@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 0.11.1
+
+### Patch Changes
+
+- 036c62c: Enhance authentication setup and improve documentation
+
 ## 0.11.0
 
 ### Minor Changes
