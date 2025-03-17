@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 0.11.2
+
+### Patch Changes
+
+- 98b1262: Add postgres support
+
 ## 0.11.1
 
 ### Patch Changes
