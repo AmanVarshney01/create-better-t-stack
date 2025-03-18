@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 0.11.3
+
+### Patch Changes
+
+- ac2f220: simplify auth setup
+
 ## 0.11.2
 
 ### Patch Changes
