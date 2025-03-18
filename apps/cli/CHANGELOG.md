@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 0.11.5
+
+### Patch Changes
+
+- 640e64e: Improve package manager prompts
+
 ## 0.11.4
 
 ### Patch Changes
