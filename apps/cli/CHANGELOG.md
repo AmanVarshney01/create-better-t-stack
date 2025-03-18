@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 0.11.4
+
+### Patch Changes
+
+- b7ac81d: Add dependency version constants and package management utility
+
 ## 0.11.3
 
 ### Patch Changes
