@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 0.12.1
+
+### Patch Changes
+
+- 5897e9c: several improvements
+
 ## 0.12.0
 
 ### Minor Changes
