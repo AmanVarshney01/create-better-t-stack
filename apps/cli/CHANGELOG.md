@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 0.12.0
+
+### Minor Changes
+
+- 03d9559: Simplify auth setup, centralize environment variable management and fix readme
+
 ## 0.11.5
 
 ### Patch Changes
