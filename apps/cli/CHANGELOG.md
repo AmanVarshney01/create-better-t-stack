@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 0.12.3
+
+### Patch Changes
+
+- 17db765: Remove GitHub Actions and SEO addons
+
 ## 0.12.2
 
 ### Patch Changes
