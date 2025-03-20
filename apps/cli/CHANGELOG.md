@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 0.12.2
+
+### Patch Changes
+
+- e4f950c: fix env when turso setup is off
+
 ## 0.12.1
 
 ### Patch Changes
