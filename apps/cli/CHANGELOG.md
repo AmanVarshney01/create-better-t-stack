@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 0.13.1
+
+### Patch Changes
+
+- 3124a6a: fix .gitignore
+
 ## 0.13.0
 
 ### Minor Changes
