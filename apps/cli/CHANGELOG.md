@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 0.14.1
+
+### Patch Changes
+
+- 03c400d: fix schema
+
 ## 0.14.0
 
 ### Minor Changes
