@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 0.14.0
+
+### Minor Changes
+
+- fc59f63: Enhance template with improved UI
+
 ## 0.13.1
 
 ### Patch Changes
