@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 0.13.0
+
+### Minor Changes
+
+- af70905: Fix auth template setup, todo example, turso setup with setup selection
+
 ## 0.12.3
 
 ### Patch Changes
