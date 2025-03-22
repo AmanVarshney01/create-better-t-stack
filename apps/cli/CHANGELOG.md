@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 0.15.0
+
+### Minor Changes
+
+- 66a47c7: Add Progressive Web App (PWA) support
+
 ## 0.14.1
 
 ### Patch Changes
