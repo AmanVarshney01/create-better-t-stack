@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 0.16.0
+
+### Minor Changes
+
+- 406864f: Add Tauri Desktop App addon
+
 ## 0.15.0
 
 ### Minor Changes
