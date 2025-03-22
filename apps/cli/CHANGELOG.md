@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 0.17.0
+
+### Minor Changes
+
+- 996b35b: Add Biome and Husky for code formatting and Git hooks
+
 ## 0.16.0
 
 ### Minor Changes
