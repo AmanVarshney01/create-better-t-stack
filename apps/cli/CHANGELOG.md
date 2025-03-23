@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 0.17.1
+
+### Patch Changes
+
+- 9574230: Redirect unauthenticated users to login page instead of home
+
 ## 0.17.0
 
 ### Minor Changes
