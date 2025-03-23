@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 0.17.2
+
+### Patch Changes
+
+- 137cc31: some improvements
+
 ## 0.17.1
 
 ### Patch Changes
