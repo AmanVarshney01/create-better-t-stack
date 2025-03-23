@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.0.1
+
+### Patch Changes
+
+- e7335d6: stable release
+
 ## 1.0.0
 
 ### Major Changes
