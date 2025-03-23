@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.0.0
+
+### Major Changes
+
+- 4cc13bf: stable release
+
 ## 0.17.2
 
 ### Patch Changes
