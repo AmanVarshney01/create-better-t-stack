@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.0.4
+
+### Patch Changes
+
+- e358534: Add prismaSchemaFolder preview feature to Prisma config
+
 ## 1.0.3
 
 ### Patch Changes
