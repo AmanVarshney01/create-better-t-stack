@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.0.3
+
+### Patch Changes
+
+- 53be1b8: fix pnpm workspace
+
 ## 1.0.2
 
 ### Patch Changes

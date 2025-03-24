@@ -1,6 +1,6 @@
 {
 	"name": "create-better-t-stack",
-	"version": "1.0.2",
+	"version": "1.0.3",
 	"description": "CLI tool to scaffold Better-T Stack projects",
 	"type": "module",
 	"license": "MIT",
@@ -22,7 +22,10 @@
 		"test": "vitest run",
 		"prepublishOnly": "npm run build"
 	},
-	"files": ["dist", "template"],
+	"files": [
+		"dist",
+		"template"
+	],
 	"dependencies": {
 		"@clack/prompts": "^0.10.0",
 		"commander": "^13.1.0",
