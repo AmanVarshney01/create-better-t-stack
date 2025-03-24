@@ -1,6 +1,6 @@
 {
 	"name": "create-better-t-stack",
-	"version": "1.0.8",
+	"version": "1.0.9",
 	"description": "CLI tool to scaffold Better-T Stack projects",
 	"type": "module",
 	"license": "MIT",
@@ -13,7 +13,10 @@
 		"url": "git+https://github.com/better-t-stack/create-better-t-stack.git",
 		"directory": "apps/cli"
 	},
-	"files": ["dist", "template"],
+	"files": [
+		"dist",
+		"template"
+	],
 	"homepage": "https://better-t-stack.pages.dev/",
 	"scripts": {
 		"build": "tsup",

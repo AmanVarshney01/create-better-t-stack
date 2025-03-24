@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.0.9
+
+### Patch Changes
+
+- 380f659: Add package manager specific support for Tauri setup
+
 ## 1.0.8
 
 ### Patch Changes
