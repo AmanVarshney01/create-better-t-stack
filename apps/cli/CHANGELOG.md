@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.0.7
+
+### Patch Changes
+
+- 2bfbcf6: fix several db conf issues
+
 ## 1.0.6
 
 ### Patch Changes
