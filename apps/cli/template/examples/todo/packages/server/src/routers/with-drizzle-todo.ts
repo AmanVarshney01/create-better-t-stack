@@ -6,7 +6,7 @@ import { db } from "../db";
 
 export const todoRouter = router({
   getAll: publicProcedure.query(async () => {
-    return await db.select().from(todo).all();
+    return await db.select().from(todo);
   }),
 
   create: publicProcedure
@@ -17,8 +17,7 @@ export const todoRouter = router({
         .values({
           text: input.text,
         })
-        .returning()
-        .get();
+        .returning();
     }),
 
   toggle: publicProcedure
@@ -28,8 +27,7 @@ export const todoRouter = router({
         .update(todo)
         .set({ completed: input.completed })
         .where(eq(todo.id, input.id))
-        .returning()
-        .get();
+        .returning();
     }),
 
   delete: publicProcedure
@@ -38,7 +36,6 @@ export const todoRouter = router({
       return await db
         .delete(todo)
         .where(eq(todo.id, input.id))
-        .returning()
-        .get();
+        .returning();
     }),
 });
