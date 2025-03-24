@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.0.8
+
+### Patch Changes
+
+- c9d4e4c: Fix self-closing div tag syntax in client template
+
 ## 1.0.7
 
 ### Patch Changes
