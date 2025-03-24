@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.0.6
+
+### Patch Changes
+
+- d0133f3: rename packages folder to apps
+
 ## 1.0.5
 
 ### Patch Changes
