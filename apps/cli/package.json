@@ -1,13 +1,16 @@
 {
 	"name": "create-better-t-stack",
-	"version": "1.0.9",
+	"version": "1.0.10",
 	"description": "CLI tool to scaffold Better-T Stack projects",
 	"type": "module",
 	"license": "MIT",
 	"bin": {
 		"create-better-t-stack": "dist/index.js"
 	},
-	"files": ["dist", "template"],
+	"files": [
+		"dist",
+		"template"
+	],
 	"keywords": [],
 	"repository": {
 		"type": "git",

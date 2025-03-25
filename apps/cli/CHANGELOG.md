@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.0.10
+
+### Patch Changes
+
+- 4a45ce9: Use current package manager version in packageManager field
+
 ## 1.0.9
 
 ### Patch Changes
