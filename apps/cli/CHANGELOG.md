@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.1.0
+
+### Minor Changes
+
+- 88afd53: Add runtime selection feature between Bun and Node.js
+
 ## 1.0.10
 
 ### Patch Changes
