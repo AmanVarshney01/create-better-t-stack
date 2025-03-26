@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.2.0
+
+### Minor Changes
+
+- 91fe9f8: Add option to choose elysiajs as backend framework
+
 ## 1.1.0
 
 ### Minor Changes
