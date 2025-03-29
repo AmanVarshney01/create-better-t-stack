@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.3.2
+
+### Patch Changes
+
+- 851c1b7: Add @trpc/tanstack-react-query dependency to web package.json
+
 ## 1.3.1
 
 ### Patch Changes
