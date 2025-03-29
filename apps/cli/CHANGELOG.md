@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.3.3
+
+### Patch Changes
+
+- a69ff19: fix(todos): trpc v11
+
 ## 1.3.2
 
 ### Patch Changes
