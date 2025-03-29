@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.3.0
+
+### Minor Changes
+
+- 1c66d64: Added support for building mobile applications with Expo
+
 ## 1.2.0
 
 ### Minor Changes
