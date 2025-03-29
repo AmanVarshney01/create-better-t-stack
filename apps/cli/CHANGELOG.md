@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.3.1
+
+### Patch Changes
+
+- b0e3432: fix several bugs
+
 ## 1.3.0
 
 ### Minor Changes
