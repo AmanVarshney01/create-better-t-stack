@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.4.0
+
+### Minor Changes
+
+- a6ac5dc: Add AI chat example and update flags structures
+
 ## 1.3.3
 
 ### Patch Changes
