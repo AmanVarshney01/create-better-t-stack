@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.4.1
+
+### Patch Changes
+
+- c3ebe27: Remove debug console.log in examples setup
+
 ## 1.4.0
 
 ### Minor Changes
