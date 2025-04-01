@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.4.4
+
+### Patch Changes
+
+- b230ddb: Improve native connectivity instruction message
+
 ## 1.4.3
 
 ### Patch Changes
