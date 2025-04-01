@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.4.2
+
+### Patch Changes
+
+- 5435dd3: Replace log.info with note for post-install instructions
+
 ## 1.4.1
 
 ### Patch Changes
