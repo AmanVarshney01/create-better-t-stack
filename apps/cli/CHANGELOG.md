@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.4.3
+
+### Patch Changes
+
+- b296ac2: use spaces instead of commas in flags
+
 ## 1.4.2
 
 ### Patch Changes
