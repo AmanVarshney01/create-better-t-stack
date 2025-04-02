@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.4.5
+
+### Patch Changes
+
+- 0d7ac63: Update CLI prompts
+
 ## 1.4.4
 
 ### Patch Changes
