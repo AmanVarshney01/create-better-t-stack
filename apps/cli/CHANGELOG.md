@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.5.0
+
+### Minor Changes
+
+- dafefb8: Add React Router
+
 ## 1.4.5
 
 ### Patch Changes
