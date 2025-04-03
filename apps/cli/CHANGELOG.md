@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.6.0
+
+### Minor Changes
+
+- cc56381: Add automatic prisma postgres setup
+
 ## 1.5.0
 
 ### Minor Changes
