@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.6.2
+
+### Patch Changes
+
+- b3c746c: Add useSortedClasses rule to Biome configuration
+
 ## 1.6.1
 
 ### Patch Changes
