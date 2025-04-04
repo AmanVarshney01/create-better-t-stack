@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.6.1
+
+### Patch Changes
+
+- b170dfc: fix prisma postgres setup prompt
+
 ## 1.6.0
 
 ### Minor Changes
