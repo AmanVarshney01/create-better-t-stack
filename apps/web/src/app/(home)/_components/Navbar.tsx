@@ -82,7 +82,7 @@ const Navbar = () => {
 								linkRefs.current.home = ref;
 							}}
 							onMouseOver={() => setActiveLink("home")}
-							className="relative rounded-md px-4 py-2 font-mono text-gray-700 transition-colors hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300"
+							className="relative rounded-md px-4 py-2 font-mono text-gray-700 transition-colors hover:text-blue-600 dark:text-gray-300 dark:hover:text-blue-300 flex gap-1 items-center"
 						>
 							<span className="text-blue-600 dark:text-blue-400">~/</span>
 							home
