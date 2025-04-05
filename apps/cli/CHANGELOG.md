@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.7.0
+
+### Minor Changes
+
+- 81dc240: Add Better Auth in Native
+
 ## 1.6.2
 
 ### Patch Changes
