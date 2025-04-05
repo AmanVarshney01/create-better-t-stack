@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.7.1
+
+### Patch Changes
+
+- 935a23b: update readme
+
 ## 1.7.0
 
 ### Minor Changes
