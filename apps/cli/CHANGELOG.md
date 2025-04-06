@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.8.0
+
+### Minor Changes
+
+- d943bf0: add tanstack start
+
 ## 1.7.1
 
 ### Patch Changes
