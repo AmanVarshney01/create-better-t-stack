@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.8.1
+
+### Patch Changes
+
+- e8a777e: make frontend optional
+
 ## 1.8.0
 
 ### Minor Changes
