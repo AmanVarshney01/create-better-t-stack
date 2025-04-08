@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.9.0
+
+### Minor Changes
+
+- 2cf01d1: Add express backend, mongodb database and automated mongodb atlas setup
+
 ## 1.8.1
 
 ### Patch Changes
