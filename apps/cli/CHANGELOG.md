@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.9.1
+
+### Patch Changes
+
+- fe7153f: update deps
+
 ## 1.9.0
 
 ### Minor Changes
