@@ -57,7 +57,7 @@ export async function setupEnvironmentVariables(
 
 		if (options.database === "sqlite" && options.dbSetup !== "turso") {
 			if (!envContent.includes("TURSO_CONNECTION_URL")) {
-				envContent += "\nTURSO_CONNECTION_URL=http://127.0.0.1:8080";
+				envContent += "\nTURSO_CONNECTION_URL=file:./local.db";
 			}
 		}
 	}
