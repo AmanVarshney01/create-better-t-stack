@@ -52,7 +52,7 @@
 		"prepublishOnly": "npm run build"
 	},
 	"dependencies": {
-		"@clack/prompts": "^0.10.0",
+		"@clack/prompts": "^0.10.1",
 		"commander": "^13.1.0",
 		"execa": "^8.0.1",
 		"fs-extra": "^11.3.0",
@@ -61,8 +61,8 @@
 	},
 	"devDependencies": {
 		"@types/fs-extra": "^11.0.4",
-		"@types/node": "^20.17.19",
+		"@types/node": "^20.17.30",
 		"tsup": "^8.4.0",
-		"typescript": "^5.7.3"
+		"typescript": "^5.8.3"
 	}
 }

@@ -111,7 +111,6 @@ app.post("/ai", async (c) => {
   return stream(c, (stream) => stream.pipe(result.toDataStream()));
 });`;
 
-			// Add imports and route handler for Hono
 			if (indexContent.includes("import {")) {
 				const lastImportIndex = indexContent.lastIndexOf("import");
 				const endOfLastImport = indexContent.indexOf("\n", lastImportIndex);
@@ -144,7 +143,6 @@ ${aiRouteHandler}`;
 				}
 			}
 		} else if (isExpress) {
-			// Express implementation
 			const importSection = `import { streamText } from "ai";\nimport { google } from "@ai-sdk/google";`;
 
 			const aiRouteHandler = `
@@ -160,7 +158,6 @@ app.post("/ai", async (req, res) => {
   result.pipeDataStreamToResponse(res);
 });`;
 
-			// Add imports for Express
 			if (
 				indexContent.includes("import {") ||
 				indexContent.includes("import ")
@@ -176,7 +173,6 @@ ${indexContent.substring(endOfLastImport + 1)}`;
 ${indexContent}`;
 			}
 
-			// Add route handler for Express
 			const trpcHandlerIndex = indexContent.indexOf('app.use("/trpc"');
 			if (trpcHandlerIndex !== -1) {
 				indexContent = `${indexContent.substring(0, trpcHandlerIndex)}${aiRouteHandler}
@@ -185,7 +181,6 @@ ${indexContent.substring(trpcHandlerIndex)}`;
 			} else {
 				const appListenIndex = indexContent.indexOf("app.listen(");
 				if (appListenIndex !== -1) {
-					// Find the line before app.listen
 					const prevNewlineIndex = indexContent.lastIndexOf(
 						"\n",
 						appListenIndex,
@@ -194,7 +189,6 @@ ${indexContent.substring(trpcHandlerIndex)}`;
 
 ${indexContent.substring(prevNewlineIndex)}`;
 				} else {
-					// Fallback: append to the end
 					indexContent = `${indexContent}
 
 ${aiRouteHandler}`;

@@ -45,13 +45,10 @@ type PromptGroupResults = {
 export async function gatherConfig(
 	flags: Partial<ProjectConfig>,
 ): Promise<ProjectConfig> {
-	// Handle specific dbSetup scenarios to adjust database and ORM before prompts
 	if (flags.dbSetup) {
 		if (flags.dbSetup === "turso") {
-			// Force database to be sqlite when turso is selected
 			flags.database = "sqlite";
 
-			// If orm is explicitly set to prisma, warn and switch to drizzle
 			if (flags.orm === "prisma") {
 				log.warn(
 					pc.yellow(
@@ -61,13 +58,11 @@ export async function gatherConfig(
 				flags.orm = "drizzle";
 			}
 		} else if (flags.dbSetup === "prisma-postgres") {
-			// Force database and orm for prisma-postgres
 			flags.database = "postgres";
 			flags.orm = "prisma";
 		} else if (flags.dbSetup === "mongodb-atlas") {
-			// Force database for mongodb-atlas
 			flags.database = "mongodb";
-			flags.orm = "prisma"; // MongoDB only works with Prisma
+			flags.orm = "prisma";
 		}
 	}
 

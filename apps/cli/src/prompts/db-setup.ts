@@ -16,7 +16,7 @@ export async function getDBSetupChoice(
 			{
 				value: "turso" as const,
 				label: "Turso",
-				hint: "Cloud SQLite with libSQL",
+				hint: "SQLite for Production. Powered by libSQL.",
 			},
 			{ value: "none" as const, label: "None", hint: "Manual setup" },
 		];
@@ -25,7 +25,7 @@ export async function getDBSetupChoice(
 			{
 				value: "prisma-postgres" as const,
 				label: "Prisma Postgres",
-				hint: "Managed by Prisma",
+				hint: "Instant Postgres for Global Applications",
 			},
 			{ value: "none" as const, label: "None", hint: "Manual setup" },
 		];
@@ -34,7 +34,7 @@ export async function getDBSetupChoice(
 			{
 				value: "mongodb-atlas" as const,
 				label: "MongoDB Atlas",
-				hint: "Cloud MongoDB service",
+				hint: "The most effective way to deploy MongoDB",
 			},
 			{ value: "none" as const, label: "None", hint: "Manual setup" },
 		];

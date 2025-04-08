@@ -201,7 +201,6 @@ function validateOptions(options: CLIOptions): void {
 		}
 	}
 
-	// Check for database setup compatibility
 	if (options.dbSetup === "turso") {
 		if (options.database && options.database !== "sqlite") {
 			cancel(

@@ -19,7 +19,7 @@
 		"@changesets/cli": "^2.28.1",
 		"husky": "^9.1.7",
 		"lint-staged": "^15.5.0",
-		"turbo": "^2.4.4",
+		"turbo": "^2.5.0",
 		"typescript": "5.7.3"
 	},
 	"lint-staged": {
