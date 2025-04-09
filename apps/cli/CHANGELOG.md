@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.10.1
+
+### Patch Changes
+
+- 9222c1e: Change PrismaClient instantiation from `let` to `const`
+
 ## 1.10.0
 
 ### Minor Changes
