@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.10.0
+
+### Minor Changes
+
+- c9b7e25: add mysql database
+
 ## 1.9.2
 
 ### Patch Changes
