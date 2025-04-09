@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.9.2
+
+### Patch Changes
+
+- 7504d27: Rename database environment variables for consistency
+
 ## 1.9.1
 
 ### Patch Changes
