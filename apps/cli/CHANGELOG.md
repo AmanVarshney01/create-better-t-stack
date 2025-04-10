@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.11.0
+
+### Minor Changes
+
+- aac6a7d: add starlight docs addon
+
 ## 1.10.3
 
 ### Patch Changes
