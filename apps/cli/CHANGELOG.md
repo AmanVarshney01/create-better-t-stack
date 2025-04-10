@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.10.3
+
+### Patch Changes
+
+- 8120222: Replace postgres package with pg for PostgreSQL support with drizzle
+
 ## 1.10.2
 
 ### Patch Changes
