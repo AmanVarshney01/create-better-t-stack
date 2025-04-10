@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.10.2
+
+### Patch Changes
+
+- c84bfcd: Fix Postgres DB setup choice condition to require Prisma ORM
+
 ## 1.10.1
 
 ### Patch Changes
