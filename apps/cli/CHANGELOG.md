@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.12.2
+
+### Patch Changes
+
+- 5a15147: Fix validation logic with --yes flag for addon compatibility
+
 ## 1.12.1
 
 ### Patch Changes
