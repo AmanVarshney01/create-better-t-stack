@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.12.0
+
+### Minor Changes
+
+- 0868672: add neon postgres setup
+
 ## 1.11.0
 
 ### Minor Changes
