@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.12.3
+
+### Patch Changes
+
+- 3e7a605: upgrade to prisma v6.6.0
+
 ## 1.12.2
 
 ### Patch Changes
