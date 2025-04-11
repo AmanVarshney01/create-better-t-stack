@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.12.1
+
+### Patch Changes
+
+- 30efd64: Add spinner feedback to database setup workflows
+
 ## 1.12.0
 
 ### Minor Changes
