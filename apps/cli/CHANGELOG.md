@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.13.0
+
+### Minor Changes
+
+- 33158a2: add nextjs frontend and backend
+
 ## 1.12.4
 
 ### Patch Changes
