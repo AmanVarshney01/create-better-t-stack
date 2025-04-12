@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.12.4
+
+### Patch Changes
+
+- bef8182: add command completions
+
 ## 1.12.3
 
 ### Patch Changes
