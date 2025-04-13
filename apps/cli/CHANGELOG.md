@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.13.2
+
+### Patch Changes
+
+- 1e67949: add consola errors, update to better-auth v1.2.6
+
 ## 1.13.1
 
 ### Patch Changes
