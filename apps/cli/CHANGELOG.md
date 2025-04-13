@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 1.13.1
+
+### Patch Changes
+
+- 6d16f27: Update trpc endpoint path from '/api/trpc' to '/trpc'
+
 ## 1.13.0
 
 ### Minor Changes
