@@ -72,7 +72,7 @@ export async function setupTauri(
 			"init",
 			`--app-name=${path.basename(projectDir)}`,
 			`--window-title=${path.basename(projectDir)}`,
-			"--frontend-dist=dist",
+			"--frontend-dist=../dist",
 			`--dev-url=${devUrl}`,
 			`--before-dev-command=${packageManager} run dev`,
 			`--before-build-command=${packageManager} run build`,
