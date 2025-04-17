@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.0.1
+
+### Patch Changes
+
+- 2a51f85: fix express server orpc route
+
 ## 2.0.0
 
 ### Major Changes
