@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.0.3
+
+### Patch Changes
+
+- 98fdc3b: fix pnpm dev script
+
 ## 2.0.2
 
 ### Patch Changes
