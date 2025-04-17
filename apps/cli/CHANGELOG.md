@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.0.2
+
+### Patch Changes
+
+- 13241ee: fix cli project name check
+
 ## 2.0.1
 
 ### Patch Changes
