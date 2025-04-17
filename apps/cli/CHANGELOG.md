@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.0.0
+
+### Major Changes
+
+- 7f441ef: add orpc, make turborepo optional, use handlebarjs to scaffold template
+
 ## 1.13.2
 
 ### Patch Changes
