@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.0.4
+
+### Patch Changes
+
+- 933c4ac: Implement @/\* path aliases and move dotenv imports
+
 ## 2.0.3
 
 ### Patch Changes
