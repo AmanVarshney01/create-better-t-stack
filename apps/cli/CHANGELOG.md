@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.0.7
+
+### Patch Changes
+
+- d82ad80: fix native scaffolding
+
 ## 2.0.6
 
 ### Patch Changes
