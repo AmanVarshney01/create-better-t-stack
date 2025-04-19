@@ -1,9 +1,11 @@
 {
-	"mode": "pre",
-	"tag": "beta",
-	"initialVersions": {
-		"create-better-t-stack": "2.0.5",
-		"web": "0.0.0"
-	},
-	"changesets": []
+  "mode": "pre",
+  "tag": "beta",
+  "initialVersions": {
+    "create-better-t-stack": "2.0.5",
+    "web": "0.0.0"
+  },
+  "changesets": [
+    "polite-mirrors-love"
+  ]
 }

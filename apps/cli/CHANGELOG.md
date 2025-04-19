@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.0.6-beta.0
+
+### Patch Changes
+
+- 0a4813b: Only add tRPC server adapters when API is tRPC
+
 ## 2.0.5
 
 ### Patch Changes
