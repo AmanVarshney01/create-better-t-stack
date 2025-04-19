@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.0.8
+
+### Patch Changes
+
+- 1cb5c0c: fix database none flags validation
+
 ## 2.0.7
 
 ### Patch Changes
