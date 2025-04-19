@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.0.6-beta.1
+
+### Patch Changes
+
+- 9d9bd1d: remove none option in api
+
 ## 2.0.6-beta.0
 
 ### Patch Changes
