@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.0.5
+
+### Patch Changes
+
+- 88afa9a: fix ai example template path
+
 ## 2.0.4
 
 ### Patch Changes
