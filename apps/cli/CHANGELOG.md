@@ -1,5 +1,12 @@
 # create-better-t-stack
 
+## 2.0.6
+
+### Patch Changes
+
+- 0de49d4: remove none option in api
+- 0de49d4: Only add tRPC server adapters when API is tRPC
+
 ## 2.0.6-beta.1
 
 ### Patch Changes

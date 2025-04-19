@@ -1,9 +1,0 @@
-{
-	"mode": "exit",
-	"tag": "beta",
-	"initialVersions": {
-		"create-better-t-stack": "2.0.5",
-		"web": "0.0.0"
-	},
-	"changesets": ["dirty-seas-train", "polite-mirrors-love"]
-}
