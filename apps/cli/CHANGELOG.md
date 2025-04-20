@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.0.10
+
+### Patch Changes
+
+- 579d125: add zod dep in tanstack start
+
 ## 2.0.9
 
 ### Patch Changes
