@@ -92,7 +92,7 @@ const TechIcon = ({
 	}
 
 	return (
-		<span className={`inline-block text-lg ${className || ""}`}>{icon}</span>
+		<span className={`inline-flex items-center text-lg ${className || ""}`}>{icon}</span>
 	);
 };
 
@@ -921,14 +921,14 @@ const StackArchitect = () => {
 						<span className="mr-2 select-none text-green-600 dark:text-green-400">
 							$
 						</span>
-						<code className="whitespace-pre break-words text-gray-700 text-xs sm:text-sm dark:text-gray-300">
+						<code className="inline-flex items-center whitespace-pre break-words text-gray-700 text-xs sm:text-sm dark:text-gray-300">
 							{command}
 						</code>
 					</div>
 					<button
 						type="button"
 						onClick={copyToClipboard}
-						className="absolute top-1 right-1 rounded p-1 text-gray-500 transition-colors hover:bg-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
+						className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-1 text-gray-500 transition-colors hover:bg-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200"
 						title={copied ? "Copied!" : "Copy command"}
 					>
 						{copied ? (
@@ -966,7 +966,7 @@ const StackArchitect = () => {
 											<TechIcon
 												icon={tech.icon}
 												name={tech.name}
-												className="h-3 w-3"
+												className={tech.icon.startsWith("/icon/") ? "h-3 w-3" : "h-3 w-3 text-xs"}
 											/>
 											{tech.name}
 										</span>
