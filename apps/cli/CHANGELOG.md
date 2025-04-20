@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.0.9
+
+### Patch Changes
+
+- b5267e0: Add setup warnings and handle no-ORM auth
+
 ## 2.0.8
 
 ### Patch Changes
