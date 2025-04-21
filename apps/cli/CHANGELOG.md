@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.0.11
+
+### Patch Changes
+
+- ea79154: ensure .npmrc is included and copied for native setup
+
 ## 2.0.10
 
 ### Patch Changes
