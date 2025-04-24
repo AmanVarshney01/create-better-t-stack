@@ -1,5 +1,5 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
-import { BookMarked } from "lucide-react";
+import { BookMarked, Github, Hammer } from "lucide-react";
 
 /**
  * Shared layout configurations
@@ -15,17 +15,23 @@ export const baseOptions: BaseLayoutProps = {
   },
   links: [
     {
-      children: (
-        <a
-          className='border-muted flex border rounded-lg p-2 text-lg items-center gap-2'
-          href='/docs'
-        >
-          <BookMarked size={16} />
-          Documentation
-        </a>
-      ),
-      type: "custom",
+      url: "/docs",
+      text: "Documentation",
+      type: "main",
+      active: "none",
+      icon: <BookMarked size={16} />,
+    },
+    {
+      url: "https://github.com/AmanVarshney01/create-better-t-stack",
+      text: "Github",
+      type: "main",
+      icon: <Github size={16} />,
+    },
+    {
+      url: "/new",
+      text: "Builder",
+      type: "main",
+      icon: <Hammer size={16} />,
     },
   ],
-  githubUrl: "https://github.com/AmanVarshney01/create-better-t-stack",
 };
