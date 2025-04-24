@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.1.1
+
+### Patch Changes
+
+- 9c125c2: fix prisma todo location
+
 ## 2.1.0
 
 ### Minor Changes
