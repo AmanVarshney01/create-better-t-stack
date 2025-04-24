@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.1.2
+
+### Patch Changes
+
+- 6031287: add zod dep in react router
+
 ## 2.1.1
 
 ### Patch Changes
