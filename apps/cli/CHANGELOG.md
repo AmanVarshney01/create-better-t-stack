@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.1.3
+
+### Patch Changes
+
+- b400b7e: Add .nuxt to ignore list in biome.json
+
 ## 2.1.2
 
 ### Patch Changes
