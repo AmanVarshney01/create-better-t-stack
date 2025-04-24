@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.1.0
+
+### Minor Changes
+
+- d3a80b7: add nuxt and expo with orpc
+
 ## 2.0.12
 
 ### Patch Changes
