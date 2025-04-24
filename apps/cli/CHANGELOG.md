@@ -1,5 +1,24 @@
 # create-better-t-stack
 
+## 2.1.1
+
+### Patch Changes
+
+- 9c125c2: fix prisma todo location
+
+## 2.1.0
+
+### Minor Changes
+
+- d3a80b7: add nuxt and expo with orpc
+
+## 2.0.12
+
+### Patch Changes
+
+- 7839950: Add express.json() middleware to the Express backend template.
+  Rename the TanStack Start frontend package to "web".
+
 ## 2.0.11
 
 ### Patch Changes

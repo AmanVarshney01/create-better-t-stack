@@ -3,6 +3,12 @@
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
 	DEFAULT_STACK,
 	PRESET_TEMPLATES,
 	type StackState,
@@ -77,6 +83,9 @@ const hasWebFrontend = (frontend: string[]) =>
 
 const hasPWACompatibleFrontend = (frontend: string[]) =>
 	frontend.some((f) => ["tanstack-router", "react-router"].includes(f));
+
+const hasTauriCompatibleFrontend = (frontend: string[]) =>
+	frontend.some((f) => ["tanstack-router", "react-router", "nuxt"].includes(f));
 
 const hasNativeFrontend = (frontend: string[]) => frontend.includes("native");
 
@@ -173,6 +182,10 @@ const StackArchitect = () => {
 		() => hasPWACompatibleFrontend(stack.frontend),
 		[stack.frontend],
 	);
+	const currentHasTauriCompatibleFrontend = useMemo(
+		() => hasTauriCompatibleFrontend(stack.frontend),
+		[stack.frontend],
+	);
 	const currentHasNativeFrontend = useMemo(
 		() => hasNativeFrontend(stack.frontend),
 		[stack.frontend],
@@ -201,7 +214,8 @@ const StackArchitect = () => {
 
 			const isWeb = hasWebFrontend(nextStack.frontend);
 			const isPWACompat = hasPWACompatibleFrontend(nextStack.frontend);
-			const isNative = hasNativeFrontend(nextStack.frontend);
+			const isTauriCompat = hasTauriCompatibleFrontend(nextStack.frontend);
+			const isNuxt = nextStack.frontend.includes("nuxt");
 
 			if (nextStack.database === "none") {
 				if (nextStack.orm !== "none") {
@@ -256,13 +270,14 @@ const StackArchitect = () => {
 				changed = true;
 			}
 
-			if (isNative && nextStack.api !== "trpc") {
-				nextStack.api = "trpc";
+			if (isNuxt && nextStack.api === "trpc") {
+				nextStack.api = "orpc";
 				changed = true;
 			}
 
 			const incompatibleAddons: string[] = [];
-			if (!isPWACompat) incompatibleAddons.push("pwa", "tauri");
+			if (!isPWACompat) incompatibleAddons.push("pwa");
+			if (!isTauriCompat) incompatibleAddons.push("tauri");
 			const originalAddonsLength = nextStack.addons.length;
 			nextStack.addons = nextStack.addons.filter(
 				(addon) => !incompatibleAddons.includes(addon),
@@ -356,7 +371,9 @@ const StackArchitect = () => {
 			flags.push(`--database ${stackState.database}`);
 		}
 
-		if (stackState.database !== "none" && !isDefault("orm", stackState.orm)) {
+		if (stackState.database === "none") {
+			flags.push("--orm none");
+		} else if (!isDefault("orm", stackState.orm)) {
 			flags.push(`--orm ${stackState.orm}`);
 		}
 
@@ -415,6 +432,7 @@ const StackArchitect = () => {
 		}`;
 	}, []);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		const cmd = generateCommand(stack);
 		setCommand(cmd);
@@ -426,35 +444,34 @@ const StackArchitect = () => {
 
 		const isWeb = currentHasWebFrontend;
 		const isPWACompat = currentHasPWACompatibleFrontend;
-		const isNative = currentHasNativeFrontend;
+		const isTauriCompat = currentHasTauriCompatibleFrontend;
+		const isNuxt = stack.frontend.includes("nuxt");
 
-		if (isNative && stack.frontend.length > 1) {
-			notes.frontend.notes.push(
-				"React Native requires the tRPC API when used with other frontends. oRPC will be disabled. (temporarily)",
-			);
-			if (stack.api !== "trpc") notes.frontend.hasIssue = true;
+		if (!isPWACompat && stack.addons.includes("pwa")) {
+			notes.frontend.notes.push("PWA addon requires TanStack or React Router.");
+			notes.frontend.hasIssue = true;
+			notes.addons.hasIssue = true;
 		}
-		if (
-			!isPWACompat &&
-			stack.addons.some((a) => ["pwa", "tauri"].includes(a))
-		) {
+		if (!isTauriCompat && stack.addons.includes("tauri")) {
 			notes.frontend.notes.push(
-				"PWA/Tauri addons require TanStack or React Router.",
+				"Tauri addon requires TanStack Router, React Router, or Nuxt.",
 			);
 			notes.frontend.hasIssue = true;
 			notes.addons.hasIssue = true;
 		}
+
 		if (!isWeb && stack.examples.length > 0) {
 			notes.frontend.notes.push("Examples require a web frontend.");
 			notes.frontend.hasIssue = true;
 			notes.examples.hasIssue = true;
 		}
 
-		if (isNative && stack.api !== "trpc") {
+		if (isNuxt && stack.api === "trpc") {
 			notes.api.notes.push(
-				"React Native requires tRPC. It will be selected automatically.",
+				"Nuxt requires oRPC. It will be selected automatically.",
 			);
 			notes.api.hasIssue = true;
+			notes.frontend.hasIssue = true;
 		}
 
 		if (stack.database === "mongodb" && stack.orm !== "prisma") {
@@ -592,6 +609,7 @@ const StackArchitect = () => {
 		generateCommand,
 		currentHasWebFrontend,
 		currentHasPWACompatibleFrontend,
+		currentHasTauriCompatibleFrontend,
 		currentHasNativeFrontend,
 	]);
 
@@ -601,44 +619,55 @@ const StackArchitect = () => {
 				const catKey = category as keyof StackState;
 				const update: Partial<StackState> = {};
 
-				if (
-					catKey === "frontend" ||
-					catKey === "addons" ||
-					catKey === "examples"
-				) {
+				if (catKey === "frontend") {
 					const currentArray = [...(currentStack[catKey] as string[])];
 					let nextArray = [...currentArray];
 					const isSelected = currentArray.includes(techId);
 
-					if (catKey === "frontend") {
-						const webTypes = [
-							"tanstack-router",
-							"react-router",
-							"tanstack-start",
-							"next",
-						];
-						if (techId === "none") {
-							nextArray = ["none"];
-						} else if (isSelected) {
-							nextArray = nextArray.filter((id) => id !== techId);
-							if (nextArray.length === 0) {
-								return {};
-							}
-						} else {
-							nextArray = nextArray.filter((id) => id !== "none");
-							if (webTypes.includes(techId)) {
-								nextArray = nextArray.filter((id) => !webTypes.includes(id));
-							}
-							nextArray.push(techId);
+					const webTypes = [
+						"tanstack-router",
+						"react-router",
+						"tanstack-start",
+						"next",
+						"nuxt",
+					];
+
+					if (techId === "none") {
+						nextArray = ["none"];
+					} else if (isSelected) {
+						nextArray = nextArray.filter((id) => id !== techId);
+						if (nextArray.length === 0) {
+							return {};
 						}
 					} else {
-						if (isSelected) {
-							nextArray = nextArray.filter((id) => id !== techId);
-						} else {
-							nextArray.push(techId);
+						nextArray = nextArray.filter((id) => id !== "none");
+						if (webTypes.includes(techId)) {
+							nextArray = nextArray.filter((id) => !webTypes.includes(id));
 						}
+						nextArray.push(techId);
 					}
 
+					const selectedWeb = nextArray.filter((id) => webTypes.includes(id));
+					if (selectedWeb.length > 1) {
+						nextArray = nextArray.filter((id) => !webTypes.includes(id));
+						nextArray.push(techId);
+					}
+
+					if (
+						JSON.stringify([...new Set(nextArray)].sort()) !==
+						JSON.stringify(currentArray.sort())
+					) {
+						update[catKey] = [...new Set(nextArray)];
+					}
+				} else if (catKey === "addons" || catKey === "examples") {
+					const currentArray = [...(currentStack[catKey] as string[])];
+					let nextArray = [...currentArray];
+					const isSelected = currentArray.includes(techId);
+					if (isSelected) {
+						nextArray = nextArray.filter((id) => id !== techId);
+					} else {
+						nextArray.push(techId);
+					}
 					if (
 						JSON.stringify([...new Set(nextArray)].sort()) !==
 						JSON.stringify(currentArray.sort())
@@ -657,6 +686,7 @@ const StackArchitect = () => {
 		[setStack],
 	);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	const getDisabledReason = useCallback(
 		(category: keyof typeof TECH_OPTIONS, techId: string): string | null => {
 			const catKey = category as keyof StackState;
@@ -684,8 +714,10 @@ const StackArchitect = () => {
 				}
 			}
 
-			if (catKey === "api" && techId !== "trpc" && currentHasNativeFrontend) {
-				return "Only tRPC API is supported with React Native.";
+			if (catKey === "api") {
+				if (techId === "trpc" && stack.frontend.includes("nuxt")) {
+					return "tRPC is not supported with Nuxt. Use oRPC instead.";
+				}
 			}
 
 			if (catKey === "orm") {
@@ -725,11 +757,11 @@ const StackArchitect = () => {
 			}
 
 			if (catKey === "addons") {
-				if (
-					(techId === "pwa" || techId === "tauri") &&
-					!currentHasPWACompatibleFrontend
-				) {
+				if (techId === "pwa" && !currentHasPWACompatibleFrontend) {
 					return "Requires TanStack Router or React Router frontend.";
+				}
+				if (techId === "tauri" && !currentHasTauriCompatibleFrontend) {
+					return "Requires TanStack Router, React Router, or Nuxt frontend.";
 				}
 			}
 
@@ -751,6 +783,7 @@ const StackArchitect = () => {
 			stack,
 			currentHasNativeFrontend,
 			currentHasPWACompatibleFrontend,
+			currentHasTauriCompatibleFrontend,
 			currentHasWebFrontend,
 		],
 	);
@@ -818,483 +851,461 @@ const StackArchitect = () => {
 	};
 
 	return (
-		<div
-			className={cn(
-				"flex h-screen flex-col overflow-hidden border-border bg-background text-foreground",
-			)}
-		>
+		<TooltipProvider>
 			<div
 				className={cn(
-					"grid w-full flex-shrink-0 grid-cols-2 items-center justify-center border-border border-b bg-background px-2 py-2 sm:grid-cols-3 sm:px-4",
+					"flex h-screen flex-col overflow-hidden border-border bg-background text-foreground",
 				)}
 			>
-				<Link href={"/"}>
-					<div className="mr-auto font-mono text-muted-foreground text-xs">
-						Home
+				<div
+					className={cn(
+						"grid w-full flex-shrink-0 grid-cols-2 items-center justify-center border-border border-b bg-background px-2 py-2 sm:grid-cols-3 sm:px-4",
+					)}
+				>
+					<Link href={"/"}>
+						<div className="mr-auto font-mono text-muted-foreground text-xs">
+							Home
+						</div>
+					</Link>
+					<div className="mx-auto hidden font-mono text-muted-foreground text-xs sm:block">
+						Create Better T Stack
 					</div>
-				</Link>
-				<div className="mx-auto hidden font-mono text-muted-foreground text-xs sm:block">
-					Create Better T Stack
-				</div>
-				<div className="ml-auto flex space-x-2">
-					<button
-						type="button"
-						onClick={() => setShowHelp(!showHelp)}
-						className={cn(
-							"text-muted-foreground transition-colors hover:text-foreground",
-						)}
-						title="Help"
-					>
-						<HelpCircle className="h-4 w-4" />
-					</button>
-					<button
-						type="button"
-						onClick={() => setShowPresets(!showPresets)}
-						className={cn(
-							"text-muted-foreground transition-colors hover:text-foreground",
-						)}
-						title="Presets"
-					>
-						<Star className="h-4 w-4" />
-					</button>
-					<button
-						type="button"
-						className={cn(
-							"text-muted-foreground transition-colors hover:text-foreground",
-						)}
-						title="GitHub Repository"
-					>
-						<Link
-							href={"https://github.com/AmanVarshney01/create-better-t-stack"}
-							target="_blank"
-						>
-							<Github className="h-4 w-4" />
-						</Link>
-					</button>
-					<ThemeToggle />
-				</div>
-			</div>
-
-			{showHelp && (
-				<div className="flex-shrink-0 border-border border-b bg-background p-3 text-foreground sm:p-4">
-					<h3 className="mb-2 font-medium text-sm">
-						How to Use Stack Architect
-					</h3>
-					<ul className="list-disc space-y-1 pl-5 text-xs">
-						<li>Use the sidebar to navigate between configuration sections.</li>
-						<li>Select your preferred technologies in the main area.</li>
-						<li>
-							Some selections may disable or automatically change other options
-							based on compatibility (check notes within each section!).
-						</li>
-						<li>
-							The command below updates automatically based on your selections.
-						</li>
-						<li>
-							Click the copy button (
-							<ClipboardCopy className="inline h-3 w-3" />) next to the command
-							to copy it.
-						</li>
-						<li>
-							Use presets (<Star className="inline h-3 w-3" />) for quick setup
-							or reset (<RefreshCw className="inline h-3 w-3" />) to defaults.
-						</li>
-						<li>
-							Save (<Star className="inline h-3 w-3" />) your preferences to
-							load (<Settings className="inline h-3 w-3" />) them later.
-						</li>
-					</ul>
-				</div>
-			)}
-
-			{showPresets && (
-				<div className="flex-shrink-0 border-border border-b bg-background p-3 sm:p-4">
-					<h3 className="mb-2 font-medium text-foreground text-sm">
-						Quick Start Presets
-					</h3>
-					<div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-						{PRESET_TEMPLATES.map((preset) => (
-							<button
-								type="button"
-								key={preset.id}
-								onClick={() => applyPreset(preset.id)}
-								className="rounded border border-border bg-background p-2 text-left transition-colors hover:bg-muted"
-							>
-								<div className="font-medium text-foreground text-sm">
-									{preset.name}
-								</div>
-								<div className="text-muted-foreground text-xs">
-									{preset.description}
-								</div>
-							</button>
-						))}
-					</div>
-				</div>
-			)}
-
-			<div className="flex-shrink-0 bg-background p-3 pb-0 font-mono sm:p-4 sm:pb-0">
-				<div className="mb-3 flex flex-col justify-between gap-y-3 sm:flex-row sm:items-start">
-					<label className="flex flex-col">
-						<span className="mb-1 text-muted-foreground text-xs">
-							Project Name:
-						</span>
-						<input
-							type="text"
-							value={stack.projectName || ""}
-							onChange={(e) => {
-								const newValue = e.target.value;
-								setStack({ projectName: newValue });
-							}}
+					<div className="ml-auto flex space-x-2">
+						<button
+							type="button"
+							onClick={() => setShowHelp(!showHelp)}
 							className={cn(
-								"w-full rounded border bg-background px-2 py-1 font-mono text-sm focus:outline-none sm:w-auto",
-								projectNameError
-									? "border-destructive bg-destructive/10 text-destructive-foreground"
-									: "border-border focus:border-primary",
+								"text-muted-foreground transition-colors hover:text-foreground",
 							)}
-							placeholder="my-better-t-app"
-						/>
-						{projectNameError && (
-							<p className="mt-1 text-destructive text-xs">
-								{projectNameError}
-							</p>
-						)}
-					</label>
-					<div className="flex flex-wrap gap-2">
+							title="Help"
+						>
+							<HelpCircle className="h-4 w-4" />
+						</button>
 						<button
 							type="button"
-							onClick={resetStack}
-							className="flex items-center gap-1 rounded border border-border bg-background px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
-							title="Reset to defaults"
+							onClick={() => setShowPresets(!showPresets)}
+							className={cn(
+								"text-muted-foreground transition-colors hover:text-foreground",
+							)}
+							title="Presets"
 						>
-							<RefreshCw className="h-3 w-3" />
-							Reset
+							<Star className="h-4 w-4" />
 						</button>
-						{lastSavedStack && (
-							<button
-								type="button"
-								onClick={loadSavedStack}
-								className="flex items-center gap-1 rounded border border-border bg-background px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
-								title="Load saved preferences"
+						<button
+							type="button"
+							className={cn(
+								"text-muted-foreground transition-colors hover:text-foreground",
+							)}
+							title="GitHub Repository"
+						>
+							<Link
+								href={"https://github.com/AmanVarshney01/create-better-t-stack"}
+								target="_blank"
 							>
-								<Settings className="h-3 w-3" />
-								Load Saved
-							</button>
-						)}
-						<button
-							id="save-stack-button"
-							type="button"
-							onClick={saveCurrentStack}
-							className="flex items-center gap-1 rounded border border-chart-4 bg-chart-4/10 px-2 py-1 text-chart-4 text-xs transition-colors hover:bg-chart-4/20"
-							title="Save current preferences"
-						>
-							<Star className="h-3 w-3" />
-							<span>Save</span>
+								<Github className="h-4 w-4" />
+							</Link>
 						</button>
+						<ThemeToggle />
 					</div>
 				</div>
-				<div className="relative mb-4 overflow-hidden rounded border border-border bg-background p-2 pr-16 sm:pr-20">
-					<div className="flex overflow-x-auto">
-						<span className="mr-2 select-none text-chart-4">$</span>
-						<code className="no-scrollbar inline-flex items-center overflow-x-auto whitespace-pre break-words text-muted-foreground text-xs sm:text-sm">
-							{command}
-						</code>
+
+				{showHelp && (
+					<div className="flex-shrink-0 border-border border-b bg-background p-3 text-foreground sm:p-4">
+						<h3 className="mb-2 font-medium text-sm">
+							How to Use Stack Architect
+						</h3>
+						<ul className="list-disc space-y-1 pl-5 text-xs">
+							<li>
+								Use the sidebar to navigate between configuration sections.
+							</li>
+							<li>Select your preferred technologies in the main area.</li>
+							<li>
+								Some selections may disable or automatically change other
+								options based on compatibility (check notes within each
+								section!).
+							</li>
+							<li>
+								The command below updates automatically based on your
+								selections.
+							</li>
+							<li>
+								Click the copy button (
+								<ClipboardCopy className="inline h-3 w-3" />) next to the
+								command to copy it.
+							</li>
+							<li>
+								Use presets (<Star className="inline h-3 w-3" />) for quick
+								setup or reset (<RefreshCw className="inline h-3 w-3" />) to
+								defaults.
+							</li>
+							<li>
+								Save (<Star className="inline h-3 w-3" />) your preferences to
+								load (<Settings className="inline h-3 w-3" />) them later.
+							</li>
+						</ul>
 					</div>
-					<button
-						type="button"
-						onClick={copyToClipboard}
-						className={cn(
-							"-translate-y-1/2 absolute top-1/2 right-1 flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors",
-							copied
-								? "bg-muted text-chart-4"
-								: "text-muted-foreground hover:bg-muted hover:text-foreground",
-						)}
-						title={copied ? "Copied!" : "Copy command"}
-					>
-						{copied ? (
-							<>
-								<Check className="h-3 w-3 flex-shrink-0" />
-								<span>Copied</span>
-							</>
-						) : (
-							<>
-								<ClipboardCopy className="h-3 w-3 flex-shrink-0" />
-								<span>Copy</span>
-							</>
-						)}
-					</button>
-				</div>
+				)}
 
-				<div className="mb-4">
-					<div className="flex flex-wrap gap-1.5">
-						{CATEGORY_ORDER.flatMap((category) => {
-							const categoryKey = category as keyof StackState;
-							const options =
-								TECH_OPTIONS[category as keyof typeof TECH_OPTIONS];
-							const selectedValue = stack[categoryKey];
-
-							if (!options) return [];
-
-							if (Array.isArray(selectedValue)) {
-								if (selectedValue.length === 0 || selectedValue[0] === "none")
-									return [];
-
-								return selectedValue
-									.map((id) => options.find((opt) => opt.id === id))
-									.filter((tech): tech is NonNullable<typeof tech> =>
-										Boolean(tech),
-									)
-									.map((tech) => (
-										<span
-											key={`${category}-${tech.id}`}
-											className={cn(
-												"inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs",
-												getBadgeColors(category),
-											)}
-										>
-											<TechIcon
-												icon={tech.icon}
-												name={tech.name}
-												className={
-													tech.icon.startsWith("/icon/")
-														? "h-3 w-3"
-														: "h-3 w-3 text-xs"
-												}
-											/>
-											{tech.name}
-										</span>
-									));
-							}
-							const tech = options.find((opt) => opt.id === selectedValue);
-
-							if (
-								!tech ||
-								tech.id === "none" ||
-								tech.id === "false" ||
-								((category === "git" ||
-									category === "install" ||
-									category === "auth") &&
-									tech.id === "true")
-							) {
-								return [];
-							}
-
-							return (
-								<span
-									key={`${category}-${tech.id}`}
-									className={cn(
-										"inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs",
-										getBadgeColors(category),
-									)}
-								>
-									<TechIcon
-										icon={tech.icon}
-										name={tech.name}
-										className="h-3 w-3"
-									/>
-									{tech.name}
-								</span>
-							);
-						})}
-					</div>
-				</div>
-			</div>
-
-			<div className="flex flex-grow overflow-hidden">
-				<nav className="hidden w-48 flex-shrink-0 overflow-y-auto border-border border-r p-2 md:flex">
-					<ul className="space-y-1">
-						{CATEGORY_ORDER.map((category) => (
-							<li key={category}>
+				{showPresets && (
+					<div className="flex-shrink-0 border-border border-b bg-background p-3 sm:p-4">
+						<h3 className="mb-2 font-medium text-foreground text-sm">
+							Quick Start Presets
+						</h3>
+						<div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+							{PRESET_TEMPLATES.map((preset) => (
 								<button
 									type="button"
-									onClick={() => handleSidebarClick(category)}
-									className={cn(
-										"flex w-full items-center justify-between rounded px-2 py-1.5 text-left font-mono text-xs transition-colors",
-										activeCategory === category
-											? "bg-primary/10 text-primary"
-											: "text-muted-foreground hover:bg-muted/50",
-									)}
+									key={preset.id}
+									onClick={() => applyPreset(preset.id)}
+									className="rounded border border-border bg-background p-2 text-left transition-colors hover:bg-muted"
 								>
-									<span>{getCategoryDisplayName(category)}</span>
-									{compatNotes[category]?.hasIssue && (
-										<span title="Compatibility issue affects this section">
-											<InfoIcon className="h-3 w-3 flex-shrink-0 text-chart-5" />{" "}
-										</span>
-									)}
+									<div className="font-medium text-foreground text-sm">
+										{preset.name}
+									</div>
+									<div className="text-muted-foreground text-xs">
+										{preset.description}
+									</div>
 								</button>
-							</li>
-						))}
-					</ul>
-				</nav>
+							))}
+						</div>
+					</div>
+				)}
 
-				<ScrollArea className="flex-1">
-					<main
-						ref={contentRef}
-						className="flex-grow overflow-y-auto scroll-smooth p-4"
-					>
-						{CATEGORY_ORDER.map((categoryKey) => {
-							const categoryOptions =
-								TECH_OPTIONS[categoryKey as keyof typeof TECH_OPTIONS] || [];
-							const categoryDisplayName = getCategoryDisplayName(categoryKey);
-							const notesInfo = compatNotes[categoryKey];
-
-							return (
-								<section
-									ref={(el) => {
-										sectionRefs.current[categoryKey] = el;
-									}}
-									key={categoryKey}
-									id={`section-${categoryKey}`}
-									className="mb-8 scroll-mt-4"
+				<div className="flex-shrink-0 bg-background p-3 pb-0 font-mono sm:p-4 sm:pb-0">
+					<div className="mb-3 flex flex-col justify-between gap-y-3 sm:flex-row sm:items-start">
+						<label className="flex flex-col">
+							<span className="mb-1 text-muted-foreground text-xs">
+								Project Name:
+							</span>
+							<input
+								type="text"
+								value={stack.projectName || ""}
+								onChange={(e) => {
+									const newValue = e.target.value;
+									setStack({ projectName: newValue });
+								}}
+								className={cn(
+									"w-full rounded border bg-background px-2 py-1 font-mono text-sm focus:outline-none sm:w-auto",
+									projectNameError
+										? "border-destructive bg-destructive/10 text-destructive-foreground"
+										: "border-border focus:border-primary",
+								)}
+								placeholder="my-better-t-app"
+							/>
+							{projectNameError && (
+								<p className="mt-1 text-destructive text-xs">
+									{projectNameError}
+								</p>
+							)}
+						</label>
+						<div className="flex flex-wrap gap-2">
+							<button
+								type="button"
+								onClick={resetStack}
+								className="flex items-center gap-1 rounded border border-border bg-background px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
+								title="Reset to defaults"
+							>
+								<RefreshCw className="h-3 w-3" />
+								Reset
+							</button>
+							{lastSavedStack && (
+								<button
+									type="button"
+									onClick={loadSavedStack}
+									className="flex items-center gap-1 rounded border border-border bg-background px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
+									title="Load saved preferences"
 								>
-									<div className="mb-3 flex items-center border-border border-b pb-2 text-muted-foreground">
-										<Terminal className="mr-2 h-5 w-5 flex-shrink-0" />
-										<h2 className="font-semibold text-base text-foreground">
-											{categoryDisplayName}
-										</h2>
-									</div>
+									<Settings className="h-3 w-3" />
+									Load Saved
+								</button>
+							)}
+							<button
+								id="save-stack-button"
+								type="button"
+								onClick={saveCurrentStack}
+								className="flex items-center gap-1 rounded border border-chart-4 bg-chart-4/10 px-2 py-1 text-chart-4 text-xs transition-colors hover:bg-chart-4/20"
+								title="Save current preferences"
+							>
+								<Star className="h-3 w-3" />
+								<span>Save</span>
+							</button>
+						</div>
+					</div>
+					<div className="relative mb-4 overflow-hidden rounded border border-border bg-background p-2 pr-16 sm:pr-20">
+						<div className="flex overflow-x-auto">
+							<span className="mr-2 select-none text-chart-4">$</span>
+							<code className="no-scrollbar inline-flex items-center overflow-x-auto whitespace-pre break-words text-muted-foreground text-xs sm:text-sm">
+								{command}
+							</code>
+						</div>
+						<button
+							type="button"
+							onClick={copyToClipboard}
+							className={cn(
+								"-translate-y-1/2 absolute top-1/2 right-1 flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors",
+								copied
+									? "bg-muted text-chart-4"
+									: "text-muted-foreground hover:bg-muted hover:text-foreground",
+							)}
+							title={copied ? "Copied!" : "Copy command"}
+						>
+							{copied ? (
+								<>
+									<Check className="h-3 w-3 flex-shrink-0" />
+									<span>Copied</span>
+								</>
+							) : (
+								<>
+									<ClipboardCopy className="h-3 w-3 flex-shrink-0" />
+									<span>Copy</span>
+								</>
+							)}
+						</button>
+					</div>
 
-									{notesInfo?.notes && notesInfo.notes.length > 0 && (
-										<div
-											className={cn(
-												"mb-4 rounded-md border p-3",
-												notesInfo.hasIssue
-													? "border-chart-5 bg-chart-5/10"
-													: "border-primary bg-primary/10",
-											)}
-										>
-											<div
+					<div className="mb-4">
+						<div className="flex flex-wrap gap-1.5">
+							{CATEGORY_ORDER.flatMap((category) => {
+								const categoryKey = category as keyof StackState;
+								const options =
+									TECH_OPTIONS[category as keyof typeof TECH_OPTIONS];
+								const selectedValue = stack[categoryKey];
+
+								if (!options) return [];
+
+								if (Array.isArray(selectedValue)) {
+									if (selectedValue.length === 0 || selectedValue[0] === "none")
+										return [];
+
+									return selectedValue
+										.map((id) => options.find((opt) => opt.id === id))
+										.filter((tech): tech is NonNullable<typeof tech> =>
+											Boolean(tech),
+										)
+										.map((tech) => (
+											<span
+												key={`${category}-${tech.id}`}
 												className={cn(
-													"mb-1 flex items-center gap-2 font-medium text-xs sm:text-sm",
-													notesInfo.hasIssue ? "text-chart-5" : "text-primary",
+													"inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs",
+													getBadgeColors(category),
 												)}
 											>
-												<InfoIcon className="h-4 w-4 flex-shrink-0" />
-												<span>
-													{notesInfo.hasIssue
-														? "Compatibility Issues / Auto-Adjustments"
-														: "Notes"}
-												</span>
-											</div>
-											<ul
-												className={cn(
-													"list-inside list-disc space-y-1 text-xs",
-													notesInfo.hasIssue
-														? "text-chart-5/90"
-														: "text-primary/90",
-												)}
-											>
-												{notesInfo.notes.map((note, index) => (
-													// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-													<li key={index}>{note}</li>
-												))}
-											</ul>
+												<TechIcon
+													icon={tech.icon}
+													name={tech.name}
+													className={
+														tech.icon.startsWith("/icon/")
+															? "h-3 w-3"
+															: "h-3 w-3 text-xs"
+													}
+												/>
+												{tech.name}
+											</span>
+										));
+								}
+								const tech = options.find((opt) => opt.id === selectedValue);
+
+								if (
+									!tech ||
+									tech.id === "none" ||
+									tech.id === "false" ||
+									((category === "git" ||
+										category === "install" ||
+										category === "auth") &&
+										tech.id === "true")
+								) {
+									return [];
+								}
+
+								return (
+									<span
+										key={`${category}-${tech.id}`}
+										className={cn(
+											"inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs",
+											getBadgeColors(category),
+										)}
+									>
+										<TechIcon
+											icon={tech.icon}
+											name={tech.name}
+											className="h-3 w-3"
+										/>
+										{tech.name}
+									</span>
+								);
+							})}
+						</div>
+					</div>
+				</div>
+
+				<div className="flex flex-grow overflow-hidden">
+					<nav className="hidden w-48 flex-shrink-0 overflow-y-auto border-border border-r p-2 md:flex">
+						<ul className="space-y-1">
+							{CATEGORY_ORDER.map((category) => (
+								<li key={category}>
+									<button
+										type="button"
+										onClick={() => handleSidebarClick(category)}
+										className={cn(
+											"flex w-full items-center justify-between rounded px-2 py-1.5 text-left font-mono text-xs transition-colors",
+											activeCategory === category
+												? "bg-primary/10 text-primary"
+												: "text-muted-foreground hover:bg-muted/50",
+										)}
+									>
+										<span>{getCategoryDisplayName(category)}</span>
+										{compatNotes[category]?.hasIssue && (
+											<span title="Compatibility issue affects this section">
+												<InfoIcon className="h-3 w-3 flex-shrink-0 text-chart-5" />{" "}
+											</span>
+										)}
+									</button>
+								</li>
+							))}
+						</ul>
+					</nav>
+
+					<ScrollArea className="flex-1">
+						<main
+							ref={contentRef}
+							className="flex-grow overflow-y-auto scroll-smooth p-4"
+						>
+							{CATEGORY_ORDER.map((categoryKey) => {
+								const categoryOptions =
+									TECH_OPTIONS[categoryKey as keyof typeof TECH_OPTIONS] || [];
+								const categoryDisplayName = getCategoryDisplayName(categoryKey);
+
+								return (
+									<section
+										ref={(el) => {
+											sectionRefs.current[categoryKey] = el;
+										}}
+										key={categoryKey}
+										id={`section-${categoryKey}`}
+										className="mb-8 scroll-mt-4"
+									>
+										<div className="mb-3 flex items-center border-border border-b pb-2 text-muted-foreground">
+											<Terminal className="mr-2 h-5 w-5 flex-shrink-0" />
+											<h2 className="font-semibold text-base text-foreground">
+												{categoryDisplayName}
+											</h2>
 										</div>
-									)}
 
-									<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-										{categoryOptions.map((tech) => {
-											let isSelected = false;
-											const category = categoryKey as keyof StackState;
+										<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+											{categoryOptions.map((tech) => {
+												let isSelected = false;
+												const category = categoryKey as keyof StackState;
 
-											if (
-												category === "addons" ||
-												category === "examples" ||
-												category === "frontend"
-											) {
-												isSelected = (
-													(stack[category] as string[]) || []
-												).includes(tech.id);
-											} else {
-												isSelected = stack[category] === tech.id;
-											}
+												if (
+													category === "addons" ||
+													category === "examples" ||
+													category === "frontend"
+												) {
+													isSelected = (
+														(stack[category] as string[]) || []
+													).includes(tech.id);
+												} else {
+													isSelected = stack[category] === tech.id;
+												}
 
-											const disabledReason = getDisabledReason(
-												categoryKey as keyof typeof TECH_OPTIONS,
-												tech.id,
-											);
-											const isDisabled = !!disabledReason && !isSelected;
+												const disabledReason = getDisabledReason(
+													categoryKey as keyof typeof TECH_OPTIONS,
+													tech.id,
+												);
+												const isDisabled = !!disabledReason && !isSelected;
 
-											return (
-												<motion.div
-													key={tech.id}
-													className={cn(
-														"relative rounded border p-3 transition-all",
-														isDisabled
-															? "cursor-not-allowed opacity-60"
-															: "cursor-pointer",
-														isSelected
-															? "border-primary bg-primary/10 ring-1 ring-primary"
-															: `border-border ${
-																	!isDisabled
-																		? "hover:border-muted hover:bg-muted"
-																		: ""
-																}`,
-													)}
-													title={
-														isDisabled
-															? (disabledReason ?? "Option disabled")
-															: tech.description
-													}
-													whileHover={!isDisabled ? { scale: 1.02 } : undefined}
-													whileTap={!isDisabled ? { scale: 0.98 } : undefined}
-													onClick={() =>
-														!isDisabled &&
-														handleTechSelect(
-															categoryKey as keyof typeof TECH_OPTIONS,
-															tech.id,
-														)
-													}
-												>
-													<div className="flex items-start">
-														<div className="mt-1 mr-3 flex-shrink-0">
-															{isSelected ? (
-																<CircleCheck className="h-5 w-5 text-primary" />
-															) : (
-																<Circle className="h-5 w-5 text-muted-foreground" />
-															)}
-														</div>
-														<div className="flex-grow">
-															<div className="flex items-center justify-between">
-																<div className="flex items-center">
-																	<TechIcon
-																		icon={tech.icon}
-																		name={tech.name}
-																		className="mr-2 h-5 w-5"
-																	/>
-																	<span
-																		className={cn(
-																			"font-medium text-sm",
-																			isSelected
-																				? "text-primary"
-																				: "text-foreground",
+												return (
+													<Tooltip key={tech.id} delayDuration={100}>
+														<TooltipTrigger asChild>
+															<motion.div
+																className={cn(
+																	"relative rounded border p-3 transition-all",
+																	isDisabled
+																		? "cursor-not-allowed opacity-60"
+																		: "cursor-pointer",
+																	isSelected
+																		? "border-primary bg-primary/10 ring-1 ring-primary"
+																		: `border-border ${
+																				!isDisabled
+																					? "hover:border-muted hover:bg-muted"
+																					: ""
+																			}`,
+																)}
+																whileHover={
+																	!isDisabled ? { scale: 1.02 } : undefined
+																}
+																whileTap={
+																	!isDisabled ? { scale: 0.98 } : undefined
+																}
+																onClick={() =>
+																	!isDisabled &&
+																	handleTechSelect(
+																		categoryKey as keyof typeof TECH_OPTIONS,
+																		tech.id,
+																	)
+																}
+															>
+																<div className="flex items-start">
+																	<div className="mt-1 mr-3 flex-shrink-0">
+																		{isSelected ? (
+																			<CircleCheck className="h-5 w-5 text-primary" />
+																		) : (
+																			<Circle className="h-5 w-5 text-muted-foreground" />
 																		)}
-																	>
-																		{tech.name}
-																	</span>
+																	</div>
+																	<div className="flex-grow">
+																		<div className="flex items-center justify-between">
+																			<div className="flex items-center">
+																				<TechIcon
+																					icon={tech.icon}
+																					name={tech.name}
+																					className="mr-2 h-5 w-5"
+																				/>
+																				<span
+																					className={cn(
+																						"font-medium text-sm",
+																						isSelected
+																							? "text-primary"
+																							: "text-foreground",
+																					)}
+																				>
+																					{tech.name}
+																				</span>
+																			</div>
+																			{isDisabled && (
+																				<InfoIcon className="ml-2 h-4 w-4 flex-shrink-0 text-muted-foreground" />
+																			)}
+																		</div>
+																		<p className="mt-1 text-muted-foreground text-xs">
+																			{tech.description}
+																		</p>
+																	</div>
 																</div>
-															</div>
-															<p className="mt-1 text-muted-foreground text-xs">
-																{tech.description}
-															</p>
-														</div>
-													</div>
-													{tech.default && !isSelected && !isDisabled && (
-														<span className="absolute top-1 right-1 ml-2 flex-shrink-0 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
-															Default
-														</span>
-													)}
-												</motion.div>
-											);
-										})}
-									</div>
-								</section>
-							);
-						})}
-						<div className="h-10" />
-					</main>
-				</ScrollArea>
+																{tech.default && !isSelected && !isDisabled && (
+																	<span className="absolute top-1 right-1 ml-2 flex-shrink-0 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
+																		Default
+																	</span>
+																)}
+															</motion.div>
+														</TooltipTrigger>
+														{isDisabled && disabledReason && (
+															<TooltipContent side="top" align="center">
+																<p>{disabledReason}</p>
+															</TooltipContent>
+														)}
+													</Tooltip>
+												);
+											})}
+										</div>
+									</section>
+								);
+							})}
+							<div className="h-10" />
+						</main>
+					</ScrollArea>
+				</div>
 			</div>
-		</div>
+		</TooltipProvider>
 	);
 };
 

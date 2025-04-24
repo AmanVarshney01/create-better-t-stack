@@ -1,0 +1,45 @@
+<script setup lang="ts">
+import { USeparator } from '#components';
+import ModeToggle from './ModeToggle.vue'
+{{#if auth}}
+import UserMenu from './UserMenu.vue'
+{{/if}}
+
+const links = [
+    { to: "/", label: "Home" },
+    {{#if auth}}
+    { to: "/dashboard", label: "Dashboard" },
+    {{/if}}
+    {{#if (includes examples "todo")}}
+    { to: "/todos", label: "Todos" },
+    {{/if}}
+    {{#if (includes examples "ai")}}
+    { to: "/ai", label: "AI Chat" },
+    {{/if}}
+];
+</script>
+
+<template>
+  <div>
+    <div class="flex flex-row items-center justify-between px-2 py-1">
+      <nav class="flex gap-4 text-lg">
+        <NuxtLink
+          v-for="link in links"
+          :key="link.to"
+          :to="link.to"
+          class="text-foreground hover:text-primary"
+          active-class="text-primary font-semibold"
+        >
+          \{{ link.label }}
+        </NuxtLink>
+      </nav>
+      <div class="flex items-center gap-2">
+        <ModeToggle />
+        {{#if auth}}
+        <UserMenu />
+        {{/if}}
+      </div>
+    </div>
+    <USeparator />
+  </div>
+</template>

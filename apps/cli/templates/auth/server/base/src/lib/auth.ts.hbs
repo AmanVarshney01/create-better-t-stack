@@ -1,6 +1,9 @@
 {{#if (eq orm "prisma")}}
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+{{#if (includes frontend "native")}}
+import { expo } from "@better-auth/expo";
+{{/if}}
 import prisma from "../../prisma";
 
 export const auth = betterAuth({
@@ -9,14 +12,27 @@ export const auth = betterAuth({
     {{#if (eq database "sqlite")}}provider: "sqlite"{{/if}}
     {{#if (eq database "mysql")}}provider: "mysql"{{/if}}
   }),
-  trustedOrigins: [process.env.CORS_ORIGIN || ""],
-  emailAndPassword: { enabled: true }
+  trustedOrigins: [
+    process.env.CORS_ORIGIN || "",{{#if (includes frontend "native")}}
+    "my-better-t-app://",{{/if}}
+  ],
+  emailAndPassword: {
+    enabled: true,
+  }
+
+  {{~#if (includes frontend "native")}}
+  ,
+  plugins: [expo()]
+  {{/if~}}
 });
 {{/if}}
 
 {{#if (eq orm "drizzle")}}
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+{{#if (includes frontend "native")}}
+import { expo } from "@better-auth/expo";
+{{/if}}
 import { db } from "../db";
 import * as schema from "../db/schema/auth";
 
@@ -25,19 +41,42 @@ export const auth = betterAuth({
     {{#if (eq database "postgres")}}provider: "pg",{{/if}}
     {{#if (eq database "sqlite")}}provider: "sqlite",{{/if}}
     {{#if (eq database "mysql")}}provider: "mysql",{{/if}}
-    schema: schema
+    schema: schema,
   }),
-  trustedOrigins: [process.env.CORS_ORIGIN || ""],
-  emailAndPassword: { enabled: true }
+  trustedOrigins: [
+    process.env.CORS_ORIGIN || "",{{#if (includes frontend "native")}}
+    "my-better-t-app://",{{/if}}
+  ],
+  emailAndPassword: {
+    enabled: true,
+  }
+
+  {{~#if (includes frontend "native")}}
+  ,
+  plugins: [expo()]
+  {{/if~}}
 });
 {{/if}}
 
 {{#if (eq orm "none")}}
 import { betterAuth } from "better-auth";
+{{#if (includes frontend "native")}}
+import { expo } from "@better-auth/expo";
+{{/if}}
 
 export const auth = betterAuth({
-  database: "",
-  trustedOrigins: [process.env.CORS_ORIGIN || ""],
-  emailAndPassword: { enabled: true }
+  database: "", // Invalid configuration
+  trustedOrigins: [
+    process.env.CORS_ORIGIN || "",{{#if (includes frontend "native")}}
+    "my-better-t-app://", // Use hardcoded scheme{{/if}}
+  ],
+  emailAndPassword: {
+    enabled: true,
+  }
+
+  {{~#if (includes frontend "native")}}
+  ,
+  plugins: [expo()]
+  {{/if~}}
 });
 {{/if}}

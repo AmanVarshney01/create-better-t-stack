@@ -37,14 +37,22 @@ export function displayPostInstallInstructions(
 		? getNativeInstructions()
 		: "";
 	const pwaInstructions =
-		addons?.includes("pwa") && frontend?.includes("react-router")
+		addons?.includes("pwa") &&
+		(frontend?.includes("react-router") ||
+			frontend?.includes("tanstack-router")) // Exclude Nuxt from PWA instructions
 			? getPwaInstructions()
 			: "";
 	const starlightInstructions = addons?.includes("starlight")
 		? getStarlightInstructions(runCmd)
 		: "";
 	const hasWeb = frontend?.some((f) =>
-		["tanstack-router", "react-router", "next", "tanstack-start"].includes(f),
+		[
+			"tanstack-router",
+			"react-router",
+			"next",
+			"tanstack-start",
+			"nuxt", // Include Nuxt here
+		].includes(f),
 	);
 	const hasNative = frontend?.includes("native");
 	const bunWebNativeWarning =
@@ -57,12 +65,13 @@ export function displayPostInstallInstructions(
 	const hasTanstackRouter = frontend?.includes("tanstack-router");
 	const hasTanstackStart = frontend?.includes("tanstack-start");
 	const hasReactRouter = frontend?.includes("react-router");
+	const hasNuxt = frontend?.includes("nuxt"); // Add Nuxt check
 	const hasWebFrontend =
-		hasTanstackRouter || hasReactRouter || hasTanstackStart;
+		hasTanstackRouter || hasReactRouter || hasTanstackStart || hasNuxt; // Include Nuxt
 	const hasNativeFrontend = frontend?.includes("native");
 	const hasFrontend = hasWebFrontend || hasNativeFrontend;
 
-	const webPort = hasReactRouter ? "5173" : "3001";
+	const webPort = hasReactRouter ? "5173" : "3001"; // Nuxt uses 3001, same as others
 	const tazeCommand = getPackageExecutionCommand(packageManager, "taze -r");
 
 	consola.box(
@@ -93,7 +102,9 @@ ${
 	lintingInstructions ? `\n${lintingInstructions.trim()}` : ""
 }${pwaInstructions ? `\n${pwaInstructions.trim()}` : ""}${
 	starlightInstructions ? `\n${starlightInstructions.trim()}` : ""
-}${noOrmWarning ? `\n${noOrmWarning.trim()}` : ""}${bunWebNativeWarning ? `\n${bunWebNativeWarning.trim()}` : ""}
+}${noOrmWarning ? `\n${noOrmWarning.trim()}` : ""}${
+	bunWebNativeWarning ? `\n${bunWebNativeWarning.trim()}` : ""
+}
 
 ${pc.bold("Update all dependencies:\n")}${pc.cyan(tazeCommand)}
 
@@ -177,9 +188,13 @@ function getStarlightInstructions(runCmd?: string): string {
 }
 
 function getNoOrmWarning(): string {
-	return `\n${pc.yellow("WARNING:")} Database selected without an ORM. Features requiring database access (e.g., examples, auth) need manual setup.\n`;
+	return `\n${pc.yellow(
+		"WARNING:",
+	)} Database selected without an ORM. Features requiring database access (e.g., examples, auth) need manual setup.\n`;
 }
 
 function getBunWebNativeWarning(): string {
-	return `\n${pc.yellow("WARNING:")} 'bun' might cause issues with web + native apps in a monorepo. Use 'pnpm' if problems arise.\n`;
+	return `\n${pc.yellow(
+		"WARNING:",
+	)} 'bun' might cause issues with web + native apps in a monorepo. Use 'pnpm' if problems arise.\n`;
 }

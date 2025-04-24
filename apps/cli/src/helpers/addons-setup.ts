@@ -10,8 +10,9 @@ import type { ProjectConfig } from "../types";
 export async function setupAddons(config: ProjectConfig) {
 	const { projectName, addons, frontend } = config;
 	const projectDir = path.resolve(process.cwd(), projectName);
-	const hasWebFrontend =
+	const hasReactWebFrontend =
 		frontend.includes("react-router") || frontend.includes("tanstack-router");
+	const hasNuxtFrontend = frontend.includes("nuxt");
 
 	if (addons.includes("turborepo")) {
 		await addPackageDependency({
@@ -20,10 +21,10 @@ export async function setupAddons(config: ProjectConfig) {
 		});
 	}
 
-	if (addons.includes("pwa") && hasWebFrontend) {
+	if (addons.includes("pwa") && hasReactWebFrontend) {
 		await setupPwa(projectDir, frontend);
 	}
-	if (addons.includes("tauri") && hasWebFrontend) {
+	if (addons.includes("tauri") && (hasReactWebFrontend || hasNuxtFrontend)) {
 		await setupTauri(config);
 	}
 	if (addons.includes("biome")) {
@@ -89,6 +90,11 @@ async function setupHusky(projectDir: string) {
 }
 
 async function setupPwa(projectDir: string, frontends: ProjectFrontend[]) {
+	const isCompatibleFrontend = frontends.some((f) =>
+		["react-router", "tanstack-router"].includes(f),
+	);
+	if (!isCompatibleFrontend) return;
+
 	const clientPackageDir = getWebAppDir(projectDir, frontends);
 
 	if (!(await fs.pathExists(clientPackageDir))) {

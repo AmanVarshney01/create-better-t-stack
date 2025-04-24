@@ -39,6 +39,8 @@ app.use(
 app.all("/api/auth{/*path}", toNodeHandler(auth));
 {{/if}}
 
+app.use(express.json())
+
 {{#if (eq api "trpc")}}
 app.use(
   "/trpc",

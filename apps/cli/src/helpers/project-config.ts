@@ -3,6 +3,7 @@ import { log } from "@clack/prompts";
 import { $, execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
+import { dependencyVersionMap } from "../constants";
 import type { ProjectConfig } from "../types";
 
 export async function updatePackageConfigurations(

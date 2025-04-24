@@ -22,6 +22,7 @@ export type ProjectFrontend =
 	| "tanstack-router"
 	| "tanstack-start"
 	| "next"
+	| "nuxt"
 	| "native"
 	| "none";
 export type ProjectDBSetup =

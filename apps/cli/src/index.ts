@@ -75,6 +75,7 @@ async function main() {
 					"react-router",
 					"tanstack-start",
 					"next",
+					"nuxt",
 					"native",
 					"none",
 				],
@@ -268,11 +269,12 @@ function processAndValidateFlags(
 					f === "tanstack-router" ||
 					f === "react-router" ||
 					f === "tanstack-start" ||
-					f === "next",
+					f === "next" ||
+					f === "nuxt",
 			);
 			if (webFrontends.length > 1) {
 				consola.fatal(
-					"Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next",
+					"Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, nuxt",
 				);
 				process.exit(1);
 			}
@@ -445,18 +447,20 @@ function processAndValidateFlags(
 	}
 
 	const includesNative = effectiveFrontend?.includes("native");
-	if (includesNative && effectiveApi === "orpc") {
+	const includesNuxt = effectiveFrontend?.includes("nuxt");
+
+	if (includesNuxt && effectiveApi === "trpc") {
 		consola.fatal(
-			`oRPC API is not supported with 'native' frontend. Please use --api trpc or remove 'native' from --frontend.`,
+			`tRPC API is not supported with 'nuxt' frontend. Please use --api orpc or remove 'nuxt' from --frontend.`,
 		);
 		process.exit(1);
 	}
 	if (
-		includesNative &&
-		effectiveApi !== "trpc" &&
-		(!options.api || (options.yes && options.api !== "orpc"))
+		includesNuxt &&
+		effectiveApi !== "orpc" &&
+		(!options.api || (options.yes && options.api !== "trpc"))
 	) {
-		config.api = "trpc";
+		config.api = "orpc";
 	}
 
 	if (config.addons && config.addons.length > 0) {
@@ -465,18 +469,35 @@ function processAndValidateFlags(
 			webSpecificAddons.includes(addon),
 		);
 		const hasCompatibleWebFrontend = effectiveFrontend?.some(
-			(f) => f === "tanstack-router" || f === "react-router",
+			(f) =>
+				f === "tanstack-router" ||
+				f === "react-router" ||
+				(f === "nuxt" &&
+					config.addons?.includes("tauri") &&
+					!config.addons?.includes("pwa")), // Nuxt compatible with Tauri, not PWA
 		);
 
 		if (hasWebSpecificAddons && !hasCompatibleWebFrontend) {
+			let incompatibleAddon = "";
+			if (config.addons.includes("pwa") && includesNuxt) {
+				incompatibleAddon = "PWA addon is not compatible with Nuxt.";
+			} else if (
+				config.addons.includes("pwa") ||
+				config.addons.includes("tauri")
+			) {
+				incompatibleAddon =
+					"PWA and Tauri addons require tanstack-router, react-router, or Nuxt (Tauri only).";
+			}
 			consola.fatal(
-				"PWA and Tauri addons require tanstack-router or react-router. Cannot use these addons with your frontend selection.",
+				`${incompatibleAddon} Cannot use these addons with your frontend selection.`,
 			);
 			process.exit(1);
 		}
 
 		if (config.addons.includes("husky") && !config.addons.includes("biome")) {
-			config.addons.push("biome");
+			consola.warn(
+				"Husky addon is recommended to be used with Biome for lint-staged configuration.",
+			);
 		}
 		config.addons = [...new Set(config.addons)];
 	}
@@ -484,17 +505,24 @@ function processAndValidateFlags(
 	if (config.examples && config.examples.length > 0) {
 		if (config.examples.includes("ai") && effectiveBackend === "elysia") {
 			consola.fatal(
-				"AI example is not compatible with Elysia backend. Cannot use --examples ai with --backend elysia",
+				"The 'ai' example is not compatible with the Elysia backend.",
 			);
 			process.exit(1);
 		}
 
 		const hasWebFrontendForExamples = effectiveFrontend?.some((f) =>
-			["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+			[
+				"tanstack-router",
+				"react-router",
+				"tanstack-start",
+				"next",
+				"nuxt",
+			].includes(f),
 		);
-		if (!hasWebFrontendForExamples) {
+
+		if (config.examples.length > 0 && !hasWebFrontendForExamples) {
 			consola.fatal(
-				"Examples require a web frontend (tanstack-router, react-router, tanstack-start, or next). Cannot use --examples with your frontend selection.",
+				"Examples require a web frontend (tanstack-router, react-router, tanstack-start, next, or nuxt).",
 			);
 			process.exit(1);
 		}
@@ -507,12 +535,8 @@ main().catch((err) => {
 	consola.error("Aborting installation due to unexpected error...");
 	if (err instanceof Error) {
 		consola.error(err.message);
-		console.error(err.stack);
 	} else {
-		consola.error(
-			"An unknown error has occurred. Please open an issue on GitHub with the below:",
-		);
 		console.error(err);
 	}
-	process.exit(1);
+	process.exit(1); // Ensure exit on error
 });

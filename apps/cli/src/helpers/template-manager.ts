@@ -28,17 +28,21 @@ async function processAndCopyFiles(
 		if (relativeSrcPath.endsWith(".hbs")) {
 			relativeDestPath = relativeSrcPath.slice(0, -4);
 		}
+		if (path.basename(relativeSrcPath) === "_gitignore") {
+			relativeDestPath = path.join(path.dirname(relativeSrcPath), ".gitignore");
+		}
 
 		const destPath = path.join(destDir, relativeDestPath);
 
 		await fs.ensureDir(path.dirname(destPath));
 
+		if (!overwrite && (await fs.pathExists(destPath))) {
+			continue;
+		}
+
 		if (srcPath.endsWith(".hbs")) {
 			await processTemplate(srcPath, destPath, context);
 		} else {
-			if (!overwrite && (await fs.pathExists(destPath))) {
-				continue;
-			}
 			await fs.copy(srcPath, destPath, { overwrite: true });
 		}
 	}
@@ -49,62 +53,69 @@ export async function copyBaseTemplate(
 	context: ProjectConfig,
 ): Promise<void> {
 	const templateDir = path.join(PKG_ROOT, "templates/base");
-	await processAndCopyFiles(
-		["package.json", "_gitignore"],
-		templateDir,
-		projectDir,
-		context,
-	);
+	await processAndCopyFiles(["**/*"], templateDir, projectDir, context);
 }
 
 export async function setupFrontendTemplates(
 	projectDir: string,
 	context: ProjectConfig,
 ): Promise<void> {
-	const webFrontends = context.frontend.filter(
-		(f) =>
-			f === "tanstack-router" ||
-			f === "react-router" ||
-			f === "tanstack-start" ||
-			f === "next",
+	const hasReactWeb = context.frontend.some((f) =>
+		["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
 	);
+	const hasNuxtWeb = context.frontend.includes("nuxt");
 	const hasNative = context.frontend.includes("native");
 
-	if (webFrontends.length > 0) {
+	if (hasReactWeb || hasNuxtWeb) {
 		const webAppDir = path.join(projectDir, "apps/web");
 		await fs.ensureDir(webAppDir);
 
-		const webBaseDir = path.join(PKG_ROOT, "templates/frontend/web-base");
-		if (await fs.pathExists(webBaseDir)) {
-			await processAndCopyFiles("**/*", webBaseDir, webAppDir, context);
-		}
-
-		for (const framework of webFrontends) {
-			const frameworkSrcDir = path.join(
+		if (hasReactWeb) {
+			const webBaseDir = path.join(
 				PKG_ROOT,
-				`templates/frontend/${framework}`,
+				"templates/frontend/react/web-base",
 			);
-			if (await fs.pathExists(frameworkSrcDir)) {
-				await processAndCopyFiles("**/*", frameworkSrcDir, webAppDir, context);
+			if (await fs.pathExists(webBaseDir)) {
+				await processAndCopyFiles("**/*", webBaseDir, webAppDir, context);
 			}
-		}
-
-		const webFramework = webFrontends[0];
-
-		const apiWebBaseDir = path.join(
-			PKG_ROOT,
-			`templates/api/${context.api}/web/base`,
-		);
-		if (await fs.pathExists(apiWebBaseDir)) {
-			await processAndCopyFiles("**/*", apiWebBaseDir, webAppDir, context);
-		}
-
-		const apiWebFrameworkDir = path.join(
-			PKG_ROOT,
-			`templates/api/${context.api}/web/${webFramework}`,
-		);
-		if (await fs.pathExists(apiWebFrameworkDir)) {
-			await processAndCopyFiles("**/*", apiWebFrameworkDir, webAppDir, context);
+			const reactFramework = context.frontend.find((f) =>
+				["tanstack-router", "react-router", "tanstack-start", "next"].includes(
+					f,
+				),
+			);
+			if (reactFramework) {
+				const frameworkSrcDir = path.join(
+					PKG_ROOT,
+					`templates/frontend/react/${reactFramework}`,
+				);
+				if (await fs.pathExists(frameworkSrcDir)) {
+					await processAndCopyFiles(
+						"**/*",
+						frameworkSrcDir,
+						webAppDir,
+						context,
+					);
+				}
+				const apiWebBaseDir = path.join(
+					PKG_ROOT,
+					`templates/api/${context.api}/web/react/base`,
+				);
+				if (await fs.pathExists(apiWebBaseDir)) {
+					await processAndCopyFiles("**/*", apiWebBaseDir, webAppDir, context);
+				}
+			}
+		} else if (hasNuxtWeb) {
+			const nuxtBaseDir = path.join(PKG_ROOT, "templates/frontend/nuxt");
+			if (await fs.pathExists(nuxtBaseDir)) {
+				await processAndCopyFiles("**/*", nuxtBaseDir, webAppDir, context);
+			}
+			const apiWebNuxtDir = path.join(
+				PKG_ROOT,
+				`templates/api/${context.api}/web/nuxt`,
+			);
+			if (await fs.pathExists(apiWebNuxtDir)) {
+				await processAndCopyFiles("**/*", apiWebNuxtDir, webAppDir, context);
+			}
 		}
 	}
 
@@ -117,14 +128,32 @@ export async function setupFrontendTemplates(
 			await processAndCopyFiles("**/*", nativeBaseDir, nativeAppDir, context);
 		}
 
-		const apiNativeSrcDir = path.join(
-			PKG_ROOT,
-			`templates/api/${context.api}/native`,
-		);
-
-		if (await fs.pathExists(apiNativeSrcDir)) {
-			await processAndCopyFiles("**/*", apiNativeSrcDir, nativeAppDir, context);
-		} else {
+		if (context.api === "trpc") {
+			const apiNativeSrcDir = path.join(
+				PKG_ROOT,
+				`templates/api/${context.api}/native`,
+			);
+			if (await fs.pathExists(apiNativeSrcDir)) {
+				await processAndCopyFiles(
+					"**/*",
+					apiNativeSrcDir,
+					nativeAppDir,
+					context,
+				);
+			}
+		} else if (context.api === "orpc") {
+			const apiNativeSrcDir = path.join(
+				PKG_ROOT,
+				`templates/api/${context.api}/native`,
+			);
+			if (await fs.pathExists(apiNativeSrcDir)) {
+				await processAndCopyFiles(
+					"**/*",
+					apiNativeSrcDir,
+					nativeAppDir,
+					context,
+				);
+			}
 		}
 	}
 }
@@ -222,13 +251,10 @@ export async function setupAuthTemplate(
 	const webAppDirExists = await fs.pathExists(webAppDir);
 	const nativeAppDirExists = await fs.pathExists(nativeAppDir);
 
-	const webFrontends = context.frontend.filter(
-		(f) =>
-			f === "tanstack-router" ||
-			f === "react-router" ||
-			f === "tanstack-start" ||
-			f === "next",
+	const hasReactWeb = context.frontend.some((f) =>
+		["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
 	);
+	const hasNuxtWeb = context.frontend.includes("nuxt");
 	const hasNative = context.frontend.includes("native");
 
 	if (serverAppDirExists) {
@@ -239,12 +265,6 @@ export async function setupAuthTemplate(
 				authServerBaseSrc,
 				serverAppDir,
 				context,
-			);
-		} else {
-			consola.warn(
-				pc.yellow(
-					`Warning: Base auth server template not found at ${authServerBaseSrc}`,
-				),
 			);
 		}
 
@@ -259,12 +279,6 @@ export async function setupAuthTemplate(
 					authServerNextSrc,
 					serverAppDir,
 					context,
-				);
-			} else {
-				consola.warn(
-					pc.yellow(
-						`Warning: Next auth server template not found at ${authServerNextSrc}`,
-					),
 				);
 			}
 		}
@@ -294,44 +308,40 @@ export async function setupAuthTemplate(
 				);
 			}
 		}
-	} else {
-		consola.warn(
-			pc.yellow(
-				"Warning: apps/server directory does not exist, skipping server-side auth template setup.",
-			),
-		);
 	}
 
-	if (webFrontends.length > 0 && webAppDirExists) {
-		const authWebBaseSrc = path.join(PKG_ROOT, "templates/auth/web/base");
-		if (await fs.pathExists(authWebBaseSrc)) {
-			await processAndCopyFiles("**/*", authWebBaseSrc, webAppDir, context);
-		} else {
-			consola.warn(
-				pc.yellow(
-					`Warning: Base auth web template not found at ${authWebBaseSrc}`,
+	if ((hasReactWeb || hasNuxtWeb) && webAppDirExists) {
+		if (hasReactWeb) {
+			const authWebBaseSrc = path.join(
+				PKG_ROOT,
+				"templates/auth/web/react/base",
+			);
+			if (await fs.pathExists(authWebBaseSrc)) {
+				await processAndCopyFiles("**/*", authWebBaseSrc, webAppDir, context);
+			}
+			const reactFramework = context.frontend.find((f) =>
+				["tanstack-router", "react-router", "tanstack-start", "next"].includes(
+					f,
 				),
 			);
-		}
-
-		for (const framework of webFrontends) {
-			const authWebFrameworkSrc = path.join(
-				PKG_ROOT,
-				`templates/auth/web/${framework}`,
-			);
-			if (await fs.pathExists(authWebFrameworkSrc)) {
-				await processAndCopyFiles(
-					"**/*",
-					authWebFrameworkSrc,
-					webAppDir,
-					context,
+			if (reactFramework) {
+				const authWebFrameworkSrc = path.join(
+					PKG_ROOT,
+					`templates/auth/web/react/${reactFramework}`,
 				);
-			} else {
-				consola.warn(
-					pc.yellow(
-						`Warning: Auth web template for ${framework} not found at ${authWebFrameworkSrc}`,
-					),
-				);
+				if (await fs.pathExists(authWebFrameworkSrc)) {
+					await processAndCopyFiles(
+						"**/*",
+						authWebFrameworkSrc,
+						webAppDir,
+						context,
+					);
+				}
+			}
+		} else if (hasNuxtWeb) {
+			const authWebNuxtSrc = path.join(PKG_ROOT, "templates/auth/web/nuxt");
+			if (await fs.pathExists(authWebNuxtSrc)) {
+				await processAndCopyFiles("**/*", authWebNuxtSrc, webAppDir, context);
 			}
 		}
 	}
@@ -354,50 +364,25 @@ export async function setupAddonsTemplate(
 	projectDir: string,
 	context: ProjectConfig,
 ): Promise<void> {
-	if (context.addons.includes("turborepo")) {
-		const turboSrcDir = path.join(PKG_ROOT, "templates/addons/turborepo");
-		if (await fs.pathExists(turboSrcDir)) {
-			await processAndCopyFiles("**/*", turboSrcDir, projectDir, context);
-		} else {
-			consola.warn(pc.yellow("Warning: Turborepo addon template not found."));
-		}
-	}
+	if (!context.addons || context.addons.length === 0) return;
 
-	if (context.addons.includes("husky")) {
-		const huskySrcDir = path.join(PKG_ROOT, "templates/addons/husky");
-		if (await fs.pathExists(huskySrcDir)) {
-			await processAndCopyFiles("**/*", huskySrcDir, projectDir, context);
-		} else {
-			consola.warn(pc.yellow("Warning: Husky addon template not found."));
-		}
-	}
+	for (const addon of context.addons) {
+		if (addon === "none") continue;
 
-	if (context.addons.includes("biome")) {
-		const biomeSrcDir = path.join(PKG_ROOT, "templates/addons/biome");
-		if (await fs.pathExists(biomeSrcDir)) {
-			await processAndCopyFiles("**/*", biomeSrcDir, projectDir, context);
-		} else {
-			consola.warn(pc.yellow("Warning: Biome addon template not found."));
-		}
-	}
+		let addonSrcDir = path.join(PKG_ROOT, `templates/addons/${addon}`);
+		let addonDestDir = projectDir;
 
-	if (context.addons.includes("pwa")) {
-		const pwaSrcDir = path.join(PKG_ROOT, "templates/addons/pwa/apps/web");
-		const webAppDir = path.join(projectDir, "apps/web");
-		const webAppDirExists = await fs.pathExists(webAppDir);
-
-		if (await fs.pathExists(pwaSrcDir)) {
-			if (webAppDirExists) {
-				await processAndCopyFiles("**/*", pwaSrcDir, webAppDir, context);
-			} else {
-				consola.warn(
-					pc.yellow(
-						"Warning: apps/web directory not found, cannot setup PWA addon template.",
-					),
-				);
+		if (addon === "pwa") {
+			addonSrcDir = path.join(PKG_ROOT, "templates/addons/pwa/apps/web");
+			addonDestDir = path.join(projectDir, "apps/web");
+			if (!(await fs.pathExists(addonDestDir))) {
+				continue;
 			}
+		}
+
+		if (await fs.pathExists(addonSrcDir)) {
+			await processAndCopyFiles("**/*", addonSrcDir, addonDestDir, context);
 		} else {
-			consola.warn(pc.yellow("Warning: PWA addon template not found."));
 		}
 	}
 }
@@ -414,7 +399,14 @@ export async function setupExamplesTemplate(
 	const serverAppDirExists = await fs.pathExists(serverAppDir);
 	const webAppDirExists = await fs.pathExists(webAppDir);
 
+	const hasReactWeb = context.frontend.some((f) =>
+		["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+	);
+	const hasNuxtWeb = context.frontend.includes("nuxt");
+
 	for (const example of context.examples) {
+		if (example === "none") continue;
+
 		const exampleBaseDir = path.join(PKG_ROOT, `templates/examples/${example}`);
 
 		if (serverAppDirExists) {
@@ -456,10 +448,10 @@ export async function setupExamplesTemplate(
 			}
 		}
 
-		if (webAppDirExists) {
-			const exampleWebSrc = path.join(exampleBaseDir, "web");
+		if (hasReactWeb && webAppDirExists) {
+			const exampleWebSrc = path.join(exampleBaseDir, "web/react");
 			if (await fs.pathExists(exampleWebSrc)) {
-				const webFrameworks = context.frontend.filter((f) =>
+				const reactFramework = context.frontend.find((f) =>
 					[
 						"next",
 						"react-router",
@@ -467,8 +459,11 @@ export async function setupExamplesTemplate(
 						"tanstack-start",
 					].includes(f),
 				);
-				for (const framework of webFrameworks) {
-					const exampleWebFrameworkSrc = path.join(exampleWebSrc, framework);
+				if (reactFramework) {
+					const exampleWebFrameworkSrc = path.join(
+						exampleWebSrc,
+						reactFramework,
+					);
 					if (await fs.pathExists(exampleWebFrameworkSrc)) {
 						await processAndCopyFiles(
 							"**/*",
@@ -480,36 +475,27 @@ export async function setupExamplesTemplate(
 					}
 				}
 			}
-		}
-	}
-}
-
-export async function fixGitignoreFiles(
-	projectDir: string,
-	context: ProjectConfig,
-): Promise<void> {
-	const gitignoreFiles = await globby(["**/.gitignore.hbs", "**/_gitignore"], {
-		cwd: projectDir,
-		dot: true,
-		onlyFiles: true,
-		absolute: true,
-		ignore: ["**/node_modules/**", "**/.git/**"],
-	});
-
-	for (const currentPath of gitignoreFiles) {
-		const dir = path.dirname(currentPath);
-		const filename = path.basename(currentPath);
-		const destPath = path.join(dir, ".gitignore");
-
-		try {
-			if (filename === ".gitignore.hbs") {
-				await processTemplate(currentPath, destPath, context);
-				await fs.remove(currentPath);
-			} else if (filename === "_gitignore") {
-				await fs.move(currentPath, destPath, { overwrite: true });
+		} else if (hasNuxtWeb && webAppDirExists) {
+			// Only copy Nuxt examples if the API is oRPC (as tRPC is not supported)
+			if (context.api === "orpc") {
+				const exampleWebNuxtSrc = path.join(exampleBaseDir, "web/nuxt");
+				if (await fs.pathExists(exampleWebNuxtSrc)) {
+					await processAndCopyFiles(
+						"**/*",
+						exampleWebNuxtSrc,
+						webAppDir,
+						context,
+						false,
+					);
+				} else {
+					consola.info(
+						pc.gray(
+							`Skipping Nuxt web template for example '${example}' (template not found).`,
+						),
+					);
+				}
 			}
-		} catch (error) {
-			consola.error(`Error processing gitignore file ${currentPath}:`, error);
+			// If API is tRPC, skip Nuxt examples silently as CLI validation prevents this combo.
 		}
 	}
 }
@@ -518,24 +504,24 @@ export async function handleExtras(
 	projectDir: string,
 	context: ProjectConfig,
 ): Promise<void> {
+	const extrasDir = path.join(PKG_ROOT, "templates/extras");
+
 	if (context.packageManager === "pnpm") {
-		const pnpmWorkspaceSrc = path.join(
-			PKG_ROOT,
-			"templates/extras/pnpm-workspace.yaml",
-		);
+		const pnpmWorkspaceSrc = path.join(extrasDir, "pnpm-workspace.yaml");
 		const pnpmWorkspaceDest = path.join(projectDir, "pnpm-workspace.yaml");
 		if (await fs.pathExists(pnpmWorkspaceSrc)) {
 			await fs.copy(pnpmWorkspaceSrc, pnpmWorkspaceDest);
-		} else {
 		}
 	}
 
-	if (context.frontend.includes("native")) {
-		const npmrcSrc = path.join(PKG_ROOT, "templates/extras/_npmrc");
+	if (
+		context.packageManager === "pnpm" &&
+		(context.frontend.includes("native") || context.frontend.includes("nuxt"))
+	) {
+		const npmrcTemplateSrc = path.join(extrasDir, "_npmrc.hbs");
 		const npmrcDest = path.join(projectDir, ".npmrc");
-		if (await fs.pathExists(npmrcSrc)) {
-			await fs.copy(npmrcSrc, npmrcDest);
-		} else {
+		if (await fs.pathExists(npmrcTemplateSrc)) {
+			await processTemplate(npmrcTemplateSrc, npmrcDest, context);
 		}
 	}
 }

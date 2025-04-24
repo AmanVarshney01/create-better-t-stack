@@ -42,15 +42,19 @@ export async function setupTauri(config: ProjectConfig): Promise<void> {
 		}
 
 		const hasReactRouter = frontend.includes("react-router");
+		const hasNuxt = frontend.includes("nuxt");
+
 		const devUrl = hasReactRouter
 			? "http://localhost:5173"
 			: "http://localhost:3001";
+
+		const frontendDist = hasNuxt ? "../.output/public" : "../dist";
 
 		const tauriArgs = [
 			"init",
 			`--app-name=${path.basename(projectDir)}`,
 			`--window-title=${path.basename(projectDir)}`,
-			"--frontend-dist=../dist",
+			`--frontend-dist=${frontendDist}`,
 			`--dev-url=${devUrl}`,
 			`--before-dev-command=\"${packageManager} run dev\"`,
 			`--before-build-command=\"${packageManager} run build\"`,

@@ -25,8 +25,8 @@ export const DEFAULT_CONFIG: ProjectConfig = {
 };
 
 export const dependencyVersionMap = {
-	"better-auth": "^1.2.6",
-	"@better-auth/expo": "^1.2.6",
+	"better-auth": "^1.2.7",
+	"@better-auth/expo": "^1.2.7",
 
 	"drizzle-orm": "^0.38.4",
 	"drizzle-kit": "^0.30.5",
@@ -74,12 +74,14 @@ export const dependencyVersionMap = {
 
 	ai: "^4.2.8",
 	"@ai-sdk/google": "^1.2.3",
+	"@ai-sdk/vue": "^1.2.8",
 
 	"@prisma/extension-accelerate": "^1.3.0",
 
-	"@orpc/server": "^1.0.3",
-	"@orpc/react-query": "^1.0.3",
-	"@orpc/client": "^1.0.3",
+	"@orpc/server": "^1.1.0",
+	"@orpc/client": "^1.1.0",
+	"@orpc/react-query": "^1.1.0",
+	"@orpc/vue-query": "^1.1.0",
 
 	"@trpc/tanstack-react-query": "^11.0.0",
 	"@trpc/server": "^11.0.0",

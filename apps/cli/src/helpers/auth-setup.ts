@@ -25,11 +25,15 @@ export async function setupAuth(config: ProjectConfig): Promise<void> {
 			projectDir: serverDir,
 		});
 
-		const hasWebFrontend =
-			frontend.includes("react-router") ||
-			frontend.includes("tanstack-router") ||
-			frontend.includes("tanstack-start") ||
-			frontend.includes("next");
+		const hasWebFrontend = frontend.some((f) =>
+			[
+				"react-router",
+				"tanstack-router",
+				"tanstack-start",
+				"next",
+				"nuxt",
+			].includes(f),
+		);
 
 		if (hasWebFrontend && clientDirExists) {
 			await addPackageDependency({

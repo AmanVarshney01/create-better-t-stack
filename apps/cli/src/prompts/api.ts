@@ -9,7 +9,7 @@ export async function getApiChoice(
 ): Promise<ProjectApi> {
 	if (Api) return Api;
 
-	const includesNative = frontend?.includes("native");
+	const includesNuxt = frontend?.includes("nuxt");
 
 	let apiOptions = [
 		{
@@ -24,12 +24,12 @@ export async function getApiChoice(
 		},
 	];
 
-	if (includesNative) {
+	if (includesNuxt) {
 		apiOptions = [
 			{
-				value: "trpc" as const,
-				label: "tRPC",
-				hint: "End-to-end typesafe APIs made easy (Required for Native frontend)",
+				value: "orpc" as const,
+				label: "oRPC",
+				hint: "End-to-end type-safe APIs (Required for Nuxt frontend)",
 			},
 		];
 	}
@@ -37,7 +37,7 @@ export async function getApiChoice(
 	const apiType = await select<ProjectApi>({
 		message: "Select API type",
 		options: apiOptions,
-		initialValue: includesNative ? "trpc" : DEFAULT_CONFIG.api,
+		initialValue: includesNuxt ? "orpc" : DEFAULT_CONFIG.api,
 	});
 
 	if (isCancel(apiType)) {
@@ -45,8 +45,8 @@ export async function getApiChoice(
 		process.exit(0);
 	}
 
-	if (includesNative && apiType !== "trpc") {
-		return "trpc";
+	if (includesNuxt && apiType !== "orpc") {
+		return "orpc";
 	}
 
 	return apiType;

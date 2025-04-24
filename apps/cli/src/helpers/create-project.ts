@@ -17,7 +17,6 @@ import { initializeGit, updatePackageConfigurations } from "./project-config";
 import { setupRuntime } from "./runtime-setup";
 import {
 	copyBaseTemplate,
-	fixGitignoreFiles,
 	handleExtras,
 	setupAddonsTemplate,
 	setupAuthTemplate,
@@ -69,8 +68,6 @@ export async function createProject(options: ProjectConfig): Promise<string> {
 		await createReadme(projectDir, options);
 
 		await initializeGit(projectDir, options.git);
-
-		await fixGitignoreFiles(projectDir, options);
 
 		log.success("Project template successfully scaffolded!");
 

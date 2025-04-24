@@ -51,6 +51,14 @@ export const TECH_OPTIONS = {
 			default: false,
 		},
 		{
+			id: "nuxt",
+			name: "Nuxt",
+			description: "Vue full-stack framework (SSR, SSG, hybrid)",
+			icon: "/icon/nuxt.svg",
+			color: "from-green-400 to-green-700",
+			default: false,
+		},
+		{
 			id: "native",
 			name: "React Native",
 			description: "Expo with NativeWind",

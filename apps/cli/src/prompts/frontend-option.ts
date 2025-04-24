@@ -14,7 +14,7 @@ export async function getFrontendChoice(
 			{
 				value: "web",
 				label: "Web",
-				hint: "React Web Application",
+				hint: "React or Vue Web Application",
 			},
 			{
 				value: "native",
@@ -28,7 +28,8 @@ export async function getFrontendChoice(
 				f === "tanstack-router" ||
 				f === "react-router" ||
 				f === "tanstack-start" ||
-				f === "next",
+				f === "next" ||
+				f === "nuxt",
 		)
 			? ["web"]
 			: [],
@@ -59,6 +60,11 @@ export async function getFrontendChoice(
 					value: "next",
 					label: "Next.js",
 					hint: "The React Framework for the Web",
+				},
+				{
+					value: "nuxt",
+					label: "Nuxt",
+					hint: "The Progressive Web Framework for Vue.js",
 				},
 				{
 					value: "tanstack-start",
