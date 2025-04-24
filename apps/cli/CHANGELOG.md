@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.1.4
+
+### Patch Changes
+
+- 9b685d7: add .cache in native gitignore
+
 ## 2.1.3
 
 ### Patch Changes
