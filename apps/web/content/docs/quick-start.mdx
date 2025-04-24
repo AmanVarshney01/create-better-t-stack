@@ -1,0 +1,117 @@
+---
+title: Quick Start
+---
+
+Check out the app builder [here](/new).
+
+# CLI Command
+
+Insert this command in your terminal to start the setup wizard:
+
+```package-install
+npx create-better-t-stack@latest project-name
+```
+
+# Setup Wizard
+
+The setup wizard will guide you through the process of setting up your project.
+
+<Steps>
+  <Step>
+    ### Project Platform
+
+    Select the platform you want to develop your project for; Web or Native. Web will get you a React or Vue project, Native will set up a React Native/Expo Router project.
+
+  </Step>
+
+  <Step>
+    ### Frontend Framework
+
+    Select the frontend framework you want to work with. There are a couple to choose:
+    - [Tanstack Router](https://tanstack.com/router)
+    - [React Router](https://reactrouter.com)
+    - [Next.js](https://nextjs.org)
+    - [Nuxt](https://nuxt.com)
+    - [Tanstack Start](https://tanstack.com/start) (beta)
+
+  </Step>
+  <Step>
+    ### Backend Framework
+
+    Select the backend framework you want to work with:
+    - [Hono](https://hono.dev)
+    - [Next.js](https://nextjs.org)
+    - [Elysia](https://elysiajs.com)
+    - [Express](https://expressjs.com)
+
+  </Step>
+  <Step>
+    ### Runtime
+
+    For the runtime, you can choose between [Bun](https://bun.sh) and [Node.js](https://nodejs.org).
+
+  </Step>
+  <Step>
+    ### Database
+
+    If you want to hook up a database, select one of the following:
+    - [PostgreSQL](https://www.postgresql.org)
+    - [MySQL](https://www.mysql.com)
+    - [MongoDB](https://www.mongodb.com)
+    - [SQLite](https://www.sqlite.org)
+
+  </Step>
+  <Step>
+    ### ORM
+
+    To query your database and manage schemas type-safe, select between [Drizzle](https://orm.drizzle.team) or[Prisma](https://prisma.io)
+
+  </Step>
+  <Step>
+    ### API type
+
+    To communicate between backend and frontend, select between [tRPC](https://trpc.io) or [oRPC](https://orpc.unnoq.com/)
+
+  </Step>
+  <Step>
+    ### Auth
+
+    Set up auth with [Better Auth](https://better-auth.com) (optional).
+
+  </Step>
+  <Step>
+    ### Addons
+
+    If you want any additional things, this is on the menu:
+
+    - [Turborepo](https://turborepo.com) (Optimize builds for monorepos)
+    - [Starlight](https://starlight.astro.build) (Documentation)
+    - [Biome](https://biomejs.dev) (Code formatter)
+    - [Husky](https://typicode.github.io/husky/) (Git hooks)
+    - PWA (Progressive Web App)
+    - [Tauri](https://tauri.app) (Desktop app)
+
+  </Step>
+  <Step>
+    ### Examples
+
+    Select between the Todo and AI Chat examples.
+
+  </Step>
+  <Step>
+    ### Cloud DB Setup
+
+    If you selected a database, you can choose to set up a cloud database. We offer:
+    - [Turso](https://turso.dev) for SQLite
+    - [Neon](https://neon.tech) for PostgreSQL
+    - [Prisma Postgres](https://www.prisma.io/postgres) for PostgreSQL (Prisma only)
+    - [MongoDB Atlas](https://www.mongodb.com/products/platform/atlas-database) for MongoDB
+
+  </Step>
+  <Step>
+    ### Finish
+
+    Select a package manager and if you want to set up Git and you are good to go!
+
+  </Step>
+</Steps>

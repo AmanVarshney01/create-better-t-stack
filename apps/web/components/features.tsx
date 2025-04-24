@@ -1,13 +1,32 @@
 import { Cards, Card } from "fumadocs-ui/components/card";
-import { Database, Package, Lock, Globe, Server, Cable } from "lucide-react";
+import {
+  Database,
+  Package,
+  Lock,
+  Globe,
+  Server,
+  Cable,
+  Atom,
+  Terminal,
+} from "lucide-react";
 
 export default function Features() {
   return (
     <Cards>
       <Card
-        icon={<Globe />}
-        title='Frontend'
+        icon={<Terminal />}
+        title='Zero Config Setup'
+        description='No need to configure anything with the interactive CLI wizard'
+      />
+      <Card
+        icon={<Atom />}
+        title='Modern Frontend'
         description='Choose between Tanstack Router, React Router, Expo, Next.js, and more'
+      />
+      <Card
+        icon={<Globe />}
+        title='Multi-Platform'
+        description='Better-T Stack supports web, mobile, and desktop'
       />
       <Card
         icon={<Server />}

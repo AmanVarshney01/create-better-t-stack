@@ -1,4 +1,5 @@
 import { defineConfig, defineDocs } from "fumadocs-mdx/config";
+import { remarkInstall } from "fumadocs-docgen";
 
 export const docs = defineDocs({
   dir: "content/docs",
@@ -6,6 +7,6 @@ export const docs = defineDocs({
 
 export default defineConfig({
   mdxOptions: {
-    // MDX options
+    remarkPlugins: [remarkInstall],
   },
 });
