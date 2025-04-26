@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.1.5
+
+### Patch Changes
+
+- 8adf020: add svelte
+
 ## 2.1.4
 
 ### Patch Changes
