@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.2.1
+
+### Patch Changes
+
+- ca0dcda: add svelte post installation hint
+
 ## 2.2.0
 
 ### Minor Changes
