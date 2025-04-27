@@ -281,16 +281,18 @@ export async function setupAuthTemplate(
 	const hasSvelteWeb = context.frontend.includes("svelte");
 	const hasNative = context.frontend.includes("native");
 
-	if (serverAppDirExists) {
+ if (serverAppDirExists) {
 		const authServerBaseSrc = path.join(PKG_ROOT, "templates/auth/server/base");
-		if (await fs.pathExists(authServerBaseSrc)) {
-			await processAndCopyFiles(
+  if(context.backend !== "fastify") {
+   if (await fs.pathExists(authServerBaseSrc)) {
+    await processAndCopyFiles(
 				"**/*",
 				authServerBaseSrc,
 				serverAppDir,
 				context,
 			);
 		}
+ }
 
 		if (context.backend === "next") {
 			const authServerNextSrc = path.join(

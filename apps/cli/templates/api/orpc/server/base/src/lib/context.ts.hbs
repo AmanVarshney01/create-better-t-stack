@@ -94,7 +94,7 @@ session: null,
 {{else if (eq backend 'fastify')}}
 {{#if auth}}
 import { fromNodeHeaders } from "better-auth/node";
-import type { FastifyInstance, FastifyRequest } from "fastify";
+import type { FastifyRequest } from "fastify";
 {{/if}}
 
 export async function createContext(request: FastifyRequest) {

@@ -116,6 +116,9 @@ async function updateServerPackageJson(
 				serverPackageJson.scripts["db:studio"] = "drizzle-kit studio";
 			}
 		}
+  if(options.backend === 'fastify') {
+   serverPackageJson.scripts.dev = "tsx watch src/index.ts";
+  }
 
 		await fs.writeJson(serverPackageJsonPath, serverPackageJson, {
 			spaces: 2,

@@ -24,7 +24,7 @@ export async function setupBackendDependencies(
 		if (runtime === "node") {
 			dependencies.push("@hono/node-server");
 			devDependencies.push("tsx", "@types/node");
-		}
+   }
 	} else if (framework === "elysia") {
 		dependencies.push("elysia", "@elysiajs/cors");
 		if (api === "trpc") {
@@ -40,6 +40,13 @@ export async function setupBackendDependencies(
 
 		if (runtime === "node") {
 			devDependencies.push("tsx", "@types/node");
+		}
+	} else if (framework === "fastify") {
+		dependencies.push("fastify", "fastify-plugin" ,"@fastify/autoload", "@fastify/cors", "@fastify/env", "@fastify/helmet", "close-with-grace","fastify-better-auth" , "@fastify/rate-limit");
+		devDependencies.push( "tsx")
+
+		if (runtime === "node") {
+			devDependencies.push("@types/node");
 		}
 	}
 

@@ -1,0 +1,97 @@
+import type { FastifyInstance, FastifyPluginAsync } from "fastify";
+import FastifyBetterAuth from 'fastify-better-auth';
+import fp from 'fastify-plugin';
+{{#if (eq orm "prisma")}}
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+{{#if (includes frontend "native")}}
+import { expo } from "@better-auth/expo";
+{{/if}}
+import prisma from "../../../prisma";
+
+export const auth = betterAuth({
+database: prismaAdapter(prisma, {
+{{#if (eq database "postgres")}}provider: "postgresql"{{/if}}
+{{#if (eq database "sqlite")}}provider: "sqlite"{{/if}}
+{{#if (eq database "mysql")}}provider: "mysql"{{/if}}
+{{#if (eq database "mongodb")}}provider: "mongodb"{{/if}}
+}),
+trustedOrigins: [
+process.env.CORS_ORIGIN || "",{{#if (includes frontend "native")}}
+"my-better-t-app://",{{/if}}
+],
+emailAndPassword: {
+enabled: true,
+}
+
+{{~#if (includes frontend "native")}}
+,
+plugins: [expo()]
+{{/if~}}
+});
+{{/if}}
+
+
+{{#if (eq orm "drizzle")}}
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+{{#if (includes frontend "native")}}
+import { expo } from "@better-auth/expo";
+{{/if}}
+import { db } from "../db";
+import * as schema from "../db/schema/auth";
+
+export const auth = betterAuth({
+database: drizzleAdapter(db, {
+{{#if (eq database "postgres")}}provider: "pg",{{/if}}
+{{#if (eq database "sqlite")}}provider: "sqlite",{{/if}}
+{{#if (eq database "mysql")}}provider: "mysql",{{/if}}
+schema: schema,
+}),
+trustedOrigins: [
+process.env.CORS_ORIGIN || "",{{#if (includes frontend "native")}}
+"my-better-t-app://",{{/if}}
+],
+emailAndPassword: {
+enabled: true,
+}
+
+{{~#if (includes frontend "native")}}
+,
+plugins: [expo()]
+{{/if~}}
+});
+{{/if}}
+
+
+{{#if (eq orm "none")}}
+import { betterAuth } from "better-auth";
+{{#if (includes frontend "native")}}
+import { expo } from "@better-auth/expo";
+{{/if}}
+
+export const auth = betterAuth({
+database: "", // Invalid configuration
+trustedOrigins: [
+process.env.CORS_ORIGIN || "",{{#if (includes frontend "native")}}
+"my-better-t-app://", // Use hardcoded scheme{{/if}}
+],
+emailAndPassword: {
+enabled: true,
+}
+
+{{~#if (includes frontend "native")}}
+,
+plugins: [expo()]
+{{/if~}}
+});
+{{/if}}
+
+
+async function authPlugin(fastify : FastifyInstance) {
+  await fastify.register(FastifyBetterAuth, { auth });
+}
+
+export default fp(authPlugin, {
+  name: 'auth-plugin',
+});

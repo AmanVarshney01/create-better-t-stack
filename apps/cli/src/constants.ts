@@ -72,6 +72,7 @@ export const dependencyVersionMap = {
  "close-with-grace": "^2.2.0",
  "fastify-better-auth": "^1.0.1",
  "fastify-plugin": "^5.0.1",
+ "@fastify/rate-limit": "^10.2.2",
 
  cors: "^2.8.5",
  express: "^5.1.0",
