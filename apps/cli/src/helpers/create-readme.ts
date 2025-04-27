@@ -39,20 +39,34 @@ function generateReadmeContent(options: ProjectConfig): string {
 	const hasNative = frontend.includes("native");
 	const hasNext = frontend.includes("next");
 	const hasTanstackStart = frontend.includes("tanstack-start");
+	const hasSvelte = frontend.includes("svelte");
+	const hasNuxt = frontend.includes("nuxt");
 
 	const packageManagerRunCmd =
 		packageManager === "npm" ? "npm run" : packageManager;
 
 	let webPort = "3001";
-	if (hasReactRouter) {
+	if (hasReactRouter || hasSvelte) {
 		webPort = "5173";
-	} else if (hasNext) {
-		webPort = "3000";
 	}
 
 	return `# ${projectName}
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines React, ${hasTanstackRouter ? "TanStack Router" : hasReactRouter ? "React Router" : hasNext ? "Next.js" : hasTanstackStart ? "TanStack Start" : ""}, ${backend[0].toUpperCase() + backend.slice(1)}, tRPC, and more.
+This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines React, ${
+		hasTanstackRouter
+			? "TanStack Router"
+			: hasReactRouter
+				? "React Router"
+				: hasNext
+					? "Next.js"
+					: hasTanstackStart
+						? "TanStack Start"
+						: hasSvelte
+							? "SvelteKit"
+							: hasNuxt
+								? "Nuxt"
+								: ""
+	}, ${backend[0].toUpperCase() + backend.slice(1)}, tRPC, and more.
 
 ## Features
 
@@ -75,7 +89,12 @@ ${packageManagerRunCmd} dev
 \`\`\`
 
 ${
-	hasTanstackRouter || hasReactRouter || hasNext || hasTanstackStart
+	hasTanstackRouter ||
+	hasReactRouter ||
+	hasNext ||
+	hasTanstackStart ||
+	hasSvelte ||
+	hasNuxt
 		? `Open [http://localhost:${webPort}](http://localhost:${webPort}) in your browser to see the web application.`
 		: ""
 }
@@ -93,12 +112,53 @@ ${
 \`\`\`
 ${projectName}/
 ├── apps/
-${hasTanstackRouter || hasReactRouter || hasNext || hasTanstackStart ? `│   ├── web/         # Frontend application (${hasTanstackRouter ? "React + TanStack Router" : hasReactRouter ? "React + React Router" : hasNext ? "Next.js" : "React + TanStack Start"})\n` : ""}${hasNative ? "│   ├── native/      # Mobile application (React Native, Expo)\n" : ""}${addons.includes("starlight") ? "│   ├── docs/        # Documentation site (Astro Starlight)\n" : ""}│   └── server/      # Backend API (${backend[0].toUpperCase() + backend.slice(1)}, tRPC)
+${
+	hasTanstackRouter ||
+	hasReactRouter ||
+	hasNext ||
+	hasTanstackStart ||
+	hasSvelte ||
+	hasNuxt
+		? `│   ├── web/         # Frontend application (${
+				hasTanstackRouter
+					? "React + TanStack Router"
+					: hasReactRouter
+						? "React + React Router"
+						: hasNext
+							? "Next.js"
+							: hasTanstackStart
+								? "React + TanStack Start"
+								: hasSvelte
+									? "SvelteKit"
+									: hasNuxt
+										? "Nuxt"
+										: ""
+			})\n`
+		: ""
+}${
+	hasNative
+		? "│   ├── native/      # Mobile application (React Native, Expo)\n"
+		: ""
+}${
+	addons.includes("starlight")
+		? "│   ├── docs/        # Documentation site (Astro Starlight)\n"
+		: ""
+}│   └── server/      # Backend API (${
+		backend[0].toUpperCase() + backend.slice(1)
+	}, tRPC)
 \`\`\`
 
 ## Available Scripts
 
-${generateScriptsList(packageManagerRunCmd, database, orm, auth, hasNative, addons, backend)}
+${generateScriptsList(
+	packageManagerRunCmd,
+	database,
+	orm,
+	auth,
+	hasNative,
+	addons,
+	backend,
+)}
 `;
 }
 
@@ -116,6 +176,8 @@ function generateFeaturesList(
 	const hasNative = frontend.includes("native");
 	const hasNext = frontend.includes("next");
 	const hasTanstackStart = frontend.includes("tanstack-start");
+	const hasSvelte = frontend.includes("svelte");
+	const hasNuxt = frontend.includes("nuxt");
 
 	const addonsList = [
 		"- **TypeScript** - For type safety and improved developer experience",
@@ -133,6 +195,10 @@ function generateFeaturesList(
 		addonsList.push(
 			"- **TanStack Start** - SSR framework with TanStack Router",
 		);
+	} else if (hasSvelte) {
+		addonsList.push("- **SvelteKit** - Web framework for building Svelte apps");
+	} else if (hasNuxt) {
+		addonsList.push("- **Nuxt** - The Intuitive Vue Framework");
 	}
 
 	if (hasNative) {
@@ -162,8 +228,18 @@ function generateFeaturesList(
 
 	if (database !== "none") {
 		addonsList.push(
-			`- **${orm === "drizzle" ? "Drizzle" : "Prisma"}** - TypeScript-first ORM`,
-			`- **${database === "sqlite" ? "SQLite/Turso" : database === "postgres" ? "PostgreSQL" : database === "mysql" ? "MySQL" : "MongoDB"}** - Database engine`,
+			`- **${
+				orm === "drizzle" ? "Drizzle" : "Prisma"
+			}** - TypeScript-first ORM`,
+			`- **${
+				database === "sqlite"
+					? "SQLite/Turso"
+					: database === "postgres"
+						? "PostgreSQL"
+						: database === "mysql"
+							? "MySQL"
+							: "MongoDB"
+			}** - Database engine`,
 		);
 	}
 
@@ -203,7 +279,9 @@ function generateDatabaseSetup(
 	let setup = "## Database Setup\n\n";
 
 	if (database === "sqlite") {
-		setup += `This project uses SQLite${orm === "drizzle" ? " with Drizzle ORM" : " with Prisma"}.
+		setup += `This project uses SQLite${
+			orm === "drizzle" ? " with Drizzle ORM" : " with Prisma"
+		}.
 
 1. Start the local SQLite database:
 \`\`\`bash
@@ -213,13 +291,17 @@ cd apps/server && ${packageManagerRunCmd} db:local
 2. Update your \`.env\` file in the \`apps/server\` directory with the appropriate connection details if needed.
 `;
 	} else if (database === "postgres") {
-		setup += `This project uses PostgreSQL${orm === "drizzle" ? " with Drizzle ORM" : " with Prisma"}.
+		setup += `This project uses PostgreSQL${
+			orm === "drizzle" ? " with Drizzle ORM" : " with Prisma"
+		}.
 
 1. Make sure you have a PostgreSQL database set up.
 2. Update your \`apps/server/.env\` file with your PostgreSQL connection details.
 `;
 	} else if (database === "mysql") {
-		setup += `This project uses MySQL${orm === "drizzle" ? " with Drizzle ORM" : " with Prisma"}.
+		setup += `This project uses MySQL${
+			orm === "drizzle" ? " with Drizzle ORM" : " with Prisma"
+		}.
 
 1. Make sure you have a MySQL database set up.
 2. Update your \`apps/server/.env\` file with your MySQL connection details.

@@ -8,6 +8,7 @@ import CustomizableSection from "./_components/CustomizableSection";
 import Footer from "./_components/Footer";
 import Navbar from "./_components/Navbar";
 import NpmPackage from "./_components/NpmPackage";
+import SponsorsSection from "./_components/SponsorsSection";
 import Testimonials from "./_components/Testimonials";
 
 export default function HomePage() {
@@ -118,10 +119,8 @@ export default function HomePage() {
 						<div className="flex items-center justify-center">
 							<div className="hidden w-1/3 items-center sm:flex">
 								<div className="h-px flex-grow bg-gradient-to-r from-transparent via-primary/30 to-primary/50" />
-
 								<div className="h-2 w-2 rounded-full bg-primary/60" />
 							</div>
-
 							<div className="px-4 sm:px-6">
 								<div
 									className={cn(
@@ -143,14 +142,11 @@ export default function HomePage() {
 									</svg>
 								</div>
 							</div>
-
 							<div className="hidden w-1/3 items-center sm:flex">
 								<div className="h-2 w-2 rounded-full bg-primary/60" />
-
 								<div className="h-px flex-grow bg-gradient-to-l from-transparent via-primary/30 to-primary/50" />
 							</div>
 						</div>
-
 						<div className="mt-6 h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent sm:hidden" />
 					</div>
 				</motion.div>
@@ -163,6 +159,16 @@ export default function HomePage() {
 					variants={sectionVariants}
 				>
 					<Testimonials />
+				</motion.div>
+
+				<motion.div
+					className="w-full"
+					initial="hidden"
+					whileInView="visible"
+					viewport={{ once: true, amount: 0.15 }}
+					variants={sectionVariants}
+				>
+					<SponsorsSection />
 				</motion.div>
 			</main>
 			<Footer />

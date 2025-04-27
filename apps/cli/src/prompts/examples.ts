@@ -22,8 +22,9 @@ export async function getExamplesChoice(
 		frontends?.includes("react-router") ||
 		frontends?.includes("tanstack-router") ||
 		frontends?.includes("tanstack-start") ||
-		frontends?.includes("next") || // Added next
-		frontends?.includes("nuxt"); // Added nuxt
+		frontends?.includes("next") ||
+		frontends?.includes("nuxt") ||
+		frontends?.includes("svelte");
 
 	if (!hasWebFrontend) return [];
 
@@ -36,7 +37,6 @@ export async function getExamplesChoice(
 		},
 	];
 
-	// AI example is available for hono, express, next backends, and Nuxt (if backend is not elysia)
 	if (backend !== "elysia") {
 		options.push({
 			value: "ai" as const,

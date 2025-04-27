@@ -4,6 +4,12 @@ A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with 
 
 ![demo](https://github.com/user-attachments/assets/87f6fffd-750d-43c5-9d00-cefbb644ed92)
 
+## Sponsors
+
+<p align="center">
+<img src="https://cdn.jsdelivr.net/gh/amanvarshney01/sponsors@master/sponsorkit/sponsors.svg" alt="Sponsors" width="300">
+</p>
+
 ## Quick Start
 
 ```bash

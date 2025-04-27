@@ -31,6 +31,9 @@ async function processAndCopyFiles(
 		if (path.basename(relativeSrcPath) === "_gitignore") {
 			relativeDestPath = path.join(path.dirname(relativeSrcPath), ".gitignore");
 		}
+		if (path.basename(relativeSrcPath) === "_npmrc") {
+			relativeDestPath = path.join(path.dirname(relativeSrcPath), ".npmrc");
+		}
 
 		const destPath = path.join(destDir, relativeDestPath);
 
@@ -64,9 +67,10 @@ export async function setupFrontendTemplates(
 		["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
 	);
 	const hasNuxtWeb = context.frontend.includes("nuxt");
+	const hasSvelteWeb = context.frontend.includes("svelte");
 	const hasNative = context.frontend.includes("native");
 
-	if (hasReactWeb || hasNuxtWeb) {
+	if (hasReactWeb || hasNuxtWeb || hasSvelteWeb) {
 		const webAppDir = path.join(projectDir, "apps/web");
 		await fs.ensureDir(webAppDir);
 
@@ -115,6 +119,25 @@ export async function setupFrontendTemplates(
 			);
 			if (await fs.pathExists(apiWebNuxtDir)) {
 				await processAndCopyFiles("**/*", apiWebNuxtDir, webAppDir, context);
+			}
+		} else if (hasSvelteWeb) {
+			const svelteBaseDir = path.join(PKG_ROOT, "templates/frontend/svelte");
+			if (await fs.pathExists(svelteBaseDir)) {
+				await processAndCopyFiles("**/*", svelteBaseDir, webAppDir, context);
+			}
+			if (context.api === "orpc") {
+				const apiWebSvelteDir = path.join(
+					PKG_ROOT,
+					`templates/api/${context.api}/web/svelte`,
+				);
+				if (await fs.pathExists(apiWebSvelteDir)) {
+					await processAndCopyFiles(
+						"**/*",
+						apiWebSvelteDir,
+						webAppDir,
+						context,
+					);
+				}
 			}
 		}
 	}
@@ -255,6 +278,7 @@ export async function setupAuthTemplate(
 		["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
 	);
 	const hasNuxtWeb = context.frontend.includes("nuxt");
+	const hasSvelteWeb = context.frontend.includes("svelte");
 	const hasNative = context.frontend.includes("native");
 
 	if (serverAppDirExists) {
@@ -310,7 +334,7 @@ export async function setupAuthTemplate(
 		}
 	}
 
-	if ((hasReactWeb || hasNuxtWeb) && webAppDirExists) {
+	if ((hasReactWeb || hasNuxtWeb || hasSvelteWeb) && webAppDirExists) {
 		if (hasReactWeb) {
 			const authWebBaseSrc = path.join(
 				PKG_ROOT,
@@ -342,6 +366,21 @@ export async function setupAuthTemplate(
 			const authWebNuxtSrc = path.join(PKG_ROOT, "templates/auth/web/nuxt");
 			if (await fs.pathExists(authWebNuxtSrc)) {
 				await processAndCopyFiles("**/*", authWebNuxtSrc, webAppDir, context);
+			}
+		} else if (hasSvelteWeb) {
+			if (context.api === "orpc") {
+				const authWebSvelteSrc = path.join(
+					PKG_ROOT,
+					"templates/auth/web/svelte",
+				);
+				if (await fs.pathExists(authWebSvelteSrc)) {
+					await processAndCopyFiles(
+						"**/*",
+						authWebSvelteSrc,
+						webAppDir,
+						context,
+					);
+				}
 			}
 		}
 	}
@@ -403,6 +442,7 @@ export async function setupExamplesTemplate(
 		["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
 	);
 	const hasNuxtWeb = context.frontend.includes("nuxt");
+	const hasSvelteWeb = context.frontend.includes("svelte");
 
 	for (const example of context.examples) {
 		if (example === "none") continue;
@@ -476,7 +516,6 @@ export async function setupExamplesTemplate(
 				}
 			}
 		} else if (hasNuxtWeb && webAppDirExists) {
-			// Only copy Nuxt examples if the API is oRPC (as tRPC is not supported)
 			if (context.api === "orpc") {
 				const exampleWebNuxtSrc = path.join(exampleBaseDir, "web/nuxt");
 				if (await fs.pathExists(exampleWebNuxtSrc)) {
@@ -488,14 +527,22 @@ export async function setupExamplesTemplate(
 						false,
 					);
 				} else {
-					consola.info(
-						pc.gray(
-							`Skipping Nuxt web template for example '${example}' (template not found).`,
-						),
-					);
 				}
 			}
-			// If API is tRPC, skip Nuxt examples silently as CLI validation prevents this combo.
+		} else if (hasSvelteWeb && webAppDirExists) {
+			if (context.api === "orpc") {
+				const exampleWebSvelteSrc = path.join(exampleBaseDir, "web/svelte");
+				if (await fs.pathExists(exampleWebSvelteSrc)) {
+					await processAndCopyFiles(
+						"**/*",
+						exampleWebSvelteSrc,
+						webAppDir,
+						context,
+						false,
+					);
+				} else {
+				}
+			}
 		}
 	}
 }

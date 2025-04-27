@@ -77,6 +77,7 @@ async function main() {
 					"next",
 					"nuxt",
 					"native",
+					"svelte",
 					"none",
 				],
 			})
@@ -270,11 +271,12 @@ function processAndValidateFlags(
 					f === "react-router" ||
 					f === "tanstack-start" ||
 					f === "next" ||
-					f === "nuxt",
+					f === "nuxt" ||
+					f === "svelte",
 			);
 			if (webFrontends.length > 1) {
 				consola.fatal(
-					"Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, nuxt",
+					"Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, nuxt, svelte",
 				);
 				process.exit(1);
 			}
@@ -446,17 +448,21 @@ function processAndValidateFlags(
 		}
 	}
 
-	const includesNative = effectiveFrontend?.includes("native");
 	const includesNuxt = effectiveFrontend?.includes("nuxt");
+	const includesSvelte = effectiveFrontend?.includes("svelte");
 
-	if (includesNuxt && effectiveApi === "trpc") {
+	if ((includesNuxt || includesSvelte) && effectiveApi === "trpc") {
 		consola.fatal(
-			`tRPC API is not supported with 'nuxt' frontend. Please use --api orpc or remove 'nuxt' from --frontend.`,
+			`tRPC API is not supported with '${
+				includesNuxt ? "nuxt" : "svelte"
+			}' frontend. Please use --api orpc or remove '${
+				includesNuxt ? "nuxt" : "svelte"
+			}' from --frontend.`,
 		);
 		process.exit(1);
 	}
 	if (
-		includesNuxt &&
+		(includesNuxt || includesSvelte) &&
 		effectiveApi !== "orpc" &&
 		(!options.api || (options.yes && options.api !== "trpc"))
 	) {
@@ -474,7 +480,10 @@ function processAndValidateFlags(
 				f === "react-router" ||
 				(f === "nuxt" &&
 					config.addons?.includes("tauri") &&
-					!config.addons?.includes("pwa")), // Nuxt compatible with Tauri, not PWA
+					!config.addons?.includes("pwa")) ||
+				(f === "svelte" &&
+					config.addons?.includes("tauri") &&
+					!config.addons?.includes("pwa")),
 		);
 
 		if (hasWebSpecificAddons && !hasCompatibleWebFrontend) {
@@ -486,7 +495,7 @@ function processAndValidateFlags(
 				config.addons.includes("tauri")
 			) {
 				incompatibleAddon =
-					"PWA and Tauri addons require tanstack-router, react-router, or Nuxt (Tauri only).";
+					"PWA and Tauri addons require tanstack-router, react-router, or Nuxt/Svelte (Tauri only).";
 			}
 			consola.fatal(
 				`${incompatibleAddon} Cannot use these addons with your frontend selection.`,
@@ -517,12 +526,13 @@ function processAndValidateFlags(
 				"tanstack-start",
 				"next",
 				"nuxt",
+				"svelte",
 			].includes(f),
 		);
 
 		if (config.examples.length > 0 && !hasWebFrontendForExamples) {
 			consola.fatal(
-				"Examples require a web frontend (tanstack-router, react-router, tanstack-start, next, or nuxt).",
+				"Examples require a web frontend (tanstack-router, react-router, tanstack-start, next, nuxt, or svelte).",
 			);
 			process.exit(1);
 		}
@@ -538,5 +548,5 @@ main().catch((err) => {
 	} else {
 		console.error(err);
 	}
-	process.exit(1); // Ensure exit on error
+	process.exit(1);
 });

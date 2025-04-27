@@ -33,7 +33,7 @@ import { motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useQueryStates } from "nuqs";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const validateProjectName = (name: string): string | undefined => {
 	const INVALID_CHARS = ["<", ">", ":", '"', "|", "?", "*"];
@@ -78,45 +78,23 @@ const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
 
 const hasWebFrontend = (frontend: string[]) =>
 	frontend.some((f) =>
-		["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+		[
+			"tanstack-router",
+			"react-router",
+			"tanstack-start",
+			"next",
+			"nuxt",
+			"svelte",
+		].includes(f),
 	);
 
 const hasPWACompatibleFrontend = (frontend: string[]) =>
 	frontend.some((f) => ["tanstack-router", "react-router"].includes(f));
 
 const hasTauriCompatibleFrontend = (frontend: string[]) =>
-	frontend.some((f) => ["tanstack-router", "react-router", "nuxt"].includes(f));
-
-const hasNativeFrontend = (frontend: string[]) => frontend.includes("native");
-
-const TechIcon = ({
-	icon,
-	name,
-	className,
-}: {
-	icon: string;
-	name: string;
-	className?: string;
-}) => {
-	if (icon.startsWith("/icon/")) {
-		return (
-			<Image
-				src={icon}
-				alt={`${name} icon`}
-				width={20}
-				height={20}
-				className={`inline-block ${className || ""}`}
-				unoptimized
-			/>
-		);
-	}
-
-	return (
-		<span className={`inline-flex items-center text-lg ${className || ""}`}>
-			{icon}
-		</span>
+	frontend.some((f) =>
+		["tanstack-router", "react-router", "nuxt", "svelte"].includes(f),
 	);
-};
 
 const getBadgeColors = (category: string): string => {
 	switch (category) {
@@ -150,6 +128,319 @@ const getBadgeColors = (category: string): string => {
 	}
 };
 
+const TechIcon = ({
+	icon,
+	name,
+	className,
+}: {
+	icon: string;
+	name: string;
+	className?: string;
+}) => {
+	if (icon.startsWith("/icon/")) {
+		return (
+			<Image
+				src={icon}
+				alt={`${name} icon`}
+				width={20}
+				height={20}
+				className={`inline-block ${className || ""}`}
+				unoptimized
+			/>
+		);
+	}
+
+	return (
+		<span className={`inline-flex items-center text-lg ${className || ""}`}>
+			{icon}
+		</span>
+	);
+};
+
+const getCategoryDisplayName = (categoryKey: string): string => {
+	const result = categoryKey.replace(/([A-Z])/g, " $1");
+	return result.charAt(0).toUpperCase() + result.slice(1);
+};
+
+interface CompatibilityResult {
+	adjustedStack: StackState | null;
+	notes: Record<string, { notes: string[]; hasIssue: boolean }>;
+}
+
+const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
+	const nextStack = { ...stack };
+	let changed = false;
+	const notes: CompatibilityResult["notes"] = {};
+	for (const cat of CATEGORY_ORDER) {
+		notes[cat] = { notes: [], hasIssue: false };
+	}
+
+	const isWeb = hasWebFrontend(nextStack.frontend);
+	const isPWACompat = hasPWACompatibleFrontend(nextStack.frontend);
+	const isTauriCompat = hasTauriCompatibleFrontend(nextStack.frontend);
+	const isNuxt = nextStack.frontend.includes("nuxt");
+	const isSvelte = nextStack.frontend.includes("svelte");
+
+	if (nextStack.database === "none") {
+		if (nextStack.orm !== "none") {
+			notes.database.notes.push(
+				"Database 'None' selected: ORM will be set to 'None'.",
+			);
+			notes.orm.notes.push(
+				"ORM requires a database. It will be set to 'None'.",
+			);
+			notes.database.hasIssue = true;
+			notes.orm.hasIssue = true;
+			nextStack.orm = "none";
+			changed = true;
+		}
+		if (nextStack.auth === "true") {
+			notes.database.notes.push(
+				"Database 'None' selected: Auth will be disabled.",
+			);
+			notes.auth.notes.push(
+				"Authentication requires a database. It will be disabled.",
+			);
+			notes.database.hasIssue = true;
+			notes.auth.hasIssue = true;
+			nextStack.auth = "false";
+			changed = true;
+		}
+		if (nextStack.dbSetup !== "none") {
+			notes.database.notes.push(
+				"Database 'None' selected: DB Setup will be set to 'Basic'.",
+			);
+			notes.dbSetup.notes.push(
+				"DB Setup requires a database. It will be set to 'Basic Setup'.",
+			);
+			notes.database.hasIssue = true;
+			notes.dbSetup.hasIssue = true;
+			nextStack.dbSetup = "none";
+			changed = true;
+		}
+	} else if (nextStack.database === "mongodb") {
+		if (nextStack.orm !== "prisma") {
+			notes.database.notes.push(
+				"MongoDB requires Prisma ORM. It will be selected.",
+			);
+			notes.orm.notes.push("MongoDB requires Prisma ORM. It will be selected.");
+			notes.database.hasIssue = true;
+			notes.orm.hasIssue = true;
+			nextStack.orm = "prisma";
+			changed = true;
+		}
+	}
+
+	if (nextStack.dbSetup === "turso") {
+		if (nextStack.database !== "sqlite") {
+			notes.dbSetup.notes.push("Turso requires SQLite. It will be selected.");
+			notes.database.notes.push(
+				"Turso DB setup requires SQLite. It will be selected.",
+			);
+			notes.dbSetup.hasIssue = true;
+			notes.database.hasIssue = true;
+			nextStack.database = "sqlite";
+			changed = true;
+		}
+		if (nextStack.orm !== "drizzle") {
+			notes.dbSetup.notes.push(
+				"Turso requires Drizzle ORM. It will be selected.",
+			);
+			notes.orm.notes.push(
+				"Turso DB setup requires Drizzle ORM. It will be selected.",
+			);
+			notes.dbSetup.hasIssue = true;
+			notes.orm.hasIssue = true;
+			nextStack.orm = "drizzle";
+			changed = true;
+		}
+	} else if (nextStack.dbSetup === "prisma-postgres") {
+		if (nextStack.database !== "postgres") {
+			notes.dbSetup.notes.push("Requires PostgreSQL. It will be selected.");
+			notes.database.notes.push(
+				"Prisma PostgreSQL setup requires PostgreSQL. It will be selected.",
+			);
+			notes.dbSetup.hasIssue = true;
+			notes.database.hasIssue = true;
+			nextStack.database = "postgres";
+			changed = true;
+		}
+		if (nextStack.orm !== "prisma") {
+			notes.dbSetup.notes.push("Requires Prisma ORM. It will be selected.");
+			notes.orm.notes.push(
+				"Prisma PostgreSQL setup requires Prisma ORM. It will be selected.",
+			);
+			notes.dbSetup.hasIssue = true;
+			notes.orm.hasIssue = true;
+			nextStack.orm = "prisma";
+			changed = true;
+		}
+	} else if (nextStack.dbSetup === "mongodb-atlas") {
+		if (nextStack.database !== "mongodb") {
+			notes.dbSetup.notes.push("Requires MongoDB. It will be selected.");
+			notes.database.notes.push(
+				"MongoDB Atlas setup requires MongoDB. It will be selected.",
+			);
+			notes.dbSetup.hasIssue = true;
+			notes.database.hasIssue = true;
+			nextStack.database = "mongodb";
+			changed = true;
+		}
+		if (nextStack.orm !== "prisma") {
+			notes.dbSetup.notes.push("Requires Prisma ORM. It will be selected.");
+			notes.orm.notes.push(
+				"MongoDB Atlas setup requires Prisma ORM. It will be selected.",
+			);
+			notes.dbSetup.hasIssue = true;
+			notes.orm.hasIssue = true;
+			nextStack.orm = "prisma";
+			changed = true;
+		}
+	} else if (nextStack.dbSetup === "neon") {
+		if (nextStack.database !== "postgres") {
+			notes.dbSetup.notes.push(
+				"Neon requires PostgreSQL. It will be selected.",
+			);
+			notes.database.notes.push(
+				"Neon DB setup requires PostgreSQL. It will be selected.",
+			);
+			notes.dbSetup.hasIssue = true;
+			notes.database.hasIssue = true;
+			nextStack.database = "postgres";
+			changed = true;
+		}
+	}
+
+	if ((isNuxt || isSvelte) && nextStack.api === "trpc") {
+		const frontendName = isNuxt ? "Nuxt" : "Svelte";
+		notes.api.notes.push(
+			`${frontendName} requires oRPC. It will be selected automatically.`,
+		);
+		notes.frontend.notes.push(
+			`Selected ${frontendName}: API will be set to oRPC.`,
+		);
+		notes.api.hasIssue = true;
+		notes.frontend.hasIssue = true;
+		nextStack.api = "orpc";
+		changed = true;
+	}
+
+	const incompatibleAddons: string[] = [];
+	if (!isPWACompat && nextStack.addons.includes("pwa")) {
+		incompatibleAddons.push("pwa");
+		notes.frontend.notes.push(
+			"PWA addon requires TanStack or React Router. Addon will be removed.",
+		);
+		notes.addons.notes.push(
+			"PWA requires TanStack/React Router. It will be removed.",
+		);
+		notes.frontend.hasIssue = true;
+		notes.addons.hasIssue = true;
+	}
+	if (!isTauriCompat && nextStack.addons.includes("tauri")) {
+		incompatibleAddons.push("tauri");
+		notes.frontend.notes.push(
+			"Tauri addon requires TanStack Router, React Router, or Nuxt. Addon will be removed.",
+		);
+		notes.addons.notes.push(
+			"Tauri requires TanStack/React Router/Nuxt. It will be removed.",
+		);
+		notes.frontend.hasIssue = true;
+		notes.addons.hasIssue = true;
+	}
+
+	const originalAddonsLength = nextStack.addons.length;
+	if (incompatibleAddons.length > 0) {
+		nextStack.addons = nextStack.addons.filter(
+			(addon) => !incompatibleAddons.includes(addon),
+		);
+		if (nextStack.addons.length !== originalAddonsLength) changed = true;
+	}
+
+	if (
+		nextStack.addons.includes("husky") &&
+		!nextStack.addons.includes("biome")
+	) {
+		notes.addons.notes.push(
+			"Husky automatically enables Biome. It will be added.",
+		);
+		notes.addons.hasIssue = true;
+		nextStack.addons.push("biome");
+		nextStack.addons = [...new Set(nextStack.addons)];
+		changed = true;
+	}
+
+	const incompatibleExamples: string[] = [];
+	if (!isWeb) {
+		if (nextStack.examples.includes("todo")) incompatibleExamples.push("todo");
+		if (nextStack.examples.includes("ai")) incompatibleExamples.push("ai");
+	}
+	if (nextStack.database === "none" && nextStack.examples.includes("todo")) {
+		incompatibleExamples.push("todo");
+	}
+	if (
+		nextStack.backendFramework === "elysia" &&
+		nextStack.examples.includes("ai")
+	) {
+		incompatibleExamples.push("ai");
+	}
+
+	const uniqueIncompatibleExamples = [...new Set(incompatibleExamples)];
+	if (uniqueIncompatibleExamples.length > 0) {
+		if (
+			!isWeb &&
+			(uniqueIncompatibleExamples.includes("todo") ||
+				uniqueIncompatibleExamples.includes("ai"))
+		) {
+			notes.frontend.notes.push(
+				"Examples require a web frontend. Incompatible examples will be removed.",
+			);
+			notes.examples.notes.push(
+				"Requires a web frontend. Incompatible examples will be removed.",
+			);
+			notes.frontend.hasIssue = true;
+			notes.examples.hasIssue = true;
+		}
+		if (
+			nextStack.database === "none" &&
+			uniqueIncompatibleExamples.includes("todo")
+		) {
+			notes.database.notes.push(
+				"Todo example requires a database. It will be removed.",
+			);
+			notes.examples.notes.push(
+				"Todo example requires a database. It will be removed.",
+			);
+			notes.database.hasIssue = true;
+			notes.examples.hasIssue = true;
+		}
+		if (
+			nextStack.backendFramework === "elysia" &&
+			uniqueIncompatibleExamples.includes("ai")
+		) {
+			notes.backendFramework.notes.push(
+				"AI example is not compatible with Elysia. It will be removed.",
+			);
+			notes.examples.notes.push(
+				"AI example is not compatible with Elysia. It will be removed.",
+			);
+			notes.backendFramework.hasIssue = true;
+			notes.examples.hasIssue = true;
+		}
+
+		const originalExamplesLength = nextStack.examples.length;
+		nextStack.examples = nextStack.examples.filter(
+			(ex) => !uniqueIncompatibleExamples.includes(ex),
+		);
+		if (nextStack.examples.length !== originalExamplesLength) changed = true;
+	}
+
+	return {
+		adjustedStack: changed ? nextStack : null,
+		notes,
+	};
+};
+
 const StackArchitect = () => {
 	const [stack, setStack] = useQueryStates(
 		stackParsers,
@@ -158,9 +449,6 @@ const StackArchitect = () => {
 
 	const [command, setCommand] = useState("");
 	const [copied, setCopied] = useState(false);
-	const [compatNotes, setCompatNotes] = useState<
-		Record<string, { notes: string[]; hasIssue: boolean }>
-	>({});
 	const [projectNameError, setProjectNameError] = useState<string | undefined>(
 		undefined,
 	);
@@ -174,22 +462,15 @@ const StackArchitect = () => {
 	const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 	const contentRef = useRef<HTMLDivElement>(null);
 
-	const currentHasWebFrontend = useMemo(
-		() => hasWebFrontend(stack.frontend),
-		[stack.frontend],
+	const currentHasWebFrontend = hasWebFrontend(stack.frontend);
+	const currentHasPWACompatibleFrontend = hasPWACompatibleFrontend(
+		stack.frontend,
 	);
-	const currentHasPWACompatibleFrontend = useMemo(
-		() => hasPWACompatibleFrontend(stack.frontend),
-		[stack.frontend],
+	const currentHasTauriCompatibleFrontend = hasTauriCompatibleFrontend(
+		stack.frontend,
 	);
-	const currentHasTauriCompatibleFrontend = useMemo(
-		() => hasTauriCompatibleFrontend(stack.frontend),
-		[stack.frontend],
-	);
-	const currentHasNativeFrontend = useMemo(
-		() => hasNativeFrontend(stack.frontend),
-		[stack.frontend],
-	);
+
+	const compatibilityAnalysis = analyzeStackCompatibility(stack);
 
 	useEffect(() => {
 		const savedStack = localStorage.getItem("betterTStackPreference");
@@ -204,126 +485,13 @@ const StackArchitect = () => {
 		}
 	}, []);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
-		const calculateAdjustedStack = (
-			currentStack: StackState,
-		): StackState | null => {
-			const nextStack = { ...currentStack };
-			let changed = false;
-
-			const isWeb = hasWebFrontend(nextStack.frontend);
-			const isPWACompat = hasPWACompatibleFrontend(nextStack.frontend);
-			const isTauriCompat = hasTauriCompatibleFrontend(nextStack.frontend);
-			const isNuxt = nextStack.frontend.includes("nuxt");
-
-			if (nextStack.database === "none") {
-				if (nextStack.orm !== "none") {
-					nextStack.orm = "none";
-					changed = true;
-				}
-				if (nextStack.auth === "true") {
-					nextStack.auth = "false";
-					changed = true;
-				}
-				if (nextStack.dbSetup !== "none") {
-					nextStack.dbSetup = "none";
-					changed = true;
-				}
-			}
-			if (nextStack.database === "mongodb" && nextStack.orm !== "prisma") {
-				nextStack.orm = "prisma";
-				changed = true;
-			}
-			if (nextStack.dbSetup === "turso") {
-				if (nextStack.database !== "sqlite") {
-					nextStack.database = "sqlite";
-					changed = true;
-				}
-				if (nextStack.orm !== "drizzle") {
-					nextStack.orm = "drizzle";
-					changed = true;
-				}
-			}
-			if (nextStack.dbSetup === "prisma-postgres") {
-				if (nextStack.database !== "postgres") {
-					nextStack.database = "postgres";
-					changed = true;
-				}
-				if (nextStack.orm !== "prisma") {
-					nextStack.orm = "prisma";
-					changed = true;
-				}
-			}
-			if (nextStack.dbSetup === "mongodb-atlas") {
-				if (nextStack.database !== "mongodb") {
-					nextStack.database = "mongodb";
-					changed = true;
-				}
-				if (nextStack.orm !== "prisma") {
-					nextStack.orm = "prisma";
-					changed = true;
-				}
-			}
-			if (nextStack.dbSetup === "neon" && nextStack.database !== "postgres") {
-				nextStack.database = "postgres";
-				changed = true;
-			}
-
-			if (isNuxt && nextStack.api === "trpc") {
-				nextStack.api = "orpc";
-				changed = true;
-			}
-
-			const incompatibleAddons: string[] = [];
-			if (!isPWACompat) incompatibleAddons.push("pwa");
-			if (!isTauriCompat) incompatibleAddons.push("tauri");
-			const originalAddonsLength = nextStack.addons.length;
-			nextStack.addons = nextStack.addons.filter(
-				(addon) => !incompatibleAddons.includes(addon),
-			);
-			if (nextStack.addons.length !== originalAddonsLength) changed = true;
-			if (
-				nextStack.addons.includes("husky") &&
-				!nextStack.addons.includes("biome")
-			) {
-				nextStack.addons.push("biome");
-				nextStack.addons = [...new Set(nextStack.addons)];
-				changed = true;
-			}
-
-			const incompatibleExamples: string[] = [];
-			if (!isWeb) incompatibleExamples.push("todo", "ai");
-			if (nextStack.database === "none") incompatibleExamples.push("todo");
-			if (nextStack.backendFramework === "elysia")
-				incompatibleExamples.push("ai");
-			const originalExamplesLength = nextStack.examples.length;
-			nextStack.examples = nextStack.examples.filter(
-				(ex) => !incompatibleExamples.includes(ex),
-			);
-			if (nextStack.examples.length !== originalExamplesLength) changed = true;
-
-			return changed ? nextStack : null;
-		};
-
-		const adjustedStack = calculateAdjustedStack(stack);
-		if (adjustedStack) {
-			setStack(adjustedStack);
+		if (compatibilityAnalysis.adjustedStack) {
+			setStack(compatibilityAnalysis.adjustedStack);
 		}
-	}, [
-		stack.database,
-		stack.orm,
-		stack.auth,
-		stack.dbSetup,
-		stack.frontend,
-		stack.api,
-		stack.addons,
-		stack.examples,
-		stack.backendFramework,
-		setStack,
-	]);
+	}, [compatibilityAnalysis.adjustedStack, setStack]);
 
-	const generateCommand = useCallback((stackState: StackState) => {
+	const generateCommand = (stackState: StackState) => {
 		let base: string;
 		switch (stackState.packageManager) {
 			case "npm":
@@ -371,19 +539,17 @@ const StackArchitect = () => {
 			flags.push(`--database ${stackState.database}`);
 		}
 
-		if (stackState.database === "none") {
-			flags.push("--orm none");
-		} else if (!isDefault("orm", stackState.orm)) {
+		if (stackState.orm !== stackParsers.orm.defaultValue) {
 			flags.push(`--orm ${stackState.orm}`);
 		}
 
-		if (!isDefault("auth", stackState.auth)) {
+		if (stackState.auth !== stackParsers.auth.defaultValue) {
 			if (stackState.auth === "false") {
 				flags.push("--no-auth");
 			}
 		}
 
-		if (!isDefault("dbSetup", stackState.dbSetup)) {
+		if (stackState.dbSetup !== stackParsers.dbSetup.defaultValue) {
 			flags.push(`--db-setup ${stackState.dbSetup}`);
 		}
 
@@ -395,7 +561,7 @@ const StackArchitect = () => {
 			flags.push(`--runtime ${stackState.runtime}`);
 		}
 
-		if (!isDefault("api", stackState.api)) {
+		if (stackState.api !== stackParsers.api.defaultValue) {
 			flags.push(`--api ${stackState.api}`);
 		}
 
@@ -418,225 +584,65 @@ const StackArchitect = () => {
 		if (!isDefault("addons", stackState.addons)) {
 			if (stackState.addons.length > 0) {
 				flags.push(`--addons ${stackState.addons.join(" ")}`);
+			} else {
 			}
 		}
 
 		if (!isDefault("examples", stackState.examples)) {
 			if (stackState.examples.length > 0) {
 				flags.push(`--examples ${stackState.examples.join(" ")}`);
+			} else {
 			}
 		}
 
 		return `${base} ${projectName}${
 			flags.length > 0 ? ` ${flags.join(" ")}` : ""
 		}`;
-	}, []);
+	};
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		const cmd = generateCommand(stack);
 		setCommand(cmd);
+		// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+	}, [stack, generateCommand]);
 
-		const notes: Record<string, { notes: string[]; hasIssue: boolean }> = {};
-		for (const cat of CATEGORY_ORDER) {
-			notes[cat] = { notes: [], hasIssue: false };
-		}
+	useEffect(() => {
+		setProjectNameError(validateProjectName(stack.projectName || ""));
+	}, [stack.projectName]);
 
-		const isWeb = currentHasWebFrontend;
-		const isPWACompat = currentHasPWACompatibleFrontend;
-		const isTauriCompat = currentHasTauriCompatibleFrontend;
-		const isNuxt = stack.frontend.includes("nuxt");
+	const handleTechSelect = (
+		category: keyof typeof TECH_OPTIONS,
+		techId: string,
+	) => {
+		setStack((currentStack) => {
+			const catKey = category as keyof StackState;
+			const update: Partial<StackState> = {};
+			const currentValue = currentStack[catKey];
 
-		if (!isPWACompat && stack.addons.includes("pwa")) {
-			notes.frontend.notes.push("PWA addon requires TanStack or React Router.");
-			notes.frontend.hasIssue = true;
-			notes.addons.hasIssue = true;
-		}
-		if (!isTauriCompat && stack.addons.includes("tauri")) {
-			notes.frontend.notes.push(
-				"Tauri addon requires TanStack Router, React Router, or Nuxt.",
-			);
-			notes.frontend.hasIssue = true;
-			notes.addons.hasIssue = true;
-		}
-
-		if (!isWeb && stack.examples.length > 0) {
-			notes.frontend.notes.push("Examples require a web frontend.");
-			notes.frontend.hasIssue = true;
-			notes.examples.hasIssue = true;
-		}
-
-		if (isNuxt && stack.api === "trpc") {
-			notes.api.notes.push(
-				"Nuxt requires oRPC. It will be selected automatically.",
-			);
-			notes.api.hasIssue = true;
-			notes.frontend.hasIssue = true;
-		}
-
-		if (stack.database === "mongodb" && stack.orm !== "prisma") {
-			notes.database.notes.push(
-				"MongoDB requires Prisma ORM. It will be selected automatically.",
-			);
-			notes.database.hasIssue = true;
-			notes.orm.hasIssue = true;
-		}
-		if (stack.database === "none") {
-			if (stack.orm !== "none") notes.database.hasIssue = true;
-			if (stack.auth === "true") notes.database.hasIssue = true;
-			if (stack.dbSetup !== "none") notes.database.hasIssue = true;
-			if (stack.examples.includes("todo")) notes.database.hasIssue = true;
-		}
-
-		if (stack.database === "none" && stack.orm !== "none") {
-			notes.orm.notes.push(
-				"ORM requires a database. It will be set to 'None'.",
-			);
-			notes.orm.hasIssue = true;
-		}
-		if (stack.database === "mongodb" && stack.orm !== "prisma") {
-			notes.orm.notes.push("MongoDB requires Prisma ORM. It will be selected.");
-			notes.orm.hasIssue = true;
-		}
-		if (stack.dbSetup === "turso" && stack.orm !== "drizzle") {
-			notes.orm.notes.push(
-				"Turso DB setup requires Drizzle ORM. It will be selected.",
-			);
-			notes.orm.hasIssue = true;
-		}
-		if (stack.dbSetup === "prisma-postgres" && stack.orm !== "prisma") {
-			notes.orm.notes.push(
-				"Prisma PostgreSQL setup requires Prisma ORM. It will be selected.",
-			);
-			notes.orm.hasIssue = true;
-		}
-		if (stack.dbSetup === "mongodb-atlas" && stack.orm !== "prisma") {
-			notes.orm.notes.push(
-				"MongoDB Atlas setup requires Prisma ORM. It will be selected.",
-			);
-			notes.orm.hasIssue = true;
-		}
-
-		if (stack.database === "none" && stack.dbSetup !== "none") {
-			notes.dbSetup.notes.push(
-				"DB Setup requires a database. It will be set to 'Basic Setup'.",
-			);
-			notes.dbSetup.hasIssue = true;
-		} else if (stack.dbSetup !== "none") {
-			const db = stack.database;
-			const orm = stack.orm;
-			if (stack.dbSetup === "turso" && (db !== "sqlite" || orm !== "drizzle")) {
-				notes.dbSetup.notes.push(
-					"Turso requires SQLite & Drizzle. They will be selected.",
-				);
-				notes.dbSetup.hasIssue = true;
-				if (db !== "sqlite") notes.database.hasIssue = true;
-				if (orm !== "drizzle") notes.orm.hasIssue = true;
-			} else if (
-				stack.dbSetup === "prisma-postgres" &&
-				(db !== "postgres" || orm !== "prisma")
+			if (
+				catKey === "frontend" ||
+				catKey === "addons" ||
+				catKey === "examples"
 			) {
-				notes.dbSetup.notes.push(
-					"Requires PostgreSQL & Prisma. They will be selected.",
-				);
-				notes.dbSetup.hasIssue = true;
-				if (db !== "postgres") notes.database.hasIssue = true;
-				if (orm !== "prisma") notes.orm.hasIssue = true;
-			} else if (
-				stack.dbSetup === "mongodb-atlas" &&
-				(db !== "mongodb" || orm !== "prisma")
-			) {
-				notes.dbSetup.notes.push(
-					"Requires MongoDB & Prisma. They will be selected.",
-				);
-				notes.dbSetup.hasIssue = true;
-				if (db !== "mongodb") notes.database.hasIssue = true;
-				if (orm !== "prisma") notes.orm.hasIssue = true;
-			} else if (stack.dbSetup === "neon" && db !== "postgres") {
-				notes.dbSetup.notes.push(
-					"Neon requires PostgreSQL. It will be selected.",
-				);
-				notes.dbSetup.hasIssue = true;
-				if (db !== "postgres") notes.database.hasIssue = true;
-			}
-		}
-
-		if (stack.database === "none" && stack.auth === "true") {
-			notes.auth.notes.push(
-				"Authentication requires a database. It will be disabled.",
-			);
-			notes.auth.hasIssue = true;
-		}
-
-		if (
-			!isPWACompat &&
-			stack.addons.some((a) => ["pwa", "tauri"].includes(a))
-		) {
-			notes.addons.notes.push(
-				"PWA/Tauri require TanStack/React Router. They will be removed.",
-			);
-			notes.addons.hasIssue = true;
-		}
-		if (stack.addons.includes("husky") && !stack.addons.includes("biome")) {
-			notes.addons.notes.push(
-				"Husky automatically enables Biome. It will be added.",
-			);
-		}
-
-		if (!isWeb && stack.examples.length > 0) {
-			notes.examples.notes.push(
-				"Examples require a web frontend. They will be removed.",
-			);
-			notes.examples.hasIssue = true;
-		}
-		if (stack.database === "none" && stack.examples.includes("todo")) {
-			notes.examples.notes.push(
-				"Todo example requires a database. It will be removed.",
-			);
-			notes.examples.hasIssue = true;
-		}
-		if (stack.backendFramework === "elysia" && stack.examples.includes("ai")) {
-			notes.examples.notes.push(
-				"AI example is not compatible with Elysia. It will be removed.",
-			);
-			notes.examples.hasIssue = true;
-			notes.backendFramework.hasIssue = true;
-		}
-
-		setCompatNotes(notes);
-	}, [
-		stack,
-		generateCommand,
-		currentHasWebFrontend,
-		currentHasPWACompatibleFrontend,
-		currentHasTauriCompatibleFrontend,
-		currentHasNativeFrontend,
-	]);
-
-	const handleTechSelect = useCallback(
-		(category: keyof typeof TECH_OPTIONS, techId: string) => {
-			setStack((currentStack) => {
-				const catKey = category as keyof StackState;
-				const update: Partial<StackState> = {};
+				const currentArray = [...(currentValue as string[])];
+				let nextArray = [...currentArray];
+				const isSelected = currentArray.includes(techId);
 
 				if (catKey === "frontend") {
-					const currentArray = [...(currentStack[catKey] as string[])];
-					let nextArray = [...currentArray];
-					const isSelected = currentArray.includes(techId);
-
 					const webTypes = [
 						"tanstack-router",
 						"react-router",
 						"tanstack-start",
 						"next",
 						"nuxt",
+						"svelte",
 					];
-
 					if (techId === "none") {
 						nextArray = ["none"];
 					} else if (isSelected) {
-						nextArray = nextArray.filter((id) => id !== techId);
-						if (nextArray.length === 0) {
+						if (currentArray.length > 1) {
+							nextArray = nextArray.filter((id) => id !== techId);
+						} else {
 							return {};
 						}
 					} else {
@@ -646,172 +652,185 @@ const StackArchitect = () => {
 						}
 						nextArray.push(techId);
 					}
-
-					const selectedWeb = nextArray.filter((id) => webTypes.includes(id));
-					if (selectedWeb.length > 1) {
-						nextArray = nextArray.filter((id) => !webTypes.includes(id));
-						nextArray.push(techId);
-					}
-
-					if (
-						JSON.stringify([...new Set(nextArray)].sort()) !==
-						JSON.stringify(currentArray.sort())
-					) {
-						update[catKey] = [...new Set(nextArray)];
-					}
-				} else if (catKey === "addons" || catKey === "examples") {
-					const currentArray = [...(currentStack[catKey] as string[])];
-					let nextArray = [...currentArray];
-					const isSelected = currentArray.includes(techId);
+				} else {
 					if (isSelected) {
 						nextArray = nextArray.filter((id) => id !== techId);
 					} else {
 						nextArray.push(techId);
 					}
+				}
+
+				const uniqueNext = [...new Set(nextArray)].sort();
+				if (
+					JSON.stringify(uniqueNext) !==
+					JSON.stringify([...new Set(currentArray)].sort())
+				) {
+					update[catKey] = uniqueNext;
+				}
+			} else {
+				if (currentValue !== techId) {
+					const techOption = TECH_OPTIONS[category]?.find(
+						(opt) => opt.id === techId,
+					);
+					const isBooleanLike =
+						category === "auth" || category === "git" || category === "install";
 					if (
-						JSON.stringify([...new Set(nextArray)].sort()) !==
-						JSON.stringify(currentArray.sort())
+						currentValue === techId &&
+						techId !== "none" &&
+						!isBooleanLike &&
+						techOption?.id !== "none"
 					) {
-						update[catKey] = [...new Set(nextArray)];
+						return {};
 					}
+					update[catKey] = techId;
 				} else {
-					if (currentStack[catKey] !== techId) {
-						update[catKey] = techId;
+					if (
+						(category === "git" ||
+							category === "install" ||
+							category === "auth") &&
+						techId === "false"
+					) {
+						update[catKey] = "true";
+					} else {
+						return {};
 					}
 				}
+			}
 
-				return update;
-			});
-		},
-		[setStack],
-	);
+			return Object.keys(update).length > 0 ? update : {};
+		});
+	};
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
-	const getDisabledReason = useCallback(
-		(category: keyof typeof TECH_OPTIONS, techId: string): string | null => {
-			const catKey = category as keyof StackState;
+	const getDisabledReason = (
+		category: keyof typeof TECH_OPTIONS,
+		techId: string,
+	): string | null => {
+		const catKey = category as keyof StackState;
 
+		if (catKey === "api") {
 			if (
-				catKey === "frontend" &&
-				Array.isArray(stack[catKey]) &&
-				(stack[catKey] as string[]).length === 1 &&
-				(stack[catKey] as string[])[0] === techId &&
+				techId === "trpc" &&
+				(stack.frontend.includes("nuxt") || stack.frontend.includes("svelte"))
+			) {
+				return `tRPC is not supported with ${
+					stack.frontend.includes("nuxt") ? "Nuxt" : "Svelte"
+				}. Use oRPC instead.`;
+			}
+		}
+
+		if (catKey === "orm") {
+			if (stack.database === "none")
+				return "Select a database to enable ORM options.";
+			if (
+				stack.database === "mongodb" &&
+				techId !== "prisma" &&
 				techId !== "none"
-			) {
-				return "At least one frontend option must be selected.";
-			}
-
+			)
+				return "MongoDB requires the Prisma ORM.";
 			if (
-				!(
-					catKey === "frontend" ||
-					catKey === "addons" ||
-					catKey === "examples"
-				) &&
-				stack[catKey] === techId
-			) {
-				if (techId !== "none" && techId !== "false") {
-					return "This option is currently selected.";
-				}
+				stack.dbSetup === "turso" &&
+				techId !== "drizzle" &&
+				techId !== "none"
+			)
+				return "Turso DB setup requires the Drizzle ORM.";
+			if (
+				stack.dbSetup === "prisma-postgres" &&
+				techId !== "prisma" &&
+				techId !== "none"
+			)
+				return "Prisma PostgreSQL setup requires Prisma ORM.";
+			if (
+				stack.dbSetup === "mongodb-atlas" &&
+				techId !== "prisma" &&
+				techId !== "none"
+			)
+				return "MongoDB Atlas setup requires Prisma ORM.";
+
+			if (techId === "none" && stack.database === "mongodb")
+				return "MongoDB requires Prisma ORM.";
+			if (techId === "none" && stack.dbSetup === "turso")
+				return "Turso DB setup requires Drizzle ORM.";
+			if (
+				techId === "none" &&
+				(stack.dbSetup === "prisma-postgres" ||
+					stack.dbSetup === "mongodb-atlas")
+			)
+				return "This DB setup requires Prisma ORM.";
+		}
+
+		if (catKey === "dbSetup" && techId !== "none") {
+			if (stack.database === "none")
+				return "Select a database before choosing a cloud setup.";
+
+			if (techId === "turso") {
+				if (stack.database !== "sqlite" && stack.database !== "none")
+					return "Turso requires SQLite database.";
+				if (stack.orm !== "drizzle" && stack.orm !== "none")
+					return "Turso requires Drizzle ORM.";
+			} else if (techId === "prisma-postgres") {
+				if (stack.database !== "postgres" && stack.database !== "none")
+					return "Requires PostgreSQL database.";
+				if (stack.orm !== "prisma" && stack.orm !== "none")
+					return "Requires Prisma ORM.";
+			} else if (techId === "mongodb-atlas") {
+				if (stack.database !== "mongodb" && stack.database !== "none")
+					return "Requires MongoDB database.";
+				if (stack.orm !== "prisma" && stack.orm !== "none")
+					return "Requires Prisma ORM.";
+			} else if (techId === "neon") {
+				if (stack.database !== "postgres" && stack.database !== "none")
+					return "Requires PostgreSQL database.";
 			}
+		}
 
-			if (catKey === "api") {
-				if (techId === "trpc" && stack.frontend.includes("nuxt")) {
-					return "tRPC is not supported with Nuxt. Use oRPC instead.";
-				}
+		if (catKey === "auth" && techId === "true" && stack.database === "none") {
+			return "Authentication requires a database.";
+		}
+
+		if (catKey === "addons") {
+			if (techId === "pwa" && !currentHasPWACompatibleFrontend) {
+				return "Requires TanStack Router or React Router frontend.";
 			}
-
-			if (catKey === "orm") {
-				if (stack.database === "none")
-					return "Select a database to enable ORM options.";
-				if (stack.database === "mongodb" && techId === "drizzle")
-					return "MongoDB requires the Prisma ORM.";
-				if (stack.dbSetup === "turso" && techId === "prisma")
-					return "Turso DB setup requires the Drizzle ORM.";
-				if (techId === "none" && stack.database === "mongodb")
-					return "MongoDB requires Prisma ORM.";
+			if (techId === "tauri" && !currentHasTauriCompatibleFrontend) {
+				return "Requires TanStack Router, React Router, or Nuxt frontend.";
 			}
+		}
 
-			if (catKey === "dbSetup" && techId !== "none") {
-				if (stack.database === "none")
-					return "Select a database before choosing a cloud setup.";
-
-				if (techId === "turso") {
-					if (stack.database !== "sqlite")
-						return "Turso requires SQLite database.";
-					if (stack.orm === "prisma") return "Turso requires Drizzle ORM.";
-				} else if (techId === "prisma-postgres") {
-					if (stack.database !== "postgres")
-						return "Requires PostgreSQL database.";
-					if (stack.orm !== "prisma") return "Requires Prisma ORM.";
-				} else if (techId === "mongodb-atlas") {
-					if (stack.database !== "mongodb") return "Requires MongoDB database.";
-					if (stack.orm !== "prisma") return "Requires Prisma ORM.";
-				} else if (techId === "neon") {
-					if (stack.database !== "postgres")
-						return "Requires PostgreSQL database.";
-				}
+		if (catKey === "examples") {
+			if ((techId === "todo" || techId === "ai") && !currentHasWebFrontend) {
+				return "Requires a web frontend (TanStack Router, React Router, etc.).";
 			}
-
-			if (catKey === "auth" && techId === "true" && stack.database === "none") {
-				return "Authentication requires a database.";
+			if (techId === "todo" && stack.database === "none") {
+				return "Todo example requires a database.";
 			}
-
-			if (catKey === "addons") {
-				if (techId === "pwa" && !currentHasPWACompatibleFrontend) {
-					return "Requires TanStack Router or React Router frontend.";
-				}
-				if (techId === "tauri" && !currentHasTauriCompatibleFrontend) {
-					return "Requires TanStack Router, React Router, or Nuxt frontend.";
-				}
+			if (techId === "ai" && stack.backendFramework === "elysia") {
+				return "AI example is not compatible with Elysia backend.";
 			}
+		}
 
-			if (catKey === "examples") {
-				if ((techId === "todo" || techId === "ai") && !currentHasWebFrontend) {
-					return "Requires a web frontend (TanStack Router, React Router, etc.).";
-				}
-				if (techId === "todo" && stack.database === "none") {
-					return "Todo example requires a database.";
-				}
-				if (techId === "ai" && stack.backendFramework === "elysia") {
-					return "AI example is not compatible with Elysia backend.";
-				}
-			}
+		return null;
+	};
 
-			return null;
-		},
-		[
-			stack,
-			currentHasNativeFrontend,
-			currentHasPWACompatibleFrontend,
-			currentHasTauriCompatibleFrontend,
-			currentHasWebFrontend,
-		],
-	);
-
-	const copyToClipboard = useCallback(() => {
+	const copyToClipboard = () => {
 		navigator.clipboard.writeText(command);
 		setCopied(true);
 		setTimeout(() => setCopied(false), 2000);
-	}, [command]);
+	};
 
-	const resetStack = useCallback(() => {
+	const resetStack = () => {
 		setStack(DEFAULT_STACK);
 		setShowHelp(false);
 		setShowPresets(false);
 		setActiveCategory(CATEGORY_ORDER[0]);
 		contentRef.current?.scrollTo(0, 0);
-	}, [setStack]);
+	};
 
-	useEffect(() => {
-		setProjectNameError(validateProjectName(stack.projectName || ""));
-	}, [stack.projectName]);
-
-	const saveCurrentStack = useCallback(() => {
+	const saveCurrentStack = () => {
 		localStorage.setItem("betterTStackPreference", JSON.stringify(stack));
 		setLastSavedStack(stack);
-	}, [stack]);
+	};
 
-	const loadSavedStack = useCallback(() => {
+	const loadSavedStack = () => {
 		if (lastSavedStack) {
 			setStack(lastSavedStack);
 			setShowHelp(false);
@@ -819,35 +838,36 @@ const StackArchitect = () => {
 			setActiveCategory(CATEGORY_ORDER[0]);
 			contentRef.current?.scrollTo(0, 0);
 		}
-	}, [lastSavedStack, setStack]);
+	};
 
-	const applyPreset = useCallback(
-		(presetId: string) => {
-			const preset = PRESET_TEMPLATES.find(
-				(template) => template.id === presetId,
-			);
-			if (preset) {
-				setStack(preset.stack);
-				setShowPresets(false);
-				setShowHelp(false);
-				setActiveCategory(CATEGORY_ORDER[0]);
-				contentRef.current?.scrollTo(0, 0);
-			}
-		},
-		[setStack],
-	);
+	const applyPreset = (presetId: string) => {
+		const preset = PRESET_TEMPLATES.find(
+			(template) => template.id === presetId,
+		);
+		if (preset) {
+			setStack(preset.stack);
+			setShowPresets(false);
+			setShowHelp(false);
+			setActiveCategory(CATEGORY_ORDER[0]);
+			contentRef.current?.scrollTo(0, 0);
+		}
+	};
 
 	const handleSidebarClick = (category: string) => {
 		setActiveCategory(category);
 		const element = sectionRefs.current[category];
-		if (element) {
-			element.scrollIntoView({ behavior: "smooth", block: "start" });
-		}
-	};
+		if (element && contentRef.current) {
+			const containerTop = contentRef.current.getBoundingClientRect().top;
+			const elementTop = element.getBoundingClientRect().top;
+			const scrollTop = contentRef.current.scrollTop;
+			const offset = 16;
+			const targetScrollTop = scrollTop + elementTop - containerTop - offset;
 
-	const getCategoryDisplayName = (categoryKey: string): string => {
-		const result = categoryKey.replace(/([A-Z])/g, " $1");
-		return result.charAt(0).toUpperCase() + result.slice(1);
+			contentRef.current.scrollTo({
+				top: targetScrollTop,
+				behavior: "smooth",
+			});
+		}
 	};
 
 	return (
@@ -1154,7 +1174,7 @@ const StackArchitect = () => {
 										)}
 									>
 										<span>{getCategoryDisplayName(category)}</span>
-										{compatNotes[category]?.hasIssue && (
+										{compatibilityAnalysis.notes[category]?.hasIssue && (
 											<span title="Compatibility issue affects this section">
 												<InfoIcon className="h-3 w-3 flex-shrink-0 text-chart-5" />{" "}
 											</span>
@@ -1165,11 +1185,8 @@ const StackArchitect = () => {
 						</ul>
 					</nav>
 
-					<ScrollArea className="flex-1">
-						<main
-							ref={contentRef}
-							className="flex-grow overflow-y-auto scroll-smooth p-4"
-						>
+					<ScrollArea ref={contentRef} className="flex-1 scroll-smooth">
+						<main className="flex-grow p-4">
 							{CATEGORY_ORDER.map((categoryKey) => {
 								const categoryOptions =
 									TECH_OPTIONS[categoryKey as keyof typeof TECH_OPTIONS] || [];
@@ -1189,6 +1206,23 @@ const StackArchitect = () => {
 											<h2 className="font-semibold text-base text-foreground">
 												{categoryDisplayName}
 											</h2>
+											{compatibilityAnalysis.notes[categoryKey]?.notes.length >
+												0 && (
+												<Tooltip delayDuration={100}>
+													<TooltipTrigger asChild>
+														<InfoIcon className="ml-2 h-4 w-4 flex-shrink-0 cursor-help text-muted-foreground" />
+													</TooltipTrigger>
+													<TooltipContent side="top" align="start">
+														<ul className="list-disc space-y-1 pl-4 text-xs">
+															{compatibilityAnalysis.notes[
+																categoryKey
+															].notes.map((note) => (
+																<li key={note}>{note}</li>
+															))}
+														</ul>
+													</TooltipContent>
+												</Tooltip>
+											)}
 										</div>
 
 										<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -1212,6 +1246,7 @@ const StackArchitect = () => {
 													categoryKey as keyof typeof TECH_OPTIONS,
 													tech.id,
 												);
+
 												const isDisabled = !!disabledReason && !isSelected;
 
 												return (

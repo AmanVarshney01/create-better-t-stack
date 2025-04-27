@@ -32,6 +32,7 @@ export async function setupAuth(config: ProjectConfig): Promise<void> {
 				"tanstack-start",
 				"next",
 				"nuxt",
+				"svelte",
 			].includes(f),
 		);
 

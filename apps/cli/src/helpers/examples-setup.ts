@@ -14,11 +14,14 @@ export async function setupExamples(config: ProjectConfig): Promise<void> {
 		const clientDirExists = await fs.pathExists(clientDir);
 
 		const hasNuxt = frontend.includes("nuxt");
+		const hasSvelte = frontend.includes("svelte");
 
 		if (clientDirExists) {
 			const dependencies: AvailableDependencies[] = ["ai"];
 			if (hasNuxt) {
 				dependencies.push("@ai-sdk/vue");
+			} else if (hasSvelte) {
+				dependencies.push("@ai-sdk/svelte");
 			}
 			await addPackageDependency({
 				dependencies,

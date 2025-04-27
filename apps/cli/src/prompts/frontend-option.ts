@@ -14,7 +14,7 @@ export async function getFrontendChoice(
 			{
 				value: "web",
 				label: "Web",
-				hint: "React or Vue Web Application",
+				hint: "React, Vue or Svelte Web Application",
 			},
 			{
 				value: "native",
@@ -29,7 +29,8 @@ export async function getFrontendChoice(
 				f === "react-router" ||
 				f === "tanstack-start" ||
 				f === "next" ||
-				f === "nuxt",
+				f === "nuxt" ||
+				f === "svelte",
 		)
 			? ["web"]
 			: [],
@@ -67,6 +68,11 @@ export async function getFrontendChoice(
 					hint: "The Progressive Web Framework for Vue.js",
 				},
 				{
+					value: "svelte",
+					label: "Svelte",
+					hint: "web development for the rest of us",
+				},
+				{
 					value: "tanstack-start",
 					label: "TanStack Start (beta)",
 					hint: "SSR, Server Functions, API Routes and more with TanStack Router",
@@ -78,7 +84,9 @@ export async function getFrontendChoice(
 						f === "tanstack-router" ||
 						f === "react-router" ||
 						f === "tanstack-start" ||
-						f === "next",
+						f === "next" ||
+						f === "nuxt" ||
+						f === "svelte",
 				) || "tanstack-router",
 		});
 

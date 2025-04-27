@@ -1,0 +1,31 @@
+import { PUBLIC_SERVER_URL } from "$env/static/public";
+import { createORPCClient } from "@orpc/client";
+import { RPCLink } from "@orpc/client/fetch";
+import type { RouterClient } from "@orpc/server";
+import { createORPCSvelteQueryUtils } from "@orpc/svelte-query";
+import { QueryCache, QueryClient } from "@tanstack/svelte-query";
+import type { appRouter } from "../../../server/src/routers/index";
+
+export const queryClient = new QueryClient({
+	queryCache: new QueryCache({
+		onError: (error) => {
+			console.error(`Error: ${error.message}`);
+		},
+	}),
+});
+
+export const link = new RPCLink({
+	url: `${PUBLIC_SERVER_URL}/rpc`,
+	{{#if auth}}
+	fetch(url, options) {
+		return fetch(url, {
+			...options,
+			credentials: "include",
+		});
+	},
+	{{/if}}
+});
+
+export const client: RouterClient<typeof appRouter> = createORPCClient(link);
+
+export const orpc = createORPCSvelteQueryUtils(client);

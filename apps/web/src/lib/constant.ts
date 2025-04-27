@@ -59,6 +59,14 @@ export const TECH_OPTIONS = {
 			default: false,
 		},
 		{
+			id: "svelte",
+			name: "Svelte",
+			description: "Cybernetically enhanced web apps",
+			icon: "/icon/svelte.svg",
+			color: "from-orange-500 to-orange-700",
+			default: false,
+		},
+		{
 			id: "native",
 			name: "React Native",
 			description: "Expo with NativeWind",

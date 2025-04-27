@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { Tweet } from "react-tweet";
 
 const TWEET_IDS = [
@@ -38,175 +38,192 @@ const TWEET_IDS = [
 	"1906570888897777847",
 ];
 
+const MAX_VISIBLE_PAGES = 5;
+
 export default function Testimonials() {
 	const [startIndex, setStartIndex] = useState(0);
-	const [tweetsPerPage, setTweetsPerPage] = useState(1);
+	const [tweetsPerPage] = useState(6); // Show 6 tweets per page
 
-	useEffect(() => {
-		const handleResize = () => {
-			if (window.innerWidth >= 1280) {
-				setTweetsPerPage(6);
-			} else if (window.innerWidth >= 768) {
-				setTweetsPerPage(4);
-			} else if (window.innerWidth >= 640) {
-				setTweetsPerPage(2);
-			} else {
-				setTweetsPerPage(1);
-			}
-		};
-
-		handleResize();
-		window.addEventListener("resize", handleResize);
-		return () => window.removeEventListener("resize", handleResize);
-	}, []);
-
-	const getVisibleTweets = () => {
-		const visible = [];
-		for (let i = 0; i < tweetsPerPage; i++) {
-			const index = (startIndex + i) % TWEET_IDS.length;
-			visible.push(index);
-		}
-		return visible;
-	};
+	const totalPages = useMemo(
+		() => Math.ceil(TWEET_IDS.length / tweetsPerPage),
+		[tweetsPerPage],
+	);
+	const currentPage = useMemo(
+		() => Math.floor(startIndex / tweetsPerPage) + 1,
+		[startIndex, tweetsPerPage],
+	);
 
 	const handleNext = () => {
-		setStartIndex((prev) => (prev + tweetsPerPage) % TWEET_IDS.length);
+		setStartIndex((prev) =>
+			Math.min(prev + tweetsPerPage, (totalPages - 1) * tweetsPerPage),
+		);
 	};
 
 	const handlePrev = () => {
-		setStartIndex((prev) => {
-			const newIndex = prev - tweetsPerPage;
-			return newIndex < 0 ? TWEET_IDS.length + newIndex : newIndex;
-		});
+		setStartIndex((prev) => Math.max(0, prev - tweetsPerPage));
 	};
 
-	const visibleTweets = getVisibleTweets();
-	const totalPages = Math.ceil(TWEET_IDS.length / tweetsPerPage);
-	const currentPage = Math.floor(startIndex / tweetsPerPage) + 1;
+	const goToPage = (pageNumber: number) => {
+		setStartIndex((pageNumber - 1) * tweetsPerPage);
+	};
+
+	const visibleTweetIndices = useMemo(() => {
+		const end = Math.min(startIndex + tweetsPerPage, TWEET_IDS.length);
+		return Array.from({ length: end - startIndex }, (_, i) => startIndex + i);
+	}, [startIndex, tweetsPerPage]);
+
+	const paginationDots = useMemo(() => {
+		if (totalPages <= MAX_VISIBLE_PAGES) {
+			return Array.from({ length: totalPages }, (_, i) => i + 1);
+		}
+
+		const startPage = Math.max(
+			1,
+			Math.min(
+				currentPage - Math.floor(MAX_VISIBLE_PAGES / 2),
+				totalPages - MAX_VISIBLE_PAGES + 1,
+			),
+		);
+		const endPage = Math.min(totalPages, startPage + MAX_VISIBLE_PAGES - 1);
+
+		const pages: (number | string)[] = [];
+		if (startPage > 1) {
+			pages.push(1);
+			if (startPage > 2) pages.push("...");
+		}
+		for (let i = startPage; i <= endPage; i++) {
+			pages.push(i);
+		}
+		if (endPage < totalPages) {
+			if (endPage < totalPages - 1) pages.push("...");
+			pages.push(totalPages);
+		}
+		return pages;
+	}, [totalPages, currentPage]);
+
+	const sectionVariants = {
+		hidden: { opacity: 0, y: 30 },
+		visible: {
+			opacity: 1,
+			y: 0,
+			transition: { duration: 0.6, ease: "easeOut" },
+		},
+	};
+
+	const gridVariants = {
+		hidden: { opacity: 0 },
+		visible: {
+			opacity: 1,
+			transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+		},
+	};
 
 	return (
-		<section className="relative z-10 mx-auto mt-12 w-full max-w-7xl space-y-8 px-4 sm:mt-20 sm:space-y-16 sm:px-6">
-			<div className="relative space-y-4 text-center sm:space-y-8">
-				<motion.div
-					initial={{ opacity: 0, y: 20 }}
-					whileInView={{ opacity: 1, y: 0 }}
-					viewport={{ once: true, margin: "-100px" }}
-					transition={{ duration: 0.5 }}
-					className="relative"
-				>
-					<h2 className="font-bold font-mono text-xl tracking-tight sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl">
-						<span className="border-primary border-b-2 pb-1 text-foreground dark:text-primary">
-							Developer Feedback
-						</span>
-					</h2>
-				</motion.div>
-
-				<motion.p
-					initial={{ opacity: 0, y: 15 }}
-					whileInView={{ opacity: 1, y: 0 }}
-					viewport={{ once: true, margin: "-100px" }}
-					transition={{ duration: 0.5, delay: 0.2 }}
-					className="mx-auto max-w-3xl font-mono text-base text-muted-foreground leading-relaxed sm:text-lg md:text-xl"
-				>
-					what devs are saying about Better-T-Stack
-				</motion.p>
+		<motion.section
+			className="relative z-10 mx-auto w-full max-w-7xl space-y-12 px-4 py-16 sm:px-6 sm:py-24 lg:space-y-16 lg:px-8"
+			initial="hidden"
+			whileInView="visible"
+			viewport={{ once: true, amount: 0.2 }}
+			variants={sectionVariants}
+		>
+			<div className="text-center">
+				<h2 className="font-bold font-mono text-3xl text-foreground tracking-tight sm:text-4xl lg:text-5xl">
+					Loved by <span className="text-primary">Developers</span>
+				</h2>
+				<p className="mx-auto mt-4 max-w-2xl font-mono text-lg text-muted-foreground leading-relaxed">
+					See what people are saying about Better-T-Stack on X.
+				</p>
 			</div>
 
 			<motion.div
-				initial={{ opacity: 0, y: 20 }}
-				whileInView={{ opacity: 1, y: 0 }}
-				viewport={{ once: true, margin: "-100px" }}
-				transition={{ duration: 0.5, delay: 0.3 }}
-				className="relative mt-4 sm:mt-8"
+				className={cn("grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3")}
+				variants={gridVariants}
 			>
-				<div className="overflow-hidden rounded-xl border border-border bg-background">
-					<div className="flex items-center justify-between bg-muted px-2 py-2 sm:px-4">
-						<div className="flex space-x-1 sm:space-x-2">
-							<div className="h-2 w-2 rounded-full bg-red-500 sm:h-3 sm:w-3" />
-							<div className="h-2 w-2 rounded-full bg-yellow-500 sm:h-3 sm:w-3" />
-							<div className="h-2 w-2 rounded-full bg-green-500 sm:h-3 sm:w-3" />
-						</div>
-						<div className="font-mono text-[10px] text-muted-foreground sm:text-xs">
-							Developer Feedback
-						</div>
-						<div className="flex items-center gap-1 sm:gap-2">
-							<motion.button
-								whileHover={{ scale: 1.05 }}
-								whileTap={{ scale: 0.95 }}
-								onClick={handlePrev}
-								className="flex h-5 w-5 items-center justify-center rounded bg-secondary text-secondary-foreground transition-colors hover:bg-muted sm:h-6 sm:w-6"
-								title="Previous testimonials"
-								aria-label="Previous testimonials"
-							>
-								<ChevronLeft className="h-3 w-3" />
-							</motion.button>
-
-							<motion.button
-								whileHover={{ scale: 1.05 }}
-								whileTap={{ scale: 0.95 }}
-								onClick={handleNext}
-								className="flex h-5 w-5 items-center justify-center rounded bg-secondary text-secondary-foreground transition-colors hover:bg-muted sm:h-6 sm:w-6"
-								title="Next testimonials"
-								aria-label="Next testimonials"
-							>
-								<ChevronRight className="h-3 w-3" />
-							</motion.button>
-						</div>
+				{visibleTweetIndices.map((index) => (
+					<div
+						key={TWEET_IDS[index]}
+						className="overflow-hidden rounded-lg border border-border bg-card shadow-sm transition-shadow duration-300 hover:shadow-md"
+					>
+						<Tweet id={TWEET_IDS[index]} />
 					</div>
-
-					<div className="p-2">
-						<div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-							{visibleTweets.map((tweetIndex) => (
-								<Tweet key={tweetIndex} id={TWEET_IDS[tweetIndex]} />
-							))}
-						</div>
-					</div>
-
-					<div className="flex items-center justify-between border-border border-t bg-muted px-2 py-2 sm:p-3">
-						<div className="flex items-center">
-							<span className="text-[10px] text-muted-foreground sm:text-xs">
-								{currentPage}/{totalPages}
-							</span>
-						</div>
-
-						<div className="flex items-center gap-2 sm:gap-3">
-							<div className="flex items-center gap-1">
-								{Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
-									const pageNum =
-										totalPages <= 5
-											? i
-											: currentPage <= 3
-												? i
-												: currentPage >= totalPages - 1
-													? totalPages - 5 + i
-													: currentPage - 3 + i;
-									const isActive = pageNum === currentPage - 1;
-									return (
-										<button
-											type="button"
-											// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-											key={i}
-											onClick={() => setStartIndex(pageNum * tweetsPerPage)}
-											className={cn(
-												"h-1 w-1 rounded-full transition-colors sm:h-1.5 sm:w-1.5",
-												isActive
-													? "bg-primary"
-													: "bg-muted-foreground/50 hover:bg-muted-foreground/70",
-											)}
-											aria-label={`Go to page ${pageNum + 1}`}
-										/>
-									);
-								})}
-								{totalPages > 5 && (
-									<span className="text-[8px] text-muted-foreground sm:text-[10px]">
-										...
-									</span>
-								)}
-							</div>
-						</div>
-					</div>
-				</div>
+				))}
 			</motion.div>
-		</section>
+
+			{totalPages > 1 && (
+				<motion.div
+					className="mt-10 flex items-center justify-between sm:mt-12"
+					initial={{ opacity: 0 }}
+					animate={{ opacity: 1 }}
+					transition={{ delay: 0.5, duration: 0.5 }}
+				>
+					<motion.button
+						whileHover={{ scale: 1.05 }}
+						whileTap={{ scale: 0.95 }}
+						onClick={handlePrev}
+						disabled={currentPage === 1}
+						className={cn(
+							"inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 font-medium text-muted-foreground text-sm transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50",
+						)}
+						aria-label="Previous page"
+					>
+						<ChevronLeft className="size-4" />
+						Prev
+					</motion.button>
+
+					<div className="hidden items-center gap-1 sm:flex">
+						{paginationDots.map((page, index) =>
+							typeof page === "number" ? (
+								<button
+									type="button"
+									key={`${page}-${
+										// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+										index
+									}`}
+									onClick={() => goToPage(page)}
+									className={cn(
+										"flex h-8 w-8 items-center justify-center rounded-md font-medium text-sm transition-colors",
+										currentPage === page
+											? "bg-primary/10 text-primary"
+											: "text-muted-foreground hover:bg-muted",
+									)}
+									aria-label={`Go to page ${page}`}
+									aria-current={currentPage === page ? "page" : undefined}
+								>
+									{page}
+								</button>
+							) : (
+								<span
+									key={`ellipsis-${
+										// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+										index
+									}`}
+									className="flex h-8 w-8 items-center justify-center text-muted-foreground text-sm"
+									aria-hidden="true"
+								>
+									...
+								</span>
+							),
+						)}
+					</div>
+					<div className="text-muted-foreground text-sm sm:hidden">
+						Page {currentPage} of {totalPages}
+					</div>
+
+					<motion.button
+						whileHover={{ scale: 1.05 }}
+						whileTap={{ scale: 0.95 }}
+						onClick={handleNext}
+						disabled={currentPage === totalPages}
+						className={cn(
+							"inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 font-medium text-muted-foreground text-sm transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50",
+						)}
+						aria-label="Next page"
+					>
+						Next
+						<ChevronRight className="size-4" />
+					</motion.button>
+				</motion.div>
+			)}
+		</motion.section>
 	);
 }

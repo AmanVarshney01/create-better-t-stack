@@ -14,7 +14,7 @@ export default function CustomizableSection() {
 				>
 					<h2 className="font-bold font-mono text-2xl tracking-tight sm:text-3xl md:text-4xl lg:text-5xl">
 						<span className="border-primary border-b-2 pb-1 text-foreground dark:text-primary">
-							Your Stack, Your Choice
+							Roll Your Own Stack
 						</span>
 					</h2>
 				</motion.div>
@@ -27,8 +27,7 @@ export default function CustomizableSection() {
 					className="mx-auto max-w-3xl space-y-6"
 				>
 					<p className="font-mono text-lg text-muted-foreground leading-relaxed sm:text-xl">
-						Configure your ideal TypeScript environment with all the options you
-						need
+						Build your perfect TypeScript stack.
 					</p>
 				</motion.div>
 			</div>

@@ -55,15 +55,17 @@ export async function setupEnvironmentVariables(
 	const hasTanStackStart = options.frontend.includes("tanstack-start");
 	const hasNextJs = options.frontend.includes("next");
 	const hasNuxt = options.frontend.includes("nuxt");
+	const hasSvelte = options.frontend.includes("svelte");
 	const hasWebFrontend =
 		hasReactRouter ||
 		hasTanStackRouter ||
 		hasTanStackStart ||
 		hasNextJs ||
-		hasNuxt;
+		hasNuxt ||
+		hasSvelte;
 
 	let corsOrigin = "http://localhost:3001";
-	if (hasReactRouter) {
+	if (hasReactRouter || hasSvelte) {
 		corsOrigin = "http://localhost:5173";
 	} else if (hasTanStackRouter || hasTanStackStart || hasNextJs || hasNuxt) {
 		corsOrigin = "http://localhost:3001";
@@ -128,6 +130,8 @@ export async function setupEnvironmentVariables(
 			envVarName = "NEXT_PUBLIC_SERVER_URL";
 		} else if (hasNuxt) {
 			envVarName = "NUXT_PUBLIC_SERVER_URL";
+		} else if (hasSvelte) {
+			envVarName = "PUBLIC_SERVER_URL";
 		}
 
 		const clientVars: EnvVariable[] = [

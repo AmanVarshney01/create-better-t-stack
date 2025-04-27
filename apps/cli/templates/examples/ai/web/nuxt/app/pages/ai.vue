@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
 import { useChat } from '@ai-sdk/vue'
+import { nextTick, ref, watch } from 'vue'
 
 const config = useRuntimeConfig()
 const serverUrl = config.public.serverURL
@@ -16,7 +16,6 @@ watch(messages, async () => {
   messagesEndRef.value?.scrollIntoView({ behavior: 'smooth' })
 })
 
-// Helper: Concatenate all text parts for a message
 function getMessageText(message: any) {
   return message.parts
     .filter((part: any) => part.type === 'text')

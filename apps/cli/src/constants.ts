@@ -75,6 +75,7 @@ export const dependencyVersionMap = {
 	ai: "^4.2.8",
 	"@ai-sdk/google": "^1.2.3",
 	"@ai-sdk/vue": "^1.2.8",
+	"@ai-sdk/svelte": "^2.1.9",
 
 	"@prisma/extension-accelerate": "^1.3.0",
 
@@ -82,6 +83,7 @@ export const dependencyVersionMap = {
 	"@orpc/client": "^1.1.0",
 	"@orpc/react-query": "^1.1.0",
 	"@orpc/vue-query": "^1.1.0",
+	"@orpc/svelte-query": "^1.1.0",
 
 	"@trpc/tanstack-react-query": "^11.0.0",
 	"@trpc/server": "^11.0.0",

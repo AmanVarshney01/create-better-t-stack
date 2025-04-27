@@ -13,6 +13,7 @@ export async function setupApi(config: ProjectConfig): Promise<void> {
 		["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
 	);
 	const hasNuxtWeb = frontend.includes("nuxt");
+	const hasSvelteWeb = frontend.includes("svelte");
 
 	if (api === "orpc") {
 		await addPackageDependency({
@@ -58,6 +59,13 @@ export async function setupApi(config: ProjectConfig): Promise<void> {
 			if (api === "orpc") {
 				await addPackageDependency({
 					dependencies: ["@orpc/vue-query", "@orpc/client", "@orpc/server"],
+					projectDir: webDir,
+				});
+			}
+		} else if (hasSvelteWeb) {
+			if (api === "orpc") {
+				await addPackageDependency({
+					dependencies: ["@orpc/svelte-query", "@orpc/client", "@orpc/server"],
 					projectDir: webDir,
 				});
 			}

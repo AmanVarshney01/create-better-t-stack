@@ -10,6 +10,7 @@ export async function getApiChoice(
 	if (Api) return Api;
 
 	const includesNuxt = frontend?.includes("nuxt");
+	const includesSvelte = frontend?.includes("svelte");
 
 	let apiOptions = [
 		{
@@ -24,12 +25,14 @@ export async function getApiChoice(
 		},
 	];
 
-	if (includesNuxt) {
+	if (includesNuxt || includesSvelte) {
 		apiOptions = [
 			{
 				value: "orpc" as const,
 				label: "oRPC",
-				hint: "End-to-end type-safe APIs (Required for Nuxt frontend)",
+				hint: `End-to-end type-safe APIs (Required for ${
+					includesNuxt ? "Nuxt" : "Svelte"
+				} frontend)`,
 			},
 		];
 	}
@@ -37,7 +40,7 @@ export async function getApiChoice(
 	const apiType = await select<ProjectApi>({
 		message: "Select API type",
 		options: apiOptions,
-		initialValue: includesNuxt ? "orpc" : DEFAULT_CONFIG.api,
+		initialValue: includesNuxt || includesSvelte ? "orpc" : DEFAULT_CONFIG.api,
 	});
 
 	if (isCancel(apiType)) {
@@ -45,7 +48,7 @@ export async function getApiChoice(
 		process.exit(0);
 	}
 
-	if (includesNuxt && apiType !== "orpc") {
+	if ((includesNuxt || includesSvelte) && apiType !== "orpc") {
 		return "orpc";
 	}
 
