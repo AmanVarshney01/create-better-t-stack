@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.2.3
+
+### Patch Changes
+
+- aef7aa4: Refactor: Simplify error handling in CLI helpers
+
 ## 2.2.2
 
 ### Patch Changes
