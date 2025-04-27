@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.2.2
+
+### Patch Changes
+
+- f1ce6b4: fix(templates): password must be at least 8 characters
+
 ## 2.2.1
 
 ### Patch Changes
