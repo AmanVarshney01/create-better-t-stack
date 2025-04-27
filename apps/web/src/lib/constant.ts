@@ -130,6 +130,13 @@ export const TECH_OPTIONS = {
 			icon: "/icon/express.svg",
 			color: "from-gray-500 to-gray-700",
 		},
+  {
+			id: "fastify",
+			name: "Fastify",
+			description: "Fast and low overhead web framework, for Node.js",
+			icon: "/icon/fastify.svg",
+			color: "from-gray-500 to-gray-700",
+		},
 	],
 	database: [
 		{
