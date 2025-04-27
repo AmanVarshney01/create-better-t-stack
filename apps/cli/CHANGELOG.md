@@ -1,5 +1,12 @@
 # create-better-t-stack
 
+## 2.2.4
+
+### Patch Changes
+
+- 9180ac2: fix shebang banner
+- 49f1fa1: Replace tsup with tsdown
+
 ## 2.2.3
 
 ### Patch Changes
