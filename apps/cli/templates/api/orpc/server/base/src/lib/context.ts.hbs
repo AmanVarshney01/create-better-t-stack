@@ -6,14 +6,14 @@ import { auth } from "./auth";
 
 export async function createContext(req: NextRequest) {
 {{#if auth}}
-  const session = await auth.api.getSession({
-    headers: req.headers,
-  });
-  return {
-    session,
-  };
+const session = await auth.api.getSession({
+headers: req.headers,
+});
+return {
+session,
+};
 {{else}}
-  return {}
+return {}
 {{/if}}
 }
 
@@ -24,22 +24,22 @@ import { auth } from "./auth";
 {{/if}}
 
 export type CreateContextOptions = {
-  context: HonoContext;
+context: HonoContext;
 };
 
 export async function createContext({ context }: CreateContextOptions) {
 {{#if auth}}
-  const session = await auth.api.getSession({
-    headers: context.req.raw.headers,
-  });
-  return {
-    session,
-  };
+const session = await auth.api.getSession({
+headers: context.req.raw.headers,
+});
+return {
+session,
+};
 {{else}}
-  // No auth configured
-  return {
-    session: null,
-  };
+// No auth configured
+return {
+session: null,
+};
 {{/if}}
 }
 
@@ -50,22 +50,22 @@ import { auth } from "./auth";
 {{/if}}
 
 export type CreateContextOptions = {
-  context: ElysiaContext;
+context: ElysiaContext;
 };
 
 export async function createContext({ context }: CreateContextOptions) {
 {{#if auth}}
-  const session = await auth.api.getSession({
-    headers: context.request.headers,
-  });
-  return {
-    session,
-  };
+const session = await auth.api.getSession({
+headers: context.request.headers,
+});
+return {
+session,
+};
 {{else}}
-  // No auth configured
-  return {
-    session: null,
-  };
+// No auth configured
+return {
+session: null,
+};
 {{/if}}
 }
 
@@ -77,17 +77,41 @@ import { auth } from "./auth";
 
 export async function createContext(opts: any) {
 {{#if auth}}
-	const session = await auth.api.getSession({
-		headers: fromNodeHeaders(opts.req.headers),
-	});
-	return {
-		session,
-	};
+const session = await auth.api.getSession({
+headers: fromNodeHeaders(opts.req.headers),
+});
+return {
+session,
+};
 {{else}}
-  // No auth configured
-	return {
-		session: null,
-	};
+// No auth configured
+return {
+session: null,
+};
+{{/if}}
+}
+
+{{else if (eq backend 'fastify')}}
+{{#if auth}}
+import { fromNodeHeaders } from "better-auth/node";
+import type { FastifyInstance, FastifyRequest } from "fastify";
+{{/if}}
+
+export async function createContext(request: FastifyRequest) {
+{{#if auth}}
+const session = await request.server.auth.api.getSession({
+headers: fromNodeHeaders(request.headers),
+});
+return {
+session,
+ctx: request.server,
+};
+{{else}}
+// No auth configured
+return {
+session: null,
+ctx: request.server,
+};
 {{/if}}
 }
 
@@ -95,9 +119,9 @@ export async function createContext(opts: any) {
 // Default or fallback context if backend is not recognized or none
 // This might need adjustment based on your default behavior
 export async function createContext() {
-  return {
-    session: null,
-  };
+return {
+session: null,
+};
 }
 {{/if}}
 
