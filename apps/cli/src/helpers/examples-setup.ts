@@ -15,6 +15,7 @@ export async function setupExamples(config: ProjectConfig): Promise<void> {
 
 		const hasNuxt = frontend.includes("nuxt");
 		const hasSvelte = frontend.includes("svelte");
+		const hasReact = frontend.includes("react");
 
 		if (clientDirExists) {
 			const dependencies: AvailableDependencies[] = ["ai"];
@@ -23,6 +24,9 @@ export async function setupExamples(config: ProjectConfig): Promise<void> {
 			} else if (hasSvelte) {
 				dependencies.push("@ai-sdk/svelte");
 			}
+			} else if (hasReact) {
+				dependencies.push("@ai-sdk/react");
+			}
 			await addPackageDependency({
 				dependencies,
 				projectDir: clientDir,
@@ -30,7 +34,7 @@ export async function setupExamples(config: ProjectConfig): Promise<void> {
 		}
 
 		await addPackageDependency({
-			dependencies: ["ai", "@ai-sdk/react", "@ai-sdk/google"],
+			dependencies: ["ai", "@ai-sdk/google"],
 			projectDir: serverDir,
 		});
 	}
