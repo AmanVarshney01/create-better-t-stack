@@ -30,7 +30,7 @@ export async function setupExamples(config: ProjectConfig): Promise<void> {
 		}
 
 		await addPackageDependency({
-			dependencies: ["ai", "@ai-sdk/google"],
+			dependencies: ["ai", "@ai-sdk/react", "@ai-sdk/google"],
 			projectDir: serverDir,
 		});
 	}
