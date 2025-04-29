@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.3.0
+
+### Minor Changes
+
+- 2a5358a: add convex
+
 ## 2.2.4
 
 ### Patch Changes
