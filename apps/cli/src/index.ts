@@ -60,7 +60,7 @@ async function main() {
 			.option("orm", {
 				type: "string",
 				describe: "ORM type",
-				choices: ["drizzle", "prisma", "none"],
+				choices: ["drizzle", "prisma", "mongoose", "none"],
 			})
 			.option("auth", {
 				type: "boolean",
@@ -438,78 +438,82 @@ function processAndValidateFlags(
 			config.dbSetup = "none";
 		}
 
-		if (effectiveDatabase === "mongodb" && effectiveOrm === "drizzle") {
+	if (effectiveDatabase === "mongodb" && effectiveOrm === "drizzle") {
+		consola.fatal(
+			"Drizzle ORM is not compatible with MongoDB. Please use --orm prisma or --orm mongoose.",
+		);
+		process.exit(1);
+	}
+
+	if (
+		effectiveOrm === "mongoose" &&
+		effectiveDatabase &&
+		effectiveDatabase !== "mongodb"
+	) {
+		consola.fatal(
+			`Mongoose ORM requires MongoDB. Cannot use --orm mongoose with --database ${effectiveDatabase}.`,
+		);
+		process.exit(1);
+	}
+
+	if (config.dbSetup && config.dbSetup !== "none") {
+		const dbSetup = config.dbSetup;
+
+		if (!effectiveDatabase || effectiveDatabase === "none") {
 			consola.fatal(
-				"MongoDB is only available with Prisma. Cannot use --database mongodb with --orm drizzle",
+				`Database setup '--db-setup ${dbSetup}' requires a database. Cannot use when database is 'none'.`,
 			);
 			process.exit(1);
 		}
 
-		if (config.dbSetup && config.dbSetup !== "none") {
-			const dbSetup = config.dbSetup;
-			if (dbSetup === "turso") {
-				if (effectiveDatabase && effectiveDatabase !== "sqlite") {
-					consola.fatal(
-						`Turso setup requires SQLite. Cannot use --db-setup turso with --database ${effectiveDatabase}`,
-					);
-					process.exit(1);
-				}
-				if (effectiveOrm === "prisma") {
-					consola.fatal(
-						"Turso setup is not compatible with Prisma. Cannot use --db-setup turso with --orm prisma",
-					);
-					process.exit(1);
-				}
-				config.database = "sqlite";
-				config.orm = "drizzle";
-			} else if (dbSetup === "prisma-postgres") {
-				if (effectiveDatabase && effectiveDatabase !== "postgres") {
-					consola.fatal(
-						`Prisma PostgreSQL setup requires PostgreSQL. Cannot use --db-setup prisma-postgres with --database ${effectiveDatabase}.`,
-					);
-					process.exit(1);
-				}
-				if (
-					effectiveOrm &&
-					effectiveOrm !== "prisma" &&
-					effectiveOrm !== "none"
-				) {
-					consola.fatal(
-						`Prisma PostgreSQL setup requires Prisma ORM. Cannot use --db-setup prisma-postgres with --orm ${effectiveOrm}.`,
-					);
-					process.exit(1);
-				}
-				config.database = "postgres";
-				config.orm = "prisma";
-			} else if (dbSetup === "mongodb-atlas") {
-				if (effectiveDatabase && effectiveDatabase !== "mongodb") {
-					consola.fatal(
-						`MongoDB Atlas setup requires MongoDB. Cannot use --db-setup mongodb-atlas with --database ${effectiveDatabase}.`,
-					);
-					process.exit(1);
-				}
-				if (
-					effectiveOrm &&
-					effectiveOrm !== "prisma" &&
-					effectiveOrm !== "none"
-				) {
-					consola.fatal(
-						`MongoDB Atlas setup requires Prisma ORM. Cannot use --db-setup mongodb-atlas with --orm ${effectiveOrm}.`,
-					);
-					process.exit(1);
-				}
-				config.database = "mongodb";
-				config.orm = "prisma";
-			} else if (dbSetup === "neon") {
-				if (effectiveDatabase && effectiveDatabase !== "postgres") {
-					consola.fatal(
-						`Neon PostgreSQL setup requires PostgreSQL. Cannot use --db-setup neon with --database ${effectiveDatabase}.`,
-					);
-					process.exit(1);
-				}
-				config.database = "postgres";
+		if (dbSetup === "turso") {
+			if (effectiveDatabase && effectiveDatabase !== "sqlite") {
+				consola.fatal(
+					`Turso setup requires SQLite. Cannot use --db-setup turso with --database ${effectiveDatabase}`,
+				);
+				process.exit(1);
+			}
+			if (effectiveOrm !== "drizzle") {
+				consola.fatal(
+					`Turso setup requires Drizzle ORM. Cannot use --db-setup turso with --orm ${effectiveOrm ?? "none"}.`,
+				);
+				process.exit(1);
+			}
+		} else if (dbSetup === "prisma-postgres") {
+			if (effectiveDatabase !== "postgres") {
+				consola.fatal(
+					`Prisma PostgreSQL setup requires PostgreSQL. Cannot use --db-setup prisma-postgres with --database ${effectiveDatabase}.`,
+				);
+				process.exit(1);
+			}
+			if (effectiveOrm !== "prisma") {
+				consola.fatal(
+					`Prisma PostgreSQL setup requires Prisma ORM. Cannot use --db-setup prisma-postgres with --orm ${effectiveOrm}.`,
+				);
+				process.exit(1);
+			}
+		} else if (dbSetup === "mongodb-atlas") {
+			if (effectiveDatabase !== "mongodb") {
+				consola.fatal(
+					`MongoDB Atlas setup requires MongoDB. Cannot use --db-setup mongodb-atlas with --database ${effectiveDatabase}.`,
+				);
+				process.exit(1);
+			}
+			if (effectiveOrm !== "prisma" && effectiveOrm !== "mongoose") {
+				consola.fatal(
+					`MongoDB Atlas setup requires Prisma or Mongoose ORM. Cannot use --db-setup mongodb-atlas with --orm ${effectiveOrm}.`,
+				);
+				process.exit(1);
+			}
+		} else if (dbSetup === "neon") {
+			if (effectiveDatabase !== "postgres") {
+				consola.fatal(
+					`Neon PostgreSQL setup requires PostgreSQL. Cannot use --db-setup neon with --database ${effectiveDatabase}.`,
+				);
+				process.exit(1);
 			}
 		}
+	}
 
 		const includesNuxt = effectiveFrontend?.includes("nuxt");
 		const includesSvelte = effectiveFrontend?.includes("svelte");
@@ -568,13 +572,13 @@ function processAndValidateFlags(
 				process.exit(1);
 			}
 
-			if (config.addons.includes("husky") && !config.addons.includes("biome")) {
-				consola.warn(
-					"Husky addon is recommended to be used with Biome for lint-staged configuration.",
-				);
-			}
-			config.addons = [...new Set(config.addons)];
+		if (config.addons.includes("husky") && !config.addons.includes("biome")) {
+			consola.warn(
+				"Husky addon is recommended to be used with Biome for lint-staged configuration.",
+			);
 		}
+		config.addons = [...new Set(config.addons)];
+	}
 
 		const onlyNativeFrontend =
 			effectiveFrontend &&

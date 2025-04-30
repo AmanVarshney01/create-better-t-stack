@@ -40,6 +40,8 @@ export const dependencyVersionMap = {
 	"@prisma/client": "^6.7.0",
 	prisma: "^6.7.0",
 
+	mongoose: "^8.14.0",
+
 	"vite-plugin-pwa": "^0.21.2",
 	"@vite-pwa/assets-generator": "^0.2.6",
 

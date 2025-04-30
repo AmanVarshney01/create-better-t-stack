@@ -58,6 +58,31 @@ export const auth = betterAuth({
 });
 {{/if}}
 
+{{#if (eq orm "mongoose")}}
+import { betterAuth } from "better-auth";
+import { mongodbAdapter } from "better-auth/adapters/mongodb";
+{{#if (includes frontend "native")}}
+import { expo } from "@better-auth/expo";
+{{/if}}
+import { client } from "../db";
+
+export const auth = betterAuth({
+    database: mongodbAdapter(client.db()),
+    trustedOrigins: [
+        process.env.CORS_ORIGIN || "",{{#if (includes frontend "native")}}
+        "my-better-t-app://",{{/if}}
+    ],
+    emailAndPassword: {
+        enabled: true,
+    }
+
+    {{~#if (includes frontend "native")}}
+        ,
+        plugins: [expo()]
+    {{/if~}}
+});
+{{/if}}
+
 {{#if (eq orm "none")}}
 import { betterAuth } from "better-auth";
 {{#if (includes frontend "native")}}

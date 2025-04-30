@@ -4,7 +4,7 @@ export type ProjectDatabase =
 	| "mongodb"
 	| "mysql"
 	| "none";
-export type ProjectOrm = "drizzle" | "prisma" | "none";
+export type ProjectOrm = "drizzle" | "prisma" | "mongoose" | "none";
 export type ProjectPackageManager = "npm" | "pnpm" | "bun";
 export type ProjectAddons =
 	| "pwa"

@@ -367,6 +367,11 @@ export async function setupAuthTemplate(
 					PKG_ROOT,
 					`templates/auth/server/db/prisma/${db}`,
 				);
+			} else if (orm === "mongoose") {
+				authDbSrc = path.join(
+					PKG_ROOT,
+					`templates/auth/server/db/mongoose/${db}`,
+				)
 			}
 			if (authDbSrc && (await fs.pathExists(authDbSrc))) {
 				await processAndCopyFiles("**/*", authDbSrc, serverAppDir, context);

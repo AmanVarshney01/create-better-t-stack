@@ -3,6 +3,24 @@ import pc from "picocolors";
 import { DEFAULT_CONFIG } from "../constants";
 import type { ProjectBackend, ProjectDatabase, ProjectOrm } from "../types";
 
+const ormOptions = {
+	prisma: {
+		value: "prisma" as const,
+		label: "Prisma",
+		hint: "Powerful, feature-rich ORM",
+	},
+	mongoose: {
+		value: "mongoose" as const,
+		label: "Mongoose",
+		hint: "Elegant object modeling tool",
+	},
+	drizzle: {
+		value: "drizzle" as const,
+		label: "Drizzle",
+		hint: "Lightweight and performant TypeScript ORM",
+	},
+};
+
 export async function getORMChoice(
 	orm: ProjectOrm | undefined,
 	hasDatabase: boolean,
@@ -16,26 +34,16 @@ export async function getORMChoice(
 	if (!hasDatabase) return "none";
 	if (orm !== undefined) return orm;
 
-	if (database === "mongodb") {
-		log.info("Only Prisma is supported with MongoDB.");
-		return "prisma";
-	}
+	const options = [
+		...(database === "mongodb"
+			? [ormOptions.prisma, ormOptions.mongoose]
+			: [ormOptions.drizzle, ormOptions.prisma]),
+	];
 
 	const response = await select<ProjectOrm>({
 		message: "Select ORM",
-		options: [
-			{
-				value: "drizzle",
-				label: "Drizzle",
-				hint: "lightweight and performant TypeScript ORM",
-			},
-			{
-				value: "prisma",
-				label: "Prisma",
-				hint: "Powerful, feature-rich ORM",
-			},
-		],
-		initialValue: DEFAULT_CONFIG.orm,
+		options,
+		initialValue: database === "mongodb" ? "prisma" : DEFAULT_CONFIG.orm,
 	});
 
 	if (isCancel(response)) {

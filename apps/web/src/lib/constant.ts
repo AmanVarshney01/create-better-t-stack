@@ -193,6 +193,13 @@ export const TECH_OPTIONS = {
 			color: "from-purple-400 to-purple-600",
 		},
 		{
+			id: "mongoose",
+			name: "Mongoose",
+			description: "Elegant object modeling tool",
+			icon: "/icon/mongoose.svg",
+			color: "from-blue-400 to-blue-600",
+		},
+		{
 			id: "none",
 			name: "No ORM",
 			description: "Skip ORM integration",

@@ -62,6 +62,12 @@ export async function setupDatabase(config: ProjectConfig): Promise<void> {
 					projectDir: serverDir,
 				});
 			}
+		} else if (orm === "mongoose") {
+			await addPackageDependency({
+				dependencies: ["mongoose"],
+				devDependencies: [],
+				projectDir: serverDir,
+			});
 		}
 
 		if (database === "sqlite" && dbSetup === "turso") {
