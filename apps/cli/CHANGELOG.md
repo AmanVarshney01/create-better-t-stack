@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.4.1
+
+### Patch Changes
+
+- 0510a27: Fix spinner behavior in Neon command execution
+
 ## 2.4.0
 
 ### Minor Changes
