@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.4.0
+
+### Minor Changes
+
+- 065f862: add convex for svelte
+
 ## 2.3.0
 
 ### Minor Changes
