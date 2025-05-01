@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.5.2
+
+### Patch Changes
+
+- 920a8f0: Fixed an issue where the CLI would still allow selecting non-Convex backends after specifying `--api none` flag.
+
 ## 2.5.1
 
 ### Patch Changes
