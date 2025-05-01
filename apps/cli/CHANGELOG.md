@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.6.0
+
+### Minor Changes
+
+- d5894e5: upgrade to expo 53
+
 ## 2.5.2
 
 ### Patch Changes
