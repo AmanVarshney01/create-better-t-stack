@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.5.1
+
+### Patch Changes
+
+- 9e00e20: add todo, ai template for next
+
 ## 2.5.0
 
 ### Minor Changes
