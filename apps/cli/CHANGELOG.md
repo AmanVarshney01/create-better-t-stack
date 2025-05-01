@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.6.1
+
+### Patch Changes
+
+- cebb077: Add dotenv import to Prisma config files
+
 ## 2.6.0
 
 ### Minor Changes
