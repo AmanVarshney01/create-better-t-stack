@@ -1,5 +1,15 @@
 # create-better-t-stack
 
+## 2.7.0
+
+### Minor Changes
+
+- 437cf9a: add mongoose orm support to the stack builder
+
+### Patch Changes
+
+- 0cb24b1: add migrate and generate scripts
+
 ## 2.6.1
 
 ### Patch Changes
