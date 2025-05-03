@@ -11,26 +11,28 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import Header from "../components/header";
 import appCss from "../index.css?url";
 import type { QueryClient } from "@tanstack/react-query";
-{{#if (eq api "trpc")}}
-import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
-import type { AppRouter } from "../../../server/src/routers";
-{{/if}}
-{{#if (eq api "orpc")}}
-import type { orpc } from "@/utils/orpc";
-{{/if}}
 import Loader from "@/components/loader";
 
-{{#if (eq api "trpc")}}
+{{#if (eq backend "convex")}}
+export interface RouterAppContext {
+  queryClient: QueryClient;
+}
+{{else}}
+  {{#if (eq api "trpc")}}
+import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
+import type { AppRouter } from "../../../server/src/routers";
 export interface RouterAppContext {
   trpc: TRPCOptionsProxy<AppRouter>;
   queryClient: QueryClient;
 }
-{{/if}}
-{{#if (eq api "orpc")}}
+  {{/if}}
+  {{#if (eq api "orpc")}}
+import type { orpc } from "@/utils/orpc";
 export interface RouterAppContext {
   orpc: typeof orpc;
   queryClient: QueryClient;
 }
+  {{/if}}
 {{/if}}
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({

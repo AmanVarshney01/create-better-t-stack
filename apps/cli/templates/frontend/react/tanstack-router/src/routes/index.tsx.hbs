@@ -1,11 +1,16 @@
+import { createFileRoute } from "@tanstack/react-router";
 {{#if (eq api "orpc")}}
 import { orpc } from "@/utils/orpc";
+import { useQuery } from "@tanstack/react-query";
 {{/if}}
 {{#if (eq api "trpc")}}
 import { trpc } from "@/utils/trpc";
-{{/if}}
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+{{/if}}
+{{#if (eq backend "convex")}}
+import { useQuery } from "convex/react";
+import { api } from "@{{ projectName }}/backend/convex/_generated/api.js";
+{{/if}}
 
 export const Route = createFileRoute("/")({
   component: HomeComponent,
@@ -34,6 +39,9 @@ function HomeComponent() {
   {{#if (eq api "trpc")}}
   const healthCheck = useQuery(trpc.healthCheck.queryOptions());
   {{/if}}
+  {{#if (eq backend "convex")}}
+  const healthCheck = useQuery(api.healthCheck.get);
+  {{/if}}
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-2">
@@ -42,6 +50,7 @@ function HomeComponent() {
         <section className="rounded-lg border p-4">
           <h2 className="mb-2 font-medium">API Status</h2>
           <div className="flex items-center gap-2">
+            {{#if (or (eq api "orpc") (eq api "trpc"))}}
             <div
               className={`h-2 w-2 rounded-full ${healthCheck.data ? "bg-green-500" : "bg-red-500"}`}
             />
@@ -52,46 +61,22 @@ function HomeComponent() {
                   ? "Connected"
                   : "Disconnected"}
             </span>
+            {{/if}}
+            {{#if (eq backend "convex")}}
+            <div
+              className={`h-2 w-2 rounded-full ${healthCheck === "OK" ? "bg-green-500" : healthCheck === undefined ? "bg-orange-400" : "bg-red-500"}`}
+            />
+            <span className="text-sm text-muted-foreground">
+              {healthCheck === undefined
+                ? "Checking..."
+                : healthCheck === "OK"
+                  ? "Connected"
+                  : "Error"}
+            </span>
+            {{/if}}
           </div>
-        </section>
-
-        <section>
-          <h2 className="mb-3 font-medium">Core Features</h2>
-          <ul className="grid grid-cols-2 gap-3">
-            <FeatureItem
-              title="Type-Safe API"
-              description="End-to-end type safety with tRPC"
-            />
-            <FeatureItem
-              title="Modern React"
-              description="TanStack Router + TanStack Query"
-            />
-            <FeatureItem
-              title="Fast Backend"
-              description="Lightweight Hono server"
-            />
-            <FeatureItem
-              title="Beautiful UI"
-              description="TailwindCSS + shadcn/ui components"
-            />
-          </ul>
         </section>
       </div>
     </div>
-  );
-}
-
-function FeatureItem({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <li className="border-l-2 border-primary py-1 pl-3">
-      <h3 className="font-medium">{title}</h3>
-      <p className="text-sm text-muted-foreground">{description}</p>
-    </li>
   );
 }

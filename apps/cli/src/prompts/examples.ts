@@ -1,4 +1,4 @@
-import { cancel, isCancel, multiselect } from "@clack/prompts";
+import { cancel, isCancel, log, multiselect } from "@clack/prompts";
 import pc from "picocolors";
 import { DEFAULT_CONFIG } from "../constants";
 import type {
@@ -16,17 +16,32 @@ export async function getExamplesChoice(
 ): Promise<ProjectExamples[]> {
 	if (examples !== undefined) return examples;
 
+	if (backend === "convex") {
+		return ["todo"];
+	}
+
 	if (database === "none") return [];
 
-	const hasWebFrontend =
-		frontends?.includes("react-router") ||
-		frontends?.includes("tanstack-router") ||
-		frontends?.includes("tanstack-start") ||
-		frontends?.includes("next") ||
-		frontends?.includes("nuxt") ||
-		frontends?.includes("svelte");
+	const onlyNative =
+		frontends && frontends.length === 1 && frontends[0] === "native";
+	if (onlyNative) {
+		return [];
+	}
 
-	if (!hasWebFrontend) return [];
+	const hasWebFrontend =
+		frontends?.some((f) =>
+			[
+				"react-router",
+				"tanstack-router",
+				"tanstack-start",
+				"next",
+				"nuxt",
+				"svelte",
+			].includes(f),
+		) ?? false;
+	const noFrontendSelected = !frontends || frontends.length === 0;
+
+	if (!hasWebFrontend && !noFrontendSelected) return [];
 
 	let response: ProjectExamples[] | symbol = [];
 	const options: { value: ProjectExamples; label: string; hint: string }[] = [

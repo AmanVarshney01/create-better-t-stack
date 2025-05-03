@@ -30,19 +30,19 @@ import { getRuntimeChoice } from "./runtime";
 
 type PromptGroupResults = {
 	projectName: string;
+	frontend: ProjectFrontend[];
+	backend: ProjectBackend;
+	runtime: ProjectRuntime;
 	database: ProjectDatabase;
 	orm: ProjectOrm;
+	api: ProjectApi;
 	auth: boolean;
 	addons: ProjectAddons[];
 	examples: ProjectExamples[];
+	dbSetup: ProjectDBSetup;
 	git: boolean;
 	packageManager: ProjectPackageManager;
 	install: boolean;
-	dbSetup: ProjectDBSetup;
-	backend: ProjectBackend;
-	runtime: ProjectRuntime;
-	frontend: ProjectFrontend[];
-	api: ProjectApi;
 };
 
 export async function gatherConfig(
@@ -57,12 +57,19 @@ export async function gatherConfig(
 			backend: () => getBackendFrameworkChoice(flags.backend),
 			runtime: ({ results }) =>
 				getRuntimeChoice(flags.runtime, results.backend),
-			database: () => getDatabaseChoice(flags.database),
+			database: ({ results }) =>
+				getDatabaseChoice(flags.database, results.backend),
 			orm: ({ results }) =>
-				getORMChoice(flags.orm, results.database !== "none", results.database),
-			api: ({ results }) => getApiChoice(flags.api, results.frontend),
+				getORMChoice(
+					flags.orm,
+					results.database !== "none",
+					results.database,
+					results.backend,
+				),
+			api: ({ results }) =>
+				getApiChoice(flags.api, results.frontend, results.backend),
 			auth: ({ results }) =>
-				getAuthChoice(flags.auth, results.database !== "none"),
+				getAuthChoice(flags.auth, results.database !== "none", results.backend),
 			addons: ({ results }) => getAddonsChoice(flags.addons, results.frontend),
 			examples: ({ results }) =>
 				getExamplesChoice(
@@ -76,6 +83,7 @@ export async function gatherConfig(
 					results.database ?? "none",
 					flags.dbSetup,
 					results.orm,
+					results.backend,
 				),
 			git: () => getGitChoice(flags.git),
 			packageManager: () => getPackageManagerChoice(flags.packageManager),
@@ -89,9 +97,20 @@ export async function gatherConfig(
 		},
 	);
 
+	if (result.backend === "convex") {
+		result.runtime = "none";
+		result.database = "none";
+		result.orm = "none";
+		result.api = "none";
+		result.auth = false;
+		result.dbSetup = "none";
+	}
+
 	return {
 		projectName: result.projectName,
 		frontend: result.frontend,
+		backend: result.backend,
+		runtime: result.runtime,
 		database: result.database,
 		orm: result.orm,
 		auth: result.auth,
@@ -101,8 +120,6 @@ export async function gatherConfig(
 		packageManager: result.packageManager,
 		install: result.install,
 		dbSetup: result.dbSetup,
-		backend: result.backend,
-		runtime: result.runtime,
 		api: result.api,
 	};
 }

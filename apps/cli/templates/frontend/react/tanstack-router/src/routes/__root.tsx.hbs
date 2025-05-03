@@ -38,6 +38,9 @@ export interface RouterAppContext {
   queryClient: QueryClient;
 }
 {{/if}}
+{{#if (eq backend "convex")}}
+export interface RouterAppContext {}
+{{/if}}
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
   component: RootComponent,
@@ -103,6 +106,26 @@ function RootComponent() {
       </ThemeProvider>
       <TanStackRouterDevtools position="bottom-left" />
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+    </>
+  );
+}
+{{/if}}
+{{#if (eq backend "convex")}}
+function RootComponent() {
+  const isFetching = useRouterState({
+    select: (s) => s.isLoading,
+  });
+  return (
+    <>
+      <HeadContent />
+      <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <div className="grid grid-rows-[auto_1fr] h-svh">
+          <Header />
+          {isFetching ? <Loader /> : <Outlet />}
+        </div>
+        <Toaster richColors />
+      </ThemeProvider>
+      <TanStackRouterDevtools position="bottom-left" />
     </>
   );
 }

@@ -13,7 +13,7 @@ export function displayConfig(config: Partial<ProjectConfig>) {
 			? config.frontend
 			: [config.frontend];
 		const frontendText =
-			frontend.length > 0 && frontend[0] !== undefined && frontend[0] !== ""
+			frontend.length > 0 && frontend[0] !== undefined
 				? frontend.join(", ")
 				: "none";
 		configDisplay.push(`${pc.blue("Frontend:")} ${frontendText}`);

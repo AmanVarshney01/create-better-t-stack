@@ -7,6 +7,11 @@
 		"check-types": "tsc --noEmit",
 		"compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server"
 	},
+	{{#if (eq orm 'prisma')}}
+    "prisma": {
+        "schema": "./schema"
+    },
+    {{/if}}
 	"dependencies": {
 		"dotenv": "^16.4.7",
 		"zod": "^3.24.2"

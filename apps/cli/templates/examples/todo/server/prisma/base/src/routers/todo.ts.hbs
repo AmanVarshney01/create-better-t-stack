@@ -23,7 +23,11 @@ export const todoRouter = {
     }),
 
   toggle: publicProcedure
+    {{#if (eq database "mongodb")}}
+    .input(z.object({ id: z.string(), completed: z.boolean() }))
+    {{else}}
     .input(z.object({ id: z.number(), completed: z.boolean() }))
+    {{/if}}
     .handler(async ({ input }) => {
       await prisma.todo.update({
         where: { id: input.id },
@@ -33,7 +37,11 @@ export const todoRouter = {
     }),
 
   delete: publicProcedure
+    {{#if (eq database "mongodb")}}
+    .input(z.object({ id: z.string() }))
+    {{else}}
     .input(z.object({ id: z.number() }))
+    {{/if}}
     .handler(async ({ input }) => {
       await prisma.todo.delete({
         where: { id: input.id },
@@ -69,7 +77,11 @@ export const todoRouter = router({
     }),
 
   toggle: publicProcedure
+    {{#if (eq database "mongodb")}}
+    .input(z.object({ id: z.string(), completed: z.boolean() }))
+    {{else}}
     .input(z.object({ id: z.number(), completed: z.boolean() }))
+    {{/if}}
     .mutation(async ({ input }) => {
       try {
         return await prisma.todo.update({
@@ -85,7 +97,11 @@ export const todoRouter = router({
     }),
 
   delete: publicProcedure
+    {{#if (eq database "mongodb")}}
+    .input(z.object({ id: z.string() }))
+    {{else}}
     .input(z.object({ id: z.number() }))
+    {{/if}}
     .mutation(async ({ input }) => {
       try {
         return await prisma.todo.delete({

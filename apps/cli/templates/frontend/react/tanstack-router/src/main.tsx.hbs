@@ -1,13 +1,19 @@
-import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
 import Loader from "./components/loader";
 import { routeTree } from "./routeTree.gen";
 {{#if (eq api "orpc")}}
+import { QueryClientProvider } from "@tanstack/react-query";
 import { orpc, queryClient } from "./utils/orpc";
 {{/if}}
 {{#if (eq api "trpc")}}
+import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient, trpc } from "./utils/trpc";
+{{/if}}
+{{#if (eq backend "convex")}}
+import { ConvexProvider, ConvexReactClient } from "convex/react";
+
+const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 {{/if}}
 
 {{#if (eq api "orpc")}}
@@ -36,8 +42,18 @@ const router = createRouter({
   },
 });
 {{/if}}
+{{#if (eq backend "convex")}}
+const router = createRouter({
+  routeTree,
+  defaultPreload: "intent",
+  defaultPendingComponent: () => <Loader />,
+  context: {},
+  Wrap: function WrapComponent({ children }) {
+    return <ConvexProvider client={convex}>{children}</ConvexProvider>;
+  },
+});
+{{/if}}
 
-// Register things for typesafety
 declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router;

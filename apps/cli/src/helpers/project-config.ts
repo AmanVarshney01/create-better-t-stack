@@ -3,7 +3,6 @@ import { log } from "@clack/prompts";
 import { $, execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
-import { dependencyVersionMap } from "../constants";
 import type { ProjectConfig } from "../types";
 
 export async function updatePackageConfigurations(
@@ -11,7 +10,11 @@ export async function updatePackageConfigurations(
 	options: ProjectConfig,
 ): Promise<void> {
 	await updateRootPackageJson(projectDir, options);
-	await updateServerPackageJson(projectDir, options);
+	if (options.backend !== "convex") {
+		await updateServerPackageJson(projectDir, options);
+	} else {
+		await updateConvexPackageJson(projectDir, options);
+	}
 }
 
 async function updateRootPackageJson(
@@ -19,75 +22,188 @@ async function updateRootPackageJson(
 	options: ProjectConfig,
 ): Promise<void> {
 	const rootPackageJsonPath = path.join(projectDir, "package.json");
-	if (await fs.pathExists(rootPackageJsonPath)) {
-		const packageJson = await fs.readJson(rootPackageJsonPath);
-		packageJson.name = options.projectName;
+	if (!(await fs.pathExists(rootPackageJsonPath))) return;
 
-		const turboScripts = {
-			dev: "turbo dev",
-			build: "turbo build",
-			"check-types": "turbo check-types",
-			"dev:native": "turbo -F native dev",
-			"dev:web": "turbo -F web dev",
-			"dev:server": "turbo -F server dev",
-			"db:push": "turbo -F server db:push",
-			"db:studio": "turbo -F server db:studio",
-		};
+	const packageJson = await fs.readJson(rootPackageJsonPath);
+	packageJson.name = options.projectName;
 
-		const pnpmScripts = {
-			dev: "pnpm -r dev",
-			build: "pnpm -r build",
-			"check-types": "pnpm -r check-types",
-			"dev:native": "pnpm --filter native dev",
-			"dev:web": "pnpm --filter web dev",
-			"dev:server": "pnpm --filter server dev",
-			"db:push": "pnpm --filter server db:push",
-			"db:studio": "pnpm --filter server db:studio",
-		};
+	if (!packageJson.scripts) {
+		packageJson.scripts = {};
+	}
+	const scripts = packageJson.scripts;
 
-		const npmScripts = {
-			dev: "npm run dev --workspaces",
-			build: "npm run build --workspaces",
-			"check-types": "npm run check-types --workspaces",
-			"dev:native": "npm run dev --workspace native",
-			"dev:web": "npm run dev --workspace web",
-			"dev:server": "npm run dev --workspace server",
-			"db:push": "npm run db:push --workspace server",
-			"db:studio": "npm run db:studio --workspace server",
-		};
+	const backendPackageName =
+		options.backend === "convex" ? `@${options.projectName}/backend` : "server";
 
-		const bunScripts = {
-			dev: "bun run --filter '*' dev",
-			build: "bun run --filter '*' build",
-			"check-types": "bun run --filter '*' check-types",
-			"dev:native": "bun run --filter native dev",
-			"dev:web": "bun run --filter web dev",
-			"dev:server": "bun run --filter server dev",
-			"db:push": "bun run --filter server db:push",
-			"db:studio": "bun run --filter server db:studio",
-		};
+	let serverDevScript = "";
+	if (options.addons.includes("turborepo")) {
+		serverDevScript = `turbo -F ${backendPackageName} dev`;
+	} else if (options.packageManager === "bun") {
+		serverDevScript = `bun run --filter ${backendPackageName} dev`;
+	} else if (options.packageManager === "pnpm") {
+		serverDevScript = `pnpm --filter ${backendPackageName} dev`;
+	} else if (options.packageManager === "npm") {
+		serverDevScript = `npm run dev --workspace ${backendPackageName}`;
+	}
 
-		if (options.addons.includes("turborepo")) {
-			packageJson.scripts = turboScripts;
-		} else {
-			if (options.packageManager === "pnpm") {
-				packageJson.scripts = pnpmScripts;
-			} else if (options.packageManager === "npm") {
-				packageJson.scripts = npmScripts;
-			} else if (options.packageManager === "bun") {
-				packageJson.scripts = bunScripts;
-			} else {
-				packageJson.scripts = {};
+	let devScript = "";
+	if (options.packageManager === "pnpm") {
+		devScript = "pnpm -r dev";
+	} else if (options.packageManager === "npm") {
+		devScript = "npm run dev --workspaces";
+	} else if (options.packageManager === "bun") {
+		devScript = "bun run --filter '*' dev";
+	}
+
+	const needsDbScripts =
+		options.backend !== "convex" &&
+		options.database !== "none" &&
+		options.orm !== "none" &&
+		options.orm !== "mongoose";
+	if (options.addons.includes("turborepo")) {
+		scripts.dev = "turbo dev";
+		scripts.build = "turbo build";
+		scripts["check-types"] = "turbo check-types";
+		scripts["dev:native"] = "turbo -F native dev";
+		scripts["dev:web"] = "turbo -F web dev";
+		scripts["dev:server"] = serverDevScript;
+		if (options.backend === "convex") {
+			scripts["dev:setup"] = `turbo -F ${backendPackageName} setup`;
+		}
+		if (needsDbScripts) {
+			scripts["db:push"] = `turbo -F ${backendPackageName} db:push`;
+			scripts["db:studio"] = `turbo -F ${backendPackageName} db:studio`;
+			if (options.orm === "prisma") {
+				scripts["db:generate"] = `turbo -F ${backendPackageName} db:generate`;
+				scripts["db:migrate"] = `turbo -F ${backendPackageName} db:migrate`;
+			} else if (options.orm === "drizzle") {
+				scripts["db:generate"] = `turbo -F ${backendPackageName} db:generate`;
+				scripts["db:migrate"] = `turbo -F ${backendPackageName} db:migrate`;
 			}
 		}
+	} else if (options.packageManager === "pnpm") {
+		scripts.dev = devScript;
+		scripts.build = "pnpm -r build";
+		scripts["check-types"] = "pnpm -r check-types";
+		scripts["dev:native"] = "pnpm --filter native dev";
+		scripts["dev:web"] = "pnpm --filter web dev";
+		scripts["dev:server"] = serverDevScript;
+		if (options.backend === "convex") {
+			scripts["dev:setup"] = `pnpm --filter ${backendPackageName} setup`;
+		}
+		if (needsDbScripts) {
+			scripts["db:push"] = `pnpm --filter ${backendPackageName} db:push`;
+			scripts["db:studio"] = `pnpm --filter ${backendPackageName} db:studio`;
+			if (options.orm === "prisma") {
+				scripts["db:generate"] =
+					`pnpm --filter ${backendPackageName} db:generate`;
+				scripts["db:migrate"] =
+					`pnpm --filter ${backendPackageName} db:migrate`;
+			} else if (options.orm === "drizzle") {
+				scripts["db:generate"] =
+					`pnpm --filter ${backendPackageName} db:generate`;
+				scripts["db:migrate"] =
+					`pnpm --filter ${backendPackageName} db:migrate`;
+			}
+		}
+	} else if (options.packageManager === "npm") {
+		scripts.dev = devScript;
+		scripts.build = "npm run build --workspaces";
+		scripts["check-types"] = "npm run check-types --workspaces";
+		scripts["dev:native"] = "npm run dev --workspace native";
+		scripts["dev:web"] = "npm run dev --workspace web";
+		scripts["dev:server"] = serverDevScript;
+		if (options.backend === "convex") {
+			scripts["dev:setup"] = `npm run setup --workspace ${backendPackageName}`;
+		}
+		if (needsDbScripts) {
+			scripts["db:push"] = `npm run db:push --workspace ${backendPackageName}`;
+			scripts["db:studio"] =
+				`npm run db:studio --workspace ${backendPackageName}`;
+			if (options.orm === "prisma") {
+				scripts["db:generate"] =
+					`npm run db:generate --workspace ${backendPackageName}`;
+				scripts["db:migrate"] =
+					`npm run db:migrate --workspace ${backendPackageName}`;
+			} else if (options.orm === "drizzle") {
+				scripts["db:generate"] =
+					`npm run db:generate --workspace ${backendPackageName}`;
+				scripts["db:migrate"] =
+					`npm run db:migrate --workspace ${backendPackageName}`;
+			}
+		}
+	} else if (options.packageManager === "bun") {
+		scripts.dev = devScript;
+		scripts.build = "bun run --filter '*' build";
+		scripts["check-types"] = "bun run --filter '*' check-types";
+		scripts["dev:native"] = "bun run --filter native dev";
+		scripts["dev:web"] = "bun run --filter web dev";
+		scripts["dev:server"] = serverDevScript;
+		if (options.backend === "convex") {
+			scripts["dev:setup"] = `bun run --filter ${backendPackageName} setup`;
+		}
+		if (needsDbScripts) {
+			scripts["db:push"] = `bun run --filter ${backendPackageName} db:push`;
+			scripts["db:studio"] = `bun run --filter ${backendPackageName} db:studio`;
+			if (options.orm === "prisma") {
+				scripts["db:generate"] =
+					`bun run --filter ${backendPackageName} db:generate`;
+				scripts["db:migrate"] =
+					`bun run --filter ${backendPackageName} db:migrate`;
+			} else if (options.orm === "drizzle") {
+				scripts["db:generate"] =
+					`bun run --filter ${backendPackageName} db:generate`;
+				scripts["db:migrate"] =
+					`bun run --filter ${backendPackageName} db:migrate`;
+			}
+		}
+	}
 
+	if (options.addons.includes("biome")) {
+		scripts.check = "biome check --write .";
+	}
+	if (options.addons.includes("husky")) {
+		scripts.prepare = "husky";
+		packageJson["lint-staged"] = {
+			"*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+				"biome check --write .",
+			],
+		};
+	}
+
+	try {
 		const { stdout } = await execa(options.packageManager, ["-v"], {
 			cwd: projectDir,
 		});
 		packageJson.packageManager = `${options.packageManager}@${stdout.trim()}`;
-
-		await fs.writeJson(rootPackageJsonPath, packageJson, { spaces: 2 });
+	} catch (e) {
+		log.warn(`Could not determine ${options.packageManager} version.`);
 	}
+
+	if (!packageJson.workspaces) {
+		packageJson.workspaces = [];
+	}
+	const workspaces = packageJson.workspaces;
+
+	if (options.backend === "convex") {
+		if (!workspaces.includes("packages/*")) {
+			workspaces.push("packages/*");
+		}
+		const needsAppsDir =
+			options.frontend.length > 0 || options.addons.includes("starlight");
+		if (needsAppsDir && !workspaces.includes("apps/*")) {
+			workspaces.push("apps/*");
+		}
+	} else {
+		if (!workspaces.includes("apps/*")) {
+			workspaces.push("apps/*");
+		}
+		if (!workspaces.includes("packages/*")) {
+			workspaces.push("packages/*");
+		}
+	}
+
+	await fs.writeJson(rootPackageJsonPath, packageJson, { spaces: 2 });
 }
 
 async function updateServerPackageJson(
@@ -99,31 +215,60 @@ async function updateServerPackageJson(
 		"apps/server/package.json",
 	);
 
-	if (await fs.pathExists(serverPackageJsonPath)) {
-		const serverPackageJson = await fs.readJson(serverPackageJsonPath);
+	if (!(await fs.pathExists(serverPackageJsonPath))) return;
 
-		if (options.database !== "none") {
-			if (options.database === "sqlite" && options.orm === "drizzle") {
-				serverPackageJson.scripts["db:local"] = "turso dev --db-file local.db";
-			}
+	const serverPackageJson = await fs.readJson(serverPackageJsonPath);
 
-			if (options.orm === "prisma") {
-				serverPackageJson.scripts["db:push"] =
-					"prisma db push --schema ./prisma/schema";
-				serverPackageJson.scripts["db:studio"] = "prisma studio";
-			} else if (options.orm === "drizzle") {
-				serverPackageJson.scripts["db:push"] = "drizzle-kit push";
-				serverPackageJson.scripts["db:studio"] = "drizzle-kit studio";
-			}
+	if (!serverPackageJson.scripts) {
+		serverPackageJson.scripts = {};
+	}
+	const scripts = serverPackageJson.scripts;
+
+	if (options.database !== "none") {
+		if (options.database === "sqlite" && options.orm === "drizzle") {
+			scripts["db:local"] = "turso dev --db-file local.db";
 		}
   if(options.backend === 'fastify') {
    serverPackageJson.scripts.dev = "tsx watch src/index.ts";
   }
 
-		await fs.writeJson(serverPackageJsonPath, serverPackageJson, {
-			spaces: 2,
-		});
+		if (options.orm === "prisma") {
+			scripts["db:push"] = "prisma db push --schema ./prisma/schema";
+			scripts["db:studio"] = "prisma studio";
+			scripts["db:generate"] = "prisma generate --schema ./prisma/schema";
+			scripts["db:migrate"] = "prisma migrate dev";
+		} else if (options.orm === "drizzle") {
+			scripts["db:push"] = "drizzle-kit push";
+			scripts["db:studio"] = "drizzle-kit studio";
+			scripts["db:generate"] = "drizzle-kit generate";
+			scripts["db:migrate"] = "drizzle-kit migrate";
+		}
 	}
+
+	await fs.writeJson(serverPackageJsonPath, serverPackageJson, {
+		spaces: 2,
+	});
+}
+
+async function updateConvexPackageJson(
+	projectDir: string,
+	options: ProjectConfig,
+): Promise<void> {
+	const convexPackageJsonPath = path.join(
+		projectDir,
+		"packages/backend/package.json",
+	);
+
+	if (!(await fs.pathExists(convexPackageJsonPath))) return;
+
+	const convexPackageJson = await fs.readJson(convexPackageJsonPath);
+	convexPackageJson.name = `@${options.projectName}/backend`;
+
+	if (!convexPackageJson.scripts) {
+		convexPackageJson.scripts = {};
+	}
+
+	await fs.writeJson(convexPackageJsonPath, convexPackageJson, { spaces: 2 });
 }
 
 export async function initializeGit(

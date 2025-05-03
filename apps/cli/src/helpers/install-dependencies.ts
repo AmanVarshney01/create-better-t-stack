@@ -33,7 +33,6 @@ export async function installDependencies({
 		if (error instanceof Error) {
 			consola.error(pc.red(`Installation error: ${error.message}`));
 		}
-		throw error;
 	}
 }
 

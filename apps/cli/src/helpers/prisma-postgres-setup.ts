@@ -95,7 +95,6 @@ async function writeEnvFile(projectDir: string, config?: PrismaConfig) {
 		await fs.writeFile(envPath, envContent.trim());
 	} catch (error) {
 		consola.error("Failed to update environment configuration");
-		throw error;
 	}
 }
 
@@ -119,7 +118,7 @@ async function addPrismaAccelerateExtension(serverDir: string) {
 
 		const prismaIndexPath = path.join(serverDir, "prisma/index.ts");
 		const prismaIndexContent = `
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "./generated/client";
 import { withAccelerate } from "@prisma/extension-accelerate";
 
 const prisma = new PrismaClient().$extends(withAccelerate());

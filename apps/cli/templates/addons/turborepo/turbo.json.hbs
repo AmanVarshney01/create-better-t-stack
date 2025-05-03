@@ -16,7 +16,12 @@
 		"dev": {
 			"cache": false,
 			"persistent": true
-		},
+		}{{#if (eq backend "convex")}},
+		"setup": {
+			"cache": false,
+			"persistent": true
+		}
+		{{else}}{{#unless (or (eq database "none") (eq orm "none"))}},
 		"db:push": {
 			"cache": false,
 			"persistent": true
@@ -24,6 +29,15 @@
 		"db:studio": {
 			"cache": false,
 			"persistent": true
+		},
+		"db:migrate": {
+			"cache": false,
+			"persistent": true
+		},
+		"db:generate": {
+			"cache": false,
+			"persistent": true
 		}
+		{{/unless}}{{/if}}
 	}
 }

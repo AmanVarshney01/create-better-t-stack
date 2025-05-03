@@ -1,6 +1,5 @@
 <script setup lang="ts">
 
-// import { authClient } from "~/lib/auth-client";
 const {$authClient} = useNuxtApp()
 const session = $authClient.useSession()
 const toast = useToast()

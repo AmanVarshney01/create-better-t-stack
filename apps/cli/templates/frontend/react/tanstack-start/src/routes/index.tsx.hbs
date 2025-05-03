@@ -1,11 +1,17 @@
-{{#if (eq api "trpc")}}
-import { useTRPC } from "@/utils/trpc";
-{{/if}}
-{{#if (eq api "orpc")}}
-import { useORPC } from "@/utils/orpc";
-{{/if}}
-import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+{{#if (eq backend "convex")}}
+import { convexQuery } from "@convex-dev/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { api } from "@{{projectName}}/backend/convex/_generated/api.js";
+{{else}}
+  {{#if (eq api "trpc")}}
+import { useTRPC } from "@/utils/trpc";
+  {{/if}}
+  {{#if (eq api "orpc")}}
+import { useORPC } from "@/utils/orpc";
+  {{/if}}
+import { useQuery } from "@tanstack/react-query";
+{{/if}}
 
 export const Route = createFileRoute("/")({
   component: HomeComponent,
@@ -28,13 +34,17 @@ const TITLE_TEXT = `
  `;
 
 function HomeComponent() {
-  {{#if (eq api "trpc")}}
+  {{#if (eq backend "convex")}}
+  const healthCheck = useSuspenseQuery(convexQuery(api.healthCheck.get, {}));
+  {{else}}
+    {{#if (eq api "trpc")}}
   const trpc = useTRPC();
   const healthCheck = useQuery(trpc.healthCheck.queryOptions());
-  {{/if}}
-  {{#if (eq api "orpc")}}
+    {{/if}}
+    {{#if (eq api "orpc")}}
   const orpc = useORPC();
   const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+    {{/if}}
   {{/if}}
 
   return (
@@ -44,6 +54,18 @@ function HomeComponent() {
         <section className="rounded-lg border p-4">
           <h2 className="mb-2 font-medium">API Status</h2>
           <div className="flex items-center gap-2">
+            {{#if (eq backend "convex")}}
+            <div
+              className={`h-2 w-2 rounded-full ${healthCheck.data === "OK" ? "bg-green-500" : healthCheck.isLoading ? "bg-orange-400" : "bg-red-500"}`}
+            />
+            <span className="text-muted-foreground text-sm">
+              {healthCheck.isLoading
+                ? "Checking..."
+                : healthCheck.data === "OK"
+                  ? "Connected"
+                  : "Error"}
+            </span>
+            {{else}}
             <div
               className={`h-2 w-2 rounded-full ${healthCheck.data ? "bg-green-500" : "bg-red-500"}`}
             />
@@ -54,46 +76,10 @@ function HomeComponent() {
                   ? "Connected"
                   : "Disconnected"}
             </span>
+            {{/if}}
           </div>
-        </section>
-
-        <section>
-          <h2 className="mb-3 font-medium">Core Features</h2>
-          <ul className="grid grid-cols-2 gap-3">
-            <FeatureItem
-              title="Type-Safe API"
-              description="End-to-end type safety with tRPC"
-            />
-            <FeatureItem
-              title="Modern React"
-              description="TanStack Router + TanStack Query"
-            />
-            <FeatureItem
-              title="Fast Backend"
-              description="Lightweight Hono server"
-            />
-            <FeatureItem
-              title="Beautiful UI"
-              description="TailwindCSS + shadcn/ui components"
-            />
-          </ul>
         </section>
       </div>
     </div>
-  );
-}
-
-function FeatureItem({
-  title,
-  description,
-}: {
-  title: string;
-  description: string;
-}) {
-  return (
-    <li className="border-primary border-l-2 py-1 pl-3">
-      <h3 className="font-medium">{title}</h3>
-      <p className="text-muted-foreground text-sm">{description}</p>
-    </li>
   );
 }

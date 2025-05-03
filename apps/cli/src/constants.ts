@@ -37,8 +37,10 @@ export const dependencyVersionMap = {
 
  mysql2: "^3.14.0",
 
- "@prisma/client": "^6.6.0",
- prisma: "^6.6.0",
+	"@prisma/client": "^6.7.0",
+	prisma: "^6.7.0",
+
+	mongoose: "^8.14.0",
 
  "vite-plugin-pwa": "^0.21.2",
  "@vite-pwa/assets-generator": "^0.2.6",
@@ -88,15 +90,23 @@ export const dependencyVersionMap = {
 
  "@prisma/extension-accelerate": "^1.3.0",
 
- "@orpc/server": "^1.1.0",
- "@orpc/client": "^1.1.0",
- "@orpc/react-query": "^1.1.0",
- "@orpc/vue-query": "^1.1.0",
- "@orpc/svelte-query": "^1.1.0",
+	"@orpc/server": "^1.1.1",
+	"@orpc/client": "^1.1.1",
+	"@orpc/react-query": "^1.1.1",
+	"@orpc/vue-query": "^1.1.1",
+	"@orpc/svelte-query": "^1.1.1",
 
- "@trpc/tanstack-react-query": "^11.0.0",
- "@trpc/server": "^11.0.0",
- "@trpc/client": "^11.0.0",
+	"@trpc/tanstack-react-query": "^11.0.0",
+	"@trpc/server": "^11.0.0",
+	"@trpc/client": "^11.0.0",
+
+	convex: "^1.23.0",
+	"@convex-dev/react-query": "^0.0.0-alpha.8",
+	"convex-svelte": "^0.0.11",
+
+	"@tanstack/svelte-query": "^5.74.4",
+	"@tanstack/react-query-devtools": "^5.69.0",
+	"@tanstack/react-query": "^5.69.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

@@ -16,9 +16,9 @@ export const stackParsers = {
 	runtime: parseAsStringEnum<StackState["runtime"]>(
 		getValidIds("runtime"),
 	).withDefault(DEFAULT_STACK.runtime),
-	backendFramework: parseAsStringEnum<StackState["backendFramework"]>(
-		getValidIds("backendFramework"),
-	).withDefault(DEFAULT_STACK.backendFramework),
+	backend: parseAsStringEnum<StackState["backend"]>(
+		getValidIds("backend"),
+	).withDefault(DEFAULT_STACK.backend),
 	api: parseAsStringEnum<StackState["api"]>(getValidIds("api")).withDefault(
 		DEFAULT_STACK.api,
 	),
@@ -52,7 +52,7 @@ export const stackUrlKeys: UrlKeys<typeof stackParsers> = {
 	projectName: "name",
 	frontend: "fe",
 	runtime: "rt",
-	backendFramework: "be",
+	backend: "be",
 	api: "api",
 	database: "db",
 	orm: "orm",

@@ -49,7 +49,6 @@ async function loginToTurso() {
 		return true;
 	} catch (error) {
 		s.stop(pc.red("Failed to log in to Turso"));
-		throw error;
 	}
 }
 
@@ -75,7 +74,6 @@ async function installTursoCLI(isMac: boolean) {
 			throw new Error("Installation cancelled");
 		}
 		s.stop(pc.red("Failed to install Turso CLI"));
-		throw error;
 	}
 }
 
@@ -135,10 +133,7 @@ async function selectTursoGroup(): Promise<string | null> {
 	return selectedGroup as string;
 }
 
-async function createTursoDatabase(
-	dbName: string,
-	groupName: string | null,
-): Promise<TursoConfig> {
+async function createTursoDatabase(dbName: string, groupName: string | null) {
 	const s = spinner();
 
 	try {
@@ -158,7 +153,6 @@ async function createTursoDatabase(
 		if (error instanceof Error && error.message.includes("already exists")) {
 			throw new Error("DATABASE_EXISTS");
 		}
-		throw error;
 	}
 
 	s.start("Retrieving database connection details...");
@@ -174,7 +168,6 @@ async function createTursoDatabase(
 		};
 	} catch (error) {
 		s.stop(pc.red("Failed to retrieve database connection details"));
-		throw error;
 	}
 }
 
@@ -289,7 +282,6 @@ export async function setupTurso(config: ProjectConfig): Promise<void> {
 					log.warn(pc.yellow(`Database "${pc.red(dbName)}" already exists`));
 					suggestedName = `${dbName}-${Math.floor(Math.random() * 1000)}`;
 				} else {
-					throw error;
 				}
 			}
 		}

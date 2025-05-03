@@ -1,13 +1,22 @@
-import { cancel, isCancel, select } from "@clack/prompts";
+import { cancel, isCancel, log, select } from "@clack/prompts";
 import pc from "picocolors";
-import type { ProjectDBSetup, ProjectOrm } from "../types";
+import type { ProjectBackend, ProjectDBSetup, ProjectOrm } from "../types";
 
 export async function getDBSetupChoice(
 	databaseType: string,
 	dbSetup: ProjectDBSetup | undefined,
 	orm?: ProjectOrm,
+	backend?: ProjectBackend,
 ): Promise<ProjectDBSetup> {
+	if (backend === "convex") {
+		return "none";
+	}
+
 	if (dbSetup !== undefined) return dbSetup as ProjectDBSetup;
+
+	if (databaseType === "none") {
+		return "none";
+	}
 
 	if (databaseType === "sqlite" && orm === "prisma") {
 		return "none";

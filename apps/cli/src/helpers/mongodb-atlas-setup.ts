@@ -108,7 +108,6 @@ async function writeEnvFile(projectDir: string, config?: MongoDBConfig) {
 		await fs.writeFile(envPath, envContent.trim());
 	} catch (error) {
 		consola.error("Failed to update environment configuration");
-		throw error;
 	}
 }
 

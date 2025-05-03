@@ -26,47 +26,48 @@ import {
 	setupFrontendTemplates,
 } from "./template-manager";
 
-export async function createProject(options: ProjectConfig): Promise<string> {
-	const s = spinner();
+export async function createProject(options: ProjectConfig) {
 	const projectDir = path.resolve(process.cwd(), options.projectName);
+	const isConvex = options.backend === "convex";
 
 	try {
 		await fs.ensureDir(projectDir);
 
 		await copyBaseTemplate(projectDir, options);
 		await setupFrontendTemplates(projectDir, options);
-
 		await setupBackendFramework(projectDir, options);
-		await setupBackendDependencies(options);
-
-		await setupDbOrmTemplates(projectDir, options);
-
-		await setupDatabase(options);
-
-		await setupAuthTemplate(projectDir, options);
-		await setupAuth(options);
-
+		if (!isConvex) {
+			await setupDbOrmTemplates(projectDir, options);
+			await setupAuthTemplate(projectDir, options);
+		}
+		if (options.examples.length > 0 && options.examples[0] !== "none") {
+			await setupExamplesTemplate(projectDir, options);
+		}
 		await setupAddonsTemplate(projectDir, options);
+
+		await setupApi(options);
+
+		if (!isConvex) {
+			await setupBackendDependencies(options);
+			await setupDatabase(options);
+			await setupRuntime(options);
+			if (options.examples.length > 0 && options.examples[0] !== "none") {
+				await setupExamples(options);
+			}
+		}
+
 		if (options.addons.length > 0 && options.addons[0] !== "none") {
 			await setupAddons(options);
 		}
 
-		await setupExamplesTemplate(projectDir, options);
-		await handleExtras(projectDir, options);
-
-		if (options.examples.length > 0 && options.examples[0] !== "none") {
-			await setupExamples(options);
+		if (!isConvex && options.auth) {
+			await setupAuth(options);
 		}
 
-		await setupApi(options);
-
-		await setupRuntime(options);
-
+		await handleExtras(projectDir, options);
 		await setupEnvironmentVariables(options);
-
 		await updatePackageConfigurations(projectDir, options);
 		await createReadme(projectDir, options);
-
 		await initializeGit(projectDir, options.git);
 
 		log.success("Project template successfully scaffolded!");
@@ -86,12 +87,14 @@ export async function createProject(options: ProjectConfig): Promise<string> {
 
 		return projectDir;
 	} catch (error) {
-		s.stop(pc.red("Failed"));
 		if (error instanceof Error) {
 			cancel(pc.red(`Error during project creation: ${error.message}`));
 			console.error(error.stack);
 			process.exit(1);
+		} else {
+			cancel(pc.red(`An unexpected error occurred: ${String(error)}`));
+			console.error(error);
+			process.exit(1);
 		}
-		throw error;
 	}
 }

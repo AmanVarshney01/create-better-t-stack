@@ -2,7 +2,8 @@
   "name": "better-t-stack",
   "private": true,
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
 
