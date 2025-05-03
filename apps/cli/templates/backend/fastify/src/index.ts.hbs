@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import Fastify , { type FastifyInstance, type FastifyPluginOptions } from 'fastify';
+import Fastify, { type FastifyInstance, type FastifyPluginOptions } from 'fastify';
 import fp from 'fastify-plugin';
 import fastifyAutoload from '@fastify/autoload';
 import type { ListenOptions } from 'node:net';
@@ -24,168 +24,174 @@ import { streamText } from "ai";
 import closeWithGrace from 'close-with-grace';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-async function serviceApp(
-fastify: FastifyInstance,
-opts: FastifyPluginOptions
-) {
-// biome-ignore lint/performance/noDelete: This option only serves testing purpose
-delete opts.skipOverride;
-// This loads all external plugins defined in plugins/external
-// those should be registered first as your custom plugins might depend on them
-await fastify.register(fastifyAutoload, {
-dir: path.join(__dirname, 'plugins/external'),
-options: { ...opts },
-autoHooks: true,
-cascadeHooks: true
-});
 
-// This loads all your custom plugins defined in plugins/custom
-// those should be support plugins that are reused
-// through your application
-fastify.register(fastifyAutoload, {
-dir: path.join(__dirname, 'plugins/custom'),
-options: { ...opts }
-});
+async function serviceApp(fastify: FastifyInstance, opts: FastifyPluginOptions) {
+  // biome-ignore lint/performance/noDelete: This option only serves testing purpose
+  delete opts.skipOverride;
 
-{{#if (eq api "trpc")}}
-fastify.register(trpcFastify.fastifyTRPCPlugin, {
-prefix: '/trpc',
-trpcOptions: {
-router: appRouter,
-createContext: createContext
+  // This loads all external plugins defined in plugins/external
+  // those should be registered first as your custom plugins might depend on them
+  await fastify.register(fastifyAutoload, {
+    dir: path.join(__dirname, 'plugins/external'),
+    options: { ...opts },
+    autoHooks: true,
+    cascadeHooks: true
+  });
+
+  // This loads all your custom plugins defined in plugins/custom
+  // those should be support plugins that are reused
+  // through your application
+  fastify.register(fastifyAutoload, {
+    dir: path.join(__dirname, 'plugins/custom'),
+    options: { ...opts }
+  });
+
+  {{#if (eq api "trpc")}}
+  fastify.register(trpcFastify.fastifyTRPCPlugin, {
+    prefix: '/trpc',
+    trpcOptions: {
+      router: appRouter,
+      createContext: createContext
+    }
+  });
+  {{/if}}
+
+  // Register ORPC handler
+  {{#if (eq api "orpc")}}
+  const handler = new RPCHandler(appRouter);
+  fastify.addHook('onRequest', async (req, res) => {
+    const { matched } = await handler.handle(req.raw, res.raw, {
+      prefix: '/rpc',
+      {{#if auth}}
+      context: await createContext({ req }),
+      {{else}}
+      context: {},
+      {{/if}}
+    });
+
+    if (matched) {
+      return;
+    }
+  });
+  {{/if}}
+
+  {{#if (includes examples "ai")}}
+  fastify.post("/ai", async (request, reply) => {
+    const { messages = [] } = request.body || {};
+    const result = streamText({
+      model: google("gemini-1.5-flash"),
+      messages,
+    });
+    result.pipeDataStreamToResponse(await reply);
+  });
+  {{/if}}
+
+  fastify.setErrorHandler((err, request, reply) => {
+    fastify.log.error(
+      {
+        err,
+        request: {
+          method: request.method,
+          url: request.url,
+          query: request.query,
+          params: request.params
+        }
+      },
+      'Unhandled error occurred'
+    );
+
+    reply.code(err.statusCode ?? 500);
+
+    let message = 'Internal Server Error';
+    if (err.statusCode && err.statusCode < 500) {
+      message = err.message;
+    }
+    return { message };
+  });
+
+  // An attacker could search for valid URLs if your 404 error handling is not rate limited.
+  fastify.setNotFoundHandler(
+    { preHandler: fastify.rateLimit({ max: 3, timeWindow: 500 }) },
+    (request, reply) => {
+      request.log.warn(
+        {
+          request: {
+            method: request.method,
+            url: request.url,
+            query: request.query,
+            params: request.params
+          }
+        },
+        'Resource not found'
+      );
+
+      reply.code(404);
+      return { message: 'Not Found' };
+    }
+  );
 }
-});
-{{/if}}
 
-// Register ORPC handler
-{{#if (eq api "orpc")}}
-const handler = new RPCHandler(appRouter);
-fastify.addHook('onRequest', async (req, res) => {
-  const { matched } = await handler.handle(req.raw, res.raw, {
-    prefix: '/rpc',
-    {{#if auth}}
-    context: await createContext({ req }),
-    {{else}}
-    context: {},
-    {{/if}}
-  })
-
-  if (matched) {
-    return
-  }
-});
-{{/if}}
-{{#if (includes examples "ai")}}
-fastify.post("/ai", async (request, reply) => {
-const { messages = [] } = request.body || {};
-const result = streamText({
-model: google("gemini-1.5-flash"),
-messages,
-});
-result.pipeDataStreamToResponse(await reply);
-});
-{{/if}}
-
-
-fastify.setErrorHandler((err, request, reply) => {
-fastify.log.error(
-{
-err,
-request: {
-method: request.method,
-url: request.url,
-query: request.query,
-params: request.params
-}
-},
-'Unhandled error occurred'
-);
-
-reply.code(err.statusCode ?? 500);
-
-let message = 'Internal Server Error';
-if (err.statusCode && err.statusCode < 500) { message=err.message; } return { message }; });
-// An attacker could search for valid URLs if your 404 error handling is not rate limited.
-fastify.setNotFoundHandler( { preHandler:
- fastify.rateLimit({ max: 3, timeWindow: 500 }) }, (request, reply)=> {
- request.log.warn(
- {
- request: {
- method: request.method,
- url: request.url,
- query: request.query,
- params: request.params
- }
- },
- 'Resource not found'
- );
-
- reply.code(404);
-
- return { message: 'Not Found' };
- });
- }
- /**
+/**
  * Do not use NODE_ENV to determine what logger (or any env related feature) to use
  * @see {@link https://www.youtube.com/watch?v=HMM7GJC5E2o}
  */
- function getLoggerOptions() {
- // Only if the program is running in an interactive terminal
- if (process.stdout.isTTY) {
- return {
- level: 'info',
- // if you want to log to a file, you can use the file option
- // file: path.join(__dirname, '../logs/app.log')
- };
- }
+function getLoggerOptions() {
+  // Only if the program is running in an interactive terminal
+  if (process.stdout.isTTY) {
+    return {
+      level: 'info',
+      // if you want to log to a file, you can use the file option
+      // file: path.join(__dirname, '../logs/app.log')
+    };
+  }
 
- return { level: process.env.LOG_LEVEL ?? 'silent' };
- }
+  return { level: process.env.LOG_LEVEL ?? 'silent' };
+}
 
- const app = Fastify({
- logger: true,
- });
+const app = Fastify({
+  logger: true,
+});
 
- async function init() {
- console.log('Starting server...');
- // Register your application as a normal plugin.
- // fp must be used to override default error handler
- app.register(fp(serviceApp));
- // Delay is the number of milliseconds for the graceful close to finish
- closeWithGrace(
- { delay: process.env.FASTIFY_CLOSE_GRACE_DELAY! ? Number(process.env.FASTIFY_CLOSE_GRACE_DELAY) : 500 },
- async ({ err }) => {
- if (err != null) {
- app.log.error(err);
- }
+async function init() {
+  console.log('Starting server...');
+  // Register your application as a normal plugin.
+  // fp must be used to override default error handler
+  app.register(fp(serviceApp));
 
- await app.close();
- }
- );
+  // Delay is the number of milliseconds for the graceful close to finish
+  closeWithGrace(
+    { delay: process.env.FASTIFY_CLOSE_GRACE_DELAY! ? Number(process.env.FASTIFY_CLOSE_GRACE_DELAY) : 500 },
+    async ({ err }) => {
+      if (err != null) {
+        app.log.error(err);
+      }
+      await app.close();
+    }
+  );
 
- await app.ready();
+  await app.ready();
 
- try {
- // Start listening.
- await app.listen(
- {
- port: 3000,
- host: '127.0.0.1',
- backlog: 511
- } as ListenOptions,
- (err: Error | null, address: string) => {
- if (err) {
- console.error(err);
- process.exit(1);
- }
- console.log(`⚡ Server listening at ${address}`);
- app.log.info(`⚡ Server listening at ${address}`);
- }
- );
- } catch (err) {
- app.log.error(err);
- process.exit(1);
- }
- }
+  try {
+    // Start listening.
+    await app.listen(
+      {
+        port: 3000,
+        host: '127.0.0.1',
+        backlog: 511
+      } as ListenOptions,
+      (err: Error | null, address: string) => {
+        if (err) {
+          console.error(err);
+          process.exit(1);
+        }
+        console.log(`⚡ Server listening at ${address}`);
+        app.log.info(`⚡ Server listening at ${address}`);
+      }
+    );
+  } catch (err) {
+    app.log.error(err);
+    process.exit(1);
+  }
+}
 
- init();
+init();

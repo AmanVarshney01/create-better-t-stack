@@ -5,19 +5,19 @@ import { auth } from "./auth";
 {{/if}}
 
 export async function createContext(req: NextRequest) {
-{{#if auth}}
-const session = await auth.api.getSession({
-headers: req.headers,
-});
-return {
-session,
-};
-{{else}}
-// No auth configured
-return {
-session: null,
-};
-{{/if}}
+  {{#if auth}}
+  const session = await auth.api.getSession({
+    headers: req.headers,
+  });
+  return {
+    session,
+  };
+  {{else}}
+  // No auth configured
+  return {
+    session: null,
+  };
+  {{/if}}
 }
 
 {{else if (eq backend 'hono')}}
@@ -27,23 +27,23 @@ import { auth } from "./auth";
 {{/if}}
 
 export type CreateContextOptions = {
-context: HonoContext;
+  context: HonoContext;
 };
 
 export async function createContext({ context }: CreateContextOptions) {
-{{#if auth}}
-const session = await auth.api.getSession({
-headers: context.req.raw.headers,
-});
-return {
-session,
-};
-{{else}}
-// No auth configured
-return {
-session: null,
-};
-{{/if}}
+  {{#if auth}}
+  const session = await auth.api.getSession({
+    headers: context.req.raw.headers,
+  });
+  return {
+    session,
+  };
+  {{else}}
+  // No auth configured
+  return {
+    session: null,
+  };
+  {{/if}}
 }
 
 {{else if (eq backend 'elysia')}}
@@ -53,23 +53,23 @@ import { auth } from "./auth";
 {{/if}}
 
 export type CreateContextOptions = {
-context: ElysiaContext;
+  context: ElysiaContext;
 };
 
 export async function createContext({ context }: CreateContextOptions) {
-{{#if auth}}
-const session = await auth.api.getSession({
-headers: context.request.headers,
-});
-return {
-session,
-};
-{{else}}
-// No auth configured
-return {
-session: null,
-};
-{{/if}}
+  {{#if auth}}
+  const session = await auth.api.getSession({
+    headers: context.request.headers,
+  });
+  return {
+    session,
+  };
+  {{else}}
+  // No auth configured
+  return {
+    session: null,
+  };
+  {{/if}}
 }
 
 {{else if (eq backend 'express')}}
@@ -80,19 +80,19 @@ import { auth } from "./auth";
 {{/if}}
 
 export async function createContext(opts: CreateExpressContextOptions) {
-{{#if auth}}
-const session = await auth.api.getSession({
-headers: fromNodeHeaders(opts.req.headers),
-});
-return {
-session,
-};
-{{else}}
-// No auth configured
-return {
-session: null,
-};
-{{/if}}
+  {{#if auth}}
+  const session = await auth.api.getSession({
+    headers: fromNodeHeaders(opts.req.headers),
+  });
+  return {
+    session,
+  };
+  {{else}}
+  // No auth configured
+  return {
+    session: null,
+  };
+  {{/if}}
 }
 
 {{else if (eq backend 'fastify')}}
@@ -102,27 +102,27 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 {{/if}}
 
 export async function createContext(request: FastifyRequest) {
-{{#if auth}}
-const session = await request.server.auth.api.getSession({
-headers: fromNodeHeaders(request.headers),
-});
-return {
-session,
-ctx: request.server,
-};
-{{else}}
-// No auth configured
-return {
-session: null,
-ctx: request.server,
-};
-{{/if}}
+  {{#if auth}}
+  const session = await request.server.auth.api.getSession({
+    headers: fromNodeHeaders(request.headers),
+  });
+  return {
+    session,
+    ctx: request.server,
+  };
+  {{else}}
+  // No auth configured
+  return {
+    session: null,
+    ctx: request.server,
+  };
+  {{/if}}
 }
 {{else}}
 export async function createContext() {
-return {
-session: null,
-};
+  return {
+    session: null,
+  };
 }
 {{/if}}
 
