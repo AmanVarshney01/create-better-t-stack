@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.7.1
+
+### Patch Changes
+
+- 7ecef29: Enable edge-to-edge display for Android
+
 ## 2.7.0
 
 ### Minor Changes
