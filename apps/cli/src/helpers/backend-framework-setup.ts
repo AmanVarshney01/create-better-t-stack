@@ -8,6 +8,11 @@ export async function setupBackendDependencies(
 	config: ProjectConfig,
 ): Promise<void> {
 	const { projectName, backend, runtime, api } = config;
+
+	if (backend === "convex") {
+		return;
+	}
+
 	const projectDir = path.resolve(process.cwd(), projectName);
 	const framework = backend;
 	const serverDir = path.join(projectDir, "apps/server");
@@ -54,9 +59,11 @@ export async function setupBackendDependencies(
 		devDependencies.push("@types/bun");
 	}
 
-	await addPackageDependency({
-		dependencies,
-		devDependencies,
-		projectDir: serverDir,
-	});
+	if (dependencies.length > 0 || devDependencies.length > 0) {
+		await addPackageDependency({
+			dependencies,
+			devDependencies,
+			projectDir: serverDir,
+		});
+	}
 }

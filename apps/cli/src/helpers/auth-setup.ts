@@ -6,8 +6,9 @@ import type { ProjectConfig } from "../types";
 import { addPackageDependency } from "../utils/add-package-deps";
 
 export async function setupAuth(config: ProjectConfig): Promise<void> {
-	const { projectName, auth, frontend } = config;
-	if (!auth) {
+	const { projectName, auth, frontend, backend } = config;
+
+	if (backend === "convex" || !auth) {
 		return;
 	}
 
@@ -18,12 +19,15 @@ export async function setupAuth(config: ProjectConfig): Promise<void> {
 
 	const clientDirExists = await fs.pathExists(clientDir);
 	const nativeDirExists = await fs.pathExists(nativeDir);
+	const serverDirExists = await fs.pathExists(serverDir);
 
 	try {
-		await addPackageDependency({
-			dependencies: ["better-auth"],
-			projectDir: serverDir,
-		});
+		if (serverDirExists) {
+			await addPackageDependency({
+				dependencies: ["better-auth"],
+				projectDir: serverDir,
+			});
+		}
 
 		const hasWebFrontend = frontend.some((f) =>
 			[
@@ -48,10 +52,12 @@ export async function setupAuth(config: ProjectConfig): Promise<void> {
 				dependencies: ["better-auth", "@better-auth/expo"],
 				projectDir: nativeDir,
 			});
-			await addPackageDependency({
-				dependencies: ["@better-auth/expo"],
-				projectDir: serverDir,
-			});
+			if (serverDirExists) {
+				await addPackageDependency({
+					dependencies: ["@better-auth/expo"],
+					projectDir: serverDir,
+				});
+			}
 		}
 	} catch (error) {
 		consola.error(pc.red("Failed to configure authentication dependencies"));

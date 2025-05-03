@@ -39,7 +39,7 @@ export default function SponsorsSection() {
 					alt="Sponsors"
 					width={1000}
 					height={500}
-					className="h-auto max-w-full"
+					className="h-auto max-w-full md:max-w-2xl"
 					style={{ colorScheme: "light" }}
 				/>
 			</motion.div>

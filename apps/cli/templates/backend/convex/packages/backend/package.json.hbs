@@ -1,0 +1,21 @@
+{
+  "name": "@{{projectName}}/backend",
+  "version": "1.0.0",
+  "private": true,
+  "exports": {
+    "./convex/*": "./convex/*"
+  },
+  "scripts": {
+    "dev": "convex dev",
+    "setup": "convex dev --until-success"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "convex": "^1.23.0"
+  }
+}

@@ -17,7 +17,6 @@
     "@react-router/node": "^7.4.1",
     "@react-router/serve": "^7.4.1",
     "@tanstack/react-form": "^1.2.3",
-    "@tanstack/react-query": "^5.71.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "isbot": "^5.1.17",
@@ -34,7 +33,6 @@
   "devDependencies": {
     "@react-router/dev": "^7.4.1",
     "@tailwindcss/vite": "^4.0.0",
-    "@tanstack/react-query-devtools": "^5.71.3",
     "@types/node": "^20",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.1",

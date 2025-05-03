@@ -116,8 +116,6 @@ ctx: request.server,
 }
 
 {{else}}
-// Default or fallback context if backend is not recognized or none
-// This might need adjustment based on your default behavior
 export async function createContext() {
 return {
 session: null,

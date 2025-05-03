@@ -13,13 +13,25 @@ import { setupNeonPostgres } from "./neon-setup";
 import type { ProjectConfig } from "../types";
 
 export async function setupDatabase(config: ProjectConfig): Promise<void> {
-	const { projectName, database, orm, dbSetup } = config;
+	const { projectName, database, orm, dbSetup, backend } = config;
+
+	if (backend === "convex" || database === "none") {
+		if (backend !== "convex") {
+			const projectDir = path.resolve(process.cwd(), projectName);
+			const serverDir = path.join(projectDir, "apps/server");
+			const serverDbDir = path.join(serverDir, "src/db");
+			if (await fs.pathExists(serverDbDir)) {
+				await fs.remove(serverDbDir);
+			}
+		}
+		return;
+	}
+
 	const projectDir = path.resolve(process.cwd(), projectName);
 	const s = spinner();
 	const serverDir = path.join(projectDir, "apps/server");
 
-	if (database === "none") {
-		await fs.remove(path.join(serverDir, "src/db"));
+	if (!(await fs.pathExists(serverDir))) {
 		return;
 	}
 
@@ -50,6 +62,12 @@ export async function setupDatabase(config: ProjectConfig): Promise<void> {
 					projectDir: serverDir,
 				});
 			}
+		} else if (orm === "mongoose") {
+			await addPackageDependency({
+				dependencies: ["mongoose"],
+				devDependencies: [],
+				projectDir: serverDir,
+			});
 		}
 
 		if (database === "sqlite" && dbSetup === "turso") {
@@ -68,6 +86,5 @@ export async function setupDatabase(config: ProjectConfig): Promise<void> {
 		if (error instanceof Error) {
 			consola.error(pc.red(error.message));
 		}
-		throw error;
 	}
 }

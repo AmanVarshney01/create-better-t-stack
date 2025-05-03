@@ -1,4 +1,4 @@
-import { cancel, isCancel, select } from "@clack/prompts";
+import { cancel, isCancel, log, select } from "@clack/prompts";
 import pc from "picocolors";
 import { DEFAULT_CONFIG } from "../constants";
 import type { ProjectBackend, ProjectRuntime } from "../types";
@@ -7,6 +7,10 @@ export async function getRuntimeChoice(
 	runtime?: ProjectRuntime,
 	backend?: ProjectBackend,
 ): Promise<ProjectRuntime> {
+	if (backend === "convex") {
+		return "none";
+	}
+
 	if (runtime !== undefined) return runtime;
 
 	if (backend === "next") {

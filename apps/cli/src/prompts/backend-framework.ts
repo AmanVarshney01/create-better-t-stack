@@ -31,6 +31,11 @@ export async function getBackendFrameworkChoice(
     label: "Elysia",
     hint: "Ergonomic web framework for building backend servers",
    },
+			{
+				value: "convex",
+				label: "Convex",
+				hint: "Reactive backend-as-a-service platform",
+			},
    {
     value: "fastify",
     label: "Fastify",

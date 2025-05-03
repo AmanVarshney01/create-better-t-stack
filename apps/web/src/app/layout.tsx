@@ -4,6 +4,7 @@ import { Poppins } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
 import "./global.css";
+import { Toaster } from "@/components/ui/sonner";
 
 const poppins = Poppins({
 	subsets: ["latin"],
@@ -96,6 +97,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 					}}
 				>
 					<NuqsAdapter>{children}</NuqsAdapter>
+					<Toaster />
 				</RootProvider>
 			</body>
 		</html>

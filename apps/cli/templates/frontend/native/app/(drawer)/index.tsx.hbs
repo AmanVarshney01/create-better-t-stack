@@ -1,11 +1,16 @@
-import { useQuery } from "@tanstack/react-query";
 import { View, Text, ScrollView } from "react-native";
 import { Container } from "@/components/container";
 {{#if (eq api "orpc")}}
+import { useQuery } from "@tanstack/react-query";
 import { orpc } from "@/utils/orpc";
 {{/if}}
 {{#if (eq api "trpc")}}
+import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
+{{/if}}
+{{#if (eq backend "convex")}}
+import { useQuery } from "convex/react";
+import { api } from "@{{ projectName }}/backend/convex/_generated/api.js";
 {{/if}}
 
 export default function Home() {
@@ -14,6 +19,9 @@ export default function Home() {
   {{/if}}
   {{#if (eq api "trpc")}}
   const healthCheck = useQuery(trpc.healthCheck.queryOptions());
+  {{/if}}
+  {{#if (eq backend "convex")}}
+  const healthCheck = useQuery(api.healthCheck.get);
   {{/if}}
 
   return (
@@ -28,15 +36,35 @@ export default function Home() {
           <View className="flex-row items-center gap-2">
             <View
               className={`h-2.5 w-2.5 rounded-full ${
-                healthCheck.data ? "bg-green-500" : "bg-red-500"
+                {{#if (or (eq api "orpc") (eq api "trpc"))}}
+                  healthCheck.data ? "bg-green-500" : "bg-red-500"
+                {{else}}
+                  healthCheck ? "bg-green-500" : "bg-red-500"
+                {{/if}}
               }`}
             />
             <Text className="text-sm text-foreground">
-              {healthCheck.isLoading
-                ? "Checking..."
-                : healthCheck.data
-                  ? "Connected"
-                  : "Disconnected"}
+              {{#if (eq api "orpc")}}
+                {healthCheck.isLoading
+                  ? "Checking..."
+                  : healthCheck.data
+                    ? "Connected"
+                    : "Disconnected"}
+              {{/if}}
+              {{#if (eq api "trpc")}}
+                {healthCheck.isLoading
+                  ? "Checking..."
+                  : healthCheck.data
+                    ? "Connected"
+                    : "Disconnected"}
+              {{/if}}
+              {{#if (eq backend "convex")}}
+                {healthCheck === undefined
+                  ? "Checking..."
+                  : healthCheck === "OK"
+                    ? "Connected"
+                    : "Error"}
+              {{/if}}
             </Text>
           </View>
         </View>

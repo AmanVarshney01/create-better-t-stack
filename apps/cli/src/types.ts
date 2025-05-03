@@ -1,10 +1,10 @@
 export type ProjectDatabase =
- | "sqlite"
- | "postgres"
- | "mongodb"
- | "mysql"
- | "none";
-export type ProjectOrm = "drizzle" | "prisma" | "none";
+	| "sqlite"
+	| "postgres"
+	| "mongodb"
+	| "mysql"
+	| "none";
+export type ProjectOrm = "drizzle" | "prisma" | "mongoose" | "none";
 export type ProjectPackageManager = "npm" | "pnpm" | "bun";
 export type ProjectAddons =
  | "pwa"
@@ -14,8 +14,8 @@ export type ProjectAddons =
  | "starlight"
  | "turborepo"
  | "none";
-export type ProjectBackend = "hono" | "elysia" | "express" | "next" | "fastify";
-export type ProjectRuntime = "node" | "bun";
+export type ProjectBackend = "hono" | "elysia" | "express" | "next" | "convex" | "fastify";
+export type ProjectRuntime = "node" | "bun" | "none";
 export type ProjectExamples = "todo" | "ai" | "none";
 export type ProjectFrontend =
  | "react-router"
@@ -27,12 +27,12 @@ export type ProjectFrontend =
  | "svelte"
  | "none";
 export type ProjectDBSetup =
- | "turso"
- | "prisma-postgres"
- | "mongodb-atlas"
- | "neon"
- | "none";
-export type ProjectApi = "trpc" | "orpc";
+	| "turso"
+	| "prisma-postgres"
+	| "mongodb-atlas"
+	| "neon"
+	| "none";
+export type ProjectApi = "trpc" | "orpc" | "none";
 
 export interface ProjectConfig {
  projectName: string;

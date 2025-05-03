@@ -47,6 +47,5 @@ export async function setupStarlight(config: ProjectConfig): Promise<void> {
 		if (error instanceof Error) {
 			consola.error(pc.red(error.message));
 		}
-		throw error;
 	}
 }

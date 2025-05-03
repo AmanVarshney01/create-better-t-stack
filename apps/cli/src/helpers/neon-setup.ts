@@ -26,10 +26,9 @@ async function executeNeonCommand(
 			commandArgsString,
 		);
 
-		if (s) s.start(spinnerText);
+		if (spinnerText) s.start(spinnerText);
 		const result = await execa(fullCommand, { shell: true });
-		if (s) s.stop(spinnerText);
-
+		if (spinnerText) s.stop(pc.green("Completed"));
 		return result;
 	} catch (error) {
 		if (s) s.stop(pc.red(`Failed: ${spinnerText}`));
@@ -61,14 +60,13 @@ async function authenticateWithNeon(packageManager: ProjectPackageManager) {
 		return true;
 	} catch (error) {
 		consola.error(pc.red("Failed to authenticate with Neon"));
-		throw error;
 	}
 }
 
 async function createNeonProject(
 	projectName: string,
 	packageManager: ProjectPackageManager,
-): Promise<NeonConfig | null> {
+) {
 	try {
 		const commandArgsString = `neonctl projects create --name "${projectName}" --output json`;
 		const { stdout } = await executeNeonCommand(
@@ -101,7 +99,6 @@ async function createNeonProject(
 		return null;
 	} catch (error) {
 		consola.error(pc.red("Failed to create Neon project"));
-		throw error;
 	}
 }
 

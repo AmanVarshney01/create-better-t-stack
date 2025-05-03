@@ -1,6 +1,6 @@
 {
   "name": "create-better-t-stack",
-  "version": "2.2.1",
+  "version": "2.7.0",
   "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
   "type": "module",
   "license": "MIT",
@@ -45,8 +45,8 @@
   },
   "homepage": "https://better-t-stack.amanv.dev/",
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
     "check-types": "tsc --noEmit",
     "check": "biome check --write .",
     "test": "vitest run",
@@ -68,7 +68,7 @@
     "@types/globby": "^9.1.0",
     "@types/node": "^22.14.1",
     "@types/yargs": "^17.0.33",
-    "tsup": "^8.4.0",
+    "tsdown": "^0.9.9",
     "typescript": "^5.8.3"
   }
 }

@@ -1,5 +1,82 @@
 # create-better-t-stack
 
+## 2.7.0
+
+### Minor Changes
+
+- 437cf9a: add mongoose orm support to the stack builder
+
+### Patch Changes
+
+- 0cb24b1: add migrate and generate scripts
+
+## 2.6.1
+
+### Patch Changes
+
+- cebb077: Add dotenv import to Prisma config files
+
+## 2.6.0
+
+### Minor Changes
+
+- d5894e5: upgrade to expo 53
+
+## 2.5.2
+
+### Patch Changes
+
+- 920a8f0: Fixed an issue where the CLI would still allow selecting non-Convex backends after specifying `--api none` flag.
+
+## 2.5.1
+
+### Patch Changes
+
+- 9e00e20: add todo, ai template for next
+
+## 2.5.0
+
+### Minor Changes
+
+- 8c648de: update to prisma v6.7.0
+
+## 2.4.1
+
+### Patch Changes
+
+- 0510a27: Fix spinner behavior in Neon command execution
+
+## 2.4.0
+
+### Minor Changes
+
+- 065f862: add convex for svelte
+
+## 2.3.0
+
+### Minor Changes
+
+- 2a5358a: add convex
+
+## 2.2.4
+
+### Patch Changes
+
+- 9180ac2: fix shebang banner
+- 49f1fa1: Replace tsup with tsdown
+
+## 2.2.3
+
+### Patch Changes
+
+- aef7aa4: Refactor: Simplify error handling in CLI helpers
+
+## 2.2.2
+
+### Patch Changes
+
+- f1ce6b4: fix(templates): password must be at least 8 characters
+
 ## 2.2.1
 
 ### Patch Changes

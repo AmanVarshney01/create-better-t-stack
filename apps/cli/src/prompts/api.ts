@@ -1,12 +1,17 @@
-import { cancel, isCancel, select } from "@clack/prompts";
+import { cancel, isCancel, log, select } from "@clack/prompts";
 import pc from "picocolors";
 import { DEFAULT_CONFIG } from "../constants";
-import type { ProjectApi, ProjectFrontend } from "../types";
+import type { ProjectApi, ProjectBackend, ProjectFrontend } from "../types";
 
 export async function getApiChoice(
 	Api?: ProjectApi | undefined,
 	frontend?: ProjectFrontend[],
+	backend?: ProjectBackend,
 ): Promise<ProjectApi> {
+	if (backend === "convex") {
+		return "none";
+	}
+
 	if (Api) return Api;
 
 	const includesNuxt = frontend?.includes("nuxt");

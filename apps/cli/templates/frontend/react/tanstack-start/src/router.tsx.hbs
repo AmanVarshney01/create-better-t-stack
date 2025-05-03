@@ -1,3 +1,13 @@
+{{#if (eq backend "convex")}}
+import { createRouter as createTanStackRouter } from "@tanstack/react-router";
+import { QueryClient } from "@tanstack/react-query";
+import { routerWithQueryClient } from "@tanstack/react-router-with-query";
+import { ConvexQueryClient } from "@convex-dev/react-query";
+import { ConvexProvider } from "convex/react";
+import { routeTree } from "./routeTree.gen";
+import Loader from "./components/loader";
+import "./index.css";
+{{else}}
 import {
   QueryCache,
   QueryClient,
@@ -7,18 +17,56 @@ import { createRouter as createTanstackRouter } from "@tanstack/react-router";
 import Loader from "./components/loader";
 import "./index.css";
 import { routeTree } from "./routeTree.gen";
-{{#if (eq api "trpc")}}
+  {{#if (eq api "trpc")}}
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { toast } from "sonner";
 import type { AppRouter } from "../../server/src/routers";
 import { TRPCProvider } from "./utils/trpc";
-{{/if}}
-{{#if (eq api "orpc")}}
+  {{/if}}
+  {{#if (eq api "orpc")}}
 import { orpc, ORPCContext, queryClient } from "./utils/orpc";
+  {{/if}}
 {{/if}}
 
-{{#if (eq api "trpc")}}
+{{#if (eq backend "convex")}}
+export function createRouter() {
+  const CONVEX_URL = (import.meta as any).env.VITE_CONVEX_URL!;
+  if (!CONVEX_URL) {
+    console.error("missing envar VITE_CONVEX_URL");
+  }
+  const convexQueryClient = new ConvexQueryClient(CONVEX_URL);
+
+  const queryClient: QueryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        queryKeyHashFn: convexQueryClient.hashFn(),
+        queryFn: convexQueryClient.queryFn(),
+      },
+    },
+  });
+  convexQueryClient.connect(queryClient);
+
+  const router = routerWithQueryClient(
+    createTanStackRouter({
+      routeTree,
+      defaultPreload: "intent",
+      defaultPendingComponent: () => <Loader />,
+      defaultNotFoundComponent: () => <div>Not Found</div>,
+      context: { queryClient },
+      Wrap: ({ children }) => (
+        <ConvexProvider client={convexQueryClient.convexClient}>
+          {children}
+        </ConvexProvider>
+      ),
+    }),
+    queryClient,
+  );
+
+  return router;
+}
+{{else}}
+  {{#if (eq api "trpc")}}
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
@@ -38,11 +86,7 @@ export const queryClient = new QueryClient({
 const trpcClient = createTRPCClient<AppRouter>({
   links: [
     httpBatchLink({
-      {{#if (includes frontend 'next')}}
-      url: `${process.env.NEXT_PUBLIC_SERVER_URL}/trpc`,
-      {{else}}
       url: `${import.meta.env.VITE_SERVER_URL}/trpc`,
-      {{/if}}
       {{#if auth}}
       fetch(url, options) {
         return fetch(url, {
@@ -59,8 +103,7 @@ const trpc = createTRPCOptionsProxy({
   client: trpcClient,
   queryClient: queryClient,
 });
-{{/if}}
-
+  {{/if}}
 
 export const createRouter = () => {
   const router = createTanstackRouter({
@@ -69,10 +112,10 @@ export const createRouter = () => {
     defaultPreloadStaleTime: 0,
     {{#if (eq api "trpc")}}
     context: { trpc, queryClient },
-{{/if}}
-{{#if (eq api "orpc")}}
+    {{/if}}
+    {{#if (eq api "orpc")}}
     context: { orpc, queryClient },
-{{/if}}
+    {{/if}}
     defaultPendingComponent: () => <Loader />,
     defaultNotFoundComponent: () => <div>Not Found</div>,
     Wrap: ({ children }) => (
@@ -93,6 +136,7 @@ export const createRouter = () => {
 
   return router;
 };
+{{/if}}
 
 // Register the router instance for type safety
 declare module "@tanstack/react-router" {

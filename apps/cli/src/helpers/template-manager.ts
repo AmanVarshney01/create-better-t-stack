@@ -1,5 +1,4 @@
 import path from "node:path";
-import consola from "consola";
 import fs from "fs-extra";
 import { globby } from "globby";
 import pc from "picocolors";
@@ -28,26 +27,28 @@ async function processAndCopyFiles(
 		if (relativeSrcPath.endsWith(".hbs")) {
 			relativeDestPath = relativeSrcPath.slice(0, -4);
 		}
-		if (path.basename(relativeSrcPath) === "_gitignore") {
+		const basename = path.basename(relativeSrcPath);
+		if (basename === "_gitignore") {
 			relativeDestPath = path.join(path.dirname(relativeSrcPath), ".gitignore");
-		}
-		if (path.basename(relativeSrcPath) === "_npmrc") {
+		} else if (basename === "_npmrc") {
 			relativeDestPath = path.join(path.dirname(relativeSrcPath), ".npmrc");
 		}
 
 		const destPath = path.join(destDir, relativeDestPath);
 
-		await fs.ensureDir(path.dirname(destPath));
+		try {
+			await fs.ensureDir(path.dirname(destPath));
 
-		if (!overwrite && (await fs.pathExists(destPath))) {
-			continue;
-		}
+			if (!overwrite && (await fs.pathExists(destPath))) {
+				continue;
+			}
 
-		if (srcPath.endsWith(".hbs")) {
-			await processTemplate(srcPath, destPath, context);
-		} else {
-			await fs.copy(srcPath, destPath, { overwrite: true });
-		}
+			if (srcPath.endsWith(".hbs")) {
+				await processTemplate(srcPath, destPath, context);
+			} else {
+				await fs.copy(srcPath, destPath, { overwrite: true });
+			}
+		} catch (error) {}
 	}
 }
 
@@ -57,6 +58,7 @@ export async function copyBaseTemplate(
 ): Promise<void> {
 	const templateDir = path.join(PKG_ROOT, "templates/base");
 	await processAndCopyFiles(["**/*"], templateDir, projectDir, context);
+	await fs.ensureDir(path.join(projectDir, "packages"));
 }
 
 export async function setupFrontendTemplates(
@@ -69,6 +71,7 @@ export async function setupFrontendTemplates(
 	const hasNuxtWeb = context.frontend.includes("nuxt");
 	const hasSvelteWeb = context.frontend.includes("svelte");
 	const hasNative = context.frontend.includes("native");
+	const isConvex = context.backend === "convex";
 
 	if (hasReactWeb || hasNuxtWeb || hasSvelteWeb) {
 		const webAppDir = path.join(projectDir, "apps/web");
@@ -81,6 +84,7 @@ export async function setupFrontendTemplates(
 			);
 			if (await fs.pathExists(webBaseDir)) {
 				await processAndCopyFiles("**/*", webBaseDir, webAppDir, context);
+			} else {
 			}
 			const reactFramework = context.frontend.find((f) =>
 				["tanstack-router", "react-router", "tanstack-start", "next"].includes(
@@ -99,33 +103,47 @@ export async function setupFrontendTemplates(
 						webAppDir,
 						context,
 					);
+				} else {
 				}
-				const apiWebBaseDir = path.join(
-					PKG_ROOT,
-					`templates/api/${context.api}/web/react/base`,
-				);
-				if (await fs.pathExists(apiWebBaseDir)) {
-					await processAndCopyFiles("**/*", apiWebBaseDir, webAppDir, context);
+				if (!isConvex && context.api !== "none") {
+					const apiWebBaseDir = path.join(
+						PKG_ROOT,
+						`templates/api/${context.api}/web/react/base`,
+					);
+					if (await fs.pathExists(apiWebBaseDir)) {
+						await processAndCopyFiles(
+							"**/*",
+							apiWebBaseDir,
+							webAppDir,
+							context,
+						);
+					} else {
+					}
 				}
 			}
 		} else if (hasNuxtWeb) {
 			const nuxtBaseDir = path.join(PKG_ROOT, "templates/frontend/nuxt");
 			if (await fs.pathExists(nuxtBaseDir)) {
 				await processAndCopyFiles("**/*", nuxtBaseDir, webAppDir, context);
+			} else {
 			}
-			const apiWebNuxtDir = path.join(
-				PKG_ROOT,
-				`templates/api/${context.api}/web/nuxt`,
-			);
-			if (await fs.pathExists(apiWebNuxtDir)) {
-				await processAndCopyFiles("**/*", apiWebNuxtDir, webAppDir, context);
+			if (!isConvex && context.api !== "none") {
+				const apiWebNuxtDir = path.join(
+					PKG_ROOT,
+					`templates/api/${context.api}/web/nuxt`,
+				);
+				if (await fs.pathExists(apiWebNuxtDir)) {
+					await processAndCopyFiles("**/*", apiWebNuxtDir, webAppDir, context);
+				} else {
+				}
 			}
 		} else if (hasSvelteWeb) {
 			const svelteBaseDir = path.join(PKG_ROOT, "templates/frontend/svelte");
 			if (await fs.pathExists(svelteBaseDir)) {
 				await processAndCopyFiles("**/*", svelteBaseDir, webAppDir, context);
+			} else {
 			}
-			if (context.api === "orpc") {
+			if (!isConvex && context.api === "orpc") {
 				const apiWebSvelteDir = path.join(
 					PKG_ROOT,
 					`templates/api/${context.api}/web/svelte`,
@@ -137,6 +155,7 @@ export async function setupFrontendTemplates(
 						webAppDir,
 						context,
 					);
+				} else {
 				}
 			}
 		}
@@ -149,9 +168,10 @@ export async function setupFrontendTemplates(
 		const nativeBaseDir = path.join(PKG_ROOT, "templates/frontend/native");
 		if (await fs.pathExists(nativeBaseDir)) {
 			await processAndCopyFiles("**/*", nativeBaseDir, nativeAppDir, context);
+		} else {
 		}
 
-		if (context.api === "trpc") {
+		if (!isConvex && (context.api === "trpc" || context.api === "orpc")) {
 			const apiNativeSrcDir = path.join(
 				PKG_ROOT,
 				`templates/api/${context.api}/native`,
@@ -163,19 +183,7 @@ export async function setupFrontendTemplates(
 					nativeAppDir,
 					context,
 				);
-			}
-		} else if (context.api === "orpc") {
-			const apiNativeSrcDir = path.join(
-				PKG_ROOT,
-				`templates/api/${context.api}/native`,
-			);
-			if (await fs.pathExists(apiNativeSrcDir)) {
-				await processAndCopyFiles(
-					"**/*",
-					apiNativeSrcDir,
-					nativeAppDir,
-					context,
-				);
+			} else {
 			}
 		}
 	}
@@ -185,53 +193,89 @@ export async function setupBackendFramework(
 	projectDir: string,
 	context: ProjectConfig,
 ): Promise<void> {
-	if ((context.backend as string) === "none") return;
+	if (context.backend === "convex") {
+		const convexBackendDestDir = path.join(projectDir, "packages/backend");
+		const convexSrcDir = path.join(
+			PKG_ROOT,
+			"templates/backend/convex/packages/backend",
+		);
+
+		await fs.ensureDir(convexBackendDestDir);
+
+		if (await fs.pathExists(convexSrcDir)) {
+			await processAndCopyFiles(
+				"**/*",
+				convexSrcDir,
+				convexBackendDestDir,
+				context,
+			);
+		} else {
+		}
+
+		const serverAppDir = path.join(projectDir, "apps/server");
+		if (await fs.pathExists(serverAppDir)) {
+			await fs.remove(serverAppDir);
+		}
+		return;
+	}
 
 	const serverAppDir = path.join(projectDir, "apps/server");
 	await fs.ensureDir(serverAppDir);
 
-	const serverBaseDir = path.join(PKG_ROOT, "templates/backend/server-base");
+	const serverBaseDir = path.join(
+		PKG_ROOT,
+		"templates/backend/server/server-base",
+	);
 	if (await fs.pathExists(serverBaseDir)) {
 		await processAndCopyFiles("**/*", serverBaseDir, serverAppDir, context);
 	} else {
-		consola.warn(
-			pc.yellow(`Warning: server-base template not found at ${serverBaseDir}`),
-		);
 	}
 
 	const frameworkSrcDir = path.join(
 		PKG_ROOT,
-		`templates/backend/${context.backend}`,
+		`templates/backend/server/${context.backend}`,
 	);
 	if (await fs.pathExists(frameworkSrcDir)) {
-		await processAndCopyFiles("**/*", frameworkSrcDir, serverAppDir, context);
-	} else {
-		consola.warn(
-			pc.yellow(
-				`Warning: Backend template directory not found, skipping: ${frameworkSrcDir}`,
-			),
-		);
-	}
-
-	const apiServerBaseDir = path.join(
-		PKG_ROOT,
-		`templates/api/${context.api}/server/base`,
-	);
-	if (await fs.pathExists(apiServerBaseDir)) {
-		await processAndCopyFiles("**/*", apiServerBaseDir, serverAppDir, context);
-	}
-
-	const apiServerFrameworkDir = path.join(
-		PKG_ROOT,
-		`templates/api/${context.api}/server/${context.backend}`,
-	);
-	if (await fs.pathExists(apiServerFrameworkDir)) {
 		await processAndCopyFiles(
 			"**/*",
-			apiServerFrameworkDir,
+			frameworkSrcDir,
 			serverAppDir,
 			context,
+			true,
 		);
+	} else {
+	}
+
+	if (context.api !== "none") {
+		const apiServerBaseDir = path.join(
+			PKG_ROOT,
+			`templates/api/${context.api}/server/base`,
+		);
+		if (await fs.pathExists(apiServerBaseDir)) {
+			await processAndCopyFiles(
+				"**/*",
+				apiServerBaseDir,
+				serverAppDir,
+				context,
+				true,
+			);
+		} else {
+		}
+
+		const apiServerFrameworkDir = path.join(
+			PKG_ROOT,
+			`templates/api/${context.api}/server/${context.backend}`,
+		);
+		if (await fs.pathExists(apiServerFrameworkDir)) {
+			await processAndCopyFiles(
+				"**/*",
+				apiServerFrameworkDir,
+				serverAppDir,
+				context,
+				true,
+			);
+		} else {
+		}
 	}
 }
 
@@ -239,7 +283,12 @@ export async function setupDbOrmTemplates(
 	projectDir: string,
 	context: ProjectConfig,
 ): Promise<void> {
-	if (context.orm === "none" || context.database === "none") return;
+	if (
+		context.backend === "convex" ||
+		context.orm === "none" ||
+		context.database === "none"
+	)
+		return;
 
 	const serverAppDir = path.join(projectDir, "apps/server");
 	await fs.ensureDir(serverAppDir);
@@ -252,11 +301,6 @@ export async function setupDbOrmTemplates(
 	if (await fs.pathExists(dbOrmSrcDir)) {
 		await processAndCopyFiles("**/*", dbOrmSrcDir, serverAppDir, context);
 	} else {
-		consola.warn(
-			pc.yellow(
-				`Warning: Database/ORM template directory not found, skipping: ${dbOrmSrcDir}`,
-			),
-		);
 	}
 }
 
@@ -264,7 +308,7 @@ export async function setupAuthTemplate(
 	projectDir: string,
 	context: ProjectConfig,
 ): Promise<void> {
-	if (!context.auth) return;
+	if (context.backend === "convex" || !context.auth) return;
 
 	const serverAppDir = path.join(projectDir, "apps/server");
 	const webAppDir = path.join(projectDir, "apps/web");
@@ -291,6 +335,7 @@ export async function setupAuthTemplate(
 				serverAppDir,
 				context,
 			);
+		} else {
 		}
  }
 
@@ -306,6 +351,7 @@ export async function setupAuthTemplate(
 					serverAppDir,
 					context,
 				);
+			} else {
 			}
 		}
 
@@ -323,15 +369,15 @@ export async function setupAuthTemplate(
 					PKG_ROOT,
 					`templates/auth/server/db/prisma/${db}`,
 				);
+			} else if (orm === "mongoose") {
+				authDbSrc = path.join(
+					PKG_ROOT,
+					`templates/auth/server/db/mongoose/${db}`,
+				);
 			}
 			if (authDbSrc && (await fs.pathExists(authDbSrc))) {
 				await processAndCopyFiles("**/*", authDbSrc, serverAppDir, context);
-			} else {
-				consola.warn(
-					pc.yellow(
-						`Warning: Auth template for ${orm}/${db} not found at ${authDbSrc}`,
-					),
-				);
+			} else if (authDbSrc) {
 			}
 		}
 	}
@@ -344,6 +390,7 @@ export async function setupAuthTemplate(
 			);
 			if (await fs.pathExists(authWebBaseSrc)) {
 				await processAndCopyFiles("**/*", authWebBaseSrc, webAppDir, context);
+			} else {
 			}
 			const reactFramework = context.frontend.find((f) =>
 				["tanstack-router", "react-router", "tanstack-start", "next"].includes(
@@ -362,12 +409,14 @@ export async function setupAuthTemplate(
 						webAppDir,
 						context,
 					);
+				} else {
 				}
 			}
 		} else if (hasNuxtWeb) {
 			const authWebNuxtSrc = path.join(PKG_ROOT, "templates/auth/web/nuxt");
 			if (await fs.pathExists(authWebNuxtSrc)) {
 				await processAndCopyFiles("**/*", authWebNuxtSrc, webAppDir, context);
+			} else {
 			}
 		} else if (hasSvelteWeb) {
 			if (context.api === "orpc") {
@@ -382,6 +431,7 @@ export async function setupAuthTemplate(
 						webAppDir,
 						context,
 					);
+				} else {
 				}
 			}
 		}
@@ -392,11 +442,6 @@ export async function setupAuthTemplate(
 		if (await fs.pathExists(authNativeSrc)) {
 			await processAndCopyFiles("**/*", authNativeSrc, nativeAppDir, context);
 		} else {
-			consola.warn(
-				pc.yellow(
-					`Warning: Auth native template not found at ${authNativeSrc}`,
-				),
-			);
 		}
 	}
 }
@@ -432,8 +477,6 @@ export async function setupExamplesTemplate(
 	projectDir: string,
 	context: ProjectConfig,
 ): Promise<void> {
-	if (!context.examples || context.examples.length === 0) return;
-
 	const serverAppDir = path.join(projectDir, "apps/server");
 	const webAppDir = path.join(projectDir, "apps/web");
 
@@ -447,30 +490,51 @@ export async function setupExamplesTemplate(
 	const hasSvelteWeb = context.frontend.includes("svelte");
 
 	for (const example of context.examples) {
+		if (
+			!context.examples ||
+			context.examples.length === 0 ||
+			context.examples[0] === "none"
+		)
+			continue;
+
 		if (example === "none") continue;
 
 		const exampleBaseDir = path.join(PKG_ROOT, `templates/examples/${example}`);
 
+		if (example === "ai" && context.backend === "next" && serverAppDirExists) {
+			const aiNextServerSrc = path.join(exampleBaseDir, "server/next");
+
+			if (await fs.pathExists(aiNextServerSrc)) {
+				await processAndCopyFiles(
+					"**/*",
+					aiNextServerSrc,
+					serverAppDir,
+					context,
+					false,
+				);
+			}
+		}
+
 		if (serverAppDirExists) {
 			const exampleServerSrc = path.join(exampleBaseDir, "server");
 			if (await fs.pathExists(exampleServerSrc)) {
-				if (context.orm !== "none") {
-					const exampleOrmBaseSrc = path.join(
-						exampleServerSrc,
-						context.orm,
-						"base",
-					);
-					if (await fs.pathExists(exampleOrmBaseSrc)) {
-						await processAndCopyFiles(
-							"**/*",
-							exampleOrmBaseSrc,
-							serverAppDir,
-							context,
-							false,
+				if (context.backend !== "convex") {
+					if (context.orm !== "none" && context.database !== "none") {
+						const exampleOrmBaseSrc = path.join(
+							exampleServerSrc,
+							context.orm,
+							"base",
 						);
-					}
+						if (await fs.pathExists(exampleOrmBaseSrc)) {
+							await processAndCopyFiles(
+								"**/*",
+								exampleOrmBaseSrc,
+								serverAppDir,
+								context,
+								false,
+							);
+						}
 
-					if (context.database !== "none") {
 						const exampleDbSchemaSrc = path.join(
 							exampleServerSrc,
 							context.orm,
@@ -486,39 +550,55 @@ export async function setupExamplesTemplate(
 							);
 						}
 					}
+					const generalServerFiles = await globby(["*.ts", "*.hbs"], {
+						cwd: exampleServerSrc,
+						onlyFiles: true,
+						deep: 1,
+						ignore: [`${context.orm}/**`],
+					});
+					for (const file of generalServerFiles) {
+						const srcPath = path.join(exampleServerSrc, file);
+						const destPath = path.join(serverAppDir, file.replace(".hbs", ""));
+						if (srcPath.endsWith(".hbs")) {
+							await processTemplate(srcPath, destPath, context);
+						} else {
+							await fs.copy(srcPath, destPath, { overwrite: false });
+						}
+					}
 				}
 			}
 		}
 
-		if (hasReactWeb && webAppDirExists) {
-			const exampleWebSrc = path.join(exampleBaseDir, "web/react");
-			if (await fs.pathExists(exampleWebSrc)) {
-				const reactFramework = context.frontend.find((f) =>
-					[
-						"next",
-						"react-router",
-						"tanstack-router",
-						"tanstack-start",
-					].includes(f),
-				);
-				if (reactFramework) {
-					const exampleWebFrameworkSrc = path.join(
-						exampleWebSrc,
-						reactFramework,
+		if (webAppDirExists) {
+			if (hasReactWeb) {
+				const exampleWebSrc = path.join(exampleBaseDir, "web/react");
+				if (await fs.pathExists(exampleWebSrc)) {
+					const reactFramework = context.frontend.find((f) =>
+						[
+							"next",
+							"react-router",
+							"tanstack-router",
+							"tanstack-start",
+						].includes(f),
 					);
-					if (await fs.pathExists(exampleWebFrameworkSrc)) {
-						await processAndCopyFiles(
-							"**/*",
-							exampleWebFrameworkSrc,
-							webAppDir,
-							context,
-							false,
+					if (reactFramework) {
+						const exampleWebFrameworkSrc = path.join(
+							exampleWebSrc,
+							reactFramework,
 						);
+						if (await fs.pathExists(exampleWebFrameworkSrc)) {
+							await processAndCopyFiles(
+								"**/*",
+								exampleWebFrameworkSrc,
+								webAppDir,
+								context,
+								false,
+							);
+						} else {
+						}
 					}
 				}
-			}
-		} else if (hasNuxtWeb && webAppDirExists) {
-			if (context.api === "orpc") {
+			} else if (hasNuxtWeb) {
 				const exampleWebNuxtSrc = path.join(exampleBaseDir, "web/nuxt");
 				if (await fs.pathExists(exampleWebNuxtSrc)) {
 					await processAndCopyFiles(
@@ -530,9 +610,7 @@ export async function setupExamplesTemplate(
 					);
 				} else {
 				}
-			}
-		} else if (hasSvelteWeb && webAppDirExists) {
-			if (context.api === "orpc") {
+			} else if (hasSvelteWeb) {
 				const exampleWebSvelteSrc = path.join(exampleBaseDir, "web/svelte");
 				if (await fs.pathExists(exampleWebSvelteSrc)) {
 					await processAndCopyFiles(

@@ -7,19 +7,19 @@ import { expo } from "@better-auth/expo";
 import prisma from "../../prisma";
 
 export const auth = betterAuth({
-database: prismaAdapter(prisma, {
-{{#if (eq database "postgres")}}provider: "postgresql"{{/if}}
-{{#if (eq database "sqlite")}}provider: "sqlite"{{/if}}
-{{#if (eq database "mysql")}}provider: "mysql"{{/if}}
-{{#if (eq database "mongodb")}}provider: "mongodb"{{/if}}
-}),
-trustedOrigins: [
-process.env.CORS_ORIGIN || "",{{#if (includes frontend "native")}}
-"my-better-t-app://",{{/if}}
-],
-emailAndPassword: {
-enabled: true,
-}
+  database: prismaAdapter(prisma, {
+    {{#if (eq database "postgres")}}provider: "postgresql"{{/if}}
+    {{#if (eq database "sqlite")}}provider: "sqlite"{{/if}}
+    {{#if (eq database "mysql")}}provider: "mysql"{{/if}}
+    {{#if (eq database "mongodb")}}provider: "mongodb"{{/if}}
+  }),
+  trustedOrigins: [
+    process.env.CORS_ORIGIN || "",{{#if (includes frontend "native")}}
+    "my-better-t-app://",{{/if}}
+  ],
+  emailAndPassword: {
+    enabled: true,
+  }
 
 {{~#if (includes frontend "native")}}
 ,
@@ -38,24 +38,49 @@ import { db } from "../db";
 import * as schema from "../db/schema/auth";
 
 export const auth = betterAuth({
-database: drizzleAdapter(db, {
-{{#if (eq database "postgres")}}provider: "pg",{{/if}}
-{{#if (eq database "sqlite")}}provider: "sqlite",{{/if}}
-{{#if (eq database "mysql")}}provider: "mysql",{{/if}}
-schema: schema,
-}),
-trustedOrigins: [
-process.env.CORS_ORIGIN || "",{{#if (includes frontend "native")}}
-"my-better-t-app://",{{/if}}
-],
-emailAndPassword: {
-enabled: true,
-}
+  database: drizzleAdapter(db, {
+    {{#if (eq database "postgres")}}provider: "pg",{{/if}}
+    {{#if (eq database "sqlite")}}provider: "sqlite",{{/if}}
+    {{#if (eq database "mysql")}}provider: "mysql",{{/if}}
+    schema: schema,
+  }),
+  trustedOrigins: [
+    process.env.CORS_ORIGIN || "",{{#if (includes frontend "native")}}
+    "my-better-t-app://",{{/if}}
+  ],
+  emailAndPassword: {
+    enabled: true,
+  }
 
-{{~#if (includes frontend "native")}}
-,
-plugins: [expo()]
-{{/if~}}
+  {{~#if (includes frontend "native")}}
+  ,
+  plugins: [expo()]
+  {{/if~}}
+});
+{{/if}}
+
+{{#if (eq orm "mongoose")}}
+import { betterAuth } from "better-auth";
+import { mongodbAdapter } from "better-auth/adapters/mongodb";
+{{#if (includes frontend "native")}}
+import { expo } from "@better-auth/expo";
+{{/if}}
+import { client } from "../db";
+
+export const auth = betterAuth({
+    database: mongodbAdapter(client),
+    trustedOrigins: [
+        process.env.CORS_ORIGIN || "",{{#if (includes frontend "native")}}
+        "my-better-t-app://",{{/if}}
+    ],
+    emailAndPassword: {
+        enabled: true,
+    }
+
+    {{~#if (includes frontend "native")}}
+        ,
+        plugins: [expo()]
+    {{/if~}}
 });
 {{/if}}
 
