@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.7.2
+
+### Patch Changes
+
+- 1695185: Use CommonJS exports in babel config
+
 ## 2.7.1
 
 ### Patch Changes
