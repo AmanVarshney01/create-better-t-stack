@@ -1,5 +1,12 @@
 # create-better-t-stack
 
+## 2.8.1
+
+### Patch Changes
+
+- 357dfbb: Prompt to overwrite non-empty dirs before config
+- a2469b6: Add merge and rename options for existing directories
+
 ## 2.8.0
 
 ### Minor Changes
