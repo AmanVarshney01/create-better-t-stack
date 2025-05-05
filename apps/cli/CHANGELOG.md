@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.8.2
+
+### Patch Changes
+
+- 317fd47: update readme
+
 ## 2.8.1
 
 ### Patch Changes
