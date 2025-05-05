@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.8.0
+
+### Minor Changes
+
+- 4f89b8b: add solid
+
 ## 2.7.2
 
 ### Patch Changes
