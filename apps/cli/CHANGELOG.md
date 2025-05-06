@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.8.4
+
+### Patch Changes
+
+- 4d5495d: Bump orpc and nativewind dependencies
+
 ## 2.8.3
 
 ### Patch Changes
