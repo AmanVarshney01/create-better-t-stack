@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.8.3
+
+### Patch Changes
+
+- b0e23cb: Remove todos route from base Solid frontend template
+
 ## 2.8.2
 
 ### Patch Changes
