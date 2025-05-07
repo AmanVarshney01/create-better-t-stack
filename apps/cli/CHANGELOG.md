@@ -1,5 +1,15 @@
 # create-better-t-stack
 
+## 2.9.0
+
+### Minor Changes
+
+- 6c269a4: add expo with unistyles
+
+### Patch Changes
+
+- d09a284: make backend optional
+
 ## 2.8.4
 
 ### Patch Changes
