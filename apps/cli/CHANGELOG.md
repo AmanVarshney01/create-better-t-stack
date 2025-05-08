@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.9.1
+
+### Patch Changes
+
+- 296ea3d: Improve type safety for orpc protectedProcedure context
+
 ## 2.9.0
 
 ### Minor Changes
