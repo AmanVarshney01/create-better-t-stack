@@ -8,24 +8,20 @@ import { routeTree } from "./routeTree.gen";
 import Loader from "./components/loader";
 import "./index.css";
 {{else}}
-import {
-  QueryCache,
-  QueryClient,
-  QueryClientProvider,
-} from "@tanstack/react-query";
 import { createRouter as createTanstackRouter } from "@tanstack/react-router";
 import Loader from "./components/loader";
 import "./index.css";
 import { routeTree } from "./routeTree.gen";
   {{#if (eq api "trpc")}}
+import { QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { toast } from "sonner";
 import type { AppRouter } from "../../server/src/routers";
 import { TRPCProvider } from "./utils/trpc";
-  {{/if}}
-  {{#if (eq api "orpc")}}
-import { orpc, ORPCContext, queryClient } from "./utils/orpc";
+  {{else if (eq api "orpc")}}
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { orpc, ORPCContext, queryClient as orpcQueryClient } from "./utils/orpc";
   {{/if}}
 {{/if}}
 
@@ -62,7 +58,6 @@ export function createRouter() {
     }),
     queryClient,
   );
-
   return router;
 }
 {{else}}
@@ -103,6 +98,8 @@ const trpc = createTRPCOptionsProxy({
   client: trpcClient,
   queryClient: queryClient,
 });
+  {{else if (eq api "orpc")}}
+  const queryClient = orpcQueryClient;
   {{/if}}
 
 export const createRouter = () => {
@@ -112,33 +109,37 @@ export const createRouter = () => {
     defaultPreloadStaleTime: 0,
     {{#if (eq api "trpc")}}
     context: { trpc, queryClient },
-    {{/if}}
-    {{#if (eq api "orpc")}}
+    {{else if (eq api "orpc")}}
     context: { orpc, queryClient },
+    {{else}}
+    context: { },
     {{/if}}
     defaultPendingComponent: () => <Loader />,
     defaultNotFoundComponent: () => <div>Not Found</div>,
+    {{#if (eq api "trpc")}}
     Wrap: ({ children }) => (
       <QueryClientProvider client={queryClient}>
-        {{#if (eq api "trpc")}}
         <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
           {children}
         </TRPCProvider>
-        {{/if}}
-        {{#if (eq api "orpc")}}
+      </QueryClientProvider>
+    ),
+    {{else if (eq api "orpc")}}
+    Wrap: ({ children }) => (
+      <QueryClientProvider client={queryClient}>
         <ORPCContext.Provider value={orpc}>
           {children}
         </ORPCContext.Provider>
-        {{/if}}
       </QueryClientProvider>
     ),
+    {{else}}
+    Wrap: ({ children }) => <>{children}</>,
+    {{/if}}
   });
-
   return router;
 };
 {{/if}}
 
-// Register the router instance for type safety
 declare module "@tanstack/react-router" {
   interface Register {
     router: ReturnType<typeof createRouter>;

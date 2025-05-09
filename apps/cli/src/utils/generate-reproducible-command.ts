@@ -3,39 +3,18 @@ import type { ProjectConfig } from "../types";
 export function generateReproducibleCommand(config: ProjectConfig): string {
 	const flags: string[] = [];
 
-	if (config.database === "none") {
-		flags.push("--database none");
-	} else {
-		flags.push(`--database ${config.database}`);
-
-		if (config.orm) {
-			flags.push(`--orm ${config.orm}`);
-		}
-
-		if (config.dbSetup) {
-			flags.push(`--db-setup ${config.dbSetup}`);
-		}
-	}
-
-	if (config.api) {
-		flags.push(`--api ${config.api}`);
-	}
-
-	flags.push(config.auth ? "--auth" : "--no-auth");
-	flags.push(config.git ? "--git" : "--no-git");
-	flags.push(config.install ? "--install" : "--no-install");
-
-	if (config.runtime) {
-		flags.push(`--runtime ${config.runtime}`);
-	}
-
-	if (config.backend) {
-		flags.push(`--backend ${config.backend}`);
-	}
-
 	if (config.frontend && config.frontend.length > 0) {
 		flags.push(`--frontend ${config.frontend.join(" ")}`);
+	} else {
+		flags.push("--frontend none");
 	}
+
+	flags.push(`--backend ${config.backend}`);
+	flags.push(`--runtime ${config.runtime}`);
+	flags.push(`--database ${config.database}`);
+	flags.push(`--orm ${config.orm}`);
+	flags.push(`--api ${config.api}`);
+	flags.push(config.auth ? "--auth" : "--no-auth");
 
 	if (config.addons && config.addons.length > 0) {
 		flags.push(`--addons ${config.addons.join(" ")}`);
@@ -49,9 +28,10 @@ export function generateReproducibleCommand(config: ProjectConfig): string {
 		flags.push("--examples none");
 	}
 
-	if (config.packageManager) {
-		flags.push(`--package-manager ${config.packageManager}`);
-	}
+	flags.push(`--db-setup ${config.dbSetup}`);
+	flags.push(config.git ? "--git" : "--no-git");
+	flags.push(`--package-manager ${config.packageManager}`);
+	flags.push(config.install ? "--install" : "--no-install");
 
 	let baseCommand = "";
 	const pkgManager = config.packageManager;

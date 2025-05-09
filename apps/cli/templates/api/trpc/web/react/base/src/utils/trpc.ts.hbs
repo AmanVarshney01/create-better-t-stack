@@ -1,5 +1,4 @@
 {{#if (includes frontend 'next')}}
-{{!-- Next.js tRPC Client Setup --}}
 import { QueryCache, QueryClient } from '@tanstack/react-query';
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
@@ -47,16 +46,14 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
 });
 
 {{else if (includes frontend 'tanstack-start')}}
-{{!-- TanStack Start tRPC Client Setup --}}
 import { createTRPCContext } from "@trpc/tanstack-react-query";
-import type { AppRouter } from "../../../server/src/routers"; {{! Adjust path if necessary }}
+import type { AppRouter } from "../../../server/src/routers";
 
 export const { TRPCProvider, useTRPC, useTRPCClient } =
   createTRPCContext<AppRouter>();
 
 {{else}}
-{{!-- Default Web tRPC Client Setup (TanStack Router, React Router, etc.) --}}
-import type { AppRouter } from "../../../server/src/routers"; {{! Adjust path if necessary }}
+import type { AppRouter } from "../../../server/src/routers";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";

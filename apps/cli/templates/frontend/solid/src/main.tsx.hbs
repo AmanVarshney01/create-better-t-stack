@@ -2,8 +2,10 @@ import { RouterProvider, createRouter } from "@tanstack/solid-router";
 import { render } from "solid-js/web";
 import { routeTree } from "./routeTree.gen";
 import "./styles.css";
+{{#if (eq api "orpc")}}
 import { QueryClientProvider } from "@tanstack/solid-query";
 import { queryClient } from "./utils/orpc";
+{{/if}}
 
 const router = createRouter({
   routeTree,
@@ -20,9 +22,13 @@ declare module "@tanstack/solid-router" {
 
 function App() {
   return (
+    {{#if (eq api "orpc")}}
     <QueryClientProvider client={queryClient}>
+    {{/if}}
       <RouterProvider router={router} />
+    {{#if (eq api "orpc")}}
     </QueryClientProvider>
+    {{/if}}
   );
 }
 

@@ -1,5 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
+{{#unless (eq backend "convex")}} {{#unless (eq api "none")}}
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+{{/unless}} {{/unless}}
 import {
   HeadContent,
   Outlet,
@@ -25,12 +27,14 @@ export interface RouterAppContext {
   trpc: TRPCOptionsProxy<AppRouter>;
   queryClient: QueryClient;
 }
-  {{/if}}
-  {{#if (eq api "orpc")}}
+  {{else if (eq api "orpc")}}
 import type { orpc } from "@/utils/orpc";
 export interface RouterAppContext {
   orpc: typeof orpc;
   queryClient: QueryClient;
+}
+  {{else}}
+export interface RouterAppContext {
 }
   {{/if}}
 {{/if}}
@@ -75,7 +79,11 @@ function RootDocument() {
         </div>
         <Toaster richColors />
         <TanStackRouterDevtools position="bottom-left" />
+        {{#unless (eq backend "convex")}}
+          {{#unless (eq api "none")}}
         <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+          {{/unless}}
+        {{/unless}}
         <Scripts />
       </body>
     </html>

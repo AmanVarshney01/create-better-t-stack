@@ -20,9 +20,7 @@ export function displayConfig(config: Partial<ProjectConfig>) {
 	}
 
 	if (config.backend !== undefined) {
-		configDisplay.push(
-			`${pc.blue("Backend Framework:")} ${String(config.backend)}`,
-		);
+		configDisplay.push(`${pc.blue("Backend:")} ${String(config.backend)}`);
 	}
 
 	if (config.runtime !== undefined) {

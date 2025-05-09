@@ -126,7 +126,6 @@ export default function Todos() {
               onChange={(e) => setNewTodoText(e.target.value)}
               placeholder="Add a new task..."
               {{#if (eq backend "convex")}}
-              {{!-- Convex mutations don't have an easy isPending state here, disable based on text --}}
               {{else}}
               disabled={createMutation.isPending}
               {{/if}}

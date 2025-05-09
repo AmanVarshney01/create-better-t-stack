@@ -3,14 +3,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { convexQuery } from "@convex-dev/react-query";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { api } from "@{{projectName}}/backend/convex/_generated/api.js";
-{{else}}
+{{else if (or (eq api "trpc") (eq api "orpc"))}}
+import { useQuery } from "@tanstack/react-query";
   {{#if (eq api "trpc")}}
 import { useTRPC } from "@/utils/trpc";
   {{/if}}
   {{#if (eq api "orpc")}}
 import { useORPC } from "@/utils/orpc";
   {{/if}}
-import { useQuery } from "@tanstack/react-query";
 {{/if}}
 
 export const Route = createFileRoute("/")({
@@ -36,15 +36,12 @@ const TITLE_TEXT = `
 function HomeComponent() {
   {{#if (eq backend "convex")}}
   const healthCheck = useSuspenseQuery(convexQuery(api.healthCheck.get, {}));
-  {{else}}
-    {{#if (eq api "trpc")}}
+  {{else if (eq api "trpc")}}
   const trpc = useTRPC();
   const healthCheck = useQuery(trpc.healthCheck.queryOptions());
-    {{/if}}
-    {{#if (eq api "orpc")}}
+  {{else if (eq api "orpc")}}
   const orpc = useORPC();
   const healthCheck = useQuery(orpc.healthCheck.queryOptions());
-    {{/if}}
   {{/if}}
 
   return (
@@ -53,8 +50,8 @@ function HomeComponent() {
       <div className="grid gap-6">
         <section className="rounded-lg border p-4">
           <h2 className="mb-2 font-medium">API Status</h2>
+          {{#if (eq backend "convex")}}
           <div className="flex items-center gap-2">
-            {{#if (eq backend "convex")}}
             <div
               className={`h-2 w-2 rounded-full ${healthCheck.data === "OK" ? "bg-green-500" : healthCheck.isLoading ? "bg-orange-400" : "bg-red-500"}`}
             />
@@ -65,19 +62,23 @@ function HomeComponent() {
                   ? "Connected"
                   : "Error"}
             </span>
-            {{else}}
-            <div
-              className={`h-2 w-2 rounded-full ${healthCheck.data ? "bg-green-500" : "bg-red-500"}`}
-            />
-            <span className="text-muted-foreground text-sm">
-              {healthCheck.isLoading
-                ? "Checking..."
-                : healthCheck.data
-                  ? "Connected"
-                  : "Disconnected"}
-            </span>
-            {{/if}}
           </div>
+          {{else}}
+            {{#unless (eq api "none")}}
+            <div className="flex items-center gap-2">
+              <div
+                className={`h-2 w-2 rounded-full ${healthCheck.data ? "bg-green-500" : "bg-red-500"}`}
+              />
+              <span className="text-muted-foreground text-sm">
+                {healthCheck.isLoading
+                  ? "Checking..."
+                  : healthCheck.data
+                    ? "Connected"
+                    : "Disconnected"}
+              </span>
+            </div>
+            {{/unless}}
+          {{/if}}
         </section>
       </div>
     </div>

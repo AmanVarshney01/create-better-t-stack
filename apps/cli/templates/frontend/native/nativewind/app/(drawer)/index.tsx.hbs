@@ -33,40 +33,48 @@ export default function Home() {
 
         <View className="rounded-lg border border-foreground p-4">
           <Text className="mb-2 font-medium text-foreground">API Status</Text>
+          {{#if (eq backend "convex")}}
           <View className="flex-row items-center gap-2">
             <View
               className={`h-2.5 w-2.5 rounded-full ${
-                {{#if (or (eq api "orpc") (eq api "trpc"))}}
-                  healthCheck.data ? "bg-green-500" : "bg-red-500"
-                {{else}}
                   healthCheck ? "bg-green-500" : "bg-red-500"
-                {{/if}}
               }`}
             />
             <Text className="text-sm text-foreground">
-              {{#if (eq api "orpc")}}
-                {healthCheck.isLoading
-                  ? "Checking..."
-                  : healthCheck.data
-                    ? "Connected"
-                    : "Disconnected"}
-              {{/if}}
-              {{#if (eq api "trpc")}}
-                {healthCheck.isLoading
-                  ? "Checking..."
-                  : healthCheck.data
-                    ? "Connected"
-                    : "Disconnected"}
-              {{/if}}
-              {{#if (eq backend "convex")}}
                 {healthCheck === undefined
                   ? "Checking..."
                   : healthCheck === "OK"
                     ? "Connected"
                     : "Error"}
-              {{/if}}
             </Text>
           </View>
+          {{else}}
+            {{#unless (eq api "none")}}
+            <View className="flex-row items-center gap-2">
+              <View
+                className={`h-2.5 w-2.5 rounded-full ${
+                    healthCheck.data ? "bg-green-500" : "bg-red-500"
+                }`}
+              />
+              <Text className="text-sm text-foreground">
+                {{#if (eq api "orpc")}}
+                  {healthCheck.isLoading
+                    ? "Checking..."
+                    : healthCheck.data
+                      ? "Connected"
+                      : "Disconnected"}
+                {{/if}}
+                {{#if (eq api "trpc")}}
+                  {healthCheck.isLoading
+                    ? "Checking..."
+                    : healthCheck.data
+                      ? "Connected"
+                      : "Disconnected"}
+                {{/if}}
+              </Text>
+            </View>
+            {{/unless}}
+          {{/if}}
         </View>
       </ScrollView>
     </Container>

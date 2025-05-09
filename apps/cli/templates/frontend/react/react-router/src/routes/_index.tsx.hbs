@@ -2,14 +2,14 @@ import type { Route } from "./+types/_index";
 {{#if (eq backend "convex")}}
 import { useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api.js";
-{{else}}
+{{else if (or (eq api "orpc") (eq api "trpc"))}}
+import { useQuery } from "@tanstack/react-query";
   {{#if (eq api "orpc")}}
   import { orpc } from "@/utils/orpc";
   {{/if}}
   {{#if (eq api "trpc")}}
   import { trpc } from "@/utils/trpc";
   {{/if}}
-import { useQuery } from "@tanstack/react-query";
 {{/if}}
 
 const TITLE_TEXT = `
@@ -47,8 +47,8 @@ export default function Home() {
       <div className="grid gap-6">
         <section className="rounded-lg border p-4">
           <h2 className="mb-2 font-medium">API Status</h2>
+          {{#if (eq backend "convex")}}
           <div className="flex items-center gap-2">
-            {{#if (eq backend "convex")}}
             <div
               className={`h-2 w-2 rounded-full ${healthCheck === "OK" ? "bg-green-500" : healthCheck === undefined ? "bg-orange-400" : "bg-red-500"}`}
             />
@@ -59,21 +59,25 @@ export default function Home() {
                   ? "Connected"
                   : "Error"}
             </span>
-            {{else}}
-            <div
-              className={`h-2 w-2 rounded-full ${
-                healthCheck.data ? "bg-green-500" : "bg-red-500"
-              }`}
-            />
-            <span className="text-sm text-muted-foreground">
-              {healthCheck.isLoading
-                ? "Checking..."
-                : healthCheck.data
-                ? "Connected"
-                : "Disconnected"}
-            </span>
-            {{/if}}
           </div>
+          {{else}}
+            {{#unless (eq api "none")}}
+            <div className="flex items-center gap-2">
+              <div
+                className={`h-2 w-2 rounded-full ${
+                  healthCheck.data ? "bg-green-500" : "bg-red-500"
+                }`}
+              />
+              <span className="text-sm text-muted-foreground">
+                {healthCheck.isLoading
+                  ? "Checking..."
+                  : healthCheck.data
+                  ? "Connected"
+                  : "Disconnected"}
+              </span>
+            </div>
+            {{/unless}}
+          {{/if}}
         </section>
       </div>
     </div>

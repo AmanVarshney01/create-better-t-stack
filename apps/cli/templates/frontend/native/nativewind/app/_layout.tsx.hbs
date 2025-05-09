@@ -1,7 +1,9 @@
 {{#if (eq backend "convex")}}
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 {{else}}
+{{#unless (eq api "none")}}
 import { QueryClientProvider } from "@tanstack/react-query";
+{{/unless}}
 {{/if}}
 import { Stack } from "expo-router";
 import {
@@ -82,6 +84,7 @@ export default function RootLayout() {
       </ThemeProvider>
     </ConvexProvider>
     {{else}}
+    {{#unless (eq api "none")}}
     <QueryClientProvider client={queryClient}>
       <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
         <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
@@ -96,6 +99,20 @@ export default function RootLayout() {
         </GestureHandlerRootView>
       </ThemeProvider>
     </QueryClientProvider>
+    {{else}}
+    <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
+      <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
+      <GestureHandlerRootView style=\{{ flex: 1 }}>
+        <Stack>
+          <Stack.Screen name="(drawer)" options=\{{ headerShown: false }} />
+          <Stack.Screen
+            name="modal"
+            options=\{{ title: "Modal", presentation: "modal" }}
+          />
+        </Stack>
+      </GestureHandlerRootView>
+    </ThemeProvider>
+    {{/unless}}
     {{/if}}
   );
 }
