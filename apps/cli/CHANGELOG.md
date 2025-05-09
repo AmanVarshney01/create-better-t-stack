@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.9.2
+
+### Patch Changes
+
+- 89caa15: Make Turborepo a default addon
+
 ## 2.9.1
 
 ### Patch Changes
