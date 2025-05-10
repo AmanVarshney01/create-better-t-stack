@@ -21,9 +21,7 @@ export const appRouter = {
   {{/if}}
 };
 export type AppRouter = typeof appRouter;
-{{/if}}
-
-{{#if (eq api "trpc")}}
+{{else if (eq api "trpc")}}
 import {
   {{#if auth}}protectedProcedure, {{/if}}publicProcedure,
   router,
@@ -48,5 +46,8 @@ export const appRouter = router({
   todo: todoRouter,
   {{/if}}
 });
+export type AppRouter = typeof appRouter;
+{{else}}
+export const appRouter = {};
 export type AppRouter = typeof appRouter;
 {{/if}}

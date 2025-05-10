@@ -775,24 +775,11 @@ function processAndValidateFlags(
 			consola.fatal(
 				`tRPC API is not supported with '${
 					includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"
-				}' frontend. Please use --api orpc or remove '${
+				}' frontend. Please use --api orpc or --api none or remove '${
 					includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"
 				}' from --frontend.`,
 			);
 			process.exit(1);
-		}
-
-		if (
-			(includesNuxt || includesSvelte || includesSolid) &&
-			effectiveApi !== "orpc" &&
-			(!options.api || (options.yes && options.api === "trpc"))
-		) {
-			if (config.api !== "none") {
-				config.api = "orpc";
-				log.info(
-					`Due to frontend selection, API has been set to 'orpc'. tRPC is not compatible with Nuxt, Svelte, or Solid Framework`,
-				);
-			}
 		}
 
 		if (config.addons && config.addons.length > 0) {
