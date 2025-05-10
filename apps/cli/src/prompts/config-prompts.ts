@@ -77,6 +77,7 @@ export async function gatherConfig(
 					results.database,
 					results.frontend,
 					results.backend,
+					results.api,
 				),
 			dbSetup: ({ results }) =>
 				getDBSetupChoice(

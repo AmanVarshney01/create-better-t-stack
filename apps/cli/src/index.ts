@@ -399,12 +399,11 @@ function processAndValidateFlags(
 		config.api = options.api as ProjectApi;
 		if (options.api === "none") {
 			if (
-				options.backend &&
-				options.backend !== "convex" &&
-				options.backend !== "none"
+				options.examples &&
+				!(options.examples.length === 1 && options.examples[0] === "none")
 			) {
 				consola.fatal(
-					`'--api none' is only supported with '--backend convex' or '--backend none'. Please choose a different API setting or use '--backend convex' or '--backend none'.`,
+					"Cannot use '--examples' when '--api' is set to 'none'. Please remove the --examples flag or choose an API type.",
 				);
 				process.exit(1);
 			}
@@ -421,12 +420,6 @@ function processAndValidateFlags(
 		config.backend !== "convex" &&
 		config.backend !== "none"
 	) {
-		if (providedFlags.has("api") && options.api === "none") {
-			consola.fatal(
-				`'--api none' is only supported with '--backend convex' or '--backend none'. Please choose 'trpc', 'orpc', or remove the --api flag.`,
-			);
-			process.exit(1);
-		}
 		if (providedFlags.has("runtime") && options.runtime === "none") {
 			consola.fatal(
 				`'--runtime none' is only supported with '--backend convex' or '--backend none'. Please choose 'bun', 'node', or remove the --runtime flag.`,

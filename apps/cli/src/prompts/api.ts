@@ -29,6 +29,11 @@ export async function getApiChoice(
 			label: "oRPC",
 			hint: "End-to-end type-safe APIs that adhere to OpenAPI standards",
 		},
+		{
+			value: "none" as const,
+			label: "None",
+			hint: "No API layer (e.g. for full-stack frameworks like Next.js with Route Handlers)",
+		},
 	];
 
 	if (includesNuxt || includesSvelte || includesSolid) {
@@ -39,6 +44,11 @@ export async function getApiChoice(
 				hint: `End-to-end type-safe APIs (Required for ${
 					includesNuxt ? "Nuxt" : includesSvelte ? "Svelte" : "Solid"
 				} frontend)`,
+			},
+			{
+				value: "none" as const,
+				label: "None",
+				hint: "No API layer",
 			},
 		];
 	}
@@ -55,10 +65,6 @@ export async function getApiChoice(
 	if (isCancel(apiType)) {
 		cancel(pc.red("Operation cancelled"));
 		process.exit(0);
-	}
-
-	if ((includesNuxt || includesSvelte || includesSolid) && apiType !== "orpc") {
-		return "orpc";
 	}
 
 	return apiType;

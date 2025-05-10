@@ -2,6 +2,7 @@ import { cancel, isCancel, multiselect } from "@clack/prompts";
 import pc from "picocolors";
 import { DEFAULT_CONFIG } from "../constants";
 import type {
+	ProjectApi,
 	ProjectBackend,
 	ProjectDatabase,
 	ProjectExamples,
@@ -13,7 +14,11 @@ export async function getExamplesChoice(
 	database?: ProjectDatabase,
 	frontends?: ProjectFrontend[],
 	backend?: ProjectBackend,
+	api?: ProjectApi,
 ): Promise<ProjectExamples[]> {
+	if (api === "none") {
+		return [];
+	}
 	if (examples !== undefined) return examples;
 
 	if (backend === "convex") {
