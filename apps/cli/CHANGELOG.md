@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.9.4
+
+### Patch Changes
+
+- 95c9113: fix incorrect helper usage
+
 ## 2.9.3
 
 ### Patch Changes

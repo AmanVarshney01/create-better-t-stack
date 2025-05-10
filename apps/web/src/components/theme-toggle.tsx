@@ -7,14 +7,14 @@ import { useTheme } from "next-themes";
 import * as React from "react";
 
 export function ThemeToggle({ className }: { className?: string }) {
-	const { theme, setTheme } = useTheme();
+	const { setTheme, resolvedTheme } = useTheme();
 	const [mounted, setMounted] = React.useState(false);
 
 	React.useEffect(() => {
 		setMounted(true);
 	}, []);
 
-	const isChecked = mounted ? theme === "dark" : false;
+	const isChecked = mounted ? resolvedTheme === "dark" : false;
 
 	const handleCheckedChange = (checked: boolean) => {
 		setTheme(checked ? "dark" : "light");
@@ -25,13 +25,13 @@ export function ThemeToggle({ className }: { className?: string }) {
 			<button
 				type="button"
 				className={cn(
-					"inline-flex h-5 w-10 shrink-0 cursor-not-allowed items-center rounded-full border-2 border-transparent bg-input opacity-50",
+					"inline-flex h-4 w-9 shrink-0 cursor-not-allowed items-center rounded-full border-2 border-transparent bg-input opacity-50",
 					className,
 				)}
 				disabled
 				aria-label="Toggle theme (loading)"
 			>
-				<span className="block h-4 w-4 rounded-full bg-background shadow-lg ring-0" />
+				<span className="block h-3 w-3 rounded-full bg-background shadow-lg ring-0" />
 			</button>
 		);
 	}

@@ -94,6 +94,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 					}}
 					theme={{
 						enableSystem: true,
+						defaultTheme: "system",
 					}}
 				>
 					<NuqsAdapter>{children}</NuqsAdapter>
