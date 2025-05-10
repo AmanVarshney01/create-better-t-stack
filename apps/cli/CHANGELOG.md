@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.9.5
+
+### Patch Changes
+
+- 6a339bc: dont allow examples when api is none
+
 ## 2.9.4
 
 ### Patch Changes
