@@ -27,7 +27,7 @@ const healthCheck = useQuery($orpc.healthCheck.queryOptions())
 
 <template>
   <div class="container mx-auto max-w-3xl px-4 py-2">
-    <pre class="overflow-x-auto font-mono text-sm whitespace-pre-wrap">{{ TITLE_TEXT }}</pre>
+    <pre class="overflow-x-auto font-mono text-sm whitespace-pre-wrap">\{{ TITLE_TEXT }}</pre>
     <div class="grid gap-6 mt-4">
       {{#unless (eq api "none")}}
       <section class="rounded-lg border p-4">
@@ -50,10 +50,10 @@ const healthCheck = useQuery($orpc.healthCheck.queryOptions())
                   Checking...
                 </template>
                 <template v-else-if="healthCheck.status.value === 'success'">
-                  Connected ({{ healthCheck.data.value }})
+                  Connected (\{{ healthCheck.data.value }})
                 </template>
                 <template v-else-if="healthCheck.status.value === 'error'">
-                  Error: {{ healthCheck.error.value?.message || 'Failed to connect' }}
+                  Error: \{{ healthCheck.error.value?.message || 'Failed to connect' }}
                 </template>
                  <template v-else>
                   Idle
