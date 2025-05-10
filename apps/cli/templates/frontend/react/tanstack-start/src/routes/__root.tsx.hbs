@@ -12,7 +12,9 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import Header from "../components/header";
 import appCss from "../index.css?url";
+{{#unless (and (eq api "none") (not (eq backend "convex"))}}
 import type { QueryClient } from "@tanstack/react-query";
+{{/unless}}
 import Loader from "@/components/loader";
 
 {{#if (eq backend "convex")}}
