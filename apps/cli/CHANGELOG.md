@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.9.3
+
+### Patch Changes
+
+- 8209713: fix templates when backend is none
+
 ## 2.9.2
 
 ### Patch Changes
