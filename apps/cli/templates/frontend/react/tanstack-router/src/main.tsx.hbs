@@ -22,7 +22,7 @@ const router = createRouter({
   defaultPendingComponent: () => <Loader />,
   {{#if (eq api "orpc")}}
   context: { orpc, queryClient },
-  Wrap: function WrapComponent({ children }: { children: any }) {
+  Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
         {children}
@@ -31,7 +31,7 @@ const router = createRouter({
   },
   {{else if (eq api "trpc")}}
   context: { trpc, queryClient },
-  Wrap: function WrapComponent({ children }: { children: any }) {
+  Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
         {children}
@@ -40,7 +40,7 @@ const router = createRouter({
   },
   {{else if (eq backend "convex")}}
   context: {},
-  Wrap: function WrapComponent({ children }: { children: any }) {
+  Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
     return <ConvexProvider client={convex}>{children}</ConvexProvider>;
   },
   {{else}}

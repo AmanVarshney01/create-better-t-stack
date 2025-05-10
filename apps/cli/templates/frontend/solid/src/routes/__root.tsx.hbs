@@ -11,11 +11,7 @@ export interface RouterContext {
   queryClient: QueryClient;
 }
 {{else}}
-export interface RouterContext {
-  {{#if (eq backend "convex")}}
-  {{else}}
-  {{/if}}
-}
+export interface RouterContext {}
 {{/if}}
 
 export const Route = createRootRouteWithContext<RouterContext>()({
