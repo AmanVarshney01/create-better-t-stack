@@ -15,6 +15,13 @@ export const TECH_OPTIONS = {
 			icon: "/icon/orpc.svg",
 			color: "from-indigo-400 to-indigo-600",
 		},
+		{
+			id: "none",
+			name: "No API",
+			description: "No API layer (API routes disabled)",
+			icon: "🚫",
+			color: "from-gray-400 to-gray-600",
+		},
 	],
 	frontend: [
 		{

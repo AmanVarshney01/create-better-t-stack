@@ -299,17 +299,8 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 				message: "Runtime set to 'Bun' (None is only for Convex)",
 			});
 		}
-		if (nextStack.api === "none") {
-			notes.api.notes.push(
-				"API 'None' is only for Convex. Defaulting to 'tRPC'.",
-			);
-			notes.api.hasIssue = true;
-			nextStack.api = DEFAULT_STACK.api;
-			changed = true;
-			changes.push({
-				category: "api",
-				message: "API set to 'tRPC' (None is only for Convex)",
-			});
+		if (nextStack.api === "none" && (isConvex || isBackendNone)) {
+		} else if (nextStack.api === "none" && !(isConvex || isBackendNone)) {
 		}
 
 		if (nextStack.database === "none") {
@@ -1047,11 +1038,13 @@ const StackArchitect = () => {
 				}
 
 				if (catKey === "api") {
-					if (techId === "none" && !rules.isConvex) {
+					if (techId === "none" && (rules.isConvex || rules.isBackendNone)) {
 						addRule(
 							category,
 							techId,
-							"Disabled: API 'None' is only available with Convex backend.",
+							rules.isConvex
+								? "Disabled: Convex backend requires API to be 'None'."
+								: "Disabled: No backend requires API to be 'None'.",
 						);
 					}
 					if (techId === "trpc" && rules.hasNuxtOrSvelteOrSolid) {
