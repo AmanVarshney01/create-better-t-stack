@@ -1038,7 +1038,7 @@ const StackArchitect = () => {
 				}
 
 				if (catKey === "api") {
-					if (techId === "none" && (rules.isConvex || rules.isBackendNone)) {
+					if (techId !== "none" && (rules.isConvex || rules.isBackendNone)) {
 						addRule(
 							category,
 							techId,
