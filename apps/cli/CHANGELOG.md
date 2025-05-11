@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.9.8
+
+### Patch Changes
+
+- c147b35: fix tauri frontend dist locationd for react router
+
 ## 2.9.7
 
 ### Patch Changes
