@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.9.6
+
+### Patch Changes
+
+- f5598c9: add tauri option for nextjs
+
 ## 2.9.5
 
 ### Patch Changes
