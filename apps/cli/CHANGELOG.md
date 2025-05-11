@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.9.7
+
+### Patch Changes
+
+- 2b8eb62: add server references in web apps
+
 ## 2.9.6
 
 ### Patch Changes
