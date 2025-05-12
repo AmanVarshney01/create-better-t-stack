@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.9.9
+
+### Patch Changes
+
+- 4840951: remove references from tsconfig when backend is none or convex
+
 ## 2.9.8
 
 ### Patch Changes
