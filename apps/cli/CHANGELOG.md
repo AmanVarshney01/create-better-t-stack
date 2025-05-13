@@ -1,5 +1,15 @@
 # create-better-t-stack
 
+## 2.10.0
+
+### Minor Changes
+
+- 5c5a4b2: add supabase database setup
+
+### Patch Changes
+
+- 0631b23: add supabase flag validation
+
 ## 2.9.9
 
 ### Patch Changes
