@@ -790,34 +790,19 @@ const generateCommand = (stackState: StackState): string => {
 		value: StackState[K],
 	) => isStackDefault(stackState, key, value);
 
-	if (!checkDefault("webFrontend", stackState.webFrontend)) {
-		if (
-			stackState.webFrontend.length === 0 ||
-			stackState.webFrontend[0] === "none"
-		) {
+	const combinedFrontends = [
+		...stackState.webFrontend,
+		...stackState.nativeFrontend,
+	].filter((v, _, arr) => v !== "none" || arr.length === 1);
+
+	if (
+		!checkDefault("webFrontend", stackState.webFrontend) ||
+		!checkDefault("nativeFrontend", stackState.nativeFrontend)
+	) {
+		if (combinedFrontends.length === 0 || combinedFrontends[0] === "none") {
 			flags.push("--frontend none");
 		} else {
-			flags.push(`--frontend ${stackState.webFrontend.join(" ")}`);
-		}
-	}
-
-	if (!checkDefault("nativeFrontend", stackState.nativeFrontend)) {
-		if (
-			stackState.nativeFrontend.length > 0 &&
-			stackState.nativeFrontend[0] !== "none"
-		) {
-			if (checkDefault("webFrontend", stackState.webFrontend)) {
-				flags.push(`--frontend ${stackState.nativeFrontend.join(" ")}`);
-			} else {
-				const existingFrontendIndex = flags.findIndex((f) =>
-					f.startsWith("--frontend "),
-				);
-				if (existingFrontendIndex !== -1) {
-					flags[existingFrontendIndex] += ` ${stackState.nativeFrontend.join(
-						" ",
-					)}`;
-				}
-			}
+			flags.push(`--frontend ${combinedFrontends.join(" ")}`);
 		}
 	}
 
