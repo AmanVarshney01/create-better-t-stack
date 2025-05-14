@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.10.1
+
+### Patch Changes
+
+- 5a90912: fix prisma config dotenv error
+
 ## 2.10.0
 
 ### Minor Changes
