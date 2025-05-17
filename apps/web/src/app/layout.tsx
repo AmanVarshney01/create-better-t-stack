@@ -80,6 +80,9 @@ export const metadata: Metadata = {
 		},
 	},
 	category: "Technology",
+	icons: {
+		icon: "/logo.svg",
+	},
 };
 
 export default function Layout({ children }: { children: ReactNode }) {
