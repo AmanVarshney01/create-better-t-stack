@@ -99,6 +99,7 @@ export default function Navbar() {
 							alt="Better-T Stack"
 							width={32}
 							height={32}
+							unoptimized
 						/>
 						<span className="hidden font-semibold text-foreground text-md sm:inline-block">
 							Better-T Stack

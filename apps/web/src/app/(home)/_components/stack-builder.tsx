@@ -31,6 +31,7 @@ import {
 	Terminal,
 } from "lucide-react";
 import { motion } from "motion/react";
+import { useTheme } from "next-themes";
 import Image from "next/image";
 import Link from "next/link";
 import { useQueryStates } from "nuqs";
@@ -152,7 +153,23 @@ const TechIcon: React.FC<{
 	name: string;
 	className?: string;
 }> = ({ icon, name, className }) => {
-	if (icon.startsWith("/icon/")) {
+	const [mounted, setMounted] = useState(false);
+	const { theme } = useTheme();
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
+
+	if (mounted && icon.startsWith("/icon/")) {
+		if (
+			theme === "light" &&
+			(icon.includes("drizzle") ||
+				icon.includes("prisma") ||
+				icon.includes("express"))
+		) {
+			icon = icon.replace(".svg", "-light.svg");
+		}
+
 		return (
 			<Image
 				src={icon}
