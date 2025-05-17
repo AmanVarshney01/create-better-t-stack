@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.10.2
+
+### Patch Changes
+
+- 34ecf97: added support to select region for neon postgres
+
 ## 2.10.1
 
 ### Patch Changes
