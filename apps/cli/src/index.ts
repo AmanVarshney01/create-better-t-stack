@@ -627,9 +627,6 @@ function processAndValidateFlags(
 			process.exit(1);
 		}
 		config.examples = [];
-		log.info(
-			"Due to '--backend none', the following options have been automatically set: --auth=false, --database=none, --orm=none, --api=none, --runtime=none, --db-setup=none, --examples=none",
-		);
 	} else {
 		const effectiveDatabase =
 			config.database ?? (options.yes ? DEFAULT_CONFIG.database : undefined);
