@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.10.3
+
+### Patch Changes
+
+- aed897c: fixed(#269): duplicate logging message during project creation
+
 ## 2.10.2
 
 ### Patch Changes
