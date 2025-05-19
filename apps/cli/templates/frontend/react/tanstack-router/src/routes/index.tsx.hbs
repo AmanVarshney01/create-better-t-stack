@@ -34,10 +34,10 @@ const TITLE_TEXT = `
 
 function HomeComponent() {
   {{#if (eq api "orpc")}}
-  const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+  const { isPending, isError, data, error } = useQuery(orpc.healthCheck.queryOptions());
   {{/if}}
   {{#if (eq api "trpc")}}
-  const healthCheck = useQuery(trpc.healthCheck.queryOptions());
+  const { isPending, isError, data, error } = useQuery(trpc.healthCheck.queryOptions());
   {{/if}}
   {{#if (eq backend "convex")}}
   const healthCheck = useQuery(api.healthCheck.get);
@@ -50,30 +50,34 @@ function HomeComponent() {
         <section className="rounded-lg border p-4">
           <h2 className="mb-2 font-medium">API Status</h2>
           {{#if (eq backend "convex")}}
-          <div className="flex items-center gap-2">
-            <div
-              className={`h-2 w-2 rounded-full ${healthCheck === "OK" ? "bg-green-500" : healthCheck === undefined ? "bg-orange-400" : "bg-red-500"}`}
-            />
-            <span className="text-sm text-muted-foreground">
-              {healthCheck === undefined
-                ? "Checking..."
-                : healthCheck === "OK"
-                  ? "Connected"
-                  : "Error"}
-            </span>
-          </div>
+            <div className="flex items-center gap-2">
+              <div
+                className={`h-2 w-2 rounded-full ${healthCheck === "OK" ? "bg-green-500" : healthCheck === undefined ? "bg-orange-400" : "bg-red-500"}`}
+              />
+              <span className="text-sm text-muted-foreground">
+                {healthCheck === undefined
+                  ? "Checking..."
+                  : healthCheck === "OK"
+                    ? "Connected"
+                    : "Error"}
+              </span>
+            </div>
           {{else}}
             {{#unless (eq api "none")}}
             <div className="flex items-center gap-2">
               <div
-                className={`h-2 w-2 rounded-full ${healthCheck.data ? "bg-green-500" : "bg-red-500"}`}
+                className={`h-2 w-2 rounded-full ${isPending ? "bg-yellow-500" : !isError ? "bg-green-500" : "bg-red-500"}`}
               />
               <span className="text-sm text-muted-foreground">
-                {healthCheck.isLoading
-                  ? "Checking..."
-                  : healthCheck.data
-                    ? "Connected"
-                    : "Disconnected"}
+                {
+                  isPending
+                    ? "Checking..."
+                    : isError
+                      ? String(error)
+                      : !!data
+                        ? "Connected"
+                        : "Disconnected"
+                }
               </span>
             </div>
             {{/unless}}
