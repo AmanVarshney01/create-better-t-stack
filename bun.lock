@@ -5,7 +5,7 @@
       "name": "better-t-stack",
       "devDependencies": {
         "@biomejs/biome": "1.9.4",
-        "@changesets/cli": "^2.29.3",
+        "@changesets/cli": "^2.29.4",
         "husky": "^9.1.7",
         "lint-staged": "^15.5.2",
         "turbo": "^2.5.3",
