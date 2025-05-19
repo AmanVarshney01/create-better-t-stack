@@ -1,3 +1,4 @@
+export const dynamic = "force-static";
 import { RootProvider } from "fumadocs-ui/provider";
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
@@ -80,6 +81,9 @@ export const metadata: Metadata = {
 		},
 	},
 	category: "Technology",
+	icons: {
+		icon: "/logo.svg",
+	},
 };
 
 export default function Layout({ children }: { children: ReactNode }) {

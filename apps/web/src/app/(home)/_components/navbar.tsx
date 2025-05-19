@@ -3,6 +3,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 import { Github, Maximize2, Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import PackageIcon from "./icons";
@@ -93,11 +94,13 @@ export default function Navbar() {
 			>
 				<div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
 					<Link href="/" className="flex flex-shrink-0 items-center gap-2">
-						<div className="flex h-6 w-6 items-center justify-center rounded-md border border-primary/50 bg-primary/10">
-							<span className="font-medium font-mono text-primary text-sm">
-								$_
-							</span>
-						</div>
+						<Image
+							src="/logo.svg"
+							alt="Better-T Stack"
+							width={32}
+							height={32}
+							unoptimized
+						/>
 						<span className="hidden font-semibold text-foreground text-md sm:inline-block">
 							Better-T Stack
 						</span>

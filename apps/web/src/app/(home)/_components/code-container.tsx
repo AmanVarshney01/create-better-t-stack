@@ -53,7 +53,7 @@ const CodeContainer = () => {
 	const packageManagers: Array<"npm" | "pnpm" | "bun"> = ["bun", "pnpm", "npm"];
 
 	return (
-		<div className="mx-auto mt-6 w-full max-w-3xl font-mono">
+		<div className="mx-auto mt-6 w-full max-w-3xl px-2 font-mono md:px-0">
 			<div className="overflow-hidden rounded-lg border border-border bg-muted/30 shadow-sm">
 				<div className="flex items-center justify-between border-border border-b bg-muted/50 px-4 py-2">
 					<span className="text-muted-foreground text-xs">
