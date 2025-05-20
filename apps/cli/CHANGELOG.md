@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.10.4
+
+### Patch Changes
+
+- 1521aa1: add react query devtools in next template
+
 ## 2.10.3
 
 ### Patch Changes
