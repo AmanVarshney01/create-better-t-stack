@@ -14,12 +14,12 @@ import { createContext } from "./lib/context";
 {{/if}}
 {{/if}}
 {{#if (includes examples "ai")}}
-import { streamText } from "ai";
+import type { FastifyRequest, FastifyReply } from "fastify";
+import { streamText, type Message } from "ai";
 import { google } from "@ai-sdk/google";
 {{/if}}
 {{#if auth}}
 import { auth } from "./lib/auth";
-import { toNodeHandler } from "better-auth/node";
 {{/if}}
 
 const fastify = Fastify({
@@ -88,26 +88,26 @@ fastify.register(fastifyORPCHandler, {
 });
 {{/if}}
 
-fastify.register(import("@fastify/formbody"));
-fastify.register(import("@fastify/express")); // For compatibility if needed
-fastify.register(import("@fastify/multipart")); // If file upload needed
-
-fastify.register(async (instance) => {
-  {{#if (includes examples "ai")}}
-  instance.post("/ai", async (request, reply) => {
-    const { messages = [] } = request.body || {};
-    const result = streamText({
-      model: google("gemini-1.5-flash"),
-      messages,
-    });
-    reply.send(result);
+{{#if (includes examples "ai")}}
+fastify.post('/ai', async (request: FastifyRequest<{
+  Body: {
+    messages?: Message[];
+  }
+}>, reply: FastifyReply) => {
+  const { messages = [] } = request.body || {};
+  
+  const result = streamText({
+    model: google("gemini-1.5-flash"),
+    messages,
   });
-  {{/if}}
-
-  instance.get("/", async (_request, reply) => {
-    reply.status(200).send("OK");
-  });
+  
+  reply.send(result);
 });
+{{/if}}
+
+fastify.get('/', async () => {
+  return 'OK'
+})
 
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 fastify.listen({ port, host: "0.0.0.0" }, (err, address) => {
