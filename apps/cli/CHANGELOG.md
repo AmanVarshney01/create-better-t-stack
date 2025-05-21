@@ -1,5 +1,15 @@
 # create-better-t-stack
 
+## 2.11.0
+
+### Minor Changes
+
+- 01d745a: add pwa support in nextjs
+
+### Patch Changes
+
+- 5cfd3d3: fix zod v4 madness
+
 ## 2.10.4
 
 ### Patch Changes
