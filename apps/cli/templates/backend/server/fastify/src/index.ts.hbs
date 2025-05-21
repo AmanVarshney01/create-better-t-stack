@@ -1,0 +1,119 @@
+import "dotenv/config";
+import Fastify from "fastify";
+import cors from "@fastify/cors";
+{{#if (eq api "trpc")}}
+import { fastifyTRPCPlugin } from "@trpc/server/adapters/fastify";
+import { createContext } from "./lib/context";
+import { appRouter } from "./routers/index";
+{{/if}}
+{{#if (eq api "orpc")}}
+import { fastifyORPCHandler } from "@orpc/server/fastify";
+import { appRouter } from "./routers";
+{{#if auth}}
+import { createContext } from "./lib/context";
+{{/if}}
+{{/if}}
+{{#if (includes examples "ai")}}
+import { streamText } from "ai";
+import { google } from "@ai-sdk/google";
+{{/if}}
+{{#if auth}}
+import { auth } from "./lib/auth";
+import { toNodeHandler } from "better-auth/node";
+{{/if}}
+
+const fastify = Fastify({
+  logger: true,
+});
+
+fastify.register(cors, {
+  origin: process.env.CORS_ORIGIN || "",
+  methods: ["GET", "POST", "OPTIONS"],
+  {{#if auth}}
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With"
+  ],
+  credentials: true,
+  maxAge: 86400,
+  {{/if}}
+});
+
+{{#if auth}}
+fastify.route({
+  method: ["GET", "POST"],
+  url: "/api/auth/*",
+  async handler(request, reply) {
+    try {
+      const url = new URL(request.url, `http://${request.headers.host}`);
+      const headers = new Headers();
+      Object.entries(request.headers).forEach(([key, value]) => {
+        if (value) headers.append(key, value.toString());
+      });
+      const req = new Request(url.toString(), {
+        method: request.method,
+        headers,
+        body: request.body ? JSON.stringify(request.body) : undefined,
+      });
+      const response = await auth.handler(req);
+      reply.status(response.status);
+      response.headers.forEach((value, key) => reply.header(key, value));
+      reply.send(response.body ? await response.text() : null);
+    } catch (error) {
+      fastify.log.error("Authentication Error:", error);
+      reply.status(500).send({
+        error: "Internal authentication error",
+        code: "AUTH_FAILURE"
+      });
+    }
+  }
+});
+{{/if}}
+
+{{#if (eq api "trpc")}}
+fastify.register(fastifyTRPCPlugin, {
+  prefix: "/trpc",
+  trpcOptions: { router: appRouter, createContext },
+});
+{{/if}}
+
+{{#if (eq api "orpc")}}
+fastify.register(fastifyORPCHandler, {
+  prefix: "/rpc",
+  router: appRouter,
+  {{#if auth}}
+  createContext,
+  {{/if}}
+});
+{{/if}}
+
+fastify.register(import("@fastify/formbody"));
+fastify.register(import("@fastify/express")); // For compatibility if needed
+fastify.register(import("@fastify/multipart")); // If file upload needed
+
+fastify.register(async (instance) => {
+  {{#if (includes examples "ai")}}
+  instance.post("/ai", async (request, reply) => {
+    const { messages = [] } = request.body || {};
+    const result = streamText({
+      model: google("gemini-1.5-flash"),
+      messages,
+    });
+    reply.send(result);
+  });
+  {{/if}}
+
+  instance.get("/", async (_request, reply) => {
+    reply.status(200).send("OK");
+  });
+});
+
+const port = process.env.PORT ? Number(process.env.PORT) : 3000;
+fastify.listen({ port, host: "0.0.0.0" }, (err, address) => {
+  if (err) {
+    fastify.log.error(err);
+    process.exit(1);
+  }
+  console.log(`Server is running on ${address}`);
+});

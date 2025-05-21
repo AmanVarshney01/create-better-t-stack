@@ -1,3 +1,7 @@
+// This is a Handlebars template for tRPC context creation.
+// Each backend (next, hono, elysia, express, fastify) has its own conditional block.
+// To add a new backend, follow the existing pattern.
+
 {{#if (eq backend 'next')}}
 import type { NextRequest } from "next/server";
 {{#if auth}}
@@ -92,6 +96,33 @@ export async function createContext(opts: CreateExpressContextOptions) {
 	return {
 		session: null,
 	};
+{{/if}}
+}
+
+{{else if (eq backend 'fastify')}}
+import type { CreateFastifyContextOptions } from "@trpc/server/adapters/fastify";
+{{#if auth}}
+import { fromNodeHeaders } from "better-auth/node";
+import { auth } from "./auth";
+{{/if}}
+
+export async function createContext({ req, res }: CreateFastifyContextOptions) {
+{{#if auth}}
+  const session = await auth.api.getSession({
+    headers: fromNodeHeaders(req.headers),
+  });
+  return {
+    req,
+    res,
+    session,
+  };
+{{else}}
+  // No auth configured
+  return {
+    req,
+    res,
+    session: null,
+  };
 {{/if}}
 }
 
