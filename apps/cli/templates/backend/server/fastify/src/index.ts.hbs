@@ -7,8 +7,10 @@ import { createContext } from "./lib/context";
 import { appRouter } from "./routers/index";
 {{/if}}
 {{#if (eq api "orpc")}}
-import { fastifyORPCHandler } from "@orpc/server/fastify";
+import { RPCHandler } from "@orpc/server/node";
+import { CORSPlugin } from "@orpc/server/plugins";
 import { appRouter } from "./routers";
+import { createServer } from "node:http";
 {{#if auth}}
 import { createContext } from "./lib/context";
 {{/if}}
@@ -22,11 +24,7 @@ import { google } from "@ai-sdk/google";
 import { auth } from "./lib/auth";
 {{/if}}
 
-const fastify = Fastify({
-  logger: true,
-});
-
-fastify.register(cors, {
+const corsOptions = {
   origin: process.env.CORS_ORIGIN || "",
   methods: ["GET", "POST", "OPTIONS"],
   {{#if auth}}
@@ -38,7 +36,39 @@ fastify.register(cors, {
   credentials: true,
   maxAge: 86400,
   {{/if}}
+};
+
+const rpcHandler = new RPCHandler(router, {
+  plugins: [
+    new CORSPlugin({
+      ...corsOptions,
+    }),
+  ],
 });
+
+const fastify = Fastify({
+  logger: true,
+  serverFactory: (fastifyHandler) => {
+    const server = createServer(async (req, res) => {
+      const { matched } = await rpcHandler.handle(req, res, {
+        context: {
+          session: null,
+        },
+        prefix: "/rpc",
+      });
+
+      if (matched) {
+        return;
+      }
+
+      fastifyHandler(req, res);
+    });
+
+    return server;
+  },
+});
+
+fastify.register(cors, corsOptions);
 
 {{#if auth}}
 fastify.route({
@@ -89,20 +119,30 @@ fastify.register(fastifyORPCHandler, {
 {{/if}}
 
 {{#if (includes examples "ai")}}
-fastify.post('/ai', async (request: FastifyRequest<{
-  Body: {
-    messages?: Message[];
+fastify.post(
+  "/ai",
+  async (
+    request: FastifyRequest<{
+      Body: {
+        messages?: Message[];
+      };
+    }>,
+    reply: FastifyReply
+  ) => {
+    const { messages = [] } = request.body || {};
+
+    const result = streamText({
+      model: openai("gpt-4o"),
+      messages,
+    });
+
+    // Mark the response as a v1 data stream:
+    reply.header("X-Vercel-AI-Data-Stream", "v1");
+    reply.header("Content-Type", "text/plain; charset=utf-8");
+
+    return reply.send(result.toDataStream());
   }
-}>, reply: FastifyReply) => {
-  const { messages = [] } = request.body || {};
-  
-  const result = streamText({
-    model: google("gemini-1.5-flash"),
-    messages,
-  });
-  
-  reply.send(result);
-});
+);
 {{/if}}
 
 fastify.get('/', async () => {
