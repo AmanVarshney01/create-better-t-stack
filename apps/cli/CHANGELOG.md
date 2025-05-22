@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.12.0
+
+### Minor Changes
+
+- b9dae19: add fastify
+
 ## 2.11.0
 
 ### Minor Changes
