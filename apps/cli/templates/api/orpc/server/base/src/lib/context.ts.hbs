@@ -92,16 +92,16 @@ export async function createContext(opts: any) {
 }
 
 {{else if (eq backend 'fastify')}}
-import type { FastifyRequest } from "fastify";
+import type { IncomingHttpHeaders } from "node:http";
 {{#if auth}}
 import { fromNodeHeaders } from "better-auth/node";
 import { auth } from "./auth";
 {{/if}}
 
-export async function createContext(req: FastifyRequest) {
+export async function createContext(req: IncomingHttpHeaders) {
 {{#if auth}}
   const session = await auth.api.getSession({
-    headers: fromNodeHeaders(req.headers),
+    headers: fromNodeHeaders(req),
   });
   return {
     session,

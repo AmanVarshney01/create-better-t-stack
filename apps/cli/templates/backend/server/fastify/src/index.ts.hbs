@@ -1,33 +1,36 @@
 import "dotenv/config";
 import Fastify from "fastify";
-import cors from "@fastify/cors";
+import fastifyCors from "@fastify/cors";
+
 {{#if (eq api "trpc")}}
-import { fastifyTRPCPlugin } from "@trpc/server/adapters/fastify";
+import { fastifyTRPCPlugin, type FastifyTRPCPluginOptions } from "@trpc/server/adapters/fastify";
 import { createContext } from "./lib/context";
-import { appRouter } from "./routers/index";
+import { appRouter, type AppRouter } from "./routers/index";
 {{/if}}
+
 {{#if (eq api "orpc")}}
 import { RPCHandler } from "@orpc/server/node";
 import { CORSPlugin } from "@orpc/server/plugins";
-import { appRouter } from "./routers";
+import { appRouter } from "./routers/index";
 import { createServer } from "node:http";
 {{#if auth}}
 import { createContext } from "./lib/context";
 {{/if}}
 {{/if}}
+
 {{#if (includes examples "ai")}}
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { streamText, type Message } from "ai";
 import { google } from "@ai-sdk/google";
 {{/if}}
+
 {{#if auth}}
 import { auth } from "./lib/auth";
 {{/if}}
 
-const corsOptions = {
+const baseCorsConfig = {
   origin: process.env.CORS_ORIGIN || "",
-  methods: ["GET", "POST", "OPTIONS"],
-  {{#if auth}}
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: [
     "Content-Type",
     "Authorization",
@@ -35,13 +38,15 @@ const corsOptions = {
   ],
   credentials: true,
   maxAge: 86400,
-  {{/if}}
 };
 
-const rpcHandler = new RPCHandler(router, {
+{{#if (eq api "orpc")}}
+const handler = new RPCHandler(appRouter, {
   plugins: [
     new CORSPlugin({
-      ...corsOptions,
+      origin: process.env.CORS_ORIGIN,
+      credentials: true,
+      allowHeaders: ["Content-Type", "Authorization"],
     }),
   ],
 });
@@ -50,10 +55,8 @@ const fastify = Fastify({
   logger: true,
   serverFactory: (fastifyHandler) => {
     const server = createServer(async (req, res) => {
-      const { matched } = await rpcHandler.handle(req, res, {
-        context: {
-          session: null,
-        },
+      const { matched } = await handler.handle(req, res, {
+        context: await createContext(req.headers),
         prefix: "/rpc",
       });
 
@@ -67,8 +70,13 @@ const fastify = Fastify({
     return server;
   },
 });
+{{else}}
+const fastify = Fastify({
+  logger: true,
+});
+{{/if}}
 
-fastify.register(cors, corsOptions);
+fastify.register(fastifyCors, baseCorsConfig);
 
 {{#if auth}}
 fastify.route({
@@ -104,56 +112,44 @@ fastify.route({
 {{#if (eq api "trpc")}}
 fastify.register(fastifyTRPCPlugin, {
   prefix: "/trpc",
-  trpcOptions: { router: appRouter, createContext },
-});
-{{/if}}
-
-{{#if (eq api "orpc")}}
-fastify.register(fastifyORPCHandler, {
-  prefix: "/rpc",
-  router: appRouter,
-  {{#if auth}}
-  createContext,
-  {{/if}}
+  trpcOptions: {
+    router: appRouter,
+    createContext,
+    onError({ path, error }) {
+      console.error(`Error in tRPC handler on path '${path}':`, error);
+    },
+  } satisfies FastifyTRPCPluginOptions<AppRouter>["trpcOptions"],
 });
 {{/if}}
 
 {{#if (includes examples "ai")}}
-fastify.post(
-  "/ai",
-  async (
-    request: FastifyRequest<{
-      Body: {
-        messages?: Message[];
-      };
-    }>,
-    reply: FastifyReply
-  ) => {
-    const { messages = [] } = request.body || {};
+interface AiRequestBody {
+  id?: string;
+  messages: Message[];
+}
 
-    const result = streamText({
-      model: openai("gpt-4o"),
-      messages,
-    });
+fastify.post('/ai', async function (request, reply) {
+  const { messages } = request.body as AiRequestBody;
+  const result = streamText({
+    model: google('gemini-1.5-flash'),
+    messages,
+  });
 
-    // Mark the response as a v1 data stream:
-    reply.header("X-Vercel-AI-Data-Stream", "v1");
-    reply.header("Content-Type", "text/plain; charset=utf-8");
+  reply.header('X-Vercel-AI-Data-Stream', 'v1');
+  reply.header('Content-Type', 'text/plain; charset=utf-8');
 
-    return reply.send(result.toDataStream());
-  }
-);
+  return reply.send(result.toDataStream());
+});
 {{/if}}
 
 fastify.get('/', async () => {
   return 'OK'
 })
 
-const port = process.env.PORT ? Number(process.env.PORT) : 3000;
-fastify.listen({ port, host: "0.0.0.0" }, (err, address) => {
+fastify.listen({ port: 3000 }, (err) => {
   if (err) {
     fastify.log.error(err);
     process.exit(1);
   }
-  console.log(`Server is running on ${address}`);
+  console.log("Server running on port 3000");
 });
