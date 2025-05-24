@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.13.1
+
+### Patch Changes
+
+- 07deae5: remove deprecated @types/globby
+
 ## 2.13.0
 
 ### Minor Changes
