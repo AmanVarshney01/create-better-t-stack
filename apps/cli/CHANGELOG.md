@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.13.2
+
+### Patch Changes
+
+- cb0c98d: Add todo example and --configure to setup
+
 ## 2.13.1
 
 ### Patch Changes
