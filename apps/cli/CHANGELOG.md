@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.13.0
+
+### Minor Changes
+
+- 1cc9d81: Auto-generate .env.example files with empty values
+
 ## 2.12.0
 
 ### Minor Changes
