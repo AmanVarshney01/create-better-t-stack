@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.13.3
+
+### Patch Changes
+
+- a9d3601: Refactor CLI argument parsing, validation, and project setup logic
+
 ## 2.13.2
 
 ### Patch Changes
