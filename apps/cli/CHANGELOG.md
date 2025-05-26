@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.13.4
+
+### Patch Changes
+
+- 71706c6: update database setup log messages
+
 ## 2.13.3
 
 ### Patch Changes
