@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.14.2
+
+### Patch Changes
+
+- 27e4411: update react router deps and fix next backend tsconfig error
+
 ## 2.14.1
 
 ### Patch Changes
