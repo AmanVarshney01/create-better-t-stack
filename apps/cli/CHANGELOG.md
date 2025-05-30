@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.14.4
+
+### Patch Changes
+
+- 942c48f: run project tracker after reproducible command
+
 ## 2.14.3
 
 ### Patch Changes
