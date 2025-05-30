@@ -2,8 +2,8 @@ import { PostHog } from "posthog-node";
 import type { ProjectConfig } from "../types";
 import { getLatestCLIVersion } from "./get-latest-cli-version";
 
-const POSTHOG_API_KEY = "phc_8ZUxEwwfKMajJLvxz1daGd931dYbQrwKNficBmsdIrs";
-const POSTHOG_HOST = "https://us.i.posthog.com";
+const POSTHOG_API_KEY = process.env.POSTHOG_API_KEY || "";
+const POSTHOG_HOST = process.env.POSTHOG_HOST;
 
 export async function trackProjectCreation(
 	config: ProjectConfig,
@@ -14,6 +14,7 @@ export async function trackProjectCreation(
 		flushInterval: 0,
 		privacyMode: true,
 		disableGeoip: true,
+		disabled: process.env.MODE !== "prod",
 	});
 
 	try {
