@@ -599,6 +599,8 @@ export async function setupExamplesTemplate(
 
 	const serverAppDirExists = await fs.pathExists(serverAppDir);
 	const webAppDirExists = await fs.pathExists(webAppDir);
+	const nativeAppDir = path.join(projectDir, "apps/native");
+	const nativeAppDirExists = await fs.pathExists(nativeAppDir);
 
 	const hasReactWeb = context.frontend.some((f) =>
 		["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
@@ -755,6 +757,34 @@ export async function setupExamplesTemplate(
 						false,
 					);
 				} else {
+				}
+			}
+		}
+
+		if (nativeAppDirExists) {
+			const hasNativeWind = context.frontend.includes("native-nativewind");
+			const hasUnistyles = context.frontend.includes("native-unistyles");
+
+			if (hasNativeWind || hasUnistyles) {
+				let nativeFramework = "";
+				if (hasNativeWind) {
+					nativeFramework = "nativewind";
+				} else if (hasUnistyles) {
+					nativeFramework = "unistyles";
+				}
+
+				const exampleNativeSrc = path.join(
+					exampleBaseDir,
+					`native/${nativeFramework}`,
+				);
+				if (await fs.pathExists(exampleNativeSrc)) {
+					await processAndCopyFiles(
+						"**/*",
+						exampleNativeSrc,
+						nativeAppDir,
+						context,
+						false,
+					);
 				}
 			}
 		}

@@ -467,24 +467,6 @@ export function validateConfigCompatibility(
 		config.addons = [...new Set(config.addons)];
 	}
 
-	const onlyNativeFrontend =
-		effectiveFrontend &&
-		effectiveFrontend.length === 1 &&
-		(effectiveFrontend[0] === "native-nativewind" ||
-			effectiveFrontend[0] === "native-unistyles");
-
-	if (
-		onlyNativeFrontend &&
-		config.examples &&
-		config.examples.length > 0 &&
-		!config.examples.includes("none")
-	) {
-		consola.fatal(
-			"Examples are not supported when only a native frontend (NativeWind or Unistyles) is selected.",
-		);
-		process.exit(1);
-	}
-
 	if (
 		config.examples &&
 		config.examples.length > 0 &&

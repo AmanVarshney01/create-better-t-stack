@@ -11,10 +11,5 @@ const styles = StyleSheet.create((theme, rt) => ({
     flex: 1,
     paddingBottom: rt.insets.bottom,
     backgroundColor: theme.colors.background,
-    transform: [
-      {
-        translateY: rt.insets.ime * -1,
-      },
-    ],
   },
 }));

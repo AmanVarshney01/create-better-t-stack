@@ -25,30 +25,9 @@ export async function getExamplesChoice(
 
 	if (database === "none") return [];
 
-	const onlyNative =
-		frontends &&
-		frontends.length === 1 &&
-		(frontends[0] === "native-nativewind" ||
-			frontends[0] === "native-unistyles");
-	if (onlyNative) {
-		return [];
-	}
-
-	const hasWebFrontend =
-		frontends?.some((f) =>
-			[
-				"react-router",
-				"tanstack-router",
-				"tanstack-start",
-				"next",
-				"nuxt",
-				"svelte",
-				"solid",
-			].includes(f),
-		) ?? false;
 	const noFrontendSelected = !frontends || frontends.length === 0;
 
-	if (!hasWebFrontend && !noFrontendSelected) return [];
+	if (noFrontendSelected) return [];
 
 	let response: Examples[] | symbol = [];
 	const options: { value: Examples; label: string; hint: string }[] = [
