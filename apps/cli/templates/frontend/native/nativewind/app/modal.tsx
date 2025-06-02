@@ -2,11 +2,13 @@ import { Container } from "@/components/container";
 import { Text, View } from "react-native";
 
 export default function Modal() {
-	return (
-		<Container>
-			<View className="flex-1 justify-center items-center">
-				<Text className="text-xl font-bold text-foreground">Modal View</Text>
-			</View>
-		</Container>
-	);
+  return (
+    <Container>
+      <View className="flex-1 p-6">
+        <View className="flex-row items-center justify-between mb-8">
+          <Text className="text-2xl font-bold text-foreground">Modal</Text>
+        </View>
+      </View>
+    </Container>
+  );
 }

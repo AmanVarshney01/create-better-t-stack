@@ -28,56 +28,80 @@ export default function Home() {
 
   return (
     <Container>
-      <ScrollView contentContainerStyle={styles.pageContainer}>
-        <Text style={styles.headerTitle}>BETTER T STACK</Text>
+      <ScrollView 
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text className="font-mono text-foreground text-3xl font-bold mb-4">
+						BETTER T STACK
+				</Text>
 
-        <View style={styles.apiStatusCard}>
-          <Text style={styles.cardTitle}>API Status</Text>
+        <View style={styles.statusCard}>
+          <View style={styles.statusHeader}>
+            <Text style={styles.statusTitle}>System Status</Text>
+            <View style={styles.statusBadge}>
+              <Text style={styles.statusBadgeText}>LIVE</Text>
+            </View>
+          </View>
+          
           {{#if (eq backend "convex")}}
-          <View style={styles.apiStatusRow}>
+          <View style={styles.statusRow}>
             <View
               style={[
-                styles.statusIndicatorDot,
+                styles.statusDot,
                 healthCheck === "OK"
-                  ? styles.statusIndicatorGreen
-                  : styles.statusIndicatorRed,
+                  ? styles.statusDotSuccess
+                  : styles.statusDotWarning,
               ]}
             />
-            <Text style={styles.statusText}>
-              {healthCheck === undefined
-                ? "Checking..."
-                : healthCheck === "OK"
-                  ? "Connected"
-                  : "Error"}
-            </Text>
+            <View style={styles.statusContent}>
+              <Text style={styles.statusLabel}>Convex</Text>
+              <Text style={styles.statusDescription}>
+                {healthCheck === undefined
+                  ? "Checking connection..."
+                  : healthCheck === "OK"
+                    ? "All systems operational"
+                    : "Service unavailable"}
+              </Text>
+            </View>
           </View>
           {{else}}
             {{#unless (eq api "none")}}
-            <View style={styles.apiStatusRow}>
+            <View style={styles.statusRow}>
               <View
                 style={[
-                  styles.statusIndicatorDot,
+                  styles.statusDot,
                   healthCheck.data
-                    ? styles.statusIndicatorGreen
-                    : styles.statusIndicatorRed,
+                    ? styles.statusDotSuccess
+                    : styles.statusDotWarning,
                 ]}
               />
-              <Text style={styles.statusText}>
-                {{#if (eq api "orpc")}}
-                {healthCheck.isLoading
-                  ? "Checking..."
-                  : healthCheck.data
-                    ? "Connected"
-                    : "Disconnected"}
-                {{/if}}
-                {{#if (eq api "trpc")}}
-                {healthCheck.isLoading
-                  ? "Checking..."
-                  : healthCheck.data
-                    ? "Connected"
-                    : "Disconnected"}
-                {{/if}}
-              </Text>
+              <View style={styles.statusContent}>
+                <Text style={styles.statusLabel}>
+                  {{#if (eq api "orpc")}}
+                  ORPC
+                  {{/if}}
+                  {{#if (eq api "trpc")}}
+                  TRPC
+                  {{/if}}
+                </Text>
+                <Text style={styles.statusDescription}>
+                  {{#if (eq api "orpc")}}
+                  {healthCheck.isLoading
+                    ? "Checking connection..."
+                    : healthCheck.data
+                      ? "All systems operational"
+                      : "Service unavailable"}
+                  {{/if}}
+                  {{#if (eq api "trpc")}}
+                  {healthCheck.isLoading
+                    ? "Checking connection..."
+                    : healthCheck.data
+                      ? "All systems operational"
+                      : "Service unavailable"}
+                  {{/if}}
+                </Text>
+              </View>
             </View>
             {{/unless}}
           {{/if}}
@@ -88,44 +112,84 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create((theme) => ({
-  pageContainer: {
-    paddingHorizontal: 8,
+  container: {
+    paddingHorizontal: theme.spacing.md,
   },
-  headerTitle: {
-    color: theme?.colors?.typography,
-    fontSize: 30,
+  heroSection: {
+    paddingVertical: theme.spacing.xl,
+  },
+  heroTitle: {
+    fontSize: theme.fontSize["4xl"],
     fontWeight: "bold",
-    marginBottom: 16,
+    color: theme.colors.foreground,
+    marginBottom: theme.spacing.sm,
   },
-  apiStatusCard: {
-    marginBottom: 24,
-    borderRadius: 8,
+  heroSubtitle: {
+    fontSize: theme.fontSize.lg,
+    color: theme.colors.mutedForeground,
+    lineHeight: 28,
+  },
+  statusCard: {
+    backgroundColor: theme.colors.card,
     borderWidth: 1,
-    borderColor: theme?.colors?.border,
-    padding: 16,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  cardTitle: {
-    marginBottom: 12,
-    fontWeight: "500",
-    color: theme?.colors?.typography,
-  },
-  apiStatusRow: {
+  statusHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    justifyContent: "space-between",
+    marginBottom: theme.spacing.md,
   },
-  statusIndicatorDot: {
-    height: 12,
-    width: 12,
+  statusTitle: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: "600",
+    color: theme.colors.cardForeground,
+  },
+  statusBadge: {
+    backgroundColor: theme.colors.secondary,
+    paddingHorizontal: theme.spacing.sm + 4,
+    paddingVertical: theme.spacing.xs,
     borderRadius: 9999,
   },
-  statusIndicatorGreen: {
+  statusBadgeText: {
+    fontSize: theme.fontSize.xs,
+    fontWeight: "500",
+    color: theme.colors.secondaryForeground,
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm + 4,
+  },
+  statusDot: {
+    height: 12,
+    width: 12,
+    borderRadius: 6,
+  },
+  statusDotSuccess: {
     backgroundColor: theme.colors.success,
   },
-  statusIndicatorRed: {
-    backgroundColor: theme.colors.destructive,
+  statusDotWarning: {
+    backgroundColor: "#F59E0B",
   },
-  statusText: {
-    color: theme?.colors?.typography,
+  statusContent: {
+    flex: 1,
   },
+  statusLabel: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: "500",
+    color: theme.colors.cardForeground,
+  },
+  statusDescription: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.mutedForeground,
+  }
 }));

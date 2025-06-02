@@ -1,29 +1,37 @@
-import { Stack } from "expo-router";
-import { StyleSheet } from "react-native-unistyles";
 import { Container } from "@/components/container";
-import { Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
 
 export default function Home() {
   return (
-    <>
-      <Stack.Screen options={{ title: "Tab One" }} />
-      <Container>
-        <View style={styles.container}>
-          <Text style={styles.text}>Tab One</Text>
+    <Container>
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.headerSection}>
+          <Text style={styles.title}>Tab One</Text>
+          <Text style={styles.subtitle}>
+            Explore the first section of your app
+          </Text>
         </View>
-      </Container>
-    </>
+      </ScrollView>
+    </Container>
   );
 }
 
 const styles = StyleSheet.create((theme) => ({
-  text: {
-    color: theme.colors.typography,
-  },
   container: {
-    flex: 1,
-    paddingBottom: 100,
-    justifyContent: "center",
-    alignItems: "center",
+    padding: theme.spacing.lg,
+  },
+  headerSection: {
+    paddingVertical: theme.spacing.xl,
+  },
+  title: {
+    fontSize: theme.fontSize["3xl"],
+    fontWeight: "bold",
+    color: theme.colors.foreground,
+    marginBottom: theme.spacing.sm,
+  },
+  subtitle: {
+    fontSize: theme.fontSize.lg,
+    color: theme.colors.mutedForeground,
   },
 }));

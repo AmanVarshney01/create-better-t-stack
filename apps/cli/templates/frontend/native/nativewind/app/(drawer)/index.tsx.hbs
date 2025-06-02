@@ -26,52 +26,66 @@ export default function Home() {
 
   return (
     <Container>
-      <ScrollView className="py-4 flex-1">
-        <Text className="font-mono text-foreground text-2xl font-bold mb-6">
-          BETTER T STACK
-        </Text>
+      <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
+        <Text className="font-mono text-foreground text-3xl font-bold mb-4">
+						BETTER T STACK
+				</Text>
 
-        <View className="rounded-lg border border-foreground p-4">
-          <Text className="mb-2 font-medium text-foreground">API Status</Text>
+        <View className="bg-card border border-border rounded-xl p-6 mb-6 shadow-sm">
           {{#if (eq backend "convex")}}
-          <View className="flex-row items-center gap-2">
+          <View className="flex-row items-center gap-3">
             <View
-              className={`h-2.5 w-2.5 rounded-full ${
-                  healthCheck ? "bg-green-500" : "bg-red-500"
+              className={`h-3 w-3 rounded-full ${
+                  healthCheck ? "bg-green-500" : "bg-orange-500"
               }`}
             />
-            <Text className="text-sm text-foreground">
+            <View className="flex-1">
+              <Text className="text-sm font-medium text-card-foreground">
+                Convex
+              </Text>
+              <Text className="text-xs text-muted-foreground">
                 {healthCheck === undefined
-                  ? "Checking..."
+                  ? "Checking connection..."
                   : healthCheck === "OK"
-                    ? "Connected"
-                    : "Error"}
-            </Text>
+                    ? "All systems operational"
+                    : "Service unavailable"}
+              </Text>
+            </View>
           </View>
           {{else}}
             {{#unless (eq api "none")}}
-            <View className="flex-row items-center gap-2">
+            <View className="flex-row items-center gap-3">
               <View
-                className={`h-2.5 w-2.5 rounded-full ${
-                    healthCheck.data ? "bg-green-500" : "bg-red-500"
+                className={`h-3 w-3 rounded-full ${
+                    healthCheck.data ? "bg-green-500" : "bg-orange-500"
                 }`}
               />
-              <Text className="text-sm text-foreground">
-                {{#if (eq api "orpc")}}
+              <View className="flex-1">
+                <Text className="text-sm font-medium text-card-foreground">
+                  {{#if (eq api "orpc")}}
+                  ORPC
+                  {{/if}}
+                  {{#if (eq api "trpc")}}
+                  TRPC
+                  {{/if}}
+                </Text>
+                <Text className="text-xs text-muted-foreground">
+                  {{#if (eq api "orpc")}}
                   {healthCheck.isLoading
-                    ? "Checking..."
+                    ? "Checking connection..."
                     : healthCheck.data
-                      ? "Connected"
-                      : "Disconnected"}
-                {{/if}}
-                {{#if (eq api "trpc")}}
+                      ? "All systems operational"
+                      : "Service unavailable"}
+                  {{/if}}
+                  {{#if (eq api "trpc")}}
                   {healthCheck.isLoading
-                    ? "Checking..."
+                    ? "Checking connection..."
                     : healthCheck.data
-                      ? "Connected"
-                      : "Disconnected"}
-                {{/if}}
-              </Text>
+                      ? "All systems operational"
+                      : "Service unavailable"}
+                  {{/if}}
+                </Text>
+              </View>
             </View>
             {{/unless}}
           {{/if}}

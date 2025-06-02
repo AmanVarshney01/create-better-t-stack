@@ -159,20 +159,20 @@ const styles = StyleSheet.create((theme) => ({
   },
   content: {
     flex: 1,
-    paddingHorizontal: theme.margins.md,
-    paddingVertical: theme.margins.lg,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.lg,
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: theme.margins.md,
+    paddingHorizontal: theme.spacing.md,
   },
   errorText: {
     color: theme.colors.destructive,
     textAlign: "center",
     fontSize: 18,
-    marginBottom: theme.margins.md,
+    marginBottom: theme.spacing.md,
   },
   errorSubtext: {
     color: theme.colors.typography,
@@ -180,13 +180,13 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: 16,
   },
   header: {
-    marginBottom: theme.margins.lg,
+    marginBottom: theme.spacing.lg,
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: "bold",
     color: theme.colors.typography,
-    marginBottom: theme.margins.sm,
+    marginBottom: theme.spacing.sm,
   },
   headerSubtitle: {
     fontSize: 16,
@@ -194,7 +194,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   messagesContainer: {
     flex: 1,
-    marginBottom: theme.margins.md,
+    marginBottom: theme.spacing.md,
   },
   emptyContainer: {
     flex: 1,
@@ -207,27 +207,27 @@ const styles = StyleSheet.create((theme) => ({
     fontSize: 18,
   },
   messagesWrapper: {
-    gap: theme.margins.md,
+    gap: theme.spacing.md,
   },
   messageContainer: {
-    padding: theme.margins.md,
+    padding: theme.spacing.md,
     borderRadius: 8,
   },
   userMessage: {
     backgroundColor: theme.colors.primary + "20",
-    marginLeft: theme.margins.xl,
+    marginLeft: theme.spacing.xl,
     alignSelf: "flex-end",
   },
   assistantMessage: {
     backgroundColor: theme.colors.background,
-    marginRight: theme.margins.xl,
+    marginRight: theme.spacing.xl,
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
   messageRole: {
     fontSize: 14,
     fontWeight: "600",
-    marginBottom: theme.margins.sm,
+    marginBottom: theme.spacing.sm,
     color: theme.colors.typography,
   },
   messageContent: {
@@ -239,27 +239,27 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.typography,
     fontFamily: "monospace",
     backgroundColor: theme.colors.border + "40",
-    padding: theme.margins.sm,
+    padding: theme.spacing.sm,
     borderRadius: 4,
-    marginTop: theme.margins.sm,
+    marginTop: theme.spacing.sm,
   },
   inputSection: {
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
-    paddingTop: theme.margins.md,
+    paddingTop: theme.spacing.md,
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "flex-end",
-    gap: theme.margins.sm,
+    gap: theme.spacing.sm,
   },
   textInput: {
     flex: 1,
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: 8,
-    paddingHorizontal: theme.margins.md,
-    paddingVertical: theme.margins.sm,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
     color: theme.colors.typography,
     backgroundColor: theme.colors.background,
     fontSize: 16,
@@ -268,7 +268,7 @@ const styles = StyleSheet.create((theme) => ({
   },
   sendButton: {
     backgroundColor: theme.colors.primary,
-    padding: theme.margins.sm,
+    padding: theme.spacing.sm,
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",

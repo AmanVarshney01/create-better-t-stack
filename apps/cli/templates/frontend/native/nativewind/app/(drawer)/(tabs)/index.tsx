@@ -1,17 +1,19 @@
 import { Container } from "@/components/container";
-import { Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 
 export default function TabOne() {
-	return (
-		<Container>
-			<View className="p-6 flex-1 justify-center">
-				<Text className="text-2xl font-bold text-foreground text-center mb-4">
-					Tab One
-				</Text>
-				<Text className="text-foreground text-center">
-					This is the first tab of the application.
-				</Text>
-			</View>
-		</Container>
-	);
+  return (
+    <Container>
+      <ScrollView className="flex-1 p-6">
+        <View className="py-8">
+          <Text className="text-3xl font-bold text-foreground mb-2">
+            Tab One
+          </Text>
+          <Text className="text-lg text-muted-foreground">
+            Explore the first section of your app
+          </Text>
+        </View>
+      </ScrollView>
+    </Container>
+  );
 }

@@ -15,16 +15,16 @@ const DrawerLayout = () => {
           backgroundColor: theme.colors.background,
         },
         headerTitleStyle: {
-          color: theme.colors.typography,
+          color: theme.colors.foreground,
         },
-        headerTintColor: theme.colors.typography,
+        headerTintColor: theme.colors.foreground,
         drawerStyle: {
           backgroundColor: theme.colors.background,
         },
         drawerLabelStyle: {
-          color: theme.colors.typography,
+          color: theme.colors.foreground,
         },
-        drawerInactiveTintColor: theme.colors.typography,
+        drawerInactiveTintColor: theme.colors.mutedForeground,
       }}
     >
       <Drawer.Screen
@@ -67,7 +67,7 @@ const DrawerLayout = () => {
       {{#if (includes examples "ai")}}
       <Drawer.Screen
         name="ai"
-        options={{
+        options=\{{
           headerTitle: "AI",
           drawerLabel: "AI",
           drawerIcon: ({ size, color }) => (
