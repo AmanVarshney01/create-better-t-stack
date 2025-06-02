@@ -28,7 +28,9 @@ export async function setupExamples(config: ProjectConfig): Promise<void> {
 			frontend.includes("react-router") ||
 			frontend.includes("tanstack-router") ||
 			frontend.includes("next") ||
-			frontend.includes("tanstack-start");
+			frontend.includes("tanstack-start") ||
+			frontend.includes("native-nativewind") ||
+			frontend.includes("native-unistyles");
 
 		if (clientDirExists) {
 			const dependencies: AvailableDependencies[] = ["ai"];
