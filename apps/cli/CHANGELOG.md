@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.15.0
+
+### Minor Changes
+
+- 7851d06: add AI and todo example templates for nativewind and unistyles
+
 ## 2.14.4
 
 ### Patch Changes
