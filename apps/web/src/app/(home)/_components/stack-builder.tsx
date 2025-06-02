@@ -626,90 +626,35 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 			}
 
 			const incompatibleExamples: string[] = [];
-			const isWeb = hasWebFrontend(nextStack.webFrontend);
-			const hasNative = checkHasNativeFrontend(nextStack.nativeFrontend);
-			const isNativeOnly = hasNative && !isWeb;
 
-			if (isNativeOnly) {
-				if (nextStack.examples.length > 0) {
-					notes.webFrontend.notes.push(
-						"Examples are not supported with Native-only frontend. Examples will be removed.",
-					);
-					notes.examples.notes.push(
-						"Examples require a web frontend. They will be removed.",
-					);
-					notes.webFrontend.hasIssue = true;
-					notes.examples.hasIssue = true;
-					incompatibleExamples.push(...nextStack.examples);
-					changes.push({
-						category: "examples",
-						message:
-							"Examples removed (not supported with Native-only frontend)",
-					});
-				}
-			} else {
-				if (!isWeb) {
-					if (nextStack.examples.includes("todo")) {
-						incompatibleExamples.push("todo");
-						changes.push({
-							category: "examples",
-							message: "Todo example removed (requires web frontend)",
-						});
-					}
-					if (nextStack.examples.includes("ai")) {
-						incompatibleExamples.push("ai");
-						changes.push({
-							category: "examples",
-							message: "AI example removed (requires web frontend)",
-						});
-					}
-				}
-				if (
-					nextStack.database === "none" &&
-					nextStack.examples.includes("todo")
-				) {
-					incompatibleExamples.push("todo");
-					changes.push({
-						category: "examples",
-						message: "Todo example removed (requires a database)",
-					});
-				}
-				if (
-					nextStack.backend === "elysia" &&
-					nextStack.examples.includes("ai")
-				) {
-					incompatibleExamples.push("ai");
-					changes.push({
-						category: "examples",
-						message: "AI example removed (not compatible with Elysia)",
-					});
-				}
-				if (isSolid && nextStack.examples.includes("ai")) {
-					incompatibleExamples.push("ai");
-					changes.push({
-						category: "examples",
-						message: "AI example removed (not compatible with Solid)",
-					});
-				}
+			// Note: Examples are now supported with Native-only frontends
+			if (
+				nextStack.database === "none" &&
+				nextStack.examples.includes("todo")
+			) {
+				incompatibleExamples.push("todo");
+				changes.push({
+					category: "examples",
+					message: "Todo example removed (requires a database)",
+				});
+			}
+			if (nextStack.backend === "elysia" && nextStack.examples.includes("ai")) {
+				incompatibleExamples.push("ai");
+				changes.push({
+					category: "examples",
+					message: "AI example removed (not compatible with Elysia)",
+				});
+			}
+			if (isSolid && nextStack.examples.includes("ai")) {
+				incompatibleExamples.push("ai");
+				changes.push({
+					category: "examples",
+					message: "AI example removed (not compatible with Solid)",
+				});
 			}
 
 			const uniqueIncompatibleExamples = [...new Set(incompatibleExamples)];
 			if (uniqueIncompatibleExamples.length > 0) {
-				if (!isWeb && !isNativeOnly) {
-					if (
-						uniqueIncompatibleExamples.includes("todo") ||
-						uniqueIncompatibleExamples.includes("ai")
-					) {
-						notes.webFrontend.notes.push(
-							"Examples require a web frontend. Incompatible examples will be removed.",
-						);
-						notes.examples.notes.push(
-							"Requires a web frontend. Incompatible examples will be removed.",
-						);
-						notes.webFrontend.hasIssue = true;
-						notes.examples.hasIssue = true;
-					}
-				}
 				if (
 					nextStack.database === "none" &&
 					uniqueIncompatibleExamples.includes("todo")
@@ -769,7 +714,6 @@ const getCompatibilityRules = (stack: StackState) => {
 	const isBackendNone = stack.backend === "none";
 	const hasWebFrontendSelected = hasWebFrontend(stack.webFrontend);
 	const hasNativeFrontend = checkHasNativeFrontend(stack.nativeFrontend);
-	const hasNativeOnly = hasNativeFrontend && !hasWebFrontendSelected;
 	const hasSolid = stack.webFrontend.includes("solid");
 	const hasNuxt = stack.webFrontend.includes("nuxt");
 	const hasSvelte = stack.webFrontend.includes("svelte");
@@ -779,7 +723,6 @@ const getCompatibilityRules = (stack: StackState) => {
 		isBackendNone,
 		hasWebFrontend: hasWebFrontendSelected,
 		hasNativeFrontend,
-		hasNativeOnly,
 		hasPWACompatible: hasPWACompatibleFrontend(stack.webFrontend),
 		hasTauriCompatible: hasTauriCompatibleFrontend(stack.webFrontend),
 		hasNuxtOrSvelteOrSolid: hasNuxt || hasSvelte || hasSolid,
@@ -1280,59 +1223,37 @@ const StackBuilder = () => {
 				}
 
 				if (catKey === "examples" && techId !== "none") {
-					if (rules.hasNativeOnly) {
+					if (stack.api === "none" && !rules.isConvex && !rules.isBackendNone) {
 						addRule(
 							category,
 							techId,
-							"Disabled: Examples are not supported with a Native-only frontend.",
+							"Disabled: Examples require an API. Cannot be selected when API is 'None'.",
 						);
-					} else {
-						if (
-							!rules.hasWebFrontend &&
-							(techId === "todo" || techId === "ai")
-						) {
-							addRule(
-								category,
-								techId,
-								"Disabled: This example requires a web frontend.",
-							);
-						}
-						if (
-							stack.api === "none" &&
-							!rules.isConvex &&
-							!rules.isBackendNone
-						) {
-							addRule(
-								category,
-								techId,
-								"Disabled: Examples require an API. Cannot be selected when API is 'None'.",
-							);
-						}
-						if (
-							stack.database === "none" &&
-							techId === "todo" &&
-							!rules.isConvex
-						) {
-							addRule(
-								category,
-								techId,
-								"Disabled: The 'Todo' example requires a database.",
-							);
-						}
-						if (stack.backend === "elysia" && techId === "ai") {
-							addRule(
-								category,
-								techId,
-								"Disabled: The 'AI' example is not compatible with an Elysia backend.",
-							);
-						}
-						if (rules.hasSolid && techId === "ai") {
-							addRule(
-								category,
-								techId,
-								"Disabled: The 'AI' example is not compatible with a Solid frontend.",
-							);
-						}
+					}
+					if (
+						stack.database === "none" &&
+						techId === "todo" &&
+						!rules.isConvex
+					) {
+						addRule(
+							category,
+							techId,
+							"Disabled: The 'Todo' example requires a database.",
+						);
+					}
+					if (stack.backend === "elysia" && techId === "ai") {
+						addRule(
+							category,
+							techId,
+							"Disabled: The 'AI' example is not compatible with an Elysia backend.",
+						);
+					}
+					if (rules.hasSolid && techId === "ai") {
+						addRule(
+							category,
+							techId,
+							"Disabled: The 'AI' example is not compatible with a Solid frontend.",
+						);
 					}
 				}
 			}
