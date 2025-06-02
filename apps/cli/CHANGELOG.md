@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.15.1
+
+### Patch Changes
+
+- f19c6d7: Simplify frontend/native prompt messages
+
 ## 2.15.0
 
 ### Minor Changes
