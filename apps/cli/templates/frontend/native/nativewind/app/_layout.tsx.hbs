@@ -1,3 +1,6 @@
+{{#if (includes examples "ai")}}
+import "@/polyfills";
+{{/if}}
 {{#if (eq backend "convex")}}
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 {{else}}

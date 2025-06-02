@@ -1,3 +1,6 @@
+{{#if (includes examples "ai")}}
+import "@/polyfills";
+{{/if}}
 {{#if (eq api "trpc")}}
 import { queryClient } from "@/utils/trpc";
 {{/if}}

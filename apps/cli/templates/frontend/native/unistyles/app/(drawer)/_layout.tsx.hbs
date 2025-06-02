@@ -10,7 +10,7 @@ const DrawerLayout = () => {
 
   return (
     <Drawer
-      screenOptions={{
+      screenOptions=\{{
         headerStyle: {
           backgroundColor: theme.colors.background,
         },
@@ -29,7 +29,7 @@ const DrawerLayout = () => {
     >
       <Drawer.Screen
         name="index"
-        options={{
+        options=\{{
           headerTitle: "Home",
           drawerLabel: "Home",
           drawerIcon: ({ size, color }) => (
@@ -39,7 +39,7 @@ const DrawerLayout = () => {
       />
       <Drawer.Screen
         name="(tabs)"
-        options={{
+        options=\{{
           headerTitle: "Tabs",
           drawerLabel: "Tabs",
           drawerIcon: ({ size, color }) => (
@@ -60,6 +60,22 @@ const DrawerLayout = () => {
           drawerLabel: "Todos",
           drawerIcon: ({ size, color }) => (
             <Ionicons name="checkbox-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      {{/if}}
+      {{#if (includes examples "ai")}}
+      <Drawer.Screen
+        name="ai"
+        options={{
+          headerTitle: "AI",
+          drawerLabel: "AI",
+          drawerIcon: ({ size, color }) => (
+            <Ionicons
+              name="chatbubble-ellipses-outline"
+              size={size}
+              color={color}
+            />
           ),
         }}
       />

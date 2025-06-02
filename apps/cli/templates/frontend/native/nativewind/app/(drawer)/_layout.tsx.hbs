@@ -44,6 +44,22 @@ const DrawerLayout = () => {
         }}
       />
       {{/if}}
+      {{#if (includes examples "ai")}}
+      <Drawer.Screen
+        name="ai"
+        options=\{{
+          headerTitle: "AI",
+          drawerLabel: "AI",
+          drawerIcon: ({ size, color }) => (
+            <Ionicons
+              name="chatbubble-ellipses-outline"
+              size={size}
+              color={color}
+            />
+          ),
+        }}
+      />
+      {{/if}}
     </Drawer>
   );
 };
