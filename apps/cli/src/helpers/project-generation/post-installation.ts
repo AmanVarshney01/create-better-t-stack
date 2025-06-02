@@ -145,9 +145,17 @@ function getNativeInstructions(isConvex: boolean): string {
 		? "your Convex deployment URL (find after running 'dev:setup')"
 		: "your local IP address";
 
-	return `${pc.yellow(
+	let instructions = `${pc.yellow(
 		"NOTE:",
 	)} For Expo connectivity issues, update apps/native/${envFileName} \nwith ${ipNote}:\n${`${envVar}=${exampleUrl}`}\n`;
+
+	if (isConvex) {
+		instructions += `\n${pc.yellow(
+			"IMPORTANT:",
+		)} When using local development with Convex and native apps, ensure you use your local IP address \ninstead of localhost or 127.0.0.1 for proper connectivity.\n`;
+	}
+
+	return instructions;
 }
 
 function getLintingInstructions(runCmd?: string): string {
