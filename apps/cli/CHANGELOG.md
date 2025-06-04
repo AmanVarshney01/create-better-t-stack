@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.15.2
+
+### Patch Changes
+
+- 314a38c: Remove @better-auth/expo from unistyles template
+
 ## 2.15.1
 
 ### Patch Changes
