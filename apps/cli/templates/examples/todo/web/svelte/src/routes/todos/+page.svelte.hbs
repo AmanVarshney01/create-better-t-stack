@@ -2,7 +2,7 @@
 <script lang="ts">
 	import { useQuery, useConvexClient } from 'convex-svelte';
 	import { api } from '@{{projectName}}/backend/convex/_generated/api';
-	import type { Id } from '@{{projectName}}/backend/convex/_generated/dataModel.js';
+	import type { Id } from '@{{projectName}}/backend/convex/_generated/dataModel';
 
 	let newTodoText = $state('');
 	let isAdding = $state(false);
@@ -164,9 +164,6 @@
 	{{#if (eq api "orpc")}}
 	import { orpc } from '$lib/orpc';
 	{{/if}}
-	{{#if (eq api "trpc")}}
-	import { trpc } from '$lib/trpc';
-	{{/if}}
 	import { createQuery, createMutation } from '@tanstack/svelte-query';
 
 	let newTodoText = $state('');
@@ -208,43 +205,6 @@
 		})
 	);
 	{{/if}}
-	{{#if (eq api "trpc")}}
-	const todosQuery = createQuery(trpc.todo.getAll.queryOptions());
-
-	const addMutation = createMutation(
-		trpc.todo.create.mutationOptions({
-			onSuccess: () => {
-				$todosQuery.refetch();
-				newTodoText = '';
-			},
-			onError: (error) => {
-				console.error('Failed to create todo:', error?.message ?? error);
-			},
-		})
-	);
-
-	const toggleMutation = createMutation(
-		trpc.todo.toggle.mutationOptions({
-			onSuccess: () => {
-				$todosQuery.refetch();
-			},
-			onError: (error) => {
-				console.error('Failed to toggle todo:', error?.message ?? error);
-			},
-		})
-	);
-
-	const deleteMutation = createMutation(
-		trpc.todo.delete.mutationOptions({
-			onSuccess: () => {
-				$todosQuery.refetch();
-			},
-			onError: (error) => {
-				console.error('Failed to delete todo:', error?.message ?? error);
-			},
-		})
-	);
-	{{/if}}
 
 	function handleAddTodo(event: SubmitEvent) {
 		event.preventDefault();
@@ -271,7 +231,7 @@
 </script>
 
 <div class="p-4">
-	<h1 class="text-xl mb-4">Todos{{#if (eq api "trpc")}} (tRPC){{/if}}{{#if (eq api "orpc")}} (oRPC){{/if}}</h1>
+	<h1 class="text-xl mb-4">Todos{{#if (eq api "orpc")}} (oRPC){{/if}}</h1>
 
 	<form onsubmit={handleAddTodo} class="flex gap-2 mb-4">
 		<input

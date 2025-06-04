@@ -70,12 +70,12 @@ export default function TodosScreen() {
     );
     const toggleMutation = useMutation(
       orpc.todo.toggle.mutationOptions({
-        onSuccess: () => todos.refetch(),
+        onSuccess: () => { todos.refetch() },
       }),
     );
     const deleteMutation = useMutation(
       orpc.todo.delete.mutationOptions({
-        onSuccess: () => todos.refetch(),
+        onSuccess: () => { todos.refetch() },
       }),
     );
     {{/if}}
@@ -91,12 +91,12 @@ export default function TodosScreen() {
     );
     const toggleMutation = useMutation(
       trpc.todo.toggle.mutationOptions({
-        onSuccess: () => todos.refetch(),
+        onSuccess: () => { todos.refetch() },
       }),
     );
     const deleteMutation = useMutation(
       trpc.todo.delete.mutationOptions({
-        onSuccess: () => todos.refetch(),
+        onSuccess: () => { todos.refetch() },
       }),
     );
     {{/if}}

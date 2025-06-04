@@ -3,7 +3,7 @@ import type { RouterClient } from '@orpc/server'
 import type { appRouter } from "../../../server/src/routers/index";
 import { createORPCClient } from '@orpc/client'
 import { RPCLink } from '@orpc/client/fetch'
-import { createORPCVueQueryUtils } from '@orpc/vue-query'
+import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig()
@@ -25,7 +25,7 @@ export default defineNuxtPlugin(() => {
 
 
   const client: RouterClient<typeof appRouter> = createORPCClient(rpcLink)
-  const orpcUtils = createORPCVueQueryUtils(client)
+  const orpcUtils = createTanstackQueryUtils(client)
 
   return {
     provide: {

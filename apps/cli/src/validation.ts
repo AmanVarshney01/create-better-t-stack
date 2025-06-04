@@ -30,7 +30,8 @@ export function processAndValidateFlags(
 		if (options.api === "none") {
 			if (
 				options.examples &&
-				!(options.examples.length === 1 && options.examples[0] === "none")
+				!(options.examples.length === 1 && options.examples[0] === "none") &&
+				options.backend !== "convex"
 			) {
 				consola.fatal(
 					"Cannot use '--examples' when '--api' is set to 'none'. Please remove the --examples flag or choose an API type.",
