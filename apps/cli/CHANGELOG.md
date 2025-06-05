@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.16.1
+
+### Patch Changes
+
+- 2e6454a: Improve oRPC templates
+
 ## 2.16.0
 
 ### Minor Changes
