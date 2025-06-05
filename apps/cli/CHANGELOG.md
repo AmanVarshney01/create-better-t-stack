@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.16.0
+
+### Minor Changes
+
+- 1485809: update orpc tanstack integration
+
 ## 2.15.2
 
 ### Patch Changes
