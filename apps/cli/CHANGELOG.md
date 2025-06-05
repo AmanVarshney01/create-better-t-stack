@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.16.2
+
+### Patch Changes
+
+- 9aad821: fix react version
+
 ## 2.16.1
 
 ### Patch Changes
