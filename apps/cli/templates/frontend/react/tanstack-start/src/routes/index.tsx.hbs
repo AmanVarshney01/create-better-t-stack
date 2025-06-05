@@ -9,7 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/utils/trpc";
   {{/if}}
   {{#if (eq api "orpc")}}
-import { useORPC } from "@/utils/orpc";
+import { orpc } from "@/utils/orpc";
   {{/if}}
 {{/if}}
 
@@ -40,7 +40,6 @@ function HomeComponent() {
   const trpc = useTRPC();
   const healthCheck = useQuery(trpc.healthCheck.queryOptions());
   {{else if (eq api "orpc")}}
-  const orpc = useORPC();
   const healthCheck = useQuery(orpc.healthCheck.queryOptions());
   {{/if}}
 

@@ -19,12 +19,12 @@ import { useMutation } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
 {{else}}
-  {{#if (eq api "trpc")}}
+{{#if (eq api "trpc")}}
 import { useTRPC } from "@/utils/trpc";
-  {{/if}}
-  {{#if (eq api "orpc")}}
-import { useORPC } from "@/utils/orpc";
-  {{/if}}
+{{/if}}
+{{#if (eq api "orpc")}}
+import { orpc } from "@/utils/orpc";
+{{/if}}
 import { useMutation, useQuery } from "@tanstack/react-query";
 {{/if}}
 
@@ -77,7 +77,6 @@ function TodosRoute() {
   const trpc = useTRPC();
     {{/if}}
     {{#if (eq api "orpc")}}
-  const orpc = useORPC();
     {{/if}}
 
     {{#if (eq api "trpc")}}

@@ -3,7 +3,7 @@ import { authClient } from "@/lib/auth-client";
 import { useTRPC } from "@/utils/trpc";
 {{/if}}
 {{#if (eq api "orpc")}}
-import { useORPC } from "@/utils/orpc";
+import { orpc } from "@/utils/orpc";
 {{/if}}
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -19,7 +19,6 @@ function RouteComponent() {
   const trpc = useTRPC();
   {{/if}}
   {{#if (eq api "orpc")}}
-  const orpc = useORPC();
   {{/if}}
   const { data: session, isPending } = authClient.useSession();
 
