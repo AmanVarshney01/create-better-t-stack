@@ -29,6 +29,7 @@ export type Frontend =
 	| "native-unistyles"
 	| "svelte"
 	| "solid"
+	| "angular"
 	| "none";
 export type DatabaseSetup =
 	| "turso"
