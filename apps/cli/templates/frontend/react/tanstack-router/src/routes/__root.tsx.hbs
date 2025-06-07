@@ -75,7 +75,6 @@ function RootComponent() {
     <>
       <HeadContent />
       {{#if (eq api "orpc")}}
-      <ORPCContext.Provider value={orpcUtils}>
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
           <div className="grid grid-rows-[auto_1fr] h-svh">
             <Header />
@@ -83,7 +82,6 @@ function RootComponent() {
           </div>
           <Toaster richColors />
         </ThemeProvider>
-      </ORPCContext.Provider>
       {{else}}
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
         <div className="grid grid-rows-[auto_1fr] h-svh">

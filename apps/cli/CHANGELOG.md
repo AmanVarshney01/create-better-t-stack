@@ -1,5 +1,17 @@
 # create-better-t-stack
 
+## 2.16.2
+
+### Patch Changes
+
+- 9aad821: fix react version
+
+## 2.16.1
+
+### Patch Changes
+
+- 2e6454a: Improve oRPC templates
+
 ## 2.16.0
 
 ### Minor Changes

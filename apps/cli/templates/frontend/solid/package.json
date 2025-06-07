@@ -9,17 +9,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@orpc/client": "^1.1.1",
-    "@orpc/server": "^1.1.1",
-    "@orpc/solid-query": "^1.1.1",
     "@tailwindcss/vite": "^4.0.6",
     "@tanstack/router-plugin": "^1.109.2",
     "@tanstack/solid-form": "^1.9.0",
-    "@tanstack/solid-query": "^5.75.0",
-    "@tanstack/solid-query-devtools": "^5.75.0",
     "@tanstack/solid-router": "^1.110.0",
     "@tanstack/solid-router-devtools": "^1.109.2",
-    "better-auth": "^1.2.7",
     "lucide-solid": "^0.507.0",
     "solid-js": "^1.9.4",
     "tailwindcss": "^4.0.6",

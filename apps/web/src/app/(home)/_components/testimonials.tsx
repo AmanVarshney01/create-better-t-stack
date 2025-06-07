@@ -1,30 +1,39 @@
 "use client";
 
-import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, Terminal } from "lucide-react";
+import { Terminal } from "lucide-react";
 import { motion } from "motion/react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Tweet } from "react-tweet";
 
 const TWEET_IDS = [
+	"1930194170418999437",
 	"1907728148294447538",
-	"1907831059275735353",
+	"1931029815047455149",
+	"1930511724702285885",
 	"1912836377365905496",
 	"1907817662215757853",
+	"1929147326955704662",
 	"1904228496144269699",
+	"1930257410259616057",
 	"1917815700980391964",
+	"1928317790588403953",
 	"1917640304758514093",
+	"1907831059275735353",
 	"1912924558522524039",
 	"1911490975173607495",
+	"1930104047845158972",
 	"1913773945523953713",
 	"1904241046898556970",
 	"1913834145471672652",
+	"1930514202260635807",
 	"1904144343125860404",
 	"1917610656477348229",
 	"1904215768272654825",
 	"1913833079342522779",
+	"1930449311848087708",
 	"1907723601731530820",
 	"1904233896851521980",
+	"1930294868808515726",
 	"1913801258789491021",
 	"1907841646513005038",
 	"1904301540422070671",
@@ -41,74 +50,35 @@ const TWEET_IDS = [
 	"1906570888897777847",
 ];
 
-const MAX_VISIBLE_PAGES = 5;
-
 export default function Testimonials() {
-	const [startIndex, setStartIndex] = useState(0);
-	const [tweetsPerPage] = useState(6);
+	// Split tweets into 3 columns
+	const columns = useMemo(() => {
+		const col1: string[] = [];
+		const col2: string[] = [];
+		const col3: string[] = [];
 
-	const totalPages = useMemo(
-		() => Math.ceil(TWEET_IDS.length / tweetsPerPage),
-		[tweetsPerPage],
-	);
-	const currentPage = useMemo(
-		() => Math.floor(startIndex / tweetsPerPage) + 1,
-		[startIndex, tweetsPerPage],
-	);
+		TWEET_IDS.forEach((tweetId, index) => {
+			if (index % 3 === 0) col1.push(tweetId);
+			else if (index % 3 === 1) col2.push(tweetId);
+			else col3.push(tweetId);
+		});
 
-	const handleNext = () => {
-		setStartIndex((prev) =>
-			Math.min(prev + tweetsPerPage, (totalPages - 1) * tweetsPerPage),
-		);
-	};
+		return [col1, col2, col3];
+	}, []);
 
-	const handlePrev = () => {
-		setStartIndex((prev) => Math.max(0, prev - tweetsPerPage));
-	};
-
-	const goToPage = (pageNumber: number) => {
-		setStartIndex((pageNumber - 1) * tweetsPerPage);
-	};
-
-	const visibleTweetIndices = useMemo(() => {
-		const end = Math.min(startIndex + tweetsPerPage, TWEET_IDS.length);
-		return Array.from({ length: end - startIndex }, (_, i) => startIndex + i);
-	}, [startIndex, tweetsPerPage]);
-
-	const paginationDots = useMemo(() => {
-		if (totalPages <= MAX_VISIBLE_PAGES) {
-			return Array.from({ length: totalPages }, (_, i) => i + 1);
-		}
-
-		const startPage = Math.max(
-			1,
-			Math.min(
-				currentPage - Math.floor(MAX_VISIBLE_PAGES / 2),
-				totalPages - MAX_VISIBLE_PAGES + 1,
-			),
-		);
-		const endPage = Math.min(totalPages, startPage + MAX_VISIBLE_PAGES - 1);
-
-		const pages: (number | string)[] = [];
-		if (startPage > 1) {
-			pages.push(1);
-			if (startPage > 2) pages.push("...");
-		}
-		for (let i = startPage; i <= endPage; i++) {
-			pages.push(i);
-		}
-		if (endPage < totalPages) {
-			if (endPage < totalPages - 1) pages.push("...");
-			pages.push(totalPages);
-		}
-		return pages;
-	}, [totalPages, currentPage]);
-
-	const gridVariants = {
+	const containerVariants = {
 		hidden: { opacity: 0 },
 		visible: {
 			opacity: 1,
-			transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+			transition: { staggerChildren: 0.1, delayChildren: 0.1 },
+		},
+	};
+
+	const columnVariants = {
+		hidden: { opacity: 0 },
+		visible: {
+			opacity: 1,
+			transition: { staggerChildren: 0.05 },
 		},
 	};
 
@@ -143,102 +113,125 @@ export default function Testimonials() {
 			</div>
 
 			<motion.div
-				className={cn("grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3")}
-				variants={gridVariants}
+				className="flex flex-col gap-4 sm:flex-row"
+				variants={containerVariants}
 				initial="hidden"
 				animate="visible"
 			>
-				{visibleTweetIndices.map((index, i) => (
-					<motion.div
-						key={TWEET_IDS[index]}
-						className="terminal-block-hover overflow-hidden rounded border border-border bg-background"
-						style={{ animationDelay: `${i * 50}ms` }}
-						initial={{ opacity: 0, y: 20 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ delay: i * 0.1 }}
-					>
-						<div className="border-border border-b bg-muted/20 px-3 py-2">
-							<div className="flex items-center gap-2">
-								<span className="text-primary text-xs">▶</span>
-								<span className="font-mono font-semibold text-xs">
-									[TWEET_{String(index + 1).padStart(3, "0")}]
-								</span>
-							</div>
-						</div>
-						<div className="p-0">
-							<Tweet id={TWEET_IDS[index]} />
-						</div>
-					</motion.div>
-				))}
+				{/* Column 1 */}
+				<motion.div
+					className="flex flex-1 flex-col gap-4"
+					variants={columnVariants}
+				>
+					{columns[0]?.map((tweetId, tweetIndex) => {
+						const globalIndex = 0 + tweetIndex * 3;
+						return (
+							<motion.div
+								key={tweetId}
+								className="terminal-block-hover overflow-hidden rounded border border-border bg-background"
+								initial={{ opacity: 0, y: 20, scale: 0.95 }}
+								animate={{ opacity: 1, y: 0, scale: 1 }}
+								transition={{
+									delay: tweetIndex * 0.05,
+									duration: 0.4,
+									ease: "easeOut",
+								}}
+							>
+								<div className="sticky top-0 z-10 border-border border-b bg-muted/20 px-3 py-2">
+									<div className="flex items-center gap-2">
+										<span className="text-primary text-xs">▶</span>
+										<span className="font-mono font-semibold text-xs">
+											[TWEET_{String(globalIndex + 1).padStart(3, "0")}]
+										</span>
+										<span className="rounded bg-primary/10 px-1 text-muted-foreground text-xs">
+											COL_1
+										</span>
+									</div>
+								</div>
+								<div className="p-0">
+									<Tweet id={tweetId} />
+								</div>
+							</motion.div>
+						);
+					})}
+				</motion.div>
+
+				{/* Column 2 */}
+				<motion.div
+					className="flex flex-1 flex-col gap-4"
+					variants={columnVariants}
+				>
+					{columns[1]?.map((tweetId, tweetIndex) => {
+						const globalIndex = 1 + tweetIndex * 3;
+						return (
+							<motion.div
+								key={tweetId}
+								className="terminal-block-hover overflow-hidden rounded border border-border bg-background"
+								initial={{ opacity: 0, y: 20, scale: 0.95 }}
+								animate={{ opacity: 1, y: 0, scale: 1 }}
+								transition={{
+									delay: tweetIndex * 0.05,
+									duration: 0.4,
+									ease: "easeOut",
+								}}
+							>
+								<div className="sticky top-0 z-10 border-border border-b bg-muted/20 px-3 py-2">
+									<div className="flex items-center gap-2">
+										<span className="text-primary text-xs">▶</span>
+										<span className="font-mono font-semibold text-xs">
+											[TWEET_{String(globalIndex + 1).padStart(3, "0")}]
+										</span>
+										<span className="rounded bg-primary/10 px-1 text-muted-foreground text-xs">
+											COL_2
+										</span>
+									</div>
+								</div>
+								<div className="p-0">
+									<Tweet id={tweetId} />
+								</div>
+							</motion.div>
+						);
+					})}
+				</motion.div>
+
+				{/* Column 3 */}
+				<motion.div
+					className="flex flex-1 flex-col gap-4"
+					variants={columnVariants}
+				>
+					{columns[2]?.map((tweetId, tweetIndex) => {
+						const globalIndex = 2 + tweetIndex * 3;
+						return (
+							<motion.div
+								key={tweetId}
+								className="terminal-block-hover overflow-hidden rounded border border-border bg-background"
+								initial={{ opacity: 0, y: 20, scale: 0.95 }}
+								animate={{ opacity: 1, y: 0, scale: 1 }}
+								transition={{
+									delay: tweetIndex * 0.05,
+									duration: 0.4,
+									ease: "easeOut",
+								}}
+							>
+								<div className="sticky top-0 z-10 border-border border-b bg-muted/20 px-3 py-2">
+									<div className="flex items-center gap-2">
+										<span className="text-primary text-xs">▶</span>
+										<span className="font-mono font-semibold text-xs">
+											[TWEET_{String(globalIndex + 1).padStart(3, "0")}]
+										</span>
+										<span className="rounded bg-primary/10 px-1 text-muted-foreground text-xs">
+											COL_3
+										</span>
+									</div>
+								</div>
+								<div className="p-0">
+									<Tweet id={tweetId} />
+								</div>
+							</motion.div>
+						);
+					})}
+				</motion.div>
 			</motion.div>
-
-			{totalPages > 1 && (
-				<div className="terminal-block-hover mt-8 rounded border border-border bg-muted/20 p-4">
-					<div className="flex items-center justify-between">
-						<button
-							type="button"
-							onClick={handlePrev}
-							disabled={currentPage === 1}
-							className={cn(
-								"terminal-block-hover hidden items-center gap-1.5 rounded border border-border bg-background px-3 py-1.5 font-mono text-xs transition-colors sm:flex",
-								currentPage === 1
-									? "cursor-not-allowed opacity-50"
-									: "hover:bg-muted/50",
-							)}
-						>
-							<ChevronLeft className="h-3 w-3" />
-							PREV
-						</button>
-
-						<div className="flex items-center gap-1">
-							<span className="font-mono text-muted-foreground text-xs">
-								PAGE:
-							</span>
-							{paginationDots.map((page, index) =>
-								typeof page === "number" ? (
-									<button
-										type="button"
-										key={`page-${page}`}
-										onClick={() => goToPage(page)}
-										className={cn(
-											"terminal-block-hover flex h-6 w-6 items-center justify-center rounded border border-border font-mono text-xs transition-colors",
-											currentPage === page
-												? "bg-primary/20 text-primary"
-												: "bg-background text-muted-foreground hover:text-foreground",
-										)}
-									>
-										{page}
-									</button>
-								) : (
-									<span
-										key={`ellipsis-${
-											index < paginationDots.length / 2 ? "start" : "end"
-										}`}
-										className="flex h-6 w-6 items-center justify-center font-mono text-muted-foreground text-xs"
-									>
-										...
-									</span>
-								),
-							)}
-						</div>
-
-						<button
-							type="button"
-							onClick={handleNext}
-							disabled={currentPage === totalPages}
-							className={cn(
-								"terminal-block-hover hidden items-center gap-1.5 rounded border border-border bg-background px-3 py-1.5 font-mono text-xs transition-colors sm:flex",
-								currentPage === totalPages
-									? "cursor-not-allowed opacity-50"
-									: "hover:bg-muted/50",
-							)}
-						>
-							NEXT
-							<ChevronRight className="h-3 w-3" />
-						</button>
-					</div>
-				</div>
-			)}
 		</div>
 	);
 }

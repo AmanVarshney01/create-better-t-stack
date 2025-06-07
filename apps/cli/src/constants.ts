@@ -100,8 +100,8 @@ export const dependencyVersionMap = {
 	"convex-svelte": "^0.0.11",
 
 	"@tanstack/svelte-query": "^5.74.4",
-	"@tanstack/react-query-devtools": "^5.69.0",
-	"@tanstack/react-query": "^5.69.0",
+	"@tanstack/react-query-devtools": "^5.80.5",
+	"@tanstack/react-query": "^5.80.5",
 
 	"@tanstack/solid-query": "^5.75.0",
 	"@tanstack/solid-query-devtools": "^5.75.0",

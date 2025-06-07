@@ -410,8 +410,8 @@ export default function HomePage() {
 					</div>
 				</div>
 
-				<Testimonials />
 				<SponsorsSection />
+				<Testimonials />
 			</main>
 			<Footer />
 		</div>
