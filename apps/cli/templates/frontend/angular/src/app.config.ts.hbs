@@ -15,7 +15,7 @@ import {
 	withDevtools,
 } from "@tanstack/angular-query-experimental";
 {{/if}}
-{{#if (eq addons "pwa")}}
+{{#if (eq addons.pwa "true")}}
 import { provideServiceWorker } from '@angular/service-worker';
 import { isDevMode } from '@angular/core';
 {{/if}}
@@ -42,7 +42,7 @@ export const appConfig: ApplicationConfig = {
 			withDevtools(() => ({ loadDevtools: "auto" })),
 		),
 		{{/if}}
-		{{#if (eq addons "pwa")}}
+		{{#if (eq addons.pwa "true")}}
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000',

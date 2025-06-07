@@ -93,6 +93,7 @@ export const dependencyVersionMap = {
 	"@orpc/tanstack-query": "^1.4.1",
 
 	"@trpc/tanstack-react-query": "^11.0.0",
+	"@tanstack/angular-query-experimental": "^5.80.2",
 	"@trpc/server": "^11.0.0",
 	"@trpc/client": "^11.0.0",
 

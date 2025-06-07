@@ -107,7 +107,15 @@ export async function setupApi(config: ProjectConfig): Promise<void> {
 					});
 				}
 			} else if (hasAngularWeb) {
-				if (api === "orpc") {
+				if(api === "trpc"){
+					await addPackageDependency({
+						dependencies: [
+							"@trpc/client",
+							"@trpc/server",
+						],
+						projectDir: webDir,
+					});
+				} else if (api === "orpc") {
 					await addPackageDependency({
 						dependencies: [
 							"@orpc/tanstack-query",
@@ -153,7 +161,7 @@ export async function setupApi(config: ProjectConfig): Promise<void> {
 	];
 	const needsSolidQuery = frontend.includes("solid");
 	const needsReactQuery = frontend.some((f) => reactBasedFrontends.includes(f));
-
+	const needsAngularQuery = frontend.includes("angular");
 	if (needsReactQuery && !isConvex) {
 		const reactQueryDeps: AvailableDependencies[] = ["@tanstack/react-query"];
 		const reactQueryDevDeps: AvailableDependencies[] = [
@@ -217,7 +225,17 @@ export async function setupApi(config: ProjectConfig): Promise<void> {
 			}
 		}
 	}
-
+ if(needsAngularQuery && !isConvex){
+  if(webDirExists){
+    const webPkgJsonPath = path.join(webDir, "package.json");
+    if (await fs.pathExists(webPkgJsonPath)) {
+      await addPackageDependency({
+        dependencies: ["@tanstack/angular-query-experimental"],
+        projectDir: webDir,
+      });
+     }
+    }
+  }
 	if (isConvex) {
 		if (webDirExists) {
 			const webPkgJsonPath = path.join(webDir, "package.json");

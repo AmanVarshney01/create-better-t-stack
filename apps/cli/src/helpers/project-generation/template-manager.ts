@@ -189,7 +189,7 @@ export async function setupFrontendTemplates(
 			} else {
 			}
 
-			if (!isConvex && context.api === "none") {
+			if (!isConvex && (context.api === "orpc" || context.api === "trpc")) {
 				const apiWebAngularDir = path.join(
 					PKG_ROOT,
 					`templates/api/${context.api}/web/angular`,
