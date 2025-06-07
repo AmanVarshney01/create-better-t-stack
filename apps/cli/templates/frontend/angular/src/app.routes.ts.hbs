@@ -1,0 +1,21 @@
+import type { Route } from '@angular/router';
+import { HomeComponent } from './components/home/home.component';
+import { TodoListComponent } from './components/todo-list/todo-list.component';
+import { NotFoundComponent } from './components/not-found/not-found-component';
+{{#if (not (eq auth "none"))}}
+import { LoginComponent } from './components/auth/login/login.component';
+import { DashboardComponent } from './components/dashboard/dashboard.component';
+import { SignupComponent } from './components/auth/signup/signup.component';
+import { authGuard } from './guards/auth.guard';
+{{/if}}
+
+export const routes: Route[] = [
+   { path: '', component: HomeComponent },
+   { path: 'todos', component: TodoListComponent },
+   {{#if (not (eq auth "none"))}}
+   { path: 'login', component: LoginComponent },
+   { path: 'signup', component: SignupComponent },
+   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
+   {{/if}}
+   { path: '**', component: NotFoundComponent }
+];

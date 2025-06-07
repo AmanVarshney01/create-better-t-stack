@@ -6,8 +6,14 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  {{#if addons.includes("pwa")}}
+    <link rel="manifest" href="manifest.webmanifest">
+  {{/if}}
 </head>
 <body>
   <app-root></app-root>
+  {{#if addons.includes("pwa")}}
+    <noscript>Please enable JavaScript to continue using this application.</noscript>
+  {{/if}}
 </body>
 </html>

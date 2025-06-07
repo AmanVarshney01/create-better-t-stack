@@ -424,7 +424,8 @@ export function validateConfigCompatibility(
 				f === "tanstack-router" ||
 				f === "react-router" ||
 				f === "solid" ||
-				f === "next"
+				f === "next" ||
+				f === "angular";
 			const isTauriCompatible =
 				f === "tanstack-router" ||
 				f === "react-router" ||
@@ -450,11 +451,11 @@ export function validateConfigCompatibility(
 			let incompatibleReason = "Selected frontend is not compatible.";
 			if (config.addons.includes("pwa")) {
 				incompatibleReason =
-					"PWA requires tanstack-router, react-router, next, or solid.";
+					"PWA requires tanstack-router, react-router, next, angular, or solid.";
 			}
 			if (config.addons.includes("tauri")) {
 				incompatibleReason =
-					"Tauri requires tanstack-router, react-router, nuxt, svelte, solid, or next.";
+					"Tauri requires tanstack-router, react-router, nuxt, svelte, solid, next, or angular.";
 			}
 			consola.fatal(
 				`Incompatible addon/frontend combination: ${incompatibleReason}`,

@@ -4,6 +4,7 @@ import { globby } from "globby";
 import { PKG_ROOT } from "../../constants";
 import type { ProjectConfig } from "../../types";
 import { processTemplate } from "../../utils/template-processor";
+import { addPackageDependency } from "../../utils/add-package-deps";
 
 async function processAndCopyFiles(
 	sourcePattern: string | string[],
@@ -70,12 +71,13 @@ export async function setupFrontendTemplates(
 	const hasNuxtWeb = context.frontend.includes("nuxt");
 	const hasSvelteWeb = context.frontend.includes("svelte");
 	const hasSolidWeb = context.frontend.includes("solid");
+	const hasAngularWeb = context.frontend.includes("angular");
 	const hasNativeWind = context.frontend.includes("native-nativewind");
 	const hasUnistyles = context.frontend.includes("native-unistyles");
 	const _hasNative = hasNativeWind || hasUnistyles;
 	const isConvex = context.backend === "convex";
 
-	if (hasReactWeb || hasNuxtWeb || hasSvelteWeb || hasSolidWeb) {
+	if (hasReactWeb || hasNuxtWeb || hasSvelteWeb || hasSolidWeb || hasAngularWeb) {
 		const webAppDir = path.join(projectDir, "apps/web");
 		await fs.ensureDir(webAppDir);
 
@@ -177,6 +179,23 @@ export async function setupFrontendTemplates(
 				);
 				if (await fs.pathExists(apiWebSolidDir)) {
 					await processAndCopyFiles("**/*", apiWebSolidDir, webAppDir, context);
+				} else {
+				}
+			}
+		} else if (hasAngularWeb) {
+			const angularBaseDir = path.join(PKG_ROOT, "templates/frontend/angular");
+			if (await fs.pathExists(angularBaseDir)) {
+				await processAndCopyFiles("**/*", angularBaseDir, webAppDir, context);
+			} else {
+			}
+
+			if (!isConvex && context.api === "none") {
+				const apiWebAngularDir = path.join(
+					PKG_ROOT,
+					`templates/api/${context.api}/web/angular`,
+				);
+				if (await fs.pathExists(apiWebAngularDir)) {
+					await processAndCopyFiles("**/*", apiWebAngularDir, webAppDir, context);
 				} else {
 				}
 			}
@@ -378,7 +397,7 @@ export async function setupAuthTemplate(
 	const hasNativeWind = context.frontend.includes("native-nativewind");
 	const hasUnistyles = context.frontend.includes("native-unistyles");
 	const hasNative = hasNativeWind || hasUnistyles;
-
+	const hasAngularWeb = context.frontend.includes("angular");
 	if (serverAppDirExists) {
 		const authServerBaseSrc = path.join(PKG_ROOT, "templates/auth/server/base");
 		if (await fs.pathExists(authServerBaseSrc)) {
@@ -435,7 +454,7 @@ export async function setupAuthTemplate(
 	}
 
 	if (
-		(hasReactWeb || hasNuxtWeb || hasSvelteWeb || hasSolidWeb) &&
+		(hasReactWeb || hasNuxtWeb || hasSvelteWeb || hasSolidWeb || hasAngularWeb) &&
 		webAppDirExists
 	) {
 		if (hasReactWeb) {
@@ -502,6 +521,12 @@ export async function setupAuthTemplate(
 					);
 				} else {
 				}
+			}
+		} else if (hasAngularWeb) {
+			const authWebAngularSrc = path.join(PKG_ROOT, "templates/auth/web/angular");
+			if (await fs.pathExists(authWebAngularSrc)) {
+				await processAndCopyFiles("**/*", authWebAngularSrc, webAppDir, context);
+			} else {
 			}
 		}
 	}
@@ -570,6 +595,15 @@ export async function setupAddonsTemplate(
 				)
 			) {
 				addonSrcDir = path.join(PKG_ROOT, "templates/addons/pwa/apps/web/vite");
+			} else if (context.frontend.includes("angular")) {
+				addonSrcDir = path.join(
+					PKG_ROOT,
+					"templates/addons/pwa/apps/web/angular",
+				);
+				await addPackageDependency({
+					dependencies: ["@angular/service-worker"],
+					projectDir: webAppDir,
+				});
 			} else {
 				continue;
 			}
@@ -608,7 +642,7 @@ export async function setupExamplesTemplate(
 	const hasNuxtWeb = context.frontend.includes("nuxt");
 	const hasSvelteWeb = context.frontend.includes("svelte");
 	const hasSolidWeb = context.frontend.includes("solid");
-
+	const hasAngularWeb = context.frontend.includes("angular");
 	for (const example of context.examples) {
 		if (example === "none") continue;
 
@@ -756,6 +790,12 @@ export async function setupExamplesTemplate(
 						context,
 						false,
 					);
+				} else {
+				}
+			} else if (hasAngularWeb) {
+				const exampleWebAngularSrc = path.join(exampleBaseDir, "web/angular");
+				if (await fs.pathExists(exampleWebAngularSrc)) {
+					await processAndCopyFiles("**/*", exampleWebAngularSrc, webAppDir, context);
 				} else {
 				}
 			}

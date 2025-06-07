@@ -45,6 +45,7 @@ export const dependencyVersionMap = {
 	mongoose: "^8.14.0",
 
 	"vite-plugin-pwa": "^0.21.2",
+ "@angular/service-worker" : "^19.2.0",
 	"@vite-pwa/assets-generator": "^0.2.6",
 
 	"@tauri-apps/cli": "^2.4.0",

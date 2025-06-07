@@ -19,7 +19,7 @@ export async function setupApi(config: ProjectConfig): Promise<void> {
 	const hasNuxtWeb = frontend.includes("nuxt");
 	const hasSvelteWeb = frontend.includes("svelte");
 	const hasSolidWeb = frontend.includes("solid");
-
+	const hasAngularWeb = frontend.includes("angular");
 	if (!isConvex && api !== "none") {
 		const serverDir = path.join(projectDir, "apps/server");
 		const serverDirExists = await fs.pathExists(serverDir);
@@ -102,6 +102,17 @@ export async function setupApi(config: ProjectConfig): Promise<void> {
 							"@orpc/client",
 							"@orpc/server",
 							"@tanstack/solid-query",
+						],
+						projectDir: webDir,
+					});
+				}
+			} else if (hasAngularWeb) {
+				if (api === "orpc") {
+					await addPackageDependency({
+						dependencies: [
+							"@orpc/tanstack-query",
+							"@orpc/client",
+							"@orpc/server",
 						],
 						projectDir: webDir,
 					});
