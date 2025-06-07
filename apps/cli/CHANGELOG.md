@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.16.3
+
+### Patch Changes
+
+- ded8f89: Refactor Neon authentication logic
+
 ## 2.16.2
 
 ### Patch Changes
