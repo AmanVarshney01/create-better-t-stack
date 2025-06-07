@@ -47,6 +47,7 @@ export async function parseCliArguments(): Promise<YargsArgv> {
 				"native-nativewind",
 				"native-unistyles",
 				"svelte",
+				"angular",
 				"solid",
 				"none",
 			],

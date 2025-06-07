@@ -14,15 +14,7 @@ import { ThemeService } from '../services/theme.service';
     HeaderComponent,
     NgxSonnerToaster
   ],
-  template: `
-    <div class="min-h-screen flex flex-col">
-      <app-header />
-      <main class="flex-1">
-        <router-outlet></router-outlet>
-      </main>
-      <ngx-sonner-toaster richColors closeButton position="top-right" />
-    </div>
-  `,
+  templateUrl: './app.component.html',
 })
 export class AppComponent {
  private themeService = inject(ThemeService);

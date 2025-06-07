@@ -1,0 +1,30 @@
+<div class="min-h-screen bg-gray-50 dark:bg-black text-gray-900 dark:text-white">
+ <div class="container mx-auto px-4 py-12">
+   <pre className="overflow-x-auto font-mono text-sm">
+██████╗ ███████╗████████╗████████╗███████╗██████╗
+██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗
+██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝
+██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗
+██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║
+╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝
+
+████████╗    ███████╗████████╗ █████╗  ██████╗██╗  ██╗
+╚══██╔══╝    ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
+██║       ███████╗   ██║   ███████║██║     █████╔╝
+██║       ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
+██║       ███████║   ██║   ██║  ██║╚██████╗██║  ██╗
+╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
+</pre>
+   {{#if (not (eq api "none"))}}
+   <div class="bg-white dark:bg-[#111111] rounded-lg p-6 mb-12 border border-gray-200 dark:border-gray-800">
+     <h2 class="text-xl font-medium mb-4">API Status</h2>
+     <div class="flex items-center space-x-2">
+       <div class="w-2 h-2 rounded-full bg-green-500"></div>
+       <span class="text-gray-700 dark:text-gray-300">
+        {{query.isSuccess() ? 'Connected' : 'Disconnected'}}
+       </span>
+     </div>
+   </div>
+   {{/if}}
+ </div>
+</div>

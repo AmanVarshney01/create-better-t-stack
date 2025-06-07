@@ -71,6 +71,11 @@ export async function getFrontendChoice(
 				label: "TanStack Start (beta)",
 				hint: "SSR, Server Functions, API Routes and more with TanStack Router",
 			},
+			{
+				value: "angular" as const,
+				label: "Angular",
+				hint: "The web framework that empowers developers to build fast, reliable applications",
+			},
 		];
 
 		const webOptions = allWebOptions.filter((option) => {
