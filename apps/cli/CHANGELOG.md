@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.16.4
+
+### Patch Changes
+
+- da16fdc: remove biome check after installation
+
 ## 2.16.3
 
 ### Patch Changes
