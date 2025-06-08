@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.16.6
+
+### Patch Changes
+
+- 737690c: Add trustedDependencies for Supabase when dbSetup is supabase
+
 ## 2.16.5
 
 ### Patch Changes
