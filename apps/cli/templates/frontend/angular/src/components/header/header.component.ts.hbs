@@ -2,7 +2,9 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { ThemeService } from '../../services/theme.service';
+{{#if auth}}
 import { AuthService } from '../../services/auth.service';
+{{/if}}
 
 @Component({
  selector: 'app-header',
@@ -16,7 +18,7 @@ export class HeaderComponent {
  darkMode$ = this.themeService.darkMode$;
  showProfileMenu = false;
  showThemeMenu = false;
- {{#if (not (eq auth "none"))}}
+ {{#if auth}}
  public authService = inject(AuthService);
  isAuthenticated$ = this.authService.isAuthenticated$;
  get userInitial(): string {

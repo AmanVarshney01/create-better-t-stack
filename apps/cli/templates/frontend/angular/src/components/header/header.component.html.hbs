@@ -9,6 +9,7 @@
      >
        Home
      </a>
+     {{#if (eq examples "todos")}}
      <a
        routerLink="/todos"
        routerLinkActive="text-primary-600 dark:text-primary-400"
@@ -16,6 +17,8 @@
      >
        Todos
      </a>
+     {{/if}}
+     {{#if auth}}
      <a
        *ngIf="isAuthenticated$ | async"
        routerLink="/dashboard"
@@ -24,6 +27,7 @@
      >
        Dashboard
      </a>
+     {{/if}}
    </nav>
 
    <div class="flex items-center space-x-4">
@@ -68,7 +72,7 @@
        </div>
      </div>
 
-     {{#if (not (eq auth "none"))}}
+     {{#if auth}}
      <ng-container *ngIf="!(isAuthenticated$ | async); else profileMenu">
        <a
          routerLink="/login"

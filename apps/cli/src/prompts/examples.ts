@@ -38,7 +38,7 @@ export async function getExamplesChoice(
 		},
 	];
 
-	if (backend !== "elysia" && !frontends?.includes("solid")) {
+	if (backend !== "elysia" && !frontends?.includes("solid") && !frontends?.includes("angular")) {
 		options.push({
 			value: "ai" as const,
 			label: "AI Chat",

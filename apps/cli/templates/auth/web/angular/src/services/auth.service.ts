@@ -23,9 +23,11 @@ export class AuthService {
  login(email: string, password: string): void {
   this.authClient.signIn.email({ email, password }, {
    onSuccess: (session) => {
-    this.isAuthenticated.next(true);
-    this.user.set(session.data?.user ?? null);
-    this.router.navigate(['/dashboard']);
+    if(session.data?.user) {
+     this.isAuthenticated.next(true);
+     this.user.set(session.data?.user ?? null);
+     this.router.navigate(['/dashboard']);
+    }
    },
    onError: (error) => {
     console.error(error);
@@ -36,9 +38,11 @@ export class AuthService {
  signUp(email: string, password: string): void {
   this.authClient.signUp.email({ email, password, name: email }, {
    onSuccess: (session) => {
-    this.isAuthenticated.next(true);
-    this.user.set(session.data?.user ?? null);
-    this.router.navigate(['/dashboard']);
+    if(session.data?.user) {
+     this.isAuthenticated.next(true);
+     this.user.set(session.data?.user ?? null);
+     this.router.navigate(['/dashboard']);
+    }
    },
    onError: (error) => {
     console.error(error);
@@ -50,8 +54,10 @@ export class AuthService {
  getSession(): void {
   this.authClient.getSession({}, {
    onSuccess: (session) => {
-    this.isAuthenticated.next(true);
-    this.user.set(session.data?.user ?? null);
+    if(session.data?.user) {
+     this.isAuthenticated.next(true);
+     this.user.set(session.data?.user ?? null);
+    }
    },
    onError: (error) => {
     console.error(error);

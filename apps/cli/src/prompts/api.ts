@@ -16,6 +16,7 @@ export async function getApiChoice(
 	const includesNuxt = frontend?.includes("nuxt");
 	const includesSvelte = frontend?.includes("svelte");
 	const includesSolid = frontend?.includes("solid");
+	const includesAngular = frontend?.includes("angular");
 
 	let apiOptions = [
 		{
@@ -35,7 +36,7 @@ export async function getApiChoice(
 		},
 	];
 
-	if (includesNuxt || includesSvelte || includesSolid) {
+	if (includesNuxt || includesSvelte || includesSolid || includesAngular) {
 		apiOptions = [
 			{
 				value: "orpc" as const,
