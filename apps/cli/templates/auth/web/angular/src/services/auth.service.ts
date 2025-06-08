@@ -1,25 +1,24 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { inject, Injectable, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { createAuthClient } from "better-auth/client";
 import type { User } from 'better-auth/types';
 import { toast } from 'ngx-sonner';
 import { BehaviorSubject } from 'rxjs';
-
+import { environment } from '../environments/environment';
 @Injectable({
  providedIn: 'root'
 })
-export class AuthService {
+export class AuthService implements OnInit {
  private isAuthenticated = new BehaviorSubject<boolean>(false);
  isAuthenticated$ = this.isAuthenticated.asObservable();
  user = signal<User | null>(null);
  authClient = createAuthClient({
-  baseURL: 'http://localhost:3000',
+  baseURL: environment.baseUrl,
  });
  router = inject(Router);
- constructor() {
+ ngOnInit(): void {
   this.getSession();
  }
-
  login(email: string, password: string): void {
   this.authClient.signIn.email({ email, password }, {
    onSuccess: (session) => {

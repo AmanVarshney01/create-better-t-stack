@@ -1,7 +1,7 @@
 import type { Route } from '@angular/router';
 import { HomeComponent } from './components/home/home.component';
-import { NotFoundComponent } from './components/not-found/not-found-component';
-{{#if (eq examples "todos")}}
+import { NotFoundComponent } from './components/not-found/not-found.component';
+{{#if (not (eq examples "none"))}}
 import { TodoListComponent } from './components/todo-list/todo-list.component';
 {{/if}}
 {{#if auth}}
@@ -13,7 +13,7 @@ import { authGuard } from './guards/auth.guard';
 
 export const routes: Route[] = [
    { path: '', component: HomeComponent },
-   {{#if (eq examples "todos")}}
+   {{#if (not (eq examples "none"))}}
    { path: 'todos', component: TodoListComponent },
    {{/if}}
    {{#if auth}}

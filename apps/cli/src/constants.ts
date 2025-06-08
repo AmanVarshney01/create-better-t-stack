@@ -45,7 +45,7 @@ export const dependencyVersionMap = {
 	mongoose: "^8.14.0",
 
 	"vite-plugin-pwa": "^0.21.2",
- "@angular/service-worker" : "^19.2.0",
+ "@angular/service-worker" : "^20.0.2",
 	"@vite-pwa/assets-generator": "^0.2.6",
 
 	"@tauri-apps/cli": "^2.4.0",
@@ -93,7 +93,7 @@ export const dependencyVersionMap = {
 	"@orpc/tanstack-query": "^1.4.1",
 
 	"@trpc/tanstack-react-query": "^11.0.0",
-	"@tanstack/angular-query-experimental": "^5.80.2",
+	"@tanstack/angular-query-experimental": "5.80.2",
 	"@trpc/server": "^11.0.0",
 	"@trpc/client": "^11.0.0",
 
