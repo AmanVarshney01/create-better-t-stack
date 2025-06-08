@@ -401,14 +401,14 @@ export function validateConfigCompatibility(
 	const includesSolid = effectiveFrontend?.includes("solid");
 	const includesAngular = effectiveFrontend?.includes("angular");
 	if (
-		(includesNuxt || includesSvelte || includesSolid) &&
+		(includesNuxt || includesSvelte || includesSolid || includesAngular) &&
 		effectiveApi === "trpc"
 	) {
 		consola.fatal(
 			`tRPC API is not supported with '${
-				includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"
+				includesNuxt ? "nuxt" : includesSvelte ? "svelte" : includesSolid ? "solid" : "angular"
 			}' frontend. Please use --api orpc or --api none or remove '${
-				includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"
+				includesNuxt ? "nuxt" : includesSvelte ? "svelte" : includesSolid ? "solid" : "angular"
 			}' from --frontend.`,
 		);
 		process.exit(1);

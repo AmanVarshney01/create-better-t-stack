@@ -4,12 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { injectForm, injectStore, TanStackField } from '@tanstack/angular-form';
 import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { z } from 'zod';
-{{#if (eq api "trpc")}}
 import { RpcService } from '../../services/rpc.service';
-{{/if}}
-{{#if (eq api "orpc")}}
-import { RpcService } from '../../services/rpc.service';
-{{/if}}
+
 @Component({
  selector: 'app-todo-list',
  standalone: true,
@@ -18,48 +14,6 @@ import { RpcService } from '../../services/rpc.service';
 })
 export class TodoListComponent {
   queryClient = inject(QueryClient);
- {{#if (eq api "trpc")}}
- private _rpc = inject(RpcService);
- queryToDo = injectQuery(() => ({
-  queryKey: ["todo"],
-  queryFn: () => this._rpc.proxy.todo.getAll.query(),
- }));
-
- mutateToDo = injectMutation(() => ({
-  mutationFn: (todo: string) => {
-   return this._rpc.proxy.todo.create.mutate({ text: todo });
-  },
-  onSuccess: () => {
-   this.queryClient.invalidateQueries({ queryKey: ["todo"] });
-   this.todoForm.reset();
-  },
- }));
-
- updateToDo = injectMutation(() => ({
-  mutationFn: (todo: Awaited<ReturnType<typeof this._rpc.proxy.todo.getAll.query>>[number]) => {
-   console.log(todo, "todoForm");
-   return this._rpc.proxy.todo.toggle.mutate({
-    id: todo.id!,
-    completed: !todo.completed,
-   });
-  },
-  onSuccess: () => {
-   this.queryClient.invalidateQueries({ queryKey: ["todo"] });
-   this.todoForm.reset();
-  },
- }));
-
- deleteTodo = injectMutation(() => ({
-  mutationFn: (id: string) => {
-   return this._rpc.proxy.todo.delete.mutate({ id: id });
-  },
-  onSuccess: () => {
-   this.queryClient.invalidateQueries({ queryKey: ["todo"] });
-  },
- }));
-
- {{/if}}
- {{#if (eq api "orpc")}}
   private _rpc = inject(RpcService);
 
   queryToDo = injectQuery(() => this._rpc.utils.todo.getAll.queryOptions())
@@ -83,7 +37,6 @@ export class TodoListComponent {
     this.queryClient.invalidateQueries({ queryKey: this._rpc.utils.todo.getAll.key() });
    },
   }));
- {{/if}}
 
  todoSchema = z.object({
  todo: z.string().nonempty("Todo is required"),
@@ -97,7 +50,7 @@ export class TodoListComponent {
    onChange: this.todoSchema,
   },
   onSubmit: async ({ value }) => {
-   this.mutateToDo.mutate(value.todo);
+   this.mutateToDo.mutate({ text: value.todo });
   },
  });
  canSubmit = injectStore(this.todoForm, (state) => state.canSubmit);

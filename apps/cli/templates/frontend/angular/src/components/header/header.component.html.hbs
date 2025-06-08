@@ -84,9 +84,9 @@
            class="flex items-center space-x-2 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
          >
            <div class="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white">
-             {{ userInitial }}
+             \{{ userInitial }}
            </div>
-           <span class="font-medium">{{ authService.user()?.name }}</span>
+           <span class="font-medium">\{{ authService.user()?.name }}</span>
          </button>
 
          <div
@@ -94,8 +94,8 @@
            class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5"
          >
            <div class="px-4 py-2 text-sm">
-             <div class="font-medium">{{ this.authService.user()?.name }}</div>
-             <div class="text-gray-500 dark:text-gray-400 text-xs">{{ this.authService.user()?.email }}</div>
+             <div class="font-medium">\{{ this.authService.user()?.name }}</div>
+             <div class="text-gray-500 dark:text-gray-400 text-xs">\{{ this.authService.user()?.email }}</div>
            </div>
            <div class="border-t border-gray-200 dark:border-gray-700"></div>
            <button

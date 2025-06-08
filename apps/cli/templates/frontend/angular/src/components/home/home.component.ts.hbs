@@ -2,9 +2,6 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { injectQuery } from '@tanstack/angular-query-experimental';
-{{#if (eq api "trpc")}}
-import { RpcService } from '../../services/rpc.service';
-{{/if}}
 {{#if (eq api "orpc")}}
 import { RpcService } from '../../services/rpc.service';
 {{/if}}
@@ -17,14 +14,9 @@ import { RpcService } from '../../services/rpc.service';
  styles: []
 })
 export class HomeComponent {
- {{#if (eq api "trpc")}}
- private _rpc = inject(RpcService);
- query = injectQuery(() => ({
-  queryKey: ['healthCheck'],
-  queryFn: () => this._rpc.proxy.healthCheck.query(),
- }));
- {{/if}}
+
  {{#if (eq api "orpc")}}
  private _rpc = inject(RpcService);
  query = injectQuery(() => this._rpc.utils.healthCheck.queryOptions());
  {{/if}}
+}

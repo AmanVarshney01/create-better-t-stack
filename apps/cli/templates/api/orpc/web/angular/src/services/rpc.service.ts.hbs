@@ -6,6 +6,7 @@ import { toast } from 'ngx-sonner';
 import { appRouter, AppRouter } from '../../../server/src/routers';
 import { environment } from '../environments/enviroments';
 import type { RouterClient } from "@orpc/server";
+import { createTanstackQueryUtils } from '@orpc/tanstack-query';
 
 export const queryClient = new QueryClient({
  queryCache: new QueryCache({
@@ -37,4 +38,6 @@ export class RpcService {
  });
 
  private client: RouterClient<typeof appRouter> = createORPCClient(this.link);
+ public utils = createTanstackQueryUtils(this.client);
+
 }
