@@ -91,6 +91,7 @@ const hasWebFrontend = (webFrontend: string[]) =>
 			"nuxt",
 			"svelte",
 			"solid",
+			"angular",
 		].includes(f),
 	);
 
@@ -100,7 +101,7 @@ const checkHasNativeFrontend = (nativeFrontend: string[]) =>
 
 const hasPWACompatibleFrontend = (webFrontend: string[]) =>
 	webFrontend.some((f) =>
-		["tanstack-router", "react-router", "solid", "next"].includes(f),
+		["tanstack-router", "react-router", "solid", "next", "angular"].includes(f),
 	);
 
 const hasTauriCompatibleFrontend = (webFrontend: string[]) =>
@@ -112,6 +113,7 @@ const hasTauriCompatibleFrontend = (webFrontend: string[]) =>
 			"svelte",
 			"solid",
 			"next",
+			"angular",
 		].includes(f),
 	);
 
@@ -555,8 +557,9 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 			const isNuxt = nextStack.webFrontend.includes("nuxt");
 			const isSvelte = nextStack.webFrontend.includes("svelte");
 			const isSolid = nextStack.webFrontend.includes("solid");
-			if ((isNuxt || isSvelte || isSolid) && nextStack.api === "trpc") {
-				const frontendName = isNuxt ? "Nuxt" : isSvelte ? "Svelte" : "Solid";
+			const isAngular = nextStack.webFrontend.includes("angular");
+			if ((isNuxt || isSvelte || isSolid || isAngular) && nextStack.api === "trpc") {
+				const frontendName = isNuxt ? "Nuxt" : isSvelte ? "Svelte" : isSolid ? "Solid" : "Angular";
 				notes.api.notes.push(
 					`${frontendName} requires oRPC. It will be selected automatically.`,
 				);
@@ -652,6 +655,13 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 					message: "AI example removed (not compatible with Solid)",
 				});
 			}
+			if (isAngular && nextStack.examples.includes("ai")) {
+				incompatibleExamples.push("ai");
+				changes.push({
+					category: "examples",
+					message: "AI example removed (not compatible with Angular)",
+				});
+			}
 
 			const uniqueIncompatibleExamples = [...new Set(incompatibleExamples)];
 			if (uniqueIncompatibleExamples.length > 0) {
@@ -691,6 +701,16 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 					notes.webFrontend.hasIssue = true;
 					notes.examples.hasIssue = true;
 				}
+				if (isAngular && uniqueIncompatibleExamples.includes("ai")) {
+					notes.webFrontend.notes.push(
+						"AI example is not compatible with Angular. It will be removed.",
+					);
+					notes.examples.notes.push(
+						"AI example is not compatible with Angular. It will be removed.",
+					);
+					notes.webFrontend.hasIssue = true;
+					notes.examples.hasIssue = true;
+				}
 
 				const originalExamplesLength = nextStack.examples.length;
 				nextStack.examples = nextStack.examples.filter(
@@ -717,7 +737,7 @@ const getCompatibilityRules = (stack: StackState) => {
 	const hasSolid = stack.webFrontend.includes("solid");
 	const hasNuxt = stack.webFrontend.includes("nuxt");
 	const hasSvelte = stack.webFrontend.includes("svelte");
-
+	const hasAngular = stack.webFrontend.includes("angular");
 	return {
 		isConvex,
 		isBackendNone,
@@ -725,10 +745,11 @@ const getCompatibilityRules = (stack: StackState) => {
 		hasNativeFrontend,
 		hasPWACompatible: hasPWACompatibleFrontend(stack.webFrontend),
 		hasTauriCompatible: hasTauriCompatibleFrontend(stack.webFrontend),
-		hasNuxtOrSvelteOrSolid: hasNuxt || hasSvelte || hasSolid,
+		hasNuxtOrSvelteOrSolidOrAngular: hasNuxt || hasSvelte || hasSolid || hasAngular,
 		hasSolid,
 		hasNuxt,
 		hasSvelte,
+		hasAngular,
 	};
 };
 
@@ -1091,12 +1112,14 @@ const StackBuilder = () => {
 								: "Disabled: No backend requires API to be 'None'.",
 						);
 					}
-					if (techId === "trpc" && rules.hasNuxtOrSvelteOrSolid) {
+					if (techId === "trpc" && rules.hasNuxtOrSvelteOrSolidOrAngular) {
 						const frontendName = rules.hasNuxt
 							? "Nuxt"
 							: rules.hasSvelte
 								? "Svelte"
-								: "Solid";
+								: rules.hasSolid
+									? "Solid"
+									: "Angular";
 						addRule(
 							category,
 							techId,
@@ -1301,6 +1324,13 @@ const StackBuilder = () => {
 							category,
 							techId,
 							"Disabled: The 'AI' example is not compatible with a Solid frontend.",
+						);
+					}
+					if (rules.hasAngular && techId === "ai") {
+						addRule(
+							category,
+							techId,
+							"Disabled: The 'AI' example is not compatible with an Angular frontend.",
 						);
 					}
 				}
