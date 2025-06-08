@@ -58,32 +58,6 @@ async function executeNeonCommand(
 	}
 }
 
-async function isNeonAuthenticated(packageManager: PackageManager) {
-	try {
-		const commandArgsString = "neonctl projects list";
-		const result = await executeNeonCommand(packageManager, commandArgsString);
-		return (
-			!result.stdout.includes("not authenticated") &&
-			!result.stdout.includes("error")
-		);
-	} catch {
-		return false;
-	}
-}
-
-async function authenticateWithNeon(packageManager: PackageManager) {
-	try {
-		await executeNeonCommand(
-			packageManager,
-			"neonctl auth",
-			"Authenticating with Neon...",
-		);
-		return true;
-	} catch (_error) {
-		consola.error(pc.red("Failed to authenticate with Neon"));
-	}
-}
-
 async function createNeonProject(
 	projectName: string,
 	regionId: string,
@@ -140,6 +114,36 @@ async function writeEnvFile(projectDir: string, config?: NeonConfig) {
 	return true;
 }
 
+async function setupWithNeonDb(
+	projectDir: string,
+	packageManager: PackageManager,
+) {
+	try {
+		const s = spinner();
+		s.start("Creating Neon database using neondb...");
+
+		const serverDir = path.join(projectDir, "apps/server");
+		await fs.ensureDir(serverDir);
+
+		const packageCmd = getPackageExecutionCommand(
+			packageManager,
+			"neondb --yes",
+		);
+
+		await execa(packageCmd, {
+			shell: true,
+			cwd: serverDir,
+		});
+
+		s.stop(pc.green("Neon database created successfully!"));
+
+		return true;
+	} catch (error) {
+		consola.error(pc.red("Failed to create database with neondb"));
+		throw error;
+	}
+}
+
 function displayManualSetupInstructions() {
 	log.info(`Manual Neon PostgreSQL Setup Instructions:
 
@@ -153,59 +157,72 @@ DATABASE_URL="your_connection_string"`);
 
 export async function setupNeonPostgres(config: ProjectConfig): Promise<void> {
 	const { packageManager, projectDir } = config;
-	const setupSpinner = spinner();
-	setupSpinner.start("Checking Neon authentication...");
 
 	try {
-		const isAuthenticated = await isNeonAuthenticated(packageManager);
-
-		setupSpinner.stop("Neon authentication checked");
-
-		if (!isAuthenticated) {
-			log.info("Please authenticate with Neon to continue:");
-			await authenticateWithNeon(packageManager);
-		}
-
-		const suggestedProjectName = path.basename(projectDir);
-		const projectName = await text({
-			message: "Enter a name for your Neon project:",
-			defaultValue: suggestedProjectName,
-			initialValue: suggestedProjectName,
+		const setupMethod = await select({
+			message: "Choose your Neon setup method:",
+			options: [
+				{
+					label: "Quick setup with neondb",
+					value: "neondb",
+					hint: "fastest, no auth required",
+				},
+				{
+					label: "Custom setup with neonctl",
+					value: "neonctl",
+					hint: "More control - choose project name and region",
+				},
+			],
+			initialValue: "neondb",
 		});
 
-		const regionId = await select({
-			message: "Select a region for your Neon project:",
-			options: NEON_REGIONS,
-			initialValue: NEON_REGIONS[0].value,
-		});
-
-		if (isCancel(projectName) || isCancel(regionId)) {
+		if (isCancel(setupMethod)) {
 			cancel(pc.red("Operation cancelled"));
 			process.exit(0);
 		}
 
-		const config = await createNeonProject(
-			projectName as string,
-			regionId,
-			packageManager,
-		);
+		if (setupMethod === "neondb") {
+			await setupWithNeonDb(projectDir, packageManager);
+		} else {
+			const suggestedProjectName = path.basename(projectDir);
+			const projectName = await text({
+				message: "Enter a name for your Neon project:",
+				defaultValue: suggestedProjectName,
+				initialValue: suggestedProjectName,
+			});
 
-		if (!config) {
-			throw new Error(
-				"Failed to create project - couldn't get connection information",
+			const regionId = await select({
+				message: "Select a region for your Neon project:",
+				options: NEON_REGIONS,
+				initialValue: NEON_REGIONS[0].value,
+			});
+
+			if (isCancel(projectName) || isCancel(regionId)) {
+				cancel(pc.red("Operation cancelled"));
+				process.exit(0);
+			}
+
+			const neonConfig = await createNeonProject(
+				projectName as string,
+				regionId,
+				packageManager,
 			);
+
+			if (!neonConfig) {
+				throw new Error(
+					"Failed to create project - couldn't get connection information",
+				);
+			}
+
+			const finalSpinner = spinner();
+			finalSpinner.start("Configuring database connection");
+
+			await fs.ensureDir(path.join(projectDir, "apps/server"));
+			await writeEnvFile(projectDir, neonConfig);
+
+			finalSpinner.stop("Neon database configured!");
 		}
-
-		const finalSpinner = spinner();
-		finalSpinner.start("Configuring database connection");
-
-		await fs.ensureDir(path.join(projectDir, "apps/server"));
-		await writeEnvFile(projectDir, config);
-
-		finalSpinner.stop("Neon database configured!");
 	} catch (error) {
-		setupSpinner.stop(pc.red("Neon authentication check failed"));
-
 		if (error instanceof Error) {
 			consola.error(pc.red(error.message));
 		}

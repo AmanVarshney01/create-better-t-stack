@@ -75,7 +75,6 @@ export async function createProject(options: ProjectConfig) {
 			await installDependencies({
 				projectDir,
 				packageManager: options.packageManager,
-				addons: options.addons,
 			});
 		}
 

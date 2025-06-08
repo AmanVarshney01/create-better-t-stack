@@ -1,5 +1,23 @@
 # create-better-t-stack
 
+## 2.16.5
+
+### Patch Changes
+
+- 591affc: add neondb cli support
+
+## 2.16.4
+
+### Patch Changes
+
+- da16fdc: remove biome check after installation
+
+## 2.16.3
+
+### Patch Changes
+
+- ded8f89: Refactor Neon authentication logic
+
 ## 2.16.2
 
 ### Patch Changes
