@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.16.7
+
+### Patch Changes
+
+- 5567d65: Show privateData only for selected API in dashboard template
+
 ## 2.16.6
 
 ### Patch Changes
