@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.17.1
+
+### Patch Changes
+
+- 28e5a7e: Remove redundant await return in create project mutation
+
 ## 2.17.0
 
 ### Minor Changes
