@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.17.0
+
+### Minor Changes
+
+- d677159: migrate to trpc-cli
+
 ## 2.16.7
 
 ### Patch Changes
