@@ -1,10 +1,10 @@
 import path from "node:path";
-import { log } from "@clack/prompts";
 import { consola } from "consola";
 import type {
 	API,
 	Addons,
 	Backend,
+	CLIInput,
 	Database,
 	DatabaseSetup,
 	Examples,
@@ -13,17 +13,14 @@ import type {
 	PackageManager,
 	ProjectConfig,
 	Runtime,
-	YargsArgv,
 } from "./types";
 
 export function processAndValidateFlags(
-	options: YargsArgv,
+	options: CLIInput,
+	providedFlags: Set<string>,
 	projectName?: string,
 ): Partial<ProjectConfig> {
 	const config: Partial<ProjectConfig> = {};
-	const providedFlags: Set<string> = new Set(
-		Object.keys(options).filter((key) => key !== "_" && key !== "$0"),
-	);
 
 	if (options.api) {
 		config.api = options.api as API;
@@ -223,6 +220,12 @@ export function processAndValidateFlags(
 			incompatibleFlags.push(`--runtime ${options.runtime}`);
 		if (providedFlags.has("dbSetup") && options.dbSetup !== "none")
 			incompatibleFlags.push(`--db-setup ${options.dbSetup}`);
+		if (providedFlags.has("examples") && options.examples) {
+			const hasNonNoneExamples = options.examples.some((ex) => ex !== "none");
+			if (hasNonNoneExamples) {
+				incompatibleFlags.push("--examples");
+			}
+		}
 
 		if (incompatibleFlags.length > 0) {
 			consola.fatal(
@@ -240,148 +243,99 @@ export function processAndValidateFlags(
 		config.runtime = "none";
 		config.dbSetup = "none";
 		config.examples = [];
-	} else {
-		if (config.database === "none") {
-			if (providedFlags.has("orm") && options.orm !== "none") {
-				consola.fatal(
-					`'--orm ${options.orm}' is incompatible with '--database none'. Please use '--orm none' or choose a database.`,
-				);
-				process.exit(1);
-			}
-			if (providedFlags.has("auth") && options.auth === true) {
-				consola.fatal(
-					`'--auth' requires a database. Cannot use '--auth' with '--database none'.`,
-				);
-				process.exit(1);
-			}
-			if (providedFlags.has("dbSetup") && options.dbSetup !== "none") {
-				consola.fatal(
-					`'--db-setup ${options.dbSetup}' requires a database. Cannot use with '--database none'.`,
-				);
-				process.exit(1);
-			}
+	}
 
-			config.orm = "none";
-			config.auth = false;
-			config.dbSetup = "none";
+	if (config.orm === "mongoose" && config.database !== "mongodb") {
+		consola.fatal(
+			"Mongoose ORM requires MongoDB database. Please use '--database mongodb' or choose a different ORM.",
+		);
+		process.exit(1);
+	}
 
-			log.info(
-				"Due to '--database none', '--orm' has been automatically set to 'none'.",
-			);
-			log.info(
-				"Due to '--database none', '--auth' has been automatically set to 'false'.",
-			);
-			log.info(
-				"Due to '--database none', '--db-setup' has been automatically set to 'none'.",
-			);
-		}
+	if (
+		config.database === "mongodb" &&
+		config.orm &&
+		config.orm !== "mongoose" &&
+		config.orm !== "prisma"
+	) {
+		consola.fatal(
+			"MongoDB database requires Mongoose or Prisma ORM. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
+		);
+		process.exit(1);
+	}
 
-		if (config.orm === "mongoose") {
-			if (!providedFlags.has("database")) {
-				config.database = "mongodb";
-				log.info(
-					"Due to '--orm mongoose', '--database' has been automatically set to 'mongodb'.",
-				);
-			} else if (config.database !== "mongodb") {
-				consola.fatal(
-					`'--orm mongoose' requires '--database mongodb'. Cannot use '--orm mongoose' with '--database ${config.database}'.`,
-				);
-				process.exit(1);
-			}
-		}
+	if (config.orm === "drizzle" && config.database === "mongodb") {
+		consola.fatal(
+			"Drizzle ORM does not support MongoDB. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
+		);
+		process.exit(1);
+	}
 
-		if (config.dbSetup) {
-			if (config.dbSetup === "turso") {
-				if (!providedFlags.has("database")) {
-					config.database = "sqlite";
-					log.info(
-						"Due to '--db-setup turso', '--database' has been automatically set to 'sqlite'.",
-					);
-				} else if (config.database !== "sqlite") {
-					consola.fatal(
-						`'--db-setup turso' requires '--database sqlite'. Cannot use with '--database ${config.database}'.`,
-					);
-					process.exit(1);
-				}
-				if (!providedFlags.has("orm")) {
-					config.orm = "drizzle";
-					log.info(
-						"Due to '--db-setup turso', '--orm' has been automatically set to 'drizzle'.",
-					);
-				} else if (config.orm !== "drizzle") {
-					consola.fatal(
-						`'--db-setup turso' requires '--orm drizzle'. Cannot use with '--orm ${config.orm}'.`,
-					);
-					process.exit(1);
-				}
-			} else if (config.dbSetup === "prisma-postgres") {
-				if (!providedFlags.has("database")) {
-					config.database = "postgres";
-					log.info(
-						"Due to '--db-setup prisma-postgres', '--database' has been automatically set to 'postgres'.",
-					);
-				} else if (config.database !== "postgres") {
-					consola.fatal(
-						`'--db-setup prisma-postgres' requires '--database postgres'. Cannot use with '--database ${config.database}'.`,
-					);
-					process.exit(1);
-				}
-				if (!providedFlags.has("orm")) {
-					config.orm = "prisma";
-					log.info(
-						"Due to '--db-setup prisma-postgres', '--orm' has been automatically set to 'prisma'.",
-					);
-				} else if (config.orm !== "prisma") {
-					consola.fatal(
-						`'--db-setup prisma-postgres' requires '--orm prisma'. Cannot use with '--orm ${config.orm}'.`,
-					);
-					process.exit(1);
-				}
-			} else if (config.dbSetup === "supabase") {
-				if (!providedFlags.has("database")) {
-					config.database = "postgres";
-					log.info(
-						"Due to '--db-setup supabase', '--database' has been automatically set to 'postgres'.",
-					);
-				} else if (config.database !== "postgres") {
-					consola.fatal(
-						`'--db-setup supabase' requires '--database postgres'. Cannot use with '--database ${config.database}'.`,
-					);
-					process.exit(1);
-				}
-			} else if (config.dbSetup === "neon") {
-				if (!providedFlags.has("database")) {
-					config.database = "postgres";
-					log.info(
-						"Due to '--db-setup neon', '--database' has been automatically set to 'postgres'.",
-					);
-				} else if (config.database !== "postgres") {
-					consola.fatal(
-						`'--db-setup neon' requires '--database postgres'. Cannot use with '--database ${config.database}'.`,
-					);
-					process.exit(1);
-				}
-			} else if (config.dbSetup === "mongodb-atlas") {
-				if (!providedFlags.has("database")) {
-					config.database = "mongodb";
-					log.info(
-						"Due to '--db-setup mongodb-atlas', '--database' has been automatically set to 'mongodb'.",
-					);
-				} else if (config.database !== "mongodb") {
-					consola.fatal(
-						`'--db-setup mongodb-atlas' requires '--database mongodb'. Cannot use with '--database ${config.database}'.`,
-					);
-					process.exit(1);
-				}
-			}
-		}
+	if (config.database && config.database !== "none" && config.orm === "none") {
+		consola.fatal(
+			"Database selection requires an ORM. Please choose '--orm drizzle', '--orm prisma', or '--orm mongoose'.",
+		);
+		process.exit(1);
+	}
 
-		if (config.database === "mongodb" && config.orm === "drizzle") {
-			consola.fatal(
-				`'--database mongodb' is incompatible with '--orm drizzle'. Use '--orm mongoose' or '--orm prisma' with MongoDB.`,
-			);
-			process.exit(1);
-		}
+	if (config.orm && config.orm !== "none" && config.database === "none") {
+		consola.fatal(
+			"ORM selection requires a database. Please choose a database or set '--orm none'.",
+		);
+		process.exit(1);
+	}
+
+	if (config.auth && config.database === "none") {
+		consola.fatal(
+			"Authentication requires a database. Please choose a database or set '--no-auth'.",
+		);
+		process.exit(1);
+	}
+
+	if (
+		config.dbSetup &&
+		config.dbSetup !== "none" &&
+		config.database === "none"
+	) {
+		consola.fatal(
+			"Database setup requires a database. Please choose a database or set '--db-setup none'.",
+		);
+		process.exit(1);
+	}
+
+	if (config.dbSetup === "turso" && config.database !== "sqlite") {
+		consola.fatal(
+			"Turso setup requires SQLite database. Please use '--database sqlite' or choose a different setup.",
+		);
+		process.exit(1);
+	}
+
+	if (config.dbSetup === "neon" && config.database !== "postgres") {
+		consola.fatal(
+			"Neon setup requires PostgreSQL database. Please use '--database postgres' or choose a different setup.",
+		);
+		process.exit(1);
+	}
+
+	if (config.dbSetup === "prisma-postgres" && config.database !== "postgres") {
+		consola.fatal(
+			"Prisma PostgreSQL setup requires PostgreSQL database. Please use '--database postgres' or choose a different setup.",
+		);
+		process.exit(1);
+	}
+
+	if (config.dbSetup === "mongodb-atlas" && config.database !== "mongodb") {
+		consola.fatal(
+			"MongoDB Atlas setup requires MongoDB database. Please use '--database mongodb' or choose a different setup.",
+		);
+		process.exit(1);
+	}
+
+	if (config.dbSetup === "supabase" && config.database !== "postgres") {
+		consola.fatal(
+			"Supabase setup requires PostgreSQL database. Please use '--database postgres' or choose a different setup.",
+		);
+		process.exit(1);
 	}
 
 	return config;
@@ -499,4 +453,12 @@ export function validateConfigCompatibility(
 			process.exit(1);
 		}
 	}
+}
+
+export function getProvidedFlags(options: CLIInput): Set<string> {
+	return new Set(
+		Object.keys(options).filter(
+			(key) => options[key as keyof CLIInput] !== undefined,
+		),
+	);
 }
