@@ -1,5 +1,15 @@
 # create-better-t-stack
 
+## 2.18.0
+
+### Minor Changes
+
+- 0ffaedd: Upgrade to Tanstack start devinxi
+
+### Patch Changes
+
+- 1dc9222: use zod for project name validation
+
 ## 2.17.1
 
 ### Patch Changes
