@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.18.1
+
+### Patch Changes
+
+- fc8e994: Migrate to radix-ui monorepo package and update imports
+
 ## 2.18.0
 
 ### Minor Changes
