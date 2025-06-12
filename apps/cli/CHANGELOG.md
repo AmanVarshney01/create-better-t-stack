@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.18.3
+
+### Patch Changes
+
+- bfcecf5: update domain
+
 ## 2.18.2
 
 ### Patch Changes
