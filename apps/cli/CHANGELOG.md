@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.18.2
+
+### Patch Changes
+
+- fd86d51: add sponsors, builder, docs command
+
 ## 2.18.1
 
 ### Patch Changes
