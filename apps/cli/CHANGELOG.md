@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.18.4
+
+### Patch Changes
+
+- 4cae3b7: fix prisma type error
+
 ## 2.18.3
 
 ### Patch Changes
