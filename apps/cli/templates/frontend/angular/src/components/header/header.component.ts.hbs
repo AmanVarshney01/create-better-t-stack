@@ -1,0 +1,48 @@
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterLink, RouterLinkActive } from '@angular/router';
+import { ThemeService } from '../../services/theme.service';
+{{#if auth}}
+import { AuthService } from '../../services/auth.service';
+{{/if}}
+
+@Component({
+ selector: 'app-header',
+ standalone: true,
+ imports: [CommonModule, RouterLink, RouterLinkActive],
+ templateUrl: './header.component.html'
+})
+export class HeaderComponent {
+
+ private themeService = inject(ThemeService);
+ darkMode$ = this.themeService.darkMode$;
+ showProfileMenu = false;
+ showThemeMenu = false;
+ {{#if auth}}
+ public authService = inject(AuthService);
+ isAuthenticated$ = this.authService.isAuthenticated$;
+ get userInitial(): string {
+  return this.authService.user()?.name?.charAt(0) ?? '';
+ }
+ toggleProfileMenu(): void {
+  this.showProfileMenu = !this.showProfileMenu;
+  if (this.showProfileMenu) {
+   this.showThemeMenu = false;
+  }
+ }
+ logout(): void {
+  this.showProfileMenu = false;
+  this.authService.logout();
+ }
+ {{/if}}
+ toggleThemeMenu(): void {
+  this.showThemeMenu = !this.showThemeMenu;
+  if (this.showThemeMenu) {
+   this.showProfileMenu = false;
+  }
+ }
+ setTheme(mode: 'light' | 'dark' | 'system'): void {
+  this.themeService.setTheme(mode);
+  this.showThemeMenu = false;
+ }
+}

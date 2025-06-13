@@ -1,0 +1,59 @@
+import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { injectForm, injectStore, TanStackField } from '@tanstack/angular-form';
+import { injectMutation, injectQuery, QueryClient } from '@tanstack/angular-query-experimental';
+import { z } from 'zod';
+import { RpcService } from '../../services/rpc.service';
+
+@Component({
+ selector: 'app-todo-list',
+ standalone: true,
+ imports: [CommonModule, FormsModule, TanStackField],
+ templateUrl: './todo-list.component.html'
+})
+export class TodoListComponent {
+  queryClient = inject(QueryClient);
+  private _rpc = inject(RpcService);
+
+  queryToDo = injectQuery(() => this._rpc.utils.todo.getAll.queryOptions())
+
+  mutateToDo = injectMutation(() => this._rpc.utils.todo.create.mutationOptions({
+   onSuccess: () => {
+    this.queryClient.invalidateQueries({ queryKey: this._rpc.utils.todo.getAll.key() });
+    this.todoForm.reset();
+   },
+  }));
+
+  updateToDo = injectMutation(() => this._rpc.utils.todo.toggle.mutationOptions({
+   onSuccess: () => {
+    this.queryClient.invalidateQueries({ queryKey: this._rpc.utils.todo.getAll.key() });
+    this.todoForm.reset();
+   },
+  }));
+
+  deleteTodo = injectMutation(() => this._rpc.utils.todo.delete.mutationOptions({
+   onSuccess: () => {
+    this.queryClient.invalidateQueries({ queryKey: this._rpc.utils.todo.getAll.key() });
+   },
+  }));
+
+ todoSchema = z.object({
+ todo: z.string().nonempty("Todo is required"),
+ });
+
+ todoForm = injectForm({
+  defaultValues: {
+   todo: "",
+  } as z.infer<typeof this.todoSchema>,
+  validators: {
+   onChange: this.todoSchema,
+  },
+  onSubmit: async ({ value }) => {
+   this.mutateToDo.mutate({ text: value.todo });
+  },
+ });
+ canSubmit = injectStore(this.todoForm, (state) => state.canSubmit);
+ isSubmitting = injectStore(this.todoForm, (state) => state.isSubmitting);
+
+}

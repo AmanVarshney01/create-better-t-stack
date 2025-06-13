@@ -128,7 +128,8 @@ export function processAndValidateFlags(
 					f === "next" ||
 					f === "nuxt" ||
 					f === "svelte" ||
-					f === "solid",
+					f === "solid" ||
+					f === "angular",
 			);
 			const nativeFrontends = validOptions.filter(
 				(f) => f === "native-nativewind" || f === "native-unistyles",
@@ -206,7 +207,7 @@ export function processAndValidateFlags(
 
 		if (providedFlags.has("frontend") && options.frontend) {
 			const incompatibleFrontends = options.frontend.filter(
-				(f) => f === "nuxt" || f === "solid",
+				(f) => f === "nuxt" || f === "solid" || f === "angular",
 			);
 			if (incompatibleFrontends.length > 0) {
 				consola.fatal(
@@ -372,16 +373,28 @@ export function validateConfigCompatibility(
 	const includesNuxt = effectiveFrontend?.includes("nuxt");
 	const includesSvelte = effectiveFrontend?.includes("svelte");
 	const includesSolid = effectiveFrontend?.includes("solid");
-
+	const includesAngular = effectiveFrontend?.includes("angular");
 	if (
-		(includesNuxt || includesSvelte || includesSolid) &&
+		(includesNuxt || includesSvelte || includesSolid || includesAngular) &&
 		effectiveApi === "trpc"
 	) {
 		consola.fatal(
 			`tRPC API is not supported with '${
-				includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"
+				includesNuxt
+					? "nuxt"
+					: includesSvelte
+						? "svelte"
+						: includesSolid
+							? "solid"
+							: "angular"
 			}' frontend. Please use --api orpc or --api none or remove '${
-				includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"
+				includesNuxt
+					? "nuxt"
+					: includesSvelte
+						? "svelte"
+						: includesSolid
+							? "solid"
+							: "angular"
 			}' from --frontend.`,
 		);
 		process.exit(1);
@@ -397,14 +410,16 @@ export function validateConfigCompatibility(
 				f === "tanstack-router" ||
 				f === "react-router" ||
 				f === "solid" ||
-				f === "next";
+				f === "next" ||
+				f === "angular";
 			const isTauriCompatible =
 				f === "tanstack-router" ||
 				f === "react-router" ||
 				f === "nuxt" ||
 				f === "svelte" ||
 				f === "solid" ||
-				f === "next";
+				f === "next" ||
+				f === "angular";
 
 			if (config.addons?.includes("pwa") && config.addons?.includes("tauri")) {
 				return isPwaCompatible && isTauriCompatible;
@@ -422,11 +437,11 @@ export function validateConfigCompatibility(
 			let incompatibleReason = "Selected frontend is not compatible.";
 			if (config.addons.includes("pwa")) {
 				incompatibleReason =
-					"PWA requires tanstack-router, react-router, next, or solid.";
+					"PWA requires tanstack-router, react-router, next, angular, or solid.";
 			}
 			if (config.addons.includes("tauri")) {
 				incompatibleReason =
-					"Tauri requires tanstack-router, react-router, nuxt, svelte, solid, or next.";
+					"Tauri requires tanstack-router, react-router, nuxt, svelte, solid, next, or angular.";
 			}
 			consola.fatal(
 				`Incompatible addon/frontend combination: ${incompatibleReason}`,
@@ -469,6 +484,12 @@ export function validateConfigCompatibility(
 		if (config.examples.includes("ai") && includesSolid) {
 			consola.fatal(
 				"The 'ai' example is not compatible with the Solid frontend.",
+			);
+			process.exit(1);
+		}
+		if (config.examples.includes("ai") && includesAngular) {
+			consola.fatal(
+				"The 'ai' example is not compatible with the Angular frontend.",
 			);
 			process.exit(1);
 		}

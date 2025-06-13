@@ -32,6 +32,8 @@ handlebars.registerHelper("or", (a, b) => a || b);
 
 handlebars.registerHelper("eq", (a, b) => a === b);
 
+handlebars.registerHelper("not", (a) => !a);
+
 handlebars.registerHelper(
 	"includes",
 	(array, value) => Array.isArray(array) && array.includes(value),
