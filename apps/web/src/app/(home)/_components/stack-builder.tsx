@@ -558,8 +558,17 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 			const isSvelte = nextStack.webFrontend.includes("svelte");
 			const isSolid = nextStack.webFrontend.includes("solid");
 			const isAngular = nextStack.webFrontend.includes("angular");
-			if ((isNuxt || isSvelte || isSolid || isAngular) && nextStack.api === "trpc") {
-				const frontendName = isNuxt ? "Nuxt" : isSvelte ? "Svelte" : isSolid ? "Solid" : "Angular";
+			if (
+				(isNuxt || isSvelte || isSolid || isAngular) &&
+				nextStack.api === "trpc"
+			) {
+				const frontendName = isNuxt
+					? "Nuxt"
+					: isSvelte
+						? "Svelte"
+						: isSolid
+							? "Solid"
+							: "Angular";
 				notes.api.notes.push(
 					`${frontendName} requires oRPC. It will be selected automatically.`,
 				);
@@ -745,7 +754,8 @@ const getCompatibilityRules = (stack: StackState) => {
 		hasNativeFrontend,
 		hasPWACompatible: hasPWACompatibleFrontend(stack.webFrontend),
 		hasTauriCompatible: hasTauriCompatibleFrontend(stack.webFrontend),
-		hasNuxtOrSvelteOrSolidOrAngular: hasNuxt || hasSvelte || hasSolid || hasAngular,
+		hasNuxtOrSvelteOrSolidOrAngular:
+			hasNuxt || hasSvelte || hasSolid || hasAngular,
 		hasSolid,
 		hasNuxt,
 		hasSvelte,

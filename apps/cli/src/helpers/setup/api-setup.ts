@@ -107,12 +107,9 @@ export async function setupApi(config: ProjectConfig): Promise<void> {
 					});
 				}
 			} else if (hasAngularWeb) {
-				if(api === "trpc"){
+				if (api === "trpc") {
 					await addPackageDependency({
-						dependencies: [
-							"@trpc/client",
-							"@trpc/server",
-						],
+						dependencies: ["@trpc/client", "@trpc/server"],
 						projectDir: webDir,
 					});
 				} else if (api === "orpc") {
@@ -225,17 +222,17 @@ export async function setupApi(config: ProjectConfig): Promise<void> {
 			}
 		}
 	}
- if(needsAngularQuery && !isConvex){
-  if(webDirExists){
-    const webPkgJsonPath = path.join(webDir, "package.json");
-    if (await fs.pathExists(webPkgJsonPath)) {
-      await addPackageDependency({
-        dependencies: ["@tanstack/angular-query-experimental"],
-        projectDir: webDir,
-      });
-     }
-    }
-  }
+	if (needsAngularQuery && !isConvex) {
+		if (webDirExists) {
+			const webPkgJsonPath = path.join(webDir, "package.json");
+			if (await fs.pathExists(webPkgJsonPath)) {
+				await addPackageDependency({
+					dependencies: ["@tanstack/angular-query-experimental"],
+					projectDir: webDir,
+				});
+			}
+		}
+	}
 	if (isConvex) {
 		if (webDirExists) {
 			const webPkgJsonPath = path.join(webDir, "package.json");

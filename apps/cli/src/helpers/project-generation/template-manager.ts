@@ -3,8 +3,8 @@ import fs from "fs-extra";
 import { globby } from "globby";
 import { PKG_ROOT } from "../../constants";
 import type { ProjectConfig } from "../../types";
-import { processTemplate } from "../../utils/template-processor";
 import { addPackageDependency } from "../../utils/add-package-deps";
+import { processTemplate } from "../../utils/template-processor";
 
 async function processAndCopyFiles(
 	sourcePattern: string | string[],
@@ -77,7 +77,13 @@ export async function setupFrontendTemplates(
 	const _hasNative = hasNativeWind || hasUnistyles;
 	const isConvex = context.backend === "convex";
 
-	if (hasReactWeb || hasNuxtWeb || hasSvelteWeb || hasSolidWeb || hasAngularWeb) {
+	if (
+		hasReactWeb ||
+		hasNuxtWeb ||
+		hasSvelteWeb ||
+		hasSolidWeb ||
+		hasAngularWeb
+	) {
 		const webAppDir = path.join(projectDir, "apps/web");
 		await fs.ensureDir(webAppDir);
 
@@ -195,7 +201,12 @@ export async function setupFrontendTemplates(
 					`templates/api/${context.api}/web/angular`,
 				);
 				if (await fs.pathExists(apiWebAngularDir)) {
-					await processAndCopyFiles("**/*", apiWebAngularDir, webAppDir, context);
+					await processAndCopyFiles(
+						"**/*",
+						apiWebAngularDir,
+						webAppDir,
+						context,
+					);
 				} else {
 				}
 			}
@@ -454,7 +465,11 @@ export async function setupAuthTemplate(
 	}
 
 	if (
-		(hasReactWeb || hasNuxtWeb || hasSvelteWeb || hasSolidWeb || hasAngularWeb) &&
+		(hasReactWeb ||
+			hasNuxtWeb ||
+			hasSvelteWeb ||
+			hasSolidWeb ||
+			hasAngularWeb) &&
 		webAppDirExists
 	) {
 		if (hasReactWeb) {
@@ -523,9 +538,17 @@ export async function setupAuthTemplate(
 				}
 			}
 		} else if (hasAngularWeb) {
-			const authWebAngularSrc = path.join(PKG_ROOT, "templates/auth/web/angular");
+			const authWebAngularSrc = path.join(
+				PKG_ROOT,
+				"templates/auth/web/angular",
+			);
 			if (await fs.pathExists(authWebAngularSrc)) {
-				await processAndCopyFiles("**/*", authWebAngularSrc, webAppDir, context);
+				await processAndCopyFiles(
+					"**/*",
+					authWebAngularSrc,
+					webAppDir,
+					context,
+				);
 			} else {
 			}
 		}
@@ -795,7 +818,12 @@ export async function setupExamplesTemplate(
 			} else if (hasAngularWeb) {
 				const exampleWebAngularSrc = path.join(exampleBaseDir, "web/angular");
 				if (await fs.pathExists(exampleWebAngularSrc)) {
-					await processAndCopyFiles("**/*", exampleWebAngularSrc, webAppDir, context);
+					await processAndCopyFiles(
+						"**/*",
+						exampleWebAngularSrc,
+						webAppDir,
+						context,
+					);
 				} else {
 				}
 			}
