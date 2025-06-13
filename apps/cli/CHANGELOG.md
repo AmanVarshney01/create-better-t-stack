@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.18.5
+
+### Patch Changes
+
+- 2e1aad3: update prisma dep
+
 ## 2.18.4
 
 ### Patch Changes
