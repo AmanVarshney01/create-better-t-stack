@@ -11,41 +11,154 @@ import {
 import { consola } from "consola";
 import fs from "fs-extra";
 import pc from "picocolors";
-import { parseCliArguments } from "./cli";
+import { createCli, trpcServer, zod as z } from "trpc-cli";
 import { DEFAULT_CONFIG } from "./constants";
 import { createProject } from "./helpers/project-generation/create-project";
 import { gatherConfig } from "./prompts/config-prompts";
 import { getProjectName } from "./prompts/project-name";
-import type { ProjectConfig } from "./types";
+import type { CreateInput, ProjectConfig } from "./types";
+import {
+	APISchema,
+	AddonsSchema,
+	BackendSchema,
+	DatabaseSchema,
+	DatabaseSetupSchema,
+	ExamplesSchema,
+	FrontendSchema,
+	ORMSchema,
+	PackageManagerSchema,
+	ProjectNameSchema,
+	RuntimeSchema,
+} from "./types";
 import { trackProjectCreation } from "./utils/analytics";
 import { displayConfig } from "./utils/display-config";
 import { generateReproducibleCommand } from "./utils/generate-reproducible-command";
+import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
+import { openUrl } from "./utils/open-url";
 import { renderTitle } from "./utils/render-title";
-import { processAndValidateFlags } from "./validation";
+import { displaySponsors, fetchSponsors } from "./utils/sponsors";
+import { getProvidedFlags, processAndValidateFlags } from "./validation";
 
-const exit = () => process.exit(0);
-process.on("SIGINT", exit);
-process.on("SIGTERM", exit);
+const t = trpcServer.initTRPC.create();
 
-async function main() {
+async function handleDirectoryConflict(currentPathInput: string): Promise<{
+	finalPathInput: string;
+	shouldClearDirectory: boolean;
+}> {
+	while (true) {
+		const resolvedPath = path.resolve(process.cwd(), currentPathInput);
+		const dirExists = fs.pathExistsSync(resolvedPath);
+		const dirIsNotEmpty = dirExists && fs.readdirSync(resolvedPath).length > 0;
+
+		if (!dirIsNotEmpty) {
+			return { finalPathInput: currentPathInput, shouldClearDirectory: false };
+		}
+
+		log.warn(
+			`Directory "${pc.yellow(
+				currentPathInput,
+			)}" already exists and is not empty.`,
+		);
+
+		const action = await select<"overwrite" | "merge" | "rename" | "cancel">({
+			message: "What would you like to do?",
+			options: [
+				{
+					value: "overwrite",
+					label: "Overwrite",
+					hint: "Empty the directory and create the project",
+				},
+				{
+					value: "merge",
+					label: "Merge",
+					hint: "Create project files inside, potentially overwriting conflicts",
+				},
+				{
+					value: "rename",
+					label: "Choose a different name/path",
+					hint: "Keep the existing directory and create a new one",
+				},
+				{ value: "cancel", label: "Cancel", hint: "Abort the process" },
+			],
+			initialValue: "rename",
+		});
+
+		if (isCancel(action)) {
+			cancel(pc.red("Operation cancelled."));
+			process.exit(0);
+		}
+
+		switch (action) {
+			case "overwrite":
+				return { finalPathInput: currentPathInput, shouldClearDirectory: true };
+			case "merge":
+				log.info(
+					`Proceeding into existing directory "${pc.yellow(
+						currentPathInput,
+					)}". Files may be overwritten.`,
+				);
+				return {
+					finalPathInput: currentPathInput,
+					shouldClearDirectory: false,
+				};
+			case "rename": {
+				log.info("Please choose a different project name or path.");
+				const newPathInput = await getProjectName(undefined);
+				return await handleDirectoryConflict(newPathInput);
+			}
+			case "cancel":
+				cancel(pc.red("Operation cancelled."));
+				process.exit(0);
+		}
+	}
+}
+
+async function setupProjectDirectory(
+	finalPathInput: string,
+	shouldClearDirectory: boolean,
+): Promise<{ finalResolvedPath: string; finalBaseName: string }> {
+	let finalResolvedPath: string;
+	let finalBaseName: string;
+
+	if (finalPathInput === ".") {
+		finalResolvedPath = process.cwd();
+		finalBaseName = path.basename(finalResolvedPath);
+	} else {
+		finalResolvedPath = path.resolve(process.cwd(), finalPathInput);
+		finalBaseName = path.basename(finalResolvedPath);
+	}
+
+	if (shouldClearDirectory) {
+		const s = spinner();
+		s.start(`Clearing directory "${finalResolvedPath}"...`);
+		try {
+			await fs.emptyDir(finalResolvedPath);
+			s.stop(`Directory "${finalResolvedPath}" cleared.`);
+		} catch (error) {
+			s.stop(pc.red(`Failed to clear directory "${finalResolvedPath}".`));
+			consola.error(error);
+			process.exit(1);
+		}
+	} else {
+		await fs.ensureDir(finalResolvedPath);
+	}
+
+	return { finalResolvedPath, finalBaseName };
+}
+
+async function createProjectHandler(
+	input: CreateInput & { projectName?: string },
+) {
 	const startTime = Date.now();
 
 	try {
-		const options = await parseCliArguments();
-		const cliProjectNameArg = options.projectDirectory;
-
 		renderTitle();
-		intro(pc.magenta("Creating a new Better-T-Stack project"));
+		intro(pc.magenta("Creating a new Better-T Stack project"));
 
 		let currentPathInput: string;
-		let finalPathInput: string;
-		let finalResolvedPath: string;
-		let finalBaseName: string;
-		let shouldClearDirectory = false;
-
-		if (options.yes && cliProjectNameArg) {
-			currentPathInput = cliProjectNameArg;
-		} else if (options.yes) {
+		if (input.yes && input.projectName) {
+			currentPathInput = input.projectName;
+		} else if (input.yes) {
 			let defaultName = DEFAULT_CONFIG.relativePath;
 			let counter = 1;
 			while (
@@ -57,113 +170,38 @@ async function main() {
 			}
 			currentPathInput = defaultName;
 		} else {
-			currentPathInput = await getProjectName(cliProjectNameArg);
+			currentPathInput = await getProjectName(input.projectName);
 		}
 
-		while (true) {
-			const resolvedPath = path.resolve(process.cwd(), currentPathInput);
-			const dirExists = fs.pathExistsSync(resolvedPath);
-			const dirIsNotEmpty =
-				dirExists && fs.readdirSync(resolvedPath).length > 0;
+		const { finalPathInput, shouldClearDirectory } =
+			await handleDirectoryConflict(currentPathInput);
 
-			if (!dirIsNotEmpty) {
-				finalPathInput = currentPathInput;
-				shouldClearDirectory = false;
-				break;
-			}
+		const { finalResolvedPath, finalBaseName } = await setupProjectDirectory(
+			finalPathInput,
+			shouldClearDirectory,
+		);
 
-			log.warn(
-				`Directory "${pc.yellow(
-					currentPathInput,
-				)}" already exists and is not empty.`,
-			);
+		const cliInput = {
+			...input,
+			projectDirectory: input.projectName,
+		};
 
-			const action = await select<"overwrite" | "merge" | "rename" | "cancel">({
-				message: "What would you like to do?",
-				options: [
-					{
-						value: "overwrite",
-						label: "Overwrite",
-						hint: "Empty the directory and create the project",
-					},
-					{
-						value: "merge",
-						label: "Merge",
-						hint: "Create project files inside, potentially overwriting conflicts",
-					},
-					{
-						value: "rename",
-						label: "Choose a different name/path",
-						hint: "Keep the existing directory and create a new one",
-					},
-					{ value: "cancel", label: "Cancel", hint: "Abort the process" },
-				],
-				initialValue: "rename",
-			});
-
-			if (isCancel(action)) {
-				cancel(pc.red("Operation cancelled."));
-				process.exit(0);
-			}
-
-			if (action === "overwrite") {
-				finalPathInput = currentPathInput;
-				shouldClearDirectory = true;
-				break;
-			}
-			if (action === "merge") {
-				finalPathInput = currentPathInput;
-				shouldClearDirectory = false;
-				log.info(
-					`Proceeding into existing directory "${pc.yellow(
-						currentPathInput,
-					)}". Files may be overwritten.`,
-				);
-				break;
-			}
-			if (action === "rename") {
-				log.info("Please choose a different project name or path.");
-				currentPathInput = await getProjectName(undefined);
-			} else if (action === "cancel") {
-				cancel(pc.red("Operation cancelled."));
-				process.exit(0);
-			}
-		}
-
-		if (finalPathInput === ".") {
-			finalResolvedPath = process.cwd();
-			finalBaseName = path.basename(finalResolvedPath);
-		} else {
-			finalResolvedPath = path.resolve(process.cwd(), finalPathInput);
-			finalBaseName = path.basename(finalResolvedPath);
-		}
-
-		if (shouldClearDirectory) {
-			const s = spinner();
-			s.start(`Clearing directory "${finalResolvedPath}"...`);
-			try {
-				await fs.emptyDir(finalResolvedPath);
-				s.stop(`Directory "${finalResolvedPath}" cleared.`);
-			} catch (error) {
-				s.stop(pc.red(`Failed to clear directory "${finalResolvedPath}".`));
-				consola.error(error);
-				process.exit(1);
-			}
-		} else {
-			await fs.ensureDir(finalResolvedPath);
-		}
-
-		const flagConfig = processAndValidateFlags(options, finalBaseName);
+		const providedFlags = getProvidedFlags(cliInput);
+		const flagConfig = processAndValidateFlags(
+			cliInput,
+			providedFlags,
+			finalBaseName,
+		);
 		const { projectName: _projectNameFromFlags, ...otherFlags } = flagConfig;
 
-		if (!options.yes && Object.keys(otherFlags).length > 0) {
+		if (!input.yes && Object.keys(otherFlags).length > 0) {
 			log.info(pc.yellow("Using these pre-selected options:"));
 			log.message(displayConfig(otherFlags));
 			log.message("");
 		}
 
 		let config: ProjectConfig;
-		if (options.yes) {
+		if (input.yes) {
 			config = {
 				...DEFAULT_CONFIG,
 				...flagConfig,
@@ -199,7 +237,6 @@ async function main() {
 		await createProject(config);
 
 		const reproducibleCommand = generateReproducibleCommand(config);
-
 		log.success(
 			pc.blue(
 				`You can reproduce this setup with the following command:\n${reproducibleCommand}`,
@@ -217,41 +254,92 @@ async function main() {
 			),
 		);
 	} catch (error) {
-		if (error instanceof Error) {
-			if (error.name === "YError") {
-				cancel(pc.red(`Invalid arguments: ${error.message}`));
-			} else {
-				consola.error(`An unexpected error occurred: ${error.message}`);
-				if (!error.message.includes("is only supported with")) {
-					consola.error(error.stack);
-				}
-			}
-			process.exit(1);
-		} else {
-			consola.error("An unexpected error occurred.");
-			console.error(error);
-			process.exit(1);
-		}
+		console.error(error);
+		process.exit(1);
 	}
 }
 
-main().catch((err) => {
-	consola.error("Aborting installation due to unexpected error...");
-	if (err instanceof Error) {
-		if (
-			!err.message.includes("is only supported with") &&
-			!err.message.includes("incompatible with") &&
-			!err.message.includes("requires") &&
-			!err.message.includes("Cannot use") &&
-			!err.message.includes("Cannot select multiple") &&
-			!err.message.includes("Cannot combine") &&
-			!err.message.includes("not supported")
-		) {
-			consola.error(err.message);
-			consola.error(err.stack);
-		}
-	} else {
-		console.error(err);
-	}
-	process.exit(1);
+const router = t.router({
+	init: t.procedure
+		.meta({
+			description: "Create a new Better-T Stack project",
+			default: true,
+		})
+		.input(
+			z.tuple([
+				ProjectNameSchema.optional(),
+				z
+					.object({
+						yes: z
+							.boolean()
+							.optional()
+							.default(false)
+							.describe("Use default configuration"),
+						database: DatabaseSchema.optional(),
+						orm: ORMSchema.optional(),
+						auth: z.boolean().optional(),
+						frontend: z.array(FrontendSchema).optional(),
+						addons: z.array(AddonsSchema).optional(),
+						examples: z.array(ExamplesSchema).optional(),
+						git: z.boolean().optional(),
+						packageManager: PackageManagerSchema.optional(),
+						install: z.boolean().optional(),
+						dbSetup: DatabaseSetupSchema.optional(),
+						backend: BackendSchema.optional(),
+						runtime: RuntimeSchema.optional(),
+						api: APISchema.optional(),
+					})
+					.optional()
+					.default({}),
+			]),
+		)
+		.mutation(async ({ input }) => {
+			const [projectName, options] = input;
+			const combinedInput = {
+				projectName,
+				...options,
+			};
+			await createProjectHandler(combinedInput);
+		}),
+	sponsors: t.procedure
+		.meta({ description: "Show Better-T Stack sponsors" })
+		.mutation(async () => {
+			try {
+				renderTitle();
+				intro(pc.magenta("Better-T Stack Sponsors"));
+				const sponsors = await fetchSponsors();
+				displaySponsors(sponsors);
+			} catch (error) {
+				consola.error(error);
+				process.exit(1);
+			}
+		}),
+	docs: t.procedure
+		.meta({ description: "Open Better-T Stack documentation" })
+		.mutation(async () => {
+			const DOCS_URL = "https://better-t-stack.dev/docs";
+			try {
+				await openUrl(DOCS_URL);
+				log.success(pc.blue("Opened docs in your default browser."));
+			} catch {
+				log.message(`Please visit ${DOCS_URL}`);
+			}
+		}),
+	builder: t.procedure
+		.meta({ description: "Open the web-based stack builder" })
+		.mutation(async () => {
+			const BUILDER_URL = "https://better-t-stack.dev/new";
+			try {
+				await openUrl(BUILDER_URL);
+				log.success(pc.blue("Opened builder in your default browser."));
+			} catch {
+				log.message(`Please visit ${BUILDER_URL}`);
+			}
+		}),
 });
+
+createCli({
+	router,
+	name: "create-better-t-stack",
+	version: getLatestCLIVersion(),
+}).run();

@@ -8,6 +8,6 @@ export default function robots(): MetadataRoute.Robots {
 			allow: "/",
 			disallow: "/private/",
 		},
-		sitemap: "https://better-t-stack.amanv.dev/sitemap.xml",
+		sitemap: "https://better-t-stack.dev/sitemap.xml",
 	};
 }

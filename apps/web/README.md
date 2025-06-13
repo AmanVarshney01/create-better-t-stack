@@ -44,4 +44,4 @@ To learn more about the technologies used in this website:
 
 - [Next.js Documentation](https://nextjs.org/docs) - Next.js features and API
 - [Fumadocs](https://fumadocs.vercel.app) - The documentation framework used
-- [Better-T-Stack](https://better-t-stack.amanv.dev) - Main project site
+- [Better-T-Stack](https://better-t-stack.dev) - Main project site

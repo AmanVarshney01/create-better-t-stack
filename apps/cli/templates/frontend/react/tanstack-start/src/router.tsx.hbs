@@ -8,7 +8,7 @@ import { routeTree } from "./routeTree.gen";
 import Loader from "./components/loader";
 import "./index.css";
 {{else}}
-import { createRouter as createTanstackRouter } from "@tanstack/react-router";
+import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import Loader from "./components/loader";
 import "./index.css";
 import { routeTree } from "./routeTree.gen";
@@ -102,7 +102,7 @@ const trpc = createTRPCOptionsProxy({
   {{/if}}
 
 export const createRouter = () => {
-  const router = createTanstackRouter({
+  const router = createTanStackRouter({
     routeTree,
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
@@ -111,7 +111,7 @@ export const createRouter = () => {
     {{else if (eq api "orpc")}}
     context: { orpc, queryClient },
     {{else}}
-    context: { },
+    context: {},
     {{/if}}
     defaultPendingComponent: () => <Loader />,
     defaultNotFoundComponent: () => <div>Not Found</div>,

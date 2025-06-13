@@ -10,8 +10,11 @@ const TWEET_IDS = [
 	"1907728148294447538",
 	"1931029815047455149",
 	"1930511724702285885",
+	"1933149770639614324",
 	"1912836377365905496",
 	"1907817662215757853",
+	"1933216760896934060",
+	"1931709370003583004",
 	"1929147326955704662",
 	"1904228496144269699",
 	"1930257410259616057",
@@ -20,15 +23,18 @@ const TWEET_IDS = [
 	"1917640304758514093",
 	"1907831059275735353",
 	"1912924558522524039",
+	"1933150129738981383",
 	"1911490975173607495",
 	"1930104047845158972",
 	"1913773945523953713",
 	"1904241046898556970",
 	"1913834145471672652",
 	"1930514202260635807",
+	"1931589579749892480",
 	"1904144343125860404",
 	"1917610656477348229",
 	"1904215768272654825",
+	"1931830211013718312",
 	"1913833079342522779",
 	"1930449311848087708",
 	"1907723601731530820",
@@ -118,7 +124,6 @@ export default function Testimonials() {
 				initial="hidden"
 				animate="visible"
 			>
-				{/* Column 1 */}
 				<motion.div
 					className="flex flex-1 flex-col gap-4"
 					variants={columnVariants}
@@ -143,9 +148,6 @@ export default function Testimonials() {
 										<span className="font-mono font-semibold text-xs">
 											[TWEET_{String(globalIndex + 1).padStart(3, "0")}]
 										</span>
-										<span className="rounded bg-primary/10 px-1 text-muted-foreground text-xs">
-											COL_1
-										</span>
 									</div>
 								</div>
 								<div className="p-0">
@@ -156,7 +158,6 @@ export default function Testimonials() {
 					})}
 				</motion.div>
 
-				{/* Column 2 */}
 				<motion.div
 					className="flex flex-1 flex-col gap-4"
 					variants={columnVariants}
@@ -181,9 +182,6 @@ export default function Testimonials() {
 										<span className="font-mono font-semibold text-xs">
 											[TWEET_{String(globalIndex + 1).padStart(3, "0")}]
 										</span>
-										<span className="rounded bg-primary/10 px-1 text-muted-foreground text-xs">
-											COL_2
-										</span>
 									</div>
 								</div>
 								<div className="p-0">
@@ -194,7 +192,6 @@ export default function Testimonials() {
 					})}
 				</motion.div>
 
-				{/* Column 3 */}
 				<motion.div
 					className="flex flex-1 flex-col gap-4"
 					variants={columnVariants}
@@ -218,9 +215,6 @@ export default function Testimonials() {
 										<span className="text-primary text-xs">▶</span>
 										<span className="font-mono font-semibold text-xs">
 											[TWEET_{String(globalIndex + 1).padStart(3, "0")}]
-										</span>
-										<span className="rounded bg-primary/10 px-1 text-muted-foreground text-xs">
-											COL_3
 										</span>
 									</div>
 								</div>

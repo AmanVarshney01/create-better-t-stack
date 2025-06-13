@@ -15,7 +15,8 @@
 			"template",
 			"templates",
 			".turbo",
-			"package.json"
+			"package.json",
+			"analytics-data.json"
 		]
 	},
 	"formatter": {

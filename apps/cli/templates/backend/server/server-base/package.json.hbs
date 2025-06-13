@@ -16,6 +16,11 @@
 		"dotenv": "^16.4.7",
 		"zod": "^3.25.16"
 	},
+	{{#if (eq dbSetup 'supabase')}}
+	"trustedDependencies": [
+        "supabase"
+    ],
+    {{/if}}
 	"devDependencies": {
 		"tsc-alias": "^1.8.11",
 		"typescript": "^5.8.2"

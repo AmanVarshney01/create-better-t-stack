@@ -3,25 +3,14 @@ import { cancel, isCancel, text } from "@clack/prompts";
 import fs from "fs-extra";
 import pc from "picocolors";
 import { DEFAULT_CONFIG } from "../constants";
-
-const INVALID_CHARS = ["<", ">", ":", '"', "|", "?", "*"];
-const MAX_LENGTH = 255;
+import { ProjectNameSchema } from "../types";
 
 function validateDirectoryName(name: string): string | undefined {
 	if (name === ".") return undefined;
 
-	if (!name) return "Project name cannot be empty";
-	if (name.length > MAX_LENGTH) {
-		return `Project name must be less than ${MAX_LENGTH} characters`;
-	}
-	if (INVALID_CHARS.some((char) => name.includes(char))) {
-		return "Project name contains invalid characters";
-	}
-	if (name.startsWith(".") || name.startsWith("-")) {
-		return "Project name cannot start with a dot or dash";
-	}
-	if (name.toLowerCase() === "node_modules") {
-		return "Project name is reserved";
+	const result = ProjectNameSchema.safeParse(name);
+	if (!result.success) {
+		return result.error.issues[0]?.message || "Invalid project name";
 	}
 	return undefined;
 }

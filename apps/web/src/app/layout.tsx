@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 	keywords: [
 		"TypeScript",
 		"project scaffolding",
-		"biolerplate",
+		"boilerplate",
 		"type safety",
 		"Drizzle",
 		"Prisma",
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
 		email: false,
 		telephone: false,
 	},
-	metadataBase: new URL("https://better-t-stack.amanv.dev"),
+	metadataBase: new URL("https://better-t-stack.dev"),
 	alternates: {
 		canonical: "/",
 	},
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
 		title: "Better-T Stack",
 		description:
 			"A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
-		url: "https://better-t-stack.amanv.dev",
+		url: "https://better-t-stack.dev",
 		siteName: "Better-T Stack",
 		images: [
 			{

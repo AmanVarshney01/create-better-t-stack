@@ -1,7 +1,7 @@
 {{#if (eq orm "prisma")}}
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-{{#if (includes frontend "native")}}
+{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { expo } from "@better-auth/expo";
 {{/if}}
 import prisma from "../../prisma";
@@ -14,24 +14,24 @@ export const auth = betterAuth({
     {{#if (eq database "mongodb")}}provider: "mongodb"{{/if}}
   }),
   trustedOrigins: [
-    process.env.CORS_ORIGIN || "",{{#if (includes frontend "native")}}
+    process.env.CORS_ORIGIN || "",{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
     "my-better-t-app://",{{/if}}
   ],
   emailAndPassword: {
     enabled: true,
   }
 
-  {{~#if (includes frontend "native")}}
+  {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
   ,
   plugins: [expo()]
-  {{/if~}}
+  {{/if}}
 });
 {{/if}}
 
 {{#if (eq orm "drizzle")}}
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-{{#if (includes frontend "native")}}
+{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { expo } from "@better-auth/expo";
 {{/if}}
 import { db } from "../db";
@@ -45,64 +45,64 @@ export const auth = betterAuth({
     schema: schema,
   }),
   trustedOrigins: [
-    process.env.CORS_ORIGIN || "",{{#if (includes frontend "native")}}
+    process.env.CORS_ORIGIN || "",{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
     "my-better-t-app://",{{/if}}
   ],
   emailAndPassword: {
     enabled: true,
   }
 
-  {{~#if (includes frontend "native")}}
+  {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
   ,
   plugins: [expo()]
-  {{/if~}}
+  {{/if}}
 });
 {{/if}}
 
 {{#if (eq orm "mongoose")}}
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
-{{#if (includes frontend "native")}}
+{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { expo } from "@better-auth/expo";
 {{/if}}
 import { client } from "../db";
 
 export const auth = betterAuth({
-    database: mongodbAdapter(client),
-    trustedOrigins: [
-        process.env.CORS_ORIGIN || "",{{#if (includes frontend "native")}}
-        "my-better-t-app://",{{/if}}
-    ],
-    emailAndPassword: {
-        enabled: true,
-    }
-
-    {{~#if (includes frontend "native")}}
-        ,
-        plugins: [expo()]
-    {{/if~}}
-});
-{{/if}}
-
-{{#if (eq orm "none")}}
-import { betterAuth } from "better-auth";
-{{#if (includes frontend "native")}}
-import { expo } from "@better-auth/expo";
-{{/if}}
-
-export const auth = betterAuth({
-  database: "", // Invalid configuration
+  database: mongodbAdapter(client),
   trustedOrigins: [
-    process.env.CORS_ORIGIN || "",{{#if (includes frontend "native")}}
+    process.env.CORS_ORIGIN || "",{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
     "my-better-t-app://",{{/if}}
   ],
   emailAndPassword: {
     enabled: true,
   }
 
-  {{~#if (includes frontend "native")}}
+  {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
   ,
   plugins: [expo()]
-  {{/if~}}
+  {{/if}}
+});
+{{/if}}
+
+{{#if (eq orm "none")}}
+import { betterAuth } from "better-auth";
+{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+import { expo } from "@better-auth/expo";
+{{/if}}
+
+export const auth = betterAuth({
+  database: "", // Invalid configuration
+  trustedOrigins: [
+    process.env.CORS_ORIGIN || "",{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    "my-better-t-app://",{{/if}}
+  ],
+  emailAndPassword: {
+    enabled: true,
+  }
+
+  {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+  ,
+  plugins: [expo()]
+  {{/if}}
 });
 {{/if}}

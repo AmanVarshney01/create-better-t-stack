@@ -27,8 +27,8 @@ export const DEFAULT_CONFIG: ProjectConfig = {
 };
 
 export const dependencyVersionMap = {
-	"better-auth": "^1.2.8",
-	"@better-auth/expo": "^1.2.8",
+	"better-auth": "^1.2.9",
+	"@better-auth/expo": "^1.2.9",
 
 	"drizzle-orm": "^0.38.4",
 	"drizzle-kit": "^0.30.5",
@@ -45,7 +45,7 @@ export const dependencyVersionMap = {
 	mongoose: "^8.14.0",
 
 	"vite-plugin-pwa": "^0.21.2",
- "@angular/service-worker" : "^20.0.2",
+	"@angular/service-worker": "^20.0.2",
 	"@vite-pwa/assets-generator": "^0.2.6",
 
 	"@tauri-apps/cli": "^2.4.0",
@@ -78,7 +78,7 @@ export const dependencyVersionMap = {
 	fastify: "^5.3.3",
 	"@fastify/cors": "^11.0.1",
 
-	turbo: "^2.4.2",
+	turbo: "^2.5.4",
 
 	ai: "^4.3.16",
 	"@ai-sdk/google": "^1.2.3",
@@ -88,9 +88,9 @@ export const dependencyVersionMap = {
 
 	"@prisma/extension-accelerate": "^1.3.0",
 
-	"@orpc/server": "^1.4.1",
-	"@orpc/client": "^1.4.1",
-	"@orpc/tanstack-query": "^1.4.1",
+	"@orpc/server": "^1.5.0",
+	"@orpc/client": "^1.5.0",
+	"@orpc/tanstack-query": "^1.5.0",
 
 	"@trpc/tanstack-react-query": "^11.0.0",
 	"@tanstack/angular-query-experimental": "5.80.2",

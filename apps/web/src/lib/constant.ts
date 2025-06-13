@@ -42,7 +42,7 @@ export const TECH_OPTIONS = {
 		},
 		{
 			id: "tanstack-start",
-			name: "TanStack Start (beta)",
+			name: "TanStack Start (devinxi)",
 			description:
 				"Full-stack React and Solid framework powered by TanStack Router",
 			icon: "/icon/tanstack.svg",
@@ -84,7 +84,8 @@ export const TECH_OPTIONS = {
 		{
 			id: "angular",
 			name: "Angular",
-			description: "The web framework that empowers developers to build fast, reliable applications",
+			description:
+				"The web framework that empowers developers to build fast, reliable applications",
 			icon: "/icon/angular.svg",
 			color: "from-red-500 to-red-700",
 			default: false,

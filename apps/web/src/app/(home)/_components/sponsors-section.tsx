@@ -158,7 +158,7 @@ export default function SponsorsSection() {
 													>
 														<Github className="h-4 w-4" />
 														<span className="truncate">
-															github.com/{entry.sponsor.login}
+															{entry.sponsor.login}
 														</span>
 													</a>
 													{(entry.sponsor.websiteUrl ||

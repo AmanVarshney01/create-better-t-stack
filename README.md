@@ -39,7 +39,7 @@ This repository is organized as a monorepo containing:
 
 ## Documentation
 
-Visit [better-t-stack.amanv.dev](https://better-t-stack.amanv.dev) for full documentation, guides, and examples.
+Visit [better-t-stack.dev](https://better-t-stack.dev) for full documentation, guides, and examples.
 
 ## Development
 

@@ -1,5 +1,57 @@
 # create-better-t-stack
 
+## 2.18.3
+
+### Patch Changes
+
+- bfcecf5: update domain
+
+## 2.18.2
+
+### Patch Changes
+
+- fd86d51: add sponsors, builder, docs command
+
+## 2.18.1
+
+### Patch Changes
+
+- fc8e994: Migrate to radix-ui monorepo package and update imports
+
+## 2.18.0
+
+### Minor Changes
+
+- 0ffaedd: Upgrade to Tanstack start devinxi
+
+### Patch Changes
+
+- 1dc9222: use zod for project name validation
+
+## 2.17.1
+
+### Patch Changes
+
+- 28e5a7e: Remove redundant await return in create project mutation
+
+## 2.17.0
+
+### Minor Changes
+
+- d677159: migrate to trpc-cli
+
+## 2.16.7
+
+### Patch Changes
+
+- 5567d65: Show privateData only for selected API in dashboard template
+
+## 2.16.6
+
+### Patch Changes
+
+- 737690c: Add trustedDependencies for Supabase when dbSetup is supabase
+
 ## 2.16.5
 
 ### Patch Changes
