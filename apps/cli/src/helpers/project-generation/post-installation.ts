@@ -93,7 +93,18 @@ export function displayPostInstallInstructions(
 		)}\n`;
 		output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev\n\n`;
 	} else {
-		output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev\n\n`;
+		if (runtime !== "workers") {
+			output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev\n`;
+		}
+
+		if (runtime === "workers") {
+			output += `${pc.cyan(`${stepCounter++}.`)} bun dev\n`;
+			output += `${pc.cyan(
+				`${stepCounter++}.`,
+			)} cd apps/server && bun run cf-typegen\n\n`;
+		} else {
+			output += "\n";
+		}
 	}
 
 	output += `${pc.bold("Your project will be available at:")}\n`;
