@@ -16,8 +16,8 @@ export const BackendSchema = z
 export type Backend = z.infer<typeof BackendSchema>;
 
 export const RuntimeSchema = z
-	.enum(["bun", "node", "none"])
-	.describe("Runtime environment");
+	.enum(["bun", "node", "workers", "none"])
+	.describe("Runtime environment (workers only available with hono backend)");
 export type Runtime = z.infer<typeof RuntimeSchema>;
 
 export const FrontendSchema = z

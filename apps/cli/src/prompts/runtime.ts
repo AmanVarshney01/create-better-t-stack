@@ -17,20 +17,34 @@ export async function getRuntimeChoice(
 		return "node";
 	}
 
+	const runtimeOptions: Array<{
+		value: Runtime;
+		label: string;
+		hint: string;
+	}> = [
+		{
+			value: "bun",
+			label: "Bun",
+			hint: "Fast all-in-one JavaScript runtime",
+		},
+		{
+			value: "node",
+			label: "Node.js",
+			hint: "Traditional Node.js runtime",
+		},
+	];
+
+	if (backend === "hono") {
+		runtimeOptions.push({
+			value: "workers",
+			label: "Cloudflare Workers",
+			hint: "Edge runtime on Cloudflare's global network (Hono only)",
+		});
+	}
+
 	const response = await select<Runtime>({
 		message: "Select runtime",
-		options: [
-			{
-				value: "bun",
-				label: "Bun",
-				hint: "Fast all-in-one JavaScript runtime",
-			},
-			{
-				value: "node",
-				label: "Node.js",
-				hint: "Traditional Node.js runtime",
-			},
-		],
+		options: runtimeOptions,
 		initialValue: DEFAULT_CONFIG.runtime,
 	});
 

@@ -105,6 +105,8 @@ export const dependencyVersionMap = {
 
 	"@tanstack/solid-query": "^5.75.0",
 	"@tanstack/solid-query-devtools": "^5.75.0",
+
+	wrangler: "^4.20.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

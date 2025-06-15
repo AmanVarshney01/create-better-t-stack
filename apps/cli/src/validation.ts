@@ -358,6 +358,30 @@ export function processAndValidateFlags(
 		process.exit(1);
 	}
 
+	if (
+		providedFlags.has("runtime") &&
+		options.runtime === "workers" &&
+		config.backend &&
+		config.backend !== "hono"
+	) {
+		consola.fatal(
+			`Cloudflare Workers runtime (--runtime workers) is only supported with Hono backend (--backend hono). Current backend: ${config.backend}. Please use '--backend hono' or choose a different runtime.`,
+		);
+		process.exit(1);
+	}
+
+	if (
+		providedFlags.has("backend") &&
+		config.backend &&
+		config.backend !== "hono" &&
+		config.runtime === "workers"
+	) {
+		consola.fatal(
+			`Backend '${config.backend}' is not compatible with Cloudflare Workers runtime. Cloudflare Workers runtime is only supported with Hono backend. Please use '--backend hono' or choose a different runtime.`,
+		);
+		process.exit(1);
+	}
+
 	return config;
 }
 
@@ -368,6 +392,14 @@ export function validateConfigCompatibility(
 	const effectiveBackend = config.backend;
 	const effectiveFrontend = config.frontend;
 	const effectiveApi = config.api;
+	const effectiveRuntime = config.runtime;
+
+	if (effectiveRuntime === "workers" && effectiveBackend !== "hono") {
+		consola.fatal(
+			`Cloudflare Workers runtime is only supported with Hono backend. Current backend: ${effectiveBackend}. Please use a different runtime or change to Hono backend.`,
+		);
+		process.exit(1);
+	}
 
 	const includesNuxt = effectiveFrontend?.includes("nuxt");
 	const includesSvelte = effectiveFrontend?.includes("svelte");
