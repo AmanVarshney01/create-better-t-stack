@@ -200,7 +200,11 @@ export async function setupEnvironmentVariables(
 				databaseUrl = "mongodb://localhost:27017/mydatabase";
 				break;
 			case "sqlite":
-				databaseUrl = "file:./local.db";
+				if (config.runtime === "workers") {
+					databaseUrl = "http://127.0.0.1:8080";
+				} else {
+					databaseUrl = "file:./local.db";
+				}
 				break;
 		}
 	}
