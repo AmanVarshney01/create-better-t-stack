@@ -28,27 +28,25 @@ import { stream } from "hono/streaming";
 {{#if (and (includes examples "ai") (eq runtime "workers"))}}
 import { streamText } from "ai";
 import { stream } from "hono/streaming";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 {{/if}}
 
 const app = new Hono();
 
 app.use(logger());
-app.use(
-  "/*",
-  cors({
-    {{#if (or (eq runtime "bun") (eq runtime "node"))}}
-    origin: process.env.CORS_ORIGIN || "",
-    {{/if}}
-    {{#if (eq runtime "workers")}}
-    origin: env.CORS_ORIGIN || "",
-    {{/if}}
-    allowMethods: ["GET", "POST", "OPTIONS"],
-    {{#if auth}}
-    allowHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-    {{/if}}
-  })
-);
+app.use("/*", cors({
+  {{#if (or (eq runtime "bun") (eq runtime "node"))}}
+  origin: process.env.CORS_ORIGIN || "",
+  {{/if}}
+  {{#if (eq runtime "workers")}}
+  origin: env.CORS_ORIGIN || "",
+  {{/if}}
+  allowMethods: ["GET", "POST", "OPTIONS"],
+  {{#if auth}}
+  allowHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+  {{/if}}
+}));
 
 {{#if auth}}
 app.on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw));
@@ -62,6 +60,7 @@ app.use("/rpc/*", async (c, next) => {
     prefix: "/rpc",
     context: context,
   });
+
   if (matched) {
     return c.newResponse(response.body, response);
   }
@@ -70,15 +69,12 @@ app.use("/rpc/*", async (c, next) => {
 {{/if}}
 
 {{#if (eq api "trpc")}}
-app.use(
-  "/trpc/*",
-  trpcServer({
-    router: appRouter,
-    createContext: (_opts, context) => {
-      return createContext({ context });
-    },
-  })
-);
+app.use("/trpc/*", trpcServer({
+  router: appRouter,
+  createContext: (_opts, context) => {
+    return createContext({ context });
+  },
+}));
 {{/if}}
 
 {{#if (and (includes examples "ai") (or (eq runtime "bun") (eq runtime "node")))}}
@@ -89,6 +85,7 @@ app.post("/ai", async (c) => {
     model: google("gemini-1.5-flash"),
     messages,
   });
+
   c.header("X-Vercel-AI-Data-Stream", "v1");
   c.header("Content-Type", "text/plain; charset=utf-8");
   return stream(c, (stream) => stream.pipe(result.toDataStream()));
@@ -106,6 +103,7 @@ app.post("/ai", async (c) => {
     model: google("gemini-1.5-flash"),
     messages,
   });
+
   c.header("X-Vercel-AI-Data-Stream", "v1");
   c.header("Content-Type", "text/plain; charset=utf-8");
   return stream(c, (stream) => stream.pipe(result.toDataStream()));
@@ -118,15 +116,13 @@ app.get("/", (c) => {
 
 {{#if (eq runtime "node")}}
 import { serve } from "@hono/node-server";
-serve(
-  {
-    fetch: app.fetch,
-    port: 3000,
-  },
-  (info) => {
-    console.log(`Server is running on http://localhost:${info.port}`);
-  }
-);
+
+serve({
+  fetch: app.fetch,
+  port: 3000,
+}, (info) => {
+  console.log(`Server is running on http://localhost:${info.port}`);
+});
 {{else}}
   {{#if (eq runtime "bun")}}
 export default app;

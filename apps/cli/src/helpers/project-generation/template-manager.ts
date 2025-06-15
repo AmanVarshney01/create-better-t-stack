@@ -818,4 +818,18 @@ export async function handleExtras(
 			await processTemplate(npmrcTemplateSrc, npmrcDest, context);
 		}
 	}
+
+	// Copy runtime specific templates, e.g., Cloudflare Workers configuration
+	if (context.runtime === "workers") {
+		const runtimeWorkersDir = path.join(PKG_ROOT, "templates/runtime/workers");
+		if (await fs.pathExists(runtimeWorkersDir)) {
+			await processAndCopyFiles(
+				"**/*",
+				runtimeWorkersDir,
+				projectDir,
+				context,
+				false,
+			);
+		}
+	}
 }
