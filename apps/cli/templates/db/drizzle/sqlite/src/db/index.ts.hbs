@@ -1,9 +1,24 @@
+{{#if (or (eq runtime "bun") (eq runtime "node"))}}
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
 const client = createClient({
   url: process.env.DATABASE_URL || "",
-  authToken: process.env.DATABASE_AUTH_TOKEN ,
+  authToken: process.env.DATABASE_AUTH_TOKEN,
 });
 
 export const db = drizzle({ client });
+{{/if}}
+
+{{#if (eq runtime "workers")}}
+import { drizzle } from "drizzle-orm/libsql";
+import { env } from "cloudflare:workers";
+import { createClient } from "@libsql/client";
+
+const client = createClient({
+  url: env.DATABASE_URL || "",
+  authToken: env.DATABASE_AUTH_TOKEN,
+});
+
+export const db = drizzle({ client });
+{{/if}}
