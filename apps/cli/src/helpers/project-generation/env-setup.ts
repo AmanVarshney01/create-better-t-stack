@@ -234,4 +234,11 @@ export async function setupEnvironmentVariables(
 	];
 
 	await addEnvVariablesToFile(envPath, serverVars);
+
+	if (config.runtime === "workers") {
+		const devVarsPath = path.join(serverDir, ".dev.vars");
+		try {
+			await fs.copy(envPath, devVarsPath);
+		} catch (_err) {}
+	}
 }
