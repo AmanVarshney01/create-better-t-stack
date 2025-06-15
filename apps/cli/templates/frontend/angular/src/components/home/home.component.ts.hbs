@@ -1,0 +1,22 @@
+import { Component, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { injectQuery } from '@tanstack/angular-query-experimental';
+{{#if (eq api "orpc")}}
+import { RpcService } from '../../services/rpc.service';
+{{/if}}
+
+@Component({
+ selector: 'app-home',
+ standalone: true,
+ imports: [CommonModule],
+ templateUrl: './home.component.html',
+ styles: []
+})
+export class HomeComponent {
+
+ {{#if (eq api "orpc")}}
+ private _rpc = inject(RpcService);
+ query = injectQuery(() => this._rpc.utils.healthCheck.queryOptions());
+ {{/if}}
+}
