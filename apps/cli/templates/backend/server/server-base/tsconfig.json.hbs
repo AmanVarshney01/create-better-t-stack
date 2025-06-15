@@ -1,35 +1,39 @@
 {
-	"compilerOptions": {
-		"target": "ESNext",
-		"module": "ESNext",
-		"moduleResolution": "bundler",
-		"verbatimModuleSyntax": true,
-		"strict": true,
-		"skipLibCheck": true,
-		"baseUrl": "./",
-		"paths": {
-			"@/*": ["./src/*"]
-			{{#if (eq orm 'prisma')}},
-			"prisma": ["node_modules/prisma"]
-			{{/if}}
-		},
-		"outDir": "./dist",
-		"types": [
-      {{#if (eq runtime 'node')}}
-        "node"
-      {{else if (eq runtime 'bun')}}
-        "bun"
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "verbatimModuleSyntax": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["./src/*"]
+      {{#if (eq orm "prisma")}},
+      "prisma": ["node_modules/prisma"]
+      {{/if}}
+    },
+    "outDir": "./dist",
+    "types": [
+      {{#if (eq runtime "node")}}
+      "node"
+      {{else if (eq runtime "bun")}}
+      "bun"
+      {{else if (eq runtime "workers")}}
+      "./worker-configuration",
+      "node"
       {{else}}
-        "node", "bun"
+      "node",
+      "bun"
       {{/if}}
     ],
-  	{{#unless (or (eq backend "convex") (eq backend "none"))}}
-	  "composite": true,
-		{{/unless}}
-		"jsx": "react-jsx"{{#if (eq backend 'hono')}},
-		"jsxImportSource": "hono/jsx"{{/if}}
-	},
-	"tsc-alias": {
-		"resolveFullPaths": true
-	}
+    {{#unless (or (eq backend "convex") (eq backend "none"))}}
+    "composite": true,
+    {{/unless}}
+    "jsx": "react-jsx"{{#if (eq backend "hono")}},
+    "jsxImportSource": "hono/jsx"{{/if}}
+  },
+  "tsc-alias": {
+    "resolveFullPaths": true
+  }
 }

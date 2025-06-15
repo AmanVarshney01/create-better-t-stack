@@ -1,0 +1,12 @@
+{{#if (or (eq runtime "bun") (eq runtime "node"))}}
+import { drizzle } from "drizzle-orm/node-postgres";
+
+export const db = drizzle(process.env.DATABASE_URL || "");
+{{/if}}
+
+{{#if (eq runtime "workers")}}
+import { drizzle } from "drizzle-orm/node-postgres";
+import { env } from "cloudflare:workers";
+
+export const db = drizzle(env.DATABASE_URL || "");
+{{/if}}

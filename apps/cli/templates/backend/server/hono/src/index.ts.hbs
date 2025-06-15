@@ -1,4 +1,9 @@
+{{#if (or (eq runtime "bun") (eq runtime "node"))}}
 import "dotenv/config";
+{{/if}}
+{{#if (eq runtime "workers")}}
+import { env } from "cloudflare:workers";
+{{/if}}
 {{#if (eq api "orpc")}}
 import { RPCHandler } from "@orpc/server/fetch";
 import { createContext } from "./lib/context";
@@ -15,26 +20,33 @@ import { auth } from "./lib/auth";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-{{#if (includes examples "ai")}}
+{{#if (and (includes examples "ai") (or (eq runtime "bun") (eq runtime "node")))}}
 import { streamText } from "ai";
 import { google } from "@ai-sdk/google";
 import { stream } from "hono/streaming";
+{{/if}}
+{{#if (and (includes examples "ai") (eq runtime "workers"))}}
+import { streamText } from "ai";
+import { stream } from "hono/streaming";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 {{/if}}
 
 const app = new Hono();
 
 app.use(logger());
-app.use(
-  "/*",
-  cors({
-    origin: process.env.CORS_ORIGIN || "",
-    allowMethods: ["GET", "POST", "OPTIONS"],
-    {{#if auth}}
-    allowHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-    {{/if}}
-  })
-);
+app.use("/*", cors({
+  {{#if (or (eq runtime "bun") (eq runtime "node"))}}
+  origin: process.env.CORS_ORIGIN || "",
+  {{/if}}
+  {{#if (eq runtime "workers")}}
+  origin: env.CORS_ORIGIN || "",
+  {{/if}}
+  allowMethods: ["GET", "POST", "OPTIONS"],
+  {{#if auth}}
+  allowHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+  {{/if}}
+}));
 
 {{#if auth}}
 app.on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw));
@@ -48,6 +60,7 @@ app.use("/rpc/*", async (c, next) => {
     prefix: "/rpc",
     context: context,
   });
+
   if (matched) {
     return c.newResponse(response.body, response);
   }
@@ -64,11 +77,10 @@ app.use("/trpc/*", trpcServer({
 }));
 {{/if}}
 
-{{#if (includes examples "ai")}}
+{{#if (and (includes examples "ai") (or (eq runtime "bun") (eq runtime "node")))}}
 app.post("/ai", async (c) => {
   const body = await c.req.json();
   const messages = body.messages || [];
-
   const result = streamText({
     model: google("gemini-1.5-flash"),
     messages,
@@ -76,7 +88,24 @@ app.post("/ai", async (c) => {
 
   c.header("X-Vercel-AI-Data-Stream", "v1");
   c.header("Content-Type", "text/plain; charset=utf-8");
+  return stream(c, (stream) => stream.pipe(result.toDataStream()));
+});
+{{/if}}
 
+{{#if (and (includes examples "ai") (eq runtime "workers"))}}
+app.post("/ai", async (c) => {
+  const body = await c.req.json();
+  const messages = body.messages || [];
+  const google = createGoogleGenerativeAI({
+    apiKey: env.GOOGLE_GENERATIVE_AI_API_KEY,
+  });
+  const result = streamText({
+    model: google("gemini-1.5-flash"),
+    messages,
+  });
+
+  c.header("X-Vercel-AI-Data-Stream", "v1");
+  c.header("Content-Type", "text/plain; charset=utf-8");
   return stream(c, (stream) => stream.pipe(result.toDataStream()));
 });
 {{/if}}
@@ -95,5 +124,10 @@ serve({
   console.log(`Server is running on http://localhost:${info.port}`);
 });
 {{else}}
+  {{#if (eq runtime "bun")}}
 export default app;
+  {{/if}}
+  {{#if (eq runtime "workers")}}
+export default app;
+  {{/if}}
 {{/if}}

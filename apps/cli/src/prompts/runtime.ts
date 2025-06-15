@@ -30,6 +30,11 @@ export async function getRuntimeChoice(
 				label: "Node.js",
 				hint: "Traditional Node.js runtime",
 			},
+			{
+				value: "workers",
+				label: "Cloudflare Workers",
+				hint: "Edge runtime on Cloudflare's global network",
+			},
 		],
 		initialValue: DEFAULT_CONFIG.runtime,
 	});
