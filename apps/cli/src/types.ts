@@ -16,7 +16,7 @@ export const BackendSchema = z
 export type Backend = z.infer<typeof BackendSchema>;
 
 export const RuntimeSchema = z
-	.enum(["bun", "node", "none"])
+	.enum(["bun", "node", "workers", "none"])
 	.describe("Runtime environment");
 export type Runtime = z.infer<typeof RuntimeSchema>;
 
