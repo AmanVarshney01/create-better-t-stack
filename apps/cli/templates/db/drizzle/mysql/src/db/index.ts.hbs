@@ -1,0 +1,20 @@
+{{#if (or (eq runtime "bun") (eq runtime "node"))}}
+import { drizzle } from "drizzle-orm/mysql2";
+
+export const db = drizzle({
+  connection: {
+    uri: process.env.DATABASE_URL,
+  },
+});
+{{/if}}
+
+{{#if (eq runtime "workers")}}
+import { drizzle } from "drizzle-orm/mysql2";
+import { env } from "cloudflare:workers";
+
+export const db = drizzle({
+  connection: {
+    uri: env.DATABASE_URL,
+  },
+});
+{{/if}}

@@ -132,6 +132,20 @@ export const TECH_OPTIONS = {
 			icon: "/icon/node.svg",
 			color: "from-green-400 to-green-600",
 		},
+		{
+			id: "workers",
+			name: "Cloudflare Workers (beta)",
+			description: "Serverless runtime for the edge",
+			icon: "/icon/workers.svg",
+			color: "from-orange-400 to-orange-600",
+		},
+		{
+			id: "none",
+			name: "No Runtime",
+			description: "No specific runtime",
+			icon: "",
+			color: "from-gray-400 to-gray-600",
+		},
 	],
 	backend: [
 		{

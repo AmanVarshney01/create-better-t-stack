@@ -20,6 +20,8 @@ export async function setupRuntime(config: ProjectConfig): Promise<void> {
 		await setupBunRuntime(serverDir, backend);
 	} else if (runtime === "node") {
 		await setupNodeRuntime(serverDir, backend);
+	} else if (runtime === "workers") {
+		await setupWorkersRuntime(serverDir);
 	}
 }
 
@@ -79,4 +81,27 @@ async function setupNodeRuntime(
 			projectDir: serverDir,
 		});
 	}
+}
+
+async function setupWorkersRuntime(serverDir: string): Promise<void> {
+	const packageJsonPath = path.join(serverDir, "package.json");
+	if (!(await fs.pathExists(packageJsonPath))) return;
+
+	const packageJson = await fs.readJson(packageJsonPath);
+
+	packageJson.scripts = {
+		...packageJson.scripts,
+		dev: "wrangler dev --port=3000",
+		start: "wrangler dev",
+		deploy: "wrangler deploy",
+		build: "wrangler deploy --dry-run",
+		"cf-typegen": "wrangler types --env-interface CloudflareBindings",
+	};
+
+	await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+
+	await addPackageDependency({
+		devDependencies: ["wrangler"],
+		projectDir: serverDir,
+	});
 }
