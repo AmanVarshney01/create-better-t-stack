@@ -386,10 +386,11 @@ export function processAndValidateFlags(
 		providedFlags.has("runtime") &&
 		options.runtime === "workers" &&
 		config.orm &&
-		config.orm !== "drizzle"
+		config.orm !== "drizzle" &&
+		config.orm !== "none"
 	) {
 		consola.fatal(
-			`Cloudflare Workers runtime (--runtime workers) is only supported with Drizzle ORM (--orm drizzle). Current ORM: ${config.orm}. Please use '--orm drizzle' or choose a different runtime.`,
+			`Cloudflare Workers runtime (--runtime workers) is only supported with Drizzle ORM (--orm drizzle) or no ORM (--orm none). Current ORM: ${config.orm}. Please use '--orm drizzle', '--orm none', or choose a different runtime.`,
 		);
 		process.exit(1);
 	}
@@ -398,10 +399,11 @@ export function processAndValidateFlags(
 		providedFlags.has("orm") &&
 		config.orm &&
 		config.orm !== "drizzle" &&
+		config.orm !== "none" &&
 		config.runtime === "workers"
 	) {
 		consola.fatal(
-			`ORM '${config.orm}' is not compatible with Cloudflare Workers runtime. Cloudflare Workers runtime is only supported with Drizzle ORM. Please use '--orm drizzle' or choose a different runtime.`,
+			`ORM '${config.orm}' is not compatible with Cloudflare Workers runtime. Cloudflare Workers runtime is only supported with Drizzle ORM or no ORM. Please use '--orm drizzle', '--orm none', or choose a different runtime.`,
 		);
 		process.exit(1);
 	}
@@ -448,9 +450,13 @@ export function validateConfigCompatibility(
 	}
 
 	const effectiveOrm = config.orm;
-	if (effectiveRuntime === "workers" && effectiveOrm !== "drizzle") {
+	if (
+		effectiveRuntime === "workers" &&
+		effectiveOrm !== "drizzle" &&
+		effectiveOrm !== "none"
+	) {
 		consola.fatal(
-			`Cloudflare Workers runtime is only supported with Drizzle ORM. Current ORM: ${effectiveOrm}. Please use a different runtime or change to Drizzle ORM.`,
+			`Cloudflare Workers runtime is only supported with Drizzle ORM or no ORM. Current ORM: ${effectiveOrm}. Please use a different runtime or change to Drizzle ORM or no ORM.`,
 		);
 		process.exit(1);
 	}
