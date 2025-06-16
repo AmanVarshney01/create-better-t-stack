@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { FolderOpen, Terminal } from "lucide-react";
 import { motion } from "motion/react";
 import Navbar from "../_components/navbar";
@@ -9,33 +8,11 @@ import ShowcaseItem from "./_components/ShowcaseItem";
 const showcaseProjects = [
 	{
 		title: "gl1.chat",
-		description: "An ai platform focused on speed, reliability and advanced workflows powered by trpc, drizzle, vite, elysia, tanstack router",
-		imageUrl: "https://gl1.chat/", // Placeholder, consider adding a proper image if available
+		description:
+			"An ai platform focused on speed, reliability and advanced workflows powered by trpc, drizzle, vite, elysia, tanstack router",
+		imageUrl: "https://gl1.chat/",
 		liveUrl: "https://gl1.chat/?ref=better-t-stack",
 		tags: ["tRPC", "Drizzle", "Elysia", "Vite", "TanStack Router"],
-	},
-	{
-		title: "Project Alpha",
-		description: "A cool project built with Better-T-Stack.",
-		imageUrl: "https://via.placeholder.com/400x300?text=Project+Alpha",
-		liveUrl: "#",
-		sourceUrl: "#",
-		tags: ["Next.js", "tRPC", "Drizzle"],
-	},
-	{
-		title: "Beta App",
-		description: "Another awesome application powered by Better-T-Stack.",
-		imageUrl: "https://via.placeholder.com/400x300?text=Beta+App",
-		liveUrl: "#",
-		sourceUrl: "#",
-		tags: ["Hono", "React Native", "SQLite"],
-	},
-	{
-		title: "Gamma Platform",
-		description: "Showcasing the versatility of Better-T-Stack.",
-		imageUrl: "https://via.placeholder.com/400x300?text=Gamma+Platform",
-		liveUrl: "#",
-		tags: ["Convex", "TanStack Router"],
 	},
 ];
 
