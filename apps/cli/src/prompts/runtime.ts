@@ -37,7 +37,7 @@ export async function getRuntimeChoice(
 	if (backend === "hono") {
 		runtimeOptions.push({
 			value: "workers",
-			label: "Cloudflare Workers",
+			label: "Cloudflare Workers (beta)",
 			hint: "Edge runtime on Cloudflare's global network",
 		});
 	}

@@ -134,7 +134,7 @@ export const TECH_OPTIONS = {
 		},
 		{
 			id: "workers",
-			name: "Cloudflare Workers",
+			name: "Cloudflare Workers (beta)",
 			description: "Serverless runtime for the edge",
 			icon: "/icon/workers.svg",
 			color: "from-orange-400 to-orange-600",
