@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.18.6
+
+### Patch Changes
+
+- 2eacf7b: Add better-auth package in solid frontend
+
 ## 2.18.5
 
 ### Patch Changes
