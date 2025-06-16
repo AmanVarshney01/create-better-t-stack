@@ -535,7 +535,6 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 				}
 			}
 
-			// Cloudflare Workers runtime validation
 			if (nextStack.runtime === "workers") {
 				if (nextStack.backend !== "hono") {
 					notes.runtime.notes.push(
@@ -665,7 +664,6 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 
 			const incompatibleExamples: string[] = [];
 
-			// Note: Examples are now supported with Native-only frontends
 			if (
 				nextStack.database === "none" &&
 				nextStack.examples.includes("todo")
@@ -1079,10 +1077,18 @@ const StackBuilder = () => {
 	useEffect(() => {
 		if (compatibilityAnalysis.adjustedStack) {
 			if (compatibilityAnalysis.changes.length > 0) {
-				// Show toast notifications for each change
-				for (const change of compatibilityAnalysis.changes) {
-					toast.info(change.message, {
+				if (compatibilityAnalysis.changes.length === 1) {
+					toast.info(compatibilityAnalysis.changes[0].message, {
 						duration: 4000,
+					});
+				} else if (compatibilityAnalysis.changes.length > 1) {
+					const message = `${
+						compatibilityAnalysis.changes.length
+					} compatibility adjustments made:\n${compatibilityAnalysis.changes
+						.map((c) => `• ${c.message}`)
+						.join("\n")}`;
+					toast.info(message, {
+						duration: 5000,
 					});
 				}
 			}
@@ -1487,35 +1493,19 @@ const StackBuilder = () => {
 													isSelected = currentValue === tech.id;
 												}
 
-												// Remove disabled logic - all options are now selectable
-												const disabledReason = undefined;
-												const isDisabled = false;
-
 												return (
 													<Tooltip key={tech.id} delayDuration={100}>
 														<TooltipTrigger asChild>
 															<motion.div
 																className={cn(
-																	"relative rounded border p-2 transition-all",
-																	isDisabled && !isSelected
-																		? "cursor-not-allowed opacity-60"
-																		: "cursor-pointer",
+																	"relative cursor-pointer rounded border p-2 transition-all",
 																	isSelected
 																		? "border-primary bg-primary/10"
-																		: `border-border ${
-																				!isDisabled
-																					? "hover:border-muted hover:bg-muted"
-																					: ""
-																			}`,
+																		: "border-border hover:border-muted hover:bg-muted",
 																)}
-																whileHover={
-																	!isDisabled ? { scale: 1.02 } : undefined
-																}
-																whileTap={
-																	!isDisabled ? { scale: 0.98 } : undefined
-																}
+																whileHover={{ scale: 1.02 }}
+																whileTap={{ scale: 0.98 }}
 																onClick={() =>
-																	!isDisabled &&
 																	handleTechSelect(
 																		categoryKey as keyof typeof TECH_OPTIONS,
 																		tech.id,
@@ -1544,27 +1534,19 @@ const StackBuilder = () => {
 																					{tech.name}
 																				</span>
 																			</div>
-																			{isDisabled && !isSelected && (
-																				<InfoIcon className="ml-2 h-4 w-4 flex-shrink-0 text-muted-foreground" />
-																			)}
 																		</div>
 																		<p className="mt-0.5 text-muted-foreground text-xs">
 																			{tech.description}
 																		</p>
 																	</div>
 																</div>
-																{tech.default && !isSelected && !isDisabled && (
+																{tech.default && !isSelected && (
 																	<span className="absolute top-1 right-1 ml-2 flex-shrink-0 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
 																		Default
 																	</span>
 																)}
 															</motion.div>
 														</TooltipTrigger>
-														{isDisabled && disabledReason && (
-															<TooltipContent side="top" align="center">
-																<p>{disabledReason}</p>
-															</TooltipContent>
-														)}
 													</Tooltip>
 												);
 											})}
