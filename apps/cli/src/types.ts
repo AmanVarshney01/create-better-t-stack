@@ -17,7 +17,9 @@ export type Backend = z.infer<typeof BackendSchema>;
 
 export const RuntimeSchema = z
 	.enum(["bun", "node", "workers", "none"])
-	.describe("Runtime environment (workers only available with hono backend)");
+	.describe(
+		"Runtime environment (workers only available with hono backend and drizzle orm)",
+	);
 export type Runtime = z.infer<typeof RuntimeSchema>;
 
 export const FrontendSchema = z

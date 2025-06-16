@@ -382,6 +382,52 @@ export function processAndValidateFlags(
 		process.exit(1);
 	}
 
+	if (
+		providedFlags.has("runtime") &&
+		options.runtime === "workers" &&
+		config.orm &&
+		config.orm !== "drizzle"
+	) {
+		consola.fatal(
+			`Cloudflare Workers runtime (--runtime workers) is only supported with Drizzle ORM (--orm drizzle). Current ORM: ${config.orm}. Please use '--orm drizzle' or choose a different runtime.`,
+		);
+		process.exit(1);
+	}
+
+	if (
+		providedFlags.has("orm") &&
+		config.orm &&
+		config.orm !== "drizzle" &&
+		config.runtime === "workers"
+	) {
+		consola.fatal(
+			`ORM '${config.orm}' is not compatible with Cloudflare Workers runtime. Cloudflare Workers runtime is only supported with Drizzle ORM. Please use '--orm drizzle' or choose a different runtime.`,
+		);
+		process.exit(1);
+	}
+
+	if (
+		providedFlags.has("runtime") &&
+		options.runtime === "workers" &&
+		config.database === "mongodb"
+	) {
+		consola.fatal(
+			"Cloudflare Workers runtime (--runtime workers) is not compatible with MongoDB database. MongoDB requires Prisma or Mongoose ORM, but Workers runtime only supports Drizzle ORM. Please use a different database or runtime.",
+		);
+		process.exit(1);
+	}
+
+	if (
+		providedFlags.has("database") &&
+		config.database === "mongodb" &&
+		config.runtime === "workers"
+	) {
+		consola.fatal(
+			"MongoDB database is not compatible with Cloudflare Workers runtime. MongoDB requires Prisma or Mongoose ORM, but Workers runtime only supports Drizzle ORM. Please use a different database or runtime.",
+		);
+		process.exit(1);
+	}
+
 	return config;
 }
 
@@ -397,6 +443,21 @@ export function validateConfigCompatibility(
 	if (effectiveRuntime === "workers" && effectiveBackend !== "hono") {
 		consola.fatal(
 			`Cloudflare Workers runtime is only supported with Hono backend. Current backend: ${effectiveBackend}. Please use a different runtime or change to Hono backend.`,
+		);
+		process.exit(1);
+	}
+
+	const effectiveOrm = config.orm;
+	if (effectiveRuntime === "workers" && effectiveOrm !== "drizzle") {
+		consola.fatal(
+			`Cloudflare Workers runtime is only supported with Drizzle ORM. Current ORM: ${effectiveOrm}. Please use a different runtime or change to Drizzle ORM.`,
+		);
+		process.exit(1);
+	}
+
+	if (effectiveRuntime === "workers" && effectiveDatabase === "mongodb") {
+		consola.fatal(
+			"Cloudflare Workers runtime is not compatible with MongoDB database. MongoDB requires Prisma or Mongoose ORM, but Workers runtime only supports Drizzle ORM. Please use a different database or runtime.",
 		);
 		process.exit(1);
 	}

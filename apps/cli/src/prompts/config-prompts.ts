@@ -57,13 +57,14 @@ export async function gatherConfig(
 			runtime: ({ results }) =>
 				getRuntimeChoice(flags.runtime, results.backend),
 			database: ({ results }) =>
-				getDatabaseChoice(flags.database, results.backend),
+				getDatabaseChoice(flags.database, results.backend, results.runtime),
 			orm: ({ results }) =>
 				getORMChoice(
 					flags.orm,
 					results.database !== "none",
 					results.database,
 					results.backend,
+					results.runtime,
 				),
 			api: ({ results }) =>
 				getApiChoice(flags.api, results.frontend, results.backend),

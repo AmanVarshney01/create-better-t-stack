@@ -1,7 +1,7 @@
 import { cancel, isCancel, select } from "@clack/prompts";
 import pc from "picocolors";
 import { DEFAULT_CONFIG } from "../constants";
-import type { Backend, Database, ORM } from "../types";
+import type { Backend, Database, ORM, Runtime } from "../types";
 
 const ormOptions = {
 	prisma: {
@@ -26,6 +26,7 @@ export async function getORMChoice(
 	hasDatabase: boolean,
 	database?: Database,
 	backend?: Backend,
+	runtime?: Runtime,
 ): Promise<ORM> {
 	if (backend === "convex") {
 		return "none";
@@ -33,6 +34,10 @@ export async function getORMChoice(
 
 	if (!hasDatabase) return "none";
 	if (orm !== undefined) return orm;
+
+	if (runtime === "workers") {
+		return "drizzle";
+	}
 
 	const options = [
 		...(database === "mongodb"
