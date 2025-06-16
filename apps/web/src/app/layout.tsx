@@ -13,7 +13,7 @@ const poppins = Poppins({
 });
 
 const ogImage =
-	"https://api.screenshothis.com/v1/screenshots/take?api_key=ss_live_jRNSxQeqoZAfIZlqGOmzEAOlValCYtNIAlcPlmEbyGjvECgQHKCOJpMBTFTOjRAQ&url=https%3A%2F%2Fbetter-t-stack.amanv.dev%2F&width=1200&height=630&block_ads=true&block_cookie_banners=true&block_trackers=true&device_scale_factor=0.75&prefers_color_scheme=dark&is_cached=true";
+	"https://api.screenshothis.com/v1/screenshots/take?api_key=ss_live_NQJgRXqHcKPwnoMTuQmgiwLIGbVfihjpMyQhgsaMyNBHTyesvrxpYNXmdgcnxipc&url=https%3A%2F%2Fbetter-t-stack.dev%2F&width=1200&height=630&block_ads=true&block_cookie_banners=true&block_trackers=true&device_scale_factor=0.75&prefers_color_scheme=dark&is_cached=true";
 
 export const metadata: Metadata = {
 	title: "Better-T Stack",
