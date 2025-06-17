@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.19.1
+
+### Patch Changes
+
+- 2e56b27: Switch workers template from TOML to JSONC format
+
 ## 2.19.0
 
 ### Minor Changes
