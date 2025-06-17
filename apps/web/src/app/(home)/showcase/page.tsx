@@ -10,7 +10,7 @@ const showcaseProjects = [
 		title: "gl1.chat",
 		description:
 			"An ai platform focused on speed, reliability and advanced workflows powered by trpc, drizzle, vite, elysia, tanstack router",
-		imageUrl: "https://gl1.chat/",
+		imageUrl: "https://gl1.chat/social-share-image.png",
 		liveUrl: "https://gl1.chat/?ref=better-t-stack",
 		tags: ["tRPC", "Drizzle", "Elysia", "Vite", "TanStack Router"],
 	},
