@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.20.0
+
+### Minor Changes
+
+- 7013426: upgrade to biome v2
+
 ## 2.19.1
 
 ### Patch Changes
