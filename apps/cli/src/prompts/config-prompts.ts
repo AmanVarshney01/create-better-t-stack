@@ -85,6 +85,7 @@ export async function gatherConfig(
 					flags.dbSetup,
 					results.orm,
 					results.backend,
+					results.runtime,
 				),
 			git: () => getGitChoice(flags.git),
 			packageManager: () => getPackageManagerChoice(flags.packageManager),

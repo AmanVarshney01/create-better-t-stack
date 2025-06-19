@@ -3,6 +3,16 @@ import { defineConfig } from "drizzle-kit";
 export default defineConfig({
   schema: "./src/db/schema",
   out: "./src/db/migrations",
+  {{#if (eq dbSetup "d1")}}
+  // DOCS: https://orm.drizzle.team/docs/guides/d1-http-with-drizzle-kit
+  dialect: "sqlite",
+  driver: "d1-http",
+  dbCredentials: {
+    accountId: process.env.CLOUDFLARE_ACCOUNT_ID!,
+    databaseId: process.env.CLOUDFLARE_DATABASE_ID!,
+    token: process.env.CLOUDFLARE_D1_TOKEN!,
+  },
+  {{else}}
   dialect: "turso",
   dbCredentials: {
     url: process.env.DATABASE_URL || "",
@@ -10,4 +20,5 @@ export default defineConfig({
     authToken: process.env.DATABASE_AUTH_TOKEN,
     {{/if}}
   },
+  {{/if}}
 });

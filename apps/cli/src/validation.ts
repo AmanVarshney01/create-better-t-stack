@@ -358,6 +358,22 @@ export function processAndValidateFlags(
 		process.exit(1);
 	}
 
+	if (config.dbSetup === "d1") {
+		if (config.database !== "sqlite") {
+			consola.fatal(
+				"Cloudflare D1 setup requires SQLite database. Please use '--database sqlite' or choose a different setup.",
+			);
+			process.exit(1);
+		}
+
+		if (config.runtime !== "workers") {
+			consola.fatal(
+				"Cloudflare D1 setup requires the Cloudflare Workers runtime. Please use '--runtime workers' or choose a different setup.",
+			);
+			process.exit(1);
+		}
+	}
+
 	if (
 		providedFlags.has("runtime") &&
 		options.runtime === "workers" &&

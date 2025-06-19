@@ -1,12 +1,13 @@
 import { cancel, isCancel, select } from "@clack/prompts";
 import pc from "picocolors";
-import type { Backend, DatabaseSetup, ORM } from "../types";
+import type { Backend, DatabaseSetup, ORM, Runtime } from "../types";
 
 export async function getDBSetupChoice(
 	databaseType: string,
 	dbSetup: DatabaseSetup | undefined,
 	orm?: ORM,
 	backend?: Backend,
+	runtime?: Runtime,
 ): Promise<DatabaseSetup> {
 	if (backend === "convex") {
 		return "none";
@@ -32,6 +33,15 @@ export async function getDBSetupChoice(
 				label: "Turso",
 				hint: "SQLite for Production. Powered by libSQL",
 			},
+			...(runtime === "workers"
+				? [
+						{
+							value: "d1" as const,
+							label: "Cloudflare D1",
+							hint: "SQLite on Cloudflare Workers (requires Workers runtime)",
+						},
+					]
+				: []),
 			{ value: "none" as const, label: "None", hint: "Manual setup" },
 		];
 	} else if (databaseType === "postgres") {

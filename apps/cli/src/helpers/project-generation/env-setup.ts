@@ -186,7 +186,8 @@ export async function setupEnvironmentVariables(
 		dbSetup === "prisma-postgres" ||
 		dbSetup === "mongodb-atlas" ||
 		dbSetup === "neon" ||
-		dbSetup === "supabase";
+		dbSetup === "supabase" ||
+		dbSetup === "d1";
 
 	if (database !== "none" && !specializedSetup) {
 		switch (database) {

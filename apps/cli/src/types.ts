@@ -60,6 +60,7 @@ export const DatabaseSetupSchema = z
 		"prisma-postgres",
 		"mongodb-atlas",
 		"supabase",
+		"d1",
 		"none",
 	])
 	.describe("Database hosting setup");
