@@ -1,7 +1,6 @@
 "use client";
 
 import { ExternalLink, File, Github, Monitor } from "lucide-react";
-import { motion } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -24,26 +23,10 @@ export default function ShowcaseItem({
 	tags,
 	index = 0,
 }: ShowcaseItemProps) {
-	const itemVariants = {
-		hidden: { opacity: 0, y: 20 },
-		visible: {
-			opacity: 1,
-			y: 0,
-			transition: {
-				duration: 0.5,
-				ease: "easeOut",
-			},
-		},
-	};
-
 	const projectId = `PROJECT_${String(index + 1).padStart(3, "0")}`;
 
 	return (
-		<motion.div
-			variants={itemVariants}
-			className="terminal-block-hover flex h-full flex-col overflow-hidden rounded border border-border bg-background"
-			style={{ animationDelay: `${index * 100}ms` }}
-		>
+		<div className="terminal-block-hover flex h-full flex-col overflow-hidden rounded border border-border bg-background">
 			<div className="border-border border-b bg-muted/20 px-3 py-2">
 				<div className="flex items-center gap-2">
 					<File className="h-3 w-3 text-primary" />
@@ -137,6 +120,6 @@ export default function ShowcaseItem({
 					</div>
 				</div>
 			</div>
-		</motion.div>
+		</div>
 	);
 }

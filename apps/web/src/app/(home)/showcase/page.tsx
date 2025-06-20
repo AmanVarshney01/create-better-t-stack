@@ -1,7 +1,6 @@
 "use client";
 
 import { FolderOpen, Terminal } from "lucide-react";
-import { motion } from "motion/react";
 import Navbar from "../_components/navbar";
 import ShowcaseItem from "./_components/ShowcaseItem";
 
@@ -17,40 +16,12 @@ const showcaseProjects = [
 ];
 
 export default function ShowcasePage() {
-	const containerVariants = {
-		hidden: { opacity: 0 },
-		visible: {
-			opacity: 1,
-			transition: {
-				staggerChildren: 0.1,
-				delayChildren: 0.2,
-			},
-		},
-	};
-
-	const itemVariants = {
-		hidden: { opacity: 0, y: 20 },
-		visible: {
-			opacity: 1,
-			y: 0,
-			transition: {
-				duration: 0.5,
-				ease: "easeOut",
-			},
-		},
-	};
-
 	return (
 		<>
 			<Navbar />
 			<main className="flex min-h-svh flex-col items-center bg-background px-4 pt-24 pb-10 sm:px-6 md:px-8 md:pt-28 lg:pt-32">
-				<motion.div
-					className="mx-auto w-full max-w-6xl"
-					initial="hidden"
-					animate="visible"
-					variants={containerVariants}
-				>
-					<motion.div className="mb-8" variants={itemVariants}>
+				<div className="mx-auto w-full max-w-6xl">
+					<div className="mb-8">
 						<div className="mb-6 flex items-center gap-2">
 							<Terminal className="h-4 w-4 text-primary" />
 							<span className="font-bold font-mono text-lg">
@@ -92,18 +63,15 @@ export default function ShowcasePage() {
 								</div>
 							</div>
 						</div>
-					</motion.div>
+					</div>
 
-					<motion.div
-						className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3"
-						variants={containerVariants}
-					>
+					<div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
 						{showcaseProjects.map((project, index) => (
 							<ShowcaseItem key={project.title} {...project} index={index} />
 						))}
-					</motion.div>
+					</div>
 
-					<motion.div className="mt-8" variants={itemVariants}>
+					<div className="mt-8">
 						<div className="terminal-block-hover rounded border border-border bg-muted/20 p-4">
 							<div className="flex items-center gap-2 text-sm">
 								<span className="text-primary">$</span>
@@ -119,8 +87,8 @@ export default function ShowcasePage() {
 								</span>
 							</div>
 						</div>
-					</motion.div>
-				</motion.div>
+					</div>
+				</div>
 			</main>
 		</>
 	);

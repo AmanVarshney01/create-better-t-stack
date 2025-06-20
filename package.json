@@ -16,19 +16,24 @@
 		"deploy:web": "bun run build:web:cloudflare && bunx wrangler pages deploy ./apps/web/out"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.0.0",
-		"@changesets/cli": "^2.29.3",
+		"@biomejs/biome": "^2.0.2",
+		"@changesets/cli": "^2.29.5",
 		"husky": "^9.1.7",
 		"lint-staged": "^15.5.2",
-		"turbo": "^2.5.3",
+		"turbo": "^2.5.4",
 		"typescript": "5.7.3"
 	},
 	"lint-staged": {
-		"*": ["bun biome check --write ."]
+		"*": [
+			"bun biome check --write ."
+		]
 	},
 	"engines": {
 		"node": ">=20"
 	},
-	"packageManager": "bun@1.2.5",
-	"workspaces": ["apps/*"]
+	"packageManager": "bun@1.2.16",
+	"workspaces": [
+		"apps/*",
+		"packages/*"
+	]
 }

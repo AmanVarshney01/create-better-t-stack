@@ -1,0 +1,20 @@
+{
+	"$schema": "https://better-t-stack.dev/schema.json",
+	// Better-T-Stack configuration file
+	// This file was automatically generated when the project was created
+	// It contains the stack configuration used to generate this project
+
+	"version": "2.21.0",
+	"createdAt": "2024-01-15T10:30:00.000Z",
+	"database": "sqlite",
+	"orm": "drizzle",
+	"backend": "hono",
+	"runtime": "bun",
+	"frontend": ["tanstack-router"],
+	"addons": ["turborepo", "biome"],
+	"examples": ["todo"],
+	"auth": true,
+	"packageManager": "bun",
+	"dbSetup": "turso",
+	"api": "trpc"
+}

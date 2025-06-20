@@ -2,6 +2,7 @@ import { cancel, log } from "@clack/prompts";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
+import { writeBtsConfig } from "../../utils/bts-config";
 import { setupAddons } from "../setup/addons-setup";
 import { setupApi } from "../setup/api-setup";
 import { setupAuth } from "../setup/auth-setup";
@@ -71,6 +72,9 @@ export async function createProject(options: ProjectConfig) {
 		await setupEnvironmentVariables(options);
 		await updatePackageConfigurations(projectDir, options);
 		await createReadme(projectDir, options);
+
+		await writeBtsConfig(options);
+
 		await initializeGit(projectDir, options.git);
 
 		log.success("Project template successfully scaffolded!");

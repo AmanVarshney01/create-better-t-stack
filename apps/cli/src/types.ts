@@ -110,6 +110,13 @@ export type CreateInput = {
 	api?: API;
 };
 
+export type AddInput = {
+	addons?: Addons[];
+	projectDir?: string;
+	install?: boolean;
+	packageManager?: PackageManager;
+};
+
 export type CLIInput = CreateInput & {
 	projectDirectory?: string;
 };
@@ -129,6 +136,22 @@ export interface ProjectConfig {
 	git: boolean;
 	packageManager: PackageManager;
 	install: boolean;
+	dbSetup: DatabaseSetup;
+	api: API;
+}
+
+export interface BetterTStackConfig {
+	version: string;
+	createdAt: string;
+	database: Database;
+	orm: ORM;
+	backend: Backend;
+	runtime: Runtime;
+	frontend: Frontend[];
+	addons: Addons[];
+	examples: Examples[];
+	auth: boolean;
+	packageManager: PackageManager;
 	dbSetup: DatabaseSetup;
 	api: API;
 }

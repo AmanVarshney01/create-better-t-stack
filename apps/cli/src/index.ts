@@ -13,10 +13,13 @@ import fs from "fs-extra";
 import pc from "picocolors";
 import { createCli, trpcServer, zod as z } from "trpc-cli";
 import { DEFAULT_CONFIG } from "./constants";
+import { addAddonsToProject } from "./helpers/project-generation/add-addons";
 import { createProject } from "./helpers/project-generation/create-project";
+import { detectProjectConfig } from "./helpers/project-generation/detect-project-config";
+import { getAddonsToAdd } from "./prompts/addons";
 import { gatherConfig } from "./prompts/config-prompts";
 import { getProjectName } from "./prompts/project-name";
-import type { CreateInput, ProjectConfig } from "./types";
+import type { AddInput, CreateInput, ProjectConfig } from "./types";
 import {
 	AddonsSchema,
 	APISchema,
@@ -259,6 +262,53 @@ async function createProjectHandler(
 	}
 }
 
+async function addAddonsHandler(input: AddInput): Promise<void> {
+	try {
+		if (!input.addons || input.addons.length === 0) {
+			const projectDir = input.projectDir || process.cwd();
+			const detectedConfig = await detectProjectConfig(projectDir);
+
+			if (!detectedConfig) {
+				cancel(
+					pc.red(
+						"Could not detect project configuration. Please ensure this is a valid Better-T Stack project.",
+					),
+				);
+				process.exit(1);
+			}
+
+			const addonsPrompt = await getAddonsToAdd(
+				detectedConfig.frontend || [],
+				detectedConfig.addons || [],
+			);
+
+			if (addonsPrompt.length === 0) {
+				outro(
+					pc.yellow(
+						"No addons to add or all compatible addons are already present.",
+					),
+				);
+				return;
+			}
+
+			input.addons = addonsPrompt;
+		}
+
+		if (!input.addons || input.addons.length === 0) {
+			outro(pc.yellow("No addons specified to add."));
+			return;
+		}
+
+		await addAddonsToProject({
+			...input,
+			addons: input.addons,
+		});
+	} catch (error) {
+		console.error(error);
+		process.exit(1);
+	}
+}
+
 const router = t.router({
 	init: t.procedure
 		.meta({
@@ -300,6 +350,31 @@ const router = t.router({
 				...options,
 			};
 			await createProjectHandler(combinedInput);
+		}),
+	add: t.procedure
+		.meta({
+			description: "Add addons to an existing Better-T Stack project",
+		})
+		.input(
+			z.tuple([
+				z
+					.object({
+						addons: z.array(AddonsSchema).optional().default([]),
+						projectDir: z.string().optional(),
+						install: z
+							.boolean()
+							.optional()
+							.default(false)
+							.describe("Install dependencies after adding addons"),
+						packageManager: PackageManagerSchema.optional(),
+					})
+					.optional()
+					.default({}),
+			]),
+		)
+		.mutation(async ({ input }) => {
+			const [options] = input;
+			await addAddonsHandler(options);
 		}),
 	sponsors: t.procedure
 		.meta({ description: "Show Better-T Stack sponsors" })

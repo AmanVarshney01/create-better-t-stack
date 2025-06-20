@@ -110,3 +110,13 @@ export const dependencyVersionMap = {
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;
+
+export const ADDON_COMPATIBILITY = {
+	pwa: ["tanstack-router", "react-router", "solid"],
+	tauri: ["tanstack-router", "react-router", "nuxt", "svelte", "solid"],
+	biome: [],
+	husky: [],
+	turborepo: [],
+	starlight: [],
+	none: [],
+} as const;

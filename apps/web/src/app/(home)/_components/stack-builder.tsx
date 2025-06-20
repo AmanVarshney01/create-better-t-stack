@@ -1465,7 +1465,6 @@ const StackBuilder = () => {
 									</button>
 								)}
 								<button
-									id="save-stack-button"
 									type="button"
 									onClick={saveCurrentStack}
 									className="flex items-center gap-1 rounded border border-border bg-background px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
