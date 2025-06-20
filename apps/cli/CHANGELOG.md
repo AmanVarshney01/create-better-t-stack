@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.21.0
+
+### Minor Changes
+
+- 0c5dd2e: add d1 database setup
+
 ## 2.20.0
 
 ### Minor Changes
