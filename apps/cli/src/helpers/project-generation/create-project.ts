@@ -8,7 +8,10 @@ import { setupAuth } from "../setup/auth-setup";
 import { setupBackendDependencies } from "../setup/backend-setup";
 import { setupDatabase } from "../setup/db-setup";
 import { setupExamples } from "../setup/examples-setup";
-import { setupRuntime } from "../setup/runtime-setup";
+import {
+	generateCloudflareWorkerTypes,
+	setupRuntime,
+} from "../setup/runtime-setup";
 import { createReadme } from "./create-readme";
 import { setupEnvironmentVariables } from "./env-setup";
 import { installDependencies } from "./install-dependencies";
@@ -64,6 +67,7 @@ export async function createProject(options: ProjectConfig) {
 		}
 
 		await handleExtras(projectDir, options);
+
 		await setupEnvironmentVariables(options);
 		await updatePackageConfigurations(projectDir, options);
 		await createReadme(projectDir, options);
@@ -76,6 +80,7 @@ export async function createProject(options: ProjectConfig) {
 				projectDir,
 				packageManager: options.packageManager,
 			});
+			await generateCloudflareWorkerTypes(options);
 		}
 
 		displayPostInstallInstructions({

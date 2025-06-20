@@ -30,7 +30,5 @@ export async function setupCloudflareD1(config: ProjectConfig): Promise<void> {
 
 	try {
 		await addEnvVariablesToFile(envPath, variables);
-	} catch (_err) {
-		// ignore
-	}
+	} catch (_err) {}
 }

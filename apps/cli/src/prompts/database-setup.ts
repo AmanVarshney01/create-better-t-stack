@@ -38,7 +38,7 @@ export async function getDBSetupChoice(
 						{
 							value: "d1" as const,
 							label: "Cloudflare D1",
-							hint: "SQLite on Cloudflare Workers (requires Workers runtime)",
+							hint: "Cloudflare's managed, serverless database with SQLite's SQL semantics",
 						},
 					]
 				: []),

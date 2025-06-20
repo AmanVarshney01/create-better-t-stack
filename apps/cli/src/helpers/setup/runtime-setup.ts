@@ -1,5 +1,8 @@
 import path from "node:path";
+import { spinner } from "@clack/prompts";
+import { execa } from "execa";
 import fs from "fs-extra";
+import pc from "picocolors";
 import type { Backend, ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 
@@ -22,6 +25,43 @@ export async function setupRuntime(config: ProjectConfig): Promise<void> {
 		await setupNodeRuntime(serverDir, backend);
 	} else if (runtime === "workers") {
 		await setupWorkersRuntime(serverDir);
+	}
+}
+
+export async function generateCloudflareWorkerTypes(
+	config: ProjectConfig,
+): Promise<void> {
+	if (config.runtime !== "workers") {
+		return;
+	}
+
+	const serverDir = path.join(config.projectDir, "apps/server");
+
+	if (!(await fs.pathExists(serverDir))) {
+		return;
+	}
+
+	const s = spinner();
+
+	try {
+		s.start("Generating Cloudflare Workers types...");
+
+		const runCmd =
+			config.packageManager === "npm" ? "npm" : config.packageManager;
+		await execa(runCmd, ["run", "cf-typegen"], {
+			cwd: serverDir,
+		});
+
+		s.stop("Cloudflare Workers types generated successfully!");
+	} catch {
+		s.stop(pc.yellow("Failed to generate Cloudflare Workers types"));
+		const managerCmd =
+			config.packageManager === "npm"
+				? "npm run"
+				: `${config.packageManager} run`;
+		console.warn(
+			`Note: You can manually run 'cd apps/server && ${managerCmd} cf-typegen' in the project directory later`,
+		);
 	}
 }
 

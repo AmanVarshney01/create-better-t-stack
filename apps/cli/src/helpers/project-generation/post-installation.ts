@@ -1,6 +1,12 @@
 import { consola } from "consola";
 import pc from "picocolors";
-import type { Database, ORM, ProjectConfig, Runtime } from "../../types";
+import type {
+	Database,
+	DatabaseSetup,
+	ORM,
+	ProjectConfig,
+	Runtime,
+} from "../../types";
 import { getPackageExecutionCommand } from "../../utils/get-package-execution-command";
 
 export function displayPostInstallInstructions(
@@ -16,6 +22,7 @@ export function displayPostInstallInstructions(
 		runtime,
 		frontend,
 		backend,
+		dbSetup,
 	} = config;
 
 	const isConvex = backend === "convex";
@@ -26,7 +33,7 @@ export function displayPostInstallInstructions(
 
 	const databaseInstructions =
 		!isConvex && database !== "none"
-			? getDatabaseInstructions(database, orm, runCmd, runtime)
+			? getDatabaseInstructions(database, orm, runCmd, runtime, dbSetup)
 			: "";
 
 	const tauriInstructions = addons?.includes("tauri")
@@ -96,6 +103,11 @@ export function displayPostInstallInstructions(
 		}
 
 		if (runtime === "workers") {
+			if (dbSetup === "d1") {
+				output += `${pc.yellow(
+					"IMPORTANT:",
+				)} Complete D1 database setup first (see Database commands below)\n`;
+			}
 			output += `${pc.cyan(`${stepCounter++}.`)} bun dev\n`;
 			output += `${pc.cyan(
 				`${stepCounter++}.`,
@@ -178,8 +190,45 @@ function getDatabaseInstructions(
 	orm?: ORM,
 	runCmd?: string,
 	runtime?: Runtime,
+	dbSetup?: DatabaseSetup,
 ): string {
 	const instructions = [];
+
+	if (runtime === "workers" && dbSetup === "d1") {
+		const packageManager = runCmd === "npm run" ? "npm" : runCmd || "npm";
+
+		instructions.push(
+			`${pc.cyan("1.")} Login to Cloudflare: ${pc.white(
+				`${packageManager} wrangler login`,
+			)}`,
+		);
+		instructions.push(
+			`${pc.cyan("2.")} Create D1 database: ${pc.white(
+				`${packageManager} wrangler d1 create your-database-name`,
+			)}`,
+		);
+		instructions.push(
+			`${pc.cyan(
+				"3.",
+			)} Update apps/server/wrangler.jsonc with database_id and database_name`,
+		);
+		instructions.push(
+			`${pc.cyan("4.")} Generate migrations: ${pc.white(
+				"cd apps/server && bun db:generate",
+			)}`,
+		);
+		instructions.push(
+			`${pc.cyan("5.")} Apply migrations locally: ${pc.white(
+				`${packageManager} wrangler d1 migrations apply YOUR_DB_NAME --local`,
+			)}`,
+		);
+		instructions.push(
+			`${pc.cyan("6.")} Apply migrations to production: ${pc.white(
+				`${packageManager} wrangler d1 migrations apply YOUR_DB_NAME`,
+			)}`,
+		);
+		instructions.push("");
+	}
 
 	if (orm === "prisma") {
 		if (database === "sqlite") {
@@ -204,7 +253,7 @@ function getDatabaseInstructions(
 	} else if (orm === "drizzle") {
 		instructions.push(`${pc.cyan("•")} Apply schema: ${`${runCmd} db:push`}`);
 		instructions.push(`${pc.cyan("•")} Database UI: ${`${runCmd} db:studio`}`);
-		if (database === "sqlite") {
+		if (database === "sqlite" && dbSetup !== "d1") {
 			instructions.push(
 				`${pc.cyan(
 					"•",
