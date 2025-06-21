@@ -77,7 +77,7 @@ export async function addAddonsToProject(
 		);
 
 		await setupAddonsTemplate(projectDir, config);
-		await setupAddons(config);
+		await setupAddons(config, true);
 
 		const currentAddons = detectedConfig.addons || [];
 		const mergedAddons = [...new Set([...currentAddons, ...input.addons])];
