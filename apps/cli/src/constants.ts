@@ -34,6 +34,7 @@ export const dependencyVersionMap = {
 	"drizzle-kit": "^0.30.5",
 
 	"@libsql/client": "^0.14.0",
+	"@neondatabase/serverless": "^1.0.1",
 	pg: "^8.14.1",
 	"@types/pg": "^8.11.11",
 
