@@ -48,11 +48,19 @@ export async function setupDatabase(config: ProjectConfig): Promise<void> {
 					projectDir: serverDir,
 				});
 			} else if (database === "postgres") {
-				await addPackageDependency({
-					dependencies: ["drizzle-orm", "pg"],
-					devDependencies: ["drizzle-kit", "@types/pg"],
-					projectDir: serverDir,
-				});
+				if (dbSetup === "neon") {
+					await addPackageDependency({
+						dependencies: ["drizzle-orm", "@neondatabase/serverless"],
+						devDependencies: ["drizzle-kit"],
+						projectDir: serverDir,
+					});
+				} else {
+					await addPackageDependency({
+						dependencies: ["drizzle-orm", "pg"],
+						devDependencies: ["drizzle-kit", "@types/pg"],
+						projectDir: serverDir,
+					});
+				}
 			} else if (database === "mysql") {
 				await addPackageDependency({
 					dependencies: ["drizzle-orm", "mysql2"],
