@@ -1,4 +1,4 @@
-import "dotenv/config";
+import env from "./env";
 {{#if (eq runtime "node")}}
 import { node } from "@elysiajs/node";
 {{/if}}
@@ -29,7 +29,7 @@ const app = new Elysia()
 {{/if}}
   .use(
     cors({
-      origin: process.env.CORS_ORIGIN || "",
+      origin: env.CORS_ORIGIN || "",
       methods: ["GET", "POST", "OPTIONS"],
       {{#if auth}}
       allowedHeaders: ["Content-Type", "Authorization"],

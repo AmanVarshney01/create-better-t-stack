@@ -40,6 +40,16 @@ export async function getRuntimeChoice(
 			label: "Cloudflare Workers (beta)",
 			hint: "Edge runtime on Cloudflare's global network",
 		});
+		runtimeOptions.push({
+			value: "vercel-edge",
+			label: "Vercel Edge Runtime (beta)",
+			hint: "Edge runtime on Vercel's global network",
+		});
+		runtimeOptions.push({
+			value: "vercel-nodejs",
+			label: "Vercel Node.js Runtime (beta)",
+			hint: "Node.js runtime optimized for Vercel",
+		});
 	}
 
 	const response = await select<Runtime>({

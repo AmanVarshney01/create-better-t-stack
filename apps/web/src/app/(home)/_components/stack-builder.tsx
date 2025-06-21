@@ -654,6 +654,32 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 				}
 			}
 
+			if (
+				nextStack.runtime === "vercel-edge" ||
+				nextStack.runtime === "vercel-nodejs"
+			) {
+				if (nextStack.backend !== "hono") {
+					const runtimeName =
+						nextStack.runtime === "vercel-edge"
+							? "Vercel Edge"
+							: "Vercel Node.js";
+					notes.runtime.notes.push(
+						`${runtimeName} runtime requires Hono backend. Hono will be selected.`,
+					);
+					notes.backend.notes.push(
+						`${runtimeName} runtime requires Hono backend. It will be selected.`,
+					);
+					notes.runtime.hasIssue = true;
+					notes.backend.hasIssue = true;
+					nextStack.backend = "hono";
+					changed = true;
+					changes.push({
+						category: "runtime",
+						message: `Backend set to 'Hono' (required by ${runtimeName})`,
+					});
+				}
+			}
+
 			const isNuxt = nextStack.webFrontend.includes("nuxt");
 			const isSvelte = nextStack.webFrontend.includes("svelte");
 			const isSolid = nextStack.webFrontend.includes("solid");
