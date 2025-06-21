@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.22.0
+
+### Minor Changes
+
+- 9c7a0f0: Add 'add' command for adding addons to existing projects
+
 ## 2.21.1
 
 ### Patch Changes
