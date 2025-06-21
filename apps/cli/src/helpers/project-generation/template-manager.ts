@@ -831,4 +831,36 @@ export async function handleExtras(
 			);
 		}
 	}
+
+	if (context.runtime === "vercel-edge") {
+		const runtimeVercelEdgeDir = path.join(
+			PKG_ROOT,
+			"templates/runtime/vercel-edge",
+		);
+		if (await fs.pathExists(runtimeVercelEdgeDir)) {
+			await processAndCopyFiles(
+				"**/*",
+				runtimeVercelEdgeDir,
+				projectDir,
+				context,
+				false,
+			);
+		}
+	}
+
+	if (context.runtime === "vercel-nodejs") {
+		const runtimeVercelNodejsDir = path.join(
+			PKG_ROOT,
+			"templates/runtime/vercel-nodejs",
+		);
+		if (await fs.pathExists(runtimeVercelNodejsDir)) {
+			await processAndCopyFiles(
+				"**/*",
+				runtimeVercelNodejsDir,
+				projectDir,
+				context,
+				false,
+			);
+		}
+	}
 }

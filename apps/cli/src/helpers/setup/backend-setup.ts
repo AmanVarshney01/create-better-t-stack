@@ -24,7 +24,7 @@ export async function setupBackendDependencies(
 			dependencies.push("@hono/trpc-server");
 		}
 
-		if (runtime === "node") {
+		if (runtime === "node" || runtime === "vercel-nodejs") {
 			dependencies.push("@hono/node-server");
 			devDependencies.push("tsx", "@types/node");
 		}
