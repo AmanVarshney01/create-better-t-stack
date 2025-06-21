@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.21.1
+
+### Patch Changes
+
+- 410ffda: update tailwindcss dep in next
+
 ## 2.21.0
 
 ### Minor Changes
