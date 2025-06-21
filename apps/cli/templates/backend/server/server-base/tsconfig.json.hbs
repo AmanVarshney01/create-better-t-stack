@@ -22,6 +22,8 @@
       {{else if (eq runtime "workers")}}
       "./worker-configuration",
       "node"
+      {{else if (or (eq runtime "vercel-edge") (eq runtime "vercel-nodejs"))}}
+      "node"
       {{else}}
       "node",
       "bun"

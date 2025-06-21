@@ -1,4 +1,4 @@
-import "dotenv/config";
+import env from "./env";
 {{#if (eq api "trpc")}}
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { createContext } from "./lib/context";
@@ -26,7 +26,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || "",
+    origin: env.CORS_ORIGIN || "",
     methods: ["GET", "POST", "OPTIONS"],
     {{#if auth}}
     allowedHeaders: ["Content-Type", "Authorization"],

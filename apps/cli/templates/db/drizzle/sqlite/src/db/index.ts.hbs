@@ -1,11 +1,12 @@
-{{#if (or (eq runtime "bun") (eq runtime "node"))}}
+{{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "vercel-edge") (eq runtime "vercel-nodejs"))}}
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
+import env from "../../env";
 
 const client = createClient({
-  url: process.env.DATABASE_URL || "",
+  url: env.DATABASE_URL || "",
   {{#if (eq dbSetup "turso")}}
-  authToken: process.env.DATABASE_AUTH_TOKEN,
+  authToken: env.DATABASE_AUTH_TOKEN,
   {{/if}}
 });
 

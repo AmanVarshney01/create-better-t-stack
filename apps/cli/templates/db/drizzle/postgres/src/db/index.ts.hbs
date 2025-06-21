@@ -1,29 +1,22 @@
-{{#if (or (eq runtime "bun") (eq runtime "node"))}}
+{{!-- Import database libraries based on setup type --}}
 {{#if (eq dbSetup "neon")}}
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
-
-const sql = neon(process.env.DATABASE_URL || "");
-export const db = drizzle(sql);
+  import { neon } from '@neondatabase/serverless';
+  import { drizzle } from 'drizzle-orm/neon-http';
 {{else}}
-import { drizzle } from "drizzle-orm/node-postgres";
-
-export const db = drizzle(process.env.DATABASE_URL || "");
-{{/if}}
+  import { drizzle } from "drizzle-orm/node-postgres";
 {{/if}}
 
+{{!-- Import environment variables based on runtime --}}
 {{#if (eq runtime "workers")}}
-{{#if (eq dbSetup "neon")}}
-import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
-import { env } from "cloudflare:workers";
-
-const sql = neon(env.DATABASE_URL || "");
-export const db = drizzle(sql);
+  import { env } from "cloudflare:workers";
 {{else}}
-import { drizzle } from "drizzle-orm/node-postgres";
-import { env } from "cloudflare:workers";
-
-export const db = drizzle(env.DATABASE_URL || "");
+  import env from "../../env";
 {{/if}}
+
+{{!-- Database setup based on setup type --}}
+{{#if (eq dbSetup "neon")}}
+  const sql = neon(env.DATABASE_URL);
+  export const db = drizzle(sql);
+{{else}}
+  export const db = drizzle(env.DATABASE_URL);
 {{/if}}
