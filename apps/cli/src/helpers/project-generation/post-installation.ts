@@ -111,7 +111,7 @@ export function displayPostInstallInstructions(
 			output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev\n`;
 			output += `${pc.cyan(
 				`${stepCounter++}.`,
-			)} cd apps/server && ${packageManager} run cf-typegen\n\n`;
+			)} cd apps/server && ${runCmd} run cf-typegen\n\n`;
 		} else {
 			output += "\n";
 		}
