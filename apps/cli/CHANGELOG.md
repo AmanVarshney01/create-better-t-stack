@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.22.1
+
+### Patch Changes
+
+- 3fbd751: fix(post-installation): use selected package manager
+
 ## 2.22.0
 
 ### Minor Changes
