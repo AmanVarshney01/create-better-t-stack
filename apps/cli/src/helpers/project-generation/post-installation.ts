@@ -108,7 +108,7 @@ export function displayPostInstallInstructions(
 					"IMPORTANT:",
 				)} Complete D1 database setup first (see Database commands below)\n`;
 			}
-			output += `${pc.cyan(`${stepCounter++}.`)} ${packageManager} dev\n`;
+			output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev\n`;
 			output += `${pc.cyan(
 				`${stepCounter++}.`,
 			)} cd apps/server && ${packageManager} run cf-typegen\n\n`;
