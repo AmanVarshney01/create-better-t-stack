@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.22.2
+
+### Patch Changes
+
+- 215bd2f: refractor files
+
 ## 2.22.1
 
 ### Patch Changes
