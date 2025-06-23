@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- 215bd2f: refractor files
+- 215bd2f: refactor files
 
 ## 2.22.1
 
@@ -1156,7 +1156,7 @@
 
 ### Minor Changes
 
-- 76a14ea: refractor: migrate inquirer to @clack/prompts
+- 76a14ea: refactor: migrate inquirer to @clack/prompts
 
 ## 0.3.4
 
