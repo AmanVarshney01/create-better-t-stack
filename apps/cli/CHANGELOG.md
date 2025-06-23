@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.22.3
+
+### Patch Changes
+
+- e37a846: Update dependencies and version maps to latest releases
+
 ## 2.22.2
 
 ### Patch Changes
