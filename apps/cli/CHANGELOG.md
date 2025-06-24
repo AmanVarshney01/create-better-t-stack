@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.22.4
+
+### Patch Changes
+
+- da3d0ed: Exclude bts.jsonc from Biome
+
 ## 2.22.3
 
 ### Patch Changes
