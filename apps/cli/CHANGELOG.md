@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.22.5
+
+### Patch Changes
+
+- 32275d3: Add support for Neon database in db-setup
+
 ## 2.22.4
 
 ### Patch Changes
