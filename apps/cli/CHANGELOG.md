@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.22.6
+
+### Patch Changes
+
+- e21f6de: generate better readme
+
 ## 2.22.5
 
 ### Patch Changes
