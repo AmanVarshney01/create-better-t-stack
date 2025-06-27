@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.22.7
+
+### Patch Changes
+
+- 2948629: Update Unistyles config and bump to 3.0.0-rc.5
+
 ## 2.22.6
 
 ### Patch Changes
