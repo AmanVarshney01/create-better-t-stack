@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.22.8
+
+### Patch Changes
+
+- 0486e2a: Update TanStack Start references from devinxi to vite
+
 ## 2.22.7
 
 ### Patch Changes
