@@ -225,7 +225,7 @@ async function updateServerPackageJson(
 	const scripts = serverPackageJson.scripts;
 
 	if (options.database !== "none") {
-		if (options.database === "sqlite" && options.orm === "drizzle") {
+		if (options.database === "sqlite" && options.orm === "drizzle" && options.dbSetup !== "d1") {
 			scripts["db:local"] = "turso dev --db-file local.db";
 		}
 
