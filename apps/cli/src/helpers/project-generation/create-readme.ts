@@ -5,6 +5,7 @@ import type {
 	Addons,
 	API,
 	Database,
+	DatabaseSetup,
 	Frontend,
 	ORM,
 	ProjectConfig,
@@ -96,7 +97,7 @@ ${packageManagerRunCmd} dev:setup
 \`\`\`
 
 Follow the prompts to create a new Convex project and connect it to your application.`
-		: generateDatabaseSetup(database, auth, packageManagerRunCmd, orm)
+		: generateDatabaseSetup(database, auth, packageManagerRunCmd, orm, options.dbSetup)
 }
 
 Then, run the development server:
@@ -467,6 +468,7 @@ function generateDatabaseSetup(
 	_auth: boolean,
 	packageManagerRunCmd: string,
 	orm: ORM,
+	dbSetup: DatabaseSetup,
 ): string {
 	if (database === "none") {
 		return "";
@@ -484,9 +486,12 @@ function generateDatabaseSetup(
 		}.
 
 1. Start the local SQLite database:
-\`\`\`bash
+${dbSetup === "d1" 
+  ? "Local development for a Cloudflare D1 database will already be running as part of the `wrangler dev` command."
+  : `\`\`\`bash
 cd apps/server && ${packageManagerRunCmd} db:local
 \`\`\`
+`}
 
 2. Update your \`.env\` file in the \`apps/server\` directory with the appropriate connection details if needed.
 `;
