@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.22.9
+
+### Patch Changes
+
+- 3ae5ab9: auto git commit if git init is true
+
 ## 2.22.8
 
 ### Patch Changes
