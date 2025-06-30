@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.22.10
+
+### Patch Changes
+
+- 8dc521c: Avoid db:local script for D1 database
+
 ## 2.22.9
 
 ### Patch Changes
