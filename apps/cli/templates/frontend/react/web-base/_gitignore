@@ -50,3 +50,8 @@ next-env.d.ts
 
 # Other
 dev-dist
+
+.wrangler
+.dev.vars*
+
+.open-next

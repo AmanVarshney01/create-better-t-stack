@@ -18,6 +18,7 @@ import {
 	PackageManagerSchema,
 	ProjectNameSchema,
 	RuntimeSchema,
+	WebDeploySchema,
 } from "./types";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
 import { openUrl } from "./utils/open-url";
@@ -55,6 +56,7 @@ const router = t.router({
 						backend: BackendSchema.optional(),
 						runtime: RuntimeSchema.optional(),
 						api: APISchema.optional(),
+						webDeploy: WebDeploySchema.optional(),
 					})
 					.optional()
 					.default({}),
@@ -70,19 +72,23 @@ const router = t.router({
 		}),
 	add: t.procedure
 		.meta({
-			description: "Add addons to an existing Better-T Stack project",
+			description:
+				"Add addons or deployment configurations to an existing Better-T Stack project",
 		})
 		.input(
 			z.tuple([
 				z
 					.object({
 						addons: z.array(AddonsSchema).optional().default([]),
+						webDeploy: WebDeploySchema.optional(),
 						projectDir: z.string().optional(),
 						install: z
 							.boolean()
 							.optional()
 							.default(false)
-							.describe("Install dependencies after adding addons"),
+							.describe(
+								"Install dependencies after adding addons or deployment",
+							),
 						packageManager: PackageManagerSchema.optional(),
 					})
 					.optional()

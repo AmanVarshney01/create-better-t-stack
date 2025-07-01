@@ -64,6 +64,7 @@
     "picocolors": "^1.1.1",
     "posthog-node": "^5.1.1",
     "trpc-cli": "^0.9.2",
+    "ts-morph": "^26.0.0",
     "zod": "^3.25.67"
   },
   "devDependencies": {

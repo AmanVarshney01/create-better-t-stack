@@ -136,7 +136,7 @@ export async function getAddonsToAdd(
 	const response = await multiselect<Addons>({
 		message: "Select addons",
 		options: options,
-		required: true,
+		required: false,
 	});
 
 	if (isCancel(response)) {

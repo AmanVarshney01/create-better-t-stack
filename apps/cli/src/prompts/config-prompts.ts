@@ -12,6 +12,7 @@ import type {
 	PackageManager,
 	ProjectConfig,
 	Runtime,
+	WebDeploy,
 } from "../types";
 import { getAddonsChoice } from "./addons";
 import { getApiChoice } from "./api";
@@ -19,6 +20,7 @@ import { getAuthChoice } from "./auth";
 import { getBackendFrameworkChoice } from "./backend";
 import { getDatabaseChoice } from "./database";
 import { getDBSetupChoice } from "./database-setup";
+import { getDeploymentChoice } from "./deployment";
 import { getExamplesChoice } from "./examples";
 import { getFrontendChoice } from "./frontend";
 import { getGitChoice } from "./git";
@@ -41,6 +43,7 @@ type PromptGroupResults = {
 	git: boolean;
 	packageManager: PackageManager;
 	install: boolean;
+	webDeploy: WebDeploy;
 };
 
 export async function gatherConfig(
@@ -87,6 +90,13 @@ export async function gatherConfig(
 					results.backend,
 					results.runtime,
 				),
+			webDeploy: ({ results }) =>
+				getDeploymentChoice(
+					flags.webDeploy,
+					results.runtime,
+					results.backend,
+					results.frontend,
+				),
 			git: () => getGitChoice(flags.git),
 			packageManager: () => getPackageManagerChoice(flags.packageManager),
 			install: () => getinstallChoice(flags.install),
@@ -107,6 +117,7 @@ export async function gatherConfig(
 		result.auth = false;
 		result.dbSetup = "none";
 		result.examples = ["todo"];
+		result.webDeploy = "none";
 	}
 
 	if (result.backend === "none") {
@@ -117,6 +128,7 @@ export async function gatherConfig(
 		result.auth = false;
 		result.dbSetup = "none";
 		result.examples = [];
+		result.webDeploy = "none";
 	}
 
 	return {
@@ -136,5 +148,6 @@ export async function gatherConfig(
 		install: result.install,
 		dbSetup: result.dbSetup,
 		api: result.api,
+		webDeploy: result.webDeploy,
 	};
 }

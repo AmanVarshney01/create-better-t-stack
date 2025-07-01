@@ -832,3 +832,47 @@ export async function handleExtras(
 		}
 	}
 }
+
+export async function setupDeploymentTemplates(
+	projectDir: string,
+	context: ProjectConfig,
+): Promise<void> {
+	if (context.webDeploy === "none") {
+		return;
+	}
+
+	if (context.webDeploy === "workers") {
+		const webAppDir = path.join(projectDir, "apps/web");
+		if (!(await fs.pathExists(webAppDir))) {
+			return;
+		}
+
+		const frontends = context.frontend;
+
+		const templateMap: Record<string, string> = {
+			"tanstack-router": "react/tanstack-router",
+			"react-router": "react/react-router",
+			solid: "solid",
+			next: "react/next",
+			nuxt: "nuxt",
+			svelte: "svelte",
+		};
+
+		for (const f of frontends) {
+			if (templateMap[f]) {
+				const deployTemplateSrc = path.join(
+					PKG_ROOT,
+					`templates/deploy/web/${templateMap[f]}`,
+				);
+				if (await fs.pathExists(deployTemplateSrc)) {
+					await processAndCopyFiles(
+						"**/*",
+						deployTemplateSrc,
+						webAppDir,
+						context,
+					);
+				}
+			}
+		}
+	}
+}

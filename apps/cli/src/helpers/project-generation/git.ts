@@ -30,5 +30,5 @@ export async function initializeGit(
 	}
 
 	await $({ cwd: projectDir })`git add -A`;
-	await $({ cwd: projectDir })`git commit -m ${"Initial commit"}`;
+	await $({ cwd: projectDir })`git commit -m ${"initial commit"}`;
 }

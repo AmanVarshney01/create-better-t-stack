@@ -92,6 +92,11 @@ export const ProjectNameSchema = z
 	.describe("Project name or path");
 export type ProjectName = z.infer<typeof ProjectNameSchema>;
 
+export const WebDeploySchema = z
+	.enum(["workers", "none"])
+	.describe("Web deployment");
+export type WebDeploy = z.infer<typeof WebDeploySchema>;
+
 export type CreateInput = {
 	projectName?: string;
 	yes?: boolean;
@@ -108,10 +113,12 @@ export type CreateInput = {
 	backend?: Backend;
 	runtime?: Runtime;
 	api?: API;
+	webDeploy?: WebDeploy;
 };
 
 export type AddInput = {
 	addons?: Addons[];
+	webDeploy?: WebDeploy;
 	projectDir?: string;
 	install?: boolean;
 	packageManager?: PackageManager;
@@ -138,6 +145,7 @@ export interface ProjectConfig {
 	install: boolean;
 	dbSetup: DatabaseSetup;
 	api: API;
+	webDeploy: WebDeploy;
 }
 
 export interface BetterTStackConfig {
@@ -154,6 +162,7 @@ export interface BetterTStackConfig {
 	packageManager: PackageManager;
 	dbSetup: DatabaseSetup;
 	api: API;
+	webDeploy: WebDeploy;
 }
 
 export type AvailablePackageManagers = "npm" | "pnpm" | "bun";

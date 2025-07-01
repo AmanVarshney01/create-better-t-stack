@@ -14,6 +14,7 @@ import {
 	type ProjectConfig,
 	ProjectNameSchema,
 	type Runtime,
+	type WebDeploy,
 } from "./types";
 
 export function processAndValidateFlags(
@@ -80,6 +81,10 @@ export function processAndValidateFlags(
 	}
 	if (options.packageManager) {
 		config.packageManager = options.packageManager as PackageManager;
+	}
+
+	if (options.webDeploy) {
+		config.webDeploy = options.webDeploy as WebDeploy;
 	}
 
 	if (projectName) {
@@ -444,6 +449,24 @@ export function processAndValidateFlags(
 			"MongoDB database is not compatible with Cloudflare Workers runtime. MongoDB requires Prisma or Mongoose ORM, but Workers runtime only supports Drizzle ORM. Please use a different database or runtime.",
 		);
 		process.exit(1);
+	}
+
+	if (
+		config.webDeploy === "workers" &&
+		config.frontend &&
+		config.frontend.length > 0
+	) {
+		const incompatibleFrontends = config.frontend.filter(
+			(f) => f === "tanstack-start",
+		);
+		if (incompatibleFrontends.length > 0) {
+			consola.fatal(
+				`The following frontends are not compatible with '--web-deploy workers': ${incompatibleFrontends.join(
+					", ",
+				)}. Please choose a different frontend or remove '--web-deploy workers'.`,
+			);
+			process.exit(1);
+		}
 	}
 
 	return config;

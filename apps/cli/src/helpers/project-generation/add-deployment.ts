@@ -1,24 +1,23 @@
 import path from "node:path";
 import { cancel, log } from "@clack/prompts";
 import pc from "picocolors";
-import type { AddInput, Addons, ProjectConfig } from "../../types";
-import { validateAddonCompatibility } from "../../utils/addon-compatibility";
+import type { AddInput, ProjectConfig, WebDeploy } from "../../types";
 import { updateBtsConfig } from "../../utils/bts-config";
-import { setupAddons } from "../setup/addons-setup";
+import { setupWebDeploy } from "../setup/web-deploy-setup";
 import {
 	detectProjectConfig,
 	isBetterTStackProject,
 } from "./detect-project-config";
 import { installDependencies } from "./install-dependencies";
-import { setupAddonsTemplate } from "./template-manager";
+import { setupDeploymentTemplates } from "./template-manager";
 
 function exitWithError(message: string): never {
 	cancel(pc.red(message));
 	process.exit(1);
 }
 
-export async function addAddonsToProject(
-	input: AddInput & { addons: Addons[]; suppressInstallMessage?: boolean },
+export async function addDeploymentToProject(
+	input: AddInput & { webDeploy: WebDeploy; suppressInstallMessage?: boolean },
 ): Promise<void> {
 	try {
 		const projectDir = input.projectDir || process.cwd();
@@ -37,6 +36,30 @@ export async function addAddonsToProject(
 			);
 		}
 
+		if (detectedConfig.webDeploy === input.webDeploy) {
+			exitWithError(
+				`${input.webDeploy} deployment is already configured for this project.`,
+			);
+		}
+
+		if (input.webDeploy === "workers") {
+			const compatibleFrontends = [
+				"tanstack-router",
+				"react-router",
+				"solid",
+				"next",
+				"svelte",
+			];
+			const hasCompatible = detectedConfig.frontend?.some((f) =>
+				compatibleFrontends.includes(f),
+			);
+			if (!hasCompatible) {
+				exitWithError(
+					"Cloudflare Workers deployment requires a compatible web frontend (tanstack-router, react-router, solid, next, or svelte).",
+				);
+			}
+		}
+
 		const config: ProjectConfig = {
 			projectName: detectedConfig.projectName || path.basename(projectDir),
 			projectDir,
@@ -46,7 +69,7 @@ export async function addAddonsToProject(
 			backend: detectedConfig.backend || "none",
 			runtime: detectedConfig.runtime || "none",
 			frontend: detectedConfig.frontend || [],
-			addons: input.addons,
+			addons: detectedConfig.addons || [],
 			examples: detectedConfig.examples || [],
 			auth: detectedConfig.auth || false,
 			git: false,
@@ -55,34 +78,19 @@ export async function addAddonsToProject(
 			install: input.install || false,
 			dbSetup: detectedConfig.dbSetup || "none",
 			api: detectedConfig.api || "none",
-			webDeploy: detectedConfig.webDeploy || "none",
+			webDeploy: input.webDeploy,
 		};
-
-		for (const addon of input.addons) {
-			const { isCompatible, reason } = validateAddonCompatibility(
-				addon,
-				config.frontend,
-			);
-			if (!isCompatible) {
-				exitWithError(
-					reason ||
-						`${addon} addon is not compatible with current frontend configuration`,
-				);
-			}
-		}
 
 		log.info(
 			pc.green(
-				`Adding ${input.addons.join(", ")} to ${config.frontend.join("/")}`,
+				`Adding ${input.webDeploy} deployment to ${config.frontend.join("/")}`,
 			),
 		);
 
-		await setupAddonsTemplate(projectDir, config);
-		await setupAddons(config, true);
+		await setupDeploymentTemplates(projectDir, config);
+		await setupWebDeploy(config);
 
-		const currentAddons = detectedConfig.addons || [];
-		const mergedAddons = [...new Set([...currentAddons, ...input.addons])];
-		await updateBtsConfig(projectDir, { addons: mergedAddons });
+		await updateBtsConfig(projectDir, { webDeploy: input.webDeploy });
 
 		if (config.install) {
 			await installDependencies({
@@ -100,6 +108,6 @@ export async function addAddonsToProject(
 		}
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
-		exitWithError(`Error adding addons: ${message}`);
+		exitWithError(`Error adding deployment: ${message}`);
 	}
 }

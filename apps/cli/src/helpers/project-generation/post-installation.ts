@@ -287,7 +287,7 @@ function getTauriInstructions(runCmd?: string): string {
 function getPwaInstructions(): string {
 	return `\n${pc.bold("PWA with React Router v7:")}\n${pc.yellow(
 		"NOTE:",
-	)} There is a known compatibility issue between VitePWA and React Router v7.\nSee: https://github.com/vite-pwa/vite-plugin-pwa/issues/809`;
+	)} There is a known compatibility issue between VitePWA \nand React Router v7.See: https://github.com/vite-pwa/vite-plugin-pwa/issues/809`;
 }
 
 function getStarlightInstructions(runCmd?: string): string {

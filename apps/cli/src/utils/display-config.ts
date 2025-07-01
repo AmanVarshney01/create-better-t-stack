@@ -101,6 +101,12 @@ export function displayConfig(config: Partial<ProjectConfig>) {
 		);
 	}
 
+	if (config.webDeploy !== undefined) {
+		configDisplay.push(
+			`${pc.blue("Web Deployment:")} ${String(config.webDeploy)}`,
+		);
+	}
+
 	if (configDisplay.length === 0) {
 		return pc.yellow("No configuration selected.");
 	}

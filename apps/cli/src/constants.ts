@@ -24,6 +24,7 @@ export const DEFAULT_CONFIG: ProjectConfig = {
 	backend: "hono",
 	runtime: "bun",
 	api: "trpc",
+	webDeploy: "none",
 };
 
 export const dependencyVersionMap = {
@@ -107,13 +108,17 @@ export const dependencyVersionMap = {
 	"@tanstack/solid-query": "^5.75.0",
 	"@tanstack/solid-query-devtools": "^5.75.0",
 
-	wrangler: "^4.20.0",
+	wrangler: "^4.23.0",
+	"@cloudflare/vite-plugin": "^1.9.0",
+	"@opennextjs/cloudflare": "^1.3.0",
+	"nitro-cloudflare-dev": "^0.2.2",
+	"@sveltejs/adapter-cloudflare": "^7.0.4",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;
 
 export const ADDON_COMPATIBILITY = {
-	pwa: ["tanstack-router", "react-router", "solid"],
+	pwa: ["tanstack-router", "react-router", "solid", "next"],
 	tauri: ["tanstack-router", "react-router", "nuxt", "svelte", "solid"],
 	biome: [],
 	husky: [],

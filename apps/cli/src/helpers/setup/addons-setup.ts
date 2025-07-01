@@ -6,6 +6,7 @@ import type { Frontend, ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { setupStarlight } from "./starlight-setup";
 import { setupTauri } from "./tauri-setup";
+import { addPwaToViteConfig } from "./vite-pwa-setup";
 
 export async function setupAddons(config: ProjectConfig, isAddCommand = false) {
 	const { addons, frontend, projectDir } = config;
@@ -148,5 +149,11 @@ async function setupPwa(projectDir: string, frontends: Frontend[]) {
 		};
 
 		await fs.writeJson(clientPackageJsonPath, packageJson, { spaces: 2 });
+	}
+
+	const viteConfigTs = path.join(clientPackageDir, "vite.config.ts");
+
+	if (await fs.pathExists(viteConfigTs)) {
+		await addPwaToViteConfig(viteConfigTs, path.basename(projectDir));
 	}
 }

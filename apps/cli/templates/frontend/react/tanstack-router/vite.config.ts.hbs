@@ -1,8 +1,5 @@
-{{#if (includes addons "pwa")}}
-import { VitePWA } from "vite-plugin-pwa";
-{{/if}}
 import tailwindcss from "@tailwindcss/vite";
-import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
+import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
 import { defineConfig } from "vite";
@@ -10,26 +7,8 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [
     tailwindcss(),
-    TanStackRouterVite({}),
+    tanstackRouter({}),
     react(),
-    {{#if (includes addons "pwa")}}
-    VitePWA({
-      registerType: "autoUpdate",
-      manifest: {
-        name: "{{projectName}}",
-        short_name: "{{projectName}}",
-        description: "{{projectName}} - PWA Application",
-        theme_color: "#0c0c0c",
-      },
-      pwaAssets: {
-        disabled: false,
-        config: true,
-      },
-      devOptions: {
-        enabled: true,
-      },
-    }),
-    {{/if}}
   ],
   resolve: {
     alias: {

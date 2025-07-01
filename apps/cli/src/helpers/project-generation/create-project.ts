@@ -13,6 +13,7 @@ import {
 	generateCloudflareWorkerTypes,
 	setupRuntime,
 } from "../setup/runtime-setup";
+import { setupWebDeploy } from "../setup/web-deploy-setup";
 import { createReadme } from "./create-readme";
 import { setupEnvironmentVariables } from "./env-setup";
 import { initializeGit } from "./git";
@@ -26,6 +27,7 @@ import {
 	setupAuthTemplate,
 	setupBackendFramework,
 	setupDbOrmTemplates,
+	setupDeploymentTemplates,
 	setupExamplesTemplate,
 	setupFrontendTemplates,
 } from "./template-manager";
@@ -49,6 +51,8 @@ export async function createProject(options: ProjectConfig) {
 		}
 		await setupAddonsTemplate(projectDir, options);
 
+		await setupDeploymentTemplates(projectDir, options);
+
 		await setupApi(options);
 
 		if (!isConvex) {
@@ -69,6 +73,8 @@ export async function createProject(options: ProjectConfig) {
 		}
 
 		await handleExtras(projectDir, options);
+
+		await setupWebDeploy(options);
 
 		await setupEnvironmentVariables(options);
 		await updatePackageConfigurations(projectDir, options);

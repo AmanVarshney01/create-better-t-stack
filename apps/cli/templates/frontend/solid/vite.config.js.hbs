@@ -3,33 +3,12 @@ import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import solidPlugin from "vite-plugin-solid";
 import tailwindcss from "@tailwindcss/vite";
 import path from "node:path";
-{{#if (includes addons "pwa")}}
-import { VitePWA } from "vite-plugin-pwa";
-{{/if}}
 
 export default defineConfig({
   plugins: [
     TanStackRouterVite({ target: "solid", autoCodeSplitting: true }),
     solidPlugin(),
     tailwindcss(),
-    {{#if (includes addons "pwa")}}
-    VitePWA({
-      registerType: "autoUpdate",
-      manifest: {
-        name: "{{projectName}}",
-        short_name: "{{projectName}}",
-        description: "{{projectName}} - PWA Application",
-        theme_color: "#0c0c0c",
-      },
-      pwaAssets: {
-        disabled: false,
-        config: true,
-      },
-      devOptions: {
-        enabled: true,
-      },
-    }),
-    {{/if}}
   ],
   resolve: {
     alias: {

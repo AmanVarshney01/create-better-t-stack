@@ -23,6 +23,7 @@ export async function writeBtsConfig(
 		packageManager: projectConfig.packageManager,
 		dbSetup: projectConfig.dbSetup,
 		api: projectConfig.api,
+		webDeploy: projectConfig.webDeploy,
 	};
 
 	const baseContent = {
@@ -40,6 +41,7 @@ export async function writeBtsConfig(
 		packageManager: btsConfig.packageManager,
 		dbSetup: btsConfig.dbSetup,
 		api: btsConfig.api,
+		webDeploy: btsConfig.webDeploy,
 	};
 
 	let configContent = JSON.stringify(baseContent);
@@ -91,7 +93,7 @@ export async function readBtsConfig(
 
 export async function updateBtsConfig(
 	projectDir: string,
-	updates: Partial<Pick<BetterTStackConfig, "addons">>,
+	updates: Partial<Pick<BetterTStackConfig, "addons" | "webDeploy">>,
 ): Promise<void> {
 	try {
 		const configPath = path.join(projectDir, BTS_CONFIG_FILE);
