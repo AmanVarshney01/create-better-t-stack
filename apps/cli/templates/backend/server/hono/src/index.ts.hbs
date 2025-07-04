@@ -1,5 +1,5 @@
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "vercel-edge") (eq runtime "vercel-nodejs"))}}
-import env from "./env";
+import env from "@/env";
 {{/if}}
 {{#if (eq runtime "workers")}}
 import { env } from "cloudflare:workers";

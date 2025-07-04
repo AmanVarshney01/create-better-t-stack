@@ -10,7 +10,7 @@
 {{#if (eq runtime "workers")}}
   import { env } from "cloudflare:workers";
 {{else}}
-  import env from "../../env";
+  import env from "@/env";
 {{/if}}
 
 {{!-- Database setup based on setup type --}}
