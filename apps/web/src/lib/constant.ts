@@ -611,7 +611,7 @@ export type StackState = {
 	git: string;
 	install: string;
 	api: string;
-	webDeploy?: string;
+	webDeploy: string;
 };
 
 export const DEFAULT_STACK: StackState = {

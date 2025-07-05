@@ -51,10 +51,9 @@ export const stackParsers = {
 		"true",
 		"false",
 	]).withDefault(DEFAULT_STACK.install),
-	webDeploy: parseAsStringEnum<StackState["webDeploy"]>([
-		"workers",
-		"none",
-	]).withDefault(DEFAULT_STACK.webDeploy ?? "none"),
+	webDeploy: parseAsStringEnum<StackState["webDeploy"]>(
+		getValidIds("webDeploy"),
+	).withDefault(DEFAULT_STACK.webDeploy),
 };
 
 export const stackUrlKeys: UrlKeys<typeof stackParsers> = {
