@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.23.1
+
+### Patch Changes
+
+- aea23e8: add workers help message in neext steps box
+
 ## 2.23.0
 
 ### Minor Changes
