@@ -392,6 +392,19 @@ export function processAndValidateFlags(
 	}
 
 	if (
+		providedFlags.has("runtime") &&
+		(options.runtime === "vercel-edge" ||
+			options.runtime === "vercel-nodejs") &&
+		config.backend &&
+		config.backend !== "hono"
+	) {
+		consola.fatal(
+			`Vercel runtime (--runtime ${options.runtime}) is only supported with Hono backend (--backend hono). Current backend: ${config.backend}. Please use '--backend hono' or choose a different runtime.`,
+		);
+		process.exit(1);
+	}
+
+	if (
 		providedFlags.has("backend") &&
 		config.backend &&
 		config.backend !== "hono" &&
@@ -399,6 +412,18 @@ export function processAndValidateFlags(
 	) {
 		consola.fatal(
 			`Backend '${config.backend}' is not compatible with Cloudflare Workers runtime. Cloudflare Workers runtime is only supported with Hono backend. Please use '--backend hono' or choose a different runtime.`,
+		);
+		process.exit(1);
+	}
+
+	if (
+		providedFlags.has("backend") &&
+		config.backend &&
+		config.backend !== "hono" &&
+		(config.runtime === "vercel-edge" || config.runtime === "vercel-nodejs")
+	) {
+		consola.fatal(
+			`Backend '${config.backend}' is not compatible with Vercel runtime. Vercel runtime is only supported with Hono backend. Please use '--backend hono' or choose a different runtime.`,
 		);
 		process.exit(1);
 	}
@@ -610,6 +635,17 @@ export function validateConfigCompatibility(
 			);
 			process.exit(1);
 		}
+	}
+
+	if (
+		(effectiveRuntime === "vercel-edge" ||
+			effectiveRuntime === "vercel-nodejs") &&
+		effectiveBackend !== "hono"
+	) {
+		consola.fatal(
+			`Vercel runtime is only supported with Hono backend. Current backend: ${effectiveBackend}. Please use a different runtime or change to Hono backend.`,
+		);
+		process.exit(1);
 	}
 }
 

@@ -25,6 +25,10 @@ export async function setupRuntime(config: ProjectConfig): Promise<void> {
 		await setupNodeRuntime(serverDir, backend);
 	} else if (runtime === "workers") {
 		await setupWorkersRuntime(serverDir);
+	} else if (runtime === "vercel-edge") {
+		await setupVercelEdgeRuntime(serverDir);
+	} else if (runtime === "vercel-nodejs") {
+		await setupVercelNodejsRuntime(serverDir);
 	}
 }
 
@@ -142,6 +146,43 @@ async function setupWorkersRuntime(serverDir: string): Promise<void> {
 
 	await addPackageDependency({
 		devDependencies: ["wrangler"],
+		projectDir: serverDir,
+	});
+}
+
+async function setupVercelEdgeRuntime(serverDir: string): Promise<void> {
+	const packageJsonPath = path.join(serverDir, "package.json");
+	if (!(await fs.pathExists(packageJsonPath))) return;
+
+	const packageJson = await fs.readJson(packageJsonPath);
+
+	packageJson.scripts = {
+		...packageJson.scripts,
+		dev: "next dev",
+		build: "next build",
+		start: "next start",
+	};
+
+	await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+}
+
+async function setupVercelNodejsRuntime(serverDir: string): Promise<void> {
+	const packageJsonPath = path.join(serverDir, "package.json");
+	if (!(await fs.pathExists(packageJsonPath))) return;
+
+	const packageJson = await fs.readJson(packageJsonPath);
+
+	packageJson.scripts = {
+		...packageJson.scripts,
+		dev: "next dev",
+		build: "next build",
+		start: "next start",
+	};
+
+	await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+
+	await addPackageDependency({
+		dependencies: ["@hono/node-server"],
 		projectDir: serverDir,
 	});
 }
