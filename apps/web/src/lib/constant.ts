@@ -320,6 +320,23 @@ export const TECH_OPTIONS = {
 			default: true,
 		},
 	],
+	webDeploy: [
+		{
+			id: "workers",
+			name: "Cloudflare Workers",
+			description: "Deploy to Cloudflare Workers",
+			icon: "/icon/workers.svg",
+			color: "from-orange-400 to-orange-600",
+		},
+		{
+			id: "none",
+			name: "No Deployment",
+			description: "Skip deployment configuration",
+			icon: "",
+			color: "from-gray-400 to-gray-600",
+			default: true,
+		},
+	],
 	auth: [
 		{
 			id: "true",
@@ -594,6 +611,7 @@ export type StackState = {
 	git: string;
 	install: string;
 	api: string;
+	webDeploy?: string;
 };
 
 export const DEFAULT_STACK: StackState = {
@@ -612,6 +630,7 @@ export const DEFAULT_STACK: StackState = {
 	git: "true",
 	install: "true",
 	api: "trpc",
+	webDeploy: "none",
 };
 
 export const isStackDefault = <K extends keyof StackState>(

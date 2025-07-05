@@ -51,6 +51,10 @@ export const stackParsers = {
 		"true",
 		"false",
 	]).withDefault(DEFAULT_STACK.install),
+	webDeploy: parseAsStringEnum<StackState["webDeploy"]>([
+		"workers",
+		"none",
+	]).withDefault(DEFAULT_STACK.webDeploy ?? "none"),
 };
 
 export const stackUrlKeys: UrlKeys<typeof stackParsers> = {
@@ -69,6 +73,7 @@ export const stackUrlKeys: UrlKeys<typeof stackParsers> = {
 	examples: "ex",
 	git: "git",
 	install: "i",
+	webDeploy: "wd",
 };
 
 export const stackQueryStatesOptions = {

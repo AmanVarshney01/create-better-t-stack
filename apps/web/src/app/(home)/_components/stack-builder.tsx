@@ -73,6 +73,7 @@ const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
 	"database",
 	"orm",
 	"dbSetup",
+	"webDeploy",
 	"auth",
 	"packageManager",
 	"addons",
@@ -124,6 +125,7 @@ const getBadgeColors = (category: string): string => {
 		case "packageManager":
 			return "border-orange-300 bg-orange-100 text-orange-800 dark:border-orange-700/30 dark:bg-orange-900/30 dark:text-orange-300";
 		case "git":
+		case "webDeploy":
 		case "install":
 			return "border-gray-300 bg-gray-100 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400";
 		default:
@@ -800,6 +802,28 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 				if (nextStack.examples.length !== originalExamplesLength)
 					changed = true;
 			}
+
+			// Web deploy compatibility: Workers not supported with TanStack Start
+			if (
+				nextStack.webDeploy === "workers" &&
+				nextStack.webFrontend.includes("tanstack-start")
+			) {
+				notes.webDeploy.notes.push(
+					"Cloudflare Workers deployment is not supported with TanStack Start. It will be set to 'None'.",
+				);
+				notes.webFrontend.notes.push(
+					"TanStack Start is not compatible with Cloudflare Workers deployment.",
+				);
+				notes.webDeploy.hasIssue = true;
+				notes.webFrontend.hasIssue = true;
+				nextStack.webDeploy = "none";
+				changed = true;
+				changes.push({
+					category: "webDeploy",
+					message:
+						"Web deployment set to 'None' (Workers not compatible with TanStack Start)",
+				});
+			}
 		}
 	}
 
@@ -897,6 +921,13 @@ const generateCommand = (stackState: StackState): string => {
 		if (stackState.git === "false" && DEFAULT_STACK.git === "true") {
 			flags.push("--no-git");
 		}
+	}
+
+	if (
+		stackState.webDeploy &&
+		!checkDefault("webDeploy", stackState.webDeploy)
+	) {
+		flags.push(`--web-deploy ${stackState.webDeploy}`);
 	}
 
 	if (!checkDefault("install", stackState.install)) {
