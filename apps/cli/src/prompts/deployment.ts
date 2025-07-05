@@ -3,6 +3,15 @@ import pc from "picocolors";
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Frontend, Runtime, WebDeploy } from "../types";
 
+const WORKERS_COMPATIBLE_FRONTENDS: Frontend[] = [
+	"tanstack-router",
+	"react-router",
+	"solid",
+	"next",
+	"nuxt",
+	"svelte",
+];
+
 type DeploymentOption = {
 	value: WebDeploy;
 	label: string;
@@ -33,17 +42,8 @@ export async function getDeploymentChoice(
 ): Promise<WebDeploy> {
 	if (deployment !== undefined) return deployment;
 
-	const compatibleFrontends = [
-		"tanstack-router",
-		"react-router",
-		"solid",
-		"next",
-		"nuxt",
-		"svelte",
-	];
-
 	const hasCompatibleFrontend = frontend.some((f) =>
-		compatibleFrontends.includes(f),
+		WORKERS_COMPATIBLE_FRONTENDS.includes(f),
 	);
 
 	if (!hasCompatibleFrontend) {
@@ -79,17 +79,8 @@ export async function getDeploymentToAdd(
 ): Promise<WebDeploy> {
 	const options: DeploymentOption[] = [];
 
-	const compatibleFrontends = [
-		"tanstack-router",
-		"react-router",
-		"solid",
-		"next",
-		"nuxt",
-		"svelte",
-	];
-
 	if (
-		frontend.some((f) => compatibleFrontends.includes(f)) &&
+		frontend.some((f) => WORKERS_COMPATIBLE_FRONTENDS.includes(f)) &&
 		existingDeployment !== "workers"
 	) {
 		const { label, hint } = getDeploymentDisplay("workers");
