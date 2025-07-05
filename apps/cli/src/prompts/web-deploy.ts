@@ -60,7 +60,7 @@ export async function getDeploymentChoice(
 	];
 
 	const response = await select<WebDeploy>({
-		message: "Select deployment target",
+		message: "Select web deployment",
 		options,
 		initialValue: DEFAULT_CONFIG.webDeploy,
 	});
@@ -108,7 +108,7 @@ export async function getDeploymentToAdd(
 	}
 
 	const response = await select<WebDeploy>({
-		message: "Select deployment target to add",
+		message: "Select web deployment",
 		options,
 		initialValue: DEFAULT_CONFIG.webDeploy,
 	});

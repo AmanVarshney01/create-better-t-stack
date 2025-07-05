@@ -34,7 +34,6 @@ export function generateReproducibleCommand(config: ProjectConfig): string {
 	flags.push(`--package-manager ${config.packageManager}`);
 	flags.push(config.install ? "--install" : "--no-install");
 
-
 	let baseCommand = "";
 	const pkgManager = config.packageManager;
 

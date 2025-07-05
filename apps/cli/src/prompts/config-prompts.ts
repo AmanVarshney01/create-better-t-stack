@@ -20,7 +20,6 @@ import { getAuthChoice } from "./auth";
 import { getBackendFrameworkChoice } from "./backend";
 import { getDatabaseChoice } from "./database";
 import { getDBSetupChoice } from "./database-setup";
-import { getDeploymentChoice } from "./deployment";
 import { getExamplesChoice } from "./examples";
 import { getFrontendChoice } from "./frontend";
 import { getGitChoice } from "./git";
@@ -28,6 +27,7 @@ import { getinstallChoice } from "./install";
 import { getORMChoice } from "./orm";
 import { getPackageManagerChoice } from "./package-manager";
 import { getRuntimeChoice } from "./runtime";
+import { getDeploymentChoice } from "./web-deploy";
 
 type PromptGroupResults = {
 	frontend: Frontend[];
