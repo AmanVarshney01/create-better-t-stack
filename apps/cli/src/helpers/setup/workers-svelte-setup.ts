@@ -1,8 +1,9 @@
 import path from "node:path";
 import fs from "fs-extra";
-import { type ImportDeclaration, Project } from "ts-morph";
+import type { ImportDeclaration } from "ts-morph";
 import type { PackageManager } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
+import { tsProject } from "../../utils/ts-morph";
 
 export async function setupSvelteWorkersDeploy(
 	projectDir: string,
@@ -39,11 +40,9 @@ export async function setupSvelteWorkersDeploy(
 	).find((p) => p);
 
 	if (existingConfigPath) {
-		const project = new Project({
-			useInMemoryFileSystem: false,
-			skipAddingFilesFromTsConfig: true,
-		});
-		const sourceFile = project.addSourceFileAtPath(existingConfigPath);
+		const sourceFile =
+			tsProject.addSourceFileAtPathIfExists(existingConfigPath);
+		if (!sourceFile) return;
 
 		const adapterImport = sourceFile
 			.getImportDeclarations()
@@ -70,6 +69,6 @@ export async function setupSvelteWorkersDeploy(
 			}
 		}
 
-		await sourceFile.save();
+		await tsProject.save();
 	}
 }

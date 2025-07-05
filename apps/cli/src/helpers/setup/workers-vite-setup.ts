@@ -1,13 +1,13 @@
 import path from "node:path";
 import fs from "fs-extra";
 import {
-	type ArrayLiteralExpression,
 	type CallExpression,
+	Node,
 	type ObjectLiteralExpression,
-	Project,
 	SyntaxKind,
 } from "ts-morph";
 import { addPackageDependency } from "../../utils/add-package-deps";
+import { ensureArrayProperty, tsProject } from "../../utils/ts-morph";
 
 export async function setupWorkersVitePlugin(
 	projectDir: string,
@@ -24,11 +24,10 @@ export async function setupWorkersVitePlugin(
 		projectDir: webAppDir,
 	});
 
-	const project = new Project({
-		useInMemoryFileSystem: false,
-	});
-
-	const sourceFile = project.addSourceFileAtPath(viteConfigPath);
+	const sourceFile = tsProject.addSourceFileAtPathIfExists(viteConfigPath);
+	if (!sourceFile) {
+		throw new Error("vite.config.ts not found in web app directory");
+	}
 
 	const hasCloudflareImport = sourceFile
 		.getImportDeclarations()
@@ -43,7 +42,12 @@ export async function setupWorkersVitePlugin(
 
 	const defineCall = sourceFile
 		.getDescendantsOfKind(SyntaxKind.CallExpression)
-		.find((expr) => expr.getExpression().getText() === "defineConfig");
+		.find((expr) => {
+			const expression = expr.getExpression();
+			return (
+				Node.isIdentifier(expression) && expression.getText() === "defineConfig"
+			);
+		});
 
 	if (!defineCall) {
 		throw new Error("Could not find defineConfig call in vite config");
@@ -58,15 +62,7 @@ export async function setupWorkersVitePlugin(
 		throw new Error("defineConfig argument is not an object literal");
 	}
 
-	const pluginsArray = configObject
-		.getProperty("plugins")
-		?.getFirstDescendantByKind(SyntaxKind.ArrayLiteralExpression) as
-		| ArrayLiteralExpression
-		| undefined;
-
-	if (!pluginsArray) {
-		throw new Error("Could not find plugins array in vite config");
-	}
+	const pluginsArray = ensureArrayProperty(configObject, "plugins");
 
 	const hasCloudflarePlugin = pluginsArray
 		.getElements()
@@ -76,5 +72,5 @@ export async function setupWorkersVitePlugin(
 		pluginsArray.addElement("cloudflare()");
 	}
 
-	await sourceFile.save();
+	await tsProject.save();
 }

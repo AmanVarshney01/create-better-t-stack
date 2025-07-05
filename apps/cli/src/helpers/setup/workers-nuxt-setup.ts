@@ -3,13 +3,14 @@ import fs from "fs-extra";
 import {
 	type ArrayLiteralExpression,
 	type CallExpression,
+	Node,
 	type ObjectLiteralExpression,
-	Project,
 	type PropertyAssignment,
 	SyntaxKind,
 } from "ts-morph";
 import type { PackageManager } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
+import { tsProject } from "../../utils/ts-morph";
 
 export async function setupNuxtWorkersDeploy(
 	projectDir: string,
@@ -38,14 +39,18 @@ export async function setupNuxtWorkersDeploy(
 	const nuxtConfigPath = path.join(webAppDir, "nuxt.config.ts");
 	if (!(await fs.pathExists(nuxtConfigPath))) return;
 
-	const project = new Project({ useInMemoryFileSystem: false });
-	const sourceFile = project.addSourceFileAtPath(nuxtConfigPath);
+	const sourceFile = tsProject.addSourceFileAtPathIfExists(nuxtConfigPath);
+	if (!sourceFile) return;
 
 	const defineCall = sourceFile
 		.getDescendantsOfKind(SyntaxKind.CallExpression)
-		.find((expr) => expr.getExpression().getText() === "defineNuxtConfig") as
-		| CallExpression
-		| undefined;
+		.find((expr) => {
+			const expression = expr.getExpression();
+			return (
+				Node.isIdentifier(expression) &&
+				expression.getText() === "defineNuxtConfig"
+			);
+		}) as CallExpression | undefined;
 
 	if (!defineCall) return;
 
@@ -103,5 +108,5 @@ export async function setupNuxtWorkersDeploy(
 		});
 	}
 
-	await sourceFile.save();
+	await tsProject.save();
 }
