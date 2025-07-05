@@ -11,13 +11,11 @@ export async function setupSvelteWorkersDeploy(
 	const webAppDir = path.join(projectDir, "apps/web");
 	if (!(await fs.pathExists(webAppDir))) return;
 
-	// 1. Add required dev dependencies
 	await addPackageDependency({
 		devDependencies: ["@sveltejs/adapter-cloudflare", "wrangler"],
 		projectDir: webAppDir,
 	});
 
-	// 2. Update package.json scripts
 	const pkgPath = path.join(webAppDir, "package.json");
 	if (await fs.pathExists(pkgPath)) {
 		const pkg = await fs.readJson(pkgPath);
@@ -58,7 +56,6 @@ export async function setupSvelteWorkersDeploy(
 		if (adapterImport) {
 			adapterImport.setModuleSpecifier("@sveltejs/adapter-cloudflare");
 		} else {
-			// If the adapter-auto import didn't exist, ensure Cloudflare adapter is imported
 			const alreadyHasCloudflare = sourceFile
 				.getImportDeclarations()
 				.some(
@@ -73,7 +70,6 @@ export async function setupSvelteWorkersDeploy(
 			}
 		}
 
-		// Save modifications
 		await sourceFile.save();
 	}
 }

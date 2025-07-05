@@ -49,8 +49,7 @@ async function setupWorkersWebDeploy(
 		packageJson.scripts = {
 			...packageJson.scripts,
 			"wrangler:dev": "wrangler dev --port=3001",
-			"wrangler:build": "wrangler build",
-			"wrangler:deploy": `${pkgManager} run build && wrangler deploy`,
+			deploy: `${pkgManager} run build && wrangler deploy`,
 		};
 
 		await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
