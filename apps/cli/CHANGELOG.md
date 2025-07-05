@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.23.0
+
+### Minor Changes
+
+- d267427: add cloudflare workers deployment support for next, solid, tanstack-router, react-router, nuxt
+
 ## 2.22.10
 
 ### Patch Changes
