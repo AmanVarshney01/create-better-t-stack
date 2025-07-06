@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.24.0
+
+### Minor Changes
+
+- 0ae1347: add workers support for tanstack start
+
 ## 2.23.1
 
 ### Patch Changes
