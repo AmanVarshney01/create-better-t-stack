@@ -4,6 +4,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { expo } from "@better-auth/expo";
 {{/if}}
+import env from "../utils/env";
 import prisma from "../../prisma";
 
 export const auth = betterAuth({
@@ -14,16 +15,18 @@ export const auth = betterAuth({
     {{#if (eq database "mongodb")}}provider: "mongodb"{{/if}}
   }),
   trustedOrigins: [
-    process.env.CORS_ORIGIN || "",
+    env.CORS_ORIGIN || "",
     {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
     "my-better-t-app://",
     {{/if}}
   ],
   emailAndPassword: {
     enabled: true,
-  }
+  },
+  secret: env.BETTER_AUTH_SECRET,
+  baseURL: env.BETTER_AUTH_URL,
   {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-  , plugins: [expo()]
+  plugins: [expo()],
   {{/if}}
 });
 {{/if}}
@@ -35,6 +38,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { expo } from "@better-auth/expo";
 {{/if}}
+import env from "../utils/env";
 import { db } from "../db";
 import * as schema from "../db/schema/auth";
 
@@ -46,7 +50,7 @@ export const auth = betterAuth({
     schema: schema,
   }),
   trustedOrigins: [
-    process.env.CORS_ORIGIN || "",
+    env.CORS_ORIGIN || "",
     {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
     "my-better-t-app://",
     {{/if}}
@@ -54,8 +58,8 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: process.env.BETTER_AUTH_URL,
+  secret: env.BETTER_AUTH_SECRET,
+  baseURL: env.BETTER_AUTH_URL,
   {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
   plugins: [expo()],
   {{/if}}
@@ -68,9 +72,9 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { expo } from "@better-auth/expo";
 {{/if}}
+import env from "../utils/env";
 import { db } from "@/db";
 import * as schema from "../db/schema/auth";
-import { env } from "cloudflare:workers";
 
 export const auth = betterAuth({
    database: drizzleAdapter(db, {
@@ -79,7 +83,7 @@ export const auth = betterAuth({
     {{#if (eq database "mysql")}}provider: "mysql",{{/if}}
     schema: schema,
   }),
-  trustedOrigins: [env.CORS_ORIGIN],
+  trustedOrigins: [env.CORS_ORIGIN || ""],
   emailAndPassword: {
     enabled: true,
   },
@@ -98,21 +102,24 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { expo } from "@better-auth/expo";
 {{/if}}
+import env from "../utils/env";
 import { client } from "../db";
 
 export const auth = betterAuth({
   database: mongodbAdapter(client),
   trustedOrigins: [
-    process.env.CORS_ORIGIN || "",
+    env.CORS_ORIGIN || "",
     {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
     "my-better-t-app://",
     {{/if}}
   ],
   emailAndPassword: {
     enabled: true,
-  }
+  },
+  secret: env.BETTER_AUTH_SECRET,
+  baseURL: env.BETTER_AUTH_URL,
   {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-  , plugins: [expo()]
+  plugins: [expo()],
   {{/if}}
 });
 {{/if}}
@@ -122,20 +129,23 @@ import { betterAuth } from "better-auth";
 {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { expo } from "@better-auth/expo";
 {{/if}}
+import env from "../utils/env";
 
 export const auth = betterAuth({
   database: "", // Invalid configuration
   trustedOrigins: [
-    process.env.CORS_ORIGIN || "",
+    env.CORS_ORIGIN || "",
     {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
     "my-better-t-app://",
     {{/if}}
   ],
   emailAndPassword: {
     enabled: true,
-  }
+  },
+  secret: env.BETTER_AUTH_SECRET,
+  baseURL: env.BETTER_AUTH_URL,
   {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-  , plugins: [expo()]
+  plugins: [expo()],
   {{/if}}
 });
 {{/if}}
