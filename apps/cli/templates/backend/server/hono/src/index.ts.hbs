@@ -1,9 +1,3 @@
-{{#if (or (eq runtime "bun") (eq runtime "node"))}}
-import "dotenv/config";
-{{/if}}
-{{#if (eq runtime "workers")}}
-import { env } from "cloudflare:workers";
-{{/if}}
 {{#if (eq api "orpc")}}
 import { RPCHandler } from "@orpc/server/fetch";
 import { createContext } from "./lib/context";
@@ -17,6 +11,7 @@ import { appRouter } from "./routers/index";
 {{#if auth}}
 import { auth } from "./lib/auth";
 {{/if}}
+import env from "./utils/env";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -35,12 +30,7 @@ const app = new Hono();
 
 app.use(logger());
 app.use("/*", cors({
-  {{#if (or (eq runtime "bun") (eq runtime "node"))}}
-  origin: process.env.CORS_ORIGIN || "",
-  {{/if}}
-  {{#if (eq runtime "workers")}}
   origin: env.CORS_ORIGIN || "",
-  {{/if}}
   allowMethods: ["GET", "POST", "OPTIONS"],
   {{#if auth}}
   allowHeaders: ["Content-Type", "Authorization"],
@@ -119,7 +109,7 @@ import { serve } from "@hono/node-server";
 
 serve({
   fetch: app.fetch,
-  port: 3000,
+  port: env.PORT,
 }, (info) => {
   console.log(`Server is running on http://localhost:${info.port}`);
 });

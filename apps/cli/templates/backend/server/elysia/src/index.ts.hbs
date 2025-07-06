@@ -1,7 +1,7 @@
-import "dotenv/config";
 {{#if (eq runtime "node")}}
 import { node } from "@elysiajs/node";
 {{/if}}
+import env from "./utils/env";
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 {{#if (eq api "trpc")}}
@@ -29,7 +29,7 @@ const app = new Elysia()
 {{/if}}
   .use(
     cors({
-      origin: process.env.CORS_ORIGIN || "",
+      origin: env.CORS_ORIGIN || "",
       methods: ["GET", "POST", "OPTIONS"],
       {{#if auth}}
       allowedHeaders: ["Content-Type", "Authorization"],
@@ -67,6 +67,6 @@ const app = new Elysia()
   })
 {{/if}}
   .get("/", () => "OK")
-  .listen(3000, () => {
-    console.log("Server is running on http://localhost:3000");
+  .listen(env.PORT, () => {
+    console.log(`Server is running on http://localhost:${env.PORT}`);
   });
