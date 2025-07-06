@@ -451,24 +451,6 @@ export function processAndValidateFlags(
 		process.exit(1);
 	}
 
-	if (
-		config.webDeploy === "workers" &&
-		config.frontend &&
-		config.frontend.length > 0
-	) {
-		const incompatibleFrontends = config.frontend.filter(
-			(f) => f === "tanstack-start",
-		);
-		if (incompatibleFrontends.length > 0) {
-			consola.fatal(
-				`The following frontends are not compatible with '--web-deploy workers': ${incompatibleFrontends.join(
-					", ",
-				)}. Please choose a different frontend or remove '--web-deploy workers'.`,
-			);
-			process.exit(1);
-		}
-	}
-
 	return config;
 }
 

@@ -4,6 +4,7 @@ import type { PackageManager, ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { setupNuxtWorkersDeploy } from "./workers-nuxt-setup";
 import { setupSvelteWorkersDeploy } from "./workers-svelte-setup";
+import { setupTanstackStartWorkersDeploy } from "./workers-tanstack-start-setup";
 import { setupWorkersVitePlugin } from "./workers-vite-setup";
 
 export async function setupWebDeploy(config: ProjectConfig): Promise<void> {
@@ -18,6 +19,7 @@ export async function setupWebDeploy(config: ProjectConfig): Promise<void> {
 	const isNuxt = frontend.includes("nuxt");
 	const isSvelte = frontend.includes("svelte");
 	const isTanstackRouter = frontend.includes("tanstack-router");
+	const isTanstackStart = frontend.includes("tanstack-start");
 	const isReactRouter = frontend.includes("react-router");
 	const isSolid = frontend.includes("solid");
 
@@ -27,6 +29,8 @@ export async function setupWebDeploy(config: ProjectConfig): Promise<void> {
 		await setupNuxtWorkersDeploy(projectDir, packageManager);
 	} else if (isSvelte) {
 		await setupSvelteWorkersDeploy(projectDir, packageManager);
+	} else if (isTanstackStart) {
+		await setupTanstackStartWorkersDeploy(projectDir, packageManager);
 	} else if (isTanstackRouter || isReactRouter || isSolid) {
 		await setupWorkersWebDeploy(projectDir, packageManager);
 	}

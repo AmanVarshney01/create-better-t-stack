@@ -802,28 +802,6 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 				if (nextStack.examples.length !== originalExamplesLength)
 					changed = true;
 			}
-
-			// Web deploy compatibility: Workers not supported with TanStack Start
-			if (
-				nextStack.webDeploy === "workers" &&
-				nextStack.webFrontend.includes("tanstack-start")
-			) {
-				notes.webDeploy.notes.push(
-					"Cloudflare Workers deployment is not supported with TanStack Start. It will be set to 'None'.",
-				);
-				notes.webFrontend.notes.push(
-					"TanStack Start is not compatible with Cloudflare Workers deployment.",
-				);
-				notes.webDeploy.hasIssue = true;
-				notes.webFrontend.hasIssue = true;
-				nextStack.webDeploy = "none";
-				changed = true;
-				changes.push({
-					category: "webDeploy",
-					message:
-						"Web deployment set to 'None' (Workers not compatible with TanStack Start)",
-				});
-			}
 		}
 	}
 

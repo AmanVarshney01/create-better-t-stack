@@ -851,6 +851,7 @@ export async function setupDeploymentTemplates(
 
 		const templateMap: Record<string, string> = {
 			"tanstack-router": "react/tanstack-router",
+			"tanstack-start": "react/tanstack-start",
 			"react-router": "react/react-router",
 			solid: "solid",
 			next: "react/next",

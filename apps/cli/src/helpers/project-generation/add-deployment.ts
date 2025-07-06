@@ -42,24 +42,6 @@ export async function addDeploymentToProject(
 			);
 		}
 
-		if (input.webDeploy === "workers") {
-			const compatibleFrontends = [
-				"tanstack-router",
-				"react-router",
-				"solid",
-				"next",
-				"svelte",
-			];
-			const hasCompatible = detectedConfig.frontend?.some((f) =>
-				compatibleFrontends.includes(f),
-			);
-			if (!hasCompatible) {
-				exitWithError(
-					"Cloudflare Workers deployment requires a compatible web frontend (tanstack-router, react-router, solid, next, or svelte).",
-				);
-			}
-		}
-
 		const config: ProjectConfig = {
 			projectName: detectedConfig.projectName || path.basename(projectDir),
 			projectDir,
