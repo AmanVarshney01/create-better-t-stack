@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.24.2
+
+### Patch Changes
+
+- e21756a: fix root path in unistyles template
+
 ## 2.24.1
 
 ### Patch Changes
