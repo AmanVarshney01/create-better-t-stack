@@ -1,5 +1,12 @@
 # create-better-t-stack
 
+## 2.24.1
+
+### Patch Changes
+
+- d344b85: Prevent web-deploy when no web frontend is selected
+- 98bb4a3: Upgrade to unistyles 3.0
+
 ## 2.24.0
 
 ### Minor Changes
