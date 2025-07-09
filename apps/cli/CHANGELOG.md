@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.24.4
+
+### Patch Changes
+
+- 5fec00a: fix: web-deploy validation to check for frontend flag
+
 ## 2.24.3
 
 ### Patch Changes
