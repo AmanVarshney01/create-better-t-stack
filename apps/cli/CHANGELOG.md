@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.24.3
+
+### Patch Changes
+
+- fe7b4ff: Remove unnecessary returning() from todo insert query
+
 ## 2.24.2
 
 ### Patch Changes
