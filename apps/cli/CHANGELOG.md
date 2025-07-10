@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.24.5
+
+### Patch Changes
+
+- b2195dd: Upgrade to zod@4.0.2
+
 ## 2.24.4
 
 ### Patch Changes
