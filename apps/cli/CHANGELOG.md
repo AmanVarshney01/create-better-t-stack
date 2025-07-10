@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.25.0
+
+### Minor Changes
+
+- 3569b04: Added support for local database setup using Docker Compose for PostgreSQL, MySQL, and MongoDB.
+
 ## 2.24.5
 
 ### Patch Changes
