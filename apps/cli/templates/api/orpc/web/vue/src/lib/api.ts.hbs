@@ -1,0 +1,25 @@
+import { createORPCClient, createORPCFetchHandler } from "@orpc/client";
+import { ref } from "vue";
+import type { ORPCContext, orpc } from "../../../../server/src/lib/orpc";
+
+export const getAuthToken = () => {
+  if (typeof window === "undefined") return undefined;
+  return localStorage.getItem("auth-token") ?? undefined;
+};
+
+export const authToken = ref(getAuthToken());
+
+const fetchHandler = createORPCFetchHandler({
+  baseURL: import.meta.env.VITE_SERVER_URL ?? "http://localhost:5000/api",
+  headers: () => {
+    const token = authToken.value;
+    return token ? { Authorization: `Bearer ${token}` } : undefined;
+  },
+});
+
+export const { api } = createORPCClient<
+  typeof orpc,
+  ORPCContext
+>({
+  async: fetchHandler,
+});
