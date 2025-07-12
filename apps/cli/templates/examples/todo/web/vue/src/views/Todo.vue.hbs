@@ -1,0 +1,112 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
+import { api } from '@/lib/api'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Trash2 } from 'lucide-vue-next'
+
+const newTodoTitle = ref('')
+const queryClient = useQueryClient()
+
+const { data: todos, isLoading } = useQuery({
+  queryKey: ['todos'],
+  queryFn: async () => {
+    const response = await api.todo.getAll{{#if (eq api "orpc")}}(){{/if}}
+    return response{{#if (eq api "trpc")}}.data{{/if}}
+  },
+})
+
+const createTodoMutation = useMutation({
+  mutationFn: async (title: string) => {
+    return api.todo.create{{#if (eq api "orpc")}}({ title }){{else}}({ title }){{/if}}
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['todos'] })
+    newTodoTitle.value = ''
+  },
+})
+
+const toggleTodoMutation = useMutation({
+  mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
+    return api.todo.update{{#if (eq api "orpc")}}({ id, completed }){{else}}({ id, completed }){{/if}}
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['todos'] })
+  },
+})
+
+const deleteTodoMutation = useMutation({
+  mutationFn: async (id: string) => {
+    return api.todo.delete{{#if (eq api "orpc")}}({ id }){{else}}({ id }){{/if}}
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ['todos'] })
+  },
+})
+
+const handleCreateTodo = () => {
+  if (newTodoTitle.value.trim()) {
+    createTodoMutation.mutate(newTodoTitle.value)
+  }
+}
+</script>
+
+<template>
+  <div class="container mx-auto py-8 px-4">
+    <Card class="max-w-2xl mx-auto">
+      <CardHeader>
+        <CardTitle>Todo List</CardTitle>
+      </CardHeader>
+      <CardContent class="space-y-4">
+        <form @submit.prevent="handleCreateTodo" class="flex gap-2">
+          <Input
+            v-model="newTodoTitle"
+            placeholder="Add a new todo..."
+            :disabled="createTodoMutation.isPending.value"
+          />
+          <Button type="submit" :disabled="createTodoMutation.isPending.value">
+            Add
+          </Button>
+        </form>
+
+        <div v-if="isLoading" class="text-center py-4">
+          Loading todos...
+        </div>
+
+        <div v-else-if="todos && todos.length > 0" class="space-y-2">
+          <div
+            v-for="todo in todos"
+            :key="todo.id"
+            class="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50"
+          >
+            <Checkbox
+              :checked="todo.completed"
+              @update:checked="(checked) => toggleTodoMutation.mutate({ id: todo.id, completed: checked })"
+            />
+            <span
+              class="flex-1"
+              :class="{ 'line-through text-muted-foreground': todo.completed }"
+            >
+              {{ todo.title }}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              @click="deleteTodoMutation.mutate(todo.id)"
+              :disabled="deleteTodoMutation.isPending.value"
+            >
+              <Trash2 class="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div v-else class="text-center py-4 text-muted-foreground">
+          No todos yet. Add one above!
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+</template>

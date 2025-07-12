@@ -1,0 +1,50 @@
+<script setup lang="ts">
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ArrowLeft } from 'lucide-vue-next'
+</script>
+
+<template>
+  <div class="container mx-auto py-8 px-4">
+    <div class="max-w-2xl mx-auto">
+      <router-link to="/" class="inline-block mb-8">
+        <Button variant="ghost" size="sm">
+          <ArrowLeft class="mr-2 h-4 w-4" />
+          Back to Home
+        </Button>
+      </router-link>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle class="text-3xl">About {{projectName}}</CardTitle>
+          <CardDescription>Built with modern web technologies</CardDescription>
+        </CardHeader>
+        <CardContent class="space-y-4">
+          <div>
+            <h3 class="text-lg font-semibold mb-2">Tech Stack</h3>
+            <ul class="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400">
+              <li>Vue 3 - The Progressive JavaScript Framework</li>
+              <li>Vue Router 4 - Official router for Vue.js</li>
+              <li>TypeScript - JavaScript with syntax for types</li>
+              <li>Vite - Next Generation Frontend Tooling</li>
+              <li>Tailwind CSS - A utility-first CSS framework</li>
+              <li>Pinia - The intuitive store for Vue</li>
+            </ul>
+          </div>
+          
+          <div>
+            <h3 class="text-lg font-semibold mb-2">Features</h3>
+            <ul class="list-disc list-inside space-y-1 text-gray-600 dark:text-gray-400">
+              <li>⚡️ Lightning fast HMR with Vite</li>
+              <li>🎯 Type-safe development with TypeScript</li>
+              <li>🎨 Beautiful UI with Tailwind CSS</li>
+              <li>🌙 Dark mode support</li>
+              <li>📦 State management with Pinia</li>
+              <li>🔄 Data fetching with TanStack Query</li>
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  </div>
+</template>
