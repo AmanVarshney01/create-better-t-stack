@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.25.2
+
+### Patch Changes
+
+- 7881892: remove trailing comma in biome.json
+
 ## 2.25.1
 
 ### Patch Changes
