@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.25.3
+
+### Patch Changes
+
+- ea826a5: biome ignore .wrangler dir
+
 ## 2.25.2
 
 ### Patch Changes
