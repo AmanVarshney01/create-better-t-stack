@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.25.1
+
+### Patch Changes
+
+- 110fa5a: exclude .expo dir from biome.json
+
 ## 2.25.0
 
 ### Minor Changes
