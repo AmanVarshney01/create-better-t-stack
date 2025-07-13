@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.25.6
+
+### Patch Changes
+
+- 71e5850: remove telemetry console logs
+
 ## 2.25.5
 
 ### Patch Changes
