@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.25.5
+
+### Patch Changes
+
+- 901e1ff: fix telemetry logic
+
 ## 2.25.4
 
 ### Patch Changes
