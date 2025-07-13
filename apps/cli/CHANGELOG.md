@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.25.4
+
+### Patch Changes
+
+- 65c29c2: Allow disabling telemetry with BTS_TELEMETRY_DISABLED=1
+
 ## 2.25.3
 
 ### Patch Changes
