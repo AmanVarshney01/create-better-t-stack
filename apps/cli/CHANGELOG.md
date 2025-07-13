@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.25.7
+
+### Patch Changes
+
+- 4ece24b: Update telemetry disable instructions to use BTS_TELEMETRY_DISABLED
+
 ## 2.25.6
 
 ### Patch Changes
