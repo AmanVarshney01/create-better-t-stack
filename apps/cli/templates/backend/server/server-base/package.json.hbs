@@ -3,7 +3,7 @@
 	"main": "src/index.ts",
 	"type": "module",
 	"scripts": {
-		"build": "tsc && tsc-alias",
+		"build": "tsdown",
 		"check-types": "tsc --noEmit",
 		"compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server"
 	},
@@ -22,7 +22,7 @@
     ],
     {{/if}}
 	"devDependencies": {
-		"tsc-alias": "^1.8.11",
+		"tsdown": "^0.12.9",
 		"typescript": "^5.8.2"
 	}
 }
