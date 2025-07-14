@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.25.8
+
+### Patch Changes
+
+- 5080b6b: Switch to tsdown in server template and update configs
+
 ## 2.25.7
 
 ### Patch Changes
