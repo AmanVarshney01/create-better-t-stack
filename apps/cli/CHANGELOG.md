@@ -1,5 +1,12 @@
 # create-better-t-stack
 
+## 2.25.9
+
+### Patch Changes
+
+- b47671c: Fix start script paths in Bun and Node runtime setup
+- b9e9292: Return DB results directly in todo router handlers
+
 ## 2.25.8
 
 ### Patch Changes
