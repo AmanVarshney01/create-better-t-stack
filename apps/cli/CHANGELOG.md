@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.26.0
+
+### Minor Changes
+
+- 8a9ddc9: Update Nuxt template to v4
+
 ## 2.25.9
 
 ### Patch Changes
