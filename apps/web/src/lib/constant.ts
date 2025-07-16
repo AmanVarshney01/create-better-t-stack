@@ -134,7 +134,7 @@ export const TECH_OPTIONS = {
 		},
 		{
 			id: "workers",
-			name: "Cloudflare Workers (beta)",
+			name: "Cloudflare Workers",
 			description: "Serverless runtime for the edge",
 			icon: "/icon/workers.svg",
 			color: "from-orange-400 to-orange-600",
@@ -312,9 +312,33 @@ export const TECH_OPTIONS = {
 			color: "from-emerald-400 to-emerald-600",
 		},
 		{
+			id: "docker",
+			name: "Docker",
+			description: "Local database with Docker Compose",
+			icon: "/icon/docker.svg",
+			color: "from-blue-500 to-blue-700",
+		},
+		{
 			id: "none",
 			name: "Basic Setup",
 			description: "No cloud DB integration",
+			icon: "",
+			color: "from-gray-400 to-gray-600",
+			default: true,
+		},
+	],
+	webDeploy: [
+		{
+			id: "workers",
+			name: "Cloudflare Workers",
+			description: "Deploy to Cloudflare Workers",
+			icon: "/icon/workers.svg",
+			color: "from-orange-400 to-orange-600",
+		},
+		{
+			id: "none",
+			name: "No Deployment",
+			description: "Skip deployment configuration",
 			icon: "",
 			color: "from-gray-400 to-gray-600",
 			default: true,
@@ -594,6 +618,7 @@ export type StackState = {
 	git: string;
 	install: string;
 	api: string;
+	webDeploy: string;
 };
 
 export const DEFAULT_STACK: StackState = {
@@ -612,6 +637,7 @@ export const DEFAULT_STACK: StackState = {
 	git: "true",
 	install: "true",
 	api: "trpc",
+	webDeploy: "none",
 };
 
 export const isStackDefault = <K extends keyof StackState>(

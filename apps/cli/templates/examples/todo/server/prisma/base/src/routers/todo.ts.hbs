@@ -1,5 +1,5 @@
 {{#if (eq api "orpc")}}
-import z from "zod/v4";
+import z from "zod";
 import prisma from "../../prisma";
 import { publicProcedure } from "../lib/orpc";
 
@@ -29,11 +29,10 @@ export const todoRouter = {
     .input(z.object({ id: z.number(), completed: z.boolean() }))
     {{/if}}
     .handler(async ({ input }) => {
-      await prisma.todo.update({
+      return await prisma.todo.update({
         where: { id: input.id },
         data: { completed: input.completed },
       });
-      return { success: true };
     }),
 
   delete: publicProcedure
@@ -43,17 +42,16 @@ export const todoRouter = {
     .input(z.object({ id: z.number() }))
     {{/if}}
     .handler(async ({ input }) => {
-      await prisma.todo.delete({
+      return await prisma.todo.delete({
         where: { id: input.id },
       });
-      return { success: true };
     }),
 };
 {{/if}}
 
 {{#if (eq api "trpc")}}
 import { TRPCError } from "@trpc/server";
-import z from "zod/v4";
+import z from "zod";
 import prisma from "../../prisma";
 import { publicProcedure, router } from "../lib/trpc";
 

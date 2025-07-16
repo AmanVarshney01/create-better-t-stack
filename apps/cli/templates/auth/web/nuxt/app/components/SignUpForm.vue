@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import z from 'zod/v4'
+import z from 'zod'
 import type { FormSubmitEvent } from '#ui/types'
 const {$authClient} = useNuxtApp()
 

@@ -39,5 +39,23 @@
 			"persistent": true
 		}
 		{{/unless}}{{/if}}
+		{{#if (eq dbSetup "docker")}},
+		"db:start": {
+			"cache": false,
+			"persistent": true
+		},
+		"db:stop": {
+			"cache": false,
+			"persistent": true
+		},
+		"db:watch": {
+			"cache": false,
+			"persistent": true
+		},
+		"db:down": {
+			"cache": false,
+			"persistent": true
+		}
+		{{/if}}
 	}
 }

@@ -187,7 +187,8 @@ export async function setupEnvironmentVariables(
 		dbSetup === "mongodb-atlas" ||
 		dbSetup === "neon" ||
 		dbSetup === "supabase" ||
-		dbSetup === "d1";
+		dbSetup === "d1" ||
+		dbSetup === "docker";
 
 	if (database !== "none" && !specializedSetup) {
 		switch (database) {

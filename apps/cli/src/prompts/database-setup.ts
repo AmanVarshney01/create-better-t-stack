@@ -65,6 +65,20 @@ export async function getDBSetupChoice(
 						},
 					]
 				: []),
+			{
+				value: "docker" as const,
+				label: "Docker",
+				hint: "Run locally with docker compose",
+			},
+			{ value: "none" as const, label: "None", hint: "Manual setup" },
+		];
+	} else if (databaseType === "mysql") {
+		options = [
+			{
+				value: "docker" as const,
+				label: "Docker",
+				hint: "Run locally with docker compose",
+			},
 			{ value: "none" as const, label: "None", hint: "Manual setup" },
 		];
 	} else if (databaseType === "mongodb") {
@@ -73,6 +87,11 @@ export async function getDBSetupChoice(
 				value: "mongodb-atlas" as const,
 				label: "MongoDB Atlas",
 				hint: "The most effective way to deploy MongoDB",
+			},
+			{
+				value: "docker" as const,
+				label: "Docker",
+				hint: "Run locally with docker compose",
 			},
 			{ value: "none" as const, label: "None", hint: "Manual setup" },
 		];

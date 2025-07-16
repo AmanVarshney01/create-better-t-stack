@@ -1,6 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { ProjectConfig } from "./types";
+import type { Frontend, ProjectConfig } from "./types";
 import { getUserPkgManager } from "./utils/get-package-manager";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -24,6 +24,7 @@ export const DEFAULT_CONFIG: ProjectConfig = {
 	backend: "hono",
 	runtime: "bun",
 	api: "trpc",
+	webDeploy: "none",
 };
 
 export const dependencyVersionMap = {
@@ -45,8 +46,8 @@ export const dependencyVersionMap = {
 
 	mongoose: "^8.14.0",
 
-	"vite-plugin-pwa": "^0.21.2",
-	"@vite-pwa/assets-generator": "^0.2.6",
+	"vite-plugin-pwa": "^1.0.1",
+	"@vite-pwa/assets-generator": "^1.0.0",
 
 	"@tauri-apps/cli": "^2.4.0",
 
@@ -107,13 +108,17 @@ export const dependencyVersionMap = {
 	"@tanstack/solid-query": "^5.75.0",
 	"@tanstack/solid-query-devtools": "^5.75.0",
 
-	wrangler: "^4.20.0",
+	wrangler: "^4.23.0",
+	"@cloudflare/vite-plugin": "^1.9.0",
+	"@opennextjs/cloudflare": "^1.3.0",
+	"nitro-cloudflare-dev": "^0.2.2",
+	"@sveltejs/adapter-cloudflare": "^7.0.4",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;
 
 export const ADDON_COMPATIBILITY = {
-	pwa: ["tanstack-router", "react-router", "solid"],
+	pwa: ["tanstack-router", "react-router", "solid", "next"],
 	tauri: ["tanstack-router", "react-router", "nuxt", "svelte", "solid"],
 	biome: [],
 	husky: [],
@@ -121,3 +126,14 @@ export const ADDON_COMPATIBILITY = {
 	starlight: [],
 	none: [],
 } as const;
+
+// TODO: need to refactor this
+export const WEB_FRAMEWORKS: readonly Frontend[] = [
+	"tanstack-router",
+	"react-router",
+	"tanstack-start",
+	"next",
+	"nuxt",
+	"svelte",
+	"solid",
+];

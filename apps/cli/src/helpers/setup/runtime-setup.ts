@@ -81,7 +81,7 @@ async function setupBunRuntime(
 	packageJson.scripts = {
 		...packageJson.scripts,
 		dev: "bun run --hot src/index.ts",
-		start: "bun run dist/src/index.js",
+		start: "bun run dist/index.js",
 	};
 
 	await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
@@ -104,7 +104,7 @@ async function setupNodeRuntime(
 	packageJson.scripts = {
 		...packageJson.scripts,
 		dev: "tsx watch src/index.ts",
-		start: "node dist/src/index.js",
+		start: "node dist/index.js",
 	};
 
 	await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });

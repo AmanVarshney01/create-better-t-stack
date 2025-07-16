@@ -12,6 +12,8 @@
 /out/
 /build
 *.tsbuildinfo
+/.open-next/
+/.wrangler/
 
 # misc
 .DS_Store
@@ -26,3 +28,5 @@ yarn-error.log*
 .env*.local
 .vercel
 next-env.d.ts
+
+analytics-data.json

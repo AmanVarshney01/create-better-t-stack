@@ -23,6 +23,7 @@ export async function detectProjectConfig(
 				packageManager: btsConfig.packageManager,
 				dbSetup: btsConfig.dbSetup,
 				api: btsConfig.api,
+				webDeploy: btsConfig.webDeploy,
 			};
 		}
 

@@ -6,6 +6,7 @@ import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { setupCloudflareD1 } from "../database-providers/d1-setup";
+import { setupDockerCompose } from "../database-providers/docker-compose-setup";
 import { setupMongoDBAtlas } from "../database-providers/mongodb-atlas-setup";
 import { setupNeonPostgres } from "../database-providers/neon-setup";
 import { setupPrismaPostgres } from "../database-providers/prisma-postgres-setup";
@@ -76,7 +77,9 @@ export async function setupDatabase(config: ProjectConfig): Promise<void> {
 			});
 		}
 
-		if (database === "sqlite" && dbSetup === "turso") {
+		if (dbSetup === "docker") {
+			await setupDockerCompose(config);
+		} else if (database === "sqlite" && dbSetup === "turso") {
 			await setupTurso(config);
 		} else if (database === "sqlite" && dbSetup === "d1") {
 			await setupCloudflareD1(config);

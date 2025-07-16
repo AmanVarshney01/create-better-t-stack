@@ -864,3 +864,68 @@ export async function handleExtras(
 		}
 	}
 }
+
+export async function setupDockerComposeTemplates(
+	projectDir: string,
+	context: ProjectConfig,
+): Promise<void> {
+	if (context.dbSetup !== "docker" || context.database === "none") {
+		return;
+	}
+
+	const serverAppDir = path.join(projectDir, "apps/server");
+	const dockerSrcDir = path.join(
+		PKG_ROOT,
+		`templates/db-setup/docker-compose/${context.database}`,
+	);
+
+	if (await fs.pathExists(dockerSrcDir)) {
+		await processAndCopyFiles("**/*", dockerSrcDir, serverAppDir, context);
+	} else {
+	}
+}
+
+export async function setupDeploymentTemplates(
+	projectDir: string,
+	context: ProjectConfig,
+): Promise<void> {
+	if (context.webDeploy === "none") {
+		return;
+	}
+
+	if (context.webDeploy === "workers") {
+		const webAppDir = path.join(projectDir, "apps/web");
+		if (!(await fs.pathExists(webAppDir))) {
+			return;
+		}
+
+		const frontends = context.frontend;
+
+		const templateMap: Record<string, string> = {
+			"tanstack-router": "react/tanstack-router",
+			"tanstack-start": "react/tanstack-start",
+			"react-router": "react/react-router",
+			solid: "solid",
+			next: "react/next",
+			nuxt: "nuxt",
+			svelte: "svelte",
+		};
+
+		for (const f of frontends) {
+			if (templateMap[f]) {
+				const deployTemplateSrc = path.join(
+					PKG_ROOT,
+					`templates/deploy/web/${templateMap[f]}`,
+				);
+				if (await fs.pathExists(deployTemplateSrc)) {
+					await processAndCopyFiles(
+						"**/*",
+						deployTemplateSrc,
+						webAppDir,
+						context,
+					);
+				}
+			}
+		}
+	}
+}

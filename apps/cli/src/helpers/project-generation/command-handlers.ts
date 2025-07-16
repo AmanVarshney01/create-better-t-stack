@@ -6,6 +6,7 @@ import { DEFAULT_CONFIG } from "../../constants";
 import { getAddonsToAdd } from "../../prompts/addons";
 import { gatherConfig } from "../../prompts/config-prompts";
 import { getProjectName } from "../../prompts/project-name";
+import { getDeploymentToAdd } from "../../prompts/web-deploy";
 import type { AddInput, CreateInput, ProjectConfig } from "../../types";
 import { trackProjectCreation } from "../../utils/analytics";
 import { displayConfig } from "../../utils/display-config";
@@ -17,8 +18,10 @@ import {
 import { renderTitle } from "../../utils/render-title";
 import { getProvidedFlags, processAndValidateFlags } from "../../validation";
 import { addAddonsToProject } from "./add-addons";
+import { addDeploymentToProject } from "./add-deployment";
 import { createProject } from "./create-project";
 import { detectProjectConfig } from "./detect-project-config";
+import { installDependencies } from "./install-dependencies";
 
 export async function createProjectHandler(
 	input: CreateInput & { projectName?: string },
@@ -135,45 +138,82 @@ export async function createProjectHandler(
 
 export async function addAddonsHandler(input: AddInput): Promise<void> {
 	try {
+		const projectDir = input.projectDir || process.cwd();
+		const detectedConfig = await detectProjectConfig(projectDir);
+
+		if (!detectedConfig) {
+			cancel(
+				pc.red(
+					"Could not detect project configuration. Please ensure this is a valid Better-T Stack project.",
+				),
+			);
+			process.exit(1);
+		}
+
 		if (!input.addons || input.addons.length === 0) {
-			const projectDir = input.projectDir || process.cwd();
-			const detectedConfig = await detectProjectConfig(projectDir);
-
-			if (!detectedConfig) {
-				cancel(
-					pc.red(
-						"Could not detect project configuration. Please ensure this is a valid Better-T Stack project.",
-					),
-				);
-				process.exit(1);
-			}
-
 			const addonsPrompt = await getAddonsToAdd(
 				detectedConfig.frontend || [],
 				detectedConfig.addons || [],
 			);
 
-			if (addonsPrompt.length === 0) {
-				outro(
-					pc.yellow(
-						"No addons to add or all compatible addons are already present.",
-					),
-				);
-				return;
+			if (addonsPrompt.length > 0) {
+				input.addons = addonsPrompt;
 			}
-
-			input.addons = addonsPrompt;
 		}
 
-		if (!input.addons || input.addons.length === 0) {
-			outro(pc.yellow("No addons specified to add."));
+		if (!input.webDeploy) {
+			const deploymentPrompt = await getDeploymentToAdd(
+				detectedConfig.frontend || [],
+				detectedConfig.webDeploy,
+			);
+
+			if (deploymentPrompt !== "none") {
+				input.webDeploy = deploymentPrompt;
+			}
+		}
+
+		const packageManager =
+			input.packageManager || detectedConfig.packageManager || "npm";
+
+		let somethingAdded = false;
+
+		if (input.addons && input.addons.length > 0) {
+			await addAddonsToProject({
+				...input,
+				install: false,
+				suppressInstallMessage: true,
+				addons: input.addons,
+			});
+			somethingAdded = true;
+		}
+
+		if (input.webDeploy && input.webDeploy !== "none") {
+			await addDeploymentToProject({
+				...input,
+				install: false,
+				suppressInstallMessage: true,
+				webDeploy: input.webDeploy,
+			});
+			somethingAdded = true;
+		}
+
+		if (!somethingAdded) {
+			outro(pc.yellow("No addons or deployment configurations to add."));
 			return;
 		}
 
-		await addAddonsToProject({
-			...input,
-			addons: input.addons,
-		});
+		if (input.install) {
+			await installDependencies({
+				projectDir,
+				packageManager,
+			});
+		} else {
+			log.info(
+				`Run ${pc.bold(`${packageManager} install`)} to install dependencies`,
+			);
+		}
+
+		outro("Add command completed successfully!");
 	} catch (error) {
 		console.error(error);
 		process.exit(1);

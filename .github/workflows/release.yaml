@@ -36,7 +36,7 @@ jobs:
         with:
           publish: bun run publish-packages
         env:
-          TELEMETRY: "true"
+          BTS_TELEMETRY: 1
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}

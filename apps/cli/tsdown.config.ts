@@ -10,8 +10,8 @@ export default defineConfig({
 		banner: "#!/usr/bin/env node",
 	},
 	env: {
-		POSTHOG_API_KEY: process.env.POSTHOG_API_KEY || "lol",
-		POSTHOG_HOST: process.env.POSTHOG_HOST || "lool",
-		TELEMETRY: process.env.TELEMETRY || "false", // wierd trick i know
+		POSTHOG_API_KEY: process.env.POSTHOG_API_KEY || "random",
+		POSTHOG_HOST: process.env.POSTHOG_HOST || "random",
+		BTS_TELEMETRY: process.env.BTS_TELEMETRY || "0",
 	},
 });

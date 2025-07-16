@@ -68,7 +68,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { expo } from "@better-auth/expo";
 {{/if}}
-import { db } from "@/db";
+import { db } from "../db";
 import * as schema from "../db/schema/auth";
 import { env } from "cloudflare:workers";
 

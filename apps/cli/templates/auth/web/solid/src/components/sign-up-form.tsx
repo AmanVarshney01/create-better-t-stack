@@ -1,7 +1,7 @@
 import { authClient } from "@/lib/auth-client";
 import { createForm } from "@tanstack/solid-form";
 import { useNavigate } from "@tanstack/solid-router";
-import z from "zod/v4";
+import z from "zod";
 import { For } from "solid-js";
 
 export default function SignUpForm({

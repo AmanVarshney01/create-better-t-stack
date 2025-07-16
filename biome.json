@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.0.4/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.1.1/schema.json",
 	"vcs": {
 		"enabled": false,
 		"clientKind": "git",
@@ -16,7 +16,8 @@
 			"!**/templates/**",
 			"!**/.turbo",
 			"!**/package.json",
-			"!**/analytics-data.json"
+			"!**/analytics-data.json",
+			"!**/schema.json"
 		]
 	},
 	"formatter": {

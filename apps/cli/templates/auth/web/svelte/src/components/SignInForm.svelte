@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createForm } from '@tanstack/svelte-form';
-	import z from 'zod/v4';
+	import z from 'zod';
 	import { authClient } from '$lib/auth-client';
 	import { goto } from '$app/navigation';
 

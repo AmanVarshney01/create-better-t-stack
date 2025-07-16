@@ -80,6 +80,12 @@ async function updateRootPackageJson(
 				scripts["db:migrate"] = `turbo -F ${backendPackageName} db:migrate`;
 			}
 		}
+		if (options.dbSetup === "docker") {
+			scripts["db:start"] = `turbo -F ${backendPackageName} db:start`;
+			scripts["db:watch"] = `turbo -F ${backendPackageName} db:watch`;
+			scripts["db:stop"] = `turbo -F ${backendPackageName} db:stop`;
+			scripts["db:down"] = `turbo -F ${backendPackageName} db:down`;
+		}
 	} else if (options.packageManager === "pnpm") {
 		scripts.dev = devScript;
 		scripts.build = "pnpm -r build";
@@ -104,6 +110,12 @@ async function updateRootPackageJson(
 				scripts["db:migrate"] =
 					`pnpm --filter ${backendPackageName} db:migrate`;
 			}
+		}
+		if (options.dbSetup === "docker") {
+			scripts["db:start"] = `pnpm --filter ${backendPackageName} db:start`;
+			scripts["db:watch"] = `pnpm --filter ${backendPackageName} db:watch`;
+			scripts["db:stop"] = `pnpm --filter ${backendPackageName} db:stop`;
+			scripts["db:down"] = `pnpm --filter ${backendPackageName} db:down`;
 		}
 	} else if (options.packageManager === "npm") {
 		scripts.dev = devScript;
@@ -132,6 +144,14 @@ async function updateRootPackageJson(
 					`npm run db:migrate --workspace ${backendPackageName}`;
 			}
 		}
+		if (options.dbSetup === "docker") {
+			scripts["db:start"] =
+				`npm run db:start --workspace ${backendPackageName}`;
+			scripts["db:watch"] =
+				`npm run db:watch --workspace ${backendPackageName}`;
+			scripts["db:stop"] = `npm run db:stop --workspace ${backendPackageName}`;
+			scripts["db:down"] = `npm run db:down --workspace ${backendPackageName}`;
+		}
 	} else if (options.packageManager === "bun") {
 		scripts.dev = devScript;
 		scripts.build = "bun run --filter '*' build";
@@ -156,6 +176,12 @@ async function updateRootPackageJson(
 				scripts["db:migrate"] =
 					`bun run --filter ${backendPackageName} db:migrate`;
 			}
+		}
+		if (options.dbSetup === "docker") {
+			scripts["db:start"] = `bun run --filter ${backendPackageName} db:start`;
+			scripts["db:watch"] = `bun run --filter ${backendPackageName} db:watch`;
+			scripts["db:stop"] = `bun run --filter ${backendPackageName} db:stop`;
+			scripts["db:down"] = `bun run --filter ${backendPackageName} db:down`;
 		}
 	}
 
@@ -244,6 +270,13 @@ async function updateServerPackageJson(
 			scripts["db:generate"] = "drizzle-kit generate";
 			scripts["db:migrate"] = "drizzle-kit migrate";
 		}
+	}
+
+	if (options.dbSetup === "docker") {
+		scripts["db:start"] = "docker compose up -d";
+		scripts["db:watch"] = "docker compose up";
+		scripts["db:stop"] = "docker compose stop";
+		scripts["db:down"] = "docker compose down";
 	}
 
 	await fs.writeJson(serverPackageJsonPath, serverPackageJson, {

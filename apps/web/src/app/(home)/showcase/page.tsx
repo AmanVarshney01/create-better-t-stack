@@ -6,12 +6,20 @@ import ShowcaseItem from "./_components/ShowcaseItem";
 
 const showcaseProjects = [
 	{
-		title: "gl1.chat",
+		title: "DocSurf",
 		description:
-			"An ai platform focused on speed, reliability and advanced workflows powered by trpc, drizzle, vite, elysia, tanstack router",
-		imageUrl: "https://gl1.chat/social-share-image.png",
-		liveUrl: "https://gl1.chat/?ref=better-t-stack",
-		tags: ["tRPC", "Drizzle", "Elysia", "Vite", "TanStack Router"],
+			"AI-powered writing platform with smart text suggestions, real-time autocomplete, and document management",
+		imageUrl: "https://docsurf.ai/opengraph.jpg",
+		liveUrl: "https://docsurf.ai/?ref=better-t-etter-t-stack",
+		tags: [
+			"TanStack Start",
+			"Convex",
+			"Better Auth",
+			"Biome",
+			"Husky",
+			"Turborepo",
+			"pnpm",
+		],
 	},
 	{
 		title: "Look Crafted",
@@ -50,6 +58,14 @@ const showcaseProjects = [
 			"Husky",
 			"Turborepo",
 		],
+	},
+	{
+		title: "gl1.chat",
+		description:
+			"An ai platform focused on speed, reliability and advanced workflows powered by trpc, drizzle, vite, elysia, tanstack router",
+		imageUrl: "https://gl1.chat/social-share-image.png",
+		liveUrl: "https://gl1.chat/?ref=better-t-stack",
+		tags: ["tRPC", "Drizzle", "Elysia", "Vite", "TanStack Router"],
 	},
 ];
 

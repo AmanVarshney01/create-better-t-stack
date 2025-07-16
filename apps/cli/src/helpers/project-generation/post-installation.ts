@@ -7,9 +7,10 @@ import type {
 	ProjectConfig,
 	Runtime,
 } from "../../types";
+import { getDockerStatus } from "../../utils/docker-utils";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
 
-export function displayPostInstallInstructions(
+export async function displayPostInstallInstructions(
 	config: ProjectConfig & { depsInstalled: boolean },
 ) {
 	const {
@@ -23,6 +24,7 @@ export function displayPostInstallInstructions(
 		frontend,
 		backend,
 		dbSetup,
+		webDeploy,
 	} = config;
 
 	const isConvex = backend === "convex";
@@ -33,7 +35,7 @@ export function displayPostInstallInstructions(
 
 	const databaseInstructions =
 		!isConvex && database !== "none"
-			? getDatabaseInstructions(database, orm, runCmd, runtime, dbSetup)
+			? await getDatabaseInstructions(database, orm, runCmd, runtime, dbSetup)
 			: "";
 
 	const tauriInstructions = addons?.includes("tauri")
@@ -54,6 +56,8 @@ export function displayPostInstallInstructions(
 	const starlightInstructions = addons?.includes("starlight")
 		? getStarlightInstructions(runCmd)
 		: "";
+	const workersDeployInstructions =
+		webDeploy === "workers" ? getWorkersDeployInstructions(runCmd) : "";
 
 	const hasWeb = frontend?.some((f) =>
 		[
@@ -143,6 +147,8 @@ export function displayPostInstallInstructions(
 	if (tauriInstructions) output += `\n${tauriInstructions.trim()}\n`;
 	if (lintingInstructions) output += `\n${lintingInstructions.trim()}\n`;
 	if (pwaInstructions) output += `\n${pwaInstructions.trim()}\n`;
+	if (workersDeployInstructions)
+		output += `\n${workersDeployInstructions.trim()}\n`;
 	if (starlightInstructions) output += `\n${starlightInstructions.trim()}\n`;
 
 	if (noOrmWarning) output += `\n${noOrmWarning.trim()}\n`;
@@ -188,14 +194,23 @@ function getLintingInstructions(runCmd?: string): string {
 	)} Format and lint fix: ${`${runCmd} check`}\n`;
 }
 
-function getDatabaseInstructions(
+async function getDatabaseInstructions(
 	database: Database,
 	orm?: ORM,
 	runCmd?: string,
 	runtime?: Runtime,
 	dbSetup?: DatabaseSetup,
-): string {
+): Promise<string> {
 	const instructions = [];
+
+	if (dbSetup === "docker") {
+		const dockerStatus = await getDockerStatus(database);
+
+		if (dockerStatus.message) {
+			instructions.push(dockerStatus.message);
+			instructions.push("");
+		}
+	}
 
 	if (runtime === "workers" && dbSetup === "d1") {
 		const packageManager = runCmd === "npm run" ? "npm" : runCmd || "npm";
@@ -250,10 +265,26 @@ function getDatabaseInstructions(
 				)} Prisma with Bun may require additional configuration. If you encounter errors,\nfollow the guidance provided in the error messages`,
 			);
 		}
-
+		if (database === "mongodb" && dbSetup === "docker") {
+			instructions.push(
+				`${pc.yellow(
+					"WARNING:",
+				)} Prisma + MongoDB + Docker combination may not work.`,
+			);
+		}
+		if (dbSetup === "docker") {
+			instructions.push(
+				`${pc.cyan("•")} Start docker container: ${`${runCmd} db:start`}`,
+			);
+		}
 		instructions.push(`${pc.cyan("•")} Apply schema: ${`${runCmd} db:push`}`);
 		instructions.push(`${pc.cyan("•")} Database UI: ${`${runCmd} db:studio`}`);
 	} else if (orm === "drizzle") {
+		if (dbSetup === "docker") {
+			instructions.push(
+				`${pc.cyan("•")} Start docker container: ${`${runCmd} db:start`}`,
+			);
+		}
 		instructions.push(`${pc.cyan("•")} Apply schema: ${`${runCmd} db:push`}`);
 		instructions.push(`${pc.cyan("•")} Database UI: ${`${runCmd} db:studio`}`);
 		if (database === "sqlite" && dbSetup !== "d1") {
@@ -261,6 +292,12 @@ function getDatabaseInstructions(
 				`${pc.cyan(
 					"•",
 				)} Start local DB (if needed): ${`cd apps/server && ${runCmd} db:local`}`,
+			);
+		}
+	} else if (orm === "mongoose") {
+		if (dbSetup === "docker") {
+			instructions.push(
+				`${pc.cyan("•")} Start docker container: ${`${runCmd} db:start`}`,
 			);
 		}
 	} else if (orm === "none") {
@@ -287,7 +324,7 @@ function getTauriInstructions(runCmd?: string): string {
 function getPwaInstructions(): string {
 	return `\n${pc.bold("PWA with React Router v7:")}\n${pc.yellow(
 		"NOTE:",
-	)} There is a known compatibility issue between VitePWA and React Router v7.\nSee: https://github.com/vite-pwa/vite-plugin-pwa/issues/809`;
+	)} There is a known compatibility issue between VitePWA \nand React Router v7.See: https://github.com/vite-pwa/vite-plugin-pwa/issues/809`;
 }
 
 function getStarlightInstructions(runCmd?: string): string {
@@ -308,4 +345,8 @@ function getBunWebNativeWarning(): string {
 	return `\n${pc.yellow(
 		"WARNING:",
 	)} 'bun' might cause issues with web + native apps in a monorepo. Use 'pnpm' if problems arise.`;
+}
+
+function getWorkersDeployInstructions(runCmd?: string): string {
+	return `\n${pc.bold("Deploy frontend to Cloudflare Workers:")}\n${pc.cyan("•")} Deploy: ${`cd apps/web && ${runCmd || "bun run"} deploy`}`;
 }

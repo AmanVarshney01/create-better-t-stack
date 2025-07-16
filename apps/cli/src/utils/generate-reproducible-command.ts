@@ -29,6 +29,7 @@ export function generateReproducibleCommand(config: ProjectConfig): string {
 	}
 
 	flags.push(`--db-setup ${config.dbSetup}`);
+	flags.push(`--web-deploy ${config.webDeploy}`);
 	flags.push(config.git ? "--git" : "--no-git");
 	flags.push(`--package-manager ${config.packageManager}`);
 	flags.push(config.install ? "--install" : "--no-install");

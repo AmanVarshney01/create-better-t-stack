@@ -1,5 +1,121 @@
 # create-better-t-stack
 
+## 2.26.0
+
+### Minor Changes
+
+- 8a9ddc9: Update Nuxt template to v4
+
+## 2.25.9
+
+### Patch Changes
+
+- b47671c: Fix start script paths in Bun and Node runtime setup
+- b9e9292: Return DB results directly in todo router handlers
+
+## 2.25.8
+
+### Patch Changes
+
+- 5080b6b: Switch to tsdown in server template and update configs
+
+## 2.25.7
+
+### Patch Changes
+
+- 4ece24b: Update telemetry disable instructions to use BTS_TELEMETRY_DISABLED
+
+## 2.25.6
+
+### Patch Changes
+
+- 71e5850: remove telemetry console logs
+
+## 2.25.5
+
+### Patch Changes
+
+- 901e1ff: fix telemetry logic
+
+## 2.25.4
+
+### Patch Changes
+
+- 65c29c2: Allow disabling telemetry with BTS_TELEMETRY_DISABLED=1
+
+## 2.25.3
+
+### Patch Changes
+
+- ea826a5: biome ignore .wrangler dir
+
+## 2.25.2
+
+### Patch Changes
+
+- 7881892: remove trailing comma in biome.json
+
+## 2.25.1
+
+### Patch Changes
+
+- 110fa5a: exclude .expo dir from biome.json
+
+## 2.25.0
+
+### Minor Changes
+
+- 3569b04: Added support for local database setup using Docker Compose for PostgreSQL, MySQL, and MongoDB.
+
+## 2.24.5
+
+### Patch Changes
+
+- b2195dd: Upgrade to zod@4.0.2
+
+## 2.24.4
+
+### Patch Changes
+
+- 5fec00a: fix: web-deploy validation to check for frontend flag
+
+## 2.24.3
+
+### Patch Changes
+
+- fe7b4ff: Remove unnecessary returning() from todo insert query
+
+## 2.24.2
+
+### Patch Changes
+
+- e21756a: fix root path in unistyles template
+
+## 2.24.1
+
+### Patch Changes
+
+- d344b85: Prevent web-deploy when no web frontend is selected
+- 98bb4a3: Upgrade to unistyles 3.0
+
+## 2.24.0
+
+### Minor Changes
+
+- 0ae1347: add workers support for tanstack start
+
+## 2.23.1
+
+### Patch Changes
+
+- aea23e8: add workers help message in neext steps box
+
+## 2.23.0
+
+### Minor Changes
+
+- d267427: add cloudflare workers deployment support for next, solid, tanstack-router, react-router, nuxt
+
 ## 2.22.10
 
 ### Patch Changes

@@ -132,6 +132,7 @@
         "mongodb-atlas",
         "supabase",
         "d1",
+        "docker",
         "none"
       ],
       "description": "Database hosting setup"
@@ -144,6 +145,14 @@
         "none"
       ],
       "description": "API type"
+    },
+    "webDeploy": {
+      "type": "string",
+      "enum": [
+        "workers",
+        "none"
+      ],
+      "description": "Web deployment"
     }
   },
   "required": [
@@ -159,7 +168,8 @@
     "auth",
     "packageManager",
     "dbSetup",
-    "api"
+    "api",
+    "webDeploy"
   ],
   "additionalProperties": false
 }

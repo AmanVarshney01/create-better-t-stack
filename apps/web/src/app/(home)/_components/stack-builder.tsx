@@ -73,6 +73,7 @@ const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
 	"database",
 	"orm",
 	"dbSetup",
+	"webDeploy",
 	"auth",
 	"packageManager",
 	"addons",
@@ -124,6 +125,7 @@ const getBadgeColors = (category: string): string => {
 		case "packageManager":
 			return "border-orange-300 bg-orange-100 text-orange-800 dark:border-orange-700/30 dark:bg-orange-900/30 dark:text-orange-300";
 		case "git":
+		case "webDeploy":
 		case "install":
 			return "border-gray-300 bg-gray-100 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400";
 		default:
@@ -598,6 +600,39 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 						message: "Backend set to 'Hono' (required by Cloudflare D1)",
 					});
 				}
+			} else if (nextStack.dbSetup === "docker") {
+				if (nextStack.database === "sqlite") {
+					notes.dbSetup.notes.push(
+						"Docker setup is not needed for SQLite. It will be set to 'Basic Setup'.",
+					);
+					notes.dbSetup.hasIssue = true;
+					notes.database.hasIssue = true;
+					nextStack.dbSetup = "none";
+					changed = true;
+					changes.push({
+						category: "dbSetup",
+						message:
+							"DB Setup set to 'Basic Setup' (SQLite doesn't need Docker)",
+					});
+				}
+
+				if (nextStack.runtime === "workers") {
+					notes.dbSetup.notes.push(
+						"Docker setup is not compatible with Cloudflare Workers runtime. Bun runtime will be selected.",
+					);
+					notes.runtime.notes.push(
+						"Cloudflare Workers runtime does not support Docker setup. Bun runtime will be selected.",
+					);
+					notes.dbSetup.hasIssue = true;
+					notes.runtime.hasIssue = true;
+					nextStack.runtime = "bun";
+					changed = true;
+					changes.push({
+						category: "dbSetup",
+						message:
+							"Runtime set to 'Bun' (Workers not compatible with Docker)",
+					});
+				}
 			}
 
 			if (nextStack.runtime === "workers") {
@@ -650,6 +685,24 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 						category: "runtime",
 						message:
 							"Database set to 'SQLite' (MongoDB not compatible with Workers)",
+					});
+				}
+
+				if (nextStack.dbSetup === "docker") {
+					notes.runtime.notes.push(
+						"Cloudflare Workers runtime does not support Docker setup. D1 will be selected.",
+					);
+					notes.dbSetup.notes.push(
+						"Docker setup is not compatible with Cloudflare Workers runtime. D1 will be selected.",
+					);
+					notes.runtime.hasIssue = true;
+					notes.dbSetup.hasIssue = true;
+					nextStack.dbSetup = "d1";
+					changed = true;
+					changes.push({
+						category: "runtime",
+						message:
+							"DB Setup set to 'D1' (Docker not compatible with Workers)",
 					});
 				}
 			}
@@ -829,6 +882,24 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 		}
 	}
 
+	const webFrontendsSelected = nextStack.webFrontend.some((f) => f !== "none");
+	if (!webFrontendsSelected && nextStack.webDeploy !== "none") {
+		notes.webDeploy.notes.push(
+			"Web deployment requires a web frontend. It will be disabled.",
+		);
+		notes.webFrontend.notes.push(
+			"No web frontend selected: Deployment has been disabled.",
+		);
+		notes.webDeploy.hasIssue = true;
+		notes.webFrontend.hasIssue = true;
+		nextStack.webDeploy = "none";
+		changed = true;
+		changes.push({
+			category: "webDeploy",
+			message: "Web deployment set to 'none' (requires web frontend)",
+		});
+	}
+
 	return {
 		adjustedStack: changed ? nextStack : null,
 		notes,
@@ -893,6 +964,7 @@ const generateCommand = (stackState: StackState): string => {
 			"supabase",
 			"prisma-postgres",
 			"mongodb-atlas",
+			"docker",
 		].includes(stackState.dbSetup);
 
 		if (
@@ -923,6 +995,13 @@ const generateCommand = (stackState: StackState): string => {
 		if (stackState.git === "false" && DEFAULT_STACK.git === "true") {
 			flags.push("--no-git");
 		}
+	}
+
+	if (
+		stackState.webDeploy &&
+		!checkDefault("webDeploy", stackState.webDeploy)
+	) {
+		flags.push(`--web-deploy ${stackState.webDeploy}`);
 	}
 
 	if (!checkDefault("install", stackState.install)) {

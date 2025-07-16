@@ -4,7 +4,7 @@ import { routeTree } from "./routeTree.gen";
 import "./styles.css";
 {{#if (eq api "orpc")}}
 import { QueryClientProvider } from "@tanstack/solid-query";
-import { queryClient } from "./utils/orpc";
+import { orpc, queryClient } from "./utils/orpc";
 {{/if}}
 
 const router = createRouter({
@@ -12,6 +12,9 @@ const router = createRouter({
   defaultPreload: "intent",
   scrollRestoration: true,
   defaultPreloadStaleTime: 0,
+  {{#if (eq api "orpc")}}
+  context: { orpc, queryClient },
+  {{/if}}
 });
 
 declare module "@tanstack/solid-router" {

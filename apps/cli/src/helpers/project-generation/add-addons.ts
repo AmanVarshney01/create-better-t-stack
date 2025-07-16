@@ -18,7 +18,7 @@ function exitWithError(message: string): never {
 }
 
 export async function addAddonsToProject(
-	input: AddInput & { addons: Addons[] },
+	input: AddInput & { addons: Addons[]; suppressInstallMessage?: boolean },
 ): Promise<void> {
 	try {
 		const projectDir = input.projectDir || process.cwd();
@@ -55,6 +55,7 @@ export async function addAddonsToProject(
 			install: input.install || false,
 			dbSetup: detectedConfig.dbSetup || "none",
 			api: detectedConfig.api || "none",
+			webDeploy: detectedConfig.webDeploy || "none",
 		};
 
 		for (const addon of input.addons) {
@@ -71,9 +72,7 @@ export async function addAddonsToProject(
 		}
 
 		log.info(
-			pc.green(
-				`Adding ${input.addons.join(", ")} to ${config.frontend.join("/")}`,
-			),
+			`Adding ${input.addons.join(", ")} to ${config.frontend.join("/")}`,
 		);
 
 		await setupAddonsTemplate(projectDir, config);
@@ -88,7 +87,7 @@ export async function addAddonsToProject(
 				projectDir,
 				packageManager: config.packageManager,
 			});
-		} else {
+		} else if (!input.suppressInstallMessage) {
 			log.info(
 				pc.yellow(
 					`Run ${pc.bold(

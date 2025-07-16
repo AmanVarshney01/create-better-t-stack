@@ -12,8 +12,7 @@
 		"check": "turbo check",
 		"format": "biome check --write .",
 		"publish-packages": "turbo run build --filter=create-better-t-stack && changeset publish",
-		"build:web:cloudflare": "bun install && bun run build:web",
-		"deploy:web": "bun run build:web:cloudflare && bunx wrangler pages deploy ./apps/web/out"
+		"deploy:web": "bun run --filter=web deploy"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.0.2",

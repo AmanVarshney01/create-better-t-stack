@@ -66,6 +66,32 @@ Options:
   -h, --help                      Display help
 ```
 
+## Telemetry
+
+This CLI collects anonymous usage data to help improve the tool. The data collected includes:
+- Configuration options selected
+- CLI version
+- Node.js version
+- Platform (OS)
+
+**Telemetry is enabled by default in published versions** to help us understand usage patterns and improve the tool.
+
+### Disabling Telemetry
+
+You can disable telemetry by setting the `BTS_TELEMETRY` environment variable:
+
+```bash
+# Disable telemetry for a single run
+BTS_TELEMETRY_DISABLED=1 npx create-better-t-stack my-app
+
+# Disable telemetry globally in your shell profile (.bashrc, .zshrc, etc.)
+export BTS_TELEMETRY_DISABLED=1
+```
+
+### Development
+
+During development, telemetry is automatically disabled when `NODE_ENV=development`.
+
 ## Examples
 
 Create a project with default configuration:

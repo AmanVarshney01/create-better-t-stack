@@ -1,6 +1,7 @@
 import { PostHog } from "posthog-node";
 import type { ProjectConfig } from "../types";
 import { getLatestCLIVersion } from "./get-latest-cli-version";
+import { isTelemetryEnabled } from "./telemetry";
 
 const POSTHOG_API_KEY = process.env.POSTHOG_API_KEY || "";
 const POSTHOG_HOST = process.env.POSTHOG_HOST;
@@ -14,7 +15,7 @@ export async function trackProjectCreation(
 		flushInterval: 0,
 		privacyMode: true,
 		disableGeoip: true,
-		disabled: process.env.TELEMETRY !== "true",
+		disabled: !isTelemetryEnabled(),
 	});
 
 	try {
