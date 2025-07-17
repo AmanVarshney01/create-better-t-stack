@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.26.1
+
+### Patch Changes
+
+- 5ab503a: Add conditional rendering for private data based on API type in dashboard page
+
 ## 2.26.0
 
 ### Minor Changes
