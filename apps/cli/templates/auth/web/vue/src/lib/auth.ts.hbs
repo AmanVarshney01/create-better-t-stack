@@ -1,0 +1,89 @@
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { api{{#if (eq api "trpc")}}, authToken{{/if}} } from './api'
+
+export interface User {
+  id: string
+  email: string
+  name: string | null
+}
+
+export interface Session {
+  user: User
+  expiresAt: Date
+}
+
+const currentUser = ref<User | null>(null)
+const isLoading = ref(true)
+
+export function useAuth() {
+  const router = useRouter()
+  
+  const isAuthenticated = computed(() => !!currentUser.value)
+
+  const initialize = async () => {
+    try {
+      const token = localStorage.getItem('auth-token')
+      if (!token) {
+        isLoading.value = false
+        return
+      }
+
+      const { data } = await api.auth.getSession{{#if (eq api "orpc")}}(){{/if}}
+      if (data) {
+        currentUser.value = data.user
+{{#if (eq api "orpc")}}        authToken.value = token{{/if}}
+      }
+    } catch (error) {
+      localStorage.removeItem('auth-token')
+{{#if (eq api "orpc")}}      authToken.value = null{{/if}}
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  const login = async (email: string, password: string) => {
+    const { data } = await api.auth.login{{#if (eq api "orpc")}}({email, password}){{else}}({ email, password }){{/if}}
+    
+    if (data?.token) {
+      localStorage.setItem('auth-token', data.token)
+{{#if (eq api "orpc")}}      authToken.value = data.token{{/if}}
+      currentUser.value = data.user
+      router.push('/')
+    }
+  }
+
+  const signup = async (email: string, password: string, name: string) => {
+    const { data } = await api.auth.signup{{#if (eq api "orpc")}}({email, password, name}){{else}}({ email, password, name }){{/if}}
+    
+    if (data?.token) {
+      localStorage.setItem('auth-token', data.token)
+{{#if (eq api "orpc")}}      authToken.value = data.token{{/if}}
+      currentUser.value = data.user
+      router.push('/')
+    }
+  }
+
+  const logout = async () => {
+    try {
+      await api.auth.logout{{#if (eq api "orpc")}}(){{/if}}
+    } catch (error) {
+      console.error('Logout error:', error)
+    } finally {
+      localStorage.removeItem('auth-token')
+{{#if (eq api "orpc")}}      authToken.value = null{{/if}}
+      currentUser.value = null
+      router.push('/login')
+    }
+  }
+
+  return {
+    user: currentUser,
+    isAuthenticated,
+    isLoading,
+    initialize,
+    login,
+    signup,
+    logout,
+  }
+}

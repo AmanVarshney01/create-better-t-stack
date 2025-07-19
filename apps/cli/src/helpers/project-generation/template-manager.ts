@@ -68,6 +68,7 @@ export async function setupFrontendTemplates(
 		["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
 	);
 	const hasNuxtWeb = context.frontend.includes("nuxt");
+	const hasVueRouterWeb = context.frontend.includes("vue-router");
 	const hasSvelteWeb = context.frontend.includes("svelte");
 	const hasSolidWeb = context.frontend.includes("solid");
 	const hasNativeWind = context.frontend.includes("native-nativewind");
@@ -75,7 +76,7 @@ export async function setupFrontendTemplates(
 	const _hasNative = hasNativeWind || hasUnistyles;
 	const isConvex = context.backend === "convex";
 
-	if (hasReactWeb || hasNuxtWeb || hasSvelteWeb || hasSolidWeb) {
+	if (hasReactWeb || hasNuxtWeb || hasVueRouterWeb || hasSvelteWeb || hasSolidWeb) {
 		const webAppDir = path.join(projectDir, "apps/web");
 		await fs.ensureDir(webAppDir);
 
@@ -138,6 +139,23 @@ export async function setupFrontendTemplates(
 				);
 				if (await fs.pathExists(apiWebNuxtDir)) {
 					await processAndCopyFiles("**/*", apiWebNuxtDir, webAppDir, context);
+				} else {
+				}
+			}
+		} else if (hasVueRouterWeb) {
+			const vueRouterBaseDir = path.join(PKG_ROOT, "templates/frontend/vue/vue-router");
+			if (await fs.pathExists(vueRouterBaseDir)) {
+				await processAndCopyFiles("**/*", vueRouterBaseDir, webAppDir, context);
+			} else {
+			}
+
+			if (!isConvex && context.api !== "none") {
+				const apiWebVueDir = path.join(
+					PKG_ROOT,
+					`templates/api/${context.api}/web/vue`,
+				);
+				if (await fs.pathExists(apiWebVueDir)) {
+					await processAndCopyFiles("**/*", apiWebVueDir, webAppDir, context);
 				} else {
 				}
 			}
@@ -373,6 +391,7 @@ export async function setupAuthTemplate(
 		["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
 	);
 	const hasNuxtWeb = context.frontend.includes("nuxt");
+	const hasVueRouterWeb = context.frontend.includes("vue-router");
 	const hasSvelteWeb = context.frontend.includes("svelte");
 	const hasSolidWeb = context.frontend.includes("solid");
 	const hasNativeWind = context.frontend.includes("native-nativewind");
@@ -435,7 +454,7 @@ export async function setupAuthTemplate(
 	}
 
 	if (
-		(hasReactWeb || hasNuxtWeb || hasSvelteWeb || hasSolidWeb) &&
+		(hasReactWeb || hasNuxtWeb || hasVueRouterWeb || hasSvelteWeb || hasSolidWeb) &&
 		webAppDirExists
 	) {
 		if (hasReactWeb) {
@@ -473,6 +492,14 @@ export async function setupAuthTemplate(
 			if (await fs.pathExists(authWebNuxtSrc)) {
 				await processAndCopyFiles("**/*", authWebNuxtSrc, webAppDir, context);
 			} else {
+			}
+		} else if (hasVueRouterWeb) {
+			if (context.api !== "none") {
+				const authWebVueSrc = path.join(PKG_ROOT, "templates/auth/web/vue");
+				if (await fs.pathExists(authWebVueSrc)) {
+					await processAndCopyFiles("**/*", authWebVueSrc, webAppDir, context);
+				} else {
+				}
 			}
 		} else if (hasSvelteWeb) {
 			const authWebSvelteSrc = path.join(PKG_ROOT, "templates/auth/web/svelte");
@@ -589,6 +616,7 @@ export async function setupExamplesTemplate(
 		["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
 	);
 	const hasNuxtWeb = context.frontend.includes("nuxt");
+	const hasVueRouterWeb = context.frontend.includes("vue-router");
 	const hasSvelteWeb = context.frontend.includes("svelte");
 	const hasSolidWeb = context.frontend.includes("solid");
 
@@ -711,6 +739,18 @@ export async function setupExamplesTemplate(
 					await processAndCopyFiles(
 						"**/*",
 						exampleWebNuxtSrc,
+						webAppDir,
+						context,
+						false,
+					);
+				} else {
+				}
+			} else if (hasVueRouterWeb) {
+				const exampleWebVueSrc = path.join(exampleBaseDir, "web/vue");
+				if (await fs.pathExists(exampleWebVueSrc)) {
+					await processAndCopyFiles(
+						"**/*",
+						exampleWebVueSrc,
 						webAppDir,
 						context,
 						false,
@@ -859,6 +899,7 @@ export async function setupDeploymentTemplates(
 			solid: "solid",
 			next: "react/next",
 			nuxt: "nuxt",
+			"vue-router": "vue",
 			svelte: "svelte",
 		};
 

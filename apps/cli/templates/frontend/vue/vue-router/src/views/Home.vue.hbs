@@ -1,0 +1,70 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { AlertCircle, Rocket, Zap, Shield } from 'lucide-vue-next'
+
+const count = ref(0)
+
+const features = [
+  {
+    icon: Zap,
+    title: 'Lightning Fast',
+    description: 'Built with Vite for instant HMR and optimized builds'
+  },
+  {
+    icon: Shield,
+    title: 'Type Safe',
+    description: 'Full TypeScript support with Vue 3 composition API'
+  },
+  {
+    icon: Rocket,
+    title: 'Production Ready',
+    description: 'Best practices and optimizations out of the box'
+  }
+]
+</script>
+
+<template>
+  <div class="container mx-auto py-8 px-4">
+    <section class="flex flex-col items-center text-center space-y-8 py-12">
+      <h1 class="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
+        Welcome to <span class="text-primary">{{projectName}}</span>
+      </h1>
+      <p class="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
+        A modern Vue 3 application with Vue Router, TypeScript, and Tailwind CSS
+      </p>
+      
+      <div class="flex gap-4 items-center">
+        <Button @click="count++">
+          Count is {{ count }}
+        </Button>
+        <router-link to="/about">
+          <Button variant="outline">
+            <AlertCircle class="mr-2 h-4 w-4" />
+            About
+          </Button>
+        </router-link>
+      </div>
+    </section>
+
+    <section class="grid gap-6 md:grid-cols-3 py-12">
+      <Card v-for="feature in features" :key="feature.title">
+        <CardHeader>
+          <component :is="feature.icon" class="h-10 w-10 mb-4 text-primary" />
+          <CardTitle>{{ feature.title }}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <CardDescription>{{ feature.description }}</CardDescription>
+        </CardContent>
+      </Card>
+    </section>
+
+    <section class="text-center py-12 space-y-4">
+      <h2 class="text-3xl font-bold">Get Started</h2>
+      <p class="text-gray-500 dark:text-gray-400">
+        Edit <code class="text-sm font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">src/views/Home.vue</code> to get started
+      </p>
+    </section>
+  </div>
+</template>
