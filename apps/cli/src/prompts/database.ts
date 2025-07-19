@@ -8,17 +8,34 @@ export async function getDatabaseChoice(
 	backend?: Backend,
 	runtime?: Runtime,
 ): Promise<Database> {
+	// Backends that don't use traditional databases
 	if (backend === "convex" || backend === "none") {
 		return "none";
 	}
 
 	if (database !== undefined) return database;
 
-	const databaseOptions: Array<{
-		value: Database;
-		label: string;
-		hint: string;
-	}> = [
+	const databaseOptions = getAvailableDatabases(backend, runtime);
+
+	const response = await select<Database>({
+		message: "Select database",
+		options: databaseOptions,
+		initialValue: DEFAULT_CONFIG.database,
+	});
+
+	if (isCancel(response)) {
+		cancel(pc.red("Operation cancelled"));
+		process.exit(0);
+	}
+
+	return response;
+}
+
+function getAvailableDatabases(
+	backend?: Backend,
+	runtime?: Runtime,
+): Array<{ value: Database; label: string; hint: string }> {
+	const options: Array<{ value: Database; label: string; hint: string }> = [
 		{
 			value: "none",
 			label: "None",
@@ -34,31 +51,25 @@ export async function getDatabaseChoice(
 			label: "PostgreSQL",
 			hint: "powerful, open source object-relational database system",
 		},
-		{
+	];
+
+	// Add MySQL for all backends except bknd
+	if (backend !== "bknd") {
+		options.push({
 			value: "mysql",
 			label: "MySQL",
 			hint: "popular open-source relational database system",
-		},
-	];
-
-	if (runtime !== "workers") {
-		databaseOptions.push({
-			value: "mongodb",
-			label: "MongoDB",
-			hint: "open-source NoSQL database that stores data in JSON-like documents called BSON",
 		});
 	}
 
-	const response = await select<Database>({
-		message: "Select database",
-		options: databaseOptions,
-		initialValue: DEFAULT_CONFIG.database,
-	});
-
-	if (isCancel(response)) {
-		cancel(pc.red("Operation cancelled"));
-		process.exit(0);
+	// Add MongoDB for all runtimes except workers
+	if (runtime !== "workers") {
+		options.push({
+			value: "mongodb",
+			label: "MongoDB",
+			hint: "open-source NoSQL database that stores data in JSON-like documents",
+		});
 	}
 
-	return response;
+	return options;
 }
