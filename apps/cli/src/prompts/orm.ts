@@ -3,23 +3,40 @@ import pc from "picocolors";
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Database, ORM, Runtime } from "../types";
 
-const ormOptions = {
-	prisma: {
-		value: "prisma" as const,
-		label: "Prisma",
-		hint: "Powerful, feature-rich ORM",
+const ormLabelsAndHints: { value: ORM, label: string; hint: string, runtimes: Runtime[], backends: Backend[], databases: Database[] }[] = [
+	{
+		value: "none",
+		label: "None",
+		hint: "No ORM setup",
+		runtimes: ["bun", "node", "workers"],
+		backends: ["hono", "express", "fastify", "next", "elysia", "convex", "bknd", "none"],
+		databases: ["none"],
 	},
-	mongoose: {
-		value: "mongoose" as const,
-		label: "Mongoose",
-		hint: "Elegant object modeling tool",
-	},
-	drizzle: {
-		value: "drizzle" as const,
+	{
+		value: "drizzle",
 		label: "Drizzle",
 		hint: "Lightweight and performant TypeScript ORM",
+		runtimes: ["bun", "node", "workers"],
+		backends: ["hono", "express", "fastify", "next", "elysia", "bknd", "none"],
+		databases: ["sqlite", "postgres", "mysql"],
 	},
-};
+	{
+		value: "prisma",
+		label: "Prisma",
+		hint: "Powerful, feature-rich ORM",
+		runtimes: ["bun", "node"],
+		backends: ["hono", "express", "fastify", "next", "elysia", "bknd", "none"],
+		databases: ["sqlite", "postgres", "mysql", "mongodb"],
+	},
+	{
+		value: "mongoose",
+		label: "Mongoose",
+		hint: "Elegant object modeling tool",
+		runtimes: ["bun", "node"],
+		backends: ["hono", "express", "fastify", "next", "elysia", "none"],
+		databases: ["mongodb"],
+	},
+];
 
 export async function getORMChoice(
 	orm: ORM | undefined,
@@ -28,6 +45,7 @@ export async function getORMChoice(
 	backend?: Backend,
 	runtime?: Runtime,
 ): Promise<ORM> {
+	// Backends that don't use traditional ORMs
 	if (backend === "convex") {
 		return "none";
 	}
@@ -35,19 +53,11 @@ export async function getORMChoice(
 	if (!hasDatabase) return "none";
 	if (orm !== undefined) return orm;
 
-	if (runtime === "workers") {
-		return "drizzle";
-	}
-
-	const options = [
-		...(database === "mongodb"
-			? [ormOptions.prisma, ormOptions.mongoose]
-			: [ormOptions.drizzle, ormOptions.prisma]),
-	];
+	const ormOptions = getAvailableORMs(database, backend, runtime);
 
 	const response = await select<ORM>({
 		message: "Select ORM",
-		options,
+		options: ormOptions,
 		initialValue: database === "mongodb" ? "prisma" : DEFAULT_CONFIG.orm,
 	});
 
@@ -57,4 +67,34 @@ export async function getORMChoice(
 	}
 
 	return response;
+}
+
+function getAvailableORMs(
+	database?: Database,
+	backend?: Backend,
+	runtime?: Runtime,
+): Array<{ value: ORM; label: string; hint: string }> {
+	// Filter ORMs based on database, backend and runtime
+	const supportedORMs = ormLabelsAndHints
+		.filter((orm) => {
+			if (database && !orm.databases.includes(database)) {
+				return false;
+			}
+			if (backend && !orm.backends.includes(backend)) {
+				return false;
+			}
+			if (runtime && !orm.runtimes.includes(runtime)) {
+				return false;
+			}
+			return true;
+		})
+		.map((orm) => {
+			return {
+				value: orm.value,
+				label: orm.label,
+				hint: orm.hint,
+			};
+		});
+
+	return supportedORMs;
 }
