@@ -38,6 +38,8 @@ export const dependencyVersionMap = {
 	"@neondatabase/serverless": "^1.0.1",
 	pg: "^8.14.1",
 	"@types/pg": "^8.11.11",
+	"@types/ws": "^8.18.1",
+	ws: "^8.18.3",
 
 	mysql2: "^3.14.0",
 

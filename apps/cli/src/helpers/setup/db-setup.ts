@@ -51,8 +51,8 @@ export async function setupDatabase(config: ProjectConfig): Promise<void> {
 			} else if (database === "postgres") {
 				if (dbSetup === "neon") {
 					await addPackageDependency({
-						dependencies: ["drizzle-orm", "@neondatabase/serverless"],
-						devDependencies: ["drizzle-kit"],
+						dependencies: ["drizzle-orm", "@neondatabase/serverless", "ws"],
+						devDependencies: ["drizzle-kit", "@types/ws"],
 						projectDir: serverDir,
 					});
 				} else {
