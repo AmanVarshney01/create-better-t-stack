@@ -31,45 +31,66 @@ export async function getDatabaseChoice(
 	return response;
 }
 
+const databaseLabelsAndHints: { value: Database, label: string; hint: string, runtimes: Runtime[], backends: Backend[] }[] = [
+	{
+		value: "none",
+		label: "None",
+		hint: "No database setup",
+		runtimes: ["bun", "node", "workers"],
+		backends: ["hono", "express", "fastify", "next", "elysia", "convex", "bknd", "none"],
+	},
+	{
+		value: "sqlite",
+		label: "SQLite",
+		hint: "lightweight, server-less, embedded relational database",
+		runtimes: ["bun", "node", "workers"],
+		backends: ["hono", "express", "fastify", "next", "elysia", "bknd", "none"],
+	},
+	{
+		value: "postgres",
+		label: "PostgreSQL",
+		hint: "powerful, open source object-relational database system",
+		runtimes: ["bun", "node", "workers"],
+		backends: ["hono", "express", "fastify", "next", "elysia", "bknd", "none"],
+	},
+	{
+		value: "mysql",
+		label: "MySQL",
+		runtimes: ["bun", "node", "workers"],
+		hint: "popular open-source relational database system",
+		backends: ["hono", "express", "fastify", "next", "elysia", "none"],
+	},
+	{
+		value: "mongodb",
+		label: "MongoDB",
+		runtimes: ["bun", "node"], // MongoDB is not supported on workers.
+		hint: "open-source NoSQL database that stores data in JSON-like documents",
+		backends: ["hono", "express", "fastify", "next", "elysia", "none"],
+	},
+];
+
 function getAvailableDatabases(
 	backend?: Backend,
 	runtime?: Runtime,
 ): Array<{ value: Database; label: string; hint: string }> {
-	const options: Array<{ value: Database; label: string; hint: string }> = [
-		{
-			value: "none",
-			label: "None",
-			hint: "No database setup",
-		},
-		{
-			value: "sqlite",
-			label: "SQLite",
-			hint: "lightweight, server-less, embedded relational database",
-		},
-		{
-			value: "postgres",
-			label: "PostgreSQL",
-			hint: "powerful, open source object-relational database system",
-		},
-	];
-
-	// Add MySQL for all backends except bknd
-	if (backend !== "bknd") {
-		options.push({
-			value: "mysql",
-			label: "MySQL",
-			hint: "popular open-source relational database system",
+	// Filter databases based on backend and runtime
+	const supportedDatabases = databaseLabelsAndHints
+		.filter((db) => {
+			if (backend && !db.backends.includes(backend)) {
+				return false;
+			}
+			if (runtime && !db.runtimes.includes(runtime)) {
+				return false;
+			}
+			return true;
+		})
+		.map((db) => {
+			return {
+				value: db.value,
+				label: db.label,
+				hint: db.hint,
+			};
 		});
-	}
 
-	// Add MongoDB for all runtimes except workers
-	if (runtime !== "workers") {
-		options.push({
-			value: "mongodb",
-			label: "MongoDB",
-			hint: "open-source NoSQL database that stores data in JSON-like documents",
-		});
-	}
-
-	return options;
+	return supportedDatabases;
 }
