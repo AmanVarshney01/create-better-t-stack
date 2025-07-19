@@ -3,43 +3,47 @@ import pc from "picocolors";
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Runtime } from "../types";
 
+const runtimeLabelsAndHints: { value: Runtime, label: string; hint: string, backends: Backend[] }[] = [
+	{
+		value: "none",
+		label: "None",
+		hint: "No runtime setup",
+		backends: ["convex", "none"],
+	},
+	{
+		value: "bun",
+		label: "Bun",
+		hint: "Fast all-in-one JavaScript runtime",
+		backends: ["hono", "express", "fastify", "elysia", "bknd"],
+	},
+	{
+		value: "node",
+		label: "Node.js",
+		hint: "Traditional Node.js runtime",
+		backends: ["hono", "express", "fastify", "next", "elysia", "bknd"],
+	},
+	{
+		value: "workers",
+		label: "Cloudflare Workers",
+		hint: "Edge runtime on Cloudflare's global network",
+		backends: ["hono"],
+	},
+];
+
 export async function getRuntimeChoice(
 	runtime?: Runtime,
 	backend?: Backend,
 ): Promise<Runtime> {
-	if (backend === "convex" || backend === "none") {
+	if (runtime !== undefined) return runtime;
+
+	const runtimeOptions = getAvailableRuntimes(backend);
+
+	if (!runtimeOptions.length) {
 		return "none";
 	}
 
-	if (runtime !== undefined) return runtime;
-
-	if (backend === "next") {
-		return "node";
-	}
-
-	const runtimeOptions: Array<{
-		value: Runtime;
-		label: string;
-		hint: string;
-	}> = [
-		{
-			value: "bun",
-			label: "Bun",
-			hint: "Fast all-in-one JavaScript runtime",
-		},
-		{
-			value: "node",
-			label: "Node.js",
-			hint: "Traditional Node.js runtime",
-		},
-	];
-
-	if (backend === "hono") {
-		runtimeOptions.push({
-			value: "workers",
-			label: "Cloudflare Workers",
-			hint: "Edge runtime on Cloudflare's global network",
-		});
+	if (runtimeOptions.length === 1) {
+		return runtimeOptions[0].value;
 	}
 
 	const response = await select<Runtime>({
@@ -54,4 +58,26 @@ export async function getRuntimeChoice(
 	}
 
 	return response;
+}
+
+function getAvailableRuntimes(
+	backend?: Backend,
+): Array<{ value: Runtime; label: string; hint: string }> {
+	// Filter runtimes based on backend
+	const supportedRuntimes = runtimeLabelsAndHints
+		.filter((runtime) => {
+			if (backend && !runtime.backends.includes(backend)) {
+				return false;
+			}
+			return true;
+		})
+		.map((runtime) => {
+			return {
+				value: runtime.value,
+				label: runtime.label,
+				hint: runtime.hint,
+			};
+		});
+
+	return supportedRuntimes;
 }
