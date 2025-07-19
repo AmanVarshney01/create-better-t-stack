@@ -11,7 +11,16 @@ export const ORMSchema = z
 export type ORM = z.infer<typeof ORMSchema>;
 
 export const BackendSchema = z
-	.enum(["hono", "express", "fastify", "next", "elysia", "convex", "bknd", "none"])
+	.enum([
+		"hono",
+		"express",
+		"fastify",
+		"next",
+		"elysia",
+		"convex",
+		"bknd",
+		"none",
+	])
 	.describe("Backend framework");
 export type Backend = z.infer<typeof BackendSchema>;
 
