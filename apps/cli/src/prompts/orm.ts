@@ -45,15 +45,12 @@ export async function getORMChoice(
 	backend?: Backend,
 	runtime?: Runtime,
 ): Promise<ORM> {
-	// Backends that don't use traditional ORMs
-	if (backend === "convex") {
-		return "none";
-	}
-
 	if (!hasDatabase) return "none";
 	if (orm !== undefined) return orm;
 
 	const ormOptions = getAvailableORMs(database, backend, runtime);
+
+	if (!ormOptions.length) return "none";
 
 	const response = await select<ORM>({
 		message: "Select ORM",
