@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.26.2
+
+### Patch Changes
+
+- e2e4504: Bump better-auth packages to v1.3.0
+
 ## 2.26.1
 
 ### Patch Changes
