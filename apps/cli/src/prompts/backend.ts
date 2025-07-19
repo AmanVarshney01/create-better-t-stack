@@ -51,6 +51,12 @@ export async function getBackendFrameworkChoice(
 			label: "Convex",
 			hint: "Reactive backend-as-a-service platform",
 		});
+
+		backendOptions.push({
+			value: "bknd" as const,
+			label: "bknd",
+			hint: "Lightweight backend with instant APIs, auth, and admin UI",
+		});
 	}
 
 	backendOptions.push({
