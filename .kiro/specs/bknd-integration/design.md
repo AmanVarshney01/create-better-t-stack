@@ -98,7 +98,7 @@ project-root/
 - **Supported Options**:
   - SQLite (embedded): Node.js SQLite, Bun SQLite, LibSQL, SQLocal
   - SQLite (remote): Turso, Cloudflare D1
-  - PostgreSQL: Vanilla Postgres, Supabase, Neon, Xata
+  - PostgreSQL: Vanilla Postgres, Supabase, Neon
 - **Disabled Options**: MySQL, MongoDB (not supported by bknd)
 - **Special Constraints**:
   - D1 requires Cloudflare Workers runtime
@@ -118,14 +118,14 @@ project-root/
 
 ### 2. Template Structure
 
-Following the better-auth template organization pattern, with focus on officially supported frameworks:
+Following the better-auth template organization pattern, with focus on supported frameworks:
 
 ```
 apps/cli/templates/bknd/
 ├── config/
 │   └── bknd.config.ts.hbs          # Main configuration template
 ├── web/
-│   ├── next/                       # Next.js (officially supported)
+│   ├── next/                       # Next.js (supported)
 │   │   ├── src/
 │   │   │   ├── lib/
 │   │   │   │   └── bknd.ts.hbs     # Next.js bknd client
@@ -138,23 +138,13 @@ apps/cli/templates/bknd/
 │   │   │               └── page.tsx.hbs  # Admin UI page
 │   │   └── middleware.ts.hbs       # Auth middleware
 │   ├── react/
-│   │   └── react-router/           # React Router (officially supported)
+│   │   └── react-router/           # React Router (supported)
 │   │       └── src/
 │   │           ├── lib/
 │   │           │   └── bknd.ts.hbs
 │   │           └── routes/
 │   │               ├── api.$.ts.hbs    # API splat route
 │   │               └── admin.$.tsx.hbs # Admin UI splat route
-│   ├── astro/                      # Astro (officially supported)
-│   │   ├── src/
-│   │   │   ├── lib/
-│   │   │   │   └── bknd.ts.hbs
-│   │   │   └── pages/
-│   │   │       ├── api/
-│   │   │       │   └── [...api].ts.hbs
-│   │   │       └── admin/
-│   │   │           └── [...admin].astro.hbs
-│   │   └── astro.config.mjs.hbs    # Astro config with React integration
 │   ├── unsupported/                # Warning templates for unsupported frameworks
 │   │   ├── nuxt/
 │   │   │   └── warning.md.hbs      # Nuxt not yet supported warning
@@ -246,33 +236,7 @@ export async function getApi(
 }
 ```
 
-#### Astro Client Setup
 
-```typescript
-// apps/cli/templates/bknd/web/astro/src/lib/bknd.ts.hbs
-import type { AstroGlobal } from "astro";
-import { getApp as getBkndApp } from "bknd/adapter/astro";
-import config from "../../../bknd.config";
-
-export { config };
-
-export async function getApp() {
-  return await getBkndApp(config);
-}
-
-export async function getApi(
-  astro: AstroGlobal,
-  opts?: { mode: "static" } | { mode?: "dynamic"; verify?: boolean }
-) {
-  const app = await getApp();
-  if (opts?.mode !== "static" && opts?.verify) {
-    const api = app.getApi({ headers: astro.request.headers });
-    await api.verifyAuth();
-    return api;
-  }
-  return app.getApi();
-}
-```
 
 ### 4. Configuration Templates
 
@@ -280,7 +244,7 @@ export async function getApi(
 
 ```typescript
 // apps/cli/templates/bknd/config/bknd.config.ts.hbs
-import type { {{#if (eq frontend "next")}}NextjsBkndConfig{{else if (eq frontend "react-router")}}ReactRouterBkndConfig{{else if (eq frontend "astro")}}AstroBkndConfig{{else}}BkndConfig{{/if}} } from "bknd/adapter/{{#if (eq frontend "next")}}nextjs{{else if (eq frontend "react-router")}}react-router{{else if (eq frontend "astro")}}astro{{else}}node{{/if}}";
+import type { {{#if (eq frontend "next")}}NextjsBkndConfig{{else if (eq frontend "react-router")}}ReactRouterBkndConfig{{else}}BkndConfig{{/if}} } from "bknd/adapter/{{#if (eq frontend "next")}}nextjs{{else if (eq frontend "react-router")}}react-router{{else}}node{{/if}}";
 
 export default {
   connection: {
@@ -295,9 +259,6 @@ export default {
     {{/if}}
     {{#if (eq database "supabase")}}
     url: process.env.DATABASE_URL
-    {{/if}}
-    {{#if (eq database "xata")}}
-    url: process.env.XATA_DATABASE_URL
     {{/if}}
     {{#if (eq database "turso")}}
     url: process.env.TURSO_DATABASE_URL,
@@ -324,7 +285,7 @@ export default {
       enabled: true
     }
   }
-} satisfies {{#if (eq frontend "next")}}NextjsBkndConfig{{else if (eq frontend "react-router")}}ReactRouterBkndConfig{{else if (eq frontend "astro")}}AstroBkndConfig{{else}}BkndConfig{{/if}};
+} satisfies {{#if (eq frontend "next")}}NextjsBkndConfig{{else if (eq frontend "react-router")}}ReactRouterBkndConfig{{else}}BkndConfig{{/if}};
 ```
 
 #### React SDK Integration Template
@@ -457,35 +418,7 @@ export default function AdminPage() {
 }
 ```
 
-**Astro Admin UI:**
 
-```typescript
-// apps/cli/templates/bknd/web/astro/src/pages/admin/[...admin].astro.hbs
----
-import { Admin } from "bknd/ui";
-import "bknd/dist/styles.css";
-import { getApi } from "~/lib/bknd";
-
-const api = await getApi(Astro, { mode: "dynamic" });
-const user = api.getUser();
-
-export const prerender = false;
----
-
-<html>
-   <body>
-      <Admin
-         withProvider={{ user }}
-         config={{
-            basepath: "/admin",
-            color_scheme: "dark",
-            logo_return_path: "/../"
-         }}
-         client:only
-      />
-   </body>
-</html>
-```
 
 ## Data Models
 
@@ -514,7 +447,6 @@ export const BkndDatabaseSchema = z
     "d1",
     "neon",
     "supabase",
-    "xata",
     "memory",
   ])
   .describe("bknd database type");
@@ -538,25 +470,32 @@ export const dependencyVersionMap = {
   "@bknd/postgres": "^0.13.0", // For PostgreSQL support
   "@bknd/sqlocal": "^0.13.0", // For SQLocal support
   "@libsql/client": "^0.14.0", // For LibSQL/Turso support
-  "@astrojs/react": "^3.6.2", // Required for Astro Admin UI
+
   "@hono/vite-dev-server": "^0.16.0", // For Vite integration
 } as const;
 ```
+
+## Requirements vs Implementation Notes
+
+### Framework Support Discrepancy
+The requirements document mentions TanStack Start support (Requirement 2.3), but:
+1. **better-t-stack compatibility**: The current `BACKEND_COMPATIBILITY.bknd.frontends` in constants.ts only includes `["next", "react-router", "native-nativewind", "native-unistyles"]`
+2. **bknd official support**: TanStack Start is not listed as officially supported by bknd in their documentation
+3. **Resolution**: TanStack Start should be treated as unsupported and show warnings, similar to other unsupported frameworks
 
 ## Error Handling
 
 ### Validation and Constraints
 
 1. **Framework Compatibility**: Validate that selected frontends are compatible with bknd
-   - Officially Supported: Next.js, React Router, Astro
+   - Supported: Next.js, React Router
    - Unsupported: Nuxt, Svelte, SolidJS, TanStack Start (show warnings)
 2. **Database Validation**: Ensure selected database type is supported by bknd
-   - Supported: SQLite, libSQL (Turso), PostgreSQL, Neon, Supabase, Xata, Cloudflare D1
+   - Supported: SQLite, libSQL (Turso), PostgreSQL, Neon, Supabase, Cloudflare D1
    - Unsupported: MySQL, MongoDB (automatically disabled)
    - Special: D1 requires Cloudflare Workers runtime
 3. **Runtime Requirements**:
    - Node.js version 22 (LTS) or higher required
-   - Astro requires React integration for Admin UI
 4. **Dependency Conflicts**: Check for conflicts between bknd and other selected backends
 5. **Template Validation**: Validate that all required template variables are available
 6. **Runtime Constraints**: Validate D1 + Cloudflare Workers combination
@@ -603,7 +542,6 @@ export const dependencyVersionMap = {
 
 - Implement Next.js integration templates
 - Add React Router support
-- Add Astro integration templates
 - Create basic client setup templates
 
 ### Phase 3: Advanced Features
