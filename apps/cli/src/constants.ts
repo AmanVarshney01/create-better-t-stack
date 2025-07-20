@@ -1,6 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Frontend, ProjectConfig } from "./types";
+import type { Frontend, Runtime, Backend, Addons, Database, ProjectConfig } from "./types";
 import { getUserPkgManager } from "./utils/get-package-manager";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -117,7 +117,7 @@ export const dependencyVersionMap = {
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;
 
-export const ADDON_COMPATIBILITY = {
+export const ADDON_COMPATIBILITY: Record<Addons, Frontend[]> = {
 	pwa: ["tanstack-router", "react-router", "solid", "next"],
 	tauri: ["tanstack-router", "react-router", "nuxt", "svelte", "solid"],
 	biome: [],
@@ -136,4 +136,28 @@ export const WEB_FRAMEWORKS: readonly Frontend[] = [
 	"nuxt",
 	"svelte",
 	"solid",
+	// @TODO - consider Hono with Hono JSX as a front-end framework
 ];
+
+export const DATABASE_COMPATIBILITY: Record<Database, { runtimes: Runtime[]; backends: Backend[] }> = {
+	none: {
+		runtimes: ["bun", "node", "workers"],
+		backends: ["hono", "express", "fastify", "next", "elysia", "convex", "bknd", "none"],
+	},
+	sqlite: {
+		runtimes: ["bun", "node", "workers"],
+		backends: ["hono", "express", "fastify", "next", "elysia", "bknd", "none"],
+	},
+	postgres: {
+		runtimes: ["bun", "node", "workers"],
+		backends: ["hono", "express", "fastify", "next", "elysia", "bknd", "none"],
+	},
+	mysql: {
+		runtimes: ["bun", "node", "workers"],
+		backends: ["hono", "express", "fastify", "next", "elysia", "none"],
+	},
+	mongodb: {
+		runtimes: ["bun", "node"],
+		backends: ["hono", "express", "fastify", "next", "elysia", "none"],
+	},
+} as const;

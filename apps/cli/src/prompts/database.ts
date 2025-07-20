@@ -1,6 +1,6 @@
 import { cancel, isCancel, select } from "@clack/prompts";
 import pc from "picocolors";
-import { DEFAULT_CONFIG } from "../constants";
+import { DEFAULT_CONFIG, DATABASE_COMPATIBILITY } from "../constants";
 import type { Backend, Database, Runtime } from "../types";
 
 export async function getDatabaseChoice(
@@ -31,64 +31,50 @@ export async function getDatabaseChoice(
 	return response;
 }
 
-const databaseLabelsAndHints: { value: Database, label: string; hint: string, runtimes: Runtime[], backends: Backend[] }[] = [
-	{
-		value: "none",
+const DATABASE_DETAILS: Record<Database, { label: string; hint: string }> = {
+	none: {
 		label: "None",
 		hint: "No database setup",
-		runtimes: ["bun", "node", "workers"],
-		backends: ["hono", "express", "fastify", "next", "elysia", "convex", "bknd", "none"],
 	},
-	{
-		value: "sqlite",
+	sqlite: {
 		label: "SQLite",
 		hint: "lightweight, server-less, embedded relational database",
-		runtimes: ["bun", "node", "workers"],
-		backends: ["hono", "express", "fastify", "next", "elysia", "bknd", "none"],
 	},
-	{
-		value: "postgres",
+	postgres: {
 		label: "PostgreSQL",
 		hint: "powerful, open source object-relational database system",
-		runtimes: ["bun", "node", "workers"],
-		backends: ["hono", "express", "fastify", "next", "elysia", "bknd", "none"],
 	},
-	{
-		value: "mysql",
+	mysql: {
 		label: "MySQL",
-		runtimes: ["bun", "node", "workers"],
 		hint: "popular open-source relational database system",
-		backends: ["hono", "express", "fastify", "next", "elysia", "none"],
 	},
-	{
-		value: "mongodb",
+	mongodb: {
 		label: "MongoDB",
-		runtimes: ["bun", "node"], // MongoDB is not supported on workers.
 		hint: "open-source NoSQL database that stores data in JSON-like documents",
-		backends: ["hono", "express", "fastify", "next", "elysia", "none"],
 	},
-];
+};
 
 function getAvailableDatabases(
 	backend?: Backend,
 	runtime?: Runtime,
 ): Array<{ value: Database; label: string; hint: string }> {
 	// Filter databases based on backend and runtime
-	const supportedDatabases = databaseLabelsAndHints
-		.filter((db) => {
-			if (backend && !db.backends.includes(backend)) {
+	const supportedDatabases = Object.entries(DATABASE_COMPATIBILITY)
+		.filter(([_database, { runtimes: dbSupportedRuntimes, backends: dbSupportedBackends }]) => {
+			if (backend && !dbSupportedBackends.includes(backend)) {
 				return false;
 			}
-			if (runtime && !db.runtimes.includes(runtime)) {
+			if (runtime && !dbSupportedRuntimes.includes(runtime)) {
 				return false;
 			}
 			return true;
 		})
-		.map((db) => {
+		.map(([database, _values]) => {
+			const { label, hint } = DATABASE_DETAILS[database as Database];
 			return {
-				value: db.value,
-				label: db.label,
-				hint: db.hint,
+				value: database as Database,
+				label,
+				hint,
 			};
 		});
 
