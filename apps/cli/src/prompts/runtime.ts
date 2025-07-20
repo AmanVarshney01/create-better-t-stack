@@ -31,7 +31,7 @@ const runtimeLabelsAndHints: {
 		value: "workers",
 		label: "Cloudflare Workers",
 		hint: "Edge runtime on Cloudflare's global network",
-		backends: ["hono"],
+		backends: ["hono", "bknd"],
 	},
 ];
 
