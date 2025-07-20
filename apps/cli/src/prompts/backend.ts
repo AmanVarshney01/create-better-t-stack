@@ -1,73 +1,47 @@
 import { cancel, isCancel, select } from "@clack/prompts";
 import pc from "picocolors";
-import { DEFAULT_CONFIG } from "../constants";
+import {
+	BACKEND_COMPATIBILITY,
+	BACKEND_DETAILS,
+	DEFAULT_CONFIG,
+} from "../constants";
 import type { Backend, Frontend } from "../types";
+
+function getCompatibleBackends(frontendFrameworks?: Frontend[]): Backend[] {
+	if (!frontendFrameworks || frontendFrameworks.length === 0) {
+		return Object.keys(BACKEND_DETAILS) as Backend[];
+	}
+
+	// Find backends that are compatible with all selected frontend frameworks
+	const allBackends = Object.keys(BACKEND_COMPATIBILITY) as Backend[];
+	
+	return allBackends.filter((backend) => {
+		return frontendFrameworks.every((frontend) =>
+			BACKEND_COMPATIBILITY[backend].frontends.includes(frontend)
+		);
+	});
+}
 
 export async function getBackendFrameworkChoice(
 	backendFramework?: Backend,
-	frontends?: Frontend[],
+	frontendFrameworks?: Frontend[],
 ): Promise<Backend> {
 	if (backendFramework !== undefined) return backendFramework;
 
-	const hasIncompatibleFrontend = frontends?.some(
-		(f) => f === "nuxt" || f === "solid",
-	);
+	// Get compatible backends based on the passed in frontend frameworks
+	const compatibleBackends = getCompatibleBackends(frontendFrameworks);
 
-	const backendOptions: Array<{
-		value: Backend;
-		label: string;
-		hint: string;
-	}> = [
-		{
-			value: "hono" as const,
-			label: "Hono",
-			hint: "Lightweight, ultrafast web framework",
-		},
-		{
-			value: "next" as const,
-			label: "Next.js",
-			hint: "separate api routes only backend",
-		},
-		{
-			value: "express" as const,
-			label: "Express",
-			hint: "Fast, unopinionated, minimalist web framework for Node.js",
-		},
-		{
-			value: "fastify" as const,
-			label: "Fastify",
-			hint: "Fast, low-overhead web framework for Node.js",
-		},
-		{
-			value: "elysia" as const,
-			label: "Elysia",
-			hint: "Ergonomic web framework for building backend servers",
-		},
-	];
+	// Build backend options using BACKEND_DETAILS
+	const backendOptions = compatibleBackends.map((backend) => ({
+		value: backend,
+		label: BACKEND_DETAILS[backend].label,
+		hint: BACKEND_DETAILS[backend].hint,
+	}));
 
-	if (!hasIncompatibleFrontend) {
-		backendOptions.push({
-			value: "convex" as const,
-			label: "Convex",
-			hint: "Reactive backend-as-a-service platform",
-		});
-
-		backendOptions.push({
-			value: "bknd" as const,
-			label: "bknd",
-			hint: "Lightweight backend with instant APIs, auth, and admin UI",
-		});
-	}
-
-	backendOptions.push({
-		value: "none" as const,
-		label: "None",
-		hint: "No backend server",
-	});
-
+	// Determine initial value, fallback to compatible option if needed
 	let initialValue = DEFAULT_CONFIG.backend;
-	if (hasIncompatibleFrontend && initialValue === "convex") {
-		initialValue = "hono";
+	if (!compatibleBackends.includes(initialValue)) {
+		initialValue = compatibleBackends[0] || "hono";
 	}
 
 	const response = await select<Backend>({

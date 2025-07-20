@@ -1,9 +1,17 @@
 import { cancel, isCancel, multiselect, select } from "@clack/prompts";
 import pc from "picocolors";
-import { DEFAULT_CONFIG, BACKEND_COMPATIBILITY, type WebFramework } from "../constants";
+import {
+	BACKEND_COMPATIBILITY,
+	DEFAULT_CONFIG,
+	type WebFrontend,
+} from "../constants";
 import type { Backend, Frontend } from "../types";
 
-const WEB_FRAMEWORK_DETAILS: { value: WebFramework, label: string, hint: string }[] = [
+const WEB_FRAMEWORK_DETAILS: {
+	value: WebFrontend;
+	label: string;
+	hint: string;
+}[] = [
 	{
 		value: "tanstack-router",
 		label: "TanStack Router",
@@ -74,7 +82,9 @@ export async function getFrontendChoice(
 
 	if (frontendTypes.includes("web")) {
 		const webOptions = WEB_FRAMEWORK_DETAILS.filter(({ value: framework }) => {
-			return BACKEND_COMPATIBILITY[backend ?? "none"].webFrameworks.includes(framework)
+			return BACKEND_COMPATIBILITY[backend ?? "none"].frontends.includes(
+				framework,
+			);
 		});
 
 		const webFramework = await select<Frontend>({

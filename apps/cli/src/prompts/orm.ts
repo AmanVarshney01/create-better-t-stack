@@ -3,13 +3,29 @@ import pc from "picocolors";
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Database, ORM, Runtime } from "../types";
 
-const ormLabelsAndHints: { value: ORM, label: string; hint: string, runtimes: Runtime[], backends: Backend[], databases: Database[] }[] = [
+const ormLabelsAndHints: {
+	value: ORM;
+	label: string;
+	hint: string;
+	runtimes: Runtime[];
+	backends: Backend[];
+	databases: Database[];
+}[] = [
 	{
 		value: "none",
 		label: "None",
 		hint: "No ORM setup",
 		runtimes: ["bun", "node", "workers"],
-		backends: ["hono", "express", "fastify", "next", "elysia", "convex", "bknd", "none"],
+		backends: [
+			"hono",
+			"express",
+			"fastify",
+			"next",
+			"elysia",
+			"convex",
+			"bknd",
+			"none",
+		],
 		databases: ["none"],
 	},
 	{

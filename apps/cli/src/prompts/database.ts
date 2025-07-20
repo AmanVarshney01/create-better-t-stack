@@ -1,6 +1,6 @@
 import { cancel, isCancel, select } from "@clack/prompts";
 import pc from "picocolors";
-import { DEFAULT_CONFIG, DATABASE_COMPATIBILITY } from "../constants";
+import { DATABASE_COMPATIBILITY, DEFAULT_CONFIG } from "../constants";
 import type { Backend, Database, Runtime } from "../types";
 
 export async function getDatabaseChoice(
@@ -60,15 +60,20 @@ function getAvailableDatabases(
 ): Array<{ value: Database; label: string; hint: string }> {
 	// Filter databases based on backend and runtime
 	const supportedDatabases = Object.entries(DATABASE_COMPATIBILITY)
-		.filter(([_database, { runtimes: dbSupportedRuntimes, backends: dbSupportedBackends }]) => {
-			if (backend && !dbSupportedBackends.includes(backend)) {
-				return false;
-			}
-			if (runtime && !dbSupportedRuntimes.includes(runtime)) {
-				return false;
-			}
-			return true;
-		})
+		.filter(
+			([
+				_database,
+				{ runtimes: dbSupportedRuntimes, backends: dbSupportedBackends },
+			]) => {
+				if (backend && !dbSupportedBackends.includes(backend)) {
+					return false;
+				}
+				if (runtime && !dbSupportedRuntimes.includes(runtime)) {
+					return false;
+				}
+				return true;
+			},
+		)
 		.map(([database, _values]) => {
 			const { label, hint } = DATABASE_DETAILS[database as Database];
 			return {

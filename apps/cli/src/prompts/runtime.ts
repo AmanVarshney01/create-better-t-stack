@@ -3,7 +3,12 @@ import pc from "picocolors";
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Runtime } from "../types";
 
-const runtimeLabelsAndHints: { value: Runtime, label: string; hint: string, backends: Backend[] }[] = [
+const runtimeLabelsAndHints: {
+	value: Runtime;
+	label: string;
+	hint: string;
+	backends: Backend[];
+}[] = [
 	{
 		value: "none",
 		label: "None",

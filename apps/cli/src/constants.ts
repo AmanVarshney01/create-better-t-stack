@@ -1,6 +1,13 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Frontend, Runtime, Backend, Addons, Database, ProjectConfig } from "./types";
+import type {
+	Addons,
+	Backend,
+	Database,
+	Frontend,
+	ProjectConfig,
+	Runtime,
+} from "./types";
 import { getUserPkgManager } from "./utils/get-package-manager";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -127,8 +134,10 @@ export const ADDON_COMPATIBILITY: Record<Addons, Frontend[]> = {
 	none: [],
 } as const;
 
+export type WebFrontend = Exclude<Frontend, "native-nativewind" | "native-unistyles">;
+
 // Web-only frontend frameworks (excludes native frameworks)
-export const WEB_FRAMEWORKS = [
+export const WEB_FRONTENDS: WebFrontend[] = [
 	"tanstack-router",
 	"react-router",
 	"tanstack-start",
@@ -139,12 +148,22 @@ export const WEB_FRAMEWORKS = [
 	// @TODO - consider Hono with Hono JSX as a front-end framework
 ] as const;
 
-export type WebFramework = (typeof WEB_FRAMEWORKS)[number];
-
-export const DATABASE_COMPATIBILITY: Record<Database, { runtimes: Runtime[]; backends: Backend[] }> = {
+export const DATABASE_COMPATIBILITY: Record<
+	Database,
+	{ runtimes: Runtime[]; backends: Backend[] }
+> = {
 	none: {
 		runtimes: ["bun", "node", "workers"],
-		backends: ["hono", "express", "fastify", "next", "elysia", "convex", "bknd", "none"],
+		backends: [
+			"hono",
+			"express",
+			"fastify",
+			"next",
+			"elysia",
+			"convex",
+			"bknd",
+			"none",
+		],
 	},
 	sqlite: {
 		runtimes: ["bun", "node", "workers"],
@@ -164,29 +183,135 @@ export const DATABASE_COMPATIBILITY: Record<Database, { runtimes: Runtime[]; bac
 	},
 } as const;
 
-export const BACKEND_COMPATIBILITY: Record<Backend, { webFrameworks: WebFramework[] }> = {
-	"none": {
-		webFrameworks: ["next", "nuxt", "react-router", "solid", "svelte", "tanstack-router", "tanstack-start"]
-	},
-	"bknd": {
-		webFrameworks: ["next", "react-router"]
-	},
-	"convex": {
-		webFrameworks: ["next", "react-router", "svelte", "tanstack-router", "tanstack-start"]
-	},
-	"elysia": {
-		webFrameworks: ["next", "nuxt", "react-router", "solid", "svelte", "tanstack-router", "tanstack-start"]
-	},
-	"express": {
-		webFrameworks: ["next", "nuxt", "react-router", "solid", "svelte", "tanstack-router", "tanstack-start"]
-	},
-	"fastify": {
-		webFrameworks: ["next", "nuxt", "react-router", "solid", "svelte", "tanstack-router", "tanstack-start"]
-	},
-	"hono": {
-		webFrameworks: ["next", "nuxt", "react-router", "solid", "svelte", "tanstack-router", "tanstack-start"]
-	},
-	"next": {
-		webFrameworks: ["next", "nuxt", "react-router", "solid", "svelte", "tanstack-router", "tanstack-start"]
-	},
-}
+// My assumption is that "native-nativewind" and "native-unistyles" are compatible with all
+export const BACKEND_COMPATIBILITY: Record<Backend, { frontends: Frontend[] }> =
+	{
+		none: {
+			frontends: [
+				"next",
+				"nuxt",
+				"react-router",
+				"solid",
+				"svelte",
+				"tanstack-router",
+				"tanstack-start",
+				"native-nativewind",
+				"native-unistyles"
+			],
+		},
+		bknd: {
+			frontends: ["next", "react-router", "native-nativewind", "native-unistyles"],
+		},
+		convex: {
+			frontends: [
+				"next",
+				"react-router",
+				"svelte",
+				"tanstack-router",
+				"tanstack-start",
+				"native-nativewind",
+				"native-unistyles"
+			],
+		},
+		elysia: {
+			frontends: [
+				"next",
+				"nuxt",
+				"react-router",
+				"solid",
+				"svelte",
+				"tanstack-router",
+				"tanstack-start",
+				"native-nativewind",
+				"native-unistyles"
+			],
+		},
+		express: {
+			frontends: [
+				"next",
+				"nuxt",
+				"react-router",
+				"solid",
+				"svelte",
+				"tanstack-router",
+				"tanstack-start",
+				"native-nativewind",
+				"native-unistyles"
+			],
+		},
+		fastify: {
+			frontends: [
+				"next",
+				"nuxt",
+				"react-router",
+				"solid",
+				"svelte",
+				"tanstack-router",
+				"tanstack-start",
+				"native-nativewind",
+				"native-unistyles"
+			],
+		},
+		hono: {
+			frontends: [
+				"next",
+				"nuxt",
+				"react-router",
+				"solid",
+				"svelte",
+				"tanstack-router",
+				"tanstack-start",
+				"native-nativewind",
+				"native-unistyles"
+			],
+		},
+		next: {
+			frontends: [
+				"next",
+				"nuxt",
+				"react-router",
+				"solid",
+				"svelte",
+				"tanstack-router",
+				"tanstack-start",
+				"native-nativewind",
+				"native-unistyles"
+			],
+		},
+	};
+
+export const BACKEND_DETAILS: Record<Backend, { label: string; hint: string }> =
+	{
+		hono: {
+			label: "Hono",
+			hint: "Lightweight, ultrafast web framework",
+		},
+		next: {
+			label: "Next.js",
+			hint: "separate api routes only backend",
+		},
+		express: {
+			label: "Express",
+			hint: "Fast, unopinionated, minimalist web framework for Node.js",
+		},
+		fastify: {
+			label: "Fastify",
+			hint: "Fast, low-overhead web framework for Node.js",
+		},
+		elysia: {
+			label: "Elysia",
+			hint: "Ergonomic web framework for building backend servers",
+		},
+		convex: {
+			label: "Convex",
+			hint: "Reactive backend-as-a-service platform",
+		},
+		bknd: {
+			label: "bknd",
+			hint: "Lightweight backend with instant APIs, auth, and admin UI",
+		},
+		none: {
+			label: "None",
+			hint: "No backend server",
+		},
+	} as const;

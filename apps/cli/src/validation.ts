@@ -1,6 +1,6 @@
 import path from "node:path";
 import { consola } from "consola";
-import { WEB_FRAMEWORKS } from "./constants";
+import { WEB_FRONTENDS, type WebFrontend } from "./constants";
 import {
 	type Addons,
 	type API,
@@ -17,6 +17,7 @@ import {
 	type Runtime,
 	type WebDeploy,
 } from "./types";
+import { isWebFrontend } from "./utils/frontend-helpers";
 
 export function processAndValidateFlags(
 	options: CLIInput,
@@ -126,9 +127,7 @@ export function processAndValidateFlags(
 			const validOptions = options.frontend.filter(
 				(f): f is Frontend => f !== "none",
 			);
-			const webFrontends = validOptions.filter((f) =>
-				WEB_FRAMEWORKS.includes(f),
-			);
+			const webFrontends = validOptions.filter(isWebFrontend);
 			const nativeFrontends = validOptions.filter(
 				(f) => f === "native-nativewind" || f === "native-unistyles",
 			);
@@ -481,9 +480,7 @@ export function processAndValidateFlags(
 		process.exit(1);
 	}
 
-	const hasWebFrontendFlag = (config.frontend ?? []).some((f) =>
-		WEB_FRAMEWORKS.includes(f),
-	);
+	const hasWebFrontendFlag = (config.frontend ?? []).some(isWebFrontend);
 
 	if (
 		config.webDeploy &&
