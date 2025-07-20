@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.26.3
+
+### Patch Changes
+
+- 2b71ef2: Use next-themes in theme provider for React frontends, and fix neon setup
+
 ## 2.26.2
 
 ### Patch Changes
