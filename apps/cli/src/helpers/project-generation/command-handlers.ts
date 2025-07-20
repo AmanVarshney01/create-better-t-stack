@@ -103,6 +103,8 @@ export async function createProjectHandler(
 			log.message(displayConfig(config));
 			log.message("");
 		} else {
+			// This is the CLI entry point where it gathers all
+			// the config options from the user.
 			config = await gatherConfig(
 				flagConfig,
 				finalBaseName,
