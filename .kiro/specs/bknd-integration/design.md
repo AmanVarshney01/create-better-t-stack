@@ -96,9 +96,9 @@ project-root/
 - **File**: Modify existing database prompts in `apps/cli/src/prompts/database.ts`
 - **Purpose**: Filter database options when bknd is selected
 - **Supported Options**:
-  - SQLite (embedded): Node.js SQLite, Bun SQLite, LibSQL, SQLocal
+  - SQLite (embedded): Node.js SQLite or Bun SQLite, depending on runtime (use this if "Basic Setup - no cloud db integration" is the choice)
   - SQLite (remote): Turso, Cloudflare D1
-  - PostgreSQL: Vanilla Postgres, Supabase, Neon
+  - PostgreSQL: Neon, Supabase, and Docker
 - **Disabled Options**: MySQL, MongoDB (not supported by bknd)
 - **Special Constraints**:
   - D1 requires Cloudflare Workers runtime
@@ -235,8 +235,6 @@ export async function getApi(
   return app.getApi();
 }
 ```
-
-
 
 ### 4. Configuration Templates
 
@@ -418,8 +416,6 @@ export default function AdminPage() {
 }
 ```
 
-
-
 ## Data Models
 
 ### Extended CLI Types
@@ -439,25 +435,8 @@ export const BackendSchema = z
   ])
   .describe("Backend framework");
 
-export const BkndDatabaseSchema = z
-  .enum([
-    "sqlite",
-    "postgres",
-    "turso",
-    "d1",
-    "neon",
-    "supabase",
-    "memory",
-  ])
-  .describe("bknd database type");
-
-export type BkndDatabase = z.infer<typeof BkndDatabaseSchema>;
-
-// Extension to ProjectConfig
-export interface ProjectConfig {
-  // ... existing fields
-  bkndDatabase?: BkndDatabase;
-}
+// No additional database schema needed - bknd uses existing Database type
+// No additional ProjectConfig fields needed - existing database field is sufficient
 ```
 
 ### Dependency Mapping
@@ -478,7 +457,9 @@ export const dependencyVersionMap = {
 ## Requirements vs Implementation Notes
 
 ### Framework Support Discrepancy
+
 The requirements document mentions TanStack Start support (Requirement 2.3), but:
+
 1. **better-t-stack compatibility**: The current `BACKEND_COMPATIBILITY.bknd.frontends` in constants.ts only includes `["next", "react-router", "native-nativewind", "native-unistyles"]`
 2. **bknd official support**: TanStack Start is not listed as officially supported by bknd in their documentation
 3. **Resolution**: TanStack Start should be treated as unsupported and show warnings, similar to other unsupported frameworks
