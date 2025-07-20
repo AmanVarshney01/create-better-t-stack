@@ -17,7 +17,7 @@ const ormLabelsAndHints: { value: ORM, label: string; hint: string, runtimes: Ru
 		label: "Drizzle",
 		hint: "Lightweight and performant TypeScript ORM",
 		runtimes: ["bun", "node", "workers"],
-		backends: ["hono", "express", "fastify", "next", "elysia", "bknd", "none"],
+		backends: ["hono", "express", "fastify", "next", "elysia", "none"],
 		databases: ["sqlite", "postgres", "mysql"],
 	},
 	{
@@ -25,7 +25,7 @@ const ormLabelsAndHints: { value: ORM, label: string; hint: string, runtimes: Ru
 		label: "Prisma",
 		hint: "Powerful, feature-rich ORM",
 		runtimes: ["bun", "node"],
-		backends: ["hono", "express", "fastify", "next", "elysia", "bknd", "none"],
+		backends: ["hono", "express", "fastify", "next", "elysia", "none"],
 		databases: ["sqlite", "postgres", "mysql", "mongodb"],
 	},
 	{
