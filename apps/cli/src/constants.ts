@@ -127,8 +127,8 @@ export const ADDON_COMPATIBILITY: Record<Addons, Frontend[]> = {
 	none: [],
 } as const;
 
-// TODO: need to refactor this
-export const WEB_FRAMEWORKS: readonly Frontend[] = [
+// Web-only frontend frameworks (excludes native frameworks)
+export const WEB_FRAMEWORKS = [
 	"tanstack-router",
 	"react-router",
 	"tanstack-start",
@@ -137,7 +137,9 @@ export const WEB_FRAMEWORKS: readonly Frontend[] = [
 	"svelte",
 	"solid",
 	// @TODO - consider Hono with Hono JSX as a front-end framework
-];
+] as const;
+
+export type WebFramework = (typeof WEB_FRAMEWORKS)[number];
 
 export const DATABASE_COMPATIBILITY: Record<Database, { runtimes: Runtime[]; backends: Backend[] }> = {
 	none: {
@@ -161,3 +163,30 @@ export const DATABASE_COMPATIBILITY: Record<Database, { runtimes: Runtime[]; bac
 		backends: ["hono", "express", "fastify", "next", "elysia", "none"],
 	},
 } as const;
+
+export const BACKEND_COMPATIBILITY: Record<Backend, { webFrameworks: WebFramework[] }> = {
+	"none": {
+		webFrameworks: ["next", "nuxt", "react-router", "solid", "svelte", "tanstack-router", "tanstack-start"]
+	},
+	"bknd": {
+		webFrameworks: ["next", "react-router"]
+	},
+	"convex": {
+		webFrameworks: ["next", "react-router", "svelte", "tanstack-router", "tanstack-start"]
+	},
+	"elysia": {
+		webFrameworks: ["next", "nuxt", "react-router", "solid", "svelte", "tanstack-router", "tanstack-start"]
+	},
+	"express": {
+		webFrameworks: ["next", "nuxt", "react-router", "solid", "svelte", "tanstack-router", "tanstack-start"]
+	},
+	"fastify": {
+		webFrameworks: ["next", "nuxt", "react-router", "solid", "svelte", "tanstack-router", "tanstack-start"]
+	},
+	"hono": {
+		webFrameworks: ["next", "nuxt", "react-router", "solid", "svelte", "tanstack-router", "tanstack-start"]
+	},
+	"next": {
+		webFrameworks: ["next", "nuxt", "react-router", "solid", "svelte", "tanstack-router", "tanstack-start"]
+	},
+}

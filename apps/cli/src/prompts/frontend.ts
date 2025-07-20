@@ -1,7 +1,45 @@
 import { cancel, isCancel, multiselect, select } from "@clack/prompts";
 import pc from "picocolors";
-import { DEFAULT_CONFIG } from "../constants";
+import { DEFAULT_CONFIG, BACKEND_COMPATIBILITY, type WebFramework } from "../constants";
 import type { Backend, Frontend } from "../types";
+
+const WEB_FRAMEWORK_DETAILS: { value: WebFramework, label: string, hint: string }[] = [
+	{
+		value: "tanstack-router",
+		label: "TanStack Router",
+		hint: "Modern and scalable routing for React Applications",
+	},
+	{
+		value: "react-router",
+		label: "React Router",
+		hint: "A user-obsessed, standards-focused, multi-strategy router",
+	},
+	{
+		value: "next",
+		label: "Next.js",
+		hint: "The React Framework for the Web",
+	},
+	{
+		value: "nuxt",
+		label: "Nuxt",
+		hint: "The Progressive Web Framework for Vue.js",
+	},
+	{
+		value: "svelte",
+		label: "Svelte",
+		hint: "web development for the rest of us",
+	},
+	{
+		value: "solid",
+		label: "Solid",
+		hint: "Simple and performant reactivity for building user interfaces",
+	},
+	{
+		value: "tanstack-start",
+		label: "TanStack Start (vite)",
+		hint: "SSR, Server Functions, API Routes and more with TanStack Router",
+	},
+];
 
 export async function getFrontendChoice(
 	frontendOptions?: Frontend[],
@@ -35,49 +73,8 @@ export async function getFrontendChoice(
 	const result: Frontend[] = [];
 
 	if (frontendTypes.includes("web")) {
-		const allWebOptions = [
-			{
-				value: "tanstack-router" as const,
-				label: "TanStack Router",
-				hint: "Modern and scalable routing for React Applications",
-			},
-			{
-				value: "react-router" as const,
-				label: "React Router",
-				hint: "A user‑obsessed, standards‑focused, multi‑strategy router",
-			},
-			{
-				value: "next" as const,
-				label: "Next.js",
-				hint: "The React Framework for the Web",
-			},
-			{
-				value: "nuxt" as const,
-				label: "Nuxt",
-				hint: "The Progressive Web Framework for Vue.js",
-			},
-			{
-				value: "svelte" as const,
-				label: "Svelte",
-				hint: "web development for the rest of us",
-			},
-			{
-				value: "solid" as const,
-				label: "Solid",
-				hint: "Simple and performant reactivity for building user interfaces",
-			},
-			{
-				value: "tanstack-start" as const,
-				label: "TanStack Start (vite)",
-				hint: "SSR, Server Functions, API Routes and more with TanStack Router",
-			},
-		];
-
-		const webOptions = allWebOptions.filter((option) => {
-			if (backend === "convex") {
-				return option.value !== "nuxt" && option.value !== "solid";
-			}
-			return true;
+		const webOptions = WEB_FRAMEWORK_DETAILS.filter(({ value: framework }) => {
+			return BACKEND_COMPATIBILITY[backend ?? "none"].webFrameworks.includes(framework)
 		});
 
 		const webFramework = await select<Frontend>({
