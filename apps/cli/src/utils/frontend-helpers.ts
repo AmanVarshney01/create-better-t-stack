@@ -6,5 +6,5 @@ export function isWebFrontend(frontend: Frontend): frontend is WebFrontend {
 }
 
 export function hasWebFrontend(frontends: Frontend[]): boolean {
-	return frontends.some((frontend) => WEB_FRONTENDS.includes(frontend as WebFrontend));
+	return frontends.some(isWebFrontend);
 }
