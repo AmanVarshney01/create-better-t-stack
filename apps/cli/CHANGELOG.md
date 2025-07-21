@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.26.4
+
+### Patch Changes
+
+- a4209b7: add react deps in next backend
+
 ## 2.26.3
 
 ### Patch Changes
