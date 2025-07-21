@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.26.5
+
+### Patch Changes
+
+- 23497b6: Remove tsc-alias configuration from tsconfig
+
 ## 2.26.4
 
 ### Patch Changes
