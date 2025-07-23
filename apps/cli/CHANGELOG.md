@@ -1,5 +1,12 @@
 # create-better-t-stack
 
+## 2.27.0
+
+### Minor Changes
+
+- 0c26578: feat: Add quick setup option with create-db by Prisma
+  feat: Make Prisma Postgres available for both Prisma and Drizzle ORMs
+
 ## 2.26.5
 
 ### Patch Changes
