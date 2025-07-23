@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.27.1
+
+### Patch Changes
+
+- 31be802: Update prisma setup options labels and hints
+
 ## 2.27.0
 
 ### Minor Changes
