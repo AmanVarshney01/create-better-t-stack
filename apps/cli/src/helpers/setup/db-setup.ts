@@ -84,7 +84,7 @@ export async function setupDatabase(config: ProjectConfig): Promise<void> {
 		} else if (database === "sqlite" && dbSetup === "d1") {
 			await setupCloudflareD1(config);
 		} else if (database === "postgres") {
-			if (orm === "prisma" && dbSetup === "prisma-postgres") {
+			if (dbSetup === "prisma-postgres") {
 				await setupPrismaPostgres(config);
 			} else if (dbSetup === "neon") {
 				await setupNeonPostgres(config);

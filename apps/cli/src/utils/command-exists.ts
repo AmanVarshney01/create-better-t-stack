@@ -1,6 +1,6 @@
 import { execa } from "execa";
 
-export async function commandExists(command: string): Promise<boolean> {
+export async function commandExists(command: string) {
 	try {
 		const isWindows = process.platform === "win32";
 		if (isWindows) {

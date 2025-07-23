@@ -7,7 +7,7 @@ export async function getAuthChoice(
 	auth: boolean | undefined,
 	hasDatabase: boolean,
 	backend?: Backend,
-): Promise<boolean> {
+) {
 	if (backend === "convex") {
 		return false;
 	}

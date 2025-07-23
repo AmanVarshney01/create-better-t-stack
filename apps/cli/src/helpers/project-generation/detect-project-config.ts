@@ -33,9 +33,7 @@ export async function detectProjectConfig(
 	}
 }
 
-export async function isBetterTStackProject(
-	projectDir: string,
-): Promise<boolean> {
+export async function isBetterTStackProject(projectDir: string) {
 	try {
 		return await fs.pathExists(path.join(projectDir, "bts.jsonc"));
 	} catch (_error) {

@@ -15,7 +15,7 @@ type MongoDBConfig = {
 	connectionString: string;
 };
 
-async function checkAtlasCLI(): Promise<boolean> {
+async function checkAtlasCLI() {
 	const s = spinner();
 	s.start("Checking for MongoDB Atlas CLI...");
 

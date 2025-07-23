@@ -2,7 +2,7 @@ import { cancel, confirm, isCancel } from "@clack/prompts";
 import pc from "picocolors";
 import { DEFAULT_CONFIG } from "../constants";
 
-export async function getinstallChoice(install?: boolean): Promise<boolean> {
+export async function getinstallChoice(install?: boolean) {
 	if (install !== undefined) return install;
 
 	const response = await confirm({

@@ -56,15 +56,11 @@ export async function getDBSetupChoice(
 				label: "Supabase",
 				hint: "Local Supabase stack (requires Docker)",
 			},
-			...(orm === "prisma"
-				? [
-						{
-							value: "prisma-postgres" as const,
-							label: "Prisma Postgres",
-							hint: "Instant Postgres for Global Applications",
-						},
-					]
-				: []),
+			{
+				value: "prisma-postgres" as const,
+				label: "Prisma Postgres",
+				hint: "Instant Postgres for Global Applications",
+			},
 			{
 				value: "docker" as const,
 				label: "Docker",

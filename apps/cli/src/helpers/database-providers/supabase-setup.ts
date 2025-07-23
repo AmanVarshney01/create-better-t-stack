@@ -11,10 +11,7 @@ import {
 	type EnvVariable,
 } from "../project-generation/env-setup";
 
-async function writeSupabaseEnvFile(
-	projectDir: string,
-	databaseUrl: string,
-): Promise<boolean> {
+async function writeSupabaseEnvFile(projectDir: string, databaseUrl: string) {
 	try {
 		const envPath = path.join(projectDir, "apps/server", ".env");
 		const dbUrlToUse =
@@ -54,7 +51,7 @@ function extractDbUrl(output: string): string | null {
 async function initializeSupabase(
 	serverDir: string,
 	packageManager: PackageManager,
-): Promise<boolean> {
+) {
 	log.info("Initializing Supabase project...");
 	try {
 		const supabaseInitCommand = getPackageExecutionCommand(
@@ -90,7 +87,7 @@ async function initializeSupabase(
 async function startSupabase(
 	serverDir: string,
 	packageManager: PackageManager,
-): Promise<string | null> {
+) {
 	log.info("Starting Supabase services (this may take a moment)...");
 	const supabaseStartCommand = getPackageExecutionCommand(
 		packageManager,

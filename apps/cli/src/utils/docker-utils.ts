@@ -3,11 +3,11 @@ import pc from "picocolors";
 import type { Database } from "../types";
 import { commandExists } from "./command-exists";
 
-export async function isDockerInstalled(): Promise<boolean> {
+export async function isDockerInstalled() {
 	return commandExists("docker");
 }
 
-export async function isDockerRunning(): Promise<boolean> {
+export async function isDockerRunning() {
 	try {
 		const { $ } = await import("execa");
 		await $`docker info`;

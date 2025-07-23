@@ -35,6 +35,7 @@ export const dependencyVersionMap = {
 	"drizzle-kit": "^0.31.2",
 
 	"@libsql/client": "^0.15.9",
+
 	"@neondatabase/serverless": "^1.0.1",
 	pg: "^8.14.1",
 	"@types/pg": "^8.11.11",
@@ -43,8 +44,9 @@ export const dependencyVersionMap = {
 
 	mysql2: "^3.14.0",
 
-	"@prisma/client": "^6.9.0",
-	prisma: "^6.9.0",
+	"@prisma/client": "^6.12.0",
+	prisma: "^6.12.0",
+	"@prisma/extension-accelerate": "^2.0.2",
 
 	mongoose: "^8.14.0",
 
@@ -88,8 +90,6 @@ export const dependencyVersionMap = {
 	"@ai-sdk/vue": "^1.2.8",
 	"@ai-sdk/svelte": "^2.1.9",
 	"@ai-sdk/react": "^1.2.12",
-
-	"@prisma/extension-accelerate": "^1.3.0",
 
 	"@orpc/server": "^1.5.0",
 	"@orpc/client": "^1.5.0",

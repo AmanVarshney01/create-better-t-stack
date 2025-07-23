@@ -4,7 +4,7 @@
 	"type": "module",
 	"scripts": {
 		"build": "tsdown",
-		"check-types": "tsc --noEmit",
+		"check-types": "tsc -b",
 		"compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server"
 	},
 	{{#if (eq orm 'prisma')}}
