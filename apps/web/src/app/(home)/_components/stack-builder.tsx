@@ -448,21 +448,6 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 							"Database set to 'PostgreSQL' (required by Prisma PostgreSQL setup)",
 					});
 				}
-				if (nextStack.orm !== "prisma") {
-					notes.dbSetup.notes.push("Requires Prisma ORM. It will be selected.");
-					notes.orm.notes.push(
-						"Prisma PostgreSQL setup requires Prisma ORM. It will be selected.",
-					);
-					notes.dbSetup.hasIssue = true;
-					notes.orm.hasIssue = true;
-					nextStack.orm = "prisma";
-					changed = true;
-					changes.push({
-						category: "dbSetup",
-						message:
-							"ORM set to 'Prisma' (required by Prisma PostgreSQL setup)",
-					});
-				}
 			} else if (nextStack.dbSetup === "mongodb-atlas") {
 				if (nextStack.database !== "mongodb") {
 					notes.dbSetup.notes.push("Requires MongoDB. It will be selected.");
