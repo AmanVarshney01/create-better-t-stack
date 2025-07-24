@@ -5,6 +5,12 @@ node_modules
 .pnp
 .pnp.js
 
+# Lock files (add appropriate lock file to .gitignore based on package manager)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+bun.lockb
+
 # Local env files
 .env
 .env.local
