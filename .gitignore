@@ -27,12 +27,6 @@ build
 dist
 
 
-# Lock files (package manager specific)
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-bun.lock
-
 # Debug
 npm-debug.log*
 yarn-debug.log*
