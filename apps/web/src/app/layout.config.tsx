@@ -2,6 +2,7 @@ import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 import Image from "next/image";
 import discordLogo from "@/public/icon/discord.svg";
 import npmLogo from "@/public/icon/npm.svg";
+import xLogo from "@/public/icon/x.svg";
 import mainLogo from "@/public/logo.svg";
 
 export const logo = (
@@ -20,7 +21,6 @@ export const baseOptions: BaseLayoutProps = {
 		title: (
 			<>
 				{logo}
-
 				<span className="font-medium [.uwu_&]:hidden [header_&]:text-[15px]">
 					Better T Stack
 				</span>
@@ -57,6 +57,17 @@ export const baseOptions: BaseLayoutProps = {
 			label: "NPM",
 			type: "icon",
 			url: "https://www.npmjs.com/package/create-better-t-stack",
+			external: true,
+			secondary: true,
+		},
+		{
+			text: "X",
+			icon: (
+				<Image src={xLogo} alt="x" className="size-4 invert dark:invert-0" />
+			),
+			label: "X",
+			type: "icon",
+			url: "https://x.com/amanvarshney01",
 			external: true,
 			secondary: true,
 		},

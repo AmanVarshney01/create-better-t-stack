@@ -38,6 +38,7 @@ export interface Sponsor {
 		avatarUrl: string;
 		websiteUrl?: string;
 		linkUrl: string;
+		customLogoUrl: string;
 		type: string;
 	};
 	isOneTime: boolean;

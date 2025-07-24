@@ -17,6 +17,13 @@ bun create better-t-stack@latest
 pnpm create better-t-stack@latest
 ```
 
+## Sponsors
+
+<p align="center">
+<img src="https://sponsors.amanv.dev/sponsors.png" alt="Sponsors" width="300">
+</p>
+
+
 ## Features
 
 - **Zero-config setup** with interactive CLI wizard
@@ -60,12 +67,6 @@ bun dev:web
 ## Want to contribute?
 
 Just fork the repository and submit a pull request!
-
-## Sponsors
-
-<p align="center">
-<img src="https://sponsors.amanv.dev/sponsors.png" alt="Sponsors" width="300">
-</p>
 
 ## Star History
 

@@ -21,6 +21,12 @@ pnpm create better-t-stack@latest
 
 Follow the prompts to configure your project or use the `--yes` flag for defaults.
 
+## Sponsors
+
+<p align="center">
+<img src="https://sponsors.amanv.dev/sponsors.png" alt="Sponsors" width="300">
+</p>
+
 ## Features
 
 | Category                 | Options                                                                                                                                                                                                                                                    |
@@ -211,9 +217,3 @@ my-better-t-app/
 ```
 
 After project creation, you'll receive detailed instructions for next steps and additional setup requirements.
-
-## Sponsors
-
-<p align="center">
-<img src="https://sponsors.amanv.dev/sponsors.png" alt="Sponsors" width="300">
-</p>
