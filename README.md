@@ -10,11 +10,14 @@ A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with 
 # Using npm
 npx create-better-t-stack@latest
 
-# Using bun
-bun create better-t-stack@latest
+# Using yarn
+yarn create better-t-stack
 
 # Using pnpm
 pnpm create better-t-stack@latest
+
+# Using bun
+bun create better-t-stack@latest
 ```
 
 ## Features

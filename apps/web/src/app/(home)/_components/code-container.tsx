@@ -6,11 +6,12 @@ import { cn } from "@/lib/utils";
 import PackageIcon from "./icons";
 
 const CodeContainer = () => {
-	const [selectedPM, setSelectedPM] = useState<"npm" | "pnpm" | "bun">("bun");
+	const [selectedPM, setSelectedPM] = useState<"npm" | "yarn" | "pnpm" | "bun">("bun");
 	const [copied, setCopied] = useState(false);
 
 	const commands = {
 		npm: "npx create-better-t-stack@latest",
+		yarn: "yarn create better-t-stack",
 		pnpm: "pnpm create better-t-stack@latest",
 		bun: "bun create better-t-stack@latest",
 	};
@@ -22,7 +23,7 @@ const CodeContainer = () => {
 		setTimeout(() => setCopied(false), 2000);
 	};
 
-	const packageManagers: Array<"npm" | "pnpm" | "bun"> = ["bun", "pnpm", "npm"];
+	const packageManagers: Array<"npm" | "yarn" | "pnpm" | "bun"> = ["bun", "pnpm", "yarn", "npm"];
 
 	return (
 		<div className="mx-auto mt-6 w-full max-w-3xl px-2 md:px-0">
