@@ -1,0 +1,20 @@
+import { createTRPCProxyClient, httpBatchLink } from "@trpc/client";
+import superjson from "superjson";
+import type { AppRouter } from "../../../../server/src/router/root";
+
+export const api = createTRPCProxyClient<AppRouter>({
+  links: [
+    httpBatchLink({
+      transformer: superjson,
+      url: import.meta.env.VITE_SERVER_URL ?? "http://localhost:5000/api/trpc",
+      async headers() {
+        const headers: Record<string, string> = {};
+        const token = localStorage.getItem("auth-token");
+        if (token) {
+          headers.authorization = `Bearer ${token}`;
+        }
+        return headers;
+      },
+    }),
+  ],
+});
