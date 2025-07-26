@@ -1,0 +1,263 @@
+---
+title: Addons & Features
+description: Enhance your Better-T-Stack project with optional addons and features
+---
+
+import { Callout } from 'fumadocs-ui/components/callout'
+
+# Addons & Features
+
+Better-T-Stack provides a variety of optional addons to enhance your project with additional functionality. These can be added during project creation or later using the `add` command.
+
+## Available Addons
+
+### Turborepo
+
+**Description**: High-performance build system for JavaScript and TypeScript monorepos
+
+**Compatible with**: All frontends
+
+**What it adds**:
+- Monorepo configuration with Turborepo
+- Optimized build pipelines
+- Dependency graph management
+- Parallel task execution
+
+```bash
+npx create-better-t-stack@latest init --addons turborepo
+```
+
+<Callout type="info">
+Turborepo is included by default in most project templates as it provides significant performance benefits for monorepo setups.
+</Callout>
+
+### Progressive Web App (PWA)
+
+**Description**: Make your web app installable and work offline
+
+**Compatible with**: TanStack Router, React Router, Solid, Next.js
+
+**What it adds**:
+- Service worker configuration
+- Web app manifest
+- Offline functionality
+- App installation capabilities
+- PWA asset generation
+
+```bash
+npx create-better-t-stack@latest init --addons pwa
+```
+
+### Tauri Desktop App
+
+**Description**: Build native desktop applications from your web frontend
+
+**Compatible with**: TanStack Router, React Router, Nuxt, Svelte, Solid, Next.js
+
+**What it adds**:
+- Tauri configuration
+- Desktop app bundling
+- Native API access
+- Cross-platform builds
+
+```bash
+npx create-better-t-stack@latest init --addons tauri
+```
+
+### Biome
+
+**Description**: Fast formatter and linter for JavaScript, TypeScript, and JSX
+
+**Compatible with**: All projects
+
+**What it adds**:
+- Biome configuration
+- Linting rules
+- Code formatting
+- Import sorting
+
+```bash
+npx create-better-t-stack@latest init --addons biome
+```
+
+### Husky
+
+**Description**: Git hooks made easy with lint-staged integration
+
+**Compatible with**: All projects
+
+**What it adds**:
+- Pre-commit hooks
+- Lint-staged configuration
+- Code quality enforcement
+- Automatic Biome integration
+
+```bash
+npx create-better-t-stack@latest init --addons husky
+```
+
+<Callout type="info">
+When you add Husky, Biome is automatically included as well since Husky requires a linter/formatter.
+</Callout>
+
+### Starlight
+
+**Description**: Documentation site built with Astro Starlight
+
+**Compatible with**: All projects
+
+**What it adds**:
+- Astro Starlight documentation site
+- Pre-configured documentation structure
+- Search functionality
+- Responsive design
+
+```bash
+npx create-better-t-stack@latest init --addons starlight
+```
+
+### Nuqs
+
+**Description**: Type-safe URL state management for React frameworks
+
+**Compatible with**: TanStack Router, React Router, TanStack Start, Next.js, Nuxt, Svelte, Solid
+
+**What it adds**:
+- Nuqs package installation
+- Framework-specific adapter configuration
+- Example components demonstrating usage
+- Type-safe URL query parameter management
+
+```bash
+npx create-better-t-stack@latest init --addons nuqs
+```
+
+<Callout type="info">
+Nuqs automatically configures the appropriate adapter for your chosen framework (Next.js app router, pages router, React SPA, etc.).
+</Callout>
+
+#### Nuqs Features
+
+- **Type-safe**: Full TypeScript support with built-in parsers
+- **Framework agnostic**: Works with all major React frameworks
+- **Server-side compatible**: Supports SSR and SSG
+- **Built-in parsers**: String, number, boolean, date, array, JSON, and more
+- **Custom parsers**: Create your own for complex data types
+- **URL-friendly**: Automatic serialization and deserialization
+- **History management**: Control browser history behavior
+- **Throttling**: Built-in URL update throttling for performance
+
+#### Nuqs Usage Examples
+
+After adding Nuqs to your project, you'll find example components in `src/components/nuqs-examples/`:
+
+**Basic Usage**:
+```tsx
+import { useQueryState } from 'nuqs'
+
+function SearchComponent() {
+  const [search, setSearch] = useQueryState('search')
+  
+  return (
+    <input
+      value={search || ''}
+      onChange={(e) => setSearch(e.target.value)}
+      placeholder="Search..."
+    />
+  )
+}
+```
+
+**Advanced Usage with Multiple States**:
+```tsx
+import { useQueryStates, parseAsInteger, parseAsString } from 'nuqs'
+
+function FilterComponent() {
+  const [filters, setFilters] = useQueryStates({
+    search: parseAsString.withDefault(''),
+    page: parseAsInteger.withDefault(1),
+    category: parseAsString.withDefault('all')
+  })
+  
+  return (
+    <div>
+      <input
+        value={filters.search}
+        onChange={(e) => setFilters({ search: e.target.value })}
+      />
+      <select
+        value={filters.category}
+        onChange={(e) => setFilters({ category: e.target.value })}
+      >
+        <option value="all">All</option>
+        <option value="web">Web</option>
+        <option value="mobile">Mobile</option>
+      </select>
+    </div>
+  )
+}
+```
+
+## Adding Addons to Existing Projects
+
+You can add addons to existing Better-T-Stack projects using the `add` command:
+
+```bash
+# Interactive selection
+npx create-better-t-stack@latest add
+
+# Add specific addons
+npx create-better-t-stack@latest add --addons nuqs pwa
+
+# Add addons with automatic installation
+npx create-better-t-stack@latest add --addons biome husky --install
+```
+
+## Addon Compatibility
+
+| Addon | Compatible Frontends |
+| --- | --- |
+| Turborepo | All |
+| PWA | TanStack Router, React Router, Solid, Next.js |
+| Tauri | TanStack Router, React Router, Nuxt, Svelte, Solid, Next.js |
+| Biome | All |
+| Husky | All |
+| Starlight | All |
+| Nuqs | TanStack Router, React Router, TanStack Start, Next.js, Nuxt, Svelte, Solid |
+
+<Callout type="warning">
+Some addons have framework-specific requirements. The CLI will automatically validate compatibility before installation.
+</Callout>
+
+## Best Practices
+
+### Recommended Addon Combinations
+
+**For Production Web Apps**:
+```bash
+--addons turborepo biome husky pwa nuqs
+```
+
+**For Desktop Applications**:
+```bash
+--addons turborepo biome husky tauri nuqs
+```
+
+**For Open Source Projects**:
+```bash
+--addons turborepo biome husky starlight nuqs
+```
+
+### Performance Considerations
+
+- **Turborepo**: Essential for monorepos, provides significant build performance improvements
+- **Biome**: Faster than ESLint/Prettier combination
+- **Nuqs**: Lightweight URL state management with minimal bundle impact
+- **PWA**: Improves user experience with offline capabilities
+
+### Development Workflow
+
+1. Start with essential addons (Turborepo, Biome, Husky)
+2. Add feature-specific addons based on requirements (PWA, Tauri, Nuqs)
+3. Include documentation (Starlight) for team projects
+4. Use the `add` command to incrementally enhance existing projects

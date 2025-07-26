@@ -115,6 +115,8 @@ export const dependencyVersionMap = {
 	"@opennextjs/cloudflare": "^1.3.0",
 	"nitro-cloudflare-dev": "^0.2.2",
 	"@sveltejs/adapter-cloudflare": "^7.0.4",
+
+	nuqs: "^2.4.3",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;
@@ -126,6 +128,7 @@ export const ADDON_COMPATIBILITY = {
 	husky: [],
 	turborepo: [],
 	starlight: [],
+	nuqs: ["tanstack-router", "react-router", "tanstack-start", "next", "nuxt", "svelte", "solid"],
 	none: [],
 } as const;
 

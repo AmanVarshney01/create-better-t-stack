@@ -200,12 +200,13 @@ npx create-better-t-stack@latest .
 - `biome` - Biome linter/formatter
 - `husky` - Git hooks with Husky
 - `starlight` - Documentation site
+- `nuqs` - URL state management
 - `none` - No addons
 
 **Examples:**
 ```bash
 --addons turborepo pwa
---addons biome husky
+--addons biome husky nuqs
 --addons none
 ```
 
@@ -300,7 +301,7 @@ Add addons or deployment configurations to existing Better-T-Stack projects.
 npx create-better-t-stack@latest add
 
 # Add specific addons
-npx create-better-t-stack@latest add --addons pwa tauri
+npx create-better-t-stack@latest add --addons nuqs pwa tauri
 
 # Add deployment
 npx create-better-t-stack@latest add --web-deploy workers

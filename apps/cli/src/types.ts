@@ -39,7 +39,7 @@ export const FrontendSchema = z
 export type Frontend = z.infer<typeof FrontendSchema>;
 
 export const AddonsSchema = z
-	.enum(["pwa", "tauri", "starlight", "biome", "husky", "turborepo", "none"])
+	.enum(["pwa", "tauri", "starlight", "biome", "husky", "turborepo", "nuqs", "none"])
 	.describe("Additional addons");
 export type Addons = z.infer<typeof AddonsSchema>;
 
