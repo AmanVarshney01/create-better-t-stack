@@ -13,6 +13,8 @@ export function getPackageExecutionCommand(
 	commandWithArgs: string,
 ): string {
 	switch (packageManager) {
+		case "yarn":
+			return `yarn dlx ${commandWithArgs}`;
 		case "pnpm":
 			return `pnpm dlx ${commandWithArgs}`;
 		case "bun":

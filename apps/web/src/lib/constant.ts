@@ -370,6 +370,13 @@ export const TECH_OPTIONS = {
 			color: "from-red-500 to-red-700",
 		},
 		{
+			id: "yarn",
+			name: "yarn",
+			description: "Fast, reliable, and secure",
+			icon: "/icon/yarn.svg",
+			color: "from-blue-500 to-blue-700",
+		},
+		{
 			id: "pnpm",
 			name: "pnpm",
 			description: "Fast, disk space efficient",

@@ -22,10 +22,11 @@ export default function HomePage() {
 	const [stars, setStars] = useState<number | null>(null);
 	const [isLoadingStars, setIsLoadingStars] = useState(true);
 	const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
-	const [selectedPM, setSelectedPM] = useState<"npm" | "pnpm" | "bun">("bun");
+	const [selectedPM, setSelectedPM] = useState<"npm" | "yarn" | "pnpm" | "bun">("bun");
 
 	const commands = {
 		npm: "npx create-better-t-stack@latest",
+		yarn: "yarn create better-t-stack",
 		pnpm: "pnpm create better-t-stack@latest",
 		bun: "bun create better-t-stack@latest",
 	};
@@ -121,7 +122,7 @@ export default function HomePage() {
 							<span className="font-semibold text-sm">QUICK_START</span>
 						</div>
 						<div className="flex items-center rounded border border-border p-0.5">
-							{(["bun", "pnpm", "npm"] as const).map((pm) => (
+							{(["bun", "pnpm", "yarn", "npm"] as const).map((pm) => (
 								<button
 									type="button"
 									key={pm}

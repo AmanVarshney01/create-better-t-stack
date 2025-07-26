@@ -8,7 +8,7 @@ description: How to install and set up Better-T-Stack CLI
 Before installing Better-T-Stack, ensure your system meets these requirements:
 
 - **Node.js**: Version 18 or higher
-- **Package Manager**: npm, pnpm, or bun
+- **Package Manager**: npm, yarn, pnpm, or bun
 - **Git**: For repository initialization (optional but recommended)
 
 ### Optional Dependencies
@@ -45,6 +45,17 @@ npm install -g create-better-t-stack
 create-better-t-stack my-project
 ```
 
+### yarn
+
+```bash
+# Run without installing (recommended)
+yarn create better-t-stack my-project
+
+# Or install globally
+yarn global add create-better-t-stack
+create-better-t-stack my-project
+```
+
 ### pnpm
 
 ```bash
@@ -71,10 +82,15 @@ create-better-t-stack my-project
 
 If you frequently create new projects, you might want to install the CLI globally:
 
-<Tabs items={['npm', 'pnpm', 'bun']}>
+<Tabs items={['npm', 'yarn', 'pnpm', 'bun']}>
   <Tab value="npm">
     ```bash
     npm install -g create-better-t-stack
+    ```
+  </Tab>
+  <Tab value="yarn">
+    ```bash
+    yarn global add create-better-t-stack
     ```
   </Tab>
   <Tab value="pnpm">
@@ -171,6 +187,9 @@ If you need to upgrade Node.js:
 If you prefer a specific package manager but it's not installed:
 
 ```bash
+# Install yarn
+npm install -g yarn
+
 # Install pnpm
 npm install -g pnpm
 
@@ -209,10 +228,15 @@ When using `npx create-better-t-stack@latest`, you automatically get the latest 
 
 If you have it installed globally, update regularly:
 
-<Tabs items={['npm', 'pnpm', 'bun']}>
+<Tabs items={['npm', 'yarn', 'pnpm', 'bun']}>
   <Tab value="npm">
     ```bash
     npm update -g create-better-t-stack
+    ```
+  </Tab>
+  <Tab value="yarn">
+    ```bash
+    yarn global upgrade create-better-t-stack
     ```
   </Tab>
   <Tab value="pnpm">
