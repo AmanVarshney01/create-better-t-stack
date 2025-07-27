@@ -105,7 +105,7 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 		}
 
 		const ultraciteArgsString = ultraciteArgs.join(" ");
-		const commandWithArgs = `ultracite@latest ${ultraciteArgsString}`;
+		const commandWithArgs = `ultracite@latest ${ultraciteArgsString} --skip-install`;
 
 		const ultraciteInitCommand = getPackageExecutionCommand(
 			packageManager,

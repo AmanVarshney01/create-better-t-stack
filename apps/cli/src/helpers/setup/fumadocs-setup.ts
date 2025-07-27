@@ -59,7 +59,7 @@ export async function setupFumadocs(config: ProjectConfig) {
 
 		const templateArg = TEMPLATES[template].value;
 
-		const commandWithArgs = `create-fumadocs-app@latest fumadocs --template ${templateArg} --src --no-install --pm bun --no-eslint`;
+		const commandWithArgs = `create-fumadocs-app@latest fumadocs --template ${templateArg} --src --no-install --pm ${packageManager} --no-eslint`;
 
 		const fumadocsInitCommand = getPackageExecutionCommand(
 			packageManager,

@@ -44,15 +44,15 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 			break;
 		case "husky":
 			label = "Husky";
-			hint = "Git hooks made easy";
+			hint = "Modern native Git hooks made easy";
 			break;
 		case "starlight":
 			label = "Starlight";
-			hint = "Documentation site with Astro";
+			hint = "Everything you need to build a stellar docs with astro";
 			break;
 		case "fumadocs":
 			label = "Fumadocs";
-			hint = "Next.js documentation framework";
+			hint = "Build excellent documentation site with less effort";
 			break;
 		default:
 			label = addon;
