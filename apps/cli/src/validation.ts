@@ -500,9 +500,7 @@ export function processAndValidateFlags(
 	return config;
 }
 
-export function validateConfigCompatibility(
-	config: Partial<ProjectConfig>,
-): void {
+export function validateConfigCompatibility(config: Partial<ProjectConfig>) {
 	const effectiveDatabase = config.database;
 	const effectiveBackend = config.backend;
 	const effectiveFrontend = config.frontend;

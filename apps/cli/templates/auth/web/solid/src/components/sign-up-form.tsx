@@ -56,7 +56,7 @@ export default function SignUpForm({
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          void form.handleSubmit();
+          form.handleSubmit();
         }}
         class="space-y-4"
       >

@@ -58,7 +58,7 @@ export default function SignInForm({
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          void form.handleSubmit();
+          form.handleSubmit();
         }}
         className="space-y-4"
       >

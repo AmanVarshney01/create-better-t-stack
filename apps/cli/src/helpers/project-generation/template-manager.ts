@@ -790,6 +790,14 @@ export async function handleExtras(
 		}
 	}
 
+	if (context.packageManager === "bun") {
+		const bunfigSrc = path.join(extrasDir, "bunfig.toml");
+		const bunfigDest = path.join(projectDir, "bunfig.toml");
+		if (await fs.pathExists(bunfigSrc)) {
+			await fs.copy(bunfigSrc, bunfigDest);
+		}
+	}
+
 	if (
 		context.packageManager === "pnpm" &&
 		(hasNative || context.frontend.includes("nuxt"))

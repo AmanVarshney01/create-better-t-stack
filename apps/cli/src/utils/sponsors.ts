@@ -34,7 +34,7 @@ export async function fetchSponsors(
 	return sponsors;
 }
 
-export function displaySponsors(sponsors: SponsorEntry[]): void {
+export function displaySponsors(sponsors: SponsorEntry[]) {
 	if (sponsors.length === 0) {
 		log.info("No sponsors found. You can be the first one! ✨");
 		outro(

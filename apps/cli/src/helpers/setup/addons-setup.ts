@@ -1,15 +1,19 @@
 import path from "node:path";
 import { log } from "@clack/prompts";
+import { execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
-import type { Frontend, ProjectConfig } from "../../types";
+import type { Frontend, PackageManager, ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
+import { getPackageExecutionCommand } from "../../utils/package-runner";
+import { setupFumadocs } from "./fumadocs-setup";
 import { setupStarlight } from "./starlight-setup";
 import { setupTauri } from "./tauri-setup";
+import { setupUltracite } from "./ultracite-setup";
 import { addPwaToViteConfig } from "./vite-pwa-setup";
 
 export async function setupAddons(config: ProjectConfig, isAddCommand = false) {
-	const { addons, frontend, projectDir } = config;
+	const { addons, frontend, projectDir, packageManager } = config;
 	const hasReactWebFrontend =
 		frontend.includes("react-router") ||
 		frontend.includes("tanstack-router") ||
@@ -53,14 +57,37 @@ ${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
 	) {
 		await setupTauri(config);
 	}
-	if (addons.includes("biome")) {
-		await setupBiome(projectDir);
+	const hasUltracite = addons.includes("ultracite");
+	const hasBiome = addons.includes("biome");
+	const hasHusky = addons.includes("husky");
+	const hasOxlint = addons.includes("oxlint");
+
+	if (hasUltracite) {
+		await setupUltracite(config, hasHusky);
+	} else {
+		if (hasBiome) {
+			await setupBiome(projectDir);
+		}
+		if (hasHusky) {
+			// Determine which linter to use for lint-staged
+			let linter: "biome" | "oxlint" | undefined;
+			if (hasOxlint) {
+				linter = "oxlint";
+			} else if (hasBiome) {
+				linter = "biome";
+			}
+			await setupHusky(projectDir, linter);
+		}
 	}
-	if (addons.includes("husky")) {
-		await setupHusky(projectDir);
+
+	if (addons.includes("oxlint")) {
+		await setupOxlint(projectDir, packageManager);
 	}
 	if (addons.includes("starlight")) {
 		await setupStarlight(config);
+	}
+	if (addons.includes("fumadocs")) {
+		await setupFumadocs(config);
 	}
 }
 
@@ -77,7 +104,7 @@ function getWebAppDir(projectDir: string, frontends: Frontend[]): string {
 	return path.join(projectDir, "apps/web");
 }
 
-async function setupBiome(projectDir: string) {
+export async function setupBiome(projectDir: string) {
 	await addPackageDependency({
 		devDependencies: ["@biomejs/biome"],
 		projectDir,
@@ -96,7 +123,10 @@ async function setupBiome(projectDir: string) {
 	}
 }
 
-async function setupHusky(projectDir: string) {
+export async function setupHusky(
+	projectDir: string,
+	linter?: "biome" | "oxlint",
+) {
 	await addPackageDependency({
 		devDependencies: ["husky", "lint-staged"],
 		projectDir,
@@ -111,11 +141,21 @@ async function setupHusky(projectDir: string) {
 			prepare: "husky",
 		};
 
-		packageJson["lint-staged"] = {
-			"*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
-				"biome check --write .",
-			],
-		};
+		if (linter === "oxlint") {
+			packageJson["lint-staged"] = {
+				"**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,astro,svelte}": "oxlint",
+			};
+		} else if (linter === "biome") {
+			packageJson["lint-staged"] = {
+				"*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+					"biome check --write .",
+				],
+			};
+		} else {
+			packageJson["lint-staged"] = {
+				"**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,astro,svelte}": "",
+			};
+		}
 
 		await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
 	}
@@ -156,4 +196,34 @@ async function setupPwa(projectDir: string, frontends: Frontend[]) {
 	if (await fs.pathExists(viteConfigTs)) {
 		await addPwaToViteConfig(viteConfigTs, path.basename(projectDir));
 	}
+}
+
+async function setupOxlint(projectDir: string, packageManager: PackageManager) {
+	await addPackageDependency({
+		devDependencies: ["oxlint"],
+		projectDir,
+	});
+
+	const packageJsonPath = path.join(projectDir, "package.json");
+	if (await fs.pathExists(packageJsonPath)) {
+		const packageJson = await fs.readJson(packageJsonPath);
+
+		packageJson.scripts = {
+			...packageJson.scripts,
+			check: "oxlint",
+		};
+
+		await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+	}
+
+	const oxlintInitCommand = getPackageExecutionCommand(
+		packageManager,
+		"oxlint@latest --init",
+	);
+
+	await execa(oxlintInitCommand, {
+		cwd: projectDir,
+		env: { CI: "true" },
+		shell: true,
+	});
 }

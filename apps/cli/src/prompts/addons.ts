@@ -1,4 +1,4 @@
-import { cancel, isCancel, multiselect } from "@clack/prompts";
+import { cancel, groupMultiselect, isCancel } from "@clack/prompts";
 import pc from "picocolors";
 import { DEFAULT_CONFIG } from "../constants";
 import { type Addons, AddonsSchema, type Frontend } from "../types";
@@ -13,44 +13,60 @@ type AddonOption = {
 	hint: string;
 };
 
-function getAddonDisplay(
-	addon: Addons,
-	isRecommended = false,
-): { label: string; hint: string } {
+function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 	let label: string;
 	let hint: string;
 
-	if (addon === "turborepo") {
-		label = isRecommended ? "Turborepo (Recommended)" : "Turborepo";
-		hint = "High-performance build system for JavaScript and TypeScript";
-	} else if (addon === "pwa") {
-		label = "PWA (Progressive Web App)";
-		hint = "Make your app installable and work offline";
-	} else if (addon === "tauri") {
-		label = isRecommended ? "Tauri Desktop App" : "Tauri";
-		hint = "Build native desktop apps from your web frontend";
-	} else if (addon === "biome") {
-		label = "Biome";
-		hint = isRecommended
-			? "Add Biome for linting and formatting"
-			: "Fast formatter and linter for JavaScript, TypeScript, JSX";
-	} else if (addon === "husky") {
-		label = "Husky";
-		hint = isRecommended
-			? "Add Git hooks with Husky, lint-staged (requires Biome)"
-			: "Git hooks made easy";
-	} else if (addon === "starlight") {
-		label = "Starlight";
-		hint = isRecommended
-			? "Add Astro Starlight documentation site"
-			: "Documentation site with Astro";
-	} else {
-		label = addon;
-		hint = `Add ${addon}`;
+	switch (addon) {
+		case "turborepo":
+			label = "Turborepo";
+			hint = "High-performance build system for JavaScript and TypeScript";
+			break;
+		case "pwa":
+			label = "PWA (Progressive Web App)";
+			hint = "Make your app installable and work offline";
+			break;
+		case "tauri":
+			label = "Tauri";
+			hint = "Build native desktop apps from your web frontend";
+			break;
+		case "biome":
+			label = "Biome";
+			hint = "Fast formatter and linter for JavaScript, TypeScript, JSX";
+			break;
+		case "oxlint":
+			label = "Oxlint";
+			hint = "Fast JavaScript linter written in Rust";
+			break;
+		case "ultracite":
+			label = "Ultracite";
+			hint = "Ultra-fast code quality tool";
+			break;
+		case "husky":
+			label = "Husky";
+			hint = "Git hooks made easy";
+			break;
+		case "starlight":
+			label = "Starlight";
+			hint = "Documentation site with Astro";
+			break;
+		case "fumadocs":
+			label = "Fumadocs";
+			hint = "Next.js documentation framework";
+			break;
+		default:
+			label = addon;
+			hint = `Add ${addon}`;
 	}
 
 	return { label, hint };
 }
+
+const ADDON_GROUPS = {
+	Documentation: ["starlight", "fumadocs"],
+	Linting: ["biome", "oxlint", "ultracite"],
+	Other: ["turborepo", "pwa", "tauri", "husky"],
+};
 
 export async function getAddonsChoice(
 	addons?: Addons[],
@@ -59,47 +75,54 @@ export async function getAddonsChoice(
 	if (addons !== undefined) return addons;
 
 	const allAddons = AddonsSchema.options.filter((addon) => addon !== "none");
+	const groupedOptions: Record<string, AddonOption[]> = {
+		Documentation: [],
+		Linting: [],
+		Other: [],
+	};
 
-	const allPossibleOptions: AddonOption[] = [];
+	const frontendsArray = frontends || [];
 
 	for (const addon of allAddons) {
-		const { isCompatible } = validateAddonCompatibility(addon, frontends || []);
+		const { isCompatible } = validateAddonCompatibility(addon, frontendsArray);
+		if (!isCompatible) continue;
 
-		if (isCompatible) {
-			const { label, hint } = getAddonDisplay(addon, true);
+		const { label, hint } = getAddonDisplay(addon);
+		const option = { value: addon, label, hint };
 
-			allPossibleOptions.push({
-				value: addon,
-				label,
-				hint,
-			});
+		if (ADDON_GROUPS.Documentation.includes(addon)) {
+			groupedOptions.Documentation.push(option);
+		} else if (ADDON_GROUPS.Linting.includes(addon)) {
+			groupedOptions.Linting.push(option);
+		} else if (ADDON_GROUPS.Other.includes(addon)) {
+			groupedOptions.Other.push(option);
 		}
 	}
 
-	const options = allPossibleOptions.sort((a, b) => {
-		if (a.value === "turborepo") return -1;
-		if (b.value === "turborepo") return 1;
-		return 0;
+	Object.keys(groupedOptions).forEach((group) => {
+		if (groupedOptions[group].length === 0) {
+			delete groupedOptions[group];
+		}
 	});
 
 	const initialValues = DEFAULT_CONFIG.addons.filter((addonValue) =>
-		options.some((opt) => opt.value === addonValue),
+		Object.values(groupedOptions).some((options) =>
+			options.some((opt) => opt.value === addonValue),
+		),
 	);
 
-	const response = await multiselect({
+	const response = await groupMultiselect<Addons>({
 		message: "Select addons",
-		options: options,
+		options: groupedOptions,
 		initialValues: initialValues,
 		required: false,
+		// groupSpacing: 1,
+		selectableGroups: false,
 	});
 
 	if (isCancel(response)) {
 		cancel(pc.red("Operation cancelled"));
 		process.exit(0);
-	}
-
-	if (response.includes("husky") && !response.includes("biome")) {
-		response.push("biome");
 	}
 
 	return response;
@@ -109,34 +132,49 @@ export async function getAddonsToAdd(
 	frontend: Frontend[],
 	existingAddons: Addons[] = [],
 ): Promise<Addons[]> {
-	const options: AddonOption[] = [];
+	const groupedOptions: Record<string, AddonOption[]> = {
+		Documentation: [],
+		Linting: [],
+		Other: [],
+	};
 
-	const allAddons = AddonsSchema.options.filter((addon) => addon !== "none");
+	const frontendArray = frontend || [];
 
 	const compatibleAddons = getCompatibleAddons(
-		allAddons,
-		frontend,
+		AddonsSchema.options.filter((addon) => addon !== "none"),
+		frontendArray,
 		existingAddons,
 	);
 
 	for (const addon of compatibleAddons) {
-		const { label, hint } = getAddonDisplay(addon, false);
+		const { label, hint } = getAddonDisplay(addon);
+		const option = { value: addon, label, hint };
 
-		options.push({
-			value: addon,
-			label,
-			hint,
-		});
+		if (ADDON_GROUPS.Documentation.includes(addon)) {
+			groupedOptions.Documentation.push(option);
+		} else if (ADDON_GROUPS.Linting.includes(addon)) {
+			groupedOptions.Linting.push(option);
+		} else if (ADDON_GROUPS.Other.includes(addon)) {
+			groupedOptions.Other.push(option);
+		}
 	}
 
-	if (options.length === 0) {
+	Object.keys(groupedOptions).forEach((group) => {
+		if (groupedOptions[group].length === 0) {
+			delete groupedOptions[group];
+		}
+	});
+
+	if (Object.keys(groupedOptions).length === 0) {
 		return [];
 	}
 
-	const response = await multiselect<Addons>({
-		message: "Select addons",
-		options: options,
+	const response = await groupMultiselect<Addons>({
+		message: "Select addons to add",
+		options: groupedOptions,
 		required: false,
+		// groupSpacing: 1,
+		selectableGroups: false,
 	});
 
 	if (isCancel(response)) {

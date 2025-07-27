@@ -1,6 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Frontend, ProjectConfig } from "./types";
+import type { Addons, Frontend, ProjectConfig } from "./types";
 import { getUserPkgManager } from "./utils/get-package-manager";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -55,10 +55,11 @@ export const dependencyVersionMap = {
 
 	"@tauri-apps/cli": "^2.4.0",
 
-	"@biomejs/biome": "^2.0.0",
+	"@biomejs/biome": "^2.1.2",
+	oxlint: "^1.8.0",
 
 	husky: "^9.1.7",
-	"lint-staged": "^15.5.0",
+	"lint-staged": "^16.1.2",
 
 	tsx: "^4.19.2",
 	"@types/node": "^22.13.11",
@@ -119,13 +120,16 @@ export const dependencyVersionMap = {
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;
 
-export const ADDON_COMPATIBILITY = {
+export const ADDON_COMPATIBILITY: Record<Addons, readonly Frontend[]> = {
 	pwa: ["tanstack-router", "react-router", "solid", "next"],
 	tauri: ["tanstack-router", "react-router", "nuxt", "svelte", "solid"],
 	biome: [],
 	husky: [],
 	turborepo: [],
 	starlight: [],
+	ultracite: [],
+	oxlint: [],
+	fumadocs: [],
 	none: [],
 } as const;
 

@@ -142,6 +142,10 @@ export async function displayPostInstallInstructions(
 		output += `${pc.cyan("•")} Docs: http://localhost:4321\n`;
 	}
 
+	if (addons?.includes("fumadocs")) {
+		output += `${pc.cyan("•")} Fumadocs: http://localhost:4000\n`;
+	}
+
 	if (nativeInstructions) output += `\n${nativeInstructions.trim()}\n`;
 	if (databaseInstructions) output += `\n${databaseInstructions.trim()}\n`;
 	if (tauriInstructions) output += `\n${tauriInstructions.trim()}\n`;
