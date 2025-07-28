@@ -605,11 +605,6 @@ export function validateConfigCompatibility(config: Partial<ProjectConfig>) {
 			process.exit(1);
 		}
 
-		if (config.addons.includes("husky") && !config.addons.includes("biome")) {
-			consola.warn(
-				"Husky addon is recommended to be used with Biome for lint-staged configuration.",
-			);
-		}
 		config.addons = [...new Set(config.addons)];
 	}
 
