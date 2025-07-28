@@ -1,27 +1,19 @@
 export type TechCategory =
-	| "core"
-	| "frontend"
+	| "api"
+	| "webFrontend"
+	| "nativeFrontend"
+	| "runtime"
 	| "backend"
 	| "database"
-	| "auth"
 	| "orm"
-	| "router";
-
-export interface TechNode {
-	id: string;
-	type: string;
-	position: { x: number; y: number };
-	data: {
-		label: string;
-		category: TechCategory;
-		description: string;
-		isDefault: boolean;
-		alternatives?: string[];
-		isActive: boolean;
-		group?: TechCategory;
-		isStatic?: boolean;
-	};
-}
+	| "dbSetup"
+	| "webDeploy"
+	| "auth"
+	| "packageManager"
+	| "addons"
+	| "examples"
+	| "git"
+	| "install";
 
 export interface TechEdge {
 	id: string;

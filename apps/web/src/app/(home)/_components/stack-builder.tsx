@@ -129,11 +129,15 @@ const getBadgeColors = (category: string): string => {
 	}
 };
 
-const TechIcon: React.FC<{
+function TechIcon({
+	icon,
+	name,
+	className,
+}: {
 	icon: string;
 	name: string;
 	className?: string;
-}> = ({ icon, name, className }) => {
+}) {
 	const [mounted, setMounted] = useState(false);
 	const { theme } = useTheme();
 
@@ -168,7 +172,7 @@ const TechIcon: React.FC<{
 			{icon}
 		</span>
 	);
-};
+}
 
 const getCategoryDisplayName = (categoryKey: string): string => {
 	const result = categoryKey.replace(/([A-Z])/g, " $1");
@@ -1687,7 +1691,10 @@ const StackBuilder = () => {
 																					<TechIcon
 																						icon={tech.icon}
 																						name={tech.name}
-																						className="mr-1.5 h-3 w-3 sm:h-4 sm:w-4"
+																						className={cn(
+																							"mr-1.5 h-3 w-3 sm:h-4 sm:w-4",
+																							tech.className,
+																						)}
 																					/>
 																				)}
 																				<span

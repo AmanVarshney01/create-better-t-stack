@@ -1,4 +1,17 @@
-export const TECH_OPTIONS = {
+import type { TechCategory } from "./types";
+
+export const TECH_OPTIONS: Record<
+	TechCategory,
+	{
+		id: string;
+		name: string;
+		description: string;
+		icon: string;
+		color: string;
+		default?: boolean;
+		className?: string;
+	}[]
+> = {
 	api: [
 		{
 			id: "trpc",
@@ -97,6 +110,7 @@ export const TECH_OPTIONS = {
 			description: "Expo with NativeWind (Tailwind)",
 			icon: "/icon/expo.svg",
 			color: "from-purple-400 to-purple-600",
+			className: "invert-0 dark:invert",
 			default: false,
 		},
 		{
@@ -105,6 +119,7 @@ export const TECH_OPTIONS = {
 			description: "Expo with Unistyles",
 			icon: "/icon/expo.svg",
 			color: "from-pink-400 to-pink-600",
+			className: "invert-0 dark:invert",
 			default: false,
 		},
 		{
@@ -368,6 +383,7 @@ export const TECH_OPTIONS = {
 			description: "Default package manager",
 			icon: "/icon/npm.svg",
 			color: "from-red-500 to-red-700",
+			className: "invert-0 dark:invert",
 		},
 		{
 			id: "pnpm",
