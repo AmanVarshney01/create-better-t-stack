@@ -32,15 +32,16 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 			break;
 		case "biome":
 			label = "Biome";
-			hint = "Fast formatter and linter for JavaScript, TypeScript, JSX";
+			hint = "Format, lint, and more in a fraction of a second";
 			break;
 		case "oxlint":
 			label = "Oxlint";
-			hint = "Fast JavaScript linter written in Rust";
+			hint = "Rust-powered linter for JavaScript and TypeScript";
 			break;
 		case "ultracite":
 			label = "Ultracite";
-			hint = "Ultra-fast code quality tool";
+			hint =
+				"Zero-config Biome preset for linting, formatting, and AI integration.";
 			break;
 		case "husky":
 			label = "Husky";

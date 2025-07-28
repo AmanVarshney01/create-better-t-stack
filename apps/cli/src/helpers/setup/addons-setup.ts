@@ -69,7 +69,6 @@ ${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
 			await setupBiome(projectDir);
 		}
 		if (hasHusky) {
-			// Determine which linter to use for lint-staged
 			let linter: "biome" | "oxlint" | undefined;
 			if (hasOxlint) {
 				linter = "oxlint";
