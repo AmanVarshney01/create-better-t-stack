@@ -101,6 +101,10 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 			ultraciteArgs.push("--rules", ...rules);
 		}
 
+		if (hasHusky) {
+			ultraciteArgs.push("--features", "husky", "lint-staged");
+		}
+
 		const ultraciteArgsString = ultraciteArgs.join(" ");
 		const commandWithArgs = `ultracite@latest ${ultraciteArgsString} --skip-install`;
 
@@ -116,7 +120,6 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 		});
 
 		if (hasHusky) {
-			ultraciteArgs.push("--features", "husky", "lint-staged");
 			await addPackageDependency({
 				devDependencies: ["husky", "lint-staged"],
 				projectDir,
