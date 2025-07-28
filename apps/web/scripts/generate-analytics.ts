@@ -1,7 +1,7 @@
-import { execSync } from "child_process";
-import { writeFileSync, mkdtempSync } from "node:fs";
-import { join } from "node:path";
+import { execSync } from "node:child_process";
+import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { join } from "node:path";
 import Papa from "papaparse";
 
 // TODO: write a more effiecient way of handling analytics
