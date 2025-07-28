@@ -116,7 +116,6 @@ export async function getAddonsChoice(
 		options: groupedOptions,
 		initialValues: initialValues,
 		required: false,
-		// groupSpacing: 1,
 		selectableGroups: false,
 	});
 
@@ -173,7 +172,6 @@ export async function getAddonsToAdd(
 		message: "Select addons to add",
 		options: groupedOptions,
 		required: false,
-		// groupSpacing: 1,
 		selectableGroups: false,
 	});
 
