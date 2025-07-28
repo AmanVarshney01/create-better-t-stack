@@ -1,5 +1,19 @@
 # create-better-t-stack
 
+## 2.28.0
+
+### Minor Changes
+
+- 216c242: Added addons: fumadocs, ultracite, oxlint
+
+  Added bunfig.toml with isolated linker
+
+  Grouped addon prompts
+
+### Patch Changes
+
+- 82a4f42: Added Sao Paulo region
+
 ## 2.27.1
 
 ### Patch Changes
