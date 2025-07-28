@@ -413,14 +413,14 @@ export default function AnalyticsPage() {
 
 	const loadAnalyticsData = useCallback(async () => {
 		try {
-			const response = await fetch("/analytics-data.json");
+			const response = await fetch("https://r2.amanv.dev/analytics-data.json");
 			const analyticsData = await response.json();
 
 			setData(analyticsData.data || []);
 			setLastUpdated(analyticsData.lastUpdated || null);
 
 			console.log(
-				`Loaded ${analyticsData.data?.length || 0} records from static JSON`,
+				`Loaded ${analyticsData.data?.length || 0} records from R2 bucket`,
 			);
 			console.log(`Data generated at: ${analyticsData.generatedAt}`);
 		} catch (error: unknown) {

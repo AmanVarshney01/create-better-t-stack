@@ -1,6 +1,10 @@
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { execSync } from "child_process";
+import { writeFileSync, mkdtempSync } from "node:fs";
 import { join } from "node:path";
+import { tmpdir } from "node:os";
 import Papa from "papaparse";
+
+// TODO: write a more effiecient way of handling analytics
 
 interface AnalyticsData {
 	date: string;
@@ -157,18 +161,29 @@ async function generateAnalyticsData() {
 			totalRecords: processedData.length,
 		};
 
-		const publicDir = join(process.cwd(), "public");
-		if (!existsSync(publicDir)) {
-			mkdirSync(publicDir, { recursive: true });
-		}
+		console.log("📤 Uploading to Cloudflare R2...");
 
-		const outputPath = join(publicDir, "analytics-data.json");
-		writeFileSync(outputPath, JSON.stringify(analyticsData, null, 2));
+		const tempDir = mkdtempSync(join(tmpdir(), "analytics-"));
+		const tempFilePath = join(tempDir, "analytics-data.json");
+
+		writeFileSync(tempFilePath, JSON.stringify(analyticsData, null, 2));
+
+		const BUCKET_NAME = "bucket";
+		const key = "analytics-data.json";
+		const cmd = `npx wrangler r2 object put "${BUCKET_NAME}/${key}" --file="${tempFilePath}" --remote`;
+
+		console.log(`Uploading ${tempFilePath} to r2://${BUCKET_NAME}/${key} ...`);
+		try {
+			execSync(cmd, { stdio: "inherit" });
+		} catch (err) {
+			console.error("Failed to upload analytics data:", err);
+			throw err;
+		}
 
 		console.log(
 			`✅ Generated analytics data with ${processedData.length} records`,
 		);
-		console.log(`📁 Saved to: ${outputPath}`);
+		console.log("📤 Uploaded to R2 bucket: bucket/analytics-data.json");
 		console.log(`🕒 Last data update: ${lastUpdated}`);
 	} catch (error) {
 		console.error("❌ Error generating analytics data:", error);
