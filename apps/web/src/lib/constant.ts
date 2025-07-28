@@ -434,6 +434,14 @@ export const TECH_OPTIONS = {
 			color: "from-gray-400 to-gray-700",
 			default: true,
 		},
+		{
+			id: "nuqs",
+			name: "Nuqs",
+			description: "URL state management",
+			icon: "/icon/nuqs.svg",
+			color: "from-blue-400 to-purple-600",
+			default: false,
+		},
 	],
 	examples: [
 		{
@@ -593,7 +601,7 @@ export const PRESET_TEMPLATES = [
 			dbSetup: "turso",
 			auth: "true",
 			packageManager: "bun",
-			addons: ["pwa", "biome", "husky", "tauri", "starlight", "turborepo"],
+			addons: ["pwa", "biome", "husky", "tauri", "starlight", "nuqs", "turborepo"],
 			examples: ["todo", "ai"],
 			git: "true",
 			install: "true",

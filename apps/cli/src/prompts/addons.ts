@@ -44,6 +44,11 @@ function getAddonDisplay(
 		hint = isRecommended
 			? "Add Astro Starlight documentation site"
 			: "Documentation site with Astro";
+	} else if (addon === "nuqs") {
+		label = "Nuqs";
+		hint = isRecommended
+			? "Add Nuqs for URL state management"
+			: "Type-safe URL state management for React frameworks";
 	} else {
 		label = addon;
 		hint = `Add ${addon}`;
