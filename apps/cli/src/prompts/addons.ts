@@ -20,7 +20,7 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 	switch (addon) {
 		case "turborepo":
 			label = "Turborepo";
-			hint = "High-performance build system for JavaScript and TypeScript";
+			hint = "High-performance build system";
 			break;
 		case "pwa":
 			label = "PWA (Progressive Web App)";
@@ -32,16 +32,15 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 			break;
 		case "biome":
 			label = "Biome";
-			hint = "Format, lint, and more in a fraction of a second";
+			hint = "Format, lint, and more";
 			break;
 		case "oxlint":
 			label = "Oxlint";
-			hint = "Rust-powered linter for JavaScript and TypeScript";
+			hint = "Rust-powered linter";
 			break;
 		case "ultracite":
 			label = "Ultracite";
-			hint =
-				"Zero-config Biome preset for linting, formatting, and AI integration.";
+			hint = "Zero-config Biome preset with AI integration";
 			break;
 		case "husky":
 			label = "Husky";
@@ -49,11 +48,11 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 			break;
 		case "starlight":
 			label = "Starlight";
-			hint = "Everything you need to build a stellar docs with astro";
+			hint = "Build stellar docs with astro";
 			break;
 		case "fumadocs":
 			label = "Fumadocs";
-			hint = "Build excellent documentation site with less effort";
+			hint = "Build excellent documentation site";
 			break;
 		default:
 			label = addon;

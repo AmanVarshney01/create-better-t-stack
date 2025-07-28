@@ -404,8 +404,8 @@ export const TECH_OPTIONS: Record<
 	addons: [
 		{
 			id: "pwa",
-			name: "PWA",
-			description: "Progressive Web App",
+			name: "PWA (Progressive Web App)",
+			description: "Make your app installable and work offline",
 			icon: "",
 			color: "from-blue-500 to-blue-700",
 			default: false,
@@ -413,7 +413,7 @@ export const TECH_OPTIONS: Record<
 		{
 			id: "tauri",
 			name: "Tauri",
-			description: "Desktop app support",
+			description: "Build native desktop apps",
 			icon: "/icon/tauri.svg",
 			color: "from-amber-500 to-amber-700",
 			default: false,
@@ -421,7 +421,7 @@ export const TECH_OPTIONS: Record<
 		{
 			id: "starlight",
 			name: "Starlight",
-			description: "Documentation site with Astro",
+			description: "Build stellar docs with astro",
 			icon: "/icon/starlight.svg",
 			color: "from-teal-500 to-teal-700",
 			default: false,
@@ -429,7 +429,7 @@ export const TECH_OPTIONS: Record<
 		{
 			id: "biome",
 			name: "Biome",
-			description: "Linting & formatting",
+			description: "Format, lint, and more",
 			icon: "/icon/biome.svg",
 			color: "from-green-500 to-green-700",
 			default: false,
@@ -437,7 +437,7 @@ export const TECH_OPTIONS: Record<
 		{
 			id: "husky",
 			name: "Husky",
-			description: "Git hooks & lint-staged",
+			description: "Modern native Git hooks made easy",
 			icon: "",
 			color: "from-purple-500 to-purple-700",
 			default: false,
@@ -445,7 +445,7 @@ export const TECH_OPTIONS: Record<
 		{
 			id: "ultracite",
 			name: "Ultracite",
-			description: "Ultra-fast code quality tool",
+			description: "Biome preset with AI integration",
 			icon: "/icon/ultracite.svg",
 			color: "from-blue-500 to-blue-700",
 			className: "invert-0 dark:invert",
@@ -454,7 +454,7 @@ export const TECH_OPTIONS: Record<
 		{
 			id: "fumadocs",
 			name: "Fumadocs",
-			description: "Next.js documentation framework",
+			description: "Build excellent documentation site",
 			icon: "",
 			color: "from-indigo-500 to-indigo-700",
 			default: false,
@@ -462,7 +462,7 @@ export const TECH_OPTIONS: Record<
 		{
 			id: "oxlint",
 			name: "Oxlint",
-			description: "Fast JavaScript linter written in Rust",
+			description: "Rust-powered linter",
 			icon: "",
 			color: "from-orange-500 to-orange-700",
 			default: false,
@@ -470,7 +470,7 @@ export const TECH_OPTIONS: Record<
 		{
 			id: "turborepo",
 			name: "Turborepo",
-			description: "Monorepo build system",
+			description: "High-performance build system",
 			icon: "/icon/turborepo.svg",
 			color: "from-gray-400 to-gray-700",
 			default: true,
