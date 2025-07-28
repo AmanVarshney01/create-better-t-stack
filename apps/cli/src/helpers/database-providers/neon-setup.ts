@@ -29,6 +29,7 @@ const NEON_REGIONS: NeonRegion[] = [
 	{ label: "AWS US West (Oregon)", value: "aws-us-west-2" },
 	{ label: "AWS Europe (Frankfurt)", value: "aws-eu-central-1" },
 	{ label: "AWS Asia Pacific (Singapore)", value: "aws-ap-southeast-1" },
+	{ label: "AWS South America East 1 (São Paulo)", value: "aws-sa-east-1" },
 	{ label: "AWS Asia Pacific (Sydney)", value: "aws-ap-southeast-2" },
 	{ label: "Azure East US 2 region (Virginia)", value: "azure-eastus2" },
 ];
