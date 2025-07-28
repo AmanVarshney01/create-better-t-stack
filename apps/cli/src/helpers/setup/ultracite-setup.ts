@@ -4,6 +4,7 @@ import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
 import { setupBiome } from "./addons-setup";
+import { addPackageDependency } from "../../utils/add-package-deps";
 
 type UltraciteEditor = "vscode" | "zed";
 type UltraciteRule =
@@ -100,10 +101,6 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 			ultraciteArgs.push("--rules", ...rules);
 		}
 
-		if (hasHusky) {
-			ultraciteArgs.push("--features", "husky", "lint-staged");
-		}
-
 		const ultraciteArgsString = ultraciteArgs.join(" ");
 		const commandWithArgs = `ultracite@latest ${ultraciteArgsString} --skip-install`;
 
@@ -116,6 +113,19 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 			cwd: projectDir,
 			env: { CI: "true" },
 			shell: true,
+		});
+
+		if (hasHusky) {
+			ultraciteArgs.push("--features", "husky", "lint-staged");
+			await addPackageDependency({
+				devDependencies: ["husky", "lint-staged"],
+				projectDir,
+			});
+		}
+
+		await addPackageDependency({
+			devDependencies: ["ultracite"],
+			projectDir,
 		});
 
 		log.success("Ultracite setup successfully!");

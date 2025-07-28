@@ -758,10 +758,36 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 
 			if (
 				nextStack.addons.includes("husky") &&
-				!nextStack.addons.includes("biome")
+				!nextStack.addons.includes("biome") &&
+				!nextStack.addons.includes("oxlint")
 			) {
 				notes.addons.notes.push(
-					"Husky addon is selected without Biome. Consider adding Biome for lint-staged integration.",
+					"Husky addon is selected without a linter. Consider adding Biome or Oxlint for lint-staged integration.",
+				);
+			}
+
+			if (nextStack.addons.includes("ultracite")) {
+				if (nextStack.addons.includes("biome")) {
+					notes.addons.notes.push(
+						"Ultracite includes Biome setup. Biome addon will be removed.",
+					);
+					nextStack.addons = nextStack.addons.filter(
+						(addon) => addon !== "biome",
+					);
+					changed = true;
+					changes.push({
+						category: "addons",
+						message: "Biome addon removed (included in Ultracite)",
+					});
+				}
+			}
+
+			if (
+				nextStack.addons.includes("oxlint") &&
+				nextStack.addons.includes("biome")
+			) {
+				notes.addons.notes.push(
+					"Both Oxlint and Biome are selected. Consider using only one linter.",
 				);
 			}
 
@@ -971,7 +997,26 @@ const generateCommand = (stackState: StackState): string => {
 
 	if (!checkDefault("addons", stackState.addons)) {
 		if (stackState.addons.length > 0) {
-			flags.push(`--addons ${stackState.addons.join(" ")}`);
+			const validAddons = stackState.addons.filter((addon) =>
+				[
+					"pwa",
+					"tauri",
+					"starlight",
+					"biome",
+					"husky",
+					"turborepo",
+					"ultracite",
+					"fumadocs",
+					"oxlint",
+				].includes(addon),
+			);
+			if (validAddons.length > 0) {
+				flags.push(`--addons ${validAddons.join(" ")}`);
+			} else {
+				if (DEFAULT_STACK.addons.length > 0) {
+					flags.push("--addons none");
+				}
+			}
 		} else {
 			if (DEFAULT_STACK.addons.length > 0) {
 				flags.push("--addons none");
