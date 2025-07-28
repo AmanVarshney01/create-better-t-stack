@@ -18,7 +18,7 @@ function exitWithError(message: string): never {
 
 export async function addDeploymentToProject(
 	input: AddInput & { webDeploy: WebDeploy; suppressInstallMessage?: boolean },
-): Promise<void> {
+) {
 	try {
 		const projectDir = input.projectDir || process.cwd();
 

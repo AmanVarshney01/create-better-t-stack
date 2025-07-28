@@ -6,7 +6,7 @@ import pc from "picocolors";
 import type { Backend, ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 
-export async function setupRuntime(config: ProjectConfig): Promise<void> {
+export async function setupRuntime(config: ProjectConfig) {
 	const { runtime, backend, projectDir } = config;
 
 	if (backend === "convex" || backend === "next" || runtime === "none") {
@@ -28,9 +28,7 @@ export async function setupRuntime(config: ProjectConfig): Promise<void> {
 	}
 }
 
-export async function generateCloudflareWorkerTypes(
-	config: ProjectConfig,
-): Promise<void> {
+export async function generateCloudflareWorkerTypes(config: ProjectConfig) {
 	if (config.runtime !== "workers") {
 		return;
 	}
@@ -65,10 +63,7 @@ export async function generateCloudflareWorkerTypes(
 	}
 }
 
-async function setupBunRuntime(
-	serverDir: string,
-	_backend: Backend,
-): Promise<void> {
+async function setupBunRuntime(serverDir: string, _backend: Backend) {
 	const packageJsonPath = path.join(serverDir, "package.json");
 	if (!(await fs.pathExists(packageJsonPath))) return;
 
@@ -88,10 +83,7 @@ async function setupBunRuntime(
 	});
 }
 
-async function setupNodeRuntime(
-	serverDir: string,
-	backend: Backend,
-): Promise<void> {
+async function setupNodeRuntime(serverDir: string, backend: Backend) {
 	const packageJsonPath = path.join(serverDir, "package.json");
 	if (!(await fs.pathExists(packageJsonPath))) return;
 
@@ -123,7 +115,7 @@ async function setupNodeRuntime(
 	}
 }
 
-async function setupWorkersRuntime(serverDir: string): Promise<void> {
+async function setupWorkersRuntime(serverDir: string) {
 	const packageJsonPath = path.join(serverDir, "package.json");
 	if (!(await fs.pathExists(packageJsonPath))) return;
 

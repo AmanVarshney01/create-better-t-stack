@@ -136,7 +136,7 @@ export async function createProjectHandler(
 	}
 }
 
-export async function addAddonsHandler(input: AddInput): Promise<void> {
+export async function addAddonsHandler(input: AddInput) {
 	try {
 		const projectDir = input.projectDir || process.cwd();
 		const detectedConfig = await detectProjectConfig(projectDir);

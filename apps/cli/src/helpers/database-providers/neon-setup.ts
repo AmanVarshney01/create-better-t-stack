@@ -155,7 +155,7 @@ function displayManualSetupInstructions() {
 DATABASE_URL="your_connection_string"`);
 }
 
-export async function setupNeonPostgres(config: ProjectConfig): Promise<void> {
+export async function setupNeonPostgres(config: ProjectConfig) {
 	const { packageManager, projectDir } = config;
 
 	try {

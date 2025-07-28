@@ -5,7 +5,7 @@ import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 
-export async function setupAuth(config: ProjectConfig): Promise<void> {
+export async function setupAuth(config: ProjectConfig) {
 	const { auth, frontend, backend, projectDir } = config;
 	if (backend === "convex" || !auth) {
 		return;

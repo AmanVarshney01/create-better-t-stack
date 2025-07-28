@@ -8,7 +8,7 @@ import { tsProject } from "../../utils/ts-morph";
 export async function setupSvelteWorkersDeploy(
 	projectDir: string,
 	packageManager: PackageManager,
-): Promise<void> {
+) {
 	const webAppDir = path.join(projectDir, "apps/web");
 	if (!(await fs.pathExists(webAppDir))) return;
 

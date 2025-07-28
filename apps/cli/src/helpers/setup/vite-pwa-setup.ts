@@ -9,7 +9,7 @@ import { ensureArrayProperty, tsProject } from "../../utils/ts-morph";
 export async function addPwaToViteConfig(
 	viteConfigPath: string,
 	projectName: string,
-): Promise<void> {
+) {
 	const sourceFile = tsProject.addSourceFileAtPathIfExists(viteConfigPath);
 	if (!sourceFile) {
 		throw new Error("vite config not found");

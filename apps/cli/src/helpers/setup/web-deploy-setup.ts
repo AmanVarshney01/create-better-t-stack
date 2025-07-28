@@ -7,7 +7,7 @@ import { setupSvelteWorkersDeploy } from "./workers-svelte-setup";
 import { setupTanstackStartWorkersDeploy } from "./workers-tanstack-start-setup";
 import { setupWorkersVitePlugin } from "./workers-vite-setup";
 
-export async function setupWebDeploy(config: ProjectConfig): Promise<void> {
+export async function setupWebDeploy(config: ProjectConfig) {
 	const { webDeploy, frontend, projectDir } = config;
 	const { packageManager } = config;
 
@@ -39,7 +39,7 @@ export async function setupWebDeploy(config: ProjectConfig): Promise<void> {
 async function setupWorkersWebDeploy(
 	projectDir: string,
 	pkgManager: PackageManager,
-): Promise<void> {
+) {
 	const webAppDir = path.join(projectDir, "apps/web");
 
 	if (!(await fs.pathExists(webAppDir))) {
@@ -65,7 +65,7 @@ async function setupWorkersWebDeploy(
 async function setupNextWorkersDeploy(
 	projectDir: string,
 	_packageManager: PackageManager,
-): Promise<void> {
+) {
 	const webAppDir = path.join(projectDir, "apps/web");
 	if (!(await fs.pathExists(webAppDir))) return;
 

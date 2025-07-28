@@ -19,7 +19,7 @@ function exitWithError(message: string): never {
 
 export async function addAddonsToProject(
 	input: AddInput & { addons: Addons[]; suppressInstallMessage?: boolean },
-): Promise<void> {
+) {
 	try {
 		const projectDir = input.projectDir || process.cwd();
 

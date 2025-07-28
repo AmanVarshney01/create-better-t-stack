@@ -8,7 +8,7 @@ import type { ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
 
-export async function setupTauri(config: ProjectConfig): Promise<void> {
+export async function setupTauri(config: ProjectConfig) {
 	const { packageManager, frontend, projectDir } = config;
 	const s = spinner();
 	const clientPackageDir = path.join(projectDir, "apps/web");

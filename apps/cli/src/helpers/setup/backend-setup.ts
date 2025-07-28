@@ -3,9 +3,7 @@ import type { AvailableDependencies } from "../../constants";
 import type { ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 
-export async function setupBackendDependencies(
-	config: ProjectConfig,
-): Promise<void> {
+export async function setupBackendDependencies(config: ProjectConfig) {
 	const { backend, runtime, api, projectDir } = config;
 
 	if (backend === "convex") {

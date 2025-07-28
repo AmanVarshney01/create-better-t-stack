@@ -15,7 +15,7 @@ import { tsProject } from "../../utils/ts-morph";
 export async function setupNuxtWorkersDeploy(
 	projectDir: string,
 	packageManager: PackageManager,
-): Promise<void> {
+) {
 	const webAppDir = path.join(projectDir, "apps/web");
 	if (!(await fs.pathExists(webAppDir))) return;
 

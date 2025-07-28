@@ -2,9 +2,9 @@ import { cancel, isCancel, log, multiselect } from "@clack/prompts";
 import { execa } from "execa";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
+import { addPackageDependency } from "../../utils/add-package-deps";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
 import { setupBiome } from "./addons-setup";
-import { addPackageDependency } from "../../utils/add-package-deps";
 
 type UltraciteEditor = "vscode" | "zed";
 type UltraciteRule =

@@ -13,7 +13,7 @@ import { setupPrismaPostgres } from "../database-providers/prisma-postgres-setup
 import { setupSupabase } from "../database-providers/supabase-setup";
 import { setupTurso } from "../database-providers/turso-setup";
 
-export async function setupDatabase(config: ProjectConfig): Promise<void> {
+export async function setupDatabase(config: ProjectConfig) {
 	const { database, orm, dbSetup, backend, projectDir } = config;
 
 	if (backend === "convex" || database === "none") {

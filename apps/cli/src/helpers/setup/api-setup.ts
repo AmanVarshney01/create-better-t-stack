@@ -4,7 +4,7 @@ import type { AvailableDependencies } from "../../constants";
 import type { Frontend, ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 
-export async function setupApi(config: ProjectConfig): Promise<void> {
+export async function setupApi(config: ProjectConfig) {
 	const { api, projectName, frontend, backend, packageManager, projectDir } =
 		config;
 	const isConvex = backend === "convex";

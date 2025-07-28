@@ -36,7 +36,7 @@ interface ProcessedAnalyticsData {
 	totalRecords: number;
 }
 
-async function generateAnalyticsData(): Promise<void> {
+async function generateAnalyticsData() {
 	try {
 		console.log("🔄 Fetching analytics data...");
 

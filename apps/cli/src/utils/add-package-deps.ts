@@ -7,7 +7,7 @@ export const addPackageDependency = async (opts: {
 	dependencies?: AvailableDependencies[];
 	devDependencies?: AvailableDependencies[];
 	projectDir: string;
-}): Promise<void> => {
+}) => {
 	const { dependencies = [], devDependencies = [], projectDir } = opts;
 
 	const pkgJsonPath = path.join(projectDir, "package.json");

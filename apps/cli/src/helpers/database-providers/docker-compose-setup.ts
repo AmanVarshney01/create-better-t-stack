@@ -5,7 +5,7 @@ import {
 	type EnvVariable,
 } from "../project-generation/env-setup";
 
-export async function setupDockerCompose(config: ProjectConfig): Promise<void> {
+export async function setupDockerCompose(config: ProjectConfig) {
 	const { database, projectDir, projectName } = config;
 
 	if (database === "none" || database === "sqlite") {

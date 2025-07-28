@@ -11,7 +11,7 @@ async function processAndCopyFiles(
 	destDir: string,
 	context: ProjectConfig,
 	overwrite = true,
-): Promise<void> {
+) {
 	const sourceFiles = await globby(sourcePattern, {
 		cwd: baseSourceDir,
 		dot: true,
@@ -54,7 +54,7 @@ async function processAndCopyFiles(
 export async function copyBaseTemplate(
 	projectDir: string,
 	context: ProjectConfig,
-): Promise<void> {
+) {
 	const templateDir = path.join(PKG_ROOT, "templates/base");
 	await processAndCopyFiles(["**/*"], templateDir, projectDir, context);
 }
@@ -62,7 +62,7 @@ export async function copyBaseTemplate(
 export async function setupFrontendTemplates(
 	projectDir: string,
 	context: ProjectConfig,
-): Promise<void> {
+) {
 	const hasReactWeb = context.frontend.some((f) =>
 		["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
 	);
@@ -241,7 +241,7 @@ export async function setupFrontendTemplates(
 export async function setupBackendFramework(
 	projectDir: string,
 	context: ProjectConfig,
-): Promise<void> {
+) {
 	if (context.backend === "none") {
 		return;
 	}
@@ -332,7 +332,7 @@ export async function setupBackendFramework(
 export async function setupDbOrmTemplates(
 	projectDir: string,
 	context: ProjectConfig,
-): Promise<void> {
+) {
 	if (
 		context.backend === "convex" ||
 		context.orm === "none" ||
@@ -357,7 +357,7 @@ export async function setupDbOrmTemplates(
 export async function setupAuthTemplate(
 	projectDir: string,
 	context: ProjectConfig,
-): Promise<void> {
+) {
 	if (context.backend === "convex" || !context.auth) return;
 
 	const serverAppDir = path.join(projectDir, "apps/server");
@@ -529,7 +529,7 @@ export async function setupAuthTemplate(
 export async function setupAddonsTemplate(
 	projectDir: string,
 	context: ProjectConfig,
-): Promise<void> {
+) {
 	if (!context.addons || context.addons.length === 0) return;
 
 	for (const addon of context.addons) {
@@ -567,7 +567,7 @@ export async function setupAddonsTemplate(
 export async function setupExamplesTemplate(
 	projectDir: string,
 	context: ProjectConfig,
-): Promise<void> {
+) {
 	if (
 		!context.examples ||
 		context.examples.length === 0 ||
@@ -773,10 +773,7 @@ export async function setupExamplesTemplate(
 	}
 }
 
-export async function handleExtras(
-	projectDir: string,
-	context: ProjectConfig,
-): Promise<void> {
+export async function handleExtras(projectDir: string, context: ProjectConfig) {
 	const extrasDir = path.join(PKG_ROOT, "templates/extras");
 	const hasNativeWind = context.frontend.includes("native-nativewind");
 	const hasUnistyles = context.frontend.includes("native-unistyles");
@@ -826,7 +823,7 @@ export async function handleExtras(
 export async function setupDockerComposeTemplates(
 	projectDir: string,
 	context: ProjectConfig,
-): Promise<void> {
+) {
 	if (context.dbSetup !== "docker" || context.database === "none") {
 		return;
 	}
@@ -846,7 +843,7 @@ export async function setupDockerComposeTemplates(
 export async function setupDeploymentTemplates(
 	projectDir: string,
 	context: ProjectConfig,
-): Promise<void> {
+) {
 	if (context.webDeploy === "none") {
 		return;
 	}

@@ -6,9 +6,7 @@ import { getLatestCLIVersion } from "./get-latest-cli-version";
 
 const BTS_CONFIG_FILE = "bts.jsonc";
 
-export async function writeBtsConfig(
-	projectConfig: ProjectConfig,
-): Promise<void> {
+export async function writeBtsConfig(projectConfig: ProjectConfig) {
 	const btsConfig: BetterTStackConfig = {
 		version: getLatestCLIVersion(),
 		createdAt: new Date().toISOString(),
@@ -94,7 +92,7 @@ export async function readBtsConfig(
 export async function updateBtsConfig(
 	projectDir: string,
 	updates: Partial<Pick<BetterTStackConfig, "addons" | "webDeploy">>,
-): Promise<void> {
+) {
 	try {
 		const configPath = path.join(projectDir, BTS_CONFIG_FILE);
 

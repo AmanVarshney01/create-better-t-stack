@@ -9,9 +9,7 @@ import {
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { ensureArrayProperty, tsProject } from "../../utils/ts-morph";
 
-export async function setupWorkersVitePlugin(
-	projectDir: string,
-): Promise<void> {
+export async function setupWorkersVitePlugin(projectDir: string) {
 	const webAppDir = path.join(projectDir, "apps/web");
 	const viteConfigPath = path.join(webAppDir, "vite.config.ts");
 

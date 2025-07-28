@@ -2,10 +2,7 @@ import { log } from "@clack/prompts";
 import { $ } from "execa";
 import pc from "picocolors";
 
-export async function initializeGit(
-	projectDir: string,
-	useGit: boolean,
-): Promise<void> {
+export async function initializeGit(projectDir: string, useGit: boolean) {
 	if (!useGit) return;
 
 	const gitVersionResult = await $({

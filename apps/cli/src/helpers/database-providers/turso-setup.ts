@@ -206,7 +206,7 @@ DATABASE_URL=your_database_url
 DATABASE_AUTH_TOKEN=your_auth_token`);
 }
 
-export async function setupTurso(config: ProjectConfig): Promise<void> {
+export async function setupTurso(config: ProjectConfig) {
 	const { orm, projectDir } = config;
 	const _isDrizzle = orm === "drizzle";
 	const setupSpinner = spinner();

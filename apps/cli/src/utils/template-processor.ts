@@ -14,7 +14,7 @@ export async function processTemplate(
 	srcPath: string,
 	destPath: string,
 	context: ProjectConfig,
-): Promise<void> {
+) {
 	try {
 		const templateContent = await fs.readFile(srcPath, "utf-8");
 		const template = handlebars.compile(templateContent);

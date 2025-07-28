@@ -4,7 +4,7 @@ import type { AvailableDependencies } from "../../constants";
 import type { ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 
-export async function setupExamples(config: ProjectConfig): Promise<void> {
+export async function setupExamples(config: ProjectConfig) {
 	const { examples, frontend, backend, projectDir } = config;
 
 	if (

@@ -5,7 +5,7 @@ import {
 	type EnvVariable,
 } from "../project-generation/env-setup";
 
-export async function setupCloudflareD1(config: ProjectConfig): Promise<void> {
+export async function setupCloudflareD1(config: ProjectConfig) {
 	const { projectDir } = config;
 
 	const envPath = path.join(projectDir, "apps/server", ".env");

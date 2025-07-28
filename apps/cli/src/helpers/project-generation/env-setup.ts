@@ -12,7 +12,7 @@ export interface EnvVariable {
 export async function addEnvVariablesToFile(
 	filePath: string,
 	variables: EnvVariable[],
-): Promise<void> {
+) {
 	await fs.ensureDir(path.dirname(filePath));
 
 	let envContent = "";
@@ -84,9 +84,7 @@ export async function addEnvVariablesToFile(
 	}
 }
 
-export async function setupEnvironmentVariables(
-	config: ProjectConfig,
-): Promise<void> {
+export async function setupEnvironmentVariables(config: ProjectConfig) {
 	const { backend, frontend, database, auth, examples, dbSetup, projectDir } =
 		config;
 

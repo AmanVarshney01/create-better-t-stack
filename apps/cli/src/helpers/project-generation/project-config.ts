@@ -7,7 +7,7 @@ import type { ProjectConfig } from "../../types";
 export async function updatePackageConfigurations(
 	projectDir: string,
 	options: ProjectConfig,
-): Promise<void> {
+) {
 	await updateRootPackageJson(projectDir, options);
 	if (options.backend !== "convex") {
 		await updateServerPackageJson(projectDir, options);
@@ -19,7 +19,7 @@ export async function updatePackageConfigurations(
 async function updateRootPackageJson(
 	projectDir: string,
 	options: ProjectConfig,
-): Promise<void> {
+) {
 	const rootPackageJsonPath = path.join(projectDir, "package.json");
 	if (!(await fs.pathExists(rootPackageJsonPath))) return;
 
@@ -185,18 +185,6 @@ async function updateRootPackageJson(
 		}
 	}
 
-	if (options.addons.includes("biome")) {
-		scripts.check = "biome check --write .";
-	}
-	if (options.addons.includes("husky")) {
-		scripts.prepare = "husky";
-		packageJson["lint-staged"] = {
-			"*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
-				"biome check --write .",
-			],
-		};
-	}
-
 	try {
 		const { stdout } = await execa(options.packageManager, ["-v"], {
 			cwd: projectDir,
@@ -235,7 +223,7 @@ async function updateRootPackageJson(
 async function updateServerPackageJson(
 	projectDir: string,
 	options: ProjectConfig,
-): Promise<void> {
+) {
 	const serverPackageJsonPath = path.join(
 		projectDir,
 		"apps/server/package.json",
@@ -287,7 +275,7 @@ async function updateServerPackageJson(
 async function updateConvexPackageJson(
 	projectDir: string,
 	options: ProjectConfig,
-): Promise<void> {
+) {
 	const convexPackageJsonPath = path.join(
 		projectDir,
 		"packages/backend/package.json",

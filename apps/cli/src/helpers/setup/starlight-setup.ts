@@ -6,7 +6,7 @@ import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
 
-export async function setupStarlight(config: ProjectConfig): Promise<void> {
+export async function setupStarlight(config: ProjectConfig) {
 	const { packageManager, projectDir } = config;
 	const s = spinner();
 
