@@ -203,7 +203,7 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 				if (config.runtime === "workers") {
 					databaseUrl = "http://127.0.0.1:8080";
 				} else {
-					databaseUrl = "file:./local.db";
+					databaseUrl = "file:../local.db";
 				}
 				break;
 		}

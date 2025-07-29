@@ -23,7 +23,7 @@ async function setupWithCreateDb(
 ) {
 	try {
 		log.info(
-			"Starting Prisma PostgreSQL setup. Please follow the instructions below:",
+			"Starting Prisma Postgres setup. Please follow the instructions below:",
 		);
 
 		const createDbCommand = getPackageExecutionCommand(
@@ -226,7 +226,7 @@ export async function setupPrismaPostgres(config: ProjectConfig) {
 		}
 
 		const setupMethod = await select({
-			message: "Choose your Prisma setup method:",
+			message: "Choose your Prisma Postgres setup method:",
 			options: setupOptions,
 			initialValue: "create-db",
 		});
@@ -255,7 +255,7 @@ export async function setupPrismaPostgres(config: ProjectConfig) {
 				);
 			}
 			log.success(
-				pc.green("Prisma PostgreSQL database configured successfully!"),
+				pc.green("Prisma Postgres database configured successfully!"),
 			);
 		} else {
 			const fallbackSpinner = spinner();
@@ -267,7 +267,7 @@ export async function setupPrismaPostgres(config: ProjectConfig) {
 	} catch (error) {
 		consola.error(
 			pc.red(
-				`Error during Prisma PostgreSQL setup: ${
+				`Error during Prisma Postgres setup: ${
 					error instanceof Error ? error.message : String(error)
 				}`,
 			),

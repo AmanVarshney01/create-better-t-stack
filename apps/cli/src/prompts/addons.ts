@@ -23,7 +23,7 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 			hint = "High-performance build system";
 			break;
 		case "pwa":
-			label = "PWA (Progressive Web App)";
+			label = "PWA";
 			hint = "Make your app installable and work offline";
 			break;
 		case "tauri":
