@@ -898,6 +898,9 @@ const generateCommand = (stackState: StackState): string => {
 		case "npm":
 			base = "npx create-better-t-stack@latest";
 			break;
+		case "yarn":
+			base = "yarn create better-t-stack";
+			break;
 		case "pnpm":
 			base = "pnpm create better-t-stack@latest";
 			break;

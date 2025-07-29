@@ -386,6 +386,13 @@ export const TECH_OPTIONS: Record<
 			className: "invert-0 dark:invert",
 		},
 		{
+			id: "yarn",
+			name: "yarn",
+			description: "Fast, reliable, and secure",
+			icon: "/icon/yarn.svg",
+			color: "from-blue-500 to-blue-700",
+		},
+		{
 			id: "pnpm",
 			name: "pnpm",
 			description: "Fast, disk space efficient",

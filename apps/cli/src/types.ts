@@ -60,7 +60,7 @@ export const ExamplesSchema = z
 export type Examples = z.infer<typeof ExamplesSchema>;
 
 export const PackageManagerSchema = z
-	.enum(["npm", "pnpm", "bun"])
+	.enum(["npm", "yarn", "pnpm", "bun"])
 	.describe("Package manager");
 export type PackageManager = z.infer<typeof PackageManagerSchema>;
 
@@ -177,4 +177,4 @@ export interface BetterTStackConfig {
 	webDeploy: WebDeploy;
 }
 
-export type AvailablePackageManagers = "npm" | "pnpm" | "bun";
+export type AvailablePackageManagers = "npm" | "yarn" | "pnpm" | "bun";

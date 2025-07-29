@@ -15,6 +15,11 @@ export async function getPackageManagerChoice(
 		options: [
 			{ value: "npm", label: "npm", hint: "Node Package Manager" },
 			{
+				value: "yarn",
+				label: "yarn",
+				hint: "Fast, reliable, and secure dependency management",
+			},
+			{
 				value: "pnpm",
 				label: "pnpm",
 				hint: "Fast, disk space efficient package manager",
