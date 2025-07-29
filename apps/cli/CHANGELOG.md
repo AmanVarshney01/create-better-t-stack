@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.28.1
+
+### Patch Changes
+
+- 16c4d42: Upgrade to Prisma 6.13.0
+
 ## 2.28.0
 
 ### Minor Changes
