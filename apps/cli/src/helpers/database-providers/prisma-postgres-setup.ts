@@ -1,5 +1,5 @@
 import path from "node:path";
-import { cancel, isCancel, log, select, spinner, text } from "@clack/prompts";
+import { cancel, isCancel, log, select, text } from "@clack/prompts";
 import { consola } from "consola";
 import { execa } from "execa";
 import fs from "fs-extra";
@@ -149,6 +149,20 @@ async function writeEnvFile(projectDir: string, config?: PrismaConfig) {
 	}
 }
 
+async function addDotenvImportToPrismaConfig(projectDir: string) {
+	try {
+		const prismaConfigPath = path.join(
+			projectDir,
+			"apps/server/prisma.config.ts",
+		);
+		let content = await fs.readFile(prismaConfigPath, "utf8");
+		content = `import "dotenv/config";\n${content}`;
+		await fs.writeFile(prismaConfigPath, content);
+	} catch (_error) {
+		consola.error("Failed to update prisma.config.ts");
+	}
+}
+
 function displayManualSetupInstructions() {
 	log.info(`Manual Prisma PostgreSQL Setup Instructions:
 
@@ -246,22 +260,17 @@ export async function setupPrismaPostgres(config: ProjectConfig) {
 
 		if (prismaConfig) {
 			await writeEnvFile(projectDir, prismaConfig);
+
+			await addDotenvImportToPrismaConfig(projectDir);
+
 			if (orm === "prisma") {
 				await addPrismaAccelerateExtension(serverDir);
-				log.info(
-					pc.cyan(
-						'NOTE: Make sure to uncomment `import "dotenv/config";` in `apps/server/src/prisma.config.ts` to load environment variables.',
-					),
-				);
 			}
 			log.success(
 				pc.green("Prisma Postgres database configured successfully!"),
 			);
 		} else {
-			const fallbackSpinner = spinner();
-			fallbackSpinner.start("Setting up fallback configuration...");
 			await writeEnvFile(projectDir);
-			fallbackSpinner.stop("Fallback configuration ready");
 			displayManualSetupInstructions();
 		}
 	} catch (error) {

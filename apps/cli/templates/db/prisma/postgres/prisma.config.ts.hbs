@@ -1,9 +1,6 @@
-{{#if (eq dbSetup "prisma-postgres")}}
-// uncomment this to load .env
-// import "dotenv/config";
-{{else}}
+{{#unless (eq dbSetup "prisma-postgres")}}
 import "dotenv/config";
-{{/if}}
+{{/unless}}
 import path from "node:path";
 import type { PrismaConfig } from "prisma";
 
