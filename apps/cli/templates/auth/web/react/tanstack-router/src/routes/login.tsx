@@ -8,7 +8,7 @@ const fallbackRedirect = "/dashboard";
 
 export const Route = createFileRoute("/login")({
   validateSearch: z.object({
-    redirect: z.string().optional().catch(fallbackRedirect),
+    redirect: z.string().default(fallbackRedirect),
   }),
   beforeLoad: async ({ context, search }) => {
     if (context.user) {
