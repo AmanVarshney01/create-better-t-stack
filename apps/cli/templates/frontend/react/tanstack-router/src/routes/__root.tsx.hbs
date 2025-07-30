@@ -17,6 +17,10 @@ import type { trpc } from "@/utils/trpc";
 import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 {{/if}}
+{{#if auth}}
+import { authClient } from "@/lib/auth-client";
+import type { User } from "better-auth";
+{{/if}}
 import {
   HeadContent,
   Outlet,
@@ -30,17 +34,33 @@ import "../index.css";
 export interface RouterAppContext {
   orpc: typeof orpc;
   queryClient: QueryClient;
+  {{#if auth}}
+  user: User | null;
+  {{/if}}
 }
 {{else if (eq api "trpc")}}
 export interface RouterAppContext {
   trpc: typeof trpc;
   queryClient: QueryClient;
+  {{#if auth}}
+  user: User | null;
+  {{/if}}
 }
 {{else}}
-export interface RouterAppContext {}
+export interface RouterAppContext {
+  {{#if auth}}
+  user: User | null;
+  {{/if}}
+}
 {{/if}}
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
+  {{#if auth}}
+  beforeLoad: async () => {
+    const session = await authClient.getSession();
+    return { user: session.data?.user ?? null };
+  },
+  {{/if}}
   component: RootComponent,
   head: () => ({
     meta: [
@@ -65,8 +85,8 @@ function RootComponent() {
   const isFetching = useRouterState({
     select: (s) => s.isLoading,
   });
-
   {{#if (eq api "orpc")}}
+
   const [client] = useState<RouterClient<typeof appRouter>>(() => createORPCClient(link));
   const [orpcUtils] = useState(() => createTanstackQueryUtils(client));
   {{/if}}

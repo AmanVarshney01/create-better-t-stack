@@ -21,7 +21,7 @@ const router = createRouter({
   defaultPreload: "intent",
   defaultPendingComponent: () => <Loader />,
   {{#if (eq api "orpc")}}
-  context: { orpc, queryClient },
+  context: { orpc, queryClient{{#if auth}}, user: null{{/if}} },
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
@@ -30,7 +30,7 @@ const router = createRouter({
     );
   },
   {{else if (eq api "trpc")}}
-  context: { trpc, queryClient },
+  context: { trpc, queryClient{{#if auth}}, user: null{{/if}} },
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
@@ -44,7 +44,9 @@ const router = createRouter({
     return <ConvexProvider client={convex}>{children}</ConvexProvider>;
   },
   {{else}}
-  context: {},
+  context: {
+    {{#if auth}}user: null{{/if}}
+    },
   {{/if}}
 });
 

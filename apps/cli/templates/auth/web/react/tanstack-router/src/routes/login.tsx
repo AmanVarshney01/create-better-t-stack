@@ -1,9 +1,20 @@
 import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
+import { z } from "zod";
+
+const fallbackRedirect = "/dashboard";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: z.object({
+    redirect: z.string().optional().catch(fallbackRedirect),
+  }),
+  beforeLoad: async ({ context, search }) => {
+    if (context.user) {
+      throw redirect({ to: search.redirect });
+    }
+  },
   component: RouteComponent,
 });
 

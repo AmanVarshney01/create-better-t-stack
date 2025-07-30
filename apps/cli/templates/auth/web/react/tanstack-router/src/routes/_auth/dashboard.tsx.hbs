@@ -9,31 +9,21 @@ import { trpc } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 {{/if}}
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/_auth/dashboard")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
   const { data: session, isPending } = authClient.useSession();
-
-  const navigate = Route.useNavigate();
-
   {{#if (eq api "orpc")}}
+
   const privateData = useQuery(orpc.privateData.queryOptions());
   {{/if}}
   {{#if (eq api "trpc")}}
+
   const privateData = useQuery(trpc.privateData.queryOptions());
   {{/if}}
-
-  useEffect(() => {
-    if (!session && !isPending) {
-      navigate({
-        to: "/login",
-      });
-    }
-  }, [session, isPending]);
 
   if (isPending) {
     return <div>Loading...</div>;
