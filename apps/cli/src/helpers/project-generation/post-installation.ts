@@ -253,7 +253,7 @@ async function getDatabaseInstructions(
 	}
 
 	if (orm === "prisma") {
-		if (database === "sqlite") {
+		if (dbSetup === "turso") {
 			instructions.push(
 				`${pc.yellow(
 					"NOTE:",
@@ -262,13 +262,6 @@ async function getDatabaseInstructions(
 			);
 		}
 
-		if (runtime === "bun") {
-			instructions.push(
-				`${pc.yellow(
-					"NOTE:",
-				)} Prisma with Bun may require additional configuration. If you encounter errors,\nfollow the guidance provided in the error messages`,
-			);
-		}
 		if (database === "mongodb" && dbSetup === "docker") {
 			instructions.push(
 				`${pc.yellow(

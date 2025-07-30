@@ -1,7 +1,6 @@
 {
 	"pages": [
 		"index",
-		"---Getting Started---",
 		"installation",
 		"quick-start",
 		"project-structure",

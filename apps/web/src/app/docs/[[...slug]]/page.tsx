@@ -7,7 +7,6 @@ import {
 	DocsTitle,
 } from "fumadocs-ui/page";
 import { notFound } from "next/navigation";
-import { LLMCopyButton, ViewOptions } from "@/components/ai/page-actions";
 import { source } from "@/lib/source";
 
 export default async function Page(props: {
@@ -23,13 +22,6 @@ export default async function Page(props: {
 		<DocsPage toc={page.data.toc} full={page.data.full}>
 			<DocsTitle>{page.data.title}</DocsTitle>
 			<DocsDescription>{page.data.description}</DocsDescription>
-			<div className="flex flex-row items-center gap-2 border-b pt-2 pb-6">
-				<LLMCopyButton markdownUrl={`${page.url}.mdx`} />
-				<ViewOptions
-					markdownUrl={`${page.url}.mdx`}
-					githubUrl={`https://github.com/amanvarshney01/create-better-t-stack/blob/dev/apps/docs/content/docs/${page.path}`}
-				/>
-			</div>
 			<DocsBody>
 				<MDX components={{ ...defaultMdxComponents, ...TabsComponents }} />
 			</DocsBody>

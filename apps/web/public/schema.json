@@ -93,6 +93,9 @@
           "biome",
           "husky",
           "turborepo",
+          "fumadocs",
+          "ultracite",
+          "oxlint",
           "none"
         ]
       },

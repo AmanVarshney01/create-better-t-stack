@@ -1,4 +1,5 @@
 {
+	"$schema": "../../node_modules/wrangler/config-schema.json",
 	"main": ".open-next/worker.js",
 	"name": "better-t-stack",
 	"compatibility_date": "2025-07-13",

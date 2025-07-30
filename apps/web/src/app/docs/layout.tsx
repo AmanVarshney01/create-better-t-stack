@@ -1,8 +1,14 @@
 import { Banner } from "fumadocs-ui/components/banner";
-import { DocsLayout } from "fumadocs-ui/layouts/docs";
+import { DocsLayout, type DocsLayoutProps } from "fumadocs-ui/layouts/docs";
 import type { ReactNode } from "react";
-import { baseOptions } from "@/app/layout.config";
+import { baseOptions, links } from "@/app/layout.config";
 import { source } from "@/lib/source";
+
+const docsOptions: DocsLayoutProps = {
+	...baseOptions,
+	tree: source.pageTree,
+	links: links.filter((link) => "text" in link && link.text !== "Docs"),
+};
 
 export default function Layout({ children }: { children: ReactNode }) {
 	return (
@@ -10,9 +16,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 			<Banner variant="rainbow">
 				⚠️ WORK IN PROGRESS DONT TAKE REFERENCE!!!
 			</Banner>
-			<DocsLayout tree={source.pageTree} {...baseOptions}>
-				{children}
-			</DocsLayout>
+			<DocsLayout {...docsOptions}>{children}</DocsLayout>
 		</>
 	);
 }

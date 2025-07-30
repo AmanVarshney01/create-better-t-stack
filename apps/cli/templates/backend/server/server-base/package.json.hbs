@@ -7,13 +7,8 @@
 		"check-types": "tsc -b",
 		"compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server"
 	},
-	{{#if (eq orm 'prisma')}}
-    "prisma": {
-        "schema": "./schema"
-    },
-    {{/if}}
 	"dependencies": {
-		"dotenv": "^16.4.7",
+		"dotenv": "^17.2.1",
 		"zod": "^4.0.2"
 	},
 	{{#if (eq dbSetup 'supabase')}}

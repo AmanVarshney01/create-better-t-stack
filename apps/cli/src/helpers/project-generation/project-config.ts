@@ -248,9 +248,9 @@ async function updateServerPackageJson(
 		}
 
 		if (options.orm === "prisma") {
-			scripts["db:push"] = "prisma db push --schema ./prisma/schema";
+			scripts["db:push"] = "prisma db push";
 			scripts["db:studio"] = "prisma studio";
-			scripts["db:generate"] = "prisma generate --schema ./prisma/schema";
+			scripts["db:generate"] = "prisma generate";
 			scripts["db:migrate"] = "prisma migrate dev";
 		} else if (options.orm === "drizzle") {
 			scripts["db:push"] = "drizzle-kit push";
