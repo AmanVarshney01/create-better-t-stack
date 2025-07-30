@@ -57,8 +57,13 @@ export interface RouterAppContext {
 export const Route = createRootRouteWithContext<RouterAppContext>()({
   {{#if auth}}
   beforeLoad: async () => {
-    const session = await authClient.getSession();
-    return { user: session.data?.user ?? null };
+    try {
+      const session = await authClient.getSession();
+      return { user: session.data?.user ?? null };
+    } catch (error) {
+      console.error('Failed to fetch user session:', error);
+      return { user: null };
+    }
   },
   {{/if}}
   component: RootComponent,
