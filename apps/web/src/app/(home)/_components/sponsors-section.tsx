@@ -10,6 +10,17 @@ import {
 import Image from "next/image";
 // import Link from "next/link";
 import { useEffect, useState } from "react";
+import {
+	filterCurrentSponsors,
+	filterPastSponsors,
+	filterRegularSponsors,
+	filterSpecialSponsors,
+	formatSponsorUrl,
+	getSponsorUrl,
+	isSpecialSponsor,
+	sortSpecialSponsors,
+	sortSponsors,
+} from "@/lib/sponsor-utils";
 import type { Sponsor } from "@/lib/types";
 
 export default function SponsorsSection() {
@@ -26,48 +37,7 @@ export default function SponsorsSection() {
 			})
 			.then((data) => {
 				const sponsorsData = Array.isArray(data) ? data : [];
-
-				const sortedSponsors = sponsorsData.sort((a, b) => {
-					const getAmount = (sponsor: Sponsor) => {
-						if (!sponsor.isOneTime && sponsor.monthlyDollars > 0) {
-							return sponsor.monthlyDollars;
-						}
-
-						if (sponsor.tierName) {
-							const match = sponsor.tierName.match(/\$(\d+(?:\.\d+)?)/);
-							return match ? Number.parseFloat(match[1]) : 0;
-						}
-
-						return 0;
-					};
-
-					if (a.monthlyDollars === -1 && b.monthlyDollars !== -1) return 1;
-					if (a.monthlyDollars !== -1 && b.monthlyDollars === -1) return -1;
-
-					if (a.monthlyDollars === -1 && b.monthlyDollars === -1) {
-						return (
-							new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-						);
-					}
-
-					const aAmount = getAmount(a);
-					const bAmount = getAmount(b);
-
-					if (aAmount !== bAmount) {
-						return bAmount - aAmount;
-					}
-
-					const aIsMonthly = !a.isOneTime;
-					const bIsMonthly = !b.isOneTime;
-
-					if (aIsMonthly && !bIsMonthly) return -1;
-					if (!aIsMonthly && bIsMonthly) return 1;
-
-					return (
-						new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-					);
-				});
-
+				const sortedSponsors = sortSponsors(sponsorsData);
 				setSponsors(sortedSponsors);
 				setLoadingSponsors(false);
 			})
@@ -77,45 +47,13 @@ export default function SponsorsSection() {
 			});
 	}, []);
 
-	const SPECIAL_SPONSOR_THRESHOLD = 100;
+	const currentSponsors = filterCurrentSponsors(sponsors);
+	const pastSponsors = filterPastSponsors(sponsors);
 
-	const getSponsorAmount = (sponsor: Sponsor) => {
-		if (sponsor.monthlyDollars === -1) {
-			if (sponsor.tierName) {
-				const match = sponsor.tierName.match(/\$(\d+(?:\.\d+)?)/);
-				return match ? Number.parseFloat(match[1]) : 0;
-			}
-			return 0;
-		}
-
-		if (!sponsor.isOneTime && sponsor.monthlyDollars > 0) {
-			return sponsor.monthlyDollars;
-		}
-
-		if (sponsor.isOneTime && sponsor.tierName) {
-			const match = sponsor.tierName.match(/\$(\d+(?:\.\d+)?)/);
-			return match ? Number.parseFloat(match[1]) : 0;
-		}
-
-		return 0;
-	};
-
-	const isSpecialSponsor = (sponsor: Sponsor) => {
-		const amount = getSponsorAmount(sponsor);
-		return amount >= SPECIAL_SPONSOR_THRESHOLD;
-	};
-
-	const currentSponsors = sponsors.filter(
-		(sponsor) => sponsor.monthlyDollars !== -1,
+	const specialSponsors = sortSpecialSponsors(
+		filterSpecialSponsors(currentSponsors),
 	);
-	const pastSponsors = sponsors.filter(
-		(sponsor) => sponsor.monthlyDollars === -1,
-	);
-
-	const specialSponsors = currentSponsors.filter(isSpecialSponsor);
-	const regularSponsors = currentSponsors.filter(
-		(sponsor) => !isSpecialSponsor(sponsor),
-	);
+	const regularSponsors = filterRegularSponsors(currentSponsors);
 
 	return (
 		<div className="mb-12">
@@ -185,10 +123,7 @@ export default function SponsorsSection() {
 										undefined,
 										{ year: "numeric", month: "short" },
 									);
-									const sponsorUrl =
-										entry.sponsor.websiteUrl ||
-										entry.sponsor.linkUrl ||
-										`https://github.com/${entry.sponsor.login}`;
+									const sponsorUrl = getSponsorUrl(entry);
 
 									return (
 										<div
@@ -254,9 +189,7 @@ export default function SponsorsSection() {
 																>
 																	<Globe className="h-4 w-4" />
 																	<span className="truncate">
-																		{sponsorUrl
-																			?.replace(/^https?:\/\//, "")
-																			?.replace(/\/$/, "")}
+																		{formatSponsorUrl(sponsorUrl)}
 																	</span>
 																</a>
 															)}
@@ -340,12 +273,10 @@ export default function SponsorsSection() {
 																>
 																	<Globe className="h-4 w-4" />
 																	<span className="truncate">
-																		{(
+																		{formatSponsorUrl(
 																			entry.sponsor.websiteUrl ||
-																			entry.sponsor.linkUrl
-																		)
-																			?.replace(/^https?:\/\//, "")
-																			?.replace(/\/$/, "")}
+																				entry.sponsor.linkUrl,
+																		)}
 																	</span>
 																</a>
 															)}
@@ -392,10 +323,7 @@ export default function SponsorsSection() {
 											{ year: "numeric", month: "short" },
 										);
 										const wasSpecial = isSpecialSponsor(entry);
-										const sponsorUrl =
-											entry.sponsor.websiteUrl ||
-											entry.sponsor.linkUrl ||
-											`https://github.com/${entry.sponsor.login}`;
+										const sponsorUrl = getSponsorUrl(entry);
 
 										return (
 											<div
@@ -467,9 +395,7 @@ export default function SponsorsSection() {
 																	>
 																		<Globe className="h-4 w-4" />
 																		<span className="truncate">
-																			{sponsorUrl
-																				?.replace(/^https?:\/\//, "")
-																				?.replace(/\/$/, "")}
+																			{formatSponsorUrl(sponsorUrl)}
 																		</span>
 																	</a>
 																)}

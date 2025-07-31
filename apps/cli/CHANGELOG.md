@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.28.2
+
+### Patch Changes
+
+- c8df019: update readme
+
 ## 2.28.1
 
 ### Patch Changes
