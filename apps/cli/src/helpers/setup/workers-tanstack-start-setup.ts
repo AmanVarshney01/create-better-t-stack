@@ -61,7 +61,7 @@ export async function setupTanstackStartWorkersDeploy(
 		.getElements()
 		.findIndex((el) => el.getText().includes("tanstackStart("));
 
-	const tanstackPluginText = 'tanstackStart({ target: "cloudflare-module" })';
+	const tanstackPluginText = 'tanstackStart({ target: "cloudflare-module", customViteReactPlugin: true })';
 
 	if (tanstackPluginIndex === -1) {
 		pluginsArray.addElement(tanstackPluginText);
