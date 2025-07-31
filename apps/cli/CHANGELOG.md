@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.28.5
+
+### Patch Changes
+
+- 2ad89b7: fix auth error handling in all react templates
+
 ## 2.28.4
 
 ### Patch Changes
