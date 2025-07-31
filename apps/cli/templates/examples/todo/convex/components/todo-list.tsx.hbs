@@ -1,0 +1,116 @@
+import { useMutation, useQuery } from "convex/react";
+import { api } from "{{#if (eq backend "convex")}}@{{projectName}}/backend{{else}}../convex/_generated/api{{/if}}";
+import { Id } from "{{#if (eq backend "convex")}}@{{projectName}}/backend{{else}}../convex/_generated/dataModel{{/if}}";
+import { useState } from "react";
+{{#if auth}}
+import { useAuth } from "../hooks/use-auth";
+{{/if}}
+
+export function TodoList() {
+  const [newTodo, setNewTodo] = useState("");
+  const todos = useQuery(api.todos.getAll);
+  const createTodo = useMutation(api.todos.create);
+  const toggleTodo = useMutation(api.todos.toggle);
+  const deleteTodo = useMutation(api.todos.deleteTodo);
+  
+  {{#if auth}}
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-gray-600">Please sign in to manage your todos.</p>
+      </div>
+    );
+  }
+  {{/if}}
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newTodo.trim()) {
+      try {
+        await createTodo({ text: newTodo.trim() });
+        setNewTodo("");
+      } catch (error) {
+        console.error("Failed to create todo:", error);
+        // You could also show a toast notification or set an error state here
+      }
+    }
+  };
+
+  const handleToggle = async (id: string, completed: boolean) => {
+    await toggleTodo({ id: id as Id<"todos">, completed: !completed });
+  };
+
+  const handleDelete = async (id: string) => {
+    await deleteTodo({ id: id as Id<"todos"> });
+  };
+
+  return (
+    <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold mb-6 text-center">Todo List</h2>
+      
+      <form onSubmit={handleSubmit} className="mb-6">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={newTodo}
+            onChange={(e) => setNewTodo(e.target.value)}
+            placeholder="Add a new todo..."
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+          <button
+            type="submit"
+            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            Add
+          </button>
+        </div>
+      </form>
+
+      <div className="space-y-2">
+        {todos?.map((todo) => (
+          <div
+            key={todo._id}
+            className="flex items-center gap-3 p-3 border border-gray-200 rounded-md"
+          >
+            <input
+              type="checkbox"
+              checked={todo.completed}
+              onChange={() => handleToggle(todo._id, todo.completed)}
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+            />
+            <span
+              className={`flex-1 ${
+                todo.completed
+                  ? "line-through text-gray-500"
+                  : "text-gray-900"
+              }`}
+            >
+              {todo.text}
+            </span>
+            <button
+              onClick={() => handleDelete(todo._id)}
+              className="text-red-600 hover:text-red-800 text-sm"
+            >
+              Delete
+            </button>
+          </div>
+        ))}
+        {todos?.length === 0 && (
+          <p className="text-center text-gray-500 py-4">
+            No todos yet. Add one above!
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}

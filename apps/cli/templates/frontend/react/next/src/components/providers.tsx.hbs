@@ -1,7 +1,11 @@
 "use client";
 
 {{#if (eq backend "convex")}}
+{{#if auth}}
+import { ConvexAuthProvider } from "@convex-dev/auth/react";
+{{else}}
 import { ConvexProvider, ConvexReactClient } from "convex/react";
+{{/if}}
 {{else}}
 {{#unless (eq api "none")}}
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -18,7 +22,9 @@ import { ThemeProvider } from "./theme-provider";
 import { Toaster } from "./ui/sonner";
 
 {{#if (eq backend "convex")}}
+{{#unless auth}}
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+{{/unless}}
 {{/if}}
 
 export default function Providers({
@@ -34,7 +40,11 @@ export default function Providers({
       disableTransitionOnChange
     >
       {{#if (eq backend "convex")}}
+      {{#if auth}}
+      <ConvexAuthProvider>{children}</ConvexAuthProvider>
+      {{else}}
       <ConvexProvider client={convex}>{children}</ConvexProvider>
+      {{/if}}
       {{else}}
       {{#unless (eq api "none")}}
       <QueryClientProvider client={queryClient}>

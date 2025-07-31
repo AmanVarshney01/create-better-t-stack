@@ -12,8 +12,12 @@ import { routeTree } from "./routeTree.gen";
   import { queryClient, trpc } from "./utils/trpc";
 {{/if}}
 {{#if (eq backend "convex")}}
+  {{#if auth}}
+  import { ConvexAuthProvider } from "@convex-dev/auth/react";
+  {{else}}
   import { ConvexProvider, ConvexReactClient } from "convex/react";
   const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
+  {{/if}}
 {{/if}}
 
 const router = createRouter({
@@ -41,7 +45,11 @@ const router = createRouter({
   {{else if (eq backend "convex")}}
   context: {},
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
+    {{#if auth}}
+    return <ConvexAuthProvider>{children}</ConvexAuthProvider>;
+    {{else}}
     return <ConvexProvider client={convex}>{children}</ConvexProvider>;
+    {{/if}}
   },
   {{else}}
   context: {},

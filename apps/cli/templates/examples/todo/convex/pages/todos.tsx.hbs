@@ -1,0 +1,90 @@
+{{#if (includes frontend "next")}}
+import { TodoList } from "../components/todo-list";
+{{#if auth}}
+import { ProtectedRoute } from "../components/protected-route";
+{{/if}}
+
+export default function TodosPage() {
+  return (
+    {{#if auth}}
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <TodoList />
+      </div>
+    </ProtectedRoute>
+    {{else}}
+    <div className="min-h-screen bg-gray-50 py-8">
+      <TodoList />
+    </div>
+    {{/if}}
+  );
+}
+{{else if (includes frontend "tanstack-router")}}
+import { createFileRoute } from "@tanstack/react-router";
+import { TodoList } from "../components/todo-list";
+{{#if auth}}
+import { ProtectedRoute } from "../components/protected-route";
+{{/if}}
+
+export const Route = createFileRoute("/todos")({
+  component: TodosPage,
+});
+
+function TodosPage() {
+  return (
+    {{#if auth}}
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <TodoList />
+      </div>
+    </ProtectedRoute>
+    {{else}}
+    <div className="min-h-screen bg-gray-50 py-8">
+      <TodoList />
+    </div>
+    {{/if}}
+  );
+}
+{{else if (includes frontend "react-router")}}
+import { TodoList } from "../components/todo-list";
+{{#if auth}}
+import { ProtectedRoute } from "../components/protected-route";
+{{/if}}
+
+export default function TodosPage() {
+  return (
+    {{#if auth}}
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <TodoList />
+      </div>
+    </ProtectedRoute>
+    {{else}}
+    <div className="min-h-screen bg-gray-50 py-8">
+      <TodoList />
+    </div>
+    {{/if}}
+  );
+}
+{{else}}
+import { TodoList } from "../components/todo-list";
+{{#if auth}}
+import { ProtectedRoute } from "../components/protected-route";
+{{/if}}
+
+export default function TodosPage() {
+  return (
+    {{#if auth}}
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <TodoList />
+      </div>
+    </ProtectedRoute>
+    {{else}}
+    <div className="min-h-screen bg-gray-50 py-8">
+      <TodoList />
+    </div>
+    {{/if}}
+  );
+}
+{{/if}}

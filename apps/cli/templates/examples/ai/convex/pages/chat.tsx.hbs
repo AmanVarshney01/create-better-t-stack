@@ -1,0 +1,90 @@
+{{#if (includes frontend "next")}}
+import { Chat } from "../components/chat";
+{{#if auth}}
+import { ProtectedRoute } from "../components/protected-route";
+{{/if}}
+
+export default function ChatPage() {
+  return (
+    {{#if auth}}
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <Chat />
+      </div>
+    </ProtectedRoute>
+    {{else}}
+    <div className="min-h-screen bg-gray-50 py-8">
+      <Chat />
+    </div>
+    {{/if}}
+  );
+}
+{{else if (includes frontend "tanstack-router")}}
+import { createFileRoute } from "@tanstack/react-router";
+import { Chat } from "../components/chat";
+{{#if auth}}
+import { ProtectedRoute } from "../components/protected-route";
+{{/if}}
+
+export const Route = createFileRoute("/chat")({
+  component: ChatPage,
+});
+
+function ChatPage() {
+  return (
+    {{#if auth}}
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <Chat />
+      </div>
+    </ProtectedRoute>
+    {{else}}
+    <div className="min-h-screen bg-gray-50 py-8">
+      <Chat />
+    </div>
+    {{/if}}
+  );
+}
+{{else if (includes frontend "react-router")}}
+import { Chat } from "../components/chat";
+{{#if auth}}
+import { ProtectedRoute } from "../components/protected-route";
+{{/if}}
+
+export default function ChatPage() {
+  return (
+    {{#if auth}}
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <Chat />
+      </div>
+    </ProtectedRoute>
+    {{else}}
+    <div className="min-h-screen bg-gray-50 py-8">
+      <Chat />
+    </div>
+    {{/if}}
+  );
+}
+{{else}}
+import { Chat } from "../components/chat";
+{{#if auth}}
+import { ProtectedRoute } from "../components/protected-route";
+{{/if}}
+
+export default function ChatPage() {
+  return (
+    {{#if auth}}
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <Chat />
+      </div>
+    </ProtectedRoute>
+    {{else}}
+    <div className="min-h-screen bg-gray-50 py-8">
+      <Chat />
+    </div>
+    {{/if}}
+  );
+}
+{{/if}}

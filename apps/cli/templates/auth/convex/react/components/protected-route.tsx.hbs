@@ -1,0 +1,71 @@
+import { ReactNode } from "react";
+import { useAuth } from "../hooks/use-auth";
+{{#if (includes frontend "next")}}
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+{{else if (includes frontend "tanstack-router")}}
+import { useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+{{else if (includes frontend "react-router")}}
+import { useNavigate } from "react-router";
+import { useEffect } from "react";
+{{/if}}
+
+interface ProtectedRouteProps {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+
+export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  {{#if (includes frontend "next")}}
+  const router = useRouter();
+  
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, isLoading, router]);
+  {{else if (includes frontend "tanstack-router")}}
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate({ to: "/login" });
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+  {{else if (includes frontend "react-router")}}
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate("/login");
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+  {{/if}}
+
+  if (isLoading) {
+    return (
+      fallback || (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
+        </div>
+      )
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      fallback || (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold">Redirecting to login...</h2>
+          </div>
+        </div>
+      )
+    );
+  }
+
+  return <>{children}</>;
+}

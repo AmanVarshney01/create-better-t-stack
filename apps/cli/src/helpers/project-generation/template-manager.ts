@@ -4,6 +4,7 @@ import { globby } from "globby";
 import { PKG_ROOT } from "../../constants";
 import type { ProjectConfig } from "../../types";
 import { processTemplate } from "../../utils/template-processor";
+import { addPackageDependency } from "../../utils/add-package-deps";
 
 async function processAndCopyFiles(
 	sourcePattern: string | string[],
@@ -354,11 +355,59 @@ export async function setupDbOrmTemplates(
 	}
 }
 
+async function setupConvexAuthTemplate(
+	projectDir: string,
+	context: ProjectConfig,
+) {
+	const webAppDir = path.join(projectDir, "apps/web");
+	const nativeAppDir = path.join(projectDir, "apps/native");
+
+	const webAppDirExists = await fs.pathExists(webAppDir);
+	const nativeAppDirExists = await fs.pathExists(nativeAppDir);
+
+	const hasReactWeb = context.frontend.some((f) =>
+		["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+	);
+	const hasNativeWind = context.frontend.includes("native-nativewind");
+	const hasUnistyles = context.frontend.includes("native-unistyles");
+	const hasNative = hasNativeWind || hasUnistyles;
+
+	// Setup React web authentication templates
+	if (webAppDirExists && hasReactWeb) {
+		const convexAuthReactSrc = path.join(PKG_ROOT, "templates/auth/convex/react");
+		if (await fs.pathExists(convexAuthReactSrc)) {
+			await processAndCopyFiles(
+				"**/*",
+				convexAuthReactSrc,
+				webAppDir,
+				context,
+			);
+		}
+
+		// Add Convex Auth dependencies to web app
+		await addPackageDependency({
+			dependencies: ["@convex-dev/auth"],
+			projectDir: webAppDir,
+		});
+	}
+
+	// Setup native authentication templates (if needed in the future)
+	if (nativeAppDirExists && hasNative) {
+		// TODO: Add Convex native auth templates when available
+	}
+}
+
 export async function setupAuthTemplate(
 	projectDir: string,
 	context: ProjectConfig,
 ) {
-	if (context.backend === "convex" || !context.auth) return;
+	if (!context.auth) return;
+
+	// Handle Convex authentication separately
+	if (context.backend === "convex") {
+		await setupConvexAuthTemplate(projectDir, context);
+		return;
+	}
 
 	const serverAppDir = path.join(projectDir, "apps/server");
 	const webAppDir = path.join(projectDir, "apps/web");
@@ -675,8 +724,38 @@ export async function setupExamplesTemplate(
 			}
 		}
 
+		// Handle Convex examples
+		if (context.backend === "convex") {
+			const convexBackendDir = path.join(projectDir, "packages/backend/convex");
+			const convexExampleSrc = path.join(exampleBaseDir, "convex/backend");
+
+			if (await fs.pathExists(convexExampleSrc) && await fs.pathExists(convexBackendDir)) {
+				await processAndCopyFiles(
+					"**/*",
+					convexExampleSrc,
+					convexBackendDir,
+					context,
+					false,
+				);
+			}
+		}
+
 		if (webAppDirExists) {
-			if (hasReactWeb) {
+			// Handle Convex-specific frontend examples
+			if (context.backend === "convex" && hasReactWeb) {
+				const convexExampleWebSrc = path.join(exampleBaseDir, "convex");
+				if (await fs.pathExists(convexExampleWebSrc)) {
+					await processAndCopyFiles(
+						"**/*",
+						convexExampleWebSrc,
+						webAppDir,
+						context,
+						false,
+					);
+				}
+			}
+			// Handle regular frontend examples for non-Convex backends
+			else if (hasReactWeb) {
 				const exampleWebSrc = path.join(exampleBaseDir, "web/react");
 				if (await fs.pathExists(exampleWebSrc)) {
 					const reactFramework = context.frontend.find((f) =>

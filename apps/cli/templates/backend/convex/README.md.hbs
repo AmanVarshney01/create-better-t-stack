@@ -1,0 +1,205 @@
+# {{projectName}} - Convex Backend
+
+This project uses [Convex](https://convex.dev) as the backend database and real-time sync solution{{#if auth}} with built-in authentication{{/if}}.
+
+## Getting Started
+
+### 1. Install Dependencies
+
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+```
+
+### 2. Set up Convex
+
+First, you'll need to create a Convex account and project:
+
+1. Visit [https://dashboard.convex.dev](https://dashboard.convex.dev)
+2. Create a new project
+3. Copy your deployment URL
+
+### 3. Configure Environment Variables
+
+{{#if (includes frontend "next")}}
+Create a `.env.local` file in your web app directory:
+
+```bash
+NEXT_PUBLIC_CONVEX_URL=https://your-deployment-url.convex.cloud
+{{#if auth}}
+CONVEX_AUTH_PRIVATE_KEY=your-auth-private-key
+{{/if}}
+```
+
+{{#if auth}}
+To generate your `CONVEX_AUTH_PRIVATE_KEY`, run:
+```bash
+npx convex auth
+```
+This will generate a private key for your authentication setup.
+{{/if}}
+{{else}}
+Create a `.env` file in your web app directory:
+
+```bash
+VITE_CONVEX_URL=https://your-deployment-url.convex.cloud
+{{#if auth}}
+CONVEX_AUTH_PRIVATE_KEY=your-auth-private-key
+{{/if}}
+```
+
+{{#if auth}}
+To generate your `CONVEX_AUTH_PRIVATE_KEY`, run:
+```bash
+npx convex auth
+```
+This will generate a private key for your authentication setup.
+{{/if}}
+{{/if}}
+
+### 4. Initialize Convex
+
+Navigate to the backend directory and run:
+
+```bash
+cd packages/backend
+npx convex dev
+```
+
+This will:
+- Set up your Convex deployment
+- Push your schema and functions
+- Start the development server with real-time sync
+
+{{#if auth}}
+### 5. Authentication Setup
+
+This project uses Convex Auth for authentication. The following features are included:
+
+- Email/password authentication
+- User registration and login
+- Protected routes
+- User session management
+
+#### Authentication Flow
+
+1. Users can sign up with email and password
+2. Authentication state is managed by Convex Auth
+3. Protected routes automatically redirect unauthenticated users
+4. User data is stored in the Convex `users` table
+
+#### Available Auth Components
+
+- `SignInForm` - Email/password sign-in form
+- `SignUpForm` - User registration form
+- `UserMenu` - User profile dropdown
+- `ProtectedRoute` - Wrapper for authenticated routes
+- `useAuth` - Hook for authentication state
+
+{{/if}}
+## Project Structure
+
+```
+packages/backend/
+├── convex/
+│   ├── schema.ts          # Database schema
+{{#if auth}}
+│   ├── auth.ts           # Authentication configuration
+│   ├── users.ts          # User management functions
+│   ├── lib/
+│   │   └── auth.ts       # Authentication helpers
+{{/if}}
+│   ├── todos.ts          # Example todo functions
+│   ├── healthCheck.ts    # Health check endpoint
+│   └── http.ts           # HTTP routes
+├── package.json
+└── convex.json           # Convex configuration
+```
+
+## Available Functions
+
+### Queries
+- `healthCheck.get` - Health check endpoint
+- `todos.getAll` - Get all todos{{#if auth}} for the current user{{/if}}
+{{#if auth}}
+- `users.getCurrentUser` - Get current user profile
+- `users.listUsers` - List all users (authenticated)
+{{/if}}
+
+### Mutations
+- `todos.create` - Create a new todo
+- `todos.toggle` - Toggle todo completion
+- `todos.deleteTodo` - Delete a todo
+{{#if auth}}
+- `users.updateProfile` - Update user profile
+{{/if}}
+
+{{#if (includes examples "ai")}}
+### AI Chat Functions
+- `messages.getMessages` - Get chat messages
+- `messages.sendMessage` - Send a message and trigger AI response
+{{/if}}
+
+## Development
+
+### Running the Development Server
+
+1. Start Convex development server:
+```bash
+cd packages/backend
+npm run dev
+```
+
+2. Start your frontend application:
+```bash
+cd apps/web
+npm run dev
+```
+
+### Database Schema
+
+The database schema is defined in `convex/schema.ts`. When you make changes to the schema, Convex will automatically migrate your data.
+
+{{#if auth}}
+### Adding New Protected Functions
+
+To create functions that require authentication:
+
+```typescript
+import { requireAuth } from "./lib/auth";
+
+export const myProtectedFunction = mutation({
+  args: { /* your args */ },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+    // Your function logic here
+  },
+});
+```
+{{/if}}
+
+## Deployment
+
+### Production Deployment
+
+1. Deploy your Convex backend:
+```bash
+cd packages/backend
+npx convex deploy
+```
+
+2. Update your environment variables with the production Convex URL
+
+3. Deploy your frontend to your preferred platform (Vercel, Netlify, etc.)
+
+## Learn More
+
+- [Convex Documentation](https://docs.convex.dev)
+{{#if auth}}
+- [Convex Auth Documentation](https://labs.convex.dev/auth)
+{{/if}}
+- [Convex React Integration](https://docs.convex.dev/client/react)
+- [Convex Functions](https://docs.convex.dev/functions)

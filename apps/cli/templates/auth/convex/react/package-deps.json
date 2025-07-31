@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@convex-dev/auth": "^0.0.75",
+    "convex": "^1.25.0"
+  }
+}

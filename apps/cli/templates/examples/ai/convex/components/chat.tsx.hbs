@@ -1,0 +1,114 @@
+import { useMutation, useQuery } from "convex/react";
+import { api } from "{{#if (eq backend "convex")}}@{{projectName}}/backend{{else}}../convex/_generated/api{{/if}}";
+import { useState, useRef, useEffect } from "react";
+{{#if auth}}
+import { useAuth } from "../hooks/use-auth";
+{{/if}}
+
+export function Chat() {
+  const [message, setMessage] = useState("");
+  const [conversationId] = useState("default");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const messages = useQuery(api.messages.getMessages, { conversationId });
+  const sendMessage = useMutation(api.messages.sendMessage);
+  
+  {{#if auth}}
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-gray-600">Please sign in to start chatting.</p>
+      </div>
+    );
+  }
+  {{/if}}
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (message.trim()) {
+      try {
+        await sendMessage({ content: message.trim(), conversationId });
+        setMessage("");
+      } catch (error) {
+        console.error("Failed to send message:", error);
+        // You could also show a toast notification or set an error state here
+        // For now, we keep the message in the input so user can retry
+      }
+    }
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto h-[600px] flex flex-col bg-white rounded-lg shadow-md">
+      <div className="p-4 border-b border-gray-200">
+        <h2 className="text-xl font-semibold text-gray-800">AI Chat</h2>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages?.map((msg) => (
+          <div
+            key={msg._id}
+            className={`flex ${
+              msg.role === "user" ? "justify-end" : "justify-start"
+            }`}
+          >
+            <div
+              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                msg.role === "user"
+                  ? "bg-indigo-600 text-white"
+                  : "bg-gray-200 text-gray-800"
+              }`}
+            >
+              <p className="text-sm">{msg.content}</p>
+              <p className="text-xs mt-1 opacity-70">
+                {new Date(msg._creationTime).toLocaleTimeString()}
+              </p>
+            </div>
+          </div>
+        ))}
+        {messages?.length === 0 && (
+          <div className="text-center text-gray-500 py-8">
+            <p>Start a conversation with the AI!</p>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Type your message..."
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          />
+          <button
+            type="submit"
+            disabled={!message.trim()}
+            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Send
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}

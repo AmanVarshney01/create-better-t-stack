@@ -13,7 +13,11 @@ import { ThemeProvider } from "./components/theme-provider";
 import { Toaster } from "./components/ui/sonner";
 
 {{#if (eq backend "convex")}}
+{{#if auth}}
+import { ConvexAuthProvider } from "@convex-dev/auth/react";
+{{else}}
 import { ConvexProvider, ConvexReactClient } from "convex/react";
+{{/if}}
 {{else}}
   {{#unless (eq api "none")}}
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -57,11 +61,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 {{#if (eq backend "convex")}}
 export default function App() {
+  {{#unless auth}}
   const convex = new ConvexReactClient(
     import.meta.env.VITE_CONVEX_URL as string,
   );
+  {{/unless}}
   return (
+    {{#if auth}}
+    <ConvexAuthProvider>
+    {{else}}
     <ConvexProvider client={convex}>
+    {{/if}}
       <ThemeProvider
         attribute="class"
         defaultTheme="dark"
@@ -74,7 +84,11 @@ export default function App() {
         </div>
         <Toaster richColors />
       </ThemeProvider>
+    {{#if auth}}
+    </ConvexAuthProvider>
+    {{else}}
     </ConvexProvider>
+    {{/if}}
   );
 }
 {{else if (eq api "orpc")}}
