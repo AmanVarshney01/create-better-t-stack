@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.28.3
+
+### Patch Changes
+
+- 17389ac: Update Nuxt template deps and add tailwind as dep
+
 ## 2.28.2
 
 ### Patch Changes
