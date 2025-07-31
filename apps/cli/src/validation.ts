@@ -255,7 +255,7 @@ export function processAndValidateFlags(
 			process.exit(1);
 		}
 
-		config.auth = false;
+		config.auth = "none";
 		config.database = "none";
 		config.orm = "none";
 		config.api = "none";
@@ -304,9 +304,10 @@ export function processAndValidateFlags(
 		process.exit(1);
 	}
 
-	if (config.auth && config.database === "none") {
+	// Only Better-Auth requires a database, Clerk does not
+	if (config.auth === "better-auth" && config.database === "none") {
 		consola.fatal(
-			"Authentication requires a database. Please choose a database or set '--no-auth'.",
+			"Better-Auth requires a database. Please choose a database, use Clerk, or set '--no-auth'.",
 		);
 		process.exit(1);
 	}

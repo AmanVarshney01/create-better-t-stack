@@ -1,0 +1,19 @@
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+import App from "./App.tsx";
+import { ClerkProvider } from "@clerk/clerk-react";
+import { CLERK_PUBLISHABLE_KEY } from "./lib/clerk-client";
+
+const rootEl = document.getElementById("root");
+if (!rootEl) {
+  throw new Error('Root element with id "root" not found');
+}
+
+createRoot(rootEl).render(
+  <StrictMode>
+    <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} afterSignOutUrl="/">
+      <App />
+    </ClerkProvider>
+  </StrictMode>
+);

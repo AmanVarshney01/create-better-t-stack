@@ -1,0 +1,82 @@
+import { useUser, useAuth } from '@clerk/clerk-expo'
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { StyleSheet } from 'react-native-unistyles'
+import { Container } from '@/components/container'
+import { SignIn } from '@/components/sign-in'
+import { SignUp } from '@/components/sign-up'
+
+export default function HomeScreen() {
+  const { user } = useUser()
+  const { signOut } = useAuth()
+
+  if (!user) {
+    return (
+      <Container>
+        <ScrollView style={styles.container}>
+          <View style={styles.centered}>
+            <Text style={styles.title}>Welcome to {{projectName}}</Text>
+            <Text style={styles.subtitle}>
+              Please sign in or create an account to continue
+            </Text>
+            <SignIn />
+            <SignUp />
+          </View>
+        </ScrollView>
+      </Container>
+    )
+  }
+
+  return (
+    <Container>
+      <ScrollView style={styles.container}>
+        <View style={styles.centered}>
+          <Text style={styles.title}>Welcome back!</Text>
+          <Text style={styles.greeting}>Hello, {user.firstName || user.emailAddresses[0]?.emailAddress}</Text>
+          <TouchableOpacity
+            onPress={() => signOut()}
+            style={styles.signOutButton}
+          >
+            <Text style={styles.signOutText}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </Container>
+  )
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 32,
+    textAlign: 'center',
+  },
+  greeting: {
+    fontSize: 18,
+    marginBottom: 32,
+  },
+  signOutButton: {
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  signOutText: {
+    color: 'white',
+    fontWeight: '600',
+  },
+})

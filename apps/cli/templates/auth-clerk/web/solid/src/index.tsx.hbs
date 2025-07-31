@@ -1,0 +1,15 @@
+/* @refresh reload */
+import { render } from 'solid-js/web'
+import { ClerkProvider } from '@clerk/clerk-js/solid'
+import { CLERK_PUBLISHABLE_KEY } from './lib/clerk-client'
+
+import './index.css'
+import App from './App'
+
+const root = document.getElementById('root')
+
+render(() => (
+  <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+    <App />
+  </ClerkProvider>
+), root!)

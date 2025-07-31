@@ -59,6 +59,11 @@ export const ExamplesSchema = z
 	.describe("Example templates to include");
 export type Examples = z.infer<typeof ExamplesSchema>;
 
+export const AuthProviderSchema = z
+	.enum(["better-auth", "clerk", "none"])
+	.describe("Authentication provider");
+export type AuthProvider = z.infer<typeof AuthProviderSchema>;
+
 export const PackageManagerSchema = z
 	.enum(["npm", "pnpm", "bun"])
 	.describe("Package manager");
@@ -151,7 +156,7 @@ export interface ProjectConfig {
 	frontend: Frontend[];
 	addons: Addons[];
 	examples: Examples[];
-	auth: boolean;
+	auth: AuthProvider | boolean; // Support both new AuthProvider and legacy boolean
 	git: boolean;
 	packageManager: PackageManager;
 	install: boolean;
@@ -170,7 +175,7 @@ export interface BetterTStackConfig {
 	frontend: Frontend[];
 	addons: Addons[];
 	examples: Examples[];
-	auth: boolean;
+	auth: AuthProvider | boolean; // Support both new AuthProvider and legacy boolean
 	packageManager: PackageManager;
 	dbSetup: DatabaseSetup;
 	api: API;
@@ -178,3 +183,24 @@ export interface BetterTStackConfig {
 }
 
 export type AvailablePackageManagers = "npm" | "pnpm" | "bun";
+
+// Helper functions for auth provider handling
+export function getAuthProvider(auth: AuthProvider | boolean): AuthProvider {
+	if (typeof auth === "boolean") {
+		return auth ? "better-auth" : "none";
+	}
+	return auth;
+}
+
+export function hasAuth(auth: AuthProvider | boolean): boolean {
+	const provider = getAuthProvider(auth);
+	return provider !== "none";
+}
+
+export function isBetterAuth(auth: AuthProvider | boolean): boolean {
+	return getAuthProvider(auth) === "better-auth";
+}
+
+export function isClerk(auth: AuthProvider | boolean): boolean {
+	return getAuthProvider(auth) === "clerk";
+}

@@ -4,6 +4,7 @@ import { globby } from "globby";
 import { PKG_ROOT } from "../../constants";
 import type { ProjectConfig } from "../../types";
 import { processTemplate } from "../../utils/template-processor";
+import { hasAuth, isBetterAuth, isClerk } from "../../types";
 
 async function processAndCopyFiles(
 	sourcePattern: string | string[],
@@ -358,7 +359,19 @@ export async function setupAuthTemplate(
 	projectDir: string,
 	context: ProjectConfig,
 ) {
-	if (context.backend === "convex" || !context.auth) return;
+	if (context.backend === "convex" || !hasAuth(context.auth)) return;
+
+	if (isBetterAuth(context.auth)) {
+		await setupBetterAuthTemplate(projectDir, context);
+	} else if (isClerk(context.auth)) {
+		await setupClerkTemplate(projectDir, context);
+	}
+}
+
+async function setupBetterAuthTemplate(
+	projectDir: string,
+	context: ProjectConfig,
+) {
 
 	const serverAppDir = path.join(projectDir, "apps/server");
 	const webAppDir = path.join(projectDir, "apps/web");
@@ -518,6 +531,146 @@ export async function setupAuthTemplate(
 				await processAndCopyFiles(
 					"**/*",
 					authNativeFrameworkSrc,
+					nativeAppDir,
+					context,
+				);
+			}
+		}
+	}
+}
+
+async function setupClerkTemplate(
+	projectDir: string,
+	context: ProjectConfig,
+) {
+	const serverAppDir = path.join(projectDir, "apps/server");
+	const webAppDir = path.join(projectDir, "apps/web");
+	const nativeAppDir = path.join(projectDir, "apps/native");
+
+	const serverAppDirExists = await fs.pathExists(serverAppDir);
+	const webAppDirExists = await fs.pathExists(webAppDir);
+	const nativeAppDirExists = await fs.pathExists(nativeAppDir);
+
+	const hasReactWeb = context.frontend.some((f) =>
+		["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+	);
+	const hasNuxtWeb = context.frontend.includes("nuxt");
+	const hasSvelteWeb = context.frontend.includes("svelte");
+	const hasSolidWeb = context.frontend.includes("solid");
+	const hasNativeWind = context.frontend.includes("native-nativewind");
+	const hasUnistyles = context.frontend.includes("native-unistyles");
+	const hasNative = hasNativeWind || hasUnistyles;
+
+	// Setup Clerk server templates
+	if (serverAppDirExists) {
+		const clerkServerBaseSrc = path.join(PKG_ROOT, "templates/auth-clerk/server/base");
+		if (await fs.pathExists(clerkServerBaseSrc)) {
+			await processAndCopyFiles(
+				"**/*",
+				clerkServerBaseSrc,
+				serverAppDir,
+				context,
+			);
+		}
+
+		if (context.backend === "next") {
+			const clerkServerNextSrc = path.join(
+				PKG_ROOT,
+				"templates/auth-clerk/server/next",
+			);
+			if (await fs.pathExists(clerkServerNextSrc)) {
+				await processAndCopyFiles(
+					"**/*",
+					clerkServerNextSrc,
+					serverAppDir,
+					context,
+				);
+			}
+		}
+	}
+
+	// Setup Clerk web templates
+	if (
+		(hasReactWeb || hasNuxtWeb || hasSvelteWeb || hasSolidWeb) &&
+		webAppDirExists
+	) {
+		if (hasReactWeb) {
+			const clerkWebBaseSrc = path.join(
+				PKG_ROOT,
+				"templates/auth-clerk/web/react/base",
+			);
+			if (await fs.pathExists(clerkWebBaseSrc)) {
+				await processAndCopyFiles("**/*", clerkWebBaseSrc, webAppDir, context);
+			}
+
+			const reactFramework = context.frontend.find((f) =>
+				["tanstack-router", "react-router", "tanstack-start", "next"].includes(
+					f,
+				),
+			);
+			if (reactFramework) {
+				const clerkWebFrameworkSrc = path.join(
+					PKG_ROOT,
+					`templates/auth-clerk/web/react/${reactFramework}`,
+				);
+				if (await fs.pathExists(clerkWebFrameworkSrc)) {
+					await processAndCopyFiles(
+						"**/*",
+						clerkWebFrameworkSrc,
+						webAppDir,
+						context,
+					);
+				}
+			}
+		} else if (hasNuxtWeb) {
+			const clerkWebNuxtSrc = path.join(PKG_ROOT, "templates/auth-clerk/web/nuxt");
+			if (await fs.pathExists(clerkWebNuxtSrc)) {
+				await processAndCopyFiles("**/*", clerkWebNuxtSrc, webAppDir, context);
+			}
+		} else if (hasSvelteWeb) {
+			const clerkWebSvelteSrc = path.join(PKG_ROOT, "templates/auth-clerk/web/svelte");
+			if (await fs.pathExists(clerkWebSvelteSrc)) {
+				await processAndCopyFiles("**/*", clerkWebSvelteSrc, webAppDir, context);
+			}
+		} else if (hasSolidWeb) {
+			const clerkWebSolidSrc = path.join(PKG_ROOT, "templates/auth-clerk/web/solid");
+			if (await fs.pathExists(clerkWebSolidSrc)) {
+				await processAndCopyFiles("**/*", clerkWebSolidSrc, webAppDir, context);
+			}
+		}
+	}
+
+	// Setup Clerk native templates
+	if (hasNative && nativeAppDirExists) {
+		const clerkNativeBaseSrc = path.join(
+			PKG_ROOT,
+			"templates/auth-clerk/native/native-base",
+		);
+		if (await fs.pathExists(clerkNativeBaseSrc)) {
+			await processAndCopyFiles(
+				"**/*",
+				clerkNativeBaseSrc,
+				nativeAppDir,
+				context,
+			);
+		}
+
+		let nativeFrameworkAuthPath = "";
+		if (hasNativeWind) {
+			nativeFrameworkAuthPath = "nativewind";
+		} else if (hasUnistyles) {
+			nativeFrameworkAuthPath = "unistyles";
+		}
+
+		if (nativeFrameworkAuthPath) {
+			const clerkNativeFrameworkSrc = path.join(
+				PKG_ROOT,
+				`templates/auth-clerk/native/${nativeFrameworkAuthPath}`,
+			);
+			if (await fs.pathExists(clerkNativeFrameworkSrc)) {
+				await processAndCopyFiles(
+					"**/*",
+					clerkNativeFrameworkSrc,
 					nativeAppDir,
 					context,
 				);

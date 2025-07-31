@@ -1,0 +1,11 @@
+import { ClerkProvider } from '@clerk/clerk-expo'
+import { publishableKey } from '@/lib/clerk-client'
+import { Slot } from 'expo-router'
+
+export default function RootLayout() {
+  return (
+    <ClerkProvider publishableKey={publishableKey}>
+      <Slot />
+    </ClerkProvider>
+  )
+}

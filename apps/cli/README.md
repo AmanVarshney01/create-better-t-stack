@@ -55,7 +55,7 @@ Options:
   -y, --yes                       Use default configuration
   --database <type>               Database type (none, sqlite, postgres, mysql, mongodb)
   --orm <type>                    ORM type (none, drizzle, prisma, mongoose)
-  --auth                          Include authentication
+  --auth [provider]               Include authentication (better-auth, clerk)
   --no-auth                       Exclude authentication
   --frontend <types...>           Frontend types (tanstack-router, react-router, tanstack-start, next, nuxt, svelte, solid, native-nativewind, native-unistyles, none)
   --addons <types...>             Additional addons (pwa, tauri, starlight, biome, husky, turborepo, none)
@@ -109,7 +109,13 @@ npx create-better-t-stack my-app --yes
 Create a project with specific options:
 
 ```bash
-npx create-better-t-stack my-app --database postgres --orm drizzle --auth --addons pwa biome
+npx create-better-t-stack my-app --database postgres --orm drizzle --auth better-auth --addons pwa biome
+```
+
+Create a project with Clerk authentication:
+
+```bash
+npx create-better-t-stack my-app --auth clerk --frontend next
 ```
 
 Create a project with Elysia backend and Node.js runtime:
@@ -139,7 +145,7 @@ npx create-better-t-stack my-app --database sqlite --orm drizzle --db-setup turs
 Create a project with Supabase PostgreSQL setup:
 
 ```bash
-npx create-better-t-stack my-app --database postgres --orm drizzle --db-setup supabase --auth
+npx create-better-t-stack my-app --database postgres --orm drizzle --db-setup supabase --auth better-auth
 ```
 
 Create a project with Convex backend:

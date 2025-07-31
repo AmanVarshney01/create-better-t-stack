@@ -1,0 +1,46 @@
+import { useUser, useAuth } from '@clerk/clerk-expo'
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { Container } from '@/components/container'
+import { SignIn } from '@/components/sign-in'
+import { SignUp } from '@/components/sign-up'
+
+export default function HomeScreen() {
+  const { user } = useUser()
+  const { signOut } = useAuth()
+
+  if (!user) {
+    return (
+      <Container>
+        <ScrollView className="flex-1">
+          <View className="flex-1 justify-center items-center p-4">
+            <Text className="text-3xl font-bold mb-8">Welcome to {{projectName}}</Text>
+            <Text className="text-gray-600 mb-8 text-center">
+              Please sign in or create an account to continue
+            </Text>
+            <SignIn />
+            <SignUp />
+          </View>
+        </ScrollView>
+      </Container>
+    )
+  }
+
+  return (
+    <Container>
+      <ScrollView className="flex-1">
+        <View className="flex-1 justify-center items-center p-4">
+          <Text className="text-3xl font-bold mb-4">Welcome back!</Text>
+          <Text className="text-lg mb-8">
+            Hello, {user.firstName || user.emailAddresses?.[0]?.emailAddress || 'User'}
+          </Text>
+          <TouchableOpacity
+            onPress={() => signOut()}
+            className="bg-red-500 px-6 py-3 rounded-lg"
+          >
+            <Text className="text-white font-semibold">Sign Out</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </Container>
+  )
+}

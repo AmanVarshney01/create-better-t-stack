@@ -1,0 +1,46 @@
+{{#if (includes frontend "next")}}
+// For Next.js, Clerk is configured via middleware and environment variables
+// This file exports utilities for server-side authentication
+import { auth } from '@clerk/nextjs/server'
+
+export { auth }
+
+export async function getAuth() {
+  return auth()
+}
+{{else}}
+// For non-Next.js backends, Clerk authentication is handled client-side
+// This file provides utilities for validating Clerk tokens if needed
+import { createClerkClient } from '@clerk/backend'
+
++if (!process.env.CLERK_SECRET_KEY) {
++  throw new Error('CLERK_SECRET_KEY environment variable is required for Clerk authentication')
++}
++
+ const clerkClient = createClerkClient({
+   secretKey: process.env.CLERK_SECRET_KEY,
+ })
+
+export { clerkClient }
+
+export async function verifyToken(token: string) {
+  if (!token || typeof token !== 'string') {
+    return null
+  }
+
+  if (!process.env.CLERK_SECRET_KEY) {
+    throw new Error('CLERK_SECRET_KEY environment variable is required')
+  }
+
+  try {
+    const payload = await clerkClient.verifyToken(token)
+    return payload
+  } catch (error) {
+    // Log error appropriately based on your logging strategy
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Token verification failed:', error)
+    }
+    return null
+  }
+}
+{{/if}}

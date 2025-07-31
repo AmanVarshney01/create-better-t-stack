@@ -1,0 +1,37 @@
+{{#if (includes frontend "next")}}
+'use client';
+
+import { SignIn } from "@clerk/nextjs";
+
+export default function SignInForm() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <SignIn
+        appearance=\{{
+          elements: {
+            formButtonPrimary:
+              "bg-slate-500 hover:bg-slate-400 text-sm normal-case"
+          }
+        }}
+      />
+    </div>
+  );
+}
+{{else}}
+import { SignIn } from "@clerk/clerk-react";
+
+export default function SignInForm() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <SignIn
+        appearance=\{{
+          elements: {
+            formButtonPrimary:
+              "bg-slate-500 hover:bg-slate-400 text-sm normal-case"
+          }
+        }}
+      />
+    </div>
+  );
+}
+{{/if}}

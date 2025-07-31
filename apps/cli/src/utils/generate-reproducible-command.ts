@@ -1,4 +1,5 @@
 import type { ProjectConfig } from "../types";
+import { getAuthProvider } from "../types";
 
 export function generateReproducibleCommand(config: ProjectConfig): string {
 	const flags: string[] = [];
@@ -14,7 +15,12 @@ export function generateReproducibleCommand(config: ProjectConfig): string {
 	flags.push(`--database ${config.database}`);
 	flags.push(`--orm ${config.orm}`);
 	flags.push(`--api ${config.api}`);
-	flags.push(config.auth ? "--auth" : "--no-auth");
+	const authProvider = getAuthProvider(config.auth);
+	if (authProvider === "none") {
+		flags.push("--no-auth");
+	} else {
+		flags.push(`--auth ${authProvider}`);
+	}
 
 	if (config.addons && config.addons.length > 0) {
 		flags.push(`--addons ${config.addons.join(" ")}`);

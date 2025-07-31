@@ -1,0 +1,45 @@
+import React from 'react'
+import { View, Text, TouchableOpacity } from 'react-native'
+import { useSignUp } from '@clerk/clerk-expo'
+
+export function SignUp() {
+  const { signUp, setActive, isLoaded } = useSignUp()
+
+  const onSignUpPress = React.useCallback(async () => {
+    if (!isLoaded) return
+
+    try {
+      // TODO: Replace with actual form inputs
+      // This is a template demo - integrate with real user input
+      console.log('Demo: Sign up button pressed. Integrate with form inputs.')
+
+      // Example of how to implement sign up:
+      // const signUpAttempt = await signUp.create({
+      //   emailAddress: email, // from form input
+      //   password: password, // from form input
+      // })
+      //
+      // if (signUpAttempt.status === 'complete') {
+      //   await setActive({ session: signUpAttempt.createdSessionId })
+      // } else if (signUpAttempt.status === 'missing_requirements') {
+      //   // Handle email verification or other requirements
+      //   console.log('Additional verification required')
+      // }
+    } catch (err) {
+      console.error('Sign up error:', err)
+      // TODO: Show user-friendly error message
+    }
+  }, [isLoaded, signUp, setActive])
+
+  return (
+    <View className="flex-1 justify-center items-center p-4">
+      <Text className="text-2xl font-bold mb-8">Sign Up</Text>
+      <TouchableOpacity
+        onPress={onSignUpPress}
+        className="bg-green-500 px-6 py-3 rounded-lg"
+      >
+        <Text className="text-white font-semibold">Sign Up</Text>
+      </TouchableOpacity>
+    </View>
+  )
+}

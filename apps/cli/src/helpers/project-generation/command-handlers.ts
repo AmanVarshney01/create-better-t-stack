@@ -89,11 +89,11 @@ export async function createProjectHandler(
 
 			if (config.backend === "convex") {
 				log.info(
-					"Due to '--backend convex' flag, the following options have been automatically set: auth=false, database=none, orm=none, api=none, runtime=none, dbSetup=none, examples=todo",
+					"Due to '--backend convex' flag, the following options have been automatically set: auth=none, database=none, orm=none, api=none, runtime=none, dbSetup=none, examples=todo",
 				);
 			} else if (config.backend === "none") {
 				log.info(
-					"Due to '--backend none', the following options have been automatically set: --auth=false, --database=none, --orm=none, --api=none, --runtime=none, --db-setup=none, --examples=none",
+					"Due to '--backend none', the following options have been automatically set: --auth=none, --database=none, --orm=none, --api=none, --runtime=none, --db-setup=none, --examples=none",
 				);
 			}
 

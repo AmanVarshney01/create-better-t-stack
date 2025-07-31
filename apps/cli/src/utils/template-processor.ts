@@ -36,3 +36,32 @@ handlebars.registerHelper(
 	"includes",
 	(array, value) => Array.isArray(array) && array.includes(value),
 );
+
+// Auth provider helpers
+handlebars.registerHelper("hasAuth", (auth) => {
+	if (typeof auth === "boolean") {
+		return auth;
+	}
+	return auth !== "none";
+});
+
+handlebars.registerHelper("isBetterAuth", (auth) => {
+	if (typeof auth === "boolean") {
+		return auth; // Legacy: true means better-auth
+	}
+	return auth === "better-auth";
+});
+
+handlebars.registerHelper("isClerk", (auth) => {
+	if (typeof auth === "boolean") {
+		return false; // Legacy: boolean never means Clerk
+	}
+	return auth === "clerk";
+});
+
+handlebars.registerHelper("getAuthProvider", (auth) => {
+	if (typeof auth === "boolean") {
+		return auth ? "better-auth" : "none";
+	}
+	return auth;
+});

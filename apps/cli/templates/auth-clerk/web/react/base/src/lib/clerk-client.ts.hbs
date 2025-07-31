@@ -1,0 +1,16 @@
+{{#if (includes frontend "next")}}
+// For Next.js, Clerk is configured via ClerkProvider in layout
+// This file exports utilities for client-side authentication
+export const CLERK_PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+
+if (!CLERK_PUBLISHABLE_KEY) {
+  throw new Error("Missing Clerk Publishable Key")
+}
+{{else}}
+// For Vite-based React apps
+export const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+
+if (!CLERK_PUBLISHABLE_KEY) {
+  throw new Error("Missing Clerk Publishable Key")
+}
+{{/if}}

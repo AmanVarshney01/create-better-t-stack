@@ -361,15 +361,22 @@ export const TECH_OPTIONS: Record<
 	],
 	auth: [
 		{
-			id: "true",
+			id: "better-auth",
 			name: "Better Auth",
-			description: "Simple authentication",
+			description: "Simple authentication for TypeScript",
 			icon: "/icon/better-auth.svg",
 			color: "from-green-400 to-green-600",
 			default: true,
 		},
 		{
-			id: "false",
+			id: "clerk",
+			name: "Clerk",
+			description: "Complete authentication and user management platform",
+			icon: "/icon/clerk.svg",
+			color: "from-blue-400 to-blue-600",
+		},
+		{
+			id: "none",
 			name: "No Auth",
 			description: "Skip authentication",
 			icon: "",

@@ -1,0 +1,63 @@
+{{#if (includes frontend "next")}}
+'use client';
+
+import { UserButton, SignedIn, SignedOut, SignInButton, SignUpButton } from "@clerk/nextjs";
+
+export default function UserMenu() {
+  return (
+    <div className="flex items-center gap-4">
+      <SignedOut>
+        <SignInButton mode="modal" asChild>
+          <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+            Sign In
+          </button>
+        </SignInButton>
+        <SignUpButton mode="modal" asChild>
+          <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+            Sign Up
+          </button>
+        </SignUpButton>
+      </SignedOut>
+      <SignedIn>
+        <UserButton
+          appearance=\{{
+            elements: {
+              avatarBox: "w-8 h-8"
+            }
+          }}
+        />
+      </SignedIn>
+    </div>
+  );
+}
+{{else}}
+import { UserButton, SignedIn, SignedOut, SignInButton, SignUpButton } from "@clerk/clerk-react";
+
+export default function UserMenu() {
+  return (
+    <div className="flex items-center gap-4">
+      <SignedOut>
+        <SignInButton mode="modal" asChild>
+          <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+            Sign In
+          </button>
+        </SignInButton>
+        <SignUpButton mode="modal" asChild>
+          <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+            Sign Up
+          </button>
+        </SignUpButton>
+      </SignedOut>
+      <SignedIn>
+        <UserButton
+          appearance=\{{
+            elements: {
+              avatarBox: "w-8 h-8"
+            }
+          }}
+        />
+      </SignedIn>
+    </div>
+  );
+}
+{{/if}}

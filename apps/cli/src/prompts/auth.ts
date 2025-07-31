@@ -1,30 +1,71 @@
-import { cancel, confirm, isCancel } from "@clack/prompts";
+import { cancel, confirm, isCancel, select } from "@clack/prompts";
 import pc from "picocolors";
 import { DEFAULT_CONFIG } from "../constants";
-import type { Backend } from "../types";
+import type { AuthProvider, Backend } from "../types";
+import { getAuthProvider } from "../types";
 
 export async function getAuthChoice(
-	auth: boolean | undefined,
+	auth: AuthProvider | boolean | undefined,
 	hasDatabase: boolean,
 	backend?: Backend,
-) {
+): Promise<AuthProvider> {
 	if (backend === "convex") {
-		return false;
+		return "none";
 	}
 
-	if (!hasDatabase) return false;
+	// If auth is already specified, normalize it to AuthProvider
+	if (auth !== undefined) {
+		return getAuthProvider(auth);
+	}
 
-	if (auth !== undefined) return auth;
-
-	const response = await confirm({
-		message: "Add authentication with Better-Auth?",
-		initialValue: DEFAULT_CONFIG.auth,
+	// First ask if they want authentication at all
+	const wantsAuth = await confirm({
+		message: "Add authentication to your project?",
+		initialValue: true,
 	});
 
-	if (isCancel(response)) {
+	if (isCancel(wantsAuth)) {
 		cancel(pc.red("Operation cancelled"));
 		process.exit(0);
 	}
 
-	return response;
+	if (!wantsAuth) {
+		return "none";
+	}
+
+	// If they want auth, ask which provider
+	const authProvider = await select({
+		message: "Choose your authentication provider:",
+		options: [
+			{
+				value: "better-auth",
+				label: "Better-Auth",
+				hint: "Simple, flexible authentication for TypeScript",
+			},
+			{
+				value: "clerk",
+				label: "Clerk",
+				hint: "Complete authentication and user management platform",
+			},
+		],
+		initialValue: "better-auth",
+	});
+
+	if (isCancel(authProvider)) {
+		cancel(pc.red("Operation cancelled"));
+		process.exit(0);
+	}
+
+	// For Clerk, database is not required
+	if (authProvider === "clerk") {
+		return "clerk";
+	}
+
+	// For Better-Auth, check if database is available
+	if (authProvider === "better-auth" && !hasDatabase) {
+		cancel(pc.red("Better-Auth requires a database. Please select a database first."));
+		process.exit(0);
+	}
+
+	return authProvider as AuthProvider;
 }
