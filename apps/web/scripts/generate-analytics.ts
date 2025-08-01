@@ -12,7 +12,6 @@ interface AggregatedAnalyticsData {
 	lastUpdated: string | null;
 	generatedAt: string;
 	totalRecords: number;
-	// Pre-aggregated chart data
 	timeSeries: Array<{ date: string; displayDate: string; count: number }>;
 	monthlyTimeSeries: Array<{
 		month: string;
@@ -43,7 +42,6 @@ interface AggregatedAnalyticsData {
 		displayHour: string;
 		count: number;
 	}>;
-	// Summary stats
 	summary: {
 		totalProjects: number;
 		avgProjectsPerDay: number;

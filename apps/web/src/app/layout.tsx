@@ -5,6 +5,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
+import SearchDialog from "@/components/search";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import "./global.css";
@@ -115,6 +116,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 			<body>
 				<RootProvider
 					search={{
+						SearchDialog,
 						options: {
 							type: "static",
 						},
