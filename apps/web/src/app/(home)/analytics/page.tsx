@@ -27,27 +27,50 @@ import {
 import discordLogo from "@/public/icon/discord.svg";
 import Footer from "../_components/footer";
 
-interface AnalyticsData {
-	date: string;
-	hour: number;
-	cli_version: string;
-	node_version: string;
-	platform: string;
-	backend: string;
-	database: string;
-	orm: string;
-	dbSetup: string;
-	auth: string;
-	api: string;
-	packageManager: string;
-	frontend0: string;
-	frontend1: string;
-	examples0: string;
-	examples1: string;
-	addons: string[];
-	git: string;
-	install: string;
-	runtime: string;
+interface AggregatedAnalyticsData {
+	lastUpdated: string | null;
+	generatedAt: string;
+	totalRecords: number;
+	timeSeries: Array<{ date: string; displayDate: string; count: number }>;
+	monthlyTimeSeries: Array<{
+		month: string;
+		displayMonth: string;
+		count: number;
+	}>;
+	platformDistribution: Array<{ name: string; value: number }>;
+	packageManagerDistribution: Array<{ name: string; value: number }>;
+	backendDistribution: Array<{ name: string; value: number }>;
+	databaseDistribution: Array<{ name: string; value: number }>;
+	ormDistribution: Array<{ name: string; value: number }>;
+	dbSetupDistribution: Array<{ name: string; value: number }>;
+	apiDistribution: Array<{ name: string; value: number }>;
+	frontendDistribution: Array<{ name: string; value: number }>;
+	nodeVersionDistribution: Array<{ version: string; count: number }>;
+	cliVersionDistribution: Array<{ version: string; count: number }>;
+	authDistribution: Array<{ name: string; value: number }>;
+	gitDistribution: Array<{ name: string; value: number }>;
+	installDistribution: Array<{ name: string; value: number }>;
+	examplesDistribution: Array<{ name: string; value: number }>;
+	addonsDistribution: Array<{ name: string; value: number }>;
+	runtimeDistribution: Array<{ name: string; value: number }>;
+	projectTypeDistribution: Array<{ name: string; value: number }>;
+	popularStackCombinations: Array<{ name: string; value: number }>;
+	databaseORMCombinations: Array<{ name: string; value: number }>;
+	hourlyDistribution: Array<{
+		hour: string;
+		displayHour: string;
+		count: number;
+	}>;
+	summary: {
+		totalProjects: number;
+		avgProjectsPerDay: number;
+		authEnabledPercent: number;
+		mostPopularFrontend: string;
+		mostPopularBackend: string;
+		mostPopularORM: string;
+		mostPopularAPI: string;
+		mostPopularPackageManager: string;
+	};
 }
 
 const timeSeriesConfig = {
@@ -84,14 +107,6 @@ const packageManagerConfig = {
 	bun: {
 		label: "bun",
 		color: "hsl(var(--chart-3))",
-	},
-	yarn: {
-		label: "yarn",
-		color: "hsl(var(--chart-4))",
-	},
-	unknown: {
-		label: "Unknown",
-		color: "hsl(var(--chart-5))",
 	},
 } satisfies ChartConfig;
 
@@ -145,7 +160,7 @@ const databaseConfig = {
 	},
 	none: {
 		label: "None",
-		color: "hsl(var(--chart-6))",
+		color: "hsl(var(--chart-5))",
 	},
 } satisfies ChartConfig;
 
@@ -164,7 +179,7 @@ const ormConfig = {
 	},
 	none: {
 		label: "None",
-		color: "hsl(var(--chart-6))",
+		color: "hsl(var(--chart-4))",
 	},
 } satisfies ChartConfig;
 
@@ -206,7 +221,7 @@ const apiConfig = {
 	},
 	none: {
 		label: "None",
-		color: "hsl(var(--chart-6))",
+		color: "hsl(var(--chart-3))",
 	},
 } satisfies ChartConfig;
 
@@ -249,7 +264,7 @@ const frontendConfig = {
 	},
 	none: {
 		label: "None",
-		color: "hsl(var(--chart-6))",
+		color: "hsl(var(--chart-7))",
 	},
 } satisfies ChartConfig;
 
@@ -283,7 +298,7 @@ const cliVersionConfig = {
 	},
 	outdated: {
 		label: "Outdated",
-		color: "hsl(var(--chart-5))",
+		color: "hsl(var(--chart-2))",
 	},
 } satisfies ChartConfig;
 
@@ -294,7 +309,7 @@ const authConfig = {
 	},
 	disabled: {
 		label: "Disabled",
-		color: "hsl(var(--chart-5))",
+		color: "hsl(var(--chart-2))",
 	},
 } satisfies ChartConfig;
 
@@ -305,7 +320,7 @@ const gitConfig = {
 	},
 	disabled: {
 		label: "No Git",
-		color: "hsl(var(--chart-5))",
+		color: "hsl(var(--chart-2))",
 	},
 } satisfies ChartConfig;
 
@@ -316,7 +331,7 @@ const installConfig = {
 	},
 	disabled: {
 		label: "Skip Install",
-		color: "hsl(var(--chart-5))",
+		color: "hsl(var(--chart-2))",
 	},
 } satisfies ChartConfig;
 
@@ -331,7 +346,7 @@ const examplesConfig = {
 	},
 	none: {
 		label: "No Examples",
-		color: "hsl(var(--chart-6))",
+		color: "hsl(var(--chart-3))",
 	},
 } satisfies ChartConfig;
 
@@ -381,7 +396,7 @@ const runtimeConfig = {
 	},
 	none: {
 		label: "None",
-		color: "hsl(var(--chart-6))",
+		color: "hsl(var(--chart-4))",
 	},
 } satisfies ChartConfig;
 
@@ -408,8 +423,7 @@ const hourlyDistributionConfig = {
 } satisfies ChartConfig;
 
 export default function AnalyticsPage() {
-	const [data, setData] = useState<AnalyticsData[]>([]);
-	const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+	const [data, setData] = useState<AggregatedAnalyticsData | null>(null);
 	const [loadingLastUpdated, setLoadingLastUpdated] = useState(true);
 
 	const loadAnalyticsData = useCallback(async () => {
@@ -417,12 +431,8 @@ export default function AnalyticsPage() {
 			const response = await fetch("https://r2.amanv.dev/analytics-data.json");
 			const analyticsData = await response.json();
 
-			setData(analyticsData.data || []);
-			setLastUpdated(analyticsData.lastUpdated || null);
-
-			console.log(
-				`Loaded ${analyticsData.data?.length || 0} records from R2 bucket`,
-			);
+			setData(analyticsData);
+			console.log("Loaded aggregated analytics data from R2 bucket");
 			console.log(`Data generated at: ${analyticsData.generatedAt}`);
 		} catch (error: unknown) {
 			console.error("Error loading analytics data:", error);
@@ -436,509 +446,127 @@ export default function AnalyticsPage() {
 	}, [loadAnalyticsData]);
 
 	const getPlatformData = () => {
-		const platformCounts = data.reduce(
-			(acc, item) => {
-				const platform = item.platform;
-				acc[platform] = (acc[platform] || 0) + 1;
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return Object.entries(platformCounts).map(([name, value]) => ({
-			name,
-			value,
-		}));
+		if (!data) return [];
+		return data.platformDistribution || [];
 	};
 
 	const getPackageManagerData = () => {
-		const packageManagerCounts = data.reduce(
-			(acc, item) => {
-				const pm = item.packageManager;
-				acc[pm] = (acc[pm] || 0) + 1;
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return Object.entries(packageManagerCounts).map(([name, value]) => ({
-			name,
-			value,
-		}));
+		if (!data) return [];
+		return data.packageManagerDistribution || [];
 	};
 
 	const getBackendData = () => {
-		const backendCounts = data.reduce(
-			(acc, item) => {
-				const backend = item.backend || "none";
-				acc[backend] = (acc[backend] || 0) + 1;
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return Object.entries(backendCounts)
-			.map(([name, value]) => ({
-				name,
-				value,
-			}))
-			.sort((a, b) => b.value - a.value);
+		if (!data) return [];
+		return data.backendDistribution || [];
 	};
 
 	const getDatabaseData = () => {
-		const databaseCounts = data.reduce(
-			(acc, item) => {
-				const database = item.database || "none";
-				acc[database] = (acc[database] || 0) + 1;
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return Object.entries(databaseCounts)
-			.map(([name, value]) => ({
-				name,
-				value,
-			}))
-			.sort((a, b) => b.value - a.value);
+		if (!data) return [];
+		return data.databaseDistribution || [];
 	};
 
 	const getORMData = () => {
-		const ormCounts = data.reduce(
-			(acc, item) => {
-				const orm = item.orm || "none";
-				acc[orm] = (acc[orm] || 0) + 1;
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return Object.entries(ormCounts)
-			.map(([name, value]) => ({
-				name,
-				value,
-			}))
-			.sort((a, b) => b.value - a.value);
+		if (!data) return [];
+		return data.ormDistribution || [];
 	};
 
 	const getDBSetupData = () => {
-		const dbSetupCounts = data.reduce(
-			(acc, item) => {
-				const dbSetup = item.dbSetup || "none";
-				acc[dbSetup] = (acc[dbSetup] || 0) + 1;
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return Object.entries(dbSetupCounts)
-			.map(([name, value]) => ({
-				name,
-				value,
-			}))
-			.sort((a, b) => b.value - a.value);
+		if (!data) return [];
+		return data.dbSetupDistribution || [];
 	};
 
 	const getAPIData = () => {
-		const apiCounts = data.reduce(
-			(acc, item) => {
-				const api = item.api || "none";
-				acc[api] = (acc[api] || 0) + 1;
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return Object.entries(apiCounts)
-			.map(([name, value]) => ({
-				name,
-				value,
-			}))
-			.sort((a, b) => b.value - a.value);
+		if (!data) return [];
+		return data.apiDistribution || [];
 	};
 
 	const getFrontendData = () => {
-		const frontendCounts = data.reduce(
-			(acc, item) => {
-				if (
-					item.frontend0 &&
-					item.frontend0 !== "none" &&
-					item.frontend0 !== ""
-				) {
-					acc[item.frontend0] = (acc[item.frontend0] || 0) + 1;
-				}
-				if (
-					item.frontend1 &&
-					item.frontend1 !== "none" &&
-					item.frontend1 !== ""
-				) {
-					acc[item.frontend1] = (acc[item.frontend1] || 0) + 1;
-				}
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return Object.entries(frontendCounts)
-			.map(([name, value]) => ({
-				name,
-				value,
-			}))
-			.sort((a, b) => b.value - a.value);
+		if (!data) return [];
+		return data.frontendDistribution || [];
 	};
 
 	const getTimeSeriesData = () => {
-		if (data.length === 0) return [];
-
-		const dates = data
-			.map((item) => item.date)
-			.filter(Boolean)
-			.sort();
-		if (dates.length === 0) return [];
-
-		const startDate = new Date(dates[0]);
-		const endDate = new Date(dates[dates.length - 1]);
-		const today = new Date();
-
-		const actualEndDate = endDate > today ? today : endDate;
-		const daysDiff = Math.ceil(
-			(actualEndDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
-		);
-		const maxDays = 60;
-
-		let finalStartDate = startDate;
-		if (daysDiff > maxDays) {
-			finalStartDate = new Date(
-				actualEndDate.getTime() - maxDays * 24 * 60 * 60 * 1000,
-			);
-		}
-
-		const dateRange = [];
-		const currentDate = new Date(finalStartDate);
-		while (currentDate <= actualEndDate) {
-			dateRange.push(format(currentDate, "yyyy-MM-dd"));
-			currentDate.setDate(currentDate.getDate() + 1);
-		}
-
-		const dailyCounts = data.reduce(
-			(acc, item) => {
-				acc[item.date] = (acc[item.date] || 0) + 1;
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return dateRange.map((date) => ({
-			date,
-			displayDate: format(parseISO(date), "MMM dd"),
-			count: dailyCounts[date] || 0,
-		}));
+		if (!data) return [];
+		return data.timeSeries || [];
 	};
 
 	const getNodeVersionData = () => {
-		const versionCounts = data.reduce(
-			(acc, item) => {
-				const version = item.node_version.replace(/^v/, "").split(".")[0];
-				acc[version] = (acc[version] || 0) + 1;
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return Object.entries(versionCounts)
-			.map(([version, count]) => ({
-				version,
-				count,
-			}))
-			.sort((a, b) => b.count - a.count)
-			.slice(0, 5);
+		if (!data) return [];
+		return data.nodeVersionDistribution || [];
 	};
 
 	const getCLIVersionData = () => {
-		const versionCounts = data.reduce(
-			(acc, item) => {
-				const version = item.cli_version || "unknown";
-				acc[version] = (acc[version] || 0) + 1;
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return Object.entries(versionCounts)
-			.map(([version, count]) => ({
-				version,
-				count,
-			}))
-			.sort((a, b) => b.count - a.count)
-			.slice(0, 8);
+		if (!data) return [];
+		return data.cliVersionDistribution || [];
 	};
 
 	const getAuthData = () => {
-		const authCounts = data.reduce(
-			(acc, item) => {
-				const auth = item.auth || "disabled";
-				acc[auth] = (acc[auth] || 0) + 1;
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return Object.entries(authCounts).map(([name, value]) => ({
-			name,
-			value,
-		}));
+		if (!data) return [];
+		return data.authDistribution || [];
 	};
 
 	const getGitData = () => {
-		const gitCounts = data.reduce(
-			(acc, item) => {
-				const git = item.git || "disabled";
-				acc[git] = (acc[git] || 0) + 1;
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return Object.entries(gitCounts).map(([name, value]) => ({
-			name,
-			value,
-		}));
+		if (!data) return [];
+		return data.gitDistribution || [];
 	};
 
 	const getInstallData = () => {
-		const installCounts = data.reduce(
-			(acc, item) => {
-				const install = item.install || "disabled";
-				acc[install] = (acc[install] || 0) + 1;
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return Object.entries(installCounts).map(([name, value]) => ({
-			name,
-			value,
-		}));
+		if (!data) return [];
+		return data.installDistribution || [];
 	};
 
 	const getExamplesData = () => {
-		const exampleCounts = data.reduce(
-			(acc, item) => {
-				const examples = [item.examples0, item.examples1].filter(Boolean);
-				if (examples.length === 0) {
-					acc.none = (acc.none || 0) + 1;
-				} else {
-					for (const example of examples) {
-						acc[example] = (acc[example] || 0) + 1;
-					}
-				}
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return Object.entries(exampleCounts)
-			.map(([name, value]) => ({
-				name,
-				value,
-			}))
-			.sort((a, b) => b.value - a.value);
+		if (!data) return [];
+		return data.examplesDistribution || [];
 	};
 
 	const getAddonsData = () => {
-		const addonCounts = data.reduce(
-			(acc, item) => {
-				if (!item.addons || item.addons.length === 0) {
-					acc.none = (acc.none || 0) + 1;
-				} else {
-					for (const addon of item.addons) {
-						if (addon) {
-							acc[addon] = (acc[addon] || 0) + 1;
-						}
-					}
-				}
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return Object.entries(addonCounts)
-			.map(([name, value]) => ({
-				name,
-				value,
-			}))
-			.sort((a, b) => b.value - a.value);
+		if (!data) return [];
+		return data.addonsDistribution || [];
 	};
 
 	const getRuntimeData = () => {
-		const runtimeCounts = data.reduce(
-			(acc, item) => {
-				const runtime = item.runtime || "none";
-				acc[runtime] = (acc[runtime] || 0) + 1;
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return Object.entries(runtimeCounts)
-			.map(([name, value]) => ({
-				name,
-				value,
-			}))
-			.sort((a, b) => b.value - a.value);
+		if (!data) return [];
+		return data.runtimeDistribution || [];
 	};
 
 	const getProjectTypeData = () => {
-		const typeCounts = data.reduce(
-			(acc, item) => {
-				const hasFrontend =
-					(item.frontend0 && item.frontend0 !== "none") ||
-					(item.frontend1 && item.frontend1 !== "none");
-				const hasBackend = item.backend && item.backend !== "none";
-
-				let type: string;
-				if (hasFrontend && hasBackend) {
-					type = "fullstack";
-				} else if (hasFrontend && !hasBackend) {
-					type = "frontend-only";
-				} else if (!hasFrontend && hasBackend) {
-					type = "backend-only";
-				} else {
-					type = "frontend-only";
-				}
-
-				acc[type] = (acc[type] || 0) + 1;
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return Object.entries(typeCounts).map(([name, value]) => ({
-			name,
-			value,
-		}));
+		if (!data) return [];
+		return data.projectTypeDistribution || [];
 	};
 
 	const getMonthlyTimeSeriesData = () => {
-		if (data.length === 0) return [];
-
-		const monthlyCounts = data.reduce(
-			(acc, item) => {
-				const date = new Date(item.date);
-				const monthKey = format(date, "yyyy-MM");
-				acc[monthKey] = (acc[monthKey] || 0) + 1;
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return Object.entries(monthlyCounts)
-			.map(([month, count]) => ({
-				month,
-				displayMonth: format(parseISO(`${month}-01`), "MMM yyyy"),
-				count,
-			}))
-			.sort((a, b) => a.month.localeCompare(b.month));
+		if (!data) return [];
+		return data.monthlyTimeSeries || [];
 	};
 
 	const getPopularStackCombinations = () => {
-		const comboCounts = data.reduce(
-			(acc, item) => {
-				const frontends = [item.frontend0, item.frontend1].filter(
-					(f) => f && f !== "none" && f !== "",
-				);
-				const backend = item.backend || "none";
-
-				const parts = [...frontends];
-				if (backend !== "none") {
-					parts.push(backend);
-				}
-
-				const combo = parts.length > 0 ? parts.join(" + ") : "none";
-				acc[combo] = (acc[combo] || 0) + 1;
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return Object.entries(comboCounts)
-			.map(([name, value]) => ({
-				name,
-				value,
-			}))
-			.sort((a, b) => b.value - a.value)
-			.slice(0, 8);
+		if (!data) return [];
+		return data.popularStackCombinations || [];
 	};
 
 	const getDatabaseORMCombinations = () => {
-		const comboCounts = data.reduce(
-			(acc, item) => {
-				const database = item.database || "none";
-				const orm = item.orm || "none";
-				if (database !== "none" && orm !== "none") {
-					const combo = `${database} + ${orm}`;
-					acc[combo] = (acc[combo] || 0) + 1;
-				}
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return Object.entries(comboCounts)
-			.map(([name, value]) => ({
-				name,
-				value,
-			}))
-			.sort((a, b) => b.value - a.value)
-			.slice(0, 6);
+		if (!data) return [];
+		return data.databaseORMCombinations || [];
 	};
 
 	const getHourlyDistributionData = () => {
-		if (data.length === 0) return [];
-
-		const hourlyCounts = data.reduce(
-			(acc, item) => {
-				const hour = item.hour;
-				acc[hour] = (acc[hour] || 0) + 1;
-				return acc;
-			},
-			{} as Record<number, number>,
-		);
-
-		return Array.from({ length: 24 }, (_, hour) => ({
-			hour: hour.toString().padStart(2, "0"),
-			displayHour: `${hour.toString().padStart(2, "0")}:00`,
-			count: hourlyCounts[hour] || 0,
-		}));
+		if (!data) return [];
+		return data.hourlyDistribution || [];
 	};
 
-	const totalProjects = data.length;
+	const totalProjects = data?.summary?.totalProjects || 0;
 	const getAvgProjectsPerDay = () => {
-		if (data.length === 0) return 0;
-		const dates = data.map((item) => item.date).filter(Boolean);
-		if (dates.length === 0) return 0;
-
-		const uniqueDates = new Set(dates);
-		const daysCovered = uniqueDates.size;
-		return daysCovered > 0 ? totalProjects / daysCovered : 0;
+		if (!data) return 0;
+		return data.summary?.avgProjectsPerDay || 0;
 	};
 
 	const avgProjectsPerDay = getAvgProjectsPerDay();
-	const authEnabledPercent =
-		totalProjects > 0
-			? Math.round(
-					(data.filter((d) => d.auth === "enabled").length / totalProjects) *
-						100,
-				)
-			: 0;
+	const authEnabledPercent = data?.summary?.authEnabledPercent || 0;
 
-	const frontendData = getFrontendData();
-	const backendData = getBackendData();
 	const runtimeData = getRuntimeData();
-	const mostPopularFrontend =
-		frontendData.length > 0 ? frontendData[0].name : "None";
-	const mostPopularBackend =
-		backendData.length > 0 ? backendData[0].name : "None";
+	const mostPopularFrontend = data?.summary?.mostPopularFrontend || "None";
+	const mostPopularBackend = data?.summary?.mostPopularBackend || "None";
 
 	const projectTypeData = getProjectTypeData();
 	const monthlyTimeSeriesData = getMonthlyTimeSeriesData();
@@ -1006,8 +634,8 @@ export default function AnalyticsPage() {
 								Last updated:{" "}
 								{loadingLastUpdated
 									? "CHECKING..."
-									: lastUpdated
-										? `${lastUpdated} UTC`
+									: data?.lastUpdated
+										? `${data.lastUpdated} UTC`
 										: "UNKNOWN"}
 							</span>
 						</div>
@@ -1112,7 +740,7 @@ export default function AnalyticsPage() {
 							</div>
 							<div className="p-4">
 								<div className="truncate font-bold text-accent text-lg">
-									{getORMData().length > 0 ? getORMData()[0].name : "None"}
+									{data?.summary?.mostPopularORM || "None"}
 								</div>
 								<p className="mt-1 text-muted-foreground text-xs">
 									$ most_selected_orm.sh
@@ -1129,7 +757,7 @@ export default function AnalyticsPage() {
 							</div>
 							<div className="p-4">
 								<div className="truncate font-bold text-accent text-lg">
-									{getAPIData().length > 0 ? getAPIData()[0].name : "None"}
+									{data?.summary?.mostPopularAPI || "None"}
 								</div>
 								<p className="mt-1 text-muted-foreground text-xs">
 									$ most_selected_api.sh
@@ -1163,9 +791,7 @@ export default function AnalyticsPage() {
 							</div>
 							<div className="p-4">
 								<div className="truncate font-bold text-accent text-lg">
-									{getPackageManagerData().length > 0
-										? getPackageManagerData()[0].name
-										: "npm"}
+									{data?.summary?.mostPopularPackageManager || "npm"}
 								</div>
 								<p className="mt-1 text-muted-foreground text-xs">
 									$ most_used_package_manager.sh
@@ -1232,8 +858,8 @@ export default function AnalyticsPage() {
 										<Area
 											type="monotone"
 											dataKey="count"
-											stroke="var(--color-projects)"
-											fill="var(--color-projects)"
+											stroke="hsl(var(--chart-1))"
+											fill="hsl(var(--chart-1))"
 											fillOpacity={0.2}
 										/>
 									</AreaChart>
@@ -1272,7 +898,7 @@ export default function AnalyticsPage() {
 										<Bar
 											dataKey="count"
 											radius={4}
-											fill="var(--color-projects)"
+											fill="hsl(var(--chart-1))"
 										/>
 									</BarChart>
 								</ChartContainer>
@@ -1309,13 +935,19 @@ export default function AnalyticsPage() {
 												`${name} ${(percent * 100).toFixed(0)}%`
 											}
 											outerRadius={80}
-											fill="var(--color-platform)"
+											fill="hsl(var(--chart-1))"
 											dataKey="value"
 										>
 											{getPlatformData().map((entry) => (
 												<Cell
 													key={entry.name}
-													fill={`var(--color-${entry.name})`}
+													fill={
+														entry.name === "darwin"
+															? "hsl(var(--chart-1))"
+															: entry.name === "linux"
+																? "hsl(var(--chart-2))"
+																: "hsl(var(--chart-3))"
+													}
 												/>
 											))}
 										</Pie>
@@ -1359,7 +991,11 @@ export default function AnalyticsPage() {
 												return hour ? `${hour} UTC` : value;
 											}}
 										/>
-										<Bar dataKey="count" radius={4} fill="var(--color-count)" />
+										<Bar
+											dataKey="count"
+											radius={4}
+											fill="hsl(var(--chart-1))"
+										/>
 									</BarChart>
 								</ChartContainer>
 							</div>
@@ -1408,11 +1044,7 @@ export default function AnalyticsPage() {
 									/>
 									<YAxis hide />
 									<ChartTooltip content={<ChartTooltipContent />} />
-									<Bar
-										dataKey="value"
-										radius={4}
-										fill="var(--color-react-router)"
-									/>
+									<Bar dataKey="value" radius={4} fill="hsl(var(--chart-1))" />
 								</BarChart>
 							</ChartContainer>
 						</div>
@@ -1450,7 +1082,27 @@ export default function AnalyticsPage() {
 										{getFrontendData().map((entry) => (
 											<Cell
 												key={`frontend-${entry.name}`}
-												fill={`var(--color-${entry.name})`}
+												fill={
+													entry.name === "react-router"
+														? "hsl(var(--chart-1))"
+														: entry.name === "tanstack-router"
+															? "hsl(var(--chart-2))"
+															: entry.name === "tanstack-start"
+																? "hsl(var(--chart-3))"
+																: entry.name === "next"
+																	? "hsl(var(--chart-4))"
+																	: entry.name === "nuxt"
+																		? "hsl(var(--chart-5))"
+																		: entry.name === "native-nativewind"
+																			? "hsl(var(--chart-6))"
+																			: entry.name === "native-unistyles"
+																				? "hsl(var(--chart-7))"
+																				: entry.name === "svelte"
+																					? "hsl(var(--chart-3))"
+																					: entry.name === "solid"
+																						? "hsl(var(--chart-4))"
+																						: "hsl(var(--chart-7))"
+												}
 											/>
 										))}
 									</Bar>
@@ -1491,7 +1143,21 @@ export default function AnalyticsPage() {
 											{getBackendData().map((entry) => (
 												<Cell
 													key={`backend-${entry.name}`}
-													fill={`var(--color-${entry.name})`}
+													fill={
+														entry.name === "hono"
+															? "hsl(var(--chart-1))"
+															: entry.name === "express"
+																? "hsl(var(--chart-2))"
+																: entry.name === "fastify"
+																	? "hsl(var(--chart-3))"
+																	: entry.name === "next"
+																		? "hsl(var(--chart-4))"
+																		: entry.name === "elysia"
+																			? "hsl(var(--chart-5))"
+																			: entry.name === "convex"
+																				? "hsl(var(--chart-6))"
+																				: "hsl(var(--chart-7))"
+													}
 												/>
 											))}
 										</Bar>
@@ -1531,7 +1197,17 @@ export default function AnalyticsPage() {
 											{getDatabaseData().map((entry) => (
 												<Cell
 													key={`database-${entry.name}`}
-													fill={`var(--color-${entry.name})`}
+													fill={
+														entry.name === "sqlite"
+															? "hsl(var(--chart-1))"
+															: entry.name === "postgres"
+																? "hsl(var(--chart-2))"
+																: entry.name === "mysql"
+																	? "hsl(var(--chart-3))"
+																	: entry.name === "mongodb"
+																		? "hsl(var(--chart-4))"
+																		: "hsl(var(--chart-7))"
+													}
 												/>
 											))}
 										</Bar>
@@ -1568,7 +1244,15 @@ export default function AnalyticsPage() {
 											{getORMData().map((entry) => (
 												<Cell
 													key={`orm-${entry.name}`}
-													fill={`var(--color-${entry.name})`}
+													fill={
+														entry.name === "drizzle"
+															? "hsl(var(--chart-1))"
+															: entry.name === "prisma"
+																? "hsl(var(--chart-2))"
+																: entry.name === "mongoose"
+																	? "hsl(var(--chart-3))"
+																	: "hsl(var(--chart-7))"
+													}
 												/>
 											))}
 										</Bar>
@@ -1608,7 +1292,19 @@ export default function AnalyticsPage() {
 											{getDBSetupData().map((entry) => (
 												<Cell
 													key={`dbsetup-${entry.name}`}
-													fill={`var(--color-${entry.name})`}
+													fill={
+														entry.name === "turso"
+															? "hsl(var(--chart-1))"
+															: entry.name === "prisma-postgres"
+																? "hsl(var(--chart-2))"
+																: entry.name === "mongodb-atlas"
+																	? "hsl(var(--chart-3))"
+																	: entry.name === "neon"
+																		? "hsl(var(--chart-4))"
+																		: entry.name === "supabase"
+																			? "hsl(var(--chart-5))"
+																			: "hsl(var(--chart-7))"
+													}
 												/>
 											))}
 										</Bar>
@@ -1644,7 +1340,13 @@ export default function AnalyticsPage() {
 											{getAPIData().map((entry) => (
 												<Cell
 													key={`api-${entry.name}`}
-													fill={`var(--color-${entry.name})`}
+													fill={
+														entry.name === "trpc"
+															? "hsl(var(--chart-1))"
+															: entry.name === "orpc"
+																? "hsl(var(--chart-2))"
+																: "hsl(var(--chart-7))"
+													}
 												/>
 											))}
 										</Pie>
@@ -1689,7 +1391,11 @@ export default function AnalyticsPage() {
 											{getAuthData().map((entry) => (
 												<Cell
 													key={`auth-${entry.name}`}
-													fill={`var(--color-${entry.name})`}
+													fill={
+														entry.name === "enabled"
+															? "hsl(var(--chart-1))"
+															: "hsl(var(--chart-7))"
+													}
 												/>
 											))}
 										</Pie>
@@ -1734,7 +1440,15 @@ export default function AnalyticsPage() {
 											{runtimeData.map((entry) => (
 												<Cell
 													key={`runtime-${entry.name}`}
-													fill={`var(--color-${entry.name})`}
+													fill={
+														entry.name === "node"
+															? "hsl(var(--chart-1))"
+															: entry.name === "bun"
+																? "hsl(var(--chart-2))"
+																: entry.name === "workers"
+																	? "hsl(var(--chart-3))"
+																	: "hsl(var(--chart-7))"
+													}
 												/>
 											))}
 										</Pie>
@@ -1779,7 +1493,13 @@ export default function AnalyticsPage() {
 											{projectTypeData.map((entry) => (
 												<Cell
 													key={`project-type-${entry.name}`}
-													fill={`var(--color-${entry.name})`}
+													fill={
+														entry.name === "fullstack"
+															? "hsl(var(--chart-1))"
+															: entry.name === "frontend-only"
+																? "hsl(var(--chart-2))"
+																: "hsl(var(--chart-3))"
+													}
 												/>
 											))}
 										</Pie>
@@ -1818,7 +1538,7 @@ export default function AnalyticsPage() {
 									/>
 									<YAxis hide />
 									<ChartTooltip content={<ChartTooltipContent />} />
-									<Bar dataKey="value" radius={4} fill="var(--color-sqlite)" />
+									<Bar dataKey="value" radius={4} fill="hsl(var(--chart-1))" />
 								</BarChart>
 							</ChartContainer>
 						</div>
@@ -1854,7 +1574,21 @@ export default function AnalyticsPage() {
 										{getAddonsData().map((entry) => (
 											<Cell
 												key={`addons-${entry.name}`}
-												fill={`var(--color-${entry.name})`}
+												fill={
+													entry.name === "pwa"
+														? "hsl(var(--chart-1))"
+														: entry.name === "biome"
+															? "hsl(var(--chart-2))"
+															: entry.name === "tauri"
+																? "hsl(var(--chart-3))"
+																: entry.name === "husky"
+																	? "hsl(var(--chart-4))"
+																	: entry.name === "starlight"
+																		? "hsl(var(--chart-5))"
+																		: entry.name === "turborepo"
+																			? "hsl(var(--chart-6))"
+																			: "hsl(var(--chart-7))"
+												}
 											/>
 										))}
 									</Bar>
@@ -1895,7 +1629,13 @@ export default function AnalyticsPage() {
 										{getExamplesData().map((entry) => (
 											<Cell
 												key={`examples-${entry.name}`}
-												fill={`var(--color-${entry.name})`}
+												fill={
+													entry.name === "todo"
+														? "hsl(var(--chart-1))"
+														: entry.name === "ai"
+															? "hsl(var(--chart-2))"
+															: "hsl(var(--chart-7))"
+												}
 											/>
 										))}
 									</Bar>
@@ -1944,7 +1684,11 @@ export default function AnalyticsPage() {
 											{getGitData().map((entry) => (
 												<Cell
 													key={`git-${entry.name}`}
-													fill={`var(--color-${entry.name})`}
+													fill={
+														entry.name === "enabled"
+															? "hsl(var(--chart-1))"
+															: "hsl(var(--chart-7))"
+													}
 												/>
 											))}
 										</Pie>
@@ -1985,7 +1729,17 @@ export default function AnalyticsPage() {
 											{getPackageManagerData().map((entry) => (
 												<Cell
 													key={`package-${entry.name}`}
-													fill={`var(--color-${entry.name})`}
+													fill={
+														entry.name === "npm"
+															? "hsl(var(--chart-1))"
+															: entry.name === "pnpm"
+																? "hsl(var(--chart-2))"
+																: entry.name === "bun"
+																	? "hsl(var(--chart-3))"
+																	: entry.name === "yarn"
+																		? "hsl(var(--chart-4))"
+																		: "hsl(var(--chart-7))"
+													}
 												/>
 											))}
 										</Bar>
@@ -2029,7 +1783,11 @@ export default function AnalyticsPage() {
 											{getInstallData().map((entry) => (
 												<Cell
 													key={`install-${entry.name}`}
-													fill={`var(--color-${entry.name})`}
+													fill={
+														entry.name === "enabled"
+															? "hsl(var(--chart-1))"
+															: "hsl(var(--chart-7))"
+													}
 												/>
 											))}
 										</Pie>
@@ -2067,7 +1825,11 @@ export default function AnalyticsPage() {
 										/>
 										<YAxis hide />
 										<ChartTooltip content={<ChartTooltipContent />} />
-										<Bar dataKey="count" radius={4} fill="var(--color-18)" />
+										<Bar
+											dataKey="count"
+											radius={4}
+											fill="hsl(var(--chart-1))"
+										/>
 									</BarChart>
 								</ChartContainer>
 							</div>
@@ -2100,7 +1862,7 @@ export default function AnalyticsPage() {
 									/>
 									<YAxis hide />
 									<ChartTooltip content={<ChartTooltipContent />} />
-									<Bar dataKey="count" radius={4} fill="var(--color-latest)" />
+									<Bar dataKey="count" radius={4} fill="hsl(var(--chart-1))" />
 								</BarChart>
 							</ChartContainer>
 						</div>

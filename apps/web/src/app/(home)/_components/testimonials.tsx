@@ -161,7 +161,7 @@ export default function Testimonials() {
 			}}
 		>
 			<div className="w-full min-w-0 overflow-hidden rounded border border-border">
-				<div className="sticky top-0 z-10 border-border border-b px-3 py-2">
+				<div className="sticky top-0 z-10 border-border border-b px-2 py-2">
 					<div className="flex items-center gap-2">
 						<Play className="h-3 w-3 text-primary" />
 						<span className="font-semibold text-xs">[{video.id}]</span>
@@ -211,7 +211,7 @@ export default function Testimonials() {
 				<div className="w-full min-w-0 overflow-hidden">
 					<div style={{ width: "100%", minWidth: 0, maxWidth: "100%" }}>
 						<Suspense fallback={<TweetSkeleton />}>
-							<Tweet id={tweetId} />
+							<Tweet id={tweetId} components={components} />
 						</Suspense>
 					</div>
 				</div>

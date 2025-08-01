@@ -1202,11 +1202,12 @@ const StackBuilder = () => {
 									<TechIcon
 										icon={tech.icon}
 										name={tech.name}
-										className={
+										className={cn(
 											tech.icon.startsWith("/icon/")
 												? "h-3 w-3"
-												: "h-3 w-3 text-xs"
-										}
+												: "h-3 w-3 text-xs",
+											tech.className,
+										)}
 									/>
 								)}
 								{tech.name}
