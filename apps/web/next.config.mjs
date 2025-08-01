@@ -30,12 +30,12 @@ const config = {
 				source: "/ingest/decide",
 				destination: "https://us.i.posthog.com/decide",
 			},
+			{
+				source: "/docs/:path*.mdx",
+				destination: "/llms.mdx/:path*",
+			},
 		];
 	},
 };
 
 export default withMDX(config);
-
-import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
-
-initOpenNextCloudflareForDev();

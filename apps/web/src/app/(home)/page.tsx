@@ -59,7 +59,7 @@ export default function HomePage() {
 
 	return (
 		<div className="mx-auto min-h-svh max-w-[1280px]">
-			<main className="mx-auto px-4 pt-16">
+			<main className="mx-auto px-2 pt-16">
 				<div className="mb-8 flex items-center justify-center">
 					<div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 md:gap-6">
 						<pre className="ascii-art text-primary text-xs leading-tight sm:text-sm">
@@ -142,7 +142,7 @@ export default function HomePage() {
 
 					<div className="space-y-3">
 						<div className="flex items-center justify-between rounded border border-border p-3">
-							<div className="flex items-center gap-2 text-sm">
+							<div className="flex items-center gap-2 font-mono text-sm">
 								<span className="text-primary">$</span>
 								<span className=" text-foreground">{commands[selectedPM]}</span>
 							</div>

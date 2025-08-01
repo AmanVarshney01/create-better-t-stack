@@ -96,6 +96,8 @@
 }
 
 @theme inline {
+	--font-sans: var(--font-geist);
+	--font-mono: var(--font-geist-mono);
 	--radius-sm: calc(var(--radius) - 4px);
 	--radius-md: calc(var(--radius) - 2px);
 	--radius-lg: var(--radius);
@@ -133,9 +135,6 @@
 	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
 	--color-sidebar-border: var(--sidebar-border);
 	--color-sidebar-ring: var(--sidebar-ring);
-	--font-sans: Montserrat, sans-serif;
-	--font-mono: Fira Code, monospace;
-	--font-serif: Georgia, serif;
 	--radius: 0.35rem;
 	--tracking-tighter: calc(var(--tracking-normal) - 0.05em);
 	--tracking-tight: calc(var(--tracking-normal) - 0.025em);
@@ -198,9 +197,6 @@
 	--sidebar-ring: #8839ef;
 	--destructive-foreground: oklch(1 0 0);
 	--radius: 0.35rem;
-	--font-sans: Montserrat, sans-serif;
-	--font-serif: Georgia, serif;
-	--font-mono: Fira Code, monospace;
 	--shadow-color: hsl(240 30% 25%);
 	--shadow-opacity: 0.12;
 	--shadow-blur: 6px;
@@ -266,9 +262,6 @@
 	--sidebar-ring: #cba6f7;
 	--destructive-foreground: #11111b;
 	--radius: 0.35rem;
-	--font-sans: Montserrat, sans-serif;
-	--font-serif: Georgia, serif;
-	--font-mono: Fira Code, monospace;
 	--shadow-color: hsl(240 30% 5%);
 	--shadow-opacity: 0.25;
 	--shadow-blur: 8px;
@@ -351,12 +344,6 @@
 	transform: translateY(-1px);
 }
 
-/* .terminal-matrix-bg {
-	background: linear-gradient(90deg, transparent 98%, var(--border) 100%),
-		linear-gradient(0deg, transparent 98%, var(--border) 100%);
-	background-size: 20px 20px;
-} */
-
 .ascii-art {
 	font-family: "Courier New", monospace;
 	line-height: 1;
@@ -406,4 +393,140 @@
 
 .file-load-animation {
 	animation: file-load 0.3s ease-out forwards;
+}
+
+/* Chart styling to match terminal aesthetic */
+.recharts-wrapper {
+	font-family: var(--font-mono);
+}
+
+.recharts-cartesian-axis-tick-value {
+	font-size: 0.75rem;
+	font-weight: 500;
+	color: hsl(var(--muted-foreground));
+}
+
+.recharts-cartesian-axis-line {
+	stroke: hsl(var(--border));
+	stroke-width: 1;
+}
+
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+	stroke: hsl(var(--border));
+	stroke-width: 1;
+	stroke-dasharray: 3 3;
+	opacity: 0.5;
+}
+
+.recharts-tooltip-wrapper {
+	background: hsl(var(--popover));
+	border: 1px solid hsl(var(--border));
+	border-radius: var(--radius);
+	box-shadow: var(--shadow-lg);
+	padding: 0.5rem;
+	font-family: var(--font-mono);
+	font-size: 0.75rem;
+}
+
+.recharts-tooltip-item {
+	color: hsl(var(--foreground));
+}
+
+.recharts-legend-item-text {
+	font-family: var(--font-mono);
+	font-size: 0.75rem;
+	color: hsl(var(--foreground));
+}
+
+.recharts-pie-label {
+	font-family: var(--font-mono);
+	font-size: 0.75rem;
+	font-weight: 500;
+	color: hsl(var(--foreground));
+}
+
+.recharts-bar-rectangle {
+	transition: opacity 0.2s ease;
+}
+
+.recharts-bar-rectangle:hover {
+	opacity: 0.8;
+}
+
+.recharts-pie-sector {
+	transition: opacity 0.2s ease;
+}
+
+.recharts-pie-sector:hover {
+	opacity: 0.8;
+}
+
+.recharts-area-curve {
+	transition: opacity 0.2s ease;
+}
+
+.recharts-area-curve:hover {
+	opacity: 0.8;
+}
+
+/* Chart container styling */
+.chart-container {
+	border-radius: var(--radius);
+	overflow: hidden;
+}
+
+/* Terminal-style chart headers */
+.chart-header {
+	border-bottom: 1px solid hsl(var(--border));
+	padding: 0.75rem 1rem;
+	background: hsl(var(--card));
+}
+
+.chart-header-title {
+	font-family: var(--font-mono);
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: hsl(var(--foreground));
+}
+
+.chart-header-description {
+	font-size: 0.75rem;
+	color: hsl(var(--muted-foreground));
+	margin-top: 0.25rem;
+}
+
+/* Chart hover effects */
+.chart-card {
+	transition: all 0.2s ease;
+	border: 1px solid hsl(var(--border));
+	border-radius: var(--radius);
+	overflow: hidden;
+}
+
+.chart-card:hover {
+	border-color: hsl(var(--primary));
+	box-shadow: 0 0 0 1px hsl(var(--primary) / 0.1);
+}
+
+/* Chart loading state */
+.chart-loading {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 300px;
+	color: hsl(var(--muted-foreground));
+	font-family: var(--font-mono);
+	font-size: 0.875rem;
+}
+
+/* Chart error state */
+.chart-error {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 300px;
+	color: hsl(var(--destructive));
+	font-family: var(--font-mono);
+	font-size: 0.875rem;
 }
