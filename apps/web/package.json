@@ -38,6 +38,7 @@
     "react-dom": "^19.1.1",
     "react-tweet": "^3.2.2",
     "recharts": "2.15.4",
+    "shiki": "^3.9.1",
     "sonner": "^2.0.6",
     "tailwind-merge": "^3.3.1"
   },
