@@ -229,7 +229,7 @@ async function generateAnalyticsData() {
 						} else if (!hasFrontend && hasBackend) {
 							type = "backend-only";
 						} else {
-							type = "frontend-only";
+							type = "none";
 						}
 						projectTypeCounts[type] = (projectTypeCounts[type] || 0) + 1;
 

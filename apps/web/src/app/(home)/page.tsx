@@ -25,6 +25,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import analyticsData from "@/public/analytics-minimal.json";
 import Footer from "./_components/footer";
 import PackageIcon from "./_components/icons";
 import NpmPackage from "./_components/npm-package";
@@ -222,7 +223,7 @@ export default function HomePage() {
 										Total Projects
 									</span>
 									<NumberFlow
-										value={14175}
+										value={analyticsData.totalProjects}
 										className="font-bold font-mono text-lg text-primary tabular-nums"
 										transformTiming={{
 											duration: 1000,
@@ -240,7 +241,7 @@ export default function HomePage() {
 										Avg/Day
 									</span>
 									<span className="font-mono text-foreground text-sm">
-										211.6
+										{analyticsData.avgProjectsPerDay}
 									</span>
 								</div>
 
@@ -249,7 +250,14 @@ export default function HomePage() {
 										<span className="font-mono text-muted-foreground">
 											Last Updated
 										</span>
-										<span className="font-mono text-accent">Aug 1, 2025</span>
+										<span className="font-mono text-accent">
+											{analyticsData.lastUpdated ||
+												new Date().toLocaleDateString("en-US", {
+													month: "short",
+													day: "numeric",
+													year: "numeric",
+												})}
+										</span>
 									</div>
 								</div>
 							</div>
