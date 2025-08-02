@@ -18,6 +18,8 @@
   },
   "dependencies": {
     "@better-t-stack/backend": "workspace:*",
+    "@erquhart/convex-oss-stats": "^0.8.1",
+    "@number-flow/react": "^0.5.10",
     "@opennextjs/cloudflare": "^1.6.3",
     "@orama/orama": "^3.1.11",
     "babel-plugin-react-compiler": "^19.1.0-rc.2",

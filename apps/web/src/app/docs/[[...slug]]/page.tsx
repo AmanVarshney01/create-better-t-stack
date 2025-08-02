@@ -42,23 +42,23 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({
-  params,
+	params,
 }: {
-  params: Promise<{ slug?: string[] }>;
+	params: Promise<{ slug?: string[] }>;
 }) {
-  const { slug = [] } = await params;
-  const page = source.getPage(slug);
-  if (!page) notFound();
-  const image = ['/docs-og', ...slug, 'image.png'].join('/');
-  return {
-    title: page.data.title,
-    description: page.data.description,
-    openGraph: {
-      images: image,
-    },
-    twitter: {
-      card: 'summary_large_image',
-      images: image,
-    },
-  };
+	const { slug = [] } = await params;
+	const page = source.getPage(slug);
+	if (!page) notFound();
+	const image = ["/docs-og", ...slug, "image.png"].join("/");
+	return {
+		title: page.data.title,
+		description: page.data.description,
+		openGraph: {
+			images: image,
+		},
+		twitter: {
+			card: "summary_large_image",
+			images: image,
+		},
+	};
 }

@@ -12,6 +12,7 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
+    "@erquhart/convex-oss-stats": "^0.8.1",
     "convex": "^1.25.4"
   }
 }
