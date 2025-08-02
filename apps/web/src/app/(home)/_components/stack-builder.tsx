@@ -233,7 +233,7 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 				});
 			}
 		}
-		const incompatibleConvexFrontends = ["nuxt", "solid"];
+		const incompatibleConvexFrontends = ["solid"];
 		const originalWebFrontendLength = nextStack.webFrontend.length;
 		nextStack.webFrontend = nextStack.webFrontend.filter(
 			(f) => !incompatibleConvexFrontends.includes(f),
@@ -241,16 +241,14 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 		if (nextStack.webFrontend.length !== originalWebFrontendLength) {
 			changed = true;
 			notes.webFrontend.notes.push(
-				"Nuxt and Solid are not compatible with Convex backend and have been removed.",
+				"Solid is not compatible with Convex backend and has been removed.",
 			);
-			notes.backend.notes.push(
-				"Convex backend is not compatible with Nuxt or Solid.",
-			);
+			notes.backend.notes.push("Convex backend is not compatible with Solid.");
 			notes.webFrontend.hasIssue = true;
 			notes.backend.hasIssue = true;
 			changes.push({
 				category: "convex",
-				message: "Removed incompatible web frontends (Nuxt, Solid)",
+				message: "Removed incompatible web frontends (Solid)",
 			});
 		}
 		if (nextStack.nativeFrontend[0] === "none") {
