@@ -6,6 +6,7 @@ import { useQuery } from "convex/react";
 import {
 	BarChart3,
 	Check,
+	ChevronRight,
 	Copy,
 	Github,
 	Package,
@@ -105,57 +106,90 @@ export default function HomePage() {
 					<NpmPackage />
 				</div>
 
-				<div className=" mb-8 rounded border border-border p-4">
-					<div className="mb-4 flex items-center justify-between">
-						<div className="flex items-center gap-2">
-							<Terminal className="h-4 w-4 text-primary" />
-							<span className="font-semibold text-sm">QUICK_START</span>
+				<div className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
+					{/* CLI Command Option */}
+					<div className="h-full rounded border border-border p-4">
+						<div className="mb-4 flex items-center justify-between">
+							<div className="flex items-center gap-2">
+								<Terminal className="h-4 w-4 text-primary" />
+								<span className="font-semibold text-sm">CLI_COMMAND</span>
+							</div>
+							<div className="flex items-center rounded border border-border p-0.5">
+								{(["bun", "pnpm", "npm"] as const).map((pm) => (
+									<button
+										type="button"
+										key={pm}
+										onClick={() => setSelectedPM(pm)}
+										className={cn(
+											"flex items-center gap-1.5 rounded px-2 py-1 text-xs transition-colors duration-150",
+											selectedPM === pm
+												? "bg-primary/20 text-primary"
+												: "text-muted-foreground hover:text-foreground",
+										)}
+									>
+										<PackageIcon pm={pm} className="h-3 w-3" />
+										{pm.toUpperCase()}
+									</button>
+								))}
+							</div>
 						</div>
-						<div className="flex items-center rounded border border-border p-0.5">
-							{(["bun", "pnpm", "npm"] as const).map((pm) => (
+
+						<div className="space-y-3">
+							<div className="flex items-center justify-between rounded border border-border p-3">
+								<div className="flex items-center gap-2 font-mono text-sm">
+									<span className="text-primary">$</span>
+									<span className="text-foreground">
+										{commands[selectedPM]}
+									</span>
+								</div>
 								<button
 									type="button"
-									key={pm}
-									onClick={() => setSelectedPM(pm)}
-									className={cn(
-										"flex items-center gap-1.5 rounded px-2 py-1 text-xs transition-colors duration-150",
-										selectedPM === pm
-											? "bg-primary/20 text-primary"
-											: "text-muted-foreground hover:text-foreground",
-									)}
+									onClick={() => copyCommand(commands[selectedPM], selectedPM)}
+									className="flex items-center gap-1 rounded border border-border px-2 py-1 text-xs hover:bg-muted/50"
 								>
-									<PackageIcon pm={pm} className="h-3 w-3" />
-									{pm.toUpperCase()}
+									{copiedCommand === selectedPM ? (
+										<Check className="h-3 w-3 text-primary" />
+									) : (
+										<Copy className="h-3 w-3" />
+									)}
+									{copiedCommand === selectedPM ? "COPIED!" : "COPY"}
 								</button>
-							))}
+							</div>
 						</div>
 					</div>
 
-					<div className="space-y-3">
-						<div className="flex items-center justify-between rounded border border-border p-3">
-							<div className="flex items-center gap-2 font-mono text-sm">
-								<span className="text-primary">$</span>
-								<span className=" text-foreground">{commands[selectedPM]}</span>
+					<Link href="/new">
+						<div className="group h-full cursor-pointer rounded border border-border p-4 transition-colors hover:bg-muted/50">
+							<div className="mb-4 flex items-center justify-between">
+								<div className="flex items-center gap-2">
+									<ChevronRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-1" />
+									<span className="font-semibold text-sm">STACK_BUILDER</span>
+								</div>
+								<div className="rounded border border-border bg-muted/30 px-2 py-1 text-xs">
+									INTERACTIVE
+								</div>
 							</div>
-							<button
-								type="button"
-								onClick={() => copyCommand(commands[selectedPM], selectedPM)}
-								className="flex items-center gap-1 rounded border border-border px-2 py-1 text-xs hover:bg-muted/50"
-							>
-								{copiedCommand === selectedPM ? (
-									<Check className="h-3 w-3 text-primary" />
-								) : (
-									<Copy className="h-3 w-3" />
-								)}
-								{copiedCommand === selectedPM ? "COPIED!" : "COPY"}
-							</button>
+
+							<div className="space-y-3">
+								<div className="flex items-center justify-between rounded border border-border p-3">
+									<div className="flex items-center gap-2 text-sm">
+										<span className="text-primary">⚡</span>
+										<span className="text-foreground">
+											Interactive configuration wizard
+										</span>
+									</div>
+									<div className="rounded border border-border bg-muted/30 px-2 py-1 text-xs">
+										START
+									</div>
+								</div>
+							</div>
 						</div>
-					</div>
+					</Link>
 				</div>
 
 				<div className="mb-8 grid grid-cols-1 gap-4 sm:mb-12 sm:grid-cols-2 lg:grid-cols-3">
 					<Link href="/analytics">
-						<div className="rounded border border-border p-4 transition-colors hover:bg-muted/50 cursor-pointer">
+						<div className="cursor-pointer rounded border border-border p-4 transition-colors hover:bg-muted/50">
 							<div className="mb-3 flex items-center gap-2">
 								<Terminal className="h-4 w-4 text-primary" />
 								<span className="font-semibold text-sm sm:text-base">
@@ -209,7 +243,7 @@ export default function HomePage() {
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						<div className="rounded border border-border p-4 transition-colors hover:bg-muted/50 cursor-pointer">
+						<div className="cursor-pointer rounded border border-border p-4 transition-colors hover:bg-muted/50">
 							<div className="mb-3 flex items-center gap-2">
 								<Github className="h-4 w-4 text-primary" />
 								<span className="font-semibold text-sm sm:text-base">
@@ -236,7 +270,7 @@ export default function HomePage() {
 											isolate
 										/>
 									) : (
-										<div className="font-bold font-mono text-lg text-primary tabular-nums h-6 w-16 animate-pulse rounded bg-muted/50" />
+										<div className="h-6 w-16 animate-pulse rounded bg-muted/50 font-bold font-mono text-lg text-primary tabular-nums" />
 									)}
 								</div>
 
@@ -269,7 +303,7 @@ export default function HomePage() {
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						<div className="rounded border border-border p-4 transition-colors hover:bg-muted/50 cursor-pointer">
+						<div className="cursor-pointer rounded border border-border p-4 transition-colors hover:bg-muted/50">
 							<div className="mb-3 flex items-center gap-2">
 								<Terminal className="h-4 w-4 text-primary" />
 								<span className="font-semibold text-sm sm:text-base">
@@ -297,7 +331,7 @@ export default function HomePage() {
 											isolate
 										/>
 									) : (
-										<div className="font-bold font-mono text-lg text-primary tabular-nums h-6 w-20 animate-pulse rounded bg-muted/50" />
+										<div className="h-6 w-20 animate-pulse rounded bg-muted/50 font-bold font-mono text-lg text-primary tabular-nums" />
 									)}
 								</div>
 
