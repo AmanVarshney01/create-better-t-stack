@@ -1,0 +1,18 @@
+{
+  "name": "@better-t-stack/backend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "convex dev",
+    "dev:setup": "convex dev --configure --until-success"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@erquhart/convex-oss-stats": "^0.8.1",
+    "convex": "^1.25.4"
+  }
+}

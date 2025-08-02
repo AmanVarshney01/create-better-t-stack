@@ -18,7 +18,8 @@
 			"!**/.turbo",
 			"!**/package.json",
 			"!**/analytics-data.json",
-			"!**/schema.json"
+			"!**/schema.json",
+			"!**/_generated/**"
 		]
 	},
 	"formatter": {

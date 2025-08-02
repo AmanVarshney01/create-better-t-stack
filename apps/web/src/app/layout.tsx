@@ -3,12 +3,11 @@ export const dynamic = "force-static";
 import { RootProvider } from "fumadocs-ui/provider";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
 import type { ReactNode } from "react";
 import SearchDialog from "@/components/search";
-import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import "./global.css";
+import Providers from "@/components/providers";
 
 const geist = Geist({
 	subsets: ["latin"],
@@ -126,8 +125,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 						defaultTheme: "system",
 					}}
 				>
-					<NuqsAdapter>{children}</NuqsAdapter>
-					<Toaster />
+					<Providers>{children}</Providers>
 				</RootProvider>
 			</body>
 		</html>

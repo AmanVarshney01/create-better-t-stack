@@ -12,7 +12,7 @@
 		"check": "turbo check",
 		"format": "biome check --write .",
 		"publish-packages": "turbo run build --filter=create-better-t-stack && changeset publish",
-		"deploy:web": "bun run --filter=web generate-analytics && bun run --filter=web generate-schema && turbo run --filter=web deploy"
+		"deploy:web": "bun run --filter=web generate-analytics && bun run --filter=web generate-schema && vercel --prod"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.1.2",
