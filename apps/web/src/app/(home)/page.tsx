@@ -124,7 +124,7 @@ export default function HomePage() {
 								<DropdownMenuTrigger asChild>
 									<button
 										type="button"
-										className="flex items-center gap-2 rounded border border-border px-3 py-1.5 text-xs transition-colors hover:bg-muted/50"
+										className="flex items-center gap-2 rounded border border-border px-3 py-1.5 text-xs transition-colors hover:bg-muted/10"
 									>
 										<PackageIcon pm={selectedPM} className="h-3 w-3" />
 										<span>{selectedPM.toUpperCase()}</span>
@@ -163,7 +163,7 @@ export default function HomePage() {
 								<button
 									type="button"
 									onClick={() => copyCommand(commands[selectedPM], selectedPM)}
-									className="flex items-center gap-1 rounded border border-border px-2 py-1 text-xs hover:bg-muted/50"
+									className="flex items-center gap-1 rounded border border-border px-2 py-1 text-xs hover:bg-muted/10"
 								>
 									{copiedCommand === selectedPM ? (
 										<Check className="h-3 w-3 text-primary" />
@@ -177,7 +177,7 @@ export default function HomePage() {
 					</div>
 
 					<Link href="/new">
-						<div className="group flex h-full cursor-pointer flex-col justify-between rounded border border-border p-4 transition-colors hover:bg-muted/50">
+						<div className="group flex h-full cursor-pointer flex-col justify-between rounded border border-border p-4 transition-colors hover:bg-muted/10">
 							<div className="mb-4 flex items-center justify-between">
 								<div className="flex items-center gap-2">
 									<ChevronRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-1" />
@@ -207,7 +207,7 @@ export default function HomePage() {
 
 				<div className="mb-8 grid grid-cols-1 gap-4 sm:mb-12 sm:grid-cols-2 lg:grid-cols-3">
 					<Link href="/analytics">
-						<div className="cursor-pointer rounded border border-border p-4 transition-colors hover:bg-muted/50">
+						<div className="cursor-pointer rounded border border-border p-4 transition-colors hover:bg-muted/10">
 							<div className="mb-3 flex items-center gap-2">
 								<Terminal className="h-4 w-4 text-primary" />
 								<span className="font-semibold text-sm sm:text-base">
@@ -261,7 +261,7 @@ export default function HomePage() {
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						<div className="cursor-pointer rounded border border-border p-4 transition-colors hover:bg-muted/50">
+						<div className="cursor-pointer rounded border border-border p-4 transition-colors hover:bg-muted/10">
 							<div className="mb-3 flex items-center gap-2">
 								<Github className="h-4 w-4 text-primary" />
 								<span className="font-semibold text-sm sm:text-base">
@@ -321,7 +321,7 @@ export default function HomePage() {
 						target="_blank"
 						rel="noopener noreferrer"
 					>
-						<div className="cursor-pointer rounded border border-border p-4 transition-colors hover:bg-muted/50">
+						<div className="cursor-pointer rounded border border-border p-4 transition-colors hover:bg-muted/10">
 							<div className="mb-3 flex items-center gap-2">
 								<Terminal className="h-4 w-4 text-primary" />
 								<span className="font-semibold text-sm sm:text-base">
