@@ -95,10 +95,14 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 
 		if (editors.length > 0) {
 			ultraciteArgs.push("--editors", ...editors);
+		} else {
+			ultraciteArgs.push("--editors", "none");
 		}
 
 		if (rules.length > 0) {
 			ultraciteArgs.push("--rules", ...rules);
+		} else {
+			ultraciteArgs.push("--rules", "none");
 		}
 
 		if (hasHusky) {
