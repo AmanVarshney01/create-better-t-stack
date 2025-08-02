@@ -6,6 +6,7 @@ import { useQuery } from "convex/react";
 import {
 	BarChart3,
 	Check,
+	ChevronDown,
 	ChevronRight,
 	Copy,
 	Github,
@@ -17,6 +18,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import Footer from "./_components/footer";
 import PackageIcon from "./_components/icons";
@@ -113,24 +120,36 @@ export default function HomePage() {
 								<Terminal className="h-4 w-4 text-primary" />
 								<span className="font-semibold text-sm">CLI_COMMAND</span>
 							</div>
-							<div className="flex items-center rounded border border-border p-0.5">
-								{(["bun", "pnpm", "npm"] as const).map((pm) => (
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
 									<button
 										type="button"
-										key={pm}
-										onClick={() => setSelectedPM(pm)}
-										className={cn(
-											"flex items-center gap-1.5 rounded px-2 py-1 text-xs transition-colors duration-150",
-											selectedPM === pm
-												? "bg-primary/20 text-primary"
-												: "text-muted-foreground hover:text-foreground",
-										)}
+										className="flex items-center gap-2 rounded border border-border px-3 py-1.5 text-xs transition-colors hover:bg-muted/50"
 									>
-										<PackageIcon pm={pm} className="h-3 w-3" />
-										{pm.toUpperCase()}
+										<PackageIcon pm={selectedPM} className="h-3 w-3" />
+										<span>{selectedPM.toUpperCase()}</span>
+										<ChevronDown className="h-3 w-3" />
 									</button>
-								))}
-							</div>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align="end">
+									{(["bun", "pnpm", "npm"] as const).map((pm) => (
+										<DropdownMenuItem
+											key={pm}
+											onClick={() => setSelectedPM(pm)}
+											className={cn(
+												"flex items-center gap-2",
+												selectedPM === pm && "bg-accent text-background",
+											)}
+										>
+											<PackageIcon pm={pm} className="h-3 w-3" />
+											<span>{pm.toUpperCase()}</span>
+											{selectedPM === pm && (
+												<Check className="ml-auto h-3 w-3 text-background" />
+											)}
+										</DropdownMenuItem>
+									))}
+								</DropdownMenuContent>
+							</DropdownMenu>
 						</div>
 
 						<div className="space-y-3">
