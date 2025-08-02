@@ -107,8 +107,7 @@ export default function HomePage() {
 				</div>
 
 				<div className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
-					{/* CLI Command Option */}
-					<div className="h-full rounded border border-border p-4">
+					<div className="flex h-full flex-col justify-between rounded border border-border p-4">
 						<div className="mb-4 flex items-center justify-between">
 							<div className="flex items-center gap-2">
 								<Terminal className="h-4 w-4 text-primary" />
@@ -159,7 +158,7 @@ export default function HomePage() {
 					</div>
 
 					<Link href="/new">
-						<div className="group h-full cursor-pointer rounded border border-border p-4 transition-colors hover:bg-muted/50">
+						<div className="group flex h-full cursor-pointer flex-col justify-between rounded border border-border p-4 transition-colors hover:bg-muted/50">
 							<div className="mb-4 flex items-center justify-between">
 								<div className="flex items-center gap-2">
 									<ChevronRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-1" />
