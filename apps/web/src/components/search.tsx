@@ -12,10 +12,13 @@ import {
 	SearchDialogOverlay,
 	type SharedProps,
 } from "fumadocs-ui/components/dialog/search";
+import { customSearchItems, filterCustomItems } from "@/lib/search-config";
 
 function initOrama() {
 	return create({
-		schema: { _: "string" },
+		schema: {
+			_: "string",
+		},
 		language: "english",
 	});
 }
@@ -25,6 +28,25 @@ export default function DefaultSearchDialog(props: SharedProps) {
 		type: "static",
 		initOrama,
 	});
+
+	const filteredCustomItems = filterCustomItems(
+		customSearchItems,
+		search || "",
+	);
+
+	const combinedResults =
+		query.data === "empty" || !query.data
+			? null
+			: [
+					...query.data,
+					...filteredCustomItems.map((item, index) => ({
+						id: `custom-${index}`,
+						title: item.title,
+						url: item.url,
+						content: item.content,
+						type: "page" as const,
+					})),
+				];
 
 	return (
 		<SearchDialog
@@ -40,7 +62,7 @@ export default function DefaultSearchDialog(props: SharedProps) {
 					<SearchDialogInput />
 					<SearchDialogClose />
 				</SearchDialogHeader>
-				<SearchDialogList items={query.data !== "empty" ? query.data : null} />
+				<SearchDialogList items={combinedResults} />
 			</SearchDialogContent>
 		</SearchDialog>
 	);

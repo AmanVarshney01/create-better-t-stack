@@ -53,7 +53,13 @@ export function SpecialSponsorBanner() {
 		<div className="">
 			<div className="flex flex-col gap-2">
 				{specialSponsors.map((sponsor) => (
-					<div key={sponsor.sponsor.login} className="flex items-center gap-3">
+					<a
+						key={sponsor.sponsor.login}
+						className="flex items-center gap-3"
+						href={sponsor.sponsor.websiteUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+					>
 						<Image
 							src={sponsor.sponsor.customLogoUrl || sponsor.sponsor.avatarUrl}
 							alt={sponsor.sponsor.name || sponsor.sponsor.login}
@@ -67,7 +73,7 @@ export function SpecialSponsorBanner() {
 								{sponsor.sponsor.name || sponsor.sponsor.login}
 							</h4>
 						</div>
-					</div>
+					</a>
 				))}
 			</div>
 		</div>
