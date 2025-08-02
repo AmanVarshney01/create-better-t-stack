@@ -1,4 +1,6 @@
 "use client";
+import { api } from "@better-t-stack/backend/convex/_generated/api";
+import { useQuery } from "convex/react";
 import {
 	Check,
 	ChevronRight,
@@ -57,9 +59,21 @@ export default function HomePage() {
 		setTimeout(() => setCopiedCommand(null), 2000);
 	};
 
+	const healthCheck = useQuery(api.healthCheck.get);
+
 	return (
 		<div className="mx-auto min-h-svh max-w-[1280px]">
-			<main className="mx-auto px-2 pt-16">
+			<div
+				className={`h-2 w-2 rounded-full ${healthCheck === "OK" ? "bg-green-500" : healthCheck === undefined ? "bg-orange-400" : "bg-red-500"}`}
+			/>
+			<span className="text-muted-foreground text-sm">
+				{healthCheck === undefined
+					? "Checking..."
+					: healthCheck === "OK"
+						? "Connected"
+						: "Error"}
+			</span>
+			<main className="mx-auto px-2 pt-12">
 				<div className="mb-8 flex items-center justify-center">
 					<div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 md:gap-6">
 						<pre className="ascii-art text-primary text-xs leading-tight sm:text-sm">

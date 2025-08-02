@@ -17,11 +17,13 @@
     "generate-schema": "bun scripts/generate-schema.ts"
   },
   "dependencies": {
+    "@better-t-stack/backend": "workspace:*",
     "@opennextjs/cloudflare": "^1.6.3",
     "@orama/orama": "^3.1.11",
     "babel-plugin-react-compiler": "^19.1.0-rc.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "convex": "^1.25.4",
     "date-fns": "^4.1.0",
     "fumadocs-core": "15.6.7",
     "fumadocs-mdx": "11.7.3",
