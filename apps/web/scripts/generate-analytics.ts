@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import Papa from "papaparse";
@@ -441,6 +441,27 @@ async function generateAnalyticsData() {
 			},
 		};
 
+		console.log("📤 Creating minimal analytics file...");
+
+		// Create minimal analytics data for public folder
+		const minimalAnalyticsData = {
+			totalProjects: totalRecords,
+			avgProjectsPerDay: avgProjectsPerDay.toFixed(1),
+			lastUpdated: lastUpdated,
+			generatedAt: new Date().toISOString(),
+		};
+
+		// Write minimal file to public folder
+		const publicDir = join(process.cwd(), "public");
+		if (!existsSync(publicDir)) {
+			mkdirSync(publicDir, { recursive: true });
+		}
+		const minimalFilePath = join(publicDir, "analytics-minimal.json");
+		writeFileSync(
+			minimalFilePath,
+			JSON.stringify(minimalAnalyticsData, null, 2),
+		);
+
 		console.log("📤 Uploading to Cloudflare R2...");
 
 		const tempDir = mkdtempSync(join(tmpdir(), "analytics-"));
@@ -462,6 +483,9 @@ async function generateAnalyticsData() {
 
 		console.log(
 			`✅ Generated optimized analytics data with ${totalRecords} records`,
+		);
+		console.log(
+			"📁 Created minimal analytics file: public/analytics-minimal.json",
 		);
 		console.log("📤 Uploaded to R2 bucket: bucket/analytics-data.json");
 		console.log(`🕒 Last data update: ${lastUpdated}`);
