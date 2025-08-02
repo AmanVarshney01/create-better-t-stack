@@ -101,11 +101,17 @@ export const dependencyVersionMap = {
 	"@trpc/server": "^11.4.2",
 	"@trpc/client": "^11.4.2",
 
-	convex: "^1.25.0",
+	convex: "^1.25.4",
 	"@convex-dev/react-query": "^0.0.0-alpha.8",
 	"convex-svelte": "^0.0.11",
+	"convex-nuxt": "0.1.5",
+	"convex-vue": "^0.1.5",
 
 	"@tanstack/svelte-query": "^5.74.4",
+
+	"@tanstack/vue-query-devtools": "^5.83.0",
+	"@tanstack/vue-query": "^5.83.0",
+
 	"@tanstack/react-query-devtools": "^5.80.5",
 	"@tanstack/react-query": "^5.80.5",
 

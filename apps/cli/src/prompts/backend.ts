@@ -9,9 +9,7 @@ export async function getBackendFrameworkChoice(
 ): Promise<Backend> {
 	if (backendFramework !== undefined) return backendFramework;
 
-	const hasIncompatibleFrontend = frontends?.some(
-		(f) => f === "nuxt" || f === "solid",
-	);
+	const hasIncompatibleFrontend = frontends?.some((f) => f === "solid");
 
 	const backendOptions: Array<{
 		value: Backend;
@@ -59,15 +57,10 @@ export async function getBackendFrameworkChoice(
 		hint: "No backend server",
 	});
 
-	let initialValue = DEFAULT_CONFIG.backend;
-	if (hasIncompatibleFrontend && initialValue === "convex") {
-		initialValue = "hono";
-	}
-
 	const response = await select<Backend>({
 		message: "Select backend",
 		options: backendOptions,
-		initialValue,
+		initialValue: DEFAULT_CONFIG.backend,
 	});
 
 	if (isCancel(response)) {

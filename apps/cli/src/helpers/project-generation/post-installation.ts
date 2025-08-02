@@ -345,5 +345,5 @@ function getBunWebNativeWarning(): string {
 }
 
 function getWorkersDeployInstructions(runCmd?: string): string {
-	return `\n${pc.bold("Deploy frontend to Cloudflare Workers:")}\n${pc.cyan("•")} Deploy: ${`cd apps/web && ${runCmd || "bun run"} deploy`}`;
+	return `\n${pc.bold("Deploy frontend to Cloudflare Workers:")}\n${pc.cyan("•")} Deploy: ${`cd apps/web && ${runCmd} run deploy`}`;
 }

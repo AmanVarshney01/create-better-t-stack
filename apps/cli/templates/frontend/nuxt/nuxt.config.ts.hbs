@@ -2,12 +2,22 @@
 export default defineNuxtConfig({
   compatibilityDate: 'latest',
   devtools: { enabled: true },
-  modules: ['@nuxt/ui'],
+  modules: [
+    '@nuxt/ui'
+    {{#if (eq backend "convex")}},
+    'convex-nuxt'
+    {{/if}}
+  ],
   css: ['~/assets/css/main.css'],
   devServer: {
     port: 3001
   },
   ssr: false,
+  {{#if (eq backend "convex")}}
+  convex: {
+    url: process.env.NUXT_PUBLIC_CONVEX_URL,
+  },
+  {{/if}}
   runtimeConfig: {
     public: {
       serverURL: process.env.NUXT_PUBLIC_SERVER_URL,

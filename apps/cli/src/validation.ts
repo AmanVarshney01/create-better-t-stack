@@ -205,7 +205,7 @@ export function processAndValidateFlags(
 
 		if (providedFlags.has("frontend") && options.frontend) {
 			const incompatibleFrontends = options.frontend.filter(
-				(f) => f === "nuxt" || f === "solid",
+				(f) => f === "solid",
 			);
 			if (incompatibleFrontends.length > 0) {
 				consola.fatal(

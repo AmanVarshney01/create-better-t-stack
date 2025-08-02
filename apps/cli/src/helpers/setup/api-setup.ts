@@ -75,6 +75,8 @@ export async function setupApi(config: ProjectConfig) {
 				if (api === "orpc") {
 					await addPackageDependency({
 						dependencies: [
+							"@tanstack/vue-query",
+							"@tanstack/vue-query-devtools",
 							"@orpc/tanstack-query",
 							"@orpc/client",
 							"@orpc/server",
@@ -219,7 +221,10 @@ export async function setupApi(config: ProjectConfig) {
 					if (hasSvelteWeb) {
 						webDepsToAdd.push("convex-svelte");
 					}
-
+					if (hasNuxtWeb) {
+						webDepsToAdd.push("convex-nuxt");
+						webDepsToAdd.push("convex-vue");
+					}
 					await addPackageDependency({
 						dependencies: webDepsToAdd,
 						projectDir: webDir,

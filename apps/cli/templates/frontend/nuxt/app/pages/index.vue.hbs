@@ -1,8 +1,13 @@
 <script setup lang="ts">
-{{#unless (eq api "none")}}
-const { $orpc } = useNuxtApp()
-import { useQuery } from '@tanstack/vue-query'
-{{/unless}}
+{{#if (eq backend "convex")}}
+import { api } from "@{{ projectName }}/backend/convex/_generated/api";
+import { useConvexQuery } from "convex-vue";
+{{else}}
+  {{#unless (eq api "none")}}
+  const { $orpc } = useNuxtApp()
+  import { useQuery } from '@tanstack/vue-query'
+  {{/unless}}
+{{/if}}
 
 const TITLE_TEXT = `
  ██████╗ ███████╗████████╗████████╗███████╗██████╗
@@ -20,19 +25,34 @@ const TITLE_TEXT = `
     ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
  `;
 
-{{#unless (eq api "none")}}
-const healthCheck = useQuery($orpc.healthCheck.queryOptions())
-{{/unless}}
+{{#if (eq backend "convex")}}
+const healthCheck = useConvexQuery(api.healthCheck.get, {});
+{{else}}
+  {{#unless (eq api "none")}}
+  const healthCheck = useQuery($orpc.healthCheck.queryOptions())
+  {{/unless}}
+{{/if}}
 </script>
 
 <template>
   <div class="container mx-auto max-w-3xl px-4 py-2">
     <pre class="overflow-x-auto font-mono text-sm whitespace-pre-wrap">\{{ TITLE_TEXT }}</pre>
     <div class="grid gap-6 mt-4">
-      {{#unless (eq api "none")}}
       <section class="rounded-lg border p-4">
         <h2 class="mb-2 font-medium">API Status</h2>
         <div class="flex items-center gap-2">
+          {{#if (eq backend "convex")}}
+            <span class="text-sm text-muted-foreground">
+              \{{
+                healthCheck === undefined
+                  ? "Checking..."
+                  : healthCheck.data.value === "OK"
+                    ? "Connected"
+                    : "Error"
+              }}
+            </span>
+          {{else}}
+            {{#unless (eq api "none")}}
             <div class="flex items-center gap-2">
               <div
                 class="w-2 h-2 rounded-full"
@@ -60,9 +80,10 @@ const healthCheck = useQuery($orpc.healthCheck.queryOptions())
                 </template>
               </span>
             </div>
-          </div>
+            {{/unless}}
+          {{/if}}
+        </div>
       </section>
-      {{/unless}}
     </div>
   </div>
 </template>
