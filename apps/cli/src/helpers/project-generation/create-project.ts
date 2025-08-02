@@ -9,6 +9,7 @@ import { setupAuth } from "../setup/auth-setup";
 import { setupBackendDependencies } from "../setup/backend-setup";
 import { setupDatabase } from "../setup/db-setup";
 import { setupExamples } from "../setup/examples-setup";
+import { setupFrontendDependencies } from "../setup/frontend-setup";
 import {
 	generateCloudflareWorkerTypes,
 	setupRuntime,
@@ -42,6 +43,7 @@ export async function createProject(options: ProjectConfig) {
 
 		await copyBaseTemplate(projectDir, options);
 		await setupFrontendTemplates(projectDir, options);
+		await setupFrontendDependencies(options);
 		await setupBackendFramework(projectDir, options);
 		if (!isConvex) {
 			await setupDbOrmTemplates(projectDir, options);

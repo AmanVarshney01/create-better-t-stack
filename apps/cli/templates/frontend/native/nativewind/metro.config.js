@@ -17,6 +17,9 @@ config.resolver.unstable_enablePackageExports = true;
 
 config.resolver.disableHierarchicalLookup = true;
 
+// Ensure local node_modules takes precedence
+config.resolver.resolverMainFields = ["react-native", "browser", "main"];
+
 module.exports = config;
 
 /**

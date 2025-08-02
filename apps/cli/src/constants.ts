@@ -123,6 +123,11 @@ export const dependencyVersionMap = {
 	"@opennextjs/cloudflare": "^1.3.0",
 	"nitro-cloudflare-dev": "^0.2.2",
 	"@sveltejs/adapter-cloudflare": "^7.0.4",
+
+	// TailwindCSS and related dependencies
+	autoprefixer: "^10.4.21",
+	postcss: "^8.5.6",
+	tailwindcss: "^3.4.17",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;
