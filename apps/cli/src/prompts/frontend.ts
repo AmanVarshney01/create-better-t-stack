@@ -75,7 +75,7 @@ export async function getFrontendChoice(
 
 		const webOptions = allWebOptions.filter((option) => {
 			if (backend === "convex") {
-				return option.value !== "nuxt" && option.value !== "solid";
+				return option.value !== "solid";
 			}
 			return true;
 		});
