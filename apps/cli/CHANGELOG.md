@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.29.0
+
+### Minor Changes
+
+- 430fa41: Add Nuxt + Convex support
+
 ## 2.28.5
 
 ### Patch Changes
