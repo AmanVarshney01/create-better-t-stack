@@ -63,31 +63,55 @@ export async function setupTauri(config: ProjectConfig) {
 						? "../build/client"
 						: "../dist";
 
-		const tauriArgs = [
+		const isWindows = process.platform === "win32";
+
+		const appName = path.basename(projectDir);
+
+		const commonArgs = [
 			"init",
-			`--app-name=${path.basename(projectDir)}`,
-			`--window-title=${path.basename(projectDir)}`,
+			`--app-name=${appName}`,
+			`--window-title=${appName}`,
 			`--frontend-dist=${frontendDist}`,
 			`--dev-url=${devUrl}`,
-			`--before-dev-command=\"${packageManager} run dev\"`,
-			`--before-build-command=\"${packageManager} run build\"`,
 		];
-		const tauriArgsString = tauriArgs.join(" ");
 
-		const commandWithArgs = `@tauri-apps/cli@latest ${tauriArgsString}`;
+		if (isWindows && packageManager === "bun") {
+			const baseCommand = getPackageExecutionCommand(
+				packageManager,
+				"@tauri-apps/cli@latest",
+			);
+			const [executable, ...baseArgs] = baseCommand.split(" ");
 
-		const tauriInitCommand = getPackageExecutionCommand(
-			packageManager,
-			commandWithArgs,
-		);
+			const tauriArgs = [
+				...baseArgs,
+				...commonArgs,
+				`--before-dev-command="${packageManager} run dev"`,
+				`--before-build-command="${packageManager} run build"`,
+			];
 
-		await execa(tauriInitCommand, {
-			cwd: clientPackageDir,
-			env: {
-				CI: "true",
-			},
-			shell: true,
-		});
+			await execa(executable, tauriArgs, {
+				cwd: clientPackageDir,
+				env: { CI: "true" },
+			});
+		} else {
+			const tauriArgs = [
+				...commonArgs,
+				`--before-dev-command=\"${packageManager} run dev\"`,
+				`--before-build-command=\"${packageManager} run build\"`,
+			];
+
+			const commandWithArgs = `@tauri-apps/cli@latest ${tauriArgs.join(" ")}`;
+			const tauriInitCommand = getPackageExecutionCommand(
+				packageManager,
+				commandWithArgs,
+			);
+
+			await execa(tauriInitCommand, {
+				cwd: clientPackageDir,
+				env: { CI: "true" },
+				shell: true,
+			});
+		}
 
 		s.stop("Tauri desktop app support configured successfully!");
 	} catch (error) {
