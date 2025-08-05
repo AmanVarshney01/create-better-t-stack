@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.29.2
+
+### Patch Changes
+
+- a188d51: Switched analytics to use fetch instead of posthog-node
+
 ## 2.29.1
 
 ### Patch Changes
