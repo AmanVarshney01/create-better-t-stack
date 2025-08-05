@@ -1,5 +1,12 @@
 # create-better-t-stack
 
+## 2.29.1
+
+### Patch Changes
+
+- b06fa74: update dependencies
+- ad1d28f: Comment isolated linker in bunfig.toml when native-nativewind is selected
+
 ## 2.29.0
 
 ### Minor Changes
