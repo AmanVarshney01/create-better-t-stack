@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.29.3
+
+### Patch Changes
+
+- a0c6acb: add @types/node in server when workers runtime
+
 ## 2.29.2
 
 ### Patch Changes
