@@ -140,13 +140,4 @@ export const ADDON_COMPATIBILITY: Record<Addons, readonly Frontend[]> = {
 	none: [],
 } as const;
 
-// TODO: need to refactor this
-export const WEB_FRAMEWORKS: readonly Frontend[] = [
-	"tanstack-router",
-	"react-router",
-	"tanstack-start",
-	"next",
-	"nuxt",
-	"svelte",
-	"solid",
-];
+// WEB_FRAMEWORKS moved to utils/compatibility for centralized use

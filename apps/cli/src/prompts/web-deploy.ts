@@ -1,7 +1,8 @@
 import { cancel, isCancel, select } from "@clack/prompts";
 import pc from "picocolors";
-import { DEFAULT_CONFIG, WEB_FRAMEWORKS } from "../constants";
+import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Frontend, Runtime, WebDeploy } from "../types";
+import { WEB_FRAMEWORKS } from "../utils/compatibility";
 
 function hasWebFrontend(frontends: Frontend[]): boolean {
 	return frontends.some((f) => WEB_FRAMEWORKS.includes(f));

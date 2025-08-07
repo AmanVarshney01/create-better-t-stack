@@ -2,6 +2,7 @@ import { cancel, isCancel, multiselect, select } from "@clack/prompts";
 import pc from "picocolors";
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Frontend } from "../types";
+import { isFrontendAllowedWithBackend } from "../utils/compatibility-rules";
 
 export async function getFrontendChoice(
 	frontendOptions?: Frontend[],
@@ -73,12 +74,9 @@ export async function getFrontendChoice(
 			},
 		];
 
-		const webOptions = allWebOptions.filter((option) => {
-			if (backend === "convex") {
-				return option.value !== "solid";
-			}
-			return true;
-		});
+		const webOptions = allWebOptions.filter((option) =>
+			isFrontendAllowedWithBackend(option.value, backend),
+		);
 
 		const webFramework = await select<Frontend>({
 			message: "Choose web",

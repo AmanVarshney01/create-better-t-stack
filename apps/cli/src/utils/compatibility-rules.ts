@@ -1,0 +1,315 @@
+import { consola } from "consola";
+import type {
+	Addons,
+	API,
+	CLIInput,
+	Frontend,
+	ProjectConfig,
+	WebDeploy,
+} from "../types";
+import { validateAddonCompatibility } from "./addon-compatibility";
+import { WEB_FRAMEWORKS } from "./compatibility";
+
+export function isWebFrontend(value: Frontend): boolean {
+	return WEB_FRAMEWORKS.includes(value);
+}
+
+export function splitFrontends(values: Frontend[] = []): {
+	web: Frontend[];
+	native: Frontend[];
+} {
+	const web = values.filter((f) => isWebFrontend(f));
+	const native = values.filter(
+		(f) => f === "native-nativewind" || f === "native-unistyles",
+	);
+	return { web, native };
+}
+
+export function ensureSingleWebAndNative(frontends: Frontend[]) {
+	const { web, native } = splitFrontends(frontends);
+	if (web.length > 1) {
+		consola.fatal(
+			"Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, nuxt, svelte, solid",
+		);
+		process.exit(1);
+	}
+	if (native.length > 1) {
+		consola.fatal(
+			"Cannot select multiple native frameworks. Choose only one of: native-nativewind, native-unistyles",
+		);
+		process.exit(1);
+	}
+}
+
+export function validateWorkersCompatibility(
+	providedFlags: Set<string>,
+	options: CLIInput,
+	config: Partial<ProjectConfig>,
+) {
+	if (
+		providedFlags.has("runtime") &&
+		options.runtime === "workers" &&
+		config.backend &&
+		config.backend !== "hono"
+	) {
+		consola.fatal(
+			`Cloudflare Workers runtime (--runtime workers) is only supported with Hono backend (--backend hono). Current backend: ${config.backend}. Please use '--backend hono' or choose a different runtime.`,
+		);
+		process.exit(1);
+	}
+
+	if (
+		providedFlags.has("backend") &&
+		config.backend &&
+		config.backend !== "hono" &&
+		config.runtime === "workers"
+	) {
+		consola.fatal(
+			`Backend '${config.backend}' is not compatible with Cloudflare Workers runtime. Cloudflare Workers runtime is only supported with Hono backend. Please use '--backend hono' or choose a different runtime.`,
+		);
+		process.exit(1);
+	}
+
+	if (
+		providedFlags.has("runtime") &&
+		options.runtime === "workers" &&
+		config.orm &&
+		config.orm !== "drizzle" &&
+		config.orm !== "none"
+	) {
+		consola.fatal(
+			`Cloudflare Workers runtime (--runtime workers) is only supported with Drizzle ORM (--orm drizzle) or no ORM (--orm none). Current ORM: ${config.orm}. Please use '--orm drizzle', '--orm none', or choose a different runtime.`,
+		);
+		process.exit(1);
+	}
+
+	if (
+		providedFlags.has("orm") &&
+		config.orm &&
+		config.orm !== "drizzle" &&
+		config.orm !== "none" &&
+		config.runtime === "workers"
+	) {
+		consola.fatal(
+			`ORM '${config.orm}' is not compatible with Cloudflare Workers runtime. Cloudflare Workers runtime is only supported with Drizzle ORM or no ORM. Please use '--orm drizzle', '--orm none', or choose a different runtime.`,
+		);
+		process.exit(1);
+	}
+
+	if (
+		providedFlags.has("runtime") &&
+		options.runtime === "workers" &&
+		config.database === "mongodb"
+	) {
+		consola.fatal(
+			"Cloudflare Workers runtime (--runtime workers) is not compatible with MongoDB database. MongoDB requires Prisma or Mongoose ORM, but Workers runtime only supports Drizzle ORM. Please use a different database or runtime.",
+		);
+		process.exit(1);
+	}
+
+	if (
+		providedFlags.has("runtime") &&
+		options.runtime === "workers" &&
+		config.dbSetup === "docker"
+	) {
+		consola.fatal(
+			"Cloudflare Workers runtime (--runtime workers) is not compatible with Docker setup. Workers runtime uses serverless databases (D1) and doesn't support local Docker containers. Please use '--db-setup d1' for SQLite or choose a different runtime.",
+		);
+		process.exit(1);
+	}
+
+	if (
+		providedFlags.has("database") &&
+		config.database === "mongodb" &&
+		config.runtime === "workers"
+	) {
+		consola.fatal(
+			"MongoDB database is not compatible with Cloudflare Workers runtime. MongoDB requires Prisma or Mongoose ORM, but Workers runtime only supports Drizzle ORM. Please use a different database or runtime.",
+		);
+		process.exit(1);
+	}
+
+	if (
+		providedFlags.has("db-setup") &&
+		options.dbSetup === "docker" &&
+		config.runtime === "workers"
+	) {
+		consola.fatal(
+			"Docker setup (--db-setup docker) is not compatible with Cloudflare Workers runtime. Workers runtime uses serverless databases (D1) and doesn't support local Docker containers. Please use '--db-setup d1' for SQLite or choose a different runtime.",
+		);
+		process.exit(1);
+	}
+}
+
+export function coerceBackendPresets(config: Partial<ProjectConfig>) {
+	if (config.backend === "convex") {
+		config.auth = false;
+		config.database = "none";
+		config.orm = "none";
+		config.api = "none";
+		config.runtime = "none";
+		config.dbSetup = "none";
+		config.examples = ["todo"] as ProjectConfig["examples"];
+	}
+	if (config.backend === "none") {
+		config.auth = false;
+		config.database = "none";
+		config.orm = "none";
+		config.api = "none";
+		config.runtime = "none";
+		config.dbSetup = "none";
+		config.examples = [] as ProjectConfig["examples"];
+	}
+}
+
+export function incompatibleFlagsForBackend(
+	backend: ProjectConfig["backend"] | undefined,
+	providedFlags: Set<string>,
+	options: CLIInput,
+): string[] {
+	const list: string[] = [];
+	if (backend === "convex") {
+		if (providedFlags.has("auth") && options.auth === true) list.push("--auth");
+		if (providedFlags.has("database") && options.database !== "none")
+			list.push(`--database ${options.database}`);
+		if (providedFlags.has("orm") && options.orm !== "none")
+			list.push(`--orm ${options.orm}`);
+		if (providedFlags.has("api") && options.api !== "none")
+			list.push(`--api ${options.api}`);
+		if (providedFlags.has("runtime") && options.runtime !== "none")
+			list.push(`--runtime ${options.runtime}`);
+		if (providedFlags.has("dbSetup") && options.dbSetup !== "none")
+			list.push(`--db-setup ${options.dbSetup}`);
+	}
+	if (backend === "none") {
+		if (providedFlags.has("auth") && options.auth === true) list.push("--auth");
+		if (providedFlags.has("database") && options.database !== "none")
+			list.push(`--database ${options.database}`);
+		if (providedFlags.has("orm") && options.orm !== "none")
+			list.push(`--orm ${options.orm}`);
+		if (providedFlags.has("api") && options.api !== "none")
+			list.push(`--api ${options.api}`);
+		if (providedFlags.has("runtime") && options.runtime !== "none")
+			list.push(`--runtime ${options.runtime}`);
+		if (providedFlags.has("dbSetup") && options.dbSetup !== "none")
+			list.push(`--db-setup ${options.dbSetup}`);
+		if (providedFlags.has("examples") && options.examples) {
+			const hasNonNoneExamples = options.examples.some((ex) => ex !== "none");
+			if (hasNonNoneExamples) list.push("--examples");
+		}
+	}
+	return list;
+}
+
+export function validateApiFrontendCompatibility(
+	api: API | undefined,
+	frontends: Frontend[] = [],
+) {
+	const includesNuxt = frontends.includes("nuxt");
+	const includesSvelte = frontends.includes("svelte");
+	const includesSolid = frontends.includes("solid");
+	if ((includesNuxt || includesSvelte || includesSolid) && api === "trpc") {
+		consola.fatal(
+			`tRPC API is not supported with '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"}' frontend. Please use --api orpc or --api none or remove '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"}' from --frontend.`,
+		);
+		process.exit(1);
+	}
+}
+
+export function isFrontendAllowedWithBackend(
+	frontend: Frontend,
+	backend?: ProjectConfig["backend"],
+) {
+	if (backend === "convex" && frontend === "solid") return false;
+	return true;
+}
+
+export function allowedApisForFrontends(frontends: Frontend[] = []): API[] {
+	const includesNuxt = frontends.includes("nuxt");
+	const includesSvelte = frontends.includes("svelte");
+	const includesSolid = frontends.includes("solid");
+	const base: API[] = ["trpc", "orpc", "none"];
+	if (includesNuxt || includesSvelte || includesSolid) {
+		return ["orpc", "none"];
+	}
+	return base;
+}
+
+export function isExampleTodoAllowed(
+	backend?: ProjectConfig["backend"],
+	database?: ProjectConfig["database"],
+) {
+	return !(backend !== "convex" && backend !== "none" && database === "none");
+}
+
+export function isExampleAIAllowed(
+	backend?: ProjectConfig["backend"],
+	frontends: Frontend[] = [],
+) {
+	const includesSolid = frontends.includes("solid");
+	if (backend === "elysia") return false;
+	if (includesSolid) return false;
+	return true;
+}
+
+export function validateWebDeployRequiresWebFrontend(
+	webDeploy: WebDeploy | undefined,
+	hasWebFrontendFlag: boolean,
+) {
+	if (webDeploy && webDeploy !== "none" && !hasWebFrontendFlag) {
+		consola.fatal(
+			"'--web-deploy' requires a web frontend. Please select a web frontend or set '--web-deploy none'.",
+		);
+		process.exit(1);
+	}
+}
+
+export function validateAddonsAgainstFrontends(
+	addons: Addons[] = [],
+	frontends: Frontend[] = [],
+) {
+	for (const addon of addons) {
+		if (addon === "none") continue;
+		const { isCompatible, reason } = validateAddonCompatibility(
+			addon,
+			frontends,
+		);
+		if (!isCompatible) {
+			consola.fatal(`Incompatible addon/frontend combination: ${reason}`);
+			process.exit(1);
+		}
+	}
+}
+
+export function validateExamplesCompatibility(
+	examples: string[] | undefined,
+	backend: ProjectConfig["backend"] | undefined,
+	database: ProjectConfig["database"] | undefined,
+	frontend?: Frontend[],
+) {
+	const examplesArr = examples ?? [];
+	if (examplesArr.length === 0 || examplesArr.includes("none")) return;
+	if (
+		examplesArr.includes("todo") &&
+		backend !== "convex" &&
+		backend !== "none" &&
+		database === "none"
+	) {
+		consola.fatal(
+			"The 'todo' example requires a database if a backend (other than Convex) is present. Cannot use --examples todo when database is 'none' and a backend is selected.",
+		);
+		process.exit(1);
+	}
+	if (examplesArr.includes("ai") && backend === "elysia") {
+		consola.fatal(
+			"The 'ai' example is not compatible with the Elysia backend.",
+		);
+		process.exit(1);
+	}
+	if (examplesArr.includes("ai") && (frontend ?? []).includes("solid")) {
+		consola.fatal(
+			"The 'ai' example is not compatible with the Solid frontend.",
+		);
+		process.exit(1);
+	}
+}

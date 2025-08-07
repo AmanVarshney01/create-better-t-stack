@@ -2,6 +2,10 @@ import { cancel, isCancel, multiselect } from "@clack/prompts";
 import pc from "picocolors";
 import { DEFAULT_CONFIG } from "../constants";
 import type { API, Backend, Database, Examples, Frontend } from "../types";
+import {
+	isExampleAIAllowed,
+	isExampleTodoAllowed,
+} from "../utils/compatibility-rules";
 
 export async function getExamplesChoice(
 	examples?: Examples[],
@@ -30,15 +34,17 @@ export async function getExamplesChoice(
 	if (noFrontendSelected) return [];
 
 	let response: Examples[] | symbol = [];
-	const options: { value: Examples; label: string; hint: string }[] = [
-		{
+	const options: { value: Examples; label: string; hint: string }[] = [];
+
+	if (isExampleTodoAllowed(backend, database)) {
+		options.push({
 			value: "todo" as const,
 			label: "Todo App",
 			hint: "A simple CRUD example app",
-		},
-	];
+		});
+	}
 
-	if (backend !== "elysia" && !frontends?.includes("solid")) {
+	if (isExampleAIAllowed(backend, frontends ?? [])) {
 		options.push({
 			value: "ai" as const,
 			label: "AI Chat",

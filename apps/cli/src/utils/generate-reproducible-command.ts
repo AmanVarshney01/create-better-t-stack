@@ -37,12 +37,12 @@ export function generateReproducibleCommand(config: ProjectConfig): string {
 	let baseCommand = "";
 	const pkgManager = config.packageManager;
 
-	if (pkgManager === "npm") {
-		baseCommand = "npx create-better-t-stack@latest";
+	if (pkgManager === "bun") {
+		baseCommand = "bun create better-t-stack@latest";
 	} else if (pkgManager === "pnpm") {
 		baseCommand = "pnpm create better-t-stack@latest";
-	} else if (pkgManager === "bun") {
-		baseCommand = "bun create better-t-stack@latest";
+	} else if (pkgManager === "npm") {
+		baseCommand = "npx create-better-t-stack@latest";
 	}
 
 	const projectPathArg = config.relativePath ? ` ${config.relativePath}` : "";
