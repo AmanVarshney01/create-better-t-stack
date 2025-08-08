@@ -25,27 +25,30 @@ pnpm create better-t-stack@latest
 
 ## Features
 
-- **Zero-config setup** with interactive CLI wizard
-- **End-to-end type safety** from database to frontend via tRPC
-- **Modern stack** with React, Hono/Elysia, and TanStack libraries
-- **Multi-platform** supporting web, mobile (Expo), and desktop applications
-- **Database flexibility** with SQLite (Turso) or PostgreSQL options
-- **ORM choice** between Drizzle or Prisma
-- **Built-in authentication** with Better-Auth
-- **Optional PWA support** for installable web applications
-- **Desktop app capabilities** with Tauri integration
-- **Monorepo architecture** powered by Turborepo
+- Frontend: React (TanStack Router, React Router, TanStack Start), Next.js, Nuxt, Svelte, Solid, React Native (NativeWind/Unistyles), or none
+- Backend: Hono, Express, Fastify, Elysia, Next API Routes, Convex, or none
+- API: tRPC or oRPC (or none)
+- Runtime: Bun, Node.js, or Cloudflare Workers
+- Databases: SQLite, PostgreSQL, MySQL, MongoDB (or none)
+- ORMs: Drizzle, Prisma, Mongoose (or none)
+- Auth: Better-Auth (optional)
+- Addons: Turborepo, PWA, Tauri, Biome, Husky, Starlight, Fumadocs, Ultracite, Oxlint
+- Examples: Todo, AI
+- DB Setup: Turso, Neon, Supabase, Prisma PostgreSQL, MongoDB Atlas, Cloudflare D1, Docker
+- Web Deploy: Cloudflare Workers
+
+Type safety end-to-end, clean monorepo layout, and zero‑lock‑in: you choose only what you need.
 
 ## Repository Structure
 
 This repository is organized as a monorepo containing:
 
-- **CLI**: [`create-better-t-stack`](apps/cli) - The scaffolding CLI tool
-- **Documentation**: [`web`](apps/web) - Official website and documentation
+- **CLI**: [`apps/cli`](apps/cli) - The scaffolding CLI tool
+- **Documentation**: [`apps/web`](apps/web) - Official website and documentation
 
 ## Documentation
 
-Visit [better-t-stack.dev](https://better-t-stack.dev) for full documentation, guides, and examples.
+Visit [better-t-stack.dev](https://better-t-stack.dev) for full documentation, guides, and examples. You can also use the visual Stack Builder at `https://better-t-stack.dev/new` to generate a command for your stack.
 
 ## Development
 
@@ -65,7 +68,10 @@ bun dev:web
 
 ## Want to contribute?
 
-Just fork the repository and submit a pull request!
+Please read the Contribution Guide first and open an issue before starting new features to ensure alignment with project goals.
+
+- Docs: [`Contributing`](/apps/web/content/docs/contributing.mdx)
+- Repo guide: [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md)
 
 ## Star History
 
