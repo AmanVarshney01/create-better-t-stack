@@ -5,93 +5,244 @@ description: Create your first Better-T-Stack project in minutes
 
 ## Philosophy
 
-- With Better T Stack, you freely choose only the parts you want; nothing extra is added.
-- Pick your frontend, backend, API layer, database, ORM, auth, addons — or skip any of them. Compatibility is enforced.
-- No lock‑in: it’s a generator, not a framework fork.
+- Roll your own stack: pick only what you need, nothing extra.
+- Minimal templates: bare-bones scaffolds with zero bloat.
+- Latest dependencies: always current and stable by default.
+- Free and open source: forever.
 
 ## Get Started
+
+### CLI (prompts)
+
+<Tabs items={['bun', 'pnpm', 'npm']}>
+  <Tab value="bun">
+    ```bash
+    bun create better-t-stack@latest
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npx create-better-t-stack@latest
+    ```
+  </Tab>
+</Tabs>
+
+Follow the interactive prompts to choose your frontend, backend, database, ORM, API layer, and addons.
+
+Skip prompts and use the default stack:
+
+<Tabs items={['bun', 'pnpm', 'npm']}>
+  <Tab value="bun">
+    ```bash
+    bun create better-t-stack@latest my-app --yes
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest my-app --yes
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npx create-better-t-stack@latest my-app --yes
+    ```
+  </Tab>
+</Tabs>
+
+ 
 
 ### Stack Builder (UI)
 
 - Visit [/new](/new) to pick your stack and copy the generated command
 - Or open it via:
 
-```bash
-bun create better-t-stack@latest builder
-```
-
-### CLI (prompts)
-
-```bash
-bun create better-t-stack@latest
-```
-
-Follow the interactive prompts to choose your frontend, backend, database, ORM, API layer, and addons.
-
-Skip prompts and use the default stack:
-
-```bash
-bun create better-t-stack@latest my-app --yes
-```
-
-Prefer a visual flow? Use the Stack Builder at [/new](/new) to pick your stack and copy the generated command. You can also open it via:
-
-```bash
-bun create better-t-stack@latest builder
-```
+<Tabs items={['bun', 'pnpm', 'npm']}>
+  <Tab value="bun">
+    ```bash
+    bun create better-t-stack@latest builder
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest builder
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npx create-better-t-stack@latest builder
+    ```
+  </Tab>
+</Tabs>
 
 ## Common Setups
 
 ### Default Stack
 
-```bash
-bun create better-t-stack@latest my-webapp \
-  --frontend tanstack-router \
-  --backend hono \
-  --database sqlite \
-  --orm drizzle \
-  --auth \
-  --addons turborepo
-```
+<Tabs items={['bun', 'pnpm', 'npm']}>
+  <Tab value="bun">
+    ```bash
+    bun create better-t-stack@latest my-webapp \
+      --frontend tanstack-router \
+      --backend hono \
+      --database sqlite \
+      --orm drizzle \
+      --auth \
+      --addons turborepo
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest my-webapp \
+      --frontend tanstack-router \
+      --backend hono \
+      --database sqlite \
+      --orm drizzle \
+      --auth \
+      --addons turborepo
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npx create-better-t-stack@latest my-webapp \
+      --frontend tanstack-router \
+      --backend hono \
+      --database sqlite \
+      --orm drizzle \
+      --auth \
+      --addons turborepo
+    ```
+  </Tab>
+</Tabs>
 
 ### Convex + React
 
-```bash
-bun create better-t-stack@latest my-convex-app \
-  --frontend tanstack-router \
-  --backend convex
-```
+<Tabs items={['bun', 'pnpm', 'npm']}>
+  <Tab value="bun">
+    ```bash
+    bun create better-t-stack@latest my-convex-app \
+      --frontend tanstack-router \
+      --backend convex
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest my-convex-app \
+      --frontend tanstack-router \
+      --backend convex
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npx create-better-t-stack@latest my-convex-app \
+      --frontend tanstack-router \
+      --backend convex
+    ```
+  </Tab>
+</Tabs>
 
 ### API Only
 
-```bash
-bun create better-t-stack@latest my-api \
-  --frontend none \
-  --backend fastify \
-  --runtime node \
-  --database postgres \
-  --orm prisma \
-  --api trpc
-```
+<Tabs items={['bun', 'pnpm', 'npm']}>
+  <Tab value="bun">
+    ```bash
+    bun create better-t-stack@latest my-api \
+      --frontend none \
+      --backend fastify \
+      --runtime node \
+      --database postgres \
+      --orm prisma \
+      --api trpc
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest my-api \
+      --frontend none \
+      --backend fastify \
+      --runtime node \
+      --database postgres \
+      --orm prisma \
+      --api trpc
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npx create-better-t-stack@latest my-api \
+      --frontend none \
+      --backend fastify \
+      --runtime node \
+      --database postgres \
+      --orm prisma \
+      --api trpc
+    ```
+  </Tab>
+</Tabs>
 
 ### Mobile App (Expo)
 
-```bash
-bun create better-t-stack@latest my-native \
-  --frontend native-nativewind \
-  --backend hono \
-  --database sqlite \
-  --orm drizzle \
-  --auth
-```
+<Tabs items={['bun', 'pnpm', 'npm']}>
+  <Tab value="bun">
+    ```bash
+    bun create better-t-stack@latest my-native \
+      --frontend native-nativewind \
+      --backend hono \
+      --database sqlite \
+      --orm drizzle \
+      --auth
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest my-native \
+      --frontend native-nativewind \
+      --backend hono \
+      --database sqlite \
+      --orm drizzle \
+      --auth
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npx create-better-t-stack@latest my-native \
+      --frontend native-nativewind \
+      --backend hono \
+      --database sqlite \
+      --orm drizzle \
+      --auth
+    ```
+  </Tab>
+</Tabs>
 
 ### Empty Monorepo
 
-```bash
-bun create better-t-stack@latest my-workspace \
-  --frontend none \
-  --backend none
-```
+<Tabs items={['bun', 'pnpm', 'npm']}>
+  <Tab value="bun">
+    ```bash
+    bun create better-t-stack@latest my-workspace \
+      --frontend none \
+      --backend none
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest my-workspace \
+      --frontend none \
+      --backend none
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npx create-better-t-stack@latest my-workspace \
+      --frontend none \
+      --backend none
+    ```
+  </Tab>
+</Tabs>
 
 ## Flags Cheat Sheet
 

@@ -10,17 +10,24 @@ A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with 
 
 ![demo](https://cdn.jsdelivr.net/gh/amanvarshney01/create-better-t-stack/demo.gif)
 
+## Philosophy
+
+- Roll your own stack: you pick only the parts you need, nothing extra.
+- Minimal templates: bare-bones scaffolds with zero bloat.
+- Latest dependencies: always use current, stable versions by default.
+- Free and open source: forever.
+
 ## Quick Start
 
 ```bash
-# Using npm
-npx create-better-t-stack@latest
-
-# Using bun
+# Using bun (recommended)
 bun create better-t-stack@latest
 
 # Using pnpm
 pnpm create better-t-stack@latest
+
+# Using npm
+npx create-better-t-stack@latest
 ```
 
 ## Features
@@ -37,7 +44,7 @@ pnpm create better-t-stack@latest
 - DB Setup: Turso, Neon, Supabase, Prisma PostgreSQL, MongoDB Atlas, Cloudflare D1, Docker
 - Web Deploy: Cloudflare Workers
 
-Type safety end-to-end, clean monorepo layout, and zero‑lock‑in: you choose only what you need.
+Type safety end-to-end, clean monorepo layout, and zero lock-in: you choose only what you need.
 
 ## Repository Structure
 

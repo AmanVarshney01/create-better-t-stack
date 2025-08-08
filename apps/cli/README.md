@@ -15,14 +15,14 @@ A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with 
 Run without installing globally:
 
 ```bash
-# Using npm
-npx create-better-t-stack@latest
-
-# Using bun
+# Using bun (recommended)
 bun create better-t-stack@latest
 
 # Using pnpm
 pnpm create better-t-stack@latest
+
+# Using npm
+npx create-better-t-stack@latest
 ```
 
 Follow the prompts to configure your project or use the `--yes` flag for defaults.
@@ -58,14 +58,15 @@ Options:
   --auth                          Include authentication
   --no-auth                       Exclude authentication
   --frontend <types...>           Frontend types (tanstack-router, react-router, tanstack-start, next, nuxt, svelte, solid, native-nativewind, native-unistyles, none)
-  --addons <types...>             Additional addons (pwa, tauri, starlight, biome, husky, turborepo, none)
+  --addons <types...>             Additional addons (pwa, tauri, starlight, biome, husky, turborepo, fumadocs, ultracite, oxlint, none)
   --examples <types...>           Examples to include (todo, ai, none)
   --git                           Initialize git repository
   --no-git                        Skip git initialization
   --package-manager <pm>          Package manager (npm, pnpm, bun)
   --install                       Install dependencies
   --no-install                    Skip installing dependencies
-  --db-setup <setup>              Database setup (turso, d1, neon, supabase, prisma-postgres, mongodb-atlas, none)
+  --db-setup <setup>              Database setup (turso, d1, neon, supabase, prisma-postgres, mongodb-atlas, docker, none)
+  --web-deploy <setup>            Web deployment (workers, none)
   --backend <framework>           Backend framework (hono, express, elysia, next, convex, fastify, none)
   --runtime <runtime>             Runtime (bun, node, workers, none)
   --api <type>                    API type (trpc, orpc, none)
@@ -84,7 +85,7 @@ This CLI collects anonymous usage data to help improve the tool. The data collec
 
 ### Disabling Telemetry
 
-You can disable telemetry by setting the `BTS_TELEMETRY` environment variable:
+You can disable telemetry by setting the `BTS_TELEMETRY_DISABLED` environment variable:
 
 ```bash
 # Disable telemetry for a single run
@@ -93,10 +94,6 @@ BTS_TELEMETRY_DISABLED=1 npx create-better-t-stack my-app
 # Disable telemetry globally in your shell profile (.bashrc, .zshrc, etc.)
 export BTS_TELEMETRY_DISABLED=1
 ```
-
-### Development
-
-During development, telemetry is automatically disabled when `NODE_ENV=development`.
 
 ## Examples
 
@@ -118,10 +115,10 @@ Create a project with Elysia backend and Node.js runtime:
 npx create-better-t-stack my-app --backend elysia --runtime node
 ```
 
-Create a project with multiple frontend options:
+Create a project with multiple frontend options (one web + one native):
 
 ```bash
-npx create-better-t-stack my-app --frontend tanstack-router native
+npx create-better-t-stack my-app --frontend tanstack-router native-nativewind
 ```
 
 Create a project with examples:

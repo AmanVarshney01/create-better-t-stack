@@ -23,10 +23,26 @@ Not collected:
 
 Telemetry is enabled by default. To disable:
 
-```bash
-# Disable for a single run
-BTS_TELEMETRY_DISABLED=1 bun create better-t-stack@latest
-```
+<Tabs items={['bun', 'pnpm', 'npm']}>
+  <Tab value="bun">
+    ```bash
+    # Disable for a single run
+    BTS_TELEMETRY_DISABLED=1 bun create better-t-stack@latest
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    # Disable for a single run
+    BTS_TELEMETRY_DISABLED=1 pnpm create better-t-stack@latest
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    # Disable for a single run
+    BTS_TELEMETRY_DISABLED=1 npx create-better-t-stack@latest
+    ```
+  </Tab>
+</Tabs>
 
 Add `export BTS_TELEMETRY_DISABLED=1` to your shell profile to make it permanent.
 

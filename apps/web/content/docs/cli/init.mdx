@@ -31,5 +31,121 @@ You can pass `.` to use the current directory.
 bun create better-t-stack@latest my-app --yes
 ```
 
-See also: [Compatibility](/docs/compatibility)
+## Flags Reference
+
+### General
+
+- `--yes, -y` Skip all prompts and use defaults
+- `--help, -h` Show help
+- `--version, -V` Show CLI version
+
+### Frontend
+
+- `--frontend` Choose one web frontend and optionally one native frontend
+  - Web: `tanstack-router`, `react-router`, `tanstack-start`, `next`, `nuxt`, `svelte`, `solid`
+  - Native: `native-nativewind`, `native-unistyles`
+  - Special: `none`
+  - Notes: At most one from each group; do not combine `none` with others
+
+### Backend
+
+- `--backend` One of: `hono`, `express`, `fastify`, `next`, `elysia`, `convex`, `none`
+
+### Runtime
+
+- `--runtime` One of: `bun`, `node`, `workers`, `none`
+  - `workers` only with `--backend hono`
+  - `none` only with `--backend convex` or `--backend none`
+
+### Database
+
+- `--database` One of: `sqlite`, `postgres`, `mysql`, `mongodb`, `none`
+
+### ORM
+
+- `--orm` One of: `drizzle`, `prisma`, `mongoose`, `none`
+  - `mongoose` requires `--database mongodb`
+  - `drizzle` is not compatible with `--database mongodb`
+
+### API
+
+- `--api` One of: `trpc`, `orpc`, `none`
+  - Use `orpc` with `nuxt`, `svelte`, or `solid` (tRPC not supported there)
+
+### Authentication
+
+- `--auth` Enable auth
+- `--no-auth` Disable auth
+  - Auth requires a non-`none` database
+
+### Addons
+
+- `--addons` Multiple values: `pwa`, `tauri`, `starlight`, `biome`, `husky`, `turborepo`, `fumadocs`, `ultracite`, `oxlint`, `none`
+  - Do not combine `none` with other values
+
+### Examples
+
+- `--examples` Multiple values: `todo`, `ai`, `none`
+  - Do not combine `none` with other values
+
+### Database setup
+
+- `--db-setup` One of: `turso`, `neon`, `prisma-postgres`, `mongodb-atlas`, `supabase`, `d1`, `docker`, `none`
+  - `turso` → requires `--database sqlite`
+  - `neon`, `prisma-postgres`, `supabase` → require `--database postgres`
+  - `mongodb-atlas` → requires `--database mongodb`
+  - `d1` → requires `--database sqlite` and `--runtime workers`
+  - `docker` → not compatible with `--database sqlite` or `--runtime workers`
+
+### Web deployment
+
+- `--web-deploy` One of: `workers`, `none`
+  - Requires selecting a web frontend
+
+### Project setup
+
+- `--git` / `--no-git` Initialize git repository
+- `--install` / `--no-install` Install dependencies
+- `--package-manager` One of: `bun`, `pnpm`, `npm`
+
+## Examples
+
+```bash
+# Full-stack web app
+bun create better-t-stack@latest my-webapp \
+  --frontend tanstack-router \
+  --backend hono \
+  --runtime bun \
+  --database postgres \
+  --orm drizzle \
+  --api trpc \
+  --auth \
+  --db-setup neon \
+  --addons pwa turborepo \
+  --examples todo
+```
+
+```bash
+# Cloudflare Workers
+bun create better-t-stack@latest my-workers \
+  --frontend tanstack-router \
+  --backend hono \
+  --runtime workers \
+  --database sqlite \
+  --orm drizzle \
+  --db-setup d1 \
+  --web-deploy workers
+```
+
+## Compatibility notes
+
+- Workers runtime only with `--backend hono` and `--orm drizzle` or `--orm none`
+- MongoDB requires `--orm mongoose` or `--orm prisma`
+- Convex backend forces: no auth, no db, no orm, no api, no runtime, no db-setup; Solid is not supported
+- Todo example requires a database when a non-Convex backend is selected
+- AI example is not compatible with `--backend elysia` or `--frontend solid`
+
+The CLI validates incompatible combinations and fails fast with clear messages.
+
+See also: Compatibility overview in the main CLI reference.
 

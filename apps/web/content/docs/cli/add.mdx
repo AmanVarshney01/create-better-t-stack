@@ -8,28 +8,61 @@ description: Add addons or deployment to an existing project
 <Tabs items={['bun', 'pnpm', 'npm']}>
   <Tab value="bun">
     ```bash
-    bun create better-t-stack@latest add [options]
+    bun create better-t-stack@latest add
     ```
   </Tab>
   <Tab value="pnpm">
     ```bash
-    pnpm create better-t-stack@latest add [options]
+    pnpm create better-t-stack@latest add
     ```
   </Tab>
   <Tab value="npm">
     ```bash
-    npx create-better-t-stack@latest add [options]
+    npx create-better-t-stack@latest add
     ```
   </Tab>
 </Tabs>
 
-### Options
+## Flags
 
-- `--addons` Multiple values
+### Addons
+
+- `--addons` Multiple values to add features
+  - Values: `pwa`, `tauri`, `starlight`, `biome`, `husky`, `turborepo`, `fumadocs`, `ultracite`, `oxlint`, `none`
+  - Do not combine `none` with other values
+
+### Deployment
+
 - `--web-deploy` One of: `workers`, `none`
-- `--project-dir` Path
-- `--install` / `--no-install`
+  - Requires that the project includes a web frontend
+
+### Project directory and install
+
+- `--project-dir` Path to target project (default: current directory)
+- `--install` / `--no-install` Install dependencies after applying changes
 - `--package-manager` One of: `bun`, `pnpm`, `npm`
 
-See also: [Compatibility](/docs/compatibility)
+## Examples
+
+```bash
+# Add PWA and Turborepo to the current project
+bun create better-t-stack@latest add --addons pwa turborepo --install
+```
+
+```bash
+# Add Cloudflare Workers deployment
+bun create better-t-stack@latest add --web-deploy workers
+```
+
+```bash
+# Operate on a specific project directory using bun
+bun create better-t-stack@latest add --project-dir ./apps/web --addons biome --package-manager bun
+```
+
+## Compatibility notes
+
+- Web deployment requires a web frontend to be present
+- Addons must be compatible with the selected frontend; the CLI validates this and fails with a clear error if incompatible
+
+For general compatibility rules, see the main CLI reference.
 
