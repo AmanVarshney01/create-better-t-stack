@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.29.4
+
+### Patch Changes
+
+- 7d76289: add --no-git option to fumadocs setup command
+
 ## 2.29.3
 
 ### Patch Changes
