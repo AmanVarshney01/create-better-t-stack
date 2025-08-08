@@ -43,6 +43,7 @@ export const AddonsSchema = z
 		"starlight",
 		"biome",
 		"husky",
+		"vibe-rules",
 		"turborepo",
 		"fumadocs",
 		"ultracite",

@@ -1,19 +1,12 @@
 import os from "node:os";
 import path from "node:path";
-import {
-	cancel,
-	confirm,
-	isCancel,
-	log,
-	select,
-	spinner,
-	text,
-} from "@clack/prompts";
+import { confirm, isCancel, log, select, spinner, text } from "@clack/prompts";
 import consola from "consola";
 import { $ } from "execa";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 import { commandExists } from "../../utils/command-exists";
+import { exitCancelled } from "../../utils/errors";
 import {
 	addEnvVariablesToFile,
 	type EnvVariable,
@@ -129,10 +122,7 @@ async function selectTursoGroup(): Promise<string | null> {
 		options: groupOptions,
 	});
 
-	if (isCancel(selectedGroup)) {
-		cancel(pc.red("Operation cancelled"));
-		process.exit(0);
-	}
+	if (isCancel(selectedGroup)) return exitCancelled("Operation cancelled");
 
 	return selectedGroup as string;
 }
@@ -236,10 +226,7 @@ export async function setupTurso(config: ProjectConfig) {
 				initialValue: true,
 			});
 
-			if (isCancel(shouldInstall)) {
-				cancel(pc.red("Operation cancelled"));
-				process.exit(0);
-			}
+			if (isCancel(shouldInstall)) return exitCancelled("Operation cancelled");
 
 			if (!shouldInstall) {
 				await writeEnvFile(projectDir);
@@ -269,10 +256,7 @@ export async function setupTurso(config: ProjectConfig) {
 				placeholder: suggestedName,
 			});
 
-			if (isCancel(dbNameResponse)) {
-				cancel(pc.red("Operation cancelled"));
-				process.exit(0);
-			}
+			if (isCancel(dbNameResponse)) return exitCancelled("Operation cancelled");
 
 			dbName = dbNameResponse as string;
 

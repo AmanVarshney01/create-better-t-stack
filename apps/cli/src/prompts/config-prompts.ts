@@ -1,5 +1,4 @@
-import { cancel, group } from "@clack/prompts";
-import pc from "picocolors";
+import { group } from "@clack/prompts";
 import type {
 	Addons,
 	API,
@@ -14,6 +13,7 @@ import type {
 	Runtime,
 	WebDeploy,
 } from "../types";
+import { exitCancelled } from "../utils/errors";
 import { getAddonsChoice } from "./addons";
 import { getApiChoice } from "./api";
 import { getAuthChoice } from "./auth";
@@ -102,10 +102,7 @@ export async function gatherConfig(
 			install: () => getinstallChoice(flags.install),
 		},
 		{
-			onCancel: () => {
-				cancel(pc.red("Operation cancelled"));
-				process.exit(0);
-			},
+			onCancel: () => exitCancelled("Operation cancelled"),
 		},
 	);
 

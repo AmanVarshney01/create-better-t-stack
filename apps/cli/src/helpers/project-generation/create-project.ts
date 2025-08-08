@@ -1,8 +1,8 @@
-import { cancel, log } from "@clack/prompts";
+import { log } from "@clack/prompts";
 import fs from "fs-extra";
-import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 import { writeBtsConfig } from "../../utils/bts-config";
+import { exitWithError } from "../../utils/errors";
 import { setupAddons } from "../setup/addons-setup";
 import { setupApi } from "../setup/api-setup";
 import { setupAuth } from "../setup/auth-setup";
@@ -104,13 +104,11 @@ export async function createProject(options: ProjectConfig) {
 		return projectDir;
 	} catch (error) {
 		if (error instanceof Error) {
-			cancel(pc.red(`Error during project creation: ${error.message}`));
 			console.error(error.stack);
-			process.exit(1);
+			exitWithError(`Error during project creation: ${error.message}`);
 		} else {
-			cancel(pc.red(`An unexpected error occurred: ${String(error)}`));
 			console.error(error);
-			process.exit(1);
+			exitWithError(`An unexpected error occurred: ${String(error)}`);
 		}
 	}
 }

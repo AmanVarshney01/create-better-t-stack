@@ -1,10 +1,11 @@
 import path from "node:path";
-import { cancel, isCancel, log, select } from "@clack/prompts";
+import { isCancel, log, select } from "@clack/prompts";
 import consola from "consola";
 import { execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
+import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
 
 type FumadocsTemplate =
@@ -52,10 +53,7 @@ export async function setupFumadocs(config: ProjectConfig) {
 			initialValue: "next-mdx",
 		});
 
-		if (isCancel(template)) {
-			cancel(pc.red("Operation cancelled"));
-			process.exit(0);
-		}
+		if (isCancel(template)) return exitCancelled("Operation cancelled");
 
 		const templateArg = TEMPLATES[template].value;
 

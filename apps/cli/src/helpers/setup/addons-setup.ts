@@ -10,6 +10,7 @@ import { setupFumadocs } from "./fumadocs-setup";
 import { setupStarlight } from "./starlight-setup";
 import { setupTauri } from "./tauri-setup";
 import { setupUltracite } from "./ultracite-setup";
+import { setupVibeRules } from "./vibe-rules-setup";
 import { addPwaToViteConfig } from "./vite-pwa-setup";
 
 export async function setupAddons(config: ProjectConfig, isAddCommand = false) {
@@ -84,6 +85,10 @@ ${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
 	}
 	if (addons.includes("starlight")) {
 		await setupStarlight(config);
+	}
+
+	if (addons.includes("vibe-rules")) {
+		await setupVibeRules(config);
 	}
 	if (addons.includes("fumadocs")) {
 		await setupFumadocs(config);

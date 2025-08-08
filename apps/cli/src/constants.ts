@@ -135,6 +135,7 @@ export const ADDON_COMPATIBILITY: Record<Addons, readonly Frontend[]> = {
 	turborepo: [],
 	starlight: [],
 	ultracite: [],
+	"vibe-rules": [],
 	oxlint: [],
 	fumadocs: [],
 	none: [],

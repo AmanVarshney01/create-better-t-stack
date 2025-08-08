@@ -1,6 +1,6 @@
-import { cancel, confirm, isCancel } from "@clack/prompts";
-import pc from "picocolors";
+import { confirm, isCancel } from "@clack/prompts";
 import { DEFAULT_CONFIG } from "../constants";
+import { exitCancelled } from "../utils/errors";
 
 export async function getinstallChoice(install?: boolean) {
 	if (install !== undefined) return install;
@@ -10,10 +10,7 @@ export async function getinstallChoice(install?: boolean) {
 		initialValue: DEFAULT_CONFIG.install,
 	});
 
-	if (isCancel(response)) {
-		cancel(pc.red("Operation cancelled"));
-		process.exit(0);
-	}
+	if (isCancel(response)) return exitCancelled("Operation cancelled");
 
 	return response;
 }

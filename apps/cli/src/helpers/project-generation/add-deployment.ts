@@ -1,8 +1,9 @@
 import path from "node:path";
-import { cancel, log } from "@clack/prompts";
+import { log } from "@clack/prompts";
 import pc from "picocolors";
 import type { AddInput, ProjectConfig, WebDeploy } from "../../types";
 import { updateBtsConfig } from "../../utils/bts-config";
+import { exitWithError } from "../../utils/errors";
 import { setupWebDeploy } from "../setup/web-deploy-setup";
 import {
 	detectProjectConfig,
@@ -10,11 +11,6 @@ import {
 } from "./detect-project-config";
 import { installDependencies } from "./install-dependencies";
 import { setupDeploymentTemplates } from "./template-manager";
-
-function exitWithError(message: string): never {
-	cancel(pc.red(message));
-	process.exit(1);
-}
 
 export async function addDeploymentToProject(
 	input: AddInput & { webDeploy: WebDeploy; suppressInstallMessage?: boolean },

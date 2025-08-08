@@ -1,7 +1,7 @@
-import { cancel, isCancel, select } from "@clack/prompts";
-import pc from "picocolors";
+import { isCancel, select } from "@clack/prompts";
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Database, ORM, Runtime } from "../types";
+import { exitCancelled } from "../utils/errors";
 
 const ormOptions = {
 	prisma: {
@@ -51,10 +51,7 @@ export async function getORMChoice(
 		initialValue: database === "mongodb" ? "prisma" : DEFAULT_CONFIG.orm,
 	});
 
-	if (isCancel(response)) {
-		cancel(pc.red("Operation cancelled"));
-		process.exit(0);
-	}
+	if (isCancel(response)) return exitCancelled("Operation cancelled");
 
 	return response;
 }

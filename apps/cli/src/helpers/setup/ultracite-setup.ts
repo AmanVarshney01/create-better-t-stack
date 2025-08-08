@@ -1,8 +1,9 @@
-import { cancel, isCancel, log, multiselect } from "@clack/prompts";
+import { isCancel, log, multiselect } from "@clack/prompts";
 import { execa } from "execa";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
+import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
 import { setupBiome } from "./addons-setup";
 
@@ -71,10 +72,7 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 			required: false,
 		});
 
-		if (isCancel(editors)) {
-			cancel(pc.red("Operation cancelled"));
-			process.exit(0);
-		}
+		if (isCancel(editors)) return exitCancelled("Operation cancelled");
 
 		const rules = await multiselect<UltraciteRule>({
 			message: "Choose rules",
@@ -86,10 +84,7 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 			required: false,
 		});
 
-		if (isCancel(rules)) {
-			cancel(pc.red("Operation cancelled"));
-			process.exit(0);
-		}
+		if (isCancel(rules)) return exitCancelled("Operation cancelled");
 
 		const ultraciteArgs = ["init", "--pm", packageManager];
 

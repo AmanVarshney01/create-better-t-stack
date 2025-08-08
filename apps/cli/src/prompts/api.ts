@@ -1,7 +1,7 @@
-import { cancel, isCancel, select } from "@clack/prompts";
-import pc from "picocolors";
+import { isCancel, select } from "@clack/prompts";
 import type { API, Backend, Frontend } from "../types";
 import { allowedApisForFrontends } from "../utils/compatibility-rules";
+import { exitCancelled } from "../utils/errors";
 
 export async function getApiChoice(
 	Api?: API | undefined,
@@ -43,10 +43,7 @@ export async function getApiChoice(
 		initialValue: apiOptions[0].value,
 	});
 
-	if (isCancel(apiType)) {
-		cancel(pc.red("Operation cancelled"));
-		process.exit(0);
-	}
+	if (isCancel(apiType)) return exitCancelled("Operation cancelled");
 
 	return apiType;
 }

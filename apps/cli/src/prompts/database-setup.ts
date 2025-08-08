@@ -1,6 +1,6 @@
-import { cancel, isCancel, select } from "@clack/prompts";
-import pc from "picocolors";
+import { isCancel, select } from "@clack/prompts";
 import type { Backend, DatabaseSetup, ORM, Runtime } from "../types";
+import { exitCancelled } from "../utils/errors";
 
 export async function getDBSetupChoice(
 	databaseType: string,
@@ -101,10 +101,7 @@ export async function getDBSetupChoice(
 		initialValue: "none",
 	});
 
-	if (isCancel(response)) {
-		cancel(pc.red("Operation cancelled"));
-		process.exit(0);
-	}
+	if (isCancel(response)) return exitCancelled("Operation cancelled");
 
 	return response;
 }

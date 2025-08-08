@@ -1,11 +1,12 @@
 import path from "node:path";
-import { cancel, isCancel, log, select, text } from "@clack/prompts";
+import { isCancel, log, select, text } from "@clack/prompts";
 import { consola } from "consola";
 import { execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { ORM, PackageManager, ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
+import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
 import {
 	addEnvVariablesToFile,
@@ -60,10 +61,7 @@ async function setupWithCreateDb(
 			},
 		});
 
-		if (isCancel(databaseUrl)) {
-			cancel("Database setup cancelled");
-			return null;
-		}
+		if (isCancel(databaseUrl)) return null;
 
 		return {
 			databaseUrl: databaseUrl as string,
@@ -115,10 +113,7 @@ async function initPrismaDatabase(
 			},
 		});
 
-		if (isCancel(databaseUrl)) {
-			cancel("Database setup cancelled");
-			return null;
-		}
+		if (isCancel(databaseUrl)) return null;
 
 		return {
 			databaseUrl: databaseUrl as string,
@@ -245,10 +240,7 @@ export async function setupPrismaPostgres(config: ProjectConfig) {
 			initialValue: "create-db",
 		});
 
-		if (isCancel(setupMethod)) {
-			cancel(pc.red("Operation cancelled"));
-			process.exit(0);
-		}
+		if (isCancel(setupMethod)) return exitCancelled("Operation cancelled");
 
 		let prismaConfig: PrismaConfig | null = null;
 

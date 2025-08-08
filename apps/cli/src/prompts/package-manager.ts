@@ -1,6 +1,6 @@
-import { cancel, isCancel, select } from "@clack/prompts";
-import pc from "picocolors";
+import { isCancel, select } from "@clack/prompts";
 import type { PackageManager } from "../types";
+import { exitCancelled } from "../utils/errors";
 import { getUserPkgManager } from "../utils/get-package-manager";
 
 export async function getPackageManagerChoice(
@@ -28,10 +28,7 @@ export async function getPackageManagerChoice(
 		initialValue: detectedPackageManager,
 	});
 
-	if (isCancel(response)) {
-		cancel(pc.red("Operation cancelled"));
-		process.exit(0);
-	}
+	if (isCancel(response)) return exitCancelled("Operation cancelled");
 
 	return response;
 }

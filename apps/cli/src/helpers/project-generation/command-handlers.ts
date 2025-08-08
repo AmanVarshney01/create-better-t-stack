@@ -1,5 +1,5 @@
 import path from "node:path";
-import { cancel, intro, log, outro } from "@clack/prompts";
+import { intro, log, outro } from "@clack/prompts";
 import fs from "fs-extra";
 import pc from "picocolors";
 import { DEFAULT_CONFIG } from "../../constants";
@@ -10,6 +10,7 @@ import { getDeploymentToAdd } from "../../prompts/web-deploy";
 import type { AddInput, CreateInput, ProjectConfig } from "../../types";
 import { trackProjectCreation } from "../../utils/analytics";
 import { displayConfig } from "../../utils/display-config";
+import { exitWithError, handleError } from "../../utils/errors";
 import { generateReproducibleCommand } from "../../utils/generate-reproducible-command";
 import {
 	handleDirectoryConflict,
@@ -131,8 +132,7 @@ export async function createProjectHandler(
 			),
 		);
 	} catch (error) {
-		console.error(error);
-		process.exit(1);
+		handleError(error, "Failed to create project");
 	}
 }
 
@@ -142,12 +142,9 @@ export async function addAddonsHandler(input: AddInput) {
 		const detectedConfig = await detectProjectConfig(projectDir);
 
 		if (!detectedConfig) {
-			cancel(
-				pc.red(
-					"Could not detect project configuration. Please ensure this is a valid Better-T Stack project.",
-				),
+			exitWithError(
+				"Could not detect project configuration. Please ensure this is a valid Better-T Stack project.",
 			);
-			process.exit(1);
 		}
 
 		if (!input.addons || input.addons.length === 0) {
@@ -215,7 +212,6 @@ export async function addAddonsHandler(input: AddInput) {
 
 		outro("Add command completed successfully!");
 	} catch (error) {
-		console.error(error);
-		process.exit(1);
+		handleError(error, "Failed to add addons or deployment");
 	}
 }

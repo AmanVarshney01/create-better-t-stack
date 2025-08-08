@@ -1,7 +1,7 @@
-import { cancel, isCancel, select } from "@clack/prompts";
-import pc from "picocolors";
+import { isCancel, select } from "@clack/prompts";
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Frontend } from "../types";
+import { exitCancelled } from "../utils/errors";
 
 export async function getBackendFrameworkChoice(
 	backendFramework?: Backend,
@@ -63,10 +63,7 @@ export async function getBackendFrameworkChoice(
 		initialValue: DEFAULT_CONFIG.backend,
 	});
 
-	if (isCancel(response)) {
-		cancel(pc.red("Operation cancelled"));
-		process.exit(0);
-	}
+	if (isCancel(response)) return exitCancelled("Operation cancelled");
 
 	return response;
 }

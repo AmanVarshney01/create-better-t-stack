@@ -1,9 +1,9 @@
 import path from "node:path";
-import { cancel, isCancel, log, select, spinner } from "@clack/prompts";
-import { consola } from "consola";
+import { isCancel, log, select, spinner } from "@clack/prompts";
 import fs from "fs-extra";
 import pc from "picocolors";
 import { getProjectName } from "../prompts/project-name";
+import { exitCancelled, handleError } from "./errors";
 
 export async function handleDirectoryConflict(
 	currentPathInput: string,
@@ -49,10 +49,7 @@ export async function handleDirectoryConflict(
 			initialValue: "rename",
 		});
 
-		if (isCancel(action)) {
-			cancel(pc.red("Operation cancelled."));
-			process.exit(0);
-		}
+		if (isCancel(action)) return exitCancelled("Operation cancelled.");
 
 		switch (action) {
 			case "overwrite":
@@ -73,8 +70,7 @@ export async function handleDirectoryConflict(
 				return await handleDirectoryConflict(newPathInput);
 			}
 			case "cancel":
-				cancel(pc.red("Operation cancelled."));
-				process.exit(0);
+				return exitCancelled("Operation cancelled.");
 		}
 	}
 }
@@ -102,8 +98,7 @@ export async function setupProjectDirectory(
 			s.stop(`Directory "${finalResolvedPath}" cleared.`);
 		} catch (error) {
 			s.stop(pc.red(`Failed to clear directory "${finalResolvedPath}".`));
-			consola.error(error);
-			process.exit(1);
+			handleError(error);
 		}
 	} else {
 		await fs.ensureDir(finalResolvedPath);

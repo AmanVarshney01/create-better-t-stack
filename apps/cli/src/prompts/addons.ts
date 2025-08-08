@@ -1,11 +1,11 @@
-import { cancel, groupMultiselect, isCancel } from "@clack/prompts";
-import pc from "picocolors";
+import { groupMultiselect, isCancel } from "@clack/prompts";
 import { DEFAULT_CONFIG } from "../constants";
 import { type Addons, AddonsSchema, type Frontend } from "../types";
 import {
 	getCompatibleAddons,
 	validateAddonCompatibility,
 } from "../utils/addon-compatibility";
+import { exitCancelled } from "../utils/errors";
 
 type AddonOption = {
 	value: Addons;
@@ -42,6 +42,10 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 			label = "Ultracite";
 			hint = "Zero-config Biome preset with AI integration";
 			break;
+		case "vibe-rules":
+			label = "vibe-rules";
+			hint = "Install and apply BTS rules to editors";
+			break;
 		case "husky":
 			label = "Husky";
 			hint = "Modern native Git hooks made easy";
@@ -65,7 +69,7 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 const ADDON_GROUPS = {
 	Documentation: ["starlight", "fumadocs"],
 	Linting: ["biome", "oxlint", "ultracite"],
-	Other: ["turborepo", "pwa", "tauri", "husky"],
+	Other: ["vibe-rules", "turborepo", "pwa", "tauri", "husky"],
 };
 
 export async function getAddonsChoice(
@@ -119,10 +123,7 @@ export async function getAddonsChoice(
 		selectableGroups: false,
 	});
 
-	if (isCancel(response)) {
-		cancel(pc.red("Operation cancelled"));
-		process.exit(0);
-	}
+	if (isCancel(response)) return exitCancelled("Operation cancelled");
 
 	return response;
 }
@@ -175,10 +176,7 @@ export async function getAddonsToAdd(
 		selectableGroups: false,
 	});
 
-	if (isCancel(response)) {
-		cancel(pc.red("Operation cancelled"));
-		process.exit(0);
-	}
+	if (isCancel(response)) return exitCancelled("Operation cancelled");
 
 	return response;
 }

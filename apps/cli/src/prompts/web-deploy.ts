@@ -1,8 +1,8 @@
-import { cancel, isCancel, select } from "@clack/prompts";
-import pc from "picocolors";
+import { isCancel, select } from "@clack/prompts";
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Frontend, Runtime, WebDeploy } from "../types";
 import { WEB_FRAMEWORKS } from "../utils/compatibility";
+import { exitCancelled } from "../utils/errors";
 
 function hasWebFrontend(frontends: Frontend[]): boolean {
 	return frontends.some((f) => WEB_FRAMEWORKS.includes(f));
@@ -56,10 +56,7 @@ export async function getDeploymentChoice(
 		initialValue: DEFAULT_CONFIG.webDeploy,
 	});
 
-	if (isCancel(response)) {
-		cancel(pc.red("Operation cancelled"));
-		process.exit(0);
-	}
+	if (isCancel(response)) return exitCancelled("Operation cancelled");
 
 	return response;
 }
@@ -105,10 +102,7 @@ export async function getDeploymentToAdd(
 		initialValue: DEFAULT_CONFIG.webDeploy,
 	});
 
-	if (isCancel(response)) {
-		cancel(pc.red("Operation cancelled"));
-		process.exit(0);
-	}
+	if (isCancel(response)) return exitCancelled("Operation cancelled");
 
 	return response;
 }

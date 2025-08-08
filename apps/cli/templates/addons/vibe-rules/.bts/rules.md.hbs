@@ -1,0 +1,17 @@
+# Better T Stack Rules
+
+- Project: {{projectName}}
+- Frontends: {{#if frontend}}{{#each frontend}}{{this}}{{#unless @last}} / {{/unless}}{{/each}}{{else}}none{{/if}}
+- Backend: {{backend}}
+- API: {{api}}
+
+## Structure
+- apps/web: Web app source
+- apps/server: Server backend (when applicable)
+- packages/*: Shared libraries
+- .bts/rules.md: Project rules for AI editors
+
+## Conventions
+- Package manager: {{packageManager}}
+- Commit messages: one-line summary
+- Linting/format: Biome or Oxlint per addon

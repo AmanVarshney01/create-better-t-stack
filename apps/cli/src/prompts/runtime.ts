@@ -1,7 +1,7 @@
-import { cancel, isCancel, select } from "@clack/prompts";
-import pc from "picocolors";
+import { isCancel, select } from "@clack/prompts";
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Runtime } from "../types";
+import { exitCancelled } from "../utils/errors";
 
 export async function getRuntimeChoice(
 	runtime?: Runtime,
@@ -48,10 +48,7 @@ export async function getRuntimeChoice(
 		initialValue: DEFAULT_CONFIG.runtime,
 	});
 
-	if (isCancel(response)) {
-		cancel(pc.red("Operation cancelled"));
-		process.exit(0);
-	}
+	if (isCancel(response)) return exitCancelled("Operation cancelled");
 
 	return response;
 }

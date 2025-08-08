@@ -1,8 +1,8 @@
-import { cancel, isCancel, multiselect, select } from "@clack/prompts";
-import pc from "picocolors";
+import { isCancel, multiselect, select } from "@clack/prompts";
 import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Frontend } from "../types";
 import { isFrontendAllowedWithBackend } from "../utils/compatibility-rules";
+import { exitCancelled } from "../utils/errors";
 
 export async function getFrontendChoice(
 	frontendOptions?: Frontend[],
@@ -28,10 +28,7 @@ export async function getFrontendChoice(
 		initialValues: ["web"],
 	});
 
-	if (isCancel(frontendTypes)) {
-		cancel(pc.red("Operation cancelled"));
-		process.exit(0);
-	}
+	if (isCancel(frontendTypes)) return exitCancelled("Operation cancelled");
 
 	const result: Frontend[] = [];
 
@@ -84,10 +81,7 @@ export async function getFrontendChoice(
 			initialValue: DEFAULT_CONFIG.frontend[0],
 		});
 
-		if (isCancel(webFramework)) {
-			cancel(pc.red("Operation cancelled"));
-			process.exit(0);
-		}
+		if (isCancel(webFramework)) return exitCancelled("Operation cancelled");
 
 		result.push(webFramework);
 	}
@@ -110,10 +104,7 @@ export async function getFrontendChoice(
 			initialValue: "native-nativewind",
 		});
 
-		if (isCancel(nativeFramework)) {
-			cancel(pc.red("Operation cancelled"));
-			process.exit(0);
-		}
+		if (isCancel(nativeFramework)) return exitCancelled("Operation cancelled");
 		result.push(nativeFramework);
 	}
 

@@ -1,5 +1,4 @@
 import { intro, log } from "@clack/prompts";
-import { consola } from "consola";
 import pc from "picocolors";
 import { createCli, trpcServer } from "trpc-cli";
 import z from "zod";
@@ -21,6 +20,7 @@ import {
 	RuntimeSchema,
 	WebDeploySchema,
 } from "./types";
+import { handleError } from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
 import { openUrl } from "./utils/open-url";
 import { renderTitle } from "./utils/render-title";
@@ -102,8 +102,7 @@ const router = t.router({
 				const sponsors = await fetchSponsors();
 				displaySponsors(sponsors);
 			} catch (error) {
-				consola.error(error);
-				process.exit(1);
+				handleError(error, "Failed to display sponsors");
 			}
 		}),
 	docs: t.procedure

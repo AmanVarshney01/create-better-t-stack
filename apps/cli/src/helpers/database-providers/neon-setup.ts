@@ -1,10 +1,11 @@
 import path from "node:path";
-import { cancel, isCancel, log, select, spinner, text } from "@clack/prompts";
+import { isCancel, log, select, spinner, text } from "@clack/prompts";
 import { consola } from "consola";
 import { execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { PackageManager, ProjectConfig } from "../../types";
+import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
 import {
 	addEnvVariablesToFile,
@@ -177,10 +178,7 @@ export async function setupNeonPostgres(config: ProjectConfig) {
 			initialValue: "neondb",
 		});
 
-		if (isCancel(setupMethod)) {
-			cancel(pc.red("Operation cancelled"));
-			process.exit(0);
-		}
+		if (isCancel(setupMethod)) return exitCancelled("Operation cancelled");
 
 		if (setupMethod === "neondb") {
 			await setupWithNeonDb(projectDir, packageManager);
@@ -198,10 +196,8 @@ export async function setupNeonPostgres(config: ProjectConfig) {
 				initialValue: NEON_REGIONS[0].value,
 			});
 
-			if (isCancel(projectName) || isCancel(regionId)) {
-				cancel(pc.red("Operation cancelled"));
-				process.exit(0);
-			}
+			if (isCancel(projectName) || isCancel(regionId))
+				return exitCancelled("Operation cancelled");
 
 			const neonConfig = await createNeonProject(
 				projectName as string,

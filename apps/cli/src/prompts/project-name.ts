@@ -1,10 +1,11 @@
 import path from "node:path";
-import { cancel, isCancel, text } from "@clack/prompts";
+import { isCancel, text } from "@clack/prompts";
 import consola from "consola";
 import fs from "fs-extra";
 import pc from "picocolors";
 import { DEFAULT_CONFIG } from "../constants";
 import { ProjectNameSchema } from "../types";
+import { exitCancelled } from "../utils/errors";
 
 function isPathWithinCwd(targetPath: string): boolean {
 	const resolved = path.resolve(targetPath);
@@ -76,10 +77,7 @@ export async function getProjectName(initialName?: string): Promise<string> {
 			},
 		});
 
-		if (isCancel(response)) {
-			cancel(pc.red("Operation cancelled."));
-			process.exit(0);
-		}
+		if (isCancel(response)) return exitCancelled("Operation cancelled.");
 
 		projectPath = response || defaultName;
 		isValid = true;

@@ -1,9 +1,10 @@
 import path from "node:path";
-import { cancel, log } from "@clack/prompts";
+import { log } from "@clack/prompts";
 import pc from "picocolors";
 import type { AddInput, Addons, ProjectConfig } from "../../types";
 import { validateAddonCompatibility } from "../../utils/addon-compatibility";
 import { updateBtsConfig } from "../../utils/bts-config";
+import { exitWithError } from "../../utils/errors";
 import { setupAddons } from "../setup/addons-setup";
 import {
 	detectProjectConfig,
@@ -11,11 +12,6 @@ import {
 } from "./detect-project-config";
 import { installDependencies } from "./install-dependencies";
 import { setupAddonsTemplate } from "./template-manager";
-
-function exitWithError(message: string): never {
-	cancel(pc.red(message));
-	process.exit(1);
-}
 
 export async function addAddonsToProject(
 	input: AddInput & { addons: Addons[]; suppressInstallMessage?: boolean },
