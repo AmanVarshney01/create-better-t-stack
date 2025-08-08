@@ -48,7 +48,7 @@ export function AnalyticsHeader({
 					<span className=" text-muted-foreground">
 						Source:{" "}
 						<Link
-							href="https://github.com/amanvarshney01/create-better-t-stack/blob/main/apps/cli/src/utils/analytics.ts"
+							href="https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/cli/src/utils/analytics.ts"
 							target="_blank"
 							rel="noopener noreferrer"
 							className="text-accent underline hover:text-primary"

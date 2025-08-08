@@ -54,7 +54,7 @@ Visit [better-t-stack.dev](https://better-t-stack.dev) for full documentation, g
 
 ```bash
 # Clone the repository
-git clone https://github.com/better-t-stack/create-better-t-stack.git
+git clone https://github.com/AmanVarshney01/create-better-t-stack.git
 
 # Install dependencies
 bun install

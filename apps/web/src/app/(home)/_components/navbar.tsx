@@ -85,7 +85,7 @@ export default function Navbar() {
 			target: "_blank",
 		},
 		{
-			href: "https://www.github.com/better-t-stack/create-better-t-stack",
+			href: "https://www.github.com/AmanVarshney01/create-better-t-stack",
 			label: "GitHub",
 			icon: <Github className="size-4" />,
 			target: "_blank",
