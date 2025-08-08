@@ -29,6 +29,7 @@ export const FrontendSchema = z
 		"tanstack-start",
 		"next",
 		"nuxt",
+		"vue-router",
 		"native-nativewind",
 		"native-unistyles",
 		"svelte",

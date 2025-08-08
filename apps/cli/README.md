@@ -32,7 +32,7 @@ Follow the prompts to configure your project or use the `--yes` flag for default
 | Category                 | Options                                                                                                                                                                                                                                                    |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **TypeScript**           | End-to-end type safety across all parts of your application                                                                                                                                                                                                |
-| **Frontend**             | • React with TanStack Router<br>• React with React Router<br>• React with TanStack Start (SSR)<br>• Next.js<br>• SvelteKit<br>• Nuxt (Vue)<br>• SolidJS<br>• React Native with NativeWind (via Expo)<br>• React Native with Unistyles (via Expo)<br>• None |
+| **Frontend**             | • React with TanStack Router<br>• React with React Router<br>• React with TanStack Start (SSR)<br>• Next.js<br>• Vue with Vue Router<br>• Nuxt (Vue)<br>• SvelteKit<br>• SolidJS<br>• React Native with NativeWind (via Expo)<br>• React Native with Unistyles (via Expo)<br>• None |
 | **Backend**              | • Hono<br>• Express<br>• Elysia<br>• Next.js API routes<br>• Convex<br>• Fastify<br>• None                                                                                                                                                                 |
 | **API Layer**            | • tRPC (type-safe APIs)<br>• oRPC (OpenAPI-compatible type-safe APIs)<br>• None                                                                                                                                                                            |
 | **Runtime**              | • Bun<br>• Node.js<br>• Cloudflare Workers<br>• None                                                                                                                                                                                                       |
@@ -57,7 +57,7 @@ Options:
   --orm <type>                    ORM type (none, drizzle, prisma, mongoose)
   --auth                          Include authentication
   --no-auth                       Exclude authentication
-  --frontend <types...>           Frontend types (tanstack-router, react-router, tanstack-start, next, nuxt, svelte, solid, native-nativewind, native-unistyles, none)
+  --frontend <types...>           Frontend types (tanstack-router, react-router, tanstack-start, next, nuxt, vue-router, svelte, solid, native-nativewind, native-unistyles, none)
   --addons <types...>             Additional addons (pwa, tauri, starlight, biome, husky, turborepo, none)
   --examples <types...>           Examples to include (todo, ai, none)
   --git                           Initialize git repository

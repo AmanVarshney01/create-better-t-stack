@@ -135,7 +135,7 @@ export function processAndValidateFlags(
 
 			if (webFrontends.length > 1) {
 				consola.fatal(
-					"Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, nuxt, svelte, solid",
+					"Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, nuxt, vue-router, svelte, solid",
 				);
 				process.exit(1);
 			}
@@ -205,7 +205,7 @@ export function processAndValidateFlags(
 
 		if (providedFlags.has("frontend") && options.frontend) {
 			const incompatibleFrontends = options.frontend.filter(
-				(f) => f === "solid",
+				(f) => f === "nuxt" || f === "solid" || f === "vue-router",
 			);
 			if (incompatibleFrontends.length > 0) {
 				consola.fatal(
@@ -632,9 +632,10 @@ export function validateConfigCompatibility(config: Partial<ProjectConfig>) {
 			process.exit(1);
 		}
 
-		if (config.examples.includes("ai") && includesSolid) {
+		const includesVueRouter = effectiveFrontend?.includes("vue-router");
+		if (config.examples.includes("ai") && (includesSolid || includesVueRouter)) {
 			consola.fatal(
-				"The 'ai' example is not compatible with the Solid frontend.",
+				`The 'ai' example is not compatible with the ${includesSolid ? "Solid" : "Vue Router"} frontend.`,
 			);
 			process.exit(1);
 		}

@@ -27,7 +27,7 @@ pnpm create better-t-stack@latest
 
 - **Zero-config setup** with interactive CLI wizard
 - **End-to-end type safety** from database to frontend via tRPC
-- **Modern stack** with React, Hono/Elysia, and TanStack libraries
+- **Modern stack** with React, Vue, Nuxt, Svelte, Solid, and more
 - **Multi-platform** supporting web, mobile (Expo), and desktop applications
 - **Database flexibility** with SQLite (Turso) or PostgreSQL options
 - **ORM choice** between Drizzle or Prisma

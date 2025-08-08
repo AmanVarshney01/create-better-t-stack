@@ -57,6 +57,11 @@ export async function getFrontendChoice(
 				hint: "The Progressive Web Framework for Vue.js",
 			},
 			{
+				value: "vue-router" as const,
+				label: "Vue Router",
+				hint: "The official router for Vue.js single-page applications",
+			},
+			{
 				value: "svelte" as const,
 				label: "Svelte",
 				hint: "web development for the rest of us",
@@ -75,7 +80,7 @@ export async function getFrontendChoice(
 
 		const webOptions = allWebOptions.filter((option) => {
 			if (backend === "convex") {
-				return option.value !== "solid";
+				return option.value !== "nuxt" && option.value !== "solid" && option.value !== "vue-router";
 			}
 			return true;
 		});
