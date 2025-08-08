@@ -1,334 +1,46 @@
 ---
 title: Frequently Asked Questions
-description: Common questions and answers about Better-T-Stack CLI
+description: Short answers to common beginner questions
 ---
 
-## General Questions
+## General
 
-### What is Better-T-Stack?
+### What is Better‑T‑Stack?
+An opinionated CLI that scaffolds full‑stack TypeScript projects (frontend, backend, API, DB/ORM, auth, addons) with a clean monorepo. See the Quick Start on the docs home.
 
-Better-T-Stack is a modern CLI tool that helps you scaffold end-to-end type-safe TypeScript projects. It provides opinionated, production-ready configurations for full-stack applications with support for multiple frontend frameworks, backend frameworks, databases, and deployment options.
+### Do I need to install anything globally?
+No. Run the CLI directly with your package manager. See Quick Start and the per‑command pages under CLI.
 
-### How is Better-T-Stack different from other scaffolding tools?
+### Which package manager can I use?
+`npm`, `pnpm`, or `bun` (all supported).
 
-- **End-to-End Type Safety**: TypeScript across your entire stack with proper type sharing
-- **Modern Stack Focus**: Latest versions of popular frameworks and tools
-- **Production Ready**: Configurations used in real production applications
-- **Highly Customizable**: Mix and match technologies based on your needs
-- **Monorepo Structure**: Organized project structure with shared packages
-- **Database Integration**: Built-in database setup and ORM configuration
-- **Authentication**: Integrated auth with Better-Auth
-- **Multi-Platform**: Web, mobile, and desktop app support in one project
+### What Node.js version is required?
+Node.js 18+ (LTS recommended).
 
-### Is Better-T-Stack free to use?
+### Can I use this with an existing project?
+The CLI is for new projects. You can migrate gradually or use `add` to extend a Better‑T‑Stack project.
 
-Yes, Better-T-Stack is completely free and open-source under the MIT license. You can use it for personal and commercial projects without any restrictions.
+### Where do generated files live?
+See Project Structure for high‑level layouts (server‑based vs. Convex, optional web/native).
 
-### Do I need to know all these technologies to use Better-T-Stack?
+## Choosing options
 
-No! Better-T-Stack is designed to help you learn modern full-stack development. Each generated project includes:
-- Comprehensive README with setup instructions
-- Example code and patterns
-- TypeScript for better developer experience
-- Best practices and folder structure
+### Does the CLI recommend a stack?
+No. Pick what fits your needs. The CLI validates compatibility. See CLI (per command) and Compatibility for rules.
 
----
+### I’m unsure between tRPC and oRPC / Drizzle and Prisma
+See Compatibility for guidance and constraints. Both pairs work well; choose based on team and hosting needs.
 
-## Installation & Setup
+## Common issues
 
-### Which package manager should I use?
-
-You can use any of the major package managers:
-- **npm**: Most widely supported, comes with Node.js
-- **pnpm**: Faster installs, better disk space efficiency
-- **bun**: All-in-one runtime, extremely fast
-
-For monorepo projects, we recommend **pnpm** for its excellent workspace support.
-
-### Do I need to install the CLI globally?
-
-No, you can use npx to run the latest version without installation:
-
-```bash
-npx create-better-t-stack@latest my-project
-```
-
-This ensures you always use the latest version with the newest features and bug fixes.
-
-### What Node.js version do I need?
-
-Better-T-Stack requires **Node.js 18 or higher**. We recommend using the latest LTS version for the best experience.
-
-### Can I use Better-T-Stack with existing projects?
-
-Better-T-Stack is designed for new projects. For existing projects, you can:
-1. Create a new Better-T-Stack project
-2. Gradually migrate your code
-3. Use the `add` command to add specific features to existing Better-T-Stack projects
-
----
-
-## Configuration & Stack Choices
-
-### Can I change my stack choices after creating a project?
-
-Some changes are possible:
-- **Easy**: Add addons, examples, or deployment configurations using the `add` command
-- **Medium**: Switch between compatible ORMs or databases (requires manual migration)
-- **Hard**: Change frontend/backend frameworks (requires significant refactoring)
-
-It's best to plan your stack carefully during initial setup.
-
-### What's the difference between tRPC and oRPC?
-
-- **tRPC**: End-to-end type safety with TypeScript inference, great for TypeScript-only projects
-- **oRPC**: OpenAPI-compatible type-safe APIs, better for teams using multiple languages or requiring OpenAPI specs
-
-Both provide excellent type safety, choose based on your team's needs.
-
-### Should I use Drizzle or Prisma?
-
-- **Drizzle**: TypeScript-first, lightweight, great for edge deployments, SQL-like syntax
-- **Prisma**: Feature-rich, mature ecosystem, great tooling, GraphQL-like schema
-
-Choose Drizzle for modern TypeScript projects and Prisma for feature-rich applications.
-
-### What's the recommended stack for beginners?
-
-For beginners, we recommend:
-```bash
-npx create-better-t-stack@latest my-first-project \
-  --frontend tanstack-router \
-  --backend hono \
-  --database sqlite \
-  --orm drizzle \
-  --auth \
-  --addons turborepo biome
-```
-
-This provides a simple but powerful full-stack setup that's easy to understand and deploy.
-
----
-
-## Compatibility Questions
-
-### Can I use MongoDB with Drizzle?
-
-No, Drizzle doesn't support MongoDB. For MongoDB, use:
-- **Prisma ORM**: Full ORM support for MongoDB
-- **Mongoose**: Traditional MongoDB object modeling
-
-### Why can't I use tRPC with Nuxt/SvelteKit/SolidJS?
-
-tRPC is primarily designed for React ecosystems. For these frameworks, use:
-- **oRPC**: Provides similar type safety with broader framework support
-- **None**: Use the framework's built-in API capabilities
-
-### Can I use Cloudflare Workers with any backend?
-
-Cloudflare Workers runtime only supports:
-- **Backend**: Hono only
-- **Database**: SQLite with Cloudflare D1
-- **ORM**: Drizzle only
-
-This is due to the serverless nature and limitations of the Workers environment.
-
-### Which addons work with which frontends?
-
-| Addon | Compatible Frontends |
-|-------|---------------------|
-| PWA | TanStack Router, React Router, SolidJS, Next.js |
-| Tauri | TanStack Router, React Router, Nuxt, SvelteKit, SolidJS, Next.js |
-| Turborepo | All frontends |
-| Biome | All frontends |
-| Husky | All frontends |
-| Starlight | All frontends |
-
----
-
-## Database & Hosting
-
-### What database should I choose for production?
-
-**For small to medium applications:**
-- **SQLite + Turso**: Excellent performance, easy scaling
-- **PostgreSQL + Neon**: Serverless PostgreSQL, great for startups
-
-**For large applications:**
-- **PostgreSQL + Supabase**: Full backend-as-a-service
-- **MongoDB + Atlas**: NoSQL flexibility with managed hosting
-
-### Do I need Docker for development?
-
-Docker is optional and only required for:
-- **Database Setup**: If you choose `--db-setup docker`
-- **Local Development**: Some setups like Supabase local development
-
-Many database options (Turso, Neon, MongoDB Atlas) don't require Docker.
-
-### How do I deploy my Better-T-Stack application?
-
-Better-T-Stack projects are configured for easy deployment:
-
-**Frontend:**
-- **Vercel**: Zero-config deployment for Next.js, React apps
-- **Netlify**: Static site deployment
-- **Cloudflare Workers**: Edge deployment with `--web-deploy workers`
-
-**Backend:**
-- **Railway**: Easy backend deployment
-- **Fly.io**: Global application deployment
-- **Cloudflare Workers**: Serverless edge deployment
-
----
-
-## Development & Troubleshooting
-
-### My project won't start after creation. What should I do?
-
-1. **Check Node.js version**: Ensure you're using Node.js 18+
-2. **Install dependencies**: Run `npm install` in the project directory
-3. **Check environment variables**: Copy `.env.example` to `.env` and fill in values
-4. **Database setup**: Run database migrations if using a database
-5. **Check the README**: Each project includes detailed setup instructions
-
-### I'm getting TypeScript errors. How do I fix them?
-
-1. **Install dependencies**: Ensure all packages are installed
-2. **Restart TypeScript server**: In VS Code, use Ctrl/Cmd + Shift + P → "TypeScript: Restart TS Server"
-3. **Check imports**: Ensure all imports are correct and packages are installed
-4. **Update types**: Run `npm run check-types` to see detailed errors
-
-### How do I update dependencies in my project?
-
-```bash
-# Check for updates
-npx taze -r
-
-# Update all dependencies
-npm update
-
-# Or with other package managers
-pnpm update
-bun update
-```
-
-### Can I use Better-T-Stack with VS Code?
-
-Yes! Better-T-Stack projects work excellently with VS Code. We recommend these extensions:
-- TypeScript and JavaScript Language Features (built-in)
-- Tailwind CSS IntelliSense
-- Prisma or Drizzle Kit extensions
-- ESLint (if using Biome addon)
-
-### My mobile app won't connect to the backend. What's wrong?
-
-This is a common issue with Expo and local development:
-
-1. **Check environment variables**: Update `EXPO_PUBLIC_SERVER_URL` in `apps/native/.env`
-2. **Use your local IP**: Replace `localhost` with your computer's IP address
-3. **Check firewall**: Ensure your firewall allows connections on port 3000
-4. **Use tunnel**: Consider using `npx expo start --tunnel`
-
----
-
-## Advanced Usage
-
-### Can I customize the generated templates?
-
-Currently, Better-T-Stack doesn't support custom templates, but you can:
-1. Fork the repository and modify templates
-2. Create a feature request for specific customizations
-3. Modify the generated project after creation
-
-### How do I contribute to Better-T-Stack?
-
-We welcome contributions! Here's how to get started:
-
-1. **Fork the repository** on GitHub
-2. **Clone your fork** locally
-3. **Install dependencies**: `pnpm install`
-4. **Make your changes** and test them
-5. **Submit a pull request** with a clear description
-
-### Can I use Better-T-Stack in my company/team?
-
-Absolutely! Better-T-Stack is perfect for:
-- **Standardizing project structure** across teams
-- **Onboarding new developers** with consistent setup
-- **Rapid prototyping** and MVP development
-- **Client projects** with proven, production-ready configurations
+### My mobile app can’t connect to the backend (Expo)
+Set `EXPO_PUBLIC_SERVER_URL` in `apps/native/.env` to your machine IP (not `localhost`), check firewall, or try `npx expo start --tunnel`.
 
 ### How do I disable telemetry?
+Set `BTS_TELEMETRY_DISABLED=1` (shell env). For one run, prefix the command; to make it permanent, export it in your shell profile.
 
-Better-T-Stack collects anonymous usage data to improve the tool. To disable:
+## Getting help
 
-```bash
-# Disable for single run
-BTS_TELEMETRY_DISABLED=1 npx create-better-t-stack@latest my-app
-
-# Disable globally
-export BTS_TELEMETRY_DISABLED=1
-```
-
-Add the export to your shell profile (`.bashrc`, `.zshrc`, etc.) to make it permanent.
-
----
-
-## Getting Help
-
-### Where can I get help?
-
-- **Documentation**: Comprehensive guides at [better-t-stack.dev/docs](https://better-t-stack.dev/docs)
-- **GitHub Issues**: Report bugs or request features
-- **GitHub Discussions**: Community support and questions
-- **Discord/Twitter**: Follow for updates and community discussion
-
-### How do I report a bug?
-
-1. **Search existing issues** to avoid duplicates
-2. **Create a new issue** with:
-   - Clear description of the problem
-   - Steps to reproduce
-   - Your system information (OS, Node.js version, etc.)
-   - Generated project configuration
-   - Error messages or screenshots
-
-### How do I request a new feature?
-
-1. **Check existing feature requests** in GitHub Issues
-2. **Create a new issue** with the "feature request" label
-3. **Describe the feature** and its use case
-4. **Explain why** it would benefit the community
-
-### Is there a community?
-
-Yes! You can connect with other Better-T-Stack users:
-- **GitHub Discussions**: Ask questions and share projects
-- **Twitter**: Follow [@AmanVarshney01](https://twitter.com/AmanVarshney01) for updates
-- **Show your projects**: Tag us when you build something with Better-T-Stack!
-
----
-
-## Sponsorship & Support
-
-### How can I support Better-T-Stack?
-
-- **⭐ Star the repository** on GitHub
-- **🐛 Report bugs** and suggest improvements
-- **💰 Sponsor the project** on GitHub Sponsors
-- **📢 Share with others** who might find it useful
-- **🤝 Contribute code** or documentation
-
-### Who sponsors Better-T-Stack?
-
-View current sponsors by running:
-```bash
-npx create-better-t-stack@latest sponsors
-```
-
-Or visit: [github.com/sponsors/AmanVarshney01](https://github.com/sponsors/AmanVarshney01)
-
----
-
-*Still have questions? Feel free to ask in [GitHub Discussions](https://github.com/AmanVarshney01/create-better-t-stack/discussions) or check our [documentation](https://better-t-stack.dev/docs).*
+- Docs: Quick Start, CLI, Project Structure, Compatibility
+- Ask/Report: GitHub Issues & Discussions
+- Community: Discord

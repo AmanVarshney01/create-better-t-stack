@@ -1,32 +1,12 @@
 {
 	"pages": [
 		"index",
-		"installation",
-		"quick-start",
+		"cli",
 		"project-structure",
-		"---Configuration Options---",
-		"frontend",
-		"backend",
-		"database",
-		"orm",
-		"authentication",
-		"runtime",
-		"api-layer",
-		"---Addons & Features---",
-		"addons",
-		"examples",
-		"deployment",
-		"---Database Setup---",
-		"database-providers",
-		"---CLI Reference---",
-		"cli-commands",
-		"cli-flags",
-		"---Guides---",
-		"migration-guide",
+		"bts-config",
+		"contributing",
+		"compatibility",
 		"troubleshooting",
-		"best-practices",
-		"---FAQ---",
-		"faq",
-		"compatibility"
+		"faq"
 	]
 }

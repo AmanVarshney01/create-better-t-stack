@@ -1,0 +1,13 @@
+{
+  "title": "CLI",
+  "defaultOpen": true,
+  "pages": [
+    "index",
+    "init",
+    "add",
+    "builder",
+    "docs",
+    "sponsors"
+  ]
+}
+

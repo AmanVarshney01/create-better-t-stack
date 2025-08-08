@@ -1,0 +1,54 @@
+---
+title: bts.jsonc
+description: What bts.jsonc does and why it matters
+---
+
+## What is it?
+
+`bts.jsonc` is a small config file written to your project root when you create a project. It captures the stack choices you selected (frontend, backend, API, DB/ORM, auth, addons, etc.). The file uses JSONC (JSON with comments) and includes a schema for editor hints.
+
+Where: `./bts.jsonc`
+
+## Why it exists
+
+- Required for the `add` command to detect your current stack
+- Helps validate compatibility and pre‑fill sensible defaults
+
+If `bts.jsonc` is missing, the `add` command cannot run because the project cannot be detected.
+
+## Safe to delete (with a caveat)
+
+It’s safe to delete for normal development; the generated code in `apps/*` and `packages/*` remains the source of truth. However, if you plan to use the `add` command later, you must keep `bts.jsonc` (or recreate it) so the CLI can detect your project.
+
+## Format
+
+The file is JSONC with comments enabled and includes a `$schema` URL for tooling.
+
+```jsonc
+// Better-T-Stack configuration file
+// safe to delete
+{
+  "$schema": "https://r2.better-t-stack.dev/schema.json",
+  "version": "x.y.z",
+  "createdAt": "2025-01-01T00:00:00.000Z",
+  "frontend": ["tanstack-router"],
+  "backend": "hono",
+  "runtime": "bun",
+  "database": "sqlite",
+  "orm": "drizzle",
+  "api": "trpc",
+  "auth": true,
+  "addons": ["turborepo"],
+  "examples": [],
+  "dbSetup": "none",
+  "webDeploy": "none",
+  "packageManager": "bun"
+}
+```
+
+Notes:
+- Values mirror what you selected during project creation
+- The file may be updated when you run `add` (e.g., addons or webDeploy)
+
+See also: [`add` command](/docs/cli/add)
+

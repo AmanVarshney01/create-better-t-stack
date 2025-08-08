@@ -1,0 +1,94 @@
+---
+title: Contributing
+description: How to set up your environment and contribute changes
+---
+
+## Overview
+
+This project is a monorepo with two main apps:
+
+- CLI: `apps/cli`
+- Documentation site: `apps/web`
+
+> Note: Planning to add a new feature? Please open an issue first to confirm it aligns with the project's future goals. We don't want you to spend time on work that might not land.
+
+## Setup
+
+### Prerequisites
+
+- Node.js 20+
+- Bun (recommended)
+- Git
+
+### Install
+
+```bash
+git clone https://github.com/better-t-stack/create-better-t-stack.git
+cd create-better-t-stack
+bun install
+```
+
+## Develop the CLI
+
+```bash
+cd apps/cli
+# optional global link for testing anywhere
+bun link
+# run in watch mode
+bun dev:cli
+```
+
+## Develop the Docs
+
+```bash
+# from repo root
+bun dev:web
+```
+
+## Contribution Flow
+
+1. Open an issue/discussion before starting major work
+2. Create a feature branch
+3. Make changes following existing code style
+4. Update docs as needed
+5. Test and format
+
+```bash
+# CLI
+cd apps/cli && bun dev:cli
+
+# Web
+bun dev:web
+
+# Format
+bun run format
+
+# Type checks
+bun check
+```
+
+6. (CLI changes) Add a changeset
+
+```bash
+bunx changeset select create-better-t-stack
+# Choose 'patch' for small fixes, 'minor' for features
+# Never choose 'major'
+```
+
+7. Commit and push
+
+```bash
+git add .
+git commit -m "feat(web): ..." # or fix(cli): ...
+git push origin <your-branch>
+```
+
+8. Open a Pull Request and link any related issues
+
+## Help
+
+- Issues and Discussions on GitHub
+- Discord: https://discord.gg/ZYsbjpDaM5
+
+See full contributor guide in the repository: `.github/CONTRIBUTING.md`.
+

@@ -139,5 +139,3 @@ export const ADDON_COMPATIBILITY: Record<Addons, readonly Frontend[]> = {
 	fumadocs: [],
 	none: [],
 } as const;
-
-// WEB_FRAMEWORKS moved to utils/compatibility for centralized use

@@ -1,0 +1,35 @@
+---
+title: add
+description: Add addons or deployment to an existing project
+---
+
+## Usage
+
+<Tabs items={['bun', 'pnpm', 'npm']}>
+  <Tab value="bun">
+    ```bash
+    bun create better-t-stack@latest add [options]
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest add [options]
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npx create-better-t-stack@latest add [options]
+    ```
+  </Tab>
+</Tabs>
+
+### Options
+
+- `--addons` Multiple values
+- `--web-deploy` One of: `workers`, `none`
+- `--project-dir` Path
+- `--install` / `--no-install`
+- `--package-manager` One of: `bun`, `pnpm`, `npm`
+
+See also: [Compatibility](/docs/compatibility)
+

@@ -1,0 +1,60 @@
+---
+title: Project Structure
+description: High-level overview of the generated monorepo layout
+---
+
+import { File, Folder, Files } from 'fumadocs-ui/components/files';
+
+### Server-based projects
+
+<Files>
+  <Folder name="apps" defaultOpen>
+    <Folder name="server" defaultOpen>
+      <Folder name="src" />
+    </Folder>
+    <Folder name="web" defaultOpen disabled>
+      <Folder name="src" />
+      <Folder name="public" />
+    </Folder>
+    <Folder name="native" defaultOpen disabled>
+      <Folder name="app" />
+    </Folder>
+  </Folder>
+</Files>
+
+Notes:
+- `apps/server` is present for backends like `hono`, `express`, `fastify`, `elysia`, `next`.
+- `apps/web` and `apps/native` are optional; they appear only if you select a web or native frontend.
+
+### Convex-based projects
+
+<Files>
+  <Folder name="apps" defaultOpen>
+    <Folder name="web" defaultOpen disabled>
+      <Folder name="src" />
+      <Folder name="public" />
+    </Folder>
+    <Folder name="native" defaultOpen disabled>
+      <Folder name="app" />
+    </Folder>
+  </Folder>
+  <Folder name="packages" defaultOpen>
+    <Folder name="backend" defaultOpen>
+      <Folder name="convex" />
+    </Folder>
+  </Folder>
+</Files>
+
+Notes:
+- Convex replaces the server app; `packages/backend` is generated instead of `apps/server`.
+- Auth, DB/ORM, and API scaffolding are disabled for Convex presets.
+
+### Where features land (high level)
+
+- API layer: merged into `apps/server` and `apps/web` when applicable.
+- Database & ORM: merged into `apps/server` when both are selected.
+- Authentication: merged into `apps/server`, `apps/web`, and `apps/native` when enabled and compatible.
+- Addons: PWA merges into `apps/web`; others merge at the appropriate location.
+- Web deployment (Workers): deployment files merge into `apps/web` per frontend.
+- Runtime extras (Workers): Workers-specific files added at the repo root.
+

@@ -1,118 +1,127 @@
 ---
-title: Getting Started
-description: A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations
+title: Quick Start
+description: Create your first Better-T-Stack project in minutes
 ---
 
-> ⚠️ **Warning:** Documentation is a work in progress.
+## Philosophy
 
-## What is Better-T-Stack?
+- With Better T Stack, you freely choose only the parts you want; nothing extra is added.
+- Pick your frontend, backend, API layer, database, ORM, auth, addons — or skip any of them. Compatibility is enforced.
+- No lock‑in: it’s a generator, not a framework fork.
 
-Better-T-Stack is designed to eliminate the complexity of setting up modern TypeScript projects. Instead of spending hours configuring build tools, type systems, databases, and deployment pipelines, you can get a production-ready project structure in minutes.
+## Get Started
 
-### Key Features
+### Stack Builder (UI)
 
-- **🏗️ Full-Stack Ready**: Choose from multiple frontend and backend frameworks
-- **🔒 End-to-End Type Safety**: TypeScript across your entire application stack
-- **🗄️ Database Integration**: Support for SQLite, PostgreSQL, MySQL, and MongoDB
-- **🔐 Built-in Authentication**: Email/password auth with Better-Auth
-- **📱 Multi-Platform**: Web, mobile (React Native), and desktop (Tauri) support
-- **☁️ Deployment Ready**: Configured for modern hosting platforms
-- **⚡ Modern Tooling**: Latest versions of your favorite tools and frameworks
-
-### Supported Technologies
-
-#### Frontend Frameworks
-- **React** with TanStack Router or React Router
-- **Next.js** - Full-stack React framework
-- **SvelteKit** - Web framework for Svelte
-- **Nuxt** - Vue.js framework
-- **SolidJS** - Performant reactive framework
-- **TanStack Start** - SSR with TanStack Router
-- **React Native** - Mobile development with Expo
-
-#### Backend Frameworks
-- **Hono** - Lightweight, ultrafast web framework
-- **Express** - Popular Node.js framework
-- **Fastify** - Fast, low-overhead framework
-- **Elysia** - Type-safe, high-performance framework
-- **Convex** - Reactive backend-as-a-service
-- **Next.js API Routes** - Full-stack React
-
-#### Databases & ORMs
-- **Databases**: SQLite/Turso, PostgreSQL, MySQL, MongoDB
-- **ORMs**: Drizzle (TypeScript-first), Prisma (feature-rich), Mongoose
-- **Hosting**: Neon, Supabase, MongoDB Atlas, Cloudflare D1
-
-#### API Layers
-- **tRPC** - End-to-end type-safe APIs
-- **oRPC** - OpenAPI-compatible type-safe APIs
-
-### Why Choose Better-T-Stack?
-
-#### Traditional Setup Problems
-- ⏰ Hours of configuration and setup
-- 🔧 Complex toolchain integration
-- 📚 Overwhelming technology choices
-- 🐛 Configuration bugs and compatibility issues
-- 🏗️ Inconsistent project structures
-
-#### Better-T-Stack Solutions
-- ⚡ **Quick Setup**: Get started in under 2 minutes
-- 🎯 **Curated Choices**: Pre-selected, compatible technology combinations
-- 📋 **Best Practices**: Industry-standard configurations out of the box
-- 🔄 **Consistent Structure**: Standardized monorepo organization
-- 🧪 **Battle-Tested**: Configurations used in production applications
-
-## Quick Example
+- Visit [/new](/new) to pick your stack and copy the generated command
+- Or open it via:
 
 ```bash
-# Create a new project
-npx create-better-t-stack@latest my-app
-
-# Choose your stack interactively or use flags
-npx create-better-t-stack@latest my-app \
-  --frontend tanstack-router \
-  --backend hono \
-  --database postgres \
-  --orm drizzle \
-  --auth \
-  --addons pwa turborepo
+bun create better-t-stack@latest builder
 ```
 
-## Project Types
+### CLI (prompts)
 
-Better-T-Stack supports various project configurations:
+```bash
+bun create better-t-stack@latest
+```
 
-### Full-Stack Web Applications
-Perfect for modern web apps with React, Vue, or Svelte frontends backed by type-safe APIs.
+Follow the interactive prompts to choose your frontend, backend, database, ORM, API layer, and addons.
 
-### Mobile Applications
-Build React Native apps with Expo, sharing type definitions with your backend.
+Skip prompts and use the default stack:
 
-### Desktop Applications
-Create cross-platform desktop apps using Tauri with your web frontend.
+```bash
+bun create better-t-stack@latest my-app --yes
+```
 
-### API-Only Projects
-Build standalone APIs and microservices with your preferred backend framework.
+Prefer a visual flow? Use the Stack Builder at [/new](/new) to pick your stack and copy the generated command. You can also open it via:
 
-### Monorepo Projects
-Organize multiple applications (web, mobile, API) in a single repository with shared packages.
+```bash
+bun create better-t-stack@latest builder
+```
 
-## Who Should Use Better-T-Stack?
+## Common Setups
 
-- **Indie Developers**: Quickly prototype and build full-stack applications
-- **Startups**: Get to market faster with production-ready project structure
-- **Teams**: Standardize project setup across your organization
-- **Students**: Learn modern full-stack development with best practices
-- **Agencies**: Rapidly scaffold client projects with consistent quality
+### Default Stack
 
-## What's Next?
+```bash
+bun create better-t-stack@latest my-webapp \
+  --frontend tanstack-router \
+  --backend hono \
+  --database sqlite \
+  --orm drizzle \
+  --auth \
+  --addons turborepo
+```
 
-Ready to get started? Check out our [Quick Start Guide](/docs/quick-start) to create your first Better-T-Stack project, or explore the [Configuration Options](/docs/frontend) to learn about all available technologies and features.
+### Convex + React
 
-### Need Help?
+```bash
+bun create better-t-stack@latest my-convex-app \
+  --frontend tanstack-router \
+  --backend convex
+```
 
-- 📖 **Documentation**: Comprehensive guides and references
-- 🐛 **Issues**: Report bugs on [GitHub](https://github.com/AmanVarshney01/create-better-t-stack/issues)
-- 💬 **Discussions**: Community support and questions
-- 🌟 **Star us**: Show support on [GitHub](https://github.com/AmanVarshney01/create-better-t-stack)
+### API Only
+
+```bash
+bun create better-t-stack@latest my-api \
+  --frontend none \
+  --backend fastify \
+  --runtime node \
+  --database postgres \
+  --orm prisma \
+  --api trpc
+```
+
+### Mobile App (Expo)
+
+```bash
+bun create better-t-stack@latest my-native \
+  --frontend native-nativewind \
+  --backend hono \
+  --database sqlite \
+  --orm drizzle \
+  --auth
+```
+
+### Empty Monorepo
+
+```bash
+bun create better-t-stack@latest my-workspace \
+  --frontend none \
+  --backend none
+```
+
+## Flags Cheat Sheet
+
+See the full list in the [CLI Reference](/docs/cli). Key flags:
+
+- `--frontend`: tanstack-router, react-router, tanstack-start, next, nuxt, svelte, solid, native-nativewind, native-unistyles, none
+- `--backend`: hono, express, fastify, elysia, next, convex, none
+- `--runtime`: bun, node, workers, none
+- `--database`: sqlite, postgres, mysql, mongodb, none
+- `--orm`: drizzle, prisma, mongoose, none
+- `--api`: trpc, orpc, none
+- `--addons`: turborepo, pwa, tauri, biome, husky, starlight, none
+- `--examples`: todo, ai, none
+
+## Next Steps
+
+<Cards>
+  <Card href="/docs/cli" title="CLI (per-command)">
+    Flags, usage, and examples for each command
+  </Card>
+  <Card href="/docs/project-structure" title="Project Structure">
+    See how web/server/native and Convex layouts are generated
+  </Card>
+  <Card href="/docs/compatibility" title="Compatibility">
+    Valid combinations for backend, runtime, database, ORM, API
+  </Card>
+  <Card href="/docs/bts-config" title="bts.jsonc">
+    Required for the add command; safe to delete if you don’t use add
+  </Card>
+  <Card href="/docs/contributing" title="Contributing">
+    Dev setup and contribution flow
+  </Card>
+</Cards>

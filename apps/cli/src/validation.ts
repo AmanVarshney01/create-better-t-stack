@@ -346,10 +346,6 @@ export function validateConfigCompatibility(config: Partial<ProjectConfig>) {
 	const effectiveBackend = config.backend;
 	const effectiveFrontend = config.frontend;
 	const effectiveApi = config.api;
-	// effectiveRuntime currently unused after centralizing checks, keep for future consolidation
-	// const effectiveRuntime = config.runtime;
-
-	// Workers-related compatibility is validated during flag processing.
 
 	validateApiFrontendCompatibility(effectiveApi, effectiveFrontend);
 

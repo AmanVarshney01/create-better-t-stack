@@ -3,6 +3,32 @@ title: CLI Commands
 description: Complete reference for all Better-T-Stack CLI commands and options
 ---
 
+## Quick Usage
+
+<Tabs items={['bun', 'pnpm', 'npm']}>
+  <Tab value="bun">
+    ```bash
+    # Interactive setup
+    bun create better-t-stack@latest
+
+    # With project name
+    bun create better-t-stack@latest my-project
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest
+    pnpm create better-t-stack@latest my-project
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npx create-better-t-stack@latest
+    npx create-better-t-stack@latest my-project
+    ```
+  </Tab>
+</Tabs>
+
 ## Commands Overview
 
 | Command | Description |
@@ -21,19 +47,39 @@ The primary command for creating new Better-T-Stack projects.
 
 ### Basic Usage
 
-```bash
-# Interactive setup
-npx create-better-t-stack@latest
+<Tabs items={['bun', 'pnpm', 'npm']}>
+  <Tab value="bun">
+    ```bash
+    # Interactive setup
+    bun create better-t-stack@latest
 
-# With project name
-npx create-better-t-stack@latest my-project
+    # With project name
+    bun create better-t-stack@latest my-project
 
-# With specific directory
-npx create-better-t-stack@latest ./path/to/project
+    # With specific directory
+    bun create better-t-stack@latest ./path/to/project
 
-# Use current directory
-npx create-better-t-stack@latest .
-```
+    # Use current directory
+    bun create better-t-stack@latest .
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest
+    pnpm create better-t-stack@latest my-project
+    pnpm create better-t-stack@latest ./path/to/project
+    pnpm create better-t-stack@latest .
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npx create-better-t-stack@latest
+    npx create-better-t-stack@latest my-project
+    npx create-better-t-stack@latest ./path/to/project
+    npx create-better-t-stack@latest .
+    ```
+  </Tab>
+</Tabs>
 
 ### Flags Reference
 
@@ -71,12 +117,12 @@ npx create-better-t-stack@latest .
 # Web + Mobile
 --frontend tanstack-router native-nativewind
 
-# Multiple frontends
---frontend next solid
-
 # No frontend (API-only)
 --frontend none
 ```
+
+Note: Select at most one web frontend (one of: tanstack-router, react-router, tanstack-start, next, nuxt, svelte, solid) and at most one native frontend (one of: native-nativewind, native-unistyles).
+Do not combine `none` with other frontend values.
 
 #### Backend Options
 
@@ -200,7 +246,12 @@ npx create-better-t-stack@latest .
 - `biome` - Biome linter/formatter
 - `husky` - Git hooks with Husky
 - `starlight` - Documentation site
+ - `fumadocs` - Fumadocs docs site
+ - `ultracite` - Markdown/MDX processing
+ - `oxlint` - Fast linter
 - `none` - No addons
+
+Note: Do not combine `none` with other addon values.
 
 **Examples:**
 ```bash
@@ -226,6 +277,8 @@ npx create-better-t-stack@latest .
 --examples todo ai
 --examples none
 ```
+
+Note: Do not combine `none` with other example values.
 
 #### Database Setup Options
 
@@ -295,19 +348,39 @@ Add addons or deployment configurations to existing Better-T-Stack projects.
 
 ### Usage
 
-```bash
-# Interactive addon selection
-npx create-better-t-stack@latest add
+<Tabs items={['bun', 'pnpm', 'npm']}>
+  <Tab value="bun">
+    ```bash
+    # Interactive addon selection
+    bun create better-t-stack@latest add
 
-# Add specific addons
-npx create-better-t-stack@latest add --addons pwa tauri
+    # Add specific addons
+    bun create better-t-stack@latest add --addons pwa tauri
 
-# Add deployment
-npx create-better-t-stack@latest add --web-deploy workers
+    # Add deployment
+    bun create better-t-stack@latest add --web-deploy workers
 
-# Add both
-npx create-better-t-stack@latest add --addons biome --web-deploy workers
-```
+    # Add both
+    bun create better-t-stack@latest add --addons biome --web-deploy workers
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest add
+    pnpm create better-t-stack@latest add --addons pwa tauri
+    pnpm create better-t-stack@latest add --web-deploy workers
+    pnpm create better-t-stack@latest add --addons biome --web-deploy workers
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npx create-better-t-stack@latest add
+    npx create-better-t-stack@latest add --addons pwa tauri
+    npx create-better-t-stack@latest add --web-deploy workers
+    npx create-better-t-stack@latest add --addons biome --web-deploy workers
+    ```
+  </Tab>
+</Tabs>
 
 ### Flags
 
@@ -341,9 +414,23 @@ Display Better-T-Stack project sponsors.
 
 ### Usage
 
-```bash
-npx create-better-t-stack@latest sponsors
-```
+<Tabs items={['bun', 'pnpm', 'npm']}>
+  <Tab value="bun">
+    ```bash
+    bun create better-t-stack@latest sponsors
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest sponsors
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npx create-better-t-stack@latest sponsors
+    ```
+  </Tab>
+</Tabs>
 
 Shows a list of project sponsors with their GitHub profiles and websites.
 
@@ -355,9 +442,23 @@ Open Better-T-Stack documentation in your default browser.
 
 ### Usage
 
-```bash
-npx create-better-t-stack@latest docs
-```
+<Tabs items={['bun', 'pnpm', 'npm']}>
+  <Tab value="bun">
+    ```bash
+    bun create better-t-stack@latest docs
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest docs
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npx create-better-t-stack@latest docs
+    ```
+  </Tab>
+</Tabs>
 
 Opens: https://better-t-stack.dev/docs
 
@@ -369,9 +470,23 @@ Open the web-based interactive stack builder.
 
 ### Usage
 
-```bash
-npx create-better-t-stack@latest builder
-```
+<Tabs items={['bun', 'pnpm', 'npm']}>
+  <Tab value="bun">
+    ```bash
+    bun create better-t-stack@latest builder
+    ```
+  </Tab>
+  <Tab value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest builder
+    ```
+  </Tab>
+  <Tab value="npm">
+    ```bash
+    npx create-better-t-stack@latest builder
+    ```
+  </Tab>
+</Tabs>
 
 Opens: https://better-t-stack.dev/new
 
@@ -384,7 +499,7 @@ The web builder provides a visual interface for configuring your stack and gener
 ### Full-Stack Web Application
 
 ```bash
-npx create-better-t-stack@latest my-webapp \
+bun create better-t-stack@latest my-webapp \
   --frontend tanstack-router \
   --backend hono \
   --runtime bun \
@@ -400,7 +515,7 @@ npx create-better-t-stack@latest my-webapp \
 ### Mobile + Web Application
 
 ```bash
-npx create-better-t-stack@latest my-mobile-app \
+bun create better-t-stack@latest my-mobile-app \
   --frontend tanstack-router native-nativewind \
   --backend hono \
   --database sqlite \
@@ -413,7 +528,7 @@ npx create-better-t-stack@latest my-mobile-app \
 ### Cloudflare Workers Project
 
 ```bash
-npx create-better-t-stack@latest my-workers-app \
+bun create better-t-stack@latest my-workers-app \
   --frontend tanstack-router \
   --backend hono \
   --runtime workers \
@@ -426,7 +541,7 @@ npx create-better-t-stack@latest my-workers-app \
 ### API-Only Project
 
 ```bash
-npx create-better-t-stack@latest my-api \
+bun create better-t-stack@latest my-api \
   --frontend none \
   --backend fastify \
   --runtime node \
@@ -440,10 +555,10 @@ npx create-better-t-stack@latest my-api \
 
 ```bash
 # Use all defaults with immediate setup
-npx create-better-t-stack@latest my-project --yes
+bun create better-t-stack@latest my-project --yes
 
 # Convex full-stack (automatically configures compatible options)
-npx create-better-t-stack@latest my-convex-app --backend convex
+bun create better-t-stack@latest my-convex-app --backend convex
 ```
 
 ---
@@ -452,11 +567,29 @@ npx create-better-t-stack@latest my-convex-app --backend convex
 
 Some options have compatibility requirements:
 
-- **Cloudflare Workers**: Only with `--backend hono`, `--orm drizzle`, `--runtime workers`
+- **Cloudflare Workers**: Only with `--backend hono`, `--orm drizzle` or `--orm none`, `--runtime workers`
 - **MongoDB**: Requires `--orm mongoose` or `--orm prisma`
-- **Convex**: Incompatible with custom database/ORM/API options
+- **Convex**: Forces `--no-auth`, `--database none`, `--orm none`, `--api none`, `--runtime none`, `--db-setup none`; sets `--examples todo`; Solid frontend is not supported with Convex
 - **PWA**: Requires compatible web frontend
 - **Tauri**: Requires compatible web frontend
 - **AI Examples**: Not compatible with `--backend elysia` or `--frontend solid`
+- **tRPC + Nuxt/Svelte/Solid**: Use `--api orpc` (tRPC is not supported with `nuxt`, `svelte`, or `solid`)
+- **Todo Example**: Requires a database when a backend (other than Convex) is selected
+- **Web Deploy**: `--web-deploy workers` requires selecting a web frontend
+- **Examples with `--api none`**: Cannot select examples when `--api none` (unless `--backend convex`)
+- **Runtime `none`**: Only allowed with `--backend convex` or `--backend none`
+- **Mongoose ORM**: Requires `--database mongodb`
+- **Drizzle ORM**: Not compatible with `--database mongodb`
+- **Database requires ORM**: Selecting a database requires a non-`none` ORM
+- **ORM requires database**: Selecting a non-`none` ORM requires a database
+- **Auth requires database**: `--auth` requires a non-`none` database
+- **DB Setup constraints**:
+  - `--db-setup turso` → requires `--database sqlite`
+  - `--db-setup neon` → requires `--database postgres`
+  - `--db-setup prisma-postgres` → requires `--database postgres`
+  - `--db-setup mongodb-atlas` → requires `--database mongodb`
+  - `--db-setup supabase` → requires `--database postgres`
+  - `--db-setup d1` → requires `--database sqlite` and `--runtime workers`
+  - `--db-setup docker` → not compatible with `--database sqlite` or `--runtime workers`
 
 The CLI will validate compatibility and show helpful error messages for invalid combinations.
