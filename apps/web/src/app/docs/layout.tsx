@@ -14,9 +14,5 @@ const docsOptions: DocsLayoutProps = {
 };
 
 export default function Layout({ children }: { children: ReactNode }) {
-	return (
-		<>
-			<DocsLayout {...docsOptions}>{children}</DocsLayout>
-		</>
-	);
+	return <DocsLayout {...docsOptions}>{children}</DocsLayout>;
 }
