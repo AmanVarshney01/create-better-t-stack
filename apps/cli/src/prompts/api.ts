@@ -12,9 +12,11 @@ export async function getApiChoice(
 		return "none";
 	}
 
-	if (Api) return Api;
-
 	const allowed = allowedApisForFrontends(frontend ?? []);
+
+	if (Api) {
+		return allowed.includes(Api) ? Api : allowed[0];
+	}
 	const apiOptions = allowed.map((a) =>
 		a === "trpc"
 			? {

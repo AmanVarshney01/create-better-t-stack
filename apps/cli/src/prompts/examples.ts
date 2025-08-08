@@ -52,11 +52,15 @@ export async function getExamplesChoice(
 		});
 	}
 
+	if (options.length === 0) return [];
+
 	response = await multiselect<Examples>({
 		message: "Include examples",
 		options: options,
 		required: false,
-		initialValues: DEFAULT_CONFIG.examples,
+		initialValues: DEFAULT_CONFIG.examples?.filter((ex) =>
+			options.some((o) => o.value === ex),
+		),
 	});
 
 	if (isCancel(response)) {

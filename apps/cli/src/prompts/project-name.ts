@@ -31,11 +31,10 @@ export async function getProjectName(initialName?: string): Promise<string> {
 		const validationError = validateDirectoryName(finalDirName);
 		if (!validationError) {
 			const projectDir = path.resolve(process.cwd(), initialName);
-			if (!isPathWithinCwd(projectDir)) {
-				consola.error(pc.red("Project path must be within current directory"));
-			} else {
+			if (isPathWithinCwd(projectDir)) {
 				return initialName;
 			}
+			consola.error(pc.red("Project path must be within current directory"));
 		}
 	}
 

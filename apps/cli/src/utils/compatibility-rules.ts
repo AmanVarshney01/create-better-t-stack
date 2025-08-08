@@ -130,7 +130,7 @@ export function validateWorkersCompatibility(
 	}
 
 	if (
-		providedFlags.has("db-setup") &&
+		providedFlags.has("dbSetup") &&
 		options.dbSetup === "docker" &&
 		config.runtime === "workers"
 	) {

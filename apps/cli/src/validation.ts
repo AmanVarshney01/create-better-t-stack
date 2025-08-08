@@ -140,6 +140,16 @@ export function processAndValidateFlags(
 			config.frontend = validOptions;
 		}
 	}
+
+	if (
+		providedFlags.has("api") &&
+		providedFlags.has("frontend") &&
+		config.api &&
+		config.frontend &&
+		config.frontend.length > 0
+	) {
+		validateApiFrontendCompatibility(config.api, config.frontend);
+	}
 	if (options.addons && options.addons.length > 0) {
 		if (options.addons.includes("none")) {
 			if (options.addons.length > 1) {
@@ -206,7 +216,12 @@ export function processAndValidateFlags(
 		coerceBackendPresets(config);
 	}
 
-	if (config.orm === "mongoose" && config.database !== "mongodb") {
+	if (
+		providedFlags.has("orm") &&
+		providedFlags.has("database") &&
+		config.orm === "mongoose" &&
+		config.database !== "mongodb"
+	) {
 		consola.fatal(
 			"Mongoose ORM requires MongoDB database. Please use '--database mongodb' or choose a different ORM.",
 		);
@@ -214,6 +229,8 @@ export function processAndValidateFlags(
 	}
 
 	if (
+		providedFlags.has("database") &&
+		providedFlags.has("orm") &&
 		config.database === "mongodb" &&
 		config.orm &&
 		config.orm !== "mongoose" &&
@@ -225,28 +242,50 @@ export function processAndValidateFlags(
 		process.exit(1);
 	}
 
-	if (config.orm === "drizzle" && config.database === "mongodb") {
+	if (
+		providedFlags.has("orm") &&
+		providedFlags.has("database") &&
+		config.orm === "drizzle" &&
+		config.database === "mongodb"
+	) {
 		consola.fatal(
 			"Drizzle ORM does not support MongoDB. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
 		);
 		process.exit(1);
 	}
 
-	if (config.database && config.database !== "none" && config.orm === "none") {
+	if (
+		providedFlags.has("database") &&
+		providedFlags.has("orm") &&
+		config.database &&
+		config.database !== "none" &&
+		config.orm === "none"
+	) {
 		consola.fatal(
 			"Database selection requires an ORM. Please choose '--orm drizzle', '--orm prisma', or '--orm mongoose'.",
 		);
 		process.exit(1);
 	}
 
-	if (config.orm && config.orm !== "none" && config.database === "none") {
+	if (
+		providedFlags.has("orm") &&
+		providedFlags.has("database") &&
+		config.orm &&
+		config.orm !== "none" &&
+		config.database === "none"
+	) {
 		consola.fatal(
 			"ORM selection requires a database. Please choose a database or set '--orm none'.",
 		);
 		process.exit(1);
 	}
 
-	if (config.auth && config.database === "none") {
+	if (
+		providedFlags.has("auth") &&
+		providedFlags.has("database") &&
+		config.auth &&
+		config.database === "none"
+	) {
 		consola.fatal(
 			"Authentication requires a database. Please choose a database or set '--no-auth'.",
 		);
@@ -254,6 +293,8 @@ export function processAndValidateFlags(
 	}
 
 	if (
+		providedFlags.has("dbSetup") &&
+		providedFlags.has("database") &&
 		config.dbSetup &&
 		config.dbSetup !== "none" &&
 		config.database === "none"
@@ -264,35 +305,60 @@ export function processAndValidateFlags(
 		process.exit(1);
 	}
 
-	if (config.dbSetup === "turso" && config.database !== "sqlite") {
+	if (
+		providedFlags.has("dbSetup") &&
+		(config.database ? providedFlags.has("database") : true) &&
+		config.dbSetup === "turso" &&
+		config.database !== "sqlite"
+	) {
 		consola.fatal(
 			"Turso setup requires SQLite database. Please use '--database sqlite' or choose a different setup.",
 		);
 		process.exit(1);
 	}
 
-	if (config.dbSetup === "neon" && config.database !== "postgres") {
+	if (
+		providedFlags.has("dbSetup") &&
+		(config.database ? providedFlags.has("database") : true) &&
+		config.dbSetup === "neon" &&
+		config.database !== "postgres"
+	) {
 		consola.fatal(
 			"Neon setup requires PostgreSQL database. Please use '--database postgres' or choose a different setup.",
 		);
 		process.exit(1);
 	}
 
-	if (config.dbSetup === "prisma-postgres" && config.database !== "postgres") {
+	if (
+		providedFlags.has("dbSetup") &&
+		(config.database ? providedFlags.has("database") : true) &&
+		config.dbSetup === "prisma-postgres" &&
+		config.database !== "postgres"
+	) {
 		consola.fatal(
 			"Prisma PostgreSQL setup requires PostgreSQL database. Please use '--database postgres' or choose a different setup.",
 		);
 		process.exit(1);
 	}
 
-	if (config.dbSetup === "mongodb-atlas" && config.database !== "mongodb") {
+	if (
+		providedFlags.has("dbSetup") &&
+		(config.database ? providedFlags.has("database") : true) &&
+		config.dbSetup === "mongodb-atlas" &&
+		config.database !== "mongodb"
+	) {
 		consola.fatal(
 			"MongoDB Atlas setup requires MongoDB database. Please use '--database mongodb' or choose a different setup.",
 		);
 		process.exit(1);
 	}
 
-	if (config.dbSetup === "supabase" && config.database !== "postgres") {
+	if (
+		providedFlags.has("dbSetup") &&
+		(config.database ? providedFlags.has("database") : true) &&
+		config.dbSetup === "supabase" &&
+		config.database !== "postgres"
+	) {
 		consola.fatal(
 			"Supabase setup requires PostgreSQL database. Please use '--database postgres' or choose a different setup.",
 		);
@@ -300,29 +366,49 @@ export function processAndValidateFlags(
 	}
 
 	if (config.dbSetup === "d1") {
-		if (config.database !== "sqlite") {
-			consola.fatal(
-				"Cloudflare D1 setup requires SQLite database. Please use '--database sqlite' or choose a different setup.",
-			);
-			process.exit(1);
+		if (
+			(providedFlags.has("dbSetup") && providedFlags.has("database")) ||
+			(providedFlags.has("dbSetup") && !config.database)
+		) {
+			if (config.database !== "sqlite") {
+				consola.fatal(
+					"Cloudflare D1 setup requires SQLite database. Please use '--database sqlite' or choose a different setup.",
+				);
+				process.exit(1);
+			}
 		}
 
-		if (config.runtime !== "workers") {
-			consola.fatal(
-				"Cloudflare D1 setup requires the Cloudflare Workers runtime. Please use '--runtime workers' or choose a different setup.",
-			);
-			process.exit(1);
+		if (
+			(providedFlags.has("dbSetup") && providedFlags.has("runtime")) ||
+			(providedFlags.has("dbSetup") && !config.runtime)
+		) {
+			if (config.runtime !== "workers") {
+				consola.fatal(
+					"Cloudflare D1 setup requires the Cloudflare Workers runtime. Please use '--runtime workers' or choose a different setup.",
+				);
+				process.exit(1);
+			}
 		}
 	}
 
-	if (config.dbSetup === "docker" && config.database === "sqlite") {
+	if (
+		providedFlags.has("dbSetup") &&
+		providedFlags.has("database") &&
+		config.dbSetup === "docker" &&
+		config.database === "sqlite"
+	) {
 		consola.fatal(
 			"Docker setup is not compatible with SQLite database. SQLite is file-based and doesn't require Docker. Please use '--database postgres', '--database mysql', '--database mongodb', or choose a different setup.",
 		);
 		process.exit(1);
 	}
 
-	if (config.dbSetup === "docker" && config.runtime === "workers") {
+	if (
+		providedFlags.has("dbSetup") &&
+		providedFlags.has("runtime") &&
+		config.dbSetup === "docker" &&
+		config.runtime === "workers"
+	) {
 		consola.fatal(
 			"Docker setup is not compatible with Cloudflare Workers runtime. Workers runtime uses serverless databases (D1) and doesn't support local Docker containers. Please use '--db-setup d1' for SQLite or choose a different runtime.",
 		);
@@ -334,9 +420,7 @@ export function processAndValidateFlags(
 	const hasWebFrontendFlag = (config.frontend ?? []).some((f) =>
 		isWebFrontend(f),
 	);
-	if (providedFlags.has("frontend")) {
-		validateWebDeployRequiresWebFrontend(config.webDeploy, hasWebFrontendFlag);
-	}
+	validateWebDeployRequiresWebFrontend(config.webDeploy, hasWebFrontendFlag);
 
 	return config;
 }

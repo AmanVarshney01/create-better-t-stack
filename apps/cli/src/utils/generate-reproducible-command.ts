@@ -34,7 +34,7 @@ export function generateReproducibleCommand(config: ProjectConfig): string {
 	flags.push(`--package-manager ${config.packageManager}`);
 	flags.push(config.install ? "--install" : "--no-install");
 
-	let baseCommand = "";
+	let baseCommand = "npx create-better-t-stack@latest";
 	const pkgManager = config.packageManager;
 
 	if (pkgManager === "bun") {
