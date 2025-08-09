@@ -36,7 +36,7 @@ export const stackParsers = {
 	dbSetup: parseAsStringEnum<StackState["dbSetup"]>(
 		getValidIds("dbSetup"),
 	).withDefault(DEFAULT_STACK.dbSetup),
-	auth: parseAsStringEnum<StackState["auth"]>(["true", "false"]).withDefault(
+	auth: parseAsStringEnum<StackState["auth"]>(getValidIds("auth")).withDefault(
 		DEFAULT_STACK.auth,
 	),
 	packageManager: parseAsStringEnum<StackState["packageManager"]>(

@@ -32,6 +32,10 @@ handlebars.registerHelper("eq", (a, b) => a === b);
 handlebars.registerHelper("ne", (a, b) => a !== b);
 handlebars.registerHelper("and", (a, b) => a && b);
 handlebars.registerHelper("or", (a, b) => a || b);
+handlebars.registerHelper("capitalize", (str) => {
+	if (typeof str !== "string" || str.length === 0) return str;
+	return str.charAt(0).toUpperCase() + str.slice(1);
+});
 
 handlebars.registerHelper(
 	"includes",

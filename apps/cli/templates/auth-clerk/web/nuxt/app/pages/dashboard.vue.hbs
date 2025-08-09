@@ -1,0 +1,47 @@
+<script setup lang="ts">
+import { SignedIn, SignedOut, RedirectToSignIn } from '@clerk/vue'
+
+definePageMeta({
+  layout: false
+})
+</script>
+
+<template>
+  <div>
+    <SignedOut>
+      <RedirectToSignIn />
+    </SignedOut>
+    
+    <SignedIn>
+      <div class="min-h-screen bg-background p-8">
+        <div class="mx-auto max-w-4xl">
+          <div class="mb-8 flex items-center justify-between">
+            <h1 class="text-4xl font-bold">Dashboard</h1>
+            <UserMenu />
+          </div>
+          
+          <UCard>
+            <template #header>
+              <h2 class="text-2xl font-semibold">Welcome to your {{capitalize(packageName)}} app!</h2>
+            </template>
+            
+            <div class="space-y-4">
+              <p class="text-muted-foreground">
+                You're successfully authenticated with Clerk. This is a protected route that requires authentication.
+              </p>
+              
+              <div class="rounded-lg border p-4">
+                <h3 class="mb-2 font-semibold">Quick Links</h3>
+                <ul class="space-y-2 text-sm">
+                  <li>• <a href="https://clerk.com/docs" target="_blank" class="text-primary hover:underline">Clerk Documentation</a></li>
+                  <li>• <a href="https://nuxt.com/docs" target="_blank" class="text-primary hover:underline">Nuxt Documentation</a></li>
+                  <li>• <NuxtLink to="/" class="text-primary hover:underline">Back to Home</NuxtLink></li>
+                </ul>
+              </div>
+            </div>
+          </UCard>
+        </div>
+      </div>
+    </SignedIn>
+  </div>
+</template>

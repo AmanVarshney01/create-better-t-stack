@@ -358,7 +358,7 @@ export async function setupAuthTemplate(
 	projectDir: string,
 	context: ProjectConfig,
 ) {
-	if (context.backend === "convex" || !context.auth) return;
+	if (context.backend === "convex" || context.auth === "none") return;
 
 	const serverAppDir = path.join(projectDir, "apps/server");
 	const webAppDir = path.join(projectDir, "apps/web");
@@ -378,8 +378,15 @@ export async function setupAuthTemplate(
 	const hasUnistyles = context.frontend.includes("native-unistyles");
 	const hasNative = hasNativeWind || hasUnistyles;
 
-	if (serverAppDirExists) {
-		const authServerBaseSrc = path.join(PKG_ROOT, "templates/auth/server/base");
+	// Choose the auth template directory based on the auth provider
+	const authTemplateBase = context.auth === "clerk" ? "auth-clerk" : "auth";
+
+	if (serverAppDirExists && context.auth === "better-auth") {
+		// Better-Auth requires server-side setup
+		const authServerBaseSrc = path.join(
+			PKG_ROOT,
+			`templates/${authTemplateBase}/server/base`,
+		);
 		if (await fs.pathExists(authServerBaseSrc)) {
 			await processAndCopyFiles(
 				"**/*",
@@ -387,13 +394,12 @@ export async function setupAuthTemplate(
 				serverAppDir,
 				context,
 			);
-		} else {
 		}
 
 		if (context.backend === "next") {
 			const authServerNextSrc = path.join(
 				PKG_ROOT,
-				"templates/auth/server/next",
+				`templates/${authTemplateBase}/server/next`,
 			);
 			if (await fs.pathExists(authServerNextSrc)) {
 				await processAndCopyFiles(
@@ -402,7 +408,6 @@ export async function setupAuthTemplate(
 					serverAppDir,
 					context,
 				);
-			} else {
 			}
 		}
 
@@ -413,22 +418,21 @@ export async function setupAuthTemplate(
 			if (orm === "drizzle") {
 				authDbSrc = path.join(
 					PKG_ROOT,
-					`templates/auth/server/db/drizzle/${db}`,
+					`templates/${authTemplateBase}/server/db/drizzle/${db}`,
 				);
 			} else if (orm === "prisma") {
 				authDbSrc = path.join(
 					PKG_ROOT,
-					`templates/auth/server/db/prisma/${db}`,
+					`templates/${authTemplateBase}/server/db/prisma/${db}`,
 				);
 			} else if (orm === "mongoose") {
 				authDbSrc = path.join(
 					PKG_ROOT,
-					`templates/auth/server/db/mongoose/${db}`,
+					`templates/${authTemplateBase}/server/db/mongoose/${db}`,
 				);
 			}
 			if (authDbSrc && (await fs.pathExists(authDbSrc))) {
 				await processAndCopyFiles("**/*", authDbSrc, serverAppDir, context);
-			} else if (authDbSrc) {
 			}
 		}
 	}
@@ -440,11 +444,10 @@ export async function setupAuthTemplate(
 		if (hasReactWeb) {
 			const authWebBaseSrc = path.join(
 				PKG_ROOT,
-				"templates/auth/web/react/base",
+				`templates/${authTemplateBase}/web/react/base`,
 			);
 			if (await fs.pathExists(authWebBaseSrc)) {
 				await processAndCopyFiles("**/*", authWebBaseSrc, webAppDir, context);
-			} else {
 			}
 
 			const reactFramework = context.frontend.find((f) =>
@@ -455,7 +458,7 @@ export async function setupAuthTemplate(
 			if (reactFramework) {
 				const authWebFrameworkSrc = path.join(
 					PKG_ROOT,
-					`templates/auth/web/react/${reactFramework}`,
+					`templates/${authTemplateBase}/web/react/${reactFramework}`,
 				);
 				if (await fs.pathExists(authWebFrameworkSrc)) {
 					await processAndCopyFiles(
@@ -464,64 +467,63 @@ export async function setupAuthTemplate(
 						webAppDir,
 						context,
 					);
-				} else {
 				}
 			}
 		} else if (hasNuxtWeb) {
-			const authWebNuxtSrc = path.join(PKG_ROOT, "templates/auth/web/nuxt");
+			const authWebNuxtSrc = path.join(
+				PKG_ROOT,
+				`templates/${authTemplateBase}/web/nuxt`,
+			);
 			if (await fs.pathExists(authWebNuxtSrc)) {
 				await processAndCopyFiles("**/*", authWebNuxtSrc, webAppDir, context);
-			} else {
 			}
 		} else if (hasSvelteWeb) {
-			const authWebSvelteSrc = path.join(PKG_ROOT, "templates/auth/web/svelte");
+			const authWebSvelteSrc = path.join(
+				PKG_ROOT,
+				`templates/${authTemplateBase}/web/svelte`,
+			);
 			if (await fs.pathExists(authWebSvelteSrc)) {
 				await processAndCopyFiles("**/*", authWebSvelteSrc, webAppDir, context);
-			} else {
 			}
 		} else if (hasSolidWeb) {
-			const authWebSolidSrc = path.join(PKG_ROOT, "templates/auth/web/solid");
+			const authWebSolidSrc = path.join(
+				PKG_ROOT,
+				`templates/${authTemplateBase}/web/solid`,
+			);
 			if (await fs.pathExists(authWebSolidSrc)) {
 				await processAndCopyFiles("**/*", authWebSolidSrc, webAppDir, context);
-			} else {
 			}
 		}
 	}
 
 	if (hasNative && nativeAppDirExists) {
-		const authNativeBaseSrc = path.join(
-			PKG_ROOT,
-			"templates/auth/native/native-base",
-		);
-		if (await fs.pathExists(authNativeBaseSrc)) {
-			await processAndCopyFiles(
-				"**/*",
-				authNativeBaseSrc,
-				nativeAppDir,
-				context,
-			);
-		}
-
-		let nativeFrameworkAuthPath = "";
-		if (hasNativeWind) {
-			nativeFrameworkAuthPath = "nativewind";
-		} else if (hasUnistyles) {
-			nativeFrameworkAuthPath = "unistyles";
-		}
-
-		if (nativeFrameworkAuthPath) {
-			const authNativeFrameworkSrc = path.join(
+		if (context.auth === "better-auth" || context.auth === "clerk") {
+			const authNativeBaseSrc = path.join(
 				PKG_ROOT,
-				`templates/auth/native/${nativeFrameworkAuthPath}`,
+				`templates/${authTemplateBase}/native/native-base`,
 			);
-			if (await fs.pathExists(authNativeFrameworkSrc)) {
+			if (await fs.pathExists(authNativeBaseSrc)) {
 				await processAndCopyFiles(
 					"**/*",
-					authNativeFrameworkSrc,
+					authNativeBaseSrc,
 					nativeAppDir,
 					context,
 				);
 			}
+		}
+
+		const nativeStyle = hasNativeWind ? "nativewind" : "unistyles";
+		const authNativeStyleSrc = path.join(
+			PKG_ROOT,
+			`templates/${authTemplateBase}/native/${nativeStyle}`,
+		);
+		if (await fs.pathExists(authNativeStyleSrc)) {
+			await processAndCopyFiles(
+				"**/*",
+				authNativeStyleSrc,
+				nativeAppDir,
+				context,
+			);
 		}
 	}
 }

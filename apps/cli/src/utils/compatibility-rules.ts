@@ -268,6 +268,28 @@ export function validateAddonsAgainstFrontends(
 	}
 }
 
+export function validateClerkFrontendCompatibility(
+	auth: ProjectConfig["auth"],
+	frontends: Frontend[] = [],
+) {
+	if (auth !== "clerk") return;
+
+	const includesSvelte = frontends.includes("svelte");
+	const includesSolid = frontends.includes("solid");
+
+	if (includesSvelte) {
+		exitWithError(
+			"Clerk authentication is not supported with Svelte frontend. Svelte is not officially supported by Clerk. Please use --auth better-auth or remove 'svelte' from --frontend.",
+		);
+	}
+
+	if (includesSolid) {
+		exitWithError(
+			"Clerk authentication is not supported with Solid frontend. Solid is not officially supported by Clerk. Please use --auth better-auth or remove 'solid' from --frontend.",
+		);
+	}
+}
+
 export function validateExamplesCompatibility(
 	examples: string[] | undefined,
 	backend: ProjectConfig["backend"] | undefined,

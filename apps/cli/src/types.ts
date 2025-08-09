@@ -80,6 +80,11 @@ export type DatabaseSetup = z.infer<typeof DatabaseSetupSchema>;
 export const APISchema = z.enum(["trpc", "orpc", "none"]).describe("API type");
 export type API = z.infer<typeof APISchema>;
 
+export const AuthSchema = z
+	.enum(["none", "better-auth", "clerk"])
+	.describe("Authentication provider");
+export type Auth = z.infer<typeof AuthSchema>;
+
 export const ProjectNameSchema = z
 	.string()
 	.min(1, "Project name cannot be empty")
@@ -113,7 +118,7 @@ export type CreateInput = {
 	yes?: boolean;
 	database?: Database;
 	orm?: ORM;
-	auth?: boolean;
+	auth?: Auth;
 	frontend?: Frontend[];
 	addons?: Addons[];
 	examples?: Examples[];
@@ -150,7 +155,7 @@ export interface ProjectConfig {
 	frontend: Frontend[];
 	addons: Addons[];
 	examples: Examples[];
-	auth: boolean;
+	auth: Auth;
 	git: boolean;
 	packageManager: PackageManager;
 	install: boolean;
@@ -169,7 +174,7 @@ export interface BetterTStackConfig {
 	frontend: Frontend[];
 	addons: Addons[];
 	examples: Examples[];
-	auth: boolean;
+	auth: Auth;
 	packageManager: PackageManager;
 	dbSetup: DatabaseSetup;
 	api: API;

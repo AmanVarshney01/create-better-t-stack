@@ -61,7 +61,7 @@ export async function createProjectHandler(
 
 		const cliInput = {
 			...input,
-			projectDirectory: input.projectName,
+			projectDirectory: finalResolvedPath,
 		};
 
 		const providedFlags = getProvidedFlags(cliInput);

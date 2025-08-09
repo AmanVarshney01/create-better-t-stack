@@ -1,0 +1,27 @@
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+
+export default async function DashboardPage() {
+  const { userId } = await auth();
+
+  if (!userId) {
+    redirect("/login");
+  }
+
+  return (
+    <div className="container mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+      <p className="text-gray-600">
+        Welcome to your protected dashboard! You are successfully authenticated with Clerk.
+      </p>
+      {{#if (includes examples "todo")}}
+      <div className="mt-6">
+        <h2 className="text-xl font-semibold mb-2">Todo Example</h2>
+        <p className="text-gray-600">
+          Check out the todo example to see how authentication works with your data.
+        </p>
+      </div>
+      {{/if}}
+    </div>
+  );
+}

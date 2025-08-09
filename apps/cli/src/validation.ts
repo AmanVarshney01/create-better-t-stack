@@ -22,6 +22,7 @@ import {
 	isWebFrontend,
 	validateAddonsAgainstFrontends,
 	validateApiFrontendCompatibility,
+	validateClerkFrontendCompatibility,
 	validateExamplesCompatibility,
 	validateWebDeployRequiresWebFrontend,
 	validateWorkersCompatibility,
@@ -144,6 +145,11 @@ export function processAndValidateFlags(
 		config.frontend.length > 0
 	) {
 		validateApiFrontendCompatibility(config.api, config.frontend);
+	}
+
+	// Validate Clerk authentication compatibility with frontend frameworks
+	if (config.auth && config.frontend && config.frontend.length > 0) {
+		validateClerkFrontendCompatibility(config.auth, config.frontend);
 	}
 	if (options.addons && options.addons.length > 0) {
 		if (options.addons.includes("none")) {

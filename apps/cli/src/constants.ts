@@ -14,7 +14,7 @@ export const DEFAULT_CONFIG: ProjectConfig = {
 	frontend: ["tanstack-router"],
 	database: "sqlite",
 	orm: "drizzle",
-	auth: true,
+	auth: "none",
 	addons: ["turborepo"],
 	examples: [],
 	git: true,
@@ -30,6 +30,11 @@ export const DEFAULT_CONFIG: ProjectConfig = {
 export const dependencyVersionMap = {
 	"better-auth": "^1.3.4",
 	"@better-auth/expo": "^1.3.4",
+
+	"@clerk/nextjs": "^6.12.3",
+	"@clerk/clerk-react": "^5.26.0",
+	"@clerk/expo": "^2.14.1",
+	"@clerk/astro": "^1.8.3",
 
 	"drizzle-orm": "^0.44.2",
 	"drizzle-kit": "^0.31.2",

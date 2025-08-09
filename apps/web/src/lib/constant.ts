@@ -363,19 +363,26 @@ export const TECH_OPTIONS: Record<
 	],
 	auth: [
 		{
-			id: "true",
-			name: "Better Auth",
-			description: "Simple authentication",
-			icon: `${ICON_BASE_URL}/better-auth.svg`,
-			color: "from-green-400 to-green-600",
+			id: "none",
+			name: "No Auth",
+			description: "No authentication layer",
+			icon: "",
+			color: "from-gray-400 to-gray-600",
 			default: true,
 		},
 		{
-			id: "false",
-			name: "No Auth",
-			description: "Skip authentication",
-			icon: "",
-			color: "from-red-400 to-red-600",
+			id: "better-auth",
+			name: "Better Auth",
+			description: "Simple authentication with database",
+			icon: `${ICON_BASE_URL}/better-auth.svg`,
+			color: "from-green-400 to-green-600",
+		},
+		{
+			id: "clerk",
+			name: "Clerk",
+			description: "Complete user management platform",
+			icon: `${ICON_BASE_URL}/clerk.svg`,
+			color: "from-purple-400 to-purple-600",
 		},
 	],
 	packageManager: [
@@ -554,7 +561,7 @@ export const PRESET_TEMPLATES = [
 			database: "sqlite",
 			orm: "drizzle",
 			dbSetup: "none",
-			auth: "true",
+			auth: "better-auth",
 			packageManager: "bun",
 			addons: ["turborepo"],
 			examples: [],
@@ -576,7 +583,7 @@ export const PRESET_TEMPLATES = [
 			database: "none",
 			orm: "none",
 			dbSetup: "none",
-			auth: "false",
+			auth: "none",
 			packageManager: "bun",
 			addons: ["turborepo"],
 			examples: ["todo"],
@@ -598,7 +605,7 @@ export const PRESET_TEMPLATES = [
 			database: "sqlite",
 			orm: "drizzle",
 			dbSetup: "none",
-			auth: "true",
+			auth: "better-auth",
 			packageManager: "bun",
 			addons: ["turborepo"],
 			examples: [],
@@ -620,7 +627,7 @@ export const PRESET_TEMPLATES = [
 			database: "sqlite",
 			orm: "drizzle",
 			dbSetup: "none",
-			auth: "true",
+			auth: "better-auth",
 			packageManager: "bun",
 			addons: ["turborepo"],
 			examples: [],
@@ -642,7 +649,7 @@ export const PRESET_TEMPLATES = [
 			database: "sqlite",
 			orm: "drizzle",
 			dbSetup: "turso",
-			auth: "true",
+			auth: "better-auth",
 			packageManager: "bun",
 			addons: ["pwa", "biome", "husky", "tauri", "starlight", "turborepo"],
 			examples: ["todo", "ai"],
@@ -681,7 +688,7 @@ export const DEFAULT_STACK: StackState = {
 	database: "sqlite",
 	orm: "drizzle",
 	dbSetup: "none",
-	auth: "true",
+	auth: "none",
 	packageManager: "bun",
 	addons: ["turborepo"],
 	examples: [],
@@ -703,7 +710,7 @@ export const isStackDefault = <K extends keyof StackState>(
 		if (key === "database" && value === "none") return true;
 		if (key === "orm" && value === "none") return true;
 		if (key === "api" && value === "none") return true;
-		if (key === "auth" && value === "false") return true;
+		if (key === "auth" && value === "none") return true;
 		if (key === "dbSetup" && value === "none") return true;
 		if (
 			key === "examples" &&

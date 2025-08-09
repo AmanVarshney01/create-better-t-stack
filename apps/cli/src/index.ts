@@ -9,6 +9,7 @@ import {
 import {
 	AddonsSchema,
 	APISchema,
+	AuthSchema,
 	BackendSchema,
 	DatabaseSchema,
 	DatabaseSetupSchema,
@@ -46,7 +47,7 @@ const router = t.router({
 						.describe("Use default configuration"),
 					database: DatabaseSchema.optional(),
 					orm: ORMSchema.optional(),
-					auth: z.boolean().optional(),
+					auth: AuthSchema.optional(),
 					frontend: z.array(FrontendSchema).optional(),
 					addons: z.array(AddonsSchema).optional(),
 					examples: z.array(ExamplesSchema).optional(),

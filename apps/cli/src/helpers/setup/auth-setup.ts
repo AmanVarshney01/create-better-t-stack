@@ -7,7 +7,7 @@ import { addPackageDependency } from "../../utils/add-package-deps";
 
 export async function setupAuth(config: ProjectConfig) {
 	const { auth, frontend, backend, projectDir } = config;
-	if (backend === "convex" || !auth) {
+	if (backend === "convex" || auth === "none") {
 		return;
 	}
 
@@ -20,53 +20,89 @@ export async function setupAuth(config: ProjectConfig) {
 	const serverDirExists = await fs.pathExists(serverDir);
 
 	try {
-		if (serverDirExists) {
-			await addPackageDependency({
-				dependencies: ["better-auth"],
-				projectDir: serverDir,
-			});
-		}
-
-		const hasWebFrontend = frontend.some((f) =>
-			[
-				"react-router",
-				"tanstack-router",
-				"tanstack-start",
-				"next",
-				"nuxt",
-				"svelte",
-				"solid",
-			].includes(f),
-		);
-
-		if (hasWebFrontend && clientDirExists) {
-			await addPackageDependency({
-				dependencies: ["better-auth"],
-				projectDir: clientDir,
-			});
-		}
-
-		if (
-			(frontend.includes("native-nativewind") ||
-				frontend.includes("native-unistyles")) &&
-			nativeDirExists
-		) {
-			await addPackageDependency({
-				dependencies: ["better-auth", "@better-auth/expo"],
-				projectDir: nativeDir,
-			});
+		if (auth === "better-auth") {
+			// Better-Auth setup
 			if (serverDirExists) {
 				await addPackageDependency({
-					dependencies: ["@better-auth/expo"],
+					dependencies: ["better-auth"],
 					projectDir: serverDir,
 				});
 			}
+
+			const hasWebFrontend = frontend.some((f) =>
+				[
+					"react-router",
+					"tanstack-router",
+					"tanstack-start",
+					"next",
+					"nuxt",
+					"svelte",
+					"solid",
+				].includes(f),
+			);
+
+			if (hasWebFrontend && clientDirExists) {
+				await addPackageDependency({
+					dependencies: ["better-auth"],
+					projectDir: clientDir,
+				});
+			}
+
+			if (
+				(frontend.includes("native-nativewind") ||
+					frontend.includes("native-unistyles")) &&
+				nativeDirExists
+			) {
+				await addPackageDependency({
+					dependencies: ["better-auth", "@better-auth/expo"],
+					projectDir: nativeDir,
+				});
+			}
+		} else if (auth === "clerk") {
+			// Clerk setup
+			const hasWebFrontend = frontend.some((f) =>
+				["react-router", "tanstack-router", "tanstack-start"].includes(f),
+			);
+
+			if (frontend.includes("next") && clientDirExists) {
+				await addPackageDependency({
+					dependencies: ["@clerk/nextjs"],
+					projectDir: clientDir,
+				});
+			} else if (hasWebFrontend && clientDirExists) {
+				await addPackageDependency({
+					dependencies: ["@clerk/clerk-react"],
+					projectDir: clientDir,
+				});
+			} else if (frontend.includes("nuxt") && clientDirExists) {
+				await addPackageDependency({
+					dependencies: ["@clerk/vue"],
+					projectDir: clientDir,
+				});
+			}
+
+			if (
+				(frontend.includes("native-nativewind") ||
+					frontend.includes("native-unistyles")) &&
+				nativeDirExists
+			) {
+				await addPackageDependency({
+					dependencies: ["@clerk/expo"],
+					projectDir: nativeDir,
+				});
+			}
 		}
+
+		consola.success(
+			pc.green(
+				`✅ Successfully set up ${auth === "better-auth" ? "Better-Auth" : "Clerk"} authentication!`,
+			),
+		);
 	} catch (error) {
-		consola.error(pc.red("Failed to configure authentication dependencies"));
-		if (error instanceof Error) {
-			consola.error(pc.red(error.message));
-		}
+		consola.error(
+			pc.red(`❌ Failed to set up authentication: ${(error as Error).message}`),
+		);
+		throw error;
 	}
 }
 
