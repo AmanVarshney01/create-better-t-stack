@@ -3,9 +3,11 @@ import { isCancel, log, multiselect, spinner } from "@clack/prompts";
 import { execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
+import { PKG_ROOT } from "../../constants";
 import type { ProjectConfig } from "../../types";
 import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
+import { processTemplate } from "../../utils/template-processor";
 
 export async function setupVibeRules(config: ProjectConfig) {
 	const { packageManager, projectDir } = config;
@@ -13,10 +15,24 @@ export async function setupVibeRules(config: ProjectConfig) {
 	try {
 		log.info("Setting up vibe-rules...");
 
-		const ruleFile = path.join(projectDir, ".bts", "rules.md");
+		const rulesDir = path.join(projectDir, ".bts");
+		const ruleFile = path.join(rulesDir, "rules.md");
 		if (!(await fs.pathExists(ruleFile))) {
-			log.error(pc.red("Rules file not found at .bts/rules.md"));
-			return;
+			const templatePath = path.join(
+				PKG_ROOT,
+				"templates",
+				"addons",
+				"vibe-rules",
+				".bts",
+				"rules.md.hbs",
+			);
+			if (await fs.pathExists(templatePath)) {
+				await fs.ensureDir(rulesDir);
+				await processTemplate(templatePath, ruleFile, config);
+			} else {
+				log.error(pc.red("Rules template not found for vibe-rules addon"));
+				return;
+			}
 		}
 
 		const EDITORS = {

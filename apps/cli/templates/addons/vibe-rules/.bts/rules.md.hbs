@@ -1,17 +1,133 @@
-# Better T Stack Rules
+### Better-T-Stack project rules for {{projectName}}
 
-- Project: {{projectName}}
-- Frontends: {{#if frontend}}{{#each frontend}}{{this}}{{#unless @last}} / {{/unless}}{{/each}}{{else}}none{{/if}}
-- Backend: {{backend}}
-- API: {{api}}
+These rules describe the generated monorepo layout, primary entry points, and how to run common tasks based on your
+selected stack.
 
-## Structure
-- apps/web: Web app source
-- apps/server: Server backend (when applicable)
-- packages/*: Shared libraries
-- .bts/rules.md: Project rules for AI editors
+### Tech choices
 
-## Conventions
-- Package manager: {{packageManager}}
-- Commit messages: one-line summary
-- Linting/format: Biome or Oxlint per addon
+- **frontend**: {{#if (includes frontend "tanstack-router")}}React + TanStack Router{{/if}}{{#if (includes frontend
+"react-router")}}React + React Router{{/if}}{{#if (includes frontend "tanstack-start")}}React + TanStack
+Start{{/if}}{{#if (includes frontend "next")}}Next.js{{/if}}{{#if (includes frontend "svelte")}}SvelteKit{{/if}}{{#if
+(includes frontend "nuxt")}}Nuxt{{/if}}{{#if (includes frontend "solid")}}SolidJS{{/if}}{{#if (includes frontend
+"native-nativewind")}}Native (Expo, NativeWind){{/if}}{{#if (includes frontend "native-unistyles")}}Native (Expo,
+Unistyles){{/if}}
+- **backend**: {{backend}}
+- **api**: {{api}}
+- **db / orm**: {{database}} / {{orm}}
+- **runtime**: {{runtime}}
+- **package manager**: {{packageManager}}
+- **addons**: {{#each addons}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}{{#unless addons}}none{{/unless}}
+
+### Monorepo layout
+
+- `{{projectName}}/`
+- `apps/`
+{{#unless (or (eq backend "convex") (eq backend "none"))}}
+- `server/` backend API for {{backend}} {{#if (ne api "none")}}with {{api}}{{/if}}
+{{/unless}}
+{{#unless (or (includes frontend "none") (eq (lookup frontend 0) undefined))}}
+- `web/` web frontend {{#if (includes frontend "tanstack-router")}}(React + TanStack Router){{/if}}{{#if (includes
+frontend "react-router")}}(React + React Router){{/if}}{{#if (includes frontend "tanstack-start")}}(React + TanStack
+Start){{/if}}{{#if (includes frontend "next")}}(Next.js){{/if}}{{#if (includes frontend
+"svelte")}}(SvelteKit){{/if}}{{#if (includes frontend "nuxt")}}(Nuxt){{/if}}{{#if (includes frontend
+"solid")}}(SolidJS){{/if}}
+{{/unless}}
+{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+- `native/` mobile app (Expo)
+{{/if}}
+{{#if (eq backend "convex")}}
+- `packages/`
+- `backend/` Convex backend (functions, schema)
+{{/if}}
+
+### Key entry points
+
+{{#if (and (ne backend "none") (ne backend "convex"))}}
+- **server**: `apps/server/src/index.ts`
+{{/if}}
+{{#if (includes frontend "tanstack-router")}}
+- **web**: `apps/web/src/main.tsx` and `apps/web/src/routes/`
+{{/if}}
+{{#if (includes frontend "react-router")}}
+- **web**: `apps/web/src/main.tsx` and `apps/web/src/routes/`
+{{/if}}
+{{#if (includes frontend "tanstack-start")}}
+- **web**: `apps/web/src/routes/`
+{{/if}}
+{{#if (includes frontend "next")}}
+- **web**: `apps/web/src/app/`
+{{/if}}
+{{#if (includes frontend "svelte")}}
+- **web**: `apps/web/src/routes/`
+{{/if}}
+{{#if (includes frontend "nuxt")}}
+- **web**: `apps/web/app/` and `apps/web/pages/`
+{{/if}}
+{{#if (includes frontend "solid")}}
+- **web**: `apps/web/src/routes/`
+{{/if}}
+{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+- **native**: `apps/native/app/`
+{{/if}}
+{{#if (ne api "none")}}
+- **api layer**: merged into server and web templates under their respective `src/lib` folders
+{{/if}}
+{{#if (and (ne database "none") (ne backend "convex"))}}
+- **database**: configured in `apps/server/src/db/` with {{orm}} targeting {{database}}
+{{/if}}
+
+### Commands
+
+Use the root package scripts. Prefer {{#if (eq packageManager "npm")}}`npm run`{{else}}{{packageManager}}{{/if}} over
+others.
+
+- `{{#if (eq packageManager "npm")}}npm run{{else}}{{packageManager}}{{/if}} dev` start all apps in development
+- `{{#if (eq packageManager "npm")}}npm run{{else}}{{packageManager}}{{/if}} build` build all apps
+- `{{#if (eq packageManager "npm")}}npm run{{else}}{{packageManager}}{{/if}} dev:web` start only web
+{{#if (and (ne backend "none") (ne backend "convex"))}}
+- `{{#if (eq packageManager "npm")}}npm run{{else}}{{packageManager}}{{/if}} dev:server` start only server
+{{/if}}
+- `{{#if (eq packageManager "npm")}}npm run{{else}}{{packageManager}}{{/if}} check-types` check TypeScript types
+{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+- `{{#if (eq packageManager "npm")}}npm run{{else}}{{packageManager}}{{/if}} dev:native` start Expo
+{{/if}}
+{{#if (and (ne database "none") (ne backend "convex"))}}
+- `{{#if (eq packageManager "npm")}}npm run{{else}}{{packageManager}}{{/if}} db:push` apply schema changes
+- `{{#if (eq packageManager "npm")}}npm run{{else}}{{packageManager}}{{/if}} db:studio` open database studio
+{{#if (and (eq database "sqlite") (eq orm "drizzle"))}}
+- `cd apps/server && {{#if (eq packageManager "npm")}}npm run{{else}}{{packageManager}}{{/if}} db:local` start local
+SQLite
+{{/if}}
+{{/if}}
+{{#if (includes addons "biome")}}
+- `{{#if (eq packageManager "npm")}}npm run{{else}}{{packageManager}}{{/if}} check` run Biome formatting and linting
+{{/if}}
+{{#if (includes addons "pwa")}}
+- `cd apps/web && {{#if (eq packageManager "npm")}}npm run{{else}}{{packageManager}}{{/if}} generate-pwa-assets`
+generate PWA assets
+{{/if}}
+{{#if (includes addons "tauri")}}
+- `cd apps/web && {{#if (eq packageManager "npm")}}npm run{{else}}{{packageManager}}{{/if}} desktop:dev` start Tauri dev
+- `cd apps/web && {{#if (eq packageManager "npm")}}npm run{{else}}{{packageManager}}{{/if}} desktop:build` build Tauri
+app
+{{/if}}
+{{#if (includes addons "starlight")}}
+- `cd apps/docs && {{#if (eq packageManager "npm")}}npm run{{else}}{{packageManager}}{{/if}} dev` start docs
+{{/if}}
+{{#if (eq backend "convex")}}
+- `{{#if (eq packageManager "npm")}}npm run{{else}}{{packageManager}}{{/if}} dev:setup` one-time Convex link and setup
+{{/if}}
+
+### Assistant guidance
+
+- **implement in-place**: prefer editing files under `apps/` directly and keep changes scoped
+- **respect selections**: follow the chosen backend `{{backend}}`, api `{{api}}`, db `{{database}}` with orm `{{orm}}`
+- **routing**: for React web, routes live under `apps/web/src/routes`; for Next, under `apps/web/src/app`
+- **api**: server handlers live under `apps/server/src` and share context in `src/lib`
+- **db**: use the existing ORM utilities in `apps/server/src/db`
+{{#if auth}}
+- **auth**: authentication is wired with Better Auth; check `apps/server/src/lib/auth`
+{{/if}}
+{{#if (eq packageManager "bun")}}
+- **bun**: prefer Bun commands and APIs where applicable. Avoid Node-only APIs that are not supported by Bun
+{{/if}}

@@ -19,7 +19,8 @@
 			"!**/package.json",
 			"!**/analytics-minimal.json",
 			"!**/schema.json",
-			"!**/_generated/**"
+			"!**/_generated/**",
+			"!**/.smoke/**"
 		]
 	},
 	"formatter": {
