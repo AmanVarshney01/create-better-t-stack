@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.30.0
+
+### Minor Changes
+
+- 6cf476a: add vibe-rules addon with a better t stack rules file
+
 ## 2.29.4
 
 ### Patch Changes
