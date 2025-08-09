@@ -101,6 +101,10 @@ export async function setupVibeRules(config: ProjectConfig) {
 			applySpinner.stop(pc.red("Failed applying rules"));
 		}
 
+		try {
+			await fs.remove(rulesDir);
+		} catch (_) {}
+
 		log.success("vibe-rules setup successfully!");
 	} catch (error) {
 		log.error(pc.red("Failed to set up vibe-rules"));
