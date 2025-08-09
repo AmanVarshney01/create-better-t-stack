@@ -63,42 +63,39 @@ export async function setupVibeRules(config: ProjectConfig) {
 
 		if (isCancel(selectedEditors)) return exitCancelled("Operation cancelled");
 
-		const run = async (args: string, startMsg: string, successMsg: string) => {
-			const s = spinner();
-			s.start(startMsg);
-			try {
-				const cmd = getPackageExecutionCommand(packageManager, args);
-				await execa(cmd, { cwd: projectDir, env: { CI: "true" }, shell: true });
-				s.stop(successMsg);
-			} catch (err) {
-				s.stop(pc.red(`Failed: ${startMsg}`));
-				throw err;
-			}
-		};
-
-		const exec = async (args: string) => {
-			const cmd = getPackageExecutionCommand(packageManager, args);
-			await execa(cmd, { cwd: projectDir, env: { CI: "true" }, shell: true });
-		};
-
-		await run(
-			`vibe-rules@latest save bts -f ${JSON.stringify(
-				path.relative(projectDir, ruleFile),
-			)}`,
-			"Saving BTS rules",
-			"Saved BTS rules",
-		);
-
 		const editorsArg = selectedEditors.join(", ");
-		const applySpinner = spinner();
-		applySpinner.start(`Applying rules to: ${editorsArg}`);
+		const s = spinner();
+		s.start("Saving and applying BTS rules...");
+
 		try {
+			const saveCmd = getPackageExecutionCommand(
+				packageManager,
+				`vibe-rules@latest save bts -f ${JSON.stringify(
+					path.relative(projectDir, ruleFile),
+				)}`,
+			);
+			await execa(saveCmd, {
+				cwd: projectDir,
+				env: { CI: "true" },
+				shell: true,
+			});
+
 			for (const editor of selectedEditors) {
-				await exec(`vibe-rules@latest load bts ${editor}`);
+				const loadCmd = getPackageExecutionCommand(
+					packageManager,
+					`vibe-rules@latest load bts ${editor}`,
+				);
+				await execa(loadCmd, {
+					cwd: projectDir,
+					env: { CI: "true" },
+					shell: true,
+				});
 			}
-			applySpinner.stop(`Applied rules to: ${editorsArg}`);
-		} catch (_) {
-			applySpinner.stop(pc.red("Failed applying rules"));
+
+			s.stop(`Applied BTS rules to: ${editorsArg}`);
+		} catch (error) {
+			s.stop(pc.red("Failed to apply BTS rules"));
+			throw error;
 		}
 
 		try {
