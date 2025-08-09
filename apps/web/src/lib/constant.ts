@@ -57,7 +57,7 @@ export const TECH_OPTIONS: Record<
 		},
 		{
 			id: "tanstack-start",
-			name: "TanStack Start (vite)",
+			name: "TanStack Start",
 			description:
 				"Full-stack React and Solid framework powered by TanStack Router",
 			icon: `${ICON_BASE_URL}/tanstack.svg`,

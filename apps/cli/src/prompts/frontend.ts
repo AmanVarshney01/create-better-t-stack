@@ -66,7 +66,7 @@ export async function getFrontendChoice(
 			},
 			{
 				value: "tanstack-start" as const,
-				label: "TanStack Start (vite)",
+				label: "TanStack Start",
 				hint: "SSR, Server Functions, API Routes and more with TanStack Router",
 			},
 		];
