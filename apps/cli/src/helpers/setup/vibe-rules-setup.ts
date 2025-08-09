@@ -46,7 +46,6 @@ export async function setupVibeRules(config: ProjectConfig) {
 			gemini: { label: "Gemini", hint: "GEMINI.md" },
 			codex: { label: "Codex", hint: "AGENTS.md" },
 			clinerules: { label: "Cline/Roo", hint: ".clinerules/*.md" },
-			roo: { label: "Roo", hint: ".clinerules/*.md" },
 			zed: { label: "Zed", hint: ".rules/*.md" },
 			unified: { label: "Unified", hint: ".rules/*.md" },
 		} as const;
