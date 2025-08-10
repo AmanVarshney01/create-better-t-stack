@@ -8,6 +8,7 @@ import {
 	readJsonSync,
 	removeSync,
 } from "fs-extra";
+import * as JSONC from "jsonc-parser";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const CLI_BIN = join(__dirname, "..", "dist", "index.js");
@@ -213,35 +214,7 @@ function assertBtsConfig(
 ) {
 	const btsConfigPath = join(dir, "bts.jsonc");
 	expect(existsSync(btsConfigPath)).toBe(true);
-
 	const content = readFileSync(btsConfigPath, "utf8");
-
-	const lines = content.split("\n");
-	const jsonLines: string[] = [];
-	let inJsonBlock = false;
-
-	for (const line of lines) {
-		const trimmedLine = line.trim();
-		if (
-			trimmedLine.startsWith("//") ||
-			trimmedLine.startsWith("/*") ||
-			trimmedLine.endsWith("*/")
-		) {
-			continue;
-		}
-		if (trimmedLine === "{") {
-			inJsonBlock = true;
-		}
-		if (inJsonBlock) {
-			jsonLines.push(line);
-		}
-	}
-
-	let jsonContent = jsonLines.join("\n").trim();
-
-	if (!jsonContent.endsWith("}")) {
-		jsonContent += "\n}";
-	}
 
 	type BtsConfig = {
 		frontend?: string[];
@@ -255,16 +228,18 @@ function assertBtsConfig(
 		runtime?: string;
 		packageManager?: string;
 	};
-	let config: BtsConfig;
-	try {
-		config = JSON.parse(jsonContent);
-	} catch (error) {
-		consola.error(
-			"Failed to parse JSON content:",
-			`${jsonContent.slice(0, 200)}...`,
-		);
-		throw error;
+
+	const errors: JSONC.ParseError[] = [];
+	const parsed = JSONC.parse(content, errors, {
+		allowTrailingComma: true,
+		disallowComments: false,
+	}) as BtsConfig | null;
+
+	if (errors.length > 0 || !parsed) {
+		consola.error("Failed to parse bts.jsonc", errors);
+		throw new Error("Failed to parse bts.jsonc");
 	}
+	const config = parsed;
 
 	if (expectedConfig.frontend) {
 		expect(config.frontend).toEqual(expectedConfig.frontend);
@@ -303,37 +278,16 @@ function readBtsConfig(dir: string) {
 	if (!existsSync(btsConfigPath)) return {} as Record<string, unknown>;
 
 	const content = readFileSync(btsConfigPath, "utf8");
-	const lines = content.split("\n");
-	const jsonLines: string[] = [];
-	let inJsonBlock = false;
+	const errors: JSONC.ParseError[] = [];
+	const parsed = JSONC.parse(content, errors, {
+		allowTrailingComma: true,
+		disallowComments: false,
+	}) as Record<string, unknown> | null;
 
-	for (const line of lines) {
-		const trimmedLine = line.trim();
-		if (
-			trimmedLine.startsWith("//") ||
-			trimmedLine.startsWith("/*") ||
-			trimmedLine.endsWith("*/")
-		) {
-			continue;
-		}
-		if (trimmedLine === "{") {
-			inJsonBlock = true;
-		}
-		if (inJsonBlock) {
-			jsonLines.push(line);
-		}
-	}
-
-	let jsonContent = jsonLines.join("\n").trim();
-	if (!jsonContent.endsWith("}")) {
-		jsonContent += "\n}";
-	}
-
-	try {
-		return JSON.parse(jsonContent) as Record<string, unknown>;
-	} catch {
+	if (errors.length > 0 || !parsed) {
 		return {} as Record<string, unknown>;
 	}
+	return parsed;
 }
 
 describe("create-better-t-stack smoke", () => {
