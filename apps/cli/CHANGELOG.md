@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.31.0
+
+### Minor Changes
+
+- f412d8f: Upgrade to AI SDK v5
+
 ## 2.30.0
 
 ### Minor Changes

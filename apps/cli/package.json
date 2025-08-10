@@ -1,6 +1,6 @@
 {
   "name": "create-better-t-stack",
-  "version": "2.30.0",
+  "version": "2.31.0",
   "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
   "type": "module",
   "license": "MIT",
