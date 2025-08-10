@@ -11,12 +11,14 @@ async function processAndCopyFiles(
 	destDir: string,
 	context: ProjectConfig,
 	overwrite = true,
+	ignorePatterns?: string[],
 ) {
 	const sourceFiles = await globby(sourcePattern, {
 		cwd: baseSourceDir,
 		dot: true,
 		onlyFiles: true,
 		absolute: false,
+		ignore: ignorePatterns,
 	});
 
 	for (const relativeSrcPath of sourceFiles) {
@@ -26,28 +28,30 @@ async function processAndCopyFiles(
 		if (relativeSrcPath.endsWith(".hbs")) {
 			relativeDestPath = relativeSrcPath.slice(0, -4);
 		}
-		const basename = path.basename(relativeSrcPath);
+
+		const basename = path.basename(relativeDestPath);
 		if (basename === "_gitignore") {
-			relativeDestPath = path.join(path.dirname(relativeSrcPath), ".gitignore");
+			relativeDestPath = path.join(
+				path.dirname(relativeDestPath),
+				".gitignore",
+			);
 		} else if (basename === "_npmrc") {
-			relativeDestPath = path.join(path.dirname(relativeSrcPath), ".npmrc");
+			relativeDestPath = path.join(path.dirname(relativeDestPath), ".npmrc");
 		}
 
 		const destPath = path.join(destDir, relativeDestPath);
 
-		try {
-			await fs.ensureDir(path.dirname(destPath));
+		await fs.ensureDir(path.dirname(destPath));
 
-			if (!overwrite && (await fs.pathExists(destPath))) {
-				continue;
-			}
+		if (!overwrite && (await fs.pathExists(destPath))) {
+			continue;
+		}
 
-			if (srcPath.endsWith(".hbs")) {
-				await processTemplate(srcPath, destPath, context);
-			} else {
-				await fs.copy(srcPath, destPath, { overwrite: true });
-			}
-		} catch (_error) {}
+		if (srcPath.endsWith(".hbs")) {
+			await processTemplate(srcPath, destPath, context);
+		} else {
+			await fs.copy(srcPath, destPath, { overwrite: true });
+		}
 	}
 }
 
@@ -655,26 +659,14 @@ export async function setupExamplesTemplate(
 				ignorePatterns.push("next/**");
 			}
 
-			const generalServerFiles = await globby(["**/*.ts", "**/*.hbs"], {
-				cwd: exampleServerSrc,
-				onlyFiles: true,
-				deep: 1,
-				ignore: ignorePatterns,
-			});
-
-			for (const file of generalServerFiles) {
-				const srcPath = path.join(exampleServerSrc, file);
-				const destPath = path.join(serverAppDir, file.replace(".hbs", ""));
-				try {
-					if (srcPath.endsWith(".hbs")) {
-						await processTemplate(srcPath, destPath, context);
-					} else {
-						if (!(await fs.pathExists(destPath))) {
-							await fs.copy(srcPath, destPath, { overwrite: false });
-						}
-					}
-				} catch (_error) {}
-			}
+			await processAndCopyFiles(
+				["**/*.ts", "**/*.hbs"],
+				exampleServerSrc,
+				serverAppDir,
+				context,
+				false,
+				ignorePatterns,
+			);
 		}
 
 		if (webAppDirExists) {
@@ -791,9 +783,13 @@ export async function handleExtras(projectDir: string, context: ProjectConfig) {
 
 	if (context.packageManager === "bun") {
 		const bunfigSrc = path.join(extrasDir, "bunfig.toml.hbs");
-		const bunfigDest = path.join(projectDir, "bunfig.toml");
 		if (await fs.pathExists(bunfigSrc)) {
-			await processTemplate(bunfigSrc, bunfigDest, context);
+			await processAndCopyFiles(
+				"bunfig.toml.hbs",
+				extrasDir,
+				projectDir,
+				context,
+			);
 		}
 	}
 
@@ -802,9 +798,8 @@ export async function handleExtras(projectDir: string, context: ProjectConfig) {
 		(hasNative || context.frontend.includes("nuxt"))
 	) {
 		const npmrcTemplateSrc = path.join(extrasDir, "_npmrc.hbs");
-		const npmrcDest = path.join(projectDir, ".npmrc");
 		if (await fs.pathExists(npmrcTemplateSrc)) {
-			await processTemplate(npmrcTemplateSrc, npmrcDest, context);
+			await processAndCopyFiles("_npmrc.hbs", extrasDir, projectDir, context);
 		}
 	}
 

@@ -49,7 +49,8 @@
     "dev": "tsdown --watch",
     "check-types": "tsc --noEmit",
     "check": "biome check --write .",
-    "test": "vitest run",
+    "test": "bun run build && vitest run",
+    "test:with-build": "bun run build && WITH_BUILD=1 vitest run",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
@@ -70,6 +71,7 @@
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^24.2.0",
     "tsdown": "^0.13.3",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
   }
 }

@@ -236,7 +236,7 @@ async function getDatabaseInstructions(
 		);
 		instructions.push(
 			`${pc.cyan("4.")} Generate migrations: ${pc.white(
-				"cd apps/server && bun db:generate",
+				`cd apps/server && ${packageManager} db:generate`,
 			)}`,
 		);
 		instructions.push(

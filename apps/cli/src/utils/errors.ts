@@ -1,5 +1,5 @@
 import { cancel } from "@clack/prompts";
-import { consola } from "consola";
+import consola from "consola";
 import pc from "picocolors";
 
 export function exitWithError(message: string): never {
