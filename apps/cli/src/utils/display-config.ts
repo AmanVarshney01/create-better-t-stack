@@ -21,6 +21,9 @@ export function displayConfig(config: Partial<ProjectConfig>) {
 
 	if (config.backend !== undefined) {
 		configDisplay.push(`${pc.blue("Backend:")} ${String(config.backend)}`);
+		configDisplay.push(
+			`${pc.blue("Backand Path:")} apps/${String(config.serverName)}`,
+		);
 	}
 
 	if (config.runtime !== undefined) {

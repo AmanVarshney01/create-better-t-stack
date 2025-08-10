@@ -85,8 +85,16 @@ export async function addEnvVariablesToFile(
 }
 
 export async function setupEnvironmentVariables(config: ProjectConfig) {
-	const { backend, frontend, database, auth, examples, dbSetup, projectDir } =
-		config;
+	const {
+		backend,
+		frontend,
+		database,
+		auth,
+		examples,
+		dbSetup,
+		projectDir,
+		serverName,
+	} = config;
 
 	const hasReactRouter = frontend.includes("react-router");
 	const hasTanStackRouter = frontend.includes("tanstack-router");
@@ -167,7 +175,7 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 		return;
 	}
 
-	const serverDir = path.join(projectDir, "apps/server");
+	const serverDir = path.join(projectDir, "apps", serverName);
 	if (!(await fs.pathExists(serverDir))) {
 		return;
 	}

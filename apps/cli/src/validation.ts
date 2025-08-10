@@ -96,6 +96,10 @@ export function processAndValidateFlags(
 		config.webDeploy = options.webDeploy as WebDeploy;
 	}
 
+	if (options.serverName) {
+		config.serverName = options.serverName;
+	}
+
 	if (projectName) {
 		const result = ProjectNameSchema.safeParse(path.basename(projectName));
 		if (!result.success) {

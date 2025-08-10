@@ -126,9 +126,13 @@ async function initPrismaDatabase(
 	}
 }
 
-async function writeEnvFile(projectDir: string, config?: PrismaConfig) {
+async function writeEnvFile(
+	projectDir: string,
+	serverName: string,
+	config?: PrismaConfig,
+) {
 	try {
-		const envPath = path.join(projectDir, "apps/server", ".env");
+		const envPath = path.join(projectDir, "apps", serverName, ".env");
 		const variables: EnvVariable[] = [
 			{
 				key: "DATABASE_URL",
@@ -144,11 +148,16 @@ async function writeEnvFile(projectDir: string, config?: PrismaConfig) {
 	}
 }
 
-async function addDotenvImportToPrismaConfig(projectDir: string) {
+async function addDotenvImportToPrismaConfig(
+	projectDir: string,
+	serverName: string,
+) {
 	try {
 		const prismaConfigPath = path.join(
 			projectDir,
-			"apps/server/prisma.config.ts",
+			"apps",
+			serverName,
+			"prisma.config.ts",
 		);
 		let content = await fs.readFile(prismaConfigPath, "utf8");
 		content = `import "dotenv/config";\n${content}`;
@@ -158,13 +167,13 @@ async function addDotenvImportToPrismaConfig(projectDir: string) {
 	}
 }
 
-function displayManualSetupInstructions() {
+function displayManualSetupInstructions(serverName: string) {
 	log.info(`Manual Prisma PostgreSQL Setup Instructions:
 
 1. Visit https://console.prisma.io and create an account
 2. Create a new PostgreSQL database from the dashboard
 3. Get your database URL
-4. Add the database URL to the .env file in apps/server/.env
+4. Add the database URL to the .env file in apps/${serverName}/.env
 
 DATABASE_URL="your_database_url"`);
 }
@@ -212,8 +221,8 @@ export default prisma;
 }
 
 export async function setupPrismaPostgres(config: ProjectConfig) {
-	const { packageManager, projectDir, orm } = config;
-	const serverDir = path.join(projectDir, "apps/server");
+	const { packageManager, projectDir, orm, serverName } = config;
+	const serverDir = path.join(projectDir, "apps", serverName);
 
 	try {
 		await fs.ensureDir(serverDir);
@@ -251,9 +260,9 @@ export async function setupPrismaPostgres(config: ProjectConfig) {
 		}
 
 		if (prismaConfig) {
-			await writeEnvFile(projectDir, prismaConfig);
+			await writeEnvFile(projectDir, serverName, prismaConfig);
 
-			await addDotenvImportToPrismaConfig(projectDir);
+			await addDotenvImportToPrismaConfig(projectDir, serverName);
 
 			if (orm === "prisma") {
 				await addPrismaAccelerateExtension(serverDir);
@@ -262,8 +271,8 @@ export async function setupPrismaPostgres(config: ProjectConfig) {
 				pc.green("Prisma Postgres database configured successfully!"),
 			);
 		} else {
-			await writeEnvFile(projectDir);
-			displayManualSetupInstructions();
+			await writeEnvFile(projectDir, serverName);
+			displayManualSetupInstructions(serverName);
 		}
 	} catch (error) {
 		consola.error(
@@ -275,8 +284,8 @@ export async function setupPrismaPostgres(config: ProjectConfig) {
 		);
 
 		try {
-			await writeEnvFile(projectDir);
-			displayManualSetupInstructions();
+			await writeEnvFile(projectDir, serverName);
+			displayManualSetupInstructions(serverName);
 		} catch {}
 
 		log.info("Setup completed with manual configuration required.");

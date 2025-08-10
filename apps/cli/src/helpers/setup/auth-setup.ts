@@ -6,12 +6,12 @@ import type { ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 
 export async function setupAuth(config: ProjectConfig) {
-	const { auth, frontend, backend, projectDir } = config;
+	const { auth, frontend, backend, projectDir, serverName } = config;
 	if (backend === "convex" || !auth) {
 		return;
 	}
 
-	const serverDir = path.join(projectDir, "apps/server");
+	const serverDir = path.join(projectDir, "apps", serverName);
 	const clientDir = path.join(projectDir, "apps/web");
 	const nativeDir = path.join(projectDir, "apps/native");
 

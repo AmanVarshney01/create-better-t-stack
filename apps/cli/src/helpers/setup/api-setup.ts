@@ -5,8 +5,15 @@ import type { Frontend, ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 
 export async function setupApi(config: ProjectConfig) {
-	const { api, projectName, frontend, backend, packageManager, projectDir } =
-		config;
+	const {
+		api,
+		projectName,
+		frontend,
+		backend,
+		packageManager,
+		projectDir,
+		serverName,
+	} = config;
 	const isConvex = backend === "convex";
 	const webDir = path.join(projectDir, "apps/web");
 	const nativeDir = path.join(projectDir, "apps/native");
@@ -21,7 +28,7 @@ export async function setupApi(config: ProjectConfig) {
 	const hasSolidWeb = frontend.includes("solid");
 
 	if (!isConvex && api !== "none") {
-		const serverDir = path.join(projectDir, "apps/server");
+		const serverDir = path.join(projectDir, "apps", serverName);
 		const serverDirExists = await fs.pathExists(serverDir);
 
 		if (serverDirExists) {

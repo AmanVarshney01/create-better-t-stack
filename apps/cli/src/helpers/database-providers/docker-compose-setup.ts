@@ -6,14 +6,14 @@ import {
 } from "../project-generation/env-setup";
 
 export async function setupDockerCompose(config: ProjectConfig) {
-	const { database, projectDir, projectName } = config;
+	const { database, projectDir, projectName, serverName } = config;
 
 	if (database === "none" || database === "sqlite") {
 		return;
 	}
 
 	try {
-		await writeEnvFile(projectDir, database, projectName);
+		await writeEnvFile(projectDir, database, projectName, serverName);
 	} catch (error) {
 		if (error instanceof Error) {
 			console.error(`Error: ${error.message}`);
@@ -25,8 +25,9 @@ async function writeEnvFile(
 	projectDir: string,
 	database: Database,
 	projectName: string,
+	serverName: string,
 ) {
-	const envPath = path.join(projectDir, "apps/server", ".env");
+	const envPath = path.join(projectDir, "apps", serverName, ".env");
 	const variables: EnvVariable[] = [
 		{
 			key: "DATABASE_URL",

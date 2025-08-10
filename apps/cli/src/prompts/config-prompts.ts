@@ -50,6 +50,7 @@ export async function gatherConfig(
 	flags: Partial<ProjectConfig>,
 	projectName: string,
 	projectDir: string,
+	serverName: string,
 	relativePath: string,
 ): Promise<ProjectConfig> {
 	const result = await group<PromptGroupResults>(
@@ -146,5 +147,6 @@ export async function gatherConfig(
 		dbSetup: result.dbSetup,
 		api: result.api,
 		webDeploy: result.webDeploy,
+		serverName,
 	};
 }

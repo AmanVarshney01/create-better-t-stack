@@ -7,13 +7,13 @@ import type { Backend, ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 
 export async function setupRuntime(config: ProjectConfig) {
-	const { runtime, backend, projectDir } = config;
+	const { runtime, backend, projectDir, serverName } = config;
 
 	if (backend === "convex" || backend === "next" || runtime === "none") {
 		return;
 	}
 
-	const serverDir = path.join(projectDir, "apps/server");
+	const serverDir = path.join(projectDir, "apps", serverName);
 
 	if (!(await fs.pathExists(serverDir))) {
 		return;
@@ -29,11 +29,12 @@ export async function setupRuntime(config: ProjectConfig) {
 }
 
 export async function generateCloudflareWorkerTypes(config: ProjectConfig) {
-	if (config.runtime !== "workers") {
+	const { runtime, packageManager, projectDir, serverName } = config;
+	if (runtime !== "workers") {
 		return;
 	}
 
-	const serverDir = path.join(config.projectDir, "apps/server");
+	const serverDir = path.join(projectDir, "apps", serverName);
 
 	if (!(await fs.pathExists(serverDir))) {
 		return;
@@ -44,8 +45,7 @@ export async function generateCloudflareWorkerTypes(config: ProjectConfig) {
 	try {
 		s.start("Generating Cloudflare Workers types...");
 
-		const runCmd =
-			config.packageManager === "npm" ? "npm" : config.packageManager;
+		const runCmd = packageManager === "npm" ? "npm" : packageManager;
 		await execa(runCmd, ["run", "cf-typegen"], {
 			cwd: serverDir,
 		});
@@ -54,11 +54,9 @@ export async function generateCloudflareWorkerTypes(config: ProjectConfig) {
 	} catch {
 		s.stop(pc.yellow("Failed to generate Cloudflare Workers types"));
 		const managerCmd =
-			config.packageManager === "npm"
-				? "npm run"
-				: `${config.packageManager} run`;
+			packageManager === "npm" ? "npm run" : `${packageManager} run`;
 		console.warn(
-			`Note: You can manually run 'cd apps/server && ${managerCmd} cf-typegen' in the project directory later`,
+			`Note: You can manually run 'cd apps/${serverName} && ${managerCmd} cf-typegen' in the project directory later`,
 		);
 	}
 }

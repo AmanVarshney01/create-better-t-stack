@@ -25,6 +25,7 @@ export const DEFAULT_CONFIG: ProjectConfig = {
 	runtime: "bun",
 	api: "trpc",
 	webDeploy: "none",
+	serverName: "server",
 };
 
 export const dependencyVersionMap = {

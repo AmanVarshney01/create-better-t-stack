@@ -86,9 +86,13 @@ async function initMongoDBAtlas(
 	}
 }
 
-async function writeEnvFile(projectDir: string, config?: MongoDBConfig) {
+async function writeEnvFile(
+	projectDir: string,
+	serverName: string,
+	config?: MongoDBConfig,
+) {
 	try {
-		const envPath = path.join(projectDir, "apps/server", ".env");
+		const envPath = path.join(projectDir, "apps", serverName, ".env");
 		const variables: EnvVariable[] = [
 			{
 				key: "DATABASE_URL",
@@ -125,11 +129,11 @@ ${pc.green("MongoDB Atlas Manual Setup Instructions:")}
 }
 
 export async function setupMongoDBAtlas(config: ProjectConfig) {
-	const { projectDir } = config;
+	const { projectDir, serverName } = config;
 	const mainSpinner = spinner();
 	mainSpinner.start("Setting up MongoDB Atlas...");
 
-	const serverDir = path.join(projectDir, "apps/server");
+	const serverDir = path.join(projectDir, "apps", serverName);
 	try {
 		await fs.ensureDir(serverDir);
 
@@ -138,7 +142,7 @@ export async function setupMongoDBAtlas(config: ProjectConfig) {
 		const config = await initMongoDBAtlas(serverDir);
 
 		if (config) {
-			await writeEnvFile(projectDir, config);
+			await writeEnvFile(projectDir, serverName, config);
 			log.success(
 				pc.green(
 					"MongoDB Atlas setup complete! Connection saved to .env file.",
@@ -146,7 +150,7 @@ export async function setupMongoDBAtlas(config: ProjectConfig) {
 			);
 		} else {
 			log.warn(pc.yellow("Falling back to local MongoDB configuration"));
-			await writeEnvFile(projectDir);
+			await writeEnvFile(projectDir, serverName);
 			displayManualSetupInstructions();
 		}
 	} catch (error) {
@@ -160,7 +164,7 @@ export async function setupMongoDBAtlas(config: ProjectConfig) {
 		);
 
 		try {
-			await writeEnvFile(projectDir);
+			await writeEnvFile(projectDir, serverName);
 			displayManualSetupInstructions();
 		} catch {}
 	}

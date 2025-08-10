@@ -9,7 +9,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState } from "react";
 import type { RouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
-import type { appRouter } from "../../../server/src/routers";
+import type { appRouter } from "../../../{{serverName}}/src/routers";
 import { createORPCClient } from "@orpc/client";
 {{/if}}
 {{#if (eq api "trpc")}}

@@ -5,7 +5,7 @@ import type { ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 
 export async function setupExamples(config: ProjectConfig) {
-	const { examples, frontend, backend, projectDir } = config;
+	const { examples, frontend, backend, projectDir, serverName } = config;
 
 	if (
 		backend === "convex" ||
@@ -19,7 +19,7 @@ export async function setupExamples(config: ProjectConfig) {
 	if (examples.includes("ai")) {
 		const webClientDir = path.join(projectDir, "apps/web");
 		const nativeClientDir = path.join(projectDir, "apps/native");
-		const serverDir = path.join(projectDir, "apps/server");
+		const serverDir = path.join(projectDir, "apps", serverName);
 
 		const webClientDirExists = await fs.pathExists(webClientDir);
 		const nativeClientDirExists = await fs.pathExists(nativeClientDir);

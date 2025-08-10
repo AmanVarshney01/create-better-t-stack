@@ -240,13 +240,14 @@ export async function setupFrontendTemplates(
 
 export async function setupBackendFramework(
 	projectDir: string,
+	serverName: string,
 	context: ProjectConfig,
 ) {
 	if (context.backend === "none") {
 		return;
 	}
 
-	const serverAppDir = path.join(projectDir, "apps/server");
+	const serverAppDir = path.join(projectDir, "apps", serverName);
 
 	if (context.backend === "convex") {
 		if (await fs.pathExists(serverAppDir)) {
@@ -331,6 +332,7 @@ export async function setupBackendFramework(
 
 export async function setupDbOrmTemplates(
 	projectDir: string,
+	serverName: string,
 	context: ProjectConfig,
 ) {
 	if (
@@ -340,7 +342,7 @@ export async function setupDbOrmTemplates(
 	)
 		return;
 
-	const serverAppDir = path.join(projectDir, "apps/server");
+	const serverAppDir = path.join(projectDir, "apps", serverName);
 	await fs.ensureDir(serverAppDir);
 
 	const dbOrmSrcDir = path.join(
@@ -356,11 +358,12 @@ export async function setupDbOrmTemplates(
 
 export async function setupAuthTemplate(
 	projectDir: string,
+	serverName: string,
 	context: ProjectConfig,
 ) {
 	if (context.backend === "convex" || !context.auth) return;
 
-	const serverAppDir = path.join(projectDir, "apps/server");
+	const serverAppDir = path.join(projectDir, "apps", serverName);
 	const webAppDir = path.join(projectDir, "apps/web");
 	const nativeAppDir = path.join(projectDir, "apps/native");
 
@@ -568,6 +571,7 @@ export async function setupAddonsTemplate(
 
 export async function setupExamplesTemplate(
 	projectDir: string,
+	serverName: string,
 	context: ProjectConfig,
 ) {
 	if (
@@ -578,7 +582,7 @@ export async function setupExamplesTemplate(
 		return;
 	}
 
-	const serverAppDir = path.join(projectDir, "apps/server");
+	const serverAppDir = path.join(projectDir, "apps", serverName);
 	const webAppDir = path.join(projectDir, "apps/web");
 
 	const serverAppDirExists = await fs.pathExists(serverAppDir);
@@ -824,13 +828,14 @@ export async function handleExtras(projectDir: string, context: ProjectConfig) {
 
 export async function setupDockerComposeTemplates(
 	projectDir: string,
+	serverName: string,
 	context: ProjectConfig,
 ) {
 	if (context.dbSetup !== "docker" || context.database === "none") {
 		return;
 	}
 
-	const serverAppDir = path.join(projectDir, "apps/server");
+	const serverAppDir = path.join(projectDir, "apps", serverName);
 	const dockerSrcDir = path.join(
 		PKG_ROOT,
 		`templates/db-setup/docker-compose/${context.database}`,

@@ -29,7 +29,7 @@
     "./**/*.tsx",
     "./.next/types/**/*.ts",
     {{#if (eq runtime "workers")}}
-    "../server/worker-configuration.d.ts"
+    "../{{serverName}}/worker-configuration.d.ts"
     {{/if}}
   ],
   "exclude": [
@@ -38,7 +38,7 @@
   {{#unless (or (eq backend "convex") (eq backend "none"))}}
   "references": [
     {
-      "path": "../server"
+      "path": "../{{serverName}}"
     }
   ]
   {{/unless}}

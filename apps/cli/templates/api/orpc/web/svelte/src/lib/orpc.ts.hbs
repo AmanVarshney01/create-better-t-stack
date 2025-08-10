@@ -4,7 +4,7 @@ import { RPCLink } from "@orpc/client/fetch";
 import type { RouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/svelte-query";
-import type { appRouter } from "../../../server/src/routers/index";
+import type { appRouter } from "../../../{{serverName}}/src/routers/index";
 
 export const queryClient = new QueryClient({
 	queryCache: new QueryCache({

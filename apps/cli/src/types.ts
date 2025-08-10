@@ -137,6 +137,7 @@ export type AddInput = {
 
 export type CLIInput = CreateInput & {
 	projectDirectory?: string;
+	serverName: string;
 };
 
 export interface ProjectConfig {
@@ -157,6 +158,7 @@ export interface ProjectConfig {
 	dbSetup: DatabaseSetup;
 	api: API;
 	webDeploy: WebDeploy;
+	serverName: string;
 }
 
 export interface BetterTStackConfig {

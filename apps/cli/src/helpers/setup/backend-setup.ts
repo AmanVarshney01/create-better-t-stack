@@ -4,14 +4,14 @@ import type { ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 
 export async function setupBackendDependencies(config: ProjectConfig) {
-	const { backend, runtime, api, projectDir } = config;
+	const { backend, runtime, api, projectDir, serverName } = config;
 
 	if (backend === "convex") {
 		return;
 	}
 
 	const framework = backend;
-	const serverDir = path.join(projectDir, "apps/server");
+	const serverDir = path.join(projectDir, "apps", serverName);
 
 	const dependencies: AvailableDependencies[] = [];
 	const devDependencies: AvailableDependencies[] = [];

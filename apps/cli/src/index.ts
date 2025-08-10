@@ -58,6 +58,7 @@ const router = t.router({
 					runtime: RuntimeSchema.optional(),
 					api: APISchema.optional(),
 					webDeploy: WebDeploySchema.optional(),
+					serverName: z.string().default("server"),
 				}),
 			]),
 		)

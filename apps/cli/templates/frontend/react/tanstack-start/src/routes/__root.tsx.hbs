@@ -28,7 +28,7 @@ export interface RouterAppContext {
 {{else}}
   {{#if (eq api "trpc")}}
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
-import type { AppRouter } from "../../../server/src/routers";
+import type { AppRouter } from "../../../{{serverName}}/src/routers";
 export interface RouterAppContext {
   trpc: TRPCOptionsProxy<AppRouter>;
   queryClient: QueryClient;

@@ -34,22 +34,22 @@ import {
 } from "./template-manager";
 
 export async function createProject(options: ProjectConfig) {
-	const projectDir = options.projectDir;
-	const isConvex = options.backend === "convex";
+	const { backend, projectDir, serverName } = options;
+	const isConvex = backend === "convex";
 
 	try {
 		await fs.ensureDir(projectDir);
 
 		await copyBaseTemplate(projectDir, options);
 		await setupFrontendTemplates(projectDir, options);
-		await setupBackendFramework(projectDir, options);
+		await setupBackendFramework(projectDir, serverName, options);
 		if (!isConvex) {
-			await setupDbOrmTemplates(projectDir, options);
-			await setupDockerComposeTemplates(projectDir, options);
-			await setupAuthTemplate(projectDir, options);
+			await setupDbOrmTemplates(projectDir, serverName, options);
+			await setupDockerComposeTemplates(projectDir, serverName, options);
+			await setupAuthTemplate(projectDir, serverName, options);
 		}
 		if (options.examples.length > 0 && options.examples[0] !== "none") {
-			await setupExamplesTemplate(projectDir, options);
+			await setupExamplesTemplate(projectDir, serverName, options);
 		}
 		await setupAddonsTemplate(projectDir, options);
 

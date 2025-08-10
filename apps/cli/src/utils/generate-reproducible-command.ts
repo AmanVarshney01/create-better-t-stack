@@ -33,6 +33,7 @@ export function generateReproducibleCommand(config: ProjectConfig): string {
 	flags.push(config.git ? "--git" : "--no-git");
 	flags.push(`--package-manager ${config.packageManager}`);
 	flags.push(config.install ? "--install" : "--no-install");
+	flags.push(`--server-name ${config.serverName}`);
 
 	let baseCommand = "npx create-better-t-stack@latest";
 	const pkgManager = config.packageManager;

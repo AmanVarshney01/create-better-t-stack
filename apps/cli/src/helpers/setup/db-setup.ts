@@ -14,11 +14,11 @@ import { setupSupabase } from "../database-providers/supabase-setup";
 import { setupTurso } from "../database-providers/turso-setup";
 
 export async function setupDatabase(config: ProjectConfig) {
-	const { database, orm, dbSetup, backend, projectDir } = config;
+	const { database, orm, dbSetup, backend, projectDir, serverName } = config;
 
 	if (backend === "convex" || database === "none") {
 		if (backend !== "convex") {
-			const serverDir = path.join(projectDir, "apps/server");
+			const serverDir = path.join(projectDir, "apps", serverName);
 			const serverDbDir = path.join(serverDir, "src/db");
 			if (await fs.pathExists(serverDbDir)) {
 				await fs.remove(serverDbDir);
@@ -28,7 +28,7 @@ export async function setupDatabase(config: ProjectConfig) {
 	}
 
 	const s = spinner();
-	const serverDir = path.join(projectDir, "apps/server");
+	const serverDir = path.join(projectDir, "apps", serverName);
 
 	if (!(await fs.pathExists(serverDir))) {
 		return;

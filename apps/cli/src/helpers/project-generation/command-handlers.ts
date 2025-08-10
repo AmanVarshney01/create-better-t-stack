@@ -25,7 +25,7 @@ import { detectProjectConfig } from "./detect-project-config";
 import { installDependencies } from "./install-dependencies";
 
 export async function createProjectHandler(
-	input: CreateInput & { projectName?: string },
+	input: CreateInput & { projectName?: string; serverName: string },
 ) {
 	const startTime = Date.now();
 
@@ -62,6 +62,7 @@ export async function createProjectHandler(
 		const cliInput = {
 			...input,
 			projectDirectory: input.projectName,
+			serverName: input.serverName,
 		};
 
 		const providedFlags = getProvidedFlags(cliInput);
@@ -108,6 +109,7 @@ export async function createProjectHandler(
 				flagConfig,
 				finalBaseName,
 				finalResolvedPath,
+				input.serverName,
 				finalPathInput,
 			);
 		}

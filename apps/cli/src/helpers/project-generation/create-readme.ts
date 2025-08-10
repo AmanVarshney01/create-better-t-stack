@@ -27,6 +27,7 @@ function generateReadmeContent(options: ProjectConfig): string {
 	const {
 		projectName,
 		packageManager,
+		serverName,
 		database,
 		auth,
 		addons = [],
@@ -103,6 +104,7 @@ Follow the prompts to create a new Convex project and connect it to your applica
 				packageManagerRunCmd,
 				orm,
 				options.dbSetup,
+				options.serverName,
 			)
 }
 
@@ -125,6 +127,7 @@ ${
 \`\`\`
 ${generateProjectStructure(
 	projectName,
+	serverName,
 	frontend,
 	backend,
 	addons,
@@ -143,6 +146,7 @@ ${generateScriptsList(
 	hasNative,
 	addons,
 	backend,
+	options.serverName,
 )}
 `;
 }
@@ -248,6 +252,7 @@ function generateRunningInstructions(
 
 function generateProjectStructure(
 	projectName: string,
+	serverName: string,
 	frontend: Frontend[],
 	backend: string,
 	addons: Addons[],
@@ -316,7 +321,9 @@ function generateProjectStructure(
 		const backendName = backend[0].toUpperCase() + backend.slice(1);
 		const apiName = api !== "none" ? api.toUpperCase() : "";
 		const backendDesc = apiName ? `${backendName}, ${apiName}` : backendName;
-		structure.push(`│   └── server/      # Backend API (${backendDesc})`);
+		structure.push(
+			`│   └── ${serverName}/      # Backend API (${backendDesc})`,
+		);
 	}
 
 	return structure.join("\n");
@@ -475,6 +482,7 @@ function generateDatabaseSetup(
 	packageManagerRunCmd: string,
 	orm: ORM,
 	dbSetup: DatabaseSetup,
+	serverName: string,
 ): string {
 	if (database === "none") {
 		return "";
@@ -496,12 +504,12 @@ ${
 	dbSetup === "d1"
 		? "Local development for a Cloudflare D1 database will already be running as part of the `wrangler dev` command."
 		: `\`\`\`bash
-cd apps/server && ${packageManagerRunCmd} db:local
+cd apps/${serverName} && ${packageManagerRunCmd} db:local
 \`\`\`
 `
 }
 
-2. Update your \`.env\` file in the \`apps/server\` directory with the appropriate connection details if needed.
+2. Update your \`.env\` file in the \`apps/${serverName}\` directory with the appropriate connection details if needed.
 `;
 	} else if (database === "postgres") {
 		setup += `This project uses PostgreSQL${
@@ -513,7 +521,7 @@ cd apps/server && ${packageManagerRunCmd} db:local
 		}.
 
 1. Make sure you have a PostgreSQL database set up.
-2. Update your \`apps/server/.env\` file with your PostgreSQL connection details.
+2. Update your \`apps/${serverName}/.env\` file with your PostgreSQL connection details.
 `;
 	} else if (database === "mysql") {
 		setup += `This project uses MySQL${
@@ -525,7 +533,7 @@ cd apps/server && ${packageManagerRunCmd} db:local
 		}.
 
 1. Make sure you have a MySQL database set up.
-2. Update your \`apps/server/.env\` file with your MySQL connection details.
+2. Update your \`apps/${serverName}/.env\` file with your MySQL connection details.
 `;
 	} else if (database === "mongodb") {
 		setup += `This project uses MongoDB ${
@@ -537,7 +545,7 @@ cd apps/server && ${packageManagerRunCmd} db:local
 		}.
 
 1. Make sure you have MongoDB set up.
-2. Update your \`apps/server/.env\` file with your MongoDB connection URI.
+2. Update your \`apps/${serverName}/.env\` file with your MongoDB connection URI.
 `;
 	}
 
@@ -571,6 +579,7 @@ function generateScriptsList(
 	hasNative: boolean,
 	addons: Addons[],
 	backend: string,
+	serverName: string,
 ): string {
 	const isConvex = backend === "convex";
 	const isBackendNone = backend === "none";
@@ -586,7 +595,7 @@ function generateScriptsList(
 - \`${packageManagerRunCmd} dev:setup\`: Setup and configure your Convex project`;
 	} else if (!isBackendNone) {
 		scripts += `
-- \`${packageManagerRunCmd} dev:server\`: Start only the server`;
+- \`${packageManagerRunCmd} dev:${serverName}\`: Start only the ${serverName}`;
 	}
 
 	scripts += `
@@ -604,7 +613,7 @@ function generateScriptsList(
 
 		if (database === "sqlite" && orm === "drizzle") {
 			scripts += `
-- \`cd apps/server && ${packageManagerRunCmd} db:local\`: Start the local SQLite database`;
+- \`cd apps/${serverName} && ${packageManagerRunCmd} db:local\`: Start the local SQLite database`;
 		}
 	}
 

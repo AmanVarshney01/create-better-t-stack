@@ -25,6 +25,7 @@ export async function displayPostInstallInstructions(
 		backend,
 		dbSetup,
 		webDeploy,
+		serverName,
 	} = config;
 
 	const isConvex = backend === "convex";
@@ -35,7 +36,14 @@ export async function displayPostInstallInstructions(
 
 	const databaseInstructions =
 		!isConvex && database !== "none"
-			? await getDatabaseInstructions(database, orm, runCmd, runtime, dbSetup)
+			? await getDatabaseInstructions(
+					database,
+					serverName,
+					orm,
+					runCmd,
+					runtime,
+					dbSetup,
+				)
 			: "";
 
 	const tauriInstructions = addons?.includes("tauri")
@@ -118,7 +126,7 @@ export async function displayPostInstallInstructions(
 			output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev\n`;
 			output += `${pc.cyan(
 				`${stepCounter++}.`,
-			)} cd apps/server && ${runCmd} run cf-typegen\n\n`;
+			)} cd apps/${serverName} && ${runCmd} run cf-typegen\n\n`;
 		} else {
 			output += "\n";
 		}
@@ -200,6 +208,7 @@ function getLintingInstructions(runCmd?: string): string {
 
 async function getDatabaseInstructions(
 	database: Database,
+	serverName: string,
 	orm?: ORM,
 	runCmd?: string,
 	runtime?: Runtime,
@@ -232,11 +241,11 @@ async function getDatabaseInstructions(
 		instructions.push(
 			`${pc.cyan(
 				"3.",
-			)} Update apps/server/wrangler.jsonc with database_id and database_name`,
+			)} Update apps/${serverName}/wrangler.jsonc with database_id and database_name`,
 		);
 		instructions.push(
 			`${pc.cyan("4.")} Generate migrations: ${pc.white(
-				"cd apps/server && bun db:generate",
+				`cd apps/${serverName} && bun db:generate`,
 			)}`,
 		);
 		instructions.push(
@@ -288,7 +297,7 @@ async function getDatabaseInstructions(
 			instructions.push(
 				`${pc.cyan(
 					"•",
-				)} Start local DB (if needed): ${`cd apps/server && ${runCmd} db:local`}`,
+				)} Start local DB (if needed): ${`cd apps/${serverName} && ${runCmd} db:local`}`,
 			);
 		}
 	} else if (orm === "mongoose") {

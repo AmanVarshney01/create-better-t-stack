@@ -32,7 +32,9 @@ async function updateRootPackageJson(
 	const scripts = packageJson.scripts;
 
 	const backendPackageName =
-		options.backend === "convex" ? `@${options.projectName}/backend` : "server";
+		options.backend === "convex"
+			? `@${options.projectName}/backend`
+			: options.serverName;
 
 	let serverDevScript = "";
 	if (options.addons.includes("turborepo")) {
@@ -65,7 +67,7 @@ async function updateRootPackageJson(
 		scripts["check-types"] = "turbo check-types";
 		scripts["dev:native"] = "turbo -F native dev";
 		scripts["dev:web"] = "turbo -F web dev";
-		scripts["dev:server"] = serverDevScript;
+		scripts[`dev:${options.serverName}`] = serverDevScript;
 		if (options.backend === "convex") {
 			scripts["dev:setup"] = `turbo -F ${backendPackageName} dev:setup`;
 		}
@@ -92,7 +94,7 @@ async function updateRootPackageJson(
 		scripts["check-types"] = "pnpm -r check-types";
 		scripts["dev:native"] = "pnpm --filter native dev";
 		scripts["dev:web"] = "pnpm --filter web dev";
-		scripts["dev:server"] = serverDevScript;
+		scripts[`dev:${options.serverName}`] = serverDevScript;
 		if (options.backend === "convex") {
 			scripts["dev:setup"] = `pnpm --filter ${backendPackageName} dev:setup`;
 		}
@@ -123,7 +125,7 @@ async function updateRootPackageJson(
 		scripts["check-types"] = "npm run check-types --workspaces";
 		scripts["dev:native"] = "npm run dev --workspace native";
 		scripts["dev:web"] = "npm run dev --workspace web";
-		scripts["dev:server"] = serverDevScript;
+		scripts[`dev:${options.serverName}`] = serverDevScript;
 		if (options.backend === "convex") {
 			scripts["dev:setup"] =
 				`npm run dev:setup --workspace ${backendPackageName}`;
@@ -158,7 +160,7 @@ async function updateRootPackageJson(
 		scripts["check-types"] = "bun run --filter '*' check-types";
 		scripts["dev:native"] = "bun run --filter native dev";
 		scripts["dev:web"] = "bun run --filter web dev";
-		scripts["dev:server"] = serverDevScript;
+		scripts[`dev:${options.serverName}`] = serverDevScript;
 		if (options.backend === "convex") {
 			scripts["dev:setup"] = `bun run --filter ${backendPackageName} dev:setup`;
 		}
@@ -226,7 +228,9 @@ async function updateServerPackageJson(
 ) {
 	const serverPackageJsonPath = path.join(
 		projectDir,
-		"apps/server/package.json",
+		"apps",
+		options.serverName,
+		"package.json",
 	);
 
 	if (!(await fs.pathExists(serverPackageJsonPath))) return;

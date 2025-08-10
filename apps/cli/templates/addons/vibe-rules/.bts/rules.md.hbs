@@ -16,7 +16,7 @@ frontend "solid")}} (SolidStart){{/if}}
 
 {{#if (ne backend "convex")}}
 {{#if (ne backend "none")}}
-- **`apps/server/`** - Backend server{{#if (eq backend "hono")}} (Hono){{else if (eq backend "express")}}
+- **`apps/{{serverName}}/`** - Backend server{{#if (eq backend "hono")}} (Hono){{else if (eq backend "express")}}
 (Express){{else if (eq backend "fastify")}} (Fastify){{else if (eq backend "elysia")}} (Elysia){{else if (eq backend
 "next")}} (Next.js API){{/if}}
 {{/if}}
@@ -38,7 +38,7 @@ frontend "solid")}} (SolidStart){{/if}}
 {{/if}}
 {{#if (ne backend "none")}}
 {{#if (ne backend "convex")}}
-- `{{packageManager}} run dev:server` - Start only the server
+- `{{packageManager}} run dev:{{serverName}}` - Start only the {{serverName}}
 {{/if}}
 {{/if}}
 {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
@@ -48,7 +48,7 @@ frontend "solid")}} (SolidStart){{/if}}
 {{#if (and (ne database "none") (ne orm "none") (ne backend "convex"))}}
 ## Database Commands
 
-All database operations should be run from the server workspace:
+All database operations should be run from the {{serverName}} workspace:
 
 - `{{packageManager}} run db:push` - Push schema changes to database
 - `{{packageManager}} run db:studio` - Open database studio
@@ -57,11 +57,11 @@ All database operations should be run from the server workspace:
 - `{{packageManager}} run db:migrate` - Run database migrations
 
 {{#if (eq orm "drizzle")}}
-Database schema files are located in `apps/server/src/db/schema/`
+Database schema files are located in `apps/{{serverName}}/src/db/schema/`
 {{else if (eq orm "prisma")}}
-Database schema is located in `apps/server/prisma/schema.prisma`
+Database schema is located in `apps/{{serverName}}/prisma/schema.prisma`
 {{else if (eq orm "mongoose")}}
-Database models are located in `apps/server/src/db/models/`
+Database models are located in `apps/{{serverName}}/src/db/models/`
 {{/if}}
 {{/if}}
 
@@ -69,10 +69,10 @@ Database models are located in `apps/server/src/db/models/`
 ## API Structure
 
 {{#if (eq api "trpc")}}
-- tRPC routers are in `apps/server/src/routers/`
+- tRPC routers are in `apps/{{serverName}}/src/routers/`
 - Client-side tRPC utils are in `apps/web/src/utils/trpc.ts`
 {{else if (eq api "orpc")}}
-- oRPC endpoints are in `apps/server/src/api/`
+- oRPC endpoints are in `apps/{{serverName}}/src/api/`
 - Client-side API utils are in `apps/web/src/utils/api.ts`
 {{/if}}
 {{/if}}
@@ -82,7 +82,7 @@ Database models are located in `apps/server/src/db/models/`
 
 Authentication is enabled in this project:
 {{#if (ne backend "convex")}}
-- Server auth logic is in `apps/server/src/lib/auth.ts`
+- Server auth logic is in `apps/{{serverName}}/src/lib/auth.ts`
 {{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start")
 (includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
 - Web app auth client is in `apps/web/src/lib/auth-client.ts`
