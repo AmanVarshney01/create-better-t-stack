@@ -87,11 +87,11 @@ export const dependencyVersionMap = {
 
 	turbo: "^2.5.4",
 
-	ai: "^4.3.16",
-	"@ai-sdk/google": "^1.2.3",
-	"@ai-sdk/vue": "^1.2.8",
-	"@ai-sdk/svelte": "^2.1.9",
-	"@ai-sdk/react": "^1.2.12",
+	ai: "^5.0.9",
+	"@ai-sdk/google": "^2.0.3",
+    "@ai-sdk/vue": "^2.0.9",
+    "@ai-sdk/svelte": "^3.0.9",
+	"@ai-sdk/react": "^2.0.9",
 
 	"@orpc/server": "^1.5.0",
 	"@orpc/client": "^1.5.0",

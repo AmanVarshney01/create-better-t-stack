@@ -14,7 +14,7 @@ import { createContext } from "./lib/context";
 import cors from "cors";
 import express from "express";
 {{#if (includes examples "ai")}}
-import { streamText } from "ai";
+import { streamText, type UIMessage, convertToModelMessages } from "ai";
 import { google } from "@ai-sdk/google";
 {{/if}}
 {{#if auth}}
@@ -44,16 +44,16 @@ app.use(
   "/trpc",
   createExpressMiddleware({
     router: appRouter,
-    createContext
+    createContext,
   })
 );
 {{/if}}
 
 {{#if (eq api "orpc")}}
 const handler = new RPCHandler(appRouter);
-app.use('/rpc{*path}', async (req, res, next) => {
+app.use("/rpc{*path}", async (req, res, next) => {
   const { matched } = await handler.handle(req, res, {
-    prefix: '/rpc',
+    prefix: "/rpc",
     {{#if auth}}
     context: await createContext({ req }),
     {{else}}
@@ -65,16 +65,16 @@ app.use('/rpc{*path}', async (req, res, next) => {
 });
 {{/if}}
 
-app.use(express.json())
+app.use(express.json());
 
 {{#if (includes examples "ai")}}
 app.post("/ai", async (req, res) => {
-  const { messages = [] } = req.body || {};
+  const { messages = [] } = (req.body || {}) as { messages: UIMessage[] };
   const result = streamText({
     model: google("gemini-1.5-flash"),
-    messages,
+    messages: convertToModelMessages(messages),
   });
-  result.pipeDataStreamToResponse(res);
+  result.pipeUIMessageStreamToResponse(res);
 });
 {{/if}}
 

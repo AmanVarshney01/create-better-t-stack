@@ -1,17 +1,18 @@
-import { createFileRoute } from "@tanstack/react-router";
+"use client";
+
 import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 
-export const Route = createFileRoute("/ai")({
-  component: RouteComponent,
-});
-
-function RouteComponent() {
-  const { messages, input, handleInputChange, handleSubmit } = useChat({
-    api: `${import.meta.env.VITE_SERVER_URL}/ai`,
+export default function AIPage() {
+  const [input, setInput] = useState("");
+  const { messages, sendMessage } = useChat({
+    transport: new DefaultChatTransport({
+      api: `${process.env.NEXT_PUBLIC_SERVER_URL}/ai`,
+    }),
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -19,6 +20,14 @@ function RouteComponent() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const text = input.trim();
+    if (!text) return;
+    sendMessage({ text });
+    setInput("");
+  };
 
   return (
     <div className="grid grid-rows-[1fr_auto] overflow-hidden w-full mx-auto p-4">
@@ -40,7 +49,16 @@ function RouteComponent() {
               <p className="text-sm font-semibold mb-1">
                 {message.role === "user" ? "You" : "AI Assistant"}
               </p>
-              <div className="whitespace-pre-wrap">{message.content}</div>
+              {message.parts?.map((part, index) => {
+                if (part.type === "text") {
+                  return (
+                    <div key={index} className="whitespace-pre-wrap">
+                      {part.text}
+                    </div>
+                  );
+                }
+                return null;
+              })}
             </div>
           ))
         )}
@@ -54,7 +72,7 @@ function RouteComponent() {
         <Input
           name="prompt"
           value={input}
-          onChange={handleInputChange}
+          onChange={(e) => setInput(e.target.value)}
           placeholder="Type your message..."
           className="flex-1"
           autoComplete="off"

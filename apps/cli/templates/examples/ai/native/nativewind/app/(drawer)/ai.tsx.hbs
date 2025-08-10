@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,11 +9,11 @@ import {
   Platform,
 } from "react-native";
 import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import { fetch as expoFetch } from "expo/fetch";
 import { Ionicons } from "@expo/vector-icons";
 import { Container } from "@/components/container";
 
-// Utility function to generate API URLs
 const generateAPIUrl = (relativePath: string) => {
   const serverUrl = process.env.EXPO_PUBLIC_SERVER_URL;
   if (!serverUrl) {
@@ -25,11 +25,13 @@ const generateAPIUrl = (relativePath: string) => {
 };
 
 export default function AIScreen() {
-  const { messages, input, handleInputChange, handleSubmit, error } = useChat({
-    fetch: expoFetch as unknown as typeof globalThis.fetch,
-    api: generateAPIUrl('/ai'),
+  const [input, setInput] = useState("");
+  const { messages, error, sendMessage } = useChat({
+    transport: new DefaultChatTransport({
+      fetch: expoFetch as unknown as typeof globalThis.fetch,
+      api: generateAPIUrl('/ai'),
+    }),
     onError: error => console.error(error, 'AI Chat Error'),
-    maxSteps: 5,
   });
 
   const scrollViewRef = useRef<ScrollView>(null);
@@ -39,8 +41,10 @@ export default function AIScreen() {
   }, [messages]);
 
   const onSubmit = () => {
-    if (input.trim()) {
-      handleSubmit();
+    const value = input.trim();
+    if (value) {
+      sendMessage({ text: value });
+      setInput("");
     }
   };
 
@@ -100,9 +104,28 @@ export default function AIScreen() {
                     <Text className="text-sm font-semibold mb-1 text-foreground">
                       {message.role === "user" ? "You" : "AI Assistant"}
                     </Text>
-                    <Text className="text-foreground leading-relaxed">
-                      {message.content}
-                    </Text>
+                    <View className="space-y-1">
+                      {message.parts.map((part, i) => {
+                        if (part.type === 'text') {
+                          return (
+                            <Text
+                              key={`${message.id}-${i}`}
+                              className="text-foreground leading-relaxed"
+                            >
+                              {part.text}
+                            </Text>
+                          );
+                        }
+                        return (
+                          <Text
+                            key={`${message.id}-${i}`}
+                            className="text-foreground leading-relaxed"
+                          >
+                            {JSON.stringify(part)}
+                          </Text>
+                        );
+                      })}
+                    </View>
                   </View>
                 ))}
               </View>
@@ -113,21 +136,13 @@ export default function AIScreen() {
             <View className="flex-row items-end space-x-2">
               <TextInput
                 value={input}
-                onChange={(e) =>
-                  handleInputChange({
-                    ...e,
-                    target: {
-                      ...e.target,
-                      value: e.nativeEvent.text,
-                    },
-                  } as unknown as React.ChangeEvent<HTMLInputElement>)
-                }
+                onChangeText={setInput}
                 placeholder="Type your message..."
                 placeholderTextColor="#6b7280"
                 className="flex-1 border border-border rounded-md px-3 py-2 text-foreground bg-background min-h-[40px] max-h-[120px]"
                 onSubmitEditing={(e) => {
-                  handleSubmit(e);
                   e.preventDefault();
+                  onSubmit();
                 }}
                 autoFocus={true}
               />

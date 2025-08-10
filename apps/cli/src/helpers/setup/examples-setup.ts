@@ -17,33 +17,44 @@ export async function setupExamples(config: ProjectConfig) {
 	}
 
 	if (examples.includes("ai")) {
-		const clientDir = path.join(projectDir, "apps/web");
+		const webClientDir = path.join(projectDir, "apps/web");
+		const nativeClientDir = path.join(projectDir, "apps/native");
 		const serverDir = path.join(projectDir, "apps/server");
-		const clientDirExists = await fs.pathExists(clientDir);
+
+		const webClientDirExists = await fs.pathExists(webClientDir);
+		const nativeClientDirExists = await fs.pathExists(nativeClientDir);
 		const serverDirExists = await fs.pathExists(serverDir);
 
 		const hasNuxt = frontend.includes("nuxt");
 		const hasSvelte = frontend.includes("svelte");
-		const hasReact =
+		const hasReactWeb =
 			frontend.includes("react-router") ||
 			frontend.includes("tanstack-router") ||
 			frontend.includes("next") ||
-			frontend.includes("tanstack-start") ||
+			frontend.includes("tanstack-start");
+		const hasReactNative =
 			frontend.includes("native-nativewind") ||
 			frontend.includes("native-unistyles");
 
-		if (clientDirExists) {
+		if (webClientDirExists) {
 			const dependencies: AvailableDependencies[] = ["ai"];
 			if (hasNuxt) {
 				dependencies.push("@ai-sdk/vue");
 			} else if (hasSvelte) {
 				dependencies.push("@ai-sdk/svelte");
-			} else if (hasReact) {
+			} else if (hasReactWeb) {
 				dependencies.push("@ai-sdk/react");
 			}
 			await addPackageDependency({
 				dependencies,
-				projectDir: clientDir,
+				projectDir: webClientDir,
+			});
+		}
+
+		if (nativeClientDirExists && hasReactNative) {
+			await addPackageDependency({
+				dependencies: ["ai", "@ai-sdk/react"],
+				projectDir: nativeClientDir,
 			});
 		}
 

@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Platform,
 } from "react-native";
 import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import { fetch as expoFetch } from "expo/fetch";
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
@@ -18,21 +19,22 @@ const generateAPIUrl = (relativePath: string) => {
   const serverUrl = process.env.EXPO_PUBLIC_SERVER_URL;
   if (!serverUrl) {
     throw new Error(
-      "EXPO_PUBLIC_SERVER_URL environment variable is not defined",
+      "EXPO_PUBLIC_SERVER_URL environment variable is not defined"
     );
   }
-
   const path = relativePath.startsWith("/") ? relativePath : `/${relativePath}`;
   return serverUrl.concat(path);
 };
 
 export default function AIScreen() {
   const { theme } = useUnistyles();
-  const { messages, input, handleInputChange, handleSubmit, error } = useChat({
-    fetch: expoFetch as unknown as typeof globalThis.fetch,
-    api: generateAPIUrl("/ai"),
+  const [input, setInput] = useState("");
+  const { messages, error, sendMessage } = useChat({
+    transport: new DefaultChatTransport({
+      fetch: expoFetch as unknown as typeof globalThis.fetch,
+      api: generateAPIUrl("/ai"),
+    }),
     onError: (error) => console.error(error, "AI Chat Error"),
-    maxSteps: 5,
   });
 
   const scrollViewRef = useRef<ScrollView>(null);
@@ -42,8 +44,10 @@ export default function AIScreen() {
   }, [messages]);
 
   const onSubmit = () => {
-    if (input.trim()) {
-      handleSubmit();
+    const value = input.trim();
+    if (value) {
+      sendMessage({ text: value });
+      setInput("");
     }
   };
 
@@ -100,7 +104,28 @@ export default function AIScreen() {
                     <Text style={styles.messageRole}>
                       {message.role === "user" ? "You" : "AI Assistant"}
                     </Text>
-                    <Text style={styles.messageContent}>{message.content}</Text>
+                    <View style={styles.messageContentWrapper}>
+                      {message.parts.map((part, i) => {
+                        if (part.type === "text") {
+                          return (
+                            <Text
+                              key={`${message.id}-${i}`}
+                              style={styles.messageContent}
+                            >
+                              {part.text}
+                            </Text>
+                          );
+                        }
+                        return (
+                          <Text
+                            key={`${message.id}-${i}`}
+                            style={styles.messageContent}
+                          >
+                            {JSON.stringify(part)}
+                          </Text>
+                        );
+                      })}
+                    </View>
                   </View>
                 ))}
               </View>
@@ -111,21 +136,13 @@ export default function AIScreen() {
             <View style={styles.inputContainer}>
               <TextInput
                 value={input}
-                onChange={(e) =>
-                  handleInputChange({
-                    ...e,
-                    target: {
-                      ...e.target,
-                      value: e.nativeEvent.text,
-                    },
-                  } as unknown as React.ChangeEvent<HTMLInputElement>)
-                }
+                onChangeText={setInput}
                 placeholder="Type your message..."
                 placeholderTextColor={theme.colors.border}
                 style={styles.textInput}
                 onSubmitEditing={(e) => {
-                  handleSubmit(e);
                   e.preventDefault();
+                  onSubmit();
                 }}
                 autoFocus={true}
               />
@@ -141,7 +158,9 @@ export default function AIScreen() {
                   name="send"
                   size={20}
                   color={
-                    input.trim() ? theme.colors.background : theme.colors.border
+                    input.trim()
+                      ? theme.colors.background
+                      : theme.colors.border
                   }
                 />
               </TouchableOpacity>
@@ -229,6 +248,9 @@ const styles = StyleSheet.create((theme) => ({
     fontWeight: "600",
     marginBottom: theme.spacing.sm,
     color: theme.colors.typography,
+  },
+  messageContentWrapper: {
+    gap: theme.spacing.xs,
   },
   messageContent: {
     color: theme.colors.typography,

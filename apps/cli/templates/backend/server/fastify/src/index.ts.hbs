@@ -19,8 +19,7 @@ import { createContext } from "./lib/context";
 {{/if}}
 
 {{#if (includes examples "ai")}}
-import type { FastifyRequest, FastifyReply } from "fastify";
-import { streamText, type Message } from "ai";
+import { streamText, type UIMessage, convertToModelMessages } from "ai";
 import { google } from "@ai-sdk/google";
 {{/if}}
 
@@ -99,7 +98,7 @@ fastify.route({
       response.headers.forEach((value, key) => reply.header(key, value));
       reply.send(response.body ? await response.text() : null);
     } catch (error) {
-      fastify.log.error("Authentication Error:", error);
+      fastify.log.error({ err: error }, "Authentication Error:");
       reply.status(500).send({
         error: "Internal authentication error",
         code: "AUTH_FAILURE"
@@ -125,26 +124,24 @@ fastify.register(fastifyTRPCPlugin, {
 {{#if (includes examples "ai")}}
 interface AiRequestBody {
   id?: string;
-  messages: Message[];
+  messages: UIMessage[];
 }
 
 fastify.post('/ai', async function (request, reply) {
+  // there are some issues with the ai sdk and fastify, docs: https://ai-sdk.dev/cookbook/api-servers/fastify
   const { messages } = request.body as AiRequestBody;
   const result = streamText({
     model: google('gemini-1.5-flash'),
-    messages,
+    messages: convertToModelMessages(messages),
   });
 
-  reply.header('X-Vercel-AI-Data-Stream', 'v1');
-  reply.header('Content-Type', 'text/plain; charset=utf-8');
-
-  return reply.send(result.toDataStream());
+  return result.pipeUIMessageStreamToResponse(reply.raw);
 });
 {{/if}}
 
 fastify.get('/', async () => {
-  return 'OK'
-})
+  return 'OK';
+});
 
 fastify.listen({ port: 3000 }, (err) => {
   if (err) {
