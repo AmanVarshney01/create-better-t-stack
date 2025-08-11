@@ -69,6 +69,11 @@ export const router = t.router({
 						.describe(
 							"(WARNING - NOT RECOMMENDED) Bypass validations and compatibility checks",
 						),
+					verbose: z
+						.boolean()
+						.optional()
+						.default(false)
+						.describe("Show detailed result information"),
 					database: DatabaseSchema.optional(),
 					orm: ORMSchema.optional(),
 					auth: z.boolean().optional(),
@@ -94,7 +99,11 @@ export const router = t.router({
 				projectName,
 				...options,
 			};
-			return createProjectHandler(combinedInput);
+			const result = await createProjectHandler(combinedInput);
+
+			if (options.verbose) {
+				return result;
+			}
 		}),
 	add: t.procedure
 		.meta({
@@ -203,7 +212,9 @@ export async function init(
 	options?: CreateInput,
 ): Promise<InitResult> {
 	const opts = (options ?? {}) as CreateInput;
-	return caller.init([projectName, opts]);
+	const programmaticOpts = { ...opts, verbose: true };
+	const result = await caller.init([projectName, programmaticOpts]);
+	return result as InitResult;
 }
 
 export async function sponsors() {

@@ -113,6 +113,7 @@ interface CreateInput {
   projectName?: string;
   yes?: boolean;                    // Skip prompts, use defaults
   yolo?: boolean;                   // Bypass validations (not recommended)
+  verbose?: boolean;               // Show JSON result (CLI only, programmatic always returns result)
   database?: Database;              // "none" | "sqlite" | "postgres" | "mysql" | "mongodb"
   orm?: ORM;                        // "none" | "drizzle" | "prisma" | "mongoose"
   auth?: boolean;                   // Include authentication

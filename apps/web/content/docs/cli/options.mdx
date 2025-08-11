@@ -37,6 +37,48 @@ Control Git repository initialization.
 create-better-t-stack --no-git
 ```
 
+### `--yolo`
+
+Bypass validations and compatibility checks. Not recommended for normal use.
+
+```bash
+create-better-t-stack --yolo
+```
+
+### `--verbose`
+
+Show detailed result information in JSON format after project creation.
+
+```bash
+create-better-t-stack --verbose
+```
+
+### `--render-title / --no-render-title`
+
+Control whether the ASCII art title is shown. Enabled by default.
+
+```bash
+# Hide the title (useful in CI)
+create-better-t-stack --no-render-title
+```
+
+### `--directory-conflict <strategy>`
+
+How to handle existing, non-empty target directories:
+
+- `merge`: Keep existing files and merge new ones
+- `overwrite`: Clear the directory before scaffolding
+- `increment`: Create a suffixed directory (e.g., `my-app-1`)
+- `error`: Fail instead of prompting
+
+```bash
+# Overwrite an existing directory without prompting
+create-better-t-stack my-app --yes --directory-conflict overwrite
+
+# Safely create a new directory name if it exists
+create-better-t-stack my-app --yes --directory-conflict increment
+```
+
 ## Database Options
 
 ### `--database <type>`

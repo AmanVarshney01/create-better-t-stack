@@ -117,6 +117,7 @@ export type CreateInput = {
 	projectName?: string;
 	yes?: boolean;
 	yolo?: boolean;
+	verbose?: boolean;
 	database?: Database;
 	orm?: ORM;
 	auth?: boolean;

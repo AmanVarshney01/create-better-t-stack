@@ -22,6 +22,8 @@ create-better-t-stack [project-directory] [options]
 ### Key Options
 
 - `--yes, -y`: Use default configuration (skips prompts)
+- `--verbose`: Show detailed result information as JSON
+- `--yolo`: Bypass validations and compatibility checks
 - `--package-manager <pm>`: `npm`, `pnpm`, `bun`
 - `--install / --no-install`: Install dependencies after creation
 - `--git / --no-git`: Initialize Git repository
@@ -34,6 +36,8 @@ create-better-t-stack [project-directory] [options]
 - `--db-setup <setup>`: `none`, `turso`, `d1`, `neon`, `supabase`, `prisma-postgres`, `mongodb-atlas`, `docker`
 - `--examples <types...>`: `none`, `todo`, `ai`
 - `--web-deploy <setup>`: `none`, `workers`
+- `--directory-conflict <strategy>`: `merge`, `overwrite`, `increment`, `error`
+- `--render-title / --no-render-title`: Show/hide ASCII art title
 
 See the full reference in [Options](/docs/cli/options).
 
