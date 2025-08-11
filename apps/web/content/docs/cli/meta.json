@@ -1,5 +1,5 @@
 {
 	"title": "CLI",
 	"defaultOpen": true,
-	"pages": ["index", "options", "compatibility"]
+	"pages": ["index", "programmatic-api", "options", "compatibility"]
 }

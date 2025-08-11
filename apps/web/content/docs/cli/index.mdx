@@ -147,3 +147,35 @@ create-better-t-stack api-server \
 cd my-existing-project
 create-better-t-stack add --addons tauri starlight --install
 ```
+
+## Programmatic Usage
+
+For advanced use cases, automation, or integration with other tools, you can use the [Programmatic API](/docs/cli/programmatic-api) to create projects from Node.js code:
+
+```typescript
+import { init } from "create-better-t-stack";
+
+// Create multiple projects programmatically
+const projects = [
+  { name: "api", config: { frontend: ["none"], backend: "hono" } },
+  { name: "web", config: { frontend: ["next"], backend: "none" } }
+];
+
+for (const { name, config } of projects) {
+  const result = await init(name, {
+    yes: true,
+    ...config,
+    directoryConflict: "increment"
+  });
+  
+  console.log(result.success ? `✅ ${name}` : `❌ ${name}: ${result.error}`);
+}
+```
+
+This is useful for:
+- **Build tools and generators** - Create projects from templates
+- **CI/CD pipelines** - Generate test projects automatically  
+- **Development workflows** - Batch create related projects
+- **Custom tooling** - Integrate with your existing development setup
+
+See the [Programmatic API documentation](/docs/cli/programmatic-api) for complete examples and API reference.
