@@ -6,7 +6,7 @@
   "license": "MIT",
   "author": "Aman Varshney",
   "bin": {
-    "create-better-t-stack": "dist/index.js"
+    "create-better-t-stack": "dist/cli.js"
   },
   "files": [
     "templates",
@@ -52,6 +52,12 @@
     "test": "bun run build && vitest run",
     "test:with-build": "bun run build && WITH_BUILD=1 vitest run",
     "prepublishOnly": "npm run build"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
   "dependencies": {
     "@clack/prompts": "^0.11.0",

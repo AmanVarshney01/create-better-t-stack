@@ -421,6 +421,99 @@ export function validateConfigCompatibility(config: Partial<ProjectConfig>) {
 	);
 }
 
+export function processProvidedFlagsWithoutValidation(
+	options: CLIInput,
+	projectName?: string,
+): Partial<ProjectConfig> {
+	const config: Partial<ProjectConfig> = {};
+
+	if (options.api) {
+		config.api = options.api as API;
+	}
+
+	if (options.backend) {
+		config.backend = options.backend as Backend;
+	}
+
+	if (options.database) {
+		config.database = options.database as Database;
+	}
+
+	if (options.orm) {
+		config.orm = options.orm as ORM;
+	}
+
+	if (options.auth !== undefined) {
+		config.auth = options.auth;
+	}
+
+	if (options.git !== undefined) {
+		config.git = options.git;
+	}
+
+	if (options.install !== undefined) {
+		config.install = options.install;
+	}
+
+	if (options.runtime) {
+		config.runtime = options.runtime as Runtime;
+	}
+
+	if (options.dbSetup) {
+		config.dbSetup = options.dbSetup as DatabaseSetup;
+	}
+
+	if (options.packageManager) {
+		config.packageManager = options.packageManager as PackageManager;
+	}
+
+	if (options.webDeploy) {
+		config.webDeploy = options.webDeploy as WebDeploy;
+	}
+
+	if (projectName) {
+		config.projectName = projectName;
+	} else if (options.projectDirectory) {
+		const baseName = path.basename(
+			path.resolve(process.cwd(), options.projectDirectory),
+		);
+		config.projectName = baseName;
+	}
+
+	if (options.frontend && options.frontend.length > 0) {
+		if (options.frontend.includes("none")) {
+			config.frontend = [];
+		} else {
+			const validOptions = options.frontend.filter(
+				(f): f is Frontend => f !== "none",
+			);
+			config.frontend = validOptions;
+		}
+	}
+
+	if (options.addons && options.addons.length > 0) {
+		if (options.addons.includes("none")) {
+			config.addons = [];
+		} else {
+			config.addons = options.addons.filter(
+				(addon): addon is Addons => addon !== "none",
+			);
+		}
+	}
+
+	if (options.examples && options.examples.length > 0) {
+		if (options.examples.includes("none")) {
+			config.examples = [];
+		} else {
+			config.examples = options.examples.filter(
+				(ex): ex is Examples => ex !== "none",
+			);
+		}
+	}
+
+	return config;
+}
+
 export function getProvidedFlags(options: CLIInput): Set<string> {
 	return new Set(
 		Object.keys(options).filter(

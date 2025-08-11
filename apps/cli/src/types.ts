@@ -108,9 +108,15 @@ export const WebDeploySchema = z
 	.describe("Web deployment");
 export type WebDeploy = z.infer<typeof WebDeploySchema>;
 
+export const DirectoryConflictSchema = z
+	.enum(["merge", "overwrite", "increment", "error"])
+	.describe("How to handle existing directory conflicts");
+export type DirectoryConflict = z.infer<typeof DirectoryConflictSchema>;
+
 export type CreateInput = {
 	projectName?: string;
 	yes?: boolean;
+	yolo?: boolean;
 	database?: Database;
 	orm?: ORM;
 	auth?: boolean;
@@ -125,6 +131,8 @@ export type CreateInput = {
 	runtime?: Runtime;
 	api?: API;
 	webDeploy?: WebDeploy;
+	directoryConflict?: DirectoryConflict;
+	renderTitle?: boolean;
 };
 
 export type AddInput = {
@@ -174,4 +182,15 @@ export interface BetterTStackConfig {
 	dbSetup: DatabaseSetup;
 	api: API;
 	webDeploy: WebDeploy;
+}
+
+export interface InitResult {
+	success: boolean;
+	projectConfig: ProjectConfig;
+	reproducibleCommand: string;
+	timeScaffolded: string;
+	elapsedTimeMs: number;
+	projectDirectory: string;
+	relativePath: string;
+	error?: string;
 }

@@ -7,6 +7,7 @@ import { exitCancelled, handleError } from "./errors";
 
 export async function handleDirectoryConflict(
 	currentPathInput: string,
+	silent = false,
 ): Promise<{
 	finalPathInput: string;
 	shouldClearDirectory: boolean;
@@ -18,6 +19,12 @@ export async function handleDirectoryConflict(
 
 		if (!dirIsNotEmpty) {
 			return { finalPathInput: currentPathInput, shouldClearDirectory: false };
+		}
+
+		if (silent) {
+			throw new Error(
+				`Directory "${currentPathInput}" already exists and is not empty. In silent mode, please provide a different project name or clear the directory manually.`,
+			);
 		}
 
 		log.warn(

@@ -9,9 +9,33 @@ import {
 	removeSync,
 } from "fs-extra";
 import * as JSONC from "jsonc-parser";
+import { FailedToExitError } from "trpc-cli";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { createBtsCli } from "../src/index";
 
-const CLI_BIN = join(__dirname, "..", "dist", "index.js");
+async function runCli(argv: string[], cwd: string) {
+	const previous = process.cwd();
+	process.chdir(cwd);
+	try {
+		const cli = createBtsCli();
+		await cli
+			.run({
+				argv,
+				logger: { info: () => {}, error: () => {} },
+				process: { exit: () => void 0 as never },
+			})
+			.catch((err) => {
+				let e: unknown = err;
+				while (e instanceof FailedToExitError) {
+					if (e.exitCode === 0) return e.cause;
+					e = e.cause;
+				}
+				throw e;
+			});
+	} finally {
+		process.chdir(previous);
+	}
+}
 
 function createTmpDir(_prefix: string) {
 	const dir = join(__dirname, "..", ".smoke");
@@ -22,39 +46,30 @@ function createTmpDir(_prefix: string) {
 	return dir;
 }
 
-async function runCli(args: string[], cwd: string, env?: NodeJS.ProcessEnv) {
-	const subprocess = execa("node", [CLI_BIN, ...args], {
-		cwd,
-		env: {
-			...process.env,
-			BTS_TELEMETRY_DISABLED: "1",
-			...env,
-		},
-	});
-	subprocess.stdout?.pipe(process.stdout);
-	subprocess.stderr?.pipe(process.stderr);
-	const { exitCode } = await subprocess;
-	expect(exitCode).toBe(0);
-}
-
-async function runCliExpectingError(
-	args: string[],
-	cwd: string,
-	env?: NodeJS.ProcessEnv,
-) {
-	const subprocess = execa("node", [CLI_BIN, ...args], {
-		cwd,
-		env: {
-			...process.env,
-			BTS_TELEMETRY_DISABLED: "1",
-			...env,
-		},
-		reject: false,
-	});
-	subprocess.stdout?.pipe(process.stdout);
-	subprocess.stderr?.pipe(process.stderr);
-	const { exitCode } = await subprocess;
-	expect(exitCode).not.toBe(0);
+async function runCliExpectingError(args: string[], cwd: string) {
+	const previous = process.cwd();
+	process.chdir(cwd);
+	try {
+		const cli = createBtsCli();
+		let threw = false;
+		await cli
+			.run({
+				argv: args,
+				logger: { info: () => {}, error: () => {} },
+				process: { exit: () => void 0 as never },
+			})
+			.catch((err) => {
+				threw = true;
+				let e: unknown = err;
+				while (e instanceof FailedToExitError) {
+					if (e.exitCode === 0) throw new Error("Expected failure");
+					e = e.cause;
+				}
+			});
+		expect(threw).toBe(true);
+	} finally {
+		process.chdir(previous);
+	}
 }
 
 function assertScaffoldedProject(dir: string) {
@@ -310,9 +325,8 @@ describe("create-better-t-stack smoke", () => {
 		expect(exitCode).toBe(0);
 		consola.success("CLI build completed");
 
-		const cliBinExists = existsSync(CLI_BIN);
-		expect(cliBinExists).toBe(true);
-		consola.info(`CLI binary: ${CLI_BIN}`);
+		process.env.BTS_TELEMETRY_DISABLED = "1";
+		consola.info("Programmatic CLI mode");
 	});
 
 	// Exhaustive matrix: all frontends x standard backends (no db, no orm, no api, no auth)

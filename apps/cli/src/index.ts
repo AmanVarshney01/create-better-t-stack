@@ -7,17 +7,35 @@ import {
 	createProjectHandler,
 } from "./helpers/project-generation/command-handlers";
 import {
+	type AddInput,
+	type Addons,
 	AddonsSchema,
+	type API,
 	APISchema,
+	type Backend,
 	BackendSchema,
+	type BetterTStackConfig,
+	type CreateInput,
+	type Database,
 	DatabaseSchema,
+	type DatabaseSetup,
 	DatabaseSetupSchema,
+	type DirectoryConflict,
+	DirectoryConflictSchema,
+	type Examples,
 	ExamplesSchema,
+	type Frontend,
 	FrontendSchema,
+	type InitResult,
+	type ORM,
 	ORMSchema,
+	type PackageManager,
 	PackageManagerSchema,
+	type ProjectConfig,
 	ProjectNameSchema,
+	type Runtime,
 	RuntimeSchema,
+	type WebDeploy,
 	WebDeploySchema,
 } from "./types";
 import { handleError } from "./utils/errors";
@@ -28,7 +46,7 @@ import { displaySponsors, fetchSponsors } from "./utils/sponsors";
 
 const t = trpcServer.initTRPC.create();
 
-const router = t.router({
+export const router = t.router({
 	init: t.procedure
 		.meta({
 			description: "Create a new Better-T Stack project",
@@ -44,6 +62,13 @@ const router = t.router({
 						.optional()
 						.default(false)
 						.describe("Use default configuration"),
+					yolo: z
+						.boolean()
+						.optional()
+						.default(false)
+						.describe(
+							"(WARNING - NOT RECOMMENDED) Bypass validations and compatibility checks",
+						),
 					database: DatabaseSchema.optional(),
 					orm: ORMSchema.optional(),
 					auth: z.boolean().optional(),
@@ -58,6 +83,8 @@ const router = t.router({
 					runtime: RuntimeSchema.optional(),
 					api: APISchema.optional(),
 					webDeploy: WebDeploySchema.optional(),
+					directoryConflict: DirectoryConflictSchema.optional(),
+					renderTitle: z.boolean().optional(),
 				}),
 			]),
 		)
@@ -67,7 +94,7 @@ const router = t.router({
 				projectName,
 				...options,
 			};
-			await createProjectHandler(combinedInput);
+			return createProjectHandler(combinedInput);
 		}),
 	add: t.procedure
 		.meta({
@@ -129,8 +156,84 @@ const router = t.router({
 		}),
 });
 
-createCli({
-	router,
-	name: "create-better-t-stack",
-	version: getLatestCLIVersion(),
-}).run();
+const caller = t.createCallerFactory(router)({});
+
+export function createBtsCli() {
+	return createCli({
+		router,
+		name: "create-better-t-stack",
+		version: getLatestCLIVersion(),
+	});
+}
+
+/**
+ * Initialize a new Better-T Stack project
+ *
+ * @example CLI usage:
+ * ```bash
+ * npx create-better-t-stack my-app --yes
+ * ```
+ *
+ * @example Programmatic usage (always returns structured data):
+ * ```typescript
+ * import { init } from "create-better-t-stack";
+ *
+ * const result = await init("my-app", {
+ *   yes: true,
+ *   frontend: ["tanstack-router"],
+ *   backend: "hono",
+ *   database: "sqlite",
+ *   orm: "drizzle",
+ *   auth: true,
+ *   addons: ["biome", "turborepo"],
+ *   packageManager: "bun",
+ *   install: false,
+ *   directoryConflict: "increment", // auto-handle conflicts
+ * });
+ *
+ * if (result.success) {
+ *   console.log(`Project created at: ${result.projectDirectory}`);
+ *   console.log(`Reproducible command: ${result.reproducibleCommand}`);
+ *   console.log(`Time taken: ${result.elapsedTimeMs}ms`);
+ * }
+ * ```
+ */
+export async function init(
+	projectName?: string,
+	options?: CreateInput,
+): Promise<InitResult> {
+	const opts = (options ?? {}) as CreateInput;
+	return caller.init([projectName, opts]);
+}
+
+export async function sponsors() {
+	return caller.sponsors();
+}
+
+export async function docs() {
+	return caller.docs();
+}
+
+export async function builder() {
+	return caller.builder();
+}
+
+export type {
+	Database,
+	ORM,
+	Backend,
+	Runtime,
+	Frontend,
+	Addons,
+	Examples,
+	PackageManager,
+	DatabaseSetup,
+	API,
+	WebDeploy,
+	DirectoryConflict,
+	CreateInput,
+	AddInput,
+	ProjectConfig,
+	BetterTStackConfig,
+	InitResult,
+};
