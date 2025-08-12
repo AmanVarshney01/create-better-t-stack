@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.32.2
+
+### Patch Changes
+
+- 78fe4b7: fix unwanted orm directories (sorry it was pretty bad)
+
 ## 2.32.1
 
 ### Patch Changes
