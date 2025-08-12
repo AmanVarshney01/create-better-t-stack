@@ -5,7 +5,7 @@ import { PKG_ROOT } from "../../constants";
 import type { ProjectConfig } from "../../types";
 import { processTemplate } from "../../utils/template-processor";
 
-async function processAndCopyFiles(
+export async function processAndCopyFiles(
 	sourcePattern: string | string[],
 	baseSourceDir: string,
 	destDir: string,

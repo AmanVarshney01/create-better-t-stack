@@ -7,106 +7,146 @@ import { PKG_ROOT } from "../../constants";
 import type { ProjectConfig } from "../../types";
 import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
-import { processTemplate } from "../../utils/template-processor";
+import { processAndCopyFiles } from "../project-generation/template-manager";
 
 export async function setupVibeRules(config: ProjectConfig) {
 	const { packageManager, projectDir } = config;
 
 	try {
-		log.info("Setting up vibe-rules...");
+		log.info("Setting up Ruler...");
 
-		const rulesDir = path.join(projectDir, ".bts");
-		const ruleFile = path.join(rulesDir, "rules.md");
-		if (!(await fs.pathExists(ruleFile))) {
-			const templatePath = path.join(
-				PKG_ROOT,
-				"templates",
-				"addons",
-				"vibe-rules",
-				".bts",
-				"rules.md.hbs",
-			);
-			if (await fs.pathExists(templatePath)) {
-				await fs.ensureDir(rulesDir);
-				await processTemplate(templatePath, ruleFile, config);
+		const rulerDir = path.join(projectDir, ".ruler");
+		const rulerTemplateDir = path.join(
+			PKG_ROOT,
+			"templates",
+			"addons",
+			"vibe-rules",
+			".ruler",
+		);
+
+		if (!(await fs.pathExists(rulerDir))) {
+			if (await fs.pathExists(rulerTemplateDir)) {
+				await processAndCopyFiles("**/*", rulerTemplateDir, rulerDir, config);
 			} else {
-				log.error(pc.red("Rules template not found for vibe-rules addon"));
+				log.error(pc.red("Ruler template directory not found"));
 				return;
 			}
 		}
 
 		const EDITORS = {
-			cursor: { label: "Cursor", hint: ".cursor/rules/*.mdc" },
-			windsurf: { label: "Windsurf", hint: ".windsurfrules" },
-			"claude-code": { label: "Claude Code", hint: "CLAUDE.md" },
-			vscode: {
-				label: "VSCode",
-				hint: ".github/instructions/*.instructions.md",
+			cursor: {
+				label: "Cursor",
 			},
-			gemini: { label: "Gemini", hint: "GEMINI.md" },
-			codex: { label: "Codex", hint: "AGENTS.md" },
-			clinerules: { label: "Cline/Roo", hint: ".clinerules/*.md" },
-			roo: { label: "Roo", hint: ".clinerules/*.md" },
-			zed: { label: "Zed", hint: ".rules/*.md" },
-			unified: { label: "Unified", hint: ".rules/*.md" },
+			windsurf: {
+				label: "Windsurf",
+			},
+			claude: { label: "Claude Code" },
+			copilot: {
+				label: "GitHub Copilot",
+			},
+			"gemini-cli": { label: "Gemini CLI" },
+			codex: { label: "OpenAI Codex CLI" },
+			jules: { label: "Jules" },
+			cline: { label: "Cline" },
+			aider: { label: "Aider" },
+			firebase: { label: "Firebase Studio" },
+			openhands: { label: "Open Hands" },
+			junie: { label: "Junie" },
+			augmentcode: {
+				label: "AugmentCode",
+			},
+			kilocode: {
+				label: "Kilo Code",
+			},
+			opencode: { label: "OpenCode" },
 		} as const;
 
 		const selectedEditors = await multiselect<keyof typeof EDITORS>({
-			message: "Choose editors to install BTS rule",
+			message: "Select AI assistants for Ruler",
 			options: Object.entries(EDITORS).map(([key, v]) => ({
 				value: key as keyof typeof EDITORS,
 				label: v.label,
-				hint: v.hint,
 			})),
 			required: false,
 		});
 
 		if (isCancel(selectedEditors)) return exitCancelled("Operation cancelled");
 
-		const editorsArg = selectedEditors.join(", ");
+		if (selectedEditors.length === 0) {
+			log.info("No AI assistants selected. To apply rules later, run:");
+			log.info(
+				pc.cyan(
+					`${getPackageExecutionCommand(packageManager, "@intellectronica/ruler@latest apply --local-only")}`,
+				),
+			);
+			return;
+		}
+
+		const configFile = path.join(rulerDir, "ruler.toml");
+		const currentConfig = await fs.readFile(configFile, "utf-8");
+
+		let updatedConfig = currentConfig;
+
+		const defaultAgentsLine = `default_agents = [${selectedEditors.map((editor) => `"${editor}"`).join(", ")}]`;
+		updatedConfig = updatedConfig.replace(
+			/default_agents = \[\]/,
+			defaultAgentsLine,
+		);
+
+		await fs.writeFile(configFile, updatedConfig);
+
+		await addRulerScriptToPackageJson(projectDir, packageManager);
+
 		const s = spinner();
-		s.start("Saving and applying BTS rules...");
+		s.start("Applying rules with Ruler...");
 
 		try {
-			const saveCmd = getPackageExecutionCommand(
+			const rulerApplyCmd = getPackageExecutionCommand(
 				packageManager,
-				`vibe-rules@latest save bts -f ${JSON.stringify(
-					path.relative(projectDir, ruleFile),
-				)}`,
+				`@intellectronica/ruler@latest apply --agents ${selectedEditors.join(",")} --local-only`,
 			);
-			await execa(saveCmd, {
+			await execa(rulerApplyCmd, {
 				cwd: projectDir,
 				env: { CI: "true" },
 				shell: true,
 			});
 
-			for (const editor of selectedEditors) {
-				const loadCmd = getPackageExecutionCommand(
-					packageManager,
-					`vibe-rules@latest load bts ${editor}`,
-				);
-				await execa(loadCmd, {
-					cwd: projectDir,
-					env: { CI: "true" },
-					shell: true,
-				});
-			}
-
-			s.stop(`Applied BTS rules to: ${editorsArg}`);
-		} catch (error) {
-			s.stop(pc.red("Failed to apply BTS rules"));
-			throw error;
+			s.stop("Applied rules with Ruler");
+		} catch (_error) {
+			s.stop(pc.red("Failed to apply rules"));
 		}
-
-		try {
-			await fs.remove(rulesDir);
-		} catch (_) {}
-
-		log.success("vibe-rules setup successfully!");
 	} catch (error) {
-		log.error(pc.red("Failed to set up vibe-rules"));
+		log.error(pc.red("Failed to set up Ruler"));
 		if (error instanceof Error) {
 			console.error(pc.red(error.message));
 		}
 	}
+}
+
+async function addRulerScriptToPackageJson(
+	projectDir: string,
+	packageManager: ProjectConfig["packageManager"],
+) {
+	const rootPackageJsonPath = path.join(projectDir, "package.json");
+
+	if (!(await fs.pathExists(rootPackageJsonPath))) {
+		log.warn(
+			"Root package.json not found, skipping ruler:apply script addition",
+		);
+		return;
+	}
+
+	const packageJson = await fs.readJson(rootPackageJsonPath);
+
+	if (!packageJson.scripts) {
+		packageJson.scripts = {};
+	}
+
+	const rulerApplyCommand = getPackageExecutionCommand(
+		packageManager,
+		"@intellectronica/ruler@latest apply --local-only",
+	);
+	packageJson.scripts["ruler:apply"] = rulerApplyCommand;
+
+	await fs.writeJson(rootPackageJsonPath, packageJson, { spaces: 2 });
 }
