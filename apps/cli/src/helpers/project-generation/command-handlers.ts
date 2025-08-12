@@ -178,7 +178,7 @@ export async function createProjectHandler(
 		),
 	);
 
-	await trackProjectCreation(config);
+	await trackProjectCreation(config, input.disableAnalytics);
 
 	const elapsedTimeMs = Date.now() - startTime;
 	const elapsedTimeInSeconds = (elapsedTimeMs / 1000).toFixed(2);

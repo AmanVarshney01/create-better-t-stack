@@ -36,6 +36,7 @@ async function createProject() {
     auth: true,
     packageManager: "bun",
     install: false, // Don't install deps automatically
+    disableAnalytics: true, // Disable analytics
   });
 
   if (result.success) {
@@ -61,6 +62,23 @@ const result = await init("existing-folder", {
   renderTitle: false, // Hide ASCII art
 });
 ```
+
+### Disabling Analytics
+
+You can disable analytics:
+
+```typescript
+import { init } from "create-better-t-stack";
+
+const result = await init("my-private-project", {
+  yes: true,
+  disableAnalytics: true, // No analytics data will be sent
+  frontend: ["tanstack-router"],
+  backend: "hono",
+});
+```
+
+> **Note:** Analytics help improve Better-T Stack by providing insights into usage patterns. When disabled, no data is collected or transmitted.
 
 ## API Reference
 
@@ -130,6 +148,7 @@ interface CreateInput {
   webDeploy?: WebDeploy;          // Web deployment setup
   directoryConflict?: DirectoryConflict; // "merge" | "overwrite" | "increment" | "error"
   renderTitle?: boolean;           // Show ASCII art title
+  disableAnalytics?: boolean;      // Disable analytics and telemetry
 }
 ```
 

@@ -134,6 +134,7 @@ export type CreateInput = {
 	webDeploy?: WebDeploy;
 	directoryConflict?: DirectoryConflict;
 	renderTitle?: boolean;
+	disableAnalytics?: boolean;
 };
 
 export type AddInput = {

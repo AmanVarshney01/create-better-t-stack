@@ -90,6 +90,11 @@ export const router = t.router({
 					webDeploy: WebDeploySchema.optional(),
 					directoryConflict: DirectoryConflictSchema.optional(),
 					renderTitle: z.boolean().optional(),
+					disableAnalytics: z
+						.boolean()
+						.optional()
+						.default(false)
+						.describe("Disable analytics"),
 				}),
 			]),
 		)
@@ -198,6 +203,7 @@ export function createBtsCli() {
  *   packageManager: "bun",
  *   install: false,
  *   directoryConflict: "increment", // auto-handle conflicts
+ *   disableAnalytics: true, // disable analytics
  * });
  *
  * if (result.success) {

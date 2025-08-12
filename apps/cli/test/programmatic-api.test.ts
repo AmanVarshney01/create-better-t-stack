@@ -213,6 +213,18 @@ describe("Programmatic API - Fast Tests", () => {
 				addons: ["biome"],
 			});
 		}, 15000);
+
+		test("creates project with analytics disabled", async () => {
+			const result = await init("no-analytics-app", {
+				yes: true,
+				disableAnalytics: true,
+				install: false,
+				git: false,
+			});
+
+			expect(result.success).toBe(true);
+			expect(result.projectConfig.projectName).toBe("no-analytics-app");
+		}, 15000);
 	});
 
 	describe("Error scenarios", () => {
