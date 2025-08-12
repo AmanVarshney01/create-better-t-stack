@@ -1,5 +1,15 @@
 # create-better-t-stack
 
+## 2.32.0
+
+### Minor Changes
+
+- aecde5a: Add programmatic API
+
+### Patch Changes
+
+- 5b2827e: Extend biome.json.hbs, add missing wrangler.jsonc file ignore
+
 ## 2.31.0
 
 ### Minor Changes
