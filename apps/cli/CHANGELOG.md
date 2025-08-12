@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.32.1
+
+### Patch Changes
+
+- 3c00c54: add disable analytics option
+
 ## 2.32.0
 
 ### Minor Changes
