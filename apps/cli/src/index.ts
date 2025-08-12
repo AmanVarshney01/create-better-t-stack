@@ -213,7 +213,11 @@ export async function init(
 ): Promise<InitResult> {
 	const opts = (options ?? {}) as CreateInput;
 	const programmaticOpts = { ...opts, verbose: true };
+	const prev = process.env.BTS_PROGRAMMATIC;
+	process.env.BTS_PROGRAMMATIC = "1";
 	const result = await caller.init([projectName, programmaticOpts]);
+	if (prev === undefined) delete process.env.BTS_PROGRAMMATIC;
+	else process.env.BTS_PROGRAMMATIC = prev;
 	return result as InitResult;
 }
 
