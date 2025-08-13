@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.33.2
+
+### Patch Changes
+
+- a231a81: fix ruler template path
+
 ## 2.33.1
 
 ### Patch Changes
