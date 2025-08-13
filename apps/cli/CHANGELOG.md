@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.33.0
+
+### Minor Changes
+
+- 94dcd82: migrate vibe-rules to ruler
+
 ## 2.32.2
 
 ### Patch Changes
