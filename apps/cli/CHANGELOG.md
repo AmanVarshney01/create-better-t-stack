@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.33.1
+
+### Patch Changes
+
+- 0da814a: rename vibe-rules to ruler
+
 ## 2.33.0
 
 ### Minor Changes
