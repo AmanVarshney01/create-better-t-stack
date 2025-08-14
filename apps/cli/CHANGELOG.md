@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.33.3
+
+### Patch Changes
+
+- 1aca452: update biome to v2.2.0
+
 ## 2.33.2
 
 ### Patch Changes
