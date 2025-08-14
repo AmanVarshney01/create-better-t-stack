@@ -1,5 +1,11 @@
 # create-better-t-stack
 
+## 2.33.4
+
+### Patch Changes
+
+- ffe59ac: remove manual ultracite package handling
+
 ## 2.33.3
 
 ### Patch Changes
