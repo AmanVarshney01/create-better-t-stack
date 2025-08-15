@@ -13,19 +13,21 @@
     "lint": "turbo lint",
     "check": "turbo check",
     "format": "biome check --write .",
-	"publish-packages": "turbo run build --filter=create-better-t-stack && changeset publish",
+    "release": "bun run scripts/release.ts",
+    "bump": "bun run scripts/bump-version.ts",
     "deploy:convex": "turbo run --filter=@better-t-stack/backend deploy",
     "deploy:web": "bun run --filter=web deploy",
     "generate": "bun run --filter=web generate-analytics && bun run --filter=web generate-schema",
     "deploy": "bun run deploy:web"
   },
   "devDependencies": {
-	"@changesets/cli": "^2.29.5",
-    "@biomejs/biome": "2.1.2",
+    "@biomejs/biome": "2.2.0",
+    "changelogithub": "^13.16.0",
     "husky": "^9.1.7",
-    "lint-staged": "^16.1.2",
-    "turbo": "^2.5.5",
-    "typescript": "5.8.3"
+    "lint-staged": "^16.1.5",
+    "turbo": "^2.5.6",
+    "typescript": "5.9.2",
+    "@types/bun": "latest"
   },
   "lint-staged": {
     "*": [

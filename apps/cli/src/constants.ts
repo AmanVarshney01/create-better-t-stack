@@ -25,6 +25,7 @@ export const DEFAULT_CONFIG: ProjectConfig = {
 	runtime: "bun",
 	api: "trpc",
 	webDeploy: "none",
+	serverDeploy: "none",
 };
 
 export const dependencyVersionMap = {
@@ -122,6 +123,8 @@ export const dependencyVersionMap = {
 	"@opennextjs/cloudflare": "^1.3.0",
 	"nitro-cloudflare-dev": "^0.2.2",
 	"@sveltejs/adapter-cloudflare": "^7.0.4",
+
+	"@alchemy/cli": "^1.0.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

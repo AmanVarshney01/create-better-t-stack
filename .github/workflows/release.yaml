@@ -1,17 +1,12 @@
 name: Release
 
+permissions:
+  contents: write
+
 on:
   push:
-    branches:
-      - main
-      - beta
-    paths:
-      - "apps/cli/**"
-      - ".changeset/**"
-      - "package.json"
-      - "bun.lock"
-
-concurrency: ${{ github.workflow }}-${{ github.ref }}
+    tags:
+      - 'v*'
 
 jobs:
   release:
@@ -30,14 +25,19 @@ jobs:
       - name: Install Dependencies
         run: bun install --frozen-lockfile
 
-      - name: Create Release Pull Request or Publish
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          publish: bun run publish-packages
+      - name: Build CLI
+        run: bun run build:cli
         env:
           BTS_TELEMETRY: 1
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
           POSTHOG_HOST: ${{ secrets.POSTHOG_HOST }}
+
+      - name: Generate Changelog
+        run: bun run release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish CLI to NPM
+        run: cd apps/cli && bun publish --access public
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -256,9 +256,24 @@ Web deployment configuration:
 
 - `none`: No deployment setup
 - `workers`: Cloudflare Workers deployment
+- `alchemy`: Alchemy platform deployment
 
 ```bash
 create-better-t-stack --web-deploy workers
+create-better-t-stack --web-deploy alchemy
+```
+
+### `--server-deploy <setup>`
+
+Server deployment configuration:
+
+- `none`: No deployment setup
+- `workers`: Cloudflare Workers deployment (when runtime is workers)
+- `alchemy`: Alchemy platform deployment (when runtime is workers)
+
+```bash
+create-better-t-stack --server-deploy workers
+create-better-t-stack --server-deploy alchemy
 ```
 
 ## Option Validation
@@ -281,6 +296,8 @@ create-better-t-stack \
   --addons pwa biome \
   --examples todo \
   --package-manager bun \
+  --web-deploy workers \
+  --server-deploy alchemy \
   --install
 ```
 

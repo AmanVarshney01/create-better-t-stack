@@ -73,7 +73,7 @@ export default function SponsorsSection() {
 				<div className="rounded border border-border p-8">
 					<div className="flex items-center justify-center gap-2">
 						<div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-						<span className=" text-muted-foreground">LOADING_SPONSORS.SH</span>
+						<span className="text-muted-foreground">LOADING_SPONSORS.SH</span>
 						<div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
 					</div>
 				</div>
@@ -81,7 +81,7 @@ export default function SponsorsSection() {
 				<div className="rounded border border-border bg-destructive/10 p-8">
 					<div className="flex items-center justify-center gap-2">
 						<span className="text-destructive">✗</span>
-						<span className=" text-destructive">ERROR: {sponsorError}</span>
+						<span className="text-destructive">ERROR: {sponsorError}</span>
 					</div>
 				</div>
 			) : sponsors.length === 0 ? (
@@ -89,13 +89,13 @@ export default function SponsorsSection() {
 					<div className="rounded border border-border p-8">
 						<div className="text-center">
 							<div className="mb-4 flex items-center justify-center gap-2">
-								<span className=" text-muted-foreground">
+								<span className="text-muted-foreground">
 									NO_SPONSORS_FOUND.NULL
 								</span>
 							</div>
 							<div className="flex items-center justify-center gap-2 text-sm">
 								<span className="text-primary">$</span>
-								<span className=" text-muted-foreground">
+								<span className="text-muted-foreground">
 									Be the first to support this project!
 								</span>
 							</div>
@@ -162,7 +162,7 @@ export default function SponsorsSection() {
 																{entry.sponsor.name || entry.sponsor.login}
 															</h3>
 															{entry.tierName && (
-																<p className=" text-primary text-xs">
+																<p className="text-primary text-xs">
 																	{entry.tierName}
 																</p>
 															)}
@@ -243,7 +243,7 @@ export default function SponsorsSection() {
 																{entry.sponsor.name || entry.sponsor.login}
 															</h3>
 															{entry.tierName && (
-																<p className=" text-primary text-xs">
+																<p className="text-primary text-xs">
 																	{entry.tierName}
 																</p>
 															)}

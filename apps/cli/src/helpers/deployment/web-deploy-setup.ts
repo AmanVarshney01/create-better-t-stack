@@ -1,11 +1,11 @@
 import path from "node:path";
 import fs from "fs-extra";
-import type { PackageManager, ProjectConfig } from "../../types";
+import type { Frontend, PackageManager, ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
-import { setupNuxtWorkersDeploy } from "./workers-nuxt-setup";
-import { setupSvelteWorkersDeploy } from "./workers-svelte-setup";
-import { setupTanstackStartWorkersDeploy } from "./workers-tanstack-start-setup";
-import { setupWorkersVitePlugin } from "./workers-vite-setup";
+import { setupNuxtWorkersDeploy } from "../workers/workers-nuxt-setup";
+import { setupSvelteWorkersDeploy } from "../workers/workers-svelte-setup";
+import { setupTanstackStartWorkersDeploy } from "../workers/workers-tanstack-start-setup";
+import { setupWorkersVitePlugin } from "../workers/workers-vite-setup";
 
 export async function setupWebDeploy(config: ProjectConfig) {
 	const { webDeploy, frontend, projectDir } = config;
@@ -13,7 +13,7 @@ export async function setupWebDeploy(config: ProjectConfig) {
 
 	if (webDeploy === "none") return;
 
-	if (webDeploy !== "workers") return;
+	if (webDeploy !== "workers" && webDeploy !== "alchemy") return;
 
 	const isNext = frontend.includes("next");
 	const isNuxt = frontend.includes("nuxt");
@@ -23,16 +23,20 @@ export async function setupWebDeploy(config: ProjectConfig) {
 	const isReactRouter = frontend.includes("react-router");
 	const isSolid = frontend.includes("solid");
 
-	if (isNext) {
-		await setupNextWorkersDeploy(projectDir, packageManager);
-	} else if (isNuxt) {
-		await setupNuxtWorkersDeploy(projectDir, packageManager);
-	} else if (isSvelte) {
-		await setupSvelteWorkersDeploy(projectDir, packageManager);
-	} else if (isTanstackStart) {
-		await setupTanstackStartWorkersDeploy(projectDir, packageManager);
-	} else if (isTanstackRouter || isReactRouter || isSolid) {
-		await setupWorkersWebDeploy(projectDir, packageManager);
+	if (webDeploy === "workers") {
+		if (isNext) {
+			await setupNextWorkersDeploy(projectDir, packageManager);
+		} else if (isNuxt) {
+			await setupNuxtWorkersDeploy(projectDir, packageManager);
+		} else if (isSvelte) {
+			await setupSvelteWorkersDeploy(projectDir, packageManager);
+		} else if (isTanstackStart) {
+			await setupTanstackStartWorkersDeploy(projectDir, packageManager);
+		} else if (isTanstackRouter || isReactRouter || isSolid) {
+			await setupWorkersWebDeploy(projectDir, packageManager);
+		}
+	} else if (webDeploy === "alchemy") {
+		await setupAlchemyWebDeploy(projectDir, packageManager, frontend);
 	}
 }
 
@@ -60,6 +64,15 @@ async function setupWorkersWebDeploy(
 	}
 
 	await setupWorkersVitePlugin(projectDir);
+}
+
+async function setupAlchemyWebDeploy(
+	_projectDir: string,
+	_pkgManager: PackageManager,
+	_frontend: Frontend[],
+) {
+	// no-op; user will handle Alchemy web deployment setup
+	return;
 }
 
 async function setupNextWorkersDeploy(

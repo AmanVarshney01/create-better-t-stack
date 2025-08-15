@@ -9,7 +9,7 @@ import { getPackageExecutionCommand } from "../../utils/package-runner";
 import {
 	addEnvVariablesToFile,
 	type EnvVariable,
-} from "../project-generation/env-setup";
+} from "../core/env-setup";
 
 async function writeSupabaseEnvFile(projectDir: string, databaseUrl: string) {
 	try {

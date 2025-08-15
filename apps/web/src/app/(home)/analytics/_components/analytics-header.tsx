@@ -32,20 +32,20 @@ export function AnalyticsHeader({
 			<div className="rounded rounded-b-none border border-border p-4">
 				<div className="flex items-center gap-2 text-sm">
 					<span className="text-primary">$</span>
-					<span className=" text-foreground">
+					<span className="text-foreground">
 						Analytics from Better-T-Stack CLI usage data
 					</span>
 				</div>
 				<div className="mt-2 flex items-center gap-2 text-sm">
 					<span className="text-primary">$</span>
-					<span className=" text-muted-foreground">
+					<span className="text-muted-foreground">
 						Uses PostHog - no personal info tracked, runs on each project
 						creation
 					</span>
 				</div>
 				<div className="mt-2 flex items-center gap-2 text-sm">
 					<span className="text-primary">$</span>
-					<span className=" text-muted-foreground">
+					<span className="text-muted-foreground">
 						Source:{" "}
 						<Link
 							href="https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/cli/src/utils/analytics.ts"
@@ -68,7 +68,7 @@ export function AnalyticsHeader({
 				</div>
 				<div className="mt-2 flex items-center gap-2 text-sm">
 					<span className="text-primary">$</span>
-					<span className=" text-muted-foreground">
+					<span className="text-muted-foreground">
 						Last updated:{" "}
 						{loadingLastUpdated
 							? "CHECKING..."
@@ -93,17 +93,17 @@ export function AnalyticsHeader({
 							className="h-4 w-4 invert-0 dark:invert"
 						/>
 						<div>
-							<span className=" font-semibold text-sm">
+							<span className="font-semibold text-sm">
 								DISCORD_NOTIFICATIONS.IRC
 							</span>
-							<p className=" text-muted-foreground text-xs">
+							<p className="text-muted-foreground text-xs">
 								Join for LIVE project creation alerts
 							</p>
 						</div>
 					</div>
 					<div className="flex items-center gap-1 rounded border border-border bg-primary/10 px-2 py-1">
 						<span className="text-primary text-xs">▶</span>
-						<span className=" font-semibold text-primary text-xs">JOIN</span>
+						<span className="font-semibold text-primary text-xs">JOIN</span>
 					</div>
 				</div>
 			</Link>

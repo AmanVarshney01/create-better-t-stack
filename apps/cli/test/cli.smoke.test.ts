@@ -17,6 +17,8 @@ async function runCli(argv: string[], cwd: string) {
 	const previous = process.cwd();
 	process.chdir(cwd);
 	try {
+		consola.info(`Running CLI command: bts ${argv.join(" ")}`);
+
 		const cli = createBtsCli();
 		await cli
 			.run({
@@ -50,6 +52,10 @@ async function runCliExpectingError(args: string[], cwd: string) {
 	const previous = process.cwd();
 	process.chdir(cwd);
 	try {
+		consola.info(
+			`Running CLI command (expecting error): bts ${args.join(" ")}`,
+		);
+
 		const cli = createBtsCli();
 		let threw = false;
 		await cli
@@ -2459,7 +2465,9 @@ describe("create-better-t-stack smoke", () => {
 				"app-orpc-solid",
 				"app-backend-next",
 				"app-node-runtime",
-			].forEach((n) => projectNames.add(n));
+			].forEach((n) => {
+				projectNames.add(n);
+			});
 
 			const detectPackageManager = (
 				projectDir: string,
@@ -2603,32 +2611,24 @@ describe("create-better-t-stack smoke", () => {
 
 						if (scripts["check-types"]) {
 							consola.start(`Type checking ${dirName}...`);
-							try {
-								const typeRes = await runScript(
-									pm,
-									projectDir,
-									"check-types",
-									[],
-									120_000,
-								);
-								if (typeRes.exitCode === 0) {
-									consola.success(`${dirName} type check passed`);
-								} else {
-									consola.warn(
-										`${dirName} type check failed (exit code ${typeRes.exitCode}) - likely due to missing generated files`,
-									);
-								}
-							} catch (error) {
-								consola.warn(
-									`${dirName} type check failed - likely due to missing generated files:`,
-									error.message,
-								);
-							}
+							const typeRes = await runScript(
+								pm,
+								projectDir,
+								"check-types",
+								[],
+								120_000,
+							);
+							expect(typeRes.exitCode).toBe(0);
+							consola.success(`${dirName} type check passed`);
 						}
 
 						if (!scripts.build && !scripts["check-types"]) {
 							consola.info(
 								`No build or check-types script for ${dirName}, skipping`,
+							);
+						} else if (!scripts.build && scripts["check-types"]) {
+							consola.info(
+								`Only check-types script available for ${dirName}, type checking will be performed`,
 							);
 						}
 					} catch (error) {

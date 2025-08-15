@@ -98,7 +98,7 @@ export default function Navbar() {
 				className={cn(
 					"fixed top-0 z-[100] w-full transition-all duration-300 ease-in-out",
 					scrolled
-						? " border- border-border shadow-sm backdrop-blur-md"
+						? "border- border-border shadow-sm backdrop-blur-md"
 						: "border-transparent border-b bg-transparent",
 				)}
 			>
@@ -183,7 +183,7 @@ export default function Navbar() {
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
 							transition={{ duration: 0.2, ease: "easeInOut" }}
-							className=" fixed inset-0 z-[98 backdrop-blur-sm lg:hidden"
+							className="fixed inset-0 z-[98 backdrop-blur-sm lg:hidden"
 							onClick={closeMobileMenu}
 							aria-hidden="true"
 						/>
