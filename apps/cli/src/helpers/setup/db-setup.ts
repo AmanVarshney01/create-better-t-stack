@@ -12,6 +12,7 @@ import { setupNeonPostgres } from "../database-providers/neon-setup";
 import { setupPrismaPostgres } from "../database-providers/prisma-postgres-setup";
 import { setupSupabase } from "../database-providers/supabase-setup";
 import { setupTurso } from "../database-providers/turso-setup";
+import { setupSingleStoreHelios } from "../database-providers/singlestore-helios-setup";
 
 export async function setupDatabase(config: ProjectConfig) {
 	const { database, orm, dbSetup, backend, projectDir } = config;
@@ -68,6 +69,12 @@ export async function setupDatabase(config: ProjectConfig) {
 					devDependencies: ["drizzle-kit"],
 					projectDir: serverDir,
 				});
+			} else if (database === "singlestore") {
+				await addPackageDependency({
+					dependencies: ["drizzle-orm", "mysql2"],
+					devDependencies: ["drizzle-kit"],
+					projectDir: serverDir,
+				});
 			}
 		} else if (orm === "mongoose") {
 			await addPackageDependency({
@@ -93,6 +100,8 @@ export async function setupDatabase(config: ProjectConfig) {
 			}
 		} else if (database === "mongodb" && dbSetup === "mongodb-atlas") {
 			await setupMongoDBAtlas(config);
+		} else if (database === "singlestore" && dbSetup === "singlestore-helios") {
+			await setupSingleStoreHelios(config);
 		}
 	} catch (error) {
 		s.stop(pc.red("Failed to set up database"));
