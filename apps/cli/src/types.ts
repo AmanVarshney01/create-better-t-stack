@@ -1,7 +1,7 @@
 import z from "zod";
 
 export const DatabaseSchema = z
-	.enum(["none", "sqlite", "postgres", "mysql", "mongodb"])
+	.enum(["none", "sqlite", "postgres", "mysql", "mongodb", "singlestore"])
 	.describe("Database type");
 export type Database = z.infer<typeof DatabaseSchema>;
 
@@ -70,6 +70,7 @@ export const DatabaseSetupSchema = z
 		"prisma-postgres",
 		"mongodb-atlas",
 		"supabase",
+		"singlestore-helios",
 		"d1",
 		"docker",
 		"none",
