@@ -95,14 +95,14 @@ export async function displayPostInstallInstructions(
 	}
 
 	if (isConvex) {
-		output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev:setup ${pc.dim(
-			"(this will guide you through Convex project setup)",
+		output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev:setup\n${pc.dim(
+			"   (this will guide you through Convex project setup)",
 		)}\n`;
 		output += `${pc.cyan(
 			`${stepCounter++}.`,
-		)} Copy environment variables from ${pc.white(
-			"packages/backend/.env.local",
-		)} \nto ${pc.white("apps/*/.env")}\n`;
+		)} Copy environment variables from\n${pc.white(
+			"   packages/backend/.env.local",
+		)} to ${pc.white("apps/*/.env")}\n`;
 		output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev\n\n`;
 	} else {
 		if (runtime !== "workers") {
@@ -113,7 +113,7 @@ export async function displayPostInstallInstructions(
 			if (dbSetup === "d1") {
 				output += `${pc.yellow(
 					"IMPORTANT:",
-				)} Complete D1 database setup first (see Database commands below)\n`;
+				)} Complete D1 database setup first\n   (see Database commands below)\n`;
 			}
 			output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev\n`;
 			output += `${pc.cyan(
@@ -131,7 +131,7 @@ export async function displayPostInstallInstructions(
 	} else if (!hasNative && !addons?.includes("starlight")) {
 		output += `${pc.yellow(
 			"NOTE:",
-		)} You are creating a backend-only app (no frontend selected)\n`;
+		)} You are creating a backend-only app\n   (no frontend selected)\n`;
 	}
 
 	if (!isConvex) {
@@ -163,7 +163,7 @@ export async function displayPostInstallInstructions(
 	)}\n\n`;
 	output += `${pc.bold(
 		"Like Better-T Stack?",
-	)} Please consider giving us a star on GitHub:\n`;
+	)} Please consider giving us a star\n   on GitHub:\n`;
 	output += pc.cyan("https://github.com/AmanVarshney01/create-better-t-stack");
 
 	consola.box(output);
@@ -181,12 +181,12 @@ function getNativeInstructions(isConvex: boolean): string {
 
 	let instructions = `${pc.yellow(
 		"NOTE:",
-	)} For Expo connectivity issues, update apps/native/${envFileName} \nwith ${ipNote}:\n${`${envVar}=${exampleUrl}`}\n`;
+	)} For Expo connectivity issues, update\n   apps/native/${envFileName} with ${ipNote}:\n   ${`${envVar}=${exampleUrl}`}\n`;
 
 	if (isConvex) {
 		instructions += `\n${pc.yellow(
 			"IMPORTANT:",
-		)} When using local development with Convex and native apps, ensure you use your local IP address \ninstead of localhost or 127.0.0.1 for proper connectivity.\n`;
+		)} When using local development with Convex and native apps,\n   ensure you use your local IP address instead of localhost or 127.0.0.1\n   for proper connectivity.\n`;
 	}
 
 	return instructions;
@@ -257,8 +257,7 @@ async function getDatabaseInstructions(
 			instructions.push(
 				`${pc.yellow(
 					"NOTE:",
-				)} Turso support with Prisma is in Early Access and requires additional setup.`,
-				`${"Learn more at: https://www.prisma.io/docs/orm/overview/databases/turso"}`,
+				)} Turso support with Prisma is in Early Access and requires\n   additional setup. Learn more at:\n   https://www.prisma.io/docs/orm/overview/databases/turso`,
 			);
 		}
 
@@ -266,7 +265,7 @@ async function getDatabaseInstructions(
 			instructions.push(
 				`${pc.yellow(
 					"WARNING:",
-				)} Prisma + MongoDB + Docker combination may not work.`,
+				)} Prisma + MongoDB + Docker combination\n   may not work.`,
 			);
 		}
 		if (dbSetup === "docker") {
@@ -299,7 +298,7 @@ async function getDatabaseInstructions(
 		}
 	} else if (orm === "none") {
 		instructions.push(
-			`${pc.yellow("NOTE:")} Manual database schema setup required.`,
+			`${pc.yellow("NOTE:")} Manual database schema setup\n   required.`,
 		);
 	}
 
@@ -315,13 +314,13 @@ function getTauriInstructions(runCmd?: string): string {
 		"•",
 	)} Build desktop app: ${`cd apps/web && ${runCmd} desktop:build`}\n${pc.yellow(
 		"NOTE:",
-	)} Tauri requires Rust and platform-specific dependencies.\nSee: ${"https://v2.tauri.app/start/prerequisites/"}`;
+	)} Tauri requires Rust and platform-specific dependencies.\n   See: ${"https://v2.tauri.app/start/prerequisites/"}`;
 }
 
 function getPwaInstructions(): string {
 	return `\n${pc.bold("PWA with React Router v7:")}\n${pc.yellow(
 		"NOTE:",
-	)} There is a known compatibility issue between VitePWA \nand React Router v7.See: https://github.com/vite-pwa/vite-plugin-pwa/issues/809`;
+	)} There is a known compatibility issue between VitePWA\n   and React Router v7. See:\n   https://github.com/vite-pwa/vite-plugin-pwa/issues/809`;
 }
 
 function getStarlightInstructions(runCmd?: string): string {
@@ -335,13 +334,13 @@ function getStarlightInstructions(runCmd?: string): string {
 function getNoOrmWarning(): string {
 	return `\n${pc.yellow(
 		"WARNING:",
-	)} Database selected without an ORM. Features requiring database access (e.g., examples, auth) need manual setup.`;
+	)} Database selected without an ORM. Features requiring\n   database access (e.g., examples, auth) need manual setup.`;
 }
 
 function getBunWebNativeWarning(): string {
 	return `\n${pc.yellow(
 		"WARNING:",
-	)} 'bun' might cause issues with web + native apps in a monorepo. Use 'pnpm' if problems arise.`;
+	)} 'bun' might cause issues with web + native apps in a monorepo.\n   Use 'pnpm' if problems arise.`;
 }
 
 function getWorkersDeployInstructions(runCmd?: string): string {
