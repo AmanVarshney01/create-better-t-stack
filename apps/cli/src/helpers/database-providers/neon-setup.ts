@@ -12,13 +12,6 @@ import {
 	type EnvVariable,
 } from "../project-generation/env-setup";
 
-type NeonConfig = {
-	connectionString: string;
-	projectId: string;
-	dbName: string;
-	roleName: string;
-};
-
 type NeonRegion = {
 	label: string;
 	value: string;
@@ -100,13 +93,13 @@ async function createNeonProject(
 	}
 }
 
-async function writeEnvFile(projectDir: string, config?: NeonConfig) {
+async function writeEnvFile(projectDir: string, connectionString?: string) {
 	const envPath = path.join(projectDir, "apps/server", ".env");
 	const variables: EnvVariable[] = [
 		{
 			key: "DATABASE_URL",
 			value:
-				config?.connectionString ??
+				connectionString ??
 				"postgresql://postgres:postgres@localhost:5432/mydb?schema=public",
 			condition: true,
 		},
@@ -174,6 +167,11 @@ export async function setupNeonPostgres(config: ProjectConfig) {
 					value: "neonctl",
 					hint: "More control - choose project name and region",
 				},
+				{
+					label: "Manual setup",
+					value: "manual",
+					hint: "Enter connection string manually",
+				}
 			],
 			initialValue: "neondb",
 		});
@@ -182,7 +180,7 @@ export async function setupNeonPostgres(config: ProjectConfig) {
 
 		if (setupMethod === "neondb") {
 			await setupWithNeonDb(projectDir, packageManager);
-		} else {
+		} else if (setupMethod === 'neonctl') {
 			const suggestedProjectName = path.basename(projectDir);
 			const projectName = await text({
 				message: "Enter a name for your Neon project:",
@@ -215,9 +213,21 @@ export async function setupNeonPostgres(config: ProjectConfig) {
 			finalSpinner.start("Configuring database connection");
 
 			await fs.ensureDir(path.join(projectDir, "apps/server"));
-			await writeEnvFile(projectDir, neonConfig);
+			await writeEnvFile(projectDir, neonConfig.connectionString);
 
 			finalSpinner.stop("Neon database configured!");
+		} else if (setupMethod === "manual") {
+			const connectionString = await text({
+				message: "Enter your Neon connection string:",
+				validate(value) {
+					if (!value) return "Please enter a connection string";
+				},
+			});
+
+			if (isCancel(connectionString)) return exitCancelled("Operation cancelled");
+
+			await fs.ensureDir(path.join(projectDir, "apps/server"));
+			await writeEnvFile(projectDir, connectionString);
 		}
 	} catch (error) {
 		if (error instanceof Error) {
