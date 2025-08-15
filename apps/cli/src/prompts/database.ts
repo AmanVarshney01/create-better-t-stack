@@ -39,6 +39,11 @@ export async function getDatabaseChoice(
 			label: "MySQL",
 			hint: "popular open-source relational database system",
 		},
+		{
+			value: "singlestore",
+			label: "SingleStore",
+			hint: "high-performance distributed SQL database for real-time analytics",
+		},
 	];
 
 	if (runtime !== "workers") {
