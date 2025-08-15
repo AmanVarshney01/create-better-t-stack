@@ -1146,6 +1146,318 @@ describe("create-better-t-stack smoke", () => {
 				orm: "mongoose",
 			});
 		});
+
+		it("scaffolds with SingleStore + Drizzle", async () => {
+			const projectName = "app-singlestore-drizzle";
+			await runCli(
+				[
+					projectName,
+					"--yes",
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"bun",
+					"--database",
+					"singlestore",
+					"--orm",
+					"drizzle",
+					"--api",
+					"trpc",
+					"--no-auth",
+					"--addons",
+					"none",
+					"--db-setup",
+					"singlestore-helios",
+					"--examples",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			assertScaffoldedProject(projectDir);
+			assertProjectStructure(projectDir, {
+				hasWeb: true,
+				hasServer: true,
+				hasDatabase: true,
+			});
+			assertBtsConfig(projectDir, {
+				database: "singlestore",
+				orm: "drizzle",
+			});
+		});
+
+		it("SingleStore project generates correct drizzle setup and dependencies", async () => {
+			const projectName = "app-singlestore-setup";
+			await runCli(
+				[
+					projectName,
+					"--yes",
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"bun",
+					"--database",
+					"singlestore",
+					"--orm",
+					"drizzle",
+					"--api",
+					"trpc",
+					"--no-auth",
+					"--addons",
+					"none",
+					"--db-setup",
+					"singlestore-helios",
+					"--examples",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			const serverDir = join(projectDir, "apps", "server");
+			
+			// Check drizzle.config.ts has correct singlestore dialect
+			const drizzleConfigPath = join(serverDir, "drizzle.config.ts");
+			expect(existsSync(drizzleConfigPath)).toBe(true);
+			const drizzleConfig = readFileSync(drizzleConfigPath, "utf8");
+			expect(drizzleConfig).toContain('dialect: "singlestore"');
+			
+			// Check db connection uses mysql2 driver for SingleStore
+			const dbIndexPath = join(serverDir, "src", "db", "index.ts");
+			expect(existsSync(dbIndexPath)).toBe(true);
+			const dbIndex = readFileSync(dbIndexPath, "utf8");
+			expect(dbIndex).toContain('drizzle-orm/singlestore');
+			expect(dbIndex).toContain('mysql2/promise');
+			
+			// Check mysql2 dependency is included
+			const packageJsonPath = join(serverDir, "package.json");
+			expect(existsSync(packageJsonPath)).toBe(true);
+			const packageJson = readJsonSync(packageJsonPath);
+			expect(packageJson.dependencies).toHaveProperty("mysql2");
+		});
+
+
+		it("SingleStore project generates proper schema structure", async () => {
+			const projectName = "app-singlestore-schema";
+			await runCli(
+				[
+					projectName,
+					"--yes",
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"bun",
+					"--database",
+					"singlestore",
+					"--orm",
+					"drizzle",
+					"--api",
+					"trpc",
+					"--no-auth",
+					"--addons",
+					"none",
+					"--db-setup",
+					"singlestore-helios",
+					"--examples",
+					"todo",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			const serverDir = join(projectDir, "apps", "server");
+			const schemaDir = join(serverDir, "src", "db", "schema");
+			
+			// Check schema directory exists
+			expect(existsSync(schemaDir)).toBe(true);
+			
+			// Look for schema files that should use singlestoreTable
+			const schemaFiles = require("node:fs").readdirSync(schemaDir);
+			const schemaFile = schemaFiles.find((file: string) => file.endsWith(".ts"));
+			
+			if (schemaFile) {
+				const schemaPath = join(schemaDir, schemaFile);
+				const schemaContent = readFileSync(schemaPath, "utf8");
+				expect(schemaContent).toContain("singlestoreTable");
+			}
+		});
+
+		it("SingleStore project generates .env with correct SSL configuration", async () => {
+			const projectName = "app-singlestore-env";
+			await runCli(
+				[
+					projectName,
+					"--yes",
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"bun",
+					"--database",
+					"singlestore",
+					"--orm",
+					"drizzle",
+					"--api",
+					"trpc",
+					"--no-auth",
+					"--addons",
+					"none",
+					"--db-setup",
+					"singlestore-helios",
+					"--examples",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			const serverDir = join(projectDir, "apps", "server");
+			const envPath = join(serverDir, ".env");
+			
+			// Check .env file exists and has correct SingleStore format
+			expect(existsSync(envPath)).toBe(true);
+			const envContent = readFileSync(envPath, "utf8");
+			expect(envContent).toContain("DATABASE_URL");
+			
+			// Find the DATABASE_URL line and verify SingleStore format with SSL
+			const lines = envContent.split('\n');
+			const databaseUrlLine = lines.find(line => line.startsWith('DATABASE_URL='));
+			expect(databaseUrlLine).toBeTruthy();
+			
+			const databaseUrl = databaseUrlLine?.split('=', 2)[1]?.replace(/['"]/g, '');
+			expect(databaseUrl).toBeTruthy();
+			expect(databaseUrl).toMatch(/singlestore:\/\/.*\?ssl/);
+			
+			// Verify SSL parameter is included (required for SingleStore cloud)
+			expect(envContent).toContain("?ssl=");
+		});
+
+		// Phase 7: Advanced Testing & Integration - SingleStore Matrix Testing
+		describe("SingleStore compatibility matrix", () => {
+
+
+			it("scaffolds SingleStore with authentication enabled", async () => {
+				const projectName = "singlestore-auth";
+				await runCli(
+					[
+						projectName,
+						"--yes",
+						"--frontend",
+						"tanstack-router",
+						"--backend",
+						"hono",
+						"--runtime",
+						"bun",
+						"--database",
+						"singlestore",
+						"--orm",
+						"drizzle",
+						"--api",
+						"trpc",
+						"--auth",
+						"--db-setup",
+						"singlestore-helios",
+						"--examples",
+						"none",
+						"--package-manager",
+						"bun",
+						"--no-install",
+						"--no-git",
+					],
+					workdir,
+				);
+
+				const projectDir = join(workdir, projectName);
+				assertScaffoldedProject(projectDir);
+				assertProjectStructure(projectDir, {
+					hasWeb: true,
+					hasServer: true,
+					hasDatabase: true,
+					hasAuth: true,
+				});
+				assertBtsConfig(projectDir, {
+					database: "singlestore",
+					orm: "drizzle",
+					auth: true,
+				});
+			});
+
+			it("scaffolds SingleStore with TODO example", async () => {
+				const projectName = "singlestore-todo";
+				await runCli(
+					[
+						projectName,
+						"--yes",
+						"--frontend",
+						"tanstack-router",
+						"--backend",
+						"hono",
+						"--runtime",
+						"bun",
+						"--database",
+						"singlestore",
+						"--orm",
+						"drizzle",
+						"--api",
+						"trpc",
+						"--no-auth",
+						"--db-setup",
+						"singlestore-helios",
+						"--examples",
+						"todo",
+						"--package-manager",
+						"bun",
+						"--no-install",
+						"--no-git",
+					],
+					workdir,
+				);
+
+				const projectDir = join(workdir, projectName);
+				assertScaffoldedProject(projectDir);
+				assertProjectStructure(projectDir, {
+					hasWeb: true,
+					hasServer: true,
+					hasDatabase: true,
+				});
+				assertBtsConfig(projectDir, {
+					database: "singlestore",
+					orm: "drizzle",
+					examples: ["todo"],
+				});
+
+				// Check that TODO example schema uses SingleStore table structure
+				const todoSchemaPath = join(projectDir, "apps", "server", "src", "db", "schema", "todo.ts");
+				expect(existsSync(todoSchemaPath)).toBe(true);
+				const todoSchemaContent = readFileSync(todoSchemaPath, "utf8");
+				expect(todoSchemaContent).toContain("singlestoreTable");
+				expect(todoSchemaContent).toContain("bigint()");
+			});
+		});
 	});
 
 	describe("addon combinations", () => {
@@ -1390,6 +1702,106 @@ describe("create-better-t-stack smoke", () => {
 				workdir,
 			);
 		});
+
+		it("rejects SingleStore with Prisma ORM", async () => {
+			await runCliExpectingError(
+				[
+					"invalid-singlestore-prisma",
+					"--yes",
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"bun",
+					"--database",
+					"singlestore",
+					"--orm",
+					"prisma",
+					"--api",
+					"none",
+					"--no-auth",
+					"--addons",
+					"none",
+					"--db-setup",
+					"none",
+					"--examples",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+		});
+
+		it("rejects SingleStore with Mongoose ORM", async () => {
+			await runCliExpectingError(
+				[
+					"invalid-singlestore-mongoose",
+					"--yes",
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"bun",
+					"--database",
+					"singlestore",
+					"--orm",
+					"mongoose",
+					"--api",
+					"none",
+					"--no-auth",
+					"--addons",
+					"none",
+					"--db-setup",
+					"none",
+					"--examples",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+		});
+
+		it("rejects singlestore-helios setup with non-SingleStore database", async () => {
+			await runCliExpectingError(
+				[
+					"invalid-helios-postgres",
+					"--yes",
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"bun",
+					"--database",
+					"postgres",
+					"--orm",
+					"prisma",
+					"--api",
+					"none",
+					"--no-auth",
+					"--addons",
+					"none",
+					"--db-setup",
+					"singlestore-helios",
+					"--examples",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+		});
+
 
 		it("rejects incompatible frontend and API combinations", async () => {
 			await runCliExpectingError(
@@ -2437,6 +2849,7 @@ describe("create-better-t-stack smoke", () => {
 				"app-sqlite-drizzle",
 				"app-postgres-prisma",
 				"app-mongo-mongoose",
+				"app-singlestore-drizzle",
 				"app-biome",
 				"app-multi-addons",
 				"app-trpc",
@@ -2459,6 +2872,7 @@ describe("create-better-t-stack smoke", () => {
 				"app-orpc-solid",
 				"app-backend-next",
 				"app-node-runtime",
+				"singlestore-hono-node",
 			].forEach((n) => projectNames.add(n));
 
 			const detectPackageManager = (
