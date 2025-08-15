@@ -30,10 +30,10 @@ create-better-t-stack [project-directory] [options]
 - `--frontend <types...>`: Web and/or native frameworks (see [Options](/docs/cli/options#frontend))
 - `--backend <framework>`: `hono`, `express`, `fastify`, `elysia`, `next`, `convex`, `none`
 - `--runtime <runtime>`: `bun`, `node`, `workers` (`none` only with `--backend convex` or `--backend none`)
-- `--database <type>`: `none`, `sqlite`, `postgres`, `mysql`, `mongodb`
+- `--database <type>`: `none`, `sqlite`, `postgres`, `mysql`, `mongodb`, `singlestore`
 - `--orm <type>`: `none`, `drizzle`, `prisma`, `mongoose`
 - `--api <type>`: `none`, `trpc`, `orpc`
-- `--db-setup <setup>`: `none`, `turso`, `d1`, `neon`, `supabase`, `prisma-postgres`, `mongodb-atlas`, `docker`
+- `--db-setup <setup>`: `none`, `turso`, `d1`, `neon`, `supabase`, `prisma-postgres`, `mongodb-atlas`, `singlestore-helios`, `docker`
 - `--examples <types...>`: `none`, `todo`, `ai`
 - `--web-deploy <setup>`: `none`, `workers`
 - `--directory-conflict <strategy>`: `merge`, `overwrite`, `increment`, `error`

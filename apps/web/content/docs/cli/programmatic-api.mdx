@@ -132,7 +132,7 @@ interface CreateInput {
   yes?: boolean;                    // Skip prompts, use defaults
   yolo?: boolean;                   // Bypass validations (not recommended)
   verbose?: boolean;               // Show JSON result (CLI only, programmatic always returns result)
-  database?: Database;              // "none" | "sqlite" | "postgres" | "mysql" | "mongodb"
+  database?: Database;              // "none" | "sqlite" | "postgres" | "mysql" | "mongodb" | "singlestore"
   orm?: ORM;                        // "none" | "drizzle" | "prisma" | "mongoose"
   auth?: boolean;                   // Include authentication
   frontend?: Frontend[];            // Array of frontend frameworks

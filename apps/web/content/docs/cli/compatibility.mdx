@@ -17,11 +17,13 @@ The CLI validates option combinations to ensure generated projects work correctl
 | `postgres` | `drizzle`, `prisma` | Advanced relational database |
 | `mysql` | `drizzle`, `prisma` | Traditional relational database |
 | `mongodb` | `mongoose`, `prisma` | Document database, requires specific ORMs |
+| `singlestore` | `drizzle` | High-performance distributed SQL database |
 | `none` | `none` | No database setup |
 
 ### Restrictions
 
 - **MongoDB + Drizzle**: ❌ Not supported - Drizzle doesn't support MongoDB
+- **SingleStore + Prisma/Mongoose**: ❌ Not supported - SingleStore only supports Drizzle ORM
 - **Database without ORM**: ❌ Not supported - Database requires an ORM for code generation
 - **ORM without Database**: ❌ Not supported - ORM requires a database target
 
@@ -104,7 +106,7 @@ create-better-t-stack --frontend nuxt --api orpc
 ### Frontend Restrictions
 
 - **Multiple Web Frontends**: ❌ Only one web framework allowed
-- **Multiple Native Frontends**: ❌ Only one native framework allowed  
+- **Multiple Native Frontends**: ❌ Only one native framework allowed
 - **Web + Native**: ✅ One web and one native framework allowed
 
 ```bash
@@ -127,6 +129,7 @@ create-better-t-stack --frontend next native-nativewind
 | `supabase` | `postgres` | PostgreSQL with additional features |
 | `prisma-postgres` | `postgres` | Managed PostgreSQL via Prisma |
 | `mongodb-atlas` | `mongodb` | Managed MongoDB |
+| `singlestore-helios` | `singlestore` | Cloud SingleStore database |
 | `docker` | `postgres`, `mysql`, `mongodb` | Not compatible with `sqlite` or Workers |
 
 ### Special Cases
@@ -177,7 +180,7 @@ create-better-t-stack --auth --database postgres --orm drizzle --backend hono
 - Requires a database when backend is present (except Convex)
 - Cannot be used with `--backend none` and `--database none`
 
-### AI Example  
+### AI Example
 - Not compatible with `--backend elysia`
 - Not compatible with `--frontend solid`
 
