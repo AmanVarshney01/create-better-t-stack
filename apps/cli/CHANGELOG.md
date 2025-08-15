@@ -1,82 +1,77 @@
 # Change Log
 
+## 2.33.7
+
+### Patch Changes
+
+- 699efa4: nothing here
+
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
 ## [2.33.6](https://github.com/AmanVarshney01/create-better-t-stack/compare/v2.33.5...v2.33.6) (2025-08-15)
 
-
 ### Bug Fixes
 
-* remove forced none webdeploy when convex ([ac1067a](https://github.com/AmanVarshney01/create-better-t-stack/commit/ac1067ab231fa452bd85bf8ce51bb2edc7746199))
-
-
-
-
+- remove forced none webdeploy when convex ([ac1067a](https://github.com/AmanVarshney01/create-better-t-stack/commit/ac1067ab231fa452bd85bf8ce51bb2edc7746199))
 
 ## 2.33.5 (2025-08-15)
 
-
 ### Bug Fixes
 
-* backend none templates ([#241](https://github.com/AmanVarshney01/create-better-t-stack/issues/241)) ([8209713](https://github.com/AmanVarshney01/create-better-t-stack/commit/8209713bd644a812cfd2f9fa81adc5da97ab13cc))
-* **cli:** add --no-git option to fumadocs setup command ([7d76289](https://github.com/AmanVarshney01/create-better-t-stack/commit/7d76289db791aef7c6d31a1f9f598dddc0db7490))
-* **cli:** add @types/node when workers runtime ([a0c6acb](https://github.com/AmanVarshney01/create-better-t-stack/commit/a0c6acbc608ab3613db5a6e7dafb7cabd22365bf))
-* **cli:** Add conditional rendering for private data based on API type ([5ab503a](https://github.com/AmanVarshney01/create-better-t-stack/commit/5ab503a814019828ba6d1ebd0c9817177e4fbfa9))
-* **cli:** add missing wrangler.jsonc file ignore to biome.json.hbs ([#492](https://github.com/AmanVarshney01/create-better-t-stack/issues/492)) ([5b2827e](https://github.com/AmanVarshney01/create-better-t-stack/commit/5b2827ef123bb9dbd45135a19d3e1dc91406823a))
-* **cli:** add react deps in next backend ([a4209b7](https://github.com/AmanVarshney01/create-better-t-stack/commit/a4209b7a5352d57be9ff55a73ec5bc04dfd25f5c))
-* **cli:** comment isolated linker in bunfig.toml when native-nativewind ([ad1d28f](https://github.com/AmanVarshney01/create-better-t-stack/commit/ad1d28ff287262b378d5bbeb81f8cba90489ce37))
-* **cli:** fix nuxt template issues with bun ([53985fe](https://github.com/AmanVarshney01/create-better-t-stack/commit/53985feabb66cf9b0acd240f8a55d74849e102da))
-* **cli:** fix telemetry ([901e1ff](https://github.com/AmanVarshney01/create-better-t-stack/commit/901e1fffd91490689126eb0112b9930c382f9f61))
-* **cli:** remove telemetry console logs ([71e5850](https://github.com/AmanVarshney01/create-better-t-stack/commit/71e585040265cc9e0c0bf5842a023e580ad95b1f))
-* **cli:** remove unwanted orm directories ([78fe4b7](https://github.com/AmanVarshney01/create-better-t-stack/commit/78fe4b76b7a926eb6b6b0350755312d96fe60583))
-* **cli:** ruler template path ([a231a81](https://github.com/AmanVarshney01/create-better-t-stack/commit/a231a8183903d93f8f41b3e1484601d0ee4cc385))
-* **cli:** start script paths in Bun and Node runtime setup ([b47671c](https://github.com/AmanVarshney01/create-better-t-stack/commit/b47671c24d8cae51de12b5334c519238dde62d77))
-* **cli:** Update Nuxt template dependencies and add TailwindCSS ([17389ac](https://github.com/AmanVarshney01/create-better-t-stack/commit/17389ac381a6c76baa668920e3883e0a77c1b5f1))
-* dependency installation output flow ([f73c7d2](https://github.com/AmanVarshney01/create-better-t-stack/commit/f73c7d2064505db93b9e0cd86bc2b0a5633e9e90))
-* enforce Convex backend when --api none is specified ([920a8f0](https://github.com/AmanVarshney01/create-better-t-stack/commit/920a8f01ca03cd72a04f17d6807a80ea99989266))
-* ensure .npmrc is included and copied for native setup ([ea79154](https://github.com/AmanVarshney01/create-better-t-stack/commit/ea79154ae9cf3aa845a06fedb00d22b457432027))
-* **post-installation:** use selected package manager ([#342](https://github.com/AmanVarshney01/create-better-t-stack/issues/342)) ([3fbd751](https://github.com/AmanVarshney01/create-better-t-stack/commit/3fbd751ceb2bc0e09a3164c9416409505517da80))
-* remove unneeded todo schema at auth.ts from drizzle-sqlite template ([#114](https://github.com/AmanVarshney01/create-better-t-stack/issues/114)) ([6b2cde8](https://github.com/AmanVarshney01/create-better-t-stack/commit/6b2cde803017202624cb0971e0e9ec9f97d8aca0))
-* show proper error messages on auth failure in Next.js frontend ([#445](https://github.com/AmanVarshney01/create-better-t-stack/issues/445)) ([2ad89b7](https://github.com/AmanVarshney01/create-better-t-stack/commit/2ad89b72b5798219dd53e79eacc7a9dc92a5e41b))
-* **templates:** password must be at least 8 characters ([#190](https://github.com/AmanVarshney01/create-better-t-stack/issues/190)) ([f1ce6b4](https://github.com/AmanVarshney01/create-better-t-stack/commit/f1ce6b4c09cf7dd272257f91d3eb3c555888befb))
-* **todos:** trpc v11 ([#93](https://github.com/AmanVarshney01/create-better-t-stack/issues/93)) ([a69ff19](https://github.com/AmanVarshney01/create-better-t-stack/commit/a69ff19a7eac3b077368879d681cdd36268febcc))
-* use npx degit for template cloning ([78340fc](https://github.com/AmanVarshney01/create-better-t-stack/commit/78340fca07c18ceefe9cac5bf6aa5bb293741248))
-* web-deploy validation to check for frontend flag ([5fec00a](https://github.com/AmanVarshney01/create-better-t-stack/commit/5fec00a48f31501b9c7bea0e6ad205c6eaa83c31))
-* **web:** miscellaneous improvements ([#416](https://github.com/AmanVarshney01/create-better-t-stack/issues/416)) ([2543c53](https://github.com/AmanVarshney01/create-better-t-stack/commit/2543c5317b21c8e18082e1e7225d3df77c00cc83))
-
+- backend none templates ([#241](https://github.com/AmanVarshney01/create-better-t-stack/issues/241)) ([8209713](https://github.com/AmanVarshney01/create-better-t-stack/commit/8209713bd644a812cfd2f9fa81adc5da97ab13cc))
+- **cli:** add --no-git option to fumadocs setup command ([7d76289](https://github.com/AmanVarshney01/create-better-t-stack/commit/7d76289db791aef7c6d31a1f9f598dddc0db7490))
+- **cli:** add @types/node when workers runtime ([a0c6acb](https://github.com/AmanVarshney01/create-better-t-stack/commit/a0c6acbc608ab3613db5a6e7dafb7cabd22365bf))
+- **cli:** Add conditional rendering for private data based on API type ([5ab503a](https://github.com/AmanVarshney01/create-better-t-stack/commit/5ab503a814019828ba6d1ebd0c9817177e4fbfa9))
+- **cli:** add missing wrangler.jsonc file ignore to biome.json.hbs ([#492](https://github.com/AmanVarshney01/create-better-t-stack/issues/492)) ([5b2827e](https://github.com/AmanVarshney01/create-better-t-stack/commit/5b2827ef123bb9dbd45135a19d3e1dc91406823a))
+- **cli:** add react deps in next backend ([a4209b7](https://github.com/AmanVarshney01/create-better-t-stack/commit/a4209b7a5352d57be9ff55a73ec5bc04dfd25f5c))
+- **cli:** comment isolated linker in bunfig.toml when native-nativewind ([ad1d28f](https://github.com/AmanVarshney01/create-better-t-stack/commit/ad1d28ff287262b378d5bbeb81f8cba90489ce37))
+- **cli:** fix nuxt template issues with bun ([53985fe](https://github.com/AmanVarshney01/create-better-t-stack/commit/53985feabb66cf9b0acd240f8a55d74849e102da))
+- **cli:** fix telemetry ([901e1ff](https://github.com/AmanVarshney01/create-better-t-stack/commit/901e1fffd91490689126eb0112b9930c382f9f61))
+- **cli:** remove telemetry console logs ([71e5850](https://github.com/AmanVarshney01/create-better-t-stack/commit/71e585040265cc9e0c0bf5842a023e580ad95b1f))
+- **cli:** remove unwanted orm directories ([78fe4b7](https://github.com/AmanVarshney01/create-better-t-stack/commit/78fe4b76b7a926eb6b6b0350755312d96fe60583))
+- **cli:** ruler template path ([a231a81](https://github.com/AmanVarshney01/create-better-t-stack/commit/a231a8183903d93f8f41b3e1484601d0ee4cc385))
+- **cli:** start script paths in Bun and Node runtime setup ([b47671c](https://github.com/AmanVarshney01/create-better-t-stack/commit/b47671c24d8cae51de12b5334c519238dde62d77))
+- **cli:** Update Nuxt template dependencies and add TailwindCSS ([17389ac](https://github.com/AmanVarshney01/create-better-t-stack/commit/17389ac381a6c76baa668920e3883e0a77c1b5f1))
+- dependency installation output flow ([f73c7d2](https://github.com/AmanVarshney01/create-better-t-stack/commit/f73c7d2064505db93b9e0cd86bc2b0a5633e9e90))
+- enforce Convex backend when --api none is specified ([920a8f0](https://github.com/AmanVarshney01/create-better-t-stack/commit/920a8f01ca03cd72a04f17d6807a80ea99989266))
+- ensure .npmrc is included and copied for native setup ([ea79154](https://github.com/AmanVarshney01/create-better-t-stack/commit/ea79154ae9cf3aa845a06fedb00d22b457432027))
+- **post-installation:** use selected package manager ([#342](https://github.com/AmanVarshney01/create-better-t-stack/issues/342)) ([3fbd751](https://github.com/AmanVarshney01/create-better-t-stack/commit/3fbd751ceb2bc0e09a3164c9416409505517da80))
+- remove unneeded todo schema at auth.ts from drizzle-sqlite template ([#114](https://github.com/AmanVarshney01/create-better-t-stack/issues/114)) ([6b2cde8](https://github.com/AmanVarshney01/create-better-t-stack/commit/6b2cde803017202624cb0971e0e9ec9f97d8aca0))
+- show proper error messages on auth failure in Next.js frontend ([#445](https://github.com/AmanVarshney01/create-better-t-stack/issues/445)) ([2ad89b7](https://github.com/AmanVarshney01/create-better-t-stack/commit/2ad89b72b5798219dd53e79eacc7a9dc92a5e41b))
+- **templates:** password must be at least 8 characters ([#190](https://github.com/AmanVarshney01/create-better-t-stack/issues/190)) ([f1ce6b4](https://github.com/AmanVarshney01/create-better-t-stack/commit/f1ce6b4c09cf7dd272257f91d3eb3c555888befb))
+- **todos:** trpc v11 ([#93](https://github.com/AmanVarshney01/create-better-t-stack/issues/93)) ([a69ff19](https://github.com/AmanVarshney01/create-better-t-stack/commit/a69ff19a7eac3b077368879d681cdd36268febcc))
+- use npx degit for template cloning ([78340fc](https://github.com/AmanVarshney01/create-better-t-stack/commit/78340fca07c18ceefe9cac5bf6aa5bb293741248))
+- web-deploy validation to check for frontend flag ([5fec00a](https://github.com/AmanVarshney01/create-better-t-stack/commit/5fec00a48f31501b9c7bea0e6ad205c6eaa83c31))
+- **web:** miscellaneous improvements ([#416](https://github.com/AmanVarshney01/create-better-t-stack/issues/416)) ([2543c53](https://github.com/AmanVarshney01/create-better-t-stack/commit/2543c5317b21c8e18082e1e7225d3df77c00cc83))
 
 ### Features
 
-* add @better-t-stack/types package ([19b625c](https://github.com/AmanVarshney01/create-better-t-stack/commit/19b625c5c71914f6c46f681ed51d8fefaefcf191))
-* add ai chat example and update flags structure ([a6ac5dc](https://github.com/AmanVarshney01/create-better-t-stack/commit/a6ac5dc86c758435a42490912719715f97f888ad))
-* add authentication in native ([81dc240](https://github.com/AmanVarshney01/create-better-t-stack/commit/81dc240e7bc5febbf13f8073f6f06bbc81be4cdc))
-* add command ([#337](https://github.com/AmanVarshney01/create-better-t-stack/issues/337)) ([9c7a0f0](https://github.com/AmanVarshney01/create-better-t-stack/commit/9c7a0f0110ab811b11112e5be8de765fb60d4162))
-* add Ctrl+C interrupt handling ([cc8850d](https://github.com/AmanVarshney01/create-better-t-stack/commit/cc8850d7c2340d1decabe3bd4d3d98ec2e14509d))
-* add mysql database ([c9b7e25](https://github.com/AmanVarshney01/create-better-t-stack/commit/c9b7e25e1d6f572b5abc72229e21a53a17163461))
-* add package manager selection and configuration ([4659db9](https://github.com/AmanVarshney01/create-better-t-stack/commit/4659db93f8adbdc3976b5929e1f039d393c115c4))
-* add project name validation ([ecd7db9](https://github.com/AmanVarshney01/create-better-t-stack/commit/ecd7db9e488f27ae5f9e5ae5894b00f9ca50764f))
-* Auto-generate .env.example files with empty values ([1cc9d81](https://github.com/AmanVarshney01/create-better-t-stack/commit/1cc9d819449ca83bacd375167bf729738ae512a2))
-* **cli:** add disable analytics option ([#496](https://github.com/AmanVarshney01/create-better-t-stack/issues/496)) ([3c00c54](https://github.com/AmanVarshney01/create-better-t-stack/commit/3c00c5453f16ed37f5031fe1ef6355092160a4d5))
-* **cli:** add nuxt + convex support ([#458](https://github.com/AmanVarshney01/create-better-t-stack/issues/458)) ([430fa41](https://github.com/AmanVarshney01/create-better-t-stack/commit/430fa41abdbd307cf5f7c407280def7a943a9792))
-* **cli:** add prisma create-db setup ([#419](https://github.com/AmanVarshney01/create-better-t-stack/issues/419)) ([0c26578](https://github.com/AmanVarshney01/create-better-t-stack/commit/0c26578e8e9a10cc8e6224c3d1a79ad4c3d1eb30))
-* **cli:** add programmatic api  ([#494](https://github.com/AmanVarshney01/create-better-t-stack/issues/494)) ([aecde5a](https://github.com/AmanVarshney01/create-better-t-stack/commit/aecde5a54ec545fe4c7f67716298b128c610eb5f))
-* **cli:** add reproducible command output and flag support ([b56096f](https://github.com/AmanVarshney01/create-better-t-stack/commit/b56096f36a71f53b43ca86b8c592736132540fa5))
-* **cli:** add ultracite, oxlint, fumadocs addons ([#427](https://github.com/AmanVarshney01/create-better-t-stack/issues/427)) ([216c242](https://github.com/AmanVarshney01/create-better-t-stack/commit/216c242f7d78f394b1b24a23825823e18d0cc341))
-* **cli:** add vibe rules addon ([#481](https://github.com/AmanVarshney01/create-better-t-stack/issues/481)) ([6cf476a](https://github.com/AmanVarshney01/create-better-t-stack/commit/6cf476a21e6cd6b3ae424bfc1b5b0c5f72268681))
-* **cli:** allow disable telemetry ([65c29c2](https://github.com/AmanVarshney01/create-better-t-stack/commit/65c29c26c52b575f6ddeb8d94162f499ef5d03d5))
-* **cli:** display pre-selected flags before prompts ([0983fc1](https://github.com/AmanVarshney01/create-better-t-stack/commit/0983fc1746cea5553d3587e9af5750abca8dda48))
-* **cli:** migrate vibe-rules to ruler ([#503](https://github.com/AmanVarshney01/create-better-t-stack/issues/503)) ([94dcd82](https://github.com/AmanVarshney01/create-better-t-stack/commit/94dcd82afd079a5290c37ebc6305e64223d5ecdc))
-* **cli:** upgrade to ai sdk v5 ([#487](https://github.com/AmanVarshney01/create-better-t-stack/issues/487)) ([f412d8f](https://github.com/AmanVarshney01/create-better-t-stack/commit/f412d8f0c70b7416c27a69fcbd97c046fdff6a4e))
-* **cli:** Upgrade to Prisma 6.13.0 ([#431](https://github.com/AmanVarshney01/create-better-t-stack/issues/431)) ([16c4d42](https://github.com/AmanVarshney01/create-better-t-stack/commit/16c4d423dd20c9a7e86ecd94ffeb003c5e152aaf))
-* **env-setup:** use a local file as default in sqlite ([#124](https://github.com/AmanVarshney01/create-better-t-stack/issues/124)) ([33a43fc](https://github.com/AmanVarshney01/create-better-t-stack/commit/33a43fcf1400d39d512751ddc6a7a9084b788f92))
-* **web:** add llms.txt ([1f36e9e](https://github.com/AmanVarshney01/create-better-t-stack/commit/1f36e9effcfb09f846703fe83ff886b1d056e844))
-* **web:** improve docs and refactor cli ([#476](https://github.com/AmanVarshney01/create-better-t-stack/issues/476)) ([51cfb35](https://github.com/AmanVarshney01/create-better-t-stack/commit/51cfb359123b1269be08147be96661d73e47d844))
-* **web:** improve sponsors section, add special sponsor highlighting, update README, add X icon ([#426](https://github.com/AmanVarshney01/create-better-t-stack/issues/426)) ([16518cc](https://github.com/AmanVarshney01/create-better-t-stack/commit/16518cc44975068e407721be55d342de095b4e8d))
-
-
-
-
+- add @better-t-stack/types package ([19b625c](https://github.com/AmanVarshney01/create-better-t-stack/commit/19b625c5c71914f6c46f681ed51d8fefaefcf191))
+- add ai chat example and update flags structure ([a6ac5dc](https://github.com/AmanVarshney01/create-better-t-stack/commit/a6ac5dc86c758435a42490912719715f97f888ad))
+- add authentication in native ([81dc240](https://github.com/AmanVarshney01/create-better-t-stack/commit/81dc240e7bc5febbf13f8073f6f06bbc81be4cdc))
+- add command ([#337](https://github.com/AmanVarshney01/create-better-t-stack/issues/337)) ([9c7a0f0](https://github.com/AmanVarshney01/create-better-t-stack/commit/9c7a0f0110ab811b11112e5be8de765fb60d4162))
+- add Ctrl+C interrupt handling ([cc8850d](https://github.com/AmanVarshney01/create-better-t-stack/commit/cc8850d7c2340d1decabe3bd4d3d98ec2e14509d))
+- add mysql database ([c9b7e25](https://github.com/AmanVarshney01/create-better-t-stack/commit/c9b7e25e1d6f572b5abc72229e21a53a17163461))
+- add package manager selection and configuration ([4659db9](https://github.com/AmanVarshney01/create-better-t-stack/commit/4659db93f8adbdc3976b5929e1f039d393c115c4))
+- add project name validation ([ecd7db9](https://github.com/AmanVarshney01/create-better-t-stack/commit/ecd7db9e488f27ae5f9e5ae5894b00f9ca50764f))
+- Auto-generate .env.example files with empty values ([1cc9d81](https://github.com/AmanVarshney01/create-better-t-stack/commit/1cc9d819449ca83bacd375167bf729738ae512a2))
+- **cli:** add disable analytics option ([#496](https://github.com/AmanVarshney01/create-better-t-stack/issues/496)) ([3c00c54](https://github.com/AmanVarshney01/create-better-t-stack/commit/3c00c5453f16ed37f5031fe1ef6355092160a4d5))
+- **cli:** add nuxt + convex support ([#458](https://github.com/AmanVarshney01/create-better-t-stack/issues/458)) ([430fa41](https://github.com/AmanVarshney01/create-better-t-stack/commit/430fa41abdbd307cf5f7c407280def7a943a9792))
+- **cli:** add prisma create-db setup ([#419](https://github.com/AmanVarshney01/create-better-t-stack/issues/419)) ([0c26578](https://github.com/AmanVarshney01/create-better-t-stack/commit/0c26578e8e9a10cc8e6224c3d1a79ad4c3d1eb30))
+- **cli:** add programmatic api ([#494](https://github.com/AmanVarshney01/create-better-t-stack/issues/494)) ([aecde5a](https://github.com/AmanVarshney01/create-better-t-stack/commit/aecde5a54ec545fe4c7f67716298b128c610eb5f))
+- **cli:** add reproducible command output and flag support ([b56096f](https://github.com/AmanVarshney01/create-better-t-stack/commit/b56096f36a71f53b43ca86b8c592736132540fa5))
+- **cli:** add ultracite, oxlint, fumadocs addons ([#427](https://github.com/AmanVarshney01/create-better-t-stack/issues/427)) ([216c242](https://github.com/AmanVarshney01/create-better-t-stack/commit/216c242f7d78f394b1b24a23825823e18d0cc341))
+- **cli:** add vibe rules addon ([#481](https://github.com/AmanVarshney01/create-better-t-stack/issues/481)) ([6cf476a](https://github.com/AmanVarshney01/create-better-t-stack/commit/6cf476a21e6cd6b3ae424bfc1b5b0c5f72268681))
+- **cli:** allow disable telemetry ([65c29c2](https://github.com/AmanVarshney01/create-better-t-stack/commit/65c29c26c52b575f6ddeb8d94162f499ef5d03d5))
+- **cli:** display pre-selected flags before prompts ([0983fc1](https://github.com/AmanVarshney01/create-better-t-stack/commit/0983fc1746cea5553d3587e9af5750abca8dda48))
+- **cli:** migrate vibe-rules to ruler ([#503](https://github.com/AmanVarshney01/create-better-t-stack/issues/503)) ([94dcd82](https://github.com/AmanVarshney01/create-better-t-stack/commit/94dcd82afd079a5290c37ebc6305e64223d5ecdc))
+- **cli:** upgrade to ai sdk v5 ([#487](https://github.com/AmanVarshney01/create-better-t-stack/issues/487)) ([f412d8f](https://github.com/AmanVarshney01/create-better-t-stack/commit/f412d8f0c70b7416c27a69fcbd97c046fdff6a4e))
+- **cli:** Upgrade to Prisma 6.13.0 ([#431](https://github.com/AmanVarshney01/create-better-t-stack/issues/431)) ([16c4d42](https://github.com/AmanVarshney01/create-better-t-stack/commit/16c4d423dd20c9a7e86ecd94ffeb003c5e152aaf))
+- **env-setup:** use a local file as default in sqlite ([#124](https://github.com/AmanVarshney01/create-better-t-stack/issues/124)) ([33a43fc](https://github.com/AmanVarshney01/create-better-t-stack/commit/33a43fcf1400d39d512751ddc6a7a9084b788f92))
+- **web:** add llms.txt ([1f36e9e](https://github.com/AmanVarshney01/create-better-t-stack/commit/1f36e9effcfb09f846703fe83ff886b1d056e844))
+- **web:** improve docs and refactor cli ([#476](https://github.com/AmanVarshney01/create-better-t-stack/issues/476)) ([51cfb35](https://github.com/AmanVarshney01/create-better-t-stack/commit/51cfb359123b1269be08147be96661d73e47d844))
+- **web:** improve sponsors section, add special sponsor highlighting, update README, add X icon ([#426](https://github.com/AmanVarshney01/create-better-t-stack/issues/426)) ([16518cc](https://github.com/AmanVarshney01/create-better-t-stack/commit/16518cc44975068e407721be55d342de095b4e8d))
 
 # v2.33.5 (Fri Aug 15 2025)
 
