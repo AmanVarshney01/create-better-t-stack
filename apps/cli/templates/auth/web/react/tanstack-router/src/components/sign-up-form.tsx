@@ -1,6 +1,6 @@
 import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { toast } from "sonner";
 import z from "zod";
 import Loader from "./loader";
@@ -13,6 +13,7 @@ export default function SignUpForm({
 }: {
 	onSwitchToSignIn: () => void;
 }) {
+	const search = useSearch({ from: "/login" });
 	const navigate = useNavigate({
 		from: "/",
 	});
@@ -34,7 +35,7 @@ export default function SignUpForm({
 				{
 					onSuccess: () => {
 						navigate({
-							to: "/dashboard",
+							to: search.redirect,
 						});
 						toast.success("Sign up successful");
 					},
