@@ -131,6 +131,44 @@ export function validateWorkersCompatibility(
 	}
 }
 
+export function validateSingleStoreCompatibility(
+	providedFlags: Set<string>,
+	options: CLIInput,
+	config: Partial<ProjectConfig>,
+) {
+	if (
+		providedFlags.has("database") &&
+		options.database === "singlestore" &&
+		config.orm &&
+		config.orm !== "drizzle"
+	) {
+		exitWithError(
+			`SingleStore database is only compatible with Drizzle ORM. Current ORM: ${config.orm}. Please use '--orm drizzle' or choose a different database.`,
+		);
+	}
+
+	if (
+		providedFlags.has("orm") &&
+		config.orm &&
+		config.orm !== "drizzle" &&
+		config.database === "singlestore"
+	) {
+		exitWithError(
+			`ORM '${config.orm}' is not compatible with SingleStore database. SingleStore only supports Drizzle ORM. Please use '--orm drizzle' or choose a different database.`,
+		);
+	}
+
+	if (
+		providedFlags.has("dbSetup") &&
+		options.dbSetup === "singlestore-helios" &&
+		config.database !== "singlestore"
+	) {
+		exitWithError(
+			`SingleStore Helios setup (--db-setup singlestore-helios) requires SingleStore database. Current database: ${config.database}. Please use '--database singlestore' or choose a different database setup.`,
+		);
+	}
+}
+
 export function coerceBackendPresets(config: Partial<ProjectConfig>) {
 	if (config.backend === "convex") {
 		config.auth = false;

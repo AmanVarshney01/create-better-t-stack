@@ -20,6 +20,7 @@ import {
 	validateAddonsAgainstFrontends,
 	validateApiFrontendCompatibility,
 	validateExamplesCompatibility,
+	validateSingleStoreCompatibility,
 	validateWebDeployRequiresWebFrontend,
 	validateWorkersCompatibility,
 } from "./utils/compatibility-rules";
@@ -250,6 +251,18 @@ export function processAndValidateFlags(
 	if (
 		providedFlags.has("database") &&
 		providedFlags.has("orm") &&
+		config.database === "singlestore" &&
+		config.orm &&
+		config.orm !== "drizzle"
+	) {
+		exitWithError(
+			"SingleStore database requires Drizzle ORM. Please use '--orm drizzle' or choose a different database.",
+		);
+	}
+
+	if (
+		providedFlags.has("database") &&
+		providedFlags.has("orm") &&
 		config.database &&
 		config.database !== "none" &&
 		config.orm === "none"
@@ -349,6 +362,17 @@ export function processAndValidateFlags(
 		);
 	}
 
+	if (
+		providedFlags.has("dbSetup") &&
+		(config.database ? providedFlags.has("database") : true) &&
+		config.dbSetup === "singlestore-helios" &&
+		config.database !== "singlestore"
+	) {
+		exitWithError(
+			"SingleStore Helios setup requires SingleStore database. Please use '--database singlestore' or choose a different setup.",
+		);
+	}
+
 	if (config.dbSetup === "d1") {
 		if (
 			(providedFlags.has("dbSetup") && providedFlags.has("database")) ||
@@ -396,6 +420,7 @@ export function processAndValidateFlags(
 	}
 
 	validateWorkersCompatibility(providedFlags, options, config);
+	validateSingleStoreCompatibility(providedFlags, options, config);
 
 	const hasWebFrontendFlag = (config.frontend ?? []).some((f) =>
 		isWebFrontend(f),
