@@ -9,7 +9,7 @@ import { commandExists } from "../../utils/command-exists";
 import {
 	addEnvVariablesToFile,
 	type EnvVariable,
-} from "../project-generation/env-setup";
+} from "../core/env-setup";
 
 type MongoDBConfig = {
 	connectionString: string;

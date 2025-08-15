@@ -5,13 +5,13 @@ import fs from "fs-extra";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
-import { setupCloudflareD1 } from "../database-providers/d1-setup";
-import { setupDockerCompose } from "../database-providers/docker-compose-setup";
-import { setupMongoDBAtlas } from "../database-providers/mongodb-atlas-setup";
-import { setupNeonPostgres } from "../database-providers/neon-setup";
-import { setupPrismaPostgres } from "../database-providers/prisma-postgres-setup";
-import { setupSupabase } from "../database-providers/supabase-setup";
-import { setupTurso } from "../database-providers/turso-setup";
+import { setupCloudflareD1 } from "../database/d1-setup";
+import { setupDockerCompose } from "../database/docker-compose-setup";
+import { setupMongoDBAtlas } from "../database/mongodb-atlas-setup";
+import { setupNeonPostgres } from "../database/neon-setup";
+import { setupPrismaPostgres } from "../database/prisma-postgres-setup";
+import { setupSupabase } from "../database/supabase-setup";
+import { setupTurso } from "../database/turso-setup";
 
 export async function setupDatabase(config: ProjectConfig) {
 	const { database, orm, dbSetup, backend, projectDir } = config;

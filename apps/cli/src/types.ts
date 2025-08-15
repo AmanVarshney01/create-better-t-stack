@@ -104,9 +104,14 @@ export const ProjectNameSchema = z
 export type ProjectName = z.infer<typeof ProjectNameSchema>;
 
 export const WebDeploySchema = z
-	.enum(["workers", "none"])
+	.enum(["workers", "alchemy", "none"])
 	.describe("Web deployment");
 export type WebDeploy = z.infer<typeof WebDeploySchema>;
+
+export const ServerDeploySchema = z
+	.enum(["workers", "alchemy", "none"])
+	.describe("Server deployment");
+export type ServerDeploy = z.infer<typeof ServerDeploySchema>;
 
 export const DirectoryConflictSchema = z
 	.enum(["merge", "overwrite", "increment", "error"])
@@ -132,6 +137,7 @@ export type CreateInput = {
 	runtime?: Runtime;
 	api?: API;
 	webDeploy?: WebDeploy;
+	serverDeploy?: ServerDeploy;
 	directoryConflict?: DirectoryConflict;
 	renderTitle?: boolean;
 	disableAnalytics?: boolean;
@@ -140,6 +146,7 @@ export type CreateInput = {
 export type AddInput = {
 	addons?: Addons[];
 	webDeploy?: WebDeploy;
+	serverDeploy?: ServerDeploy;
 	projectDir?: string;
 	install?: boolean;
 	packageManager?: PackageManager;
@@ -167,6 +174,7 @@ export interface ProjectConfig {
 	dbSetup: DatabaseSetup;
 	api: API;
 	webDeploy: WebDeploy;
+	serverDeploy: ServerDeploy;
 }
 
 export interface BetterTStackConfig {
@@ -184,6 +192,7 @@ export interface BetterTStackConfig {
 	dbSetup: DatabaseSetup;
 	api: API;
 	webDeploy: WebDeploy;
+	serverDeploy: ServerDeploy;
 }
 
 export interface InitResult {

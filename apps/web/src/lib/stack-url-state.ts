@@ -54,6 +54,9 @@ export const stackParsers = {
 	webDeploy: parseAsStringEnum<StackState["webDeploy"]>(
 		getValidIds("webDeploy"),
 	).withDefault(DEFAULT_STACK.webDeploy),
+	serverDeploy: parseAsStringEnum<StackState["serverDeploy"]>(
+		getValidIds("serverDeploy"),
+	).withDefault(DEFAULT_STACK.serverDeploy),
 };
 
 export const stackUrlKeys: UrlKeys<typeof stackParsers> = {
@@ -73,6 +76,7 @@ export const stackUrlKeys: UrlKeys<typeof stackParsers> = {
 	git: "git",
 	install: "i",
 	webDeploy: "wd",
+	serverDeploy: "sd",
 };
 
 export const stackQueryStatesOptions = {

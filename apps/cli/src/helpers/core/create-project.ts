@@ -3,17 +3,17 @@ import fs from "fs-extra";
 import type { ProjectConfig } from "../../types";
 import { writeBtsConfig } from "../../utils/bts-config";
 import { exitWithError } from "../../utils/errors";
-import { setupAddons } from "../setup/addons-setup";
-import { setupApi } from "../setup/api-setup";
-import { setupAuth } from "../setup/auth-setup";
-import { setupBackendDependencies } from "../setup/backend-setup";
-import { setupDatabase } from "../setup/db-setup";
-import { setupExamples } from "../setup/examples-setup";
+import { setupAddons } from "../addons/addons-setup";
+import { setupAuth } from "../addons/auth-setup";
+import { setupExamples } from "../addons/examples-setup";
+import { setupApi } from "../core/api-setup";
+import { setupBackendDependencies } from "../core/backend-setup";
+import { setupDatabase } from "../core/db-setup";
 import {
 	generateCloudflareWorkerTypes,
 	setupRuntime,
-} from "../setup/runtime-setup";
-import { setupWebDeploy } from "../setup/web-deploy-setup";
+} from "../core/runtime-setup";
+import { setupWebDeploy } from "../deployment/web-deploy-setup";
 import { createReadme } from "./create-readme";
 import { setupEnvironmentVariables } from "./env-setup";
 import { initializeGit } from "./git";

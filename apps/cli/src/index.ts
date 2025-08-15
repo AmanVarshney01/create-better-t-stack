@@ -5,7 +5,7 @@ import z from "zod";
 import {
 	addAddonsHandler,
 	createProjectHandler,
-} from "./helpers/project-generation/command-handlers";
+} from "./helpers/core/command-handlers";
 import {
 	type AddInput,
 	type Addons,
@@ -35,6 +35,8 @@ import {
 	ProjectNameSchema,
 	type Runtime,
 	RuntimeSchema,
+	type ServerDeploy,
+	ServerDeploySchema,
 	type WebDeploy,
 	WebDeploySchema,
 } from "./types";
@@ -88,6 +90,7 @@ export const router = t.router({
 					runtime: RuntimeSchema.optional(),
 					api: APISchema.optional(),
 					webDeploy: WebDeploySchema.optional(),
+					serverDeploy: ServerDeploySchema.optional(),
 					directoryConflict: DirectoryConflictSchema.optional(),
 					renderTitle: z.boolean().optional(),
 					disableAnalytics: z
@@ -120,6 +123,7 @@ export const router = t.router({
 				z.object({
 					addons: z.array(AddonsSchema).optional().default([]),
 					webDeploy: WebDeploySchema.optional(),
+					serverDeploy: ServerDeploySchema.optional(),
 					projectDir: z.string().optional(),
 					install: z
 						.boolean()
@@ -251,6 +255,7 @@ export type {
 	DatabaseSetup,
 	API,
 	WebDeploy,
+	ServerDeploy,
 	DirectoryConflict,
 	CreateInput,
 	AddInput,

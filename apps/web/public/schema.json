@@ -153,9 +153,19 @@
       "type": "string",
       "enum": [
         "workers",
+        "alchemy",
         "none"
       ],
       "description": "Web deployment"
+    },
+    "serverDeploy": {
+      "type": "string",
+      "enum": [
+        "workers",
+        "alchemy",
+        "none"
+      ],
+      "description": "Server deployment"
     }
   },
   "required": [
@@ -172,7 +182,8 @@
     "packageManager",
     "dbSetup",
     "api",
-    "webDeploy"
+    "webDeploy",
+    "serverDeploy"
   ],
   "additionalProperties": false
 }

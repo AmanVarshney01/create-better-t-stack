@@ -7,10 +7,7 @@ import pc from "picocolors";
 import type { PackageManager, ProjectConfig } from "../../types";
 import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
-import {
-	addEnvVariablesToFile,
-	type EnvVariable,
-} from "../project-generation/env-setup";
+import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
 
 type NeonConfig = {
 	connectionString: string;

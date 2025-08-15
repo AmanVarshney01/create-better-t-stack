@@ -11,6 +11,7 @@ import type {
 	PackageManager,
 	ProjectConfig,
 	Runtime,
+	ServerDeploy,
 	WebDeploy,
 } from "../types";
 import { exitCancelled } from "../utils/errors";
@@ -27,6 +28,7 @@ import { getinstallChoice } from "./install";
 import { getORMChoice } from "./orm";
 import { getPackageManagerChoice } from "./package-manager";
 import { getRuntimeChoice } from "./runtime";
+import { getServerDeploymentChoice } from "./server-deploy";
 import { getDeploymentChoice } from "./web-deploy";
 
 type PromptGroupResults = {
@@ -44,6 +46,7 @@ type PromptGroupResults = {
 	packageManager: PackageManager;
 	install: boolean;
 	webDeploy: WebDeploy;
+	serverDeploy: ServerDeploy;
 };
 
 export async function gatherConfig(
@@ -97,6 +100,12 @@ export async function gatherConfig(
 					results.backend,
 					results.frontend,
 				),
+			serverDeploy: ({ results }) =>
+				getServerDeploymentChoice(
+					flags.serverDeploy,
+					results.runtime,
+					results.backend,
+				),
 			git: () => getGitChoice(flags.git),
 			packageManager: () => getPackageManagerChoice(flags.packageManager),
 			install: () => getinstallChoice(flags.install),
@@ -144,5 +153,6 @@ export async function gatherConfig(
 		dbSetup: result.dbSetup,
 		api: result.api,
 		webDeploy: result.webDeploy,
+		serverDeploy: result.serverDeploy,
 	};
 }

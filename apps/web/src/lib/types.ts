@@ -8,6 +8,7 @@ export type TechCategory =
 	| "orm"
 	| "dbSetup"
 	| "webDeploy"
+	| "serverDeploy"
 	| "auth"
 	| "packageManager"
 	| "addons"

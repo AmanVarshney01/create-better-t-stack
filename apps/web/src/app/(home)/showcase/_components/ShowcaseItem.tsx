@@ -30,7 +30,7 @@ export default function ShowcaseItem({
 			<div className="border-border border-b px-3 py-2">
 				<div className="flex items-center gap-2">
 					<File className="h-3 w-3 text-primary" />
-					<span className=" font-semibold text-foreground text-xs">
+					<span className="font-semibold text-foreground text-xs">
 						{projectId}.PROJECT
 					</span>
 					<div className="ml-auto flex items-center gap-2 text-muted-foreground text-xs">
@@ -60,9 +60,7 @@ export default function ShowcaseItem({
 
 				<div className="mb-4">
 					<div className="mb-2 flex items-center gap-2">
-						<span className=" text-muted-foreground text-xs">
-							DEPENDENCIES:
-						</span>
+						<span className="text-muted-foreground text-xs">DEPENDENCIES:</span>
 					</div>
 					<div className="flex flex-wrap gap-1">
 						{tags.map((tag) => (
@@ -107,12 +105,12 @@ export default function ShowcaseItem({
 					<div className="border-border border-t pt-2">
 						<div className="flex items-center gap-2 text-xs">
 							<span className="text-primary">$</span>
-							<span className=" text-muted-foreground">
+							<span className="text-muted-foreground">
 								echo &quot;Status: READY&quot;
 							</span>
 							<div className="ml-auto flex items-center gap-1">
 								<div className="h-1 w-1 animate-pulse rounded-full bg-green-400" />
-								<span className=" text-green-400 text-xs">ONLINE</span>
+								<span className="text-green-400 text-xs">ONLINE</span>
 							</div>
 						</div>
 					</div>

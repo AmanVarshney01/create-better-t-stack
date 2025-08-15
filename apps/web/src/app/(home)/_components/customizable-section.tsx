@@ -26,7 +26,7 @@ export default function CustomizableSection() {
 					transition={{ duration: 0.5, delay: 0.2 }}
 					className="mx-auto max-w-3xl space-y-6"
 				>
-					<p className=" text-lg text-muted-foreground leading-relaxed sm:text-xl">
+					<p className="text-lg text-muted-foreground leading-relaxed sm:text-xl">
 						Build your perfect TypeScript stack.
 					</p>
 				</motion.div>

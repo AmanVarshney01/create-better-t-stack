@@ -113,7 +113,7 @@ export default function ShowcasePage() {
 							</span>
 						</div>
 						<div className="h-px flex-1 bg-border" />
-						<span className=" text-muted-foreground text-xs">
+						<span className="text-muted-foreground text-xs">
 							[{showcaseProjects.length} PROJECTS FOUND]
 						</span>
 					</div>
@@ -129,7 +129,7 @@ export default function ShowcasePage() {
 					<div className="rounded border border-border p-4">
 						<div className="flex items-center gap-2 text-sm">
 							<span className="text-primary">$</span>
-							<span className=" text-muted-foreground">
+							<span className="text-muted-foreground">
 								Want to showcase your project? Submit via GitHub issues
 							</span>
 						</div>

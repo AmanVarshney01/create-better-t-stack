@@ -53,7 +53,7 @@ export function TimelineCharts({ data }: TimelineChartsProps) {
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center gap-2">
 							<span className="text-primary text-xs">▶</span>
-							<span className=" font-semibold text-sm">
+							<span className="font-semibold text-sm">
 								PROJECT_TIMELINE.CHART
 							</span>
 						</div>
@@ -95,7 +95,7 @@ export function TimelineCharts({ data }: TimelineChartsProps) {
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center gap-2">
 							<span className="text-primary text-xs">▶</span>
-							<span className=" font-semibold text-sm">
+							<span className="font-semibold text-sm">
 								MONTHLY_TRENDS.CHART
 							</span>
 						</div>
@@ -115,7 +115,7 @@ export function TimelineCharts({ data }: TimelineChartsProps) {
 									tickLine={false}
 									tickMargin={10}
 									axisLine={false}
-									className=" text-xs"
+									className="text-xs"
 								/>
 								<YAxis hide />
 								<ChartTooltip content={<ChartTooltipContent />} />
@@ -129,7 +129,7 @@ export function TimelineCharts({ data }: TimelineChartsProps) {
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center gap-2">
 							<span className="text-primary text-xs">▶</span>
-							<span className=" font-semibold text-sm">
+							<span className="font-semibold text-sm">
 								PLATFORM_DISTRIBUTION.PIE
 							</span>
 						</div>
@@ -185,7 +185,7 @@ export function TimelineCharts({ data }: TimelineChartsProps) {
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center gap-2">
 							<span className="text-primary text-xs">▶</span>
-							<span className=" font-semibold text-sm">
+							<span className="font-semibold text-sm">
 								HOURLY_DISTRIBUTION.BAR
 							</span>
 						</div>
@@ -205,7 +205,7 @@ export function TimelineCharts({ data }: TimelineChartsProps) {
 									tickLine={false}
 									tickMargin={10}
 									axisLine={false}
-									className=" text-xs"
+									className="text-xs"
 								/>
 								<YAxis hide />
 								<ChartTooltip

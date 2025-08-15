@@ -10,6 +10,7 @@ import {
 	type ProjectConfig,
 	ProjectNameSchema,
 	type Runtime,
+	type ServerDeploy,
 	type WebDeploy,
 } from "./types";
 import {
@@ -121,6 +122,10 @@ export function processAndValidateFlags(
 
 	if (options.webDeploy) {
 		config.webDeploy = options.webDeploy as WebDeploy;
+	}
+
+	if (options.serverDeploy) {
+		config.serverDeploy = options.serverDeploy as ServerDeploy;
 	}
 
 	const derivedName = deriveProjectName(projectName, options.projectDirectory);

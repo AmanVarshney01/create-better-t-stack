@@ -143,6 +143,78 @@ export const components: TwitterComponents = {
 	},
 };
 
+const VideoCard = ({
+	video,
+	index,
+}: {
+	video: (typeof YOUTUBE_VIDEOS)[0];
+	index: number;
+}) => (
+	<motion.div
+		className="w-full min-w-0"
+		initial={{ opacity: 0, y: 20, scale: 0.95 }}
+		animate={{ opacity: 1, y: 0, scale: 1 }}
+		transition={{
+			delay: index * 0.1,
+			duration: 0.4,
+			ease: "easeOut",
+		}}
+	>
+		<div className="w-full min-w-0 overflow-hidden rounded border border-border">
+			<div className="sticky top-0 z-10 border-border border-b px-2 py-2">
+				<div className="flex items-center gap-2">
+					<Play className="h-3 w-3 text-primary" />
+					<span className="font-semibold text-xs">
+						[VIDEO_{String(index + 1).padStart(3, "0")}]
+					</span>
+				</div>
+			</div>
+			<div className="w-full min-w-0 overflow-hidden">
+				<div className="relative aspect-video w-full">
+					<iframe
+						src={`https://www.youtube.com/embed/${video.embedId}`}
+						title={video.title}
+						allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+						allowFullScreen
+						className="absolute inset-0 h-full w-full"
+					/>
+				</div>
+			</div>
+		</div>
+	</motion.div>
+);
+
+const TweetCard = ({ tweetId, index }: { tweetId: string; index: number }) => (
+	<motion.div
+		className="w-full min-w-0"
+		initial={{ opacity: 0, y: 20, scale: 0.95 }}
+		animate={{ opacity: 1, y: 0, scale: 1 }}
+		transition={{
+			delay: index * 0.05,
+			duration: 0.4,
+			ease: "easeOut",
+		}}
+	>
+		<div className="w-full min-w-0 overflow-hidden rounded border border-border">
+			<div className="sticky top-0 z-10 border-border border-b px-3 py-2">
+				<div className="flex items-center gap-2">
+					<span className="text-primary text-xs">▶</span>
+					<span className="font-semibold text-xs">
+						[TWEET_{String(index + 1).padStart(3, "0")}]
+					</span>
+				</div>
+			</div>
+			<div className="w-full min-w-0 overflow-hidden">
+				<div style={{ width: "100%", minWidth: 0, maxWidth: "100%" }}>
+					<Suspense fallback={<TweetSkeleton />}>
+						<Tweet id={tweetId} components={components} />
+					</Suspense>
+				</div>
+			</div>
+		</div>
+	</motion.div>
+);
+
 export default function Testimonials() {
 	const getResponsiveColumns = (numCols: number) => {
 		const columns: string[][] = Array(numCols)
@@ -172,84 +244,6 @@ export default function Testimonials() {
 			transition: { staggerChildren: 0.05 },
 		},
 	};
-
-	const VideoCard = ({
-		video,
-		index,
-	}: {
-		video: (typeof YOUTUBE_VIDEOS)[0];
-		index: number;
-	}) => (
-		<motion.div
-			className="w-full min-w-0"
-			initial={{ opacity: 0, y: 20, scale: 0.95 }}
-			animate={{ opacity: 1, y: 0, scale: 1 }}
-			transition={{
-				delay: index * 0.1,
-				duration: 0.4,
-				ease: "easeOut",
-			}}
-		>
-			<div className="w-full min-w-0 overflow-hidden rounded border border-border">
-				<div className="sticky top-0 z-10 border-border border-b px-2 py-2">
-					<div className="flex items-center gap-2">
-						<Play className="h-3 w-3 text-primary" />
-						<span className="font-semibold text-xs">
-							[VIDEO_{String(index + 1).padStart(3, "0")}]
-						</span>
-					</div>
-				</div>
-				<div className="w-full min-w-0 overflow-hidden">
-					<div className="relative aspect-video w-full">
-						<iframe
-							src={`https://www.youtube.com/embed/${video.embedId}`}
-							title={video.title}
-							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-							allowFullScreen
-							className="absolute inset-0 h-full w-full"
-						/>
-					</div>
-				</div>
-			</div>
-		</motion.div>
-	);
-
-	const TweetCard = ({
-		tweetId,
-		index,
-	}: {
-		tweetId: string;
-		index: number;
-	}) => (
-		<motion.div
-			className="w-full min-w-0"
-			initial={{ opacity: 0, y: 20, scale: 0.95 }}
-			animate={{ opacity: 1, y: 0, scale: 1 }}
-			transition={{
-				delay: index * 0.05,
-				duration: 0.4,
-				ease: "easeOut",
-			}}
-		>
-			<div className="w-full min-w-0 overflow-hidden rounded border border-border">
-				<div className="sticky top-0 z-10 border-border border-b px-3 py-2">
-					<div className="flex items-center gap-2">
-						<span className="text-primary text-xs">▶</span>
-						<span className="font-semibold text-xs">
-							[TWEET_{String(index + 1).padStart(3, "0")}]
-						</span>
-					</div>
-				</div>
-				<div className="w-full min-w-0 overflow-hidden">
-					<div style={{ width: "100%", minWidth: 0, maxWidth: "100%" }}>
-						<Suspense fallback={<TweetSkeleton />}>
-							<Tweet id={tweetId} components={components} />
-						</Suspense>
-					</div>
-				</div>
-			</div>
-		</motion.div>
-	);
 
 	return (
 		<div className="mb-12 w-full max-w-full overflow-hidden px-4">

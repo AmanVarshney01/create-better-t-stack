@@ -353,6 +353,37 @@ export const TECH_OPTIONS: Record<
 			color: "from-orange-400 to-orange-600",
 		},
 		{
+			id: "alchemy",
+			name: "Alchemy",
+			description: "Deploy to Alchemy platform",
+			icon: `${ICON_BASE_URL}/alchemy.svg`,
+			color: "from-purple-400 to-purple-600",
+		},
+		{
+			id: "none",
+			name: "No Deployment",
+			description: "Skip deployment configuration",
+			icon: "",
+			color: "from-gray-400 to-gray-600",
+			default: true,
+		},
+	],
+	serverDeploy: [
+		{
+			id: "workers",
+			name: "Cloudflare Workers",
+			description: "Deploy to Cloudflare Workers",
+			icon: `${ICON_BASE_URL}/workers.svg`,
+			color: "from-orange-400 to-orange-600",
+		},
+		{
+			id: "alchemy",
+			name: "Alchemy",
+			description: "Deploy to Alchemy platform",
+			icon: `${ICON_BASE_URL}/alchemy.svg`,
+			color: "from-purple-400 to-purple-600",
+		},
+		{
 			id: "none",
 			name: "No Deployment",
 			description: "Skip deployment configuration",
@@ -670,6 +701,7 @@ export type StackState = {
 	install: string;
 	api: string;
 	webDeploy: string;
+	serverDeploy: string;
 };
 
 export const DEFAULT_STACK: StackState = {
@@ -689,6 +721,7 @@ export const DEFAULT_STACK: StackState = {
 	install: "true",
 	api: "trpc",
 	webDeploy: "none",
+	serverDeploy: "none",
 };
 
 export const isStackDefault = <K extends keyof StackState>(

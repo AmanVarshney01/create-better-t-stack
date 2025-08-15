@@ -32,7 +32,7 @@ export function MetricsCards({
 				<div className="rounded border border-border">
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center justify-between">
-							<span className=" font-semibold text-sm">TOTAL_PROJECTS</span>
+							<span className="font-semibold text-sm">TOTAL_PROJECTS</span>
 							<Terminal className="h-4 w-4 text-primary" />
 						</div>
 					</div>
@@ -49,7 +49,7 @@ export function MetricsCards({
 				<div className="rounded border border-border">
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center justify-between">
-							<span className=" font-semibold text-sm">TOP_FRONTEND</span>
+							<span className="font-semibold text-sm">TOP_FRONTEND</span>
 							<Cpu className="h-4 w-4 text-primary" />
 						</div>
 					</div>
@@ -66,7 +66,7 @@ export function MetricsCards({
 				<div className="rounded border border-border">
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center justify-between">
-							<span className=" font-semibold text-sm">TOP_BACKEND</span>
+							<span className="font-semibold text-sm">TOP_BACKEND</span>
 							<Terminal className="h-4 w-4 text-primary" />
 						</div>
 					</div>
@@ -83,7 +83,7 @@ export function MetricsCards({
 				<div className="rounded border border-border">
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center justify-between">
-							<span className=" font-semibold text-sm">TOP_ORM</span>
+							<span className="font-semibold text-sm">TOP_ORM</span>
 							<Download className="h-4 w-4 text-primary" />
 						</div>
 					</div>
@@ -100,7 +100,7 @@ export function MetricsCards({
 				<div className="rounded border border-border">
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center justify-between">
-							<span className=" font-semibold text-sm">TOP_API</span>
+							<span className="font-semibold text-sm">TOP_API</span>
 							<TrendingUp className="h-4 w-4 text-primary" />
 						</div>
 					</div>
@@ -117,7 +117,7 @@ export function MetricsCards({
 				<div className="rounded border border-border">
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center justify-between">
-							<span className=" font-semibold text-sm">AUTH_ADOPTION</span>
+							<span className="font-semibold text-sm">AUTH_ADOPTION</span>
 							<Users className="h-4 w-4 text-primary" />
 						</div>
 					</div>
@@ -134,7 +134,7 @@ export function MetricsCards({
 				<div className="rounded border border-border">
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center justify-between">
-							<span className=" font-semibold text-sm">TOP_PKG_MGR</span>
+							<span className="font-semibold text-sm">TOP_PKG_MGR</span>
 							<Terminal className="h-4 w-4 text-primary" />
 						</div>
 					</div>
@@ -151,7 +151,7 @@ export function MetricsCards({
 				<div className="rounded border border-border">
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center justify-between">
-							<span className=" font-semibold text-sm">AVG_DAILY</span>
+							<span className="font-semibold text-sm">AVG_DAILY</span>
 							<TrendingUp className="h-4 w-4 text-primary" />
 						</div>
 					</div>

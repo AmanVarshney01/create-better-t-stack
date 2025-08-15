@@ -1,10 +1,16 @@
 import path from "node:path";
 import { log } from "@clack/prompts";
 import pc from "picocolors";
-import type { AddInput, ProjectConfig, WebDeploy } from "../../types";
+import type {
+	AddInput,
+	ProjectConfig,
+	ServerDeploy,
+	WebDeploy,
+} from "../../types";
 import { updateBtsConfig } from "../../utils/bts-config";
 import { exitWithError } from "../../utils/errors";
-import { setupWebDeploy } from "../setup/web-deploy-setup";
+import { setupServerDeploy } from "../deployment/server-deploy-setup";
+import { setupWebDeploy } from "../deployment/web-deploy-setup";
 import {
 	detectProjectConfig,
 	isBetterTStackProject,
@@ -13,7 +19,11 @@ import { installDependencies } from "./install-dependencies";
 import { setupDeploymentTemplates } from "./template-manager";
 
 export async function addDeploymentToProject(
-	input: AddInput & { webDeploy: WebDeploy; suppressInstallMessage?: boolean },
+	input: AddInput & {
+		webDeploy?: WebDeploy;
+		serverDeploy?: ServerDeploy;
+		suppressInstallMessage?: boolean;
+	},
 ) {
 	try {
 		const projectDir = input.projectDir || process.cwd();
@@ -32,9 +42,20 @@ export async function addDeploymentToProject(
 			);
 		}
 
-		if (detectedConfig.webDeploy === input.webDeploy) {
+		// Check if web deployment is already configured
+		if (input.webDeploy && detectedConfig.webDeploy === input.webDeploy) {
 			exitWithError(
-				`${input.webDeploy} deployment is already configured for this project.`,
+				`${input.webDeploy} web deployment is already configured for this project.`,
+			);
+		}
+
+		// Check if server deployment is already configured
+		if (
+			input.serverDeploy &&
+			detectedConfig.serverDeploy === input.serverDeploy
+		) {
+			exitWithError(
+				`${input.serverDeploy} server deployment is already configured for this project.`,
 			);
 		}
 
@@ -56,19 +77,31 @@ export async function addDeploymentToProject(
 			install: input.install || false,
 			dbSetup: detectedConfig.dbSetup || "none",
 			api: detectedConfig.api || "none",
-			webDeploy: input.webDeploy,
+			webDeploy: input.webDeploy || detectedConfig.webDeploy || "none",
+			serverDeploy: input.serverDeploy || detectedConfig.serverDeploy || "none",
 		};
 
-		log.info(
-			pc.green(
-				`Adding ${input.webDeploy} deployment to ${config.frontend.join("/")}`,
-			),
-		);
+		// Log what we're adding
+		if (input.webDeploy && input.webDeploy !== "none") {
+			log.info(
+				pc.green(
+					`Adding ${input.webDeploy} web deployment to ${config.frontend.join("/")}`,
+				),
+			);
+		}
+
+		if (input.serverDeploy && input.serverDeploy !== "none") {
+			log.info(pc.green(`Adding ${input.serverDeploy} server deployment`));
+		}
 
 		await setupDeploymentTemplates(projectDir, config);
 		await setupWebDeploy(config);
+		await setupServerDeploy(config);
 
-		await updateBtsConfig(projectDir, { webDeploy: input.webDeploy });
+		await updateBtsConfig(projectDir, {
+			webDeploy: input.webDeploy || config.webDeploy,
+			serverDeploy: input.serverDeploy || config.serverDeploy,
+		});
 
 		if (config.install) {
 			await installDependencies({

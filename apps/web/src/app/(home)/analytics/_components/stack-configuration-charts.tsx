@@ -78,7 +78,7 @@ export function StackConfigurationCharts({
 				<div className="border-border border-b px-4 py-3">
 					<div className="flex items-center gap-2">
 						<span className="text-primary text-xs">▶</span>
-						<span className=" font-semibold text-sm">
+						<span className="font-semibold text-sm">
 							POPULAR_STACK_COMBINATIONS.BAR
 						</span>
 					</div>
@@ -95,7 +95,7 @@ export function StackConfigurationCharts({
 								tickLine={false}
 								tickMargin={10}
 								axisLine={false}
-								className=" text-xs"
+								className="text-xs"
 							/>
 							<YAxis hide />
 							<ChartTooltip content={<ChartTooltipContent />} />
@@ -109,7 +109,7 @@ export function StackConfigurationCharts({
 				<div className="border-border border-b px-4 py-3">
 					<div className="flex items-center gap-2">
 						<span className="text-primary text-xs">▶</span>
-						<span className=" font-semibold text-sm">
+						<span className="font-semibold text-sm">
 							FRONTEND_FRAMEWORKS.BAR
 						</span>
 					</div>
@@ -126,7 +126,7 @@ export function StackConfigurationCharts({
 								tickLine={false}
 								tickMargin={10}
 								axisLine={false}
-								className=" text-xs"
+								className="text-xs"
 							/>
 							<YAxis hide />
 							<ChartTooltip content={<ChartTooltipContent />} />
@@ -168,7 +168,7 @@ export function StackConfigurationCharts({
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center gap-2">
 							<span className="text-primary text-xs">▶</span>
-							<span className=" font-semibold text-sm">
+							<span className="font-semibold text-sm">
 								BACKEND_FRAMEWORKS.BAR
 							</span>
 						</div>
@@ -219,7 +219,7 @@ export function StackConfigurationCharts({
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center gap-2">
 							<span className="text-primary text-xs">▶</span>
-							<span className=" font-semibold text-sm">
+							<span className="font-semibold text-sm">
 								DATABASE_DISTRIBUTION.BAR
 							</span>
 						</div>
@@ -269,7 +269,7 @@ export function StackConfigurationCharts({
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center gap-2">
 							<span className="text-primary text-xs">▶</span>
-							<span className=" font-semibold text-sm">
+							<span className="font-semibold text-sm">
 								ORM_DISTRIBUTION.BAR
 							</span>
 						</div>
@@ -314,7 +314,7 @@ export function StackConfigurationCharts({
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center gap-2">
 							<span className="text-primary text-xs">▶</span>
-							<span className=" font-semibold text-sm">
+							<span className="font-semibold text-sm">
 								DATABASE_HOSTING.BAR
 							</span>
 						</div>
@@ -363,7 +363,7 @@ export function StackConfigurationCharts({
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center gap-2">
 							<span className="text-primary text-xs">▶</span>
-							<span className=" font-semibold text-sm">API_LAYER.PIE</span>
+							<span className="font-semibold text-sm">API_LAYER.PIE</span>
 						</div>
 						<p className="mt-1 text-muted-foreground text-xs">
 							API layer technology distribution
@@ -406,7 +406,7 @@ export function StackConfigurationCharts({
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center gap-2">
 							<span className="text-primary text-xs">▶</span>
-							<span className=" font-semibold text-sm">AUTH_ADOPTION.PIE</span>
+							<span className="font-semibold text-sm">AUTH_ADOPTION.PIE</span>
 						</div>
 						<p className="mt-1 text-muted-foreground text-xs">
 							Authentication implementation rate
@@ -450,7 +450,7 @@ export function StackConfigurationCharts({
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center gap-2">
 							<span className="text-primary text-xs">▶</span>
-							<span className=" font-semibold text-sm">
+							<span className="font-semibold text-sm">
 								RUNTIME_DISTRIBUTION.PIE
 							</span>
 						</div>
@@ -500,7 +500,7 @@ export function StackConfigurationCharts({
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center gap-2">
 							<span className="text-primary text-xs">▶</span>
-							<span className=" font-semibold text-sm">PROJECT_TYPES.PIE</span>
+							<span className="font-semibold text-sm">PROJECT_TYPES.PIE</span>
 						</div>
 						<p className="mt-1 text-muted-foreground text-xs">
 							Full-stack vs Frontend-only vs Backend-only projects
@@ -552,7 +552,7 @@ export function StackConfigurationCharts({
 				<div className="border-border border-b px-4 py-3">
 					<div className="flex items-center gap-2">
 						<span className="text-primary text-xs">▶</span>
-						<span className=" font-semibold text-sm">
+						<span className="font-semibold text-sm">
 							DATABASE_ORM_COMBINATIONS.BAR
 						</span>
 					</div>
@@ -569,7 +569,7 @@ export function StackConfigurationCharts({
 								tickLine={false}
 								tickMargin={10}
 								axisLine={false}
-								className=" text-xs"
+								className="text-xs"
 							/>
 							<YAxis hide />
 							<ChartTooltip content={<ChartTooltipContent />} />
