@@ -4,7 +4,9 @@
       "npm",
       {
         "forcePublish": false,
-        "subPackageChangelogs": true
+        "subPackageChangelogs": true,
+        "exact": true,
+        "monorepoChangelog": true
       }
     ],
     "all-contributors",
@@ -17,12 +19,23 @@
   "name": "Aman Varshney",
   "email": "amanvarshney.work@gmail.com",
   "baseBranch": "main",
+  "prereleaseBranches": ["next"],
+  "next": {
+    "message": "🎉 This PR is included in version %NEXT_PATCH_VERSION% of this package. The release is available on [npm](https://www.npmjs.com/package/create-better-t-stack)!"
+  },
   "labels": [
     {
       "name": "skip-release",
       "changelogTitle": "⚠️ Pushed to `main`",
       "description": "Skip a release and only update the changelog",
       "releaseType": "skip"
+    },
+    {
+      "name": "cli",
+      "changelogTitle": "🛠️ CLI Changes",
+      "description": "Changes to the CLI tool",
+      "releaseType": "patch",
+      "color": "#0366d6"
     }
   ]
 }
