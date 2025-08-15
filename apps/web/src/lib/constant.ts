@@ -247,6 +247,13 @@ export const TECH_OPTIONS: Record<
 			color: "from-green-400 to-green-600",
 		},
 		{
+			id: "singlestore",
+			name: "SingleStore",
+			description: "High-performance distributed SQL database",
+			icon: `${ICON_BASE_URL}/singlestore.svg`,
+			color: "from-purple-500 to-purple-700",
+		},
+		{
 			id: "none",
 			name: "No Database",
 			description: "Skip database integration",
@@ -327,6 +334,13 @@ export const TECH_OPTIONS: Record<
 			description: "Local Supabase stack (requires Docker)",
 			icon: `${ICON_BASE_URL}/supabase.svg`,
 			color: "from-emerald-400 to-emerald-600",
+		},
+		{
+			id: "singlestore-helios",
+			name: "SingleStore Helios",
+			description: "Cloud SingleStore database on Helios",
+			icon: `${ICON_BASE_URL}/singlestore.svg`,
+			color: "from-purple-500 to-purple-700",
 		},
 		{
 			id: "docker",
