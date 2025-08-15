@@ -36,9 +36,9 @@ Follow the prompts to configure your project or use the `--yes` flag for default
 | **Backend**              | • Hono<br>• Express<br>• Elysia<br>• Next.js API routes<br>• Convex<br>• Fastify<br>• None                                                                                                                                                                 |
 | **API Layer**            | • tRPC (type-safe APIs)<br>• oRPC (OpenAPI-compatible type-safe APIs)<br>• None                                                                                                                                                                            |
 | **Runtime**              | • Bun<br>• Node.js<br>• Cloudflare Workers<br>• None                                                                                                                                                                                                       |
-| **Database**             | • SQLite<br>• PostgreSQL<br>• MySQL<br>• MongoDB<br>• None                                                                                                                                                                                                 |
+| **Database**             | • SQLite<br>• PostgreSQL<br>• MySQL<br>• MongoDB<br>• SingleStore<br>• None                                                                                                                                                                                |
 | **ORM**                  | • Drizzle (TypeScript-first)<br>• Prisma (feature-rich)<br>• Mongoose (for MongoDB)<br>• None                                                                                                                                                              |
-| **Database Setup**       | • Turso (SQLite)<br>• Cloudflare D1 (SQLite)<br>• Neon (PostgreSQL)<br>• Supabase (PostgreSQL)<br>• Prisma Postgres (via Prisma Accelerate)<br>• MongoDB Atlas<br>• None (manual setup)                                                                    |
+| **Database Setup**       | • Turso (SQLite)<br>• Cloudflare D1 (SQLite)<br>• Neon (PostgreSQL)<br>• Supabase (PostgreSQL)<br>• Prisma Postgres (via Prisma Accelerate)<br>• MongoDB Atlas<br>• SingleStore Helios (SingleStore)<br>• None (manual setup)                          |
 | **Authentication**       | Better-Auth (email/password, with more options coming soon)                                                                                                                                                                                                |
 | **Styling**              | Tailwind CSS with shadcn/ui components                                                                                                                                                                                                                     |
 | **Addons**               | • PWA support<br>• Tauri (desktop applications)<br>• Starlight (documentation site)<br>• Biome (linting and formatting)<br>• Husky (Git hooks)<br>• Turborepo (optimized builds)                                                                           |
@@ -53,7 +53,7 @@ Usage: create-better-t-stack [project-directory] [options]
 Options:
   -V, --version                   Output the version number
   -y, --yes                       Use default configuration
-  --database <type>               Database type (none, sqlite, postgres, mysql, mongodb)
+  --database <type>               Database type (none, sqlite, postgres, mysql, mongodb, singlestore)
   --orm <type>                    ORM type (none, drizzle, prisma, mongoose)
   --auth                          Include authentication
   --no-auth                       Exclude authentication
@@ -65,7 +65,7 @@ Options:
   --package-manager <pm>          Package manager (npm, pnpm, bun)
   --install                       Install dependencies
   --no-install                    Skip installing dependencies
-  --db-setup <setup>              Database setup (turso, d1, neon, supabase, prisma-postgres, mongodb-atlas, docker, none)
+  --db-setup <setup>              Database setup (turso, d1, neon, supabase, prisma-postgres, mongodb-atlas, singlestore-helios, docker, none)
   --web-deploy <setup>            Web deployment (workers, none)
   --backend <framework>           Backend framework (hono, express, elysia, next, convex, fastify, none)
   --runtime <runtime>             Runtime (bun, node, workers, none)
@@ -173,6 +173,11 @@ Create a Cloudflare Workers project:
 
 ```bash
 npx create-better-t-stack my-app --backend hono --runtime workers --database sqlite --orm drizzle --db-setup d1
+
+Create a SingleStore project with Helios cloud setup:
+
+```bash
+npx create-better-t-stack my-app --backend hono --runtime node --database singlestore --orm drizzle --db-setup singlestore-helios --api trpc
 ```
 
 Create a minimal API-only project:
@@ -191,6 +196,7 @@ npx create-better-t-stack my-app --frontend none --backend hono --api trpc --dat
 - **ORM 'none'**: Can be used when you want to handle database operations manually or use a different ORM.
 - **Runtime 'none'**: Only available with Convex backend or when backend is 'none'.
 - **Cloudflare Workers runtime**: Only compatible with Hono backend, Drizzle ORM (or no ORM), and SQLite database (with D1 setup). Not compatible with MongoDB.
+- **SingleStore database**: Only compatible with Drizzle ORM. Automatically sets database setup to SingleStore Helios (cloud).
 - **Addons 'none'**: Skips all addons (PWA, Tauri, Starlight, Biome, Husky, Turborepo).
 - **Examples 'none'**: Skips all example implementations (todo, AI chat).
 - **SvelteKit, Nuxt, and SolidJS** frontends are only compatible with oRPC API layer
