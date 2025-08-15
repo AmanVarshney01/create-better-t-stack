@@ -44,7 +44,7 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 			break;
 		case "ruler":
 			label = "Ruler";
-			hint = "Install and apply BTS rules to editors";
+			hint = "Centralize your AI rules";
 			break;
 		case "husky":
 			label = "Husky";
