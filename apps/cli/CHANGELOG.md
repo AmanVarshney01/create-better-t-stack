@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.33.8
+
+### Patch Changes
+
+- 4790cb8: optimize oRPC client dependencies by removing server dependency
+
 ## 2.33.7
 
 ### Patch Changes
