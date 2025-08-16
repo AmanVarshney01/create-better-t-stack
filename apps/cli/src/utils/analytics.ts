@@ -5,13 +5,19 @@ import { isTelemetryEnabled } from "./telemetry";
 const POSTHOG_API_KEY = process.env.POSTHOG_API_KEY || "";
 const POSTHOG_HOST = process.env.POSTHOG_HOST;
 
+function generateSessionId() {
+	const rand = Math.random().toString(36).slice(2);
+	const now = Date.now().toString(36);
+	return `cli_${now}${rand}`;
+}
+
 export async function trackProjectCreation(
 	config: ProjectConfig,
 	disableAnalytics = false,
 ) {
 	if (!isTelemetryEnabled() || disableAnalytics) return;
 
-	const sessionId = `cli_${crypto.randomUUID().replace(/-/g, "")}`;
+	const sessionId = generateSessionId();
 	// biome-ignore lint/correctness/noUnusedVariables: `projectName`, `projectDir`, and `relativePath` are not used in the event properties
 	const { projectName, projectDir, relativePath, ...safeConfig } = config;
 
@@ -21,8 +27,8 @@ export async function trackProjectCreation(
 		properties: {
 			...safeConfig,
 			cli_version: getLatestCLIVersion(),
-			node_version: process.version,
-			platform: process.platform,
+			node_version: typeof process !== "undefined" ? process.version : "",
+			platform: typeof process !== "undefined" ? process.platform : "",
 			$ip: null,
 		},
 		distinct_id: sessionId,

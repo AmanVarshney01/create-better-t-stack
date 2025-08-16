@@ -8,9 +8,9 @@ import {
 	type PropertyAssignment,
 	SyntaxKind,
 } from "ts-morph";
-import type { PackageManager } from "../../types";
-import { addPackageDependency } from "../../utils/add-package-deps";
-import { tsProject } from "../../utils/ts-morph";
+import type { PackageManager } from "../../../types";
+import { addPackageDependency } from "../../../utils/add-package-deps";
+import { tsProject } from "../../../utils/ts-morph";
 
 export async function setupNuxtWorkersDeploy(
 	projectDir: string,

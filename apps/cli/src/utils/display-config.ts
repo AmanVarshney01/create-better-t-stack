@@ -107,6 +107,12 @@ export function displayConfig(config: Partial<ProjectConfig>) {
 		);
 	}
 
+	if (config.serverDeploy !== undefined) {
+		configDisplay.push(
+			`${pc.blue("Server Deployment:")} ${String(config.serverDeploy)}`,
+		);
+	}
+
 	if (configDisplay.length === 0) {
 		return pc.yellow("No configuration selected.");
 	}

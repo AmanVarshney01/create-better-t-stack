@@ -1,0 +1,22 @@
+///
+<reference types="@types/node" />
+
+import alchemy from "alchemy";
+import { Nuxt } from "alchemy/cloudflare";
+
+const app = await alchemy("{{projectName}}");
+
+export const website = await Nuxt("website", {
+name: `${app.name}-${app.stage}-website`,
+// replace if different from default:
+//
+// main: "./.output/server/index.mjs",
+// command: "nuxt build",
+// dev: { command: "nuxt dev" },
+});
+
+console.log({
+url: website.url,
+});
+
+await app.finalize();

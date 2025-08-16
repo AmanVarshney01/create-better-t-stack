@@ -124,7 +124,7 @@ export const dependencyVersionMap = {
 	"nitro-cloudflare-dev": "^0.2.2",
 	"@sveltejs/adapter-cloudflare": "^7.0.4",
 
-	"@alchemy/cli": "^1.0.0",
+	alchemy: "^0.62.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

@@ -1,0 +1,23 @@
+///
+<reference types="@types/node" />
+
+import alchemy from "alchemy";
+import { Vite } from "alchemy/cloudflare";
+
+const app = await alchemy("{{projectName}}");
+
+export const website = await Vite("website", {
+name: `${app.name}-${app.stage}-website`,
+// replace if different from default:
+//
+// main: "./dist/server/index.js",
+// command: "vite build",
+// dev: { command: "vite dev" },
+assets: "dist"
+});
+
+console.log({
+url: website.url,
+});
+
+await app.finalize();

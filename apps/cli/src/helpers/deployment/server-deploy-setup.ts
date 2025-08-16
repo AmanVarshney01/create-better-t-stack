@@ -46,9 +46,27 @@ async function setupWorkersServerDeploy(
 }
 
 async function setupAlchemyServerDeploy(
-	_serverDir: string,
+	serverDir: string,
 	_packageManager: PackageManager,
 ) {
-	// no-op; user will handle Alchemy server deployment setup
-	return;
+	if (!(await fs.pathExists(serverDir))) return;
+
+	await addPackageDependency({
+		devDependencies: ["alchemy"],
+		projectDir: serverDir,
+	});
+
+	const packageJsonPath = path.join(serverDir, "package.json");
+	if (await fs.pathExists(packageJsonPath)) {
+		const packageJson = await fs.readJson(packageJsonPath);
+
+		packageJson.scripts = {
+			...packageJson.scripts,
+			deploy: "alchemy deploy",
+			destroy: "alchemy destroy",
+			"alchemy:dev": "alchemy dev",
+		};
+
+		await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+	}
 }
