@@ -9,18 +9,25 @@ import { setupSolidAlchemyDeploy } from "./alchemy/alchemy-solid-setup";
 import { setupSvelteAlchemyDeploy } from "./alchemy/alchemy-svelte-setup";
 import { setupTanStackRouterAlchemyDeploy } from "./alchemy/alchemy-tanstack-router-setup";
 import { setupTanStackStartAlchemyDeploy } from "./alchemy/alchemy-tanstack-start-setup";
+import { setupCombinedAlchemyDeploy } from "./alchemy/alchemy-combined-setup";
 import { setupNuxtWorkersDeploy } from "./workers/workers-nuxt-setup";
 import { setupSvelteWorkersDeploy } from "./workers/workers-svelte-setup";
 import { setupTanstackStartWorkersDeploy } from "./workers/workers-tanstack-start-setup";
 import { setupWorkersVitePlugin } from "./workers/workers-vite-setup";
 
 export async function setupWebDeploy(config: ProjectConfig) {
-	const { webDeploy, frontend, projectDir } = config;
+	const { webDeploy, serverDeploy, frontend, projectDir } = config;
 	const { packageManager } = config;
 
 	if (webDeploy === "none") return;
 
 	if (webDeploy !== "workers" && webDeploy !== "alchemy") return;
+
+	// If both web and server use alchemy, handle combined setup
+	if (webDeploy === "alchemy" && serverDeploy === "alchemy") {
+		await setupCombinedAlchemyDeploy(projectDir, packageManager);
+		return;
+	}
 
 	const isNext = frontend.includes("next");
 	const isNuxt = frontend.includes("nuxt");

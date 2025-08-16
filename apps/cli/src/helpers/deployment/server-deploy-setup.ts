@@ -4,10 +4,16 @@ import type { PackageManager, ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 
 export async function setupServerDeploy(config: ProjectConfig) {
-	const { serverDeploy, projectDir } = config;
+	const { serverDeploy, webDeploy, projectDir } = config;
 	const { packageManager } = config;
 
 	if (serverDeploy === "none") return;
+
+	// Skip individual server alchemy setup if both web and server use alchemy
+	// (handled by combined setup in web-deploy-setup.ts)
+	if (serverDeploy === "alchemy" && webDeploy === "alchemy") {
+		return;
+	}
 
 	const serverDir = path.join(projectDir, "apps/server");
 	if (!(await fs.pathExists(serverDir))) return;

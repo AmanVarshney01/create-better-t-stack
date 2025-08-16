@@ -5,6 +5,8 @@
 .nitro
 .cache
 dist
+.wrangler
+.alchemy
 
 # Node dependencies
 node_modules
@@ -22,3 +24,4 @@ logs
 .env
 .env.*
 !.env.example
+

@@ -814,7 +814,60 @@ export async function setupDeploymentTemplates(
 	projectDir: string,
 	context: ProjectConfig,
 ) {
-	if (context.webDeploy !== "none") {
+	if (context.webDeploy === "alchemy" || context.serverDeploy === "alchemy") {
+		if (context.webDeploy === "alchemy" && context.serverDeploy === "alchemy") {
+			const alchemyTemplateSrc = path.join(
+				PKG_ROOT,
+				"templates/deploy/alchemy",
+			);
+			if (await fs.pathExists(alchemyTemplateSrc)) {
+				await processAndCopyFiles(
+					"**/*",
+					alchemyTemplateSrc,
+					projectDir,
+					context,
+				);
+			}
+		} else {
+			if (context.webDeploy === "alchemy") {
+				const webAppDir = path.join(projectDir, "apps/web");
+				if (await fs.pathExists(webAppDir)) {
+					const alchemyTemplateSrc = path.join(
+						PKG_ROOT,
+						"templates/deploy/alchemy",
+					);
+					if (await fs.pathExists(alchemyTemplateSrc)) {
+						await processAndCopyFiles(
+							"**/*",
+							alchemyTemplateSrc,
+							webAppDir,
+							context,
+						);
+					}
+				}
+			}
+
+			if (context.serverDeploy === "alchemy") {
+				const serverAppDir = path.join(projectDir, "apps/server");
+				if (await fs.pathExists(serverAppDir)) {
+					const alchemyTemplateSrc = path.join(
+						PKG_ROOT,
+						"templates/deploy/alchemy",
+					);
+					if (await fs.pathExists(alchemyTemplateSrc)) {
+						await processAndCopyFiles(
+							"**/*",
+							alchemyTemplateSrc,
+							serverAppDir,
+							context,
+						);
+					}
+				}
+			}
+		}
+	}
+
+	if (context.webDeploy !== "none" && context.webDeploy !== "alchemy") {
 		const webAppDir = path.join(projectDir, "apps/web");
 		if (await fs.pathExists(webAppDir)) {
 			const frontends = context.frontend;
@@ -833,7 +886,7 @@ export async function setupDeploymentTemplates(
 				if (templateMap[f]) {
 					const deployTemplateSrc = path.join(
 						PKG_ROOT,
-						`templates/deploy/web/${context.webDeploy}/${templateMap[f]}`,
+						`templates/deploy/${context.webDeploy}/web/${templateMap[f]}`,
 					);
 					if (await fs.pathExists(deployTemplateSrc)) {
 						await processAndCopyFiles(
@@ -848,12 +901,12 @@ export async function setupDeploymentTemplates(
 		}
 	}
 
-	if (context.serverDeploy !== "none") {
+	if (context.serverDeploy !== "none" && context.serverDeploy !== "alchemy") {
 		const serverAppDir = path.join(projectDir, "apps/server");
 		if (await fs.pathExists(serverAppDir)) {
 			const deployTemplateSrc = path.join(
 				PKG_ROOT,
-				`templates/deploy/server/${context.serverDeploy}`,
+				`templates/deploy/${context.serverDeploy}/server`,
 			);
 			if (await fs.pathExists(deployTemplateSrc)) {
 				await processAndCopyFiles(
