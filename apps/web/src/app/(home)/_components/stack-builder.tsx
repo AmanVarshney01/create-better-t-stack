@@ -412,7 +412,8 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 				changed = true;
 				changes.push({
 					category: "database",
-					message: "DB Setup set to 'SingleStore Helios' (recommended for SingleStore)",
+					message:
+						"DB Setup set to 'SingleStore Helios' (recommended for SingleStore)",
 				});
 			}
 		} else {
@@ -551,7 +552,9 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 				}
 			} else if (nextStack.dbSetup === "singlestore-helios") {
 				if (nextStack.database !== "singlestore") {
-					notes.dbSetup.notes.push("Requires SingleStore. It will be selected.");
+					notes.dbSetup.notes.push(
+						"Requires SingleStore. It will be selected.",
+					);
 					notes.database.notes.push(
 						"SingleStore Helios setup requires SingleStore. It will be selected.",
 					);
@@ -734,7 +737,6 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 							"Database set to 'SQLite' (MongoDB not compatible with Workers)",
 					});
 				}
-
 
 				if (nextStack.dbSetup === "docker") {
 					notes.runtime.notes.push(
@@ -1707,35 +1709,52 @@ const StackBuilder = () => {
 									// Filter ORM options based on database selection
 									if (categoryKey === "orm") {
 										if (stack.database === "mongodb") {
-											return option.id === "prisma" || option.id === "mongoose" || option.id === "none";
+											return (
+												option.id === "prisma" ||
+												option.id === "mongoose" ||
+												option.id === "none"
+											);
 										}
 										if (stack.database === "singlestore") {
 											return option.id === "drizzle" || option.id === "none";
 										}
 									}
-									
+
 									// Filter dbSetup options based on database selection
 									if (categoryKey === "dbSetup") {
 										if (stack.database === "singlestore") {
-											return option.id === "singlestore-helios" || option.id === "none";
+											return (
+												option.id === "singlestore-helios" ||
+												option.id === "none"
+											);
 										}
 										if (stack.database === "sqlite") {
-											return ["turso", "d1", "docker", "none"].includes(option.id);
+											return ["turso", "d1", "docker", "none"].includes(
+												option.id,
+											);
 										}
 										if (stack.database === "postgres") {
-											return ["neon", "supabase", "prisma-postgres", "docker", "none"].includes(option.id);
+											return [
+												"neon",
+												"supabase",
+												"prisma-postgres",
+												"docker",
+												"none",
+											].includes(option.id);
 										}
 										if (stack.database === "mysql") {
 											return ["docker", "none"].includes(option.id);
 										}
 										if (stack.database === "mongodb") {
-											return ["mongodb-atlas", "docker", "none"].includes(option.id);
+											return ["mongodb-atlas", "docker", "none"].includes(
+												option.id,
+											);
 										}
 										if (stack.database === "none") {
 											return option.id === "none";
 										}
 									}
-									
+
 									return true;
 								});
 

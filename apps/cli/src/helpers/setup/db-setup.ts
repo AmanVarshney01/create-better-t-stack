@@ -10,9 +10,9 @@ import { setupDockerCompose } from "../database-providers/docker-compose-setup";
 import { setupMongoDBAtlas } from "../database-providers/mongodb-atlas-setup";
 import { setupNeonPostgres } from "../database-providers/neon-setup";
 import { setupPrismaPostgres } from "../database-providers/prisma-postgres-setup";
+import { setupSingleStoreHelios } from "../database-providers/singlestore-helios-setup";
 import { setupSupabase } from "../database-providers/supabase-setup";
 import { setupTurso } from "../database-providers/turso-setup";
-import { setupSingleStoreHelios } from "../database-providers/singlestore-helios-setup";
 
 export async function setupDatabase(config: ProjectConfig) {
 	const { database, orm, dbSetup, backend, projectDir } = config;

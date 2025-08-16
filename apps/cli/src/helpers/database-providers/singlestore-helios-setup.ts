@@ -12,13 +12,18 @@ type SingleStoreHeliosConfig = {
 	connectionString: string;
 };
 
-async function writeEnvFile(projectDir: string, config?: SingleStoreHeliosConfig) {
+async function writeEnvFile(
+	projectDir: string,
+	config?: SingleStoreHeliosConfig,
+) {
 	try {
 		const envPath = path.join(projectDir, "apps/server", ".env");
 		const variables: EnvVariable[] = [
 			{
 				key: "DATABASE_URL",
-				value: config?.connectionString ?? "singlestore://username:password@host:port/database?ssl=require",
+				value:
+					config?.connectionString ??
+					"singlestore://username:password@host:port/database?ssl=require",
 				condition: true,
 			},
 		];
@@ -59,13 +64,14 @@ export async function setupSingleStoreHelios(config: ProjectConfig) {
 		// For now, we'll create a default .env with placeholder values
 		// In the future, this could integrate with SingleStore CLI if available
 		await writeEnvFile(projectDir);
-		
+
 		log.success(
-			pc.green("SingleStore Helios setup complete! Please update the connection string in .env file.")
+			pc.green(
+				"SingleStore Helios setup complete! Please update the connection string in .env file.",
+			),
 		);
-		
+
 		displayManualSetupInstructions();
-		
 	} catch (error) {
 		log.error(pc.red("SingleStore Helios setup failed"));
 		if (error instanceof Error) {
