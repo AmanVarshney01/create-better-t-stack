@@ -1,18 +1,6 @@
-{{#if (or (eq runtime "bun") (eq runtime "node"))}}
 import mysql from "mysql2/promise";
 import { drizzle } from "drizzle-orm/singlestore";
 
 const pool = mysql.createPool(process.env.DATABASE_URL || "");
 
 export const db = drizzle({ client: pool });
-{{/if}}
-
-{{#if (eq runtime "workers")}}
-import mysql from "mysql2/promise";
-import { drizzle } from "drizzle-orm/singlestore";
-import { env } from "cloudflare:workers";
-
-const pool = mysql.createPool(env.DATABASE_URL || "");
-
-export const db = drizzle({ client: pool });
-{{/if}}

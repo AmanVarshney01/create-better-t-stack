@@ -738,6 +738,24 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 					});
 				}
 
+				if (nextStack.database === "singlestore") {
+					notes.runtime.notes.push(
+						"Cloudflare Workers runtime is not compatible with SingleStore. SQLite will be selected.",
+					);
+					notes.database.notes.push(
+						"SingleStore is not compatible with Cloudflare Workers runtime. SQLite will be selected.",
+					);
+					notes.runtime.hasIssue = true;
+					notes.database.hasIssue = true;
+					nextStack.database = "sqlite";
+					changed = true;
+					changes.push({
+						category: "runtime",
+						message:
+							"Database set to 'SQLite' (SingleStore not compatible with Workers)",
+					});
+				}
+
 				if (nextStack.dbSetup === "docker") {
 					notes.runtime.notes.push(
 						"Cloudflare Workers runtime does not support Docker setup. D1 will be selected.",
