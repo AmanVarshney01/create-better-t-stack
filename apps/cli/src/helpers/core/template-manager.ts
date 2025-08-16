@@ -788,19 +788,6 @@ export async function handleExtras(projectDir: string, context: ProjectConfig) {
 			await processAndCopyFiles("_npmrc.hbs", extrasDir, projectDir, context);
 		}
 	}
-
-	if (context.runtime === "workers") {
-		const runtimeWorkersDir = path.join(PKG_ROOT, "templates/runtime/workers");
-		if (await fs.pathExists(runtimeWorkersDir)) {
-			await processAndCopyFiles(
-				"**/*",
-				runtimeWorkersDir,
-				projectDir,
-				context,
-				false,
-			);
-		}
-	}
 }
 
 export async function setupDockerComposeTemplates(
@@ -827,42 +814,54 @@ export async function setupDeploymentTemplates(
 	projectDir: string,
 	context: ProjectConfig,
 ) {
-	if (context.webDeploy === "none") {
-		return;
+	if (context.webDeploy !== "none") {
+		const webAppDir = path.join(projectDir, "apps/web");
+		if (await fs.pathExists(webAppDir)) {
+			const frontends = context.frontend;
+
+			const templateMap: Record<string, string> = {
+				"tanstack-router": "react/tanstack-router",
+				"tanstack-start": "react/tanstack-start",
+				"react-router": "react/react-router",
+				solid: "solid",
+				next: "react/next",
+				nuxt: "nuxt",
+				svelte: "svelte",
+			};
+
+			for (const f of frontends) {
+				if (templateMap[f]) {
+					const deployTemplateSrc = path.join(
+						PKG_ROOT,
+						`templates/deploy/web/${context.webDeploy}/${templateMap[f]}`,
+					);
+					if (await fs.pathExists(deployTemplateSrc)) {
+						await processAndCopyFiles(
+							"**/*",
+							deployTemplateSrc,
+							webAppDir,
+							context,
+						);
+					}
+				}
+			}
+		}
 	}
 
-	if (context.webDeploy === "workers") {
-		const webAppDir = path.join(projectDir, "apps/web");
-		if (!(await fs.pathExists(webAppDir))) {
-			return;
-		}
-
-		const frontends = context.frontend;
-
-		const templateMap: Record<string, string> = {
-			"tanstack-router": "react/tanstack-router",
-			"tanstack-start": "react/tanstack-start",
-			"react-router": "react/react-router",
-			solid: "solid",
-			next: "react/next",
-			nuxt: "nuxt",
-			svelte: "svelte",
-		};
-
-		for (const f of frontends) {
-			if (templateMap[f]) {
-				const deployTemplateSrc = path.join(
-					PKG_ROOT,
-					`templates/deploy/web/${templateMap[f]}`,
+	if (context.serverDeploy !== "none") {
+		const serverAppDir = path.join(projectDir, "apps/server");
+		if (await fs.pathExists(serverAppDir)) {
+			const deployTemplateSrc = path.join(
+				PKG_ROOT,
+				`templates/deploy/server/${context.serverDeploy}`,
+			);
+			if (await fs.pathExists(deployTemplateSrc)) {
+				await processAndCopyFiles(
+					"**/*",
+					deployTemplateSrc,
+					serverAppDir,
+					context,
 				);
-				if (await fs.pathExists(deployTemplateSrc)) {
-					await processAndCopyFiles(
-						"**/*",
-						deployTemplateSrc,
-						webAppDir,
-						context,
-					);
-				}
 			}
 		}
 	}

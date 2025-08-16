@@ -1,0 +1,30 @@
+import path from "node:path";
+import fs from "fs-extra";
+import type { PackageManager } from "../../../types";
+import { addPackageDependency } from "../../../utils/add-package-deps";
+
+export async function setupSolidAlchemyDeploy(
+	projectDir: string,
+	_packageManager: PackageManager,
+) {
+	const webAppDir = path.join(projectDir, "apps/web");
+	if (!(await fs.pathExists(webAppDir))) return;
+
+	await addPackageDependency({
+		devDependencies: ["alchemy", "@cloudflare/vite-plugin"],
+		projectDir: webAppDir,
+	});
+
+	const pkgPath = path.join(webAppDir, "package.json");
+	if (await fs.pathExists(pkgPath)) {
+		const pkg = await fs.readJson(pkgPath);
+
+		pkg.scripts = {
+			...pkg.scripts,
+			deploy: "alchemy deploy",
+			destroy: "alchemy destroy",
+			"alchemy:dev": "alchemy dev",
+		};
+		await fs.writeJson(pkgPath, pkg, { spaces: 2 });
+	}
+}

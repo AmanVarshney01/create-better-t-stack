@@ -1,9 +1,6 @@
 import path from "node:path";
 import type { ProjectConfig } from "../../types";
-import {
-	addEnvVariablesToFile,
-	type EnvVariable,
-} from "../core/env-setup";
+import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
 
 export async function setupCloudflareD1(config: ProjectConfig) {
 	const { projectDir } = config;
