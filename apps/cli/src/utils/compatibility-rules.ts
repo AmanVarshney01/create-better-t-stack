@@ -163,7 +163,7 @@ export function validateSingleStoreCompatibility(
 		config.orm !== "drizzle"
 	) {
 		exitWithError(
-			`SingleStore database is only compatible with Drizzle ORM. Current ORM: ${config.orm}. Please use '--orm drizzle' or choose a different database.`,
+			`SingleStore database requires Drizzle ORM. Current ORM: ${config.orm}. Please use '--orm drizzle' or choose a different database.`,
 		);
 	}
 
@@ -174,7 +174,7 @@ export function validateSingleStoreCompatibility(
 		config.database === "singlestore"
 	) {
 		exitWithError(
-			`ORM '${config.orm}' is not compatible with SingleStore database. SingleStore only supports Drizzle ORM. Please use '--orm drizzle' or choose a different database.`,
+			`ORM '${config.orm}' is not compatible with SingleStore database. SingleStore requires Drizzle ORM. Please use '--orm drizzle' or choose a different database.`,
 		);
 	}
 

@@ -338,7 +338,7 @@ export const TECH_OPTIONS: Record<
 		{
 			id: "singlestore-helios",
 			name: "SingleStore Helios",
-			description: "Cloud SingleStore database on Helios",
+			description: "Cloud-hosted SingleStore database on Helios",
 			icon: `${ICON_BASE_URL}/singlestore.svg`,
 			color: "from-purple-500 to-purple-700",
 		},

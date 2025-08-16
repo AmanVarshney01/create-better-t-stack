@@ -1733,16 +1733,13 @@ const StackBuilder = () => {
 											);
 										}
 										if (stack.database === "singlestore") {
-											return option.id === "drizzle" || option.id === "none";
+											return option.id === "drizzle";
 										}
 									}
 
 									if (categoryKey === "dbSetup") {
 										if (stack.database === "singlestore") {
-											return (
-												option.id === "singlestore-helios" ||
-												option.id === "none"
-											);
+											return option.id === "singlestore-helios";
 										}
 										if (stack.database === "sqlite") {
 											return ["turso", "d1", "docker", "none"].includes(
