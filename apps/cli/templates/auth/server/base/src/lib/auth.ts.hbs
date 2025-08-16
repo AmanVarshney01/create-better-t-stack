@@ -21,6 +21,13 @@ export const auth = betterAuth({
   ],
   emailAndPassword: {
     enabled: true,
+  },
+  advanced: {
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+      httpOnly: true,
+    },
   }
   {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
   , plugins: [expo()]
@@ -54,8 +61,13 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  secret: process.env.BETTER_AUTH_SECRET,
-  baseURL: process.env.BETTER_AUTH_URL,
+  advanced: {
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+      httpOnly: true,
+    },
+  },
   {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
   plugins: [expo()],
   {{/if}}
@@ -73,7 +85,7 @@ import * as schema from "../db/schema/auth";
 import { env } from "cloudflare:workers";
 
 export const auth = betterAuth({
-   database: drizzleAdapter(db, {
+  database: drizzleAdapter(db, {
     {{#if (eq database "postgres")}}provider: "pg",{{/if}}
     {{#if (eq database "sqlite")}}provider: "sqlite",{{/if}}
     {{#if (eq database "mysql")}}provider: "mysql",{{/if}}
@@ -85,6 +97,13 @@ export const auth = betterAuth({
   },
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,
+  advanced: {
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+      httpOnly: true,
+    },
+  },
   {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
   plugins: [expo()],
   {{/if}}
@@ -110,6 +129,13 @@ export const auth = betterAuth({
   ],
   emailAndPassword: {
     enabled: true,
+  },
+  advanced: {
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+      httpOnly: true,
+    },
   }
   {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
   , plugins: [expo()]
@@ -133,6 +159,13 @@ export const auth = betterAuth({
   ],
   emailAndPassword: {
     enabled: true,
+  },
+  advanced: {
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+      httpOnly: true,
+    },
   }
   {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
   , plugins: [expo()]
