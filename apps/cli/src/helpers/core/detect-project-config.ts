@@ -24,6 +24,7 @@ export async function detectProjectConfig(
 				dbSetup: btsConfig.dbSetup,
 				api: btsConfig.api,
 				webDeploy: btsConfig.webDeploy,
+				serverDeploy: btsConfig.serverDeploy,
 			};
 		}
 

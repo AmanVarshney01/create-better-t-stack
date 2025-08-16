@@ -69,8 +69,8 @@ export async function setupTauri(config: ProjectConfig) {
 			`--window-title=${path.basename(projectDir)}`,
 			`--frontend-dist=${frontendDist}`,
 			`--dev-url=${devUrl}`,
-			`--before-dev-command=\"${packageManager} run dev\"`,
-			`--before-build-command=\"${packageManager} run build\"`,
+			`--before-dev-command="${packageManager} run dev"`,
+			`--before-build-command="${packageManager} run build"`,
 		];
 		const tauriArgsString = tauriArgs.join(" ");
 

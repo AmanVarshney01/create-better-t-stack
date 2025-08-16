@@ -70,6 +70,7 @@ const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
 	"orm",
 	"dbSetup",
 	"webDeploy",
+	"serverDeploy",
 	"auth",
 	"packageManager",
 	"addons",
@@ -122,6 +123,7 @@ const getBadgeColors = (category: string): string => {
 			return "border-orange-300 bg-orange-100 text-orange-800 dark:border-orange-700/30 dark:bg-orange-900/30 dark:text-orange-300";
 		case "git":
 		case "webDeploy":
+		case "serverDeploy":
 		case "install":
 			return "border-gray-300 bg-gray-100 text-gray-700 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400";
 		default:
@@ -983,6 +985,13 @@ const generateCommand = (stackState: StackState): string => {
 		!checkDefault("webDeploy", stackState.webDeploy)
 	) {
 		flags.push(`--web-deploy ${stackState.webDeploy}`);
+	}
+
+	if (
+		stackState.serverDeploy &&
+		!checkDefault("serverDeploy", stackState.serverDeploy)
+	) {
+		flags.push(`--server-deploy ${stackState.serverDeploy}`);
 	}
 
 	if (!checkDefault("install", stackState.install)) {

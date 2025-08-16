@@ -54,7 +54,7 @@ export function DevEnvironmentCharts({ data }: DevEnvironmentChartsProps) {
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center gap-2">
 							<span className="text-primary text-xs">▶</span>
-							<span className=" font-semibold text-sm">
+							<span className="font-semibold text-sm">
 								GIT_INITIALIZATION.PIE
 							</span>
 						</div>
@@ -100,9 +100,7 @@ export function DevEnvironmentCharts({ data }: DevEnvironmentChartsProps) {
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center gap-2">
 							<span className="text-primary text-xs">▶</span>
-							<span className=" font-semibold text-sm">
-								PACKAGE_MANAGER.BAR
-							</span>
+							<span className="font-semibold text-sm">PACKAGE_MANAGER.BAR</span>
 						</div>
 						<p className="mt-1 text-muted-foreground text-xs">
 							Package manager usage distribution
@@ -150,7 +148,7 @@ export function DevEnvironmentCharts({ data }: DevEnvironmentChartsProps) {
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center gap-2">
 							<span className="text-primary text-xs">▶</span>
-							<span className=" font-semibold text-sm">
+							<span className="font-semibold text-sm">
 								INSTALL_PREFERENCE.PIE
 							</span>
 						</div>
@@ -196,7 +194,7 @@ export function DevEnvironmentCharts({ data }: DevEnvironmentChartsProps) {
 					<div className="border-border border-b px-4 py-3">
 						<div className="flex items-center gap-2">
 							<span className="text-primary text-xs">▶</span>
-							<span className=" font-semibold text-sm">NODE_VERSIONS.BAR</span>
+							<span className="font-semibold text-sm">NODE_VERSIONS.BAR</span>
 						</div>
 						<p className="mt-1 text-muted-foreground text-xs">
 							Node.js version distribution (major versions)
@@ -214,7 +212,7 @@ export function DevEnvironmentCharts({ data }: DevEnvironmentChartsProps) {
 									tickLine={false}
 									tickMargin={10}
 									axisLine={false}
-									className=" text-xs"
+									className="text-xs"
 								/>
 								<YAxis hide />
 								<ChartTooltip content={<ChartTooltipContent />} />
@@ -229,7 +227,7 @@ export function DevEnvironmentCharts({ data }: DevEnvironmentChartsProps) {
 				<div className="border-border border-b px-4 py-3">
 					<div className="flex items-center gap-2">
 						<span className="text-primary text-xs">▶</span>
-						<span className=" font-semibold text-sm">CLI_VERSIONS.BAR</span>
+						<span className="font-semibold text-sm">CLI_VERSIONS.BAR</span>
 					</div>
 					<p className="mt-1 text-muted-foreground text-xs">
 						CLI version distribution across project creations
@@ -247,7 +245,7 @@ export function DevEnvironmentCharts({ data }: DevEnvironmentChartsProps) {
 								tickLine={false}
 								tickMargin={10}
 								axisLine={false}
-								className=" text-xs"
+								className="text-xs"
 							/>
 							<YAxis hide />
 							<ChartTooltip content={<ChartTooltipContent />} />

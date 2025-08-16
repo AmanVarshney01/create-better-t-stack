@@ -7,6 +7,7 @@ import { DEFAULT_CONFIG } from "../../constants";
 import { getAddonsToAdd } from "../../prompts/addons";
 import { gatherConfig } from "../../prompts/config-prompts";
 import { getProjectName } from "../../prompts/project-name";
+import { getServerDeploymentToAdd } from "../../prompts/server-deploy";
 import { getDeploymentToAdd } from "../../prompts/web-deploy";
 import type {
 	AddInput,
@@ -102,6 +103,7 @@ export async function createProjectHandler(
 				dbSetup: "none",
 				api: "none",
 				webDeploy: "none",
+				serverDeploy: "none",
 			} satisfies ProjectConfig,
 			reproducibleCommand: "",
 			timeScaffolded,
@@ -284,6 +286,17 @@ export async function addAddonsHandler(input: AddInput) {
 			}
 		}
 
+		if (!input.serverDeploy) {
+			const serverDeploymentPrompt = await getServerDeploymentToAdd(
+				detectedConfig.runtime,
+				detectedConfig.serverDeploy,
+			);
+
+			if (serverDeploymentPrompt !== "none") {
+				input.serverDeploy = serverDeploymentPrompt;
+			}
+		}
+
 		const packageManager =
 			input.packageManager || detectedConfig.packageManager || "npm";
 
@@ -305,6 +318,16 @@ export async function addAddonsHandler(input: AddInput) {
 				install: false,
 				suppressInstallMessage: true,
 				webDeploy: input.webDeploy,
+			});
+			somethingAdded = true;
+		}
+
+		if (input.serverDeploy && input.serverDeploy !== "none") {
+			await addDeploymentToProject({
+				...input,
+				install: false,
+				suppressInstallMessage: true,
+				serverDeploy: input.serverDeploy,
 			});
 			somethingAdded = true;
 		}

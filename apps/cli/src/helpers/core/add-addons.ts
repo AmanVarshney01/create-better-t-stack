@@ -5,7 +5,7 @@ import type { AddInput, Addons, ProjectConfig } from "../../types";
 import { validateAddonCompatibility } from "../../utils/addon-compatibility";
 import { updateBtsConfig } from "../../utils/bts-config";
 import { exitWithError } from "../../utils/errors";
-import { setupAddons } from "../setup/addons-setup";
+import { setupAddons } from "../addons/addons-setup";
 import {
 	detectProjectConfig,
 	isBetterTStackProject,
@@ -52,6 +52,7 @@ export async function addAddonsToProject(
 			dbSetup: detectedConfig.dbSetup || "none",
 			api: detectedConfig.api || "none",
 			webDeploy: detectedConfig.webDeploy || "none",
+			serverDeploy: detectedConfig.serverDeploy || "none",
 		};
 
 		for (const addon of input.addons) {

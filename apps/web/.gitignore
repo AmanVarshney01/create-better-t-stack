@@ -15,6 +15,7 @@ public/analytics-minimal.json
 *.tsbuildinfo
 /.open-next/
 /.wrangler/
+.alchemy
 
 # misc
 .DS_Store

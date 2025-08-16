@@ -788,19 +788,6 @@ export async function handleExtras(projectDir: string, context: ProjectConfig) {
 			await processAndCopyFiles("_npmrc.hbs", extrasDir, projectDir, context);
 		}
 	}
-
-	if (context.runtime === "workers") {
-		const runtimeWorkersDir = path.join(PKG_ROOT, "templates/runtime/workers");
-		if (await fs.pathExists(runtimeWorkersDir)) {
-			await processAndCopyFiles(
-				"**/*",
-				runtimeWorkersDir,
-				projectDir,
-				context,
-				false,
-			);
-		}
-	}
 }
 
 export async function setupDockerComposeTemplates(
@@ -827,42 +814,107 @@ export async function setupDeploymentTemplates(
 	projectDir: string,
 	context: ProjectConfig,
 ) {
-	if (context.webDeploy === "none") {
-		return;
+	if (context.webDeploy === "alchemy" || context.serverDeploy === "alchemy") {
+		if (context.webDeploy === "alchemy" && context.serverDeploy === "alchemy") {
+			const alchemyTemplateSrc = path.join(
+				PKG_ROOT,
+				"templates/deploy/alchemy",
+			);
+			if (await fs.pathExists(alchemyTemplateSrc)) {
+				await processAndCopyFiles(
+					"**/*",
+					alchemyTemplateSrc,
+					projectDir,
+					context,
+				);
+			}
+		} else {
+			if (context.webDeploy === "alchemy") {
+				const webAppDir = path.join(projectDir, "apps/web");
+				if (await fs.pathExists(webAppDir)) {
+					const alchemyTemplateSrc = path.join(
+						PKG_ROOT,
+						"templates/deploy/alchemy",
+					);
+					if (await fs.pathExists(alchemyTemplateSrc)) {
+						await processAndCopyFiles(
+							"**/*",
+							alchemyTemplateSrc,
+							webAppDir,
+							context,
+						);
+					}
+				}
+			}
+
+			if (context.serverDeploy === "alchemy") {
+				const serverAppDir = path.join(projectDir, "apps/server");
+				if (await fs.pathExists(serverAppDir)) {
+					const alchemyTemplateSrc = path.join(
+						PKG_ROOT,
+						"templates/deploy/alchemy",
+					);
+					if (await fs.pathExists(alchemyTemplateSrc)) {
+						await processAndCopyFiles(
+							"**/*",
+							alchemyTemplateSrc,
+							serverAppDir,
+							context,
+						);
+					}
+				}
+			}
+		}
 	}
 
-	if (context.webDeploy === "workers") {
+	if (context.webDeploy !== "none" && context.webDeploy !== "alchemy") {
 		const webAppDir = path.join(projectDir, "apps/web");
-		if (!(await fs.pathExists(webAppDir))) {
-			return;
-		}
+		if (await fs.pathExists(webAppDir)) {
+			const frontends = context.frontend;
 
-		const frontends = context.frontend;
+			const templateMap: Record<string, string> = {
+				"tanstack-router": "react/tanstack-router",
+				"tanstack-start": "react/tanstack-start",
+				"react-router": "react/react-router",
+				solid: "solid",
+				next: "react/next",
+				nuxt: "nuxt",
+				svelte: "svelte",
+			};
 
-		const templateMap: Record<string, string> = {
-			"tanstack-router": "react/tanstack-router",
-			"tanstack-start": "react/tanstack-start",
-			"react-router": "react/react-router",
-			solid: "solid",
-			next: "react/next",
-			nuxt: "nuxt",
-			svelte: "svelte",
-		};
-
-		for (const f of frontends) {
-			if (templateMap[f]) {
-				const deployTemplateSrc = path.join(
-					PKG_ROOT,
-					`templates/deploy/web/${templateMap[f]}`,
-				);
-				if (await fs.pathExists(deployTemplateSrc)) {
-					await processAndCopyFiles(
-						"**/*",
-						deployTemplateSrc,
-						webAppDir,
-						context,
+			for (const f of frontends) {
+				if (templateMap[f]) {
+					const deployTemplateSrc = path.join(
+						PKG_ROOT,
+						`templates/deploy/${context.webDeploy}/web/${templateMap[f]}`,
 					);
+					if (await fs.pathExists(deployTemplateSrc)) {
+						await processAndCopyFiles(
+							"**/*",
+							deployTemplateSrc,
+							webAppDir,
+							context,
+						);
+					}
 				}
+			}
+		}
+	}
+
+	if (context.serverDeploy !== "none" && context.serverDeploy !== "alchemy") {
+		const serverAppDir = path.join(projectDir, "apps/server");
+		if (await fs.pathExists(serverAppDir)) {
+			const deployTemplateSrc = path.join(
+				PKG_ROOT,
+				`templates/deploy/${context.serverDeploy}/server`,
+			);
+			if (await fs.pathExists(deployTemplateSrc)) {
+				await processAndCopyFiles(
+					"**/*",
+					deployTemplateSrc,
+					serverAppDir,
+					context,
+				);
 			}
 		}
 	}
