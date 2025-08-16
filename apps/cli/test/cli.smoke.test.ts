@@ -1228,21 +1228,15 @@ describe("create-better-t-stack smoke", () => {
 
 			const projectDir = join(workdir, projectName);
 			const serverDir = join(projectDir, "apps", "server");
-
-			// Check drizzle.config.ts has correct singlestore dialect
 			const drizzleConfigPath = join(serverDir, "drizzle.config.ts");
 			expect(existsSync(drizzleConfigPath)).toBe(true);
 			const drizzleConfig = readFileSync(drizzleConfigPath, "utf8");
 			expect(drizzleConfig).toContain('dialect: "singlestore"');
-
-			// Check db connection uses mysql2 driver for SingleStore
 			const dbIndexPath = join(serverDir, "src", "db", "index.ts");
 			expect(existsSync(dbIndexPath)).toBe(true);
 			const dbIndex = readFileSync(dbIndexPath, "utf8");
 			expect(dbIndex).toContain("drizzle-orm/singlestore");
 			expect(dbIndex).toContain("mysql2/promise");
-
-			// Check mysql2 dependency is included
 			const packageJsonPath = join(serverDir, "package.json");
 			expect(existsSync(packageJsonPath)).toBe(true);
 			const packageJson = readJsonSync(packageJsonPath);
@@ -1285,11 +1279,7 @@ describe("create-better-t-stack smoke", () => {
 			const projectDir = join(workdir, projectName);
 			const serverDir = join(projectDir, "apps", "server");
 			const schemaDir = join(serverDir, "src", "db", "schema");
-
-			// Check schema directory exists
 			expect(existsSync(schemaDir)).toBe(true);
-
-			// Look for schema files that should use singlestoreTable
 			const schemaFiles = require("node:fs").readdirSync(schemaDir);
 			const schemaFile = schemaFiles.find((file: string) =>
 				file.endsWith(".ts"),
@@ -1340,13 +1330,9 @@ describe("create-better-t-stack smoke", () => {
 			const projectDir = join(workdir, projectName);
 			const serverDir = join(projectDir, "apps", "server");
 			const envPath = join(serverDir, ".env");
-
-			// Check .env file exists and has correct SingleStore format
 			expect(existsSync(envPath)).toBe(true);
 			const envContent = readFileSync(envPath, "utf8");
 			expect(envContent).toContain("DATABASE_URL");
-
-			// Find the DATABASE_URL line and verify SingleStore format with SSL
 			const lines = envContent.split("\n");
 			const databaseUrlLine = lines.find((line) =>
 				line.startsWith("DATABASE_URL="),
@@ -1358,12 +1344,9 @@ describe("create-better-t-stack smoke", () => {
 				?.replace(/['"]/g, "");
 			expect(databaseUrl).toBeTruthy();
 			expect(databaseUrl).toMatch(/singlestore:\/\/.*\?ssl/);
-
-			// Verify SSL parameter is included (required for SingleStore cloud)
 			expect(envContent).toContain("?ssl=");
 		});
 
-		// Phase 7: Advanced Testing & Integration - SingleStore Matrix Testing
 		describe("SingleStore compatibility matrix", () => {
 			it("scaffolds SingleStore with authentication enabled", async () => {
 				const projectName = "singlestore-auth";
@@ -1455,7 +1438,6 @@ describe("create-better-t-stack smoke", () => {
 					examples: ["todo"],
 				});
 
-				// Check that TODO example schema uses SingleStore table structure
 				const todoSchemaPath = join(
 					projectDir,
 					"apps",

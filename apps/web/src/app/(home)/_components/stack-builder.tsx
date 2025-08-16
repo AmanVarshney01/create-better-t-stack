@@ -1706,7 +1706,6 @@ const StackBuilder = () => {
 								const categoryDisplayName = getCategoryDisplayName(categoryKey);
 
 								const filteredOptions = categoryOptions.filter((option) => {
-									// Filter ORM options based on database selection
 									if (categoryKey === "orm") {
 										if (stack.database === "mongodb") {
 											return (
@@ -1720,7 +1719,6 @@ const StackBuilder = () => {
 										}
 									}
 
-									// Filter dbSetup options based on database selection
 									if (categoryKey === "dbSetup") {
 										if (stack.database === "singlestore") {
 											return (

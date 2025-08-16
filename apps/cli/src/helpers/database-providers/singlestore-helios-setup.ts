@@ -60,9 +60,6 @@ export async function setupSingleStoreHelios(config: ProjectConfig) {
 	try {
 		const serverDir = path.join(projectDir, "apps/server");
 		await fs.ensureDir(serverDir);
-
-		// For now, we'll create a default .env with placeholder values
-		// In the future, this could integrate with SingleStore CLI if available
 		await writeEnvFile(projectDir);
 
 		log.success(
