@@ -185,6 +185,7 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 		dbSetup === "mongodb-atlas" ||
 		dbSetup === "neon" ||
 		dbSetup === "supabase" ||
+		dbSetup === "singlestore-helios" ||
 		dbSetup === "d1" ||
 		dbSetup === "docker";
 

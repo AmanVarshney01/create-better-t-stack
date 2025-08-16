@@ -91,6 +91,8 @@ export async function getDBSetupChoice(
 			},
 			{ value: "none" as const, label: "None", hint: "Manual setup" },
 		];
+	} else if (databaseType === "singlestore") {
+		return "singlestore-helios";
 	} else {
 		return "none";
 	}

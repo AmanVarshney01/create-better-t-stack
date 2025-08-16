@@ -382,6 +382,57 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 					message: "ORM set to 'Prisma' (MongoDB requires Prisma or Mongoose)",
 				});
 			}
+		} else if (nextStack.database === "singlestore") {
+			if (nextStack.orm !== "drizzle") {
+				notes.database.notes.push(
+					"SingleStore requires Drizzle ORM. Drizzle will be selected.",
+				);
+				notes.orm.notes.push(
+					"SingleStore requires Drizzle ORM. It will be selected.",
+				);
+				notes.database.hasIssue = true;
+				notes.orm.hasIssue = true;
+				nextStack.orm = "drizzle";
+				changed = true;
+				changes.push({
+					category: "database",
+					message: "ORM set to 'Drizzle' (SingleStore requires Drizzle)",
+				});
+			}
+			if (nextStack.dbSetup !== "singlestore-helios") {
+				notes.database.notes.push(
+					"SingleStore database selected: DB Setup will be set to 'SingleStore Helios'.",
+				);
+				notes.dbSetup.notes.push(
+					"SingleStore works best with cloud setup. SingleStore Helios will be selected.",
+				);
+				notes.database.hasIssue = true;
+				notes.dbSetup.hasIssue = true;
+				nextStack.dbSetup = "singlestore-helios";
+				changed = true;
+				changes.push({
+					category: "database",
+					message:
+						"DB Setup set to 'SingleStore Helios' (recommended for SingleStore)",
+				});
+			}
+			if (nextStack.runtime === "workers") {
+				notes.runtime.notes.push(
+					"Cloudflare Workers runtime is not compatible with SingleStore. SQLite will be selected.",
+				);
+				notes.database.notes.push(
+					"SingleStore is not compatible with Cloudflare Workers runtime. SQLite will be selected.",
+				);
+				notes.runtime.hasIssue = true;
+				notes.database.hasIssue = true;
+				nextStack.database = "sqlite";
+				changed = true;
+				changes.push({
+					category: "runtime",
+					message:
+						"Database set to 'SQLite' (SingleStore not compatible with Workers)",
+				});
+			}
 		} else {
 			if (nextStack.orm === "mongoose") {
 				notes.database.notes.push(
@@ -514,6 +565,41 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 						category: "dbSetup",
 						message:
 							"Database set to 'PostgreSQL' (required by Supabase setup)",
+					});
+				}
+			} else if (nextStack.dbSetup === "singlestore-helios") {
+				if (nextStack.database !== "singlestore") {
+					notes.dbSetup.notes.push(
+						"Requires SingleStore. It will be selected.",
+					);
+					notes.database.notes.push(
+						"SingleStore Helios setup requires SingleStore. It will be selected.",
+					);
+					notes.dbSetup.hasIssue = true;
+					notes.database.hasIssue = true;
+					nextStack.database = "singlestore";
+					changed = true;
+					changes.push({
+						category: "dbSetup",
+						message:
+							"Database set to 'SingleStore' (required by SingleStore Helios setup)",
+					});
+				}
+				if (nextStack.orm !== "drizzle") {
+					notes.dbSetup.notes.push(
+						"SingleStore Helios requires Drizzle ORM. It will be selected.",
+					);
+					notes.orm.notes.push(
+						"SingleStore Helios setup requires Drizzle ORM. It will be selected.",
+					);
+					notes.dbSetup.hasIssue = true;
+					notes.orm.hasIssue = true;
+					nextStack.orm = "drizzle";
+					changed = true;
+					changes.push({
+						category: "dbSetup",
+						message:
+							"ORM set to 'Drizzle' (SingleStore Helios requires Drizzle)",
 					});
 				}
 			} else if (nextStack.dbSetup === "d1") {
@@ -666,6 +752,24 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 						category: "runtime",
 						message:
 							"Database set to 'SQLite' (MongoDB not compatible with Workers)",
+					});
+				}
+
+				if (nextStack.database === "singlestore") {
+					notes.runtime.notes.push(
+						"Cloudflare Workers runtime is not compatible with SingleStore. SQLite will be selected.",
+					);
+					notes.database.notes.push(
+						"SingleStore is not compatible with Cloudflare Workers runtime. SQLite will be selected.",
+					);
+					notes.runtime.hasIssue = true;
+					notes.database.hasIssue = true;
+					nextStack.database = "sqlite";
+					changed = true;
+					changes.push({
+						category: "runtime",
+						message:
+							"Database set to 'SQLite' (SingleStore not compatible with Workers)",
 					});
 				}
 
@@ -945,6 +1049,7 @@ const generateCommand = (stackState: StackState): string => {
 			"supabase",
 			"prisma-postgres",
 			"mongodb-atlas",
+			"singlestore-helios",
 			"docker",
 		].includes(stackState.dbSetup);
 
@@ -1635,7 +1740,51 @@ const StackBuilder = () => {
 									TECH_OPTIONS[categoryKey as keyof typeof TECH_OPTIONS] || [];
 								const categoryDisplayName = getCategoryDisplayName(categoryKey);
 
-								const filteredOptions = categoryOptions.filter(() => {
+								const filteredOptions = categoryOptions.filter((option) => {
+									if (categoryKey === "orm") {
+										if (stack.database === "mongodb") {
+											return (
+												option.id === "prisma" ||
+												option.id === "mongoose" ||
+												option.id === "none"
+											);
+										}
+										if (stack.database === "singlestore") {
+											return option.id === "drizzle";
+										}
+									}
+
+									if (categoryKey === "dbSetup") {
+										if (stack.database === "singlestore") {
+											return option.id === "singlestore-helios";
+										}
+										if (stack.database === "sqlite") {
+											return ["turso", "d1", "docker", "none"].includes(
+												option.id,
+											);
+										}
+										if (stack.database === "postgres") {
+											return [
+												"neon",
+												"supabase",
+												"prisma-postgres",
+												"docker",
+												"none",
+											].includes(option.id);
+										}
+										if (stack.database === "mysql") {
+											return ["docker", "none"].includes(option.id);
+										}
+										if (stack.database === "mongodb") {
+											return ["mongodb-atlas", "docker", "none"].includes(
+												option.id,
+											);
+										}
+										if (stack.database === "none") {
+											return option.id === "none";
+										}
+									}
+
 									return true;
 								});
 
