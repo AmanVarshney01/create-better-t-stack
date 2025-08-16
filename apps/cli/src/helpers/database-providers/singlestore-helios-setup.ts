@@ -23,7 +23,7 @@ async function writeEnvFile(
 				key: "DATABASE_URL",
 				value:
 					config?.connectionString ??
-					"singlestore://username:password@host:port/database?ssl=require",
+					"singlestore://username:password@host:port/database?ssl={}",
 				condition: true,
 			},
 		];
@@ -48,7 +48,7 @@ ${pc.green("SingleStore Helios Manual Setup Instructions:")}
 4. Add the connection string to your .env file:
    ${pc.dim('DATABASE_URL="your_connection_string"')}
 
-${pc.yellow("Important:")} 
+${pc.yellow("Important:")}
 - The connection string MUST include ${pc.bold("ssl={}")} at the end
 - Use the singlestore:// protocol for SingleStore connections
 - SingleStore requires SSL connections for cloud deployments`);

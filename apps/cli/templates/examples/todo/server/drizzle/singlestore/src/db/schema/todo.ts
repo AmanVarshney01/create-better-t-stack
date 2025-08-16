@@ -1,4 +1,4 @@
-import { singlestoreTable, varchar, bigint, boolean } from "drizzle-orm/singlestore";
+import { singlestoreTable, varchar, bigint, boolean } from "drizzle-orm/singlestore-core";
 
 export const todo = singlestoreTable("todo", {
   id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),

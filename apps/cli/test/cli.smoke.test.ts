@@ -1299,6 +1299,8 @@ describe("create-better-t-stack smoke", () => {
 				const schemaPath = join(schemaDir, schemaFile);
 				const schemaContent = readFileSync(schemaPath, "utf8");
 				expect(schemaContent).toContain("singlestoreTable");
+				expect(schemaContent).toContain('from "drizzle-orm/singlestore-core"');
+				expect(schemaContent).not.toContain('from "drizzle-orm/singlestore"');
 			}
 		});
 
