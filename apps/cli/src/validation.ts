@@ -373,6 +373,17 @@ export function processAndValidateFlags(
 		);
 	}
 
+	if (
+		providedFlags.has("database") &&
+		providedFlags.has("dbSetup") &&
+		config.database === "singlestore" &&
+		config.dbSetup === "none"
+	) {
+		exitWithError(
+			"SingleStore database requires SingleStore Helios setup. Please use '--db-setup singlestore-helios' or omit the --db-setup flag.",
+		);
+	}
+
 	if (config.dbSetup === "d1") {
 		if (
 			(providedFlags.has("dbSetup") && providedFlags.has("database")) ||

@@ -196,7 +196,7 @@ npx create-better-t-stack my-app --frontend none --backend hono --api trpc --dat
 - **ORM 'none'**: Can be used when you want to handle database operations manually or use a different ORM.
 - **Runtime 'none'**: Only available with Convex backend or when backend is 'none'.
 - **Cloudflare Workers runtime**: Only compatible with Hono backend, Drizzle ORM (or no ORM), and SQLite database (with D1 setup). Not compatible with MongoDB.
-- **SingleStore database**: Only compatible with Drizzle ORM. Automatically sets database setup to SingleStore Helios (cloud).
+- **SingleStore database**: Only compatible with Drizzle ORM. Always uses SingleStore Helios setup (no manual setup option).
 - **Addons 'none'**: Skips all addons (PWA, Tauri, Starlight, Biome, Husky, Turborepo).
 - **Examples 'none'**: Skips all example implementations (todo, AI chat).
 - **SvelteKit, Nuxt, and SolidJS** frontends are only compatible with oRPC API layer

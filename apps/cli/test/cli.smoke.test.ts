@@ -1797,6 +1797,39 @@ describe("create-better-t-stack smoke", () => {
 			);
 		});
 
+		it("rejects SingleStore database with none db-setup", async () => {
+			await runCliExpectingError(
+				[
+					"invalid-singlestore-none",
+					"--yes",
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"node",
+					"--database",
+					"singlestore",
+					"--orm",
+					"drizzle",
+					"--api",
+					"none",
+					"--no-auth",
+					"--addons",
+					"none",
+					"--db-setup",
+					"none",
+					"--examples",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+		});
+
 		it("rejects incompatible frontend and API combinations", async () => {
 			await runCliExpectingError(
 				[
