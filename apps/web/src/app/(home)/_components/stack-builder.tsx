@@ -399,7 +399,7 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 					message: "ORM set to 'Drizzle' (SingleStore requires Drizzle)",
 				});
 			}
-			if (nextStack.dbSetup === "none") {
+			if (nextStack.dbSetup !== "singlestore-helios") {
 				notes.database.notes.push(
 					"SingleStore database selected: DB Setup will be set to 'SingleStore Helios'.",
 				);
@@ -414,6 +414,23 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 					category: "database",
 					message:
 						"DB Setup set to 'SingleStore Helios' (recommended for SingleStore)",
+				});
+			}
+			if (nextStack.runtime === "workers") {
+				notes.runtime.notes.push(
+					"Cloudflare Workers runtime is not compatible with SingleStore. SQLite will be selected.",
+				);
+				notes.database.notes.push(
+					"SingleStore is not compatible with Cloudflare Workers runtime. SQLite will be selected.",
+				);
+				notes.runtime.hasIssue = true;
+				notes.database.hasIssue = true;
+				nextStack.database = "sqlite";
+				changed = true;
+				changes.push({
+					category: "runtime",
+					message:
+						"Database set to 'SQLite' (SingleStore not compatible with Workers)",
 				});
 			}
 		} else {
