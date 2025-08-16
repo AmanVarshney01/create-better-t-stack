@@ -84,6 +84,20 @@ const showcaseProjects = [
 			"Hono",
 		],
 	},
+	{
+		title: "Formcn",
+		description:
+			"Easily build single- and multi-step forms with auto-generated client- and server-side code.",
+		imageUrl: "https://formcn.dev/opengraph-image.jpg",
+		liveUrl: "https://formcn.dev",
+		tags: [
+			"Next.js",
+			"React 19",
+			"shadcn components",
+			"React-hook-form",
+			"Typescript",
+		],
+	},
 ];
 
 export default function ShowcasePage() {
