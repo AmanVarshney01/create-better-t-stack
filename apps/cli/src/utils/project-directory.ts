@@ -14,8 +14,9 @@ export async function handleDirectoryConflict(
 }> {
 	while (true) {
 		const resolvedPath = path.resolve(process.cwd(), currentPathInput);
-		const dirExists = fs.pathExistsSync(resolvedPath);
-		const dirIsNotEmpty = dirExists && fs.readdirSync(resolvedPath).length > 0;
+		const dirExists = await fs.pathExists(resolvedPath);
+		const dirIsNotEmpty =
+			dirExists && (await fs.readdir(resolvedPath)).length > 0;
 
 		if (!dirIsNotEmpty) {
 			return { finalPathInput: currentPathInput, shouldClearDirectory: false };

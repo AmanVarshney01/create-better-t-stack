@@ -1,6 +1,6 @@
 import path from "node:path";
 import fs from "fs-extra";
-import { globby } from "globby";
+import { glob } from "tinyglobby";
 import { PKG_ROOT } from "../../constants";
 import type { ProjectConfig } from "../../types";
 import { processTemplate } from "../../utils/template-processor";
@@ -13,7 +13,7 @@ export async function processAndCopyFiles(
 	overwrite = true,
 	ignorePatterns?: string[],
 ) {
-	const sourceFiles = await globby(sourcePattern, {
+	const sourceFiles = await glob(sourcePattern, {
 		cwd: baseSourceDir,
 		dot: true,
 		onlyFiles: true,

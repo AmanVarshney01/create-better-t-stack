@@ -1,13 +1,7 @@
 import { join } from "node:path";
 import consola from "consola";
 import { execa } from "execa";
-import {
-	ensureDirSync,
-	existsSync,
-	readFileSync,
-	readJsonSync,
-	removeSync,
-} from "fs-extra";
+import { ensureDir, existsSync, readFile, readJson, remove } from "fs-extra";
 import * as JSONC from "jsonc-parser";
 import { FailedToExitError } from "trpc-cli";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -39,12 +33,12 @@ async function runCli(argv: string[], cwd: string) {
 	}
 }
 
-function createTmpDir(_prefix: string) {
+async function createTmpDir(_prefix: string) {
 	const dir = join(__dirname, "..", ".smoke");
 	if (existsSync(dir)) {
-		removeSync(dir);
+		await remove(dir);
 	}
-	ensureDirSync(dir);
+	await ensureDir(dir);
 	return dir;
 }
 
@@ -78,15 +72,15 @@ async function runCliExpectingError(args: string[], cwd: string) {
 	}
 }
 
-function assertScaffoldedProject(dir: string) {
+async function assertScaffoldedProject(dir: string) {
 	const pkgJsonPath = join(dir, "package.json");
 	expect(existsSync(pkgJsonPath)).toBe(true);
-	const pkg = readJsonSync(pkgJsonPath);
+	const pkg = await readJson(pkgJsonPath);
 	expect(typeof pkg.name).toBe("string");
 	expect(Array.isArray(pkg.workspaces)).toBe(true);
 }
 
-function assertProjectStructure(
+async function assertProjectStructure(
 	dir: string,
 	options: {
 		hasWeb?: boolean;
@@ -214,11 +208,11 @@ function assertProjectStructure(
 	}
 
 	expect(existsSync(join(dir, "bts.jsonc"))).toBe(true);
-	const btsConfig = readFileSync(join(dir, "bts.jsonc"), "utf8");
+	const btsConfig = await readFile(join(dir, "bts.jsonc"), "utf8");
 	expect(btsConfig).toContain("Better-T-Stack configuration");
 }
 
-function assertBtsConfig(
+async function assertBtsConfig(
 	dir: string,
 	expectedConfig: Partial<{
 		frontend: string[];
@@ -235,7 +229,7 @@ function assertBtsConfig(
 ) {
 	const btsConfigPath = join(dir, "bts.jsonc");
 	expect(existsSync(btsConfigPath)).toBe(true);
-	const content = readFileSync(btsConfigPath, "utf8");
+	const content = await readFile(btsConfigPath, "utf8");
 
 	type BtsConfig = {
 		frontend?: string[];
@@ -294,11 +288,11 @@ function assertBtsConfig(
 	}
 }
 
-function readBtsConfig(dir: string) {
+async function readBtsConfig(dir: string) {
 	const btsConfigPath = join(dir, "bts.jsonc");
 	if (!existsSync(btsConfigPath)) return {} as Record<string, unknown>;
 
-	const content = readFileSync(btsConfigPath, "utf8");
+	const content = await readFile(btsConfigPath, "utf8");
 	const errors: JSONC.ParseError[] = [];
 	const parsed = JSONC.parse(content, errors, {
 		allowTrailingComma: true,
@@ -315,7 +309,7 @@ describe("create-better-t-stack smoke", () => {
 	let workdir: string;
 
 	beforeAll(async () => {
-		workdir = createTmpDir("cli");
+		workdir = await createTmpDir("cli");
 		consola.start("Building CLI...");
 		const buildProc = execa("bun", ["run", "build"], {
 			cwd: join(__dirname, ".."),
@@ -397,15 +391,15 @@ describe("create-better-t-stack smoke", () => {
 						);
 
 						const projectDir = join(workdir, projectName);
-						assertScaffoldedProject(projectDir);
-						assertProjectStructure(projectDir, {
+						await assertScaffoldedProject(projectDir);
+						await assertProjectStructure(projectDir, {
 							hasWeb: WEB_FRONTENDS.has(frontend),
 							hasNative:
 								frontend === "native-nativewind" ||
 								frontend === "native-unistyles",
 							hasServer: true,
 						});
-						assertBtsConfig(projectDir, {
+						await assertBtsConfig(projectDir, {
 							frontend: [frontend],
 							backend,
 							database: "none",
@@ -480,9 +474,9 @@ describe("create-better-t-stack smoke", () => {
 			});
 		}
 	});
-	afterAll(() => {
+	afterAll(async () => {
 		try {
-			removeSync(workdir);
+			await remove(workdir);
 		} catch {}
 	});
 
@@ -2469,12 +2463,12 @@ describe("create-better-t-stack smoke", () => {
 				projectNames.add(n);
 			});
 
-			const detectPackageManager = (
+			const detectPackageManager = async (
 				projectDir: string,
-			): "bun" | "pnpm" | "npm" => {
+			): Promise<"bun" | "pnpm" | "npm"> => {
 				const bts = readBtsConfig(projectDir) as { packageManager?: string };
 				const pkgJsonPath = join(projectDir, "package.json");
-				const pkg = existsSync(pkgJsonPath) ? readJsonSync(pkgJsonPath) : {};
+				const pkg = existsSync(pkgJsonPath) ? await readJson(pkgJsonPath) : {};
 				const pkgMgrField =
 					(pkg.packageManager as string | undefined) || bts.packageManager;
 
@@ -2539,7 +2533,7 @@ describe("create-better-t-stack smoke", () => {
 						consola.info(`${dirName} not found, skipping`);
 						return;
 					}
-					const pm = detectPackageManager(projectDir);
+					const pm = await detectPackageManager(projectDir);
 
 					consola.info(`Processing ${dirName} (pm=${pm})`);
 					try {
@@ -2560,11 +2554,11 @@ describe("create-better-t-stack smoke", () => {
 						}
 
 						const pkgJsonPath = join(projectDir, "package.json");
-						const pkg = readJsonSync(pkgJsonPath);
+						const pkg = await readJson(pkgJsonPath);
 						const scripts = pkg.scripts || {};
 						consola.info(`Scripts: ${Object.keys(scripts).join(", ")}`);
 
-						const bts = readBtsConfig(projectDir) as {
+						const bts = (await readBtsConfig(projectDir)) as {
 							backend?: string;
 							frontend?: string[];
 						};

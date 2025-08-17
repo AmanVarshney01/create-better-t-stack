@@ -54,8 +54,8 @@ export async function createProjectHandler(
 		let defaultName = DEFAULT_CONFIG.relativePath;
 		let counter = 1;
 		while (
-			fs.pathExistsSync(path.resolve(process.cwd(), defaultName)) &&
-			fs.readdirSync(path.resolve(process.cwd(), defaultName)).length > 0
+			(await fs.pathExists(path.resolve(process.cwd(), defaultName))) &&
+			(await fs.readdir(path.resolve(process.cwd(), defaultName))).length > 0
 		) {
 			defaultName = `${DEFAULT_CONFIG.projectName}-${counter}`;
 			counter++;
@@ -209,11 +209,11 @@ async function handleDirectoryConflictProgrammatically(
 ): Promise<{ finalPathInput: string; shouldClearDirectory: boolean }> {
 	const currentPath = path.resolve(process.cwd(), currentPathInput);
 
-	if (!fs.pathExistsSync(currentPath)) {
+	if (!(await fs.pathExists(currentPath))) {
 		return { finalPathInput: currentPathInput, shouldClearDirectory: false };
 	}
 
-	const dirContents = fs.readdirSync(currentPath);
+	const dirContents = await fs.readdir(currentPath);
 	const isNotEmpty = dirContents.length > 0;
 
 	if (!isNotEmpty) {
@@ -233,8 +233,9 @@ async function handleDirectoryConflictProgrammatically(
 			let finalPathInput = `${baseName}-${counter}`;
 
 			while (
-				fs.pathExistsSync(path.resolve(process.cwd(), finalPathInput)) &&
-				fs.readdirSync(path.resolve(process.cwd(), finalPathInput)).length > 0
+				(await fs.pathExists(path.resolve(process.cwd(), finalPathInput))) &&
+				(await fs.readdir(path.resolve(process.cwd(), finalPathInput))).length >
+					0
 			) {
 				counter++;
 				finalPathInput = `${baseName}-${counter}`;

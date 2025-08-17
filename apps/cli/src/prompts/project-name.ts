@@ -45,8 +45,8 @@ export async function getProjectName(initialName?: string): Promise<string> {
 	let counter = 1;
 
 	while (
-		fs.pathExistsSync(path.resolve(process.cwd(), defaultName)) &&
-		fs.readdirSync(path.resolve(process.cwd(), defaultName)).length > 0
+		(await fs.pathExists(path.resolve(process.cwd(), defaultName))) &&
+		(await fs.readdir(path.resolve(process.cwd(), defaultName))).length > 0
 	) {
 		defaultName = `${DEFAULT_CONFIG.projectName}-${counter}`;
 		counter++;

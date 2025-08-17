@@ -5,7 +5,7 @@ import { addPackageDependency } from "../../../utils/add-package-deps";
 
 export async function setupCombinedAlchemyDeploy(
 	projectDir: string,
-	packageManager: PackageManager,
+	_packageManager: PackageManager,
 ) {
 	await addPackageDependency({
 		devDependencies: ["alchemy"],

@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { ensureDirSync, existsSync, readFileSync, removeSync } from "fs-extra";
+import { ensureDir, existsSync, readFile, remove } from "fs-extra";
 import { parse as parseJsonc } from "jsonc-parser";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { init } from "../src/index";
@@ -9,13 +9,13 @@ let testCounter = 0;
 let tmpDir: string;
 let originalCwd: string;
 
-function createTmpDir() {
+async function createTmpDir() {
 	testCounter++;
 	const dir = join(__dirname, "..", `.prog-test-${testCounter}`);
 	if (existsSync(dir)) {
-		removeSync(dir);
+		await remove(dir);
 	}
-	ensureDirSync(dir);
+	await ensureDir(dir);
 	return dir;
 }
 
@@ -25,7 +25,7 @@ function assertProjectExists(dir: string) {
 	expect(existsSync(join(dir, "bts.jsonc"))).toBe(true);
 }
 
-function assertBtsConfig(
+async function assertBtsConfig(
 	dir: string,
 	expectedConfig: Partial<{
 		frontend: string[];
@@ -40,7 +40,7 @@ function assertBtsConfig(
 	const configPath = join(dir, "bts.jsonc");
 	expect(existsSync(configPath)).toBe(true);
 
-	const configContent = readFileSync(configPath, "utf-8");
+	const configContent = await readFile(configPath, "utf-8");
 	const config: BetterTStackConfig = parseJsonc(configContent);
 
 	if (expectedConfig.frontend) {
@@ -67,16 +67,16 @@ function assertBtsConfig(
 }
 
 describe("Programmatic API - Fast Tests", () => {
-	beforeEach(() => {
+	beforeEach(async () => {
 		originalCwd = process.cwd();
-		tmpDir = createTmpDir();
+		tmpDir = await createTmpDir();
 		process.chdir(tmpDir);
 	});
 
-	afterEach(() => {
+	afterEach(async () => {
 		process.chdir(originalCwd);
 		if (existsSync(tmpDir)) {
-			removeSync(tmpDir);
+			await remove(tmpDir);
 		}
 	});
 
@@ -137,7 +137,7 @@ describe("Programmatic API - Fast Tests", () => {
 			});
 
 			expect(result.success).toBe(true);
-			assertBtsConfig(result.projectDirectory, {
+			await assertBtsConfig(result.projectDirectory, {
 				frontend: ["next"],
 			});
 		}, 15000);
@@ -151,7 +151,7 @@ describe("Programmatic API - Fast Tests", () => {
 			});
 
 			expect(result.success).toBe(true);
-			assertBtsConfig(result.projectDirectory, {
+			await assertBtsConfig(result.projectDirectory, {
 				backend: "fastify",
 			});
 		}, 15000);
@@ -166,7 +166,7 @@ describe("Programmatic API - Fast Tests", () => {
 			});
 
 			expect(result.success).toBe(true);
-			assertBtsConfig(result.projectDirectory, {
+			await assertBtsConfig(result.projectDirectory, {
 				database: "postgres",
 				orm: "prisma",
 			});
@@ -181,7 +181,7 @@ describe("Programmatic API - Fast Tests", () => {
 			});
 
 			expect(result.success).toBe(true);
-			assertBtsConfig(result.projectDirectory, {
+			await assertBtsConfig(result.projectDirectory, {
 				api: "orpc",
 			});
 		}, 15000);
@@ -195,7 +195,7 @@ describe("Programmatic API - Fast Tests", () => {
 			});
 
 			expect(result.success).toBe(true);
-			assertBtsConfig(result.projectDirectory, {
+			await assertBtsConfig(result.projectDirectory, {
 				runtime: "node",
 			});
 		}, 15000);
@@ -209,7 +209,7 @@ describe("Programmatic API - Fast Tests", () => {
 			});
 
 			expect(result.success).toBe(true);
-			assertBtsConfig(result.projectDirectory, {
+			await assertBtsConfig(result.projectDirectory, {
 				addons: ["biome"],
 			});
 		}, 15000);
@@ -305,7 +305,7 @@ describe("Programmatic API - Fast Tests", () => {
 			});
 
 			expect(result.success).toBe(true);
-			assertBtsConfig(result.projectDirectory, {
+			await assertBtsConfig(result.projectDirectory, {
 				addons: ["biome", "turborepo"],
 			});
 		}, 15000);
@@ -321,7 +321,7 @@ describe("Programmatic API - Fast Tests", () => {
 			});
 
 			expect(result.success).toBe(true);
-			assertBtsConfig(result.projectDirectory, {
+			await assertBtsConfig(result.projectDirectory, {
 				database: "sqlite",
 				orm: "drizzle",
 			});
