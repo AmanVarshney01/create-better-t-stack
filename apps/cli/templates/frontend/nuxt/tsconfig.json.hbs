@@ -12,12 +12,12 @@
     },
     {
       "path": "./.nuxt/tsconfig.node.json"
-    }
-  {{#unless (or (eq backend "convex") (eq backend "none"))}}
-    ,
+    }{{#unless (or (eq backend "convex") (eq backend "none"))}},
     {
         "path": "../server"
     }
   {{/unless}}
-  ]
+  ]{{#if (eq webDeploy "alchemy")}},
+  "include": ["alchemy.run.ts"]
+  {{/if}}
 }
