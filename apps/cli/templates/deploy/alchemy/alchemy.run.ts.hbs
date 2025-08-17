@@ -1,21 +1,18 @@
-///
-<reference types="@types/node" />
-
 import alchemy from "alchemy";
 {{#if (eq webDeploy "alchemy")}}
-{{#if (eq frontend "next")}}
+{{#if (includes frontend "next")}}
 import { Next } from "alchemy/cloudflare";
-{{else if (eq frontend "nuxt")}}
+{{else if (includes frontend "nuxt")}}
 import { Nuxt } from "alchemy/cloudflare";
-{{else if (eq frontend "svelte")}}
+{{else if (includes frontend "svelte")}}
 import { SvelteKit } from "alchemy/cloudflare";
-{{else if (eq frontend "tanstack-start")}}
+{{else if (includes frontend "tanstack-start")}}
 import { TanStackStart } from "alchemy/cloudflare";
-{{else if (eq frontend "tanstack-router")}}
+{{else if (includes frontend "tanstack-router")}}
 import { Vite } from "alchemy/cloudflare";
-{{else if (eq frontend "react-router")}}
+{{else if (includes frontend "react-router")}}
 import { ReactRouter } from "alchemy/cloudflare";
-{{else if (eq frontend "solid")}}
+{{else if (includes frontend "solid")}}
 import { Vite } from "alchemy/cloudflare";
 {{/if}}
 {{/if}}
@@ -26,92 +23,62 @@ import { Worker } from "alchemy/cloudflare";
 const app = await alchemy("{{projectName}}");
 
 {{#if (eq webDeploy "alchemy")}}
-{{#if (eq frontend "next")}}
+{{#if (includes frontend "next")}}
 export const website = await Next("website", {
-name: `${app.name}-${app.stage}-website`,
-// replace if different from default:
-//
-// main: "./.output/server/index.mjs",
-// command: "next build",
-// dev: { command: "next dev" },
+{{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
+name: `${app.name}-${app.stage}-website`
 });
-{{else if (eq frontend "nuxt")}}
+{{else if (includes frontend "nuxt")}}
 export const website = await Nuxt("website", {
-name: `${app.name}-${app.stage}-website`,
-// replace if different from default:
-//
-// main: "./.output/server/index.mjs",
-// command: "nuxt build",
-// dev: { command: "nuxt dev" },
+{{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
+name: `${app.name}-${app.stage}-website`
 });
-{{else if (eq frontend "svelte")}}
+{{else if (includes frontend "svelte")}}
 export const website = await SvelteKit("website", {
-name: `${app.name}-${app.stage}-website`,
-// replace if different from default:
-//
-// main: "./.output/server/index.mjs",
-// command: "vite build",
-// dev: { command: "vite dev" },
+{{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
+name: `${app.name}-${app.stage}-website`
 });
-{{else if (eq frontend "tanstack-start")}}
+{{else if (includes frontend "tanstack-start")}}
 export const website = await TanStackStart("website", {
-name: `${app.name}-${app.stage}-website`,
-// replace if different from default:
-//
-// main: "./.output/server/index.mjs",
-// command: "vite build",
-// dev: { command: "vite dev" },
+{{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
+name: `${app.name}-${app.stage}-website`
 });
-{{else if (eq frontend "tanstack-router")}}
+{{else if (includes frontend "tanstack-router")}}
 export const website = await Vite("website", {
-name: `${app.name}-${app.stage}-website`,
-// replace if different from default:
-//
-// main: "./dist/server/index.js",
-// command: "vite build",
-// dev: { command: "vite dev" },
-assets: "dist"
+{{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
+name: `${app.name}-${app.stage}-website`
 });
-{{else if (eq frontend "react-router")}}
+{{else if (includes frontend "react-router")}}
 export const website = await ReactRouter("website", {
-name: `${app.name}-${app.stage}-website`,
-// replace if different from default:
-//
-// main: "build/server/index.js",
-// command: "react-router build",
-// dev: { command: "react-router dev" },
+{{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
+name: `${app.name}-${app.stage}-website`
 });
-{{else if (eq frontend "solid")}}
+{{else if (includes frontend "solid")}}
 export const website = await Vite("website", {
-name: `${app.name}-${app.stage}-website`,
-// replace if different from default:
-//
-// main: "./dist/server/index.js",
-// command: "vite build",
-// dev: { command: "vite dev" },
-assets: "dist"
+{{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
+name: `${app.name}-${app.stage}-website`
 });
 {{/if}}
 {{/if}}
 
 {{#if (eq serverDeploy "alchemy")}}
 export const worker = await Worker("worker", {
+{{#if (eq webDeploy "alchemy")}}cwd: "apps/server",{{/if}}
 name: `${app.name}-${app.stage}`,
-entrypoint: "{{#if (eq webDeploy "alchemy")}}apps/server/src/worker.ts{{else}}src/worker.ts{{/if}}",
+entrypoint: "src/index.ts"
 });
 {{/if}}
 
 {{#if (and (eq webDeploy "alchemy") (eq serverDeploy "alchemy"))}}
-console.log({
-website: website.url,
-worker: worker.url,
-});
+console.log("\nDeployment URLs:");
+console.log(`Website: ${website.url}`);
+console.log(`Worker: ${worker.url}`);
 {{else if (eq webDeploy "alchemy")}}
-console.log({
-url: website.url,
-});
+console.log("\nDeployment URL:");
+console.log(`Website: ${website.url}`);
 {{else if (eq serverDeploy "alchemy")}}
-console.log(worker.url);
+console.log("\nDeployment URL:");
+console.log(`Worker: ${worker.url}`);
 {{/if}}
 
 await app.finalize();

@@ -29,7 +29,7 @@ export async function setupRuntime(config: ProjectConfig) {
 }
 
 export async function generateCloudflareWorkerTypes(config: ProjectConfig) {
-	if (config.runtime !== "workers") {
+	if (config.runtime !== "workers" || config.serverDeploy !== "workers") {
 		return;
 	}
 

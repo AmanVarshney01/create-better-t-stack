@@ -25,7 +25,7 @@ export async function setupWebDeploy(config: ProjectConfig) {
 
 	// If both web and server use alchemy, handle combined setup
 	if (webDeploy === "alchemy" && serverDeploy === "alchemy") {
-		await setupCombinedAlchemyDeploy(projectDir, packageManager);
+		await setupCombinedAlchemyDeploy(projectDir, packageManager, config);
 		return;
 	}
 

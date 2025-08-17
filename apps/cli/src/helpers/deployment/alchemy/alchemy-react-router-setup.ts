@@ -29,7 +29,6 @@ export async function setupReactRouterAlchemyDeploy(
 		await fs.writeJson(pkgPath, pkg, { spaces: 2 });
 	}
 
-	// Update Vite config
 	const viteConfigPath = path.join(webAppDir, "vite.config.ts");
 	if (await fs.pathExists(viteConfigPath)) {
 		try {
