@@ -35,6 +35,7 @@ export async function setupApi(config: ProjectConfig) {
 					dependencies: ["@trpc/server", "@trpc/client"],
 					projectDir: serverDir,
 				});
+
 				if (config.backend === "hono") {
 					await addPackageDependency({
 						dependencies: ["@hono/trpc-server"],
@@ -47,7 +48,6 @@ export async function setupApi(config: ProjectConfig) {
 					});
 				}
 			}
-		} else {
 		}
 
 		if (webDirExists) {
@@ -67,41 +67,36 @@ export async function setupApi(config: ProjectConfig) {
 						projectDir: webDir,
 					});
 				}
-			} else if (hasNuxtWeb) {
-				if (api === "orpc") {
-					await addPackageDependency({
-						dependencies: [
-							"@tanstack/vue-query",
-							"@tanstack/vue-query-devtools",
-							"@orpc/tanstack-query",
-							"@orpc/client",
-						],
-						projectDir: webDir,
-					});
-				}
-			} else if (hasSvelteWeb) {
-				if (api === "orpc") {
-					await addPackageDependency({
-						dependencies: [
-							"@orpc/tanstack-query",
-							"@orpc/client",
-							"@tanstack/svelte-query",
-							"@tanstack/svelte-query-devtools",
-						],
-						projectDir: webDir,
-					});
-				}
-			} else if (hasSolidWeb) {
-				if (api === "orpc") {
-					await addPackageDependency({
-						dependencies: [
-							"@orpc/tanstack-query",
-							"@orpc/client",
-							"@tanstack/solid-query",
-						],
-						projectDir: webDir,
-					});
-				}
+			} else if (hasNuxtWeb && api === "orpc") {
+				await addPackageDependency({
+					dependencies: [
+						"@tanstack/vue-query",
+						"@orpc/tanstack-query",
+						"@orpc/client",
+					],
+					devDependencies: ["@tanstack/vue-query-devtools"],
+					projectDir: webDir,
+				});
+			} else if (hasSvelteWeb && api === "orpc") {
+				await addPackageDependency({
+					dependencies: [
+						"@orpc/tanstack-query",
+						"@orpc/client",
+						"@tanstack/svelte-query",
+					],
+					devDependencies: ["@tanstack/svelte-query-devtools"],
+					projectDir: webDir,
+				});
+			} else if (hasSolidWeb && api === "orpc") {
+				await addPackageDependency({
+					dependencies: [
+						"@orpc/tanstack-query",
+						"@orpc/client",
+						"@tanstack/solid-query",
+					],
+					devDependencies: ["@tanstack/solid-query-devtools"],
+					projectDir: webDir,
+				});
 			}
 		}
 
@@ -136,11 +131,6 @@ export async function setupApi(config: ProjectConfig) {
 	const needsReactQuery = frontend.some((f) => reactBasedFrontends.includes(f));
 
 	if (needsReactQuery && !isConvex) {
-		const reactQueryDeps: AvailableDependencies[] = ["@tanstack/react-query"];
-		const reactQueryDevDeps: AvailableDependencies[] = [
-			"@tanstack/react-query-devtools",
-		];
-
 		const hasReactWeb = frontend.some(
 			(f) =>
 				f !== "native-nativewind" &&
@@ -152,134 +142,80 @@ export async function setupApi(config: ProjectConfig) {
 			frontend.includes("native-unistyles");
 
 		if (hasReactWeb && webDirExists) {
-			const webPkgJsonPath = path.join(webDir, "package.json");
-			if (await fs.pathExists(webPkgJsonPath)) {
-				try {
-					await addPackageDependency({
-						dependencies: reactQueryDeps,
-						devDependencies: reactQueryDevDeps,
-						projectDir: webDir,
-					});
-				} catch (_error) {}
-			} else {
-			}
+			await addPackageDependency({
+				dependencies: ["@tanstack/react-query"],
+				devDependencies: ["@tanstack/react-query-devtools"],
+				projectDir: webDir,
+			});
 		}
 
 		if (hasNative && nativeDirExists) {
-			const nativePkgJsonPath = path.join(nativeDir, "package.json");
-			if (await fs.pathExists(nativePkgJsonPath)) {
-				try {
-					await addPackageDependency({
-						dependencies: reactQueryDeps,
-						projectDir: nativeDir,
-					});
-				} catch (_error) {}
-			} else {
-			}
+			await addPackageDependency({
+				dependencies: ["@tanstack/react-query"],
+				projectDir: nativeDir,
+			});
 		}
 	}
 
-	if (needsSolidQuery && !isConvex) {
-		const solidQueryDeps: AvailableDependencies[] = ["@tanstack/solid-query"];
-		const solidQueryDevDeps: AvailableDependencies[] = [
-			"@tanstack/solid-query-devtools",
-		];
-
-		if (webDirExists) {
-			const webPkgJsonPath = path.join(webDir, "package.json");
-			if (await fs.pathExists(webPkgJsonPath)) {
-				try {
-					await addPackageDependency({
-						dependencies: solidQueryDeps,
-						devDependencies: solidQueryDevDeps,
-						projectDir: webDir,
-					});
-				} catch (_error) {}
-			}
-		}
+	if (needsSolidQuery && !isConvex && webDirExists) {
+		await addPackageDependency({
+			dependencies: ["@tanstack/solid-query"],
+			devDependencies: ["@tanstack/solid-query-devtools"],
+			projectDir: webDir,
+		});
 	}
 
 	if (isConvex) {
 		if (webDirExists) {
-			const webPkgJsonPath = path.join(webDir, "package.json");
-			if (await fs.pathExists(webPkgJsonPath)) {
-				try {
-					const webDepsToAdd: AvailableDependencies[] = ["convex"];
-					if (frontend.includes("tanstack-start")) {
-						webDepsToAdd.push("@convex-dev/react-query");
-					}
-					if (hasSvelteWeb) {
-						webDepsToAdd.push("convex-svelte");
-					}
-					if (hasNuxtWeb) {
-						webDepsToAdd.push("convex-nuxt");
-						webDepsToAdd.push("convex-vue");
-					}
-					await addPackageDependency({
-						dependencies: webDepsToAdd,
-						projectDir: webDir,
-					});
-				} catch (_error) {}
-			} else {
+			const webDepsToAdd: AvailableDependencies[] = ["convex"];
+			if (frontend.includes("tanstack-start")) {
+				webDepsToAdd.push("@convex-dev/react-query");
 			}
+			if (hasSvelteWeb) {
+				webDepsToAdd.push("convex-svelte");
+			}
+			if (hasNuxtWeb) {
+				webDepsToAdd.push("convex-nuxt", "convex-vue");
+			}
+			await addPackageDependency({
+				dependencies: webDepsToAdd,
+				projectDir: webDir,
+			});
 		}
 
 		if (nativeDirExists) {
-			const nativePkgJsonPath = path.join(nativeDir, "package.json");
-			if (await fs.pathExists(nativePkgJsonPath)) {
-				try {
-					await addPackageDependency({
-						dependencies: ["convex"],
-						projectDir: nativeDir,
-					});
-				} catch (_error) {}
-			} else {
-			}
+			await addPackageDependency({
+				dependencies: ["convex"],
+				projectDir: nativeDir,
+			});
 		}
 
 		const backendPackageName = `@${projectName}/backend`;
 		const backendWorkspaceVersion =
 			packageManager === "npm" ? "*" : "workspace:*";
-		const addWorkspaceDepManually = async (
-			pkgJsonPath: string,
-			depName: string,
-			depVersion: string,
-		) => {
-			try {
-				const pkgJson = await fs.readJson(pkgJsonPath);
-				if (!pkgJson.dependencies) {
-					pkgJson.dependencies = {};
-				}
-				if (pkgJson.dependencies[depName] !== depVersion) {
-					pkgJson.dependencies[depName] = depVersion;
-					await fs.writeJson(pkgJsonPath, pkgJson, { spaces: 2 });
-				} else {
-				}
-			} catch (_error) {}
-		};
 
 		if (webDirExists) {
 			const webPkgJsonPath = path.join(webDir, "package.json");
-			if (await fs.pathExists(webPkgJsonPath)) {
-				await addWorkspaceDepManually(
-					webPkgJsonPath,
-					backendPackageName,
-					backendWorkspaceVersion,
-				);
-			} else {
-			}
+			try {
+				const pkgJson = await fs.readJson(webPkgJsonPath);
+				if (!pkgJson.dependencies) {
+					pkgJson.dependencies = {};
+				}
+				pkgJson.dependencies[backendPackageName] = backendWorkspaceVersion;
+				await fs.writeJson(webPkgJsonPath, pkgJson, { spaces: 2 });
+			} catch (_error) {}
 		}
 
 		if (nativeDirExists) {
 			const nativePkgJsonPath = path.join(nativeDir, "package.json");
-			if (await fs.pathExists(nativePkgJsonPath)) {
-				await addWorkspaceDepManually(
-					nativePkgJsonPath,
-					backendPackageName,
-					backendWorkspaceVersion,
-				);
-			} else {
-			}
+			try {
+				const pkgJson = await fs.readJson(nativePkgJsonPath);
+				if (!pkgJson.dependencies) {
+					pkgJson.dependencies = {};
+				}
+				pkgJson.dependencies[backendPackageName] = backendWorkspaceVersion;
+				await fs.writeJson(nativePkgJsonPath, pkgJson, { spaces: 2 });
+			} catch (_error) {}
 		}
 	}
 }
