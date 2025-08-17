@@ -107,7 +107,8 @@ export const dependencyVersionMap = {
 	"convex-nuxt": "0.1.5",
 	"convex-vue": "^0.1.5",
 
-	"@tanstack/svelte-query": "^5.74.4",
+	"@tanstack/svelte-query": "^5.85.3",
+	"@tanstack/svelte-query-devtools": "^5.85.3",
 
 	"@tanstack/vue-query-devtools": "^5.83.0",
 	"@tanstack/vue-query": "^5.83.0",
@@ -122,9 +123,9 @@ export const dependencyVersionMap = {
 	"@cloudflare/vite-plugin": "^1.9.0",
 	"@opennextjs/cloudflare": "^1.3.0",
 	"nitro-cloudflare-dev": "^0.2.2",
-	"@sveltejs/adapter-cloudflare": "^7.0.4",
+	"@sveltejs/adapter-cloudflare": "^7.2.1",
 
-	alchemy: "^0.62.0",
+	alchemy: "^0.62.1",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

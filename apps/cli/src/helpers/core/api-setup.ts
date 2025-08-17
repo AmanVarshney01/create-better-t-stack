@@ -86,6 +86,7 @@ export async function setupApi(config: ProjectConfig) {
 							"@orpc/tanstack-query",
 							"@orpc/client",
 							"@tanstack/svelte-query",
+							"@tanstack/svelte-query-devtools",
 						],
 						projectDir: webDir,
 					});
