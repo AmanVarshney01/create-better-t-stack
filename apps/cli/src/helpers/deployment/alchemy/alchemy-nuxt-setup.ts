@@ -29,7 +29,6 @@ export async function setupNuxtAlchemyDeploy(
 		await fs.writeJson(pkgPath, pkg, { spaces: 2 });
 	}
 
-	// Update Nuxt config
 	const nuxtConfigPath = path.join(webAppDir, "nuxt.config.ts");
 	if (!(await fs.pathExists(nuxtConfigPath))) return;
 

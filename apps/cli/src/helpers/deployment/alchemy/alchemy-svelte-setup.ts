@@ -29,7 +29,6 @@ export async function setupSvelteAlchemyDeploy(
 		await fs.writeJson(pkgPath, pkg, { spaces: 2 });
 	}
 
-	// Update Svelte config
 	const svelteConfigPath = path.join(webAppDir, "svelte.config.js");
 	if (!(await fs.pathExists(svelteConfigPath))) return;
 
@@ -44,27 +43,22 @@ export async function setupSvelteAlchemyDeploy(
 		project.addSourceFileAtPath(svelteConfigPath);
 		const sourceFile = project.getSourceFileOrThrow(svelteConfigPath);
 
-		// Find and update the adapter import
 		const importDeclarations = sourceFile.getImportDeclarations();
 		const adapterImport = importDeclarations.find((imp) =>
 			imp.getModuleSpecifierValue().includes("@sveltejs/adapter"),
 		);
 
 		if (adapterImport) {
-			// Change the import to alchemy
 			adapterImport.setModuleSpecifier("alchemy/cloudflare/sveltekit");
-			// Remove old default import and add new one
 			adapterImport.removeDefaultImport();
 			adapterImport.setDefaultImport("alchemy");
 		} else {
-			// Add alchemy import if no adapter import exists
 			sourceFile.insertImportDeclaration(0, {
 				moduleSpecifier: "alchemy/cloudflare/sveltekit",
 				defaultImport: "alchemy",
 			});
 		}
 
-		// Find the config object
 		const configVariable = sourceFile.getVariableDeclaration("config");
 		if (configVariable) {
 			const initializer = configVariable.getInitializer();

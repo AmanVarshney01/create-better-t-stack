@@ -29,7 +29,6 @@ export async function setupTanStackRouterAlchemyDeploy(
 		await fs.writeJson(pkgPath, pkg, { spaces: 2 });
 	}
 
-	// Update Vite config
 	const viteConfigPath = path.join(webAppDir, "vite.config.ts");
 	if (await fs.pathExists(viteConfigPath)) {
 		try {
@@ -43,7 +42,6 @@ export async function setupTanStackRouterAlchemyDeploy(
 			project.addSourceFileAtPath(viteConfigPath);
 			const sourceFile = project.getSourceFileOrThrow(viteConfigPath);
 
-			// Add alchemy import
 			const alchemyImport = sourceFile.getImportDeclaration(
 				"alchemy/cloudflare/vite",
 			);
@@ -54,7 +52,6 @@ export async function setupTanStackRouterAlchemyDeploy(
 				});
 			}
 
-			// Find the defineConfig call
 			const exportAssignment = sourceFile.getExportAssignment(
 				(d) => !d.isExportEquals(),
 			);

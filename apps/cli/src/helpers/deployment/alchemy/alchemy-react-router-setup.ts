@@ -42,7 +42,6 @@ export async function setupReactRouterAlchemyDeploy(
 			project.addSourceFileAtPath(viteConfigPath);
 			const sourceFile = project.getSourceFileOrThrow(viteConfigPath);
 
-			// Add alchemy import
 			const alchemyImport = sourceFile.getImportDeclaration(
 				"alchemy/cloudflare/react-router",
 			);
@@ -53,7 +52,6 @@ export async function setupReactRouterAlchemyDeploy(
 				});
 			}
 
-			// Find the defineConfig call
 			const exportAssignment = sourceFile.getExportAssignment(
 				(d) => !d.isExportEquals(),
 			);
@@ -76,18 +74,15 @@ export async function setupReactRouterAlchemyDeploy(
 				if (pluginsProperty && Node.isPropertyAssignment(pluginsProperty)) {
 					const initializer = pluginsProperty.getInitializer();
 					if (Node.isArrayLiteralExpression(initializer)) {
-						// Check if cloudflare plugin is already configured
 						const hasCloudflarePlugin = initializer
 							.getElements()
 							.some((el) => el.getText().includes("cloudflare("));
 
 						if (!hasCloudflarePlugin) {
-							// Add cloudflare plugin
 							initializer.addElement("alchemy()");
 						}
 					}
 				} else if (!pluginsProperty) {
-					// If no plugins property exists, create one with cloudflare plugin
 					configObject.addPropertyAssignment({
 						name: "plugins",
 						initializer: "[alchemy()]",
@@ -101,7 +96,6 @@ export async function setupReactRouterAlchemyDeploy(
 		}
 	}
 
-	// Update React Router config
 	const reactRouterConfigPath = path.join(webAppDir, "react-router.config.ts");
 	if (await fs.pathExists(reactRouterConfigPath)) {
 		try {
@@ -115,7 +109,6 @@ export async function setupReactRouterAlchemyDeploy(
 			project.addSourceFileAtPath(reactRouterConfigPath);
 			const sourceFile = project.getSourceFileOrThrow(reactRouterConfigPath);
 
-			// Find the default export
 			const exportAssignment = sourceFile.getExportAssignment(
 				(d) => !d.isExportEquals(),
 			);
@@ -124,7 +117,6 @@ export async function setupReactRouterAlchemyDeploy(
 			const configExpression = exportAssignment.getExpression();
 			let configObject: Node | undefined;
 
-			// Handle both direct object literal and satisfies expression
 			if (Node.isObjectLiteralExpression(configExpression)) {
 				configObject = configExpression;
 			} else if (Node.isSatisfiesExpression(configExpression)) {
@@ -137,11 +129,9 @@ export async function setupReactRouterAlchemyDeploy(
 			if (!configObject || !Node.isObjectLiteralExpression(configObject))
 				return;
 
-			// Check if future property exists
 			const futureProperty = configObject.getProperty("future");
 
 			if (!futureProperty) {
-				// Add future property with unstable_viteEnvironmentApi
 				configObject.addPropertyAssignment({
 					name: "future",
 					initializer: `{
@@ -149,7 +139,6 @@ export async function setupReactRouterAlchemyDeploy(
   }`,
 				});
 			} else if (Node.isPropertyAssignment(futureProperty)) {
-				// Future property exists, check if it has unstable_viteEnvironmentApi
 				const futureInitializer = futureProperty.getInitializer();
 
 				if (Node.isObjectLiteralExpression(futureInitializer)) {
@@ -158,13 +147,11 @@ export async function setupReactRouterAlchemyDeploy(
 					);
 
 					if (!viteEnvApiProp) {
-						// Add unstable_viteEnvironmentApi
 						futureInitializer.addPropertyAssignment({
 							name: "unstable_viteEnvironmentApi",
 							initializer: "true",
 						});
 					} else if (Node.isPropertyAssignment(viteEnvApiProp)) {
-						// Check if it's false and update to true
 						const value = viteEnvApiProp.getInitializer()?.getText();
 						if (value === "false") {
 							viteEnvApiProp.setInitializer("true");

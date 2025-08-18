@@ -9,8 +9,6 @@ export async function setupServerDeploy(config: ProjectConfig) {
 
 	if (serverDeploy === "none") return;
 
-	// Skip individual server alchemy setup if both web and server use alchemy
-	// (handled by combined setup in web-deploy-setup.ts)
 	if (serverDeploy === "alchemy" && webDeploy === "alchemy") {
 		return;
 	}

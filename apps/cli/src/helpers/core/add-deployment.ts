@@ -42,14 +42,12 @@ export async function addDeploymentToProject(
 			);
 		}
 
-		// Check if web deployment is already configured
 		if (input.webDeploy && detectedConfig.webDeploy === input.webDeploy) {
 			exitWithError(
 				`${input.webDeploy} web deployment is already configured for this project.`,
 			);
 		}
 
-		// Check if server deployment is already configured
 		if (
 			input.serverDeploy &&
 			detectedConfig.serverDeploy === input.serverDeploy
@@ -81,7 +79,6 @@ export async function addDeploymentToProject(
 			serverDeploy: input.serverDeploy || detectedConfig.serverDeploy || "none",
 		};
 
-		// Log what we're adding
 		if (input.webDeploy && input.webDeploy !== "none") {
 			log.info(
 				pc.green(

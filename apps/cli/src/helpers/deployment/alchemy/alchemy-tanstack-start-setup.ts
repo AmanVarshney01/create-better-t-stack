@@ -29,7 +29,6 @@ export async function setupTanStackStartAlchemyDeploy(
 		await fs.writeJson(pkgPath, pkg, { spaces: 2 });
 	}
 
-	// Update Vite config
 	const viteConfigPath = path.join(webAppDir, "vite.config.ts");
 	if (await fs.pathExists(viteConfigPath)) {
 		try {
@@ -73,7 +72,6 @@ export async function setupTanStackStartAlchemyDeploy(
 			}
 
 			if (Node.isObjectLiteralExpression(configObject)) {
-				// Add build configuration
 				if (!configObject.getProperty("build")) {
 					configObject.addPropertyAssignment({
 						name: "build",

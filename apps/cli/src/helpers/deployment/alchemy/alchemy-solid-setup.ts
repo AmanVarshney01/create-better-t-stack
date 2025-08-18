@@ -29,7 +29,6 @@ export async function setupSolidAlchemyDeploy(
 		await fs.writeJson(pkgPath, pkg, { spaces: 2 });
 	}
 
-	// Update Vite config
 	const viteConfigPath = path.join(webAppDir, "vite.config.ts");
 	if (await fs.pathExists(viteConfigPath)) {
 		try {
@@ -43,7 +42,6 @@ export async function setupSolidAlchemyDeploy(
 			project.addSourceFileAtPath(viteConfigPath);
 			const sourceFile = project.getSourceFileOrThrow(viteConfigPath);
 
-			// Add alchemy import
 			const alchemyImport = sourceFile.getImportDeclaration(
 				"alchemy/cloudflare/vite",
 			);
@@ -54,7 +52,6 @@ export async function setupSolidAlchemyDeploy(
 				});
 			}
 
-			// Find the defineConfig call
 			const exportAssignment = sourceFile.getExportAssignment(
 				(d) => !d.isExportEquals(),
 			);
@@ -77,18 +74,15 @@ export async function setupSolidAlchemyDeploy(
 				if (pluginsProperty && Node.isPropertyAssignment(pluginsProperty)) {
 					const initializer = pluginsProperty.getInitializer();
 					if (Node.isArrayLiteralExpression(initializer)) {
-						// Check if cloudflare plugin is already configured
 						const hasCloudflarePlugin = initializer
 							.getElements()
 							.some((el) => el.getText().includes("cloudflare("));
 
 						if (!hasCloudflarePlugin) {
-							// Add cloudflare plugin
 							initializer.addElement("alchemy()");
 						}
 					}
 				} else if (!pluginsProperty) {
-					// If no plugins property exists, create one with cloudflare plugin
 					configObject.addPropertyAssignment({
 						name: "plugins",
 						initializer: "[alchemy()]",

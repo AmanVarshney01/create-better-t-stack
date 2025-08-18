@@ -15,7 +15,6 @@ export async function setupCombinedAlchemyDeploy(
 	packageManager: PackageManager,
 	config: ProjectConfig,
 ) {
-	// Add alchemy dependency to root package.json
 	await addPackageDependency({
 		devDependencies: ["alchemy"],
 		projectDir,
