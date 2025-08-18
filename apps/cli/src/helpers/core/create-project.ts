@@ -9,10 +9,7 @@ import { setupExamples } from "../addons/examples-setup";
 import { setupApi } from "../core/api-setup";
 import { setupBackendDependencies } from "../core/backend-setup";
 import { setupDatabase } from "../core/db-setup";
-import {
-	generateCloudflareWorkerTypes,
-	setupRuntime,
-} from "../core/runtime-setup";
+import { setupRuntime } from "../core/runtime-setup";
 import { setupWebDeploy } from "../deployment/web-deploy-setup";
 import { createReadme } from "./create-readme";
 import { setupEnvironmentVariables } from "./env-setup";
@@ -91,7 +88,7 @@ export async function createProject(options: ProjectConfig) {
 				projectDir,
 				packageManager: options.packageManager,
 			});
-			await generateCloudflareWorkerTypes(options);
+			// Cloudflare types are generated as part of wrangler server deploy setup
 		}
 
 		await initializeGit(projectDir, options.git);

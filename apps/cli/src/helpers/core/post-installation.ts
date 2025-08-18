@@ -25,6 +25,7 @@ export async function displayPostInstallInstructions(
 		backend,
 		dbSetup,
 		webDeploy,
+		serverDeploy,
 	} = config;
 
 	const isConvex = backend === "convex";
@@ -116,7 +117,9 @@ export async function displayPostInstallInstructions(
 				)} Complete D1 database setup first\n   (see Database commands below)\n`;
 			}
 			output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev\n`;
-			output += `${pc.cyan(`${stepCounter++}.`)} cd apps/server && ${runCmd} run cf-typegen\n\n`;
+			if (serverDeploy === "wrangler") {
+				output += `${pc.cyan(`${stepCounter++}.`)} cd apps/server && ${runCmd} cf-typegen\n\n`;
+			}
 		} else {
 			output += "\n";
 		}

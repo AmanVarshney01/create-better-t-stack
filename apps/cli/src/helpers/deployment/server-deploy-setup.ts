@@ -1,5 +1,8 @@
 import path from "node:path";
+import { log, spinner } from "@clack/prompts";
+import { execa } from "execa";
 import fs from "fs-extra";
+import pc from "picocolors";
 import type { PackageManager, ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 
@@ -18,6 +21,7 @@ export async function setupServerDeploy(config: ProjectConfig) {
 
 	if (serverDeploy === "wrangler") {
 		await setupWorkersServerDeploy(serverDir, packageManager);
+		await generateCloudflareWorkerTypes({ serverDir, packageManager });
 	} else if (serverDeploy === "alchemy") {
 		await setupAlchemyServerDeploy(serverDir, packageManager);
 	}
@@ -47,6 +51,30 @@ async function setupWorkersServerDeploy(
 		devDependencies: ["wrangler", "@types/node", "@cloudflare/workers-types"],
 		projectDir: serverDir,
 	});
+}
+
+async function generateCloudflareWorkerTypes({
+	serverDir,
+	packageManager,
+}: {
+	serverDir: string;
+	packageManager: ProjectConfig["packageManager"];
+}) {
+	if (!(await fs.pathExists(serverDir))) return;
+	const s = spinner();
+	try {
+		s.start("Generating Cloudflare Workers types...");
+		const runCmd = packageManager === "npm" ? "npm" : packageManager;
+		await execa(runCmd, ["run", "cf-typegen"], { cwd: serverDir });
+		s.stop("Cloudflare Workers types generated successfully!");
+	} catch {
+		s.stop(pc.yellow("Failed to generate Cloudflare Workers types"));
+		const managerCmd =
+			packageManager === "npm" ? "npm run" : `${packageManager} run`;
+		log.warn(
+			`Note: You can manually run 'cd apps/server && ${managerCmd} cf-typegen' in the project directory later`,
+		);
+	}
 }
 
 async function setupAlchemyServerDeploy(
