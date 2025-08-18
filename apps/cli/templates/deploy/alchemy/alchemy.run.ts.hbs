@@ -17,7 +17,7 @@ import { Vite } from "alchemy/cloudflare";
 {{/if}}
 {{/if}}
 {{#if (eq serverDeploy "alchemy")}}
-import { server } from "alchemy/cloudflare";
+import { Worker } from "alchemy/cloudflare";
 {{/if}}
 
 const app = await alchemy("{{projectName}}");
@@ -64,7 +64,7 @@ export const web = await Vite("web", {
 {{/if}}
 
 {{#if (eq serverDeploy "alchemy")}}
-export const server = await server("server", {
+export const server = await Worker("server", {
   {{#if (eq webDeploy "alchemy")}}cwd: "apps/server",{{/if}}
   name: `${app.name}-${app.stage}`,
   entrypoint: "src/index.ts"
