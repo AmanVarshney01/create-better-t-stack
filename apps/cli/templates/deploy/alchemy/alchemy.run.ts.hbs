@@ -17,52 +17,54 @@ import { Vite } from "alchemy/cloudflare";
 {{/if}}
 {{/if}}
 {{#if (eq serverDeploy "alchemy")}}
-import { Worker } from "alchemy/cloudflare";
+import { server } from "alchemy/cloudflare";
 {{/if}}
 
 const app = await alchemy("{{projectName}}");
 
 {{#if (eq webDeploy "alchemy")}}
 {{#if (includes frontend "next")}}
-export const website = await Next("website", {
+export const web = await Next("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
-  name: `${app.name}-${app.stage}-website`
+  name: `${app.name}-${app.stage}-web`
 });
 {{else if (includes frontend "nuxt")}}
-export const website = await Nuxt("website", {
+export const web = await Nuxt("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
-  name: `${app.name}-${app.stage}-website`
+  name: `${app.name}-${app.stage}-web`
 });
 {{else if (includes frontend "svelte")}}
-export const website = await SvelteKit("website", {
+export const web = await SvelteKit("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
-  name: `${app.name}-${app.stage}-website`
+  name: `${app.name}-${app.stage}-web`
 });
 {{else if (includes frontend "tanstack-start")}}
-export const website = await TanStackStart("website", {
+export const web = await TanStackStart("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
-  name: `${app.name}-${app.stage}-website`
+  name: `${app.name}-${app.stage}-web`
 });
 {{else if (includes frontend "tanstack-router")}}
-export const website = await Vite("website", {
+export const web = await Vite("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
-  name: `${app.name}-${app.stage}-website`
+  name: `${app.name}-${app.stage}-web`,
+  assets: "dist"
 });
 {{else if (includes frontend "react-router")}}
-export const website = await ReactRouter("website", {
+export const web = await ReactRouter("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
-  name: `${app.name}-${app.stage}-website`
+  name: `${app.name}-${app.stage}-web`
 });
 {{else if (includes frontend "solid")}}
-export const website = await Vite("website", {
+export const web = await Vite("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
-  name: `${app.name}-${app.stage}-website`
+  name: `${app.name}-${app.stage}-web`,
+  assets: "dist"
 });
 {{/if}}
 {{/if}}
 
 {{#if (eq serverDeploy "alchemy")}}
-export const worker = await Worker("worker", {
+export const server = await server("server", {
   {{#if (eq webDeploy "alchemy")}}cwd: "apps/server",{{/if}}
   name: `${app.name}-${app.stage}`,
   entrypoint: "src/index.ts"
@@ -70,12 +72,12 @@ export const worker = await Worker("worker", {
 {{/if}}
 
 {{#if (and (eq webDeploy "alchemy") (eq serverDeploy "alchemy"))}}
-console.log(`\nWebsite: ${website.url}`);
-console.log(`Worker: ${worker.url}`);
+console.log(`\nWeb: ${web.url}`);
+console.log(`Server: ${server.url}`);
 {{else if (eq webDeploy "alchemy")}}
-console.log(`\nWebsite: ${website.url}`);
+console.log(`\nWeb: ${web.url}`);
 {{else if (eq serverDeploy "alchemy")}}
-console.log(`\nWorker: ${worker.url}`);
+console.log(`\nServer: ${server.url}`);
 {{/if}}
 
 await app.finalize();

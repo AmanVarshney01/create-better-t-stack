@@ -12,7 +12,7 @@ export async function setupTanStackStartAlchemyDeploy(
 	if (!(await fs.pathExists(webAppDir))) return;
 
 	await addPackageDependency({
-		devDependencies: ["alchemy"],
+		devDependencies: ["alchemy", "nitropack"],
 		projectDir: webAppDir,
 	});
 
@@ -141,4 +141,18 @@ export async function setupTanStackStartAlchemyDeploy(
 			console.warn("Failed to update vite.config.ts:", error);
 		}
 	}
+
+	// workaround for alchemy
+	const nitroConfigPath = path.join(webAppDir, "nitro.config.ts");
+	const nitroConfigContent = `import { defineNitroConfig } from "nitropack/config";
+
+export default defineNitroConfig({
+    preset: "cloudflare-module",
+    cloudflare: {
+        nodeCompat: true,
+    },
+});
+`;
+
+	await fs.writeFile(nitroConfigPath, nitroConfigContent, "utf-8");
 }

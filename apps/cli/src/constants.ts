@@ -118,6 +118,7 @@ export const dependencyVersionMap = {
 
 	"@tanstack/solid-query": "^5.75.0",
 	"@tanstack/solid-query-devtools": "^5.75.0",
+	"@tanstack/solid-router-devtools": "^1.131.25",
 
 	wrangler: "^4.23.0",
 	"@cloudflare/vite-plugin": "^1.9.0",
@@ -126,6 +127,8 @@ export const dependencyVersionMap = {
 	"@sveltejs/adapter-cloudflare": "^7.2.1",
 
 	alchemy: "^0.62.1",
+	// temporary workaround for alchemy
+	nitropack: "^2.12.4",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;
