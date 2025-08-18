@@ -20,7 +20,7 @@
       {{else if (eq runtime "bun")}}
       "bun"
       {{else if (eq runtime "workers")}}
-      "./worker-configuration",
+      "@cloudflare/workers-types",
       "node"
       {{else}}
       "node",

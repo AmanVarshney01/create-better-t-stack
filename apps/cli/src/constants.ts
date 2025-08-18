@@ -125,9 +125,10 @@ export const dependencyVersionMap = {
 	"@opennextjs/cloudflare": "^1.3.0",
 	"nitro-cloudflare-dev": "^0.2.2",
 	"@sveltejs/adapter-cloudflare": "^7.2.1",
+	"@cloudflare/workers-types": "^4.20250813.0",
 
 	alchemy: "^0.62.1",
-	// temporary workaround for alchemy
+	// temporary workaround for alchemy + tanstack start
 	nitropack: "^2.12.4",
 } as const;
 
