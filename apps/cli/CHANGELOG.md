@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.33.9
+
+### Patch Changes
+
+- b2d33a8: fix ultracite integrations flag
+
 ## 2.33.8
 
 ### Patch Changes
