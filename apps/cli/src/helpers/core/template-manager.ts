@@ -822,11 +822,20 @@ export async function setupDeploymentTemplates(
 			);
 			if (await fs.pathExists(alchemyTemplateSrc)) {
 				await processAndCopyFiles(
-					"**/*",
+					"alchemy.run.ts.hbs",
 					alchemyTemplateSrc,
 					projectDir,
 					context,
 				);
+				const serverAppDir = path.join(projectDir, "apps/server");
+				if (await fs.pathExists(serverAppDir)) {
+					await processAndCopyFiles(
+						"env.d.ts.hbs",
+						alchemyTemplateSrc,
+						serverAppDir,
+						context,
+					);
+				}
 			}
 		} else {
 			if (context.webDeploy === "alchemy") {
@@ -856,7 +865,13 @@ export async function setupDeploymentTemplates(
 					);
 					if (await fs.pathExists(alchemyTemplateSrc)) {
 						await processAndCopyFiles(
-							"**/*",
+							"alchemy.run.ts.hbs",
+							alchemyTemplateSrc,
+							serverAppDir,
+							context,
+						);
+						await processAndCopyFiles(
+							"env.d.ts.hbs",
 							alchemyTemplateSrc,
 							serverAppDir,
 							context,
