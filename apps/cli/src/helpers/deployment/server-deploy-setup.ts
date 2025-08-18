@@ -84,7 +84,12 @@ async function setupAlchemyServerDeploy(
 	if (!(await fs.pathExists(serverDir))) return;
 
 	await addPackageDependency({
-		devDependencies: ["alchemy"],
+		devDependencies: [
+			"alchemy",
+			"wrangler",
+			"@types/node",
+			"@cloudflare/workers-types",
+		],
 		projectDir: serverDir,
 	});
 
@@ -94,6 +99,8 @@ async function setupAlchemyServerDeploy(
 
 		packageJson.scripts = {
 			...packageJson.scripts,
+			dev: "wrangler dev --port=3000",
+			build: "wrangler deploy --dry-run",
 			deploy: "alchemy deploy",
 			destroy: "alchemy destroy",
 			"alchemy:dev": "alchemy dev",
