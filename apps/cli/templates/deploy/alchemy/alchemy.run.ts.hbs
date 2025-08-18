@@ -67,7 +67,8 @@ export const web = await Vite("web", {
 export const server = await Worker("server", {
   {{#if (eq webDeploy "alchemy")}}cwd: "apps/server",{{/if}}
   name: `${app.name}-${app.stage}`,
-  entrypoint: "src/index.ts"
+  entrypoint: "src/index.ts",
+  compatibility: "node"
 });
 {{/if}}
 
