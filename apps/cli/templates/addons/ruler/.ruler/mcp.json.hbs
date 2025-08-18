@@ -4,7 +4,7 @@
       "type": "stdio",
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp"]
-    }{{#if (or (eq runtime "workers") (eq webDeploy "workers"))}},
+    }{{#if (or (eq runtime "workers") (eq webDeploy "wrangler"))}},
     "cloudflare": {
 			"command": "npx",
 			"args": ["mcp-remote", "https://docs.mcp.cloudflare.com/sse"]

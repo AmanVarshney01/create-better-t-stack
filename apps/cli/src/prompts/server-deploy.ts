@@ -13,9 +13,9 @@ function getDeploymentDisplay(deployment: ServerDeploy): {
 	label: string;
 	hint: string;
 } {
-	if (deployment === "workers") {
+	if (deployment === "wrangler") {
 		return {
-			label: "Workers",
+			label: "Wrangler",
 			hint: "Deploy to Cloudflare Workers using Wrangler",
 		};
 	}
@@ -42,12 +42,10 @@ export async function getServerDeploymentChoice(
 		return "none";
 	}
 
-	const options: DeploymentOption[] = [
-		{ value: "none", label: "None", hint: "Manual setup" },
-	];
+	const options: DeploymentOption[] = [];
 
 	if (runtime === "workers") {
-		["alchemy", "workers"].forEach((deploy) => {
+		["alchemy", "wrangler"].forEach((deploy) => {
 			const { label, hint } = getDeploymentDisplay(deploy as ServerDeploy);
 			options.unshift({
 				value: deploy as ServerDeploy,
@@ -55,12 +53,15 @@ export async function getServerDeploymentChoice(
 				hint,
 			});
 		});
+	} else {
+		options.push({ value: "none", label: "None", hint: "Manual setup" });
 	}
 
 	const response = await select<ServerDeploy>({
 		message: "Select server deployment",
 		options,
-		initialValue: DEFAULT_CONFIG.serverDeploy,
+		initialValue:
+			runtime === "workers" ? "wrangler" : DEFAULT_CONFIG.serverDeploy,
 	});
 
 	if (isCancel(response)) return exitCancelled("Operation cancelled");
@@ -75,10 +76,10 @@ export async function getServerDeploymentToAdd(
 	const options: DeploymentOption[] = [];
 
 	if (runtime === "workers") {
-		if (existingDeployment !== "workers") {
-			const { label, hint } = getDeploymentDisplay("workers");
+		if (existingDeployment !== "wrangler") {
+			const { label, hint } = getDeploymentDisplay("wrangler");
 			options.push({
-				value: "workers",
+				value: "wrangler",
 				label,
 				hint,
 			});
@@ -113,7 +114,8 @@ export async function getServerDeploymentToAdd(
 	const response = await select<ServerDeploy>({
 		message: "Select server deployment",
 		options,
-		initialValue: DEFAULT_CONFIG.serverDeploy,
+		initialValue:
+			runtime === "workers" ? "wrangler" : DEFAULT_CONFIG.serverDeploy,
 	});
 
 	if (isCancel(response)) return exitCancelled("Operation cancelled");

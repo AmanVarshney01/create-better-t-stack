@@ -16,7 +16,7 @@ export async function setupServerDeploy(config: ProjectConfig) {
 	const serverDir = path.join(projectDir, "apps/server");
 	if (!(await fs.pathExists(serverDir))) return;
 
-	if (serverDeploy === "workers") {
+	if (serverDeploy === "wrangler") {
 		await setupWorkersServerDeploy(serverDir, packageManager);
 	} else if (serverDeploy === "alchemy") {
 		await setupAlchemyServerDeploy(serverDir, packageManager);

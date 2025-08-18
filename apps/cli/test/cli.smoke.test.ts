@@ -225,6 +225,8 @@ async function assertBtsConfig(
 		api: string;
 		runtime: string;
 		packageManager: string;
+		webDeploy: string;
+		serverDeploy: string;
 	}>,
 ) {
 	const btsConfigPath = join(dir, "bts.jsonc");
@@ -242,6 +244,8 @@ async function assertBtsConfig(
 		api?: string;
 		runtime?: string;
 		packageManager?: string;
+		webDeploy?: string;
+		serverDeploy?: string;
 	};
 
 	const errors: JSONC.ParseError[] = [];
@@ -285,6 +289,12 @@ async function assertBtsConfig(
 	}
 	if (expectedConfig.packageManager) {
 		expect(config.packageManager).toBe(expectedConfig.packageManager);
+	}
+	if (expectedConfig.webDeploy) {
+		expect(config.webDeploy).toBe(expectedConfig.webDeploy);
+	}
+	if (expectedConfig.serverDeploy) {
+		expect(config.serverDeploy).toBe(expectedConfig.serverDeploy);
 	}
 }
 
@@ -2633,4 +2643,224 @@ describe("create-better-t-stack smoke", () => {
 			}
 		},
 	);
+
+	describe("deploy combinations", () => {
+		it("scaffolds workers runtime + web deploy wrangler", async () => {
+			const projectName = "app-web-wrangler";
+			await runCli(
+				[
+					projectName,
+					"--yes",
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"workers",
+					"--web-deploy",
+					"wrangler",
+					"--database",
+					"none",
+					"--orm",
+					"none",
+					"--api",
+					"none",
+					"--no-auth",
+					"--addons",
+					"none",
+					"--db-setup",
+					"none",
+					"--examples",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			await assertScaffoldedProject(projectDir);
+			await assertBtsConfig(projectDir, {
+				frontend: ["tanstack-router"],
+				backend: "hono",
+				runtime: "workers",
+			});
+		});
+
+		it("scaffolds workers runtime + web deploy alchemy", async () => {
+			const projectName = "app-web-alchemy";
+			await runCli(
+				[
+					projectName,
+					"--yes",
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"workers",
+					"--web-deploy",
+					"alchemy",
+					"--database",
+					"none",
+					"--orm",
+					"none",
+					"--api",
+					"none",
+					"--no-auth",
+					"--addons",
+					"none",
+					"--db-setup",
+					"none",
+					"--examples",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			await assertScaffoldedProject(projectDir);
+			await assertBtsConfig(projectDir, {
+				frontend: ["tanstack-router"],
+				backend: "hono",
+				runtime: "workers",
+			});
+		});
+
+		it("scaffolds workers runtime + server deploy wrangler", async () => {
+			const projectName = "app-server-wrangler";
+			await runCli(
+				[
+					projectName,
+					"--yes",
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"workers",
+					"--server-deploy",
+					"wrangler",
+					"--database",
+					"none",
+					"--orm",
+					"none",
+					"--api",
+					"none",
+					"--no-auth",
+					"--addons",
+					"none",
+					"--db-setup",
+					"none",
+					"--examples",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			await assertScaffoldedProject(projectDir);
+			await assertBtsConfig(projectDir, {
+				frontend: ["tanstack-router"],
+				backend: "hono",
+				runtime: "workers",
+			});
+		});
+
+		it("scaffolds workers runtime + server deploy alchemy", async () => {
+			const projectName = "app-server-alchemy";
+			await runCli(
+				[
+					projectName,
+					"--yes",
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"workers",
+					"--server-deploy",
+					"alchemy",
+					"--database",
+					"none",
+					"--orm",
+					"none",
+					"--api",
+					"none",
+					"--no-auth",
+					"--addons",
+					"none",
+					"--db-setup",
+					"none",
+					"--examples",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			await assertScaffoldedProject(projectDir);
+			await assertBtsConfig(projectDir, {
+				frontend: ["tanstack-router"],
+				backend: "hono",
+				runtime: "workers",
+			});
+		});
+
+		it("scaffolds web deploy wrangler with backend none (no server deploy)", async () => {
+			const projectName = "app-web-wrangler-only";
+			await runCli(
+				[
+					projectName,
+					"--yes",
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"none",
+					"--web-deploy",
+					"wrangler",
+					"--database",
+					"none",
+					"--orm",
+					"none",
+					"--api",
+					"none",
+					"--no-auth",
+					"--addons",
+					"none",
+					"--db-setup",
+					"none",
+					"--examples",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			await assertScaffoldedProject(projectDir);
+			await assertBtsConfig(projectDir, {
+				frontend: ["tanstack-router"],
+				backend: "none",
+				webDeploy: "wrangler",
+			});
+		});
+	});
 });

@@ -57,7 +57,7 @@ export async function displayPostInstallInstructions(
 		? getStarlightInstructions(runCmd)
 		: "";
 	const workersDeployInstructions =
-		webDeploy === "workers" ? getWorkersDeployInstructions(runCmd) : "";
+		webDeploy === "wrangler" ? getWorkersDeployInstructions(runCmd) : "";
 
 	const hasWeb = frontend?.some((f) =>
 		[
@@ -116,9 +116,7 @@ export async function displayPostInstallInstructions(
 				)} Complete D1 database setup first\n   (see Database commands below)\n`;
 			}
 			output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev\n`;
-			output += `${pc.cyan(
-				`${stepCounter++}.`,
-			)} cd apps/server && ${runCmd} run cf-typegen\n\n`;
+			output += `${pc.cyan(`${stepCounter++}.`)} cd apps/server && ${runCmd} run cf-typegen\n\n`;
 		} else {
 			output += "\n";
 		}
@@ -205,7 +203,7 @@ async function getDatabaseInstructions(
 	runtime?: Runtime,
 	dbSetup?: DatabaseSetup,
 ): Promise<string> {
-	const instructions = [];
+	const instructions: string[] = [];
 
 	if (dbSetup === "docker") {
 		const dockerStatus = await getDockerStatus(database);

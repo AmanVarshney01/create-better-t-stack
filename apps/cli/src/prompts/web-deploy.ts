@@ -18,9 +18,9 @@ function getDeploymentDisplay(deployment: WebDeploy): {
 	label: string;
 	hint: string;
 } {
-	if (deployment === "workers") {
+	if (deployment === "wrangler") {
 		return {
-			label: "Workers",
+			label: "Wrangler",
 			hint: "Deploy to Cloudflare Workers using Wrangler",
 		};
 	}
@@ -47,7 +47,7 @@ export async function getDeploymentChoice(
 		return "none";
 	}
 
-	const options: DeploymentOption[] = ["workers", "alchemy", "none"].map(
+	const options: DeploymentOption[] = ["wrangler", "alchemy", "none"].map(
 		(deploy) => {
 			const { label, hint } = getDeploymentDisplay(deploy as WebDeploy);
 			return {
@@ -79,10 +79,10 @@ export async function getDeploymentToAdd(
 
 	const options: DeploymentOption[] = [];
 
-	if (existingDeployment !== "workers") {
-		const { label, hint } = getDeploymentDisplay("workers");
+	if (existingDeployment !== "wrangler") {
+		const { label, hint } = getDeploymentDisplay("wrangler");
 		options.push({
-			value: "workers",
+			value: "wrangler",
 			label,
 			hint,
 		});

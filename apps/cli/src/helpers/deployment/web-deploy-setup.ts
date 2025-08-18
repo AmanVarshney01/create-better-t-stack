@@ -21,7 +21,7 @@ export async function setupWebDeploy(config: ProjectConfig) {
 
 	if (webDeploy === "none") return;
 
-	if (webDeploy !== "workers" && webDeploy !== "alchemy") return;
+	if (webDeploy !== "wrangler" && webDeploy !== "alchemy") return;
 
 	if (webDeploy === "alchemy" && serverDeploy === "alchemy") {
 		await setupCombinedAlchemyDeploy(projectDir, packageManager, config);
@@ -36,7 +36,7 @@ export async function setupWebDeploy(config: ProjectConfig) {
 	const isReactRouter = frontend.includes("react-router");
 	const isSolid = frontend.includes("solid");
 
-	if (webDeploy === "workers") {
+	if (webDeploy === "wrangler") {
 		if (isNext) {
 			await setupNextWorkersDeploy(projectDir, packageManager);
 		} else if (isNuxt) {
