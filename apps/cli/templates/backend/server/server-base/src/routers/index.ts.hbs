@@ -1,5 +1,6 @@
 {{#if (eq api "orpc")}}
 import { {{#if auth}}protectedProcedure, {{/if}}publicProcedure } from "../lib/orpc";
+import type { RouterClient } from "@orpc/server";
 {{#if (includes examples "todo")}}
 import { todoRouter } from "./todo";
 {{/if}}
@@ -21,6 +22,7 @@ export const appRouter = {
   {{/if}}
 };
 export type AppRouter = typeof appRouter;
+export type AppRouterClient = RouterClient<typeof appRouter>;
 {{else if (eq api "trpc")}}
 import {
   {{#if auth}}protectedProcedure, {{/if}}publicProcedure,

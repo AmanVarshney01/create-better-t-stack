@@ -55,9 +55,8 @@ export const dependencyVersionMap = {
 
 	"@tauri-apps/cli": "^2.4.0",
 
-	"@biomejs/biome": "^2.1.2",
+	"@biomejs/biome": "^2.2.0",
 	oxlint: "^1.8.0",
-	ultracite: "5.1.1",
 
 	husky: "^9.1.7",
 	"lint-staged": "^16.1.2",
@@ -135,7 +134,7 @@ export const ADDON_COMPATIBILITY: Record<Addons, readonly Frontend[]> = {
 	turborepo: [],
 	starlight: [],
 	ultracite: [],
-	"vibe-rules": [],
+	ruler: [],
 	oxlint: [],
 	fumadocs: [],
 	none: [],

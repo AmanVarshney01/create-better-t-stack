@@ -1,0 +1,59 @@
+---
+title: Using the interactive prompts
+description: How to navigate and answer the CLI's interactive questions
+---
+
+## Overview
+
+The CLI uses `@clack/prompts` for interactive questions. These prompts work well in most terminals and are fully keyboard-driven.
+
+## Core keys
+
+- **Navigate**: Up/Down arrow keys
+- **Confirm/continue**: Enter
+- **Cancel**: Ctrl+C
+
+## Prompt types you’ll see
+
+### Single select (choose one)
+
+- **Move** with Up/Down, **Enter** to choose the highlighted option.
+
+Typical places: choosing a web or native framework, picking a runtime or API.
+
+### Multi-select (choose many)
+
+- **Move** with Up/Down.
+- **Space** toggles the highlighted option on/off.
+- **Enter** confirms your selection(s).
+- Some prompts allow selecting none (you can press Enter without toggling anything).
+
+Typical places: selecting project types (web/native), choosing example apps.
+
+### Grouped multi-select (addons)
+
+- Options are organized under group headings.
+- **Move** with Up/Down, **Space** to toggle an option, **Enter** to confirm.
+- Group headings are informational; toggle the items within groups.
+
+Used when selecting addons like Biome, PWA, Turborepo, etc.
+
+### Confirm (yes/no)
+
+- Use Left/Right or Up/Down to highlight Yes/No, then **Enter**.
+
+Typical places: installing dependencies, initializing Git.
+
+### Text input
+
+- Type your answer and press **Enter**.
+- If validation fails, a short message will explain what to fix; edit and press **Enter** again.
+
+Typical places: project name/path, database URLs, provider-specific inputs.
+
+## Tips
+
+- You can skip all prompts with `--yes` if you want the defaults. See the [Options](/docs/cli/options#yes--y) page.
+- If you accidentally start the wrong flow, press **Ctrl+C** to cancel safely.
+
+

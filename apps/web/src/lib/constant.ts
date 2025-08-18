@@ -470,9 +470,9 @@ export const TECH_OPTIONS: Record<
 			default: false,
 		},
 		{
-			id: "vibe-rules",
-			name: "Vibe Rules",
-			description: "Install and apply BTS rules to editors",
+			id: "ruler",
+			name: "Ruler",
+			description: "Centralize your AI rules",
 			icon: "",
 			color: "from-violet-500 to-violet-700",
 			default: false,

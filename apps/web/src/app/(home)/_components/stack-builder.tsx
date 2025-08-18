@@ -1004,7 +1004,7 @@ const generateCommand = (stackState: StackState): string => {
 					"ultracite",
 					"fumadocs",
 					"oxlint",
-					"vibe-rules",
+					"ruler",
 				].includes(addon),
 			);
 			if (validAddons.length > 0) {

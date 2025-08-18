@@ -54,11 +54,7 @@ export async function setupApi(config: ProjectConfig) {
 			if (hasReactWeb) {
 				if (api === "orpc") {
 					await addPackageDependency({
-						dependencies: [
-							"@orpc/tanstack-query",
-							"@orpc/client",
-							"@orpc/server",
-						],
+						dependencies: ["@orpc/tanstack-query", "@orpc/client"],
 						projectDir: webDir,
 					});
 				} else if (api === "trpc") {
@@ -79,7 +75,6 @@ export async function setupApi(config: ProjectConfig) {
 							"@tanstack/vue-query-devtools",
 							"@orpc/tanstack-query",
 							"@orpc/client",
-							"@orpc/server",
 						],
 						projectDir: webDir,
 					});
@@ -90,7 +85,6 @@ export async function setupApi(config: ProjectConfig) {
 						dependencies: [
 							"@orpc/tanstack-query",
 							"@orpc/client",
-							"@orpc/server",
 							"@tanstack/svelte-query",
 						],
 						projectDir: webDir,
@@ -102,7 +96,6 @@ export async function setupApi(config: ProjectConfig) {
 						dependencies: [
 							"@orpc/tanstack-query",
 							"@orpc/client",
-							"@orpc/server",
 							"@tanstack/solid-query",
 						],
 						projectDir: webDir,
@@ -123,11 +116,7 @@ export async function setupApi(config: ProjectConfig) {
 				});
 			} else if (api === "orpc") {
 				await addPackageDependency({
-					dependencies: [
-						"@orpc/tanstack-query",
-						"@orpc/client",
-						"@orpc/server",
-					],
+					dependencies: ["@orpc/tanstack-query", "@orpc/client"],
 					projectDir: nativeDir,
 				});
 			}

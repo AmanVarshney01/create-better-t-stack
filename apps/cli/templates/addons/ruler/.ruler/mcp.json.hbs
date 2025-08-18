@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "context7": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"]
+    }{{#if (or (eq runtime "workers") (eq webDeploy "workers"))}},
+    "cloudflare": {
+			"command": "npx",
+			"args": ["mcp-remote", "https://docs.mcp.cloudflare.com/sse"]
+    }{{/if}}{{#if (eq backend "convex")}},
+    "convex": {
+      "command": "npx",
+      "args": ["-y", "convex@latest", "mcp", "start"]
+    }
+    {{/if}}
+  }
+}

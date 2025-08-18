@@ -97,7 +97,7 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 		}
 
 		if (hasHusky) {
-			ultraciteArgs.push("--features", "husky", "lint-staged");
+			ultraciteArgs.push("--integrations", "husky", "lint-staged");
 		}
 
 		const ultraciteArgsString = ultraciteArgs.join(" ");
@@ -120,11 +120,6 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 				projectDir,
 			});
 		}
-
-		await addPackageDependency({
-			devDependencies: ["ultracite"],
-			projectDir,
-		});
 
 		log.success("Ultracite setup successfully!");
 	} catch (error) {

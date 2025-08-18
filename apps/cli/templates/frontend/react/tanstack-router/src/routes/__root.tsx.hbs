@@ -7,9 +7,8 @@ import { link, orpc } from "@/utils/orpc";
 import type { QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useState } from "react";
-import type { RouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
-import type { appRouter } from "../../../server/src/routers";
+import type { AppRouterClient } from "../../../server/src/routers";
 import { createORPCClient } from "@orpc/client";
 {{/if}}
 {{#if (eq api "trpc")}}
@@ -67,7 +66,7 @@ function RootComponent() {
   });
 
   {{#if (eq api "orpc")}}
-  const [client] = useState<RouterClient<typeof appRouter>>(() => createORPCClient(link));
+  const [client] = useState<AppRouterClient>(() => createORPCClient(link));
   const [orpcUtils] = useState(() => createTanstackQueryUtils(client));
   {{/if}}
 

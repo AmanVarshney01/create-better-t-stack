@@ -114,7 +114,6 @@ export async function gatherConfig(
 		result.auth = false;
 		result.dbSetup = "none";
 		result.examples = ["todo"];
-		result.webDeploy = "none";
 	}
 
 	if (result.backend === "none") {
@@ -125,7 +124,6 @@ export async function gatherConfig(
 		result.auth = false;
 		result.dbSetup = "none";
 		result.examples = [];
-		result.webDeploy = "none";
 	}
 
 	return {

@@ -42,9 +42,9 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 			label = "Ultracite";
 			hint = "Zero-config Biome preset with AI integration";
 			break;
-		case "vibe-rules":
-			label = "vibe-rules";
-			hint = "Install and apply BTS rules to editors";
+		case "ruler":
+			label = "Ruler";
+			hint = "Centralize your AI rules";
 			break;
 		case "husky":
 			label = "Husky";
@@ -69,7 +69,7 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 const ADDON_GROUPS = {
 	Documentation: ["starlight", "fumadocs"],
 	Linting: ["biome", "oxlint", "ultracite"],
-	Other: ["vibe-rules", "turborepo", "pwa", "tauri", "husky"],
+	Other: ["ruler", "turborepo", "pwa", "tauri", "husky"],
 };
 
 export async function getAddonsChoice(

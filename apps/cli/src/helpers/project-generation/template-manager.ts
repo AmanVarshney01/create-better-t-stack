@@ -5,7 +5,7 @@ import { PKG_ROOT } from "../../constants";
 import type { ProjectConfig } from "../../types";
 import { processTemplate } from "../../utils/template-processor";
 
-async function processAndCopyFiles(
+export async function processAndCopyFiles(
 	sourcePattern: string | string[],
 	baseSourceDir: string,
 	destDir: string,
@@ -539,7 +539,7 @@ export async function setupAddonsTemplate(
 	for (const addon of context.addons) {
 		if (addon === "none") continue;
 
-		if (addon === "vibe-rules") continue;
+		if (addon === "ruler") continue;
 
 		let addonSrcDir = path.join(PKG_ROOT, `templates/addons/${addon}`);
 		let addonDestDir = projectDir;

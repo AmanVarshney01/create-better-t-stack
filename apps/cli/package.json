@@ -1,6 +1,6 @@
 {
   "name": "create-better-t-stack",
-  "version": "2.32.2",
+  "version": "2.33.9",
   "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
   "type": "module",
   "license": "MIT",
@@ -43,14 +43,17 @@
     "url": "git+https://github.com/AmanVarshney01/create-better-t-stack.git",
     "directory": "apps/cli"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "homepage": "https://better-t-stack.dev/",
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
     "check-types": "tsc --noEmit",
     "check": "biome check --write .",
-    "test": "bun run build && vitest run",
-    "test:with-build": "bun run build && WITH_BUILD=1 vitest run",
+    "test": "bun run build && vitest --ui",
+    "test:with-build": "bun run build && WITH_BUILD=1 vitest --ui",
     "prepublishOnly": "npm run build"
   },
   "exports": {
@@ -77,6 +80,7 @@
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^24.2.1",
+    "@vitest/ui": "^3.2.4",
     "tsdown": "^0.14.1",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4"
