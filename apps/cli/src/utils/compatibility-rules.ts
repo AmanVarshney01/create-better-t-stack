@@ -1,9 +1,11 @@
 import type {
 	Addons,
 	API,
+	Backend,
 	CLIInput,
 	Frontend,
 	ProjectConfig,
+	ServerDeploy,
 	WebDeploy,
 } from "../types";
 import { validateAddonCompatibility } from "./addon-compatibility";
@@ -248,6 +250,21 @@ export function validateWebDeployRequiresWebFrontend(
 	if (webDeploy && webDeploy !== "none" && !hasWebFrontendFlag) {
 		exitWithError(
 			"'--web-deploy' requires a web frontend. Please select a web frontend or set '--web-deploy none'.",
+		);
+	}
+}
+
+export function validateServerDeployRequiresBackend(
+	serverDeploy: ServerDeploy | undefined,
+	backend: Backend | undefined,
+) {
+	if (
+		serverDeploy &&
+		serverDeploy !== "none" &&
+		(!backend || backend === "none")
+	) {
+		exitWithError(
+			"'--server-deploy' requires a backend. Please select a backend or set '--server-deploy none'.",
 		);
 	}
 }

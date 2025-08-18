@@ -21,6 +21,7 @@ import {
 	validateAddonsAgainstFrontends,
 	validateApiFrontendCompatibility,
 	validateExamplesCompatibility,
+	validateServerDeployRequiresBackend,
 	validateWebDeployRequiresWebFrontend,
 	validateWorkersCompatibility,
 } from "./utils/compatibility-rules";
@@ -406,6 +407,7 @@ export function processAndValidateFlags(
 		isWebFrontend(f),
 	);
 	validateWebDeployRequiresWebFrontend(config.webDeploy, hasWebFrontendFlag);
+	validateServerDeployRequiresBackend(config.serverDeploy, config.backend);
 
 	return config;
 }
