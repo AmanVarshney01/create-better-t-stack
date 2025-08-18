@@ -3,7 +3,6 @@ import consola from "consola";
 import fs from "fs-extra";
 import handlebars from "handlebars";
 import type { ProjectConfig } from "../types";
-import { formatWithBiome } from "./biome-formatter";
 
 /**
  * Processes a Handlebars template file and writes the output to the destination.
@@ -19,13 +18,7 @@ export async function processTemplate(
 	try {
 		const templateContent = await fs.readFile(srcPath, "utf-8");
 		const template = handlebars.compile(templateContent);
-		let processedContent = template(context);
-
-		processedContent = formatWithBiome(
-			context.projectDir,
-			destPath,
-			processedContent,
-		);
+		const processedContent = template(context);
 
 		await fs.ensureDir(path.dirname(destPath));
 		await fs.writeFile(destPath, processedContent);

@@ -3,6 +3,7 @@ import fs from "fs-extra";
 import type { ProjectConfig } from "../../types";
 import { writeBtsConfig } from "../../utils/bts-config";
 import { exitWithError } from "../../utils/errors";
+import { formatProjectWithBiome } from "../../utils/format-with-biome";
 import { setupAddons } from "../addons/addons-setup";
 import { setupAuth } from "../addons/auth-setup";
 import { setupExamples } from "../addons/examples-setup";
@@ -81,6 +82,8 @@ export async function createProject(options: ProjectConfig) {
 
 		await writeBtsConfig(options);
 
+		await formatProjectWithBiome(projectDir);
+
 		log.success("Project template successfully scaffolded!");
 
 		if (options.install) {
@@ -88,7 +91,6 @@ export async function createProject(options: ProjectConfig) {
 				projectDir,
 				packageManager: options.packageManager,
 			});
-			// Cloudflare types are generated as part of wrangler server deploy setup
 		}
 
 		await initializeGit(projectDir, options.git);

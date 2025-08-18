@@ -107,6 +107,13 @@ async function assertProjectStructure(
 	expect(existsSync(join(dir, "package.json"))).toBe(true);
 	expect(existsSync(join(dir, ".gitignore"))).toBe(true);
 
+	try {
+		const pmConfig = (await readBtsConfig(dir)) as { packageManager?: string };
+		if (pmConfig && pmConfig.packageManager === "bun") {
+			expect(existsSync(join(dir, "bunfig.toml"))).toBe(true);
+		}
+	} catch {}
+
 	if (hasWeb) {
 		expect(existsSync(join(dir, "apps", "web", "package.json"))).toBe(true);
 		const webDir = join(dir, "apps", "web");
@@ -132,6 +139,14 @@ async function assertProjectStructure(
 				hasAppDir ||
 				hasPublicDir,
 		).toBe(true);
+
+		const bts = (await readBtsConfig(dir)) as {
+			webDeploy?: string;
+			frontend?: string[];
+		};
+		if (bts.webDeploy === "wrangler") {
+			expect(existsSync(join(dir, "apps", "web", "wrangler.jsonc"))).toBe(true);
+		}
 	}
 
 	if (hasNative) {
@@ -154,6 +169,23 @@ async function assertProjectStructure(
 		expect(existsSync(join(dir, "apps", "server", "src", "index.ts"))).toBe(
 			true,
 		);
+		expect(existsSync(join(dir, "apps", "server", "tsconfig.json"))).toBe(true);
+
+		const bts = (await readBtsConfig(dir)) as {
+			serverDeploy?: string;
+			webDeploy?: string;
+		};
+		if (bts.serverDeploy === "wrangler") {
+			expect(existsSync(join(dir, "apps", "server", "wrangler.jsonc"))).toBe(
+				true,
+			);
+		}
+		if (bts.serverDeploy === "alchemy") {
+			expect(existsSync(join(dir, "apps", "server", "alchemy.run.ts"))).toBe(
+				true,
+			);
+			expect(existsSync(join(dir, "apps", "server", "env.d.ts"))).toBe(true);
+		}
 	}
 
 	if (hasConvexBackend) {
@@ -339,7 +371,6 @@ describe("create-better-t-stack smoke", () => {
 		consola.info("Programmatic CLI mode");
 	});
 
-	// Exhaustive matrix: all frontends x standard backends (no db, no orm, no api, no auth)
 	describe("frontend x backend matrix (no db, no api)", () => {
 		const FRONTENDS = [
 			"tanstack-router",
@@ -1510,10 +1541,6 @@ describe("create-better-t-stack smoke", () => {
 				runtime: "workers",
 				orm: "drizzle",
 			});
-
-			expect(
-				existsSync(join(projectDir, "apps", "server", "wrangler.jsonc")),
-			).toBe(true);
 		});
 
 		it("rejects incompatible runtime and backend combinations", async () => {
@@ -1820,7 +1847,6 @@ describe("create-better-t-stack smoke", () => {
 			});
 		});
 
-		// Git and install flag variations
 		it("scaffolds with git enabled", async () => {
 			const projectName = "app-with-git";
 			await runCli(
@@ -1897,7 +1923,6 @@ describe("create-better-t-stack smoke", () => {
 			expect(existsSync(join(projectDir, "node_modules"))).toBe(true);
 		});
 
-		// Additional addons beyond turborepo and biome
 		it("scaffolds with PWA addon", async () => {
 			const projectName = "app-addon-pwa";
 			await runCli(
@@ -2018,7 +2043,6 @@ describe("create-better-t-stack smoke", () => {
 			});
 		});
 
-		// Authentication combinations
 		it("scaffolds with authentication enabled", async () => {
 			const projectName = "app-with-auth";
 			await runCli(
@@ -2065,7 +2089,6 @@ describe("create-better-t-stack smoke", () => {
 			});
 		});
 
-		// MySQL database
 		it("scaffolds with MySQL + Prisma", async () => {
 			const projectName = "app-mysql-prisma";
 			await runCli(
@@ -2148,7 +2171,6 @@ describe("create-better-t-stack smoke", () => {
 			});
 		});
 
-		// oRPC API with more frontends
 		it("scaffolds oRPC with Next.js", async () => {
 			const projectName = "app-orpc-next";
 			await runCli(
@@ -2313,7 +2335,6 @@ describe("create-better-t-stack smoke", () => {
 			});
 		});
 
-		// Backend next combinations
 		it("scaffolds with Next.js backend", async () => {
 			const projectName = "app-backend-next";
 			await runCli(
@@ -2355,7 +2376,6 @@ describe("create-better-t-stack smoke", () => {
 			});
 		});
 
-		// Node runtime combinations
 		it("scaffolds with Node runtime", async () => {
 			const projectName = "app-node-runtime";
 			await runCli(

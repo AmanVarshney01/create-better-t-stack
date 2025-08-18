@@ -6,7 +6,6 @@ import { NavLink } from "react-router";
 {{else if (or (includes frontend "tanstack-router") (includes frontend "tanstack-start"))}}
 import { Link } from "@tanstack/react-router";
 {{/if}}
-
 {{#unless (includes frontend "tanstack-start")}}
 import { ModeToggle } from "./mode-toggle";
 {{/unless}}
