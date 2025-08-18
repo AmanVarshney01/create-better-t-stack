@@ -69,15 +69,14 @@ async function generateCloudflareWorkerTypes({
 		s.stop("Cloudflare Workers types generated successfully!");
 	} catch {
 		s.stop(pc.yellow("Failed to generate Cloudflare Workers types"));
-		const managerCmd =
-			packageManager === "npm" ? "npm run" : `${packageManager} run`;
+		const managerCmd = `${packageManager} run`;
 		log.warn(
 			`Note: You can manually run 'cd apps/server && ${managerCmd} cf-typegen' in the project directory later`,
 		);
 	}
 }
 
-async function setupAlchemyServerDeploy(
+export async function setupAlchemyServerDeploy(
 	serverDir: string,
 	_packageManager: PackageManager,
 ) {
@@ -89,6 +88,7 @@ async function setupAlchemyServerDeploy(
 			"wrangler",
 			"@types/node",
 			"@cloudflare/workers-types",
+			"dotenv",
 		],
 		projectDir: serverDir,
 	});

@@ -12,7 +12,7 @@ export async function setupTanStackStartAlchemyDeploy(
 	if (!(await fs.pathExists(webAppDir))) return;
 
 	await addPackageDependency({
-		devDependencies: ["alchemy", "nitropack"],
+		devDependencies: ["alchemy", "nitropack", "dotenv"],
 		projectDir: webAppDir,
 	});
 

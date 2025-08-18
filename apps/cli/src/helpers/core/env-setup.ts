@@ -85,8 +85,17 @@ export async function addEnvVariablesToFile(
 }
 
 export async function setupEnvironmentVariables(config: ProjectConfig) {
-	const { backend, frontend, database, auth, examples, dbSetup, projectDir } =
-		config;
+	const {
+		backend,
+		frontend,
+		database,
+		auth,
+		examples,
+		dbSetup,
+		projectDir,
+		webDeploy,
+		serverDeploy,
+	} = config;
 
 	const hasReactRouter = frontend.includes("react-router");
 	const hasTanStackRouter = frontend.includes("tanstack-router");
@@ -244,5 +253,53 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 		try {
 			await fs.copy(envPath, devVarsPath);
 		} catch (_err) {}
+	}
+
+	const isUnifiedAlchemy =
+		webDeploy === "alchemy" && serverDeploy === "alchemy";
+	const isIndividualAlchemy =
+		webDeploy === "alchemy" || serverDeploy === "alchemy";
+
+	if (isUnifiedAlchemy) {
+		const rootEnvPath = path.join(projectDir, ".env");
+		const rootAlchemyVars: EnvVariable[] = [
+			{
+				key: "ALCHEMY_PASSWORD",
+				value: "please-change-this",
+				condition: true,
+			},
+		];
+		await addEnvVariablesToFile(rootEnvPath, rootAlchemyVars);
+	} else if (isIndividualAlchemy) {
+		if (webDeploy === "alchemy") {
+			const webDir = path.join(projectDir, "apps/web");
+			if (await fs.pathExists(webDir)) {
+				const webAlchemyVars: EnvVariable[] = [
+					{
+						key: "ALCHEMY_PASSWORD",
+						value: "please-change-this",
+						condition: true,
+					},
+				];
+				await addEnvVariablesToFile(path.join(webDir, ".env"), webAlchemyVars);
+			}
+		}
+
+		if (serverDeploy === "alchemy") {
+			const serverDir = path.join(projectDir, "apps/server");
+			if (await fs.pathExists(serverDir)) {
+				const serverAlchemyVars: EnvVariable[] = [
+					{
+						key: "ALCHEMY_PASSWORD",
+						value: "please-change-this",
+						condition: true,
+					},
+				];
+				await addEnvVariablesToFile(
+					path.join(serverDir, ".env"),
+					serverAlchemyVars,
+				);
+			}
+		}
 	}
 }

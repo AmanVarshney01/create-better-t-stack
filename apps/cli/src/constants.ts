@@ -130,6 +130,8 @@ export const dependencyVersionMap = {
 	alchemy: "^0.62.1",
 	// temporary workaround for alchemy + tanstack start
 	nitropack: "^2.12.4",
+
+	dotenv: "^17.2.1",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

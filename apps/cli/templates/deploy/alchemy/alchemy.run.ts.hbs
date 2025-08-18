@@ -19,6 +19,15 @@ import { Vite } from "alchemy/cloudflare";
 {{#if (eq serverDeploy "alchemy")}}
 import { Worker } from "alchemy/cloudflare";
 {{/if}}
+import { config } from "dotenv";
+
+{{#if (and (eq webDeploy "alchemy") (eq serverDeploy "alchemy"))}}
+config({ path: "./.env" });
+{{else if (eq webDeploy "alchemy")}}
+config({ path: "./apps/web/.env" });
+{{else if (eq serverDeploy "alchemy")}}
+config({ path: "./apps/server/.env" });
+{{/if}}
 
 const app = await alchemy("{{projectName}}");
 
@@ -26,39 +35,88 @@ const app = await alchemy("{{projectName}}");
 {{#if (includes frontend "next")}}
 export const web = await Next("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
-  name: `${app.name}-${app.stage}-web`
+  name: `${app.name}-${app.stage}-web`,
+  bindings: {
+    {{#if (eq backend "convex")}}
+    NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL || "",
+    {{else}}
+    NEXT_PUBLIC_SERVER_URL: process.env.NEXT_PUBLIC_SERVER_URL || "",
+    {{/if}}
+  }
 });
 {{else if (includes frontend "nuxt")}}
 export const web = await Nuxt("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
-  name: `${app.name}-${app.stage}-web`
+  name: `${app.name}-${app.stage}-web`,
+  bindings: {
+    {{#if (eq backend "convex")}}
+    NUXT_PUBLIC_CONVEX_URL: process.env.NUXT_PUBLIC_CONVEX_URL || "",
+    {{else}}
+    NUXT_PUBLIC_SERVER_URL: process.env.NUXT_PUBLIC_SERVER_URL || "",
+    {{/if}}
+  }
 });
 {{else if (includes frontend "svelte")}}
 export const web = await SvelteKit("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
-  name: `${app.name}-${app.stage}-web`
+  name: `${app.name}-${app.stage}-web`,
+  bindings: {
+    {{#if (eq backend "convex")}}
+    PUBLIC_CONVEX_URL: process.env.PUBLIC_CONVEX_URL || "",
+    {{else}}
+    PUBLIC_SERVER_URL: process.env.PUBLIC_SERVER_URL || "",
+    {{/if}}
+  }
 });
 {{else if (includes frontend "tanstack-start")}}
 export const web = await TanStackStart("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
-  name: `${app.name}-${app.stage}-web`
+  name: `${app.name}-${app.stage}-web`,
+  bindings: {
+    {{#if (eq backend "convex")}}
+    VITE_CONVEX_URL: process.env.VITE_CONVEX_URL || "",
+    {{else}}
+    VITE_SERVER_URL: process.env.VITE_SERVER_URL || "",
+    {{/if}}
+  }
 });
 {{else if (includes frontend "tanstack-router")}}
 export const web = await Vite("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
   name: `${app.name}-${app.stage}-web`,
-  assets: "dist"
+  assets: "dist",
+  bindings: {
+    {{#if (eq backend "convex")}}
+    VITE_CONVEX_URL: process.env.VITE_CONVEX_URL || "",
+    {{else}}
+    VITE_SERVER_URL: process.env.VITE_SERVER_URL || "",
+    {{/if}}
+  }
 });
 {{else if (includes frontend "react-router")}}
 export const web = await ReactRouter("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
-  name: `${app.name}-${app.stage}-web`
+  name: `${app.name}-${app.stage}-web`,
+  bindings: {
+    {{#if (eq backend "convex")}}
+    VITE_CONVEX_URL: process.env.VITE_CONVEX_URL || "",
+    {{else}}
+    VITE_SERVER_URL: process.env.VITE_SERVER_URL || "",
+    {{/if}}
+  }
 });
 {{else if (includes frontend "solid")}}
 export const web = await Vite("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
   name: `${app.name}-${app.stage}-web`,
-  assets: "dist"
+  assets: "dist",
+  bindings: {
+    {{#if (eq backend "convex")}}
+    VITE_CONVEX_URL: process.env.VITE_CONVEX_URL || "",
+    {{else}}
+    VITE_SERVER_URL: process.env.VITE_SERVER_URL || "",
+    {{/if}}
+  }
 });
 {{/if}}
 {{/if}}
@@ -68,17 +126,38 @@ export const server = await Worker("server", {
   {{#if (eq webDeploy "alchemy")}}cwd: "apps/server",{{/if}}
   name: `${app.name}-${app.stage}`,
   entrypoint: "src/index.ts",
-  compatibility: "node"
+  compatibility: "node",
+  bindings: {
+    {{#if (and (ne database "none") (ne dbSetup "none"))}}
+    DATABASE_URL: alchemy.secret(process.env.DATABASE_URL),
+    {{/if}}
+    CORS_ORIGIN: process.env.CORS_ORIGIN || "",
+    {{#if auth}}
+    BETTER_AUTH_SECRET: alchemy.secret(process.env.BETTER_AUTH_SECRET),
+    BETTER_AUTH_URL: process.env.BETTER_AUTH_URL || "",
+    {{/if}}
+    {{#if (includes examples "ai")}}
+    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret(process.env.GOOGLE_GENERATIVE_AI_API_KEY),
+    {{/if}}
+    {{#if (eq dbSetup "turso")}}
+    DATABASE_AUTH_TOKEN: alchemy.secret(process.env.DATABASE_AUTH_TOKEN),
+    {{/if}}
+  }
 });
 {{/if}}
 
+
+
 {{#if (and (eq webDeploy "alchemy") (eq serverDeploy "alchemy"))}}
-console.log(`\nWeb: ${web.url}`);
-console.log(`Server: ${server.url}`);
+console.log("\nDeployed via Alchemy:");
+console.log(`  Web    -> ${web.url}`);
+console.log(`  Server -> ${server.url}`);
 {{else if (eq webDeploy "alchemy")}}
-console.log(`\nWeb: ${web.url}`);
+console.log("\nDeployed via Alchemy:");
+console.log(`  Web    -> ${web.url}`);
 {{else if (eq serverDeploy "alchemy")}}
-console.log(`\nServer: ${server.url}`);
+console.log("\nDeployed via Alchemy:");
+console.log(`  Server -> ${server.url}`);
 {{/if}}
 
 await app.finalize();

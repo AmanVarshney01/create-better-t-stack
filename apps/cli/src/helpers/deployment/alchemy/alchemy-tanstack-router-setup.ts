@@ -11,7 +11,7 @@ export async function setupTanStackRouterAlchemyDeploy(
 	if (!(await fs.pathExists(webAppDir))) return;
 
 	await addPackageDependency({
-		devDependencies: ["alchemy"],
+		devDependencies: ["alchemy", "dotenv"],
 		projectDir: webAppDir,
 	});
 

@@ -2,6 +2,7 @@ import path from "node:path";
 import fs from "fs-extra";
 import type { PackageManager, ProjectConfig } from "../../../types";
 import { addPackageDependency } from "../../../utils/add-package-deps";
+import { setupAlchemyServerDeploy } from "../server-deploy-setup";
 import { setupNextAlchemyDeploy } from "./alchemy-next-setup";
 import { setupNuxtAlchemyDeploy } from "./alchemy-nuxt-setup";
 import { setupReactRouterAlchemyDeploy } from "./alchemy-react-router-setup";
@@ -16,7 +17,7 @@ export async function setupCombinedAlchemyDeploy(
 	config: ProjectConfig,
 ) {
 	await addPackageDependency({
-		devDependencies: ["alchemy"],
+		devDependencies: ["alchemy", "dotenv"],
 		projectDir,
 	});
 
@@ -31,6 +32,11 @@ export async function setupCombinedAlchemyDeploy(
 			"alchemy:dev": "alchemy dev",
 		};
 		await fs.writeJson(rootPkgPath, pkg, { spaces: 2 });
+	}
+
+	const serverDir = path.join(projectDir, "apps/server");
+	if (await fs.pathExists(serverDir)) {
+		await setupAlchemyServerDeploy(serverDir, packageManager);
 	}
 
 	const frontend = config.frontend;

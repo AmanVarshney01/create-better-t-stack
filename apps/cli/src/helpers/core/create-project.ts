@@ -12,6 +12,7 @@ import { setupBackendDependencies } from "../core/backend-setup";
 import { setupDatabase } from "../core/db-setup";
 import { setupRuntime } from "../core/runtime-setup";
 import { setupWebDeploy } from "../deployment/web-deploy-setup";
+import { runConvexCodegen } from "./convex-codegen";
 import { createReadme } from "./create-readme";
 import { setupEnvironmentVariables } from "./env-setup";
 import { initializeGit } from "./git";
@@ -30,7 +31,6 @@ import {
 	setupExamplesTemplate,
 	setupFrontendTemplates,
 } from "./template-manager";
-import { runConvexCodegen } from "./convex-codegen";
 
 export async function createProject(options: ProjectConfig) {
 	const projectDir = options.projectDir;

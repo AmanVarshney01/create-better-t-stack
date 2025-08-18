@@ -12,7 +12,7 @@ export async function setupNuxtAlchemyDeploy(
 	if (!(await fs.pathExists(webAppDir))) return;
 
 	await addPackageDependency({
-		devDependencies: ["alchemy", "nitro-cloudflare-dev"],
+		devDependencies: ["alchemy", "nitro-cloudflare-dev", "dotenv"],
 		projectDir: webAppDir,
 	});
 
