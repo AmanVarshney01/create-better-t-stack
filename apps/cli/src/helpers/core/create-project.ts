@@ -30,6 +30,7 @@ import {
 	setupExamplesTemplate,
 	setupFrontendTemplates,
 } from "./template-manager";
+import { runConvexCodegen } from "./convex-codegen";
 
 export async function createProject(options: ProjectConfig) {
 	const projectDir = options.projectDir;
@@ -83,6 +84,10 @@ export async function createProject(options: ProjectConfig) {
 		await writeBtsConfig(options);
 
 		await formatProjectWithBiome(projectDir);
+
+		if (isConvex) {
+			await runConvexCodegen(projectDir, options.packageManager);
+		}
 
 		log.success("Project template successfully scaffolded!");
 
