@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@erquhart/convex-oss-stats": "^0.8.1",
-    "convex": "^1.25.4"
+    "convex": "^1.25.4",
+    "convex-helpers": "^0.1.104"
   }
 }

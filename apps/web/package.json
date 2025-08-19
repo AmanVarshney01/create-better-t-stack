@@ -26,6 +26,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "convex": "^1.25.4",
+    "convex-helpers": "^0.1.104",
     "date-fns": "^4.1.0",
     "fumadocs-core": "15.6.7",
     "fumadocs-mdx": "11.7.3",
