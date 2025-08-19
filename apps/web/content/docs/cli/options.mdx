@@ -255,11 +255,11 @@ create-better-t-stack --examples todo ai
 Web deployment configuration:
 
 - `none`: No deployment setup
-- `workers`: Cloudflare Workers deployment
+- `wrangler`: Cloudflare Workers deployment
 - `alchemy`: Alchemy platform deployment
 
 ```bash
-create-better-t-stack --web-deploy workers
+create-better-t-stack --web-deploy wrangler
 create-better-t-stack --web-deploy alchemy
 ```
 
@@ -268,11 +268,11 @@ create-better-t-stack --web-deploy alchemy
 Server deployment configuration:
 
 - `none`: No deployment setup
-- `workers`: Cloudflare Workers deployment (when runtime is workers)
-- `alchemy`: Alchemy platform deployment (when runtime is workers)
+- `wrangler`: Cloudflare Workers deployment (when runtime is workers)
+- `alchemy`: Cloudflare Workers deployment (when runtime is workers)
 
 ```bash
-create-better-t-stack --server-deploy workers
+create-better-t-stack --server-deploy wrangler
 create-better-t-stack --server-deploy alchemy
 ```
 
@@ -296,7 +296,7 @@ create-better-t-stack \
   --addons pwa biome \
   --examples todo \
   --package-manager bun \
-  --web-deploy workers \
+  --web-deploy wrangler \
   --server-deploy alchemy \
   --install
 ```

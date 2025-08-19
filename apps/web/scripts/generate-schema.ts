@@ -14,6 +14,7 @@ import {
 	PackageManagerSchema,
 	RuntimeSchema,
 	WebDeploySchema,
+	ServerDeploySchema,
 } from "../../cli/src/types";
 
 const DATABASE_VALUES = DatabaseSchema.options;
@@ -27,6 +28,7 @@ const PACKAGE_MANAGER_VALUES = PackageManagerSchema.options;
 const DATABASE_SETUP_VALUES = DatabaseSetupSchema.options;
 const API_VALUES = APISchema.options;
 const WEB_DEPLOY_VALUES = WebDeploySchema.options;
+const SERVER_DEPLOY_VALUES = ServerDeploySchema.options;
 
 const configSchema = {
 	$schema: "http://json-schema.org/draft-07/schema#",
@@ -117,6 +119,11 @@ const configSchema = {
 			enum: WEB_DEPLOY_VALUES,
 			description: WebDeploySchema.description,
 		},
+		serverDeploy: {
+			type: "string",
+			enum: SERVER_DEPLOY_VALUES,
+			description: ServerDeploySchema.description,
+		},
 	},
 	required: [
 		"version",
@@ -133,6 +140,7 @@ const configSchema = {
 		"dbSetup",
 		"api",
 		"webDeploy",
+		"serverDeploy",
 	],
 	additionalProperties: false,
 };

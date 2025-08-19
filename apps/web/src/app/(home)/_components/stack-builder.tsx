@@ -718,10 +718,10 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 			if (!isPWACompat && nextStack.addons.includes("pwa")) {
 				incompatibleAddons.push("pwa");
 				notes.webFrontend.notes.push(
-					"PWA addon requires TanStack/React Router or Solid. Addon will be removed.",
+					"PWA addon requires TanStack Router, React Router, Solid, or Next.js. Addon will be removed.",
 				);
 				notes.addons.notes.push(
-					"PWA requires TanStack/React Router/Solid. It will be removed.",
+					"PWA requires TanStack Router, React Router, Solid, or Next.js. It will be removed.",
 				);
 				notes.webFrontend.hasIssue = true;
 				notes.addons.hasIssue = true;
@@ -733,10 +733,10 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 			if (!isTauriCompat && nextStack.addons.includes("tauri")) {
 				incompatibleAddons.push("tauri");
 				notes.webFrontend.notes.push(
-					"Tauri addon requires TanStack/React Router, Nuxt, Svelte, Solid, or Next.js. Addon will be removed.",
+					"Tauri addon requires TanStack Router, React Router, Nuxt, Svelte, Solid, or Next.js. Addon will be removed.",
 				);
 				notes.addons.notes.push(
-					"Tauri requires TanStack/React Router/Nuxt/Svelte/Solid/Next.js. It will be removed.",
+					"Tauri requires TanStack Router, React Router, Nuxt, Svelte, Solid, or Next.js. It will be removed.",
 				);
 				notes.webFrontend.hasIssue = true;
 				notes.addons.hasIssue = true;
@@ -881,6 +881,112 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 			category: "webDeploy",
 			message: "Web deployment set to 'none' (requires web frontend)",
 		});
+	}
+
+	// Server deployment requires a backend (and not Convex)
+	if (
+		nextStack.serverDeploy !== "none" &&
+		(nextStack.backend === "none" || nextStack.backend === "convex")
+	) {
+		notes.serverDeploy.notes.push(
+			"Server deployment requires a supported backend. It will be disabled.",
+		);
+		notes.backend.notes.push(
+			"No compatible backend selected: Server deployment has been disabled.",
+		);
+		notes.serverDeploy.hasIssue = true;
+		notes.backend.hasIssue = true;
+		nextStack.serverDeploy = "none";
+		changed = true;
+		changes.push({
+			category: "serverDeploy",
+			message: "Server deployment set to 'none' (requires backend)",
+		});
+	}
+
+	// Cloudflare server deployments (wrangler/alchemy) require Workers runtime
+	if (nextStack.serverDeploy !== "none" && nextStack.runtime !== "workers") {
+		notes.serverDeploy.notes.push(
+			"Selected server deployment targets Cloudflare Workers. Runtime will be set to 'Cloudflare Workers'.",
+		);
+		notes.runtime.notes.push(
+			"Server deployment requires Cloudflare Workers runtime. It will be selected.",
+		);
+		notes.serverDeploy.hasIssue = true;
+		notes.runtime.hasIssue = true;
+		nextStack.runtime = "workers";
+		changed = true;
+		changes.push({
+			category: "serverDeploy",
+			message:
+				"Runtime set to 'Cloudflare Workers' (required by server deployment)",
+		});
+
+		// Apply Workers runtime compatibility adjustments
+		if (nextStack.backend !== "hono") {
+			notes.runtime.notes.push(
+				"Cloudflare Workers runtime requires Hono backend. Hono will be selected.",
+			);
+			notes.backend.notes.push(
+				"Cloudflare Workers runtime requires Hono backend. It will be selected.",
+			);
+			notes.runtime.hasIssue = true;
+			notes.backend.hasIssue = true;
+			nextStack.backend = "hono";
+			changes.push({
+				category: "runtime",
+				message: "Backend set to 'Hono' (required by Cloudflare Workers)",
+			});
+		}
+
+		if (nextStack.orm !== "drizzle" && nextStack.orm !== "none") {
+			notes.runtime.notes.push(
+				"Cloudflare Workers runtime requires Drizzle ORM or no ORM. Drizzle will be selected.",
+			);
+			notes.orm.notes.push(
+				"Cloudflare Workers runtime requires Drizzle ORM or no ORM. Drizzle will be selected.",
+			);
+			notes.runtime.hasIssue = true;
+			notes.orm.hasIssue = true;
+			nextStack.orm = "drizzle";
+			changes.push({
+				category: "runtime",
+				message: "ORM set to 'Drizzle' (required by Cloudflare Workers)",
+			});
+		}
+
+		if (nextStack.database === "mongodb") {
+			notes.runtime.notes.push(
+				"Cloudflare Workers runtime is not compatible with MongoDB. SQLite will be selected.",
+			);
+			notes.database.notes.push(
+				"MongoDB is not compatible with Cloudflare Workers runtime. SQLite will be selected.",
+			);
+			notes.runtime.hasIssue = true;
+			notes.database.hasIssue = true;
+			nextStack.database = "sqlite";
+			changes.push({
+				category: "runtime",
+				message:
+					"Database set to 'SQLite' (MongoDB not compatible with Workers)",
+			});
+		}
+
+		if (nextStack.dbSetup === "docker") {
+			notes.runtime.notes.push(
+				"Cloudflare Workers runtime does not support Docker setup. D1 will be selected.",
+			);
+			notes.dbSetup.notes.push(
+				"Docker setup is not compatible with Cloudflare Workers runtime. D1 will be selected.",
+			);
+			notes.runtime.hasIssue = true;
+			notes.dbSetup.hasIssue = true;
+			nextStack.dbSetup = "d1";
+			changes.push({
+				category: "runtime",
+				message: "DB Setup set to 'D1' (Docker not compatible with Workers)",
+			});
+		}
 	}
 
 	return {

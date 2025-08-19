@@ -35,7 +35,7 @@ create-better-t-stack [project-directory] [options]
 - `--api <type>`: `none`, `trpc`, `orpc`
 - `--db-setup <setup>`: `none`, `turso`, `d1`, `neon`, `supabase`, `prisma-postgres`, `mongodb-atlas`, `docker`
 - `--examples <types...>`: `none`, `todo`, `ai`
-- `--web-deploy <setup>`: `none`, `workers`
+- `--web-deploy <setup>`: `none`, `wrangler`, `alchemy`
 - `--directory-conflict <strategy>`: `merge`, `overwrite`, `increment`, `error`
 - `--render-title / --no-render-title`: Show/hide ASCII art title
 
@@ -80,7 +80,7 @@ create-better-t-stack add
 create-better-t-stack add --addons pwa tauri --install
 
 # Add deployment setup
-create-better-t-stack add --web-deploy workers
+create-better-t-stack add --web-deploy wrangler
 ```
 
 ## `sponsors`

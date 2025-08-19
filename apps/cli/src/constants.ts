@@ -138,7 +138,7 @@ export type AvailableDependencies = keyof typeof dependencyVersionMap;
 
 export const ADDON_COMPATIBILITY: Record<Addons, readonly Frontend[]> = {
 	pwa: ["tanstack-router", "react-router", "solid", "next"],
-	tauri: ["tanstack-router", "react-router", "nuxt", "svelte", "solid"],
+	tauri: ["tanstack-router", "react-router", "nuxt", "svelte", "solid", "next"],
 	biome: [],
 	husky: [],
 	turborepo: [],
