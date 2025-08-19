@@ -248,13 +248,6 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 
 	await addEnvVariablesToFile(envPath, serverVars);
 
-	if (config.runtime === "workers") {
-		const devVarsPath = path.join(serverDir, ".dev.vars");
-		try {
-			await fs.copy(envPath, devVarsPath);
-		} catch (_err) {}
-	}
-
 	const isUnifiedAlchemy =
 		webDeploy === "alchemy" && serverDeploy === "alchemy";
 	const isIndividualAlchemy =
