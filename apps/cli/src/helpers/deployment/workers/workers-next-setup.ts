@@ -1,5 +1,5 @@
 import path from "node:path";
-import * as fs from "fs-extra";
+import fs from "fs-extra";
 import type { PackageManager } from "../../../types";
 import { addPackageDependency } from "../../../utils/add-package-deps";
 

@@ -25,7 +25,12 @@ import {
 	setupProjectDirectory,
 } from "../../utils/project-directory";
 import { renderTitle } from "../../utils/render-title";
-import { getProvidedFlags, processAndValidateFlags } from "../../validation";
+import {
+	getProvidedFlags,
+	processAndValidateFlags,
+	processProvidedFlagsWithoutValidation,
+	validateConfigCompatibility,
+} from "../../validation";
 import { addAddonsToProject } from "./add-addons";
 import { addDeploymentToProject } from "./add-deployment";
 import { createProject } from "./create-project";
@@ -126,21 +131,13 @@ export async function createProjectHandler(
 
 	const providedFlags = getProvidedFlags(cliInput);
 
-	const flagConfig = processAndValidateFlags(
-		cliInput,
-		providedFlags,
-		finalBaseName,
-	);
-	const { projectName: _projectNameFromFlags, ...otherFlags } = flagConfig;
-
-	if (!input.yes && Object.keys(otherFlags).length > 0) {
-		log.info(pc.yellow("Using these pre-selected options:"));
-		log.message(displayConfig(otherFlags));
-		log.message("");
-	}
-
 	let config: ProjectConfig;
 	if (input.yes) {
+		const flagConfig = processProvidedFlagsWithoutValidation(
+			cliInput,
+			finalBaseName,
+		);
+
 		config = {
 			...DEFAULT_CONFIG,
 			...flagConfig,
@@ -148,6 +145,8 @@ export async function createProjectHandler(
 			projectDir: finalResolvedPath,
 			relativePath: finalPathInput,
 		};
+
+		validateConfigCompatibility(config);
 
 		if (config.backend === "convex") {
 			log.info(
@@ -163,6 +162,19 @@ export async function createProjectHandler(
 		log.message(displayConfig(config));
 		log.message("");
 	} else {
+		const flagConfig = processAndValidateFlags(
+			cliInput,
+			providedFlags,
+			finalBaseName,
+		);
+		const { projectName: _projectNameFromFlags, ...otherFlags } = flagConfig;
+
+		if (Object.keys(otherFlags).length > 0) {
+			log.info(pc.yellow("Using these pre-selected options:"));
+			log.message(displayConfig(otherFlags));
+			log.message("");
+		}
+
 		config = await gatherConfig(
 			flagConfig,
 			finalBaseName,

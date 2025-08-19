@@ -13,8 +13,8 @@ import {
 	ORMSchema,
 	PackageManagerSchema,
 	RuntimeSchema,
-	WebDeploySchema,
 	ServerDeploySchema,
+	WebDeploySchema,
 } from "../../cli/src/types";
 
 const DATABASE_VALUES = DatabaseSchema.options;
