@@ -1,7 +1,6 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 
-// Query to get all videos from the database
 export const getVideos = query({
 	args: {},
 	returns: v.array(
@@ -17,7 +16,6 @@ export const getVideos = query({
 	},
 });
 
-// Query to get all tweets from the database
 export const getTweets = query({
 	args: {},
 	returns: v.array(

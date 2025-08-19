@@ -11,7 +11,6 @@ async function main(): Promise<void> {
 	let versionInput = args.find((arg) => !arg.startsWith("--"));
 
 	if (!versionInput) {
-		// Interactive prompt
 		const bumpType = await select({
 			message: "What type of release do you want to create?",
 			options: [

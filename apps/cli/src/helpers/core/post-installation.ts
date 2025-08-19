@@ -36,7 +36,14 @@ export async function displayPostInstallInstructions(
 
 	const databaseInstructions =
 		!isConvex && database !== "none"
-			? await getDatabaseInstructions(database, orm, runCmd, runtime, dbSetup)
+			? await getDatabaseInstructions(
+					database,
+					orm,
+					runCmd,
+					runtime,
+					dbSetup,
+					serverDeploy,
+				)
 			: "";
 
 	const tauriInstructions = addons?.includes("tauri")
@@ -57,8 +64,16 @@ export async function displayPostInstallInstructions(
 	const starlightInstructions = addons?.includes("starlight")
 		? getStarlightInstructions(runCmd)
 		: "";
-	const workersDeployInstructions =
-		webDeploy === "wrangler" ? getWorkersDeployInstructions(runCmd) : "";
+	const wranglerDeployInstructions = getWranglerDeployInstructions(
+		runCmd,
+		webDeploy,
+		serverDeploy,
+	);
+	const alchemyDeployInstructions = getAlchemyDeployInstructions(
+		runCmd,
+		webDeploy,
+		serverDeploy,
+	);
 
 	const hasWeb = frontend?.some((f) =>
 		[
@@ -152,8 +167,10 @@ export async function displayPostInstallInstructions(
 	if (tauriInstructions) output += `\n${tauriInstructions.trim()}\n`;
 	if (lintingInstructions) output += `\n${lintingInstructions.trim()}\n`;
 	if (pwaInstructions) output += `\n${pwaInstructions.trim()}\n`;
-	if (workersDeployInstructions)
-		output += `\n${workersDeployInstructions.trim()}\n`;
+	if (wranglerDeployInstructions)
+		output += `\n${wranglerDeployInstructions.trim()}\n`;
+	if (alchemyDeployInstructions)
+		output += `\n${alchemyDeployInstructions.trim()}\n`;
 	if (starlightInstructions) output += `\n${starlightInstructions.trim()}\n`;
 
 	if (noOrmWarning) output += `\n${noOrmWarning.trim()}\n`;
@@ -203,8 +220,9 @@ async function getDatabaseInstructions(
 	database: Database,
 	orm?: ORM,
 	runCmd?: string,
-	runtime?: Runtime,
+	_runtime?: Runtime,
 	dbSetup?: DatabaseSetup,
+	serverDeploy?: string,
 ): Promise<string> {
 	const instructions: string[] = [];
 
@@ -217,7 +235,7 @@ async function getDatabaseInstructions(
 		}
 	}
 
-	if (runtime === "workers" && dbSetup === "d1") {
+	if (serverDeploy === "wrangler" && dbSetup === "d1") {
 		const packageManager = runCmd === "npm run" ? "npm" : runCmd || "npm";
 
 		instructions.push(
@@ -249,6 +267,13 @@ async function getDatabaseInstructions(
 			`${pc.cyan("6.")} Apply migrations to production: ${pc.white(
 				`${packageManager} wrangler d1 migrations apply YOUR_DB_NAME`,
 			)}`,
+		);
+		instructions.push("");
+	}
+
+	if (dbSetup === "d1" && serverDeploy === "alchemy") {
+		instructions.push(
+			`${pc.cyan("•")} Generate migrations: ${pc.white(`${runCmd} db:generate`)}`,
 		);
 		instructions.push("");
 	}
@@ -344,6 +369,47 @@ function getBunWebNativeWarning(): string {
 	)} 'bun' might cause issues with web + native apps in a monorepo.\n   Use 'pnpm' if problems arise.`;
 }
 
-function getWorkersDeployInstructions(runCmd?: string): string {
-	return `\n${pc.bold("Deploy frontend to Cloudflare Workers:")}\n${pc.cyan("•")} Deploy: ${`cd apps/web && ${runCmd} run deploy`}`;
+function getWranglerDeployInstructions(
+	runCmd?: string,
+	webDeploy?: string,
+	serverDeploy?: string,
+): string {
+	const instructions: string[] = [];
+
+	if (webDeploy === "wrangler") {
+		instructions.push(
+			`${pc.bold("Deploy web to Cloudflare Workers:")}\n${pc.cyan("•")} Deploy: ${`cd apps/web && ${runCmd} run deploy`}`,
+		);
+	}
+	if (serverDeploy === "wrangler") {
+		instructions.push(
+			`${pc.bold("Deploy server to Cloudflare Workers:")}\n${pc.cyan("•")} Deploy: ${`cd apps/server && ${runCmd} run deploy`}`,
+		);
+	}
+
+	return instructions.length ? `\n${instructions.join("\n")}` : "";
+}
+
+function getAlchemyDeployInstructions(
+	runCmd?: string,
+	webDeploy?: string,
+	serverDeploy?: string,
+): string {
+	const instructions: string[] = [];
+
+	if (webDeploy === "alchemy" && serverDeploy !== "alchemy") {
+		instructions.push(
+			`${pc.bold("Deploy web to Alchemy:")}\n${pc.cyan("•")} Deploy: ${`cd apps/web && ${runCmd} deploy`}`,
+		);
+	} else if (serverDeploy === "alchemy" && webDeploy !== "alchemy") {
+		instructions.push(
+			`${pc.bold("Deploy server to Alchemy:")}\n${pc.cyan("•")} Deploy: ${`cd apps/server && ${runCmd} deploy`}`,
+		);
+	} else if (webDeploy === "alchemy" && serverDeploy === "alchemy") {
+		instructions.push(
+			`${pc.bold("Deploy to Alchemy:")}\n${pc.cyan("•")} Deploy: ${`${runCmd} deploy`}`,
+		);
+	}
+
+	return instructions.length ? `\n${instructions.join("\n")}` : "";
 }

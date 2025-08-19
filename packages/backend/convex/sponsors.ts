@@ -1,7 +1,6 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 
-// Simple query to get all sponsors from the database
 export const getSponsors = query({
 	args: {},
 	returns: v.array(
