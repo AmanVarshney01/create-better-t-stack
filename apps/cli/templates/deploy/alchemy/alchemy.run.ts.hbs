@@ -17,16 +17,15 @@ import { Vite } from "alchemy/cloudflare";
 {{/if}}
 {{/if}}
 {{#if (eq serverDeploy "alchemy")}}
-import { Worker } from "alchemy/cloudflare";
+import { Worker, WranglerJson } from "alchemy/cloudflare";
 {{/if}}
 import { config } from "dotenv";
 
 {{#if (and (eq webDeploy "alchemy") (eq serverDeploy "alchemy"))}}
-config({ path: "./.env" });
-{{else if (eq webDeploy "alchemy")}}
 config({ path: "./apps/web/.env" });
-{{else if (eq serverDeploy "alchemy")}}
 config({ path: "./apps/server/.env" });
+{{else if (or (eq webDeploy "alchemy") (eq serverDeploy "alchemy"))}}
+config({ path: "./.env" });
 {{/if}}
 
 const app = await alchemy("{{projectName}}");
@@ -42,6 +41,9 @@ export const web = await Next("web", {
     {{else}}
     NEXT_PUBLIC_SERVER_URL: process.env.NEXT_PUBLIC_SERVER_URL || "",
     {{/if}}
+  },
+  dev: {
+    command: "{{packageManager}} run dev"
   }
 });
 {{else if (includes frontend "nuxt")}}
@@ -54,6 +56,9 @@ export const web = await Nuxt("web", {
     {{else}}
     NUXT_PUBLIC_SERVER_URL: process.env.NUXT_PUBLIC_SERVER_URL || "",
     {{/if}}
+  },
+  dev: {
+    command: "{{packageManager}} run dev"
   }
 });
 {{else if (includes frontend "svelte")}}
@@ -66,6 +71,9 @@ export const web = await SvelteKit("web", {
     {{else}}
     PUBLIC_SERVER_URL: process.env.PUBLIC_SERVER_URL || "",
     {{/if}}
+  },
+  dev: {
+    command: "{{packageManager}} run dev"
   }
 });
 {{else if (includes frontend "tanstack-start")}}
@@ -78,6 +86,9 @@ export const web = await TanStackStart("web", {
     {{else}}
     VITE_SERVER_URL: process.env.VITE_SERVER_URL || "",
     {{/if}}
+  },
+  dev: {
+    command: "{{packageManager}} run dev"
   }
 });
 {{else if (includes frontend "tanstack-router")}}
@@ -91,6 +102,9 @@ export const web = await Vite("web", {
     {{else}}
     VITE_SERVER_URL: process.env.VITE_SERVER_URL || "",
     {{/if}}
+  },
+  dev: {
+    command: "{{packageManager}} run dev"
   }
 });
 {{else if (includes frontend "react-router")}}
@@ -103,6 +117,9 @@ export const web = await ReactRouter("web", {
     {{else}}
     VITE_SERVER_URL: process.env.VITE_SERVER_URL || "",
     {{/if}}
+  },
+  dev: {
+    command: "{{packageManager}} run dev"
   }
 });
 {{else if (includes frontend "solid")}}
@@ -116,6 +133,9 @@ export const web = await Vite("web", {
     {{else}}
     VITE_SERVER_URL: process.env.VITE_SERVER_URL || "",
     {{/if}}
+  },
+  dev: {
+    command: "{{packageManager}} run dev"
   }
 });
 {{/if}}
@@ -142,22 +162,26 @@ export const server = await Worker("server", {
     {{#if (eq dbSetup "turso")}}
     DATABASE_AUTH_TOKEN: alchemy.secret(process.env.DATABASE_AUTH_TOKEN),
     {{/if}}
-  }
+  },
+  dev: {
+		port: 3000,
+	},
+});
+
+await WranglerJson("wrangler", {
+	worker: server,
 });
 {{/if}}
 
 
 
 {{#if (and (eq webDeploy "alchemy") (eq serverDeploy "alchemy"))}}
-console.log("\nDeployed via Alchemy:");
-console.log(`  Web    -> ${web.url}`);
-console.log(`  Server -> ${server.url}`);
+console.log(`Web    -> ${web.url}`);
+console.log(`Server -> ${server.url}`);
 {{else if (eq webDeploy "alchemy")}}
-console.log("\nDeployed via Alchemy:");
-console.log(`  Web    -> ${web.url}`);
+console.log(`Web    -> ${web.url}`);
 {{else if (eq serverDeploy "alchemy")}}
-console.log("\nDeployed via Alchemy:");
-console.log(`  Server -> ${server.url}`);
+console.log(`Server -> ${server.url}`);
 {{/if}}
 
 await app.finalize();
