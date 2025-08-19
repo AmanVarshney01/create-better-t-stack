@@ -1,6 +1,6 @@
 import { isCancel, select } from "@clack/prompts";
 import { DEFAULT_CONFIG } from "../constants";
-import type { Backend, Runtime, ServerDeploy } from "../types";
+import type { Backend, Runtime, ServerDeploy, WebDeploy } from "../types";
 import { exitCancelled } from "../utils/errors";
 
 type DeploymentOption = {
@@ -35,6 +35,7 @@ export async function getServerDeploymentChoice(
 	deployment?: ServerDeploy,
 	runtime?: Runtime,
 	backend?: Backend,
+	webDeploy?: WebDeploy,
 ): Promise<ServerDeploy> {
 	if (deployment !== undefined) return deployment;
 
@@ -61,7 +62,11 @@ export async function getServerDeploymentChoice(
 		message: "Select server deployment",
 		options,
 		initialValue:
-			runtime === "workers" ? "wrangler" : DEFAULT_CONFIG.serverDeploy,
+			webDeploy === "alchemy"
+				? "alchemy"
+				: runtime === "workers"
+					? "wrangler"
+					: DEFAULT_CONFIG.serverDeploy,
 	});
 
 	if (isCancel(response)) return exitCancelled("Operation cancelled");

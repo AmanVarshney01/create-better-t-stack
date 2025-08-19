@@ -3,29 +3,31 @@ import type { ProjectConfig } from "../../types";
 import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
 
 export async function setupCloudflareD1(config: ProjectConfig) {
-	const { projectDir } = config;
+	const { projectDir, serverDeploy } = config;
 
-	const envPath = path.join(projectDir, "apps/server", ".env");
+	if (serverDeploy === "wrangler") {
+		const envPath = path.join(projectDir, "apps/server", ".env");
 
-	const variables: EnvVariable[] = [
-		{
-			key: "CLOUDFLARE_ACCOUNT_ID",
-			value: "",
-			condition: true,
-		},
-		{
-			key: "CLOUDFLARE_DATABASE_ID",
-			value: "",
-			condition: true,
-		},
-		{
-			key: "CLOUDFLARE_D1_TOKEN",
-			value: "",
-			condition: true,
-		},
-	];
+		const variables: EnvVariable[] = [
+			{
+				key: "CLOUDFLARE_ACCOUNT_ID",
+				value: "",
+				condition: true,
+			},
+			{
+				key: "CLOUDFLARE_DATABASE_ID",
+				value: "",
+				condition: true,
+			},
+			{
+				key: "CLOUDFLARE_D1_TOKEN",
+				value: "",
+				condition: true,
+			},
+		];
 
-	try {
-		await addEnvVariablesToFile(envPath, variables);
-	} catch (_err) {}
+		try {
+			await addEnvVariablesToFile(envPath, variables);
+		} catch (_err) {}
+	}
 }

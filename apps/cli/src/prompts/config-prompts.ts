@@ -105,6 +105,7 @@ export async function gatherConfig(
 					flags.serverDeploy,
 					results.runtime,
 					results.backend,
+					results.webDeploy,
 				),
 			git: () => getGitChoice(flags.git),
 			packageManager: () => getPackageManagerChoice(flags.packageManager),

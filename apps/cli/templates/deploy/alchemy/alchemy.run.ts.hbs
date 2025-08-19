@@ -18,10 +18,14 @@ import { Vite } from "alchemy/cloudflare";
 {{/if}}
 {{#if (eq serverDeploy "alchemy")}}
 import { Worker, WranglerJson } from "alchemy/cloudflare";
+{{#if (eq dbSetup "d1")}}
+import { D1Database } from "alchemy/cloudflare";
+{{/if}}
 {{/if}}
 import { config } from "dotenv";
 
 {{#if (and (eq webDeploy "alchemy") (eq serverDeploy "alchemy"))}}
+config({ path: "./.env" });
 config({ path: "./apps/web/.env" });
 config({ path: "./apps/server/.env" });
 {{else if (or (eq webDeploy "alchemy") (eq serverDeploy "alchemy"))}}
@@ -29,6 +33,13 @@ config({ path: "./.env" });
 {{/if}}
 
 const app = await alchemy("{{projectName}}");
+
+{{#if (and (eq serverDeploy "alchemy") (eq dbSetup "d1"))}}
+const db = await D1Database("database", {
+	name: `${app.name}-${app.stage}-db`,
+	migrationsDir: "apps/server/src/db/migrations",
+});
+{{/if}}
 
 {{#if (eq webDeploy "alchemy")}}
 {{#if (includes frontend "next")}}
@@ -148,7 +159,9 @@ export const server = await Worker("server", {
   entrypoint: "src/index.ts",
   compatibility: "node",
   bindings: {
-    {{#if (and (ne database "none") (ne dbSetup "none"))}}
+    {{#if (eq dbSetup "d1")}}
+    DB: db,
+    {{else if (and (ne database "none") (ne dbSetup "none"))}}
     DATABASE_URL: alchemy.secret(process.env.DATABASE_URL),
     {{/if}}
     CORS_ORIGIN: process.env.CORS_ORIGIN || "",
