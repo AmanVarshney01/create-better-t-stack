@@ -142,10 +142,22 @@ async function assertProjectStructure(
 
 		const bts = (await readBtsConfig(dir)) as {
 			webDeploy?: string;
+			serverDeploy?: string;
 			frontend?: string[];
 		};
 		if (bts.webDeploy === "wrangler") {
 			expect(existsSync(join(dir, "apps", "web", "wrangler.jsonc"))).toBe(true);
+		}
+
+		if (
+			bts.webDeploy === "alchemy" &&
+			bts.serverDeploy !== "alchemy" &&
+			bts.frontend &&
+			bts.frontend.length > 0
+		) {
+			const webRunner = join(dir, "apps", "web", "alchemy.run.ts");
+			consola.info(`Checking Alchemy web runner at: ${webRunner}`);
+			expect(existsSync(webRunner)).toBe(true);
 		}
 	}
 
@@ -181,12 +193,29 @@ async function assertProjectStructure(
 			);
 		}
 		if (bts.serverDeploy === "alchemy") {
-			expect(existsSync(join(dir, "apps", "server", "alchemy.run.ts"))).toBe(
-				true,
-			);
-			expect(existsSync(join(dir, "apps", "server", "env.d.ts"))).toBe(true);
+			const serverRunner = join(dir, "apps", "server", "alchemy.run.ts");
+			const serverEnv = join(dir, "apps", "server", "env.d.ts");
+			consola.info(`Checking Alchemy server runner at: ${serverRunner}`);
+			consola.info(`Checking Alchemy env types at: ${serverEnv}`);
+			expect(existsSync(serverRunner)).toBe(true);
+			expect(existsSync(serverEnv)).toBe(true);
 		}
 	}
+
+	try {
+		const btsAll = (await readBtsConfig(dir)) as {
+			serverDeploy?: string;
+			webDeploy?: string;
+		};
+		if (btsAll.serverDeploy === "alchemy" && btsAll.webDeploy === "alchemy") {
+			const rootRunner = join(dir, "alchemy.run.ts");
+			const serverEnv = join(dir, "apps", "server", "env.d.ts");
+			consola.info(`Checking Alchemy root runner at: ${rootRunner}`);
+			consola.info(`Checking Alchemy env types at: ${serverEnv}`);
+			expect(existsSync(rootRunner)).toBe(true);
+			expect(existsSync(serverEnv)).toBe(true);
+		}
+	} catch {}
 
 	if (hasConvexBackend) {
 		const hasPackagesDir = existsSync(join(dir, "packages"));
@@ -1139,6 +1168,52 @@ describe("create-better-t-stack smoke", () => {
 			assertBtsConfig(projectDir, {
 				database: "postgres",
 				orm: "prisma",
+			});
+		});
+
+		it("scaffolds with PostgreSQL + Drizzle", async () => {
+			const projectName = "app-postgres-drizzle";
+			await runCli(
+				[
+					projectName,
+					"--yes",
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"bun",
+					"--database",
+					"postgres",
+					"--orm",
+					"drizzle",
+					"--api",
+					"trpc",
+					"--no-auth",
+					"--addons",
+					"none",
+					"--db-setup",
+					"none",
+					"--examples",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			assertScaffoldedProject(projectDir);
+			assertProjectStructure(projectDir, {
+				hasWeb: true,
+				hasServer: true,
+				hasDatabase: true,
+			});
+			assertBtsConfig(projectDir, {
+				database: "postgres",
+				orm: "drizzle",
 			});
 		});
 
@@ -2751,6 +2826,59 @@ describe("create-better-t-stack smoke", () => {
 				backend: "hono",
 				runtime: "workers",
 			});
+		});
+
+		it("scaffolds workers runtime + server deploy alchemy (server-only)", async () => {
+			const projectName = "app-server-only-alchemy";
+			await runCli(
+				[
+					projectName,
+					"--yes",
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"workers",
+					"--server-deploy",
+					"alchemy",
+					"--database",
+					"none",
+					"--orm",
+					"none",
+					"--api",
+					"none",
+					"--no-auth",
+					"--addons",
+					"none",
+					"--db-setup",
+					"none",
+					"--examples",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			await assertScaffoldedProject(projectDir);
+			await assertBtsConfig(projectDir, {
+				frontend: ["tanstack-router"],
+				backend: "hono",
+				runtime: "workers",
+				serverDeploy: "alchemy",
+			});
+			consola.info("Verifying server-only Alchemy artifacts");
+			expect(
+				existsSync(join(projectDir, "apps", "server", "alchemy.run.ts")),
+			).toBe(true);
+			expect(existsSync(join(projectDir, "apps", "server", "env.d.ts"))).toBe(
+				true,
+			);
+			expect(existsSync(join(projectDir, "alchemy.run.ts"))).toBe(false);
 		});
 
 		it("scaffolds workers runtime + server deploy wrangler", async () => {
