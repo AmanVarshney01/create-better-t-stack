@@ -79,6 +79,20 @@ create-better-t-stack my-app --yes --directory-conflict overwrite
 create-better-t-stack my-app --yes --directory-conflict increment
 ```
 
+### `--disable-analytics / --no-disable-analytics`
+
+Control whether analytics and telemetry data is collected.
+
+```bash
+# Disable analytics collection
+create-better-t-stack --disable-analytics
+
+# Enable analytics collection (default)
+create-better-t-stack --no-disable-analytics
+```
+
+Analytics help improve Better-T Stack by providing insights into usage patterns. When disabled, no data is collected or transmitted.
+
 ## Database Options
 
 ### `--database <type>`
@@ -212,6 +226,8 @@ create-better-t-stack --auth
 create-better-t-stack --no-auth
 ```
 
+**Note:** Authentication requires both a database and backend framework to be selected. It is automatically disabled when using Convex backend or when no backend is selected.
+
 ## Addons
 
 ### `--addons <types...>`
@@ -256,12 +272,14 @@ Web deployment configuration:
 
 - `none`: No deployment setup
 - `wrangler`: Cloudflare Workers deployment
-- `alchemy`: Alchemy platform deployment
+- `alchemy`: Cloudflare Workers deployment (via Alchemy infrastructure as code)
 
 ```bash
 create-better-t-stack --web-deploy wrangler
 create-better-t-stack --web-deploy alchemy
 ```
+
+**Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Infrastructure as Code with Alchemy Guide](/docs/guides/alchemy-deployment) for details.
 
 ### `--server-deploy <setup>`
 
@@ -269,12 +287,14 @@ Server deployment configuration:
 
 - `none`: No deployment setup
 - `wrangler`: Cloudflare Workers deployment (when runtime is workers)
-- `alchemy`: Cloudflare Workers deployment (when runtime is workers)
+- `alchemy`: Cloudflare Workers deployment (when runtime is workers, via Alchemy infrastructure as code)
 
 ```bash
 create-better-t-stack --server-deploy wrangler
 create-better-t-stack --server-deploy alchemy
 ```
+
+**Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Infrastructure as Code with Alchemy Guide](/docs/guides/alchemy-deployment) for details.
 
 ## Option Validation
 

@@ -39,6 +39,7 @@ create-better-t-stack [project-directory] [options]
 - `--server-deploy <setup>`: `none`, `wrangler`, `alchemy`
 - `--directory-conflict <strategy>`: `merge`, `overwrite`, `increment`, `error`
 - `--render-title / --no-render-title`: Show/hide ASCII art title
+- `--disable-analytics / --no-disable-analytics`: Control analytics collection
 
 See the full reference in [Options](/docs/cli/options).
 
@@ -46,7 +47,7 @@ See the full reference in [Options](/docs/cli/options).
 
 ```bash
 # Default setup with prompts
-create-better-t-stack 
+create-better-t-stack
 
 # Quick setup with defaults
 create-better-t-stack --yes
