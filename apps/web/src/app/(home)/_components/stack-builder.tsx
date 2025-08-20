@@ -989,6 +989,54 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 		}
 	}
 
+	// Alchemy deployment validation - temporarily not compatible with Next.js and React Router
+	const isAlchemyWebDeploy = nextStack.webDeploy === "alchemy";
+	const isAlchemyServerDeploy = nextStack.serverDeploy === "alchemy";
+
+	if (isAlchemyWebDeploy || isAlchemyServerDeploy) {
+		const incompatibleFrontends = nextStack.webFrontend.filter(
+			(f) => f === "next" || f === "react-router",
+		);
+
+		if (incompatibleFrontends.length > 0) {
+			const deployType =
+				isAlchemyWebDeploy && isAlchemyServerDeploy
+					? "web and server deployment"
+					: isAlchemyWebDeploy
+						? "web deployment"
+						: "server deployment";
+
+			notes.webFrontend.notes.push(
+				`Alchemy ${deployType} is temporarily not compatible with ${incompatibleFrontends.join(" and ")}. These frontends will be removed.`,
+			);
+			notes.webDeploy.notes.push(
+				`Alchemy ${deployType} is temporarily not compatible with ${incompatibleFrontends.join(" and ")}.`,
+			);
+			notes.serverDeploy.notes.push(
+				`Alchemy ${deployType} is temporarily not compatible with ${incompatibleFrontends.join(" and ")}.`,
+			);
+			notes.webFrontend.hasIssue = true;
+			notes.webDeploy.hasIssue = true;
+			notes.serverDeploy.hasIssue = true;
+
+			// Remove incompatible frontends
+			nextStack.webFrontend = nextStack.webFrontend.filter(
+				(f) => f !== "next" && f !== "react-router",
+			);
+
+			// If no web frontends remain, set to default
+			if (nextStack.webFrontend.length === 0) {
+				nextStack.webFrontend = ["tanstack-router"];
+			}
+
+			changed = true;
+			changes.push({
+				category: "alchemy",
+				message: `Removed ${incompatibleFrontends.join(" and ")} (not compatible with Alchemy ${deployType})`,
+			});
+		}
+	}
+
 	return {
 		adjustedStack: changed ? nextStack : null,
 		notes,
@@ -1575,6 +1623,19 @@ const StackBuilder = () => {
 
 		const { adjustedStack } = analyzeStackCompatibility(simulatedStack);
 		const finalStack = adjustedStack ?? simulatedStack;
+
+		// Additional check for Alchemy compatibility with Next.js and React Router
+		if (
+			category === "webFrontend" &&
+			(optionId === "next" || optionId === "react-router")
+		) {
+			const isAlchemyWebDeploy = finalStack.webDeploy === "alchemy";
+			const isAlchemyServerDeploy = finalStack.serverDeploy === "alchemy";
+
+			if (isAlchemyWebDeploy || isAlchemyServerDeploy) {
+				return false;
+			}
+		}
 
 		if (
 			category === "webFrontend" ||

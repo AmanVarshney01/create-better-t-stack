@@ -16,6 +16,7 @@ import {
 	validateServerDeployRequiresBackend,
 	validateWebDeployRequiresWebFrontend,
 	validateWorkersCompatibility,
+	validateAlchemyCompatibility,
 } from "./compatibility-rules";
 import { exitWithError } from "./errors";
 
@@ -291,6 +292,12 @@ export function validateFullConfig(
 		config.examples ?? [],
 		config.backend,
 		config.database,
+		config.frontend ?? [],
+	);
+
+	validateAlchemyCompatibility(
+		config.webDeploy,
+		config.serverDeploy,
 		config.frontend ?? [],
 	);
 }
