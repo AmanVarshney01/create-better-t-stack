@@ -250,9 +250,8 @@ export async function setupPrismaPostgres(config: ProjectConfig) {
 		if (prismaConfig) {
 			await writeEnvFile(projectDir, prismaConfig);
 
-			await addDotenvImportToPrismaConfig(projectDir);
-
 			if (orm === "prisma") {
+				await addDotenvImportToPrismaConfig(projectDir);
 				await addPrismaAccelerateExtension(serverDir);
 			}
 			log.success(
