@@ -258,7 +258,7 @@ describe("Programmatic API - Fast Tests", () => {
 					git: false,
 					yolo: false,
 				}),
-			).rejects.toThrow(/requires Mongoose or Prisma/);
+			).rejects.toThrow(/Drizzle ORM does not support MongoDB/);
 		});
 
 		test("handles auth without database", async () => {

@@ -7,26 +7,37 @@ const __filename = fileURLToPath(import.meta.url);
 const distPath = path.dirname(__filename);
 export const PKG_ROOT = path.join(distPath, "../");
 
-export const DEFAULT_CONFIG: ProjectConfig = {
+export const DEFAULT_CONFIG_BASE = {
 	projectName: "my-better-t-app",
-	projectDir: path.resolve(process.cwd(), "my-better-t-app"),
 	relativePath: "my-better-t-app",
-	frontend: ["tanstack-router"],
-	database: "sqlite",
-	orm: "drizzle",
+	frontend: ["tanstack-router"] as const,
+	database: "sqlite" as const,
+	orm: "drizzle" as const,
 	auth: true,
-	addons: ["turborepo"],
-	examples: [],
+	addons: ["turborepo"] as const,
+	examples: [] as const,
 	git: true,
-	packageManager: getUserPkgManager(),
 	install: true,
-	dbSetup: "none",
-	backend: "hono",
-	runtime: "bun",
-	api: "trpc",
-	webDeploy: "none",
-	serverDeploy: "none",
-};
+	dbSetup: "none" as const,
+	backend: "hono" as const,
+	runtime: "bun" as const,
+	api: "trpc" as const,
+	webDeploy: "none" as const,
+	serverDeploy: "none" as const,
+} as const;
+
+export function getDefaultConfig(): ProjectConfig {
+	return {
+		...DEFAULT_CONFIG_BASE,
+		projectDir: path.resolve(process.cwd(), DEFAULT_CONFIG_BASE.projectName),
+		packageManager: getUserPkgManager(),
+		frontend: [...DEFAULT_CONFIG_BASE.frontend],
+		addons: [...DEFAULT_CONFIG_BASE.addons],
+		examples: [...DEFAULT_CONFIG_BASE.examples],
+	};
+}
+
+export const DEFAULT_CONFIG = getDefaultConfig();
 
 export const dependencyVersionMap = {
 	"better-auth": "^1.3.4",

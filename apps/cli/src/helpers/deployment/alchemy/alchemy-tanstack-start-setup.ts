@@ -142,7 +142,7 @@ export async function setupTanStackStartAlchemyDeploy(
 		}
 	}
 
-	// workaround for alchemy
+	// workaround for tanstack start + workers
 	const nitroConfigPath = path.join(webAppDir, "nitro.config.ts");
 	const nitroConfigContent = `import { defineNitroConfig } from "nitropack/config";
 

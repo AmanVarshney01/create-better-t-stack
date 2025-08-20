@@ -1966,6 +1966,8 @@ describe("create-better-t-stack smoke", () => {
 				[
 					projectName,
 					"--yes",
+					"--directory-conflict",
+					"overwrite",
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -2834,6 +2836,8 @@ describe("create-better-t-stack smoke", () => {
 				[
 					projectName,
 					"--yes",
+					"--directory-conflict",
+					"overwrite",
 					"--frontend",
 					"tanstack-router",
 					"--backend",

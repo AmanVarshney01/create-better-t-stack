@@ -133,10 +133,8 @@ export async function displayPostInstallInstructions(
 			}
 			output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev\n`;
 			if (serverDeploy === "wrangler") {
-				output += `${pc.cyan(`${stepCounter++}.`)} cd apps/server && ${runCmd} cf-typegen\n\n`;
+				output += `${pc.cyan(`${stepCounter++}.`)} cd apps/server && ${runCmd} cf-typegen\n`;
 			}
-		} else {
-			output += "\n";
 		}
 	}
 
@@ -268,14 +266,12 @@ async function getDatabaseInstructions(
 				`${packageManager} wrangler d1 migrations apply YOUR_DB_NAME`,
 			)}`,
 		);
-		instructions.push("");
 	}
 
 	if (dbSetup === "d1" && serverDeploy === "alchemy") {
 		instructions.push(
 			`${pc.cyan("•")} Generate migrations: ${pc.white(`${runCmd} db:generate`)}`,
 		);
-		instructions.push("");
 	}
 
 	if (orm === "prisma") {
@@ -307,7 +303,9 @@ async function getDatabaseInstructions(
 				`${pc.cyan("•")} Start docker container: ${`${runCmd} db:start`}`,
 			);
 		}
-		instructions.push(`${pc.cyan("•")} Apply schema: ${`${runCmd} db:push`}`);
+		if (dbSetup !== "d1") {
+			instructions.push(`${pc.cyan("•")} Apply schema: ${`${runCmd} db:push`}`);
+		}
 		instructions.push(`${pc.cyan("•")} Database UI: ${`${runCmd} db:studio`}`);
 		if (database === "sqlite" && dbSetup !== "d1") {
 			instructions.push(

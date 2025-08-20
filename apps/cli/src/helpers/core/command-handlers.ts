@@ -3,7 +3,7 @@ import { intro, log, outro } from "@clack/prompts";
 import consola from "consola";
 import fs from "fs-extra";
 import pc from "picocolors";
-import { DEFAULT_CONFIG } from "../../constants";
+import { getDefaultConfig } from "../../constants";
 import { getAddonsToAdd } from "../../prompts/addons";
 import { gatherConfig } from "../../prompts/config-prompts";
 import { getProjectName } from "../../prompts/project-name";
@@ -17,6 +17,7 @@ import type {
 	ProjectConfig,
 } from "../../types";
 import { trackProjectCreation } from "../../utils/analytics";
+import { coerceBackendPresets } from "../../utils/compatibility-rules";
 import { displayConfig } from "../../utils/display-config";
 import { exitWithError, handleError } from "../../utils/errors";
 import { generateReproducibleCommand } from "../../utils/generate-reproducible-command";
@@ -56,13 +57,14 @@ export async function createProjectHandler(
 	if (input.yes && input.projectName) {
 		currentPathInput = input.projectName;
 	} else if (input.yes) {
-		let defaultName = DEFAULT_CONFIG.relativePath;
+		const defaultConfig = getDefaultConfig();
+		let defaultName = defaultConfig.relativePath;
 		let counter = 1;
 		while (
 			(await fs.pathExists(path.resolve(process.cwd(), defaultName))) &&
 			(await fs.readdir(path.resolve(process.cwd(), defaultName))).length > 0
 		) {
-			defaultName = `${DEFAULT_CONFIG.projectName}-${counter}`;
+			defaultName = `${defaultConfig.projectName}-${counter}`;
 			counter++;
 		}
 		currentPathInput = defaultName;
@@ -139,14 +141,16 @@ export async function createProjectHandler(
 		);
 
 		config = {
-			...DEFAULT_CONFIG,
+			...getDefaultConfig(),
 			...flagConfig,
 			projectName: finalBaseName,
 			projectDir: finalResolvedPath,
 			relativePath: finalPathInput,
 		};
 
-		validateConfigCompatibility(config);
+		coerceBackendPresets(config);
+
+		validateConfigCompatibility(config, providedFlags, cliInput);
 
 		if (config.backend === "convex") {
 			log.info(

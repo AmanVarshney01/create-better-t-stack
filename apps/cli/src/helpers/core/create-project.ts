@@ -11,6 +11,7 @@ import { setupApi } from "../core/api-setup";
 import { setupBackendDependencies } from "../core/backend-setup";
 import { setupDatabase } from "../core/db-setup";
 import { setupRuntime } from "../core/runtime-setup";
+import { setupServerDeploy } from "../deployment/server-deploy-setup";
 import { setupWebDeploy } from "../deployment/web-deploy-setup";
 import { runConvexCodegen } from "./convex-codegen";
 import { createReadme } from "./create-readme";
@@ -76,6 +77,7 @@ export async function createProject(options: ProjectConfig) {
 		await handleExtras(projectDir, options);
 
 		await setupWebDeploy(options);
+		await setupServerDeploy(options);
 
 		await setupEnvironmentVariables(options);
 		await updatePackageConfigurations(projectDir, options);
