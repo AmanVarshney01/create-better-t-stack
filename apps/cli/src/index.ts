@@ -1,6 +1,7 @@
 import { intro, log } from "@clack/prompts";
+import { initTRPC } from "@trpc/server";
 import pc from "picocolors";
-import { createCli, trpcServer } from "trpc-cli";
+import { createCli } from "trpc-cli";
 import z from "zod";
 import {
 	addAddonsHandler,
@@ -44,7 +45,7 @@ import { openUrl } from "./utils/open-url";
 import { renderTitle } from "./utils/render-title";
 import { displaySponsors, fetchSponsors } from "./utils/sponsors";
 
-const t = trpcServer.initTRPC.create();
+const t = initTRPC.create();
 
 export const router = t.router({
 	init: t.procedure
