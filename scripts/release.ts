@@ -2,6 +2,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { $ } from "bun";
 import { generate } from "changelogithub";
+import config from "../changelogithub.config";
 
 async function main(): Promise<void> {
 	const tag = process.env.GITHUB_REF?.replace("refs/tags/", "");
@@ -14,9 +15,7 @@ async function main(): Promise<void> {
 
 	const changelog = await generate({
 		to: tag,
-		emoji: true,
-		contributors: true,
-		repo: "AmanVarshney01/create-better-t-stack",
+		...config,
 	});
 
 	const changelogPath = join(process.cwd(), "CHANGELOG.md");

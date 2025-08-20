@@ -36,6 +36,7 @@ create-better-t-stack [project-directory] [options]
 - `--db-setup <setup>`: `none`, `turso`, `d1`, `neon`, `supabase`, `prisma-postgres`, `mongodb-atlas`, `docker`
 - `--examples <types...>`: `none`, `todo`, `ai`
 - `--web-deploy <setup>`: `none`, `wrangler`, `alchemy`
+- `--server-deploy <setup>`: `none`, `wrangler`, `alchemy`
 - `--directory-conflict <strategy>`: `merge`, `overwrite`, `increment`, `error`
 - `--render-title / --no-render-title`: Show/hide ASCII art title
 
@@ -65,7 +66,8 @@ create-better-t-stack add [options]
 ### Options
 
 - `--addons <types...>`: Addons to add (see [Addons](/docs/cli/options#addons))
-- `--web-deploy <setup>`: Web deployment setup (`workers`, `none`)
+- `--web-deploy <setup>`: Web deployment setup (`none`, `wrangler`, `alchemy`)
+- `--server-deploy <setup>`: Server deployment setup (`none`, `wrangler`, `alchemy`)
 - `--project-dir <path>`: Project directory (defaults to current directory)
 - `--install`: Install dependencies after adding
 - `--package-manager <pm>`: Package manager to use
