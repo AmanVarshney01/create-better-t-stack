@@ -1573,6 +1573,116 @@ describe("create-better-t-stack smoke", () => {
 				workdir,
 			);
 		});
+
+		it("rejects Turso db-setup with non-SQLite database", async () => {
+			await runCliExpectingError(
+				[
+					"invalid-combo",
+					"--yes",
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"bun",
+					"--database",
+					"postgres",
+					"--orm",
+					"prisma",
+					"--api",
+					"none",
+					"--no-auth",
+					"--addons",
+					"none",
+					"--db-setup",
+					"turso",
+					"--examples",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+		});
+	});
+
+	describe("YOLO mode", () => {
+		it("bypasses db-setup/database validation (Turso + Postgres + Prisma)", async () => {
+			const projectName = "app-yolo-turso-postgres";
+			await runCli(
+				[
+					projectName,
+					"--yes",
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"bun",
+					"--database",
+					"postgres",
+					"--orm",
+					"prisma",
+					"--api",
+					"none",
+					"--no-auth",
+					"--addons",
+					"none",
+					"--db-setup",
+					"turso",
+					"--examples",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+					"--yolo",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			await assertScaffoldedProject(projectDir);
+			await assertBtsConfig(projectDir, {
+				database: "postgres",
+				orm: "prisma",
+			});
+		});
+
+		it("bypasses web-deploy requires web frontend (none + wrangler)", async () => {
+			const projectName = "app-yolo-webdeploy-no-frontend";
+			await runCli(
+				[
+					projectName,
+					"--yes",
+					"--frontend",
+					"none",
+					"--backend",
+					"none",
+					"--web-deploy",
+					"wrangler",
+					"--addons",
+					"none",
+					"--examples",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+					"--yolo",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			await assertScaffoldedProject(projectDir);
+			await assertBtsConfig(projectDir, {
+				backend: "none",
+				webDeploy: "wrangler",
+			});
+		});
 	});
 
 	describe("runtime compatibility", () => {

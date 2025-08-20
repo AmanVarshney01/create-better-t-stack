@@ -16,6 +16,19 @@ export function processAndValidateFlags(
 	providedFlags: Set<string>,
 	projectName?: string,
 ): Partial<ProjectConfig> {
+	if (options.yolo) {
+		const cfg = processFlags(options, projectName);
+		const validatedProjectName = extractAndValidateProjectName(
+			projectName,
+			options.projectDirectory,
+			true,
+		);
+		if (validatedProjectName) {
+			cfg.projectName = validatedProjectName;
+		}
+		return cfg;
+	}
+
 	try {
 		validateArrayOptions(options);
 	} catch (error) {
@@ -61,6 +74,7 @@ export function validateConfigCompatibility(
 	providedFlags?: Set<string>,
 	options?: CLIInput,
 ) {
+	if (options?.yolo) return;
 	if (options && providedFlags) {
 		validateFullConfig(config, providedFlags, options);
 	} else {

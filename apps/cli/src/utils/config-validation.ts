@@ -241,10 +241,10 @@ export function validateFrontendConstraints(
 		) {
 			validateApiFrontendCompatibility(config.api, frontend);
 		}
-
-		const hasWebFrontendFlag = frontend.some((f) => isWebFrontend(f));
-		validateWebDeployRequiresWebFrontend(config.webDeploy, hasWebFrontendFlag);
 	}
+
+	const hasWebFrontendFlag = (frontend ?? []).some((f) => isWebFrontend(f));
+	validateWebDeployRequiresWebFrontend(config.webDeploy, hasWebFrontendFlag);
 }
 
 export function validateApiConstraints(
