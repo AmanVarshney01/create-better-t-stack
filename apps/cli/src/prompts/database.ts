@@ -47,6 +47,11 @@ export async function getDatabaseChoice(
 			label: "MongoDB",
 			hint: "open-source NoSQL database that stores data in JSON-like documents called BSON",
 		});
+		databaseOptions.push({
+			value: "singlestore",
+			label: "SingleStore",
+			hint: "high-performance distributed SQL database for real-time analytics",
+		});
 	}
 
 	const response = await select<Database>({

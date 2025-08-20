@@ -129,6 +129,64 @@ export function validateWorkersCompatibility(
 			"Docker setup (--db-setup docker) is not compatible with Cloudflare Workers runtime. Workers runtime uses serverless databases (D1) and doesn't support local Docker containers. Please use '--db-setup d1' for SQLite or choose a different runtime.",
 		);
 	}
+
+	if (
+		providedFlags.has("runtime") &&
+		options.runtime === "workers" &&
+		config.database === "singlestore"
+	) {
+		exitWithError(
+			"SingleStore is not supported on Cloudflare Workers. Use Bun or Node.js runtimes.",
+		);
+	}
+
+	if (
+		providedFlags.has("database") &&
+		config.database === "singlestore" &&
+		config.runtime === "workers"
+	) {
+		exitWithError(
+			"SingleStore is not supported on Cloudflare Workers. Use Bun or Node.js runtimes.",
+		);
+	}
+}
+
+export function validateSingleStoreCompatibility(
+	providedFlags: Set<string>,
+	options: CLIInput,
+	config: Partial<ProjectConfig>,
+) {
+	if (
+		providedFlags.has("database") &&
+		options.database === "singlestore" &&
+		config.orm &&
+		config.orm !== "drizzle"
+	) {
+		exitWithError(
+			`SingleStore database requires Drizzle ORM. Current ORM: ${config.orm}. Please use '--orm drizzle' or choose a different database.`,
+		);
+	}
+
+	if (
+		providedFlags.has("orm") &&
+		config.orm &&
+		config.orm !== "drizzle" &&
+		config.database === "singlestore"
+	) {
+		exitWithError(
+			`ORM '${config.orm}' is not compatible with SingleStore database. SingleStore requires Drizzle ORM. Please use '--orm drizzle' or choose a different database.`,
+		);
+	}
+
+	if (
+		providedFlags.has("dbSetup") &&
+		options.dbSetup === "singlestore-helios" &&
+		config.database !== "singlestore"
+	) {
+		exitWithError(
+			`SingleStore Helios setup (--db-setup singlestore-helios) requires SingleStore database. Current database: ${config.database}. Please use '--database singlestore' or choose a different database setup.`,
+		);
+	}
 }
 
 export function coerceBackendPresets(config: Partial<ProjectConfig>) {

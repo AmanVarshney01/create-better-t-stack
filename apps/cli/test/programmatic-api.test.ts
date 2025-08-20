@@ -172,6 +172,23 @@ describe("Programmatic API - Fast Tests", () => {
 			});
 		}, 15000);
 
+		test("creates project with SingleStore + Drizzle", async () => {
+			const result = await init("singlestore-app", {
+				yes: true,
+				database: "singlestore",
+				orm: "drizzle",
+				dbSetup: "singlestore-helios",
+				install: false,
+				git: false,
+			});
+
+			expect(result.success).toBe(true);
+			assertBtsConfig(result.projectDirectory, {
+				database: "singlestore",
+				orm: "drizzle",
+			});
+		}, 15000);
+
 		test("creates project with oRPC API", async () => {
 			const result = await init("orpc-app", {
 				yes: true,
@@ -259,6 +276,19 @@ describe("Programmatic API - Fast Tests", () => {
 					yolo: false,
 				}),
 			).rejects.toThrow(/requires Mongoose or Prisma/);
+		});
+
+		test("handles incompatible SingleStore + Prisma combination", async () => {
+			await expect(
+				init("singlestore-prisma", {
+					yes: true,
+					database: "singlestore",
+					orm: "prisma",
+					install: false,
+					git: false,
+					yolo: false,
+				}),
+			).rejects.toThrow(/SingleStore database requires Drizzle/);
 		});
 
 		test("handles auth without database", async () => {
