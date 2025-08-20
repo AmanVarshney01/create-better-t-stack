@@ -269,9 +269,6 @@ async function getDatabaseInstructions(
 	}
 
 	if (dbSetup === "d1" && serverDeploy === "alchemy") {
-		instructions.push(
-			`${pc.cyan("•")} Generate migrations: ${pc.white(`${runCmd} db:generate`)}`,
-		);
 	}
 
 	if (orm === "prisma") {
