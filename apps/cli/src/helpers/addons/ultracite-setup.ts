@@ -69,7 +69,7 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 				label: editor.label,
 				hint: editor.hint,
 			})),
-			required: false,
+			required: true,
 		});
 
 		if (isCancel(editors)) return exitCancelled("Operation cancelled");
@@ -81,7 +81,7 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 				label: rule.label,
 				hint: rule.hint,
 			})),
-			required: false,
+			required: true,
 		});
 
 		if (isCancel(rules)) return exitCancelled("Operation cancelled");
