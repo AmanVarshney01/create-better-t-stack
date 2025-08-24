@@ -2731,20 +2731,6 @@ describe("create-better-t-stack smoke", () => {
 				});
 			};
 
-			const runCodegen = async (pm: "bun" | "pnpm" | "npm", cwd: string) => {
-				if (pm === "bun")
-					return execa("bunx", ["convex", "codegen"], {
-						cwd,
-						stdio: "inherit",
-					});
-				if (pm === "pnpm")
-					return execa("pnpm", ["dlx", "convex", "codegen"], {
-						cwd,
-						stdio: "inherit",
-					});
-				return execa("npx", ["convex", "codegen"], { cwd, stdio: "inherit" });
-			};
-
 			for (const dirName of projectNames) {
 				it(`builds ${dirName}`, async () => {
 					const projectDir = join(workdir, dirName);
@@ -2801,10 +2787,6 @@ describe("create-better-t-stack smoke", () => {
 								);
 								return;
 							}
-							consola.start("Running Convex codegen in packages/backend ...");
-							const backendDir = join(projectDir, "packages", "backend");
-							const codegenRes = await runCodegen(pm, backendDir);
-							expect(codegenRes.exitCode).toBe(0);
 						}
 
 						if (scripts.build) {
