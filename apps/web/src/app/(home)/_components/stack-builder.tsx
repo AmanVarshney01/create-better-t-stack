@@ -1005,7 +1005,7 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 
 	if (isAlchemyWebDeploy || isAlchemyServerDeploy) {
 		const incompatibleFrontends = nextStack.webFrontend.filter(
-			(f) => f === "next" || f === "react-router",
+			(f) => f === "next",
 		);
 
 		if (incompatibleFrontends.length > 0) {
@@ -1029,9 +1029,7 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 			notes.webDeploy.hasIssue = true;
 			notes.serverDeploy.hasIssue = true;
 
-			nextStack.webFrontend = nextStack.webFrontend.filter(
-				(f) => f !== "next" && f !== "react-router",
-			);
+			nextStack.webFrontend = nextStack.webFrontend.filter((f) => f !== "next");
 
 			if (nextStack.webFrontend.length === 0) {
 				nextStack.webFrontend = ["tanstack-router"];
@@ -1632,10 +1630,7 @@ const StackBuilder = () => {
 		const { adjustedStack } = analyzeStackCompatibility(simulatedStack);
 		const finalStack = adjustedStack ?? simulatedStack;
 
-		if (
-			category === "webFrontend" &&
-			(optionId === "next" || optionId === "react-router")
-		) {
+		if (category === "webFrontend" && optionId === "next") {
 			const isAlchemyWebDeploy = finalStack.webDeploy === "alchemy";
 			const isAlchemyServerDeploy = finalStack.serverDeploy === "alchemy";
 
