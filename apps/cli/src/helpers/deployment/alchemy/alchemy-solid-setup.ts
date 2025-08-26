@@ -27,11 +27,6 @@ export async function setupSolidAlchemyDeploy(
 				destroy: "alchemy destroy",
 				dev: "alchemy dev",
 			};
-		} else {
-			pkg.scripts = {
-				...pkg.scripts,
-				dev: pkg.scripts?.dev ?? "pnpm dev",
-			};
 		}
 		await fs.writeJson(pkgPath, pkg, { spaces: 2 });
 	}
