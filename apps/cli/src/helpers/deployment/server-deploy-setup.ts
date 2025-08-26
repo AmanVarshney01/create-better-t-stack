@@ -99,11 +99,9 @@ export async function setupAlchemyServerDeploy(
 
 		packageJson.scripts = {
 			...packageJson.scripts,
-			dev: "wrangler dev --port=3000",
-			build: "wrangler deploy --dry-run",
+			dev: "alchemy dev",
 			deploy: "alchemy deploy",
 			destroy: "alchemy destroy",
-			"alchemy:dev": "alchemy dev",
 		};
 
 		await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });

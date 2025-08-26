@@ -29,7 +29,7 @@ export async function setupCombinedAlchemyDeploy(
 			...pkg.scripts,
 			deploy: "alchemy deploy",
 			destroy: "alchemy destroy",
-			"alchemy:dev": "alchemy dev",
+			dev: "alchemy dev",
 		};
 		await fs.writeJson(rootPkgPath, pkg, { spaces: 2 });
 	}
@@ -49,18 +49,32 @@ export async function setupCombinedAlchemyDeploy(
 	const isSolid = frontend.includes("solid");
 
 	if (isNext) {
-		await setupNextAlchemyDeploy(projectDir, packageManager);
+		await setupNextAlchemyDeploy(projectDir, packageManager, {
+			skipAppScripts: true,
+		});
 	} else if (isNuxt) {
-		await setupNuxtAlchemyDeploy(projectDir, packageManager);
+		await setupNuxtAlchemyDeploy(projectDir, packageManager, {
+			skipAppScripts: true,
+		});
 	} else if (isSvelte) {
-		await setupSvelteAlchemyDeploy(projectDir, packageManager);
+		await setupSvelteAlchemyDeploy(projectDir, packageManager, {
+			skipAppScripts: true,
+		});
 	} else if (isTanstackStart) {
-		await setupTanStackStartAlchemyDeploy(projectDir, packageManager);
+		await setupTanStackStartAlchemyDeploy(projectDir, packageManager, {
+			skipAppScripts: true,
+		});
 	} else if (isTanstackRouter) {
-		await setupTanStackRouterAlchemyDeploy(projectDir, packageManager);
+		await setupTanStackRouterAlchemyDeploy(projectDir, packageManager, {
+			skipAppScripts: true,
+		});
 	} else if (isReactRouter) {
-		await setupReactRouterAlchemyDeploy(projectDir, packageManager);
+		await setupReactRouterAlchemyDeploy(projectDir, packageManager, {
+			skipAppScripts: true,
+		});
 	} else if (isSolid) {
-		await setupSolidAlchemyDeploy(projectDir, packageManager);
+		await setupSolidAlchemyDeploy(projectDir, packageManager, {
+			skipAppScripts: true,
+		});
 	}
 }

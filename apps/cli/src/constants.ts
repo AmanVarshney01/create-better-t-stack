@@ -138,7 +138,7 @@ export const dependencyVersionMap = {
 	"@sveltejs/adapter-cloudflare": "^7.2.1",
 	"@cloudflare/workers-types": "^4.20250822.0",
 
-	alchemy: "^0.62.1",
+	alchemy: "^0.63.0",
 	// temporary workaround for alchemy + tanstack start
 	nitropack: "^2.12.4",
 

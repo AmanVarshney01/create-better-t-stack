@@ -35,6 +35,8 @@ function generateReadmeContent(options: ProjectConfig): string {
 		frontend = ["tanstack-router"],
 		backend = "hono",
 		api = "trpc",
+		webDeploy,
+		serverDeploy,
 	} = options;
 
 	const isConvex = backend === "convex";
@@ -103,6 +105,7 @@ Follow the prompts to create a new Convex project and connect it to your applica
 				packageManagerRunCmd,
 				orm,
 				options.dbSetup,
+				options.serverDeploy,
 			)
 }
 
@@ -119,6 +122,8 @@ ${
 		? "\n## PWA Support with React Router v7\n\nThere is a known compatibility issue between VitePWA and React Router v7.\nSee: https://github.com/vite-pwa/vite-plugin-pwa/issues/809\n"
 		: ""
 }
+
+${generateDeploymentCommands(packageManagerRunCmd, webDeploy, serverDeploy)}
 
 ## Project Structure
 
@@ -475,6 +480,7 @@ function generateDatabaseSetup(
 	packageManagerRunCmd: string,
 	orm: ORM,
 	dbSetup: DatabaseSetup,
+	serverDeploy?: string,
 ): string {
 	if (database === "none") {
 		return "";
@@ -494,7 +500,9 @@ function generateDatabaseSetup(
 1. Start the local SQLite database:
 ${
 	dbSetup === "d1"
-		? "Local development for a Cloudflare D1 database will already be running as part of the `wrangler dev` command."
+		? serverDeploy === "alchemy"
+			? "D1 local development and migrations are handled automatically by Alchemy during dev and deploy."
+			: "Local development for a Cloudflare D1 database will already be running as part of the `wrangler dev` command."
 		: `\`\`\`bash
 cd apps/server && ${packageManagerRunCmd} db:local
 \`\`\`
@@ -631,4 +639,52 @@ function generateScriptsList(
 	}
 
 	return scripts;
+}
+
+function generateDeploymentCommands(
+	packageManagerRunCmd: string,
+	webDeploy?: string,
+	serverDeploy?: string,
+): string {
+	const lines: string[] = [];
+
+	if (webDeploy === "alchemy" || serverDeploy === "alchemy") {
+		lines.push("## Deployment (Alchemy)");
+		if (webDeploy === "alchemy" && serverDeploy !== "alchemy") {
+			lines.push(
+				`- Web dev: cd apps/web && ${packageManagerRunCmd} dev`,
+				`- Web deploy: cd apps/web && ${packageManagerRunCmd} deploy`,
+				`- Web destroy: cd apps/web && ${packageManagerRunCmd} destroy`,
+			);
+		}
+		if (serverDeploy === "alchemy" && webDeploy !== "alchemy") {
+			lines.push(
+				`- Server dev: cd apps/server && ${packageManagerRunCmd} dev`,
+				`- Server deploy: cd apps/server && ${packageManagerRunCmd} deploy`,
+				`- Server destroy: cd apps/server && ${packageManagerRunCmd} destroy`,
+			);
+		}
+		if (webDeploy === "alchemy" && serverDeploy === "alchemy") {
+			lines.push(
+				`- Dev: ${packageManagerRunCmd} dev`,
+				`- Deploy: ${packageManagerRunCmd} deploy`,
+				`- Destroy: ${packageManagerRunCmd} destroy`,
+			);
+		}
+	}
+
+	if (webDeploy === "wrangler" || serverDeploy === "wrangler") {
+		lines.push("\n## Deployment (Cloudflare Wrangler)");
+		if (webDeploy === "wrangler") {
+			lines.push(`- Web deploy: cd apps/web && ${packageManagerRunCmd} deploy`);
+		}
+		if (serverDeploy === "wrangler") {
+			lines.push(
+				`- Server dev: cd apps/server && ${packageManagerRunCmd} dev`,
+				`- Server deploy: cd apps/server && ${packageManagerRunCmd} deploy`,
+			);
+		}
+	}
+
+	return lines.length ? `\n${lines.join("\n")}\n` : "";
 }

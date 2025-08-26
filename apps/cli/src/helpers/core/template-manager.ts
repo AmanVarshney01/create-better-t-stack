@@ -835,12 +835,6 @@ export async function setupDeploymentTemplates(
 						serverAppDir,
 						context,
 					);
-					await processAndCopyFiles(
-						"wrangler.jsonc.hbs",
-						alchemyTemplateSrc,
-						serverAppDir,
-						context,
-					);
 				}
 			}
 		} else {
@@ -881,12 +875,6 @@ export async function setupDeploymentTemplates(
 					);
 					await processAndCopyFiles(
 						"env.d.ts.hbs",
-						alchemyTemplateSrc,
-						serverAppDir,
-						context,
-					);
-					await processAndCopyFiles(
-						"wrangler.jsonc.hbs",
 						alchemyTemplateSrc,
 						serverAppDir,
 						context,

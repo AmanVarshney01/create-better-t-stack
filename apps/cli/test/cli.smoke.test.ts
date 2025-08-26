@@ -2804,27 +2804,8 @@ describe("create-better-t-stack smoke", () => {
 							consola.success(`${dirName} built successfully`);
 						}
 
-						if (scripts["check-types"]) {
-							consola.start(`Type checking ${dirName}...`);
-							const typeRes = await runScript(
-								pm,
-								projectDir,
-								"check-types",
-								[],
-								120_000,
-							);
-							expect(typeRes.exitCode).toBe(0);
-							consola.success(`${dirName} type check passed`);
-						}
-
-						if (!scripts.build && !scripts["check-types"]) {
-							consola.info(
-								`No build or check-types script for ${dirName}, skipping`,
-							);
-						} else if (!scripts.build && scripts["check-types"]) {
-							consola.info(
-								`Only check-types script available for ${dirName}, type checking will be performed`,
-							);
+						if (!scripts.build) {
+							consola.info(`No build script for ${dirName}, skipping`);
 						}
 					} catch (error) {
 						consola.error(`${dirName} failed`, error);

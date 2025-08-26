@@ -7,6 +7,7 @@ import { addPackageDependency } from "../../../utils/add-package-deps";
 export async function setupTanStackStartAlchemyDeploy(
 	projectDir: string,
 	_packageManager: PackageManager,
+	options?: { skipAppScripts?: boolean },
 ) {
 	const webAppDir = path.join(projectDir, "apps/web");
 	if (!(await fs.pathExists(webAppDir))) return;
@@ -20,12 +21,19 @@ export async function setupTanStackStartAlchemyDeploy(
 	if (await fs.pathExists(pkgPath)) {
 		const pkg = await fs.readJson(pkgPath);
 
-		pkg.scripts = {
-			...pkg.scripts,
-			deploy: "alchemy deploy",
-			destroy: "alchemy destroy",
-			"alchemy:dev": "alchemy dev",
-		};
+		if (!options?.skipAppScripts) {
+			pkg.scripts = {
+				...pkg.scripts,
+				deploy: "alchemy deploy",
+				destroy: "alchemy destroy",
+				dev: "alchemy dev",
+			};
+		} else {
+			pkg.scripts = {
+				...pkg.scripts,
+				dev: pkg.scripts?.dev ?? "pnpm dev",
+			};
+		}
 		await fs.writeJson(pkgPath, pkg, { spaces: 2 });
 	}
 

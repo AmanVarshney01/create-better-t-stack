@@ -47,9 +47,7 @@ export async function getDeploymentChoice(
 		return "none";
 	}
 
-	const hasIncompatibleFrontend = frontend.some(
-		(f) => f === "next" || f === "react-router",
-	);
+	const hasIncompatibleFrontend = frontend.some((f) => f === "next");
 	const availableDeployments = hasIncompatibleFrontend
 		? ["wrangler", "none"]
 		: ["wrangler", "alchemy", "none"];
@@ -84,9 +82,7 @@ export async function getDeploymentToAdd(
 		return "none";
 	}
 
-	const hasIncompatibleFrontend = frontend.some(
-		(f) => f === "next" || f === "react-router",
-	);
+	const hasIncompatibleFrontend = frontend.some((f) => f === "next");
 
 	const options: DeploymentOption[] = [];
 

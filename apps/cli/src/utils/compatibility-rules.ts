@@ -324,9 +324,7 @@ export function validateAlchemyCompatibility(
 	const isAlchemyServerDeploy = serverDeploy === "alchemy";
 
 	if (isAlchemyWebDeploy || isAlchemyServerDeploy) {
-		const incompatibleFrontends = frontends.filter(
-			(f) => f === "next" || f === "react-router",
-		);
+		const incompatibleFrontends = frontends.filter((f) => f === "next");
 
 		if (incompatibleFrontends.length > 0) {
 			const deployType =

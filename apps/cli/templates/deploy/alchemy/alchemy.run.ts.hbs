@@ -17,7 +17,7 @@ import { Vite } from "alchemy/cloudflare";
 {{/if}}
 {{/if}}
 {{#if (eq serverDeploy "alchemy")}}
-import { Worker, WranglerJson } from "alchemy/cloudflare";
+import { Worker } from "alchemy/cloudflare";
 {{#if (eq dbSetup "d1")}}
 import { D1Database } from "alchemy/cloudflare";
 {{/if}}
@@ -44,7 +44,6 @@ await Exec("db-generate", {
 });
 
 const db = await D1Database("database", {
-	name: `${app.name}-${app.stage}-db`,
 	migrationsDir: "apps/server/src/db/migrations",
 });
 {{/if}}
@@ -53,7 +52,6 @@ const db = await D1Database("database", {
 {{#if (includes frontend "next")}}
 export const web = await Next("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
-  name: `${app.name}-${app.stage}-web`,
   bindings: {
     {{#if (eq backend "convex")}}
     NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL || "",
@@ -68,7 +66,6 @@ export const web = await Next("web", {
 {{else if (includes frontend "nuxt")}}
 export const web = await Nuxt("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
-  name: `${app.name}-${app.stage}-web`,
   bindings: {
     {{#if (eq backend "convex")}}
     NUXT_PUBLIC_CONVEX_URL: process.env.NUXT_PUBLIC_CONVEX_URL || "",
@@ -83,7 +80,6 @@ export const web = await Nuxt("web", {
 {{else if (includes frontend "svelte")}}
 export const web = await SvelteKit("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
-  name: `${app.name}-${app.stage}-web`,
   bindings: {
     {{#if (eq backend "convex")}}
     PUBLIC_CONVEX_URL: process.env.PUBLIC_CONVEX_URL || "",
@@ -98,7 +94,6 @@ export const web = await SvelteKit("web", {
 {{else if (includes frontend "tanstack-start")}}
 export const web = await TanStackStart("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
-  name: `${app.name}-${app.stage}-web`,
   bindings: {
     {{#if (eq backend "convex")}}
     VITE_CONVEX_URL: process.env.VITE_CONVEX_URL || "",
@@ -113,7 +108,6 @@ export const web = await TanStackStart("web", {
 {{else if (includes frontend "tanstack-router")}}
 export const web = await Vite("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
-  name: `${app.name}-${app.stage}-web`,
   assets: "dist",
   bindings: {
     {{#if (eq backend "convex")}}
@@ -129,7 +123,6 @@ export const web = await Vite("web", {
 {{else if (includes frontend "react-router")}}
 export const web = await ReactRouter("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
-  name: `${app.name}-${app.stage}-web`,
   bindings: {
     {{#if (eq backend "convex")}}
     VITE_CONVEX_URL: process.env.VITE_CONVEX_URL || "",
@@ -144,7 +137,6 @@ export const web = await ReactRouter("web", {
 {{else if (includes frontend "solid")}}
 export const web = await Vite("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
-  name: `${app.name}-${app.stage}-web`,
   assets: "dist",
   bindings: {
     {{#if (eq backend "convex")}}
@@ -163,7 +155,6 @@ export const web = await Vite("web", {
 {{#if (eq serverDeploy "alchemy")}}
 export const server = await Worker("server", {
   {{#if (eq webDeploy "alchemy")}}cwd: "apps/server",{{/if}}
-  name: `${app.name}-${app.stage}`,
   entrypoint: "src/index.ts",
   compatibility: "node",
   bindings: {
@@ -188,13 +179,7 @@ export const server = await Worker("server", {
 		port: 3000,
 	},
 });
-
-await WranglerJson("wrangler", {
-	worker: server,
-});
 {{/if}}
-
-
 
 {{#if (and (eq webDeploy "alchemy") (eq serverDeploy "alchemy"))}}
 console.log(`Web    -> ${web.url}`);

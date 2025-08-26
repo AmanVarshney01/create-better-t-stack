@@ -76,11 +76,12 @@ export async function createProject(options: ProjectConfig) {
 
 		await handleExtras(projectDir, options);
 
+		await setupEnvironmentVariables(options);
+		await updatePackageConfigurations(projectDir, options);
+
 		await setupWebDeploy(options);
 		await setupServerDeploy(options);
 
-		await setupEnvironmentVariables(options);
-		await updatePackageConfigurations(projectDir, options);
 		await createReadme(projectDir, options);
 
 		await writeBtsConfig(options);
