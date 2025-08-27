@@ -40,13 +40,7 @@ export function displayConfig(config: Partial<ProjectConfig>) {
 	}
 
 	if (config.auth !== undefined) {
-		const authText =
-			typeof config.auth === "boolean"
-				? config.auth
-					? "Yes"
-					: "No"
-				: String(config.auth);
-		configDisplay.push(`${pc.blue("Authentication:")} ${authText}`);
+		configDisplay.push(`${pc.blue("Authentication:")} ${String(config.auth)}`);
 	}
 
 	if (config.addons !== undefined) {

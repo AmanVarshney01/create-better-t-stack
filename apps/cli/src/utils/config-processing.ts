@@ -1,6 +1,7 @@
 import path from "node:path";
 import type {
 	API,
+	Auth,
 	Backend,
 	CLIInput,
 	Database,
@@ -57,7 +58,7 @@ export function processFlags(
 	}
 
 	if (options.auth !== undefined) {
-		config.auth = options.auth;
+		config.auth = options.auth as Auth;
 	}
 
 	if (options.git !== undefined) {

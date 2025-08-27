@@ -4,6 +4,7 @@ import fs from "fs-extra";
 import type {
 	Addons,
 	API,
+	Auth,
 	Database,
 	DatabaseSetup,
 	Frontend,
@@ -329,7 +330,7 @@ function generateProjectStructure(
 
 function generateFeaturesList(
 	database: Database,
-	auth: boolean,
+	auth: Auth,
 	addons: Addons[],
 	orm: ORM,
 	runtime: Runtime,
@@ -449,10 +450,9 @@ function generateFeaturesList(
 		);
 	}
 
-	if (auth && !isConvex) {
-		addonsList.push(
-			"- **Authentication** - Email & password authentication with Better Auth",
-		);
+	if (auth !== "none" && !isConvex) {
+		const authLabel = auth === "clerk" ? "Clerk" : "Better-Auth";
+		addonsList.push(`- **Authentication** - ${authLabel}`);
 	}
 
 	for (const addon of addons) {
@@ -476,7 +476,7 @@ function generateFeaturesList(
 
 function generateDatabaseSetup(
 	database: Database,
-	_auth: boolean,
+	_auth: Auth,
 	packageManagerRunCmd: string,
 	orm: ORM,
 	dbSetup: DatabaseSetup,
@@ -575,7 +575,7 @@ function generateScriptsList(
 	packageManagerRunCmd: string,
 	database: Database,
 	orm: ORM,
-	_auth: boolean,
+	_auth: Auth,
 	hasNative: boolean,
 	addons: Addons[],
 	backend: string,

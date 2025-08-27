@@ -13,7 +13,7 @@ export const DEFAULT_CONFIG_BASE = {
 	frontend: ["tanstack-router"],
 	database: "sqlite",
 	orm: "drizzle",
-	auth: true,
+	auth: "better-auth",
 	addons: ["turborepo"],
 	examples: [],
 	git: true,

@@ -2,6 +2,7 @@ import { group } from "@clack/prompts";
 import type {
 	Addons,
 	API,
+	Auth,
 	Backend,
 	Database,
 	DatabaseSetup,
@@ -38,7 +39,7 @@ type PromptGroupResults = {
 	database: Database;
 	orm: ORM;
 	api: API;
-	auth: boolean;
+	auth: Auth;
 	addons: Addons[];
 	examples: Examples[];
 	dbSetup: DatabaseSetup;
@@ -75,7 +76,11 @@ export async function gatherConfig(
 			api: ({ results }) =>
 				getApiChoice(flags.api, results.frontend, results.backend),
 			auth: ({ results }) =>
-				getAuthChoice(flags.auth, results.database !== "none", results.backend),
+				getAuthChoice(
+					flags.auth as import("../types").Auth | undefined,
+					results.database !== "none",
+					results.backend,
+				),
 			addons: ({ results }) => getAddonsChoice(flags.addons, results.frontend),
 			examples: ({ results }) =>
 				getExamplesChoice(
@@ -121,7 +126,6 @@ export async function gatherConfig(
 		result.database = "none";
 		result.orm = "none";
 		result.api = "none";
-		result.auth = false;
 		result.dbSetup = "none";
 		result.examples = ["todo"];
 	}
@@ -131,7 +135,7 @@ export async function gatherConfig(
 		result.database = "none";
 		result.orm = "none";
 		result.api = "none";
-		result.auth = false;
+		result.auth = "none";
 		result.dbSetup = "none";
 		result.examples = [];
 	}

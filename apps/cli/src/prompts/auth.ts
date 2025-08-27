@@ -1,27 +1,32 @@
-import { confirm, isCancel } from "@clack/prompts";
+import { isCancel, select } from "@clack/prompts";
 import { DEFAULT_CONFIG } from "../constants";
-import type { Backend } from "../types";
+import type { Auth, Backend } from "../types";
 import { exitCancelled } from "../utils/errors";
 
 export async function getAuthChoice(
-	auth: boolean | undefined,
+	auth: Auth | undefined,
 	hasDatabase: boolean,
 	backend?: Backend,
 ) {
 	if (backend === "convex") {
-		return false;
+		return "none" as Auth;
 	}
 
-	if (!hasDatabase) return false;
+	if (!hasDatabase) return "none";
 
 	if (auth !== undefined) return auth;
 
-	const response = await confirm({
-		message: "Add authentication with Better-Auth?",
+	const response = await select({
+		message: "Select authentication provider",
+		options: [
+			{ value: "better-auth", label: "Better-Auth" },
+			{ value: "clerk", label: "Clerk" },
+			{ value: "none", label: "None" },
+		],
 		initialValue: DEFAULT_CONFIG.auth,
 	});
 
 	if (isCancel(response)) return exitCancelled("Operation cancelled");
 
-	return response;
+	return response as Auth;
 }

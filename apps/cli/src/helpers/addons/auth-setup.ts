@@ -7,7 +7,7 @@ import { addPackageDependency } from "../../utils/add-package-deps";
 
 export async function setupAuth(config: ProjectConfig) {
 	const { auth, frontend, backend, projectDir } = config;
-	if (backend === "convex" || !auth) {
+	if (backend === "convex" || !auth || auth === "none") {
 		return;
 	}
 
@@ -20,7 +20,7 @@ export async function setupAuth(config: ProjectConfig) {
 	const serverDirExists = await fs.pathExists(serverDir);
 
 	try {
-		if (serverDirExists) {
+		if (serverDirExists && auth === "better-auth") {
 			await addPackageDependency({
 				dependencies: ["better-auth"],
 				projectDir: serverDir,
@@ -40,10 +40,12 @@ export async function setupAuth(config: ProjectConfig) {
 		);
 
 		if (hasWebFrontend && clientDirExists) {
-			await addPackageDependency({
-				dependencies: ["better-auth"],
-				projectDir: clientDir,
-			});
+			if (auth === "better-auth") {
+				await addPackageDependency({
+					dependencies: ["better-auth"],
+					projectDir: clientDir,
+				});
+			}
 		}
 
 		if (
@@ -51,15 +53,17 @@ export async function setupAuth(config: ProjectConfig) {
 				frontend.includes("native-unistyles")) &&
 			nativeDirExists
 		) {
-			await addPackageDependency({
-				dependencies: ["better-auth", "@better-auth/expo"],
-				projectDir: nativeDir,
-			});
-			if (serverDirExists) {
+			if (auth === "better-auth") {
 				await addPackageDependency({
-					dependencies: ["@better-auth/expo"],
-					projectDir: serverDir,
+					dependencies: ["better-auth", "@better-auth/expo"],
+					projectDir: nativeDir,
 				});
+				if (serverDirExists) {
+					await addPackageDependency({
+						dependencies: ["@better-auth/expo"],
+						projectDir: serverDir,
+					});
+				}
 			}
 		}
 	} catch (error) {

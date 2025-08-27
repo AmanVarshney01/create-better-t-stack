@@ -1,7 +1,13 @@
 "use client";
 
 {{#if (eq backend "convex")}}
+{{#if (eq auth "clerk")}}
+import { useAuth } from "@clerk/nextjs";
+import { ConvexReactClient } from "convex/react";
+import { ConvexProviderWithClerk } from "convex/react-clerk";
+{{else}}
 import { ConvexProvider, ConvexReactClient } from "convex/react";
+{{/if}}
 {{else}}
 {{#unless (eq api "none")}}
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -34,7 +40,13 @@ export default function Providers({
       disableTransitionOnChange
     >
       {{#if (eq backend "convex")}}
+      {{#if (eq auth "clerk")}}
+      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+        {children}
+      </ConvexProviderWithClerk>
+      {{else}}
       <ConvexProvider client={convex}>{children}</ConvexProvider>
+      {{/if}}
       {{else}}
       {{#unless (eq api "none")}}
       <QueryClientProvider client={queryClient}>

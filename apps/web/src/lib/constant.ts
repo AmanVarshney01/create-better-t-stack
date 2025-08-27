@@ -396,15 +396,22 @@ export const TECH_OPTIONS: Record<
 	],
 	auth: [
 		{
-			id: "true",
-			name: "Better Auth",
+			id: "better-auth",
+			name: "Better-Auth",
 			description: "Simple authentication",
 			icon: `${ICON_BASE_URL}/better-auth.svg`,
 			color: "from-green-400 to-green-600",
 			default: true,
 		},
 		{
-			id: "false",
+			id: "clerk",
+			name: "Clerk",
+			description: "Clerk authentication",
+			icon: `${ICON_BASE_URL}/clerk.svg`,
+			color: "from-blue-400 to-blue-600",
+		},
+		{
+			id: "none",
 			name: "No Auth",
 			description: "Skip authentication",
 			icon: "",
@@ -587,7 +594,7 @@ export const PRESET_TEMPLATES = [
 			database: "sqlite",
 			orm: "drizzle",
 			dbSetup: "none",
-			auth: "true",
+			auth: "better-auth",
 			packageManager: "bun",
 			addons: ["turborepo"],
 			examples: [],
@@ -609,7 +616,7 @@ export const PRESET_TEMPLATES = [
 			database: "none",
 			orm: "none",
 			dbSetup: "none",
-			auth: "false",
+			auth: "none",
 			packageManager: "bun",
 			addons: ["turborepo"],
 			examples: ["todo"],
@@ -631,7 +638,7 @@ export const PRESET_TEMPLATES = [
 			database: "sqlite",
 			orm: "drizzle",
 			dbSetup: "none",
-			auth: "true",
+			auth: "better-auth",
 			packageManager: "bun",
 			addons: ["turborepo"],
 			examples: [],
@@ -653,7 +660,7 @@ export const PRESET_TEMPLATES = [
 			database: "sqlite",
 			orm: "drizzle",
 			dbSetup: "none",
-			auth: "true",
+			auth: "better-auth",
 			packageManager: "bun",
 			addons: ["turborepo"],
 			examples: [],
@@ -675,7 +682,7 @@ export const PRESET_TEMPLATES = [
 			database: "sqlite",
 			orm: "drizzle",
 			dbSetup: "turso",
-			auth: "true",
+			auth: "better-auth",
 			packageManager: "bun",
 			addons: ["pwa", "biome", "husky", "tauri", "starlight", "turborepo"],
 			examples: ["todo", "ai"],
@@ -715,7 +722,7 @@ export const DEFAULT_STACK: StackState = {
 	database: "sqlite",
 	orm: "drizzle",
 	dbSetup: "none",
-	auth: "true",
+	auth: "better-auth",
 	packageManager: "bun",
 	addons: ["turborepo"],
 	examples: [],
@@ -738,7 +745,7 @@ export const isStackDefault = <K extends keyof StackState>(
 		if (key === "database" && value === "none") return true;
 		if (key === "orm" && value === "none") return true;
 		if (key === "api" && value === "none") return true;
-		if (key === "auth" && value === "false") return true;
+		if (key === "auth" && value === "none") return true;
 		if (key === "dbSetup" && value === "none") return true;
 		if (
 			key === "examples" &&

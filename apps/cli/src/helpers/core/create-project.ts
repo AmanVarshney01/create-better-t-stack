@@ -70,7 +70,7 @@ export async function createProject(options: ProjectConfig) {
 			await setupAddons(options);
 		}
 
-		if (!isConvex && options.auth) {
+		if (!isConvex && options.auth && options.auth !== "none") {
 			await setupAuth(options);
 		}
 

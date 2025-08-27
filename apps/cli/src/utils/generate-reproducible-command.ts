@@ -14,7 +14,7 @@ export function generateReproducibleCommand(config: ProjectConfig): string {
 	flags.push(`--database ${config.database}`);
 	flags.push(`--orm ${config.orm}`);
 	flags.push(`--api ${config.api}`);
-	flags.push(config.auth ? "--auth" : "--no-auth");
+	flags.push(`--auth ${config.auth}`);
 
 	if (config.addons && config.addons.length > 0) {
 		flags.push(`--addons ${config.addons.join(" ")}`);

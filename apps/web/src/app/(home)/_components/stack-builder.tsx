@@ -157,7 +157,8 @@ function TechIcon({
 		theme === "light" &&
 		(icon.includes("drizzle") ||
 			icon.includes("prisma") ||
-			icon.includes("express"))
+			icon.includes("express") ||
+			icon.includes("clerk"))
 	) {
 		iconSrc = icon.replace(".svg", "-light.svg");
 	}
@@ -205,7 +206,7 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 			database: "none",
 			orm: "none",
 			api: "none",
-			auth: "false",
+			auth: "none",
 			dbSetup: "none",
 			examples: ["todo"],
 		};
@@ -257,7 +258,7 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 		}
 	} else if (isBackendNone) {
 		const noneOverrides: Partial<StackState> = {
-			auth: "false",
+			auth: "none",
 			database: "none",
 			orm: "none",
 			api: "none",
@@ -336,20 +337,20 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 					message: "ORM set to 'None' (requires a database)",
 				});
 			}
-			if (nextStack.auth === "true") {
+			if (nextStack.auth !== "none") {
 				notes.database.notes.push(
 					"Database 'None' selected: Auth will be disabled.",
 				);
 				notes.auth.notes.push(
-					"Authentication requires a database. It will be disabled.",
+					"Authentication requires a database. It will be set to 'None'.",
 				);
 				notes.database.hasIssue = true;
 				notes.auth.hasIssue = true;
-				nextStack.auth = "false";
+				nextStack.auth = "none";
 				changed = true;
 				changes.push({
 					category: "database",
-					message: "Authentication disabled (requires a database)",
+					message: "Authentication set to 'None' (requires a database)",
 				});
 			}
 			if (nextStack.dbSetup !== "none") {
@@ -1120,9 +1121,7 @@ const generateCommand = (stackState: StackState): string => {
 			flags.push(`--orm ${stackState.orm}`);
 		}
 		if (!checkDefault("auth", stackState.auth)) {
-			if (stackState.auth === "false" && DEFAULT_STACK.auth === "true") {
-				flags.push("--no-auth");
-			}
+			flags.push(`--auth ${stackState.auth}`);
 		}
 		if (!checkDefault("dbSetup", stackState.dbSetup)) {
 			flags.push(`--db-setup ${stackState.dbSetup}`);
@@ -1527,16 +1526,12 @@ const StackBuilder = () => {
 					update[catKey] = techId;
 				} else {
 					if (
-						(category === "git" ||
-							category === "install" ||
-							category === "auth") &&
+						(category === "git" || category === "install") &&
 						techId === "false"
 					) {
 						update[catKey] = "true";
 					} else if (
-						(category === "git" ||
-							category === "install" ||
-							category === "auth") &&
+						(category === "git" || category === "install") &&
 						techId === "true"
 					) {
 						update[catKey] = "false";
