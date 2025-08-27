@@ -26,7 +26,7 @@ export const link = new RPCLink({
   {{else}}
   url: `${import.meta.env.VITE_SERVER_URL}/rpc`,
   {{/if}}
-  {{#if auth}}
+  {{#if (eq auth "better-auth")}}
   fetch(url, options) {
     return fetch(url, {
       ...options,

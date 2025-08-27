@@ -265,7 +265,7 @@ describe("Programmatic API - Fast Tests", () => {
 			await expect(
 				init("auth-no-db", {
 					yes: true,
-					auth: true,
+					auth: "better-auth",
 					database: "none",
 					install: false,
 					git: false,
@@ -313,7 +313,7 @@ describe("Programmatic API - Fast Tests", () => {
 		test("creates project with authentication enabled", async () => {
 			const result = await init("auth-app", {
 				yes: true,
-				auth: true,
+				auth: "better-auth",
 				database: "sqlite",
 				orm: "drizzle",
 				install: false,
@@ -325,7 +325,7 @@ describe("Programmatic API - Fast Tests", () => {
 				database: "sqlite",
 				orm: "drizzle",
 			});
-			expect(result.projectConfig.auth).toBe(true);
+			expect(result.projectConfig.auth).toBe("better-auth");
 		}, 15000);
 
 		test("validates reproducible command format", async () => {

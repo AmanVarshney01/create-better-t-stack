@@ -14,7 +14,7 @@ import { trpcServer } from "@hono/trpc-server";
 import { createContext } from "./lib/context";
 import { appRouter } from "./routers/index";
 {{/if}}
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
 import { auth } from "./lib/auth";
 {{/if}}
 import { Hono } from "hono";
@@ -42,14 +42,14 @@ app.use(
     origin: env.CORS_ORIGIN || "",
     {{/if}}
     allowMethods: ["GET", "POST", "OPTIONS"],
-    {{#if auth}}
+    {{#if (eq auth "better-auth")}}
     allowHeaders: ["Content-Type", "Authorization"],
     credentials: true,
     {{/if}}
   })
 );
 
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
 app.on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw));
 {{/if}}
 

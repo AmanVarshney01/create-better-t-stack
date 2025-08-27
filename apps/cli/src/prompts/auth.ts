@@ -8,19 +8,26 @@ export async function getAuthChoice(
 	hasDatabase: boolean,
 	backend?: Backend,
 ) {
+	if (auth !== undefined) return auth;
 	if (backend === "convex") {
-		return "none" as Auth;
+		const response = await select({
+			message: "Select authentication provider",
+			options: [
+				{ value: "clerk", label: "Clerk" },
+				{ value: "none", label: "None" },
+			],
+			initialValue: "clerk",
+		});
+		if (isCancel(response)) return exitCancelled("Operation cancelled");
+		return response as Auth;
 	}
 
 	if (!hasDatabase) return "none";
-
-	if (auth !== undefined) return auth;
 
 	const response = await select({
 		message: "Select authentication provider",
 		options: [
 			{ value: "better-auth", label: "Better-Auth" },
-			{ value: "clerk", label: "Clerk" },
 			{ value: "none", label: "None" },
 		],
 		initialValue: DEFAULT_CONFIG.auth,

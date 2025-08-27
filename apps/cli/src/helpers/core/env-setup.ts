@@ -1,7 +1,7 @@
 import path from "node:path";
 import fs from "fs-extra";
 import type { ProjectConfig } from "../../types";
-import { generateAuthSecret } from "../addons/auth-setup";
+import { generateAuthSecret } from "./auth-setup";
 
 export interface EnvVariable {
 	key: string;
@@ -143,6 +143,28 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 					condition: true,
 				},
 			];
+
+			// Add Clerk environment variables for Convex + Clerk + Next.js
+			if (backend === "convex" && auth === "clerk" && hasNextJs) {
+				clientVars.push(
+					{
+						key: "NEXT_PUBLIC_CLERK_FRONTEND_API_URL",
+						value: "",
+						condition: true,
+					},
+					{
+						key: "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+						value: "",
+						condition: true,
+					},
+					{
+						key: "CLERK_SECRET_KEY",
+						value: "",
+						condition: true,
+					},
+				);
+			}
+
 			await addEnvVariablesToFile(path.join(clientDir, ".env"), clientVars);
 		}
 	}

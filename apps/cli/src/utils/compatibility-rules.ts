@@ -135,7 +135,10 @@ export function validateWorkersCompatibility(
 
 export function coerceBackendPresets(config: Partial<ProjectConfig>) {
 	if (config.backend === "convex") {
-		config.auth = "none" as ProjectConfig["auth"];
+		// Only set auth to "none" if it's not already set to "clerk"
+		if (config.auth !== "clerk") {
+			config.auth = "none" as ProjectConfig["auth"];
+		}
 		config.database = "none";
 		config.orm = "none";
 		config.api = "none";
@@ -161,7 +164,12 @@ export function incompatibleFlagsForBackend(
 ): string[] {
 	const list: string[] = [];
 	if (backend === "convex") {
-		if (providedFlags.has("auth") && options.auth && options.auth !== "none")
+		if (
+			providedFlags.has("auth") &&
+			options.auth &&
+			options.auth !== "none" &&
+			options.auth !== "clerk"
+		)
 			list.push(`--auth ${options.auth}`);
 		if (providedFlags.has("database") && options.database !== "none")
 			list.push(`--database ${options.database}`);

@@ -7,7 +7,7 @@ export const router = t.router;
 
 export const publicProcedure = t.procedure;
 
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
 export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
   if (!ctx.session) {
     throw new TRPCError({

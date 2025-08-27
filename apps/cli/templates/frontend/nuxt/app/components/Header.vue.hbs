@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import ModeToggle from './ModeToggle.vue'
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
 import UserMenu from './UserMenu.vue'
 {{/if}}
 
 const links = [
     { to: "/", label: "Home" },
-    {{#if auth}}
+    {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
     { to: "/dashboard", label: "Dashboard" },
     {{/if}}
     {{#if (includes examples "todo")}}
@@ -34,7 +34,7 @@ const links = [
       </nav>
       <div class="flex items-center gap-2">
         <ModeToggle />
-        {{#if auth}}
+        {{#if (eq auth "better-auth")}}
         <UserMenu />
         {{/if}}
       </div>

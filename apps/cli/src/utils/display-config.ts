@@ -40,7 +40,7 @@ export function displayConfig(config: Partial<ProjectConfig>) {
 	}
 
 	if (config.auth !== undefined) {
-		configDisplay.push(`${pc.blue("Authentication:")} ${String(config.auth)}`);
+		configDisplay.push(`${pc.blue("Auth:")} ${String(config.auth)}`);
 	}
 
 	if (config.addons !== undefined) {

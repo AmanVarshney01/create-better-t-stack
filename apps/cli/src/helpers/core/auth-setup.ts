@@ -7,7 +7,7 @@ import { addPackageDependency } from "../../utils/add-package-deps";
 
 export async function setupAuth(config: ProjectConfig) {
 	const { auth, frontend, backend, projectDir } = config;
-	if (backend === "convex" || !auth || auth === "none") {
+	if (!auth || auth === "none") {
 		return;
 	}
 
@@ -20,6 +20,17 @@ export async function setupAuth(config: ProjectConfig) {
 	const serverDirExists = await fs.pathExists(serverDir);
 
 	try {
+		// Convex-specific handling
+		if (backend === "convex") {
+			if (auth === "clerk" && frontend.includes("next") && clientDirExists) {
+				await addPackageDependency({
+					dependencies: ["@clerk/nextjs"],
+					projectDir: clientDir,
+				});
+			}
+			return;
+		}
+
 		if (serverDirExists && auth === "better-auth") {
 			await addPackageDependency({
 				dependencies: ["better-auth"],

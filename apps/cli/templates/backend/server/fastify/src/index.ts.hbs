@@ -13,7 +13,7 @@ import { RPCHandler } from "@orpc/server/node";
 import { CORSPlugin } from "@orpc/server/plugins";
 import { appRouter } from "./routers/index";
 import { createServer } from "node:http";
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
 import { createContext } from "./lib/context";
 {{/if}}
 {{/if}}
@@ -23,7 +23,7 @@ import { streamText, type UIMessage, convertToModelMessages } from "ai";
 import { google } from "@ai-sdk/google";
 {{/if}}
 
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
 import { auth } from "./lib/auth";
 {{/if}}
 
@@ -77,7 +77,7 @@ const fastify = Fastify({
 
 fastify.register(fastifyCors, baseCorsConfig);
 
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
 fastify.route({
   method: ["GET", "POST"],
   url: "/api/auth/*",

@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/solid-router";
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
 import UserMenu from "./user-menu";
 {{/if}}
 import { For } from "solid-js";
@@ -7,7 +7,7 @@ import { For } from "solid-js";
 export default function Header() {
   const links = [
     { to: "/", label: "Home" },
-    {{#if auth}}
+    {{#if (eq auth "better-auth")}}
     { to: "/dashboard", label: "Dashboard" },
     {{/if}}
     {{#if (includes examples "todo")}}
@@ -27,7 +27,7 @@ export default function Header() {
           </For>
         </nav>
         <div class="flex items-center gap-2">
-          {{#if auth}}
+          {{#if (eq auth "better-auth")}}
           <UserMenu />
           {{/if}}
         </div>

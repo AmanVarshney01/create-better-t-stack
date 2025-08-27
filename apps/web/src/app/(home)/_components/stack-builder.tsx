@@ -337,7 +337,8 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 					message: "ORM set to 'None' (requires a database)",
 				});
 			}
-			if (nextStack.auth !== "none") {
+			// For Convex backend, Clerk and "none" auth are allowed without database
+			if (nextStack.auth !== "none" && nextStack.backend !== "convex") {
 				notes.database.notes.push(
 					"Database 'None' selected: Auth will be disabled.",
 				);

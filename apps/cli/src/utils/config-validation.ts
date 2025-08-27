@@ -66,15 +66,22 @@ export function validateDatabaseOrmAuth(
 		);
 	}
 
-	if (has("auth") && has("database") && cfg.auth && db === "none") {
+	// For Convex backend, Clerk and "none" auth are allowed without database
+	if (
+		has("auth") &&
+		has("database") &&
+		cfg.auth !== "none" &&
+		db === "none" &&
+		cfg.backend !== "convex"
+	) {
 		exitWithError(
-			"Authentication requires a database. Please choose a database or set '--no-auth'.",
+			"Authentication requires a database. Please choose a database or set '--auth none'.",
 		);
 	}
 
-	if (cfg.auth && db === "none") {
+	if (cfg.auth !== "none" && db === "none" && cfg.backend !== "convex") {
 		exitWithError(
-			"Authentication requires a database. Please choose a database or set '--no-auth'.",
+			"Authentication requires a database. Please choose a database or set '--auth none'.",
 		);
 	}
 
@@ -177,6 +184,12 @@ export function validateBackendConstraints(
 	options: CLIInput,
 ): void {
 	const { backend } = config;
+
+	if (config.auth === "clerk" && backend !== "convex") {
+		exitWithError(
+			"Clerk authentication is only supported with the Convex backend. Please use '--backend convex' or choose a different auth provider.",
+		);
+	}
 
 	if (
 		providedFlags.has("backend") &&

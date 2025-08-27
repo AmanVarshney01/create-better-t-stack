@@ -7,7 +7,7 @@ import { appRouter } from "./routers/index";
 {{#if (eq api "orpc")}}
 import { RPCHandler } from "@orpc/server/node";
 import { appRouter } from "./routers";
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
 import { createContext } from "./lib/context";
 {{/if}}
 {{/if}}
@@ -17,7 +17,7 @@ import express from "express";
 import { streamText, type UIMessage, convertToModelMessages } from "ai";
 import { google } from "@ai-sdk/google";
 {{/if}}
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
 import { auth } from "./lib/auth";
 import { toNodeHandler } from "better-auth/node";
 {{/if}}
@@ -28,14 +28,14 @@ app.use(
   cors({
     origin: process.env.CORS_ORIGIN || "",
     methods: ["GET", "POST", "OPTIONS"],
-    {{#if auth}}
+    {{#if (eq auth "better-auth")}}
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
     {{/if}}
   })
 );
 
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
 app.all("/api/auth{/*path}", toNodeHandler(auth));
 {{/if}}
 
@@ -54,7 +54,7 @@ const handler = new RPCHandler(appRouter);
 app.use("/rpc{*path}", async (req, res, next) => {
   const { matched } = await handler.handle(req, res, {
     prefix: "/rpc",
-    {{#if auth}}
+    {{#if (eq auth "better-auth")}}
     context: await createContext({ req }),
     {{else}}
     context: {},

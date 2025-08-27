@@ -164,7 +164,7 @@ export const server = await Worker("server", {
     DATABASE_URL: alchemy.secret(process.env.DATABASE_URL),
     {{/if}}
     CORS_ORIGIN: process.env.CORS_ORIGIN || "",
-    {{#if auth}}
+    {{#if (eq auth "better-auth")}}
     BETTER_AUTH_SECRET: alchemy.secret(process.env.BETTER_AUTH_SECRET),
     BETTER_AUTH_URL: process.env.BETTER_AUTH_URL || "",
     {{/if}}

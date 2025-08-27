@@ -1,11 +1,11 @@
 {{#if (eq backend 'next')}}
 import type { NextRequest } from "next/server";
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
 import { auth } from "./auth";
 {{/if}}
 
 export async function createContext(req: NextRequest) {
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
   const session = await auth.api.getSession({
     headers: req.headers,
   });
@@ -22,7 +22,7 @@ export async function createContext(req: NextRequest) {
 
 {{else if (eq backend 'hono')}}
 import type { Context as HonoContext } from "hono";
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
 import { auth } from "./auth";
 {{/if}}
 
@@ -31,7 +31,7 @@ export type CreateContextOptions = {
 };
 
 export async function createContext({ context }: CreateContextOptions) {
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
   const session = await auth.api.getSession({
     headers: context.req.raw.headers,
   });
@@ -48,7 +48,7 @@ export async function createContext({ context }: CreateContextOptions) {
 
 {{else if (eq backend 'elysia')}}
 import type { Context as ElysiaContext } from "elysia";
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
 import { auth } from "./auth";
 {{/if}}
 
@@ -57,7 +57,7 @@ export type CreateContextOptions = {
 };
 
 export async function createContext({ context }: CreateContextOptions) {
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
   const session = await auth.api.getSession({
     headers: context.request.headers,
   });
@@ -74,13 +74,13 @@ export async function createContext({ context }: CreateContextOptions) {
 
 {{else if (eq backend 'express')}}
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
 import { fromNodeHeaders } from "better-auth/node";
 import { auth } from "./auth";
 {{/if}}
 
 export async function createContext(opts: CreateExpressContextOptions) {
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(opts.req.headers),
 	});
@@ -97,13 +97,13 @@ export async function createContext(opts: CreateExpressContextOptions) {
 
 {{else if (eq backend 'fastify')}}
 import type { CreateFastifyContextOptions } from "@trpc/server/adapters/fastify";
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
 import { fromNodeHeaders } from "better-auth/node";
 import { auth } from "./auth";
 {{/if}}
 
 export async function createContext({ req, res }: CreateFastifyContextOptions) {
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
   const session = await auth.api.getSession({
     headers: fromNodeHeaders(req.headers),
   });

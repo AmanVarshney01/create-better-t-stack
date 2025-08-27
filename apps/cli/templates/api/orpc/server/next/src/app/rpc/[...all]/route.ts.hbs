@@ -1,4 +1,4 @@
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
 import { createContext } from '@/lib/context'
 {{/if}}
 import { appRouter } from '@/routers'
@@ -10,7 +10,7 @@ const handler = new RPCHandler(appRouter)
 async function handleRequest(req: NextRequest) {
   const { response } = await handler.handle(req, {
     prefix: '/rpc',
-    context: {{#if auth}}await createContext(req){{else}}{}{{/if}},
+    context: {{#if (eq auth "better-auth")}}await createContext(req){{else}}{}{{/if}},
   })
 
   return response ?? new Response('Not found', { status: 404 })

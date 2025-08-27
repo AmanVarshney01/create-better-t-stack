@@ -1,11 +1,11 @@
 <script lang="ts">
 
-    {{#if auth}}
+    {{#if (eq auth "better-auth")}}
 	import UserMenu from './UserMenu.svelte';
     {{/if}}
     const links = [
         { to: "/", label: "Home" },
-        {{#if auth}}
+        {{#if (eq auth "better-auth")}}
         { to: "/dashboard", label: "Dashboard" },
         {{/if}}
         {{#if (includes examples "todo")}}
@@ -31,7 +31,7 @@
 			{/each}
 		</nav>
 		<div class="flex items-center gap-2">
-		    {{#if auth}}
+		    {{#if (eq auth "better-auth")}}
             <UserMenu />
              {{/if}}
 		</div>

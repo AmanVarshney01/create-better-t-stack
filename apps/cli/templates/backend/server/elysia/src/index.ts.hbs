@@ -14,7 +14,7 @@ import { RPCHandler } from "@orpc/server/fetch";
 import { appRouter } from "./routers";
 import { createContext } from "./lib/context";
 {{/if}}
-{{#if auth}}
+{{#if (eq auth "better-auth")}}
 import { auth } from "./lib/auth";
 {{/if}}
 
@@ -31,13 +31,13 @@ const app = new Elysia()
     cors({
       origin: process.env.CORS_ORIGIN || "",
       methods: ["GET", "POST", "OPTIONS"],
-      {{#if auth}}
+      {{#if (eq auth "better-auth")}}
       allowedHeaders: ["Content-Type", "Authorization"],
       credentials: true,
       {{/if}}
     }),
   )
-  {{#if auth}}
+  {{#if (eq auth "better-auth")}}
   .all("/api/auth/*", async (context) => {
     const { request } = context;
     if (["POST", "GET"].includes(request.method)) {
