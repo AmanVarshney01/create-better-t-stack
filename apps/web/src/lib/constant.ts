@@ -398,7 +398,8 @@ export const TECH_OPTIONS: Record<
 		{
 			id: "better-auth",
 			name: "Better-Auth",
-			description: "Simple authentication",
+			description:
+				"The most comprehensive authentication framework for TypeScript",
 			icon: `${ICON_BASE_URL}/better-auth.svg`,
 			color: "from-green-400 to-green-600",
 			default: true,
@@ -406,7 +407,7 @@ export const TECH_OPTIONS: Record<
 		{
 			id: "clerk",
 			name: "Clerk",
-			description: "Clerk authentication",
+			description: "More than authentication, Complete User Management",
 			icon: `${ICON_BASE_URL}/clerk.svg`,
 			color: "from-blue-400 to-blue-600",
 		},

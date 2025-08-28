@@ -68,7 +68,7 @@ export async function addDeploymentToProject(
 			frontend: detectedConfig.frontend || [],
 			addons: detectedConfig.addons || [],
 			examples: detectedConfig.examples || [],
-			auth: detectedConfig.auth || false,
+			auth: detectedConfig.auth || "none",
 			git: false,
 			packageManager:
 				input.packageManager || detectedConfig.packageManager || "npm",

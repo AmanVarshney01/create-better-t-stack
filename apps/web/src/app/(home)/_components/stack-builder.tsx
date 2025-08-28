@@ -206,10 +206,23 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 			database: "none",
 			orm: "none",
 			api: "none",
-			auth: "none",
 			dbSetup: "none",
 			examples: ["todo"],
 		};
+
+		const hasClerkCompatibleFrontend =
+			nextStack.webFrontend.some((f) =>
+				["tanstack-router", "react-router", "tanstack-start", "next"].includes(
+					f,
+				),
+			) ||
+			nextStack.nativeFrontend.some((f) =>
+				["native-nativewind", "native-unistyles"].includes(f),
+			);
+
+		if (nextStack.auth !== "clerk" || !hasClerkCompatibleFrontend) {
+			convexOverrides.auth = "none";
+		}
 
 		for (const [key, value] of Object.entries(convexOverrides)) {
 			const catKey = key as keyof StackState;
@@ -337,7 +350,6 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 					message: "ORM set to 'None' (requires a database)",
 				});
 			}
-			// For Convex backend, Clerk and "none" auth are allowed without database
 			if (nextStack.auth !== "none" && nextStack.backend !== "convex") {
 				notes.database.notes.push(
 					"Database 'None' selected: Auth will be disabled.",
@@ -698,6 +710,7 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 					notes.runtime.hasIssue = true;
 					notes.dbSetup.hasIssue = true;
 					nextStack.dbSetup = "d1";
+					changed = true;
 					changes.push({
 						category: "runtime",
 						message:
@@ -724,6 +737,57 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 				changes.push({
 					category: "api",
 					message: `API set to 'oRPC' (required by ${frontendName})`,
+				});
+			}
+
+			if (nextStack.auth === "clerk") {
+				const hasClerkCompatibleFrontend =
+					nextStack.webFrontend.some((f) =>
+						[
+							"tanstack-router",
+							"react-router",
+							"tanstack-start",
+							"next",
+						].includes(f),
+					) ||
+					nextStack.nativeFrontend.some((f) =>
+						["native-nativewind", "native-unistyles"].includes(f),
+					);
+
+				if (!hasClerkCompatibleFrontend) {
+					notes.auth.notes.push(
+						"Clerk auth is not compatible with the selected frontends. Auth will be set to 'None'.",
+					);
+					notes.webFrontend.notes.push(
+						"Selected frontends are not compatible with Clerk auth. Auth will be disabled.",
+					);
+					notes.auth.hasIssue = true;
+					notes.webFrontend.hasIssue = true;
+					nextStack.auth = "none";
+					changed = true;
+					changes.push({
+						category: "auth",
+						message:
+							"Auth set to 'None' (Clerk not compatible with selected frontends)",
+					});
+				}
+			}
+
+			if (nextStack.backend === "convex" && nextStack.auth === "better-auth") {
+				notes.auth.notes.push(
+					"Better-Auth is not compatible with Convex backend. Auth will be set to 'None'.",
+				);
+				notes.backend.notes.push(
+					"Convex backend only supports Clerk auth or no auth. Auth will be disabled.",
+				);
+				notes.auth.hasIssue = true;
+				notes.backend.hasIssue = true;
+				nextStack.auth = "none";
+				changed = true;
+				changes.push({
+					category: "auth",
+					message:
+						"Auth set to 'None' (Better-Auth not compatible with Convex)",
 				});
 			}
 

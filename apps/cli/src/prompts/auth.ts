@@ -7,13 +7,26 @@ export async function getAuthChoice(
 	auth: Auth | undefined,
 	hasDatabase: boolean,
 	backend?: Backend,
+	frontend?: string[],
 ) {
 	if (auth !== undefined) return auth;
 	if (backend === "convex") {
+		const unsupportedFrontends = frontend?.filter((f) =>
+			["nuxt", "svelte", "solid"].includes(f),
+		);
+
+		if (unsupportedFrontends && unsupportedFrontends.length > 0) {
+			return "none";
+		}
+
 		const response = await select({
 			message: "Select authentication provider",
 			options: [
-				{ value: "clerk", label: "Clerk" },
+				{
+					value: "clerk",
+					label: "Clerk",
+					hint: "More than auth, Complete User Management",
+				},
 				{ value: "none", label: "None" },
 			],
 			initialValue: "clerk",
@@ -27,7 +40,11 @@ export async function getAuthChoice(
 	const response = await select({
 		message: "Select authentication provider",
 		options: [
-			{ value: "better-auth", label: "Better-Auth" },
+			{
+				value: "better-auth",
+				label: "Better-Auth",
+				hint: "comprehensive auth framework for TypeScript",
+			},
 			{ value: "none", label: "None" },
 		],
 		initialValue: DEFAULT_CONFIG.auth,

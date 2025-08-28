@@ -545,6 +545,228 @@ describe("create-better-t-stack smoke", () => {
 			});
 		}
 	});
+
+	describe("convex + clerk auth combinations", () => {
+		const WEB_FRONTENDS = [
+			"tanstack-router",
+			"react-router",
+			"tanstack-start",
+			"next",
+		] as const;
+		const NATIVE_FRONTENDS = ["native-nativewind", "native-unistyles"] as const;
+
+		for (const frontend of WEB_FRONTENDS) {
+			it(`scaffolds ${frontend} + convex + clerk`, async () => {
+				const projectName = `app-convex-clerk-${frontend.replace(/[^a-z-]/g, "").slice(0, 20)}`;
+				await runCli(
+					[
+						projectName,
+						"--yes",
+						"--frontend",
+						frontend,
+						"--backend",
+						"convex",
+						"--auth",
+						"clerk",
+						"--db-setup",
+						"none",
+						"--addons",
+						"none",
+						"--package-manager",
+						"bun",
+						"--no-install",
+						"--no-git",
+					],
+					workdir,
+				);
+
+				const projectDir = join(workdir, projectName);
+				assertScaffoldedProject(projectDir);
+				assertProjectStructure(projectDir, {
+					hasWeb: true,
+					hasNative: false,
+					hasConvexBackend: true,
+					hasServer: false,
+				});
+				assertBtsConfig(projectDir, {
+					frontend: [frontend],
+					backend: "convex",
+					database: "none",
+					orm: "none",
+					auth: "clerk",
+				});
+			});
+		}
+
+		for (const frontend of NATIVE_FRONTENDS) {
+			it(`scaffolds ${frontend} + convex + clerk`, async () => {
+				const projectName = `app-convex-clerk-${frontend.replace(/[^a-z-]/g, "").slice(0, 20)}`;
+				await runCli(
+					[
+						projectName,
+						"--yes",
+						"--frontend",
+						frontend,
+						"--backend",
+						"convex",
+						"--auth",
+						"clerk",
+						"--db-setup",
+						"none",
+						"--addons",
+						"none",
+						"--package-manager",
+						"bun",
+						"--no-install",
+						"--no-git",
+					],
+					workdir,
+				);
+
+				const projectDir = join(workdir, projectName);
+				assertScaffoldedProject(projectDir);
+				assertProjectStructure(projectDir, {
+					hasWeb: false,
+					hasNative: true,
+					hasConvexBackend: true,
+					hasServer: false,
+				});
+				assertBtsConfig(projectDir, {
+					frontend: [frontend],
+					backend: "convex",
+					database: "none",
+					orm: "none",
+					auth: "clerk",
+				});
+			});
+		}
+
+		it("scaffolds tanstack-router + native-nativewind + convex + clerk", async () => {
+			const projectName = "app-convex-clerk-web-native";
+			await runCli(
+				[
+					projectName,
+					"--yes",
+					"--frontend",
+					"tanstack-router",
+					"native-nativewind",
+					"--backend",
+					"convex",
+					"--auth",
+					"clerk",
+					"--db-setup",
+					"none",
+					"--addons",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			assertScaffoldedProject(projectDir);
+			assertProjectStructure(projectDir, {
+				hasWeb: true,
+				hasNative: true,
+				hasConvexBackend: true,
+				hasServer: false,
+			});
+			assertBtsConfig(projectDir, {
+				frontend: ["tanstack-router", "native-nativewind"],
+				backend: "convex",
+				database: "none",
+				orm: "none",
+				auth: "clerk",
+			});
+		});
+
+		it("scaffolds next + native-unistyles + convex + clerk", async () => {
+			const projectName = "app-convex-clerk-next-native";
+			await runCli(
+				[
+					projectName,
+					"--yes",
+					"--frontend",
+					"next",
+					"native-unistyles",
+					"--backend",
+					"convex",
+					"--auth",
+					"clerk",
+					"--db-setup",
+					"none",
+					"--addons",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			assertScaffoldedProject(projectDir);
+			assertProjectStructure(projectDir, {
+				hasWeb: true,
+				hasNative: true,
+				hasConvexBackend: true,
+				hasServer: false,
+			});
+			assertBtsConfig(projectDir, {
+				frontend: ["next", "native-unistyles"],
+				backend: "convex",
+				database: "none",
+				orm: "none",
+				auth: "clerk",
+			});
+		});
+
+		it("scaffolds tanstack-start + native-nativewind + convex + clerk", async () => {
+			const projectName = "app-convex-clerk-start-native";
+			await runCli(
+				[
+					projectName,
+					"--yes",
+					"--frontend",
+					"tanstack-start",
+					"native-nativewind",
+					"--backend",
+					"convex",
+					"--auth",
+					"clerk",
+					"--db-setup",
+					"none",
+					"--addons",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			assertScaffoldedProject(projectDir);
+			assertProjectStructure(projectDir, {
+				hasWeb: true,
+				hasNative: true,
+				hasConvexBackend: true,
+				hasServer: false,
+			});
+			assertBtsConfig(projectDir, {
+				frontend: ["tanstack-start", "native-nativewind"],
+				backend: "convex",
+				database: "none",
+				orm: "none",
+				auth: "clerk",
+			});
+		});
+	});
 	afterAll(async () => {
 		try {
 			await remove(workdir);
@@ -1630,6 +1852,78 @@ describe("create-better-t-stack smoke", () => {
 				workdir,
 			);
 		});
+
+		it("rejects convex + better-auth combination", async () => {
+			await runCliExpectingError(
+				[
+					"invalid-combo",
+					"--yes",
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"convex",
+					"--auth",
+					"better-auth",
+					"--db-setup",
+					"none",
+					"--addons",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+		});
+
+		it("rejects nuxt + convex + clerk combination", async () => {
+			await runCliExpectingError(
+				[
+					"invalid-combo",
+					"--yes",
+					"--frontend",
+					"nuxt",
+					"--backend",
+					"convex",
+					"--auth",
+					"clerk",
+					"--db-setup",
+					"none",
+					"--addons",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+		});
+
+		it("rejects svelte + convex + clerk combination", async () => {
+			await runCliExpectingError(
+				[
+					"invalid-combo",
+					"--yes",
+					"--frontend",
+					"svelte",
+					"--backend",
+					"convex",
+					"--auth",
+					"clerk",
+					"--db-setup",
+					"none",
+					"--addons",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+		});
 	});
 
 	describe("YOLO mode", () => {
@@ -2687,6 +2981,24 @@ describe("create-better-t-stack smoke", () => {
 			for (const frontend of CONVEX_COMPATIBLE_FRONTENDS) {
 				projectNames.add(`app-convex-${sanitize(frontend)}`);
 			}
+
+			const WEB_FRONTENDS_CLERK = [
+				"tanstack-router",
+				"react-router",
+				"tanstack-start",
+				"next",
+			];
+			const NATIVE_FRONTENDS_CLERK = ["native-nativewind", "native-unistyles"];
+
+			for (const frontend of WEB_FRONTENDS_CLERK) {
+				projectNames.add(`app-convex-clerk-${sanitize(frontend)}`);
+			}
+			for (const frontend of NATIVE_FRONTENDS_CLERK) {
+				projectNames.add(`app-convex-clerk-${sanitize(frontend)}`);
+			}
+			projectNames.add("app-convex-clerk-web-native");
+			projectNames.add("app-convex-clerk-next-native");
+			projectNames.add("app-convex-clerk-start-native");
 			[
 				"app-default",
 				"app-min",

@@ -17,7 +17,7 @@ export default async function HomePage() {
 	);
 
 	const minimalAnalytics = await fetch(
-		"https://r2.amanv.dev/analytics-minimal.json",
+		"https://r2.better-t-stack.dev/analytics-minimal.json",
 	);
 
 	const minimalAnalyticsData = await minimalAnalytics.json();

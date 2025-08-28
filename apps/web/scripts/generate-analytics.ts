@@ -62,7 +62,7 @@ async function generateAnalyticsData() {
 	try {
 		console.log("🔄 Fetching analytics data...");
 
-		const response = await fetch("https://r2.amanv.dev/export.csv");
+		const response = await fetch("https://r2.better-t-stack.dev/export.csv");
 		let csvText = await response.text();
 
 		// Fix malformed CSV data - if it's all on one line, try to split it properly

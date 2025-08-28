@@ -44,7 +44,7 @@ export async function addAddonsToProject(
 			frontend: detectedConfig.frontend || [],
 			addons: input.addons,
 			examples: detectedConfig.examples || [],
-			auth: detectedConfig.auth || false,
+			auth: detectedConfig.auth || "none",
 			git: false,
 			packageManager:
 				input.packageManager || detectedConfig.packageManager || "npm",

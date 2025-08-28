@@ -80,6 +80,7 @@ export async function gatherConfig(
 					flags.auth as import("../types").Auth | undefined,
 					results.database !== "none",
 					results.backend,
+					results.frontend,
 				),
 			addons: ({ results }) => getAddonsChoice(flags.addons, results.frontend),
 			examples: ({ results }) =>

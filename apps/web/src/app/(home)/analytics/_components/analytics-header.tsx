@@ -53,7 +53,7 @@ export function AnalyticsHeader({
 						</Link>
 						{" | "}
 						<Link
-							href="https://r2.amanv.dev/export.csv"
+							href="https://r2.better-t-stack.dev/export.csv"
 							target="_blank"
 							rel="noopener noreferrer"
 							className="text-accent underline hover:text-primary"
