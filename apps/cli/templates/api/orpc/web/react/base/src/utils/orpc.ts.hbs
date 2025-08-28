@@ -6,44 +6,44 @@ import { toast } from "sonner";
 import type { AppRouterClient } from "../../../server/src/routers/index";
 
 export const queryClient = new QueryClient({
-queryCache: new QueryCache({
-onError: (error) => {
-toast.error(`Error: ${error.message}`, {
-action: {
-label: "retry",
-onClick: () => {
-queryClient.invalidateQueries();
-},
-},
-});
-},
-}),
+  queryCache: new QueryCache({
+    onError: (error) => {
+      toast.error(`Error: ${error.message}`, {
+        action: {
+          label: "retry",
+          onClick: () => {
+            queryClient.invalidateQueries();
+          },
+        },
+      });
+    },
+  }),
 });
 
 export const link = new RPCLink({
-{{#if (includes frontend "next")}}
-url: `${process.env.NEXT_PUBLIC_SERVER_URL}/rpc`,
-{{else}}
-url: `${import.meta.env.VITE_SERVER_URL}/rpc`,
-{{/if}}
-{{#if auth}}
-fetch(url, options) {
-return fetch(url, {
-...options,
-credentials: "include",
-});
-},
-{{#if (includes frontend "next")}}
-headers: async () => {
-if (typeof window !== "undefined") {
-return {}
-}
+  {{#if (includes frontend "next")}}
+  url: `${process.env.NEXT_PUBLIC_SERVER_URL}/rpc`,
+  {{else}}
+  url: `${import.meta.env.VITE_SERVER_URL}/rpc`,
+  {{/if}}
+  {{#if auth}}
+  fetch(url, options) {
+    return fetch(url, {
+      ...options,
+      credentials: "include",
+    });
+  },
+  {{#if (includes frontend "next")}}
+  headers: async () => {
+    if (typeof window !== "undefined") {
+      return {}
+    }
 
-const { headers } = await import("next/headers")
-return Object.fromEntries(await headers())
-},
-{{/if}}
-{{/if}}
+    const { headers } = await import("next/headers")
+    return Object.fromEntries(await headers())
+  },
+  {{/if}}
+  {{/if}}
 });
 
 export const client: AppRouterClient = createORPCClient(link)
