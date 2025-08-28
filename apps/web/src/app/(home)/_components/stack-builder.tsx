@@ -1172,21 +1172,19 @@ const generateCommand = (stackState: StackState): string => {
 
 		flags.push(`--backend ${stackState.backend}`);
 
-		if (stackState.backend !== "convex") {
-			flags.push(`--runtime ${stackState.runtime}`);
+		flags.push(`--runtime ${stackState.runtime}`);
 
-			flags.push(`--api ${stackState.api}`);
+		flags.push(`--api ${stackState.api}`);
 
-			flags.push(`--database ${stackState.database}`);
+		flags.push(`--auth ${stackState.auth}`);
 
-			flags.push(`--orm ${stackState.orm}`);
+		flags.push(`--database ${stackState.database}`);
 
-			flags.push(`--auth ${stackState.auth}`);
+		flags.push(`--orm ${stackState.orm}`);
 
-			flags.push(`--db-setup ${stackState.dbSetup}`);
-		} else {
-			flags.push(`--auth ${stackState.auth}`);
-		}
+		flags.push(`--auth ${stackState.auth}`);
+
+		flags.push(`--db-setup ${stackState.dbSetup}`);
 
 		flags.push(`--package-manager ${stackState.packageManager}`);
 
