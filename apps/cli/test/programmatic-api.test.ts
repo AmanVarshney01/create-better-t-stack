@@ -83,7 +83,19 @@ describe("Programmatic API - Fast Tests", () => {
 	describe("Core functionality", () => {
 		test("creates minimal project successfully", async () => {
 			const result = await init("test-app", {
-				yes: true,
+				frontend: ["tanstack-router"],
+				backend: "hono",
+				runtime: "bun",
+				database: "sqlite",
+				orm: "drizzle",
+				api: "trpc",
+				auth: "better-auth",
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
+				addons: ["turborepo"],
+				examples: ["none"],
+				packageManager: "bun",
 				install: false,
 				git: false,
 			});
@@ -100,7 +112,19 @@ describe("Programmatic API - Fast Tests", () => {
 
 		test("returns complete result structure", async () => {
 			const result = await init("result-test", {
-				yes: true,
+				frontend: ["tanstack-router"],
+				backend: "hono",
+				runtime: "bun",
+				database: "sqlite",
+				orm: "drizzle",
+				api: "trpc",
+				auth: "better-auth",
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
+				addons: ["turborepo"],
+				examples: ["none"],
+				packageManager: "bun",
 				install: false,
 				git: false,
 			});
@@ -116,7 +140,19 @@ describe("Programmatic API - Fast Tests", () => {
 
 		test("handles project with custom name", async () => {
 			const result = await init("custom-name", {
-				yes: true,
+				frontend: ["tanstack-router"],
+				backend: "hono",
+				runtime: "bun",
+				database: "sqlite",
+				orm: "drizzle",
+				api: "trpc",
+				auth: "better-auth",
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
+				addons: ["turborepo"],
+				examples: ["none"],
+				packageManager: "bun",
 				install: false,
 				git: false,
 			});
@@ -130,8 +166,19 @@ describe("Programmatic API - Fast Tests", () => {
 	describe("Configuration options", () => {
 		test("creates project with Next.js frontend", async () => {
 			const result = await init("next-app", {
-				yes: true,
 				frontend: ["next"],
+				backend: "hono",
+				runtime: "bun",
+				database: "sqlite",
+				orm: "drizzle",
+				api: "trpc",
+				auth: "better-auth",
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
+				addons: ["turborepo"],
+				examples: ["none"],
+				packageManager: "bun",
 				install: false,
 				git: false,
 			});
@@ -144,8 +191,19 @@ describe("Programmatic API - Fast Tests", () => {
 
 		test("creates project with Fastify backend", async () => {
 			const result = await init("fastify-app", {
-				yes: true,
+				frontend: ["tanstack-router"],
 				backend: "fastify",
+				runtime: "bun",
+				database: "sqlite",
+				orm: "drizzle",
+				api: "trpc",
+				auth: "better-auth",
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
+				addons: ["turborepo"],
+				examples: ["none"],
+				packageManager: "bun",
 				install: false,
 				git: false,
 			});
@@ -158,9 +216,19 @@ describe("Programmatic API - Fast Tests", () => {
 
 		test("creates project with PostgreSQL + Prisma", async () => {
 			const result = await init("pg-app", {
-				yes: true,
+				frontend: ["tanstack-router"],
+				backend: "hono",
+				runtime: "bun",
 				database: "postgres",
 				orm: "prisma",
+				api: "trpc",
+				auth: "better-auth",
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
+				addons: ["turborepo"],
+				examples: ["none"],
+				packageManager: "bun",
 				install: false,
 				git: false,
 			});
@@ -174,8 +242,19 @@ describe("Programmatic API - Fast Tests", () => {
 
 		test("creates project with oRPC API", async () => {
 			const result = await init("orpc-app", {
-				yes: true,
+				frontend: ["tanstack-router"],
+				backend: "hono",
+				runtime: "bun",
+				database: "sqlite",
+				orm: "drizzle",
 				api: "orpc",
+				auth: "better-auth",
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
+				addons: ["turborepo"],
+				examples: ["none"],
+				packageManager: "bun",
 				install: false,
 				git: false,
 			});
@@ -188,8 +267,19 @@ describe("Programmatic API - Fast Tests", () => {
 
 		test("creates project with Node runtime", async () => {
 			const result = await init("node-app", {
-				yes: true,
+				frontend: ["tanstack-router"],
+				backend: "hono",
 				runtime: "node",
+				database: "sqlite",
+				orm: "drizzle",
+				api: "trpc",
+				auth: "better-auth",
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
+				addons: ["turborepo"],
+				examples: ["none"],
+				packageManager: "bun",
 				install: false,
 				git: false,
 			});
@@ -202,8 +292,19 @@ describe("Programmatic API - Fast Tests", () => {
 
 		test("creates project with Biome addon", async () => {
 			const result = await init("biome-app", {
-				yes: true,
+				frontend: ["tanstack-router"],
+				backend: "hono",
+				runtime: "bun",
+				database: "sqlite",
+				orm: "drizzle",
+				api: "trpc",
+				auth: "better-auth",
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
 				addons: ["biome"],
+				examples: ["none"],
+				packageManager: "bun",
 				install: false,
 				git: false,
 			});
@@ -216,7 +317,19 @@ describe("Programmatic API - Fast Tests", () => {
 
 		test("creates project with analytics disabled", async () => {
 			const result = await init("no-analytics-app", {
-				yes: true,
+				frontend: ["tanstack-router"],
+				backend: "hono",
+				runtime: "bun",
+				database: "sqlite",
+				orm: "drizzle",
+				api: "trpc",
+				auth: "better-auth",
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
+				addons: ["turborepo"],
+				examples: ["none"],
+				packageManager: "bun",
 				disableAnalytics: true,
 				install: false,
 				git: false,
@@ -231,7 +344,19 @@ describe("Programmatic API - Fast Tests", () => {
 		test("handles invalid project name", async () => {
 			await expect(
 				init("", {
-					yes: true,
+					frontend: ["tanstack-router"],
+					backend: "hono",
+					runtime: "bun",
+					database: "sqlite",
+					orm: "drizzle",
+					api: "trpc",
+					auth: "better-auth",
+					dbSetup: "none",
+					webDeploy: "none",
+					serverDeploy: "none",
+					addons: ["turborepo"],
+					examples: ["none"],
+					packageManager: "bun",
 					install: false,
 					git: false,
 				}),
@@ -241,7 +366,19 @@ describe("Programmatic API - Fast Tests", () => {
 		test("handles invalid characters in project name", async () => {
 			await expect(
 				init("invalid<name>", {
-					yes: true,
+					frontend: ["tanstack-router"],
+					backend: "hono",
+					runtime: "bun",
+					database: "sqlite",
+					orm: "drizzle",
+					api: "trpc",
+					auth: "better-auth",
+					dbSetup: "none",
+					webDeploy: "none",
+					serverDeploy: "none",
+					addons: ["turborepo"],
+					examples: ["none"],
+					packageManager: "bun",
 					install: false,
 					git: false,
 				}),
@@ -251,9 +388,19 @@ describe("Programmatic API - Fast Tests", () => {
 		test("handles incompatible database + ORM combination", async () => {
 			await expect(
 				init("incompatible", {
-					yes: true,
+					frontend: ["tanstack-router"],
+					backend: "hono",
+					runtime: "bun",
 					database: "mongodb",
 					orm: "drizzle",
+					api: "trpc",
+					auth: "better-auth",
+					dbSetup: "none",
+					webDeploy: "none",
+					serverDeploy: "none",
+					addons: ["turborepo"],
+					examples: ["none"],
+					packageManager: "bun",
 					install: false,
 					git: false,
 					yolo: false,
@@ -264,19 +411,41 @@ describe("Programmatic API - Fast Tests", () => {
 		test("handles auth without database", async () => {
 			await expect(
 				init("auth-no-db", {
-					yes: true,
-					auth: "better-auth",
+					frontend: ["tanstack-router"],
+					backend: "hono",
+					runtime: "bun",
 					database: "none",
+					orm: "drizzle",
+					api: "trpc",
+					auth: "better-auth",
+					dbSetup: "none",
+					webDeploy: "none",
+					serverDeploy: "none",
+					addons: ["turborepo"],
+					examples: ["none"],
+					packageManager: "bun",
 					install: false,
 					git: false,
 					yolo: false,
 				}),
-			).rejects.toThrow(/Authentication requires/);
+			).rejects.toThrow(/ORM selection requires a database/);
 		});
 
 		test("handles directory conflict with error strategy", async () => {
 			const result1 = await init("conflict-test", {
-				yes: true,
+				frontend: ["tanstack-router"],
+				backend: "hono",
+				runtime: "bun",
+				database: "sqlite",
+				orm: "drizzle",
+				api: "trpc",
+				auth: "better-auth",
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
+				addons: ["turborepo"],
+				examples: ["none"],
+				packageManager: "bun",
 				install: false,
 				git: false,
 			});
@@ -284,7 +453,19 @@ describe("Programmatic API - Fast Tests", () => {
 			expect(result1.success).toBe(true);
 
 			const result2 = await init("conflict-test", {
-				yes: true,
+				frontend: ["tanstack-router"],
+				backend: "hono",
+				runtime: "bun",
+				database: "sqlite",
+				orm: "drizzle",
+				api: "trpc",
+				auth: "better-auth",
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
+				addons: ["turborepo"],
+				examples: ["none"],
+				packageManager: "bun",
 				install: false,
 				git: false,
 				directoryConflict: "error",
@@ -298,8 +479,19 @@ describe("Programmatic API - Fast Tests", () => {
 	describe("Advanced features", () => {
 		test("creates project with multiple addons", async () => {
 			const result = await init("multi-addon", {
-				yes: true,
+				frontend: ["tanstack-router"],
+				backend: "hono",
+				runtime: "bun",
+				database: "sqlite",
+				orm: "drizzle",
+				api: "trpc",
+				auth: "better-auth",
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
 				addons: ["biome", "turborepo"],
+				examples: ["none"],
+				packageManager: "bun",
 				install: false,
 				git: false,
 			});
@@ -312,10 +504,19 @@ describe("Programmatic API - Fast Tests", () => {
 
 		test("creates project with authentication enabled", async () => {
 			const result = await init("auth-app", {
-				yes: true,
-				auth: "better-auth",
+				frontend: ["tanstack-router"],
+				backend: "hono",
+				runtime: "bun",
 				database: "sqlite",
 				orm: "drizzle",
+				api: "trpc",
+				auth: "better-auth",
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
+				addons: ["turborepo"],
+				examples: ["none"],
+				packageManager: "bun",
 				install: false,
 				git: false,
 			});
@@ -330,11 +531,19 @@ describe("Programmatic API - Fast Tests", () => {
 
 		test("validates reproducible command format", async () => {
 			const result = await init("repro-test", {
-				yes: true,
 				frontend: ["next"],
 				backend: "fastify",
+				runtime: "bun",
 				database: "postgres",
 				orm: "prisma",
+				api: "trpc",
+				auth: "better-auth",
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
+				addons: ["turborepo"],
+				examples: ["none"],
+				packageManager: "bun",
 				install: false,
 				git: false,
 			});

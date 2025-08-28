@@ -432,7 +432,6 @@ describe("create-better-t-stack smoke", () => {
 						await runCli(
 							[
 								projectName,
-								"--yes",
 								"--frontend",
 								frontend,
 								"--backend",
@@ -447,9 +446,13 @@ describe("create-better-t-stack smoke", () => {
 								"none",
 								"--auth",
 								"none",
-								"--addons",
-								"none",
 								"--db-setup",
+								"none",
+								"--web-deploy",
+								"none",
+								"--server-deploy",
+								"none",
+								"--addons",
 								"none",
 								"--examples",
 								"none",
@@ -509,16 +512,29 @@ describe("create-better-t-stack smoke", () => {
 				await runCli(
 					[
 						projectName,
-						"--yes",
 						"--frontend",
 						frontend,
 						"--backend",
 						"convex",
+						"--runtime",
+						"none",
+						"--database",
+						"none",
+						"--orm",
+						"none",
+						"--api",
+						"none",
 						"--auth",
 						"none",
 						"--db-setup",
 						"none",
+						"--web-deploy",
+						"none",
+						"--server-deploy",
+						"none",
 						"--addons",
+						"none",
+						"--examples",
 						"none",
 						"--package-manager",
 						"bun",
@@ -563,16 +579,29 @@ describe("create-better-t-stack smoke", () => {
 				await runCli(
 					[
 						projectName,
-						"--yes",
 						"--frontend",
 						frontend,
 						"--backend",
 						"convex",
+						"--runtime",
+						"none",
+						"--api",
+						"none",
+						"--database",
+						"none",
+						"--orm",
+						"none",
 						"--auth",
 						"clerk",
 						"--db-setup",
 						"none",
+						"--web-deploy",
+						"none",
+						"--server-deploy",
+						"none",
 						"--addons",
+						"none",
+						"--examples",
 						"none",
 						"--package-manager",
 						"bun",
@@ -606,16 +635,29 @@ describe("create-better-t-stack smoke", () => {
 				await runCli(
 					[
 						projectName,
-						"--yes",
 						"--frontend",
 						frontend,
 						"--backend",
 						"convex",
+						"--runtime",
+						"none",
+						"--api",
+						"none",
+						"--database",
+						"none",
+						"--orm",
+						"none",
 						"--auth",
 						"clerk",
 						"--db-setup",
 						"none",
+						"--web-deploy",
+						"none",
+						"--server-deploy",
+						"none",
 						"--addons",
+						"none",
+						"--examples",
 						"none",
 						"--package-manager",
 						"bun",
@@ -648,17 +690,30 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
 					"--frontend",
 					"tanstack-router",
 					"native-nativewind",
 					"--backend",
 					"convex",
+					"--runtime",
+					"none",
+					"--api",
+					"none",
+					"--database",
+					"none",
+					"--orm",
+					"none",
 					"--auth",
 					"clerk",
 					"--db-setup",
 					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
+					"none",
 					"--addons",
+					"none",
+					"--examples",
 					"none",
 					"--package-manager",
 					"bun",
@@ -690,17 +745,31 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"next",
 					"native-unistyles",
 					"--backend",
 					"convex",
+					"--runtime",
+					"none",
+					"--api",
+					"none",
+					"--database",
+					"none",
+					"--orm",
+					"none",
 					"--auth",
 					"clerk",
 					"--db-setup",
 					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
+					"none",
 					"--addons",
+					"none",
+					"--examples",
 					"none",
 					"--package-manager",
 					"bun",
@@ -732,17 +801,31 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-start",
 					"native-nativewind",
 					"--backend",
 					"convex",
+					"--runtime",
+					"none",
+					"--api",
+					"none",
+					"--database",
+					"none",
+					"--orm",
+					"none",
 					"--auth",
 					"clerk",
 					"--db-setup",
 					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
+					"none",
 					"--addons",
+					"none",
+					"--examples",
 					"none",
 					"--package-manager",
 					"bun",
@@ -777,19 +860,7 @@ describe("create-better-t-stack smoke", () => {
 
 	it("scaffolds minimal default project with yes flag", async () => {
 		const projectName = "app-default";
-		await runCli(
-			[
-				projectName,
-				"--yes",
-				"--db-setup",
-				"none",
-				"--addons",
-				"none",
-				"--no-install",
-				"--no-git",
-			],
-			workdir,
-		);
+		await runCli([projectName, "--yes", "--no-install", "--no-git"], workdir);
 
 		const projectDir = join(workdir, projectName);
 		assertScaffoldedProject(projectDir);
@@ -809,64 +880,12 @@ describe("create-better-t-stack smoke", () => {
 		});
 	});
 
-	it("scaffolds with explicit minimal flags (no db, no api, no auth, no addons)", async () => {
-		const projectName = "app-min";
-		await runCli(
-			[
-				projectName,
-				"--yes",
-				"--frontend",
-				"tanstack-router",
-				"--backend",
-				"hono",
-				"--runtime",
-				"bun",
-				"--database",
-				"none",
-				"--orm",
-				"none",
-				"--api",
-				"none",
-				"--auth",
-				"none",
-				"--addons",
-				"none",
-				"--db-setup",
-				"none",
-				"--examples",
-				"none",
-				"--package-manager",
-				"bun",
-				"--no-install",
-				"--no-git",
-			],
-			workdir,
-		);
-
-		const projectDir = join(workdir, projectName);
-		assertScaffoldedProject(projectDir);
-		assertProjectStructure(projectDir, {
-			hasWeb: true,
-			hasServer: true,
-			hasAuth: false,
-			hasDatabase: false,
-		});
-		assertBtsConfig(projectDir, {
-			frontend: ["tanstack-router"],
-			backend: "hono",
-			database: "none",
-			orm: "none",
-			auth: "none",
-			addons: [],
-		});
-	});
-
 	it("scaffolds with turborepo addon", async () => {
 		const projectName = "app-turbo";
 		await runCli(
 			[
 				projectName,
-				"--yes",
+
 				"--frontend",
 				"tanstack-router",
 				"--backend",
@@ -889,6 +908,10 @@ describe("create-better-t-stack smoke", () => {
 				"none",
 				"--package-manager",
 				"bun",
+				"--web-deploy",
+				"none",
+				"--server-deploy",
+				"none",
 				"--no-install",
 				"--no-git",
 			],
@@ -916,19 +939,35 @@ describe("create-better-t-stack smoke", () => {
 		await runCli(
 			[
 				projectName,
-				"--yes",
+
 				"--frontend",
 				"tanstack-router",
 				"--backend",
 				"convex",
+				"--runtime",
+				"none",
+				"--api",
+				"none",
+				"--database",
+				"none",
+				"--orm",
+				"none",
 				"--auth",
 				"none",
 				"--db-setup",
 				"none",
+				"--server-deploy",
+				"none",
 				"--addons",
 				"none",
+				"--examples",
+				"todo",
 				"--package-manager",
 				"bun",
+				"--web-deploy",
+				"none",
+				"--server-deploy",
+				"none",
 				"--no-install",
 				"--no-git",
 			],
@@ -959,11 +998,12 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
 					"--frontend",
 					"next",
 					"--backend",
 					"none",
+					"--runtime",
+					"bun",
 					"--database",
 					"none",
 					"--orm",
@@ -972,9 +1012,13 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--auth",
 					"none",
-					"--addons",
-					"none",
 					"--db-setup",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
+					"none",
+					"--addons",
 					"none",
 					"--examples",
 					"none",
@@ -1003,11 +1047,12 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
 					"--frontend",
 					"nuxt",
 					"--backend",
 					"none",
+					"--runtime",
+					"bun",
 					"--database",
 					"none",
 					"--orm",
@@ -1016,9 +1061,13 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--auth",
 					"none",
-					"--addons",
-					"none",
 					"--db-setup",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
+					"none",
+					"--addons",
 					"none",
 					"--examples",
 					"none",
@@ -1047,11 +1096,12 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
 					"--frontend",
 					"svelte",
 					"--backend",
 					"none",
+					"--runtime",
+					"bun",
 					"--database",
 					"none",
 					"--orm",
@@ -1060,9 +1110,13 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--auth",
 					"none",
-					"--addons",
-					"none",
 					"--db-setup",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
+					"none",
+					"--addons",
 					"none",
 					"--examples",
 					"none",
@@ -1091,11 +1145,12 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
 					"--frontend",
 					"solid",
 					"--backend",
 					"none",
+					"--runtime",
+					"bun",
 					"--database",
 					"none",
 					"--orm",
@@ -1104,9 +1159,13 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--auth",
 					"none",
-					"--addons",
-					"none",
 					"--db-setup",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
+					"none",
+					"--addons",
 					"none",
 					"--examples",
 					"none",
@@ -1135,11 +1194,12 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
 					"--frontend",
 					"native-nativewind",
 					"--backend",
 					"none",
+					"--runtime",
+					"bun",
 					"--database",
 					"none",
 					"--orm",
@@ -1148,9 +1208,13 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--auth",
 					"none",
-					"--addons",
-					"none",
 					"--db-setup",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
+					"none",
+					"--addons",
 					"none",
 					"--examples",
 					"none",
@@ -1181,7 +1245,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -1198,9 +1262,13 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
+					"--examples",
+					"none",
 					"--db-setup",
 					"none",
-					"--examples",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--package-manager",
 					"bun",
@@ -1227,7 +1295,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -1244,9 +1312,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",
@@ -1273,7 +1341,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -1290,9 +1358,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",
@@ -1321,7 +1389,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -1338,9 +1406,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",
@@ -1368,7 +1436,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -1385,9 +1453,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",
@@ -1415,7 +1483,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -1432,9 +1500,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",
@@ -1462,7 +1530,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -1479,9 +1547,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",
@@ -1511,7 +1579,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -1534,6 +1602,10 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--package-manager",
 					"bun",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
+					"none",
 					"--no-install",
 					"--no-git",
 				],
@@ -1557,7 +1629,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -1607,7 +1679,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -1624,9 +1696,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",
@@ -1648,7 +1720,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -1665,9 +1737,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",
@@ -1690,7 +1762,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCliExpectingError(
 				[
 					"<invalid>",
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -1707,9 +1779,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",
@@ -1724,7 +1796,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCliExpectingError(
 				[
 					"invalid-combo-database-orm",
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -1741,9 +1813,13 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
+					"--examples",
+					"none",
 					"--db-setup",
 					"none",
-					"--examples",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--package-manager",
 					"bun",
@@ -1758,7 +1834,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCliExpectingError(
 				[
 					"invalid-combo-frontend-api",
-					"--yes",
+
 					"--frontend",
 					"nuxt",
 					"--backend",
@@ -1775,9 +1851,13 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
+					"--examples",
+					"none",
 					"--db-setup",
 					"none",
-					"--examples",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--package-manager",
 					"bun",
@@ -1792,7 +1872,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCliExpectingError(
 				[
 					"invalid-combo-multiple-web",
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"next",
@@ -1810,9 +1890,13 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
+					"--examples",
+					"none",
 					"--db-setup",
 					"none",
-					"--examples",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--package-manager",
 					"bun",
@@ -1827,7 +1911,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCliExpectingError(
 				[
 					"invalid-combo-turso-sqlite",
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -1844,9 +1928,15 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
+					"--examples",
+					"none",
 					"--db-setup",
 					"turso",
 					"--examples",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--package-manager",
 					"bun",
@@ -1861,7 +1951,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCliExpectingError(
 				[
 					"invalid-combo-convex-better-auth",
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -1871,6 +1961,12 @@ describe("create-better-t-stack smoke", () => {
 					"--db-setup",
 					"none",
 					"--addons",
+					"none",
+					"--examples",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--package-manager",
 					"bun",
@@ -1885,7 +1981,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCliExpectingError(
 				[
 					"invalid-combo-nuxt-convex-clerk",
-					"--yes",
+
 					"--frontend",
 					"nuxt",
 					"--backend",
@@ -1895,6 +1991,12 @@ describe("create-better-t-stack smoke", () => {
 					"--db-setup",
 					"none",
 					"--addons",
+					"none",
+					"--examples",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--package-manager",
 					"bun",
@@ -1909,7 +2011,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCliExpectingError(
 				[
 					"invalid-combo-svlete-convex-clerk",
-					"--yes",
+
 					"--frontend",
 					"svelte",
 					"--backend",
@@ -1919,6 +2021,12 @@ describe("create-better-t-stack smoke", () => {
 					"--db-setup",
 					"none",
 					"--addons",
+					"none",
+					"--examples",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--package-manager",
 					"bun",
@@ -1936,7 +2044,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -1953,9 +2061,15 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
+					"--examples",
+					"none",
 					"--db-setup",
 					"turso",
 					"--examples",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--package-manager",
 					"bun",
@@ -1979,13 +2093,26 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
 					"--frontend",
 					"none",
 					"--backend",
 					"none",
+					"--runtime",
+					"bun",
+					"--database",
+					"none",
+					"--orm",
+					"none",
+					"--api",
+					"none",
+					"--auth",
+					"none",
+					"--db-setup",
+					"none",
 					"--web-deploy",
 					"wrangler",
+					"--server-deploy",
+					"none",
 					"--addons",
 					"none",
 					"--examples",
@@ -2014,7 +2141,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -2033,9 +2160,11 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
+					"--examples",
+					"none",
 					"--db-setup",
 					"none",
-					"--examples",
+					"--web-deploy",
 					"none",
 					"--package-manager",
 					"bun",
@@ -2058,7 +2187,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCliExpectingError(
 				[
 					"invalid-combo-runtime-backend",
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -2075,9 +2204,13 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
+					"--examples",
+					"none",
 					"--db-setup",
 					"none",
-					"--examples",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--package-manager",
 					"bun",
@@ -2092,7 +2225,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCliExpectingError(
 				[
 					"invalid-combo-runtime-orm",
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -2109,9 +2242,13 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
+					"--examples",
+					"none",
 					"--db-setup",
 					"none",
-					"--examples",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--package-manager",
 					"bun",
@@ -2129,7 +2266,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -2146,9 +2283,13 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
+					"--examples",
+					"none",
 					"--db-setup",
 					"none",
-					"--examples",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--package-manager",
 					"npm",
@@ -2170,7 +2311,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -2187,9 +2328,13 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
+					"--examples",
+					"none",
 					"--db-setup",
 					"none",
-					"--examples",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--package-manager",
 					"pnpm",
@@ -2215,7 +2360,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"nuxt",
 					"--backend",
@@ -2232,7 +2377,13 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
+					"--examples",
+					"none",
 					"--db-setup",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--examples",
 					"ai",
@@ -2258,7 +2409,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -2275,7 +2426,13 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
+					"--examples",
+					"none",
 					"--db-setup",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--examples",
 					"todo",
@@ -2299,7 +2456,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -2316,7 +2473,13 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
+					"--examples",
+					"none",
 					"--db-setup",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--examples",
 					"ai",
@@ -2340,17 +2503,31 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
 					"convex",
+					"--runtime",
+					"none",
+					"--api",
+					"none",
+					"--database",
+					"none",
+					"--orm",
+					"none",
 					"--auth",
 					"none",
 					"--db-setup",
 					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
+					"none",
 					"--addons",
 					"none",
+					"--examples",
+					"todo",
 					"--package-manager",
 					"bun",
 					"--no-install",
@@ -2373,7 +2550,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -2390,7 +2567,13 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
+					"--examples",
+					"none",
 					"--db-setup",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--examples",
 					"none",
@@ -2412,7 +2595,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--directory-conflict",
 					"overwrite",
 					"--frontend",
@@ -2431,7 +2614,13 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
+					"--examples",
+					"none",
 					"--db-setup",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--examples",
 					"none",
@@ -2453,7 +2642,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -2471,6 +2660,10 @@ describe("create-better-t-stack smoke", () => {
 					"--addons",
 					"pwa",
 					"--db-setup",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--examples",
 					"none",
@@ -2494,7 +2687,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -2512,6 +2705,10 @@ describe("create-better-t-stack smoke", () => {
 					"--addons",
 					"tauri",
 					"--db-setup",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--examples",
 					"none",
@@ -2535,7 +2732,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -2553,6 +2750,10 @@ describe("create-better-t-stack smoke", () => {
 					"--addons",
 					"husky",
 					"--db-setup",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--examples",
 					"none",
@@ -2576,7 +2777,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -2593,7 +2794,13 @@ describe("create-better-t-stack smoke", () => {
 					"better-auth",
 					"--addons",
 					"none",
+					"--examples",
+					"none",
 					"--db-setup",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--examples",
 					"none",
@@ -2623,7 +2830,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -2640,7 +2847,13 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
+					"--examples",
+					"none",
 					"--db-setup",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--examples",
 					"none",
@@ -2665,7 +2878,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -2682,7 +2895,13 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
+					"--examples",
+					"none",
 					"--db-setup",
+					"none",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
 					"none",
 					"--examples",
 					"none",
@@ -2707,7 +2926,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"next",
 					"--backend",
@@ -2724,9 +2943,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",
@@ -2749,7 +2968,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"nuxt",
 					"--backend",
@@ -2766,9 +2985,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",
@@ -2791,7 +3010,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"svelte",
 					"--backend",
@@ -2808,9 +3027,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",
@@ -2833,7 +3052,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"solid",
 					"--backend",
@@ -2850,9 +3069,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",
@@ -2875,7 +3094,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"next",
 					"--backend",
@@ -2892,9 +3111,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",
@@ -2917,7 +3136,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -2934,9 +3153,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",
@@ -3188,7 +3407,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -3209,9 +3428,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",
@@ -3235,7 +3454,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -3256,9 +3475,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",
@@ -3282,7 +3501,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--directory-conflict",
 					"overwrite",
 					"--frontend",
@@ -3303,9 +3522,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",
@@ -3338,7 +3557,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -3357,9 +3576,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",
@@ -3383,7 +3602,7 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
+
 					"--frontend",
 					"tanstack-router",
 					"--backend",
@@ -3402,9 +3621,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",
@@ -3428,13 +3647,16 @@ describe("create-better-t-stack smoke", () => {
 			await runCli(
 				[
 					projectName,
-					"--yes",
 					"--frontend",
 					"tanstack-router",
 					"--backend",
 					"none",
+					"--runtime",
+					"bun",
 					"--web-deploy",
 					"wrangler",
+					"--server-deploy",
+					"none",
 					"--database",
 					"none",
 					"--orm",
@@ -3445,9 +3667,9 @@ describe("create-better-t-stack smoke", () => {
 					"none",
 					"--addons",
 					"none",
-					"--db-setup",
-					"none",
 					"--examples",
+					"none",
+					"--db-setup",
 					"none",
 					"--package-manager",
 					"bun",

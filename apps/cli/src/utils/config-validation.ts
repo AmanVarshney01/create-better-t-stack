@@ -6,9 +6,7 @@ import type {
 	Runtime,
 } from "../types";
 import {
-	coerceBackendPresets,
 	ensureSingleWebAndNative,
-	incompatibleFlagsForBackend,
 	isWebFrontend,
 	validateAddonsAgainstFrontends,
 	validateAlchemyCompatibility,
@@ -226,38 +224,19 @@ export function validateBackendConstraints(
 		}
 	}
 
-	if (backend === "convex" || backend === "none") {
-		const incompatibleFlags = incompatibleFlagsForBackend(
-			backend,
-			providedFlags,
-			options,
-		);
-		if (incompatibleFlags.length > 0) {
+	if (
+		backend === "convex" &&
+		providedFlags.has("frontend") &&
+		options.frontend
+	) {
+		const incompatibleFrontends = options.frontend.filter((f) => f === "solid");
+		if (incompatibleFrontends.length > 0) {
 			exitWithError(
-				`The following flags are incompatible with '--backend ${backend}': ${incompatibleFlags.join(
+				`The following frontends are not compatible with '--backend convex': ${incompatibleFrontends.join(
 					", ",
-				)}. Please remove them.`,
+				)}. Please choose a different frontend or backend.`,
 			);
 		}
-
-		if (
-			backend === "convex" &&
-			providedFlags.has("frontend") &&
-			options.frontend
-		) {
-			const incompatibleFrontends = options.frontend.filter(
-				(f) => f === "solid",
-			);
-			if (incompatibleFrontends.length > 0) {
-				exitWithError(
-					`The following frontends are not compatible with '--backend convex': ${incompatibleFrontends.join(
-						", ",
-					)}. Please choose a different frontend or backend.`,
-				);
-			}
-		}
-
-		coerceBackendPresets(config);
 	}
 }
 
