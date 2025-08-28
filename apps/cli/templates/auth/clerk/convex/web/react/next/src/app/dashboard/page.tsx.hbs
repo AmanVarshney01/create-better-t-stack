@@ -1,10 +1,11 @@
 "use client";
 
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
-import { SignInButton, UserButton } from "@clerk/nextjs";
-import { Authenticated, Unauthenticated, useQuery } from "convex/react";
+import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
+import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
 
 export default function Dashboard() {
+  const user = useUser();
   const privateData = useQuery(api.privateData.get);
 
   return (
@@ -12,7 +13,7 @@ export default function Dashboard() {
       <Authenticated>
         <div>
           <h1>Dashboard</h1>
-          <p>Welcome {privateData?.user?.name}</p>
+          <p>Welcome {user.user?.fullName}</p>
           <p>privateData: {privateData?.message}</p>
           <UserButton />
         </div>
@@ -20,6 +21,9 @@ export default function Dashboard() {
       <Unauthenticated>
         <SignInButton />
       </Unauthenticated>
+      <AuthLoading>
+        <div>Loading...</div>
+      </AuthLoading>
     </>
   );
 }
