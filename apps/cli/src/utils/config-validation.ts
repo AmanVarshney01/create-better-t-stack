@@ -190,6 +190,25 @@ export function validateBackendConstraints(
 		);
 	}
 
+	if (backend === "convex" && config.auth === "clerk" && config.frontend) {
+		const incompatibleFrontends = config.frontend.filter((f) =>
+			["nuxt", "svelte", "solid"].includes(f),
+		);
+		if (incompatibleFrontends.length > 0) {
+			exitWithError(
+				`Clerk authentication is not compatible with the following frontends: ${incompatibleFrontends.join(
+					", ",
+				)}. Please choose a different frontend or auth provider.`,
+			);
+		}
+	}
+
+	if (backend === "convex" && config.auth === "better-auth") {
+		exitWithError(
+			"Better-Auth is not compatible with the Convex backend. Please use '--auth clerk' or '--auth none'.",
+		);
+	}
+
 	if (
 		providedFlags.has("backend") &&
 		backend &&

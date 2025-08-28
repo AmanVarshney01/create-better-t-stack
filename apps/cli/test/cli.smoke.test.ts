@@ -1719,7 +1719,7 @@ describe("create-better-t-stack smoke", () => {
 		it("rejects incompatible database and ORM combinations", async () => {
 			await runCliExpectingError(
 				[
-					"invalid-combo",
+					"invalid-combo-database-orm",
 					"--yes",
 					"--frontend",
 					"tanstack-router",
@@ -1753,7 +1753,7 @@ describe("create-better-t-stack smoke", () => {
 		it("rejects incompatible frontend and API combinations", async () => {
 			await runCliExpectingError(
 				[
-					"invalid-combo",
+					"invalid-combo-frontend-api",
 					"--yes",
 					"--frontend",
 					"nuxt",
@@ -1787,7 +1787,7 @@ describe("create-better-t-stack smoke", () => {
 		it("rejects multiple web frontends", async () => {
 			await runCliExpectingError(
 				[
-					"invalid-combo",
+					"invalid-combo-multiple-web",
 					"--yes",
 					"--frontend",
 					"tanstack-router",
@@ -1822,7 +1822,7 @@ describe("create-better-t-stack smoke", () => {
 		it("rejects Turso db-setup with non-SQLite database", async () => {
 			await runCliExpectingError(
 				[
-					"invalid-combo",
+					"invalid-combo-turso-sqlite",
 					"--yes",
 					"--frontend",
 					"tanstack-router",
@@ -1856,7 +1856,7 @@ describe("create-better-t-stack smoke", () => {
 		it("rejects convex + better-auth combination", async () => {
 			await runCliExpectingError(
 				[
-					"invalid-combo",
+					"invalid-combo-convex-better-auth",
 					"--yes",
 					"--frontend",
 					"tanstack-router",
@@ -1880,7 +1880,7 @@ describe("create-better-t-stack smoke", () => {
 		it("rejects nuxt + convex + clerk combination", async () => {
 			await runCliExpectingError(
 				[
-					"invalid-combo",
+					"invalid-combo-nuxt-convex-clerk",
 					"--yes",
 					"--frontend",
 					"nuxt",
@@ -1904,7 +1904,7 @@ describe("create-better-t-stack smoke", () => {
 		it("rejects svelte + convex + clerk combination", async () => {
 			await runCliExpectingError(
 				[
-					"invalid-combo",
+					"invalid-combo-svlete-convex-clerk",
 					"--yes",
 					"--frontend",
 					"svelte",
@@ -2053,7 +2053,7 @@ describe("create-better-t-stack smoke", () => {
 		it("rejects incompatible runtime and backend combinations", async () => {
 			await runCliExpectingError(
 				[
-					"invalid-combo",
+					"invalid-combo-runtime-backend",
 					"--yes",
 					"--frontend",
 					"tanstack-router",
@@ -2087,7 +2087,7 @@ describe("create-better-t-stack smoke", () => {
 		it("rejects incompatible runtime and ORM combinations", async () => {
 			await runCliExpectingError(
 				[
-					"invalid-combo",
+					"invalid-combo-runtime-orm",
 					"--yes",
 					"--frontend",
 					"tanstack-router",
@@ -2947,7 +2947,7 @@ describe("create-better-t-stack smoke", () => {
 		});
 	});
 
-	describe.runIf(process.env.WITH_BUILD === "1")(
+	(process.env.WITH_BUILD === "1" ? describe : describe.skip)(
 		"build each scaffolded project",
 		() => {
 			const sanitize = (s: string) => s.replace(/[^a-z-]/g, "").slice(0, 30);
