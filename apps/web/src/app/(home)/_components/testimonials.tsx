@@ -1,12 +1,11 @@
 "use client";
 
-import { api } from "@better-t-stack/backend/convex/_generated/api";
-import { useQueryWithStatus } from "@better-t-stack/backend/convex/hooks";
+import type { api } from "@better-t-stack/backend/convex/_generated/api";
+import { type Preloaded, usePreloadedQuery } from "convex/react";
 import { Play, Terminal } from "lucide-react";
 import { motion } from "motion/react";
 import Image from "next/image";
-import { Suspense } from "react";
-import { Tweet, TweetSkeleton, type TwitterComponents } from "react-tweet";
+import { Tweet, type TwitterComponents } from "react-tweet";
 
 export const components: TwitterComponents = {
 	AvatarImg: (props) => {
@@ -92,101 +91,27 @@ const TweetCard = ({ tweetId, index }: { tweetId: string; index: number }) => (
 			</div>
 			<div className="w-full min-w-0 overflow-hidden">
 				<div style={{ width: "100%", minWidth: 0, maxWidth: "100%" }}>
-					<Suspense fallback={<TweetSkeleton />}>
-						<Tweet id={tweetId} components={components} />
-					</Suspense>
+					{/* <Suspense fallback={<TweetSkeleton />}> */}
+					<Tweet id={tweetId} components={components} />
+					{/* </Suspense> */}
 				</div>
 			</div>
 		</div>
 	</motion.div>
 );
 
-export default function Testimonials() {
-	const videosQuery = useQueryWithStatus(api.testimonials.getVideos);
-	const tweetsQuery = useQueryWithStatus(api.testimonials.getTweets);
+export default function Testimonials({
+	preloadedTestimonialsTweet,
+	preloadedTestimonialsVideos,
+}: {
+	preloadedTestimonialsTweet: Preloaded<typeof api.testimonials.getTweets>;
+	preloadedTestimonialsVideos: Preloaded<typeof api.testimonials.getVideos>;
+}) {
+	const videosData = usePreloadedQuery(preloadedTestimonialsVideos);
+	const tweetsData = usePreloadedQuery(preloadedTestimonialsTweet);
 
-	const videos = videosQuery.data || [];
-	const tweets = tweetsQuery.data || [];
-
-	if (videosQuery.isPending || tweetsQuery.isPending) {
-		return (
-			<div className="mb-12 w-full max-w-full overflow-hidden px-4">
-				<div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
-					<div className="flex items-center gap-2">
-						<Play className="h-5 w-5 text-primary" />
-						<span className="font-bold text-lg sm:text-xl">
-							VIDEO_TESTIMONIALS.LOG
-						</span>
-					</div>
-					<div className="hidden h-px flex-1 bg-border sm:block" />
-					<span className="w-full text-right text-muted-foreground text-xs sm:w-auto sm:text-left">
-						[LOADING... ENTRIES]
-					</span>
-				</div>
-				<div className="mb-6 rounded border border-border p-8">
-					<div className="flex items-center justify-center gap-2">
-						<div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-						<span className="text-muted-foreground">LOADING_VIDEOS.SH</span>
-						<div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-					</div>
-				</div>
-
-				<div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
-					<div className="flex items-center gap-2">
-						<Terminal className="h-5 w-5 text-primary" />
-						<span className="font-bold text-lg sm:text-xl">
-							DEVELOPER_TESTIMONIALS.LOG
-						</span>
-					</div>
-					<div className="hidden h-px flex-1 bg-border sm:block" />
-					<span className="w-full text-right text-muted-foreground text-xs sm:w-auto sm:text-left">
-						[LOADING... ENTRIES]
-					</span>
-				</div>
-				<div className="rounded border border-border p-8">
-					<div className="flex items-center justify-center gap-2">
-						<div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-						<span className="text-muted-foreground">LOADING_TWEETS.SH</span>
-						<div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-					</div>
-				</div>
-			</div>
-		);
-	}
-
-	if (videosQuery.isError || tweetsQuery.isError) {
-		return (
-			<div className="mb-12 w-full max-w-full overflow-hidden px-4">
-				<div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
-					<div className="flex items-center gap-2">
-						<Play className="h-5 w-5 text-primary" />
-						<span className="font-bold text-lg sm:text-xl">
-							VIDEO_TESTIMONIALS.LOG
-						</span>
-					</div>
-					<div className="hidden h-px flex-1 bg-border sm:block" />
-					<span className="w-full text-right text-muted-foreground text-xs sm:w-auto sm:text-left">
-						[ERROR ENTRIES]
-					</span>
-				</div>
-				<div className="rounded border border-border p-8">
-					<div className="text-center">
-						<div className="mb-4 flex items-center justify-center gap-2">
-							<span className="text-destructive">
-								ERROR_LOADING_TESTIMONIALS.NULL
-							</span>
-						</div>
-						<div className="flex items-center justify-center gap-2 text-sm">
-							<span className="text-primary">$</span>
-							<span className="text-muted-foreground">
-								Please try again later!
-							</span>
-						</div>
-					</div>
-				</div>
-			</div>
-		);
-	}
+	const videos = videosData || [];
+	const tweets = tweetsData || [];
 
 	const getResponsiveColumns = (numCols: number) => {
 		const columns: string[][] = Array(numCols)

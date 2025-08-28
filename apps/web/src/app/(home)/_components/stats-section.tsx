@@ -1,3 +1,4 @@
+"use client";
 import { api } from "@better-t-stack/backend/convex/_generated/api";
 import { useNpmDownloadCounter } from "@erquhart/convex-oss-stats/react";
 import NumberFlow, { continuous } from "@number-flow/react";
@@ -12,33 +13,16 @@ import {
 	Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
-export default function StatsSection() {
-	const [analyticsData, setAnalyticsData] = useState<{
+export default function StatsSection({
+	analyticsData,
+}: {
+	analyticsData: {
 		totalProjects: number;
 		avgProjectsPerDay: string;
 		lastUpdated: string | null;
-	} | null>(null);
-
-	useEffect(() => {
-		const fetchAnalytics = async () => {
-			try {
-				const response = await fetch(
-					"https://r2.amanv.dev/analytics-minimal.json",
-				);
-				if (response.ok) {
-					const data = await response.json();
-					setAnalyticsData(data);
-				}
-			} catch (error) {
-				console.error("Failed to fetch analytics data:", error);
-			}
-		};
-
-		fetchAnalytics();
-	}, []);
-
+	};
+}) {
 	const githubRepo = useQuery(api.stats.getGithubRepo, {
 		name: "AmanVarshney01/create-better-t-stack",
 	});

@@ -1,3 +1,4 @@
+"use client";
 import { Check, ChevronDown, ChevronRight, Copy, Terminal } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";

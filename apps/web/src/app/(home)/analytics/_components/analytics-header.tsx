@@ -3,17 +3,13 @@ import Image from "next/image";
 import Link from "next/link";
 import discordIcon from "@/public/icon/discord.svg";
 
-interface AnalyticsHeaderProps {
-	totalProjects: number;
-	lastUpdated: string | null;
-	loadingLastUpdated: boolean;
-}
-
 export function AnalyticsHeader({
 	totalProjects,
 	lastUpdated,
-	loadingLastUpdated,
-}: AnalyticsHeaderProps) {
+}: {
+	totalProjects: number;
+	lastUpdated: string | null;
+}) {
 	return (
 		<div className="mb-8">
 			<div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
@@ -69,12 +65,7 @@ export function AnalyticsHeader({
 				<div className="mt-2 flex items-center gap-2 text-sm">
 					<span className="text-primary">$</span>
 					<span className="text-muted-foreground">
-						Last updated:{" "}
-						{loadingLastUpdated
-							? "CHECKING..."
-							: lastUpdated
-								? `${lastUpdated} UTC`
-								: "UNKNOWN"}
+						Last updated: {lastUpdated ? `${lastUpdated} UTC` : "UNKNOWN"}
 					</span>
 				</div>
 			</div>

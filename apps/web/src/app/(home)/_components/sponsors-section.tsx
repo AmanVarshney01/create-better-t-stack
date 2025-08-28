@@ -1,5 +1,6 @@
-import { api } from "@better-t-stack/backend/convex/_generated/api";
-import { useQueryWithStatus } from "@better-t-stack/backend/convex/hooks";
+"use client";
+import type { api } from "@better-t-stack/backend/convex/_generated/api";
+import { type Preloaded, usePreloadedQuery } from "convex/react";
 import {
 	ChevronDown,
 	ChevronUp,
@@ -25,77 +26,17 @@ import {
 	sortSponsors,
 } from "@/lib/sponsor-utils";
 
-export default function SponsorsSection() {
+export default function SponsorsSection({
+	preloadedSponsors,
+}: {
+	preloadedSponsors: Preloaded<typeof api.sponsors.getSponsors>;
+}) {
+	const sponsorsData = usePreloadedQuery(preloadedSponsors);
+
 	const [showPastSponsors, setShowPastSponsors] = useState(false);
 
-	const sponsorsQuery = useQueryWithStatus(api.sponsors.getSponsors);
-
-	if (sponsorsQuery.isPending) {
-		return (
-			<div className="mb-12">
-				<div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
-					<div className="flex items-center gap-2">
-						<Terminal className="h-5 w-5 text-primary" />
-						<span className="font-bold text-lg sm:text-xl">
-							SPONSORS_DATABASE.JSON
-						</span>
-					</div>
-					<div className="hidden h-px flex-1 bg-border sm:block" />
-					<div className="flex items-center gap-2">
-						<span className="text-muted-foreground text-xs">
-							[LOADING... RECORDS]
-						</span>
-					</div>
-				</div>
-				<div className="rounded border border-border p-8">
-					<div className="flex items-center justify-center gap-2">
-						<div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-						<span className="text-muted-foreground">LOADING_SPONSORS.SH</span>
-						<div className="h-2 w-2 animate-pulse rounded-full bg-primary" />
-					</div>
-				</div>
-			</div>
-		);
-	}
-
-	if (sponsorsQuery.isError) {
-		return (
-			<div className="mb-12">
-				<div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
-					<div className="flex items-center gap-2">
-						<Terminal className="h-5 w-5 text-primary" />
-						<span className="font-bold text-lg sm:text-xl">
-							SPONSORS_DATABASE.JSON
-						</span>
-					</div>
-					<div className="hidden h-px flex-1 bg-border sm:block" />
-					<div className="flex items-center gap-2">
-						<span className="text-muted-foreground text-xs">
-							[ERROR RECORDS]
-						</span>
-					</div>
-				</div>
-				<div className="rounded border border-border p-8">
-					<div className="text-center">
-						<div className="mb-4 flex items-center justify-center gap-2">
-							<span className="text-destructive">
-								ERROR_LOADING_SPONSORS.NULL
-							</span>
-						</div>
-						<div className="flex items-center justify-center gap-2 text-sm">
-							<span className="text-primary">$</span>
-							<span className="text-muted-foreground">
-								Please try again later!
-							</span>
-						</div>
-					</div>
-				</div>
-			</div>
-		);
-	}
-
 	const sponsors =
-		sponsorsQuery.data?.map((sponsor) => ({
+		sponsorsData.map((sponsor) => ({
 			...sponsor,
 			sponsor: {
 				...sponsor.sponsor,
@@ -106,7 +47,7 @@ export default function SponsorsSection() {
 	const visibleSponsors = filterVisibleSponsors(sponsors);
 	const sortedSponsors = sortSponsors(visibleSponsors);
 	const currentSponsors = filterCurrentSponsors(sortedSponsors);
-	const pastSponsors = filterPastSponsors(sortedSponsors);
+	const pastSponsors = filterPastSponsors(sortSponsors(sponsors));
 	const specialSponsors = sortSpecialSponsors(
 		filterSpecialSponsors(currentSponsors),
 	);
