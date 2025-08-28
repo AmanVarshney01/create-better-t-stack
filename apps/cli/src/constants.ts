@@ -14,7 +14,7 @@ export const DEFAULT_CONFIG_BASE = {
 	database: "sqlite",
 	orm: "drizzle",
 	auth: true,
-	addons: ["turborepo"],
+	addons: ["turborepo", "t3env"],
 	examples: [],
 	git: true,
 	install: true,
@@ -143,6 +143,11 @@ export const dependencyVersionMap = {
 	nitropack: "^2.12.4",
 
 	dotenv: "^17.2.1",
+
+	zod: "^4.0.14",
+	"@t3-oss/env-core": "^0.13.8",
+	"@t3-oss/env-nextjs": "^0.13.8",
+	"@t3-oss/env-nuxt": "^0.13.8",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;
@@ -158,5 +163,6 @@ export const ADDON_COMPATIBILITY: Record<Addons, readonly Frontend[]> = {
 	ruler: [],
 	oxlint: [],
 	fumadocs: [],
+	t3env: [],
 	none: [],
 } as const;
