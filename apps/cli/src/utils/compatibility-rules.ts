@@ -135,9 +135,6 @@ export function validateWorkersCompatibility(
 
 export function coerceBackendPresets(config: Partial<ProjectConfig>) {
 	if (config.backend === "convex") {
-		if (config.auth !== "clerk") {
-			config.auth = "none" as ProjectConfig["auth"];
-		}
 		config.database = "none";
 		config.orm = "none";
 		config.api = "none";
@@ -219,8 +216,15 @@ export function validateApiFrontendCompatibility(
 export function isFrontendAllowedWithBackend(
 	frontend: Frontend,
 	backend?: ProjectConfig["backend"],
+	auth?: string,
 ) {
 	if (backend === "convex" && frontend === "solid") return false;
+
+	if (auth === "clerk" && backend === "convex") {
+		const incompatibleFrontends = ["nuxt", "svelte", "solid"];
+		if (incompatibleFrontends.includes(frontend)) return false;
+	}
+
 	return true;
 }
 

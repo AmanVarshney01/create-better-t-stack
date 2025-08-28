@@ -256,7 +256,7 @@ apps/docs/
   "frontend": ["<next|tanstack-router|react-router|tanstack-start|nuxt|svelte|solid>"] ,
   "addons": ["<turborepo|biome|husky|pwa|starlight>"] ,
   "examples": ["<ai|todo|none>"] ,
-  "auth": <true|false>,
+  "auth": <"better-auth"|"clerk"|"none">,
   "packageManager": "<bun|pnpm|npm>",
   "dbSetup": "<none|docker|d1>",
   "api": "<none|trpc|orpc>",
@@ -336,7 +336,9 @@ Notes:
 - **Monorepo**: `apps/*` always; `packages/*` only when needed (Convex)
 - **React web base**: shadcn/ui primitives, `components.json`, common utilities
 - **API clients**: `src/utils/trpc.ts` or `src/utils/orpc.ts` added to web/native when selected
-- **Auth**: Adds `src/lib/auth.ts` on the server and login/dashboard pages on the web app
+- **Auth**: Adds authentication setup based on provider:
+  - `better-auth`: `src/lib/auth.ts` on server and login/dashboard pages on web app
+  - `clerk`: Clerk provider setup and authentication components
 - **ORM/DB**: Drizzle/Prisma/Mongoose files added only when selected
 - **Extras**: `pnpm-workspace.yaml`, `bunfig.toml`, or `.npmrc` added based on package manager and choices
 - **Deploy**: Workers deploy adds `wrangler.jsonc` templates to the appropriate app(s)

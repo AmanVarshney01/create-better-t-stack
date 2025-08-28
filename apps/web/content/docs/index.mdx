@@ -91,7 +91,7 @@ Skip prompts and use the default stack:
       --backend hono \
       --database sqlite \
       --orm drizzle \
-      --auth \
+      --auth better-auth \
       --addons turborepo
     ```
   </Tab>
@@ -102,7 +102,7 @@ Skip prompts and use the default stack:
       --backend hono \
       --database sqlite \
       --orm drizzle \
-      --auth \
+      --auth better-auth \
       --addons turborepo
     ```
   </Tab>
@@ -113,34 +113,37 @@ Skip prompts and use the default stack:
       --backend hono \
       --database sqlite \
       --orm drizzle \
-      --auth \
+      --auth better-auth \
       --addons turborepo
     ```
   </Tab>
 </Tabs>
 
-### Convex + React
+### Convex + React + Clerk
 
 <Tabs items={['bun', 'pnpm', 'npm']}>
   <Tab value="bun">
     ```bash
     bun create better-t-stack@latest my-convex-app \
       --frontend tanstack-router \
-      --backend convex
+      --backend convex \
+      --auth clerk
     ```
   </Tab>
   <Tab value="pnpm">
     ```bash
     pnpm create better-t-stack@latest my-convex-app \
       --frontend tanstack-router \
-      --backend convex
+      --backend convex \
+      --auth clerk
     ```
   </Tab>
   <Tab value="npm">
     ```bash
     npx create-better-t-stack@latest my-convex-app \
       --frontend tanstack-router \
-      --backend convex
+      --backend convex \
+      --auth clerk
     ```
   </Tab>
 </Tabs>
@@ -193,7 +196,7 @@ Skip prompts and use the default stack:
       --backend hono \
       --database sqlite \
       --orm drizzle \
-      --auth
+      --auth better-auth
     ```
   </Tab>
   <Tab value="pnpm">
@@ -203,7 +206,7 @@ Skip prompts and use the default stack:
       --backend hono \
       --database sqlite \
       --orm drizzle \
-      --auth
+      --auth better-auth
     ```
   </Tab>
   <Tab value="npm">
@@ -213,7 +216,7 @@ Skip prompts and use the default stack:
       --backend hono \
       --database sqlite \
       --orm drizzle \
-      --auth
+      --auth better-auth
     ```
   </Tab>
 </Tabs>
@@ -254,6 +257,7 @@ See the full list in the [CLI Reference](/docs/cli). Key flags:
 - `--database`: sqlite, postgres, mysql, mongodb, none
 - `--orm`: drizzle, prisma, mongoose, none
 - `--api`: trpc, orpc, none
+- `--auth`: better-auth, clerk, none
 - `--addons`: turborepo, pwa, tauri, biome, husky, starlight, fumadocs, ultracite, oxlint, ruler, none
 - `--examples`: todo, ai, none
 

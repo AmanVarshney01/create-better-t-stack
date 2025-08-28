@@ -99,7 +99,11 @@ This project uses Convex as a backend. You'll need to set up Convex before runni
 ${packageManagerRunCmd} dev:setup
 \`\`\`
 
-Follow the prompts to create a new Convex project and connect it to your application.`
+Follow the prompts to create a new Convex project and connect it to your application.${
+				auth === "clerk"
+					? " See [Convex + Clerk guide](https://docs.convex.dev/auth/clerk) for auth setup."
+					: ""
+			}`
 		: generateDatabaseSetup(
 				database,
 				auth,
@@ -136,6 +140,7 @@ ${generateProjectStructure(
 	addons,
 	isConvex,
 	api,
+	auth,
 )}
 \`\`\`
 
@@ -259,6 +264,7 @@ function generateProjectStructure(
 	addons: Addons[],
 	isConvex: boolean,
 	api: API,
+	auth: Auth,
 ): string {
 	const structure: string[] = [`${projectName}/`, "├── apps/"];
 
@@ -318,6 +324,12 @@ function generateProjectStructure(
 		structure.push(
 			"│   └── backend/     # Convex backend functions and schema",
 		);
+		if (auth === "clerk") {
+			structure.push(
+				"│       ├── convex/    # Convex functions and schema",
+				"│       └── .env.local # Convex environment variables",
+			);
+		}
 	} else if (!isBackendNone) {
 		const backendName = backend[0].toUpperCase() + backend.slice(1);
 		const apiName = api !== "none" ? api.toUpperCase() : "";
@@ -450,7 +462,7 @@ function generateFeaturesList(
 		);
 	}
 
-	if (auth !== "none" && !isConvex) {
+	if (auth !== "none") {
 		const authLabel = auth === "clerk" ? "Clerk" : "Better-Auth";
 		addonsList.push(`- **Authentication** - ${authLabel}`);
 	}

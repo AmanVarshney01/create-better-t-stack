@@ -7,6 +7,7 @@ import { exitCancelled } from "../utils/errors";
 export async function getFrontendChoice(
 	frontendOptions?: Frontend[],
 	backend?: Backend,
+	auth?: string,
 ): Promise<Frontend[]> {
 	if (frontendOptions !== undefined) return frontendOptions;
 
@@ -72,7 +73,7 @@ export async function getFrontendChoice(
 		];
 
 		const webOptions = allWebOptions.filter((option) =>
-			isFrontendAllowedWithBackend(option.value, backend),
+			isFrontendAllowedWithBackend(option.value, backend, auth),
 		);
 
 		const webFramework = await select<Frontend>({

@@ -5,13 +5,14 @@ description: Valid and invalid combinations across frontend, backend, runtime, d
 
 ## Rules
 
-- **Convex backend**: Disables authentication, database, ORM, and API options
+- **Convex backend**: Sets database, ORM, and API to `none`; auth to `clerk` (if compatible frontends) or `none`
 - **Backend `none`**: Forces API, ORM, database, authentication, and runtime to `none`; disables examples
 - **Frontend `none`**: Backend-only project; PWA/Tauri/examples may be disabled
 - **API `none`**: No tRPC/oRPC setup; use framework-native APIs
-- **Database `none`**: Disables ORM and authentication
+- **Database `none`**: Disables ORM and Better-Auth (but allows Clerk with Convex)
 - **ORM `none`**: No ORM setup; manage DB manually
 - **Runtime `none`**: Only with Convex backend or when backend is `none`
+- **Auth `clerk`**: Only available with Convex backend and compatible frontends
 
 ## Cloudflare Workers
 

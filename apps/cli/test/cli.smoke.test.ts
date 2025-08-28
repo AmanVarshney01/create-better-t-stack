@@ -514,6 +514,8 @@ describe("create-better-t-stack smoke", () => {
 						frontend,
 						"--backend",
 						"convex",
+						"--auth",
+						"none",
 						"--db-setup",
 						"none",
 						"--addons",
@@ -919,6 +921,8 @@ describe("create-better-t-stack smoke", () => {
 				"tanstack-router",
 				"--backend",
 				"convex",
+				"--auth",
+				"none",
 				"--db-setup",
 				"none",
 				"--addons",
@@ -2341,6 +2345,8 @@ describe("create-better-t-stack smoke", () => {
 					"tanstack-router",
 					"--backend",
 					"convex",
+					"--auth",
+					"none",
 					"--db-setup",
 					"none",
 					"--addons",
@@ -2358,6 +2364,7 @@ describe("create-better-t-stack smoke", () => {
 			assertBtsConfig(projectDir, {
 				backend: "convex",
 				examples: ["todo"],
+				auth: "none",
 			});
 		});
 

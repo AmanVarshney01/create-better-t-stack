@@ -33,7 +33,7 @@ async function createProject() {
     backend: "hono",
     database: "sqlite",
     orm: "drizzle",
-    auth: true,
+    auth: "better-auth",
     packageManager: "bun",
     install: false, // Don't install deps automatically
     disableAnalytics: true, // Disable analytics
@@ -258,7 +258,7 @@ create-better-t-stack my-app \
   --backend hono \
   --database postgres \
   --orm drizzle \
-  --auth \
+  --auth better-auth \
   --yes
 ```
 
@@ -269,7 +269,7 @@ const result = await init("my-app", {
   backend: "hono",
   database: "postgres",
   orm: "drizzle",
-  auth: true,
+  auth: "better-auth",
   yes: true
 });
 ```
@@ -286,7 +286,7 @@ const result = await init("my-app", {
   backend: "hono",
   database: "postgres",
   orm: "drizzle",
-  auth: true,
+  auth: "better-auth",
   addons: ["biome", "turborepo"],
   examples: ["todo"],
   packageManager: "bun",

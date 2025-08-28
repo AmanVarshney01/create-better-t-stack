@@ -203,7 +203,11 @@ export function validateBackendConstraints(
 		}
 	}
 
-	if (backend === "convex" && config.auth === "better-auth") {
+	if (
+		backend === "convex" &&
+		config.auth === "better-auth" &&
+		providedFlags.has("auth")
+	) {
 		exitWithError(
 			"Better-Auth is not compatible with the Convex backend. Please use '--auth clerk' or '--auth none'.",
 		);

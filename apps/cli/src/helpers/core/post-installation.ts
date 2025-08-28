@@ -69,6 +69,8 @@ export async function displayPostInstallInstructions(
 	const starlightInstructions = addons?.includes("starlight")
 		? getStarlightInstructions(runCmd)
 		: "";
+	const clerkInstructions =
+		isConvex && config.auth === "clerk" ? getClerkInstructions() : "";
 	const wranglerDeployInstructions = getWranglerDeployInstructions(
 		runCmd,
 		webDeploy,
@@ -119,6 +121,16 @@ export async function displayPostInstallInstructions(
 		output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev:setup\n${pc.dim(
 			"   (this will guide you through Convex project setup)",
 		)}\n`;
+
+		if (config.auth === "clerk") {
+			output += `${pc.cyan(`${stepCounter++}.`)} ${pc.bold("Clerk Setup:")}\n${pc.dim(
+				"   Follow the Convex + Clerk guide to configure authentication:",
+			)}\n${pc.cyan("   ")}${pc.underline("https://docs.convex.dev/auth/clerk")}\n\n`;
+			output += `${pc.cyan(`${stepCounter++}.`)} ${pc.bold("Required Environment Variables:")}\n`;
+			output += `${pc.dim("   •")} Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard\n`;
+			output += `${pc.dim("   •")} Set CLERK_PUBLISHABLE_KEY in apps/*/.env\n`;
+		}
+
 		output += `${pc.cyan(
 			`${stepCounter++}.`,
 		)} Copy environment variables from\n${pc.white(
@@ -175,6 +187,7 @@ export async function displayPostInstallInstructions(
 	if (alchemyDeployInstructions)
 		output += `\n${alchemyDeployInstructions.trim()}\n`;
 	if (starlightInstructions) output += `\n${starlightInstructions.trim()}\n`;
+	if (clerkInstructions) output += `\n${clerkInstructions.trim()}\n`;
 
 	if (noOrmWarning) output += `\n${noOrmWarning.trim()}\n`;
 	if (bunWebNativeWarning) output += `\n${bunWebNativeWarning.trim()}\n`;
@@ -401,6 +414,10 @@ function getWranglerDeployInstructions(
 	}
 
 	return instructions.length ? `\n${instructions.join("\n")}` : "";
+}
+
+function getClerkInstructions(): string {
+	return `${pc.bold("Clerk Authentication Setup:")}\n${pc.cyan("1.")} Sign up for Clerk at ${pc.underline("https://clerk.com/sign-up")}\n${pc.cyan("2.")} Create a new application in Clerk Dashboard\n${pc.cyan("3.")} Create a JWT template named ${pc.bold("'convex'")} (exact name required)\n${pc.cyan("4.")} Copy your Clerk Frontend API URL (Issuer URL)\n${pc.cyan("5.")} Set environment variables:\n${pc.dim("   •")} CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard\n${pc.dim("   •")} CLERK_PUBLISHABLE_KEY in apps/*/.env\n${pc.cyan("6.")} Follow the complete guide: ${pc.underline("https://docs.convex.dev/auth/clerk")}\n${pc.yellow("NOTE:")} Use Convex's <Authenticated> components instead of Clerk's <SignedIn>`;
 }
 
 function getAlchemyDeployInstructions(

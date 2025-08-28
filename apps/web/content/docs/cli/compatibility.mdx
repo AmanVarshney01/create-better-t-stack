@@ -59,7 +59,7 @@ create-better-t-stack --runtime workers --backend hono --database sqlite --orm d
 #### Convex Backend
 When using `--backend convex`, the following options are automatically set:
 
-- `--auth false` (Convex handles auth)
+- `--auth clerk` (if compatible frontends selected, otherwise `none`)
 - `--database none` (Convex provides database)
 - `--orm none` (Convex provides data layer)
 - `--api none` (Convex provides API)
@@ -67,10 +67,12 @@ When using `--backend convex`, the following options are automatically set:
 - `--db-setup none` (Convex manages hosting)
 - `--examples todo` (Todo example works with Convex)
 
+**Note:** Convex supports Clerk authentication with compatible frontends (React frameworks, Next.js, TanStack Start, and native frameworks). Nuxt, Svelte, and Solid are not compatible with Clerk.
+
 #### No Backend
 When using `--backend none`, the following options are automatically set:
 
-- `--auth false` (No backend for auth)
+- `--auth none` (No backend for auth)
 - `--database none` (No backend for database)
 - `--orm none` (No database)
 - `--api none` (No backend for API)
@@ -158,17 +160,30 @@ create-better-t-stack --frontend next native-nativewind
 
 ## Authentication Requirements
 
-Authentication requires:
+### Better-Auth Requirements
+Better-Auth authentication requires:
 - A backend framework (cannot be `none`)
 - A database (cannot be `none`)
 - An ORM (cannot be `none`)
 
-```bash
-# ❌ Invalid - Auth without database
-create-better-t-stack --auth --database none
+### Clerk Requirements
+Clerk authentication requires:
+- Convex backend (`--backend convex`)
+- Compatible frontends (React frameworks, Next.js, TanStack Start, native frameworks)
+- Not compatible with Nuxt, Svelte, or Solid
 
-# ✅ Valid - Auth with full stack
-create-better-t-stack --auth --database postgres --orm drizzle --backend hono
+```bash
+# ❌ Invalid - Better-Auth without database
+create-better-t-stack --auth better-auth --database none
+
+# ✅ Valid - Better-Auth with full stack
+create-better-t-stack --auth better-auth --database postgres --orm drizzle --backend hono
+
+# ✅ Valid - Clerk with Convex
+create-better-t-stack --auth clerk --backend convex --frontend tanstack-router
+
+# ❌ Invalid - Clerk without Convex
+create-better-t-stack --auth clerk --backend hono
 ```
 
 ## Example Compatibility
@@ -203,8 +218,11 @@ create-better-t-stack --frontend tanstack-router
 
 ### "Authentication requires a database"
 ```bash
-# Fix by adding database
-create-better-t-stack --auth --database postgres --orm drizzle
+# Fix by adding database for Better-Auth
+create-better-t-stack --auth better-auth --database postgres --orm drizzle
+
+# Or use Clerk with Convex (no database required)
+create-better-t-stack --auth clerk --backend convex
 ```
 
 ## Validation Strategy
