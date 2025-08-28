@@ -144,7 +144,6 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 				},
 			];
 
-			// Add Clerk environment variables for Convex + Clerk
 			if (backend === "convex" && auth === "clerk") {
 				if (hasNextJs) {
 					clientVars.push(
@@ -170,6 +169,13 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 						value: "",
 						condition: true,
 					});
+					if (hasTanStackStart) {
+						clientVars.push({
+							key: "CLERK_SECRET_KEY",
+							value: "",
+							condition: true,
+						});
+					}
 				}
 			}
 

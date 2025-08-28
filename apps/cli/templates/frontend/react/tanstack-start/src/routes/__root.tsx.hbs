@@ -8,22 +8,37 @@ import {
   Scripts,
   createRootRouteWithContext,
   useRouterState,
+  useRouteContext,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import Header from "../components/header";
 import appCss from "../index.css?url";
 {{#if (eq backend "convex")}}
 import type { QueryClient } from "@tanstack/react-query";
-{{else}}
-  {{#unless (eq api "none")}}
-import type { QueryClient } from "@tanstack/react-query";
-  {{/unless}}
+import type { ConvexQueryClient } from "@convex-dev/react-query";
+import type { ConvexReactClient } from "convex/react";
 {{/if}}
 import Loader from "@/components/loader";
+
+{{#if (and (eq backend "convex") (eq auth "clerk"))}}
+import { ClerkProvider, useAuth } from "@clerk/tanstack-react-start";
+import { getAuth } from "@clerk/tanstack-react-start/server";
+import { createServerFn } from "@tanstack/react-start";
+import { getWebRequest } from "@tanstack/react-start/server";
+import { ConvexProviderWithClerk } from "convex/react-clerk";
+
+const fetchClerkAuth = createServerFn({ method: "GET" }).handler(async () => {
+  const auth = await getAuth(getWebRequest());
+  const token = await auth.getToken({ template: "convex" });
+  return { userId: auth.userId, token };
+});
+{{/if}}
 
 {{#if (eq backend "convex")}}
 export interface RouterAppContext {
   queryClient: QueryClient;
+  convexClient: ConvexReactClient;
+  convexQueryClient: ConvexQueryClient;
 }
 {{else}}
   {{#if (eq api "trpc")}}
@@ -68,11 +83,42 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
   }),
 
   component: RootDocument,
+  {{#if (and (eq backend "convex") (eq auth "clerk"))}}
+  beforeLoad: async (ctx) => {
+    const { userId, token } = await fetchClerkAuth();
+    if (token) {
+      ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
+    }
+    return { userId, token };
+  },
+  {{/if}}
 });
 
 function RootDocument() {
   const isFetching = useRouterState({ select: (s) => s.isLoading });
-
+  {{#if (and (eq backend "convex") (eq auth "clerk"))}}
+  const context = useRouteContext({ from: Route.id });
+  return (
+    <ClerkProvider>
+      <ConvexProviderWithClerk client={context.convexClient} useAuth={useAuth}>
+        <html lang="en" className="dark">
+          <head>
+            <HeadContent />
+          </head>
+          <body>
+            <div className="grid h-svh grid-rows-[auto_1fr]">
+              <Header />
+              {isFetching ? <Loader /> : <Outlet />}
+            </div>
+            <Toaster richColors />
+            <TanStackRouterDevtools position="bottom-left" />
+            <Scripts />
+          </body>
+        </html>
+      </ConvexProviderWithClerk>
+    </ClerkProvider>
+  );
+  {{else}}
   return (
     <html lang="en" className="dark">
       <head>
@@ -94,4 +140,5 @@ function RootDocument() {
       </body>
     </html>
   );
+  {{/if}}
 }
