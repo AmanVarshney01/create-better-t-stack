@@ -9,6 +9,11 @@ import { queryClient } from "@/utils/orpc";
 {{/if}}
 {{#if (eq backend "convex")}}
 import { ConvexProvider, ConvexReactClient } from "convex/react";
+{{#if (eq auth "clerk")}}
+import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { ConvexProviderWithClerk } from "convex/react-clerk";
+import { tokenCache } from "@clerk/clerk-expo/token-cache";
+{{/if}}
 {{else}}
   {{#unless (eq api "none")}}
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -34,6 +39,35 @@ export default function RootLayout() {
 
   return (
     {{#if (eq backend "convex")}}
+    {{#if (eq auth "clerk")}}
+    <ClerkProvider
+      tokenCache={tokenCache}
+      publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
+    >
+      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+        <GestureHandlerRootView style=\{{ flex: 1 }}>
+          <Stack
+            screenOptions=\{{
+              headerStyle: {
+                backgroundColor: theme.colors.background,
+              },
+              headerTitleStyle: {
+                color: theme.colors.foreground,
+              },
+              headerTintColor: theme.colors.foreground,
+            }}
+          >
+            <Stack.Screen name="(drawer)" options=\{{ headerShown: false }} />
+            <Stack.Screen name="(auth)" options=\{{ headerShown: false }} />
+            <Stack.Screen
+              name="modal"
+              options=\{{ title: "Modal", presentation: "modal" }}
+            />
+          </Stack>
+        </GestureHandlerRootView>
+      </ConvexProviderWithClerk>
+    </ClerkProvider>
+    {{else}}
     <ConvexProvider client={convex}>
       <GestureHandlerRootView style=\{{ flex: 1 }}>
         <Stack
@@ -55,6 +89,7 @@ export default function RootLayout() {
         </Stack>
       </GestureHandlerRootView>
     </ConvexProvider>
+    {{/if}}
     {{else}}
       {{#unless (eq api "none")}}
     <QueryClientProvider client={queryClient}>

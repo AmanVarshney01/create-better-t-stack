@@ -9,8 +9,16 @@ import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 {{/if}}
 {{#if (eq backend "convex")}}
+{{#if (eq auth "clerk")}}
+import { Link } from "expo-router";
+import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
+import { api } from "@{{ projectName }}/backend/convex/_generated/api";
+import { useUser } from "@clerk/clerk-expo";
+import { SignOutButton } from "@/components/sign-out-button";
+{{else}}
 import { useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
+{{/if}}
 {{/if}}
 
 export default function Home() {
@@ -21,21 +29,27 @@ export default function Home() {
   const healthCheck = useQuery(trpc.healthCheck.queryOptions());
   {{/if}}
   {{#if (eq backend "convex")}}
+  {{#if (eq auth "clerk")}}
+  const { user } = useUser();
   const healthCheck = useQuery(api.healthCheck.get);
+  const privateData = useQuery(api.privateData.get);
+  {{else}}
+  const healthCheck = useQuery(api.healthCheck.get);
+  {{/if}}
   {{/if}}
 
   return (
     <Container>
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
         <Text className="font-mono text-foreground text-3xl font-bold mb-4">
-			BETTER T STACK
-		</Text>
+          BETTER T STACK
+        </Text>
         <View className="bg-card border border-border rounded-xl p-6 mb-6 shadow-sm">
           {{#if (eq backend "convex")}}
           <View className="flex-row items-center gap-3">
             <View
               className={`h-3 w-3 rounded-full ${
-                  healthCheck ? "bg-green-500" : "bg-orange-500"
+                healthCheck ? "bg-green-500" : "bg-orange-500"
               }`}
             />
             <View className="flex-1">
@@ -89,6 +103,24 @@ export default function Home() {
             {{/unless}}
           {{/if}}
         </View>
+        {{#if (and (eq backend "convex") (eq auth "clerk"))}}
+        <Authenticated>
+          <Text>Hello {user?.emailAddresses[0].emailAddress}</Text>
+          <Text>Private Data: {privateData?.message}</Text>
+          <SignOutButton />
+        </Authenticated>
+        <Unauthenticated>
+          <Link href="/(auth)/sign-in">
+            <Text>Sign in</Text>
+          </Link>
+          <Link href="/(auth)/sign-up">
+            <Text>Sign up</Text>
+          </Link>
+        </Unauthenticated>
+        <AuthLoading>
+          <Text>Loading...</Text>
+        </AuthLoading>
+        {{/if}}
       </ScrollView>
     </Container>
   );
