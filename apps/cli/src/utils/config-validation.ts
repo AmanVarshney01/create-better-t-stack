@@ -66,7 +66,6 @@ export function validateDatabaseOrmAuth(
 		);
 	}
 
-	// For Convex backend, Clerk and "none" auth are allowed without database
 	if (
 		has("auth") &&
 		has("database") &&

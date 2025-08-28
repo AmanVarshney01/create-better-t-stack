@@ -135,7 +135,6 @@ export function validateWorkersCompatibility(
 
 export function coerceBackendPresets(config: Partial<ProjectConfig>) {
 	if (config.backend === "convex") {
-		// Only set auth to "none" if it's not already set to "clerk"
 		if (config.auth !== "clerk") {
 			config.auth = "none" as ProjectConfig["auth"];
 		}

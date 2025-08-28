@@ -436,7 +436,6 @@ export async function setupAuthTemplate(
 				);
 			}
 
-			// If we later add framework-specific native templates, copy them here as well
 			const hasNativeWind = context.frontend.includes("native-nativewind");
 			const hasUnistyles = context.frontend.includes("native-unistyles");
 			let nativeFrameworkPath = "";
@@ -460,7 +459,6 @@ export async function setupAuthTemplate(
 		return;
 	}
 
-	// Server-side templates by provider (skip for Convex)
 	if (serverAppDirExists && context.backend !== "convex") {
 		const authServerBaseSrc = path.join(
 			PKG_ROOT,
@@ -516,7 +514,6 @@ export async function setupAuthTemplate(
 		}
 	}
 
-	// Web templates by provider
 	if (
 		(hasReactWeb || hasNuxtWeb || hasSvelteWeb || hasSolidWeb) &&
 		webAppDirExists
@@ -576,7 +573,6 @@ export async function setupAuthTemplate(
 		}
 	}
 
-	// Native templates by provider
 	if (hasNative && nativeAppDirExists) {
 		const authNativeBaseSrc = path.join(
 			PKG_ROOT,
