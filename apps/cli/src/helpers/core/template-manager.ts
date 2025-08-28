@@ -384,7 +384,7 @@ export async function setupAuthTemplate(
 
 	const authProvider = context.auth; // 'better-auth' | 'clerk'
 
-	// Handle convex + clerk
+	// Handle convex + clerk (only auth option for Convex)
 	if (context.backend === "convex" && authProvider === "clerk") {
 		// Copy Convex backend pieces for Clerk
 		const convexBackendDestDir = path.join(projectDir, "packages/backend");
@@ -418,49 +418,6 @@ export async function setupAuthTemplate(
 					await processAndCopyFiles(
 						"**/*",
 						convexClerkWebSrc,
-						webAppDir,
-						context,
-					);
-				}
-			}
-		}
-		return;
-	}
-
-	// Handle convex + better-auth
-	if (context.backend === "convex" && authProvider === "better-auth") {
-		// Copy Convex backend pieces for Better-Auth
-		const convexBackendDestDir = path.join(projectDir, "packages/backend");
-		const convexBetterAuthBackendSrc = path.join(
-			PKG_ROOT,
-			"templates/auth/better-auth/convex/backend",
-		);
-		if (await fs.pathExists(convexBetterAuthBackendSrc)) {
-			await fs.ensureDir(convexBackendDestDir);
-			await processAndCopyFiles(
-				"**/*",
-				convexBetterAuthBackendSrc,
-				convexBackendDestDir,
-				context,
-			);
-		}
-
-		// Copy web templates if web app exists
-		if (webAppDirExists) {
-			const reactFramework = context.frontend.find((f) =>
-				["tanstack-router", "react-router", "tanstack-start", "next"].includes(
-					f,
-				),
-			);
-			if (reactFramework) {
-				const convexBetterAuthWebSrc = path.join(
-					PKG_ROOT,
-					`templates/auth/better-auth/convex/web/react/${reactFramework}`,
-				);
-				if (await fs.pathExists(convexBetterAuthWebSrc)) {
-					await processAndCopyFiles(
-						"**/*",
-						convexBetterAuthWebSrc,
 						webAppDir,
 						context,
 					);

@@ -144,25 +144,33 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 				},
 			];
 
-			// Add Clerk environment variables for Convex + Clerk + Next.js
-			if (backend === "convex" && auth === "clerk" && hasNextJs) {
-				clientVars.push(
-					{
-						key: "NEXT_PUBLIC_CLERK_FRONTEND_API_URL",
+			// Add Clerk environment variables for Convex + Clerk
+			if (backend === "convex" && auth === "clerk") {
+				if (hasNextJs) {
+					clientVars.push(
+						{
+							key: "NEXT_PUBLIC_CLERK_FRONTEND_API_URL",
+							value: "",
+							condition: true,
+						},
+						{
+							key: "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+							value: "",
+							condition: true,
+						},
+						{
+							key: "CLERK_SECRET_KEY",
+							value: "",
+							condition: true,
+						},
+					);
+				} else if (hasReactRouter || hasTanStackRouter || hasTanStackStart) {
+					clientVars.push({
+						key: "VITE_CLERK_PUBLISHABLE_KEY",
 						value: "",
 						condition: true,
-					},
-					{
-						key: "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
-						value: "",
-						condition: true,
-					},
-					{
-						key: "CLERK_SECRET_KEY",
-						value: "",
-						condition: true,
-					},
-				);
+					});
+				}
 			}
 
 			await addEnvVariablesToFile(path.join(clientDir, ".env"), clientVars);

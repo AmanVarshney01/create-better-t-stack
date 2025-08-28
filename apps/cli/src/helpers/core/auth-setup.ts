@@ -20,13 +20,24 @@ export async function setupAuth(config: ProjectConfig) {
 	const serverDirExists = await fs.pathExists(serverDir);
 
 	try {
-		// Convex-specific handling
 		if (backend === "convex") {
-			if (auth === "clerk" && frontend.includes("next") && clientDirExists) {
-				await addPackageDependency({
-					dependencies: ["@clerk/nextjs"],
-					projectDir: clientDir,
-				});
+			if (auth === "clerk" && clientDirExists) {
+				const hasNextJs = frontend.includes("next");
+				const hasViteReact = frontend.some((f) =>
+					["tanstack-router", "tanstack-start", "react-router"].includes(f),
+				);
+
+				if (hasNextJs) {
+					await addPackageDependency({
+						dependencies: ["@clerk/nextjs"],
+						projectDir: clientDir,
+					});
+				} else if (hasViteReact) {
+					await addPackageDependency({
+						dependencies: ["@clerk/clerk-react"],
+						projectDir: clientDir,
+					});
+				}
 			}
 			return;
 		}

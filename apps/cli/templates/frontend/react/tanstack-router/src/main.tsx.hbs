@@ -12,7 +12,13 @@ import { routeTree } from "./routeTree.gen";
   import { queryClient, trpc } from "./utils/trpc";
 {{/if}}
 {{#if (eq backend "convex")}}
-  import { ConvexProvider, ConvexReactClient } from "convex/react";
+  import { ConvexReactClient } from "convex/react";
+  {{#if (eq auth "clerk")}}
+  import { ClerkProvider, useAuth } from "@clerk/clerk-react";
+  import { ConvexProviderWithClerk } from "convex/react-clerk";
+  {{else}}
+  import { ConvexProvider } from "convex/react";
+  {{/if}}
   const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 {{/if}}
 
@@ -41,7 +47,19 @@ const router = createRouter({
   {{else if (eq backend "convex")}}
   context: {},
   Wrap: function WrapComponent({ children }: { children: React.ReactNode }) {
+    {{#if (eq auth "clerk")}}
+    return (
+      <ClerkProvider
+        publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}
+      >
+        <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+          {children}
+        </ConvexProviderWithClerk>
+      </ClerkProvider>
+    );
+    {{else}}
     return <ConvexProvider client={convex}>{children}</ConvexProvider>;
+    {{/if}}
   },
   {{else}}
   context: {},
