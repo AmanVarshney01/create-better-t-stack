@@ -45,6 +45,19 @@ export async function setupAuth(config: ProjectConfig) {
 					});
 				}
 			}
+
+			const hasNativeWind = frontend.includes("native-nativewind");
+			const hasUnistyles = frontend.includes("native-unistyles");
+			if (
+				auth === "clerk" &&
+				nativeDirExists &&
+				(hasNativeWind || hasUnistyles)
+			) {
+				await addPackageDependency({
+					dependencies: ["@clerk/clerk-expo"],
+					projectDir: nativeDir,
+				});
+			}
 			return;
 		}
 

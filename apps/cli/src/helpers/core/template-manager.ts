@@ -382,11 +382,9 @@ export async function setupAuthTemplate(
 	const hasUnistyles = context.frontend.includes("native-unistyles");
 	const hasNative = hasNativeWind || hasUnistyles;
 
-	const authProvider = context.auth; // 'better-auth' | 'clerk'
+	const authProvider = context.auth;
 
-	// Handle convex + clerk (only auth option for Convex)
 	if (context.backend === "convex" && authProvider === "clerk") {
-		// Copy Convex backend pieces for Clerk
 		const convexBackendDestDir = path.join(projectDir, "packages/backend");
 		const convexClerkBackendSrc = path.join(
 			PKG_ROOT,
@@ -402,7 +400,6 @@ export async function setupAuthTemplate(
 			);
 		}
 
-		// Copy web templates if web app exists
 		if (webAppDirExists) {
 			const reactFramework = context.frontend.find((f) =>
 				["tanstack-router", "react-router", "tanstack-start", "next"].includes(
@@ -419,6 +416,42 @@ export async function setupAuthTemplate(
 						"**/*",
 						convexClerkWebSrc,
 						webAppDir,
+						context,
+					);
+				}
+			}
+		}
+
+		if (nativeAppDirExists) {
+			const convexClerkNativeBaseSrc = path.join(
+				PKG_ROOT,
+				"templates/auth/clerk/convex/native/base",
+			);
+			if (await fs.pathExists(convexClerkNativeBaseSrc)) {
+				await processAndCopyFiles(
+					"**/*",
+					convexClerkNativeBaseSrc,
+					nativeAppDir,
+					context,
+				);
+			}
+
+			// If we later add framework-specific native templates, copy them here as well
+			const hasNativeWind = context.frontend.includes("native-nativewind");
+			const hasUnistyles = context.frontend.includes("native-unistyles");
+			let nativeFrameworkPath = "";
+			if (hasNativeWind) nativeFrameworkPath = "nativewind";
+			else if (hasUnistyles) nativeFrameworkPath = "unistyles";
+			if (nativeFrameworkPath) {
+				const convexClerkNativeFrameworkSrc = path.join(
+					PKG_ROOT,
+					`templates/auth/clerk/convex/native/${nativeFrameworkPath}`,
+				);
+				if (await fs.pathExists(convexClerkNativeFrameworkSrc)) {
+					await processAndCopyFiles(
+						"**/*",
+						convexClerkNativeFrameworkSrc,
+						nativeAppDir,
 						context,
 					);
 				}

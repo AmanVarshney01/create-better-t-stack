@@ -204,6 +204,14 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 					condition: true,
 				},
 			];
+
+			if (backend === "convex" && auth === "clerk") {
+				nativeVars.push({
+					key: "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY",
+					value: "",
+					condition: true,
+				});
+			}
 			await addEnvVariablesToFile(path.join(nativeDir, ".env"), nativeVars);
 		}
 	}
