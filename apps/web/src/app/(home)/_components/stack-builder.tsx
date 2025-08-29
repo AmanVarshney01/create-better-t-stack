@@ -657,21 +657,8 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 					changed = true;
 					changes.push({
 						category: "runtime",
-						message: "Backend set to 'Hono' (required by Cloudflare Workers)",
-					});
-				}
-
-				if (nextStack.serverDeploy === "none") {
-					notes.serverDeploy.notes.push(
-						"Cloudflare Workers runtime requires a server deployment. Wrangler will be selected.",
-					);
-					notes.serverDeploy.hasIssue = true;
-					nextStack.serverDeploy = "wrangler";
-					changed = true;
-					changes.push({
-						category: "serverDeploy",
 						message:
-							"Server deployment set to 'Wrangler' (required by Cloudflare Workers)",
+							"Backend set to 'Hono' (Cloudflare Workers runtime only works with Hono backend)",
 					});
 				}
 
@@ -688,7 +675,8 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 					changed = true;
 					changes.push({
 						category: "runtime",
-						message: "ORM set to 'Drizzle' (required by Cloudflare Workers)",
+						message:
+							"ORM set to 'Drizzle' (Cloudflare Workers runtime only supports Drizzle or no ORM)",
 					});
 				}
 
@@ -706,7 +694,7 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 					changes.push({
 						category: "runtime",
 						message:
-							"Database set to 'SQLite' (MongoDB not compatible with Workers)",
+							"Database set to 'SQLite' (MongoDB not compatible with Cloudflare Workers runtime)",
 					});
 				}
 
@@ -724,9 +712,48 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 					changes.push({
 						category: "runtime",
 						message:
-							"DB Setup set to 'D1' (Docker not compatible with Workers)",
+							"DB Setup set to 'D1' (Docker setup not compatible with Cloudflare Workers runtime)",
 					});
 				}
+			} else {
+				if (nextStack.serverDeploy === "wrangler") {
+					notes.runtime.notes.push(
+						"Wrangler deployment requires Cloudflare Workers runtime. Server deployment disabled.",
+					);
+					notes.serverDeploy.notes.push(
+						"Selected runtime is not compatible with Wrangler deployment. Server deployment disabled.",
+					);
+					notes.runtime.hasIssue = true;
+					notes.serverDeploy.hasIssue = true;
+					nextStack.serverDeploy = "none";
+					changed = true;
+					changes.push({
+						category: "runtime",
+						message:
+							"Server deployment set to 'None' (Wrangler requires Cloudflare Workers runtime)",
+					});
+				}
+			}
+
+			if (
+				nextStack.backend !== "hono" &&
+				nextStack.serverDeploy === "wrangler"
+			) {
+				notes.backend.notes.push(
+					"Wrangler deployment requires Hono backend (via Workers runtime). Server deployment disabled.",
+				);
+				notes.serverDeploy.notes.push(
+					"Selected backend is not compatible with Wrangler deployment. Server deployment disabled.",
+				);
+				notes.backend.hasIssue = true;
+				notes.serverDeploy.hasIssue = true;
+				nextStack.serverDeploy = "none";
+				changed = true;
+				changes.push({
+					category: "backend",
+					message:
+						"Server deployment set to 'None' (Wrangler requires Hono backend via Workers runtime)",
+				});
 			}
 
 			const isNuxt = nextStack.webFrontend.includes("nuxt");
@@ -1017,90 +1044,36 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 		});
 	}
 
-	if (nextStack.serverDeploy !== "none" && nextStack.runtime !== "workers") {
+	if (
+		nextStack.serverDeploy === "wrangler" &&
+		(nextStack.runtime !== "workers" || nextStack.backend !== "hono")
+	) {
 		notes.serverDeploy.notes.push(
-			"Selected server deployment targets Cloudflare Workers. Runtime will be set to 'Cloudflare Workers'.",
+			"Wrangler deployment requires Cloudflare Workers runtime and Hono backend. Server deployment disabled.",
 		);
-		notes.runtime.notes.push(
-			"Server deployment requires Cloudflare Workers runtime. It will be selected.",
+		notes.serverDeploy.notes.push(
+			"To use Wrangler: Set Runtime to 'Cloudflare Workers' and Backend to 'Hono', then re-enable Wrangler deployment.",
 		);
+		if (nextStack.runtime !== "workers") {
+			notes.runtime.notes.push(
+				"Selected runtime is not compatible with Wrangler deployment. Switch to 'Cloudflare Workers' to use Wrangler.",
+			);
+		}
+		if (nextStack.backend !== "hono") {
+			notes.backend.notes.push(
+				"Selected backend is not compatible with Wrangler deployment. Switch to 'Hono' to use Wrangler.",
+			);
+		}
 		notes.serverDeploy.hasIssue = true;
 		notes.runtime.hasIssue = true;
-		nextStack.runtime = "workers";
+		notes.backend.hasIssue = true;
+		nextStack.serverDeploy = "none";
 		changed = true;
 		changes.push({
 			category: "serverDeploy",
 			message:
-				"Runtime set to 'Cloudflare Workers' (selected server deployment requires Workers runtime)",
+				"Server deployment disabled (Tip: Use Cloudflare Workers runtime + Hono backend to enable Wrangler)",
 		});
-
-		if (nextStack.backend !== "hono") {
-			notes.runtime.notes.push(
-				"Cloudflare Workers runtime requires Hono backend. Hono will be selected.",
-			);
-			notes.backend.notes.push(
-				"Cloudflare Workers runtime requires Hono backend. It will be selected.",
-			);
-			notes.runtime.hasIssue = true;
-			notes.backend.hasIssue = true;
-			nextStack.backend = "hono";
-			changes.push({
-				category: "runtime",
-				message:
-					"Backend set to 'Hono' (Cloudflare Workers runtime only works with Hono backend)",
-			});
-		}
-
-		if (nextStack.orm !== "drizzle" && nextStack.orm !== "none") {
-			notes.runtime.notes.push(
-				"Cloudflare Workers runtime requires Drizzle ORM or no ORM. Drizzle will be selected.",
-			);
-			notes.orm.notes.push(
-				"Cloudflare Workers runtime requires Drizzle ORM or no ORM. Drizzle will be selected.",
-			);
-			notes.runtime.hasIssue = true;
-			notes.orm.hasIssue = true;
-			nextStack.orm = "drizzle";
-			changes.push({
-				category: "runtime",
-				message:
-					"ORM set to 'Drizzle' (Cloudflare Workers runtime only supports Drizzle or no ORM)",
-			});
-		}
-
-		if (nextStack.database === "mongodb") {
-			notes.runtime.notes.push(
-				"Cloudflare Workers runtime is not compatible with MongoDB. SQLite will be selected.",
-			);
-			notes.database.notes.push(
-				"MongoDB is not compatible with Cloudflare Workers runtime. SQLite will be selected.",
-			);
-			notes.runtime.hasIssue = true;
-			notes.database.hasIssue = true;
-			nextStack.database = "sqlite";
-			changes.push({
-				category: "runtime",
-				message:
-					"Database set to 'SQLite' (MongoDB not compatible with Cloudflare Workers runtime)",
-			});
-		}
-
-		if (nextStack.dbSetup === "docker") {
-			notes.runtime.notes.push(
-				"Cloudflare Workers runtime does not support Docker setup. D1 will be selected.",
-			);
-			notes.dbSetup.notes.push(
-				"Docker setup is not compatible with Cloudflare Workers runtime. D1 will be selected.",
-			);
-			notes.runtime.hasIssue = true;
-			notes.dbSetup.hasIssue = true;
-			nextStack.dbSetup = "d1";
-			changes.push({
-				category: "runtime",
-				message:
-					"DB Setup set to 'D1' (Docker setup not compatible with Cloudflare Workers runtime)",
-			});
-		}
 	}
 
 	const isAlchemyWebDeploy = nextStack.webDeploy === "alchemy";
@@ -1295,14 +1268,12 @@ const StackBuilder = () => {
 				["webFrontend", "nativeFrontend", "addons", "examples"].includes(catKey)
 			) {
 				if (catKey === "webFrontend" || catKey === "nativeFrontend") {
-					// For frontend, pick one random option
 					const randomIndex = Math.floor(Math.random() * options.length);
 					const selectedOption = options[randomIndex].id;
 					randomStack[catKey as "webFrontend" | "nativeFrontend"] = [
 						selectedOption,
 					];
 				} else {
-					// For addons/examples, pick 0-3 random options
 					const numToPick = Math.floor(
 						Math.random() * Math.min(options.length, 4),
 					);
@@ -1319,7 +1290,6 @@ const StackBuilder = () => {
 					}
 				}
 			} else {
-				// For single-value fields like backend, runtime, database, etc.
 				const randomIndex = Math.floor(Math.random() * options.length);
 				(randomStack[catKey] as string) = options[randomIndex].id;
 			}
@@ -1496,7 +1466,6 @@ const StackBuilder = () => {
 			}
 			setLastChanges(compatibilityAnalysis.changes);
 
-			// Only update stack if it's actually different to prevent infinite loops
 			const isStackDifferent =
 				JSON.stringify(stack) !==
 				JSON.stringify(compatibilityAnalysis.adjustedStack);
@@ -1512,7 +1481,6 @@ const StackBuilder = () => {
 	]);
 
 	useEffect(() => {
-		// Use compatibility-adjusted stack if available, otherwise use raw stack
 		const stackToUse = compatibilityAnalysis.adjustedStack || stack;
 		const cmd = generateCommand(stackToUse);
 		setCommand(cmd);
@@ -1720,6 +1688,113 @@ const StackBuilder = () => {
 
 			if (!hasClerkCompatibleFrontend) {
 				return false;
+			}
+		}
+
+		if (category === "backend" && currentStack.runtime === "workers") {
+			if (optionId !== "hono") {
+				return false;
+			}
+		}
+
+		if (category === "runtime" && optionId === "workers") {
+			if (currentStack.backend !== "hono") {
+				return false;
+			}
+			if (currentStack.orm !== "drizzle" && currentStack.orm !== "none") {
+				return false;
+			}
+			if (currentStack.database === "mongodb") {
+				return false;
+			}
+			if (currentStack.dbSetup === "docker") {
+				return false;
+			}
+		}
+
+		if (category === "orm" && currentStack.runtime === "workers") {
+			if (optionId !== "drizzle" && optionId !== "none") {
+				return false;
+			}
+		}
+
+		if (category === "database" && currentStack.runtime === "workers") {
+			if (optionId === "mongodb") {
+				return false;
+			}
+		}
+
+		if (category === "dbSetup" && currentStack.runtime === "workers") {
+			if (optionId === "docker") {
+				return false;
+			}
+		}
+
+		if (category === "database") {
+			if (optionId === "mongodb") {
+				if (
+					currentStack.orm !== "prisma" &&
+					currentStack.orm !== "mongoose" &&
+					currentStack.orm !== "none"
+				) {
+					return false;
+				}
+			} else if (optionId === "none") {
+				if (currentStack.orm !== "none") {
+					return false;
+				}
+			} else {
+				if (currentStack.orm === "mongoose") {
+					return false;
+				}
+			}
+		}
+
+		if (category === "orm") {
+			if (optionId === "mongoose") {
+				if (currentStack.database !== "mongodb") {
+					return false;
+				}
+			} else if (optionId !== "none") {
+				if (currentStack.database === "none") {
+					return false;
+				}
+				if (optionId === "drizzle" && currentStack.database === "mongodb") {
+					return false;
+				}
+			}
+		}
+
+		if (category === "auth") {
+			if (optionId === "clerk") {
+				if (currentStack.backend !== "convex") {
+					return false;
+				}
+			} else if (optionId === "better-auth") {
+				if (currentStack.backend === "convex") {
+					return false;
+				}
+				if (currentStack.database === "none") {
+					return false;
+				}
+			} else if (optionId !== "none") {
+				if (
+					currentStack.database === "none" &&
+					currentStack.backend !== "convex"
+				) {
+					return false;
+				}
+			}
+		}
+
+		if (category === "backend") {
+			if (optionId !== "convex") {
+				if (currentStack.auth === "clerk") {
+					return false;
+				}
+				if (currentStack.auth !== "none" && currentStack.database === "none") {
+					return false;
+				}
 			}
 		}
 
