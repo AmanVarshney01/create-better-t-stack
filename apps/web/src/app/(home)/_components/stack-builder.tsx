@@ -1175,8 +1175,6 @@ const generateCommand = (stackState: StackState): string => {
 
 		flags.push(`--orm ${stackState.orm}`);
 
-		flags.push(`--auth ${stackState.auth}`);
-
 		flags.push(`--db-setup ${stackState.dbSetup}`);
 
 		flags.push(`--package-manager ${stackState.packageManager}`);
@@ -1688,113 +1686,6 @@ const StackBuilder = () => {
 
 			if (!hasClerkCompatibleFrontend) {
 				return false;
-			}
-		}
-
-		if (category === "backend" && currentStack.runtime === "workers") {
-			if (optionId !== "hono") {
-				return false;
-			}
-		}
-
-		if (category === "runtime" && optionId === "workers") {
-			if (currentStack.backend !== "hono") {
-				return false;
-			}
-			if (currentStack.orm !== "drizzle" && currentStack.orm !== "none") {
-				return false;
-			}
-			if (currentStack.database === "mongodb") {
-				return false;
-			}
-			if (currentStack.dbSetup === "docker") {
-				return false;
-			}
-		}
-
-		if (category === "orm" && currentStack.runtime === "workers") {
-			if (optionId !== "drizzle" && optionId !== "none") {
-				return false;
-			}
-		}
-
-		if (category === "database" && currentStack.runtime === "workers") {
-			if (optionId === "mongodb") {
-				return false;
-			}
-		}
-
-		if (category === "dbSetup" && currentStack.runtime === "workers") {
-			if (optionId === "docker") {
-				return false;
-			}
-		}
-
-		if (category === "database") {
-			if (optionId === "mongodb") {
-				if (
-					currentStack.orm !== "prisma" &&
-					currentStack.orm !== "mongoose" &&
-					currentStack.orm !== "none"
-				) {
-					return false;
-				}
-			} else if (optionId === "none") {
-				if (currentStack.orm !== "none") {
-					return false;
-				}
-			} else {
-				if (currentStack.orm === "mongoose") {
-					return false;
-				}
-			}
-		}
-
-		if (category === "orm") {
-			if (optionId === "mongoose") {
-				if (currentStack.database !== "mongodb") {
-					return false;
-				}
-			} else if (optionId !== "none") {
-				if (currentStack.database === "none") {
-					return false;
-				}
-				if (optionId === "drizzle" && currentStack.database === "mongodb") {
-					return false;
-				}
-			}
-		}
-
-		if (category === "auth") {
-			if (optionId === "clerk") {
-				if (currentStack.backend !== "convex") {
-					return false;
-				}
-			} else if (optionId === "better-auth") {
-				if (currentStack.backend === "convex") {
-					return false;
-				}
-				if (currentStack.database === "none") {
-					return false;
-				}
-			} else if (optionId !== "none") {
-				if (
-					currentStack.database === "none" &&
-					currentStack.backend !== "convex"
-				) {
-					return false;
-				}
-			}
-		}
-
-		if (category === "backend") {
-			if (optionId !== "convex") {
-				if (currentStack.auth === "clerk") {
-					return false;
-				}
-				if (currentStack.auth !== "none" && currentStack.database === "none") {
-					return false;
-				}
 			}
 		}
 
