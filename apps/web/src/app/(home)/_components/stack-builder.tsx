@@ -1274,30 +1274,32 @@ const StackBuilder = () => {
 			if (
 				["webFrontend", "nativeFrontend", "addons", "examples"].includes(catKey)
 			) {
-				const currentValues: string[] = [];
-				randomStack[
-					catKey as "webFrontend" | "nativeFrontend" | "addons" | "examples"
-				] = currentValues;
-
 				if (catKey === "webFrontend" || catKey === "nativeFrontend") {
+					// For frontend, pick one random option
 					const randomIndex = Math.floor(Math.random() * options.length);
 					const selectedOption = options[randomIndex].id;
-					currentValues.push(selectedOption);
-					if (selectedOption === "none" && currentValues.length > 1) {
-						randomStack[catKey] = ["none"];
-					} else if (selectedOption !== "none") {
-						randomStack[catKey] = currentValues.filter((id) => id !== "none");
-					}
+					randomStack[catKey as "webFrontend" | "nativeFrontend"] = [
+						selectedOption,
+					];
 				} else {
+					// For addons/examples, pick 0-3 random options
 					const numToPick = Math.floor(
-						Math.random() * Math.min(options.length + 1, 4),
+						Math.random() * Math.min(options.length, 4),
 					);
-					const shuffledOptions = [...options].sort(() => 0.5 - Math.random());
-					for (let i = 0; i < numToPick; i++) {
-						currentValues.push(shuffledOptions[i].id);
+					if (numToPick === 0) {
+						randomStack[catKey as "addons" | "examples"] = ["none"];
+					} else {
+						const shuffledOptions = [...options]
+							.filter((opt) => opt.id !== "none")
+							.sort(() => 0.5 - Math.random())
+							.slice(0, numToPick);
+						randomStack[catKey as "addons" | "examples"] = shuffledOptions.map(
+							(opt) => opt.id,
+						);
 					}
 				}
 			} else {
+				// For single-value fields like backend, runtime, database, etc.
 				const randomIndex = Math.floor(Math.random() * options.length);
 				(randomStack[catKey] as string) = options[randomIndex].id;
 			}
@@ -1473,12 +1475,20 @@ const StackBuilder = () => {
 				}
 			}
 			setLastChanges(compatibilityAnalysis.changes);
-			setStack(compatibilityAnalysis.adjustedStack);
+
+			// Only update stack if it's actually different to prevent infinite loops
+			const isStackDifferent =
+				JSON.stringify(stack) !==
+				JSON.stringify(compatibilityAnalysis.adjustedStack);
+			if (isStackDifferent) {
+				setStack(compatibilityAnalysis.adjustedStack);
+			}
 		}
 	}, [
 		compatibilityAnalysis.adjustedStack,
 		setStack,
 		compatibilityAnalysis.changes,
+		stack,
 	]);
 
 	useEffect(() => {

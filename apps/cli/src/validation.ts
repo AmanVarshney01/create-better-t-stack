@@ -11,6 +11,39 @@ import {
 import { exitWithError } from "./utils/errors";
 import { extractAndValidateProjectName } from "./utils/project-name-validation";
 
+const CORE_STACK_FLAGS = new Set([
+	"database",
+	"orm",
+	"backend",
+	"runtime",
+	"frontend",
+	"addons",
+	"examples",
+	"auth",
+	"dbSetup",
+	"api",
+	"webDeploy",
+	"serverDeploy",
+]);
+
+function validateYesFlagCombination(
+	options: CLIInput,
+	providedFlags: Set<string>,
+) {
+	if (!options.yes) return;
+
+	const coreStackFlagsProvided = Array.from(providedFlags).filter((flag) =>
+		CORE_STACK_FLAGS.has(flag),
+	);
+
+	if (coreStackFlagsProvided.length > 0) {
+		exitWithError(
+			`Cannot combine --yes with core stack configuration flags: ${coreStackFlagsProvided.map((f) => `--${f}`).join(", ")}. ` +
+				"The --yes flag uses default configuration. Remove these flags or use --yes without them.",
+		);
+	}
+}
+
 export function processAndValidateFlags(
 	options: CLIInput,
 	providedFlags: Set<string>,
@@ -28,6 +61,8 @@ export function processAndValidateFlags(
 		}
 		return cfg;
 	}
+
+	validateYesFlagCombination(options, providedFlags);
 
 	try {
 		validateArrayOptions(options);
@@ -55,6 +90,11 @@ export function processProvidedFlagsWithoutValidation(
 	options: CLIInput,
 	projectName?: string,
 ): Partial<ProjectConfig> {
+	if (!options.yolo) {
+		const providedFlags = getProvidedFlags(options);
+		validateYesFlagCombination(options, providedFlags);
+	}
+
 	const config = processFlags(options, projectName);
 
 	const validatedProjectName = extractAndValidateProjectName(
