@@ -108,6 +108,7 @@ export const dependencyVersionMap = {
 	"@ai-sdk/vue": "^2.0.9",
 	"@ai-sdk/svelte": "^3.0.9",
 	"@ai-sdk/react": "^2.0.9",
+	streamdown: "^1.1.6",
 
 	"@orpc/server": "^1.8.4",
 	"@orpc/client": "^1.8.4",

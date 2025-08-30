@@ -43,7 +43,7 @@ export async function setupExamples(config: ProjectConfig) {
 			} else if (hasSvelte) {
 				dependencies.push("@ai-sdk/svelte");
 			} else if (hasReactWeb) {
-				dependencies.push("@ai-sdk/react");
+				dependencies.push("@ai-sdk/react", "streamdown");
 			}
 			await addPackageDependency({
 				dependencies,

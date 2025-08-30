@@ -2,10 +2,11 @@
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
-import { useRef, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Response } from "@/components/response";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function AIPage() {
   const [input, setInput] = useState("");
@@ -51,11 +52,7 @@ export default function AIPage() {
               </p>
               {message.parts?.map((part, index) => {
                 if (part.type === "text") {
-                  return (
-                    <div key={index} className="whitespace-pre-wrap">
-                      {part.text}
-                    </div>
-                  );
+                  return <Response key={index}>{part.text}</Response>;
                 }
                 return null;
               })}

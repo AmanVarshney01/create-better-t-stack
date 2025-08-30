@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+{{#if (includes examples "ai")}}
+@source "../node_modules/streamdown/dist/index.js";
+{{/if}}
 
 @custom-variant dark (&:where(.dark, .dark *));
 

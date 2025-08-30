@@ -740,6 +740,19 @@ export async function setupExamplesTemplate(
 			if (hasReactWeb) {
 				const exampleWebSrc = path.join(exampleBaseDir, "web/react");
 				if (await fs.pathExists(exampleWebSrc)) {
+					if (example === "ai") {
+						const exampleWebBaseSrc = path.join(exampleWebSrc, "base");
+						if (await fs.pathExists(exampleWebBaseSrc)) {
+							await processAndCopyFiles(
+								"**/*",
+								exampleWebBaseSrc,
+								webAppDir,
+								context,
+								false,
+							);
+						}
+					}
+
 					const reactFramework = context.frontend.find((f) =>
 						[
 							"next",
