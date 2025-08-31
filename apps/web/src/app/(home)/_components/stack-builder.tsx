@@ -1004,6 +1004,24 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 		}
 	}
 
+	if (nextStack.runtime === "workers" && nextStack.serverDeploy === "none") {
+		notes.runtime.notes.push(
+			"Cloudflare Workers runtime requires a server deployment. Wrangler will be selected.",
+		);
+		notes.serverDeploy.notes.push(
+			"Cloudflare Workers runtime requires a server deployment. Wrangler will be selected.",
+		);
+		notes.runtime.hasIssue = true;
+		notes.serverDeploy.hasIssue = true;
+		nextStack.serverDeploy = "wrangler";
+		changed = true;
+		changes.push({
+			category: "serverDeploy",
+			message:
+				"Server deployment set to 'Wrangler' (Cloudflare Workers runtime requires a server deployment)",
+		});
+	}
+
 	const webFrontendsSelected = nextStack.webFrontend.some((f) => f !== "none");
 	if (!webFrontendsSelected && nextStack.webDeploy !== "none") {
 		notes.webDeploy.notes.push(
@@ -1492,6 +1510,10 @@ const StackBuilder = () => {
 		category: keyof typeof TECH_OPTIONS,
 		techId: string,
 	) => {
+		if (!isOptionCompatible(stack, category, techId)) {
+			return;
+		}
+
 		setStack((currentStack) => {
 			const catKey = category as keyof StackState;
 			const update: Partial<StackState> = {};
@@ -1687,6 +1709,46 @@ const StackBuilder = () => {
 			if (!hasClerkCompatibleFrontend) {
 				return false;
 			}
+		}
+
+		if (
+			category === "backend" &&
+			finalStack.runtime === "workers" &&
+			optionId !== "hono"
+		) {
+			return false;
+		}
+
+		if (
+			category === "runtime" &&
+			optionId === "workers" &&
+			finalStack.backend !== "hono"
+		) {
+			return false;
+		}
+
+		if (
+			category === "orm" &&
+			finalStack.database === "none" &&
+			optionId !== "none"
+		) {
+			return false;
+		}
+
+		if (
+			category === "database" &&
+			optionId !== "none" &&
+			finalStack.orm === "none"
+		) {
+			return false;
+		}
+
+		if (
+			category === "serverDeploy" &&
+			finalStack.runtime === "workers" &&
+			optionId === "none"
+		) {
+			return false;
 		}
 
 		if (
