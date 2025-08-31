@@ -175,6 +175,116 @@ export function validateDatabaseSetup(
 	}
 }
 
+export function validateConvexConstraints(
+	config: Partial<ProjectConfig>,
+	providedFlags: Set<string>,
+): void {
+	const { backend } = config;
+
+	if (backend !== "convex") {
+		return;
+	}
+
+	const has = (k: string) => providedFlags.has(k);
+
+	if (has("runtime") && config.runtime !== "none") {
+		exitWithError(
+			"Convex backend requires '--runtime none'. Please remove the --runtime flag or set it to 'none'.",
+		);
+	}
+
+	if (has("database") && config.database !== "none") {
+		exitWithError(
+			"Convex backend requires '--database none'. Please remove the --database flag or set it to 'none'.",
+		);
+	}
+
+	if (has("orm") && config.orm !== "none") {
+		exitWithError(
+			"Convex backend requires '--orm none'. Please remove the --orm flag or set it to 'none'.",
+		);
+	}
+
+	if (has("api") && config.api !== "none") {
+		exitWithError(
+			"Convex backend requires '--api none'. Please remove the --api flag or set it to 'none'.",
+		);
+	}
+
+	if (has("dbSetup") && config.dbSetup !== "none") {
+		exitWithError(
+			"Convex backend requires '--db-setup none'. Please remove the --db-setup flag or set it to 'none'.",
+		);
+	}
+
+	if (has("serverDeploy") && config.serverDeploy !== "none") {
+		exitWithError(
+			"Convex backend requires '--server-deploy none'. Please remove the --server-deploy flag or set it to 'none'.",
+		);
+	}
+
+	if (has("auth") && config.auth === "better-auth") {
+		exitWithError(
+			"Better-Auth is not compatible with Convex backend. Please use '--auth clerk' or '--auth none'.",
+		);
+	}
+}
+
+export function validateBackendNoneConstraints(
+	config: Partial<ProjectConfig>,
+	providedFlags: Set<string>,
+): void {
+	const { backend } = config;
+
+	if (backend !== "none") {
+		return;
+	}
+
+	const has = (k: string) => providedFlags.has(k);
+
+	if (has("runtime") && config.runtime !== "none") {
+		exitWithError(
+			"Backend 'none' requires '--runtime none'. Please remove the --runtime flag or set it to 'none'.",
+		);
+	}
+
+	if (has("database") && config.database !== "none") {
+		exitWithError(
+			"Backend 'none' requires '--database none'. Please remove the --database flag or set it to 'none'.",
+		);
+	}
+
+	if (has("orm") && config.orm !== "none") {
+		exitWithError(
+			"Backend 'none' requires '--orm none'. Please remove the --orm flag or set it to 'none'.",
+		);
+	}
+
+	if (has("api") && config.api !== "none") {
+		exitWithError(
+			"Backend 'none' requires '--api none'. Please remove the --api flag or set it to 'none'.",
+		);
+	}
+
+	if (has("auth") && config.auth !== "none") {
+		exitWithError(
+			"Backend 'none' requires '--auth none'. Please remove the --auth flag or set it to 'none'.",
+		);
+	}
+
+	if (has("dbSetup") && config.dbSetup !== "none") {
+		exitWithError(
+			"Backend 'none' requires '--db-setup none'. Please remove the --db-setup flag or set it to 'none'.",
+		);
+	}
+
+	if (has("serverDeploy") && config.serverDeploy !== "none") {
+		exitWithError(
+			"Backend 'none' requires '--server-deploy none'. Please remove the --server-deploy flag or set it to 'none'.",
+		);
+	}
+}
+
 export function validateBackendConstraints(
 	config: Partial<ProjectConfig>,
 	providedFlags: Set<string>,
@@ -199,16 +309,6 @@ export function validateBackendConstraints(
 				)}. Please choose a different frontend or auth provider.`,
 			);
 		}
-	}
-
-	if (
-		backend === "convex" &&
-		config.auth === "better-auth" &&
-		providedFlags.has("auth")
-	) {
-		exitWithError(
-			"Better-Auth is not compatible with the Convex backend. Please use '--auth clerk' or '--auth none'.",
-		);
 	}
 
 	if (
@@ -287,6 +387,8 @@ export function validateFullConfig(
 	validateDatabaseOrmAuth(config, providedFlags);
 	validateDatabaseSetup(config, providedFlags);
 
+	validateConvexConstraints(config, providedFlags);
+	validateBackendNoneConstraints(config, providedFlags);
 	validateBackendConstraints(config, providedFlags, options);
 
 	validateFrontendConstraints(config, providedFlags);

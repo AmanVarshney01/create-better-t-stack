@@ -242,23 +242,19 @@ async function generateAnalyticsData() {
 						cliVersionCounts[cliVersion] =
 							(cliVersionCounts[cliVersion] || 0) + 1;
 
-						// Auth
 						const auth =
 							row["*.properties.auth"] === "True" ? "enabled" : "disabled";
 						authCounts[auth] = (authCounts[auth] || 0) + 1;
 						if (auth === "enabled") authEnabledCount++;
 
-						// Git
 						const git =
 							row["*.properties.git"] === "True" ? "enabled" : "disabled";
 						gitCounts[git] = (gitCounts[git] || 0) + 1;
 
-						// Install
 						const install =
 							row["*.properties.install"] === "True" ? "enabled" : "disabled";
 						installCounts[install] = (installCounts[install] || 0) + 1;
 
-						// Examples
 						const examples = [
 							row["*.properties.examples.0"],
 							row["*.properties.examples.1"],
@@ -271,7 +267,6 @@ async function generateAnalyticsData() {
 							}
 						}
 
-						// Addons
 						const addons = [
 							row["*.properties.addons.0"],
 							row["*.properties.addons.1"],
@@ -288,23 +283,19 @@ async function generateAnalyticsData() {
 							}
 						}
 
-						// Runtime
 						const runtime = row["*.properties.runtime"] || "unknown";
 						runtimeCounts[runtime] = (runtimeCounts[runtime] || 0) + 1;
 
-						// Web Deploy (migrate "workers" to "wrangler")
 						const webDeploy = row["*.properties.webDeploy"] || "none";
 						const normalizedWebDeploy =
 							webDeploy === "workers" ? "wrangler" : webDeploy;
 						webDeployCounts[normalizedWebDeploy] =
 							(webDeployCounts[normalizedWebDeploy] || 0) + 1;
 
-						// Server Deploy
 						const serverDeploy = row["*.properties.serverDeploy"] || "none";
 						serverDeployCounts[serverDeploy] =
 							(serverDeployCounts[serverDeploy] || 0) + 1;
 
-						// Project type
 						const hasFrontend =
 							(frontend0 && frontend0 !== "none") ||
 							(frontend1 && frontend1 !== "none");
@@ -321,7 +312,6 @@ async function generateAnalyticsData() {
 						}
 						projectTypeCounts[type] = (projectTypeCounts[type] || 0) + 1;
 
-						// Stack combinations
 						const frontends = [frontend0, frontend1].filter(
 							(f) => f && f !== "none" && f !== "",
 						);
@@ -332,7 +322,6 @@ async function generateAnalyticsData() {
 						const combo = parts.length > 0 ? parts.join(" + ") : "none";
 						stackComboCounts[combo] = (stackComboCounts[combo] || 0) + 1;
 
-						// Database + ORM combinations
 						if (database !== "none" && orm !== "none") {
 							const combo = `${database} + ${orm}`;
 							dbORMComboCounts[combo] = (dbORMComboCounts[combo] || 0) + 1;

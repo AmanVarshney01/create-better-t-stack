@@ -2,6 +2,7 @@
 
 import {
 	Check,
+	ChevronDown,
 	ClipboardCopy,
 	InfoIcon,
 	RefreshCw,
@@ -10,15 +11,23 @@ import {
 	Shuffle,
 	Star,
 	Terminal,
+	Zap,
 } from "lucide-react";
 import { motion } from "motion/react";
 import Image from "next/image";
 import { useTheme } from "next-themes";
-import { useQueryStates } from "nuqs";
+
 import type React from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ShareDialog } from "@/components/ui/share-dialog";
 import {
 	Tooltip,
 	TooltipContent,
@@ -27,12 +36,16 @@ import {
 } from "@/components/ui/tooltip";
 import {
 	DEFAULT_STACK,
-	isStackDefault,
 	PRESET_TEMPLATES,
 	type StackState,
 	TECH_OPTIONS,
 } from "@/lib/constant";
-import { stackParsers, stackQueryStatesOptions } from "@/lib/stack-url-state";
+import {
+	CATEGORY_ORDER,
+	generateStackCommand,
+	generateStackUrlFromState,
+	useStackStateWithAllParams,
+} from "@/lib/stack-utils";
 import { cn } from "@/lib/utils";
 
 const validateProjectName = (name: string): string | undefined => {
@@ -59,25 +72,6 @@ const validateProjectName = (name: string): string | undefined => {
 	}
 	return undefined;
 };
-
-const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
-	"webFrontend",
-	"nativeFrontend",
-	"backend",
-	"runtime",
-	"api",
-	"database",
-	"orm",
-	"dbSetup",
-	"webDeploy",
-	"serverDeploy",
-	"auth",
-	"packageManager",
-	"addons",
-	"examples",
-	"git",
-	"install",
-];
 
 const hasPWACompatibleFrontend = (webFrontend: string[]) =>
 	webFrontend.some((f) =>
@@ -1137,6 +1131,38 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 		}
 	}
 
+	if (
+		nextStack.serverDeploy === "alchemy" &&
+		(nextStack.runtime !== "workers" || nextStack.backend !== "hono")
+	) {
+		notes.serverDeploy.notes.push(
+			"Alchemy deployment requires Cloudflare Workers runtime and Hono backend. Server deployment disabled.",
+		);
+		notes.serverDeploy.notes.push(
+			"To use Alchemy: Set Runtime to 'Cloudflare Workers' and Backend to 'Hono', then re-enable Alchemy deployment.",
+		);
+		if (nextStack.runtime !== "workers") {
+			notes.runtime.notes.push(
+				"Selected runtime is not compatible with Alchemy deployment. Switch to 'Cloudflare Workers' to use Alchemy.",
+			);
+		}
+		if (nextStack.backend !== "hono") {
+			notes.backend.notes.push(
+				"Selected backend is not compatible with Alchemy deployment. Switch to 'Hono' to use Alchemy.",
+			);
+		}
+		notes.serverDeploy.hasIssue = true;
+		notes.runtime.hasIssue = true;
+		notes.backend.hasIssue = true;
+		nextStack.serverDeploy = "none";
+		changed = true;
+		changes.push({
+			category: "serverDeploy",
+			message:
+				"Server deployment disabled (Tip: Use Cloudflare Workers runtime + Hono backend to enable Alchemy)",
+		});
+	}
+
 	return {
 		adjustedStack: changed ? nextStack : null,
 		notes,
@@ -1144,114 +1170,8 @@ const analyzeStackCompatibility = (stack: StackState): CompatibilityResult => {
 	};
 };
 
-const generateCommand = (stackState: StackState): string => {
-	let base: string;
-	switch (stackState.packageManager) {
-		case "npm":
-			base = "npx create-better-t-stack@latest";
-			break;
-		case "pnpm":
-			base = "pnpm create better-t-stack@latest";
-			break;
-		default:
-			base = "bun create better-t-stack@latest";
-			break;
-	}
-
-	const projectName = stackState.projectName || "my-better-t-app";
-	const flags: string[] = [];
-
-	const isDefaultStack = Object.keys(DEFAULT_STACK).every((key) => {
-		if (key === "projectName") return true;
-		const defaultKey = key as keyof StackState;
-		return isStackDefault(stackState, defaultKey, stackState[defaultKey]);
-	});
-
-	if (isDefaultStack) {
-		flags.push("--yes");
-	} else {
-		const combinedFrontends = [
-			...stackState.webFrontend,
-			...stackState.nativeFrontend,
-		].filter((v, _, arr) => v !== "none" || arr.length === 1);
-
-		if (combinedFrontends.length === 0 || combinedFrontends[0] === "none") {
-			flags.push("--frontend none");
-		} else {
-			flags.push(`--frontend ${combinedFrontends.join(" ")}`);
-		}
-
-		flags.push(`--backend ${stackState.backend}`);
-
-		flags.push(`--runtime ${stackState.runtime}`);
-
-		flags.push(`--api ${stackState.api}`);
-
-		flags.push(`--auth ${stackState.auth}`);
-
-		flags.push(`--database ${stackState.database}`);
-
-		flags.push(`--orm ${stackState.orm}`);
-
-		flags.push(`--db-setup ${stackState.dbSetup}`);
-
-		flags.push(`--package-manager ${stackState.packageManager}`);
-
-		if (stackState.git === "false") {
-			flags.push("--no-git");
-		} else {
-			flags.push("--git");
-		}
-
-		flags.push(`--web-deploy ${stackState.webDeploy}`);
-
-		flags.push(`--server-deploy ${stackState.serverDeploy}`);
-
-		if (stackState.install === "false") {
-			flags.push("--no-install");
-		} else {
-			flags.push("--install");
-		}
-
-		if (stackState.addons.length > 0) {
-			const validAddons = stackState.addons.filter((addon) =>
-				[
-					"pwa",
-					"tauri",
-					"starlight",
-					"biome",
-					"husky",
-					"turborepo",
-					"ultracite",
-					"fumadocs",
-					"oxlint",
-					"ruler",
-				].includes(addon),
-			);
-			if (validAddons.length > 0) {
-				flags.push(`--addons ${validAddons.join(" ")}`);
-			}
-		} else {
-			flags.push("--addons none");
-		}
-
-		if (stackState.examples.length > 0) {
-			flags.push(`--examples ${stackState.examples.join(" ")}`);
-		} else {
-			flags.push("--examples none");
-		}
-	}
-
-	return `${base} ${projectName}${
-		flags.length > 0 ? ` ${flags.join(" ")}` : ""
-	}`;
-};
-
 const StackBuilder = () => {
-	const [stack, setStack] = useQueryStates(
-		stackParsers,
-		stackQueryStatesOptions,
-	);
+	const [stack, setStack] = useStackStateWithAllParams();
 
 	const [command, setCommand] = useState("");
 	const [copied, setCopied] = useState(false);
@@ -1265,6 +1185,7 @@ const StackBuilder = () => {
 
 	const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
 	const contentRef = useRef<HTMLDivElement>(null);
+	const lastAppliedStackString = useRef<string>("");
 
 	const compatibilityAnalysis = useMemo(
 		() => analyzeStackCompatibility(stack),
@@ -1310,72 +1231,15 @@ const StackBuilder = () => {
 				(randomStack[catKey] as string) = options[randomIndex].id;
 			}
 		}
-		setStack(randomStack as StackState);
+		startTransition(() => {
+			setStack(randomStack as StackState);
+		});
 		contentRef.current?.scrollTo(0, 0);
 		toast.success("Random stack generated!");
 	};
 
-	const shareToTwitter = () => {
-		const getStackSummary = (): string => {
-			const selectedTechs: string[] = [];
-
-			for (const category of CATEGORY_ORDER) {
-				const categoryKey = category as keyof StackState;
-				const options = TECH_OPTIONS[category as keyof typeof TECH_OPTIONS];
-				const selectedValue = stack[categoryKey];
-
-				if (!options) continue;
-
-				if (Array.isArray(selectedValue)) {
-					if (
-						selectedValue.length === 0 ||
-						(selectedValue.length === 1 && selectedValue[0] === "none")
-					) {
-						continue;
-					}
-
-					for (const id of selectedValue) {
-						if (id === "none") continue;
-						const tech = options.find((opt) => opt.id === id);
-						if (tech) {
-							selectedTechs.push(tech.name);
-						}
-					}
-				} else {
-					const tech = options.find((opt) => opt.id === selectedValue);
-					if (
-						!tech ||
-						tech.id === "none" ||
-						tech.id === "false" ||
-						((category === "git" ||
-							category === "install" ||
-							category === "auth") &&
-							tech.id === "true")
-					) {
-						continue;
-					}
-					selectedTechs.push(tech.name);
-				}
-			}
-
-			return selectedTechs.length > 0
-				? selectedTechs.join(" • ")
-				: "Custom stack";
-		};
-
-		const stackSummary = getStackSummary();
-		const text = encodeURIComponent(
-			`Check out this cool tech stack I configured with Create Better T Stack!\n\n🚀 ${stackSummary}\n\n`,
-		);
-		if (typeof window !== "undefined") {
-			const url = encodeURIComponent(window.location.href);
-			window.open(
-				`https://twitter.com/intent/tweet?text=${text}&url=${url}`,
-				"_blank",
-			);
-		} else {
-			toast.error("Could not generate share link.");
-		}
+	const getStackUrl = (): string => {
+		return generateStackUrlFromState(stack);
 	};
 
 	const selectedBadges = (() => {
@@ -1464,41 +1328,45 @@ const StackBuilder = () => {
 
 	useEffect(() => {
 		if (compatibilityAnalysis.adjustedStack) {
-			if (compatibilityAnalysis.changes.length > 0) {
-				if (compatibilityAnalysis.changes.length === 1) {
-					toast.info(compatibilityAnalysis.changes[0].message, {
-						duration: 4000,
-					});
-				} else if (compatibilityAnalysis.changes.length > 1) {
-					const message = `${
-						compatibilityAnalysis.changes.length
-					} compatibility adjustments made:\n${compatibilityAnalysis.changes
-						.map((c) => `• ${c.message}`)
-						.join("\n")}`;
-					toast.info(message, {
-						duration: 5000,
-					});
-				}
-			}
-			setLastChanges(compatibilityAnalysis.changes);
+			const adjustedStackString = JSON.stringify(
+				compatibilityAnalysis.adjustedStack,
+			);
 
-			const isStackDifferent =
-				JSON.stringify(stack) !==
-				JSON.stringify(compatibilityAnalysis.adjustedStack);
-			if (isStackDifferent) {
-				setStack(compatibilityAnalysis.adjustedStack);
+			if (lastAppliedStackString.current !== adjustedStackString) {
+				startTransition(() => {
+					if (compatibilityAnalysis.changes.length > 0) {
+						if (compatibilityAnalysis.changes.length === 1) {
+							toast.info(compatibilityAnalysis.changes[0].message, {
+								duration: 4000,
+							});
+						} else if (compatibilityAnalysis.changes.length > 1) {
+							const message = `${
+								compatibilityAnalysis.changes.length
+							} compatibility adjustments made:\n${compatibilityAnalysis.changes
+								.map((c) => `• ${c.message}`)
+								.join("\n")}`;
+							toast.info(message, {
+								duration: 5000,
+							});
+						}
+					}
+					setLastChanges(compatibilityAnalysis.changes);
+					if (compatibilityAnalysis.adjustedStack) {
+						setStack(compatibilityAnalysis.adjustedStack);
+					}
+					lastAppliedStackString.current = adjustedStackString;
+				});
 			}
 		}
 	}, [
 		compatibilityAnalysis.adjustedStack,
-		setStack,
 		compatibilityAnalysis.changes,
-		stack,
+		setStack,
 	]);
 
 	useEffect(() => {
 		const stackToUse = compatibilityAnalysis.adjustedStack || stack;
-		const cmd = generateCommand(stackToUse);
+		const cmd = generateStackCommand(stackToUse);
 		setCommand(cmd);
 	}, [stack, compatibilityAnalysis.adjustedStack]);
 
@@ -1514,86 +1382,88 @@ const StackBuilder = () => {
 			return;
 		}
 
-		setStack((currentStack) => {
-			const catKey = category as keyof StackState;
-			const update: Partial<StackState> = {};
-			const currentValue = currentStack[catKey];
+		startTransition(() => {
+			setStack((currentStack) => {
+				const catKey = category as keyof StackState;
+				const update: Partial<StackState> = {};
+				const currentValue = currentStack[catKey];
 
-			if (
-				catKey === "webFrontend" ||
-				catKey === "nativeFrontend" ||
-				catKey === "addons" ||
-				catKey === "examples"
-			) {
-				const currentArray = Array.isArray(currentValue)
-					? [...currentValue]
-					: [];
-				let nextArray = [...currentArray];
-				const isSelected = currentArray.includes(techId);
+				if (
+					catKey === "webFrontend" ||
+					catKey === "nativeFrontend" ||
+					catKey === "addons" ||
+					catKey === "examples"
+				) {
+					const currentArray = Array.isArray(currentValue)
+						? [...currentValue]
+						: [];
+					let nextArray = [...currentArray];
+					const isSelected = currentArray.includes(techId);
 
-				if (catKey === "webFrontend") {
-					if (techId === "none") {
-						nextArray = ["none"];
-					} else if (isSelected) {
-						if (currentArray.length > 1) {
-							nextArray = nextArray.filter((id) => id !== techId);
-						} else {
+					if (catKey === "webFrontend") {
+						if (techId === "none") {
 							nextArray = ["none"];
+						} else if (isSelected) {
+							if (currentArray.length > 1) {
+								nextArray = nextArray.filter((id) => id !== techId);
+							} else {
+								nextArray = ["none"];
+							}
+						} else {
+							nextArray = [techId];
+						}
+					} else if (catKey === "nativeFrontend") {
+						if (techId === "none") {
+							nextArray = ["none"];
+						} else if (isSelected) {
+							nextArray = ["none"];
+						} else {
+							nextArray = [techId];
 						}
 					} else {
-						nextArray = [techId];
+						if (isSelected) {
+							nextArray = nextArray.filter((id) => id !== techId);
+						} else {
+							nextArray.push(techId);
+						}
+						if (nextArray.length > 1) {
+							nextArray = nextArray.filter((id) => id !== "none");
+						}
+						if (
+							nextArray.length === 0 &&
+							(catKey === "addons" || catKey === "examples")
+						) {
+						} else if (nextArray.length === 0) {
+							nextArray = ["none"];
+						}
 					}
-				} else if (catKey === "nativeFrontend") {
-					if (techId === "none") {
-						nextArray = ["none"];
-					} else if (isSelected) {
-						nextArray = ["none"];
-					} else {
-						nextArray = [techId];
+
+					const uniqueNext = [...new Set(nextArray)].sort();
+					const uniqueCurrent = [...new Set(currentArray)].sort();
+
+					if (JSON.stringify(uniqueNext) !== JSON.stringify(uniqueCurrent)) {
+						update[catKey] = uniqueNext;
 					}
 				} else {
-					if (isSelected) {
-						nextArray = nextArray.filter((id) => id !== techId);
+					if (currentValue !== techId) {
+						update[catKey] = techId;
 					} else {
-						nextArray.push(techId);
-					}
-					if (nextArray.length > 1) {
-						nextArray = nextArray.filter((id) => id !== "none");
-					}
-					if (
-						nextArray.length === 0 &&
-						(catKey === "addons" || catKey === "examples")
-					) {
-					} else if (nextArray.length === 0) {
-						nextArray = ["none"];
+						if (
+							(category === "git" || category === "install") &&
+							techId === "false"
+						) {
+							update[catKey] = "true";
+						} else if (
+							(category === "git" || category === "install") &&
+							techId === "true"
+						) {
+							update[catKey] = "false";
+						}
 					}
 				}
 
-				const uniqueNext = [...new Set(nextArray)].sort();
-				const uniqueCurrent = [...new Set(currentArray)].sort();
-
-				if (JSON.stringify(uniqueNext) !== JSON.stringify(uniqueCurrent)) {
-					update[catKey] = uniqueNext;
-				}
-			} else {
-				if (currentValue !== techId) {
-					update[catKey] = techId;
-				} else {
-					if (
-						(category === "git" || category === "install") &&
-						techId === "false"
-					) {
-						update[catKey] = "true";
-					} else if (
-						(category === "git" || category === "install") &&
-						techId === "true"
-					) {
-						update[catKey] = "false";
-					}
-				}
-			}
-
-			return Object.keys(update).length > 0 ? update : {};
+				return Object.keys(update).length > 0 ? update : {};
+			});
 		});
 	};
 
@@ -1604,7 +1474,9 @@ const StackBuilder = () => {
 	};
 
 	const resetStack = () => {
-		setStack(DEFAULT_STACK);
+		startTransition(() => {
+			setStack(DEFAULT_STACK);
+		});
 		contentRef.current?.scrollTo(0, 0);
 	};
 
@@ -1616,7 +1488,9 @@ const StackBuilder = () => {
 
 	const loadSavedStack = () => {
 		if (lastSavedStack) {
-			setStack(lastSavedStack);
+			startTransition(() => {
+				setStack(lastSavedStack);
+			});
 			contentRef.current?.scrollTo(0, 0);
 			toast.success("Saved configuration loaded");
 		}
@@ -1627,17 +1501,64 @@ const StackBuilder = () => {
 			(template) => template.id === presetId,
 		);
 		if (preset) {
-			setStack(preset.stack);
+			startTransition(() => {
+				setStack(preset.stack);
+			});
 			contentRef.current?.scrollTo(0, 0);
 			toast.success(`Applied preset: ${preset.name}`);
 		}
 	};
 
-	const isOptionCompatible = (
+	const getDisabledReason = (
 		currentStack: StackState,
 		category: keyof typeof TECH_OPTIONS,
 		optionId: string,
-	): boolean => {
+	): string | null => {
+		if (currentStack.backend === "convex") {
+			if (category === "runtime" && optionId !== "none") {
+				return "Convex backend requires runtime to be 'None'. Convex handles its own runtime.";
+			}
+			if (category === "database" && optionId !== "none") {
+				return "Convex backend requires database to be 'None'. Convex provides its own database.";
+			}
+			if (category === "orm" && optionId !== "none") {
+				return "Convex backend requires ORM to be 'None'. Convex has built-in data access.";
+			}
+			if (category === "api" && optionId !== "none") {
+				return "Convex backend requires API to be 'None'. Convex provides its own API layer.";
+			}
+			if (category === "dbSetup" && optionId !== "none") {
+				return "Convex backend requires DB Setup to be 'None'. Convex handles database setup automatically.";
+			}
+			if (category === "auth" && optionId === "better-auth") {
+				return "Convex backend is not compatible with Better-Auth. Use Clerk authentication instead.";
+			}
+		}
+
+		if (currentStack.backend === "none") {
+			if (category === "runtime" && optionId !== "none") {
+				return "No backend selected: Runtime must be 'None' for frontend-only projects.";
+			}
+			if (category === "database" && optionId !== "none") {
+				return "No backend selected: Database must be 'None' for frontend-only projects.";
+			}
+			if (category === "orm" && optionId !== "none") {
+				return "No backend selected: ORM must be 'None' for frontend-only projects.";
+			}
+			if (category === "api" && optionId !== "none") {
+				return "No backend selected: API must be 'None' for frontend-only projects.";
+			}
+			if (category === "auth" && optionId !== "none") {
+				return "No backend selected: Authentication must be 'None' for frontend-only projects.";
+			}
+			if (category === "dbSetup" && optionId !== "none") {
+				return "No backend selected: DB Setup must be 'None' for frontend-only projects.";
+			}
+			if (category === "serverDeploy" && optionId !== "none") {
+				return "No backend selected: Server deployment must be 'None' for frontend-only projects.";
+			}
+		}
+
 		const simulatedStack: StackState = JSON.parse(JSON.stringify(currentStack));
 
 		const updateArrayCategory = (arr: string[], cat: string): string[] => {
@@ -1684,13 +1605,19 @@ const StackBuilder = () => {
 			const isAlchemyServerDeploy = finalStack.serverDeploy === "alchemy";
 
 			if (isAlchemyWebDeploy || isAlchemyServerDeploy) {
-				return false;
+				return "Next.js is temporarily not compatible with Alchemy deployment. Support coming soon!";
+			}
+		}
+
+		if (category === "webFrontend" && optionId === "solid") {
+			if (finalStack.backend === "convex") {
+				return "Solid is not compatible with Convex backend. Try TanStack Router, React Router, or Next.js instead.";
 			}
 		}
 
 		if (category === "auth" && optionId === "clerk") {
 			if (finalStack.backend !== "convex") {
-				return false;
+				return "Clerk authentication only works with Convex backend. Switch to Convex backend to use Clerk.";
 			}
 
 			const hasClerkCompatibleFrontend =
@@ -1707,7 +1634,13 @@ const StackBuilder = () => {
 				);
 
 			if (!hasClerkCompatibleFrontend) {
-				return false;
+				return "Clerk requires TanStack Router, React Router, TanStack Start, Next.js, or React Native frontend.";
+			}
+		}
+
+		if (category === "auth" && optionId === "better-auth") {
+			if (finalStack.backend === "convex") {
+				return "Better-Auth is not compatible with Convex backend. Use Clerk authentication instead.";
 			}
 		}
 
@@ -1716,7 +1649,7 @@ const StackBuilder = () => {
 			finalStack.runtime === "workers" &&
 			optionId !== "hono"
 		) {
-			return false;
+			return "Cloudflare Workers runtime only supports Hono backend. Switch to Hono to use Workers runtime.";
 		}
 
 		if (
@@ -1724,7 +1657,15 @@ const StackBuilder = () => {
 			optionId === "workers" &&
 			finalStack.backend !== "hono"
 		) {
-			return false;
+			return "Cloudflare Workers runtime requires Hono backend. Switch to Hono backend first.";
+		}
+
+		if (
+			category === "runtime" &&
+			optionId === "none" &&
+			finalStack.backend !== "convex"
+		) {
+			return "Runtime 'None' is only available with Convex backend. Switch to Convex to use this option.";
 		}
 
 		if (
@@ -1732,7 +1673,7 @@ const StackBuilder = () => {
 			finalStack.database === "none" &&
 			optionId !== "none"
 		) {
-			return false;
+			return "ORM requires a database. Select a database first (SQLite, PostgreSQL, MySQL, or MongoDB).";
 		}
 
 		if (
@@ -1740,7 +1681,79 @@ const StackBuilder = () => {
 			optionId !== "none" &&
 			finalStack.orm === "none"
 		) {
-			return false;
+			return "Database requires an ORM. Select an ORM first (Drizzle, Prisma, or Mongoose).";
+		}
+
+		if (category === "database" && optionId === "mongodb") {
+			if (finalStack.orm !== "prisma" && finalStack.orm !== "mongoose") {
+				return "MongoDB requires Prisma or Mongoose ORM. Select one of these ORMs first.";
+			}
+		}
+
+		if (category === "orm" && optionId === "mongoose") {
+			if (finalStack.database !== "mongodb") {
+				return "Mongoose ORM only works with MongoDB database. Select MongoDB first.";
+			}
+		}
+
+		if (category === "dbSetup" && optionId === "turso") {
+			if (finalStack.database !== "sqlite") {
+				return "Turso requires SQLite database. Select SQLite first.";
+			}
+			if (finalStack.orm !== "drizzle") {
+				return "Turso requires Drizzle ORM. Select Drizzle first.";
+			}
+		}
+
+		if (category === "dbSetup" && optionId === "d1") {
+			if (finalStack.database !== "sqlite") {
+				return "Cloudflare D1 requires SQLite database. Select SQLite first.";
+			}
+			if (finalStack.orm !== "drizzle") {
+				return "Cloudflare D1 requires Drizzle ORM. Select Drizzle first.";
+			}
+			if (finalStack.runtime !== "workers") {
+				return "Cloudflare D1 requires Cloudflare Workers runtime. Select Workers runtime first.";
+			}
+			if (finalStack.backend !== "hono") {
+				return "Cloudflare D1 requires Hono backend. Select Hono backend first.";
+			}
+		}
+
+		if (category === "dbSetup" && optionId === "prisma-postgres") {
+			if (finalStack.database !== "postgres") {
+				return "Prisma PostgreSQL setup requires PostgreSQL database. Select PostgreSQL first.";
+			}
+		}
+
+		if (category === "dbSetup" && optionId === "mongodb-atlas") {
+			if (finalStack.database !== "mongodb") {
+				return "MongoDB Atlas requires MongoDB database. Select MongoDB first.";
+			}
+			if (finalStack.orm !== "prisma" && finalStack.orm !== "mongoose") {
+				return "MongoDB Atlas requires Prisma or Mongoose ORM. Select one of these ORMs first.";
+			}
+		}
+
+		if (category === "dbSetup" && optionId === "neon") {
+			if (finalStack.database !== "postgres") {
+				return "Neon requires PostgreSQL database. Select PostgreSQL first.";
+			}
+		}
+
+		if (category === "dbSetup" && optionId === "supabase") {
+			if (finalStack.database !== "postgres") {
+				return "Supabase requires PostgreSQL database. Select PostgreSQL first.";
+			}
+		}
+
+		if (category === "dbSetup" && optionId === "docker") {
+			if (finalStack.database === "sqlite") {
+				return "Docker setup is not needed for SQLite. SQLite works without Docker.";
+			}
+			if (finalStack.runtime === "workers") {
+				return "Docker setup is not compatible with Cloudflare Workers runtime. Use D1 instead.";
+			}
 		}
 
 		if (
@@ -1748,18 +1761,94 @@ const StackBuilder = () => {
 			finalStack.runtime === "workers" &&
 			optionId === "none"
 		) {
-			return false;
+			return "Cloudflare Workers runtime requires a server deployment. Select Wrangler or Alchemy.";
 		}
 
 		if (
-			category === "webFrontend" ||
-			category === "nativeFrontend" ||
-			category === "addons" ||
-			category === "examples"
+			category === "serverDeploy" &&
+			(optionId === "alchemy" || optionId === "wrangler") &&
+			finalStack.runtime !== "workers"
 		) {
-			return (finalStack[category] as string[]).includes(optionId);
+			return `${optionId === "alchemy" ? "Alchemy" : "Wrangler"} deployment requires Cloudflare Workers runtime. Select Workers runtime first.`;
 		}
-		return finalStack[category] === optionId;
+
+		if (
+			category === "serverDeploy" &&
+			(optionId === "alchemy" || optionId === "wrangler") &&
+			finalStack.backend !== "hono"
+		) {
+			return `${optionId === "alchemy" ? "Alchemy" : "Wrangler"} deployment requires Hono backend. Select Hono backend first.`;
+		}
+
+		if (
+			category === "serverDeploy" &&
+			optionId !== "none" &&
+			(finalStack.backend === "none" || finalStack.backend === "convex")
+		) {
+			return "Server deployment requires a supported backend (Hono, Express, Fastify, or Elysia). Convex has its own deployment.";
+		}
+
+		if (category === "webDeploy" && optionId !== "none") {
+			const hasWebFrontend = finalStack.webFrontend.some((f) => f !== "none");
+			if (!hasWebFrontend) {
+				return "Web deployment requires a web frontend. Select a web frontend first.";
+			}
+		}
+
+		if (category === "api" && optionId === "trpc") {
+			const isNuxt = finalStack.webFrontend.includes("nuxt");
+			const isSvelte = finalStack.webFrontend.includes("svelte");
+			const isSolid = finalStack.webFrontend.includes("solid");
+			if (isNuxt || isSvelte || isSolid) {
+				const frontendName = isNuxt ? "Nuxt" : isSvelte ? "Svelte" : "Solid";
+				return `${frontendName} requires oRPC API. tRPC is not compatible with ${frontendName}.`;
+			}
+		}
+
+		if (category === "addons" && optionId === "pwa") {
+			const hasPWACompat = hasPWACompatibleFrontend(finalStack.webFrontend);
+			if (!hasPWACompat) {
+				return "PWA addon requires TanStack Router, React Router, Solid, or Next.js frontend.";
+			}
+		}
+
+		if (category === "addons" && optionId === "tauri") {
+			const hasTauriCompat = hasTauriCompatibleFrontend(finalStack.webFrontend);
+			if (!hasTauriCompat) {
+				return "Tauri addon requires TanStack Router, React Router, Nuxt, Svelte, Solid, or Next.js frontend.";
+			}
+		}
+
+		if (category === "addons" && optionId === "ultracite") {
+			if (finalStack.addons.includes("biome")) {
+				return "Ultracite already includes Biome configuration. Remove Biome addon first.";
+			}
+		}
+
+		if (category === "examples" && optionId === "todo") {
+			if (finalStack.database === "none") {
+				return "Todo example requires a database. Select a database first.";
+			}
+		}
+
+		if (category === "examples" && optionId === "ai") {
+			if (finalStack.backend === "elysia") {
+				return "AI example is not compatible with Elysia backend. Try Hono, Express, or Fastify.";
+			}
+			if (finalStack.webFrontend.includes("solid")) {
+				return "AI example is not compatible with Solid frontend. Try React-based frontends.";
+			}
+		}
+
+		return null;
+	};
+
+	const isOptionCompatible = (
+		currentStack: StackState,
+		category: keyof typeof TECH_OPTIONS,
+		optionId: string,
+	): boolean => {
+		return getDisabledReason(currentStack, category, optionId) === null;
 	};
 
 	return (
@@ -1767,8 +1856,8 @@ const StackBuilder = () => {
 			<div className="grid w-full grid-cols-1 overflow-hidden border-border text-foreground sm:grid-cols-[auto_1fr]">
 				<div className="flex w-full flex-col border-border border-r sm:max-w-3xs md:max-w-xs lg:max-w-sm">
 					<ScrollArea className="flex-1">
-						<div className="grid h-full grid-rows-[auto_1fr] justify-between gap-2 p-3 sm:p-4 md:h-[calc(100vh-64px)]">
-							<div className="flex flex-col space-y-3 sm:space-y-4">
+						<div className="flex h-full flex-col gap-3 p-3 sm:p-4 md:h-[calc(100vh-64px)]">
+							<div className="space-y-3">
 								<label className="flex flex-col">
 									<span className="mb-1 text-muted-foreground text-xs">
 										Project Name:
@@ -1778,7 +1867,9 @@ const StackBuilder = () => {
 										value={stack.projectName || ""}
 										onChange={(e) => {
 											const newValue = e.target.value;
-											setStack({ projectName: newValue });
+											startTransition(() => {
+												setStack({ projectName: newValue });
+											});
 										}}
 										className={cn(
 											"w-full rounded border px-2 py-1 text-sm focus:outline-none",
@@ -1795,57 +1886,7 @@ const StackBuilder = () => {
 									)}
 								</label>
 
-								<div className="flex flex-wrap gap-1.5 sm:gap-2">
-									<button
-										type="button"
-										onClick={resetStack}
-										className="flex items-center gap-1 rounded border border-border px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
-										title="Reset to defaults"
-									>
-										<RefreshCw className="h-3 w-3" />
-										<span className="">Reset</span>
-									</button>
-									<button
-										type="button"
-										onClick={getRandomStack}
-										className="flex items-center gap-1 rounded border border-border px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
-										title="Generate a random stack"
-									>
-										<Shuffle className="h-3 w-3" />
-										<span className="">Random</span>
-									</button>
-									{lastSavedStack && (
-										<button
-											type="button"
-											onClick={loadSavedStack}
-											className="flex items-center gap-1 rounded border border-border px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
-											title="Load saved preferences"
-										>
-											<Settings className="h-3 w-3" />
-											<span className="">Load</span>
-										</button>
-									)}
-									<button
-										type="button"
-										onClick={saveCurrentStack}
-										className="flex items-center gap-1 rounded border border-border px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
-										title="Save current preferences"
-									>
-										<Star className="h-3 w-3" />
-										<span className="">Save</span>
-									</button>
-									<button
-										type="button"
-										onClick={shareToTwitter}
-										className="flex items-center gap-1 rounded border border-border px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
-										title="Share to Twitter"
-									>
-										<Share2 className="h-3 w-3" />
-										<span className="">Share</span>
-									</button>
-								</div>
-
-								<div className="relative rounded border border-border p-2">
+								<div className="rounded border border-border p-2">
 									<div className="flex">
 										<span className="mr-2 select-none text-chart-4">$</span>
 										<code className="block break-all text-muted-foreground text-xs sm:text-sm">
@@ -1888,26 +1929,87 @@ const StackBuilder = () => {
 							</div>
 
 							<div className="mt-auto hidden border-border border-t pt-4 lg:flex lg:flex-col">
-								<h3 className="mb-2 font-medium text-foreground text-sm">
-									Quick Presets
-								</h3>
-								<div className="grid grid-cols-2 gap-2">
-									{PRESET_TEMPLATES.map((preset) => (
+								<div className="space-y-3">
+									{/* Action Buttons */}
+									<div className="grid grid-cols-2 gap-1.5">
 										<button
 											type="button"
-											key={preset.id}
-											onClick={() => applyPreset(preset.id)}
-											className="rounded border border-border p-2 text-left transition-colors hover:bg-muted"
-											title={preset.description}
+											onClick={resetStack}
+											className="flex items-center gap-1 rounded border border-border px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
+											title="Reset to defaults"
 										>
-											<div className="font-medium text-foreground text-sm">
-												{preset.name}
-											</div>
-											<div className="text-muted-foreground text-xs">
-												{preset.description}
-											</div>
+											<RefreshCw className="h-3 w-3" />
+											Reset
 										</button>
-									))}
+										<button
+											type="button"
+											onClick={getRandomStack}
+											className="flex items-center gap-1 rounded border border-border px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
+											title="Generate a random stack"
+										>
+											<Shuffle className="h-3 w-3" />
+											Random
+										</button>
+										{lastSavedStack && (
+											<button
+												type="button"
+												onClick={loadSavedStack}
+												className="flex items-center gap-1 rounded border border-border px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
+												title="Load saved preferences"
+											>
+												<Settings className="h-3 w-3" />
+												Load
+											</button>
+										)}
+										<button
+											type="button"
+											onClick={saveCurrentStack}
+											className="flex items-center gap-1 rounded border border-border px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
+											title="Save current preferences"
+										>
+											<Star className="h-3 w-3" />
+											Save
+										</button>
+										<ShareDialog stackUrl={getStackUrl()} stackState={stack}>
+											<button
+												type="button"
+												className="col-span-2 flex items-center gap-1 rounded border border-border px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
+												title="Share your stack"
+											>
+												<Share2 className="h-3 w-3" />
+												Share
+											</button>
+										</ShareDialog>
+									</div>
+
+									<div>
+										<DropdownMenu>
+											<DropdownMenuTrigger asChild>
+												<button
+													type="button"
+													className="flex w-full items-center gap-1 rounded border border-border px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
+												>
+													<Zap className="h-3 w-3" />
+													<span>Quick Preset</span>
+													<ChevronDown className="ml-auto h-3 w-3" />
+												</button>
+											</DropdownMenuTrigger>
+											<DropdownMenuContent align="end" className="w-64">
+												{PRESET_TEMPLATES.map((preset) => (
+													<DropdownMenuItem
+														key={preset.id}
+														onClick={() => applyPreset(preset.id)}
+														className="flex flex-col items-start gap-1 p-3"
+													>
+														<div className="font-medium text-sm">
+															{preset.name}
+														</div>
+														<div className="text-xs">{preset.description}</div>
+													</DropdownMenuItem>
+												))}
+											</DropdownMenuContent>
+										</DropdownMenu>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -1986,6 +2088,14 @@ const StackBuilder = () => {
 													tech.id,
 												);
 
+												const disabledReason = isDisabled
+													? getDisabledReason(
+															stack,
+															categoryKey as keyof typeof TECH_OPTIONS,
+															tech.id,
+														)
+													: null;
+
 												return (
 													<Tooltip key={tech.id} delayDuration={100}>
 														<TooltipTrigger asChild>
@@ -2045,6 +2155,15 @@ const StackBuilder = () => {
 																)}
 															</motion.div>
 														</TooltipTrigger>
+														{disabledReason && (
+															<TooltipContent
+																side="top"
+																align="center"
+																className="max-w-xs"
+															>
+																<p className="text-xs">{disabledReason}</p>
+															</TooltipContent>
+														)}
 													</Tooltip>
 												);
 											})}

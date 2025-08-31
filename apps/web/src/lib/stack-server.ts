@@ -1,16 +1,17 @@
 import {
+	createLoader,
 	parseAsArrayOf,
 	parseAsString,
 	parseAsStringEnum,
-	type UrlKeys,
-} from "nuqs";
+} from "nuqs/server";
 import { DEFAULT_STACK, type StackState, TECH_OPTIONS } from "@/lib/constant";
 
 const getValidIds = (category: keyof typeof TECH_OPTIONS): string[] => {
 	return TECH_OPTIONS[category]?.map((opt) => opt.id) ?? [];
 };
 
-export const stackParsers = {
+// Server-side parsers (same as client-side but imported from nuqs/server)
+const serverStackParsers = {
 	projectName: parseAsString.withDefault(DEFAULT_STACK.projectName),
 	webFrontend: parseAsArrayOf(parseAsString).withDefault(
 		DEFAULT_STACK.webFrontend,
@@ -59,29 +60,6 @@ export const stackParsers = {
 	).withDefault(DEFAULT_STACK.serverDeploy),
 };
 
-export const stackUrlKeys: UrlKeys<typeof stackParsers> = {
-	projectName: "name",
-	webFrontend: "fe-w",
-	nativeFrontend: "fe-n",
-	runtime: "rt",
-	backend: "be",
-	api: "api",
-	database: "db",
-	orm: "orm",
-	dbSetup: "dbs",
-	auth: "au",
-	packageManager: "pm",
-	addons: "add",
-	examples: "ex",
-	git: "git",
-	install: "i",
-	webDeploy: "wd",
-	serverDeploy: "sd",
-};
+export const loadStackParams = createLoader(serverStackParsers);
 
-export const stackQueryStatesOptions = {
-	history: "replace" as const,
-	shallow: false,
-	urlKeys: stackUrlKeys,
-	clearOnDefault: true,
-};
+export type LoadedStackState = Awaited<ReturnType<typeof loadStackParams>>;

@@ -123,25 +123,6 @@ export async function gatherConfig(
 		},
 	);
 
-	if (result.backend === "convex") {
-		result.runtime = "none";
-		result.database = "none";
-		result.orm = "none";
-		result.api = "none";
-		result.dbSetup = "none";
-		result.examples = ["todo"];
-	}
-
-	if (result.backend === "none") {
-		result.runtime = "none";
-		result.database = "none";
-		result.orm = "none";
-		result.api = "none";
-		result.auth = "none";
-		result.dbSetup = "none";
-		result.examples = [];
-	}
-
 	return {
 		projectName: projectName,
 		projectDir: projectDir,
