@@ -28,25 +28,6 @@ interface StackDisplayProps {
 	stackState: LoadedStackState;
 }
 
-const CATEGORY_LABELS: Record<keyof typeof TECH_OPTIONS, string> = {
-	webFrontend: "Frontend",
-	nativeFrontend: "Mobile",
-	runtime: "Runtime",
-	backend: "Backend",
-	api: "API",
-	database: "Database",
-	orm: "ORM",
-	dbSetup: "DB Setup",
-	auth: "Auth",
-	packageManager: "Package Manager",
-	addons: "Addons",
-	examples: "Examples",
-	git: "Git",
-	install: "Install",
-	webDeploy: "Web Deploy",
-	serverDeploy: "Server Deploy",
-};
-
 export function StackDisplay({ stackState }: StackDisplayProps) {
 	const pathname = usePathname();
 	const searchParamsHook = useSearchParams();
@@ -136,7 +117,6 @@ export function StackDisplay({ stackState }: StackDisplayProps) {
 	return (
 		<main className="mx-auto min-h-svh max-w-[1280px]">
 			<div className="mx-auto flex flex-col gap-8 px-4 pt-12">
-				{/* Header */}
 				<div className="mb-8">
 					<div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
 						<div className="space-y-2">
@@ -162,9 +142,8 @@ export function StackDisplay({ stackState }: StackDisplayProps) {
 					</div>
 				</div>
 
-				{/* Command Section - Prominent Display */}
 				<div className="mb-8">
-					<div className="flex h-full flex-col justify-between rounded border border-border p-4">
+					<div className="rounded border border-border p-4">
 						<div className="mb-4 flex items-center justify-between">
 							<div className="flex items-center gap-2">
 								<Terminal className="h-4 w-4 text-primary" />
@@ -202,128 +181,37 @@ export function StackDisplay({ stackState }: StackDisplayProps) {
 							</DropdownMenu>
 						</div>
 
-						<div className="space-y-3">
-							<div className="flex items-center justify-between rounded border border-border p-3">
-								<div className="flex items-center gap-2 font-mono text-sm">
-									<span className="text-primary">$</span>
-									<span className="text-foreground">{command}</span>
-								</div>
-								<button
-									type="button"
-									onClick={copyCommand}
-									className="flex items-center gap-1 rounded border border-border px-2 py-1 text-xs hover:bg-muted/10"
-								>
-									{copied ? (
-										<Check className="h-3 w-3 text-primary" />
-									) : (
-										<Copy className="h-3 w-3" />
-									)}
-									{copied ? "COPIED!" : "COPY"}
-								</button>
+						<div className="flex items-center justify-between rounded border border-border p-3">
+							<div className="flex items-center gap-2 font-mono text-sm">
+								<span className="text-primary">$</span>
+								<span className="text-foreground">{command}</span>
 							</div>
+							<button
+								type="button"
+								onClick={copyCommand}
+								className="flex items-center gap-1 rounded border border-border px-2 py-1 text-xs hover:bg-muted/10"
+							>
+								{copied ? (
+									<Check className="h-3 w-3 text-primary" />
+								) : (
+									<Copy className="h-3 w-3" />
+								)}
+								{copied ? "COPIED!" : "COPY"}
+							</button>
 						</div>
 					</div>
 				</div>
 
-				{/* Tech Stack Grid */}
-				<div className="space-y-8">
-					{/* Tech Badges */}
-					<div className="space-y-4">
-						<h2 className="font-semibold text-2xl text-foreground">
-							Technologies
-						</h2>
-						<div className="flex flex-wrap gap-3">
-							{techBadges.length > 0 ? (
-								techBadges
-							) : (
-								<p className="text-muted-foreground">
-									No technologies selected
-								</p>
-							)}
-						</div>
-					</div>
-
-					{/* Configuration Details */}
-					<div className="space-y-4">
-						<h2 className="font-semibold text-2xl text-foreground">
-							Configuration
-						</h2>
-						<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-							{CATEGORY_ORDER.map((category) => {
-								const categoryKey = category as keyof StackState;
-								const value = stack[categoryKey];
-								const options = TECH_OPTIONS[category];
-								if (!options) return null;
-
-								const label = CATEGORY_LABELS[category] || category;
-
-								if (
-									Array.isArray(value) &&
-									(value.length === 0 ||
-										(value.length === 1 && value[0] === "none"))
-								) {
-									return null;
-								}
-
-								if (
-									!Array.isArray(value) &&
-									(value === "none" || value === "false")
-								) {
-									return null;
-								}
-
-								return (
-									<div
-										key={category}
-										className="rounded-lg border border-border bg-card p-4"
-									>
-										<h3 className="mb-3 font-medium text-foreground text-sm uppercase tracking-wide">
-											{label}
-										</h3>
-										<div className="space-y-2">
-											{Array.isArray(value)
-												? value
-														.filter((id) => id !== "none")
-														.map((id) => {
-															const tech = options.find((opt) => opt.id === id);
-															return tech ? (
-																<div
-																	key={id}
-																	className="flex items-center gap-2"
-																>
-																	{tech.icon && (
-																		<span className="text-lg">{tech.icon}</span>
-																	)}
-																	<span className="text-foreground text-sm">
-																		{tech.name}
-																	</span>
-																</div>
-															) : null;
-														})
-												: (() => {
-														const tech = options.find(
-															(opt) => opt.id === value,
-														);
-														return tech ? (
-															<div className="flex items-center gap-2">
-																{tech.icon && (
-																	<span className="text-lg">{tech.icon}</span>
-																)}
-																<span className="text-foreground text-sm">
-																	{tech.name}
-																</span>
-															</div>
-														) : (
-															<span className="text-foreground text-sm">
-																{String(value)}
-															</span>
-														);
-													})()}
-										</div>
-									</div>
-								);
-							})}
-						</div>
+				<div className="space-y-4">
+					<h2 className="font-semibold text-2xl text-foreground">
+						Technologies
+					</h2>
+					<div className="flex flex-wrap gap-3">
+						{techBadges.length > 0 ? (
+							techBadges
+						) : (
+							<p className="text-muted-foreground">No technologies selected</p>
+						)}
 					</div>
 				</div>
 			</div>
