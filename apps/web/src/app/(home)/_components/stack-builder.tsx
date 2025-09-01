@@ -1928,88 +1928,94 @@ const StackBuilder = () => {
 								</div>
 							</div>
 
-							<div className="mt-auto hidden border-border border-t pt-4 lg:flex lg:flex-col">
+							<div className="mt-auto border-border border-t pt-4">
 								<div className="space-y-3">
-									{/* Action Buttons */}
-									<div className="grid grid-cols-2 gap-1.5">
+									<div className="grid grid-cols-2 gap-2">
 										<button
 											type="button"
 											onClick={resetStack}
-											className="flex items-center gap-1 rounded border border-border px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
+											className="flex items-center justify-center gap-2 rounded-md border border-border bg-fd-background px-3 py-2 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
 											title="Reset to defaults"
 										>
-											<RefreshCw className="h-3 w-3" />
+											<RefreshCw className="h-3.5 w-3.5" />
 											Reset
 										</button>
 										<button
 											type="button"
 											onClick={getRandomStack}
-											className="flex items-center gap-1 rounded border border-border px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
+											className="flex items-center justify-center gap-2 rounded-md border border-border bg-fd-background px-3 py-2 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
 											title="Generate a random stack"
 										>
-											<Shuffle className="h-3 w-3" />
+											<Shuffle className="h-3.5 w-3.5" />
 											Random
 										</button>
-										{lastSavedStack && (
+									</div>
+
+									<div className="grid grid-cols-2 gap-2">
+										{lastSavedStack ? (
 											<button
 												type="button"
 												onClick={loadSavedStack}
-												className="flex items-center gap-1 rounded border border-border px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
+												className="flex items-center justify-center gap-2 rounded-md border border-border bg-fd-background px-3 py-2 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
 												title="Load saved preferences"
 											>
-												<Settings className="h-3 w-3" />
+												<Settings className="h-3.5 w-3.5" />
 												Load
 											</button>
+										) : (
+											<div className="h-9" />
 										)}
 										<button
 											type="button"
 											onClick={saveCurrentStack}
-											className="flex items-center gap-1 rounded border border-border px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
+											className="flex items-center justify-center gap-2 rounded-md border border-border bg-fd-background px-3 py-2 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
 											title="Save current preferences"
 										>
-											<Star className="h-3 w-3" />
+											<Star className="h-3.5 w-3.5" />
 											Save
 										</button>
-										<ShareDialog stackUrl={getStackUrl()} stackState={stack}>
-											<button
-												type="button"
-												className="col-span-2 flex items-center gap-1 rounded border border-border px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
-												title="Share your stack"
-											>
-												<Share2 className="h-3 w-3" />
-												Share
-											</button>
-										</ShareDialog>
 									</div>
 
-									<div>
-										<DropdownMenu>
-											<DropdownMenuTrigger asChild>
-												<button
-													type="button"
-													className="flex w-full items-center gap-1 rounded border border-border px-2 py-1 text-muted-foreground text-xs transition-colors hover:bg-muted"
+									<ShareDialog stackUrl={getStackUrl()} stackState={stack}>
+										<button
+											type="button"
+											className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-fd-background px-3 py-2 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
+											title="Share your stack"
+										>
+											<Share2 className="h-3.5 w-3.5" />
+											Share Stack
+										</button>
+									</ShareDialog>
+
+									<DropdownMenu>
+										<DropdownMenuTrigger asChild>
+											<button
+												type="button"
+												className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-fd-background px-3 py-2 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
+											>
+												<Zap className="h-3.5 w-3.5" />
+												Quick Preset
+												<ChevronDown className="ml-auto h-3.5 w-3.5" />
+											</button>
+										</DropdownMenuTrigger>
+										<DropdownMenuContent
+											align="end"
+											className="w-64 bg-fd-background"
+										>
+											{PRESET_TEMPLATES.map((preset) => (
+												<DropdownMenuItem
+													key={preset.id}
+													onClick={() => applyPreset(preset.id)}
+													className="flex flex-col items-start gap-1 p-3"
 												>
-													<Zap className="h-3 w-3" />
-													<span>Quick Preset</span>
-													<ChevronDown className="ml-auto h-3 w-3" />
-												</button>
-											</DropdownMenuTrigger>
-											<DropdownMenuContent align="end" className="w-64">
-												{PRESET_TEMPLATES.map((preset) => (
-													<DropdownMenuItem
-														key={preset.id}
-														onClick={() => applyPreset(preset.id)}
-														className="flex flex-col items-start gap-1 p-3"
-													>
-														<div className="font-medium text-sm">
-															{preset.name}
-														</div>
-														<div className="text-xs">{preset.description}</div>
-													</DropdownMenuItem>
-												))}
-											</DropdownMenuContent>
-										</DropdownMenu>
-									</div>
+													<div className="font-medium text-sm">
+														{preset.name}
+													</div>
+													<div className="text-xs">{preset.description}</div>
+												</DropdownMenuItem>
+											))}
+										</DropdownMenuContent>
+									</DropdownMenu>
 								</div>
 							</div>
 						</div>
