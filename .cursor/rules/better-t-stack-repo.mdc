@@ -1,0 +1,8 @@
+---
+alwaysApply: true
+---
+
+- use functional programming
+- use normal function syntax for functions do not use arrow functions
+- no emojis
+- use type syntax, dont use interface syntax for types

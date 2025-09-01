@@ -1,5 +1,5 @@
 import path from "node:path";
-import { isCancel, log, select, text } from "@clack/prompts";
+import { isCancel, log, select, spinner, text } from "@clack/prompts";
 import { consola } from "consola";
 import { execa } from "execa";
 import fs from "fs-extra";
@@ -12,7 +12,27 @@ import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
 
 type PrismaConfig = {
 	databaseUrl: string;
+	claimUrl?: string;
 };
+
+type CreateDbResponse = {
+	connectionString: string;
+	directConnectionString: string;
+	claimUrl: string;
+	deletionDate: string;
+	region: string;
+	name: string;
+	projectId: string;
+};
+
+const AVAILABLE_REGIONS = [
+	{ value: "ap-southeast-1", label: "Asia Pacific (Singapore)" },
+	{ value: "ap-northeast-1", label: "Asia Pacific (Tokyo)" },
+	{ value: "eu-central-1", label: "Europe (Frankfurt)" },
+	{ value: "eu-west-3", label: "Europe (Paris)" },
+	{ value: "us-east-1", label: "US East (N. Virginia)" },
+	{ value: "us-west-1", label: "US West (N. California)" },
+];
 
 async function setupWithCreateDb(
 	serverDir: string,
@@ -21,47 +41,48 @@ async function setupWithCreateDb(
 ) {
 	try {
 		log.info(
-			"Starting Prisma Postgres setup. Please follow the instructions below:",
+			"Starting Prisma Postgres setup with create-db. Please follow the instructions below:",
 		);
+
+		const selectedRegion = await select({
+			message: "Select your preferred region:",
+			options: AVAILABLE_REGIONS,
+			initialValue: "ap-southeast-1",
+		});
+
+		if (isCancel(selectedRegion)) return null;
 
 		const createDbCommand = getPackageExecutionCommand(
 			packageManager,
-			"create-db@latest -i",
+			`create-db@latest --json --region ${selectedRegion}`,
 		);
 
-		await execa(createDbCommand, {
+		const s = spinner();
+		s.start("Creating Prisma Postgres database...");
+
+		const { stdout } = await execa(createDbCommand, {
 			cwd: serverDir,
-			stdio: "inherit",
 			shell: true,
 		});
 
-		log.info(
+		s.stop("Database created successfully!");
+
+		let createDbResponse: CreateDbResponse;
+		try {
+			createDbResponse = JSON.parse(stdout) as CreateDbResponse;
+		} catch {
+			consola.error("Failed to parse create-db response");
+			return null;
+		}
+
+		const databaseUrl =
 			orm === "drizzle"
-				? pc.yellow(
-						"Please copy the database URL from the output above and append ?sslmode=require for Drizzle.",
-					)
-				: pc.yellow(
-						"Please copy the Prisma Postgres URL from the output above.",
-					),
-		);
-
-		const databaseUrl = await text({
-			message:
-				orm === "drizzle"
-					? "Paste your database URL (append ?sslmode=require for Drizzle):"
-					: "Paste your Prisma Postgres database URL:",
-			validate(value) {
-				if (!value) return "Please enter a database URL";
-				if (orm === "drizzle" && !value.includes("?sslmode=require")) {
-					return "Please append ?sslmode=require to your database URL when using Drizzle";
-				}
-			},
-		});
-
-		if (isCancel(databaseUrl)) return null;
+				? createDbResponse.directConnectionString
+				: createDbResponse.connectionString;
 
 		return {
-			databaseUrl: databaseUrl as string,
+			databaseUrl,
+			claimUrl: createDbResponse.claimUrl,
 		};
 	} catch (error) {
 		if (error instanceof Error) {
@@ -135,6 +156,15 @@ async function writeEnvFile(projectDir: string, config?: PrismaConfig) {
 				condition: true,
 			},
 		];
+
+		if (config?.claimUrl) {
+			variables.push({
+				key: "CLAIM_URL",
+				value: config.claimUrl,
+				condition: true,
+			});
+		}
+
 		await addEnvVariablesToFile(envPath, variables);
 	} catch (_error) {
 		consola.error("Failed to update environment configuration");
@@ -254,9 +284,18 @@ export async function setupPrismaPostgres(config: ProjectConfig) {
 				await addDotenvImportToPrismaConfig(projectDir);
 				await addPrismaAccelerateExtension(serverDir);
 			}
+
+			const connectionType =
+				orm === "drizzle" ? "direct connection" : "Prisma Accelerate";
 			log.success(
-				pc.green("Prisma Postgres database configured successfully!"),
+				pc.green(
+					`Prisma Postgres database configured successfully with ${connectionType}!`,
+				),
 			);
+
+			if (prismaConfig.claimUrl) {
+				log.info(pc.blue(`Claim URL saved to .env: ${prismaConfig.claimUrl}`));
+			}
 		} else {
 			await writeEnvFile(projectDir);
 			displayManualSetupInstructions();
