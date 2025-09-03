@@ -53,6 +53,11 @@ export const AddonsSchema = z
 	.describe("Additional addons");
 export type Addons = z.infer<typeof AddonsSchema>;
 
+export const DockerSchema = z
+	.enum(["app-web", "app-server", "redis", "none"])
+	.describe("Docker configuration");
+export type Docker = z.infer<typeof DockerSchema>;
+
 export const ExamplesSchema = z
 	.enum(["todo", "ai", "none"])
 	.describe("Example templates to include");
@@ -133,6 +138,7 @@ export type CreateInput = {
 	auth?: Auth;
 	frontend?: Frontend[];
 	addons?: Addons[];
+	docker?: Docker[];
 	examples?: Examples[];
 	git?: boolean;
 	packageManager?: PackageManager;
@@ -150,6 +156,7 @@ export type CreateInput = {
 
 export type AddInput = {
 	addons?: Addons[];
+	docker?: Docker[];
 	webDeploy?: WebDeploy;
 	serverDeploy?: ServerDeploy;
 	projectDir?: string;
@@ -171,6 +178,7 @@ export interface ProjectConfig {
 	runtime: Runtime;
 	frontend: Frontend[];
 	addons: Addons[];
+	docker: Docker[];
 	examples: Examples[];
 	auth: Auth;
 	git: boolean;
@@ -191,6 +199,7 @@ export interface BetterTStackConfig {
 	runtime: Runtime;
 	frontend: Frontend[];
 	addons: Addons[];
+	docker: Docker[];
 	examples: Examples[];
 	auth: Auth;
 	packageManager: PackageManager;

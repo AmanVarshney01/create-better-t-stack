@@ -18,6 +18,7 @@ const CORE_STACK_FLAGS = new Set([
 	"runtime",
 	"frontend",
 	"addons",
+	"docker",
 	"examples",
 	"auth",
 	"dbSetup",

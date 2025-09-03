@@ -102,6 +102,7 @@ export async function createProjectHandler(
 				runtime: "none",
 				frontend: [],
 				addons: [],
+				docker: [],
 				examples: [],
 				auth: "none",
 				git: false,
@@ -163,6 +164,9 @@ export async function createProjectHandler(
 
 		if (Object.keys(otherFlags).length > 0) {
 			log.info(pc.yellow("Using these pre-selected options:"));
+			// TODO: remove before pull request
+			console.log(otherFlags);
+
 			log.message(displayConfig(otherFlags));
 			log.message("");
 		}

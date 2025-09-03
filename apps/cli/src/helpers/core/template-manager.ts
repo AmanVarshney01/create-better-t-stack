@@ -4,6 +4,10 @@ import { glob } from "tinyglobby";
 import { PKG_ROOT } from "../../constants";
 import type { ProjectConfig } from "../../types";
 import { processTemplate } from "../../utils/template-processor";
+import {
+	checkFrontendSelected,
+	getEnabledFrontendFrameworksGroups,
+} from "../../utils/get-enabled-frontend";
 
 export async function processAndCopyFiles(
 	sourcePattern: string | string[],
@@ -647,6 +651,133 @@ export async function setupAddonsTemplate(
 		if (await fs.pathExists(addonSrcDir)) {
 			await processAndCopyFiles("**/*", addonSrcDir, addonDestDir, context);
 		} else {
+		}
+	}
+}
+
+export async function setupDockerTemplates(
+	projectDir: string,
+	context: ProjectConfig,
+) {
+	if (!context.docker || context.docker.length === 0) return;
+	for (const doc of context.docker) {
+		if (doc === "none") continue;
+
+		const isFrontendSelected = checkFrontendSelected(context.frontend);
+
+		if (doc === "app-web" && isFrontendSelected) {
+			const {
+				hasReactFramework,
+				hasVueFramework,
+				hasSvelteFramework,
+				hasSolidFramework,
+			} = getEnabledFrontendFrameworksGroups(context.frontend);
+
+			const webAppDir = path.join(projectDir, "apps/web");
+
+			if (!(await fs.pathExists(webAppDir))) {
+				continue;
+			}
+
+			if (hasReactFramework) {
+				const reactFramework = context.frontend.find((f) =>
+					[
+						"tanstack-router",
+						"react-router",
+						"tanstack-start",
+						"next",
+					].includes(f),
+				);
+
+				if (reactFramework) {
+					const frameworkSrcDir = path.join(
+						PKG_ROOT,
+						`templates/docker/frontend/react/${reactFramework}`,
+					);
+					if (await fs.pathExists(frameworkSrcDir)) {
+						await processAndCopyFiles(
+							"**/*",
+							frameworkSrcDir,
+							webAppDir,
+							context,
+						);
+					}
+				}
+			}
+
+			if (hasVueFramework) {
+				const veuFramework = context.frontend.find((f) => ["nuxt"].includes(f));
+				if (veuFramework) {
+					const frameworkSrcDir = path.join(
+						PKG_ROOT,
+						`templates/docker/frontend/${veuFramework}`,
+					);
+					if (await fs.pathExists(frameworkSrcDir)) {
+						await processAndCopyFiles(
+							"**/*",
+							frameworkSrcDir,
+							webAppDir,
+							context,
+						);
+					}
+				}
+			}
+
+			if (hasSvelteFramework) {
+				const svelteFramework = context.frontend.find((f) =>
+					["nuxt"].includes(f),
+				);
+				if (svelteFramework) {
+					const frameworkSrcDir = path.join(
+						PKG_ROOT,
+						`templates/docker/frontend/${svelteFramework}`,
+					);
+					if (await fs.pathExists(frameworkSrcDir)) {
+						await processAndCopyFiles(
+							"**/*",
+							frameworkSrcDir,
+							webAppDir,
+							context,
+						);
+					}
+				}
+			}
+
+			if (hasSolidFramework) {
+				const solidFramework = context.frontend.find((f) =>
+					["solid"].includes(f),
+				);
+				if (solidFramework) {
+					const frameworkSrcDir = path.join(
+						PKG_ROOT,
+						`templates/docker/frontend/${solidFramework}`,
+					);
+					if (await fs.pathExists(frameworkSrcDir)) {
+						await processAndCopyFiles(
+							"**/*",
+							frameworkSrcDir,
+							webAppDir,
+							context,
+						);
+					}
+				}
+			}
+		}
+
+		if (doc === "app-server" && context.backend !== "convex") {
+			const serverAppDir = path.join(projectDir, "apps/server");
+			if (!(await fs.pathExists(serverAppDir))) {
+				continue;
+			}
+
+			const serverBaseDir = path.join(
+				PKG_ROOT,
+				`templates/docker/backend/server/${context.backend}`,
+			);
+
+			if (await fs.pathExists(serverBaseDir)) {
+				await processAndCopyFiles("**/*", serverBaseDir, serverAppDir, context);
+			}
 		}
 	}
 }

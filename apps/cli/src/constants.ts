@@ -1,6 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Addons, Frontend, ProjectConfig } from "./types";
+import type { Addons, Docker, Frontend, ProjectConfig } from "./types";
 import { getUserPkgManager } from "./utils/get-package-manager";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -15,6 +15,7 @@ export const DEFAULT_CONFIG_BASE = {
 	orm: "drizzle",
 	auth: "better-auth",
 	addons: ["turborepo"],
+	docker: ["none"],
 	examples: [],
 	git: true,
 	install: true,
@@ -33,6 +34,7 @@ export function getDefaultConfig(): ProjectConfig {
 		packageManager: getUserPkgManager(),
 		frontend: [...DEFAULT_CONFIG_BASE.frontend],
 		addons: [...DEFAULT_CONFIG_BASE.addons],
+		docker: [...DEFAULT_CONFIG_BASE.docker],
 		examples: [...DEFAULT_CONFIG_BASE.examples],
 	};
 }
@@ -166,3 +168,10 @@ export const ADDON_COMPATIBILITY: Record<Addons, readonly Frontend[]> = {
 	fumadocs: [],
 	none: [],
 } as const;
+
+export const DOCKER_COMPATIBILITY: Record<Docker, readonly Frontend[]> = {
+	"app-server": ["tanstack-router", "react-router", "solid"],
+	"app-web": ["tanstack-router", "react-router", "solid"],
+	redis: [],
+	none: [],
+};
