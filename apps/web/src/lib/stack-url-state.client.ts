@@ -1,18 +1,21 @@
+"use client";
 import {
-	createLoader,
 	parseAsArrayOf,
 	parseAsString,
 	parseAsStringEnum,
-} from "nuqs/server";
+	useQueryStates,
+} from "nuqs";
 import { DEFAULT_STACK, type StackState, TECH_OPTIONS } from "@/lib/constant";
+import { stackUrlKeys } from "./stack-url-keys";
 
 const getValidIds = (category: keyof typeof TECH_OPTIONS): string[] => {
 	return TECH_OPTIONS[category]?.map((opt) => opt.id) ?? [];
 };
 
-// Server-side parsers (same as client-side but imported from nuqs/server)
-const serverStackParsers = {
-	projectName: parseAsString.withDefault(DEFAULT_STACK.projectName),
+export const stackParsers = {
+	projectName: parseAsString.withDefault(
+		DEFAULT_STACK.projectName || "my-better-t-app",
+	),
 	webFrontend: parseAsArrayOf(parseAsString).withDefault(
 		DEFAULT_STACK.webFrontend,
 	),
@@ -60,6 +63,26 @@ const serverStackParsers = {
 	).withDefault(DEFAULT_STACK.serverDeploy),
 };
 
-export const loadStackParams = createLoader(serverStackParsers);
+export const stackQueryStatesOptions = {
+	history: "replace" as const,
+	shallow: false,
+	urlKeys: stackUrlKeys,
+	clearOnDefault: true,
+};
 
-export type LoadedStackState = Awaited<ReturnType<typeof loadStackParams>>;
+export function useStackState() {
+	const [stack, setStack] = useQueryStates(
+		stackParsers,
+		stackQueryStatesOptions,
+	);
+
+	const updateStack = async (
+		updates: Partial<StackState> | ((prev: StackState) => Partial<StackState>),
+	) => {
+		const newStack = typeof updates === "function" ? updates(stack) : updates;
+		const finalStack = { ...stack, ...newStack };
+		await setStack(finalStack);
+	};
+
+	return [stack, updateStack] as const;
+}

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { loadStackParams } from "@/lib/stack-server";
+import { loadStackParams } from "@/lib/stack-url-state";
 import { StackDisplay } from "./_components/stack-display";
 
 interface StackPageProps {

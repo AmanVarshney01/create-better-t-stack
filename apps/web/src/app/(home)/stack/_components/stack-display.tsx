@@ -1,50 +1,42 @@
 "use client";
 
-import { Check, ChevronDown, Copy, Edit, Share2, Terminal } from "lucide-react";
+import { Check, Copy, Edit, Share2, Terminal } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { ShareDialog } from "@/components/ui/share-dialog";
 import { TechBadge } from "@/components/ui/tech-badge";
 import { type StackState, TECH_OPTIONS } from "@/lib/constant";
-import type { LoadedStackState } from "@/lib/stack-server";
+import type { LoadedStackState } from "@/lib/stack-url-state";
 import {
 	CATEGORY_ORDER,
+	generateStackCommand,
+	generateStackSharingUrl,
 	generateStackSummary,
-	generateStackUrl,
+	generateStackUrlFromState,
 } from "@/lib/stack-utils";
 import { cn } from "@/lib/utils";
-import PackageIcon from "../../_components/icons";
 
 interface StackDisplayProps {
 	stackState: LoadedStackState;
 }
 
 export function StackDisplay({ stackState }: StackDisplayProps) {
-	const pathname = usePathname();
-	const searchParamsHook = useSearchParams();
 	const [copied, setCopied] = useState(false);
-	const [selectedPM, setSelectedPM] = useState<"npm" | "pnpm" | "bun">("bun");
+	const [stackUrl, setStackUrl] = useState<string>("");
+	const [editUrl, setEditUrl] = useState<string>("");
 
-	const stackUrl = generateStackUrl(pathname, searchParamsHook);
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			setStackUrl(generateStackSharingUrl(stackState, window.location.origin));
+			setEditUrl(generateStackUrlFromState(stackState, window.location.origin));
+		}
+	}, [stackState]);
+
 	const stack = stackState;
 	const stackSummary = generateStackSummary(stack);
 
-	const commands = {
-		npm: "npx create-better-t-stack@latest",
-		pnpm: "pnpm create better-t-stack@latest",
-		bun: "bun create better-t-stack@latest",
-	};
-
-	const command = commands[selectedPM];
+	const command = generateStackCommand(stackState);
 
 	const techBadges = (() => {
 		const badges: React.ReactNode[] = [];
@@ -117,102 +109,107 @@ export function StackDisplay({ stackState }: StackDisplayProps) {
 	return (
 		<main className="mx-auto min-h-svh max-w-[1280px]">
 			<div className="mx-auto flex flex-col gap-8 px-4 pt-12">
-				<div className="mb-8">
-					<div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-						<div className="space-y-2">
-							<h1 className="font-bold text-4xl text-foreground">Tech Stack</h1>
-							<p className="text-lg text-muted-foreground">{stackSummary}</p>
-						</div>
+				<div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
+					<div className="flex items-center gap-2">
+						<Terminal className="h-5 w-5 text-primary" />
+						<span className="font-bold text-lg sm:text-xl">
+							STACK_DISPLAY.SH
+						</span>
+					</div>
+					<div className="hidden h-px flex-1 bg-border sm:block" />
+					<span className="w-full text-right text-muted-foreground text-xs sm:w-auto sm:text-left">
+						[{techBadges.length} DEPENDENCIES]
+					</span>
+				</div>
 
-						<div className="flex items-center gap-3">
-							<Link href={`/new?${searchParamsHook.toString()}`}>
-								<Button variant="outline" size="sm">
-									<Edit className="h-4 w-4" />
-									Edit Stack
-								</Button>
-							</Link>
-
-							<ShareDialog stackUrl={stackUrl} stackState={stackState}>
-								<Button variant="outline" size="sm">
-									<Share2 className="h-4 w-4" />
-									Share
-								</Button>
-							</ShareDialog>
-						</div>
+				<div className="space-y-2 rounded border border-border bg-muted/20 p-4">
+					<div className="flex items-center gap-2 text-sm">
+						<span className="text-primary">$</span>
+						<span className="text-foreground">./display_stack --summary</span>
+					</div>
+					<div className="flex items-center gap-2 text-sm">
+						<span className="text-primary">&gt;</span>
+						<span className="text-muted-foreground">{stackSummary}</span>
+					</div>
+					<div className="flex items-center gap-2 text-sm">
+						<span className="text-primary">$</span>
+						<span className="text-muted-foreground">
+							Stack loaded successfully
+						</span>
 					</div>
 				</div>
 
-				<div className="mb-8">
-					<div className="rounded border border-border p-4">
-						<div className="mb-4 flex items-center justify-between">
-							<div className="flex items-center gap-2">
-								<Terminal className="h-4 w-4 text-primary" />
-								<span className="font-semibold text-sm">GENERATE_COMMAND</span>
-							</div>
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<button
-										type="button"
-										className="flex items-center gap-2 rounded border border-border px-3 py-1.5 text-xs transition-colors hover:bg-muted/10"
-									>
-										<PackageIcon pm={selectedPM} className="h-3 w-3" />
-										<span>{selectedPM.toUpperCase()}</span>
-										<ChevronDown className="h-3 w-3" />
-									</button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent align="end">
-									{(["bun", "pnpm", "npm"] as const).map((pm) => (
-										<DropdownMenuItem
-											key={pm}
-											onClick={() => setSelectedPM(pm)}
-											className={cn(
-												"flex items-center gap-2",
-												selectedPM === pm && "bg-accent text-background",
-											)}
-										>
-											<PackageIcon pm={pm} className="h-3 w-3" />
-											<span>{pm.toUpperCase()}</span>
-											{selectedPM === pm && (
-												<Check className="ml-auto h-3 w-3 text-background" />
-											)}
-										</DropdownMenuItem>
-									))}
-								</DropdownMenuContent>
-							</DropdownMenu>
-						</div>
+				<div className="flex items-center gap-3">
+					<Link href={editUrl}>
+						<button
+							type="button"
+							className="flex items-center gap-2 rounded border border-border bg-fd-background px-3 py-2 font-mono text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
+						>
+							<Edit className="h-3 w-3" />
+							<span>./edit --stack</span>
+						</button>
+					</Link>
 
-						<div className="flex items-center justify-between rounded border border-border p-3">
-							<div className="flex items-center gap-2 font-mono text-sm">
-								<span className="text-primary">$</span>
-								<span className="text-foreground">{command}</span>
-							</div>
-							<button
-								type="button"
-								onClick={copyCommand}
-								className="flex items-center gap-1 rounded border border-border px-2 py-1 text-xs hover:bg-muted/10"
-							>
-								{copied ? (
-									<Check className="h-3 w-3 text-primary" />
-								) : (
-									<Copy className="h-3 w-3" />
-								)}
-								{copied ? "COPIED!" : "COPY"}
-							</button>
+					<ShareDialog stackUrl={stackUrl} stackState={stackState}>
+						<button
+							type="button"
+							className="flex items-center gap-2 rounded border border-border bg-fd-background px-3 py-2 font-mono text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
+						>
+							<Share2 className="h-3 w-3" />
+							<span>./share --config</span>
+						</button>
+					</ShareDialog>
+				</div>
+
+				<div className="space-y-4">
+					<div className="flex items-center gap-2">
+						<span className="text-primary text-xs">▶</span>
+						<span className="font-mono font-semibold text-foreground text-sm">
+							GENERATE_COMMAND
+						</span>
+					</div>
+
+					<div className="flex items-center justify-between rounded border border-border bg-muted/20 p-3">
+						<div className="flex items-center gap-2 font-mono text-sm">
+							<span className="text-primary">$</span>
+							<span className="text-foreground">{command}</span>
 						</div>
+						<button
+							type="button"
+							onClick={copyCommand}
+							className={cn(
+								"flex items-center gap-1 rounded border px-2 py-1 font-mono text-xs transition-colors",
+								copied
+									? "border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400"
+									: "border-border hover:bg-muted/10",
+							)}
+						>
+							{copied ? (
+								<Check className="h-3 w-3" />
+							) : (
+								<Copy className="h-3 w-3" />
+							)}
+							{copied ? "COPIED!" : "COPY"}
+						</button>
 					</div>
 				</div>
 
 				<div className="space-y-4">
-					<h2 className="font-semibold text-2xl text-foreground">
-						Technologies
-					</h2>
-					<div className="flex flex-wrap gap-3">
-						{techBadges.length > 0 ? (
-							techBadges
-						) : (
-							<p className="text-muted-foreground">No technologies selected</p>
-						)}
+					<div className="flex items-center gap-2">
+						<span className="text-primary text-xs">▶</span>
+						<span className="font-mono font-semibold text-foreground text-sm">
+							DEPENDENCIES ({techBadges.length})
+						</span>
 					</div>
+
+					{techBadges.length > 0 ? (
+						<div className="flex flex-wrap gap-3">{techBadges}</div>
+					) : (
+						<div className="flex items-center gap-2 text-muted-foreground">
+							<span className="text-primary">$</span>
+							<span>No technologies selected</span>
+						</div>
+					)}
 				</div>
 			</div>
 		</main>

@@ -705,7 +705,7 @@ export const PRESET_TEMPLATES = [
 ];
 
 export type StackState = {
-	projectName: string;
+	projectName: string | null;
 	webFrontend: string[];
 	nativeFrontend: string[];
 	runtime: string;

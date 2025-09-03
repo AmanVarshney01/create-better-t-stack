@@ -1,21 +1,10 @@
 import {
-	parseAsArrayOf,
-	parseAsString,
-	parseAsStringEnum,
-	useQueryState,
-	useQueryStates,
-} from "nuqs";
-import {
 	DEFAULT_STACK,
 	isStackDefault,
 	type StackState,
 	TECH_OPTIONS,
 } from "@/lib/constant";
-import {
-	stackParsers,
-	stackQueryStatesOptions,
-	stackUrlKeys,
-} from "@/lib/stack-url-state";
+import { stackUrlKeys } from "@/lib/stack-url-keys";
 
 const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
 	"webFrontend",
@@ -35,48 +24,6 @@ const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
 	"git",
 	"install",
 ];
-
-const getStackKeyFromUrlKey = (urlKey: string): keyof StackState | null =>
-	(Object.entries(stackUrlKeys).find(
-		([, value]) => value === urlKey,
-	)?.[0] as keyof StackState) || null;
-
-const isDefaultStack = (stack: StackState): boolean =>
-	Object.entries(DEFAULT_STACK).every(
-		([key, _defaultValue]) =>
-			key === "projectName" ||
-			isStackDefault(
-				stack,
-				key as keyof StackState,
-				stack[key as keyof StackState],
-			),
-	);
-
-export function parseSearchParamsToStack(
-	searchParams: Record<string, string | string[] | undefined>,
-): StackState {
-	const parsedStack: StackState = { ...DEFAULT_STACK };
-
-	Object.entries(searchParams)
-		.filter(([key]) => !key.startsWith("utm_"))
-		.forEach(([key, value]) => {
-			const stackKey = getStackKeyFromUrlKey(key);
-			if (stackKey && value !== undefined) {
-				try {
-					const parser = stackParsers[stackKey];
-					if (parser) {
-						parsedStack[stackKey] = parser.parseServerSide(
-							Array.isArray(value) ? value[0] : value,
-						) as never;
-					}
-				} catch (error) {
-					console.warn(`Failed to parse ${key}:`, error);
-				}
-			}
-		});
-
-	return parsedStack;
-}
 
 export function generateStackSummary(stack: StackState): string {
 	const selectedTechs = CATEGORY_ORDER.flatMap((category) => {
@@ -98,7 +45,7 @@ export function generateStackSummary(stack: StackState): string {
 				.filter(Boolean) as string[];
 		};
 
-		return getTechNames(selectedValue);
+		return selectedValue ? getTechNames(selectedValue) : [];
 	});
 
 	return selectedTechs.length > 0 ? selectedTechs.join(" • ") : "Custom stack";
@@ -117,7 +64,17 @@ export function generateStackCommand(stack: StackState): string {
 		] || packageManagerCommands.default;
 	const projectName = stack.projectName || "my-better-t-app";
 
-	if (isDefaultStack(stack)) {
+	const isStackDefaultExceptProjectName = Object.entries(DEFAULT_STACK).every(
+		([key, _defaultValue]) =>
+			key === "projectName" ||
+			isStackDefault(
+				stack,
+				key as keyof StackState,
+				stack[key as keyof StackState],
+			),
+	);
+
+	if (isStackDefaultExceptProjectName) {
 		return `${base} ${projectName} --yes`;
 	}
 
@@ -165,170 +122,46 @@ export function generateStackCommand(stack: StackState): string {
 	return `${base} ${projectName} ${flags.join(" ")}`;
 }
 
-// URL generation functions
-export function generateStackUrl(
-	pathname: string,
-	searchParams: URLSearchParams,
-): string {
-	const searchString = searchParams.toString();
-	return `https://better-t-stack.dev${pathname}${searchString ? `?${searchString}` : ""}`;
-}
-
 export function generateStackUrlFromState(
 	stack: StackState,
 	baseUrl?: string,
 ): string {
-	const origin =
-		baseUrl ||
-		(typeof window !== "undefined"
-			? window.location.origin
-			: "https://better-t-stack.dev");
-
-	if (isDefaultStack(stack)) {
-		return `${origin}/stack`;
-	}
+	const origin = baseUrl || "https://better-t-stack.dev";
 
 	const stackParams = new URLSearchParams();
 	Object.entries(stackUrlKeys).forEach(([stackKey, urlKey]) => {
 		const value = stack[stackKey as keyof StackState];
 		if (value !== undefined) {
 			stackParams.set(
-				urlKey,
+				urlKey as string,
 				Array.isArray(value) ? value.join(",") : String(value),
 			);
 		}
 	});
 
-	return `${origin}/stack?${stackParams.toString()}`;
+	const searchString = stackParams.toString();
+	return `${origin}/new${searchString ? `?${searchString}` : ""}`;
 }
 
-// Primary hook - simplified approach
-export function useStackState() {
-	const [stack, setStack] = useQueryStates(
-		stackParsers,
-		stackQueryStatesOptions,
-	);
+export function generateStackSharingUrl(
+	stack: StackState,
+	baseUrl?: string,
+): string {
+	const origin = baseUrl || "https://better-t-stack.dev";
 
-	const updateStack = async (
-		updates: Partial<StackState> | ((prev: StackState) => Partial<StackState>),
-	) => {
-		const newStack = typeof updates === "function" ? updates(stack) : updates;
-		const finalStack = { ...stack, ...newStack };
+	const stackParams = new URLSearchParams();
+	Object.entries(stackUrlKeys).forEach(([stackKey, urlKey]) => {
+		const value = stack[stackKey as keyof StackState];
+		if (value !== undefined) {
+			stackParams.set(
+				urlKey as string,
+				Array.isArray(value) ? value.join(",") : String(value),
+			);
+		}
+	});
 
-		await setStack(isDefaultStack(finalStack) ? null : finalStack);
-	};
-
-	return [stack, updateStack] as const;
-}
-
-// Individual state hook - kept for backward compatibility but simplified
-export function useIndividualStackStates() {
-	const getValidIds = (category: keyof typeof TECH_OPTIONS) =>
-		TECH_OPTIONS[category]?.map((opt) => opt.id) ?? [];
-
-	// Individual query states
-	const queryStates = {
-		projectName: useQueryState(
-			"name",
-			parseAsString.withDefault(DEFAULT_STACK.projectName),
-		),
-		webFrontend: useQueryState(
-			"fe-w",
-			parseAsArrayOf(parseAsString).withDefault(DEFAULT_STACK.webFrontend),
-		),
-		nativeFrontend: useQueryState(
-			"fe-n",
-			parseAsArrayOf(parseAsString).withDefault(DEFAULT_STACK.nativeFrontend),
-		),
-		runtime: useQueryState(
-			"rt",
-			parseAsStringEnum(getValidIds("runtime")).withDefault(
-				DEFAULT_STACK.runtime,
-			),
-		),
-		backend: useQueryState(
-			"be",
-			parseAsStringEnum(getValidIds("backend")).withDefault(
-				DEFAULT_STACK.backend,
-			),
-		),
-		api: useQueryState(
-			"api",
-			parseAsStringEnum(getValidIds("api")).withDefault(DEFAULT_STACK.api),
-		),
-		database: useQueryState(
-			"db",
-			parseAsStringEnum(getValidIds("database")).withDefault(
-				DEFAULT_STACK.database,
-			),
-		),
-		orm: useQueryState(
-			"orm",
-			parseAsStringEnum(getValidIds("orm")).withDefault(DEFAULT_STACK.orm),
-		),
-		dbSetup: useQueryState(
-			"dbs",
-			parseAsStringEnum(getValidIds("dbSetup")).withDefault(
-				DEFAULT_STACK.dbSetup,
-			),
-		),
-		auth: useQueryState(
-			"au",
-			parseAsStringEnum(getValidIds("auth")).withDefault(DEFAULT_STACK.auth),
-		),
-		packageManager: useQueryState(
-			"pm",
-			parseAsStringEnum(getValidIds("packageManager")).withDefault(
-				DEFAULT_STACK.packageManager,
-			),
-		),
-		addons: useQueryState(
-			"add",
-			parseAsArrayOf(parseAsString).withDefault(DEFAULT_STACK.addons),
-		),
-		examples: useQueryState(
-			"ex",
-			parseAsArrayOf(parseAsString).withDefault(DEFAULT_STACK.examples),
-		),
-		git: useQueryState(
-			"git",
-			parseAsStringEnum(["true", "false"] as const).withDefault(
-				DEFAULT_STACK.git as "true" | "false",
-			),
-		),
-		install: useQueryState(
-			"i",
-			parseAsStringEnum(["true", "false"] as const).withDefault(
-				DEFAULT_STACK.install as "true" | "false",
-			),
-		),
-		webDeploy: useQueryState(
-			"wd",
-			parseAsStringEnum(getValidIds("webDeploy")).withDefault(
-				DEFAULT_STACK.webDeploy,
-			),
-		),
-		serverDeploy: useQueryState(
-			"sd",
-			parseAsStringEnum(getValidIds("serverDeploy")).withDefault(
-				DEFAULT_STACK.serverDeploy,
-			),
-		),
-	};
-
-	const stack: StackState = Object.fromEntries(
-		Object.entries(queryStates).map(([key, [value]]) => [key, value]),
-	) as StackState;
-
-	const setStack = async (updates: Partial<StackState>) => {
-		const promises = Object.entries(updates).map(([key, value]) => {
-			const setter = queryStates[key as keyof typeof queryStates]?.[1];
-			return setter?.(value as never);
-		});
-		await Promise.all(promises.filter(Boolean));
-	};
-
-	return [stack, setStack] as const;
+	const searchString = stackParams.toString();
+	return `${origin}/stack${searchString ? `?${searchString}` : ""}`;
 }
 
 export { CATEGORY_ORDER };
