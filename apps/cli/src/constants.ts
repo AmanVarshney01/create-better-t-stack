@@ -61,8 +61,8 @@ export const dependencyVersionMap = {
 
 	mysql2: "^3.14.0",
 
-	"@prisma/client": "^6.13.0",
-	prisma: "^6.13.0",
+	"@prisma/client": "^6.15.0",
+	prisma: "^6.15.0",
 	"@prisma/extension-accelerate": "^2.0.2",
 
 	mongoose: "^8.14.0",
@@ -110,9 +110,9 @@ export const dependencyVersionMap = {
 	"@ai-sdk/react": "^2.0.9",
 	streamdown: "^1.1.6",
 
-	"@orpc/server": "^1.8.4",
-	"@orpc/client": "^1.8.4",
-	"@orpc/tanstack-query": "^1.8.4",
+	"@orpc/server": "^1.8.6",
+	"@orpc/client": "^1.8.6",
+	"@orpc/tanstack-query": "^1.8.6",
 
 	"@trpc/tanstack-react-query": "^11.5.0",
 	"@trpc/server": "^11.5.0",
