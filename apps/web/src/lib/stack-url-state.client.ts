@@ -14,7 +14,7 @@ const getValidIds = (category: keyof typeof TECH_OPTIONS): string[] => {
 
 export const stackParsers = {
 	projectName: parseAsString.withDefault(
-		DEFAULT_STACK.projectName || "my-better-t-app",
+		DEFAULT_STACK.projectName ?? "my-better-t-app",
 	),
 	webFrontend: parseAsArrayOf(parseAsString).withDefault(
 		DEFAULT_STACK.webFrontend,

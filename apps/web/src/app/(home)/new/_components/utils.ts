@@ -5,7 +5,7 @@ import {
 } from "@/lib/constant";
 import { CATEGORY_ORDER } from "@/lib/stack-utils";
 
-export const validateProjectName = (name: string): string | undefined => {
+export function validateProjectName(name: string): string | undefined {
 	const INVALID_CHARS = ["<", ">", ":", '"', "|", "?", "*"];
 	const MAX_LENGTH = 255;
 
@@ -28,7 +28,7 @@ export const validateProjectName = (name: string): string | undefined => {
 		return "Project name is reserved";
 	}
 	return undefined;
-};
+}
 
 export const hasPWACompatibleFrontend = (webFrontend: string[]) =>
 	webFrontend.some((f) =>
@@ -280,7 +280,6 @@ export const analyzeStackCompatibility = (
 					message: `ORM set to 'Prisma' (${message})`,
 				});
 			}
-			// MongoDB Atlas is the only setup option that works with MongoDB
 			if (
 				nextStack.dbSetup !== "mongodb-atlas" &&
 				nextStack.dbSetup !== "none"
@@ -302,7 +301,6 @@ export const analyzeStackCompatibility = (
 				});
 			}
 		} else {
-			// Handle cases where ORM is "none" but a database is selected
 			if (nextStack.orm === "none") {
 				notes.database.notes.push(
 					"Database requires an ORM. Drizzle will be selected.",
@@ -573,10 +571,8 @@ export const analyzeStackCompatibility = (
 				}
 			}
 
-			// Handle cases where dbSetup is selected but database is "none"
 			if (nextStack.dbSetup !== "none" && nextStack.database === "none") {
-				// Select appropriate database based on dbSetup
-				let selectedDatabase = "postgres"; // Default fallback
+				let selectedDatabase = "postgres";
 				let databaseName = "PostgreSQL";
 
 				if (nextStack.dbSetup === "turso" || nextStack.dbSetup === "d1") {
@@ -1315,7 +1311,6 @@ export const getDisabledReason = (
 		if (finalStack.orm !== "prisma" && finalStack.orm !== "mongoose") {
 			return "MongoDB requires Prisma or Mongoose ORM. Select one of these ORMs first.";
 		}
-		// MongoDB Atlas is the only setup option that works with MongoDB
 		if (
 			finalStack.dbSetup !== "mongodb-atlas" &&
 			finalStack.dbSetup !== "none"
@@ -1331,7 +1326,6 @@ export const getDisabledReason = (
 		if (finalStack.dbSetup === "mongodb-atlas") {
 			return "MongoDB Atlas setup requires MongoDB database. Select MongoDB first.";
 		}
-		// SQLite works with Drizzle and Prisma, but not Mongoose
 		if (finalStack.orm === "mongoose") {
 			return "SQLite database is not compatible with Mongoose ORM. Mongoose only works with MongoDB. Use Drizzle or Prisma ORM instead.";
 		}
@@ -1344,7 +1338,6 @@ export const getDisabledReason = (
 		if (finalStack.dbSetup === "mongodb-atlas") {
 			return "MongoDB Atlas setup requires MongoDB database. Select MongoDB first.";
 		}
-		// PostgreSQL works with Drizzle and Prisma, but not Mongoose
 		if (finalStack.orm === "mongoose") {
 			return "PostgreSQL database is not compatible with Mongoose ORM. Mongoose only works with MongoDB. Use Drizzle or Prisma ORM instead.";
 		}
@@ -1357,7 +1350,6 @@ export const getDisabledReason = (
 		if (finalStack.dbSetup === "mongodb-atlas") {
 			return "MongoDB Atlas setup requires MongoDB database. Select MongoDB first.";
 		}
-		// MySQL works with Drizzle and Prisma, but not Mongoose
 		if (finalStack.orm === "mongoose") {
 			return "MySQL database is not compatible with Mongoose ORM. Mongoose only works with MongoDB. Use Drizzle or Prisma ORM instead.";
 		}
@@ -1373,7 +1365,6 @@ export const getDisabledReason = (
 	}
 
 	if (category === "orm" && optionId === "none") {
-		// Prevent selecting "none" ORM when a database is selected
 		if (finalStack.database !== "none") {
 			return "Cannot set ORM to 'None' when a database is selected. Select an appropriate ORM (Drizzle, Prisma, or Mongoose) or set database to 'None'.";
 		}
@@ -1383,14 +1374,12 @@ export const getDisabledReason = (
 		if (finalStack.database === "mongodb") {
 			return "Drizzle ORM does not support MongoDB. Use Prisma or Mongoose ORM instead.";
 		}
-		// Drizzle works with SQLite, PostgreSQL, and MySQL
 		if (finalStack.database === "none") {
 			return "Drizzle ORM requires a database. Select a database first (SQLite, PostgreSQL, or MySQL).";
 		}
 	}
 
 	if (category === "orm" && optionId === "prisma") {
-		// Prisma works with all databases, but requires one to be selected
 		if (finalStack.database === "none") {
 			return "Prisma ORM requires a database. Select a database first (SQLite, PostgreSQL, MySQL, or MongoDB).";
 		}
@@ -1426,7 +1415,6 @@ export const getDisabledReason = (
 		}
 	}
 
-	// dbSetup-specific database validation rules
 	if (category === "dbSetup" && optionId === "turso") {
 		if (finalStack.database !== "sqlite") {
 			return "Turso requires SQLite database. Select SQLite first.";
@@ -1457,9 +1445,7 @@ export const getDisabledReason = (
 		}
 	}
 
-	// Database-specific dbSetup validation rules
 	if (category === "database" && optionId === "sqlite") {
-		// SQLite only works with turso, d1, or none
 		if (
 			finalStack.dbSetup !== "none" &&
 			finalStack.dbSetup !== "turso" &&
@@ -1470,7 +1456,6 @@ export const getDisabledReason = (
 	}
 
 	if (category === "database" && optionId === "postgres") {
-		// PostgreSQL only works with docker, prisma-postgres, neon, supabase, or none
 		if (
 			finalStack.dbSetup !== "none" &&
 			finalStack.dbSetup !== "docker" &&
@@ -1483,14 +1468,12 @@ export const getDisabledReason = (
 	}
 
 	if (category === "database" && optionId === "mysql") {
-		// MySQL only works with docker or none
 		if (finalStack.dbSetup !== "none" && finalStack.dbSetup !== "docker") {
 			return "MySQL database only works with Docker or Basic Setup. Select one of these options or change database.";
 		}
 	}
 
 	if (category === "database" && optionId === "mongodb") {
-		// MongoDB only works with mongodb-atlas or none
 		if (
 			finalStack.dbSetup !== "none" &&
 			finalStack.dbSetup !== "mongodb-atlas"
@@ -1499,7 +1482,6 @@ export const getDisabledReason = (
 		}
 	}
 
-	// General rule: All dbSetup options (except "none") require a database
 	if (category === "dbSetup" && optionId !== "none") {
 		if (finalStack.database === "none") {
 			return "Database setup requires a database. Select a database first or set DB Setup to 'None'.";

@@ -15,7 +15,14 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import type React from "react";
-import { startTransition, useEffect, useMemo, useRef, useState } from "react";
+import {
+	startTransition,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { toast } from "sonner";
 import {
 	DropdownMenu,
@@ -73,20 +80,34 @@ const StackBuilder = () => {
 		[stack],
 	);
 
-	// Get project name error for display
 	const projectNameError = validateProjectName(stack.projectName || "");
+
+	const formatProjectName = useCallback((name: string): string => {
+		return name.replace(/\s+/g, "-");
+	}, []);
+
+	const getStackUrl = (): string => {
+		const stackToUse = compatibilityAnalysis.adjustedStack || stack;
+		const projectName = stackToUse.projectName || "my-better-t-app";
+		const formattedProjectName = formatProjectName(projectName);
+		const stackWithProjectName = {
+			...stackToUse,
+			projectName: formattedProjectName,
+		};
+		return generateStackSharingUrl(stackWithProjectName);
+	};
 
 	const getRandomStack = () => {
 		const randomStack: Partial<StackState> = {};
-
 		for (const category of CATEGORY_ORDER) {
 			const options = TECH_OPTIONS[category as keyof typeof TECH_OPTIONS] || [];
 			if (options.length === 0) continue;
-
 			const catKey = category as keyof StackState;
-
 			if (
-				["webFrontend", "nativeFrontend", "addons", "examples"].includes(catKey)
+				catKey === "webFrontend" ||
+				catKey === "nativeFrontend" ||
+				catKey === "addons" ||
+				catKey === "examples"
 			) {
 				if (catKey === "webFrontend" || catKey === "nativeFrontend") {
 					const randomIndex = Math.floor(Math.random() * options.length);
@@ -116,21 +137,12 @@ const StackBuilder = () => {
 			}
 		}
 		startTransition(() => {
-			setStack(randomStack as StackState);
+			setStack({
+				...(randomStack as StackState),
+				projectName: stack.projectName || "my-better-t-app",
+			});
 		});
 		contentRef.current?.scrollTo(0, 0);
-		toast.success("Random stack generated!");
-	};
-
-	const getStackUrl = (): string => {
-		// Auto-convert spaces to hyphens for the URL
-		const projectName = stack.projectName || "my-better-t-app";
-		const formattedProjectName = projectName.replace(/\s+/g, "-");
-		const stackWithProjectName = {
-			...stack,
-			projectName: formattedProjectName,
-		};
-		return generateStackSharingUrl(stackWithProjectName);
 	};
 
 	const selectedBadges = (() => {
@@ -257,16 +269,15 @@ const StackBuilder = () => {
 
 	useEffect(() => {
 		const stackToUse = compatibilityAnalysis.adjustedStack || stack;
-		// Auto-convert spaces to hyphens for the command
-		const projectName = stack.projectName || "my-better-t-app";
-		const formattedProjectName = projectName.replace(/\s+/g, "-");
+		const projectName = stackToUse.projectName || "my-better-t-app";
+		const formattedProjectName = formatProjectName(projectName);
 		const stackWithProjectName = {
 			...stackToUse,
 			projectName: formattedProjectName,
 		};
 		const cmd = generateStackCommand(stackWithProjectName);
 		setCommand(cmd);
-	}, [stack, compatibilityAnalysis.adjustedStack]);
+	}, [stack, compatibilityAnalysis.adjustedStack, formatProjectName]);
 
 	const handleTechSelect = (
 		category: keyof typeof TECH_OPTIONS,
@@ -375,10 +386,10 @@ const StackBuilder = () => {
 	};
 
 	const saveCurrentStack = () => {
-		// Auto-convert spaces to hyphens when saving
-		const projectName = stack.projectName || "my-better-t-app";
-		const formattedProjectName = projectName.replace(/\s+/g, "-");
-		const stackToSave = { ...stack, projectName: formattedProjectName };
+		const stackToUse = compatibilityAnalysis.adjustedStack || stack;
+		const projectName = stackToUse.projectName || "my-better-t-app";
+		const formattedProjectName = formatProjectName(projectName);
+		const stackToSave = { ...stackToUse, projectName: formattedProjectName };
 		localStorage.setItem("betterTStackPreference", JSON.stringify(stackToSave));
 		setLastSavedStack(stackToSave);
 		toast.success("Your stack configuration has been saved");
