@@ -141,6 +141,7 @@ export const router = t.router({
 			const [options] = input;
 			await addAddonsHandler(options);
 		}),
+	// This command is brocken
 	sponsors: t.procedure
 		.meta({ description: "Show Better-T-Stack sponsors" })
 		.mutation(async () => {

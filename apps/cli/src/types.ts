@@ -1,18 +1,18 @@
 import z from "zod";
-import { DATABASES } from "./constants/database";
-import { ORMS } from "./constants/orm";
-import { BACKENDS } from "./constants/backend";
-import { RUNTIMES } from "./constants/runtime";
-import { FRONTENDS } from "./constants/frontend";
-import { ADDONS } from "./constants/addons";
-import { DOCKERS } from "./constants/docker";
-import { EXAMPLES } from "./constants/example";
-import { PACKAGE_MANAGERS } from "./constants/package-manager";
-import { DATABASES_PROVIDERS } from "./constants/database-providers";
-import { APIS } from "./constants/api-strategy";
-import { WEB_DEPLOYMENT_STRATEGIES } from "./constants/web-deployment-strategy";
-import { SERVER_DEPLOYMENT_STRATEGIES } from "./constants/server-deployment-strategy";
-import { DIRECTORY_CONFLICT_STRATEGIES } from "./constants/directory-conflict-strategy";
+import { DATABASES } from "@/constants/database";
+import { ORMS } from "@/constants/orm";
+import { BACKENDS } from "@/constants/backend";
+import { RUNTIMES } from "@/constants/runtime";
+import { FRONTEND } from "@/constants/frontend";
+import { ADDONS } from "@/constants/addons";
+import { DOCKERS } from "@/constants/docker";
+import { EXAMPLES } from "@/constants/example";
+import { PACKAGE_MANAGERS } from "@/constants/package-manager";
+import { DATABASES_PROVIDERS } from "@/constants/database-providers";
+import { APIS } from "@/constants/api-strategy";
+import { WEB_DEPLOYMENT_STRATEGIES } from "@/constants/web-deployment-strategy";
+import { SERVER_DEPLOYMENT_STRATEGIES } from "@/constants/server-deployment-strategy";
+import { DIRECTORY_CONFLICT_STRATEGIES } from "@/constants/directory-conflict-strategy";
 
 export const DatabaseSchema = z.enum(DATABASES).describe("Database type");
 export type Database = z.infer<typeof DatabaseSchema>;
@@ -26,7 +26,7 @@ export type Backend = z.infer<typeof BackendSchema>;
 export const RuntimeSchema = z.enum(RUNTIMES).describe("Runtime environment");
 export type Runtime = z.infer<typeof RuntimeSchema>;
 
-export const FrontendSchema = z.enum(FRONTENDS).describe("Frontend framework");
+export const FrontendSchema = z.enum(FRONTEND).describe("Frontend framework");
 export type Frontend = z.infer<typeof FrontendSchema>;
 
 export const AddonsSchema = z.enum(ADDONS).describe("Addon");

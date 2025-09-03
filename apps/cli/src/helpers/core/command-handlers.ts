@@ -1,42 +1,43 @@
+// TODO: Fixed all import and export are not sorted error
 import path from "node:path";
 import { intro, log, outro } from "@clack/prompts";
 import consola from "consola";
 import fs from "fs-extra";
 import pc from "picocolors";
-import { getDefaultConfig } from "../../constants";
-import { getAddonsToAdd } from "../../prompts/addons";
-import { gatherConfig } from "../../prompts/config-prompts";
-import { getProjectName } from "../../prompts/project-name";
-import { getServerDeploymentToAdd } from "../../prompts/server-deploy";
-import { getDeploymentToAdd } from "../../prompts/web-deploy";
+import { getDefaultConfig } from "@/constants";
+import { getAddonsToAdd } from "@/prompts/addons";
+import { gatherConfig } from "@/prompts/config-prompts";
+import { getProjectName } from "@/prompts/project-name";
+import { getServerDeploymentToAdd } from "@/prompts/server-deploy";
+import { getDeploymentToAdd } from "@/prompts/web-deploy";
 import type {
 	AddInput,
 	CreateInput,
 	DirectoryConflict,
 	InitResult,
 	ProjectConfig,
-} from "../../types";
-import { trackProjectCreation } from "../../utils/analytics";
+} from "@/types";
+import { trackProjectCreation } from "@/utils/analytics";
 
-import { displayConfig } from "../../utils/display-config";
-import { exitWithError, handleError } from "../../utils/errors";
-import { generateReproducibleCommand } from "../../utils/generate-reproducible-command";
+import { displayConfig } from "@/utils/display-config";
+import { exitWithError, handleError } from "@/utils/errors";
+import { generateReproducibleCommand } from "@/utils/generate-reproducible-command";
 import {
 	handleDirectoryConflict,
 	setupProjectDirectory,
-} from "../../utils/project-directory";
-import { renderTitle } from "../../utils/render-title";
+} from "@/utils/project-directory";
+import { renderTitle } from "@/utils/render-title";
 import {
 	getProvidedFlags,
 	processAndValidateFlags,
 	processProvidedFlagsWithoutValidation,
 	validateConfigCompatibility,
-} from "../../validation";
-import { addAddonsToProject } from "./add-addons";
-import { addDeploymentToProject } from "./add-deployment";
-import { createProject } from "./create-project";
-import { detectProjectConfig } from "./detect-project-config";
-import { installDependencies } from "./install-dependencies";
+} from "@/validation";
+import { addAddonsToProject } from "@/helpers/core/add-addons";
+import { addDeploymentToProject } from "@/helpers/core/add-deployment";
+import { createProject } from "@/helpers/core/create-project";
+import { detectProjectConfig } from "@/helpers/core/detect-project-config";
+import { installDependencies } from "@/helpers/core/install-dependencies";
 
 export async function createProjectHandler(
 	input: CreateInput & { projectName?: string },
