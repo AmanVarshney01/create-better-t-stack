@@ -172,6 +172,5 @@ export const ADDON_COMPATIBILITY: Record<Addons, readonly Frontend[]> = {
 export const DOCKER_COMPATIBILITY: Record<Docker, readonly Frontend[]> = {
 	"app-server": ["tanstack-router", "react-router", "solid"],
 	"app-web": ["tanstack-router", "react-router", "solid"],
-	redis: [],
 	none: [],
 };

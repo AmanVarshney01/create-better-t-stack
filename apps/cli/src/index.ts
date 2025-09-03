@@ -5,7 +5,7 @@ import z from "zod";
 import {
 	addAddonsHandler,
 	createProjectHandler,
-} from "./helpers/core/command-handlers";
+} from "@/helpers/core/command-handlers";
 import {
 	type AddInput,
 	type Addons,
@@ -41,12 +41,12 @@ import {
 	ServerDeploySchema,
 	type WebDeploy,
 	WebDeploySchema,
-} from "./types";
-import { handleError } from "./utils/errors";
-import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
-import { openUrl } from "./utils/open-url";
-import { renderTitle } from "./utils/render-title";
-import { displaySponsors, fetchSponsors } from "./utils/sponsors";
+} from "@/types";
+import { handleError } from "@/utils/errors";
+import { getLatestCLIVersion } from "@/utils/get-latest-cli-version";
+import { openUrl } from "@/utils/open-url";
+import { renderTitle } from "@/utils/render-title";
+import { displaySponsors, fetchSponsors } from "@/utils/sponsors";
 
 const t = trpcServer.initTRPC.create();
 
