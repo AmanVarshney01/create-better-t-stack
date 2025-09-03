@@ -1,5 +1,6 @@
 import {
 	createLoader,
+	createSerializer,
 	parseAsArrayOf as parseAsArrayOfServer,
 	parseAsStringEnum as parseAsStringEnumServer,
 	parseAsString as parseAsStringServer,
@@ -69,6 +70,10 @@ const serverStackParsers = {
 };
 
 export const loadStackParams = createLoader(serverStackParsers, {
+	urlKeys: stackUrlKeys as UrlKeys<typeof serverStackParsers>,
+});
+
+export const serializeStackParams = createSerializer(serverStackParsers, {
 	urlKeys: stackUrlKeys as UrlKeys<typeof serverStackParsers>,
 });
 
