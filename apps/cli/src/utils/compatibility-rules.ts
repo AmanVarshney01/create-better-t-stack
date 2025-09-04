@@ -71,30 +71,6 @@ export function validateWorkersCompatibility(
 	if (
 		providedFlags.has("runtime") &&
 		options.runtime === "workers" &&
-		config.orm &&
-		config.orm !== "drizzle" &&
-		config.orm !== "none"
-	) {
-		exitWithError(
-			`Cloudflare Workers runtime (--runtime workers) is only supported with Drizzle ORM (--orm drizzle) or no ORM (--orm none). Current ORM: ${config.orm}. Please use '--orm drizzle', '--orm none', or choose a different runtime.`,
-		);
-	}
-
-	if (
-		providedFlags.has("orm") &&
-		config.orm &&
-		config.orm !== "drizzle" &&
-		config.orm !== "none" &&
-		config.runtime === "workers"
-	) {
-		exitWithError(
-			`ORM '${config.orm}' is not compatible with Cloudflare Workers runtime. Cloudflare Workers runtime is only supported with Drizzle ORM or no ORM. Please use '--orm drizzle', '--orm none', or choose a different runtime.`,
-		);
-	}
-
-	if (
-		providedFlags.has("runtime") &&
-		options.runtime === "workers" &&
 		config.database === "mongodb"
 	) {
 		exitWithError(
