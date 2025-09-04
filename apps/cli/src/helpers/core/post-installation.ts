@@ -14,6 +14,7 @@ export async function displayPostInstallInstructions(
 	config: ProjectConfig & { depsInstalled: boolean },
 ) {
 	const {
+		api,
 		database,
 		relativePath,
 		packageManager,
@@ -158,6 +159,14 @@ export async function displayPostInstallInstructions(
 
 	if (!isConvex) {
 		output += `${pc.cyan("•")} Backend API: http://localhost:3000\n`;
+
+		if (api === "orpc") {
+			if (backend === "next") {
+				output += `${pc.cyan("•")} OpenAPI (Scalar UI): http://localhost:3000/rpc/api\n`;
+			} else {
+				output += `${pc.cyan("•")} OpenAPI (Scalar UI): http://localhost:3000/api\n`;
+			}
+		}
 	}
 
 	if (addons?.includes("starlight")) {
