@@ -27,19 +27,15 @@ export const DEFAULT_CONFIG_BASE = {
 	serverDeploy: "none",
 } as const;
 
-export function getDefaultConfig(): ProjectConfig {
-	return {
-		...DEFAULT_CONFIG_BASE,
-		projectDir: path.resolve(process.cwd(), DEFAULT_CONFIG_BASE.projectName),
-		packageManager: getUserPkgManager(),
-		frontend: [...DEFAULT_CONFIG_BASE.frontend],
-		addons: [...DEFAULT_CONFIG_BASE.addons],
-		docker: [...DEFAULT_CONFIG_BASE.docker],
-		examples: [...DEFAULT_CONFIG_BASE.examples],
-	};
-}
-
-export const DEFAULT_CONFIG = getDefaultConfig();
+export const DEFAULT_CONFIG: ProjectConfig = {
+	...DEFAULT_CONFIG_BASE,
+	projectDir: path.resolve(process.cwd(), DEFAULT_CONFIG_BASE.projectName),
+	packageManager: getUserPkgManager(),
+	frontend: [...DEFAULT_CONFIG_BASE.frontend],
+	addons: [...DEFAULT_CONFIG_BASE.addons],
+	docker: [...DEFAULT_CONFIG_BASE.docker],
+	examples: [...DEFAULT_CONFIG_BASE.examples],
+} as const;
 
 export const dependencyVersionMap = {
 	"better-auth": "^1.3.7",

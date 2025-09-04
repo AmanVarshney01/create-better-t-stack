@@ -2,7 +2,7 @@
 import { intro, log, outro } from "@clack/prompts";
 import consola from "consola";
 import pc from "picocolors";
-import { getDefaultConfig } from "@/constants";
+import { DEFAULT_CONFIG } from "@/constants";
 import { getAddonsToAdd } from "@/prompts/addons";
 import { gatherConfig } from "@/prompts/config-prompts";
 import {
@@ -136,7 +136,7 @@ export async function createProjectHandler(
 		);
 
 		config = {
-			...getDefaultConfig(),
+			...DEFAULT_CONFIG,
 			...flagConfig,
 			projectName: finalBaseName,
 			projectDir: finalResolvedPath,
