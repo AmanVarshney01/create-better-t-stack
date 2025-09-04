@@ -44,7 +44,11 @@ await Exec("db-generate", {
 });
 
 const db = await D1Database("database", {
+	{{#if (eq orm "prisma")}}
+	migrationsDir: "apps/server/prisma/migrations",
+	{{else if (eq orm "drizzle")}}
 	migrationsDir: "apps/server/src/db/migrations",
+	{{/if}}
 });
 {{/if}}
 

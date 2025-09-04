@@ -61,6 +61,15 @@ interface CompatibilityResult {
 export const analyzeStackCompatibility = (
 	stack: StackState,
 ): CompatibilityResult => {
+	// Skip all validation if YOLO mode is enabled
+	if (stack.yolo === "true") {
+		return {
+			adjustedStack: null,
+			notes: {},
+			changes: [],
+		};
+	}
+
 	const nextStack = { ...stack };
 	let changed = false;
 	const notes: CompatibilityResult["notes"] = {};
@@ -487,22 +496,6 @@ export const analyzeStackCompatibility = (
 						message: "Runtime set to 'Cloudflare Workers' (required by D1)",
 					});
 				}
-				if (nextStack.orm !== "drizzle") {
-					notes.dbSetup.notes.push(
-						"Cloudflare D1 requires Drizzle ORM. It will be selected.",
-					);
-					notes.orm.notes.push(
-						"Cloudflare D1 DB setup requires Drizzle ORM. It will be selected.",
-					);
-					notes.dbSetup.hasIssue = true;
-					notes.orm.hasIssue = true;
-					nextStack.orm = "drizzle";
-					changed = true;
-					changes.push({
-						category: "dbSetup",
-						message: "ORM set to 'Drizzle' (required by Cloudflare D1)",
-					});
-				}
 				if (nextStack.backend !== "hono") {
 					notes.dbSetup.notes.push(
 						"Cloudflare D1 requires Hono backend. It will be selected.",
@@ -615,24 +608,6 @@ export const analyzeStackCompatibility = (
 						category: "runtime",
 						message:
 							"Backend set to 'Hono' (Cloudflare Workers runtime only works with Hono backend)",
-					});
-				}
-
-				if (nextStack.orm !== "drizzle" && nextStack.orm !== "none") {
-					notes.runtime.notes.push(
-						"Cloudflare Workers runtime requires Drizzle ORM or no ORM. Drizzle will be selected.",
-					);
-					notes.orm.notes.push(
-						"Cloudflare Workers runtime requires Drizzle ORM or no ORM. Drizzle will be selected.",
-					);
-					notes.runtime.hasIssue = true;
-					notes.orm.hasIssue = true;
-					nextStack.orm = "drizzle";
-					changed = true;
-					changes.push({
-						category: "runtime",
-						message:
-							"ORM set to 'Drizzle' (Cloudflare Workers runtime only supports Drizzle or no ORM)",
 					});
 				}
 
@@ -1607,5 +1582,8 @@ export const isOptionCompatible = (
 	category: keyof typeof TECH_OPTIONS,
 	optionId: string,
 ): boolean => {
+	if (currentStack.yolo === "true") {
+		return true;
+	}
 	return getDisabledReason(currentStack, category, optionId) === null;
 };

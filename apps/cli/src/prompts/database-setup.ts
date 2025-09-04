@@ -5,7 +5,7 @@ import { exitCancelled } from "../utils/errors";
 export async function getDBSetupChoice(
 	databaseType: string,
 	dbSetup: DatabaseSetup | undefined,
-	orm?: ORM,
+	_orm?: ORM,
 	backend?: Backend,
 	runtime?: Runtime,
 ): Promise<DatabaseSetup> {
@@ -16,10 +16,6 @@ export async function getDBSetupChoice(
 	if (dbSetup !== undefined) return dbSetup as DatabaseSetup;
 
 	if (databaseType === "none") {
-		return "none";
-	}
-
-	if (databaseType === "sqlite" && orm === "prisma") {
 		return "none";
 	}
 

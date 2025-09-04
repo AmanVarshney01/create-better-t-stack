@@ -604,6 +604,7 @@ export const PRESET_TEMPLATES = [
 			api: "trpc",
 			webDeploy: "none",
 			serverDeploy: "none",
+			yolo: "false",
 		},
 	},
 	{
@@ -628,6 +629,7 @@ export const PRESET_TEMPLATES = [
 			api: "none",
 			webDeploy: "none",
 			serverDeploy: "none",
+			yolo: "false",
 		},
 	},
 	{
@@ -652,6 +654,7 @@ export const PRESET_TEMPLATES = [
 			api: "trpc",
 			webDeploy: "none",
 			serverDeploy: "none",
+			yolo: "false",
 		},
 	},
 	{
@@ -676,6 +679,7 @@ export const PRESET_TEMPLATES = [
 			api: "trpc",
 			webDeploy: "none",
 			serverDeploy: "none",
+			yolo: "false",
 		},
 	},
 	{
@@ -700,6 +704,7 @@ export const PRESET_TEMPLATES = [
 			api: "trpc",
 			webDeploy: "alchemy",
 			serverDeploy: "alchemy",
+			yolo: "false",
 		},
 	},
 ];
@@ -722,6 +727,7 @@ export type StackState = {
 	api: string;
 	webDeploy: string;
 	serverDeploy: string;
+	yolo: string;
 };
 
 export const DEFAULT_STACK: StackState = {
@@ -742,6 +748,7 @@ export const DEFAULT_STACK: StackState = {
 	api: "trpc",
 	webDeploy: "none",
 	serverDeploy: "none",
+	yolo: "false",
 };
 
 export const isStackDefault = <K extends keyof StackState>(
