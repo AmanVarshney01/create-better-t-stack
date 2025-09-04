@@ -267,3 +267,8 @@ export type {
 	BetterTStackConfig,
 	InitResult,
 };
+
+// TODO: Write all docker files
+// TODO: Write docker-compose file
+// TODO: Check all command-programmatic-api is running
+// TODO: Update the docs and builder

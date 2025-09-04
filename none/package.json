@@ -1,0 +1,21 @@
+{
+	"name": "none",
+	"private": true,
+	"workspaces": [
+		"apps/*",
+		"packages/*"
+	],
+	"scripts": {
+		"dev": "turbo dev",
+		"build": "turbo build",
+		"check-types": "turbo check-types",
+		"dev:native": "turbo -F native dev",
+		"dev:web": "turbo -F web dev",
+		"dev:server": "turbo -F server dev"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"turbo": "^2.5.4"
+	},
+	"packageManager": "bun@1.2.21"
+}

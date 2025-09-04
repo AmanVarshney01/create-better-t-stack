@@ -1,22 +1,18 @@
 // TODO: Fixed all import and export are not sorted error
-import path from "node:path";
 import { intro, log, outro } from "@clack/prompts";
 import consola from "consola";
-import fs from "fs-extra";
 import pc from "picocolors";
 import { getDefaultConfig } from "@/constants";
 import { getAddonsToAdd } from "@/prompts/addons";
 import { gatherConfig } from "@/prompts/config-prompts";
-import { getProjectName } from "@/prompts/project-name";
+import {
+	getDefaultName,
+	getProjectName,
+	isSafeProjectPath,
+} from "@/prompts/project-name";
 import { getServerDeploymentToAdd } from "@/prompts/server-deploy";
 import { getDeploymentToAdd } from "@/prompts/web-deploy";
-import type {
-	AddInput,
-	CreateInput,
-	DirectoryConflict,
-	InitResult,
-	ProjectConfig,
-} from "@/types";
+import type { AddInput, CreateInput, InitResult, ProjectConfig } from "@/types";
 import { trackProjectCreation } from "@/utils/analytics";
 
 import { displayConfig } from "@/utils/display-config";
@@ -24,6 +20,7 @@ import { exitWithError, handleError } from "@/utils/errors";
 import { generateReproducibleCommand } from "@/utils/generate-reproducible-command";
 import {
 	handleDirectoryConflict,
+	handleDirectoryConflictProgrammatically,
 	setupProjectDirectory,
 } from "@/utils/project-directory";
 import { renderTitle } from "@/utils/render-title";
@@ -43,9 +40,9 @@ export async function createProjectHandler(
 	input: CreateInput & { projectName?: string },
 ): Promise<InitResult> {
 	const startTime = Date.now();
-	const timeScaffolded = new Date().toISOString();
+	const timeScaffolded = new Date(startTime).toISOString();
 
-	if (input.renderTitle !== false) {
+	if (input.renderTitle) {
 		renderTitle();
 	}
 	intro(pc.magenta("Creating a new Better-T-Stack project"));
@@ -55,20 +52,16 @@ export async function createProjectHandler(
 	}
 
 	let currentPathInput: string;
+
 	if (input.yes && input.projectName) {
+		if (!isSafeProjectPath(input.projectName)) {
+			exitWithError(
+				"Invalid project path, Project path must be within current directory",
+			);
+		}
 		currentPathInput = input.projectName;
 	} else if (input.yes) {
-		const defaultConfig = getDefaultConfig();
-		let defaultName = defaultConfig.relativePath;
-		let counter = 1;
-		while (
-			(await fs.pathExists(path.resolve(process.cwd(), defaultName))) &&
-			(await fs.readdir(path.resolve(process.cwd(), defaultName))).length > 0
-		) {
-			defaultName = `${defaultConfig.projectName}-${counter}`;
-			counter++;
-		}
-		currentPathInput = defaultName;
+		currentPathInput = await getDefaultName();
 	} else {
 		currentPathInput = await getProjectName(input.projectName);
 	}
@@ -165,9 +158,6 @@ export async function createProjectHandler(
 
 		if (Object.keys(otherFlags).length > 0) {
 			log.info(pc.yellow("Using these pre-selected options:"));
-			// TODO: remove before pull request
-			console.log(otherFlags);
-
 			log.message(displayConfig(otherFlags));
 			log.message("");
 		}
@@ -210,57 +200,6 @@ export async function createProjectHandler(
 		projectDirectory: config.projectDir,
 		relativePath: config.relativePath,
 	};
-}
-
-async function handleDirectoryConflictProgrammatically(
-	currentPathInput: string,
-	strategy: DirectoryConflict,
-): Promise<{ finalPathInput: string; shouldClearDirectory: boolean }> {
-	const currentPath = path.resolve(process.cwd(), currentPathInput);
-
-	if (!(await fs.pathExists(currentPath))) {
-		return { finalPathInput: currentPathInput, shouldClearDirectory: false };
-	}
-
-	const dirContents = await fs.readdir(currentPath);
-	const isNotEmpty = dirContents.length > 0;
-
-	if (!isNotEmpty) {
-		return { finalPathInput: currentPathInput, shouldClearDirectory: false };
-	}
-
-	switch (strategy) {
-		case "overwrite":
-			return { finalPathInput: currentPathInput, shouldClearDirectory: true };
-
-		case "merge":
-			return { finalPathInput: currentPathInput, shouldClearDirectory: false };
-
-		case "increment": {
-			let counter = 1;
-			const baseName = currentPathInput;
-			let finalPathInput = `${baseName}-${counter}`;
-
-			while (
-				(await fs.pathExists(path.resolve(process.cwd(), finalPathInput))) &&
-				(await fs.readdir(path.resolve(process.cwd(), finalPathInput))).length >
-					0
-			) {
-				counter++;
-				finalPathInput = `${baseName}-${counter}`;
-			}
-
-			return { finalPathInput, shouldClearDirectory: false };
-		}
-
-		case "error":
-			throw new Error(
-				`Directory "${currentPathInput}" already exists and is not empty. Use directoryConflict: "overwrite", "merge", or "increment" to handle this.`,
-			);
-
-		default:
-			throw new Error(`Unknown directory conflict strategy: ${strategy}`);
-	}
 }
 
 export async function addAddonsHandler(input: AddInput) {
