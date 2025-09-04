@@ -29,6 +29,7 @@ import {
 	setupDbOrmTemplates,
 	setupDeploymentTemplates,
 	setupDockerComposeTemplates,
+	setupDockerTemplates,
 	setupExamplesTemplate,
 	setupFrontendTemplates,
 } from "./template-manager";
@@ -54,6 +55,8 @@ export async function createProject(options: ProjectConfig) {
 		await setupAddonsTemplate(projectDir, options);
 
 		await setupDeploymentTemplates(projectDir, options);
+
+		await setupDockerTemplates(projectDir, options);
 
 		await setupApi(options);
 

@@ -52,6 +52,15 @@ export function displayConfig(config: Partial<ProjectConfig>) {
 		configDisplay.push(`${pc.blue("Addons:")} ${addonsText}`);
 	}
 
+	if (config.docker !== undefined) {
+		const docker = Array.isArray(config.docker)
+			? config.docker
+			: [config.docker];
+		const dockerText =
+			docker.length > 0 && docker[0] !== undefined ? docker.join(", ") : "none";
+		configDisplay.push(`${pc.blue("Docker:")} ${dockerText}`);
+	}
+
 	if (config.examples !== undefined) {
 		const examples = Array.isArray(config.examples)
 			? config.examples

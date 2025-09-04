@@ -1,3 +1,3 @@
-import { createBtsCli } from "./index";
+import { createBtsCli } from "@/index";
 
 createBtsCli().run();

@@ -102,6 +102,10 @@ export function processFlags(
 		config.addons = processArrayOption(options.addons);
 	}
 
+	if (options.docker && options.docker.length > 0) {
+		config.docker = processArrayOption(options.docker);
+	}
+
 	if (options.examples && options.examples.length > 0) {
 		config.examples = processArrayOption(options.examples);
 	}
@@ -131,5 +135,6 @@ export function validateNoneExclusivity<T>(
 export function validateArrayOptions(options: CLIInput): void {
 	validateNoneExclusivity(options.frontend, "frontend options");
 	validateNoneExclusivity(options.addons, "addons");
+	validateNoneExclusivity(options.docker, "docker");
 	validateNoneExclusivity(options.examples, "examples");
 }

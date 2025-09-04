@@ -6,6 +6,7 @@ import type {
 	Backend,
 	Database,
 	DatabaseSetup,
+	Docker,
 	Examples,
 	Frontend,
 	ORM,
@@ -31,6 +32,7 @@ import { getPackageManagerChoice } from "./package-manager";
 import { getRuntimeChoice } from "./runtime";
 import { getServerDeploymentChoice } from "./server-deploy";
 import { getDeploymentChoice } from "./web-deploy";
+import { getDockerChoice } from "./docker";
 
 type PromptGroupResults = {
 	frontend: Frontend[];
@@ -41,6 +43,7 @@ type PromptGroupResults = {
 	api: API;
 	auth: Auth;
 	addons: Addons[];
+	docker: Docker[];
 	examples: Examples[];
 	dbSetup: DatabaseSetup;
 	git: boolean;
@@ -84,6 +87,7 @@ export async function gatherConfig(
 					results.frontend,
 				),
 			addons: ({ results }) => getAddonsChoice(flags.addons, results.frontend),
+			docker: ({ results }) => getDockerChoice(flags.docker, results.frontend),
 			examples: ({ results }) =>
 				getExamplesChoice(
 					flags.examples,
@@ -134,6 +138,7 @@ export async function gatherConfig(
 		orm: result.orm,
 		auth: result.auth,
 		addons: result.addons,
+		docker: result.docker,
 		examples: result.examples,
 		git: result.git,
 		packageManager: result.packageManager,

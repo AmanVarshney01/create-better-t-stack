@@ -40,6 +40,7 @@ npx create-better-t-stack@latest
 - ORMs: Drizzle, Prisma, Mongoose (or none)
 - Auth: Better-Auth (optional)
 - Addons: Turborepo, PWA, Tauri, Biome, Husky, Starlight, Fumadocs, Ruler, Ultracite, Oxlint
+- Docker: app-server, app-web, redis (or none)
 - Examples: Todo, AI
 - DB Setup: Turso, Neon, Supabase, Prisma PostgreSQL, MongoDB Atlas, Cloudflare D1, Docker
 - Web Deploy: Cloudflare Workers

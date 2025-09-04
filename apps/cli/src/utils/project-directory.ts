@@ -4,6 +4,58 @@ import fs from "fs-extra";
 import pc from "picocolors";
 import { getProjectName } from "../prompts/project-name";
 import { exitCancelled, handleError } from "./errors";
+import type { DirectoryConflict } from "@/types";
+
+export async function handleDirectoryConflictProgrammatically(
+	currentPathInput: string,
+	strategy: DirectoryConflict,
+): Promise<{ finalPathInput: string; shouldClearDirectory: boolean }> {
+	const currentPath = path.resolve(process.cwd(), currentPathInput);
+
+	if (!(await fs.pathExists(currentPath))) {
+		return { finalPathInput: currentPathInput, shouldClearDirectory: false };
+	}
+
+	const dirExists = await fs.readdir(currentPath);
+	const isDirEmpty = dirExists.length === 0;
+
+	if (isDirEmpty) {
+		return { finalPathInput: currentPathInput, shouldClearDirectory: false };
+	}
+
+	switch (strategy) {
+		case "overwrite":
+			return { finalPathInput: currentPathInput, shouldClearDirectory: true };
+
+		case "merge":
+			return { finalPathInput: currentPathInput, shouldClearDirectory: false };
+
+		case "increment": {
+			let counter = 1;
+			const baseName = currentPathInput;
+			let finalPathInput = `${baseName}-${counter}`;
+
+			while (
+				(await fs.pathExists(path.resolve(process.cwd(), finalPathInput))) &&
+				(await fs.readdir(path.resolve(process.cwd(), finalPathInput))).length >
+					0
+			) {
+				counter++;
+				finalPathInput = `${baseName}-${counter}`;
+			}
+
+			return { finalPathInput, shouldClearDirectory: false };
+		}
+
+		case "error":
+			throw new Error(
+				`Directory "${currentPathInput}" already exists and is not empty. Use directoryConflict: "overwrite", "merge", or "increment" to handle this.`,
+			);
+
+		default:
+			throw new Error(`Unknown directory conflict strategy: ${strategy}`);
+	}
+}
 
 export async function handleDirectoryConflict(
 	currentPathInput: string,
@@ -15,10 +67,10 @@ export async function handleDirectoryConflict(
 	while (true) {
 		const resolvedPath = path.resolve(process.cwd(), currentPathInput);
 		const dirExists = await fs.pathExists(resolvedPath);
-		const dirIsNotEmpty =
-			dirExists && (await fs.readdir(resolvedPath)).length > 0;
+		const isDirEmpty =
+			dirExists && (await fs.readdir(resolvedPath)).length === 0;
 
-		if (!dirIsNotEmpty) {
+		if (isDirEmpty) {
 			return { finalPathInput: currentPathInput, shouldClearDirectory: false };
 		}
 

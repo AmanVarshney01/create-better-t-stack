@@ -5,7 +5,7 @@ import z from "zod";
 import {
 	addAddonsHandler,
 	createProjectHandler,
-} from "./helpers/core/command-handlers";
+} from "@/helpers/core/command-handlers";
 import {
 	type AddInput,
 	type Addons,
@@ -23,6 +23,7 @@ import {
 	DatabaseSetupSchema,
 	type DirectoryConflict,
 	DirectoryConflictSchema,
+	DockerSchema,
 	type Examples,
 	ExamplesSchema,
 	type Frontend,
@@ -40,12 +41,12 @@ import {
 	ServerDeploySchema,
 	type WebDeploy,
 	WebDeploySchema,
-} from "./types";
-import { handleError } from "./utils/errors";
-import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
-import { openUrl } from "./utils/open-url";
-import { renderTitle } from "./utils/render-title";
-import { displaySponsors, fetchSponsors } from "./utils/sponsors";
+} from "@/types";
+import { handleError } from "@/utils/errors";
+import { getLatestCLIVersion } from "@/utils/get-latest-cli-version";
+import { openUrl } from "@/utils/open-url";
+import { renderTitle } from "@/utils/render-title";
+import { displaySponsors, fetchSponsors } from "@/utils/sponsors";
 
 const t = trpcServer.initTRPC.create();
 
@@ -82,6 +83,7 @@ export const router = t.router({
 					auth: AuthSchema.optional(),
 					frontend: z.array(FrontendSchema).optional(),
 					addons: z.array(AddonsSchema).optional(),
+					docker: z.array(DockerSchema).optional(),
 					examples: z.array(ExamplesSchema).optional(),
 					git: z.boolean().optional(),
 					packageManager: PackageManagerSchema.optional(),
@@ -139,6 +141,7 @@ export const router = t.router({
 			const [options] = input;
 			await addAddonsHandler(options);
 		}),
+	// This command is brocken
 	sponsors: t.procedure
 		.meta({ description: "Show Better-T-Stack sponsors" })
 		.mutation(async () => {
@@ -264,3 +267,8 @@ export type {
 	BetterTStackConfig,
 	InitResult,
 };
+
+// TODO: Write all docker files
+// TODO: Write docker-compose file
+// TODO: Check all command-programmatic-api is running
+// TODO: Update the docs and builder

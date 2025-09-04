@@ -22,6 +22,12 @@ export function generateReproducibleCommand(config: ProjectConfig): string {
 		flags.push("--addons none");
 	}
 
+	if (config.docker && config.docker.length > 0) {
+		flags.push(`--docker ${config.docker.join(" ")}`);
+	} else {
+		flags.push("--docker none");
+	}
+
 	if (config.examples && config.examples.length > 0) {
 		flags.push(`--examples ${config.examples.join(" ")}`);
 	} else {
