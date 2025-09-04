@@ -1,7 +1,7 @@
 import { isCancel, select } from "@clack/prompts";
-import { DEFAULT_CONFIG } from "../constants";
-import type { Auth, Backend } from "../types";
-import { exitCancelled } from "../utils/errors";
+import { DEFAULT_CONFIG } from "@/constants";
+import type { Auth, Backend } from "@/types";
+import { exitCancelled } from "@/utils/errors";
 
 export async function getAuthChoice(
 	auth: Auth | undefined,

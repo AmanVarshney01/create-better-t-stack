@@ -11,7 +11,7 @@ import type {
 	ORM,
 	ProjectConfig,
 	Runtime,
-} from "../../types";
+} from "@/types";
 
 export async function createReadme(projectDir: string, options: ProjectConfig) {
 	const readmePath = path.join(projectDir, "README.md");

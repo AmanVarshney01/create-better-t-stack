@@ -4,7 +4,7 @@ import type {
 	DatabaseSetup,
 	ProjectConfig,
 	Runtime,
-} from "../types";
+} from "@/types";
 import {
 	ensureSingleWebAndNative,
 	isWebFrontend,
@@ -15,8 +15,8 @@ import {
 	validateServerDeployRequiresBackend,
 	validateWebDeployRequiresWebFrontend,
 	validateWorkersCompatibility,
-} from "./compatibility-rules";
-import { exitWithError } from "./errors";
+} from "@/utils/compatibility-rules";
+import { exitWithError } from "@/utils/errors";
 
 export function validateDatabaseOrmAuth(
 	cfg: Partial<ProjectConfig>,

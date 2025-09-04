@@ -2,14 +2,15 @@ import path from "node:path";
 import { isCancel, log, select, spinner } from "@clack/prompts";
 import fs from "fs-extra";
 import pc from "picocolors";
-import { getProjectName } from "../prompts/project-name";
-import { exitCancelled, handleError } from "./errors";
+import { getProjectName } from "@/prompts/project-name";
+import { exitCancelled, handleError } from "@/utils/errors";
 import type { DirectoryConflict } from "@/types";
 
 export async function handleDirectoryConflictProgrammatically(
 	currentPathInput: string,
 	strategy: DirectoryConflict,
 ): Promise<{ finalPathInput: string; shouldClearDirectory: boolean }> {
+	//TODO: We can separate can we separate into function exist in twice in handleDirectoryConflictProgrammatically and  handleDirectoryConflict in the same file
 	const currentPath = path.resolve(process.cwd(), currentPathInput);
 
 	if (!(await fs.pathExists(currentPath))) {
@@ -31,6 +32,7 @@ export async function handleDirectoryConflictProgrammatically(
 			return { finalPathInput: currentPathInput, shouldClearDirectory: false };
 
 		case "increment": {
+			//TODO: we can separate projectName-increment - already exists in projectName
 			let counter = 1;
 			const baseName = currentPathInput;
 			let finalPathInput = `${baseName}-${counter}`;

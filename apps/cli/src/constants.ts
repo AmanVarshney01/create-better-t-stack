@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Addons, Docker, Frontend, ProjectConfig } from "./types";
-import { getUserPkgManager } from "./utils/get-package-manager";
+import type { Addons, Docker, Frontend, ProjectConfig } from "@/types";
+import { getUserPkgManager } from "@/utils/get-package-manager";
 
 const __filename = fileURLToPath(import.meta.url);
 const distPath = path.dirname(__filename);

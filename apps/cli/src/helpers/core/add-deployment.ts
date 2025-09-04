@@ -1,16 +1,11 @@
 import path from "node:path";
 import { log } from "@clack/prompts";
 import pc from "picocolors";
-import type {
-	AddInput,
-	ProjectConfig,
-	ServerDeploy,
-	WebDeploy,
-} from "../../types";
-import { updateBtsConfig } from "../../utils/bts-config";
-import { exitWithError } from "../../utils/errors";
-import { setupServerDeploy } from "../deployment/server-deploy-setup";
-import { setupWebDeploy } from "../deployment/web-deploy-setup";
+import type { AddInput, ProjectConfig, ServerDeploy, WebDeploy } from "@/types";
+import { updateBtsConfig } from "@/utils/bts-config";
+import { exitWithError } from "@/utils/errors";
+import { setupServerDeploy } from "@/helpers/deployment/server-deploy-setup";
+import { setupWebDeploy } from "@/helpers/deployment/web-deploy-setup";
 import {
 	detectProjectConfig,
 	isBetterTStackProject,

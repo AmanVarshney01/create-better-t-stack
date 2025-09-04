@@ -1,5 +1,5 @@
-import { ADDON_COMPATIBILITY } from "../constants";
-import type { Addons, Frontend } from "../types";
+import { ADDON_COMPATIBILITY } from "@/constants";
+import type { Addons, Frontend } from "@/types";
 
 export function validateAddonCompatibility(
 	addon: Addons,

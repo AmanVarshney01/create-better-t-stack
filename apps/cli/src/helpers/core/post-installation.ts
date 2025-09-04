@@ -6,9 +6,9 @@ import type {
 	ORM,
 	ProjectConfig,
 	Runtime,
-} from "../../types";
-import { getDockerStatus } from "../../utils/docker-utils";
-import { getPackageExecutionCommand } from "../../utils/package-runner";
+} from "@/types";
+import { getDockerStatus } from "@/utils/docker-utils";
+import { getPackageExecutionCommand } from "@/utils/package-runner";
 
 export async function displayPostInstallInstructions(
 	config: ProjectConfig & { depsInstalled: boolean },

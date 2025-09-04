@@ -1,7 +1,7 @@
 import { isCancel, select } from "@clack/prompts";
-import type { PackageManager } from "../types";
-import { exitCancelled } from "../utils/errors";
-import { getUserPkgManager } from "../utils/get-package-manager";
+import type { PackageManager } from "@/types";
+import { exitCancelled } from "@/utils/errors";
+import { getUserPkgManager } from "@/utils/get-package-manager";
 
 export async function getPackageManagerChoice(
 	packageManager?: PackageManager,

@@ -1,17 +1,17 @@
 import path from "node:path";
 import { log } from "@clack/prompts";
 import pc from "picocolors";
-import type { AddInput, Addons, ProjectConfig } from "../../types";
-import { validateAddonCompatibility } from "../../utils/addon-compatibility";
-import { updateBtsConfig } from "../../utils/bts-config";
-import { exitWithError } from "../../utils/errors";
-import { setupAddons } from "../addons/addons-setup";
+import type { AddInput, Addons, ProjectConfig } from "@/types";
+import { validateAddonCompatibility } from "@/utils/addon-compatibility";
+import { updateBtsConfig } from "@/utils/bts-config";
+import { exitWithError } from "@/utils/errors";
+import { setupAddons } from "@/helpers/addons/addons-setup";
 import {
 	detectProjectConfig,
 	isBetterTStackProject,
-} from "./detect-project-config";
-import { installDependencies } from "./install-dependencies";
-import { setupAddonsTemplate } from "./template-manager";
+} from "@/helpers/core/detect-project-config";
+import { installDependencies } from "@/helpers/core/install-dependencies";
+import { setupAddonsTemplate } from "@/helpers/core/template-manager";
 
 export async function addAddonsToProject(
 	input: AddInput & { addons: Addons[]; suppressInstallMessage?: boolean },
@@ -43,6 +43,7 @@ export async function addAddonsToProject(
 			runtime: detectedConfig.runtime || "none",
 			frontend: detectedConfig.frontend || [],
 			addons: input.addons,
+			docker: input.docker || "none",
 			examples: detectedConfig.examples || [],
 			auth: detectedConfig.auth || "none",
 			git: false,

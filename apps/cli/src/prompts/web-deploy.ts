@@ -1,8 +1,8 @@
 import { isCancel, select } from "@clack/prompts";
-import { DEFAULT_CONFIG } from "../constants";
-import type { Backend, Frontend, Runtime, WebDeploy } from "../types";
-import { WEB_FRAMEWORKS } from "../utils/compatibility";
-import { exitCancelled } from "../utils/errors";
+import { DEFAULT_CONFIG } from "@/constants";
+import type { Backend, Frontend, Runtime, WebDeploy } from "@/types";
+import { WEB_FRAMEWORKS } from "@/utils/compatibility";
+import { exitCancelled } from "@/utils/errors";
 
 function hasWebFrontend(frontends: Frontend[]): boolean {
 	return frontends.some((f) => WEB_FRAMEWORKS.includes(f));

@@ -8,11 +8,11 @@ import {
 import { execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
-import { PKG_ROOT } from "../../constants";
-import type { ProjectConfig } from "../../types";
-import { exitCancelled } from "../../utils/errors";
-import { getPackageExecutionCommand } from "../../utils/package-runner";
-import { processAndCopyFiles } from "../core/template-manager";
+import { PKG_ROOT } from "@/constants";
+import type { ProjectConfig } from "@/types";
+import { exitCancelled } from "@/utils/errors";
+import { getPackageExecutionCommand } from "@/utils/package-runner";
+import { processAndCopyFiles } from "@/helpers/core/template-manager";
 
 export async function setupVibeRules(config: ProjectConfig) {
 	const { packageManager, projectDir } = config;

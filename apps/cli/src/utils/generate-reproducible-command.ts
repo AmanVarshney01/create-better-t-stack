@@ -1,4 +1,4 @@
-import type { ProjectConfig } from "../types";
+import type { ProjectConfig } from "@/types";
 
 export function generateReproducibleCommand(config: ProjectConfig): string {
 	const flags: string[] = [];

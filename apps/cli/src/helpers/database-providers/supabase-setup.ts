@@ -4,9 +4,12 @@ import { consola } from "consola";
 import { type ExecaError, execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
-import type { PackageManager, ProjectConfig } from "../../types";
-import { getPackageExecutionCommand } from "../../utils/package-runner";
-import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
+import type { PackageManager, ProjectConfig } from "@/types";
+import { getPackageExecutionCommand } from "@/utils/package-runner";
+import {
+	addEnvVariablesToFile,
+	type EnvVariable,
+} from "@/helpers/core/env-setup";
 
 async function writeSupabaseEnvFile(projectDir: string, databaseUrl: string) {
 	try {

@@ -3,8 +3,8 @@ import { log, spinner } from "@clack/prompts";
 import { execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
-import type { PackageManager, ProjectConfig } from "../../types";
-import { addPackageDependency } from "../../utils/add-package-deps";
+import type { PackageManager, ProjectConfig } from "@/types";
+import { addPackageDependency } from "@/utils/add-package-deps";
 
 export async function setupServerDeploy(config: ProjectConfig) {
 	const { serverDeploy, webDeploy, projectDir } = config;

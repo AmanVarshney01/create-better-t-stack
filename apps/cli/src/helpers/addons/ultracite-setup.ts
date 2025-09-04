@@ -6,10 +6,10 @@ import {
 } from "@clack/prompts";
 import { execa } from "execa";
 import pc from "picocolors";
-import type { ProjectConfig } from "../../types";
-import { addPackageDependency } from "../../utils/add-package-deps";
-import { exitCancelled } from "../../utils/errors";
-import { getPackageExecutionCommand } from "../../utils/package-runner";
+import type { ProjectConfig } from "@/types";
+import { addPackageDependency } from "@/utils/add-package-deps";
+import { exitCancelled } from "@/utils/errors";
+import { getPackageExecutionCommand } from "@/utils/package-runner";
 import { setupBiome } from "./addons-setup";
 
 type UltraciteEditor = "vscode" | "zed";

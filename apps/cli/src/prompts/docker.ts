@@ -1,11 +1,11 @@
 import { groupMultiselect, isCancel } from "@clack/prompts";
-import { DEFAULT_CONFIG } from "../constants";
-import { type Docker, DockerSchema, type Frontend } from "../types";
+import { DEFAULT_CONFIG } from "@/constants";
+import { type Docker, DockerSchema, type Frontend } from "@/types";
 import {
 	getCompatibleDockers,
 	validateDockerCompatibility,
-} from "../utils/docker-compatibility";
-import { exitCancelled } from "../utils/errors";
+} from "@/utils/docker-compatibility";
+import { exitCancelled } from "@/utils/errors";
 
 type DockerOption = {
 	value: Docker;

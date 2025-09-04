@@ -15,24 +15,24 @@ import type {
 	Runtime,
 	ServerDeploy,
 	WebDeploy,
-} from "../types";
-import { exitCancelled } from "../utils/errors";
-import { getAddonsChoice } from "./addons";
-import { getApiChoice } from "./api";
-import { getAuthChoice } from "./auth";
-import { getBackendFrameworkChoice } from "./backend";
-import { getDatabaseChoice } from "./database";
-import { getDBSetupChoice } from "./database-setup";
-import { getExamplesChoice } from "./examples";
-import { getFrontendChoice } from "./frontend";
-import { getGitChoice } from "./git";
-import { getinstallChoice } from "./install";
-import { getORMChoice } from "./orm";
-import { getPackageManagerChoice } from "./package-manager";
-import { getRuntimeChoice } from "./runtime";
-import { getServerDeploymentChoice } from "./server-deploy";
-import { getDeploymentChoice } from "./web-deploy";
-import { getDockerChoice } from "./docker";
+} from "@/types";
+import { exitCancelled } from "@/utils/errors";
+import { getAddonsChoice } from "@/prompts/addons";
+import { getApiChoice } from "@/prompts/api";
+import { getAuthChoice } from "@/prompts/auth";
+import { getBackendFrameworkChoice } from "@/prompts/backend";
+import { getDatabaseChoice } from "@/prompts/database";
+import { getDBSetupChoice } from "@/prompts/database-setup";
+import { getExamplesChoice } from "@/prompts/examples";
+import { getFrontendChoice } from "@/prompts/frontend";
+import { getGitChoice } from "@/prompts/git";
+import { getinstallChoice } from "@/prompts/install";
+import { getORMChoice } from "@/prompts/orm";
+import { getPackageManagerChoice } from "@/prompts/package-manager";
+import { getRuntimeChoice } from "@/prompts/runtime";
+import { getServerDeploymentChoice } from "@/prompts/server-deploy";
+import { getDeploymentChoice } from "@/prompts/web-deploy";
+import { getDockerChoice } from "@/prompts/docker";
 
 type PromptGroupResults = {
 	frontend: Frontend[];
@@ -81,7 +81,7 @@ export async function gatherConfig(
 				getApiChoice(flags.api, results.frontend, results.backend),
 			auth: ({ results }) =>
 				getAuthChoice(
-					flags.auth as import("../types").Auth | undefined,
+					flags.auth as import("@/types").Auth | undefined,
 					results.database !== "none",
 					results.backend,
 					results.frontend,

@@ -7,10 +7,10 @@ import type {
 	ProjectConfig,
 	ServerDeploy,
 	WebDeploy,
-} from "../types";
-import { validateAddonCompatibility } from "./addon-compatibility";
-import { WEB_FRAMEWORKS } from "./compatibility";
-import { exitWithError } from "./errors";
+} from "@/types";
+import { validateAddonCompatibility } from "@/utils/addon-compatibility";
+import { WEB_FRAMEWORKS } from "@/utils/compatibility";
+import { exitWithError } from "@/utils/errors";
 
 export function isWebFrontend(value: Frontend): boolean {
 	return WEB_FRAMEWORKS.includes(value);

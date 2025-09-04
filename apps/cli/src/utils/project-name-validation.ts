@@ -1,6 +1,6 @@
 import path from "node:path";
-import { ProjectNameSchema } from "../types";
-import { exitWithError } from "./errors";
+import { ProjectNameSchema } from "@/types";
+import { exitWithError } from "@/utils/errors";
 
 export function validateProjectName(name: string): void {
 	const result = ProjectNameSchema.safeParse(name);

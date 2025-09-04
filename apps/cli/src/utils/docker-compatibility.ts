@@ -1,5 +1,5 @@
-import { DOCKER_COMPATIBILITY } from "../constants";
-import type { Docker, Frontend } from "../types";
+import { DOCKER_COMPATIBILITY } from "@/constants";
+import type { Docker, Frontend } from "@/types";
 
 export function validateDockerCompatibility(
 	docker: Docker,

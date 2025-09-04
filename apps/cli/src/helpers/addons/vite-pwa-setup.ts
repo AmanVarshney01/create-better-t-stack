@@ -4,7 +4,7 @@ import {
 	type ObjectLiteralExpression,
 	SyntaxKind,
 } from "ts-morph";
-import { ensureArrayProperty, tsProject } from "../../utils/ts-morph";
+import { ensureArrayProperty, tsProject } from "@/utils/ts-morph";
 
 export async function addPwaToViteConfig(
 	viteConfigPath: string,

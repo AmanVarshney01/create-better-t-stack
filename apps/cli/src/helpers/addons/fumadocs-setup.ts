@@ -4,9 +4,9 @@ import consola from "consola";
 import { execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
-import type { ProjectConfig } from "../../types";
-import { exitCancelled } from "../../utils/errors";
-import { getPackageExecutionCommand } from "../../utils/package-runner";
+import type { ProjectConfig } from "@/types";
+import { exitCancelled } from "@/utils/errors";
+import { getPackageExecutionCommand } from "@/utils/package-runner";
 
 type FumadocsTemplate =
 	| "next-mdx"

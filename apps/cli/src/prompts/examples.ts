@@ -1,11 +1,11 @@
 import { isCancel, multiselect } from "@clack/prompts";
-import { DEFAULT_CONFIG } from "../constants";
-import type { API, Backend, Database, Examples, Frontend } from "../types";
+import { DEFAULT_CONFIG } from "@/constants";
+import type { API, Backend, Database, Examples, Frontend } from "@/types";
 import {
 	isExampleAIAllowed,
 	isExampleTodoAllowed,
-} from "../utils/compatibility-rules";
-import { exitCancelled } from "../utils/errors";
+} from "@/utils/compatibility-rules";
+import { exitCancelled } from "@/utils/errors";
 
 export async function getExamplesChoice(
 	examples?: Examples[],

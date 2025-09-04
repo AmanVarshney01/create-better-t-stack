@@ -1,6 +1,6 @@
 import { confirm, isCancel } from "@clack/prompts";
-import { DEFAULT_CONFIG } from "../constants";
-import { exitCancelled } from "../utils/errors";
+import { DEFAULT_CONFIG } from "@/constants";
+import { exitCancelled } from "@/utils/errors";
 
 export async function getGitChoice(git?: boolean) {
 	if (git !== undefined) return git;

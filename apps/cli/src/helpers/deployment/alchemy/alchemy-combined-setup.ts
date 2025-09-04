@@ -1,15 +1,15 @@
 import path from "node:path";
 import fs from "fs-extra";
-import type { PackageManager, ProjectConfig } from "../../../types";
-import { addPackageDependency } from "../../../utils/add-package-deps";
-import { setupAlchemyServerDeploy } from "../server-deploy-setup";
-import { setupNextAlchemyDeploy } from "./alchemy-next-setup";
-import { setupNuxtAlchemyDeploy } from "./alchemy-nuxt-setup";
-import { setupReactRouterAlchemyDeploy } from "./alchemy-react-router-setup";
-import { setupSolidAlchemyDeploy } from "./alchemy-solid-setup";
-import { setupSvelteAlchemyDeploy } from "./alchemy-svelte-setup";
-import { setupTanStackRouterAlchemyDeploy } from "./alchemy-tanstack-router-setup";
-import { setupTanStackStartAlchemyDeploy } from "./alchemy-tanstack-start-setup";
+import type { PackageManager, ProjectConfig } from "@/types";
+import { addPackageDependency } from "@/utils/add-package-deps";
+import { setupAlchemyServerDeploy } from "@/helpers/deployment/server-deploy-setup";
+import { setupNextAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-next-setup";
+import { setupNuxtAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-nuxt-setup";
+import { setupReactRouterAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-react-router-setup";
+import { setupSolidAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-solid-setup";
+import { setupSvelteAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-svelte-setup";
+import { setupTanStackRouterAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-tanstack-router-setup";
+import { setupTanStackStartAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-tanstack-start-setup";
 
 export async function setupCombinedAlchemyDeploy(
 	projectDir: string,

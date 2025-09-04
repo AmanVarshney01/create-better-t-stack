@@ -1,4 +1,4 @@
-import type { PackageManager } from "../types";
+import type { PackageManager } from "@/types";
 
 /**
  * Returns the appropriate command for running a package without installing it globally,

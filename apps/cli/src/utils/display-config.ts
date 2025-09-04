@@ -1,5 +1,5 @@
 import pc from "picocolors";
-import type { ProjectConfig } from "../types";
+import type { ProjectConfig } from "@/types";
 
 export function displayConfig(config: Partial<ProjectConfig>) {
 	const configDisplay: string[] = [];

@@ -1,15 +1,15 @@
-import type { CLIInput, ProjectConfig } from "./types";
+import type { CLIInput, ProjectConfig } from "@/types";
 import {
 	getProvidedFlags,
 	processFlags,
 	validateArrayOptions,
-} from "./utils/config-processing";
+} from "@/utils/config-processing";
 import {
 	validateConfigForProgrammaticUse,
 	validateFullConfig,
-} from "./utils/config-validation";
-import { exitWithError } from "./utils/errors";
-import { extractAndValidateProjectName } from "./utils/project-name-validation";
+} from "@/utils/config-validation";
+import { exitWithError } from "@/utils/errors";
+import { extractAndValidateProjectName } from "@/utils/project-name-validation";
 
 const CORE_STACK_FLAGS = new Set([
 	"database",

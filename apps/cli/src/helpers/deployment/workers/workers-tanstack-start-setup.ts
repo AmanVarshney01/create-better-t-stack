@@ -6,9 +6,9 @@ import {
 	type ObjectLiteralExpression,
 	SyntaxKind,
 } from "ts-morph";
-import type { PackageManager } from "../../../types";
-import { addPackageDependency } from "../../../utils/add-package-deps";
-import { ensureArrayProperty, tsProject } from "../../../utils/ts-morph";
+import type { PackageManager } from "@/types";
+import { addPackageDependency } from "@/utils/add-package-deps";
+import { ensureArrayProperty, tsProject } from "@/utils/ts-morph";
 
 export async function setupTanstackStartWorkersDeploy(
 	projectDir: string,

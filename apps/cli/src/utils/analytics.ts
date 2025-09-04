@@ -1,6 +1,6 @@
-import type { ProjectConfig } from "../types";
-import { getLatestCLIVersion } from "./get-latest-cli-version";
-import { isTelemetryEnabled } from "./telemetry";
+import type { ProjectConfig } from "@/types";
+import { getLatestCLIVersion } from "@/utils/get-latest-cli-version";
+import { isTelemetryEnabled } from "@/utils/telemetry";
 
 const POSTHOG_API_KEY = process.env.POSTHOG_API_KEY || "";
 const POSTHOG_HOST = process.env.POSTHOG_HOST;

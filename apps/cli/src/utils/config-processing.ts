@@ -12,7 +12,7 @@ import type {
 	Runtime,
 	ServerDeploy,
 	WebDeploy,
-} from "../types";
+} from "@/types";
 
 export function processArrayOption<T>(
 	options: (T | "none")[] | undefined,

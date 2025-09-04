@@ -1,8 +1,8 @@
 import path from "node:path";
 import fs from "fs-extra";
-import type { AvailableDependencies } from "../../constants";
-import type { ProjectConfig } from "../../types";
-import { addPackageDependency } from "../../utils/add-package-deps";
+import type { AvailableDependencies } from "@/constants";
+import type { ProjectConfig } from "@/types";
+import { addPackageDependency } from "@/utils/add-package-deps";
 
 export async function setupExamples(config: ProjectConfig) {
 	const { examples, frontend, backend, projectDir } = config;

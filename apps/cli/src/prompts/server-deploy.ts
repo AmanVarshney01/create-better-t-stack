@@ -1,7 +1,7 @@
 import { isCancel, select } from "@clack/prompts";
-import { DEFAULT_CONFIG } from "../constants";
-import type { Backend, Runtime, ServerDeploy, WebDeploy } from "../types";
-import { exitCancelled } from "../utils/errors";
+import { DEFAULT_CONFIG } from "@/constants";
+import type { Backend, Runtime, ServerDeploy, WebDeploy } from "@/types";
+import { exitCancelled } from "@/utils/errors";
 
 type DeploymentOption = {
 	value: ServerDeploy;

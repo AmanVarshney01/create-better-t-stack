@@ -6,8 +6,8 @@ import {
 	type ObjectLiteralExpression,
 	SyntaxKind,
 } from "ts-morph";
-import { addPackageDependency } from "../../../utils/add-package-deps";
-import { ensureArrayProperty, tsProject } from "../../../utils/ts-morph";
+import { addPackageDependency } from "@/utils/add-package-deps";
+import { ensureArrayProperty, tsProject } from "@/utils/ts-morph";
 
 export async function setupWorkersVitePlugin(projectDir: string) {
 	const webAppDir = path.join(projectDir, "apps/web");

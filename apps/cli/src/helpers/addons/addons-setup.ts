@@ -3,15 +3,15 @@ import { log } from "@clack/prompts";
 import { execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
-import type { Frontend, PackageManager, ProjectConfig } from "../../types";
-import { addPackageDependency } from "../../utils/add-package-deps";
-import { getPackageExecutionCommand } from "../../utils/package-runner";
-import { setupFumadocs } from "./fumadocs-setup";
-import { setupVibeRules } from "./ruler-setup";
-import { setupStarlight } from "./starlight-setup";
-import { setupTauri } from "./tauri-setup";
-import { setupUltracite } from "./ultracite-setup";
-import { addPwaToViteConfig } from "./vite-pwa-setup";
+import type { Frontend, PackageManager, ProjectConfig } from "@/types";
+import { addPackageDependency } from "@/utils/add-package-deps";
+import { getPackageExecutionCommand } from "@/utils/package-runner";
+import { setupFumadocs } from "@/helpers/addons/fumadocs-setup";
+import { setupVibeRules } from "@/helpers/addons/ruler-setup";
+import { setupStarlight } from "@/helpers/addons/starlight-setup";
+import { setupTauri } from "@/helpers/addons/tauri-setup";
+import { setupUltracite } from "@/helpers/addons/ultracite-setup";
+import { addPwaToViteConfig } from "@/helpers/addons/vite-pwa-setup";
 
 export async function setupAddons(config: ProjectConfig, isAddCommand = false) {
 	const { addons, frontend, projectDir, packageManager } = config;

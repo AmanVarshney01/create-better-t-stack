@@ -1,7 +1,7 @@
 import path from "node:path";
 import fs from "fs-extra";
-import type { Backend, ProjectConfig } from "../../types";
-import { addPackageDependency } from "../../utils/add-package-deps";
+import type { Backend, ProjectConfig } from "@/types";
+import { addPackageDependency } from "@/utils/add-package-deps";
 
 export async function setupRuntime(config: ProjectConfig) {
 	const { runtime, backend, projectDir } = config;

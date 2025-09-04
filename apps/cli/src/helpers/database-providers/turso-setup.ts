@@ -4,10 +4,13 @@ import { confirm, isCancel, log, select, spinner, text } from "@clack/prompts";
 import consola from "consola";
 import { $ } from "execa";
 import pc from "picocolors";
-import type { ProjectConfig } from "../../types";
-import { commandExists } from "../../utils/command-exists";
-import { exitCancelled } from "../../utils/errors";
-import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
+import type { ProjectConfig } from "@/types";
+import { commandExists } from "@/utils/command-exists";
+import { exitCancelled } from "@/utils/errors";
+import {
+	addEnvVariablesToFile,
+	type EnvVariable,
+} from "@/helpers/core/env-setup";
 
 type TursoConfig = {
 	dbUrl: string;

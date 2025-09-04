@@ -14,7 +14,6 @@ import { getServerDeploymentToAdd } from "@/prompts/server-deploy";
 import { getDeploymentToAdd } from "@/prompts/web-deploy";
 import type { AddInput, CreateInput, InitResult, ProjectConfig } from "@/types";
 import { trackProjectCreation } from "@/utils/analytics";
-
 import { displayConfig } from "@/utils/display-config";
 import { exitWithError, handleError } from "@/utils/errors";
 import { generateReproducibleCommand } from "@/utils/generate-reproducible-command";
@@ -69,6 +68,7 @@ export async function createProjectHandler(
 	let finalPathInput: string;
 	let shouldClearDirectory: boolean;
 
+	// This will run only when --yes and project-name is given.
 	try {
 		if (input.directoryConflict) {
 			const result = await handleDirectoryConflictProgrammatically(

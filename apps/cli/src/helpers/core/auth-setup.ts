@@ -2,8 +2,8 @@ import path from "node:path";
 import consola from "consola";
 import fs from "fs-extra";
 import pc from "picocolors";
-import type { ProjectConfig } from "../../types";
-import { addPackageDependency } from "../../utils/add-package-deps";
+import type { ProjectConfig } from "@/types";
+import { addPackageDependency } from "@/utils/add-package-deps";
 
 export async function setupAuth(config: ProjectConfig) {
 	const { auth, frontend, backend, projectDir } = config;

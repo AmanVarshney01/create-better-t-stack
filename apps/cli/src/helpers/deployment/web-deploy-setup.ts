@@ -1,19 +1,19 @@
 import path from "node:path";
 import fs from "fs-extra";
-import type { PackageManager, ProjectConfig } from "../../types";
-import { setupCombinedAlchemyDeploy } from "./alchemy/alchemy-combined-setup";
-import { setupNextAlchemyDeploy } from "./alchemy/alchemy-next-setup";
-import { setupNuxtAlchemyDeploy } from "./alchemy/alchemy-nuxt-setup";
-import { setupReactRouterAlchemyDeploy } from "./alchemy/alchemy-react-router-setup";
-import { setupSolidAlchemyDeploy } from "./alchemy/alchemy-solid-setup";
-import { setupSvelteAlchemyDeploy } from "./alchemy/alchemy-svelte-setup";
-import { setupTanStackRouterAlchemyDeploy } from "./alchemy/alchemy-tanstack-router-setup";
-import { setupTanStackStartAlchemyDeploy } from "./alchemy/alchemy-tanstack-start-setup";
-import { setupNextWorkersDeploy } from "./workers/workers-next-setup";
-import { setupNuxtWorkersDeploy } from "./workers/workers-nuxt-setup";
-import { setupSvelteWorkersDeploy } from "./workers/workers-svelte-setup";
-import { setupTanstackStartWorkersDeploy } from "./workers/workers-tanstack-start-setup";
-import { setupWorkersVitePlugin } from "./workers/workers-vite-setup";
+import type { PackageManager, ProjectConfig } from "@/types";
+import { setupCombinedAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-combined-setup";
+import { setupNextAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-next-setup";
+import { setupNuxtAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-nuxt-setup";
+import { setupReactRouterAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-react-router-setup";
+import { setupSolidAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-solid-setup";
+import { setupSvelteAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-svelte-setup";
+import { setupTanStackRouterAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-tanstack-router-setup";
+import { setupTanStackStartAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-tanstack-start-setup";
+import { setupNextWorkersDeploy } from "@/helpers/deployment/workers/workers-next-setup";
+import { setupNuxtWorkersDeploy } from "@/helpers/deployment/workers/workers-nuxt-setup";
+import { setupSvelteWorkersDeploy } from "@/helpers/deployment/workers/workers-svelte-setup";
+import { setupTanstackStartWorkersDeploy } from "@/helpers/deployment/workers/workers-tanstack-start-setup";
+import { setupWorkersVitePlugin } from "@/helpers/deployment/workers/workers-vite-setup";
 
 export async function setupWebDeploy(config: ProjectConfig) {
 	const { webDeploy, serverDeploy, frontend, projectDir } = config;
