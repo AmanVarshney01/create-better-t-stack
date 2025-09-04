@@ -9,6 +9,7 @@ import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { RPCHandler } from "@orpc/server/fetch";
+import { onError } from "@orpc/server";
 import { createContext } from "./lib/context";
 import { appRouter } from "./routers/index";
 {{/if}}
@@ -63,9 +64,20 @@ export const apiHandler = new OpenAPIHandler(appRouter, {
       schemaConverters: [new ZodToJsonSchemaConverter()],
     }),
   ],
+  interceptors: [
+    onError((error) => {
+      console.error(error);
+    }),
+  ],
 });
 
-export const rpcHandler = new RPCHandler(appRouter);
+export const rpcHandler = new RPCHandler(appRouter, {
+  interceptors: [
+    onError((error) => {
+      console.error(error);
+    }),
+  ],
+});
 
 app.use("/*", async (c, next) => {
   const context = await createContext({ context: c });

@@ -9,6 +9,7 @@ import { OpenAPIHandler } from "@orpc/openapi/node";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { RPCHandler } from "@orpc/server/node";
+import { onError } from "@orpc/server";
 import { appRouter } from "./routers";
 {{#if (eq auth "better-auth")}}
 import { createContext } from "./lib/context";
@@ -53,11 +54,22 @@ app.use(
 {{/if}}
 
 {{#if (eq api "orpc")}}
-const rpcHandler = new RPCHandler(appRouter);
+const rpcHandler = new RPCHandler(appRouter, {
+  interceptors: [
+    onError((error) => {
+      console.error(error);
+    }),
+  ],
+});
 const apiHandler = new OpenAPIHandler(appRouter, {
   plugins: [
     new OpenAPIReferencePlugin({
       schemaConverters: [new ZodToJsonSchemaConverter()],
+    }),
+  ],
+  interceptors: [
+    onError((error) => {
+      console.error(error);
     }),
   ],
 });
