@@ -114,7 +114,6 @@ export function ShareDialog({
 		);
 	};
 
-	// Generate QR code using local qrcode library
 	useEffect(() => {
 		const generateQRCode = async () => {
 			try {
@@ -261,25 +260,6 @@ export function ShareDialog({
 											: "./copy --url clipboard"}
 									</span>
 								</button>
-							</div>
-						</div>
-					</div>
-
-					<div className="rounded border border-border">
-						<div className="border-border border-b px-3 py-2">
-							<div className="flex items-center gap-2">
-								<span className="text-primary text-xs">▶</span>
-								<span className="font-mono font-semibold text-foreground text-xs">
-									OUTPUT.URL
-								</span>
-							</div>
-						</div>
-						<div className="p-3">
-							<div className="flex items-center gap-2 text-xs">
-								<span className="text-primary">$</span>
-								<code className="flex-1 truncate text-muted-foreground">
-									{stackUrl}
-								</code>
 							</div>
 						</div>
 					</div>
