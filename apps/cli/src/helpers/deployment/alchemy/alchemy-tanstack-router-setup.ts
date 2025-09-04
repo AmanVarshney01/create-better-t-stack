@@ -25,7 +25,6 @@ export async function setupTanStackRouterAlchemyDeploy(
 				...pkg.scripts,
 				deploy: "alchemy deploy",
 				destroy: "alchemy destroy",
-				dev: "alchemy dev",
 			};
 		}
 

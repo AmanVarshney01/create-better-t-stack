@@ -5,6 +5,9 @@ import "dotenv/config";
 import { env } from "cloudflare:workers";
 {{/if}}
 {{#if (eq api "orpc")}}
+import { OpenAPIHandler } from "@orpc/openapi/fetch";
+import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { RPCHandler } from "@orpc/server/fetch";
 import { createContext } from "./lib/context";
 import { appRouter } from "./routers/index";
@@ -54,17 +57,37 @@ app.on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw));
 {{/if}}
 
 {{#if (eq api "orpc")}}
-const handler = new RPCHandler(appRouter);
-app.use("/rpc/*", async (c, next) => {
+export const apiHandler = new OpenAPIHandler(appRouter, {
+  plugins: [
+    new OpenAPIReferencePlugin({
+      schemaConverters: [new ZodToJsonSchemaConverter()],
+    }),
+  ],
+});
+
+export const rpcHandler = new RPCHandler(appRouter);
+
+app.use("/*", async (c, next) => {
   const context = await createContext({ context: c });
-  const { matched, response } = await handler.handle(c.req.raw, {
+
+  const rpcResult = await rpcHandler.handle(c.req.raw, {
     prefix: "/rpc",
     context: context,
   });
 
-  if (matched) {
-    return c.newResponse(response.body, response);
+  if (rpcResult.matched) {
+    return c.newResponse(rpcResult.response.body, rpcResult.response);
   }
+
+  const apiResult = await apiHandler.handle(c.req.raw, {
+    prefix: "/api",
+    context: context,
+  });
+
+  if (apiResult.matched) {
+    return c.newResponse(apiResult.response.body, apiResult.response);
+  }
+
   await next();
 });
 {{/if}}

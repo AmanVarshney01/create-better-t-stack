@@ -54,7 +54,14 @@ function getApiDependencies(
 	> = {};
 
 	if (api === "orpc") {
-		deps.server = { dependencies: ["@orpc/server", "@orpc/client"] };
+		deps.server = {
+			dependencies: [
+				"@orpc/server",
+				"@orpc/client",
+				"@orpc/openapi",
+				"@orpc/zod",
+			],
+		};
 	} else if (api === "trpc") {
 		deps.server = { dependencies: ["@trpc/server", "@trpc/client"] };
 	}

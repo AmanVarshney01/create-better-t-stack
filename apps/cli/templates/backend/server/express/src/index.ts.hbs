@@ -5,6 +5,9 @@ import { createContext } from "./lib/context";
 import { appRouter } from "./routers/index";
 {{/if}}
 {{#if (eq api "orpc")}}
+import { OpenAPIHandler } from "@orpc/openapi/node";
+import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { RPCHandler } from "@orpc/server/node";
 import { appRouter } from "./routers";
 {{#if (eq auth "better-auth")}}
@@ -50,9 +53,17 @@ app.use(
 {{/if}}
 
 {{#if (eq api "orpc")}}
-const handler = new RPCHandler(appRouter);
-app.use("/rpc{*path}", async (req, res, next) => {
-  const { matched } = await handler.handle(req, res, {
+const rpcHandler = new RPCHandler(appRouter);
+const apiHandler = new OpenAPIHandler(appRouter, {
+  plugins: [
+    new OpenAPIReferencePlugin({
+      schemaConverters: [new ZodToJsonSchemaConverter()],
+    }),
+  ],
+});
+
+app.use(async (req, res, next) => {
+  const rpcResult = await rpcHandler.handle(req, res, {
     prefix: "/rpc",
     {{#if (eq auth "better-auth")}}
     context: await createContext({ req }),
@@ -60,7 +71,18 @@ app.use("/rpc{*path}", async (req, res, next) => {
     context: {},
     {{/if}}
   });
-  if (matched) return;
+  if (rpcResult.matched) return;
+
+  const apiResult = await apiHandler.handle(req, res, {
+    prefix: "/api",
+    {{#if (eq auth "better-auth")}}
+    context: await createContext({ req }),
+    {{else}}
+    context: {},
+    {{/if}}
+  });
+  if (apiResult.matched) return;
+
   next();
 });
 {{/if}}

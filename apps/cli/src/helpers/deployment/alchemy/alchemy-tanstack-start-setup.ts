@@ -26,7 +26,6 @@ export async function setupTanStackStartAlchemyDeploy(
 				...pkg.scripts,
 				deploy: "alchemy deploy",
 				destroy: "alchemy destroy",
-				dev: "alchemy dev",
 			};
 		}
 

@@ -25,7 +25,6 @@ export async function setupReactRouterAlchemyDeploy(
 				...pkg.scripts,
 				deploy: "alchemy deploy",
 				destroy: "alchemy destroy",
-				dev: "alchemy dev",
 			};
 		}
 		await fs.writeJson(pkgPath, pkg, { spaces: 2 });
