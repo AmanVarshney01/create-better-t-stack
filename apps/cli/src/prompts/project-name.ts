@@ -1,17 +1,10 @@
 import path from "node:path";
 import { isCancel, text } from "@clack/prompts";
-import consola from "consola";
 import fs from "fs-extra";
-import pc from "picocolors";
 import { DEFAULT_CONFIG } from "@/constants/default-configurations";
 import { ProjectNameSchema } from "@/types";
 import { exitCancelled } from "@/utils/errors";
-
-function isPathWithinCwd(targetPath: string): boolean {
-	const resolved = path.resolve(targetPath);
-	const rel = path.relative(process.cwd(), resolved);
-	return !rel.startsWith("..") && !path.isAbsolute(rel);
-}
+import { isSafeProjectPath } from "@/utils/is-safe-project-path";
 
 function validateDirectoryName(name: string): string | undefined {
 	if (name === ".") return undefined;
@@ -21,22 +14,6 @@ function validateDirectoryName(name: string): string | undefined {
 		return result.error.issues[0]?.message || "Invalid project name";
 	}
 	return undefined;
-}
-
-export function isSafeProjectPath(initialName?: string): boolean {
-	if (initialName === ".") {
-		return true;
-	}
-
-	if (initialName) {
-		const projectDir = path.resolve(process.cwd(), initialName);
-		if (isPathWithinCwd(projectDir)) {
-			return true;
-		}
-		consola.error(pc.red("Project path must be within current directory"));
-	}
-
-	return false;
 }
 
 export async function getProjectName(initialName?: string): Promise<string> {

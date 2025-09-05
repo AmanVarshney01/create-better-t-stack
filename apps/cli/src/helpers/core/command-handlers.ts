@@ -9,11 +9,7 @@ import { detectProjectConfig } from "@/helpers/core/detect-project-config";
 import { installDependencies } from "@/helpers/core/install-dependencies";
 import { getAddonsToAdd } from "@/prompts/addons";
 import { gatherConfig } from "@/prompts/config-prompts";
-import {
-	getDefaultName,
-	getProjectName,
-	isSafeProjectPath,
-} from "@/prompts/project-name";
+import { getDefaultName, getProjectName } from "@/prompts/project-name";
 import { getServerDeploymentToAdd } from "@/prompts/server-deploy";
 import { getDeploymentToAdd } from "@/prompts/web-deploy";
 import type { AddInput, CreateInput, InitResult, ProjectConfig } from "@/types";
@@ -33,6 +29,7 @@ import {
 	processProvidedFlagsWithoutValidation,
 	validateConfigCompatibility,
 } from "@/validation";
+import { isSafeProjectPath } from "@/utils/is-safe-project-path";
 
 export async function createProjectHandler(
 	input: CreateInput,

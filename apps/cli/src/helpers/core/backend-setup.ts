@@ -1,5 +1,5 @@
 import path from "node:path";
-import type { AvailableDependencies } from "@/constants/default-configurations";
+import type { AvailableDependencies } from "@/constants/dependency-version-map";
 import type { ProjectConfig } from "@/types";
 import { addPackageDependency } from "@/utils/add-package-deps";
 
@@ -9,6 +9,8 @@ export async function setupBackendDependencies(config: ProjectConfig) {
 	if (backend === "convex") {
 		return;
 	}
+
+	// TODO: Add turbo dependency in nextjs app when turborepo addons is supported
 
 	const framework = backend;
 	const serverDir = path.join(projectDir, "apps/server");
