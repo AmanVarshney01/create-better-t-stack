@@ -1,6 +1,5 @@
 import path from "node:path";
 import fs from "fs-extra";
-import type { PackageManager, ProjectConfig } from "@/types";
 import { setupCombinedAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-combined-setup";
 import { setupNextAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-next-setup";
 import { setupNuxtAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-nuxt-setup";
@@ -14,6 +13,7 @@ import { setupNuxtWorkersDeploy } from "@/helpers/deployment/workers/workers-nux
 import { setupSvelteWorkersDeploy } from "@/helpers/deployment/workers/workers-svelte-setup";
 import { setupTanstackStartWorkersDeploy } from "@/helpers/deployment/workers/workers-tanstack-start-setup";
 import { setupWorkersVitePlugin } from "@/helpers/deployment/workers/workers-vite-setup";
+import type { PackageManager, ProjectConfig } from "@/types";
 
 export async function setupWebDeploy(config: ProjectConfig) {
 	const { webDeploy, serverDeploy, frontend, projectDir } = config;

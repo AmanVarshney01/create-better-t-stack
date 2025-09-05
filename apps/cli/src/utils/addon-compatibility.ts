@@ -1,4 +1,4 @@
-import { ADDON_COMPATIBILITY } from "@/constants";
+import { ADDON_COMPATIBILITY } from "@/constants/compatibility";
 import type { Addons, Frontend } from "@/types";
 
 export function validateAddonCompatibility(

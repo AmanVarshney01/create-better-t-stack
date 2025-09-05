@@ -1,46 +1,31 @@
 import { intro, log } from "@clack/prompts";
 import pc from "picocolors";
 import { createCli, trpcServer } from "trpc-cli";
-import z from "zod";
 import {
 	addAddonsHandler,
 	createProjectHandler,
 } from "@/helpers/core/command-handlers";
 import {
 	type AddInput,
+	AddInputSchema,
 	type Addons,
-	AddonsSchema,
 	type API,
-	APISchema,
-	AuthSchema,
 	type Backend,
-	BackendSchema,
 	type BetterTStackConfig,
 	type CreateInput,
+	CreateInputSchema,
 	type Database,
-	DatabaseSchema,
 	type DatabaseSetup,
-	DatabaseSetupSchema,
 	type DirectoryConflict,
-	DirectoryConflictSchema,
-	DockerSchema,
 	type Examples,
-	ExamplesSchema,
 	type Frontend,
-	FrontendSchema,
 	type InitResult,
 	type ORM,
-	ORMSchema,
 	type PackageManager,
-	PackageManagerSchema,
 	type ProjectConfig,
-	ProjectNameSchema,
 	type Runtime,
-	RuntimeSchema,
 	type ServerDeploy,
-	ServerDeploySchema,
 	type WebDeploy,
-	WebDeploySchema,
 } from "@/types";
 import { handleError } from "@/utils/errors";
 import { getLatestCLIVersion } from "@/utils/get-latest-cli-version";
@@ -57,53 +42,7 @@ export const router = t.router({
 			default: true,
 			negateBooleans: true,
 		})
-		.input(
-			z.tuple([
-				ProjectNameSchema.optional(),
-				z.object({
-					yes: z
-						.boolean()
-						.optional()
-						.default(false)
-						.describe("Use default configuration"),
-					yolo: z
-						.boolean()
-						.optional()
-						.default(false)
-						.describe(
-							"(WARNING - NOT RECOMMENDED) Bypass validations and compatibility checks",
-						),
-					verbose: z
-						.boolean()
-						.optional()
-						.default(false)
-						.describe("Show detailed result information"),
-					database: DatabaseSchema.optional(),
-					orm: ORMSchema.optional(),
-					auth: AuthSchema.optional(),
-					frontend: z.array(FrontendSchema).optional(),
-					addons: z.array(AddonsSchema).optional(),
-					docker: z.array(DockerSchema).optional(),
-					examples: z.array(ExamplesSchema).optional(),
-					git: z.boolean().optional(),
-					packageManager: PackageManagerSchema.optional(),
-					install: z.boolean().optional(),
-					dbSetup: DatabaseSetupSchema.optional(),
-					backend: BackendSchema.optional(),
-					runtime: RuntimeSchema.optional(),
-					api: APISchema.optional(),
-					webDeploy: WebDeploySchema.optional(),
-					serverDeploy: ServerDeploySchema.optional(),
-					directoryConflict: DirectoryConflictSchema.optional(),
-					renderTitle: z.boolean().optional(),
-					disableAnalytics: z
-						.boolean()
-						.optional()
-						.default(false)
-						.describe("Disable analytics"),
-				}),
-			]),
-		)
+		.input(CreateInputSchema)
 		.mutation(async ({ input }) => {
 			const [projectName, options] = input;
 			const combinedInput = {
@@ -121,27 +60,11 @@ export const router = t.router({
 			description:
 				"Add addons or deployment configurations to an existing Better-T-Stack project",
 		})
-		.input(
-			z.tuple([
-				z.object({
-					addons: z.array(AddonsSchema).optional().default([]),
-					webDeploy: WebDeploySchema.optional(),
-					serverDeploy: ServerDeploySchema.optional(),
-					projectDir: z.string().optional(),
-					install: z
-						.boolean()
-						.optional()
-						.default(false)
-						.describe("Install dependencies after adding addons or deployment"),
-					packageManager: PackageManagerSchema.optional(),
-				}),
-			]),
-		)
+		.input(AddInputSchema)
 		.mutation(async ({ input }) => {
 			const [options] = input;
 			await addAddonsHandler(options);
 		}),
-	// This command is brocken
 	sponsors: t.procedure
 		.meta({ description: "Show Better-T-Stack sponsors" })
 		.mutation(async () => {
@@ -267,8 +190,3 @@ export type {
 	BetterTStackConfig,
 	InitResult,
 };
-
-// TODO: Write all docker files
-// TODO: Write docker-compose file
-// TODO: Check all command-programmatic-api is running
-// TODO: Update the docs and builder

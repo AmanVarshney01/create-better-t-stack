@@ -1,5 +1,5 @@
 import { isCancel, multiselect } from "@clack/prompts";
-import { DEFAULT_CONFIG } from "@/constants";
+import { DEFAULT_CONFIG } from "@/constants/default-configurations";
 import type { API, Backend, Database, Examples, Frontend } from "@/types";
 import {
 	isExampleAIAllowed,

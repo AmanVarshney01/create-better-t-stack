@@ -1,0 +1,37 @@
+import { CORE_BACKEND_FRAMEWORKS_MAP } from "@/constants/backend-frameworks";
+import {
+	FRONTEND_FRAMEWORKS_MAP,
+	WEB_FRONTEND_FRAMEWORKS_LIST,
+} from "@/constants/frontend-frameworks";
+
+export const ADDON_COMPATIBILITY = {
+	pwa: [
+		FRONTEND_FRAMEWORKS_MAP.TANSTACK_ROUTER,
+		FRONTEND_FRAMEWORKS_MAP.REACT_ROUTER,
+		FRONTEND_FRAMEWORKS_MAP.SOLID,
+		FRONTEND_FRAMEWORKS_MAP.NEXT,
+	],
+	tauri: [
+		FRONTEND_FRAMEWORKS_MAP.TANSTACK_ROUTER,
+		FRONTEND_FRAMEWORKS_MAP.REACT_ROUTER,
+		FRONTEND_FRAMEWORKS_MAP.NUXT,
+		FRONTEND_FRAMEWORKS_MAP.SVELTE,
+		FRONTEND_FRAMEWORKS_MAP.SOLID,
+		FRONTEND_FRAMEWORKS_MAP.NEXT,
+	],
+	biome: [],
+	husky: [],
+	turborepo: [],
+	starlight: [],
+	ultracite: [],
+	ruler: [],
+	oxlint: [],
+	fumadocs: [],
+	none: [],
+} as const;
+
+export const DOCKER_COMPATIBILITY = {
+	"app-server": CORE_BACKEND_FRAMEWORKS_MAP,
+	"app-web": WEB_FRONTEND_FRAMEWORKS_LIST,
+	none: [],
+};

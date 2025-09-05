@@ -1,4 +1,20 @@
 import { group } from "@clack/prompts";
+import { getAddonsChoice } from "@/prompts/addons";
+import { getApiChoice } from "@/prompts/api";
+import { getAuthChoice } from "@/prompts/auth";
+import { getBackendFrameworkChoice } from "@/prompts/backend";
+import { getDatabaseChoice } from "@/prompts/database";
+import { getDBSetupChoice } from "@/prompts/database-setup";
+import { getDockerChoice } from "@/prompts/docker";
+import { getExamplesChoice } from "@/prompts/examples";
+import { getFrontendChoice } from "@/prompts/frontend";
+import { getGitChoice } from "@/prompts/git";
+import { getinstallChoice } from "@/prompts/install";
+import { getORMChoice } from "@/prompts/orm";
+import { getPackageManagerChoice } from "@/prompts/package-manager";
+import { getRuntimeChoice } from "@/prompts/runtime";
+import { getServerDeploymentChoice } from "@/prompts/server-deploy";
+import { getDeploymentChoice } from "@/prompts/web-deploy";
 import type {
 	Addons,
 	API,
@@ -17,22 +33,6 @@ import type {
 	WebDeploy,
 } from "@/types";
 import { exitCancelled } from "@/utils/errors";
-import { getAddonsChoice } from "@/prompts/addons";
-import { getApiChoice } from "@/prompts/api";
-import { getAuthChoice } from "@/prompts/auth";
-import { getBackendFrameworkChoice } from "@/prompts/backend";
-import { getDatabaseChoice } from "@/prompts/database";
-import { getDBSetupChoice } from "@/prompts/database-setup";
-import { getExamplesChoice } from "@/prompts/examples";
-import { getFrontendChoice } from "@/prompts/frontend";
-import { getGitChoice } from "@/prompts/git";
-import { getinstallChoice } from "@/prompts/install";
-import { getORMChoice } from "@/prompts/orm";
-import { getPackageManagerChoice } from "@/prompts/package-manager";
-import { getRuntimeChoice } from "@/prompts/runtime";
-import { getServerDeploymentChoice } from "@/prompts/server-deploy";
-import { getDeploymentChoice } from "@/prompts/web-deploy";
-import { getDockerChoice } from "@/prompts/docker";
 
 type PromptGroupResults = {
 	frontend: Frontend[];

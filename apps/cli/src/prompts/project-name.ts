@@ -3,9 +3,9 @@ import { isCancel, text } from "@clack/prompts";
 import consola from "consola";
 import fs from "fs-extra";
 import pc from "picocolors";
-import { DEFAULT_CONFIG } from "@/constants";
-import { exitCancelled } from "@/utils/errors";
+import { DEFAULT_CONFIG } from "@/constants/default-configurations";
 import { ProjectNameSchema } from "@/types";
+import { exitCancelled } from "@/utils/errors";
 
 function isPathWithinCwd(targetPath: string): boolean {
 	const resolved = path.resolve(targetPath);
@@ -85,3 +85,8 @@ export async function getDefaultName(): Promise<string> {
 
 	return defaultName;
 }
+
+// TODO: Write all docker files
+// TODO: Write docker-compose file
+// TODO: Check all command-programmatic-api is running
+// TODO: Update the docs and builder

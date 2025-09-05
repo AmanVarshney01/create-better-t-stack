@@ -3,8 +3,8 @@ import { isCancel, log, select, spinner } from "@clack/prompts";
 import fs from "fs-extra";
 import pc from "picocolors";
 import { getProjectName } from "@/prompts/project-name";
-import { exitCancelled, handleError } from "@/utils/errors";
 import type { DirectoryConflict } from "@/types";
+import { exitCancelled, handleError } from "@/utils/errors";
 
 export async function handleDirectoryConflictProgrammatically(
 	currentPathInput: string,

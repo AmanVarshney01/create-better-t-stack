@@ -1,5 +1,5 @@
 import { isCancel, multiselect, select } from "@clack/prompts";
-import { DEFAULT_CONFIG } from "@/constants";
+import { DEFAULT_CONFIG } from "@/constants/default-configurations";
 import type { Backend, Frontend } from "@/types";
 import { isFrontendAllowedWithBackend } from "@/utils/compatibility-rules";
 import { exitCancelled } from "@/utils/errors";

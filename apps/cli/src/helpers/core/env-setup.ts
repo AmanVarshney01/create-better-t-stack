@@ -1,7 +1,7 @@
 import path from "node:path";
 import fs from "fs-extra";
-import type { ProjectConfig } from "@/types";
 import { generateAuthSecret } from "@/helpers/core/auth-setup";
+import type { ProjectConfig } from "@/types";
 
 export interface EnvVariable {
 	key: string;

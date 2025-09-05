@@ -1,8 +1,5 @@
 import path from "node:path";
 import fs from "fs-extra";
-import type { PackageManager, ProjectConfig } from "@/types";
-import { addPackageDependency } from "@/utils/add-package-deps";
-import { setupAlchemyServerDeploy } from "@/helpers/deployment/server-deploy-setup";
 import { setupNextAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-next-setup";
 import { setupNuxtAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-nuxt-setup";
 import { setupReactRouterAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-react-router-setup";
@@ -10,6 +7,9 @@ import { setupSolidAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-so
 import { setupSvelteAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-svelte-setup";
 import { setupTanStackRouterAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-tanstack-router-setup";
 import { setupTanStackStartAlchemyDeploy } from "@/helpers/deployment/alchemy/alchemy-tanstack-start-setup";
+import { setupAlchemyServerDeploy } from "@/helpers/deployment/server-deploy-setup";
+import type { PackageManager, ProjectConfig } from "@/types";
+import { addPackageDependency } from "@/utils/add-package-deps";
 
 export async function setupCombinedAlchemyDeploy(
 	projectDir: string,

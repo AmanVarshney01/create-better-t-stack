@@ -1,8 +1,12 @@
-// TODO: Fixed all import and export are not sorted error
 import { intro, log, outro } from "@clack/prompts";
 import consola from "consola";
 import pc from "picocolors";
-import { DEFAULT_CONFIG } from "@/constants";
+import { DEFAULT_CONFIG } from "@/constants/default-configurations";
+import { addAddonsToProject } from "@/helpers/core/add-addons";
+import { addDeploymentToProject } from "@/helpers/core/add-deployment";
+import { createProject } from "@/helpers/core/create-project";
+import { detectProjectConfig } from "@/helpers/core/detect-project-config";
+import { installDependencies } from "@/helpers/core/install-dependencies";
 import { getAddonsToAdd } from "@/prompts/addons";
 import { gatherConfig } from "@/prompts/config-prompts";
 import {
@@ -29,17 +33,11 @@ import {
 	processProvidedFlagsWithoutValidation,
 	validateConfigCompatibility,
 } from "@/validation";
-import { addAddonsToProject } from "@/helpers/core/add-addons";
-import { addDeploymentToProject } from "@/helpers/core/add-deployment";
-import { createProject } from "@/helpers/core/create-project";
-import { detectProjectConfig } from "@/helpers/core/detect-project-config";
-import { installDependencies } from "@/helpers/core/install-dependencies";
 
 export async function createProjectHandler(
-	input: CreateInput & { projectName?: string },
+	input: CreateInput,
 ): Promise<InitResult> {
 	const startTime = Date.now();
-	const timeScaffolded = new Date(startTime).toISOString();
 
 	if (input.renderTitle) {
 		renderTitle();
@@ -68,7 +66,6 @@ export async function createProjectHandler(
 	let finalPathInput: string;
 	let shouldClearDirectory: boolean;
 
-	// This will run only when --yes and project-name is given.
 	try {
 		if (input.directoryConflict) {
 			const result = await handleDirectoryConflictProgrammatically(
@@ -108,7 +105,7 @@ export async function createProjectHandler(
 				serverDeploy: "none",
 			} satisfies ProjectConfig,
 			reproducibleCommand: "",
-			timeScaffolded,
+			timeScaffolded: new Date(startTime).toISOString(),
 			elapsedTimeMs,
 			projectDirectory: "",
 			relativePath: "",
@@ -195,7 +192,7 @@ export async function createProjectHandler(
 		success: true,
 		projectConfig: config,
 		reproducibleCommand,
-		timeScaffolded,
+		timeScaffolded: new Date(startTime).toISOString(),
 		elapsedTimeMs,
 		projectDirectory: config.projectDir,
 		relativePath: config.relativePath,

@@ -56,7 +56,6 @@ export async function fetchSponsors(
 	return sponsors;
 }
 
-// TODO: Fixed the sponsor display
 export function displaySponsors(sponsors: SponsorEntry) {
 	const { total_sponsors } = sponsors.summary;
 	if (total_sponsors === 0) {
@@ -69,12 +68,12 @@ export function displaySponsors(sponsors: SponsorEntry) {
 		return;
 	}
 
+	// Due to limited terminal space, only the top sponsor should be displayed.
 	listSponsors(sponsors.specialSponsors);
 	// listSponsors(sponsors.sponsors);
 	// listSponsors(sponsors.pastSponsors);
 	// listSponsors(sponsors.backers);
 
-	log.message("");
 	outro(
 		pc.magenta(
 			`There are ${total_sponsors - sponsors.specialSponsors.length}+ more amazing sponsors.\n   https://github.com/sponsors/AmanVarshney01 to become a sponsor.`,

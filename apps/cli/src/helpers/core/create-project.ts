@@ -1,25 +1,25 @@
 import { log } from "@clack/prompts";
 import fs from "fs-extra";
-import type { ProjectConfig } from "@/types";
-import { writeBtsConfig } from "@/utils/bts-config";
-import { exitWithError } from "@/utils/errors";
-import { formatProjectWithBiome } from "@/utils/format-with-biome";
 import { setupAddons } from "@/helpers/addons/addons-setup";
 import { setupExamples } from "@/helpers/addons/examples-setup";
 import { setupApi } from "@/helpers/core/api-setup";
-import { setupBackendDependencies } from "@/helpers/core/backend-setup";
-import { setupDatabase } from "@/helpers/core/db-setup";
-import { setupRuntime } from "@/helpers/core/runtime-setup";
-import { setupServerDeploy } from "@/helpers/deployment/server-deploy-setup";
-import { setupWebDeploy } from "@/helpers/deployment/web-deploy-setup";
 import { setupAuth } from "@/helpers/core/auth-setup";
+import { setupBackendDependencies } from "@/helpers/core/backend-setup";
 import { runConvexCodegen } from "@/helpers/core/convex-codegen";
 import { createReadme } from "@/helpers/core/create-readme";
+import { setupDatabase } from "@/helpers/core/db-setup";
 import { setupEnvironmentVariables } from "@/helpers/core/env-setup";
 import { initializeGit } from "@/helpers/core/git";
 import { installDependencies } from "@/helpers/core/install-dependencies";
 import { displayPostInstallInstructions } from "@/helpers/core/post-installation";
 import { updatePackageConfigurations } from "@/helpers/core/project-config";
+import { setupRuntime } from "@/helpers/core/runtime-setup";
+import { setupServerDeploy } from "@/helpers/deployment/server-deploy-setup";
+import { setupWebDeploy } from "@/helpers/deployment/web-deploy-setup";
+import type { ProjectConfig } from "@/types";
+import { writeBtsConfig } from "@/utils/bts-config";
+import { exitWithError } from "@/utils/errors";
+import { formatProjectWithBiome } from "@/utils/format-with-biome";
 import {
 	copyBaseTemplate,
 	handleExtras,

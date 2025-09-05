@@ -4,14 +4,14 @@ import { consola } from "consola";
 import { execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
-import type { ORM, PackageManager, ProjectConfig } from "@/types";
-import { addPackageDependency } from "@/utils/add-package-deps";
-import { exitCancelled } from "@/utils/errors";
-import { getPackageExecutionCommand } from "@/utils/package-runner";
 import {
 	addEnvVariablesToFile,
 	type EnvVariable,
 } from "@/helpers/core/env-setup";
+import type { ORM, PackageManager, ProjectConfig } from "@/types";
+import { addPackageDependency } from "@/utils/add-package-deps";
+import { exitCancelled } from "@/utils/errors";
+import { getPackageExecutionCommand } from "@/utils/package-runner";
 
 type PrismaConfig = {
 	databaseUrl: string;

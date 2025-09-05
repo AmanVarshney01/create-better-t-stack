@@ -1,13 +1,12 @@
-const ORM_WITHOUT_NONE = {
-	drizzle: "drizzle",
-	prisma: "prisma",
-	mongoose: "mongoose",
+import { withNone } from "@/utils/common";
+
+const ORM_WITHOUT_NONE_MAP = {
+	DRIZZLE: "drizzle",
+	PRISMA: "prisma",
+	MONGO_DB: "mongoose",
 } as const;
 
-const ORM = {
-	...ORM_WITHOUT_NONE,
-	none: "none",
-} as const;
+const ORM_MAP = withNone(ORM_WITHOUT_NONE_MAP);
 
-export const ORMS_WITHOUT_NONE = Object.values(ORM_WITHOUT_NONE);
-export const ORMS = Object.values(ORM);
+export const ORM_WITHOUT_NONE = Object.values(ORM_WITHOUT_NONE_MAP);
+export const ORM = Object.values(ORM_MAP);

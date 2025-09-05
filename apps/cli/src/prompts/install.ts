@@ -1,5 +1,5 @@
 import { confirm, isCancel } from "@clack/prompts";
-import { DEFAULT_CONFIG } from "@/constants";
+import { DEFAULT_CONFIG } from "@/constants/default-configurations";
 import { exitCancelled } from "@/utils/errors";
 
 export async function getinstallChoice(install?: boolean) {

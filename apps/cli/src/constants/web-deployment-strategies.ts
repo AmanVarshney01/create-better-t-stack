@@ -1,0 +1,17 @@
+import { withNone } from "@/utils/common";
+
+export const WEB_DEPLOYMENT_STRATEGIES_WITHOUT_NONE_MAP = {
+	WRANGLER: "wrangler",
+	ALCHEMY: "alchemy",
+} as const;
+
+export const WEB_DEPLOYMENT_STRATEGIES_MAP = withNone(
+	WEB_DEPLOYMENT_STRATEGIES_WITHOUT_NONE_MAP,
+);
+
+export const WEB_DEPLOYMENT_STRATEGIES_WITHOUT_NONE = Object.values(
+	WEB_DEPLOYMENT_STRATEGIES_WITHOUT_NONE_MAP,
+);
+export const WEB_DEPLOYMENT_STRATEGIES = Object.values(
+	WEB_DEPLOYMENT_STRATEGIES_MAP,
+);

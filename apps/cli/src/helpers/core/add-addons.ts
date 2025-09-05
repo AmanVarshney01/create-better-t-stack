@@ -1,10 +1,6 @@
 import path from "node:path";
 import { log } from "@clack/prompts";
 import pc from "picocolors";
-import type { AddInput, Addons, ProjectConfig } from "@/types";
-import { validateAddonCompatibility } from "@/utils/addon-compatibility";
-import { updateBtsConfig } from "@/utils/bts-config";
-import { exitWithError } from "@/utils/errors";
 import { setupAddons } from "@/helpers/addons/addons-setup";
 import {
 	detectProjectConfig,
@@ -12,6 +8,10 @@ import {
 } from "@/helpers/core/detect-project-config";
 import { installDependencies } from "@/helpers/core/install-dependencies";
 import { setupAddonsTemplate } from "@/helpers/core/template-manager";
+import type { AddInput, Addons, ProjectConfig } from "@/types";
+import { validateAddonCompatibility } from "@/utils/addon-compatibility";
+import { updateBtsConfig } from "@/utils/bts-config";
+import { exitWithError } from "@/utils/errors";
 
 export async function addAddonsToProject(
 	input: AddInput & { addons: Addons[]; suppressInstallMessage?: boolean },

@@ -1,6 +1,6 @@
 import path from "node:path";
 import fs from "fs-extra";
-import { PKG_ROOT } from "../constants";
+import { PKG_ROOT } from "@/constants/default-configurations";
 
 export const getLatestCLIVersion = () => {
 	const packageJsonPath = path.join(PKG_ROOT, "package.json");

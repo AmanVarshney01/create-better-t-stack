@@ -1,11 +1,11 @@
 import {
-	FRONTEND_FRAMEWORK_MAP,
-	NATIVE_FRAMEWORK_LIST,
-	REACT_FRAMEWORK_LIST,
-	SOLID_FRAMEWORK_LIST,
-	SVELTE_FRAMEWORK_LIST,
-	VUE_FRAMEWORK_LIST,
-} from "@/constants/frontend";
+	FRONTEND_FRAMEWORKS_MAP,
+	NATIVE_FRAMEWORKS_LIST,
+	REACT_FRAMEWORKS_LIST,
+	SOLID_FRAMEWORKS_LIST,
+	SVELTE_FRAMEWORKS_LIST,
+	VUE_FRAMEWORKS_LIST,
+} from "@/constants/frontend-frameworks";
 import type { Frontend } from "@/types";
 
 export type FrontendFrameworks = {
@@ -32,15 +32,17 @@ export function getEnabledFrontendFramework(
 	frontend: Frontend[],
 ): FrontendFrameworks {
 	return {
-		hasNext: frontend.includes(FRONTEND_FRAMEWORK_MAP.next),
-		hasNuxt: frontend.includes(FRONTEND_FRAMEWORK_MAP.nuxt),
-		hasSolid: frontend.includes(FRONTEND_FRAMEWORK_MAP.solid),
-		hasSvelte: frontend.includes(FRONTEND_FRAMEWORK_MAP.svelte),
-		hasTanstackRouter: frontend.includes(FRONTEND_FRAMEWORK_MAP.tanstackRouter),
-		hasReactRouter: frontend.includes(FRONTEND_FRAMEWORK_MAP.reactRouter),
-		hasTanstackStart: frontend.includes(FRONTEND_FRAMEWORK_MAP.tanstackStart),
-		hasNativeWind: frontend.includes(FRONTEND_FRAMEWORK_MAP.nativeNativewind),
-		hasUnistyles: frontend.includes(FRONTEND_FRAMEWORK_MAP.nativeUnistyles),
+		hasNext: frontend.includes(FRONTEND_FRAMEWORKS_MAP.NEXT),
+		hasNuxt: frontend.includes(FRONTEND_FRAMEWORKS_MAP.NUXT),
+		hasSolid: frontend.includes(FRONTEND_FRAMEWORKS_MAP.SOLID),
+		hasSvelte: frontend.includes(FRONTEND_FRAMEWORKS_MAP.SVELTE),
+		hasTanstackRouter: frontend.includes(
+			FRONTEND_FRAMEWORKS_MAP.TANSTACK_ROUTER,
+		),
+		hasReactRouter: frontend.includes(FRONTEND_FRAMEWORKS_MAP.REACT_ROUTER),
+		hasTanstackStart: frontend.includes(FRONTEND_FRAMEWORKS_MAP.TANSTACK_START),
+		hasNativeWind: frontend.includes(FRONTEND_FRAMEWORKS_MAP.NATIVE_NATIVEWIND),
+		hasUnistyles: frontend.includes(FRONTEND_FRAMEWORKS_MAP.NATIVE_UNISTYLES),
 	};
 }
 
@@ -48,11 +50,16 @@ export function getEnabledFrontendFrameworksGroups(
 	frontend: Frontend[],
 ): FrontendFrameworksGroups {
 	return {
-		hasReactFramework: frontend.some((f) => REACT_FRAMEWORK_LIST.includes(f)),
-		hasVueFramework: frontend.some((f) => VUE_FRAMEWORK_LIST.includes(f)),
-		hasSvelteFramework: frontend.some((f) => SVELTE_FRAMEWORK_LIST.includes(f)),
-		hasSolidFramework: frontend.some((f) => SOLID_FRAMEWORK_LIST.includes(f)),
-		hasNativeFramework: frontend.some((f) => NATIVE_FRAMEWORK_LIST.includes(f)),
+		// calling frontend.some(f => REACT_FRAMEWORKS_LIST.includes(f)) will cause typescript error
+		hasReactFramework: REACT_FRAMEWORKS_LIST.some((f) => frontend.includes(f)),
+		hasVueFramework: VUE_FRAMEWORKS_LIST.some((f) => frontend.includes(f)),
+		hasSvelteFramework: SVELTE_FRAMEWORKS_LIST.some((f) =>
+			frontend.includes(f),
+		),
+		hasSolidFramework: SOLID_FRAMEWORKS_LIST.some((f) => frontend.includes(f)),
+		hasNativeFramework: NATIVE_FRAMEWORKS_LIST.some((f) =>
+			frontend.includes(f),
+		),
 	};
 }
 

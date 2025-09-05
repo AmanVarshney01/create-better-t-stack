@@ -4,13 +4,13 @@ import { consola } from "consola";
 import { execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
-import type { PackageManager, ProjectConfig } from "@/types";
-import { exitCancelled } from "@/utils/errors";
-import { getPackageExecutionCommand } from "@/utils/package-runner";
 import {
 	addEnvVariablesToFile,
 	type EnvVariable,
 } from "@/helpers/core/env-setup";
+import type { PackageManager, ProjectConfig } from "@/types";
+import { exitCancelled } from "@/utils/errors";
+import { getPackageExecutionCommand } from "@/utils/package-runner";
 
 type NeonConfig = {
 	connectionString: string;

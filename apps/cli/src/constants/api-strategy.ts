@@ -1,12 +1,13 @@
-export const API_WITHOUT_NONE = {
-	trpc: "trpc",
-	orpc: "orpc",
+import { withNone } from "@/utils/common";
+
+export const API_STRATEGIES_WITHOUT_NONE_MAP = {
+	TRPC: "trpc",
+	ORPC: "orpc",
 } as const;
 
-export const API = {
-	...API_WITHOUT_NONE,
-	none: "none",
-} as const;
+export const API_STRATEGIES_MAP = withNone(API_STRATEGIES_WITHOUT_NONE_MAP);
 
-export const APIS_WITHOUT_NONE = Object.values(API_WITHOUT_NONE);
-export const APIS = Object.values(API);
+export const API_STRATEGIES_WITHOUT_NONE = Object.values(
+	API_STRATEGIES_WITHOUT_NONE_MAP,
+);
+export const API_STRATEGIES = Object.values(API_STRATEGIES_MAP);

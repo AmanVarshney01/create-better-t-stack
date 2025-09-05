@@ -1,5 +1,5 @@
 import { isCancel, select } from "@clack/prompts";
-import { DEFAULT_CONFIG } from "@/constants";
+import { DEFAULT_CONFIG } from "@/constants/default-configurations";
 import type { Backend, Database, ORM, Runtime } from "@/types";
 import { exitCancelled } from "@/utils/errors";
 

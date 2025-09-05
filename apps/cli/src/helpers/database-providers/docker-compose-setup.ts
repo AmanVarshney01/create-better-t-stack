@@ -1,9 +1,9 @@
 import path from "node:path";
-import type { Database, ProjectConfig } from "@/types";
 import {
 	addEnvVariablesToFile,
 	type EnvVariable,
 } from "@/helpers/core/env-setup";
+import type { Database, ProjectConfig } from "@/types";
 
 export async function setupDockerCompose(config: ProjectConfig) {
 	const { database, projectDir, projectName } = config;

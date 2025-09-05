@@ -1,13 +1,13 @@
 import path from "node:path";
 import fs from "fs-extra";
 import { glob } from "tinyglobby";
-import { PKG_ROOT } from "@/constants";
+import { PKG_ROOT } from "@/constants/default-configurations";
 import type { ProjectConfig } from "@/types";
-import { processTemplate } from "@/utils/template-processor";
 import {
 	checkFrontendSelected,
 	getEnabledFrontendFrameworksGroups,
 } from "@/utils/get-enabled-frontend";
+import { processTemplate } from "@/utils/template-processor";
 
 export async function processAndCopyFiles(
 	sourcePattern: string | string[],

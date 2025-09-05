@@ -1,7 +1,10 @@
 import path from "node:path";
 import fs from "fs-extra";
 
-import { type AvailableDependencies, dependencyVersionMap } from "@/constants";
+import {
+	type AvailableDependencies,
+	dependencyVersionMap,
+} from "@/constants/dependency-version-map";
 
 export const addPackageDependency = async (opts: {
 	dependencies?: AvailableDependencies[];

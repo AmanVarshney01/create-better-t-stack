@@ -1,5 +1,5 @@
 import { groupMultiselect, isCancel } from "@clack/prompts";
-import { DEFAULT_CONFIG } from "@/constants";
+import { DEFAULT_CONFIG } from "@/constants/default-configurations";
 import { type Docker, DockerSchema, type Frontend } from "@/types";
 import {
 	getCompatibleDockers,

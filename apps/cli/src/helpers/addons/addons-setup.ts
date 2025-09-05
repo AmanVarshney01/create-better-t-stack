@@ -3,28 +3,41 @@ import { log } from "@clack/prompts";
 import { execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
-import type { Frontend, PackageManager, ProjectConfig } from "@/types";
-import { addPackageDependency } from "@/utils/add-package-deps";
-import { getPackageExecutionCommand } from "@/utils/package-runner";
 import { setupFumadocs } from "@/helpers/addons/fumadocs-setup";
 import { setupVibeRules } from "@/helpers/addons/ruler-setup";
 import { setupStarlight } from "@/helpers/addons/starlight-setup";
 import { setupTauri } from "@/helpers/addons/tauri-setup";
 import { setupUltracite } from "@/helpers/addons/ultracite-setup";
 import { addPwaToViteConfig } from "@/helpers/addons/vite-pwa-setup";
+import type { Frontend, PackageManager, ProjectConfig } from "@/types";
+import { addPackageDependency } from "@/utils/add-package-deps";
+import { getEnabledAddons } from "@/utils/get-enabled-addons";
+import {
+	getEnabledFrontendFramework,
+	getEnabledFrontendFrameworksGroups,
+} from "@/utils/get-enabled-frontend";
+import { getPackageExecutionCommand } from "@/utils/package-runner";
 
 export async function setupAddons(config: ProjectConfig, isAddCommand = false) {
 	const { addons, frontend, projectDir, packageManager } = config;
-	const hasReactWebFrontend =
-		frontend.includes("react-router") ||
-		frontend.includes("tanstack-router") ||
-		frontend.includes("next");
-	const hasNuxtFrontend = frontend.includes("nuxt");
-	const hasSvelteFrontend = frontend.includes("svelte");
-	const hasSolidFrontend = frontend.includes("solid");
-	const hasNextFrontend = frontend.includes("next");
 
-	if (addons.includes("turborepo")) {
+	const { hasReactFramework } = getEnabledFrontendFrameworksGroups(frontend);
+	const { hasNuxt, hasSvelte, hasSolid } =
+		getEnabledFrontendFramework(frontend);
+	const {
+		hasBiome,
+		hasHusky,
+		hasOxlint,
+		hasUltracite,
+		hasRuler,
+		hasFumadocs,
+		hasPwa,
+		hasTauri,
+		hasStarlight,
+		hasTurborepo,
+	} = getEnabledAddons(addons);
+
+	if (hasTurborepo) {
 		await addPackageDependency({
 			devDependencies: ["turbo"],
 			projectDir,
@@ -45,24 +58,12 @@ ${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
 		}
 	}
 
-	if (addons.includes("pwa") && (hasReactWebFrontend || hasSolidFrontend)) {
+	if (hasPwa && (hasReactFramework || hasSolid)) {
 		await setupPwa(projectDir, frontend);
 	}
-	if (
-		addons.includes("tauri") &&
-		(hasReactWebFrontend ||
-			hasNuxtFrontend ||
-			hasSvelteFrontend ||
-			hasSolidFrontend ||
-			hasNextFrontend)
-	) {
+	if (hasTauri && (hasReactFramework || hasNuxt || hasSvelte || hasSolid)) {
 		await setupTauri(config);
 	}
-	const hasUltracite = addons.includes("ultracite");
-	const hasBiome = addons.includes("biome");
-	const hasHusky = addons.includes("husky");
-	const hasOxlint = addons.includes("oxlint");
-
 	if (hasUltracite) {
 		await setupUltracite(config, hasHusky);
 	} else {
@@ -80,17 +81,17 @@ ${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
 		}
 	}
 
-	if (addons.includes("oxlint")) {
+	if (hasOxlint) {
 		await setupOxlint(projectDir, packageManager);
 	}
-	if (addons.includes("starlight")) {
+	if (hasStarlight) {
 		await setupStarlight(config);
 	}
 
-	if (addons.includes("ruler")) {
+	if (hasRuler) {
 		await setupVibeRules(config);
 	}
-	if (addons.includes("fumadocs")) {
+	if (hasFumadocs) {
 		await setupFumadocs(config);
 	}
 }

@@ -1,20 +1,19 @@
-export const ADDON_WITHOUT_NONE = {
-	pwa: "pwa",
-	tauri: "tauri",
-	starlight: "starlight",
-	biome: "biome",
-	husky: "husky",
-	ruler: "ruler",
-	turborepo: "turborepo",
-	fumadocs: "fumadocs",
-	ultracite: "ultracite",
-	oxlint: "oxlint",
+import { withNone } from "@/utils/common";
+
+export const ADDONS_WITHOUT_NONE_MAP = {
+	PWA: "pwa",
+	TAURI: "tauri",
+	STARLIGHT: "starlight",
+	BIOME: "biome",
+	HUSKY: "husky",
+	ULTRACITY: "ultracite",
+	FUMADOCS: "fumadocs",
+	RULER: "ruler",
+	TURBOREPO: "turborepo",
+	OXLINT: "oxlint",
 } as const;
 
-export const ADDON = {
-	...ADDON_WITHOUT_NONE,
-	none: "none",
-} as const;
+export const ADDONS_MAP = withNone(ADDONS_WITHOUT_NONE_MAP);
 
-export const ADDONS_WITHOUT_NONE = Object.values(ADDON_WITHOUT_NONE);
-export const ADDONS = Object.values(ADDON);
+export const ADDONS_WITHOUT_NONE = Object.values(ADDONS_WITHOUT_NONE_MAP);
+export const ADDONS = Object.values(ADDONS_MAP);
