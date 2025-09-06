@@ -16,12 +16,12 @@ type SponsorSummary = {
 };
 
 type Sponsor = {
-	name: string;
+	name?: string;
 	githubId: string;
 	avatarUrl: string;
-	websiteUrl: string;
+	websiteUrl?: string;
 	githubUrl: string;
-	tierName: string;
+	tierName?: string;
 	sinceWhen: string;
 	transactionCount: number;
 	totalProcessedAmount?: number;
