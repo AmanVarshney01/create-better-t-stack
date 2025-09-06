@@ -63,6 +63,7 @@ export const dependencyVersionMap = {
 
 	"@prisma/client": "^6.15.0",
 	prisma: "^6.15.0",
+	"@prisma/adapter-d1": "^6.15.0",
 	"@prisma/extension-accelerate": "^2.0.2",
 
 	mongoose: "^8.14.0",
