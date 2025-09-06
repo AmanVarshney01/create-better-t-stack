@@ -25,10 +25,23 @@ export async function setupCloudflareD1(config: ProjectConfig) {
 				value: "",
 				condition: true,
 			},
+		];
+
+		try {
+			await addEnvVariablesToFile(envPath, variables);
+		} catch (_err) {}
+	}
+
+	if (
+		(serverDeploy === "wrangler" || serverDeploy === "alchemy") &&
+		orm === "prisma"
+	) {
+		const envPath = path.join(projectDir, "apps/server", ".env");
+		const variables: EnvVariable[] = [
 			{
 				key: "DATABASE_URL",
 				value: "file:./local.db",
-				condition: orm === "prisma",
+				condition: true,
 			},
 		];
 
@@ -36,12 +49,10 @@ export async function setupCloudflareD1(config: ProjectConfig) {
 			await addEnvVariablesToFile(envPath, variables);
 		} catch (_err) {}
 
-		if (orm === "prisma") {
-			const serverDir = path.join(projectDir, "apps/server");
-			await addPackageDependency({
-				dependencies: ["@prisma/adapter-d1"],
-				projectDir: serverDir,
-			});
-		}
+		const serverDir = path.join(projectDir, "apps/server");
+		await addPackageDependency({
+			dependencies: ["@prisma/adapter-d1"],
+			projectDir: serverDir,
+		});
 	}
 }
