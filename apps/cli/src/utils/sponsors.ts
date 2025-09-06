@@ -1,4 +1,5 @@
 import { log, outro, spinner } from "@clack/prompts";
+import { consola } from "consola";
 import pc from "picocolors";
 
 type SponsorSummary = {
@@ -37,7 +38,8 @@ type SponsorEntry = {
 	backers: Sponsor[];
 };
 
-export const SPONSORS_JSON_URL = "https://sponsors.amanv.dev/sponsors.json";
+export const SPONSORS_JSON_URL =
+	"https://sponsors.better-t-stack.dev/sponsors.json";
 
 export async function fetchSponsors(
 	url: string = SPONSORS_JSON_URL,
@@ -68,11 +70,7 @@ export function displaySponsors(sponsors: SponsorEntry) {
 		return;
 	}
 
-	// Show only special sponsors - because terminal has limited space
-	listSponsors(sponsors.specialSponsors);
-	// listSponsors(sponsors.sponsors);
-	// listSponsors(sponsors.pastSponsors);
-	// listSponsors(sponsors.backers);
+	displaySponsorsBox(sponsors);
 
 	if (total_sponsors - sponsors.specialSponsors.length > 0) {
 		log.message(
@@ -88,24 +86,31 @@ export function displaySponsors(sponsors: SponsorEntry) {
 	);
 }
 
-function listSponsors(sponsors: Sponsor[]) {
-	if (sponsors.length === 0) {
+function displaySponsorsBox(sponsors: SponsorEntry) {
+	if (sponsors.specialSponsors.length === 0) {
 		return;
 	}
 
-	log.message("Sponsors:");
-	sponsors.forEach((sponsor: Sponsor, idx: number) => {
-		const displayName = sponsor.name ?? sponsor.githubId;
-		const tier = sponsor.tierName ? ` (${sponsor.tierName})` : "";
+	let output = `${pc.bold(pc.cyan("-> Special Sponsors"))}\n\n`;
 
-		log.step(`${idx + 1}. ${pc.green(displayName)}${pc.yellow(tier)}`);
-		log.message(
-			`   ${pc.dim("GitHub:")} https://github.com/${sponsor.githubId}`,
-		);
+	sponsors.specialSponsors.forEach((sponsor: Sponsor, idx: number) => {
+		const displayName = sponsor.name ?? sponsor.githubId;
+		const tier = sponsor.tierName
+			? ` ${pc.yellow(`(${sponsor.tierName})`)}`
+			: "";
+
+		output += `${pc.green(`• ${displayName}`)}${tier}\n`;
+		output += `  ${pc.dim("GitHub:")} https://github.com/${sponsor.githubId}\n`;
 
 		const website = sponsor.websiteUrl ?? sponsor.githubUrl;
 		if (website) {
-			log.message(`   ${pc.dim("Website:")} ${website}`);
+			output += `  ${pc.dim("Website:")} ${website}\n`;
+		}
+
+		if (idx < sponsors.specialSponsors.length - 1) {
+			output += "\n";
 		}
 	});
+
+	consola.box(output);
 }
