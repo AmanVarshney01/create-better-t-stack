@@ -357,13 +357,17 @@ export const addonsConfig = {
 		label: "Starlight",
 		color: "hsl(var(--chart-5))",
 	},
+	t3env: {
+		label: "T3 Env",
+		color: "hsl(var(--chart-6))",
+	},
 	turborepo: {
 		label: "Turborepo",
-		color: "hsl(var(--chart-6))",
+		color: "hsl(var(--chart-7))",
 	},
 	none: {
 		label: "No Addons",
-		color: "hsl(var(--chart-7))",
+		color: "hsl(var(--chart-8))",
 	},
 } satisfies ChartConfig;
 
