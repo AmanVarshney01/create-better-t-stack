@@ -1,10 +1,27 @@
 import "dotenv/config";
 import path from "node:path";
 import type { PrismaConfig } from "prisma";
+{{#if (eq serverDeploy "wrangler")}}
+import { PrismaD1 } from "@prisma/adapter-d1";
+{{/if}}
 
 export default {
+  {{#if (eq serverDeploy "wrangler")}}
+  experimental: {
+    adapter: true
+  },
+  {{/if}}
   schema: path.join("prisma", "schema"),
   migrations: {
     path: path.join("prisma", "migrations"),
-  }
+  },
+  {{#if (eq serverDeploy "wrangler")}}
+  async adapter() {
+			return new PrismaD1({
+				CLOUDFLARE_D1_TOKEN: process.env.CLOUDFLARE_D1_TOKEN!,
+				CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID!,
+				CLOUDFLARE_DATABASE_ID: process.env.CLOUDFLARE_DATABASE_ID!,
+			});
+		},
+  {{/if}}
 } satisfies PrismaConfig;

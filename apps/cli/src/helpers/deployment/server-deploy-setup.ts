@@ -5,6 +5,7 @@ import fs from "fs-extra";
 import pc from "picocolors";
 import type { PackageManager, ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
+import { getPackageExecutionCommand } from "../../utils/package-runner";
 
 export async function setupServerDeploy(config: ProjectConfig) {
 	const { serverDeploy, webDeploy, projectDir } = config;
@@ -64,8 +65,11 @@ async function generateCloudflareWorkerTypes({
 	const s = spinner();
 	try {
 		s.start("Generating Cloudflare Workers types...");
-		const runCmd = packageManager === "npm" ? "npm" : packageManager;
-		await execa(runCmd, ["run", "cf-typegen"], { cwd: serverDir });
+		const runCmd = getPackageExecutionCommand(
+			packageManager,
+			"wrangler types --env-interface CloudflareBindings",
+		);
+		await execa(runCmd, { cwd: serverDir, shell: true });
 		s.stop("Cloudflare Workers types generated successfully!");
 	} catch {
 		s.stop(pc.yellow("Failed to generate Cloudflare Workers types"));

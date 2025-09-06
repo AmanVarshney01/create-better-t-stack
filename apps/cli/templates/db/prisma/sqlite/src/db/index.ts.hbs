@@ -1,0 +1,16 @@
+{{#if (and (eq dbSetup "d1") (eq runtime "workers"))}}
+import { env } from "cloudflare:workers";
+import { PrismaD1 } from "@prisma/adapter-d1";
+import { PrismaClient } from "../../prisma/generated/client";
+
+const adapter = new PrismaD1(env.DB);
+const prisma = new PrismaClient({ adapter });
+
+export default prisma;
+{{else}}
+import { PrismaClient } from "../../prisma/generated/client";
+
+const prisma = new PrismaClient();
+
+export default prisma;
+{{/if}}

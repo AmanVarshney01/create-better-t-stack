@@ -61,6 +61,9 @@ export const stackParsers = {
 	serverDeploy: parseAsStringEnum<StackState["serverDeploy"]>(
 		getValidIds("serverDeploy"),
 	).withDefault(DEFAULT_STACK.serverDeploy),
+	yolo: parseAsStringEnum<StackState["yolo"]>(["true", "false"]).withDefault(
+		DEFAULT_STACK.yolo,
+	),
 };
 
 export const stackQueryStatesOptions = {

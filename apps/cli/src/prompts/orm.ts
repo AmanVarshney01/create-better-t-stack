@@ -35,10 +35,6 @@ export async function getORMChoice(
 	if (!hasDatabase) return "none";
 	if (orm !== undefined) return orm;
 
-	if (runtime === "workers") {
-		return "drizzle";
-	}
-
 	const options = [
 		...(database === "mongodb"
 			? [ormOptions.prisma, ormOptions.mongoose]
@@ -48,7 +44,12 @@ export async function getORMChoice(
 	const response = await select<ORM>({
 		message: "Select ORM",
 		options,
-		initialValue: database === "mongodb" ? "prisma" : DEFAULT_CONFIG.orm,
+		initialValue:
+			database === "mongodb"
+				? "prisma"
+				: runtime === "workers"
+					? "drizzle"
+					: DEFAULT_CONFIG.orm,
 	});
 
 	if (isCancel(response)) return exitCancelled("Operation cancelled");

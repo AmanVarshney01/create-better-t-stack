@@ -19,4 +19,5 @@ export const stackUrlKeys: UrlKeys<Record<keyof StackState, unknown>> = {
 	install: "i",
 	webDeploy: "wd",
 	serverDeploy: "sd",
+	yolo: "yolo",
 };
