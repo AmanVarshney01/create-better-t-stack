@@ -287,11 +287,20 @@ async function getDatabaseInstructions(
 	}
 
 	if (dbSetup === "d1" && serverDeploy === "alchemy") {
-		instructions.push(
-			`${pc.yellow(
-				"NOTE:",
-			)} D1 migrations are automatically handled by Alchemy`,
-		);
+		if (orm === "drizzle") {
+			instructions.push(
+				`${pc.yellow(
+					"NOTE:",
+				)} D1 migrations are automatically handled by Alchemy`,
+			);
+		} else if (orm === "prisma") {
+			instructions.push(
+				`${pc.cyan("•")} Generate migrations: ${`${runCmd} db:generate`}`,
+			);
+			instructions.push(
+				`${pc.cyan("•")} Apply migrations: ${`${runCmd} db:migrate`}`,
+			);
+		}
 	}
 
 	if (orm === "prisma") {
