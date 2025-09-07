@@ -1,5 +1,5 @@
 import path from "node:path";
-import { log } from "@clack/prompts";
+import { log, select, isCancel } from "@clack/prompts";
 import { consola } from "consola";
 import { type ExecaError, execa } from "execa";
 import fs from "fs-extra";
@@ -7,6 +7,7 @@ import pc from "picocolors";
 import type { PackageManager, ProjectConfig } from "../../types";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
 import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
+import { exitCancelled } from "../../utils/errors";
 
 async function writeSupabaseEnvFile(projectDir: string, databaseUrl: string) {
 	try {
@@ -158,6 +159,30 @@ export async function setupSupabase(config: ProjectConfig) {
 
 	try {
 		await fs.ensureDir(serverDir);
+
+		const mode = await select({
+			message: "Supabase setup: choose mode",
+			options: [
+				{
+					label: "Automatic (recommended)",
+					value: "auto",
+					hint: "Automated setup with provider CLI, sets .env",
+				},
+				{
+					label: "Manual",
+					value: "manual",
+					hint: "Manual setup, add env vars yourself",
+				},
+			],
+			initialValue: "auto",
+		});
+
+		if (isCancel(mode)) return exitCancelled("Operation cancelled");
+
+		if (mode === "manual") {
+			displayManualSupabaseInstructions();
+			return;
+		}
 
 		const initialized = await initializeSupabase(serverDir, packageManager);
 		if (!initialized) {
