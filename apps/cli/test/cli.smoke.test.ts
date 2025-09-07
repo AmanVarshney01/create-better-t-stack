@@ -3067,8 +3067,8 @@ describe("create-better-t-stack smoke", () => {
 			);
 
 			const projectDir = join(workdir, projectName);
-			assertScaffoldedProject(projectDir);
-			assertBtsConfig(projectDir, {
+			await assertScaffoldedProject(projectDir);
+			await assertBtsConfig(projectDir, {
 				database: "postgres",
 				orm: "drizzle",
 			});
@@ -3434,8 +3434,8 @@ describe("create-better-t-stack smoke", () => {
 			);
 
 			const projectDir = join(workdir, projectName);
-			assertScaffoldedProject(projectDir);
-			assertBtsConfig(projectDir, {
+			await assertScaffoldedProject(projectDir);
+			await assertBtsConfig(projectDir, {
 				database: "mysql",
 				orm: "drizzle",
 				runtime: "node",
