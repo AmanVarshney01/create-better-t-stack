@@ -1,4 +1,15 @@
 {{#if (or (eq runtime "bun") (eq runtime "node"))}}
+{{#if (eq dbSetup "planetscale")}}
+import { drizzle } from "drizzle-orm/planetscale-serverless";
+
+export const db = drizzle({
+  connection: {
+    host: process.env.DATABASE_HOST,
+    username: process.env.DATABASE_USERNAME,
+    password: process.env.DATABASE_PASSWORD,
+  },
+});
+{{else}}
 import { drizzle } from "drizzle-orm/mysql2";
 
 export const db = drizzle({
@@ -7,8 +18,21 @@ export const db = drizzle({
   },
 });
 {{/if}}
+{{/if}}
 
 {{#if (eq runtime "workers")}}
+{{#if (eq dbSetup "planetscale")}}
+import { drizzle } from "drizzle-orm/planetscale-serverless";
+import { env } from "cloudflare:workers";
+
+export const db = drizzle({
+  connection: {
+    host: env.DATABASE_HOST,
+    username: env.DATABASE_USERNAME,
+    password: env.DATABASE_PASSWORD,
+  },
+});
+{{else}}
 import { drizzle } from "drizzle-orm/mysql2";
 import { env } from "cloudflare:workers";
 
@@ -17,4 +41,5 @@ export const db = drizzle({
     uri: env.DATABASE_URL,
   },
 });
+{{/if}}
 {{/if}}

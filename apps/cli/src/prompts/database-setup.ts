@@ -48,6 +48,11 @@ export async function getDBSetupChoice(
 				hint: "Serverless Postgres with branching capability",
 			},
 			{
+				value: "planetscale" as const,
+				label: "PlanetScale",
+				hint: "Serverless MySQL platform with branching (Postgres compatible)",
+			},
+			{
 				value: "supabase" as const,
 				label: "Supabase",
 				hint: "Local Supabase stack (requires Docker)",
@@ -66,6 +71,11 @@ export async function getDBSetupChoice(
 		];
 	} else if (databaseType === "mysql") {
 		options = [
+			{
+				value: "planetscale" as const,
+				label: "PlanetScale",
+				hint: "Serverless MySQL platform with branching",
+			},
 			{
 				value: "docker" as const,
 				label: "Docker",

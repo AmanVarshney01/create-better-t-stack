@@ -50,6 +50,7 @@ export const dependencyVersionMap = {
 
 	"drizzle-orm": "^0.44.2",
 	"drizzle-kit": "^0.31.2",
+	"@planetscale/database": "^1.19.0",
 
 	"@libsql/client": "^0.15.9",
 
@@ -65,6 +66,9 @@ export const dependencyVersionMap = {
 	prisma: "^6.15.0",
 	"@prisma/adapter-d1": "^6.15.0",
 	"@prisma/extension-accelerate": "^2.0.2",
+
+	"@prisma/adapter-planetscale": "^6.15.0",
+	undici: "^7.15.0",
 
 	mongoose: "^8.14.0",
 
@@ -147,7 +151,7 @@ export const dependencyVersionMap = {
 	"@sveltejs/adapter-cloudflare": "^7.2.1",
 	"@cloudflare/workers-types": "^4.20250822.0",
 
-	alchemy: "^0.63.0",
+	alchemy: "^0.65.0",
 	// temporary workaround for alchemy + tanstack start
 	nitropack: "^2.12.4",
 

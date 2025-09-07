@@ -11,9 +11,15 @@ generator client {
   {{#if (eq runtime "workers")}}
   runtime = "workerd"
   {{/if}}
+  {{#if (eq dbSetup "planetscale")}}
+  previewFeatures = ["driverAdapters"]
+  {{/if}}
 }
 
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
+  {{#if (eq dbSetup "planetscale")}}
+  relationMode = "prisma"
+  {{/if}}
 }
