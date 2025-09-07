@@ -463,6 +463,27 @@ export const analyzeStackCompatibility = (
 							"Database set to 'PostgreSQL' (Supabase hosting requires PostgreSQL database)",
 					});
 				}
+			} else if (nextStack.dbSetup === "planetscale") {
+				if (
+					nextStack.database !== "postgres" &&
+					nextStack.database !== "mysql"
+				) {
+					notes.dbSetup.notes.push(
+						"PlanetScale requires PostgreSQL or MySQL. PostgreSQL will be selected.",
+					);
+					notes.database.notes.push(
+						"PlanetScale DB setup requires PostgreSQL or MySQL. PostgreSQL will be selected.",
+					);
+					notes.dbSetup.hasIssue = true;
+					notes.database.hasIssue = true;
+					nextStack.database = "postgres";
+					changed = true;
+					changes.push({
+						category: "dbSetup",
+						message:
+							"Database set to 'PostgreSQL' (PlanetScale supports PostgreSQL and MySQL)",
+					});
+				}
 			} else if (nextStack.dbSetup === "d1") {
 				if (nextStack.database !== "sqlite") {
 					notes.dbSetup.notes.push(
@@ -574,6 +595,9 @@ export const analyzeStackCompatibility = (
 				} else if (nextStack.dbSetup === "mongodb-atlas") {
 					selectedDatabase = "mongodb";
 					databaseName = "MongoDB";
+				} else if (nextStack.dbSetup === "planetscale") {
+					selectedDatabase = "postgres";
+					databaseName = "PostgreSQL";
 				}
 
 				notes.dbSetup.notes.push(
@@ -1436,15 +1460,20 @@ export const getDisabledReason = (
 			finalStack.dbSetup !== "docker" &&
 			finalStack.dbSetup !== "prisma-postgres" &&
 			finalStack.dbSetup !== "neon" &&
-			finalStack.dbSetup !== "supabase"
+			finalStack.dbSetup !== "supabase" &&
+			finalStack.dbSetup !== "planetscale"
 		) {
-			return "PostgreSQL database only works with Docker, Prisma PostgreSQL, Neon, Supabase, or Basic Setup. Select one of these options or change database.";
+			return "PostgreSQL database only works with Docker, Prisma PostgreSQL, Neon, Supabase, PlanetScale, or Basic Setup. Select one of these options or change database.";
 		}
 	}
 
 	if (category === "database" && optionId === "mysql") {
-		if (finalStack.dbSetup !== "none" && finalStack.dbSetup !== "docker") {
-			return "MySQL database only works with Docker or Basic Setup. Select one of these options or change database.";
+		if (
+			finalStack.dbSetup !== "none" &&
+			finalStack.dbSetup !== "docker" &&
+			finalStack.dbSetup !== "planetscale"
+		) {
+			return "MySQL database only works with Docker, PlanetScale, or Basic Setup. Select one of these options or change database.";
 		}
 	}
 
@@ -1559,9 +1588,24 @@ export const getDisabledReason = (
 		}
 	}
 
+	if (category === "dbSetup" && optionId === "planetscale") {
+		if (finalStack.database !== "postgres" && finalStack.database !== "mysql") {
+			return "PlanetScale requires PostgreSQL or MySQL database. Select PostgreSQL or MySQL first.";
+		}
+	}
+
 	if (category === "dbSetup" && optionId === "supabase") {
 		if ((finalStack.database as string) !== "postgres") {
 			return "Supabase requires PostgreSQL database. Select PostgreSQL first.";
+		}
+	}
+
+	if (
+		category === "database" &&
+		(finalStack.dbSetup as string) === "planetscale"
+	) {
+		if (optionId !== "postgres" && optionId !== "mysql") {
+			return "Selected DB Setup 'PlanetScale' requires PostgreSQL or MySQL. Select PostgreSQL or MySQL, or change DB Setup.";
 		}
 	}
 

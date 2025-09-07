@@ -329,6 +329,13 @@ export const TECH_OPTIONS: Record<
 			color: "from-emerald-400 to-emerald-600",
 		},
 		{
+			id: "planetscale",
+			name: "PlanetScale",
+			description: "Serverless MySQL platform with branching",
+			icon: `${ICON_BASE_URL}/planetscale.svg`,
+			color: "from-orange-400 to-orange-600",
+		},
+		{
 			id: "docker",
 			name: "Docker",
 			description: "Local database with Docker Compose",
