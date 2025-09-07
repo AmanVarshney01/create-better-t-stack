@@ -146,7 +146,7 @@ export const dependencyVersionMap = {
 
 	wrangler: "^4.23.0",
 	"@cloudflare/vite-plugin": "^1.9.0",
-	"@opennextjs/cloudflare": "^1.3.0",
+    "@opennextjs/cloudflare": "^1.6.5",
 	"nitro-cloudflare-dev": "^0.2.2",
 	"@sveltejs/adapter-cloudflare": "^7.2.1",
 	"@cloudflare/workers-types": "^4.20250822.0",

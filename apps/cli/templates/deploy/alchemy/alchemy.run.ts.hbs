@@ -1,7 +1,7 @@
 import alchemy from "alchemy";
 {{#if (eq webDeploy "alchemy")}}
 {{#if (includes frontend "next")}}
-import { Next } from "alchemy/cloudflare";
+import { Nextjs } from "alchemy/cloudflare";
 {{else if (includes frontend "nuxt")}}
 import { Nuxt } from "alchemy/cloudflare";
 {{else if (includes frontend "svelte")}}
@@ -54,7 +54,7 @@ const db = await D1Database("database", {
 
 {{#if (eq webDeploy "alchemy")}}
 {{#if (includes frontend "next")}}
-export const web = await Next("web", {
+export const web = await Nextjs("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
   bindings: {
     {{#if (eq backend "convex")}}
