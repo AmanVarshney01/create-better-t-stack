@@ -164,7 +164,7 @@ export async function setupSupabase(config: ProjectConfig) {
 			message: "Supabase setup: choose mode",
 			options: [
 				{
-					label: "Automatic (recommended)",
+					label: "Automatic",
 					value: "auto",
 					hint: "Automated setup with provider CLI, sets .env",
 				},

@@ -304,14 +304,6 @@ async function getDatabaseInstructions(
 	}
 
 	if (orm === "prisma") {
-		if (dbSetup === "turso") {
-			instructions.push(
-				`${pc.yellow(
-					"NOTE:",
-				)} Turso support with Prisma is in Early Access and requires\n   additional setup. Learn more at:\n   https://www.prisma.io/docs/orm/overview/databases/turso`,
-			);
-		}
-
 		if (database === "mongodb" && dbSetup === "docker") {
 			instructions.push(
 				`${pc.yellow(

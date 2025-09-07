@@ -249,7 +249,7 @@ export async function setupPrismaPostgres(config: ProjectConfig) {
 			message: "Prisma Postgres setup: choose mode",
 			options: [
 				{
-					label: "Automatic (recommended)",
+					label: "Automatic",
 					value: "auto",
 					hint: "Automated setup with provider CLI, sets .env",
 				},

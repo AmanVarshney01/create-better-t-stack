@@ -66,6 +66,7 @@ export const dependencyVersionMap = {
 	prisma: "^6.15.0",
 	"@prisma/adapter-d1": "^6.15.0",
 	"@prisma/extension-accelerate": "^2.0.2",
+	"@prisma/adapter-libsql": "^6.15.0",
 
 	"@prisma/adapter-planetscale": "^6.15.0",
 	undici: "^7.15.0",
@@ -146,7 +147,7 @@ export const dependencyVersionMap = {
 
 	wrangler: "^4.23.0",
 	"@cloudflare/vite-plugin": "^1.9.0",
-    "@opennextjs/cloudflare": "^1.6.5",
+	"@opennextjs/cloudflare": "^1.6.5",
 	"nitro-cloudflare-dev": "^0.2.2",
 	"@sveltejs/adapter-cloudflare": "^7.2.1",
 	"@cloudflare/workers-types": "^4.20250822.0",

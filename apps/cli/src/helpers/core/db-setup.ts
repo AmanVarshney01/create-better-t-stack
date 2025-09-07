@@ -42,8 +42,15 @@ export async function setupDatabase(config: ProjectConfig) {
 					dependencies: [
 						"@prisma/client",
 						"@prisma/adapter-planetscale",
+						"@planetscale/database",
 						"undici",
 					],
+					devDependencies: ["prisma"],
+					projectDir: serverDir,
+				});
+			} else if (database === "sqlite" && dbSetup === "turso") {
+				await addPackageDependency({
+					dependencies: ["@prisma/client", "@prisma/adapter-libsql"],
 					devDependencies: ["prisma"],
 					projectDir: serverDir,
 				});

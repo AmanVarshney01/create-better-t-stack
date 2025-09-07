@@ -7,6 +7,7 @@ import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 import { commandExists } from "../../utils/command-exists";
 import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
+import { exitCancelled } from "../../utils/errors";
 
 type MongoDBConfig = {
 	connectionString: string;
@@ -134,7 +135,7 @@ export async function setupMongoDBAtlas(config: ProjectConfig) {
 			message: "MongoDB Atlas setup: choose mode",
 			options: [
 				{
-					label: "Automatic (recommended)",
+					label: "Automatic",
 					value: "auto",
 					hint: "Automated setup with provider CLI, sets .env",
 				},
@@ -147,7 +148,7 @@ export async function setupMongoDBAtlas(config: ProjectConfig) {
 			initialValue: "auto",
 		});
 
-		if (isCancel(mode)) return cancel("Operation cancelled");
+		if (isCancel(mode)) return exitCancelled("Operation cancelled");
 
 		if (mode === "manual") {
 			mainSpinner.stop("MongoDB Atlas manual setup selected");

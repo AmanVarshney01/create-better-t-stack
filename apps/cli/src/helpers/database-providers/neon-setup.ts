@@ -162,7 +162,7 @@ export async function setupNeonPostgres(config: ProjectConfig) {
 			message: "Neon setup: choose mode",
 			options: [
 				{
-					label: "Automatic (recommended)",
+					label: "Automatic",
 					value: "auto",
 					hint: "Automated setup with provider CLI, sets .env",
 				},
