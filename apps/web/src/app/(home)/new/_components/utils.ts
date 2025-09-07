@@ -1049,49 +1049,6 @@ export const analyzeStackCompatibility = (
 		});
 	}
 
-	const isAlchemyWebDeploy = nextStack.webDeploy === "alchemy";
-	const isAlchemyServerDeploy = nextStack.serverDeploy === "alchemy";
-
-	if (isAlchemyWebDeploy || isAlchemyServerDeploy) {
-		const incompatibleFrontends = nextStack.webFrontend.filter(
-			(f) => f === "next",
-		);
-
-		if (incompatibleFrontends.length > 0) {
-			const deployType =
-				isAlchemyWebDeploy && isAlchemyServerDeploy
-					? "web and server deployment"
-					: isAlchemyWebDeploy
-						? "web deployment"
-						: "server deployment";
-
-			notes.webFrontend.notes.push(
-				`Alchemy ${deployType} is temporarily not compatible with ${incompatibleFrontends.join(" and ")}. These frontends will be removed.`,
-			);
-			notes.webDeploy.notes.push(
-				`Alchemy ${deployType} is temporarily not compatible with ${incompatibleFrontends.join(" and ")}.`,
-			);
-			notes.serverDeploy.notes.push(
-				`Alchemy ${deployType} is temporarily not compatible with ${incompatibleFrontends.join(" and ")}.`,
-			);
-			notes.webFrontend.hasIssue = true;
-			notes.webDeploy.hasIssue = true;
-			notes.serverDeploy.hasIssue = true;
-
-			nextStack.webFrontend = nextStack.webFrontend.filter((f) => f !== "next");
-
-			if (nextStack.webFrontend.length === 0) {
-				nextStack.webFrontend = ["tanstack-router"];
-			}
-
-			changed = true;
-			changes.push({
-				category: "alchemy",
-				message: `Removed ${incompatibleFrontends.join(" and ")} frontend (temporarily not compatible with Alchemy ${deployType} - support coming soon)`,
-			});
-		}
-	}
-
 	if (
 		nextStack.serverDeploy === "alchemy" &&
 		(nextStack.runtime !== "workers" || nextStack.backend !== "hono")
@@ -1221,15 +1178,6 @@ export const getDisabledReason = (
 
 	const { adjustedStack } = analyzeStackCompatibility(simulatedStack);
 	const finalStack = adjustedStack ?? simulatedStack;
-
-	if (category === "webFrontend" && optionId === "next") {
-		const isAlchemyWebDeploy = finalStack.webDeploy === "alchemy";
-		const isAlchemyServerDeploy = finalStack.serverDeploy === "alchemy";
-
-		if (isAlchemyWebDeploy || isAlchemyServerDeploy) {
-			return "Next.js is temporarily not compatible with Alchemy deployment. Support coming soon!";
-		}
-	}
 
 	if (category === "webFrontend" && optionId === "solid") {
 		if (finalStack.backend === "convex") {

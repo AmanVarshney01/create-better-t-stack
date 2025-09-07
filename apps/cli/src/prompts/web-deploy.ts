@@ -47,10 +47,7 @@ export async function getDeploymentChoice(
 		return "none";
 	}
 
-	const hasIncompatibleFrontend = frontend.some((f) => f === "next");
-	const availableDeployments = hasIncompatibleFrontend
-		? ["wrangler", "none"]
-		: ["wrangler", "alchemy", "none"];
+	const availableDeployments = ["wrangler", "alchemy", "none"];
 
 	const options: DeploymentOption[] = availableDeployments.map((deploy) => {
 		const { label, hint } = getDeploymentDisplay(deploy as WebDeploy);
@@ -64,9 +61,7 @@ export async function getDeploymentChoice(
 	const response = await select<WebDeploy>({
 		message: "Select web deployment",
 		options,
-		initialValue: hasIncompatibleFrontend
-			? "wrangler"
-			: DEFAULT_CONFIG.webDeploy,
+		initialValue: DEFAULT_CONFIG.webDeploy,
 	});
 
 	if (isCancel(response)) return exitCancelled("Operation cancelled");
@@ -82,8 +77,6 @@ export async function getDeploymentToAdd(
 		return "none";
 	}
 
-	const hasIncompatibleFrontend = frontend.some((f) => f === "next");
-
 	const options: DeploymentOption[] = [];
 
 	if (existingDeployment !== "wrangler") {
@@ -95,7 +88,7 @@ export async function getDeploymentToAdd(
 		});
 	}
 
-	if (existingDeployment !== "alchemy" && !hasIncompatibleFrontend) {
+	if (existingDeployment !== "alchemy") {
 		const { label, hint } = getDeploymentDisplay("alchemy");
 		options.push({
 			value: "alchemy",
@@ -123,9 +116,7 @@ export async function getDeploymentToAdd(
 	const response = await select<WebDeploy>({
 		message: "Select web deployment",
 		options,
-		initialValue: hasIncompatibleFrontend
-			? "wrangler"
-			: DEFAULT_CONFIG.webDeploy,
+		initialValue: DEFAULT_CONFIG.webDeploy,
 	});
 
 	if (isCancel(response)) return exitCancelled("Operation cancelled");

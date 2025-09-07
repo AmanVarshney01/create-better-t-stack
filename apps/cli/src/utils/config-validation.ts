@@ -9,7 +9,6 @@ import {
 	ensureSingleWebAndNative,
 	isWebFrontend,
 	validateAddonsAgainstFrontends,
-	validateAlchemyCompatibility,
 	validateApiFrontendCompatibility,
 	validateExamplesCompatibility,
 	validateServerDeployRequiresBackend,
@@ -425,12 +424,6 @@ export function validateFullConfig(
 		config.examples ?? [],
 		config.backend,
 		config.database,
-		config.frontend ?? [],
-	);
-
-	validateAlchemyCompatibility(
-		config.webDeploy,
-		config.serverDeploy,
 		config.frontend ?? [],
 	);
 }

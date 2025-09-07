@@ -237,29 +237,3 @@ export function validateExamplesCompatibility(
 		);
 	}
 }
-
-export function validateAlchemyCompatibility(
-	webDeploy: WebDeploy | undefined,
-	serverDeploy: ServerDeploy | undefined,
-	frontends: Frontend[] = [],
-) {
-	const isAlchemyWebDeploy = webDeploy === "alchemy";
-	const isAlchemyServerDeploy = serverDeploy === "alchemy";
-
-	if (isAlchemyWebDeploy || isAlchemyServerDeploy) {
-		const incompatibleFrontends = frontends.filter((f) => f === "next");
-
-		if (incompatibleFrontends.length > 0) {
-			const deployType =
-				isAlchemyWebDeploy && isAlchemyServerDeploy
-					? "web and server deployment"
-					: isAlchemyWebDeploy
-						? "web deployment"
-						: "server deployment";
-
-			exitWithError(
-				`Alchemy ${deployType} is temporarily not compatible with ${incompatibleFrontends.join(" and ")} frontend(s). Please choose a different frontend or deployment option.`,
-			);
-		}
-	}
-}
