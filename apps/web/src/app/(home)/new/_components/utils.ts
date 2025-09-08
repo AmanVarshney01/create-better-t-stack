@@ -361,12 +361,12 @@ export const analyzeStackCompatibility = (
 							"Database set to 'SQLite' (Turso hosting requires SQLite database)",
 					});
 				}
-				if (nextStack.orm !== "drizzle") {
+				if (nextStack.orm !== "drizzle" && nextStack.orm !== "prisma") {
 					notes.dbSetup.notes.push(
-						"Turso requires Drizzle ORM. It will be selected.",
+						"Turso requires Drizzle or Prisma ORM. Drizzle will be selected.",
 					);
 					notes.orm.notes.push(
-						"Turso DB setup requires Drizzle ORM. It will be selected.",
+						"Turso DB setup requires Drizzle or Prisma ORM. Drizzle will be selected.",
 					);
 					notes.dbSetup.hasIssue = true;
 					notes.orm.hasIssue = true;
@@ -375,7 +375,7 @@ export const analyzeStackCompatibility = (
 					changes.push({
 						category: "dbSetup",
 						message:
-							"ORM set to 'Drizzle' (Turso hosting requires Drizzle ORM)",
+							"ORM set to 'Drizzle' (Turso hosting requires Drizzle or Prisma ORM)",
 					});
 				}
 			} else if (nextStack.dbSetup === "prisma-postgres") {
@@ -499,6 +499,23 @@ export const analyzeStackCompatibility = (
 					changes.push({
 						category: "dbSetup",
 						message: "Database set to 'SQLite' (required by Cloudflare D1)",
+					});
+				}
+				if (nextStack.orm !== "drizzle" && nextStack.orm !== "prisma") {
+					notes.dbSetup.notes.push(
+						"Cloudflare D1 requires Drizzle or Prisma ORM. Drizzle will be selected.",
+					);
+					notes.orm.notes.push(
+						"Cloudflare D1 DB setup requires Drizzle or Prisma ORM. Drizzle will be selected.",
+					);
+					notes.dbSetup.hasIssue = true;
+					notes.orm.hasIssue = true;
+					nextStack.orm = "drizzle";
+					changed = true;
+					changes.push({
+						category: "dbSetup",
+						message:
+							"ORM set to 'Drizzle' (Cloudflare D1 requires Drizzle or Prisma ORM)",
 					});
 				}
 				if (nextStack.runtime !== "workers") {
@@ -1330,11 +1347,17 @@ export const getDisabledReason = (
 		if (finalStack.database === "none") {
 			return "Prisma ORM requires a database. Select a database first (SQLite, PostgreSQL, MySQL, or MongoDB).";
 		}
+		if (finalStack.dbSetup === "turso" && finalStack.database !== "sqlite") {
+			return "Turso setup requires SQLite database. Select SQLite first.";
+		}
+		if (finalStack.dbSetup === "d1" && finalStack.database !== "sqlite") {
+			return "Cloudflare D1 setup requires SQLite database. Select SQLite first.";
+		}
 	}
 
 	if (category === "dbSetup" && optionId === "turso") {
-		if (finalStack.orm !== "drizzle") {
-			return "Turso requires Drizzle ORM. Select Drizzle first.";
+		if (finalStack.orm !== "drizzle" && finalStack.orm !== "prisma") {
+			return "Turso requires Drizzle or Prisma ORM. Select Drizzle or Prisma first.";
 		}
 	}
 
@@ -1345,8 +1368,8 @@ export const getDisabledReason = (
 	}
 
 	if (category === "dbSetup" && optionId === "d1") {
-		if (finalStack.orm !== "drizzle") {
-			return "Cloudflare D1 requires Drizzle ORM. Select Drizzle first.";
+		if (finalStack.orm !== "drizzle" && finalStack.orm !== "prisma") {
+			return "Cloudflare D1 requires Drizzle or Prisma ORM. Select Drizzle or Prisma first.";
 		}
 		if (finalStack.runtime !== "workers") {
 			return "Cloudflare D1 requires Cloudflare Workers runtime. Select Workers runtime first.";
