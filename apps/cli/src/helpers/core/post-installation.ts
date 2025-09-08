@@ -303,6 +303,23 @@ async function getDatabaseInstructions(
 		}
 	}
 
+	if (dbSetup === "planetscale") {
+		if (database === "mysql" && orm === "drizzle") {
+			instructions.push(
+				`${pc.yellow(
+					"NOTE:",
+				)} Enable foreign key constraints in PlanetScale database settings`,
+			);
+		}
+		if (database === "mysql" && orm === "prisma") {
+			instructions.push(
+				`${pc.yellow(
+					"NOTE:",
+				)} How to handle Prisma migrations with PlanetScale:\n   https://github.com/prisma/prisma/issues/7292`,
+			);
+		}
+	}
+
 	if (orm === "prisma") {
 		if (database === "mongodb" && dbSetup === "docker") {
 			instructions.push(

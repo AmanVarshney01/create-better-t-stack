@@ -11,11 +11,6 @@ export async function setupPlanetScale(config: ProjectConfig) {
 	if (database === "mysql" && orm === "drizzle") {
 		const variables: EnvVariable[] = [
 			{
-				key: "# enable foreign key constraints in database settings",
-				value: "",
-				condition: true,
-			},
-			{
 				key: "DATABASE_URL",
 				value:
 					'mysql://username:password@host/database?ssl={"rejectUnauthorized":true}',

@@ -69,7 +69,6 @@ export const dependencyVersionMap = {
 	"@prisma/adapter-libsql": "^6.15.0",
 
 	"@prisma/adapter-planetscale": "^6.15.0",
-	undici: "^7.15.0",
 
 	mongoose: "^8.14.0",
 

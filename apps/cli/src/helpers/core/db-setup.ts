@@ -43,7 +43,6 @@ export async function setupDatabase(config: ProjectConfig) {
 						"@prisma/client",
 						"@prisma/adapter-planetscale",
 						"@planetscale/database",
-						"undici",
 					],
 					devDependencies: ["prisma"],
 					projectDir: serverDir,
