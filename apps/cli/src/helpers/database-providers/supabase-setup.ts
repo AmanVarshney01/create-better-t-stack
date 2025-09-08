@@ -181,6 +181,7 @@ export async function setupSupabase(config: ProjectConfig) {
 
 		if (mode === "manual") {
 			displayManualSupabaseInstructions();
+			await writeSupabaseEnvFile(projectDir, "");
 			return;
 		}
 
