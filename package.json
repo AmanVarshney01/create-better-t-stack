@@ -1,47 +1,47 @@
 {
-  "name": "better-t-stack",
-  "version": "0.0.0",
-  "private": true,
-  "scripts": {
-    "build": "turbo build",
-    "dev": "turbo dev",
-    "dev:cli": "turbo run dev --filter=create-better-t-stack",
-    "cli": "cd apps/cli && node dist/cli.js",
-    "dev:web": "turbo run dev --filter=web",
-    "build:web": "turbo run build --filter=web",
-    "build:cli": "turbo run build --filter=create-better-t-stack",
-    "lint": "turbo lint",
-    "check": "turbo check",
-    "format": "biome check --write .",
-    "release": "bun run scripts/release.ts",
-    "bump": "bun run scripts/bump-version.ts",
-    "canary": "bun run scripts/canary-release.ts",
-    "deploy:convex": "turbo run --filter=@better-t-stack/backend deploy",
-    "deploy:web": "bun run --filter=web deploy",
-    "generate": "bun run --filter=web generate-analytics && bun run --filter=web generate-schema",
-    "deploy": "bun run deploy:web"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.2.0",
-    "changelogithub": "^13.16.0",
-    "husky": "^9.1.7",
-    "lint-staged": "^16.1.5",
-    "turbo": "^2.5.6",
-    "typescript": "5.9.2",
-    "@types/bun": "latest"
-  },
-  "lint-staged": {
-    "*": [
-      "bun biome check --write ."
-    ]
-  },
-  "engines": {
-    "node": ">=20"
-  },
-  "packageManager": "bun@1.2.20",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
-  "dependencies": {}
+	"name": "better-t-stack",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"build": "turbo build",
+		"dev": "turbo dev",
+		"dev:cli": "turbo run dev --filter=create-better-t-stack",
+		"cli": "cd apps/cli && node dist/cli.js",
+		"dev:web": "turbo run dev --filter=web",
+		"build:web": "turbo run build --filter=web",
+		"build:cli": "turbo run build --filter=create-better-t-stack",
+		"lint": "turbo lint",
+		"check": "turbo check",
+		"format": "biome check --write .",
+		"release": "bun run scripts/release.ts",
+		"bump": "bun run scripts/bump-version.ts",
+		"canary": "bun run scripts/canary-release.ts",
+		"deploy:convex": "turbo run --filter=@better-t-stack/backend deploy",
+		"deploy:web": "bun run --filter=web deploy",
+		"generate": "bun run --filter=web generate-analytics && bun run --filter=web generate-schema",
+		"deploy": "bun run deploy:web"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.2.0",
+		"changelogithub": "^13.16.0",
+		"husky": "^9.1.7",
+		"lint-staged": "^16.1.5",
+		"turbo": "^2.5.6",
+		"typescript": "5.9.2",
+		"@types/bun": "latest"
+	},
+	"lint-staged": {
+		"*": [
+			"bun biome check --write ."
+		]
+	},
+	"engines": {
+		"node": ">=20"
+	},
+	"packageManager": "bun@1.2.20",
+	"workspaces": [
+		"apps/*",
+		"packages/*"
+	],
+	"dependencies": {}
 }

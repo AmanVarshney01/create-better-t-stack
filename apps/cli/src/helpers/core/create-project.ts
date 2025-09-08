@@ -3,7 +3,6 @@ import fs from "fs-extra";
 import type { ProjectConfig } from "../../types";
 import { writeBtsConfig } from "../../utils/bts-config";
 import { exitWithError } from "../../utils/errors";
-import { formatProjectWithBiome } from "../../utils/format-with-biome";
 import { setupAddons } from "../addons/addons-setup";
 import { setupExamples } from "../addons/examples-setup";
 import { setupApi } from "../core/api-setup";
@@ -85,8 +84,6 @@ export async function createProject(options: ProjectConfig) {
 		await createReadme(projectDir, options);
 
 		await writeBtsConfig(options);
-
-		await formatProjectWithBiome(projectDir);
 
 		if (isConvex) {
 			await runConvexCodegen(projectDir, options.packageManager);
