@@ -27,7 +27,12 @@
       "database_name": "YOUR_DB_NAME",
       "database_id": "YOUR_DB_ID",
       "preview_database_id": "local-test-db",
+      {{#if (eq orm "drizzle")}}
       "migrations_dir": "./src/db/migrations"
+      {{/if}}
+      {{#if (eq orm "prisma")}}
+      "migrations_dir": "./prisma/migrations"
+      {{/if}}
     }
   ]
   {{/if}}

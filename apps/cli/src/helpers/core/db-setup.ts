@@ -9,6 +9,7 @@ import { setupCloudflareD1 } from "../database-providers/d1-setup";
 import { setupDockerCompose } from "../database-providers/docker-compose-setup";
 import { setupMongoDBAtlas } from "../database-providers/mongodb-atlas-setup";
 import { setupNeonPostgres } from "../database-providers/neon-setup";
+import { setupPlanetScale } from "../database-providers/planetscale-setup";
 import { setupPrismaPostgres } from "../database-providers/prisma-postgres-setup";
 import { setupSupabase } from "../database-providers/supabase-setup";
 import { setupTurso } from "../database-providers/turso-setup";
@@ -36,11 +37,29 @@ export async function setupDatabase(config: ProjectConfig) {
 
 	try {
 		if (orm === "prisma") {
-			await addPackageDependency({
-				dependencies: ["@prisma/client"],
-				devDependencies: ["prisma"],
-				projectDir: serverDir,
-			});
+			if (database === "mysql" && dbSetup === "planetscale") {
+				await addPackageDependency({
+					dependencies: [
+						"@prisma/client",
+						"@prisma/adapter-planetscale",
+						"@planetscale/database",
+					],
+					devDependencies: ["prisma"],
+					projectDir: serverDir,
+				});
+			} else if (database === "sqlite" && dbSetup === "turso") {
+				await addPackageDependency({
+					dependencies: ["@prisma/client", "@prisma/adapter-libsql"],
+					devDependencies: ["prisma"],
+					projectDir: serverDir,
+				});
+			} else {
+				await addPackageDependency({
+					dependencies: ["@prisma/client"],
+					devDependencies: ["prisma"],
+					projectDir: serverDir,
+				});
+			}
 		} else if (orm === "drizzle") {
 			if (database === "sqlite") {
 				await addPackageDependency({
@@ -55,6 +74,12 @@ export async function setupDatabase(config: ProjectConfig) {
 						devDependencies: ["drizzle-kit", "@types/ws"],
 						projectDir: serverDir,
 					});
+				} else if (dbSetup === "planetscale") {
+					await addPackageDependency({
+						dependencies: ["drizzle-orm", "pg"],
+						devDependencies: ["drizzle-kit", "@types/pg"],
+						projectDir: serverDir,
+					});
 				} else {
 					await addPackageDependency({
 						dependencies: ["drizzle-orm", "pg"],
@@ -63,11 +88,19 @@ export async function setupDatabase(config: ProjectConfig) {
 					});
 				}
 			} else if (database === "mysql") {
-				await addPackageDependency({
-					dependencies: ["drizzle-orm", "mysql2"],
-					devDependencies: ["drizzle-kit"],
-					projectDir: serverDir,
-				});
+				if (dbSetup === "planetscale") {
+					await addPackageDependency({
+						dependencies: ["drizzle-orm", "@planetscale/database"],
+						devDependencies: ["drizzle-kit"],
+						projectDir: serverDir,
+					});
+				} else {
+					await addPackageDependency({
+						dependencies: ["drizzle-orm", "mysql2"],
+						devDependencies: ["drizzle-kit"],
+						projectDir: serverDir,
+					});
+				}
 			}
 		} else if (orm === "mongoose") {
 			await addPackageDependency({
@@ -88,8 +121,14 @@ export async function setupDatabase(config: ProjectConfig) {
 				await setupPrismaPostgres(config);
 			} else if (dbSetup === "neon") {
 				await setupNeonPostgres(config);
+			} else if (dbSetup === "planetscale") {
+				await setupPlanetScale(config);
 			} else if (dbSetup === "supabase") {
 				await setupSupabase(config);
+			}
+		} else if (database === "mysql") {
+			if (dbSetup === "planetscale") {
+				await setupPlanetScale(config);
 			}
 		} else if (database === "mongodb" && dbSetup === "mongodb-atlas") {
 			await setupMongoDBAtlas(config);

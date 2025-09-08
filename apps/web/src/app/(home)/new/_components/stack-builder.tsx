@@ -5,13 +5,8 @@ import {
 	ChevronDown,
 	ClipboardCopy,
 	InfoIcon,
-	RefreshCw,
 	Settings,
-	Share2,
-	Shuffle,
-	Star,
 	Terminal,
-	Zap,
 } from "lucide-react";
 import { motion } from "motion/react";
 import type React from "react";
@@ -27,11 +22,9 @@ import { toast } from "sonner";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
-	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ShareDialog } from "@/components/ui/share-dialog";
 import {
 	Tooltip,
 	TooltipContent,
@@ -51,7 +44,10 @@ import {
 	generateStackSharingUrl,
 } from "@/lib/stack-utils";
 import { cn } from "@/lib/utils";
+import { ActionButtons } from "./action-buttons";
 import { getBadgeColors } from "./get-badge-color";
+import { PresetDropdown } from "./preset-dropdown";
+import { ShareButton } from "./share-button";
 import { TechIcon } from "./tech-icon";
 import {
 	analyzeStackCompatibility,
@@ -60,6 +56,7 @@ import {
 	isOptionCompatible,
 	validateProjectName,
 } from "./utils";
+import { YoloToggle } from "./yolo-toggle";
 
 const StackBuilder = () => {
 	const [stack, setStack] = useStackState();
@@ -407,7 +404,12 @@ const StackBuilder = () => {
 
 	const applyPreset = (presetId: string) => {
 		const preset = PRESET_TEMPLATES.find(
-			(template) => template.id === presetId,
+			(template: {
+				id: string;
+				name: string;
+				description: string;
+				stack: StackState;
+			}) => template.id === presetId,
 		);
 		if (preset) {
 			startTransition(() => {
@@ -505,92 +507,41 @@ const StackBuilder = () => {
 
 							<div className="mt-auto border-border border-t pt-4">
 								<div className="space-y-3">
-									<div className="grid grid-cols-2 gap-2">
-										<button
-											type="button"
-											onClick={resetStack}
-											className="flex items-center justify-center gap-2 rounded-md border border-border bg-fd-background px-3 py-2 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
-											title="Reset to defaults"
-										>
-											<RefreshCw className="h-3.5 w-3.5" />
-											Reset
-										</button>
-										<button
-											type="button"
-											onClick={getRandomStack}
-											className="flex items-center justify-center gap-2 rounded-md border border-border bg-fd-background px-3 py-2 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
-											title="Generate a random stack"
-										>
-											<Shuffle className="h-3.5 w-3.5" />
-											Random
-										</button>
-									</div>
+									<ActionButtons
+										onReset={resetStack}
+										onRandom={getRandomStack}
+										onSave={saveCurrentStack}
+										onLoad={loadSavedStack}
+										hasSavedStack={!!lastSavedStack}
+									/>
 
-									<div className="grid grid-cols-2 gap-2">
-										<button
-											type="button"
-											onClick={saveCurrentStack}
-											className="flex items-center justify-center gap-2 rounded-md border border-border bg-fd-background px-3 py-2 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
-											title="Save current preferences"
-										>
-											<Star className="h-3.5 w-3.5" />
-											Save
-										</button>
-										{lastSavedStack ? (
-											<button
-												type="button"
-												onClick={loadSavedStack}
-												className="flex items-center justify-center gap-2 rounded-md border border-border bg-fd-background px-3 py-2 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
-												title="Load saved preferences"
-											>
-												<Settings className="h-3.5 w-3.5" />
-												Load
-											</button>
-										) : (
-											<div className="h-9" />
-										)}
-									</div>
+									<div className="flex gap-1">
+										<ShareButton stackUrl={getStackUrl()} stackState={stack} />
 
-									<ShareDialog stackUrl={getStackUrl()} stackState={stack}>
-										<button
-											type="button"
-											className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-fd-background px-3 py-2 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
-											title="Share your stack"
-										>
-											<Share2 className="h-3.5 w-3.5" />
-											Share Stack
-										</button>
-									</ShareDialog>
+										<PresetDropdown onApplyPreset={applyPreset} />
 
-									<DropdownMenu>
-										<DropdownMenuTrigger asChild>
-											<button
-												type="button"
-												className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-fd-background px-3 py-2 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
-											>
-												<Zap className="h-3.5 w-3.5" />
-												Quick Preset
-												<ChevronDown className="ml-auto h-3.5 w-3.5" />
-											</button>
-										</DropdownMenuTrigger>
-										<DropdownMenuContent
-											align="end"
-											className="w-64 bg-fd-background"
-										>
-											{PRESET_TEMPLATES.map((preset) => (
-												<DropdownMenuItem
-													key={preset.id}
-													onClick={() => applyPreset(preset.id)}
-													className="flex flex-col items-start gap-1 p-3"
+										<DropdownMenu>
+											<DropdownMenuTrigger asChild>
+												<button
+													type="button"
+													className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-fd-background px-2 py-1.5 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
 												>
-													<div className="font-medium text-sm">
-														{preset.name}
-													</div>
-													<div className="text-xs">{preset.description}</div>
-												</DropdownMenuItem>
-											))}
-										</DropdownMenuContent>
-									</DropdownMenu>
+													<Settings className="h-3 w-3" />
+													Settings
+													<ChevronDown className="ml-auto h-3 w-3" />
+												</button>
+											</DropdownMenuTrigger>
+											<DropdownMenuContent
+												align="end"
+												className="w-64 bg-fd-background"
+											>
+												<YoloToggle
+													stack={stack}
+													onToggle={(yolo) => setStack({ yolo })}
+												/>
+											</DropdownMenuContent>
+										</DropdownMenu>
+									</div>
 								</div>
 							</div>
 						</div>

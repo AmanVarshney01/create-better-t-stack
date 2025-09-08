@@ -16,7 +16,6 @@
 			"!**/out",
 			"!**/templates",
 			"!**/.turbo",
-			"!**/package.json",
 			"!**/analytics-minimal.json",
 			"!**/schema.json",
 			"!**/_generated",

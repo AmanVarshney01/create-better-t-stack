@@ -4,7 +4,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { expo } from "@better-auth/expo";
 {{/if}}
-import prisma from "../../prisma";
+import prisma from "../db";
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {

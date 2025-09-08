@@ -158,6 +158,31 @@ export async function setupNeonPostgres(config: ProjectConfig) {
 	const { packageManager, projectDir } = config;
 
 	try {
+		const mode = await select({
+			message: "Neon setup: choose mode",
+			options: [
+				{
+					label: "Automatic",
+					value: "auto",
+					hint: "Automated setup with provider CLI, sets .env",
+				},
+				{
+					label: "Manual",
+					value: "manual",
+					hint: "Manual setup, add env vars yourself",
+				},
+			],
+			initialValue: "auto",
+		});
+
+		if (isCancel(mode)) return exitCancelled("Operation cancelled");
+
+		if (mode === "manual") {
+			await writeEnvFile(projectDir);
+			displayManualSetupInstructions();
+			return;
+		}
+
 		const setupMethod = await select({
 			message: "Choose your Neon setup method:",
 			options: [

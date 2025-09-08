@@ -1,7 +1,7 @@
 import alchemy from "alchemy";
 {{#if (eq webDeploy "alchemy")}}
 {{#if (includes frontend "next")}}
-import { Next } from "alchemy/cloudflare";
+import { Nextjs } from "alchemy/cloudflare";
 {{else if (includes frontend "nuxt")}}
 import { Nuxt } from "alchemy/cloudflare";
 {{else if (includes frontend "svelte")}}
@@ -44,13 +44,17 @@ await Exec("db-generate", {
 });
 
 const db = await D1Database("database", {
+	{{#if (eq orm "prisma")}}
+	migrationsDir: "apps/server/prisma/migrations",
+	{{else if (eq orm "drizzle")}}
 	migrationsDir: "apps/server/src/db/migrations",
+	{{/if}}
 });
 {{/if}}
 
 {{#if (eq webDeploy "alchemy")}}
 {{#if (includes frontend "next")}}
-export const web = await Next("web", {
+export const web = await Nextjs("web", {
   {{#if (eq serverDeploy "alchemy")}}cwd: "apps/web",{{/if}}
   bindings: {
     {{#if (eq backend "convex")}}

@@ -2936,6 +2936,190 @@ describe("create-better-t-stack smoke", () => {
 			});
 		});
 
+		it("scaffolds with MySQL + Drizzle + PlanetScale", async () => {
+			const projectName = "app-mysql-drizzle-planetscale";
+			await runCli(
+				[
+					projectName,
+
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"bun",
+					"--database",
+					"mysql",
+					"--orm",
+					"drizzle",
+					"--api",
+					"trpc",
+					"--auth",
+					"none",
+					"--addons",
+					"none",
+					"--examples",
+					"none",
+					"--db-setup",
+					"planetscale",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			assertScaffoldedProject(projectDir);
+			assertBtsConfig(projectDir, {
+				database: "mysql",
+				orm: "drizzle",
+			});
+		});
+
+		it("scaffolds with MySQL + Prisma + PlanetScale", async () => {
+			const projectName = "app-mysql-prisma-planetscale";
+			await runCli(
+				[
+					projectName,
+
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"bun",
+					"--database",
+					"mysql",
+					"--orm",
+					"prisma",
+					"--api",
+					"trpc",
+					"--auth",
+					"none",
+					"--addons",
+					"none",
+					"--examples",
+					"none",
+					"--db-setup",
+					"planetscale",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			assertScaffoldedProject(projectDir);
+			assertBtsConfig(projectDir, {
+				database: "mysql",
+				orm: "prisma",
+			});
+		});
+
+		it("scaffolds with PostgreSQL + Drizzle + PlanetScale", async () => {
+			const projectName = "app-postgres-drizzle-planetscale";
+			await runCli(
+				[
+					projectName,
+
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"bun",
+					"--database",
+					"postgres",
+					"--orm",
+					"drizzle",
+					"--api",
+					"trpc",
+					"--auth",
+					"none",
+					"--addons",
+					"none",
+					"--examples",
+					"none",
+					"--db-setup",
+					"planetscale",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			await assertScaffoldedProject(projectDir);
+			await assertBtsConfig(projectDir, {
+				database: "postgres",
+				orm: "drizzle",
+			});
+		});
+
+		it("scaffolds with PostgreSQL + Prisma + PlanetScale", async () => {
+			const projectName = "app-postgres-prisma-planetscale";
+			await runCli(
+				[
+					projectName,
+
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"bun",
+					"--database",
+					"postgres",
+					"--orm",
+					"prisma",
+					"--api",
+					"trpc",
+					"--auth",
+					"none",
+					"--addons",
+					"none",
+					"--examples",
+					"none",
+					"--db-setup",
+					"planetscale",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			assertScaffoldedProject(projectDir);
+			assertBtsConfig(projectDir, {
+				database: "postgres",
+				orm: "prisma",
+			});
+		});
+
 		it("scaffolds oRPC with Next.js", async () => {
 			const projectName = "app-orpc-next";
 			await runCli(
@@ -3210,6 +3394,100 @@ describe("create-better-t-stack smoke", () => {
 				runtime: "node",
 			});
 		});
+
+		it("scaffolds with MySQL + Drizzle + PlanetScale + Node runtime", async () => {
+			const projectName = "app-mysql-drizzle-planetscale-node";
+			await runCli(
+				[
+					projectName,
+
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"node",
+					"--database",
+					"mysql",
+					"--orm",
+					"drizzle",
+					"--api",
+					"trpc",
+					"--auth",
+					"none",
+					"--addons",
+					"none",
+					"--examples",
+					"none",
+					"--db-setup",
+					"planetscale",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
+					"none",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			await assertScaffoldedProject(projectDir);
+			await assertBtsConfig(projectDir, {
+				database: "mysql",
+				orm: "drizzle",
+				runtime: "node",
+			});
+		});
+
+		it("scaffolds with MySQL + Prisma + PlanetScale + Workers runtime", async () => {
+			const projectName = "app-mysql-prisma-planetscale-workers";
+			await runCli(
+				[
+					projectName,
+
+					"--frontend",
+					"tanstack-router",
+					"--backend",
+					"hono",
+					"--runtime",
+					"workers",
+					"--database",
+					"mysql",
+					"--orm",
+					"prisma",
+					"--api",
+					"trpc",
+					"--auth",
+					"none",
+					"--addons",
+					"none",
+					"--examples",
+					"none",
+					"--db-setup",
+					"planetscale",
+					"--web-deploy",
+					"none",
+					"--server-deploy",
+					"wrangler",
+					"--package-manager",
+					"bun",
+					"--no-install",
+					"--no-git",
+				],
+				workdir,
+			);
+
+			const projectDir = join(workdir, projectName);
+			assertScaffoldedProject(projectDir);
+			assertBtsConfig(projectDir, {
+				database: "mysql",
+				orm: "prisma",
+				runtime: "workers",
+			});
+		});
 	});
 
 	(process.env.WITH_BUILD === "1" ? describe : describe.skip)(
@@ -3296,12 +3574,18 @@ describe("create-better-t-stack smoke", () => {
 				"app-with-auth",
 				"app-mysql-prisma",
 				"app-mysql-drizzle",
+				"app-mysql-drizzle-planetscale",
+				"app-mysql-prisma-planetscale",
+				"app-postgres-drizzle-planetscale",
+				"app-postgres-prisma-planetscale",
 				"app-orpc-next",
 				"app-orpc-nuxt",
 				"app-orpc-svelte",
 				"app-orpc-solid",
 				"app-backend-next",
 				"app-node-runtime",
+				"app-mysql-drizzle-planetscale-node",
+				"app-mysql-prisma-planetscale-workers",
 			].forEach((n) => {
 				projectNames.add(n);
 			});

@@ -197,23 +197,49 @@ export async function setupTurso(config: ProjectConfig) {
 	const { orm, projectDir } = config;
 	const _isDrizzle = orm === "drizzle";
 	const setupSpinner = spinner();
-	setupSpinner.start("Checking Turso CLI availability...");
 
 	try {
+		const mode = await select({
+			message: "Turso setup: choose mode",
+			options: [
+				{
+					label: "Automatic",
+					value: "auto",
+					hint: "Automated setup with provider CLI, sets .env",
+				},
+				{
+					label: "Manual",
+					value: "manual",
+					hint: "Manual setup, add env vars yourself",
+				},
+			],
+			initialValue: "auto",
+		});
+
+		if (isCancel(mode)) return exitCancelled("Operation cancelled");
+
+		if (mode === "manual") {
+			await writeEnvFile(projectDir);
+			displayManualSetupInstructions();
+			return;
+		}
+
+		setupSpinner.start("Checking Turso CLI availability...");
 		const platform = os.platform();
 		const isMac = platform === "darwin";
 		const _isLinux = platform === "linux";
 		const isWindows = platform === "win32";
 
 		if (isWindows) {
-			setupSpinner.stop(pc.yellow("Turso setup not supported on Windows"));
+			if (setupSpinner)
+				setupSpinner.stop(pc.yellow("Turso setup not supported on Windows"));
 			log.warn(pc.yellow("Automatic Turso setup is not supported on Windows."));
 			await writeEnvFile(projectDir);
 			displayManualSetupInstructions();
 			return;
 		}
 
-		setupSpinner.stop("Turso CLI availability checked");
+		if (setupSpinner) setupSpinner.stop("Turso CLI availability checked");
 
 		const isCliInstalled = await isTursoInstalled();
 
@@ -273,7 +299,8 @@ export async function setupTurso(config: ProjectConfig) {
 
 		log.success("Turso database setup completed successfully!");
 	} catch (error) {
-		setupSpinner.stop(pc.red("Turso CLI availability check failed"));
+		if (setupSpinner)
+			setupSpinner.stop(pc.red("Turso CLI availability check failed"));
 		consola.error(
 			pc.red(
 				`Error during Turso setup: ${

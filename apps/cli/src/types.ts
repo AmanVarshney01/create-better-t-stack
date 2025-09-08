@@ -69,6 +69,7 @@ export const DatabaseSetupSchema = z
 		"turso",
 		"neon",
 		"prisma-postgres",
+		"planetscale",
 		"mongodb-atlas",
 		"supabase",
 		"d1",

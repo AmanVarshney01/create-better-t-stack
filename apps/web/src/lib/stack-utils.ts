@@ -120,6 +120,10 @@ export function generateStackCommand(stack: StackState): string {
 		`--examples ${stack.examples.join(" ") || "none"}`,
 	];
 
+	if (stack.yolo === "true") {
+		flags.push("--yolo");
+	}
+
 	return `${base} ${projectName} ${flags.join(" ")}`;
 }
 

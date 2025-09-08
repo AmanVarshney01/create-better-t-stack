@@ -1,11 +1,12 @@
 import path from "node:path";
-import { cancel, isCancel, log, spinner, text } from "@clack/prompts";
+import { cancel, isCancel, log, select, spinner, text } from "@clack/prompts";
 import consola from "consola";
 import { execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 import { commandExists } from "../../utils/command-exists";
+import { exitCancelled } from "../../utils/errors";
 import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
 
 type MongoDBConfig = {
@@ -129,6 +130,32 @@ export async function setupMongoDBAtlas(config: ProjectConfig) {
 	const serverDir = path.join(projectDir, "apps/server");
 	try {
 		await fs.ensureDir(serverDir);
+
+		const mode = await select({
+			message: "MongoDB Atlas setup: choose mode",
+			options: [
+				{
+					label: "Automatic",
+					value: "auto",
+					hint: "Automated setup with provider CLI, sets .env",
+				},
+				{
+					label: "Manual",
+					value: "manual",
+					hint: "Manual setup, add env vars yourself",
+				},
+			],
+			initialValue: "auto",
+		});
+
+		if (isCancel(mode)) return exitCancelled("Operation cancelled");
+
+		if (mode === "manual") {
+			mainSpinner.stop("MongoDB Atlas manual setup selected");
+			await writeEnvFile(projectDir);
+			displayManualSetupInstructions();
+			return;
+		}
 
 		mainSpinner.stop("MongoDB Atlas setup ready");
 

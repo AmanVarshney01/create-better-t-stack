@@ -252,6 +252,14 @@ async function getDatabaseInstructions(
 	}
 
 	if (serverDeploy === "wrangler" && dbSetup === "d1") {
+		if (orm === "prisma" && _runtime === "workers") {
+			instructions.push(
+				`${pc.yellow(
+					"WARNING:",
+				)} Prisma + D1 on Workers with Wrangler has migration issues.
+	   Consider using Alchemy deploy instead of Wrangler for D1 projects.`,
+			);
+		}
 		const packageManager = runCmd === "npm run" ? "npm" : runCmd || "npm";
 
 		instructions.push(
@@ -287,22 +295,40 @@ async function getDatabaseInstructions(
 	}
 
 	if (dbSetup === "d1" && serverDeploy === "alchemy") {
-		instructions.push(
-			`${pc.yellow(
-				"NOTE:",
-			)} D1 migrations are automatically handled by Alchemy`,
-		);
-	}
-
-	if (orm === "prisma") {
-		if (dbSetup === "turso") {
+		if (orm === "drizzle") {
 			instructions.push(
 				`${pc.yellow(
 					"NOTE:",
-				)} Turso support with Prisma is in Early Access and requires\n   additional setup. Learn more at:\n   https://www.prisma.io/docs/orm/overview/databases/turso`,
+				)} D1 migrations are automatically handled by Alchemy`,
+			);
+		} else if (orm === "prisma") {
+			instructions.push(
+				`${pc.cyan("•")} Generate migrations: ${`${runCmd} db:generate`}`,
+			);
+			instructions.push(
+				`${pc.cyan("•")} Apply migrations: ${`${runCmd} db:migrate`}`,
 			);
 		}
+	}
 
+	if (dbSetup === "planetscale") {
+		if (database === "mysql" && orm === "drizzle") {
+			instructions.push(
+				`${pc.yellow(
+					"NOTE:",
+				)} Enable foreign key constraints in PlanetScale database settings`,
+			);
+		}
+		if (database === "mysql" && orm === "prisma") {
+			instructions.push(
+				`${pc.yellow(
+					"NOTE:",
+				)} How to handle Prisma migrations with PlanetScale:\n   https://github.com/prisma/prisma/issues/7292`,
+			);
+		}
+	}
+
+	if (orm === "prisma") {
 		if (database === "mongodb" && dbSetup === "docker") {
 			instructions.push(
 				`${pc.yellow(

@@ -9,7 +9,6 @@ import {
 	ensureSingleWebAndNative,
 	isWebFrontend,
 	validateAddonsAgainstFrontends,
-	validateAlchemyCompatibility,
 	validateApiFrontendCompatibility,
 	validateExamplesCompatibility,
 	validateServerDeployRequiresBackend,
@@ -126,6 +125,10 @@ export function validateDatabaseSetup(
 			errorMessage:
 				"Prisma PostgreSQL setup requires PostgreSQL database. Please use '--database postgres' or choose a different setup.",
 		},
+		planetscale: {
+			errorMessage:
+				"PlanetScale setup requires PostgreSQL or MySQL database. Please use '--database postgres' or '--database mysql' or choose a different setup.",
+		},
 		"mongodb-atlas": {
 			database: "mongodb",
 			errorMessage:
@@ -152,8 +155,15 @@ export function validateDatabaseSetup(
 	if (dbSetup && dbSetup !== "none") {
 		const validation = setupValidations[dbSetup];
 
-		if (validation.database && database !== validation.database) {
-			exitWithError(validation.errorMessage);
+		// Special handling for PlanetScale - supports both postgres and mysql
+		if (dbSetup === "planetscale") {
+			if (database !== "postgres" && database !== "mysql") {
+				exitWithError(validation.errorMessage);
+			}
+		} else {
+			if (validation.database && database !== validation.database) {
+				exitWithError(validation.errorMessage);
+			}
 		}
 
 		if (validation.runtime && runtime !== validation.runtime) {
@@ -414,12 +424,6 @@ export function validateFullConfig(
 		config.examples ?? [],
 		config.backend,
 		config.database,
-		config.frontend ?? [],
-	);
-
-	validateAlchemyCompatibility(
-		config.webDeploy,
-		config.serverDeploy,
 		config.frontend ?? [],
 	);
 }

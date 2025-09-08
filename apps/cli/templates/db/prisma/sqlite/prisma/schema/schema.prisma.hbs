@@ -10,10 +10,20 @@ generator client {
   {{/if}}
   {{#if (eq runtime "workers")}}
   runtime = "workerd"
+  {{#if (eq dbSetup "d1")}}
+  previewFeatures = ["driverAdapters"]
+  {{/if}}
+  {{/if}}
+  {{#if (eq dbSetup "turso")}}
+  previewFeatures = ["driverAdapters"]
   {{/if}}
 }
 
 datasource db {
   provider = "sqlite"
+  {{#if (eq dbSetup "turso")}}
+  url      = "file:./local.db"
+  {{else}}
   url      = env("DATABASE_URL")
+  {{/if}}
 }

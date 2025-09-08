@@ -347,15 +347,21 @@ export function StackConfigurationCharts({
 											fill={
 												entry.name === "turso"
 													? "hsl(var(--chart-1))"
-													: entry.name === "prisma-postgres"
+													: entry.name === "planetscale"
 														? "hsl(var(--chart-2))"
-														: entry.name === "mongodb-atlas"
+														: entry.name === "prisma-postgres"
 															? "hsl(var(--chart-3))"
-															: entry.name === "neon"
+															: entry.name === "mongodb-atlas"
 																? "hsl(var(--chart-4))"
-																: entry.name === "supabase"
+																: entry.name === "neon"
 																	? "hsl(var(--chart-5))"
-																	: "hsl(var(--chart-7))"
+																	: entry.name === "supabase"
+																		? "hsl(var(--chart-6))"
+																		: entry.name === "d1"
+																			? "hsl(var(--chart-7))"
+																			: entry.name === "docker"
+																				? "hsl(var(--chart-1))"
+																				: "hsl(var(--chart-2))"
 											}
 										/>
 									))}

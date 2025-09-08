@@ -1,0 +1,12 @@
+import { PrismaClient } from "../../prisma/generated/client";
+{{#if (eq dbSetup "planetscale")}}
+import { PrismaPlanetScale } from '@prisma/adapter-planetscale'
+
+const adapter = new PrismaPlanetScale({ url: process.env.DATABASE_URL })
+
+const prisma = new PrismaClient({adapter});
+{{else}}
+const prisma = new PrismaClient();
+{{/if}}
+
+export default prisma;

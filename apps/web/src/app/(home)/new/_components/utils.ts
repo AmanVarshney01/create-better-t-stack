@@ -61,6 +61,15 @@ interface CompatibilityResult {
 export const analyzeStackCompatibility = (
 	stack: StackState,
 ): CompatibilityResult => {
+	// Skip all validation if YOLO mode is enabled
+	if (stack.yolo === "true") {
+		return {
+			adjustedStack: null,
+			notes: {},
+			changes: [],
+		};
+	}
+
 	const nextStack = { ...stack };
 	let changed = false;
 	const notes: CompatibilityResult["notes"] = {};
@@ -352,12 +361,12 @@ export const analyzeStackCompatibility = (
 							"Database set to 'SQLite' (Turso hosting requires SQLite database)",
 					});
 				}
-				if (nextStack.orm !== "drizzle") {
+				if (nextStack.orm !== "drizzle" && nextStack.orm !== "prisma") {
 					notes.dbSetup.notes.push(
-						"Turso requires Drizzle ORM. It will be selected.",
+						"Turso requires Drizzle or Prisma ORM. Drizzle will be selected.",
 					);
 					notes.orm.notes.push(
-						"Turso DB setup requires Drizzle ORM. It will be selected.",
+						"Turso DB setup requires Drizzle or Prisma ORM. Drizzle will be selected.",
 					);
 					notes.dbSetup.hasIssue = true;
 					notes.orm.hasIssue = true;
@@ -366,7 +375,7 @@ export const analyzeStackCompatibility = (
 					changes.push({
 						category: "dbSetup",
 						message:
-							"ORM set to 'Drizzle' (Turso hosting requires Drizzle ORM)",
+							"ORM set to 'Drizzle' (Turso hosting requires Drizzle or Prisma ORM)",
 					});
 				}
 			} else if (nextStack.dbSetup === "prisma-postgres") {
@@ -454,6 +463,27 @@ export const analyzeStackCompatibility = (
 							"Database set to 'PostgreSQL' (Supabase hosting requires PostgreSQL database)",
 					});
 				}
+			} else if (nextStack.dbSetup === "planetscale") {
+				if (
+					nextStack.database !== "postgres" &&
+					nextStack.database !== "mysql"
+				) {
+					notes.dbSetup.notes.push(
+						"PlanetScale requires PostgreSQL or MySQL. PostgreSQL will be selected.",
+					);
+					notes.database.notes.push(
+						"PlanetScale DB setup requires PostgreSQL or MySQL. PostgreSQL will be selected.",
+					);
+					notes.dbSetup.hasIssue = true;
+					notes.database.hasIssue = true;
+					nextStack.database = "postgres";
+					changed = true;
+					changes.push({
+						category: "dbSetup",
+						message:
+							"Database set to 'PostgreSQL' (PlanetScale supports PostgreSQL and MySQL)",
+					});
+				}
 			} else if (nextStack.dbSetup === "d1") {
 				if (nextStack.database !== "sqlite") {
 					notes.dbSetup.notes.push(
@@ -471,6 +501,23 @@ export const analyzeStackCompatibility = (
 						message: "Database set to 'SQLite' (required by Cloudflare D1)",
 					});
 				}
+				if (nextStack.orm !== "drizzle" && nextStack.orm !== "prisma") {
+					notes.dbSetup.notes.push(
+						"Cloudflare D1 requires Drizzle or Prisma ORM. Drizzle will be selected.",
+					);
+					notes.orm.notes.push(
+						"Cloudflare D1 DB setup requires Drizzle or Prisma ORM. Drizzle will be selected.",
+					);
+					notes.dbSetup.hasIssue = true;
+					notes.orm.hasIssue = true;
+					nextStack.orm = "drizzle";
+					changed = true;
+					changes.push({
+						category: "dbSetup",
+						message:
+							"ORM set to 'Drizzle' (Cloudflare D1 requires Drizzle or Prisma ORM)",
+					});
+				}
 				if (nextStack.runtime !== "workers") {
 					notes.dbSetup.notes.push(
 						"Cloudflare D1 requires Cloudflare Workers runtime. It will be selected.",
@@ -485,22 +532,6 @@ export const analyzeStackCompatibility = (
 					changes.push({
 						category: "dbSetup",
 						message: "Runtime set to 'Cloudflare Workers' (required by D1)",
-					});
-				}
-				if (nextStack.orm !== "drizzle") {
-					notes.dbSetup.notes.push(
-						"Cloudflare D1 requires Drizzle ORM. It will be selected.",
-					);
-					notes.orm.notes.push(
-						"Cloudflare D1 DB setup requires Drizzle ORM. It will be selected.",
-					);
-					notes.dbSetup.hasIssue = true;
-					notes.orm.hasIssue = true;
-					nextStack.orm = "drizzle";
-					changed = true;
-					changes.push({
-						category: "dbSetup",
-						message: "ORM set to 'Drizzle' (required by Cloudflare D1)",
 					});
 				}
 				if (nextStack.backend !== "hono") {
@@ -581,6 +612,9 @@ export const analyzeStackCompatibility = (
 				} else if (nextStack.dbSetup === "mongodb-atlas") {
 					selectedDatabase = "mongodb";
 					databaseName = "MongoDB";
+				} else if (nextStack.dbSetup === "planetscale") {
+					selectedDatabase = "postgres";
+					databaseName = "PostgreSQL";
 				}
 
 				notes.dbSetup.notes.push(
@@ -615,24 +649,6 @@ export const analyzeStackCompatibility = (
 						category: "runtime",
 						message:
 							"Backend set to 'Hono' (Cloudflare Workers runtime only works with Hono backend)",
-					});
-				}
-
-				if (nextStack.orm !== "drizzle" && nextStack.orm !== "none") {
-					notes.runtime.notes.push(
-						"Cloudflare Workers runtime requires Drizzle ORM or no ORM. Drizzle will be selected.",
-					);
-					notes.orm.notes.push(
-						"Cloudflare Workers runtime requires Drizzle ORM or no ORM. Drizzle will be selected.",
-					);
-					notes.runtime.hasIssue = true;
-					notes.orm.hasIssue = true;
-					nextStack.orm = "drizzle";
-					changed = true;
-					changes.push({
-						category: "runtime",
-						message:
-							"ORM set to 'Drizzle' (Cloudflare Workers runtime only supports Drizzle or no ORM)",
 					});
 				}
 
@@ -1050,49 +1066,6 @@ export const analyzeStackCompatibility = (
 		});
 	}
 
-	const isAlchemyWebDeploy = nextStack.webDeploy === "alchemy";
-	const isAlchemyServerDeploy = nextStack.serverDeploy === "alchemy";
-
-	if (isAlchemyWebDeploy || isAlchemyServerDeploy) {
-		const incompatibleFrontends = nextStack.webFrontend.filter(
-			(f) => f === "next",
-		);
-
-		if (incompatibleFrontends.length > 0) {
-			const deployType =
-				isAlchemyWebDeploy && isAlchemyServerDeploy
-					? "web and server deployment"
-					: isAlchemyWebDeploy
-						? "web deployment"
-						: "server deployment";
-
-			notes.webFrontend.notes.push(
-				`Alchemy ${deployType} is temporarily not compatible with ${incompatibleFrontends.join(" and ")}. These frontends will be removed.`,
-			);
-			notes.webDeploy.notes.push(
-				`Alchemy ${deployType} is temporarily not compatible with ${incompatibleFrontends.join(" and ")}.`,
-			);
-			notes.serverDeploy.notes.push(
-				`Alchemy ${deployType} is temporarily not compatible with ${incompatibleFrontends.join(" and ")}.`,
-			);
-			notes.webFrontend.hasIssue = true;
-			notes.webDeploy.hasIssue = true;
-			notes.serverDeploy.hasIssue = true;
-
-			nextStack.webFrontend = nextStack.webFrontend.filter((f) => f !== "next");
-
-			if (nextStack.webFrontend.length === 0) {
-				nextStack.webFrontend = ["tanstack-router"];
-			}
-
-			changed = true;
-			changes.push({
-				category: "alchemy",
-				message: `Removed ${incompatibleFrontends.join(" and ")} frontend (temporarily not compatible with Alchemy ${deployType} - support coming soon)`,
-			});
-		}
-	}
-
 	if (
 		nextStack.serverDeploy === "alchemy" &&
 		(nextStack.runtime !== "workers" || nextStack.backend !== "hono")
@@ -1222,15 +1195,6 @@ export const getDisabledReason = (
 
 	const { adjustedStack } = analyzeStackCompatibility(simulatedStack);
 	const finalStack = adjustedStack ?? simulatedStack;
-
-	if (category === "webFrontend" && optionId === "next") {
-		const isAlchemyWebDeploy = finalStack.webDeploy === "alchemy";
-		const isAlchemyServerDeploy = finalStack.serverDeploy === "alchemy";
-
-		if (isAlchemyWebDeploy || isAlchemyServerDeploy) {
-			return "Next.js is temporarily not compatible with Alchemy deployment. Support coming soon!";
-		}
-	}
 
 	if (category === "webFrontend" && optionId === "solid") {
 		if (finalStack.backend === "convex") {
@@ -1383,11 +1347,17 @@ export const getDisabledReason = (
 		if (finalStack.database === "none") {
 			return "Prisma ORM requires a database. Select a database first (SQLite, PostgreSQL, MySQL, or MongoDB).";
 		}
+		if (finalStack.dbSetup === "turso" && finalStack.database !== "sqlite") {
+			return "Turso setup requires SQLite database. Select SQLite first.";
+		}
+		if (finalStack.dbSetup === "d1" && finalStack.database !== "sqlite") {
+			return "Cloudflare D1 setup requires SQLite database. Select SQLite first.";
+		}
 	}
 
 	if (category === "dbSetup" && optionId === "turso") {
-		if (finalStack.orm !== "drizzle") {
-			return "Turso requires Drizzle ORM. Select Drizzle first.";
+		if (finalStack.orm !== "drizzle" && finalStack.orm !== "prisma") {
+			return "Turso requires Drizzle or Prisma ORM. Select Drizzle or Prisma first.";
 		}
 	}
 
@@ -1398,8 +1368,8 @@ export const getDisabledReason = (
 	}
 
 	if (category === "dbSetup" && optionId === "d1") {
-		if (finalStack.orm !== "drizzle") {
-			return "Cloudflare D1 requires Drizzle ORM. Select Drizzle first.";
+		if (finalStack.orm !== "drizzle" && finalStack.orm !== "prisma") {
+			return "Cloudflare D1 requires Drizzle or Prisma ORM. Select Drizzle or Prisma first.";
 		}
 		if (finalStack.runtime !== "workers") {
 			return "Cloudflare D1 requires Cloudflare Workers runtime. Select Workers runtime first.";
@@ -1461,15 +1431,20 @@ export const getDisabledReason = (
 			finalStack.dbSetup !== "docker" &&
 			finalStack.dbSetup !== "prisma-postgres" &&
 			finalStack.dbSetup !== "neon" &&
-			finalStack.dbSetup !== "supabase"
+			finalStack.dbSetup !== "supabase" &&
+			finalStack.dbSetup !== "planetscale"
 		) {
-			return "PostgreSQL database only works with Docker, Prisma PostgreSQL, Neon, Supabase, or Basic Setup. Select one of these options or change database.";
+			return "PostgreSQL database only works with Docker, Prisma PostgreSQL, Neon, Supabase, PlanetScale, or Basic Setup. Select one of these options or change database.";
 		}
 	}
 
 	if (category === "database" && optionId === "mysql") {
-		if (finalStack.dbSetup !== "none" && finalStack.dbSetup !== "docker") {
-			return "MySQL database only works with Docker or Basic Setup. Select one of these options or change database.";
+		if (
+			finalStack.dbSetup !== "none" &&
+			finalStack.dbSetup !== "docker" &&
+			finalStack.dbSetup !== "planetscale"
+		) {
+			return "MySQL database only works with Docker, PlanetScale, or Basic Setup. Select one of these options or change database.";
 		}
 	}
 
@@ -1584,9 +1559,24 @@ export const getDisabledReason = (
 		}
 	}
 
+	if (category === "dbSetup" && optionId === "planetscale") {
+		if (finalStack.database !== "postgres" && finalStack.database !== "mysql") {
+			return "PlanetScale requires PostgreSQL or MySQL database. Select PostgreSQL or MySQL first.";
+		}
+	}
+
 	if (category === "dbSetup" && optionId === "supabase") {
 		if ((finalStack.database as string) !== "postgres") {
 			return "Supabase requires PostgreSQL database. Select PostgreSQL first.";
+		}
+	}
+
+	if (
+		category === "database" &&
+		(finalStack.dbSetup as string) === "planetscale"
+	) {
+		if (optionId !== "postgres" && optionId !== "mysql") {
+			return "Selected DB Setup 'PlanetScale' requires PostgreSQL or MySQL. Select PostgreSQL or MySQL, or change DB Setup.";
 		}
 	}
 
@@ -1607,5 +1597,8 @@ export const isOptionCompatible = (
 	category: keyof typeof TECH_OPTIONS,
 	optionId: string,
 ): boolean => {
+	if (currentStack.yolo === "true") {
+		return true;
+	}
 	return getDisabledReason(currentStack, category, optionId) === null;
 };

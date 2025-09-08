@@ -42,7 +42,7 @@ Cloudflare Workers has specific compatibility requirements:
 | Component | Requirement | Reason |
 |-----------|-------------|--------|
 | Backend | Must be `hono` | Only Hono supports Workers runtime |
-| ORM | Must be `drizzle` or `none` | Workers doesn't support Prisma/Mongoose |
+| ORM | Must be `drizzle` or `prisma` | Workers supports Drizzle and Prisma; Mongoose is not supported |
 | Database | Cannot be `mongodb` | MongoDB requires Prisma/Mongoose |
 | Database Setup | Cannot be `docker` | Workers is serverless, no Docker support |
 
@@ -52,6 +52,9 @@ create-better-t-stack --runtime workers --backend express
 
 # ✅ Valid - Workers with Hono
 create-better-t-stack --runtime workers --backend hono --database sqlite --orm drizzle --db-setup d1
+
+# ✅ Also valid - Workers with Prisma (D1)
+create-better-t-stack --runtime workers --backend hono --database sqlite --orm prisma --db-setup d1
 ```
 
 ### Backend Presets
@@ -123,8 +126,8 @@ create-better-t-stack --frontend next native-nativewind
 
 | Setup Provider | Required Database | Notes |
 |---------------|------------------|-------|
-| `turso` | `sqlite` | Distributed SQLite |
-| `d1` | `sqlite` | Cloudflare D1 (requires Workers runtime) |
+| `turso` | `sqlite` | Distributed SQLite; works with Drizzle and Prisma |
+| `d1` | `sqlite` | Cloudflare D1 (requires Workers runtime); works with Drizzle and Prisma |
 | `neon` | `postgres` | Serverless PostgreSQL |
 | `supabase` | `postgres` | PostgreSQL with additional features |
 | `prisma-postgres` | `postgres` | Managed PostgreSQL via Prisma |

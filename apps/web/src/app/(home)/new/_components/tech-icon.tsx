@@ -29,7 +29,8 @@ export function TechIcon({
 		(icon.includes("drizzle") ||
 			icon.includes("prisma") ||
 			icon.includes("express") ||
-			icon.includes("clerk"))
+			icon.includes("clerk") ||
+			icon.includes("planetscale"))
 	) {
 		iconSrc = icon.replace(".svg", "-light.svg");
 	}

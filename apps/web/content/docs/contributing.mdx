@@ -3,14 +3,14 @@ title: Contributing
 description: How to set up your environment and contribute changes
 ---
 
+> **⚠️ Important**: Before starting work on any new features or major changes, please open an issue first to discuss your proposal and get approval. We don't want you to waste time on work that might not align with the project's direction or get merged.
+
 ## Overview
 
 This project is a monorepo with two main apps:
 
 - CLI: `apps/cli`
 - Documentation site: `apps/web`
-
-> Note: Planning to add a new feature? Please open an issue first to confirm it aligns with the project's future goals. We don't want you to spend time on work that might not land.
 
 ## Setup
 
@@ -48,14 +48,16 @@ bun dev:web
 ## Contribution Flow
 
 1. Open an issue/discussion before starting major work
-2. Create a feature branch
-3. Make changes following existing code style
-4. Update docs as needed
-5. Test and format
+2. Fork the repository
+3. Create a feature branch
+4. Make changes following existing code style
+5. Update docs as needed
+6. Test and format
 
 ```bash
 # CLI
 cd apps/cli && bun dev:cli
+cd apps/cli && bun run test
 
 # Web
 bun dev:web
@@ -67,14 +69,6 @@ bun run format
 bun check
 ```
 
-6. (CLI changes) Add a changeset
-
-```bash
-bunx changeset select create-better-t-stack
-# Choose 'patch' for small fixes, 'minor' for features
-# Never choose 'major'
-```
-
 7. Commit and push
 
 ```bash
@@ -84,6 +78,17 @@ git push origin <your-branch>
 ```
 
 8. Open a Pull Request and link any related issues
+
+## Commit Conventions
+
+Use conventional commit messages with the appropriate scope:
+
+- `feat(cli): add new CLI feature`
+- `fix(cli): fix CLI bug`
+- `feat(web): add new web feature`
+- `fix(web): fix web bug`
+- `chore(web): update dependencies`
+- `docs: update documentation`
 
 ## Help
 

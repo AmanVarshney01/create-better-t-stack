@@ -245,6 +245,31 @@ export async function setupPrismaPostgres(config: ProjectConfig) {
 	try {
 		await fs.ensureDir(serverDir);
 
+		const mode = await select({
+			message: "Prisma Postgres setup: choose mode",
+			options: [
+				{
+					label: "Automatic",
+					value: "auto",
+					hint: "Automated setup with provider CLI, sets .env",
+				},
+				{
+					label: "Manual",
+					value: "manual",
+					hint: "Manual setup, add env vars yourself",
+				},
+			],
+			initialValue: "auto",
+		});
+
+		if (isCancel(mode)) return exitCancelled("Operation cancelled");
+
+		if (mode === "manual") {
+			await writeEnvFile(projectDir);
+			displayManualSetupInstructions();
+			return;
+		}
+
 		const setupOptions = [
 			{
 				label: "Quick setup with create-db",

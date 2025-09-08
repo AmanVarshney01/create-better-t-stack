@@ -170,25 +170,37 @@ export const dbSetupConfig = {
 		label: "Turso",
 		color: "hsl(var(--chart-1))",
 	},
+	planetscale: {
+		label: "PlanetScale",
+		color: "hsl(var(--chart-2))",
+	},
 	"prisma-postgres": {
 		label: "Prisma Postgres",
-		color: "hsl(var(--chart-2))",
+		color: "hsl(var(--chart-3))",
 	},
 	"mongodb-atlas": {
 		label: "MongoDB Atlas",
-		color: "hsl(var(--chart-3))",
+		color: "hsl(var(--chart-4))",
 	},
 	neon: {
 		label: "Neon",
-		color: "hsl(var(--chart-4))",
+		color: "hsl(var(--chart-5))",
 	},
 	supabase: {
 		label: "Supabase",
-		color: "hsl(var(--chart-5))",
+		color: "hsl(var(--chart-6))",
+	},
+	d1: {
+		label: "Cloudflare D1",
+		color: "hsl(var(--chart-7))",
+	},
+	docker: {
+		label: "Docker",
+		color: "hsl(var(--chart-1))",
 	},
 	none: {
 		label: "None",
-		color: "hsl(var(--chart-6))",
+		color: "hsl(var(--chart-2))",
 	},
 } satisfies ChartConfig;
 

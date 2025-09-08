@@ -1,6 +1,6 @@
 {{#if (eq api "orpc")}}
 import z from "zod";
-import prisma from "../../prisma";
+import prisma from "../db";
 import { publicProcedure } from "../lib/orpc";
 
 export const todoRouter = {
@@ -52,7 +52,7 @@ export const todoRouter = {
 {{#if (eq api "trpc")}}
 import { TRPCError } from "@trpc/server";
 import z from "zod";
-import prisma from "../../prisma";
+import prisma from "../db";
 import { publicProcedure, router } from "../lib/trpc";
 
 export const todoRouter = router({

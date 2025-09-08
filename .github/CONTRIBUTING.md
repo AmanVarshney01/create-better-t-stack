@@ -2,6 +2,8 @@
 
 Thank you for your interest in contributing to Better-T-Stack! This document provides guidelines and setup instructions for contributors.
 
+> **⚠️ Important**: Before starting work on any new features or major changes, please open an issue first to discuss your proposal and get approval. We don't want you to waste time on work that might not align with the project's direction or get merged.
+
 ## Project Structure
 
 This repository is organized as a monorepo containing:
@@ -21,7 +23,7 @@ This repository is organized as a monorepo containing:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/better-t-stack/create-better-t-stack.git
+   git clone https://github.com/AmanVarshney01/create-better-t-stack.git
    cd create-better-t-stack
    ```
 
@@ -59,10 +61,6 @@ This repository is organized as a monorepo containing:
 
 ## Contribution Guidelines
 
-### Before You Start
-
-**Please ask before working on any new features!** We don't want to waste your time on features that might not align with the project's direction. Open an issue or discussion first to discuss your proposed changes.
-
 ### Standard Contribution Steps
 
 1. **Create an issue** (if one doesn't exist)
@@ -71,6 +69,8 @@ This repository is organized as a monorepo containing:
    - Discuss the proposed solution
 
 2. **Fork the repository**
+   - Click the "Fork" button on GitHub
+   - Clone your fork locally
 
 3. **Create a feature branch**
    ```bash
@@ -83,30 +83,9 @@ This repository is organized as a monorepo containing:
    - Follow the existing code style
    - Update documentation as needed
 
-5. **Test and format your changes**
-   ```bash
-   # For CLI changes
-   cd apps/cli
-   bun dev:cli
-   
-   # For web changes
-   bun dev:web
-   
-   # Format files
-   bun run format
-   
-   # Run type checks
-   bun check
-   ```
+5. **Test and format your changes** (see Testing section below)
 
-6. **Add changeset** (for CLI-related changes)
-   ```bash
-   bunx changeset select create-better-t-stack
-   # Choose 'patch' for small fixes, 'minor' for features
-   # Never choose 'major'
-   ```
-
-7. **Commit your changes**
+6. **Commit your changes**
    ```bash
    git add .
    git commit -m "feat(web): add your feature description"
@@ -114,20 +93,46 @@ This repository is organized as a monorepo containing:
    git commit -m "fix(cli): fix your bug description"
    ```
 
-8. **Push to your fork**
+7. **Push to your fork**
    ```bash
    git push origin feature/your-feature-name
    ```
 
-9. **Create a Pull Request**
+8. **Create a Pull Request**
    - Link to the related issue
    - Describe your changes
 
 ### Testing
 
+**Before committing, make sure to test your changes:**
+
+```bash
+# For CLI changes
+cd apps/cli
+bun dev:cli
+bun run test
+
+# For web changes
+bun dev:web
+
+# Format files
+bun run format
+```
+
 - **Manual testing**: Test your changes manually to ensure everything works as expected
 - For CLI changes: Test with different configurations and options
 - For web changes: Ensure the site builds and displays correctly
+
+## Commit Conventions
+
+Use conventional commit messages with the appropriate scope:
+
+- `feat(cli): add new CLI feature`
+- `fix(cli): fix CLI bug`
+- `feat(web): add new web feature`
+- `fix(web): fix web bug`
+- `chore(web): update dependencies`
+- `docs: update documentation`
 
 ## Getting Help
 

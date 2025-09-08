@@ -289,49 +289,57 @@ export const TECH_OPTIONS: Record<
 		{
 			id: "turso",
 			name: "Turso",
-			description: "SQLite cloud database powered by libSQL",
+			description: "Distributed SQLite with edge replicas (libSQL)",
 			icon: `${ICON_BASE_URL}/turso.svg`,
 			color: "from-pink-400 to-pink-600",
 		},
 		{
 			id: "d1",
 			name: "Cloudflare D1",
-			description: "Serverless SQLite database on Cloudflare Workers",
+			description:
+				"Serverless SQLite-compatible database for Cloudflare Workers",
 			icon: `${ICON_BASE_URL}/workers.svg`,
 			color: "from-orange-400 to-orange-600",
 		},
 		{
 			id: "neon",
 			name: "Neon Postgres",
-			description: "Serverless PostgreSQL with Neon",
+			description: "Serverless Postgres with autoscaling and branching",
 			icon: `${ICON_BASE_URL}/neon.svg`,
 			color: "from-blue-400 to-blue-600",
 		},
 		{
 			id: "prisma-postgres",
 			name: "Prisma PostgreSQL",
-			description: "Set up PostgreSQL with Prisma",
+			description: "Managed Postgres via Prisma Data Platform",
 			icon: `${ICON_BASE_URL}/prisma.svg`,
 			color: "from-indigo-400 to-indigo-600",
 		},
 		{
 			id: "mongodb-atlas",
 			name: "MongoDB Atlas",
-			description: "Cloud MongoDB setup with Atlas",
+			description: "Managed MongoDB clusters in the cloud",
 			icon: `${ICON_BASE_URL}/mongodb.svg`,
 			color: "from-green-400 to-green-600",
 		},
 		{
 			id: "supabase",
 			name: "Supabase",
-			description: "Local Supabase stack (requires Docker)",
+			description: "Local Postgres stack via Supabase (Docker required)",
 			icon: `${ICON_BASE_URL}/supabase.svg`,
 			color: "from-emerald-400 to-emerald-600",
 		},
 		{
+			id: "planetscale",
+			name: "PlanetScale",
+			description: "Postgres & Vitess (MySQL) on NVMe",
+			icon: `${ICON_BASE_URL}/planetscale.svg`,
+			color: "from-orange-400 to-orange-600",
+		},
+		{
 			id: "docker",
 			name: "Docker",
-			description: "Local database with Docker Compose",
+			description: "Run Postgres/MySQL/MongoDB locally via Docker Compose",
 			icon: `${ICON_BASE_URL}/docker.svg`,
 			color: "from-blue-500 to-blue-700",
 		},
@@ -612,6 +620,7 @@ export const PRESET_TEMPLATES = [
 			api: "trpc",
 			webDeploy: "none",
 			serverDeploy: "none",
+			yolo: "false",
 		},
 	},
 	{
@@ -636,6 +645,7 @@ export const PRESET_TEMPLATES = [
 			api: "none",
 			webDeploy: "none",
 			serverDeploy: "none",
+			yolo: "false",
 		},
 	},
 	{
@@ -660,6 +670,7 @@ export const PRESET_TEMPLATES = [
 			api: "trpc",
 			webDeploy: "none",
 			serverDeploy: "none",
+			yolo: "false",
 		},
 	},
 	{
@@ -684,6 +695,7 @@ export const PRESET_TEMPLATES = [
 			api: "trpc",
 			webDeploy: "none",
 			serverDeploy: "none",
+			yolo: "false",
 		},
 	},
 	{
@@ -716,6 +728,7 @@ export const PRESET_TEMPLATES = [
 			api: "trpc",
 			webDeploy: "alchemy",
 			serverDeploy: "alchemy",
+			yolo: "false",
 		},
 	},
 ];
@@ -738,6 +751,7 @@ export type StackState = {
 	api: string;
 	webDeploy: string;
 	serverDeploy: string;
+	yolo: string;
 };
 
 export const DEFAULT_STACK: StackState = {
@@ -758,6 +772,7 @@ export const DEFAULT_STACK: StackState = {
 	api: "trpc",
 	webDeploy: "none",
 	serverDeploy: "none",
+	yolo: "false",
 };
 
 export const isStackDefault = <K extends keyof StackState>(

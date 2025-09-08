@@ -19,4 +19,7 @@ datasource db {
   {{#if (eq dbSetup "supabase")}}
   directUrl = env("DIRECT_URL")
   {{/if}}
+  {{#if (eq dbSetup "planetscale")}}
+  relationMode = "prisma"
+  {{/if}}
 }

@@ -5,7 +5,7 @@ import { exitCancelled } from "../utils/errors";
 export async function getDBSetupChoice(
 	databaseType: string,
 	dbSetup: DatabaseSetup | undefined,
-	orm?: ORM,
+	_orm?: ORM,
 	backend?: Backend,
 	runtime?: Runtime,
 ): Promise<DatabaseSetup> {
@@ -16,10 +16,6 @@ export async function getDBSetupChoice(
 	if (dbSetup !== undefined) return dbSetup as DatabaseSetup;
 
 	if (databaseType === "none") {
-		return "none";
-	}
-
-	if (databaseType === "sqlite" && orm === "prisma") {
 		return "none";
 	}
 
@@ -52,6 +48,11 @@ export async function getDBSetupChoice(
 				hint: "Serverless Postgres with branching capability",
 			},
 			{
+				value: "planetscale" as const,
+				label: "PlanetScale",
+				hint: "Postgres & Vitess (MySQL) on NVMe",
+			},
+			{
 				value: "supabase" as const,
 				label: "Supabase",
 				hint: "Local Supabase stack (requires Docker)",
@@ -70,6 +71,11 @@ export async function getDBSetupChoice(
 		];
 	} else if (databaseType === "mysql") {
 		options = [
+			{
+				value: "planetscale" as const,
+				label: "PlanetScale",
+				hint: "MySQL on Vitess (NVMe, HA)",
+			},
 			{
 				value: "docker" as const,
 				label: "Docker",
