@@ -1,13 +1,13 @@
 import path from "node:path";
-import { log, select, isCancel } from "@clack/prompts";
+import { isCancel, log, select } from "@clack/prompts";
 import { consola } from "consola";
 import { type ExecaError, execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { PackageManager, ProjectConfig } from "../../types";
+import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
 import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
-import { exitCancelled } from "../../utils/errors";
 
 async function writeSupabaseEnvFile(projectDir: string, databaseUrl: string) {
 	try {

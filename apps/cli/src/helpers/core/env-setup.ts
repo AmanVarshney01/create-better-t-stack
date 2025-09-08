@@ -232,16 +232,8 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 	}
 
 	let databaseUrl: string | null = null;
-	const specializedSetup =
-		dbSetup === "turso" ||
-		dbSetup === "prisma-postgres" ||
-		dbSetup === "mongodb-atlas" ||
-		dbSetup === "neon" ||
-		dbSetup === "supabase" ||
-		dbSetup === "d1" ||
-		dbSetup === "docker";
 
-	if (database !== "none" && !specializedSetup) {
+	if (database !== "none" && dbSetup === "none") {
 		switch (database) {
 			case "postgres":
 				databaseUrl = "postgresql://postgres:password@localhost:5432/postgres";
@@ -281,7 +273,7 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 		{
 			key: "DATABASE_URL",
 			value: databaseUrl,
-			condition: database !== "none" && !specializedSetup,
+			condition: database !== "none" && dbSetup === "none",
 		},
 		{
 			key: "GOOGLE_GENERATIVE_AI_API_KEY",

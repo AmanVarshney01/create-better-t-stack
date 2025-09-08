@@ -6,8 +6,8 @@ import fs from "fs-extra";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 import { commandExists } from "../../utils/command-exists";
-import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
 import { exitCancelled } from "../../utils/errors";
+import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
 
 type MongoDBConfig = {
 	connectionString: string;
