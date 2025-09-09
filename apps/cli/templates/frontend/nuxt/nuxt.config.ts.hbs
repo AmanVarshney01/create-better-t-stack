@@ -12,7 +12,7 @@ export default defineNuxtConfig({
   devServer: {
     port: 3001
   },
-  ssr: false,
+  ssr: true,
   {{#if (eq backend "convex")}}
   convex: {
     url: process.env.NUXT_PUBLIC_CONVEX_URL,

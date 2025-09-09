@@ -236,7 +236,7 @@ async function getDatabaseInstructions(
 	database: Database,
 	orm?: ORM,
 	runCmd?: string,
-	_runtime?: Runtime,
+	runtime?: Runtime,
 	dbSetup?: DatabaseSetup,
 	serverDeploy?: string,
 ): Promise<string> {
@@ -252,12 +252,11 @@ async function getDatabaseInstructions(
 	}
 
 	if (serverDeploy === "wrangler" && dbSetup === "d1") {
-		if (orm === "prisma" && _runtime === "workers") {
+		if (orm === "prisma" && runtime === "workers") {
 			instructions.push(
-				`${pc.yellow(
+				`\n${pc.yellow(
 					"WARNING:",
-				)} Prisma + D1 on Workers with Wrangler has migration issues.
-	   Consider using Alchemy deploy instead of Wrangler for D1 projects.`,
+				)} Prisma + D1 on Workers with Wrangler has migration issues.\n   Consider using Alchemy deploy instead of Wrangler for D1 projects.\n`,
 			);
 		}
 		const packageManager = runCmd === "npm run" ? "npm" : runCmd || "npm";
