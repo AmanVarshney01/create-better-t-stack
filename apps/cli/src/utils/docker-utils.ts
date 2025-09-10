@@ -1,4 +1,5 @@
 import os from "node:os";
+import { $ } from "execa";
 import pc from "picocolors";
 import type { Database } from "../types";
 import { commandExists } from "./command-exists";
@@ -9,7 +10,6 @@ export async function isDockerInstalled() {
 
 export async function isDockerRunning() {
 	try {
-		const { $ } = await import("execa");
 		await $`docker info`;
 		return true;
 	} catch {
@@ -20,7 +20,7 @@ export async function isDockerRunning() {
 export function getDockerInstallInstructions(
 	platform: string,
 	database: Database,
-): string {
+) {
 	const isMac = platform === "darwin";
 	const isWindows = platform === "win32";
 	const isLinux = platform === "linux";
@@ -50,11 +50,7 @@ export function getDockerInstallInstructions(
 	return `${pc.yellow("IMPORTANT:")} Docker required for ${databaseName}. Install for ${platformName}:\n${pc.blue(installUrl)}`;
 }
 
-export async function getDockerStatus(database: Database): Promise<{
-	installed: boolean;
-	running: boolean;
-	message?: string;
-}> {
+export async function getDockerStatus(database: Database) {
 	const platform = os.platform();
 	const installed = await isDockerInstalled();
 

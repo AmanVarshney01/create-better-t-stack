@@ -62,9 +62,7 @@ ${configContent}`;
 	await fs.writeFile(configPath, finalContent, "utf-8");
 }
 
-export async function readBtsConfig(
-	projectDir: string,
-): Promise<BetterTStackConfig | null> {
+export async function readBtsConfig(projectDir: string) {
 	try {
 		const configPath = path.join(projectDir, BTS_CONFIG_FILE);
 

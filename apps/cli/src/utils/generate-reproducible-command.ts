@@ -1,6 +1,6 @@
 import type { ProjectConfig } from "../types";
 
-export function generateReproducibleCommand(config: ProjectConfig): string {
+export function generateReproducibleCommand(config: ProjectConfig) {
 	const flags: string[] = [];
 
 	if (config.frontend && config.frontend.length > 0) {

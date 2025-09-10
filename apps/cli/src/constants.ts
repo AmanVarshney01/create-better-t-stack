@@ -1,6 +1,5 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import type { Addons, Frontend, ProjectConfig } from "./types";
 import { getUserPkgManager } from "./utils/get-package-manager";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -26,7 +25,7 @@ export const DEFAULT_CONFIG_BASE = {
 	serverDeploy: "none",
 } as const;
 
-export function getDefaultConfig(): ProjectConfig {
+export function getDefaultConfig() {
 	return {
 		...DEFAULT_CONFIG_BASE,
 		projectDir: path.resolve(process.cwd(), DEFAULT_CONFIG_BASE.projectName),
@@ -160,7 +159,7 @@ export const dependencyVersionMap = {
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;
 
-export const ADDON_COMPATIBILITY: Record<Addons, readonly Frontend[]> = {
+export const ADDON_COMPATIBILITY = {
 	pwa: ["tanstack-router", "react-router", "solid", "next"],
 	tauri: ["tanstack-router", "react-router", "nuxt", "svelte", "solid", "next"],
 	biome: [],

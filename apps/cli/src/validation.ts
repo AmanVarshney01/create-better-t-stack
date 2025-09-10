@@ -48,7 +48,7 @@ export function processAndValidateFlags(
 	options: CLIInput,
 	providedFlags: Set<string>,
 	projectName?: string,
-): Partial<ProjectConfig> {
+) {
 	if (options.yolo) {
 		const cfg = processFlags(options, projectName);
 		const validatedProjectName = extractAndValidateProjectName(
@@ -89,7 +89,7 @@ export function processAndValidateFlags(
 export function processProvidedFlagsWithoutValidation(
 	options: CLIInput,
 	projectName?: string,
-): Partial<ProjectConfig> {
+) {
 	if (!options.yolo) {
 		const providedFlags = getProvidedFlags(options);
 		validateYesFlagCombination(options, providedFlags);

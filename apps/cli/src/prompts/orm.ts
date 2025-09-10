@@ -27,7 +27,7 @@ export async function getORMChoice(
 	database?: Database,
 	backend?: Backend,
 	runtime?: Runtime,
-): Promise<ORM> {
+) {
 	if (backend === "convex") {
 		return "none";
 	}

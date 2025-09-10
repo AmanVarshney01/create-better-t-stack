@@ -14,9 +14,7 @@ import type {
 	WebDeploy,
 } from "../types";
 
-export function processArrayOption<T>(
-	options: (T | "none")[] | undefined,
-): T[] {
+export function processArrayOption<T>(options: (T | "none")[] | undefined) {
 	if (!options || options.length === 0) return [];
 	if (options.includes("none" as T | "none")) return [];
 	return options.filter((item): item is T => item !== "none");
@@ -25,7 +23,7 @@ export function processArrayOption<T>(
 export function deriveProjectName(
 	projectName?: string,
 	projectDirectory?: string,
-): string {
+) {
 	if (projectName) {
 		return projectName;
 	}
@@ -35,10 +33,7 @@ export function deriveProjectName(
 	return "";
 }
 
-export function processFlags(
-	options: CLIInput,
-	projectName?: string,
-): Partial<ProjectConfig> {
+export function processFlags(options: CLIInput, projectName?: string) {
 	const config: Partial<ProjectConfig> = {};
 
 	if (options.api) {
@@ -109,7 +104,7 @@ export function processFlags(
 	return config;
 }
 
-export function getProvidedFlags(options: CLIInput): Set<string> {
+export function getProvidedFlags(options: CLIInput) {
 	return new Set(
 		Object.keys(options).filter(
 			(key) => options[key as keyof CLIInput] !== undefined,
@@ -120,7 +115,7 @@ export function getProvidedFlags(options: CLIInput): Set<string> {
 export function validateNoneExclusivity<T>(
 	options: (T | "none")[] | undefined,
 	optionName: string,
-): void {
+) {
 	if (!options || options.length === 0) return;
 
 	if (options.includes("none" as T | "none") && options.length > 1) {
@@ -128,7 +123,7 @@ export function validateNoneExclusivity<T>(
 	}
 }
 
-export function validateArrayOptions(options: CLIInput): void {
+export function validateArrayOptions(options: CLIInput) {
 	validateNoneExclusivity(options.frontend, "frontend options");
 	validateNoneExclusivity(options.addons, "addons");
 	validateNoneExclusivity(options.examples, "examples");

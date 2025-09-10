@@ -7,7 +7,7 @@ export async function getApiChoice(
 	Api?: API | undefined,
 	frontend?: Frontend[],
 	backend?: Backend,
-): Promise<API> {
+) {
 	if (backend === "convex" || backend === "none") {
 		return "none";
 	}

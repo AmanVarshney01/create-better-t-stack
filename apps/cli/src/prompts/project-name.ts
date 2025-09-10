@@ -7,13 +7,13 @@ import { DEFAULT_CONFIG } from "../constants";
 import { ProjectNameSchema } from "../types";
 import { exitCancelled } from "../utils/errors";
 
-function isPathWithinCwd(targetPath: string): boolean {
+function isPathWithinCwd(targetPath: string) {
 	const resolved = path.resolve(targetPath);
 	const rel = path.relative(process.cwd(), resolved);
 	return !rel.startsWith("..") && !path.isAbsolute(rel);
 }
 
-function validateDirectoryName(name: string): string | undefined {
+function validateDirectoryName(name: string) {
 	if (name === ".") return undefined;
 
 	const result = ProjectNameSchema.safeParse(name);
@@ -23,7 +23,7 @@ function validateDirectoryName(name: string): string | undefined {
 	return undefined;
 }
 
-export async function getProjectName(initialName?: string): Promise<string> {
+export async function getProjectName(initialName?: string) {
 	if (initialName) {
 		if (initialName === ".") {
 			return initialName;
@@ -41,7 +41,7 @@ export async function getProjectName(initialName?: string): Promise<string> {
 
 	let isValid = false;
 	let projectPath = "";
-	let defaultName = DEFAULT_CONFIG.projectName;
+	let defaultName: string = DEFAULT_CONFIG.projectName;
 	let counter = 1;
 
 	while (

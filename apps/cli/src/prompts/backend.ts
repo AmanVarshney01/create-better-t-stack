@@ -6,7 +6,7 @@ import { exitCancelled } from "../utils/errors";
 export async function getBackendFrameworkChoice(
 	backendFramework?: Backend,
 	frontends?: Frontend[],
-): Promise<Backend> {
+) {
 	if (backendFramework !== undefined) return backendFramework;
 
 	const hasIncompatibleFrontend = frontends?.some((f) => f === "solid");

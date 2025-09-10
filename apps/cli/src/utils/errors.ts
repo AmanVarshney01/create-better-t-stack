@@ -2,7 +2,7 @@ import { cancel } from "@clack/prompts";
 import consola from "consola";
 import pc from "picocolors";
 
-function isProgrammatic(): boolean {
+function isProgrammatic() {
 	return process.env.BTS_PROGRAMMATIC === "1";
 }
 

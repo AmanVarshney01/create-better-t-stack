@@ -31,9 +31,7 @@ async function checkAtlasCLI() {
 	}
 }
 
-async function initMongoDBAtlas(
-	serverDir: string,
-): Promise<MongoDBConfig | null> {
+async function initMongoDBAtlas(serverDir: string) {
 	try {
 		const hasAtlas = await checkAtlasCLI();
 

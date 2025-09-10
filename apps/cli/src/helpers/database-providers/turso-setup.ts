@@ -14,13 +14,6 @@ type TursoConfig = {
 	authToken: string;
 };
 
-type TursoGroup = {
-	name: string;
-	locations: string;
-	version: string;
-	status: string;
-};
-
 async function isTursoInstalled() {
 	return commandExists("turso");
 }
@@ -71,7 +64,7 @@ async function installTursoCLI(isMac: boolean) {
 	}
 }
 
-async function getTursoGroups(): Promise<TursoGroup[]> {
+async function getTursoGroups() {
 	const s = spinner();
 	try {
 		s.start("Fetching Turso groups...");
@@ -97,7 +90,7 @@ async function getTursoGroups(): Promise<TursoGroup[]> {
 	}
 }
 
-async function selectTursoGroup(): Promise<string | null> {
+async function selectTursoGroup() {
 	const groups = await getTursoGroups();
 
 	if (groups.length === 0) {
@@ -119,7 +112,7 @@ async function selectTursoGroup(): Promise<string | null> {
 		options: groupOptions,
 	});
 
-	if (isCancel(selectedGroup)) return exitCancelled("Operation cancelled");
+	if (isCancel(selectedGroup)) exitCancelled("Operation cancelled");
 
 	return selectedGroup as string;
 }

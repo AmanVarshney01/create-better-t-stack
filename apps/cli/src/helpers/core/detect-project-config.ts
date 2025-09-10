@@ -1,11 +1,8 @@
 import path from "node:path";
 import fs from "fs-extra";
-import type { ProjectConfig } from "../../types";
 import { readBtsConfig } from "../../utils/bts-config";
 
-export async function detectProjectConfig(
-	projectDir: string,
-): Promise<Partial<ProjectConfig> | null> {
+export async function detectProjectConfig(projectDir: string) {
 	try {
 		const btsConfig = await readBtsConfig(projectDir);
 		if (btsConfig) {

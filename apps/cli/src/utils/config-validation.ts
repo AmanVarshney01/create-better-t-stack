@@ -20,7 +20,7 @@ import { exitWithError } from "./errors";
 export function validateDatabaseOrmAuth(
 	cfg: Partial<ProjectConfig>,
 	flags?: Set<string>,
-): void {
+) {
 	const db = cfg.database;
 	const orm = cfg.orm;
 	const has = (k: string) => (flags ? flags.has(k) : true);
@@ -91,7 +91,7 @@ export function validateDatabaseOrmAuth(
 export function validateDatabaseSetup(
 	config: Partial<ProjectConfig>,
 	providedFlags: Set<string>,
-): void {
+) {
 	const { dbSetup, database, runtime } = config;
 
 	if (
@@ -188,7 +188,7 @@ export function validateDatabaseSetup(
 export function validateConvexConstraints(
 	config: Partial<ProjectConfig>,
 	providedFlags: Set<string>,
-): void {
+) {
 	const { backend } = config;
 
 	if (backend !== "convex") {
@@ -243,7 +243,7 @@ export function validateConvexConstraints(
 export function validateBackendNoneConstraints(
 	config: Partial<ProjectConfig>,
 	providedFlags: Set<string>,
-): void {
+) {
 	const { backend } = config;
 
 	if (backend !== "none") {
@@ -299,7 +299,7 @@ export function validateBackendConstraints(
 	config: Partial<ProjectConfig>,
 	providedFlags: Set<string>,
 	options: CLIInput,
-): void {
+) {
 	const { backend } = config;
 
 	if (config.auth === "clerk" && backend !== "convex") {
@@ -353,7 +353,7 @@ export function validateBackendConstraints(
 export function validateFrontendConstraints(
 	config: Partial<ProjectConfig>,
 	providedFlags: Set<string>,
-): void {
+) {
 	const { frontend } = config;
 
 	if (frontend && frontend.length > 0) {
@@ -375,7 +375,7 @@ export function validateFrontendConstraints(
 export function validateApiConstraints(
 	config: Partial<ProjectConfig>,
 	options: CLIInput,
-): void {
+) {
 	if (config.api === "none") {
 		if (
 			options.examples &&
@@ -393,7 +393,7 @@ export function validateFullConfig(
 	config: Partial<ProjectConfig>,
 	providedFlags: Set<string>,
 	options: CLIInput,
-): void {
+) {
 	validateDatabaseOrmAuth(config, providedFlags);
 	validateDatabaseSetup(config, providedFlags);
 
@@ -430,7 +430,7 @@ export function validateFullConfig(
 
 export function validateConfigForProgrammaticUse(
 	config: Partial<ProjectConfig>,
-): void {
+) {
 	try {
 		validateDatabaseOrmAuth(config);
 

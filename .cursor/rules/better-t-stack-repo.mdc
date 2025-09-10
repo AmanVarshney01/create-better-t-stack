@@ -7,3 +7,4 @@ alwaysApply: true
 - Do not include emojis.
 - Use TypeScript type aliases instead of interface declarations.
 - In Handlebars templates, avoid generic if/else blocks. Write explicit conditions, such as: use if (eq orm "prisma") for Prisma, and else if (eq orm "drizzle") for Drizzle.
+- Do not use explicit return types

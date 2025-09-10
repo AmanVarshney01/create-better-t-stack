@@ -76,7 +76,7 @@ export async function setupSvelteAlchemyDeploy(
 	}
 }
 
-function updateAdapterInConfig(configObject: Node): void {
+function updateAdapterInConfig(configObject: Node) {
 	if (!Node.isObjectLiteralExpression(configObject)) return;
 
 	const kitProperty = configObject.getProperty("kit");

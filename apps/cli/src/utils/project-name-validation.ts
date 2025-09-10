@@ -2,7 +2,7 @@ import path from "node:path";
 import { ProjectNameSchema } from "../types";
 import { exitWithError } from "./errors";
 
-export function validateProjectName(name: string): void {
+export function validateProjectName(name: string) {
 	const result = ProjectNameSchema.safeParse(name);
 	if (!result.success) {
 		exitWithError(
@@ -13,7 +13,7 @@ export function validateProjectName(name: string): void {
 	}
 }
 
-export function validateProjectNameThrow(name: string): void {
+export function validateProjectNameThrow(name: string) {
 	const result = ProjectNameSchema.safeParse(name);
 	if (!result.success) {
 		throw new Error(`Invalid project name: ${result.error.issues[0]?.message}`);
@@ -24,7 +24,7 @@ export function extractAndValidateProjectName(
 	projectName?: string,
 	projectDirectory?: string,
 	throwOnError = false,
-): string {
+) {
 	const derivedName =
 		projectName ||
 		(projectDirectory

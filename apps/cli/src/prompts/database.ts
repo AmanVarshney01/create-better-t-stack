@@ -7,7 +7,7 @@ export async function getDatabaseChoice(
 	database?: Database,
 	backend?: Backend,
 	runtime?: Runtime,
-): Promise<Database> {
+) {
 	if (backend === "convex" || backend === "none") {
 		return "none";
 	}

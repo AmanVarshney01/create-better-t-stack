@@ -41,9 +41,7 @@ type SponsorEntry = {
 export const SPONSORS_JSON_URL =
 	"https://sponsors.better-t-stack.dev/sponsors.json";
 
-export async function fetchSponsors(
-	url: string = SPONSORS_JSON_URL,
-): Promise<SponsorEntry> {
+export async function fetchSponsors(url: string = SPONSORS_JSON_URL) {
 	const s = spinner();
 	s.start("Fetching sponsors…");
 

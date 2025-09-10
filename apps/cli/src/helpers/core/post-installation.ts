@@ -203,7 +203,7 @@ export async function displayPostInstallInstructions(
 	consola.box(output);
 }
 
-function getNativeInstructions(isConvex: boolean): string {
+function getNativeInstructions(isConvex: boolean) {
 	const envVar = isConvex ? "EXPO_PUBLIC_CONVEX_URL" : "EXPO_PUBLIC_SERVER_URL";
 	const exampleUrl = isConvex
 		? "https://<YOUR_CONVEX_URL>"
@@ -226,7 +226,7 @@ function getNativeInstructions(isConvex: boolean): string {
 	return instructions;
 }
 
-function getLintingInstructions(runCmd?: string): string {
+function getLintingInstructions(runCmd?: string) {
 	return `${pc.bold("Linting and formatting:")}\n${pc.cyan(
 		"•",
 	)} Format and lint fix: ${`${runCmd} check`}\n`;
@@ -239,7 +239,7 @@ async function getDatabaseInstructions(
 	runtime?: Runtime,
 	dbSetup?: DatabaseSetup,
 	serverDeploy?: string,
-): Promise<string> {
+) {
 	const instructions: string[] = [];
 
 	if (dbSetup === "docker") {
@@ -384,7 +384,7 @@ async function getDatabaseInstructions(
 		: "";
 }
 
-function getTauriInstructions(runCmd?: string): string {
+function getTauriInstructions(runCmd?: string) {
 	return `\n${pc.bold("Desktop app with Tauri:")}\n${pc.cyan(
 		"•",
 	)} Start desktop app: ${`cd apps/web && ${runCmd} desktop:dev`}\n${pc.cyan(
@@ -394,13 +394,13 @@ function getTauriInstructions(runCmd?: string): string {
 	)} Tauri requires Rust and platform-specific dependencies.\n   See: ${"https://v2.tauri.app/start/prerequisites/"}`;
 }
 
-function getPwaInstructions(): string {
+function getPwaInstructions() {
 	return `\n${pc.bold("PWA with React Router v7:")}\n${pc.yellow(
 		"NOTE:",
 	)} There is a known compatibility issue between VitePWA\n   and React Router v7. See:\n   https://github.com/vite-pwa/vite-plugin-pwa/issues/809`;
 }
 
-function getStarlightInstructions(runCmd?: string): string {
+function getStarlightInstructions(runCmd?: string) {
 	return `\n${pc.bold("Documentation with Starlight:")}\n${pc.cyan(
 		"•",
 	)} Start docs site: ${`cd apps/docs && ${runCmd} dev`}\n${pc.cyan(
@@ -408,13 +408,13 @@ function getStarlightInstructions(runCmd?: string): string {
 	)} Build docs site: ${`cd apps/docs && ${runCmd} build`}`;
 }
 
-function getNoOrmWarning(): string {
+function getNoOrmWarning() {
 	return `\n${pc.yellow(
 		"WARNING:",
 	)} Database selected without an ORM. Features requiring\n   database access (e.g., examples, auth) need manual setup.`;
 }
 
-function getBunWebNativeWarning(): string {
+function getBunWebNativeWarning() {
 	return `\n${pc.yellow(
 		"WARNING:",
 	)} 'bun' might cause issues with web + native apps in a monorepo.\n   Use 'pnpm' if problems arise.`;
@@ -424,7 +424,7 @@ function getWranglerDeployInstructions(
 	runCmd?: string,
 	webDeploy?: string,
 	serverDeploy?: string,
-): string {
+) {
 	const instructions: string[] = [];
 
 	if (webDeploy === "wrangler") {
@@ -441,7 +441,7 @@ function getWranglerDeployInstructions(
 	return instructions.length ? `\n${instructions.join("\n")}` : "";
 }
 
-function getClerkInstructions(): string {
+function getClerkInstructions() {
 	return `${pc.bold("Clerk Authentication Setup:")}\n${pc.cyan("•")} Follow the guide: ${pc.underline("https://docs.convex.dev/auth/clerk")}\n${pc.cyan("•")} Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard\n${pc.cyan("•")} Set CLERK_PUBLISHABLE_KEY in apps/*/.env`;
 }
 
@@ -449,7 +449,7 @@ function getAlchemyDeployInstructions(
 	runCmd?: string,
 	webDeploy?: string,
 	serverDeploy?: string,
-): string {
+) {
 	const instructions: string[] = [];
 
 	if (webDeploy === "alchemy" && serverDeploy !== "alchemy") {

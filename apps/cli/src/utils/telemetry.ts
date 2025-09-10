@@ -4,7 +4,7 @@
  * - If BTS_TELEMETRY_DISABLED is present and "1", disables analytics.
  * - Otherwise, BTS_TELEMETRY: "0" disables, "1" enables (default: enabled).
  */
-export function isTelemetryEnabled(): boolean {
+export function isTelemetryEnabled() {
 	const BTS_TELEMETRY_DISABLED = process.env.BTS_TELEMETRY_DISABLED;
 	const BTS_TELEMETRY = process.env.BTS_TELEMETRY;
 

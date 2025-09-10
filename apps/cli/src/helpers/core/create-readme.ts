@@ -24,7 +24,7 @@ export async function createReadme(projectDir: string, options: ProjectConfig) {
 	}
 }
 
-function generateReadmeContent(options: ProjectConfig): string {
+function generateReadmeContent(options: ProjectConfig) {
 	const {
 		projectName,
 		packageManager,
@@ -163,7 +163,7 @@ function generateStackDescription(
 	backend: string,
 	api: API,
 	isConvex: boolean,
-): string {
+) {
 	const parts: string[] = [];
 
 	const hasTanstackRouter = frontend.includes("tanstack-router");
@@ -210,7 +210,7 @@ function generateRunningInstructions(
 	webPort: string,
 	hasNative: boolean,
 	isConvex: boolean,
-): string {
+) {
 	const instructions: string[] = [];
 
 	const hasFrontendNone = frontend.length === 0 || frontend.includes("none");
@@ -265,7 +265,7 @@ function generateProjectStructure(
 	isConvex: boolean,
 	api: API,
 	auth: Auth,
-): string {
+) {
 	const structure: string[] = [`${projectName}/`, "├── apps/"];
 
 	const hasFrontendNone = frontend.length === 0 || frontend.includes("none");
@@ -349,7 +349,7 @@ function generateFeaturesList(
 	frontend: Frontend[],
 	backend: string,
 	api: API,
-): string {
+) {
 	const isConvex = backend === "convex";
 	const isBackendNone = backend === "none";
 	const hasTanstackRouter = frontend.includes("tanstack-router");
@@ -493,7 +493,7 @@ function generateDatabaseSetup(
 	orm: ORM,
 	dbSetup: DatabaseSetup,
 	serverDeploy?: string,
-): string {
+) {
 	if (database === "none") {
 		return "";
 	}
@@ -591,7 +591,7 @@ function generateScriptsList(
 	hasNative: boolean,
 	addons: Addons[],
 	backend: string,
-): string {
+) {
 	const isConvex = backend === "convex";
 	const isBackendNone = backend === "none";
 
@@ -657,7 +657,7 @@ function generateDeploymentCommands(
 	packageManagerRunCmd: string,
 	webDeploy?: string,
 	serverDeploy?: string,
-): string {
+) {
 	const lines: string[] = [];
 
 	if (webDeploy === "alchemy" || serverDeploy === "alchemy") {

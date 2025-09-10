@@ -8,7 +8,7 @@ export async function getDBSetupChoice(
 	_orm?: ORM,
 	backend?: Backend,
 	runtime?: Runtime,
-): Promise<DatabaseSetup> {
+) {
 	if (backend === "convex") {
 		return "none";
 	}

@@ -11,7 +11,7 @@ import type { PackageManager } from "../types";
 export function getPackageExecutionCommand(
 	packageManager: PackageManager | null | undefined,
 	commandWithArgs: string,
-): string {
+) {
 	switch (packageManager) {
 		case "pnpm":
 			return `pnpm dlx ${commandWithArgs}`;

@@ -218,10 +218,7 @@ export function createBtsCli() {
  * }
  * ```
  */
-export async function init(
-	projectName?: string,
-	options?: CreateInput,
-): Promise<InitResult> {
+export async function init(projectName?: string, options?: CreateInput) {
 	const opts = (options ?? {}) as CreateInput;
 	const programmaticOpts = { ...opts, verbose: true };
 	const prev = process.env.BTS_PROGRAMMATIC;

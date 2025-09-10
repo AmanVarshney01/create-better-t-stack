@@ -25,7 +25,7 @@ const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
 	"install",
 ];
 
-export function generateStackSummary(stack: StackState): string {
+export function generateStackSummary(stack: StackState) {
 	const selectedTechs = CATEGORY_ORDER.flatMap((category) => {
 		const options = TECH_OPTIONS[category];
 		const selectedValue = stack[category as keyof StackState];
@@ -51,7 +51,7 @@ export function generateStackSummary(stack: StackState): string {
 	return selectedTechs.length > 0 ? selectedTechs.join(" • ") : "Custom stack";
 }
 
-export function generateStackCommand(stack: StackState): string {
+export function generateStackCommand(stack: StackState) {
 	const packageManagerCommands = {
 		npm: "npx create-better-t-stack@latest",
 		pnpm: "pnpm create better-t-stack@latest",
@@ -126,10 +126,7 @@ export function generateStackCommand(stack: StackState): string {
 	return `${base} ${projectName} ${flags.join(" ")}`;
 }
 
-export function generateStackUrlFromState(
-	stack: StackState,
-	baseUrl?: string,
-): string {
+export function generateStackUrlFromState(stack: StackState, baseUrl?: string) {
 	const origin = baseUrl || "https://better-t-stack.dev";
 
 	const stackParams = new URLSearchParams();
@@ -147,10 +144,7 @@ export function generateStackUrlFromState(
 	return `${origin}/new${searchString ? `?${searchString}` : ""}`;
 }
 
-export function generateStackSharingUrl(
-	stack: StackState,
-	baseUrl?: string,
-): string {
+export function generateStackSharingUrl(stack: StackState, baseUrl?: string) {
 	const origin = baseUrl || "https://better-t-stack.dev";
 
 	const stackParams = new URLSearchParams();

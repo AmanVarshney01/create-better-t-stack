@@ -8,7 +8,7 @@ export async function getFrontendChoice(
 	frontendOptions?: Frontend[],
 	backend?: Backend,
 	auth?: string,
-): Promise<Frontend[]> {
+) {
 	if (frontendOptions !== undefined) return frontendOptions;
 
 	const frontendTypes = await multiselect({

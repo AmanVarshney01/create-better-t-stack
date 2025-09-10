@@ -34,7 +34,7 @@ async function writeEnvFile(
 	await addEnvVariablesToFile(envPath, variables);
 }
 
-function getDatabaseUrl(database: Database, projectName: string): string {
+function getDatabaseUrl(database: Database, projectName: string) {
 	switch (database) {
 		case "postgres":
 			return `postgresql://postgres:password@localhost:5432/${projectName}`;

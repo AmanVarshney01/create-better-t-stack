@@ -12,7 +12,7 @@ import { validateAddonCompatibility } from "./addon-compatibility";
 import { WEB_FRAMEWORKS } from "./compatibility";
 import { exitWithError } from "./errors";
 
-export function isWebFrontend(value: Frontend): boolean {
+export function isWebFrontend(value: Frontend) {
 	return WEB_FRAMEWORKS.includes(value);
 }
 
@@ -138,7 +138,7 @@ export function isFrontendAllowedWithBackend(
 	return true;
 }
 
-export function allowedApisForFrontends(frontends: Frontend[] = []): API[] {
+export function allowedApisForFrontends(frontends: Frontend[] = []) {
 	const includesNuxt = frontends.includes("nuxt");
 	const includesSvelte = frontends.includes("svelte");
 	const includesSolid = frontends.includes("solid");

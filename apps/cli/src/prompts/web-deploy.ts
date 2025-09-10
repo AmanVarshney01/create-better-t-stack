@@ -4,7 +4,7 @@ import type { Backend, Frontend, Runtime, WebDeploy } from "../types";
 import { WEB_FRAMEWORKS } from "../utils/compatibility";
 import { exitCancelled } from "../utils/errors";
 
-function hasWebFrontend(frontends: Frontend[]): boolean {
+function hasWebFrontend(frontends: Frontend[]) {
 	return frontends.some((f) => WEB_FRAMEWORKS.includes(f));
 }
 
@@ -41,7 +41,7 @@ export async function getDeploymentChoice(
 	_runtime?: Runtime,
 	_backend?: Backend,
 	frontend: Frontend[] = [],
-): Promise<WebDeploy> {
+) {
 	if (deployment !== undefined) return deployment;
 	if (!hasWebFrontend(frontend)) {
 		return "none";
@@ -72,7 +72,7 @@ export async function getDeploymentChoice(
 export async function getDeploymentToAdd(
 	frontend: Frontend[],
 	existingDeployment?: WebDeploy,
-): Promise<WebDeploy> {
+) {
 	if (!hasWebFrontend(frontend)) {
 		return "none";
 	}

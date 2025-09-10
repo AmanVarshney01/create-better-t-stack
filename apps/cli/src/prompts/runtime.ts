@@ -3,10 +3,7 @@ import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Runtime } from "../types";
 import { exitCancelled } from "../utils/errors";
 
-export async function getRuntimeChoice(
-	runtime?: Runtime,
-	backend?: Backend,
-): Promise<Runtime> {
+export async function getRuntimeChoice(runtime?: Runtime, backend?: Backend) {
 	if (backend === "convex" || backend === "none") {
 		return "none";
 	}

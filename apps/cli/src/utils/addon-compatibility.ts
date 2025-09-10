@@ -30,7 +30,7 @@ export function getCompatibleAddons(
 	allAddons: Addons[],
 	frontend: Frontend[],
 	existingAddons: Addons[] = [],
-): Addons[] {
+) {
 	return allAddons.filter((addon) => {
 		if (existingAddons.includes(addon)) return false;
 

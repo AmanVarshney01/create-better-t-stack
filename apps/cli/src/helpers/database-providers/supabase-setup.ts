@@ -37,7 +37,7 @@ async function writeSupabaseEnvFile(projectDir: string, databaseUrl: string) {
 	}
 }
 
-function extractDbUrl(output: string): string | null {
+function extractDbUrl(output: string) {
 	const dbUrlMatch = output.match(/DB URL:\s*(postgresql:\/\/[^\s]+)/);
 	const url = dbUrlMatch?.[1];
 	if (url) {

@@ -19,7 +19,7 @@ export const tsProject = new Project({
 export function ensureArrayProperty(
 	obj: ObjectLiteralExpression,
 	name: string,
-): ArrayLiteralExpression {
+) {
 	return (obj
 		.getProperty(name)
 		?.getFirstDescendantByKind(SyntaxKind.ArrayLiteralExpression) ??

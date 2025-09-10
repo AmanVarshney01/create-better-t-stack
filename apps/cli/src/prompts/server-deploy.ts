@@ -36,7 +36,7 @@ export async function getServerDeploymentChoice(
 	runtime?: Runtime,
 	backend?: Backend,
 	webDeploy?: WebDeploy,
-): Promise<ServerDeploy> {
+) {
 	if (deployment !== undefined) return deployment;
 
 	if (backend === "none" || backend === "convex") {
@@ -82,7 +82,7 @@ export async function getServerDeploymentToAdd(
 	runtime?: Runtime,
 	existingDeployment?: ServerDeploy,
 	backend?: Backend,
-): Promise<ServerDeploy> {
+) {
 	if (backend !== "hono") {
 		return "none";
 	}

@@ -5,10 +5,7 @@ import consola from "consola";
 let biome: Biome | null = null;
 let projectKey: number | null = null;
 
-async function initializeBiome(): Promise<{
-	biome: Biome;
-	projectKey: number;
-}> {
+async function initializeBiome() {
 	if (biome && projectKey !== null) return { biome, projectKey };
 
 	try {
@@ -39,19 +36,18 @@ async function initializeBiome(): Promise<{
 		});
 
 		return { biome, projectKey };
-	} catch (error) {
-		consola.error("Failed to initialize Biome:", error);
-		throw error;
+	} catch (_error) {
+		return null;
 	}
 }
 
-function isSupportedFile(filePath: string): boolean {
+function isSupportedFile(filePath: string) {
 	const ext = path.extname(filePath).toLowerCase();
 	const supportedExtensions = [".js", ".jsx", ".ts", ".tsx", ".json", ".jsonc"];
 	return supportedExtensions.includes(ext);
 }
 
-function shouldSkipFile(filePath: string): boolean {
+function shouldSkipFile(filePath: string) {
 	const basename = path.basename(filePath);
 	const skipPatterns = [
 		".hbs",
@@ -65,16 +61,16 @@ function shouldSkipFile(filePath: string): boolean {
 	return skipPatterns.some((pattern) => basename.includes(pattern));
 }
 
-export async function formatFileWithBiome(
-	filePath: string,
-	content: string,
-): Promise<string | null> {
+export async function formatFileWithBiome(filePath: string, content: string) {
 	if (!isSupportedFile(filePath) || shouldSkipFile(filePath)) {
 		return null;
 	}
 
 	try {
-		const { biome: biomeInstance, projectKey: key } = await initializeBiome();
+		const biomeResult = await initializeBiome();
+		if (!biomeResult) return null;
+
+		const { biome: biomeInstance, projectKey: key } = biomeResult;
 
 		const result = biomeInstance.formatContent(key, content, {
 			filePath: path.basename(filePath),
@@ -88,8 +84,7 @@ export async function formatFileWithBiome(
 		}
 
 		return result.content;
-	} catch (error) {
-		consola.warn(`Failed to format ${filePath} with Biome:`, error);
+	} catch (_error) {
 		return null;
 	}
 }

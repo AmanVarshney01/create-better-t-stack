@@ -8,10 +8,7 @@ import { exitCancelled, handleError } from "./errors";
 export async function handleDirectoryConflict(
 	currentPathInput: string,
 	silent = false,
-): Promise<{
-	finalPathInput: string;
-	shouldClearDirectory: boolean;
-}> {
+) {
 	while (true) {
 		const resolvedPath = path.resolve(process.cwd(), currentPathInput);
 		const dirExists = await fs.pathExists(resolvedPath);
@@ -86,7 +83,7 @@ export async function handleDirectoryConflict(
 export async function setupProjectDirectory(
 	finalPathInput: string,
 	shouldClearDirectory: boolean,
-): Promise<{ finalResolvedPath: string; finalBaseName: string }> {
+) {
 	let finalResolvedPath: string;
 	let finalBaseName: string;
 

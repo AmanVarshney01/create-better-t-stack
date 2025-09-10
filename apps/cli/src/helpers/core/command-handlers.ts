@@ -13,7 +13,6 @@ import type {
 	AddInput,
 	CreateInput,
 	DirectoryConflict,
-	InitResult,
 	ProjectConfig,
 } from "../../types";
 import { trackProjectCreation } from "../../utils/analytics";
@@ -40,7 +39,7 @@ import { installDependencies } from "./install-dependencies";
 
 export async function createProjectHandler(
 	input: CreateInput & { projectName?: string },
-): Promise<InitResult> {
+) {
 	const startTime = Date.now();
 	const timeScaffolded = new Date().toISOString();
 
@@ -58,7 +57,7 @@ export async function createProjectHandler(
 		currentPathInput = input.projectName;
 	} else if (input.yes) {
 		const defaultConfig = getDefaultConfig();
-		let defaultName = defaultConfig.relativePath;
+		let defaultName: string = defaultConfig.relativePath;
 		let counter = 1;
 		while (
 			(await fs.pathExists(path.resolve(process.cwd(), defaultName))) &&
@@ -210,7 +209,7 @@ export async function createProjectHandler(
 async function handleDirectoryConflictProgrammatically(
 	currentPathInput: string,
 	strategy: DirectoryConflict,
-): Promise<{ finalPathInput: string; shouldClearDirectory: boolean }> {
+) {
 	const currentPath = path.resolve(process.cwd(), currentPathInput);
 
 	if (!(await fs.pathExists(currentPath))) {

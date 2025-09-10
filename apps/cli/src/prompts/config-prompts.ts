@@ -55,7 +55,7 @@ export async function gatherConfig(
 	projectName: string,
 	projectDir: string,
 	relativePath: string,
-): Promise<ProjectConfig> {
+) {
 	const result = await group<PromptGroupResults>(
 		{
 			frontend: () =>
@@ -75,10 +75,14 @@ export async function gatherConfig(
 					results.runtime,
 				),
 			api: ({ results }) =>
-				getApiChoice(flags.api, results.frontend, results.backend),
+				getApiChoice(
+					flags.api,
+					results.frontend,
+					results.backend,
+				) as Promise<API>,
 			auth: ({ results }) =>
 				getAuthChoice(
-					flags.auth as import("../types").Auth | undefined,
+					flags.auth,
 					results.database !== "none",
 					results.backend,
 					results.frontend,
@@ -91,7 +95,7 @@ export async function gatherConfig(
 					results.frontend,
 					results.backend,
 					results.api,
-				),
+				) as Promise<Examples[]>,
 			dbSetup: ({ results }) =>
 				getDBSetupChoice(
 					results.database ?? "none",

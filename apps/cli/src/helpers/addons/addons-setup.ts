@@ -95,7 +95,7 @@ ${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
 	}
 }
 
-function getWebAppDir(projectDir: string, frontends: Frontend[]): string {
+function getWebAppDir(projectDir: string, frontends: Frontend[]) {
 	if (
 		frontends.some((f) =>
 			["react-router", "tanstack-router", "nuxt", "svelte", "solid"].includes(

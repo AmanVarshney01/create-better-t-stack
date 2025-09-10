@@ -75,7 +75,7 @@ const ADDON_GROUPS = {
 export async function getAddonsChoice(
 	addons?: Addons[],
 	frontends?: Frontend[],
-): Promise<Addons[]> {
+) {
 	if (addons !== undefined) return addons;
 
 	const allAddons = AddonsSchema.options.filter((addon) => addon !== "none");
@@ -131,7 +131,7 @@ export async function getAddonsChoice(
 export async function getAddonsToAdd(
 	frontend: Frontend[],
 	existingAddons: Addons[] = [],
-): Promise<Addons[]> {
+) {
 	const groupedOptions: Record<string, AddonOption[]> = {
 		Documentation: [],
 		Linting: [],
