@@ -10,14 +10,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import type React from "react";
-import {
-	startTransition,
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
 	DropdownMenu,
@@ -72,16 +65,13 @@ const StackBuilder = () => {
 	const contentRef = useRef<HTMLDivElement>(null);
 	const lastAppliedStackString = useRef<string>("");
 
-	const compatibilityAnalysis = useMemo(
-		() => analyzeStackCompatibility(stack),
-		[stack],
-	);
+	const compatibilityAnalysis = analyzeStackCompatibility(stack);
 
 	const projectNameError = validateProjectName(stack.projectName || "");
 
-	const formatProjectName = useCallback((name: string): string => {
+	const formatProjectName = (name: string): string => {
 		return name.replace(/\s+/g, "-");
-	}, []);
+	};
 
 	const getStackUrl = (): string => {
 		const stackToUse = compatibilityAnalysis.adjustedStack || stack;
@@ -274,6 +264,7 @@ const StackBuilder = () => {
 		};
 		const cmd = generateStackCommand(stackWithProjectName);
 		setCommand(cmd);
+		// biome-ignore lint/correctness/useExhaustiveDependencies: let it be
 	}, [stack, compatibilityAnalysis.adjustedStack, formatProjectName]);
 
 	const handleTechSelect = (

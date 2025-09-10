@@ -47,11 +47,7 @@ export async function processAndCopyFiles(
 			continue;
 		}
 
-		if (srcPath.endsWith(".hbs")) {
-			await processTemplate(srcPath, destPath, context);
-		} else {
-			await fs.copy(srcPath, destPath, { overwrite: true });
-		}
+		await processTemplate(srcPath, destPath, context);
 	}
 }
 

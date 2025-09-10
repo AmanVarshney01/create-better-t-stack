@@ -28,7 +28,13 @@
 		"indentStyle": "tab",
 		"includes": ["**", "!**/templates"]
 	},
-	"assist": { "actions": { "source": { "organizeImports": "on" } } },
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
+	},
 	"linter": {
 		"enabled": true,
 		"rules": {
@@ -64,7 +70,12 @@
 	},
 	"javascript": {
 		"formatter": {
-			"quoteStyle": "double"
+			"enabled": true
+		}
+	},
+	"json": {
+		"formatter": {
+			"enabled": true
 		}
 	}
 }
