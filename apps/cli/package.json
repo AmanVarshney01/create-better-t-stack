@@ -1,90 +1,90 @@
 {
-	"name": "create-better-t-stack",
-	"version": "2.43.1",
-	"description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
-	"type": "module",
-	"license": "MIT",
-	"author": "Aman Varshney",
-	"bin": {
-		"create-better-t-stack": "dist/cli.js"
-	},
-	"files": [
-		"templates",
-		"dist"
-	],
-	"keywords": [
-		"better-t-stack",
-		"typescript",
-		"boilerplate",
-		"starter",
-		"cli",
-		"turborepo",
-		"trpc",
-		"better-auth",
-		"monorepo",
-		"fullstack",
-		"type-safety",
-		"react",
-		"react-native",
-		"expo",
-		"hono",
-		"elysia",
-		"drizzle",
-		"prisma",
-		"tanstack",
-		"tailwind",
-		"shadcn",
-		"pwa",
-		"tauri",
-		"biome"
-	],
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/AmanVarshney01/create-better-t-stack.git",
-		"directory": "apps/cli"
-	},
-	"publishConfig": {
-		"access": "public"
-	},
-	"homepage": "https://better-t-stack.dev/",
-	"scripts": {
-		"build": "tsdown",
-		"dev": "tsdown --watch",
-		"check-types": "tsc --noEmit",
-		"check": "biome check --write .",
-		"test": "bun run build && vitest run",
-		"test:ui": "bun run build && vitest --ui",
-		"test:with-build": "bun run build && WITH_BUILD=1 vitest --ui",
-		"prepublishOnly": "npm run build"
-	},
-	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js"
-		}
-	},
-	"dependencies": {
-		"@biomejs/js-api": "^3.0.0",
-		"@biomejs/wasm-nodejs": "^2.2.4",
-		"@clack/prompts": "^1.0.0-alpha.4",
-		"consola": "^3.4.2",
-		"execa": "^9.6.0",
-		"fs-extra": "^11.3.1",
-		"gradient-string": "^3.0.0",
-		"handlebars": "^4.7.8",
-		"jsonc-parser": "^3.3.1",
-		"picocolors": "^1.1.1",
-		"tinyglobby": "^0.2.15",
-		"trpc-cli": "^0.10.2",
-		"ts-morph": "^27.0.0",
-		"zod": "^4.1.5"
-	},
-	"devDependencies": {
-		"@types/fs-extra": "^11.0.4",
-		"@types/node": "^24.3.1",
-		"@vitest/ui": "^3.2.4",
-		"tsdown": "^0.14.2",
-		"typescript": "^5.9.2",
-		"vitest": "^3.2.4"
-	}
+  "name": "create-better-t-stack",
+  "version": "2.44.0",
+  "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
+  "type": "module",
+  "license": "MIT",
+  "author": "Aman Varshney",
+  "bin": {
+    "create-better-t-stack": "dist/cli.js"
+  },
+  "files": [
+    "templates",
+    "dist"
+  ],
+  "keywords": [
+    "better-t-stack",
+    "typescript",
+    "boilerplate",
+    "starter",
+    "cli",
+    "turborepo",
+    "trpc",
+    "better-auth",
+    "monorepo",
+    "fullstack",
+    "type-safety",
+    "react",
+    "react-native",
+    "expo",
+    "hono",
+    "elysia",
+    "drizzle",
+    "prisma",
+    "tanstack",
+    "tailwind",
+    "shadcn",
+    "pwa",
+    "tauri",
+    "biome"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AmanVarshney01/create-better-t-stack.git",
+    "directory": "apps/cli"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://better-t-stack.dev/",
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "check-types": "tsc --noEmit",
+    "check": "biome check --write .",
+    "test": "bun run build && vitest run",
+    "test:ui": "bun run build && vitest --ui",
+    "test:with-build": "bun run build && WITH_BUILD=1 vitest --ui",
+    "prepublishOnly": "npm run build"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@biomejs/js-api": "^3.0.0",
+    "@biomejs/wasm-nodejs": "^2.2.4",
+    "@clack/prompts": "^1.0.0-alpha.4",
+    "consola": "^3.4.2",
+    "execa": "^9.6.0",
+    "fs-extra": "^11.3.1",
+    "gradient-string": "^3.0.0",
+    "handlebars": "^4.7.8",
+    "jsonc-parser": "^3.3.1",
+    "picocolors": "^1.1.1",
+    "tinyglobby": "^0.2.15",
+    "trpc-cli": "^0.10.2",
+    "ts-morph": "^27.0.0",
+    "zod": "^4.1.5"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^24.3.1",
+    "@vitest/ui": "^3.2.4",
+    "tsdown": "^0.14.2",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
 }

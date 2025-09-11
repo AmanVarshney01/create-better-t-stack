@@ -15,7 +15,7 @@
     },
     "apps/cli": {
       "name": "create-better-t-stack",
-      "version": "2.43.1",
+      "version": "2.44.0",
       "bin": {
         "create-better-t-stack": "dist/cli.js",
       },
@@ -40,7 +40,6 @@
         "@types/node": "^24.3.1",
         "@vitest/ui": "^3.2.4",
         "tsdown": "^0.14.2",
-        "tsx": "^4.19.2",
         "typescript": "^5.9.2",
         "vitest": "^3.2.4",
       },
