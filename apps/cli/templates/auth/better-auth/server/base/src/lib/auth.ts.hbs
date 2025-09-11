@@ -16,7 +16,7 @@ export const auth = betterAuth({
   trustedOrigins: [
     process.env.CORS_ORIGIN || "",
     {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-    "my-better-t-app://",
+    "mybettertapp://", "exp://"
     {{/if}}
   ],
   emailAndPassword: {
@@ -55,7 +55,7 @@ export const auth = betterAuth({
   trustedOrigins: [
     process.env.CORS_ORIGIN || "",
     {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-    "my-better-t-app://",
+    "mybettertapp://", "exp://"
     {{/if}}
   ],
   emailAndPassword: {
@@ -124,7 +124,7 @@ export const auth = betterAuth({
   trustedOrigins: [
     process.env.CORS_ORIGIN || "",
     {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-    "my-better-t-app://",
+    "mybettertapp://", "exp://"
     {{/if}}
   ],
   emailAndPassword: {
@@ -154,7 +154,7 @@ export const auth = betterAuth({
   trustedOrigins: [
     process.env.CORS_ORIGIN || "",
     {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-    "my-better-t-app://",
+    "mybettertapp://", "exp://"
     {{/if}}
   ],
   emailAndPassword: {
