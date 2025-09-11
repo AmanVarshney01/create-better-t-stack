@@ -112,7 +112,7 @@ async function selectTursoGroup() {
 		options: groupOptions,
 	});
 
-	if (isCancel(selectedGroup)) exitCancelled("Operation cancelled");
+	if (isCancel(selectedGroup)) return exitCancelled("Operation cancelled");
 
 	return selectedGroup as string;
 }
