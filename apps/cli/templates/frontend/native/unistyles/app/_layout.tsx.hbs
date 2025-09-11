@@ -22,14 +22,14 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useUnistyles } from "react-native-unistyles";
+import { StatusBar } from "expo-status-bar";
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
   initialRouteName: "(drawer)",
 };
 
 {{#if (eq backend "convex")}}
-const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
+const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL || "", {
   unsavedChangesWarning: false,
 });
 {{/if}}
