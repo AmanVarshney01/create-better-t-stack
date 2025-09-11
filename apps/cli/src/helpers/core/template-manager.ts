@@ -851,7 +851,7 @@ export async function handleExtras(projectDir: string, context: ProjectConfig) {
 		const pnpmWorkspaceSrc = path.join(extrasDir, "pnpm-workspace.yaml");
 		const pnpmWorkspaceDest = path.join(projectDir, "pnpm-workspace.yaml");
 		if (await fs.pathExists(pnpmWorkspaceSrc)) {
-			await fs.copy(pnpmWorkspaceSrc, pnpmWorkspaceDest);
+			await processTemplate(pnpmWorkspaceSrc, pnpmWorkspaceDest, context);
 		}
 	}
 

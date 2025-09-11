@@ -5,6 +5,15 @@ import handlebars from "handlebars";
 import type { ProjectConfig } from "../types";
 import { formatFileWithBiome } from "./biome-formatter";
 
+const BINARY_EXTENSIONS = new Set([
+	".png", ".ico", ".svg",
+]);
+
+function isBinaryFile(filePath: string): boolean {
+	const ext = path.extname(filePath).toLowerCase();
+	return BINARY_EXTENSIONS.has(ext);
+}
+
 export async function processTemplate(
 	srcPath: string,
 	destPath: string,
@@ -12,6 +21,11 @@ export async function processTemplate(
 ) {
 	try {
 		await fs.ensureDir(path.dirname(destPath));
+
+		if (isBinaryFile(srcPath) && !srcPath.endsWith(".hbs")) {
+			await fs.copy(srcPath, destPath);
+			return;
+		}
 
 		let content: string;
 
