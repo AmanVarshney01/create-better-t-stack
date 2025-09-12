@@ -2,16 +2,11 @@ import path from "node:path";
 import { Biome } from "@biomejs/js-api/nodejs";
 import consola from "consola";
 
-let biome: Biome | null = null;
-let projectKey: number | null = null;
-
-async function initializeBiome() {
-	if (biome && projectKey !== null) return { biome, projectKey };
-
+function initializeBiome() {
 	try {
-		biome = new Biome();
+		const biome = new Biome();
 		const result = biome.openProject("./");
-		projectKey = result.projectKey;
+		const projectKey = result.projectKey;
 
 		biome.applyConfiguration(projectKey, {
 			formatter: {
@@ -61,18 +56,18 @@ function shouldSkipFile(filePath: string) {
 	return skipPatterns.some((pattern) => basename.includes(pattern));
 }
 
-export async function formatFileWithBiome(filePath: string, content: string) {
+export function formatFileWithBiome(filePath: string, content: string) {
 	if (!isSupportedFile(filePath) || shouldSkipFile(filePath)) {
 		return null;
 	}
 
 	try {
-		const biomeResult = await initializeBiome();
+		const biomeResult = initializeBiome();
 		if (!biomeResult) return null;
 
-		const { biome: biomeInstance, projectKey: key } = biomeResult;
+		const { biome, projectKey } = biomeResult;
 
-		const result = biomeInstance.formatContent(key, content, {
+		const result = biome.formatContent(projectKey, content, {
 			filePath: path.basename(filePath),
 		});
 

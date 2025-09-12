@@ -147,6 +147,7 @@ export type CreateInput = {
 	directoryConflict?: DirectoryConflict;
 	renderTitle?: boolean;
 	disableAnalytics?: boolean;
+	manualDb?: boolean;
 };
 
 export type AddInput = {
