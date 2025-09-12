@@ -99,6 +99,13 @@ export const router = t.router({
 						.optional()
 						.default(false)
 						.describe("Disable analytics"),
+					manualDb: z
+						.boolean()
+						.optional()
+						.default(false)
+						.describe(
+							"Skip automatic/manual database setup prompt and use manual setup",
+						),
 				}),
 			]),
 		)

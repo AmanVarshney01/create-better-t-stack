@@ -14,7 +14,10 @@ import { setupPrismaPostgres } from "../database-providers/prisma-postgres-setup
 import { setupSupabase } from "../database-providers/supabase-setup";
 import { setupTurso } from "../database-providers/turso-setup";
 
-export async function setupDatabase(config: ProjectConfig) {
+export async function setupDatabase(
+	config: ProjectConfig,
+	cliInput?: { manualDb?: boolean },
+) {
 	const { database, orm, dbSetup, backend, projectDir } = config;
 
 	if (backend === "convex" || database === "none") {
@@ -113,25 +116,25 @@ export async function setupDatabase(config: ProjectConfig) {
 		if (dbSetup === "docker") {
 			await setupDockerCompose(config);
 		} else if (database === "sqlite" && dbSetup === "turso") {
-			await setupTurso(config);
+			await setupTurso(config, cliInput);
 		} else if (database === "sqlite" && dbSetup === "d1") {
 			await setupCloudflareD1(config);
 		} else if (database === "postgres") {
 			if (dbSetup === "prisma-postgres") {
-				await setupPrismaPostgres(config);
+				await setupPrismaPostgres(config, cliInput);
 			} else if (dbSetup === "neon") {
-				await setupNeonPostgres(config);
+				await setupNeonPostgres(config, cliInput);
 			} else if (dbSetup === "planetscale") {
 				await setupPlanetScale(config);
 			} else if (dbSetup === "supabase") {
-				await setupSupabase(config);
+				await setupSupabase(config, cliInput);
 			}
 		} else if (database === "mysql") {
 			if (dbSetup === "planetscale") {
 				await setupPlanetScale(config);
 			}
 		} else if (database === "mongodb" && dbSetup === "mongodb-atlas") {
-			await setupMongoDBAtlas(config);
+			await setupMongoDBAtlas(config, cliInput);
 		}
 	} catch (error) {
 		s.stop(pc.red("Failed to set up database"));

@@ -120,14 +120,25 @@ ${pc.green("MongoDB Atlas Manual Setup Instructions:")}
 `);
 }
 
-export async function setupMongoDBAtlas(config: ProjectConfig) {
+export async function setupMongoDBAtlas(
+	config: ProjectConfig,
+	cliInput?: { manualDb?: boolean },
+) {
 	const { projectDir } = config;
+	const manualDb = cliInput?.manualDb ?? false;
 	const mainSpinner = spinner();
 	mainSpinner.start("Setting up MongoDB Atlas...");
 
 	const serverDir = path.join(projectDir, "apps/server");
 	try {
 		await fs.ensureDir(serverDir);
+
+		if (manualDb) {
+			mainSpinner.stop("MongoDB Atlas manual setup selected");
+			await writeEnvFile(projectDir);
+			displayManualSetupInstructions();
+			return;
+		}
 
 		const mode = await select({
 			message: "MongoDB Atlas setup: choose mode",

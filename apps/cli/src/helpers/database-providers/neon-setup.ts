@@ -154,10 +154,20 @@ function displayManualSetupInstructions() {
 DATABASE_URL="your_connection_string"`);
 }
 
-export async function setupNeonPostgres(config: ProjectConfig) {
+export async function setupNeonPostgres(
+	config: ProjectConfig,
+	cliInput?: { manualDb?: boolean },
+) {
 	const { packageManager, projectDir } = config;
+	const manualDb = cliInput?.manualDb ?? false;
 
 	try {
+		if (manualDb) {
+			await writeEnvFile(projectDir);
+			displayManualSetupInstructions();
+			return;
+		}
+
 		const mode = await select({
 			message: "Neon setup: choose mode",
 			options: [

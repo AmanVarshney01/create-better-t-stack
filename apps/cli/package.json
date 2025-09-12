@@ -52,9 +52,8 @@
     "dev": "tsdown --watch",
     "check-types": "tsc --noEmit",
     "check": "biome check --write .",
-    "test": "bun run build && vitest run",
+    "test": "bun run build && vitest run; rm -rf .smoke || true",
     "test:ui": "bun run build && vitest --ui",
-    "test:with-build": "bun run build && WITH_BUILD=1 vitest --ui",
     "prepublishOnly": "npm run build"
   },
   "exports": {

@@ -212,12 +212,22 @@ async function addPrismaAccelerateExtension(serverDir: string) {
 	}
 }
 
-export async function setupPrismaPostgres(config: ProjectConfig) {
+export async function setupPrismaPostgres(
+	config: ProjectConfig,
+	cliInput?: { manualDb?: boolean },
+) {
 	const { packageManager, projectDir, orm } = config;
+	const manualDb = cliInput?.manualDb ?? false;
 	const serverDir = path.join(projectDir, "apps/server");
 
 	try {
 		await fs.ensureDir(serverDir);
+
+		if (manualDb) {
+			await writeEnvFile(projectDir);
+			displayManualSetupInstructions();
+			return;
+		}
 
 		const mode = await select({
 			message: "Prisma Postgres setup: choose mode",
