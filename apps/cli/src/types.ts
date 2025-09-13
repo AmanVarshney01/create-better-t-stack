@@ -48,6 +48,7 @@ export const AddonsSchema = z
 		"fumadocs",
 		"ultracite",
 		"oxlint",
+		"t3env",
 		"none",
 	])
 	.describe("Additional addons");

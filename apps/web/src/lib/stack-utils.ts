@@ -111,6 +111,7 @@ export function generateStackCommand(stack: StackState) {
 								"fumadocs",
 								"oxlint",
 								"ruler",
+                                "t3env",
 							].includes(addon),
 						)
 						.join(" ") || "none"
