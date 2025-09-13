@@ -186,12 +186,22 @@ DATABASE_URL=your_database_url
 DATABASE_AUTH_TOKEN=your_auth_token`);
 }
 
-export async function setupTurso(config: ProjectConfig) {
+export async function setupTurso(
+	config: ProjectConfig,
+	cliInput?: { manualDb?: boolean },
+) {
 	const { orm, projectDir } = config;
+	const manualDb = cliInput?.manualDb ?? false;
 	const _isDrizzle = orm === "drizzle";
 	const setupSpinner = spinner();
 
 	try {
+		if (manualDb) {
+			await writeEnvFile(projectDir);
+			displayManualSetupInstructions();
+			return;
+		}
+
 		const mode = await select({
 			message: "Turso setup: choose mode",
 			options: [

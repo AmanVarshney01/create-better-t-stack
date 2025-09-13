@@ -32,7 +32,10 @@ import {
 	setupFrontendTemplates,
 } from "./template-manager";
 
-export async function createProject(options: ProjectConfig) {
+export async function createProject(
+	options: ProjectConfig,
+	cliInput?: { manualDb?: boolean },
+) {
 	const projectDir = options.projectDir;
 	const isConvex = options.backend === "convex";
 
@@ -58,7 +61,7 @@ export async function createProject(options: ProjectConfig) {
 
 		if (!isConvex) {
 			await setupBackendDependencies(options);
-			await setupDatabase(options);
+			await setupDatabase(options, cliInput);
 			await setupRuntime(options);
 			if (options.examples.length > 0 && options.examples[0] !== "none") {
 				await setupExamples(options);

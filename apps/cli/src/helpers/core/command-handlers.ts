@@ -174,7 +174,7 @@ export async function createProjectHandler(
 		);
 	}
 
-	await createProject(config);
+	await createProject(config, { manualDb: input.manualDb });
 
 	const reproducibleCommand = generateReproducibleCommand(config);
 	log.success(

@@ -152,13 +152,23 @@ ${pc.dim(output)}`
 	);
 }
 
-export async function setupSupabase(config: ProjectConfig) {
+export async function setupSupabase(
+	config: ProjectConfig,
+	cliInput?: { manualDb?: boolean },
+) {
 	const { projectDir, packageManager } = config;
+	const manualDb = cliInput?.manualDb ?? false;
 
 	const serverDir = path.join(projectDir, "apps", "server");
 
 	try {
 		await fs.ensureDir(serverDir);
+
+		if (manualDb) {
+			displayManualSupabaseInstructions();
+			await writeSupabaseEnvFile(projectDir, "");
+			return;
+		}
 
 		const mode = await select({
 			message: "Supabase setup: choose mode",

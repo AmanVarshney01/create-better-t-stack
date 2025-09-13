@@ -380,7 +380,8 @@ export function validateApiConstraints(
 		if (
 			options.examples &&
 			!(options.examples.length === 1 && options.examples[0] === "none") &&
-			options.backend !== "convex"
+			options.backend !== "convex" &&
+			options.backend !== "none"
 		) {
 			exitWithError(
 				"Cannot use '--examples' when '--api' is set to 'none'. Please remove the --examples flag or choose an API type.",
