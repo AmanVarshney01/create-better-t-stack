@@ -480,6 +480,8 @@ function generateFeaturesList(
 			addonsList.push("- **Starlight** - Documentation site with Astro");
 		} else if (addon === "turborepo") {
 			addonsList.push("- **Turborepo** - Optimized monorepo build system");
+		} else if (addon === "t3env") {
+			addonsList.push("- **T3 Env** - Type-safe environment variables");
 		}
 	}
 

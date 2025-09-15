@@ -35,6 +35,7 @@ export const metadata: Metadata = {
 		"hono",
 		"elysia",
 		"turborepo",
+		"t3env",
 		"trpc",
 		"orpc",
 		"turso",

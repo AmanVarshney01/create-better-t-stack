@@ -36,7 +36,8 @@
     "shadcn",
     "pwa",
     "tauri",
-    "biome"
+    "biome",
+    "t3env"
   ],
   "repository": {
     "type": "git",
