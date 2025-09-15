@@ -1,2 +1,6 @@
 [install]
+{{#if (includes frontend "nuxt")}}
+# linker = "isolated"  # Commented out for Nuxt compatibility
+{{else}}
 linker = "isolated"
+{{/if}}
