@@ -11,6 +11,7 @@ import {
 	validateAddonsAgainstFrontends,
 	validateApiFrontendCompatibility,
 	validateExamplesCompatibility,
+	validatePaymentsCompatibility,
 	validateServerDeployRequiresBackend,
 	validateWebDeployRequiresWebFrontend,
 	validateWorkersCompatibility,
@@ -417,7 +418,7 @@ export function validateFullConfig(
 	}
 
 	if (config.addons && config.addons.length > 0) {
-		validateAddonsAgainstFrontends(config.addons, config.frontend);
+		validateAddonsAgainstFrontends(config.addons, config.frontend, config.auth);
 		config.addons = [...new Set(config.addons)];
 	}
 
@@ -441,8 +442,19 @@ export function validateConfigForProgrammaticUse(
 
 		validateApiFrontendCompatibility(config.api, config.frontend);
 
+		validatePaymentsCompatibility(
+			config.payments,
+			config.auth,
+			config.backend,
+			config.frontend,
+		);
+
 		if (config.addons && config.addons.length > 0) {
-			validateAddonsAgainstFrontends(config.addons, config.frontend);
+			validateAddonsAgainstFrontends(
+				config.addons,
+				config.frontend,
+				config.auth,
+			);
 		}
 
 		validateExamplesCompatibility(

@@ -72,6 +72,10 @@ export async function displayPostInstallInstructions(
 		: "";
 	const clerkInstructions =
 		isConvex && config.auth === "clerk" ? getClerkInstructions() : "";
+	const polarInstructions =
+		config.payments === "polar" && config.auth === "better-auth"
+			? getPolarInstructions()
+			: "";
 	const wranglerDeployInstructions = getWranglerDeployInstructions(
 		runCmd,
 		webDeploy,
@@ -188,6 +192,7 @@ export async function displayPostInstallInstructions(
 		output += `\n${alchemyDeployInstructions.trim()}\n`;
 	if (starlightInstructions) output += `\n${starlightInstructions.trim()}\n`;
 	if (clerkInstructions) output += `\n${clerkInstructions.trim()}\n`;
+	if (polarInstructions) output += `\n${polarInstructions.trim()}\n`;
 
 	if (noOrmWarning) output += `\n${noOrmWarning.trim()}\n`;
 	if (bunWebNativeWarning) output += `\n${bunWebNativeWarning.trim()}\n`;
@@ -445,6 +450,10 @@ function getWranglerDeployInstructions(
 
 function getClerkInstructions() {
 	return `${pc.bold("Clerk Authentication Setup:")}\n${pc.cyan("•")} Follow the guide: ${pc.underline("https://docs.convex.dev/auth/clerk")}\n${pc.cyan("•")} Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard\n${pc.cyan("•")} Set CLERK_PUBLISHABLE_KEY in apps/*/.env`;
+}
+
+function getPolarInstructions() {
+	return `${pc.bold("Polar Payments Setup:")}\n${pc.cyan("•")} Get access token & product ID from ${pc.underline("https://sandbox.polar.sh/")}\n${pc.cyan("•")} Set POLAR_ACCESS_TOKEN in apps/server/.env`;
 }
 
 function getAlchemyDeployInstructions(

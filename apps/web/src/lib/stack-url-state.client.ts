@@ -43,6 +43,9 @@ export const stackParsers = {
 	auth: parseAsStringEnum<StackState["auth"]>(getValidIds("auth")).withDefault(
 		DEFAULT_STACK.auth,
 	),
+	payments: parseAsStringEnum<StackState["payments"]>(
+		getValidIds("payments"),
+	).withDefault(DEFAULT_STACK.payments),
 	packageManager: parseAsStringEnum<StackState["packageManager"]>(
 		getValidIds("packageManager"),
 	).withDefault(DEFAULT_STACK.packageManager),

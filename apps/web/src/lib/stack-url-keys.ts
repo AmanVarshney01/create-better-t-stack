@@ -12,6 +12,7 @@ export const stackUrlKeys: UrlKeys<Record<keyof StackState, unknown>> = {
 	orm: "orm",
 	dbSetup: "dbs",
 	auth: "au",
+	payments: "pay",
 	packageManager: "pm",
 	addons: "add",
 	examples: "ex",

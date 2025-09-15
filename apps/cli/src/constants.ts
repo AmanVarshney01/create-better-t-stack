@@ -13,6 +13,7 @@ export const DEFAULT_CONFIG_BASE = {
 	database: "sqlite",
 	orm: "drizzle",
 	auth: "better-auth",
+	payments: "none",
 	addons: ["turborepo"],
 	examples: [],
 	git: true,
@@ -155,6 +156,9 @@ export const dependencyVersionMap = {
 	nitropack: "^2.12.4",
 
 	dotenv: "^17.2.1",
+
+	"@polar-sh/better-auth": "^1.1.3",
+	"@polar-sh/sdk": "^0.34.16",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

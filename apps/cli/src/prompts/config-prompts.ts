@@ -10,6 +10,7 @@ import type {
 	Frontend,
 	ORM,
 	PackageManager,
+	Payments,
 	ProjectConfig,
 	Runtime,
 	ServerDeploy,
@@ -28,6 +29,7 @@ import { getGitChoice } from "./git";
 import { getinstallChoice } from "./install";
 import { getORMChoice } from "./orm";
 import { getPackageManagerChoice } from "./package-manager";
+import { getPaymentsChoice } from "./payments";
 import { getRuntimeChoice } from "./runtime";
 import { getServerDeploymentChoice } from "./server-deploy";
 import { getDeploymentChoice } from "./web-deploy";
@@ -40,6 +42,7 @@ type PromptGroupResults = {
 	orm: ORM;
 	api: API;
 	auth: Auth;
+	payments: Payments;
 	addons: Addons[];
 	examples: Examples[];
 	dbSetup: DatabaseSetup;
@@ -87,7 +90,15 @@ export async function gatherConfig(
 					results.backend,
 					results.frontend,
 				),
-			addons: ({ results }) => getAddonsChoice(flags.addons, results.frontend),
+			payments: ({ results }) =>
+				getPaymentsChoice(
+					flags.payments,
+					results.auth,
+					results.backend,
+					results.frontend,
+				),
+			addons: ({ results }) =>
+				getAddonsChoice(flags.addons, results.frontend, results.auth),
 			examples: ({ results }) =>
 				getExamplesChoice(
 					flags.examples,
@@ -137,6 +148,7 @@ export async function gatherConfig(
 		database: result.database,
 		orm: result.orm,
 		auth: result.auth,
+		payments: result.payments,
 		addons: result.addons,
 		examples: result.examples,
 		git: result.git,

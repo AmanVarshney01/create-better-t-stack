@@ -2,8 +2,8 @@ import path from "node:path";
 import { log } from "@clack/prompts";
 import pc from "picocolors";
 import type { AddInput, Addons, ProjectConfig } from "../../types";
-import { validateAddonCompatibility } from "../../utils/addon-compatibility";
 import { updateBtsConfig } from "../../utils/bts-config";
+import { validateAddonCompatibility } from "../../utils/compatibility-rules";
 import { exitWithError } from "../../utils/errors";
 import { setupAddons } from "../addons/addons-setup";
 import {
@@ -45,6 +45,7 @@ export async function addAddonsToProject(
 			addons: input.addons,
 			examples: detectedConfig.examples || [],
 			auth: detectedConfig.auth || "none",
+			payments: detectedConfig.payments || "none",
 			git: false,
 			packageManager:
 				input.packageManager || detectedConfig.packageManager || "npm",

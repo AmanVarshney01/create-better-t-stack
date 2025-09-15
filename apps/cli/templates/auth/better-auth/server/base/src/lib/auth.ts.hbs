@@ -4,6 +4,10 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { expo } from "@better-auth/expo";
 {{/if}}
+{{#if (eq payments "polar")}}
+import { polar, checkout, portal } from "@polar-sh/better-auth";
+import { polarClient } from "./payments";
+{{/if}}
 import prisma from "../db";
 
 export const auth = betterAuth<BetterAuthOptions>({
@@ -28,9 +32,35 @@ export const auth = betterAuth<BetterAuthOptions>({
       secure: true,
       httpOnly: true,
     },
-  }
+  },
+  {{#if (eq payments "polar")}}
+  plugins: [
+    polar({
+      client: polarClient,
+      createCustomerOnSignUp: true,
+      enableCustomerPortal: true,
+      use: [
+        checkout({
+          products: [
+            {
+              productId: "your-product-id",
+              slug: "pro",
+            },
+          ],
+          successUrl: process.env.POLAR_SUCCESS_URL,
+          authenticatedUsersOnly: true,
+        }),
+        portal(),
+      ],
+    }),
+    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    expo(),
+    {{/if}}
+  ],
+  {{else}}
   {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-  , plugins: [expo()]
+  plugins: [expo()],
+  {{/if}}
   {{/if}}
 });
 {{/if}}
@@ -41,6 +71,10 @@ import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { expo } from "@better-auth/expo";
+{{/if}}
+{{#if (eq payments "polar")}}
+import { polar, checkout, portal } from "@polar-sh/better-auth";
+import { polarClient } from "./payments";
 {{/if}}
 import { db } from "../db";
 import * as schema from "../db/schema/auth";
@@ -68,8 +102,34 @@ export const auth = betterAuth<BetterAuthOptions>({
       httpOnly: true,
     },
   },
+  {{#if (eq payments "polar")}}
+  plugins: [
+    polar({
+      client: polarClient,
+      createCustomerOnSignUp: true,
+      enableCustomerPortal: true,
+      use: [
+        checkout({
+          products: [
+            {
+              productId: "your-product-id",
+              slug: "pro",
+            },
+          ],
+          successUrl: process.env.POLAR_SUCCESS_URL,
+          authenticatedUsersOnly: true,
+        }),
+        portal(),
+      ],
+    }),
+    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    expo(),
+    {{/if}}
+  ],
+  {{else}}
   {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
   plugins: [expo()],
+  {{/if}}
   {{/if}}
 });
 {{/if}}
@@ -79,6 +139,10 @@ import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { expo } from "@better-auth/expo";
+{{/if}}
+{{#if (eq payments "polar")}}
+import { polar, checkout, portal } from "@polar-sh/better-auth";
+import { polarClient } from "./payments";
 {{/if}}
 import { db } from "../db";
 import * as schema from "../db/schema/auth";
@@ -109,8 +173,31 @@ export const auth = betterAuth<BetterAuthOptions>({
       httpOnly: true,
     },
   },
+  {{#if (eq payments "polar")}}
+  plugins: [
+    polar({
+      client: polarClient,
+      createCustomerOnSignUp: true,
+      enableCustomerPortal: true,
+      use: [
+        checkout({
+          products: [
+            {
+              productId: "your-product-id",
+              slug: "pro",
+            },
+          ],
+          successUrl: env.POLAR_SUCCESS_URL,
+          authenticatedUsersOnly: true,
+        }),
+        portal(),
+      ],
+    }),
+  ],
+  {{else}}
   {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
   plugins: [expo()],
+  {{/if}}
   {{/if}}
 });
 {{/if}}
@@ -121,6 +208,10 @@ import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { expo } from "@better-auth/expo";
+{{/if}}
+{{#if (eq payments "polar")}}
+import { polar, checkout, portal } from "@polar-sh/better-auth";
+import { polarClient } from "./payments";
 {{/if}}
 import { client } from "../db";
 
@@ -141,9 +232,35 @@ export const auth = betterAuth<BetterAuthOptions>({
       secure: true,
       httpOnly: true,
     },
-  }
+  },
+  {{#if (eq payments "polar")}}
+  plugins: [
+    polar({
+      client: polarClient,
+      createCustomerOnSignUp: true,
+      enableCustomerPortal: true,
+      use: [
+        checkout({
+          products: [
+            {
+              productId: "your-product-id",
+              slug: "pro",
+            },
+          ],
+          successUrl: process.env.POLAR_SUCCESS_URL,
+          authenticatedUsersOnly: true,
+        }),
+        portal(),
+      ],
+    }),
+    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    expo(),
+    {{/if}}
+  ],
+  {{else}}
   {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-  , plugins: [expo()]
+  plugins: [expo()],
+  {{/if}}
   {{/if}}
 });
 {{/if}}
@@ -152,6 +269,10 @@ export const auth = betterAuth<BetterAuthOptions>({
 import { betterAuth, type BetterAuthOptions } from "better-auth";
 {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { expo } from "@better-auth/expo";
+{{/if}}
+{{#if (eq payments "polar")}}
+import { polar, checkout, portal } from "@polar-sh/better-auth";
+import { polarClient } from "./payments";
 {{/if}}
 
 export const auth = betterAuth<BetterAuthOptions>({
@@ -171,9 +292,35 @@ export const auth = betterAuth<BetterAuthOptions>({
       secure: true,
       httpOnly: true,
     },
-  }
+  },
+  {{#if (eq payments "polar")}}
+  plugins: [
+    polar({
+      client: polarClient,
+      createCustomerOnSignUp: true,
+      enableCustomerPortal: true,
+      use: [
+        checkout({
+          products: [
+            {
+              productId: "your-product-id",
+              slug: "pro",
+            },
+          ],
+          successUrl: process.env.POLAR_SUCCESS_URL,
+          authenticatedUsersOnly: true,
+        }),
+        portal(),
+      ],
+    }),
+    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    expo(),
+    {{/if}}
+  ],
+  {{else}}
   {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-  , plugins: [expo()]
+  plugins: [expo()],
+  {{/if}}
   {{/if}}
 });
 {{/if}}

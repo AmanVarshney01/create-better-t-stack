@@ -1,10 +1,10 @@
 import { groupMultiselect, isCancel } from "@clack/prompts";
 import { DEFAULT_CONFIG } from "../constants";
-import { type Addons, AddonsSchema, type Frontend } from "../types";
+import { type Addons, AddonsSchema, type Auth, type Frontend } from "../types";
 import {
 	getCompatibleAddons,
 	validateAddonCompatibility,
-} from "../utils/addon-compatibility";
+} from "../utils/compatibility-rules";
 import { exitCancelled } from "../utils/errors";
 
 type AddonOption = {
@@ -75,6 +75,7 @@ const ADDON_GROUPS = {
 export async function getAddonsChoice(
 	addons?: Addons[],
 	frontends?: Frontend[],
+	auth?: Auth,
 ) {
 	if (addons !== undefined) return addons;
 
@@ -88,7 +89,11 @@ export async function getAddonsChoice(
 	const frontendsArray = frontends || [];
 
 	for (const addon of allAddons) {
-		const { isCompatible } = validateAddonCompatibility(addon, frontendsArray);
+		const { isCompatible } = validateAddonCompatibility(
+			addon,
+			frontendsArray,
+			auth,
+		);
 		if (!isCompatible) continue;
 
 		const { label, hint } = getAddonDisplay(addon);
@@ -131,6 +136,7 @@ export async function getAddonsChoice(
 export async function getAddonsToAdd(
 	frontend: Frontend[],
 	existingAddons: Addons[] = [],
+	auth?: Auth,
 ) {
 	const groupedOptions: Record<string, AddonOption[]> = {
 		Documentation: [],
@@ -144,6 +150,7 @@ export async function getAddonsToAdd(
 		AddonsSchema.options.filter((addon) => addon !== "none"),
 		frontendArray,
 		existingAddons,
+		auth,
 	);
 
 	for (const addon of compatibleAddons) {

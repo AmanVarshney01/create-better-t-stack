@@ -8,6 +8,7 @@ import type {
 	DatabaseSetup,
 	ORM,
 	PackageManager,
+	Payments,
 	ProjectConfig,
 	Runtime,
 	ServerDeploy,
@@ -54,6 +55,10 @@ export function processFlags(options: CLIInput, projectName?: string) {
 
 	if (options.auth !== undefined) {
 		config.auth = options.auth as Auth;
+	}
+
+	if (options.payments !== undefined) {
+		config.payments = options.payments as Payments;
 	}
 
 	if (options.git !== undefined) {

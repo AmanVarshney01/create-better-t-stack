@@ -818,6 +818,64 @@ export const analyzeStackCompatibility = (
 				});
 			}
 
+			if (nextStack.payments === "polar") {
+				if (nextStack.auth !== "better-auth") {
+					notes.payments.notes.push(
+						"Polar payments requires Better Auth. Payments will be set to 'None'.",
+					);
+					notes.auth.notes.push(
+						"Polar payments requires Better Auth. Payments will be disabled.",
+					);
+					notes.payments.hasIssue = true;
+					notes.auth.hasIssue = true;
+					nextStack.payments = "none";
+					changed = true;
+					changes.push({
+						category: "payments",
+						message: "Payments set to 'None' (Polar requires Better Auth)",
+					});
+				}
+
+				if (nextStack.backend === "convex") {
+					notes.payments.notes.push(
+						"Polar payments is not compatible with Convex backend. Payments will be set to 'None'.",
+					);
+					notes.backend.notes.push(
+						"Polar payments is not compatible with Convex backend. Payments will be disabled.",
+					);
+					notes.payments.hasIssue = true;
+					notes.backend.hasIssue = true;
+					nextStack.payments = "none";
+					changed = true;
+					changes.push({
+						category: "payments",
+						message:
+							"Payments set to 'None' (Polar not compatible with Convex backend)",
+					});
+				}
+
+				const hasWebFrontend = nextStack.webFrontend.some((f) => f !== "none");
+				if (
+					!hasWebFrontend &&
+					nextStack.nativeFrontend.some((f) => f !== "none")
+				) {
+					notes.payments.notes.push(
+						"Polar payments requires a web frontend. Payments will be set to 'None'.",
+					);
+					notes.webFrontend.notes.push(
+						"Polar payments requires a web frontend. Payments will be disabled.",
+					);
+					notes.payments.hasIssue = true;
+					notes.webFrontend.hasIssue = true;
+					nextStack.payments = "none";
+					changed = true;
+					changes.push({
+						category: "payments",
+						message: "Payments set to 'None' (Polar requires web frontend)",
+					});
+				}
+			}
+
 			const incompatibleAddons: string[] = [];
 			const isPWACompat = hasPWACompatibleFrontend(nextStack.webFrontend);
 			const isTauriCompat = hasTauriCompatibleFrontend(nextStack.webFrontend);
@@ -1533,6 +1591,22 @@ export const getDisabledReason = (
 	if (category === "examples" && optionId === "ai") {
 		if (finalStack.webFrontend.includes("solid")) {
 			return "AI example is not compatible with Solid frontend. Try React-based frontends.";
+		}
+	}
+
+	if (category === "payments" && optionId === "polar") {
+		if (finalStack.auth !== "better-auth") {
+			return "Polar payments requires Better Auth. Select Better Auth first.";
+		}
+		if (finalStack.backend === "convex") {
+			return "Polar payments is not compatible with Convex backend. Try Hono, Express, Fastify, or Elysia.";
+		}
+		const hasWebFrontend = finalStack.webFrontend.some((f) => f !== "none");
+		if (
+			!hasWebFrontend &&
+			finalStack.nativeFrontend.some((f) => f !== "none")
+		) {
+			return "Polar payments requires a web frontend. Select a web frontend first.";
 		}
 	}
 

@@ -456,16 +456,16 @@ describe("Deployment Configurations", () => {
 			webDeploy: TestConfig["webDeploy"];
 			serverDeploy: TestConfig["serverDeploy"];
 		}> = [
-				{ webDeploy: "wrangler", serverDeploy: "wrangler" },
-				{ webDeploy: "wrangler", serverDeploy: "alchemy" },
-				{ webDeploy: "alchemy", serverDeploy: "wrangler" },
-				{ webDeploy: "alchemy", serverDeploy: "alchemy" },
-				{ webDeploy: "wrangler", serverDeploy: "none" },
-				{ webDeploy: "alchemy", serverDeploy: "none" },
-				{ webDeploy: "none", serverDeploy: "wrangler" },
-				{ webDeploy: "none", serverDeploy: "alchemy" },
-				{ webDeploy: "none", serverDeploy: "none" },
-			];
+			{ webDeploy: "wrangler", serverDeploy: "wrangler" },
+			{ webDeploy: "wrangler", serverDeploy: "alchemy" },
+			{ webDeploy: "alchemy", serverDeploy: "wrangler" },
+			{ webDeploy: "alchemy", serverDeploy: "alchemy" },
+			{ webDeploy: "wrangler", serverDeploy: "none" },
+			{ webDeploy: "alchemy", serverDeploy: "none" },
+			{ webDeploy: "none", serverDeploy: "wrangler" },
+			{ webDeploy: "none", serverDeploy: "alchemy" },
+			{ webDeploy: "none", serverDeploy: "none" },
+		];
 
 		for (const { webDeploy, serverDeploy } of deployOptions) {
 			it(`should work with webDeploy: ${webDeploy}, serverDeploy: ${serverDeploy}`, async () => {

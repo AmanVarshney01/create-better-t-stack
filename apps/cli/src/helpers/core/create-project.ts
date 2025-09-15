@@ -17,6 +17,7 @@ import { createReadme } from "./create-readme";
 import { setupEnvironmentVariables } from "./env-setup";
 import { initializeGit } from "./git";
 import { installDependencies } from "./install-dependencies";
+import { setupPayments } from "./payments-setup";
 import { displayPostInstallInstructions } from "./post-installation";
 import { updatePackageConfigurations } from "./project-config";
 import {
@@ -30,6 +31,7 @@ import {
 	setupDockerComposeTemplates,
 	setupExamplesTemplate,
 	setupFrontendTemplates,
+	setupPaymentsTemplate,
 } from "./template-manager";
 
 export async function createProject(
@@ -50,6 +52,9 @@ export async function createProject(
 			await setupDockerComposeTemplates(projectDir, options);
 		}
 		await setupAuthTemplate(projectDir, options);
+		if (options.payments && options.payments !== "none") {
+			await setupPaymentsTemplate(projectDir, options);
+		}
 		if (options.examples.length > 0 && options.examples[0] !== "none") {
 			await setupExamplesTemplate(projectDir, options);
 		}
@@ -74,6 +79,10 @@ export async function createProject(
 
 		if (options.auth && options.auth !== "none") {
 			await setupAuth(options);
+		}
+
+		if (options.payments && options.payments !== "none") {
+			await setupPayments(options);
 		}
 
 		await handleExtras(projectDir, options);

@@ -1,14 +1,16 @@
+import { ADDON_COMPATIBILITY } from "../constants";
 import type {
 	Addons,
 	API,
+	Auth,
 	Backend,
 	CLIInput,
 	Frontend,
+	Payments,
 	ProjectConfig,
 	ServerDeploy,
 	WebDeploy,
 } from "../types";
-import { validateAddonCompatibility } from "./addon-compatibility";
 import { WEB_FRAMEWORKS } from "./compatibility";
 import { exitWithError } from "./errors";
 
@@ -191,18 +193,90 @@ export function validateServerDeployRequiresBackend(
 	}
 }
 
+export function validateAddonCompatibility(
+	addon: Addons,
+	frontend: Frontend[],
+	_auth?: Auth,
+): { isCompatible: boolean; reason?: string } {
+	const compatibleFrontends = ADDON_COMPATIBILITY[addon];
+
+	if (compatibleFrontends.length > 0) {
+		const hasCompatibleFrontend = frontend.some((f) =>
+			(compatibleFrontends as readonly string[]).includes(f),
+		);
+
+		if (!hasCompatibleFrontend) {
+			const frontendList = compatibleFrontends.join(", ");
+			return {
+				isCompatible: false,
+				reason: `${addon} addon requires one of these frontends: ${frontendList}`,
+			};
+		}
+	}
+
+	return { isCompatible: true };
+}
+
+export function getCompatibleAddons(
+	allAddons: Addons[],
+	frontend: Frontend[],
+	existingAddons: Addons[] = [],
+	auth?: Auth,
+) {
+	return allAddons.filter((addon) => {
+		if (existingAddons.includes(addon)) return false;
+
+		if (addon === "none") return false;
+
+		const { isCompatible } = validateAddonCompatibility(addon, frontend, auth);
+		return isCompatible;
+	});
+}
+
 export function validateAddonsAgainstFrontends(
 	addons: Addons[] = [],
 	frontends: Frontend[] = [],
+	auth?: Auth,
 ) {
 	for (const addon of addons) {
 		if (addon === "none") continue;
 		const { isCompatible, reason } = validateAddonCompatibility(
 			addon,
 			frontends,
+			auth,
 		);
 		if (!isCompatible) {
 			exitWithError(`Incompatible addon/frontend combination: ${reason}`);
+		}
+	}
+}
+
+export function validatePaymentsCompatibility(
+	payments: Payments | undefined,
+	auth: Auth | undefined,
+	backend: Backend | undefined,
+	frontends: Frontend[] = [],
+) {
+	if (!payments || payments === "none") return;
+
+	if (payments === "polar") {
+		if (!auth || auth === "none" || auth !== "better-auth") {
+			exitWithError(
+				"Polar payments requires Better Auth. Please use '--auth better-auth' or choose a different payments provider.",
+			);
+		}
+
+		if (backend === "convex") {
+			exitWithError(
+				"Polar payments is not compatible with Convex backend. Please use a different backend or choose a different payments provider.",
+			);
+		}
+
+		const { web } = splitFrontends(frontends);
+		if (web.length === 0 && frontends.length > 0) {
+			exitWithError(
+				"Polar payments requires a web frontend or no frontend. Please select a web frontend or choose a different payments provider.",
+			);
 		}
 	}
 }

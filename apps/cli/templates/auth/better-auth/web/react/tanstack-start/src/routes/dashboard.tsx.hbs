@@ -1,54 +1,70 @@
+import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 {{#if (eq api "trpc")}}
 import { useTRPC } from "@/utils/trpc";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 {{/if}}
 {{#if (eq api "orpc")}}
 import { orpc } from "@/utils/orpc";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 {{/if}}
-import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/dashboard")({
-  component: RouteComponent,
+	component: RouteComponent,
+	beforeLoad: async () => {
+		const session = await authClient.getSession();
+		if (!session.data) {
+			redirect({
+				to: "/login",
+				throw: true
+			});
+		}
+		{{#if (eq payments "polar")}}
+		const {data: customerState} = await authClient.customer.state()
+		return { session, customerState };
+		{{else}}
+		return { session };
+		{{/if}}
+	}
 });
 
 function RouteComponent() {
-  const navigate = Route.useNavigate();
-  {{#if (eq api "trpc")}}
-  const trpc = useTRPC();
-  {{/if}}
-  {{#if (eq api "orpc")}}
-  {{/if}}
-  const { data: session, isPending } = authClient.useSession();
+	const { session{{#if (eq payments "polar")}}, customerState{{/if}} } = Route.useRouteContext();
 
-  {{#if (eq api "trpc")}}
-  const privateData = useQuery(trpc.privateData.queryOptions());
-  {{/if}}
-  {{#if (eq api "orpc")}}
-  const privateData = useQuery(orpc.privateData.queryOptions());
-  {{/if}}
+	{{#if (eq api "trpc")}}
+	const trpc = useTRPC();
+	const privateData = useQuery(trpc.privateData.queryOptions());
+	{{/if}}
+	{{#if (eq api "orpc")}}
+	const privateData = useQuery(orpc.privateData.queryOptions());
+	{{/if}}
 
-  useEffect(() => {
-    if (!session && !isPending) {
-      navigate({
-        to: "/login",
-      });
-    }
-  }, [session, isPending]);
+	{{#if (eq payments "polar")}}
+	const hasProSubscription = customerState?.activeSubscriptions?.length! > 0
+    console.log("Active subscriptions:", customerState?.activeSubscriptions)
+	{{/if}}
 
-  if (isPending) {
-    return <div>Loading...</div>;
-  }
-
-  return (
-    <div>
-      <h1>Dashboard</h1>
-      <p>Welcome {session?.user.name}</p>
-    {{#if ( or (eq api "orpc") (eq api "trpc"))}}
-      <p>privateData: {privateData.data?.message}</p>
-    {{/if}}
-    </div>
-  );
+	return (
+		<div>
+			<h1>Dashboard</h1>
+			<p>Welcome {session.data?.user.name}</p>
+			{{#if ( or (eq api "orpc") (eq api "trpc"))}}
+			<p>API: {privateData.data?.message}</p>
+			{{/if}}
+			{{#if (eq payments "polar")}}
+			<p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
+			{hasProSubscription ? (
+				<Button onClick={async () => await authClient.customer.portal()}>
+					Manage Subscription
+				</Button>
+			) : (
+				<Button onClick={async () => await authClient.checkout({ slug: "pro" })}>
+					Upgrade to Pro
+				</Button>
+			)}
+			{{/if}}
+		</div>
+	);
 }

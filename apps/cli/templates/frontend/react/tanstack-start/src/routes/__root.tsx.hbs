@@ -17,6 +17,10 @@ import appCss from "../index.css?url";
 import type { QueryClient } from "@tanstack/react-query";
 import type { ConvexQueryClient } from "@convex-dev/react-query";
 import type { ConvexReactClient } from "convex/react";
+{{else}}
+{{#if (or (eq api "trpc") (eq api "orpc"))}}
+import type { QueryClient } from "@tanstack/react-query";
+{{/if}}
 {{/if}}
 import Loader from "@/components/loader";
 

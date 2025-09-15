@@ -60,54 +60,54 @@ describe("Database and ORM Combinations", () => {
 			orm: ORM;
 			error: string;
 		}> = [
-				// MongoDB with Drizzle (not supported)
-				{
-					database: "mongodb" as Database,
-					orm: "drizzle" as ORM,
-					error: "Drizzle ORM does not support MongoDB",
-				},
+			// MongoDB with Drizzle (not supported)
+			{
+				database: "mongodb" as Database,
+				orm: "drizzle" as ORM,
+				error: "Drizzle ORM does not support MongoDB",
+			},
 
-				// Mongoose with non-MongoDB
-				{
-					database: "sqlite" as Database,
-					orm: "mongoose" as ORM,
-					error: "Mongoose ORM requires MongoDB database",
-				},
-				{
-					database: "postgres" as Database,
-					orm: "mongoose" as ORM,
-					error: "Mongoose ORM requires MongoDB database",
-				},
-				{
-					database: "mysql" as Database,
-					orm: "mongoose" as ORM,
-					error: "Mongoose ORM requires MongoDB database",
-				},
+			// Mongoose with non-MongoDB
+			{
+				database: "sqlite" as Database,
+				orm: "mongoose" as ORM,
+				error: "Mongoose ORM requires MongoDB database",
+			},
+			{
+				database: "postgres" as Database,
+				orm: "mongoose" as ORM,
+				error: "Mongoose ORM requires MongoDB database",
+			},
+			{
+				database: "mysql" as Database,
+				orm: "mongoose" as ORM,
+				error: "Mongoose ORM requires MongoDB database",
+			},
 
-				// Database without ORM
-				{
-					database: "sqlite" as Database,
-					orm: "none" as ORM,
-					error: "Database selection requires an ORM",
-				},
-				{
-					database: "postgres" as Database,
-					orm: "none" as ORM,
-					error: "Database selection requires an ORM",
-				},
+			// Database without ORM
+			{
+				database: "sqlite" as Database,
+				orm: "none" as ORM,
+				error: "Database selection requires an ORM",
+			},
+			{
+				database: "postgres" as Database,
+				orm: "none" as ORM,
+				error: "Database selection requires an ORM",
+			},
 
-				// ORM without database
-				{
-					database: "none" as Database,
-					orm: "drizzle" as ORM,
-					error: "ORM selection requires a database",
-				},
-				{
-					database: "none" as Database,
-					orm: "prisma" as ORM,
-					error: "ORM selection requires a database",
-				},
-			];
+			// ORM without database
+			{
+				database: "none" as Database,
+				orm: "drizzle" as ORM,
+				error: "ORM selection requires a database",
+			},
+			{
+				database: "none" as Database,
+				orm: "prisma" as ORM,
+				error: "ORM selection requires a database",
+			},
+		];
 
 		for (const { database, orm, error } of invalidCombinations) {
 			it(`should fail with ${database} + ${orm}`, async () => {

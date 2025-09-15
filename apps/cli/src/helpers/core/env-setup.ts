@@ -280,6 +280,16 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 			value: "",
 			condition: examples?.includes("ai") || false,
 		},
+		{
+			key: "POLAR_ACCESS_TOKEN",
+			value: "",
+			condition: config.payments === "polar",
+		},
+		{
+			key: "POLAR_SUCCESS_URL",
+			value: `${corsOrigin}/success?checkout_id={CHECKOUT_ID}`,
+			condition: config.payments === "polar",
+		},
 	];
 
 	await addEnvVariablesToFile(envPath, serverVars);

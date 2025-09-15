@@ -18,6 +18,7 @@ export async function writeBtsConfig(projectConfig: ProjectConfig) {
 		addons: projectConfig.addons,
 		examples: projectConfig.examples,
 		auth: projectConfig.auth,
+		payments: projectConfig.payments,
 		packageManager: projectConfig.packageManager,
 		dbSetup: projectConfig.dbSetup,
 		api: projectConfig.api,

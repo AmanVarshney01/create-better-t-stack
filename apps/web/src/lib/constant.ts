@@ -427,6 +427,24 @@ export const TECH_OPTIONS: Record<
 			color: "from-red-400 to-red-600",
 		},
 	],
+	payments: [
+		{
+			id: "polar",
+			name: "Polar",
+			description: "Payments and subscriptions made simple",
+			icon: `${ICON_BASE_URL}/polar.svg`,
+			color: "from-purple-400 to-purple-600",
+			default: false,
+		},
+		{
+			id: "none",
+			name: "No Payments",
+			description: "Skip payments integration",
+			icon: "",
+			color: "from-gray-400 to-gray-600",
+			default: true,
+		},
+	],
 	packageManager: [
 		{
 			id: "npm",
@@ -604,6 +622,7 @@ export const PRESET_TEMPLATES = [
 			orm: "drizzle",
 			dbSetup: "none",
 			auth: "better-auth",
+			payments: "none",
 			packageManager: "bun",
 			addons: ["turborepo"],
 			examples: [],
@@ -629,6 +648,7 @@ export const PRESET_TEMPLATES = [
 			orm: "none",
 			dbSetup: "none",
 			auth: "none",
+			payments: "none",
 			packageManager: "bun",
 			addons: ["turborepo"],
 			examples: ["todo"],
@@ -654,6 +674,7 @@ export const PRESET_TEMPLATES = [
 			orm: "drizzle",
 			dbSetup: "none",
 			auth: "better-auth",
+			payments: "none",
 			packageManager: "bun",
 			addons: ["turborepo"],
 			examples: [],
@@ -679,6 +700,7 @@ export const PRESET_TEMPLATES = [
 			orm: "drizzle",
 			dbSetup: "none",
 			auth: "better-auth",
+			payments: "none",
 			packageManager: "bun",
 			addons: ["turborepo"],
 			examples: [],
@@ -704,6 +726,7 @@ export const PRESET_TEMPLATES = [
 			orm: "drizzle",
 			dbSetup: "turso",
 			auth: "better-auth",
+			payments: "polar",
 			packageManager: "bun",
 			addons: ["pwa", "biome", "husky", "tauri", "starlight", "turborepo"],
 			examples: ["todo", "ai"],
@@ -727,6 +750,7 @@ export type StackState = {
 	orm: string;
 	dbSetup: string;
 	auth: string;
+	payments: string;
 	packageManager: string;
 	addons: string[];
 	examples: string[];
@@ -748,6 +772,7 @@ export const DEFAULT_STACK: StackState = {
 	orm: "drizzle",
 	dbSetup: "none",
 	auth: "better-auth",
+	payments: "none",
 	packageManager: "bun",
 	addons: ["turborepo"],
 	examples: [],

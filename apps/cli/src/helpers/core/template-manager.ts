@@ -607,6 +607,84 @@ export async function setupAuthTemplate(
 	}
 }
 
+export async function setupPaymentsTemplate(
+	projectDir: string,
+	context: ProjectConfig,
+) {
+	if (!context.payments || context.payments === "none") return;
+
+	const webAppDir = path.join(projectDir, "apps/web");
+	const webAppDirExists = await fs.pathExists(webAppDir);
+
+	const hasReactWeb = context.frontend.some((f) =>
+		["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+	);
+	const hasNuxtWeb = context.frontend.includes("nuxt");
+	const hasSvelteWeb = context.frontend.includes("svelte");
+	const hasSolidWeb = context.frontend.includes("solid");
+
+	if (
+		webAppDirExists &&
+		(hasReactWeb || hasNuxtWeb || hasSvelteWeb || hasSolidWeb)
+	) {
+		if (hasReactWeb) {
+			const reactFramework = context.frontend.find((f) =>
+				["tanstack-router", "react-router", "tanstack-start", "next"].includes(
+					f,
+				),
+			);
+			if (reactFramework) {
+				const paymentsWebSrc = path.join(
+					PKG_ROOT,
+					`templates/payments/${context.payments}/web/react/${reactFramework}`,
+				);
+				if (await fs.pathExists(paymentsWebSrc)) {
+					await processAndCopyFiles("**/*", paymentsWebSrc, webAppDir, context);
+				}
+			}
+		} else if (hasNuxtWeb) {
+			const paymentsWebNuxtSrc = path.join(
+				PKG_ROOT,
+				`templates/payments/${context.payments}/web/nuxt`,
+			);
+			if (await fs.pathExists(paymentsWebNuxtSrc)) {
+				await processAndCopyFiles(
+					"**/*",
+					paymentsWebNuxtSrc,
+					webAppDir,
+					context,
+				);
+			}
+		} else if (hasSvelteWeb) {
+			const paymentsWebSvelteSrc = path.join(
+				PKG_ROOT,
+				`templates/payments/${context.payments}/web/svelte`,
+			);
+			if (await fs.pathExists(paymentsWebSvelteSrc)) {
+				await processAndCopyFiles(
+					"**/*",
+					paymentsWebSvelteSrc,
+					webAppDir,
+					context,
+				);
+			}
+		} else if (hasSolidWeb) {
+			const paymentsWebSolidSrc = path.join(
+				PKG_ROOT,
+				`templates/payments/${context.payments}/web/solid`,
+			);
+			if (await fs.pathExists(paymentsWebSolidSrc)) {
+				await processAndCopyFiles(
+					"**/*",
+					paymentsWebSolidSrc,
+					webAppDir,
+					context,
+				);
+			}
+		}
+	}
+}
+
 export async function setupAddonsTemplate(
 	projectDir: string,
 	context: ProjectConfig,

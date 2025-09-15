@@ -44,6 +44,9 @@ const serverStackParsers = {
 	auth: parseAsStringEnumServer<StackState["auth"]>(
 		getValidIds("auth"),
 	).withDefault(DEFAULT_STACK.auth),
+	payments: parseAsStringEnumServer<StackState["payments"]>(
+		getValidIds("payments"),
+	).withDefault(DEFAULT_STACK.payments),
 	packageManager: parseAsStringEnumServer<StackState["packageManager"]>(
 		getValidIds("packageManager"),
 	).withDefault(DEFAULT_STACK.packageManager),

@@ -43,6 +43,10 @@ export function displayConfig(config: Partial<ProjectConfig>) {
 		configDisplay.push(`${pc.blue("Auth:")} ${String(config.auth)}`);
 	}
 
+	if (config.payments !== undefined) {
+		configDisplay.push(`${pc.blue("Payments:")} ${String(config.payments)}`);
+	}
+
 	if (config.addons !== undefined) {
 		const addons = Array.isArray(config.addons)
 			? config.addons

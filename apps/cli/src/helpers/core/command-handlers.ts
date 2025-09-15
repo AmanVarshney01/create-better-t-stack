@@ -103,6 +103,7 @@ export async function createProjectHandler(
 				addons: [],
 				examples: [],
 				auth: "none",
+				payments: "none",
 				git: false,
 				packageManager: "npm",
 				install: false,
@@ -272,6 +273,7 @@ export async function addAddonsHandler(input: AddInput) {
 			const addonsPrompt = await getAddonsToAdd(
 				detectedConfig.frontend || [],
 				detectedConfig.addons || [],
+				detectedConfig.auth,
 			);
 
 			if (addonsPrompt.length > 0) {

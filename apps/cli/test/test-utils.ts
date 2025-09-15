@@ -98,19 +98,19 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
 		const coreStackDefaults = willUseYesFlag
 			? {}
 			: {
-				frontend: ["tanstack-router"] as Frontend[],
-				backend: "hono" as Backend,
-				runtime: "bun" as Runtime,
-				api: "trpc" as API,
-				database: "sqlite" as Database,
-				orm: "drizzle" as ORM,
-				auth: "none" as Auth,
-				addons: ["none"] as Addons[],
-				examples: ["none"] as Examples[],
-				dbSetup: "none" as DatabaseSetup,
-				webDeploy: "none" as WebDeploy,
-				serverDeploy: "none" as ServerDeploy,
-			};
+					frontend: ["tanstack-router"] as Frontend[],
+					backend: "hono" as Backend,
+					runtime: "bun" as Runtime,
+					api: "trpc" as API,
+					database: "sqlite" as Database,
+					orm: "drizzle" as ORM,
+					auth: "none" as Auth,
+					addons: ["none"] as Addons[],
+					examples: ["none"] as Examples[],
+					dbSetup: "none" as DatabaseSetup,
+					webDeploy: "none" as WebDeploy,
+					serverDeploy: "none" as ServerDeploy,
+				};
 
 		// Build options object - let the CLI handle all validation
 		const options: CreateInput = {

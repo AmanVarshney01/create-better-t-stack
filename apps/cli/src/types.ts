@@ -86,6 +86,11 @@ export const AuthSchema = z
 	.describe("Authentication provider");
 export type Auth = z.infer<typeof AuthSchema>;
 
+export const PaymentsSchema = z
+	.enum(["polar", "none"])
+	.describe("Payments provider");
+export type Payments = z.infer<typeof PaymentsSchema>;
+
 export const ProjectNameSchema = z
 	.string()
 	.min(1, "Project name cannot be empty")
@@ -132,6 +137,7 @@ export type CreateInput = {
 	database?: Database;
 	orm?: ORM;
 	auth?: Auth;
+	payments?: Payments;
 	frontend?: Frontend[];
 	addons?: Addons[];
 	examples?: Examples[];
@@ -175,6 +181,7 @@ export interface ProjectConfig {
 	addons: Addons[];
 	examples: Examples[];
 	auth: Auth;
+	payments: Payments;
 	git: boolean;
 	packageManager: PackageManager;
 	install: boolean;
@@ -195,6 +202,7 @@ export interface BetterTStackConfig {
 	addons: Addons[];
 	examples: Examples[];
 	auth: Auth;
+	payments: Payments;
 	packageManager: PackageManager;
 	dbSetup: DatabaseSetup;
 	api: API;

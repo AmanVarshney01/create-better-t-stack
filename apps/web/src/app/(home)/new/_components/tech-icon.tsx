@@ -30,7 +30,8 @@ export function TechIcon({
 			icon.includes("prisma") ||
 			icon.includes("express") ||
 			icon.includes("clerk") ||
-			icon.includes("planetscale"))
+			icon.includes("planetscale") ||
+			icon.includes("polar"))
 	) {
 		iconSrc = icon.replace(".svg", "-light.svg");
 	}

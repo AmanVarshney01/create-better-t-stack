@@ -1,0 +1,11 @@
+import { createAuthClient } from "better-auth/solid";
+{{#if (eq payments "polar")}}
+import { polarClient } from "@polar-sh/better-auth";
+{{/if}}
+
+export const authClient = createAuthClient({
+  baseURL: import.meta.env.VITE_SERVER_URL,
+{{#if (eq payments "polar")}}
+  plugins: [polarClient()]
+{{/if}}
+});
