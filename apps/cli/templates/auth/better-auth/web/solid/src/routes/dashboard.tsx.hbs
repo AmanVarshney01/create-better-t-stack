@@ -1,8 +1,6 @@
 import { authClient } from "@/lib/auth-client";
 {{#if (eq api "orpc")}}
 import { orpc } from "@/utils/orpc";
-{{/if}}
-{{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/solid-query";
 {{/if}}
 import { createFileRoute, redirect } from "@tanstack/solid-router";

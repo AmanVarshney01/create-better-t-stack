@@ -2,14 +2,13 @@ import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 {{#if (eq api "trpc")}}
 import { useTRPC } from "@/utils/trpc";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 {{/if}}
 {{#if (eq api "orpc")}}
 import { orpc } from "@/utils/orpc";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 {{/if}}
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/dashboard")({
 	component: RouteComponent,

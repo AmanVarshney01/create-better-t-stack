@@ -431,7 +431,7 @@ export const TECH_OPTIONS: Record<
 		{
 			id: "polar",
 			name: "Polar",
-			description: "Payments and subscriptions made simple",
+			description: "Turn your software into a business. 6 lines of code.",
 			icon: `${ICON_BASE_URL}/polar.svg`,
 			color: "from-purple-400 to-purple-600",
 			default: false,

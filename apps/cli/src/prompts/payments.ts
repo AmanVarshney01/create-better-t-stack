@@ -25,7 +25,7 @@ export async function getPaymentsChoice(
 		{
 			value: "polar" as Payments,
 			label: "Polar",
-			hint: "Payments and subscriptions made simple",
+			hint: "Turn your software into a business. 6 lines of code.",
 		},
 		{
 			value: "none" as Payments,

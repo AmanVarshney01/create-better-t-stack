@@ -4,13 +4,12 @@ import { authClient } from "@/lib/auth-client";
 import { orpc } from "@/utils/orpc";
 {{/if}}
 {{#if (eq api "trpc")}}
-import { queryClient, trpc } from "@/utils/trpc";
+import { trpc } from "@/utils/trpc";
 {{/if}}
 {{#if ( or (eq api "orpc") (eq api "trpc"))}}
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 {{/if}}
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/dashboard")({
 	component: RouteComponent,
