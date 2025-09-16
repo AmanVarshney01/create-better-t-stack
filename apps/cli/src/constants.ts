@@ -140,9 +140,9 @@ export const dependencyVersionMap = {
 	"@tanstack/react-query-devtools": "^5.85.5",
 	"@tanstack/react-query": "^5.85.5",
 
-	"@tanstack/solid-query": "^5.75.0",
-	"@tanstack/solid-query-devtools": "^5.75.0",
-	"@tanstack/solid-router-devtools": "^1.131.25",
+	"@tanstack/solid-query": "^5.87.4",
+	"@tanstack/solid-query-devtools": "^5.87.4",
+	"@tanstack/solid-router-devtools": "^1.131.44",
 
 	wrangler: "^4.23.0",
 	"@cloudflare/vite-plugin": "^1.9.0",
