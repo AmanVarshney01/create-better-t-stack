@@ -2,10 +2,7 @@ import { authClient } from "@/lib/auth-client";
 {{#if (eq api "orpc")}}
 import { orpc } from "@/utils/orpc";
 {{/if}}
-{{#if (eq api "trpc")}}
-import { trpc } from "@/utils/trpc";
-{{/if}}
-{{#if ( or (eq api "orpc") (eq api "trpc"))}}
+{{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/solid-query";
 {{/if}}
 import { createFileRoute, redirect } from "@tanstack/solid-router";
@@ -40,9 +37,6 @@ function RouteComponent() {
 	{{#if (eq api "orpc")}}
 	const privateData = useQuery(() => orpc.privateData.queryOptions());
 	{{/if}}
-	{{#if (eq api "trpc")}}
-	const privateData = useQuery(() => trpc.privateData.queryOptions());
-	{{/if}}
 
 	{{#if (eq payments "polar")}}
 	const hasProSubscription = () =>
@@ -53,7 +47,7 @@ function RouteComponent() {
 		<div>
 			<h1>Dashboard</h1>
 			<p>Welcome {session.data?.user.name}</p>
-			{{#if ( or (eq api "orpc") (eq api "trpc"))}}
+			{{#if (eq api "orpc")}}
 			<p>API: {privateData.data?.message}</p>
 			{{/if}}
 			{{#if (eq payments "polar")}}

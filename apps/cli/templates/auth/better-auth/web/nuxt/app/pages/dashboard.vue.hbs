@@ -11,9 +11,28 @@ definePageMeta({
 const { $orpc } = useNuxtApp()
 
 const session = $authClient.useSession()
+{{#if (eq payments "polar")}}
+const customerState = ref<any>(null)
+{{/if}}
 
 {{#if (eq api "orpc")}}
-const privateData = useQuery($orpc.privateData.queryOptions())
+const privateData = useQuery({
+  ...$orpc.privateData.queryOptions(),
+  enabled: computed(() => !!session.value?.data?.user)
+})
+{{/if}}
+
+{{#if (eq payments "polar")}}
+onMounted(async () => {
+  if (session.value?.data) {
+    const { data } = await $authClient.customer.state()
+    customerState.value = data
+  }
+})
+
+const hasProSubscription = computed(() => 
+  customerState.value?.activeSubscriptions?.length! > 0
+)
 {{/if}}
 
 </script>
@@ -27,7 +46,22 @@ const privateData = useQuery($orpc.privateData.queryOptions())
     {{#if (eq api "orpc")}}
     <div v-if="privateData.status.value === 'pending'">Loading private data...</div>
     <div v-else-if="privateData.status.value === 'error'">Error loading private data: \{{ privateData.error.value?.message }}</div>
-    <p v-else-if="privateData.data.value">Private Data: \{{ privateData.data.value.message }}</p>
+    <p v-else-if="privateData.data.value">API: \{{ privateData.data.value.message }}</p>
+    {{/if}}
+    {{#if (eq payments "polar")}}
+    <p class="mb-2">Plan: \{{ hasProSubscription ? "Pro" : "Free" }}</p>
+    <UButton 
+      v-if="hasProSubscription"
+      @click="() => { $authClient.customer.portal() }"
+    >
+      Manage Subscription
+    </UButton>
+    <UButton 
+      v-else
+      @click="() => { $authClient.checkout({ slug: 'pro' }) }"
+    >
+      Upgrade to Pro
+    </UButton>
     {{/if}}
   </div>
 </template>
