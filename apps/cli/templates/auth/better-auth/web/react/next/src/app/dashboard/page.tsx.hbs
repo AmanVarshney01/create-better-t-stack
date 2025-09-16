@@ -1,47 +1,37 @@
-"use client"
 import { authClient } from "@/lib/auth-client";
-{{#if (eq api "orpc")}}
-import { useQuery } from "@tanstack/react-query";
-import { orpc } from "@/utils/orpc";
-{{/if}}
-{{#if (eq api "trpc")}}
-import { useQuery } from "@tanstack/react-query";
-import { trpc } from "@/utils/trpc";
-{{/if}}
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { redirect } from "next/navigation";
+import Dashboard from "./dashboard";
+import { headers } from "next/headers";
 
-export default function Dashboard() {
-  const router = useRouter();
-  const { data: session, isPending } = authClient.useSession();
+export default async function DashboardPage() {
+	const session = await authClient.getSession({
+		fetchOptions: {
+			headers: await headers()
+		}
+	});
 
-  {{#if (eq api "orpc")}}
-  const privateData = useQuery(orpc.privateData.queryOptions());
-  {{/if}}
-  {{#if (eq api "trpc")}}
-  const privateData = useQuery(trpc.privateData.queryOptions());
-  {{/if}}
+	if (!session.data) {
+		redirect("/login");
+	}
 
-  useEffect(() => {
-    if (!session && !isPending) {
-      router.push("/login");
-    }
-  }, [session, isPending]);
+	{{#if (eq payments "polar")}}
+	const { data: customerState, error } = await authClient.customer.state({
+		fetchOptions: {
+			headers: await headers()
+		}
+	});
+	{{/if}}
 
-  if (isPending) {
-    return <div>Loading...</div>;
-  }
-
-  return (
-    <div>
-      <h1>Dashboard</h1>
-      <p>Welcome {session?.user.name}</p>
-      {{#if (eq api "orpc")}}
-      <p>privateData: {privateData.data?.message}</p>
-      {{/if}}
-      {{#if (eq api "trpc")}}
-      <p>privateData: {privateData.data?.message}</p>
-      {{/if}}
-    </div>
-  );
+	return (
+		<div>
+			<h1>Dashboard</h1>
+			<p>Welcome {session.data.user.name}</p>
+			<Dashboard 
+				session={session.data}
+				{{#if (eq payments "polar")}}
+				customerState={customerState}
+				{{/if}}
+			/>
+		</div>
+	);
 }

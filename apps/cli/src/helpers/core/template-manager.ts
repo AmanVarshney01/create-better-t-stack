@@ -613,8 +613,21 @@ export async function setupPaymentsTemplate(
 ) {
 	if (!context.payments || context.payments === "none") return;
 
+	const serverAppDir = path.join(projectDir, "apps/server");
 	const webAppDir = path.join(projectDir, "apps/web");
+
+	const serverAppDirExists = await fs.pathExists(serverAppDir);
 	const webAppDirExists = await fs.pathExists(webAppDir);
+
+	if (serverAppDirExists && context.backend !== "convex") {
+		const paymentsServerSrc = path.join(
+			PKG_ROOT,
+			`templates/payments/${context.payments}/server/base`,
+		);
+		if (await fs.pathExists(paymentsServerSrc)) {
+			await processAndCopyFiles("**/*", paymentsServerSrc, serverAppDir, context);
+		}
+	}
 
 	const hasReactWeb = context.frontend.some((f) =>
 		["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
