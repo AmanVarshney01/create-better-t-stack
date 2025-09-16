@@ -1,44 +1,75 @@
 import { authClient } from "@/lib/auth-client";
 {{#if (eq api "orpc")}}
 import { orpc } from "@/utils/orpc";
+{{/if}}
+{{#if (eq api "trpc")}}
+import { trpc } from "@/utils/trpc";
+{{/if}}
+{{#if ( or (eq api "orpc") (eq api "trpc"))}}
 import { useQuery } from "@tanstack/solid-query";
 {{/if}}
-import { createFileRoute } from "@tanstack/solid-router";
-import { createEffect, Show } from "solid-js";
+import { createFileRoute, redirect } from "@tanstack/solid-router";
 
 export const Route = createFileRoute("/dashboard")({
-  component: RouteComponent,
+	component: RouteComponent,
+	beforeLoad: async () => {
+		const session = await authClient.getSession();
+		if (!session.data) {
+			redirect({
+				to: "/login",
+				throw: true,
+			});
+		}
+		{{#if (eq payments "polar")}}
+		const { data: customerState } = await authClient.customer.state();
+		return { session, customerState };
+		{{else}}
+		return { session };
+		{{/if}}
+	},
 });
 
 function RouteComponent() {
-  const session = authClient.useSession();
-  const navigate = Route.useNavigate();
+	const context = Route.useRouteContext();
 
-{{#if (eq api "orpc")}}
-  const privateData = useQuery(() => orpc.privateData.queryOptions());
-{{/if}}
+	const session = context().session;
+	{{#if (eq payments "polar")}}
+	const customerState = context().customerState;
+	{{/if}}
 
-  createEffect(() => {
-    if (!session().data && !session().isPending) {
-      navigate({
-        to: "/login",
-      });
-    }
-  });
+	{{#if (eq api "orpc")}}
+	const privateData = useQuery(() => orpc.privateData.queryOptions());
+	{{/if}}
+	{{#if (eq api "trpc")}}
+	const privateData = useQuery(() => trpc.privateData.queryOptions());
+	{{/if}}
 
-  return (
-    <div>
-      <Show when={session().isPending}>
-        <div>Loading...</div>
-      </Show>
+	{{#if (eq payments "polar")}}
+	const hasProSubscription = () =>
+		customerState?.activeSubscriptions?.length! > 0;
+	{{/if}}
 
-      <Show when={!session().isPending && session().data}>
-        <h1>Dashboard</h1>
-        <p>Welcome {session().data?.user.name}</p>
-        {{#if (eq api "orpc")}}
-        <p>privateData: {privateData.data?.message}</p>
-        {{/if}}
-      </Show>
-    </div>
-  );
+	return (
+		<div>
+			<h1>Dashboard</h1>
+			<p>Welcome {session.data?.user.name}</p>
+			{{#if ( or (eq api "orpc") (eq api "trpc"))}}
+			<p>API: {privateData.data?.message}</p>
+			{{/if}}
+			{{#if (eq payments "polar")}}
+			<p>Plan: {hasProSubscription() ? "Pro" : "Free"}</p>
+			{hasProSubscription() ? (
+				<button onClick={async () => await authClient.customer.portal()}>
+					Manage Subscription
+				</button>
+			) : (
+				<button
+					onClick={async () => await authClient.checkout({ slug: "pro" })}
+				>
+					Upgrade to Pro
+				</button>
+			)}
+			{{/if}}
+		</div>
+	);
 }
