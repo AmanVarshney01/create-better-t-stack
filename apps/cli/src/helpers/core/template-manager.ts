@@ -625,7 +625,12 @@ export async function setupPaymentsTemplate(
 			`templates/payments/${context.payments}/server/base`,
 		);
 		if (await fs.pathExists(paymentsServerSrc)) {
-			await processAndCopyFiles("**/*", paymentsServerSrc, serverAppDir, context);
+			await processAndCopyFiles(
+				"**/*",
+				paymentsServerSrc,
+				serverAppDir,
+				context,
+			);
 		}
 	}
 
