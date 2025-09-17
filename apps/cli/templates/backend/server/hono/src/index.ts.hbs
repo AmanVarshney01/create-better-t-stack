@@ -54,7 +54,7 @@ app.use(
 );
 
 {{#if (eq auth "better-auth")}}
-app.on(["POST", "GET"], "/api/auth/**", (c) => auth.handler(c.req.raw));
+app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 {{/if}}
 
 {{#if (eq api "orpc")}}
