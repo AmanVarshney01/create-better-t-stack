@@ -126,11 +126,12 @@ export const dependencyVersionMap = {
 	"@trpc/server": "^11.5.0",
 	"@trpc/client": "^11.5.0",
 
-	convex: "^1.25.4",
+	convex: "^1.27.0",
 	"@convex-dev/react-query": "^0.0.0-alpha.8",
 	"convex-svelte": "^0.0.11",
 	"convex-nuxt": "0.1.5",
 	"convex-vue": "^0.1.5",
+	"@convex-dev/better-auth": "^0.8.4",
 
 	"@tanstack/svelte-query": "^5.85.3",
 	"@tanstack/svelte-query-devtools": "^5.85.3",

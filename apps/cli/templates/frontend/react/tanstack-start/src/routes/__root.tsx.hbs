@@ -8,7 +8,9 @@ import {
   Scripts,
   createRootRouteWithContext,
   useRouterState,
+{{#if (and (eq backend "convex") (or (eq auth "clerk") (eq auth "better-auth")))}}
   useRouteContext,
+{{/if}}
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import Header from "../components/header";
@@ -35,6 +37,23 @@ const fetchClerkAuth = createServerFn({ method: "GET" }).handler(async () => {
   const auth = await getAuth(getWebRequest());
   const token = await auth.getToken({ template: "convex" });
   return { userId: auth.userId, token };
+});
+{{else if (and (eq backend "convex") (eq auth "better-auth"))}}
+import { createServerFn } from "@tanstack/react-start";
+import { getWebRequest, getCookie } from "@tanstack/react-start/server";
+import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
+import { fetchSession, getCookieName } from "@convex-dev/better-auth/react-start";
+import { authClient } from "@/lib/auth-client";
+import { createAuth } from "@{{projectName}}/backend/convex/auth";
+
+const fetchAuth = createServerFn({ method: "GET" }).handler(async () => {
+  const { session } = await fetchSession(getWebRequest());
+  const sessionCookieName = getCookieName(createAuth);
+  const token = getCookie(sessionCookieName);
+  return {
+    userId: session?.user.id,
+    token,
+  };
 });
 {{/if}}
 
@@ -95,6 +114,14 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
     }
     return { userId, token };
   },
+  {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
+  beforeLoad: async (ctx) => {
+    const { userId, token } = await fetchAuth();
+    if (token) {
+      ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
+    }
+    return { userId, token };
+  },
   {{/if}}
 });
 
@@ -121,6 +148,26 @@ function RootDocument() {
         </html>
       </ConvexProviderWithClerk>
     </ClerkProvider>
+  );
+  {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
+  const context = useRouteContext({ from: Route.id });
+  return (
+    <ConvexBetterAuthProvider client={context.convexClient} authClient={authClient}>
+      <html lang="en" className="dark">
+        <head>
+          <HeadContent />
+        </head>
+        <body>
+          <div className="grid h-svh grid-rows-[auto_1fr]">
+            <Header />
+            {isFetching ? <Loader /> : <Outlet />}
+          </div>
+          <Toaster richColors />
+          <TanStackRouterDevtools position="bottom-left" />
+          <Scripts />
+        </body>
+      </html>
+    </ConvexBetterAuthProvider>
   );
   {{else}}
   return (

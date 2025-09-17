@@ -254,7 +254,7 @@ export function validateAddonsAgainstFrontends(
 export function validatePaymentsCompatibility(
 	payments: Payments | undefined,
 	auth: Auth | undefined,
-	backend: Backend | undefined,
+	_backend: Backend | undefined,
 	frontends: Frontend[] = [],
 ) {
 	if (!payments || payments === "none") return;
@@ -263,12 +263,6 @@ export function validatePaymentsCompatibility(
 		if (!auth || auth === "none" || auth !== "better-auth") {
 			exitWithError(
 				"Polar payments requires Better Auth. Please use '--auth better-auth' or choose a different payments provider.",
-			);
-		}
-
-		if (backend === "convex") {
-			exitWithError(
-				"Polar payments is not compatible with Convex backend. Please use a different backend or choose a different payments provider.",
 			);
 		}
 

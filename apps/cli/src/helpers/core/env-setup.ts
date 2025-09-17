@@ -7,6 +7,7 @@ export interface EnvVariable {
 	key: string;
 	value: string | null | undefined;
 	condition: boolean;
+	comment?: string;
 }
 
 export async function addEnvVariablesToFile(
@@ -24,7 +25,7 @@ export async function addEnvVariablesToFile(
 	let contentToAdd = "";
 	const exampleVariables: string[] = [];
 
-	for (const { key, value, condition } of variables) {
+	for (const { key, value, condition, comment } of variables) {
 		if (condition) {
 			const regex = new RegExp(`^${key}=.*$`, "m");
 			const valueToWrite = value ?? "";
@@ -37,6 +38,9 @@ export async function addEnvVariablesToFile(
 					modified = true;
 				}
 			} else {
+				if (comment) {
+					contentToAdd += `# ${comment}\n`;
+				}
 				contentToAdd += `${key}=${valueToWrite}\n`;
 				modified = true;
 			}
@@ -179,6 +183,22 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 				}
 			}
 
+			if (backend === "convex" && auth === "better-auth") {
+				if (hasNextJs) {
+					clientVars.push({
+						key: "NEXT_PUBLIC_CONVEX_SITE_URL",
+						value: "https://<YOUR_CONVEX_URL>",
+						condition: true,
+					});
+				} else if (hasReactRouter || hasTanStackRouter || hasTanStackStart) {
+					clientVars.push({
+						key: "VITE_CONVEX_SITE_URL",
+						value: "https://<YOUR_CONVEX_URL>",
+						condition: true,
+					});
+				}
+			}
+
 			await addEnvVariablesToFile(path.join(clientDir, ".env"), clientVars);
 		}
 	}
@@ -217,6 +237,43 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 	}
 
 	if (backend === "convex") {
+		if (auth === "better-auth") {
+			const convexBackendDir = path.join(projectDir, "packages/backend");
+			if (await fs.pathExists(convexBackendDir)) {
+				const envLocalPath = path.join(convexBackendDir, ".env.local");
+
+				if (
+					!(await fs.pathExists(envLocalPath)) ||
+					!(await fs.readFile(envLocalPath, "utf8")).includes(
+						"npx convex env set",
+					)
+				) {
+					const convexCommands = `# Set Convex environment variables
+npx convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)
+npx convex env set SITE_URL http://localhost:3001
+
+`;
+					await fs.appendFile(envLocalPath, convexCommands);
+				}
+
+				const convexBackendVars: EnvVariable[] = [
+					{
+						key: hasNextJs
+							? "NEXT_PUBLIC_CONVEX_SITE_URL"
+							: "VITE_CONVEX_SITE_URL",
+						value: "",
+						condition: true,
+						comment: "Same as CONVEX_URL but ends in .site",
+					},
+					{
+						key: "SITE_URL",
+						value: "http://localhost:3001",
+						condition: true,
+					},
+				];
+				await addEnvVariablesToFile(envLocalPath, convexBackendVars);
+			}
+		}
 		return;
 	}
 

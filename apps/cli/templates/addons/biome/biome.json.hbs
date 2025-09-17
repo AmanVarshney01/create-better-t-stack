@@ -22,6 +22,7 @@
 			"!**/.expo",
 			"!**/.wrangler",
 			"!**/.alchemy",
+			"!**/.svelte-kit",
 			"!**/wrangler.jsonc",
 			"!**/.source"
 		]
@@ -66,7 +67,7 @@
 			"quoteStyle": "double"
 		}
 	}
-	{{#if (or (eq frontend "svelte") (eq frontend "nuxt"))}}
+	{{#if (or (includes frontend "svelte") (includes frontend "nuxt"))}}
 	,
 	"overrides": [
 		{

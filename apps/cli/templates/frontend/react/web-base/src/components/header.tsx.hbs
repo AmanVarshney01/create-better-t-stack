@@ -9,7 +9,7 @@ import { Link } from "@tanstack/react-router";
 {{#unless (includes frontend "tanstack-start")}}
 import { ModeToggle } from "./mode-toggle";
 {{/unless}}
-{{#if (eq auth "better-auth")}}
+{{#if (and (eq auth "better-auth") (ne backend "convex"))}}
 import UserMenu from "./user-menu";
 {{/if}}
 
@@ -67,7 +67,7 @@ export default function Header() {
           {{#unless (includes frontend "tanstack-start")}}
           <ModeToggle />
           {{/unless}}
-          {{#if (eq auth "better-auth")}}
+          {{#if (and (eq auth "better-auth") (ne backend "convex"))}}
           <UserMenu />
           {{/if}}
         </div>

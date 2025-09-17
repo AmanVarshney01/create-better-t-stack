@@ -102,7 +102,16 @@ export const analyzeStackCompatibility = (
 				["native-nativewind", "native-unistyles"].includes(f),
 			);
 
-		if (nextStack.auth !== "clerk" || !hasClerkCompatibleFrontend) {
+		const hasBetterAuthCompatibleFrontend = nextStack.webFrontend.some((f) =>
+			["tanstack-router", "tanstack-start", "next"].includes(f),
+		);
+
+		if (nextStack.auth === "clerk" && !hasClerkCompatibleFrontend) {
+			convexOverrides.auth = "none";
+		} else if (
+			nextStack.auth === "better-auth" &&
+			!hasBetterAuthCompatibleFrontend
+		) {
 			convexOverrides.auth = "none";
 		}
 
@@ -801,21 +810,27 @@ export const analyzeStackCompatibility = (
 			}
 
 			if (nextStack.backend === "convex" && nextStack.auth === "better-auth") {
-				notes.auth.notes.push(
-					"Better-Auth is not compatible with Convex backend. Auth will be set to 'None'.",
+				const hasBetterAuthCompatibleFrontend = nextStack.webFrontend.some(
+					(f) => ["tanstack-router", "tanstack-start", "next"].includes(f),
 				);
-				notes.backend.notes.push(
-					"Convex backend only supports Clerk auth or no auth. Auth will be disabled.",
-				);
-				notes.auth.hasIssue = true;
-				notes.backend.hasIssue = true;
-				nextStack.auth = "none";
-				changed = true;
-				changes.push({
-					category: "auth",
-					message:
-						"Auth set to 'None' (Better-Auth not compatible with Convex backend - use Clerk instead)",
-				});
+
+				if (!hasBetterAuthCompatibleFrontend) {
+					notes.auth.notes.push(
+						"Better-Auth with Convex requires TanStack Router, TanStack Start, or Next.js frontend. Auth will be set to 'None'.",
+					);
+					notes.backend.notes.push(
+						"Convex backend with Better-Auth requires compatible frontend. Auth will be disabled.",
+					);
+					notes.auth.hasIssue = true;
+					notes.backend.hasIssue = true;
+					nextStack.auth = "none";
+					changed = true;
+					changes.push({
+						category: "auth",
+						message:
+							"Auth set to 'None' (Better-Auth with Convex requires TanStack Router, TanStack Start, or Next.js frontend)",
+					});
+				}
 			}
 
 			if (nextStack.payments === "polar") {
@@ -1165,7 +1180,13 @@ export const getDisabledReason = (
 			return "Convex backend requires DB Setup to be 'None'. Convex handles database setup automatically.";
 		}
 		if (category === "auth" && optionId === "better-auth") {
-			return "Convex backend is not compatible with Better-Auth. Use Clerk authentication instead.";
+			const hasBetterAuthCompatibleFrontend = currentStack.webFrontend.some(
+				(f) => ["tanstack-router", "tanstack-start", "next"].includes(f),
+			);
+
+			if (!hasBetterAuthCompatibleFrontend) {
+				return "Better-Auth with Convex requires TanStack Router, TanStack Start, or Next.js frontend.";
+			}
 		}
 	}
 
@@ -1262,7 +1283,13 @@ export const getDisabledReason = (
 
 	if (category === "auth" && optionId === "better-auth") {
 		if (finalStack.backend === "convex") {
-			return "Better-Auth is not compatible with Convex backend. Use Clerk authentication instead.";
+			const hasBetterAuthCompatibleFrontend = finalStack.webFrontend.some((f) =>
+				["tanstack-router", "tanstack-start", "next"].includes(f),
+			);
+
+			if (!hasBetterAuthCompatibleFrontend) {
+				return "Better-Auth with Convex requires TanStack Router, TanStack Start, or Next.js frontend.";
+			}
 		}
 	}
 

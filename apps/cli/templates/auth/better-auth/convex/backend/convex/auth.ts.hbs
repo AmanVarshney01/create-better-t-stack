@@ -1,0 +1,48 @@
+import { createClient, type GenericCtx } from "@convex-dev/better-auth";
+{{#if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
+import { convex } from "@convex-dev/better-auth/plugins";
+{{else}}
+import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
+{{/if}}
+import { components } from "./_generated/api";
+import { DataModel } from "./_generated/dataModel";
+import { query } from "./_generated/server";
+import { betterAuth } from "better-auth";
+
+const siteUrl = process.env.SITE_URL!;
+
+export const authComponent = createClient<DataModel>(components.betterAuth);
+
+export const createAuth = (
+    ctx: GenericCtx<DataModel>,
+    { optionsOnly } = { optionsOnly: false },
+) => {
+    return betterAuth({
+        logger: {
+            disabled: optionsOnly,
+        },
+        {{#if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
+        baseUrl: siteUrl,
+        {{else}}
+        trustedOrigins: [siteUrl],
+        {{/if}}
+        database: authComponent.adapter(ctx),
+        emailAndPassword: {
+            enabled: true,
+            requireEmailVerification: false,
+        },
+        plugins: [
+            {{#unless (or (includes frontend "tanstack-start") (includes frontend "next"))}}
+            crossDomain({ siteUrl }),
+            {{/unless}}
+            convex(),
+        ],
+    });
+};
+
+export const getCurrentUser = query({
+    args: {},
+    handler: async (ctx) => {
+        return authComponent.getAuthUser(ctx);
+    },
+});

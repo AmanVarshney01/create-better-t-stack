@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 {{#if (eq backend "convex")}}
 import { convexQuery } from "@convex-dev/react-query";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 {{else if (or (eq api "trpc") (eq api "orpc"))}}
 import { useQuery } from "@tanstack/react-query";
@@ -35,7 +35,7 @@ const TITLE_TEXT = `
 
 function HomeComponent() {
   {{#if (eq backend "convex")}}
-  const healthCheck = useSuspenseQuery(convexQuery(api.healthCheck.get, {}));
+  const healthCheck = useQuery(convexQuery(api.healthCheck.get, {}));
   {{else if (eq api "trpc")}}
   const trpc = useTRPC();
   const healthCheck = useQuery(trpc.healthCheck.queryOptions());

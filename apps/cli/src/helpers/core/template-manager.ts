@@ -455,6 +455,59 @@ export async function setupAuthTemplate(
 		return;
 	}
 
+	if (context.backend === "convex" && authProvider === "better-auth") {
+		const convexBackendDestDir = path.join(projectDir, "packages/backend");
+		const convexBetterAuthBackendSrc = path.join(
+			PKG_ROOT,
+			"templates/auth/better-auth/convex/backend",
+		);
+		if (await fs.pathExists(convexBetterAuthBackendSrc)) {
+			await fs.ensureDir(convexBackendDestDir);
+			await processAndCopyFiles(
+				"**/*",
+				convexBetterAuthBackendSrc,
+				convexBackendDestDir,
+				context,
+			);
+		}
+
+		if (webAppDirExists && hasReactWeb) {
+			const convexBetterAuthWebBaseSrc = path.join(
+				PKG_ROOT,
+				"templates/auth/better-auth/convex/web/react/base",
+			);
+			if (await fs.pathExists(convexBetterAuthWebBaseSrc)) {
+				await processAndCopyFiles(
+					"**/*",
+					convexBetterAuthWebBaseSrc,
+					webAppDir,
+					context,
+				);
+			}
+
+			const reactFramework = context.frontend.find((f) =>
+				["tanstack-router", "react-router", "tanstack-start", "next"].includes(
+					f,
+				),
+			);
+			if (reactFramework) {
+				const convexBetterAuthWebSrc = path.join(
+					PKG_ROOT,
+					`templates/auth/better-auth/convex/web/react/${reactFramework}`,
+				);
+				if (await fs.pathExists(convexBetterAuthWebSrc)) {
+					await processAndCopyFiles(
+						"**/*",
+						convexBetterAuthWebSrc,
+						webAppDir,
+						context,
+					);
+				}
+			}
+		}
+		return;
+	}
+
 	if (serverAppDirExists && context.backend !== "convex") {
 		const authServerBaseSrc = path.join(
 			PKG_ROOT,

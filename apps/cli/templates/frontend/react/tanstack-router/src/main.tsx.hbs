@@ -16,10 +16,15 @@ import { routeTree } from "./routeTree.gen";
   {{#if (eq auth "clerk")}}
   import { ClerkProvider, useAuth } from "@clerk/clerk-react";
   import { ConvexProviderWithClerk } from "convex/react-clerk";
+  {{else if (eq auth "better-auth")}}
+  import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
+  import { authClient } from "@/lib/auth-client";
   {{else}}
   import { ConvexProvider } from "convex/react";
   {{/if}}
-  const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
+  const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string{{#if (eq auth "better-auth")}}, {
+    expectAuth: true,
+  }{{/if}});
 {{/if}}
 
 const router = createRouter({
@@ -57,6 +62,8 @@ const router = createRouter({
         </ConvexProviderWithClerk>
       </ClerkProvider>
     );
+    {{else if (eq auth "better-auth")}}
+    return <ConvexBetterAuthProvider client={convex} authClient={authClient}>{children}</ConvexBetterAuthProvider>;
     {{else}}
     return <ConvexProvider client={convex}>{children}</ConvexProvider>;
     {{/if}}

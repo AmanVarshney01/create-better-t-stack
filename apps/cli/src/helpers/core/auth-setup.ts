@@ -46,6 +46,47 @@ export async function setupAuth(config: ProjectConfig) {
 				}
 			}
 
+			if (auth === "better-auth") {
+				const convexBackendDir = path.join(projectDir, "packages/backend");
+				const convexBackendDirExists = await fs.pathExists(convexBackendDir);
+
+				if (convexBackendDirExists) {
+					await addPackageDependency({
+						dependencies: ["better-auth", "@convex-dev/better-auth"],
+						customDependencies: { "better-auth": "1.3.8" },
+						projectDir: convexBackendDir,
+					});
+				}
+
+				if (clientDirExists) {
+					const hasNextJs = frontend.includes("next");
+					const hasTanStackStart = frontend.includes("tanstack-start");
+					const hasViteReactOther = frontend.some((f) =>
+						["tanstack-router", "react-router"].includes(f),
+					);
+
+					if (hasNextJs) {
+						await addPackageDependency({
+							dependencies: ["better-auth", "@convex-dev/better-auth"],
+							customDependencies: { "better-auth": "1.3.8" },
+							projectDir: clientDir,
+						});
+					} else if (hasTanStackStart) {
+						await addPackageDependency({
+							dependencies: ["better-auth", "@convex-dev/better-auth"],
+							customDependencies: { "better-auth": "1.3.8" },
+							projectDir: clientDir,
+						});
+					} else if (hasViteReactOther) {
+						await addPackageDependency({
+							dependencies: ["better-auth", "@convex-dev/better-auth"],
+							customDependencies: { "better-auth": "1.3.8" },
+							projectDir: clientDir,
+						});
+					}
+				}
+			}
+
 			const hasNativeWind = frontend.includes("native-nativewind");
 			const hasUnistyles = frontend.includes("native-unistyles");
 			if (

@@ -12,7 +12,6 @@ import { setupRuntime } from "../core/runtime-setup";
 import { setupServerDeploy } from "../deployment/server-deploy-setup";
 import { setupWebDeploy } from "../deployment/web-deploy-setup";
 import { setupAuth } from "./auth-setup";
-import { runConvexCodegen } from "./convex-codegen";
 import { createReadme } from "./create-readme";
 import { setupEnvironmentVariables } from "./env-setup";
 import { initializeGit } from "./git";
@@ -96,10 +95,6 @@ export async function createProject(
 		await createReadme(projectDir, options);
 
 		await writeBtsConfig(options);
-
-		if (isConvex) {
-			await runConvexCodegen(projectDir, options.packageManager);
-		}
 
 		log.success("Project template successfully scaffolded!");
 

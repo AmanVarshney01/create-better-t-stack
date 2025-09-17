@@ -6,9 +6,17 @@ import { type AvailableDependencies, dependencyVersionMap } from "../constants";
 export const addPackageDependency = async (opts: {
 	dependencies?: AvailableDependencies[];
 	devDependencies?: AvailableDependencies[];
+	customDependencies?: Record<string, string>;
+	customDevDependencies?: Record<string, string>;
 	projectDir: string;
 }) => {
-	const { dependencies = [], devDependencies = [], projectDir } = opts;
+	const {
+		dependencies = [],
+		devDependencies = [],
+		customDependencies = {},
+		customDevDependencies = {},
+		projectDir,
+	} = opts;
 
 	const pkgJsonPath = path.join(projectDir, "package.json");
 
@@ -18,7 +26,8 @@ export const addPackageDependency = async (opts: {
 	if (!pkgJson.devDependencies) pkgJson.devDependencies = {};
 
 	for (const pkgName of dependencies) {
-		const version = dependencyVersionMap[pkgName];
+		const version =
+			customDependencies[pkgName] || dependencyVersionMap[pkgName];
 		if (version) {
 			pkgJson.dependencies[pkgName] = version;
 		} else {
@@ -27,7 +36,8 @@ export const addPackageDependency = async (opts: {
 	}
 
 	for (const pkgName of devDependencies) {
-		const version = dependencyVersionMap[pkgName];
+		const version =
+			customDevDependencies[pkgName] || dependencyVersionMap[pkgName];
 		if (version) {
 			pkgJson.devDependencies[pkgName] = version;
 		} else {

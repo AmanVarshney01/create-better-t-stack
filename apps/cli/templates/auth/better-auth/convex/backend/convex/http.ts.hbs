@@ -1,0 +1,12 @@
+import { httpRouter } from "convex/server";
+import { authComponent, createAuth } from "./auth";
+
+const http = httpRouter();
+
+{{#if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
+authComponent.registerRoutes(http, createAuth);
+{{else}}
+authComponent.registerRoutes(http, createAuth, { cors: true });
+{{/if}}
+
+export default http;

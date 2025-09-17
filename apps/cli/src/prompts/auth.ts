@@ -11,25 +11,45 @@ export async function getAuthChoice(
 ) {
 	if (auth !== undefined) return auth;
 	if (backend === "convex") {
-		const unsupportedFrontends = frontend?.filter((f) =>
-			["nuxt", "svelte", "solid"].includes(f),
+		const supportedBetterAuthFrontends = frontend?.some((f) =>
+			["tanstack-router", "tanstack-start", "next"].includes(f),
 		);
 
-		if (unsupportedFrontends && unsupportedFrontends.length > 0) {
-			return "none";
+		const hasClerkCompatibleFrontends = frontend?.some((f) =>
+			[
+				"react-router",
+				"tanstack-router",
+				"tanstack-start",
+				"next",
+				"native-nativewind",
+				"native-unistyles",
+			].includes(f),
+		);
+
+		const options = [];
+
+		if (supportedBetterAuthFrontends) {
+			options.push({
+				value: "better-auth",
+				label: "Better-Auth",
+				hint: "comprehensive auth framework for TypeScript",
+			});
 		}
+
+		if (hasClerkCompatibleFrontends) {
+			options.push({
+				value: "clerk",
+				label: "Clerk",
+				hint: "More than auth, Complete User Management",
+			});
+		}
+
+		options.push({ value: "none", label: "None", hint: "No auth" });
 
 		const response = await select({
 			message: "Select authentication provider",
-			options: [
-				{
-					value: "clerk",
-					label: "Clerk",
-					hint: "More than auth, Complete User Management",
-				},
-				{ value: "none", label: "None" },
-			],
-			initialValue: "clerk",
+			options,
+			initialValue: "none",
 		});
 		if (isCancel(response)) return exitCancelled("Operation cancelled");
 		return response as Auth;
