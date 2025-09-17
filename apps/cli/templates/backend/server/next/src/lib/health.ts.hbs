@@ -1,0 +1,41 @@
+{{#if orm}}
+{{#if (eq orm "drizzle")}}
+import { db } from "../../db";
+{{/if}}
+{{#if (eq orm "prisma")}}
+import prisma from "../../db";
+{{/if}}
+{{#if (eq orm "mongoose")}}
+import { client } from "../../db";
+{{/if}}
+
+export async function checkDatabaseHealth(): Promise<{ status: string; database: string; error?: string }> {
+  try {
+    {{#if (eq orm "drizzle")}}
+    {{#if (eq database "sqlite")}}
+    await db.get("SELECT 1");
+    {{else if (eq database "postgres")}}
+    await db.execute("SELECT 1");
+    {{else if (eq database "mysql")}}
+    await db.execute("SELECT 1");
+    {{/if}}
+    {{else if (eq orm "prisma")}}
+    await prisma.$queryRaw`SELECT 1`;
+    {{else if (eq orm "mongoose")}}
+    await client.admin().ping();
+    {{/if}}
+    return { status: "OK", database: "connected" };
+  } catch (error) {
+    console.error("Database connection error:", error);
+    return { 
+      status: "OK", 
+      database: "disconnected", 
+      error: error instanceof Error ? error.message : String(error) 
+    };
+  }
+}
+{{else}}
+export async function checkDatabaseHealth(): Promise<{ status: string; database: string }> {
+  return { status: "OK", database: "none" };
+}
+{{/if}}

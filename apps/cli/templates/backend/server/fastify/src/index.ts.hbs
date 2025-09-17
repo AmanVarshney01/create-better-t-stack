@@ -30,6 +30,7 @@ import { google } from "@ai-sdk/google";
 {{#if (eq auth "better-auth")}}
 import { auth } from "./lib/auth";
 {{/if}}
+import { checkDatabaseHealth } from "./lib/health";
 
 const baseCorsConfig = {
   origin: process.env.CORS_ORIGIN || "",
@@ -169,8 +170,12 @@ fastify.post('/ai', async function (request) {
 });
 {{/if}}
 
-fastify.get('/', async () => {
-  return 'OK';
+fastify.get('/', async (request, reply) => {
+  const health = await checkDatabaseHealth();
+  if (health.error) {
+    reply.status(500);
+  }
+  return health;
 });
 
 fastify.listen({ port: 3000 }, (err) => {

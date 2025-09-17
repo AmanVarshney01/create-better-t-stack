@@ -25,6 +25,7 @@ import { createContext } from "./lib/context";
 {{#if (eq auth "better-auth")}}
 import { auth } from "./lib/auth";
 {{/if}}
+import { checkDatabaseHealth } from "./lib/health";
 
 {{#if (eq api "orpc")}}
 const rpcHandler = new RPCHandler(appRouter, {
@@ -111,7 +112,9 @@ const app = new Elysia()
     return result.toUIMessageStreamResponse();
   })
 {{/if}}
-  .get("/", () => "OK")
+  .get("/", async () => {
+    return await checkDatabaseHealth();
+  })
   .listen(3000, () => {
     console.log("Server is running on http://localhost:3000");
   });
