@@ -3,10 +3,23 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Send } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
-import { Response } from "@/components/response";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+const Response = dynamic(
+  () =>
+    import("@/components/response").then((mod) => ({ default: mod.Response })),
+  {
+    loading: () => (
+      <div className="flex h-full items-center justify-center">
+        <div className="text-muted-foreground">Loading response...</div>
+      </div>
+    ),
+    ssr: false,
+  }
+);
 
 export default function AIPage() {
   const [input, setInput] = useState("");
