@@ -112,8 +112,10 @@ const app = new Elysia()
     return result.toUIMessageStreamResponse();
   })
 {{/if}}
-  .get("/", async () => {
-    return await checkDatabaseHealth();
+  .get("/", async ({ set }) => {
+    const health = await checkDatabaseHealth();
+    if (health.error) set.status = 500;
+    return health;
   })
   .listen(3000, () => {
     console.log("Server is running on http://localhost:3000");
