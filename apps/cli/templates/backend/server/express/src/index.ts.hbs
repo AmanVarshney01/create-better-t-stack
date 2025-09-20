@@ -25,6 +25,7 @@ import { google } from "@ai-sdk/google";
 import { auth } from "./lib/auth";
 import { toNodeHandler } from "better-auth/node";
 {{/if}}
+import { checkDatabaseHealth } from "./lib/health";
 
 const app = express();
 
@@ -112,8 +113,10 @@ app.post("/ai", async (req, res) => {
 });
 {{/if}}
 
-app.get("/", (_req, res) => {
-  res.status(200).send("OK");
+app.get("/", async (_req, res) => {
+  const health = await checkDatabaseHealth();
+  const status = health.error ? 500 : 200;
+  res.status(status).json(health);
 });
 
 const port = process.env.PORT || 3000;
