@@ -1,6 +1,7 @@
 "use client";
 
-import { Play, Terminal } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, ChevronUp, Play, Terminal } from "lucide-react";
 import { motion } from "motion/react";
 import Image from "next/image";
 import { Tweet, type TwitterComponents } from "react-tweet";
@@ -12,7 +13,9 @@ export const components: TwitterComponents = {
 				<div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted" />
 			);
 		}
-		return <Image {...props} alt={props.alt || "User avatar"} unoptimized />;
+		return (
+			<Image {...props} alt={props.alt || "User avatar"} unoptimized />
+		);
 	},
 	MediaImg: (props) => {
 		if (!props.src || props.src === "") {
@@ -21,7 +24,12 @@ export const components: TwitterComponents = {
 			);
 		}
 		return (
-			<Image {...props} alt={props.alt || "Media content"} fill unoptimized />
+			<Image
+				{...props}
+				alt={props.alt || "Media content"}
+				fill
+				unoptimized
+			/>
 		);
 	},
 };
@@ -104,6 +112,7 @@ export default function Testimonials({
 	tweets: Array<{ tweetId: string }>;
 }) {
 	const videosReversed = [...videos].reverse();
+	const [showAllTweets, setShowAllTweets] = useState(false);
 
 	const getResponsiveColumns = (numCols: number) => {
 		const columns: string[][] = Array(numCols)
@@ -197,77 +206,176 @@ export default function Testimonials({
 					[{tweets.length} ENTRIES]
 				</span>
 			</div>
+
 			<div className="block sm:hidden">
-				<motion.div
-					className="flex flex-col gap-4"
-					variants={containerVariants}
-					initial="hidden"
-					animate="visible"
-				>
-					{tweets.map((tweet, index) => (
-						<TweetCard
-							key={tweet.tweetId}
-							tweetId={tweet.tweetId}
-							index={index}
-						/>
-					))}
-				</motion.div>
+				<div className="relative">
+					<motion.div
+						className={`flex flex-col gap-4 overflow-hidden transition-all duration-500 ease-in-out ${
+							showAllTweets ? "h-auto" : "h-[500px]"
+						}`}
+						variants={containerVariants}
+						initial="hidden"
+						animate="visible"
+					>
+						{tweets.map((tweet, index) => (
+							<TweetCard
+								key={tweet.tweetId}
+								tweetId={tweet.tweetId}
+								index={index}
+							/>
+						))}
+					</motion.div>
+
+					{!showAllTweets && (
+						<div className="absolute bottom-10 left-0 right-0 h-32 bg-gradient-to-t from-muted via-muted/80 to-transparent pointer-events-none" />
+					)}
+
+					<div className="my-4">
+						<button
+							type="button"
+							onClick={() => setShowAllTweets(!showAllTweets)}
+							className="flex w-full items-center gap-2 rounded p-2 text-left transition-colors hover:bg-muted border border-muted"
+						>
+							{showAllTweets ? (
+								<ChevronUp className="h-4 w-4 text-muted-foreground" />
+							) : (
+								<ChevronDown className="h-4 w-4 text-muted-foreground" />
+							)}
+							<span className="font-semibold text-muted-foreground text-sm">
+								TWEET_TESTIMONIALS.ARCHIVE
+							</span>
+							<span className="text-muted-foreground text-xs">
+								({tweets.length})
+							</span>
+							<div className="mx-2 h-px flex-1 bg-border" />
+							<span className="text-muted-foreground text-xs">
+								{showAllTweets ? "HIDE" : "SHOW"}
+							</span>
+						</button>
+					</div>
+				</div>
 			</div>
 
 			<div className="hidden sm:block lg:hidden">
-				<motion.div
-					className="grid grid-cols-2 gap-4"
-					variants={containerVariants}
-					initial="hidden"
-					animate="visible"
-				>
-					{getResponsiveColumns(2).map((column, colIndex) => (
-						<motion.div
-							key={`col-2-${column.length > 0 ? column[0] : `empty-${colIndex}`}`}
-							className="flex min-w-0 flex-col gap-4"
-							variants={columnVariants}
+				<div className="relative">
+					<motion.div
+						className={`grid grid-cols-2 gap-4 overflow-hidden transition-all duration-500 ease-in-out ${
+							showAllTweets ? "h-auto" : "h-[450px]"
+						}`}
+						variants={containerVariants}
+						initial="hidden"
+						animate="visible"
+					>
+						{getResponsiveColumns(2).map((column, colIndex) => (
+							<motion.div
+								key={`col-2-${column.length > 0 ? column[0] : `empty-${colIndex}`}`}
+								className="flex min-w-0 flex-col gap-4"
+								variants={columnVariants}
+							>
+								{column.map((tweetId, tweetIndex) => {
+									const globalIndex =
+										colIndex + tweetIndex * 2;
+									return (
+										<TweetCard
+											key={tweetId}
+											tweetId={tweetId}
+											index={globalIndex}
+										/>
+									);
+								})}
+							</motion.div>
+						))}
+					</motion.div>
+
+					{!showAllTweets && (
+						<div className="absolute bottom-10 left-0 right-0 h-32 bg-gradient-to-t from-muted via-muted/80 to-transparent pointer-events-none" />
+					)}
+
+					<div className="my-4">
+						<button
+							type="button"
+							onClick={() => setShowAllTweets(!showAllTweets)}
+							className="flex w-full items-center gap-2 rounded p-2 text-left transition-colors hover:bg-muted border border-muted"
 						>
-							{column.map((tweetId, tweetIndex) => {
-								const globalIndex = colIndex + tweetIndex * 2;
-								return (
-									<TweetCard
-										key={tweetId}
-										tweetId={tweetId}
-										index={globalIndex}
-									/>
-								);
-							})}
-						</motion.div>
-					))}
-				</motion.div>
+							{showAllTweets ? (
+								<ChevronUp className="h-4 w-4 text-muted-foreground" />
+							) : (
+								<ChevronDown className="h-4 w-4 text-muted-foreground" />
+							)}
+							<span className="font-semibold text-muted-foreground text-sm">
+								TWEET_TESTIMONIALS.ARCHIVE
+							</span>
+							<span className="text-muted-foreground text-xs">
+								({tweets.length})
+							</span>
+							<div className="mx-2 h-px flex-1 bg-border" />
+							<span className="text-muted-foreground text-xs">
+								{showAllTweets ? "HIDE" : "SHOW"}
+							</span>
+						</button>
+					</div>
+				</div>
 			</div>
 
 			<div className="hidden lg:block">
-				<motion.div
-					className="grid grid-cols-3 gap-4"
-					variants={containerVariants}
-					initial="hidden"
-					animate="visible"
-				>
-					{getResponsiveColumns(3).map((column, colIndex) => (
-						<motion.div
-							key={`col-3-${column.length > 0 ? column[0] : `empty-${colIndex}`}`}
-							className="flex min-w-0 flex-col gap-4"
-							variants={columnVariants}
+				<div className="relative">
+					<motion.div
+						className={`grid grid-cols-3 gap-4 overflow-hidden transition-all duration-500 ease-in-out ${
+							showAllTweets ? "h-auto" : "h-[400px]"
+						}`}
+						variants={containerVariants}
+						initial="hidden"
+						animate="visible"
+					>
+						{getResponsiveColumns(3).map((column, colIndex) => (
+							<motion.div
+								key={`col-3-${column.length > 0 ? column[0] : `empty-${colIndex}`}`}
+								className="flex min-w-0 flex-col gap-4"
+								variants={columnVariants}
+							>
+								{column.map((tweetId, tweetIndex) => {
+									const globalIndex =
+										colIndex + tweetIndex * 3;
+									return (
+										<TweetCard
+											key={tweetId}
+											tweetId={tweetId}
+											index={globalIndex}
+										/>
+									);
+								})}
+							</motion.div>
+						))}
+					</motion.div>
+
+					{!showAllTweets && (
+						<div className="absolute bottom-10 left-0 right-0 h-32 bg-gradient-to-t from-muted via-muted/80 to-transparent pointer-events-none" />
+					)}
+
+					<div className="my-4">
+						<button
+							type="button"
+							onClick={() => setShowAllTweets(!showAllTweets)}
+							className="flex w-full items-center gap-2 rounded p-2 text-left transition-colors hover:bg-muted border border-muted"
 						>
-							{column.map((tweetId, tweetIndex) => {
-								const globalIndex = colIndex + tweetIndex * 3;
-								return (
-									<TweetCard
-										key={tweetId}
-										tweetId={tweetId}
-										index={globalIndex}
-									/>
-								);
-							})}
-						</motion.div>
-					))}
-				</motion.div>
+							{showAllTweets ? (
+								<ChevronUp className="h-4 w-4 text-muted-foreground" />
+							) : (
+								<ChevronDown className="h-4 w-4 text-muted-foreground" />
+							)}
+							<span className="font-semibold text-muted-foreground text-sm">
+								TWEET_TESTIMONIALS.ARCHIVE
+							</span>
+							<span className="text-muted-foreground text-xs">
+								({tweets.length})
+							</span>
+							<div className="mx-2 h-px flex-1 bg-border" />
+							<span className="text-muted-foreground text-xs">
+								{showAllTweets ? "HIDE" : "SHOW"}
+							</span>
+						</button>
+					</div>
+				</div>
 			</div>
 		</div>
 	);
