@@ -203,9 +203,8 @@ export default function Testimonials({
 			<div className="block sm:hidden">
 				<div className="relative">
 					<motion.div
-						className={`flex flex-col gap-4 overflow-hidden transition-all duration-500 ease-in-out ${
-							showAllTweets ? "h-auto" : "h-[500px]"
-						}`}
+						className={`flex flex-col gap-4 overflow-hidden transition-all duration-500 ease-in-out ${showAllTweets ? "h-auto" : "h-[500px]"
+							}`}
 						variants={containerVariants}
 						initial="hidden"
 						animate="visible"
@@ -220,7 +219,7 @@ export default function Testimonials({
 					</motion.div>
 
 					{!showAllTweets && (
-						<div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-gradient-to-t from-muted via-muted/80 to-transparent" />
+						<div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-gradient-to-t from-muted/20 via-muted/40 to-transparent" />
 					)}
 
 					<div className="my-4">
@@ -252,9 +251,8 @@ export default function Testimonials({
 			<div className="hidden sm:block lg:hidden">
 				<div className="relative">
 					<motion.div
-						className={`grid grid-cols-2 gap-4 overflow-hidden transition-all duration-500 ease-in-out ${
-							showAllTweets ? "h-auto" : "h-[450px]"
-						}`}
+						className={`grid grid-cols-2 gap-4 overflow-hidden transition-all duration-500 ease-in-out ${showAllTweets ? "h-auto" : "h-[450px]"
+							}`}
 						variants={containerVariants}
 						initial="hidden"
 						animate="visible"
@@ -280,7 +278,7 @@ export default function Testimonials({
 					</motion.div>
 
 					{!showAllTweets && (
-						<div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-gradient-to-t from-muted via-muted/80 to-transparent" />
+						<div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-gradient-to-t from-muted/20 via-muted/40 to-transparent" />
 					)}
 
 					<div className="my-4">
@@ -312,9 +310,8 @@ export default function Testimonials({
 			<div className="hidden lg:block">
 				<div className="relative">
 					<motion.div
-						className={`grid grid-cols-3 gap-4 overflow-hidden transition-all duration-500 ease-in-out ${
-							showAllTweets ? "h-auto" : "h-[400px]"
-						}`}
+						className={`grid grid-cols-3 gap-4 overflow-hidden transition-all duration-500 ease-in-out ${showAllTweets ? "h-auto" : "h-[400px]"
+							}`}
 						variants={containerVariants}
 						initial="hidden"
 						animate="visible"
@@ -340,7 +337,7 @@ export default function Testimonials({
 					</motion.div>
 
 					{!showAllTweets && (
-						<div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-gradient-to-t from-muted via-muted/80 to-transparent" />
+						<div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-gradient-to-t from-muted/20 via-muted/40 to-transparent" />
 					)}
 
 					<div className="my-4">
