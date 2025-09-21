@@ -65,11 +65,11 @@ const app = new Elysia()
   )
   {{#if (eq auth "better-auth")}}
   .all("/api/auth/*", async (context) => {
-    const { request } = context;
+    const { request, status } = context;
     if (["POST", "GET"].includes(request.method)) {
       return auth.handler(request);
     }
-    context.error(405);
+    status('Method Not Allowed')
   })
   {{/if}}
 {{#if (eq api "orpc")}}
