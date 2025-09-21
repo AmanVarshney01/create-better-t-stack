@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { ChevronDown, ChevronUp, Play, Terminal } from "lucide-react";
 import { motion } from "motion/react";
 import Image from "next/image";
+import { useState } from "react";
 import { Tweet, type TwitterComponents } from "react-tweet";
 
 export const components: TwitterComponents = {
@@ -13,9 +13,7 @@ export const components: TwitterComponents = {
 				<div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted" />
 			);
 		}
-		return (
-			<Image {...props} alt={props.alt || "User avatar"} unoptimized />
-		);
+		return <Image {...props} alt={props.alt || "User avatar"} unoptimized />;
 	},
 	MediaImg: (props) => {
 		if (!props.src || props.src === "") {
@@ -24,12 +22,7 @@ export const components: TwitterComponents = {
 			);
 		}
 		return (
-			<Image
-				{...props}
-				alt={props.alt || "Media content"}
-				fill
-				unoptimized
-			/>
+			<Image {...props} alt={props.alt || "Media content"} fill unoptimized />
 		);
 	},
 };
@@ -227,14 +220,14 @@ export default function Testimonials({
 					</motion.div>
 
 					{!showAllTweets && (
-						<div className="absolute bottom-10 left-0 right-0 h-32 bg-gradient-to-t from-muted via-muted/80 to-transparent pointer-events-none" />
+						<div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-gradient-to-t from-muted via-muted/80 to-transparent" />
 					)}
 
 					<div className="my-4">
 						<button
 							type="button"
 							onClick={() => setShowAllTweets(!showAllTweets)}
-							className="flex w-full items-center gap-2 rounded p-2 text-left transition-colors hover:bg-muted border border-muted"
+							className="flex w-full items-center gap-2 rounded border border-muted p-2 text-left transition-colors hover:bg-muted"
 						>
 							{showAllTweets ? (
 								<ChevronUp className="h-4 w-4 text-muted-foreground" />
@@ -273,8 +266,7 @@ export default function Testimonials({
 								variants={columnVariants}
 							>
 								{column.map((tweetId, tweetIndex) => {
-									const globalIndex =
-										colIndex + tweetIndex * 2;
+									const globalIndex = colIndex + tweetIndex * 2;
 									return (
 										<TweetCard
 											key={tweetId}
@@ -288,14 +280,14 @@ export default function Testimonials({
 					</motion.div>
 
 					{!showAllTweets && (
-						<div className="absolute bottom-10 left-0 right-0 h-32 bg-gradient-to-t from-muted via-muted/80 to-transparent pointer-events-none" />
+						<div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-gradient-to-t from-muted via-muted/80 to-transparent" />
 					)}
 
 					<div className="my-4">
 						<button
 							type="button"
 							onClick={() => setShowAllTweets(!showAllTweets)}
-							className="flex w-full items-center gap-2 rounded p-2 text-left transition-colors hover:bg-muted border border-muted"
+							className="flex w-full items-center gap-2 rounded border border-muted p-2 text-left transition-colors hover:bg-muted"
 						>
 							{showAllTweets ? (
 								<ChevronUp className="h-4 w-4 text-muted-foreground" />
@@ -334,8 +326,7 @@ export default function Testimonials({
 								variants={columnVariants}
 							>
 								{column.map((tweetId, tweetIndex) => {
-									const globalIndex =
-										colIndex + tweetIndex * 3;
+									const globalIndex = colIndex + tweetIndex * 3;
 									return (
 										<TweetCard
 											key={tweetId}
@@ -349,14 +340,14 @@ export default function Testimonials({
 					</motion.div>
 
 					{!showAllTweets && (
-						<div className="absolute bottom-10 left-0 right-0 h-32 bg-gradient-to-t from-muted via-muted/80 to-transparent pointer-events-none" />
+						<div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-gradient-to-t from-muted via-muted/80 to-transparent" />
 					)}
 
 					<div className="my-4">
 						<button
 							type="button"
 							onClick={() => setShowAllTweets(!showAllTweets)}
-							className="flex w-full items-center gap-2 rounded p-2 text-left transition-colors hover:bg-muted border border-muted"
+							className="flex w-full items-center gap-2 rounded border border-muted p-2 text-left transition-colors hover:bg-muted"
 						>
 							{showAllTweets ? (
 								<ChevronUp className="h-4 w-4 text-muted-foreground" />
