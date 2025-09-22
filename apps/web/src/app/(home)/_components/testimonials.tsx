@@ -203,8 +203,9 @@ export default function Testimonials({
 			<div className="block sm:hidden">
 				<div className="relative">
 					<motion.div
-						className={`flex flex-col gap-4 overflow-hidden transition-all duration-500 ease-in-out ${showAllTweets ? "h-auto" : "h-[500px]"
-							}`}
+						className={`flex flex-col gap-4 overflow-hidden transition-all duration-500 ease-in-out ${
+							showAllTweets ? "h-auto" : "h-[500px]"
+						}`}
 						variants={containerVariants}
 						initial="hidden"
 						animate="visible"
@@ -251,8 +252,9 @@ export default function Testimonials({
 			<div className="hidden sm:block lg:hidden">
 				<div className="relative">
 					<motion.div
-						className={`grid grid-cols-2 gap-4 overflow-hidden transition-all duration-500 ease-in-out ${showAllTweets ? "h-auto" : "h-[450px]"
-							}`}
+						className={`grid grid-cols-2 gap-4 overflow-hidden transition-all duration-500 ease-in-out ${
+							showAllTweets ? "h-auto" : "h-[450px]"
+						}`}
 						variants={containerVariants}
 						initial="hidden"
 						animate="visible"
@@ -310,8 +312,9 @@ export default function Testimonials({
 			<div className="hidden lg:block">
 				<div className="relative">
 					<motion.div
-						className={`grid grid-cols-3 gap-4 overflow-hidden transition-all duration-500 ease-in-out ${showAllTweets ? "h-auto" : "h-[400px]"
-							}`}
+						className={`grid grid-cols-3 gap-4 overflow-hidden transition-all duration-500 ease-in-out ${
+							showAllTweets ? "h-auto" : "h-[400px]"
+						}`}
 						variants={containerVariants}
 						initial="hidden"
 						animate="visible"
