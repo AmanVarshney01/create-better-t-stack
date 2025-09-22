@@ -69,7 +69,7 @@ const app = new Elysia()
     if (["POST", "GET"].includes(request.method)) {
       return auth.handler(request);
     }
-    status('Method Not Allowed')
+    status(405)
   })
   {{/if}}
 {{#if (eq api "orpc")}}
