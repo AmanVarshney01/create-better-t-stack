@@ -65,12 +65,10 @@ const app = new Elysia()
   )
   {{#if (eq auth "better-auth")}}
   .all("/api/auth/*", async (context) => {
-    const { request, status, set } = context;
+    const { request, status } = context;
     if (["POST", "GET"].includes(request.method)) {
       return auth.handler(request);
     }
-
-    set.headers = { Allow: "GET, POST" }
     return status(405)
   })
   {{/if}}
