@@ -206,29 +206,31 @@ export async function setupApi(config: ProjectConfig) {
 
 	const webDirExists = await fs.pathExists(webDir);
 	const nativeDirExists = await fs.pathExists(nativeDir);
-	const serverDirExists = await fs.pathExists(serverDir);
+	const _serverDirExists = await fs.pathExists(serverDir);
 
 	const frontendType = getFrontendType(frontend);
 
 	if (!isConvex && api !== "none") {
 		const apiDeps = getApiDependencies(api, frontendType);
+		const apiPackageDir = path.join(projectDir, "packages/api");
 
-		if (serverDirExists && apiDeps.server) {
+		// Install API dependencies in packages/api
+		if (apiDeps.server) {
 			await addPackageDependency({
 				dependencies: apiDeps.server.dependencies as AvailableDependencies[],
-				projectDir: serverDir,
+				projectDir: apiPackageDir,
 			});
 
 			if (api === "trpc") {
 				if (backend === "hono") {
 					await addPackageDependency({
 						dependencies: ["@hono/trpc-server"],
-						projectDir: serverDir,
+						projectDir: apiPackageDir,
 					});
 				} else if (backend === "elysia") {
 					await addPackageDependency({
 						dependencies: ["@elysiajs/trpc"],
-						projectDir: serverDir,
+						projectDir: apiPackageDir,
 					});
 				}
 			}

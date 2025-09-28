@@ -3,6 +3,7 @@ import { log } from "@clack/prompts";
 import { execa } from "execa";
 import fs from "fs-extra";
 import type { ProjectConfig } from "../../types";
+import { addPackageDependency } from "../../utils/add-package-deps";
 
 export async function updatePackageConfigurations(
 	projectDir: string,
@@ -11,6 +12,7 @@ export async function updatePackageConfigurations(
 	await updateRootPackageJson(projectDir, options);
 	if (options.backend !== "convex") {
 		await updateServerPackageJson(projectDir, options);
+		await updateWorkspaceDependencies(projectDir, options);
 	} else {
 		await updateConvexPackageJson(projectDir, options);
 	}
@@ -33,6 +35,7 @@ async function updateRootPackageJson(
 
 	const backendPackageName =
 		options.backend === "convex" ? `@${options.projectName}/backend` : "server";
+	const dbPackageName = "db";
 
 	let serverDevScript = "";
 	if (options.addons.includes("turborepo")) {
@@ -70,17 +73,17 @@ async function updateRootPackageJson(
 			scripts["dev:setup"] = `turbo -F ${backendPackageName} dev:setup`;
 		}
 		if (needsDbScripts) {
-			scripts["db:push"] = `turbo -F ${backendPackageName} db:push`;
+			scripts["db:push"] = `turbo -F ${dbPackageName} db:push`;
 			if (!(options.dbSetup === "d1" && options.serverDeploy === "alchemy")) {
-				scripts["db:studio"] = `turbo -F ${backendPackageName} db:studio`;
+				scripts["db:studio"] = `turbo -F ${dbPackageName} db:studio`;
 			}
 			if (options.orm === "prisma") {
-				scripts["db:generate"] = `turbo -F ${backendPackageName} db:generate`;
-				scripts["db:migrate"] = `turbo -F ${backendPackageName} db:migrate`;
+				scripts["db:generate"] = `turbo -F ${dbPackageName} db:generate`;
+				scripts["db:migrate"] = `turbo -F ${dbPackageName} db:migrate`;
 			} else if (options.orm === "drizzle") {
-				scripts["db:generate"] = `turbo -F ${backendPackageName} db:generate`;
+				scripts["db:generate"] = `turbo -F ${dbPackageName} db:generate`;
 				if (!(options.dbSetup === "d1" && options.serverDeploy === "alchemy")) {
-					scripts["db:migrate"] = `turbo -F ${backendPackageName} db:migrate`;
+					scripts["db:migrate"] = `turbo -F ${dbPackageName} db:migrate`;
 				}
 			}
 		}
@@ -101,21 +104,17 @@ async function updateRootPackageJson(
 			scripts["dev:setup"] = `pnpm --filter ${backendPackageName} dev:setup`;
 		}
 		if (needsDbScripts) {
-			scripts["db:push"] = `pnpm --filter ${backendPackageName} db:push`;
+			scripts["db:push"] = `pnpm --filter ${dbPackageName} db:push`;
 			if (!(options.dbSetup === "d1" && options.serverDeploy === "alchemy")) {
-				scripts["db:studio"] = `pnpm --filter ${backendPackageName} db:studio`;
+				scripts["db:studio"] = `pnpm --filter ${dbPackageName} db:studio`;
 			}
 			if (options.orm === "prisma") {
-				scripts["db:generate"] =
-					`pnpm --filter ${backendPackageName} db:generate`;
-				scripts["db:migrate"] =
-					`pnpm --filter ${backendPackageName} db:migrate`;
+				scripts["db:generate"] = `pnpm --filter ${dbPackageName} db:generate`;
+				scripts["db:migrate"] = `pnpm --filter ${dbPackageName} db:migrate`;
 			} else if (options.orm === "drizzle") {
-				scripts["db:generate"] =
-					`pnpm --filter ${backendPackageName} db:generate`;
+				scripts["db:generate"] = `pnpm --filter ${dbPackageName} db:generate`;
 				if (!(options.dbSetup === "d1" && options.serverDeploy === "alchemy")) {
-					scripts["db:migrate"] =
-						`pnpm --filter ${backendPackageName} db:migrate`;
+					scripts["db:migrate"] = `pnpm --filter ${dbPackageName} db:migrate`;
 				}
 			}
 		}
@@ -137,22 +136,21 @@ async function updateRootPackageJson(
 				`npm run dev:setup --workspace ${backendPackageName}`;
 		}
 		if (needsDbScripts) {
-			scripts["db:push"] = `npm run db:push --workspace ${backendPackageName}`;
+			scripts["db:push"] = `npm run db:push --workspace ${dbPackageName}`;
 			if (!(options.dbSetup === "d1" && options.serverDeploy === "alchemy")) {
-				scripts["db:studio"] =
-					`npm run db:studio --workspace ${backendPackageName}`;
+				scripts["db:studio"] = `npm run db:studio --workspace ${dbPackageName}`;
 			}
 			if (options.orm === "prisma") {
 				scripts["db:generate"] =
-					`npm run db:generate --workspace ${backendPackageName}`;
+					`npm run db:generate --workspace ${dbPackageName}`;
 				scripts["db:migrate"] =
-					`npm run db:migrate --workspace ${backendPackageName}`;
+					`npm run db:migrate --workspace ${dbPackageName}`;
 			} else if (options.orm === "drizzle") {
 				scripts["db:generate"] =
-					`npm run db:generate --workspace ${backendPackageName}`;
+					`npm run db:generate --workspace ${dbPackageName}`;
 				if (!(options.dbSetup === "d1" && options.serverDeploy === "alchemy")) {
 					scripts["db:migrate"] =
-						`npm run db:migrate --workspace ${backendPackageName}`;
+						`npm run db:migrate --workspace ${dbPackageName}`;
 				}
 			}
 		}
@@ -175,22 +173,20 @@ async function updateRootPackageJson(
 			scripts["dev:setup"] = `bun run --filter ${backendPackageName} dev:setup`;
 		}
 		if (needsDbScripts) {
-			scripts["db:push"] = `bun run --filter ${backendPackageName} db:push`;
+			scripts["db:push"] = `bun run --filter ${dbPackageName} db:push`;
 			if (!(options.dbSetup === "d1" && options.serverDeploy === "alchemy")) {
-				scripts["db:studio"] =
-					`bun run --filter ${backendPackageName} db:studio`;
+				scripts["db:studio"] = `bun run --filter ${dbPackageName} db:studio`;
 			}
 			if (options.orm === "prisma") {
 				scripts["db:generate"] =
-					`bun run --filter ${backendPackageName} db:generate`;
-				scripts["db:migrate"] =
-					`bun run --filter ${backendPackageName} db:migrate`;
+					`bun run --filter ${dbPackageName} db:generate`;
+				scripts["db:migrate"] = `bun run --filter ${dbPackageName} db:migrate`;
 			} else if (options.orm === "drizzle") {
 				scripts["db:generate"] =
-					`bun run --filter ${backendPackageName} db:generate`;
+					`bun run --filter ${dbPackageName} db:generate`;
 				if (!(options.dbSetup === "d1" && options.serverDeploy === "alchemy")) {
 					scripts["db:migrate"] =
-						`bun run --filter ${backendPackageName} db:migrate`;
+						`bun run --filter ${dbPackageName} db:migrate`;
 				}
 			}
 		}
@@ -255,6 +251,37 @@ async function updateServerPackageJson(
 	}
 	const scripts = serverPackageJson.scripts;
 
+	// Server package only needs server-specific scripts now
+	// Database scripts are handled in packages/db
+
+	if (options.dbSetup === "docker") {
+		scripts["db:start"] = "docker compose up -d";
+		scripts["db:watch"] = "docker compose up";
+		scripts["db:stop"] = "docker compose stop";
+		scripts["db:down"] = "docker compose down";
+	}
+
+	await fs.writeJson(serverPackageJsonPath, serverPackageJson, {
+		spaces: 2,
+	});
+
+	// Update database package scripts
+	await updateDbPackageJson(projectDir, options);
+}
+
+async function updateDbPackageJson(projectDir: string, options: ProjectConfig) {
+	const dbPackageJsonPath = path.join(projectDir, "packages/db/package.json");
+
+	if (!(await fs.pathExists(dbPackageJsonPath))) return;
+
+	const dbPackageJson = await fs.readJson(dbPackageJsonPath);
+	dbPackageJson.name = `@${options.projectName}/db`;
+
+	if (!dbPackageJson.scripts) {
+		dbPackageJson.scripts = {};
+	}
+	const scripts = dbPackageJson.scripts;
+
 	if (options.database !== "none") {
 		if (
 			options.database === "sqlite" &&
@@ -283,14 +310,7 @@ async function updateServerPackageJson(
 		}
 	}
 
-	if (options.dbSetup === "docker") {
-		scripts["db:start"] = "docker compose up -d";
-		scripts["db:watch"] = "docker compose up";
-		scripts["db:stop"] = "docker compose stop";
-		scripts["db:down"] = "docker compose down";
-	}
-
-	await fs.writeJson(serverPackageJsonPath, serverPackageJson, {
+	await fs.writeJson(dbPackageJsonPath, dbPackageJson, {
 		spaces: 2,
 	});
 }
@@ -314,4 +334,59 @@ async function updateConvexPackageJson(
 	}
 
 	await fs.writeJson(convexPackageJsonPath, convexPackageJson, { spaces: 2 });
+}
+
+async function updateWorkspaceDependencies(
+	projectDir: string,
+	options: ProjectConfig,
+) {
+	const projectName = options.projectName;
+	const workspaceVersion =
+		options.packageManager === "npm" ? "*" : "workspace:*";
+
+	// Update packages/auth dependencies
+	const authPackageDir = path.join(projectDir, "packages/auth");
+	if (await fs.pathExists(authPackageDir)) {
+		const authPackagePath = path.join(authPackageDir, "package.json");
+		const authPackage = await fs.readJson(authPackagePath);
+		authPackage.name = `@${projectName}/auth`;
+		await fs.writeJson(authPackagePath, authPackage, { spaces: 2 });
+
+		await addPackageDependency({
+			customDependencies: {
+				[`@${projectName}/db`]: workspaceVersion,
+			},
+			projectDir: authPackageDir,
+		});
+	}
+
+	// Update packages/api dependencies
+	const apiPackageDir = path.join(projectDir, "packages/api");
+	if (await fs.pathExists(apiPackageDir)) {
+		const apiPackagePath = path.join(apiPackageDir, "package.json");
+		const apiPackage = await fs.readJson(apiPackagePath);
+		apiPackage.name = `@${projectName}/api`;
+		await fs.writeJson(apiPackagePath, apiPackage, { spaces: 2 });
+
+		await addPackageDependency({
+			customDependencies: {
+				[`@${projectName}/auth`]: workspaceVersion,
+				[`@${projectName}/db`]: workspaceVersion,
+			},
+			projectDir: apiPackageDir,
+		});
+	}
+
+	// Update apps/server dependencies
+	const serverPackageDir = path.join(projectDir, "apps/server");
+	if (await fs.pathExists(serverPackageDir)) {
+		await addPackageDependency({
+			customDependencies: {
+				[`@${projectName}/api`]: workspaceVersion,
+				[`@${projectName}/auth`]: workspaceVersion,
+				[`@${projectName}/db`]: workspaceVersion,
+			},
+			projectDir: serverPackageDir,
+		});
+	}
 }
