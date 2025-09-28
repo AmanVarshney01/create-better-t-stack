@@ -3,16 +3,7 @@
 // TODO: Add Convex integration for Astro
 {{else}}
 {{#if (eq api "orpc")}}
-import { client } from '../lib/orpc';
-
-// Server-side API call
-let healthCheckData;
-try {
-	healthCheckData = await client.healthCheck.query();
-} catch (error) {
-	console.error('Health check failed:', error);
-	healthCheckData = null;
-}
+import { OrpcApiStatus } from '../components/orpc-status';
 {{/if}}
 {{/if}}
 
@@ -40,20 +31,7 @@ const TITLE_TEXT = `
 		<pre class="overflow-x-auto font-mono text-sm">{TITLE_TEXT}</pre>
 		<div class="grid gap-6">
 			{{#if (eq api "orpc")}}
-			<section class="rounded-lg border p-4">
-				<h2 class="mb-2 font-medium">API Status</h2>
-				<div class="flex items-center gap-2">
-					<div class={`h-2 w-2 rounded-full ${healthCheckData ? "bg-green-500" : "bg-red-500"}`}></div>
-					<span class="text-muted-foreground text-sm">
-						{healthCheckData ? "Connected" : "Disconnected"}
-					</span>
-				</div>
-				{healthCheckData && (
-					<div class="mt-2 text-sm text-green-600">
-						Response: {healthCheckData}
-					</div>
-				)}
-			</section>
+			<OrpcApiStatus client:only="react" />
 			{{/if}}
 		</div>
 	</main>
