@@ -1,9 +1,22 @@
 ---
+{{#if (eq backend "convex")}}
+// TODO: Add Convex integration for Astro
+{{else}}
 {{#if (eq api "orpc")}}
-// TODO: Add oRPC integration for Astro  
+import { client } from '../lib/orpc';
+
+// Server-side API call
+let healthCheckData;
+try {
+	healthCheckData = await client.healthCheck.query();
+} catch (error) {
+	console.error('Health check failed:', error);
+	healthCheckData = null;
+}
+{{/if}}
 {{/if}}
 
-import Layout from '@layouts/Layout.astro';
+import Layout from '../layouts/Layout.astro';
 
 const TITLE_TEXT = `
    ██████╗ ███████╗████████╗████████╗███████╗██████╗
@@ -30,11 +43,16 @@ const TITLE_TEXT = `
 			<section class="rounded-lg border p-4">
 				<h2 class="mb-2 font-medium">API Status</h2>
 				<div class="flex items-center gap-2">
-					<div class="h-2 w-2 rounded-full bg-green-500"></div>
+					<div class={`h-2 w-2 rounded-full ${healthCheckData ? "bg-green-500" : "bg-red-500"}`}></div>
 					<span class="text-muted-foreground text-sm">
-						Ready to connect
+						{healthCheckData ? "Connected" : "Disconnected"}
 					</span>
 				</div>
+				{healthCheckData && (
+					<div class="mt-2 text-sm text-green-600">
+						Response: {healthCheckData}
+					</div>
+				)}
 			</section>
 			{{/if}}
 		</div>
