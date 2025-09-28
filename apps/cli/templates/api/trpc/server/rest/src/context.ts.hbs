@@ -1,7 +1,7 @@
 {{#if (eq backend 'next')}}
 import type { NextRequest } from "next/server";
 {{#if (eq auth "better-auth")}}
-import { auth } from "./auth";
+import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
 export async function createContext(req: NextRequest) {
@@ -23,7 +23,7 @@ export async function createContext(req: NextRequest) {
 {{else if (eq backend 'hono')}}
 import type { Context as HonoContext } from "hono";
 {{#if (eq auth "better-auth")}}
-import { auth } from "./auth";
+import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
 export type CreateContextOptions = {
@@ -49,7 +49,7 @@ export async function createContext({ context }: CreateContextOptions) {
 {{else if (eq backend 'elysia')}}
 import type { Context as ElysiaContext } from "elysia";
 {{#if (eq auth "better-auth")}}
-import { auth } from "./auth";
+import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
 export type CreateContextOptions = {
@@ -76,7 +76,7 @@ export async function createContext({ context }: CreateContextOptions) {
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 {{#if (eq auth "better-auth")}}
 import { fromNodeHeaders } from "better-auth/node";
-import { auth } from "./auth";
+import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
 export async function createContext(opts: CreateExpressContextOptions) {
@@ -99,7 +99,7 @@ export async function createContext(opts: CreateExpressContextOptions) {
 import type { CreateFastifyContextOptions } from "@trpc/server/adapters/fastify";
 {{#if (eq auth "better-auth")}}
 import { fromNodeHeaders } from "better-auth/node";
-import { auth } from "./auth";
+import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
 export async function createContext({ req, res }: CreateFastifyContextOptions) {
