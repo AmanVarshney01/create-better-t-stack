@@ -1,0 +1,22 @@
+{
+	"name": "@{{projectName}}/auth",
+	"exports": {
+		".": "./dist/index.js",
+		"./*": "./dist/*.js"
+	},
+	"type": "module",
+	"scripts": {
+		"build": "tsdown"
+	},
+	"devDependencies": {
+		"@types/bun": "latest",
+		"@types/node": "^24.5.2",
+		"tsdown": "^0.15.5"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"@{{projectName}}/db": "workspace:*"
+	}
+}
