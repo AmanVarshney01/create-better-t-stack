@@ -34,6 +34,7 @@ export async function setupPayments(config: ProjectConfig) {
 					"tanstack-start",
 					"next",
 					"nuxt",
+					"astro",
 					"svelte",
 					"solid",
 				].includes(f),

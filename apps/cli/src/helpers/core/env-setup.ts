@@ -106,6 +106,7 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 	const hasTanStackStart = frontend.includes("tanstack-start");
 	const hasNextJs = frontend.includes("next");
 	const hasNuxt = frontend.includes("nuxt");
+	const hasAstro = frontend.includes("astro");
 	const hasSvelte = frontend.includes("svelte");
 	const hasSolid = frontend.includes("solid");
 	const hasWebFrontend =
@@ -114,6 +115,7 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 		hasTanStackStart ||
 		hasNextJs ||
 		hasNuxt ||
+		hasAstro ||
 		hasSolid ||
 		hasSvelte;
 

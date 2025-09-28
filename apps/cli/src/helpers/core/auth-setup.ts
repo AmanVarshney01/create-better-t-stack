@@ -116,6 +116,7 @@ export async function setupAuth(config: ProjectConfig) {
 				"tanstack-start",
 				"next",
 				"nuxt",
+				"astro",
 				"svelte",
 				"solid",
 			].includes(f),
