@@ -77,7 +77,7 @@ import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./payments";
 {{/if}}
 import { db } from "../db";
-import * as schema from "../db/schema/auth";
+import * as schema from "@{{projectName}}/db/schema/auth";
 
 export const auth = betterAuth<BetterAuthOptions>({
   database: drizzleAdapter(db, {
@@ -145,7 +145,7 @@ import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./payments";
 {{/if}}
 import { db } from "../db";
-import * as schema from "../db/schema/auth";
+import * as schema from "@{{projectName}}/db/schema/auth";
 import { env } from "cloudflare:workers";
 
 export const auth = betterAuth<BetterAuthOptions>({
@@ -226,7 +226,7 @@ import { expo } from "@better-auth/expo";
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./payments";
 {{/if}}
-import { client } from "../db";
+import { client } from "@{{projectName}}/db";
 
 export const auth = betterAuth<BetterAuthOptions>({
   database: mongodbAdapter(client),
