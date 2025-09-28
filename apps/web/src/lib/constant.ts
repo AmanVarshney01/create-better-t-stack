@@ -81,6 +81,14 @@ export const TECH_OPTIONS: Record<
 			default: false,
 		},
 		{
+			id: "astro",
+			name: "Astro",
+			description: "All-in-one web framework for content-driven websites",
+			icon: `${ICON_BASE_URL}/astro.svg`,
+			color: "from-indigo-400 to-indigo-700",
+			default: false,
+		},
+		{
 			id: "svelte",
 			name: "Svelte",
 			description: "Cybernetically enhanced web apps",
