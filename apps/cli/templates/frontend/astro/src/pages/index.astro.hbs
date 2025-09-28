@@ -1,0 +1,42 @@
+---
+{{#if (eq api "orpc")}}
+// TODO: Add oRPC integration for Astro  
+{{/if}}
+
+import Layout from '@layouts/Layout.astro';
+
+const TITLE_TEXT = `
+   ██████╗ ███████╗████████╗████████╗███████╗██████╗
+   ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗
+   ██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝
+   ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗
+   ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║
+   ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝
+
+   ████████╗    ███████╗████████╗ █████╗  ██████╗██╗  ██╗
+   ╚══██╔══╝    ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
+      ██║       ███████╗   ██║   ███████║██║     █████╔╝
+      ██║       ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
+      ██║       ███████║   ██║   ██║  ██║╚██████╗██║  ██╗
+      ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
+   `;
+---
+
+<Layout title="{{projectName}}">
+	<main class="container mx-auto max-w-3xl px-4 py-2">
+		<pre class="overflow-x-auto font-mono text-sm">{TITLE_TEXT}</pre>
+		<div class="grid gap-6">
+			{{#if (eq api "orpc")}}
+			<section class="rounded-lg border p-4">
+				<h2 class="mb-2 font-medium">API Status</h2>
+				<div class="flex items-center gap-2">
+					<div class="h-2 w-2 rounded-full bg-green-500"></div>
+					<span class="text-muted-foreground text-sm">
+						Ready to connect
+					</span>
+				</div>
+			</section>
+			{{/if}}
+		</div>
+	</main>
+</Layout>
