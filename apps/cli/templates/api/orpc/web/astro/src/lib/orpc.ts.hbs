@@ -1,4 +1,4 @@
-import { createORPCClient } from "@orpc/client";
+import { createORPCClient, onError } from "@orpc/client";
 import { BatchLinkPlugin } from "@orpc/client/plugins";
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
@@ -14,9 +14,8 @@ export const queryClient = new QueryClient({
 });
 
 export const link = new RPCLink({
-	url: `${import.meta.env.PUBLIC_SERVER_URL}/rpc`,
+	url: `${import.meta.env.VITE_SERVER_URL}/rpc`,
 	plugins: [
-	// for request batching optimization
 		new BatchLinkPlugin({
 			groups: [{
 				condition: () => true,
@@ -24,6 +23,11 @@ export const link = new RPCLink({
 			}],
 		}),
 	],
+	interceptors: [
+		onError((error) => {
+			console.error(error)
+		})
+  	],
 });
 
 export const client: AppRouterClient = createORPCClient(link);

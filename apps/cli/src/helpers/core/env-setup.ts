@@ -283,11 +283,15 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 	if (!(await fs.pathExists(serverDir))) {
 		return;
 	}
+	
 	const envPath = path.join(serverDir, ".env");
 
 	let corsOrigin = "http://localhost:3001";
 	if (hasReactRouter || hasSvelte) {
 		corsOrigin = "http://localhost:5173";
+	}
+	if (hasAstro) {
+		corsOrigin = "http://localhost:4321";
 	}
 
 	let databaseUrl: string | null = null;
