@@ -7,7 +7,7 @@ export async function setupCloudflareD1(config: ProjectConfig) {
 	const { projectDir, serverDeploy, orm } = config;
 
 	if (serverDeploy === "wrangler") {
-		const envPath = path.join(projectDir, "apps/server", ".env");
+		const envPath = path.join(projectDir, "packages/db", ".env");
 
 		const variables: EnvVariable[] = [
 			{
@@ -36,7 +36,7 @@ export async function setupCloudflareD1(config: ProjectConfig) {
 		(serverDeploy === "wrangler" || serverDeploy === "alchemy") &&
 		orm === "prisma"
 	) {
-		const envPath = path.join(projectDir, "apps/server", ".env");
+		const envPath = path.join(projectDir, "packages/db", ".env");
 		const variables: EnvVariable[] = [
 			{
 				key: "DATABASE_URL",
@@ -49,7 +49,7 @@ export async function setupCloudflareD1(config: ProjectConfig) {
 			await addEnvVariablesToFile(envPath, variables);
 		} catch (_err) {}
 
-		const serverDir = path.join(projectDir, "apps/server");
+		const serverDir = path.join(projectDir, "packages/db");
 		await addPackageDependency({
 			dependencies: ["@prisma/adapter-d1"],
 			projectDir: serverDir,

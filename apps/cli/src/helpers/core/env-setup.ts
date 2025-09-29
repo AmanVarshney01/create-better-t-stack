@@ -277,11 +277,10 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 		return;
 	}
 
+	const authDir = path.join(projectDir, "packages/auth");
+	const apiDir = path.join(projectDir, "packages/api");
+	const dbDir = path.join(projectDir, "packages/db");
 	const serverDir = path.join(projectDir, "apps/server");
-	if (!(await fs.pathExists(serverDir))) {
-		return;
-	}
-	const envPath = path.join(serverDir, ".env");
 
 	let corsOrigin = "http://localhost:3001";
 	if (hasReactRouter || hasSvelte) {
@@ -311,45 +310,61 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 		}
 	}
 
-	const serverVars: EnvVariable[] = [
-		{
-			key: "CORS_ORIGIN",
-			value: corsOrigin,
-			condition: true,
-		},
-		{
-			key: "BETTER_AUTH_SECRET",
-			value: generateAuthSecret(),
-			condition: !!auth,
-		},
-		{
-			key: "BETTER_AUTH_URL",
-			value: "http://localhost:3000",
-			condition: !!auth,
-		},
-		{
-			key: "DATABASE_URL",
-			value: databaseUrl,
-			condition: database !== "none" && dbSetup === "none",
-		},
-		{
-			key: "GOOGLE_GENERATIVE_AI_API_KEY",
-			value: "",
-			condition: examples?.includes("ai") || false,
-		},
-		{
-			key: "POLAR_ACCESS_TOKEN",
-			value: "",
-			condition: config.payments === "polar",
-		},
-		{
-			key: "POLAR_SUCCESS_URL",
-			value: `${corsOrigin}/success?checkout_id={CHECKOUT_ID}`,
-			condition: config.payments === "polar",
-		},
-	];
+	if (await fs.pathExists(authDir)) {
+		const authEnvPath = path.join(authDir, ".env");
+		const authVars: EnvVariable[] = [
+			{
+				key: "BETTER_AUTH_SECRET",
+				value: generateAuthSecret(),
+				condition: !!auth,
+			},
+			{
+				key: "BETTER_AUTH_URL",
+				value: "http://localhost:3000",
+				condition: !!auth,
+			},
+			{
+				key: "POLAR_ACCESS_TOKEN",
+				value: "",
+				condition: config.payments === "polar",
+			},
+			{
+				key: "POLAR_SUCCESS_URL",
+				value: `${corsOrigin}/success?checkout_id={CHECKOUT_ID}`,
+				condition: config.payments === "polar",
+			},
+		];
+		await addEnvVariablesToFile(authEnvPath, authVars);
+	}
 
-	await addEnvVariablesToFile(envPath, serverVars);
+	if (await fs.pathExists(apiDir)) {
+		const apiEnvPath = path.join(apiDir, ".env");
+		const apiVars: EnvVariable[] = [
+			{
+				key: "CORS_ORIGIN",
+				value: corsOrigin,
+				condition: true,
+			},
+			{
+				key: "GOOGLE_GENERATIVE_AI_API_KEY",
+				value: "",
+				condition: examples?.includes("ai") || false,
+			},
+		];
+		await addEnvVariablesToFile(apiEnvPath, apiVars);
+	}
+
+	if (await fs.pathExists(dbDir)) {
+		const dbEnvPath = path.join(dbDir, ".env");
+		const dbVars: EnvVariable[] = [
+			{
+				key: "DATABASE_URL",
+				value: databaseUrl,
+				condition: database !== "none" && dbSetup === "none",
+			},
+		];
+		await addEnvVariablesToFile(dbEnvPath, dbVars);
+	}
 
 	const isUnifiedAlchemy =
 		webDeploy === "alchemy" && serverDeploy === "alchemy";
@@ -382,20 +397,17 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 		}
 
 		if (serverDeploy === "alchemy") {
-			const serverDir = path.join(projectDir, "apps/server");
-			if (await fs.pathExists(serverDir)) {
-				const serverAlchemyVars: EnvVariable[] = [
-					{
-						key: "ALCHEMY_PASSWORD",
-						value: "please-change-this",
-						condition: true,
-					},
-				];
-				await addEnvVariablesToFile(
-					path.join(serverDir, ".env"),
-					serverAlchemyVars,
-				);
-			}
+			const serverAlchemyVars: EnvVariable[] = [
+				{
+					key: "ALCHEMY_PASSWORD",
+					value: "please-change-this",
+					condition: true,
+				},
+			];
+			await addEnvVariablesToFile(
+				path.join(serverDir, ".env"),
+				serverAlchemyVars,
+			);
 		}
 	}
 }

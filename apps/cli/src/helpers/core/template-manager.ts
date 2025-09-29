@@ -272,13 +272,11 @@ export async function setupBackendFramework(
 
 	await fs.ensureDir(serverAppDir);
 
-	// Copy base server template
 	const serverBaseDir = path.join(PKG_ROOT, "templates/backend/server/base");
 	if (await fs.pathExists(serverBaseDir)) {
 		await processAndCopyFiles("**/*", serverBaseDir, serverAppDir, context);
 	}
 
-	// Copy framework-specific server template
 	const frameworkSrcDir = path.join(
 		PKG_ROOT,
 		`templates/backend/server/${context.backend}`,
@@ -293,12 +291,10 @@ export async function setupBackendFramework(
 		);
 	}
 
-	// Setup API package if API is not none
 	if (context.api !== "none") {
 		const apiPackageDir = path.join(projectDir, "packages/api");
 		await fs.ensureDir(apiPackageDir);
 
-		// Copy API base template to packages/api
 		const apiServerBaseDir = path.join(
 			PKG_ROOT,
 			`templates/api/${context.api}/server/base`,
@@ -312,7 +308,6 @@ export async function setupBackendFramework(
 			);
 		}
 
-		// Copy API framework-specific template to packages/api
 		let apiServerFrameworkDir = "";
 		if (context.backend === "next") {
 			apiServerFrameworkDir = path.join(
@@ -320,7 +315,6 @@ export async function setupBackendFramework(
 				`templates/api/${context.api}/server/${context.backend}`,
 			);
 		} else {
-			// For non-Next.js backends, use the rest template
 			apiServerFrameworkDir = path.join(
 				PKG_ROOT,
 				`templates/api/${context.api}/server/rest`,
@@ -338,18 +332,15 @@ export async function setupBackendFramework(
 		}
 	}
 
-	// Setup DB package if database and ORM are not none
 	if (context.database !== "none" && context.orm !== "none") {
 		const dbPackageDir = path.join(projectDir, "packages/db");
 		await fs.ensureDir(dbPackageDir);
 
-		// Copy DB base template to packages/db
 		const dbBaseDir = path.join(PKG_ROOT, "templates/db/base");
 		if (await fs.pathExists(dbBaseDir)) {
 			await processAndCopyFiles("**/*", dbBaseDir, dbPackageDir, context);
 		}
 
-		// Copy ORM and database-specific templates to packages/db
 		const dbOrmSrcDir = path.join(
 			PKG_ROOT,
 			`templates/db/${context.orm}/${context.database}`,
@@ -358,15 +349,6 @@ export async function setupBackendFramework(
 			await processAndCopyFiles("**/*", dbOrmSrcDir, dbPackageDir, context);
 		}
 	}
-}
-
-export async function setupDbOrmTemplates(
-	_projectDir: string,
-	_context: ProjectConfig,
-) {
-	// DB and ORM templates are now handled in setupBackendFramework
-	// This function is kept for backward compatibility but is no longer used
-	return;
 }
 
 export async function setupAuthTemplate(
@@ -524,7 +506,6 @@ export async function setupAuthTemplate(
 	}
 
 	if (serverAppDirExists && context.backend !== "convex") {
-		// Setup auth package
 		const authPackageDir = path.join(projectDir, "packages/auth");
 		await fs.ensureDir(authPackageDir);
 
@@ -556,7 +537,6 @@ export async function setupAuthTemplate(
 			}
 		}
 
-		// Auth database schemas should go to packages/db, not packages/auth
 		if (context.orm !== "none" && context.database !== "none") {
 			const dbPackageDir = path.join(projectDir, "packages/db");
 			await fs.ensureDir(dbPackageDir);
@@ -859,7 +839,6 @@ export async function setupExamplesTemplate(
 		) {
 			const exampleServerSrc = path.join(exampleBaseDir, "server");
 
-			// Copy API examples to packages/api (routes)
 			if (context.api !== "none") {
 				const apiPackageDir = path.join(projectDir, "packages/api");
 				await fs.ensureDir(apiPackageDir);
@@ -880,7 +859,6 @@ export async function setupExamplesTemplate(
 				}
 			}
 
-			// Copy database examples to packages/db (schemas)
 			if (context.orm !== "none" && context.database !== "none") {
 				const dbPackageDir = path.join(projectDir, "packages/db");
 				await fs.ensureDir(dbPackageDir);
@@ -901,7 +879,6 @@ export async function setupExamplesTemplate(
 				}
 			}
 
-			// Copy AI-specific server examples to apps/server (for Next.js AI routes)
 			if (example === "ai" && context.backend === "next") {
 				const aiNextServerSrc = path.join(exampleServerSrc, "next");
 				if (await fs.pathExists(aiNextServerSrc)) {

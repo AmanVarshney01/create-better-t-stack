@@ -19,11 +19,11 @@ export async function setupExamples(config: ProjectConfig) {
 	if (examples.includes("ai")) {
 		const webClientDir = path.join(projectDir, "apps/web");
 		const nativeClientDir = path.join(projectDir, "apps/native");
-		const serverDir = path.join(projectDir, "apps/server");
+		const apiDir = path.join(projectDir, "packages/api");
 
 		const webClientDirExists = await fs.pathExists(webClientDir);
 		const nativeClientDirExists = await fs.pathExists(nativeClientDir);
-		const serverDirExists = await fs.pathExists(serverDir);
+		const apiDirExists = await fs.pathExists(apiDir);
 
 		const hasNuxt = frontend.includes("nuxt");
 		const hasSvelte = frontend.includes("svelte");
@@ -64,10 +64,10 @@ export async function setupExamples(config: ProjectConfig) {
 			});
 		}
 
-		if (serverDirExists && backend !== "none") {
+		if (apiDirExists && backend !== "none") {
 			await addPackageDependency({
 				dependencies: ["ai", "@ai-sdk/google"],
-				projectDir: serverDir,
+				projectDir: apiDir,
 			});
 		}
 	}

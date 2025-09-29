@@ -12,6 +12,8 @@ export async function updatePackageConfigurations(
 	await updateRootPackageJson(projectDir, options);
 	if (options.backend !== "convex") {
 		await updateServerPackageJson(projectDir, options);
+		await updateAuthPackageJson(projectDir, options);
+		await updateApiPackageJson(projectDir, options);
 		await setupWorkspaceDependencies(projectDir, options);
 	} else {
 		await updateConvexPackageJson(projectDir, options);
@@ -307,6 +309,41 @@ async function updateDbPackageJson(projectDir: string, options: ProjectConfig) {
 	}
 
 	await fs.writeJson(dbPackageJsonPath, dbPackageJson, {
+		spaces: 2,
+	});
+}
+
+async function updateAuthPackageJson(
+	projectDir: string,
+	options: ProjectConfig,
+) {
+	const authPackageJsonPath = path.join(
+		projectDir,
+		"packages/auth/package.json",
+	);
+
+	if (!(await fs.pathExists(authPackageJsonPath))) return;
+
+	const authPackageJson = await fs.readJson(authPackageJsonPath);
+	authPackageJson.name = `@${options.projectName}/auth`;
+
+	await fs.writeJson(authPackageJsonPath, authPackageJson, {
+		spaces: 2,
+	});
+}
+
+async function updateApiPackageJson(
+	projectDir: string,
+	options: ProjectConfig,
+) {
+	const apiPackageJsonPath = path.join(projectDir, "packages/api/package.json");
+
+	if (!(await fs.pathExists(apiPackageJsonPath))) return;
+
+	const apiPackageJson = await fs.readJson(apiPackageJsonPath);
+	apiPackageJson.name = `@${options.projectName}/api`;
+
+	await fs.writeJson(apiPackageJsonPath, apiPackageJson, {
 		spaces: 2,
 	});
 }
