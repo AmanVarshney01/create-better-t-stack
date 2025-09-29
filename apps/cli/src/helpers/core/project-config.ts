@@ -37,7 +37,7 @@ async function updateRootPackageJson(
 
 	const backendPackageName =
 		options.backend === "convex" ? `@${options.projectName}/backend` : "server";
-	const dbPackageName = "db";
+	const dbPackageName = `@${options.projectName}/db`;
 
 	let serverDevScript = "";
 	if (options.addons.includes("turborepo")) {
