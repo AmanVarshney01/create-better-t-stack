@@ -3,7 +3,7 @@ import { log } from "@clack/prompts";
 import { execa } from "execa";
 import fs from "fs-extra";
 import type { ProjectConfig } from "../../types";
-import { addPackageDependency } from "../../utils/add-package-deps";
+import { setupWorkspaceDependencies } from "./workspace-setup";
 
 export async function updatePackageConfigurations(
 	projectDir: string,
@@ -12,7 +12,7 @@ export async function updatePackageConfigurations(
 	await updateRootPackageJson(projectDir, options);
 	if (options.backend !== "convex") {
 		await updateServerPackageJson(projectDir, options);
-		await updateWorkspaceDependencies(projectDir, options);
+		await setupWorkspaceDependencies(projectDir, options);
 	} else {
 		await updateConvexPackageJson(projectDir, options);
 	}
@@ -251,9 +251,6 @@ async function updateServerPackageJson(
 	}
 	const scripts = serverPackageJson.scripts;
 
-	// Server package only needs server-specific scripts now
-	// Database scripts are handled in packages/db
-
 	if (options.dbSetup === "docker") {
 		scripts["db:start"] = "docker compose up -d";
 		scripts["db:watch"] = "docker compose up";
@@ -265,7 +262,6 @@ async function updateServerPackageJson(
 		spaces: 2,
 	});
 
-	// Update database package scripts
 	await updateDbPackageJson(projectDir, options);
 }
 
@@ -334,59 +330,4 @@ async function updateConvexPackageJson(
 	}
 
 	await fs.writeJson(convexPackageJsonPath, convexPackageJson, { spaces: 2 });
-}
-
-async function updateWorkspaceDependencies(
-	projectDir: string,
-	options: ProjectConfig,
-) {
-	const projectName = options.projectName;
-	const workspaceVersion =
-		options.packageManager === "npm" ? "*" : "workspace:*";
-
-	// Update packages/auth dependencies
-	const authPackageDir = path.join(projectDir, "packages/auth");
-	if (await fs.pathExists(authPackageDir)) {
-		const authPackagePath = path.join(authPackageDir, "package.json");
-		const authPackage = await fs.readJson(authPackagePath);
-		authPackage.name = `@${projectName}/auth`;
-		await fs.writeJson(authPackagePath, authPackage, { spaces: 2 });
-
-		await addPackageDependency({
-			customDependencies: {
-				[`@${projectName}/db`]: workspaceVersion,
-			},
-			projectDir: authPackageDir,
-		});
-	}
-
-	// Update packages/api dependencies
-	const apiPackageDir = path.join(projectDir, "packages/api");
-	if (await fs.pathExists(apiPackageDir)) {
-		const apiPackagePath = path.join(apiPackageDir, "package.json");
-		const apiPackage = await fs.readJson(apiPackagePath);
-		apiPackage.name = `@${projectName}/api`;
-		await fs.writeJson(apiPackagePath, apiPackage, { spaces: 2 });
-
-		await addPackageDependency({
-			customDependencies: {
-				[`@${projectName}/auth`]: workspaceVersion,
-				[`@${projectName}/db`]: workspaceVersion,
-			},
-			projectDir: apiPackageDir,
-		});
-	}
-
-	// Update apps/server dependencies
-	const serverPackageDir = path.join(projectDir, "apps/server");
-	if (await fs.pathExists(serverPackageDir)) {
-		await addPackageDependency({
-			customDependencies: {
-				[`@${projectName}/api`]: workspaceVersion,
-				[`@${projectName}/auth`]: workspaceVersion,
-				[`@${projectName}/db`]: workspaceVersion,
-			},
-			projectDir: serverPackageDir,
-		});
-	}
 }
