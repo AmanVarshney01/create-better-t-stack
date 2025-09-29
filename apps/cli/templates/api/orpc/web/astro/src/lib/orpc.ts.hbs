@@ -24,14 +24,6 @@ export const link = new RPCLink({
 			}],
 		}),
 	],
-	{{#if (eq auth "better-auth")}}
-	fetch(url, options) {
-		return fetch(url, {
-			...options,
-			credentials: "include",
-		});
-	}
-	{{/if}}
 });
 
 export const client: AppRouterClient = createORPCClient(link);
