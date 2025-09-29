@@ -98,7 +98,7 @@ async function createNeonProject(
 }
 
 async function writeEnvFile(projectDir: string, config?: NeonConfig) {
-	const envPath = path.join(projectDir, "apps/server", ".env");
+	const envPath = path.join(projectDir, "packages/db", ".env");
 	const variables: EnvVariable[] = [
 		{
 			key: "DATABASE_URL",
@@ -121,7 +121,7 @@ async function setupWithNeonDb(
 		const s = spinner();
 		s.start("Creating Neon database using neondb...");
 
-		const serverDir = path.join(projectDir, "apps/server");
+		const serverDir = path.join(projectDir, "packages/db");
 		await fs.ensureDir(serverDir);
 
 		const packageCmd = getPackageExecutionCommand(
@@ -149,7 +149,7 @@ function displayManualSetupInstructions() {
 1. Visit https://neon.tech and create an account
 2. Create a new project from the dashboard
 3. Get your connection string
-4. Add the database URL to the .env file in apps/server/.env
+4. Add the database URL to the .env file in packages/db/.env
 
 DATABASE_URL="your_connection_string"`);
 }
@@ -246,7 +246,7 @@ export async function setupNeonPostgres(
 			const finalSpinner = spinner();
 			finalSpinner.start("Configuring database connection");
 
-			await fs.ensureDir(path.join(projectDir, "apps/server"));
+			await fs.ensureDir(path.join(projectDir, "packages/db"));
 			await writeEnvFile(projectDir, neonConfig);
 
 			finalSpinner.stop("Neon database configured!");

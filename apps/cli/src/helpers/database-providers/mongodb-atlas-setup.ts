@@ -84,7 +84,7 @@ async function initMongoDBAtlas(serverDir: string) {
 
 async function writeEnvFile(projectDir: string, config?: MongoDBConfig) {
 	try {
-		const envPath = path.join(projectDir, "apps/server", ".env");
+		const envPath = path.join(projectDir, "packages/db", ".env");
 		const variables: EnvVariable[] = [
 			{
 				key: "DATABASE_URL",
@@ -129,7 +129,7 @@ export async function setupMongoDBAtlas(
 	const mainSpinner = spinner();
 	mainSpinner.start("Setting up MongoDB Atlas...");
 
-	const serverDir = path.join(projectDir, "apps/server");
+	const serverDir = path.join(projectDir, "packages/db");
 	try {
 		await fs.ensureDir(serverDir);
 

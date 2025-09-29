@@ -156,7 +156,6 @@ export function validateDatabaseSetup(
 	if (dbSetup && dbSetup !== "none") {
 		const validation = setupValidations[dbSetup];
 
-		// Special handling for PlanetScale - supports both postgres and mysql
 		if (dbSetup === "planetscale") {
 			if (database !== "postgres" && database !== "mysql") {
 				exitWithError(validation.errorMessage);

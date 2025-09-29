@@ -146,7 +146,7 @@ async function initPrismaDatabase(
 
 async function writeEnvFile(projectDir: string, config?: PrismaConfig) {
 	try {
-		const envPath = path.join(projectDir, "apps/server", ".env");
+		const envPath = path.join(projectDir, "packages/db", ".env");
 		const variables: EnvVariable[] = [
 			{
 				key: "DATABASE_URL",
@@ -175,7 +175,7 @@ async function addDotenvImportToPrismaConfig(projectDir: string) {
 	try {
 		const prismaConfigPath = path.join(
 			projectDir,
-			"apps/server/prisma.config.ts",
+			"packages/db/prisma.config.ts",
 		);
 		let content = await fs.readFile(prismaConfigPath, "utf8");
 		content = `import "dotenv/config";\n${content}`;
@@ -191,7 +191,7 @@ function displayManualSetupInstructions() {
 1. Visit https://console.prisma.io and create an account
 2. Create a new PostgreSQL database from the dashboard
 3. Get your database URL
-4. Add the database URL to the .env file in apps/server/.env
+4. Add the database URL to the .env file in packages/db/.env
 
 DATABASE_URL="your_database_url"`);
 }
@@ -218,7 +218,7 @@ export async function setupPrismaPostgres(
 ) {
 	const { packageManager, projectDir, orm } = config;
 	const manualDb = cliInput?.manualDb ?? false;
-	const serverDir = path.join(projectDir, "apps/server");
+	const serverDir = path.join(projectDir, "packages/db");
 
 	try {
 		await fs.ensureDir(serverDir);

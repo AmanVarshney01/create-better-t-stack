@@ -214,7 +214,6 @@ export async function setupApi(config: ProjectConfig) {
 		const apiDeps = getApiDependencies(api, frontendType);
 		const apiPackageDir = path.join(projectDir, "packages/api");
 
-		// Install API dependencies in packages/api
 		if (apiDeps.server) {
 			await addPackageDependency({
 				dependencies: apiDeps.server.dependencies as AvailableDependencies[],

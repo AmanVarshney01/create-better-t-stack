@@ -11,7 +11,7 @@ import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
 
 async function writeSupabaseEnvFile(projectDir: string, databaseUrl: string) {
 	try {
-		const envPath = path.join(projectDir, "apps/server", ".env");
+		const envPath = path.join(projectDir, "packages/db", ".env");
 		const dbUrlToUse =
 			databaseUrl || "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
 		const variables: EnvVariable[] = [
@@ -138,8 +138,8 @@ function displayManualSupabaseInstructions(output?: string | null) {
 		`"Manual Supabase Setup Instructions:"
 1. Ensure Docker is installed and running.
 2. Install the Supabase CLI (e.g., \`npm install -g supabase\`).
-3. Run \`supabase init\` in your project's \`apps/server\` directory.
-4. Run \`supabase start\` in your project's \`apps/server\` directory.
+3. Run \`supabase init\` in your project's \`packages/db\` directory.
+4. Run \`supabase start\` in your project's \`packages/db\` directory.
 5. Copy the 'DB URL' from the output.${
 			output
 				? `
@@ -147,7 +147,7 @@ ${pc.bold("Relevant output from `supabase start`:")}
 ${pc.dim(output)}`
 				: ""
 		}
-6. Add the DB URL to the .env file in \`apps/server/.env\` as \`DATABASE_URL\`:
+6. Add the DB URL to the .env file in \`packages/db/.env\` as \`DATABASE_URL\`:
 			${pc.gray('DATABASE_URL="your_supabase_db_url"')}`,
 	);
 }
@@ -159,7 +159,7 @@ export async function setupSupabase(
 	const { projectDir, packageManager } = config;
 	const manualDb = cliInput?.manualDb ?? false;
 
-	const serverDir = path.join(projectDir, "apps", "server");
+	const serverDir = path.join(projectDir, "packages", "db");
 
 	try {
 		await fs.ensureDir(serverDir);

@@ -102,7 +102,6 @@ export async function setupAuth(config: ProjectConfig) {
 			return;
 		}
 
-		// Install auth dependencies in packages/auth for non-Convex backends
 		const authPackageDir = path.join(projectDir, "packages/auth");
 		const authPackageDirExists = await fs.pathExists(authPackageDir);
 

@@ -25,7 +25,6 @@ import {
 	setupAddonsTemplate,
 	setupAuthTemplate,
 	setupBackendFramework,
-	setupDbOrmTemplates,
 	setupDeploymentTemplates,
 	setupDockerComposeTemplates,
 	setupExamplesTemplate,
@@ -47,7 +46,6 @@ export async function createProject(
 		await setupFrontendTemplates(projectDir, options);
 		await setupBackendFramework(projectDir, options);
 		if (!isConvex) {
-			await setupDbOrmTemplates(projectDir, options);
 			await setupDockerComposeTemplates(projectDir, options);
 		}
 		await setupAuthTemplate(projectDir, options);
