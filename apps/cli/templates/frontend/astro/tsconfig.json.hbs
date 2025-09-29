@@ -2,6 +2,10 @@
   "extends": "astro/tsconfigs/strict",
   "include": [".astro/types.d.ts", "**/*"],
   "exclude": ["dist"],
+  {{#if (eq api "orpc")}}
+  "references": [
+    { "path": "../server" } 
+  ],{{/if}}
   "comilerOptions":{
     {{#if (eq api "orpc")}}
     "jsx": "react-jsx",
