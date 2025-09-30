@@ -158,6 +158,7 @@ export const dependencyVersionMap = {
 	nitropack: "^2.12.4",
 
 	dotenv: "^17.2.2",
+	tsdown: "^0.15.5",
 
 	"@polar-sh/better-auth": "^1.1.3",
 	"@polar-sh/sdk": "^0.34.16",
