@@ -1,4 +1,4 @@
-import { PrismaClient } from "../../prisma/generated/client";
+import { PrismaClient } from "../prisma/generated/client";
 {{#if (and (eq dbSetup "prisma-postgres") (eq orm "prisma"))}}
 import { withAccelerate } from "@prisma/extension-accelerate";
 

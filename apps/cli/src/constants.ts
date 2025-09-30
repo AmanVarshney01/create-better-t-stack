@@ -53,6 +53,7 @@ export const dependencyVersionMap = {
 	"@planetscale/database": "^1.19.0",
 
 	"@libsql/client": "^0.15.9",
+	libsql: "^0.5.22",
 
 	"@neondatabase/serverless": "^1.0.1",
 	pg: "^8.14.1",
@@ -159,6 +160,7 @@ export const dependencyVersionMap = {
 
 	dotenv: "^17.2.2",
 	tsdown: "^0.15.5",
+	zod: "^4.1.11",
 
 	"@polar-sh/better-auth": "^1.1.3",
 	"@polar-sh/sdk": "^0.34.16",

@@ -175,10 +175,10 @@ async function addDotenvImportToPrismaConfig(projectDir: string) {
 	try {
 		const prismaConfigPath = path.join(
 			projectDir,
-			"apps/server/prisma.config.ts",
+			"packages/db/prisma.config.ts",
 		);
 		let content = await fs.readFile(prismaConfigPath, "utf8");
-		content = `import "dotenv/config";\n${content}`;
+		content = `import dotenv from "dotenv";\ndotenv.config({ path: "../../apps/server/.env" });\n${content}`;
 		await fs.writeFile(prismaConfigPath, content);
 	} catch (_error) {
 		consola.error("Failed to update prisma.config.ts");
@@ -196,11 +196,12 @@ function displayManualSetupInstructions() {
 DATABASE_URL="your_database_url"`);
 }
 
-async function addPrismaAccelerateExtension(serverDir: string) {
+async function addPrismaAccelerateExtension(projectDir: string) {
 	try {
+		const dbPackageDir = path.join(projectDir, "packages/db");
 		await addPackageDependency({
 			dependencies: ["@prisma/extension-accelerate"],
-			projectDir: serverDir,
+			projectDir: dbPackageDir,
 		});
 
 		return true;
@@ -291,7 +292,7 @@ export async function setupPrismaPostgres(
 
 			if (orm === "prisma") {
 				await addDotenvImportToPrismaConfig(projectDir);
-				await addPrismaAccelerateExtension(serverDir);
+				await addPrismaAccelerateExtension(projectDir);
 			}
 
 			const connectionType =

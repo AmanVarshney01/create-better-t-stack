@@ -196,8 +196,15 @@ function getConvexDependencies(frontend: Frontend[]) {
 }
 
 export async function setupApi(config: ProjectConfig) {
-	const { api, projectName, frontend, backend, packageManager, projectDir } =
-		config;
+	const {
+		api,
+		projectName,
+		frontend,
+		backend,
+		packageManager,
+		projectDir,
+		auth,
+	} = config;
 	const isConvex = backend === "convex";
 
 	const webDir = path.join(projectDir, "apps/web");
@@ -250,7 +257,24 @@ export async function setupApi(config: ProjectConfig) {
 						dependencies: ["@elysiajs/trpc"],
 						projectDir: apiPackageDir,
 					});
+				} else if (backend === "express") {
+					await addPackageDependency({
+						dependencies: ["@trpc/server"],
+						projectDir: apiPackageDir,
+					});
+				} else if (backend === "fastify") {
+					await addPackageDependency({
+						dependencies: ["@trpc/server"],
+						projectDir: apiPackageDir,
+					});
 				}
+			}
+
+			if (auth === "better-auth") {
+				await addPackageDependency({
+					dependencies: ["better-auth"],
+					projectDir: apiPackageDir,
+				});
 			}
 		}
 
