@@ -11,7 +11,7 @@ import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
 
 async function writeSupabaseEnvFile(projectDir: string, databaseUrl: string) {
 	try {
-		const envPath = path.join(projectDir, "packages/db", ".env");
+		const envPath = path.join(projectDir, "apps/server", ".env");
 		const dbUrlToUse =
 			databaseUrl || "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
 		const variables: EnvVariable[] = [

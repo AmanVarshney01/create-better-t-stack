@@ -1,5 +1,5 @@
 {{#if (eq api "orpc")}}
-import { {{#if (eq auth "better-auth")}}protectedProcedure, {{/if}}publicProcedure } from "../lib/orpc";
+import { {{#if (eq auth "better-auth")}}protectedProcedure, {{/if}}publicProcedure } from "../index";
 import type { RouterClient } from "@orpc/server";
 {{#if (includes examples "todo")}}
 import { todoRouter } from "./todo";
@@ -27,7 +27,7 @@ export type AppRouterClient = RouterClient<typeof appRouter>;
 import {
   {{#if (eq auth "better-auth")}}protectedProcedure, {{/if}}publicProcedure,
   router,
-} from "../lib/trpc";
+} from "../index";
 {{#if (includes examples "todo")}}
 import { todoRouter } from "./todo";
 {{/if}}

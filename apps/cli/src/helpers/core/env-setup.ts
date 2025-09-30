@@ -277,9 +277,6 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 		return;
 	}
 
-	const authDir = path.join(projectDir, "packages/auth");
-	const apiDir = path.join(projectDir, "packages/api");
-	const dbDir = path.join(projectDir, "packages/db");
 	const serverDir = path.join(projectDir, "apps/server");
 
 	let corsOrigin = "http://localhost:3001";
@@ -304,15 +301,15 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 				if (config.runtime === "workers") {
 					databaseUrl = "http://127.0.0.1:8080";
 				} else {
-					databaseUrl = "file:./local.db";
+					databaseUrl = `file:${path.join(config.projectDir, "apps/server", "local.db")}`;
 				}
 				break;
 		}
 	}
 
-	if (await fs.pathExists(authDir)) {
-		const authEnvPath = path.join(authDir, ".env");
-		const authVars: EnvVariable[] = [
+	if (await fs.pathExists(serverDir)) {
+		const serverEnvPath = path.join(serverDir, ".env");
+		const serverVars: EnvVariable[] = [
 			{
 				key: "BETTER_AUTH_SECRET",
 				value: generateAuthSecret(),
@@ -333,13 +330,6 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 				value: `${corsOrigin}/success?checkout_id={CHECKOUT_ID}`,
 				condition: config.payments === "polar",
 			},
-		];
-		await addEnvVariablesToFile(authEnvPath, authVars);
-	}
-
-	if (await fs.pathExists(apiDir)) {
-		const apiEnvPath = path.join(apiDir, ".env");
-		const apiVars: EnvVariable[] = [
 			{
 				key: "CORS_ORIGIN",
 				value: corsOrigin,
@@ -350,20 +340,13 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 				value: "",
 				condition: examples?.includes("ai") || false,
 			},
-		];
-		await addEnvVariablesToFile(apiEnvPath, apiVars);
-	}
-
-	if (await fs.pathExists(dbDir)) {
-		const dbEnvPath = path.join(dbDir, ".env");
-		const dbVars: EnvVariable[] = [
 			{
 				key: "DATABASE_URL",
 				value: databaseUrl,
 				condition: database !== "none" && dbSetup === "none",
 			},
 		];
-		await addEnvVariablesToFile(dbEnvPath, dbVars);
+		await addEnvVariablesToFile(serverEnvPath, serverVars);
 	}
 
 	const isUnifiedAlchemy =

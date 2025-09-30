@@ -6,7 +6,7 @@ import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
 export async function setupPlanetScale(config: ProjectConfig) {
 	const { projectDir, database, orm } = config;
 
-	const envPath = path.join(projectDir, "packages/db", ".env");
+	const envPath = path.join(projectDir, "apps/server", ".env");
 
 	if (database === "mysql" && orm === "drizzle") {
 		const variables: EnvVariable[] = [
@@ -33,7 +33,7 @@ export async function setupPlanetScale(config: ProjectConfig) {
 			},
 		];
 
-		await fs.ensureDir(path.join(projectDir, "packages/db"));
+		await fs.ensureDir(path.join(projectDir, "apps/server"));
 		await addEnvVariablesToFile(envPath, variables);
 	}
 
@@ -46,7 +46,7 @@ export async function setupPlanetScale(config: ProjectConfig) {
 			},
 		];
 
-		await fs.ensureDir(path.join(projectDir, "packages/db"));
+		await fs.ensureDir(path.join(projectDir, "apps/server"));
 		await addEnvVariablesToFile(envPath, variables);
 	}
 
@@ -60,7 +60,7 @@ export async function setupPlanetScale(config: ProjectConfig) {
 			},
 		];
 
-		await fs.ensureDir(path.join(projectDir, "packages/db"));
+		await fs.ensureDir(path.join(projectDir, "apps/server"));
 		await addEnvVariablesToFile(envPath, variables);
 	}
 
@@ -73,7 +73,7 @@ export async function setupPlanetScale(config: ProjectConfig) {
 			},
 		];
 
-		await fs.ensureDir(path.join(projectDir, "packages/db"));
+		await fs.ensureDir(path.join(projectDir, "apps/server"));
 		await addEnvVariablesToFile(envPath, variables);
 	}
 }

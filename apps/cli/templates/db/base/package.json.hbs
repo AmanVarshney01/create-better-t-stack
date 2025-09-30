@@ -2,8 +2,14 @@
 	"name": "@{{projectName}}/db",
 	"type": "module",
 	"exports": {
-		".": "./dist/index.js",
-		"./*": "./dist/*.js"
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./*": {
+			"types": "./dist/*.d.ts",
+			"default": "./dist/*.js"
+		}
 	},
 	"scripts": {
 		"build": "tsdown"
@@ -14,7 +20,5 @@
 	},
 	"peerDependencies": {
 		"typescript": "^5"
-	},
-	"dependencies": {
 	}
 }
