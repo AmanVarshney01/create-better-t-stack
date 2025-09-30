@@ -1,23 +1,23 @@
 {
-	"name": "@{{projectName}}/db",
-	"type": "module",
-	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"default": "./dist/index.js"
-		},
-		"./*": {
-			"types": "./dist/*.d.ts",
-			"default": "./dist/*.js"
-		}
-	},
-	"scripts": {
-		"build": "tsdown"
-	},
-	"devDependencies": {
-		"@types/node": "^24.5.2"
-	},
-	"peerDependencies": {
-		"typescript": "^5"
-	}
+  "name": "@{{projectName}}/db",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsdown"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
 }
