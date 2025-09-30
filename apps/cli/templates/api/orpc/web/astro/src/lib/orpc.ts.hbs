@@ -25,7 +25,7 @@ export const link = new RPCLink({
 	],
 	interceptors: [
 		onError((error) => {
-			console.error(error)
+			console.error(`RPC Error: ${error.message}`, error)
 		})
   	],
 });

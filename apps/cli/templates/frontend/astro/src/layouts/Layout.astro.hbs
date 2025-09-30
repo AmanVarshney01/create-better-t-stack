@@ -15,7 +15,7 @@ const { title, description = "Built with Better-T-Stack"} = Astro.props;
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="description" content="{{projectName}} - {{description}}" />
+		<meta name="description" content=`{{projectName}} - ${description}` />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<title>{title}</title>

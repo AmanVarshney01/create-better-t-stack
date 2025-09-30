@@ -1,6 +1,5 @@
 import { orpc, queryClient } from '../lib/orpc';
-import { useQuery } from '@tanstack/react-query';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { useQuery, QueryClientProvider } from '@tanstack/react-query';
 
 function ApiStatus() {
 	const healthCheck = useQuery(orpc.healthCheck.queryOptions());
