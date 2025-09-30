@@ -23,7 +23,7 @@ async function writeEnvFile(
 	database: Database,
 	projectName: string,
 ) {
-	const envPath = path.join(projectDir, "packages/db", ".env");
+	const envPath = path.join(projectDir, "apps/server", ".env");
 	const variables: EnvVariable[] = [
 		{
 			key: "DATABASE_URL",

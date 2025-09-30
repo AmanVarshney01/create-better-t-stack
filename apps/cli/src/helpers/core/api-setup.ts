@@ -220,6 +220,25 @@ export async function setupApi(config: ProjectConfig) {
 				projectDir: apiPackageDir,
 			});
 
+			// Add framework-specific dependencies for context types
+			const frameworkDeps: AvailableDependencies[] = [];
+			if (backend === "hono") {
+				frameworkDeps.push("hono");
+			} else if (backend === "elysia") {
+				frameworkDeps.push("elysia");
+			} else if (backend === "express") {
+				frameworkDeps.push("express", "@types/express");
+			} else if (backend === "fastify") {
+				frameworkDeps.push("fastify");
+			}
+
+			if (frameworkDeps.length > 0) {
+				await addPackageDependency({
+					dependencies: frameworkDeps,
+					projectDir: apiPackageDir,
+				});
+			}
+
 			if (api === "trpc") {
 				if (backend === "hono") {
 					await addPackageDependency({

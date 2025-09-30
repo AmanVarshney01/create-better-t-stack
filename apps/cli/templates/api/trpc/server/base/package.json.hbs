@@ -1,8 +1,14 @@
 {
 	"name": "@{{projectName}}/api",
 	"exports": {
-		".": "./dist/index.js",
-		"./*": "./dist/*.js"
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./*": {
+			"types": "./dist/*.d.ts",
+			"default": "./dist/*.js"
+		}
 	},
 	"type": "module",
 	"scripts": {
@@ -14,9 +20,5 @@
 	},
 	"peerDependencies": {
 		"typescript": "^5"
-	},
-	"dependencies": {
-		"@{{projectName}}/auth": "workspace:*",
-		"@{{projectName}}/db": "workspace:*"
 	}
 }
