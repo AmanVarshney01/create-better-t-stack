@@ -3,6 +3,7 @@ import fs from "fs-extra";
 import type { ProjectConfig } from "../../types";
 import { writeBtsConfig } from "../../utils/bts-config";
 import { exitWithError } from "../../utils/errors";
+import { setupCatalogs } from "../../utils/setup-catalogs";
 import { setupAddons } from "../addons/addons-setup";
 import { setupExamples } from "../addons/examples-setup";
 import { setupApi } from "../core/api-setup";
@@ -86,6 +87,8 @@ export async function createProject(
 
 		await setupEnvironmentVariables(options);
 		await updatePackageConfigurations(projectDir, options);
+
+		await setupCatalogs(projectDir, options);
 
 		await setupWebDeploy(options);
 		await setupServerDeploy(options);
