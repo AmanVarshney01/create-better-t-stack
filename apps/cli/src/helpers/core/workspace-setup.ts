@@ -12,7 +12,6 @@ export async function setupWorkspaceDependencies(
 	const workspaceVersion =
 		options.packageManager === "npm" ? "*" : "workspace:*";
 
-	// Add common dependencies to all packages
 	const commonDeps: AvailableDependencies[] = ["dotenv"];
 	const commonDevDeps: AvailableDependencies[] = ["tsdown"];
 

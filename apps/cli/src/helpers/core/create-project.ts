@@ -31,6 +31,7 @@ import {
 	setupFrontendTemplates,
 	setupPaymentsTemplate,
 } from "./template-manager";
+import { spinner } from "@clack/prompts";
 
 export async function createProject(
 	options: ProjectConfig,
@@ -40,6 +41,10 @@ export async function createProject(
 	const isConvex = options.backend === "convex";
 
 	try {
+		const s = spinner();
+
+		s.start("Scaffolding project template...");
+
 		await fs.ensureDir(projectDir);
 
 		await copyBaseTemplate(projectDir, options);
@@ -94,7 +99,7 @@ export async function createProject(
 
 		await writeBtsConfig(options);
 
-		log.success("Project template successfully scaffolded!");
+		s.stop("Project template successfully scaffolded!");
 
 		if (options.install) {
 			await installDependencies({

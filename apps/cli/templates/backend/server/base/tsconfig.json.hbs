@@ -8,7 +8,6 @@
       "@/*": ["./src/*"]{{#if (eq orm "prisma")}},
       "prisma": ["node_modules/prisma"]{{/if}}
     },
-    "outDir": "./dist",
     "types": [
       {{#if (eq runtime "node")}}
         "node"
