@@ -10,7 +10,7 @@ import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { RPCHandler } from "@orpc/server/node";
 import { onError } from "@orpc/server";
-import { appRouter } from "@{{projectName}}/api/routers";
+import { appRouter } from "@{{projectName}}/api/routers/index";
 {{#if (eq auth "better-auth")}}
 import { createContext } from "@{{projectName}}/api/context";
 {{/if}}

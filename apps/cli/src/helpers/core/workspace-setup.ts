@@ -12,7 +12,7 @@ export async function setupWorkspaceDependencies(
 	const workspaceVersion =
 		options.packageManager === "npm" ? "*" : "workspace:*";
 
-	const commonDeps: AvailableDependencies[] = ["dotenv"];
+	const commonDeps: AvailableDependencies[] = ["dotenv", "zod"];
 	const commonDevDeps: AvailableDependencies[] = ["tsdown"];
 
 	const dbPackageDir = path.join(projectDir, "packages/db");

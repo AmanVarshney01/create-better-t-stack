@@ -1,8 +1,12 @@
-{{#unless (eq dbSetup "prisma-postgres")}}
-import "dotenv/config";
-{{/unless}}
 import path from "node:path";
 import type { PrismaConfig } from "prisma";
+{{#unless (eq dbSetup "prisma-postgres")}}
+import dotenv from "dotenv";
+
+dotenv.config({
+	path: "../../apps/server/.env",
+});
+{{/unless}}
 
 export default {
   schema: path.join("prisma", "schema"),
