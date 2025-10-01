@@ -6,7 +6,7 @@ import { addPackageDependency } from "../../utils/add-package-deps";
 export async function setupRuntime(config: ProjectConfig) {
 	const { runtime, backend, projectDir } = config;
 
-	if (backend === "convex" || backend === "next" || runtime === "none") {
+	if (backend === "convex" || backend === "self" || runtime === "none") {
 		return;
 	}
 
