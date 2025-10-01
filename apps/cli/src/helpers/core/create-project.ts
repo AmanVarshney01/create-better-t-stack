@@ -39,16 +39,21 @@ export async function createProject(
 ) {
 	const projectDir = options.projectDir;
 	const isConvex = options.backend === "convex";
+	const isSelfBackend = options.backend === "self";
+	const needsServerSetup = !isConvex && !isSelfBackend;
 
 	try {
 		await fs.ensureDir(projectDir);
 
 		await copyBaseTemplate(projectDir, options);
 		await setupFrontendTemplates(projectDir, options);
+
 		await setupBackendFramework(projectDir, options);
-		if (!isConvex) {
+
+		if (needsServerSetup) {
 			await setupDockerComposeTemplates(projectDir, options);
 		}
+
 		await setupAuthTemplate(projectDir, options);
 		if (options.payments && options.payments !== "none") {
 			await setupPaymentsTemplate(projectDir, options);
@@ -63,9 +68,11 @@ export async function createProject(
 		await setupApi(options);
 
 		if (!isConvex) {
-			await setupBackendDependencies(options);
+			if (needsServerSetup) {
+				await setupBackendDependencies(options);
+				await setupRuntime(options);
+			}
 			await setupDatabase(options, cliInput);
-			await setupRuntime(options);
 			if (options.examples.length > 0 && options.examples[0] !== "none") {
 				await setupExamples(options);
 			}

@@ -4,15 +4,11 @@ import type { Backend, Runtime } from "../types";
 import { exitCancelled } from "../utils/errors";
 
 export async function getRuntimeChoice(runtime?: Runtime, backend?: Backend) {
-	if (backend === "convex" || backend === "none") {
+	if (backend === "convex" || backend === "none" || backend === "self") {
 		return "none";
 	}
 
 	if (runtime !== undefined) return runtime;
-
-	if (backend === "next") {
-		return "node";
-	}
 
 	const runtimeOptions: Array<{
 		value: Runtime;
