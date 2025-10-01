@@ -165,7 +165,7 @@ export async function displayPostInstallInstructions(
 		output += `${pc.cyan("•")} Backend API: http://localhost:3000\n`;
 
 		if (api === "orpc") {
-			if (backend === "next") {
+			if (backend === "self") {
 				output += `${pc.cyan("•")} OpenAPI (Scalar UI): http://localhost:3000/rpc/api\n`;
 			} else {
 				output += `${pc.cyan("•")} OpenAPI (Scalar UI): http://localhost:3000/api\n`;
