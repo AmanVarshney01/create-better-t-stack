@@ -64,13 +64,22 @@ export async function setupWorkspaceDependencies(
 	}
 
 	const needsApiDependency = options.api && options.api !== "none";
-	if (needsApiDependency) {
-		const webPackageDir = path.join(projectDir, "apps/web");
-		if (await fs.pathExists(webPackageDir)) {
+	const webPackageDir = path.join(projectDir, "apps/web");
+
+	if (await fs.pathExists(webPackageDir)) {
+		const webDeps: Record<string, string> = {};
+
+		if (options.backend === "self") {
+			webDeps[`@${projectName}/api`] = workspaceVersion;
+			webDeps[`@${projectName}/auth`] = workspaceVersion;
+			webDeps[`@${projectName}/db`] = workspaceVersion;
+		} else if (needsApiDependency) {
+			webDeps[`@${projectName}/api`] = workspaceVersion;
+		}
+
+		if (Object.keys(webDeps).length > 0) {
 			await addPackageDependency({
-				customDependencies: {
-					[`@${projectName}/api`]: workspaceVersion,
-				},
+				customDependencies: webDeps,
 				projectDir: webPackageDir,
 			});
 		}

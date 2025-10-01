@@ -12,6 +12,7 @@ import {
 	validateApiFrontendCompatibility,
 	validateExamplesCompatibility,
 	validatePaymentsCompatibility,
+	validateSelfBackendCompatibility,
 	validateServerDeployRequiresBackend,
 	validateWebDeployRequiresWebFrontend,
 	validateWorkersCompatibility,
@@ -415,6 +416,7 @@ export function validateFullConfig(
 
 	validateServerDeployRequiresBackend(config.serverDeploy, config.backend);
 
+	validateSelfBackendCompatibility(providedFlags, options, config);
 	validateWorkersCompatibility(providedFlags, options, config);
 
 	if (config.runtime === "workers" && config.serverDeploy === "none") {

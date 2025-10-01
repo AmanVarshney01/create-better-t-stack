@@ -10,13 +10,17 @@ export async function updatePackageConfigurations(
 	options: ProjectConfig,
 ) {
 	await updateRootPackageJson(projectDir, options);
-	if (options.backend !== "convex") {
+	if (options.backend === "convex") {
+		await updateConvexPackageJson(projectDir, options);
+	} else if (options.backend === "self") {
+		await updateAuthPackageJson(projectDir, options);
+		await updateApiPackageJson(projectDir, options);
+		await setupWorkspaceDependencies(projectDir, options);
+	} else if (options.backend !== "none") {
 		await updateServerPackageJson(projectDir, options);
 		await updateAuthPackageJson(projectDir, options);
 		await updateApiPackageJson(projectDir, options);
 		await setupWorkspaceDependencies(projectDir, options);
-	} else {
-		await updateConvexPackageJson(projectDir, options);
 	}
 }
 
@@ -70,7 +74,9 @@ async function updateRootPackageJson(
 		scripts["check-types"] = "turbo check-types";
 		scripts["dev:native"] = "turbo -F native dev";
 		scripts["dev:web"] = "turbo -F web dev";
-		scripts["dev:server"] = serverDevScript;
+		if (options.backend !== "self" && options.backend !== "none") {
+			scripts["dev:server"] = serverDevScript;
+		}
 		if (options.backend === "convex") {
 			scripts["dev:setup"] = `turbo -F ${backendPackageName} dev:setup`;
 		}
@@ -101,7 +107,9 @@ async function updateRootPackageJson(
 		scripts["check-types"] = "pnpm -r check-types";
 		scripts["dev:native"] = "pnpm --filter native dev";
 		scripts["dev:web"] = "pnpm --filter web dev";
-		scripts["dev:server"] = serverDevScript;
+		if (options.backend !== "self" && options.backend !== "none") {
+			scripts["dev:server"] = serverDevScript;
+		}
 		if (options.backend === "convex") {
 			scripts["dev:setup"] = `pnpm --filter ${backendPackageName} dev:setup`;
 		}
@@ -132,7 +140,9 @@ async function updateRootPackageJson(
 		scripts["check-types"] = "npm run check-types --workspaces";
 		scripts["dev:native"] = "npm run dev --workspace native";
 		scripts["dev:web"] = "npm run dev --workspace web";
-		scripts["dev:server"] = serverDevScript;
+		if (options.backend !== "self" && options.backend !== "none") {
+			scripts["dev:server"] = serverDevScript;
+		}
 		if (options.backend === "convex") {
 			scripts["dev:setup"] =
 				`npm run dev:setup --workspace ${backendPackageName}`;
@@ -170,7 +180,9 @@ async function updateRootPackageJson(
 		scripts["check-types"] = "bun run --filter '*' check-types";
 		scripts["dev:native"] = "bun run --filter native dev";
 		scripts["dev:web"] = "bun run --filter web dev";
-		scripts["dev:server"] = serverDevScript;
+		if (options.backend !== "self" && options.backend !== "none") {
+			scripts["dev:server"] = serverDevScript;
+		}
 		if (options.backend === "convex") {
 			scripts["dev:setup"] = `bun run --filter ${backendPackageName} dev:setup`;
 		}
