@@ -1,4 +1,4 @@
-{{#if (or (eq runtime "bun") (eq runtime "node"))}}
+{{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 {{#if (eq dbSetup "neon")}}
 import { neon, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';

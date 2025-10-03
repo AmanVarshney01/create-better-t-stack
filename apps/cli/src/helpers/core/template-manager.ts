@@ -244,27 +244,12 @@ async function setupApiPackage(projectDir: string, context: ProjectConfig) {
 	const apiPackageDir = path.join(projectDir, "packages/api");
 	await fs.ensureDir(apiPackageDir);
 
-	const apiServerBaseDir = path.join(
+	const apiServerDir = path.join(
 		PKG_ROOT,
-		`templates/api/${context.api}/server/base`,
+		`templates/api/${context.api}/server`,
 	);
-	if (await fs.pathExists(apiServerBaseDir)) {
-		await processAndCopyFiles("**/*", apiServerBaseDir, apiPackageDir, context);
-	}
-
-	const apiServerFrameworkDir = path.join(
-		PKG_ROOT,
-		`templates/api/${context.api}/server/rest`,
-	);
-
-	if (await fs.pathExists(apiServerFrameworkDir)) {
-		await processAndCopyFiles(
-			"**/*",
-			apiServerFrameworkDir,
-			apiPackageDir,
-			context,
-			true,
-		);
+	if (await fs.pathExists(apiServerDir)) {
+		await processAndCopyFiles("**/*", apiServerDir, apiPackageDir, context);
 	}
 }
 

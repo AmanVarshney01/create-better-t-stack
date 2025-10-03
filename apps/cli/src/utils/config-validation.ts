@@ -333,11 +333,12 @@ export function validateBackendConstraints(
 		providedFlags.has("backend") &&
 		backend &&
 		backend !== "convex" &&
-		backend !== "none"
+		backend !== "none" &&
+		backend !== "self"
 	) {
 		if (providedFlags.has("runtime") && options.runtime === "none") {
 			exitWithError(
-				"'--runtime none' is only supported with '--backend convex' or '--backend none'. Please choose 'bun', 'node', or remove the --runtime flag.",
+				"'--runtime none' is only supported with '--backend convex', '--backend none', or '--backend self'. Please choose 'bun', 'node', or remove the --runtime flag.",
 			);
 		}
 	}

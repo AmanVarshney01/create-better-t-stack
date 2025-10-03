@@ -1,4 +1,4 @@
-{{#if (or (eq runtime "bun") (eq runtime "node"))}}
+{{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 {{#if (eq dbSetup "planetscale")}}
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 
