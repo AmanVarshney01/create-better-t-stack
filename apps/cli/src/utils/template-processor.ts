@@ -55,11 +55,11 @@ handlebars.registerHelper("eq", (a, b) => a === b);
 handlebars.registerHelper("ne", (a, b) => a !== b);
 handlebars.registerHelper("and", (...args) => {
 	const values = args.slice(0, -1);
-	return values.every(value => value);
+	return values.every((value) => value);
 });
 handlebars.registerHelper("or", (...args) => {
 	const values = args.slice(0, -1);
-	return values.some(value => value);
+	return values.some((value) => value);
 });
 
 handlebars.registerHelper(

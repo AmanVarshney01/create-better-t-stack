@@ -49,13 +49,13 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
 
 {{else if (includes frontend 'tanstack-start')}}
 import { createTRPCContext } from "@trpc/tanstack-react-query";
-import type { AppRouter } from "@{{projectName}}/api/src/routers/index";
+import type { AppRouter } from "@{{projectName}}/api/routers/index";
 
 export const { TRPCProvider, useTRPC, useTRPCClient } =
   createTRPCContext<AppRouter>();
 
 {{else}}
-import type { AppRouter } from "@{{projectName}}/api/src/routers/index";
+import type { AppRouter } from "@{{projectName}}/api/routers/index";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";

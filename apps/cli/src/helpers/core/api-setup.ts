@@ -17,7 +17,7 @@ async function addBackendWorkspaceDependency(
 		}
 		pkgJson.dependencies[backendPackageName] = workspaceVersion;
 		await fs.writeJson(pkgJsonPath, pkgJson, { spaces: 2 });
-	} catch (_error) { }
+	} catch (_error) {}
 }
 
 function getFrontendType(frontend: Frontend[]): {
@@ -226,6 +226,13 @@ export async function setupApi(config: ProjectConfig) {
 				dependencies: apiDeps.server.dependencies as AvailableDependencies[],
 				projectDir: apiPackageDir,
 			});
+
+			if (backend === "self" && webDirExists) {
+				await addPackageDependency({
+					dependencies: apiDeps.server.dependencies as AvailableDependencies[],
+					projectDir: webDir,
+				});
+			}
 
 			// Add framework-specific dependencies for context types
 			const frameworkDeps: AvailableDependencies[] = [];

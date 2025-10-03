@@ -123,7 +123,11 @@ export async function setupFrontendTemplates(
 					}
 				}
 
-				if (context.backend === "self" && reactFramework === "next" && context.api !== "none") {
+				if (
+					context.backend === "self" &&
+					reactFramework === "next" &&
+					context.api !== "none"
+				) {
 					const apiFullstackDir = path.join(
 						PKG_ROOT,
 						`templates/api/${context.api}/fullstack/next`,
