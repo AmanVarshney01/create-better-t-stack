@@ -174,6 +174,7 @@ function generateStackDescription(
 	const hasTanstackStart = frontend.includes("tanstack-start");
 	const hasSvelte = frontend.includes("svelte");
 	const hasNuxt = frontend.includes("nuxt");
+	const hasAstro = frontend.includes("astro");
 	const hasSolid = frontend.includes("solid");
 	const hasFrontendNone = frontend.length === 0 || frontend.includes("none");
 
@@ -190,6 +191,8 @@ function generateStackDescription(
 			parts.push("SvelteKit");
 		} else if (hasNuxt) {
 			parts.push("Nuxt");
+		} else if (hasAstro) {
+			parts.push("Astro");
 		} else if (hasSolid) {
 			parts.push("SolidJS");
 		}

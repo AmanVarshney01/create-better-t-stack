@@ -33,7 +33,7 @@ export function ensureSingleWebAndNative(frontends: Frontend[]) {
 	const { web, native } = splitFrontends(frontends);
 	if (web.length > 1) {
 		exitWithError(
-			"Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, nuxt, svelte, solid",
+			"Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, nuxt, astro, svelte, solid",
 		);
 	}
 	if (native.length > 1) {

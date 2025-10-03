@@ -25,6 +25,7 @@ function getFrontendType(frontend: Frontend[]): {
 	hasNuxtWeb: boolean;
 	hasSvelteWeb: boolean;
 	hasSolidWeb: boolean;
+	hasAstroWeb: boolean;
 	hasNative: boolean;
 } {
 	const reactBasedFrontends = [
@@ -40,6 +41,7 @@ function getFrontendType(frontend: Frontend[]): {
 		hasNuxtWeb: frontend.includes("nuxt"),
 		hasSvelteWeb: frontend.includes("svelte"),
 		hasSolidWeb: frontend.includes("solid"),
+		hasAstroWeb: frontend.includes("astro"),
 		hasNative: frontend.some((f) => nativeFrontends.includes(f)),
 	};
 }
@@ -107,6 +109,15 @@ function getApiDependencies(
 				"@tanstack/solid-query-devtools",
 				"@tanstack/solid-router-devtools",
 			],
+		};
+	} else if (frontendType.hasAstroWeb && api === "orpc") {
+		deps.web = {
+			dependencies: [
+				"@orpc/tanstack-query",
+				"@orpc/client",
+				"@tanstack/react-query",
+			],
+			devDependencies: ["@tanstack/react-query-devtools"],
 		};
 	}
 

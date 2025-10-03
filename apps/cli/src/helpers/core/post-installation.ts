@@ -94,6 +94,7 @@ export async function displayPostInstallInstructions(
 			"next",
 			"tanstack-start",
 			"nuxt",
+			"astro",
 			"svelte",
 			"solid",
 		].includes(f),

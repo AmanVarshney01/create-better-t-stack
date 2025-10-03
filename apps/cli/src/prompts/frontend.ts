@@ -56,6 +56,11 @@ export async function getFrontendChoice(
 				hint: "The Progressive Web Framework for Vue.js",
 			},
 			{
+				value: "astro" as const,
+				label: "Astro",
+				hint: "All-in-one web framework for content-driven websites",
+			},
+			{
 				value: "svelte" as const,
 				label: "Svelte",
 				hint: "web development for the rest of us",

@@ -67,6 +67,7 @@ export async function setupFrontendTemplates(
 		["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
 	);
 	const hasNuxtWeb = context.frontend.includes("nuxt");
+	const hasAstroWeb = context.frontend.includes("astro");
 	const hasSvelteWeb = context.frontend.includes("svelte");
 	const hasSolidWeb = context.frontend.includes("solid");
 	const hasNativeWind = context.frontend.includes("native-nativewind");
@@ -74,7 +75,7 @@ export async function setupFrontendTemplates(
 	const _hasNative = hasNativeWind || hasUnistyles;
 	const isConvex = context.backend === "convex";
 
-	if (hasReactWeb || hasNuxtWeb || hasSvelteWeb || hasSolidWeb) {
+	if (hasReactWeb || hasNuxtWeb || hasAstroWeb || hasSvelteWeb || hasSolidWeb) {
 		const webAppDir = path.join(projectDir, "apps/web");
 		await fs.ensureDir(webAppDir);
 
@@ -137,6 +138,23 @@ export async function setupFrontendTemplates(
 				);
 				if (await fs.pathExists(apiWebNuxtDir)) {
 					await processAndCopyFiles("**/*", apiWebNuxtDir, webAppDir, context);
+				} else {
+				}
+			}
+		} else if (hasAstroWeb) {
+			const astroBaseDir = path.join(PKG_ROOT, "templates/frontend/astro");
+			if (await fs.pathExists(astroBaseDir)) {
+				await processAndCopyFiles("**/*", astroBaseDir, webAppDir, context);
+			} else {
+			}
+
+			if (!isConvex && context.api === "orpc") {
+				const apiWebAstroDir = path.join(
+					PKG_ROOT,
+					`templates/api/${context.api}/web/astro`,
+				);
+				if (await fs.pathExists(apiWebAstroDir)) {
+					await processAndCopyFiles("**/*", apiWebAstroDir, webAppDir, context);
 				} else {
 				}
 			}
