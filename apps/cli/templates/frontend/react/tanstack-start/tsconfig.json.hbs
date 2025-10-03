@@ -24,10 +24,5 @@
     "paths": {
       "@/*": ["./src/*"]
     }
-  },
-  {{#unless (or (eq backend "convex") (eq backend "none"))}}
-  "references": [{
-    "path": "../server"
-  }]
-  {{/unless}}
+  }
 }

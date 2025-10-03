@@ -9,9 +9,14 @@ import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
 import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
 
-async function writeSupabaseEnvFile(projectDir: string, databaseUrl: string) {
+async function writeSupabaseEnvFile(
+	projectDir: string,
+	backend: ProjectConfig["backend"],
+	databaseUrl: string,
+) {
 	try {
-		const envPath = path.join(projectDir, "apps/server", ".env");
+		const targetApp = backend === "self" ? "apps/web" : "apps/server";
+		const envPath = path.join(projectDir, targetApp, ".env");
 		const dbUrlToUse =
 			databaseUrl || "postgresql://postgres:postgres@127.0.0.1:54322/postgres";
 		const variables: EnvVariable[] = [
@@ -156,7 +161,7 @@ export async function setupSupabase(
 	config: ProjectConfig,
 	cliInput?: { manualDb?: boolean },
 ) {
-	const { projectDir, packageManager } = config;
+	const { projectDir, packageManager, backend } = config;
 	const manualDb = cliInput?.manualDb ?? false;
 
 	const serverDir = path.join(projectDir, "packages", "db");
@@ -166,7 +171,7 @@ export async function setupSupabase(
 
 		if (manualDb) {
 			displayManualSupabaseInstructions();
-			await writeSupabaseEnvFile(projectDir, "");
+			await writeSupabaseEnvFile(projectDir, backend, "");
 			return;
 		}
 
@@ -191,7 +196,7 @@ export async function setupSupabase(
 
 		if (mode === "manual") {
 			displayManualSupabaseInstructions();
-			await writeSupabaseEnvFile(projectDir, "");
+			await writeSupabaseEnvFile(projectDir, backend, "");
 			return;
 		}
 
@@ -210,7 +215,7 @@ export async function setupSupabase(
 		const dbUrl = extractDbUrl(supabaseOutput);
 
 		if (dbUrl) {
-			const envUpdated = await writeSupabaseEnvFile(projectDir, dbUrl);
+			const envUpdated = await writeSupabaseEnvFile(projectDir, backend, dbUrl);
 
 			if (envUpdated) {
 				log.success(pc.green("Supabase local development setup ready!"));

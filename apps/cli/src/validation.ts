@@ -40,7 +40,7 @@ function validateYesFlagCombination(
 	if (coreStackFlagsProvided.length > 0) {
 		exitWithError(
 			`Cannot combine --yes with core stack configuration flags: ${coreStackFlagsProvided.map((f) => `--${f}`).join(", ")}. ` +
-			"The --yes flag uses default configuration. Remove these flags or use --yes without them.",
+				"The --yes flag uses default configuration. Remove these flags or use --yes without them.",
 		);
 	}
 }

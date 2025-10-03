@@ -396,10 +396,16 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 			if (backend === "self") {
 				const webDir = path.join(projectDir, "apps/web");
 				if (await fs.pathExists(webDir)) {
-					await addEnvVariablesToFile(path.join(webDir, ".env"), serverAlchemyVars);
+					await addEnvVariablesToFile(
+						path.join(webDir, ".env"),
+						serverAlchemyVars,
+					);
 				}
 			} else {
-				await addEnvVariablesToFile(path.join(serverDir, ".env"), serverAlchemyVars);
+				await addEnvVariablesToFile(
+					path.join(serverDir, ".env"),
+					serverAlchemyVars,
+				);
 			}
 		}
 	}

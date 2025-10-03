@@ -80,9 +80,14 @@ async function initMongoDBAtlas(serverDir: string) {
 	}
 }
 
-async function writeEnvFile(projectDir: string, config?: MongoDBConfig) {
+async function writeEnvFile(
+	projectDir: string,
+	backend: ProjectConfig["backend"],
+	config?: MongoDBConfig,
+) {
 	try {
-		const envPath = path.join(projectDir, "apps/server", ".env");
+		const targetApp = backend === "self" ? "apps/web" : "apps/server";
+		const envPath = path.join(projectDir, targetApp, ".env");
 		const variables: EnvVariable[] = [
 			{
 				key: "DATABASE_URL",
@@ -122,10 +127,10 @@ export async function setupMongoDBAtlas(
 	config: ProjectConfig,
 	cliInput?: { manualDb?: boolean },
 ) {
-	const { projectDir } = config;
+	const { projectDir, backend } = config;
 	const manualDb = cliInput?.manualDb ?? false;
 
-	const serverDir = path.join(projectDir, "apps/server");
+	const serverDir = path.join(projectDir, "packages/db");
 	try {
 		await fs.ensureDir(serverDir);
 
@@ -164,8 +169,10 @@ export async function setupMongoDBAtlas(
 
 		const atlasConfig = await initMongoDBAtlas(serverDir);
 
-		if (atlasConfig) {
-			await writeEnvFile(projectDir, atlasConfig);
+		const config = await initMongoDBAtlas(serverDir);
+
+		if (config) {
+			await writeEnvFile(projectDir, config);
 			log.success(
 				pc.green(
 					"MongoDB Atlas setup complete! Connection saved to .env file.",
@@ -173,7 +180,7 @@ export async function setupMongoDBAtlas(
 			);
 		} else {
 			log.warn(pc.yellow("Falling back to local MongoDB configuration"));
-			await writeEnvFile(projectDir);
+			await writeEnvFile(projectDir, backend);
 			displayManualSetupInstructions();
 		}
 	} catch (error) {
@@ -186,7 +193,7 @@ export async function setupMongoDBAtlas(
 		);
 
 		try {
-			await writeEnvFile(projectDir);
+			await writeEnvFile(projectDir, backend);
 			displayManualSetupInstructions();
 		} catch {}
 	}

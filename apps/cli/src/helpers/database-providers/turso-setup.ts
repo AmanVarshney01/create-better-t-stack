@@ -157,8 +157,13 @@ async function createTursoDatabase(dbName: string, groupName: string | null) {
 	}
 }
 
-async function writeEnvFile(projectDir: string, config?: TursoConfig) {
-	const envPath = path.join(projectDir, "apps/server", ".env");
+async function writeEnvFile(
+	projectDir: string,
+	backend: ProjectConfig["backend"],
+	config?: TursoConfig,
+) {
+	const targetApp = backend === "self" ? "apps/web" : "apps/server";
+	const envPath = path.join(projectDir, targetApp, ".env");
 	const variables: EnvVariable[] = [
 		{
 			key: "DATABASE_URL",
@@ -190,14 +195,14 @@ export async function setupTurso(
 	config: ProjectConfig,
 	cliInput?: { manualDb?: boolean },
 ) {
-	const { orm, projectDir } = config;
+	const { orm, projectDir, backend } = config;
 	const manualDb = cliInput?.manualDb ?? false;
 	const _isDrizzle = orm === "drizzle";
 	const setupSpinner = spinner();
 
 	try {
 		if (manualDb) {
-			await writeEnvFile(projectDir);
+			await writeEnvFile(projectDir, backend);
 			displayManualSetupInstructions();
 			return;
 		}
@@ -222,7 +227,7 @@ export async function setupTurso(
 		if (isCancel(mode)) return exitCancelled("Operation cancelled");
 
 		if (mode === "manual") {
-			await writeEnvFile(projectDir);
+			await writeEnvFile(projectDir, backend);
 			displayManualSetupInstructions();
 			return;
 		}
@@ -237,7 +242,7 @@ export async function setupTurso(
 			if (setupSpinner)
 				setupSpinner.stop(pc.yellow("Turso setup not supported on Windows"));
 			log.warn(pc.yellow("Automatic Turso setup is not supported on Windows."));
-			await writeEnvFile(projectDir);
+			await writeEnvFile(projectDir, backend);
 			displayManualSetupInstructions();
 			return;
 		}
@@ -255,7 +260,7 @@ export async function setupTurso(
 			if (isCancel(shouldInstall)) return exitCancelled("Operation cancelled");
 
 			if (!shouldInstall) {
-				await writeEnvFile(projectDir);
+				await writeEnvFile(projectDir, backend);
 				displayManualSetupInstructions();
 				return;
 			}
@@ -288,7 +293,7 @@ export async function setupTurso(
 
 			try {
 				const config = await createTursoDatabase(dbName, selectedGroup);
-				await writeEnvFile(projectDir, config);
+				await writeEnvFile(projectDir, backend, config);
 				success = true;
 			} catch (error) {
 				if (error instanceof Error && error.message === "DATABASE_EXISTS") {
@@ -311,7 +316,7 @@ export async function setupTurso(
 				}`,
 			),
 		);
-		await writeEnvFile(projectDir);
+		await writeEnvFile(projectDir, backend);
 		displayManualSetupInstructions();
 		log.success("Setup completed with manual configuration required.");
 	}
