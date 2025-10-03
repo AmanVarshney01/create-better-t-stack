@@ -17,7 +17,7 @@ async function addBackendWorkspaceDependency(
 		}
 		pkgJson.dependencies[backendPackageName] = workspaceVersion;
 		await fs.writeJson(pkgJsonPath, pkgJson, { spaces: 2 });
-	} catch (_error) {}
+	} catch (_error) { }
 }
 
 function getFrontendType(frontend: Frontend[]): {
@@ -237,6 +237,10 @@ export async function setupApi(config: ProjectConfig) {
 				frameworkDeps.push("express", "@types/express");
 			} else if (backend === "fastify") {
 				frameworkDeps.push("fastify");
+			} else if (backend === "self") {
+				if (frontend.includes("next")) {
+					frameworkDeps.push("next");
+				}
 			}
 
 			if (frameworkDeps.length > 0) {
