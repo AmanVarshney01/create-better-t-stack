@@ -63,6 +63,17 @@ export async function setupDatabase(
 					projectDir: dbPackageDir,
 				});
 			}
+
+			// workaround 
+			if (backend === "self") {
+				const webDir = path.join(projectDir, "apps/web");
+				if (await fs.pathExists(webDir)) {
+					await addPackageDependency({
+						dependencies: ["@prisma/client"],
+						projectDir: webDir,
+					});
+				}
+			}
 		} else if (orm === "drizzle") {
 			if (database === "sqlite") {
 				await addPackageDependency({

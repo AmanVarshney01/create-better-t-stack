@@ -3,6 +3,34 @@ import fs from "fs-extra";
 import type { ProjectConfig } from "../../types";
 import { generateAuthSecret } from "./auth-setup";
 
+function getClientServerVar(frontend: string[], backend: ProjectConfig["backend"]) {
+	const hasNextJs = frontend.includes("next");
+	const hasNuxt = frontend.includes("nuxt");
+	const hasSvelte = frontend.includes("svelte");
+
+	// For fullstack self, no base URL is needed (same-origin)
+	if (backend === "self") {
+		return { key: "", value: "", write: false } as const;
+	}
+
+	let key = "VITE_SERVER_URL";
+	if (hasNextJs) key = "NEXT_PUBLIC_SERVER_URL";
+	else if (hasNuxt) key = "NUXT_PUBLIC_SERVER_URL";
+	else if (hasSvelte) key = "PUBLIC_SERVER_URL";
+
+	return { key, value: "http://localhost:3000", write: true } as const;
+}
+
+function getConvexVar(frontend: string[]) {
+	const hasNextJs = frontend.includes("next");
+	const hasNuxt = frontend.includes("nuxt");
+	const hasSvelte = frontend.includes("svelte");
+	if (hasNextJs) return "NEXT_PUBLIC_CONVEX_URL";
+	if (hasNuxt) return "NUXT_PUBLIC_CONVEX_URL";
+	if (hasSvelte) return "PUBLIC_CONVEX_URL";
+	return "VITE_CONVEX_URL";
+}
+
 export interface EnvVariable {
 	key: string;
 	value: string | null | undefined;
@@ -120,31 +148,15 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 	if (hasWebFrontend) {
 		const clientDir = path.join(projectDir, "apps/web");
 		if (await fs.pathExists(clientDir)) {
-			let envVarName = "VITE_SERVER_URL";
-			let serverUrl = "http://localhost:3000";
-
-			if (hasNextJs) {
-				envVarName = "NEXT_PUBLIC_SERVER_URL";
-			} else if (hasNuxt) {
-				envVarName = "NUXT_PUBLIC_SERVER_URL";
-			} else if (hasSvelte) {
-				envVarName = "PUBLIC_SERVER_URL";
-			}
-
-			if (backend === "convex") {
-				if (hasNextJs) envVarName = "NEXT_PUBLIC_CONVEX_URL";
-				else if (hasNuxt) envVarName = "NUXT_PUBLIC_CONVEX_URL";
-				else if (hasSvelte) envVarName = "PUBLIC_CONVEX_URL";
-				else envVarName = "VITE_CONVEX_URL";
-
-				serverUrl = "https://<YOUR_CONVEX_URL>";
-			}
+			const baseVar = getClientServerVar(frontend, backend);
+			const envVarName = backend === "convex" ? getConvexVar(frontend) : baseVar.key;
+			const serverUrl = backend === "convex" ? "https://<YOUR_CONVEX_URL>" : baseVar.value;
 
 			const clientVars: EnvVariable[] = [
 				{
 					key: envVarName,
 					value: serverUrl,
-					condition: backend !== "self",
+					condition: backend === "convex" ? true : baseVar.write,
 				},
 			];
 
@@ -280,7 +292,9 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 	const serverDir = path.join(projectDir, "apps/server");
 
 	let corsOrigin = "http://localhost:3001";
-	if (hasReactRouter || hasSvelte) {
+	if (backend === "self") {
+		corsOrigin = "http://localhost:3001";
+	} else if (hasReactRouter || hasSvelte) {
 		corsOrigin = "http://localhost:5173";
 	}
 
@@ -301,7 +315,8 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 				if (config.runtime === "workers") {
 					databaseUrl = "http://127.0.0.1:8080";
 				} else {
-					databaseUrl = `file:${path.join(config.projectDir, "apps/server", "local.db")}`;
+					const dbAppDir = backend === "self" ? "apps/web" : "apps/server";
+					databaseUrl = `file:${path.join(config.projectDir, dbAppDir, "local.db")}`;
 				}
 				break;
 		}
@@ -315,7 +330,7 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 		},
 		{
 			key: "BETTER_AUTH_URL",
-			value: "http://localhost:3000",
+			value: backend === "self" ? "http://localhost:3001" : "http://localhost:3000",
 			condition: !!auth,
 		},
 		{

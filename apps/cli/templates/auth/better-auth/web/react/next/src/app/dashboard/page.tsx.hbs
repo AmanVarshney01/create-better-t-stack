@@ -1,3 +1,33 @@
+{{#if (eq backend "self")}}
+import { redirect } from "next/navigation";
+import Dashboard from "./dashboard";
+import { headers } from "next/headers";
+import { auth } from "@{{projectName}}/auth";
+
+export default async function DashboardPage() {
+	const session = await auth.api.getSession({
+		headers: await headers(),
+	});
+
+	if (!session?.user) {
+		redirect("/login");
+	}
+
+	{{#if (eq payments "polar")}}
+	const { data: customerState } = await auth.api.customer.state({
+		headers: await headers(),
+	});
+	{{/if}}
+
+	return (
+		<div>
+			<h1>Dashboard</h1>
+			<p>Welcome {session.user.name}</p>
+			<Dashboard session={session} {{#if (eq payments "polar")}}customerState={customerState}{{/if}} />
+		</div>
+	);
+}
+{{else}}
 import { authClient } from "@/lib/auth-client";
 import { redirect } from "next/navigation";
 import Dashboard from "./dashboard";
@@ -35,3 +65,4 @@ export default async function DashboardPage() {
 		</div>
 	);
 }
+{{/if}}
