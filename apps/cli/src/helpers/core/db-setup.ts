@@ -64,7 +64,7 @@ export async function setupDatabase(
 				});
 			}
 
-			// workaround 
+			// workaround
 			if (backend === "self") {
 				const webDir = path.join(projectDir, "apps/web");
 				if (await fs.pathExists(webDir)) {

@@ -3,7 +3,10 @@ import fs from "fs-extra";
 import type { ProjectConfig } from "../../types";
 import { generateAuthSecret } from "./auth-setup";
 
-function getClientServerVar(frontend: string[], backend: ProjectConfig["backend"]) {
+function getClientServerVar(
+	frontend: string[],
+	backend: ProjectConfig["backend"],
+) {
 	const hasNextJs = frontend.includes("next");
 	const hasNuxt = frontend.includes("nuxt");
 	const hasSvelte = frontend.includes("svelte");
@@ -149,8 +152,10 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 		const clientDir = path.join(projectDir, "apps/web");
 		if (await fs.pathExists(clientDir)) {
 			const baseVar = getClientServerVar(frontend, backend);
-			const envVarName = backend === "convex" ? getConvexVar(frontend) : baseVar.key;
-			const serverUrl = backend === "convex" ? "https://<YOUR_CONVEX_URL>" : baseVar.value;
+			const envVarName =
+				backend === "convex" ? getConvexVar(frontend) : baseVar.key;
+			const serverUrl =
+				backend === "convex" ? "https://<YOUR_CONVEX_URL>" : baseVar.value;
 
 			const clientVars: EnvVariable[] = [
 				{
@@ -330,7 +335,8 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 		},
 		{
 			key: "BETTER_AUTH_URL",
-			value: backend === "self" ? "http://localhost:3001" : "http://localhost:3000",
+			value:
+				backend === "self" ? "http://localhost:3001" : "http://localhost:3000",
 			condition: !!auth,
 		},
 		{
