@@ -21,7 +21,9 @@ export const queryClient = new QueryClient({
 });
 
 export const link = new RPCLink({
-  {{#if (includes frontend "next")}}
+  {{#if (and (eq backend "self") (includes frontend "next"))}}
+  url: "/api/rpc",
+  {{else if (includes frontend "next")}}
   url: `${process.env.NEXT_PUBLIC_SERVER_URL}/rpc`,
   {{else}}
   url: `${import.meta.env.VITE_SERVER_URL}/rpc`,

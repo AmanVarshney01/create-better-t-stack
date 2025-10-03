@@ -5,7 +5,7 @@ import type { ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 
 export async function setupExamples(config: ProjectConfig) {
-	const { examples, frontend, backend, projectDir } = config;
+	const { examples, frontend, backend, projectDir, orm } = config;
 
 	if (
 		backend === "convex" ||
@@ -14,6 +14,28 @@ export async function setupExamples(config: ProjectConfig) {
 		examples[0] === "none"
 	) {
 		return;
+	}
+
+	const apiDir = path.join(projectDir, "packages/api");
+	const apiDirExists = await fs.pathExists(apiDir);
+
+	if (apiDirExists && backend !== "none") {
+		if (orm === "drizzle") {
+			await addPackageDependency({
+				dependencies: ["drizzle-orm"],
+				projectDir: apiDir,
+			});
+		} else if (orm === "prisma") {
+			await addPackageDependency({
+				dependencies: ["@prisma/client"],
+				projectDir: apiDir,
+			});
+		} else if (orm === "mongoose") {
+			await addPackageDependency({
+				dependencies: ["mongoose"],
+				projectDir: apiDir,
+			});
+		}
 	}
 
 	if (examples.includes("ai")) {

@@ -13,6 +13,7 @@ export async function updatePackageConfigurations(
 	if (options.backend === "convex") {
 		await updateConvexPackageJson(projectDir, options);
 	} else if (options.backend === "self") {
+		await updateDbPackageJson(projectDir, options);
 		await updateAuthPackageJson(projectDir, options);
 		await updateApiPackageJson(projectDir, options);
 		await setupWorkspaceDependencies(projectDir, options);

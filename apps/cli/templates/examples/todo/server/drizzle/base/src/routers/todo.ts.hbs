@@ -40,7 +40,7 @@ export const todoRouter = {
 {{#if (eq api "trpc")}}
 import z from "zod";
 import { router, publicProcedure } from "../index";
-import { todo } from "../db/schema/todo";
+import { todo } from "@{{projectName}}/db/schema/todo";
 import { eq } from "drizzle-orm";
 import { db } from "@{{projectName}}/db";
 
