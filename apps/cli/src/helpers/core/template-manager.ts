@@ -122,6 +122,21 @@ export async function setupFrontendTemplates(
 					} else {
 					}
 				}
+
+				if (context.backend === "self" && reactFramework === "next" && context.api !== "none") {
+					const apiFullstackDir = path.join(
+						PKG_ROOT,
+						`templates/api/${context.api}/fullstack/next`,
+					);
+					if (await fs.pathExists(apiFullstackDir)) {
+						await processAndCopyFiles(
+							"**/*",
+							apiFullstackDir,
+							webAppDir,
+							context,
+						);
+					}
+				}
 			}
 		} else if (hasNuxtWeb) {
 			const nuxtBaseDir = path.join(PKG_ROOT, "templates/frontend/nuxt");
@@ -577,6 +592,21 @@ export async function setupAuthTemplate(
 						context,
 					);
 				}
+
+				if (context.backend === "self" && reactFramework === "next") {
+					const authFullstackSrc = path.join(
+						PKG_ROOT,
+						`templates/auth/${authProvider}/fullstack/next`,
+					);
+					if (await fs.pathExists(authFullstackSrc)) {
+						await processAndCopyFiles(
+							"**/*",
+							authFullstackSrc,
+							webAppDir,
+							context,
+						);
+					}
+				}
 			}
 		} else if (hasNuxtWeb) {
 			const authWebNuxtSrc = path.join(
@@ -902,6 +932,22 @@ export async function setupExamplesTemplate(
 								false,
 							);
 						} else {
+						}
+
+						if (context.backend === "self" && reactFramework === "next") {
+							const exampleFullstackSrc = path.join(
+								exampleBaseDir,
+								"fullstack/next",
+							);
+							if (await fs.pathExists(exampleFullstackSrc)) {
+								await processAndCopyFiles(
+									"**/*",
+									exampleFullstackSrc,
+									webAppDir,
+									context,
+									false,
+								);
+							}
 						}
 					}
 				}
