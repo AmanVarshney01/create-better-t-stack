@@ -6,7 +6,7 @@ import { expo } from "@better-auth/expo";
 {{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
-import { polarClient } from "./payments";
+import { polarClient } from "./lib/payments";
 {{/if}}
 import prisma from "@{{projectName}}/db";
 
@@ -74,7 +74,7 @@ import { expo } from "@better-auth/expo";
 {{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
-import { polarClient } from "./payments";
+import { polarClient } from "./lib/payments";
 {{/if}}
 import { db } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
@@ -142,7 +142,7 @@ import { expo } from "@better-auth/expo";
 {{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
-import { polarClient } from "./payments";
+import { polarClient } from "./lib/payments";
 {{/if}}
 import { db } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
@@ -224,7 +224,7 @@ import { expo } from "@better-auth/expo";
 {{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
-import { polarClient } from "./payments";
+import { polarClient } from "./lib/payments";
 {{/if}}
 import { client } from "@{{projectName}}/db";
 
@@ -285,7 +285,7 @@ import { expo } from "@better-auth/expo";
 {{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
-import { polarClient } from "./payments";
+import { polarClient } from "./lib/payments";
 {{/if}}
 
 export const auth = betterAuth<BetterAuthOptions>({

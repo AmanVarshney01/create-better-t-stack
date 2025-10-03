@@ -63,7 +63,7 @@ async function createNeonProject(
 	packageManager: PackageManager,
 ) {
 	try {
-		const commandArgsString = `neonctl projects create --name ${projectName} --region-id ${regionId} --output json`;
+		const commandArgsString = `neonctl@latest projects create --name ${projectName} --region-id ${regionId} --output json`;
 		const { stdout } = await executeNeonCommand(
 			packageManager,
 			commandArgsString,
@@ -121,22 +121,24 @@ async function writeEnvFile(
 async function setupWithNeonDb(
 	projectDir: string,
 	packageManager: PackageManager,
+	backend: ProjectConfig["backend"],
 ) {
 	try {
 		const s = spinner();
 		s.start("Creating Neon database using neondb...");
 
-		const dbDir = path.join(projectDir, "packages/db");
-		await fs.ensureDir(dbDir);
+		const targetApp = backend === "self" ? "apps/web" : "apps/server";
+		const targetDir = path.join(projectDir, targetApp);
+		await fs.ensureDir(targetDir);
 
 		const packageCmd = getPackageExecutionCommand(
 			packageManager,
-			"neondb --yes",
+			"neondb@latest --yes",
 		);
 
 		await execa(packageCmd, {
 			shell: true,
-			cwd: dbDir,
+			cwd: targetDir,
 		});
 
 		s.stop(pc.green("Neon database created successfully!"));
@@ -222,7 +224,7 @@ export async function setupNeonPostgres(
 		if (isCancel(setupMethod)) return exitCancelled("Operation cancelled");
 
 		if (setupMethod === "neondb") {
-			await setupWithNeonDb(projectDir, packageManager);
+			await setupWithNeonDb(projectDir, packageManager, backend);
 		} else {
 			const suggestedProjectName = path.basename(projectDir);
 			const projectName = await text({
@@ -255,7 +257,6 @@ export async function setupNeonPostgres(
 			const finalSpinner = spinner();
 			finalSpinner.start("Configuring database connection");
 
-			await fs.ensureDir(path.join(projectDir, "packages/db"));
 			await writeEnvFile(projectDir, backend, neonConfig);
 
 			finalSpinner.stop("Neon database configured!");

@@ -31,7 +31,7 @@ export async function getBackendFrameworkChoice(
 		backendOptions.push({
 			value: "self" as const,
 			label: "Self (Fullstack)",
-			hint: "Use frontend's built-in backend capabilities",
+			hint: "Use frontend's built-in api routes",
 		});
 	}
 

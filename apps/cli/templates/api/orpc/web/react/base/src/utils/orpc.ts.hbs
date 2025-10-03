@@ -22,7 +22,7 @@ export const queryClient = new QueryClient({
 
 export const link = new RPCLink({
   {{#if (and (eq backend "self") (includes frontend "next"))}}
-  url: "/api/rpc",
+  url: `${typeof window !== "undefined" ? window.location.origin : "http://localhost:3001"}/api/rpc`,
   {{else if (includes frontend "next")}}
   url: `${process.env.NEXT_PUBLIC_SERVER_URL}/rpc`,
   {{else}}

@@ -4,12 +4,14 @@ import { polarClient } from "@polar-sh/better-auth";
 {{/if}}
 
 export const authClient = createAuthClient({
+  {{#unless (eq backend "self")}}
   baseURL:
     {{#if (includes frontend "next")}}
       process.env.NEXT_PUBLIC_SERVER_URL,
     {{else}}
       import.meta.env.VITE_SERVER_URL,
     {{/if}}
+  {{/unless}}
 {{#if (eq payments "polar")}}
   plugins: [polarClient()]
 {{/if}}
