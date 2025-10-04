@@ -77,7 +77,7 @@ export async function setupDatabase(
 		} else if (orm === "drizzle") {
 			if (database === "sqlite") {
 				await addPackageDependency({
-					dependencies: ["drizzle-orm", "@libsql/client", "libsql"],
+					dependencies: ["drizzle-orm", "@libsql/client"],
 					devDependencies: ["drizzle-kit"],
 					projectDir: dbPackageDir,
 				});
