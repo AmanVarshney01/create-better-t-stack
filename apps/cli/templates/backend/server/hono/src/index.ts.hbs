@@ -10,16 +10,16 @@ import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { RPCHandler } from "@orpc/server/fetch";
 import { onError } from "@orpc/server";
-import { createContext } from "./lib/context";
-import { appRouter } from "./routers/index";
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
 {{/if}}
 {{#if (eq api "trpc")}}
 import { trpcServer } from "@hono/trpc-server";
-import { createContext } from "./lib/context";
-import { appRouter } from "./routers/index";
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
 {{/if}}
 {{#if (eq auth "better-auth")}}
-import { auth } from "./lib/auth";
+import { auth } from "@{{projectName}}/auth";
 {{/if}}
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -121,7 +121,7 @@ app.post("/ai", async (c) => {
   const body = await c.req.json();
   const uiMessages = body.messages || [];
   const result = streamText({
-    model: google("gemini-1.5-flash"),
+    model: google("gemini-2.5-flash"),
     messages: convertToModelMessages(uiMessages),
   });
 
@@ -137,7 +137,7 @@ app.post("/ai", async (c) => {
     apiKey: env.GOOGLE_GENERATIVE_AI_API_KEY,
   });
   const result = streamText({
-    model: google("gemini-1.5-flash"),
+    model: google("gemini-2.5-flash"),
     messages: convertToModelMessages(uiMessages),
   });
 

@@ -9,8 +9,8 @@ import { google } from "@ai-sdk/google";
 import { convertToModelMessages, streamText } from "ai";
 {{/if}}
 {{#if (eq api "trpc")}}
-import { createContext } from "./lib/context";
-import { appRouter } from "./routers/index";
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 {{/if}}
 {{#if (eq api "orpc")}}
@@ -19,11 +19,11 @@ import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { RPCHandler } from "@orpc/server/fetch";
 import { onError } from "@orpc/server";
-import { appRouter } from "./routers";
-import { createContext } from "./lib/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import { createContext } from "@{{projectName}}/api/context";
 {{/if}}
 {{#if (eq auth "better-auth")}}
-import { auth } from "./lib/auth";
+import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
 {{#if (eq api "orpc")}}
@@ -104,7 +104,7 @@ const app = new Elysia()
     const body = await context.request.json();
     const uiMessages = body.messages || [];
     const result = streamText({
-      model: google("gemini-2.0-flash"),
+      model: google("gemini-2.5-flash"),
       messages: convertToModelMessages(uiMessages)
     });
 

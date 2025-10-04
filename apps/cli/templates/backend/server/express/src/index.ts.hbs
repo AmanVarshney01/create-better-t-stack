@@ -1,8 +1,8 @@
 import "dotenv/config";
 {{#if (eq api "trpc")}}
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { createContext } from "./lib/context";
-import { appRouter } from "./routers/index";
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
 {{/if}}
 {{#if (eq api "orpc")}}
 import { OpenAPIHandler } from "@orpc/openapi/node";
@@ -10,9 +10,9 @@ import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { RPCHandler } from "@orpc/server/node";
 import { onError } from "@orpc/server";
-import { appRouter } from "./routers";
+import { appRouter } from "@{{projectName}}/api/routers/index";
 {{#if (eq auth "better-auth")}}
-import { createContext } from "./lib/context";
+import { createContext } from "@{{projectName}}/api/context";
 {{/if}}
 {{/if}}
 import cors from "cors";
@@ -22,7 +22,7 @@ import { streamText, type UIMessage, convertToModelMessages } from "ai";
 import { google } from "@ai-sdk/google";
 {{/if}}
 {{#if (eq auth "better-auth")}}
-import { auth } from "./lib/auth";
+import { auth } from "@{{projectName}}/auth";
 import { toNodeHandler } from "better-auth/node";
 {{/if}}
 
@@ -105,7 +105,7 @@ app.use(express.json());
 app.post("/ai", async (req, res) => {
   const { messages = [] } = (req.body || {}) as { messages: UIMessage[] };
   const result = streamText({
-    model: google("gemini-1.5-flash"),
+    model: google("gemini-2.5-flash"),
     messages: convertToModelMessages(messages),
   });
   result.pipeUIMessageStreamToResponse(res);

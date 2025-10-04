@@ -3,6 +3,37 @@ import fs from "fs-extra";
 import type { ProjectConfig } from "../../types";
 import { generateAuthSecret } from "./auth-setup";
 
+function getClientServerVar(
+	frontend: string[],
+	backend: ProjectConfig["backend"],
+) {
+	const hasNextJs = frontend.includes("next");
+	const hasNuxt = frontend.includes("nuxt");
+	const hasSvelte = frontend.includes("svelte");
+
+	// For fullstack self, no base URL is needed (same-origin)
+	if (backend === "self") {
+		return { key: "", value: "", write: false } as const;
+	}
+
+	let key = "VITE_SERVER_URL";
+	if (hasNextJs) key = "NEXT_PUBLIC_SERVER_URL";
+	else if (hasNuxt) key = "NUXT_PUBLIC_SERVER_URL";
+	else if (hasSvelte) key = "PUBLIC_SERVER_URL";
+
+	return { key, value: "http://localhost:3000", write: true } as const;
+}
+
+function getConvexVar(frontend: string[]) {
+	const hasNextJs = frontend.includes("next");
+	const hasNuxt = frontend.includes("nuxt");
+	const hasSvelte = frontend.includes("svelte");
+	if (hasNextJs) return "NEXT_PUBLIC_CONVEX_URL";
+	if (hasNuxt) return "NUXT_PUBLIC_CONVEX_URL";
+	if (hasSvelte) return "PUBLIC_CONVEX_URL";
+	return "VITE_CONVEX_URL";
+}
+
 export interface EnvVariable {
 	key: string;
 	value: string | null | undefined;
@@ -120,31 +151,17 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 	if (hasWebFrontend) {
 		const clientDir = path.join(projectDir, "apps/web");
 		if (await fs.pathExists(clientDir)) {
-			let envVarName = "VITE_SERVER_URL";
-			let serverUrl = "http://localhost:3000";
-
-			if (hasNextJs) {
-				envVarName = "NEXT_PUBLIC_SERVER_URL";
-			} else if (hasNuxt) {
-				envVarName = "NUXT_PUBLIC_SERVER_URL";
-			} else if (hasSvelte) {
-				envVarName = "PUBLIC_SERVER_URL";
-			}
-
-			if (backend === "convex") {
-				if (hasNextJs) envVarName = "NEXT_PUBLIC_CONVEX_URL";
-				else if (hasNuxt) envVarName = "NUXT_PUBLIC_CONVEX_URL";
-				else if (hasSvelte) envVarName = "PUBLIC_CONVEX_URL";
-				else envVarName = "VITE_CONVEX_URL";
-
-				serverUrl = "https://<YOUR_CONVEX_URL>";
-			}
+			const baseVar = getClientServerVar(frontend, backend);
+			const envVarName =
+				backend === "convex" ? getConvexVar(frontend) : baseVar.key;
+			const serverUrl =
+				backend === "convex" ? "https://<YOUR_CONVEX_URL>" : baseVar.value;
 
 			const clientVars: EnvVariable[] = [
 				{
 					key: envVarName,
 					value: serverUrl,
-					condition: true,
+					condition: backend === "convex" ? true : baseVar.write,
 				},
 			];
 
@@ -278,13 +295,11 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 	}
 
 	const serverDir = path.join(projectDir, "apps/server");
-	if (!(await fs.pathExists(serverDir))) {
-		return;
-	}
-	const envPath = path.join(serverDir, ".env");
 
 	let corsOrigin = "http://localhost:3001";
-	if (hasReactRouter || hasSvelte) {
+	if (backend === "self") {
+		corsOrigin = "http://localhost:3001";
+	} else if (hasReactRouter || hasSvelte) {
 		corsOrigin = "http://localhost:5173";
 	}
 
@@ -305,7 +320,8 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 				if (config.runtime === "workers") {
 					databaseUrl = "http://127.0.0.1:8080";
 				} else {
-					databaseUrl = "file:./local.db";
+					const dbAppDir = backend === "self" ? "apps/web" : "apps/server";
+					databaseUrl = `file:${path.join(config.projectDir, dbAppDir, "local.db")}`;
 				}
 				break;
 		}
@@ -313,29 +329,15 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 
 	const serverVars: EnvVariable[] = [
 		{
-			key: "CORS_ORIGIN",
-			value: corsOrigin,
-			condition: true,
-		},
-		{
 			key: "BETTER_AUTH_SECRET",
 			value: generateAuthSecret(),
 			condition: !!auth,
 		},
 		{
 			key: "BETTER_AUTH_URL",
-			value: "http://localhost:3000",
+			value:
+				backend === "self" ? "http://localhost:3001" : "http://localhost:3000",
 			condition: !!auth,
-		},
-		{
-			key: "DATABASE_URL",
-			value: databaseUrl,
-			condition: database !== "none" && dbSetup === "none",
-		},
-		{
-			key: "GOOGLE_GENERATIVE_AI_API_KEY",
-			value: "",
-			condition: examples?.includes("ai") || false,
 		},
 		{
 			key: "POLAR_ACCESS_TOKEN",
@@ -347,9 +349,31 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 			value: `${corsOrigin}/success?checkout_id={CHECKOUT_ID}`,
 			condition: config.payments === "polar",
 		},
+		{
+			key: "CORS_ORIGIN",
+			value: corsOrigin,
+			condition: true,
+		},
+		{
+			key: "GOOGLE_GENERATIVE_AI_API_KEY",
+			value: "",
+			condition: examples?.includes("ai") || false,
+		},
+		{
+			key: "DATABASE_URL",
+			value: databaseUrl,
+			condition: database !== "none" && dbSetup === "none",
+		},
 	];
 
-	await addEnvVariablesToFile(envPath, serverVars);
+	if (backend === "self") {
+		const webDir = path.join(projectDir, "apps/web");
+		if (await fs.pathExists(webDir)) {
+			await addEnvVariablesToFile(path.join(webDir, ".env"), serverVars);
+		}
+	} else if (await fs.pathExists(serverDir)) {
+		await addEnvVariablesToFile(path.join(serverDir, ".env"), serverVars);
+	}
 
 	const isUnifiedAlchemy =
 		webDeploy === "alchemy" && serverDeploy === "alchemy";
@@ -382,15 +406,23 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 		}
 
 		if (serverDeploy === "alchemy") {
-			const serverDir = path.join(projectDir, "apps/server");
-			if (await fs.pathExists(serverDir)) {
-				const serverAlchemyVars: EnvVariable[] = [
-					{
-						key: "ALCHEMY_PASSWORD",
-						value: "please-change-this",
-						condition: true,
-					},
-				];
+			const serverAlchemyVars: EnvVariable[] = [
+				{
+					key: "ALCHEMY_PASSWORD",
+					value: "please-change-this",
+					condition: true,
+				},
+			];
+
+			if (backend === "self") {
+				const webDir = path.join(projectDir, "apps/web");
+				if (await fs.pathExists(webDir)) {
+					await addEnvVariablesToFile(
+						path.join(webDir, ".env"),
+						serverAlchemyVars,
+					);
+				}
+			} else {
 				await addEnvVariablesToFile(
 					path.join(serverDir, ".env"),
 					serverAlchemyVars,

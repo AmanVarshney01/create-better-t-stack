@@ -10,21 +10,19 @@ export async function setupPayments(config: ProjectConfig) {
 		return;
 	}
 
-	const serverDir = path.join(projectDir, "apps/server");
 	const clientDir = path.join(projectDir, "apps/web");
+	const authDir = path.join(projectDir, "packages/auth");
 
-	const serverDirExists = await fs.pathExists(serverDir);
 	const clientDirExists = await fs.pathExists(clientDir);
-
-	if (!serverDirExists) {
-		return;
-	}
+	const authDirExists = await fs.pathExists(authDir);
 
 	if (payments === "polar") {
-		await addPackageDependency({
-			dependencies: ["@polar-sh/better-auth", "@polar-sh/sdk"],
-			projectDir: serverDir,
-		});
+		if (authDirExists) {
+			await addPackageDependency({
+				dependencies: ["@polar-sh/better-auth", "@polar-sh/sdk"],
+				projectDir: authDir,
+			});
+		}
 
 		if (clientDirExists) {
 			const hasWebFrontend = frontend.some((f) =>

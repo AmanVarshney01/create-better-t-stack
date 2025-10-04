@@ -12,6 +12,7 @@ import {
 	validateApiFrontendCompatibility,
 	validateExamplesCompatibility,
 	validatePaymentsCompatibility,
+	validateSelfBackendCompatibility,
 	validateServerDeployRequiresBackend,
 	validateWebDeployRequiresWebFrontend,
 	validateWorkersCompatibility,
@@ -156,7 +157,6 @@ export function validateDatabaseSetup(
 	if (dbSetup && dbSetup !== "none") {
 		const validation = setupValidations[dbSetup];
 
-		// Special handling for PlanetScale - supports both postgres and mysql
 		if (dbSetup === "planetscale") {
 			if (database !== "postgres" && database !== "mysql") {
 				exitWithError(validation.errorMessage);
@@ -333,11 +333,12 @@ export function validateBackendConstraints(
 		providedFlags.has("backend") &&
 		backend &&
 		backend !== "convex" &&
-		backend !== "none"
+		backend !== "none" &&
+		backend !== "self"
 	) {
 		if (providedFlags.has("runtime") && options.runtime === "none") {
 			exitWithError(
-				"'--runtime none' is only supported with '--backend convex' or '--backend none'. Please choose 'bun', 'node', or remove the --runtime flag.",
+				"'--runtime none' is only supported with '--backend convex', '--backend none', or '--backend self'. Please choose 'bun', 'node', or remove the --runtime flag.",
 			);
 		}
 	}
@@ -416,6 +417,7 @@ export function validateFullConfig(
 
 	validateServerDeployRequiresBackend(config.serverDeploy, config.backend);
 
+	validateSelfBackendCompatibility(providedFlags, options, config);
 	validateWorkersCompatibility(providedFlags, options, config);
 
 	if (config.runtime === "workers" && config.serverDeploy === "none") {

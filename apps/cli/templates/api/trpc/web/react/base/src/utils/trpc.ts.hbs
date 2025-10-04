@@ -2,7 +2,7 @@
 import { QueryCache, QueryClient } from '@tanstack/react-query';
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
-import type { AppRouter } from '../../../server/src/routers';
+import type { AppRouter } from "@{{projectName}}/api/routers/index";
 import { toast } from 'sonner';
 
 export const queryClient = new QueryClient({
@@ -23,7 +23,9 @@ export const queryClient = new QueryClient({
 const trpcClient = createTRPCClient<AppRouter>({
   links: [
     httpBatchLink({
-      {{#if (includes frontend 'next')}}
+      {{#if (and (eq backend "self") (includes frontend 'next'))}}
+      url: "/api/trpc",
+      {{else if (includes frontend 'next')}}
       url: `${process.env.NEXT_PUBLIC_SERVER_URL}/trpc`,
       {{else}}
       url: `${import.meta.env.VITE_SERVER_URL}/trpc`,
@@ -47,13 +49,13 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
 
 {{else if (includes frontend 'tanstack-start')}}
 import { createTRPCContext } from "@trpc/tanstack-react-query";
-import type { AppRouter } from "../../../server/src/routers";
+import type { AppRouter } from "@{{projectName}}/api/routers/index";
 
 export const { TRPCProvider, useTRPC, useTRPCClient } =
   createTRPCContext<AppRouter>();
 
 {{else}}
-import type { AppRouter } from "../../../server/src/routers";
+import type { AppRouter } from "@{{projectName}}/api/routers/index";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";

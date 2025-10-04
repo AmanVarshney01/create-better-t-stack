@@ -1,0 +1,339 @@
+{{#if (eq orm "prisma")}}
+import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+import { expo } from "@better-auth/expo";
+{{/if}}
+{{#if (eq payments "polar")}}
+import { polar, checkout, portal } from "@polar-sh/better-auth";
+import { polarClient } from "./lib/payments";
+{{/if}}
+import prisma from "@{{projectName}}/db";
+
+export const auth = betterAuth<BetterAuthOptions>({
+  database: prismaAdapter(prisma, {
+    {{#if (eq database "postgres")}}provider: "postgresql"{{/if}}
+    {{#if (eq database "sqlite")}}provider: "sqlite"{{/if}}
+    {{#if (eq database "mysql")}}provider: "mysql"{{/if}}
+    {{#if (eq database "mongodb")}}provider: "mongodb"{{/if}}
+  }),
+  trustedOrigins: [
+    process.env.CORS_ORIGIN || "",
+    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    "mybettertapp://", "exp://"
+    {{/if}}
+  ],
+  emailAndPassword: {
+    enabled: true,
+  },
+  advanced: {
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+      httpOnly: true,
+    },
+  },
+  {{#if (eq payments "polar")}}
+  plugins: [
+    polar({
+      client: polarClient,
+      createCustomerOnSignUp: true,
+      enableCustomerPortal: true,
+      use: [
+        checkout({
+          products: [
+            {
+              productId: "your-product-id",
+              slug: "pro",
+            },
+          ],
+          successUrl: process.env.POLAR_SUCCESS_URL,
+          authenticatedUsersOnly: true,
+        }),
+        portal(),
+      ],
+    }),
+    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    expo(),
+    {{/if}}
+  ],
+  {{else}}
+  {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+  plugins: [expo()],
+  {{/if}}
+  {{/if}}
+});
+{{/if}}
+
+{{#if (eq orm "drizzle")}}
+{{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
+import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+import { expo } from "@better-auth/expo";
+{{/if}}
+{{#if (eq payments "polar")}}
+import { polar, checkout, portal } from "@polar-sh/better-auth";
+import { polarClient } from "./lib/payments";
+{{/if}}
+import { db } from "@{{projectName}}/db";
+import * as schema from "@{{projectName}}/db/schema/auth";
+
+export const auth = betterAuth<BetterAuthOptions>({
+  database: drizzleAdapter(db, {
+    {{#if (eq database "postgres")}}provider: "pg",{{/if}}
+    {{#if (eq database "sqlite")}}provider: "sqlite",{{/if}}
+    {{#if (eq database "mysql")}}provider: "mysql",{{/if}}
+    schema: schema,
+  }),
+  trustedOrigins: [
+    process.env.CORS_ORIGIN || "",
+    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    "mybettertapp://", "exp://"
+    {{/if}}
+  ],
+  emailAndPassword: {
+    enabled: true,
+  },
+  advanced: {
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+      httpOnly: true,
+    },
+  },
+  {{#if (eq payments "polar")}}
+  plugins: [
+    polar({
+      client: polarClient,
+      createCustomerOnSignUp: true,
+      enableCustomerPortal: true,
+      use: [
+        checkout({
+          products: [
+            {
+              productId: "your-product-id",
+              slug: "pro",
+            },
+          ],
+          successUrl: process.env.POLAR_SUCCESS_URL,
+          authenticatedUsersOnly: true,
+        }),
+        portal(),
+      ],
+    }),
+    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    expo(),
+    {{/if}}
+  ],
+  {{else}}
+  {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+  plugins: [expo()],
+  {{/if}}
+  {{/if}}
+});
+{{/if}}
+
+{{#if (eq runtime "workers")}}
+import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+import { expo } from "@better-auth/expo";
+{{/if}}
+{{#if (eq payments "polar")}}
+import { polar, checkout, portal } from "@polar-sh/better-auth";
+import { polarClient } from "./lib/payments";
+{{/if}}
+import { db } from "@{{projectName}}/db";
+import * as schema from "@{{projectName}}/db/schema/auth";
+import { env } from "cloudflare:workers";
+
+export const auth = betterAuth<BetterAuthOptions>({
+  database: drizzleAdapter(db, {
+    {{#if (eq database "postgres")}}provider: "pg",{{/if}}
+    {{#if (eq database "sqlite")}}provider: "sqlite",{{/if}}
+    {{#if (eq database "mysql")}}provider: "mysql",{{/if}}
+    schema: schema,
+  }),
+  trustedOrigins: [
+    env.CORS_ORIGIN,
+    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    "mybettertapp://", "exp://"
+    {{/if}}
+  ],
+  emailAndPassword: {
+    enabled: true,
+  },
+  // uncomment cookieCache setting when ready to deploy to Cloudflare using *.workers.dev domains
+  // session: {
+  //   cookieCache: {
+  //     enabled: true,
+  //     maxAge: 60,
+  //   },
+  // },
+  secret: env.BETTER_AUTH_SECRET,
+  baseURL: env.BETTER_AUTH_URL,
+  advanced: {
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+      httpOnly: true,
+    },
+    // uncomment crossSubDomainCookies setting when ready to deploy and replace <your-workers-subdomain> with your actual workers subdomain
+    // https://developers.cloudflare.com/workers/wrangler/configuration/#workersdev
+    // crossSubDomainCookies: {
+    //   enabled: true,
+    //   domain: "<your-workers-subdomain>",
+    // },
+  },
+  {{#if (eq payments "polar")}}
+  plugins: [
+    polar({
+      client: polarClient,
+      createCustomerOnSignUp: true,
+      enableCustomerPortal: true,
+      use: [
+        checkout({
+          products: [
+            {
+              productId: "your-product-id",
+              slug: "pro",
+            },
+          ],
+          successUrl: env.POLAR_SUCCESS_URL,
+          authenticatedUsersOnly: true,
+        }),
+        portal(),
+      ],
+    }),
+  ],
+  {{else}}
+  {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+  plugins: [expo()],
+  {{/if}}
+  {{/if}}
+});
+{{/if}}
+{{/if}}
+
+{{#if (eq orm "mongoose")}}
+import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { mongodbAdapter } from "better-auth/adapters/mongodb";
+{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+import { expo } from "@better-auth/expo";
+{{/if}}
+{{#if (eq payments "polar")}}
+import { polar, checkout, portal } from "@polar-sh/better-auth";
+import { polarClient } from "./lib/payments";
+{{/if}}
+import { client } from "@{{projectName}}/db";
+
+export const auth = betterAuth<BetterAuthOptions>({
+  database: mongodbAdapter(client),
+  trustedOrigins: [
+    process.env.CORS_ORIGIN || "",
+    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    "mybettertapp://", "exp://"
+    {{/if}}
+  ],
+  emailAndPassword: {
+    enabled: true,
+  },
+  advanced: {
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+      httpOnly: true,
+    },
+  },
+  {{#if (eq payments "polar")}}
+  plugins: [
+    polar({
+      client: polarClient,
+      createCustomerOnSignUp: true,
+      enableCustomerPortal: true,
+      use: [
+        checkout({
+          products: [
+            {
+              productId: "your-product-id",
+              slug: "pro",
+            },
+          ],
+          successUrl: process.env.POLAR_SUCCESS_URL,
+          authenticatedUsersOnly: true,
+        }),
+        portal(),
+      ],
+    }),
+    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    expo(),
+    {{/if}}
+  ],
+  {{else}}
+  {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+  plugins: [expo()],
+  {{/if}}
+  {{/if}}
+});
+{{/if}}
+
+{{#if (eq orm "none")}}
+import { betterAuth, type BetterAuthOptions } from "better-auth";
+{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+import { expo } from "@better-auth/expo";
+{{/if}}
+{{#if (eq payments "polar")}}
+import { polar, checkout, portal } from "@polar-sh/better-auth";
+import { polarClient } from "./lib/payments";
+{{/if}}
+
+export const auth = betterAuth<BetterAuthOptions>({
+  database: "", // Invalid configuration
+  trustedOrigins: [
+    process.env.CORS_ORIGIN || "",
+    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    "mybettertapp://", "exp://"
+    {{/if}}
+  ],
+  emailAndPassword: {
+    enabled: true,
+  },
+  advanced: {
+    defaultCookieAttributes: {
+      sameSite: "none",
+      secure: true,
+      httpOnly: true,
+    },
+  },
+  {{#if (eq payments "polar")}}
+  plugins: [
+    polar({
+      client: polarClient,
+      createCustomerOnSignUp: true,
+      enableCustomerPortal: true,
+      use: [
+        checkout({
+          products: [
+            {
+              productId: "your-product-id",
+              slug: "pro",
+            },
+          ],
+          successUrl: process.env.POLAR_SUCCESS_URL,
+          authenticatedUsersOnly: true,
+        }),
+        portal(),
+      ],
+    }),
+    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    expo(),
+    {{/if}}
+  ],
+  {{else}}
+  {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+  plugins: [expo()],
+  {{/if}}
+  {{/if}}
+});
+{{/if}}

@@ -52,7 +52,7 @@ export const dependencyVersionMap = {
 	"drizzle-kit": "^0.31.2",
 	"@planetscale/database": "^1.19.0",
 
-	"@libsql/client": "^0.15.9",
+	"@libsql/client": "^0.14.0",
 
 	"@neondatabase/serverless": "^1.0.1",
 	pg: "^8.14.1",
@@ -126,6 +126,8 @@ export const dependencyVersionMap = {
 	"@trpc/server": "^11.5.0",
 	"@trpc/client": "^11.5.0",
 
+	next: "15.5.4",
+
 	convex: "^1.27.0",
 	"@convex-dev/react-query": "^0.0.0-alpha.8",
 	"convex-svelte": "^0.0.11",
@@ -157,7 +159,9 @@ export const dependencyVersionMap = {
 	// temporary workaround for alchemy + tanstack start
 	nitropack: "^2.12.4",
 
-	dotenv: "^17.2.1",
+	dotenv: "^17.2.2",
+	tsdown: "^0.15.5",
+	zod: "^4.1.11",
 
 	"@polar-sh/better-auth": "^1.1.3",
 	"@polar-sh/sdk": "^0.34.16",

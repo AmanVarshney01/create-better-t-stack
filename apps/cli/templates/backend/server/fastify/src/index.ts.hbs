@@ -4,8 +4,8 @@ import fastifyCors from "@fastify/cors";
 
 {{#if (eq api "trpc")}}
 import { fastifyTRPCPlugin, type FastifyTRPCPluginOptions } from "@trpc/server/adapters/fastify";
-import { createContext } from "./lib/context";
-import { appRouter, type AppRouter } from "./routers/index";
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter, type AppRouter } from "@{{projectName}}/api/routers/index";
 {{/if}}
 
 {{#if (eq api "orpc")}}
@@ -15,10 +15,10 @@ import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { RPCHandler } from "@orpc/server/node";
 import { CORSPlugin } from "@orpc/server/plugins";
 import { onError } from "@orpc/server";
-import { appRouter } from "./routers/index";
+import { appRouter } from "@{{projectName}}/api/routers/index";
 import { createServer } from "node:http";
 {{#if (eq auth "better-auth")}}
-import { createContext } from "./lib/context";
+import { createContext } from "@{{projectName}}/api/context";
 {{/if}}
 {{/if}}
 
@@ -28,7 +28,7 @@ import { google } from "@ai-sdk/google";
 {{/if}}
 
 {{#if (eq auth "better-auth")}}
-import { auth } from "./lib/auth";
+import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
 const baseCorsConfig = {
@@ -161,7 +161,7 @@ interface AiRequestBody {
 fastify.post('/ai', async function (request) {
   const { messages } = request.body as AiRequestBody;
   const result = streamText({
-    model: google('gemini-1.5-flash'),
+    model: google('gemini-2.5-flash'),
     messages: convertToModelMessages(messages),
   });
 

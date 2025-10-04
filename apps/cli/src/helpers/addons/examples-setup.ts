@@ -5,7 +5,7 @@ import type { ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 
 export async function setupExamples(config: ProjectConfig) {
-	const { examples, frontend, backend, projectDir } = config;
+	const { examples, frontend, backend, projectDir, orm } = config;
 
 	if (
 		backend === "convex" ||
@@ -16,14 +16,36 @@ export async function setupExamples(config: ProjectConfig) {
 		return;
 	}
 
+	const apiDir = path.join(projectDir, "packages/api");
+	const apiDirExists = await fs.pathExists(apiDir);
+
+	if (apiDirExists && backend !== "none") {
+		if (orm === "drizzle") {
+			await addPackageDependency({
+				dependencies: ["drizzle-orm"],
+				projectDir: apiDir,
+			});
+		} else if (orm === "prisma") {
+			await addPackageDependency({
+				dependencies: ["@prisma/client"],
+				projectDir: apiDir,
+			});
+		} else if (orm === "mongoose") {
+			await addPackageDependency({
+				dependencies: ["mongoose"],
+				projectDir: apiDir,
+			});
+		}
+	}
+
 	if (examples.includes("ai")) {
 		const webClientDir = path.join(projectDir, "apps/web");
 		const nativeClientDir = path.join(projectDir, "apps/native");
-		const serverDir = path.join(projectDir, "apps/server");
+		const apiDir = path.join(projectDir, "packages/api");
 
 		const webClientDirExists = await fs.pathExists(webClientDir);
 		const nativeClientDirExists = await fs.pathExists(nativeClientDir);
-		const serverDirExists = await fs.pathExists(serverDir);
+		const apiDirExists = await fs.pathExists(apiDir);
 
 		const hasNuxt = frontend.includes("nuxt");
 		const hasSvelte = frontend.includes("svelte");
@@ -64,10 +86,18 @@ export async function setupExamples(config: ProjectConfig) {
 			});
 		}
 
-		if (serverDirExists && backend !== "none") {
+		if (apiDirExists && backend !== "none") {
 			await addPackageDependency({
 				dependencies: ["ai", "@ai-sdk/google"],
-				projectDir: serverDir,
+				projectDir: apiDir,
+			});
+		}
+
+		// In fullstack mode, also add AI server deps to the web app
+		if (backend === "self" && webClientDirExists) {
+			await addPackageDependency({
+				dependencies: ["ai", "@ai-sdk/google"],
+				projectDir: webClientDir,
 			});
 		}
 	}

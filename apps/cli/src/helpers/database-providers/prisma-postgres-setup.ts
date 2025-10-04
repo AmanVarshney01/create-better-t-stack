@@ -100,9 +100,7 @@ async function initPrismaDatabase(
 		const prismaDir = path.join(serverDir, "prisma");
 		await fs.ensureDir(prismaDir);
 
-		log.info(
-			"Starting Prisma PostgreSQL setup. Please follow the instructions below:",
-		);
+		log.info("Starting Prisma PostgreSQL setup.");
 
 		const prismaInitCommand = getPackageExecutionCommand(
 			packageManager,
@@ -144,9 +142,14 @@ async function initPrismaDatabase(
 	}
 }
 
-async function writeEnvFile(projectDir: string, config?: PrismaConfig) {
+async function writeEnvFile(
+	projectDir: string,
+	backend: ProjectConfig["backend"],
+	config?: PrismaConfig,
+) {
 	try {
-		const envPath = path.join(projectDir, "apps/server", ".env");
+		const targetApp = backend === "self" ? "apps/web" : "apps/server";
+		const envPath = path.join(projectDir, targetApp, ".env");
 		const variables: EnvVariable[] = [
 			{
 				key: "DATABASE_URL",
@@ -171,36 +174,42 @@ async function writeEnvFile(projectDir: string, config?: PrismaConfig) {
 	}
 }
 
-async function addDotenvImportToPrismaConfig(projectDir: string) {
+async function addDotenvImportToPrismaConfig(
+	projectDir: string,
+	backend: ProjectConfig["backend"],
+) {
 	try {
 		const prismaConfigPath = path.join(
 			projectDir,
-			"apps/server/prisma.config.ts",
+			"packages/db/prisma.config.ts",
 		);
 		let content = await fs.readFile(prismaConfigPath, "utf8");
-		content = `import "dotenv/config";\n${content}`;
+		const envPath =
+			backend === "self" ? "../../apps/web/.env" : "../../apps/server/.env";
+		content = `import dotenv from "dotenv";\ndotenv.config({ path: "${envPath}" });\n${content}`;
 		await fs.writeFile(prismaConfigPath, content);
 	} catch (_error) {
 		consola.error("Failed to update prisma.config.ts");
 	}
 }
 
-function displayManualSetupInstructions() {
+function displayManualSetupInstructions(target: "apps/web" | "apps/server") {
 	log.info(`Manual Prisma PostgreSQL Setup Instructions:
 
 1. Visit https://console.prisma.io and create an account
 2. Create a new PostgreSQL database from the dashboard
 3. Get your database URL
-4. Add the database URL to the .env file in apps/server/.env
+4. Add the database URL to the .env file in ${target}/.env
 
 DATABASE_URL="your_database_url"`);
 }
 
-async function addPrismaAccelerateExtension(serverDir: string) {
+async function addPrismaAccelerateExtension(projectDir: string) {
 	try {
+		const dbPackageDir = path.join(projectDir, "packages/db");
 		await addPackageDependency({
 			dependencies: ["@prisma/extension-accelerate"],
-			projectDir: serverDir,
+			projectDir: dbPackageDir,
 		});
 
 		return true;
@@ -216,16 +225,18 @@ export async function setupPrismaPostgres(
 	config: ProjectConfig,
 	cliInput?: { manualDb?: boolean },
 ) {
-	const { packageManager, projectDir, orm } = config;
+	const { packageManager, projectDir, orm, backend } = config;
 	const manualDb = cliInput?.manualDb ?? false;
-	const serverDir = path.join(projectDir, "apps/server");
+	const dbDir = path.join(projectDir, "packages/db");
 
 	try {
-		await fs.ensureDir(serverDir);
+		await fs.ensureDir(dbDir);
 
 		if (manualDb) {
-			await writeEnvFile(projectDir);
-			displayManualSetupInstructions();
+			await writeEnvFile(projectDir, backend);
+			displayManualSetupInstructions(
+				backend === "self" ? "apps/web" : "apps/server",
+			);
 			return;
 		}
 
@@ -249,8 +260,10 @@ export async function setupPrismaPostgres(
 		if (isCancel(mode)) return exitCancelled("Operation cancelled");
 
 		if (mode === "manual") {
-			await writeEnvFile(projectDir);
-			displayManualSetupInstructions();
+			await writeEnvFile(projectDir, backend);
+			displayManualSetupInstructions(
+				backend === "self" ? "apps/web" : "apps/server",
+			);
 			return;
 		}
 
@@ -281,17 +294,17 @@ export async function setupPrismaPostgres(
 		let prismaConfig: PrismaConfig | null = null;
 
 		if (setupMethod === "create-db") {
-			prismaConfig = await setupWithCreateDb(serverDir, packageManager, orm);
+			prismaConfig = await setupWithCreateDb(dbDir, packageManager, orm);
 		} else {
-			prismaConfig = await initPrismaDatabase(serverDir, packageManager);
+			prismaConfig = await initPrismaDatabase(dbDir, packageManager);
 		}
 
 		if (prismaConfig) {
-			await writeEnvFile(projectDir, prismaConfig);
+			await writeEnvFile(projectDir, backend, prismaConfig);
 
 			if (orm === "prisma") {
-				await addDotenvImportToPrismaConfig(projectDir);
-				await addPrismaAccelerateExtension(serverDir);
+				await addDotenvImportToPrismaConfig(projectDir, backend);
+				await addPrismaAccelerateExtension(projectDir);
 			}
 
 			const connectionType =
@@ -306,8 +319,10 @@ export async function setupPrismaPostgres(
 				log.info(pc.blue(`Claim URL saved to .env: ${prismaConfig.claimUrl}`));
 			}
 		} else {
-			await writeEnvFile(projectDir);
-			displayManualSetupInstructions();
+			await writeEnvFile(projectDir, backend);
+			displayManualSetupInstructions(
+				backend === "self" ? "apps/web" : "apps/server",
+			);
 		}
 	} catch (error) {
 		consola.error(
@@ -319,8 +334,10 @@ export async function setupPrismaPostgres(
 		);
 
 		try {
-			await writeEnvFile(projectDir);
-			displayManualSetupInstructions();
+			await writeEnvFile(projectDir, backend);
+			displayManualSetupInstructions(
+				backend === "self" ? "apps/web" : "apps/server",
+			);
 		} catch {}
 
 		log.info("Setup completed with manual configuration required.");

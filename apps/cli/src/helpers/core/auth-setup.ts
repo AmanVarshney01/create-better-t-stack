@@ -17,7 +17,7 @@ export async function setupAuth(config: ProjectConfig) {
 
 	const clientDirExists = await fs.pathExists(clientDir);
 	const nativeDirExists = await fs.pathExists(nativeDir);
-	const serverDirExists = await fs.pathExists(serverDir);
+	const _serverDirExists = await fs.pathExists(serverDir);
 
 	try {
 		if (backend === "convex") {
@@ -102,10 +102,13 @@ export async function setupAuth(config: ProjectConfig) {
 			return;
 		}
 
-		if (serverDirExists && auth === "better-auth") {
+		const authPackageDir = path.join(projectDir, "packages/auth");
+		const authPackageDirExists = await fs.pathExists(authPackageDir);
+
+		if (authPackageDirExists && auth === "better-auth") {
 			await addPackageDependency({
 				dependencies: ["better-auth"],
-				projectDir: serverDir,
+				projectDir: authPackageDir,
 			});
 		}
 
@@ -140,10 +143,10 @@ export async function setupAuth(config: ProjectConfig) {
 					dependencies: ["better-auth", "@better-auth/expo"],
 					projectDir: nativeDir,
 				});
-				if (serverDirExists) {
+				if (authPackageDirExists) {
 					await addPackageDependency({
 						dependencies: ["@better-auth/expo"],
-						projectDir: serverDir,
+						projectDir: authPackageDir,
 					});
 				}
 			}

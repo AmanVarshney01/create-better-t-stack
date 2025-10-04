@@ -26,8 +26,7 @@ export const addPackageDependency = async (opts: {
 	if (!pkgJson.devDependencies) pkgJson.devDependencies = {};
 
 	for (const pkgName of dependencies) {
-		const version =
-			customDependencies[pkgName] || dependencyVersionMap[pkgName];
+		const version = dependencyVersionMap[pkgName];
 		if (version) {
 			pkgJson.dependencies[pkgName] = version;
 		} else {
@@ -36,8 +35,7 @@ export const addPackageDependency = async (opts: {
 	}
 
 	for (const pkgName of devDependencies) {
-		const version =
-			customDevDependencies[pkgName] || dependencyVersionMap[pkgName];
+		const version = dependencyVersionMap[pkgName];
 		if (version) {
 			pkgJson.devDependencies[pkgName] = version;
 		} else {
@@ -45,6 +43,14 @@ export const addPackageDependency = async (opts: {
 				`Warning: Dev dependency ${pkgName} not found in version map.`,
 			);
 		}
+	}
+
+	for (const [pkgName, version] of Object.entries(customDependencies)) {
+		pkgJson.dependencies[pkgName] = version;
+	}
+
+	for (const [pkgName, version] of Object.entries(customDevDependencies)) {
+		pkgJson.devDependencies[pkgName] = version;
 	}
 
 	await fs.writeJson(pkgJsonPath, pkgJson, {

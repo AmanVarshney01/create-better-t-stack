@@ -3,7 +3,7 @@ import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type { AppRouterClient } from "../../../server/src/routers/index";
+import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -21,7 +21,9 @@ export const queryClient = new QueryClient({
 });
 
 export const link = new RPCLink({
-  {{#if (includes frontend "next")}}
+  {{#if (and (eq backend "self") (includes frontend "next"))}}
+  url: `${typeof window !== "undefined" ? window.location.origin : "http://localhost:3001"}/api/rpc`,
+  {{else if (includes frontend "next")}}
   url: `${process.env.NEXT_PUBLIC_SERVER_URL}/rpc`,
   {{else}}
   url: `${import.meta.env.VITE_SERVER_URL}/rpc`,

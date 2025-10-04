@@ -43,6 +43,53 @@ export function ensureSingleWebAndNative(frontends: Frontend[]) {
 	}
 }
 
+const FULLSTACK_FRONTENDS: readonly Frontend[] = [
+	"next",
+	"nuxt",
+	"svelte",
+	"tanstack-start",
+] as const;
+
+export function validateSelfBackendCompatibility(
+	providedFlags: Set<string>,
+	options: CLIInput,
+	config: Partial<ProjectConfig>,
+) {
+	const backend = config.backend || options.backend;
+	const frontends = config.frontend || options.frontend || [];
+
+	if (backend === "self") {
+		const hasFullstackFrontend = frontends.some((f) =>
+			FULLSTACK_FRONTENDS.includes(f),
+		);
+
+		if (!hasFullstackFrontend) {
+			exitWithError(
+				"Backend 'self' (fullstack) requires a fullstack-capable frontend. Please use --frontend with one of: next, nuxt, svelte, tanstack-start",
+			);
+		}
+
+		if (frontends.length > 1) {
+			exitWithError(
+				"Backend 'self' (fullstack) can only be used with a single frontend framework.",
+			);
+		}
+	}
+
+	const hasFullstackFrontend = frontends.some((f) =>
+		FULLSTACK_FRONTENDS.includes(f),
+	);
+	if (
+		providedFlags.has("backend") &&
+		!hasFullstackFrontend &&
+		backend === "self"
+	) {
+		exitWithError(
+			"Backend 'self' (fullstack) is only compatible with fullstack-capable frontends: next, nuxt, svelte, tanstack-start. Please choose a different backend or use a fullstack frontend.",
+		);
+	}
+}
+
 export function validateWorkersCompatibility(
 	providedFlags: Set<string>,
 	options: CLIInput,

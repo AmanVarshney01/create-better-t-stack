@@ -196,8 +196,15 @@ function getConvexDependencies(frontend: Frontend[]) {
 }
 
 export async function setupApi(config: ProjectConfig) {
-	const { api, projectName, frontend, backend, packageManager, projectDir } =
-		config;
+	const {
+		api,
+		projectName,
+		frontend,
+		backend,
+		packageManager,
+		projectDir,
+		auth,
+	} = config;
 	const isConvex = backend === "convex";
 
 	const webDir = path.join(projectDir, "apps/web");
@@ -206,31 +213,79 @@ export async function setupApi(config: ProjectConfig) {
 
 	const webDirExists = await fs.pathExists(webDir);
 	const nativeDirExists = await fs.pathExists(nativeDir);
-	const serverDirExists = await fs.pathExists(serverDir);
+	const _serverDirExists = await fs.pathExists(serverDir);
 
 	const frontendType = getFrontendType(frontend);
 
 	if (!isConvex && api !== "none") {
 		const apiDeps = getApiDependencies(api, frontendType);
+		const apiPackageDir = path.join(projectDir, "packages/api");
 
-		if (serverDirExists && apiDeps.server) {
+		if (apiDeps.server) {
 			await addPackageDependency({
 				dependencies: apiDeps.server.dependencies as AvailableDependencies[],
-				projectDir: serverDir,
+				projectDir: apiPackageDir,
 			});
+
+			if (backend === "self" && webDirExists) {
+				await addPackageDependency({
+					dependencies: apiDeps.server.dependencies as AvailableDependencies[],
+					projectDir: webDir,
+				});
+			}
+
+			// Add framework-specific dependencies for context types
+			const frameworkDeps: AvailableDependencies[] = [];
+			if (backend === "hono") {
+				frameworkDeps.push("hono");
+			} else if (backend === "elysia") {
+				frameworkDeps.push("elysia");
+			} else if (backend === "express") {
+				frameworkDeps.push("express", "@types/express");
+			} else if (backend === "fastify") {
+				frameworkDeps.push("fastify");
+			} else if (backend === "self") {
+				if (frontend.includes("next")) {
+					frameworkDeps.push("next");
+				}
+			}
+
+			if (frameworkDeps.length > 0) {
+				await addPackageDependency({
+					dependencies: frameworkDeps,
+					projectDir: apiPackageDir,
+				});
+			}
 
 			if (api === "trpc") {
 				if (backend === "hono") {
 					await addPackageDependency({
 						dependencies: ["@hono/trpc-server"],
-						projectDir: serverDir,
+						projectDir: apiPackageDir,
 					});
 				} else if (backend === "elysia") {
 					await addPackageDependency({
 						dependencies: ["@elysiajs/trpc"],
-						projectDir: serverDir,
+						projectDir: apiPackageDir,
+					});
+				} else if (backend === "express") {
+					await addPackageDependency({
+						dependencies: ["@trpc/server"],
+						projectDir: apiPackageDir,
+					});
+				} else if (backend === "fastify") {
+					await addPackageDependency({
+						dependencies: ["@trpc/server"],
+						projectDir: apiPackageDir,
 					});
 				}
+			}
+
+			if (auth === "better-auth") {
+				await addPackageDependency({
+					dependencies: ["better-auth"],
+					projectDir: apiPackageDir,
+				});
 			}
 		}
 

@@ -1,8 +1,17 @@
 import { defineConfig } from "drizzle-kit";
+import dotenv from "dotenv";
+
+dotenv.config({
+    {{#if (eq backend "self")}}
+    path: "../../apps/web/.env",
+    {{else}}
+    path: "../../apps/server/.env",
+    {{/if}}
+});
 
 export default defineConfig({
-  schema: "./src/db/schema",
-  out: "./src/db/migrations",
+  schema: "./src/schema",
+  out: "./src/migrations",
   {{#if (eq dbSetup "d1")}}
   // DOCS: https://orm.drizzle.team/docs/guides/d1-http-with-drizzle-kit
   dialect: "sqlite",

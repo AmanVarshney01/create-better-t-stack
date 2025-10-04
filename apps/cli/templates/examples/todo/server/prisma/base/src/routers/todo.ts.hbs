@@ -1,7 +1,7 @@
 {{#if (eq api "orpc")}}
 import z from "zod";
-import prisma from "../db";
-import { publicProcedure } from "../lib/orpc";
+import prisma from "@{{projectName}}/db";
+import { publicProcedure } from "../index";
 
 export const todoRouter = {
   getAll: publicProcedure.handler(async () => {
@@ -52,8 +52,8 @@ export const todoRouter = {
 {{#if (eq api "trpc")}}
 import { TRPCError } from "@trpc/server";
 import z from "zod";
-import prisma from "../db";
-import { publicProcedure, router } from "../lib/trpc";
+import prisma from "@{{projectName}}/db";
+import { publicProcedure, router } from "../index";
 
 export const todoRouter = router({
   getAll: publicProcedure.query(async () => {

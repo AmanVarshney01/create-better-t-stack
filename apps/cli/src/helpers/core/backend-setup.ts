@@ -4,7 +4,7 @@ import type { ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 
 export async function setupBackendDependencies(config: ProjectConfig) {
-	const { backend, runtime, api, projectDir } = config;
+	const { backend, runtime, api, auth, examples, projectDir } = config;
 
 	if (backend === "convex") {
 		return;
@@ -16,6 +16,7 @@ export async function setupBackendDependencies(config: ProjectConfig) {
 	const dependencies: AvailableDependencies[] = [];
 	const devDependencies: AvailableDependencies[] = [];
 
+	// Framework-specific dependencies
 	if (framework === "hono") {
 		dependencies.push("hono");
 		if (api === "trpc") {
@@ -50,6 +51,30 @@ export async function setupBackendDependencies(config: ProjectConfig) {
 		}
 	}
 
+	// API-specific dependencies
+	if (api === "trpc") {
+		if (framework === "express") {
+			dependencies.push("@trpc/server");
+		} else if (framework === "fastify") {
+			dependencies.push("@trpc/server");
+		} else if (runtime === "workers") {
+			dependencies.push("@trpc/server");
+		}
+	} else if (api === "orpc") {
+		dependencies.push("@orpc/server", "@orpc/openapi", "@orpc/zod");
+	}
+
+	// Auth-specific dependencies
+	if (auth === "better-auth") {
+		dependencies.push("better-auth");
+	}
+
+	// AI example dependencies
+	if (examples.includes("ai")) {
+		dependencies.push("ai", "@ai-sdk/google");
+	}
+
+	// Runtime-specific dependencies
 	if (runtime === "bun") {
 		devDependencies.push("@types/bun");
 	}

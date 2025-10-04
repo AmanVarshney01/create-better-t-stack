@@ -1,9 +1,9 @@
 {{#if (eq api "orpc")}}
 import { eq } from "drizzle-orm";
 import z from "zod";
-import { db } from "../db";
-import { todo } from "../db/schema/todo";
-import { publicProcedure } from "../lib/orpc";
+import { db } from "@{{projectName}}/db";
+import { todo } from "@{{projectName}}/db/schema/todo";
+import { publicProcedure } from "../index";
 
 export const todoRouter = {
   getAll: publicProcedure.handler(async () => {
@@ -39,10 +39,10 @@ export const todoRouter = {
 
 {{#if (eq api "trpc")}}
 import z from "zod";
-import { router, publicProcedure } from "../lib/trpc";
-import { todo } from "../db/schema/todo";
+import { router, publicProcedure } from "../index";
+import { todo } from "@{{projectName}}/db/schema/todo";
 import { eq } from "drizzle-orm";
-import { db } from "../db";
+import { db } from "@{{projectName}}/db";
 
 export const todoRouter = router({
   getAll: publicProcedure.query(async () => {

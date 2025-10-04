@@ -32,9 +32,9 @@ export async function setupDatabase(
 	}
 
 	const s = spinner();
-	const serverDir = path.join(projectDir, "apps/server");
+	const dbPackageDir = path.join(projectDir, "packages/db");
 
-	if (!(await fs.pathExists(serverDir))) {
+	if (!(await fs.pathExists(dbPackageDir))) {
 		return;
 	}
 
@@ -48,46 +48,57 @@ export async function setupDatabase(
 						"@planetscale/database",
 					],
 					devDependencies: ["prisma"],
-					projectDir: serverDir,
+					projectDir: dbPackageDir,
 				});
 			} else if (database === "sqlite" && dbSetup === "turso") {
 				await addPackageDependency({
 					dependencies: ["@prisma/client", "@prisma/adapter-libsql"],
 					devDependencies: ["prisma"],
-					projectDir: serverDir,
+					projectDir: dbPackageDir,
 				});
 			} else {
 				await addPackageDependency({
 					dependencies: ["@prisma/client"],
 					devDependencies: ["prisma"],
-					projectDir: serverDir,
+					projectDir: dbPackageDir,
 				});
+			}
+
+			// workaround
+			if (backend === "self") {
+				const webDir = path.join(projectDir, "apps/web");
+				if (await fs.pathExists(webDir)) {
+					await addPackageDependency({
+						dependencies: ["@prisma/client"],
+						projectDir: webDir,
+					});
+				}
 			}
 		} else if (orm === "drizzle") {
 			if (database === "sqlite") {
 				await addPackageDependency({
 					dependencies: ["drizzle-orm", "@libsql/client"],
 					devDependencies: ["drizzle-kit"],
-					projectDir: serverDir,
+					projectDir: dbPackageDir,
 				});
 			} else if (database === "postgres") {
 				if (dbSetup === "neon") {
 					await addPackageDependency({
 						dependencies: ["drizzle-orm", "@neondatabase/serverless", "ws"],
 						devDependencies: ["drizzle-kit", "@types/ws"],
-						projectDir: serverDir,
+						projectDir: dbPackageDir,
 					});
 				} else if (dbSetup === "planetscale") {
 					await addPackageDependency({
 						dependencies: ["drizzle-orm", "pg"],
 						devDependencies: ["drizzle-kit", "@types/pg"],
-						projectDir: serverDir,
+						projectDir: dbPackageDir,
 					});
 				} else {
 					await addPackageDependency({
 						dependencies: ["drizzle-orm", "pg"],
 						devDependencies: ["drizzle-kit", "@types/pg"],
-						projectDir: serverDir,
+						projectDir: dbPackageDir,
 					});
 				}
 			} else if (database === "mysql") {
@@ -95,13 +106,13 @@ export async function setupDatabase(
 					await addPackageDependency({
 						dependencies: ["drizzle-orm", "@planetscale/database"],
 						devDependencies: ["drizzle-kit"],
-						projectDir: serverDir,
+						projectDir: dbPackageDir,
 					});
 				} else {
 					await addPackageDependency({
 						dependencies: ["drizzle-orm", "mysql2"],
 						devDependencies: ["drizzle-kit"],
-						projectDir: serverDir,
+						projectDir: dbPackageDir,
 					});
 				}
 			}
@@ -109,7 +120,7 @@ export async function setupDatabase(
 			await addPackageDependency({
 				dependencies: ["mongoose"],
 				devDependencies: [],
-				projectDir: serverDir,
+				projectDir: dbPackageDir,
 			});
 		}
 
