@@ -22,13 +22,13 @@
 		"deploy": "bun run deploy:web"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.2.4",
-		"@types/bun": "^1.2.22",
+		"@biomejs/biome": "2.2.5",
+		"@types/bun": "^1.2.23",
 		"changelogithub": "^13.16.0",
 		"husky": "^9.1.7",
-		"lint-staged": "^16.2.1",
+		"lint-staged": "^16.2.3",
 		"turbo": "^2.5.8",
-		"typescript": "5.9.2"
+		"typescript": "5.9.3"
 	},
 	"lint-staged": {
 		"*": [
@@ -38,7 +38,7 @@
 	"engines": {
 		"node": ">=20"
 	},
-	"packageManager": "bun@1.2.20",
+	"packageManager": "bun@1.2.23",
 	"workspaces": [
 		"apps/*",
 		"packages/*"
