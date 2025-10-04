@@ -5,10 +5,5 @@ export default defineConfig({
     format: 'esm',
     outDir: './dist',
     clean: true,
-    noExternal: [/@{{projectName}}\/.*/],
-    {{#if (and (eq orm "drizzle") (eq database "sqlite") (or (eq dbSetup "turso") (eq dbSetup "none")))}}
-    external: [
-		/^@libsql\/(linux|darwin|win32).*/
-	]
-	{{/if}}
+    noExternal: [/@{{projectName}}\/.*/]
 });
