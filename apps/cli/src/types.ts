@@ -27,6 +27,7 @@ export const FrontendSchema = z
 		"tanstack-start",
 		"next",
 		"nuxt",
+		"astro",
 		"native-nativewind",
 		"native-unistyles",
 		"svelte",

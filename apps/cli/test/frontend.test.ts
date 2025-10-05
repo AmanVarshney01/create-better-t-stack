@@ -18,6 +18,7 @@ describe("Frontend Configurations", () => {
 			"native-unistyles",
 			"svelte",
 			"solid",
+			"astro"
 		] satisfies ReadonlyArray<
 			| "tanstack-router"
 			| "react-router"
@@ -28,6 +29,7 @@ describe("Frontend Configurations", () => {
 			| "native-unistyles"
 			| "svelte"
 			| "solid"
+			| "astro"
 		>;
 
 		for (const frontend of singleFrontends) {
