@@ -13,11 +13,7 @@ export async function setupNextAlchemyDeploy(
 
 	await addPackageDependency({
 		dependencies: ["@opennextjs/cloudflare"],
-		devDependencies: [
-			"alchemy",
-			"wrangler",
-			"@cloudflare/workers-types",
-		],
+		devDependencies: ["alchemy", "wrangler", "@cloudflare/workers-types"],
 		projectDir: webAppDir,
 	});
 

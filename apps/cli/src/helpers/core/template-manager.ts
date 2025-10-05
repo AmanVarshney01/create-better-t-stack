@@ -1084,12 +1084,15 @@ export async function setupDeploymentTemplates(
 	projectDir: string,
 	context: ProjectConfig,
 ) {
+	const isBackendSelf = context.backend === "self";
+
 	if (context.webDeploy === "alchemy" || context.serverDeploy === "alchemy") {
-		if (context.webDeploy === "alchemy" && context.serverDeploy === "alchemy") {
-			const alchemyTemplateSrc = path.join(
-				PKG_ROOT,
-				"templates/deploy/alchemy",
-			);
+		const alchemyTemplateSrc = path.join(PKG_ROOT, "templates/deploy/alchemy");
+
+		if (
+			context.webDeploy === "alchemy" &&
+			(context.serverDeploy === "alchemy" || isBackendSelf)
+		) {
 			if (await fs.pathExists(alchemyTemplateSrc)) {
 				await processAndCopyFiles(
 					"alchemy.run.ts.hbs",
@@ -1097,22 +1100,11 @@ export async function setupDeploymentTemplates(
 					projectDir,
 					context,
 				);
-				const serverAppDir = path.join(projectDir, "apps/server");
-				if (await fs.pathExists(serverAppDir)) {
-					await processAndCopyFiles(
-						"env.d.ts.hbs",
-						alchemyTemplateSrc,
-						serverAppDir,
-						context,
-					);
-				}
+
+				await addEnvDtsToPackages(projectDir, context, alchemyTemplateSrc);
 			}
 		} else {
 			if (context.webDeploy === "alchemy") {
-				const alchemyTemplateSrc = path.join(
-					PKG_ROOT,
-					"templates/deploy/alchemy",
-				);
 				const webAppDir = path.join(projectDir, "apps/web");
 				if (
 					(await fs.pathExists(alchemyTemplateSrc)) &&
@@ -1124,14 +1116,12 @@ export async function setupDeploymentTemplates(
 						webAppDir,
 						context,
 					);
+
+					await addEnvDtsToPackages(projectDir, context, alchemyTemplateSrc);
 				}
 			}
 
-			if (context.serverDeploy === "alchemy") {
-				const alchemyTemplateSrc = path.join(
-					PKG_ROOT,
-					"templates/deploy/alchemy",
-				);
+			if (context.serverDeploy === "alchemy" && !isBackendSelf) {
 				const serverAppDir = path.join(projectDir, "apps/server");
 				if (
 					(await fs.pathExists(alchemyTemplateSrc)) &&
@@ -1149,6 +1139,8 @@ export async function setupDeploymentTemplates(
 						serverAppDir,
 						context,
 					);
+
+					await addEnvDtsToPackages(projectDir, context, alchemyTemplateSrc);
 				}
 			}
 		}
@@ -1188,7 +1180,11 @@ export async function setupDeploymentTemplates(
 		}
 	}
 
-	if (context.serverDeploy !== "none" && context.serverDeploy !== "alchemy") {
+	if (
+		context.serverDeploy !== "none" &&
+		context.serverDeploy !== "alchemy" &&
+		!isBackendSelf
+	) {
 		const serverAppDir = path.join(projectDir, "apps/server");
 		if (await fs.pathExists(serverAppDir)) {
 			const deployTemplateSrc = path.join(
@@ -1204,5 +1200,35 @@ export async function setupDeploymentTemplates(
 				);
 			}
 		}
+	}
+}
+
+async function addEnvDtsToPackages(
+	projectDir: string,
+	context: ProjectConfig,
+	alchemyTemplateSrc: string,
+) {
+	const packages = ["packages/api", "packages/auth", "packages/db"];
+
+	for (const packageName of packages) {
+		const packageDir = path.join(projectDir, packageName);
+		if (await fs.pathExists(packageDir)) {
+			await processAndCopyFiles(
+				"env.d.ts.hbs",
+				alchemyTemplateSrc,
+				packageDir,
+				context,
+			);
+		}
+	}
+
+	const serverAppDir = path.join(projectDir, "apps/server");
+	if (await fs.pathExists(serverAppDir)) {
+		await processAndCopyFiles(
+			"env.d.ts.hbs",
+			alchemyTemplateSrc,
+			serverAppDir,
+			context,
+		);
 	}
 }

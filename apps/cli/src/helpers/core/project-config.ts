@@ -168,10 +168,8 @@ async function updateRootPackageJson(
 			}
 		}
 		if (options.dbSetup === "docker") {
-			scripts["db:start"] =
-				`npm run db:start --workspace ${dbPackageName}`;
-			scripts["db:watch"] =
-				`npm run db:watch --workspace ${dbPackageName}`;
+			scripts["db:start"] = `npm run db:start --workspace ${dbPackageName}`;
+			scripts["db:watch"] = `npm run db:watch --workspace ${dbPackageName}`;
 			scripts["db:stop"] = `npm run db:stop --workspace ${dbPackageName}`;
 			scripts["db:down"] = `npm run db:down --workspace ${dbPackageName}`;
 		}

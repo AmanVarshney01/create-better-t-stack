@@ -8,20 +8,32 @@ This is a monorepo with the following structure:
 
 {{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start")
 (includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
-- **`apps/web/`** - Frontend application{{#if (includes frontend "tanstack-router")}} (React with TanStack Router){{else
+- **`apps/web/`** - {{#if (eq backend "self")}}Fullstack application{{else}}Frontend application{{/if}}{{#if (includes frontend "tanstack-router")}} (React with TanStack Router){{else
 if (includes frontend "react-router")}} (React with React Router){{else if (includes frontend "next")}} (Next.js){{else
 if (includes frontend "nuxt")}} (Nuxt.js){{else if (includes frontend "svelte")}} (SvelteKit){{else if (includes
 frontend "solid")}} (SolidStart){{/if}}
 {{/if}}
 
 {{#if (ne backend "convex")}}
-{{#if (ne backend "none")}}
+{{#if (and (ne backend "none") (ne backend "self"))}}
 - **`apps/server/`** - Backend server{{#if (eq backend "hono")}} (Hono){{else if (eq backend "express")}}
 (Express){{else if (eq backend "fastify")}} (Fastify){{else if (eq backend "elysia")}} (Elysia){{else if (eq backend
 "next")}} (Next.js API){{/if}}
 {{/if}}
 {{else}}
 - **`packages/backend/`** - Convex backend functions
+{{/if}}
+
+{{#if (or (ne backend "none") (ne backend "convex"))}}
+{{#if (ne api "none")}}
+- **`packages/api/`** - Shared API logic and types
+{{/if}}
+{{#if (and (ne auth "none") (ne backend "convex"))}}
+- **`packages/auth/`** - Authentication logic and utilities
+{{/if}}
+{{#if (and (ne database "none") (ne orm "none") (ne backend "convex"))}}
+- **`packages/db/`** - Database schema and utilities
+{{/if}}
 {{/if}}
 
 {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
@@ -32,14 +44,12 @@ frontend "solid")}} (SolidStart){{/if}}
 ## Available Scripts
 
 - `{{packageManager}} run dev` - Start all apps in development mode
-{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start")
-(includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
+{{#if (and (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start")
+(includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid")) (ne backend "self"))}}
 - `{{packageManager}} run dev:web` - Start only the web app
 {{/if}}
-{{#if (ne backend "none")}}
-{{#if (ne backend "convex")}}
+{{#if (and (ne backend "none") (ne backend "convex") (ne backend "self"))}}
 - `{{packageManager}} run dev:server` - Start only the server
-{{/if}}
 {{/if}}
 {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 - `{{packageManager}} run dev:native` - Start only the native app
@@ -48,7 +58,7 @@ frontend "solid")}} (SolidStart){{/if}}
 {{#if (and (ne database "none") (ne orm "none") (ne backend "convex"))}}
 ## Database Commands
 
-All database operations should be run from the server workspace:
+All database operations should be run from the {{#if (eq backend "self")}}web{{else}}server{{/if}} workspace:
 
 - `{{packageManager}} run db:push` - Push schema changes to database
 - `{{packageManager}} run db:studio` - Open database studio
@@ -57,11 +67,11 @@ All database operations should be run from the server workspace:
 - `{{packageManager}} run db:migrate` - Run database migrations
 
 {{#if (eq orm "drizzle")}}
-Database schema files are located in `apps/server/src/db/schema/`
+Database schema files are located in {{#if (eq backend "self")}}`apps/web/src/db/schema/`{{else}}`apps/server/src/db/schema/`{{/if}}
 {{else if (eq orm "prisma")}}
-Database schema is located in `apps/server/prisma/schema.prisma`
+Database schema is located in {{#if (eq backend "self")}}`apps/web/prisma/schema.prisma`{{else}}`apps/server/prisma/schema.prisma`{{/if}}
 {{else if (eq orm "mongoose")}}
-Database models are located in `apps/server/src/db/models/`
+Database models are located in {{#if (eq backend "self")}}`apps/web/src/db/models/`{{else}}`apps/server/src/db/models/`{{/if}}
 {{/if}}
 {{/if}}
 
@@ -69,10 +79,10 @@ Database models are located in `apps/server/src/db/models/`
 ## API Structure
 
 {{#if (eq api "trpc")}}
-- tRPC routers are in `apps/server/src/routers/`
+- tRPC routers are in {{#if (eq backend "self")}}`packages/api/src/routers/`{{else}}`apps/server/src/routers/`{{/if}}
 - Client-side tRPC utils are in `apps/web/src/utils/trpc.ts`
 {{else if (eq api "orpc")}}
-- oRPC endpoints are in `apps/server/src/api/`
+- oRPC endpoints are in {{#if (eq backend "self")}}`packages/api/src/api/`{{else}}`apps/server/src/api/`{{/if}}
 - Client-side API utils are in `apps/web/src/utils/api.ts`
 {{/if}}
 {{/if}}
@@ -82,7 +92,7 @@ Database models are located in `apps/server/src/db/models/`
 
 Authentication is enabled in this project:
 {{#if (ne backend "convex")}}
-- Server auth logic is in `apps/server/src/lib/auth.ts`
+- Server auth logic is in {{#if (eq backend "self")}}`packages/auth/src/lib/auth.ts`{{else}}`apps/server/src/lib/auth.ts`{{/if}}
 {{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start")
 (includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
 - Web app auth client is in `apps/web/src/lib/auth-client.ts`

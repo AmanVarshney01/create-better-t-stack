@@ -24,7 +24,7 @@ export async function setupServerDeploy(config: ProjectConfig) {
 		await setupWorkersServerDeploy(serverDir, packageManager);
 		await generateCloudflareWorkerTypes({ serverDir, packageManager });
 	} else if (serverDeploy === "alchemy") {
-		await setupAlchemyServerDeploy(serverDir, packageManager);
+		await setupAlchemyServerDeploy(serverDir, packageManager, projectDir);
 	}
 }
 
@@ -83,6 +83,7 @@ async function generateCloudflareWorkerTypes({
 export async function setupAlchemyServerDeploy(
 	serverDir: string,
 	_packageManager: PackageManager,
+	projectDir?: string,
 ) {
 	if (!(await fs.pathExists(serverDir))) return;
 
@@ -96,6 +97,10 @@ export async function setupAlchemyServerDeploy(
 		projectDir: serverDir,
 	});
 
+	if (projectDir) {
+		await addAlchemyPackagesDependencies(projectDir);
+	}
+
 	const packageJsonPath = path.join(serverDir, "package.json");
 	if (await fs.pathExists(packageJsonPath)) {
 		const packageJson = await fs.readJson(packageJsonPath);
@@ -108,5 +113,19 @@ export async function setupAlchemyServerDeploy(
 		};
 
 		await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+	}
+}
+
+async function addAlchemyPackagesDependencies(projectDir: string) {
+	const packages = ["packages/api", "packages/auth", "packages/db"];
+
+	for (const packageName of packages) {
+		const packageDir = path.join(projectDir, packageName);
+		if (await fs.pathExists(packageDir)) {
+			await addPackageDependency({
+				devDependencies: ["@cloudflare/workers-types"],
+				projectDir: packageDir,
+			});
+		}
 	}
 }

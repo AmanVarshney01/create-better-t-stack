@@ -15,11 +15,13 @@ export async function setupWorkspaceDependencies(
 	const commonDeps: AvailableDependencies[] = ["dotenv", "zod"];
 	const commonDevDeps: AvailableDependencies[] = ["tsdown"];
 
+	const runtimeDevDeps = getRuntimeDevDeps(options);
+
 	const dbPackageDir = path.join(projectDir, "packages/db");
 	if (await fs.pathExists(dbPackageDir)) {
 		await addPackageDependency({
 			dependencies: commonDeps,
-			devDependencies: commonDevDeps,
+			devDependencies: [...commonDevDeps, ...runtimeDevDeps],
 			projectDir: dbPackageDir,
 		});
 	}
@@ -28,7 +30,7 @@ export async function setupWorkspaceDependencies(
 	if (await fs.pathExists(authPackageDir)) {
 		await addPackageDependency({
 			dependencies: commonDeps,
-			devDependencies: commonDevDeps,
+			devDependencies: [...commonDevDeps, ...runtimeDevDeps],
 			customDependencies: {
 				[`@${projectName}/db`]: workspaceVersion,
 			},
@@ -40,7 +42,7 @@ export async function setupWorkspaceDependencies(
 	if (await fs.pathExists(apiPackageDir)) {
 		await addPackageDependency({
 			dependencies: commonDeps,
-			devDependencies: commonDevDeps,
+			devDependencies: [...commonDevDeps, ...runtimeDevDeps],
 			customDependencies: {
 				[`@${projectName}/auth`]: workspaceVersion,
 				[`@${projectName}/db`]: workspaceVersion,
@@ -53,7 +55,7 @@ export async function setupWorkspaceDependencies(
 	if (await fs.pathExists(serverPackageDir)) {
 		await addPackageDependency({
 			dependencies: commonDeps,
-			devDependencies: commonDevDeps,
+			devDependencies: [...commonDevDeps, ...runtimeDevDeps],
 			customDependencies: {
 				[`@${projectName}/api`]: workspaceVersion,
 				[`@${projectName}/auth`]: workspaceVersion,
@@ -82,7 +84,25 @@ export async function setupWorkspaceDependencies(
 
 	await addPackageDependency({
 		dependencies: commonDeps,
-		devDependencies: commonDevDeps,
+		devDependencies: [...commonDevDeps, ...runtimeDevDeps],
 		projectDir,
 	});
+}
+
+function getRuntimeDevDeps(options: ProjectConfig): AvailableDependencies[] {
+	const { runtime, backend } = options;
+	
+	if (runtime === "none" && backend === "self") {
+		return ["@types/node"];
+	}
+	
+	if (runtime === "node") {
+		return ["@types/node"];
+	}
+	
+	if (runtime === "bun") {
+		return ["@types/bun"];
+	}
+	
+	return [];
 }

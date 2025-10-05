@@ -36,7 +36,7 @@ export async function setupCombinedAlchemyDeploy(
 
 	const serverDir = path.join(projectDir, "apps/server");
 	if (await fs.pathExists(serverDir)) {
-		await setupAlchemyServerDeploy(serverDir, packageManager);
+		await setupAlchemyServerDeploy(serverDir, packageManager, projectDir);
 	}
 
 	const frontend = config.frontend;

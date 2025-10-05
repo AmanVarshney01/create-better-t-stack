@@ -93,7 +93,6 @@ export async function setupExamples(config: ProjectConfig) {
 			});
 		}
 
-		// In fullstack mode, also add AI server deps to the web app
 		if (backend === "self" && webClientDirExists) {
 			await addPackageDependency({
 				dependencies: ["ai", "@ai-sdk/google"],

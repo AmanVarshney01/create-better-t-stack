@@ -30,6 +30,7 @@ export async function displayPostInstallInstructions(
 	} = config;
 
 	const isConvex = backend === "convex";
+	const isBackendSelf = backend === "self";
 	const runCmd =
 		packageManager === "npm"
 			? "npm run"
@@ -49,6 +50,7 @@ export async function displayPostInstallInstructions(
 					runtime,
 					dbSetup,
 					serverDeploy,
+					backend,
 				)
 			: "";
 
@@ -74,17 +76,19 @@ export async function displayPostInstallInstructions(
 		isConvex && config.auth === "clerk" ? getClerkInstructions() : "";
 	const polarInstructions =
 		config.payments === "polar" && config.auth === "better-auth"
-			? getPolarInstructions()
+			? getPolarInstructions(backend)
 			: "";
 	const wranglerDeployInstructions = getWranglerDeployInstructions(
 		runCmd,
 		webDeploy,
 		serverDeploy,
+		backend,
 	);
 	const alchemyDeployInstructions = getAlchemyDeployInstructions(
 		runCmd,
 		webDeploy,
 		serverDeploy,
+		backend,
 	);
 
 	const hasWeb = frontend?.some((f) =>
@@ -133,6 +137,8 @@ export async function displayPostInstallInstructions(
 			"   packages/backend/.env.local",
 		)} to ${pc.white("apps/*/.env")}\n`;
 		output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev\n\n`;
+	} else if (isBackendSelf) {
+		output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev\n`;
 	} else {
 		if (runtime !== "workers") {
 			output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev\n`;
@@ -161,16 +167,16 @@ export async function displayPostInstallInstructions(
 		)} You are creating a backend-only app\n   (no frontend selected)\n`;
 	}
 
-	if (!isConvex) {
+	if (!isConvex && !isBackendSelf) {
 		output += `${pc.cyan("•")} Backend API: http://localhost:3000\n`;
 
 		if (api === "orpc") {
-			if (backend === "self") {
-				output += `${pc.cyan("•")} OpenAPI (Scalar UI): http://localhost:3000/rpc/api\n`;
-			} else {
-				output += `${pc.cyan("•")} OpenAPI (Scalar UI): http://localhost:3000/api\n`;
-			}
+			output += `${pc.cyan("•")} OpenAPI (Scalar UI): http://localhost:3000/api\n`;
 		}
+	}
+
+	if (isBackendSelf && api === "orpc") {
+		output += `${pc.cyan("•")} OpenAPI (Scalar UI): http://localhost:${webPort}/rpc/api\n`;
 	}
 
 	if (addons?.includes("starlight")) {
@@ -244,6 +250,7 @@ async function getDatabaseInstructions(
 	runtime?: Runtime,
 	dbSetup?: DatabaseSetup,
 	serverDeploy?: string,
+	backend?: string,
 ) {
 	const instructions: string[] = [];
 
@@ -276,14 +283,15 @@ async function getDatabaseInstructions(
 				`${packageManager} wrangler d1 create your-database-name`,
 			)}`,
 		);
+		const wranglerPath = backend === "self" ? "apps/web" : "apps/server";
 		instructions.push(
 			`${pc.cyan(
 				"3.",
-			)} Update apps/server/wrangler.jsonc with database_id and database_name`,
+			)} Update ${wranglerPath}/wrangler.jsonc with database_id and database_name`,
 		);
 		instructions.push(
 			`${pc.cyan("4.")} Generate migrations: ${pc.white(
-				`cd apps/server && ${runCmd} db:generate`,
+				`cd ${wranglerPath} && ${runCmd} db:generate`,
 			)}`,
 		);
 		instructions.push(
@@ -368,10 +376,11 @@ async function getDatabaseInstructions(
 			);
 		}
 		if (database === "sqlite" && dbSetup !== "d1") {
+			const dbLocalPath = backend === "self" ? "apps/web" : "apps/server";
 			instructions.push(
 				`${pc.cyan(
 					"•",
-				)} Start local DB (if needed): ${`cd apps/server && ${runCmd} db:local`}`,
+				)} Start local DB (if needed): ${`cd ${dbLocalPath} && ${runCmd} db:local`}`,
 			);
 		}
 	} else if (orm === "mongoose") {
@@ -431,15 +440,17 @@ function getWranglerDeployInstructions(
 	runCmd?: string,
 	webDeploy?: string,
 	serverDeploy?: string,
+	backend?: string,
 ) {
 	const instructions: string[] = [];
 
 	if (webDeploy === "wrangler") {
+		const deployPath = backend === "self" ? "apps/web" : "apps/web";
 		instructions.push(
-			`${pc.bold("Deploy web to Cloudflare Workers:")}\n${pc.cyan("•")} Deploy: ${`cd apps/web && ${runCmd} run deploy`}`,
+			`${pc.bold("Deploy web to Cloudflare Workers:")}\n${pc.cyan("•")} Deploy: ${`cd ${deployPath} && ${runCmd} run deploy`}`,
 		);
 	}
-	if (serverDeploy === "wrangler") {
+	if (serverDeploy === "wrangler" && backend !== "self") {
 		instructions.push(
 			`${pc.bold("Deploy server to Cloudflare Workers:")}\n${pc.cyan("•")} Deploy: ${`cd apps/server && ${runCmd} run deploy`}`,
 		);
@@ -452,26 +463,36 @@ function getClerkInstructions() {
 	return `${pc.bold("Clerk Authentication Setup:")}\n${pc.cyan("•")} Follow the guide: ${pc.underline("https://docs.convex.dev/auth/clerk")}\n${pc.cyan("•")} Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard\n${pc.cyan("•")} Set CLERK_PUBLISHABLE_KEY in apps/*/.env`;
 }
 
-function getPolarInstructions() {
-	return `${pc.bold("Polar Payments Setup:")}\n${pc.cyan("•")} Get access token & product ID from ${pc.underline("https://sandbox.polar.sh/")}\n${pc.cyan("•")} Set POLAR_ACCESS_TOKEN in apps/server/.env`;
+function getPolarInstructions(backend?: string) {
+	const envPath = backend === "self" ? "apps/web/.env" : "apps/server/.env";
+	return `${pc.bold("Polar Payments Setup:")}\n${pc.cyan("•")} Get access token & product ID from ${pc.underline("https://sandbox.polar.sh/")}\n${pc.cyan("•")} Set POLAR_ACCESS_TOKEN in ${envPath}`;
 }
 
 function getAlchemyDeployInstructions(
 	runCmd?: string,
 	webDeploy?: string,
 	serverDeploy?: string,
+	backend?: string,
 ) {
 	const instructions: string[] = [];
+	const isBackendSelf = backend === "self";
 
 	if (webDeploy === "alchemy" && serverDeploy !== "alchemy") {
 		instructions.push(
 			`${pc.bold("Deploy web with Alchemy:")}\n${pc.cyan("•")} Dev: ${`cd apps/web && ${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`cd apps/web && ${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`cd apps/web && ${runCmd} destroy`}`,
 		);
-	} else if (serverDeploy === "alchemy" && webDeploy !== "alchemy") {
+	} else if (
+		serverDeploy === "alchemy" &&
+		webDeploy !== "alchemy" &&
+		!isBackendSelf
+	) {
 		instructions.push(
 			`${pc.bold("Deploy server with Alchemy:")}\n${pc.cyan("•")} Dev: ${`cd apps/server && ${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`cd apps/server && ${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`cd apps/server && ${runCmd} destroy`}`,
 		);
-	} else if (webDeploy === "alchemy" && serverDeploy === "alchemy") {
+	} else if (
+		webDeploy === "alchemy" &&
+		(serverDeploy === "alchemy" || isBackendSelf)
+	) {
 		instructions.push(
 			`${pc.bold("Deploy with Alchemy:")}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
 		);

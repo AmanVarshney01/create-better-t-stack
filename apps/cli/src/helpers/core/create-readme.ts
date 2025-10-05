@@ -111,6 +111,7 @@ Follow the prompts to create a new Convex project and connect it to your applica
 				orm,
 				options.dbSetup,
 				options.serverDeploy,
+				options.backend,
 			)
 }
 
@@ -217,6 +218,7 @@ function generateRunningInstructions(
 
 	const hasFrontendNone = frontend.length === 0 || frontend.includes("none");
 	const isBackendNone = backend === "none";
+	const isBackendSelf = backend === "self";
 
 	if (!hasFrontendNone) {
 		const hasTanstackRouter = frontend.includes("tanstack-router");
@@ -236,9 +238,15 @@ function generateRunningInstructions(
 			hasNuxt ||
 			hasSolid
 		) {
-			instructions.push(
-				`Open [http://localhost:${webPort}](http://localhost:${webPort}) in your browser to see the web application.`,
-			);
+			if (isBackendSelf) {
+				instructions.push(
+					`Open [http://localhost:${webPort}](http://localhost:${webPort}) in your browser to see your fullstack application.`,
+				);
+			} else {
+				instructions.push(
+					`Open [http://localhost:${webPort}](http://localhost:${webPort}) in your browser to see the web application.`,
+				);
+			}
 		}
 	}
 
@@ -250,7 +258,7 @@ function generateRunningInstructions(
 		instructions.push(
 			"Your app will connect to the Convex cloud backend automatically.",
 		);
-	} else if (!isBackendNone) {
+	} else if (!isBackendNone && !isBackendSelf) {
 		instructions.push(
 			"The API is running at [http://localhost:3000](http://localhost:3000).",
 		);
@@ -272,6 +280,7 @@ function generateProjectStructure(
 
 	const hasFrontendNone = frontend.length === 0 || frontend.includes("none");
 	const isBackendNone = backend === "none";
+	const isBackendSelf = backend === "self";
 
 	if (!hasFrontendNone) {
 		const hasTanstackRouter = frontend.includes("tanstack-router");
@@ -300,9 +309,15 @@ function generateProjectStructure(
 			else if (hasNuxt) frontendType = "Nuxt";
 			else if (hasSolid) frontendType = "SolidJS";
 
-			structure.push(
-				`│   ├── web/         # Frontend application (${frontendType})`,
-			);
+			if (isBackendSelf) {
+				structure.push(
+					`│   └── web/         # Fullstack application (${frontendType})`,
+				);
+			} else {
+				structure.push(
+					`│   ├── web/         # Frontend application (${frontendType})`,
+				);
+			}
 		}
 	}
 
@@ -310,33 +325,64 @@ function generateProjectStructure(
 		frontend.includes("native-nativewind") ||
 		frontend.includes("native-unistyles");
 	if (hasNative) {
-		structure.push(
-			"│   ├── native/      # Mobile application (React Native, Expo)",
-		);
+		if (isBackendSelf) {
+			structure.push(
+				"│   ├── native/      # Mobile application (React Native, Expo)",
+			);
+		} else {
+			structure.push(
+				"│   ├── native/      # Mobile application (React Native, Expo)",
+			);
+		}
 	}
 
 	if (addons.includes("starlight")) {
-		structure.push(
-			"│   ├── docs/        # Documentation site (Astro Starlight)",
-		);
-	}
-
-	if (isConvex) {
-		structure.push("├── packages/");
-		structure.push(
-			"│   └── backend/     # Convex backend functions and schema",
-		);
-		if (auth === "clerk") {
+		if (isBackendSelf) {
 			structure.push(
-				"│       ├── convex/    # Convex functions and schema",
-				"│       └── .env.local # Convex environment variables",
+				"│   ├── docs/        # Documentation site (Astro Starlight)",
+			);
+		} else {
+			structure.push(
+				"│   ├── docs/        # Documentation site (Astro Starlight)",
 			);
 		}
-	} else if (!isBackendNone) {
+	}
+
+	if (!isBackendSelf && !isBackendNone && !isConvex) {
 		const backendName = backend[0].toUpperCase() + backend.slice(1);
 		const apiName = api !== "none" ? api.toUpperCase() : "";
 		const backendDesc = apiName ? `${backendName}, ${apiName}` : backendName;
 		structure.push(`│   └── server/      # Backend API (${backendDesc})`);
+	}
+
+	if (isConvex || !isBackendNone) {
+		structure.push("├── packages/");
+
+		if (isConvex) {
+			structure.push(
+				"│   ├── backend/     # Convex backend functions and schema",
+			);
+			if (auth === "clerk") {
+				structure.push(
+					"│   │   ├── convex/    # Convex functions and schema",
+					"│   │   └── .env.local # Convex environment variables",
+				);
+			}
+		}
+
+		if (!isConvex) {
+			structure.push("│   ├── api/         # API layer / business logic");
+
+			if (auth !== "none") {
+				structure.push(
+					"│   ├── auth/        # Authentication configuration & logic",
+				);
+			}
+
+			if (api !== "none" || auth !== "none") {
+				structure.push("│   └── db/          # Database schema & queries");
+			}
+		}
 	}
 
 	return structure.join("\n");
@@ -495,10 +541,15 @@ function generateDatabaseSetup(
 	orm: ORM,
 	dbSetup: DatabaseSetup,
 	serverDeploy?: string,
+	backend?: string,
 ) {
 	if (database === "none") {
 		return "";
 	}
+
+	const isBackendSelf = backend === "self";
+	const envPath = isBackendSelf ? "apps/web/.env" : "apps/server/.env";
+	const dbLocalPath = isBackendSelf ? "apps/web" : "apps/server";
 
 	let setup = "## Database Setup\n\n";
 
@@ -518,12 +569,12 @@ ${
 			? "D1 local development and migrations are handled automatically by Alchemy during dev and deploy."
 			: "Local development for a Cloudflare D1 database will already be running as part of the `wrangler dev` command."
 		: `\`\`\`bash
-cd apps/server && ${packageManagerRunCmd} db:local
+cd ${dbLocalPath} && ${packageManagerRunCmd} db:local
 \`\`\`
 `
 }
 
-2. Update your \`.env\` file in the \`apps/server\` directory with the appropriate connection details if needed.
+2. Update your \`.env\` file in the \`${isBackendSelf ? "apps/web" : "apps/server"}\` directory with the appropriate connection details if needed.
 `;
 	} else if (database === "postgres") {
 		setup += `This project uses PostgreSQL${
@@ -535,7 +586,7 @@ cd apps/server && ${packageManagerRunCmd} db:local
 		}.
 
 1. Make sure you have a PostgreSQL database set up.
-2. Update your \`apps/server/.env\` file with your PostgreSQL connection details.
+2. Update your \`${envPath}\` file with your PostgreSQL connection details.
 `;
 	} else if (database === "mysql") {
 		setup += `This project uses MySQL${
@@ -547,7 +598,7 @@ cd apps/server && ${packageManagerRunCmd} db:local
 		}.
 
 1. Make sure you have a MySQL database set up.
-2. Update your \`apps/server/.env\` file with your MySQL connection details.
+2. Update your \`${envPath}\` file with your MySQL connection details.
 `;
 	} else if (database === "mongodb") {
 		setup += `This project uses MongoDB ${
@@ -559,7 +610,7 @@ cd apps/server && ${packageManagerRunCmd} db:local
 		}.
 
 1. Make sure you have MongoDB set up.
-2. Update your \`apps/server/.env\` file with your MongoDB connection URI.
+2. Update your \`${envPath}\` file with your MongoDB connection URI.
 `;
 	}
 
@@ -596,17 +647,20 @@ function generateScriptsList(
 ) {
 	const isConvex = backend === "convex";
 	const isBackendNone = backend === "none";
+	const isBackendSelf = backend === "self";
 
 	let scripts = `- \`${packageManagerRunCmd} dev\`: Start all applications in development mode
 - \`${packageManagerRunCmd} build\`: Build all applications`;
 
-	scripts += `
+	if (!isBackendSelf) {
+		scripts += `
 - \`${packageManagerRunCmd} dev:web\`: Start only the web application`;
+	}
 
 	if (isConvex) {
 		scripts += `
 - \`${packageManagerRunCmd} dev:setup\`: Setup and configure your Convex project`;
-	} else if (!isBackendNone) {
+	} else if (!isBackendNone && !isBackendSelf) {
 		scripts += `
 - \`${packageManagerRunCmd} dev:server\`: Start only the server`;
 	}
@@ -625,8 +679,9 @@ function generateScriptsList(
 - \`${packageManagerRunCmd} db:studio\`: Open database studio UI`;
 
 		if (database === "sqlite" && orm === "drizzle") {
+			const dbLocalPath = isBackendSelf ? "apps/web" : "apps/server";
 			scripts += `
-- \`cd apps/server && ${packageManagerRunCmd} db:local\`: Start the local SQLite database`;
+- \`cd ${dbLocalPath} && ${packageManagerRunCmd} db:local\`: Start the local SQLite database`;
 		}
 	}
 

@@ -1,6 +1,7 @@
 import path from "node:path";
 import fs from "fs-extra";
 import type { PackageManager, ProjectConfig } from "../../types";
+import { addPackageDependency } from "../../utils/add-package-deps";
 import { setupCombinedAlchemyDeploy } from "./alchemy/alchemy-combined-setup";
 import { setupNextAlchemyDeploy } from "./alchemy/alchemy-next-setup";
 import { setupNuxtAlchemyDeploy } from "./alchemy/alchemy-nuxt-setup";
@@ -25,6 +26,7 @@ export async function setupWebDeploy(config: ProjectConfig) {
 
 	if (webDeploy === "alchemy" && serverDeploy === "alchemy") {
 		await setupCombinedAlchemyDeploy(projectDir, packageManager, config);
+		await addAlchemyPackagesDependencies(projectDir);
 		return;
 	}
 
@@ -64,6 +66,8 @@ export async function setupWebDeploy(config: ProjectConfig) {
 		} else if (isSolid) {
 			await setupSolidAlchemyDeploy(projectDir, packageManager);
 		}
+
+		await addAlchemyPackagesDependencies(projectDir);
 	}
 }
 
@@ -91,4 +95,18 @@ async function setupWorkersWebDeploy(
 	}
 
 	await setupWorkersVitePlugin(projectDir);
+}
+
+async function addAlchemyPackagesDependencies(projectDir: string) {
+	const packages = ["packages/api", "packages/auth", "packages/db"];
+
+	for (const packageName of packages) {
+		const packageDir = path.join(projectDir, packageName);
+		if (await fs.pathExists(packageDir)) {
+			await addPackageDependency({
+				devDependencies: ["@cloudflare/workers-types"],
+				projectDir: packageDir,
+			});
+		}
+	}
 }

@@ -5,8 +5,7 @@
 		"outDir": "dist",
 		"baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]{{#if (eq orm "prisma")}},
-      "prisma": ["node_modules/prisma"]{{/if}}
+      "@/*": ["./src/*"]
     },
     "types": [
       {{#if (eq runtime "node")}}
