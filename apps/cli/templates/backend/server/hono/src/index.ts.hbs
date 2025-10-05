@@ -21,6 +21,7 @@ import { appRouter } from "./routers/index";
 {{#if (eq auth "better-auth")}}
 import { auth } from "./lib/auth";
 {{/if}}
+import { checkDatabaseHealth } from "./lib/health";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -145,8 +146,10 @@ app.post("/ai", async (c) => {
 });
 {{/if}}
 
-app.get("/", (c) => {
-  return c.text("OK");
+app.get("/", async (c) => {
+  const health = await checkDatabaseHealth();
+  const status = health.error ? 500 : 200;
+  return c.json(health, status);
 });
 
 {{#if (eq runtime "node")}}
