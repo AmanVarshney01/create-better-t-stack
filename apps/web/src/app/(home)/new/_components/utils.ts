@@ -81,6 +81,7 @@ export const analyzeStackCompatibility = (
 
 	const isConvex = nextStack.backend === "convex";
 	const isBackendNone = nextStack.backend === "none";
+	const isBackendSelf = nextStack.backend === "self";
 
 	if (isConvex) {
 		const convexOverrides: Partial<StackState> = {
@@ -192,6 +193,51 @@ export const analyzeStackCompatibility = (
 					message,
 				});
 			}
+		}
+	} else if (isBackendSelf) {
+		const hasNextFrontend = nextStack.webFrontend.includes("next");
+
+		if (!hasNextFrontend) {
+			const originalWebFrontendLength = nextStack.webFrontend.length;
+			nextStack.webFrontend = ["next"];
+
+			if (
+				originalWebFrontendLength !== 1 ||
+				!nextStack.webFrontend.includes("next")
+			) {
+				changed = true;
+				notes.webFrontend.notes.push(
+					"Self backend (fullstack) currently only supports Next.js frontend. Other frontends have been removed.",
+				);
+				notes.backend.notes.push(
+					"Self backend (fullstack) requires Next.js frontend.",
+				);
+				notes.webFrontend.hasIssue = true;
+				notes.backend.hasIssue = true;
+				changes.push({
+					category: "backend",
+					message:
+						"Frontend set to 'Next.js' (Self backend currently only supports Next.js)",
+				});
+			}
+		}
+
+		if (nextStack.runtime !== "none") {
+			notes.runtime.notes.push(
+				"Self backend (fullstack) uses frontend's built-in API routes. Runtime will be set to 'None'.",
+			);
+			notes.backend.notes.push(
+				"Self backend (fullstack) doesn't need a separate runtime.",
+			);
+			notes.runtime.hasIssue = true;
+			notes.backend.hasIssue = true;
+			nextStack.runtime = "none";
+			changed = true;
+			changes.push({
+				category: "backend",
+				message:
+					"Runtime set to 'None' (Self backend uses frontend's built-in API routes)",
+			});
 		}
 	} else {
 		if (nextStack.runtime === "none") {
@@ -1068,13 +1114,22 @@ export const analyzeStackCompatibility = (
 
 	if (
 		nextStack.serverDeploy !== "none" &&
-		(nextStack.backend === "none" || nextStack.backend === "convex")
+		(nextStack.backend === "none" ||
+			nextStack.backend === "convex" ||
+			nextStack.backend === "self")
 	) {
+		const backendType =
+			nextStack.backend === "self"
+				? "Self backend (fullstack)"
+				: nextStack.backend === "convex"
+					? "Convex backend"
+					: "No backend";
+
 		notes.serverDeploy.notes.push(
-			"Server deployment requires a supported backend. It will be disabled.",
+			`Server deployment is not needed with ${backendType.toLowerCase()}. It will be disabled.`,
 		);
 		notes.backend.notes.push(
-			"No compatible backend selected: Server deployment has been disabled.",
+			`${backendType} doesn't need server deployment. Server deployment has been disabled.`,
 		);
 		notes.serverDeploy.hasIssue = true;
 		notes.backend.hasIssue = true;
@@ -1082,8 +1137,7 @@ export const analyzeStackCompatibility = (
 		changed = true;
 		changes.push({
 			category: "serverDeploy",
-			message:
-				"Server deployment set to 'None' (requires a backend but 'None' or 'Convex' was selected)",
+			message: `Server deployment set to 'None' (${backendType.toLowerCase()} doesn't need server deployment)`,
 		});
 	}
 
@@ -1301,6 +1355,21 @@ export const getDisabledReason = (
 		return "Cloudflare Workers runtime only supports Hono backend. Switch to Hono to use Workers runtime.";
 	}
 
+	if (category === "backend" && optionId === "self") {
+		const hasNextFrontend = finalStack.webFrontend.includes("next");
+		if (!hasNextFrontend) {
+			return "Self backend (fullstack) currently only supports Next.js frontend. Select Next.js frontend first.";
+		}
+	}
+
+	if (
+		category === "webFrontend" &&
+		optionId !== "next" &&
+		finalStack.backend === "self"
+	) {
+		return "Self backend (fullstack) currently only supports Next.js frontend. Support for other frameworks will be added in a future update.";
+	}
+
 	if (
 		category === "runtime" &&
 		optionId === "workers" &&
@@ -1312,9 +1381,18 @@ export const getDisabledReason = (
 	if (
 		category === "runtime" &&
 		optionId === "none" &&
-		finalStack.backend !== "convex"
+		finalStack.backend !== "convex" &&
+		finalStack.backend !== "self"
 	) {
-		return "Runtime 'None' is only available with Convex backend. Switch to Convex to use this option.";
+		return "Runtime 'None' is only available with Convex backend or Self backend (fullstack). Switch to Convex or Self to use this option.";
+	}
+
+	if (
+		category === "runtime" &&
+		optionId !== "none" &&
+		finalStack.backend === "self"
+	) {
+		return "Self backend (fullstack) uses frontend's built-in API routes and requires runtime to be 'None'. Self backend doesn't need a separate runtime.";
 	}
 
 	if (
@@ -1567,8 +1645,13 @@ export const getDisabledReason = (
 	if (
 		category === "serverDeploy" &&
 		optionId !== "none" &&
-		(finalStack.backend === "none" || finalStack.backend === "convex")
+		(finalStack.backend === "none" ||
+			finalStack.backend === "convex" ||
+			finalStack.backend === "self")
 	) {
+		if (finalStack.backend === "self") {
+			return "Self backend (fullstack) uses frontend's built-in API routes and doesn't need server deployment.";
+		}
 		return "Server deployment requires a supported backend (Hono, Express, Fastify, or Elysia). Convex has its own deployment.";
 	}
 

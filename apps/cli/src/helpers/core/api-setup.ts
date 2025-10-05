@@ -196,15 +196,8 @@ function getConvexDependencies(frontend: Frontend[]) {
 }
 
 export async function setupApi(config: ProjectConfig) {
-	const {
-		api,
-		projectName,
-		frontend,
-		backend,
-		packageManager,
-		projectDir,
-		auth,
-	} = config;
+	const { api, projectName, frontend, backend, packageManager, projectDir } =
+		config;
 	const isConvex = backend === "convex";
 
 	const webDir = path.join(projectDir, "apps/web");
@@ -239,7 +232,7 @@ export async function setupApi(config: ProjectConfig) {
 				if (frontend.includes("next")) {
 					frameworkDeps.push("next");
 				}
-				
+
 				if (frameworkDeps.length > 0) {
 					await addPackageDependency({
 						dependencies: frameworkDeps,

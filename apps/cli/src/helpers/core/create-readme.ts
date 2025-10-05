@@ -463,8 +463,6 @@ function generateFeaturesList(
 			addonsList.push("- **Fastify** - Fast, low-overhead web framework");
 		} else if (backend === "elysia") {
 			addonsList.push("- **Elysia** - Type-safe, high-performance framework");
-		} else if (backend === "next") {
-			addonsList.push("- **Next.js** - Full-stack React framework");
 		}
 
 		if (api === "trpc") {

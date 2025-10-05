@@ -43,5 +43,7 @@
 		"apps/*",
 		"packages/*"
 	],
-	"dependencies": {}
+	"dependencies": {
+		"@clack/prompts": "^0.11.0"
+	}
 }
