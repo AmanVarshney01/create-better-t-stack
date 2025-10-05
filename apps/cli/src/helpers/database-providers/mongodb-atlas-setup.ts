@@ -136,7 +136,7 @@ export async function setupMongoDBAtlas(
 
 		if (manualDb) {
 			log.info("MongoDB Atlas manual setup selected");
-			await writeEnvFile(projectDir);
+			await writeEnvFile(projectDir, backend);
 			displayManualSetupInstructions();
 			return;
 		}
@@ -162,17 +162,15 @@ export async function setupMongoDBAtlas(
 
 		if (mode === "manual") {
 			log.info("MongoDB Atlas manual setup selected");
-			await writeEnvFile(projectDir);
+			await writeEnvFile(projectDir, backend);
 			displayManualSetupInstructions();
 			return;
 		}
 
-		const atlasConfig = await initMongoDBAtlas(serverDir);
-
 		const config = await initMongoDBAtlas(serverDir);
 
 		if (config) {
-			await writeEnvFile(projectDir, config);
+			await writeEnvFile(projectDir, backend, config);
 			log.success(
 				pc.green(
 					"MongoDB Atlas setup complete! Connection saved to .env file.",

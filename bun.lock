@@ -4,13 +4,13 @@
     "": {
       "name": "better-t-stack",
       "devDependencies": {
-        "@biomejs/biome": "latest",
-        "@types/bun": "latest",
-        "changelogithub": "latest",
-        "husky": "latest",
-        "lint-staged": "latest",
-        "turbo": "latest",
-        "typescript": "latest",
+        "@biomejs/biome": "2.2.5",
+        "@types/bun": "^1.2.23",
+        "changelogithub": "^13.16.0",
+        "husky": "^9.1.7",
+        "lint-staged": "^16.2.3",
+        "turbo": "^2.5.8",
+        "typescript": "5.9.3",
       },
     },
     "apps/cli": {
