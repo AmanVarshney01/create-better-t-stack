@@ -18,45 +18,27 @@ export async function setupBackendDependencies(config: ProjectConfig) {
 
 	if (framework === "hono") {
 		dependencies.push("hono");
-		if (api === "trpc") {
-			dependencies.push("@hono/trpc-server");
-		}
-
 		if (runtime === "node") {
 			dependencies.push("@hono/node-server");
-			devDependencies.push("tsx", "@types/node");
 		}
 	} else if (framework === "elysia") {
 		dependencies.push("elysia", "@elysiajs/cors");
-		if (api === "trpc") {
-			dependencies.push("@elysiajs/trpc");
-		}
 		if (runtime === "node") {
 			dependencies.push("@elysiajs/node");
-			devDependencies.push("tsx", "@types/node");
 		}
 	} else if (framework === "express") {
 		dependencies.push("express", "cors");
 		devDependencies.push("@types/express", "@types/cors");
-
-		if (runtime === "node") {
-			devDependencies.push("tsx", "@types/node");
-		}
 	} else if (framework === "fastify") {
 		dependencies.push("fastify", "@fastify/cors");
-
-		if (runtime === "node") {
-			devDependencies.push("tsx", "@types/node");
-		}
 	}
 
 	if (api === "trpc") {
-		if (framework === "express") {
-			dependencies.push("@trpc/server");
-		} else if (framework === "fastify") {
-			dependencies.push("@trpc/server");
-		} else if (runtime === "workers") {
-			dependencies.push("@trpc/server");
+		dependencies.push("@trpc/server");
+		if (framework === "hono") {
+			dependencies.push("@hono/trpc-server");
+		} else if (framework === "elysia") {
+			dependencies.push("@elysiajs/trpc");
 		}
 	} else if (api === "orpc") {
 		dependencies.push("@orpc/server", "@orpc/openapi", "@orpc/zod");
@@ -70,7 +52,9 @@ export async function setupBackendDependencies(config: ProjectConfig) {
 		dependencies.push("ai", "@ai-sdk/google");
 	}
 
-	if (runtime === "bun") {
+	if (runtime === "node") {
+		devDependencies.push("tsx", "@types/node");
+	} else if (runtime === "bun") {
 		devDependencies.push("@types/bun");
 	}
 

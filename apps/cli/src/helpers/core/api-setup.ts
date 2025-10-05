@@ -234,58 +234,18 @@ export async function setupApi(config: ProjectConfig) {
 				});
 			}
 
-			// Add framework-specific dependencies for context types
-			const frameworkDeps: AvailableDependencies[] = [];
-			if (backend === "hono") {
-				frameworkDeps.push("hono");
-			} else if (backend === "elysia") {
-				frameworkDeps.push("elysia");
-			} else if (backend === "express") {
-				frameworkDeps.push("express", "@types/express");
-			} else if (backend === "fastify") {
-				frameworkDeps.push("fastify");
-			} else if (backend === "self") {
+			if (backend === "self") {
+				const frameworkDeps: AvailableDependencies[] = [];
 				if (frontend.includes("next")) {
 					frameworkDeps.push("next");
 				}
-			}
-
-			if (frameworkDeps.length > 0) {
-				await addPackageDependency({
-					dependencies: frameworkDeps,
-					projectDir: apiPackageDir,
-				});
-			}
-
-			if (api === "trpc") {
-				if (backend === "hono") {
+				
+				if (frameworkDeps.length > 0) {
 					await addPackageDependency({
-						dependencies: ["@hono/trpc-server"],
-						projectDir: apiPackageDir,
-					});
-				} else if (backend === "elysia") {
-					await addPackageDependency({
-						dependencies: ["@elysiajs/trpc"],
-						projectDir: apiPackageDir,
-					});
-				} else if (backend === "express") {
-					await addPackageDependency({
-						dependencies: ["@trpc/server"],
-						projectDir: apiPackageDir,
-					});
-				} else if (backend === "fastify") {
-					await addPackageDependency({
-						dependencies: ["@trpc/server"],
+						dependencies: frameworkDeps,
 						projectDir: apiPackageDir,
 					});
 				}
-			}
-
-			if (auth === "better-auth") {
-				await addPackageDependency({
-					dependencies: ["better-auth"],
-					projectDir: apiPackageDir,
-				});
 			}
 		}
 
