@@ -97,10 +97,10 @@ async function updateRootPackageJson(
 			}
 		}
 		if (options.dbSetup === "docker") {
-			scripts["db:start"] = `turbo -F ${backendPackageName} db:start`;
-			scripts["db:watch"] = `turbo -F ${backendPackageName} db:watch`;
-			scripts["db:stop"] = `turbo -F ${backendPackageName} db:stop`;
-			scripts["db:down"] = `turbo -F ${backendPackageName} db:down`;
+			scripts["db:start"] = `turbo -F ${dbPackageName} db:start`;
+			scripts["db:watch"] = `turbo -F ${dbPackageName} db:watch`;
+			scripts["db:stop"] = `turbo -F ${dbPackageName} db:stop`;
+			scripts["db:down"] = `turbo -F ${dbPackageName} db:down`;
 		}
 	} else if (options.packageManager === "pnpm") {
 		scripts.dev = devScript;
@@ -130,10 +130,10 @@ async function updateRootPackageJson(
 			}
 		}
 		if (options.dbSetup === "docker") {
-			scripts["db:start"] = `pnpm --filter ${backendPackageName} db:start`;
-			scripts["db:watch"] = `pnpm --filter ${backendPackageName} db:watch`;
-			scripts["db:stop"] = `pnpm --filter ${backendPackageName} db:stop`;
-			scripts["db:down"] = `pnpm --filter ${backendPackageName} db:down`;
+			scripts["db:start"] = `pnpm --filter ${dbPackageName} db:start`;
+			scripts["db:watch"] = `pnpm --filter ${dbPackageName} db:watch`;
+			scripts["db:stop"] = `pnpm --filter ${dbPackageName} db:stop`;
+			scripts["db:down"] = `pnpm --filter ${dbPackageName} db:down`;
 		}
 	} else if (options.packageManager === "npm") {
 		scripts.dev = devScript;
@@ -169,11 +169,11 @@ async function updateRootPackageJson(
 		}
 		if (options.dbSetup === "docker") {
 			scripts["db:start"] =
-				`npm run db:start --workspace ${backendPackageName}`;
+				`npm run db:start --workspace ${dbPackageName}`;
 			scripts["db:watch"] =
-				`npm run db:watch --workspace ${backendPackageName}`;
-			scripts["db:stop"] = `npm run db:stop --workspace ${backendPackageName}`;
-			scripts["db:down"] = `npm run db:down --workspace ${backendPackageName}`;
+				`npm run db:watch --workspace ${dbPackageName}`;
+			scripts["db:stop"] = `npm run db:stop --workspace ${dbPackageName}`;
+			scripts["db:down"] = `npm run db:down --workspace ${dbPackageName}`;
 		}
 	} else if (options.packageManager === "bun") {
 		scripts.dev = devScript;
@@ -206,10 +206,10 @@ async function updateRootPackageJson(
 			}
 		}
 		if (options.dbSetup === "docker") {
-			scripts["db:start"] = `bun run --filter ${backendPackageName} db:start`;
-			scripts["db:watch"] = `bun run --filter ${backendPackageName} db:watch`;
-			scripts["db:stop"] = `bun run --filter ${backendPackageName} db:stop`;
-			scripts["db:down"] = `bun run --filter ${backendPackageName} db:down`;
+			scripts["db:start"] = `bun run --filter ${dbPackageName} db:start`;
+			scripts["db:watch"] = `bun run --filter ${dbPackageName} db:watch`;
+			scripts["db:stop"] = `bun run --filter ${dbPackageName} db:stop`;
+			scripts["db:down"] = `bun run --filter ${dbPackageName} db:down`;
 		}
 	}
 
@@ -264,14 +264,6 @@ async function updateServerPackageJson(
 	if (!serverPackageJson.scripts) {
 		serverPackageJson.scripts = {};
 	}
-	const scripts = serverPackageJson.scripts;
-
-	if (options.dbSetup === "docker") {
-		scripts["db:start"] = "docker compose up -d";
-		scripts["db:watch"] = "docker compose up";
-		scripts["db:stop"] = "docker compose stop";
-		scripts["db:down"] = "docker compose down";
-	}
 
 	await fs.writeJson(serverPackageJsonPath, serverPackageJson, {
 		spaces: 2,
@@ -319,6 +311,13 @@ async function updateDbPackageJson(projectDir: string, options: ProjectConfig) {
 				scripts["db:migrate"] = "drizzle-kit migrate";
 			}
 		}
+	}
+
+	if (options.dbSetup === "docker") {
+		scripts["db:start"] = "docker compose up -d";
+		scripts["db:watch"] = "docker compose up";
+		scripts["db:stop"] = "docker compose stop";
+		scripts["db:down"] = "docker compose down";
 	}
 
 	await fs.writeJson(dbPackageJsonPath, dbPackageJson, {

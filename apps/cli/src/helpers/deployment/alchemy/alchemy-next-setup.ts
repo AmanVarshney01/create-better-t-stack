@@ -15,7 +15,6 @@ export async function setupNextAlchemyDeploy(
 		dependencies: ["@opennextjs/cloudflare"],
 		devDependencies: [
 			"alchemy",
-			"dotenv",
 			"wrangler",
 			"@cloudflare/workers-types",
 		],

@@ -17,7 +17,7 @@ export async function setupCombinedAlchemyDeploy(
 	config: ProjectConfig,
 ) {
 	await addPackageDependency({
-		devDependencies: ["alchemy", "dotenv"],
+		devDependencies: ["alchemy"],
 		projectDir,
 	});
 

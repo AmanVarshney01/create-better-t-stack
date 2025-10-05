@@ -12,7 +12,7 @@ export async function setupReactRouterAlchemyDeploy(
 	if (!(await fs.pathExists(webAppDir))) return;
 
 	await addPackageDependency({
-		devDependencies: ["alchemy", "dotenv"],
+		devDependencies: ["alchemy"],
 		projectDir: webAppDir,
 	});
 

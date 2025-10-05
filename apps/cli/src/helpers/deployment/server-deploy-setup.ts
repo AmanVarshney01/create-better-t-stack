@@ -91,7 +91,6 @@ export async function setupAlchemyServerDeploy(
 			"alchemy",
 			"wrangler",
 			"@types/node",
-			"dotenv",
 			"@cloudflare/workers-types",
 		],
 		projectDir: serverDir,

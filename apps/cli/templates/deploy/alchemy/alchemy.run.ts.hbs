@@ -39,15 +39,15 @@ const app = await alchemy("{{projectName}}");
 
 {{#if (and (eq serverDeploy "alchemy") (eq dbSetup "d1"))}}
 await Exec("db-generate", {
-	{{#if (and (eq webDeploy "alchemy") (eq serverDeploy "alchemy"))}}cwd: "apps/server",{{/if}}
+	{{#if (and (eq webDeploy "alchemy") (eq serverDeploy "alchemy"))}}cwd: "packages/db",{{/if}}
 	command: "{{packageManager}} run db:generate",
 });
 
 const db = await D1Database("database", {
 	{{#if (eq orm "prisma")}}
-	migrationsDir: "apps/server/prisma/migrations",
+	migrationsDir: "packages/db/prisma/migrations",
 	{{else if (eq orm "drizzle")}}
-	migrationsDir: "apps/server/src/db/migrations",
+	migrationsDir: "packages/db/src/migrations",
 	{{/if}}
 });
 {{/if}}

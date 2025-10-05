@@ -13,7 +13,7 @@ export async function setupSvelteAlchemyDeploy(
 	if (!(await fs.pathExists(webAppDir))) return;
 
 	await addPackageDependency({
-		devDependencies: ["alchemy", "@sveltejs/adapter-cloudflare", "dotenv"],
+		devDependencies: ["alchemy", "@sveltejs/adapter-cloudflare"],
 		projectDir: webAppDir,
 	});
 

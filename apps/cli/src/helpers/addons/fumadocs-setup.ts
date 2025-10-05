@@ -1,5 +1,5 @@
 import path from "node:path";
-import { isCancel, log, select } from "@clack/prompts";
+import { isCancel, log, select, spinner } from "@clack/prompts";
 import consola from "consola";
 import { execa } from "execa";
 import fs from "fs-extra";
@@ -64,11 +64,16 @@ export async function setupFumadocs(config: ProjectConfig) {
 			commandWithArgs,
 		);
 
+		const s = spinner();
+		s.start("Setting up Fumadocs...");
+
 		await execa(fumadocsInitCommand, {
 			cwd: path.join(projectDir, "apps"),
 			env: { CI: "true" },
 			shell: true,
 		});
+
+		s.stop("Fumadocs setup complete!");
 
 		const fumadocsDir = path.join(projectDir, "apps", "fumadocs");
 		const packageJsonPath = path.join(fumadocsDir, "package.json");

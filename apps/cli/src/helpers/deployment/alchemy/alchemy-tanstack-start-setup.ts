@@ -13,7 +13,7 @@ export async function setupTanStackStartAlchemyDeploy(
 	if (!(await fs.pathExists(webAppDir))) return;
 
 	await addPackageDependency({
-		devDependencies: ["alchemy", "dotenv", "@cloudflare/vite-plugin"],
+		devDependencies: ["alchemy", "@cloudflare/vite-plugin"],
 		projectDir: webAppDir,
 	});
 
