@@ -4,14 +4,18 @@ import { authClient } from "@/lib/auth-client";
 import { QueryClient } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
-import type { AppRouter } from "../../server/src/routers";
+import type { AppRouter } from "@{{projectName}}/api/routers/index";
 
 export const queryClient = new QueryClient();
 
 const trpcClient = createTRPCClient<AppRouter>({
 	links: [
 		httpBatchLink({
+			 {{#if  (eq backend "self")}}
+			url: `${process.env.EXPO_PUBLIC_SERVER_URL}/api/trpc`,
+			{{else}}
 			url: `${process.env.EXPO_PUBLIC_SERVER_URL}/trpc`,
+			{{/if}}
 			{{#if (eq auth "better-auth")}}
 			headers() {
 				const headers = new Map<string, string>();

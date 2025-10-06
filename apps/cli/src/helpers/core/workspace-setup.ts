@@ -80,6 +80,21 @@ export async function setupWorkspaceDependencies(
 		}
 	}
 
+	const nativePackageDir = path.join(projectDir, "apps/native");
+
+	if (await fs.pathExists(nativePackageDir)) {
+		const nativeDeps: Record<string, string> = {};
+
+		nativeDeps[`@${projectName}/api`] = workspaceVersion;
+
+		if (Object.keys(nativeDeps).length > 0) {
+			await addPackageDependency({
+				customDependencies: nativeDeps,
+				projectDir: nativePackageDir,
+			});
+		}
+	}
+
 	const runtimeDevDeps = getRuntimeDevDeps(options);
 
 	await addPackageDependency({

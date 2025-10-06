@@ -227,7 +227,8 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 		const nativeDir = path.join(projectDir, "apps/native");
 		if (await fs.pathExists(nativeDir)) {
 			let envVarName = "EXPO_PUBLIC_SERVER_URL";
-			let serverUrl = "http://localhost:3000";
+			let serverUrl =
+				backend === "self" ? "http://localhost:3001" : "http://localhost:3000";
 
 			if (backend === "convex") {
 				envVarName = "EXPO_PUBLIC_CONVEX_URL";

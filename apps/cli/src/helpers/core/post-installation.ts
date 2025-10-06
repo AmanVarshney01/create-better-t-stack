@@ -63,7 +63,7 @@ export async function displayPostInstallInstructions(
 	const nativeInstructions =
 		frontend?.includes("native-nativewind") ||
 		frontend?.includes("native-unistyles")
-			? getNativeInstructions(isConvex)
+			? getNativeInstructions(isConvex, isBackendSelf)
 			: "";
 	const pwaInstructions =
 		addons?.includes("pwa") && frontend?.includes("react-router")
@@ -214,11 +214,13 @@ export async function displayPostInstallInstructions(
 	consola.box(output);
 }
 
-function getNativeInstructions(isConvex: boolean) {
+function getNativeInstructions(isConvex: boolean, isBackendSelf: boolean) {
 	const envVar = isConvex ? "EXPO_PUBLIC_CONVEX_URL" : "EXPO_PUBLIC_SERVER_URL";
 	const exampleUrl = isConvex
 		? "https://<YOUR_CONVEX_URL>"
-		: "http://<YOUR_LOCAL_IP>:3000";
+		: isBackendSelf
+			? "http://<YOUR_LOCAL_IP>:3001"
+			: "http://<YOUR_LOCAL_IP>:3000";
 	const envFileName = ".env";
 	const ipNote = isConvex
 		? "your Convex deployment URL (find after running 'dev:setup')"

@@ -215,12 +215,7 @@ describe("Deployment Configurations", () => {
 		});
 
 		it("should work with server deploy + all compatible backends", async () => {
-			const backends = [
-				"hono",
-				"express",
-				"fastify",
-				"elysia",
-			] as const;
+			const backends = ["hono", "express", "fastify", "elysia"] as const;
 
 			for (const backend of backends) {
 				const config: TestConfig = {

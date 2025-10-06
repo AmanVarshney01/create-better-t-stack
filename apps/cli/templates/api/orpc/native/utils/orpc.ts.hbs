@@ -2,7 +2,7 @@ import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
-import type { AppRouterClient } from "../../server/src/routers";
+import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 {{#if (eq auth "better-auth")}}
 import { authClient } from "@/lib/auth-client";
 {{/if}}
@@ -16,7 +16,11 @@ export const queryClient = new QueryClient({
 });
 
 export const link = new RPCLink({
+  {{#if (eq backend "self")}}
+  url: `${process.env.EXPO_PUBLIC_SERVER_URL}/api/rpc`,
+  {{else}}
   url: `${process.env.EXPO_PUBLIC_SERVER_URL}/rpc`,
+  {{/if}}
   {{#if (eq auth "better-auth")}}
   headers() {
     const headers = new Map<string, string>();

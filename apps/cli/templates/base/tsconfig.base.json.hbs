@@ -25,8 +25,7 @@
       {{else if (eq runtime "workers")}}
         "node"
       {{else}}
-        "node",
-        "bun"
+        "node"
       {{/if}}{{#if (eq serverDeploy "alchemy")}},
       "@cloudflare/workers-types"{{/if}}
     ]
