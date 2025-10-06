@@ -1,6 +1,6 @@
 [install]
 {{#if (or (includes frontend "nuxt") (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-# linker = "isolated"  # Commented out for Nuxt compatibility
+# linker = "isolated"  # having issues with Nuxt and NativeWind/Unistyles
 {{else}}
 linker = "isolated"
 {{/if}}
