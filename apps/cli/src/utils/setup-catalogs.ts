@@ -25,7 +25,7 @@ export async function setupCatalogs(
 	const packagePaths = [
 		"apps/server",
 		"apps/web",
-		"apps/native",
+		// "apps/native", // todo
 		"packages/api",
 		"packages/db",
 		"packages/auth",
