@@ -331,7 +331,7 @@ describe("Authentication Configurations", () => {
 	});
 
 	describe("Authentication with Different Backends", () => {
-		const backends = ["hono", "express", "fastify", "next", "elysia"];
+		const backends = ["hono", "express", "fastify", "elysia", "self"];
 
 		for (const backend of backends) {
 			it(`should work with better-auth + ${backend}`, async () => {
@@ -342,7 +342,7 @@ describe("Authentication Configurations", () => {
 					database: "sqlite",
 					orm: "drizzle",
 					api: "trpc",
-					frontend: ["tanstack-router"],
+					frontend: backend === "self" ? ["next"] : ["tanstack-router"],
 					addons: ["turborepo"],
 					examples: ["todo"],
 					dbSetup: "none",
@@ -354,6 +354,8 @@ describe("Authentication Configurations", () => {
 				// Set appropriate runtime
 				if (backend === "elysia") {
 					config.runtime = "bun";
+				} else if (backend === "self") {
+					config.runtime = "none";
 				} else {
 					config.runtime = "bun";
 				}

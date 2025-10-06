@@ -1,5 +1,5 @@
 import { describe, it } from "vitest";
-import type { Backend, Runtime } from "../src/types";
+import type { Backend, Frontend, Runtime } from "../src/types";
 import {
 	expectError,
 	expectSuccess,
@@ -23,12 +23,10 @@ describe("Backend and Runtime Combinations", () => {
 
 			{ backend: "elysia" as const, runtime: "bun" as const },
 
-			{ backend: "next" as const, runtime: "bun" as const },
-			{ backend: "next" as const, runtime: "node" as const },
-
 			// Special cases
 			{ backend: "convex" as const, runtime: "none" as const },
 			{ backend: "none" as const, runtime: "none" as const },
+			{ backend: "self" as const, runtime: "none" as const },
 		];
 
 		for (const { backend, runtime } of validCombinations) {
@@ -57,6 +55,12 @@ describe("Backend and Runtime Combinations", () => {
 					config.orm = "none";
 					config.auth = "none";
 					config.api = "none";
+				} else if (backend === "self") {
+					config.frontend = ["next"];
+					config.database = "sqlite";
+					config.orm = "drizzle";
+					config.auth = "better-auth";
+					config.api = "trpc";
 				} else {
 					config.database = "sqlite";
 					config.orm = "drizzle";
@@ -86,12 +90,6 @@ describe("Backend and Runtime Combinations", () => {
 			},
 			{
 				backend: "fastify",
-				runtime: "workers",
-				error:
-					"Cloudflare Workers runtime (--runtime workers) is only supported with Hono backend",
-			},
-			{
-				backend: "next",
 				runtime: "workers",
 				error:
 					"Cloudflare Workers runtime (--runtime workers) is only supported with Hono backend",
@@ -137,28 +135,48 @@ describe("Backend and Runtime Combinations", () => {
 				error: "Backend 'none' requires '--runtime none'",
 			},
 
-			// Runtime none only works with convex or none backend
+			// Self backend requires runtime none
+			{
+				backend: "self",
+				runtime: "bun",
+				error: "Backend 'self' (fullstack) requires '--runtime none'",
+				frontend: ["next"], // Need to specify Next.js frontend for self backend
+			},
+			{
+				backend: "self",
+				runtime: "node",
+				error: "Backend 'self' (fullstack) requires '--runtime none'",
+				frontend: ["next"], // Need to specify Next.js frontend for self backend
+			},
+			{
+				backend: "self",
+				runtime: "workers",
+				error: "Backend 'self' (fullstack) requires '--runtime none'",
+				frontend: ["next"], // Need to specify Next.js frontend for self backend
+			},
+
+			// Runtime none only works with convex, none, or self backend
 			{
 				backend: "hono",
 				runtime: "none",
 				error:
-					"'--runtime none' is only supported with '--backend convex' or '--backend none'",
+					"'--runtime none' is only supported with '--backend convex', '--backend none', or '--backend self'",
 			},
 			{
 				backend: "express",
 				runtime: "none",
 				error:
-					"'--runtime none' is only supported with '--backend convex' or '--backend none'",
+					"'--runtime none' is only supported with '--backend convex', '--backend none', or '--backend self'",
 			},
 		];
 
-		for (const { backend, runtime, error } of invalidCombinations) {
+		for (const { backend, runtime, error, frontend } of invalidCombinations) {
 			it(`should fail with ${backend} + ${runtime}`, async () => {
 				const config: TestConfig = {
 					projectName: `invalid-${backend}-${runtime}`,
 					backend: backend as Backend,
 					runtime: runtime as Runtime,
-					frontend: ["tanstack-router"],
+					frontend: (frontend || ["tanstack-router"]) as Frontend[],
 					auth: "none",
 					api: "trpc",
 					addons: ["none"],
@@ -180,6 +198,11 @@ describe("Backend and Runtime Combinations", () => {
 					config.orm = "none";
 					config.auth = "none";
 					config.api = "none";
+				} else if (backend === "self") {
+					config.database = "sqlite";
+					config.orm = "drizzle";
+					config.auth = "better-auth";
+					config.api = "trpc";
 				} else {
 					config.database = "sqlite";
 					config.orm = "drizzle";
@@ -333,10 +356,10 @@ describe("Backend and Runtime Combinations", () => {
 			"hono",
 			"express",
 			"fastify",
-			"next",
 			"elysia",
 			"convex",
 			"none",
+			"self",
 		] as const;
 
 		for (const backend of backends) {
@@ -369,6 +392,14 @@ describe("Backend and Runtime Combinations", () => {
 						config.auth = "none";
 						config.api = "none";
 						break;
+					case "self":
+						config.frontend = ["next"]; // Self backend only works with Next.js
+						config.runtime = "none";
+						config.database = "sqlite";
+						config.orm = "drizzle";
+						config.auth = "better-auth";
+						config.api = "trpc";
+						break;
 					case "elysia":
 						config.runtime = "bun";
 						config.database = "sqlite";
@@ -388,5 +419,78 @@ describe("Backend and Runtime Combinations", () => {
 				expectSuccess(result);
 			});
 		}
+	});
+
+	describe("Self Backend Constraints", () => {
+		it("should work with self backend and Next.js frontend", async () => {
+			const result = await runTRPCTest({
+				projectName: "self-backend-success",
+				backend: "self",
+				runtime: "none",
+				frontend: ["next"],
+				database: "sqlite",
+				orm: "drizzle",
+				auth: "better-auth",
+				api: "trpc",
+				addons: ["none"],
+				examples: ["none"],
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
+				install: false,
+			});
+
+			expectSuccess(result);
+		});
+
+		it("should fail self backend with non-Next.js frontend", async () => {
+			const result = await runTRPCTest({
+				projectName: "self-backend-invalid-frontend",
+				backend: "self",
+				runtime: "none",
+				frontend: ["tanstack-router"], // Invalid frontend for self backend
+				database: "sqlite",
+				orm: "drizzle",
+				auth: "better-auth",
+				api: "trpc",
+				addons: ["none"],
+				examples: ["none"],
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
+				expectError: true,
+				install: false,
+			});
+
+			expectError(
+				result,
+				"Backend 'self' (fullstack) currently only supports Next.js frontend. Please use --frontend next. Support for Nuxt, SvelteKit, and TanStack Start will be added in a future update.",
+			);
+		});
+
+		it("should fail self backend with non-none runtime", async () => {
+			const result = await runTRPCTest({
+				projectName: "self-backend-invalid-runtime",
+				backend: "self",
+				runtime: "bun", // Invalid runtime for self backend
+				frontend: ["next"],
+				database: "sqlite",
+				orm: "drizzle",
+				auth: "better-auth",
+				api: "trpc",
+				addons: ["none"],
+				examples: ["none"],
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
+				expectError: true,
+				install: false,
+			});
+
+			expectError(
+				result,
+				"Backend 'self' (fullstack) requires '--runtime none'",
+			);
+		});
 	});
 });

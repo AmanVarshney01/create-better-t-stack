@@ -137,17 +137,17 @@ describe("API Configurations", () => {
 		});
 
 		it("should work with tRPC + all compatible backends", async () => {
-			const backends = ["hono", "express", "fastify", "next", "elysia"];
+			const backends = ["hono", "express", "fastify", "elysia", "self"];
 
 			for (const backend of backends) {
 				const config: TestConfig = {
 					projectName: `trpc-${backend}`,
 					api: "trpc",
 					backend: backend as Backend,
-					frontend: ["tanstack-router"],
+					frontend: backend === "self" ? ["next"] : ["tanstack-router"],
 					database: "sqlite",
 					orm: "drizzle",
-					auth: "none",
+					auth: backend === "self" ? "better-auth" : "none",
 					addons: ["none"],
 					examples: ["none"],
 					dbSetup: "none",
@@ -159,6 +159,8 @@ describe("API Configurations", () => {
 				// Set appropriate runtime
 				if (backend === "elysia") {
 					config.runtime = "bun";
+				} else if (backend === "self") {
+					config.runtime = "none";
 				} else {
 					config.runtime = "bun";
 				}
@@ -206,7 +208,7 @@ describe("API Configurations", () => {
 		});
 
 		it("should work with oRPC + all compatible backends", async () => {
-			const backends = ["hono", "express", "fastify", "next", "elysia"];
+			const backends = ["hono", "express", "fastify", "elysia"];
 
 			for (const backend of backends) {
 				const config: TestConfig = {

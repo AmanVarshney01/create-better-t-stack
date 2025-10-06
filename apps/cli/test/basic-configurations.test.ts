@@ -42,6 +42,33 @@ describe("Basic Configurations", () => {
 				"explicit-defaults",
 			);
 		});
+
+		it("should create Next.js fullstack project with self backend", async () => {
+			const result = await runTRPCTest({
+				projectName: "nextjs-fullstack-defaults",
+				database: "sqlite",
+				orm: "drizzle",
+				backend: "self",
+				runtime: "none",
+				frontend: ["next"],
+				auth: "better-auth",
+				api: "trpc",
+				addons: ["turborepo"],
+				examples: ["none"],
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
+				install: false, // Skip installation for faster tests
+			});
+
+			expectSuccess(result);
+			expect(result.result?.projectConfig.projectName).toBe(
+				"nextjs-fullstack-defaults",
+			);
+			expect(result.result?.projectConfig.backend).toBe("self");
+			expect(result.result?.projectConfig.runtime).toBe("none");
+			expect(result.result?.projectConfig.frontend).toEqual(["next"]);
+		});
 	});
 
 	describe("Package Managers", () => {

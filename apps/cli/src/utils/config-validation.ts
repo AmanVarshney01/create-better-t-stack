@@ -303,6 +303,25 @@ export function validateBackendNoneConstraints(
 	}
 }
 
+export function validateSelfBackendConstraints(
+	config: Partial<ProjectConfig>,
+	providedFlags: Set<string>,
+) {
+	const { backend } = config;
+
+	if (backend !== "self") {
+		return;
+	}
+
+	const has = (k: string) => providedFlags.has(k);
+
+	if (has("runtime") && config.runtime !== "none") {
+		exitWithError(
+			"Backend 'self' (fullstack) requires '--runtime none'. Please remove the --runtime flag or set it to 'none'.",
+		);
+	}
+}
+
 export function validateBackendConstraints(
 	config: Partial<ProjectConfig>,
 	providedFlags: Set<string>,
@@ -409,6 +428,7 @@ export function validateFullConfig(
 
 	validateConvexConstraints(config, providedFlags);
 	validateBackendNoneConstraints(config, providedFlags);
+	validateSelfBackendConstraints(config, providedFlags);
 	validateBackendConstraints(config, providedFlags, options);
 
 	validateFrontendConstraints(config, providedFlags);

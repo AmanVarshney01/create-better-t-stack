@@ -219,7 +219,6 @@ describe("Deployment Configurations", () => {
 				"hono",
 				"express",
 				"fastify",
-				"next",
 				"elysia",
 			] as const;
 
@@ -408,16 +407,16 @@ describe("Deployment Configurations", () => {
 	});
 
 	describe("Deployment with Special Backend Constraints", () => {
-		it("should work with deployment + next backend", async () => {
+		it("should work with deployment + self backend", async () => {
 			const result = await runTRPCTest({
-				projectName: "deploy-next-backend",
+				projectName: "deploy-self-backend",
 				webDeploy: "wrangler",
-				serverDeploy: "wrangler",
-				backend: "next",
-				runtime: "bun",
+				serverDeploy: "none", // Self backend doesn't use server deployment
+				backend: "self",
+				runtime: "none",
 				database: "sqlite",
 				orm: "drizzle",
-				auth: "none",
+				auth: "better-auth",
 				api: "trpc",
 				frontend: ["next"],
 				addons: ["none"],

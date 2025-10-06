@@ -52,6 +52,19 @@ describe("Frontend Configurations", () => {
 					config.dbSetup = "none";
 					config.webDeploy = "none";
 					config.serverDeploy = "none";
+				} else if (frontend === "next") {
+					// Next.js can use self backend (fullstack)
+					config.backend = "self";
+					config.runtime = "none";
+					config.database = "sqlite";
+					config.orm = "drizzle";
+					config.auth = "better-auth";
+					config.api = "trpc";
+					config.addons = ["none"];
+					config.examples = ["none"];
+					config.dbSetup = "none";
+					config.webDeploy = "none";
+					config.serverDeploy = "none";
 				} else if (["nuxt", "svelte"].includes(frontend)) {
 					config.backend = "hono";
 					config.runtime = "bun";
@@ -405,6 +418,50 @@ describe("Frontend Configurations", () => {
 			});
 
 			expectError(result, "Cannot combine 'none' with other frontend options");
+		});
+	});
+
+	describe("Next.js with Self Backend", () => {
+		it("should work with Next.js and self backend", async () => {
+			const result = await runTRPCTest({
+				projectName: "nextjs-self-backend",
+				frontend: ["next"],
+				backend: "self",
+				runtime: "none",
+				database: "sqlite",
+				orm: "drizzle",
+				auth: "better-auth",
+				api: "trpc",
+				addons: ["none"],
+				examples: ["none"],
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
+				install: false,
+			});
+
+			expectSuccess(result);
+		});
+
+		it("should work with Next.js and traditional backend", async () => {
+			const result = await runTRPCTest({
+				projectName: "nextjs-traditional-backend",
+				frontend: ["next"],
+				backend: "hono",
+				runtime: "bun",
+				database: "sqlite",
+				orm: "drizzle",
+				auth: "none",
+				api: "trpc",
+				addons: ["none"],
+				examples: ["none"],
+				dbSetup: "none",
+				webDeploy: "none",
+				serverDeploy: "none",
+				install: false,
+			});
+
+			expectSuccess(result);
 		});
 	});
 

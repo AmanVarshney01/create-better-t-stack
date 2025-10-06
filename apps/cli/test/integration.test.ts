@@ -51,6 +51,27 @@ describe("Integration Tests - Real World Scenarios", () => {
 			expectSuccess(result);
 		});
 
+		it("should create Next.js fullstack app with self backend", async () => {
+			const result = await runTRPCTest({
+				projectName: "nextjs-fullstack-app",
+				backend: "self",
+				runtime: "none",
+				database: "postgres",
+				orm: "drizzle",
+				auth: "better-auth",
+				api: "trpc",
+				frontend: ["next"],
+				addons: ["biome", "turborepo"],
+				examples: ["todo", "ai"],
+				dbSetup: "none",
+				webDeploy: "alchemy",
+				serverDeploy: "none", // No server deployment for self backend
+				install: false,
+			});
+
+			expectSuccess(result);
+		});
+
 		it("should create Svelte app with oRPC", async () => {
 			const result = await runTRPCTest({
 				projectName: "svelte-orpc-app",
@@ -180,8 +201,8 @@ describe("Integration Tests - Real World Scenarios", () => {
 		it("should create Next.js fullstack app", async () => {
 			const result = await runTRPCTest({
 				projectName: "nextjs-fullstack",
-				backend: "next",
-				runtime: "node",
+				backend: "self",
+				runtime: "none",
 				database: "postgres",
 				orm: "prisma",
 				auth: "better-auth",
