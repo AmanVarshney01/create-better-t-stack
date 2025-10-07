@@ -3,6 +3,9 @@ title: Quick Start
 description: Create your first Better-T-Stack project in minutes
 ---
 
+import { ImNpm as NpmIcon } from "react-icons/im";
+import { SiPnpm as PnpmIcon } from "react-icons/si";
+
 ## Philosophy
 
 - Roll your own stack: pick only what you need, nothing extra.
@@ -20,99 +23,131 @@ description: Create your first Better-T-Stack project in minutes
 
 ### CLI (prompts)
 
-<Tabs items={['bun', 'pnpm', 'npm']}>
-  <Tab value="bun">
-    ```bash
-    bun create better-t-stack@latest
-    ```
-  </Tab>
-  <Tab value="pnpm">
-    ```bash
-    pnpm create better-t-stack@latest
-    ```
-  </Tab>
-  <Tab value="npm">
+<Tabs groupId="installtab" defaultValue="npm" persist>
+  <TabsList>
+    <TabsTrigger value="npm" className="flex items-center gap-2">
+      <NpmIcon />
+      npm
+    </TabsTrigger>
+    <TabsTrigger value="pnpm" className="flex items-center gap-2">
+      <PnpmIcon />
+      pnpm
+    </TabsTrigger>
+    <TabsTrigger value="bun" className="flex items-center gap-2">
+      <img src="/icon/bun.svg" alt="bun" className="size-6" />
+      bun
+    </TabsTrigger>
+  </TabsList>
+  <TabsContent value="npm">
     ```bash
     npx create-better-t-stack@latest
     ```
-  </Tab>
+  </TabsContent>
+  <TabsContent value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest
+    ```
+  </TabsContent>
+  <TabsContent value="bun">
+    ```bash
+    bun create better-t-stack@latest
+    ```
+  </TabsContent>
 </Tabs>
 
 Follow the interactive prompts to choose your frontend, backend, database, ORM, API layer, and addons.
 
 Skip prompts and use the default stack:
 
-<Tabs items={['bun', 'pnpm', 'npm']}>
-  <Tab value="bun">
-    ```bash
-    bun create better-t-stack@latest  --yes
-    ```
-  </Tab>
-  <Tab value="pnpm">
-    ```bash
-    pnpm create better-t-stack@latest  --yes
-    ```
-  </Tab>
-  <Tab value="npm">
+<Tabs groupId="installtab" defaultValue="npm" persist>
+  <TabsList>
+    <TabsTrigger value="npm" className="flex items-center gap-2">
+      <NpmIcon />
+      npm
+    </TabsTrigger>
+    <TabsTrigger value="pnpm" className="flex items-center gap-2">
+      <PnpmIcon />
+      pnpm
+    </TabsTrigger>
+    <TabsTrigger value="bun" className="flex items-center gap-2">
+      <img src="/icon/bun.svg" alt="bun" className="size-6" />
+      bun
+    </TabsTrigger>
+  </TabsList>
+  <TabsContent value="npm">
     ```bash
     npx create-better-t-stack@latest  --yes
     ```
-  </Tab>
+  </TabsContent>
+  <TabsContent value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest  --yes
+    ```
+  </TabsContent>
+  <TabsContent value="bun">
+    ```bash
+    bun create better-t-stack@latest  --yes
+    ```
+  </TabsContent>
 </Tabs>
-
- 
 
 ### Stack Builder (UI)
 
 - Visit [/new](/new) to pick your stack and copy the generated command
 - Or open it via:
 
-<Tabs items={['bun', 'pnpm', 'npm']}>
-  <Tab value="bun">
-    ```bash
-    bun create better-t-stack@latest builder
-    ```
-  </Tab>
-  <Tab value="pnpm">
-    ```bash
-    pnpm create better-t-stack@latest builder
-    ```
-  </Tab>
-  <Tab value="npm">
+<Tabs groupId="installtab" defaultValue="npm" persist>
+  <TabsList>
+    <TabsTrigger value="npm" className="flex items-center gap-2">
+      <NpmIcon />
+      npm
+    </TabsTrigger>
+    <TabsTrigger value="pnpm" className="flex items-center gap-2">
+      <PnpmIcon />
+      pnpm
+    </TabsTrigger>
+    <TabsTrigger value="bun" className="flex items-center gap-2">
+      <img src="/icon/bun.svg" alt="bun" className="size-6" />
+      bun
+    </TabsTrigger>
+  </TabsList>
+  <TabsContent value="npm">
     ```bash
     npx create-better-t-stack@latest builder
     ```
-  </Tab>
+  </TabsContent>
+  <TabsContent value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest builder
+    ```
+  </TabsContent>
+  <TabsContent value="bun">
+    ```bash
+    bun create better-t-stack@latest builder
+    ```
+  </TabsContent>
 </Tabs>
 
 ## Common Setups
 
 ### Default Stack
 
-<Tabs items={['bun', 'pnpm', 'npm']}>
-  <Tab value="bun">
-    ```bash
-    bun create better-t-stack@latest my-webapp \
-      --frontend tanstack-router \
-      --backend hono \
-      --database sqlite \
-      --orm drizzle \
-      --auth better-auth \
-      --addons turborepo
-    ```
-  </Tab>
-  <Tab value="pnpm">
-    ```bash
-    pnpm create better-t-stack@latest my-webapp \
-      --frontend tanstack-router \
-      --backend hono \
-      --database sqlite \
-      --orm drizzle \
-      --auth better-auth \
-      --addons turborepo
-    ```
-  </Tab>
-  <Tab value="npm">
+<Tabs groupId="installtab" defaultValue="npm" persist>
+  <TabsList>
+    <TabsTrigger value="npm" className="flex items-center gap-2">
+      <NpmIcon />
+      npm
+    </TabsTrigger>
+    <TabsTrigger value="pnpm" className="flex items-center gap-2">
+      <PnpmIcon />
+      pnpm
+    </TabsTrigger>
+    <TabsTrigger value="bun" className="flex items-center gap-2">
+      <img src="/icon/bun.svg" alt="bun" className="size-6" />
+      bun
+    </TabsTrigger>
+  </TabsList>
+  <TabsContent value="npm">
     ```bash
     npx create-better-t-stack@latest my-webapp \
       --frontend tanstack-router \
@@ -122,64 +157,49 @@ Skip prompts and use the default stack:
       --auth better-auth \
       --addons turborepo
     ```
-  </Tab>
+  </TabsContent>
+  <TabsContent value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest my-webapp \
+      --frontend tanstack-router \
+      --backend hono \
+      --database sqlite \
+      --orm drizzle \
+      --auth better-auth \
+      --addons turborepo
+    ```
+  </TabsContent>
+  <TabsContent value="bun">
+    ```bash
+    bun create better-t-stack@latest my-webapp \
+      --frontend tanstack-router \
+      --backend hono \
+      --database sqlite \
+      --orm drizzle \
+      --auth better-auth \
+      --addons turborepo
+    ```
+  </TabsContent>
 </Tabs>
 
 ### Convex + React + Clerk
 
-<Tabs items={['bun', 'pnpm', 'npm']}>
-  <Tab value="bun">
-    ```bash
-    bun create better-t-stack@latest my-convex-app \
-      --frontend tanstack-router \
-      --backend convex \
-      --auth clerk
-    ```
-  </Tab>
-  <Tab value="pnpm">
-    ```bash
-    pnpm create better-t-stack@latest my-convex-app \
-      --frontend tanstack-router \
-      --backend convex \
-      --auth clerk
-    ```
-  </Tab>
-  <Tab value="npm">
-    ```bash
-    npx create-better-t-stack@latest my-convex-app \
-      --frontend tanstack-router \
-      --backend convex \
-      --auth clerk
-    ```
-  </Tab>
-</Tabs>
-
-### API Only
-
-<Tabs items={['bun', 'pnpm', 'npm']}>
-  <Tab value="bun">
-    ```bash
-    bun create better-t-stack@latest my-api \
-      --frontend none \
-      --backend fastify \
-      --runtime node \
-      --database postgres \
-      --orm prisma \
-      --api trpc
-    ```
-  </Tab>
-  <Tab value="pnpm">
-    ```bash
-    pnpm create better-t-stack@latest my-api \
-      --frontend none \
-      --backend fastify \
-      --runtime node \
-      --database postgres \
-      --orm prisma \
-      --api trpc
-    ```
-  </Tab>
-  <Tab value="npm">
+<Tabs groupId="installtab" defaultValue="npm" persist>
+  <TabsList>
+    <TabsTrigger value="npm" className="flex items-center gap-2">
+      <NpmIcon />
+      npm
+    </TabsTrigger>
+    <TabsTrigger value="pnpm" className="flex items-center gap-2">
+      <PnpmIcon />
+      pnpm
+    </TabsTrigger>
+    <TabsTrigger value="bun" className="flex items-center gap-2">
+      <img src="/icon/bun.svg" alt="bun" className="size-6" />
+      bun
+    </TabsTrigger>
+  </TabsList>
+  <TabsContent value="npm">
     ```bash
     npx create-better-t-stack@latest my-api \
       --frontend none \
@@ -189,33 +209,49 @@ Skip prompts and use the default stack:
       --orm prisma \
       --api trpc
     ```
-  </Tab>
+  </TabsContent>
+  <TabsContent value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest my-api \
+      --frontend none \
+      --backend fastify \
+      --runtime node \
+      --database postgres \
+      --orm prisma \
+      --api trpc
+    ```
+  </TabsContent>
+  <TabsContent value="bun">
+    ```bash
+    bun create better-t-stack@latest my-api \
+      --frontend none \
+      --backend fastify \
+      --runtime node \
+      --database postgres \
+      --orm prisma \
+      --api trpc
+    ```
+  </TabsContent>
 </Tabs>
 
 ### Mobile App (Expo)
 
-<Tabs items={['bun', 'pnpm', 'npm']}>
-  <Tab value="bun">
-    ```bash
-    bun create better-t-stack@latest my-native \
-      --frontend native-nativewind \
-      --backend hono \
-      --database sqlite \
-      --orm drizzle \
-      --auth better-auth
-    ```
-  </Tab>
-  <Tab value="pnpm">
-    ```bash
-    pnpm create better-t-stack@latest my-native \
-      --frontend native-nativewind \
-      --backend hono \
-      --database sqlite \
-      --orm drizzle \
-      --auth better-auth
-    ```
-  </Tab>
-  <Tab value="npm">
+<Tabs groupId="installtab" defaultValue="npm" persist>
+  <TabsList>
+    <TabsTrigger value="npm" className="flex items-center gap-2">
+      <NpmIcon />
+      npm
+    </TabsTrigger>
+    <TabsTrigger value="pnpm" className="flex items-center gap-2">
+      <PnpmIcon />
+      pnpm
+    </TabsTrigger>
+    <TabsTrigger value="bun" className="flex items-center gap-2">
+      <img src="/icon/bun.svg" alt="bun" className="size-6" />
+      bun
+    </TabsTrigger>
+  </TabsList>
+  <TabsContent value="npm">
     ```bash
     npx create-better-t-stack@latest my-native \
       --frontend native-nativewind \
@@ -224,33 +260,67 @@ Skip prompts and use the default stack:
       --orm drizzle \
       --auth better-auth
     ```
-  </Tab>
+  </TabsContent>
+  <TabsContent value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest my-native \
+      --frontend native-nativewind \
+      --backend hono \
+      --database sqlite \
+      --orm drizzle \
+      --auth better-auth
+    ```
+  </TabsContent>
+  <TabsContent value="bun">
+    ```bash
+    bun create better-t-stack@latest my-native \
+      --frontend native-nativewind \
+      --backend hono \
+      --database sqlite \
+      --orm drizzle \
+      --auth better-auth
+    ```
+  </TabsContent>
 </Tabs>
 
 ### Empty Monorepo
 
-<Tabs items={['bun', 'pnpm', 'npm']}>
-  <Tab value="bun">
-    ```bash
-    bun create better-t-stack@latest my-workspace \
-      --frontend none \
-      --backend none
-    ```
-  </Tab>
-  <Tab value="pnpm">
-    ```bash
-    pnpm create better-t-stack@latest my-workspace \
-      --frontend none \
-      --backend none
-    ```
-  </Tab>
-  <Tab value="npm">
+<Tabs groupId="installtab" defaultValue="npm" persist>
+  <TabsList>
+    <TabsTrigger value="npm" className="flex items-center gap-2">
+      <NpmIcon />
+      npm
+    </TabsTrigger>
+    <TabsTrigger value="pnpm" className="flex items-center gap-2">
+      <PnpmIcon />
+      pnpm
+    </TabsTrigger>
+    <TabsTrigger value="bun" className="flex items-center gap-2">
+      <img src="/icon/bun.svg" alt="bun" className="size-6" />
+      bun
+    </TabsTrigger>
+  </TabsList>
+  <TabsContent value="npm">
     ```bash
     npx create-better-t-stack@latest my-workspace \
       --frontend none \
       --backend none
     ```
-  </Tab>
+  </TabsContent>
+  <TabsContent value="pnpm">
+    ```bash
+    pnpm create better-t-stack@latest my-workspace \
+      --frontend none \
+      --backend none
+    ```
+  </TabsContent>
+  <TabsContent value="bun">
+    ```bash
+    bun create better-t-stack@latest my-workspace \
+      --frontend none \
+      --backend none
+    ```
+  </TabsContent>
 </Tabs>
 
 ## Flags Cheat Sheet

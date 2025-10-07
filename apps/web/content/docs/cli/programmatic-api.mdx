@@ -3,6 +3,9 @@ title: Programmatic API
 description: Use Better-T-Stack programmatically in your Node.js applications
 ---
 
+import { ImNpm as NpmIcon } from "react-icons/im";
+import { SiPnpm as PnpmIcon } from "react-icons/si";
+
 ## Overview
 
 The Better-T-Stack CLI can be used programmatically in your Node.js applications, allowing you to create projects, add features, and manage configurations through JavaScript/TypeScript code instead of shell commands.
@@ -11,13 +14,37 @@ The Better-T-Stack CLI can be used programmatically in your Node.js applications
 
 Install the package in your Node.js project:
 
-```bash
-npm install create-better-t-stack
-# or
-pnpm add create-better-t-stack
-# or
-bun add create-better-t-stack
-```
+<Tabs groupId="installtab" defaultValue="npm" persist>
+  <TabsList>
+    <TabsTrigger value="npm" className="flex items-center gap-2">
+      <NpmIcon />
+      npm
+    </TabsTrigger>
+    <TabsTrigger value="pnpm" className="flex items-center gap-2">
+      <PnpmIcon />
+      pnpm
+    </TabsTrigger>
+    <TabsTrigger value="bun" className="flex items-center gap-2">
+      <img src="/icon/bun.svg" alt="bun" className="size-6" />
+      bun
+    </TabsTrigger>
+  </TabsList>
+  <TabsContent value="npm">
+    ```bash
+    npm install create-better-t-stack
+    ```
+  </TabsContent>
+  <TabsContent value="pnpm">
+    ```bash
+    pnpm add create-better-t-stack
+    ```
+  </TabsContent>
+  <TabsContent value="bun">
+    ```bash
+    bun add create-better-t-stack
+    ```
+  </TabsContent>
+</Tabs>
 
 ## Quick Start
 

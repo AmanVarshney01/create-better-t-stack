@@ -3,41 +3,79 @@ title: Frequently Asked Questions
 description: Short answers to common beginner questions
 ---
 
+import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
+
 ## General
 
-### What is Better‑T‑Stack?
-An opinionated CLI that scaffolds full‑stack TypeScript projects (frontend, backend, API, DB/ORM, auth, addons) with a clean monorepo. See the Quick Start on the docs home.
+<Accordions type="single">
+  <Accordion
+    id="faq-1"
+    title="What is Better‑T‑Stack?">
+    An opinionated CLI that scaffolds full‑stack TypeScript projects (frontend, backend, API, DB/ORM, auth, addons) with a clean monorepo. See the Quick Start on the docs home.
+  </Accordion>
 
-### Do I need to install anything globally?
-No. Run the CLI directly with your package manager. See Quick Start and the per‑command pages under CLI.
+  <Accordion 
+    id="faq-2"
+    title="Do I need to install anything globally?">
+    No. Run the CLI directly with your package manager. See Quick Start and the per‑command pages under CLI.
+  </Accordion>
 
-### Which package manager can I use?
-`npm`, `pnpm`, or `bun` (all supported).
+ <Accordion 
+    id="faq-3"
+    title="Which package manager can I use?">
+    `npm`, `pnpm`, or `bun` (all supported).
+ </Accordion>
 
-### What Node.js version is required?
-Node.js 20+ (LTS recommended).
+ <Accordion 
+    id="faq-4"
+    title="What Node.js version is required?">
+    Node.js 20+ (LTS recommended).
+ </Accordion>
 
-### Can I use this with an existing project?
-The CLI is for new projects. You can migrate gradually or use `add` to extend a Better‑T‑Stack project.
+ <Accordion 
+    id="faq-5"
+    title="Can I use this with an existing project?">
+    The CLI is for new projects. You can migrate gradually or use `add` to extend a Better‑T‑Stack project.
+ </Accordion>
 
-### Where do generated files live?
-See Project Structure for high‑level layouts (server‑based vs. Convex, optional web/native).
+ <Accordion 
+    id="faq-6"
+    title="Where do generated files live?">
+    See Project Structure for high‑level layouts (server‑based vs. Convex, optional web/native)..
+ </Accordion>
+</Accordions>
 
 ## Choosing options
 
-### Does the CLI recommend a stack?
-No. Pick what fits your needs. The CLI validates compatibility. See CLI (per command) and Compatibility for rules.
+<Accordions type="single">
+ <Accordion 
+    id="faq-7"
+    title="Does the CLI recommend a stack?">
+    No. Pick what fits your needs. The CLI validates compatibility. See CLI (per command) and Compatibility for rules.
+ </Accordion>
 
-### I’m unsure between tRPC and oRPC / Drizzle and Prisma
-See Compatibility for guidance and constraints. Both pairs work well; choose based on team and hosting needs.
+ <Accordion 
+    id="faq-8"
+    title="I’m unsure between tRPC and oRPC / Drizzle and Prisma">
+    See Compatibility for guidance and constraints. Both pairs work well; choose based on team and hosting needs.
+ </Accordion>
+</Accordions>
 
 ## Common issues
 
-### My mobile app can’t connect to the backend (Expo)
-Set `EXPO_PUBLIC_SERVER_URL` in `apps/native/.env` to your machine IP (not `localhost`), check firewall, or try `npx expo start --tunnel`.
+<Accordions type="single">
+ <Accordion 
+    id="faq-9"
+    title="My mobile app can’t connect to the backend (Expo)">
+    Set `EXPO_PUBLIC_SERVER_URL` in `apps/native/.env` to your machine IP (not `localhost`), check firewall, or try `npx expo start --tunnel`.
+ </Accordion>
 
-### How do I disable telemetry?
-Set `BTS_TELEMETRY_DISABLED=1` (shell env). For one run, prefix the command; to make it permanent, export it in your shell profile.
+ <Accordion 
+    id="faq-10"
+    title="How do I disable telemetry?">
+    Set `BTS_TELEMETRY_DISABLED=1` (shell env). For one run, prefix the command; to make it permanent, export it in your shell profile.
+ </Accordion>
+</Accordions>
 
 ## Getting help
 

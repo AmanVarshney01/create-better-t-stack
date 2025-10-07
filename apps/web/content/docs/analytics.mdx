@@ -3,6 +3,9 @@ title: Analytics & Telemetry
 description: What we collect, how to disable it, and where to view aggregated insights
 ---
 
+import { ImNpm as NpmIcon } from "react-icons/im";
+import { SiPnpm as PnpmIcon } from "react-icons/si";
+
 ## What is collected
 
 On successful project creation, the CLI sends a single event (`project_created`) with:
@@ -17,32 +20,44 @@ Not collected:
 - Project name, path, or file contents (explicitly omitted)
 - Secrets or environment variables from your machine
 
- 
-
 ## Disable telemetry
 
 Telemetry is enabled by default. To disable:
 
-<Tabs items={['bun', 'pnpm', 'npm']}>
-  <Tab value="bun">
+<Tabs groupId="installtab" defaultValue="npm" persist>
+  <TabsList>
+    <TabsTrigger value="npm" className="flex items-center gap-2">
+      <NpmIcon />
+      npm
+    </TabsTrigger>
+    <TabsTrigger value="pnpm" className="flex items-center gap-2">
+      <PnpmIcon />
+      pnpm
+    </TabsTrigger>
+    <TabsTrigger value="bun" className="flex items-center gap-2">
+      <img src="/icon/bun.svg" alt="bun" className="size-6" />
+      bun
+    </TabsTrigger>
+  </TabsList>
+  <TabsContent value="npm">
     ```bash
-    # Disable for a single run
-    BTS_TELEMETRY_DISABLED=1 bun create better-t-stack@latest
-    ```
-  </Tab>
-  <Tab value="pnpm">
-    ```bash
-    # Disable for a single run
-    BTS_TELEMETRY_DISABLED=1 pnpm create better-t-stack@latest
-    ```
-  </Tab>
-  <Tab value="npm">
-    ```bash
-    # Disable for a single run
     BTS_TELEMETRY_DISABLED=1 npx create-better-t-stack@latest
     ```
-  </Tab>
+  </TabsContent>
+  <TabsContent value="pnpm">
+    ```bash
+    BTS_TELEMETRY_DISABLED=1 pnpm create better-t-stack@latest
+    ```
+  </TabsContent>
+  <TabsContent value="bun">
+    ```bash
+    BTS_TELEMETRY_DISABLED=1 bun create better-t-stack@latest
+    ```
+  </TabsContent>
 </Tabs>
+
+<Callout title="Note">The above commands disable it for a single run.</Callout>
+
 
 Add `export BTS_TELEMETRY_DISABLED=1` to your shell profile to make it permanent.
 
