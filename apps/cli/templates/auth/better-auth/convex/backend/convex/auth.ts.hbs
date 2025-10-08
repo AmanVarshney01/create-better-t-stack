@@ -22,7 +22,7 @@ export const createAuth = (
             disabled: optionsOnly,
         },
         {{#if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
-        baseUrl: siteUrl,
+        baseURL: siteUrl,
         trustedOrigins: [siteUrl],
         {{else}}
         trustedOrigins: [siteUrl],
