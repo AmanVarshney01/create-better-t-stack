@@ -67,8 +67,11 @@ export async function setupFumadocs(config: ProjectConfig) {
 		const s = spinner();
 		s.start("Setting up Fumadocs...");
 
+		const appsDir = path.join(projectDir, "apps");
+		await fs.ensureDir(appsDir);
+
 		await execa(fumadocsInitCommand, {
-			cwd: path.join(projectDir, "apps"),
+			cwd: appsDir,
 			env: { CI: "true" },
 			shell: true,
 		});

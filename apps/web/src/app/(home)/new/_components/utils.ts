@@ -1398,7 +1398,8 @@ export const getDisabledReason = (
 	if (
 		category === "orm" &&
 		finalStack.database === "none" &&
-		optionId !== "none"
+		optionId !== "none" &&
+		finalStack.backend !== "self"
 	) {
 		return "ORM requires a database. Select a database first (SQLite, PostgreSQL, or MongoDB).";
 	}
@@ -1406,13 +1407,14 @@ export const getDisabledReason = (
 	if (
 		category === "database" &&
 		optionId !== "none" &&
-		finalStack.orm === "none"
+		finalStack.orm === "none" &&
+		finalStack.backend !== "self"
 	) {
 		return "Database requires an ORM. Select an ORM first (Drizzle, Prisma, or Mongoose).";
 	}
 
 	if (category === "database" && optionId === "mongodb") {
-		if (finalStack.orm === "none") {
+		if (finalStack.orm === "none" && finalStack.backend !== "self") {
 			return "MongoDB requires an ORM. Select Prisma or Mongoose ORM first.";
 		}
 		if (finalStack.orm !== "prisma" && finalStack.orm !== "mongoose") {
@@ -1427,7 +1429,7 @@ export const getDisabledReason = (
 	}
 
 	if (category === "database" && optionId === "sqlite") {
-		if (finalStack.orm === "none") {
+		if (finalStack.orm === "none" && finalStack.backend !== "self") {
 			return "SQLite requires an ORM. Select Drizzle or Prisma ORM first.";
 		}
 		if (finalStack.dbSetup === "mongodb-atlas") {
@@ -1481,13 +1483,13 @@ export const getDisabledReason = (
 		if (finalStack.database === "mongodb") {
 			return "Drizzle ORM does not support MongoDB. Use Prisma or Mongoose ORM instead.";
 		}
-		if (finalStack.database === "none") {
+		if (finalStack.database === "none" && finalStack.backend !== "self") {
 			return "Drizzle ORM requires a database. Select a database first (SQLite, PostgreSQL, or MySQL).";
 		}
 	}
 
 	if (category === "orm" && optionId === "prisma") {
-		if (finalStack.database === "none") {
+		if (finalStack.database === "none" && finalStack.backend !== "self") {
 			return "Prisma ORM requires a database. Select a database first (SQLite, PostgreSQL, MySQL, or MongoDB).";
 		}
 		if (finalStack.dbSetup === "turso" && finalStack.database !== "sqlite") {

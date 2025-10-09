@@ -2,6 +2,7 @@ import path from "node:path";
 import { spinner } from "@clack/prompts";
 import consola from "consola";
 import { execa } from "execa";
+import fs from "fs-extra";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
@@ -32,8 +33,11 @@ export async function setupStarlight(config: ProjectConfig) {
 			commandWithArgs,
 		);
 
+		const appsDir = path.join(projectDir, "apps");
+		await fs.ensureDir(appsDir);
+
 		await execa(starlightInitCommand, {
-			cwd: path.join(projectDir, "apps"),
+			cwd: appsDir,
 			env: {
 				CI: "true",
 			},

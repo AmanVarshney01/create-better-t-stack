@@ -1,9 +1,9 @@
 import { createMDX } from "fumadocs-mdx/next";
+import type { NextConfig } from "next";
 
 const withMDX = createMDX();
 
-/** @type {import('next').NextConfig} */
-const config = {
+const config: NextConfig = {
 	reactStrictMode: true,
 	images: {
 		remotePatterns: [
@@ -24,10 +24,9 @@ const config = {
 			},
 		];
 	},
+	experimental: {
+		reactCompiler: true,
+	},
 };
 
 export default withMDX(config);
-
-import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
-
-initOpenNextCloudflareForDev();

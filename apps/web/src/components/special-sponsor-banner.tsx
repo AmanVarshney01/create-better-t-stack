@@ -1,7 +1,5 @@
-"use client";
 import { Github, Globe, Star } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
 import {
 	HoverCard,
 	HoverCardContent,
@@ -12,42 +10,11 @@ import {
 	getSponsorUrl,
 	sortSpecialSponsors,
 } from "@/lib/sponsor-utils";
-import type { Sponsor, SponsorsData } from "@/lib/types";
+import { fetchSponsors } from "@/lib/sponsors";
 
-export function SpecialSponsorBanner() {
-	const [specialSponsors, setSpecialSponsors] = useState<Sponsor[]>([]);
-	const [loading, setLoading] = useState(true);
-
-	useEffect(() => {
-		fetch("https://sponsors.better-t-stack.dev/sponsors.json")
-			.then((res) => {
-				if (!res.ok) throw new Error("Failed to fetch sponsors");
-				return res.json();
-			})
-			.then((data: SponsorsData) => {
-				const specials = sortSpecialSponsors(data.specialSponsors);
-				setSpecialSponsors(specials);
-				setLoading(false);
-			})
-			.catch(() => {
-				setLoading(false);
-			});
-	}, []);
-
-	if (loading) {
-		return (
-			<div>
-				<div className="grid grid-cols-4 items-center gap-2 py-1">
-					{["s1", "s2", "s3", "s4"].map((key) => (
-						<div
-							key={key}
-							className="size-12 animate-pulse rounded border border-border bg-muted"
-						/>
-					))}
-				</div>
-			</div>
-		);
-	}
+export async function SpecialSponsorBanner() {
+	const data = await fetchSponsors();
+	const specialSponsors = sortSpecialSponsors(data.specialSponsors);
 
 	if (!specialSponsors.length) {
 		return null;

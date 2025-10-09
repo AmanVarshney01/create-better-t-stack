@@ -1,5 +1,5 @@
 {{#if (eq orm "prisma")}}
-import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { expo } from "@better-auth/expo";
@@ -10,7 +10,7 @@ import { polarClient } from "./lib/payments";
 {{/if}}
 import prisma from "@{{projectName}}/db";
 
-export const auth = betterAuth<BetterAuthOptions>({
+export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     {{#if (eq database "postgres")}}provider: "postgresql"{{/if}}
     {{#if (eq database "sqlite")}}provider: "sqlite"{{/if}}
@@ -67,7 +67,7 @@ export const auth = betterAuth<BetterAuthOptions>({
 
 {{#if (eq orm "drizzle")}}
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
-import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { expo } from "@better-auth/expo";
@@ -79,7 +79,7 @@ import { polarClient } from "./lib/payments";
 import { db } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
 
-export const auth = betterAuth<BetterAuthOptions>({
+export const auth = betterAuth({
   database: drizzleAdapter(db, {
     {{#if (eq database "postgres")}}provider: "pg",{{/if}}
     {{#if (eq database "sqlite")}}provider: "sqlite",{{/if}}
@@ -135,7 +135,7 @@ export const auth = betterAuth<BetterAuthOptions>({
 {{/if}}
 
 {{#if (eq runtime "workers")}}
-import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { expo } from "@better-auth/expo";
@@ -148,7 +148,7 @@ import { db } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
 import { env } from "cloudflare:workers";
 
-export const auth = betterAuth<BetterAuthOptions>({
+export const auth = betterAuth({
   database: drizzleAdapter(db, {
     {{#if (eq database "postgres")}}provider: "pg",{{/if}}
     {{#if (eq database "sqlite")}}provider: "sqlite",{{/if}}
@@ -217,7 +217,7 @@ export const auth = betterAuth<BetterAuthOptions>({
 {{/if}}
 
 {{#if (eq orm "mongoose")}}
-import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { expo } from "@better-auth/expo";
@@ -228,7 +228,7 @@ import { polarClient } from "./lib/payments";
 {{/if}}
 import { client } from "@{{projectName}}/db";
 
-export const auth = betterAuth<BetterAuthOptions>({
+export const auth = betterAuth({
   database: mongodbAdapter(client),
   trustedOrigins: [
     process.env.CORS_ORIGIN || "",
@@ -279,7 +279,7 @@ export const auth = betterAuth<BetterAuthOptions>({
 {{/if}}
 
 {{#if (eq orm "none")}}
-import { betterAuth, type BetterAuthOptions } from "better-auth";
+import { betterAuth } from "better-auth";
 {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { expo } from "@better-auth/expo";
 {{/if}}
@@ -288,7 +288,7 @@ import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
 {{/if}}
 
-export const auth = betterAuth<BetterAuthOptions>({
+export const auth = betterAuth({
   database: "", // Invalid configuration
   trustedOrigins: [
     process.env.CORS_ORIGIN || "",
