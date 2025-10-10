@@ -10,6 +10,7 @@ function getClientServerVar(
 	const hasNextJs = frontend.includes("next");
 	const hasNuxt = frontend.includes("nuxt");
 	const hasSvelte = frontend.includes("svelte");
+	const hasTanstackStart = frontend.includes("tanstack-start");
 
 	// For fullstack self, no base URL is needed (same-origin)
 	if (backend === "self") {
@@ -20,6 +21,7 @@ function getClientServerVar(
 	if (hasNextJs) key = "NEXT_PUBLIC_SERVER_URL";
 	else if (hasNuxt) key = "NUXT_PUBLIC_SERVER_URL";
 	else if (hasSvelte) key = "PUBLIC_SERVER_URL";
+	else if (hasTanstackStart) key = "VITE_SERVER_URL";
 
 	return { key, value: "http://localhost:3000", write: true } as const;
 }
@@ -28,9 +30,11 @@ function getConvexVar(frontend: string[]) {
 	const hasNextJs = frontend.includes("next");
 	const hasNuxt = frontend.includes("nuxt");
 	const hasSvelte = frontend.includes("svelte");
+	const hasTanstackStart = frontend.includes("tanstack-start");
 	if (hasNextJs) return "NEXT_PUBLIC_CONVEX_URL";
 	if (hasNuxt) return "NUXT_PUBLIC_CONVEX_URL";
 	if (hasSvelte) return "PUBLIC_CONVEX_URL";
+	if (hasTanstackStart) return "VITE_CONVEX_URL";
 	return "VITE_CONVEX_URL";
 }
 
@@ -227,8 +231,12 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 		const nativeDir = path.join(projectDir, "apps/native");
 		if (await fs.pathExists(nativeDir)) {
 			let envVarName = "EXPO_PUBLIC_SERVER_URL";
-			let serverUrl =
-				backend === "self" ? "http://localhost:3001" : "http://localhost:3000";
+			let serverUrl = "http://localhost:3000";
+
+			if (backend === "self") {
+				// Both TanStack Start and Next.js use port 3001 for fullstack
+				serverUrl = "http://localhost:3001";
+			}
 
 			if (backend === "convex") {
 				envVarName = "EXPO_PUBLIC_CONVEX_URL";

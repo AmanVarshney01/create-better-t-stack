@@ -3,12 +3,12 @@ import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Frontend } from "../types";
 import { exitCancelled } from "../utils/errors";
 
-// Temporarily restrict to Next.js only for backend="self"
+// Temporarily restrict to Next.js and TanStack Start only for backend="self"
 const FULLSTACK_FRONTENDS: readonly Frontend[] = [
 	"next",
+	"tanstack-start",
 	// "nuxt",      // TODO: Add support in future update
 	// "svelte",    // TODO: Add support in future update
-	// "tanstack-start", // TODO: Add support in future update
 ] as const;
 
 export async function getBackendFrameworkChoice(

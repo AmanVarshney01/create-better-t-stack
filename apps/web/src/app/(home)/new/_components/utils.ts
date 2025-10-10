@@ -81,7 +81,12 @@ export const analyzeStackCompatibility = (
 
 	const isConvex = nextStack.backend === "convex";
 	const isBackendNone = nextStack.backend === "none";
-	const isBackendSelf = nextStack.backend === "self";
+	const isBackendSelf =
+		nextStack.backend === "self-next" ||
+		nextStack.backend === "self-tanstack-start";
+	const isBackendSelfNext = nextStack.backend === "self-next";
+	const isBackendSelfTanstackStart =
+		nextStack.backend === "self-tanstack-start";
 
 	if (isConvex) {
 		const convexOverrides: Partial<StackState> = {
@@ -195,9 +200,11 @@ export const analyzeStackCompatibility = (
 			}
 		}
 	} else if (isBackendSelf) {
-		const hasNextFrontend = nextStack.webFrontend.includes("next");
+		const hasSupportedFrontend =
+			nextStack.webFrontend.includes("next") ||
+			nextStack.webFrontend.includes("tanstack-start");
 
-		if (!hasNextFrontend) {
+		if (!hasSupportedFrontend) {
 			const originalWebFrontendLength = nextStack.webFrontend.length;
 			nextStack.webFrontend = ["next"];
 
@@ -207,17 +214,17 @@ export const analyzeStackCompatibility = (
 			) {
 				changed = true;
 				notes.webFrontend.notes.push(
-					"Self backend (fullstack) currently only supports Next.js frontend. Other frontends have been removed.",
+					"Self backend (fullstack) currently only supports Next.js and TanStack Start frontends. Other frontends have been removed.",
 				);
 				notes.backend.notes.push(
-					"Self backend (fullstack) requires Next.js frontend.",
+					"Self backend (fullstack) requires Next.js or TanStack Start frontend.",
 				);
 				notes.webFrontend.hasIssue = true;
 				notes.backend.hasIssue = true;
 				changes.push({
 					category: "backend",
 					message:
-						"Frontend set to 'Next.js' (Self backend currently only supports Next.js)",
+						"Frontend set to 'Next.js' (Self backend currently only supports Next.js and TanStack Start)",
 				});
 			}
 		}
@@ -238,6 +245,62 @@ export const analyzeStackCompatibility = (
 				message:
 					"Runtime set to 'None' (Self backend uses frontend's built-in API routes)",
 			});
+		}
+		if (isBackendSelfNext) {
+			const hasNextFrontend = nextStack.webFrontend.includes("next");
+			if (!hasNextFrontend) {
+				const originalWebFrontendLength = nextStack.webFrontend.length;
+				nextStack.webFrontend = ["next"];
+
+				if (
+					originalWebFrontendLength !== 1 ||
+					!nextStack.webFrontend.includes("next")
+				) {
+					changed = true;
+					notes.webFrontend.notes.push(
+						"Next.js fullstack backend requires Next.js frontend. Frontend has been set to Next.js.",
+					);
+					notes.backend.notes.push(
+						"Next.js fullstack backend requires Next.js frontend.",
+					);
+					notes.webFrontend.hasIssue = true;
+					notes.backend.hasIssue = true;
+					changes.push({
+						category: "backend",
+						message:
+							"Frontend set to 'Next.js' (Next.js fullstack backend requires Next.js frontend)",
+					});
+				}
+			}
+		}
+
+		if (isBackendSelfTanstackStart) {
+			const hasTanstackStartFrontend =
+				nextStack.webFrontend.includes("tanstack-start");
+			if (!hasTanstackStartFrontend) {
+				const originalWebFrontendLength = nextStack.webFrontend.length;
+				nextStack.webFrontend = ["tanstack-start"];
+
+				if (
+					originalWebFrontendLength !== 1 ||
+					!nextStack.webFrontend.includes("tanstack-start")
+				) {
+					changed = true;
+					notes.webFrontend.notes.push(
+						"TanStack Start fullstack backend requires TanStack Start frontend. Frontend has been set to TanStack Start.",
+					);
+					notes.backend.notes.push(
+						"TanStack Start fullstack backend requires TanStack Start frontend.",
+					);
+					notes.webFrontend.hasIssue = true;
+					notes.backend.hasIssue = true;
+					changes.push({
+						category: "backend",
+						message:
+							"Frontend set to 'TanStack Start' (TanStack Start fullstack backend requires TanStack Start frontend)",
+					});
+				}
+			}
 		}
 	} else {
 		if (nextStack.runtime === "none") {
@@ -1116,10 +1179,12 @@ export const analyzeStackCompatibility = (
 		nextStack.serverDeploy !== "none" &&
 		(nextStack.backend === "none" ||
 			nextStack.backend === "convex" ||
-			nextStack.backend === "self")
+			nextStack.backend === "self-next" ||
+			nextStack.backend === "self-tanstack-start")
 	) {
 		const backendType =
-			nextStack.backend === "self"
+			nextStack.backend === "self-next" ||
+			nextStack.backend === "self-tanstack-start"
 				? "Self backend (fullstack)"
 				: nextStack.backend === "convex"
 					? "Convex backend"
@@ -1355,19 +1420,35 @@ export const getDisabledReason = (
 		return "Cloudflare Workers runtime only supports Hono backend. Switch to Hono to use Workers runtime.";
 	}
 
-	if (category === "backend" && optionId === "self") {
+	if (category === "backend" && optionId === "self-next") {
 		const hasNextFrontend = finalStack.webFrontend.includes("next");
 		if (!hasNextFrontend) {
-			return "Self backend (fullstack) currently only supports Next.js frontend. Select Next.js frontend first.";
+			return "Next.js fullstack backend requires Next.js frontend. Select Next.js frontend first.";
+		}
+	}
+
+	if (category === "backend" && optionId === "self-tanstack-start") {
+		const hasTanstackStartFrontend =
+			finalStack.webFrontend.includes("tanstack-start");
+		if (!hasTanstackStartFrontend) {
+			return "TanStack Start fullstack backend requires TanStack Start frontend. Select TanStack Start frontend first.";
 		}
 	}
 
 	if (
 		category === "webFrontend" &&
 		optionId !== "next" &&
-		finalStack.backend === "self"
+		finalStack.backend === "self-next"
 	) {
-		return "Self backend (fullstack) currently only supports Next.js frontend. Support for other frameworks will be added in a future update.";
+		return "Next.js fullstack backend only supports Next.js frontend. Select Next.js frontend first.";
+	}
+
+	if (
+		category === "webFrontend" &&
+		optionId !== "tanstack-start" &&
+		finalStack.backend === "self-tanstack-start"
+	) {
+		return "TanStack Start fullstack backend only supports TanStack Start frontend. Select TanStack Start frontend first.";
 	}
 
 	if (
@@ -1382,24 +1463,27 @@ export const getDisabledReason = (
 		category === "runtime" &&
 		optionId === "none" &&
 		finalStack.backend !== "convex" &&
-		finalStack.backend !== "self"
+		finalStack.backend !== "self-next" &&
+		finalStack.backend !== "self-tanstack-start"
 	) {
-		return "Runtime 'None' is only available with Convex backend or Self backend (fullstack). Switch to Convex or Self to use this option.";
+		return "Runtime 'None' is only available with Convex backend, Next.js fullstack, or TanStack Start fullstack. Switch to one of these backends to use this option.";
 	}
 
 	if (
 		category === "runtime" &&
 		optionId !== "none" &&
-		finalStack.backend === "self"
+		(finalStack.backend === "self-next" ||
+			finalStack.backend === "self-tanstack-start")
 	) {
-		return "Self backend (fullstack) uses frontend's built-in API routes and requires runtime to be 'None'. Self backend doesn't need a separate runtime.";
+		return "Fullstack backends use frontend's built-in API routes and require runtime to be 'None'. Fullstack backends don't need a separate runtime.";
 	}
 
 	if (
 		category === "orm" &&
 		finalStack.database === "none" &&
 		optionId !== "none" &&
-		finalStack.backend !== "self"
+		finalStack.backend !== "self-next" &&
+		finalStack.backend !== "self-tanstack-start"
 	) {
 		return "ORM requires a database. Select a database first (SQLite, PostgreSQL, or MongoDB).";
 	}
@@ -1408,13 +1492,18 @@ export const getDisabledReason = (
 		category === "database" &&
 		optionId !== "none" &&
 		finalStack.orm === "none" &&
-		finalStack.backend !== "self"
+		finalStack.backend !== "self-next" &&
+		finalStack.backend !== "self-tanstack-start"
 	) {
 		return "Database requires an ORM. Select an ORM first (Drizzle, Prisma, or Mongoose).";
 	}
 
 	if (category === "database" && optionId === "mongodb") {
-		if (finalStack.orm === "none" && finalStack.backend !== "self") {
+		if (
+			finalStack.orm === "none" &&
+			finalStack.backend !== "self-next" &&
+			finalStack.backend !== "self-tanstack-start"
+		) {
 			return "MongoDB requires an ORM. Select Prisma or Mongoose ORM first.";
 		}
 		if (finalStack.orm !== "prisma" && finalStack.orm !== "mongoose") {
@@ -1429,7 +1518,11 @@ export const getDisabledReason = (
 	}
 
 	if (category === "database" && optionId === "sqlite") {
-		if (finalStack.orm === "none" && finalStack.backend !== "self") {
+		if (
+			finalStack.orm === "none" &&
+			finalStack.backend !== "self-next" &&
+			finalStack.backend !== "self-tanstack-start"
+		) {
 			return "SQLite requires an ORM. Select Drizzle or Prisma ORM first.";
 		}
 		if (finalStack.dbSetup === "mongodb-atlas") {
@@ -1483,13 +1576,21 @@ export const getDisabledReason = (
 		if (finalStack.database === "mongodb") {
 			return "Drizzle ORM does not support MongoDB. Use Prisma or Mongoose ORM instead.";
 		}
-		if (finalStack.database === "none" && finalStack.backend !== "self") {
+		if (
+			finalStack.database === "none" &&
+			finalStack.backend !== "self-next" &&
+			finalStack.backend !== "self-tanstack-start"
+		) {
 			return "Drizzle ORM requires a database. Select a database first (SQLite, PostgreSQL, or MySQL).";
 		}
 	}
 
 	if (category === "orm" && optionId === "prisma") {
-		if (finalStack.database === "none" && finalStack.backend !== "self") {
+		if (
+			finalStack.database === "none" &&
+			finalStack.backend !== "self-next" &&
+			finalStack.backend !== "self-tanstack-start"
+		) {
 			return "Prisma ORM requires a database. Select a database first (SQLite, PostgreSQL, MySQL, or MongoDB).";
 		}
 		if (finalStack.dbSetup === "turso" && finalStack.database !== "sqlite") {
@@ -1649,9 +1750,13 @@ export const getDisabledReason = (
 		optionId !== "none" &&
 		(finalStack.backend === "none" ||
 			finalStack.backend === "convex" ||
-			finalStack.backend === "self")
+			finalStack.backend === "self-next" ||
+			finalStack.backend === "self-tanstack-start")
 	) {
-		if (finalStack.backend === "self") {
+		if (
+			finalStack.backend === "self-next" ||
+			finalStack.backend === "self-tanstack-start"
+		) {
 			return "Self backend (fullstack) uses frontend's built-in API routes and doesn't need server deployment.";
 		}
 		return "Server deployment requires a supported backend (Hono, Express, Fastify, or Elysia). Convex has its own deployment.";

@@ -87,7 +87,7 @@ const fastify = Fastify({
 
       const apiResult = await apiHandler.handle(req, res, {
         context: await createContext(req.headers),
-        prefix: "/api",
+        prefix: "/api-reference",
       });
 
       if (apiResult.matched) {

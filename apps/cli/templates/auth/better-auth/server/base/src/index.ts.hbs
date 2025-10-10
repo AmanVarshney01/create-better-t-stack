@@ -1,9 +1,6 @@
 {{#if (eq orm "prisma")}}
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
-{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-import { expo } from "@better-auth/expo";
-{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
@@ -26,6 +23,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  {{#if (ne backend "self")}}
   advanced: {
     defaultCookieAttributes: {
       sameSite: "none",
@@ -33,6 +31,7 @@ export const auth = betterAuth({
       httpOnly: true,
     },
   },
+  {{/if}}
   {{#if (eq payments "polar")}}
   plugins: [
     polar({
@@ -53,14 +52,7 @@ export const auth = betterAuth({
         portal(),
       ],
     }),
-    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-    expo(),
-    {{/if}}
   ],
-  {{else}}
-  {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-  plugins: [expo()],
-  {{/if}}
   {{/if}}
 });
 {{/if}}
@@ -69,9 +61,6 @@ export const auth = betterAuth({
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-import { expo } from "@better-auth/expo";
-{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
@@ -95,6 +84,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  {{#if (ne backend "self")}}
   advanced: {
     defaultCookieAttributes: {
       sameSite: "none",
@@ -102,6 +92,7 @@ export const auth = betterAuth({
       httpOnly: true,
     },
   },
+  {{/if}}
   {{#if (eq payments "polar")}}
   plugins: [
     polar({
@@ -122,14 +113,7 @@ export const auth = betterAuth({
         portal(),
       ],
     }),
-    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-    expo(),
-    {{/if}}
   ],
-  {{else}}
-  {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-  plugins: [expo()],
-  {{/if}}
   {{/if}}
 });
 {{/if}}
@@ -137,9 +121,6 @@ export const auth = betterAuth({
 {{#if (eq runtime "workers")}}
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-import { expo } from "@better-auth/expo";
-{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
@@ -207,10 +188,6 @@ export const auth = betterAuth({
       ],
     }),
   ],
-  {{else}}
-  {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-  plugins: [expo()],
-  {{/if}}
   {{/if}}
 });
 {{/if}}
@@ -219,9 +196,6 @@ export const auth = betterAuth({
 {{#if (eq orm "mongoose")}}
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
-{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-import { expo } from "@better-auth/expo";
-{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
@@ -239,6 +213,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  {{#if (ne backend "self")}}
   advanced: {
     defaultCookieAttributes: {
       sameSite: "none",
@@ -246,6 +221,7 @@ export const auth = betterAuth({
       httpOnly: true,
     },
   },
+  {{/if}}
   {{#if (eq payments "polar")}}
   plugins: [
     polar({
@@ -266,23 +242,13 @@ export const auth = betterAuth({
         portal(),
       ],
     }),
-    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-    expo(),
-    {{/if}}
   ],
-  {{else}}
-  {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-  plugins: [expo()],
-  {{/if}}
   {{/if}}
 });
 {{/if}}
 
 {{#if (eq orm "none")}}
 import { betterAuth } from "better-auth";
-{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-import { expo } from "@better-auth/expo";
-{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
@@ -299,6 +265,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  {{#if (ne backend "self")}}
   advanced: {
     defaultCookieAttributes: {
       sameSite: "none",
@@ -306,6 +273,7 @@ export const auth = betterAuth({
       httpOnly: true,
     },
   },
+  {{/if}}
   {{#if (eq payments "polar")}}
   plugins: [
     polar({
@@ -326,14 +294,7 @@ export const auth = betterAuth({
         portal(),
       ],
     }),
-    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-    expo(),
-    {{/if}}
   ],
-  {{else}}
-  {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
-  plugins: [expo()],
-  {{/if}}
   {{/if}}
 });
 {{/if}}

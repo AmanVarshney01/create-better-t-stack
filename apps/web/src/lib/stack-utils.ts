@@ -79,13 +79,21 @@ export function generateStackCommand(stack: StackState) {
 		return `${base} ${projectName} --yes`;
 	}
 
+	// Map web interface backend IDs to CLI backend flags
+	const mapBackendToCli = (backend: string) => {
+		if (backend === "self-next" || backend === "self-tanstack-start") {
+			return "self";
+		}
+		return backend;
+	};
+
 	const flags = [
 		`--frontend ${
 			[...stack.webFrontend, ...stack.nativeFrontend]
 				.filter((v, _, arr) => v !== "none" || arr.length === 1)
 				.join(" ") || "none"
 		}`,
-		`--backend ${stack.backend}`,
+		`--backend ${mapBackendToCli(stack.backend)}`,
 		`--runtime ${stack.runtime}`,
 		`--api ${stack.api}`,
 		`--auth ${stack.auth}`,

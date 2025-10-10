@@ -15,7 +15,7 @@ function RouteComponent() {
   const [input, setInput] = useState("");
   const { messages, sendMessage } = useChat({
     transport: new DefaultChatTransport({
-      api: `${import.meta.env.VITE_SERVER_URL}/ai`,
+      api: {{#if (eq backend "self")}}"/api/ai"{{else}}`${import.meta.env.VITE_SERVER_URL}/ai`{{/if}},
     }),
   });
 

@@ -86,7 +86,7 @@ app.use(async (req, res, next) => {
   if (rpcResult.matched) return;
 
   const apiResult = await apiHandler.handle(req, res, {
-    prefix: "/api",
+    prefix: "/api-reference",
     {{#if (eq auth "better-auth")}}
     context: await createContext({ req }),
     {{else}}

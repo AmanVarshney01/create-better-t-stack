@@ -63,7 +63,7 @@ export async function displayPostInstallInstructions(
 	const nativeInstructions =
 		frontend?.includes("native-nativewind") ||
 		frontend?.includes("native-unistyles")
-			? getNativeInstructions(isConvex, isBackendSelf)
+			? getNativeInstructions(isConvex, isBackendSelf, frontend || [])
 			: "";
 	const pwaInstructions =
 		addons?.includes("pwa") && frontend?.includes("react-router")
@@ -171,12 +171,12 @@ export async function displayPostInstallInstructions(
 		output += `${pc.cyan("•")} Backend API: http://localhost:3000\n`;
 
 		if (api === "orpc") {
-			output += `${pc.cyan("•")} OpenAPI (Scalar UI): http://localhost:3000/api\n`;
+			output += `${pc.cyan("•")} OpenAPI (Scalar UI): http://localhost:3000/api-reference\n`;
 		}
 	}
 
 	if (isBackendSelf && api === "orpc") {
-		output += `${pc.cyan("•")} OpenAPI (Scalar UI): http://localhost:${webPort}/rpc/api\n`;
+		output += `${pc.cyan("•")} OpenAPI (Scalar UI): http://localhost:${webPort}/api/rpc/api-reference\n`;
 	}
 
 	if (addons?.includes("starlight")) {
@@ -214,7 +214,11 @@ export async function displayPostInstallInstructions(
 	consola.box(output);
 }
 
-function getNativeInstructions(isConvex: boolean, isBackendSelf: boolean) {
+function getNativeInstructions(
+	isConvex: boolean,
+	isBackendSelf: boolean,
+	_frontend: string[],
+) {
 	const envVar = isConvex ? "EXPO_PUBLIC_CONVEX_URL" : "EXPO_PUBLIC_SERVER_URL";
 	const exampleUrl = isConvex
 		? "https://<YOUR_CONVEX_URL>"

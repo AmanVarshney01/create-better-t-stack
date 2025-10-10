@@ -68,7 +68,9 @@ function getApiDependencies(
 
 	if (frontendType.hasReactWeb) {
 		if (api === "orpc") {
-			deps.web = { dependencies: ["@orpc/tanstack-query", "@orpc/client"] };
+			deps.web = {
+				dependencies: ["@orpc/tanstack-query", "@orpc/client", "@orpc/server"],
+			};
 		} else if (api === "trpc") {
 			deps.web = {
 				dependencies: [
@@ -84,6 +86,7 @@ function getApiDependencies(
 				"@tanstack/vue-query",
 				"@orpc/tanstack-query",
 				"@orpc/client",
+				"@orpc/server",
 			],
 			devDependencies: ["@tanstack/vue-query-devtools"],
 		};
@@ -92,6 +95,7 @@ function getApiDependencies(
 			dependencies: [
 				"@orpc/tanstack-query",
 				"@orpc/client",
+				"@orpc/server",
 				"@tanstack/svelte-query",
 			],
 			devDependencies: ["@tanstack/svelte-query-devtools"],
@@ -101,6 +105,7 @@ function getApiDependencies(
 			dependencies: [
 				"@orpc/tanstack-query",
 				"@orpc/client",
+				"@orpc/server",
 				"@tanstack/solid-query",
 			],
 			devDependencies: [

@@ -5,7 +5,7 @@ import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { RPCHandler } from "@orpc/server/fetch";
 import { onError } from "@orpc/server";
-import { NextRequest } from "next/server";
+import { createFileRoute } from "@tanstack/react-router";
 
 const rpcHandler = new RPCHandler(appRouter, {
 	interceptors: [
@@ -14,6 +14,7 @@ const rpcHandler = new RPCHandler(appRouter, {
 		}),
 	],
 });
+
 const apiHandler = new OpenAPIHandler(appRouter, {
 	plugins: [
 		new OpenAPIReferencePlugin({
@@ -27,24 +28,31 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 	],
 });
 
-async function handleRequest(req: NextRequest) {
-	const rpcResult = await rpcHandler.handle(req, {
+async function handle({ request }: { request: Request }) {
+	const rpcResult = await rpcHandler.handle(request, {
 		prefix: "/api/rpc",
-		context: await createContext(req),
+		context: await createContext({ req: request }),
 	});
 	if (rpcResult.response) return rpcResult.response;
 
-	const apiResult = await apiHandler.handle(req, {
+	const apiResult = await apiHandler.handle(request, {
 		prefix: "/api/rpc/api-reference",
-		context: await createContext(req),
+		context: await createContext({ req: request }),
 	});
 	if (apiResult.response) return apiResult.response;
 
 	return new Response("Not found", { status: 404 });
 }
 
-export const GET = handleRequest;
-export const POST = handleRequest;
-export const PUT = handleRequest;
-export const PATCH = handleRequest;
-export const DELETE = handleRequest;
+export const Route = createFileRoute('/api/rpc/$')({
+  server: {
+    handlers: {
+      HEAD: handle,
+      GET: handle,
+      POST: handle,
+      PUT: handle,
+      PATCH: handle,
+      DELETE: handle,
+    },
+  },
+})

@@ -82,7 +82,7 @@ const app = new Elysia()
   })
   .all('/api*', async (context) => {
     const { response } = await apiHandler.handle(context.request, {
-      prefix: '/api',
+      prefix: '/api-reference',
       context: await createContext({ context })
     })
     return response ?? new Response('Not Found', { status: 404 })

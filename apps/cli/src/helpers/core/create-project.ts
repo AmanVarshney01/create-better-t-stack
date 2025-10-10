@@ -1,6 +1,7 @@
 import { log } from "@clack/prompts";
 import fs from "fs-extra";
 import type { ProjectConfig } from "../../types";
+import { setupBetterAuthPlugins } from "../../utils/better-auth-plugin-setup";
 import { writeBtsConfig } from "../../utils/bts-config";
 import { exitWithError } from "../../utils/errors";
 import { setupCatalogs } from "../../utils/setup-catalogs";
@@ -85,6 +86,8 @@ export async function createProject(
 		if (options.auth && options.auth !== "none") {
 			await setupAuth(options);
 		}
+
+		await setupBetterAuthPlugins(projectDir, options);
 
 		if (options.payments && options.payments !== "none") {
 			await setupPayments(options);

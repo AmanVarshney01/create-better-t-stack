@@ -85,7 +85,7 @@ export const queryClient = new QueryClient({
 const trpcClient = createTRPCClient<AppRouter>({
   links: [
     httpBatchLink({
-      url: `${import.meta.env.VITE_SERVER_URL}/trpc`,
+      url: {{#if (eq backend "self")}}"/api/trpc"{{else}}`${import.meta.env.VITE_SERVER_URL}/trpc`{{/if}},
       {{#if (eq auth "better-auth")}}
       fetch(url, options) {
         return fetch(url, {

@@ -125,12 +125,12 @@ export async function setupFrontendTemplates(
 
 				if (
 					context.backend === "self" &&
-					reactFramework === "next" &&
+					(reactFramework === "next" || reactFramework === "tanstack-start") &&
 					context.api !== "none"
 				) {
 					const apiFullstackDir = path.join(
 						PKG_ROOT,
-						`templates/api/${context.api}/fullstack/next`,
+						`templates/api/${context.api}/fullstack/${reactFramework}`,
 					);
 					if (await fs.pathExists(apiFullstackDir)) {
 						await processAndCopyFiles(
@@ -597,10 +597,13 @@ export async function setupAuthTemplate(
 					);
 				}
 
-				if (context.backend === "self" && reactFramework === "next") {
+				if (
+					context.backend === "self" &&
+					(reactFramework === "next" || reactFramework === "tanstack-start")
+				) {
 					const authFullstackSrc = path.join(
 						PKG_ROOT,
-						`templates/auth/${authProvider}/fullstack/next`,
+						`templates/auth/${authProvider}/fullstack/${reactFramework}`,
 					);
 					if (await fs.pathExists(authFullstackSrc)) {
 						await processAndCopyFiles(
@@ -938,10 +941,13 @@ export async function setupExamplesTemplate(
 						} else {
 						}
 
-						if (context.backend === "self" && reactFramework === "next") {
+						if (
+							context.backend === "self" &&
+							(reactFramework === "next" || reactFramework === "tanstack-start")
+						) {
 							const exampleFullstackSrc = path.join(
 								exampleBaseDir,
-								"fullstack/next",
+								`fullstack/${reactFramework}`,
 							);
 							if (await fs.pathExists(exampleFullstackSrc)) {
 								await processAndCopyFiles(
