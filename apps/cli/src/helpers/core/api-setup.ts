@@ -47,6 +47,7 @@ function getFrontendType(frontend: Frontend[]): {
 function getApiDependencies(
 	api: string,
 	frontendType: ReturnType<typeof getFrontendType>,
+	backend: string,
 ) {
 	const deps: Record<
 		string,
@@ -64,6 +65,18 @@ function getApiDependencies(
 		};
 	} else if (api === "trpc") {
 		deps.server = { dependencies: ["@trpc/server", "@trpc/client"] };
+	}
+
+	if (backend !== "self" && backend !== "convex" && backend !== "none") {
+		if (!deps.server) {
+			deps.server = { dependencies: [] };
+		}
+
+		if (backend === "hono") {
+			deps.server.dependencies.push("hono");
+		} else if (backend === "elysia") {
+			deps.server.dependencies.push("elysia");
+		}
 	}
 
 	if (frontendType.hasReactWeb) {
@@ -216,7 +229,7 @@ export async function setupApi(config: ProjectConfig) {
 	const frontendType = getFrontendType(frontend);
 
 	if (!isConvex && api !== "none") {
-		const apiDeps = getApiDependencies(api, frontendType);
+		const apiDeps = getApiDependencies(api, frontendType, backend);
 		const apiPackageDir = path.join(projectDir, "packages/api");
 
 		if (apiDeps.server) {
