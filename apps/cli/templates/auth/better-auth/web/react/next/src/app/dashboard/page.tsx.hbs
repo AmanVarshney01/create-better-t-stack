@@ -4,10 +4,22 @@ import { headers } from "next/headers";
 import { auth } from "@{{projectName}}/auth";
 import { authClient } from "@/lib/auth-client";
 
+type Session = typeof authClient.$Infer.Session;
+
 export default async function DashboardPage() {
-	const session = await auth.api.getSession({
-		headers: await headers(),
-	});
+  const headersList = await headers();
+  const cookie = headersList.get("cookie");
+
+  const session = (await fetch(
+    `${process.env.NEXT_PUBLIC_SERVER_URL}/api/auth/get-session`,
+
+    {
+      headers: {
+        "Content-Type": "application/json",
+        cookie: cookie ?? "",
+      },
+    }
+  ).then((res) => res.json())) as Session;
 
 	if (!session?.user) {
 		redirect("/login");
