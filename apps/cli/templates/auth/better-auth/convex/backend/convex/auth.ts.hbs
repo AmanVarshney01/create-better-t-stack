@@ -1,49 +1,70 @@
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
-{{#if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
+{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
 import { convex } from "@convex-dev/better-auth/plugins";
+import { expo } from "@better-auth/expo";
 {{else}}
-import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
+import { convex } from "@convex-dev/better-auth/plugins";
+{{/if}}
+{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
+import { crossDomain } from "@convex-dev/better-auth/plugins";
 {{/if}}
 import { components } from "./_generated/api";
 import { DataModel } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { betterAuth } from "better-auth";
+import { v } from "convex/values";
 
+{{#if (or (includes frontend "tanstack-start") (includes frontend "next") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
 const siteUrl = process.env.SITE_URL!;
+{{/if}}
+{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+const nativeAppUrl = process.env.NATIVE_APP_URL || "mybettertapp://";
+{{/if}}
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
-export const createAuth = (
-    ctx: GenericCtx<DataModel>,
-    { optionsOnly } = { optionsOnly: false },
-) => {
-    return betterAuth({
-        logger: {
-            disabled: optionsOnly,
-        },
-        {{#if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
-        baseURL: siteUrl,
-        trustedOrigins: [siteUrl],
-        {{else}}
-        trustedOrigins: [siteUrl],
-        {{/if}}
-        database: authComponent.adapter(ctx),
-        emailAndPassword: {
-            enabled: true,
-            requireEmailVerification: false,
-        },
-        plugins: [
-            {{#unless (or (includes frontend "tanstack-start") (includes frontend "next"))}}
-            crossDomain({ siteUrl }),
-            {{/unless}}
-            convex(),
-        ],
-    });
-};
+function createAuth(
+  ctx: GenericCtx<DataModel>,
+  { optionsOnly }: { optionsOnly?: boolean } = { optionsOnly: false }
+) {
+  return betterAuth({
+    logger: {
+      disabled: optionsOnly,
+    },
+    {{#if (and (or (includes frontend "native-nativewind") (includes frontend "native-unistyles")) (or (includes frontend "tanstack-start") (includes frontend "next")))}}
+    baseURL: siteUrl,
+    trustedOrigins: [siteUrl, nativeAppUrl],
+    {{else if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    trustedOrigins: [nativeAppUrl],
+    {{else if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
+    baseURL: siteUrl,
+    trustedOrigins: [siteUrl],
+    {{else}}
+    trustedOrigins: [siteUrl],
+    {{/if}}
+    database: authComponent.adapter(ctx),
+    emailAndPassword: {
+      enabled: true,
+      requireEmailVerification: false,
+    },
+    plugins: [
+      {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+      expo(),
+      {{/if}}
+      {{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
+      crossDomain({ siteUrl }),
+      {{/if}}
+      convex(),
+    ],
+  });
+}
+
+export { createAuth };
 
 export const getCurrentUser = query({
-    args: {},
-    handler: async (ctx) => {
-        return authComponent.getAuthUser(ctx);
-    },
+  args: {},
+  returns: v.any(),
+  handler: async function (ctx, args) {
+    return authComponent.getAuthUser(ctx);
+  },
 });

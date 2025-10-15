@@ -1,4 +1,4 @@
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View, TouchableOpacity } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { Container } from "@/components/container";
 
@@ -10,17 +10,21 @@ import { orpc } from "@/utils/orpc";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 {{/if}}
-{{#if (eq backend "convex")}}
-{{#if (eq auth "clerk")}}
+{{#if (and (eq backend "convex") (eq auth "clerk"))}}
 import { Link } from "expo-router";
 import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 import { useUser } from "@clerk/clerk-expo";
 import { SignOutButton } from "@/components/sign-out-button";
-{{else}}
+{{else if (and (eq backend "convex") (eq auth "better-auth"))}}
+import { useConvexAuth, useQuery } from "convex/react";
+import { api } from "@{{ projectName }}/backend/convex/_generated/api";
+import { authClient } from "@/lib/auth-client";
+import { SignIn } from "@/components/sign-in";
+import { SignUp } from "@/components/sign-up";
+{{else if (eq backend "convex")}}
 import { useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
-{{/if}}
 {{/if}}
 
 export default function Home() {
@@ -30,14 +34,16 @@ export default function Home() {
   {{#if (eq api "trpc")}}
   const healthCheck = useQuery(trpc.healthCheck.queryOptions());
   {{/if}}
-  {{#if (eq backend "convex")}}
-  {{#if (eq auth "clerk")}}
+  {{#if (and (eq backend "convex") (eq auth "clerk"))}}
   const { user } = useUser();
   const healthCheck = useQuery(api.healthCheck.get);
   const privateData = useQuery(api.privateData.get);
-  {{else}}
+  {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
   const healthCheck = useQuery(api.healthCheck.get);
-  {{/if}}
+  const { isAuthenticated } = useConvexAuth();
+  const user = useQuery(api.auth.getCurrentUser, isAuthenticated ? {} : "skip");
+  {{else if (eq backend "convex")}}
+  const healthCheck = useQuery(api.healthCheck.get);
   {{/if}}
 
   return (
@@ -46,7 +52,11 @@ export default function Home() {
         contentContainerStyle={styles.container}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.heroTitle}>BETTER T STACK</Text>
+        <Text style={styles.heroTitle}>
+          BETTER T STACK
+        </Text>
+
+        {{#unless (and (eq backend "convex") (eq auth "better-auth"))}}
         <View style={styles.statusCard}>
           <View style={styles.statusHeader}>
             <Text style={styles.statusTitle}>System Status</Text>
@@ -54,28 +64,29 @@ export default function Home() {
               <Text style={styles.statusBadgeText}>LIVE</Text>
             </View>
           </View>
-
           {{#if (eq backend "convex")}}
-          <View style={styles.statusRow}>
-            <View
-              style={[
-                styles.statusDot,
-                healthCheck === "OK"
-                  ? styles.statusDotSuccess
-                  : styles.statusDotWarning,
-              ]}
-            />
-            <View style={styles.statusContent}>
-              <Text style={styles.statusLabel}>Convex</Text>
-              <Text style={styles.statusDescription}>
-                {healthCheck === undefined
-                  ? "Checking connection..."
-                  : healthCheck === "OK"
-                    ? "All systems operational"
-                    : "Service unavailable"}
-              </Text>
+            {{#unless (eq auth "better-auth")}}
+            <View style={styles.statusRow}>
+              <View
+                style={[
+                  styles.statusDot,
+                  healthCheck === "OK"
+                    ? styles.statusDotSuccess
+                    : styles.statusDotWarning,
+                ]}
+              />
+              <View style={styles.statusContent}>
+                <Text style={styles.statusLabel}>Convex</Text>
+                <Text style={styles.statusDescription}>
+                  {healthCheck === undefined
+                    ? "Checking connection..."
+                    : healthCheck === "OK"
+                    ? "Connected to API"
+                    : "API Disconnected"}
+                </Text>
+              </View>
             </View>
-          </View>
+            {{/unless}}
           {{else}}
             {{#unless (eq api "none")}}
             <View style={styles.statusRow}>
@@ -89,38 +100,31 @@ export default function Home() {
               />
               <View style={styles.statusContent}>
                 <Text style={styles.statusLabel}>
-                  {{#if (eq api "orpc")}}
-                  ORPC
-                  {{/if}}
-                  {{#if (eq api "trpc")}}
-                  TRPC
-                  {{/if}}
+                  {{#if (eq api "orpc")}}ORPC{{/if}}
+                  {{#if (eq api "trpc")}}TRPC{{/if}}
                 </Text>
                 <Text style={styles.statusDescription}>
-                  {{#if (eq api "orpc")}}
                   {healthCheck.isLoading
                     ? "Checking connection..."
                     : healthCheck.data
-                      ? "All systems operational"
-                      : "Service unavailable"}
-                  {{/if}}
-                  {{#if (eq api "trpc")}}
-                  {healthCheck.isLoading
-                    ? "Checking connection..."
-                    : healthCheck.data
-                      ? "All systems operational"
-                      : "Service unavailable"}
-                  {{/if}}
+                    ? "Connected to API"
+                    : "API Disconnected"}
                 </Text>
               </View>
             </View>
             {{/unless}}
           {{/if}}
         </View>
+        {{/unless}}
+
         {{#if (and (eq backend "convex") (eq auth "clerk"))}}
         <Authenticated>
-          <Text>Hello {user?.emailAddresses[0].emailAddress}</Text>
-          <Text>Private Data: {privateData?.message}</Text>
+          <Text>
+            Hello {user?.emailAddresses[0].emailAddress}
+          </Text>
+          <Text>
+            Private Data: {privateData?.message}
+          </Text>
           <SignOutButton />
         </Authenticated>
         <Unauthenticated>
@@ -134,6 +138,54 @@ export default function Home() {
         <AuthLoading>
           <Text>Loading...</Text>
         </AuthLoading>
+        {{/if}}
+
+        {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
+        {user ? (
+          <View style={styles.userCard}>
+            <View style={styles.userHeader}>
+              <Text style={styles.userWelcome}>
+                Welcome,{" "}
+                <Text style={styles.userName}>{user.name}</Text>
+              </Text>
+            </View>
+            <Text style={styles.userEmail}>{user.email}</Text>
+            <TouchableOpacity
+              style={styles.signOutButton}
+              onPress={() => {
+                authClient.signOut();
+              }}
+            >
+              <Text style={styles.signOutText}>Sign Out</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+        <View style={styles.apiStatusCard}>
+          <Text style={styles.apiStatusTitle}>API Status</Text>
+          <View style={styles.apiStatusRow}>
+            <View
+              style={[
+                styles.statusDot,
+                healthCheck === "OK"
+                  ? styles.statusDotSuccess
+                  : styles.statusDotWarning,
+              ]}
+            />
+            <Text style={styles.apiStatusText}>
+              {healthCheck === undefined
+                ? "Checking..."
+                : healthCheck === "OK"
+                ? "Connected to API"
+                : "API Disconnected"}
+            </Text>
+          </View>
+        </View>
+        {!user && (
+          <>
+            <SignIn />
+            <SignUp />
+          </>
+        )}
         {{/if}}
       </ScrollView>
     </Container>
@@ -220,5 +272,62 @@ const styles = StyleSheet.create((theme) => ({
   statusDescription: {
     fontSize: theme.fontSize.xs,
     color: theme.colors.mutedForeground,
-  }
+  },
+  userCard: {
+    backgroundColor: theme.colors.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+  },
+  userHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: theme.spacing.xs,
+  },
+  userWelcome: {
+    fontSize: theme.fontSize.base,
+    color: theme.colors.foreground,
+  },
+  userName: {
+    fontWeight: "500",
+  },
+  userEmail: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.mutedForeground,
+    marginBottom: theme.spacing.md,
+  },
+  signOutButton: {
+    backgroundColor: theme.colors.destructive,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    alignSelf: "flex-start",
+  },
+  signOutText: {
+    color: theme.colors.destructiveForeground,
+    fontWeight: "500",
+  },
+  apiStatusCard: {
+    marginBottom: theme.spacing.md,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    padding: theme.spacing.md,
+  },
+  apiStatusTitle: {
+    marginBottom: theme.spacing.sm,
+    fontWeight: "500",
+    color: theme.colors.foreground,
+  },
+  apiStatusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs,
+  },
+  apiStatusText: {
+    color: theme.colors.mutedForeground,
+  },
 }));

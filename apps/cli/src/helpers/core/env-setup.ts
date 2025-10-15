@@ -258,6 +258,14 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 					condition: true,
 				});
 			}
+
+			if (backend === "convex" && auth === "better-auth") {
+				nativeVars.push({
+					key: "EXPO_PUBLIC_CONVEX_SITE_URL",
+					value: "https://<YOUR_CONVEX_URL>",
+					condition: true,
+				});
+			}
 			await addEnvVariablesToFile(path.join(nativeDir, ".env"), nativeVars);
 		}
 	}
@@ -268,6 +276,11 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 			if (await fs.pathExists(convexBackendDir)) {
 				const envLocalPath = path.join(convexBackendDir, ".env.local");
 
+				const hasNative =
+					frontend.includes("native-nativewind") ||
+					frontend.includes("native-unistyles");
+				const hasWeb = hasWebFrontend;
+
 				if (
 					!(await fs.pathExists(envLocalPath)) ||
 					!(await fs.readFile(envLocalPath, "utf8")).includes(
@@ -276,27 +289,40 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 				) {
 					const convexCommands = `# Set Convex environment variables
 # npx convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)
-# npx convex env set SITE_URL http://localhost:3001
-
+${hasWeb ? "# npx convex env set SITE_URL http://localhost:3001\n" : ""}
 `;
 					await fs.appendFile(envLocalPath, convexCommands);
 				}
 
-				const convexBackendVars: EnvVariable[] = [
-					{
-						key: hasNextJs
-							? "NEXT_PUBLIC_CONVEX_SITE_URL"
-							: "VITE_CONVEX_SITE_URL",
+				const convexBackendVars: EnvVariable[] = [];
+
+				if (hasNative) {
+					convexBackendVars.push({
+						key: "EXPO_PUBLIC_CONVEX_SITE_URL",
 						value: "",
 						condition: true,
 						comment: "Same as CONVEX_URL but ends in .site",
-					},
-					{
-						key: "SITE_URL",
-						value: "http://localhost:3001",
-						condition: true,
-					},
-				];
+					});
+				}
+
+				if (hasWeb) {
+					convexBackendVars.push(
+						{
+							key: hasNextJs
+								? "NEXT_PUBLIC_CONVEX_SITE_URL"
+								: "VITE_CONVEX_SITE_URL",
+							value: "",
+							condition: true,
+							comment: "Same as CONVEX_URL but ends in .site",
+						},
+						{
+							key: "SITE_URL",
+							value: "http://localhost:3001",
+							condition: true,
+						},
+					);
+				}
+
 				await addEnvVariablesToFile(envLocalPath, convexBackendVars);
 			}
 		}

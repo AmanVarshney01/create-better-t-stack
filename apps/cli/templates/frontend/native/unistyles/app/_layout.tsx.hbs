@@ -8,7 +8,13 @@ import { queryClient } from "@/utils/trpc";
 import { queryClient } from "@/utils/orpc";
 {{/if}}
 {{#if (eq backend "convex")}}
+{{#if (eq auth "better-auth")}}
+import { ConvexReactClient } from "convex/react";
+import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
+import { authClient } from "@/lib/auth-client";
+{{else}}
 import { ConvexProvider, ConvexReactClient } from "convex/react";
+{{/if}}
 {{#if (eq auth "clerk")}}
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
@@ -67,6 +73,28 @@ export default function RootLayout() {
         </GestureHandlerRootView>
       </ConvexProviderWithClerk>
     </ClerkProvider>
+    {{else if (eq auth "better-auth")}}
+    <ConvexBetterAuthProvider client={convex} authClient={authClient}>
+      <GestureHandlerRootView style=\{{ flex: 1 }}>
+        <Stack
+          screenOptions=\{{
+            headerStyle: {
+              backgroundColor: theme.colors.background,
+            },
+            headerTitleStyle: {
+              color: theme.colors.foreground,
+            },
+            headerTintColor: theme.colors.foreground,
+          }}}
+        >
+          <Stack.Screen name="(drawer)" options=\{{ headerShown: false }} />
+          <Stack.Screen
+            name="modal"
+            options=\{{ title: "Modal", presentation: "modal" }}
+          />
+        </Stack>
+      </GestureHandlerRootView>
+    </ConvexBetterAuthProvider>
     {{else}}
     <ConvexProvider client={convex}>
       <GestureHandlerRootView style=\{{ flex: 1 }}>

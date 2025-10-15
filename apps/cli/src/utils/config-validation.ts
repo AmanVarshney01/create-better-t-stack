@@ -235,14 +235,20 @@ export function validateConvexConstraints(
 	}
 
 	if (has("auth") && config.auth === "better-auth") {
-		const supportedFrontends = ["tanstack-router", "tanstack-start", "next"];
+		const supportedFrontends = [
+			"tanstack-router",
+			"tanstack-start",
+			"next",
+			"native-nativewind",
+			"native-unistyles",
+		];
 		const hasSupportedFrontend = config.frontend?.some((f) =>
 			supportedFrontends.includes(f),
 		);
 
 		if (!hasSupportedFrontend) {
 			exitWithError(
-				"Better-Auth with Convex backend is only supported with TanStack Router, TanStack Start, or Next.js frontends. Please use '--auth clerk' or '--auth none'.",
+				"Better-Auth with Convex backend requires a supported frontend (TanStack Router, TanStack Start, Next.js, or Native).",
 			);
 		}
 	}

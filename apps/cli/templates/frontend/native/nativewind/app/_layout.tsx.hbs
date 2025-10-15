@@ -2,7 +2,13 @@
 import "@/polyfills";
 {{/if}}
 {{#if (eq backend "convex")}}
+{{#if (eq auth "better-auth")}}
+import { ConvexReactClient } from "convex/react";
+import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
+import { authClient } from "@/lib/auth-client";
+{{else}}
 import { ConvexProvider, ConvexReactClient } from "convex/react";
+{{/if}}
 {{#if (eq auth "clerk")}}
 import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
@@ -98,6 +104,21 @@ export default function RootLayout() {
         </ThemeProvider>
       </ConvexProviderWithClerk>
     </ClerkProvider>
+    {{else if (eq auth "better-auth")}}
+    <ConvexBetterAuthProvider client={convex} authClient={authClient}>
+      <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
+        <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
+        <GestureHandlerRootView style=\{{ flex: 1 }}>
+          <Stack>
+            <Stack.Screen name="(drawer)" options=\{{ headerShown: false }} />
+            <Stack.Screen
+              name="modal"
+              options=\{{ title: "Modal", presentation: "modal" }}
+            />
+          </Stack>
+        </GestureHandlerRootView>
+      </ThemeProvider>
+    </ConvexBetterAuthProvider>
     {{else}}
     <ConvexProvider client={convex}>
       <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>

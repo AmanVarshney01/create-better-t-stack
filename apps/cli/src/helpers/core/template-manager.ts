@@ -207,7 +207,7 @@ export async function setupFrontendTemplates(
 
 		const nativeBaseCommonDir = path.join(
 			PKG_ROOT,
-			"templates/frontend/native/native-base",
+			"templates/frontend/native/base",
 		);
 		if (await fs.pathExists(nativeBaseCommonDir)) {
 			await processAndCopyFiles(
@@ -513,6 +513,39 @@ export async function setupAuthTemplate(
 				}
 			}
 		}
+
+		if (nativeAppDirExists) {
+			const convexBetterAuthNativeBaseSrc = path.join(
+				PKG_ROOT,
+				"templates/auth/better-auth/convex/native/base",
+			);
+			if (await fs.pathExists(convexBetterAuthNativeBaseSrc)) {
+				await processAndCopyFiles(
+					"**/*",
+					convexBetterAuthNativeBaseSrc,
+					nativeAppDir,
+					context,
+				);
+			}
+
+			let nativeFrameworkPath = "";
+			if (hasNativeWind) nativeFrameworkPath = "nativewind";
+			else if (hasUnistyles) nativeFrameworkPath = "unistyles";
+			if (nativeFrameworkPath) {
+				const convexBetterAuthNativeFrameworkSrc = path.join(
+					PKG_ROOT,
+					`templates/auth/better-auth/convex/native/${nativeFrameworkPath}`,
+				);
+				if (await fs.pathExists(convexBetterAuthNativeFrameworkSrc)) {
+					await processAndCopyFiles(
+						"**/*",
+						convexBetterAuthNativeFrameworkSrc,
+						nativeAppDir,
+						context,
+					);
+				}
+			}
+		}
 		return;
 	}
 
@@ -645,7 +678,7 @@ export async function setupAuthTemplate(
 	if (hasNative && nativeAppDirExists) {
 		const authNativeBaseSrc = path.join(
 			PKG_ROOT,
-			`templates/auth/${authProvider}/native/native-base`,
+			`templates/auth/${authProvider}/native/base`,
 		);
 		if (await fs.pathExists(authNativeBaseSrc)) {
 			await processAndCopyFiles(

@@ -12,7 +12,13 @@ export async function getAuthChoice(
 	if (auth !== undefined) return auth;
 	if (backend === "convex") {
 		const supportedBetterAuthFrontends = frontend?.some((f) =>
-			["tanstack-router", "tanstack-start", "next"].includes(f),
+			[
+				"tanstack-router",
+				"tanstack-start",
+				"next",
+				"native-nativewind",
+				"native-unistyles",
+			].includes(f),
 		);
 
 		const hasClerkCompatibleFrontends = frontend?.some((f) =>
