@@ -453,12 +453,12 @@ function getWranglerDeployInstructions(
 	if (webDeploy === "wrangler") {
 		const deployPath = backend === "self" ? "apps/web" : "apps/web";
 		instructions.push(
-			`${pc.bold("Deploy web to Cloudflare Workers:")}\n${pc.cyan("•")} Deploy: ${`cd ${deployPath} && ${runCmd} run deploy`}`,
+			`${pc.bold("Deploy web to Cloudflare Workers:")}\n${pc.cyan("•")} Deploy: ${`cd ${deployPath} && ${runCmd} deploy`}`,
 		);
 	}
 	if (serverDeploy === "wrangler" && backend !== "self") {
 		instructions.push(
-			`${pc.bold("Deploy server to Cloudflare Workers:")}\n${pc.cyan("•")} Deploy: ${`cd apps/server && ${runCmd} run deploy`}`,
+			`${pc.bold("Deploy server to Cloudflare Workers:")}\n${pc.cyan("•")} Deploy: ${`cd apps/server && ${runCmd} deploy`}`,
 		);
 	}
 
