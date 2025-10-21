@@ -39,6 +39,9 @@ lerna-debug.log*
 # Better-T-Stack
 .alchemy
 
+# Prisma
+**/prisma/generated
+
 # Testing
 coverage
 .nyc_output
