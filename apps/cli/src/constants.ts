@@ -160,6 +160,7 @@ export const dependencyVersionMap = {
 	dotenv: "^17.2.2",
 	tsdown: "^0.15.5",
 	zod: "^4.1.11",
+	srvx: "0.8.15",
 
 	"@polar-sh/better-auth": "^1.1.3",
 	"@polar-sh/sdk": "^0.34.16",

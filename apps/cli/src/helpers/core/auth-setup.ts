@@ -36,7 +36,7 @@ export async function setupAuth(config: ProjectConfig) {
 					});
 				} else if (hasTanStackStart) {
 					await addPackageDependency({
-						dependencies: ["@clerk/tanstack-react-start"],
+						dependencies: ["@clerk/tanstack-react-start", "srvx"],
 						projectDir: clientDir,
 					});
 				} else if (hasViteReactOther) {
