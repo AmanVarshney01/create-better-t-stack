@@ -142,7 +142,7 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 		}
 
 		if (rules.length > 0) {
-			ultraciteArgs.push("--rules", ...rules);
+			ultraciteArgs.push("--agents", ...rules);
 		}
 
 		if (hasHusky) {
