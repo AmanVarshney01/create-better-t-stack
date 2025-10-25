@@ -135,7 +135,7 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 		const editors = result.editors as UltraciteEditor[];
 		const rules = result.rules as UltraciteAgent[];
 
-		const ultraciteArgs = ["init", "--pm", packageManager];
+		const ultraciteArgs = ["init", "--pm", packageManager, "--frameworks", "react,next"];
 
 		if (editors.length > 0) {
 			ultraciteArgs.push("--editors", ...editors);
