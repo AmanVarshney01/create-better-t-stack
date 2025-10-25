@@ -14,7 +14,7 @@ import { getPackageExecutionCommand } from "../../utils/package-runner";
 import { setupBiome } from "./addons-setup";
 
 type UltraciteEditor = "vscode" | "zed";
-type UltraciteRule =
+type UltraciteAgent =
 	| "vscode-copilot"
 	| "cursor"
 	| "windsurf"
@@ -42,7 +42,7 @@ const EDITORS = {
 	},
 } as const;
 
-const RULES = {
+const AGENTS = {
 	"vscode-copilot": {
 		label: "VS Code Copilot",
 	},
@@ -116,11 +116,11 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 						required: true,
 					}),
 				rules: () =>
-					autocompleteMultiselect<UltraciteRule>({
-						message: "Choose rules",
-						options: Object.entries(RULES).map(([key, rule]) => ({
-							value: key as UltraciteRule,
-							label: rule.label,
+					autocompleteMultiselect<UltraciteAgent>({
+						message: "Choose agents",
+						options: Object.entries(AGENTS).map(([key, agent]) => ({
+							value: key as UltraciteAgent,
+							label: agent.label,
 						})),
 						required: true,
 					}),
@@ -133,7 +133,7 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 		);
 
 		const editors = result.editors as UltraciteEditor[];
-		const rules = result.rules as UltraciteRule[];
+		const rules = result.rules as UltraciteAgent[];
 
 		const ultraciteArgs = ["init", "--pm", packageManager];
 
