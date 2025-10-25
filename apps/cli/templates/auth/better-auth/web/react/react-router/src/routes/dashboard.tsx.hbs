@@ -1,4 +1,6 @@
+{{#if (eq payments "polar")}}
 import { Button } from "@/components/ui/button";
+{{/if}}
 import { authClient } from "@/lib/auth-client";
 {{#if (eq api "orpc")}}
 import { orpc } from "@/utils/orpc";
