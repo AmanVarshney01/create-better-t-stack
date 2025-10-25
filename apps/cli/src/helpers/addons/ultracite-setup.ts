@@ -115,7 +115,7 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 						})),
 						required: true,
 					}),
-				rules: () =>
+				agents: () =>
 					autocompleteMultiselect<UltraciteAgent>({
 						message: "Choose agents",
 						options: Object.entries(AGENTS).map(([key, agent]) => ({
@@ -133,7 +133,7 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 		);
 
 		const editors = result.editors as UltraciteEditor[];
-		const rules = result.rules as UltraciteAgent[];
+		const agents = result.agents as UltraciteAgent[];
 
 		const ultraciteArgs = ["init", "--pm", packageManager, "--frameworks", "react,next"];
 
@@ -141,8 +141,8 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 			ultraciteArgs.push("--editors", ...editors);
 		}
 
-		if (rules.length > 0) {
-			ultraciteArgs.push("--agents", ...rules);
+		if (agents.length > 0) {
+			ultraciteArgs.push("--agents", ...agents);
 		}
 
 		if (hasHusky) {
