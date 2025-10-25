@@ -1,5 +1,7 @@
 "use client";
+{{#if (eq payments "polar")}}
 import { Button } from "@/components/ui/button";
+{{/if}}
 import { authClient } from "@/lib/auth-client";
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
