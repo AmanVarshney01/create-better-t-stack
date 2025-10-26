@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 {{#if (eq api "orpc")}}
 import { link, orpc } from "@/utils/orpc";
 import type { QueryClient } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 import { useState } from "react";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
@@ -14,7 +14,7 @@ import { createORPCClient } from "@orpc/client";
 {{#if (eq api "trpc")}}
 import type { trpc } from "@/utils/trpc";
 import type { QueryClient } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
 {{/if}}
 import {
   HeadContent,
@@ -22,7 +22,8 @@ import {
   createRootRouteWithContext,
   useRouterState,
 } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import { TanStackDevtools } from "@tanstack/react-devtools";
+import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import "../index.css";
 
 {{#if (eq api "orpc")}}
@@ -100,10 +101,23 @@ function RootComponent() {
         <Toaster richColors />
       </ThemeProvider>
       {{/if}}
-      <TanStackRouterDevtools position="bottom-left" />
-      {{#if (or (eq api "orpc") (eq api "trpc"))}}
-      <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
-      {{/if}}
+      <TanStackDevtools
+				config={{
+					position: "bottom-right",
+				}}
+				plugins={[
+					{
+						name: "Tanstack Router",
+						render: <TanStackRouterDevtoolsPanel />,
+					},
+          {{#if (or (eq api "orpc") (eq api "trpc"))}}
+					{
+						name: "Tanstack Query",
+						render: <ReactQueryDevtoolsPanel />,
+					},
+          {{/if}}
+				]}
+			/>
     </>
   );
 }
