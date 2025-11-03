@@ -133,7 +133,7 @@ async function setupWithNeonDb(
 
 		const packageCmd = getPackageExecutionCommand(
 			packageManager,
-			"neondb@latest --yes",
+			"get-db@latest --yes",
 		);
 
 		await execa(packageCmd, {
