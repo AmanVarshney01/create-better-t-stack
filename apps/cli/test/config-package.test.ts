@@ -7,6 +7,8 @@ import {
 	configTsConfigReference,
 	expectSuccessWithProjectDir,
 	runTRPCTest,
+	validateConfigPackageSetup,
+	type TestConfig,
 } from "./test-utils";
 
 describe("Config Package Feature", () => {
@@ -566,6 +568,104 @@ describe("Config Package Feature", () => {
 				"utf-8",
 			);
 			expect(serverTsConfig).toContain(configTsConfigReference(projectName));
+		});
+	});
+
+	describe("Comprehensive Config Validation (Using Helper)", () => {
+		it("should validate basic stack configuration", async () => {
+			const projectName = "basic-stack";
+			const config: TestConfig = {
+				projectName,
+				backend: "hono",
+				runtime: "node",
+				database: "sqlite",
+				orm: "drizzle",
+				api: "trpc",
+				frontend: ["tanstack-router"],
+				install: false,
+			};
+
+			const result = await runTRPCTest(config);
+			const projectDir = expectSuccessWithProjectDir(result);
+
+			await validateConfigPackageSetup(projectDir, projectName, config);
+		});
+
+		it("should validate full stack with auth", async () => {
+			const projectName = "full-stack-helper";
+			const config: TestConfig = {
+				projectName,
+				backend: "hono",
+				runtime: "bun",
+				database: "postgres",
+				orm: "drizzle",
+				api: "trpc",
+				auth: "better-auth",
+				frontend: ["tanstack-router"],
+				addons: ["turborepo"],
+				install: false,
+			};
+
+			const result = await runTRPCTest(config);
+			const projectDir = expectSuccessWithProjectDir(result);
+
+			await validateConfigPackageSetup(projectDir, projectName, config);
+		});
+
+		it("should validate minimal frontend-only stack", async () => {
+			const projectName = "frontend-only";
+			const config: TestConfig = {
+				projectName,
+				backend: "none",
+				runtime: "none",
+				database: "none",
+				orm: "none",
+				api: "none",
+				auth: "none",
+				frontend: ["tanstack-router"],
+				install: false,
+			};
+
+			const result = await runTRPCTest(config);
+			const projectDir = expectSuccessWithProjectDir(result);
+
+			await validateConfigPackageSetup(projectDir, projectName, config);
+		});
+
+		it("should validate different backends and runtimes", async () => {
+			const configs: TestConfig[] = [
+				{
+					projectName: "express-node",
+					backend: "express",
+					runtime: "node",
+					frontend: ["tanstack-router"],
+					install: false,
+				},
+				{
+					projectName: "hono-bun",
+					backend: "hono",
+					runtime: "bun",
+					frontend: ["tanstack-router"],
+					install: false,
+				},
+				{
+					projectName: "fastify-node",
+					backend: "fastify",
+					runtime: "node",
+					frontend: ["tanstack-router"],
+					install: false,
+				},
+			];
+
+			for (const config of configs) {
+				const result = await runTRPCTest(config);
+				const projectDir = expectSuccessWithProjectDir(result);
+				await validateConfigPackageSetup(
+					projectDir,
+					config.projectName as string,
+					config,
+				);
+			}
 		});
 	});
 });

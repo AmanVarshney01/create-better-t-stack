@@ -188,6 +188,128 @@ export function configTsConfigReference(projectName: string): string {
 	return `@${projectName}/config/tsconfig.base.json`;
 }
 
+/**
+ * Comprehensive validation helper for config package setup
+ * Validates all expected files and references based on the CreateInput configuration
+ */
+export async function validateConfigPackageSetup(
+	projectDir: string,
+	projectName: string,
+	config: CreateInput,
+): Promise<void> {
+	const { pathExists, readFile, readJSON } = await import("fs-extra");
+	const { join } = await import("node:path");
+	const { expect } = await import("vitest");
+
+	// 1. Config package structure
+	expect(await pathExists(join(projectDir, "packages/config"))).toBe(true);
+
+	// 2. Config package.json
+	const configPkgJson = await readJSON(
+		join(projectDir, "packages/config/package.json"),
+	);
+	expect(configPkgJson.name).toBe(configPackageName(projectName));
+	expect(configPkgJson.private).toBe(true);
+
+	// 3. Config tsconfig.base.json
+	const configTsConfigBase = await readJSON(
+		join(projectDir, "packages/config/tsconfig.base.json"),
+	);
+	expect(configTsConfigBase.compilerOptions).toBeDefined();
+	expect(configTsConfigBase.compilerOptions.strict).toBe(true);
+
+	// Check runtime-specific types
+	if (config.runtime === "node") {
+		expect(configTsConfigBase.compilerOptions.types).toContain("node");
+	} else if (config.runtime === "bun") {
+		expect(configTsConfigBase.compilerOptions.types).toContain("bun");
+	}
+
+	// 4. Config tsconfig.json
+	expect(
+		await pathExists(join(projectDir, "packages/config/tsconfig.json")),
+	).toBe(true);
+
+	// 5. Root configuration
+	expect(await pathExists(join(projectDir, "tsconfig.base.json"))).toBe(false);
+
+	const rootTsConfig = await readFile(join(projectDir, "tsconfig.json"), "utf-8");
+	expect(rootTsConfig).toContain(configTsConfigReference(projectName));
+
+	const rootPkgJson = await readJSON(join(projectDir, "package.json"));
+	expect(rootPkgJson.devDependencies[configPackageName(projectName)]).toBe(
+		"workspace:*",
+	);
+
+	// 6. Workspace packages based on config
+	const shouldHaveDb =
+		config.database && config.database !== "none" && config.orm !== "none";
+	const shouldHaveApi = config.api && config.api !== "none";
+	const shouldHaveAuth = config.auth && config.auth !== "none";
+	const shouldHaveServer =
+		config.backend && !["none", "convex", "self"].includes(config.backend);
+
+	if (shouldHaveDb) {
+		const dbTsConfig = await readFile(
+			join(projectDir, "packages/db/tsconfig.json"),
+			"utf-8",
+		);
+		expect(dbTsConfig).toContain(configTsConfigReference(projectName));
+
+		const dbPkgJson = await readJSON(
+			join(projectDir, "packages/db/package.json"),
+		);
+		expect(dbPkgJson.devDependencies[configPackageName(projectName)]).toBe(
+			"workspace:*",
+		);
+	}
+
+	if (shouldHaveApi) {
+		const apiTsConfig = await readFile(
+			join(projectDir, "packages/api/tsconfig.json"),
+			"utf-8",
+		);
+		expect(apiTsConfig).toContain(configTsConfigReference(projectName));
+
+		const apiPkgJson = await readJSON(
+			join(projectDir, "packages/api/package.json"),
+		);
+		expect(apiPkgJson.devDependencies[configPackageName(projectName)]).toBe(
+			"workspace:*",
+		);
+	}
+
+	if (shouldHaveAuth) {
+		const authTsConfig = await readFile(
+			join(projectDir, "packages/auth/tsconfig.json"),
+			"utf-8",
+		);
+		expect(authTsConfig).toContain(configTsConfigReference(projectName));
+
+		const authPkgJson = await readJSON(
+			join(projectDir, "packages/auth/package.json"),
+		);
+		expect(authPkgJson.devDependencies[configPackageName(projectName)]).toBe(
+			"workspace:*",
+		);
+	}
+
+	if (shouldHaveServer) {
+		const serverTsConfig = await readFile(
+			join(projectDir, "apps/server/tsconfig.json"),
+			"utf-8",
+		);
+		expect(serverTsConfig).toContain(configTsConfigReference(projectName));
+
+		const serverPkgJson = await readJSON(
+			join(projectDir, "apps/server/package.json"),
+		);
+		expect(serverPkgJson.devDependencies[configPackageName(projectName)]).toBe(
+			"workspace:*",
+		);
+	}
+}
+
 export function expectError(result: TestResult, expectedMessage?: string) {
 	expect(result.success).toBe(false);
 	if (expectedMessage) {
