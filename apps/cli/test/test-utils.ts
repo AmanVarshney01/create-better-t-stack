@@ -42,6 +42,7 @@ export interface TestResult {
 	result?: InitResult;
 	error?: string;
 	projectDir?: string;
+	config: TestConfig;
 }
 
 export interface TestConfig extends CreateInput {
@@ -143,11 +144,13 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
 			result: result?.success ? result : undefined,
 			error: result?.success ? undefined : result?.error,
 			projectDir: result?.success ? result?.projectDirectory : undefined,
+			config,
 		};
 	} catch (error) {
 		return {
 			success: false,
 			error: error instanceof Error ? error.message : String(error),
+			config,
 		};
 	} finally {
 		// Always restore original environment
@@ -233,7 +236,10 @@ export async function validateConfigPackageSetup(
 	// 5. Root configuration
 	expect(await pathExists(join(projectDir, "tsconfig.base.json"))).toBe(false);
 
-	const rootTsConfig = await readFile(join(projectDir, "tsconfig.json"), "utf-8");
+	const rootTsConfig = await readFile(
+		join(projectDir, "tsconfig.json"),
+		"utf-8",
+	);
 	expect(rootTsConfig).toContain(configTsConfigReference(projectName));
 
 	const rootPkgJson = await readJSON(join(projectDir, "package.json"));

@@ -3,7 +3,6 @@ import {
 	cleanupSmokeDirectory,
 	expectSuccessWithProjectDir,
 	runTRPCTest,
-	type TestConfig,
 	validateConfigPackageSetup,
 } from "./test-utils";
 
@@ -15,7 +14,7 @@ describe("Config Package Feature", () => {
 	describe("Basic Stack Configurations", () => {
 		it("should validate hono + node stack", async () => {
 			const projectName = "hono-node";
-			const config: TestConfig = {
+			const result = await runTRPCTest({
 				projectName,
 				backend: "hono",
 				runtime: "node",
@@ -24,16 +23,15 @@ describe("Config Package Feature", () => {
 				api: "trpc",
 				frontend: ["tanstack-router"],
 				install: false,
-			};
-
-			const result = await runTRPCTest(config);
+			});
 			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, config);
+			await validateConfigPackageSetup(projectDir, projectName, result.config);
 		});
 
 		it("should validate hono + bun stack", async () => {
 			const projectName = "hono-bun";
-			const config: TestConfig = {
+
+			const result = await runTRPCTest({
 				projectName,
 				backend: "hono",
 				runtime: "bun",
@@ -42,16 +40,15 @@ describe("Config Package Feature", () => {
 				api: "trpc",
 				frontend: ["tanstack-router"],
 				install: false,
-			};
-
-			const result = await runTRPCTest(config);
+			});
 			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, config);
+			await validateConfigPackageSetup(projectDir, projectName, result.config);
 		});
 
 		it("should validate express + node stack", async () => {
 			const projectName = "express-node";
-			const config: TestConfig = {
+
+			const result = await runTRPCTest({
 				projectName,
 				backend: "express",
 				runtime: "node",
@@ -59,33 +56,31 @@ describe("Config Package Feature", () => {
 				orm: "drizzle",
 				frontend: ["tanstack-router"],
 				install: false,
-			};
-
-			const result = await runTRPCTest(config);
+			});
 			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, config);
+			await validateConfigPackageSetup(projectDir, projectName, result.config);
 		});
 
 		it("should validate fastify + node stack", async () => {
 			const projectName = "fastify-node";
-			const config: TestConfig = {
+
+			const result = await runTRPCTest({
 				projectName,
 				backend: "fastify",
 				runtime: "node",
 				frontend: ["tanstack-router"],
 				install: false,
-			};
-
-			const result = await runTRPCTest(config);
+			});
 			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, config);
+			await validateConfigPackageSetup(projectDir, projectName, result.config);
 		});
 	});
 
 	describe("Full Stack with Authentication", () => {
 		it("should validate full stack with better-auth", async () => {
 			const projectName = "full-stack-auth";
-			const config: TestConfig = {
+
+			const result = await runTRPCTest({
 				projectName,
 				backend: "hono",
 				runtime: "node",
@@ -96,18 +91,17 @@ describe("Config Package Feature", () => {
 				frontend: ["tanstack-router"],
 				addons: ["turborepo"],
 				install: false,
-			};
-
-			const result = await runTRPCTest(config);
+			});
 			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, config);
+			await validateConfigPackageSetup(projectDir, projectName, result.config);
 		});
 	});
 
 	describe("API Variants", () => {
 		it("should validate stack with tRPC", async () => {
 			const projectName = "trpc-api";
-			const config: TestConfig = {
+
+			const result = await runTRPCTest({
 				projectName,
 				backend: "hono",
 				runtime: "node",
@@ -116,16 +110,15 @@ describe("Config Package Feature", () => {
 				orm: "drizzle",
 				frontend: ["tanstack-router"],
 				install: false,
-			};
-
-			const result = await runTRPCTest(config);
+			});
 			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, config);
+			await validateConfigPackageSetup(projectDir, projectName, result.config);
 		});
 
 		it("should validate stack with oRPC", async () => {
 			const projectName = "orpc-api";
-			const config: TestConfig = {
+
+			const result = await runTRPCTest({
 				projectName,
 				backend: "hono",
 				runtime: "node",
@@ -134,18 +127,17 @@ describe("Config Package Feature", () => {
 				orm: "drizzle",
 				frontend: ["tanstack-router"],
 				install: false,
-			};
-
-			const result = await runTRPCTest(config);
+			});
 			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, config);
+			await validateConfigPackageSetup(projectDir, projectName, result.config);
 		});
 	});
 
 	describe("Edge Cases", () => {
 		it("should validate frontend-only stack (no backend)", async () => {
 			const projectName = "frontend-only";
-			const config: TestConfig = {
+
+			const result = await runTRPCTest({
 				projectName,
 				backend: "none",
 				runtime: "none",
@@ -155,16 +147,15 @@ describe("Config Package Feature", () => {
 				auth: "none",
 				frontend: ["tanstack-router"],
 				install: false,
-			};
-
-			const result = await runTRPCTest(config);
+			});
 			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, config);
+			await validateConfigPackageSetup(projectDir, projectName, result.config);
 		});
 
 		it("should validate convex backend", async () => {
 			const projectName = "convex-backend";
-			const config: TestConfig = {
+
+			const result = await runTRPCTest({
 				projectName,
 				backend: "convex",
 				runtime: "none",
@@ -173,16 +164,15 @@ describe("Config Package Feature", () => {
 				api: "none",
 				frontend: ["next"],
 				install: false,
-			};
-
-			const result = await runTRPCTest(config);
+			});
 			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, config);
+			await validateConfigPackageSetup(projectDir, projectName, result.config);
 		});
 
 		it("should validate self-hosted backend", async () => {
 			const projectName = "self-backend";
-			const config: TestConfig = {
+
+			const result = await runTRPCTest({
 				projectName,
 				backend: "self",
 				runtime: "none",
@@ -191,16 +181,15 @@ describe("Config Package Feature", () => {
 				orm: "drizzle",
 				frontend: ["next"],
 				install: false,
-			};
-
-			const result = await runTRPCTest(config);
+			});
 			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, config);
+			await validateConfigPackageSetup(projectDir, projectName, result.config);
 		});
 
 		it("should validate stack without database", async () => {
 			const projectName = "no-database";
-			const config: TestConfig = {
+
+			const result = await runTRPCTest({
 				projectName,
 				backend: "hono",
 				runtime: "node",
@@ -209,16 +198,15 @@ describe("Config Package Feature", () => {
 				api: "trpc",
 				frontend: ["tanstack-router"],
 				install: false,
-			};
-
-			const result = await runTRPCTest(config);
+			});
 			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, config);
+			await validateConfigPackageSetup(projectDir, projectName, result.config);
 		});
 
 		it("should validate stack with turborepo addon", async () => {
 			const projectName = "with-turborepo";
-			const config: TestConfig = {
+
+			const result = await runTRPCTest({
 				projectName,
 				backend: "hono",
 				runtime: "node",
@@ -227,11 +215,9 @@ describe("Config Package Feature", () => {
 				frontend: ["tanstack-router"],
 				addons: ["turborepo"],
 				install: false,
-			};
-
-			const result = await runTRPCTest(config);
+			});
 			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, config);
+			await validateConfigPackageSetup(projectDir, projectName, result.config);
 		});
 	});
 });
