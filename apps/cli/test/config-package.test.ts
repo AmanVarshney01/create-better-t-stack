@@ -25,7 +25,10 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
-			const configPkgPath = join(result.projectDir!, "packages/config");
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
+			const configPkgPath = join(projectDir, "packages/config");
 			expect(await pathExists(configPkgPath)).toBe(true);
 		});
 
@@ -39,7 +42,10 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
-			const rootTsConfigBase = join(result.projectDir!, "tsconfig.base.json");
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
+			const rootTsConfigBase = join(projectDir, "tsconfig.base.json");
 			expect(await pathExists(rootTsConfigBase)).toBe(false);
 		});
 
@@ -53,7 +59,10 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
-			const rootTsConfig = join(result.projectDir!, "tsconfig.json");
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
+			const rootTsConfig = join(projectDir, "tsconfig.json");
 			expect(await pathExists(rootTsConfig)).toBe(true);
 
 			const content = await readFile(rootTsConfig, "utf-8");
@@ -70,10 +79,10 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
-			const configPkgJson = join(
-				result.projectDir!,
-				"packages/config/package.json",
-			);
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
+			const configPkgJson = join(projectDir, "packages/config/package.json");
 			expect(await pathExists(configPkgJson)).toBe(true);
 
 			const pkgJson = await readJSON(configPkgJson);
@@ -91,8 +100,11 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
 			const configTsConfigBase = join(
-				result.projectDir!,
+				projectDir,
 				"packages/config/tsconfig.base.json",
 			);
 			expect(await pathExists(configTsConfigBase)).toBe(true);
@@ -113,10 +125,10 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
-			const configTsConfig = join(
-				result.projectDir!,
-				"packages/config/tsconfig.json",
-			);
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
+			const configTsConfig = join(projectDir, "packages/config/tsconfig.json");
 			expect(await pathExists(configTsConfig)).toBe(true);
 		});
 	});
@@ -133,7 +145,10 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
-			const rootPkgJson = join(result.projectDir!, "package.json");
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
+			const rootPkgJson = join(projectDir, "package.json");
 			const pkgJson = await readJSON(rootPkgJson);
 
 			expect(pkgJson.devDependencies).toBeDefined();
@@ -153,9 +168,10 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
-			const rootPkgJson = await readJSON(
-				join(result.projectDir!, "package.json"),
-			);
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
+			const rootPkgJson = await readJSON(join(projectDir, "package.json"));
 			expect(rootPkgJson.devDependencies["@pnpm-workspace/config"]).toBe(
 				"workspace:*",
 			);
@@ -175,7 +191,10 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
-			const dbTsConfig = join(result.projectDir!, "packages/db/tsconfig.json");
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
+			const dbTsConfig = join(projectDir, "packages/db/tsconfig.json");
 			expect(await pathExists(dbTsConfig)).toBe(true);
 
 			const content = await readFile(dbTsConfig, "utf-8");
@@ -193,10 +212,10 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
-			const apiTsConfig = join(
-				result.projectDir!,
-				"packages/api/tsconfig.json",
-			);
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
+			const apiTsConfig = join(projectDir, "packages/api/tsconfig.json");
 			expect(await pathExists(apiTsConfig)).toBe(true);
 
 			const content = await readFile(apiTsConfig, "utf-8");
@@ -213,14 +232,16 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
-			const serverTsConfig = join(
-				result.projectDir!,
-				"apps/server/tsconfig.json",
-			);
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
+			const serverTsConfig = join(projectDir, "apps/server/tsconfig.json");
 			expect(await pathExists(serverTsConfig)).toBe(true);
 
 			const content = await readFile(serverTsConfig, "utf-8");
-			expect(content).toContain("@server-config-ref/config/tsconfig.base.json");
+			expect(content).toContain(
+				"@server-config-ref/config/tsconfig.base.json",
+			);
 		});
 
 		it("should configure auth package to extend config package", async () => {
@@ -236,10 +257,10 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
-			const authTsConfig = join(
-				result.projectDir!,
-				"packages/auth/tsconfig.json",
-			);
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
+			const authTsConfig = join(projectDir, "packages/auth/tsconfig.json");
 			expect(await pathExists(authTsConfig)).toBe(true);
 
 			const content = await readFile(authTsConfig, "utf-8");
@@ -260,8 +281,11 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
 			const dbPkgJson = await readJSON(
-				join(result.projectDir!, "packages/db/package.json"),
+				join(projectDir, "packages/db/package.json"),
 			);
 
 			expect(dbPkgJson.devDependencies).toBeDefined();
@@ -279,12 +303,17 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
 			const apiPkgJson = await readJSON(
-				join(result.projectDir!, "packages/api/package.json"),
+				join(projectDir, "packages/api/package.json"),
 			);
 
 			expect(apiPkgJson.devDependencies).toBeDefined();
-			expect(apiPkgJson.devDependencies["@api-dep/config"]).toBe("workspace:*");
+			expect(apiPkgJson.devDependencies["@api-dep/config"]).toBe(
+				"workspace:*",
+			);
 		});
 
 		it("should add config package to server app devDependencies", async () => {
@@ -297,8 +326,11 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
 			const serverPkgJson = await readJSON(
-				join(result.projectDir!, "apps/server/package.json"),
+				join(projectDir, "apps/server/package.json"),
 			);
 
 			expect(serverPkgJson.devDependencies).toBeDefined();
@@ -320,8 +352,11 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
 			const authPkgJson = await readJSON(
-				join(result.projectDir!, "packages/auth/package.json"),
+				join(projectDir, "packages/auth/package.json"),
 			);
 
 			expect(authPkgJson.devDependencies).toBeDefined();
@@ -342,8 +377,11 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
 			const configTsConfigBase = await readJSON(
-				join(result.projectDir!, "packages/config/tsconfig.base.json"),
+				join(projectDir, "packages/config/tsconfig.base.json"),
 			);
 
 			expect(configTsConfigBase.compilerOptions.types).toContain("node");
@@ -359,8 +397,11 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
 			const configTsConfigBase = await readJSON(
-				join(result.projectDir!, "packages/config/tsconfig.base.json"),
+				join(projectDir, "packages/config/tsconfig.base.json"),
 			);
 
 			expect(configTsConfigBase.compilerOptions.types).toContain("bun");
@@ -381,7 +422,10 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
-			const configPkgPath = join(result.projectDir!, "packages/config");
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
+			const configPkgPath = join(projectDir, "packages/config");
 			expect(await pathExists(configPkgPath)).toBe(true);
 		});
 
@@ -398,7 +442,10 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
-			const configPkgPath = join(result.projectDir!, "packages/config");
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
+			const configPkgPath = join(projectDir, "packages/config");
 			expect(await pathExists(configPkgPath)).toBe(true);
 		});
 
@@ -415,7 +462,10 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
-			const configPkgPath = join(result.projectDir!, "packages/config");
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
+			const configPkgPath = join(projectDir, "packages/config");
 			expect(await pathExists(configPkgPath)).toBe(true);
 		});
 
@@ -430,10 +480,10 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
-			const apiTsConfig = join(
-				result.projectDir!,
-				"packages/api/tsconfig.json",
-			);
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
+			const apiTsConfig = join(projectDir, "packages/api/tsconfig.json");
 			const content = await readFile(apiTsConfig, "utf-8");
 			expect(content).toContain("@orpc-api/config/tsconfig.base.json");
 		});
@@ -449,10 +499,13 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
-			const configPkgPath = join(result.projectDir!, "packages/config");
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
+			const configPkgPath = join(projectDir, "packages/config");
 			expect(await pathExists(configPkgPath)).toBe(true);
 
-			const turboJson = join(result.projectDir!, "turbo.json");
+			const turboJson = join(projectDir, "turbo.json");
 			expect(await pathExists(turboJson)).toBe(true);
 		});
 	});
@@ -473,6 +526,8 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
 
 			const packages = [
 				"packages/config",
@@ -482,12 +537,12 @@ describe("Config Package Feature", () => {
 			];
 
 			for (const pkg of packages) {
-				const pkgPath = join(result.projectDir!, pkg);
+				const pkgPath = join(projectDir, pkg);
 				expect(await pathExists(pkgPath)).toBe(true);
 			}
 
 			const dbTsConfig = await readFile(
-				join(result.projectDir!, "packages/db/tsconfig.json"),
+				join(projectDir, "packages/db/tsconfig.json"),
 				"utf-8",
 			);
 			expect(dbTsConfig).toContain("@full-stack/config/tsconfig.base.json");
@@ -503,8 +558,11 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
 			const serverTsConfig = await readFile(
-				join(result.projectDir!, "apps/server/tsconfig.json"),
+				join(projectDir, "apps/server/tsconfig.json"),
 				"utf-8",
 			);
 			expect(serverTsConfig).toContain(
@@ -522,8 +580,11 @@ describe("Config Package Feature", () => {
 			});
 
 			expectSuccess(result);
+			expect(result.projectDir).toBeDefined();
+			const projectDir = result.projectDir as string;
+
 			const serverTsConfig = await readFile(
-				join(result.projectDir!, "apps/server/tsconfig.json"),
+				join(projectDir, "apps/server/tsconfig.json"),
 				"utf-8",
 			);
 			expect(serverTsConfig).toContain(
