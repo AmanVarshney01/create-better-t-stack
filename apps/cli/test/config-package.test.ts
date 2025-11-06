@@ -1,7 +1,6 @@
 import { afterAll, describe, it } from "vitest";
 import {
 	cleanupSmokeDirectory,
-	expectSuccessWithProjectDir,
 	runTRPCTest,
 	validateConfigPackageSetup,
 } from "./test-utils";
@@ -13,9 +12,8 @@ describe("Config Package Feature", () => {
 
 	describe("Basic Stack Configurations", () => {
 		it("should validate hono + node stack", async () => {
-			const projectName = "hono-node";
 			const result = await runTRPCTest({
-				projectName,
+				projectName: "hono-node",
 				backend: "hono",
 				runtime: "node",
 				database: "sqlite",
@@ -24,15 +22,12 @@ describe("Config Package Feature", () => {
 				frontend: ["tanstack-router"],
 				install: false,
 			});
-			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, result.config);
+			await validateConfigPackageSetup(result);
 		});
 
 		it("should validate hono + bun stack", async () => {
-			const projectName = "hono-bun";
-
 			const result = await runTRPCTest({
-				projectName,
+				projectName: "hono-bun",
 				backend: "hono",
 				runtime: "bun",
 				database: "sqlite",
@@ -41,15 +36,12 @@ describe("Config Package Feature", () => {
 				frontend: ["tanstack-router"],
 				install: false,
 			});
-			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, result.config);
+			await validateConfigPackageSetup(result);
 		});
 
 		it("should validate express + node stack", async () => {
-			const projectName = "express-node";
-
 			const result = await runTRPCTest({
-				projectName,
+				projectName: "express-node",
 				backend: "express",
 				runtime: "node",
 				database: "sqlite",
@@ -57,31 +49,25 @@ describe("Config Package Feature", () => {
 				frontend: ["tanstack-router"],
 				install: false,
 			});
-			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, result.config);
+			await validateConfigPackageSetup(result);
 		});
 
 		it("should validate fastify + node stack", async () => {
-			const projectName = "fastify-node";
-
 			const result = await runTRPCTest({
-				projectName,
+				projectName: "fastify-node",
 				backend: "fastify",
 				runtime: "node",
 				frontend: ["tanstack-router"],
 				install: false,
 			});
-			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, result.config);
+			await validateConfigPackageSetup(result);
 		});
 	});
 
 	describe("Full Stack with Authentication", () => {
 		it("should validate full stack with better-auth", async () => {
-			const projectName = "full-stack-auth";
-
 			const result = await runTRPCTest({
-				projectName,
+				projectName: "full-stack-auth",
 				backend: "hono",
 				runtime: "node",
 				database: "postgres",
@@ -92,17 +78,14 @@ describe("Config Package Feature", () => {
 				addons: ["turborepo"],
 				install: false,
 			});
-			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, result.config);
+			await validateConfigPackageSetup(result);
 		});
 	});
 
 	describe("API Variants", () => {
 		it("should validate stack with tRPC", async () => {
-			const projectName = "trpc-api";
-
 			const result = await runTRPCTest({
-				projectName,
+				projectName: "trpc-api",
 				backend: "hono",
 				runtime: "node",
 				api: "trpc",
@@ -111,15 +94,12 @@ describe("Config Package Feature", () => {
 				frontend: ["tanstack-router"],
 				install: false,
 			});
-			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, result.config);
+			await validateConfigPackageSetup(result);
 		});
 
 		it("should validate stack with oRPC", async () => {
-			const projectName = "orpc-api";
-
 			const result = await runTRPCTest({
-				projectName,
+				projectName: "orpc-api",
 				backend: "hono",
 				runtime: "node",
 				api: "orpc",
@@ -128,17 +108,14 @@ describe("Config Package Feature", () => {
 				frontend: ["tanstack-router"],
 				install: false,
 			});
-			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, result.config);
+			await validateConfigPackageSetup(result);
 		});
 	});
 
 	describe("Edge Cases", () => {
 		it("should validate frontend-only stack (no backend)", async () => {
-			const projectName = "frontend-only";
-
 			const result = await runTRPCTest({
-				projectName,
+				projectName: "frontend-only",
 				backend: "none",
 				runtime: "none",
 				database: "none",
@@ -148,15 +125,12 @@ describe("Config Package Feature", () => {
 				frontend: ["tanstack-router"],
 				install: false,
 			});
-			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, result.config);
+			await validateConfigPackageSetup(result);
 		});
 
 		it("should validate convex backend", async () => {
-			const projectName = "convex-backend";
-
 			const result = await runTRPCTest({
-				projectName,
+				projectName: "convex-backend",
 				backend: "convex",
 				runtime: "none",
 				database: "none",
@@ -165,15 +139,12 @@ describe("Config Package Feature", () => {
 				frontend: ["next"],
 				install: false,
 			});
-			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, result.config);
+			await validateConfigPackageSetup(result);
 		});
 
 		it("should validate self-hosted backend", async () => {
-			const projectName = "self-backend";
-
 			const result = await runTRPCTest({
-				projectName,
+				projectName: "self-backend",
 				backend: "self",
 				runtime: "none",
 				api: "trpc",
@@ -182,15 +153,12 @@ describe("Config Package Feature", () => {
 				frontend: ["next"],
 				install: false,
 			});
-			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, result.config);
+			await validateConfigPackageSetup(result);
 		});
 
 		it("should validate stack without database", async () => {
-			const projectName = "no-database";
-
 			const result = await runTRPCTest({
-				projectName,
+				projectName: "no-database",
 				backend: "hono",
 				runtime: "node",
 				database: "none",
@@ -199,15 +167,12 @@ describe("Config Package Feature", () => {
 				frontend: ["tanstack-router"],
 				install: false,
 			});
-			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, result.config);
+			await validateConfigPackageSetup(result);
 		});
 
 		it("should validate stack with turborepo addon", async () => {
-			const projectName = "with-turborepo";
-
 			const result = await runTRPCTest({
-				projectName,
+				projectName: "with-turborepo",
 				backend: "hono",
 				runtime: "node",
 				database: "sqlite",
@@ -216,8 +181,7 @@ describe("Config Package Feature", () => {
 				addons: ["turborepo"],
 				install: false,
 			});
-			const projectDir = expectSuccessWithProjectDir(result);
-			await validateConfigPackageSetup(projectDir, projectName, result.config);
+			await validateConfigPackageSetup(result);
 		});
 	});
 });

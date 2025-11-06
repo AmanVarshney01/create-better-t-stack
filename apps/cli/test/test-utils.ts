@@ -196,13 +196,16 @@ export function configTsConfigReference(projectName: string): string {
  * Validates all expected files and references based on the CreateInput configuration
  */
 export async function validateConfigPackageSetup(
-	projectDir: string,
-	projectName: string,
-	config: CreateInput,
+	result: TestResult,
 ): Promise<void> {
 	const { pathExists, readFile, readJSON } = await import("fs-extra");
 	const { join } = await import("node:path");
 	const { expect } = await import("vitest");
+
+	// Extract data from result
+	const projectDir = expectSuccessWithProjectDir(result);
+	const config = result.config;
+	const projectName = config.projectName as string;
 
 	// 1. Config package structure
 	expect(await pathExists(join(projectDir, "packages/config"))).toBe(true);
