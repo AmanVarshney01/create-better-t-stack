@@ -33,6 +33,8 @@ type UltraciteAgent =
 	| "goose"
 	| "roo-code";
 
+type UltraciteHook = "cursor" | "claude";
+
 const EDITORS = {
 	vscode: {
 		label: "VSCode / Cursor / Windsurf",
@@ -99,6 +101,15 @@ const AGENTS = {
 	},
 } as const;
 
+const HOOKS = {
+	cursor: {
+		label: "Cursor",
+	},
+	claude: {
+		label: "Claude",
+	},
+} as const;
+
 function getFrameworksFromFrontend(frontend: string[]): string[] {
 	const frameworkMap: Record<string, string> = {
 		"tanstack-router": "react",
@@ -151,6 +162,14 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 						})),
 						required: true,
 					}),
+				hooks: () =>
+					autocompleteMultiselect<UltraciteHook>({
+						message: "Choose hooks",
+						options: Object.entries(HOOKS).map(([key, hook]) => ({
+							value: key as UltraciteHook,
+							label: hook.label,
+						})),
+					}),
 			},
 			{
 				onCancel: () => {
@@ -161,7 +180,7 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 
 		const editors = result.editors as UltraciteEditor[];
 		const agents = result.agents as UltraciteAgent[];
-
+		const hooks = result.hooks as UltraciteHook[];
 		const frameworks = getFrameworksFromFrontend(frontend);
 
 		const ultraciteArgs = ["init", "--pm", packageManager];
@@ -176,6 +195,10 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 
 		if (agents.length > 0) {
 			ultraciteArgs.push("--agents", ...agents);
+		}
+
+		if (hooks.length > 0) {
+			ultraciteArgs.push("--hooks", ...hooks);
 		}
 
 		if (hasHusky) {
