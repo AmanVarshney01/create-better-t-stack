@@ -171,6 +171,23 @@ export function expectSuccess(result: TestResult) {
 	expect(result.result).toBeDefined();
 }
 
+export function expectSuccessWithProjectDir(result: TestResult): string {
+	expectSuccess(result);
+	expect(result.projectDir).toBeDefined();
+	return result.projectDir as string;
+}
+
+/**
+ * Helper functions for generating expected config package references
+ */
+export function configPackageName(projectName: string): string {
+	return `@${projectName}/config`;
+}
+
+export function configTsConfigReference(projectName: string): string {
+	return `@${projectName}/config/tsconfig.base.json`;
+}
+
 export function expectError(result: TestResult, expectedMessage?: string) {
 	expect(result.success).toBe(false);
 	if (expectedMessage) {

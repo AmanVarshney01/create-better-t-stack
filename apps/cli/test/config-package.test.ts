@@ -3,7 +3,9 @@ import { pathExists, readFile, readJSON } from "fs-extra";
 import { afterAll, describe, expect, it } from "vitest";
 import {
 	cleanupSmokeDirectory,
-	expectSuccess,
+	configPackageName,
+	configTsConfigReference,
+	expectSuccessWithProjectDir,
 	runTRPCTest,
 } from "./test-utils";
 
@@ -24,12 +26,9 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
 
-			const configPkgPath = join(projectDir, "packages/config");
-			expect(await pathExists(configPkgPath)).toBe(true);
+			expect(await pathExists(join(projectDir, "packages/config"))).toBe(true);
 		});
 
 		it("should NOT create tsconfig.base.json at root", async () => {
@@ -41,52 +40,51 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
 
-			const rootTsConfigBase = join(projectDir, "tsconfig.base.json");
-			expect(await pathExists(rootTsConfigBase)).toBe(false);
+			expect(await pathExists(join(projectDir, "tsconfig.base.json"))).toBe(
+				false,
+			);
 		});
 
 		it("should create tsconfig.json at root that extends config package", async () => {
+			const projectName = "root-tsconfig";
 			const result = await runTRPCTest({
-				projectName: "root-tsconfig",
+				projectName,
 				backend: "hono",
 				runtime: "node",
 				frontend: ["tanstack-router"],
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
 
-			const rootTsConfig = join(projectDir, "tsconfig.json");
-			expect(await pathExists(rootTsConfig)).toBe(true);
+			expect(await pathExists(join(projectDir, "tsconfig.json"))).toBe(true);
 
-			const content = await readFile(rootTsConfig, "utf-8");
-			expect(content).toContain("@root-tsconfig/config/tsconfig.base.json");
+			const content = await readFile(join(projectDir, "tsconfig.json"), "utf-8");
+			expect(content).toContain(configTsConfigReference(projectName));
 		});
 
 		it("should create package.json in config package", async () => {
+			const projectName = "config-pkg-json";
 			const result = await runTRPCTest({
-				projectName: "config-pkg-json",
+				projectName,
 				backend: "hono",
 				runtime: "node",
 				frontend: ["tanstack-router"],
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
 
-			const configPkgJson = join(projectDir, "packages/config/package.json");
-			expect(await pathExists(configPkgJson)).toBe(true);
+			expect(
+				await pathExists(join(projectDir, "packages/config/package.json")),
+			).toBe(true);
 
-			const pkgJson = await readJSON(configPkgJson);
-			expect(pkgJson.name).toBe("@config-pkg-json/config");
+			const pkgJson = await readJSON(
+				join(projectDir, "packages/config/package.json"),
+			);
+			expect(pkgJson.name).toBe(configPackageName(projectName));
 			expect(pkgJson.private).toBe(true);
 		});
 
@@ -99,17 +97,15 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
 
-			const configTsConfigBase = join(
-				projectDir,
-				"packages/config/tsconfig.base.json",
+			expect(
+				await pathExists(join(projectDir, "packages/config/tsconfig.base.json")),
+			).toBe(true);
+
+			const content = await readJSON(
+				join(projectDir, "packages/config/tsconfig.base.json"),
 			);
-			expect(await pathExists(configTsConfigBase)).toBe(true);
-
-			const content = await readJSON(configTsConfigBase);
 			expect(content.compilerOptions).toBeDefined();
 			expect(content.compilerOptions.strict).toBe(true);
 			expect(content.compilerOptions.target).toBe("ESNext");
@@ -124,19 +120,19 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
 
-			const configTsConfig = join(projectDir, "packages/config/tsconfig.json");
-			expect(await pathExists(configTsConfig)).toBe(true);
+			expect(
+				await pathExists(join(projectDir, "packages/config/tsconfig.json")),
+			).toBe(true);
 		});
 	});
 
 	describe("Root Configuration", () => {
 		it("should include config package in root package.json devDependencies", async () => {
+			const projectName = "root-config-dep";
 			const result = await runTRPCTest({
-				projectName: "root-config-dep",
+				projectName,
 				backend: "hono",
 				runtime: "node",
 				frontend: ["tanstack-router"],
@@ -144,22 +140,19 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
-
-			const rootPkgJson = join(projectDir, "package.json");
-			const pkgJson = await readJSON(rootPkgJson);
+			const projectDir = expectSuccessWithProjectDir(result);
+			const pkgJson = await readJSON(join(projectDir, "package.json"));
 
 			expect(pkgJson.devDependencies).toBeDefined();
-			expect(pkgJson.devDependencies["@root-config-dep/config"]).toBe(
+			expect(pkgJson.devDependencies[configPackageName(projectName)]).toBe(
 				"workspace:*",
 			);
 		});
 
 		it("should use workspace:* for pnpm package manager", async () => {
+			const projectName = "pnpm-workspace";
 			const result = await runTRPCTest({
-				projectName: "pnpm-workspace",
+				projectName,
 				backend: "hono",
 				runtime: "node",
 				frontend: ["tanstack-router"],
@@ -167,12 +160,10 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
+			const pkgJson = await readJSON(join(projectDir, "package.json"));
 
-			const rootPkgJson = await readJSON(join(projectDir, "package.json"));
-			expect(rootPkgJson.devDependencies["@pnpm-workspace/config"]).toBe(
+			expect(pkgJson.devDependencies[configPackageName(projectName)]).toBe(
 				"workspace:*",
 			);
 		});
@@ -180,8 +171,9 @@ describe("Config Package Feature", () => {
 
 	describe("Workspace Package References", () => {
 		it("should configure db package to extend config package", async () => {
+			const projectName = "db-config-ref";
 			const result = await runTRPCTest({
-				projectName: "db-config-ref",
+				projectName,
 				backend: "hono",
 				runtime: "node",
 				database: "postgres",
@@ -190,20 +182,23 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
 
-			const dbTsConfig = join(projectDir, "packages/db/tsconfig.json");
-			expect(await pathExists(dbTsConfig)).toBe(true);
+			expect(
+				await pathExists(join(projectDir, "packages/db/tsconfig.json")),
+			).toBe(true);
 
-			const content = await readFile(dbTsConfig, "utf-8");
-			expect(content).toContain("@db-config-ref/config/tsconfig.base.json");
+			const content = await readFile(
+				join(projectDir, "packages/db/tsconfig.json"),
+				"utf-8",
+			);
+			expect(content).toContain(configTsConfigReference(projectName));
 		});
 
 		it("should configure api package to extend config package", async () => {
+			const projectName = "api-config-ref";
 			const result = await runTRPCTest({
-				projectName: "api-config-ref",
+				projectName,
 				backend: "hono",
 				runtime: "node",
 				api: "trpc",
@@ -211,42 +206,46 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
 
-			const apiTsConfig = join(projectDir, "packages/api/tsconfig.json");
-			expect(await pathExists(apiTsConfig)).toBe(true);
+			expect(
+				await pathExists(join(projectDir, "packages/api/tsconfig.json")),
+			).toBe(true);
 
-			const content = await readFile(apiTsConfig, "utf-8");
-			expect(content).toContain("@api-config-ref/config/tsconfig.base.json");
+			const content = await readFile(
+				join(projectDir, "packages/api/tsconfig.json"),
+				"utf-8",
+			);
+			expect(content).toContain(configTsConfigReference(projectName));
 		});
 
 		it("should configure server app to extend config package", async () => {
+			const projectName = "server-config-ref";
 			const result = await runTRPCTest({
-				projectName: "server-config-ref",
+				projectName,
 				backend: "hono",
 				runtime: "node",
 				frontend: ["tanstack-router"],
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
 
-			const serverTsConfig = join(projectDir, "apps/server/tsconfig.json");
-			expect(await pathExists(serverTsConfig)).toBe(true);
+			expect(
+				await pathExists(join(projectDir, "apps/server/tsconfig.json")),
+			).toBe(true);
 
-			const content = await readFile(serverTsConfig, "utf-8");
-			expect(content).toContain(
-				"@server-config-ref/config/tsconfig.base.json",
+			const content = await readFile(
+				join(projectDir, "apps/server/tsconfig.json"),
+				"utf-8",
 			);
+			expect(content).toContain(configTsConfigReference(projectName));
 		});
 
 		it("should configure auth package to extend config package", async () => {
+			const projectName = "auth-config-ref";
 			const result = await runTRPCTest({
-				projectName: "auth-config-ref",
+				projectName,
 				backend: "hono",
 				runtime: "node",
 				database: "postgres",
@@ -256,22 +255,25 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
 
-			const authTsConfig = join(projectDir, "packages/auth/tsconfig.json");
-			expect(await pathExists(authTsConfig)).toBe(true);
+			expect(
+				await pathExists(join(projectDir, "packages/auth/tsconfig.json")),
+			).toBe(true);
 
-			const content = await readFile(authTsConfig, "utf-8");
-			expect(content).toContain("@auth-config-ref/config/tsconfig.base.json");
+			const content = await readFile(
+				join(projectDir, "packages/auth/tsconfig.json"),
+				"utf-8",
+			);
+			expect(content).toContain(configTsConfigReference(projectName));
 		});
 	});
 
 	describe("Package Dependencies", () => {
 		it("should add config package to db package devDependencies", async () => {
+			const projectName = "db-dep";
 			const result = await runTRPCTest({
-				projectName: "db-dep",
+				projectName,
 				backend: "hono",
 				runtime: "node",
 				database: "sqlite",
@@ -280,21 +282,21 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
-
+			const projectDir = expectSuccessWithProjectDir(result);
 			const dbPkgJson = await readJSON(
 				join(projectDir, "packages/db/package.json"),
 			);
 
 			expect(dbPkgJson.devDependencies).toBeDefined();
-			expect(dbPkgJson.devDependencies["@db-dep/config"]).toBe("workspace:*");
+			expect(dbPkgJson.devDependencies[configPackageName(projectName)]).toBe(
+				"workspace:*",
+			);
 		});
 
 		it("should add config package to api package devDependencies", async () => {
+			const projectName = "api-dep";
 			const result = await runTRPCTest({
-				projectName: "api-dep",
+				projectName,
 				backend: "hono",
 				runtime: "node",
 				api: "trpc",
@@ -302,46 +304,42 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
-
+			const projectDir = expectSuccessWithProjectDir(result);
 			const apiPkgJson = await readJSON(
 				join(projectDir, "packages/api/package.json"),
 			);
 
 			expect(apiPkgJson.devDependencies).toBeDefined();
-			expect(apiPkgJson.devDependencies["@api-dep/config"]).toBe(
+			expect(apiPkgJson.devDependencies[configPackageName(projectName)]).toBe(
 				"workspace:*",
 			);
 		});
 
 		it("should add config package to server app devDependencies", async () => {
+			const projectName = "server-dep";
 			const result = await runTRPCTest({
-				projectName: "server-dep",
+				projectName,
 				backend: "hono",
 				runtime: "node",
 				frontend: ["tanstack-router"],
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
-
+			const projectDir = expectSuccessWithProjectDir(result);
 			const serverPkgJson = await readJSON(
 				join(projectDir, "apps/server/package.json"),
 			);
 
 			expect(serverPkgJson.devDependencies).toBeDefined();
-			expect(serverPkgJson.devDependencies["@server-dep/config"]).toBe(
+			expect(serverPkgJson.devDependencies[configPackageName(projectName)]).toBe(
 				"workspace:*",
 			);
 		});
 
 		it("should add config package to auth package devDependencies", async () => {
+			const projectName = "auth-dep";
 			const result = await runTRPCTest({
-				projectName: "auth-dep",
+				projectName,
 				backend: "hono",
 				runtime: "node",
 				database: "postgres",
@@ -351,16 +349,13 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
-
+			const projectDir = expectSuccessWithProjectDir(result);
 			const authPkgJson = await readJSON(
 				join(projectDir, "packages/auth/package.json"),
 			);
 
 			expect(authPkgJson.devDependencies).toBeDefined();
-			expect(authPkgJson.devDependencies["@auth-dep/config"]).toBe(
+			expect(authPkgJson.devDependencies[configPackageName(projectName)]).toBe(
 				"workspace:*",
 			);
 		});
@@ -376,9 +371,7 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
 
 			const configTsConfigBase = await readJSON(
 				join(projectDir, "packages/config/tsconfig.base.json"),
@@ -396,9 +389,7 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
 
 			const configTsConfigBase = await readJSON(
 				join(projectDir, "packages/config/tsconfig.base.json"),
@@ -421,9 +412,7 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
 
 			const configPkgPath = join(projectDir, "packages/config");
 			expect(await pathExists(configPkgPath)).toBe(true);
@@ -441,9 +430,7 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
 
 			const configPkgPath = join(projectDir, "packages/config");
 			expect(await pathExists(configPkgPath)).toBe(true);
@@ -461,17 +448,16 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
 
 			const configPkgPath = join(projectDir, "packages/config");
 			expect(await pathExists(configPkgPath)).toBe(true);
 		});
 
 		it("should work with different APIs", async () => {
+			const projectName = "orpc-api";
 			const result = await runTRPCTest({
-				projectName: "orpc-api",
+				projectName,
 				backend: "hono",
 				runtime: "node",
 				api: "orpc",
@@ -479,13 +465,13 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
 
-			const apiTsConfig = join(projectDir, "packages/api/tsconfig.json");
-			const content = await readFile(apiTsConfig, "utf-8");
-			expect(content).toContain("@orpc-api/config/tsconfig.base.json");
+			const content = await readFile(
+				join(projectDir, "packages/api/tsconfig.json"),
+				"utf-8",
+			);
+			expect(content).toContain(configTsConfigReference(projectName));
 		});
 
 		it("should work with turborepo addon", async () => {
@@ -498,9 +484,7 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
 
 			const configPkgPath = join(projectDir, "packages/config");
 			expect(await pathExists(configPkgPath)).toBe(true);
@@ -512,8 +496,9 @@ describe("Config Package Feature", () => {
 
 	describe("Cross-Stack Compatibility", () => {
 		it("should work with full stack (hono + trpc + drizzle + better-auth)", async () => {
+			const projectName = "full-stack";
 			const result = await runTRPCTest({
-				projectName: "full-stack",
+				projectName,
 				backend: "hono",
 				runtime: "node",
 				database: "postgres",
@@ -525,9 +510,7 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
 
 			const packages = [
 				"packages/config",
@@ -537,59 +520,52 @@ describe("Config Package Feature", () => {
 			];
 
 			for (const pkg of packages) {
-				const pkgPath = join(projectDir, pkg);
-				expect(await pathExists(pkgPath)).toBe(true);
+				expect(await pathExists(join(projectDir, pkg))).toBe(true);
 			}
 
 			const dbTsConfig = await readFile(
 				join(projectDir, "packages/db/tsconfig.json"),
 				"utf-8",
 			);
-			expect(dbTsConfig).toContain("@full-stack/config/tsconfig.base.json");
+			expect(dbTsConfig).toContain(configTsConfigReference(projectName));
 		});
 
 		it("should work with express backend", async () => {
+			const projectName = "express-stack";
 			const result = await runTRPCTest({
-				projectName: "express-stack",
+				projectName,
 				backend: "express",
 				runtime: "node",
 				frontend: ["tanstack-router"],
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
 
 			const serverTsConfig = await readFile(
 				join(projectDir, "apps/server/tsconfig.json"),
 				"utf-8",
 			);
-			expect(serverTsConfig).toContain(
-				"@express-stack/config/tsconfig.base.json",
-			);
+			expect(serverTsConfig).toContain(configTsConfigReference(projectName));
 		});
 
 		it("should work with fastify backend", async () => {
+			const projectName = "fastify-stack";
 			const result = await runTRPCTest({
-				projectName: "fastify-stack",
+				projectName,
 				backend: "fastify",
 				runtime: "node",
 				frontend: ["tanstack-router"],
 				install: false,
 			});
 
-			expectSuccess(result);
-			expect(result.projectDir).toBeDefined();
-			const projectDir = result.projectDir as string;
+			const projectDir = expectSuccessWithProjectDir(result);
 
 			const serverTsConfig = await readFile(
 				join(projectDir, "apps/server/tsconfig.json"),
 				"utf-8",
 			);
-			expect(serverTsConfig).toContain(
-				"@fastify-stack/config/tsconfig.base.json",
-			);
+			expect(serverTsConfig).toContain(configTsConfigReference(projectName));
 		});
 	});
 });
