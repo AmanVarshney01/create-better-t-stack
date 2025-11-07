@@ -1,4 +1,4 @@
-import { afterAll, describe, it } from "vitest";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import {
 	cleanupSmokeDirectory,
 	runTRPCTest,
@@ -6,11 +6,30 @@ import {
 } from "./test-utils";
 
 describe("Config Package Feature", () => {
+	beforeAll(async () => {
+		await cleanupSmokeDirectory();
+	});
 	afterAll(async () => {
 		await cleanupSmokeDirectory();
 	});
 
 	describe("Basic Stack Configurations", () => {
+		it("should validate hono + pnpm + turbo stack", async () => {
+			const result = await runTRPCTest({
+				projectName: "hono-pnpm",
+				backend: "hono",
+				runtime: "node",
+				packageManager: "pnpm",
+				database: "sqlite",
+				orm: "drizzle",
+				api: "trpc",
+				frontend: ["tanstack-router"],
+				addons: ["turborepo"],
+				install: false,
+			});
+			await validateConfigPackageSetup(result);
+		});
+
 		it("should validate hono + node stack", async () => {
 			const result = await runTRPCTest({
 				projectName: "hono-node",

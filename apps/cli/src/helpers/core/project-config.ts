@@ -243,6 +243,13 @@ async function updateRootPackageJson(
 		}
 	}
 
+	const configPackageDir = path.join(projectDir, "packages/config");
+	if (await fs.pathExists(configPackageDir)) {
+		packageJson.devDependencies = {
+			[`@${options.projectName}/config`]: "workspace:*",
+		};
+	}
+
 	await fs.writeJson(rootPackageJsonPath, packageJson, { spaces: 2 });
 }
 

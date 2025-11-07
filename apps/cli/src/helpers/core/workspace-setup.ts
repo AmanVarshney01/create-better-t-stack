@@ -15,11 +15,19 @@ export async function setupWorkspaceDependencies(
 	const commonDeps: AvailableDependencies[] = ["dotenv", "zod"];
 	const commonDevDeps: AvailableDependencies[] = ["tsdown"];
 
+	const configPackageDir = path.join(projectDir, "packages/config");
+	const configDep: Record<string, string> = {};
+
+	if (await fs.pathExists(configPackageDir)) {
+		configDep[`@${projectName}/config`] = workspaceVersion;
+	}
+
 	const dbPackageDir = path.join(projectDir, "packages/db");
 	if (await fs.pathExists(dbPackageDir)) {
 		await addPackageDependency({
 			dependencies: commonDeps,
 			devDependencies: commonDevDeps,
+			customDevDependencies: configDep,
 			projectDir: dbPackageDir,
 		});
 	}
@@ -35,6 +43,7 @@ export async function setupWorkspaceDependencies(
 			dependencies: commonDeps,
 			devDependencies: commonDevDeps,
 			customDependencies: authDeps,
+			customDevDependencies: configDep,
 			projectDir: authPackageDir,
 		});
 	}
@@ -53,6 +62,7 @@ export async function setupWorkspaceDependencies(
 			dependencies: commonDeps,
 			devDependencies: commonDevDeps,
 			customDependencies: apiDeps,
+			customDevDependencies: configDep,
 			projectDir: apiPackageDir,
 		});
 	}
@@ -74,6 +84,7 @@ export async function setupWorkspaceDependencies(
 			dependencies: commonDeps,
 			devDependencies: commonDevDeps,
 			customDependencies: serverDeps,
+			customDevDependencies: configDep,
 			projectDir: serverPackageDir,
 		});
 	}
@@ -92,6 +103,7 @@ export async function setupWorkspaceDependencies(
 		if (Object.keys(webDeps).length > 0) {
 			await addPackageDependency({
 				customDependencies: webDeps,
+				customDevDependencies: configDep,
 				projectDir: webPackageDir,
 			});
 		}
@@ -108,6 +120,7 @@ export async function setupWorkspaceDependencies(
 		if (Object.keys(nativeDeps).length > 0) {
 			await addPackageDependency({
 				customDependencies: nativeDeps,
+				customDevDependencies: configDep,
 				projectDir: nativePackageDir,
 			});
 		}
