@@ -35,6 +35,9 @@ async function updateRootPackageJson(
 	const packageJson = await fs.readJson(rootPackageJsonPath);
 	packageJson.name = options.projectName;
 
+	const workspaceVersion =
+		options.packageManager === "npm" ? "*" : "workspace:*";
+
 	if (!packageJson.scripts) {
 		packageJson.scripts = {};
 	}
@@ -245,9 +248,8 @@ async function updateRootPackageJson(
 
 	const configPackageDir = path.join(projectDir, "packages/config");
 	if (await fs.pathExists(configPackageDir)) {
-		packageJson.devDependencies = {
-			[`@${options.projectName}/config`]: "workspace:*",
-		};
+		packageJson.devDependencies[`@${options.projectName}/config`] =
+			workspaceVersion;
 	}
 
 	await fs.writeJson(rootPackageJsonPath, packageJson, { spaces: 2 });
