@@ -319,6 +319,79 @@ export async function validateConfigPackageSetup(
 	}
 }
 
+/**
+ * Validate that turbo prune works correctly for turborepo projects
+ * Only runs if the project has turborepo addon enabled
+ * Generates lockfile without installing dependencies, then runs turbo prune
+ */
+export async function validateTurboPrune(result: TestResult): Promise<void> {
+	const { expect } = await import("vitest");
+	const { execa } = await import("execa");
+
+	// Extract data from result
+	const projectDir = expectSuccessWithProjectDir(result);
+	const config = result.config;
+
+	// Only run this validation if turborepo addon is enabled
+	const hasTurborepo =
+		config.addons &&
+		Array.isArray(config.addons) &&
+		config.addons.includes("turborepo");
+
+	if (!hasTurborepo) {
+		return;
+	}
+
+	const packageManager = config.packageManager || "pnpm";
+
+	// Generate lockfile without installing dependencies
+	try {
+		if (packageManager === "pnpm") {
+			await execa("pnpm", ["install", "--lockfile-only"], {
+				cwd: projectDir,
+			});
+		} else if (packageManager === "npm") {
+			await execa("npm", ["install", "--package-lock-only"], {
+				cwd: projectDir,
+			});
+		} else if (packageManager === "bun") {
+			// Bun doesn't have --lockfile-only, so we skip for bun
+			// or use bun install which is fast anyway
+			await execa("bun", ["install", "--frozen-lockfile"], {
+				cwd: projectDir,
+				reject: false, // Don't fail if frozen-lockfile doesn't exist
+			});
+		}
+	} catch (error) {
+		console.error("Failed to generate lockfile:");
+		console.error(error);
+		expect.fail(
+			`Failed to generate lockfile: ${error instanceof Error ? error.message : String(error)}`,
+		);
+	}
+
+	// Determine package manager command for running turbo
+	const command =
+		packageManager === "npm" ? "npx" : packageManager === "bun" ? "bunx" : "pnpm";
+	const args =
+		packageManager === "pnpm"
+			? ["dlx", "turbo", "prune", "server", "--docker"]
+			: ["turbo", "prune", "server", "--docker"];
+
+	// Run turbo prune server --docker
+	try {
+		await execa(command, args, {
+			cwd: projectDir,
+		});
+	} catch (error) {
+		console.error("turbo prune failed:");
+		console.error(error);
+		expect.fail(
+			`turbo prune server --docker failed: ${error instanceof Error ? error.message : String(error)}`,
+		);
+	}
+}
+
 export function expectError(result: TestResult, expectedMessage?: string) {
 	expect(result.success).toBe(false);
 	if (expectedMessage) {

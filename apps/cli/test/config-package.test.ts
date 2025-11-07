@@ -3,6 +3,7 @@ import {
 	cleanupSmokeDirectory,
 	runTRPCTest,
 	validateConfigPackageSetup,
+	validateTurboPrune,
 } from "./test-utils";
 
 describe("Config Package Feature", () => {
@@ -10,7 +11,7 @@ describe("Config Package Feature", () => {
 		await cleanupSmokeDirectory();
 	});
 	afterAll(async () => {
-		await cleanupSmokeDirectory();
+		// await cleanupSmokeDirectory();
 	});
 
 	describe("Basic Stack Configurations", () => {
@@ -28,6 +29,7 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 			await validateConfigPackageSetup(result);
+			await validateTurboPrune(result);
 		});
 
 		it("should validate hono + node stack", async () => {
@@ -98,6 +100,7 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 			await validateConfigPackageSetup(result);
+			await validateTurboPrune(result);
 		});
 	});
 
@@ -201,6 +204,7 @@ describe("Config Package Feature", () => {
 				install: false,
 			});
 			await validateConfigPackageSetup(result);
+			await validateTurboPrune(result);
 		});
 	});
 });
