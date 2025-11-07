@@ -248,6 +248,9 @@ async function updateRootPackageJson(
 
 	const configPackageDir = path.join(projectDir, "packages/config");
 	if (await fs.pathExists(configPackageDir)) {
+		if (!packageJson.devDependencies) {
+			packageJson.devDependencies = {};
+		}
 		packageJson.devDependencies[`@${options.projectName}/config`] =
 			workspaceVersion;
 	}
