@@ -373,22 +373,27 @@ export async function validateTurboPrune(result: TestResult): Promise<void> {
 	// Determine package manager command for running turbo
 	const command =
 		packageManager === "npm" ? "npx" : packageManager === "bun" ? "bunx" : "pnpm";
-	const args =
-		packageManager === "pnpm"
-			? ["dlx", "turbo", "prune", "server", "--docker"]
-			: ["turbo", "prune", "server", "--docker"];
 
-	// Run turbo prune server --docker
-	try {
-		await execa(command, args, {
-			cwd: projectDir,
-		});
-	} catch (error) {
-		console.error("turbo prune failed:");
-		console.error(error);
-		expect.fail(
-			`turbo prune server --docker failed: ${error instanceof Error ? error.message : String(error)}`,
-		);
+	// Test turbo prune for both server and web targets
+	const targets = ["server", "web"];
+
+	for (const target of targets) {
+		const args =
+			packageManager === "pnpm"
+				? ["dlx", "turbo", "prune", target, "--docker"]
+				: ["turbo", "prune", target, "--docker"];
+
+		try {
+			await execa(command, args, {
+				cwd: projectDir,
+			});
+		} catch (error) {
+			console.error(`turbo prune ${target} failed:`);
+			console.error(error);
+			expect.fail(
+				`turbo prune ${target} --docker failed: ${error instanceof Error ? error.message : String(error)}`,
+			);
+		}
 	}
 }
 
