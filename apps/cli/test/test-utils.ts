@@ -225,7 +225,11 @@ export async function validateConfigPackageSetup(
 	expect(configTsConfigBase.compilerOptions.strict).toBe(true);
 
 	// Check runtime-specific types
-	if (config.runtime === "node") {
+	if (
+		config.runtime === "node" ||
+		config.runtime === "workers" ||
+		config.runtime === "none"
+	) {
 		expect(configTsConfigBase.compilerOptions.types).toContain("node");
 	} else if (config.runtime === "bun") {
 		expect(configTsConfigBase.compilerOptions.types).toContain("bun");
@@ -372,7 +376,11 @@ export async function validateTurboPrune(result: TestResult): Promise<void> {
 
 	// Determine package manager command for running turbo
 	const command =
-		packageManager === "npm" ? "npx" : packageManager === "bun" ? "bunx" : "pnpm";
+		packageManager === "npm"
+			? "npx"
+			: packageManager === "bun"
+				? "bunx"
+				: "pnpm";
 
 	// Test turbo prune for both server and web targets
 	const targets = ["server", "web"];
