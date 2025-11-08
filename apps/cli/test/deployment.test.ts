@@ -482,13 +482,7 @@ describe("Deployment Configurations", () => {
 					webDeploy,
 					serverDeploy,
 					backend: "hono",
-					runtime:
-						webDeploy === "alchemy" ||
-						webDeploy === "wrangler" ||
-						serverDeploy === "alchemy" ||
-						serverDeploy === "wrangler"
-							? "workers"
-							: "bun",
+					runtime: "bun",
 					database: "sqlite",
 					orm: "drizzle",
 					auth: "none",
@@ -520,6 +514,10 @@ describe("Deployment Configurations", () => {
 
 				if (serverDeploy !== "none" && config.backend === "none") {
 					config.backend = "hono"; // Ensure backend for server deploy
+				}
+
+				if (serverDeploy !== "none" || config.backend === "none") {
+					config.runtime = "workers"; // Ensure runtime
 				}
 
 				const result = await runTRPCTest(config);
