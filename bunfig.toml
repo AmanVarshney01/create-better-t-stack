@@ -1,2 +1,6 @@
 [install]
 linker = "isolated"
+
+[test]
+coverage = true
+coverageReporter = "lcov"
