@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BiomeSettings">
+    <option name="applySafeFixesOnSave" value="true" />
+    <option name="enableLspFormat" value="true" />
+    <option name="formatOnSave" value="true" />
+    <option name="sortImportOnSave" value="true" />
+  </component>
+</project>
