@@ -61,7 +61,8 @@ export async function displayPostInstallInstructions(
 		? getLintingInstructions(runCmd)
 		: "";
 	const nativeInstructions =
-		frontend?.includes("native-nativewind") ||
+		frontend?.includes("native-bare") ||
+		frontend?.includes("native-uniwind") ||
 		frontend?.includes("native-unistyles")
 			? getNativeInstructions(isConvex, isBackendSelf, frontend || [])
 			: "";
@@ -103,7 +104,8 @@ export async function displayPostInstallInstructions(
 		].includes(f),
 	);
 	const hasNative =
-		frontend?.includes("native-nativewind") ||
+		frontend?.includes("native-bare") ||
+		frontend?.includes("native-uniwind") ||
 		frontend?.includes("native-unistyles");
 
 	const bunWebNativeWarning =

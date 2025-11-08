@@ -92,8 +92,13 @@ export async function getFrontendChoice(
 			message: "Choose native",
 			options: [
 				{
-					value: "native-nativewind" as const,
-					label: "NativeWind",
+					value: "native-bare" as const,
+					label: "Bare",
+					hint: "Bare Expo without styling library",
+				},
+				{
+					value: "native-uniwind" as const,
+					label: "UniWind",
 					hint: "Use Tailwind CSS for React Native",
 				},
 				{
@@ -102,7 +107,7 @@ export async function getFrontendChoice(
 					hint: "Consistent styling for React Native",
 				},
 			],
-			initialValue: "native-nativewind",
+			initialValue: "native-bare",
 		});
 
 		if (isCancel(nativeFramework)) return exitCancelled("Operation cancelled");

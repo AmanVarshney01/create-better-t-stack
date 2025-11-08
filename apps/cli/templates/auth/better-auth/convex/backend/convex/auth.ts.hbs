@@ -1,5 +1,5 @@
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
-{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 import { convex } from "@convex-dev/better-auth/plugins";
 import { expo } from "@better-auth/expo";
 {{else}}
@@ -17,7 +17,7 @@ import { v } from "convex/values";
 {{#if (or (includes frontend "tanstack-start") (includes frontend "next") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
 const siteUrl = process.env.SITE_URL!;
 {{/if}}
-{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 const nativeAppUrl = process.env.NATIVE_APP_URL || "mybettertapp://";
 {{/if}}
 
@@ -31,10 +31,10 @@ function createAuth(
     logger: {
       disabled: optionsOnly,
     },
-    {{#if (and (or (includes frontend "native-nativewind") (includes frontend "native-unistyles")) (or (includes frontend "tanstack-start") (includes frontend "next")))}}
+    {{#if (and (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")) (or (includes frontend "tanstack-start") (includes frontend "next")))}}
     baseURL: siteUrl,
     trustedOrigins: [siteUrl, nativeAppUrl],
-    {{else if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    {{else if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
     trustedOrigins: [nativeAppUrl],
     {{else if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
     baseURL: siteUrl,
@@ -48,7 +48,7 @@ function createAuth(
       requireEmailVerification: false,
     },
     plugins: [
-      {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+      {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
       expo(),
       {{/if}}
       {{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}

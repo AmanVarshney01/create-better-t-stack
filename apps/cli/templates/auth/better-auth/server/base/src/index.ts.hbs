@@ -16,7 +16,7 @@ export const auth = betterAuth<BetterAuthOptions>({
   }),
   trustedOrigins: [
     process.env.CORS_ORIGIN || "",
-    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
     "mybettertapp://", "exp://"
     {{/if}}
   ],
@@ -77,7 +77,7 @@ export const auth = betterAuth<BetterAuthOptions>({
   }),
   trustedOrigins: [
     process.env.CORS_ORIGIN || "",
-    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
     "mybettertapp://", "exp://"
     {{/if}}
   ],
@@ -138,7 +138,7 @@ export const auth = betterAuth<BetterAuthOptions>({
   }),
   trustedOrigins: [
     env.CORS_ORIGIN,
-    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
     "mybettertapp://", "exp://"
     {{/if}}
   ],
@@ -206,7 +206,7 @@ export const auth = betterAuth<BetterAuthOptions>({
   database: mongodbAdapter(client),
   trustedOrigins: [
     process.env.CORS_ORIGIN || "",
-    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
     "mybettertapp://", "exp://"
     {{/if}}
   ],
@@ -258,7 +258,7 @@ export const auth = betterAuth<BetterAuthOptions>({
   database: "", // Invalid configuration
   trustedOrigins: [
     process.env.CORS_ORIGIN || "",
-    {{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+    {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
     "mybettertapp://", "exp://"
     {{/if}}
   ],
