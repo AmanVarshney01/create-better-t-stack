@@ -11,7 +11,7 @@ describe("Config Package Feature", () => {
 		await cleanupSmokeDirectory();
 	});
 	afterAll(async () => {
-		// await cleanupSmokeDirectory();
+		await cleanupSmokeDirectory();
 	});
 
 	describe("Basic Stack Configurations", () => {
@@ -26,6 +26,25 @@ describe("Config Package Feature", () => {
 				api: "trpc",
 				frontend: ["tanstack-router"],
 				addons: ["turborepo"],
+				install: false,
+			});
+			await validateConfigPackageSetup(result);
+			await validateTurboPrune(result);
+		});
+
+		it("should validate hono + pnpm + turbo + wrangler stack", async () => {
+			const result = await runTRPCTest({
+				projectName: "hono-pnpm-turbo-wrangler",
+				backend: "hono",
+				runtime: "workers",
+				packageManager: "pnpm",
+				database: "sqlite",
+				orm: "drizzle",
+				api: "trpc",
+				frontend: ["tanstack-router"],
+				addons: ["turborepo"],
+				serverDeploy: "wrangler",
+				webDeploy: "wrangler",
 				install: false,
 			});
 			await validateConfigPackageSetup(result);
