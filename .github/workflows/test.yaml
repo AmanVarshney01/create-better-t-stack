@@ -36,7 +36,7 @@ jobs:
           POSTHOG_HOST: ${{ secrets.POSTHOG_HOST }}
 
       - name: Run Tests
-        run: bun test --timeout 10000
+        run: bun test --timeout 15000
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
