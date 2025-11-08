@@ -1,6 +1,7 @@
-import { describe, it } from "vitest";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import type { Backend, Frontend, Runtime } from "../src/types";
 import {
+	cleanupSmokeDirectory,
 	expectError,
 	expectSuccess,
 	runTRPCTest,
@@ -8,6 +9,14 @@ import {
 } from "./test-utils";
 
 describe("Backend and Runtime Combinations", () => {
+	beforeAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
+	afterAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
 	describe("Valid Backend-Runtime Combinations", () => {
 		const validCombinations = [
 			// Standard backend-runtime combinations
@@ -464,7 +473,7 @@ describe("Backend and Runtime Combinations", () => {
 
 			expectError(
 				result,
-				"Backend 'self' (fullstack) currently only supports Next.js frontend. Please use --frontend next. Support for Nuxt, SvelteKit, and TanStack Start will be added in a future update.",
+				"Backend 'self' (fullstack) currently only supports Next.js and TanStack Start frontends. Please use --frontend next or --frontend tanstack-start. Support for Nuxt and SvelteKit will be added in a future update.",
 			);
 		});
 

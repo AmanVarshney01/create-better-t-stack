@@ -1,6 +1,7 @@
-import { describe, it } from "vitest";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import type { Database, ORM } from "../src/types";
 import {
+	cleanupSmokeDirectory,
 	DATABASES,
 	expectError,
 	expectSuccess,
@@ -8,6 +9,14 @@ import {
 } from "./test-utils";
 
 describe("Database and ORM Combinations", () => {
+	beforeAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
+	afterAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
 	describe("Valid Database-ORM Combinations", () => {
 		const validCombinations: Array<{ database: Database; orm: ORM }> = [
 			// SQLite combinations
@@ -155,7 +164,7 @@ describe("Database and ORM Combinations", () => {
 			expectSuccess(result);
 		});
 
-		it("should fail with auth but no database (non-convex backend)", async () => {
+		it("should work with auth but no database (non-convex backend)", async () => {
 			const result = await runTRPCTest({
 				projectName: "auth-no-db",
 				database: "none",
@@ -173,7 +182,7 @@ describe("Database and ORM Combinations", () => {
 				expectError: true,
 			});
 
-			expectError(result, "Authentication requires a database");
+			expectSuccess(result);
 		});
 
 		it("should work with auth but no database (convex backend)", async () => {

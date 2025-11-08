@@ -1,6 +1,7 @@
-import { describe, it } from "vitest";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import type { Addons, Frontend } from "../src";
 import {
+	cleanupSmokeDirectory,
 	expectError,
 	expectSuccess,
 	runTRPCTest,
@@ -8,6 +9,14 @@ import {
 } from "./test-utils";
 
 describe("Addon Configurations", () => {
+	beforeAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
+	afterAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
 	describe("Universal Addons (no frontend restrictions)", () => {
 		const universalAddons = ["biome", "husky", "turborepo", "oxlint"];
 

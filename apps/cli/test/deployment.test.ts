@@ -1,5 +1,6 @@
-import { describe, it } from "vitest";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import {
+	cleanupSmokeDirectory,
 	expectError,
 	expectSuccess,
 	runTRPCTest,
@@ -9,6 +10,14 @@ import {
 } from "./test-utils";
 
 describe("Deployment Configurations", () => {
+	beforeAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
+	afterAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
 	describe("Web Deployment", () => {
 		describe("Valid Web Deploy Configurations", () => {
 			for (const webDeploy of WEB_DEPLOYS) {

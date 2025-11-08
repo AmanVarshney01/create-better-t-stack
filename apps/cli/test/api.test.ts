@@ -1,4 +1,4 @@
-import { describe, it } from "vitest";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import type {
 	API,
 	Backend,
@@ -10,6 +10,7 @@ import type {
 } from "../src/types";
 import {
 	API_TYPES,
+	cleanupSmokeDirectory,
 	expectError,
 	expectSuccess,
 	runTRPCTest,
@@ -17,6 +18,14 @@ import {
 } from "./test-utils";
 
 describe("API Configurations", () => {
+	beforeAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
+	afterAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
 	describe("tRPC API", () => {
 		it("should work with tRPC + React frontends", async () => {
 			const reactFrontends = [

@@ -1,5 +1,6 @@
-import { describe, it } from "vitest";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import {
+	cleanupSmokeDirectory,
 	expectError,
 	expectSuccess,
 	runTRPCTest,
@@ -7,6 +8,14 @@ import {
 } from "./test-utils";
 
 describe("Frontend Configurations", () => {
+	beforeAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
+	afterAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
 	describe("Single Frontend Options", () => {
 		const singleFrontends = [
 			"tanstack-router",
