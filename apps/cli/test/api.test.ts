@@ -49,7 +49,11 @@ describe("API Configurations", () => {
 		});
 
 		it("should work with tRPC + native frontends", async () => {
-			const nativeFrontends = ["native-bare", "native-uniwind", "native-unistyles"];
+			const nativeFrontends = [
+				"native-bare",
+				"native-uniwind",
+				"native-unistyles",
+			];
 
 			for (const frontend of nativeFrontends) {
 				const result = await runTRPCTest({

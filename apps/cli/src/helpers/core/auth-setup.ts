@@ -102,7 +102,10 @@ export async function setupAuth(config: ProjectConfig) {
 				const hasNativeBare = frontend.includes("native-bare");
 				const hasNativeUniwind = frontend.includes("native-uniwind");
 				const hasUnistyles = frontend.includes("native-unistyles");
-				if (nativeDirExists && (hasNativeBare || hasNativeUniwind || hasUnistyles)) {
+				if (
+					nativeDirExists &&
+					(hasNativeBare || hasNativeUniwind || hasUnistyles)
+				) {
 					await addPackageDependency({
 						dependencies: [
 							"better-auth",

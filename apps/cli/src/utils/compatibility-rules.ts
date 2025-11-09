@@ -24,7 +24,8 @@ export function splitFrontends(values: Frontend[] = []): {
 } {
 	const web = values.filter((f) => isWebFrontend(f));
 	const native = values.filter(
-		(f) => f === "native-bare" || f === "native-uniwind" || f === "native-unistyles",
+		(f) =>
+			f === "native-bare" || f === "native-uniwind" || f === "native-unistyles",
 	);
 	return { web, native };
 }
