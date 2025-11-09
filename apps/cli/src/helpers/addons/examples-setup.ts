@@ -56,7 +56,8 @@ export async function setupExamples(config: ProjectConfig) {
 			frontend.includes("tanstack-start");
 		const hasNext = frontend.includes("next");
 		const hasReactNative =
-			frontend.includes("native-nativewind") ||
+			frontend.includes("native-bare") ||
+			frontend.includes("native-uniwind") ||
 			frontend.includes("native-unistyles");
 
 		if (webClientDirExists) {

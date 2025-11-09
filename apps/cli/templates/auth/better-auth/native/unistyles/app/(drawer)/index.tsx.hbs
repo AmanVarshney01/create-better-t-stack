@@ -1,5 +1,4 @@
 import { authClient } from "@/lib/auth-client";
-import { useQuery } from "@tanstack/react-query";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 
@@ -7,9 +6,11 @@ import { Container } from "@/components/container";
 import { SignIn } from "@/components/sign-in";
 import { SignUp } from "@/components/sign-up";
 {{#if (eq api "orpc")}}
+import { useQuery } from "@tanstack/react-query";
 import { queryClient, orpc } from "@/utils/orpc";
 {{/if}}
 {{#if (eq api "trpc")}}
+import { useQuery } from "@tanstack/react-query";
 import { queryClient, trpc } from "@/utils/trpc";
 {{/if}}
 
@@ -43,13 +44,19 @@ export default function Home() {
                 style={styles.signOutButton}
                 onPress={() => {
                   authClient.signOut();
+                  {{#if (eq api "orpc")}}
                   queryClient.invalidateQueries();
+                  {{/if}}
+                  {{#if (eq api "trpc")}}
+                  queryClient.invalidateQueries();
+                  {{/if}}
                 }}
               >
                 <Text style={styles.signOutButtonText}>Sign Out</Text>
               </TouchableOpacity>
             </View>
           ) : null}
+          {{#unless (eq api "none")}}
           <View style={styles.apiStatusCard}>
             <Text style={styles.cardTitle}>API Status</Text>
             <View style={styles.apiStatusRow}>
@@ -80,6 +87,7 @@ export default function Home() {
               </View>
             )}
           </View>
+          {{/unless}}
           {!session?.user && (
             <>
               <SignIn />

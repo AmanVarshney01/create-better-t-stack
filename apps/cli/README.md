@@ -57,7 +57,7 @@ Options:
   --orm <type>                    ORM type (none, drizzle, prisma, mongoose)
   --auth                          Include authentication
   --no-auth                       Exclude authentication
-  --frontend <types...>           Frontend types (tanstack-router, react-router, tanstack-start, next, nuxt, svelte, solid, native-nativewind, native-unistyles, none)
+  --frontend <types...>           Frontend types (tanstack-router, react-router, tanstack-start, next, nuxt, svelte, solid, native-bare, native-uniwind, native-unistyles, none)
   --addons <types...>             Additional addons (pwa, tauri, starlight, biome, husky, turborepo, fumadocs, ultracite, oxlint, none)
   --examples <types...>           Examples to include (todo, ai, none)
   --git                           Initialize git repository
@@ -119,7 +119,7 @@ npx create-better-t-stack my-app --backend elysia --runtime node
 Create a project with multiple frontend options (one web + one native):
 
 ```bash
-npx create-better-t-stack my-app --frontend tanstack-router native-nativewind
+npx create-better-t-stack my-app --frontend tanstack-router native-bare
 ```
 
 Create a project with examples:

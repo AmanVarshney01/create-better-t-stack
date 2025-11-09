@@ -69,9 +69,10 @@ export async function setupFrontendTemplates(
 	const hasNuxtWeb = context.frontend.includes("nuxt");
 	const hasSvelteWeb = context.frontend.includes("svelte");
 	const hasSolidWeb = context.frontend.includes("solid");
-	const hasNativeWind = context.frontend.includes("native-nativewind");
+	const hasNativeBare = context.frontend.includes("native-bare");
+	const hasNativeUniwind = context.frontend.includes("native-uniwind");
 	const hasUnistyles = context.frontend.includes("native-unistyles");
-	const _hasNative = hasNativeWind || hasUnistyles;
+	const _hasNative = hasNativeBare || hasNativeUniwind || hasUnistyles;
 	const isConvex = context.backend === "convex";
 
 	if (hasReactWeb || hasNuxtWeb || hasSvelteWeb || hasSolidWeb) {
@@ -201,7 +202,7 @@ export async function setupFrontendTemplates(
 		}
 	}
 
-	if (hasNativeWind || hasUnistyles) {
+	if (hasNativeBare || hasNativeUniwind || hasUnistyles) {
 		const nativeAppDir = path.join(projectDir, "apps/native");
 		await fs.ensureDir(nativeAppDir);
 
@@ -220,8 +221,10 @@ export async function setupFrontendTemplates(
 		}
 
 		let nativeFrameworkPath = "";
-		if (hasNativeWind) {
-			nativeFrameworkPath = "nativewind";
+		if (hasNativeBare) {
+			nativeFrameworkPath = "bare";
+		} else if (hasNativeUniwind) {
+			nativeFrameworkPath = "uniwind";
 		} else if (hasUnistyles) {
 			nativeFrameworkPath = "unistyles";
 		}
@@ -394,9 +397,10 @@ export async function setupAuthTemplate(
 	const hasNuxtWeb = context.frontend.includes("nuxt");
 	const hasSvelteWeb = context.frontend.includes("svelte");
 	const hasSolidWeb = context.frontend.includes("solid");
-	const hasNativeWind = context.frontend.includes("native-nativewind");
+	const hasNativeBare = context.frontend.includes("native-bare");
+	const hasUniwind = context.frontend.includes("native-uniwind");
 	const hasUnistyles = context.frontend.includes("native-unistyles");
-	const hasNative = hasNativeWind || hasUnistyles;
+	const hasNative = hasNativeBare || hasUniwind || hasUnistyles;
 
 	const authProvider = context.auth;
 
@@ -452,10 +456,9 @@ export async function setupAuthTemplate(
 				);
 			}
 
-			const hasNativeWind = context.frontend.includes("native-nativewind");
-			const hasUnistyles = context.frontend.includes("native-unistyles");
 			let nativeFrameworkPath = "";
-			if (hasNativeWind) nativeFrameworkPath = "nativewind";
+			if (hasNativeBare) nativeFrameworkPath = "bare";
+			else if (hasUniwind) nativeFrameworkPath = "uniwind";
 			else if (hasUnistyles) nativeFrameworkPath = "unistyles";
 			if (nativeFrameworkPath) {
 				const convexClerkNativeFrameworkSrc = path.join(
@@ -541,7 +544,8 @@ export async function setupAuthTemplate(
 			}
 
 			let nativeFrameworkPath = "";
-			if (hasNativeWind) nativeFrameworkPath = "nativewind";
+			if (hasNativeBare) nativeFrameworkPath = "bare";
+			else if (hasUniwind) nativeFrameworkPath = "uniwind";
 			else if (hasUnistyles) nativeFrameworkPath = "unistyles";
 			if (nativeFrameworkPath) {
 				const convexBetterAuthNativeFrameworkSrc = path.join(
@@ -702,8 +706,10 @@ export async function setupAuthTemplate(
 		}
 
 		let nativeFrameworkAuthPath = "";
-		if (hasNativeWind) {
-			nativeFrameworkAuthPath = "nativewind";
+		if (hasNativeBare) {
+			nativeFrameworkAuthPath = "bare";
+		} else if (hasUniwind) {
+			nativeFrameworkAuthPath = "uniwind";
 		} else if (hasUnistyles) {
 			nativeFrameworkAuthPath = "unistyles";
 		}
@@ -1046,13 +1052,16 @@ export async function setupExamplesTemplate(
 		}
 
 		if (nativeAppDirExists) {
-			const hasNativeWind = context.frontend.includes("native-nativewind");
+			const hasNativeBare = context.frontend.includes("native-bare");
+			const hasUniwind = context.frontend.includes("native-uniwind");
 			const hasUnistyles = context.frontend.includes("native-unistyles");
 
-			if (hasNativeWind || hasUnistyles) {
+			if (hasNativeBare || hasUniwind || hasUnistyles) {
 				let nativeFramework = "";
-				if (hasNativeWind) {
-					nativeFramework = "nativewind";
+				if (hasNativeBare) {
+					nativeFramework = "bare";
+				} else if (hasUniwind) {
+					nativeFramework = "uniwind";
 				} else if (hasUnistyles) {
 					nativeFramework = "unistyles";
 				}
@@ -1077,9 +1086,10 @@ export async function setupExamplesTemplate(
 
 export async function handleExtras(projectDir: string, context: ProjectConfig) {
 	const extrasDir = path.join(PKG_ROOT, "templates/extras");
-	const hasNativeWind = context.frontend.includes("native-nativewind");
+	const hasNativeBare = context.frontend.includes("native-bare");
+	const hasUniwind = context.frontend.includes("native-uniwind");
 	const hasUnistyles = context.frontend.includes("native-unistyles");
-	const hasNative = hasNativeWind || hasUnistyles;
+	const hasNative = hasNativeBare || hasUniwind || hasUnistyles;
 
 	if (context.packageManager === "pnpm") {
 		const pnpmWorkspaceSrc = path.join(extrasDir, "pnpm-workspace.yaml");

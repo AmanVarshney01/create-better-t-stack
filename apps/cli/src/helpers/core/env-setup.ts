@@ -225,7 +225,8 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 	}
 
 	if (
-		frontend.includes("native-nativewind") ||
+		frontend.includes("native-bare") ||
+		frontend.includes("native-uniwind") ||
 		frontend.includes("native-unistyles")
 	) {
 		const nativeDir = path.join(projectDir, "apps/native");
@@ -277,7 +278,8 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
 				const envLocalPath = path.join(convexBackendDir, ".env.local");
 
 				const hasNative =
-					frontend.includes("native-nativewind") ||
+					frontend.includes("native-bare") ||
+					frontend.includes("native-uniwind") ||
 					frontend.includes("native-unistyles");
 				const hasWeb = hasWebFrontend;
 

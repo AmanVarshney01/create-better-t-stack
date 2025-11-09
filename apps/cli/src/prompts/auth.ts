@@ -18,7 +18,8 @@ export async function getAuthChoice(
 				"tanstack-router",
 				"tanstack-start",
 				"next",
-				"native-nativewind",
+				"native-bare",
+				"native-uniwind",
 				"native-unistyles",
 			].includes(f),
 		);
@@ -29,7 +30,8 @@ export async function getAuthChoice(
 				"tanstack-router",
 				"tanstack-start",
 				"next",
-				"native-nativewind",
+				"native-bare",
+				"native-uniwind",
 				"native-unistyles",
 			].includes(f),
 		);

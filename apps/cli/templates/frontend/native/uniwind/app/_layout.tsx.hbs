@@ -1,0 +1,131 @@
+{{#if (includes examples "ai")}}
+import "@/polyfills";
+{{/if}}
+
+import "@/global.css";
+
+{{#if (eq backend "convex")}}
+  {{#if (eq auth "better-auth")}}
+    import { ConvexReactClient } from "convex/react";
+    import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
+    import { authClient } from "@/lib/auth-client";
+  {{else}}
+    import { ConvexProvider, ConvexReactClient } from "convex/react";
+  {{/if}}
+
+  {{#if (eq auth "clerk")}}
+    import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+    import { ConvexProviderWithClerk } from "convex/react-clerk";
+    import { tokenCache } from "@clerk/clerk-expo/token-cache";
+  {{/if}}
+{{else}}
+  {{#unless (eq api "none")}}
+    import { QueryClientProvider } from "@tanstack/react-query";
+  {{/unless}}
+{{/if}}
+
+import { Stack } from "expo-router";
+import { HeroUINativeProvider } from "heroui-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { KeyboardProvider } from "react-native-keyboard-controller";
+import { AppThemeProvider } from "@/contexts/app-theme-context";
+
+{{#if (eq api "trpc")}}
+  import { queryClient } from "@/utils/trpc";
+{{/if}}
+{{#if (eq api "orpc")}}
+  import { queryClient } from "@/utils/orpc";
+{{/if}}
+
+export const unstable_settings = {
+  initialRouteName: "(drawer)",
+};
+
+{{#if (eq backend "convex")}}
+  const convexUrl = process.env.EXPO_PUBLIC_CONVEX_URL || "";
+  const convex = new ConvexReactClient(convexUrl, {
+    unsavedChangesWarning: false,
+  });
+{{/if}}
+
+function StackLayout() {
+  return (
+    <Stack screenOptions=\{{}}>
+      <Stack.Screen name="(drawer)" options=\{{ headerShown: false }} />
+      {{#if (eq auth "clerk")}}
+        <Stack.Screen name="(auth)" options=\{{ headerShown: false }} />
+      {{/if}}
+      <Stack.Screen name="modal" options=\{{ title: "Modal", presentation: "modal" }} />
+    </Stack>
+  );
+}
+
+export default function Layout() {
+  return (
+    {{#if (eq backend "convex")}}
+      {{#if (eq auth "clerk")}}
+        <ClerkProvider tokenCache={tokenCache} publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+          <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+            <GestureHandlerRootView style=\{{ flex: 1 }}>
+              <KeyboardProvider>
+                <AppThemeProvider>
+                  <HeroUINativeProvider>
+                    <StackLayout />
+                  </HeroUINativeProvider>
+                </AppThemeProvider>
+              </KeyboardProvider>
+            </GestureHandlerRootView>
+          </ConvexProviderWithClerk>
+        </ClerkProvider>
+      {{else if (eq auth "better-auth")}}
+        <ConvexBetterAuthProvider client={convex} authClient={authClient}>
+          <GestureHandlerRootView style=\{{ flex: 1 }}>
+            <KeyboardProvider>
+              <AppThemeProvider>
+                <HeroUINativeProvider>
+                  <StackLayout />
+                </HeroUINativeProvider>
+              </AppThemeProvider>
+            </KeyboardProvider>
+          </GestureHandlerRootView>
+        </ConvexBetterAuthProvider>
+      {{else}}
+        <ConvexProvider client={convex}>
+          <GestureHandlerRootView style=\{{ flex: 1 }}>
+            <KeyboardProvider>
+              <AppThemeProvider>
+                <HeroUINativeProvider>
+                  <StackLayout />
+                </HeroUINativeProvider>
+              </AppThemeProvider>
+            </KeyboardProvider>
+          </GestureHandlerRootView>
+        </ConvexProvider>
+      {{/if}}
+    {{else}}
+      {{#unless (eq api "none")}}
+        <QueryClientProvider client={queryClient}>
+          <GestureHandlerRootView style=\{{ flex: 1 }}>
+            <KeyboardProvider>
+              <AppThemeProvider>
+                <HeroUINativeProvider>
+                  <StackLayout />
+                </HeroUINativeProvider>
+              </AppThemeProvider>
+            </KeyboardProvider>
+          </GestureHandlerRootView>
+        </QueryClientProvider>
+      {{else}}
+        <GestureHandlerRootView style=\{{ flex: 1 }}>
+          <KeyboardProvider>
+            <AppThemeProvider>
+              <HeroUINativeProvider>
+                <StackLayout />
+              </HeroUINativeProvider>
+            </AppThemeProvider>
+          </KeyboardProvider>
+        </GestureHandlerRootView>
+      {{/unless}}
+    {{/if}}
+  );
+}

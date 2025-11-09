@@ -77,7 +77,8 @@ describe("Addon Configurations", () => {
 			const pwaIncompatibleFrontends = [
 				"nuxt",
 				"svelte",
-				"native-nativewind",
+				"native-bare",
+				"native-uniwind",
 				"native-unistyles",
 			];
 
@@ -154,7 +155,8 @@ describe("Addon Configurations", () => {
 			}
 
 			const tauriIncompatibleFrontends = [
-				"native-nativewind",
+				"native-bare",
+				"native-uniwind",
 				"native-unistyles",
 			];
 

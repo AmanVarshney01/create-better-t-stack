@@ -123,7 +123,7 @@ describe("Integration Tests - Real World Scenarios", () => {
 				orm: "drizzle",
 				auth: "better-auth",
 				api: "trpc",
-				frontend: ["native-nativewind"],
+				frontend: ["native-bare"],
 				addons: ["biome", "turborepo"],
 				examples: ["todo"],
 				dbSetup: "none",
@@ -383,7 +383,7 @@ describe("Integration Tests - Real World Scenarios", () => {
 				orm: "drizzle",
 				auth: "none",
 				api: "trpc",
-				frontend: ["native-nativewind"],
+				frontend: ["native-bare"],
 				addons: ["pwa"], // PWA not compatible with native-only
 				examples: ["none"],
 				dbSetup: "none",
@@ -450,7 +450,7 @@ describe("Integration Tests - Real World Scenarios", () => {
 				orm: "drizzle",
 				auth: "none",
 				api: "trpc",
-				frontend: ["native-nativewind"], // Only native, no web
+				frontend: ["native-bare"], // Only native, no web
 				addons: ["none"],
 				examples: ["none"],
 				dbSetup: "none",
@@ -473,7 +473,7 @@ describe("Integration Tests - Real World Scenarios", () => {
 				orm: "drizzle",
 				auth: "better-auth",
 				api: "trpc",
-				frontend: ["tanstack-router", "native-nativewind"],
+				frontend: ["tanstack-router", "native-bare"],
 				addons: ["biome", "husky", "turborepo"],
 				examples: ["todo", "ai"],
 				dbSetup: "none",

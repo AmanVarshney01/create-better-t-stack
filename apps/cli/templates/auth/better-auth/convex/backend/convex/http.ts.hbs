@@ -3,7 +3,7 @@ import { authComponent, createAuth } from "./auth";
 
 const http = httpRouter();
 
-{{#if (or (includes frontend "tanstack-start") (includes frontend "next") (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+{{#if (or (includes frontend "tanstack-start") (includes frontend "next") (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 authComponent.registerRoutes(http, createAuth);
 {{else}}
 authComponent.registerRoutes(http, createAuth, { cors: true });

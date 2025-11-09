@@ -18,7 +18,7 @@
     },
     "apps/cli": {
       "name": "create-better-t-stack",
-      "version": "3.2.23",
+      "version": "3.3.0",
       "bin": {
         "create-better-t-stack": "dist/cli.js",
       },
@@ -126,7 +126,7 @@
     },
     "packages/create-bts": {
       "name": "create-bts",
-      "version": "3.2.23",
+      "version": "3.3.0",
       "bin": {
         "create-bts": "cli.js",
       },
