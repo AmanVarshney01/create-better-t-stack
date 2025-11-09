@@ -240,13 +240,17 @@ export const frontendConfig = {
 		label: "Nuxt",
 		color: "hsl(var(--chart-5))",
 	},
-	"native-nativewind": {
-		label: "Expo NativeWind",
+	"native-bare": {
+		label: "Expo Bare",
 		color: "hsl(var(--chart-6))",
+	},
+	"native-uniwind": {
+		label: "Expo Uniwind",
+		color: "hsl(var(--chart-7))",
 	},
 	"native-unistyles": {
 		label: "Expo Unistyles",
-		color: "hsl(var(--chart-7))",
+		color: "hsl(var(--chart-1))",
 	},
 	svelte: {
 		label: "Svelte",
