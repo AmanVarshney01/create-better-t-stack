@@ -3,4 +3,4 @@ linker = "isolated"
 
 [test]
 coverage = true
-coverageReporter = "lcov"
+coverageReporter = ["text", "lcov"]
