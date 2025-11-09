@@ -12,7 +12,7 @@ const DrawerLayout = () => {
 
   return (
     <Drawer
-      screenOptions=\{{{
+      screenOptions=\{{
         headerStyle: {
           backgroundColor: theme.background,
         },
@@ -27,21 +27,21 @@ const DrawerLayout = () => {
           color: theme.text,
         },
         drawerInactiveTintColor: theme.text,
-      }}}
+      }}
     >
       <Drawer.Screen
         name="index"
-        options=\{{{
+        options=\{{
           headerTitle: "Home",
           drawerLabel: "Home",
           drawerIcon: ({ size, color }) => (
             <Ionicons name="home-outline" size={size} color={color} />
           ),
-        }}}
+        }}
       />
       <Drawer.Screen
         name="(tabs)"
-        options=\{{{
+        options=\{{
           headerTitle: "Tabs",
           drawerLabel: "Tabs",
           drawerIcon: ({ size, color }) => (
@@ -52,24 +52,24 @@ const DrawerLayout = () => {
               <HeaderButton />
             </Link>
           ),
-        }}}
+        }}
       />
       {{#if (includes examples "todo")}}
       <Drawer.Screen
         name="todos"
-        options=\{{{
+        options=\{{
           headerTitle: "Todos",
           drawerLabel: "Todos",
           drawerIcon: ({ size, color }) => (
             <Ionicons name="checkbox-outline" size={size} color={color} />
           ),
-        }}}
+        }}
       />
       {{/if}}
       {{#if (includes examples "ai")}}
       <Drawer.Screen
         name="ai"
-        options=\{{{
+        options=\{{
           headerTitle: "AI",
           drawerLabel: "AI",
           drawerIcon: ({ size, color }) => (
@@ -79,7 +79,7 @@ const DrawerLayout = () => {
               color={color}
             />
           ),
-        }}}
+        }}
       />
       {{/if}}
     </Drawer>

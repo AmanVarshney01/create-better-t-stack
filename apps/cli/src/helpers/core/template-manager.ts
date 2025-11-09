@@ -444,9 +444,6 @@ export async function setupAuthTemplate(
 				);
 			}
 
-			const hasNativeBare = context.frontend.includes("native-bare");
-			const hasUniwind = context.frontend.includes("native-uniwind");
-			const hasUnistyles = context.frontend.includes("native-unistyles");
 			let nativeFrameworkPath = "";
 			if (hasNativeBare) nativeFrameworkPath = "bare";
 			else if (hasUniwind) nativeFrameworkPath = "uniwind";
@@ -535,7 +532,8 @@ export async function setupAuthTemplate(
 			}
 
 			let nativeFrameworkPath = "";
-			if (hasUniwind) nativeFrameworkPath = "uniwind";
+			if (hasNativeBare) nativeFrameworkPath = "bare";
+			else if (hasUniwind) nativeFrameworkPath = "uniwind";
 			else if (hasUnistyles) nativeFrameworkPath = "unistyles";
 			if (nativeFrameworkPath) {
 				const convexBetterAuthNativeFrameworkSrc = path.join(
@@ -696,7 +694,9 @@ export async function setupAuthTemplate(
 		}
 
 		let nativeFrameworkAuthPath = "";
-		if (hasUniwind) {
+		if (hasNativeBare) {
+			nativeFrameworkAuthPath = "bare";
+		} else if (hasUniwind) {
 			nativeFrameworkAuthPath = "uniwind";
 		} else if (hasUnistyles) {
 			nativeFrameworkAuthPath = "unistyles";
