@@ -38,7 +38,12 @@ export function SignIn() {
         onSuccess: () => {
           setEmail("");
           setPassword("");
+          {{#if (eq api "orpc")}}
           queryClient.refetchQueries();
+          {{/if}}
+          {{#if (eq api "trpc")}}
+          queryClient.refetchQueries();
+          {{/if}}
         },
         onFinished: () => {
           setIsLoading(false);

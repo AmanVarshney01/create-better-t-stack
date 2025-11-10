@@ -72,7 +72,7 @@ describe("Deployment Configurations", () => {
 				projectName: "web-deploy-no-web-frontend-fail",
 				webDeploy: "wrangler",
 				serverDeploy: "none",
-				frontend: ["native-nativewind"], // Native frontend only
+				frontend: ["native-bare"], // Native frontend only
 				backend: "hono",
 				runtime: "bun",
 				database: "sqlite",
@@ -93,7 +93,7 @@ describe("Deployment Configurations", () => {
 				projectName: "web-deploy-mixed-frontends",
 				webDeploy: "wrangler",
 				serverDeploy: "none",
-				frontend: ["tanstack-router", "native-nativewind"],
+				frontend: ["tanstack-router", "native-bare"],
 				backend: "hono",
 				runtime: "bun",
 				database: "sqlite",
@@ -559,7 +559,7 @@ describe("Deployment Configurations", () => {
 				orm: "none",
 				auth: "none",
 				api: "none",
-				frontend: ["native-nativewind"], // Only native frontend
+				frontend: ["native-bare"], // Only native frontend
 				addons: ["none"],
 				examples: ["none"],
 				dbSetup: "none",

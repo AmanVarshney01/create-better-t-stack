@@ -107,9 +107,18 @@ export const TECH_OPTIONS: Record<
 	],
 	nativeFrontend: [
 		{
-			id: "native-nativewind",
-			name: "React Native + NativeWind",
-			description: "Expo with NativeWind (Tailwind)",
+			id: "native-bare",
+			name: "React Native + Bare",
+			description: "Expo with StyleSheet (no styling library)",
+			icon: `${ICON_BASE_URL}/expo.svg`,
+			color: "from-blue-400 to-blue-600",
+			className: "invert-0 dark:invert",
+			default: true,
+		},
+		{
+			id: "native-uniwind",
+			name: "React Native + Uniwind",
+			description: "Expo with Uniwind (Tailwind CSS for React Native)",
 			icon: `${ICON_BASE_URL}/expo.svg`,
 			color: "from-purple-400 to-purple-600",
 			className: "invert-0 dark:invert",
@@ -118,7 +127,7 @@ export const TECH_OPTIONS: Record<
 		{
 			id: "native-unistyles",
 			name: "React Native + Unistyles",
-			description: "Expo with Unistyles",
+			description: "Expo with Unistyles (type-safe styling)",
 			icon: `${ICON_BASE_URL}/expo.svg`,
 			color: "from-pink-400 to-pink-600",
 			className: "invert-0 dark:invert",
@@ -728,7 +737,7 @@ export const PRESET_TEMPLATES = [
 		stack: {
 			projectName: "my-better-t-app",
 			webFrontend: ["none"],
-			nativeFrontend: ["native-nativewind"],
+			nativeFrontend: ["native-bare"],
 			runtime: "bun",
 			backend: "hono",
 			database: "sqlite",
@@ -780,7 +789,7 @@ export const PRESET_TEMPLATES = [
 		stack: {
 			projectName: "my-better-t-app",
 			webFrontend: ["tanstack-router"],
-			nativeFrontend: ["native-nativewind"],
+			nativeFrontend: ["native-bare"],
 			runtime: "bun",
 			backend: "hono",
 			database: "sqlite",

@@ -23,7 +23,8 @@ describe("Frontend Configurations", () => {
 			"tanstack-start",
 			"next",
 			"nuxt",
-			"native-nativewind",
+			"native-bare",
+			"native-uniwind",
 			"native-unistyles",
 			"svelte",
 			"solid",
@@ -33,7 +34,8 @@ describe("Frontend Configurations", () => {
 			| "tanstack-start"
 			| "next"
 			| "nuxt"
-			| "native-nativewind"
+			| "native-bare"
+			| "native-uniwind"
 			| "native-unistyles"
 			| "svelte"
 			| "solid"
@@ -346,7 +348,7 @@ describe("Frontend Configurations", () => {
 		it("should fail with multiple native frontends", async () => {
 			const result = await runTRPCTest({
 				projectName: "multiple-native-fail",
-				frontend: ["native-nativewind", "native-unistyles"],
+				frontend: ["native-bare", "native-unistyles"],
 				backend: "hono",
 				runtime: "bun",
 				database: "sqlite",
@@ -367,7 +369,7 @@ describe("Frontend Configurations", () => {
 		it("should work with one web + one native frontend", async () => {
 			const result = await runTRPCTest({
 				projectName: "web-native-combo",
-				frontend: ["tanstack-router", "native-nativewind"],
+				frontend: ["tanstack-router", "native-bare"],
 				backend: "hono",
 				runtime: "bun",
 				database: "sqlite",
@@ -499,7 +501,7 @@ describe("Frontend Configurations", () => {
 		it("should fail with web deploy but no web frontend", async () => {
 			const result = await runTRPCTest({
 				projectName: "web-deploy-no-frontend-fail",
-				frontend: ["native-nativewind"],
+				frontend: ["native-bare"],
 				webDeploy: "wrangler",
 				backend: "hono",
 				runtime: "bun",

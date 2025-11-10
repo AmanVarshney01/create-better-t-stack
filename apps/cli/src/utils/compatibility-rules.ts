@@ -24,7 +24,8 @@ export function splitFrontends(values: Frontend[] = []): {
 } {
 	const web = values.filter((f) => isWebFrontend(f));
 	const native = values.filter(
-		(f) => f === "native-nativewind" || f === "native-unistyles",
+		(f) =>
+			f === "native-bare" || f === "native-uniwind" || f === "native-unistyles",
 	);
 	return { web, native };
 }
@@ -38,7 +39,7 @@ export function ensureSingleWebAndNative(frontends: Frontend[]) {
 	}
 	if (native.length > 1) {
 		exitWithError(
-			"Cannot select multiple native frameworks. Choose only one of: native-nativewind, native-unistyles",
+			"Cannot select multiple native frameworks. Choose only one of: native-bare, native-uniwind, native-unistyles",
 		);
 	}
 }
@@ -72,7 +73,7 @@ export function validateSelfBackendCompatibility(
 
 		if (native.length > 1) {
 			exitWithError(
-				"Cannot select multiple native frameworks. Choose only one of: native-nativewind, native-unistyles",
+				"Cannot select multiple native frameworks. Choose only one of: native-bare, native-uniwind, native-unistyles",
 			);
 		}
 	}

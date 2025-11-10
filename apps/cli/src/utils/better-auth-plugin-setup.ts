@@ -32,7 +32,8 @@ export async function setupBetterAuthPlugins(
 	}
 
 	if (
-		config.frontend?.includes("native-nativewind") ||
+		config.frontend?.includes("native-bare") ||
+		config.frontend?.includes("native-uniwind") ||
 		config.frontend?.includes("native-unistyles")
 	) {
 		pluginsToAdd.push("expo()");

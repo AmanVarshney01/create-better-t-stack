@@ -43,7 +43,8 @@ function generateReadmeContent(options: ProjectConfig) {
 	const isConvex = backend === "convex";
 	const hasReactRouter = frontend.includes("react-router");
 	const hasNative =
-		frontend.includes("native-nativewind") ||
+		frontend.includes("native-bare") ||
+		frontend.includes("native-uniwind") ||
 		frontend.includes("native-unistyles");
 	const hasSvelte = frontend.includes("svelte");
 
@@ -321,7 +322,8 @@ function generateProjectStructure(
 	}
 
 	const hasNative =
-		frontend.includes("native-nativewind") ||
+		frontend.includes("native-bare") ||
+		frontend.includes("native-uniwind") ||
 		frontend.includes("native-unistyles");
 	if (hasNative) {
 		if (isBackendSelf) {
@@ -402,7 +404,8 @@ function generateFeaturesList(
 	const hasTanstackRouter = frontend.includes("tanstack-router");
 	const hasReactRouter = frontend.includes("react-router");
 	const hasNative =
-		frontend.includes("native-nativewind") ||
+		frontend.includes("native-bare") ||
+		frontend.includes("native-uniwind") ||
 		frontend.includes("native-unistyles");
 	const hasNext = frontend.includes("next");
 	const hasTanstackStart = frontend.includes("tanstack-start");

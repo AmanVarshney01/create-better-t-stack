@@ -52,7 +52,8 @@ export async function setupAuth(config: ProjectConfig) {
 				const convexBackendDirExists = await fs.pathExists(convexBackendDir);
 
 				const hasNativeForBA =
-					frontend.includes("native-nativewind") ||
+					frontend.includes("native-bare") ||
+					frontend.includes("native-uniwind") ||
 					frontend.includes("native-unistyles");
 
 				if (convexBackendDirExists) {
@@ -98,9 +99,13 @@ export async function setupAuth(config: ProjectConfig) {
 					}
 				}
 
-				const hasNativeWind = frontend.includes("native-nativewind");
+				const hasNativeBare = frontend.includes("native-bare");
+				const hasNativeUniwind = frontend.includes("native-uniwind");
 				const hasUnistyles = frontend.includes("native-unistyles");
-				if (nativeDirExists && (hasNativeWind || hasUnistyles)) {
+				if (
+					nativeDirExists &&
+					(hasNativeBare || hasNativeUniwind || hasUnistyles)
+				) {
 					await addPackageDependency({
 						dependencies: [
 							"better-auth",
@@ -116,12 +121,13 @@ export async function setupAuth(config: ProjectConfig) {
 				}
 			}
 
-			const hasNativeWind = frontend.includes("native-nativewind");
+			const hasNativeBare = frontend.includes("native-bare");
+			const hasNativeUniwind = frontend.includes("native-uniwind");
 			const hasUnistyles = frontend.includes("native-unistyles");
 			if (
 				auth === "clerk" &&
 				nativeDirExists &&
-				(hasNativeWind || hasUnistyles)
+				(hasNativeBare || hasNativeUniwind || hasUnistyles)
 			) {
 				await addPackageDependency({
 					dependencies: ["@clerk/clerk-expo"],
@@ -163,7 +169,8 @@ export async function setupAuth(config: ProjectConfig) {
 		}
 
 		if (
-			(frontend.includes("native-nativewind") ||
+			(frontend.includes("native-bare") ||
+				frontend.includes("native-uniwind") ||
 				frontend.includes("native-unistyles")) &&
 			nativeDirExists
 		) {

@@ -139,7 +139,8 @@ describe("Authentication Configurations", () => {
 				"nuxt",
 				"svelte",
 				"solid",
-				"native-nativewind",
+				"native-bare",
+				"native-uniwind",
 				"native-unistyles",
 			];
 
@@ -225,7 +226,8 @@ describe("Authentication Configurations", () => {
 				"react-router",
 				"tanstack-start",
 				"next",
-				"native-nativewind",
+				"native-bare",
+				"native-uniwind",
 				"native-unistyles",
 			];
 
@@ -467,7 +469,7 @@ describe("Authentication Configurations", () => {
 				database: "sqlite",
 				orm: "drizzle",
 				api: "trpc",
-				frontend: ["tanstack-router", "native-nativewind"],
+				frontend: ["tanstack-router", "native-bare"],
 				addons: ["turborepo"],
 				examples: ["todo"],
 				dbSetup: "none",

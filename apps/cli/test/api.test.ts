@@ -58,7 +58,11 @@ describe("API Configurations", () => {
 		});
 
 		it("should work with tRPC + native frontends", async () => {
-			const nativeFrontends = ["native-nativewind", "native-unistyles"];
+			const nativeFrontends = [
+				"native-bare",
+				"native-uniwind",
+				"native-unistyles",
+			];
 
 			for (const frontend of nativeFrontends) {
 				const result = await runTRPCTest({
@@ -190,7 +194,8 @@ describe("API Configurations", () => {
 				"nuxt",
 				"svelte",
 				"solid",
-				"native-nativewind",
+				"native-bare",
+				"native-uniwind",
 				"native-unistyles",
 			];
 
@@ -574,7 +579,7 @@ describe("API Configurations", () => {
 			const result = await runTRPCTest({
 				projectName: "api-complex-frontend",
 				api: "trpc",
-				frontend: ["tanstack-router", "native-nativewind"], // Web + Native
+				frontend: ["tanstack-router", "native-bare"], // Web + Native
 				backend: "hono",
 				runtime: "bun",
 				database: "sqlite",

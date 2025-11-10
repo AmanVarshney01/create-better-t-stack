@@ -33,7 +33,7 @@ function getFrontendType(frontend: Frontend[]): {
 		"tanstack-start",
 		"next",
 	];
-	const nativeFrontends = ["native-nativewind", "native-unistyles"];
+	const nativeFrontends = ["native-bare", "native-uniwind", "native-unistyles"];
 
 	return {
 		hasReactWeb: frontend.some((f) => reactBasedFrontends.includes(f)),
@@ -149,7 +149,8 @@ function getQueryDependencies(frontend: Frontend[]) {
 		"tanstack-router",
 		"tanstack-start",
 		"next",
-		"native-nativewind",
+		"native-bare",
+		"native-uniwind",
 		"native-unistyles",
 	];
 
@@ -162,12 +163,14 @@ function getQueryDependencies(frontend: Frontend[]) {
 	if (needsReactQuery) {
 		const hasReactWeb = frontend.some(
 			(f) =>
-				f !== "native-nativewind" &&
+				f !== "native-bare" &&
+				f !== "native-uniwind" &&
 				f !== "native-unistyles" &&
 				reactBasedFrontends.includes(f),
 		);
 		const hasNative =
-			frontend.includes("native-nativewind") ||
+			frontend.includes("native-bare") ||
+			frontend.includes("native-uniwind") ||
 			frontend.includes("native-unistyles");
 
 		if (hasReactWeb) {

@@ -215,7 +215,8 @@ export function validateConvexConstraints(
 			"tanstack-router",
 			"tanstack-start",
 			"next",
-			"native-nativewind",
+			"native-bare",
+			"native-uniwind",
 			"native-unistyles",
 		];
 		const hasSupportedFrontend = config.frontend?.some((f) =>
