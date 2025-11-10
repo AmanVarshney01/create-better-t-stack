@@ -275,6 +275,16 @@ async function setupApiPackage(projectDir: string, context: ProjectConfig) {
 	}
 }
 
+async function setupConfigPackage(projectDir: string, context: ProjectConfig) {
+	const configPackageDir = path.join(projectDir, "packages/config");
+	await fs.ensureDir(configPackageDir);
+
+	const configBaseDir = path.join(PKG_ROOT, "templates/packages/config");
+	if (await fs.pathExists(configBaseDir)) {
+		await processAndCopyFiles("**/*", configBaseDir, configPackageDir, context);
+	}
+}
+
 async function setupDbPackage(projectDir: string, context: ProjectConfig) {
 	if (context.database === "none" || context.orm === "none") return;
 
@@ -345,6 +355,8 @@ export async function setupBackendFramework(
 	projectDir: string,
 	context: ProjectConfig,
 ) {
+	await setupConfigPackage(projectDir, context);
+
 	if (context.backend === "none") {
 		return;
 	}
