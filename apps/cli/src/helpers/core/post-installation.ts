@@ -8,8 +8,6 @@ import type {
 	Runtime,
 } from "../../types";
 import { getDockerStatus } from "../../utils/docker-utils";
-import { getPackageExecutionCommand } from "../../utils/package-runner";
-
 export async function displayPostInstallInstructions(
 	config: ProjectConfig & { depsInstalled: boolean },
 ) {
@@ -119,8 +117,6 @@ export async function displayPostInstallInstructions(
 	const hasSvelte = frontend?.includes("svelte");
 	const webPort = hasReactRouter || hasSvelte ? "5173" : "3001";
 
-	const tazeCommand = getPackageExecutionCommand(packageManager, "taze -r");
-
 	let output = `${pc.bold("Next steps")}\n${pc.cyan("1.")} ${cdCmd}\n`;
 	let stepCounter = 2;
 
@@ -218,10 +214,7 @@ export async function displayPostInstallInstructions(
 	if (noOrmWarning) output += `\n${noOrmWarning.trim()}\n`;
 	if (bunWebNativeWarning) output += `\n${bunWebNativeWarning.trim()}\n`;
 
-	output += `\n${pc.bold("Update all dependencies:\n")}${pc.cyan(
-		tazeCommand,
-	)}\n\n`;
-	output += `${pc.bold(
+	output += `\n${pc.bold(
 		"Like Better-T-Stack?",
 	)} Please consider giving us a star\n   on GitHub:\n`;
 	output += pc.cyan("https://github.com/AmanVarshney01/create-better-t-stack");
