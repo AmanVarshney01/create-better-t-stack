@@ -17,7 +17,6 @@ export async function setupWorkspaceDependencies(
 
 	const configPackageDir = path.join(projectDir, "packages/config");
 	const configDep: Record<string, string> = {};
-
 	if (await fs.pathExists(configPackageDir)) {
 		configDep[`@${projectName}/config`] = workspaceVersion;
 	}
