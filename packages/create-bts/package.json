@@ -1,6 +1,6 @@
 {
   "name": "create-bts",
-  "version": "3.3.0",
+  "version": "3.4.0",
   "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations (alias for create-better-t-stack)",
   "type": "module",
   "license": "MIT",
@@ -49,6 +49,6 @@
   },
   "homepage": "https://better-t-stack.dev/",
   "dependencies": {
-    "create-better-t-stack": "^3.3.0"
+    "create-better-t-stack": "^3.4.0"
   }
 }

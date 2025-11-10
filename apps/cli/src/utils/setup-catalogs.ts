@@ -25,7 +25,7 @@ export async function setupCatalogs(
 	const packagePaths = [
 		"apps/server",
 		"apps/web",
-		"apps/native",
+		// "apps/native", // having issues
 		"apps/fumadocs",
 		"apps/docs",
 		"packages/api",
