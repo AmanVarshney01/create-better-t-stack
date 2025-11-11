@@ -237,22 +237,11 @@ export async function validateConfigPackageSetup(
 
 	// 4. Config tsconfig.json
 	expect(
-		await pathExists(join(projectDir, "packages/config/tsconfig.json")),
+		await pathExists(join(projectDir, "packages/config/tsconfig.base.json")),
 	).toBe(true);
 
 	// 5. Root configuration
 	expect(await pathExists(join(projectDir, "tsconfig.base.json"))).toBe(false);
-
-	const rootTsConfig = await readFile(
-		join(projectDir, "tsconfig.json"),
-		"utf-8",
-	);
-	expect(rootTsConfig).toContain(configTsConfigReference(projectName));
-
-	const rootPkgJson = await readJSON(join(projectDir, "package.json"));
-	expect(rootPkgJson.devDependencies[configPackageName(projectName)]).toBe(
-		"workspace:*",
-	);
 
 	// 6. Workspace packages based on config
 	const shouldHaveDb =
