@@ -18,11 +18,9 @@ import { Vite } from "alchemy/cloudflare";
 {{/if}}
 {{#if (eq serverDeploy "alchemy")}}
 import { Worker } from "alchemy/cloudflare";
-{{#if (eq dbSetup "d1")}}
+{{/if}}
+{{#if (and (or (eq serverDeploy "alchemy") (and (eq webDeploy "alchemy") (eq backend "self"))) (eq dbSetup "d1"))}}
 import { D1Database } from "alchemy/cloudflare";
-{{/if}}
-{{/if}}
-{{#if (and (eq serverDeploy "alchemy") (eq dbSetup "d1"))}}
 import { Exec } from "alchemy/os";
 {{/if}}
 import { config } from "dotenv";
@@ -37,7 +35,7 @@ config({ path: "./.env" });
 
 const app = await alchemy("{{projectName}}");
 
-{{#if (and (eq serverDeploy "alchemy") (eq dbSetup "d1"))}}
+{{#if (and (or (eq serverDeploy "alchemy") (and (eq webDeploy "alchemy") (eq backend "self"))) (eq dbSetup "d1"))}}
 await Exec("db-generate", {
 	{{#if (and (eq webDeploy "alchemy") (eq serverDeploy "alchemy"))}}cwd: "packages/db",{{/if}}
 	command: "{{packageManager}} run db:generate",
@@ -61,6 +59,38 @@ export const web = await Nextjs("web", {
     NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL || "",
     {{else if (ne backend "self")}}
     NEXT_PUBLIC_SERVER_URL: process.env.NEXT_PUBLIC_SERVER_URL || "",
+    {{/if}}
+    {{#if (eq backend "self")}}
+    {{#if (eq dbSetup "d1")}}
+    DB: db,
+    {{else if (and (ne database "none") (ne dbSetup "none"))}}
+    DATABASE_URL: alchemy.secret(process.env.DATABASE_URL),
+    {{/if}}
+    CORS_ORIGIN: process.env.CORS_ORIGIN || "",
+    {{#if (eq auth "better-auth")}}
+    BETTER_AUTH_SECRET: alchemy.secret(process.env.BETTER_AUTH_SECRET),
+    BETTER_AUTH_URL: process.env.BETTER_AUTH_URL || "",
+    {{/if}}
+    {{#if (eq auth "clerk")}}
+    CLERK_SECRET_KEY: alchemy.secret(process.env.CLERK_SECRET_KEY),
+    {{/if}}
+    {{#if (includes examples "ai")}}
+    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret(process.env.GOOGLE_GENERATIVE_AI_API_KEY),
+    {{/if}}
+    {{#if (eq payments "polar")}}
+    POLAR_ACCESS_TOKEN: alchemy.secret(process.env.POLAR_ACCESS_TOKEN),
+    POLAR_SUCCESS_URL: process.env.POLAR_SUCCESS_URL || "",
+    {{/if}}
+    {{#if (eq dbSetup "turso")}}
+    DATABASE_AUTH_TOKEN: alchemy.secret(process.env.DATABASE_AUTH_TOKEN),
+    {{/if}}
+    {{#if (eq database "mysql")}}
+    {{#if (eq orm "drizzle")}}
+    DATABASE_HOST: process.env.DATABASE_HOST || "",
+    DATABASE_USERNAME: process.env.DATABASE_USERNAME || "",
+    DATABASE_PASSWORD: process.env.DATABASE_PASSWORD || "",
+    {{/if}}
+    {{/if}}
     {{/if}}
   },
   dev: {
@@ -103,6 +133,38 @@ export const web = await TanStackStart("web", {
     VITE_CONVEX_URL: process.env.VITE_CONVEX_URL || "",
     {{else if (ne backend "self")}}
     VITE_SERVER_URL: process.env.VITE_SERVER_URL || "",
+    {{/if}}
+    {{#if (eq backend "self")}}
+    {{#if (eq dbSetup "d1")}}
+    DB: db,
+    {{else if (and (ne database "none") (ne dbSetup "none"))}}
+    DATABASE_URL: alchemy.secret(process.env.DATABASE_URL),
+    {{/if}}
+    CORS_ORIGIN: process.env.CORS_ORIGIN || "",
+    {{#if (eq auth "better-auth")}}
+    BETTER_AUTH_SECRET: alchemy.secret(process.env.BETTER_AUTH_SECRET),
+    BETTER_AUTH_URL: process.env.BETTER_AUTH_URL || "",
+    {{/if}}
+    {{#if (eq auth "clerk")}}
+    CLERK_SECRET_KEY: alchemy.secret(process.env.CLERK_SECRET_KEY),
+    {{/if}}
+    {{#if (includes examples "ai")}}
+    GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret(process.env.GOOGLE_GENERATIVE_AI_API_KEY),
+    {{/if}}
+    {{#if (eq payments "polar")}}
+    POLAR_ACCESS_TOKEN: alchemy.secret(process.env.POLAR_ACCESS_TOKEN),
+    POLAR_SUCCESS_URL: process.env.POLAR_SUCCESS_URL || "",
+    {{/if}}
+    {{#if (eq dbSetup "turso")}}
+    DATABASE_AUTH_TOKEN: alchemy.secret(process.env.DATABASE_AUTH_TOKEN),
+    {{/if}}
+    {{#if (eq database "mysql")}}
+    {{#if (eq orm "drizzle")}}
+    DATABASE_HOST: process.env.DATABASE_HOST || "",
+    DATABASE_USERNAME: process.env.DATABASE_USERNAME || "",
+    DATABASE_PASSWORD: process.env.DATABASE_PASSWORD || "",
+    {{/if}}
+    {{/if}}
     {{/if}}
   },
   dev: {
