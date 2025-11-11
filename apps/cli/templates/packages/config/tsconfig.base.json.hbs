@@ -26,7 +26,7 @@
         "node"
       {{else}}
         "node"
-      {{/if}}{{#if (eq serverDeploy "alchemy")}},
+      {{/if}}{{#if (or (eq serverDeploy "alchemy") (eq webDeploy "alchemy"))}},
       "@cloudflare/workers-types"{{/if}}
     ]
   }

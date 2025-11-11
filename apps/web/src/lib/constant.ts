@@ -118,7 +118,8 @@ export const TECH_OPTIONS: Record<
 		{
 			id: "native-uniwind",
 			name: "Expo + Uniwind",
-			description: "Fastest Tailwind bindings for React Native with HeroUI Native",
+			description:
+				"Fastest Tailwind bindings for React Native with HeroUI Native",
 			icon: `${ICON_BASE_URL}/expo.svg`,
 			color: "from-purple-400 to-purple-600",
 			className: "invert-0 dark:invert",

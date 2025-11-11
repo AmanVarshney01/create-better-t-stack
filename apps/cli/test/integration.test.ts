@@ -22,8 +22,8 @@ describe("Integration Tests - Real World Scenarios", () => {
 				addons: ["biome", "turborepo"],
 				examples: ["todo", "ai"],
 				dbSetup: "none",
-				webDeploy: "wrangler",
-				serverDeploy: "wrangler",
+				webDeploy: "alchemy",
+				serverDeploy: "alchemy",
 				install: false,
 			});
 
@@ -106,7 +106,7 @@ describe("Integration Tests - Real World Scenarios", () => {
 				addons: ["biome", "turborepo"],
 				examples: ["todo", "ai"],
 				dbSetup: "none",
-				webDeploy: "wrangler",
+				webDeploy: "alchemy",
 				serverDeploy: "none",
 				install: false,
 			});
@@ -170,7 +170,7 @@ describe("Integration Tests - Real World Scenarios", () => {
 				examples: ["todo"],
 				dbSetup: "none",
 				webDeploy: "none",
-				serverDeploy: "wrangler",
+				serverDeploy: "alchemy",
 				install: false,
 			});
 
@@ -232,8 +232,8 @@ describe("Integration Tests - Real World Scenarios", () => {
 				addons: ["biome", "pwa"],
 				examples: ["todo"], // AI not compatible with Solid
 				dbSetup: "none",
-				webDeploy: "wrangler",
-				serverDeploy: "wrangler",
+				webDeploy: "alchemy",
+				serverDeploy: "alchemy",
 				install: false,
 			});
 
@@ -255,7 +255,7 @@ describe("Integration Tests - Real World Scenarios", () => {
 				addons: ["biome", "pwa"],
 				examples: ["none"],
 				dbSetup: "none",
-				webDeploy: "wrangler",
+				webDeploy: "alchemy",
 				serverDeploy: "none",
 				install: false,
 			});
@@ -322,7 +322,7 @@ describe("Integration Tests - Real World Scenarios", () => {
 				examples: ["none"],
 				dbSetup: "none",
 				webDeploy: "none",
-				serverDeploy: "wrangler",
+				serverDeploy: "alchemy",
 				expectError: true,
 			});
 
@@ -454,7 +454,7 @@ describe("Integration Tests - Real World Scenarios", () => {
 				addons: ["none"],
 				examples: ["none"],
 				dbSetup: "none",
-				webDeploy: "wrangler", // Requires web frontend
+				webDeploy: "alchemy", // Requires web frontend
 				serverDeploy: "none",
 				expectError: true,
 			});
@@ -477,8 +477,8 @@ describe("Integration Tests - Real World Scenarios", () => {
 				addons: ["biome", "husky", "turborepo"],
 				examples: ["todo", "ai"],
 				dbSetup: "none",
-				webDeploy: "wrangler",
-				serverDeploy: "wrangler",
+				webDeploy: "alchemy",
+				serverDeploy: "alchemy",
 				install: false,
 			});
 
@@ -573,7 +573,7 @@ describe("Integration Tests - Real World Scenarios", () => {
 
 				// Handle workers runtime requirements
 				if (runtime === "workers") {
-					config.serverDeploy = "wrangler";
+					config.serverDeploy = "alchemy";
 				}
 
 				const result = await runTRPCTest(config);

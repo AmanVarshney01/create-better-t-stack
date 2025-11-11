@@ -116,12 +116,12 @@ export const ProjectNameSchema = z
 export type ProjectName = z.infer<typeof ProjectNameSchema>;
 
 export const WebDeploySchema = z
-	.enum(["wrangler", "alchemy", "none"])
+	.enum(["alchemy", "none"])
 	.describe("Web deployment");
 export type WebDeploy = z.infer<typeof WebDeploySchema>;
 
 export const ServerDeploySchema = z
-	.enum(["wrangler", "alchemy", "none"])
+	.enum(["alchemy", "none"])
 	.describe("Server deployment");
 export type ServerDeploy = z.infer<typeof ServerDeploySchema>;
 

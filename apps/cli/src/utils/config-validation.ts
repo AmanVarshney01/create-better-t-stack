@@ -431,13 +431,13 @@ export function validateFullConfig(
 
 	if (config.runtime === "workers" && config.serverDeploy === "none") {
 		exitWithError(
-			"Cloudflare Workers runtime requires a server deployment. Please choose 'wrangler' or 'alchemy' for --server-deploy.",
+			"Cloudflare Workers runtime requires a server deployment. Please choose 'alchemy' for --server-deploy.",
 		);
 	}
 
 	if (
 		providedFlags.has("serverDeploy") &&
-		(config.serverDeploy === "alchemy" || config.serverDeploy === "wrangler") &&
+		config.serverDeploy === "alchemy" &&
 		config.runtime !== "workers"
 	) {
 		exitWithError(

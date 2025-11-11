@@ -472,7 +472,7 @@ describe("Frontend Configurations", () => {
 			const result = await runTRPCTest({
 				projectName: "web-deploy",
 				frontend: ["tanstack-router"],
-				webDeploy: "wrangler",
+				webDeploy: "alchemy",
 				backend: "hono",
 				runtime: "bun",
 				database: "sqlite",
@@ -493,7 +493,7 @@ describe("Frontend Configurations", () => {
 			const result = await runTRPCTest({
 				projectName: "web-deploy-no-frontend-fail",
 				frontend: ["native-bare"],
-				webDeploy: "wrangler",
+				webDeploy: "alchemy",
 				backend: "hono",
 				runtime: "bun",
 				database: "sqlite",

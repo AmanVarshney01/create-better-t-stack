@@ -356,8 +356,6 @@ ${hasWeb ? "# npx convex env set SITE_URL http://localhost:3001\n" : ""}
 			case "sqlite":
 				if (
 					config.runtime === "workers" ||
-					webDeploy === "wrangler" ||
-					serverDeploy === "wrangler" ||
 					webDeploy === "alchemy" ||
 					serverDeploy === "alchemy"
 				) {

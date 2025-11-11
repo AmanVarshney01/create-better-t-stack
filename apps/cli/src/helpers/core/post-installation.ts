@@ -77,12 +77,6 @@ export async function displayPostInstallInstructions(
 		config.payments === "polar" && config.auth === "better-auth"
 			? getPolarInstructions(backend)
 			: "";
-	const wranglerDeployInstructions = getWranglerDeployInstructions(
-		runCmd,
-		webDeploy,
-		serverDeploy,
-		backend,
-	);
 	const alchemyDeployInstructions = getAlchemyDeployInstructions(
 		runCmd,
 		webDeploy,
@@ -127,10 +121,7 @@ export async function displayPostInstallInstructions(
 	if (
 		database === "sqlite" &&
 		dbSetup === "none" &&
-		(serverDeploy === "wrangler" ||
-			serverDeploy === "alchemy" ||
-			webDeploy === "wrangler" ||
-			webDeploy === "alchemy")
+		(serverDeploy === "alchemy" || webDeploy === "alchemy")
 	) {
 		output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} db:local\n${pc.dim(
 			"   (starts local SQLite server for Workers compatibility)",
@@ -162,9 +153,6 @@ export async function displayPostInstallInstructions(
 				)} Complete D1 database setup first\n   (see Database commands below)\n`;
 			}
 			output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev\n`;
-			if (serverDeploy === "wrangler") {
-				output += `${pc.cyan(`${stepCounter++}.`)} cd apps/server && ${runCmd} cf-typegen\n`;
-			}
 		}
 	}
 
@@ -203,8 +191,6 @@ export async function displayPostInstallInstructions(
 	if (tauriInstructions) output += `\n${tauriInstructions.trim()}\n`;
 	if (lintingInstructions) output += `\n${lintingInstructions.trim()}\n`;
 	if (pwaInstructions) output += `\n${pwaInstructions.trim()}\n`;
-	if (wranglerDeployInstructions)
-		output += `\n${wranglerDeployInstructions.trim()}\n`;
 	if (alchemyDeployInstructions)
 		output += `\n${alchemyDeployInstructions.trim()}\n`;
 	if (starlightInstructions) output += `\n${starlightInstructions.trim()}\n`;
@@ -261,10 +247,10 @@ async function getDatabaseInstructions(
 	database: Database,
 	orm?: ORM,
 	runCmd?: string,
-	runtime?: Runtime,
+	_runtime?: Runtime,
 	dbSetup?: DatabaseSetup,
 	serverDeploy?: string,
-	backend?: string,
+	_backend?: string,
 ) {
 	const instructions: string[] = [];
 
@@ -275,49 +261,6 @@ async function getDatabaseInstructions(
 			instructions.push(dockerStatus.message);
 			instructions.push("");
 		}
-	}
-
-	if (serverDeploy === "wrangler" && dbSetup === "d1") {
-		if (orm === "prisma" && runtime === "workers") {
-			instructions.push(
-				`\n${pc.yellow(
-					"WARNING:",
-				)} Prisma + D1 on Workers with Wrangler has migration issues.\n   Consider using Alchemy deploy instead of Wrangler for D1 projects.\n`,
-			);
-		}
-		const packageManager = runCmd === "npm run" ? "npm" : runCmd || "npm";
-
-		instructions.push(
-			`${pc.cyan("1.")} Login to Cloudflare: ${pc.white(
-				`${packageManager} wrangler login`,
-			)}`,
-		);
-		instructions.push(
-			`${pc.cyan("2.")} Create D1 database: ${pc.white(
-				`${packageManager} wrangler d1 create your-database-name`,
-			)}`,
-		);
-		const wranglerPath = backend === "self" ? "apps/web" : "apps/server";
-		instructions.push(
-			`${pc.cyan(
-				"3.",
-			)} Update ${wranglerPath}/wrangler.jsonc with database_id and database_name`,
-		);
-		instructions.push(
-			`${pc.cyan("4.")} Generate migrations: ${pc.white(
-				`cd ${wranglerPath} && ${runCmd} db:generate`,
-			)}`,
-		);
-		instructions.push(
-			`${pc.cyan("5.")} Apply migrations locally: ${pc.white(
-				`${packageManager} wrangler d1 migrations apply YOUR_DB_NAME --local`,
-			)}`,
-		);
-		instructions.push(
-			`${pc.cyan("6.")} Apply migrations to production: ${pc.white(
-				`${packageManager} wrangler d1 migrations apply YOUR_DB_NAME`,
-			)}`,
-		);
 	}
 
 	if (dbSetup === "d1" && serverDeploy === "alchemy") {
@@ -440,29 +383,6 @@ function getBunWebNativeWarning() {
 	return `\n${pc.yellow(
 		"WARNING:",
 	)} 'bun' might cause issues with web + native apps in a monorepo.\n   Use 'pnpm' if problems arise.`;
-}
-
-function getWranglerDeployInstructions(
-	runCmd?: string,
-	webDeploy?: string,
-	serverDeploy?: string,
-	backend?: string,
-) {
-	const instructions: string[] = [];
-
-	if (webDeploy === "wrangler") {
-		const deployPath = backend === "self" ? "apps/web" : "apps/web";
-		instructions.push(
-			`${pc.bold("Deploy web to Cloudflare Workers:")}\n${pc.cyan("•")} Deploy: ${`cd ${deployPath} && ${runCmd} deploy`}`,
-		);
-	}
-	if (serverDeploy === "wrangler" && backend !== "self") {
-		instructions.push(
-			`${pc.bold("Deploy server to Cloudflare Workers:")}\n${pc.cyan("•")} Deploy: ${`cd apps/server && ${runCmd} deploy`}`,
-		);
-	}
-
-	return instructions.length ? `\n${instructions.join("\n")}` : "";
 }
 
 function getClerkInstructions() {
