@@ -12,10 +12,10 @@
     "@tanstack/react-form": "^1.23.5",
     "@tailwindcss/vite": "^4.1.8",
     "@tanstack/react-query": "^5.80.6",
-    "@tanstack/react-router": "^1.132.31",
+    "@tanstack/react-router": {{#if (eq auth "clerk")}}"1.134.4"{{else}}"^1.132.31"{{/if}},
     "@tanstack/react-router-with-query": "^1.130.17",
-    "@tanstack/react-start": "^1.132.31",
-    "@tanstack/router-plugin": "^1.132.31",
+    "@tanstack/react-start": {{#if (eq auth "clerk")}}"1.134.6"{{else}}"^1.132.31"{{/if}},
+    "@tanstack/router-plugin": {{#if (eq auth "clerk")}}"1.134.4"{{else}}"^1.132.31"{{/if}},
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.525.0",
@@ -30,7 +30,7 @@
     "zod": "^4.0.2"
   },
   "devDependencies": {
-    "@tanstack/react-router-devtools": "^1.132.31",
+    "@tanstack/react-router-devtools": {{#if (eq auth "clerk")}}"1.134.4"{{else}}"^1.132.31"{{/if}},
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.2.0",
     "@types/react": "~19.1.10",

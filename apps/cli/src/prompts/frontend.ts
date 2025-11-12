@@ -99,7 +99,7 @@ export async function getFrontendChoice(
 				{
 					value: "native-uniwind" as const,
 					label: "Uniwind",
-					hint: "Use Tailwind CSS for React Native",
+					hint: "Fastest Tailwind bindings for React Native with HeroUI Native",
 				},
 				{
 					value: "native-unistyles" as const,

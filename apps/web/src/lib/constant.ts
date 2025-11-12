@@ -108,7 +108,7 @@ export const TECH_OPTIONS: Record<
 	nativeFrontend: [
 		{
 			id: "native-bare",
-			name: "React Native + Bare",
+			name: "Expo + Bare",
 			description: "Expo with StyleSheet (no styling library)",
 			icon: `${ICON_BASE_URL}/expo.svg`,
 			color: "from-blue-400 to-blue-600",
@@ -117,8 +117,8 @@ export const TECH_OPTIONS: Record<
 		},
 		{
 			id: "native-uniwind",
-			name: "React Native + Uniwind",
-			description: "Expo with Uniwind (Tailwind CSS for React Native)",
+			name: "Expo + Uniwind",
+			description: "Fastest Tailwind bindings for React Native with HeroUI Native",
 			icon: `${ICON_BASE_URL}/expo.svg`,
 			color: "from-purple-400 to-purple-600",
 			className: "invert-0 dark:invert",
@@ -126,7 +126,7 @@ export const TECH_OPTIONS: Record<
 		},
 		{
 			id: "native-unistyles",
-			name: "React Native + Unistyles",
+			name: "Expo + Unistyles",
 			description: "Expo with Unistyles (type-safe styling)",
 			icon: `${ICON_BASE_URL}/expo.svg`,
 			color: "from-pink-400 to-pink-600",
