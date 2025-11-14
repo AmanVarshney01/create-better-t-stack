@@ -3,7 +3,7 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { Drawer } from "expo-router/drawer";
 import { useThemeColor } from "heroui-native";
-import { Pressable } from "react-native";
+import { Pressable, Text } from "react-native";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 function DrawerLayout() {
@@ -29,9 +29,11 @@ function DrawerLayout() {
         name="index"
         options=\{{
           headerTitle: "Home",
-          drawerLabel: "Home",
-          drawerIcon: ({ size, color }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+          drawerLabel: ({ color, focused }) => (
+            <Text style={{ color: focused ? color : themeColorForeground }}>Home</Text>
+          ),
+          drawerIcon: ({ size, color, focused }) => (
+            <Ionicons name="home-outline" size={size} color={focused ? color : themeColorForeground} />
           ),
         }}
       />
@@ -39,9 +41,11 @@ function DrawerLayout() {
         name="(tabs)"
         options=\{{
           headerTitle: "Tabs",
-          drawerLabel: "Tabs",
-          drawerIcon: ({ size, color }) => (
-            <MaterialIcons name="border-bottom" size={size} color={color} />
+          drawerLabel: ({ color, focused }) => (
+            <Text style={{ color: focused ? color : themeColorForeground }}>Tabs</Text>
+          ),
+          drawerIcon: ({ size, color, focused }) => (
+            <MaterialIcons name="border-bottom" size={size} color={focused ? color : themeColorForeground} />
           ),
           headerRight: () => (
             <Link href="/modal" asChild>
@@ -57,9 +61,11 @@ function DrawerLayout() {
         name="todos"
         options=\{{
           headerTitle: "Todos",
-          drawerLabel: "Todos",
-          drawerIcon: ({ size, color }) => (
-            <Ionicons name="checkbox-outline" size={size} color={color} />
+          drawerLabel: ({ color, focused }) => (
+            <Text style={{ color: focused ? color : themeColorForeground }}>Todos</Text>
+          ),
+          drawerIcon: ({ size, color, focused }) => (
+            <Ionicons name="checkbox-outline" size={size} color={focused ? color : themeColorForeground} />
           ),
         }}
       />
@@ -69,9 +75,11 @@ function DrawerLayout() {
         name="ai"
         options=\{{
           headerTitle: "AI",
-          drawerLabel: "AI",
-          drawerIcon: ({ size, color }) => (
-            <Ionicons name="chatbubble-ellipses-outline" size={size} color={color} />
+          drawerLabel: ({ color, focused }) => (
+            <Text style={{ color: focused ? color : themeColorForeground }}>AI</Text>
+          ),
+          drawerIcon: ({ size, color, focused }) => (
+            <Ionicons name="chatbubble-ellipses-outline" size={size} color={focused ? color : themeColorForeground} />
           ),
         }}
       />
