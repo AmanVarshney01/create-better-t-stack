@@ -1,10 +1,5 @@
 import { PrismaClient } from "../prisma/generated/client";
-{{#if (and (eq dbSetup "prisma-postgres") (eq orm "prisma"))}}
-import { withAccelerate } from "@prisma/extension-accelerate";
 
-const prisma = new PrismaClient().$extends(withAccelerate());
-{{else}}
 const prisma = new PrismaClient();
-{{/if}}
 
 export default prisma;

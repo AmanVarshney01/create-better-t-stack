@@ -4,8 +4,7 @@ import { consola } from "consola";
 import { execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
-import type { ORM, PackageManager, ProjectConfig } from "../../types";
-import { addPackageDependency } from "../../utils/add-package-deps";
+import type { PackageManager, ProjectConfig } from "../../types";
 import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
 import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
@@ -37,7 +36,6 @@ const AVAILABLE_REGIONS = [
 async function setupWithCreateDb(
 	serverDir: string,
 	packageManager: PackageManager,
-	orm: ORM,
 ) {
 	try {
 		log.info("Starting Prisma Postgres setup with create-db.");
@@ -73,13 +71,8 @@ async function setupWithCreateDb(
 			return null;
 		}
 
-		const databaseUrl =
-			orm === "drizzle"
-				? createDbResponse.directConnectionString
-				: createDbResponse.connectionString;
-
 		return {
-			databaseUrl,
+			databaseUrl: createDbResponse.connectionString,
 			claimUrl: createDbResponse.claimUrl,
 		};
 	} catch (error) {
@@ -113,7 +106,7 @@ async function initPrismaDatabase(
 
 		log.info(
 			pc.yellow(
-				"Please copy the Prisma Postgres URL from the output above.\nIt looks like: prisma+postgres://accelerate.prisma-data.net/?api_key=...",
+				"Please copy the Prisma Postgres URL.\nIt looks like: postgresql://user:password@host:5432/db?sslmode=require",
 			),
 		);
 
@@ -121,8 +114,8 @@ async function initPrismaDatabase(
 			message: "Paste your Prisma Postgres database URL:",
 			validate(value) {
 				if (!value) return "Please enter a database URL";
-				if (!value.startsWith("prisma+postgres://")) {
-					return "URL should start with prisma+postgres://";
+				if (!value.startsWith("postgresql://")) {
+					return "URL should start with postgresql://";
 				}
 			},
 		});
@@ -202,23 +195,6 @@ function displayManualSetupInstructions(target: "apps/web" | "apps/server") {
 DATABASE_URL="your_database_url"`);
 }
 
-async function addPrismaAccelerateExtension(projectDir: string) {
-	try {
-		const dbPackageDir = path.join(projectDir, "packages/db");
-		await addPackageDependency({
-			dependencies: ["@prisma/extension-accelerate"],
-			projectDir: dbPackageDir,
-		});
-
-		return true;
-	} catch (_error) {
-		log.warn(
-			pc.yellow("Could not add Prisma Accelerate extension automatically"),
-		);
-		return false;
-	}
-}
-
 export async function setupPrismaPostgres(
 	config: ProjectConfig,
 	cliInput?: { manualDb?: boolean },
@@ -292,7 +268,7 @@ export async function setupPrismaPostgres(
 		let prismaConfig: PrismaConfig | null = null;
 
 		if (setupMethod === "create-db") {
-			prismaConfig = await setupWithCreateDb(dbDir, packageManager, orm);
+			prismaConfig = await setupWithCreateDb(dbDir, packageManager);
 		} else {
 			prismaConfig = await initPrismaDatabase(dbDir, packageManager);
 		}
@@ -302,15 +278,10 @@ export async function setupPrismaPostgres(
 
 			if (orm === "prisma") {
 				await addDotenvImportToPrismaConfig(projectDir, backend);
-				await addPrismaAccelerateExtension(projectDir);
 			}
 
-			const connectionType =
-				orm === "drizzle" ? "direct connection" : "Prisma Accelerate";
 			log.success(
-				pc.green(
-					`Prisma Postgres database configured successfully with ${connectionType}!`,
-				),
+				pc.green("Prisma Postgres database configured successfully!"),
 			);
 
 			if (prismaConfig.claimUrl) {
