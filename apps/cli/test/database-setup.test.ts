@@ -1,5 +1,6 @@
-import { describe, it } from "vitest";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import {
+	cleanupSmokeDirectory,
 	DB_SETUPS,
 	expectError,
 	expectSuccess,
@@ -8,6 +9,14 @@ import {
 } from "./test-utils";
 
 describe("Database Setup Configurations", () => {
+	beforeAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
+	afterAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
 	describe("SQLite Database Setups", () => {
 		it("should work with Turso + SQLite", async () => {
 			const result = await runTRPCTest({

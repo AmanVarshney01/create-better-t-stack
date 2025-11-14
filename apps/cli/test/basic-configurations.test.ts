@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+	cleanupSmokeDirectory,
 	expectError,
 	expectSuccess,
 	PACKAGE_MANAGERS,
@@ -7,6 +8,14 @@ import {
 } from "./test-utils";
 
 describe("Basic Configurations", () => {
+	beforeAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
+	afterAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
 	describe("Default Configuration", () => {
 		it("should create project with --yes flag (default config)", async () => {
 			const result = await runTRPCTest({
