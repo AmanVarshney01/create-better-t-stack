@@ -32,9 +32,9 @@ describe("Config Package Feature", () => {
 			await validateTurboPrune(result);
 		});
 
-		it("should validate hono + pnpm + turbo + wrangler stack", async () => {
+		it("should validate hono + pnpm + turbo + alchemy stack", async () => {
 			const result = await runTRPCTest({
-				projectName: "hono-pnpm-turbo-wrangler",
+				projectName: "hono-pnpm-turbo-alchemy",
 				backend: "hono",
 				runtime: "workers",
 				packageManager: "pnpm",
@@ -43,8 +43,8 @@ describe("Config Package Feature", () => {
 				api: "trpc",
 				frontend: ["tanstack-router"],
 				addons: ["turborepo"],
-				serverDeploy: "wrangler",
-				webDeploy: "wrangler",
+				serverDeploy: "alchemy",
+				webDeploy: "alchemy",
 				install: false,
 			});
 			await validateConfigPackageSetup(result);

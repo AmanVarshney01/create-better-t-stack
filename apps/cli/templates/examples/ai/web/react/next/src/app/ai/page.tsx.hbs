@@ -3,7 +3,7 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Send } from "lucide-react";
-{{#if (or (eq webDeploy "wrangler") (eq webDeploy "alchemy"))}}
+{{#if (eq webDeploy "alchemy")}}
 import dynamic from "next/dynamic";
 {{else}}
 import { Response } from "@/components/response";
@@ -12,7 +12,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-{{#if (or (eq webDeploy "wrangler") (eq webDeploy "alchemy"))}}
+{{#if (eq webDeploy "alchemy")}}
 const Response = dynamic(
   () =>
     import("@/components/response").then((mod) => ({ default: mod.Response })),
