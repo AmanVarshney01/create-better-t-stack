@@ -1167,7 +1167,9 @@ export async function setupDeploymentTemplates(
 					context,
 				);
 
-				await addEnvDtsToPackages(projectDir, context, alchemyTemplateSrc);
+				if (!isBackendSelf) {
+					await addEnvDtsToPackages(projectDir, context, alchemyTemplateSrc);
+				}
 			}
 		} else {
 			if (context.webDeploy === "alchemy") {
@@ -1183,7 +1185,9 @@ export async function setupDeploymentTemplates(
 						context,
 					);
 
-					await addEnvDtsToPackages(projectDir, context, alchemyTemplateSrc);
+					if (!isBackendSelf) {
+						await addEnvDtsToPackages(projectDir, context, alchemyTemplateSrc);
+					}
 				}
 			}
 
