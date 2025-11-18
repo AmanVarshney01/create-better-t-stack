@@ -2,18 +2,14 @@
   "name": "@{{projectName}}/auth",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
       "default": "./src/index.ts"
     },
     "./*": {
-      "types": "./dist/*.d.ts",
       "default": "./src/*.ts"
     }
   },
   "type": "module",
-  "scripts": {
-    "build": "tsdown"
-  },
+  "scripts": {},
   "devDependencies": {},
   "peerDependencies": {
     "typescript": "^5"

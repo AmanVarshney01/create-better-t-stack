@@ -1,4 +1,5 @@
 import { PrismaClient } from "../prisma/generated/client";
+
 {{#if (eq dbSetup "planetscale")}}
 import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
 
@@ -7,15 +8,18 @@ const prisma = new PrismaClient({ adapter });
 {{else}}
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-const adapter = new PrismaMariaDb({
-host: process.env.DATABASE_HOST || "localhost",
-port: parseInt(process.env.DATABASE_PORT || "3306"),
-user: process.env.DATABASE_USERNAME || "",
-password: process.env.DATABASE_PASSWORD || "",
-database: process.env.DATABASE_NAME || "",
-connectionLimit: 5,
-});
+const databaseUrl: string = process.env.DATABASE_URL!;
 
+const url: URL = new URL(databaseUrl);
+const connectionConfig = {
+  host: url.hostname,
+  port: parseInt(url.port || "3306"),
+  user: url.username,
+  password: url.password,
+  database: url.pathname.slice(1),
+};
+
+const adapter = new PrismaMariaDb(connectionConfig);
 const prisma = new PrismaClient({ adapter });
 {{/if}}
 
