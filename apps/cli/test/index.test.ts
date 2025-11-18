@@ -1,14 +1,20 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { expectSuccess, runTRPCTest } from "./test-utils";
+import {
+	cleanupSmokeDirectory,
+	expectSuccess,
+	runTRPCTest,
+} from "./test-utils";
 
 describe("CLI Test Suite", () => {
 	beforeAll(async () => {
 		// Ensure CLI is built before running tests
 		console.log("Setting up CLI tests...");
+		await cleanupSmokeDirectory();
 	});
 
 	afterAll(async () => {
 		console.log("CLI tests completed.");
+		await cleanupSmokeDirectory();
 	});
 
 	describe("Smoke Tests", () => {

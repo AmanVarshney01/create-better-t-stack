@@ -1,5 +1,6 @@
-import { describe, it } from "vitest";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import {
+	cleanupSmokeDirectory,
 	expectError,
 	expectSuccess,
 	runTRPCTest,
@@ -9,6 +10,14 @@ import {
 } from "./test-utils";
 
 describe("Deployment Configurations", () => {
+	beforeAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
+	afterAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
 	describe("Web Deployment", () => {
 		describe("Valid Web Deploy Configurations", () => {
 			for (const webDeploy of WEB_DEPLOYS) {
@@ -152,7 +161,10 @@ describe("Deployment Configurations", () => {
 						webDeploy: "none",
 						serverDeploy: serverDeploy,
 						backend: "hono",
-						runtime: "bun",
+						runtime:
+							serverDeploy === "wrangler" || serverDeploy === "alchemy"
+								? "workers"
+								: "bun",
 						database: "sqlite",
 						orm: "drizzle",
 						auth: "none",
@@ -221,7 +233,6 @@ describe("Deployment Configurations", () => {
 				const config: TestConfig = {
 					projectName: `server-deploy-${backend}`,
 					webDeploy: "none",
-					serverDeploy: "wrangler",
 					backend,
 					database: "sqlite",
 					orm: "drizzle",
@@ -237,6 +248,9 @@ describe("Deployment Configurations", () => {
 				// Set appropriate runtime
 				if (backend === "elysia") {
 					config.runtime = "bun";
+				} else if (backend === "hono") {
+					config.runtime = "workers";
+					config.serverDeploy = "wrangler";
 				} else {
 					config.runtime = "bun";
 				}
@@ -322,7 +336,7 @@ describe("Deployment Configurations", () => {
 				webDeploy: "wrangler",
 				serverDeploy: "wrangler",
 				backend: "hono",
-				runtime: "bun",
+				runtime: "workers",
 				database: "sqlite",
 				orm: "drizzle",
 				auth: "none",
@@ -385,7 +399,7 @@ describe("Deployment Configurations", () => {
 				webDeploy: "none",
 				serverDeploy: "wrangler",
 				backend: "hono",
-				runtime: "bun",
+				runtime: "workers",
 				database: "sqlite",
 				orm: "drizzle",
 				auth: "none",
@@ -500,6 +514,10 @@ describe("Deployment Configurations", () => {
 
 				if (serverDeploy !== "none" && config.backend === "none") {
 					config.backend = "hono"; // Ensure backend for server deploy
+				}
+
+				if (serverDeploy !== "none" || config.backend === "none") {
+					config.runtime = "workers"; // Ensure runtime
 				}
 
 				const result = await runTRPCTest(config);

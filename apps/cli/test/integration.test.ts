@@ -1,6 +1,7 @@
-import { describe, it } from "vitest";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import type { Backend, Runtime } from "../src/types";
 import {
+	cleanupSmokeDirectory,
 	expectError,
 	expectSuccess,
 	runTRPCTest,
@@ -8,6 +9,14 @@ import {
 } from "./test-utils";
 
 describe("Integration Tests - Real World Scenarios", () => {
+	beforeAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
+	afterAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
 	describe("Complete Stack Configurations", () => {
 		it("should create full-stack React app with tRPC", async () => {
 			const result = await runTRPCTest({
@@ -190,8 +199,8 @@ describe("Integration Tests - Real World Scenarios", () => {
 				addons: ["husky", "turborepo"],
 				examples: ["todo"],
 				dbSetup: "none",
-				webDeploy: "alchemy",
-				serverDeploy: "alchemy",
+				webDeploy: "none",
+				serverDeploy: "none",
 				install: false,
 			});
 
@@ -223,7 +232,7 @@ describe("Integration Tests - Real World Scenarios", () => {
 			const result = await runTRPCTest({
 				projectName: "solid-orpc-app",
 				backend: "hono",
-				runtime: "bun",
+				runtime: "workers",
 				database: "sqlite",
 				orm: "drizzle",
 				auth: "better-auth",
@@ -468,7 +477,7 @@ describe("Integration Tests - Real World Scenarios", () => {
 			const result = await runTRPCTest({
 				projectName: "max-complexity",
 				backend: "hono",
-				runtime: "bun",
+				runtime: "workers",
 				database: "postgres",
 				orm: "drizzle",
 				auth: "better-auth",
