@@ -1,5 +1,32 @@
+{{#if (eq runtime "workers")}}
 import { PrismaClient } from "../prisma/generated/client";
+import { env } from "cloudflare:workers";
+{{#if (eq dbSetup "neon")}}
+import { PrismaNeon } from "@prisma/adapter-neon";
 
-const prisma = new PrismaClient();
+const adapter = new PrismaNeon({ connectionString: env.DATABASE_URL || "" });
+{{else}}
+import { PrismaPg } from "@prisma/adapter-pg";
+
+const adapter = new PrismaPg({ connectionString: env.DATABASE_URL || "" });
+{{/if}}
+const prisma = new PrismaClient({ adapter });
 
 export default prisma;
+{{else}}
+import { PrismaClient } from "../prisma/generated/client";
+{{#if (eq dbSetup "neon")}}
+import { PrismaNeon } from "@prisma/adapter-neon";
+import dotenv from "dotenv";
+
+dotenv.config();
+const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_URL || "" });
+{{else}}
+import { PrismaPg } from "@prisma/adapter-pg";
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL || "" });
+{{/if}}
+const prisma = new PrismaClient({ adapter });
+
+export default prisma;
+{{/if}}

@@ -8,22 +8,11 @@ generator client {
   {{#if (eq runtime "node")}}
   runtime = "nodejs"
   {{/if}}
-  {{#if (eq runtime "workers")}}
+  {{#if (or (eq runtime "workers") (and (eq backend "self") (eq webDeploy "alchemy")))}}
   runtime = "workerd"
-  {{#if (eq dbSetup "d1")}}
-  previewFeatures = ["driverAdapters"]
-  {{/if}}
-  {{/if}}
-  {{#if (eq dbSetup "turso")}}
-  previewFeatures = ["driverAdapters"]
   {{/if}}
 }
 
 datasource db {
   provider = "sqlite"
-  {{#if (eq dbSetup "turso")}}
-  url      = "file:./local.db"
-  {{else}}
-  url      = env("DATABASE_URL")
-  {{/if}}
 }

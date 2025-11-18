@@ -8,7 +8,7 @@ generator client {
   {{#if (eq runtime "node")}}
   runtime = "nodejs"
   {{/if}}
-  {{#if (eq runtime "workers")}}
+  {{#if (or (eq runtime "workers") (and (eq backend "self") (eq webDeploy "alchemy")))}}
   runtime = "workerd"
   {{/if}}
 }

@@ -1,28 +1,24 @@
 {{#if (eq dbSetup "d1")}}
-import { env } from "cloudflare:workers";
-import { PrismaD1 } from "@prisma/adapter-d1";
 import { PrismaClient } from "../prisma/generated/client";
+import { PrismaD1 } from "@prisma/adapter-d1";
+import { env } from "cloudflare:workers";
 
 const adapter = new PrismaD1(env.DB);
 const prisma = new PrismaClient({ adapter });
 
 export default prisma;
-{{else if (eq dbSetup "turso")}}
-import { PrismaLibSQL } from "@prisma/adapter-libsql";
+{{else}}
 import { PrismaClient } from "../prisma/generated/client";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
 
-const adapter = new PrismaLibSQL({
-	url: process.env.DATABASE_URL || "",
-	authToken: process.env.DATABASE_AUTH_TOKEN,
+const adapter = new PrismaLibSql({
+url: process.env.DATABASE_URL || "",
+{{#if (eq dbSetup "turso")}}
+authToken: process.env.DATABASE_AUTH_TOKEN,
+{{/if}}
 });
 
 const prisma = new PrismaClient({ adapter });
-
-export default prisma;
-{{else}}
-import { PrismaClient } from "../prisma/generated/client";
-
-const prisma = new PrismaClient();
 
 export default prisma;
 {{/if}}

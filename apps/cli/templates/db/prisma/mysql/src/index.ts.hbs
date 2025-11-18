@@ -1,12 +1,22 @@
 import { PrismaClient } from "../prisma/generated/client";
 {{#if (eq dbSetup "planetscale")}}
-import { PrismaPlanetScale } from '@prisma/adapter-planetscale'
+import { PrismaPlanetScale } from "@prisma/adapter-planetscale";
 
-const adapter = new PrismaPlanetScale({ url: process.env.DATABASE_URL })
-
-const prisma = new PrismaClient({adapter});
+const adapter = new PrismaPlanetScale({ url: process.env.DATABASE_URL || "" });
+const prisma = new PrismaClient({ adapter });
 {{else}}
-const prisma = new PrismaClient();
+import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+
+const adapter = new PrismaMariaDb({
+host: process.env.DATABASE_HOST || "localhost",
+port: parseInt(process.env.DATABASE_PORT || "3306"),
+user: process.env.DATABASE_USERNAME || "",
+password: process.env.DATABASE_PASSWORD || "",
+database: process.env.DATABASE_NAME || "",
+connectionLimit: 5,
+});
+
+const prisma = new PrismaClient({ adapter });
 {{/if}}
 
 export default prisma;

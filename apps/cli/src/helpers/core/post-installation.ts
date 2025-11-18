@@ -311,6 +311,9 @@ async function getDatabaseInstructions(
 			);
 		}
 		if (!(dbSetup === "d1" && serverDeploy === "alchemy")) {
+			instructions.push(
+				`${pc.cyan("•")} Generate Prisma Client: ${`${runCmd} db:generate`}`,
+			);
 			instructions.push(`${pc.cyan("•")} Apply schema: ${`${runCmd} db:push`}`);
 		}
 		if (!(dbSetup === "d1" && serverDeploy === "alchemy")) {
