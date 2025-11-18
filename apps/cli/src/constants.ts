@@ -53,6 +53,7 @@ export const dependencyVersionMap = {
 	"@planetscale/database": "^1.19.0",
 
 	"@libsql/client": "^0.14.0",
+	libsql: "^0.5.22",
 
 	"@neondatabase/serverless": "^1.0.1",
 	pg: "^8.14.1",
