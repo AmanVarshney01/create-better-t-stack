@@ -371,13 +371,6 @@ export const TECH_OPTIONS: Record<
 	],
 	webDeploy: [
 		{
-			id: "wrangler",
-			name: "Wrangler",
-			description: "Deploy to Cloudflare Workers using Wrangler",
-			icon: `${ICON_BASE_URL}/workers.svg`,
-			color: "from-orange-400 to-orange-600",
-		},
-		{
 			id: "alchemy",
 			name: "Alchemy",
 			description: "Deploy to Cloudflare Workers using Alchemy",
@@ -395,13 +388,6 @@ export const TECH_OPTIONS: Record<
 		},
 	],
 	serverDeploy: [
-		{
-			id: "wrangler",
-			name: "Wrangler",
-			description: "Deploy to Cloudflare Workers using Wrangler",
-			icon: `${ICON_BASE_URL}/workers.svg`,
-			color: "from-orange-400 to-orange-600",
-		},
 		{
 			id: "alchemy",
 			name: "Alchemy",
