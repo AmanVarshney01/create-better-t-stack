@@ -64,7 +64,11 @@ export async function setupDatabase(
 				} else if (database === "mysql") {
 					prismaDependencies.push("@prisma/adapter-mariadb");
 				} else if (database === "sqlite") {
-					prismaDependencies.push("@prisma/adapter-libsql");
+					if (dbSetup === "d1") {
+						prismaDependencies.push("@prisma/adapter-d1");
+					} else {
+						prismaDependencies.push("@prisma/adapter-libsql");
+					}
 				} else if (database === "postgres") {
 					if (dbSetup === "neon") {
 						prismaDependencies.push(

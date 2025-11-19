@@ -297,6 +297,14 @@ async function getDatabaseInstructions(
 		}
 	}
 
+	if (dbSetup === "turso" && orm === "prisma") {
+		instructions.push(
+			`${pc.yellow(
+				"NOTE:",
+			)} Follow Turso's Prisma guide for migrations via the Turso CLI:\n   https://docs.turso.tech/sdk/ts/orm/prisma`,
+		);
+	}
+
 	if (orm === "prisma") {
 		if (database === "mongodb" && dbSetup === "docker") {
 			instructions.push(
