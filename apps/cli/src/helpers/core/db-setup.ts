@@ -67,7 +67,12 @@ export async function setupDatabase(
 					prismaDependencies.push("@prisma/adapter-libsql");
 				} else if (database === "postgres") {
 					if (dbSetup === "neon") {
-						prismaDependencies.push("@prisma/adapter-neon");
+						prismaDependencies.push(
+							"@prisma/adapter-neon",
+							"@neondatabase/serverless",
+							"ws",
+						);
+						prismaDevDependencies.push("@types/ws");
 					} else {
 						prismaDependencies.push("@prisma/adapter-pg");
 						prismaDependencies.push("pg");

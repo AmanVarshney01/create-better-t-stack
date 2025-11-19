@@ -12,10 +12,10 @@ import { PrismaClient } from "../prisma/generated/client";
 import { PrismaLibSql } from "@prisma/adapter-libsql";
 
 const adapter = new PrismaLibSql({
-url: process.env.DATABASE_URL || "",
-{{#if (eq dbSetup "turso")}}
-authToken: process.env.DATABASE_AUTH_TOKEN,
-{{/if}}
+    url: process.env.DATABASE_URL || "",
+    {{#if (eq dbSetup "turso")}}
+    authToken: process.env.DATABASE_AUTH_TOKEN,
+    {{/if}}
 });
 
 const prisma = new PrismaClient({ adapter });

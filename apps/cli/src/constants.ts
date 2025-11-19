@@ -55,7 +55,7 @@ export const dependencyVersionMap = {
 	"@libsql/client": "^0.14.0",
 	libsql: "^0.5.22",
 
-	"@neondatabase/serverless": "^1.0.1",
+	"@neondatabase/serverless": "^1.0.2",
 	pg: "^8.14.1",
 	"@types/pg": "^8.11.11",
 	"@types/ws": "^8.18.1",

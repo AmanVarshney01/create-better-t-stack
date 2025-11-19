@@ -3,30 +3,48 @@ import { PrismaClient } from "../prisma/generated/client";
 import { env } from "cloudflare:workers";
 {{#if (eq dbSetup "neon")}}
 import { PrismaNeon } from "@prisma/adapter-neon";
+import { neonConfig } from "@neondatabase/serverless";
 
-const adapter = new PrismaNeon({ connectionString: env.DATABASE_URL || "" });
+neonConfig.poolQueryViaFetch = true;
+
+const prisma = new PrismaClient({
+  adapter: new PrismaNeon({
+    connectionString: env.DATABASE_URL || "",
+  }),
+});
+
 {{else}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
 const adapter = new PrismaPg({ connectionString: env.DATABASE_URL || "" });
-{{/if}}
 const prisma = new PrismaClient({ adapter });
+
+{{/if}}
 
 export default prisma;
 {{else}}
 import { PrismaClient } from "../prisma/generated/client";
 {{#if (eq dbSetup "neon")}}
 import { PrismaNeon } from "@prisma/adapter-neon";
-import dotenv from "dotenv";
+import { neonConfig } from "@neondatabase/serverless";
+import ws from "ws";
 
-dotenv.config();
-const adapter = new PrismaNeon({ connectionString: process.env.DATABASE_URL || "" });
+neonConfig.webSocketConstructor = ws;
+neonConfig.poolQueryViaFetch = true;
+
+const adapter = new PrismaNeon({
+    connectionString: process.env.DATABASE_URL || "",
+});
+
+const prisma = new PrismaClient({ adapter });
+
 {{else}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL || "" });
-{{/if}}
 const prisma = new PrismaClient({ adapter });
+
+{{/if}}
 
 export default prisma;
 {{/if}}
