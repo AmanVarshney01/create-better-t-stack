@@ -130,8 +130,14 @@ export const DirectoryConflictSchema = z
 	.describe("How to handle existing directory conflicts");
 export type DirectoryConflict = z.infer<typeof DirectoryConflictSchema>;
 
+export const TemplateSchema = z
+	.enum(["mern", "pern", "t3", "none"])
+	.describe("Predefined project template");
+export type Template = z.infer<typeof TemplateSchema>;
+
 export type CreateInput = {
 	projectName?: string;
+	template?: Template;
 	yes?: boolean;
 	yolo?: boolean;
 	verbose?: boolean;

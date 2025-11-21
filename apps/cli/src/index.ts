@@ -40,6 +40,8 @@ import {
 	RuntimeSchema,
 	type ServerDeploy,
 	ServerDeploySchema,
+	type Template,
+	TemplateSchema,
 	type WebDeploy,
 	WebDeploySchema,
 } from "./types";
@@ -60,6 +62,9 @@ export const router = os.router({
 			z.tuple([
 				ProjectNameSchema.optional(),
 				z.object({
+					template: TemplateSchema.optional().describe(
+						"Use a predefined template"
+					),
 					yes: z
 						.boolean()
 						.optional()
@@ -263,6 +268,7 @@ export type {
 	WebDeploy,
 	ServerDeploy,
 	DirectoryConflict,
+	Template,
 	CreateInput,
 	AddInput,
 	ProjectConfig,
