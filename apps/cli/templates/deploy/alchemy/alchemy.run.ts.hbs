@@ -21,7 +21,6 @@ import { Worker } from "alchemy/cloudflare";
 {{/if}}
 {{#if (and (or (eq serverDeploy "alchemy") (and (eq webDeploy "alchemy") (eq backend "self"))) (eq dbSetup "d1"))}}
 import { D1Database } from "alchemy/cloudflare";
-import { Exec } from "alchemy/os";
 {{/if}}
 import { config } from "dotenv";
 
@@ -36,11 +35,6 @@ config({ path: "./.env" });
 const app = await alchemy("{{projectName}}");
 
 {{#if (and (or (eq serverDeploy "alchemy") (and (eq webDeploy "alchemy") (eq backend "self"))) (eq dbSetup "d1"))}}
-await Exec("db-generate", {
-	{{#if (and (eq webDeploy "alchemy") (eq serverDeploy "alchemy"))}}cwd: "packages/db",{{/if}}
-	command: "{{packageManager}} run db:generate",
-});
-
 const db = await D1Database("database", {
 	{{#if (eq orm "prisma")}}
 	migrationsDir: "packages/db/prisma/migrations",

@@ -4,6 +4,7 @@ import { glob } from "tinyglobby";
 import { PKG_ROOT } from "../../constants";
 import type { ProjectConfig } from "../../types";
 import { processTemplate } from "../../utils/template-processor";
+import { setupEnvDtsImport } from "../deployment/alchemy/env-dts-setup";
 
 export async function processAndCopyFiles(
 	sourcePattern: string | string[],
@@ -1203,12 +1204,13 @@ export async function setupDeploymentTemplates(
 						serverAppDir,
 						context,
 					);
-					await processAndCopyFiles(
-						"env.d.ts.hbs",
-						alchemyTemplateSrc,
-						serverAppDir,
+					const envDtsPath = path.join(serverAppDir, "env.d.ts");
+					await processTemplate(
+						path.join(alchemyTemplateSrc, "env.d.ts.hbs"),
+						envDtsPath,
 						context,
 					);
+					await setupEnvDtsImport(envDtsPath, projectDir, context);
 
 					await addEnvDtsToPackages(projectDir, context, alchemyTemplateSrc);
 				}
@@ -1283,22 +1285,24 @@ async function addEnvDtsToPackages(
 	for (const packageName of packages) {
 		const packageDir = path.join(projectDir, packageName);
 		if (await fs.pathExists(packageDir)) {
-			await processAndCopyFiles(
-				"env.d.ts.hbs",
-				alchemyTemplateSrc,
-				packageDir,
+			const envDtsPath = path.join(packageDir, "env.d.ts");
+			await processTemplate(
+				path.join(alchemyTemplateSrc, "env.d.ts.hbs"),
+				envDtsPath,
 				context,
 			);
+			await setupEnvDtsImport(envDtsPath, projectDir, context);
 		}
 	}
 
 	const serverAppDir = path.join(projectDir, "apps/server");
 	if (await fs.pathExists(serverAppDir)) {
-		await processAndCopyFiles(
-			"env.d.ts.hbs",
-			alchemyTemplateSrc,
-			serverAppDir,
+		const envDtsPath = path.join(serverAppDir, "env.d.ts");
+		await processTemplate(
+			path.join(alchemyTemplateSrc, "env.d.ts.hbs"),
+			envDtsPath,
 			context,
 		);
+		await setupEnvDtsImport(envDtsPath, projectDir, context);
 	}
 }
