@@ -33,6 +33,10 @@ function validateYesFlagCombination(
 ) {
 	if (!options.yes) return;
 
+	if (options.template && options.template !== "none") {
+		return;
+	}
+
 	const coreStackFlagsProvided = Array.from(providedFlags).filter((flag) =>
 		CORE_STACK_FLAGS.has(flag),
 	);

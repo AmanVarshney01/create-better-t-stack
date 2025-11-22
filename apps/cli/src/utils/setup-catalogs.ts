@@ -10,7 +10,7 @@ type PackageInfo = {
 };
 
 type CatalogEntry = {
-	version: string;
+	versions: Set<string>;
 	packages: string[];
 };
 
@@ -25,7 +25,7 @@ export async function setupCatalogs(
 	const packagePaths = [
 		"apps/server",
 		"apps/web",
-		// "apps/native", // having issues
+		"apps/native",
 		"apps/fumadocs",
 		"apps/docs",
 		"packages/api",
@@ -89,10 +89,11 @@ function findDuplicateDependencies(
 
 			const existing = depCount.get(depName);
 			if (existing) {
+				existing.versions.add(version);
 				existing.packages.push(pkg.path);
 			} else {
 				depCount.set(depName, {
-					version,
+					versions: new Set([version]),
 					packages: [pkg.path],
 				});
 			}
@@ -101,8 +102,8 @@ function findDuplicateDependencies(
 
 	const catalog: Record<string, string> = {};
 	for (const [depName, info] of depCount.entries()) {
-		if (info.packages.length > 1) {
-			catalog[depName] = info.version;
+		if (info.packages.length > 1 && info.versions.size === 1) {
+			catalog[depName] = Array.from(info.versions)[0];
 		}
 	}
 
