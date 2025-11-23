@@ -63,7 +63,7 @@ export const router = os.router({
 				ProjectNameSchema.optional(),
 				z.object({
 					template: TemplateSchema.optional().describe(
-						"Use a predefined template"
+						"Use a predefined template",
 					),
 					yes: z
 						.boolean()
