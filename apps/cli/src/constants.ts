@@ -40,8 +40,8 @@ export function getDefaultConfig() {
 export const DEFAULT_CONFIG = getDefaultConfig();
 
 export const dependencyVersionMap = {
-	"better-auth": "^1.3.28",
-	"@better-auth/expo": "^1.3.28",
+	"better-auth": "^1.4.0",
+	"@better-auth/expo": "^1.4.0",
 
 	"@clerk/nextjs": "^6.31.5",
 	"@clerk/clerk-react": "^5.45.0",
@@ -53,8 +53,9 @@ export const dependencyVersionMap = {
 	"@planetscale/database": "^1.19.0",
 
 	"@libsql/client": "^0.14.0",
+	libsql: "^0.5.22",
 
-	"@neondatabase/serverless": "^1.0.1",
+	"@neondatabase/serverless": "^1.0.2",
 	pg: "^8.14.1",
 	"@types/pg": "^8.11.11",
 	"@types/ws": "^8.18.1",
@@ -62,13 +63,16 @@ export const dependencyVersionMap = {
 
 	mysql2: "^3.14.0",
 
-	"@prisma/client": "^6.15.0",
-	prisma: "^6.15.0",
-	"@prisma/adapter-d1": "^6.15.0",
-	"@prisma/extension-accelerate": "^2.0.2",
-	"@prisma/adapter-libsql": "^6.15.0",
-
-	"@prisma/adapter-planetscale": "^6.15.0",
+	"@prisma/client": "^7.0.0",
+	prisma: "^7.0.0",
+	"@prisma/adapter-d1": "^7.0.0",
+	"@prisma/adapter-neon": "^7.0.0",
+	"@prisma/adapter-mariadb": "^7.0.0",
+	"@prisma/adapter-libsql": "^7.0.0",
+	"@prisma/adapter-better-sqlite3": "^7.0.0",
+	"@prisma/adapter-pg": "^7.0.0",
+	"@prisma/adapter-planetscale": "^7.0.0",
+	"@prisma/adapter-ppg": "^7.0.0",
 
 	mongoose: "^8.14.0",
 
@@ -128,12 +132,12 @@ export const dependencyVersionMap = {
 
 	next: "15.5.4",
 
-	convex: "^1.27.0",
-	"@convex-dev/react-query": "^0.0.0-alpha.8",
-	"convex-svelte": "^0.0.11",
+	convex: "^1.29.3",
+	"@convex-dev/react-query": "^0.1.0",
+	"convex-svelte": "^0.0.12",
 	"convex-nuxt": "0.1.5",
 	"convex-vue": "^0.1.5",
-	"@convex-dev/better-auth": "^0.9.1",
+	"@convex-dev/better-auth": "^0.9.7",
 
 	"@tanstack/svelte-query": "^5.85.3",
 	"@tanstack/svelte-query-devtools": "^5.85.3",
@@ -158,7 +162,7 @@ export const dependencyVersionMap = {
 	alchemy: "^0.77.0",
 
 	dotenv: "^17.2.2",
-	tsdown: "^0.15.5",
+	tsdown: "^0.16.5",
 	zod: "^4.1.11",
 	srvx: "0.8.15",
 

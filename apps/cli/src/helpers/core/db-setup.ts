@@ -3,6 +3,7 @@ import { spinner } from "@clack/prompts";
 import consola from "consola";
 import fs from "fs-extra";
 import pc from "picocolors";
+import type { AvailableDependencies } from "../../constants";
 import type { ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { setupCloudflareD1 } from "../database-providers/d1-setup";
@@ -33,6 +34,8 @@ export async function setupDatabase(
 
 	const s = spinner();
 	const dbPackageDir = path.join(projectDir, "packages/db");
+	const webDir = path.join(projectDir, "apps/web");
+	const webDirExists = await fs.pathExists(webDir);
 
 	if (!(await fs.pathExists(dbPackageDir))) {
 		return;
@@ -40,44 +43,85 @@ export async function setupDatabase(
 
 	try {
 		if (orm === "prisma") {
-			if (database === "mysql" && dbSetup === "planetscale") {
+			if (database === "mongodb") {
 				await addPackageDependency({
-					dependencies: [
-						"@prisma/client",
-						"@prisma/adapter-planetscale",
-						"@planetscale/database",
-					],
-					devDependencies: ["prisma"],
-					projectDir: dbPackageDir,
-				});
-			} else if (database === "sqlite" && dbSetup === "turso") {
-				await addPackageDependency({
-					dependencies: ["@prisma/client", "@prisma/adapter-libsql"],
-					devDependencies: ["prisma"],
+					customDependencies: {
+						"@prisma/client": "6.19.0",
+					},
+					customDevDependencies: {
+						prisma: "6.19.0",
+					},
 					projectDir: dbPackageDir,
 				});
 			} else {
+				const prismaDependencies: AvailableDependencies[] = ["@prisma/client"];
+				const prismaDevDependencies: AvailableDependencies[] = ["prisma"];
+
+				if (database === "mysql" && dbSetup === "planetscale") {
+					prismaDependencies.push(
+						"@prisma/adapter-planetscale",
+						"@planetscale/database",
+					);
+				} else if (database === "mysql") {
+					prismaDependencies.push("@prisma/adapter-mariadb");
+				} else if (database === "sqlite") {
+					if (dbSetup === "d1") {
+						prismaDependencies.push("@prisma/adapter-d1");
+					} else {
+						prismaDependencies.push("@prisma/adapter-libsql");
+					}
+				} else if (database === "postgres") {
+					if (dbSetup === "neon") {
+						prismaDependencies.push(
+							"@prisma/adapter-neon",
+							"@neondatabase/serverless",
+							"ws",
+						);
+						prismaDevDependencies.push("@types/ws");
+					} else if (dbSetup === "prisma-postgres") {
+						prismaDependencies.push("@prisma/adapter-ppg");
+					} else {
+						prismaDependencies.push("@prisma/adapter-pg");
+						prismaDependencies.push("pg");
+						prismaDevDependencies.push("@types/pg");
+					}
+				}
+
 				await addPackageDependency({
-					dependencies: ["@prisma/client"],
-					devDependencies: ["prisma"],
+					dependencies: prismaDependencies,
+					devDependencies: prismaDevDependencies,
 					projectDir: dbPackageDir,
 				});
 			}
 
-			const webDir = path.join(projectDir, "apps/web");
 			if (await fs.pathExists(webDir)) {
-				await addPackageDependency({
-					dependencies: ["@prisma/client"],
-					projectDir: webDir,
-				});
+				if (database === "mongodb") {
+					await addPackageDependency({
+						customDependencies: {
+							"@prisma/client": "6.19.0",
+						},
+						projectDir: webDir,
+					});
+				} else {
+					await addPackageDependency({
+						dependencies: ["@prisma/client"],
+						projectDir: webDir,
+					});
+				}
 			}
 		} else if (orm === "drizzle") {
 			if (database === "sqlite") {
 				await addPackageDependency({
-					dependencies: ["drizzle-orm", "@libsql/client"],
+					dependencies: ["drizzle-orm", "@libsql/client", "libsql"],
 					devDependencies: ["drizzle-kit"],
 					projectDir: dbPackageDir,
 				});
+				if (webDirExists) {
+					await addPackageDependency({
+						dependencies: ["@libsql/client", "libsql"],
+						projectDir: webDir,
+					});
+				}
 			} else if (database === "postgres") {
 				if (dbSetup === "neon") {
 					await addPackageDependency({

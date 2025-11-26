@@ -16,13 +16,6 @@ export default defineConfig({
   // DOCS: https://orm.drizzle.team/docs/guides/d1-http-with-drizzle-kit
   dialect: "sqlite",
   driver: "d1-http",
-  {{#if (eq serverDeploy "wrangler")}}
-  dbCredentials: {
-    accountId: process.env.CLOUDFLARE_ACCOUNT_ID!,
-    databaseId: process.env.CLOUDFLARE_DATABASE_ID!,
-    token: process.env.CLOUDFLARE_D1_TOKEN!,
-  },
-  {{/if}}
   {{else}}
   dialect: "turso",
   dbCredentials: {

@@ -1,28 +1,28 @@
-{{#if (eq dbSetup "d1")}}
-import { env } from "cloudflare:workers";
-import { PrismaD1 } from "@prisma/adapter-d1";
 import { PrismaClient } from "../prisma/generated/client";
+
+{{#if (eq dbSetup "d1")}}
+import { PrismaD1 } from "@prisma/adapter-d1";
+import { env } from "cloudflare:workers";
 
 const adapter = new PrismaD1(env.DB);
 const prisma = new PrismaClient({ adapter });
 
 export default prisma;
-{{else if (eq dbSetup "turso")}}
-import { PrismaLibSQL } from "@prisma/adapter-libsql";
-import { PrismaClient } from "../prisma/generated/client";
+{{else}}
+import { PrismaLibSql } from "@prisma/adapter-libsql";
+{{#if (eq runtime "workers")}}
+import { env } from "cloudflare:workers";
+{{/if}}
 
-const adapter = new PrismaLibSQL({
-	url: process.env.DATABASE_URL || "",
-	authToken: process.env.DATABASE_AUTH_TOKEN,
+const adapter = new PrismaLibSql({
+url: {{#if (eq runtime "workers")}}env.DATABASE_URL || ""{{else}}process.env.DATABASE_URL || ""{{/if}},
+{{#if (eq dbSetup "turso")}}
+authToken: {{#if (eq runtime "workers")}}env.DATABASE_AUTH_TOKEN || ""{{else}}process.env.DATABASE_AUTH_TOKEN ||
+""{{/if}},
+{{/if}}
 });
 
 const prisma = new PrismaClient({ adapter });
-
-export default prisma;
-{{else}}
-import { PrismaClient } from "../prisma/generated/client";
-
-const prisma = new PrismaClient();
 
 export default prisma;
 {{/if}}

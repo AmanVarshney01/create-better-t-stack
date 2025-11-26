@@ -1,24 +1,20 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated"
-  moduleFormat = "esm"
+  provider      = "prisma-client"
+  output        = "../generated"
+  moduleFormat  = "esm"
   {{#if (eq runtime "bun")}}
-  runtime = "bun"
+  runtime       = "bun"
   {{/if}}
   {{#if (eq runtime "node")}}
-  runtime = "nodejs"
+  runtime       = "nodejs"
   {{/if}}
-  {{#if (eq runtime "workers")}}
-  runtime = "workerd"
-  {{/if}}
-  {{#if (eq dbSetup "planetscale")}}
-  previewFeatures = ["driverAdapters"]
+  {{#if (or (eq runtime "workers") (and (eq backend "self") (eq webDeploy "alchemy")))}}
+  runtime       = "workerd"
   {{/if}}
 }
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
   {{#if (eq dbSetup "planetscale")}}
   relationMode = "prisma"
   {{/if}}

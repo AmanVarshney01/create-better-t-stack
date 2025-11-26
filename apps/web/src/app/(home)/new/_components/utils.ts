@@ -792,44 +792,21 @@ export const analyzeStackCompatibility = (
 							"DB Setup set to 'D1' (Docker setup not compatible with Cloudflare Workers runtime)",
 					});
 				}
-			} else {
-				if (nextStack.serverDeploy === "wrangler") {
-					notes.runtime.notes.push(
-						"Wrangler deployment requires Cloudflare Workers runtime. Server deployment disabled.",
-					);
-					notes.serverDeploy.notes.push(
-						"Selected runtime is not compatible with Wrangler deployment. Server deployment disabled.",
-					);
-					notes.runtime.hasIssue = true;
-					notes.serverDeploy.hasIssue = true;
-					nextStack.serverDeploy = "none";
-					changed = true;
-					changes.push({
-						category: "runtime",
-						message:
-							"Server deployment set to 'None' (Wrangler requires Cloudflare Workers runtime)",
-					});
-				}
-			}
-
-			if (
-				nextStack.backend !== "hono" &&
-				nextStack.serverDeploy === "wrangler"
-			) {
-				notes.backend.notes.push(
-					"Wrangler deployment requires Hono backend (via Workers runtime). Server deployment disabled.",
+			} else if (nextStack.serverDeploy === "alchemy") {
+				notes.runtime.notes.push(
+					"Alchemy deployment requires Cloudflare Workers runtime. Server deployment disabled.",
 				);
 				notes.serverDeploy.notes.push(
-					"Selected backend is not compatible with Wrangler deployment. Server deployment disabled.",
+					"Selected runtime is not compatible with Alchemy deployment. Server deployment disabled.",
 				);
-				notes.backend.hasIssue = true;
+				notes.runtime.hasIssue = true;
 				notes.serverDeploy.hasIssue = true;
 				nextStack.serverDeploy = "none";
 				changed = true;
 				changes.push({
-					category: "backend",
+					category: "runtime",
 					message:
-						"Server deployment set to 'None' (Wrangler requires Hono backend via Workers runtime)",
+						"Server deployment set to 'None' (Alchemy requires Cloudflare Workers runtime)",
 				});
 			}
 
@@ -1095,19 +1072,19 @@ export const analyzeStackCompatibility = (
 
 	if (nextStack.runtime === "workers" && nextStack.serverDeploy === "none") {
 		notes.runtime.notes.push(
-			"Cloudflare Workers runtime requires a server deployment. Wrangler will be selected.",
+			"Cloudflare Workers runtime requires a server deployment. Alchemy will be selected.",
 		);
 		notes.serverDeploy.notes.push(
-			"Cloudflare Workers runtime requires a server deployment. Wrangler will be selected.",
+			"Cloudflare Workers runtime requires a server deployment. Alchemy will be selected.",
 		);
 		notes.runtime.hasIssue = true;
 		notes.serverDeploy.hasIssue = true;
-		nextStack.serverDeploy = "wrangler";
+		nextStack.serverDeploy = "alchemy";
 		changed = true;
 		changes.push({
 			category: "serverDeploy",
 			message:
-				"Server deployment set to 'Wrangler' (Cloudflare Workers runtime requires a server deployment)",
+				"Server deployment set to 'Alchemy' (Cloudflare Workers runtime requires a server deployment)",
 		});
 	}
 
@@ -1158,38 +1135,6 @@ export const analyzeStackCompatibility = (
 		changes.push({
 			category: "serverDeploy",
 			message: `Server deployment set to 'None' (${backendType.toLowerCase()} doesn't need server deployment)`,
-		});
-	}
-
-	if (
-		nextStack.serverDeploy === "wrangler" &&
-		(nextStack.runtime !== "workers" || nextStack.backend !== "hono")
-	) {
-		notes.serverDeploy.notes.push(
-			"Wrangler deployment requires Cloudflare Workers runtime and Hono backend. Server deployment disabled.",
-		);
-		notes.serverDeploy.notes.push(
-			"To use Wrangler: Set Runtime to 'Cloudflare Workers' and Backend to 'Hono', then re-enable Wrangler deployment.",
-		);
-		if (nextStack.runtime !== "workers") {
-			notes.runtime.notes.push(
-				"Selected runtime is not compatible with Wrangler deployment. Switch to 'Cloudflare Workers' to use Wrangler.",
-			);
-		}
-		if (nextStack.backend !== "hono") {
-			notes.backend.notes.push(
-				"Selected backend is not compatible with Wrangler deployment. Switch to 'Hono' to use Wrangler.",
-			);
-		}
-		notes.serverDeploy.hasIssue = true;
-		notes.runtime.hasIssue = true;
-		notes.backend.hasIssue = true;
-		nextStack.serverDeploy = "none";
-		changed = true;
-		changes.push({
-			category: "serverDeploy",
-			message:
-				"Server deployment disabled (Tip: Use Cloudflare Workers runtime + Hono backend to enable Wrangler)",
 		});
 	}
 
@@ -1689,23 +1634,23 @@ export const getDisabledReason = (
 		finalStack.runtime === "workers" &&
 		optionId === "none"
 	) {
-		return "Cloudflare Workers runtime requires a server deployment. Select Wrangler or Alchemy.";
+		return "Cloudflare Workers runtime requires a server deployment. Select Alchemy.";
 	}
 
 	if (
 		category === "serverDeploy" &&
-		(optionId === "alchemy" || optionId === "wrangler") &&
+		optionId === "alchemy" &&
 		finalStack.runtime !== "workers"
 	) {
-		return `${optionId === "alchemy" ? "Alchemy" : "Wrangler"} deployment requires Cloudflare Workers runtime. Select Workers runtime first.`;
+		return "Alchemy deployment requires Cloudflare Workers runtime. Select Workers runtime first.";
 	}
 
 	if (
 		category === "serverDeploy" &&
-		(optionId === "alchemy" || optionId === "wrangler") &&
+		optionId === "alchemy" &&
 		finalStack.backend !== "hono"
 	) {
-		return `${optionId === "alchemy" ? "Alchemy" : "Wrangler"} deployment requires Hono backend. Select Hono backend first.`;
+		return "Alchemy deployment requires Hono backend. Select Hono backend first.";
 	}
 
 	if (

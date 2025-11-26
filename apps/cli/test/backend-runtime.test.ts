@@ -79,7 +79,7 @@ describe("Backend and Runtime Combinations", () => {
 
 				// Set server deployment for workers runtime
 				if (runtime === "workers") {
-					config.serverDeploy = "wrangler";
+					config.serverDeploy = "alchemy";
 				}
 
 				const result = await runTRPCTest(config);
@@ -304,7 +304,7 @@ describe("Backend and Runtime Combinations", () => {
 				examples: ["none"],
 				dbSetup: "none",
 				webDeploy: "none",
-				serverDeploy: "wrangler", // Workers requires server deployment
+				serverDeploy: "alchemy", // Workers requires server deployment
 				install: false,
 			});
 

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, it } from "vitest";
+import { describe, it } from "vitest";
 import {
 	cleanupSmokeDirectory,
 	expectError,
@@ -70,7 +70,7 @@ describe("Deployment Configurations", () => {
 		it("should fail with web deploy but no web frontend", async () => {
 			const result = await runTRPCTest({
 				projectName: "web-deploy-no-web-frontend-fail",
-				webDeploy: "wrangler",
+				webDeploy: "alchemy",
 				serverDeploy: "none",
 				frontend: ["native-bare"], // Native frontend only
 				backend: "hono",
@@ -91,7 +91,7 @@ describe("Deployment Configurations", () => {
 		it("should work with web deploy + mixed web and native frontends", async () => {
 			const result = await runTRPCTest({
 				projectName: "web-deploy-mixed-frontends",
-				webDeploy: "wrangler",
+				webDeploy: "alchemy",
 				serverDeploy: "none",
 				frontend: ["tanstack-router", "native-bare"],
 				backend: "hono",
@@ -123,7 +123,7 @@ describe("Deployment Configurations", () => {
 			for (const frontend of webFrontends) {
 				const config: TestConfig = {
 					projectName: `web-deploy-${frontend}`,
-					webDeploy: "wrangler",
+					webDeploy: "alchemy",
 					serverDeploy: "none",
 					frontend: [frontend],
 					backend: "hono",
@@ -162,7 +162,7 @@ describe("Deployment Configurations", () => {
 						serverDeploy: serverDeploy,
 						backend: "hono",
 						runtime:
-							serverDeploy === "wrangler" || serverDeploy === "alchemy"
+							serverDeploy === "alchemy"
 								? "workers"
 								: "bun",
 						database: "sqlite",
@@ -206,7 +206,7 @@ describe("Deployment Configurations", () => {
 			const result = await runTRPCTest({
 				projectName: "server-deploy-no-backend-fail",
 				webDeploy: "none",
-				serverDeploy: "wrangler",
+				serverDeploy: "alchemy",
 				backend: "none",
 				runtime: "none",
 				database: "none",
@@ -233,6 +233,7 @@ describe("Deployment Configurations", () => {
 				const config: TestConfig = {
 					projectName: `server-deploy-${backend}`,
 					webDeploy: "none",
+					serverDeploy: "alchemy",
 					backend,
 					database: "sqlite",
 					orm: "drizzle",
@@ -250,7 +251,7 @@ describe("Deployment Configurations", () => {
 					config.runtime = "bun";
 				} else if (backend === "hono") {
 					config.runtime = "workers";
-					config.serverDeploy = "wrangler";
+					config.serverDeploy = "alchemy";
 				} else {
 					config.runtime = "bun";
 				}
@@ -264,7 +265,7 @@ describe("Deployment Configurations", () => {
 			const result = await runTRPCTest({
 				projectName: "server-deploy-convex-fail",
 				webDeploy: "none",
-				serverDeploy: "wrangler",
+				serverDeploy: "alchemy",
 				backend: "convex",
 				runtime: "none",
 				database: "none",
@@ -288,7 +289,7 @@ describe("Deployment Configurations", () => {
 				projectName: "workers-server-deploy",
 				webDeploy: "none",
 				runtime: "workers",
-				serverDeploy: "wrangler",
+				serverDeploy: "alchemy",
 				backend: "hono",
 				database: "sqlite",
 				orm: "drizzle",
@@ -333,8 +334,8 @@ describe("Deployment Configurations", () => {
 		it("should work with both web and server deploy", async () => {
 			const result = await runTRPCTest({
 				projectName: "web-server-deploy-combo",
-				webDeploy: "wrangler",
-				serverDeploy: "wrangler",
+				webDeploy: "alchemy",
+				serverDeploy: "alchemy",
 				backend: "hono",
 				runtime: "workers",
 				database: "sqlite",
@@ -354,7 +355,7 @@ describe("Deployment Configurations", () => {
 		it("should work with different deploy providers", async () => {
 			const result = await runTRPCTest({
 				projectName: "different-deploy-providers",
-				webDeploy: "wrangler",
+				webDeploy: "alchemy",
 				serverDeploy: "alchemy",
 				backend: "hono",
 				runtime: "workers",
@@ -375,7 +376,7 @@ describe("Deployment Configurations", () => {
 		it("should work with web deploy only", async () => {
 			const result = await runTRPCTest({
 				projectName: "web-deploy-only",
-				webDeploy: "wrangler",
+				webDeploy: "alchemy",
 				serverDeploy: "none",
 				backend: "hono",
 				runtime: "bun",
@@ -397,7 +398,7 @@ describe("Deployment Configurations", () => {
 			const result = await runTRPCTest({
 				projectName: "server-deploy-only",
 				webDeploy: "none",
-				serverDeploy: "wrangler",
+				serverDeploy: "alchemy",
 				backend: "hono",
 				runtime: "workers",
 				database: "sqlite",
@@ -419,7 +420,7 @@ describe("Deployment Configurations", () => {
 		it("should work with deployment + self backend", async () => {
 			const result = await runTRPCTest({
 				projectName: "deploy-self-backend",
-				webDeploy: "wrangler",
+				webDeploy: "alchemy",
 				serverDeploy: "none", // Self backend doesn't use server deployment
 				backend: "self",
 				runtime: "none",
@@ -440,8 +441,8 @@ describe("Deployment Configurations", () => {
 		it("should work with deployment + fullstack setup", async () => {
 			const result = await runTRPCTest({
 				projectName: "deploy-fullstack",
-				webDeploy: "wrangler",
-				serverDeploy: "wrangler",
+				webDeploy: "alchemy",
+				serverDeploy: "alchemy",
 				backend: "hono",
 				runtime: "workers",
 				database: "sqlite",
@@ -464,13 +465,8 @@ describe("Deployment Configurations", () => {
 			webDeploy: TestConfig["webDeploy"];
 			serverDeploy: TestConfig["serverDeploy"];
 		}> = [
-			{ webDeploy: "wrangler", serverDeploy: "wrangler" },
-			{ webDeploy: "wrangler", serverDeploy: "alchemy" },
-			{ webDeploy: "alchemy", serverDeploy: "wrangler" },
 			{ webDeploy: "alchemy", serverDeploy: "alchemy" },
-			{ webDeploy: "wrangler", serverDeploy: "none" },
 			{ webDeploy: "alchemy", serverDeploy: "none" },
-			{ webDeploy: "none", serverDeploy: "wrangler" },
 			{ webDeploy: "none", serverDeploy: "alchemy" },
 			{ webDeploy: "none", serverDeploy: "none" },
 		];
@@ -530,8 +526,8 @@ describe("Deployment Configurations", () => {
 		it("should handle deployment with complex configurations", async () => {
 			const result = await runTRPCTest({
 				projectName: "complex-deployment",
-				webDeploy: "wrangler",
-				serverDeploy: "wrangler",
+				webDeploy: "alchemy",
+				serverDeploy: "alchemy",
 				backend: "hono",
 				runtime: "workers",
 				database: "sqlite",
@@ -551,7 +547,7 @@ describe("Deployment Configurations", () => {
 			// This should fail because we have web deploy but only native frontend
 			const result = await runTRPCTest({
 				projectName: "deployment-constraints-fail",
-				webDeploy: "wrangler",
+				webDeploy: "alchemy",
 				serverDeploy: "none",
 				backend: "none", // No backend but we have server deploy
 				runtime: "none",

@@ -116,12 +116,12 @@ export const ProjectNameSchema = z
 export type ProjectName = z.infer<typeof ProjectNameSchema>;
 
 export const WebDeploySchema = z
-	.enum(["wrangler", "alchemy", "none"])
+	.enum(["alchemy", "none"])
 	.describe("Web deployment");
 export type WebDeploy = z.infer<typeof WebDeploySchema>;
 
 export const ServerDeploySchema = z
-	.enum(["wrangler", "alchemy", "none"])
+	.enum(["alchemy", "none"])
 	.describe("Server deployment");
 export type ServerDeploy = z.infer<typeof ServerDeploySchema>;
 
@@ -130,8 +130,14 @@ export const DirectoryConflictSchema = z
 	.describe("How to handle existing directory conflicts");
 export type DirectoryConflict = z.infer<typeof DirectoryConflictSchema>;
 
+export const TemplateSchema = z
+	.enum(["mern", "pern", "t3", "uniwind", "none"])
+	.describe("Predefined project template");
+export type Template = z.infer<typeof TemplateSchema>;
+
 export type CreateInput = {
 	projectName?: string;
+	template?: Template;
 	yes?: boolean;
 	yolo?: boolean;
 	verbose?: boolean;

@@ -1,10 +1,68 @@
+{{#if (eq runtime "workers")}}
 import { PrismaClient } from "../prisma/generated/client";
-{{#if (and (eq dbSetup "prisma-postgres") (eq orm "prisma"))}}
-import { withAccelerate } from "@prisma/extension-accelerate";
+import { env } from "cloudflare:workers";
+{{#if (eq dbSetup "neon")}}
+import { PrismaNeon } from "@prisma/adapter-neon";
+import { neonConfig } from "@neondatabase/serverless";
 
-const prisma = new PrismaClient().$extends(withAccelerate());
+neonConfig.poolQueryViaFetch = true;
+
+const prisma = new PrismaClient({
+  adapter: new PrismaNeon({
+    connectionString: env.DATABASE_URL || "",
+  }),
+});
+
+{{else if (eq dbSetup "prisma-postgres")}}
+import { PrismaPostgresAdapter } from "@prisma/adapter-ppg";
+
+const adapter = new PrismaPostgresAdapter({
+  connectionString: env.DATABASE_URL || "",
+});
+
+const prisma = new PrismaClient({ adapter });
+
 {{else}}
-const prisma = new PrismaClient();
+import { PrismaPg } from "@prisma/adapter-pg";
+
+const adapter = new PrismaPg({ connectionString: env.DATABASE_URL || "" });
+const prisma = new PrismaClient({ adapter });
+
 {{/if}}
 
 export default prisma;
+{{else}}
+import { PrismaClient } from "../prisma/generated/client";
+{{#if (eq dbSetup "neon")}}
+import { PrismaNeon } from "@prisma/adapter-neon";
+import { neonConfig } from "@neondatabase/serverless";
+import ws from "ws";
+
+neonConfig.webSocketConstructor = ws;
+neonConfig.poolQueryViaFetch = true;
+
+const adapter = new PrismaNeon({
+    connectionString: process.env.DATABASE_URL || "",
+});
+
+const prisma = new PrismaClient({ adapter });
+
+{{else if (eq dbSetup "prisma-postgres")}}
+import { PrismaPostgresAdapter } from "@prisma/adapter-ppg";
+
+const adapter = new PrismaPostgresAdapter({
+    connectionString: process.env.DATABASE_URL || "",
+});
+
+const prisma = new PrismaClient({ adapter });
+
+{{else}}
+import { PrismaPg } from "@prisma/adapter-pg";
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL || "" });
+const prisma = new PrismaClient({ adapter });
+
+{{/if}}
+
+export default prisma;
+{{/if}}

@@ -54,7 +54,7 @@ describe("Database Setup Configurations", () => {
 				addons: ["none"],
 				examples: ["none"],
 				webDeploy: "none",
-				serverDeploy: "wrangler",
+				serverDeploy: "alchemy",
 				manualDb: true,
 				install: false,
 			});
@@ -422,7 +422,7 @@ describe("Database Setup Configurations", () => {
 				addons: ["none"],
 				examples: ["none"],
 				webDeploy: "none",
-				serverDeploy: "wrangler",
+				serverDeploy: "alchemy",
 				install: false,
 			});
 
@@ -499,7 +499,7 @@ describe("Database Setup Configurations", () => {
 						config.database = "sqlite";
 						config.orm = "drizzle";
 						config.runtime = "workers";
-						config.serverDeploy = "wrangler";
+						config.serverDeploy = "alchemy";
 						break;
 					case "docker":
 						config.database = "postgres";

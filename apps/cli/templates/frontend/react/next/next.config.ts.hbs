@@ -1,4 +1,4 @@
-{{#if (or (eq webDeploy "alchemy") (eq webDeploy "wrangler"))}}
+{{#if (eq webDeploy "alchemy")}}
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 {{/if}}
 import type { NextConfig } from "next";
@@ -9,10 +9,13 @@ const nextConfig: NextConfig = {
 	{{#if (includes examples "ai")}}
     transpilePackages: ["shiki"],
     {{/if}}
+    {{#if (eq dbSetup "turso")}}
+    serverExternalPackages: ["libsql", "@libsql/client"],
+    {{/if}}
 };
 
 export default nextConfig;
 
-{{#if (or (eq webDeploy "alchemy") (eq webDeploy "wrangler"))}}
+{{#if (eq webDeploy "alchemy")}}
 initOpenNextCloudflareForDev();
 {{/if}}

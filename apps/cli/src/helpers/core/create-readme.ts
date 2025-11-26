@@ -540,7 +540,7 @@ function generateDatabaseSetup(
 	packageManagerRunCmd: string,
 	orm: ORM,
 	dbSetup: DatabaseSetup,
-	serverDeploy?: string,
+	_serverDeploy?: string,
 	backend?: string,
 ) {
 	if (database === "none") {
@@ -549,7 +549,7 @@ function generateDatabaseSetup(
 
 	const isBackendSelf = backend === "self";
 	const envPath = isBackendSelf ? "apps/web/.env" : "apps/server/.env";
-	const dbLocalPath = isBackendSelf ? "apps/web" : "apps/server";
+	const dbLocalPath = "packages/db";
 
 	let setup = "## Database Setup\n\n";
 
@@ -565,9 +565,7 @@ function generateDatabaseSetup(
 1. Start the local SQLite database:
 ${
 	dbSetup === "d1"
-		? serverDeploy === "alchemy"
-			? "D1 local development and migrations are handled automatically by Alchemy during dev and deploy."
-			: "Local development for a Cloudflare D1 database will already be running as part of the `wrangler dev` command."
+		? "D1 local development and migrations are handled automatically by Alchemy during dev and deploy."
 		: `\`\`\`bash
 cd ${dbLocalPath} && ${packageManagerRunCmd} db:local
 \`\`\`
@@ -679,9 +677,8 @@ function generateScriptsList(
 - \`${packageManagerRunCmd} db:studio\`: Open database studio UI`;
 
 		if (database === "sqlite" && orm === "drizzle") {
-			const dbLocalPath = isBackendSelf ? "apps/web" : "apps/server";
 			scripts += `
-- \`cd ${dbLocalPath} && ${packageManagerRunCmd} db:local\`: Start the local SQLite database`;
+- \`cd packages/db && ${packageManagerRunCmd} db:local\`: Start the local SQLite database`;
 		}
 	}
 
@@ -761,19 +758,6 @@ function generateDeploymentCommands(
 				`- Dev: ${packageManagerRunCmd} dev`,
 				`- Deploy: ${packageManagerRunCmd} deploy`,
 				`- Destroy: ${packageManagerRunCmd} destroy`,
-			);
-		}
-	}
-
-	if (webDeploy === "wrangler" || serverDeploy === "wrangler") {
-		lines.push("\n## Deployment (Cloudflare Wrangler)");
-		if (webDeploy === "wrangler") {
-			lines.push(`- Web deploy: cd apps/web && ${packageManagerRunCmd} deploy`);
-		}
-		if (serverDeploy === "wrangler") {
-			lines.push(
-				`- Server dev: cd apps/server && ${packageManagerRunCmd} dev`,
-				`- Server deploy: cd apps/server && ${packageManagerRunCmd} deploy`,
 			);
 		}
 	}

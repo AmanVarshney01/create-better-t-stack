@@ -7,6 +7,11 @@ export async function setupBackendDependencies(config: ProjectConfig) {
 	const { backend, runtime, api, auth, examples, projectDir } = config;
 
 	if (backend === "convex") {
+		const convexBackendDir = path.join(projectDir, "packages/backend");
+		await addPackageDependency({
+			dependencies: ["convex"],
+			projectDir: convexBackendDir,
+		});
 		return;
 	}
 

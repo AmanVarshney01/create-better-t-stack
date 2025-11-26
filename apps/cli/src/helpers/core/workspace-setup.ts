@@ -13,7 +13,7 @@ export async function setupWorkspaceDependencies(
 		options.packageManager === "npm" ? "*" : "workspace:*";
 
 	const commonDeps: AvailableDependencies[] = ["dotenv", "zod"];
-	const commonDevDeps: AvailableDependencies[] = ["tsdown"];
+	const commonDevDeps: AvailableDependencies[] = [];
 
 	const configPackageDir = path.join(projectDir, "packages/config");
 	const configDep: Record<string, string> = {};
@@ -81,7 +81,7 @@ export async function setupWorkspaceDependencies(
 
 		await addPackageDependency({
 			dependencies: commonDeps,
-			devDependencies: commonDevDeps,
+			devDependencies: [...commonDevDeps, "tsdown"],
 			customDependencies: serverDeps,
 			customDevDependencies: configDep,
 			projectDir: serverPackageDir,

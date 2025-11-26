@@ -59,9 +59,10 @@ export async function displayPostInstallInstructions(
 		? getLintingInstructions(runCmd)
 		: "";
 	const nativeInstructions =
-		frontend?.includes("native-bare") ||
+		(frontend?.includes("native-bare") ||
 		frontend?.includes("native-uniwind") ||
-		frontend?.includes("native-unistyles")
+			frontend?.includes("native-unistyles")) &&
+		backend !== "none"
 			? getNativeInstructions(isConvex, isBackendSelf, frontend || [])
 			: "";
 	const pwaInstructions =
@@ -77,12 +78,6 @@ export async function displayPostInstallInstructions(
 		config.payments === "polar" && config.auth === "better-auth"
 			? getPolarInstructions(backend)
 			: "";
-	const wranglerDeployInstructions = getWranglerDeployInstructions(
-		runCmd,
-		webDeploy,
-		serverDeploy,
-		backend,
-	);
 	const alchemyDeployInstructions = getAlchemyDeployInstructions(
 		runCmd,
 		webDeploy,
@@ -127,10 +122,7 @@ export async function displayPostInstallInstructions(
 	if (
 		database === "sqlite" &&
 		dbSetup === "none" &&
-		(serverDeploy === "wrangler" ||
-			serverDeploy === "alchemy" ||
-			webDeploy === "wrangler" ||
-			webDeploy === "alchemy")
+		(serverDeploy === "alchemy" || webDeploy === "alchemy")
 	) {
 		output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} db:local\n${pc.dim(
 			"   (starts local SQLite server for Workers compatibility)",
@@ -162,12 +154,17 @@ export async function displayPostInstallInstructions(
 				)} Complete D1 database setup first\n   (see Database commands below)\n`;
 			}
 			output += `${pc.cyan(`${stepCounter++}.`)} ${runCmd} dev\n`;
-			if (serverDeploy === "wrangler") {
-				output += `${pc.cyan(`${stepCounter++}.`)} cd apps/server && ${runCmd} cf-typegen\n`;
-			}
 		}
 	}
 
+	const hasStandaloneBackend = backend !== "none";
+	const hasAnyService =
+		hasWeb ||
+		hasStandaloneBackend ||
+		addons?.includes("starlight") ||
+		addons?.includes("fumadocs");
+
+	if (hasAnyService) {
 	output += `${pc.bold("Your project will be available at:")}\n`;
 
 	if (hasWeb) {
@@ -178,7 +175,7 @@ export async function displayPostInstallInstructions(
 		)} You are creating a backend-only app\n   (no frontend selected)\n`;
 	}
 
-	if (!isConvex && !isBackendSelf) {
+		if (!isConvex && !isBackendSelf && hasStandaloneBackend) {
 		output += `${pc.cyan("•")} Backend API: http://localhost:3000\n`;
 
 		if (api === "orpc") {
@@ -196,6 +193,7 @@ export async function displayPostInstallInstructions(
 
 	if (addons?.includes("fumadocs")) {
 		output += `${pc.cyan("•")} Fumadocs: http://localhost:4000\n`;
+		}
 	}
 
 	if (nativeInstructions) output += `\n${nativeInstructions.trim()}\n`;
@@ -203,8 +201,6 @@ export async function displayPostInstallInstructions(
 	if (tauriInstructions) output += `\n${tauriInstructions.trim()}\n`;
 	if (lintingInstructions) output += `\n${lintingInstructions.trim()}\n`;
 	if (pwaInstructions) output += `\n${pwaInstructions.trim()}\n`;
-	if (wranglerDeployInstructions)
-		output += `\n${wranglerDeployInstructions.trim()}\n`;
 	if (alchemyDeployInstructions)
 		output += `\n${alchemyDeployInstructions.trim()}\n`;
 	if (starlightInstructions) output += `\n${starlightInstructions.trim()}\n`;
@@ -261,10 +257,10 @@ async function getDatabaseInstructions(
 	database: Database,
 	orm?: ORM,
 	runCmd?: string,
-	runtime?: Runtime,
+	_runtime?: Runtime,
 	dbSetup?: DatabaseSetup,
 	serverDeploy?: string,
-	backend?: string,
+	_backend?: string,
 ) {
 	const instructions: string[] = [];
 
@@ -277,59 +273,14 @@ async function getDatabaseInstructions(
 		}
 	}
 
-	if (serverDeploy === "wrangler" && dbSetup === "d1") {
-		if (orm === "prisma" && runtime === "workers") {
-			instructions.push(
-				`\n${pc.yellow(
-					"WARNING:",
-				)} Prisma + D1 on Workers with Wrangler has migration issues.\n   Consider using Alchemy deploy instead of Wrangler for D1 projects.\n`,
-			);
-		}
-		const packageManager = runCmd === "npm run" ? "npm" : runCmd || "npm";
-
-		instructions.push(
-			`${pc.cyan("1.")} Login to Cloudflare: ${pc.white(
-				`${packageManager} wrangler login`,
-			)}`,
-		);
-		instructions.push(
-			`${pc.cyan("2.")} Create D1 database: ${pc.white(
-				`${packageManager} wrangler d1 create your-database-name`,
-			)}`,
-		);
-		const wranglerPath = backend === "self" ? "apps/web" : "apps/server";
-		instructions.push(
-			`${pc.cyan(
-				"3.",
-			)} Update ${wranglerPath}/wrangler.jsonc with database_id and database_name`,
-		);
-		instructions.push(
-			`${pc.cyan("4.")} Generate migrations: ${pc.white(
-				`cd ${wranglerPath} && ${runCmd} db:generate`,
-			)}`,
-		);
-		instructions.push(
-			`${pc.cyan("5.")} Apply migrations locally: ${pc.white(
-				`${packageManager} wrangler d1 migrations apply YOUR_DB_NAME --local`,
-			)}`,
-		);
-		instructions.push(
-			`${pc.cyan("6.")} Apply migrations to production: ${pc.white(
-				`${packageManager} wrangler d1 migrations apply YOUR_DB_NAME`,
-			)}`,
-		);
-	}
-
 	if (dbSetup === "d1" && serverDeploy === "alchemy") {
 		if (orm === "drizzle") {
 			instructions.push(
-				`${pc.yellow(
-					"NOTE:",
-				)} D1 migrations are automatically handled by Alchemy`,
+				`${pc.cyan("•")} Generate migrations: ${`${runCmd} db:generate`}`,
 			);
 		} else if (orm === "prisma") {
 			instructions.push(
-				`${pc.cyan("•")} Generate migrations: ${`${runCmd} db:generate`}`,
+				`${pc.cyan("•")} Generate Prisma client: ${`${runCmd} db:generate`}`,
 			);
 			instructions.push(
 				`${pc.cyan("•")} Apply migrations: ${`${runCmd} db:migrate`}`,
@@ -354,6 +305,14 @@ async function getDatabaseInstructions(
 		}
 	}
 
+	if (dbSetup === "turso" && orm === "prisma") {
+		instructions.push(
+			`${pc.yellow(
+				"NOTE:",
+			)} Follow Turso's Prisma guide for migrations via the Turso CLI:\n   https://docs.turso.tech/sdk/ts/orm/prisma`,
+		);
+	}
+
 	if (orm === "prisma") {
 		if (database === "mongodb" && dbSetup === "docker") {
 			instructions.push(
@@ -368,6 +327,9 @@ async function getDatabaseInstructions(
 			);
 		}
 		if (!(dbSetup === "d1" && serverDeploy === "alchemy")) {
+			instructions.push(
+				`${pc.cyan("•")} Generate Prisma Client: ${`${runCmd} db:generate`}`,
+			);
 			instructions.push(`${pc.cyan("•")} Apply schema: ${`${runCmd} db:push`}`);
 		}
 		if (!(dbSetup === "d1" && serverDeploy === "alchemy")) {
@@ -442,29 +404,6 @@ function getBunWebNativeWarning() {
 	)} 'bun' might cause issues with web + native apps in a monorepo.\n   Use 'pnpm' if problems arise.`;
 }
 
-function getWranglerDeployInstructions(
-	runCmd?: string,
-	webDeploy?: string,
-	serverDeploy?: string,
-	backend?: string,
-) {
-	const instructions: string[] = [];
-
-	if (webDeploy === "wrangler") {
-		const deployPath = backend === "self" ? "apps/web" : "apps/web";
-		instructions.push(
-			`${pc.bold("Deploy web to Cloudflare Workers:")}\n${pc.cyan("•")} Deploy: ${`cd ${deployPath} && ${runCmd} deploy`}`,
-		);
-	}
-	if (serverDeploy === "wrangler" && backend !== "self") {
-		instructions.push(
-			`${pc.bold("Deploy server to Cloudflare Workers:")}\n${pc.cyan("•")} Deploy: ${`cd apps/server && ${runCmd} deploy`}`,
-		);
-	}
-
-	return instructions.length ? `\n${instructions.join("\n")}` : "";
-}
-
 function getClerkInstructions() {
 	return `${pc.bold("Clerk Authentication Setup:")}\n${pc.cyan("•")} Follow the guide: ${pc.underline("https://docs.convex.dev/auth/clerk")}\n${pc.cyan("•")} Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard\n${pc.cyan("•")} Set CLERK_PUBLISHABLE_KEY in apps/*/.env`;
 }
@@ -485,7 +424,7 @@ function getAlchemyDeployInstructions(
 
 	if (webDeploy === "alchemy" && serverDeploy !== "alchemy") {
 		instructions.push(
-			`${pc.bold("Deploy web with Alchemy:")}\n${pc.cyan("•")} Dev: ${`cd apps/web && ${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`cd apps/web && ${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`cd apps/web && ${runCmd} destroy`}`,
+			`${pc.bold("Deploy web with Alchemy:")}\n${pc.cyan("•")} Dev: ${`cd apps/web && ${runCmd} alchemy dev`}\n${pc.cyan("•")} Deploy: ${`cd apps/web && ${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`cd apps/web && ${runCmd} destroy`}`,
 		);
 	} else if (
 		serverDeploy === "alchemy" &&

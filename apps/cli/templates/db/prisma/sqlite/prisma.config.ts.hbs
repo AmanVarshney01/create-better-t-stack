@@ -1,18 +1,25 @@
 import path from "node:path";
-import type { PrismaConfig } from "prisma";
+import { defineConfig, env } from "prisma/config";
 import dotenv from "dotenv";
 
 dotenv.config({
-    {{#if (eq backend "self")}}
-    path: "../../apps/web/.env",
-    {{else}}
-    path: "../../apps/server/.env",
-    {{/if}}
+  {{#if (eq backend "self")}}
+  path: "../../apps/web/.env",
+  {{else}}
+  path: "../../apps/server/.env",
+  {{/if}}
 });
 
-export default {
+export default defineConfig({
   schema: path.join("prisma", "schema"),
   migrations: {
     path: path.join("prisma", "migrations"),
-  }
-} satisfies PrismaConfig;
+  },
+  datasource: {
+    {{#if (eq dbSetup "turso")}}
+    url: "file:./dev.db",
+    {{else}}
+    url: env("DATABASE_URL"),
+    {{/if}}
+  },
+});

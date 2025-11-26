@@ -495,7 +495,7 @@ describe("Authentication Configurations", () => {
 				examples: ["todo"],
 				dbSetup: "none",
 				webDeploy: "none",
-				serverDeploy: "wrangler",
+				serverDeploy: "alchemy",
 				install: false,
 			});
 

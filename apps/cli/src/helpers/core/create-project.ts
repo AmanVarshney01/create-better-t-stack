@@ -67,9 +67,12 @@ export async function createProject(
 
 		await setupApi(options);
 
+		if (isConvex || needsServerSetup) {
+			await setupBackendDependencies(options);
+		}
+
 		if (!isConvex) {
 			if (needsServerSetup) {
-				await setupBackendDependencies(options);
 				await setupRuntime(options);
 			}
 			await setupDatabase(options, cliInput);

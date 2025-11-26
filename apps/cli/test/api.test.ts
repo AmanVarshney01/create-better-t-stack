@@ -610,7 +610,7 @@ describe("API Configurations", () => {
 				examples: ["none"],
 				dbSetup: "none",
 				webDeploy: "none",
-				serverDeploy: "wrangler", // Required for workers
+				serverDeploy: "alchemy", // Required for workers
 				install: false,
 			});
 
@@ -644,7 +644,7 @@ describe("API Configurations", () => {
 
 				// Handle workers runtime requirements
 				if (runtime === "workers") {
-					config.serverDeploy = "wrangler";
+					config.serverDeploy = "alchemy";
 				}
 
 				const result = await runTRPCTest(config);

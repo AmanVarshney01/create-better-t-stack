@@ -13,12 +13,6 @@ function getDeploymentDisplay(deployment: ServerDeploy): {
 	label: string;
 	hint: string;
 } {
-	if (deployment === "wrangler") {
-		return {
-			label: "Wrangler",
-			hint: "Deploy to Cloudflare Workers using Wrangler",
-		};
-	}
 	if (deployment === "alchemy") {
 		return {
 			label: "Alchemy",
@@ -35,7 +29,7 @@ export async function getServerDeploymentChoice(
 	deployment?: ServerDeploy,
 	runtime?: Runtime,
 	backend?: Backend,
-	webDeploy?: WebDeploy,
+	_webDeploy?: WebDeploy,
 ) {
 	if (deployment !== undefined) return deployment;
 
@@ -47,35 +41,12 @@ export async function getServerDeploymentChoice(
 		return "none";
 	}
 
-	const options: DeploymentOption[] = [];
-
-	if (runtime !== "workers") {
-		return "none";
+	// Auto-select alchemy for workers runtime since it's the only valid option
+	if (runtime === "workers") {
+		return "alchemy";
 	}
 
-	["alchemy", "wrangler"].forEach((deploy) => {
-		const { label, hint } = getDeploymentDisplay(deploy as ServerDeploy);
-		options.unshift({
-			value: deploy as ServerDeploy,
-			label,
-			hint,
-		});
-	});
-
-	const response = await select<ServerDeploy>({
-		message: "Select server deployment",
-		options,
-		initialValue:
-			webDeploy === "alchemy"
-				? "alchemy"
-				: runtime === "workers"
-					? "wrangler"
-					: DEFAULT_CONFIG.serverDeploy,
-	});
-
-	if (isCancel(response)) return exitCancelled("Operation cancelled");
-
-	return response;
+	return "none";
 }
 
 export async function getServerDeploymentToAdd(
@@ -90,15 +61,6 @@ export async function getServerDeploymentToAdd(
 	const options: DeploymentOption[] = [];
 
 	if (runtime === "workers") {
-		if (existingDeployment !== "wrangler") {
-			const { label, hint } = getDeploymentDisplay("wrangler");
-			options.push({
-				value: "wrangler",
-				label,
-				hint,
-			});
-		}
-
 		if (existingDeployment !== "alchemy") {
 			const { label, hint } = getDeploymentDisplay("alchemy");
 			options.push({
@@ -123,8 +85,7 @@ export async function getServerDeploymentToAdd(
 	const response = await select<ServerDeploy>({
 		message: "Select server deployment",
 		options,
-		initialValue:
-			runtime === "workers" ? "wrangler" : DEFAULT_CONFIG.serverDeploy,
+		initialValue: DEFAULT_CONFIG.serverDeploy,
 	});
 
 	if (isCancel(response)) return exitCancelled("Operation cancelled");

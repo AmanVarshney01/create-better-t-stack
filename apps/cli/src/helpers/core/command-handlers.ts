@@ -26,6 +26,10 @@ import {
 } from "../../utils/project-directory";
 import { renderTitle } from "../../utils/render-title";
 import {
+	getTemplateConfig,
+	getTemplateDescription,
+} from "../../utils/templates";
+import {
 	getProvidedFlags,
 	processAndValidateFlags,
 	processProvidedFlagsWithoutValidation,
@@ -126,15 +130,41 @@ export async function createProjectHandler(
 		shouldClearDirectory,
 	);
 
-	const cliInput = {
+	const originalInput = {
 		...input,
 		projectDirectory: input.projectName,
 	};
 
-	const providedFlags = getProvidedFlags(cliInput);
+	const providedFlags = getProvidedFlags(originalInput);
+
+	let cliInput = originalInput;
+
+	if (input.template && input.template !== "none") {
+		const templateConfig = getTemplateConfig(input.template);
+		if (templateConfig) {
+			const templateName = input.template.toUpperCase();
+			const templateDescription = getTemplateDescription(input.template);
+			log.message(
+				pc.bold(pc.cyan(`Using template: ${pc.white(templateName)}`)),
+			);
+			log.message(pc.dim(`   ${templateDescription}`));
+			const userOverrides: Record<string, unknown> = {};
+			for (const [key, value] of Object.entries(originalInput)) {
+				if (value !== undefined) {
+					userOverrides[key] = value;
+				}
+			}
+			cliInput = {
+				...templateConfig,
+				...userOverrides,
+				template: input.template,
+				projectDirectory: originalInput.projectDirectory,
+			};
+		}
+	}
 
 	let config: ProjectConfig;
-	if (input.yes) {
+	if (cliInput.yes) {
 		const flagConfig = processProvidedFlagsWithoutValidation(
 			cliInput,
 			finalBaseName,
@@ -152,7 +182,6 @@ export async function createProjectHandler(
 
 		log.info(pc.yellow("Using default/flag options (config prompts skipped):"));
 		log.message(displayConfig(config));
-		log.message("");
 	} else {
 		const flagConfig = processAndValidateFlags(
 			cliInput,
@@ -175,7 +204,9 @@ export async function createProjectHandler(
 		);
 	}
 
-	await createProject(config, { manualDb: input.manualDb });
+	await createProject(config, {
+		manualDb: cliInput.manualDb ?? input.manualDb,
+	});
 
 	const reproducibleCommand = generateReproducibleCommand(config);
 	log.success(

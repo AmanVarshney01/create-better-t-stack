@@ -7,7 +7,7 @@
 
 .react-tweet-theme {
 	--tweet-container-margin: 0 !important;
-	@apply !bg-fd-background !border-none !h-full !border-transparent !w-full;
+	@apply bg-fd-background! border-none! h-full! border-transparent! w-full!;
 	max-width: 100% !important;
 	min-width: 0 !important;
 }
@@ -231,6 +231,7 @@
 .dark {
 	--color-fd-primary: #cba6f7;
 	--color-fd-primary-foreground: #11111b;
+	--color-fd-background: #0D0D0D;
 	--background: #11111b;
 	--foreground: #cdd6f4;
 	--card: #11111b;
