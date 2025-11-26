@@ -1,4 +1,4 @@
-import { describe, it } from "vitest";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import {
 	cleanupSmokeDirectory,
 	expectError,
