@@ -233,7 +233,6 @@ describe("Deployment Configurations", () => {
 				const config: TestConfig = {
 					projectName: `server-deploy-${backend}`,
 					webDeploy: "none",
-					serverDeploy: "alchemy",
 					backend,
 					database: "sqlite",
 					orm: "drizzle",
