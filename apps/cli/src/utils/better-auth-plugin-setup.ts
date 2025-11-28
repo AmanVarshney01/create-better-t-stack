@@ -20,9 +20,9 @@ export async function setupBetterAuthPlugins(
 		config.backend === "self" &&
 		config.frontend?.includes("tanstack-start")
 	) {
-		pluginsToAdd.push("reactStartCookies()");
+		pluginsToAdd.push("tanstackStartCookies()");
 		importsToAdd.push(
-			'import { reactStartCookies } from "better-auth/react-start";',
+			'import { tanstackStartCookies } from "better-auth/tanstack-start";',
 		);
 	}
 

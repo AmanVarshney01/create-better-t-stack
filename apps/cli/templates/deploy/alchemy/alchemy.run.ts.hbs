@@ -54,7 +54,6 @@ export const web = await Nextjs("web", {
     {{else if (ne backend "self")}}
     NEXT_PUBLIC_SERVER_URL: process.env.NEXT_PUBLIC_SERVER_URL || "",
     {{/if}}
-    {{#if (eq backend "self")}}
     {{#if (eq dbSetup "d1")}}
     DB: db,
     {{else if (ne database "none")}}
@@ -83,7 +82,6 @@ export const web = await Nextjs("web", {
     DATABASE_HOST: process.env.DATABASE_HOST || "",
     DATABASE_USERNAME: process.env.DATABASE_USERNAME || "",
     DATABASE_PASSWORD: process.env.DATABASE_PASSWORD || "",
-    {{/if}}
     {{/if}}
     {{/if}}
   },
@@ -128,7 +126,6 @@ export const web = await TanStackStart("web", {
     {{else if (ne backend "self")}}
     VITE_SERVER_URL: process.env.VITE_SERVER_URL || "",
     {{/if}}
-    {{#if (eq backend "self")}}
     {{#if (eq dbSetup "d1")}}
     DB: db,
     {{else if (ne database "none")}}
@@ -157,7 +154,6 @@ export const web = await TanStackStart("web", {
     DATABASE_HOST: process.env.DATABASE_HOST || "",
     DATABASE_USERNAME: process.env.DATABASE_USERNAME || "",
     DATABASE_PASSWORD: process.env.DATABASE_PASSWORD || "",
-    {{/if}}
     {{/if}}
     {{/if}}
   },
