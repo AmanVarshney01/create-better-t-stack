@@ -7,13 +7,24 @@ import discordIcon from "@/public/icon/discord.svg";
 export function AnalyticsHeader({
 	totalProjects,
 	lastUpdated,
+	legacy,
 }: {
 	totalProjects: number;
 	lastUpdated: string | null;
+	legacy: {
+		total: number;
+		avgPerDay: number;
+		lastUpdatedIso: string;
+		source: string;
+	};
 }) {
 	const formattedDate = lastUpdated
 		? format(new Date(lastUpdated), "MMM d, yyyy 'at' HH:mm")
 		: null;
+	const legacyDate = format(
+		new Date(legacy.lastUpdatedIso),
+		"MMM d, yyyy 'at' HH:mm 'UTC'",
+	);
 
 	return (
 		<div className="mb-4">
@@ -54,9 +65,31 @@ export function AnalyticsHeader({
 				{formattedDate && (
 					<div className="mt-2 flex items-center gap-2 text-muted-foreground">
 						<span className="text-primary">$</span>
-						<span>Last event: {formattedDate} UTC</span>
+						<span>Last event: {formattedDate}</span>
 					</div>
 				)}
+				<div className="mt-2 flex flex-col gap-1 rounded border border-border/60 bg-muted/30 p-3 text-muted-foreground text-xs">
+					<div className="flex items-center gap-2">
+						<span className="text-primary">$</span>
+						<span className="font-semibold text-foreground">
+							Legacy totals (pre-Convex)
+						</span>
+					</div>
+					<div className="flex flex-wrap gap-3">
+						<span className="font-mono text-foreground">
+							{legacy.total.toLocaleString()} projects
+						</span>
+						<span className="font-mono">
+							avg/day {legacy.avgPerDay.toFixed(1)}
+						</span>
+						<span className="font-mono">as of {legacyDate}</span>
+						<span className="font-mono">source: {legacy.source}</span>
+					</div>
+					<span>
+						Notes: Legacy stats are frozen at the last PostHog run; live Convex
+						stats continue below.
+					</span>
+				</div>
 			</div>
 
 			<Link

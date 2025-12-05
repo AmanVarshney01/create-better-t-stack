@@ -32,7 +32,16 @@ export const ingestEvent = internalMutation({
 });
 
 export const getAllEvents = query({
-	args: {},
+	args: {
+		range: v.optional(
+			v.union(
+				v.literal("all"),
+				v.literal("30d"),
+				v.literal("7d"),
+				v.literal("1d"),
+			),
+		),
+	},
 	returns: v.array(
 		v.object({
 			_id: v.id("analyticsEvents"),
@@ -59,7 +68,29 @@ export const getAllEvents = query({
 			platform: v.optional(v.string()),
 		}),
 	),
-	handler: async (ctx) => {
-		return await ctx.db.query("analyticsEvents").order("desc").collect();
+	handler: async (ctx, args) => {
+		const events = await ctx.db
+			.query("analyticsEvents")
+			.order("desc")
+			.collect();
+		if (!args.range || args.range === "all") {
+			return events;
+		}
+
+		const now = Date.now();
+		const days =
+			args.range === "30d"
+				? 30
+				: args.range === "7d"
+					? 7
+					: args.range === "1d"
+						? 1
+						: 0;
+		if (days === 0) {
+			return events;
+		}
+
+		const cutoff = now - days * 24 * 60 * 60 * 1000;
+		return events.filter((e) => e._creationTime >= cutoff);
 	},
 });

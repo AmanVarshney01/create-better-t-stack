@@ -2,6 +2,7 @@
 
 import { api } from "@better-t-stack/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
+import { useState } from "react";
 import AnalyticsPage from "./_components/analytics-page";
 import type {
 	AggregatedAnalyticsData,
@@ -32,6 +33,8 @@ type EventRow = {
 	node_version?: string;
 	platform?: string;
 };
+
+type RangeOption = "all" | "30d" | "7d" | "1d";
 
 function count(map: Map<string, number>, key: string | undefined) {
 	if (!key) return;
@@ -231,18 +234,21 @@ function aggregateEvents(events: EventRow[]): AggregatedAnalyticsData {
 }
 
 export function AnalyticsClient() {
-	const events = useQuery(api.analytics.getAllEvents);
-
-	if (events === undefined) {
-		return (
-			<div className="flex min-h-svh items-center justify-center">
-				<div className="animate-pulse text-muted-foreground">
-					Loading analytics data...
-				</div>
-			</div>
-		);
-	}
-
-	const data = aggregateEvents(events as EventRow[]);
-	return <AnalyticsPage data={data} />;
+	const [range, setRange] = useState<RangeOption>("30d");
+	const events = useQuery(api.analytics.getAllEvents, { range });
+	const data = aggregateEvents((events as EventRow[] | undefined) ?? []);
+	const legacy = {
+		total: 55434,
+		avgPerDay: 326.1,
+		lastUpdatedIso: "2025-11-13T10:10:00.000Z",
+		source: "PostHog (legacy)",
+	};
+	return (
+		<AnalyticsPage
+			data={data}
+			range={range}
+			onRangeChange={setRange}
+			legacy={legacy}
+		/>
+	);
 }

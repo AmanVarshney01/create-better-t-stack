@@ -49,11 +49,7 @@ function BarChartComponent({
 	height?: number;
 }) {
 	return (
-		<ChartContainer
-			config={chartConfig}
-			className={`h-[${height}px] w-full`}
-			style={{ height }}
-		>
+		<ChartContainer config={chartConfig} style={{ height }} className="w-full">
 			<BarChart data={data} layout="vertical" margin={{ left: 0 }}>
 				<CartesianGrid horizontal={false} className="stroke-border" />
 				<XAxis
