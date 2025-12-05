@@ -45,7 +45,7 @@ function computeStats(events: EventRow[] | undefined) {
 }
 
 export default function StatsSection() {
-	const events = useQuery(api.analytics.getAllEvents);
+	const events = useQuery(api.analytics.getAllEvents, { range: "30d" });
 	const githubRepo = useQuery(api.stats.getGithubRepo, {
 		name: "AmanVarshney01/create-better-t-stack",
 	});
@@ -65,13 +65,16 @@ export default function StatsSection() {
 						<span className="font-semibold text-sm sm:text-base">
 							CLI_ANALYTICS.JSON
 						</span>
+						<span className="rounded border border-border px-2 py-0.5 text-[10px] text-muted-foreground uppercase">
+							Last 30 days
+						</span>
 					</div>
 
 					<div className="space-y-3">
 						<div className="flex items-center justify-between">
 							<span className="flex items-center gap-1 font-mono text-muted-foreground text-xs uppercase tracking-wide">
 								<BarChart3 className="h-3 w-3" />
-								Total Projects
+								Total Projects (30d)
 							</span>
 							<NumberFlow
 								value={analyticsData.totalProjects}
