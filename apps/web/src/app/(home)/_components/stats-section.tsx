@@ -14,26 +14,47 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-export default function StatsSection({
-	analyticsData,
-}: {
-	analyticsData: {
-		totalProjects: number;
-		avgProjectsPerDay: string;
-		lastUpdated: string | null;
-	};
-}) {
-	// no idea why there are no types
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const githubRepo = useQuery((api as any).stats.getGithubRepo, {
+type EventRow = {
+	_creationTime: number;
+};
+
+function computeStats(events: EventRow[] | undefined) {
+	if (!events || events.length === 0) {
+		return { totalProjects: 0, avgProjectsPerDay: "0", lastUpdated: null };
+	}
+
+	const byDay = new Set<string>();
+	let maxTime = 0;
+
+	for (const ev of events) {
+		const day = new Date(ev._creationTime).toISOString().slice(0, 10);
+		byDay.add(day);
+		if (ev._creationTime > maxTime) maxTime = ev._creationTime;
+	}
+
+	const totalProjects = events.length;
+	const avgProjectsPerDay =
+		byDay.size === 0 ? "0" : (totalProjects / byDay.size).toFixed(2);
+	const lastUpdated = new Date(maxTime).toLocaleDateString("en-US", {
+		month: "short",
+		day: "numeric",
+		year: "numeric",
+	});
+
+	return { totalProjects, avgProjectsPerDay, lastUpdated };
+}
+
+export default function StatsSection() {
+	const events = useQuery(api.analytics.getAllEvents, { range: "30d" });
+	const githubRepo = useQuery(api.stats.getGithubRepo, {
 		name: "AmanVarshney01/create-better-t-stack",
 	});
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const npmPackages = useQuery((api as any).stats.getNpmPackages, {
+	const npmPackages = useQuery(api.stats.getNpmPackages, {
 		names: ["create-better-t-stack"],
 	});
 
 	const liveNpmDownloadCount = useNpmDownloadCounter(npmPackages);
+	const analyticsData = computeStats(events as EventRow[] | undefined);
 
 	return (
 		<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -44,16 +65,19 @@ export default function StatsSection({
 						<span className="font-semibold text-sm sm:text-base">
 							CLI_ANALYTICS.JSON
 						</span>
+						<span className="rounded border border-border px-2 py-0.5 text-[10px] text-muted-foreground uppercase">
+							Last 30 days
+						</span>
 					</div>
 
 					<div className="space-y-3">
 						<div className="flex items-center justify-between">
 							<span className="flex items-center gap-1 font-mono text-muted-foreground text-xs uppercase tracking-wide">
 								<BarChart3 className="h-3 w-3" />
-								Total Projects
+								Total Projects (30d)
 							</span>
 							<NumberFlow
-								value={analyticsData?.totalProjects || 0}
+								value={analyticsData.totalProjects}
 								className="font-bold font-mono text-lg text-primary tabular-nums"
 								transformTiming={{
 									duration: 1000,
@@ -71,7 +95,7 @@ export default function StatsSection({
 								Avg/Day
 							</span>
 							<span className="font-mono text-foreground text-sm">
-								{analyticsData?.avgProjectsPerDay || "—"}
+								{analyticsData.avgProjectsPerDay}
 							</span>
 						</div>
 
@@ -81,7 +105,7 @@ export default function StatsSection({
 									Last Updated
 								</span>
 								<span className="truncate font-mono text-accent">
-									{analyticsData?.lastUpdated ||
+									{analyticsData.lastUpdated ||
 										new Date().toLocaleDateString("en-US", {
 											month: "short",
 											day: "numeric",

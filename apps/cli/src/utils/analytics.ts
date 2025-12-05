@@ -2,13 +2,21 @@ import type { ProjectConfig } from "../types";
 import { getLatestCLIVersion } from "./get-latest-cli-version";
 import { isTelemetryEnabled } from "./telemetry";
 
-const POSTHOG_API_KEY = process.env.POSTHOG_API_KEY || "";
-const POSTHOG_HOST = process.env.POSTHOG_HOST;
+const CONVEX_INGEST_URL =
+	"https://striped-seahorse-863.convex.site/api/analytics/ingest";
 
-function generateSessionId() {
-	const rand = Math.random().toString(36).slice(2);
-	const now = Date.now().toString(36);
-	return `cli_${now}${rand}`;
+async function sendConvexEvent(payload: Record<string, unknown>) {
+	if (!CONVEX_INGEST_URL) return;
+
+	try {
+		await fetch(CONVEX_INGEST_URL, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(payload),
+		});
+	} catch (_error) {}
 }
 
 export async function trackProjectCreation(
@@ -17,28 +25,16 @@ export async function trackProjectCreation(
 ) {
 	if (!isTelemetryEnabled() || disableAnalytics) return;
 
-	const sessionId = generateSessionId();
 	// biome-ignore lint/correctness/noUnusedVariables: `projectName`, `projectDir`, and `relativePath` are not used in the event properties
 	const { projectName, projectDir, relativePath, ...safeConfig } = config;
 
-	const payload = {
-		api_key: POSTHOG_API_KEY,
-		event: "project_created",
-		properties: {
+	try {
+		await sendConvexEvent({
+			event: "project_created",
 			...safeConfig,
 			cli_version: getLatestCLIVersion(),
 			node_version: typeof process !== "undefined" ? process.version : "",
 			platform: typeof process !== "undefined" ? process.platform : "",
-			$ip: null,
-		},
-		distinct_id: sessionId,
-	};
-
-	try {
-		await fetch(`${POSTHOG_HOST}/capture`, {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(payload),
 		});
 	} catch (_error) {}
 }

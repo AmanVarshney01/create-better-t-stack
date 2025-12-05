@@ -49,17 +49,13 @@ jobs:
         if: steps.version.outputs.version != ''
         run: bun install --frozen-lockfile
         env:
-          BTS_TELEMETRY: 1
-          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-          POSTHOG_HOST: ${{ secrets.POSTHOG_HOST }}
+          BTS_TELEMETRY: 0
 
       - name: Build CLI
         if: steps.version.outputs.version != ''
         run: cd apps/cli && bun run build
         env:
-          BTS_TELEMETRY: 1
-          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-          POSTHOG_HOST: ${{ secrets.POSTHOG_HOST }}
+          BTS_TELEMETRY: 0
 
       - name: Create GitHub Release
         if: steps.version.outputs.version != ''
@@ -85,15 +81,11 @@ jobs:
         run: cd apps/cli && bun publish --access public
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 1
-          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-          POSTHOG_HOST: ${{ secrets.POSTHOG_HOST }}
+          BTS_TELEMETRY: 0
 
       - name: Publish create-bts alias to NPM
         if: steps.version.outputs.version != ''
         run: cd packages/create-bts && bun publish --access public
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 1
-          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-          POSTHOG_HOST: ${{ secrets.POSTHOG_HOST }}
+          BTS_TELEMETRY: 0

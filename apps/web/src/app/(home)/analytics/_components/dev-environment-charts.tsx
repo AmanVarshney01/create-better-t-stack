@@ -15,245 +15,225 @@ import {
 	ChartTooltip,
 	ChartTooltipContent,
 } from "@/components/ui/chart";
-import {
-	getCLIVersionData,
-	getGitData,
-	getInstallData,
-	getNodeVersionData,
-	getPackageManagerData,
-} from "./data-utils";
-import type { AggregatedAnalyticsData } from "./types";
-import {
-	cliVersionConfig,
-	gitConfig,
-	installConfig,
-	nodeVersionConfig,
-	packageManagerConfig,
+import type {
+	AggregatedAnalyticsData,
+	Distribution,
+	VersionDistribution,
 } from "./types";
+import { chartConfig, getColor } from "./types";
 
-interface DevEnvironmentChartsProps {
-	data: AggregatedAnalyticsData | null;
+function ChartCard({
+	title,
+	description,
+	children,
+}: {
+	title: string;
+	description: string;
+	children: React.ReactNode;
+}) {
+	return (
+		<div className="rounded border border-border">
+			<div className="border-border border-b px-4 py-3">
+				<div className="flex items-center gap-2">
+					<span className="text-primary text-xs">$</span>
+					<span className="font-semibold text-sm">{title}</span>
+				</div>
+				<p className="mt-1 text-muted-foreground text-xs">{description}</p>
+			</div>
+			<div className="p-4">{children}</div>
+		</div>
+	);
 }
 
-export function DevEnvironmentCharts({ data }: DevEnvironmentChartsProps) {
-	const gitData = getGitData(data);
-	const packageManagerData = getPackageManagerData(data);
-	const installData = getInstallData(data);
-	const nodeVersionData = getNodeVersionData(data);
-	const cliVersionData = getCLIVersionData(data);
+function HorizontalBarChart({
+	data,
+	height = 280,
+}: {
+	data: Distribution;
+	height?: number;
+}) {
+	return (
+		<ChartContainer config={chartConfig} className="w-full" style={{ height }}>
+			<BarChart data={data} layout="vertical" margin={{ left: 0 }}>
+				<CartesianGrid horizontal={false} className="stroke-border" />
+				<XAxis
+					type="number"
+					tickLine={false}
+					axisLine={false}
+					className="text-xs"
+				/>
+				<YAxis
+					dataKey="name"
+					type="category"
+					tickLine={false}
+					axisLine={false}
+					width={80}
+					className="text-xs"
+				/>
+				<ChartTooltip content={<ChartTooltipContent />} />
+				<Bar dataKey="value" radius={4}>
+					{data.map((entry, i) => (
+						<Cell key={entry.name} fill={getColor(i)} />
+					))}
+				</Bar>
+			</BarChart>
+		</ChartContainer>
+	);
+}
+
+function VersionBarChart({
+	data,
+	height = 280,
+}: {
+	data: VersionDistribution;
+	height?: number;
+}) {
+	return (
+		<ChartContainer config={chartConfig} className="w-full" style={{ height }}>
+			<BarChart data={data}>
+				<CartesianGrid vertical={false} className="stroke-border" />
+				<XAxis
+					dataKey="version"
+					tickLine={false}
+					axisLine={false}
+					className="text-xs"
+				/>
+				<YAxis tickLine={false} axisLine={false} className="text-xs" />
+				<ChartTooltip content={<ChartTooltipContent />} />
+				<Bar dataKey="count" radius={4} fill="hsl(var(--chart-1))" />
+			</BarChart>
+		</ChartContainer>
+	);
+}
+
+function PieChartComponent({ data }: { data: Distribution }) {
+	return (
+		<ChartContainer config={chartConfig} className="h-[280px] w-full">
+			<PieChart>
+				<ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
+				<Pie
+					data={data}
+					cx="50%"
+					cy="50%"
+					outerRadius={80}
+					dataKey="value"
+					label={({ name, percent }) =>
+						`${name} ${(percent * 100).toFixed(0)}%`
+					}
+					labelLine={false}
+				>
+					{data.map((entry, i) => (
+						<Cell key={entry.name} fill={getColor(i)} />
+					))}
+				</Pie>
+				<ChartLegend content={<ChartLegendContent />} />
+			</PieChart>
+		</ChartContainer>
+	);
+}
+
+export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
+	const {
+		packageManagerDistribution,
+		gitDistribution,
+		installDistribution,
+		addonsDistribution,
+		examplesDistribution,
+		nodeVersionDistribution,
+		cliVersionDistribution,
+		webDeployDistribution,
+		serverDeployDistribution,
+	} = data;
 
 	return (
 		<div className="space-y-6">
-			<div className="mb-4 flex items-center gap-2">
-				<span className="font-bold text-lg">DEV_ENVIRONMENT.CONFIG</span>
+			<div className="flex items-center gap-2">
+				<span className="font-bold text-lg">DEV_TOOLS_AND_CONFIG</span>
 				<div className="h-px flex-1 bg-border" />
+				<span className="text-muted-foreground text-xs">[TOOLING]</span>
 			</div>
 
-			<div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-				<div className="rounded border border-border">
-					<div className="border-border border-b px-4 py-3">
-						<div className="flex items-center gap-2">
-							<span className="text-primary text-xs">▶</span>
-							<span className="font-semibold text-sm">
-								GIT_INITIALIZATION.PIE
-							</span>
-						</div>
-						<p className="mt-1 text-muted-foreground text-xs">
-							Git repository initialization rate
-						</p>
-					</div>
-					<div className="p-4">
-						<ChartContainer config={gitConfig} className="h-[300px] w-full">
-							<PieChart>
-								<ChartTooltip
-									content={<ChartTooltipContent nameKey="name" />}
-								/>
-								<Pie
-									data={gitData}
-									dataKey="value"
-									nameKey="name"
-									cx="50%"
-									cy="50%"
-									outerRadius={80}
-									label={({ name, percent }) =>
-										`${name} ${(percent * 100).toFixed(0)}%`
-									}
-								>
-									{gitData.map((entry) => (
-										<Cell
-											key={`git-${entry.name}`}
-											fill={
-												entry.name === "enabled"
-													? "hsl(var(--chart-1))"
-													: "hsl(var(--chart-7))"
-											}
-										/>
-									))}
-								</Pie>
-								<ChartLegend content={<ChartLegendContent />} />
-							</PieChart>
-						</ChartContainer>
-					</div>
-				</div>
+			<div className="grid gap-6 lg:grid-cols-2">
+				<ChartCard
+					title="package_managers.bar"
+					description="npm vs pnpm vs bun usage"
+				>
+					<HorizontalBarChart data={packageManagerDistribution} />
+				</ChartCard>
 
-				<div className="rounded border border-border">
-					<div className="border-border border-b px-4 py-3">
-						<div className="flex items-center gap-2">
-							<span className="text-primary text-xs">▶</span>
-							<span className="font-semibold text-sm">PACKAGE_MANAGER.BAR</span>
-						</div>
-						<p className="mt-1 text-muted-foreground text-xs">
-							Package manager usage distribution
-						</p>
-					</div>
-					<div className="p-4">
-						<ChartContainer
-							config={packageManagerConfig}
-							className="h-[300px] w-full"
+				<ChartCard
+					title="git_init.pie"
+					description="Git repository initialization"
+				>
+					<PieChartComponent data={gitDistribution} />
+				</ChartCard>
+
+				<ChartCard
+					title="auto_install.pie"
+					description="Automatic dependency installation"
+				>
+					<PieChartComponent data={installDistribution} />
+				</ChartCard>
+
+				<ChartCard
+					title="node_versions.bar"
+					description="Node.js version distribution"
+				>
+					<VersionBarChart data={nodeVersionDistribution} />
+				</ChartCard>
+			</div>
+
+			{addonsDistribution.length > 0 && (
+				<ChartCard
+					title="addons.bar"
+					description="Additional tooling and features"
+				>
+					<HorizontalBarChart
+						data={addonsDistribution}
+						height={Math.max(200, addonsDistribution.length * 40)}
+					/>
+				</ChartCard>
+			)}
+
+			{examplesDistribution.length > 0 && (
+				<ChartCard
+					title="examples.bar"
+					description="Example templates included"
+				>
+					<HorizontalBarChart data={examplesDistribution} />
+				</ChartCard>
+			)}
+
+			{(webDeployDistribution.length > 0 ||
+				serverDeployDistribution.length > 0) && (
+				<div className="grid gap-6 lg:grid-cols-2">
+					{webDeployDistribution.length > 0 && (
+						<ChartCard
+							title="web_deploy.bar"
+							description="Web deployment platform"
 						>
-							<BarChart data={packageManagerData}>
-								<CartesianGrid vertical={false} />
-								<XAxis
-									dataKey="name"
-									tickLine={false}
-									tickMargin={10}
-									axisLine={false}
-								/>
-								<YAxis />
-								<ChartTooltip content={<ChartTooltipContent />} />
-								<Bar dataKey="value" radius={4}>
-									{packageManagerData.map((entry) => (
-										<Cell
-											key={`package-${entry.name}`}
-											fill={
-												entry.name === "npm"
-													? "hsl(var(--chart-1))"
-													: entry.name === "pnpm"
-														? "hsl(var(--chart-2))"
-														: entry.name === "bun"
-															? "hsl(var(--chart-3))"
-															: entry.name === "yarn"
-																? "hsl(var(--chart-4))"
-																: "hsl(var(--chart-7))"
-											}
-										/>
-									))}
-								</Bar>
-							</BarChart>
-						</ChartContainer>
-					</div>
-				</div>
-
-				<div className="rounded border border-border">
-					<div className="border-border border-b px-4 py-3">
-						<div className="flex items-center gap-2">
-							<span className="text-primary text-xs">▶</span>
-							<span className="font-semibold text-sm">
-								INSTALL_PREFERENCE.PIE
-							</span>
-						</div>
-						<p className="mt-1 text-muted-foreground text-xs">
-							Automatic dependency installation preference
-						</p>
-					</div>
-					<div className="p-4">
-						<ChartContainer config={installConfig} className="h-[300px] w-full">
-							<PieChart>
-								<ChartTooltip
-									content={<ChartTooltipContent nameKey="name" />}
-								/>
-								<Pie
-									data={installData}
-									dataKey="value"
-									nameKey="name"
-									cx="50%"
-									cy="50%"
-									outerRadius={80}
-									label={({ name, percent }) =>
-										`${name} ${(percent * 100).toFixed(0)}%`
-									}
-								>
-									{installData.map((entry) => (
-										<Cell
-											key={`install-${entry.name}`}
-											fill={
-												entry.name === "enabled"
-													? "hsl(var(--chart-1))"
-													: "hsl(var(--chart-7))"
-											}
-										/>
-									))}
-								</Pie>
-								<ChartLegend content={<ChartLegendContent />} />
-							</PieChart>
-						</ChartContainer>
-					</div>
-				</div>
-
-				<div className="rounded border border-border">
-					<div className="border-border border-b px-4 py-3">
-						<div className="flex items-center gap-2">
-							<span className="text-primary text-xs">▶</span>
-							<span className="font-semibold text-sm">NODE_VERSIONS.BAR</span>
-						</div>
-						<p className="mt-1 text-muted-foreground text-xs">
-							Node.js version distribution (major versions)
-						</p>
-					</div>
-					<div className="p-4">
-						<ChartContainer
-							config={nodeVersionConfig}
-							className="h-[300px] w-full"
+							<HorizontalBarChart data={webDeployDistribution} />
+						</ChartCard>
+					)}
+					{serverDeployDistribution.length > 0 && (
+						<ChartCard
+							title="server_deploy.bar"
+							description="Server deployment platform"
 						>
-							<BarChart data={nodeVersionData}>
-								<CartesianGrid vertical={false} />
-								<XAxis
-									dataKey="version"
-									tickLine={false}
-									tickMargin={10}
-									axisLine={false}
-									className="text-xs"
-								/>
-								<YAxis hide />
-								<ChartTooltip content={<ChartTooltipContent />} />
-								<Bar dataKey="count" radius={4} fill="hsl(var(--chart-1))" />
-							</BarChart>
-						</ChartContainer>
-					</div>
+							<HorizontalBarChart data={serverDeployDistribution} />
+						</ChartCard>
+					)}
 				</div>
-			</div>
+			)}
 
-			<div className="rounded border border-border">
-				<div className="border-border border-b px-4 py-3">
-					<div className="flex items-center gap-2">
-						<span className="text-primary text-xs">▶</span>
-						<span className="font-semibold text-sm">CLI_VERSIONS.BAR</span>
-					</div>
-					<p className="mt-1 text-muted-foreground text-xs">
-						CLI version distribution across project creations
-					</p>
-				</div>
-				<div className="p-4">
-					<ChartContainer
-						config={cliVersionConfig}
-						className="h-[350px] w-full"
-					>
-						<BarChart data={cliVersionData}>
-							<CartesianGrid vertical={false} />
-							<XAxis
-								dataKey="version"
-								tickLine={false}
-								tickMargin={10}
-								axisLine={false}
-								className="text-xs"
-							/>
-							<YAxis hide />
-							<ChartTooltip content={<ChartTooltipContent />} />
-							<Bar dataKey="count" radius={4} fill="hsl(var(--chart-1))" />
-						</BarChart>
-					</ChartContainer>
-				</div>
-			</div>
+			{cliVersionDistribution.length > 0 && (
+				<ChartCard
+					title="cli_versions.bar"
+					description="CLI version distribution (top 10)"
+				>
+					<VersionBarChart data={cliVersionDistribution} height={320} />
+				</ChartCard>
+			)}
 		</div>
 	);
 }
