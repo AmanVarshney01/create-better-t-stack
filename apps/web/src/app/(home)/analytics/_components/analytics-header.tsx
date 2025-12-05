@@ -23,7 +23,7 @@ export function AnalyticsHeader({
 		: null;
 	const legacyDate = format(
 		new Date(legacy.lastUpdatedIso),
-		"MMM d, yyyy 'at' HH:mm 'UTC'",
+		"MMM d, yyyy 'at' HH:mm",
 	);
 
 	return (
