@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import AnalyticsPage from "./_components/analytics-page";
+import { AnalyticsClient } from "./analytics-client";
 
 export const metadata: Metadata = {
 	title: "Analytics - Better-T-Stack",
@@ -26,10 +26,5 @@ export const metadata: Metadata = {
 };
 
 export default async function Analytics() {
-	const response = await fetch(
-		"https://r2.better-t-stack.dev/analytics-data.json",
-	);
-	const analyticsData = await response.json();
-
-	return <AnalyticsPage data={analyticsData} />;
+	return <AnalyticsClient />;
 }

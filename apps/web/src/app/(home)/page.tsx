@@ -20,18 +20,12 @@ export default async function HomePage() {
 	}));
 	const tweets = fetchedTweets.map((t) => ({ tweetId: t.tweetId }));
 
-	const minimalAnalytics = await fetch(
-		"https://r2.better-t-stack.dev/analytics-minimal.json",
-	);
-
-	const minimalAnalyticsData = await minimalAnalytics.json();
-
 	return (
 		<main className="mx-auto min-h-svh max-w-[1280px]">
 			<div className="mx-auto flex flex-col gap-8 px-4 pt-12">
 				<HeroSection />
 				<CommandSection />
-				<StatsSection analyticsData={minimalAnalyticsData} />
+				<StatsSection />
 				<SponsorsSection sponsorsData={sponsorsData} />
 				<Testimonials tweets={tweets} videos={videos} />
 			</div>

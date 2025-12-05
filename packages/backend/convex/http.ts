@@ -1,7 +1,47 @@
 import { httpRouter } from "convex/server";
+import { internal } from "./_generated/api";
+import { httpAction } from "./_generated/server";
 import { ossStats } from "./stats";
 
 const http = httpRouter();
+
+http.route({
+	path: "/api/analytics/ingest",
+	method: "POST",
+	handler: httpAction(async (ctx, req) => {
+		const body = await req.json();
+		if (!body || typeof body.event !== "string") {
+			return new Response("Bad Request", { status: 400 });
+		}
+
+		const ingest = internal.analytics?.ingestEvent;
+		if (ingest) {
+			await ctx.runMutation(ingest, {
+				event: body.event,
+				database: body.database,
+				orm: body.orm,
+				backend: body.backend,
+				runtime: body.runtime,
+				frontend: body.frontend,
+				addons: body.addons,
+				examples: body.examples,
+				auth: body.auth,
+				payments: body.payments,
+				git: body.git,
+				packageManager: body.packageManager,
+				install: body.install,
+				dbSetup: body.dbSetup,
+				api: body.api,
+				webDeploy: body.webDeploy,
+				serverDeploy: body.serverDeploy,
+				cli_version: body.cli_version,
+				node_version: body.node_version,
+				platform: body.platform,
+			});
+		}
+		return new Response("ok");
+	}),
+});
 
 ossStats.registerRoutes(http);
 export default http;

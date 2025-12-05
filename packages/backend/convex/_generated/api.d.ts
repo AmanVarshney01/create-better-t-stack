@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as analytics from "../analytics.js";
 import type * as healthCheck from "../healthCheck.js";
 import type * as hooks from "../hooks.js";
 import type * as http from "../http.js";
@@ -21,15 +22,8 @@ import type {
   FunctionReference,
 } from "convex/server";
 
-/**
- * A utility for referencing Convex functions in your app's API.
- *
- * Usage:
- * ```js
- * const myFunctionReference = api.myModule.myFunction;
- * ```
- */
 declare const fullApi: ApiFromModules<{
+  analytics: typeof analytics;
   healthCheck: typeof healthCheck;
   hooks: typeof hooks;
   http: typeof http;
@@ -37,14 +31,30 @@ declare const fullApi: ApiFromModules<{
   stats: typeof stats;
   testimonials: typeof testimonials;
 }>;
-declare const fullApiWithMounts: typeof fullApi;
 
+/**
+ * A utility for referencing Convex functions in your app's public API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = api.myModule.myFunction;
+ * ```
+ */
 export declare const api: FilterApi<
-  typeof fullApiWithMounts,
+  typeof fullApi,
   FunctionReference<any, "public">
 >;
+
+/**
+ * A utility for referencing Convex functions in your app's internal API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = internal.myModule.myFunction;
+ * ```
+ */
 export declare const internal: FilterApi<
-  typeof fullApiWithMounts,
+  typeof fullApi,
   FunctionReference<any, "internal">
 >;
 
@@ -112,18 +122,6 @@ export declare const components: {
         { githubAccessToken: string; owner: string; page?: number },
         any
       >;
-      updateGithubRepoStars: FunctionReference<
-        "mutation",
-        "internal",
-        { name: string; owner: string; starCount: number },
-        any
-      >;
-      updateGithubRepoStats: FunctionReference<
-        "action",
-        "internal",
-        { githubAccessToken: string; repo: string },
-        any
-      >;
       updateGithubRepos: FunctionReference<
         "mutation",
         "internal",
@@ -136,6 +134,18 @@ export declare const components: {
             starCount: number;
           }>;
         },
+        any
+      >;
+      updateGithubRepoStars: FunctionReference<
+        "mutation",
+        "internal",
+        { name: string; owner: string; starCount: number },
+        any
+      >;
+      updateGithubRepoStats: FunctionReference<
+        "action",
+        "internal",
+        { githubAccessToken: string; repo: string },
         any
       >;
     };
@@ -238,12 +248,6 @@ export declare const components: {
         },
         any
       >;
-      updateNpmPackageStats: FunctionReference<
-        "action",
-        "internal",
-        { name: string },
-        any
-      >;
       updateNpmPackagesForOrg: FunctionReference<
         "mutation",
         "internal",
@@ -256,6 +260,12 @@ export declare const components: {
             name: string;
           }>;
         },
+        any
+      >;
+      updateNpmPackageStats: FunctionReference<
+        "action",
+        "internal",
+        { name: string },
         any
       >;
     };

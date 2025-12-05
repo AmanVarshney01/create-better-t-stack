@@ -220,7 +220,7 @@ export default function Testimonials({
 					</motion.div>
 
 					{!showAllTweets && (
-						<div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-gradient-to-t from-muted/20 via-muted/40 to-transparent" />
+						<div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-linear-to-t from-muted/20 via-muted/40 to-transparent" />
 					)}
 
 					<div className="my-4">
@@ -280,7 +280,7 @@ export default function Testimonials({
 					</motion.div>
 
 					{!showAllTweets && (
-						<div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-gradient-to-t from-muted/20 via-muted/40 to-transparent" />
+						<div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-linear-to-t from-muted/20 via-muted/40 to-transparent" />
 					)}
 
 					<div className="my-4">
@@ -340,7 +340,7 @@ export default function Testimonials({
 					</motion.div>
 
 					{!showAllTweets && (
-						<div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-gradient-to-t from-muted/20 via-muted/40 to-transparent" />
+						<div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-linear-to-t from-muted/20 via-muted/40 to-transparent" />
 					)}
 
 					<div className="my-4">
