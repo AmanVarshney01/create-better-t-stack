@@ -10,7 +10,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 			{...baseOptions}
 			style={
 				{
-					"--spacing-fd-container": "100%",
+					"--fd-layout-width": "100%",
 				} as object
 			}
 		>
