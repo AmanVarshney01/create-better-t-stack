@@ -3,7 +3,7 @@ import { getLatestCLIVersion } from "./get-latest-cli-version";
 import { isTelemetryEnabled } from "./telemetry";
 
 const CONVEX_INGEST_URL =
-	"https://neat-possum-719.convex.site/api/analytics/ingest";
+	"https://striped-seahorse-863.convex.site/api/analytics/ingest";
 
 async function sendConvexEvent(payload: Record<string, unknown>) {
 	if (!CONVEX_INGEST_URL) return;
