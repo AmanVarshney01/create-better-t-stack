@@ -39,3 +39,5 @@ yarn-error.log*
 .env*.local
 
 .smoke
+
+.idea

@@ -1,5 +1,6 @@
-import { describe, it } from "vitest";
+import { afterAll, beforeAll, describe, it } from "vitest";
 import {
+	cleanupSmokeDirectory,
 	EXAMPLES,
 	expectError,
 	expectSuccess,
@@ -8,6 +9,14 @@ import {
 } from "./test-utils";
 
 describe("Example Configurations", () => {
+	beforeAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
+	afterAll(async () => {
+		await cleanupSmokeDirectory();
+	});
+
 	describe("Todo Example", () => {
 		it("should work with todo example + database + backend", async () => {
 			const result = await runTRPCTest({
