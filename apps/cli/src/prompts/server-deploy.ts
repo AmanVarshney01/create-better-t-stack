@@ -75,9 +75,6 @@ export async function getServerDeploymentToAdd(
     return "none";
   }
 
-  if (options.length > 0) {
-  }
-
   if (options.length === 0) {
     return "none";
   }

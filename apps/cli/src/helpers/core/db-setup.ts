@@ -1,5 +1,4 @@
 import path from "node:path";
-import { spinner } from "@clack/prompts";
 import consola from "consola";
 import fs from "fs-extra";
 import pc from "picocolors";
@@ -29,7 +28,6 @@ export async function setupDatabase(config: ProjectConfig, cliInput?: { manualDb
     return;
   }
 
-  const s = spinner();
   const dbPackageDir = path.join(projectDir, "packages/db");
   const webDir = path.join(projectDir, "apps/web");
   const webDirExists = await fs.pathExists(webDir);
@@ -179,7 +177,6 @@ export async function setupDatabase(config: ProjectConfig, cliInput?: { manualDb
       await setupMongoDBAtlas(config, cliInput);
     }
   } catch (error) {
-    s.stop(pc.red("Failed to set up database"));
     if (error instanceof Error) {
       consola.error(pc.red(error.message));
     }
