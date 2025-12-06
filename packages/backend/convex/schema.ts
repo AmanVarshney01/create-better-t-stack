@@ -1,6 +1,8 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+const distributionValidator = v.record(v.string(), v.number());
+
 export default defineSchema({
 	videos: defineTable({
 		embedId: v.string(),
@@ -42,4 +44,33 @@ export default defineSchema({
 		node_version: v.optional(v.string()),
 		platform: v.optional(v.string()),
 	}).index("by_event", ["event"]),
+
+	analyticsStats: defineTable({
+		totalProjects: v.number(),
+		lastEventTime: v.number(),
+		backend: distributionValidator,
+		frontend: distributionValidator,
+		database: distributionValidator,
+		orm: distributionValidator,
+		api: distributionValidator,
+		auth: distributionValidator,
+		runtime: distributionValidator,
+		packageManager: distributionValidator,
+		platform: distributionValidator,
+		addons: distributionValidator,
+		examples: distributionValidator,
+		dbSetup: distributionValidator,
+		webDeploy: distributionValidator,
+		serverDeploy: distributionValidator,
+		payments: distributionValidator,
+		git: distributionValidator,
+		install: distributionValidator,
+		nodeVersion: distributionValidator,
+		cliVersion: distributionValidator,
+	}),
+
+	analyticsDailyStats: defineTable({
+		date: v.string(),
+		count: v.number(),
+	}).index("by_date", ["date"]),
 });

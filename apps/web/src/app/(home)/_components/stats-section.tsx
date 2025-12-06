@@ -14,38 +14,35 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-type EventRow = {
-	_creationTime: number;
-};
+type DailyStats = { date: string; count: number };
 
-function computeStats(events: EventRow[] | undefined) {
-	if (!events || events.length === 0) {
+function computeStats(
+	dailyStats: DailyStats[] | undefined,
+	lastEventTime: number | undefined,
+) {
+	if (!dailyStats || dailyStats.length === 0) {
 		return { totalProjects: 0, avgProjectsPerDay: "0", lastUpdated: null };
 	}
 
-	const byDay = new Set<string>();
-	let maxTime = 0;
-
-	for (const ev of events) {
-		const day = new Date(ev._creationTime).toISOString().slice(0, 10);
-		byDay.add(day);
-		if (ev._creationTime > maxTime) maxTime = ev._creationTime;
-	}
-
-	const totalProjects = events.length;
+	const totalProjects = dailyStats.reduce((sum, d) => sum + d.count, 0);
 	const avgProjectsPerDay =
-		byDay.size === 0 ? "0" : (totalProjects / byDay.size).toFixed(2);
-	const lastUpdated = new Date(maxTime).toLocaleDateString("en-US", {
-		month: "short",
-		day: "numeric",
-		year: "numeric",
-	});
+		dailyStats.length === 0
+			? "0"
+			: (totalProjects / dailyStats.length).toFixed(2);
+	const lastUpdated = lastEventTime
+		? new Date(lastEventTime).toLocaleDateString("en-US", {
+				month: "short",
+				day: "numeric",
+				year: "numeric",
+			})
+		: null;
 
 	return { totalProjects, avgProjectsPerDay, lastUpdated };
 }
 
 export default function StatsSection() {
-	const events = useQuery(api.analytics.getAllEvents, { range: "30d" });
+	const dailyStats = useQuery(api.analytics.getDailyStats, { days: 30 });
+	const stats = useQuery(api.analytics.getStats, {});
 	const githubRepo = useQuery(api.stats.getGithubRepo, {
 		name: "AmanVarshney01/create-better-t-stack",
 	});
@@ -54,7 +51,7 @@ export default function StatsSection() {
 	});
 
 	const liveNpmDownloadCount = useNpmDownloadCounter(npmPackages);
-	const analyticsData = computeStats(events as EventRow[] | undefined);
+	const analyticsData = computeStats(dailyStats, stats?.lastEventTime);
 
 	return (
 		<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

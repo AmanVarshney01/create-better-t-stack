@@ -1,3 +1,5 @@
+import { api } from "@better-t-stack/backend/convex/_generated/api";
+import { preloadQuery } from "convex/nextjs";
 import type { Metadata } from "next";
 import { AnalyticsClient } from "./analytics-client";
 
@@ -26,5 +28,14 @@ export const metadata: Metadata = {
 };
 
 export default async function Analytics() {
-	return <AnalyticsClient />;
+	const [preloadedStats, preloadedDailyStats] = await Promise.all([
+		preloadQuery(api.analytics.getStats, {}),
+		preloadQuery(api.analytics.getDailyStats, {}),
+	]);
+	return (
+		<AnalyticsClient
+			preloadedStats={preloadedStats}
+			preloadedDailyStats={preloadedDailyStats}
+		/>
+	);
 }

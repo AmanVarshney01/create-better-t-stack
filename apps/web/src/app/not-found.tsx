@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function NotFound() {
 	return (
-		<div className="mx-auto min-h-svh max-w-[1280px]">
+		<div className="container mx-auto mx-auto min-h-svh">
 			<main className="mx-auto px-4 pt-12">
 				<div className="mb-8">
 					<div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">

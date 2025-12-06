@@ -1,3 +1,6 @@
+"use client";
+
+import NumberFlow from "@number-flow/react";
 import {
 	Code2,
 	Database,
@@ -16,6 +19,7 @@ type MetricCardProps = {
 	subtitle: string;
 	icon: React.ReactNode;
 	highlight?: boolean;
+	animate?: boolean;
 };
 
 function MetricCard({
@@ -24,6 +28,7 @@ function MetricCard({
 	subtitle,
 	icon,
 	highlight,
+	animate,
 }: MetricCardProps) {
 	return (
 		<div className="rounded border border-border">
@@ -36,11 +41,21 @@ function MetricCard({
 				</div>
 			</div>
 			<div className="p-4">
-				<div
-					className={`truncate font-bold text-xl ${highlight ? "text-primary" : "text-accent"}`}
-				>
-					{value}
-				</div>
+				{animate && typeof value === "number" ? (
+					<NumberFlow
+						value={value}
+						className={`truncate font-bold text-xl ${highlight ? "text-primary" : "text-accent"}`}
+						transformTiming={{ duration: 800, easing: "ease-out" }}
+						willChange
+						isolate
+					/>
+				) : (
+					<div
+						className={`truncate font-bold text-xl ${highlight ? "text-primary" : "text-accent"}`}
+					>
+						{typeof value === "number" ? value.toLocaleString() : value}
+					</div>
+				)}
 				<p className="mt-1 text-muted-foreground text-xs">{subtitle}</p>
 			</div>
 		</div>
@@ -60,17 +75,19 @@ export function MetricsCards({ data }: { data: AggregatedAnalyticsData }) {
 			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 				<MetricCard
 					title="TOTAL_PROJECTS"
-					value={totalProjects.toLocaleString()}
+					value={totalProjects}
 					subtitle="Projects created with CLI"
 					icon={<Terminal className="h-4 w-4" />}
 					highlight
+					animate
 				/>
 				<MetricCard
 					title="AVG_PER_DAY"
-					value={avgProjectsPerDay.toFixed(1)}
+					value={Number(avgProjectsPerDay.toFixed(1))}
 					subtitle="Average daily creations"
 					icon={<TrendingUp className="h-4 w-4" />}
 					highlight
+					animate
 				/>
 				<MetricCard
 					title="TOP_FRONTEND"

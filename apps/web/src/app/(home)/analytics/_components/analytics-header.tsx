@@ -1,8 +1,6 @@
 import { format } from "date-fns";
 import { Terminal } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
-import discordIcon from "@/public/icon/discord.svg";
 
 export function AnalyticsHeader({
 	totalProjects,
@@ -91,32 +89,6 @@ export function AnalyticsHeader({
 					</span>
 				</div>
 			</div>
-
-			<Link
-				href="https://discord.gg/ZYsbjpDaM5"
-				target="_blank"
-				rel="noopener noreferrer"
-				className="block rounded rounded-t-none border border-border border-t-0 transition-colors hover:bg-muted/5"
-			>
-				<div className="flex items-center justify-between p-3">
-					<div className="flex items-center gap-3">
-						<Image
-							src={discordIcon}
-							alt="Discord"
-							className="h-4 w-4 invert-0 dark:invert"
-						/>
-						<div>
-							<span className="font-semibold text-sm">Join Discord</span>
-							<p className="text-muted-foreground text-xs">
-								Get live project creation notifications
-							</p>
-						</div>
-					</div>
-					<div className="rounded border border-border bg-primary/10 px-2 py-1 font-semibold text-primary text-xs">
-						JOIN
-					</div>
-				</div>
-			</Link>
 		</div>
 	);
 }

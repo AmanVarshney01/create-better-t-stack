@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@better-t-stack/backend/convex/_generated/api";
-import { useQuery } from "convex/react";
+import { type Preloaded, usePreloadedQuery, useQuery } from "convex/react";
 import { useState } from "react";
 import AnalyticsPage from "./_components/analytics-page";
 import type {
@@ -34,7 +34,139 @@ type EventRow = {
 	platform?: string;
 };
 
+type PrecomputedStats = {
+	totalProjects: number;
+	lastEventTime: number;
+	backend: Record<string, number>;
+	frontend: Record<string, number>;
+	database: Record<string, number>;
+	orm: Record<string, number>;
+	api: Record<string, number>;
+	auth: Record<string, number>;
+	runtime: Record<string, number>;
+	packageManager: Record<string, number>;
+	platform: Record<string, number>;
+	addons: Record<string, number>;
+	examples: Record<string, number>;
+	dbSetup: Record<string, number>;
+	webDeploy: Record<string, number>;
+	serverDeploy: Record<string, number>;
+	payments: Record<string, number>;
+	git: Record<string, number>;
+	install: Record<string, number>;
+	nodeVersion: Record<string, number>;
+	cliVersion: Record<string, number>;
+};
+
+type DailyStats = { date: string; count: number };
+
 type RangeOption = "all" | "30d" | "7d" | "1d";
+
+function recordToDistribution(record: Record<string, number>): Distribution {
+	return Object.entries(record)
+		.map(([name, value]) => ({ name, value }))
+		.sort((a, b) => b.value - a.value);
+}
+
+function getMostPopular(dist: Distribution) {
+	return dist.length > 0 ? dist[0].name : "none";
+}
+
+function buildFromPrecomputed(
+	stats: PrecomputedStats,
+	dailyStats: DailyStats[],
+): AggregatedAnalyticsData {
+	const backendDistribution = recordToDistribution(stats.backend);
+	const frontendDistribution = recordToDistribution(stats.frontend);
+	const databaseDistribution = recordToDistribution(stats.database);
+	const ormDistribution = recordToDistribution(stats.orm);
+	const apiDistribution = recordToDistribution(stats.api);
+	const authDistribution = recordToDistribution(stats.auth);
+	const runtimeDistribution = recordToDistribution(stats.runtime);
+	const packageManagerDistribution = recordToDistribution(stats.packageManager);
+	const platformDistribution = recordToDistribution(stats.platform);
+	const addonsDistribution = recordToDistribution(stats.addons);
+	const examplesDistribution = recordToDistribution(stats.examples);
+	const dbSetupDistribution = recordToDistribution(stats.dbSetup).filter(
+		(d) => d.name !== "none",
+	);
+	const webDeployDistribution = recordToDistribution(stats.webDeploy).filter(
+		(d) => d.name !== "none",
+	);
+	const serverDeployDistribution = recordToDistribution(
+		stats.serverDeploy,
+	).filter((d) => d.name !== "none");
+	const paymentsDistribution = recordToDistribution(stats.payments).filter(
+		(d) => d.name !== "none",
+	);
+	const gitDistribution = recordToDistribution(stats.git);
+	const installDistribution = recordToDistribution(stats.install);
+	const nodeVersionDistribution = recordToDistribution(stats.nodeVersion).map(
+		(d) => ({ version: d.name, count: d.value }),
+	);
+	const cliVersionDistribution = recordToDistribution(stats.cliVersion)
+		.filter((d) => d.name !== "unknown")
+		.slice(0, 10)
+		.map((d) => ({ version: d.name, count: d.value }));
+
+	const timeSeries = dailyStats
+		.map((d) => ({ date: d.date, count: d.count }))
+		.sort((a, b) => a.date.localeCompare(b.date));
+
+	const byMonth = new Map<string, number>();
+	for (const d of dailyStats) {
+		const month = d.date.slice(0, 7);
+		byMonth.set(month, (byMonth.get(month) || 0) + d.count);
+	}
+	const monthlyTimeSeries = Array.from(byMonth.entries())
+		.map(([month, count]) => ({ month, count }))
+		.sort((a, b) => a.month.localeCompare(b.month));
+
+	const uniqueDays = dailyStats.length || 1;
+
+	return {
+		lastUpdated: new Date(stats.lastEventTime).toISOString(),
+		totalProjects: stats.totalProjects,
+		avgProjectsPerDay: stats.totalProjects / uniqueDays,
+		timeSeries,
+		monthlyTimeSeries,
+		hourlyDistribution: Array.from({ length: 24 }, (_, i) => ({
+			hour: `${String(i).padStart(2, "0")}:00`,
+			count: 0,
+		})),
+		platformDistribution,
+		packageManagerDistribution,
+		backendDistribution,
+		databaseDistribution,
+		ormDistribution,
+		dbSetupDistribution,
+		apiDistribution,
+		frontendDistribution,
+		authDistribution,
+		runtimeDistribution,
+		addonsDistribution,
+		examplesDistribution,
+		gitDistribution,
+		installDistribution,
+		webDeployDistribution,
+		serverDeployDistribution,
+		paymentsDistribution,
+		nodeVersionDistribution,
+		cliVersionDistribution,
+		popularStackCombinations: [],
+		databaseORMCombinations: [],
+		summary: {
+			mostPopularFrontend: getMostPopular(frontendDistribution),
+			mostPopularBackend: getMostPopular(backendDistribution),
+			mostPopularDatabase: getMostPopular(databaseDistribution),
+			mostPopularORM: getMostPopular(ormDistribution),
+			mostPopularAPI: getMostPopular(apiDistribution),
+			mostPopularAuth: getMostPopular(authDistribution),
+			mostPopularPackageManager: getMostPopular(packageManagerDistribution),
+			mostPopularRuntime: getMostPopular(runtimeDistribution),
+		},
+	};
+}
 
 function count(map: Map<string, number>, key: string | undefined) {
 	if (!key) return;
@@ -66,11 +198,10 @@ function getMajorVersion(version: string | undefined) {
 	return `v${clean.split(".")[0]}`;
 }
 
-function getMostPopular(dist: Distribution) {
-	return dist.length > 0 ? dist[0].name : "none";
-}
-
-function aggregateEvents(events: EventRow[]): AggregatedAnalyticsData {
+function aggregateEvents(
+	events: EventRow[],
+	dailyStats?: DailyStats[],
+): AggregatedAnalyticsData {
 	const byDate = new Map<string, number>();
 	const byMonth = new Map<string, number>();
 	const byHour = new Map<string, number>();
@@ -143,9 +274,13 @@ function aggregateEvents(events: EventRow[]): AggregatedAnalyticsData {
 			? null
 			: new Date(Math.max(...events.map((e) => e._creationTime))).toISOString();
 
-	const timeSeries = Array.from(byDate.entries())
-		.map(([date, count]) => ({ date, count }))
-		.sort((a, b) => a.date.localeCompare(b.date));
+	const timeSeries = dailyStats
+		? dailyStats
+				.map((d) => ({ date: d.date, count: d.count }))
+				.sort((a, b) => a.date.localeCompare(b.date))
+		: Array.from(byDate.entries())
+				.map(([date, count]) => ({ date, count }))
+				.sort((a, b) => a.date.localeCompare(b.date));
 
 	const monthlyTimeSeries = Array.from(byMonth.entries())
 		.map(([month, count]) => ({ month, count }))
@@ -233,16 +368,48 @@ function aggregateEvents(events: EventRow[]): AggregatedAnalyticsData {
 	};
 }
 
-export function AnalyticsClient() {
+export function AnalyticsClient({
+	preloadedStats,
+	preloadedDailyStats,
+}: {
+	preloadedStats: Preloaded<typeof api.analytics.getStats>;
+	preloadedDailyStats: Preloaded<typeof api.analytics.getDailyStats>;
+}) {
 	const [range, setRange] = useState<RangeOption>("30d");
-	const events = useQuery(api.analytics.getAllEvents, { range });
-	const data = aggregateEvents((events as EventRow[] | undefined) ?? []);
+
+	const stats = usePreloadedQuery(preloadedStats);
+	const dailyStats = usePreloadedQuery(preloadedDailyStats);
+
+	const rangeDays =
+		range === "30d" ? 30 : range === "7d" ? 7 : range === "1d" ? 1 : 0;
+	const rawEvents = useQuery(
+		api.analytics.getAllEvents,
+		range === "all" ? "skip" : { range },
+	) as EventRow[] | undefined;
+	const rangeDailyStats = useQuery(
+		api.analytics.getDailyStats,
+		range === "all" ? "skip" : { days: rangeDays },
+	);
+
+	let data: AggregatedAnalyticsData;
+
+	if (range === "all" && stats) {
+		data = buildFromPrecomputed(stats, dailyStats);
+	} else if (rawEvents) {
+		data = aggregateEvents(rawEvents, rangeDailyStats ?? undefined);
+	} else {
+		data = stats
+			? buildFromPrecomputed(stats, dailyStats)
+			: aggregateEvents([]);
+	}
+
 	const legacy = {
 		total: 55434,
 		avgPerDay: 326.1,
 		lastUpdatedIso: "2025-11-13T10:10:00.000Z",
 		source: "PostHog (legacy)",
 	};
+
 	return (
 		<AnalyticsPage
 			data={data}

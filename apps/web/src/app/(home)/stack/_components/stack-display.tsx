@@ -107,7 +107,7 @@ export function StackDisplay({ stackState }: StackDisplayProps) {
 	};
 
 	return (
-		<main className="mx-auto min-h-svh max-w-[1280px]">
+		<main className="container mx-auto mx-auto min-h-svh">
 			<div className="mx-auto flex flex-col gap-8 px-4 pt-12">
 				<div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
 					<div className="flex items-center gap-2">
