@@ -4,11 +4,7 @@ import { useNavigate } from "@tanstack/solid-router";
 import z from "zod";
 import { For } from "solid-js";
 
-export default function SignInForm({
-  onSwitchToSignUp,
-}: {
-  onSwitchToSignUp: () => void;
-}) {
+export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
   const navigate = useNavigate({
     from: "/",
   });
@@ -72,9 +68,7 @@ export default function SignInForm({
                   class="w-full rounded border p-2"
                 />
                 <For each={field().state.meta.errors}>
-                  {(error) => (
-                    <p class="text-sm text-red-600">{error?.message}</p>
-                  )}
+                  {(error) => <p class="text-sm text-red-600">{error?.message}</p>}
                 </For>
               </div>
             )}
@@ -96,9 +90,7 @@ export default function SignInForm({
                   class="w-full rounded border p-2"
                 />
                 <For each={field().state.meta.errors}>
-                  {(error) => (
-                    <p class="text-sm text-red-600">{error?.message}</p>
-                  )}
+                  {(error) => <p class="text-sm text-red-600">{error?.message}</p>}
                 </For>
               </div>
             )}
