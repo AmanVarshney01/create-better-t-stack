@@ -51,7 +51,6 @@
     "build": "tsdown --publint",
     "dev": "tsdown --watch",
     "check-types": "tsc --noEmit",
-    "check": "biome check --write .",
     "test": "bun run build && vitest run; rm -rf .smoke || true",
     "test:ui": "bun run build && vitest --ui",
     "prepublishOnly": "npm run build"

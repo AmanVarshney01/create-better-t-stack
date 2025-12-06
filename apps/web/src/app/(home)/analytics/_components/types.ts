@@ -7,59 +7,59 @@ export type MonthlyData = Array<{ month: string; count: number }>;
 export type HourlyData = Array<{ hour: string; count: number }>;
 
 export type AggregatedAnalyticsData = {
-	lastUpdated: string | null;
-	totalProjects: number;
-	avgProjectsPerDay: number;
-	timeSeries: TimeSeriesData;
-	monthlyTimeSeries: MonthlyData;
-	hourlyDistribution: HourlyData;
-	platformDistribution: Distribution;
-	packageManagerDistribution: Distribution;
-	backendDistribution: Distribution;
-	databaseDistribution: Distribution;
-	ormDistribution: Distribution;
-	dbSetupDistribution: Distribution;
-	apiDistribution: Distribution;
-	frontendDistribution: Distribution;
-	authDistribution: Distribution;
-	runtimeDistribution: Distribution;
-	addonsDistribution: Distribution;
-	examplesDistribution: Distribution;
-	gitDistribution: Distribution;
-	installDistribution: Distribution;
-	webDeployDistribution: Distribution;
-	serverDeployDistribution: Distribution;
-	paymentsDistribution: Distribution;
-	nodeVersionDistribution: VersionDistribution;
-	cliVersionDistribution: VersionDistribution;
-	popularStackCombinations: Distribution;
-	databaseORMCombinations: Distribution;
-	summary: {
-		mostPopularFrontend: string;
-		mostPopularBackend: string;
-		mostPopularDatabase: string;
-		mostPopularORM: string;
-		mostPopularAPI: string;
-		mostPopularAuth: string;
-		mostPopularPackageManager: string;
-		mostPopularRuntime: string;
-	};
+  lastUpdated: string | null;
+  totalProjects: number;
+  avgProjectsPerDay: number;
+  timeSeries: TimeSeriesData;
+  monthlyTimeSeries: MonthlyData;
+  hourlyDistribution: HourlyData;
+  platformDistribution: Distribution;
+  packageManagerDistribution: Distribution;
+  backendDistribution: Distribution;
+  databaseDistribution: Distribution;
+  ormDistribution: Distribution;
+  dbSetupDistribution: Distribution;
+  apiDistribution: Distribution;
+  frontendDistribution: Distribution;
+  authDistribution: Distribution;
+  runtimeDistribution: Distribution;
+  addonsDistribution: Distribution;
+  examplesDistribution: Distribution;
+  gitDistribution: Distribution;
+  installDistribution: Distribution;
+  webDeployDistribution: Distribution;
+  serverDeployDistribution: Distribution;
+  paymentsDistribution: Distribution;
+  nodeVersionDistribution: VersionDistribution;
+  cliVersionDistribution: VersionDistribution;
+  popularStackCombinations: Distribution;
+  databaseORMCombinations: Distribution;
+  summary: {
+    mostPopularFrontend: string;
+    mostPopularBackend: string;
+    mostPopularDatabase: string;
+    mostPopularORM: string;
+    mostPopularAPI: string;
+    mostPopularAuth: string;
+    mostPopularPackageManager: string;
+    mostPopularRuntime: string;
+  };
 };
 
 export const chartConfig = {
-	value: { label: "Count", color: "hsl(var(--chart-1))" },
-	count: { label: "Projects", color: "hsl(var(--chart-1))" },
+  value: { label: "Count", color: "hsl(var(--chart-1))" },
+  count: { label: "Projects", color: "hsl(var(--chart-1))" },
 } satisfies ChartConfig;
 
 export const CHART_COLORS = [
-	"hsl(var(--chart-1))",
-	"hsl(var(--chart-2))",
-	"hsl(var(--chart-3))",
-	"hsl(var(--chart-4))",
-	"hsl(var(--chart-5))",
-	"hsl(var(--muted-foreground))",
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
+  "hsl(var(--muted-foreground))",
 ];
 
 export function getColor(index: number) {
-	return CHART_COLORS[index % CHART_COLORS.length];
+  return CHART_COLORS[index % CHART_COLORS.length];
 }

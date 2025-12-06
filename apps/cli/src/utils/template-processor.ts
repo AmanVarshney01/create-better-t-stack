@@ -8,61 +8,57 @@ import { formatFileWithBiome } from "./biome-formatter";
 const BINARY_EXTENSIONS = new Set([".png", ".ico", ".svg"]);
 
 function isBinaryFile(filePath: string): boolean {
-	const ext = path.extname(filePath).toLowerCase();
-	return BINARY_EXTENSIONS.has(ext);
+  const ext = path.extname(filePath).toLowerCase();
+  return BINARY_EXTENSIONS.has(ext);
 }
 
-export async function processTemplate(
-	srcPath: string,
-	destPath: string,
-	context: ProjectConfig,
-) {
-	try {
-		await fs.ensureDir(path.dirname(destPath));
+export async function processTemplate(srcPath: string, destPath: string, context: ProjectConfig) {
+  try {
+    await fs.ensureDir(path.dirname(destPath));
 
-		if (isBinaryFile(srcPath) && !srcPath.endsWith(".hbs")) {
-			await fs.copy(srcPath, destPath);
-			return;
-		}
+    if (isBinaryFile(srcPath) && !srcPath.endsWith(".hbs")) {
+      await fs.copy(srcPath, destPath);
+      return;
+    }
 
-		let content: string;
+    let content: string;
 
-		if (srcPath.endsWith(".hbs")) {
-			const templateContent = await fs.readFile(srcPath, "utf-8");
-			const template = handlebars.compile(templateContent);
-			content = template(context);
-		} else {
-			content = await fs.readFile(srcPath, "utf-8");
-		}
+    if (srcPath.endsWith(".hbs")) {
+      const templateContent = await fs.readFile(srcPath, "utf-8");
+      const template = handlebars.compile(templateContent);
+      content = template(context);
+    } else {
+      content = await fs.readFile(srcPath, "utf-8");
+    }
 
-		try {
-			const formattedContent = await formatFileWithBiome(destPath, content);
-			if (formattedContent) {
-				content = formattedContent;
-			}
-		} catch (formatError) {
-			consola.debug(`Failed to format ${destPath}:`, formatError);
-		}
+    try {
+      const formattedContent = await formatFileWithBiome(destPath, content);
+      if (formattedContent) {
+        content = formattedContent;
+      }
+    } catch (formatError) {
+      consola.debug(`Failed to format ${destPath}:`, formatError);
+    }
 
-		await fs.writeFile(destPath, content);
-	} catch (error) {
-		consola.error(`Error processing template ${srcPath}:`, error);
-		throw new Error(`Failed to process template ${srcPath}`);
-	}
+    await fs.writeFile(destPath, content);
+  } catch (error) {
+    consola.error(`Error processing template ${srcPath}:`, error);
+    throw new Error(`Failed to process template ${srcPath}`);
+  }
 }
 
 handlebars.registerHelper("eq", (a, b) => a === b);
 handlebars.registerHelper("ne", (a, b) => a !== b);
 handlebars.registerHelper("and", (...args) => {
-	const values = args.slice(0, -1);
-	return values.every((value) => value);
+  const values = args.slice(0, -1);
+  return values.every((value) => value);
 });
 handlebars.registerHelper("or", (...args) => {
-	const values = args.slice(0, -1);
-	return values.some((value) => value);
+  const values = args.slice(0, -1);
+  return values.some((value) => value);
 });
 
 handlebars.registerHelper(
-	"includes",
-	(array, value) => Array.isArray(array) && array.includes(value),
+  "includes",
+  (array, value) => Array.isArray(array) && array.includes(value),
 );

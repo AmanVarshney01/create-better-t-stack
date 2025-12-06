@@ -1,229 +1,213 @@
 import { z } from "zod";
 
 export const DatabaseSchema = z
-	.enum(["none", "sqlite", "postgres", "mysql", "mongodb"])
-	.describe("Database type");
+  .enum(["none", "sqlite", "postgres", "mysql", "mongodb"])
+  .describe("Database type");
 export type Database = z.infer<typeof DatabaseSchema>;
 
-export const ORMSchema = z
-	.enum(["drizzle", "prisma", "mongoose", "none"])
-	.describe("ORM type");
+export const ORMSchema = z.enum(["drizzle", "prisma", "mongoose", "none"]).describe("ORM type");
 export type ORM = z.infer<typeof ORMSchema>;
 
 export const BackendSchema = z
-	.enum(["hono", "express", "fastify", "elysia", "convex", "self", "none"])
-	.describe("Backend framework");
+  .enum(["hono", "express", "fastify", "elysia", "convex", "self", "none"])
+  .describe("Backend framework");
 export type Backend = z.infer<typeof BackendSchema>;
 
 export const RuntimeSchema = z
-	.enum(["bun", "node", "workers", "none"])
-	.describe("Runtime environment");
+  .enum(["bun", "node", "workers", "none"])
+  .describe("Runtime environment");
 export type Runtime = z.infer<typeof RuntimeSchema>;
 
 export const FrontendSchema = z
-	.enum([
-		"tanstack-router",
-		"react-router",
-		"tanstack-start",
-		"next",
-		"nuxt",
-		"native-bare",
-		"native-uniwind",
-		"native-unistyles",
-		"svelte",
-		"solid",
-		"none",
-	])
-	.describe("Frontend framework");
+  .enum([
+    "tanstack-router",
+    "react-router",
+    "tanstack-start",
+    "next",
+    "nuxt",
+    "native-bare",
+    "native-uniwind",
+    "native-unistyles",
+    "svelte",
+    "solid",
+    "none",
+  ])
+  .describe("Frontend framework");
 export type Frontend = z.infer<typeof FrontendSchema>;
 
 export const AddonsSchema = z
-	.enum([
-		"pwa",
-		"tauri",
-		"starlight",
-		"biome",
-		"husky",
-		"ruler",
-		"turborepo",
-		"fumadocs",
-		"ultracite",
-		"oxlint",
-		"none",
-	])
-	.describe("Additional addons");
+  .enum([
+    "pwa",
+    "tauri",
+    "starlight",
+    "biome",
+    "husky",
+    "ruler",
+    "turborepo",
+    "fumadocs",
+    "ultracite",
+    "oxlint",
+    "none",
+  ])
+  .describe("Additional addons");
 export type Addons = z.infer<typeof AddonsSchema>;
 
 export const ExamplesSchema = z
-	.enum(["todo", "ai", "none"])
-	.describe("Example templates to include");
+  .enum(["todo", "ai", "none"])
+  .describe("Example templates to include");
 export type Examples = z.infer<typeof ExamplesSchema>;
 
-export const PackageManagerSchema = z
-	.enum(["npm", "pnpm", "bun"])
-	.describe("Package manager");
+export const PackageManagerSchema = z.enum(["npm", "pnpm", "bun"]).describe("Package manager");
 export type PackageManager = z.infer<typeof PackageManagerSchema>;
 
 export const DatabaseSetupSchema = z
-	.enum([
-		"turso",
-		"neon",
-		"prisma-postgres",
-		"planetscale",
-		"mongodb-atlas",
-		"supabase",
-		"d1",
-		"docker",
-		"none",
-	])
-	.describe("Database hosting setup");
+  .enum([
+    "turso",
+    "neon",
+    "prisma-postgres",
+    "planetscale",
+    "mongodb-atlas",
+    "supabase",
+    "d1",
+    "docker",
+    "none",
+  ])
+  .describe("Database hosting setup");
 export type DatabaseSetup = z.infer<typeof DatabaseSetupSchema>;
 
 export const APISchema = z.enum(["trpc", "orpc", "none"]).describe("API type");
 export type API = z.infer<typeof APISchema>;
 
 export const AuthSchema = z
-	.enum(["better-auth", "clerk", "none"])
-	.describe("Authentication provider");
+  .enum(["better-auth", "clerk", "none"])
+  .describe("Authentication provider");
 export type Auth = z.infer<typeof AuthSchema>;
 
-export const PaymentsSchema = z
-	.enum(["polar", "none"])
-	.describe("Payments provider");
+export const PaymentsSchema = z.enum(["polar", "none"]).describe("Payments provider");
 export type Payments = z.infer<typeof PaymentsSchema>;
 
 export const ProjectNameSchema = z
-	.string()
-	.min(1, "Project name cannot be empty")
-	.max(255, "Project name must be less than 255 characters")
-	.refine(
-		(name) => name === "." || !name.startsWith("."),
-		"Project name cannot start with a dot (except for '.')",
-	)
-	.refine(
-		(name) => name === "." || !name.startsWith("-"),
-		"Project name cannot start with a dash",
-	)
-	.refine((name) => {
-		const invalidChars = ["<", ">", ":", '"', "|", "?", "*"];
-		return !invalidChars.some((char) => name.includes(char));
-	}, "Project name contains invalid characters")
-	.refine(
-		(name) => name.toLowerCase() !== "node_modules",
-		"Project name is reserved",
-	)
-	.describe("Project name or path");
+  .string()
+  .min(1, "Project name cannot be empty")
+  .max(255, "Project name must be less than 255 characters")
+  .refine(
+    (name) => name === "." || !name.startsWith("."),
+    "Project name cannot start with a dot (except for '.')",
+  )
+  .refine((name) => name === "." || !name.startsWith("-"), "Project name cannot start with a dash")
+  .refine((name) => {
+    const invalidChars = ["<", ">", ":", '"', "|", "?", "*"];
+    return !invalidChars.some((char) => name.includes(char));
+  }, "Project name contains invalid characters")
+  .refine((name) => name.toLowerCase() !== "node_modules", "Project name is reserved")
+  .describe("Project name or path");
 export type ProjectName = z.infer<typeof ProjectNameSchema>;
 
-export const WebDeploySchema = z
-	.enum(["alchemy", "none"])
-	.describe("Web deployment");
+export const WebDeploySchema = z.enum(["alchemy", "none"]).describe("Web deployment");
 export type WebDeploy = z.infer<typeof WebDeploySchema>;
 
-export const ServerDeploySchema = z
-	.enum(["alchemy", "none"])
-	.describe("Server deployment");
+export const ServerDeploySchema = z.enum(["alchemy", "none"]).describe("Server deployment");
 export type ServerDeploy = z.infer<typeof ServerDeploySchema>;
 
 export const DirectoryConflictSchema = z
-	.enum(["merge", "overwrite", "increment", "error"])
-	.describe("How to handle existing directory conflicts");
+  .enum(["merge", "overwrite", "increment", "error"])
+  .describe("How to handle existing directory conflicts");
 export type DirectoryConflict = z.infer<typeof DirectoryConflictSchema>;
 
 export const TemplateSchema = z
-	.enum(["mern", "pern", "t3", "uniwind", "none"])
-	.describe("Predefined project template");
+  .enum(["mern", "pern", "t3", "uniwind", "none"])
+  .describe("Predefined project template");
 export type Template = z.infer<typeof TemplateSchema>;
 
 export type CreateInput = {
-	projectName?: string;
-	template?: Template;
-	yes?: boolean;
-	yolo?: boolean;
-	verbose?: boolean;
-	database?: Database;
-	orm?: ORM;
-	auth?: Auth;
-	payments?: Payments;
-	frontend?: Frontend[];
-	addons?: Addons[];
-	examples?: Examples[];
-	git?: boolean;
-	packageManager?: PackageManager;
-	install?: boolean;
-	dbSetup?: DatabaseSetup;
-	backend?: Backend;
-	runtime?: Runtime;
-	api?: API;
-	webDeploy?: WebDeploy;
-	serverDeploy?: ServerDeploy;
-	directoryConflict?: DirectoryConflict;
-	renderTitle?: boolean;
-	disableAnalytics?: boolean;
-	manualDb?: boolean;
+  projectName?: string;
+  template?: Template;
+  yes?: boolean;
+  yolo?: boolean;
+  verbose?: boolean;
+  database?: Database;
+  orm?: ORM;
+  auth?: Auth;
+  payments?: Payments;
+  frontend?: Frontend[];
+  addons?: Addons[];
+  examples?: Examples[];
+  git?: boolean;
+  packageManager?: PackageManager;
+  install?: boolean;
+  dbSetup?: DatabaseSetup;
+  backend?: Backend;
+  runtime?: Runtime;
+  api?: API;
+  webDeploy?: WebDeploy;
+  serverDeploy?: ServerDeploy;
+  directoryConflict?: DirectoryConflict;
+  renderTitle?: boolean;
+  disableAnalytics?: boolean;
+  manualDb?: boolean;
 };
 
 export type AddInput = {
-	addons?: Addons[];
-	webDeploy?: WebDeploy;
-	serverDeploy?: ServerDeploy;
-	projectDir?: string;
-	install?: boolean;
-	packageManager?: PackageManager;
+  addons?: Addons[];
+  webDeploy?: WebDeploy;
+  serverDeploy?: ServerDeploy;
+  projectDir?: string;
+  install?: boolean;
+  packageManager?: PackageManager;
 };
 
 export type CLIInput = CreateInput & {
-	projectDirectory?: string;
+  projectDirectory?: string;
 };
 
 export interface ProjectConfig {
-	projectName: string;
-	projectDir: string;
-	relativePath: string;
-	database: Database;
-	orm: ORM;
-	backend: Backend;
-	runtime: Runtime;
-	frontend: Frontend[];
-	addons: Addons[];
-	examples: Examples[];
-	auth: Auth;
-	payments: Payments;
-	git: boolean;
-	packageManager: PackageManager;
-	install: boolean;
-	dbSetup: DatabaseSetup;
-	api: API;
-	webDeploy: WebDeploy;
-	serverDeploy: ServerDeploy;
+  projectName: string;
+  projectDir: string;
+  relativePath: string;
+  database: Database;
+  orm: ORM;
+  backend: Backend;
+  runtime: Runtime;
+  frontend: Frontend[];
+  addons: Addons[];
+  examples: Examples[];
+  auth: Auth;
+  payments: Payments;
+  git: boolean;
+  packageManager: PackageManager;
+  install: boolean;
+  dbSetup: DatabaseSetup;
+  api: API;
+  webDeploy: WebDeploy;
+  serverDeploy: ServerDeploy;
 }
 
 export interface BetterTStackConfig {
-	version: string;
-	createdAt: string;
-	database: Database;
-	orm: ORM;
-	backend: Backend;
-	runtime: Runtime;
-	frontend: Frontend[];
-	addons: Addons[];
-	examples: Examples[];
-	auth: Auth;
-	payments: Payments;
-	packageManager: PackageManager;
-	dbSetup: DatabaseSetup;
-	api: API;
-	webDeploy: WebDeploy;
-	serverDeploy: ServerDeploy;
+  version: string;
+  createdAt: string;
+  database: Database;
+  orm: ORM;
+  backend: Backend;
+  runtime: Runtime;
+  frontend: Frontend[];
+  addons: Addons[];
+  examples: Examples[];
+  auth: Auth;
+  payments: Payments;
+  packageManager: PackageManager;
+  dbSetup: DatabaseSetup;
+  api: API;
+  webDeploy: WebDeploy;
+  serverDeploy: ServerDeploy;
 }
 
 export interface InitResult {
-	success: boolean;
-	projectConfig: ProjectConfig;
-	reproducibleCommand: string;
-	timeScaffolded: string;
-	elapsedTimeMs: number;
-	projectDirectory: string;
-	relativePath: string;
-	error?: string;
+  success: boolean;
+  projectConfig: ProjectConfig;
+  reproducibleCommand: string;
+  timeScaffolded: string;
+  elapsedTimeMs: number;
+  projectDirectory: string;
+  relativePath: string;
+  error?: string;
 }
