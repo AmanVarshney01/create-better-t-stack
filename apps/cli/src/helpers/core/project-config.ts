@@ -22,6 +22,14 @@ export async function updatePackageConfigurations(projectDir: string, options: P
   }
 }
 
+/**
+ * Update the root package.json with the project name, workspace entries, scripts, and package manager metadata according to the provided project configuration.
+ *
+ * This updates (if present) the root package.json: sets the package name, generates workspace-scoped scripts (dev, build, check-types, native/web dev, server/dev:setup, database commands and docker-related db scripts when applicable), attempts to record the installed package manager version, and ensures appropriate workspaces (apps/* and/or packages/*) are present.
+ *
+ * @param projectDir - Filesystem path to the project root containing package.json
+ * @param options - Project configuration that determines which scripts and workspaces are added or modified (backend, packageManager, addons, database, orm, dbSetup, serverDeploy, frontend, etc.)
+ */
 async function updateRootPackageJson(projectDir: string, options: ProjectConfig) {
   const rootPackageJsonPath = path.join(projectDir, "package.json");
   if (!(await fs.pathExists(rootPackageJsonPath))) return;
@@ -91,10 +99,10 @@ async function updateRootPackageJson(projectDir: string, options: ProjectConfig)
       }
     }
     if (options.dbSetup === "docker") {
-      scripts["db:start"] = `turbo -F ${dbPackageName} db:start`;
-      scripts["db:watch"] = `turbo -F ${dbPackageName} db:watch`;
-      scripts["db:stop"] = `turbo -F ${dbPackageName} db:stop`;
-      scripts["db:down"] = `turbo -F ${dbPackageName} db:down`;
+      scripts["db:start"] = `turbo -F ${dbPackageName} --env-mode=loose db:start`;
+      scripts["db:watch"] = `turbo -F ${dbPackageName} --env-mode=loose db:watch`;
+      scripts["db:stop"] = `turbo -F ${dbPackageName} --env-mode=loose db:stop`;
+      scripts["db:down"] = `turbo -F ${dbPackageName} --env-mode=loose db:down`;
     }
   } else if (options.packageManager === "pnpm") {
     scripts.dev = devScript;
