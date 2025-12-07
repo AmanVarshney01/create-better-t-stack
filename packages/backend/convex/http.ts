@@ -10,7 +10,7 @@ http.route({
   method: "POST",
   handler: httpAction(async (ctx, req) => {
     const body = await req.json();
-    if (!body || typeof body.event !== "string") {
+    if (!body) {
       return new Response("Bad Request", { status: 400 });
     }
 
@@ -18,7 +18,6 @@ http.route({
     if (ingest) {
       try {
         await ctx.runMutation(ingest, {
-          event: body.event,
           database: body.database,
           orm: body.orm,
           backend: body.backend,
@@ -40,7 +39,7 @@ http.route({
           platform: body.platform,
         });
       } catch (error) {
-        console.error("Failed to ingest analytics event:", error);
+        console.error("Failed to ingest analytics:", error);
         return new Response("Internal Server Error", { status: 500 });
       }
     }

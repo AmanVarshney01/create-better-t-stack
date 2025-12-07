@@ -14,6 +14,7 @@
 		"typescript": "^5.9.3"
 	},
 	"dependencies": {
+		"@convex-dev/crons": "^0.2.0",
 		"@erquhart/convex-oss-stats": "^0.8.1",
 		"convex": "^1.28.2",
 		"convex-helpers": "^0.1.104"

@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { Id } from "./_generated/dataModel";
 import { internalMutation, mutation, query } from "./_generated/server";
 
 function incrementKey(
@@ -38,7 +39,6 @@ function getMajorVersion(version: string | undefined): string | undefined {
 
 export const ingestEvent = internalMutation({
   args: {
-    event: v.string(),
     database: v.optional(v.string()),
     orm: v.optional(v.string()),
     backend: v.optional(v.string()),
@@ -63,6 +63,14 @@ export const ingestEvent = internalMutation({
   handler: async (ctx, args) => {
     const now = Date.now();
     await ctx.db.insert("analyticsEvents", args);
+
+    const hourKey = String(new Date(now).getUTCHours()).padStart(2, "0");
+    const fe = args.frontend?.[0] || "none";
+    const be = args.backend || "none";
+    const stackKey = `${be} + ${fe}`;
+    const db = args.database || "none";
+    const o = args.orm || "none";
+    const dbOrmKey = `${db} + ${o}`;
 
     const existingStats = await ctx.db.query("analyticsStats").first();
 
@@ -89,6 +97,9 @@ export const ingestEvent = internalMutation({
         install: incrementBool(existingStats.install, args.install),
         nodeVersion: incrementKey(existingStats.nodeVersion, getMajorVersion(args.node_version)),
         cliVersion: incrementKey(existingStats.cliVersion, args.cli_version),
+        hourlyDistribution: incrementKey(existingStats.hourlyDistribution || {}, hourKey),
+        stackCombinations: incrementKey(existingStats.stackCombinations || {}, stackKey),
+        dbOrmCombinations: incrementKey(existingStats.dbOrmCombinations || {}, dbOrmKey),
       });
     } else {
       const emptyDist: Record<string, number> = {};
@@ -114,6 +125,9 @@ export const ingestEvent = internalMutation({
         install: incrementBool(emptyDist, args.install),
         nodeVersion: incrementKey(emptyDist, getMajorVersion(args.node_version)),
         cliVersion: incrementKey(emptyDist, args.cli_version),
+        hourlyDistribution: incrementKey(emptyDist, hourKey),
+        stackCombinations: incrementKey(emptyDist, stackKey),
+        dbOrmCombinations: incrementKey(emptyDist, dbOrmKey),
       });
     }
 
@@ -160,6 +174,9 @@ export const getStats = query({
       install: distributionValidator,
       nodeVersion: distributionValidator,
       cliVersion: distributionValidator,
+      hourlyDistribution: distributionValidator,
+      stackCombinations: distributionValidator,
+      dbOrmCombinations: distributionValidator,
     }),
     v.null(),
   ),
@@ -188,6 +205,9 @@ export const getStats = query({
       install: stats.install,
       nodeVersion: stats.nodeVersion,
       cliVersion: stats.cliVersion,
+      hourlyDistribution: stats.hourlyDistribution || {},
+      stackCombinations: stats.stackCombinations || {},
+      dbOrmCombinations: stats.dbOrmCombinations || {},
     };
   },
 });
@@ -221,15 +241,12 @@ export const getDailyStats = query({
 
 export const getAllEvents = query({
   args: {
-    range: v.optional(
-      v.union(v.literal("all"), v.literal("30d"), v.literal("7d"), v.literal("1d")),
-    ),
+    range: v.union(v.literal("30d"), v.literal("7d"), v.literal("1d")),
   },
   returns: v.array(
     v.object({
       _id: v.id("analyticsEvents"),
       _creationTime: v.number(),
-      event: v.string(),
       database: v.optional(v.string()),
       orm: v.optional(v.string()),
       backend: v.optional(v.string()),
@@ -252,19 +269,18 @@ export const getAllEvents = query({
     }),
   ),
   handler: async (ctx, args) => {
-    const events = await ctx.db.query("analyticsEvents").order("desc").collect();
-    if (!args.range || args.range === "all") {
-      return events;
-    }
-
     const now = Date.now();
-    const days = args.range === "30d" ? 30 : args.range === "7d" ? 7 : args.range === "1d" ? 1 : 0;
-    if (days === 0) {
-      return events;
+    const days = args.range === "30d" ? 30 : args.range === "7d" ? 7 : 1;
+    const cutoff = now - days * 24 * 60 * 60 * 1000;
+
+    const result = [];
+
+    for await (const ev of ctx.db.query("analyticsEvents").order("desc")) {
+      if (ev._creationTime < cutoff) break;
+      result.push(ev);
     }
 
-    const cutoff = now - days * 24 * 60 * 60 * 1000;
-    return events.filter((e) => e._creationTime >= cutoff);
+    return result;
   },
 });
 
@@ -310,6 +326,9 @@ export const backfillStats = mutation({
       install: { ...emptyDist },
       nodeVersion: { ...emptyDist },
       cliVersion: { ...emptyDist },
+      hourlyDistribution: { ...emptyDist },
+      stackCombinations: { ...emptyDist },
+      dbOrmCombinations: { ...emptyDist },
     };
 
     const dailyCounts = new Map<string, number>();
@@ -319,6 +338,14 @@ export const backfillStats = mutation({
       if (ev._creationTime > stats.lastEventTime) {
         stats.lastEventTime = ev._creationTime;
       }
+
+      const hourKey = String(new Date(ev._creationTime).getUTCHours()).padStart(2, "0");
+      const fe = ev.frontend?.[0] || "none";
+      const be = ev.backend || "none";
+      const stackKey = `${be} + ${fe}`;
+      const db = ev.database || "none";
+      const o = ev.orm || "none";
+      const dbOrmKey = `${db} + ${o}`;
 
       stats.backend = incrementKey(stats.backend, ev.backend);
       stats.frontend = incrementKeys(stats.frontend, ev.frontend);
@@ -339,6 +366,9 @@ export const backfillStats = mutation({
       stats.install = incrementBool(stats.install, ev.install);
       stats.nodeVersion = incrementKey(stats.nodeVersion, getMajorVersion(ev.node_version));
       stats.cliVersion = incrementKey(stats.cliVersion, ev.cli_version);
+      stats.hourlyDistribution = incrementKey(stats.hourlyDistribution, hourKey);
+      stats.stackCombinations = incrementKey(stats.stackCombinations, stackKey);
+      stats.dbOrmCombinations = incrementKey(stats.dbOrmCombinations, dbOrmKey);
 
       const date = new Date(ev._creationTime).toISOString().slice(0, 10);
       dailyCounts.set(date, (dailyCounts.get(date) || 0) + 1);

@@ -1,13 +1,56 @@
-import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, YAxis } from "recharts";
-import {
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, Tooltip, XAxis, YAxis } from "recharts";
+import { ChartContainer, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import type { AggregatedAnalyticsData, Distribution, VersionDistribution } from "./types";
-import { chartConfig, getColor } from "./types";
+import { CHART_COLORS, chartConfig, getColor, truncateLabel } from "./types";
+
+function CustomYAxisTick({
+  x,
+  y,
+  payload,
+  maxChars = 10,
+}: {
+  x: number;
+  y: number;
+  payload: { value: string };
+  maxChars?: number;
+}) {
+  const label = truncateLabel(String(payload.value), maxChars);
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text x={-4} y={0} dy={4} textAnchor="end" fill="hsl(var(--muted-foreground))" fontSize={11}>
+        {label}
+      </text>
+    </g>
+  );
+}
+
+function CustomXAxisTick({
+  x,
+  y,
+  payload,
+  maxChars = 7,
+}: {
+  x: number;
+  y: number;
+  payload: { value: string };
+  maxChars?: number;
+}) {
+  const label = truncateLabel(String(payload.value), maxChars);
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={0}
+        dy={12}
+        textAnchor="middle"
+        fill="hsl(var(--muted-foreground))"
+        fontSize={10}
+      >
+        {label}
+      </text>
+    </g>
+  );
+}
 
 function ChartCard({
   title,
@@ -32,22 +75,39 @@ function ChartCard({
   );
 }
 
+function CustomTooltip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ value: number; payload: { name: string } }>;
+}) {
+  if (!active || !payload?.length) return null;
+  const item = payload[0];
+  return (
+    <div className="rounded border border-border/50 bg-background px-3 py-2 text-xs shadow-lg">
+      <p className="font-medium">{item.payload.name}</p>
+      <p className="text-muted-foreground">{item.value.toLocaleString()} projects</p>
+    </div>
+  );
+}
+
 function HorizontalBarChart({ data, height = 280 }: { data: Distribution; height?: number }) {
   return (
     <ChartContainer config={chartConfig} className="w-full" style={{ height }}>
-      <BarChart data={data} layout="vertical" margin={{ left: 0 }}>
-        <CartesianGrid horizontal={false} className="stroke-border" />
-        <XAxis type="number" tickLine={false} axisLine={false} className="text-xs" />
+      <BarChart data={data} layout="vertical" margin={{ left: 4, right: 12, top: 4, bottom: 4 }}>
+        <CartesianGrid horizontal={false} className="stroke-border/40" />
+        <XAxis type="number" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
         <YAxis
           dataKey="name"
           type="category"
           tickLine={false}
           axisLine={false}
-          width={80}
-          className="text-xs"
+          width={75}
+          tick={(props) => <CustomYAxisTick {...props} maxChars={10} />}
         />
-        <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar dataKey="value" radius={4}>
+        <Tooltip content={<CustomTooltip />} cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }} />
+        <Bar dataKey="value" radius={3}>
           {data.map((entry, i) => (
             <Cell key={entry.name} fill={getColor(i)} />
           ))}
@@ -60,36 +120,78 @@ function HorizontalBarChart({ data, height = 280 }: { data: Distribution; height
 function VersionBarChart({ data, height = 280 }: { data: VersionDistribution; height?: number }) {
   return (
     <ChartContainer config={chartConfig} className="w-full" style={{ height }}>
-      <BarChart data={data}>
-        <CartesianGrid vertical={false} className="stroke-border" />
-        <XAxis dataKey="version" tickLine={false} axisLine={false} className="text-xs" />
-        <YAxis tickLine={false} axisLine={false} className="text-xs" />
-        <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar dataKey="count" radius={4} fill="hsl(var(--chart-1))" />
+      <BarChart data={data} margin={{ left: -10, right: 8, top: 8, bottom: 4 }}>
+        <CartesianGrid vertical={false} className="stroke-border/40" />
+        <XAxis
+          dataKey="version"
+          tickLine={false}
+          axisLine={false}
+          tick={(props) => <CustomXAxisTick {...props} maxChars={7} />}
+          interval={0}
+        />
+        <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} width={35} />
+        <Tooltip
+          content={({ active, payload }) => {
+            if (!active || !payload?.length) return null;
+            const item = payload[0].payload as { version: string; count: number };
+            return (
+              <div className="rounded border border-border/50 bg-background px-3 py-2 text-xs shadow-lg">
+                <p className="font-medium">{item.version}</p>
+                <p className="text-muted-foreground">{item.count.toLocaleString()} projects</p>
+              </div>
+            );
+          }}
+          cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }}
+        />
+        <Bar dataKey="count" radius={3}>
+          {data.map((_, i) => (
+            <Cell key={i} fill={CHART_COLORS[4]} />
+          ))}
+        </Bar>
       </BarChart>
     </ChartContainer>
   );
 }
 
 function PieChartComponent({ data }: { data: Distribution }) {
+  const total = data.reduce((sum, d) => sum + d.value, 0);
+
   return (
     <ChartContainer config={chartConfig} className="h-[280px] w-full">
       <PieChart>
-        <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
+        <Tooltip
+          content={({ active, payload }) => {
+            if (!active || !payload?.length) return null;
+            const item = payload[0].payload as { name: string; value: number };
+            const percent = ((item.value / total) * 100).toFixed(1);
+            return (
+              <div className="rounded border border-border/50 bg-background px-3 py-2 text-xs shadow-lg">
+                <p className="font-medium">{item.name}</p>
+                <p className="text-muted-foreground">
+                  {item.value.toLocaleString()} ({percent}%)
+                </p>
+              </div>
+            );
+          }}
+        />
         <Pie
           data={data}
           cx="50%"
-          cy="50%"
-          outerRadius={80}
+          cy="45%"
+          outerRadius={65}
+          innerRadius={35}
           dataKey="value"
-          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-          labelLine={false}
+          paddingAngle={2}
         >
           {data.map((entry, i) => (
             <Cell key={entry.name} fill={getColor(i)} />
           ))}
         </Pie>
-        <ChartLegend content={<ChartLegendContent />} />
+        <ChartLegend
+          content={<ChartLegendContent nameKey="name" />}
+          formatter={(value) => truncateLabel(String(value), 8)}
+          wrapperStyle={{ fontSize: 11 }}
+        />
       </PieChart>
     </ChartContainer>
   );
