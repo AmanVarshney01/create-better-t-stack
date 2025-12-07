@@ -9,7 +9,6 @@ import type { AggregatedAnalyticsData, Distribution } from "./_components/types"
 type EventRow = {
   _id: string;
   _creationTime: number;
-  event: string;
   database?: string;
   orm?: string;
   backend?: string;
@@ -53,6 +52,9 @@ type PrecomputedStats = {
   install: Record<string, number>;
   nodeVersion: Record<string, number>;
   cliVersion: Record<string, number>;
+  hourlyDistribution: Record<string, number>;
+  stackCombinations: Record<string, number>;
+  dbOrmCombinations: Record<string, number>;
 };
 
 type DailyStats = { date: string; count: number };
@@ -120,16 +122,21 @@ function buildFromPrecomputed(
 
   const uniqueDays = dailyStats.length || 1;
 
+  const hourlyDistribution = Array.from({ length: 24 }, (_, i) => {
+    const hour = String(i).padStart(2, "0");
+    return { hour: `${hour}:00`, count: stats.hourlyDistribution[hour] || 0 };
+  });
+
+  const popularStackCombinations = recordToDistribution(stats.stackCombinations).slice(0, 8);
+  const databaseORMCombinations = recordToDistribution(stats.dbOrmCombinations).slice(0, 8);
+
   return {
     lastUpdated: new Date(stats.lastEventTime).toISOString(),
     totalProjects: stats.totalProjects,
     avgProjectsPerDay: stats.totalProjects / uniqueDays,
     timeSeries,
     monthlyTimeSeries,
-    hourlyDistribution: Array.from({ length: 24 }, (_, i) => ({
-      hour: `${String(i).padStart(2, "0")}:00`,
-      count: 0,
-    })),
+    hourlyDistribution,
     platformDistribution,
     packageManagerDistribution,
     backendDistribution,
@@ -149,8 +156,8 @@ function buildFromPrecomputed(
     paymentsDistribution,
     nodeVersionDistribution,
     cliVersionDistribution,
-    popularStackCombinations: [],
-    databaseORMCombinations: [],
+    popularStackCombinations,
+    databaseORMCombinations,
     summary: {
       mostPopularFrontend: getMostPopular(frontendDistribution),
       mostPopularBackend: getMostPopular(backendDistribution),
@@ -360,19 +367,22 @@ export function AnalyticsClient({
   preloadedStats: Preloaded<typeof api.analytics.getStats>;
   preloadedDailyStats: Preloaded<typeof api.analytics.getDailyStats>;
 }) {
-  const [range, setRange] = useState<RangeOption>("30d");
+  const [range, setRange] = useState<RangeOption>("all");
 
   const stats = usePreloadedQuery(preloadedStats);
   const dailyStats = usePreloadedQuery(preloadedDailyStats);
 
-  const rangeDays = range === "30d" ? 30 : range === "7d" ? 7 : range === "1d" ? 1 : 0;
-  const rawEvents = useQuery(api.analytics.getAllEvents, range === "all" ? "skip" : { range }) as
-    | EventRow[]
-    | undefined;
+  const rangeDays = range === "30d" ? 30 : range === "7d" ? 7 : 1;
+  const rawEvents = useQuery(
+    api.analytics.getAllEvents,
+    range === "all" ? "skip" : { range: range as "30d" | "7d" | "1d" },
+  ) as EventRow[] | undefined;
   const rangeDailyStats = useQuery(
     api.analytics.getDailyStats,
     range === "all" ? "skip" : { days: rangeDays },
   );
+
+  const isLoading = range !== "all" && rawEvents === undefined;
 
   let data: AggregatedAnalyticsData;
 
@@ -391,5 +401,13 @@ export function AnalyticsClient({
     source: "PostHog (legacy)",
   };
 
-  return <AnalyticsPage data={data} range={range} onRangeChange={setRange} legacy={legacy} />;
+  return (
+    <AnalyticsPage
+      data={data}
+      range={range}
+      onRangeChange={setRange}
+      legacy={legacy}
+      isLoading={isLoading}
+    />
+  );
 }

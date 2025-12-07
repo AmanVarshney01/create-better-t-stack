@@ -23,7 +23,6 @@ export default defineSchema({
   }),
 
   analyticsEvents: defineTable({
-    event: v.string(),
     database: v.optional(v.string()),
     orm: v.optional(v.string()),
     backend: v.optional(v.string()),
@@ -43,7 +42,7 @@ export default defineSchema({
     cli_version: v.optional(v.string()),
     node_version: v.optional(v.string()),
     platform: v.optional(v.string()),
-  }).index("by_event", ["event"]),
+  }),
 
   analyticsStats: defineTable({
     totalProjects: v.number(),
@@ -67,6 +66,9 @@ export default defineSchema({
     install: distributionValidator,
     nodeVersion: distributionValidator,
     cliVersion: distributionValidator,
+    hourlyDistribution: v.optional(distributionValidator),
+    stackCombinations: v.optional(distributionValidator),
+    dbOrmCombinations: v.optional(distributionValidator),
   }),
 
   analyticsDailyStats: defineTable({

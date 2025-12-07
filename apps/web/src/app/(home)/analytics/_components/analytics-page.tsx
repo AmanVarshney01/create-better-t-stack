@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import Footer from "../../_components/footer";
 import { AnalyticsHeader } from "./analytics-header";
 import { DevToolsSection } from "./dev-environment-charts";
@@ -13,6 +14,7 @@ export default function AnalyticsPage({
   range,
   onRangeChange,
   legacy,
+  isLoading,
 }: {
   data: AggregatedAnalyticsData;
   range: "all" | "30d" | "7d" | "1d";
@@ -23,6 +25,7 @@ export default function AnalyticsPage({
     lastUpdatedIso: string;
     source: string;
   };
+  isLoading?: boolean;
 }) {
   return (
     <div className="mx-auto min-h-svh">
@@ -33,7 +36,7 @@ export default function AnalyticsPage({
           legacy={legacy}
         />
 
-        <RangeSelector value={range} onChange={onRangeChange} />
+        <RangeSelector value={range} onChange={onRangeChange} isLoading={isLoading} />
 
         <MetricsCards data={data} />
 
@@ -51,9 +54,11 @@ export default function AnalyticsPage({
 function RangeSelector({
   value,
   onChange,
+  isLoading,
 }: {
   value: "all" | "30d" | "7d" | "1d";
   onChange: (val: "all" | "30d" | "7d" | "1d") => void;
+  isLoading?: boolean;
 }) {
   const options: Array<{ value: "all" | "30d" | "7d" | "1d"; label: string }> = [
     { value: "all", label: "All time" },
@@ -63,7 +68,7 @@ function RangeSelector({
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-3">
       <span className="text-muted-foreground text-sm">Range:</span>
       <div className="flex flex-wrap gap-2">
         {options.map((opt) => (
@@ -71,7 +76,8 @@ function RangeSelector({
             key={opt.value}
             type="button"
             onClick={() => onChange(opt.value)}
-            className={`rounded border px-3 py-1 text-sm transition-colors ${
+            disabled={isLoading}
+            className={`rounded border px-3 py-1 text-sm transition-colors disabled:opacity-50 ${
               value === opt.value
                 ? "border-primary bg-primary/10 text-primary"
                 : "border-border text-foreground hover:bg-muted/60"
@@ -81,6 +87,7 @@ function RangeSelector({
           </button>
         ))}
       </div>
+      {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
     </div>
   );
 }

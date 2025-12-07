@@ -52,14 +52,23 @@ export const chartConfig = {
 } satisfies ChartConfig;
 
 export const CHART_COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
-  "hsl(var(--muted-foreground))",
+  "hsl(142 76% 36%)",
+  "hsl(221 83% 53%)",
+  "hsl(262 83% 58%)",
+  "hsl(24 95% 53%)",
+  "hsl(47 96% 53%)",
+  "hsl(339 90% 51%)",
+  "hsl(173 80% 40%)",
+  "hsl(291 64% 42%)",
+  "hsl(210 40% 50%)",
+  "hsl(0 72% 51%)",
 ];
 
 export function getColor(index: number) {
   return CHART_COLORS[index % CHART_COLORS.length];
+}
+
+export function truncateLabel(label: string, maxLength = 16) {
+  if (label.length <= maxLength) return label;
+  return `${label.slice(0, maxLength - 1)}...`;
 }

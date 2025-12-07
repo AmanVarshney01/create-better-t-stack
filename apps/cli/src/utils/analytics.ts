@@ -30,7 +30,6 @@ export async function trackProjectCreation(config: ProjectConfig, disableAnalyti
 
   try {
     await sendConvexEvent({
-      event: "project_created",
       ...safeConfig,
       cli_version: getLatestCLIVersion(),
       node_version: typeof process !== "undefined" ? process.version : "",
