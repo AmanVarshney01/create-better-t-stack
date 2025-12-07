@@ -91,10 +91,10 @@ async function updateRootPackageJson(projectDir: string, options: ProjectConfig)
       }
     }
     if (options.dbSetup === "docker") {
-      scripts["db:start"] = `turbo -F ${dbPackageName} db:start`;
-      scripts["db:watch"] = `turbo -F ${dbPackageName} db:watch`;
-      scripts["db:stop"] = `turbo -F ${dbPackageName} db:stop`;
-      scripts["db:down"] = `turbo -F ${dbPackageName} db:down`;
+      scripts["db:start"] = `turbo -F ${dbPackageName} --env-mode=loose db:start`;
+      scripts["db:watch"] = `turbo -F ${dbPackageName} --env-mode=loose db:watch`;
+      scripts["db:stop"] = `turbo -F ${dbPackageName} --env-mode=loose db:stop`;
+      scripts["db:down"] = `turbo -F ${dbPackageName} --env-mode=loose db:down`;
     }
   } else if (options.packageManager === "pnpm") {
     scripts.dev = devScript;
