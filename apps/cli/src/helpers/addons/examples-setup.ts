@@ -17,7 +17,7 @@ export async function setupExamples(config: ProjectConfig) {
   if (apiDirExists && backend !== "none") {
     if (orm === "drizzle") {
       await addPackageDependency({
-        dependencies: ["drizzle-orm"],
+        dependencies: ["drizzle-orm", "@types/pg"],
         projectDir: apiDir,
       });
     } else if (orm === "prisma") {

@@ -80,7 +80,7 @@
     "trpc-cli": "^0.12.0",
     "ts-morph": "^27.0.2",
     "yaml": "^2.8.1",
-    "zod": "^4.1.12"
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",

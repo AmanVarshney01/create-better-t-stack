@@ -129,7 +129,7 @@ export const dependencyVersionMap = {
   "@trpc/server": "^11.5.0",
   "@trpc/client": "^11.5.0",
 
-  next: "15.5.4",
+  next: "^16.0.7",
 
   convex: "^1.29.3",
   "@convex-dev/react-query": "^0.1.0",
@@ -162,7 +162,7 @@ export const dependencyVersionMap = {
 
   dotenv: "^17.2.2",
   tsdown: "^0.16.5",
-  zod: "^4.1.11",
+  zod: "^4.1.13",
   srvx: "0.8.15",
 
   "@polar-sh/better-auth": "^1.1.3",
