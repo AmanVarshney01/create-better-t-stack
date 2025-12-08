@@ -48,16 +48,16 @@ export const dependencyVersionMap = {
   "@clerk/tanstack-react-start": "^0.26.3",
   "@clerk/clerk-expo": "^2.14.25",
 
-  "drizzle-orm": "^0.44.2",
-  "drizzle-kit": "^0.31.2",
+  "drizzle-orm": "^0.45.0",
+  "drizzle-kit": "^0.31.8",
   "@planetscale/database": "^1.19.0",
 
   "@libsql/client": "^0.14.0",
   libsql: "^0.5.22",
 
   "@neondatabase/serverless": "^1.0.2",
-  pg: "^8.14.1",
-  "@types/pg": "^8.11.11",
+  pg: "^8.16.3",
+  "@types/pg": "^8.15.6",
   "@types/ws": "^8.18.1",
   ws: "^8.18.3",
 
