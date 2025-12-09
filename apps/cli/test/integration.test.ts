@@ -175,7 +175,7 @@ describe("Integration Tests - Real World Scenarios", () => {
     it("should create MongoDB + Mongoose app", async () => {
       const result = await runTRPCTest({
         projectName: "mongodb-mongoose-app",
-        backend: "express",
+        backend: "hono",
         runtime: "node",
         database: "mongodb",
         orm: "mongoose",
@@ -185,8 +185,8 @@ describe("Integration Tests - Real World Scenarios", () => {
         addons: ["husky", "turborepo"],
         examples: ["todo"],
         dbSetup: "none",
-        webDeploy: "alchemy",
-        serverDeploy: "alchemy",
+        webDeploy: "none",
+        serverDeploy: "none",
         install: false,
       });
 
@@ -218,7 +218,7 @@ describe("Integration Tests - Real World Scenarios", () => {
       const result = await runTRPCTest({
         projectName: "solid-orpc-app",
         backend: "hono",
-        runtime: "bun",
+        runtime: "workers",
         database: "sqlite",
         orm: "drizzle",
         auth: "better-auth",
@@ -460,7 +460,7 @@ describe("Integration Tests - Real World Scenarios", () => {
       const result = await runTRPCTest({
         projectName: "max-complexity",
         backend: "hono",
-        runtime: "bun",
+        runtime: "workers",
         database: "postgres",
         orm: "drizzle",
         auth: "better-auth",

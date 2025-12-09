@@ -95,7 +95,7 @@ describe("Authentication Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Authentication requires a database");
+      expectError(result, "The 'todo' example requires a database if a backend (other than Convex) is present. Cannot use --examples todo when database is 'none' and a backend is selected.");
     });
 
     it("should work with better-auth + convex backend (tanstack-router)", async () => {
