@@ -5,15 +5,15 @@
  * - Otherwise, BTS_TELEMETRY: "0" disables, "1" enables (default: enabled).
  */
 export function isTelemetryEnabled() {
-	const BTS_TELEMETRY_DISABLED = process.env.BTS_TELEMETRY_DISABLED;
-	const BTS_TELEMETRY = process.env.BTS_TELEMETRY;
+  const BTS_TELEMETRY_DISABLED = process.env.BTS_TELEMETRY_DISABLED;
+  const BTS_TELEMETRY = process.env.BTS_TELEMETRY;
 
-	if (BTS_TELEMETRY_DISABLED !== undefined) {
-		return BTS_TELEMETRY_DISABLED !== "1";
-	}
-	if (BTS_TELEMETRY !== undefined) {
-		return BTS_TELEMETRY === "1";
-	}
-	// Default: enabled
-	return true;
+  if (BTS_TELEMETRY_DISABLED !== undefined) {
+    return BTS_TELEMETRY_DISABLED !== "1";
+  }
+  if (BTS_TELEMETRY !== undefined) {
+    return BTS_TELEMETRY === "1";
+  }
+  // Default: enabled
+  return true;
 }

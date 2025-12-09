@@ -11,31 +11,25 @@ import StatsSection from "./_components/stats-section";
 import Testimonials from "./_components/testimonials";
 
 export default async function HomePage() {
-	const sponsorsData = await fetchSponsors();
-	const fetchedTweets = await fetchQuery(api.testimonials.getTweets);
-	const fetchedVideos = await fetchQuery(api.testimonials.getVideos);
-	const videos = fetchedVideos.map((v) => ({
-		embedId: v.embedId,
-		title: v.title,
-	}));
-	const tweets = fetchedTweets.map((t) => ({ tweetId: t.tweetId }));
+  const sponsorsData = await fetchSponsors();
+  const fetchedTweets = await fetchQuery(api.testimonials.getTweets);
+  const fetchedVideos = await fetchQuery(api.testimonials.getVideos);
+  const videos = fetchedVideos.map((v) => ({
+    embedId: v.embedId,
+    title: v.title,
+  }));
+  const tweets = fetchedTweets.map((t) => ({ tweetId: t.tweetId }));
 
-	const minimalAnalytics = await fetch(
-		"https://r2.better-t-stack.dev/analytics-minimal.json",
-	);
-
-	const minimalAnalyticsData = await minimalAnalytics.json();
-
-	return (
-		<main className="mx-auto min-h-svh max-w-[1280px]">
-			<div className="mx-auto flex flex-col gap-8 px-4 pt-12">
-				<HeroSection />
-				<CommandSection />
-				<StatsSection analyticsData={minimalAnalyticsData} />
-				<SponsorsSection sponsorsData={sponsorsData} />
-				<Testimonials tweets={tweets} videos={videos} />
-			</div>
-			<Footer />
-		</main>
-	);
+  return (
+    <main className="container mx-auto mx-auto min-h-svh">
+      <div className="mx-auto flex flex-col gap-8 px-4 pt-12">
+        <HeroSection />
+        <CommandSection />
+        <StatsSection />
+        <SponsorsSection sponsorsData={sponsorsData} />
+        <Testimonials tweets={tweets} videos={videos} />
+      </div>
+      <Footer />
+    </main>
+  );
 }

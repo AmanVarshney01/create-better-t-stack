@@ -1,56 +1,93 @@
 "use client";
+
+import { Loader2 } from "lucide-react";
 import Footer from "../../_components/footer";
-import { AddonsExamplesCharts } from "./addons-examples-charts";
 import { AnalyticsHeader } from "./analytics-header";
-import { DevEnvironmentCharts } from "./dev-environment-charts";
+import { DevToolsSection } from "./dev-environment-charts";
 import { MetricsCards } from "./metrics-cards";
-import { StackConfigurationCharts } from "./stack-configuration-charts";
-import { TimelineCharts } from "./timeline-charts";
+import { StackSection } from "./stack-configuration-charts";
+import { TimelineSection } from "./timeline-charts";
 import type { AggregatedAnalyticsData } from "./types";
 
 export default function AnalyticsPage({
-	data,
+  data,
+  range,
+  onRangeChange,
+  legacy,
+  isLoading,
 }: {
-	data: AggregatedAnalyticsData | null;
+  data: AggregatedAnalyticsData;
+  range: "all" | "30d" | "7d" | "1d";
+  onRangeChange: (value: "all" | "30d" | "7d" | "1d") => void;
+  legacy: {
+    total: number;
+    avgPerDay: number;
+    lastUpdatedIso: string;
+    source: string;
+  };
+  isLoading?: boolean;
 }) {
-	const totalProjects = data?.summary?.totalProjects || 0;
-	const avgProjectsPerDay = data?.summary?.avgProjectsPerDay || 0;
-	const mostPopularFrontend = data?.summary?.mostPopularFrontend || "None";
-	const mostPopularBackend = data?.summary?.mostPopularBackend || "None";
-	const mostPopularORM = data?.summary?.mostPopularORM || "None";
-	const mostPopularAPI = data?.summary?.mostPopularAPI || "None";
-	const mostPopularPackageManager =
-		data?.summary?.mostPopularPackageManager || "npm";
-	const mostPopularAuth = data?.summary?.mostPopularAuth || "None";
+  return (
+    <div className="mx-auto min-h-svh">
+      <div className="container mx-auto space-y-10 px-4 py-8 pt-16">
+        <AnalyticsHeader
+          totalProjects={data.totalProjects}
+          lastUpdated={data.lastUpdated}
+          legacy={legacy}
+        />
 
-	return (
-		<div className="mx-auto min-h-svh max-w-[1280px]">
-			<div className="container mx-auto space-y-8 px-4 py-8 pt-16">
-				<AnalyticsHeader
-					totalProjects={totalProjects}
-					lastUpdated={data?.lastUpdated || null}
-				/>
+        <RangeSelector value={range} onChange={onRangeChange} isLoading={isLoading} />
 
-				<MetricsCards
-					totalProjects={totalProjects}
-					avgProjectsPerDay={avgProjectsPerDay}
-					mostPopularAuth={mostPopularAuth}
-					mostPopularFrontend={mostPopularFrontend}
-					mostPopularBackend={mostPopularBackend}
-					mostPopularORM={mostPopularORM}
-					mostPopularAPI={mostPopularAPI}
-					mostPopularPackageManager={mostPopularPackageManager}
-				/>
+        <MetricsCards data={data} />
 
-				<TimelineCharts data={data} />
+        <TimelineSection data={data} />
 
-				<StackConfigurationCharts data={data} />
+        <StackSection data={data} />
 
-				<AddonsExamplesCharts data={data} />
+        <DevToolsSection data={data} />
+      </div>
+      <Footer />
+    </div>
+  );
+}
 
-				<DevEnvironmentCharts data={data} />
-			</div>
-			<Footer />
-		</div>
-	);
+function RangeSelector({
+  value,
+  onChange,
+  isLoading,
+}: {
+  value: "all" | "30d" | "7d" | "1d";
+  onChange: (val: "all" | "30d" | "7d" | "1d") => void;
+  isLoading?: boolean;
+}) {
+  const options: Array<{ value: "all" | "30d" | "7d" | "1d"; label: string }> = [
+    { value: "all", label: "All time" },
+    { value: "30d", label: "Last 30 days" },
+    { value: "7d", label: "Last 7 days" },
+    { value: "1d", label: "Today" },
+  ];
+
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <span className="text-muted-foreground text-sm">Range:</span>
+      <div className="flex flex-wrap gap-2">
+        {options.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            disabled={isLoading}
+            className={`rounded border px-3 py-1 text-sm transition-colors disabled:opacity-50 ${
+              value === opt.value
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border text-foreground hover:bg-muted/60"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+      {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+    </div>
+  );
 }

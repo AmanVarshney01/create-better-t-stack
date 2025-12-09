@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as analytics from "../analytics.js";
 import type * as healthCheck from "../healthCheck.js";
 import type * as hooks from "../hooks.js";
 import type * as http from "../http.js";
@@ -15,21 +16,10 @@ import type * as showcase from "../showcase.js";
 import type * as stats from "../stats.js";
 import type * as testimonials from "../testimonials.js";
 
-import type {
-  ApiFromModules,
-  FilterApi,
-  FunctionReference,
-} from "convex/server";
+import type { ApiFromModules, FilterApi, FunctionReference } from "convex/server";
 
-/**
- * A utility for referencing Convex functions in your app's API.
- *
- * Usage:
- * ```js
- * const myFunctionReference = api.myModule.myFunction;
- * ```
- */
 declare const fullApi: ApiFromModules<{
+  analytics: typeof analytics;
   healthCheck: typeof healthCheck;
   hooks: typeof hooks;
   http: typeof http;
@@ -37,16 +27,26 @@ declare const fullApi: ApiFromModules<{
   stats: typeof stats;
   testimonials: typeof testimonials;
 }>;
-declare const fullApiWithMounts: typeof fullApi;
 
-export declare const api: FilterApi<
-  typeof fullApiWithMounts,
-  FunctionReference<any, "public">
->;
-export declare const internal: FilterApi<
-  typeof fullApiWithMounts,
-  FunctionReference<any, "internal">
->;
+/**
+ * A utility for referencing Convex functions in your app's public API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = api.myModule.myFunction;
+ * ```
+ */
+export declare const api: FilterApi<typeof fullApi, FunctionReference<any, "public">>;
+
+/**
+ * A utility for referencing Convex functions in your app's internal API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = internal.myModule.myFunction;
+ * ```
+ */
+export declare const internal: FilterApi<typeof fullApi, FunctionReference<any, "internal">>;
 
 export declare const components: {
   ossStats: {
@@ -100,28 +100,11 @@ export declare const components: {
           updatedAt: number;
         }>
       >;
-      updateGithubOwner: FunctionReference<
-        "mutation",
-        "internal",
-        { name: string },
-        any
-      >;
+      updateGithubOwner: FunctionReference<"mutation", "internal", { name: string }, any>;
       updateGithubOwnerStats: FunctionReference<
         "action",
         "internal",
         { githubAccessToken: string; owner: string; page?: number },
-        any
-      >;
-      updateGithubRepoStars: FunctionReference<
-        "mutation",
-        "internal",
-        { name: string; owner: string; starCount: number },
-        any
-      >;
-      updateGithubRepoStats: FunctionReference<
-        "action",
-        "internal",
-        { githubAccessToken: string; repo: string },
         any
       >;
       updateGithubRepos: FunctionReference<
@@ -136,6 +119,18 @@ export declare const components: {
             starCount: number;
           }>;
         },
+        any
+      >;
+      updateGithubRepoStars: FunctionReference<
+        "mutation",
+        "internal",
+        { name: string; owner: string; starCount: number },
+        any
+      >;
+      updateGithubRepoStats: FunctionReference<
+        "action",
+        "internal",
+        { githubAccessToken: string; repo: string },
         any
       >;
     };
@@ -216,12 +211,7 @@ export declare const components: {
           updatedAt: number;
         }
       >;
-      updateNpmOrg: FunctionReference<
-        "mutation",
-        "internal",
-        { name: string },
-        any
-      >;
+      updateNpmOrg: FunctionReference<"mutation", "internal", { name: string }, any>;
       updateNpmOrgStats: FunctionReference<
         "action",
         "internal",
@@ -238,12 +228,6 @@ export declare const components: {
         },
         any
       >;
-      updateNpmPackageStats: FunctionReference<
-        "action",
-        "internal",
-        { name: string },
-        any
-      >;
       updateNpmPackagesForOrg: FunctionReference<
         "mutation",
         "internal",
@@ -258,6 +242,7 @@ export declare const components: {
         },
         any
       >;
+      updateNpmPackageStats: FunctionReference<"action", "internal", { name: string }, any>;
     };
   };
 };

@@ -1,170 +1,113 @@
-import { Cpu, Download, Terminal, TrendingUp, Users } from "lucide-react";
+"use client";
 
-interface MetricsCardsProps {
-	totalProjects: number;
-	avgProjectsPerDay: number;
-	mostPopularAuth: string;
-	mostPopularFrontend: string;
-	mostPopularBackend: string;
-	mostPopularORM: string;
-	mostPopularAPI: string;
-	mostPopularPackageManager: string;
+import NumberFlow from "@number-flow/react";
+import { Code2, Database, Globe, Layers, Server, Terminal, TrendingUp, Zap } from "lucide-react";
+import type { AggregatedAnalyticsData } from "./types";
+
+type MetricCardProps = {
+  title: string;
+  value: string | number;
+  subtitle: string;
+  icon: React.ReactNode;
+  highlight?: boolean;
+  animate?: boolean;
+};
+
+function MetricCard({ title, value, subtitle, icon, highlight, animate }: MetricCardProps) {
+  return (
+    <div className="rounded border border-border">
+      <div className="border-border border-b px-4 py-2">
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-muted-foreground text-xs">{title}</span>
+          <span className="text-primary">{icon}</span>
+        </div>
+      </div>
+      <div className="p-4">
+        {animate && typeof value === "number" ? (
+          <NumberFlow
+            value={value}
+            className={`truncate font-bold text-xl ${highlight ? "text-primary" : "text-accent"}`}
+            transformTiming={{ duration: 800, easing: "ease-out" }}
+            willChange
+            isolate
+          />
+        ) : (
+          <div
+            className={`truncate font-bold text-xl ${highlight ? "text-primary" : "text-accent"}`}
+          >
+            {typeof value === "number" ? value.toLocaleString() : value}
+          </div>
+        )}
+        <p className="mt-1 text-muted-foreground text-xs">{subtitle}</p>
+      </div>
+    </div>
+  );
 }
 
-export function MetricsCards({
-	totalProjects,
-	avgProjectsPerDay,
-	mostPopularAuth,
-	mostPopularFrontend,
-	mostPopularBackend,
-	mostPopularORM,
-	mostPopularAPI,
-	mostPopularPackageManager,
-}: MetricsCardsProps) {
-	return (
-		<div className="space-y-4">
-			<div className="mb-4 flex items-center gap-2">
-				<span className="font-bold text-lg">SYSTEM_METRICS.LOG</span>
-				<div className="h-px flex-1 bg-border" />
-			</div>
+export function MetricsCards({ data }: { data: AggregatedAnalyticsData }) {
+  const { summary, totalProjects, avgProjectsPerDay } = data;
 
-			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4">
-				<div className="rounded border border-border">
-					<div className="border-border border-b px-4 py-3">
-						<div className="flex items-center justify-between">
-							<span className="font-semibold text-sm">TOTAL_PROJECTS</span>
-							<Terminal className="h-4 w-4 text-primary" />
-						</div>
-					</div>
-					<div className="p-4">
-						<div className="font-bold text-2xl text-primary">
-							{totalProjects.toLocaleString()}
-						</div>
-						<p className="mt-1 text-muted-foreground text-xs">
-							$ ./create-better-t-stack executions
-						</p>
-					</div>
-				</div>
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <span className="font-bold text-lg">KEY_METRICS</span>
+        <div className="h-px flex-1 bg-border" />
+      </div>
 
-				<div className="rounded border border-border">
-					<div className="border-border border-b px-4 py-3">
-						<div className="flex items-center justify-between">
-							<span className="font-semibold text-sm">TOP_FRONTEND</span>
-							<Cpu className="h-4 w-4 text-primary" />
-						</div>
-					</div>
-					<div className="p-4">
-						<div className="truncate font-bold text-accent text-lg">
-							{mostPopularFrontend}
-						</div>
-						<p className="mt-1 text-muted-foreground text-xs">
-							$ most_selected_frontend.sh
-						</p>
-					</div>
-				</div>
-
-				<div className="rounded border border-border">
-					<div className="border-border border-b px-4 py-3">
-						<div className="flex items-center justify-between">
-							<span className="font-semibold text-sm">TOP_BACKEND</span>
-							<Terminal className="h-4 w-4 text-primary" />
-						</div>
-					</div>
-					<div className="p-4">
-						<div className="truncate font-bold text-accent text-lg">
-							{mostPopularBackend}
-						</div>
-						<p className="mt-1 text-muted-foreground text-xs">
-							$ most_selected_backend.sh
-						</p>
-					</div>
-				</div>
-
-				<div className="rounded border border-border">
-					<div className="border-border border-b px-4 py-3">
-						<div className="flex items-center justify-between">
-							<span className="font-semibold text-sm">TOP_ORM</span>
-							<Download className="h-4 w-4 text-primary" />
-						</div>
-					</div>
-					<div className="p-4">
-						<div className="truncate font-bold text-accent text-lg">
-							{mostPopularORM}
-						</div>
-						<p className="mt-1 text-muted-foreground text-xs">
-							$ most_selected_orm.sh
-						</p>
-					</div>
-				</div>
-
-				<div className="rounded border border-border">
-					<div className="border-border border-b px-4 py-3">
-						<div className="flex items-center justify-between">
-							<span className="font-semibold text-sm">TOP_API</span>
-							<TrendingUp className="h-4 w-4 text-primary" />
-						</div>
-					</div>
-					<div className="p-4">
-						<div className="truncate font-bold text-accent text-lg">
-							{mostPopularAPI}
-						</div>
-						<p className="mt-1 text-muted-foreground text-xs">
-							$ most_selected_api.sh
-						</p>
-					</div>
-				</div>
-
-				<div className="rounded border border-border">
-					<div className="border-border border-b px-4 py-3">
-						<div className="flex items-center justify-between">
-							<span className="font-semibold text-sm">TOP_AUTH</span>
-							<Users className="h-4 w-4 text-primary" />
-						</div>
-					</div>
-					<div className="p-4">
-						<div className="truncate font-bold text-accent text-lg">
-							{mostPopularAuth}
-						</div>
-						<p className="mt-1 text-muted-foreground text-xs">
-							$ most_selected_auth.sh
-						</p>
-					</div>
-				</div>
-
-				<div className="rounded border border-border">
-					<div className="border-border border-b px-4 py-3">
-						<div className="flex items-center justify-between">
-							<span className="font-semibold text-sm">TOP_PKG_MGR</span>
-							<Terminal className="h-4 w-4 text-primary" />
-						</div>
-					</div>
-					<div className="p-4">
-						<div className="truncate font-bold text-accent text-lg">
-							{mostPopularPackageManager}
-						</div>
-						<p className="mt-1 text-muted-foreground text-xs">
-							$ most_used_package_manager.sh
-						</p>
-					</div>
-				</div>
-
-				<div className="rounded border border-border">
-					<div className="border-border border-b px-4 py-3">
-						<div className="flex items-center justify-between">
-							<span className="font-semibold text-sm">AVG_DAILY</span>
-							<TrendingUp className="h-4 w-4 text-primary" />
-						</div>
-					</div>
-					<div className="p-4">
-						<div className="font-bold text-2xl text-primary">
-							{avgProjectsPerDay.toFixed(1)}
-						</div>
-						<p className="mt-1 text-muted-foreground text-xs">
-							$ average_projects_per_day.sh
-						</p>
-					</div>
-				</div>
-			</div>
-		</div>
-	);
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          title="TOTAL_PROJECTS"
+          value={totalProjects}
+          subtitle="Projects created with CLI"
+          icon={<Terminal className="h-4 w-4" />}
+          highlight
+          animate
+        />
+        <MetricCard
+          title="AVG_PER_DAY"
+          value={Number(avgProjectsPerDay.toFixed(1))}
+          subtitle="Average daily creations"
+          icon={<TrendingUp className="h-4 w-4" />}
+          highlight
+          animate
+        />
+        <MetricCard
+          title="TOP_FRONTEND"
+          value={summary.mostPopularFrontend}
+          subtitle="Most selected frontend"
+          icon={<Globe className="h-4 w-4" />}
+        />
+        <MetricCard
+          title="TOP_BACKEND"
+          value={summary.mostPopularBackend}
+          subtitle="Most selected backend"
+          icon={<Server className="h-4 w-4" />}
+        />
+        <MetricCard
+          title="TOP_DATABASE"
+          value={summary.mostPopularDatabase}
+          subtitle="Most selected database"
+          icon={<Database className="h-4 w-4" />}
+        />
+        <MetricCard
+          title="TOP_ORM"
+          value={summary.mostPopularORM}
+          subtitle="Most selected ORM"
+          icon={<Layers className="h-4 w-4" />}
+        />
+        <MetricCard
+          title="TOP_API"
+          value={summary.mostPopularAPI}
+          subtitle="Most selected API layer"
+          icon={<Code2 className="h-4 w-4" />}
+        />
+        <MetricCard
+          title="TOP_RUNTIME"
+          value={summary.mostPopularRuntime}
+          subtitle="Most selected runtime"
+          icon={<Zap className="h-4 w-4" />}
+        />
+      </div>
+    </div>
+  );
 }

@@ -14,9 +14,9 @@ const prisma = new PrismaClient({
 });
 
 {{else if (eq dbSetup "prisma-postgres")}}
-import { PrismaPostgresAdapter } from "@prisma/adapter-ppg";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaPostgresAdapter({
+const adapter = new PrismaPg({
   connectionString: env.DATABASE_URL || "",
 });
 
@@ -48,9 +48,9 @@ const adapter = new PrismaNeon({
 const prisma = new PrismaClient({ adapter });
 
 {{else if (eq dbSetup "prisma-postgres")}}
-import { PrismaPostgresAdapter } from "@prisma/adapter-ppg";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaPostgresAdapter({
+const adapter = new PrismaPg({
     connectionString: process.env.DATABASE_URL || "",
 });
 
