@@ -40,6 +40,8 @@ export function getDefaultConfig() {
 export const DEFAULT_CONFIG = getDefaultConfig();
 
 export const dependencyVersionMap = {
+  typescript: "^5",
+
   "better-auth": "^1.4.5",
   "@better-auth/expo": "^1.4.5",
 
@@ -89,7 +91,7 @@ export const dependencyVersionMap = {
   tsx: "^4.19.2",
   "@types/node": "^22.13.11",
 
-  "@types/bun": "^1.2.6",
+  "@types/bun": "^1.3.4",
 
   "@elysiajs/node": "^1.3.1",
 

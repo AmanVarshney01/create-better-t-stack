@@ -5,7 +5,7 @@ import type { ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 
 export async function setupExamples(config: ProjectConfig) {
-  const { examples, frontend, backend, projectDir, orm } = config;
+  const { examples, frontend, backend, projectDir, orm, database } = config;
 
   if (backend === "convex" || !examples || examples.length === 0 || examples[0] === "none") {
     return;
@@ -16,8 +16,13 @@ export async function setupExamples(config: ProjectConfig) {
 
   if (apiDirExists && backend !== "none") {
     if (orm === "drizzle") {
+      const dependencies: AvailableDependencies[] = ["drizzle-orm"];
+      if (database === "postgres") {
+        // Workaround: not sure there is a weird types error if i add it in dev dep
+        dependencies.push("@types/pg");
+      }
       await addPackageDependency({
-        dependencies: ["drizzle-orm", "@types/pg"],
+        dependencies,
         projectDir: apiDir,
       });
     } else if (orm === "prisma") {

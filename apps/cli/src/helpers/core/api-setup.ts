@@ -4,22 +4,6 @@ import type { AvailableDependencies } from "../../constants";
 import type { API, Backend, Frontend, ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 
-async function addBackendWorkspaceDependency(
-  projectDir: string,
-  backendPackageName: string,
-  workspaceVersion: string,
-) {
-  const pkgJsonPath = path.join(projectDir, "package.json");
-  try {
-    const pkgJson = await fs.readJson(pkgJsonPath);
-    if (!pkgJson.dependencies) {
-      pkgJson.dependencies = {};
-    }
-    pkgJson.dependencies[backendPackageName] = workspaceVersion;
-    await fs.writeJson(pkgJsonPath, pkgJson, { spaces: 2 });
-  } catch {}
-}
-
 function getFrontendType(frontend: Frontend[]): {
   hasReactWeb: boolean;
   hasNuxtWeb: boolean;
@@ -182,7 +166,7 @@ function getConvexDependencies(frontend: Frontend[]) {
 }
 
 export async function setupApi(config: ProjectConfig) {
-  const { api, projectName, frontend, backend, packageManager, projectDir } = config;
+  const { api, frontend, backend, projectDir } = config;
   const isConvex = backend === "convex";
 
   const webDir = path.join(projectDir, "apps/web");
@@ -291,17 +275,6 @@ export async function setupApi(config: ProjectConfig) {
         dependencies: convexDeps.native.dependencies as AvailableDependencies[],
         projectDir: nativeDir,
       });
-    }
-
-    const backendPackageName = `@${projectName}/backend`;
-    const backendWorkspaceVersion = packageManager === "npm" ? "*" : "workspace:*";
-
-    if (webDirExists) {
-      await addBackendWorkspaceDependency(webDir, backendPackageName, backendWorkspaceVersion);
-    }
-
-    if (nativeDirExists) {
-      await addBackendWorkspaceDependency(nativeDir, backendPackageName, backendWorkspaceVersion);
     }
   }
 }
