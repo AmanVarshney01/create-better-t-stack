@@ -124,7 +124,7 @@ type PackageManagerConfig = {
 
 function getPackageManagerConfig(
   packageManager: ProjectConfig["packageManager"],
-  hasTurborepo: boolean
+  hasTurborepo: boolean,
 ): PackageManagerConfig {
   if (hasTurborepo) {
     return {
@@ -160,7 +160,7 @@ function getPackageManagerConfig(
   }
 }
 
-async function updateServerPackageJson(projectDir: string, options: ProjectConfig) {
+async function updateServerPackageJson(projectDir: string, _options: ProjectConfig) {
   const serverPackageJsonPath = path.join(projectDir, "apps/server/package.json");
   if (!(await fs.pathExists(serverPackageJsonPath))) return;
 

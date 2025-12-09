@@ -166,7 +166,7 @@ export async function setupWorkspaceDependencies(projectDir: string, options: Pr
 
 function getRuntimeDevDeps(
   runtime: ProjectConfig["runtime"],
-  backend: ProjectConfig["backend"]
+  backend: ProjectConfig["backend"],
 ): AvailableDependencies[] {
   if (runtime === "none" && backend === "self") {
     return ["@types/node"];

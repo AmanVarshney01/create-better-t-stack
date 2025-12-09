@@ -28,6 +28,7 @@
         "@biomejs/js-api": "^3.0.0",
         "@biomejs/wasm-nodejs": "^2.2.6",
         "@clack/prompts": "^1.0.0-alpha.6",
+        "@create-better-t-stack/types": "workspace:*",
         "@orpc/server": "^1.10.0",
         "consola": "^3.4.2",
         "execa": "^9.6.0",
@@ -57,6 +58,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@better-t-stack/backend": "workspace:*",
+        "@create-better-t-stack/types": "workspace:*",
         "@erquhart/convex-oss-stats": "^0.8.2",
         "@number-flow/react": "^0.5.10",
         "@orama/orama": "^3.1.16",
@@ -137,6 +139,16 @@
         "create-better-t-stack": "^3.7.1",
       },
     },
+    "packages/types": {
+      "name": "@create-better-t-stack/types",
+      "version": "1.0.0",
+      "dependencies": {
+        "zod": "^4.1.13",
+      },
+      "devDependencies": {
+        "typescript": "^5.8.2",
+      },
+    },
   },
   "packages": {
     "@alloc/quick-lru": ["@alloc/quick-lru@5.2.0", "", {}, "sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw=="],
@@ -186,6 +198,8 @@
     "@clack/prompts": ["@clack/prompts@0.11.0", "", { "dependencies": { "@clack/core": "0.5.0", "picocolors": "^1.0.0", "sisteransi": "^1.0.5" } }, "sha512-pMN5FcrEw9hUkZA4f+zLlzivQSeQf5dRGJjSUbvVYDLvpKCdQx5OaknvKzgbtXOizhP+SJJJjqEbOe55uKKfAw=="],
 
     "@convex-dev/crons": ["@convex-dev/crons@0.2.0", "", { "dependencies": { "cron-parser": "^4.9.0" }, "peerDependencies": { "convex": "^1.24.8" } }, "sha512-JowF/DDPl8FuhXml2/0jmEa6uIKr/UK1UwP+FdbPt2BRVxACRX4CNlzDQEtHbO2p2FVKiJh4zEg8p5/YM27PEA=="],
+
+    "@create-better-t-stack/types": ["@create-better-t-stack/types@workspace:packages/types"],
 
     "@emnapi/core": ["@emnapi/core@1.7.1", "", { "dependencies": { "@emnapi/wasi-threads": "1.1.0", "tslib": "^2.4.0" } }, "sha512-o1uhUASyo921r2XtHYOHy7gdkGLge8ghBEQHMWmyJFoXlpU58kIrhhN3w26lpQb6dspetweapMn2CSNwQ8I4wg=="],
 

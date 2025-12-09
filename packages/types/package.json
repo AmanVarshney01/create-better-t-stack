@@ -1,0 +1,26 @@
+{
+  "name": "@create-better-t-stack/types",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./schemas": {
+      "types": "./src/schemas.ts",
+      "default": "./src/schemas.ts"
+    },
+    "./json-schema": {
+      "types": "./src/json-schema.ts",
+      "default": "./src/json-schema.ts"
+    }
+  },
+  "dependencies": {
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2"
+  }
+}
+

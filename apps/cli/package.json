@@ -65,6 +65,7 @@
     }
   },
   "dependencies": {
+    "@create-better-t-stack/types": "workspace:*",
     "@biomejs/js-api": "^3.0.0",
     "@biomejs/wasm-nodejs": "^2.2.6",
     "@clack/prompts": "^1.0.0-alpha.6",

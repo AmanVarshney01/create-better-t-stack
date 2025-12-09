@@ -1,31 +1,15 @@
-export type TechCategory =
-  | "api"
-  | "webFrontend"
-  | "nativeFrontend"
-  | "runtime"
-  | "backend"
-  | "database"
-  | "orm"
-  | "dbSetup"
-  | "webDeploy"
-  | "serverDeploy"
-  | "auth"
-  | "payments"
-  | "packageManager"
-  | "addons"
-  | "examples"
-  | "git"
-  | "install";
+// Re-export TechCategory from shared types
+export type { TechCategory } from "@create-better-t-stack/types";
 
-export interface TechEdge {
+export type TechEdge = {
   id: string;
   source: string;
   target: string;
   type?: string;
   animated?: boolean;
-}
+};
 
-export interface Sponsor {
+export type Sponsor = {
   name: string;
   githubId: string;
   avatarUrl: string;
@@ -36,9 +20,9 @@ export interface Sponsor {
   sinceWhen: string;
   transactionCount: number;
   formattedAmount?: string;
-}
+};
 
-export interface SponsorsData {
+export type SponsorsData = {
   generated_at: string;
   summary: {
     total_sponsors: number;
@@ -57,4 +41,4 @@ export interface SponsorsData {
   sponsors: Sponsor[];
   pastSponsors: Sponsor[];
   backers: Sponsor[];
-}
+};

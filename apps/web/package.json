@@ -11,6 +11,7 @@
     "generate-schema": "bun scripts/generate-schema.ts"
   },
   "dependencies": {
+    "@create-better-t-stack/types": "workspace:*",
     "@better-t-stack/backend": "workspace:*",
     "@erquhart/convex-oss-stats": "^0.8.2",
     "@number-flow/react": "^0.5.10",
