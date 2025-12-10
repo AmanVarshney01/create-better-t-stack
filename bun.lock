@@ -25,6 +25,7 @@
         "create-better-t-stack": "dist/cli.js",
       },
       "dependencies": {
+        "@better-t-stack/types": "workspace:*",
         "@biomejs/js-api": "^3.0.0",
         "@biomejs/wasm-nodejs": "^2.2.6",
         "@clack/prompts": "^1.0.0-alpha.6",
@@ -43,7 +44,6 @@
         "zod": "^4.1.13",
       },
       "devDependencies": {
-        "@better-t-stack/types": "workspace:*",
         "@types/fs-extra": "^11.0.4",
         "@types/node": "^24.9.1",
         "@vitest/ui": "^3.2.4",
