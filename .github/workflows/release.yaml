@@ -10,7 +10,7 @@ on:
     branches:
       - main
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [labeled]
 
 jobs:
   release:
@@ -119,7 +119,7 @@ jobs:
 
   canary:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.event.label.name == 'canary'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -227,3 +227,6 @@ jobs:
             - [create-better-t-stack@${{ steps.canary.outputs.version }}](https://www.npmjs.com/package/create-better-t-stack/v/${{ steps.canary.outputs.version }})
             - [create-bts@${{ steps.canary.outputs.version }}](https://www.npmjs.com/package/create-bts/v/${{ steps.canary.outputs.version }})
             - [@better-t-stack/types@${{ steps.canary.outputs.version }}](https://www.npmjs.com/package/@better-t-stack/types/v/${{ steps.canary.outputs.version }})
+
+            ---
+            *To publish a new canary after more commits, remove and re-add the `canary` label.*
