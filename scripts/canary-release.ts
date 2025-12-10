@@ -160,9 +160,19 @@ async function main(): Promise<void> {
   let restored = false;
 
   try {
-    // Update types package version and publish first
+    // Update types package version, build, and publish first
     typesPackageJson.version = canaryVersion;
     await writeFile(TYPES_PACKAGE_JSON_PATH, `${JSON.stringify(typesPackageJson, null, 2)}\n`);
+
+    const typesBuildSpin = spinner();
+    typesBuildSpin.start("Building types package...");
+    try {
+      await $`cd packages/types && bun run build`;
+      typesBuildSpin.stop("Types build complete");
+    } catch (err) {
+      typesBuildSpin.stop("Types build failed");
+      throw err;
+    }
 
     const typesPubSpin = spinner();
     typesPubSpin.start(`Publishing @better-t-stack/types@${canaryVersion} (canary)...`);

@@ -78,6 +78,10 @@ jobs:
           cd packages/types
           bun run node -e "const pkg=require('./package.json');pkg.version='$VERSION';require('fs').writeFileSync('package.json',JSON.stringify(pkg,null,2)+'\n')"
 
+      - name: Build types package
+        if: steps.version.outputs.version != ''
+        run: cd packages/types && bun run build
+
       - name: Publish types to NPM
         if: steps.version.outputs.version != ''
         run: cd packages/types && bun publish --access public
@@ -146,6 +150,9 @@ jobs:
         run: |
           cd packages/types
           jq --arg v "${{ steps.canary.outputs.version }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json
+
+      - name: Build types package
+        run: cd packages/types && bun run build
 
       - name: Publish types canary to NPM
         run: cd packages/types && bun publish --access public --tag canary
