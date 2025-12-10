@@ -22,6 +22,7 @@ export {
   CLIInputSchema,
   ProjectConfigSchema,
   BetterTStackConfigSchema,
+  BetterTStackConfigFileSchema,
   InitResultSchema,
   // Enum value arrays
   DATABASE_VALUES,

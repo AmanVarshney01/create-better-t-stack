@@ -168,8 +168,8 @@ export const ProjectConfigSchema = z.object({
 });
 
 export const BetterTStackConfigSchema = z.object({
-  version: z.string(),
-  createdAt: z.string(),
+  version: z.string().describe("CLI version used to create this project"),
+  createdAt: z.string().describe("Timestamp when the project was created"),
   database: DatabaseSchema,
   orm: ORMSchema,
   backend: BackendSchema,
@@ -185,6 +185,17 @@ export const BetterTStackConfigSchema = z.object({
   webDeploy: WebDeploySchema,
   serverDeploy: ServerDeploySchema,
 });
+
+export const BetterTStackConfigFileSchema = z
+  .object({
+    $schema: z.string().optional().describe("JSON Schema reference for validation"),
+  })
+  .extend(BetterTStackConfigSchema.shape)
+  .meta({
+    id: "https://r2.better-t-stack.dev/schema.json",
+    title: "Better-T-Stack Configuration",
+    description: "Configuration file for Better-T-Stack projects",
+  });
 
 export const InitResultSchema = z.object({
   success: z.boolean(),

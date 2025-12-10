@@ -7,12 +7,11 @@
     "dev": "next dev",
     "start": "next start",
     "postinstall": "fumadocs-mdx",
-    "generate-analytics": "bun scripts/generate-analytics.ts",
     "generate-schema": "bun scripts/generate-schema.ts"
   },
   "dependencies": {
-    "@better-t-stack/types": "workspace:*",
     "@better-t-stack/backend": "workspace:*",
+    "@better-t-stack/types": "workspace:*",
     "@erquhart/convex-oss-stats": "^0.8.2",
     "@number-flow/react": "^0.5.10",
     "@orama/orama": "^3.1.16",
@@ -51,7 +50,8 @@
     "remark-mdx": "^3.1.1",
     "shiki": "^3.19.0",
     "sonner": "^2.0.7",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "zod": "^4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.17",
