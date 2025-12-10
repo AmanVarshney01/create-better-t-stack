@@ -78,6 +78,13 @@ jobs:
           cd packages/create-bts
           bun run node -e "const pkg=require('./package.json');pkg.version='$VERSION';pkg.dependencies['create-better-t-stack']='^$VERSION';require('fs').writeFileSync('package.json',JSON.stringify(pkg,null,2)+'\n')"
 
+      - name: Update types package version
+        if: steps.version.outputs.version != ''
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          cd packages/types
+          bun run node -e "const pkg=require('./package.json');pkg.version='$VERSION';require('fs').writeFileSync('package.json',JSON.stringify(pkg,null,2)+'\n')"
+
       - name: Publish CLI to NPM
         if: steps.version.outputs.version != ''
         run: cd apps/cli && bun publish --access public
@@ -88,6 +95,13 @@ jobs:
       - name: Publish create-bts alias to NPM
         if: steps.version.outputs.version != ''
         run: cd packages/create-bts && bun publish --access public
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          BTS_TELEMETRY: 1
+
+      - name: Publish types to NPM
+        if: steps.version.outputs.version != ''
+        run: cd packages/types && bun publish --access public
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
           BTS_TELEMETRY: 1
@@ -131,6 +145,11 @@ jobs:
           cd packages/create-bts
           jq --arg v "${{ steps.canary.outputs.version }}" '.version = $v | .dependencies["create-better-t-stack"] = $v' package.json > tmp.json && mv tmp.json package.json
 
+      - name: Update types package version
+        run: |
+          cd packages/types
+          jq --arg v "${{ steps.canary.outputs.version }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json
+
       - name: Build CLI
         run: cd apps/cli && bun run build
         env:
@@ -144,6 +163,12 @@ jobs:
 
       - name: Publish create-bts canary to NPM
         run: cd packages/create-bts && bun publish --access public --tag canary
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          BTS_TELEMETRY: 0
+
+      - name: Publish types canary to NPM
+        run: cd packages/types && bun publish --access public --tag canary
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
           BTS_TELEMETRY: 0
@@ -187,3 +212,4 @@ jobs:
             ### NPM Links
             - [create-better-t-stack@${{ steps.canary.outputs.version }}](https://www.npmjs.com/package/create-better-t-stack/v/${{ steps.canary.outputs.version }})
             - [create-bts@${{ steps.canary.outputs.version }}](https://www.npmjs.com/package/create-bts/v/${{ steps.canary.outputs.version }})
+            - [@create-better-t-stack/types@${{ steps.canary.outputs.version }}](https://www.npmjs.com/package/@create-better-t-stack/types/v/${{ steps.canary.outputs.version }})

@@ -5,6 +5,7 @@ import { $ } from "bun";
 
 const CLI_PACKAGE_JSON_PATH = join(process.cwd(), "apps/cli/package.json");
 const ALIAS_PACKAGE_JSON_PATH = join(process.cwd(), "packages/create-bts/package.json");
+const TYPES_PACKAGE_JSON_PATH = join(process.cwd(), "packages/types/package.json");
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
@@ -73,7 +74,7 @@ async function main(): Promise<void> {
           try {
             await $`npm deprecate -f ${`${packageName}@${v}`} "Deprecated canary; use ${packageName}@canary (currently ${canaryVersion})"`;
             count++;
-          } catch {}
+          } catch { }
         }
         depSpin.stop(`Deprecated ${count} version(s).`);
         return;
@@ -99,7 +100,7 @@ async function main(): Promise<void> {
         try {
           await $`npm deprecate -f ${`${packageName}@${v}`} "Deprecated canary; use ${packageName}@canary (currently ${canaryVersion})"`;
           count++;
-        } catch {}
+        } catch { }
       }
       depSpin.stop(`Deprecated ${count} version(s).`);
       return;
@@ -139,7 +140,7 @@ async function main(): Promise<void> {
       );
       return;
     }
-  } catch {}
+  } catch { }
 
   if (!autoYes) {
     const proceed = await confirm({
@@ -154,6 +155,8 @@ async function main(): Promise<void> {
   const originalPackageJsonString = await readFile(CLI_PACKAGE_JSON_PATH, "utf-8");
   const aliasPackageJson = JSON.parse(await readFile(ALIAS_PACKAGE_JSON_PATH, "utf-8"));
   const originalAliasPackageJsonString = await readFile(ALIAS_PACKAGE_JSON_PATH, "utf-8");
+  const typesPackageJson = JSON.parse(await readFile(TYPES_PACKAGE_JSON_PATH, "utf-8"));
+  const originalTypesPackageJsonString = await readFile(TYPES_PACKAGE_JSON_PATH, "utf-8");
   let restored = false;
 
   try {
@@ -164,6 +167,10 @@ async function main(): Promise<void> {
     aliasPackageJson.version = canaryVersion;
     aliasPackageJson.dependencies["create-better-t-stack"] = canaryVersion;
     await writeFile(ALIAS_PACKAGE_JSON_PATH, `${JSON.stringify(aliasPackageJson, null, 2)}\n`);
+
+    // Update types package version
+    typesPackageJson.version = canaryVersion;
+    await writeFile(TYPES_PACKAGE_JSON_PATH, `${JSON.stringify(typesPackageJson, null, 2)}\n`);
 
     const buildSpin = spinner();
     buildSpin.start("Building CLI...");
@@ -177,12 +184,13 @@ async function main(): Promise<void> {
 
     const pubSpin = spinner();
     pubSpin.start(
-      `Publishing ${packageName}@${canaryVersion} and create-bts@${canaryVersion} (canary)...`,
+      `Publishing ${packageName}@${canaryVersion}, create-bts@${canaryVersion}, and @create-better-t-stack/types@${canaryVersion} (canary)...`,
     );
     try {
       await $`cd apps/cli && bun publish --access public --tag canary`;
       await $`cd packages/create-bts && bun publish --access public --tag canary`;
-      pubSpin.stop("Publish complete for both packages");
+      await $`cd packages/types && bun publish --access public --tag canary`;
+      pubSpin.stop("Publish complete for all packages");
     } catch (err) {
       pubSpin.stop("Publish failed");
       throw err;
@@ -207,15 +215,20 @@ async function main(): Promise<void> {
 
     await writeFile(CLI_PACKAGE_JSON_PATH, originalPackageJsonString);
     await writeFile(ALIAS_PACKAGE_JSON_PATH, originalAliasPackageJsonString);
+    await writeFile(TYPES_PACKAGE_JSON_PATH, originalTypesPackageJsonString);
     restored = true;
 
-    console.log(`✅ Published canary v${canaryVersion} for both packages`);
+    console.log(`✅ Published canary v${canaryVersion} for all packages`);
     console.log(`📦 NPM: https://www.npmjs.com/package/${packageName}/v/${canaryVersion}`);
     console.log(`📦 NPM: https://www.npmjs.com/package/create-bts/v/${canaryVersion}`);
+    console.log(
+      `📦 NPM: https://www.npmjs.com/package/@create-better-t-stack/types/v/${canaryVersion}`,
+    );
   } finally {
     if (!restored) {
       await writeFile(CLI_PACKAGE_JSON_PATH, originalPackageJsonString);
       await writeFile(ALIAS_PACKAGE_JSON_PATH, originalAliasPackageJsonString);
+      await writeFile(TYPES_PACKAGE_JSON_PATH, originalTypesPackageJsonString);
     }
   }
 }

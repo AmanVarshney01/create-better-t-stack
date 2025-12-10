@@ -1,7 +1,10 @@
 {
   "name": "@create-better-t-stack/types",
-  "version": "1.0.0",
+  "version": "3.7.3",
+  "description": "TypeScript types and schemas for create-better-t-stack CLI",
   "type": "module",
+  "license": "MIT",
+  "author": "Aman Varshney",
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -16,6 +19,25 @@
       "default": "./src/json-schema.ts"
     }
   },
+  "files": [
+    "src"
+  ],
+  "keywords": [
+    "better-t-stack",
+    "typescript",
+    "types",
+    "schemas",
+    "cli"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AmanVarshney01/create-better-t-stack.git",
+    "directory": "packages/types"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://better-t-stack.dev/",
   "dependencies": {
     "zod": "^4.1.13"
   },

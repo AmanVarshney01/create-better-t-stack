@@ -28,7 +28,6 @@
         "@biomejs/js-api": "^3.0.0",
         "@biomejs/wasm-nodejs": "^2.2.6",
         "@clack/prompts": "^1.0.0-alpha.6",
-        "@create-better-t-stack/types": "workspace:*",
         "@orpc/server": "^1.10.0",
         "consola": "^3.4.2",
         "execa": "^9.6.0",
@@ -44,6 +43,7 @@
         "zod": "^4.1.13",
       },
       "devDependencies": {
+        "@create-better-t-stack/types": "workspace:*",
         "@types/fs-extra": "^11.0.4",
         "@types/node": "^24.9.1",
         "@vitest/ui": "^3.2.4",
@@ -141,7 +141,7 @@
     },
     "packages/types": {
       "name": "@create-better-t-stack/types",
-      "version": "1.0.0",
+      "version": "3.7.3",
       "dependencies": {
         "zod": "^4.1.13",
       },
