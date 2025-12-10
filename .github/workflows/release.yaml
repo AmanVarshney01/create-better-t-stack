@@ -212,4 +212,4 @@ jobs:
             ### NPM Links
             - [create-better-t-stack@${{ steps.canary.outputs.version }}](https://www.npmjs.com/package/create-better-t-stack/v/${{ steps.canary.outputs.version }})
             - [create-bts@${{ steps.canary.outputs.version }}](https://www.npmjs.com/package/create-bts/v/${{ steps.canary.outputs.version }})
-            - [@create-better-t-stack/types@${{ steps.canary.outputs.version }}](https://www.npmjs.com/package/@create-better-t-stack/types/v/${{ steps.canary.outputs.version }})
+            - [@better-t-stack/types@${{ steps.canary.outputs.version }}](https://www.npmjs.com/package/@better-t-stack/types/v/${{ steps.canary.outputs.version }})

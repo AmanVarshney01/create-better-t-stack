@@ -184,7 +184,7 @@ async function main(): Promise<void> {
 
     const pubSpin = spinner();
     pubSpin.start(
-      `Publishing ${packageName}@${canaryVersion}, create-bts@${canaryVersion}, and @create-better-t-stack/types@${canaryVersion} (canary)...`,
+      `Publishing ${packageName}@${canaryVersion}, create-bts@${canaryVersion}, and @better-t-stack/types@${canaryVersion} (canary)...`,
     );
     try {
       await $`cd apps/cli && bun publish --access public --tag canary`;
@@ -222,7 +222,7 @@ async function main(): Promise<void> {
     console.log(`📦 NPM: https://www.npmjs.com/package/${packageName}/v/${canaryVersion}`);
     console.log(`📦 NPM: https://www.npmjs.com/package/create-bts/v/${canaryVersion}`);
     console.log(
-      `📦 NPM: https://www.npmjs.com/package/@create-better-t-stack/types/v/${canaryVersion}`,
+      `📦 NPM: https://www.npmjs.com/package/@better-t-stack/types/v/${canaryVersion}`,
     );
   } finally {
     if (!restored) {

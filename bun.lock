@@ -43,7 +43,7 @@
         "zod": "^4.1.13",
       },
       "devDependencies": {
-        "@create-better-t-stack/types": "workspace:*",
+        "@better-t-stack/types": "workspace:*",
         "@types/fs-extra": "^11.0.4",
         "@types/node": "^24.9.1",
         "@vitest/ui": "^3.2.4",
@@ -58,7 +58,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@better-t-stack/backend": "workspace:*",
-        "@create-better-t-stack/types": "workspace:*",
+        "@better-t-stack/types": "workspace:*",
         "@erquhart/convex-oss-stats": "^0.8.2",
         "@number-flow/react": "^0.5.10",
         "@orama/orama": "^3.1.16",
@@ -140,7 +140,7 @@
       },
     },
     "packages/types": {
-      "name": "@create-better-t-stack/types",
+      "name": "@better-t-stack/types",
       "version": "3.7.3",
       "dependencies": {
         "zod": "^4.1.13",
@@ -189,6 +189,8 @@
 
     "@better-t-stack/backend": ["@better-t-stack/backend@workspace:packages/backend"],
 
+    "@better-t-stack/types": ["@better-t-stack/types@workspace:packages/types"],
+
     "@biomejs/js-api": ["@biomejs/js-api@3.0.0", "", { "peerDependencies": { "@biomejs/wasm-bundler": "^2.2.0", "@biomejs/wasm-nodejs": "^2.2.0", "@biomejs/wasm-web": "^2.2.0" }, "optionalPeers": ["@biomejs/wasm-bundler", "@biomejs/wasm-nodejs", "@biomejs/wasm-web"] }, "sha512-5QcGJFj9IO+yXl76ICjvkdE38uxRcTDsBzcCZHEZ+ma+Te/nbvJg4A3KtAds9HCrEF0JKLWiyjMhAbqazuJvYA=="],
 
     "@biomejs/wasm-nodejs": ["@biomejs/wasm-nodejs@2.3.8", "", {}, "sha512-c5tuzrW34cRipmrChxX9hboJIkOurjrK7o1GF4pOOuNEQ5UExSpmnEek2FH0mbdp6+TikUcT0XAquQnbFNQ9Eg=="],
@@ -198,8 +200,6 @@
     "@clack/prompts": ["@clack/prompts@0.11.0", "", { "dependencies": { "@clack/core": "0.5.0", "picocolors": "^1.0.0", "sisteransi": "^1.0.5" } }, "sha512-pMN5FcrEw9hUkZA4f+zLlzivQSeQf5dRGJjSUbvVYDLvpKCdQx5OaknvKzgbtXOizhP+SJJJjqEbOe55uKKfAw=="],
 
     "@convex-dev/crons": ["@convex-dev/crons@0.2.0", "", { "dependencies": { "cron-parser": "^4.9.0" }, "peerDependencies": { "convex": "^1.24.8" } }, "sha512-JowF/DDPl8FuhXml2/0jmEa6uIKr/UK1UwP+FdbPt2BRVxACRX4CNlzDQEtHbO2p2FVKiJh4zEg8p5/YM27PEA=="],
-
-    "@create-better-t-stack/types": ["@create-better-t-stack/types@workspace:packages/types"],
 
     "@emnapi/core": ["@emnapi/core@1.7.1", "", { "dependencies": { "@emnapi/wasi-threads": "1.1.0", "tslib": "^2.4.0" } }, "sha512-o1uhUASyo921r2XtHYOHy7gdkGLge8ghBEQHMWmyJFoXlpU58kIrhhN3w26lpQb6dspetweapMn2CSNwQ8I4wg=="],
 

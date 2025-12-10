@@ -41,7 +41,7 @@ export {
   SERVER_DEPLOY_VALUES,
   DIRECTORY_CONFLICT_VALUES,
   TEMPLATE_VALUES,
-} from "@create-better-t-stack/types";
+} from "@better-t-stack/types";
 
 export type {
   Database,
@@ -67,4 +67,4 @@ export type {
   ProjectConfig,
   BetterTStackConfig,
   InitResult,
-} from "@create-better-t-stack/types";
+} from "@better-t-stack/types";

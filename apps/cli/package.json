@@ -83,7 +83,7 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
-    "@create-better-t-stack/types": "workspace:*",
+    "@better-t-stack/types": "workspace:*",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^24.9.1",
     "@vitest/ui": "^3.2.4",

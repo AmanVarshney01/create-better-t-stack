@@ -1,5 +1,5 @@
 // Re-export TechCategory from shared types
-export type { TechCategory } from "@create-better-t-stack/types";
+export type { TechCategory } from "@better-t-stack/types";
 
 export type TechEdge = {
   id: string;
