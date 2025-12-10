@@ -10,7 +10,8 @@
   },
   "files": [
     "cli.js",
-    "index.js"
+    "index.js",
+    "index.d.ts"
   ],
   "keywords": [
     "bts",
