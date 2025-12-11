@@ -50,14 +50,6 @@ jobs:
       - name: Install Dependencies
         if: steps.version.outputs.version != ''
         run: bun install --frozen-lockfile
-        env:
-          BTS_TELEMETRY: 0
-
-      - name: Build CLI
-        if: steps.version.outputs.version != ''
-        run: cd apps/cli && bun run build
-        env:
-          BTS_TELEMETRY: 0
 
       - name: Create GitHub Release
         if: steps.version.outputs.version != ''
@@ -95,6 +87,12 @@ jobs:
           VERSION=${{ steps.version.outputs.version }}
           cd apps/cli
           bun run node -e "const pkg=require('./package.json');pkg.dependencies['@better-t-stack/types']='^$VERSION';require('fs').writeFileSync('package.json',JSON.stringify(pkg,null,2)+'\n')"
+
+      - name: Build CLI
+        if: steps.version.outputs.version != ''
+        run: cd apps/cli && bun run build
+        env:
+          BTS_TELEMETRY: 1
 
       - name: Update create-bts alias package version
         if: steps.version.outputs.version != ''
