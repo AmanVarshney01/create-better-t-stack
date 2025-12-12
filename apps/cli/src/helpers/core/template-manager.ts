@@ -223,6 +223,11 @@ async function setupDbPackage(projectDir: string, context: ProjectConfig) {
     await processAndCopyFiles("**/*", dbBaseDir, dbPackageDir, context);
   }
 
+  const dbOrmBaseDir = path.join(PKG_ROOT, `templates/db/${context.orm}/base`);
+  if (await fs.pathExists(dbOrmBaseDir)) {
+    await processAndCopyFiles("**/*", dbOrmBaseDir, dbPackageDir, context);
+  }
+
   const dbOrmSrcDir = path.join(PKG_ROOT, `templates/db/${context.orm}/${context.database}`);
   if (await fs.pathExists(dbOrmSrcDir)) {
     await processAndCopyFiles("**/*", dbOrmSrcDir, dbPackageDir, context);

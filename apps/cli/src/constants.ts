@@ -42,8 +42,8 @@ export const DEFAULT_CONFIG = getDefaultConfig();
 export const dependencyVersionMap = {
   typescript: "^5",
 
-  "better-auth": "^1.4.5",
-  "@better-auth/expo": "^1.4.5",
+  "better-auth": "1.4.5",
+  "@better-auth/expo": "1.4.5",
 
   "@clerk/nextjs": "^6.31.5",
   "@clerk/clerk-react": "^5.45.0",
@@ -54,8 +54,8 @@ export const dependencyVersionMap = {
   "drizzle-kit": "^0.31.8",
   "@planetscale/database": "^1.19.0",
 
-  "@libsql/client": "^0.14.0",
-  libsql: "^0.5.22",
+  "@libsql/client": "0.14.0",
+  libsql: "0.5.22",
 
   "@neondatabase/serverless": "^1.0.2",
   pg: "^8.16.3",
@@ -65,15 +65,15 @@ export const dependencyVersionMap = {
 
   mysql2: "^3.14.0",
 
-  "@prisma/client": "^7.0.1",
-  prisma: "^7.0.1",
-  "@prisma/adapter-d1": "^7.0.1",
-  "@prisma/adapter-neon": "^7.0.1",
-  "@prisma/adapter-mariadb": "^7.0.1",
-  "@prisma/adapter-libsql": "^7.0.1",
-  "@prisma/adapter-better-sqlite3": "^7.0.1",
-  "@prisma/adapter-pg": "^7.0.1",
-  "@prisma/adapter-planetscale": "^7.0.1",
+  "@prisma/client": "^7.1.0",
+  prisma: "^7.1.0",
+  "@prisma/adapter-d1": "^7.1.0",
+  "@prisma/adapter-neon": "^7.1.0",
+  "@prisma/adapter-mariadb": "^7.1.0",
+  "@prisma/adapter-libsql": "^7.1.0",
+  "@prisma/adapter-better-sqlite3": "^7.1.0",
+  "@prisma/adapter-pg": "^7.1.0",
+  "@prisma/adapter-planetscale": "^7.1.0",
 
   mongoose: "^8.14.0",
 
@@ -83,7 +83,7 @@ export const dependencyVersionMap = {
   "@tauri-apps/cli": "^2.4.0",
 
   "@biomejs/biome": "^2.2.0",
-  oxlint: "^1.12.0",
+  oxlint: "^1.32.0",
 
   husky: "^9.1.7",
   "lint-staged": "^16.1.2",
@@ -160,7 +160,7 @@ export const dependencyVersionMap = {
   "@sveltejs/adapter-cloudflare": "^7.2.1",
   "@cloudflare/workers-types": "^4.20250822.0",
 
-  alchemy: "^0.77.0",
+  alchemy: "^0.81.1",
 
   dotenv: "^17.2.2",
   tsdown: "^0.16.5",
