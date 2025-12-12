@@ -13,6 +13,7 @@ import { setupRuntime } from "../core/runtime-setup";
 import { setupServerDeploy } from "../deployment/server-deploy-setup";
 import { setupWebDeploy } from "../deployment/web-deploy-setup";
 import { setupAuth } from "./auth-setup";
+import { setupClaudeIntegration } from "./claude-setup";
 import { createReadme } from "./create-readme";
 import { setupEnvironmentVariables } from "./env-setup";
 import { initializeGit } from "./git";
@@ -101,6 +102,8 @@ export async function createProject(options: ProjectConfig, cliInput?: { manualD
     await setupCatalogs(projectDir, options);
 
     await createReadme(projectDir, options);
+
+    await setupClaudeIntegration(projectDir, options);
 
     await writeBtsConfig(options);
 
