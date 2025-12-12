@@ -116,20 +116,20 @@ export const dependencyVersionMap = {
   "@ai-sdk/vue": "^2.0.49",
   "@ai-sdk/svelte": "^3.0.39",
   "@ai-sdk/react": "^2.0.39",
-  streamdown: "^1.3.0",
+  streamdown: "^1.6.10",
   shiki: "^3.12.2",
 
-  "@orpc/server": "^1.10.0",
-  "@orpc/client": "^1.10.0",
-  "@orpc/openapi": "^1.10.0",
-  "@orpc/zod": "^1.10.0",
-  "@orpc/tanstack-query": "^1.10.0",
+  "@orpc/server": "^1.12.2",
+  "@orpc/client": "^1.12.2",
+  "@orpc/openapi": "^1.12.2",
+  "@orpc/zod": "^1.12.2",
+  "@orpc/tanstack-query": "^1.12.2",
 
-  "@trpc/tanstack-react-query": "^11.5.0",
-  "@trpc/server": "^11.5.0",
-  "@trpc/client": "^11.5.0",
+  "@trpc/tanstack-react-query": "^11.7.2",
+  "@trpc/server": "^11.7.2",
+  "@trpc/client": "^11.7.2",
 
-  next: "^16.0.7",
+  next: "^16.0.10",
 
   convex: "^1.29.3",
   "@convex-dev/react-query": "^0.1.0",
@@ -144,8 +144,8 @@ export const dependencyVersionMap = {
   "@tanstack/vue-query-devtools": "^5.90.2",
   "@tanstack/vue-query": "^5.90.2",
 
-  "@tanstack/react-query-devtools": "^5.85.5",
-  "@tanstack/react-query": "^5.85.5",
+  "@tanstack/react-query-devtools": "^5.91.1",
+  "@tanstack/react-query": "^5.90.12",
 
   "@tanstack/solid-query": "^5.87.4",
   "@tanstack/solid-query-devtools": "^5.87.4",
