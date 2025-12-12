@@ -20,7 +20,7 @@
     },
     "apps/cli": {
       "name": "create-better-t-stack",
-      "version": "3.7.3",
+      "version": "3.7.4",
       "bin": {
         "create-better-t-stack": "dist/cli.js",
       },
@@ -118,18 +118,18 @@
       "name": "@better-t-stack/backend",
       "version": "1.0.0",
       "dependencies": {
-        "@convex-dev/crons": "latest",
-        "@erquhart/convex-oss-stats": "latest",
-        "convex": "latest",
-        "convex-helpers": "latest",
+        "@convex-dev/crons": "^0.2.0",
+        "@erquhart/convex-oss-stats": "^0.8.2",
+        "convex": "^1.31.0",
+        "convex-helpers": "^0.1.107",
       },
       "devDependencies": {
-        "typescript": "latest",
+        "typescript": "^5.9.3",
       },
     },
     "packages/create-bts": {
       "name": "create-bts",
-      "version": "3.7.3",
+      "version": "3.7.4",
       "bin": {
         "create-bts": "cli.js",
       },
