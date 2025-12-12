@@ -16,13 +16,19 @@ import type {
 } from "../../types";
 
 /**
+ * Returns the appropriate dlx command for the selected package manager
+ */
+function getDlxCmd(packageManager: PackageManager) {
+  if (packageManager === "bun") return "bunx";
+  if (packageManager === "pnpm") return "pnpm dlx";
+  return "npx";
+}
+
+/**
  * Sets up Claude Code integration for the generated project.
  * Creates CLAUDE.md, .claude/commands/, and .claude/spec/ files.
  */
-export async function setupClaudeIntegration(
-  projectDir: string,
-  options: ProjectConfig,
-): Promise<void> {
+export async function setupClaudeIntegration(projectDir: string, options: ProjectConfig) {
   try {
     // Create CLAUDE.md at project root
     await createClaudeMd(projectDir, options);
@@ -35,14 +41,15 @@ export async function setupClaudeIntegration(
 
     consola.success("Claude Code integration configured successfully");
   } catch (error) {
-    consola.error("Failed to set up Claude Code integration:", error);
+    // Log warning but continue - Claude setup is non-critical
+    consola.warn("Claude Code integration skipped due to error:", error);
   }
 }
 
 /**
  * Creates the CLAUDE.md file with comprehensive project context
  */
-async function createClaudeMd(projectDir: string, options: ProjectConfig): Promise<void> {
+async function createClaudeMd(projectDir: string, options: ProjectConfig) {
   const claudeMdPath = path.join(projectDir, "CLAUDE.md");
   const content = generateClaudeMdContent(options);
   await fs.writeFile(claudeMdPath, content);
@@ -51,7 +58,7 @@ async function createClaudeMd(projectDir: string, options: ProjectConfig): Promi
 /**
  * Creates .claude/commands/ with contextual slash commands
  */
-async function createClaudeCommands(projectDir: string, options: ProjectConfig): Promise<void> {
+async function createClaudeCommands(projectDir: string, options: ProjectConfig) {
   const commandsDir = path.join(projectDir, ".claude", "commands");
   await fs.ensureDir(commandsDir);
 
@@ -65,7 +72,7 @@ async function createClaudeCommands(projectDir: string, options: ProjectConfig):
 /**
  * Creates .claude/spec/ with project specification templates
  */
-async function createClaudeSpec(projectDir: string, options: ProjectConfig): Promise<void> {
+async function createClaudeSpec(projectDir: string, options: ProjectConfig) {
   const specDir = path.join(projectDir, ".claude", "spec");
   await fs.ensureDir(specDir);
 
@@ -79,11 +86,7 @@ async function createClaudeSpec(projectDir: string, options: ProjectConfig): Pro
 /**
  * Generates comprehensive CLAUDE.md content based on stack choices
  */
-
-/**
- * Generates comprehensive CLAUDE.md content based on stack choices
- */
-function generateClaudeMdContent(options: ProjectConfig): string {
+function generateClaudeMdContent(options: ProjectConfig) {
   const {
     projectName,
     packageManager,
@@ -192,7 +195,7 @@ ${generateNamingConventions(options)}
 // Helper functions for content generation
 // ============================================================================
 
-function getFrontendName(frontend: Frontend[]): string {
+function getFrontendName(frontend: Frontend[]) {
   const names: Record<string, string> = {
     "tanstack-router": "React + TanStack Router",
     "react-router": "React + React Router",
@@ -208,7 +211,7 @@ function getFrontendName(frontend: Frontend[]): string {
   return frontend.map((f) => names[f] || f).join(", ");
 }
 
-function getBackendName(backend: Backend): string {
+function getBackendName(backend: Backend) {
   const names: Record<string, string> = {
     hono: "Hono",
     express: "Express",
@@ -219,7 +222,7 @@ function getBackendName(backend: Backend): string {
   return names[backend] || backend;
 }
 
-function getDatabaseName(database: Database): string {
+function getDatabaseName(database: Database) {
   const names: Record<string, string> = {
     sqlite: "SQLite",
     postgres: "PostgreSQL",
@@ -229,7 +232,7 @@ function getDatabaseName(database: Database): string {
   return names[database] || database;
 }
 
-function getOrmName(orm: ORM): string {
+function getOrmName(orm: ORM) {
   const names: Record<string, string> = {
     drizzle: "Drizzle ORM",
     prisma: "Prisma",
@@ -238,7 +241,7 @@ function getOrmName(orm: ORM): string {
   return names[orm] || orm;
 }
 
-function getAuthName(auth: Auth): string {
+function getAuthName(auth: Auth) {
   const names: Record<string, string> = {
     "better-auth": "Better-Auth",
     clerk: "Clerk",
@@ -246,7 +249,7 @@ function getAuthName(auth: Auth): string {
   return names[auth] || auth;
 }
 
-function getRuntimeName(runtime: Runtime): string {
+function getRuntimeName(runtime: Runtime) {
   const names: Record<string, string> = {
     bun: "Bun",
     node: "Node.js",
@@ -255,7 +258,7 @@ function getRuntimeName(runtime: Runtime): string {
   return names[runtime] || runtime;
 }
 
-function generateProjectStructureTree(options: ProjectConfig): string {
+function generateProjectStructureTree(options: ProjectConfig) {
   const { frontend, backend, addons, api, auth, database } = options;
   const isConvex = backend === "convex";
   const hasFrontend = frontend.length > 0 && !frontend.includes("none");
@@ -266,34 +269,51 @@ function generateProjectStructureTree(options: ProjectConfig): string {
 
   const lines: string[] = ["├── apps/"];
 
+  // Build apps entries
+  const appsEntries: string[] = [];
   if (hasFrontend && !hasNative) {
-    lines.push("│   ├── web/              # Frontend application");
+    appsEntries.push("web/              # Frontend application");
   }
   if (hasNative) {
-    lines.push("│   ├── web/              # Web frontend");
-    lines.push("│   ├── native/           # React Native mobile app");
+    appsEntries.push("web/              # Web frontend");
+    appsEntries.push("native/           # React Native mobile app");
   }
   if (hasBackend && !isConvex && !isSelfBackend) {
-    lines.push("│   └── server/           # Backend API server");
+    appsEntries.push("server/           # Backend API server");
   }
   if (addons.includes("starlight") || addons.includes("fumadocs")) {
-    lines.push("│   └── docs/             # Documentation site");
+    appsEntries.push("docs/             # Documentation site");
   }
+
+  // Add apps entries with proper tree markers
+  appsEntries.forEach((entry, i) => {
+    const marker = i === appsEntries.length - 1 ? "└──" : "├──";
+    lines.push(`│   ${marker} ${entry}`);
+  });
 
   if (!isSelfBackend) {
     lines.push("├── packages/");
+
+    // Build packages entries
+    const pkgEntries: string[] = [];
     if (api !== "none" && !isConvex) {
-      lines.push("│   ├── api/              # Shared API definitions");
+      pkgEntries.push("api/              # Shared API definitions");
     }
     if (auth !== "none" && !isConvex) {
-      lines.push("│   ├── auth/             # Authentication logic");
+      pkgEntries.push("auth/             # Authentication logic");
     }
     if (hasDatabase && !isConvex) {
-      lines.push("│   └── db/               # Database schema & queries");
+      pkgEntries.push("db/               # Database schema & queries");
     }
     if (isConvex) {
-      lines.push("│   └── backend/          # Convex functions & schema");
+      pkgEntries.push("backend/          # Convex functions & schema");
     }
+
+    // Add packages entries with proper tree markers
+    pkgEntries.forEach((entry, i) => {
+      const marker = i === pkgEntries.length - 1 ? "└──" : "├──";
+      lines.push(`│   ${marker} ${entry}`);
+    });
   }
 
   lines.push("├── CLAUDE.md             # This file (Claude context)");
@@ -303,7 +323,7 @@ function generateProjectStructureTree(options: ProjectConfig): string {
   return lines.join("\n");
 }
 
-function generateCodeOrganizationGuidelines(options: ProjectConfig): string {
+function generateCodeOrganizationGuidelines(options: ProjectConfig) {
   const { frontend, backend, api } = options;
   const isConvex = backend === "convex";
   const lines: string[] = [];
@@ -330,13 +350,13 @@ function generateCodeOrganizationGuidelines(options: ProjectConfig): string {
   return lines.map((l) => l).join("\n");
 }
 
-function generateTypeSafetyRules(options: ProjectConfig): string {
+function generateTypeSafetyRules(options: ProjectConfig) {
   const { api, orm, backend } = options;
   const isConvex = backend === "convex";
   const lines: string[] = [];
 
   lines.push("- NEVER use `any` type - use `unknown` and narrow with type guards");
-  lines.push("- ALWAYS define explicit return types for functions");
+  lines.push("- Prefer TypeScript's inferred return types; avoid unnecessary explicit annotations");
   lines.push("- Use Zod for runtime validation at API boundaries");
 
   if (api === "trpc" && !isConvex) {
@@ -367,7 +387,7 @@ function generateTypeSafetyRules(options: ProjectConfig): string {
   return lines.map((l) => l).join("\n");
 }
 
-function generateFrontendPatterns(options: ProjectConfig): string {
+function generateFrontendPatterns(options: ProjectConfig) {
   const { frontend } = options;
   let content = "\n### Frontend Patterns\n\n";
 
@@ -477,7 +497,7 @@ export const load = async ({ params }) => {
   return content;
 }
 
-function generateBackendPatterns(options: ProjectConfig): string {
+function generateBackendPatterns(options: ProjectConfig) {
   const { backend, runtime } = options;
   let content = "\n### Backend Patterns\n\n";
 
@@ -547,7 +567,7 @@ const app = new Elysia()
   return content;
 }
 
-function generateConvexPatterns(options: ProjectConfig): string {
+function generateConvexPatterns(options: ProjectConfig) {
   return `
 ### Convex Patterns
 
@@ -585,7 +605,7 @@ export const create = mutation({
 `;
 }
 
-function generateApiPatterns(options: ProjectConfig): string {
+function generateApiPatterns(options: ProjectConfig) {
   const { api } = options;
   let content = "\n### API Patterns\n\n";
 
@@ -649,7 +669,7 @@ export const userRouter = router({
   return content;
 }
 
-function generateDatabasePatterns(options: ProjectConfig): string {
+function generateDatabasePatterns(options: ProjectConfig) {
   const { orm, database } = options;
   let content = "\n### Database Patterns\n\n";
 
@@ -745,7 +765,7 @@ export const User = mongoose.model("User", userSchema);
   return content;
 }
 
-function generateAuthPatterns(options: ProjectConfig): string {
+function generateAuthPatterns(options: ProjectConfig) {
   const { auth } = options;
   let content = "\n### Authentication Patterns\n\n";
 
@@ -804,7 +824,7 @@ const { user } = useUser();
   return content;
 }
 
-function generateAntiPatterns(options: ProjectConfig): string {
+function generateAntiPatterns(options: ProjectConfig) {
   const { api, orm, frontend, backend, addons } = options;
   const isConvex = backend === "convex";
   const lines: string[] = [];
@@ -849,7 +869,7 @@ function generateAntiPatterns(options: ProjectConfig): string {
   return lines.map((l) => `- ${l.replace(/^- /, "")}`).join("\n");
 }
 
-function generateNamingConventions(options: ProjectConfig): string {
+function generateNamingConventions(options: ProjectConfig) {
   const { frontend } = options;
   const lines: string[] = [];
 
@@ -883,7 +903,7 @@ function generateNamingConventions(options: ProjectConfig): string {
 /**
  * Returns relevant slash commands based on project configuration
  */
-function getRelevantCommands(options: ProjectConfig): Record<string, string> {
+function getRelevantCommands(options: ProjectConfig) {
   const { frontend, backend, database, api, addons, packageManager, dbSetup } = options;
   const commands: Record<string, string> = {};
   const runCmd = `${packageManager} run`;
@@ -949,6 +969,7 @@ ${runCmd} test:watch
 
   // Convex commands
   if (isConvex) {
+    const dlxCmd = getDlxCmd(packageManager);
     commands["convex-deploy.md"] = `---
 description: Deploy Convex functions
 ---
@@ -956,7 +977,7 @@ description: Deploy Convex functions
 Deploy your Convex backend to production:
 
 \`\`\`bash
-npx convex deploy
+${dlxCmd} convex deploy
 \`\`\`
 
 For development:
@@ -1000,7 +1021,7 @@ ${runCmd} lint
   return commands;
 }
 
-function generateAddFeatureCommand(options: ProjectConfig): string {
+function generateAddFeatureCommand(options: ProjectConfig) {
   const { frontend, api, backend, database, orm } = options;
   const isConvex = backend === "convex";
   const hasApi = api !== "none";
@@ -1090,7 +1111,7 @@ Create functions in \`packages/backend/convex/[feature].ts\`:
   return steps;
 }
 
-function generateAddRouteCommand(options: ProjectConfig): string {
+function generateAddRouteCommand(options: ProjectConfig) {
   const { frontend, packageManager } = options;
   let content = `---
 description: Add a new route/page
@@ -1197,7 +1218,7 @@ export const load = async () => {
   return content;
 }
 
-function generateAddComponentCommand(options: ProjectConfig): string {
+function generateAddComponentCommand(options: ProjectConfig) {
   return `---
 description: Add a new UI component
 ---
@@ -1211,11 +1232,11 @@ Location: \`apps/web/src/components/\`
 // apps/web/src/components/UserCard.tsx
 import { cn } from "@/lib/utils";
 
-interface UserCardProps {
+type UserCardProps = {
   name: string;
   email: string;
   className?: string;
-}
+};
 
 export function UserCard({ name, email, className }: UserCardProps) {
   return (
@@ -1230,13 +1251,13 @@ export function UserCard({ name, email, className }: UserCardProps) {
 ## Guidelines
 
 - Use \`cn()\` for conditional classes (from shadcn/ui)
-- Define props interface with TypeScript
+- Define props with TypeScript type aliases
 - Make components composable and reusable
 - Colocate tests: \`UserCard.test.tsx\`
 `;
 }
 
-function generateAddProcedureCommand(options: ProjectConfig): string {
+function generateAddProcedureCommand(options: ProjectConfig) {
   const { api, packageManager } = options;
 
   if (api === "trpc") {
@@ -1347,9 +1368,10 @@ oRPC automatically generates OpenAPI spec from your procedures.
   return "";
 }
 
-function generateDbMigrateCommand(options: ProjectConfig): string {
+function generateDbMigrateCommand(options: ProjectConfig) {
   const { orm, packageManager, database, dbSetup } = options;
   const runCmd = `${packageManager} run`;
+  const dlxCmd = getDlxCmd(packageManager);
 
   let content = `---
 description: Run database migrations
@@ -1393,17 +1415,17 @@ ${runCmd} db:push
 
 ### Create migration
 \`\`\`bash
-npx prisma migrate dev --name <migration-name>
+${dlxCmd} prisma migrate dev --name <migration-name>
 \`\`\`
 
 ### Apply migrations (production)
 \`\`\`bash
-npx prisma migrate deploy
+${dlxCmd} prisma migrate deploy
 \`\`\`
 
 ### Generate client
 \`\`\`bash
-npx prisma generate
+${dlxCmd} prisma generate
 \`\`\`
 
 ### Schema location
@@ -1425,9 +1447,10 @@ Schema validation is handled at the application level.
   return content;
 }
 
-function generateDbStudioCommand(options: ProjectConfig): string {
+function generateDbStudioCommand(options: ProjectConfig) {
   const { orm, packageManager } = options;
   const runCmd = `${packageManager} run`;
+  const dlxCmd = getDlxCmd(packageManager);
 
   let content = `---
 description: Open database GUI
@@ -1457,7 +1480,7 @@ This opens Drizzle Studio in your browser where you can:
 Open the database GUI:
 
 \`\`\`bash
-npx prisma studio
+${dlxCmd} prisma studio
 \`\`\`
 
 This opens Prisma Studio in your browser where you can:
@@ -1479,7 +1502,7 @@ Connection string is in your \`.env\` file as \`DATABASE_URL\`.
   return content;
 }
 
-function generateProjectSpecTemplate(options: ProjectConfig): string {
+function generateProjectSpecTemplate(options: ProjectConfig) {
   return `# Project Specification
 
 <!-- Fill in this template to give Claude context about your project -->
@@ -1544,7 +1567,7 @@ function generateProjectSpecTemplate(options: ProjectConfig): string {
 `;
 }
 
-function generateFeatureTemplate(options: ProjectConfig): string {
+function generateFeatureTemplate(options: ProjectConfig) {
   return `# Feature Specification
 
 <!-- Copy this template for each new feature -->
