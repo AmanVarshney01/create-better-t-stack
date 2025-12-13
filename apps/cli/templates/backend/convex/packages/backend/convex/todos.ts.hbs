@@ -16,7 +16,7 @@ export const create = mutation({
       text: args.text,
       completed: false,
     });
-    return await ctx.db.get(newTodoId);
+    return await ctx.db.get("todos", newTodoId);
   },
 });
 
@@ -26,7 +26,7 @@ export const toggle = mutation({
     completed: v.boolean(),
   },
   handler: async (ctx, args) => {
-    await ctx.db.patch(args.id, { completed: args.completed });
+    await ctx.db.patch("todos", args.id, { completed: args.completed });
     return { success: true };
   },
 });
@@ -36,7 +36,7 @@ export const deleteTodo = mutation({
     id: v.id("todos"),
   },
   handler: async (ctx, args) => {
-    await ctx.db.delete(args.id);
+    await ctx.db.delete("todos", args.id);
     return { success: true };
   },
 });
