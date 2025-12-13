@@ -16,11 +16,7 @@ import type * as showcase from "../showcase.js";
 import type * as stats from "../stats.js";
 import type * as testimonials from "../testimonials.js";
 
-import type {
-  ApiFromModules,
-  FilterApi,
-  FunctionReference,
-} from "convex/server";
+import type { ApiFromModules, FilterApi, FunctionReference } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
   analytics: typeof analytics;
@@ -40,10 +36,7 @@ declare const fullApi: ApiFromModules<{
  * const myFunctionReference = api.myModule.myFunction;
  * ```
  */
-export declare const api: FilterApi<
-  typeof fullApi,
-  FunctionReference<any, "public">
->;
+export declare const api: FilterApi<typeof fullApi, FunctionReference<any, "public">>;
 
 /**
  * A utility for referencing Convex functions in your app's internal API.
@@ -53,10 +46,7 @@ export declare const api: FilterApi<
  * const myFunctionReference = internal.myModule.myFunction;
  * ```
  */
-export declare const internal: FilterApi<
-  typeof fullApi,
-  FunctionReference<any, "internal">
->;
+export declare const internal: FilterApi<typeof fullApi, FunctionReference<any, "internal">>;
 
 export declare const components: {
   ossStats: {
@@ -110,12 +100,7 @@ export declare const components: {
           updatedAt: number;
         }>
       >;
-      updateGithubOwner: FunctionReference<
-        "mutation",
-        "internal",
-        { name: string },
-        any
-      >;
+      updateGithubOwner: FunctionReference<"mutation", "internal", { name: string }, any>;
       updateGithubOwnerStats: FunctionReference<
         "action",
         "internal",
@@ -226,12 +211,7 @@ export declare const components: {
           updatedAt: number;
         }
       >;
-      updateNpmOrg: FunctionReference<
-        "mutation",
-        "internal",
-        { name: string },
-        any
-      >;
+      updateNpmOrg: FunctionReference<"mutation", "internal", { name: string }, any>;
       updateNpmOrgStats: FunctionReference<
         "action",
         "internal",
@@ -262,12 +242,7 @@ export declare const components: {
         },
         any
       >;
-      updateNpmPackageStats: FunctionReference<
-        "action",
-        "internal",
-        { name: string },
-        any
-      >;
+      updateNpmPackageStats: FunctionReference<"action", "internal", { name: string }, any>;
     };
   };
 };

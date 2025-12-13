@@ -665,10 +665,7 @@ export async function setupExamplesTemplate(projectDir: string, context: Project
       if (await fs.pathExists(convexExampleSrc)) {
         await processAndCopyFiles("**/*", convexExampleSrc, convexBackendDestDir, context, false);
       }
-    } else if (
-      (serverAppDirExists || context.backend === "self") &&
-      context.backend !== "none"
-    ) {
+    } else if ((serverAppDirExists || context.backend === "self") && context.backend !== "none") {
       const exampleServerSrc = path.join(exampleBaseDir, "server");
 
       if (context.api !== "none") {

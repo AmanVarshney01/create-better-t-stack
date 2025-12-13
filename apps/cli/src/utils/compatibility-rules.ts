@@ -186,10 +186,7 @@ export function isExampleTodoAllowed(
   return !(backend !== "convex" && backend !== "none" && database === "none");
 }
 
-export function isExampleAIAllowed(
-  backend?: ProjectConfig["backend"],
-  frontends: Frontend[] = [],
-) {
+export function isExampleAIAllowed(backend?: ProjectConfig["backend"], frontends: Frontend[] = []) {
   if (backend === "convex") return false;
   const includesSolid = frontends.includes("solid");
   if (includesSolid) return false;
