@@ -661,7 +661,7 @@ export async function setupExamplesTemplate(projectDir: string, context: Project
 
     if (context.backend === "convex") {
       const convexBackendDestDir = path.join(projectDir, "packages/backend");
-      const convexExampleSrc = path.join(exampleBaseDir, "convex");
+      const convexExampleSrc = path.join(exampleBaseDir, "convex/packages/backend");
       if (await fs.pathExists(convexExampleSrc)) {
         await processAndCopyFiles("**/*", convexExampleSrc, convexBackendDestDir, context, false);
       }
