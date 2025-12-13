@@ -8,4 +8,7 @@ pre-commit:
     oxlint-fix:
       run: oxlint --fix {staged_files}
       stage_fixed: true
+{{else}}
+    info:
+      run: echo "Go to https://lefthook.dev/ for more information on configuring hooks!"
 {{/if}}
