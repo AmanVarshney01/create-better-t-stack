@@ -200,7 +200,10 @@ export async function setupUltracite(config: ProjectConfig, gitHook: string) {
     }
 
     if (gitHook) {
-      ultraciteArgs.push("--integrations", `${gitHook}`, "lint-staged");
+      ultraciteArgs.push("--integrations", `${gitHook}`);
+      if (gitHook === "husky") {
+        ultraciteArgs.push("lint-staged");
+      }
     }
 
     const ultraciteArgsString = ultraciteArgs.join(" ");
