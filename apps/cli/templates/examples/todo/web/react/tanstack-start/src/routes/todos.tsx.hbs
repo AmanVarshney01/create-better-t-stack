@@ -9,7 +9,11 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { createFileRoute } from "@tanstack/react-router";
+{{#if (eq backend "convex")}}
+import { Trash2 } from "lucide-react";
+{{else}}
 import { Loader2, Trash2 } from "lucide-react";
+{{/if}}
 import { useState } from "react";
 
 {{#if (eq backend "convex")}}
