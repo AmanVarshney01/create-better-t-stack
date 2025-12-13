@@ -687,18 +687,8 @@ export async function setupPaymentsTemplate(projectDir: string, context: Project
 export async function setupAddonsTemplate(projectDir: string, context: ProjectConfig) {
   if (!context.addons || context.addons.length === 0) return;
 
-  // Check if there's a linter selected (for git hooks)
-  const hasLinter = context.addons.some(
-    (addon) => addon === "biome" || addon === "oxlint" || addon === "ultracite",
-  );
-
   for (const addon of context.addons) {
     if (addon === "none") continue;
-
-    // Skip lefthook templates if no linter is selected
-    if (addon === "lefthook" && !hasLinter) {
-      continue;
-    }
 
     let addonSrcDir = path.join(PKG_ROOT, `templates/addons/${addon}`);
     let addonDestDir = projectDir;
