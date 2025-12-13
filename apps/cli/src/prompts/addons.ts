@@ -43,6 +43,10 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "Ruler";
       hint = "Centralize your AI rules";
       break;
+    case "lefthook":
+      label = "Lefthook";
+      hint = "Fast and powerful Git hooks manager";
+      break;
     case "husky":
       label = "Husky";
       hint = "Modern native Git hooks made easy";
@@ -66,7 +70,7 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 const ADDON_GROUPS = {
   Documentation: ["starlight", "fumadocs"],
   Linting: ["biome", "oxlint", "ultracite"],
-  Other: ["ruler", "turborepo", "pwa", "tauri", "husky"],
+  Other: ["ruler", "turborepo", "pwa", "tauri", "lefthook", "husky"],
 };
 
 export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[], auth?: Auth) {

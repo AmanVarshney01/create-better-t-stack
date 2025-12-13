@@ -85,6 +85,7 @@ export const dependencyVersionMap = {
   "@biomejs/biome": "^2.2.0",
   oxlint: "^1.32.0",
 
+  lefthook: "^2.0.11",
   husky: "^9.1.7",
   "lint-staged": "^16.1.2",
 

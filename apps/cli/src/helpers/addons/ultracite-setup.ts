@@ -130,7 +130,7 @@ function getFrameworksFromFrontend(frontend: string[]): string[] {
   return Array.from(frameworks);
 }
 
-export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
+export async function setupUltracite(config: ProjectConfig, gitHook: string) {
   const { packageManager, projectDir, frontend } = config;
 
   try {
@@ -197,8 +197,8 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
       ultraciteArgs.push("--hooks", ...hooks);
     }
 
-    if (hasHusky) {
-      ultraciteArgs.push("--integrations", "husky", "lint-staged");
+    if (gitHook) {
+      ultraciteArgs.push("--integrations", `${gitHook}`, "lint-staged");
     }
 
     const ultraciteArgsString = ultraciteArgs.join(" ");
@@ -215,9 +215,14 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
       shell: true,
     });
 
-    if (hasHusky) {
+    if (gitHook === "husky") {
       await addPackageDependency({
         devDependencies: ["husky", "lint-staged"],
+        projectDir,
+      });
+    } else if (gitHook === "lefthook") {
+      await addPackageDependency({
+        devDependencies: ["lefthook", "lint-staged"],
         projectDir,
       });
     }

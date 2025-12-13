@@ -459,6 +459,8 @@ function generateFeaturesList(
       addonsList.push("- **Tauri** - Build native desktop applications");
     } else if (addon === "biome") {
       addonsList.push("- **Biome** - Linting and formatting");
+    } else if (addon === "lefthook") {
+      addonsList.push("- **Lefthook** - Fast and powerful Git hooks manager");
     } else if (addon === "husky") {
       addonsList.push("- **Husky** - Git hooks for code quality");
     } else if (addon === "starlight") {
