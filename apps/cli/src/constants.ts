@@ -179,6 +179,7 @@ export const ADDON_COMPATIBILITY = {
   tauri: ["tanstack-router", "react-router", "nuxt", "svelte", "solid", "next"],
   biome: [],
   husky: [],
+  lefthook: [],
   turborepo: [],
   starlight: [],
   ultracite: [],
