@@ -2,7 +2,7 @@ import { autocompleteMultiselect, group, log, multiselect, spinner } from "@clac
 import { execa } from "execa";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
-import { addPackageDependency } from "../../utils/add-package-deps";
+
 import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
 import { setupBiome } from "./addons-setup";
@@ -130,7 +130,7 @@ function getFrameworksFromFrontend(frontend: string[]): string[] {
   return Array.from(frameworks);
 }
 
-export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
+export async function setupUltracite(config: ProjectConfig, gitHook: string) {
   const { packageManager, projectDir, frontend } = config;
 
   try {
@@ -197,8 +197,11 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
       ultraciteArgs.push("--hooks", ...hooks);
     }
 
-    if (hasHusky) {
-      ultraciteArgs.push("--integrations", "husky", "lint-staged");
+    if (gitHook) {
+      ultraciteArgs.push("--integrations", `${gitHook}`);
+      if (gitHook === "husky") {
+        ultraciteArgs.push("lint-staged");
+      }
     }
 
     const ultraciteArgsString = ultraciteArgs.join(" ");
@@ -214,13 +217,6 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
       env: { CI: "true" },
       shell: true,
     });
-
-    if (hasHusky) {
-      await addPackageDependency({
-        devDependencies: ["husky", "lint-staged"],
-        projectDir,
-      });
-    }
 
     s.stop("Ultracite setup successfully!");
   } catch (error) {

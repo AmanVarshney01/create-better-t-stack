@@ -250,6 +250,14 @@ export function getCompatibleAddons(
 
     if (addon === "none") return false;
 
+    // Skip husky if lefthook is already selected, and vice versa
+    if (
+      (addon === "husky" && existingAddons.includes("lefthook")) ||
+      (addon === "lefthook" && existingAddons.includes("husky"))
+    ) {
+      return false;
+    }
+
     const { isCompatible } = validateAddonCompatibility(addon, frontend, auth);
     return isCompatible;
   });

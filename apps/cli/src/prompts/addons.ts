@@ -43,6 +43,10 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "Ruler";
       hint = "Centralize your AI rules";
       break;
+    case "lefthook":
+      label = "Lefthook";
+      hint = "Fast and powerful Git hooks manager";
+      break;
     case "husky":
       label = "Husky";
       hint = "Modern native Git hooks made easy";
@@ -66,11 +70,17 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 const ADDON_GROUPS = {
   Documentation: ["starlight", "fumadocs"],
   Linting: ["biome", "oxlint", "ultracite"],
-  Other: ["ruler", "turborepo", "pwa", "tauri", "husky"],
+  Other: ["ruler", "turborepo", "pwa", "tauri", "lefthook", "husky"],
 };
 
-export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[], auth?: Auth) {
-  if (addons !== undefined) return addons;
+export async function getAddonsChoice(
+  initialAddons?: Addons[],
+  frontends?: Frontend[],
+  auth?: Auth,
+) {
+  if (initialAddons !== undefined) return initialAddons;
+
+  const existingAddons: Addons[] = [];
 
   const allAddons = AddonsSchema.options.filter((addon) => addon !== "none");
   const groupedOptions: Record<string, AddonOption[]> = {
@@ -84,6 +94,14 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
   for (const addon of allAddons) {
     const { isCompatible } = validateAddonCompatibility(addon, frontendsArray, auth);
     if (!isCompatible) continue;
+
+    // Skip husky if lefthook is already selected, and vice versa
+    if (
+      (addon === "husky" && existingAddons.includes("lefthook")) ||
+      (addon === "lefthook" && existingAddons.includes("husky"))
+    ) {
+      continue;
+    }
 
     const { label, hint } = getAddonDisplay(addon);
     const option = { value: addon, label, hint };

@@ -58,23 +58,31 @@ ${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
   }
   const hasUltracite = addons.includes("ultracite");
   const hasBiome = addons.includes("biome");
-  const hasHusky = addons.includes("husky");
+  const gitHook = addons.includes("husky")
+    ? "husky"
+    : addons.includes("lefthook")
+      ? "lefthook"
+      : "";
   const hasOxlint = addons.includes("oxlint");
 
   if (hasUltracite) {
-    await setupUltracite(config, hasHusky);
+    await setupUltracite(config, gitHook);
   } else {
     if (hasBiome) {
       await setupBiome(projectDir);
     }
-    if (hasHusky) {
+    if (gitHook) {
       let linter: "biome" | "oxlint" | undefined;
       if (hasOxlint) {
         linter = "oxlint";
       } else if (hasBiome) {
         linter = "biome";
       }
-      await setupHusky(projectDir, linter);
+      if (gitHook === "husky") {
+        await setupHusky(projectDir, linter);
+      } else if (gitHook === "lefthook") {
+        await setupLefthook(projectDir);
+      }
     }
   }
 
@@ -151,6 +159,25 @@ export async function setupHusky(projectDir: string, linter?: "biome" | "oxlint"
         "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,astro,svelte}": "",
       };
     }
+
+    await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+  }
+}
+
+export async function setupLefthook(projectDir: string) {
+  await addPackageDependency({
+    devDependencies: ["lefthook"],
+    projectDir,
+  });
+
+  const packageJsonPath = path.join(projectDir, "package.json");
+  if (await fs.pathExists(packageJsonPath)) {
+    const packageJson = await fs.readJson(packageJsonPath);
+
+    packageJson.scripts = {
+      ...packageJson.scripts,
+      prepare: "lefthook install",
+    };
 
     await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
   }
