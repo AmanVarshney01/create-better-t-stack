@@ -501,6 +501,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "lefthook",
+      name: "Lefthook",
+      description: "Fast and powerful Git hooks manager",
+      icon: `${ICON_BASE_URL}/lefthook.svg`,
+      color: "from-red-500 to-red-700",
+      default: false,
+    },
+    {
       id: "husky",
       name: "Husky",
       description: "Modern native Git hooks made easy",

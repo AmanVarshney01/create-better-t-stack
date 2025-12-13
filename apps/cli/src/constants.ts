@@ -88,6 +88,7 @@ export const dependencyVersionMap = {
   oxlint: "^1.34.0",
   oxfmt: "^0.19.0",
 
+  lefthook: "^2.0.11",
   husky: "^9.1.7",
   "lint-staged": "^16.1.2",
 

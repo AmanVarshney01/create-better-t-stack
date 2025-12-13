@@ -61,23 +61,27 @@ ${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
   }
   const hasUltracite = addons.includes("ultracite");
   const hasBiome = addons.includes("biome");
-  const hasHusky = addons.includes("husky");
+  const gitHook = addons.includes("husky")
+    ? "husky"
+    : addons.includes("lefthook")
+      ? "lefthook"
+      : "";
   const hasOxlint = addons.includes("oxlint");
 
   if (hasUltracite) {
-    await setupUltracite(config, hasHusky);
+    await setupUltracite(config, gitHook);
   } else {
     if (hasBiome) {
       await setupBiome(projectDir);
     }
-    if (hasHusky) {
+    if (gitHook) {
       let linter: "biome" | "oxlint" | undefined;
       if (hasOxlint) {
         linter = "oxlint";
       } else if (hasBiome) {
         linter = "biome";
       }
-      await setupHusky(projectDir, linter);
+      await setupGitHooks(gitHook, projectDir, linter);
     }
   }
 
@@ -132,9 +136,13 @@ export async function setupBiome(projectDir: string) {
   }
 }
 
-export async function setupHusky(projectDir: string, linter?: "biome" | "oxlint") {
+export async function setupGitHooks(
+  gitHook: string,
+  projectDir: string,
+  linter?: "biome" | "oxlint",
+) {
   await addPackageDependency({
-    devDependencies: ["husky", "lint-staged"],
+    devDependencies: [`${gitHook === "husky" ? "husky" : "lefthook"}`, "lint-staged"],
     projectDir,
   });
 
@@ -144,7 +152,7 @@ export async function setupHusky(projectDir: string, linter?: "biome" | "oxlint"
 
     packageJson.scripts = {
       ...packageJson.scripts,
-      prepare: "husky",
+      prepare: gitHook === "husky" ? "husky" : "lefthook install",
     };
 
     if (linter === "oxlint") {

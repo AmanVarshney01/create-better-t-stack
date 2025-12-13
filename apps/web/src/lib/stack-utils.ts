@@ -105,6 +105,7 @@ export function generateStackCommand(stack: StackState) {
                 "tauri",
                 "starlight",
                 "biome",
+                "lefthook",
                 "husky",
                 "turborepo",
                 "ultracite",

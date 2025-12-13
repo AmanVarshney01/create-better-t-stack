@@ -465,6 +465,8 @@ function generateFeaturesList(
       addonsList.push("- **Biome** - Linting and formatting");
     } else if (addon === "oxlint") {
       addonsList.push("- **Oxlint** - Oxlint + Oxfmt (linting & formatting)");
+    } else if (addon === "lefthook") {
+      addonsList.push("- **Lefthook** - Fast and powerful Git hooks manager");
     } else if (addon === "husky") {
       addonsList.push("- **Husky** - Git hooks for code quality");
     } else if (addon === "starlight") {
