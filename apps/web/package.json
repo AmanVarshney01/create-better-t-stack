@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
+    "prebuild": "cd ../../packages/types && bun run build",
     "build": "next build",
     "dev": "next dev",
     "start": "next start",
