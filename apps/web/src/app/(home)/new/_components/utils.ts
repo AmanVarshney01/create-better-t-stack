@@ -142,6 +142,26 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     if (nextStack.nativeFrontend[0] === "none") {
     } else {
     }
+
+    if (nextStack.examples.includes("ai")) {
+      const originalExamplesLength = nextStack.examples.length;
+      nextStack.examples = nextStack.examples.filter((ex) => ex !== "ai");
+      if (nextStack.examples.length !== originalExamplesLength) {
+        changed = true;
+        notes.examples.notes.push(
+          "AI example is not yet available with Convex backend. It will be removed.",
+        );
+        notes.backend.notes.push(
+          "AI example is not yet available with Convex backend. It will be removed.",
+        );
+        notes.examples.hasIssue = true;
+        notes.backend.hasIssue = true;
+        changes.push({
+          category: "convex",
+          message: "AI example removed (not yet available with Convex backend)",
+        });
+      }
+    }
   } else if (isBackendNone) {
     const noneOverrides: Partial<StackState> = {
       auth: "none",
@@ -901,13 +921,6 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
           message: "Todo example removed (requires a database but 'None' was selected)",
         });
       }
-      if (nextStack.backend === "convex" && nextStack.examples.includes("ai")) {
-        incompatibleExamples.push("ai");
-        changes.push({
-          category: "examples",
-          message: "AI example removed (not yet available with Convex backend)",
-        });
-      }
       if (isSolid && nextStack.examples.includes("ai")) {
         incompatibleExamples.push("ai");
         changes.push({
@@ -926,16 +939,6 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
           notes.database.notes.push("Todo example requires a database. It will be removed.");
           notes.examples.notes.push("Todo example requires a database. It will be removed.");
           notes.database.hasIssue = true;
-          notes.examples.hasIssue = true;
-        }
-        if (nextStack.backend === "convex" && uniqueIncompatibleExamples.includes("ai")) {
-          notes.backend.notes.push(
-            "AI example is not yet available with Convex backend. It will be removed.",
-          );
-          notes.examples.notes.push(
-            "AI example is not yet available with Convex backend. It will be removed.",
-          );
-          notes.backend.hasIssue = true;
           notes.examples.hasIssue = true;
         }
         if (isSolid && uniqueIncompatibleExamples.includes("ai")) {
