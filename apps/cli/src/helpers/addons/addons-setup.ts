@@ -81,7 +81,11 @@ ${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
       } else if (hasBiome) {
         linter = "biome";
       }
-      await setupGitHooks(gitHook, projectDir, linter);
+      if (gitHook === "husky") {
+        await setupHusky(projectDir, linter);
+      } else if (gitHook === "lefthook") {
+        await setupLefthook(projectDir);
+      }
     }
   }
 
@@ -136,13 +140,9 @@ export async function setupBiome(projectDir: string) {
   }
 }
 
-export async function setupGitHooks(
-  gitHook: string,
-  projectDir: string,
-  linter?: "biome" | "oxlint",
-) {
+export async function setupHusky(projectDir: string, linter?: "biome" | "oxlint") {
   await addPackageDependency({
-    devDependencies: [`${gitHook === "husky" ? "husky" : "lefthook"}`, "lint-staged"],
+    devDependencies: ["husky", "lint-staged"],
     projectDir,
   });
 
@@ -152,7 +152,7 @@ export async function setupGitHooks(
 
     packageJson.scripts = {
       ...packageJson.scripts,
-      prepare: gitHook === "husky" ? "husky" : "lefthook install",
+      prepare: "husky",
     };
 
     if (linter === "oxlint") {
@@ -168,6 +168,25 @@ export async function setupGitHooks(
         "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,astro,svelte}": "",
       };
     }
+
+    await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+  }
+}
+
+export async function setupLefthook(projectDir: string) {
+  await addPackageDependency({
+    devDependencies: ["lefthook"],
+    projectDir,
+  });
+
+  const packageJsonPath = path.join(projectDir, "package.json");
+  if (await fs.pathExists(packageJsonPath)) {
+    const packageJson = await fs.readJson(packageJsonPath);
+
+    packageJson.scripts = {
+      ...packageJson.scripts,
+      prepare: "lefthook install",
+    };
 
     await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
   }

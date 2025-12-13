@@ -4,7 +4,6 @@ import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 
-import { addPackageDependency } from "../../utils/add-package-deps";
 import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 import { setupBiome } from "./addons-setup";
@@ -214,18 +213,6 @@ export async function setupUltracite(config: ProjectConfig, gitHook: string) {
     s.start("Running Ultracite init command...");
 
     await $({ cwd: projectDir, env: { CI: "true" } })`${args}`;
-
-    if (gitHook === "husky") {
-      await addPackageDependency({
-        devDependencies: ["husky", "lint-staged"],
-        projectDir,
-      });
-    } else if (gitHook === "lefthook") {
-      await addPackageDependency({
-        devDependencies: ["lefthook", "lint-staged"],
-        projectDir,
-      });
-    }
 
     s.stop("Ultracite setup successfully!");
   } catch (error) {
