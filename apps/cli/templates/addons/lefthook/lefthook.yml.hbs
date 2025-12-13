@@ -1,5 +1,11 @@
 pre-commit:
   commands:
-    lint-staged:
-      run: lint-staged
+{{#if (includes addons "biome")}}
+    biome-check:
+      run: biome check --no-errors-on-unmatched --files-ignore-unknown=true --colors=off {staged_files}
       stage_fixed: true
+{{else if (includes addons "oxlint")}}
+    oxlint-fix:
+      run: oxlint --fix {staged_files}
+      stage_fixed: true
+{{/if}}
