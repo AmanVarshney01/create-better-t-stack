@@ -771,8 +771,6 @@ export const isStackDefault = <K extends keyof StackState>(
     if (key === "api" && value === "none") return true;
     if (key === "auth" && value === "none") return true;
     if (key === "dbSetup" && value === "none") return true;
-    if (key === "examples" && Array.isArray(value) && value.length === 1 && value[0] === "todo")
-      return true;
   }
 
   if (key === "webFrontend" || key === "nativeFrontend" || key === "addons" || key === "examples") {

@@ -659,9 +659,14 @@ export async function setupExamplesTemplate(projectDir: string, context: Project
 
     const exampleBaseDir = path.join(PKG_ROOT, `templates/examples/${example}`);
 
-    if (
+    if (context.backend === "convex") {
+      const convexBackendDestDir = path.join(projectDir, "packages/backend");
+      const convexExampleSrc = path.join(exampleBaseDir, "convex");
+      if (await fs.pathExists(convexExampleSrc)) {
+        await processAndCopyFiles("**/*", convexExampleSrc, convexBackendDestDir, context, false);
+      }
+    } else if (
       (serverAppDirExists || context.backend === "self") &&
-      context.backend !== "convex" &&
       context.backend !== "none"
     ) {
       const exampleServerSrc = path.join(exampleBaseDir, "server");

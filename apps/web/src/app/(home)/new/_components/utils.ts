@@ -75,7 +75,6 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
       orm: "none",
       api: "none",
       dbSetup: "none",
-      examples: ["todo"],
     };
 
     const hasClerkCompatibleFrontend =
@@ -891,11 +890,22 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
 
       const incompatibleExamples: string[] = [];
 
-      if (nextStack.database === "none" && nextStack.examples.includes("todo")) {
+      if (
+        nextStack.database === "none" &&
+        nextStack.backend !== "convex" &&
+        nextStack.examples.includes("todo")
+      ) {
         incompatibleExamples.push("todo");
         changes.push({
           category: "examples",
           message: "Todo example removed (requires a database but 'None' was selected)",
+        });
+      }
+      if (nextStack.backend === "convex" && nextStack.examples.includes("ai")) {
+        incompatibleExamples.push("ai");
+        changes.push({
+          category: "examples",
+          message: "AI example removed (not yet available with Convex backend)",
         });
       }
       if (isSolid && nextStack.examples.includes("ai")) {
@@ -908,10 +918,24 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
 
       const uniqueIncompatibleExamples = [...new Set(incompatibleExamples)];
       if (uniqueIncompatibleExamples.length > 0) {
-        if (nextStack.database === "none" && uniqueIncompatibleExamples.includes("todo")) {
+        if (
+          nextStack.database === "none" &&
+          nextStack.backend !== "convex" &&
+          uniqueIncompatibleExamples.includes("todo")
+        ) {
           notes.database.notes.push("Todo example requires a database. It will be removed.");
           notes.examples.notes.push("Todo example requires a database. It will be removed.");
           notes.database.hasIssue = true;
+          notes.examples.hasIssue = true;
+        }
+        if (nextStack.backend === "convex" && uniqueIncompatibleExamples.includes("ai")) {
+          notes.backend.notes.push(
+            "AI example is not yet available with Convex backend. It will be removed.",
+          );
+          notes.examples.notes.push(
+            "AI example is not yet available with Convex backend. It will be removed.",
+          );
+          notes.backend.hasIssue = true;
           notes.examples.hasIssue = true;
         }
         if (isSolid && uniqueIncompatibleExamples.includes("ai")) {
@@ -1519,12 +1543,15 @@ export const getDisabledReason = (
   }
 
   if (category === "examples" && optionId === "todo") {
-    if (finalStack.database === "none") {
-      return "Todo example requires a database. Select a database first.";
+    if (finalStack.database === "none" && finalStack.backend !== "convex") {
+      return "Todo example requires a database. Select a database first (or use Convex backend which includes its own database).";
     }
   }
 
   if (category === "examples" && optionId === "ai") {
+    if (finalStack.backend === "convex") {
+      return "AI example is not yet available with Convex backend.";
+    }
     if (finalStack.webFrontend.includes("solid")) {
       return "AI example is not compatible with Solid frontend. Try React-based frontends.";
     }
