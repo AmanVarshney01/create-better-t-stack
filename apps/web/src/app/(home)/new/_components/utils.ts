@@ -1148,12 +1148,14 @@ export const getDisabledReason = (
     category === "addons" ||
     category === "examples"
   ) {
-    const currentArr = Array.isArray(simulatedStack[category])
-      ? [...(simulatedStack[category] as string[])]
+    const arrayCategory = category as "webFrontend" | "nativeFrontend" | "addons" | "examples";
+    const currentArr = Array.isArray(simulatedStack[arrayCategory])
+      ? [...(simulatedStack[arrayCategory] as string[])]
       : [];
-    (simulatedStack[category] as string[]) = updateArrayCategory(currentArr, category);
+    (simulatedStack[arrayCategory] as string[]) = updateArrayCategory(currentArr, category);
   } else {
-    (simulatedStack[category] as string) = optionId;
+    const stringCategory = category as keyof StackState;
+    (simulatedStack[stringCategory] as string) = optionId;
   }
 
   const { adjustedStack } = analyzeStackCompatibility(simulatedStack);
