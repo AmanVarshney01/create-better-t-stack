@@ -902,6 +902,22 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
         });
       }
 
+      // Handle husky/lefthook mutual exclusion
+      const hasHusky = nextStack.addons.includes("husky");
+      const hasLefthook = nextStack.addons.includes("lefthook");
+
+      if (hasHusky && hasLefthook) {
+        // Remove lefthook if both are selected (prioritize husky)
+        nextStack.addons = nextStack.addons.filter((addon) => addon !== "lefthook");
+        notes.addons.notes.push("Lefthook is not compatible with Husky. It will be removed.");
+        notes.addons.hasIssue = true;
+        changes.push({
+          category: "addons",
+          message: "Lefthook removed (not compatible with Husky)",
+        });
+        changed = true;
+      }
+
       const originalAddonsLength = nextStack.addons.length;
       if (incompatibleAddons.length > 0) {
         nextStack.addons = nextStack.addons.filter((addon) => !incompatibleAddons.includes(addon));
@@ -1544,6 +1560,18 @@ export const getDisabledReason = (
     const hasTauriCompat = hasTauriCompatibleFrontend(finalStack.webFrontend);
     if (!hasTauriCompat) {
       return "Tauri addon requires TanStack Router, React Router, Nuxt, Svelte, Solid, or Next.js frontend.";
+    }
+  }
+
+  if (category === "addons" && optionId === "husky") {
+    if (finalStack.addons.includes("lefthook")) {
+      return "Husky is not compatible with Lefthook. Deselect Lefthook first.";
+    }
+  }
+
+  if (category === "addons" && optionId === "lefthook") {
+    if (finalStack.addons.includes("husky")) {
+      return "Lefthook is not compatible with Husky. Deselect Husky first.";
     }
   }
 
