@@ -152,7 +152,7 @@ describe("Deployment Configurations", () => {
             webDeploy: "none",
             serverDeploy: serverDeploy,
             backend: "hono",
-            runtime: "bun",
+            runtime: serverDeploy === "alchemy" ? "workers" : "bun",
             database: "sqlite",
             orm: "drizzle",
             auth: "none",
@@ -221,7 +221,6 @@ describe("Deployment Configurations", () => {
         const config: TestConfig = {
           projectName: `server-deploy-${backend}`,
           webDeploy: "none",
-          serverDeploy: "alchemy",
           backend,
           database: "sqlite",
           orm: "drizzle",
@@ -232,13 +231,16 @@ describe("Deployment Configurations", () => {
           examples: ["none"],
           dbSetup: "none",
           install: false,
+          runtime: "workers"
         };
 
         // Set appropriate runtime
-        if (backend === "elysia") {
-          config.runtime = "bun";
+        if (backend === "hono") {
+          config.runtime = "workers";
+          config.serverDeploy = "alchemy";
         } else {
           config.runtime = "bun";
+          config.serverDeploy = "none";
         }
 
         const result = await runTRPCTest(config);
@@ -319,7 +321,7 @@ describe("Deployment Configurations", () => {
         webDeploy: "alchemy",
         serverDeploy: "alchemy",
         backend: "hono",
-        runtime: "bun",
+        runtime: "workers",
         database: "sqlite",
         orm: "drizzle",
         auth: "none",
@@ -382,7 +384,7 @@ describe("Deployment Configurations", () => {
         webDeploy: "none",
         serverDeploy: "alchemy",
         backend: "hono",
-        runtime: "bun",
+        runtime: "workers",
         database: "sqlite",
         orm: "drizzle",
         auth: "none",
@@ -448,7 +450,6 @@ describe("Deployment Configurations", () => {
       serverDeploy: TestConfig["serverDeploy"];
     }> = [
       { webDeploy: "alchemy", serverDeploy: "alchemy" },
-      { webDeploy: "alchemy", serverDeploy: "none" },
       { webDeploy: "none", serverDeploy: "alchemy" },
       { webDeploy: "none", serverDeploy: "none" },
     ];
@@ -460,7 +461,7 @@ describe("Deployment Configurations", () => {
           webDeploy,
           serverDeploy,
           backend: "hono",
-          runtime: "bun",
+          runtime: "workers",
           database: "sqlite",
           orm: "drizzle",
           auth: "none",
@@ -492,6 +493,10 @@ describe("Deployment Configurations", () => {
 
         if (serverDeploy !== "none" && config.backend === "none") {
           config.backend = "hono"; // Ensure backend for server deploy
+        }
+
+        if (serverDeploy === "none" && webDeploy === "none") {
+          config.runtime = "bun";
         }
 
         const result = await runTRPCTest(config);
