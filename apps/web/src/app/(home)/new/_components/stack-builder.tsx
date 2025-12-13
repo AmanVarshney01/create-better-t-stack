@@ -412,12 +412,12 @@ const StackBuilder = () => {
                     >
                       {copied ? (
                         <>
-                          <Check className="h-3 w-3 flex-shrink-0" />
+                          <Check className="h-3 w-3 shrink-0" />
                           <span className="">Copied</span>
                         </>
                       ) : (
                         <>
-                          <ClipboardCopy className="h-3 w-3 flex-shrink-0" />
+                          <ClipboardCopy className="h-3 w-3 shrink-0" />
                           <span className="">Copy</span>
                         </>
                       )}
@@ -490,14 +490,14 @@ const StackBuilder = () => {
                     className="mb-6 scroll-mt-4 sm:mb-8"
                   >
                     <div className="mb-3 flex items-center border-border border-b pb-2 text-muted-foreground">
-                      <Terminal className="mr-2 h-4 w-4 flex-shrink-0 sm:h-5 sm:w-5" />
+                      <Terminal className="mr-2 h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
                       <h2 className="font-semibold text-foreground text-sm sm:text-base">
                         {categoryDisplayName}
                       </h2>
                       {compatibilityAnalysis.notes[categoryKey]?.hasIssue && (
                         <Tooltip delayDuration={100}>
                           <TooltipTrigger asChild>
-                            <InfoIcon className="ml-2 h-4 w-4 flex-shrink-0 cursor-help text-muted-foreground" />
+                            <InfoIcon className="ml-2 h-4 w-4 shrink-0 cursor-help text-muted-foreground" />
                           </TooltipTrigger>
                           <TooltipContent side="top" align="start">
                             <ul className="list-disc space-y-1 pl-4 text-xs">
@@ -563,7 +563,7 @@ const StackBuilder = () => {
                                 }
                               >
                                 <div className="flex items-start">
-                                  <div className="flex-grow">
+                                  <div className="grow">
                                     <div className="flex items-center justify-between">
                                       <div className="flex items-center">
                                         {tech.icon !== "" && (
@@ -592,7 +592,7 @@ const StackBuilder = () => {
                                   </div>
                                 </div>
                                 {tech.default && !isSelected && (
-                                  <span className="absolute top-1 right-1 ml-2 flex-shrink-0 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
+                                  <span className="absolute top-1 right-1 ml-2 shrink-0 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
                                     Default
                                   </span>
                                 )}

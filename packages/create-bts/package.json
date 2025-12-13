@@ -5,12 +5,25 @@
   "type": "module",
   "license": "MIT",
   "author": "Aman Varshney",
+  "main": "./index.js",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js"
+    },
+    "./cli": {
+      "import": "./cli.js"
+    }
+  },
   "bin": {
     "create-bts": "cli.js"
   },
   "files": [
     "cli.js",
-    "index.js"
+    "index.js",
+    "index.d.ts"
   ],
   "keywords": [
     "bts",

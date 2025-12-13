@@ -6,7 +6,7 @@
   "license": "MIT",
   "author": "Aman Varshney",
   "bin": {
-    "create-better-t-stack": "dist/cli.js"
+    "create-better-t-stack": "dist/cli.mjs"
   },
   "files": [
     "templates",
@@ -57,38 +57,39 @@
   },
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
     },
     "./cli": {
-      "import": "./dist/cli.js"
+      "import": "./dist/cli.mjs"
     }
   },
   "dependencies": {
-    "@biomejs/js-api": "^3.0.0",
-    "@biomejs/wasm-nodejs": "^2.2.6",
-    "@clack/prompts": "^1.0.0-alpha.6",
-    "@orpc/server": "^1.10.0",
+    "@better-t-stack/types": "workspace:*",
+    "@biomejs/js-api": "^4.0.0",
+    "@biomejs/wasm-nodejs": "^2.3.8",
+    "@clack/prompts": "^1.0.0-alpha.8",
+    "@orpc/server": "^1.12.2",
     "consola": "^3.4.2",
-    "execa": "^9.6.0",
+    "execa": "^9.6.1",
     "fs-extra": "^11.3.2",
     "gradient-string": "^3.0.0",
     "handlebars": "^4.7.8",
     "jsonc-parser": "^3.3.1",
     "picocolors": "^1.1.1",
     "tinyglobby": "^0.2.15",
-    "trpc-cli": "^0.12.0",
+    "trpc-cli": "^0.12.1",
     "ts-morph": "^27.0.2",
-    "yaml": "^2.8.1",
+    "yaml": "^2.8.2",
     "zod": "^4.1.13"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^24.9.1",
-    "@vitest/ui": "^3.2.4",
-    "publint": "^0.3.15",
-    "tsdown": "^0.15.9",
+    "@types/node": "^24.10.2",
+    "@vitest/ui": "^4.0.15",
+    "publint": "^0.3.16",
+    "tsdown": "^0.17.2",
     "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.15"
   }
 }

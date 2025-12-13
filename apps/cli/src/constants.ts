@@ -40,20 +40,22 @@ export function getDefaultConfig() {
 export const DEFAULT_CONFIG = getDefaultConfig();
 
 export const dependencyVersionMap = {
-  "better-auth": "^1.4.5",
-  "@better-auth/expo": "^1.4.5",
+  typescript: "^5",
+
+  "better-auth": "1.4.5",
+  "@better-auth/expo": "1.4.5",
 
   "@clerk/nextjs": "^6.31.5",
   "@clerk/clerk-react": "^5.45.0",
   "@clerk/tanstack-react-start": "^0.26.3",
   "@clerk/clerk-expo": "^2.14.25",
 
-  "drizzle-orm": "^0.45.0",
+  "drizzle-orm": "^0.45.1",
   "drizzle-kit": "^0.31.8",
   "@planetscale/database": "^1.19.0",
 
-  "@libsql/client": "^0.14.0",
-  libsql: "^0.5.22",
+  "@libsql/client": "0.15.15",
+  libsql: "0.5.22",
 
   "@neondatabase/serverless": "^1.0.2",
   pg: "^8.16.3",
@@ -63,15 +65,15 @@ export const dependencyVersionMap = {
 
   mysql2: "^3.14.0",
 
-  "@prisma/client": "^7.0.1",
-  prisma: "^7.0.1",
-  "@prisma/adapter-d1": "^7.0.1",
-  "@prisma/adapter-neon": "^7.0.1",
-  "@prisma/adapter-mariadb": "^7.0.1",
-  "@prisma/adapter-libsql": "^7.0.1",
-  "@prisma/adapter-better-sqlite3": "^7.0.1",
-  "@prisma/adapter-pg": "^7.0.1",
-  "@prisma/adapter-planetscale": "^7.0.1",
+  "@prisma/client": "^7.1.0",
+  prisma: "^7.1.0",
+  "@prisma/adapter-d1": "^7.1.0",
+  "@prisma/adapter-neon": "^7.1.0",
+  "@prisma/adapter-mariadb": "^7.1.0",
+  "@prisma/adapter-libsql": "^7.1.0",
+  "@prisma/adapter-better-sqlite3": "^7.1.0",
+  "@prisma/adapter-pg": "^7.1.0",
+  "@prisma/adapter-planetscale": "^7.1.0",
 
   mongoose: "^8.14.0",
 
@@ -81,7 +83,7 @@ export const dependencyVersionMap = {
   "@tauri-apps/cli": "^2.4.0",
 
   "@biomejs/biome": "^2.2.0",
-  oxlint: "^1.12.0",
+  oxlint: "^1.32.0",
 
   husky: "^9.1.7",
   "lint-staged": "^16.1.2",
@@ -89,7 +91,7 @@ export const dependencyVersionMap = {
   tsx: "^4.19.2",
   "@types/node": "^22.13.11",
 
-  "@types/bun": "^1.2.6",
+  "@types/bun": "^1.3.4",
 
   "@elysiajs/node": "^1.3.1",
 
@@ -158,7 +160,7 @@ export const dependencyVersionMap = {
   "@sveltejs/adapter-cloudflare": "^7.2.1",
   "@cloudflare/workers-types": "^4.20250822.0",
 
-  alchemy: "^0.77.0",
+  alchemy: "^0.81.1",
 
   dotenv: "^17.2.2",
   tsdown: "^0.16.5",

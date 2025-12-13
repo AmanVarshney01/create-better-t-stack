@@ -18,7 +18,7 @@
 		"canary": "bun run scripts/canary-release.ts",
 		"deploy:convex": "turbo run --filter=@better-t-stack/backend deploy",
 		"deploy:web": "bun run --filter=web deploy",
-		"generate": "bun run --filter=web generate-analytics && bun run --filter=web generate-schema",
+		"generate": "bun run --filter=web generate-schema",
 		"deploy": "bun run deploy:web"
 	},
 	"devDependencies": {

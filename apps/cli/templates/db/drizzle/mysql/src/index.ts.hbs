@@ -7,6 +7,8 @@ dotenv.config({
 });
 
 {{/if}}
+import * as schema from "./schema";
+
 {{#if (eq dbSetup "planetscale")}}
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 
@@ -16,6 +18,7 @@ export const db = drizzle({
     username: process.env.DATABASE_USERNAME,
     password: process.env.DATABASE_PASSWORD,
   },
+  schema,
 });
 {{else}}
 import { drizzle } from "drizzle-orm/mysql2";
@@ -24,11 +27,14 @@ export const db = drizzle({
   connection: {
     uri: process.env.DATABASE_URL,
   },
+  schema,
 });
 {{/if}}
 {{/if}}
 
 {{#if (eq runtime "workers")}}
+import * as schema from "./schema";
+
 {{#if (eq dbSetup "planetscale")}}
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 import { env } from "cloudflare:workers";
@@ -39,6 +45,7 @@ export const db = drizzle({
     username: env.DATABASE_USERNAME,
     password: env.DATABASE_PASSWORD,
   },
+  schema,
 });
 {{else}}
 import { drizzle } from "drizzle-orm/mysql2";
@@ -48,6 +55,7 @@ export const db = drizzle({
   connection: {
     uri: env.DATABASE_URL,
   },
+  schema,
 });
 {{/if}}
 {{/if}}

@@ -9,11 +9,13 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    types: [labeled]
 
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: startsWith(github.event.head_commit.message, 'chore(release):')
+    if: github.event_name == 'push' && startsWith(github.event.head_commit.message, 'chore(release):')
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -48,14 +50,6 @@ jobs:
       - name: Install Dependencies
         if: steps.version.outputs.version != ''
         run: bun install --frozen-lockfile
-        env:
-          BTS_TELEMETRY: 0
-
-      - name: Build CLI
-        if: steps.version.outputs.version != ''
-        run: cd apps/cli && bun run build
-        env:
-          BTS_TELEMETRY: 0
 
       - name: Create GitHub Release
         if: steps.version.outputs.version != ''
@@ -68,6 +62,37 @@ jobs:
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update types package version
+        if: steps.version.outputs.version != ''
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          cd packages/types
+          bun run node -e "const pkg=require('./package.json');pkg.version='$VERSION';require('fs').writeFileSync('package.json',JSON.stringify(pkg,null,2)+'\n')"
+
+      - name: Build types package
+        if: steps.version.outputs.version != ''
+        run: cd packages/types && bun run build
+
+      - name: Publish types to NPM
+        if: steps.version.outputs.version != ''
+        run: cd packages/types && bun publish --access public
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          BTS_TELEMETRY: 1
+
+      - name: Update CLI types dependency
+        if: steps.version.outputs.version != ''
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          cd apps/cli
+          bun run node -e "const pkg=require('./package.json');pkg.dependencies['@better-t-stack/types']='^$VERSION';require('fs').writeFileSync('package.json',JSON.stringify(pkg,null,2)+'\n')"
+
+      - name: Build CLI
+        if: steps.version.outputs.version != ''
+        run: cd apps/cli && bun run build
+        env:
+          BTS_TELEMETRY: 1
 
       - name: Update create-bts alias package version
         if: steps.version.outputs.version != ''
@@ -89,3 +114,117 @@ jobs:
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
           BTS_TELEMETRY: 1
+
+  canary:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.label.name == 'canary'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+        env:
+          BTS_TELEMETRY: 0
+
+      - name: Get canary version
+        id: canary
+        run: |
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          BASE_VERSION=$(jq -r '.version' apps/cli/package.json | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+          CANARY_VERSION="${BASE_VERSION}-canary.${COMMIT_HASH}"
+          echo "version=$CANARY_VERSION" >> $GITHUB_OUTPUT
+          echo "commit=$COMMIT_HASH" >> $GITHUB_OUTPUT
+
+      - name: Update types package version
+        run: |
+          cd packages/types
+          jq --arg v "${{ steps.canary.outputs.version }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json
+
+      - name: Build types package
+        run: cd packages/types && bun run build
+
+      - name: Publish types canary to NPM
+        run: cd packages/types && bun publish --access public --tag canary
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          BTS_TELEMETRY: 0
+
+      - name: Update CLI package version and types dependency
+        run: |
+          cd apps/cli
+          jq --arg v "${{ steps.canary.outputs.version }}" '.version = $v | .dependencies["@better-t-stack/types"] = $v' package.json > tmp.json && mv tmp.json package.json
+
+      - name: Update create-bts alias package version
+        run: |
+          cd packages/create-bts
+          jq --arg v "${{ steps.canary.outputs.version }}" '.version = $v | .dependencies["create-better-t-stack"] = $v' package.json > tmp.json && mv tmp.json package.json
+
+      - name: Build CLI
+        run: cd apps/cli && bun run build
+        env:
+          BTS_TELEMETRY: 0
+
+      - name: Publish CLI canary to NPM
+        run: cd apps/cli && bun publish --access public --tag canary
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          BTS_TELEMETRY: 0
+
+      - name: Publish create-bts canary to NPM
+        run: cd packages/create-bts && bun publish --access public --tag canary
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          BTS_TELEMETRY: 0
+
+      - name: Find existing canary comment
+        uses: peter-evans/find-comment@v3
+        id: find-comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: "Canary Release"
+
+      - name: Create or update PR comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          edit-mode: replace
+          body: |
+            ## Canary Release
+
+            A canary version has been published for this PR.
+
+            **Version:** `${{ steps.canary.outputs.version }}`
+            **Commit:** `${{ steps.canary.outputs.commit }}`
+
+            ### Try it out
+
+            ```bash
+            # Using bun
+            bun create better-t-stack@${{ steps.canary.outputs.version }} my-app
+
+            # Using npx
+            npx create-better-t-stack@${{ steps.canary.outputs.version }} my-app
+
+            # Using the alias
+            bun create bts@${{ steps.canary.outputs.version }} my-app
+            npx create-bts@${{ steps.canary.outputs.version }} my-app
+            ```
+
+            ### NPM Links
+            - [create-better-t-stack@${{ steps.canary.outputs.version }}](https://www.npmjs.com/package/create-better-t-stack/v/${{ steps.canary.outputs.version }})
+            - [create-bts@${{ steps.canary.outputs.version }}](https://www.npmjs.com/package/create-bts/v/${{ steps.canary.outputs.version }})
+            - [@better-t-stack/types@${{ steps.canary.outputs.version }}](https://www.npmjs.com/package/@better-t-stack/types/v/${{ steps.canary.outputs.version }})
+
+            ---
+            *To publish a new canary after more commits, remove and re-add the `canary` label.*

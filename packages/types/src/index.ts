@@ -1,6 +1,5 @@
-// Re-export everything from the shared types package
+// Re-export all schemas
 export {
-  // Schemas
   DatabaseSchema,
   ORMSchema,
   BackendSchema,
@@ -23,6 +22,7 @@ export {
   CLIInputSchema,
   ProjectConfigSchema,
   BetterTStackConfigSchema,
+  BetterTStackConfigFileSchema,
   InitResultSchema,
   // Enum value arrays
   DATABASE_VALUES,
@@ -41,8 +41,9 @@ export {
   SERVER_DEPLOY_VALUES,
   DIRECTORY_CONFLICT_VALUES,
   TEMPLATE_VALUES,
-} from "@better-t-stack/types";
+} from "./schemas";
 
+// Re-export all types
 export type {
   Database,
   ORM,
@@ -67,4 +68,7 @@ export type {
   ProjectConfig,
   BetterTStackConfig,
   InitResult,
-} from "@better-t-stack/types";
+  WebFrontend,
+  NativeFrontend,
+  TechCategory,
+} from "./types";

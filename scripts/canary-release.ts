@@ -5,6 +5,7 @@ import { $ } from "bun";
 
 const CLI_PACKAGE_JSON_PATH = join(process.cwd(), "apps/cli/package.json");
 const ALIAS_PACKAGE_JSON_PATH = join(process.cwd(), "packages/create-bts/package.json");
+const TYPES_PACKAGE_JSON_PATH = join(process.cwd(), "packages/types/package.json");
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
@@ -154,10 +155,38 @@ async function main(): Promise<void> {
   const originalPackageJsonString = await readFile(CLI_PACKAGE_JSON_PATH, "utf-8");
   const aliasPackageJson = JSON.parse(await readFile(ALIAS_PACKAGE_JSON_PATH, "utf-8"));
   const originalAliasPackageJsonString = await readFile(ALIAS_PACKAGE_JSON_PATH, "utf-8");
+  const typesPackageJson = JSON.parse(await readFile(TYPES_PACKAGE_JSON_PATH, "utf-8"));
+  const originalTypesPackageJsonString = await readFile(TYPES_PACKAGE_JSON_PATH, "utf-8");
   let restored = false;
 
   try {
+    // Update types package version, build, and publish first
+    typesPackageJson.version = canaryVersion;
+    await writeFile(TYPES_PACKAGE_JSON_PATH, `${JSON.stringify(typesPackageJson, null, 2)}\n`);
+
+    const typesBuildSpin = spinner();
+    typesBuildSpin.start("Building types package...");
+    try {
+      await $`cd packages/types && bun run build`;
+      typesBuildSpin.stop("Types build complete");
+    } catch (err) {
+      typesBuildSpin.stop("Types build failed");
+      throw err;
+    }
+
+    const typesPubSpin = spinner();
+    typesPubSpin.start(`Publishing @better-t-stack/types@${canaryVersion} (canary)...`);
+    try {
+      await $`cd packages/types && bun publish --access public --tag canary`;
+      typesPubSpin.stop("Types package published");
+    } catch (err) {
+      typesPubSpin.stop("Types publish failed");
+      throw err;
+    }
+
+    // Update CLI package version and types dependency
     packageJson.version = canaryVersion;
+    packageJson.dependencies["@better-t-stack/types"] = canaryVersion;
     await writeFile(CLI_PACKAGE_JSON_PATH, `${JSON.stringify(packageJson, null, 2)}\n`);
 
     // Update alias package version
@@ -182,7 +211,7 @@ async function main(): Promise<void> {
     try {
       await $`cd apps/cli && bun publish --access public --tag canary`;
       await $`cd packages/create-bts && bun publish --access public --tag canary`;
-      pubSpin.stop("Publish complete for both packages");
+      pubSpin.stop("Publish complete for all packages");
     } catch (err) {
       pubSpin.stop("Publish failed");
       throw err;
@@ -207,15 +236,18 @@ async function main(): Promise<void> {
 
     await writeFile(CLI_PACKAGE_JSON_PATH, originalPackageJsonString);
     await writeFile(ALIAS_PACKAGE_JSON_PATH, originalAliasPackageJsonString);
+    await writeFile(TYPES_PACKAGE_JSON_PATH, originalTypesPackageJsonString);
     restored = true;
 
-    console.log(`✅ Published canary v${canaryVersion} for both packages`);
+    console.log(`✅ Published canary v${canaryVersion} for all packages`);
     console.log(`📦 NPM: https://www.npmjs.com/package/${packageName}/v/${canaryVersion}`);
     console.log(`📦 NPM: https://www.npmjs.com/package/create-bts/v/${canaryVersion}`);
+    console.log(`📦 NPM: https://www.npmjs.com/package/@better-t-stack/types/v/${canaryVersion}`);
   } finally {
     if (!restored) {
       await writeFile(CLI_PACKAGE_JSON_PATH, originalPackageJsonString);
       await writeFile(ALIAS_PACKAGE_JSON_PATH, originalAliasPackageJsonString);
+      await writeFile(TYPES_PACKAGE_JSON_PATH, originalTypesPackageJsonString);
     }
   }
 }

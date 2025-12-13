@@ -7,6 +7,8 @@ dotenv.config({
 });
 
 {{/if}}
+import * as schema from "./schema";
+
 {{#if (eq dbSetup "neon")}}
 import { neon, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
@@ -18,15 +20,17 @@ neonConfig.webSocketConstructor = ws;
 // neonConfig.poolQueryViaFetch = true
 
 const sql = neon(process.env.DATABASE_URL || "");
-export const db = drizzle(sql);
+export const db = drizzle(sql, { schema });
 {{else}}
 import { drizzle } from "drizzle-orm/node-postgres";
 
-export const db = drizzle(process.env.DATABASE_URL || "");
+export const db = drizzle(process.env.DATABASE_URL || "", { schema });
 {{/if}}
 {{/if}}
 
 {{#if (eq runtime "workers")}}
+import * as schema from "./schema";
+
 {{#if (eq dbSetup "neon")}}
 import { neon, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
@@ -37,11 +41,11 @@ neonConfig.webSocketConstructor = ws;
 neonConfig.poolQueryViaFetch = true;
 
 const sql = neon(env.DATABASE_URL || "");
-export const db = drizzle(sql);
+export const db = drizzle(sql, { schema });
 {{else}}
 import { drizzle } from "drizzle-orm/node-postgres";
 import { env } from "cloudflare:workers";
 
-export const db = drizzle(env.DATABASE_URL || "");
+export const db = drizzle(env.DATABASE_URL || "", { schema });
 {{/if}}
 {{/if}}

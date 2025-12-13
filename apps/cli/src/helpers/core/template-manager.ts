@@ -223,6 +223,11 @@ async function setupDbPackage(projectDir: string, context: ProjectConfig) {
     await processAndCopyFiles("**/*", dbBaseDir, dbPackageDir, context);
   }
 
+  const dbOrmBaseDir = path.join(PKG_ROOT, `templates/db/${context.orm}/base`);
+  if (await fs.pathExists(dbOrmBaseDir)) {
+    await processAndCopyFiles("**/*", dbOrmBaseDir, dbPackageDir, context);
+  }
+
   const dbOrmSrcDir = path.join(PKG_ROOT, `templates/db/${context.orm}/${context.database}`);
   if (await fs.pathExists(dbOrmSrcDir)) {
     await processAndCopyFiles("**/*", dbOrmSrcDir, dbPackageDir, context);
@@ -654,11 +659,13 @@ export async function setupExamplesTemplate(projectDir: string, context: Project
 
     const exampleBaseDir = path.join(PKG_ROOT, `templates/examples/${example}`);
 
-    if (
-      (serverAppDirExists || context.backend === "self") &&
-      context.backend !== "convex" &&
-      context.backend !== "none"
-    ) {
+    if (context.backend === "convex") {
+      const convexBackendDestDir = path.join(projectDir, "packages/backend");
+      const convexExampleSrc = path.join(exampleBaseDir, "convex/packages/backend");
+      if (await fs.pathExists(convexExampleSrc)) {
+        await processAndCopyFiles("**/*", convexExampleSrc, convexBackendDestDir, context, false);
+      }
+    } else if ((serverAppDirExists || context.backend === "self") && context.backend !== "none") {
       const exampleServerSrc = path.join(exampleBaseDir, "server");
 
       if (context.api !== "none") {
