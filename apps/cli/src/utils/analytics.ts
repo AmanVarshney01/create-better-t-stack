@@ -2,7 +2,7 @@ import type { ProjectConfig } from "../types";
 import { getLatestCLIVersion } from "./get-latest-cli-version";
 import { isTelemetryEnabled } from "./telemetry";
 
-const CONVEX_INGEST_URL = "https://striped-seahorse-863.convex.site/api/analytics/ingest";
+const CONVEX_INGEST_URL = process.env.CONVEX_INGEST_URL;
 
 async function sendConvexEvent(payload: Record<string, unknown>) {
   if (!CONVEX_INGEST_URL) return;
