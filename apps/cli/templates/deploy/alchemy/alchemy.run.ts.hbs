@@ -84,7 +84,7 @@ export const web = await Nextjs("web", {
     {{#if (eq orm "drizzle")}}
     DATABASE_HOST: alchemy.env.DATABASE_HOST,
     DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME,
-    DATABASE_PASSWORD: alchemy.env.DATABASE_PASSWORD,
+    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD,
     {{/if}}
     {{/if}}
   },
@@ -161,7 +161,7 @@ export const web = await TanStackStart("web", {
     {{#if (eq orm "drizzle")}}
     DATABASE_HOST: alchemy.env.DATABASE_HOST,
     DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME,
-    DATABASE_PASSWORD: alchemy.env.DATABASE_PASSWORD,
+    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD,
     {{/if}}
     {{/if}}
   },
@@ -252,7 +252,7 @@ export const server = await Worker("server", {
     {{#if (eq orm "drizzle")}}
     DATABASE_HOST: alchemy.env.DATABASE_HOST,
     DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME,
-    DATABASE_PASSWORD: alchemy.env.DATABASE_PASSWORD,
+    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD,
     {{/if}}
     {{/if}}
   },
