@@ -87,9 +87,6 @@ export const web = await Nextjs("web", {
     DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD,
     {{/if}}
     {{/if}}
-  },
-  dev: {
-    command: "{{packageManager}} run dev"
   }
 });
 {{else if (includes frontend "nuxt")}}
@@ -102,9 +99,6 @@ export const web = await Nuxt("web", {
     {{else if (ne backend "self")}}
     NUXT_PUBLIC_SERVER_URL: alchemy.env.NUXT_PUBLIC_SERVER_URL,
     {{/if}}
-  },
-  dev: {
-    command: "{{packageManager}} run dev"
   }
 });
 {{else if (includes frontend "svelte")}}
@@ -117,9 +111,6 @@ export const web = await SvelteKit("web", {
     {{else if (ne backend "self")}}
     PUBLIC_SERVER_URL: alchemy.env.PUBLIC_SERVER_URL,
     {{/if}}
-  },
-  dev: {
-    command: "{{packageManager}} run dev"
   }
 });
 {{else if (includes frontend "tanstack-start")}}
@@ -164,9 +155,6 @@ export const web = await TanStackStart("web", {
     DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD,
     {{/if}}
     {{/if}}
-  },
-  dev: {
-    command: "{{packageManager}} run dev"
   }
 });
 {{else if (includes frontend "tanstack-router")}}
@@ -180,9 +168,6 @@ export const web = await Vite("web", {
     {{else if (ne backend "self")}}
     VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL,
     {{/if}}
-  },
-  dev: {
-    command: "{{packageManager}} run dev"
   }
 });
 {{else if (includes frontend "react-router")}}
@@ -195,9 +180,6 @@ export const web = await ReactRouter("web", {
     {{else if (ne backend "self")}}
     VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL,
     {{/if}}
-  },
-  dev: {
-    command: "{{packageManager}} run dev"
   }
 });
 {{else if (includes frontend "solid")}}
@@ -211,9 +193,6 @@ export const web = await Vite("web", {
     {{else if (ne backend "self")}}
     VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL,
     {{/if}}
-  },
-  dev: {
-    command: "{{packageManager}} run dev"
   }
 });
 {{/if}}
