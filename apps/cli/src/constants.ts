@@ -153,14 +153,14 @@ export const dependencyVersionMap = {
   "@tanstack/solid-query-devtools": "^5.87.4",
   "@tanstack/solid-router-devtools": "^1.131.44",
 
-  wrangler: "^4.40.3",
-  "@cloudflare/vite-plugin": "^1.13.8",
-  "@opennextjs/cloudflare": "^1.6.5",
+  wrangler: "^4.54.0",
+  "@cloudflare/vite-plugin": "^1.17.1",
+  "@opennextjs/cloudflare": "^1.14.6",
   "nitro-cloudflare-dev": "^0.2.2",
-  "@sveltejs/adapter-cloudflare": "^7.2.1",
-  "@cloudflare/workers-types": "^4.20250822.0",
+  "@sveltejs/adapter-cloudflare": "^7.2.4",
+  "@cloudflare/workers-types": "^4.20251213.0",
 
-  alchemy: "^0.81.1",
+  alchemy: "^0.81.2",
 
   dotenv: "^17.2.2",
   tsdown: "^0.16.5",

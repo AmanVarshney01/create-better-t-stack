@@ -24,6 +24,7 @@ export async function setupTanStackStartAlchemyDeploy(
     if (!options?.skipAppScripts) {
       pkg.scripts = {
         ...pkg.scripts,
+        dev: "alchemy dev",
         deploy: "alchemy deploy",
         destroy: "alchemy destroy",
       };
