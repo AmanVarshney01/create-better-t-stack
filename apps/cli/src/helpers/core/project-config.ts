@@ -81,7 +81,7 @@ async function updateRootPackageJson(projectDir: string, options: ProjectConfig)
     }
   }
 
-  if (database === "sqlite" && dbSetup !== "d1") {
+  if (database === "sqlite" && dbSetup !== "d1" && orm !== "none") {
     scripts["db:local"] = pmConfig.filter(dbPackageName, "db:local");
   }
 

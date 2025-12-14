@@ -51,7 +51,9 @@ export const web = await Nextjs("web", {
   bindings: {
     {{#if (eq backend "convex")}}
     NEXT_PUBLIC_CONVEX_URL: alchemy.env.NEXT_PUBLIC_CONVEX_URL,
+    {{#if (eq auth "better-auth")}}
     NEXT_PUBLIC_CONVEX_SITE_URL: alchemy.env.NEXT_PUBLIC_CONVEX_SITE_URL,
+    {{/if}}
     {{else if (ne backend "self")}}
     NEXT_PUBLIC_SERVER_URL: alchemy.env.NEXT_PUBLIC_SERVER_URL,
     {{/if}}
@@ -95,7 +97,9 @@ export const web = await Nuxt("web", {
   bindings: {
     {{#if (eq backend "convex")}}
     NUXT_PUBLIC_CONVEX_URL: alchemy.env.NUXT_PUBLIC_CONVEX_URL,
+    {{#if (eq auth "better-auth")}}
     NUXT_PUBLIC_CONVEX_SITE_URL: alchemy.env.NUXT_PUBLIC_CONVEX_SITE_URL,
+    {{/if}}
     {{else if (ne backend "self")}}
     NUXT_PUBLIC_SERVER_URL: alchemy.env.NUXT_PUBLIC_SERVER_URL,
     {{/if}}
@@ -107,7 +111,9 @@ export const web = await SvelteKit("web", {
   bindings: {
     {{#if (eq backend "convex")}}
     PUBLIC_CONVEX_URL: alchemy.env.PUBLIC_CONVEX_URL,
+    {{#if (eq auth "better-auth")}}
     PUBLIC_CONVEX_SITE_URL: alchemy.env.PUBLIC_CONVEX_SITE_URL,
+    {{/if}}
     {{else if (ne backend "self")}}
     PUBLIC_SERVER_URL: alchemy.env.PUBLIC_SERVER_URL,
     {{/if}}
@@ -119,7 +125,9 @@ export const web = await TanStackStart("web", {
   bindings: {
     {{#if (eq backend "convex")}}
     VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL,
+    {{#if (eq auth "better-auth")}}
     VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL,
+    {{/if}}
     {{else if (ne backend "self")}}
     VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL,
     {{/if}}
@@ -164,7 +172,9 @@ export const web = await Vite("web", {
   bindings: {
     {{#if (eq backend "convex")}}
     VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL,
+    {{#if (eq auth "better-auth")}}
     VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL,
+    {{/if}}
     {{else if (ne backend "self")}}
     VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL,
     {{/if}}
@@ -176,7 +186,9 @@ export const web = await ReactRouter("web", {
   bindings: {
     {{#if (eq backend "convex")}}
     VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL,
+    {{#if (eq auth "better-auth")}}
     VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL,
+    {{/if}}
     {{else if (ne backend "self")}}
     VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL,
     {{/if}}
@@ -189,7 +201,9 @@ export const web = await Vite("web", {
   bindings: {
     {{#if (eq backend "convex")}}
     VITE_CONVEX_URL: alchemy.env.VITE_CONVEX_URL,
+    {{#if (eq auth "better-auth")}}
     VITE_CONVEX_SITE_URL: alchemy.env.VITE_CONVEX_SITE_URL,
+    {{/if}}
     {{else if (ne backend "self")}}
     VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL,
     {{/if}}
