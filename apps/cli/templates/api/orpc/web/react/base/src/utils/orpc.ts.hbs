@@ -15,13 +15,11 @@ import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
-    onError: (error) => {
+    onError: (error, query) => {
       toast.error(`Error: ${error.message}`, {
         action: {
           label: "retry",
-          onClick: () => {
-            queryClient.invalidateQueries();
-          },
+          onClick: query.invalidate,
         },
       });
     },
