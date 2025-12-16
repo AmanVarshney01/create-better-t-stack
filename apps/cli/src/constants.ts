@@ -42,8 +42,8 @@ export const DEFAULT_CONFIG = getDefaultConfig();
 export const dependencyVersionMap = {
   typescript: "^5",
 
-  "better-auth": "1.4.5",
-  "@better-auth/expo": "1.4.5",
+  "better-auth": "^1.4.7",
+  "@better-auth/expo": "^1.4.7",
 
   "@clerk/nextjs": "^6.31.5",
   "@clerk/clerk-react": "^5.45.0",
