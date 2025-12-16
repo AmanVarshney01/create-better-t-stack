@@ -33,6 +33,9 @@ jobs:
         env:
           BTS_TELEMETRY: 0
 
+      - name: Build Workspace Dependencies
+        run: cd packages/types && bun run build
+
       - name: Run Tests
         working-directory: apps/cli
         run: bun run test:ci
