@@ -1,16 +1,29 @@
 {
   "name": "create-bts",
-  "version": "3.7.3",
+  "version": "3.8.3",
   "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations (alias for create-better-t-stack)",
   "type": "module",
   "license": "MIT",
   "author": "Aman Varshney",
+  "main": "./index.js",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js"
+    },
+    "./cli": {
+      "import": "./cli.js"
+    }
+  },
   "bin": {
     "create-bts": "cli.js"
   },
   "files": [
     "cli.js",
-    "index.js"
+    "index.js",
+    "index.d.ts"
   ],
   "keywords": [
     "bts",
@@ -49,6 +62,6 @@
   },
   "homepage": "https://better-t-stack.dev/",
   "dependencies": {
-    "create-better-t-stack": "^3.7.3"
+    "create-better-t-stack": "^3.8.3"
   }
 }

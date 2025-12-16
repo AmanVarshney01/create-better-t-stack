@@ -20,6 +20,7 @@ export async function setupCatalogs(projectDir: string, options: ProjectConfig) 
   }
 
   const packagePaths = [
+    ".", // root monorepo
     "apps/server",
     "apps/web",
     "apps/native",
@@ -29,6 +30,7 @@ export async function setupCatalogs(projectDir: string, options: ProjectConfig) 
     "packages/db",
     "packages/auth",
     "packages/backend",
+    "packages/config",
   ];
 
   const packagesInfo: PackageInfo[] = [];

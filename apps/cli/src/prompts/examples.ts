@@ -13,22 +13,18 @@ export async function getExamplesChoice(
 ) {
   if (examples !== undefined) return examples;
 
-  if (api === "none") {
-    if (backend === "convex") {
-      return ["todo"];
-    }
-    return [];
-  }
-
-  if (backend === "convex") {
-    return ["todo"];
-  }
-
   if (backend === "none") {
     return [];
   }
 
-  if (database === "none") return [];
+  if (backend !== "convex") {
+    if (api === "none") {
+      return [];
+    }
+    if (database === "none") {
+      return [];
+    }
+  }
 
   let response: Examples[] | symbol = [];
   const options: { value: Examples; label: string; hint: string }[] = [];

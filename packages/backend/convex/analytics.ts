@@ -74,7 +74,7 @@ export const ingestEvent = internalMutation({
     const existingStats = await ctx.db.query("analyticsStats").first();
 
     if (existingStats) {
-      await ctx.db.patch(existingStats._id, {
+      await ctx.db.patch("analyticsStats", existingStats._id, {
         totalProjects: existingStats.totalProjects + 1,
         lastEventTime: now,
         backend: incrementKey(existingStats.backend, args.backend),
@@ -137,7 +137,7 @@ export const ingestEvent = internalMutation({
       .first();
 
     if (dailyStats) {
-      await ctx.db.patch(dailyStats._id, { count: dailyStats.count + 1 });
+      await ctx.db.patch("analyticsDailyStats", dailyStats._id, { count: dailyStats.count + 1 });
     } else {
       await ctx.db.insert("analyticsDailyStats", { date: today, count: 1 });
     }
@@ -292,12 +292,12 @@ export const backfillStats = mutation({
   handler: async (ctx) => {
     const existing = await ctx.db.query("analyticsStats").first();
     if (existing) {
-      await ctx.db.delete(existing._id);
+      await ctx.db.delete("analyticsStats", existing._id);
     }
 
     const existingDaily = await ctx.db.query("analyticsDailyStats").collect();
     for (const d of existingDaily) {
-      await ctx.db.delete(d._id);
+      await ctx.db.delete("analyticsDailyStats", d._id);
     }
 
     const events = await ctx.db.query("analyticsEvents").collect();

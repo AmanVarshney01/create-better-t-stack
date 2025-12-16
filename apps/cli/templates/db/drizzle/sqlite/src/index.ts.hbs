@@ -7,6 +7,7 @@ dotenv.config({
 });
 
 {{/if}}
+import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
@@ -17,15 +18,17 @@ const client = createClient({
   {{/if}}
 });
 
-export const db = drizzle({ client });
+export const db = drizzle({ client, schema });
 {{/if}}
 
 {{#if (eq runtime "workers")}}
+import * as schema from "./schema";
+
 {{#if (eq dbSetup "d1")}}
 import { drizzle } from "drizzle-orm/d1";
 import { env } from "cloudflare:workers";
 
-export const db = drizzle(env.DB);
+export const db = drizzle(env.DB, { schema });
 {{else}}
 import { drizzle } from "drizzle-orm/libsql";
 import { env } from "cloudflare:workers";
@@ -38,6 +41,6 @@ const client = createClient({
   {{/if}}
 });
 
-export const db = drizzle({ client });
+export const db = drizzle({ client, schema });
 {{/if}}
 {{/if}}

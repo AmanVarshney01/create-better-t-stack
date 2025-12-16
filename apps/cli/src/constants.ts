@@ -40,20 +40,22 @@ export function getDefaultConfig() {
 export const DEFAULT_CONFIG = getDefaultConfig();
 
 export const dependencyVersionMap = {
-  "better-auth": "^1.4.5",
-  "@better-auth/expo": "^1.4.5",
+  typescript: "^5",
+
+  "better-auth": "^1.4.7",
+  "@better-auth/expo": "^1.4.7",
 
   "@clerk/nextjs": "^6.31.5",
   "@clerk/clerk-react": "^5.45.0",
   "@clerk/tanstack-react-start": "^0.26.3",
   "@clerk/clerk-expo": "^2.14.25",
 
-  "drizzle-orm": "^0.45.0",
+  "drizzle-orm": "^0.45.1",
   "drizzle-kit": "^0.31.8",
   "@planetscale/database": "^1.19.0",
 
-  "@libsql/client": "^0.14.0",
-  libsql: "^0.5.22",
+  "@libsql/client": "0.15.15",
+  libsql: "0.5.22",
 
   "@neondatabase/serverless": "^1.0.2",
   pg: "^8.16.3",
@@ -63,15 +65,15 @@ export const dependencyVersionMap = {
 
   mysql2: "^3.14.0",
 
-  "@prisma/client": "^7.0.1",
-  prisma: "^7.0.1",
-  "@prisma/adapter-d1": "^7.0.1",
-  "@prisma/adapter-neon": "^7.0.1",
-  "@prisma/adapter-mariadb": "^7.0.1",
-  "@prisma/adapter-libsql": "^7.0.1",
-  "@prisma/adapter-better-sqlite3": "^7.0.1",
-  "@prisma/adapter-pg": "^7.0.1",
-  "@prisma/adapter-planetscale": "^7.0.1",
+  "@prisma/client": "^7.1.0",
+  prisma: "^7.1.0",
+  "@prisma/adapter-d1": "^7.1.0",
+  "@prisma/adapter-neon": "^7.1.0",
+  "@prisma/adapter-mariadb": "^7.1.0",
+  "@prisma/adapter-libsql": "^7.1.0",
+  "@prisma/adapter-better-sqlite3": "^7.1.0",
+  "@prisma/adapter-pg": "^7.1.0",
+  "@prisma/adapter-planetscale": "^7.1.0",
 
   mongoose: "^8.14.0",
 
@@ -81,7 +83,7 @@ export const dependencyVersionMap = {
   "@tauri-apps/cli": "^2.4.0",
 
   "@biomejs/biome": "^2.2.0",
-  oxlint: "^1.12.0",
+  oxlint: "^1.32.0",
 
   husky: "^9.1.7",
   "lint-staged": "^16.1.2",
@@ -89,7 +91,7 @@ export const dependencyVersionMap = {
   tsx: "^4.19.2",
   "@types/node": "^22.13.11",
 
-  "@types/bun": "^1.2.6",
+  "@types/bun": "^1.3.4",
 
   "@elysiajs/node": "^1.3.1",
 
@@ -109,27 +111,27 @@ export const dependencyVersionMap = {
   fastify: "^5.3.3",
   "@fastify/cors": "^11.0.1",
 
-  turbo: "^2.5.4",
+  turbo: "^2.6.3",
 
   ai: "^5.0.49",
   "@ai-sdk/google": "^2.0.13",
   "@ai-sdk/vue": "^2.0.49",
   "@ai-sdk/svelte": "^3.0.39",
   "@ai-sdk/react": "^2.0.39",
-  streamdown: "^1.3.0",
+  streamdown: "^1.6.10",
   shiki: "^3.12.2",
 
-  "@orpc/server": "^1.10.0",
-  "@orpc/client": "^1.10.0",
-  "@orpc/openapi": "^1.10.0",
-  "@orpc/zod": "^1.10.0",
-  "@orpc/tanstack-query": "^1.10.0",
+  "@orpc/server": "^1.12.2",
+  "@orpc/client": "^1.12.2",
+  "@orpc/openapi": "^1.12.2",
+  "@orpc/zod": "^1.12.2",
+  "@orpc/tanstack-query": "^1.12.2",
 
-  "@trpc/tanstack-react-query": "^11.5.0",
-  "@trpc/server": "^11.5.0",
-  "@trpc/client": "^11.5.0",
+  "@trpc/tanstack-react-query": "^11.7.2",
+  "@trpc/server": "^11.7.2",
+  "@trpc/client": "^11.7.2",
 
-  next: "^16.0.7",
+  next: "^16.0.10",
 
   convex: "^1.29.3",
   "@convex-dev/react-query": "^0.1.0",
@@ -144,21 +146,21 @@ export const dependencyVersionMap = {
   "@tanstack/vue-query-devtools": "^5.90.2",
   "@tanstack/vue-query": "^5.90.2",
 
-  "@tanstack/react-query-devtools": "^5.85.5",
-  "@tanstack/react-query": "^5.85.5",
+  "@tanstack/react-query-devtools": "^5.91.1",
+  "@tanstack/react-query": "^5.90.12",
 
   "@tanstack/solid-query": "^5.87.4",
   "@tanstack/solid-query-devtools": "^5.87.4",
   "@tanstack/solid-router-devtools": "^1.131.44",
 
-  wrangler: "^4.40.3",
-  "@cloudflare/vite-plugin": "^1.13.8",
-  "@opennextjs/cloudflare": "^1.6.5",
+  wrangler: "^4.54.0",
+  "@cloudflare/vite-plugin": "^1.17.1",
+  "@opennextjs/cloudflare": "^1.14.6",
   "nitro-cloudflare-dev": "^0.2.2",
-  "@sveltejs/adapter-cloudflare": "^7.2.1",
-  "@cloudflare/workers-types": "^4.20250822.0",
+  "@sveltejs/adapter-cloudflare": "^7.2.4",
+  "@cloudflare/workers-types": "^4.20251213.0",
 
-  alchemy: "^0.77.0",
+  alchemy: "^0.81.2",
 
   dotenv: "^17.2.2",
   tsdown: "^0.16.5",
