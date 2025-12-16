@@ -1,6 +1,6 @@
 {
   "name": "@better-t-stack/types",
-  "version": "3.8.2",
+  "version": "3.8.3",
   "description": "TypeScript types and schemas for create-better-t-stack CLI",
   "type": "module",
   "license": "MIT",
