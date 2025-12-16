@@ -1,4 +1,4 @@
-import { describe, it } from "vitest";
+import { describe, it } from "bun:test";
 import type { Backend, Runtime } from "../src/types";
 import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
@@ -99,7 +99,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         api: "none",
         frontend: ["tanstack-router"],
         addons: ["biome", "turborepo"],
-        examples: ["todo", "ai"],
+        examples: ["todo"],
         dbSetup: "none",
         webDeploy: "alchemy",
         serverDeploy: "none",

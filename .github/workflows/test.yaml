@@ -31,16 +31,10 @@ jobs:
       - name: Install Dependencies
         run: bun install --frozen-lockfile
         env:
-          BTS_TELEMETRY: 1
-          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
-          POSTHOG_HOST: ${{ secrets.POSTHOG_HOST }}
+          BTS_TELEMETRY: 0
 
       - name: Run Tests
-        run: bun test --timeout 15000
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          files: ./coverage/lcov.info
+        working-directory: apps/cli
+        run: bun run test:ci
         env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          AGENT: 1

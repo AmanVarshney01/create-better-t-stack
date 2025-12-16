@@ -1,4 +1,4 @@
-import { describe, it } from "vitest";
+import { describe, it } from "bun:test";
 import { DB_SETUPS, expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
 describe("Database Setup Configurations", () => {

@@ -1,4 +1,4 @@
-import { describe, it } from "vitest";
+import { describe, it } from "bun:test";
 import {
   expectError,
   expectSuccess,
@@ -231,7 +231,7 @@ describe("Deployment Configurations", () => {
           examples: ["none"],
           dbSetup: "none",
           install: false,
-          runtime: "workers"
+          runtime: "workers",
         };
 
         // Set appropriate runtime

@@ -1,4 +1,4 @@
-import { describe, it } from "vitest";
+import { describe, it } from "bun:test";
 import type { API, Backend, Database, Examples, Frontend, ORM, Runtime } from "../src/types";
 import { API_TYPES, expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 

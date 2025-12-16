@@ -1,15 +1,7 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { cleanupSmokeDirectory, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
+import { describe, expect, it } from "bun:test";
+import { expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
 describe("CLI Performance Benchmarks", () => {
-  beforeAll(async () => {
-    await cleanupSmokeDirectory();
-  });
-
-  afterAll(async () => {
-    await cleanupSmokeDirectory();
-  });
-
   describe("Basic Project Creation Benchmarks", () => {
     it("should benchmark default configuration creation", async () => {
       const startTime = performance.now();

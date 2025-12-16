@@ -1,8 +1,7 @@
-import { rm } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { createRouterClient } from "@orpc/server";
-import { ensureDir } from "fs-extra";
-import { expect } from "vitest";
+import { expect } from "bun:test";
 import { router } from "../src/index";
 import type { CreateInput, InitResult } from "../src/types";
 import {
@@ -22,20 +21,14 @@ import {
   WebDeploySchema,
 } from "../src/types";
 
+// Re-export setup utilities for backward compatibility
+export { cleanupSmokeDirectory, ensureSmokeDirectory, SMOKE_DIR } from "./setup";
+
+// Smoke directory path - use the same as setup.ts
+const SMOKE_DIR_PATH = join(import.meta.dir, "..", ".smoke");
+
 // Create oRPC caller for direct function calls instead of subprocess
 const defaultContext = {};
-
-/**
- * Clean up the entire .smoke directory
- */
-export async function cleanupSmokeDirectory() {
-  const smokeDir = join(process.cwd(), ".smoke");
-  try {
-    await rm(smokeDir, { recursive: true, force: true });
-  } catch {
-    // Ignore cleanup errors
-  }
-}
 
 export interface TestResult {
   success: boolean;
@@ -56,8 +49,12 @@ export interface TestConfig extends CreateInput {
  * This delegates all validation to the CLI's existing logic - much simpler!
  */
 export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
-  const smokeDir = join(process.cwd(), ".smoke");
-  await ensureDir(smokeDir);
+  // Ensure smoke directory exists (may be called before global setup in some cases)
+  try {
+    await mkdir(SMOKE_DIR_PATH, { recursive: true });
+  } catch {
+    // Directory may already exist
+  }
 
   // Store original environment
   const originalProgrammatic = process.env.BTS_PROGRAMMATIC;
@@ -68,7 +65,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
 
     const caller = createRouterClient(router, { context: defaultContext });
     const projectName = config.projectName || "default-app";
-    const projectPath = join(smokeDir, projectName);
+    const projectPath = join(SMOKE_DIR_PATH, projectName);
 
     // Determine if we should use --yes or not
     // Only core stack flags conflict with --yes flag (from CLI error message)

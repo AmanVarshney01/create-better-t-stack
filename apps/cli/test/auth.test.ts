@@ -1,4 +1,4 @@
-import { describe, it } from "vitest";
+import { describe, it } from "bun:test";
 import type { Backend, Database, Frontend, ORM } from "../src/types";
 import {
   AUTH_PROVIDERS,
@@ -95,7 +95,10 @@ describe("Authentication Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "The 'todo' example requires a database if a backend (other than Convex) is present. Cannot use --examples todo when database is 'none' and a backend is selected.");
+      expectError(
+        result,
+        "The 'todo' example requires a database if a backend (other than Convex) is present. Cannot use --examples todo when database is 'none' and a backend is selected.",
+      );
     });
 
     it("should work with better-auth + convex backend (tanstack-router)", async () => {
