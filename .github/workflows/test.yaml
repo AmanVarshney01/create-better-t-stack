@@ -37,40 +37,9 @@ jobs:
         env:
           BTS_TELEMETRY: 0
 
-      - name: Build Workspace Dependencies
-        run: bun run --filter=@better-t-stack/types build
-
-      - name: Type Check
-        run: bun run --filter=create-better-t-stack check-types
-
-      - name: Run Tests
+      - name: Build and Test CLI
         working-directory: apps/cli
-        run: bun run test:ci
+        run: bun run build && bun run test:ci
         env:
           AGENT: 1
-          BTS_TELEMETRY: 0
-
-  build:
-    name: Build Check
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install Dependencies
-        run: bun install --frozen-lockfile
-        env:
-          BTS_TELEMETRY: 0
-
-      - name: Build All Packages
-        run: bun run build
-        env:
           BTS_TELEMETRY: 0

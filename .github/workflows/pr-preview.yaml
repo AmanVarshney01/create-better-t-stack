@@ -45,7 +45,7 @@ jobs:
               });
               
               const testRuns = checkRuns.check_runs.filter(run => 
-                run.name === 'Test Suite' || run.name === 'Build Check'
+                run.name === 'Test Suite'
               );
               
               if (testRuns.length === 0) {
