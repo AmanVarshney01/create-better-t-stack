@@ -14,74 +14,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  wait-for-tests:
-    name: Wait for Tests
-    runs-on: ubuntu-latest
-    if: github.event.label.name == 'preview'
-    outputs:
-      tests-passed: ${{ steps.check.outputs.passed }}
-    steps:
-      - name: Wait for test workflow
-        id: check
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const prNumber = context.payload.pull_request.number;
-            const headSha = context.payload.pull_request.head.sha;
-            
-            console.log(`Checking test status for PR #${prNumber}, SHA: ${headSha}`);
-            
-            // Wait up to 10 minutes for tests to complete
-            const maxAttempts = 60;
-            const delaySeconds = 10;
-            
-            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-              console.log(`Attempt ${attempt}/${maxAttempts}`);
-              
-              const { data: checkRuns } = await github.rest.checks.listForRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: headSha,
-              });
-              
-              const testRuns = checkRuns.check_runs.filter(run => 
-                run.name === 'Test Suite'
-              );
-              
-              if (testRuns.length === 0) {
-                console.log('No test runs found yet, waiting...');
-                await new Promise(resolve => setTimeout(resolve, delaySeconds * 1000));
-                continue;
-              }
-              
-              const allCompleted = testRuns.every(run => run.status === 'completed');
-              const allSuccess = testRuns.every(run => run.conclusion === 'success');
-              
-              console.log(`Test runs: ${testRuns.map(r => `${r.name}: ${r.status}/${r.conclusion}`).join(', ')}`);
-              
-              if (allCompleted) {
-                if (allSuccess) {
-                  console.log('All tests passed!');
-                  core.setOutput('passed', 'true');
-                  return;
-                } else {
-                  console.log('Tests failed!');
-                  core.setOutput('passed', 'false');
-                  return;
-                }
-              }
-              
-              await new Promise(resolve => setTimeout(resolve, delaySeconds * 1000));
-            }
-            
-            console.log('Timeout waiting for tests');
-            core.setOutput('passed', 'false');
-
   publish-preview:
     name: Publish Preview
-    needs: wait-for-tests
     runs-on: ubuntu-latest
-    if: needs.wait-for-tests.outputs.tests-passed == 'true'
+    if: github.event.label.name == 'preview'
     steps:
       - name: Checkout PR Code
         uses: actions/checkout@v4
@@ -207,48 +143,3 @@ jobs:
 
             ---
             *To publish a new preview after more commits, remove and re-add the `preview` label.*
-
-  tests-failed:
-    name: Tests Failed Notice
-    needs: wait-for-tests
-    runs-on: ubuntu-latest
-    if: needs.wait-for-tests.outputs.tests-passed == 'false'
-    steps:
-      - name: Find existing comment
-        uses: peter-evans/find-comment@v3
-        id: find-comment
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: "github-actions[bot]"
-          body-includes: "PR Preview"
-
-      - name: Post failure comment
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          comment-id: ${{ steps.find-comment.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          edit-mode: replace
-          body: |
-            ## PR Preview - Failed
-
-            Cannot publish preview version because tests have not passed.
-
-            Please ensure all tests pass before adding the `preview` label.
-
-            ---
-            *Fix the tests and re-add the `preview` label to try again.*
-
-      - name: Remove preview label
-        uses: actions/github-script@v7
-        with:
-          script: |
-            try {
-              await github.rest.issues.removeLabel({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.pull_request.number,
-                name: 'preview'
-              });
-            } catch (e) {
-              console.log('Label already removed or does not exist');
-            }
