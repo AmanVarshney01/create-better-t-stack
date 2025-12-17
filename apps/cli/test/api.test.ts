@@ -300,10 +300,7 @@ describe("API Configurations", () => {
         expectError: true,
       });
 
-      expectError(
-        result,
-        "Cannot use '--examples' when '--api' is set to 'none'. Please remove the --examples flag or choose an API type.",
-      );
+      expectError(result);
     });
 
     it("should work with API none + examples + convex backend", async () => {

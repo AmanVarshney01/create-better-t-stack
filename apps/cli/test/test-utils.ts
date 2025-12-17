@@ -30,6 +30,41 @@ const SMOKE_DIR_PATH = join(import.meta.dir, "..", ".smoke");
 // Create oRPC caller for direct function calls instead of subprocess
 const defaultContext = {};
 
+// Store original console methods to prevent race conditions when restoring
+const originalConsoleLog = console.log;
+const originalConsoleInfo = console.info;
+const originalConsoleWarn = console.warn;
+const originalConsoleError = console.error;
+const originalStdoutWrite = process.stdout.write;
+const originalStderrWrite = process.stderr.write;
+
+let suppressionCount = 0;
+
+function suppressConsole() {
+  if (suppressionCount === 0) {
+    console.log = () => {};
+    console.info = () => {};
+    console.warn = () => {};
+    console.error = () => {};
+    process.stdout.write = (() => true) as any;
+    process.stderr.write = (() => true) as any;
+  }
+  suppressionCount++;
+}
+
+function restoreConsole() {
+  suppressionCount--;
+  if (suppressionCount <= 0) {
+    suppressionCount = 0;
+    console.log = originalConsoleLog;
+    console.info = originalConsoleInfo;
+    console.warn = originalConsoleWarn;
+    console.error = originalConsoleError;
+    process.stdout.write = originalStdoutWrite;
+    process.stderr.write = originalStderrWrite;
+  }
+}
+
 export interface TestResult {
   success: boolean;
   result?: InitResult;
@@ -62,6 +97,9 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
   try {
     // Set programmatic mode to ensure errors are thrown instead of process.exit
     process.env.BTS_PROGRAMMATIC = "1";
+
+    // Suppress console output
+    suppressConsole();
 
     const caller = createRouterClient(router, { context: defaultContext });
     const projectName = config.projectName || "default-app";
@@ -114,7 +152,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
       renderTitle: false,
       install: config.install ?? false,
       git: config.git ?? true,
-      packageManager: config.packageManager ?? "pnpm",
+      packageManager: config.packageManager ?? "bun",
       directoryConflict: "overwrite",
       verbose: true, // Need verbose to get the result
       disableAnalytics: true,
@@ -153,6 +191,9 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     } else {
       process.env.BTS_PROGRAMMATIC = originalProgrammatic;
     }
+
+    // Restore console methods
+    restoreConsole();
   }
 }
 
