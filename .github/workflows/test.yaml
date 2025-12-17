@@ -1,0 +1,50 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request_review:
+    types: [submitted]
+  pull_request:
+    types: [labeled]
+
+jobs:
+  test:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request_review' && github.event.review.state == 'approved' && github.event.pull_request.base.ref == 'main') || (github.event_name == 'pull_request' && github.event.label.name == 'canary')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ (github.event_name == 'pull_request_review' || github.event_name == 'pull_request') && github.event.pull_request.head.sha || github.sha }}
+
+      - name: Setup Git user
+        shell: bash
+        run: |
+          git config --global user.name github-actions[bot]
+          git config --global user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+        env:
+          BTS_TELEMETRY: 0
+
+      - name: Build Workspace Dependencies
+        run: cd packages/types && bun run build
+
+      - name: Run Tests
+        working-directory: apps/cli
+        run: bun run test:ci
+        env:
+          AGENT: 1

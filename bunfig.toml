@@ -1,2 +1,7 @@
 [install]
 linker = "isolated"
+
+[test]
+coverage = true
+coverageReporter = ["text", "lcov"]
+coverageSkipTestFiles = true  # default false

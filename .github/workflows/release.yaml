@@ -9,7 +9,7 @@ on:
   push:
     branches:
       - main
-  pull_request:
+  pull_request_target:
     types: [labeled]
 
 jobs:
@@ -121,7 +121,7 @@ jobs:
 
   canary:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.event.label.name == 'canary'
+    if: github.event_name == 'pull_request_target' && github.event.label.name == 'canary'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4

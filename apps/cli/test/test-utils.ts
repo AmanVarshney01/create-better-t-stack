@@ -1,8 +1,7 @@
-import { rm } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { createRouterClient } from "@orpc/server";
-import { ensureDir } from "fs-extra";
-import { expect } from "vitest";
+import { expect } from "bun:test";
 import { router } from "../src/index";
 import type { CreateInput, InitResult } from "../src/types";
 import {
@@ -22,18 +21,47 @@ import {
   WebDeploySchema,
 } from "../src/types";
 
+// Re-export setup utilities for backward compatibility
+export { cleanupSmokeDirectory, ensureSmokeDirectory, SMOKE_DIR } from "./setup";
+
+// Smoke directory path - use the same as setup.ts
+const SMOKE_DIR_PATH = join(import.meta.dir, "..", ".smoke");
+
 // Create oRPC caller for direct function calls instead of subprocess
 const defaultContext = {};
 
-/**
- * Clean up the entire .smoke directory
- */
-export async function cleanupSmokeDirectory() {
-  const smokeDir = join(process.cwd(), ".smoke");
-  try {
-    await rm(smokeDir, { recursive: true, force: true });
-  } catch {
-    // Ignore cleanup errors
+// Store original console methods to prevent race conditions when restoring
+const originalConsoleLog = console.log;
+const originalConsoleInfo = console.info;
+const originalConsoleWarn = console.warn;
+const originalConsoleError = console.error;
+const originalStdoutWrite = process.stdout.write;
+const originalStderrWrite = process.stderr.write;
+
+let suppressionCount = 0;
+
+function suppressConsole() {
+  if (suppressionCount === 0) {
+    console.log = () => {};
+    console.info = () => {};
+    console.warn = () => {};
+    console.error = () => {};
+    process.stdout.write = (() => true) as any;
+    process.stderr.write = (() => true) as any;
+  }
+  suppressionCount++;
+}
+
+function restoreConsole() {
+  suppressionCount--;
+  if (suppressionCount <= 0) {
+    suppressionCount = 0;
+    console.log = originalConsoleLog;
+    console.info = originalConsoleInfo;
+    console.warn = originalConsoleWarn;
+    console.error = originalConsoleError;
+    process.stdout.write = originalStdoutWrite;
+    process.stderr.write = originalStderrWrite;
   }
 }
 
@@ -56,8 +84,12 @@ export interface TestConfig extends CreateInput {
  * This delegates all validation to the CLI's existing logic - much simpler!
  */
 export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
-  const smokeDir = join(process.cwd(), ".smoke");
-  await ensureDir(smokeDir);
+  // Ensure smoke directory exists (may be called before global setup in some cases)
+  try {
+    await mkdir(SMOKE_DIR_PATH, { recursive: true });
+  } catch {
+    // Directory may already exist
+  }
 
   // Store original environment
   const originalProgrammatic = process.env.BTS_PROGRAMMATIC;
@@ -66,9 +98,12 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     // Set programmatic mode to ensure errors are thrown instead of process.exit
     process.env.BTS_PROGRAMMATIC = "1";
 
+    // Suppress console output
+    suppressConsole();
+
     const caller = createRouterClient(router, { context: defaultContext });
     const projectName = config.projectName || "default-app";
-    const projectPath = join(smokeDir, projectName);
+    const projectPath = join(SMOKE_DIR_PATH, projectName);
 
     // Determine if we should use --yes or not
     // Only core stack flags conflict with --yes flag (from CLI error message)
@@ -117,7 +152,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
       renderTitle: false,
       install: config.install ?? false,
       git: config.git ?? true,
-      packageManager: config.packageManager ?? "pnpm",
+      packageManager: config.packageManager ?? "bun",
       directoryConflict: "overwrite",
       verbose: true, // Need verbose to get the result
       disableAnalytics: true,
@@ -156,6 +191,9 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     } else {
       process.env.BTS_PROGRAMMATIC = originalProgrammatic;
     }
+
+    // Restore console methods
+    restoreConsole();
   }
 }
 
@@ -169,183 +207,6 @@ export function expectSuccess(result: TestResult) {
   }
   expect(result.success).toBe(true);
   expect(result.result).toBeDefined();
-}
-
-export function expectSuccessWithProjectDir(result: TestResult): string {
-  expectSuccess(result);
-  expect(result.projectDir).toBeDefined();
-  return result.projectDir as string;
-}
-
-/**
- * Helper functions for generating expected config package references
- */
-export function configPackageName(projectName: string): string {
-  return `@${projectName}/config`;
-}
-
-export function configTsConfigReference(projectName: string): string {
-  return `@${projectName}/config/tsconfig.base.json`;
-}
-
-/**
- * Comprehensive validation helper for config package setup
- * Validates all expected files and references based on the CreateInput configuration
- */
-export async function validateConfigPackageSetup(result: TestResult): Promise<void> {
-  const { pathExists, readFile, readJSON } = await import("fs-extra");
-  const { join } = await import("node:path");
-  const { expect } = await import("vitest");
-
-  // Extract data from result
-  const projectDir = expectSuccessWithProjectDir(result);
-  const config = result.config;
-  const projectName = config.projectName as string;
-
-  // 1. Config package structure
-  expect(await pathExists(join(projectDir, "packages/config"))).toBe(true);
-
-  // 2. Config package.json
-  const configPkgJson = await readJSON(join(projectDir, "packages/config/package.json"));
-  expect(configPkgJson.name).toBe(configPackageName(projectName));
-  expect(configPkgJson.private).toBe(true);
-
-  // 3. Config tsconfig.base.json
-  const configTsConfigBase = await readJSON(join(projectDir, "packages/config/tsconfig.base.json"));
-  expect(configTsConfigBase.compilerOptions).toBeDefined();
-  expect(configTsConfigBase.compilerOptions.strict).toBe(true);
-
-  // Check runtime-specific types
-  if (config.runtime === "node" || config.runtime === "workers" || config.runtime === "none") {
-    expect(configTsConfigBase.compilerOptions.types).toContain("node");
-  } else if (config.runtime === "bun") {
-    expect(configTsConfigBase.compilerOptions.types).toContain("bun");
-  }
-
-  // 4. Config tsconfig.json
-  expect(await pathExists(join(projectDir, "packages/config/tsconfig.json"))).toBe(true);
-
-  // 5. Root configuration
-  expect(await pathExists(join(projectDir, "tsconfig.base.json"))).toBe(false);
-
-  const rootTsConfig = await readFile(join(projectDir, "tsconfig.json"), "utf-8");
-  expect(rootTsConfig).toContain(configTsConfigReference(projectName));
-
-  const rootPkgJson = await readJSON(join(projectDir, "package.json"));
-  expect(rootPkgJson.devDependencies[configPackageName(projectName)]).toBe("workspace:*");
-
-  // 6. Workspace packages based on config
-  const shouldHaveDb = config.database && config.database !== "none" && config.orm !== "none";
-  const shouldHaveApi = config.api && config.api !== "none";
-  const shouldHaveAuth = config.auth && config.auth !== "none";
-  const shouldHaveServer = config.backend && !["none", "convex", "self"].includes(config.backend);
-
-  if (shouldHaveDb) {
-    const dbTsConfig = await readFile(join(projectDir, "packages/db/tsconfig.json"), "utf-8");
-    expect(dbTsConfig).toContain(configTsConfigReference(projectName));
-
-    const dbPkgJson = await readJSON(join(projectDir, "packages/db/package.json"));
-    expect(dbPkgJson.devDependencies[configPackageName(projectName)]).toBe("workspace:*");
-  }
-
-  if (shouldHaveApi) {
-    const apiTsConfig = await readFile(join(projectDir, "packages/api/tsconfig.json"), "utf-8");
-    expect(apiTsConfig).toContain(configTsConfigReference(projectName));
-
-    const apiPkgJson = await readJSON(join(projectDir, "packages/api/package.json"));
-    expect(apiPkgJson.devDependencies[configPackageName(projectName)]).toBe("workspace:*");
-  }
-
-  if (shouldHaveAuth) {
-    const authTsConfig = await readFile(join(projectDir, "packages/auth/tsconfig.json"), "utf-8");
-    expect(authTsConfig).toContain(configTsConfigReference(projectName));
-
-    const authPkgJson = await readJSON(join(projectDir, "packages/auth/package.json"));
-    expect(authPkgJson.devDependencies[configPackageName(projectName)]).toBe("workspace:*");
-  }
-
-  if (shouldHaveServer) {
-    const serverTsConfig = await readFile(join(projectDir, "apps/server/tsconfig.json"), "utf-8");
-    expect(serverTsConfig).toContain(configTsConfigReference(projectName));
-
-    const serverPkgJson = await readJSON(join(projectDir, "apps/server/package.json"));
-    expect(serverPkgJson.devDependencies[configPackageName(projectName)]).toBe("workspace:*");
-  }
-}
-
-/**
- * Validate that turbo prune works correctly for turborepo projects
- * Only runs if the project has turborepo addon enabled
- * Generates lockfile without installing dependencies, then runs turbo prune
- */
-export async function validateTurboPrune(result: TestResult): Promise<void> {
-  const { expect } = await import("vitest");
-  const { execa } = await import("execa");
-
-  // Extract data from result
-  const projectDir = expectSuccessWithProjectDir(result);
-  const config = result.config;
-
-  // Only run this validation if turborepo addon is enabled
-  const hasTurborepo =
-    config.addons && Array.isArray(config.addons) && config.addons.includes("turborepo");
-
-  if (!hasTurborepo) {
-    return;
-  }
-
-  const packageManager = config.packageManager || "pnpm";
-
-  // Generate lockfile without installing dependencies
-  try {
-    if (packageManager === "pnpm") {
-      await execa("pnpm", ["install", "--lockfile-only"], {
-        cwd: projectDir,
-      });
-    } else if (packageManager === "npm") {
-      await execa("npm", ["install", "--package-lock-only"], {
-        cwd: projectDir,
-      });
-    } else if (packageManager === "bun") {
-      // Bun doesn't have --lockfile-only, so we skip for bun
-      // or use bun install which is fast anyway
-      await execa("bun", ["install", "--frozen-lockfile"], {
-        cwd: projectDir,
-        reject: false, // Don't fail if frozen-lockfile doesn't exist
-      });
-    }
-  } catch (error) {
-    console.error("Failed to generate lockfile:");
-    console.error(error);
-    expect.fail(
-      `Failed to generate lockfile: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
-
-  // Determine package manager command for running turbo
-  const command = packageManager === "npm" ? "npx" : packageManager === "bun" ? "bunx" : "pnpm";
-
-  // Test turbo prune for both server and web targets
-  const targets = ["server", "web"];
-
-  for (const target of targets) {
-    const args =
-      packageManager === "pnpm"
-        ? ["dlx", "turbo", "prune", target, "--docker"]
-        : ["turbo", "prune", target, "--docker"];
-
-    try {
-      await execa(command, args, {
-        cwd: projectDir,
-      });
-    } catch (error) {
-      console.error(`turbo prune ${target} failed:`);
-      console.error(error);
-      expect.fail(
-        `turbo prune ${target} --docker failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
-  }
 }
 
 export function expectError(result: TestResult, expectedMessage?: string) {

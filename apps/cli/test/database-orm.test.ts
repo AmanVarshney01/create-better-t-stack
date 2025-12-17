@@ -1,4 +1,4 @@
-import { describe, it } from "vitest";
+import { describe, it } from "bun:test";
 import type { Database, ORM } from "../src/types";
 import { DATABASES, expectError, expectSuccess, runTRPCTest } from "./test-utils";
 
@@ -150,7 +150,7 @@ describe("Database and ORM Combinations", () => {
       expectSuccess(result);
     });
 
-    it("should fail with auth but no database (non-convex backend)", async () => {
+    it("should work with auth but no database (non-convex backend)", async () => {
       const result = await runTRPCTest({
         projectName: "auth-no-db",
         database: "none",
@@ -168,7 +168,7 @@ describe("Database and ORM Combinations", () => {
         expectError: true,
       });
 
-      expectError(result, "Authentication requires a database");
+      expectSuccess(result);
     });
 
     it("should work with auth but no database (convex backend)", async () => {

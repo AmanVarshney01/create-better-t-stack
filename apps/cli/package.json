@@ -51,8 +51,10 @@
     "build": "tsdown --publint",
     "dev": "tsdown --watch",
     "check-types": "tsc --noEmit",
-    "test": "bun run build && vitest run; rm -rf .smoke || true",
-    "test:ui": "bun run build && vitest --ui",
+    "test": "bun run build && bun test",
+    "test:watch": "bun run build && bun test --watch",
+    "test:coverage": "bun run build && bun test --coverage",
+    "test:ci": "bun run build && AGENT=1 bun test --bail=5",
     "prepublishOnly": "npm run build"
   },
   "exports": {
@@ -84,12 +86,11 @@
     "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@types/bun": "^1.2.17",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^24.10.2",
-    "@vitest/ui": "^4.0.15",
     "publint": "^0.3.16",
     "tsdown": "^0.17.2",
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.15"
+    "typescript": "^5.9.3"
   }
 }

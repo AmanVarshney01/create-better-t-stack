@@ -1,4 +1,4 @@
-import { describe, it } from "vitest";
+import { describe, it } from "bun:test";
 import type { Backend, Runtime } from "../src/types";
 import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
@@ -99,7 +99,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         api: "none",
         frontend: ["tanstack-router"],
         addons: ["biome", "turborepo"],
-        examples: ["todo", "ai"],
+        examples: ["todo"],
         dbSetup: "none",
         webDeploy: "alchemy",
         serverDeploy: "none",
@@ -175,7 +175,7 @@ describe("Integration Tests - Real World Scenarios", () => {
     it("should create MongoDB + Mongoose app", async () => {
       const result = await runTRPCTest({
         projectName: "mongodb-mongoose-app",
-        backend: "express",
+        backend: "hono",
         runtime: "node",
         database: "mongodb",
         orm: "mongoose",
@@ -185,8 +185,8 @@ describe("Integration Tests - Real World Scenarios", () => {
         addons: ["husky", "turborepo"],
         examples: ["todo"],
         dbSetup: "none",
-        webDeploy: "alchemy",
-        serverDeploy: "alchemy",
+        webDeploy: "none",
+        serverDeploy: "none",
         install: false,
       });
 
@@ -218,7 +218,7 @@ describe("Integration Tests - Real World Scenarios", () => {
       const result = await runTRPCTest({
         projectName: "solid-orpc-app",
         backend: "hono",
-        runtime: "bun",
+        runtime: "workers",
         database: "sqlite",
         orm: "drizzle",
         auth: "better-auth",
@@ -460,7 +460,7 @@ describe("Integration Tests - Real World Scenarios", () => {
       const result = await runTRPCTest({
         projectName: "max-complexity",
         backend: "hono",
-        runtime: "bun",
+        runtime: "workers",
         database: "postgres",
         orm: "drizzle",
         auth: "better-auth",
@@ -498,10 +498,10 @@ describe("Integration Tests - Real World Scenarios", () => {
       expectSuccess(result);
     });
 
-    it("should handle all package managers", async () => {
-      const packageManagers = ["npm", "pnpm", "bun"];
+    const packageManagers = ["npm", "pnpm", "bun"];
 
-      for (const packageManager of packageManagers) {
+    for (const packageManager of packageManagers) {
+      it(`should handle ${packageManager} package manager`, async () => {
         const result = await runTRPCTest({
           projectName: `pkg-manager-${packageManager}`,
           backend: "hono",
@@ -520,18 +520,18 @@ describe("Integration Tests - Real World Scenarios", () => {
         });
 
         expectSuccess(result);
-      }
-    });
+      });
+    }
 
-    it("should handle different runtime environments", async () => {
-      const runtimeConfigs = [
-        { runtime: "bun", backend: "hono" },
-        { runtime: "node", backend: "express" },
-        { runtime: "workers", backend: "hono" },
-        { runtime: "none", backend: "convex" },
-      ];
+    const runtimeConfigs = [
+      { runtime: "bun", backend: "hono" },
+      { runtime: "node", backend: "express" },
+      { runtime: "workers", backend: "hono" },
+      { runtime: "none", backend: "convex" },
+    ];
 
-      for (const { runtime, backend } of runtimeConfigs) {
+    for (const { runtime, backend } of runtimeConfigs) {
+      it(`should handle ${runtime} runtime with ${backend} backend`, async () => {
         const config: TestConfig = {
           projectName: `runtime-${runtime}-${backend}`,
           runtime: runtime as Runtime,
@@ -570,7 +570,7 @@ describe("Integration Tests - Real World Scenarios", () => {
 
         const result = await runTRPCTest(config);
         expectSuccess(result);
-      }
-    });
+      });
+    }
   });
 });

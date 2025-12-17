@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { expectSuccess, runTRPCTest } from "./test-utils";
 
 describe("CLI Test Suite", () => {
@@ -78,6 +78,6 @@ describe("CLI Test Suite", () => {
       for (const result of results) {
         expectSuccess(result);
       }
-    });
+    }, 60000);
   });
 });

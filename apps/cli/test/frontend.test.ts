@@ -1,4 +1,4 @@
-import { describe, it } from "vitest";
+import { describe, it } from "bun:test";
 import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
 describe("Frontend Configurations", () => {
@@ -179,10 +179,9 @@ describe("Frontend Configurations", () => {
       expectError(result, "tRPC API is not supported with 'solid' frontend");
     });
 
-    it("should work with non-React frontends + oRPC", async () => {
-      const frontends = ["nuxt", "svelte", "solid"] as const;
-
-      for (const frontend of frontends) {
+    const frontends = ["nuxt", "svelte", "solid"] as const;
+    for (const frontend of frontends) {
+      it(`should work with ${frontend} + oRPC`, async () => {
         const result = await runTRPCTest({
           projectName: `${frontend}-orpc`,
           frontend: [frontend],
@@ -201,8 +200,8 @@ describe("Frontend Configurations", () => {
         });
 
         expectSuccess(result);
-      }
-    });
+      });
+    }
   });
 
   describe("Frontend Compatibility with Backend", () => {
@@ -253,10 +252,9 @@ describe("Frontend Configurations", () => {
   });
 
   describe("Frontend Compatibility with Auth", () => {
-    it("should fail incompatible frontends with Clerk + Convex", async () => {
-      const incompatibleFrontends = ["nuxt", "svelte", "solid"] as const;
-
-      for (const frontend of incompatibleFrontends) {
+    const incompatibleFrontends = ["nuxt", "svelte", "solid"] as const;
+    for (const frontend of incompatibleFrontends) {
+      it(`should fail incompatible ${frontend} with Clerk + Convex`, async () => {
         const result = await runTRPCTest({
           projectName: `${frontend}-clerk-convex-fail`,
           frontend: [frontend],
@@ -275,18 +273,17 @@ describe("Frontend Configurations", () => {
         });
 
         expectError(result, "Clerk authentication is not compatible");
-      }
-    });
+      });
+    }
 
-    it("should work with compatible frontends + Clerk + Convex", async () => {
-      const compatibleFrontends = [
-        "tanstack-router",
-        "react-router",
-        "tanstack-start",
-        "next",
-      ] as const;
-
-      for (const frontend of compatibleFrontends) {
+    const compatibleFrontends = [
+      "tanstack-router",
+      "react-router",
+      "tanstack-start",
+      "next",
+    ] as const;
+    for (const frontend of compatibleFrontends) {
+      it(`should work with compatible ${frontend} + Clerk + Convex`, async () => {
         const result = await runTRPCTest({
           projectName: `${frontend}-clerk-convex`,
           frontend: [frontend],
@@ -305,8 +302,8 @@ describe("Frontend Configurations", () => {
         });
 
         expectSuccess(result);
-      }
-    });
+      });
+    }
   });
 
   describe("Multiple Frontend Constraints", () => {

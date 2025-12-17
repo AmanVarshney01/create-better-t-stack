@@ -1,15 +1,7 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { cleanupSmokeDirectory, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
+import { describe, expect, it } from "bun:test";
+import { expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
 describe("CLI Performance Benchmarks", () => {
-  beforeAll(async () => {
-    await cleanupSmokeDirectory();
-  });
-
-  afterAll(async () => {
-    await cleanupSmokeDirectory();
-  });
-
   describe("Basic Project Creation Benchmarks", () => {
     it("should benchmark default configuration creation", async () => {
       const startTime = performance.now();
@@ -446,60 +438,60 @@ describe("CLI Performance Benchmarks", () => {
   });
 
   describe("Performance Regression Tests", () => {
-    it("should not exceed performance thresholds", async () => {
-      const configurations = [
-        {
-          name: "Minimal",
-          config: {
-            projectName: "perf-minimal",
-            frontend: ["none"],
-            backend: "none",
-            runtime: "none",
-            database: "none",
-            orm: "none",
-            auth: "none",
-            api: "none",
-            addons: ["none"],
-            examples: ["none"],
-            dbSetup: "none",
-            webDeploy: "none",
-            serverDeploy: "none",
-            install: false,
-          },
-          threshold: 5000, // 5 seconds
+    const configurations = [
+      {
+        name: "Minimal",
+        config: {
+          projectName: "perf-minimal",
+          frontend: ["none"],
+          backend: "none",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          api: "none",
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
         },
-        {
-          name: "Default",
-          config: {
-            projectName: "perf-default",
-            yes: true,
-            install: false,
-          },
-          threshold: 8000, // 8 seconds
+        threshold: 5000, // 5 seconds
+      },
+      {
+        name: "Default",
+        config: {
+          projectName: "perf-default",
+          yes: true,
+          install: false,
         },
-        {
-          name: "Complex",
-          config: {
-            projectName: "perf-complex",
-            frontend: ["tanstack-router"],
-            backend: "hono",
-            runtime: "bun",
-            database: "postgres",
-            orm: "prisma",
-            auth: "better-auth",
-            api: "trpc",
-            addons: ["turborepo", "biome"],
-            examples: ["todo"],
-            dbSetup: "none",
-            webDeploy: "none",
-            serverDeploy: "none",
-            install: false,
-          },
-          threshold: 12000, // 12 seconds
+        threshold: 8000, // 8 seconds
+      },
+      {
+        name: "Complex",
+        config: {
+          projectName: "perf-complex",
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          runtime: "bun",
+          database: "postgres",
+          orm: "prisma",
+          auth: "better-auth",
+          api: "trpc",
+          addons: ["turborepo", "biome"],
+          examples: ["todo"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
         },
-      ];
+        threshold: 12000, // 12 seconds
+      },
+    ];
 
-      for (const { name, config, threshold } of configurations) {
+    for (const { name, config, threshold } of configurations) {
+      it(`should not exceed performance thresholds for ${name}`, async () => {
         const startTime = performance.now();
 
         const result = await runTRPCTest(config as TestConfig);
@@ -511,7 +503,7 @@ describe("CLI Performance Benchmarks", () => {
         expect(duration).toBeLessThan(threshold);
 
         console.log(`✅ ${name} performance: ${duration.toFixed(2)}ms (threshold: ${threshold}ms)`);
-      }
-    });
+      });
+    }
   });
 });

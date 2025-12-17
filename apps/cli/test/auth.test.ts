@@ -1,4 +1,4 @@
-import { describe, it } from "vitest";
+import { describe, it } from "bun:test";
 import type { Backend, Database, Frontend, ORM } from "../src/types";
 import {
   AUTH_PROVIDERS,
@@ -31,10 +31,9 @@ describe("Authentication Configurations", () => {
       expectSuccess(result);
     });
 
-    it("should work with better-auth + different databases", async () => {
-      const databases = ["sqlite", "postgres", "mysql"];
-
-      for (const database of databases) {
+    const databases = ["sqlite", "postgres", "mysql"];
+    for (const database of databases) {
+      it(`should work with better-auth + ${database}`, async () => {
         const result = await runTRPCTest({
           projectName: `better-auth-${database}`,
           auth: "better-auth",
@@ -53,8 +52,8 @@ describe("Authentication Configurations", () => {
         });
 
         expectSuccess(result);
-      }
-    });
+      });
+    }
 
     it("should work with better-auth + mongodb + mongoose", async () => {
       const result = await runTRPCTest({
@@ -95,7 +94,10 @@ describe("Authentication Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Authentication requires a database");
+      expectError(
+        result,
+        "The 'todo' example requires a database if a backend (other than Convex) is present. Cannot use --examples todo when database is 'none' and a backend is selected.",
+      );
     });
 
     it("should work with better-auth + convex backend (tanstack-router)", async () => {
@@ -118,21 +120,21 @@ describe("Authentication Configurations", () => {
       expectSuccess(result);
     });
 
-    it("should work with better-auth + all compatible frontends", async () => {
-      const compatibleFrontends = [
-        "tanstack-router",
-        "react-router",
-        "tanstack-start",
-        "next",
-        "nuxt",
-        "svelte",
-        "solid",
-        "native-bare",
-        "native-uniwind",
-        "native-unistyles",
-      ];
+    const compatibleFrontends = [
+      "tanstack-router",
+      "react-router",
+      "tanstack-start",
+      "next",
+      "nuxt",
+      "svelte",
+      "solid",
+      "native-bare",
+      "native-uniwind",
+      "native-unistyles",
+    ];
 
-      for (const frontend of compatibleFrontends) {
+    for (const frontend of compatibleFrontends) {
+      it(`should work with better-auth + ${frontend}`, async () => {
         const config: TestConfig = {
           projectName: `better-auth-${frontend}`,
           auth: "better-auth",
@@ -158,8 +160,8 @@ describe("Authentication Configurations", () => {
 
         const result = await runTRPCTest(config);
         expectSuccess(result);
-      }
-    });
+      });
+    }
   });
 
   describe("Clerk Provider", () => {
@@ -205,18 +207,18 @@ describe("Authentication Configurations", () => {
       expectError(result, "Clerk authentication is only supported with the Convex backend");
     });
 
-    it("should work with clerk + compatible frontends", async () => {
-      const compatibleFrontends = [
-        "tanstack-router",
-        "react-router",
-        "tanstack-start",
-        "next",
-        "native-bare",
-        "native-uniwind",
-        "native-unistyles",
-      ];
+    const compatibleFrontends = [
+      "tanstack-router",
+      "react-router",
+      "tanstack-start",
+      "next",
+      "native-bare",
+      "native-uniwind",
+      "native-unistyles",
+    ];
 
-      for (const frontend of compatibleFrontends) {
+    for (const frontend of compatibleFrontends) {
+      it(`should work with clerk + ${frontend}`, async () => {
         const result = await runTRPCTest({
           projectName: `clerk-${frontend}`,
           auth: "clerk",
@@ -235,13 +237,13 @@ describe("Authentication Configurations", () => {
         });
 
         expectSuccess(result);
-      }
-    });
+      });
+    }
 
-    it("should fail with clerk + incompatible frontends", async () => {
-      const incompatibleFrontends = ["nuxt", "svelte", "solid"];
+    const incompatibleFrontends = ["nuxt", "svelte", "solid"];
 
-      for (const frontend of incompatibleFrontends) {
+    for (const frontend of incompatibleFrontends) {
+      it(`should fail with clerk + ${frontend}`, async () => {
         const result = await runTRPCTest({
           projectName: `clerk-${frontend}-fail`,
           auth: "clerk",
@@ -260,8 +262,8 @@ describe("Authentication Configurations", () => {
         });
 
         expectError(result, "Clerk authentication is not compatible");
-      }
-    });
+      });
+    }
   });
 
   describe("No Authentication", () => {

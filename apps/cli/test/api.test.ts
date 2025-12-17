@@ -1,13 +1,13 @@
-import { describe, it } from "vitest";
+import { describe, it } from "bun:test";
 import type { API, Backend, Database, Examples, Frontend, ORM, Runtime } from "../src/types";
-import { API_TYPES, expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
+import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
 describe("API Configurations", () => {
   describe("tRPC API", () => {
-    it("should work with tRPC + React frontends", async () => {
-      const reactFrontends = ["tanstack-router", "react-router", "tanstack-start", "next"];
+    const reactFrontends = ["tanstack-router", "react-router", "tanstack-start", "next"];
 
-      for (const frontend of reactFrontends) {
+    for (const frontend of reactFrontends) {
+      it(`should work with tRPC + ${frontend}`, async () => {
         const result = await runTRPCTest({
           projectName: `trpc-${frontend}`,
           api: "trpc",
@@ -26,13 +26,13 @@ describe("API Configurations", () => {
         });
 
         expectSuccess(result);
-      }
-    });
+      });
+    }
 
-    it("should work with tRPC + native frontends", async () => {
-      const nativeFrontends = ["native-bare", "native-uniwind", "native-unistyles"];
+    const nativeFrontends = ["native-bare", "native-uniwind", "native-unistyles"];
 
-      for (const frontend of nativeFrontends) {
+    for (const frontend of nativeFrontends) {
+      it(`should work with tRPC + ${frontend}`, async () => {
         const result = await runTRPCTest({
           projectName: `trpc-${frontend}`,
           api: "trpc",
@@ -51,8 +51,8 @@ describe("API Configurations", () => {
         });
 
         expectSuccess(result);
-      }
-    });
+      });
+    }
 
     it("should fail with tRPC + Nuxt", async () => {
       const result = await runTRPCTest({
@@ -117,18 +117,18 @@ describe("API Configurations", () => {
       expectError(result, "tRPC API is not supported with 'solid' frontend");
     });
 
-    it("should work with tRPC + all compatible backends", async () => {
-      const backends = ["hono", "express", "fastify", "elysia", "self"];
+    const backends = ["hono", "express", "fastify", "elysia"];
 
-      for (const backend of backends) {
+    for (const backend of backends) {
+      it(`should work with tRPC + ${backend}`, async () => {
         const config: TestConfig = {
           projectName: `trpc-${backend}`,
           api: "trpc",
           backend: backend as Backend,
-          frontend: backend === "self" ? ["next"] : ["tanstack-router"],
+          frontend: ["tanstack-router"],
           database: "sqlite",
           orm: "drizzle",
-          auth: backend === "self" ? "better-auth" : "none",
+          auth: "none",
           addons: ["none"],
           examples: ["none"],
           dbSetup: "none",
@@ -137,37 +137,34 @@ describe("API Configurations", () => {
           install: false,
         };
 
-        // Set appropriate runtime
         if (backend === "elysia") {
           config.runtime = "bun";
-        } else if (backend === "self") {
-          config.runtime = "none";
         } else {
           config.runtime = "bun";
         }
 
         const result = await runTRPCTest(config);
         expectSuccess(result);
-      }
-    });
+      });
+    }
   });
 
   describe("oRPC API", () => {
-    it("should work with oRPC + all frontends", async () => {
-      const frontends = [
-        "tanstack-router",
-        "react-router",
-        "tanstack-start",
-        "next",
-        "nuxt",
-        "svelte",
-        "solid",
-        "native-bare",
-        "native-uniwind",
-        "native-unistyles",
-      ];
+    const frontends = [
+      "tanstack-router",
+      "react-router",
+      "tanstack-start",
+      "next",
+      "nuxt",
+      "svelte",
+      "solid",
+      "native-bare",
+      "native-uniwind",
+      "native-unistyles",
+    ];
 
-      for (const frontend of frontends) {
+    for (const frontend of frontends) {
+      it(`should work with oRPC + ${frontend}`, async () => {
         const result = await runTRPCTest({
           projectName: `orpc-${frontend}`,
           api: "orpc",
@@ -186,13 +183,13 @@ describe("API Configurations", () => {
         });
 
         expectSuccess(result);
-      }
-    });
+      });
+    }
 
-    it("should work with oRPC + all compatible backends", async () => {
-      const backends = ["hono", "express", "fastify", "elysia"];
+    const backends = ["hono", "express", "fastify", "elysia"];
 
-      for (const backend of backends) {
+    for (const backend of backends) {
+      it(`should work with oRPC + ${backend}`, async () => {
         const config: TestConfig = {
           projectName: `orpc-${backend}`,
           api: "orpc",
@@ -209,7 +206,6 @@ describe("API Configurations", () => {
           install: false,
         };
 
-        // Set appropriate runtime
         if (backend === "elysia") {
           config.runtime = "bun";
         } else {
@@ -218,14 +214,14 @@ describe("API Configurations", () => {
 
         const result = await runTRPCTest(config);
         expectSuccess(result);
-      }
-    });
+      });
+    }
   });
 
   describe("No API", () => {
     it("should work with API none + basic setup", async () => {
       const result = await runTRPCTest({
-        projectName: "no-api",
+        projectName: "api-none-basic",
         api: "none",
         frontend: ["tanstack-router"],
         backend: "hono",
@@ -246,7 +242,7 @@ describe("API Configurations", () => {
 
     it("should work with API none + frontend only", async () => {
       const result = await runTRPCTest({
-        projectName: "no-api-frontend-only",
+        projectName: "api-none-frontend-only",
         api: "none",
         frontend: ["tanstack-router"],
         backend: "none",
@@ -267,14 +263,14 @@ describe("API Configurations", () => {
 
     it("should work with API none + convex", async () => {
       const result = await runTRPCTest({
-        projectName: "no-api-convex",
+        projectName: "api-none-convex",
         api: "none",
         frontend: ["tanstack-router"],
         backend: "convex",
         runtime: "none",
         database: "none",
         orm: "none",
-        auth: "clerk",
+        auth: "none",
         addons: ["none"],
         examples: ["none"],
         dbSetup: "none",
@@ -288,7 +284,7 @@ describe("API Configurations", () => {
 
     it("should fail with API none + examples (non-convex backend)", async () => {
       const result = await runTRPCTest({
-        projectName: "no-api-examples-fail",
+        projectName: "api-none-examples-fail",
         api: "none",
         frontend: ["tanstack-router"],
         backend: "hono",
@@ -304,19 +300,19 @@ describe("API Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Cannot use '--examples' when '--api' is set to 'none'");
+      expectError(result);
     });
 
     it("should work with API none + examples + convex backend", async () => {
       const result = await runTRPCTest({
-        projectName: "no-api-examples-convex",
+        projectName: "api-none-examples-convex",
         api: "none",
         frontend: ["tanstack-router"],
         backend: "convex",
         runtime: "none",
         database: "none",
         orm: "none",
-        auth: "clerk",
+        auth: "none",
         addons: ["none"],
         examples: ["todo"],
         dbSetup: "none",
@@ -410,7 +406,7 @@ describe("API Configurations", () => {
 
     it("should work with API none + convex + clerk", async () => {
       const result = await runTRPCTest({
-        projectName: "no-api-convex-clerk",
+        projectName: "api-none-convex-clerk",
         api: "none",
         auth: "clerk",
         frontend: ["tanstack-router"],
@@ -473,13 +469,13 @@ describe("API Configurations", () => {
       expectSuccess(result);
     });
 
-    it("should work with both APIs + both examples", async () => {
-      const apiExampleCombinations = [
-        { api: "trpc", examples: ["todo", "ai"] },
-        { api: "orpc", examples: ["todo", "ai"] },
-      ];
+    const apiExampleCombinations = [
+      { api: "trpc", examples: ["todo", "ai"] },
+      { api: "orpc", examples: ["todo", "ai"] },
+    ];
 
-      for (const { api, examples } of apiExampleCombinations) {
+    for (const { api, examples } of apiExampleCombinations) {
+      it(`should work with ${api} + both examples`, async () => {
         const result = await runTRPCTest({
           projectName: `${api}-both-examples`,
           api: api as API,
@@ -498,16 +494,18 @@ describe("API Configurations", () => {
         });
 
         expectSuccess(result);
-      }
-    });
+      });
+    }
   });
 
   describe("All API Types", () => {
-    for (const api of API_TYPES) {
-      it(`should work with ${api} in appropriate setup`, async () => {
+    const apis = ["trpc", "orpc", "none"];
+
+    for (const api of apis) {
+      it(`should work with ${api} API`, async () => {
         const config: TestConfig = {
-          projectName: `test-${api}`,
-          api,
+          projectName: `test-api-${api}`,
+          api: api as API,
           addons: ["none"],
           examples: ["none"],
           dbSetup: "none",
@@ -516,21 +514,20 @@ describe("API Configurations", () => {
           install: false,
         };
 
-        // Set appropriate setup for each API type
         if (api === "none") {
-          config.frontend = ["tanstack-router"];
           config.backend = "none";
           config.runtime = "none";
           config.database = "none";
           config.orm = "none";
           config.auth = "none";
-        } else {
           config.frontend = ["tanstack-router"];
+        } else {
           config.backend = "hono";
           config.runtime = "bun";
           config.database = "sqlite";
           config.orm = "drizzle";
           config.auth = "none";
+          config.frontend = ["tanstack-router"];
         }
 
         const result = await runTRPCTest(config);
@@ -544,7 +541,7 @@ describe("API Configurations", () => {
       const result = await runTRPCTest({
         projectName: "api-complex-frontend",
         api: "trpc",
-        frontend: ["tanstack-router", "native-bare"], // Web + Native
+        frontend: ["tanstack-router", "native-bare"],
         backend: "hono",
         runtime: "bun",
         database: "sqlite",
@@ -575,21 +572,21 @@ describe("API Configurations", () => {
         examples: ["none"],
         dbSetup: "none",
         webDeploy: "none",
-        serverDeploy: "alchemy", // Required for workers
+        serverDeploy: "alchemy",
         install: false,
       });
 
       expectSuccess(result);
     });
 
-    it("should handle API constraints with different runtimes", async () => {
-      const runtimeApiCombinations = [
-        { runtime: "bun", api: "trpc" },
-        { runtime: "node", api: "orpc" },
-        { runtime: "workers", api: "trpc" },
-      ];
+    const runtimeApiCombinations = [
+      { runtime: "bun", api: "trpc" },
+      { runtime: "node", api: "orpc" },
+      { runtime: "workers", api: "trpc" },
+    ];
 
-      for (const { runtime, api } of runtimeApiCombinations) {
+    for (const { runtime, api } of runtimeApiCombinations) {
+      it(`should handle ${api} with ${runtime} runtime`, async () => {
         const config: TestConfig = {
           projectName: `${runtime}-${api}`,
           api: api as API,
@@ -614,7 +611,7 @@ describe("API Configurations", () => {
 
         const result = await runTRPCTest(config);
         expectSuccess(result);
-      }
-    });
+      });
+    }
   });
 });

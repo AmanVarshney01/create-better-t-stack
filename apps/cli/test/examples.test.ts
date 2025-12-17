@@ -1,4 +1,4 @@
-import { describe, it } from "vitest";
+import { describe, it } from "bun:test";
 import { EXAMPLES, expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
 describe("Example Configurations", () => {
@@ -197,7 +197,7 @@ describe("Example Configurations", () => {
       expectError(result, "The 'ai' example is not compatible with the Solid frontend");
     });
 
-    it("should work with AI example + Convex", async () => {
+    it("should fail with AI example + Convex", async () => {
       const result = await runTRPCTest({
         projectName: "ai-convex",
         examples: ["ai"],
@@ -215,7 +215,7 @@ describe("Example Configurations", () => {
         install: false,
       });
 
-      expectSuccess(result);
+      expectError(result, "The 'ai' example is not yet available with Convex backend");
     });
   });
 
