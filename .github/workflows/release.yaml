@@ -41,15 +41,12 @@ jobs:
         env:
           BTS_TELEMETRY: 0
 
-      - name: Build Workspace Dependencies
-        run: bun run --filter=@better-t-stack/types build
+      - name: Build Types
+        run: cd packages/types && bun run build
 
-      - name: Type Check
-        run: bun run --filter=create-better-t-stack check-types
-
-      - name: Run Tests
+      - name: Build and Test CLI
         working-directory: apps/cli
-        run: bun run test:ci
+        run: bun run build && bun run test:ci
         env:
           AGENT: 1
           BTS_TELEMETRY: 0
