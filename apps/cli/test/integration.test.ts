@@ -498,10 +498,10 @@ describe("Integration Tests - Real World Scenarios", () => {
       expectSuccess(result);
     });
 
-    it("should handle all package managers", async () => {
-      const packageManagers = ["npm", "pnpm", "bun"];
+    const packageManagers = ["npm", "pnpm", "bun"];
 
-      for (const packageManager of packageManagers) {
+    for (const packageManager of packageManagers) {
+      it(`should handle ${packageManager} package manager`, async () => {
         const result = await runTRPCTest({
           projectName: `pkg-manager-${packageManager}`,
           backend: "hono",
@@ -520,18 +520,18 @@ describe("Integration Tests - Real World Scenarios", () => {
         });
 
         expectSuccess(result);
-      }
-    });
+      });
+    }
 
-    it("should handle different runtime environments", async () => {
-      const runtimeConfigs = [
-        { runtime: "bun", backend: "hono" },
-        { runtime: "node", backend: "express" },
-        { runtime: "workers", backend: "hono" },
-        { runtime: "none", backend: "convex" },
-      ];
+    const runtimeConfigs = [
+      { runtime: "bun", backend: "hono" },
+      { runtime: "node", backend: "express" },
+      { runtime: "workers", backend: "hono" },
+      { runtime: "none", backend: "convex" },
+    ];
 
-      for (const { runtime, backend } of runtimeConfigs) {
+    for (const { runtime, backend } of runtimeConfigs) {
+      it(`should handle ${runtime} runtime with ${backend} backend`, async () => {
         const config: TestConfig = {
           projectName: `runtime-${runtime}-${backend}`,
           runtime: runtime as Runtime,
@@ -570,7 +570,7 @@ describe("Integration Tests - Real World Scenarios", () => {
 
         const result = await runTRPCTest(config);
         expectSuccess(result);
-      }
-    });
+      });
+    }
   });
 });
