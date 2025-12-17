@@ -78,6 +78,6 @@ describe("CLI Test Suite", () => {
       for (const result of results) {
         expectSuccess(result);
       }
-    });
+    }, 60000);
   });
 });

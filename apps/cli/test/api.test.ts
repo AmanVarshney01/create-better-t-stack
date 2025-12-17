@@ -300,7 +300,10 @@ describe("API Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Examples require an API (tRPC or oRPC) or Convex backend");
+      expectError(
+        result,
+        "Cannot use '--examples' when '--api' is set to 'none'. Please remove the --examples flag or choose an API type.",
+      );
     });
 
     it("should work with API none + examples + convex backend", async () => {
