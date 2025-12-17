@@ -1,0 +1,145 @@
+name: PR Preview
+
+on:
+  pull_request_target:
+    types: [labeled]
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: pr-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  publish-preview:
+    name: Publish Preview
+    runs-on: ubuntu-latest
+    if: github.event.label.name == 'preview'
+    steps:
+      - name: Checkout PR Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+        env:
+          BTS_TELEMETRY: 0
+
+      - name: Generate Preview Version
+        id: version
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          COMMIT_SHA=$(echo "${{ github.event.pull_request.head.sha }}" | cut -c1-7)
+          BASE_VERSION=$(jq -r '.version' apps/cli/package.json | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+          PREVIEW_VERSION="${BASE_VERSION}-pr${PR_NUMBER}.${COMMIT_SHA}"
+          NPM_TAG="pr${PR_NUMBER}"
+          
+          echo "version=$PREVIEW_VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$NPM_TAG" >> $GITHUB_OUTPUT
+          echo "pr=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "commit=$COMMIT_SHA" >> $GITHUB_OUTPUT
+          
+          echo "Preview version: $PREVIEW_VERSION"
+          echo "NPM tag: $NPM_TAG"
+
+      - name: Update types package version
+        run: |
+          cd packages/types
+          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json
+
+      - name: Build types package
+        run: cd packages/types && bun run build
+
+      - name: Publish types to NPM
+        run: cd packages/types && bun publish --access public --tag ${{ steps.version.outputs.tag }}
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          BTS_TELEMETRY: 0
+
+      - name: Update CLI package version and types dependency
+        run: |
+          cd apps/cli
+          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["@better-t-stack/types"] = $v' package.json > tmp.json && mv tmp.json package.json
+
+      - name: Update create-bts alias package version
+        run: |
+          cd packages/create-bts
+          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["create-better-t-stack"] = $v' package.json > tmp.json && mv tmp.json package.json
+
+      - name: Build CLI
+        run: cd apps/cli && bun run build
+        env:
+          BTS_TELEMETRY: 0
+
+      - name: Publish CLI to NPM
+        run: cd apps/cli && bun publish --access public --tag ${{ steps.version.outputs.tag }}
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          BTS_TELEMETRY: 0
+
+      - name: Publish create-bts to NPM
+        run: cd packages/create-bts && bun publish --access public --tag ${{ steps.version.outputs.tag }}
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          BTS_TELEMETRY: 0
+
+      - name: Find existing preview comment
+        uses: peter-evans/find-comment@v3
+        id: find-comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: "PR Preview Release"
+
+      - name: Create or update PR comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          edit-mode: replace
+          body: |
+            ## PR Preview Release
+
+            A preview version has been published for this PR.
+
+            | Package | Version | NPM Tag |
+            |---------|---------|---------|
+            | `create-better-t-stack` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+            | `create-bts` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+            | `@better-t-stack/types` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+
+            **Commit:** `${{ steps.version.outputs.commit }}`
+
+            ### Install
+
+            ```bash
+            # Using the PR tag (always gets latest for this PR)
+            bunx create-better-t-stack@pr${{ steps.version.outputs.pr }} my-app
+            npx create-better-t-stack@pr${{ steps.version.outputs.pr }} my-app
+
+            # Using exact version
+            bunx create-better-t-stack@${{ steps.version.outputs.version }} my-app
+            npx create-better-t-stack@${{ steps.version.outputs.version }} my-app
+
+            # Using the alias
+            bunx create-bts@pr${{ steps.version.outputs.pr }} my-app
+            npx create-bts@pr${{ steps.version.outputs.pr }} my-app
+            ```
+
+            ### NPM Links
+            - [create-better-t-stack@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/create-better-t-stack/v/${{ steps.version.outputs.version }})
+            - [create-bts@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/create-bts/v/${{ steps.version.outputs.version }})
+            - [@better-t-stack/types@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/@better-t-stack/types/v/${{ steps.version.outputs.version }})
+
+            ---
+            *To publish a new preview after more commits, remove and re-add the `preview` label.*

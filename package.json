@@ -16,6 +16,7 @@
 		"release": "bun run scripts/release.ts",
 		"bump": "bun run scripts/bump-version.ts",
 		"canary": "bun run scripts/canary-release.ts",
+		"cleanup-previews": "bun run scripts/cleanup-previews.ts",
 		"deploy:convex": "turbo run --filter=@better-t-stack/backend deploy",
 		"deploy:web": "bun run --filter=web deploy",
 		"generate": "bun run --filter=web generate-schema",
