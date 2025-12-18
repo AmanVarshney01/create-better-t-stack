@@ -61,29 +61,30 @@ ${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
   }
   const hasUltracite = addons.includes("ultracite");
   const hasBiome = addons.includes("biome");
-  const gitHook = addons.includes("husky")
-    ? "husky"
-    : addons.includes("lefthook")
-      ? "lefthook"
-      : "";
+  const hasHusky = addons.includes("husky");
+  const hasLefthook = addons.includes("lefthook");
   const hasOxlint = addons.includes("oxlint");
 
   if (hasUltracite) {
-    await setupUltracite(config, gitHook);
+    const gitHooks = [];
+    if (hasHusky) gitHooks.push("husky");
+    if (hasLefthook) gitHooks.push("lefthook");
+    await setupUltracite(config, gitHooks.join(","));
   } else {
     if (hasBiome) {
       await setupBiome(projectDir);
     }
-    if (gitHook) {
+    if (hasHusky || hasLefthook) {
       let linter: "biome" | "oxlint" | undefined;
       if (hasOxlint) {
         linter = "oxlint";
       } else if (hasBiome) {
         linter = "biome";
       }
-      if (gitHook === "husky") {
+      if (hasHusky) {
         await setupHusky(projectDir, linter);
-      } else if (gitHook === "lefthook") {
+      }
+      if (hasLefthook) {
         await setupLefthook(projectDir);
       }
     }
@@ -150,9 +151,15 @@ export async function setupHusky(projectDir: string, linter?: "biome" | "oxlint"
   if (await fs.pathExists(packageJsonPath)) {
     const packageJson = await fs.readJson(packageJsonPath);
 
+    // Check if lefthook is also present and update prepare script accordingly
+    const currentPrepare = packageJson.scripts?.prepare;
+    const prepareScript = currentPrepare?.includes("lefthook install")
+      ? `${currentPrepare} && husky`
+      : "husky";
+
     packageJson.scripts = {
       ...packageJson.scripts,
-      prepare: "husky",
+      prepare: prepareScript,
     };
 
     if (linter === "oxlint") {
@@ -183,9 +190,15 @@ export async function setupLefthook(projectDir: string) {
   if (await fs.pathExists(packageJsonPath)) {
     const packageJson = await fs.readJson(packageJsonPath);
 
+    // Check if husky is also present and update prepare script accordingly
+    const currentPrepare = packageJson.scripts?.prepare;
+    const prepareScript = currentPrepare?.includes("husky")
+      ? `lefthook install && ${currentPrepare}`
+      : "lefthook install";
+
     packageJson.scripts = {
       ...packageJson.scripts,
-      prepare: "lefthook install",
+      prepare: prepareScript,
     };
 
     await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
