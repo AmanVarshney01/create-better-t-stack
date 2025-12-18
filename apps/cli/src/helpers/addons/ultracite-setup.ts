@@ -131,7 +131,7 @@ function getFrameworksFromFrontend(frontend: string[]): string[] {
   return Array.from(frameworks);
 }
 
-export async function setupUltracite(config: ProjectConfig, gitHook: string) {
+export async function setupUltracite(config: ProjectConfig, gitHooks: string[]) {
   const { packageManager, projectDir, frontend } = config;
 
   try {
@@ -198,9 +198,9 @@ export async function setupUltracite(config: ProjectConfig, gitHook: string) {
       ultraciteArgs.push("--hooks", ...hooks);
     }
 
-    if (gitHook) {
-      ultraciteArgs.push("--integrations", `${gitHook}`);
-      if (gitHook === "husky") {
+    if (gitHooks.length > 0) {
+      ultraciteArgs.push("--integrations", gitHooks.join(" "));
+      if (gitHooks.includes("husky")) {
         ultraciteArgs.push("lint-staged");
       }
     }

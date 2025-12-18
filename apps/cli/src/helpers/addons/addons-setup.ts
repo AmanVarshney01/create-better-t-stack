@@ -69,7 +69,7 @@ ${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
     const gitHooks = [];
     if (hasHusky) gitHooks.push("husky");
     if (hasLefthook) gitHooks.push("lefthook");
-    await setupUltracite(config, gitHooks.join(","));
+    await setupUltracite(config, gitHooks);
   } else {
     if (hasBiome) {
       await setupBiome(projectDir);
