@@ -2,51 +2,60 @@
   "name": "create-better-t-stack",
   "version": "3.9.0",
   "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
-  "type": "module",
-  "license": "MIT",
-  "author": "Aman Varshney",
-  "bin": {
-    "create-better-t-stack": "dist/cli.mjs"
-  },
-  "files": [
-    "templates",
-    "dist"
-  ],
   "keywords": [
-    "better-t-stack",
-    "typescript",
-    "boilerplate",
-    "starter",
-    "cli",
-    "turborepo",
-    "trpc",
     "better-auth",
-    "monorepo",
+    "better-t-stack",
+    "biome",
+    "boilerplate",
+    "cli",
+    "drizzle",
+    "elysia",
+    "expo",
     "fullstack",
-    "type-safety",
+    "hono",
+    "monorepo",
+    "prisma",
+    "pwa",
     "react",
     "react-native",
-    "expo",
-    "hono",
-    "elysia",
-    "drizzle",
-    "prisma",
-    "tanstack",
-    "tailwind",
     "shadcn",
-    "pwa",
+    "starter",
+    "tailwind",
+    "tanstack",
     "tauri",
-    "biome"
+    "trpc",
+    "turborepo",
+    "type-safety",
+    "typescript"
   ],
+  "homepage": "https://better-t-stack.dev/",
+  "license": "MIT",
+  "author": "Aman Varshney",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/AmanVarshney01/create-better-t-stack.git",
     "directory": "apps/cli"
   },
+  "bin": {
+    "create-better-t-stack": "dist/cli.mjs"
+  },
+  "files": [
+    "dist",
+    "templates"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    },
+    "./cli": {
+      "import": "./dist/cli.mjs"
+    }
+  },
   "publishConfig": {
     "access": "public"
   },
-  "homepage": "https://better-t-stack.dev/",
   "scripts": {
     "build": "tsdown --publint",
     "dev": "tsdown --watch",
@@ -56,15 +65,6 @@
     "test:coverage": "bun run build && bun test --coverage",
     "test:ci": "bun run build && AGENT=1 bun test --bail=5",
     "prepublishOnly": "npm run build"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.mts",
-      "import": "./dist/index.mjs"
-    },
-    "./cli": {
-      "import": "./dist/cli.mjs"
-    }
   },
   "dependencies": {
     "@better-t-stack/types": "workspace:*",

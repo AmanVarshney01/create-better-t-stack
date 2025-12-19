@@ -40,9 +40,11 @@ bun dev
 ```
 
 Now go to anywhere else in your system (maybe like a test folder) and run:
+
 ```bash
 create-better-t-stack
 ```
+
 This will run the locally installed CLI.
 
 ## Develop the Docs
@@ -55,11 +57,13 @@ bun dev:setup  # you can choose local development too in prompts
 ```
 
 Copy the Convex URL from `packages/backend/.env.local` to `apps/web/.env`:
+
 ```
 NEXT_PUBLIC_CONVEX_URL=http://127.0.0.1:3210/
 ```
 
 Now run `bun dev` in the root. It will complain about GitHub token, so run this in `packages/backend`:
+
 ```bash
 npx convex env set GITHUB_ACCESS_TOKEN=xxxxx
 npx convex env set GITHUB_WEBHOOK_SECRET=xxxxx
@@ -116,4 +120,3 @@ Use conventional commit messages with the appropriate scope:
 - Discord: https://discord.gg/ZYsbjpDaM5
 
 See full contributor guide in the repository: `.github/CONTRIBUTING.md`.
-

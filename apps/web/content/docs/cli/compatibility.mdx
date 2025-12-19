@@ -11,13 +11,13 @@ The CLI validates option combinations to ensure generated projects work correctl
 
 ### Required Combinations
 
-| Database | Compatible ORMs | Notes |
-|----------|----------------|-------|
-| `sqlite` | `drizzle`, `prisma` | Lightweight, file-based database |
-| `postgres` | `drizzle`, `prisma` | Advanced relational database |
-| `mysql` | `drizzle`, `prisma` | Traditional relational database |
-| `mongodb` | `mongoose`, `prisma` | Document database, requires specific ORMs |
-| `none` | `none` | No database setup |
+| Database   | Compatible ORMs      | Notes                                     |
+| ---------- | -------------------- | ----------------------------------------- |
+| `sqlite`   | `drizzle`, `prisma`  | Lightweight, file-based database          |
+| `postgres` | `drizzle`, `prisma`  | Advanced relational database              |
+| `mysql`    | `drizzle`, `prisma`  | Traditional relational database           |
+| `mongodb`  | `mongoose`, `prisma` | Document database, requires specific ORMs |
+| `none`     | `none`               | No database setup                         |
 
 ### Restrictions
 
@@ -39,12 +39,12 @@ create-better-t-stack --database mongodb --orm mongoose
 
 Cloudflare Workers has specific compatibility requirements:
 
-| Component | Requirement | Reason |
-|-----------|-------------|--------|
-| Backend | Must be `hono` | Only Hono supports Workers runtime |
-| ORM | Must be `drizzle` or `prisma` | Workers supports Drizzle and Prisma; Mongoose is not supported |
-| Database | Cannot be `mongodb` | MongoDB requires Prisma/Mongoose |
-| Database Setup | Cannot be `docker` | Workers is serverless, no Docker support |
+| Component      | Requirement                   | Reason                                                         |
+| -------------- | ----------------------------- | -------------------------------------------------------------- |
+| Backend        | Must be `hono`                | Only Hono supports Workers runtime                             |
+| ORM            | Must be `drizzle` or `prisma` | Workers supports Drizzle and Prisma; Mongoose is not supported |
+| Database       | Cannot be `mongodb`           | MongoDB requires Prisma/Mongoose                               |
+| Database Setup | Cannot be `docker`            | Workers is serverless, no Docker support                       |
 
 ```bash
 # ❌ Invalid - Workers with Express
@@ -60,6 +60,7 @@ create-better-t-stack --runtime workers --backend hono --database sqlite --orm p
 ### Backend Presets
 
 #### Convex Backend
+
 When using `--backend convex`, the following options are automatically set:
 
 - `--auth clerk` (if compatible frontends selected, otherwise `none`)
@@ -73,6 +74,7 @@ When using `--backend convex`, the following options are automatically set:
 **Note:** Convex supports Clerk authentication with compatible frontends (React frameworks, Next.js, TanStack Start, and native frameworks). Nuxt, Svelte, and Solid are not compatible with Clerk.
 
 #### No Backend
+
 When using `--backend none`, the following options are automatically set:
 
 - `--auth none` (No backend for auth)
@@ -87,16 +89,16 @@ When using `--backend none`, the following options are automatically set:
 
 ### API Framework Support
 
-| Frontend | tRPC Support | oRPC Support | Notes |
-|----------|-------------|-------------|-------|
-| `tanstack-router` | ✅ | ✅ | Full support |
-| `react-router` | ✅ | ✅ | Full support |
-| `tanstack-start` | ✅ | ✅ | Full support |
-| `next` | ✅ | ✅ | Full support |
-| `nuxt` | ❌ | ✅ | tRPC not supported |
-| `svelte` | ❌ | ✅ | tRPC not supported |
-| `solid` | ❌ | ✅ | tRPC not supported |
-| Native frameworks | ✅ | ✅ | Full support |
+| Frontend          | tRPC Support | oRPC Support | Notes              |
+| ----------------- | ------------ | ------------ | ------------------ |
+| `tanstack-router` | ✅           | ✅           | Full support       |
+| `react-router`    | ✅           | ✅           | Full support       |
+| `tanstack-start`  | ✅           | ✅           | Full support       |
+| `next`            | ✅           | ✅           | Full support       |
+| `nuxt`            | ❌           | ✅           | tRPC not supported |
+| `svelte`          | ❌           | ✅           | tRPC not supported |
+| `solid`           | ❌           | ✅           | tRPC not supported |
+| Native frameworks | ✅           | ✅           | Full support       |
 
 ```bash
 # ❌ Invalid - Nuxt with tRPC
@@ -109,7 +111,7 @@ create-better-t-stack --frontend nuxt --api orpc
 ### Frontend Restrictions
 
 - **Multiple Web Frontends**: ❌ Only one web framework allowed
-- **Multiple Native Frontends**: ❌ Only one native framework allowed  
+- **Multiple Native Frontends**: ❌ Only one native framework allowed
 - **Web + Native**: ✅ One web and one native framework allowed
 
 ```bash
@@ -124,59 +126,70 @@ create-better-t-stack --frontend next native-nativewind
 
 ### Provider Requirements
 
-| Setup Provider | Required Database | Notes |
-|---------------|------------------|-------|
-| `turso` | `sqlite` | Distributed SQLite; works with Drizzle and Prisma |
-| `d1` | `sqlite` | Cloudflare D1 (requires Workers runtime); works with Drizzle and Prisma |
-| `neon` | `postgres` | Serverless PostgreSQL |
-| `supabase` | `postgres` | PostgreSQL with additional features |
-| `prisma-postgres` | `postgres` | Managed PostgreSQL via Prisma |
-| `mongodb-atlas` | `mongodb` | Managed MongoDB |
-| `docker` | `postgres`, `mysql`, `mongodb` | Not compatible with `sqlite` or Workers |
+| Setup Provider    | Required Database              | Notes                                                                   |
+| ----------------- | ------------------------------ | ----------------------------------------------------------------------- |
+| `turso`           | `sqlite`                       | Distributed SQLite; works with Drizzle and Prisma                       |
+| `d1`              | `sqlite`                       | Cloudflare D1 (requires Workers runtime); works with Drizzle and Prisma |
+| `neon`            | `postgres`                     | Serverless PostgreSQL                                                   |
+| `supabase`        | `postgres`                     | PostgreSQL with additional features                                     |
+| `prisma-postgres` | `postgres`                     | Managed PostgreSQL via Prisma                                           |
+| `mongodb-atlas`   | `mongodb`                      | Managed MongoDB                                                         |
+| `docker`          | `postgres`, `mysql`, `mongodb` | Not compatible with `sqlite` or Workers                                 |
 
 ### Special Cases
 
 #### Cloudflare D1
+
 - Requires `--database sqlite`
 - Requires `--runtime workers`
 - Requires `--backend hono`
 
 #### Docker Setup
+
 - Cannot be used with `sqlite` (file-based database)
 - Cannot be used with `workers` runtime (serverless environment)
 
 ## Addon Compatibility
 
 ### PWA Support
+
 - Requires web frontend
 - Compatible frontends: `tanstack-router`, `react-router`, `next`, `solid`
 - Not compatible with native-only projects
 
 ### Tauri (Desktop Apps)
+
 - Requires web frontend
 - Compatible frontends: `tanstack-router`, `react-router`, `nuxt`, `svelte`, `solid`, `next`
 - Cannot be combined with native frameworks
 
 ### Web Deployment
+
 - `--web-deploy wrangler` requires a web frontend
 - Cannot be used with native-only projects
 
 ## Authentication Requirements
 
 ### Better-Auth Requirements
+
 Better-Auth authentication requires:
+
 - A backend framework (cannot be `none`)
 - With database: Requires an ORM
 - Without database: Works with Convex backend or custom configuration
 
 ### Clerk Requirements
+
 Clerk authentication requires:
+
 - Convex backend (`--backend convex`)
 - Compatible frontends (React frameworks, Next.js, TanStack Start, native frameworks)
 - Not compatible with Nuxt, Svelte, or Solid
 
 ### Payments Requirements
+
 Polar payments require:
+
 - Better-Auth authentication
 
 ```bash
@@ -196,34 +209,40 @@ create-better-t-stack --auth clerk --backend hono
 ## Example Compatibility
 
 ### Todo Example
+
 - Requires a database when backend is present (except Convex)
 - Cannot be used with `--backend none` and `--database none`
 
-### AI Example  
+### AI Example
+
 - Not compatible with `--backend elysia`
 - Not compatible with `--frontend solid`
 
 ## Common Error Messages
 
 ### "Mongoose ORM requires MongoDB database"
+
 ```bash
 # Fix by using MongoDB
 create-better-t-stack --database mongodb --orm mongoose
 ```
 
 ### "Cloudflare Workers runtime is only supported with Hono backend"
+
 ```bash
 # Fix by using Hono
 create-better-t-stack --runtime workers --backend hono
 ```
 
 ### "Cannot select multiple web frameworks"
+
 ```bash
 # Fix by choosing one web framework
 create-better-t-stack --frontend tanstack-router
 ```
 
 ### "Polar payments requires Better Auth"
+
 ```bash
 # Fix by using Better-Auth
 create-better-t-stack --payments polar --auth better-auth

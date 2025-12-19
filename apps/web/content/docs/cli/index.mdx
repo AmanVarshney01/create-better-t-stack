@@ -175,14 +175,15 @@ for (const { name, config } of projects) {
     ...config,
     directoryConflict: "increment"
   });
-  
+
   console.log(result.success ? `✅ ${name}` : `❌ ${name}: ${result.error}`);
 }
 ```
 
 This is useful for:
+
 - **Build tools and generators** - Create projects from templates
-- **CI/CD pipelines** - Generate test projects automatically  
+- **CI/CD pipelines** - Generate test projects automatically
 - **Development workflows** - Batch create related projects
 - **Custom tooling** - Integrate with your existing development setup
 
