@@ -18,14 +18,14 @@ export default function UserMenu() {
 
     return (
         <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger>
                 <Button variant="outline">{user?.name}</Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-card">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>{user?.email}</DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                <DropdownMenuItem>
                     <Button
                         variant="destructive"
                         className="w-full"
