@@ -84,7 +84,7 @@ export const dependencyVersionMap = {
 
   "@biomejs/biome": "^2.2.0",
 
-  oxlint: "^1.32.0",
+  oxlint: "^1.34.0",
   oxfmt: "^0.19.0",
 
   husky: "^9.1.7",
