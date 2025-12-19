@@ -21,7 +21,7 @@ export default async function HomePage() {
   const tweets = fetchedTweets.map((t) => ({ tweetId: t.tweetId }));
 
   return (
-    <main className="container mx-auto mx-auto min-h-svh">
+    <main className="container mx-auto min-h-svh">
       <div className="mx-auto flex flex-col gap-8 px-4 pt-12">
         <HeroSection />
         <CommandSection />
