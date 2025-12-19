@@ -2,18 +2,9 @@ import path from "node:path";
 import { format, type FormatOptions } from "oxfmt";
 
 const formatOptions: FormatOptions = {
-  useTabs: true,
-  tabWidth: 2,
-  printWidth: 80,
-  semi: true,
-  singleQuote: false,
-  trailingComma: "all",
-  bracketSpacing: true,
   experimentalSortPackageJson: true,
   experimentalSortImports: {
     order: "asc",
-    ignoreCase: true,
-    newlinesBetween: true,
   },
 };
 
