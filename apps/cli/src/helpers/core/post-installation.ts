@@ -26,7 +26,8 @@ export async function displayPostInstallInstructions(
   const runCmd =
     packageManager === "npm" ? "npm run" : packageManager === "pnpm" ? "pnpm run" : "bun run";
   const cdCmd = `cd ${relativePath}`;
-  const hasHuskyOrBiome = addons?.includes("husky") || addons?.includes("biome");
+  const hasHusky = addons?.includes("husky");
+  const hasLinting = addons?.includes("biome") || addons?.includes("oxc");
 
   const databaseInstructions =
     !isConvex && database !== "none"
@@ -42,7 +43,8 @@ export async function displayPostInstallInstructions(
       : "";
 
   const tauriInstructions = addons?.includes("tauri") ? getTauriInstructions(runCmd) : "";
-  const lintingInstructions = hasHuskyOrBiome ? getLintingInstructions(runCmd) : "";
+  const huskyInstructions = hasHusky ? getHuskyInstructions(runCmd) : "";
+  const lintingInstructions = hasLinting ? getLintingInstructions(runCmd) : "";
   const nativeInstructions =
     (frontend?.includes("native-bare") ||
       frontend?.includes("native-uniwind") ||
@@ -173,6 +175,7 @@ export async function displayPostInstallInstructions(
   if (nativeInstructions) output += `\n${nativeInstructions.trim()}\n`;
   if (databaseInstructions) output += `\n${databaseInstructions.trim()}\n`;
   if (tauriInstructions) output += `\n${tauriInstructions.trim()}\n`;
+  if (huskyInstructions) output += `\n${huskyInstructions.trim()}\n`;
   if (lintingInstructions) output += `\n${lintingInstructions.trim()}\n`;
   if (pwaInstructions) output += `\n${pwaInstructions.trim()}\n`;
   if (alchemyDeployInstructions) output += `\n${alchemyDeployInstructions.trim()}\n`;
@@ -214,6 +217,12 @@ function getNativeInstructions(isConvex: boolean, isBackendSelf: boolean, _front
   }
 
   return instructions;
+}
+
+function getHuskyInstructions(runCmd?: string) {
+  return `${pc.bold("Git hooks with Husky:")}\n${pc.cyan(
+    "•",
+  )} Initialize hooks: ${`${runCmd} prepare`}\n`;
 }
 
 function getLintingInstructions(runCmd?: string) {

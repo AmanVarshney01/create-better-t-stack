@@ -459,6 +459,8 @@ function generateFeaturesList(
       addonsList.push("- **Tauri** - Build native desktop applications");
     } else if (addon === "biome") {
       addonsList.push("- **Biome** - Linting and formatting");
+    } else if (addon === "oxc") {
+      addonsList.push("- **Oxc** - Oxlint + Oxfmt (linting & formatting)");
     } else if (addon === "husky") {
       addonsList.push("- **Husky** - Git hooks for code quality");
     } else if (addon === "starlight") {
@@ -606,6 +608,11 @@ function generateScriptsList(
   if (addons.includes("biome")) {
     scripts += `
 - \`${packageManagerRunCmd} check\`: Run Biome formatting and linting`;
+  }
+
+  if (addons.includes("oxc")) {
+    scripts += `
+- \`${packageManagerRunCmd} check\`: Run Oxlint and Oxfmt`;
   }
 
   if (addons.includes("pwa")) {

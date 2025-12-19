@@ -31,9 +31,9 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "Biome";
       hint = "Format, lint, and more";
       break;
-    case "oxlint":
-      label = "Oxlint";
-      hint = "Rust-powered linter";
+    case "oxc":
+      label = "Oxc";
+      hint = "Oxlint + Oxfmt (linting & formatting)";
       break;
     case "ultracite":
       label = "Ultracite";
@@ -65,7 +65,7 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 
 const ADDON_GROUPS = {
   Documentation: ["starlight", "fumadocs"],
-  Linting: ["biome", "oxlint", "ultracite"],
+  Linting: ["biome", "oxc", "ultracite"],
   Other: ["ruler", "turborepo", "pwa", "tauri", "husky"],
 };
 

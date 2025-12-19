@@ -77,7 +77,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         auth: "better-auth",
         api: "orpc",
         frontend: ["svelte"],
-        addons: ["turborepo", "oxlint"],
+        addons: ["turborepo", "oxc"],
         examples: ["todo"], // Todo works with Svelte
         dbSetup: "none",
         webDeploy: "none",

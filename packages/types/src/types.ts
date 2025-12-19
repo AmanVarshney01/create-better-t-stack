@@ -51,7 +51,6 @@ export type ProjectConfig = z.infer<typeof ProjectConfigSchema>;
 export type BetterTStackConfig = z.infer<typeof BetterTStackConfigSchema>;
 export type InitResult = z.infer<typeof InitResultSchema>;
 
-// Web frontend specific types (for filtering)
 export type WebFrontend = Extract<
   Frontend,
   | "tanstack-router"
@@ -69,7 +68,6 @@ export type NativeFrontend = Extract<
   "native-bare" | "native-uniwind" | "native-unistyles" | "none"
 >;
 
-// Tech category type for web UI
 export type TechCategory =
   | "api"
   | "webFrontend"

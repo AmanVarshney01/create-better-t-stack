@@ -83,7 +83,9 @@ export const dependencyVersionMap = {
   "@tauri-apps/cli": "^2.4.0",
 
   "@biomejs/biome": "^2.2.0",
+
   oxlint: "^1.32.0",
+  oxfmt: "^0.19.0",
 
   husky: "^9.1.7",
   "lint-staged": "^16.1.2",
@@ -182,7 +184,7 @@ export const ADDON_COMPATIBILITY = {
   starlight: [],
   ultracite: [],
   ruler: [],
-  oxlint: [],
+  oxc: [],
   fumadocs: [],
   none: [],
 } as const;
