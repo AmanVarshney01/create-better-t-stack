@@ -109,7 +109,7 @@ export function generateStackCommand(stack: StackState) {
                 "turborepo",
                 "ultracite",
                 "fumadocs",
-                "oxc",
+                "oxlint",
                 "ruler",
               ].includes(addon),
             )

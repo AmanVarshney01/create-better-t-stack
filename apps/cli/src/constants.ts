@@ -184,7 +184,7 @@ export const ADDON_COMPATIBILITY = {
   starlight: [],
   ultracite: [],
   ruler: [],
-  oxc: [],
+  oxlint: [],
   fumadocs: [],
   none: [],
 } as const;

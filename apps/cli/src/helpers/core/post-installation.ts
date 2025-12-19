@@ -27,7 +27,7 @@ export async function displayPostInstallInstructions(
     packageManager === "npm" ? "npm run" : packageManager === "pnpm" ? "pnpm run" : "bun run";
   const cdCmd = `cd ${relativePath}`;
   const hasHusky = addons?.includes("husky");
-  const hasLinting = addons?.includes("biome") || addons?.includes("oxc");
+  const hasLinting = addons?.includes("biome") || addons?.includes("oxlint");
 
   const databaseInstructions =
     !isConvex && database !== "none"

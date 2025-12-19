@@ -1,13 +1,11 @@
 import path from "node:path";
-import { log, spinner } from "@clack/prompts";
-import { execa } from "execa";
+import { log } from "@clack/prompts";
 import fs from "fs-extra";
 import pc from "picocolors";
-import type { Frontend, PackageManager, ProjectConfig } from "../../types";
+import type { Frontend, ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
-import { getPackageExecutionCommand } from "../../utils/package-runner";
 import { setupFumadocs } from "./fumadocs-setup";
-import { setupOxc } from "./oxc-setup";
+import { setupOxlint } from "./oxlint-setup";
 import { setupRuler } from "./ruler-setup";
 import { setupStarlight } from "./starlight-setup";
 import { setupTauri } from "./tauri-setup";
@@ -60,7 +58,7 @@ ${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
   const hasUltracite = addons.includes("ultracite");
   const hasBiome = addons.includes("biome");
   const hasHusky = addons.includes("husky");
-  const hasOxc = addons.includes("oxc");
+  const hasOxlint = addons.includes("oxlint");
 
   if (hasUltracite) {
     await setupUltracite(config, hasHusky);
@@ -69,9 +67,9 @@ ${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
       await setupBiome(projectDir);
     }
     if (hasHusky) {
-      let linter: "biome" | "oxc" | undefined;
-      if (hasOxc) {
-        linter = "oxc";
+      let linter: "biome" | "oxlint" | undefined;
+      if (hasOxlint) {
+        linter = "oxlint";
       } else if (hasBiome) {
         linter = "biome";
       }
@@ -79,8 +77,8 @@ ${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
     }
   }
 
-  if (hasOxc) {
-    await setupOxc(projectDir, packageManager);
+  if (hasOxlint) {
+    await setupOxlint(projectDir, packageManager);
   }
   if (addons.includes("starlight")) {
     await setupStarlight(config);
@@ -124,7 +122,7 @@ export async function setupBiome(projectDir: string) {
   }
 }
 
-export async function setupHusky(projectDir: string, linter?: "biome" | "oxc") {
+export async function setupHusky(projectDir: string, linter?: "biome" | "oxlint") {
   await addPackageDependency({
     devDependencies: ["husky", "lint-staged"],
     projectDir,
@@ -139,7 +137,7 @@ export async function setupHusky(projectDir: string, linter?: "biome" | "oxc") {
       prepare: "husky",
     };
 
-    if (linter === "oxc") {
+    if (linter === "oxlint") {
       packageJson["lint-staged"] = {
         "*": ["oxlint", "oxfmt --write"],
       };

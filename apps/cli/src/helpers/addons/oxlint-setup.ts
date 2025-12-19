@@ -6,7 +6,7 @@ import type { PackageManager } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
 
-export async function setupOxc(projectDir: string, packageManager: PackageManager) {
+export async function setupOxlint(projectDir: string, packageManager: PackageManager) {
   await addPackageDependency({
     devDependencies: ["oxlint", "oxfmt"],
     projectDir,

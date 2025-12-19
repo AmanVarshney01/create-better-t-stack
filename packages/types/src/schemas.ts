@@ -41,7 +41,7 @@ export const AddonsSchema = z
     "turborepo",
     "fumadocs",
     "ultracite",
-    "oxc",
+    "oxlint",
     "none",
   ])
   .describe("Additional addons");
