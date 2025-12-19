@@ -1,14 +1,11 @@
 name: Test
 
 on:
-  push:
-    branches:
-      - main
   pull_request:
     types: [opened, synchronize, reopened]
 
 concurrency:
-  group: test-${{ github.head_ref || github.ref }}
+  group: test-${{ github.head_ref }}
   cancel-in-progress: true
 
 jobs:
@@ -19,8 +16,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup Git user
         run: |

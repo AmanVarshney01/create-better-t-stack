@@ -1,6 +1,6 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { select, text } from "@clack/prompts";
+import { confirm, select, text } from "@clack/prompts";
 import { $ } from "bun";
 
 const CLI_PACKAGE_JSON_PATH = join(process.cwd(), "apps/cli/package.json");
@@ -74,6 +74,25 @@ async function main(): Promise<void> {
     return;
   }
 
+  // Check for uncommitted changes
+  const statusResult = await $`git status --porcelain`.text();
+  if (statusResult.trim()) {
+    console.error("❌ You have uncommitted changes. Please commit or stash them first.");
+    process.exit(1);
+  }
+
+  // Create release branch
+  const branchName = `release/v${newVersion}`;
+  console.log(`\n📦 Creating release branch: ${branchName}`);
+
+  // Make sure we're on main and up to date
+  await $`git checkout main`;
+  await $`git pull origin main`;
+
+  // Create and checkout the release branch
+  await $`git checkout -b ${branchName}`;
+
+  // Update package versions
   packageJson.version = newVersion;
   await writeFile(CLI_PACKAGE_JSON_PATH, `${JSON.stringify(packageJson, null, 2)}\n`);
 
@@ -93,7 +112,51 @@ async function main(): Promise<void> {
   await $`git add apps/cli/package.json packages/create-bts/package.json packages/types/package.json bun.lock`;
   await $`git commit -m "chore(release): ${newVersion}"`;
 
-  console.log(`✅ Released v${newVersion} for all packages`);
+  // Push the release branch
+  console.log(`\n🚀 Pushing release branch...`);
+  await $`git push -u origin ${branchName}`;
+
+  // Create PR using GitHub CLI
+  console.log(`\n📝 Creating pull request...`);
+  const prTitle = `chore(release): ${newVersion}`;
+  const prBody = `## Release v${newVersion}
+
+This PR bumps the version to \`${newVersion}\`.
+
+### Changes
+- Updated \`create-better-t-stack\` to v${newVersion}
+- Updated \`create-bts\` to v${newVersion}
+- Updated \`@better-t-stack/types\` to v${newVersion}
+
+---
+*This PR was automatically created by \`bun run bump\`*`;
+
+  await $`gh pr create --title ${prTitle} --body ${prBody} --base main --head ${branchName}`;
+
+  // Ask if user wants to enable auto-merge
+  const shouldAutoMerge = await confirm({
+    message: "Enable auto-merge? (PR will merge automatically when tests pass)",
+    initialValue: true,
+  });
+
+  if (shouldAutoMerge) {
+    console.log(`\n🔄 Enabling auto-merge...`);
+    await $`gh pr merge ${branchName} --auto --squash --delete-branch`;
+    console.log(`✅ Auto-merge enabled. PR will merge automatically when tests pass.`);
+  }
+
+  console.log(`\n✅ Release PR created for v${newVersion}`);
+  console.log(`\n📋 Next steps:`);
+  console.log(`   1. Wait for the "Test Suite" check to pass`);
+  if (!shouldAutoMerge) {
+    console.log(`   2. Merge the PR manually`);
+  }
+  console.log(
+    `   ${shouldAutoMerge ? "2" : "3"}. The release workflow will automatically publish to NPM`,
+  );
+
+  // Switch back to main
+  await $`git checkout main`;
 }
 
 main().catch(console.error);

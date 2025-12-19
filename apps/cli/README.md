@@ -90,7 +90,7 @@ You can disable telemetry by setting the `BTS_TELEMETRY_DISABLED` environment va
 
 ```bash
 # Disable telemetry for a single run
-BTS_TELEMETRY_DISABLED=1 npx create-better-t-stack my-app
+BTS_TELEMETRY_DISABLED=1 npx create-better-t-stack
 
 # Disable telemetry globally in your shell profile (.bashrc, .zshrc, etc.)
 export BTS_TELEMETRY_DISABLED=1
@@ -101,85 +101,85 @@ export BTS_TELEMETRY_DISABLED=1
 Create a project with default configuration:
 
 ```bash
-npx create-better-t-stack my-app --yes
+npx create-better-t-stack --yes
 ```
 
 Create a project with specific options:
 
 ```bash
-npx create-better-t-stack my-app --database postgres --orm drizzle --auth --addons pwa biome
+npx create-better-t-stack --database postgres --orm drizzle --auth --addons pwa biome
 ```
 
 Create a project with Elysia backend and Node.js runtime:
 
 ```bash
-npx create-better-t-stack my-app --backend elysia --runtime node
+npx create-better-t-stack --backend elysia --runtime node
 ```
 
 Create a project with multiple frontend options (one web + one native):
 
 ```bash
-npx create-better-t-stack my-app --frontend tanstack-router native-bare
+npx create-better-t-stack --frontend tanstack-router native-bare
 ```
 
 Create a project with examples:
 
 ```bash
-npx create-better-t-stack my-app --examples todo ai
+npx create-better-t-stack --examples todo ai
 ```
 
 Create a project with Turso database setup:
 
 ```bash
-npx create-better-t-stack my-app --database sqlite --orm drizzle --db-setup turso
+npx create-better-t-stack --database sqlite --orm drizzle --db-setup turso
 ```
 
 Create a project with Supabase PostgreSQL setup:
 
 ```bash
-npx create-better-t-stack my-app --database postgres --orm drizzle --db-setup supabase --auth
+npx create-better-t-stack --database postgres --orm drizzle --db-setup supabase --auth
 ```
 
 Create a project with Convex backend:
 
 ```bash
-npx create-better-t-stack my-app --backend convex --frontend tanstack-router
+npx create-better-t-stack --backend convex --frontend tanstack-router
 ```
 
 Create a project with documentation site:
 
 ```bash
-npx create-better-t-stack my-app --addons starlight
+npx create-better-t-stack --addons starlight
 ```
 
 Create a minimal TypeScript project with no backend:
 
 ```bash
-npx create-better-t-stack my-app --backend none --frontend tanstack-router
+npx create-better-t-stack --backend none --frontend tanstack-router
 ```
 
 Create a backend-only project with no frontend:
 
 ```bash
-npx create-better-t-stack my-app --frontend none --backend hono --database postgres --orm drizzle
+npx create-better-t-stack --frontend none --backend hono --database postgres --orm drizzle
 ```
 
 Create a simple frontend-only project:
 
 ```bash
-npx create-better-t-stack my-app --backend none --frontend next --addons none --examples none
+npx create-better-t-stack --backend none --frontend next --addons none --examples none
 ```
 
 Create a Cloudflare Workers project:
 
 ```bash
-npx create-better-t-stack my-app --backend hono --runtime workers --database sqlite --orm drizzle --db-setup d1
+npx create-better-t-stack --backend hono --runtime workers --database sqlite --orm drizzle --db-setup d1
 ```
 
 Create a minimal API-only project:
 
 ```bash
-npx create-better-t-stack my-app --frontend none --backend hono --api trpc --database none --addons none
+npx create-better-t-stack --frontend none --backend hono --api trpc --database none --addons none
 ```
 
 ## Compatibility Notes

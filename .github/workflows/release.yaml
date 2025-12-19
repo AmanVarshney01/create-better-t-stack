@@ -15,45 +15,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  test:
-    name: Test Suite
-    runs-on: ubuntu-latest
-    if: startsWith(github.event.head_commit.message, 'chore(release):')
-    timeout-minutes: 15
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Git user
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install Dependencies
-        run: bun install --frozen-lockfile
-        env:
-          BTS_TELEMETRY: 0
-
-      - name: Build Types
-        run: cd packages/types && bun run build
-
-      - name: Build and Test CLI
-        working-directory: apps/cli
-        run: bun run build && bun run test:ci
-        env:
-          AGENT: 1
-          BTS_TELEMETRY: 0
-
   release:
     name: Release to NPM
-    needs: test
+    if: startsWith(github.event.head_commit.message, 'chore(release):')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -65,7 +29,7 @@ jobs:
       - name: Extract version from commit message
         id: version
         run: |
-          VERSION=$(echo "${{ github.event.head_commit.message }}" | sed -E 's/^chore\(release\): //')
+          VERSION=$(echo "${{ github.event.head_commit.message }}" | sed -E 's/^chore\(release\): ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Releasing version: $VERSION"
 

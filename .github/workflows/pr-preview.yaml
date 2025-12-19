@@ -124,16 +124,16 @@ jobs:
 
             ```bash
             # Using the PR tag (always gets latest for this PR)
-            bunx create-better-t-stack@pr${{ steps.version.outputs.pr }} my-app
-            npx create-better-t-stack@pr${{ steps.version.outputs.pr }} my-app
+            bunx create-better-t-stack@pr${{ steps.version.outputs.pr }}
+            npx create-better-t-stack@pr${{ steps.version.outputs.pr }}
 
             # Using exact version
-            bunx create-better-t-stack@${{ steps.version.outputs.version }} my-app
-            npx create-better-t-stack@${{ steps.version.outputs.version }} my-app
+            bunx create-better-t-stack@${{ steps.version.outputs.version }}
+            npx create-better-t-stack@${{ steps.version.outputs.version }}
 
             # Using the alias
-            bunx create-bts@pr${{ steps.version.outputs.pr }} my-app
-            npx create-bts@pr${{ steps.version.outputs.pr }} my-app
+            bunx create-bts@pr${{ steps.version.outputs.pr }}
+            npx create-bts@pr${{ steps.version.outputs.pr }}
             ```
 
             ### NPM Links

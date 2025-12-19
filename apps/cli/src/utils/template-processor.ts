@@ -3,7 +3,7 @@ import consola from "consola";
 import fs from "fs-extra";
 import handlebars from "handlebars";
 import type { ProjectConfig } from "../types";
-import { formatFileWithBiome } from "./biome-formatter";
+import { formatFile } from "./file-formatter";
 
 const BINARY_EXTENSIONS = new Set([".png", ".ico", ".svg"]);
 
@@ -32,7 +32,7 @@ export async function processTemplate(srcPath: string, destPath: string, context
     }
 
     try {
-      const formattedContent = await formatFileWithBiome(destPath, content);
+      const formattedContent = await formatFile(destPath, content);
       if (formattedContent) {
         content = formattedContent;
       }

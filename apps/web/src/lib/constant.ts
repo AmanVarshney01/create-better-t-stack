@@ -530,8 +530,8 @@ export const TECH_OPTIONS: Record<
     {
       id: "oxlint",
       name: "Oxlint",
-      description: "Rust-powered linter",
-      icon: "",
+      description: "Oxlint + Oxfmt (linting & formatting)",
+      icon: `${ICON_BASE_URL}/oxc.svg`,
       color: "from-orange-500 to-orange-700",
       default: false,
     },

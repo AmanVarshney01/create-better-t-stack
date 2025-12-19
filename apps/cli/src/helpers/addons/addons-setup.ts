@@ -1,12 +1,11 @@
 import path from "node:path";
-import { log, spinner } from "@clack/prompts";
-import { execa } from "execa";
+import { log } from "@clack/prompts";
 import fs from "fs-extra";
 import pc from "picocolors";
-import type { Frontend, PackageManager, ProjectConfig } from "../../types";
+import type { Frontend, ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
-import { getPackageExecutionCommand } from "../../utils/package-runner";
 import { setupFumadocs } from "./fumadocs-setup";
+import { setupOxlint } from "./oxlint-setup";
 import { setupRuler } from "./ruler-setup";
 import { setupStarlight } from "./starlight-setup";
 import { setupTauri } from "./tauri-setup";
@@ -78,7 +77,7 @@ ${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
     }
   }
 
-  if (addons.includes("oxlint")) {
+  if (hasOxlint) {
     await setupOxlint(projectDir, packageManager);
   }
   if (addons.includes("starlight")) {
@@ -140,7 +139,7 @@ export async function setupHusky(projectDir: string, linter?: "biome" | "oxlint"
 
     if (linter === "oxlint") {
       packageJson["lint-staged"] = {
-        "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx,vue,astro,svelte}": "oxlint",
+        "*": ["oxlint", "oxfmt --write"],
       };
     } else if (linter === "biome") {
       packageJson["lint-staged"] = {
@@ -191,36 +190,4 @@ async function setupPwa(projectDir: string, frontends: Frontend[]) {
   if (await fs.pathExists(viteConfigTs)) {
     await addPwaToViteConfig(viteConfigTs, path.basename(projectDir));
   }
-}
-
-async function setupOxlint(projectDir: string, packageManager: PackageManager) {
-  await addPackageDependency({
-    devDependencies: ["oxlint"],
-    projectDir,
-  });
-
-  const packageJsonPath = path.join(projectDir, "package.json");
-  if (await fs.pathExists(packageJsonPath)) {
-    const packageJson = await fs.readJson(packageJsonPath);
-
-    packageJson.scripts = {
-      ...packageJson.scripts,
-      check: "oxlint",
-    };
-
-    await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
-  }
-
-  const oxlintInitCommand = getPackageExecutionCommand(packageManager, "oxlint@latest --init");
-
-  const s = spinner();
-  s.start("Initializing oxlint...");
-
-  await execa(oxlintInitCommand, {
-    cwd: projectDir,
-    env: { CI: "true" },
-    shell: true,
-  });
-
-  s.stop("oxlint initialized successfully!");
 }

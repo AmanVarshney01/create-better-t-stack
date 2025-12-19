@@ -33,7 +33,7 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       break;
     case "oxlint":
       label = "Oxlint";
-      hint = "Rust-powered linter";
+      hint = "Oxlint + Oxfmt (linting & formatting)";
       break;
     case "ultracite":
       label = "Ultracite";

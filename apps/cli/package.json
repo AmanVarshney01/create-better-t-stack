@@ -1,6 +1,6 @@
 {
   "name": "create-better-t-stack",
-  "version": "3.8.3",
+  "version": "3.9.0",
   "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
   "type": "module",
   "license": "MIT",
@@ -68,8 +68,6 @@
   },
   "dependencies": {
     "@better-t-stack/types": "workspace:*",
-    "@biomejs/js-api": "^4.0.0",
-    "@biomejs/wasm-nodejs": "^2.3.8",
     "@clack/prompts": "^1.0.0-alpha.8",
     "@orpc/server": "^1.12.2",
     "consola": "^3.4.2",
@@ -78,6 +76,7 @@
     "gradient-string": "^3.0.0",
     "handlebars": "^4.7.8",
     "jsonc-parser": "^3.3.1",
+    "oxfmt": "^0.19.0",
     "picocolors": "^1.1.1",
     "tinyglobby": "^0.2.15",
     "trpc-cli": "^0.12.1",
