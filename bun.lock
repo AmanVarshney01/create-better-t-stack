@@ -26,8 +26,6 @@
       },
       "dependencies": {
         "@better-t-stack/types": "workspace:*",
-        "@biomejs/js-api": "^4.0.0",
-        "@biomejs/wasm-nodejs": "^2.3.8",
         "@clack/prompts": "^1.0.0-alpha.8",
         "@orpc/server": "^1.12.2",
         "consola": "^3.4.2",
@@ -192,10 +190,6 @@
     "@better-t-stack/backend": ["@better-t-stack/backend@workspace:packages/backend"],
 
     "@better-t-stack/types": ["@better-t-stack/types@workspace:packages/types"],
-
-    "@biomejs/js-api": ["@biomejs/js-api@4.0.0", "", { "peerDependencies": { "@biomejs/wasm-bundler": "^2.3.0", "@biomejs/wasm-nodejs": "^2.3.0", "@biomejs/wasm-web": "^2.3.0" }, "optionalPeers": ["@biomejs/wasm-bundler", "@biomejs/wasm-nodejs", "@biomejs/wasm-web"] }, "sha512-EOArR/6drRzM1/hwOIz1pZw90FL31Ud4Y7hEHGWVtMNmAwS9SrwZ8hMENGlLVXCeGW/kL46p8kX7eO6x9Nmezg=="],
-
-    "@biomejs/wasm-nodejs": ["@biomejs/wasm-nodejs@2.3.8", "", {}, "sha512-c5tuzrW34cRipmrChxX9hboJIkOurjrK7o1GF4pOOuNEQ5UExSpmnEek2FH0mbdp6+TikUcT0XAquQnbFNQ9Eg=="],
 
     "@clack/core": ["@clack/core@0.5.0", "", { "dependencies": { "picocolors": "^1.0.0", "sisteransi": "^1.0.5" } }, "sha512-p3y0FIOwaYRUPRcMO7+dlmLh8PSRcrjuTndsiA0WAFbWES0mLZlrjVoBRZ9DzkPFJZG6KGkJmoEAY0ZcVWTkow=="],
 
