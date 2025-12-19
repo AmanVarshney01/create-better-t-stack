@@ -13,6 +13,7 @@ import { DataModel } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { betterAuth } from "better-auth";
 import { v } from "convex/values";
+import authConfig from "./auth.config";
 
 {{#if (or (includes frontend "tanstack-start") (includes frontend "next") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
 const siteUrl = process.env.SITE_URL!;
@@ -23,14 +24,8 @@ const nativeAppUrl = process.env.NATIVE_APP_URL || "mybettertapp://";
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
-function createAuth(
-  ctx: GenericCtx<DataModel>,
-  { optionsOnly }: { optionsOnly?: boolean } = { optionsOnly: false }
-) {
+function createAuth(ctx: GenericCtx<DataModel>) {
   return betterAuth({
-    logger: {
-      disabled: optionsOnly,
-    },
     {{#if (and (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")) (or (includes frontend "tanstack-start") (includes frontend "next")))}}
     baseURL: siteUrl,
     trustedOrigins: [siteUrl, nativeAppUrl],
@@ -54,7 +49,10 @@ function createAuth(
       {{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
       crossDomain({ siteUrl }),
       {{/if}}
-      convex(),
+      convex({
+        authConfig,
+        jwksRotateOnTokenGenerationError: true,
+      }),
     ],
   });
 }

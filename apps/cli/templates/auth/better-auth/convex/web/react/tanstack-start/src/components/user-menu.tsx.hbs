@@ -7,13 +7,11 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
-import { useNavigate } from "@tanstack/react-router";
 import { Button } from "./ui/button";
 import { useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 
 export default function UserMenu() {
-    const navigate = useNavigate();
     const user = useQuery(api.auth.getCurrentUser)
 
     return (
@@ -33,9 +31,7 @@ export default function UserMenu() {
                             authClient.signOut({
                                 fetchOptions: {
                                     onSuccess: () => {
-                                        navigate({
-                                            to: "/dashboard",
-                                        });
+                                        location.reload();
                                     },
                                 },
                             });
