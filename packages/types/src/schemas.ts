@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-// Base enum schemas
 export const DatabaseSchema = z
   .enum(["none", "sqlite", "postgres", "mysql", "mongodb"])
   .describe("Database type");
@@ -103,7 +102,6 @@ export const ProjectNameSchema = z
   .refine((name) => name.toLowerCase() !== "node_modules", "Project name is reserved")
   .describe("Project name or path");
 
-// Composite schemas
 export const CreateInputSchema = z.object({
   projectName: z.string().optional(),
   template: TemplateSchema.optional(),
@@ -208,7 +206,6 @@ export const InitResultSchema = z.object({
   error: z.string().optional(),
 });
 
-// Extract enum values as arrays for runtime use
 export const DATABASE_VALUES = DatabaseSchema.options;
 export const ORM_VALUES = ORMSchema.options;
 export const BACKEND_VALUES = BackendSchema.options;
