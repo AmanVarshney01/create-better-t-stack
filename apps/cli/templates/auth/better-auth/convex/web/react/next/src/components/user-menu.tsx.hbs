@@ -27,22 +27,19 @@ export default function UserMenu() {
 					<DropdownMenuLabel>My Account</DropdownMenuLabel>
 					<DropdownMenuSeparator />
 					<DropdownMenuItem>{user?.email}</DropdownMenuItem>
-					<DropdownMenuItem>
-						<Button
-							variant="destructive"
-							className="w-full"
-							onClick={() => {
-								authClient.signOut({
-									fetchOptions: {
-										onSuccess: () => {
-											router.push("/dashboard");
-										},
+					<DropdownMenuItem
+						variant="destructive"
+						onClick={() => {
+							authClient.signOut({
+								fetchOptions: {
+									onSuccess: () => {
+										router.push("/dashboard");
 									},
-								});
-							}}
-						>
-							Sign Out
-						</Button>
+								},
+							});
+						}}
+					>
+						Sign Out
 					</DropdownMenuItem>
 				</DropdownMenuGroup>
 			</DropdownMenuContent>

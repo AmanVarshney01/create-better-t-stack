@@ -8,9 +8,10 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
-import { Button } from "./ui/button";
 import { useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
+
+import { Button } from "./ui/button";
 
 export default function UserMenu() {
     const user = useQuery(api.auth.getCurrentUser)
@@ -25,22 +26,19 @@ export default function UserMenu() {
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem>{user?.email}</DropdownMenuItem>
-                    <DropdownMenuItem>
-                        <Button
-                            variant="destructive"
-                            className="w-full"
-                            onClick={() => {
-                                authClient.signOut({
-                                    fetchOptions: {
-                                        onSuccess: () => {
-                                            location.reload();
-                                        },
+                    <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => {
+                            authClient.signOut({
+                                fetchOptions: {
+                                    onSuccess: () => {
+                                        location.reload();
                                     },
-                                });
-                            }}
-                        >
-                            Sign Out
-                        </Button>
+                                },
+                            });
+                        }}
+                    >
+                        Sign Out
                     </DropdownMenuItem>
                 </DropdownMenuGroup>
             </DropdownMenuContent>

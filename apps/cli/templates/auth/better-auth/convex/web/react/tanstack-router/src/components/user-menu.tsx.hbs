@@ -1,3 +1,5 @@
+import { useNavigate } from "@tanstack/react-router";
+
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -8,10 +10,10 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
-import { useNavigate } from "@tanstack/react-router";
-import { Button } from "./ui/button";
 import { useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
+
+import { Button } from "./ui/button";
 
 export default function UserMenu() {
     const navigate = useNavigate();
@@ -27,24 +29,21 @@ export default function UserMenu() {
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem>{user?.email}</DropdownMenuItem>
-                    <DropdownMenuItem>
-                        <Button
-                            variant="destructive"
-                            className="w-full"
-                            onClick={() => {
-                                authClient.signOut({
-                                    fetchOptions: {
-                                        onSuccess: () => {
-                                            navigate({
-                                                to: "/dashboard",
-                                            });
-                                        },
+                    <DropdownMenuItem
+                        variant="destructive"
+                        onClick={() => {
+                            authClient.signOut({
+                                fetchOptions: {
+                                    onSuccess: () => {
+                                        navigate({
+                                            to: "/dashboard",
+                                        });
                                     },
-                                });
-                            }}
-                        >
-                            Sign Out
-                        </Button>
+                                },
+                            });
+                        }}
+                    >
+                        Sign Out
                     </DropdownMenuItem>
                 </DropdownMenuGroup>
             </DropdownMenuContent>
