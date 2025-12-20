@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -8,10 +11,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
+
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 export default function UserMenu() {
   const router = useRouter();
@@ -23,9 +25,9 @@ export default function UserMenu() {
 
   if (!session) {
     return (
-      <Button variant="outline" render={<Link href="/login" />}>
-        Sign In
-      </Button>
+      <Link href="/login">
+        <Button variant="outline">Sign In</Button>
+      </Link>
     );
   }
 
