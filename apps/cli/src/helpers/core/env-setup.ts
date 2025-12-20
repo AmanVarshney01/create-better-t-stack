@@ -287,10 +287,13 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
           !(await fs.pathExists(envLocalPath)) ||
           !(await fs.readFile(envLocalPath, "utf8")).includes("npx convex env set")
         ) {
+          let siteUrlComments = "";
+          if (hasWeb) {
+            siteUrlComments += "# npx convex env set SITE_URL http://localhost:3001\n";
+          }
           const convexCommands = `# Set Convex environment variables
 # npx convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)
-${hasWeb ? "# npx convex env set SITE_URL http://localhost:3001\n" : ""}
-`;
+${siteUrlComments}`;
           await fs.appendFile(envLocalPath, convexCommands);
         }
 
@@ -317,6 +320,7 @@ ${hasWeb ? "# npx convex env set SITE_URL http://localhost:3001\n" : ""}
               key: "SITE_URL",
               value: "http://localhost:3001",
               condition: true,
+              comment: "Web app URL for authentication",
             },
           );
         }

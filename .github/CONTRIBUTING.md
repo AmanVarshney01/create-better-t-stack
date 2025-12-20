@@ -22,6 +22,7 @@ This repository is organized as a monorepo containing:
 ### Initial Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/AmanVarshney01/create-better-t-stack.git
    cd create-better-t-stack
@@ -35,20 +36,25 @@ This repository is organized as a monorepo containing:
 ### CLI Development
 
 1. **Navigate to CLI directory**
+
    ```bash
    cd apps/cli
    ```
 
 2. **Link the CLI globally** (optional, for testing anywhere in your system)
+
    ```bash
    bun link
    ```
+
    Now you can use `create-better-t-stack` from anywhere in your system.
 
 3. **Start development server**
+
    ```bash
    bun dev
    ```
+
    This runs tsdown build in watch mode, automatically rebuilding on changes.
 
 4. **Test the CLI**
@@ -61,12 +67,14 @@ This repository is organized as a monorepo containing:
 ### Web Development
 
 1. **Install dependencies**
+
    ```bash
    # from repo root
    bun i
    ```
 
 2. **Setup backend**
+
    ```bash
    cd packages/backend
    bun dev:setup  # you can choose local development too in prompts
@@ -74,12 +82,14 @@ This repository is organized as a monorepo containing:
 
 3. **Configure environment**
    Copy the Convex URL from `packages/backend/.env.local` to `apps/web/.env`:
+
    ```
    NEXT_PUBLIC_CONVEX_URL=http://127.0.0.1:3210/
    ```
 
 4. **Set GitHub tokens**
    Now run `bun dev` in the root. It will complain about GitHub token, so run this in `packages/backend`:
+
    ```bash
    npx convex env set GITHUB_ACCESS_TOKEN=xxxxx
    npx convex env set GITHUB_WEBHOOK_SECRET=xxxxx
@@ -105,6 +115,7 @@ This repository is organized as a monorepo containing:
    - Clone your fork locally
 
 3. **Create a feature branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    # or
@@ -118,6 +129,7 @@ This repository is organized as a monorepo containing:
 5. **Test and format your changes** (see Testing section below)
 
 6. **Commit your changes**
+
    ```bash
    git add .
    git commit -m "feat(web): add your feature description"
@@ -126,6 +138,7 @@ This repository is organized as a monorepo containing:
    ```
 
 7. **Push to your fork**
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -172,4 +185,4 @@ Use conventional commit messages with the appropriate scope:
 
 ## License
 
-By contributing to Better-T-Stack, you agree that your contributions will be licensed under the MIT License. 
+By contributing to Better-T-Stack, you agree that your contributions will be licensed under the MIT License.

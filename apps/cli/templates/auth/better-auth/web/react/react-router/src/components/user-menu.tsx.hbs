@@ -1,16 +1,18 @@
+import { Link, useNavigate } from "react-router";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
-import { useNavigate } from "react-router";
+
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
-import { Link } from "react-router";
 
 export default function UserMenu() {
   const navigate = useNavigate();
@@ -22,25 +24,24 @@ export default function UserMenu() {
 
   if (!session) {
     return (
-      <Button variant="outline" asChild>
-        <Link to="/login">Sign In</Link>
-      </Button>
+      <Link to="/login">
+        <Button variant="outline">Sign In</Button>
+      </Link>
     );
   }
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="outline">{session.user.name}</Button>
+      <DropdownMenuTrigger render={<Button variant="outline" />}>
+        {session.user.name}
       </DropdownMenuTrigger>
       <DropdownMenuContent className="bg-card">
-        <DropdownMenuLabel>My Account</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem>{session.user.email}</DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Button
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem>{session.user.email}</DropdownMenuItem>
+          <DropdownMenuItem
             variant="destructive"
-            className="w-full"
             onClick={() => {
               authClient.signOut({
                 fetchOptions: {
@@ -52,8 +53,8 @@ export default function UserMenu() {
             }}
           >
             Sign Out
-          </Button>
-        </DropdownMenuItem>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );

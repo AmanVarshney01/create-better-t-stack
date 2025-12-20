@@ -14,4 +14,9 @@ export default defineConfig({
   server: {
     port: 3001,
   },
+{{#if (and (eq backend "convex") (eq auth "better-auth"))}}
+  ssr: {
+    noExternal: ["@convex-dev/better-auth"],
+  },
+{{/if}}
 });

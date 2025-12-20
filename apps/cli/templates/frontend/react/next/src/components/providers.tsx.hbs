@@ -6,7 +6,7 @@ import { useAuth } from "@clerk/nextjs";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 {{else if (eq auth "better-auth")}}
-import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { ConvexReactClient } from "convex/react";
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import { authClient } from "@/lib/auth-client";
 {{else}}
@@ -32,9 +32,15 @@ const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 {{/if}}
 
 export default function Providers({
-  children
+  children,
+{{#if (and (eq backend "convex") (eq auth "better-auth"))}}
+  initialToken,
+{{/if}}
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
+{{#if (and (eq backend "convex") (eq auth "better-auth"))}}
+  initialToken?: string | null;
+{{/if}}
 }) {
   return (
     <ThemeProvider
@@ -49,7 +55,11 @@ export default function Providers({
         {children}
       </ConvexProviderWithClerk>
       {{else if (eq auth "better-auth")}}
-      <ConvexBetterAuthProvider client={convex} authClient={authClient}>
+      <ConvexBetterAuthProvider
+        client={convex}
+        authClient={authClient}
+        initialToken={initialToken}
+      >
         {children}
       </ConvexBetterAuthProvider>
       {{else}}

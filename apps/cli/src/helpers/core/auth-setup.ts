@@ -59,13 +59,13 @@ export async function setupAuth(config: ProjectConfig) {
         if (convexBackendDirExists) {
           await addPackageDependency({
             dependencies: ["better-auth", "@convex-dev/better-auth"],
-            customDependencies: { "better-auth": "1.3.34" },
+            customDependencies: { "better-auth": "1.4.7" },
             projectDir: convexBackendDir,
           });
           if (hasNativeForBA) {
             await addPackageDependency({
               dependencies: ["@better-auth/expo"],
-              customDependencies: { "@better-auth/expo": "1.3.34" },
+              customDependencies: { "@better-auth/expo": "1.4.7" },
               projectDir: convexBackendDir,
             });
           }
@@ -81,19 +81,19 @@ export async function setupAuth(config: ProjectConfig) {
           if (hasNextJs) {
             await addPackageDependency({
               dependencies: ["better-auth", "@convex-dev/better-auth"],
-              customDependencies: { "better-auth": "1.3.34" },
+              customDependencies: { "better-auth": "1.4.7" },
               projectDir: clientDir,
             });
           } else if (hasTanStackStart) {
             await addPackageDependency({
               dependencies: ["better-auth", "@convex-dev/better-auth"],
-              customDependencies: { "better-auth": "1.3.34" },
+              customDependencies: { "better-auth": "1.4.7" },
               projectDir: clientDir,
             });
           } else if (hasViteReactOther) {
             await addPackageDependency({
               dependencies: ["better-auth", "@convex-dev/better-auth"],
-              customDependencies: { "better-auth": "1.3.34" },
+              customDependencies: { "better-auth": "1.4.7" },
               projectDir: clientDir,
             });
           }
@@ -106,8 +106,8 @@ export async function setupAuth(config: ProjectConfig) {
           await addPackageDependency({
             dependencies: ["better-auth", "@better-auth/expo", "@convex-dev/better-auth"],
             customDependencies: {
-              "better-auth": "1.3.34",
-              "@better-auth/expo": "1.3.34",
+              "better-auth": "1.4.7",
+              "@better-auth/expo": "1.4.7",
             },
             projectDir: nativeDir,
           });

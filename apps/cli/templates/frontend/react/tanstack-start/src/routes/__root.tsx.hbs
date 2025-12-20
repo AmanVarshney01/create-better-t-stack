@@ -37,20 +37,12 @@ const fetchClerkAuth = createServerFn({ method: "GET" }).handler(async () => {
 });
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest, getCookie } from "@tanstack/react-start/server";
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
-import { fetchSession, getCookieName } from "@convex-dev/better-auth/react-start";
 import { authClient } from "@/lib/auth-client";
-import { createAuth } from "@{{projectName}}/backend/convex/auth";
+import { getToken } from "@/lib/auth-server";
 
-const fetchAuth = createServerFn({ method: "GET" }).handler(async () => {
-  const { session } = await fetchSession(getRequest());
-  const sessionCookieName = getCookieName(createAuth);
-  const token = getCookie(sessionCookieName);
-  return {
-    userId: session?.user.id,
-    token,
-  };
+const getAuth = createServerFn({ method: "GET" }).handler(async () => {
+  return await getToken();
 });
 {{/if}}
 
@@ -113,11 +105,14 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
   },
   {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
   beforeLoad: async (ctx) => {
-    const { userId, token } = await fetchAuth();
+    const token = await getAuth();
     if (token) {
       ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
     }
-    return { userId, token };
+    return {
+      isAuthenticated: !!token,
+      token,
+    };
   },
   {{/if}}
 });
@@ -148,7 +143,11 @@ function RootDocument() {
   {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
   const context = useRouteContext({ from: Route.id });
   return (
-    <ConvexBetterAuthProvider client={context.convexClient} authClient={authClient}>
+    <ConvexBetterAuthProvider
+      client={context.convexClient}
+      authClient={authClient}
+      initialToken={context.token}
+    >
       <html lang="en" className="dark">
         <head>
           <HeadContent />
