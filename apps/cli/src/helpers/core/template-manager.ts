@@ -690,6 +690,9 @@ export async function setupAddonsTemplate(projectDir: string, context: ProjectCo
   for (const addon of context.addons) {
     if (addon === "none") continue;
 
+    const hasUltracite = context.addons.includes("ultracite");
+    if (addon === "lefthook" && hasUltracite) continue;
+
     let addonSrcDir = path.join(PKG_ROOT, `templates/addons/${addon}`);
     let addonDestDir = projectDir;
 
