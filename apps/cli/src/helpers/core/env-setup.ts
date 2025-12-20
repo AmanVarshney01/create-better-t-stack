@@ -291,10 +291,6 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
           if (hasWeb) {
             siteUrlComments += "# npx convex env set SITE_URL http://localhost:3001\n";
           }
-          if (hasNative) {
-            siteUrlComments +=
-              "# npx convex env set NATIVE_SITE_URL http://localhost:8081  # For Expo Web\n";
-          }
           const convexCommands = `# Set Convex environment variables
 # npx convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)
 ${siteUrlComments}`;
@@ -304,20 +300,12 @@ ${siteUrlComments}`;
         const convexBackendVars: EnvVariable[] = [];
 
         if (hasNative) {
-          convexBackendVars.push(
-            {
-              key: "EXPO_PUBLIC_CONVEX_SITE_URL",
-              value: "",
-              condition: true,
-              comment: "Same as CONVEX_URL but ends in .site",
-            },
-            {
-              key: "NATIVE_SITE_URL",
-              value: "http://localhost:8081",
-              condition: true,
-              comment: "Expo Web URL for authentication",
-            },
-          );
+          convexBackendVars.push({
+            key: "EXPO_PUBLIC_CONVEX_SITE_URL",
+            value: "",
+            condition: true,
+            comment: "Same as CONVEX_URL but ends in .site",
+          });
         }
 
         if (hasWeb) {

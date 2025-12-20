@@ -1,6 +1,6 @@
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
+import { convex } from "@convex-dev/better-auth/plugins";
 import { expo } from "@better-auth/expo";
 {{else if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
 import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
@@ -21,7 +21,6 @@ const siteUrl = process.env.SITE_URL!;
 {{/if}}
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 const nativeAppUrl = process.env.NATIVE_APP_URL || "mybettertapp://";
-const nativeSiteUrl = process.env.NATIVE_SITE_URL || "http://localhost:8081";
 {{/if}}
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
@@ -30,11 +29,11 @@ function createAuth(ctx: GenericCtx<DataModel>) {
   return betterAuth({
     {{#if (and (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")) (or (includes frontend "tanstack-start") (includes frontend "next")))}}
     baseURL: siteUrl,
-    trustedOrigins: [siteUrl, nativeSiteUrl, nativeAppUrl],
+    trustedOrigins: [siteUrl, nativeAppUrl],
     {{else if (and (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")) (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid")))}}
-    trustedOrigins: [siteUrl, nativeSiteUrl, nativeAppUrl],
+    trustedOrigins: [siteUrl, nativeAppUrl],
     {{else if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-    trustedOrigins: [nativeSiteUrl, nativeAppUrl],
+    trustedOrigins: [nativeAppUrl],
     {{else if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
     baseURL: siteUrl,
     trustedOrigins: [siteUrl],
@@ -49,7 +48,6 @@ function createAuth(ctx: GenericCtx<DataModel>) {
     plugins: [
       {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
       expo(),
-      crossDomain({ siteUrl: nativeSiteUrl }),
       {{else if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
       crossDomain({ siteUrl }),
       {{/if}}

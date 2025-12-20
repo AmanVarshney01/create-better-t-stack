@@ -50,7 +50,7 @@ export async function displayPostInstallInstructions(
       frontend?.includes("native-uniwind") ||
       frontend?.includes("native-unistyles")) &&
     backend !== "none"
-      ? getNativeInstructions(isConvex, isBackendSelf, frontend || [])
+      ? getNativeInstructions(isConvex, isBackendSelf, frontend || [], runCmd)
       : "";
   const pwaInstructions =
     addons?.includes("pwa") && frontend?.includes("react-router") ? getPwaInstructions() : "";
@@ -194,7 +194,12 @@ export async function displayPostInstallInstructions(
   consola.box(output);
 }
 
-function getNativeInstructions(isConvex: boolean, isBackendSelf: boolean, _frontend: string[]) {
+function getNativeInstructions(
+  isConvex: boolean,
+  isBackendSelf: boolean,
+  frontend: string[],
+  runCmd: string,
+) {
   const envVar = isConvex ? "EXPO_PUBLIC_CONVEX_URL" : "EXPO_PUBLIC_SERVER_URL";
   const exampleUrl = isConvex
     ? "https://<YOUR_CONVEX_URL>"
@@ -214,6 +219,12 @@ function getNativeInstructions(isConvex: boolean, isBackendSelf: boolean, _front
     instructions += `\n${pc.yellow(
       "IMPORTANT:",
     )} When using local development with Convex and native apps,\n   ensure you use your local IP address instead of localhost or 127.0.0.1\n   for proper connectivity.\n`;
+  }
+
+  if (frontend.includes("native-unistyles")) {
+    instructions += `\n${pc.yellow(
+      "NOTE:",
+    )} Unistyles requires a development build.\n   cd apps/native and run ${runCmd} android or ${runCmd} ios\n`;
   }
 
   return instructions;

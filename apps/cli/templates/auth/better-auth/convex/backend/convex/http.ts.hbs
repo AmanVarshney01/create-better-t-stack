@@ -3,14 +3,10 @@ import { authComponent, createAuth } from "./auth";
 
 const http = httpRouter();
 
-{{#if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
-{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
 authComponent.registerRoutes(http, createAuth, { cors: true });
 {{else}}
 authComponent.registerRoutes(http, createAuth);
-{{/if}}
-{{else}}
-authComponent.registerRoutes(http, createAuth, { cors: true });
 {{/if}}
 
 export default http;
