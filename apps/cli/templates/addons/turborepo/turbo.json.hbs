@@ -57,5 +57,11 @@
 			"persistent": true
 		}
 		{{/if}}
+		{{#if (eq dbSetup "turso")}},
+		"db:local": {
+			"cache": false,
+			"persistent": true
+		}
+		{{/if}}
 	}
 }

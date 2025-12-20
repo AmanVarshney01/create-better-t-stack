@@ -501,10 +501,11 @@ function generateDatabaseSetup(
 ${
   dbSetup === "d1"
     ? "D1 local development and migrations are handled automatically by Alchemy during dev and deploy."
-    : `\`\`\`bash
+    : dbSetup === "turso"
+      ? `\`\`\`bash
 cd ${dbLocalPath} && ${packageManagerRunCmd} db:local
-\`\`\`
-`
+\`\`\``
+      : "SQLite local database are created automatically by the ORM."
 }
 
 2. Update your \`.env\` file in the \`${isBackendSelf ? "apps/web" : "apps/server"}\` directory with the appropriate connection details if needed.
