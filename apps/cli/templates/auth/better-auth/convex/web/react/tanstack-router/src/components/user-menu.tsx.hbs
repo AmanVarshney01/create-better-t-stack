@@ -19,8 +19,8 @@ export default function UserMenu() {
 
     return (
         <DropdownMenu>
-            <DropdownMenuTrigger>
-                <Button variant="outline">{user?.name}</Button>
+            <DropdownMenuTrigger render={<Button variant="outline" />}>
+                {user?.name}
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-card">
                 <DropdownMenuGroup>
