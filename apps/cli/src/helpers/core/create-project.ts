@@ -73,9 +73,10 @@ export async function createProject(options: ProjectConfig, cliInput?: { manualD
         await setupRuntime(options);
       }
       await setupDatabase(options, cliInput);
-      if (options.examples.length > 0 && options.examples[0] !== "none") {
-        await setupExamples(options);
-      }
+    }
+
+    if (options.examples.length > 0 && options.examples[0] !== "none") {
+      await setupExamples(options);
     }
 
     if (options.addons.length > 0 && options.addons[0] !== "none") {

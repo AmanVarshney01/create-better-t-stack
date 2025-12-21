@@ -197,9 +197,9 @@ describe("Example Configurations", () => {
       expectError(result, "The 'ai' example is not compatible with the Solid frontend");
     });
 
-    it("should fail with AI example + Convex", async () => {
+    it("should work with AI example + Convex + React frontend", async () => {
       const result = await runTRPCTest({
-        projectName: "ai-convex",
+        projectName: "ai-convex-react",
         examples: ["ai"],
         backend: "convex",
         runtime: "none",
@@ -215,7 +215,100 @@ describe("Example Configurations", () => {
         install: false,
       });
 
-      expectError(result, "The 'ai' example is not yet available with Convex backend");
+      expectSuccess(result);
+    });
+
+    it("should work with AI example + Convex + Next.js", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-convex-next",
+        examples: ["ai"],
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "better-auth",
+        api: "none",
+        frontend: ["next"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should fail with AI example + Convex + Svelte", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-convex-svelte-fail",
+        examples: ["ai"],
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "none",
+        frontend: ["svelte"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(
+        result,
+        "The 'ai' example with Convex backend only supports React-based frontends (Next.js, TanStack Router, TanStack Start, React Router). Svelte and Nuxt are not supported with Convex AI.",
+      );
+    });
+
+    it("should fail with AI example + Convex + Nuxt", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-convex-nuxt-fail",
+        examples: ["ai"],
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "none",
+        frontend: ["nuxt"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(
+        result,
+        "The 'ai' example with Convex backend only supports React-based frontends (Next.js, TanStack Router, TanStack Start, React Router). Svelte and Nuxt are not supported with Convex AI.",
+      );
+    });
+
+    it("should fail with Convex + Solid (blocked at backend level)", async () => {
+      const result = await runTRPCTest({
+        projectName: "convex-solid-fail",
+        examples: ["none"],
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "none",
+        frontend: ["solid"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(
+        result,
+        "The following frontends are not compatible with '--backend convex': solid",
+      );
     });
   });
 

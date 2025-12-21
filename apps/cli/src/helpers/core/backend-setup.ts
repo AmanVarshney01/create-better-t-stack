@@ -4,7 +4,7 @@ import type { ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 
 export async function setupBackendDependencies(config: ProjectConfig) {
-  const { backend, runtime, api, auth, examples, projectDir } = config;
+  const { backend, runtime, api, auth, projectDir } = config;
 
   if (backend === "convex") {
     const convexBackendDir = path.join(projectDir, "packages/backend");
@@ -51,10 +51,6 @@ export async function setupBackendDependencies(config: ProjectConfig) {
 
   if (auth === "better-auth") {
     dependencies.push("better-auth");
-  }
-
-  if (examples.includes("ai")) {
-    dependencies.push("ai", "@ai-sdk/google");
   }
 
   if (runtime === "node") {

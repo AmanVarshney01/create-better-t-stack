@@ -1,3 +1,297 @@
+{{#if (eq backend "convex")}}
+import { Ionicons } from "@expo/vector-icons";
+import {
+  useUIMessages,
+  useSmoothText,
+  type UIMessage,
+} from "@convex-dev/agent/react";
+import { api } from "@{{projectName}}/backend/convex/_generated/api";
+import { useMutation } from "convex/react";
+import React, { useRef, useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+} from "react-native";
+import { StyleSheet, useUnistyles } from "react-native-unistyles";
+
+import { Container } from "@/components/container";
+
+function MessageContent({
+  text,
+  isStreaming,
+  style,
+}: {
+  text: string;
+  isStreaming: boolean;
+  style: object;
+}) {
+  const [visibleText] = useSmoothText(text, {
+    startStreaming: isStreaming,
+  });
+  return <Text style={style}>{visibleText}</Text>;
+}
+
+export default function AIScreen() {
+  const { theme } = useUnistyles();
+  const [input, setInput] = useState("");
+  const [threadId, setThreadId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  const createThread = useMutation(api.chat.createNewThread);
+  const sendMessage = useMutation(api.chat.sendMessage);
+
+  const { results: messages } = useUIMessages(
+    api.chat.listMessages,
+    threadId ? { threadId } : "skip",
+    { initialNumItems: 50, stream: true },
+  );
+
+  const hasStreamingMessage = messages?.some(
+    (m: UIMessage) => m.status === "streaming",
+  );
+
+  useEffect(() => {
+    scrollViewRef.current?.scrollToEnd({ animated: true });
+  }, [messages]);
+
+  const onSubmit = async () => {
+    const value = input.trim();
+    if (!value || isLoading) return;
+
+    setIsLoading(true);
+    setInput("");
+
+    try {
+      let currentThreadId = threadId;
+      if (!currentThreadId) {
+        currentThreadId = await createThread();
+        setThreadId(currentThreadId);
+      }
+
+      await sendMessage({ threadId: currentThreadId, prompt: value });
+    } catch (error) {
+      console.error("Failed to send message:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Container>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>AI Chat</Text>
+            <Text style={styles.headerSubtitle}>
+              Chat with our AI assistant
+            </Text>
+          </View>
+
+          <ScrollView
+            ref={scrollViewRef}
+            style={styles.messagesContainer}
+            showsVerticalScrollIndicator={false}
+          >
+            {!messages || messages.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>
+                  Ask me anything to get started!
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.messagesWrapper}>
+                {messages.map((message: UIMessage) => (
+                  <View
+                    key={message.key}
+                    style={[
+                      styles.messageContainer,
+                      message.role === "user"
+                        ? styles.userMessage
+                        : styles.assistantMessage,
+                    ]}
+                  >
+                    <Text style={styles.messageRole}>
+                      {message.role === "user" ? "You" : "AI Assistant"}
+                    </Text>
+                    <MessageContent
+                      text={message.text ?? ""}
+                      isStreaming={message.status === "streaming"}
+                      style={styles.messageContent}
+                    />
+                  </View>
+                ))}
+                {isLoading && !hasStreamingMessage && (
+                  <View style={[styles.messageContainer, styles.assistantMessage]}>
+                    <Text style={styles.messageRole}>AI Assistant</Text>
+                    <View style={styles.loadingContainer}>
+                      <ActivityIndicator size="small" color={theme.colors.primary} />
+                      <Text style={styles.loadingText}>Thinking...</Text>
+                    </View>
+                  </View>
+                )}
+              </View>
+            )}
+          </ScrollView>
+
+          <View style={styles.inputSection}>
+            <View style={styles.inputContainer}>
+              <TextInput
+                value={input}
+                onChangeText={setInput}
+                placeholder="Type your message..."
+                placeholderTextColor={theme.colors.border}
+                style={styles.textInput}
+                onSubmitEditing={(e) => {
+                  e.preventDefault();
+                  onSubmit();
+                }}
+                editable={!isLoading}
+                autoFocus={true}
+              />
+              <TouchableOpacity
+                onPress={onSubmit}
+                disabled={!input.trim() || isLoading}
+                style={[
+                  styles.sendButton,
+                  (!input.trim() || isLoading) && styles.sendButtonDisabled,
+                ]}
+              >
+                <Ionicons
+                  name="send"
+                  size={20}
+                  color={
+                    input.trim() && !isLoading
+                      ? theme.colors.background
+                      : theme.colors.border
+                  }
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Container>
+  );
+}
+
+const styles = StyleSheet.create((theme) => ({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.lg,
+  },
+  header: {
+    marginBottom: theme.spacing.lg,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: theme.colors.typography,
+    marginBottom: theme.spacing.sm,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: theme.colors.typography,
+  },
+  messagesContainer: {
+    flex: 1,
+    marginBottom: theme.spacing.md,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyText: {
+    textAlign: "center",
+    color: theme.colors.typography,
+    fontSize: 18,
+  },
+  messagesWrapper: {
+    gap: theme.spacing.md,
+  },
+  messageContainer: {
+    padding: theme.spacing.md,
+    borderRadius: 8,
+  },
+  userMessage: {
+    backgroundColor: theme.colors.primary + "20",
+    marginLeft: theme.spacing.xl,
+    alignSelf: "flex-end",
+  },
+  assistantMessage: {
+    backgroundColor: theme.colors.background,
+    marginRight: theme.spacing.xl,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  messageRole: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: theme.spacing.sm,
+    color: theme.colors.typography,
+  },
+  messageContent: {
+    color: theme.colors.typography,
+    lineHeight: 20,
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+  },
+  loadingText: {
+    color: theme.colors.typography,
+    opacity: 0.7,
+  },
+  inputSection: {
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    paddingTop: theme.spacing.md,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: theme.spacing.sm,
+  },
+  textInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: 8,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    color: theme.colors.typography,
+    backgroundColor: theme.colors.background,
+    fontSize: 16,
+    minHeight: 40,
+    maxHeight: 120,
+  },
+  sendButton: {
+    backgroundColor: theme.colors.primary,
+    padding: theme.spacing.sm,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  sendButtonDisabled: {
+    backgroundColor: theme.colors.border,
+  },
+}));
+{{else}}
 import React, { useRef, useEffect, useState } from "react";
 import {
   View,
@@ -256,15 +550,6 @@ const styles = StyleSheet.create((theme) => ({
     color: theme.colors.typography,
     lineHeight: 20,
   },
-  toolInvocations: {
-    fontSize: 12,
-    color: theme.colors.typography,
-    fontFamily: "monospace",
-    backgroundColor: theme.colors.border + "40",
-    padding: theme.spacing.sm,
-    borderRadius: 4,
-    marginTop: theme.spacing.sm,
-  },
   inputSection: {
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
@@ -299,3 +584,4 @@ const styles = StyleSheet.create((theme) => ({
     backgroundColor: theme.colors.border,
   },
 }));
+{{/if}}

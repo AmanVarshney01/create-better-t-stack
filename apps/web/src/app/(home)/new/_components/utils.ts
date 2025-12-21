@@ -101,15 +101,20 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
       changes.push({ category: "backend", message: "Removed Solid (incompatible with Convex)" });
     }
 
-    // Remove AI example (not available with Convex)
+    // Remove AI example if incompatible frontends are selected (Convex AI only supports React-based frontends)
     if (nextStack.examples.includes("ai")) {
-      nextStack.examples = nextStack.examples.filter((e) => e !== "ai");
-      if (nextStack.examples.length === 0) nextStack.examples = ["none"];
-      changed = true;
-      changes.push({
-        category: "backend",
-        message: "Removed AI example (not available with Convex)",
-      });
+      const hasIncompatibleFrontend = nextStack.webFrontend.some((f) =>
+        ["solid", "svelte", "nuxt"].includes(f),
+      );
+      if (hasIncompatibleFrontend) {
+        nextStack.examples = nextStack.examples.filter((e) => e !== "ai");
+        if (nextStack.examples.length === 0) nextStack.examples = ["none"];
+        changed = true;
+        changes.push({
+          category: "examples",
+          message: "AI example removed (Convex AI only supports React-based frontends)",
+        });
+      }
     }
 
     // Auth constraints for Convex
@@ -551,16 +556,32 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     changes.push({ category: "examples", message: "Todo removed (requires database)" });
   }
 
-  // AI example not available with Convex or Solid
+  // AI example constraints
   if (nextStack.examples.includes("ai")) {
-    if (nextStack.backend === "convex" || nextStack.webFrontend.includes("solid")) {
+    // Solid frontend is incompatible with AI example
+    if (nextStack.webFrontend.includes("solid")) {
       nextStack.examples = nextStack.examples.filter((e) => e !== "ai");
       if (nextStack.examples.length === 0) nextStack.examples = ["none"];
       changed = true;
       changes.push({
         category: "examples",
-        message: "AI removed (incompatible with current selection)",
+        message: "AI removed (not compatible with Solid frontend)",
       });
+    }
+    // Convex AI only supports React-based frontends (not Svelte/Nuxt)
+    if (nextStack.backend === "convex") {
+      const hasIncompatibleFrontend = nextStack.webFrontend.some((f) =>
+        ["svelte", "nuxt"].includes(f),
+      );
+      if (hasIncompatibleFrontend) {
+        nextStack.examples = nextStack.examples.filter((e) => e !== "ai");
+        if (nextStack.examples.length === 0) nextStack.examples = ["none"];
+        changed = true;
+        changes.push({
+          category: "examples",
+          message: "AI removed (Convex AI only supports React-based frontends)",
+        });
+      }
     }
   }
 
@@ -657,7 +678,15 @@ export const getDisabledReason = (
       return "Solid is not compatible with Convex";
     }
     if (category === "examples" && optionId === "ai") {
-      return "AI example not available with Convex";
+      const hasIncompatibleFrontend = currentStack.webFrontend.some((f) =>
+        ["solid", "svelte", "nuxt"].includes(f),
+      );
+      if (hasIncompatibleFrontend) {
+        const frontendName = currentStack.webFrontend.find((f) =>
+          ["solid", "svelte", "nuxt"].includes(f),
+        );
+        return `Convex AI example only supports React-based frontends (not ${frontendName})`;
+      }
     }
     if (category === "payments" && optionId === "polar") {
       return "Polar is not compatible with Convex";
@@ -888,8 +917,18 @@ export const getDisabledReason = (
       return "Todo example requires a database";
     }
     if (optionId === "ai") {
-      if (currentStack.backend === "convex") return "AI example not available with Convex";
-      if (currentStack.webFrontend.includes("solid")) return "AI example not compatible with Solid";
+      if (currentStack.webFrontend.includes("solid")) {
+        return "AI example not compatible with Solid frontend";
+      }
+      if (currentStack.backend === "convex") {
+        const hasIncompatibleFrontend = currentStack.webFrontend.some((f) =>
+          ["svelte", "nuxt"].includes(f),
+        );
+        if (hasIncompatibleFrontend) {
+          const frontendName = currentStack.webFrontend.find((f) => ["svelte", "nuxt"].includes(f));
+          return `Convex AI example only supports React-based frontends (not ${frontendName})`;
+        }
+      }
     }
   }
 
