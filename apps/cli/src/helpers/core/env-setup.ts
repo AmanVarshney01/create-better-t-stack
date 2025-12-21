@@ -272,32 +272,50 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
   }
 
   if (backend === "convex") {
-    if (auth === "better-auth") {
-      const convexBackendDir = path.join(projectDir, "packages/backend");
-      if (await fs.pathExists(convexBackendDir)) {
-        const envLocalPath = path.join(convexBackendDir, ".env.local");
+    const convexBackendDir = path.join(projectDir, "packages/backend");
+    if (await fs.pathExists(convexBackendDir)) {
+      const envLocalPath = path.join(convexBackendDir, ".env.local");
+      let commentBlocks = "";
 
+      if (examples?.includes("ai")) {
+        commentBlocks += `# Set Google AI API key for AI agent
+# npx convex env set GOOGLE_GENERATIVE_AI_API_KEY=your_google_api_key
+
+`;
+      }
+
+      if (auth === "better-auth") {
+        const hasWeb = hasWebFrontend;
+        commentBlocks += `# Set Convex environment variables
+# npx convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)
+${hasWeb ? "# npx convex env set SITE_URL http://localhost:3001\n" : ""}`;
+      }
+
+      if (commentBlocks) {
+        let existingContent = "";
+        if (await fs.pathExists(envLocalPath)) {
+          existingContent = await fs.readFile(envLocalPath, "utf8");
+        }
+        await fs.writeFile(envLocalPath, commentBlocks + existingContent);
+      }
+
+      const convexBackendVars: EnvVariable[] = [];
+
+      if (examples?.includes("ai")) {
+        convexBackendVars.push({
+          key: "GOOGLE_GENERATIVE_AI_API_KEY",
+          value: "",
+          condition: true,
+          comment: "Google AI API key for AI agent",
+        });
+      }
+
+      if (auth === "better-auth") {
         const hasNative =
           frontend.includes("native-bare") ||
           frontend.includes("native-uniwind") ||
           frontend.includes("native-unistyles");
         const hasWeb = hasWebFrontend;
-
-        if (
-          !(await fs.pathExists(envLocalPath)) ||
-          !(await fs.readFile(envLocalPath, "utf8")).includes("npx convex env set")
-        ) {
-          let siteUrlComments = "";
-          if (hasWeb) {
-            siteUrlComments += "# npx convex env set SITE_URL http://localhost:3001\n";
-          }
-          const convexCommands = `# Set Convex environment variables
-# npx convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)
-${siteUrlComments}`;
-          await fs.appendFile(envLocalPath, convexCommands);
-        }
-
-        const convexBackendVars: EnvVariable[] = [];
 
         if (hasNative) {
           convexBackendVars.push({
@@ -324,7 +342,9 @@ ${siteUrlComments}`;
             },
           );
         }
+      }
 
+      if (convexBackendVars.length > 0) {
         await addEnvVariablesToFile(envLocalPath, convexBackendVars);
       }
     }

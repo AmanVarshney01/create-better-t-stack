@@ -116,7 +116,7 @@ export const dependencyVersionMap = {
   turbo: "^2.6.3",
 
   ai: "^5.0.49",
-  "@ai-sdk/google": "^2.0.13",
+  "@ai-sdk/google": "^2.0.51",
   "@ai-sdk/vue": "^2.0.49",
   "@ai-sdk/svelte": "^3.0.39",
   "@ai-sdk/react": "^2.0.39",
@@ -137,6 +137,7 @@ export const dependencyVersionMap = {
 
   convex: "^1.29.3",
   "@convex-dev/react-query": "^0.1.0",
+  "@convex-dev/agent": "^0.3.2",
   "convex-svelte": "^0.0.12",
   "convex-nuxt": "0.1.5",
   "convex-vue": "^0.1.5",
