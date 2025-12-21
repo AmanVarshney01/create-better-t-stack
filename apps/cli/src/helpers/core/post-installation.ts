@@ -39,7 +39,6 @@ export async function displayPostInstallInstructions(
     packageManager === "npm" ? "npm run" : packageManager === "pnpm" ? "pnpm run" : "bun run";
   const cdCmd = `cd ${relativePath}`;
   const hasHusky = addons?.includes("husky");
-  const hasLinting = addons?.includes("biome") || addons?.includes("oxlint");
   const hasGitHooksOrBiome =
     addons?.includes("husky") || addons?.includes("biome") || addons?.includes("lefthook");
 

@@ -60,7 +60,7 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "Fumadocs";
       hint = "Build excellent documentation site";
       break;
-    
+
     default:
       label = addon;
       hint = `Add ${addon}`;
