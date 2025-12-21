@@ -42,6 +42,8 @@ export const AddonsSchema = z
     "fumadocs",
     "ultracite",
     "oxlint",
+    "opentui",
+    "wxt",
     "none",
   ])
   .describe("Additional addons");

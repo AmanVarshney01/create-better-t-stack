@@ -111,6 +111,8 @@ export function generateStackCommand(stack: StackState) {
                 "fumadocs",
                 "oxlint",
                 "ruler",
+                "opentui",
+                "wxt",
               ].includes(addon),
             )
             .join(" ") || "none"

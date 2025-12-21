@@ -544,6 +544,22 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "opentui",
+      name: "OpenTUI",
+      description: "Build terminal user interfaces",
+      icon: "",
+      color: "from-cyan-500 to-cyan-700",
+      default: false,
+    },
+    {
+      id: "wxt",
+      name: "WXT",
+      description: "Build browser extensions",
+      icon: "",
+      color: "from-emerald-500 to-emerald-700",
+      default: false,
+    },
+    {
       id: "turborepo",
       name: "Turborepo",
       description: "High-performance build system",

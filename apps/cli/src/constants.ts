@@ -187,5 +187,7 @@ export const ADDON_COMPATIBILITY = {
   ruler: [],
   oxlint: [],
   fumadocs: [],
+  opentui: [],
+  wxt: [],
   none: [],
 } as const;
