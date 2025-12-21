@@ -687,11 +687,12 @@ export async function setupPaymentsTemplate(projectDir: string, context: Project
 export async function setupAddonsTemplate(projectDir: string, context: ProjectConfig) {
   if (!context.addons || context.addons.length === 0) return;
 
+  const hasUltracite = context.addons.includes("ultracite");
+
   for (const addon of context.addons) {
     if (addon === "none") continue;
 
-    const hasUltracite = context.addons.includes("ultracite");
-    if (addon === "lefthook" && hasUltracite) continue;
+    if ((addon === "lefthook" || addon === "husky") && hasUltracite) continue;
 
     let addonSrcDir = path.join(PKG_ROOT, `templates/addons/${addon}`);
     let addonDestDir = projectDir;
