@@ -55,6 +55,14 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "Fumadocs";
       hint = "Build excellent documentation site";
       break;
+    case "opentui":
+      label = "OpenTUI";
+      hint = "Build terminal user interfaces";
+      break;
+    case "wxt":
+      label = "WXT";
+      hint = "Build browser extensions";
+      break;
     default:
       label = addon;
       hint = `Add ${addon}`;
@@ -66,7 +74,7 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 const ADDON_GROUPS = {
   Documentation: ["starlight", "fumadocs"],
   Linting: ["biome", "oxlint", "ultracite"],
-  Other: ["ruler", "turborepo", "pwa", "tauri", "husky"],
+  Other: ["ruler", "pwa", "tauri", "husky", "opentui", "wxt", "turborepo"],
 };
 
 export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[], auth?: Auth) {
@@ -100,6 +108,13 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
   Object.keys(groupedOptions).forEach((group) => {
     if (groupedOptions[group].length === 0) {
       delete groupedOptions[group];
+    } else {
+      const groupOrder = ADDON_GROUPS[group as keyof typeof ADDON_GROUPS] || [];
+      groupedOptions[group].sort((a, b) => {
+        const indexA = groupOrder.indexOf(a.value);
+        const indexB = groupOrder.indexOf(b.value);
+        return indexA - indexB;
+      });
     }
   });
 
@@ -158,6 +173,13 @@ export async function getAddonsToAdd(
   Object.keys(groupedOptions).forEach((group) => {
     if (groupedOptions[group].length === 0) {
       delete groupedOptions[group];
+    } else {
+      const groupOrder = ADDON_GROUPS[group as keyof typeof ADDON_GROUPS] || [];
+      groupedOptions[group].sort((a, b) => {
+        const indexA = groupOrder.indexOf(a.value);
+        const indexB = groupOrder.indexOf(b.value);
+        return indexA - indexB;
+      });
     }
   });
 
