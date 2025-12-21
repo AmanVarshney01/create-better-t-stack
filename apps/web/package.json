@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "prebuild": "cd ../../packages/types && bun run build",
-    "build": "next build",
-    "dev": "next dev",
-    "start": "next start",
+    "build": "bun run --bun next build",
+    "dev": "bun run --bun next dev",
+    "start": "bun run --bun next start",
     "postinstall": "fumadocs-mdx",
     "generate-schema": "bun scripts/generate-schema.ts"
   },
