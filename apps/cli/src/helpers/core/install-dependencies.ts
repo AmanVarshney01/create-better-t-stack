@@ -1,6 +1,6 @@
 import { spinner } from "@clack/prompts";
 import consola from "consola";
-import { $ } from "execa";
+import { $ } from "bun";
 import pc from "picocolors";
 import type { Addons, PackageManager } from "../../types";
 
@@ -17,10 +17,7 @@ export async function installDependencies({
   try {
     s.start(`Running ${packageManager} install...`);
 
-    await $({
-      cwd: projectDir,
-      stderr: "inherit",
-    })`${packageManager} install`;
+    await $`${packageManager} install`.cwd(projectDir);
 
     s.stop("Dependencies installed successfully");
   } catch (error) {

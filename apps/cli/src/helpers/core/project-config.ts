@@ -1,6 +1,6 @@
 import path from "node:path";
 import { log } from "@clack/prompts";
-import { execa } from "execa";
+import { $ } from "bun";
 import fs from "fs-extra";
 import type { ProjectConfig } from "../../types";
 import { setupWorkspaceDependencies } from "./workspace-setup";
@@ -93,7 +93,7 @@ async function updateRootPackageJson(projectDir: string, options: ProjectConfig)
   }
 
   try {
-    const { stdout } = await execa(packageManager, ["-v"], { cwd: projectDir });
+    const stdout = await $`${packageManager} -v`.cwd(projectDir).text();
     packageJson.packageManager = `${packageManager}@${stdout.trim()}`;
   } catch {
     log.warn(`Could not determine ${packageManager} version.`);

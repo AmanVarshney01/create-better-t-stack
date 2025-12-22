@@ -1,6 +1,6 @@
 import path from "node:path";
 import { isCancel, log, select, spinner } from "@clack/prompts";
-import { execa } from "execa";
+import { $ } from "bun";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
@@ -60,11 +60,7 @@ export async function setupWxt(config: ProjectConfig) {
     const s = spinner();
     s.start("Running WXT init command...");
 
-    await execa(wxtInitCommand, {
-      cwd: appsDir,
-      env: { CI: "true" },
-      shell: true,
-    });
+    await $`${{ raw: wxtInitCommand }}`.cwd(appsDir).env({ CI: "true" });
 
     const extensionDir = path.join(projectDir, "apps", "extension");
     const packageJsonPath = path.join(extensionDir, "package.json");

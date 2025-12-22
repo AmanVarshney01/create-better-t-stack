@@ -1,7 +1,7 @@
 import path from "node:path";
 import { isCancel, log, select, spinner, text } from "@clack/prompts";
 import { consola } from "consola";
-import { execa } from "execa";
+import { $ } from "bun";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { PackageManager, ProjectConfig } from "../../types";
@@ -42,9 +42,9 @@ async function executeNeonCommand(
     const fullCommand = getPackageExecutionCommand(packageManager, commandArgsString);
 
     if (spinnerText) s.start(spinnerText);
-    const result = await execa(fullCommand, { shell: true });
+    const result = await $`${{ raw: fullCommand }}`.text();
     if (spinnerText) s.stop(pc.green(spinnerText.replace("...", "").replace("ing ", "ed ").trim()));
-    return result;
+    return { stdout: result };
   } catch (error) {
     if (s) s.stop(pc.red(`Failed: ${spinnerText || "Command execution"}`));
     throw error;
@@ -121,10 +121,7 @@ async function setupWithNeonDb(
 
     const packageCmd = getPackageExecutionCommand(packageManager, "get-db@latest --yes");
 
-    await execa(packageCmd, {
-      shell: true,
-      cwd: targetDir,
-    });
+    await $`${{ raw: packageCmd }}`.cwd(targetDir);
 
     s.stop(pc.green("Neon database created successfully!"));
 

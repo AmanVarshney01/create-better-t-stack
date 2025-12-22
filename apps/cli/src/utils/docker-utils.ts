@@ -1,5 +1,5 @@
 import os from "node:os";
-import { $ } from "execa";
+import { $ } from "bun";
 import pc from "picocolors";
 import type { Database } from "../types";
 import { commandExists } from "./command-exists";
@@ -10,7 +10,7 @@ export async function isDockerInstalled() {
 
 export async function isDockerRunning() {
   try {
-    await $`docker info`;
+    await $`docker info`.quiet();
     return true;
   } catch {
     return false;

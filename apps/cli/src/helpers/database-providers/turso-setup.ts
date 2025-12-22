@@ -2,7 +2,7 @@ import os from "node:os";
 import path from "node:path";
 import { confirm, isCancel, log, select, spinner, text } from "@clack/prompts";
 import consola from "consola";
-import { $ } from "execa";
+import { $ } from "bun";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 import { commandExists } from "../../utils/command-exists";
@@ -20,8 +20,8 @@ async function isTursoInstalled() {
 
 async function isTursoLoggedIn() {
   try {
-    const output = await $`turso auth whoami`;
-    return !output.stdout.includes("You are not logged in");
+    const output = await $`turso auth whoami`.text();
+    return !output.includes("You are not logged in");
   } catch {
     return false;
   }
@@ -47,8 +47,8 @@ async function installTursoCLI(isMac: boolean) {
     if (isMac) {
       await $`brew install tursodatabase/tap/turso`;
     } else {
-      const { stdout: installScript } = await $`curl -sSfL https://get.tur.so/install.sh`;
-      await $`bash -c '${installScript}'`;
+      const installScript = await $`curl -sSfL https://get.tur.so/install.sh`.text();
+      await $`bash -c ${installScript}`;
     }
 
     s.stop("Turso CLI installed");
@@ -67,7 +67,7 @@ async function getTursoGroups() {
   const s = spinner();
   try {
     s.start("Fetching Turso groups...");
-    const { stdout } = await $`turso group list`;
+    const stdout = await $`turso group list`.text();
     const lines = stdout.trim().split("\n");
 
     if (lines.length <= 1) {
@@ -75,7 +75,7 @@ async function getTursoGroups() {
       return [];
     }
 
-    const groups = lines.slice(1).map((line) => {
+    const groups = lines.slice(1).map((line: string) => {
       const [name, locations, version, status] = line.trim().split(/\s{2,}/);
       return { name, locations, version, status };
     });
@@ -101,7 +101,7 @@ async function selectTursoGroup() {
     return groups[0].name;
   }
 
-  const groupOptions = groups.map((group) => ({
+  const groupOptions = groups.map((group: { name: string; locations: string }) => ({
     value: group.name,
     label: `${group.name} (${group.locations})`,
   }));
@@ -138,8 +138,8 @@ async function createTursoDatabase(dbName: string, groupName: string | null) {
 
   s.start("Retrieving database connection details...");
   try {
-    const { stdout: dbUrl } = await $`turso db show ${dbName} --url`;
-    const { stdout: authToken } = await $`turso db tokens create ${dbName}`;
+    const dbUrl = await $`turso db show ${dbName} --url`.text();
+    const authToken = await $`turso db tokens create ${dbName}`.text();
 
     s.stop("Database connection details retrieved");
 

@@ -1,0 +1,94 @@
+#!/usr/bin/env node
+
+/**
+ * Bin stub for create-better-t-stack.
+ * Finds and runs the platform-specific compiled binary.
+ * 
+ * The binary is installed as an optional dependency:
+ *   @better-t-stack/cli-{platform}-{arch}
+ * 
+ * This stub searches node_modules for the matching binary package.
+ */
+
+const childProcess = require("child_process");
+const fs = require("fs");
+const path = require("path");
+const os = require("os");
+
+function run(target) {
+    const result = childProcess.spawnSync(target, process.argv.slice(2), {
+        stdio: "inherit",
+    });
+    if (result.error) {
+        console.error(result.error.message);
+        process.exit(1);
+    }
+    const code = typeof result.status === "number" ? result.status : 0;
+    process.exit(code);
+}
+
+// Allow override via environment variable
+const envPath = process.env.CREATE_BETTER_T_STACK_BIN_PATH;
+if (envPath) {
+    run(envPath);
+}
+
+const scriptPath = fs.realpathSync(__filename);
+const scriptDir = path.dirname(scriptPath);
+
+const platformMap = {
+    darwin: "darwin",
+    linux: "linux",
+    win32: "windows",
+};
+
+const archMap = {
+    x64: "x64",
+    arm64: "arm64",
+};
+
+let platform = platformMap[os.platform()];
+if (!platform) {
+    platform = os.platform();
+}
+
+let arch = archMap[os.arch()];
+if (!arch) {
+    arch = os.arch();
+}
+
+// Scoped package name: @better-t-stack/cli-{platform}-{arch}
+const scopedPackage = "@better-t-stack/cli-" + platform + "-" + arch;
+const binary = platform === "windows" ? "create-better-t-stack.exe" : "create-better-t-stack";
+
+function findBinary(startDir) {
+    let current = startDir;
+    for (; ;) {
+        const modules = path.join(current, "node_modules");
+        if (fs.existsSync(modules)) {
+            // Check for scoped package: node_modules/@better-t-stack/cli-{platform}-{arch}
+            const scopedPath = path.join(modules, "@better-t-stack", "cli-" + platform + "-" + arch);
+            const candidate = path.join(scopedPath, "bin", binary);
+            if (fs.existsSync(candidate)) {
+                return candidate;
+            }
+        }
+        const parent = path.dirname(current);
+        if (parent === current) {
+            return;
+        }
+        current = parent;
+    }
+}
+
+const resolved = findBinary(scriptDir);
+
+if (!resolved) {
+    console.error(
+        'No binary found for your platform (' + platform + '-' + arch + ').\n' +
+        'You can try manually installing the "' + scopedPackage + '" package.',
+    );
+    process.exit(1);
+}
+
+run(resolved);

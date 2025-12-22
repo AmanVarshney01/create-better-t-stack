@@ -1,6 +1,6 @@
 import path from "node:path";
 import { autocompleteMultiselect, isCancel, log, spinner } from "@clack/prompts";
-import { execa } from "execa";
+import { $ } from "bun";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
@@ -94,11 +94,7 @@ export async function setupRuler(config: ProjectConfig) {
         packageManager,
         `@intellectronica/ruler@latest apply --agents ${selectedEditors.join(",")} --local-only`,
       );
-      await execa(rulerApplyCmd, {
-        cwd: projectDir,
-        env: { CI: "true" },
-        shell: true,
-      });
+      await $`${{ raw: rulerApplyCmd }}`.cwd(projectDir).env({ CI: "true" });
 
       s.stop("Applied rules with Ruler");
     } catch {

@@ -37,49 +37,40 @@
     "directory": "apps/cli"
   },
   "bin": {
-    "create-better-t-stack": "dist/cli.mjs"
+    "create-better-t-stack": "./bin/create-better-t-stack"
   },
   "files": [
-    "dist",
-    "templates"
+    "bin",
+    "templates",
+    "scripts/postinstall.mjs"
   ],
   "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.mts",
-      "import": "./dist/index.mjs"
-    },
-    "./cli": {
-      "import": "./dist/cli.mjs"
-    }
-  },
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "tsdown --publint",
-    "dev": "tsdown --watch",
+    "build": "bun run scripts/build.ts",
+    "build:local": "bun run scripts/build.ts --single",
+    "dev": "bun run src/cli.ts",
     "check-types": "tsc --noEmit",
-    "test": "bun run build && bun test",
-    "test:watch": "bun run build && bun test --watch",
-    "test:coverage": "bun run build && bun test --coverage",
-    "test:ci": "bun run build && AGENT=1 bun test --bail=5",
-    "prepublishOnly": "npm run build"
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage",
+    "test:ci": "AGENT=1 bun test --bail=5",
+    "prepublishOnly": "echo 'Build binaries separately before publishing'",
+    "postinstall": "node ./scripts/postinstall.mjs || true"
   },
   "dependencies": {
     "@better-t-stack/types": "workspace:*",
     "@clack/prompts": "^1.0.0-alpha.8",
-    "@orpc/server": "^1.13.0",
+    "commander": "^14.0.2",
     "consola": "^3.4.2",
-    "execa": "^9.6.1",
     "fs-extra": "^11.3.3",
     "gradient-string": "^3.0.0",
     "handlebars": "^4.7.8",
     "jsonc-parser": "^3.3.1",
-    "oxfmt": "^0.19.0",
     "picocolors": "^1.1.1",
     "tinyglobby": "^0.2.15",
-    "trpc-cli": "^0.12.1",
     "ts-morph": "^27.0.2",
     "yaml": "^2.8.2",
     "zod": "^4.2.1"
@@ -88,8 +79,13 @@
     "@types/bun": "^1.3.5",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^25.0.3",
-    "publint": "^0.3.16",
-    "tsdown": "^0.18.2",
     "typescript": "^5.9.3"
+  },
+  "optionalDependencies": {
+    "@better-t-stack/cli-darwin-arm64": "3.11.0",
+    "@better-t-stack/cli-darwin-x64": "3.11.0",
+    "@better-t-stack/cli-linux-arm64": "3.11.0",
+    "@better-t-stack/cli-linux-x64": "3.11.0",
+    "@better-t-stack/cli-windows-x64": "3.11.0"
   }
 }

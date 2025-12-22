@@ -1,7 +1,7 @@
 import path from "node:path";
 import { isCancel, log, select } from "@clack/prompts";
 import { consola } from "consola";
-import { type ExecaError, execa } from "execa";
+import { $ } from "bun";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { PackageManager, ProjectConfig } from "../../types";
@@ -54,11 +54,7 @@ async function initializeSupabase(serverDir: string, packageManager: PackageMana
   log.info("Initializing Supabase project...");
   try {
     const supabaseInitCommand = getPackageExecutionCommand(packageManager, "supabase init");
-    await execa(supabaseInitCommand, {
-      cwd: serverDir,
-      stdio: "inherit",
-      shell: true,
-    });
+    await $`${{ raw: supabaseInitCommand }}`.cwd(serverDir);
     log.success("Supabase project initialized");
     return true;
   } catch (error) {
@@ -82,36 +78,18 @@ async function startSupabase(serverDir: string, packageManager: PackageManager) 
   log.info("Starting Supabase services (this may take a moment)...");
   const supabaseStartCommand = getPackageExecutionCommand(packageManager, "supabase start");
   try {
-    const subprocess = execa(supabaseStartCommand, {
-      cwd: serverDir,
-      shell: true,
-    });
-
-    let stdoutData = "";
-
-    if (subprocess.stdout) {
-      subprocess.stdout.on("data", (data) => {
-        const text = data.toString();
-        process.stdout.write(text);
-        stdoutData += text;
-      });
-    }
-
-    if (subprocess.stderr) {
-      subprocess.stderr.pipe(process.stderr);
-    }
-
-    await subprocess;
+    // Run command and capture output while also streaming to terminal
+    const result = await $`${{ raw: supabaseStartCommand }}`.cwd(serverDir);
+    const stdoutData = result.stdout.toString();
 
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     return stdoutData;
   } catch (error) {
     consola.error(pc.red("Failed to start Supabase services."));
-    const execaError = error as ExecaError;
-    if (execaError?.message) {
-      consola.error(`Error details: ${execaError.message}`);
-      if (execaError.message.includes("Docker is not running")) {
+    if (error instanceof Error) {
+      consola.error(`Error details: ${error.message}`);
+      if (error.message.includes("Docker is not running")) {
         log.error(pc.red("Docker is not running. Please start Docker and try again."));
       }
     } else {

@@ -19,7 +19,7 @@ jobs:
     name: Release to NPM
     if: startsWith(github.event.head_commit.message, 'chore(release):')
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -104,22 +104,49 @@ jobs:
         run: cd packages/types && bun publish --access public
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 1
-          CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
-      - name: Update CLI types dependency and version
+      - name: Update CLI version and types dependency
         if: steps.check-version.outputs.exists == 'false'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           cd apps/cli
-          jq --arg v "^$VERSION" '.dependencies["@better-t-stack/types"] = $v' package.json > tmp.json && mv tmp.json package.json
+          jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["@better-t-stack/types"] = $dep' package.json > tmp.json && mv tmp.json package.json
 
-      - name: Build CLI
+      - name: Update CLI optionalDependencies versions
+        if: steps.check-version.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          cd apps/cli
+          jq --arg v "$VERSION" '
+            .optionalDependencies["@better-t-stack/cli-darwin-arm64"] = $v |
+            .optionalDependencies["@better-t-stack/cli-darwin-x64"] = $v |
+            .optionalDependencies["@better-t-stack/cli-linux-arm64"] = $v |
+            .optionalDependencies["@better-t-stack/cli-linux-x64"] = $v |
+            .optionalDependencies["@better-t-stack/cli-windows-x64"] = $v
+          ' package.json > tmp.json && mv tmp.json package.json
+
+      - name: Build CLI binaries
         if: steps.check-version.outputs.exists == 'false'
         run: cd apps/cli && bun run build
+
+      - name: Publish CLI platform packages to NPM
+        if: steps.check-version.outputs.exists == 'false'
+        run: |
+          cd apps/cli/dist
+          for dir in better-t-stack-cli-*/; do
+            echo "Publishing $dir..."
+            cd "$dir"
+            bun publish --access public
+            cd ..
+          done
         env:
-          BTS_TELEMETRY: 1
-          CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish CLI main package to NPM
+        if: steps.check-version.outputs.exists == 'false'
+        run: cd apps/cli && bun publish --access public
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Update create-bts alias package version
         if: steps.check-version.outputs.exists == 'false'
@@ -128,21 +155,29 @@ jobs:
           cd packages/create-bts
           jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["create-better-t-stack"] = $dep' package.json > tmp.json && mv tmp.json package.json
 
-      - name: Publish CLI to NPM
-        if: steps.check-version.outputs.exists == 'false'
-        run: cd apps/cli && bun publish --access public
-        env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 1
-          CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
-
       - name: Publish create-bts alias to NPM
         if: steps.check-version.outputs.exists == 'false'
         run: cd packages/create-bts && bun publish --access public
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 1
-          CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
+
+      - name: Upload binaries to GitHub Release
+        if: steps.check-version.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          cd apps/cli/dist
+          for dir in better-t-stack-cli-*/; do
+            name="${dir%/}"
+            if [[ "$name" == *"linux"* ]]; then
+              tar -czf "${name}.tar.gz" -C "$dir/bin" .
+              gh release upload "v$VERSION" "${name}.tar.gz" --clobber
+            else
+              zip -j "${name}.zip" "$dir/bin/"*
+              gh release upload "v$VERSION" "${name}.zip" --clobber
+            fi
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release Summary
         if: steps.check-version.outputs.exists == 'false'
@@ -154,6 +189,11 @@ jobs:
           echo "- [create-better-t-stack@$VERSION](https://www.npmjs.com/package/create-better-t-stack/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
           echo "- [create-bts@$VERSION](https://www.npmjs.com/package/create-bts/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
           echo "- [@better-t-stack/types@$VERSION](https://www.npmjs.com/package/@better-t-stack/types/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
+          echo "- @better-t-stack/cli-darwin-arm64@$VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- @better-t-stack/cli-darwin-x64@$VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- @better-t-stack/cli-linux-arm64@$VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- @better-t-stack/cli-linux-x64@$VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- @better-t-stack/cli-windows-x64@$VERSION" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### GitHub Release" >> $GITHUB_STEP_SUMMARY
           echo "[v$VERSION](https://github.com/${{ github.repository }}/releases/tag/v$VERSION)" >> $GITHUB_STEP_SUMMARY

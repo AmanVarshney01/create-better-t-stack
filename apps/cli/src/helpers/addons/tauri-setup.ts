@@ -1,7 +1,7 @@
 import path from "node:path";
 import { spinner } from "@clack/prompts";
 import { consola } from "consola";
-import { execa } from "execa";
+import { $ } from "bun";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
@@ -78,13 +78,7 @@ export async function setupTauri(config: ProjectConfig) {
 
     const tauriInitCommand = getPackageExecutionCommand(packageManager, commandWithArgs);
 
-    await execa(tauriInitCommand, {
-      cwd: clientPackageDir,
-      env: {
-        CI: "true",
-      },
-      shell: true,
-    });
+    await $`${{ raw: tauriInitCommand }}`.cwd(clientPackageDir).env({ CI: "true" });
 
     s.stop("Tauri desktop app support configured successfully!");
   } catch (error) {

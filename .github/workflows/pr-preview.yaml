@@ -18,6 +18,7 @@ jobs:
     name: Publish Preview
     runs-on: ubuntu-latest
     if: github.event.label.name == 'preview'
+    timeout-minutes: 30
     steps:
       - name: Checkout PR Code
         uses: actions/checkout@v4
@@ -64,34 +65,52 @@ jobs:
         run: cd packages/types && bun publish --access public --tag ${{ steps.version.outputs.tag }}
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 0
 
-      - name: Update CLI package version and types dependency
+      - name: Update CLI package version and dependencies
         run: |
           cd apps/cli
-          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["@better-t-stack/types"] = $v' package.json > tmp.json && mv tmp.json package.json
+          VERSION="${{ steps.version.outputs.version }}"
+          jq --arg v "$VERSION" '
+            .version = $v |
+            .dependencies["@better-t-stack/types"] = $v |
+            .optionalDependencies["@better-t-stack/cli-darwin-arm64"] = $v |
+            .optionalDependencies["@better-t-stack/cli-darwin-x64"] = $v |
+            .optionalDependencies["@better-t-stack/cli-linux-arm64"] = $v |
+            .optionalDependencies["@better-t-stack/cli-linux-x64"] = $v |
+            .optionalDependencies["@better-t-stack/cli-windows-x64"] = $v
+          ' package.json > tmp.json && mv tmp.json package.json
 
       - name: Update create-bts alias package version
         run: |
           cd packages/create-bts
           jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["create-better-t-stack"] = $v' package.json > tmp.json && mv tmp.json package.json
 
-      - name: Build CLI
+      - name: Build CLI binaries
         run: cd apps/cli && bun run build
         env:
           BTS_TELEMETRY: 0
+
+      - name: Publish CLI platform packages to NPM
+        run: |
+          cd apps/cli/dist
+          for dir in better-t-stack-cli-*/; do
+            echo "Publishing $dir..."
+            cd "$dir"
+            bun publish --access public --tag ${{ steps.version.outputs.tag }}
+            cd ..
+          done
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish CLI to NPM
         run: cd apps/cli && bun publish --access public --tag ${{ steps.version.outputs.tag }}
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 0
 
       - name: Publish create-bts to NPM
         run: cd packages/create-bts && bun publish --access public --tag ${{ steps.version.outputs.tag }}
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 0
 
       - name: Find existing preview comment
         uses: peter-evans/find-comment@v3
@@ -117,6 +136,11 @@ jobs:
             | `create-better-t-stack` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
             | `create-bts` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
             | `@better-t-stack/types` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+            | `@better-t-stack/cli-darwin-arm64` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+            | `@better-t-stack/cli-darwin-x64` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+            | `@better-t-stack/cli-linux-arm64` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+            | `@better-t-stack/cli-linux-x64` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+            | `@better-t-stack/cli-windows-x64` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
 
             **Commit:** `${{ steps.version.outputs.commit }}`
 
@@ -124,15 +148,12 @@ jobs:
 
             ```bash
             # Using the PR tag (always gets latest for this PR)
-            bunx create-better-t-stack@pr${{ steps.version.outputs.pr }}
             npx create-better-t-stack@pr${{ steps.version.outputs.pr }}
 
             # Using exact version
-            bunx create-better-t-stack@${{ steps.version.outputs.version }}
             npx create-better-t-stack@${{ steps.version.outputs.version }}
 
             # Using the alias
-            bunx create-bts@pr${{ steps.version.outputs.pr }}
             npx create-bts@pr${{ steps.version.outputs.pr }}
             ```
 

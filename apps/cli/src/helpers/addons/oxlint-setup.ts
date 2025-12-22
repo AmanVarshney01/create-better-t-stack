@@ -1,6 +1,6 @@
 import path from "node:path";
 import { spinner } from "@clack/prompts";
-import { execa } from "execa";
+import { $ } from "bun";
 import fs from "fs-extra";
 import type { PackageManager } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
@@ -28,17 +28,9 @@ export async function setupOxlint(projectDir: string, packageManager: PackageMan
 
   const oxlintInitCommand = getPackageExecutionCommand(packageManager, "oxlint@latest --init");
   s.start("Initializing oxlint and oxfmt...");
-  await execa(oxlintInitCommand, {
-    cwd: projectDir,
-    env: { CI: "true" },
-    shell: true,
-  });
+  await $`${{ raw: oxlintInitCommand }}`.cwd(projectDir).env({ CI: "true" });
 
   const oxfmtInitCommand = getPackageExecutionCommand(packageManager, "oxfmt@latest --init");
-  await execa(oxfmtInitCommand, {
-    cwd: projectDir,
-    env: { CI: "true" },
-    shell: true,
-  });
+  await $`${{ raw: oxfmtInitCommand }}`.cwd(projectDir).env({ CI: "true" });
   s.stop("oxlint and oxfmt initialized successfully!");
 }

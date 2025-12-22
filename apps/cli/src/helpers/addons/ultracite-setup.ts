@@ -1,5 +1,5 @@
 import { autocompleteMultiselect, group, log, multiselect, spinner } from "@clack/prompts";
-import { execa } from "execa";
+import { $ } from "bun";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
@@ -209,11 +209,7 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
     const s = spinner();
     s.start("Running Ultracite init command...");
 
-    await execa(ultraciteInitCommand, {
-      cwd: projectDir,
-      env: { CI: "true" },
-      shell: true,
-    });
+    await $`${{ raw: ultraciteInitCommand }}`.cwd(projectDir).env({ CI: "true" });
 
     if (hasHusky) {
       await addPackageDependency({
