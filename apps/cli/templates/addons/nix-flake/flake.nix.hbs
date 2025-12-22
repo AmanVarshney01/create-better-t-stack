@@ -1,48 +1,77 @@
-\{
-  description = "\{{projectName}} devshell";
+{
+  description = "{{projectName}} devshell";
 
-  inputs = \{
-    nixpkgs = \{
+  inputs = {
+    nixpkgs = {
       url = "github:NixOS/nixpkgs/nixos-unstable";
     };
   };
 
-  outputs = \{ self, nixpkgs }:
+  outputs = { self, nixpkgs }:
     let
       mkShellFor = system:
         let
-          pkgs = nixpkgs.legacyPackages.$\{system};
+          pkgs = nixpkgs.legacyPackages.${system};
         in
-        pkgs.mkShell \{
+        pkgs.mkShell {
           packages = [
-{{#if (eq runtime "bun")}}
+            # package manager
+{{#if (eq packageManager "bun")}}
             pkgs.bun
-{{else if (eq runtime "node")}}
+{{else}}
             pkgs.nodejs_22
 {{/if}}
+{{#if (eq packageManager "pnpm")}}
+            pkgs.pnpm
+{{/if}}
+
+            # backend runtime (if different from package manager)
+{{#if (and (eq runtime "bun") (ne packageManager "bun"))}}
+            pkgs.bun
+{{/if}}
+{{#if (and (eq runtime "node") (eq packageManager "bun"))}}
+            pkgs.nodejs_22
+{{/if}}
+{{#if (eq runtime "workers")}}
+            pkgs.wrangler
+{{/if}}
+
+            # database tooling
 {{#if (eq dbSetup "docker")}}
             pkgs.docker-compose
+{{/if}}
+{{#if (and (eq database "postgres") (eq dbSetup "docker"))}}
+            pkgs.postgresql
+{{/if}}
+{{#if (and (eq database "mysql") (eq dbSetup "docker"))}}
+            pkgs.mariadb
+{{/if}}
+{{#if (and (eq database "mongodb") (eq dbSetup "docker"))}}
+            pkgs.mongosh
+{{/if}}
+{{#if (eq dbSetup "turso")}}
+            pkgs.turso-cli
+{{/if}}
+{{#if (eq dbSetup "supabase")}}
+            pkgs.supabase-cli
 {{/if}}
           ];
 
           shellHook = ''
-{{#if (eq runtime "bun")}}
             if [ -n "$PS1" ]; then
+{{#if (eq packageManager "bun")}}
               echo "bun: $(bun --version)"
-            fi
-{{else if (eq runtime "node")}}
-            if [ -n "$PS1" ]; then
+{{else}}
               echo "node: $(node --version)"
-            fi
 {{/if}}
+            fi
           '';
         };
     in
-    \{
+    {
       devShells.x86_64-linux.default = mkShellFor "x86_64-linux";
       devShells.aarch64-linux.default = mkShellFor "aarch64-linux";
       devShells.x86_64-darwin.default = mkShellFor "x86_64-darwin";
       devShells.aarch64-darwin.default = mkShellFor "aarch64-darwin";
     };
 }
-
