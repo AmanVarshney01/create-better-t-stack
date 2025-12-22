@@ -1,12 +1,10 @@
 import path from "node:path";
-import { isCancel, log, select, spinner } from "@clack/prompts";
-import consola from "consola";
-import { execa } from "execa";
+import { $ } from "bun";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
-import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
+import { log } from "../../utils/logger";
 
 type FumadocsTemplate =
   | "next-mdx"
@@ -15,53 +13,24 @@ type FumadocsTemplate =
   | "react-router-spa"
   | "tanstack-start";
 
-const TEMPLATES = {
-  "next-mdx": {
-    label: "Next.js: Fumadocs MDX",
-    hint: "Recommended template with MDX support",
-    value: "+next+fuma-docs-mdx",
-  },
-  waku: {
-    label: "Waku: Content Collections",
-    hint: "Template using Waku with content collections",
-    value: "waku",
-  },
-  "react-router": {
-    label: "React Router: MDX Remote",
-    hint: "Template for React Router with MDX remote",
-    value: "react-router",
-  },
-  "react-router-spa": {
-    label: "React Router: SPA",
-    hint: "Template for React Router SPA",
-    value: "react-router-spa",
-  },
-  "tanstack-start": {
-    label: "Tanstack Start: MDX Remote",
-    hint: "Template for Tanstack Start with MDX remote",
-    value: "tanstack-start",
-  },
-} as const;
+const TEMPLATE_VALUES: Record<FumadocsTemplate, string> = {
+  "next-mdx": "+next+fuma-docs-mdx",
+  waku: "waku",
+  "react-router": "react-router",
+  "react-router-spa": "react-router-spa",
+  "tanstack-start": "tanstack-start",
+};
 
-export async function setupFumadocs(config: ProjectConfig) {
+export async function setupFumadocs(
+  config: ProjectConfig,
+  template: FumadocsTemplate = "next-mdx",
+) {
   const { packageManager, projectDir } = config;
 
   try {
     log.info("Setting up Fumadocs...");
 
-    const template = await select<FumadocsTemplate>({
-      message: "Choose a template",
-      options: Object.entries(TEMPLATES).map(([key, template]) => ({
-        value: key as FumadocsTemplate,
-        label: template.label,
-        hint: template.hint,
-      })),
-      initialValue: "next-mdx",
-    });
-
-    if (isCancel(template)) return exitCancelled("Operation cancelled");
-
-    const templateArg = TEMPLATES[template].value;
+    const templateArg = TEMPLATE_VALUES[template];
 
     const commandWithArgs = `create-fumadocs-app@latest fumadocs --template ${templateArg} --src --pm ${packageManager} --no-git`;
 
@@ -70,14 +39,9 @@ export async function setupFumadocs(config: ProjectConfig) {
     const appsDir = path.join(projectDir, "apps");
     await fs.ensureDir(appsDir);
 
-    const s = spinner();
-    s.start("Running Fumadocs create command...");
+    log.step("Running Fumadocs create command...");
 
-    await execa(fumadocsInitCommand, {
-      cwd: appsDir,
-      env: { CI: "true" },
-      shell: true,
-    });
+    await $`${{ raw: fumadocsInitCommand }}`.cwd(appsDir).env({ CI: "true" });
 
     const fumadocsDir = path.join(projectDir, "apps", "fumadocs");
     const packageJsonPath = path.join(fumadocsDir, "package.json");
@@ -93,11 +57,11 @@ export async function setupFumadocs(config: ProjectConfig) {
       await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
     }
 
-    s.stop("Fumadocs setup complete!");
+    log.success("Fumadocs setup complete!");
   } catch (error) {
-    log.error(pc.red("Failed to set up Fumadocs"));
+    log.error("Failed to set up Fumadocs");
     if (error instanceof Error) {
-      consola.error(pc.red(error.message));
+      log.error(error.message);
     }
   }
 }

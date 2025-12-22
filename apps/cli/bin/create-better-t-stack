@@ -1,0 +1,98 @@
+#!/usr/bin/env node
+
+/**
+ * Bin stub for create-better-t-stack.
+ * Finds and runs the platform-specific compiled binary.
+ *
+ * The binary is installed as an optional dependency:
+ *   @better-t-stack/cli-{platform}-{arch}
+ *
+ * This stub searches node_modules for the matching binary package.
+ */
+
+import { spawnSync } from "node:child_process";
+import { existsSync, realpathSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { platform as osPlatform, arch as osArch } from "node:os";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+function run(target) {
+    const result = spawnSync(target, process.argv.slice(2), {
+        stdio: "inherit",
+    });
+    if (result.error) {
+        console.error(result.error.message);
+        process.exit(1);
+    }
+    const code = typeof result.status === "number" ? result.status : 0;
+    process.exit(code);
+}
+
+// Allow override via environment variable
+const envPath = process.env.CREATE_BETTER_T_STACK_BIN_PATH;
+if (envPath) {
+    run(envPath);
+}
+
+const scriptPath = realpathSync(__filename);
+const scriptDir = dirname(scriptPath);
+
+const platformMap = {
+    darwin: "darwin",
+    linux: "linux",
+    win32: "windows",
+};
+
+const archMap = {
+    x64: "x64",
+    arm64: "arm64",
+};
+
+let platform = platformMap[osPlatform()];
+if (!platform) {
+    platform = osPlatform();
+}
+
+let arch = archMap[osArch()];
+if (!arch) {
+    arch = osArch();
+}
+
+// Scoped package name: @better-t-stack/cli-{platform}-{arch}
+const scopedPackage = "@better-t-stack/cli-" + platform + "-" + arch;
+const binary = platform === "windows" ? "create-better-t-stack.exe" : "create-better-t-stack";
+
+function findBinary(startDir) {
+    let current = startDir;
+    for (; ;) {
+        const modules = join(current, "node_modules");
+        if (existsSync(modules)) {
+            // Check for scoped package: node_modules/@better-t-stack/cli-{platform}-{arch}
+            const scopedPath = join(modules, "@better-t-stack", "cli-" + platform + "-" + arch);
+            const candidate = join(scopedPath, "bin", binary);
+            if (existsSync(candidate)) {
+                return candidate;
+            }
+        }
+        const parent = dirname(current);
+        if (parent === current) {
+            return;
+        }
+        current = parent;
+    }
+}
+
+const resolved = findBinary(scriptDir);
+
+if (!resolved) {
+    console.error(
+        'No binary found for your platform (' + platform + '-' + arch + ').\n' +
+        'You can try manually installing the "' + scopedPackage + '" package.',
+    );
+    process.exit(1);
+}
+
+run(resolved);

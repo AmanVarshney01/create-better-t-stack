@@ -1,7 +1,7 @@
 import path from "node:path";
-import { log } from "@clack/prompts";
 import fs from "fs-extra";
 import pc from "picocolors";
+import { log } from "../../utils/logger";
 import type { Frontend, ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { setupFumadocs } from "./fumadocs-setup";
@@ -32,15 +32,9 @@ export async function setupAddons(config: ProjectConfig, isAddCommand = false) {
     });
 
     if (isAddCommand) {
-      log.info(`${pc.yellow("Update your package.json scripts:")}
-
-${pc.dim("Replace:")} ${pc.yellow('"pnpm -r dev"')} ${pc.dim("→")} ${pc.green('"turbo dev"')}
-${pc.dim("Replace:")} ${pc.yellow('"pnpm --filter web dev"')} ${pc.dim(
-        "→",
-      )} ${pc.green('"turbo -F web dev"')}
-
-${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
-		`);
+      log.info(
+        `Update your package.json scripts: Replace "pnpm -r dev" → "turbo dev", Replace "pnpm --filter web dev" → "turbo -F web dev". Docs: https://turborepo.com/docs`,
+      );
     }
   }
 

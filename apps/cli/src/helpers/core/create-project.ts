@@ -1,6 +1,6 @@
-import { log } from "@clack/prompts";
 import fs from "fs-extra";
 import type { ProjectConfig } from "../../types";
+import { log } from "../../utils/logger";
 import { writeBtsConfig } from "../../utils/bts-config";
 import { exitWithError } from "../../utils/errors";
 import { setupCatalogs } from "../../utils/setup-catalogs";
@@ -33,7 +33,7 @@ import {
   setupPaymentsTemplate,
 } from "./template-manager";
 
-export async function createProject(options: ProjectConfig, cliInput?: { manualDb?: boolean }) {
+export async function createProject(options: ProjectConfig) {
   const projectDir = options.projectDir;
   const isConvex = options.backend === "convex";
   const isSelfBackend = options.backend === "self";
@@ -72,7 +72,7 @@ export async function createProject(options: ProjectConfig, cliInput?: { manualD
       if (needsServerSetup) {
         await setupRuntime(options);
       }
-      await setupDatabase(options, cliInput);
+      await setupDatabase(options);
     }
 
     if (options.examples.length > 0 && options.examples[0] !== "none") {

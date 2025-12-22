@@ -1,16 +1,14 @@
 import path from "node:path";
-import { spinner } from "@clack/prompts";
-import { consola } from "consola";
-import { execa } from "execa";
+import { $ } from "bun";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
+import { log } from "../../utils/logger";
 
 export async function setupTauri(config: ProjectConfig) {
   const { packageManager, frontend, projectDir } = config;
-  const s = spinner();
   const clientPackageDir = path.join(projectDir, "apps/web");
 
   if (!(await fs.pathExists(clientPackageDir))) {
@@ -18,7 +16,7 @@ export async function setupTauri(config: ProjectConfig) {
   }
 
   try {
-    s.start("Setting up Tauri desktop app support...");
+    log.step("Setting up Tauri desktop app support...");
 
     await addPackageDependency({
       devDependencies: ["@tauri-apps/cli"],
@@ -78,19 +76,13 @@ export async function setupTauri(config: ProjectConfig) {
 
     const tauriInitCommand = getPackageExecutionCommand(packageManager, commandWithArgs);
 
-    await execa(tauriInitCommand, {
-      cwd: clientPackageDir,
-      env: {
-        CI: "true",
-      },
-      shell: true,
-    });
+    await $`${{ raw: tauriInitCommand }}`.cwd(clientPackageDir).env({ CI: "true" });
 
-    s.stop("Tauri desktop app support configured successfully!");
+    log.success("Tauri desktop app support configured successfully!");
   } catch (error) {
-    s.stop(pc.red("Failed to set up Tauri"));
+    log.error("Failed to set up Tauri");
     if (error instanceof Error) {
-      consola.error(pc.red(error.message));
+      log.error(error.message);
     }
   }
 }

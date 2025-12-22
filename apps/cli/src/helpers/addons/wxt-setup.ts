@@ -1,54 +1,18 @@
 import path from "node:path";
-import { isCancel, log, select, spinner } from "@clack/prompts";
-import { execa } from "execa";
+import { $ } from "bun";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
-import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
+import { log } from "../../utils/logger";
 
 type WxtTemplate = "vanilla" | "vue" | "react" | "solid" | "svelte";
 
-const TEMPLATES = {
-  vanilla: {
-    label: "Vanilla",
-    hint: "Vanilla JavaScript template",
-  },
-  vue: {
-    label: "Vue",
-    hint: "Vue.js template",
-  },
-  react: {
-    label: "React",
-    hint: "React template",
-  },
-  solid: {
-    label: "Solid",
-    hint: "SolidJS template",
-  },
-  svelte: {
-    label: "Svelte",
-    hint: "Svelte template",
-  },
-} as const;
-
-export async function setupWxt(config: ProjectConfig) {
+export async function setupWxt(config: ProjectConfig, template: WxtTemplate = "react") {
   const { packageManager, projectDir } = config;
 
   try {
     log.info("Setting up WXT...");
-
-    const template = await select<WxtTemplate>({
-      message: "Choose a template",
-      options: Object.entries(TEMPLATES).map(([key, template]) => ({
-        value: key as WxtTemplate,
-        label: template.label,
-        hint: template.hint,
-      })),
-      initialValue: "react",
-    });
-
-    if (isCancel(template)) return exitCancelled("Operation cancelled");
 
     const commandWithArgs = `wxt@latest init extension --template ${template} --pm ${packageManager}`;
 
@@ -57,14 +21,9 @@ export async function setupWxt(config: ProjectConfig) {
     const appsDir = path.join(projectDir, "apps");
     await fs.ensureDir(appsDir);
 
-    const s = spinner();
-    s.start("Running WXT init command...");
+    log.step("Running WXT init command...");
 
-    await execa(wxtInitCommand, {
-      cwd: appsDir,
-      env: { CI: "true" },
-      shell: true,
-    });
+    await $`${{ raw: wxtInitCommand }}`.cwd(appsDir).env({ CI: "true" });
 
     const extensionDir = path.join(projectDir, "apps", "extension");
     const packageJsonPath = path.join(extensionDir, "package.json");
@@ -80,9 +39,9 @@ export async function setupWxt(config: ProjectConfig) {
       await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
     }
 
-    s.stop("WXT setup complete!");
+    log.success("WXT setup complete!");
   } catch (error) {
-    log.error(pc.red("Failed to set up WXT"));
+    log.error("Failed to set up WXT");
     if (error instanceof Error) {
       console.error(pc.red(error.message));
     }

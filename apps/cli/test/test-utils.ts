@@ -1,9 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { createRouterClient } from "@orpc/server";
 import { expect } from "bun:test";
-import { router } from "../src/index";
-import type { CreateInput, InitResult } from "../src/types";
+import { create, type CreateOptions, type CreateResult } from "../src/api";
 import {
   AddonsSchema,
   APISchema,
@@ -26,9 +24,6 @@ export { cleanupSmokeDirectory, ensureSmokeDirectory, SMOKE_DIR } from "./setup"
 
 // Smoke directory path - use the same as setup.ts
 const SMOKE_DIR_PATH = join(import.meta.dir, "..", ".smoke");
-
-// Create oRPC caller for direct function calls instead of subprocess
-const defaultContext = {};
 
 // Store original console methods to prevent race conditions when restoring
 const originalConsoleLog = console.log;
@@ -67,115 +62,64 @@ function restoreConsole() {
 
 export interface TestResult {
   success: boolean;
-  result?: InitResult;
+  result?: CreateResult;
   error?: string;
   projectDir?: string;
   config: TestConfig;
 }
 
-export interface TestConfig extends CreateInput {
+export interface TestConfig extends CreateOptions {
   projectName?: string;
   expectError?: boolean;
   expectedErrorMessage?: string;
 }
 
 /**
- * Run tRPC test using direct function calls instead of subprocess
- * This delegates all validation to the CLI's existing logic - much simpler!
+ * Run test using the new create() API
+ * This is much simpler than the old BTS_PROGRAMMATIC approach!
  */
 export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
-  // Ensure smoke directory exists (may be called before global setup in some cases)
+  // Ensure smoke directory exists
   try {
     await mkdir(SMOKE_DIR_PATH, { recursive: true });
   } catch {
     // Directory may already exist
   }
 
-  // Store original environment
-  const originalProgrammatic = process.env.BTS_PROGRAMMATIC;
-
   try {
-    // Set programmatic mode to ensure errors are thrown instead of process.exit
-    process.env.BTS_PROGRAMMATIC = "1";
-
     // Suppress console output
     suppressConsole();
 
-    const caller = createRouterClient(router, { context: defaultContext });
     const projectName = config.projectName || "default-app";
     const projectPath = join(SMOKE_DIR_PATH, projectName);
 
-    // Determine if we should use --yes or not
-    // Only core stack flags conflict with --yes flag (from CLI error message)
-    const coreStackFlags: (keyof TestConfig)[] = [
-      "database",
-      "orm",
-      "backend",
-      "runtime",
-      "frontend",
-      "addons",
-      "examples",
-      "auth",
-      "payments",
-      "dbSetup",
-      "api",
-      "webDeploy",
-      "serverDeploy",
-    ];
-    const hasSpecificCoreConfig = coreStackFlags.some((flag) => config[flag] !== undefined);
-
-    // Only use --yes if no core stack flags are provided and not explicitly disabled
-    const willUseYesFlag = config.yes !== undefined ? config.yes : !hasSpecificCoreConfig;
-
-    // Provide defaults for missing core stack options to avoid prompts
-    // But don't provide core stack defaults when yes: true is explicitly set
-    const coreStackDefaults = willUseYesFlag
-      ? {}
-      : {
-          frontend: ["tanstack-router"] as Frontend[],
-          backend: "hono" as Backend,
-          runtime: "bun" as Runtime,
-          api: "trpc" as API,
-          database: "sqlite" as Database,
-          orm: "drizzle" as ORM,
-          auth: "none" as Auth,
-          payments: "none" as Payments,
-          addons: ["none"] as Addons[],
-          examples: ["none"] as Examples[],
-          dbSetup: "none" as DatabaseSetup,
-          webDeploy: "none" as WebDeploy,
-          serverDeploy: "none" as ServerDeploy,
-        };
-
-    // Build options object - let the CLI handle all validation
-    const options: CreateInput = {
-      renderTitle: false,
-      install: config.install ?? false,
+    // Use the new clean create() API
+    const result = await create({
+      projectName: projectPath,
+      defaults: config.defaults ?? true,
+      frontend: config.frontend,
+      backend: config.backend,
+      runtime: config.runtime,
+      database: config.database,
+      orm: config.orm,
+      auth: config.auth,
+      payments: config.payments,
+      api: config.api,
+      addons: config.addons,
+      examples: config.examples,
+      dbSetup: config.dbSetup,
+      webDeploy: config.webDeploy,
+      serverDeploy: config.serverDeploy,
       git: config.git ?? true,
       packageManager: config.packageManager ?? "bun",
-      directoryConflict: "overwrite",
-      verbose: true, // Need verbose to get the result
-      disableAnalytics: true,
-      yes: willUseYesFlag,
-      ...coreStackDefaults,
-      ...config,
-    };
-
-    // Remove our test-specific properties
-    const {
-      projectName: _,
-      expectError: __,
-      expectedErrorMessage: ___,
-      ...cleanOptions
-    } = options as TestConfig;
-
-    const result = await caller.init([projectPath, cleanOptions]);
+      install: config.install ?? false,
+    });
 
     return {
-      success: result?.success ?? false,
-      result: result?.success ? result : undefined,
-      error: result?.success ? undefined : result?.error,
-      projectDir: result?.success ? result?.projectDirectory : undefined,
+      success: result.success,
+      result: result.success ? result : undefined,
+      error: result.success ? undefined : result.error,
+      projectDir: result.success ? result.projectDirectory : undefined,
       config,
     };
   } catch (error) {
@@ -185,13 +129,6 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
       config,
     };
   } finally {
-    // Always restore original environment
-    if (originalProgrammatic === undefined) {
-      delete process.env.BTS_PROGRAMMATIC;
-    } else {
-      process.env.BTS_PROGRAMMATIC = originalProgrammatic;
-    }
-
     // Restore console methods
     restoreConsole();
   }
@@ -266,7 +203,7 @@ export const DB_SETUPS = extractEnumValues(DatabaseSetupSchema);
 export function createBasicConfig(overrides: Partial<TestConfig> = {}): TestConfig {
   return {
     projectName: "test-app",
-    yes: true, // Use defaults
+    defaults: true,
     install: false,
     git: true,
     ...overrides,

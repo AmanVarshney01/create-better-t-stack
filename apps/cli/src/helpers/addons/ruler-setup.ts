@@ -1,13 +1,43 @@
 import path from "node:path";
-import { autocompleteMultiselect, isCancel, log, spinner } from "@clack/prompts";
-import { execa } from "execa";
+import { $ } from "bun";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
-import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
+import { log } from "../../utils/logger";
 
-export async function setupRuler(config: ProjectConfig) {
+type RulerAgent =
+  | "amp"
+  | "copilot"
+  | "claude"
+  | "codex"
+  | "cursor"
+  | "windsurf"
+  | "cline"
+  | "aider"
+  | "firebase"
+  | "gemini-cli"
+  | "junie"
+  | "kilocode"
+  | "opencode"
+  | "crush"
+  | "zed"
+  | "qwen"
+  | "amazonqcli"
+  | "augmentcode"
+  | "firebender"
+  | "goose"
+  | "jules"
+  | "kiro"
+  | "openhands"
+  | "roo"
+  | "trae"
+  | "warp";
+
+export async function setupRuler(
+  config: ProjectConfig,
+  agents: RulerAgent[] = ["cursor", "claude"],
+) {
   const { packageManager, projectDir } = config;
 
   try {
@@ -17,54 +47,12 @@ export async function setupRuler(config: ProjectConfig) {
 
     if (!(await fs.pathExists(rulerDir))) {
       log.error(
-        pc.red(
-          "Ruler template directory not found. Please ensure ruler addon is properly installed.",
-        ),
+        "Ruler template directory not found. Please ensure ruler addon is properly installed.",
       );
       return;
     }
 
-    const EDITORS = {
-      amp: { label: "AMP" },
-      copilot: { label: "GitHub Copilot" },
-      claude: { label: "Claude Code" },
-      codex: { label: "OpenAI Codex CLI" },
-      cursor: { label: "Cursor" },
-      windsurf: { label: "Windsurf" },
-      cline: { label: "Cline" },
-      aider: { label: "Aider" },
-      firebase: { label: "Firebase Studio" },
-      "gemini-cli": { label: "Gemini CLI" },
-      junie: { label: "Junie" },
-      kilocode: { label: "Kilo Code" },
-      opencode: { label: "OpenCode" },
-      crush: { label: "Crush" },
-      zed: { label: "Zed" },
-      qwen: { label: "Qwen" },
-      amazonqcli: { label: "Amazon Q CLI" },
-      augmentcode: { label: "AugmentCode" },
-      firebender: { label: "Firebender" },
-      goose: { label: "Goose" },
-      jules: { label: "Jules" },
-      kiro: { label: "Kiro" },
-      openhands: { label: "Open Hands" },
-      roo: { label: "RooCode" },
-      trae: { label: "Trae AI" },
-      warp: { label: "Warp" },
-    } as const;
-
-    const selectedEditors = await autocompleteMultiselect({
-      message: "Select AI assistants for Ruler",
-      options: Object.entries(EDITORS).map(([key, v]) => ({
-        value: key,
-        label: v.label,
-      })),
-      required: false,
-    });
-
-    if (isCancel(selectedEditors)) return exitCancelled("Operation cancelled");
-
-    if (selectedEditors.length === 0) {
+    if (agents.length === 0) {
       log.info("No AI assistants selected. To apply rules later, run:");
       log.info(
         pc.cyan(
@@ -79,33 +67,28 @@ export async function setupRuler(config: ProjectConfig) {
 
     let updatedConfig = currentConfig;
 
-    const defaultAgentsLine = `default_agents = [${selectedEditors.map((editor) => `"${editor}"`).join(", ")}]`;
+    const defaultAgentsLine = `default_agents = [${agents.map((agent) => `"${agent}"`).join(", ")}]`;
     updatedConfig = updatedConfig.replace(/default_agents = \[\]/, defaultAgentsLine);
 
     await fs.writeFile(configFile, updatedConfig);
 
     await addRulerScriptToPackageJson(projectDir, packageManager);
 
-    const s = spinner();
-    s.start("Applying rules with Ruler...");
+    log.step("Applying rules with Ruler...");
 
     try {
       const rulerApplyCmd = getPackageExecutionCommand(
         packageManager,
-        `@intellectronica/ruler@latest apply --agents ${selectedEditors.join(",")} --local-only`,
+        `@intellectronica/ruler@latest apply --agents ${agents.join(",")} --local-only`,
       );
-      await execa(rulerApplyCmd, {
-        cwd: projectDir,
-        env: { CI: "true" },
-        shell: true,
-      });
+      await $`${{ raw: rulerApplyCmd }}`.cwd(projectDir).env({ CI: "true" });
 
-      s.stop("Applied rules with Ruler");
+      log.success("Applied rules with Ruler");
     } catch {
-      s.stop(pc.red("Failed to apply rules"));
+      log.error("Failed to apply rules");
     }
   } catch (error) {
-    log.error(pc.red("Failed to set up Ruler"));
+    log.error("Failed to set up Ruler");
     if (error instanceof Error) {
       console.error(pc.red(error.message));
     }
