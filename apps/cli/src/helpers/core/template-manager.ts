@@ -35,6 +35,8 @@ export async function processAndCopyFiles(
       relativeDestPath = path.join(path.dirname(relativeDestPath), ".gitignore");
     } else if (basename === "_npmrc") {
       relativeDestPath = path.join(path.dirname(relativeDestPath), ".npmrc");
+    } else if (basename === "_envrc") {
+      relativeDestPath = path.join(path.dirname(relativeDestPath), ".envrc");
     }
 
     const destPath = path.join(destDir, relativeDestPath);

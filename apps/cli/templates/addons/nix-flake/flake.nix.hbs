@@ -1,0 +1,48 @@
+\{
+  description = "\{{projectName}} devshell";
+
+  inputs = \{
+    nixpkgs = \{
+      url = "github:NixOS/nixpkgs/nixos-unstable";
+    };
+  };
+
+  outputs = \{ self, nixpkgs }:
+    let
+      mkShellFor = system:
+        let
+          pkgs = nixpkgs.legacyPackages.$\{system};
+        in
+        pkgs.mkShell \{
+          packages = [
+{{#if (eq runtime "bun")}}
+            pkgs.bun
+{{else if (eq runtime "node")}}
+            pkgs.nodejs_22
+{{/if}}
+{{#if (eq dbSetup "docker")}}
+            pkgs.docker-compose
+{{/if}}
+          ];
+
+          shellHook = ''
+{{#if (eq runtime "bun")}}
+            if [ -n "$PS1" ]; then
+              echo "bun: $(bun --version)"
+            fi
+{{else if (eq runtime "node")}}
+            if [ -n "$PS1" ]; then
+              echo "node: $(node --version)"
+            fi
+{{/if}}
+          '';
+        };
+    in
+    \{
+      devShells.x86_64-linux.default = mkShellFor "x86_64-linux";
+      devShells.aarch64-linux.default = mkShellFor "aarch64-linux";
+      devShells.x86_64-darwin.default = mkShellFor "x86_64-darwin";
+      devShells.aarch64-darwin.default = mkShellFor "aarch64-darwin";
+    };
+}
+
