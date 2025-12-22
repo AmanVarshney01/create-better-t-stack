@@ -44,7 +44,6 @@ export async function displayPostInstallInstructions(
     addons?.includes("biome") ||
     addons?.includes("lefthook") ||
     addons?.includes("oxlint");
-  const hasLinting = addons?.includes("biome") || addons?.includes("oxlint");
 
   const databaseInstructions =
     !isConvex && database !== "none"
@@ -61,7 +60,7 @@ export async function displayPostInstallInstructions(
 
   const tauriInstructions = addons?.includes("tauri") ? getTauriInstructions(runCmd) : "";
   const huskyInstructions = hasHusky ? getHuskyInstructions(runCmd) : "";
-  const lintingInstructions = hasLinting ? getLintingInstructions(runCmd) : "";
+  const lintingInstructions = hasGitHooksOrLinting ? getLintingInstructions(runCmd) : "";
   const nativeInstructions =
     (frontend?.includes("native-bare") ||
       frontend?.includes("native-uniwind") ||
