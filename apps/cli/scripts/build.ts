@@ -65,6 +65,17 @@ for (const target of allTargets) {
   }
 }
 
+// Install all platform binaries for opentui (required for cross-compilation)
+if (!singleFlag) {
+  const { $ } = await import("bun");
+  console.log("Installing all platform binaries for @opentui/core...\n");
+  try {
+    await $`bun install --os="*" --cpu="*" @opentui/core@${pkg.dependencies["@opentui/core"]}`.quiet();
+  } catch (e) {
+    console.warn("Warning: Could not install all platform binaries, some builds may fail\n");
+  }
+}
+
 console.log(`Building ${cliName} v${version}\n`);
 
 export interface BuiltPackage {
