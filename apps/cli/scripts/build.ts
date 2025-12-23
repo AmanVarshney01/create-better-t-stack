@@ -8,10 +8,10 @@
  *   bun run scripts/build.ts --single  # Build only for current platform
  *
  * Output structure:
- *   dist/@better-t-stack-cli-darwin-arm64/
+ *   dist/better-t-stack-cli-darwin-arm64/
  *     ├── bin/create-better-t-stack
  *     └── package.json
- *   dist/@better-t-stack-cli-darwin-x64/
+ *   dist/better-t-stack-cli-darwin-x64/
  *   ... etc
  */
 import path from "node:path";
@@ -35,14 +35,15 @@ const singleFlag = process.argv.includes("--single");
 interface Target {
   os: "linux" | "darwin" | "win32";
   arch: "arm64" | "x64";
+  bunTarget: `bun-${"linux" | "darwin" | "windows"}-${"arm64" | "x64"}`;
 }
 
 const allTargets: Target[] = [
-  { os: "linux", arch: "arm64" },
-  { os: "linux", arch: "x64" },
-  { os: "darwin", arch: "arm64" },
-  { os: "darwin", arch: "x64" },
-  { os: "win32", arch: "x64" },
+  { os: "linux", arch: "arm64", bunTarget: "bun-linux-arm64" },
+  { os: "linux", arch: "x64", bunTarget: "bun-linux-x64" },
+  { os: "darwin", arch: "arm64", bunTarget: "bun-darwin-arm64" },
+  { os: "darwin", arch: "x64", bunTarget: "bun-darwin-x64" },
+  { os: "win32", arch: "x64", bunTarget: "bun-windows-x64" },
 ];
 
 const targets = singleFlag
@@ -81,7 +82,6 @@ for (const target of targets) {
   const binaryName = target.os === "win32" ? `${cliName}.exe` : cliName;
   const outDir = path.join(projectDir, "dist", dirName);
   const binDir = path.join(outDir, "bin");
-  const bunTarget = `bun-${platformName}-${target.arch}`;
 
   console.log(`Building ${packageName}...`);
 
@@ -89,28 +89,24 @@ for (const target of targets) {
   fs.mkdirSync(binDir, { recursive: true });
 
   try {
-    // Compile the binary using bun build --compile
-    const compileResult = Bun.spawnSync({
-      cmd: [
-        "bun",
-        "build",
-        "./src/cli.ts",
-        "--compile",
-        "--minify",
-        `--target=${bunTarget}`,
-        `--define`,
-        `CLI_VERSION="${version}"`,
-        `--outfile=${path.join(binDir, binaryName)}`,
-      ],
-      cwd: projectDir,
-      stdout: "pipe",
-      stderr: "pipe",
+    // Compile the binary using Bun.build API
+    const result = await Bun.build({
+      entrypoints: ["./src/cli.ts"],
+      minify: true,
+      define: {
+        CLI_VERSION: JSON.stringify(version),
+      },
+      compile: {
+        target: target.bunTarget as Bun.Build.Target,
+        outfile: path.join(binDir, binaryName),
+      },
     });
 
-    if (compileResult.exitCode !== 0) {
-      const stderr = compileResult.stderr.toString();
+    if (!result.success) {
       console.error(`  ✗ Compile failed for ${packageName}`);
-      console.error(`    ${stderr}`);
+      for (const log of result.logs) {
+        console.error(`    ${log}`);
+      }
       continue;
     }
 
