@@ -1,17 +1,16 @@
 #!/usr/bin/env bun
 /**
- * CLI entry point using commander directly
- * Replaces trpc-cli for bun compile compatibility
+ * CLI entry point with TUI support
+ * Replaces the old clack-prompts based CLI with OpenTUI
  */
 import { Command } from "commander";
-import { intro, log } from "@clack/prompts";
-import pc from "picocolors";
-import { addAddonsHandler, createProjectHandler } from "./helpers/core/command-handlers";
-import { handleError } from "./utils/errors";
+import { renderTui } from "./tui/app";
+import { create, type CreateOptions } from "./api";
+import { createProject } from "./helpers/core/create-project";
+import { getDefaultConfig } from "./constants";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
-import { openUrl } from "./utils/open-url";
-import { renderTitle } from "./utils/render-title";
-import { displaySponsors, fetchSponsors } from "./utils/sponsors";
+import { generateReproducibleCommand } from "./utils/generate-reproducible-command";
+import path from "node:path";
 import type {
   PackageManager,
   Database,
@@ -29,6 +28,7 @@ import type {
   Template,
   Auth,
   Payments,
+  ProjectConfig,
 } from "./types";
 
 const program = new Command();
@@ -39,7 +39,7 @@ program
   .version(getLatestCLIVersion())
   .argument("[project-name]", "Name of the project")
   .option("-t, --template <template>", "Use a predefined template")
-  .option("-y, --yes", "Use default configuration", false)
+  .option("-y, --yes", "Use default configuration (skip TUI)", false)
   .option("--yolo", "(WARNING) Bypass validations and compatibility checks", false)
   .option("--verbose", "Show detailed result information", false)
   .option("--database <database>", "Database to use")
@@ -61,47 +61,81 @@ program
   .option("--web-deploy <deploy>", "Web deployment target")
   .option("--server-deploy <deploy>", "Server deployment target")
   .option("--directory-conflict <action>", "How to handle directory conflicts")
-  .option("--render-title", "Render the title banner")
-  .option("--no-render-title", "Skip title banner")
   .option("--disable-analytics", "Disable analytics", false)
   .option("--manual-db", "Skip automatic database setup prompt", false)
   .action(async (projectName: string | undefined, options: Record<string, unknown>) => {
     try {
-      const input = {
-        projectName,
-        template: options.template as Template | undefined,
-        yes: options.yes as boolean,
-        yolo: options.yolo as boolean,
-        verbose: options.verbose as boolean,
-        database: options.database as Database | undefined,
-        orm: options.orm as ORM | undefined,
-        auth: options.auth as Auth | undefined,
-        payments: options.payments as Payments | undefined,
-        frontend: options.frontend as Frontend[] | undefined,
-        addons: options.addons as Addons[] | undefined,
-        examples: options.examples as Examples[] | undefined,
-        git: options.git as boolean | undefined,
-        packageManager: options.packageManager as PackageManager | undefined,
-        install: options.install as boolean | undefined,
-        dbSetup: options.dbSetup as DatabaseSetup | undefined,
-        backend: options.backend as Backend | undefined,
-        runtime: options.runtime as Runtime | undefined,
-        api: options.api as API | undefined,
-        webDeploy: options.webDeploy as WebDeploy | undefined,
-        serverDeploy: options.serverDeploy as ServerDeploy | undefined,
-        directoryConflict: options.directoryConflict as DirectoryConflict | undefined,
-        renderTitle: options.renderTitle as boolean | undefined,
-        disableAnalytics: options.disableAnalytics as boolean,
-        manualDb: options.manualDb as boolean,
-      };
+      // Check if we should use TUI (interactive mode)
+      const useInteractive = !options.yes && process.stdin.isTTY && process.stdout.isTTY;
 
-      const result = await createProjectHandler(input);
+      if (useInteractive) {
+        // Launch TUI
+        await renderTui({
+          initialConfig: {
+            projectName,
+            frontend: options.frontend as Frontend[] | undefined,
+            backend: options.backend as Backend | undefined,
+            runtime: options.runtime as Runtime | undefined,
+            database: options.database as Database | undefined,
+            orm: options.orm as ORM | undefined,
+            auth: options.auth as Auth | undefined,
+            payments: options.payments as Payments | undefined,
+            addons: options.addons as Addons[] | undefined,
+          },
+          onComplete: async (config: ProjectConfig) => {
+            // Create project in logs panel
+            console.log("\nCreating project...\n");
 
-      if (options.verbose && result) {
-        console.log(JSON.stringify(result, null, 2));
+            await createProject(config, {
+              manualDb: options.manualDb as boolean,
+            });
+
+            const reproducibleCommand = generateReproducibleCommand(config);
+            console.log(`\n✓ Project created at: ${config.projectDir}`);
+            console.log(`\nReproducible command:\n${reproducibleCommand}\n`);
+          },
+          onCancel: () => {
+            console.log("\nOperation cancelled.\n");
+            process.exit(0);
+          },
+        });
+      } else {
+        // Non-interactive mode: use defaults or provided flags
+        const result = await create({
+          projectName,
+          defaults: options.yes as boolean,
+          frontend: options.frontend as Frontend[] | undefined,
+          backend: options.backend as Backend | undefined,
+          runtime: options.runtime as Runtime | undefined,
+          database: options.database as Database | undefined,
+          orm: options.orm as ORM | undefined,
+          auth: options.auth as Auth | undefined,
+          payments: options.payments as Payments | undefined,
+          api: options.api as API | undefined,
+          addons: options.addons as Addons[] | undefined,
+          examples: options.examples as Examples[] | undefined,
+          dbSetup: options.dbSetup as DatabaseSetup | undefined,
+          webDeploy: options.webDeploy as WebDeploy | undefined,
+          serverDeploy: options.serverDeploy as ServerDeploy | undefined,
+          git: options.git as boolean | undefined,
+          packageManager: options.packageManager as PackageManager | undefined,
+          install: options.install as boolean | undefined,
+        });
+
+        if (result.success) {
+          if (options.verbose) {
+            console.log(JSON.stringify(result, null, 2));
+          } else {
+            console.log(`\n✓ Project created at: ${result.projectDirectory}`);
+            console.log(`\nReproducible command:\n${result.reproducibleCommand}\n`);
+          }
+        } else {
+          console.error(`\n✗ Failed to create project: ${result.error}\n`);
+          process.exit(1);
+        }
       }
     } catch (error) {
-      handleError(error, "Failed to create project");
+      console.error(`\n✗ Error: ${error instanceof Error ? error.message : String(error)}\n`);
       process.exit(1);
     }
   });
@@ -116,48 +150,21 @@ program
   .option("--install", "Install dependencies after adding", false)
   .option("--package-manager <pm>", "Package manager to use")
   .action(async (options: Record<string, unknown>) => {
-    try {
-      const input = {
-        addons: (options.addons as Addons[] | undefined) || [],
-        webDeploy: options.webDeploy as WebDeploy | undefined,
-        serverDeploy: options.serverDeploy as ServerDeploy | undefined,
-        projectDir: options.projectDir as string | undefined,
-        install: options.install as boolean,
-        packageManager: options.packageManager as PackageManager | undefined,
-      };
-
-      await addAddonsHandler(input);
-    } catch (error) {
-      handleError(error, "Failed to add addons");
-      process.exit(1);
-    }
-  });
-
-program
-  .command("sponsors")
-  .description("Show Better-T-Stack sponsors")
-  .action(async () => {
-    try {
-      renderTitle();
-      intro(pc.magenta("Better-T-Stack Sponsors"));
-      const sponsors = await fetchSponsors();
-      displaySponsors(sponsors);
-    } catch (error) {
-      handleError(error, "Failed to display sponsors");
-      process.exit(1);
-    }
+    // TODO: Implement add command with TUI
+    console.log("Add command - TUI coming soon");
   });
 
 program
   .command("docs")
   .description("Open Better-T-Stack documentation")
   .action(async () => {
+    const { openUrl } = await import("./utils/open-url");
     const DOCS_URL = "https://better-t-stack.dev/docs";
     try {
       await openUrl(DOCS_URL);
-      log.success(pc.blue("Opened docs in your default browser."));
+      console.log("Opened docs in your default browser.");
     } catch {
-      log.message(`Please visit ${DOCS_URL}`);
+      console.log(`Please visit ${DOCS_URL}`);
     }
   });
 
@@ -165,12 +172,13 @@ program
   .command("builder")
   .description("Open the web-based stack builder")
   .action(async () => {
+    const { openUrl } = await import("./utils/open-url");
     const BUILDER_URL = "https://better-t-stack.dev/new";
     try {
       await openUrl(BUILDER_URL);
-      log.success(pc.blue("Opened builder in your default browser."));
+      console.log("Opened builder in your default browser.");
     } catch {
-      log.message(`Please visit ${BUILDER_URL}`);
+      console.log(`Please visit ${BUILDER_URL}`);
     }
   });
 
