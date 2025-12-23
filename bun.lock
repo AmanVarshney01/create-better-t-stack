@@ -191,6 +191,16 @@
 
     "@better-t-stack/backend": ["@better-t-stack/backend@workspace:packages/backend"],
 
+    "@better-t-stack/cli-darwin-arm64": ["@better-t-stack/cli-darwin-arm64@3.11.0", "", { "os": "darwin", "cpu": "arm64", "bin": { "create-better-t-stack": "bin/create-better-t-stack" } }, "sha512-fAd5lQ7M4OO7Kuf6XGH4w8CSC+dxBE2cf+HI0erNoTXMILbfTUCuu7epaVkSuS/sYIgKthYqmYaGs7ppOBufLA=="],
+
+    "@better-t-stack/cli-darwin-x64": ["@better-t-stack/cli-darwin-x64@3.11.0", "", { "os": "darwin", "cpu": "x64", "bin": { "create-better-t-stack": "bin/create-better-t-stack" } }, "sha512-aVcJ8O4XEQTR7T5ywC2QJpOm8zdm7FfRg3OWA5qDVlqwAGBrc5CZnDmCGNHuzOC6UJT5Vwr7u76re5/MGqvmhw=="],
+
+    "@better-t-stack/cli-linux-arm64": ["@better-t-stack/cli-linux-arm64@3.11.0", "", { "os": "linux", "cpu": "arm64", "bin": { "create-better-t-stack": "bin/create-better-t-stack" } }, "sha512-5V1xBTV7QzohSvecofzTzLStLaGI2eA1nVpdySc7Auxj7Fc2X46Wp67Kbcmn+3UaH/H9UzN0q0FvMn0KywOkcA=="],
+
+    "@better-t-stack/cli-linux-x64": ["@better-t-stack/cli-linux-x64@3.11.0", "", { "os": "linux", "cpu": "x64", "bin": { "create-better-t-stack": "bin/create-better-t-stack" } }, "sha512-wnExrv5JSz7+Q2XpY3aoXcl1M4Wd2NqaMq7PNP3JVZ6RYUimlc+76ix2JeMa9eVkmu8UKCPJZ9vAku57KUJ0Rg=="],
+
+    "@better-t-stack/cli-windows-x64": ["@better-t-stack/cli-windows-x64@3.11.0", "", { "os": "win32", "cpu": "x64", "bin": { "create-better-t-stack": "bin/create-better-t-stack.exe" } }, "sha512-hKx6rlNb1leLJl+p1NlwiquhxktiWXXfFgVetSzLqu/Uyv71xwj5+mPP5XYxPS0cI47S1ap0Ac4dFCRcTtpB6A=="],
+
     "@better-t-stack/types": ["@better-t-stack/types@workspace:packages/types"],
 
     "@clack/core": ["@clack/core@0.5.0", "", { "dependencies": { "picocolors": "^1.0.0", "sisteransi": "^1.0.5" } }, "sha512-p3y0FIOwaYRUPRcMO7+dlmLh8PSRcrjuTndsiA0WAFbWES0mLZlrjVoBRZ9DzkPFJZG6KGkJmoEAY0ZcVWTkow=="],
