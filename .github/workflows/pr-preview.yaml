@@ -93,11 +93,14 @@ jobs:
       - name: Publish CLI platform packages to NPM
         run: |
           cd apps/cli/dist
-          for dir in better-t-stack-cli-*/; do
-            echo "Publishing $dir..."
-            cd "$dir"
-            bun publish --access public --tag ${{ steps.version.outputs.tag }}
-            cd ..
+          ls -la
+          for dir in */; do
+            if [ -f "$dir/package.json" ]; then
+              echo "Publishing $dir..."
+              cd "$dir"
+              bun publish --access public --tag ${{ steps.version.outputs.tag }}
+              cd ..
+            fi
           done
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}

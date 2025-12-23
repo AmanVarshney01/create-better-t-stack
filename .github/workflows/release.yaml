@@ -133,11 +133,14 @@ jobs:
         if: steps.check-version.outputs.exists == 'false'
         run: |
           cd apps/cli/dist
-          for dir in better-t-stack-cli-*/; do
-            echo "Publishing $dir..."
-            cd "$dir"
-            bun publish --access public
-            cd ..
+          ls -la
+          for dir in */; do
+            if [ -f "$dir/package.json" ]; then
+              echo "Publishing $dir..."
+              cd "$dir"
+              bun publish --access public
+              cd ..
+            fi
           done
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}

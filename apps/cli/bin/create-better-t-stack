@@ -3,20 +3,24 @@
 /**
  * Bin stub for create-better-t-stack.
  * Finds and runs the platform-specific compiled binary.
- * 
+ *
  * The binary is installed as an optional dependency:
  *   @better-t-stack/cli-{platform}-{arch}
- * 
+ *
  * This stub searches node_modules for the matching binary package.
  */
 
-const childProcess = require("child_process");
-const fs = require("fs");
-const path = require("path");
-const os = require("os");
+import { spawnSync } from "node:child_process";
+import { existsSync, realpathSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { platform as osPlatform, arch as osArch } from "node:os";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 function run(target) {
-    const result = childProcess.spawnSync(target, process.argv.slice(2), {
+    const result = spawnSync(target, process.argv.slice(2), {
         stdio: "inherit",
     });
     if (result.error) {
@@ -33,8 +37,8 @@ if (envPath) {
     run(envPath);
 }
 
-const scriptPath = fs.realpathSync(__filename);
-const scriptDir = path.dirname(scriptPath);
+const scriptPath = realpathSync(__filename);
+const scriptDir = dirname(scriptPath);
 
 const platformMap = {
     darwin: "darwin",
@@ -47,14 +51,14 @@ const archMap = {
     arm64: "arm64",
 };
 
-let platform = platformMap[os.platform()];
+let platform = platformMap[osPlatform()];
 if (!platform) {
-    platform = os.platform();
+    platform = osPlatform();
 }
 
-let arch = archMap[os.arch()];
+let arch = archMap[osArch()];
 if (!arch) {
-    arch = os.arch();
+    arch = osArch();
 }
 
 // Scoped package name: @better-t-stack/cli-{platform}-{arch}
@@ -64,16 +68,16 @@ const binary = platform === "windows" ? "create-better-t-stack.exe" : "create-be
 function findBinary(startDir) {
     let current = startDir;
     for (; ;) {
-        const modules = path.join(current, "node_modules");
-        if (fs.existsSync(modules)) {
+        const modules = join(current, "node_modules");
+        if (existsSync(modules)) {
             // Check for scoped package: node_modules/@better-t-stack/cli-{platform}-{arch}
-            const scopedPath = path.join(modules, "@better-t-stack", "cli-" + platform + "-" + arch);
-            const candidate = path.join(scopedPath, "bin", binary);
-            if (fs.existsSync(candidate)) {
+            const scopedPath = join(modules, "@better-t-stack", "cli-" + platform + "-" + arch);
+            const candidate = join(scopedPath, "bin", binary);
+            if (existsSync(candidate)) {
                 return candidate;
             }
         }
-        const parent = path.dirname(current);
+        const parent = dirname(current);
         if (parent === current) {
             return;
         }
