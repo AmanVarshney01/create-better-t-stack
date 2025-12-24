@@ -202,8 +202,6 @@ export async function create(
   const input = {
     ...options,
     projectName,
-    // Force silent mode for programmatic use
-    yes: options?.yes ?? true,
     renderTitle: false,
     verbose: true,
     disableAnalytics: options?.disableAnalytics ?? true,
