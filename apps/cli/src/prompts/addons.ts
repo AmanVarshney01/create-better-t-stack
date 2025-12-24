@@ -63,6 +63,10 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "WXT";
       hint = "Build browser extensions";
       break;
+    case "nix-flake":
+      label = "Nix Flake";
+      hint = "Reproducible dev environment with Nix";
+      break;
     default:
       label = addon;
       hint = `Add ${addon}`;
@@ -74,7 +78,7 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 const ADDON_GROUPS = {
   Documentation: ["starlight", "fumadocs"],
   Linting: ["biome", "oxlint", "ultracite"],
-  Other: ["ruler", "pwa", "tauri", "husky", "opentui", "wxt", "turborepo"],
+  Other: ["ruler", "pwa", "tauri", "husky", "opentui", "wxt", "turborepo", "nix-flake"],
 };
 
 export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[], auth?: Auth) {

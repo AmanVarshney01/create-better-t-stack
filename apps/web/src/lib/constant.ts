@@ -560,6 +560,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "nix-flake",
+      name: "Nix Flake",
+      description: "Reproducible dev environment with Nix",
+      icon: "",
+      color: "from-sky-500 to-sky-700",
+      default: false,
+    },
+    {
       id: "turborepo",
       name: "Turborepo",
       description: "High-performance build system",
