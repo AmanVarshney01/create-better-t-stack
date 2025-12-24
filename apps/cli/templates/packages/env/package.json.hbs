@@ -1,0 +1,24 @@
+{
+	"name": "@{{projectName}}/env",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+{{#if (and (ne backend "convex") (ne backend "none") (ne runtime "workers"))}}
+		"./server": "./src/server.ts",
+{{/if}}
+{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start") (includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
+		"./web": "./src/web.ts",
+{{/if}}
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+		"./native": "./src/native.ts"
+{{/if}}
+	},
+	"dependencies": {
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@{{projectName}}/config": "workspace:*",
+		"typescript": "catalog:"
+	}
+}

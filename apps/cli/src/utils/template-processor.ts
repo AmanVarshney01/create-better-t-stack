@@ -57,7 +57,6 @@ handlebars.registerHelper("or", (...args) => {
   const values = args.slice(0, -1);
   return values.some((value) => value);
 });
-
 handlebars.registerHelper(
   "includes",
   (array, value) => Array.isArray(array) && array.includes(value),

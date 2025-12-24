@@ -30,16 +30,25 @@ import { createProject } from "./create-project";
 import { detectProjectConfig } from "./detect-project-config";
 import { installDependencies } from "./install-dependencies";
 
-export async function createProjectHandler(input: CreateInput & { projectName?: string }) {
+export interface CreateHandlerOptions {
+  /** When true, skip all console output (for programmatic API use) */
+  silent?: boolean;
+}
+
+export async function createProjectHandler(
+  input: CreateInput & { projectName?: string },
+  options: CreateHandlerOptions = {},
+) {
+  const { silent = false } = options;
   const startTime = Date.now();
   const timeScaffolded = new Date().toISOString();
 
-  if (input.renderTitle !== false) {
+  if (!silent && input.renderTitle !== false) {
     renderTitle();
   }
-  intro(pc.magenta("Creating a new Better-T-Stack project"));
+  if (!silent) intro(pc.magenta("Creating a new Better-T-Stack project"));
 
-  if (input.yolo) {
+  if (!silent && input.yolo) {
     consola.fatal("YOLO mode enabled - skipping checks. Things may break!");
   }
 
@@ -131,8 +140,10 @@ export async function createProjectHandler(input: CreateInput & { projectName?: 
     if (templateConfig) {
       const templateName = input.template.toUpperCase();
       const templateDescription = getTemplateDescription(input.template);
-      log.message(pc.bold(pc.cyan(`Using template: ${pc.white(templateName)}`)));
-      log.message(pc.dim(`   ${templateDescription}`));
+      if (!silent) {
+        log.message(pc.bold(pc.cyan(`Using template: ${pc.white(templateName)}`)));
+        log.message(pc.dim(`   ${templateDescription}`));
+      }
       const userOverrides: Record<string, unknown> = {};
       for (const [key, value] of Object.entries(originalInput)) {
         if (value !== undefined) {
@@ -162,13 +173,15 @@ export async function createProjectHandler(input: CreateInput & { projectName?: 
 
     validateConfigCompatibility(config, providedFlags, cliInput);
 
-    log.info(pc.yellow("Using default/flag options (config prompts skipped):"));
-    log.message(displayConfig(config));
+    if (!silent) {
+      log.info(pc.yellow("Using default/flag options (config prompts skipped):"));
+      log.message(displayConfig(config));
+    }
   } else {
     const flagConfig = processAndValidateFlags(cliInput, providedFlags, finalBaseName);
     const { projectName: _projectNameFromFlags, ...otherFlags } = flagConfig;
 
-    if (Object.keys(otherFlags).length > 0) {
+    if (!silent && Object.keys(otherFlags).length > 0) {
       log.info(pc.yellow("Using these pre-selected options:"));
       log.message(displayConfig(otherFlags));
       log.message("");
@@ -179,18 +192,23 @@ export async function createProjectHandler(input: CreateInput & { projectName?: 
 
   await createProject(config, {
     manualDb: cliInput.manualDb ?? input.manualDb,
+    silent,
   });
 
   const reproducibleCommand = generateReproducibleCommand(config);
-  log.success(
-    pc.blue(`You can reproduce this setup with the following command:\n${reproducibleCommand}`),
-  );
+  if (!silent) {
+    log.success(
+      pc.blue(`You can reproduce this setup with the following command:\n${reproducibleCommand}`),
+    );
+  }
 
   await trackProjectCreation(config, input.disableAnalytics);
 
   const elapsedTimeMs = Date.now() - startTime;
-  const elapsedTimeInSeconds = (elapsedTimeMs / 1000).toFixed(2);
-  outro(pc.magenta(`Project created successfully in ${pc.bold(elapsedTimeInSeconds)} seconds!`));
+  if (!silent) {
+    const elapsedTimeInSeconds = (elapsedTimeMs / 1000).toFixed(2);
+    outro(pc.magenta(`Project created successfully in ${pc.bold(elapsedTimeInSeconds)} seconds!`));
+  }
 
   return {
     success: true,

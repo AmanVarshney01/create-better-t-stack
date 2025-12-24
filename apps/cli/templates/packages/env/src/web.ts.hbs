@@ -1,0 +1,57 @@
+import { z } from "zod";
+
+const webEnvSchema = z.object({
+{{#if (eq backend "convex")}}
+{{#if (includes frontend "next")}}
+	NEXT_PUBLIC_CONVEX_URL: z.url("NEXT_PUBLIC_CONVEX_URL must be a valid URL"),
+{{#if (eq auth "better-auth")}}
+	NEXT_PUBLIC_CONVEX_SITE_URL: z.url("NEXT_PUBLIC_CONVEX_SITE_URL must be a valid URL"),
+{{/if}}
+{{#if (eq auth "clerk")}}
+	NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z
+		.string()
+		.min(1, "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is required"),
+	CLERK_SECRET_KEY: z.string().min(1, "CLERK_SECRET_KEY is required"),
+{{/if}}
+{{else if (includes frontend "nuxt")}}
+	NUXT_PUBLIC_CONVEX_URL: z.url("NUXT_PUBLIC_CONVEX_URL must be a valid URL"),
+{{else if (includes frontend "svelte")}}
+	PUBLIC_CONVEX_URL: z.url("PUBLIC_CONVEX_URL must be a valid URL"),
+{{else}}
+	VITE_CONVEX_URL: z.url("VITE_CONVEX_URL must be a valid URL"),
+{{#if (eq auth "better-auth")}}
+	VITE_CONVEX_SITE_URL: z.url("VITE_CONVEX_SITE_URL must be a valid URL"),
+{{/if}}
+{{#if (eq auth "clerk")}}
+	VITE_CLERK_PUBLISHABLE_KEY: z
+		.string()
+		.min(1, "VITE_CLERK_PUBLISHABLE_KEY is required"),
+{{/if}}
+{{/if}}
+{{else if (ne backend "self")}}
+{{#if (includes frontend "next")}}
+	NEXT_PUBLIC_SERVER_URL: z.url("NEXT_PUBLIC_SERVER_URL must be a valid URL"),
+{{else if (includes frontend "nuxt")}}
+	NUXT_PUBLIC_SERVER_URL: z.url("NUXT_PUBLIC_SERVER_URL must be a valid URL"),
+{{else if (includes frontend "svelte")}}
+	PUBLIC_SERVER_URL: z.url("PUBLIC_SERVER_URL must be a valid URL"),
+{{else}}
+	VITE_SERVER_URL: z.url("VITE_SERVER_URL must be a valid URL"),
+{{/if}}
+{{/if}}
+});
+
+export type WebEnv = z.infer<typeof webEnvSchema>;
+
+function createEnv(): WebEnv {
+	const parsed = webEnvSchema.safeParse((import.meta as any).env);
+
+	if (!parsed.success) {
+		console.error(z.prettifyError(parsed.error));
+		throw new Error("Invalid client environment variables");
+	}
+
+	return parsed.data;
+}
+
+export const env = createEnv();

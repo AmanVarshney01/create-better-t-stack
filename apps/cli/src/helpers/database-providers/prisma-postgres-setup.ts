@@ -1,11 +1,11 @@
 import path from "node:path";
 import { isCancel, log, select, spinner } from "@clack/prompts";
 import { consola } from "consola";
-import { execa } from "execa";
+import { $ } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { PackageManager, ProjectConfig } from "../../types";
-import { getPackageExecutionCommand } from "../../utils/package-runner";
+import { getPackageExecutionArgs } from "../../utils/package-runner";
 import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
 
 type PrismaConfig = {
@@ -44,7 +44,7 @@ async function setupWithCreateDb(serverDir: string, packageManager: PackageManag
 
     if (isCancel(selectedRegion)) return null;
 
-    const createDbCommand = getPackageExecutionCommand(
+    const createDbArgs = getPackageExecutionArgs(
       packageManager,
       `create-db@latest --json --region ${selectedRegion}`,
     );
@@ -52,10 +52,7 @@ async function setupWithCreateDb(serverDir: string, packageManager: PackageManag
     const s = spinner();
     s.start("Creating Prisma Postgres database...");
 
-    const { stdout } = await execa(createDbCommand, {
-      cwd: serverDir,
-      shell: true,
-    });
+    const { stdout } = await $({ cwd: serverDir })`${createDbArgs}`;
 
     s.stop("Database created successfully!");
 

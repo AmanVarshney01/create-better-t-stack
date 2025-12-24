@@ -1,11 +1,11 @@
 import path from "node:path";
 import { isCancel, log, select, spinner } from "@clack/prompts";
-import { execa } from "execa";
+import { $ } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 import { exitCancelled } from "../../utils/errors";
-import { getPackageExecutionCommand } from "../../utils/package-runner";
+import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 type WxtTemplate = "vanilla" | "vue" | "react" | "solid" | "svelte";
 
@@ -51,8 +51,7 @@ export async function setupWxt(config: ProjectConfig) {
     if (isCancel(template)) return exitCancelled("Operation cancelled");
 
     const commandWithArgs = `wxt@latest init extension --template ${template} --pm ${packageManager}`;
-
-    const wxtInitCommand = getPackageExecutionCommand(packageManager, commandWithArgs);
+    const args = getPackageExecutionArgs(packageManager, commandWithArgs);
 
     const appsDir = path.join(projectDir, "apps");
     await fs.ensureDir(appsDir);
@@ -60,11 +59,7 @@ export async function setupWxt(config: ProjectConfig) {
     const s = spinner();
     s.start("Running WXT init command...");
 
-    await execa(wxtInitCommand, {
-      cwd: appsDir,
-      env: { CI: "true" },
-      shell: true,
-    });
+    await $({ cwd: appsDir, env: { CI: "true" } })`${args}`;
 
     const extensionDir = path.join(projectDir, "apps", "extension");
     const packageJsonPath = path.join(extensionDir, "package.json");

@@ -21,9 +21,6 @@ import {
   WebDeploySchema,
 } from "../src/types";
 
-// Re-export setup utilities for backward compatibility
-export { cleanupSmokeDirectory, ensureSmokeDirectory, SMOKE_DIR } from "./setup";
-
 // Smoke directory path - use the same as setup.ts
 const SMOKE_DIR_PATH = join(import.meta.dir, "..", ".smoke");
 
@@ -91,13 +88,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     // Directory may already exist
   }
 
-  // Store original environment
-  const originalProgrammatic = process.env.BTS_PROGRAMMATIC;
-
   try {
-    // Set programmatic mode to ensure errors are thrown instead of process.exit
-    process.env.BTS_PROGRAMMATIC = "1";
-
     // Suppress console output
     suppressConsole();
 
@@ -169,7 +160,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
       ...cleanOptions
     } = options as TestConfig;
 
-    const result = await caller.init([projectPath, cleanOptions]);
+    const result = await caller.create([projectPath, cleanOptions]);
 
     return {
       success: result?.success ?? false,
@@ -185,13 +176,6 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
       config,
     };
   } finally {
-    // Always restore original environment
-    if (originalProgrammatic === undefined) {
-      delete process.env.BTS_PROGRAMMATIC;
-    } else {
-      process.env.BTS_PROGRAMMATIC = originalProgrammatic;
-    }
-
     // Restore console methods
     restoreConsole();
   }

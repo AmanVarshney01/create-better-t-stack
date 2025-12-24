@@ -181,12 +181,13 @@ import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { env } from "@{{projectName}}/env/web";
 
 export default function AIPage() {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
-      api: {{#if (eq backend "self")}}"/api/ai"{{else}}`${process.env.NEXT_PUBLIC_SERVER_URL}/ai`{{/if}},
+      api: {{#if (eq backend "self")}}"/api/ai"{{else}}`${env.NEXT_PUBLIC_SERVER_URL}/ai`{{/if}},
     }),
   });
 

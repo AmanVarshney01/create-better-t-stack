@@ -5,12 +5,15 @@
 import { useAuth } from "@clerk/nextjs";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
+import { env } from "@{{projectName}}/env/web";
 {{else if (eq auth "better-auth")}}
 import { ConvexReactClient } from "convex/react";
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import { authClient } from "@/lib/auth-client";
+import { env } from "@{{projectName}}/env/web";
 {{else}}
 import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { env } from "@{{projectName}}/env/web";
 {{/if}}
 {{else}}
 {{#unless (eq api "none")}}
@@ -28,7 +31,7 @@ import { ThemeProvider } from "./theme-provider";
 import { Toaster } from "./ui/sonner";
 
 {{#if (eq backend "convex")}}
-const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+const convex = new ConvexReactClient(env.NEXT_PUBLIC_CONVEX_URL);
 {{/if}}
 
 export default function Providers({

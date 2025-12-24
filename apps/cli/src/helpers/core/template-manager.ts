@@ -263,8 +263,73 @@ async function setupServerApp(projectDir: string, context: ProjectConfig) {
   }
 }
 
+async function setupEnvPackage(projectDir: string, context: ProjectConfig) {
+  const hasWebFrontend = context.frontend.some((f) =>
+    [
+      "tanstack-router",
+      "react-router",
+      "tanstack-start",
+      "next",
+      "nuxt",
+      "svelte",
+      "solid",
+    ].includes(f),
+  );
+  const hasNative = context.frontend.some((f) =>
+    ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
+  );
+
+  // Skip if no frontend at all
+  if (!hasWebFrontend && !hasNative && context.backend === "none") {
+    return;
+  }
+
+  const envPackageDir = path.join(projectDir, "packages/env");
+  await fs.ensureDir(envPackageDir);
+
+  const envBaseDir = path.join(PKG_ROOT, "templates/packages/env");
+
+  // Always copy package.json
+  const packageJsonSrc = path.join(envBaseDir, "package.json.hbs");
+  if (await fs.pathExists(packageJsonSrc)) {
+    await processAndCopyFiles("package.json.hbs", envBaseDir, envPackageDir, context);
+  }
+
+  // Copy server.ts only for non-convex backends with non-workers runtime
+  // Workers use cloudflare:workers for env access
+  const needsServerEnv =
+    context.backend !== "none" && context.backend !== "convex" && context.runtime !== "workers";
+
+  if (needsServerEnv) {
+    const serverSrc = path.join(envBaseDir, "src/server.ts.hbs");
+    if (await fs.pathExists(serverSrc)) {
+      await fs.ensureDir(path.join(envPackageDir, "src"));
+      await processAndCopyFiles("src/server.ts.hbs", envBaseDir, envPackageDir, context);
+    }
+  }
+
+  // Copy web.ts for web frontends
+  if (hasWebFrontend) {
+    const webSrc = path.join(envBaseDir, "src/web.ts.hbs");
+    if (await fs.pathExists(webSrc)) {
+      await fs.ensureDir(path.join(envPackageDir, "src"));
+      await processAndCopyFiles("src/web.ts.hbs", envBaseDir, envPackageDir, context);
+    }
+  }
+
+  // Copy native.ts for native frontends
+  if (hasNative) {
+    const nativeSrc = path.join(envBaseDir, "src/native.ts.hbs");
+    if (await fs.pathExists(nativeSrc)) {
+      await fs.ensureDir(path.join(envPackageDir, "src"));
+      await processAndCopyFiles("src/native.ts.hbs", envBaseDir, envPackageDir, context);
+    }
+  }
+}
+
 export async function setupBackendFramework(projectDir: string, context: ProjectConfig) {
   await setupConfigPackage(projectDir, context);
+  await setupEnvPackage(projectDir, context);
 
   if (context.backend === "none") {
     return;

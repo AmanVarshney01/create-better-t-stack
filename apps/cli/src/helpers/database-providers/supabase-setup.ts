@@ -1,12 +1,12 @@
 import path from "node:path";
 import { isCancel, log, select } from "@clack/prompts";
 import { consola } from "consola";
-import { type ExecaError, execa } from "execa";
+import { $, type ExecaError, execa } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { PackageManager, ProjectConfig } from "../../types";
 import { exitCancelled } from "../../utils/errors";
-import { getPackageExecutionCommand } from "../../utils/package-runner";
+import { getPackageExecutionArgs } from "../../utils/package-runner";
 import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
 
 async function writeSupabaseEnvFile(
@@ -53,12 +53,8 @@ function extractDbUrl(output: string) {
 async function initializeSupabase(serverDir: string, packageManager: PackageManager) {
   log.info("Initializing Supabase project...");
   try {
-    const supabaseInitCommand = getPackageExecutionCommand(packageManager, "supabase init");
-    await execa(supabaseInitCommand, {
-      cwd: serverDir,
-      stdio: "inherit",
-      shell: true,
-    });
+    const supabaseInitArgs = getPackageExecutionArgs(packageManager, "supabase init");
+    await $({ cwd: serverDir, stdio: "inherit" })`${supabaseInitArgs}`;
     log.success("Supabase project initialized");
     return true;
   } catch (error) {
@@ -80,11 +76,10 @@ async function initializeSupabase(serverDir: string, packageManager: PackageMana
 
 async function startSupabase(serverDir: string, packageManager: PackageManager) {
   log.info("Starting Supabase services (this may take a moment)...");
-  const supabaseStartCommand = getPackageExecutionCommand(packageManager, "supabase start");
+  const supabaseStartArgs = getPackageExecutionArgs(packageManager, "supabase start");
   try {
-    const subprocess = execa(supabaseStartCommand, {
+    const subprocess = execa(supabaseStartArgs[0], supabaseStartArgs.slice(1), {
       cwd: serverDir,
-      shell: true,
     });
 
     let stdoutData = "";

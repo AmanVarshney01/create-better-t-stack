@@ -1,12 +1,12 @@
 import path from "node:path";
 import { isCancel, log, select, spinner, text } from "@clack/prompts";
 import { consola } from "consola";
-import { execa } from "execa";
+import { $ } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { PackageManager, ProjectConfig } from "../../types";
 import { exitCancelled } from "../../utils/errors";
-import { getPackageExecutionCommand } from "../../utils/package-runner";
+import { getPackageExecutionArgs } from "../../utils/package-runner";
 import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
 
 type NeonConfig = {
@@ -39,10 +39,10 @@ async function executeNeonCommand(
 ) {
   const s = spinner();
   try {
-    const fullCommand = getPackageExecutionCommand(packageManager, commandArgsString);
+    const args = getPackageExecutionArgs(packageManager, commandArgsString);
 
     if (spinnerText) s.start(spinnerText);
-    const result = await execa(fullCommand, { shell: true });
+    const result = await $`${args}`;
     if (spinnerText) s.stop(pc.green(spinnerText.replace("...", "").replace("ing ", "ed ").trim()));
     return result;
   } catch (error) {
@@ -119,12 +119,9 @@ async function setupWithNeonDb(
     const targetDir = path.join(projectDir, targetApp);
     await fs.ensureDir(targetDir);
 
-    const packageCmd = getPackageExecutionCommand(packageManager, "get-db@latest --yes");
+    const packageArgs = getPackageExecutionArgs(packageManager, "get-db@latest --yes");
 
-    await execa(packageCmd, {
-      shell: true,
-      cwd: targetDir,
-    });
+    await $({ cwd: targetDir })`${packageArgs}`;
 
     s.stop(pc.green("Neon database created successfully!"));
 

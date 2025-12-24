@@ -1,0 +1,46 @@
+import { z } from "zod";
+
+const serverEnvSchema = z.object({
+{{#if (ne database "none")}}
+{{#if (eq dbSetup "planetscale")}}
+	DATABASE_HOST: z.string().min(1, "DATABASE_HOST is required"),
+	DATABASE_USERNAME: z.string().min(1, "DATABASE_USERNAME is required"),
+	DATABASE_PASSWORD: z.string().min(1, "DATABASE_PASSWORD is required"),
+{{else}}
+	DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+{{#if (eq dbSetup "turso")}}
+	DATABASE_AUTH_TOKEN: z.string().min(1, "DATABASE_AUTH_TOKEN is required"),
+{{/if}}
+{{/if}}
+{{/if}}
+{{#if (ne auth "none")}}
+	BETTER_AUTH_SECRET: z
+		.string()
+		.min(32, "BETTER_AUTH_SECRET must be at least 32 characters"),
+	BETTER_AUTH_URL: z.url("BETTER_AUTH_URL must be a valid URL"),
+{{/if}}
+{{#if (eq payments "polar")}}
+	POLAR_ACCESS_TOKEN: z.string().min(1, "POLAR_ACCESS_TOKEN is required"),
+	POLAR_SUCCESS_URL: z.url("POLAR_SUCCESS_URL must be a valid URL"),
+{{/if}}
+	CORS_ORIGIN: z.url("CORS_ORIGIN must be a valid URL"),
+	NODE_ENV: z
+		.enum(["development", "production", "test"])
+		.default("development"),
+	PORT: z.coerce.number().default(3000),
+});
+
+export type ServerEnv = z.infer<typeof serverEnvSchema>;
+
+function createEnv(): ServerEnv {
+	const parsed = serverEnvSchema.safeParse(process.env);
+
+	if (!parsed.success) {
+		console.error(z.prettifyError(parsed.error));
+		throw new Error("Invalid server environment variables");
+	}
+
+	return parsed.data;
+}
+
+export const env = createEnv();

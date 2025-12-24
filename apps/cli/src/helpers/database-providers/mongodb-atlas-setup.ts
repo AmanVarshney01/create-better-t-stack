@@ -1,7 +1,7 @@
 import path from "node:path";
 import { cancel, isCancel, log, select, text } from "@clack/prompts";
 import consola from "consola";
-import { execa } from "execa";
+import { $ } from "execa";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
@@ -44,11 +44,7 @@ async function initMongoDBAtlas(serverDir: string) {
 
     log.info("Running MongoDB Atlas setup...");
 
-    await execa("atlas", ["deployments", "setup"], {
-      cwd: serverDir,
-      shell: true,
-      stdio: "inherit",
-    });
+    await $({ cwd: serverDir, stdio: "inherit" })`atlas deployments setup`;
 
     log.success("MongoDB Atlas deployment ready");
 

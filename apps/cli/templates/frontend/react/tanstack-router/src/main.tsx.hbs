@@ -13,6 +13,7 @@ import { routeTree } from "./routeTree.gen";
 {{/if}}
 {{#if (eq backend "convex")}}
   import { ConvexReactClient } from "convex/react";
+  import { env } from "@{{projectName}}/env/web";
   {{#if (eq auth "clerk")}}
   import { ClerkProvider, useAuth } from "@clerk/clerk-react";
   import { ConvexProviderWithClerk } from "convex/react-clerk";
@@ -22,7 +23,7 @@ import { routeTree } from "./routeTree.gen";
   {{else}}
   import { ConvexProvider } from "convex/react";
   {{/if}}
-  const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
+  const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
 {{/if}}
 
 const router = createRouter({
@@ -53,7 +54,7 @@ const router = createRouter({
     {{#if (eq auth "clerk")}}
     return (
       <ClerkProvider
-        publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}
+        publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}
       >
         <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
           {children}

@@ -1,4 +1,4 @@
-import "dotenv/config";
+import { env } from "@{{projectName}}/env/server";
 import Fastify from "fastify";
 import fastifyCors from "@fastify/cors";
 
@@ -32,77 +32,77 @@ import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
 const baseCorsConfig = {
-  origin: process.env.CORS_ORIGIN || "",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: [
-    "Content-Type",
-    "Authorization",
-    "X-Requested-With"
-  ],
-  credentials: true,
-  maxAge: 86400,
+	origin: env.CORS_ORIGIN,
+	methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+	allowedHeaders: [
+		"Content-Type",
+		"Authorization",
+		"X-Requested-With"
+	],
+	credentials: true,
+	maxAge: 86400,
 };
 
 {{#if (eq api "orpc")}}
 const rpcHandler = new RPCHandler(appRouter, {
-  plugins: [
-    new CORSPlugin({
-      origin: process.env.CORS_ORIGIN,
-      credentials: true,
-      allowHeaders: ["Content-Type", "Authorization"],
-    }),
-  ],
-  interceptors: [
-    onError((error) => {
-      console.error(error);
-    }),
-  ],
+	plugins: [
+		new CORSPlugin({
+			origin: env.CORS_ORIGIN,
+			credentials: true,
+			allowHeaders: ["Content-Type", "Authorization"],
+		}),
+	],
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
 });
 
 const apiHandler = new OpenAPIHandler(appRouter, {
-  plugins: [
-    new OpenAPIReferencePlugin({
-      schemaConverters: [new ZodToJsonSchemaConverter()],
-    }),
-  ],
-  interceptors: [
-    onError((error) => {
-      console.error(error);
-    }),
-  ],
+	plugins: [
+		new OpenAPIReferencePlugin({
+			schemaConverters: [new ZodToJsonSchemaConverter()],
+		}),
+	],
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
 });
 
 const fastify = Fastify({
-  logger: true,
-  serverFactory: (fastifyHandler) => {
-    const server = createServer(async (req, res) => {
-      const { matched } = await rpcHandler.handle(req, res, {
-        context: await createContext(req.headers),
-        prefix: "/rpc",
-      });
+	logger: true,
+	serverFactory: (fastifyHandler) => {
+		const server = createServer(async (req, res) => {
+			const { matched } = await rpcHandler.handle(req, res, {
+				context: await createContext(req.headers),
+				prefix: "/rpc",
+			});
 
-      if (matched) {
-        return;
-      }
+			if (matched) {
+				return;
+			}
 
-      const apiResult = await apiHandler.handle(req, res, {
-        context: await createContext(req.headers),
-        prefix: "/api-reference",
-      });
+			const apiResult = await apiHandler.handle(req, res, {
+				context: await createContext(req.headers),
+				prefix: "/api-reference",
+			});
 
-      if (apiResult.matched) {
-        return;
-      }
+			if (apiResult.matched) {
+				return;
+			}
 
-      fastifyHandler(req, res);
-    });
+			fastifyHandler(req, res);
+		});
 
-    return server;
-  },
+		return server;
+	},
 });
 {{else}}
 const fastify = Fastify({
-  logger: true,
+	logger: true,
 });
 {{/if}}
 
@@ -110,73 +110,73 @@ fastify.register(fastifyCors, baseCorsConfig);
 
 {{#if (eq auth "better-auth")}}
 fastify.route({
-  method: ["GET", "POST"],
-  url: "/api/auth/*",
-  async handler(request, reply) {
-    try {
-      const url = new URL(request.url, `http://${request.headers.host}`);
-      const headers = new Headers();
-      Object.entries(request.headers).forEach(([key, value]) => {
-        if (value) headers.append(key, value.toString());
-      });
-      const req = new Request(url.toString(), {
-        method: request.method,
-        headers,
-        body: request.body ? JSON.stringify(request.body) : undefined,
-      });
-      const response = await auth.handler(req);
-      reply.status(response.status);
-      response.headers.forEach((value, key) => reply.header(key, value));
-      reply.send(response.body ? await response.text() : null);
-    } catch (error) {
-      fastify.log.error({ err: error }, "Authentication Error:");
-      reply.status(500).send({
-        error: "Internal authentication error",
-        code: "AUTH_FAILURE"
-      });
-    }
-  }
+	method: ["GET", "POST"],
+	url: "/api/auth/*",
+	async handler(request, reply) {
+		try {
+			const url = new URL(request.url, `http://${request.headers.host}`);
+			const headers = new Headers();
+			Object.entries(request.headers).forEach(([key, value]) => {
+				if (value) headers.append(key, value.toString());
+			});
+			const req = new Request(url.toString(), {
+				method: request.method,
+				headers,
+				body: request.body ? JSON.stringify(request.body) : undefined,
+			});
+			const response = await auth.handler(req);
+			reply.status(response.status);
+			response.headers.forEach((value, key) => reply.header(key, value));
+			reply.send(response.body ? await response.text() : null);
+		} catch (error) {
+			fastify.log.error({ err: error }, "Authentication Error:");
+			reply.status(500).send({
+				error: "Internal authentication error",
+				code: "AUTH_FAILURE"
+			});
+		}
+	}
 });
 {{/if}}
 
 {{#if (eq api "trpc")}}
 fastify.register(fastifyTRPCPlugin, {
-  prefix: "/trpc",
-  trpcOptions: {
-    router: appRouter,
-    createContext,
-    onError({ path, error }) {
-      console.error(`Error in tRPC handler on path '${path}':`, error);
-    },
-  } satisfies FastifyTRPCPluginOptions<AppRouter>["trpcOptions"],
+	prefix: "/trpc",
+	trpcOptions: {
+		router: appRouter,
+		createContext,
+		onError({ path, error }) {
+			console.error(`Error in tRPC handler on path '${path}':`, error);
+		},
+	} satisfies FastifyTRPCPluginOptions<AppRouter>["trpcOptions"],
 });
 {{/if}}
 
 {{#if (includes examples "ai")}}
 interface AiRequestBody {
-  id?: string;
-  messages: UIMessage[];
+	id?: string;
+	messages: UIMessage[];
 }
 
 fastify.post('/ai', async function (request) {
-  const { messages } = request.body as AiRequestBody;
-  const result = streamText({
-    model: google('gemini-2.5-flash'),
-    messages: convertToModelMessages(messages),
-  });
+	const { messages } = request.body as AiRequestBody;
+	const result = streamText({
+		model: google('gemini-2.5-flash'),
+		messages: convertToModelMessages(messages),
+	});
 
-  return result.toUIMessageStreamResponse();
+	return result.toUIMessageStreamResponse();
 });
 {{/if}}
 
 fastify.get('/', async () => {
-  return 'OK';
+	return 'OK';
 });
 
 fastify.listen({ port: 3000 }, (err) => {
-  if (err) {
-    fastify.log.error(err);
-    process.exit(1);
-  }
-  console.log("Server running on port 3000");
+	if (err) {
+		fastify.log.error(err);
+		process.exit(1);
+	}
+	console.log("Server running on port 3000");
 });

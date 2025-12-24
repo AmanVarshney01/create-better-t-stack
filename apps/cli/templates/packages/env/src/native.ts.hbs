@@ -1,0 +1,32 @@
+import { z } from "zod";
+
+const nativeEnvSchema = z.object({
+{{#if (eq backend "convex")}}
+	EXPO_PUBLIC_CONVEX_URL: z.url("EXPO_PUBLIC_CONVEX_URL must be a valid URL"),
+{{#if (eq auth "better-auth")}}
+	EXPO_PUBLIC_CONVEX_SITE_URL: z.url("EXPO_PUBLIC_CONVEX_SITE_URL must be a valid URL"),
+{{/if}}
+{{#if (eq auth "clerk")}}
+	EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: z
+		.string()
+		.min(1, "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY is required"),
+{{/if}}
+{{else}}
+	EXPO_PUBLIC_SERVER_URL: z.url("EXPO_PUBLIC_SERVER_URL must be a valid URL"),
+{{/if}}
+});
+
+export type NativeEnv = z.infer<typeof nativeEnvSchema>;
+
+function createEnv(): NativeEnv {
+	const parsed = nativeEnvSchema.safeParse(process.env);
+
+	if (!parsed.success) {
+		console.error(z.prettifyError(parsed.error));
+		throw new Error("Invalid native environment variables");
+	}
+
+	return parsed.data;
+}
+
+export const env = createEnv();

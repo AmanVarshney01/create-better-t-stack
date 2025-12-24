@@ -1,12 +1,5 @@
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
-{{#if (and (ne backend "self") (includes frontend "next"))}}
-import dotenv from "dotenv";
-
-dotenv.config({
-	path: "../../apps/server/.env",
-});
-
-{{/if}}
+import { env } from "@{{projectName}}/env/server";
 import * as schema from "./schema";
 
 {{#if (eq dbSetup "neon")}}
@@ -19,12 +12,12 @@ neonConfig.webSocketConstructor = ws;
 // To work in edge environments (Cloudflare Workers, Vercel Edge, etc.), enable querying over fetch
 // neonConfig.poolQueryViaFetch = true
 
-const sql = neon(process.env.DATABASE_URL || "");
+const sql = neon(env.DATABASE_URL);
 export const db = drizzle(sql, { schema });
 {{else}}
 import { drizzle } from "drizzle-orm/node-postgres";
 
-export const db = drizzle(process.env.DATABASE_URL || "", { schema });
+export const db = drizzle(env.DATABASE_URL, { schema });
 {{/if}}
 {{/if}}
 

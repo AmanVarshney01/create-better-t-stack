@@ -1,21 +1,14 @@
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
-{{#if (and (ne backend "self") (includes frontend "next"))}}
-import dotenv from "dotenv";
-
-dotenv.config({
-	path: "../../apps/server/.env",
-});
-
-{{/if}}
+import { env } from "@{{projectName}}/env/server";
 import * as schema from "./schema";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
 const client = createClient({
-  url: process.env.DATABASE_URL || "",
-  {{#if (eq dbSetup "turso")}}
-  authToken: process.env.DATABASE_AUTH_TOKEN,
-  {{/if}}
+	url: env.DATABASE_URL,
+{{#if (eq dbSetup "turso")}}
+	authToken: env.DATABASE_AUTH_TOKEN,
+{{/if}}
 });
 
 export const db = drizzle({ client, schema });
@@ -35,10 +28,10 @@ import { env } from "cloudflare:workers";
 import { createClient } from "@libsql/client";
 
 const client = createClient({
-  url: env.DATABASE_URL || "",
-  {{#if (eq dbSetup "turso")}}
-  authToken: env.DATABASE_AUTH_TOKEN,
-  {{/if}}
+	url: env.DATABASE_URL || "",
+{{#if (eq dbSetup "turso")}}
+	authToken: env.DATABASE_AUTH_TOKEN,
+{{/if}}
 });
 
 export const db = drizzle({ client, schema });

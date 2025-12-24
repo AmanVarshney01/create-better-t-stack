@@ -49,7 +49,7 @@ import { renderTitle } from "./utils/render-title";
 import { displaySponsors, fetchSponsors } from "./utils/sponsors";
 
 export const router = os.router({
-  init: os
+  create: os
     .meta({
       description: "Create a new Better-T-Stack project",
       default: true,
@@ -175,47 +175,55 @@ export function createBtsCli() {
 }
 
 /**
- * Initialize a new Better-T-Stack project
+ * Programmatic API to create a new Better-T-Stack project.
+ * Returns pure JSON - no console output, no interactive prompts.
  *
- * @example CLI usage:
- * ```bash
- * npx create-better-t-stack my-app --yes
- * ```
- *
- * @example Programmatic usage (always returns structured data):
+ * @example
  * ```typescript
- * import { init } from "create-better-t-stack";
+ * import { create } from "create-better-t-stack";
  *
- * const result = await init("my-app", {
- *   yes: true,
+ * const result = await create("my-app", {
  *   frontend: ["tanstack-router"],
  *   backend: "hono",
+ *   runtime: "bun",
  *   database: "sqlite",
  *   orm: "drizzle",
- *   auth: "better-auth",
- *   addons: ["biome", "turborepo"],
- *   packageManager: "bun",
- *   install: false,
- *   directoryConflict: "increment", // auto-handle conflicts
- *   disableAnalytics: true, // disable analytics
  * });
  *
  * if (result.success) {
  *   console.log(`Project created at: ${result.projectDirectory}`);
- *   console.log(`Reproducible command: ${result.reproducibleCommand}`);
- *   console.log(`Time taken: ${result.elapsedTimeMs}ms`);
  * }
  * ```
  */
-export async function init(projectName?: string, options?: CreateInput) {
-  const opts = (options ?? {}) as CreateInput;
-  const programmaticOpts = { ...opts, verbose: true };
-  const prev = process.env.BTS_PROGRAMMATIC;
-  process.env.BTS_PROGRAMMATIC = "1";
-  const result = await caller.init([projectName, programmaticOpts]);
-  if (prev === undefined) delete process.env.BTS_PROGRAMMATIC;
-  else process.env.BTS_PROGRAMMATIC = prev;
-  return result as InitResult;
+export async function create(
+  projectName?: string,
+  options?: Partial<CreateInput>,
+): Promise<InitResult> {
+  const input = {
+    ...options,
+    projectName,
+    // Force silent mode for programmatic use
+    yes: options?.yes ?? true,
+    renderTitle: false,
+    verbose: true,
+    disableAnalytics: options?.disableAnalytics ?? true,
+    directoryConflict: options?.directoryConflict ?? "error",
+  } as CreateInput & { projectName?: string };
+
+  try {
+    return (await createProjectHandler(input, { silent: true })) as InitResult;
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+      projectConfig: {} as ProjectConfig,
+      reproducibleCommand: "",
+      timeScaffolded: new Date().toISOString(),
+      elapsedTimeMs: 0,
+      projectDirectory: "",
+      relativePath: "",
+    };
+  }
 }
 
 export async function sponsors() {

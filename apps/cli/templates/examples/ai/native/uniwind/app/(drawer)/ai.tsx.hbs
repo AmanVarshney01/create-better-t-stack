@@ -192,9 +192,10 @@ import { fetch as expoFetch } from "expo/fetch";
 import { Ionicons } from "@expo/vector-icons";
 import { Container } from "@/components/container";
 import { Card, useThemeColor } from "heroui-native";
+import { env } from "@{{projectName}}/env/native";
 
 const generateAPIUrl = (relativePath: string) => {
-  const serverUrl = process.env.EXPO_PUBLIC_SERVER_URL;
+  const serverUrl = env.EXPO_PUBLIC_SERVER_URL;
   if (!serverUrl) {
     throw new Error(
       "EXPO_PUBLIC_SERVER_URL environment variable is not defined"
