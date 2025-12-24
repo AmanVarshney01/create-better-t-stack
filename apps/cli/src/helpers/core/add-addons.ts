@@ -1,5 +1,4 @@
 import path from "node:path";
-import { log } from "@clack/prompts";
 import pc from "picocolors";
 import type { AddInput, Addons, ProjectConfig } from "../../types";
 import { updateBtsConfig } from "../../utils/bts-config";
@@ -74,8 +73,8 @@ export async function addAddonsToProject(
         packageManager: config.packageManager,
       });
     } else if (!input.suppressInstallMessage) {
-      log.info(
-        pc.yellow(`Run ${pc.bold(`${config.packageManager} install`)} to install dependencies`),
+      console.log(
+        pc.yellow(`ℹ Run ${pc.bold(`${config.packageManager} install`)} to install dependencies`),
       );
     }
   } catch (error) {

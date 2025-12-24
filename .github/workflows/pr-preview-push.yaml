@@ -1,0 +1,131 @@
+name: PR Preview (Push)
+
+on:
+  push:
+    branches:
+      - "**"
+    paths:
+      - "apps/cli/**"
+      - "packages/types/**"
+      - ".github/workflows/pr-preview-push.yaml"
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: pr-preview-push-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  publish-preview:
+    name: Publish Preview
+    runs-on: ubuntu-latest
+    if: github.ref != 'refs/heads/main'
+    timeout-minutes: 30
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+        env:
+          BTS_TELEMETRY: 0
+
+      - name: Generate Preview Version
+        id: version
+        run: |
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          SAFE_BRANCH=$(echo "$BRANCH_NAME" | tr '/' '-' | tr '_' '-' | cut -c1-20)
+          COMMIT_SHA=$(echo "$GITHUB_SHA" | cut -c1-7)
+          BASE_VERSION=$(jq -r '.version' apps/cli/package.json | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+          PREVIEW_VERSION="${BASE_VERSION}-${SAFE_BRANCH}.${COMMIT_SHA}"
+          NPM_TAG="dev"
+
+          echo "version=$PREVIEW_VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$NPM_TAG" >> $GITHUB_OUTPUT
+          echo "commit=$COMMIT_SHA" >> $GITHUB_OUTPUT
+
+          echo "Preview version: $PREVIEW_VERSION"
+          echo "NPM tag: $NPM_TAG"
+
+      - name: Update types package version
+        run: |
+          cd packages/types
+          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json
+
+      - name: Build types package
+        run: cd packages/types && bun run build
+
+      - name: Publish types to NPM
+        run: cd packages/types && bun publish --access public --tag ${{ steps.version.outputs.tag }}
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Update CLI package version and dependencies
+        run: |
+          cd apps/cli
+          VERSION="${{ steps.version.outputs.version }}"
+          jq --arg v "$VERSION" '
+            .version = $v |
+            .dependencies["@better-t-stack/types"] = $v |
+            .optionalDependencies["@better-t-stack/cli-darwin-arm64"] = $v |
+            .optionalDependencies["@better-t-stack/cli-darwin-x64"] = $v |
+            .optionalDependencies["@better-t-stack/cli-linux-arm64"] = $v |
+            .optionalDependencies["@better-t-stack/cli-linux-x64"] = $v |
+            .optionalDependencies["@better-t-stack/cli-windows-x64"] = $v
+          ' package.json > tmp.json && mv tmp.json package.json
+
+      - name: Update create-bts alias package version
+        run: |
+          cd packages/create-bts
+          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["create-better-t-stack"] = $v' package.json > tmp.json && mv tmp.json package.json
+
+      - name: Build CLI binaries
+        run: cd apps/cli && bun run build
+        env:
+          BTS_TELEMETRY: 0
+
+      - name: Publish CLI platform packages to NPM
+        run: |
+          cd apps/cli/dist
+          ls -la
+          for dir in */; do
+            if [ -f "$dir/package.json" ]; then
+              echo "Publishing $dir..."
+              cd "$dir"
+              bun publish --access public --tag ${{ steps.version.outputs.tag }}
+              cd ..
+            fi
+          done
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish CLI to NPM
+        run: cd apps/cli && bun publish --access public --tag ${{ steps.version.outputs.tag }}
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish create-bts to NPM
+        run: cd packages/create-bts && bun publish --access public --tag ${{ steps.version.outputs.tag }}
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Summary
+        run: |
+          echo "## Preview Release Published!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** \`${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Install" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "npx create-better-t-stack@${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

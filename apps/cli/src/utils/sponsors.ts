@@ -1,6 +1,6 @@
-import { log, outro, spinner } from "@clack/prompts";
 import { consola } from "consola";
 import pc from "picocolors";
+import { log } from "./logger";
 
 type SponsorSummary = {
   total_sponsors: number;
@@ -41,17 +41,16 @@ type SponsorEntry = {
 export const SPONSORS_JSON_URL = "https://sponsors.better-t-stack.dev/sponsors.json";
 
 export async function fetchSponsors(url: string = SPONSORS_JSON_URL) {
-  const s = spinner();
-  s.start("Fetching sponsors…");
+  log.step("Fetching sponsors…");
 
   const response = await fetch(url);
   if (!response.ok) {
-    s.stop(pc.red(`Failed to fetch sponsors: ${response.statusText}`));
+    log.error(`Failed to fetch sponsors: ${response.statusText}`);
     throw new Error(`Failed to fetch sponsors: ${response.statusText}`);
   }
 
   const sponsors = (await response.json()) as SponsorEntry;
-  s.stop("Sponsors fetched successfully!");
+  log.success("Sponsors fetched successfully!");
   return sponsors;
 }
 
@@ -59,18 +58,18 @@ export function displaySponsors(sponsors: SponsorEntry) {
   const { total_sponsors } = sponsors.summary;
   if (total_sponsors === 0) {
     log.info("No sponsors found. You can be the first one! ✨");
-    outro(pc.cyan("Visit https://github.com/sponsors/AmanVarshney01 to become a sponsor."));
+    console.log(pc.cyan("Visit https://github.com/sponsors/AmanVarshney01 to become a sponsor."));
     return;
   }
 
   displaySponsorsBox(sponsors);
 
   if (total_sponsors - sponsors.specialSponsors.length > 0) {
-    log.message(
+    console.log(
       pc.blue(`+${total_sponsors - sponsors.specialSponsors.length} more amazing sponsors.\n`),
     );
   }
-  outro(pc.magenta("Visit https://github.com/sponsors/AmanVarshney01 to become a sponsor."));
+  console.log(pc.magenta("Visit https://github.com/sponsors/AmanVarshney01 to become a sponsor."));
 }
 
 function displaySponsorsBox(sponsors: SponsorEntry) {

@@ -1,5 +1,4 @@
 import path from "node:path";
-import { log } from "@clack/prompts";
 import pc from "picocolors";
 import type { AddInput, ProjectConfig, ServerDeploy, WebDeploy } from "../../types";
 import { updateBtsConfig } from "../../utils/bts-config";
@@ -67,13 +66,13 @@ export async function addDeploymentToProject(
     };
 
     if (input.webDeploy && input.webDeploy !== "none") {
-      log.info(
-        pc.green(`Adding ${input.webDeploy} web deployment to ${config.frontend.join("/")}`),
+      console.log(
+        pc.green(`ℹ Adding ${input.webDeploy} web deployment to ${config.frontend.join("/")}`),
       );
     }
 
     if (input.serverDeploy && input.serverDeploy !== "none") {
-      log.info(pc.green(`Adding ${input.serverDeploy} server deployment`));
+      console.log(pc.green(`ℹ Adding ${input.serverDeploy} server deployment`));
     }
 
     await setupDeploymentTemplates(projectDir, config);
@@ -91,8 +90,8 @@ export async function addDeploymentToProject(
         packageManager: config.packageManager,
       });
     } else if (!input.suppressInstallMessage) {
-      log.info(
-        pc.yellow(`Run ${pc.bold(`${config.packageManager} install`)} to install dependencies`),
+      console.log(
+        pc.yellow(`ℹ Run ${pc.bold(`${config.packageManager} install`)} to install dependencies`),
       );
     }
   } catch (error) {

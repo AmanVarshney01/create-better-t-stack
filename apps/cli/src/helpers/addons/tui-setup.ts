@@ -1,46 +1,18 @@
 import path from "node:path";
-import { isCancel, log, select, spinner } from "@clack/prompts";
-import { execa } from "execa";
+import { $ } from "bun";
 import fs from "fs-extra";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
-import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionCommand } from "../../utils/package-runner";
+import { log } from "../../utils/logger";
 
 type TuiTemplate = "core" | "react" | "solid";
 
-const TEMPLATES = {
-  core: {
-    label: "Core",
-    hint: "Basic OpenTUI template",
-  },
-  react: {
-    label: "React",
-    hint: "React-based OpenTUI template",
-  },
-  solid: {
-    label: "Solid",
-    hint: "SolidJS-based OpenTUI template",
-  },
-} as const;
-
-export async function setupTui(config: ProjectConfig) {
+export async function setupTui(config: ProjectConfig, template: TuiTemplate = "react") {
   const { packageManager, projectDir } = config;
 
   try {
     log.info("Setting up OpenTUI...");
-
-    const template = await select<TuiTemplate>({
-      message: "Choose a template",
-      options: Object.entries(TEMPLATES).map(([key, template]) => ({
-        value: key as TuiTemplate,
-        label: template.label,
-        hint: template.hint,
-      })),
-      initialValue: "core",
-    });
-
-    if (isCancel(template)) return exitCancelled("Operation cancelled");
 
     const commandWithArgs = `create-tui@latest --template ${template} --no-git --no-install tui`;
 
@@ -49,18 +21,13 @@ export async function setupTui(config: ProjectConfig) {
     const appsDir = path.join(projectDir, "apps");
     await fs.ensureDir(appsDir);
 
-    const s = spinner();
-    s.start("Running OpenTUI create command...");
+    log.step("Running OpenTUI create command...");
 
-    await execa(tuiInitCommand, {
-      cwd: appsDir,
-      env: { CI: "true" },
-      shell: true,
-    });
+    await $`${{ raw: tuiInitCommand }}`.cwd(appsDir).env({ CI: "true" });
 
-    s.stop("OpenTUI setup complete!");
+    log.success("OpenTUI setup complete!");
   } catch (error) {
-    log.error(pc.red("Failed to set up OpenTUI"));
+    log.error("Failed to set up OpenTUI");
     if (error instanceof Error) {
       console.error(pc.red(error.message));
     }

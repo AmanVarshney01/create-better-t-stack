@@ -1,8 +1,8 @@
-import { spinner } from "@clack/prompts";
 import consola from "consola";
-import { $ } from "execa";
+import { $ } from "bun";
 import pc from "picocolors";
 import type { Addons, PackageManager } from "../../types";
+import { log } from "../../utils/logger";
 
 export async function installDependencies({
   projectDir,
@@ -12,19 +12,14 @@ export async function installDependencies({
   packageManager: PackageManager;
   addons?: Addons[];
 }) {
-  const s = spinner();
-
   try {
-    s.start(`Running ${packageManager} install...`);
+    log.step(`Running ${packageManager} install...`);
 
-    await $({
-      cwd: projectDir,
-      stderr: "inherit",
-    })`${packageManager} install`;
+    await $`${packageManager} install`.cwd(projectDir);
 
-    s.stop("Dependencies installed successfully");
+    log.success("Dependencies installed successfully");
   } catch (error) {
-    s.stop(pc.red("Failed to install dependencies"));
+    log.error("Failed to install dependencies");
     if (error instanceof Error) {
       consola.error(pc.red(`Installation error: ${error.message}`));
     }

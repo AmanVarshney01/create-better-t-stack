@@ -14,8 +14,13 @@ import { setupPrismaPostgres } from "../database-providers/prisma-postgres-setup
 import { setupSupabase } from "../database-providers/supabase-setup";
 import { setupTurso } from "../database-providers/turso-setup";
 
-export async function setupDatabase(config: ProjectConfig, cliInput?: { manualDb?: boolean }) {
+export type DbSetupOptions = {
+  mode?: "auto" | "manual";
+};
+
+export async function setupDatabase(config: ProjectConfig, options: DbSetupOptions = {}) {
   const { database, orm, dbSetup, backend, projectDir } = config;
+  const mode = options.mode ?? "auto";
 
   if (backend === "convex" || database === "none") {
     if (backend !== "convex") {
@@ -156,25 +161,25 @@ export async function setupDatabase(config: ProjectConfig, cliInput?: { manualDb
     if (dbSetup === "docker") {
       await setupDockerCompose(config);
     } else if (database === "sqlite" && dbSetup === "turso") {
-      await setupTurso(config, cliInput);
+      await setupTurso(config, { mode });
     } else if (database === "sqlite" && dbSetup === "d1") {
       await setupCloudflareD1(config);
     } else if (database === "postgres") {
       if (dbSetup === "prisma-postgres") {
-        await setupPrismaPostgres(config, cliInput);
+        await setupPrismaPostgres(config, { mode });
       } else if (dbSetup === "neon") {
-        await setupNeonPostgres(config, cliInput);
+        await setupNeonPostgres(config, { mode });
       } else if (dbSetup === "planetscale") {
         await setupPlanetScale(config);
       } else if (dbSetup === "supabase") {
-        await setupSupabase(config, cliInput);
+        await setupSupabase(config, { mode });
       }
     } else if (database === "mysql") {
       if (dbSetup === "planetscale") {
         await setupPlanetScale(config);
       }
     } else if (database === "mongodb" && dbSetup === "mongodb-atlas") {
-      await setupMongoDBAtlas(config, cliInput);
+      await setupMongoDBAtlas(config, { mode });
     }
   } catch (error) {
     if (error instanceof Error) {

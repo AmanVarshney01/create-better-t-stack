@@ -1,10 +1,55 @@
 import path from "node:path";
+import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { getUserPkgManager } from "./utils/get-package-manager";
 
-const __filename = fileURLToPath(import.meta.url);
-const distPath = path.dirname(__filename);
-export const PKG_ROOT = path.join(distPath, "../");
+/**
+ * Find the package root directory containing templates.
+ *
+ * For compiled binaries: Uses CREATE_BETTER_T_STACK_PKG_ROOT env var set by bin stub.
+ * For dev mode: Uses the source directory.
+ */
+function findPackageRoot(): string {
+  // First, check if the bin stub passed the package root
+  const envPkgRoot = process.env.CREATE_BETTER_T_STACK_PKG_ROOT;
+  if (envPkgRoot) {
+    const templatesPath = path.join(envPkgRoot, "templates");
+    if (fs.existsSync(templatesPath)) {
+      return envPkgRoot;
+    }
+  }
+
+  // In development (running from source), find templates relative to this file
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const devRoot = path.resolve(__dirname, "..");
+  const devTemplatesPath = path.join(devRoot, "templates");
+  if (fs.existsSync(devTemplatesPath)) {
+    return devRoot;
+  }
+
+  // Fallback: try walking up from executable location
+  const execDir = path.dirname(process.execPath);
+  let current = execDir;
+  let iterations = 0;
+
+  while (current !== path.dirname(current) && iterations < 20) {
+    iterations++;
+    const templatesPath = path.join(current, "templates");
+    if (fs.existsSync(templatesPath)) {
+      return current;
+    }
+    current = path.dirname(current);
+  }
+
+  // Not found - log error and return dev root as fallback
+  console.error(`[PKG_ROOT ERROR] Could not find templates directory!`);
+  console.error(`[PKG_ROOT ERROR] Env: ${envPkgRoot || "(not set)"}`);
+  console.error(`[PKG_ROOT ERROR] execDir: ${execDir}`);
+  return devRoot;
+}
+
+export const PKG_ROOT = findPackageRoot();
 
 export const DEFAULT_CONFIG_BASE = {
   projectName: "my-better-t-app",

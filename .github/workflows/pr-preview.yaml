@@ -3,6 +3,16 @@ name: PR Preview
 on:
   pull_request_target:
     types: [labeled]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to build preview for"
+        required: true
+        type: string
+      ref:
+        description: "Git ref to checkout (commit SHA or branch)"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -10,19 +20,20 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pr-preview-${{ github.event.pull_request.number }}
+  group: pr-preview-${{ github.event.pull_request.number || inputs.pr_number }}
   cancel-in-progress: true
 
 jobs:
   publish-preview:
     name: Publish Preview
     runs-on: ubuntu-latest
-    if: github.event.label.name == 'preview'
+    if: github.event.label.name == 'preview' || github.event_name == 'workflow_dispatch'
+    timeout-minutes: 30
     steps:
       - name: Checkout PR Code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || inputs.ref }}
           fetch-depth: 0
 
       - name: Setup Bun
@@ -38,8 +49,9 @@ jobs:
       - name: Generate Preview Version
         id: version
         run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          COMMIT_SHA=$(echo "${{ github.event.pull_request.head.sha }}" | cut -c1-7)
+          PR_NUMBER=${{ github.event.pull_request.number || inputs.pr_number }}
+          REF="${{ github.event.pull_request.head.sha || inputs.ref }}"
+          COMMIT_SHA=$(echo "$REF" | cut -c1-7)
           BASE_VERSION=$(jq -r '.version' apps/cli/package.json | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
           PREVIEW_VERSION="${BASE_VERSION}-pr${PR_NUMBER}.${COMMIT_SHA}"
           NPM_TAG="pr${PR_NUMBER}"
@@ -64,40 +76,61 @@ jobs:
         run: cd packages/types && bun publish --access public --tag ${{ steps.version.outputs.tag }}
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 0
 
-      - name: Update CLI package version and types dependency
+      - name: Update CLI package version and dependencies
         run: |
           cd apps/cli
-          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["@better-t-stack/types"] = $v' package.json > tmp.json && mv tmp.json package.json
+          VERSION="${{ steps.version.outputs.version }}"
+          jq --arg v "$VERSION" '
+            .version = $v |
+            .dependencies["@better-t-stack/types"] = $v |
+            .optionalDependencies["@better-t-stack/cli-darwin-arm64"] = $v |
+            .optionalDependencies["@better-t-stack/cli-darwin-x64"] = $v |
+            .optionalDependencies["@better-t-stack/cli-linux-arm64"] = $v |
+            .optionalDependencies["@better-t-stack/cli-linux-x64"] = $v |
+            .optionalDependencies["@better-t-stack/cli-windows-x64"] = $v
+          ' package.json > tmp.json && mv tmp.json package.json
 
       - name: Update create-bts alias package version
         run: |
           cd packages/create-bts
           jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["create-better-t-stack"] = $v' package.json > tmp.json && mv tmp.json package.json
 
-      - name: Build CLI
+      - name: Build CLI binaries
         run: cd apps/cli && bun run build
         env:
           BTS_TELEMETRY: 0
+
+      - name: Publish CLI platform packages to NPM
+        run: |
+          cd apps/cli/dist
+          ls -la
+          for dir in */; do
+            if [ -f "$dir/package.json" ]; then
+              echo "Publishing $dir..."
+              cd "$dir"
+              bun publish --access public --tag ${{ steps.version.outputs.tag }}
+              cd ..
+            fi
+          done
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish CLI to NPM
         run: cd apps/cli && bun publish --access public --tag ${{ steps.version.outputs.tag }}
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 0
 
       - name: Publish create-bts to NPM
         run: cd packages/create-bts && bun publish --access public --tag ${{ steps.version.outputs.tag }}
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
-          BTS_TELEMETRY: 0
 
       - name: Find existing preview comment
         uses: peter-evans/find-comment@v3
         id: find-comment
         with:
-          issue-number: ${{ github.event.pull_request.number }}
+          issue-number: ${{ github.event.pull_request.number || inputs.pr_number }}
           comment-author: "github-actions[bot]"
           body-includes: "PR Preview Release"
 
@@ -105,7 +138,7 @@ jobs:
         uses: peter-evans/create-or-update-comment@v4
         with:
           comment-id: ${{ steps.find-comment.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
+          issue-number: ${{ github.event.pull_request.number || inputs.pr_number }}
           edit-mode: replace
           body: |
             ## PR Preview Release
@@ -117,6 +150,11 @@ jobs:
             | `create-better-t-stack` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
             | `create-bts` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
             | `@better-t-stack/types` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+            | `@better-t-stack/cli-darwin-arm64` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+            | `@better-t-stack/cli-darwin-x64` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+            | `@better-t-stack/cli-linux-arm64` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+            | `@better-t-stack/cli-linux-x64` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+            | `@better-t-stack/cli-windows-x64` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
 
             **Commit:** `${{ steps.version.outputs.commit }}`
 
@@ -124,15 +162,12 @@ jobs:
 
             ```bash
             # Using the PR tag (always gets latest for this PR)
-            bunx create-better-t-stack@pr${{ steps.version.outputs.pr }}
             npx create-better-t-stack@pr${{ steps.version.outputs.pr }}
 
             # Using exact version
-            bunx create-better-t-stack@${{ steps.version.outputs.version }}
             npx create-better-t-stack@${{ steps.version.outputs.version }}
 
             # Using the alias
-            bunx create-bts@pr${{ steps.version.outputs.pr }}
             npx create-bts@pr${{ steps.version.outputs.pr }}
             ```
 

@@ -1,17 +1,22 @@
 import os from "node:os";
 import path from "node:path";
-import { confirm, isCancel, log, select, spinner, text } from "@clack/prompts";
+import { log } from "../../utils/logger";
 import consola from "consola";
-import { $ } from "execa";
+import { $ } from "bun";
 import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 import { commandExists } from "../../utils/command-exists";
-import { exitCancelled } from "../../utils/errors";
 import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
 
 type TursoConfig = {
   dbUrl: string;
   authToken: string;
+};
+
+export type TursoSetupOptions = {
+  mode?: "auto" | "manual";
+  dbName?: string;
+  installCli?: boolean;
 };
 
 async function isTursoInstalled() {
@@ -20,70 +25,68 @@ async function isTursoInstalled() {
 
 async function isTursoLoggedIn() {
   try {
-    const output = await $`turso auth whoami`;
-    return !output.stdout.includes("You are not logged in");
+    const output = await $`turso auth whoami`.text();
+    return !output.includes("You are not logged in");
   } catch {
     return false;
   }
 }
 
 async function loginToTurso() {
-  const s = spinner();
   try {
-    s.start("Logging in to Turso...");
+    log.step("Logging in to Turso...");
     await $`turso auth login`;
-    s.stop("Logged into Turso");
+    log.success("Logged into Turso");
     return true;
   } catch {
-    s.stop(pc.red("Failed to log in to Turso"));
+    log.error("Failed to log in to Turso");
+    return false;
   }
 }
 
 async function installTursoCLI(isMac: boolean) {
-  const s = spinner();
   try {
-    s.start("Installing Turso CLI...");
+    log.step("Installing Turso CLI...");
 
     if (isMac) {
       await $`brew install tursodatabase/tap/turso`;
     } else {
-      const { stdout: installScript } = await $`curl -sSfL https://get.tur.so/install.sh`;
-      await $`bash -c '${installScript}'`;
+      const installScript = await $`curl -sSfL https://get.tur.so/install.sh`.text();
+      await $`bash -c ${installScript}`;
     }
 
-    s.stop("Turso CLI installed");
+    log.success("Turso CLI installed");
     return true;
   } catch (error) {
     if (error instanceof Error && error.message.includes("User force closed")) {
-      s.stop("Turso CLI installation cancelled");
-      log.warn(pc.yellow("Turso CLI installation cancelled by user"));
+      log.warn("Turso CLI installation cancelled by user");
       throw new Error("Installation cancelled");
     }
-    s.stop(pc.red("Failed to install Turso CLI"));
+    log.error("Failed to install Turso CLI");
+    return false;
   }
 }
 
 async function getTursoGroups() {
-  const s = spinner();
   try {
-    s.start("Fetching Turso groups...");
-    const { stdout } = await $`turso group list`;
+    log.step("Fetching Turso groups...");
+    const stdout = await $`turso group list`.text();
     const lines = stdout.trim().split("\n");
 
     if (lines.length <= 1) {
-      s.stop("No Turso groups found");
+      log.info("No Turso groups found");
       return [];
     }
 
-    const groups = lines.slice(1).map((line) => {
+    const groups = lines.slice(1).map((line: string) => {
       const [name, locations, version, status] = line.trim().split(/\s{2,}/);
       return { name, locations, version, status };
     });
 
-    s.stop(`Found ${groups.length} Turso groups`);
+    log.success(`Found ${groups.length} Turso groups`);
     return groups;
   } catch (error) {
-    s.stop(pc.red("Error fetching Turso groups"));
+    log.error("Error fetching Turso groups");
     console.error("Error fetching Turso groups:", error);
     return [];
   }
@@ -96,31 +99,16 @@ async function selectTursoGroup() {
     return null;
   }
 
-  if (groups.length === 1) {
-    log.info(`Using the only available group: ${pc.blue(groups[0].name)}`);
-    return groups[0].name;
-  }
-
-  const groupOptions = groups.map((group) => ({
-    value: group.name,
-    label: `${group.name} (${group.locations})`,
-  }));
-
-  const selectedGroup = await select({
-    message: "Select a Turso database group:",
-    options: groupOptions,
-  });
-
-  if (isCancel(selectedGroup)) return exitCancelled("Operation cancelled");
-
-  return selectedGroup as string;
+  // Use the first available group by default in TUI mode
+  log.info(`Using group: ${pc.blue(groups[0].name)}`);
+  return groups[0].name;
 }
 
 async function createTursoDatabase(dbName: string, groupName: string | null) {
-  const s = spinner();
-
   try {
-    s.start(`Creating Turso database "${dbName}"${groupName ? ` in group "${groupName}"` : ""}...`);
+    log.step(
+      `Creating Turso database "${dbName}"${groupName ? ` in group "${groupName}"` : ""}...`,
+    );
 
     if (groupName) {
       await $`turso db create ${dbName} --group ${groupName}`;
@@ -128,27 +116,29 @@ async function createTursoDatabase(dbName: string, groupName: string | null) {
       await $`turso db create ${dbName}`;
     }
 
-    s.stop(`Turso database "${dbName}" created`);
+    log.success(`Turso database "${dbName}" created`);
   } catch (error) {
-    s.stop(pc.red(`Failed to create database "${dbName}"`));
+    log.error(`Failed to create database "${dbName}"`);
     if (error instanceof Error && error.message.includes("already exists")) {
       throw new Error("DATABASE_EXISTS");
     }
+    throw error;
   }
 
-  s.start("Retrieving database connection details...");
+  log.step("Retrieving database connection details...");
   try {
-    const { stdout: dbUrl } = await $`turso db show ${dbName} --url`;
-    const { stdout: authToken } = await $`turso db tokens create ${dbName}`;
+    const dbUrl = await $`turso db show ${dbName} --url`.text();
+    const authToken = await $`turso db tokens create ${dbName}`.text();
 
-    s.stop("Database connection details retrieved");
+    log.success("Database connection details retrieved");
 
     return {
       dbUrl: dbUrl.trim(),
       authToken: authToken.trim(),
     };
   } catch {
-    s.stop(pc.red("Failed to retrieve database connection details"));
+    log.error("Failed to retrieve database connection details");
+    return undefined;
   }
 }
 
@@ -186,110 +176,78 @@ DATABASE_URL=your_database_url
 DATABASE_AUTH_TOKEN=your_auth_token`);
 }
 
-export async function setupTurso(config: ProjectConfig, cliInput?: { manualDb?: boolean }) {
-  const { orm, projectDir, backend } = config;
-  const manualDb = cliInput?.manualDb ?? false;
-  const _isDrizzle = orm === "drizzle";
-  const setupSpinner = spinner();
+export async function setupTurso(config: ProjectConfig, options: TursoSetupOptions = {}) {
+  const { projectDir, backend } = config;
+  const mode = options.mode ?? "auto";
+  const dbName = options.dbName ?? path.basename(projectDir);
+  const installCli = options.installCli ?? true;
 
   try {
-    if (manualDb) {
-      await writeEnvFile(projectDir, backend);
-      displayManualSetupInstructions();
-      return;
-    }
-
-    const mode = await select({
-      message: "Turso setup: choose mode",
-      options: [
-        {
-          label: "Automatic",
-          value: "auto",
-          hint: "Automated setup with provider CLI, sets .env",
-        },
-        {
-          label: "Manual",
-          value: "manual",
-          hint: "Manual setup, add env vars yourself",
-        },
-      ],
-      initialValue: "auto",
-    });
-
-    if (isCancel(mode)) return exitCancelled("Operation cancelled");
-
     if (mode === "manual") {
       await writeEnvFile(projectDir, backend);
       displayManualSetupInstructions();
       return;
     }
 
-    setupSpinner.start("Checking Turso CLI availability...");
+    log.step("Checking Turso CLI availability...");
     const platform = os.platform();
     const isMac = platform === "darwin";
-    const _isLinux = platform === "linux";
     const isWindows = platform === "win32";
 
     if (isWindows) {
-      if (setupSpinner) setupSpinner.stop(pc.yellow("Turso setup not supported on Windows"));
-      log.warn(pc.yellow("Automatic Turso setup is not supported on Windows."));
+      log.warn("Automatic Turso setup is not supported on Windows.");
       await writeEnvFile(projectDir, backend);
       displayManualSetupInstructions();
       return;
     }
 
-    if (setupSpinner) setupSpinner.stop("Turso CLI availability checked");
-
     const isCliInstalled = await isTursoInstalled();
 
     if (!isCliInstalled) {
-      const shouldInstall = await confirm({
-        message: "Would you like to install Turso CLI?",
-        initialValue: true,
-      });
-
-      if (isCancel(shouldInstall)) return exitCancelled("Operation cancelled");
-
-      if (!shouldInstall) {
+      if (installCli) {
+        const installed = await installTursoCLI(isMac);
+        if (!installed) {
+          await writeEnvFile(projectDir, backend);
+          displayManualSetupInstructions();
+          return;
+        }
+      } else {
         await writeEnvFile(projectDir, backend);
         displayManualSetupInstructions();
         return;
       }
-
-      await installTursoCLI(isMac);
     }
 
     const isLoggedIn = await isTursoLoggedIn();
     if (!isLoggedIn) {
-      await loginToTurso();
+      const loggedIn = await loginToTurso();
+      if (!loggedIn) {
+        await writeEnvFile(projectDir, backend);
+        displayManualSetupInstructions();
+        return;
+      }
     }
 
     const selectedGroup = await selectTursoGroup();
 
-    let success = false;
-    let dbName = "";
-    let suggestedName = path.basename(projectDir);
+    let finalDbName = dbName;
+    let attempts = 0;
+    const maxAttempts = 5;
 
-    while (!success) {
-      const dbNameResponse = await text({
-        message: "Enter a name for your database:",
-        defaultValue: suggestedName,
-        initialValue: suggestedName,
-        placeholder: suggestedName,
-      });
-
-      if (isCancel(dbNameResponse)) return exitCancelled("Operation cancelled");
-
-      dbName = dbNameResponse as string;
-
+    while (attempts < maxAttempts) {
       try {
-        const config = await createTursoDatabase(dbName, selectedGroup);
-        await writeEnvFile(projectDir, backend, config);
-        success = true;
+        const tursoConfig = await createTursoDatabase(finalDbName, selectedGroup);
+        if (tursoConfig) {
+          await writeEnvFile(projectDir, backend, tursoConfig);
+        } else {
+          await writeEnvFile(projectDir, backend);
+        }
+        break;
       } catch (error) {
         if (error instanceof Error && error.message === "DATABASE_EXISTS") {
-          log.warn(pc.yellow(`Database "${pc.red(dbName)}" already exists`));
-          suggestedName = `${dbName}-${Math.floor(Math.random() * 1000)}`;
+          log.warn(`Database "${finalDbName}" already exists, trying alternative name...`);
+          finalDbName = `${dbName}-${Math.floor(Math.random() * 1000)}`;
+          attempts++;
         } else {
           throw error;
         }
@@ -298,12 +256,11 @@ export async function setupTurso(config: ProjectConfig, cliInput?: { manualDb?: 
 
     log.success("Turso database setup completed successfully!");
   } catch (error) {
-    if (setupSpinner) setupSpinner.stop(pc.red("Turso CLI availability check failed"));
     consola.error(
       pc.red(`Error during Turso setup: ${error instanceof Error ? error.message : String(error)}`),
     );
     await writeEnvFile(projectDir, backend);
     displayManualSetupInstructions();
-    log.success("Setup completed with manual configuration required.");
+    log.info("Setup completed with manual configuration required.");
   }
 }

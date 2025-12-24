@@ -1,31 +1,22 @@
-import { log } from "@clack/prompts";
-import { $ } from "execa";
+import { $ } from "bun";
 import pc from "picocolors";
 
 export async function initializeGit(projectDir: string, useGit: boolean) {
   if (!useGit) return;
 
-  const gitVersionResult = await $({
-    cwd: projectDir,
-    reject: false,
-    stderr: "pipe",
-  })`git --version`;
+  const gitVersionResult = await $`git --version`.cwd(projectDir).nothrow().quiet();
 
   if (gitVersionResult.exitCode !== 0) {
-    log.warn(pc.yellow("Git is not installed"));
+    console.warn(pc.yellow("⚠ Git is not installed"));
     return;
   }
 
-  const result = await $({
-    cwd: projectDir,
-    reject: false,
-    stderr: "pipe",
-  })`git init`;
+  const result = await $`git init`.cwd(projectDir).nothrow().quiet();
 
   if (result.exitCode !== 0) {
-    throw new Error(`Git initialization failed: ${result.stderr}`);
+    throw new Error(`Git initialization failed: ${result.stderr.toString()}`);
   }
 
-  await $({ cwd: projectDir })`git add -A`;
-  await $({ cwd: projectDir })`git commit -m ${"initial commit"}`;
+  await $`git add -A`.cwd(projectDir).quiet();
+  await $`git commit -m ${"initial commit"}`.cwd(projectDir).quiet();
 }
