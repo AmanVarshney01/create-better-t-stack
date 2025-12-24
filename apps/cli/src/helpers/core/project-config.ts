@@ -81,7 +81,7 @@ async function updateRootPackageJson(projectDir: string, options: ProjectConfig)
     }
   }
 
-  if (database === "sqlite" && orm !== "none" && dbSetup === "turso") {
+  if (database === "sqlite" && dbSetup !== "d1") {
     scripts["db:local"] = pmConfig.filter(dbPackageName, "db:local");
   }
 
@@ -187,7 +187,7 @@ async function updateDbPackageJson(projectDir: string, options: ProjectConfig) {
   const isD1Alchemy = dbSetup === "d1" && serverDeploy === "alchemy";
 
   if (database !== "none") {
-    if (database === "sqlite" && orm !== "none" && dbSetup === "turso") {
+    if (database === "sqlite" && dbSetup !== "d1") {
       scripts["db:local"] = "turso dev --db-file local.db";
     }
 

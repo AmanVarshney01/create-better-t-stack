@@ -55,9 +55,8 @@
 		"db:down": {
 			"cache": false,
 			"persistent": true
-		}
-		{{/if}}
-		{{#if (eq dbSetup "turso")}},
+		}{{/if}}
+		{{#if (and (eq database "sqlite") (ne dbSetup "d1"))}},
 		"db:local": {
 			"cache": false,
 			"persistent": true

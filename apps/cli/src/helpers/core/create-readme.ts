@@ -127,7 +127,7 @@ ${generateProjectStructure(projectName, frontend, backend, addons, isConvex, api
 
 ## Available Scripts
 
-${generateScriptsList(packageManagerRunCmd, database, orm, auth, hasNative, addons, backend)}
+${generateScriptsList(packageManagerRunCmd, database, orm, auth, hasNative, addons, backend, options.dbSetup)}
 `;
 }
 
@@ -488,7 +488,6 @@ function generateDatabaseSetup(
 
   const isBackendSelf = backend === "self";
   const envPath = isBackendSelf ? "apps/web/.env" : "apps/server/.env";
-  const dbLocalPath = "packages/db";
 
   let setup = "## Database Setup\n\n";
 
@@ -497,15 +496,13 @@ function generateDatabaseSetup(
       orm === "drizzle" ? " with Drizzle ORM" : orm === "prisma" ? " with Prisma" : ` with ${orm}`
     }.
 
-1. Start the local SQLite database:
+ 1. Start the local SQLite database (optional):
 ${
   dbSetup === "d1"
     ? "D1 local development and migrations are handled automatically by Alchemy during dev and deploy."
-    : dbSetup === "turso"
-      ? `\`\`\`bash
-cd ${dbLocalPath} && ${packageManagerRunCmd} db:local
+    : `\`\`\`bash
+${packageManagerRunCmd} db:local
 \`\`\``
-      : "SQLite local database are created automatically by the ORM."
 }
 
 2. Update your \`.env\` file in the \`${isBackendSelf ? "apps/web" : "apps/server"}\` directory with the appropriate connection details if needed.
@@ -566,6 +563,7 @@ function generateScriptsList(
   hasNative: boolean,
   addons: Addons[],
   backend: string,
+  dbSetup?: DatabaseSetup,
 ) {
   const isConvex = backend === "convex";
   const isBackendNone = backend === "none";
@@ -600,9 +598,9 @@ function generateScriptsList(
 - \`${packageManagerRunCmd} db:push\`: Push schema changes to database
 - \`${packageManagerRunCmd} db:studio\`: Open database studio UI`;
 
-    if (database === "sqlite" && orm === "drizzle") {
+    if (database === "sqlite" && dbSetup !== "d1") {
       scripts += `
-- \`cd packages/db && ${packageManagerRunCmd} db:local\`: Start the local SQLite database`;
+- \`${packageManagerRunCmd} db:local\`: Start the local SQLite database`;
     }
   }
 
