@@ -187,9 +187,16 @@ export function isExampleTodoAllowed(
 }
 
 export function isExampleAIAllowed(backend?: ProjectConfig["backend"], frontends: Frontend[] = []) {
-  if (backend === "convex") return false;
   const includesSolid = frontends.includes("solid");
   if (includesSolid) return false;
+
+  // Convex AI example only supports React-based frontends (not Svelte or Nuxt)
+  if (backend === "convex") {
+    const includesNuxt = frontends.includes("nuxt");
+    const includesSvelte = frontends.includes("svelte");
+    if (includesNuxt || includesSvelte) return false;
+  }
+
   return true;
 }
 
@@ -311,10 +318,20 @@ export function validateExamplesCompatibility(
       "The 'todo' example requires a database if a backend (other than Convex) is present. Cannot use --examples todo when database is 'none' and a backend is selected.",
     );
   }
-  if (examplesArr.includes("ai") && backend === "convex") {
-    exitWithError("The 'ai' example is not yet available with Convex backend.");
-  }
+
   if (examplesArr.includes("ai") && (frontend ?? []).includes("solid")) {
     exitWithError("The 'ai' example is not compatible with the Solid frontend.");
+  }
+
+  // Convex AI example only supports React-based frontends
+  if (examplesArr.includes("ai") && backend === "convex") {
+    const frontendArr = frontend ?? [];
+    const includesNuxt = frontendArr.includes("nuxt");
+    const includesSvelte = frontendArr.includes("svelte");
+    if (includesNuxt || includesSvelte) {
+      exitWithError(
+        "The 'ai' example with Convex backend only supports React-based frontends (Next.js, TanStack Router, TanStack Start, React Router). Svelte and Nuxt are not supported with Convex AI.",
+      );
+    }
   }
 }

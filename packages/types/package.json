@@ -1,14 +1,26 @@
 {
   "name": "@better-t-stack/types",
-  "version": "3.9.0",
+  "version": "3.11.0",
   "description": "TypeScript types and schemas for create-better-t-stack CLI",
-  "type": "module",
+  "keywords": [
+    "better-t-stack",
+    "cli",
+    "schemas",
+    "types",
+    "typescript"
+  ],
+  "homepage": "https://better-t-stack.dev/",
   "license": "MIT",
   "author": "Aman Varshney",
-  "scripts": {
-    "build": "tsdown",
-    "prepublishOnly": "bun run build"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AmanVarshney01/create-better-t-stack.git",
+    "directory": "packages/types"
   },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
   "exports": {
     ".": {
       "types": "./dist/index.d.mts",
@@ -23,25 +35,13 @@
       "default": "./dist/json-schema.mjs"
     }
   },
-  "files": [
-    "dist"
-  ],
-  "keywords": [
-    "better-t-stack",
-    "typescript",
-    "types",
-    "schemas",
-    "cli"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/AmanVarshney01/create-better-t-stack.git",
-    "directory": "packages/types"
-  },
   "publishConfig": {
     "access": "public"
   },
-  "homepage": "https://better-t-stack.dev/",
+  "scripts": {
+    "build": "tsdown",
+    "prepublishOnly": "bun run build"
+  },
   "dependencies": {
     "zod": "^4.1.13"
   },

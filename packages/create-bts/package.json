@@ -1,10 +1,51 @@
 {
   "name": "create-bts",
-  "version": "3.9.0",
+  "version": "3.11.0",
   "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations (alias for create-better-t-stack)",
-  "type": "module",
+  "keywords": [
+    "better-auth",
+    "better-t-stack",
+    "biome",
+    "boilerplate",
+    "bts",
+    "cli",
+    "drizzle",
+    "elysia",
+    "expo",
+    "fullstack",
+    "hono",
+    "monorepo",
+    "prisma",
+    "pwa",
+    "react",
+    "react-native",
+    "shadcn",
+    "starter",
+    "tailwind",
+    "tanstack",
+    "tauri",
+    "trpc",
+    "turborepo",
+    "type-safety",
+    "typescript"
+  ],
+  "homepage": "https://better-t-stack.dev/",
   "license": "MIT",
   "author": "Aman Varshney",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AmanVarshney01/create-better-t-stack.git",
+    "directory": "packages/create-bts"
+  },
+  "bin": {
+    "create-bts": "cli.js"
+  },
+  "files": [
+    "cli.js",
+    "index.d.ts",
+    "index.js"
+  ],
+  "type": "module",
   "main": "./index.js",
   "module": "./index.js",
   "types": "./index.d.ts",
@@ -17,51 +58,10 @@
       "import": "./cli.js"
     }
   },
-  "bin": {
-    "create-bts": "cli.js"
-  },
-  "files": [
-    "cli.js",
-    "index.js",
-    "index.d.ts"
-  ],
-  "keywords": [
-    "bts",
-    "better-t-stack",
-    "typescript",
-    "boilerplate",
-    "starter",
-    "cli",
-    "turborepo",
-    "trpc",
-    "better-auth",
-    "monorepo",
-    "fullstack",
-    "type-safety",
-    "react",
-    "react-native",
-    "expo",
-    "hono",
-    "elysia",
-    "drizzle",
-    "prisma",
-    "tanstack",
-    "tailwind",
-    "shadcn",
-    "pwa",
-    "tauri",
-    "biome"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/AmanVarshney01/create-better-t-stack.git",
-    "directory": "packages/create-bts"
-  },
   "publishConfig": {
     "access": "public"
   },
-  "homepage": "https://better-t-stack.dev/",
   "dependencies": {
-    "create-better-t-stack": "^3.9.0"
+    "create-better-t-stack": "^3.11.0"
   }
 }

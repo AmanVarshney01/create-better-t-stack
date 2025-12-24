@@ -1,22 +1,22 @@
 {
-	"name": "@better-t-stack/backend",
-	"version": "1.0.0",
-	"private": true,
-	"scripts": {
-		"dev": "convex dev",
-		"dev:setup": "convex dev --configure --until-success",
-		"deploy": "convex deploy"
-	},
-	"author": "",
-	"license": "ISC",
-	"description": "",
-	"devDependencies": {
-		"typescript": "^5.9.3"
-	},
-	"dependencies": {
-		"@convex-dev/crons": "^0.2.0",
-		"@erquhart/convex-oss-stats": "^0.8.2",
-		"convex": "^1.31.0",
-		"convex-helpers": "^0.1.107"
-	}
+  "name": "@better-t-stack/backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "scripts": {
+    "dev": "convex dev",
+    "dev:setup": "convex dev --configure --until-success",
+    "deploy": "convex deploy"
+  },
+  "dependencies": {
+    "@convex-dev/crons": "^0.2.0",
+    "@erquhart/convex-oss-stats": "^0.8.2",
+    "convex": "^1.31.0",
+    "convex-helpers": "^0.1.107"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
 }

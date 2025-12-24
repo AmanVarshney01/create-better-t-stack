@@ -25,6 +25,7 @@ At the repository root you will see:
 ```
 
 Notes:
+
 - `bts.jsonc` lets the CLI detect and enhance your project later; keep it if you plan to use `bts add`.
 - `turbo.json` exists only if you picked the Turborepo addon.
 
@@ -105,6 +106,7 @@ apps/web/
 ```
 
 Notes:
+
 - If you choose `backend=next`, the backend is scaffolded separately in `apps/server`. The web app does not include API routes.
 - (auth) adds `src/app/login/*` and `src/app/dashboard/*` plus sign-in components.
 
@@ -157,6 +159,7 @@ apps/server/
 ```
 
 API and auth scaffolding (conditional):
+
 - API=trpc: `src/lib/trpc.ts`, `src/lib/context.ts`
 - API=orpc: `src/lib/orpc.ts`, `src/lib/context.ts`
 - Auth: `src/lib/auth.ts`
@@ -195,6 +198,7 @@ apps/server/
 ### Auth + DB
 
 If you selected auth, additional files are added for your ORM:
+
 - Drizzle: `src/db/schema/auth.ts`
 - Prisma: `prisma/schema/auth.prisma`
 - Mongoose: `src/db/models/auth.model.ts`
@@ -222,6 +226,7 @@ apps/native/
 ```
 
 If an API is selected, a client utility is added:
+
 - API=trpc: `utils/trpc.ts`
 - API=orpc: `utils/orpc.ts`
 
@@ -329,6 +334,7 @@ Without Turborepo (example for Bun):
 ```
 
 Notes:
+
 - Convex adds `dev:setup` for initial backend configuration.
 
 ## Key Details

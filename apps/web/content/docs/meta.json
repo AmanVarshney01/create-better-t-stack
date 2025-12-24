@@ -1,12 +1,12 @@
 {
-	"pages": [
-		"index",
-		"cli",
-		"guides",
-		"project-structure",
-		"bts-config",
-		"analytics",
-		"contributing",
-		"faq"
-	]
+  "pages": [
+    "index",
+    "cli",
+    "guides",
+    "project-structure",
+    "bts-config",
+    "analytics",
+    "contributing",
+    "faq"
+  ]
 }

@@ -109,6 +109,48 @@ describe("Integration Tests - Real World Scenarios", () => {
       expectSuccess(result);
     });
 
+    it("should create Convex app with AI example + React frontend", async () => {
+      const result = await runTRPCTest({
+        projectName: "convex-ai-react-app",
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "better-auth",
+        api: "none",
+        frontend: ["tanstack-router"],
+        addons: ["biome"],
+        examples: ["ai"],
+        dbSetup: "none",
+        webDeploy: "alchemy",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should create Convex app with AI example + Next.js", async () => {
+      const result = await runTRPCTest({
+        projectName: "convex-ai-next-app",
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "better-auth",
+        api: "none",
+        frontend: ["next"],
+        addons: ["biome"],
+        examples: ["ai"],
+        dbSetup: "none",
+        webDeploy: "alchemy",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
     it("should create mobile app with React Native", async () => {
       const result = await runTRPCTest({
         projectName: "mobile-app",
@@ -409,6 +451,30 @@ describe("Integration Tests - Real World Scenarios", () => {
       });
 
       expectError(result, "The 'ai' example is not compatible with the Solid frontend");
+    });
+
+    it("should fail with Convex AI example + incompatible frontend", async () => {
+      const result = await runTRPCTest({
+        projectName: "convex-ai-svelte-fail",
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "none",
+        frontend: ["svelte"],
+        addons: ["none"],
+        examples: ["ai"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(
+        result,
+        "The 'ai' example with Convex backend only supports React-based frontends (Next.js, TanStack Router, TanStack Start, React Router). Svelte and Nuxt are not supported with Convex AI.",
+      );
     });
 
     it("should fail with payments incompatibility", async () => {

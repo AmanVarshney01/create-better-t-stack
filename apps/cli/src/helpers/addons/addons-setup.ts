@@ -9,7 +9,9 @@ import { setupOxlint } from "./oxlint-setup";
 import { setupRuler } from "./ruler-setup";
 import { setupStarlight } from "./starlight-setup";
 import { setupTauri } from "./tauri-setup";
+import { setupTui } from "./tui-setup";
 import { setupUltracite } from "./ultracite-setup";
+import { setupWxt } from "./wxt-setup";
 import { addPwaToViteConfig } from "./vite-pwa-setup";
 
 export async function setupAddons(config: ProjectConfig, isAddCommand = false) {
@@ -89,6 +91,12 @@ ${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
   }
   if (addons.includes("fumadocs")) {
     await setupFumadocs(config);
+  }
+  if (addons.includes("opentui")) {
+    await setupTui(config);
+  }
+  if (addons.includes("wxt")) {
+    await setupWxt(config);
   }
 }
 

@@ -1,6 +1,7 @@
 import {
 	DropdownMenu,
 	DropdownMenuContent,
+	DropdownMenuGroup,
 	DropdownMenuItem,
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
@@ -18,17 +19,16 @@ export default function UserMenu() {
 
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<Button variant="outline">{user?.name}</Button>
+			<DropdownMenuTrigger render={<Button variant="outline" />}>
+				{user?.name}
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className="bg-card">
-				<DropdownMenuLabel>My Account</DropdownMenuLabel>
-				<DropdownMenuSeparator />
-				<DropdownMenuItem>{user?.email}</DropdownMenuItem>
-				<DropdownMenuItem asChild>
-					<Button
+				<DropdownMenuGroup>
+					<DropdownMenuLabel>My Account</DropdownMenuLabel>
+					<DropdownMenuSeparator />
+					<DropdownMenuItem>{user?.email}</DropdownMenuItem>
+					<DropdownMenuItem
 						variant="destructive"
-						className="w-full"
 						onClick={() => {
 							authClient.signOut({
 								fetchOptions: {
@@ -40,8 +40,8 @@ export default function UserMenu() {
 						}}
 					>
 						Sign Out
-					</Button>
-				</DropdownMenuItem>
+					</DropdownMenuItem>
+				</DropdownMenuGroup>
 			</DropdownMenuContent>
 		</DropdownMenu>
 	);

@@ -101,7 +101,7 @@ Database type to use:
 
 - `none`: No database
 - `sqlite`: SQLite database
-- `postgres`: PostgreSQL database  
+- `postgres`: PostgreSQL database
 - `mysql`: MySQL database
 - `mongodb`: MongoDB database
 
@@ -189,6 +189,7 @@ create-better-t-stack --api trpc
 Frontend frameworks (can specify multiple):
 
 **Web Frameworks:**
+
 - `tanstack-router`: React with TanStack Router
 - `react-router`: React with React Router
 - `tanstack-start`: React with TanStack Start (SSR)
@@ -198,10 +199,12 @@ Frontend frameworks (can specify multiple):
 - `solid`: SolidJS
 
 **Native Frameworks:**
+
 - `native-nativewind`: React Native with NativeWind
 - `native-unistyles`: React Native with Unistyles
 
 **No Frontend:**
+
 - `none`: Backend-only project
 
 ```bash
@@ -231,7 +234,8 @@ create-better-t-stack --auth clerk
 create-better-t-stack --auth none
 ```
 
-**Note:** 
+**Note:**
+
 - `better-auth` requires both a database and backend framework
 - `clerk` is only available with Convex backend
 - Authentication is automatically set to `none` when using `--backend none` or `--database none` (unless using Convex)

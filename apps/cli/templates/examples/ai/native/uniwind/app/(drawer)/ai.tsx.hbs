@@ -1,3 +1,181 @@
+{{#if (eq backend "convex")}}
+import { Ionicons } from "@expo/vector-icons";
+import {
+  useUIMessages,
+  useSmoothText,
+  type UIMessage,
+} from "@convex-dev/agent/react";
+import { api } from "@{{projectName}}/backend/convex/_generated/api";
+import { useMutation } from "convex/react";
+import { Card, useThemeColor } from "heroui-native";
+import { useRef, useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Pressable,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+} from "react-native";
+
+import { Container } from "@/components/container";
+
+function MessageContent({
+  text,
+  isStreaming,
+}: {
+  text: string;
+  isStreaming: boolean;
+}) {
+  const [visibleText] = useSmoothText(text, {
+    startStreaming: isStreaming,
+  });
+  return <Text className="text-foreground leading-relaxed">{visibleText}</Text>;
+}
+
+export default function AIScreen() {
+  const [input, setInput] = useState("");
+  const [threadId, setThreadId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const mutedColor = useThemeColor("muted");
+  const accentColor = useThemeColor("accent");
+  const foregroundColor = useThemeColor("foreground");
+
+  const createThread = useMutation(api.chat.createNewThread);
+  const sendMessage = useMutation(api.chat.sendMessage);
+
+  const { results: messages } = useUIMessages(
+    api.chat.listMessages,
+    threadId ? { threadId } : "skip",
+    { initialNumItems: 50, stream: true },
+  );
+
+  const hasStreamingMessage = messages?.some(
+    (m: UIMessage) => m.status === "streaming",
+  );
+
+  useEffect(() => {
+    scrollViewRef.current?.scrollToEnd({ animated: true });
+  }, [messages]);
+
+  const onSubmit = async () => {
+    const value = input.trim();
+    if (!value || isLoading) return;
+
+    setIsLoading(true);
+    setInput("");
+
+    try {
+      let currentThreadId = threadId;
+      if (!currentThreadId) {
+        currentThreadId = await createThread();
+        setThreadId(currentThreadId);
+      }
+
+      await sendMessage({ threadId: currentThreadId, prompt: value });
+    } catch (error) {
+      console.error("Failed to send message:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Container>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View className="flex-1 px-4 py-6">
+          <View className="mb-6">
+            <Text className="text-foreground text-2xl font-bold mb-2">
+              AI Chat
+            </Text>
+            <Text className="text-muted">Chat with our AI assistant</Text>
+          </View>
+          <ScrollView
+            ref={scrollViewRef}
+            className="flex-1 mb-4"
+            showsVerticalScrollIndicator={false}
+          >
+            {!messages || messages.length === 0 ? (
+              <View className="flex-1 justify-center items-center">
+                <Text className="text-center text-muted text-lg">
+                  Ask me anything to get started!
+                </Text>
+              </View>
+            ) : (
+              <View className="gap-3">
+                {messages.map((message: UIMessage) => (
+                  <Card
+                    key={message.key}
+                    variant="secondary"
+                    className={`p-3 ${message.role === "user" ? "ml-8 bg-accent/10" : "mr-8"}`}
+                  >
+                    <Text className="text-sm font-semibold mb-1 text-foreground">
+                      {message.role === "user" ? "You" : "AI Assistant"}
+                    </Text>
+                    <MessageContent
+                      text={message.text ?? ""}
+                      isStreaming={message.status === "streaming"}
+                    />
+                  </Card>
+                ))}
+                {isLoading && !hasStreamingMessage && (
+                  <Card variant="secondary" className="p-3 mr-8">
+                    <Text className="text-sm font-semibold mb-1 text-foreground">
+                      AI Assistant
+                    </Text>
+                    <View className="flex-row items-center gap-2">
+                      <ActivityIndicator size="small" color={accentColor} />
+                      <Text className="text-muted">Thinking...</Text>
+                    </View>
+                  </Card>
+                )}
+              </View>
+            )}
+          </ScrollView>
+          <View className="border-t border-divider pt-4">
+            <View className="flex-row items-end gap-2">
+              <TextInput
+                value={input}
+                onChangeText={setInput}
+                placeholder="Type your message..."
+                placeholderTextColor={mutedColor}
+                className="flex-1 border border-divider rounded-lg px-3 py-2 text-foreground bg-surface min-h-10 max-h-30"
+                onSubmitEditing={(e) => {
+                  e.preventDefault();
+                  onSubmit();
+                }}
+                editable={!isLoading}
+                autoFocus={true}
+              />
+              <Pressable
+                onPress={onSubmit}
+                disabled={!input.trim() || isLoading}
+                className={`p-2 rounded-lg active:opacity-70 ${
+                  input.trim() && !isLoading ? "bg-accent" : "bg-surface"
+                }`}
+              >
+                <Ionicons
+                  name="send"
+                  size={20}
+                  color={
+                    input.trim() && !isLoading ? foregroundColor : mutedColor
+                  }
+                />
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Container>
+  );
+}
+{{else}}
 import { useRef, useEffect, useState } from "react";
 import {
   View,
@@ -169,3 +347,4 @@ export default function AIScreen() {
     </Container>
   );
 }
+{{/if}}
