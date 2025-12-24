@@ -174,7 +174,6 @@ Use conventional commit messages with the appropriate scope:
 - `feat(web): add new web feature`
 - `fix(web): fix web bug`
 - `chore(web): update dependencies`
-- `docs: update documentation`
 
 ## Getting Help
 

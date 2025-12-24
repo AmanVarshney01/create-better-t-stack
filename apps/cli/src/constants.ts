@@ -42,8 +42,8 @@ export const DEFAULT_CONFIG = getDefaultConfig();
 export const dependencyVersionMap = {
   typescript: "^5",
 
-  "better-auth": "^1.4.7",
-  "@better-auth/expo": "^1.4.7",
+  "better-auth": "^1.4.9",
+  "@better-auth/expo": "^1.4.9",
 
   "@clerk/nextjs": "^6.31.5",
   "@clerk/clerk-react": "^5.45.0",
@@ -141,7 +141,7 @@ export const dependencyVersionMap = {
   "convex-svelte": "^0.0.12",
   "convex-nuxt": "0.1.5",
   "convex-vue": "^0.1.5",
-  "@convex-dev/better-auth": "^0.10.6",
+  "@convex-dev/better-auth": "^0.10.9",
 
   "@tanstack/svelte-query": "^5.85.3",
   "@tanstack/svelte-query-devtools": "^5.85.3",
