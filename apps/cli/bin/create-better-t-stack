@@ -19,9 +19,14 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-function run(target) {
+function run(target, pkgRoot) {
     const result = spawnSync(target, process.argv.slice(2), {
         stdio: "inherit",
+        env: {
+            ...process.env,
+            // Pass the package root to the binary so it knows where templates are
+            CREATE_BETTER_T_STACK_PKG_ROOT: pkgRoot,
+        },
     });
     if (result.error) {
         console.error(result.error.message);
@@ -34,7 +39,9 @@ function run(target) {
 // Allow override via environment variable
 const envPath = process.env.CREATE_BETTER_T_STACK_BIN_PATH;
 if (envPath) {
-    run(envPath);
+    // Use existing PKG_ROOT env var if set, otherwise use parent of this script's dir
+    const pkgRoot = process.env.CREATE_BETTER_T_STACK_PKG_ROOT || dirname(__dirname);
+    run(envPath, pkgRoot);
 }
 
 const scriptPath = realpathSync(__filename);
@@ -95,4 +102,6 @@ if (!resolved) {
     process.exit(1);
 }
 
-run(resolved);
+// The package root is the parent of bin/ (where this script lives)
+const pkgRoot = dirname(scriptDir);
+run(resolved, pkgRoot);

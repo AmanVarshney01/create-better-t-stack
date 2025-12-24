@@ -6,58 +6,46 @@ import { getUserPkgManager } from "./utils/get-package-manager";
 /**
  * Find the package root directory containing templates.
  *
- * For compiled binaries: The binary runs from @better-t-stack/cli-{platform}-{arch},
- * but templates are shipped with the main create-better-t-stack package.
- * We need to find that package.
- *
- * For dev/npm distribution: Uses the current source directory.
- *
- * Package structure when installed via npm/bunx:
- *   <cache>/node_modules/create-better-t-stack/
- *     ├── templates/           <-- templates are here
- *     ├── bin/                 <-- stub is here
- *     └── node_modules/
- *         └── @better-t-stack/
- *             └── cli-darwin-arm64/
- *                 └── bin/     <-- compiled binary runs from here
+ * For compiled binaries: Uses CREATE_BETTER_T_STACK_PKG_ROOT env var set by bin stub.
+ * For dev mode: Uses the source directory.
  */
 function findPackageRoot(): string {
-  // Get the directory of the current module
+  // First, check if the bin stub passed the package root
+  const envPkgRoot = process.env.CREATE_BETTER_T_STACK_PKG_ROOT;
+  if (envPkgRoot) {
+    const templatesPath = path.join(envPkgRoot, "templates");
+    if (fs.existsSync(templatesPath)) {
+      return envPkgRoot;
+    }
+  }
+
+  // In development (running from source), find templates relative to this file
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
-
-  // In development or when running from source (e.g., `bun run dev`),
-  // we're already in the right package - just go up from src/constants.ts
   const devRoot = path.resolve(__dirname, "..");
   const devTemplatesPath = path.join(devRoot, "templates");
   if (fs.existsSync(devTemplatesPath)) {
     return devRoot;
   }
 
-  // For compiled binaries, walk up the directory tree looking for templates
-  // The binary is typically at:
-  //   .../create-better-t-stack/node_modules/@better-t-stack/cli-{os}-{arch}/bin/
-  // And we need to find:
-  //   .../create-better-t-stack/templates/
-  let current = __dirname;
-  while (current !== path.dirname(current)) {
-    // Check if this directory has templates (we found create-better-t-stack root)
+  // Fallback: try walking up from executable location
+  const execDir = path.dirname(process.execPath);
+  let current = execDir;
+  let iterations = 0;
+
+  while (current !== path.dirname(current) && iterations < 20) {
+    iterations++;
     const templatesPath = path.join(current, "templates");
     if (fs.existsSync(templatesPath)) {
       return current;
     }
-
-    // Check for create-better-t-stack in node_modules at this level
-    const nodeModulesPath = path.join(current, "node_modules", "create-better-t-stack");
-    const nodeModulesTemplatesPath = path.join(nodeModulesPath, "templates");
-    if (fs.existsSync(nodeModulesTemplatesPath)) {
-      return nodeModulesPath;
-    }
-
     current = path.dirname(current);
   }
 
-  // Fallback: return dev root and hope for the best
+  // Not found - log error and return dev root as fallback
+  console.error(`[PKG_ROOT ERROR] Could not find templates directory!`);
+  console.error(`[PKG_ROOT ERROR] Env: ${envPkgRoot || "(not set)"}`);
+  console.error(`[PKG_ROOT ERROR] execDir: ${execDir}`);
   return devRoot;
 }
 
