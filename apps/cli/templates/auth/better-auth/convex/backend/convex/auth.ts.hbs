@@ -8,10 +8,9 @@ import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
 import { convex } from "@convex-dev/better-auth/plugins";
 {{/if}}
 import { components } from "./_generated/api";
-import { DataModel } from "./_generated/dataModel";
+import type { DataModel } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import { betterAuth } from "better-auth";
-import { v } from "convex/values";
 import authConfig from "./auth.config";
 
 {{#if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
@@ -63,8 +62,7 @@ export { createAuth };
 
 export const getCurrentUser = query({
   args: {},
-  returns: v.any(),
-  handler: async function (ctx) {
-    return authComponent.getAuthUser(ctx);
+  handler: async (ctx) => {
+    return await authComponent.safeGetAuthUser(ctx);
   },
 });

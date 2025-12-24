@@ -154,6 +154,7 @@ function getConvexDependencies(frontend: Frontend[]) {
 
   if (frontend.includes("tanstack-start")) {
     deps.web.dependencies.push("@convex-dev/react-query");
+    deps.web.dependencies.push("@tanstack/react-router-ssr-query");
   }
   if (frontend.includes("svelte")) {
     deps.web.dependencies.push("convex-svelte");

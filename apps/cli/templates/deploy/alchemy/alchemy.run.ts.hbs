@@ -72,7 +72,7 @@ export const web = await Nextjs("web", {
     {{#if (eq auth "clerk")}}
     CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY,
     {{/if}}
-    {{#if (includes examples "ai")}}
+    {{#if (and (includes examples "ai") (ne backend "convex"))}}
     GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY,
     {{/if}}
     {{#if (eq payments "polar")}}
@@ -146,7 +146,7 @@ export const web = await TanStackStart("web", {
     {{#if (eq auth "clerk")}}
     CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY,
     {{/if}}
-    {{#if (includes examples "ai")}}
+    {{#if (and (includes examples "ai") (ne backend "convex"))}}
     GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY,
     {{/if}}
     {{#if (eq payments "polar")}}

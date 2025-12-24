@@ -1,9 +1,8 @@
 {{#if (eq backend "convex")}}
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import { QueryClient } from "@tanstack/react-query";
-import { routerWithQueryClient } from "@tanstack/react-router-with-query";
+import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
 import { ConvexQueryClient } from "@convex-dev/react-query";
-import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { routeTree } from "./routeTree.gen";
 import Loader from "./components/loader";
 import "./index.css";
@@ -27,21 +26,12 @@ import { orpc, queryClient } from "./utils/orpc";
 
 {{#if (eq backend "convex")}}
 export function getRouter() {
-  const CONVEX_URL = (import.meta as any).env.VITE_CONVEX_URL!;
-  if (!CONVEX_URL) {
-    console.error("missing envar VITE_CONVEX_URL");
+  const convexUrl = (import.meta as any).env.VITE_CONVEX_URL!;
+  if (!convexUrl) {
+    throw new Error("VITE_CONVEX_URL is not set");
   }
-  const convex = new ConvexReactClient(CONVEX_URL, {
-    unsavedChangesWarning: false,
-  });
 
-  {{#if (eq auth "better-auth")}}
-  const convexQueryClient = new ConvexQueryClient(convex, {
-    expectAuth: true,
-  });
-  {{else}}
-  const convexQueryClient = new ConvexQueryClient(convex);
-  {{/if}}
+  const convexQueryClient = new ConvexQueryClient(convexUrl);
 
   const queryClient: QueryClient = new QueryClient({
     defaultOptions: {
@@ -53,21 +43,19 @@ export function getRouter() {
   });
   convexQueryClient.connect(queryClient);
 
-  const router = routerWithQueryClient(
-    createTanStackRouter({
-      routeTree,
-      defaultPreload: "intent",
-      defaultPendingComponent: () => <Loader />,
-      defaultNotFoundComponent: () => <div>Not Found</div>,
-      context: { queryClient, convexClient: convex, convexQueryClient },
-      Wrap: ({ children }) => (
-        <ConvexProvider client={convexQueryClient.convexClient}>
-          {children}
-        </ConvexProvider>
-      ),
-    }),
+  const router = createTanStackRouter({
+    routeTree,
+    defaultPreload: "intent",
+    defaultPendingComponent: () => <Loader />,
+    defaultNotFoundComponent: () => <div>Not Found</div>,
+    context: { queryClient, convexQueryClient },
+  });
+
+  setupRouterSsrQueryIntegration({
+    router,
     queryClient,
-  );
+  });
+
   return router;
 }
 {{else}}

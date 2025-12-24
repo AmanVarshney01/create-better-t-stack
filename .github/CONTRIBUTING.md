@@ -157,8 +157,8 @@ cd apps/cli
 bun dev
 bun run test
 
-# Format files
-bun run format
+# Lint and format files (from root, uses oxlint and oxfmt)
+bun run check
 ```
 
 - **Manual testing**: Test your changes manually to ensure everything works as expected
@@ -174,7 +174,6 @@ Use conventional commit messages with the appropriate scope:
 - `feat(web): add new web feature`
 - `fix(web): fix web bug`
 - `chore(web): update dependencies`
-- `docs: update documentation`
 
 ## Getting Help
 
