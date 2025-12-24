@@ -8,9 +8,18 @@ import { getUserPkgManager } from "./utils/get-package-manager";
  *
  * For compiled binaries: The binary runs from @better-t-stack/cli-{platform}-{arch},
  * but templates are shipped with the main create-better-t-stack package.
- * We need to find that package in node_modules.
+ * We need to find that package.
  *
  * For dev/npm distribution: Uses the current source directory.
+ *
+ * Package structure when installed via npm/bunx:
+ *   <cache>/node_modules/create-better-t-stack/
+ *     ├── templates/           <-- templates are here
+ *     ├── bin/                 <-- stub is here
+ *     └── node_modules/
+ *         └── @better-t-stack/
+ *             └── cli-darwin-arm64/
+ *                 └── bin/     <-- compiled binary runs from here
  */
 function findPackageRoot(): string {
   // Get the directory of the current module
@@ -25,32 +34,24 @@ function findPackageRoot(): string {
     return devRoot;
   }
 
-  // For compiled binaries, the binary is in @better-t-stack/cli-{platform}-{arch}/bin/
-  // We need to find create-better-t-stack package which contains templates
-  // Walk up from the binary location to find node_modules
+  // For compiled binaries, walk up the directory tree looking for templates
+  // The binary is typically at:
+  //   .../create-better-t-stack/node_modules/@better-t-stack/cli-{os}-{arch}/bin/
+  // And we need to find:
+  //   .../create-better-t-stack/templates/
   let current = __dirname;
   while (current !== path.dirname(current)) {
-    // Check if we're in node_modules and can find the main package
-    const nodeModulesPath = path.join(current, "node_modules");
-    if (fs.existsSync(nodeModulesPath)) {
-      const mainPackagePath = path.join(nodeModulesPath, "create-better-t-stack");
-      const mainTemplatesPath = path.join(mainPackagePath, "templates");
-      if (fs.existsSync(mainTemplatesPath)) {
-        return mainPackagePath;
-      }
+    // Check if this directory has templates (we found create-better-t-stack root)
+    const templatesPath = path.join(current, "templates");
+    if (fs.existsSync(templatesPath)) {
+      return current;
     }
 
-    // Also check if current directory is inside node_modules
-    // e.g., /path/node_modules/@better-t-stack/cli-darwin-arm64/bin
-    const parts = current.split(path.sep);
-    const nodeModulesIndex = parts.lastIndexOf("node_modules");
-    if (nodeModulesIndex !== -1) {
-      const nodeModulesDir = parts.slice(0, nodeModulesIndex + 1).join(path.sep);
-      const mainPackagePath = path.join(nodeModulesDir, "create-better-t-stack");
-      const mainTemplatesPath = path.join(mainPackagePath, "templates");
-      if (fs.existsSync(mainTemplatesPath)) {
-        return mainPackagePath;
-      }
+    // Check for create-better-t-stack in node_modules at this level
+    const nodeModulesPath = path.join(current, "node_modules", "create-better-t-stack");
+    const nodeModulesTemplatesPath = path.join(nodeModulesPath, "templates");
+    if (fs.existsSync(nodeModulesTemplatesPath)) {
+      return nodeModulesPath;
     }
 
     current = path.dirname(current);
