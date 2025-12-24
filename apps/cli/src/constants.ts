@@ -4,84 +4,63 @@ import { fileURLToPath } from "node:url";
 import { getUserPkgManager } from "./utils/get-package-manager";
 
 /**
- * Detect if running as a compiled Bun binary.
- * Compiled binaries have Bun.main pointing to the executable itself,
- * not a .ts or .js file.
+ * Find the package root directory containing templates.
+ *
+ * For compiled binaries: The binary runs from @better-t-stack/cli-{platform}-{arch},
+ * but templates are shipped with the main create-better-t-stack package.
+ * We need to find that package in node_modules.
+ *
+ * For dev/npm distribution: Uses the current source directory.
  */
-function isCompiledBinary(): boolean {
-  if (typeof Bun === "undefined") return false;
-  const main = Bun.main;
-  // Compiled binaries don't have .ts, .js, or .mjs extensions
-  return !main.endsWith(".ts") && !main.endsWith(".js") && !main.endsWith(".mjs");
-}
+function findPackageRoot(): string {
+  // Get the directory of the current module
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
 
-/**
- * Find the main create-better-t-stack package in node_modules.
- * Used when running as a compiled binary from a platform package.
- */
-function findMainPackage(): string | null {
-  // Use process.execPath to get actual filesystem path (Bun.main returns bunfs virtual path)
-  let current = path.dirname(process.execPath);
+  // In development or when running from source (e.g., `bun run dev`),
+  // we're already in the right package - just go up from src/constants.ts
+  const devRoot = path.resolve(__dirname, "..");
+  const devTemplatesPath = path.join(devRoot, "templates");
+  if (fs.existsSync(devTemplatesPath)) {
+    return devRoot;
+  }
 
-  // Search up the directory tree for node_modules/create-better-t-stack
+  // For compiled binaries, the binary is in @better-t-stack/cli-{platform}-{arch}/bin/
+  // We need to find create-better-t-stack package which contains templates
+  // Walk up from the binary location to find node_modules
+  let current = __dirname;
   while (current !== path.dirname(current)) {
-    const candidate = path.join(current, "node_modules", "create-better-t-stack");
-    const templatesPath = path.join(candidate, "templates");
+    // Check if we're in node_modules and can find the main package
+    const nodeModulesPath = path.join(current, "node_modules");
+    if (fs.existsSync(nodeModulesPath)) {
+      const mainPackagePath = path.join(nodeModulesPath, "create-better-t-stack");
+      const mainTemplatesPath = path.join(mainPackagePath, "templates");
+      if (fs.existsSync(mainTemplatesPath)) {
+        return mainPackagePath;
+      }
+    }
 
-    if (fs.existsSync(templatesPath)) {
-      return candidate;
+    // Also check if current directory is inside node_modules
+    // e.g., /path/node_modules/@better-t-stack/cli-darwin-arm64/bin
+    const parts = current.split(path.sep);
+    const nodeModulesIndex = parts.lastIndexOf("node_modules");
+    if (nodeModulesIndex !== -1) {
+      const nodeModulesDir = parts.slice(0, nodeModulesIndex + 1).join(path.sep);
+      const mainPackagePath = path.join(nodeModulesDir, "create-better-t-stack");
+      const mainTemplatesPath = path.join(mainPackagePath, "templates");
+      if (fs.existsSync(mainTemplatesPath)) {
+        return mainPackagePath;
+      }
     }
 
     current = path.dirname(current);
   }
 
-  return null;
+  // Fallback: return dev root and hope for the best
+  return devRoot;
 }
 
-/**
- * Get the package root directory.
- * - In JS mode (development/tsdown build): relative to dist/
- * - In compiled binary mode: find main package in node_modules, or use dev fallback
- */
-function getPkgRoot(): string {
-  if (isCompiledBinary()) {
-    // First try: find main package in node_modules (production npm install)
-    const mainPkg = findMainPackage();
-    if (mainPkg) {
-      return mainPkg;
-    }
-
-    // Second try: development mode - binary is in dist/create-better-t-stack-{platform}-{arch}/bin/
-    // Use process.execPath to get actual filesystem path (Bun.main returns bunfs virtual path)
-    const binaryPath = process.execPath;
-    const binaryDir = path.dirname(binaryPath);
-
-    // Templates are at ../../../templates relative to the binary (bin -> platform-dir -> dist -> apps/cli)
-    const devTemplatesPath = path.resolve(binaryDir, "..", "..", "..", "templates");
-    if (fs.existsSync(devTemplatesPath)) {
-      return path.resolve(binaryDir, "..", "..", "..");
-    }
-
-    // Third try: templates might be at ../../templates (if binary is in dist/bin/)
-    const altTemplatesPath = path.resolve(binaryDir, "..", "..", "templates");
-    if (fs.existsSync(altTemplatesPath)) {
-      return path.resolve(binaryDir, "..", "..");
-    }
-
-    // Fourth try: templates at ../templates
-    const simpleTemplatesPath = path.resolve(binaryDir, "..", "templates");
-    if (fs.existsSync(simpleTemplatesPath)) {
-      return path.resolve(binaryDir, "..");
-    }
-  }
-
-  // Standard JS mode - relative to this file in dist/
-  const __filename = fileURLToPath(import.meta.url);
-  const distPath = path.dirname(__filename);
-  return path.join(distPath, "../");
-}
-
-export const PKG_ROOT = getPkgRoot();
+export const PKG_ROOT = findPackageRoot();
 
 export const DEFAULT_CONFIG_BASE = {
   projectName: "my-better-t-app",

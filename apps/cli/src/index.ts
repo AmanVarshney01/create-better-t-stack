@@ -46,6 +46,3 @@ export type {
   Template,
   BetterTStackConfig,
 } from "./types";
-
-// Legacy exports for backwards compatibility (deprecated)
-export { create as init } from "./api";

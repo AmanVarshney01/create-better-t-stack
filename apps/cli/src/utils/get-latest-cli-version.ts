@@ -11,7 +11,6 @@ import { PKG_ROOT } from "../constants";
 declare const CLI_VERSION: string | undefined;
 
 export const getLatestCLIVersion = (): string => {
-  // Check if version was embedded at compile time
   if (typeof CLI_VERSION !== "undefined") {
     return CLI_VERSION;
   }

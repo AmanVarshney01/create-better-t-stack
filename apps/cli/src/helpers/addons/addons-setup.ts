@@ -1,6 +1,5 @@
 import path from "node:path";
 import fs from "fs-extra";
-import pc from "picocolors";
 import { log } from "../../utils/logger";
 import type { Frontend, ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";

@@ -107,6 +107,7 @@ for (const target of targets) {
       define: {
         CLI_VERSION: JSON.stringify(version),
       },
+      target: "bun",
       compile: {
         target: target.bunTarget as Bun.Build.Target,
         outfile: path.join(binDir, binaryName),
