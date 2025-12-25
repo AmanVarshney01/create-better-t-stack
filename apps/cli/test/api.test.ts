@@ -1,5 +1,7 @@
 import { describe, it } from "bun:test";
+
 import type { API, Backend, Database, Examples, Frontend, ORM, Runtime } from "../src/types";
+
 import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
 describe("API Configurations", () => {
@@ -572,7 +574,7 @@ describe("API Configurations", () => {
         examples: ["none"],
         dbSetup: "none",
         webDeploy: "none",
-        serverDeploy: "alchemy",
+        serverDeploy: "cloudflare",
         install: false,
       });
 
@@ -604,9 +606,8 @@ describe("API Configurations", () => {
           install: false,
         };
 
-        // Handle workers runtime requirements
         if (runtime === "workers") {
-          config.serverDeploy = "alchemy";
+          config.serverDeploy = "cloudflare";
         }
 
         const result = await runTRPCTest(config);

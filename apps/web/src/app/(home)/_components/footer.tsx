@@ -1,6 +1,7 @@
 import { Github } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+
 import npmIcon from "@/public/icon/npm.svg";
 
 const Footer = () => {

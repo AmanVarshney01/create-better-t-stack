@@ -314,9 +314,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { Container } from "@/components/container";
 import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
+import { env } from "@{{projectName}}/env/native";
 
 const generateAPIUrl = (relativePath: string) => {
-  const serverUrl = process.env.EXPO_PUBLIC_SERVER_URL;
+  const serverUrl = env.EXPO_PUBLIC_SERVER_URL;
   if (!serverUrl) {
     throw new Error(
       "EXPO_PUBLIC_SERVER_URL environment variable is not defined"

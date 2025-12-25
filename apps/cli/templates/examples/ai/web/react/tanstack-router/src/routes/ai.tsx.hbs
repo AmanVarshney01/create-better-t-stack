@@ -150,6 +150,9 @@ import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 import { Streamdown } from "streamdown";
+{{#unless (eq backend "self")}}
+import { env } from "@{{projectName}}/env/web";
+{{/unless}}
 
 export const Route = createFileRoute("/ai")({
   component: RouteComponent,
@@ -159,7 +162,7 @@ function RouteComponent() {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
-      api: {{#if (eq backend "self")}}"/api/ai"{{else}}`${import.meta.env.VITE_SERVER_URL}/ai`{{/if}},
+      api: {{#if (eq backend "self")}}"/api/ai"{{else}}`${env.VITE_SERVER_URL}/ai`{{/if}},
     }),
   });
 

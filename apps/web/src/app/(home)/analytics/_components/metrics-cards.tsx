@@ -2,6 +2,7 @@
 
 import NumberFlow from "@number-flow/react";
 import { Code2, Database, Globe, Layers, Server, Terminal, TrendingUp, Zap } from "lucide-react";
+
 import type { AggregatedAnalyticsData } from "./types";
 
 type MetricCardProps = {

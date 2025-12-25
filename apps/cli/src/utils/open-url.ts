@@ -1,24 +1,19 @@
 import { log } from "@clack/prompts";
-import { execa } from "execa";
+import { $ } from "execa";
 
 export async function openUrl(url: string) {
   const platform = process.platform;
-  let command: string;
-  let args: string[] = [];
-
-  if (platform === "darwin") {
-    command = "open";
-    args = [url];
-  } else if (platform === "win32") {
-    command = "cmd";
-    args = ["/c", "start", "", url.replace(/&/g, "^&")];
-  } else {
-    command = "xdg-open";
-    args = [url];
-  }
 
   try {
-    await execa(command, args, { stdio: "ignore" });
+    if (platform === "darwin") {
+      await $({ stdio: "ignore" })`open ${url}`;
+    } else if (platform === "win32") {
+      // Windows needs special handling for ampersands
+      const escapedUrl = url.replace(/&/g, "^&");
+      await $({ stdio: "ignore" })`cmd /c start "" ${escapedUrl}`;
+    } else {
+      await $({ stdio: "ignore" })`xdg-open ${url}`;
+    }
   } catch {
     log.message(`Please open ${url} in your browser.`);
   }

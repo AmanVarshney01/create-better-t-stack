@@ -2,13 +2,15 @@
 import { ChevronDown, ChevronUp, Github, Globe, Heart, Star, Terminal } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+
+import type { SponsorsData } from "@/lib/types";
+
 import {
   formatSponsorUrl,
   getSponsorUrl,
   isLifetimeSpecialSponsor,
   shouldShowLifetimeTotal,
 } from "@/lib/sponsor-utils";
-import type { SponsorsData } from "@/lib/types";
 
 export default function SponsorsSection({ sponsorsData }: { sponsorsData: SponsorsData }) {
   const [showPastSponsors, setShowPastSponsors] = useState(false);

@@ -1,6 +1,8 @@
-import path from "node:path";
 import fs from "fs-extra";
+import path from "node:path";
+
 import type { ProjectConfig } from "../../types";
+
 import { generateAuthSecret } from "./auth-setup";
 
 function getClientServerVar(frontend: string[], backend: ProjectConfig["backend"]) {
@@ -160,14 +162,6 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
           condition: backend === "convex" ? true : baseVar.write,
         },
       ];
-
-      if (hasNextJs) {
-        clientVars.push({
-          key: "PORT",
-          value: "3001",
-          condition: true,
-        });
-      }
 
       if (backend === "convex" && auth === "clerk") {
         if (hasNextJs) {
@@ -374,7 +368,11 @@ ${hasWeb ? "# npx convex env set SITE_URL http://localhost:3001\n" : ""}`;
         databaseUrl = "mongodb://localhost:27017/mydatabase";
         break;
       case "sqlite":
-        if (config.runtime === "workers" || webDeploy === "alchemy" || serverDeploy === "alchemy") {
+        if (
+          config.runtime === "workers" ||
+          webDeploy === "cloudflare" ||
+          serverDeploy === "cloudflare"
+        ) {
           databaseUrl = "http://127.0.0.1:8080";
         } else {
           const dbAppDir = backend === "self" ? "apps/web" : "apps/server";
@@ -431,51 +429,20 @@ ${hasWeb ? "# npx convex env set SITE_URL http://localhost:3001\n" : ""}`;
     await addEnvVariablesToFile(path.join(serverDir, ".env"), serverVars);
   }
 
-  const isUnifiedAlchemy = webDeploy === "alchemy" && serverDeploy === "alchemy";
-  const isIndividualAlchemy = webDeploy === "alchemy" || serverDeploy === "alchemy";
+  const isUnifiedAlchemy = webDeploy === "cloudflare" && serverDeploy === "cloudflare";
+  const isIndividualAlchemy = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
 
-  if (isUnifiedAlchemy) {
-    const rootEnvPath = path.join(projectDir, ".env");
-    const rootAlchemyVars: EnvVariable[] = [
-      {
-        key: "ALCHEMY_PASSWORD",
-        value: "please-change-this",
-        condition: true,
-      },
-    ];
-    await addEnvVariablesToFile(rootEnvPath, rootAlchemyVars);
-  } else if (isIndividualAlchemy) {
-    if (webDeploy === "alchemy") {
-      const webDir = path.join(projectDir, "apps/web");
-      if (await fs.pathExists(webDir)) {
-        const webAlchemyVars: EnvVariable[] = [
-          {
-            key: "ALCHEMY_PASSWORD",
-            value: "please-change-this",
-            condition: true,
-          },
-        ];
-        await addEnvVariablesToFile(path.join(webDir, ".env"), webAlchemyVars);
-      }
-    }
-
-    if (serverDeploy === "alchemy") {
-      const serverAlchemyVars: EnvVariable[] = [
+  if (isUnifiedAlchemy || isIndividualAlchemy) {
+    const infraDir = path.join(projectDir, "packages/infra");
+    if (await fs.pathExists(infraDir)) {
+      const infraAlchemyVars: EnvVariable[] = [
         {
           key: "ALCHEMY_PASSWORD",
           value: "please-change-this",
           condition: true,
         },
       ];
-
-      if (backend === "self") {
-        const webDir = path.join(projectDir, "apps/web");
-        if (await fs.pathExists(webDir)) {
-          await addEnvVariablesToFile(path.join(webDir, ".env"), serverAlchemyVars);
-        }
-      } else {
-        await addEnvVariablesToFile(path.join(serverDir, ".env"), serverAlchemyVars);
-      }
+      await addEnvVariablesToFile(path.join(infraDir, ".env"), infraAlchemyVars);
     }
   }
 }

@@ -1,6 +1,8 @@
 import { isCancel, select } from "@clack/prompts";
-import { DEFAULT_CONFIG } from "../constants";
+
 import type { Backend, Database, Runtime } from "../types";
+
+import { DEFAULT_CONFIG } from "../constants";
 import { exitCancelled } from "../utils/errors";
 
 export async function getDatabaseChoice(database?: Database, backend?: Backend, runtime?: Runtime) {

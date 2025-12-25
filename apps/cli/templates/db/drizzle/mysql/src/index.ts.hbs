@@ -1,33 +1,26 @@
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
-{{#if (and (ne backend "self") (includes frontend "next"))}}
-import dotenv from "dotenv";
-
-dotenv.config({
-	path: "../../apps/server/.env",
-});
-
-{{/if}}
+import { env } from "@{{projectName}}/env/server";
 import * as schema from "./schema";
 
 {{#if (eq dbSetup "planetscale")}}
 import { drizzle } from "drizzle-orm/planetscale-serverless";
 
 export const db = drizzle({
-  connection: {
-    host: process.env.DATABASE_HOST,
-    username: process.env.DATABASE_USERNAME,
-    password: process.env.DATABASE_PASSWORD,
-  },
-  schema,
+	connection: {
+		host: env.DATABASE_HOST,
+		username: env.DATABASE_USERNAME,
+		password: env.DATABASE_PASSWORD,
+	},
+	schema,
 });
 {{else}}
 import { drizzle } from "drizzle-orm/mysql2";
 
 export const db = drizzle({
-  connection: {
-    uri: process.env.DATABASE_URL,
-  },
-  schema,
+	connection: {
+		uri: env.DATABASE_URL,
+	},
+	schema,
 });
 {{/if}}
 {{/if}}
@@ -37,25 +30,25 @@ import * as schema from "./schema";
 
 {{#if (eq dbSetup "planetscale")}}
 import { drizzle } from "drizzle-orm/planetscale-serverless";
-import { env } from "cloudflare:workers";
+import { env } from "@{{projectName}}/env/server";
 
 export const db = drizzle({
-  connection: {
-    host: env.DATABASE_HOST,
-    username: env.DATABASE_USERNAME,
-    password: env.DATABASE_PASSWORD,
-  },
-  schema,
+	connection: {
+		host: env.DATABASE_HOST,
+		username: env.DATABASE_USERNAME,
+		password: env.DATABASE_PASSWORD,
+	},
+	schema,
 });
 {{else}}
 import { drizzle } from "drizzle-orm/mysql2";
-import { env } from "cloudflare:workers";
+import { env } from "@{{projectName}}/env/server";
 
 export const db = drizzle({
-  connection: {
-    uri: env.DATABASE_URL,
-  },
-  schema,
+	connection: {
+		uri: env.DATABASE_URL,
+	},
+	schema,
 });
 {{/if}}
 {{/if}}

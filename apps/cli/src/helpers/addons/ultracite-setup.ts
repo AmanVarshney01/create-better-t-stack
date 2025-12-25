@@ -1,10 +1,12 @@
 import { autocompleteMultiselect, group, log, multiselect, spinner } from "@clack/prompts";
-import { execa } from "execa";
+import { $ } from "execa";
 import pc from "picocolors";
+
 import type { ProjectConfig } from "../../types";
+
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { exitCancelled } from "../../utils/errors";
-import { getPackageExecutionCommand } from "../../utils/package-runner";
+import { getPackageExecutionArgs } from "../../utils/package-runner";
 import { setupBiome } from "./addons-setup";
 
 type UltraciteEditor = "vscode" | "zed";
@@ -203,17 +205,12 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 
     const ultraciteArgsString = ultraciteArgs.join(" ");
     const commandWithArgs = `ultracite@latest ${ultraciteArgsString} --skip-install`;
-
-    const ultraciteInitCommand = getPackageExecutionCommand(packageManager, commandWithArgs);
+    const args = getPackageExecutionArgs(packageManager, commandWithArgs);
 
     const s = spinner();
     s.start("Running Ultracite init command...");
 
-    await execa(ultraciteInitCommand, {
-      cwd: projectDir,
-      env: { CI: "true" },
-      shell: true,
-    });
+    await $({ cwd: projectDir, env: { CI: "true" } })`${args}`;
 
     if (hasHusky) {
       await addPackageDependency({

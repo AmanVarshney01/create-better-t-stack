@@ -62,5 +62,13 @@
 			"persistent": true
 		}
 		{{/if}}
+		{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}},
+		"deploy": {
+			"cache": false
+		},
+		"destroy": {
+			"cache": false
+		}
+		{{/if}}
 	}
 }

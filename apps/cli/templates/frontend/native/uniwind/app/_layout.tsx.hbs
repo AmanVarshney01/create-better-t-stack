@@ -9,8 +9,10 @@ import "@/global.css";
     import { ConvexReactClient } from "convex/react";
     import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
     import { authClient } from "@/lib/auth-client";
+    import { env } from "@{{projectName}}/env/native";
   {{else}}
     import { ConvexProvider, ConvexReactClient } from "convex/react";
+    import { env } from "@{{projectName}}/env/native";
   {{/if}}
 
   {{#if (eq auth "clerk")}}
@@ -42,8 +44,7 @@ export const unstable_settings = {
 };
 
 {{#if (eq backend "convex")}}
-  const convexUrl = process.env.EXPO_PUBLIC_CONVEX_URL || "";
-  const convex = new ConvexReactClient(convexUrl, {
+  const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
     unsavedChangesWarning: false,
   });
 {{/if}}
@@ -64,7 +65,7 @@ export default function Layout() {
   return (
     {{#if (eq backend "convex")}}
       {{#if (eq auth "clerk")}}
-        <ClerkProvider tokenCache={tokenCache} publishableKey={process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+        <ClerkProvider tokenCache={tokenCache} publishableKey={env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}>
           <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
             <GestureHandlerRootView style=\{{ flex: 1 }}>
               <KeyboardProvider>

@@ -1,4 +1,5 @@
 import { describe, it } from "bun:test";
+
 import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
 describe("Frontend Configurations", () => {
@@ -464,7 +465,7 @@ describe("Frontend Configurations", () => {
       const result = await runTRPCTest({
         projectName: "web-deploy",
         frontend: ["tanstack-router"],
-        webDeploy: "alchemy",
+        webDeploy: "cloudflare",
         backend: "hono",
         runtime: "bun",
         database: "sqlite",
@@ -485,7 +486,7 @@ describe("Frontend Configurations", () => {
       const result = await runTRPCTest({
         projectName: "web-deploy-no-frontend-fail",
         frontend: ["native-bare"],
-        webDeploy: "alchemy",
+        webDeploy: "cloudflare",
         backend: "hono",
         runtime: "bun",
         database: "sqlite",

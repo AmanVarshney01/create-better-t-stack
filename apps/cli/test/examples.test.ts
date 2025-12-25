@@ -1,4 +1,5 @@
 import { describe, it } from "bun:test";
+
 import { EXAMPLES, expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
 describe("Example Configurations", () => {

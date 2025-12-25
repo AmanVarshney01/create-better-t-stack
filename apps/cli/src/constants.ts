@@ -1,5 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
 import { getUserPkgManager } from "./utils/get-package-manager";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -164,11 +165,14 @@ export const dependencyVersionMap = {
   "@sveltejs/adapter-cloudflare": "^7.2.4",
   "@cloudflare/workers-types": "^4.20251213.0",
 
-  alchemy: "^0.81.2",
+  alchemy: "^0.82.1",
 
   dotenv: "^17.2.2",
   tsdown: "^0.16.5",
   zod: "^4.1.13",
+  "@t3-oss/env-core": "^0.13.1",
+  "@t3-oss/env-nextjs": "^0.13.1",
+  "@t3-oss/env-nuxt": "^0.13.1",
   srvx: "0.8.15",
 
   "@polar-sh/better-auth": "^1.1.3",

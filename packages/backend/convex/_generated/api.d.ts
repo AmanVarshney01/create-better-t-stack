@@ -8,6 +8,8 @@
  * @module
  */
 
+import type { ApiFromModules, FilterApi, FunctionReference } from "convex/server";
+
 import type * as analytics from "../analytics.js";
 import type * as healthCheck from "../healthCheck.js";
 import type * as hooks from "../hooks.js";
@@ -15,8 +17,6 @@ import type * as http from "../http.js";
 import type * as showcase from "../showcase.js";
 import type * as stats from "../stats.js";
 import type * as testimonials from "../testimonials.js";
-
-import type { ApiFromModules, FilterApi, FunctionReference } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
   analytics: typeof analytics;

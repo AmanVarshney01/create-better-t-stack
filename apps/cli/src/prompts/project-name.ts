@@ -1,8 +1,9 @@
-import path from "node:path";
 import { isCancel, text } from "@clack/prompts";
 import consola from "consola";
 import fs from "fs-extra";
+import path from "node:path";
 import pc from "picocolors";
+
 import { DEFAULT_CONFIG } from "../constants";
 import { ProjectNameSchema } from "../types";
 import { exitCancelled } from "../utils/errors";

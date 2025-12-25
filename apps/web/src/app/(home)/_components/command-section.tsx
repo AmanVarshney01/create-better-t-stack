@@ -2,6 +2,7 @@
 import { Check, ChevronDown, ChevronRight, Copy, Terminal, Zap } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+
 import PackageIcon from "./icons";
 
 export default function CommandSection() {

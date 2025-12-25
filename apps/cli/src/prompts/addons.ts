@@ -1,4 +1,5 @@
 import { groupMultiselect, isCancel } from "@clack/prompts";
+
 import { DEFAULT_CONFIG } from "../constants";
 import { type Addons, AddonsSchema, type Auth, type Frontend } from "../types";
 import { getCompatibleAddons, validateAddonCompatibility } from "../utils/compatibility-rules";

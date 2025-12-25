@@ -1,6 +1,18 @@
 import { consola } from "consola";
 import pc from "picocolors";
-import type { Database, DatabaseSetup, ORM, ProjectConfig, Runtime } from "../../types";
+
+import type {
+  Backend,
+  Database,
+  DatabaseSetup,
+  Frontend,
+  ORM,
+  ProjectConfig,
+  Runtime,
+  ServerDeploy,
+  WebDeploy,
+} from "../../types";
+
 import { getDockerStatus } from "../../utils/docker-utils";
 export async function displayPostInstallInstructions(
   config: ProjectConfig & { depsInstalled: boolean },
@@ -193,7 +205,7 @@ export async function displayPostInstallInstructions(
 function getNativeInstructions(
   isConvex: boolean,
   isBackendSelf: boolean,
-  frontend: string[],
+  frontend: Frontend[],
   runCmd: string,
 ) {
   const envVar = isConvex ? "EXPO_PUBLIC_CONVEX_URL" : "EXPO_PUBLIC_SERVER_URL";
@@ -226,13 +238,13 @@ function getNativeInstructions(
   return instructions;
 }
 
-function getHuskyInstructions(runCmd?: string) {
+function getHuskyInstructions(runCmd: string) {
   return `${pc.bold("Git hooks with Husky:")}\n${pc.cyan(
     "•",
   )} Initialize hooks: ${`${runCmd} prepare`}\n`;
 }
 
-function getLintingInstructions(runCmd?: string) {
+function getLintingInstructions(runCmd: string) {
   return `${pc.bold("Linting and formatting:")}\n${pc.cyan(
     "•",
   )} Format and lint fix: ${`${runCmd} check`}\n`;
@@ -240,12 +252,12 @@ function getLintingInstructions(runCmd?: string) {
 
 async function getDatabaseInstructions(
   database: Database,
-  orm?: ORM,
-  runCmd?: string,
-  _runtime?: Runtime,
-  dbSetup?: DatabaseSetup,
-  serverDeploy?: string,
-  _backend?: string,
+  orm: ORM,
+  runCmd: string,
+  _runtime: Runtime,
+  dbSetup: DatabaseSetup,
+  serverDeploy: ServerDeploy,
+  _backend: Backend,
 ) {
   const instructions: string[] = [];
 
@@ -258,7 +270,7 @@ async function getDatabaseInstructions(
     }
   }
 
-  if (dbSetup === "d1" && serverDeploy === "alchemy") {
+  if (dbSetup === "d1" && serverDeploy === "cloudflare") {
     if (orm === "drizzle") {
       instructions.push(`${pc.cyan("•")} Generate migrations: ${`${runCmd} db:generate`}`);
     } else if (orm === "prisma") {
@@ -299,11 +311,11 @@ async function getDatabaseInstructions(
     if (dbSetup === "docker") {
       instructions.push(`${pc.cyan("•")} Start docker container: ${`${runCmd} db:start`}`);
     }
-    if (!(dbSetup === "d1" && serverDeploy === "alchemy")) {
+    if (!(dbSetup === "d1" && serverDeploy === "cloudflare")) {
       instructions.push(`${pc.cyan("•")} Generate Prisma Client: ${`${runCmd} db:generate`}`);
       instructions.push(`${pc.cyan("•")} Apply schema: ${`${runCmd} db:push`}`);
     }
-    if (!(dbSetup === "d1" && serverDeploy === "alchemy")) {
+    if (!(dbSetup === "d1" && serverDeploy === "cloudflare")) {
       instructions.push(`${pc.cyan("•")} Database UI: ${`${runCmd} db:studio`}`);
     }
   } else if (orm === "drizzle") {
@@ -313,7 +325,7 @@ async function getDatabaseInstructions(
     if (dbSetup !== "d1") {
       instructions.push(`${pc.cyan("•")} Apply schema: ${`${runCmd} db:push`}`);
     }
-    if (!(dbSetup === "d1" && serverDeploy === "alchemy")) {
+    if (!(dbSetup === "d1" && serverDeploy === "cloudflare")) {
       instructions.push(`${pc.cyan("•")} Database UI: ${`${runCmd} db:studio`}`);
     }
   } else if (orm === "mongoose") {
@@ -327,7 +339,7 @@ async function getDatabaseInstructions(
   return instructions.length ? `${pc.bold("Database commands:")}\n${instructions.join("\n")}` : "";
 }
 
-function getTauriInstructions(runCmd?: string) {
+function getTauriInstructions(runCmd: string) {
   return `\n${pc.bold("Desktop app with Tauri:")}\n${pc.cyan(
     "•",
   )} Start desktop app: ${`cd apps/web && ${runCmd} desktop:dev`}\n${pc.cyan(
@@ -343,7 +355,7 @@ function getPwaInstructions() {
   )} There is a known compatibility issue between VitePWA\n   and React Router v7. See:\n   https://github.com/vite-pwa/vite-plugin-pwa/issues/809`;
 }
 
-function getStarlightInstructions(runCmd?: string) {
+function getStarlightInstructions(runCmd: string) {
   return `\n${pc.bold("Documentation with Starlight:")}\n${pc.cyan(
     "•",
   )} Start docs site: ${`cd apps/docs && ${runCmd} dev`}\n${pc.cyan(
@@ -367,29 +379,29 @@ function getClerkInstructions() {
   return `${pc.bold("Clerk Authentication Setup:")}\n${pc.cyan("•")} Follow the guide: ${pc.underline("https://docs.convex.dev/auth/clerk")}\n${pc.cyan("•")} Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard\n${pc.cyan("•")} Set CLERK_PUBLISHABLE_KEY in apps/*/.env`;
 }
 
-function getPolarInstructions(backend?: string) {
+function getPolarInstructions(backend: Backend) {
   const envPath = backend === "self" ? "apps/web/.env" : "apps/server/.env";
   return `${pc.bold("Polar Payments Setup:")}\n${pc.cyan("•")} Get access token & product ID from ${pc.underline("https://sandbox.polar.sh/")}\n${pc.cyan("•")} Set POLAR_ACCESS_TOKEN in ${envPath}`;
 }
 
 function getAlchemyDeployInstructions(
-  runCmd?: string,
-  webDeploy?: string,
-  serverDeploy?: string,
-  backend?: string,
+  runCmd: string,
+  webDeploy: WebDeploy,
+  serverDeploy: ServerDeploy,
+  backend: Backend,
 ) {
   const instructions: string[] = [];
   const isBackendSelf = backend === "self";
 
-  if (webDeploy === "alchemy" && serverDeploy !== "alchemy") {
+  if (webDeploy === "cloudflare" && serverDeploy !== "cloudflare") {
     instructions.push(
       `${pc.bold("Deploy web with Alchemy:")}\n${pc.cyan("•")} Dev: ${`cd apps/web && ${runCmd} alchemy dev`}\n${pc.cyan("•")} Deploy: ${`cd apps/web && ${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`cd apps/web && ${runCmd} destroy`}`,
     );
-  } else if (serverDeploy === "alchemy" && webDeploy !== "alchemy" && !isBackendSelf) {
+  } else if (serverDeploy === "cloudflare" && webDeploy !== "cloudflare" && !isBackendSelf) {
     instructions.push(
       `${pc.bold("Deploy server with Alchemy:")}\n${pc.cyan("•")} Dev: ${`cd apps/server && ${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`cd apps/server && ${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`cd apps/server && ${runCmd} destroy`}`,
     );
-  } else if (webDeploy === "alchemy" && (serverDeploy === "alchemy" || isBackendSelf)) {
+  } else if (webDeploy === "cloudflare" && (serverDeploy === "cloudflare" || isBackendSelf)) {
     instructions.push(
       `${pc.bold("Deploy with Alchemy:")}\n${pc.cyan("•")} Dev: ${`${runCmd} dev`}\n${pc.cyan("•")} Deploy: ${`${runCmd} deploy`}\n${pc.cyan("•")} Destroy: ${`${runCmd} destroy`}`,
     );

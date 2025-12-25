@@ -13,6 +13,28 @@ Use default configuration and skip interactive prompts.
 create-better-t-stack --yes
 ```
 
+### `--template <type>`
+
+Use a predefined project template:
+
+- `none`: No template (default)
+- `mern`: MongoDB, Express, React, Node.js stack
+- `pern`: PostgreSQL, Express, React, Node.js stack
+- `t3`: T3 stack configuration
+- `uniwind`: UniWind React Native template
+
+```bash
+create-better-t-stack --template t3
+```
+
+### `--manual-db`
+
+Skip automatic database setup prompts and use manual database configuration.
+
+```bash
+create-better-t-stack --manual-db
+```
+
 ### `--package-manager <pm>`
 
 Choose package manager: `npm`, `pnpm`, or `bun`.
@@ -132,6 +154,7 @@ Database hosting/setup provider:
 - `neon`: Neon (PostgreSQL)
 - `supabase`: Supabase (PostgreSQL)
 - `prisma-postgres`: Prisma Postgres
+- `planetscale`: PlanetScale (MySQL/PostgreSQL)
 - `mongodb-atlas`: MongoDB Atlas
 - `docker`: Local Docker containers
 
@@ -150,8 +173,8 @@ Backend framework to use:
 - `express`: Express.js (popular, mature)
 - `fastify`: Fastify (fast, plugin-based)
 - `elysia`: Elysia (Bun-native)
-- `next`: Next.js API routes
 - `convex`: Convex backend
+- `self`: Self-hosted/custom backend
 
 ```bash
 create-better-t-stack --backend hono
@@ -200,7 +223,8 @@ Frontend frameworks (can specify multiple):
 
 **Native Frameworks:**
 
-- `native-nativewind`: React Native with NativeWind
+- `native-bare`: React Native (bare setup)
+- `native-uniwind`: React Native with UniWind (NativeWind alternative)
 - `native-unistyles`: React Native with Unistyles
 
 **No Frontend:**
@@ -212,7 +236,7 @@ Frontend frameworks (can specify multiple):
 create-better-t-stack --frontend tanstack-router
 
 # Web + native frontend
-create-better-t-stack --frontend next native-nativewind
+create-better-t-stack --frontend next native-uniwind
 
 # Backend-only
 create-better-t-stack --frontend none
@@ -240,6 +264,21 @@ create-better-t-stack --auth none
 - `clerk` is only available with Convex backend
 - Authentication is automatically set to `none` when using `--backend none` or `--database none` (unless using Convex)
 
+## Payments
+
+### `--payments <provider>`
+
+Payments provider:
+
+- `none`: No payments integration
+- `polar`: Polar payments integration
+
+```bash
+create-better-t-stack --payments polar --auth better-auth
+```
+
+**Note:** Polar payments requires Better-Auth authentication.
+
 ## Addons
 
 ### `--addons <types...>`
@@ -257,6 +296,8 @@ Additional features to include:
 - `ultracite`: Ultracite configuration
 - `oxlint`: Oxlint + Oxfmt (linting & formatting)
 - `ruler`: Centralize your AI rules with Ruler
+- `opentui`: OpenTUI components
+- `wxt`: WXT browser extension framework
 
 ```bash
 create-better-t-stack --addons pwa biome husky
@@ -283,11 +324,9 @@ create-better-t-stack --examples todo ai
 Web deployment configuration:
 
 - `none`: No deployment setup
-- `wrangler`: Cloudflare Workers deployment
 - `alchemy`: Cloudflare Workers deployment (via Alchemy infrastructure as code)
 
 ```bash
-create-better-t-stack --web-deploy wrangler
 create-better-t-stack --web-deploy alchemy
 ```
 
@@ -298,11 +337,9 @@ create-better-t-stack --web-deploy alchemy
 Server deployment configuration:
 
 - `none`: No deployment setup
-- `wrangler`: Cloudflare Workers deployment (when runtime is workers)
 - `alchemy`: Cloudflare Workers deployment (when runtime is workers, via Alchemy infrastructure as code)
 
 ```bash
-create-better-t-stack --server-deploy wrangler
 create-better-t-stack --server-deploy alchemy
 ```
 

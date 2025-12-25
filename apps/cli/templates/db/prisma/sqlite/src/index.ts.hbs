@@ -2,7 +2,7 @@ import { PrismaClient } from "../prisma/generated/client";
 
 {{#if (eq dbSetup "d1")}}
 import { PrismaD1 } from "@prisma/adapter-d1";
-import { env } from "cloudflare:workers";
+import { env } from "@{{projectName}}/env/server";
 
 const adapter = new PrismaD1(env.DB);
 const prisma = new PrismaClient({ adapter });
@@ -10,15 +10,12 @@ const prisma = new PrismaClient({ adapter });
 export default prisma;
 {{else}}
 import { PrismaLibSql } from "@prisma/adapter-libsql";
-{{#if (eq runtime "workers")}}
-import { env } from "cloudflare:workers";
-{{/if}}
+import { env } from "@{{projectName}}/env/server";
 
 const adapter = new PrismaLibSql({
-url: {{#if (eq runtime "workers")}}env.DATABASE_URL || ""{{else}}process.env.DATABASE_URL || ""{{/if}},
+	url: env.DATABASE_URL,
 {{#if (eq dbSetup "turso")}}
-authToken: {{#if (eq runtime "workers")}}env.DATABASE_AUTH_TOKEN || ""{{else}}process.env.DATABASE_AUTH_TOKEN ||
-""{{/if}},
+	authToken: env.DATABASE_AUTH_TOKEN || "",
 {{/if}}
 });
 

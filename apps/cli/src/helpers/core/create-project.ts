@@ -1,6 +1,8 @@
 import { log } from "@clack/prompts";
 import fs from "fs-extra";
+
 import type { ProjectConfig } from "../../types";
+
 import { writeBtsConfig } from "../../utils/bts-config";
 import { exitWithError } from "../../utils/errors";
 import { setupCatalogs } from "../../utils/setup-catalogs";
@@ -14,8 +16,10 @@ import { setupServerDeploy } from "../deployment/server-deploy-setup";
 import { setupWebDeploy } from "../deployment/web-deploy-setup";
 import { setupAuth } from "./auth-setup";
 import { createReadme } from "./create-readme";
+import { setupEnvPackageDependencies } from "./env-package-setup";
 import { setupEnvironmentVariables } from "./env-setup";
 import { initializeGit } from "./git";
+import { setupInfraPackageDependencies } from "./infra-package-setup";
 import { installDependencies } from "./install-dependencies";
 import { setupPayments } from "./payments-setup";
 import { displayPostInstallInstructions } from "./post-installation";
@@ -33,7 +37,14 @@ import {
   setupPaymentsTemplate,
 } from "./template-manager";
 
-export async function createProject(options: ProjectConfig, cliInput?: { manualDb?: boolean }) {
+export interface CreateProjectOptions {
+  manualDb?: boolean;
+  /** When true, skip all console output (for programmatic API use) */
+  silent?: boolean;
+}
+
+export async function createProject(options: ProjectConfig, cliInput: CreateProjectOptions = {}) {
+  const { silent = false } = cliInput;
   const projectDir = options.projectDir;
   const isConvex = options.backend === "convex";
   const isSelfBackend = options.backend === "self";
@@ -61,6 +72,11 @@ export async function createProject(options: ProjectConfig, cliInput?: { manualD
     await setupAddonsTemplate(projectDir, options);
 
     await setupDeploymentTemplates(projectDir, options);
+
+    await setupEnvPackageDependencies(projectDir, options);
+    if (options.serverDeploy === "cloudflare" || options.webDeploy === "cloudflare") {
+      await setupInfraPackageDependencies(projectDir, options);
+    }
 
     await setupApi(options);
 
@@ -105,7 +121,7 @@ export async function createProject(options: ProjectConfig, cliInput?: { manualD
 
     await writeBtsConfig(options);
 
-    log.success("Project template successfully scaffolded!");
+    if (!silent) log.success("Project template successfully scaffolded!");
 
     if (options.install) {
       await installDependencies({
@@ -116,18 +132,20 @@ export async function createProject(options: ProjectConfig, cliInput?: { manualD
 
     await initializeGit(projectDir, options.git);
 
-    await displayPostInstallInstructions({
-      ...options,
-      depsInstalled: options.install,
-    });
+    if (!silent) {
+      await displayPostInstallInstructions({
+        ...options,
+        depsInstalled: options.install,
+      });
+    }
 
     return projectDir;
   } catch (error) {
     if (error instanceof Error) {
-      console.error(error.stack);
+      if (!silent) console.error(error.stack);
       exitWithError(`Error during project creation: ${error.message}`);
     } else {
-      console.error(error);
+      if (!silent) console.error(error);
       exitWithError(`An unexpected error occurred: ${String(error)}`);
     }
   }

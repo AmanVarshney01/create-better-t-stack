@@ -1,11 +1,13 @@
-import path from "node:path";
 import { isCancel, log, select, spinner } from "@clack/prompts";
-import { execa } from "execa";
+import { $ } from "execa";
 import fs from "fs-extra";
+import path from "node:path";
 import pc from "picocolors";
+
 import type { ProjectConfig } from "../../types";
+
 import { exitCancelled } from "../../utils/errors";
-import { getPackageExecutionCommand } from "../../utils/package-runner";
+import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 type TuiTemplate = "core" | "react" | "solid";
 
@@ -43,8 +45,7 @@ export async function setupTui(config: ProjectConfig) {
     if (isCancel(template)) return exitCancelled("Operation cancelled");
 
     const commandWithArgs = `create-tui@latest --template ${template} --no-git --no-install tui`;
-
-    const tuiInitCommand = getPackageExecutionCommand(packageManager, commandWithArgs);
+    const args = getPackageExecutionArgs(packageManager, commandWithArgs);
 
     const appsDir = path.join(projectDir, "apps");
     await fs.ensureDir(appsDir);
@@ -52,11 +53,7 @@ export async function setupTui(config: ProjectConfig) {
     const s = spinner();
     s.start("Running OpenTUI create command...");
 
-    await execa(tuiInitCommand, {
-      cwd: appsDir,
-      env: { CI: "true" },
-      shell: true,
-    });
+    await $({ cwd: appsDir, env: { CI: "true" } })`${args}`;
 
     s.stop("OpenTUI setup complete!");
   } catch (error) {

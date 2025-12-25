@@ -1,7 +1,8 @@
-import path from "node:path";
 import { isCancel, log, select, spinner } from "@clack/prompts";
 import fs from "fs-extra";
+import path from "node:path";
 import pc from "picocolors";
+
 import { getProjectName } from "../prompts/project-name";
 import { exitCancelled, handleError } from "./errors";
 

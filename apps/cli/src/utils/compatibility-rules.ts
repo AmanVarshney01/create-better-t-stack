@@ -1,4 +1,3 @@
-import { ADDON_COMPATIBILITY } from "../constants";
 import type {
   Addons,
   API,
@@ -11,6 +10,8 @@ import type {
   ServerDeploy,
   WebDeploy,
 } from "../types";
+
+import { ADDON_COMPATIBILITY } from "../constants";
 import { WEB_FRAMEWORKS } from "./compatibility";
 import { exitWithError } from "./errors";
 

@@ -1,5 +1,6 @@
-import path from "node:path";
 import fs from "fs-extra";
+import path from "node:path";
+
 import { readBtsConfig } from "../../utils/bts-config";
 
 export async function detectProjectConfig(projectDir: string) {

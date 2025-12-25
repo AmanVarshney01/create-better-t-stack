@@ -1,10 +1,12 @@
 "use client";
 
+import type React from "react";
+
 import { Check, ChevronDown, ClipboardCopy, InfoIcon, Settings, Terminal } from "lucide-react";
 import { motion } from "motion/react";
-import type React from "react";
 import { startTransition, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +18,7 @@ import { DEFAULT_STACK, PRESET_TEMPLATES, type StackState, TECH_OPTIONS } from "
 import { useStackState } from "@/lib/stack-url-state.client";
 import { CATEGORY_ORDER, generateStackCommand, generateStackSharingUrl } from "@/lib/stack-utils";
 import { cn } from "@/lib/utils";
+
 import { ActionButtons } from "./action-buttons";
 import { getBadgeColors } from "./get-badge-color";
 import { PresetDropdown } from "./preset-dropdown";

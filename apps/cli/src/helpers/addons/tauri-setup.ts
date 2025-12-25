@@ -1,12 +1,14 @@
-import path from "node:path";
 import { spinner } from "@clack/prompts";
 import { consola } from "consola";
-import { execa } from "execa";
+import { $ } from "execa";
 import fs from "fs-extra";
+import path from "node:path";
 import pc from "picocolors";
+
 import type { ProjectConfig } from "../../types";
+
 import { addPackageDependency } from "../../utils/add-package-deps";
-import { getPackageExecutionCommand } from "../../utils/package-runner";
+import { getPackageRunnerPrefix } from "../../utils/package-runner";
 
 export async function setupTauri(config: ProjectConfig) {
   const { packageManager, frontend, projectDir } = config;
@@ -64,27 +66,18 @@ export async function setupTauri(config: ProjectConfig) {
             : "../dist";
 
     const tauriArgs = [
+      "@tauri-apps/cli@latest",
       "init",
       `--app-name=${path.basename(projectDir)}`,
       `--window-title=${path.basename(projectDir)}`,
       `--frontend-dist=${frontendDist}`,
       `--dev-url=${devUrl}`,
-      `--before-dev-command="${packageManager} run dev"`,
-      `--before-build-command="${packageManager} run build"`,
+      `--before-dev-command=${packageManager} run dev`,
+      `--before-build-command=${packageManager} run build`,
     ];
-    const tauriArgsString = tauriArgs.join(" ");
+    const prefix = getPackageRunnerPrefix(packageManager);
 
-    const commandWithArgs = `@tauri-apps/cli@latest ${tauriArgsString}`;
-
-    const tauriInitCommand = getPackageExecutionCommand(packageManager, commandWithArgs);
-
-    await execa(tauriInitCommand, {
-      cwd: clientPackageDir,
-      env: {
-        CI: "true",
-      },
-      shell: true,
-    });
+    await $({ cwd: clientPackageDir, env: { CI: "true" } })`${[...prefix, ...tauriArgs]}`;
 
     s.stop("Tauri desktop app support configured successfully!");
   } catch (error) {

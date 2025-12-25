@@ -246,11 +246,11 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
 
   // Workers runtime requires server deployment
   if (nextStack.runtime === "workers" && nextStack.serverDeploy === "none") {
-    nextStack.serverDeploy = "alchemy";
+    nextStack.serverDeploy = "cloudflare";
     changed = true;
     changes.push({
       category: "runtime",
-      message: "Server deploy set to 'Alchemy' (required for Workers)",
+      message: "Server deploy set to 'Cloudflare' (required for Workers)",
     });
   }
 
@@ -597,13 +597,13 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   }
 
   // Server deploy constraints
-  if (nextStack.serverDeploy === "alchemy") {
+  if (nextStack.serverDeploy === "cloudflare") {
     if (nextStack.runtime !== "workers" || nextStack.backend !== "hono") {
       nextStack.serverDeploy = "none";
       changed = true;
       changes.push({
         category: "serverDeploy",
-        message: "Server deploy set to 'None' (Alchemy requires Workers + Hono)",
+        message: "Server deploy set to 'None' (Cloudflare requires Workers + Hono)",
       });
     }
   }
@@ -942,9 +942,9 @@ export const getDisabledReason = (
   }
 
   if (category === "serverDeploy") {
-    if (optionId === "alchemy") {
-      if (currentStack.runtime !== "workers") return "Alchemy requires Workers runtime";
-      if (currentStack.backend !== "hono") return "Alchemy requires Hono backend";
+    if (optionId === "cloudflare") {
+      if (currentStack.runtime !== "workers") return "Cloudflare requires Workers runtime";
+      if (currentStack.backend !== "hono") return "Cloudflare requires Hono backend";
     }
     if (optionId !== "none") {
       const noServerDeploy = ["none", "convex", "self-next", "self-tanstack-start"];

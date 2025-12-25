@@ -43,6 +43,8 @@ import { getToken } from "@/lib/auth-server";
 const getAuth = createServerFn({ method: "GET" }).handler(async () => {
   return await getToken();
 });
+{{else if (eq backend "convex")}}
+import { ConvexProvider } from "convex/react";
 {{/if}}
 
 {{#if (eq backend "convex")}}
@@ -162,6 +164,26 @@ function RootDocument() {
       </html>
     </ConvexBetterAuthProvider>
   );
+  {{else if (eq backend "convex")}}
+  const { convexQueryClient } = Route.useRouteContext();
+  return (
+    <ConvexProvider client={convexQueryClient.convexClient}>
+      <html lang="en" className="dark">
+        <head>
+          <HeadContent />
+        </head>
+        <body>
+          <div className="grid h-svh grid-rows-[auto_1fr]">
+            <Header />
+            <Outlet />
+          </div>
+          <Toaster richColors />
+          <TanStackRouterDevtools position="bottom-left" />
+          <Scripts />
+        </body>
+      </html>
+    </ConvexProvider>
+  );
   {{else}}
   return (
     <html lang="en" className="dark">
@@ -175,10 +197,8 @@ function RootDocument() {
         </div>
         <Toaster richColors />
         <TanStackRouterDevtools position="bottom-left" />
-        {{#unless (eq backend "convex")}}
-          {{#unless (eq api "none")}}
+        {{#unless (eq api "none")}}
         <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
-          {{/unless}}
         {{/unless}}
         <Scripts />
       </body>

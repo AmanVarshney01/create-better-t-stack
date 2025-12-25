@@ -1,5 +1,7 @@
 import path from "node:path";
+
 import type { Database, ProjectConfig } from "../../types";
+
 import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
 
 export async function setupDockerCompose(config: ProjectConfig) {

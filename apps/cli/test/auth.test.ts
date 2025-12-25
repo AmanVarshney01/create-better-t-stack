@@ -1,5 +1,7 @@
 import { describe, it } from "bun:test";
+
 import type { Backend, Database, Frontend, ORM } from "../src/types";
+
 import {
   AUTH_PROVIDERS,
   expectError,
@@ -482,7 +484,7 @@ describe("Authentication Configurations", () => {
         examples: ["todo"],
         dbSetup: "none",
         webDeploy: "none",
-        serverDeploy: "alchemy",
+        serverDeploy: "cloudflare",
         install: false,
       });
 

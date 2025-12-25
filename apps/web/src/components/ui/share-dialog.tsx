@@ -1,11 +1,14 @@
 "use client";
 
 import { Check, Copy, Terminal, Twitter } from "lucide-react";
-import Image from "next/image";
 import { useTheme } from "next-themes";
+import Image from "next/image";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+
+import type { StackState } from "@/lib/constant";
+
 import {
   Dialog,
   DialogContent,
@@ -15,7 +18,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { TechBadge } from "@/components/ui/tech-badge";
-import type { StackState } from "@/lib/constant";
 import { TECH_OPTIONS } from "@/lib/constant";
 import { CATEGORY_ORDER } from "@/lib/stack-utils";
 import { cn } from "@/lib/utils";

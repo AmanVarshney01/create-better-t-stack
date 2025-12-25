@@ -368,12 +368,11 @@ export const TECH_OPTIONS: Record<
   ],
   webDeploy: [
     {
-      id: "alchemy",
-      name: "Alchemy",
+      id: "cloudflare",
+      name: "Cloudflare",
       description: "Deploy to Cloudflare Workers using Alchemy",
-      icon: `${ICON_BASE_URL}/alchemy.png`,
-      color: "from-purple-400 to-purple-600",
-      className: "scale-150",
+      icon: `${ICON_BASE_URL}/workers.svg`,
+      color: "from-orange-400 to-orange-600",
     },
     {
       id: "none",
@@ -386,12 +385,11 @@ export const TECH_OPTIONS: Record<
   ],
   serverDeploy: [
     {
-      id: "alchemy",
-      name: "Alchemy",
+      id: "cloudflare",
+      name: "Cloudflare",
       description: "Deploy to Cloudflare Workers using Alchemy",
-      icon: `${ICON_BASE_URL}/alchemy.png`,
-      color: "from-purple-400 to-purple-600",
-      className: "scale-150",
+      icon: `${ICON_BASE_URL}/workers.svg`,
+      color: "from-orange-400 to-orange-600",
     },
     {
       id: "none",

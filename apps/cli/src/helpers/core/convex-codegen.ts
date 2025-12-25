@@ -1,7 +1,9 @@
+import { $ } from "execa";
 import path from "node:path";
-import { execa } from "execa";
+
 import type { PackageManager } from "../../types";
-import { getPackageExecutionCommand } from "../../utils/package-runner";
+
+import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 // having problems running this in convex + better-auth
 export async function runConvexCodegen(
@@ -9,6 +11,6 @@ export async function runConvexCodegen(
   packageManager: PackageManager | null | undefined,
 ) {
   const backendDir = path.join(projectDir, "packages/backend");
-  const cmd = getPackageExecutionCommand(packageManager, "convex codegen");
-  await execa(cmd, { cwd: backendDir, shell: true });
+  const args = getPackageExecutionArgs(packageManager, "convex codegen");
+  await $({ cwd: backendDir })`${args}`;
 }

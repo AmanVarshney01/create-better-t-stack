@@ -9,7 +9,7 @@ import {
 } from "@convex-dev/agent/react";
 import { useMutation } from "convex/react";
 import { Send, Loader2 } from "lucide-react";
-{{#if (eq webDeploy "alchemy")}}
+{{#if (eq webDeploy "cloudflare")}}
 import dynamic from "next/dynamic";
 
 const Streamdown = dynamic(
@@ -160,7 +160,7 @@ export default function AIPage() {
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Send } from "lucide-react";
-{{#if (eq webDeploy "alchemy")}}
+{{#if (eq webDeploy "cloudflare")}}
 import dynamic from "next/dynamic";
 
 const Streamdown = dynamic(
@@ -181,12 +181,13 @@ import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { env } from "@{{projectName}}/env/web";
 
 export default function AIPage() {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
-      api: {{#if (eq backend "self")}}"/api/ai"{{else}}`${process.env.NEXT_PUBLIC_SERVER_URL}/ai`{{/if}},
+      api: {{#if (eq backend "self")}}"/api/ai"{{else}}`${env.NEXT_PUBLIC_SERVER_URL}/ai`{{/if}},
     }),
   });
 

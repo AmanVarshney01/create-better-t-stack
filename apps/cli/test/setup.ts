@@ -1,6 +1,6 @@
+import { afterAll, beforeAll } from "bun:test";
 import { mkdir, rm } from "node:fs/promises";
 import { join } from "node:path";
-import { afterAll, beforeAll } from "bun:test";
 
 export const SMOKE_DIR = join(import.meta.dir, "..", ".smoke");
 

@@ -1,16 +1,20 @@
-import path from "node:path";
 import consola from "consola";
 import fs from "fs-extra";
+import path from "node:path";
+
 import type {
   Addons,
   API,
   Auth,
+  Backend,
   Database,
   DatabaseSetup,
   Frontend,
   ORM,
   ProjectConfig,
   Runtime,
+  ServerDeploy,
+  WebDeploy,
 } from "../../types";
 
 export async function createReadme(projectDir: string, options: ProjectConfig) {
@@ -133,7 +137,7 @@ ${generateScriptsList(packageManagerRunCmd, database, orm, auth, hasNative, addo
 
 function generateStackDescription(
   frontend: Frontend[],
-  backend: string,
+  backend: Backend,
   api: API,
   isConvex: boolean,
 ) {
@@ -179,7 +183,7 @@ function generateStackDescription(
 
 function generateRunningInstructions(
   frontend: Frontend[],
-  backend: string,
+  backend: Backend,
   webPort: string,
   hasNative: boolean,
   isConvex: boolean,
@@ -236,7 +240,7 @@ function generateRunningInstructions(
 function generateProjectStructure(
   projectName: string,
   frontend: Frontend[],
-  backend: string,
+  backend: Backend,
   addons: Addons[],
   isConvex: boolean,
   api: API,
@@ -346,7 +350,7 @@ function generateFeaturesList(
   orm: ORM,
   runtime: Runtime,
   frontend: Frontend[],
-  backend: string,
+  backend: Backend,
   api: API,
 ) {
   const isConvex = backend === "convex";
@@ -479,8 +483,8 @@ function generateDatabaseSetup(
   packageManagerRunCmd: string,
   orm: ORM,
   dbSetup: DatabaseSetup,
-  _serverDeploy?: string,
-  backend?: string,
+  _serverDeploy: ServerDeploy,
+  backend: Backend,
 ) {
   if (database === "none") {
     return "";
@@ -562,8 +566,8 @@ function generateScriptsList(
   _auth: Auth,
   hasNative: boolean,
   addons: Addons[],
-  backend: string,
-  dbSetup?: DatabaseSetup,
+  backend: Backend,
+  dbSetup: DatabaseSetup,
 ) {
   const isConvex = backend === "convex";
   const isBackendNone = backend === "none";
@@ -659,28 +663,28 @@ BETTER_AUTH_URL={your-production-server-domain}
 
 function generateDeploymentCommands(
   packageManagerRunCmd: string,
-  webDeploy?: string,
-  serverDeploy?: string,
+  webDeploy: WebDeploy,
+  serverDeploy: ServerDeploy,
 ) {
   const lines: string[] = [];
 
-  if (webDeploy === "alchemy" || serverDeploy === "alchemy") {
-    lines.push("## Deployment (Alchemy)");
-    if (webDeploy === "alchemy" && serverDeploy !== "alchemy") {
+  if (webDeploy === "cloudflare" || serverDeploy === "cloudflare") {
+    lines.push("## Deployment (Cloudflare via Alchemy)");
+    if (webDeploy === "cloudflare" && serverDeploy !== "cloudflare") {
       lines.push(
         `- Web dev: cd apps/web && ${packageManagerRunCmd} dev`,
         `- Web deploy: cd apps/web && ${packageManagerRunCmd} deploy`,
         `- Web destroy: cd apps/web && ${packageManagerRunCmd} destroy`,
       );
     }
-    if (serverDeploy === "alchemy" && webDeploy !== "alchemy") {
+    if (serverDeploy === "cloudflare" && webDeploy !== "cloudflare") {
       lines.push(
         `- Server dev: cd apps/server && ${packageManagerRunCmd} dev`,
         `- Server deploy: cd apps/server && ${packageManagerRunCmd} deploy`,
         `- Server destroy: cd apps/server && ${packageManagerRunCmd} destroy`,
       );
     }
-    if (webDeploy === "alchemy" && serverDeploy === "alchemy") {
+    if (webDeploy === "cloudflare" && serverDeploy === "cloudflare") {
       lines.push(
         `- Dev: ${packageManagerRunCmd} dev`,
         `- Deploy: ${packageManagerRunCmd} deploy`,

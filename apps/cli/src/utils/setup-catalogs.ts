@@ -1,6 +1,7 @@
-import path from "node:path";
 import fs from "fs-extra";
+import path from "node:path";
 import yaml from "yaml";
+
 import type { ProjectConfig } from "../types";
 
 type PackageInfo = {
@@ -31,6 +32,8 @@ export async function setupCatalogs(projectDir: string, options: ProjectConfig) 
     "packages/auth",
     "packages/backend",
     "packages/config",
+    "packages/env",
+    "packages/infra",
   ];
 
   const packagesInfo: PackageInfo[] = [];
