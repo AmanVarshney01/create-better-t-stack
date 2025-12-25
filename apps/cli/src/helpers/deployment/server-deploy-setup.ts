@@ -4,9 +4,10 @@ import path from "node:path";
 import type { ProjectConfig } from "../../types";
 
 import { addPackageDependency } from "../../utils/add-package-deps";
+import { setupInfraScripts } from "./alchemy/alchemy-combined-setup";
 
 export async function setupServerDeploy(config: ProjectConfig) {
-  const { serverDeploy, webDeploy, projectDir } = config;
+  const { serverDeploy, webDeploy, projectDir, packageManager } = config;
 
   if (serverDeploy === "none") return;
 
@@ -18,6 +19,8 @@ export async function setupServerDeploy(config: ProjectConfig) {
   if (!(await fs.pathExists(serverDir))) return;
 
   if (serverDeploy === "cloudflare") {
+    // Setup infra scripts for individual server cloudflare deploy
+    await setupInfraScripts(projectDir, packageManager, config);
     await setupAlchemyServerDeploy(serverDir, projectDir);
   }
 }

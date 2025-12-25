@@ -1,7 +1,7 @@
 import type { ProjectConfig } from "../../types";
 
 import { addPackageDependency } from "../../utils/add-package-deps";
-import { setupCombinedAlchemyDeploy } from "./alchemy/alchemy-combined-setup";
+import { setupCombinedAlchemyDeploy, setupInfraScripts } from "./alchemy/alchemy-combined-setup";
 import { setupNextAlchemyDeploy } from "./alchemy/alchemy-next-setup";
 import { setupNuxtAlchemyDeploy } from "./alchemy/alchemy-nuxt-setup";
 import { setupReactRouterAlchemyDeploy } from "./alchemy/alchemy-react-router-setup";
@@ -23,6 +23,9 @@ export async function setupWebDeploy(config: ProjectConfig) {
     await addAlchemyPackagesDependencies(projectDir);
     return;
   }
+
+  // Setup infra scripts for individual web cloudflare deploy
+  await setupInfraScripts(projectDir, packageManager, config);
 
   const isNext = frontend.includes("next");
   const isNuxt = frontend.includes("nuxt");
