@@ -43,7 +43,25 @@ const webEnvSchema = z.object({
 export type WebEnv = z.infer<typeof webEnvSchema>;
 
 function createEnv(): WebEnv {
+{{#if (includes frontend "next")}}
+	const parsed = webEnvSchema.safeParse({
+{{#if (eq backend "convex")}}
+		NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
+{{#if (eq auth "better-auth")}}
+		NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
+{{/if}}
+{{#if (eq auth "clerk")}}
+		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+{{/if}}
+{{else if (ne backend "self")}}
+		NEXT_PUBLIC_SERVER_URL: process.env.NEXT_PUBLIC_SERVER_URL,
+{{/if}}
+	});
+{{else if (includes frontend "nuxt")}}
+	const parsed = webEnvSchema.safeParse(process.env);
+{{else}}
 	const parsed = webEnvSchema.safeParse((import.meta as any).env);
+{{/if}}
 
 	if (!parsed.success) {
 		console.error(z.prettifyError(parsed.error));

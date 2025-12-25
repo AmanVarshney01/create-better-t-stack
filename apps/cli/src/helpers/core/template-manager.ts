@@ -279,7 +279,6 @@ async function setupEnvPackage(projectDir: string, context: ProjectConfig) {
     ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
   );
 
-  // Skip if no frontend at all
   if (!hasWebFrontend && !hasNative && context.backend === "none") {
     return;
   }
@@ -289,14 +288,11 @@ async function setupEnvPackage(projectDir: string, context: ProjectConfig) {
 
   const envBaseDir = path.join(PKG_ROOT, "templates/packages/env");
 
-  // Always copy package.json
   const packageJsonSrc = path.join(envBaseDir, "package.json.hbs");
   if (await fs.pathExists(packageJsonSrc)) {
     await processAndCopyFiles("package.json.hbs", envBaseDir, envPackageDir, context);
   }
 
-  // Copy server.ts only for non-convex backends with non-workers runtime
-  // Workers use cloudflare:workers for env access
   const needsServerEnv =
     context.backend !== "none" && context.backend !== "convex" && context.runtime !== "workers";
 
@@ -308,7 +304,6 @@ async function setupEnvPackage(projectDir: string, context: ProjectConfig) {
     }
   }
 
-  // Copy web.ts for web frontends
   if (hasWebFrontend) {
     const webSrc = path.join(envBaseDir, "src/web.ts.hbs");
     if (await fs.pathExists(webSrc)) {
@@ -317,13 +312,31 @@ async function setupEnvPackage(projectDir: string, context: ProjectConfig) {
     }
   }
 
-  // Copy native.ts for native frontends
   if (hasNative) {
     const nativeSrc = path.join(envBaseDir, "src/native.ts.hbs");
     if (await fs.pathExists(nativeSrc)) {
       await fs.ensureDir(path.join(envPackageDir, "src"));
       await processAndCopyFiles("src/native.ts.hbs", envBaseDir, envPackageDir, context);
     }
+  }
+
+  const packageJsonPath = path.join(envPackageDir, "package.json");
+  if (await fs.pathExists(packageJsonPath)) {
+    const packageJson = await fs.readJson(packageJsonPath);
+    const exports: Record<string, string> = {};
+
+    if (needsServerEnv) {
+      exports["./server"] = "./src/server.ts";
+    }
+    if (hasWebFrontend) {
+      exports["./web"] = "./src/web.ts";
+    }
+    if (hasNative) {
+      exports["./native"] = "./src/native.ts";
+    }
+
+    packageJson.exports = exports;
+    await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
   }
 }
 

@@ -161,14 +161,6 @@ export async function setupEnvironmentVariables(config: ProjectConfig) {
         },
       ];
 
-      if (hasNextJs) {
-        clientVars.push({
-          key: "PORT",
-          value: "3001",
-          condition: true,
-        });
-      }
-
       if (backend === "convex" && auth === "clerk") {
         if (hasNextJs) {
           clientVars.push(

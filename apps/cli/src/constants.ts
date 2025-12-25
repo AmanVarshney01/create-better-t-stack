@@ -164,7 +164,7 @@ export const dependencyVersionMap = {
   "@sveltejs/adapter-cloudflare": "^7.2.4",
   "@cloudflare/workers-types": "^4.20251213.0",
 
-  alchemy: "^0.81.2",
+  alchemy: "^0.82.1",
 
   dotenv: "^17.2.2",
   tsdown: "^0.16.5",

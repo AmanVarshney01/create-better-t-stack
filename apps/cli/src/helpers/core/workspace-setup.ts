@@ -52,9 +52,10 @@ export async function setupWorkspaceDependencies(projectDir: string, options: Pr
     : {};
 
   if (envExists) {
+    const runtimeDevDeps = getRuntimeDevDeps(runtime, backend);
     await addPackageDependency({
       dependencies: commonDeps,
-      devDependencies: commonDevDeps,
+      devDependencies: [...commonDevDeps, ...runtimeDevDeps],
       customDevDependencies: configDep,
       projectDir: envDir,
     });
