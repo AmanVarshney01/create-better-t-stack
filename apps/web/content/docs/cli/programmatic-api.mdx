@@ -45,10 +45,10 @@ Install the package in your Node.js project:
 ### Basic Project Creation
 
 ```typescript
-import { init } from "create-better-t-stack";
+import { create } from "create-better-t-stack";
 
 async function createProject() {
-  const result = await init("my-app", {
+  const result = await create("my-app", {
     yes: true, // Use defaults, no prompts
     frontend: ["tanstack-router"],
     backend: "hono",
@@ -75,9 +75,9 @@ createProject();
 ### Directory Conflict Handling
 
 ```typescript
-import { init } from "create-better-t-stack";
+import { create } from "create-better-t-stack";
 
-const result = await init("existing-folder", {
+const result = await create("existing-folder", {
   yes: true,
   directoryConflict: "increment", // Creates "existing-folder-1"
   renderTitle: false, // Hide ASCII art
@@ -89,9 +89,9 @@ const result = await init("existing-folder", {
 You can disable analytics:
 
 ```typescript
-import { init } from "create-better-t-stack";
+import { create } from "create-better-t-stack";
 
-const result = await init("my-private-project", {
+const result = await create("my-private-project", {
   yes: true,
   disableAnalytics: true, // No analytics data will be sent
   frontend: ["tanstack-router"],
@@ -103,7 +103,7 @@ const result = await init("my-private-project", {
 
 ## API Reference
 
-### `init(projectName?, options?)`
+### `create(projectName?, options?)`
 
 Creates a new Better-T-Stack project.
 
@@ -117,7 +117,7 @@ Creates a new Better-T-Stack project.
 **Example:**
 
 ```typescript
-const result = await init("my-project", {
+const result = await create("my-project", {
   frontend: ["next"],
   backend: "hono",
   database: "postgres",
@@ -152,12 +152,14 @@ Configuration options for project creation:
 ```typescript
 interface CreateInput {
   projectName?: string;
+  template?: Template;              // "none" | "mern" | "pern" | "t3" | "uniwind"
   yes?: boolean;                    // Skip prompts, use defaults
   yolo?: boolean;                   // Bypass validations (not recommended)
   verbose?: boolean;               // Show JSON result (CLI only, programmatic always returns result)
   database?: Database;              // "none" | "sqlite" | "postgres" | "mysql" | "mongodb"
   orm?: ORM;                        // "none" | "drizzle" | "prisma" | "mongoose"
-  auth?: boolean;                   // Include authentication
+  auth?: Auth;                      // "better-auth" | "clerk" | "none"
+  payments?: Payments;             // "polar" | "none"
   frontend?: Frontend[];            // Array of frontend frameworks
   addons?: Addons[];               // Array of addons
   examples?: Examples[];           // Array of examples
@@ -173,6 +175,7 @@ interface CreateInput {
   directoryConflict?: DirectoryConflict; // "merge" | "overwrite" | "increment" | "error"
   renderTitle?: boolean;           // Show ASCII art title
   disableAnalytics?: boolean;      // Disable analytics and telemetry
+  manualDb?: boolean;              // Skip automatic database setup prompts
 }
 ```
 
@@ -287,7 +290,7 @@ create-better-t-stack my-app \
 
 ```typescript
 // Programmatic Equivalent
-const result = await init("my-app", {
+const result = await create("my-app", {
   frontend: ["tanstack-router"],
   backend: "hono",
   database: "postgres",
