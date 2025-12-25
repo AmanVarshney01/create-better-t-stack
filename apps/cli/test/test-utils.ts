@@ -3,7 +3,23 @@ import { join } from "node:path";
 import { createRouterClient } from "@orpc/server";
 import { expect } from "bun:test";
 import { router } from "../src/index";
-import type { CreateInput, InitResult } from "../src/types";
+import type {
+  CreateInput,
+  InitResult,
+  Database,
+  ORM,
+  Backend,
+  Runtime,
+  Frontend,
+  Addons,
+  Examples,
+  Auth,
+  Payments,
+  API,
+  WebDeploy,
+  ServerDeploy,
+  DatabaseSetup,
+} from "../src/types";
 import {
   AddonsSchema,
   APISchema,
@@ -213,22 +229,6 @@ export function createTestConfig(
 function extractEnumValues<T extends string>(schema: { options: readonly T[] }): readonly T[] {
   return schema.options;
 }
-
-// Inferred types and values from Zod schemas - no duplication with types.ts!
-export type PackageManager = (typeof PackageManagerSchema)["options"][number];
-export type Database = (typeof DatabaseSchema)["options"][number];
-export type ORM = (typeof ORMSchema)["options"][number];
-export type Backend = (typeof BackendSchema)["options"][number];
-export type Runtime = (typeof RuntimeSchema)["options"][number];
-export type Frontend = (typeof FrontendSchema)["options"][number];
-export type Addons = (typeof AddonsSchema)["options"][number];
-export type Examples = (typeof ExamplesSchema)["options"][number];
-export type Auth = (typeof AuthSchema)["options"][number];
-export type Payments = (typeof PaymentsSchema)["options"][number];
-export type API = (typeof APISchema)["options"][number];
-export type WebDeploy = (typeof WebDeploySchema)["options"][number];
-export type ServerDeploy = (typeof ServerDeploySchema)["options"][number];
-export type DatabaseSetup = (typeof DatabaseSetupSchema)["options"][number];
 
 // Test data generators inferred from Zod schemas
 export const PACKAGE_MANAGERS = extractEnumValues(PackageManagerSchema);

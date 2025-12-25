@@ -13,12 +13,5 @@
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 		"./native": "./src/native.ts"
 {{/if}}
-	},
-	"dependencies": {
-		"zod": "catalog:"
-	},
-	"devDependencies": {
-		"@{{projectName}}/config": "workspace:*",
-		"typescript": "catalog:"
 	}
 }

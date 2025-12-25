@@ -5,11 +5,11 @@ import { createCli } from "trpc-cli";
 import z from "zod";
 import { addAddonsHandler, createProjectHandler } from "./helpers/core/command-handlers";
 import {
-  type AddInput,
   type Addons,
   AddonsSchema,
   type API,
   APISchema,
+  type Auth,
   AuthSchema,
   type Backend,
   BackendSchema,
@@ -30,6 +30,7 @@ import {
   ORMSchema,
   type PackageManager,
   PackageManagerSchema,
+  type Payments,
   PaymentsSchema,
   type ProjectConfig,
   ProjectNameSchema,
@@ -237,6 +238,9 @@ export async function builder() {
 }
 
 export type {
+  CreateInput,
+  InitResult,
+  BetterTStackConfig,
   Database,
   ORM,
   Backend,
@@ -247,13 +251,10 @@ export type {
   PackageManager,
   DatabaseSetup,
   API,
+  Auth,
+  Payments,
   WebDeploy,
   ServerDeploy,
-  DirectoryConflict,
   Template,
-  CreateInput,
-  AddInput,
-  ProjectConfig,
-  BetterTStackConfig,
-  InitResult,
+  DirectoryConflict,
 };

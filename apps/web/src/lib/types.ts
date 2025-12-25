@@ -1,5 +1,22 @@
-// Re-export TechCategory from shared types
-export type { TechCategory } from "@better-t-stack/types";
+// TechCategory for the stack builder UI
+export type TechCategory =
+  | "api"
+  | "webFrontend"
+  | "nativeFrontend"
+  | "runtime"
+  | "backend"
+  | "database"
+  | "orm"
+  | "dbSetup"
+  | "webDeploy"
+  | "serverDeploy"
+  | "auth"
+  | "payments"
+  | "packageManager"
+  | "addons"
+  | "examples"
+  | "git"
+  | "install";
 
 export type TechEdge = {
   id: string;
