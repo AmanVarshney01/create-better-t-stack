@@ -12,7 +12,7 @@ const input = ref('')
 const chat = new Chat({
   messages,
   transport: new DefaultChatTransport({
-    api: `${config.public.NUXT_PUBLIC_SERVER_URL}/ai`,
+    api: `${config.public.serverUrl}/ai`,
   }),
   onError(error) {
     console.error('Chat error:', error)

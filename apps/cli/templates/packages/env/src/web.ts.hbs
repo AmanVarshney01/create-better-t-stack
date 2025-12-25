@@ -12,7 +12,7 @@ import { z } from "zod";
  * Nuxt env validation - validates at build time when imported in nuxt.config.ts
  * For runtime access in components/plugins, use useRuntimeConfig() instead:
  *   const config = useRuntimeConfig()
- *   config.public.NUXT_PUBLIC_SERVER_URL
+ *   config.public.serverUrl (NUXT_PUBLIC_SERVER_URL maps to serverUrl)
  */
 {{/if}}
 export const env = createEnv({

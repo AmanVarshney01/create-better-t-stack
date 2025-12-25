@@ -22,7 +22,7 @@ export default defineNuxtConfig({
   {{else}}
   runtimeConfig: {
     public: {
-      NUXT_PUBLIC_SERVER_URL: process.env.NUXT_PUBLIC_SERVER_URL,
+      serverUrl: process.env.NUXT_PUBLIC_SERVER_URL,
     }
   },
   {{/if}}
