@@ -606,7 +606,6 @@ describe("API Configurations", () => {
           install: false,
         };
 
-        // Handle workers runtime requirements
         if (runtime === "workers") {
           config.serverDeploy = "cloudflare";
         }

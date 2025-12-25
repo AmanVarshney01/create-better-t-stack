@@ -76,10 +76,17 @@ export async function setupWorkspaceDependencies(projectDir: string, options: Pr
       }
     }
 
+    const envDevDeps: Record<string, string> = { ...configDep };
+    const isCloudflare =
+      options.serverDeploy === "cloudflare" || options.webDeploy === "cloudflare";
+    if (isCloudflare) {
+      envDevDeps[`@${projectName}/infra`] = workspaceVersion;
+    }
+
     await addPackageDependency({
       dependencies: t3EnvDeps,
       devDependencies: [...commonDevDeps, ...runtimeDevDeps],
-      customDevDependencies: configDep,
+      customDevDependencies: envDevDeps,
       projectDir: envDir,
     });
   }

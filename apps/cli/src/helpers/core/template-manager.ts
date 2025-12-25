@@ -6,7 +6,6 @@ import type { ProjectConfig } from "../../types";
 
 import { PKG_ROOT } from "../../constants";
 import { processTemplate } from "../../utils/template-processor";
-import { setupEnvDtsImport } from "../deployment/alchemy/env-dts-setup";
 
 export async function processAndCopyFiles(
   sourcePattern: string | string[],
@@ -293,6 +292,11 @@ async function setupEnvPackage(projectDir: string, context: ProjectConfig) {
   const packageJsonSrc = path.join(envBaseDir, "package.json.hbs");
   if (await fs.pathExists(packageJsonSrc)) {
     await processAndCopyFiles("package.json.hbs", envBaseDir, envPackageDir, context);
+  }
+
+  const tsconfigSrc = path.join(envBaseDir, "tsconfig.json.hbs");
+  if (await fs.pathExists(tsconfigSrc)) {
+    await processAndCopyFiles("tsconfig.json.hbs", envBaseDir, envPackageDir, context);
   }
 
   const needsServerEnv = context.backend !== "none" && context.backend !== "convex";
@@ -891,20 +895,19 @@ export async function setupDeploymentTemplates(projectDir: string, context: Proj
     if (await fs.pathExists(infraTemplateSrc)) {
       await fs.ensureDir(infraDir);
 
-      // Copy package.json
       await processAndCopyFiles("package.json.hbs", infraTemplateSrc, infraDir, context);
 
-      // Copy alchemy.run.ts
       await processAndCopyFiles("alchemy.run.ts.hbs", infraTemplateSrc, infraDir, context);
+    }
 
-      // Copy env.d.ts for type definitions
-      const envDtsPath = path.join(infraDir, "env.d.ts");
-      await processTemplate(path.join(infraTemplateSrc, "env.d.ts.hbs"), envDtsPath, context);
-      await setupEnvDtsImport(envDtsPath, projectDir, context);
+    if (!isBackendSelf) {
+      const envTemplateSrc = path.join(PKG_ROOT, "templates/packages/env");
+      const envDir = path.join(projectDir, "packages/env");
+      const envDtsTemplatePath = path.join(envTemplateSrc, "env.d.ts.hbs");
 
-      // Add env.d.ts to env package for type references
-      if (!isBackendSelf) {
-        await addEnvDtsToPackages(projectDir, context, infraTemplateSrc);
+      if (await fs.pathExists(envDtsTemplatePath)) {
+        const envDtsPath = path.join(envDir, "env.d.ts");
+        await processTemplate(envDtsTemplatePath, envDtsPath, context);
       }
     }
   }
@@ -949,18 +952,5 @@ export async function setupDeploymentTemplates(projectDir: string, context: Proj
         await processAndCopyFiles("**/*", deployTemplateSrc, serverAppDir, context);
       }
     }
-  }
-}
-
-async function addEnvDtsToPackages(
-  projectDir: string,
-  context: ProjectConfig,
-  alchemyTemplateSrc: string,
-) {
-  const envPackageDir = path.join(projectDir, "packages/env");
-  if (await fs.pathExists(envPackageDir)) {
-    const envDtsPath = path.join(envPackageDir, "env.d.ts");
-    await processTemplate(path.join(alchemyTemplateSrc, "env.d.ts.hbs"), envDtsPath, context);
-    await setupEnvDtsImport(envDtsPath, projectDir, context);
   }
 }

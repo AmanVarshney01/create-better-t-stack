@@ -13,29 +13,46 @@ import { setupSvelteAlchemyDeploy } from "./alchemy-svelte-setup";
 import { setupTanStackRouterAlchemyDeploy } from "./alchemy-tanstack-router-setup";
 import { setupTanStackStartAlchemyDeploy } from "./alchemy-tanstack-start-setup";
 
+function getInfraFilter(
+  packageManager: PackageManager,
+  hasTurborepo: boolean,
+  infraWorkspace: string,
+): (script: string) => string {
+  if (hasTurborepo) {
+    return (script) => `turbo -F ${infraWorkspace} ${script}`;
+  }
+
+  switch (packageManager) {
+    case "pnpm":
+      return (script) => `pnpm --filter ${infraWorkspace} ${script}`;
+    case "npm":
+      return (script) => `npm run ${script} --workspace ${infraWorkspace}`;
+    case "bun":
+      return (script) => `bun run --filter ${infraWorkspace} ${script}`;
+  }
+}
+
 export async function setupCombinedAlchemyDeploy(
   projectDir: string,
   packageManager: PackageManager,
   config: ProjectConfig,
 ) {
   const projectName = config.projectName;
+  const hasTurborepo = config.addons.includes("turborepo");
+  const infraWorkspace = `@${projectName}/infra`;
 
   const rootPkgPath = path.join(projectDir, "package.json");
   if (await fs.pathExists(rootPkgPath)) {
     const pkg = await fs.readJson(rootPkgPath);
 
     // Scripts that run from packages/infra
-    const filterCmd =
-      packageManager === "npm"
-        ? `npm run -w @${projectName}/infra`
-        : packageManager === "bun"
-          ? `bun run --filter @${projectName}/infra`
-          : `pnpm --filter @${projectName}/infra`;
+    const filter = getInfraFilter(packageManager, hasTurborepo, infraWorkspace);
 
     pkg.scripts = {
       ...pkg.scripts,
-      deploy: `${filterCmd} deploy`,
-      destroy: `${filterCmd} destroy`,
+      dev: filter("dev"),
+      deploy: filter("deploy"),
+      destroy: filter("destroy"),
     };
     await fs.writeJson(rootPkgPath, pkg, { spaces: 2 });
   }
