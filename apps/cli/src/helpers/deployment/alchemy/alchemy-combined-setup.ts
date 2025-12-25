@@ -114,7 +114,7 @@ export async function setupInfraScripts(
     if (await fs.pathExists(serverPkgPath)) {
       const serverPkg = await fs.readJson(serverPkgPath);
       if (serverPkg.scripts?.dev) {
-        serverPkg.scripts["alchemy:dev"] = serverPkg.scripts.dev;
+        serverPkg.scripts["dev:bare"] = serverPkg.scripts.dev;
         delete serverPkg.scripts.dev;
         await fs.writeJson(serverPkgPath, serverPkg, { spaces: 2 });
       }
@@ -126,7 +126,7 @@ export async function setupInfraScripts(
     if (await fs.pathExists(webPkgPath)) {
       const webPkg = await fs.readJson(webPkgPath);
       if (webPkg.scripts?.dev) {
-        webPkg.scripts["alchemy:dev"] = webPkg.scripts.dev;
+        webPkg.scripts["dev:bare"] = webPkg.scripts.dev;
         delete webPkg.scripts.dev;
         await fs.writeJson(webPkgPath, webPkg, { spaces: 2 });
       }
