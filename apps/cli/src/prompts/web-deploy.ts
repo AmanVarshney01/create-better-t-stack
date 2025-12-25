@@ -1,6 +1,8 @@
 import { isCancel, select } from "@clack/prompts";
-import { DEFAULT_CONFIG } from "../constants";
+
 import type { Backend, Frontend, Runtime, WebDeploy } from "../types";
+
+import { DEFAULT_CONFIG } from "../constants";
 import { WEB_FRAMEWORKS } from "../utils/compatibility";
 import { exitCancelled } from "../utils/errors";
 
@@ -18,7 +20,7 @@ function getDeploymentDisplay(deployment: WebDeploy): {
   label: string;
   hint: string;
 } {
-  if (deployment === "alchemy") {
+  if (deployment === "cloudflare") {
     return {
       label: "Alchemy",
       hint: "Deploy to Cloudflare Workers using Alchemy",
@@ -41,7 +43,7 @@ export async function getDeploymentChoice(
     return "none";
   }
 
-  const availableDeployments = ["alchemy", "none"];
+  const availableDeployments = ["cloudflare", "none"];
 
   const options: DeploymentOption[] = availableDeployments.map((deploy) => {
     const { label, hint } = getDeploymentDisplay(deploy as WebDeploy);
@@ -70,10 +72,10 @@ export async function getDeploymentToAdd(frontend: Frontend[], existingDeploymen
 
   const options: DeploymentOption[] = [];
 
-  if (existingDeployment !== "alchemy") {
-    const { label, hint } = getDeploymentDisplay("alchemy");
+  if (existingDeployment !== "cloudflare") {
+    const { label, hint } = getDeploymentDisplay("cloudflare");
     options.push({
-      value: "alchemy",
+      value: "cloudflare",
       label,
       hint,
     });

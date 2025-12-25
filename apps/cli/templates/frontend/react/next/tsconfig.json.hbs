@@ -21,13 +21,13 @@
     ],
     "paths": {
       "@/*": ["./src/*"]
-    }{{#if (or (eq serverDeploy "alchemy") (eq webDeploy "alchemy"))}},
+    }{{#if (or (eq serverDeploy "cloudflare") (eq webDeploy "cloudflare"))}},
     "types": [
       "@cloudflare/workers-types"
     ]{{/if}}
   },
   "include": [
-    {{#if (eq serverDeploy "alchemy")}}
+    {{#if (eq serverDeploy "cloudflare")}}
     "../server/env.d.ts",
     {{/if}}
     "./next-env.d.ts",

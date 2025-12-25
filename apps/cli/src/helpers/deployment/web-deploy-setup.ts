@@ -1,4 +1,5 @@
 import type { ProjectConfig } from "../../types";
+
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { setupCombinedAlchemyDeploy } from "./alchemy/alchemy-combined-setup";
 import { setupNextAlchemyDeploy } from "./alchemy/alchemy-next-setup";
@@ -15,9 +16,9 @@ export async function setupWebDeploy(config: ProjectConfig) {
 
   if (webDeploy === "none") return;
 
-  if (webDeploy !== "alchemy") return;
+  if (webDeploy !== "cloudflare") return;
 
-  if (webDeploy === "alchemy" && serverDeploy === "alchemy") {
+  if (webDeploy === "cloudflare" && serverDeploy === "cloudflare") {
     await setupCombinedAlchemyDeploy(projectDir, packageManager, config);
     await addAlchemyPackagesDependencies(projectDir);
     return;

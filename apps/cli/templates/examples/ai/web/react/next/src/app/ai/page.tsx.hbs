@@ -9,7 +9,7 @@ import {
 } from "@convex-dev/agent/react";
 import { useMutation } from "convex/react";
 import { Send, Loader2 } from "lucide-react";
-{{#if (eq webDeploy "alchemy")}}
+{{#if (eq webDeploy "cloudflare")}}
 import dynamic from "next/dynamic";
 
 const Streamdown = dynamic(
@@ -160,7 +160,7 @@ export default function AIPage() {
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Send } from "lucide-react";
-{{#if (eq webDeploy "alchemy")}}
+{{#if (eq webDeploy "cloudflare")}}
 import dynamic from "next/dynamic";
 
 const Streamdown = dynamic(

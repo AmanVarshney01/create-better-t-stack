@@ -1,5 +1,5 @@
 import "@{{projectName}}/env/web";
-{{#if (eq webDeploy "alchemy")}}
+{{#if (eq webDeploy "cloudflare")}}
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 {{/if}}
 import type { NextConfig } from "next";
@@ -17,6 +17,6 @@ const nextConfig: NextConfig = {
 
 export default nextConfig;
 
-{{#if (eq webDeploy "alchemy")}}
+{{#if (eq webDeploy "cloudflare")}}
 initOpenNextCloudflareForDev();
 {{/if}}

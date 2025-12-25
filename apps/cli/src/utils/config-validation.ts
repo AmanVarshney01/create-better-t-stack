@@ -1,4 +1,5 @@
 import type { CLIInput, Database, DatabaseSetup, ProjectConfig, Runtime } from "../types";
+
 import {
   ensureSingleWebAndNative,
   isWebFrontend,
@@ -411,7 +412,7 @@ export function validateFullConfig(
 
   if (
     providedFlags.has("serverDeploy") &&
-    config.serverDeploy === "alchemy" &&
+    config.serverDeploy === "cloudflare" &&
     config.runtime !== "workers"
   ) {
     exitWithError(

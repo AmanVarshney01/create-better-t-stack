@@ -1,8 +1,10 @@
-import path from "node:path";
 import { log } from "@clack/prompts";
 import { $ } from "execa";
 import fs from "fs-extra";
+import path from "node:path";
+
 import type { ProjectConfig } from "../../types";
+
 import { setupWorkspaceDependencies } from "./workspace-setup";
 
 export async function updatePackageConfigurations(projectDir: string, options: ProjectConfig) {
@@ -45,7 +47,7 @@ async function updateRootPackageJson(projectDir: string, options: ProjectConfig)
   const needsDbScripts =
     backend !== "convex" && database !== "none" && orm !== "none" && orm !== "mongoose";
 
-  const isD1Alchemy = dbSetup === "d1" && serverDeploy === "alchemy";
+  const isD1Alchemy = dbSetup === "d1" && serverDeploy === "cloudflare";
 
   const pmConfig = getPackageManagerConfig(packageManager, hasTurborepo);
 
@@ -184,7 +186,7 @@ async function updateDbPackageJson(projectDir: string, options: ProjectConfig) {
 
   const scripts = dbPackageJson.scripts;
   const { database, orm, dbSetup, serverDeploy } = options;
-  const isD1Alchemy = dbSetup === "d1" && serverDeploy === "alchemy";
+  const isD1Alchemy = dbSetup === "d1" && serverDeploy === "cloudflare";
 
   if (database !== "none") {
     if (database === "sqlite" && dbSetup !== "d1") {

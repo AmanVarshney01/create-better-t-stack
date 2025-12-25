@@ -1,4 +1,5 @@
 import { describe, it } from "bun:test";
+
 import { DB_SETUPS, expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
 describe("Database Setup Configurations", () => {
@@ -39,7 +40,7 @@ describe("Database Setup Configurations", () => {
         addons: ["none"],
         examples: ["none"],
         webDeploy: "none",
-        serverDeploy: "alchemy",
+        serverDeploy: "cloudflare",
         manualDb: true,
         install: false,
       });
@@ -404,7 +405,7 @@ describe("Database Setup Configurations", () => {
         addons: ["none"],
         examples: ["none"],
         webDeploy: "none",
-        serverDeploy: "alchemy",
+        serverDeploy: "cloudflare",
         install: false,
       });
 
@@ -481,7 +482,7 @@ describe("Database Setup Configurations", () => {
             config.database = "sqlite";
             config.orm = "drizzle";
             config.runtime = "workers";
-            config.serverDeploy = "alchemy";
+            config.serverDeploy = "cloudflare";
             break;
           case "docker":
             config.database = "postgres";

@@ -1,8 +1,10 @@
-import path from "node:path";
 import fs from "fs-extra";
+import path from "node:path";
 import { glob } from "tinyglobby";
-import { PKG_ROOT } from "../../constants";
+
 import type { ProjectConfig } from "../../types";
+
+import { PKG_ROOT } from "../../constants";
 import { processTemplate } from "../../utils/template-processor";
 import { setupEnvDtsImport } from "../deployment/alchemy/env-dts-setup";
 
@@ -882,51 +884,32 @@ export async function setupDockerComposeTemplates(projectDir: string, context: P
 export async function setupDeploymentTemplates(projectDir: string, context: ProjectConfig) {
   const isBackendSelf = context.backend === "self";
 
-  if (context.webDeploy === "alchemy" || context.serverDeploy === "alchemy") {
-    const alchemyTemplateSrc = path.join(PKG_ROOT, "templates/deploy/alchemy");
+  if (context.webDeploy === "cloudflare" || context.serverDeploy === "cloudflare") {
+    const infraTemplateSrc = path.join(PKG_ROOT, "templates/packages/infra");
+    const infraDir = path.join(projectDir, "packages/infra");
 
-    if (context.webDeploy === "alchemy" && (context.serverDeploy === "alchemy" || isBackendSelf)) {
-      if (await fs.pathExists(alchemyTemplateSrc)) {
-        const webAppDir = path.join(projectDir, "apps/web");
-        const destDir = isBackendSelf && (await fs.pathExists(webAppDir)) ? webAppDir : projectDir;
-        await processAndCopyFiles("alchemy.run.ts.hbs", alchemyTemplateSrc, destDir, context);
+    if (await fs.pathExists(infraTemplateSrc)) {
+      await fs.ensureDir(infraDir);
 
-        if (!isBackendSelf) {
-          await addEnvDtsToPackages(projectDir, context, alchemyTemplateSrc);
-        }
-      }
-    } else {
-      if (context.webDeploy === "alchemy") {
-        const webAppDir = path.join(projectDir, "apps/web");
-        if ((await fs.pathExists(alchemyTemplateSrc)) && (await fs.pathExists(webAppDir))) {
-          await processAndCopyFiles("alchemy.run.ts.hbs", alchemyTemplateSrc, webAppDir, context);
+      // Copy package.json
+      await processAndCopyFiles("package.json.hbs", infraTemplateSrc, infraDir, context);
 
-          if (!isBackendSelf) {
-            await addEnvDtsToPackages(projectDir, context, alchemyTemplateSrc);
-          }
-        }
-      }
+      // Copy alchemy.run.ts
+      await processAndCopyFiles("alchemy.run.ts.hbs", infraTemplateSrc, infraDir, context);
 
-      if (context.serverDeploy === "alchemy" && !isBackendSelf) {
-        const serverAppDir = path.join(projectDir, "apps/server");
-        if ((await fs.pathExists(alchemyTemplateSrc)) && (await fs.pathExists(serverAppDir))) {
-          await processAndCopyFiles(
-            "alchemy.run.ts.hbs",
-            alchemyTemplateSrc,
-            serverAppDir,
-            context,
-          );
-          const envDtsPath = path.join(serverAppDir, "env.d.ts");
-          await processTemplate(path.join(alchemyTemplateSrc, "env.d.ts.hbs"), envDtsPath, context);
-          await setupEnvDtsImport(envDtsPath, projectDir, context);
+      // Copy env.d.ts for type definitions
+      const envDtsPath = path.join(infraDir, "env.d.ts");
+      await processTemplate(path.join(infraTemplateSrc, "env.d.ts.hbs"), envDtsPath, context);
+      await setupEnvDtsImport(envDtsPath, projectDir, context);
 
-          await addEnvDtsToPackages(projectDir, context, alchemyTemplateSrc);
-        }
+      // Add env.d.ts to env package for type references
+      if (!isBackendSelf) {
+        await addEnvDtsToPackages(projectDir, context, infraTemplateSrc);
       }
     }
   }
 
-  if (context.webDeploy !== "none" && context.webDeploy !== "alchemy") {
+  if (context.webDeploy !== "none" && context.webDeploy !== "cloudflare") {
     const webAppDir = path.join(projectDir, "apps/web");
     if (await fs.pathExists(webAppDir)) {
       const frontends = context.frontend;
@@ -955,7 +938,7 @@ export async function setupDeploymentTemplates(projectDir: string, context: Proj
     }
   }
 
-  if (context.serverDeploy !== "none" && context.serverDeploy !== "alchemy" && !isBackendSelf) {
+  if (context.serverDeploy !== "none" && context.serverDeploy !== "cloudflare" && !isBackendSelf) {
     const serverAppDir = path.join(projectDir, "apps/server");
     if (await fs.pathExists(serverAppDir)) {
       const deployTemplateSrc = path.join(

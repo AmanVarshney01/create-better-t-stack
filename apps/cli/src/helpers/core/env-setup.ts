@@ -1,6 +1,8 @@
-import path from "node:path";
 import fs from "fs-extra";
+import path from "node:path";
+
 import type { ProjectConfig } from "../../types";
+
 import { generateAuthSecret } from "./auth-setup";
 
 function getClientServerVar(frontend: string[], backend: ProjectConfig["backend"]) {
@@ -366,7 +368,11 @@ ${hasWeb ? "# npx convex env set SITE_URL http://localhost:3001\n" : ""}`;
         databaseUrl = "mongodb://localhost:27017/mydatabase";
         break;
       case "sqlite":
-        if (config.runtime === "workers" || webDeploy === "alchemy" || serverDeploy === "alchemy") {
+        if (
+          config.runtime === "workers" ||
+          webDeploy === "cloudflare" ||
+          serverDeploy === "cloudflare"
+        ) {
           databaseUrl = "http://127.0.0.1:8080";
         } else {
           const dbAppDir = backend === "self" ? "apps/web" : "apps/server";
@@ -423,8 +429,8 @@ ${hasWeb ? "# npx convex env set SITE_URL http://localhost:3001\n" : ""}`;
     await addEnvVariablesToFile(path.join(serverDir, ".env"), serverVars);
   }
 
-  const isUnifiedAlchemy = webDeploy === "alchemy" && serverDeploy === "alchemy";
-  const isIndividualAlchemy = webDeploy === "alchemy" || serverDeploy === "alchemy";
+  const isUnifiedAlchemy = webDeploy === "cloudflare" && serverDeploy === "cloudflare";
+  const isIndividualAlchemy = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
 
   if (isUnifiedAlchemy) {
     const rootEnvPath = path.join(projectDir, ".env");
@@ -437,7 +443,7 @@ ${hasWeb ? "# npx convex env set SITE_URL http://localhost:3001\n" : ""}`;
     ];
     await addEnvVariablesToFile(rootEnvPath, rootAlchemyVars);
   } else if (isIndividualAlchemy) {
-    if (webDeploy === "alchemy") {
+    if (webDeploy === "cloudflare") {
       const webDir = path.join(projectDir, "apps/web");
       if (await fs.pathExists(webDir)) {
         const webAlchemyVars: EnvVariable[] = [
@@ -451,7 +457,7 @@ ${hasWeb ? "# npx convex env set SITE_URL http://localhost:3001\n" : ""}`;
       }
     }
 
-    if (serverDeploy === "alchemy") {
+    if (serverDeploy === "cloudflare") {
       const serverAlchemyVars: EnvVariable[] = [
         {
           key: "ALCHEMY_PASSWORD",

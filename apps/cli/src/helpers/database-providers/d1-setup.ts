@@ -1,12 +1,14 @@
 import path from "node:path";
+
 import type { ProjectConfig } from "../../types";
+
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
 
 export async function setupCloudflareD1(config: ProjectConfig) {
   const { projectDir, serverDeploy, orm, backend } = config;
 
-  if (serverDeploy === "alchemy" && orm === "prisma") {
+  if (serverDeploy === "cloudflare" && orm === "prisma") {
     const targetApp2 = backend === "self" ? "apps/web" : "apps/server";
     const envPath = path.join(projectDir, targetApp2, ".env");
     const variables: EnvVariable[] = [

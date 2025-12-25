@@ -1,6 +1,8 @@
-import path from "node:path";
 import fs from "fs-extra";
+import path from "node:path";
+
 import type { PackageManager, ProjectConfig } from "../../../types";
+
 import { addPackageDependency } from "../../../utils/add-package-deps";
 import { setupAlchemyServerDeploy } from "../server-deploy-setup";
 import { setupNextAlchemyDeploy } from "./alchemy-next-setup";
@@ -16,20 +18,24 @@ export async function setupCombinedAlchemyDeploy(
   packageManager: PackageManager,
   config: ProjectConfig,
 ) {
-  await addPackageDependency({
-    devDependencies: ["alchemy"],
-    projectDir,
-  });
+  const projectName = config.projectName;
 
   const rootPkgPath = path.join(projectDir, "package.json");
   if (await fs.pathExists(rootPkgPath)) {
     const pkg = await fs.readJson(rootPkgPath);
 
+    // Scripts that run from packages/infra
+    const filterCmd =
+      packageManager === "npm"
+        ? `npm run -w @${projectName}/infra`
+        : packageManager === "bun"
+          ? `bun run --filter @${projectName}/infra`
+          : `pnpm --filter @${projectName}/infra`;
+
     pkg.scripts = {
       ...pkg.scripts,
-      deploy: "alchemy deploy",
-      destroy: "alchemy destroy",
-      dev: "alchemy dev",
+      deploy: `${filterCmd} deploy`,
+      destroy: `${filterCmd} destroy`,
     };
     await fs.writeJson(rootPkgPath, pkg, { spaces: 2 });
   }
