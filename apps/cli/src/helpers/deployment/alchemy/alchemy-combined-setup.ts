@@ -56,6 +56,31 @@ export async function setupCombinedAlchemyDeploy(
     await fs.writeJson(rootPkgPath, pkg, { spaces: 2 });
   }
 
+  // Rename dev script from apps that are deployed via cloudflare (infra handles them)
+  if (config.serverDeploy === "cloudflare") {
+    const serverPkgPath = path.join(projectDir, "apps/server/package.json");
+    if (await fs.pathExists(serverPkgPath)) {
+      const serverPkg = await fs.readJson(serverPkgPath);
+      if (serverPkg.scripts?.dev) {
+        serverPkg.scripts["alchemy:dev"] = serverPkg.scripts.dev;
+        delete serverPkg.scripts.dev;
+        await fs.writeJson(serverPkgPath, serverPkg, { spaces: 2 });
+      }
+    }
+  }
+
+  if (config.webDeploy === "cloudflare") {
+    const webPkgPath = path.join(projectDir, "apps/web/package.json");
+    if (await fs.pathExists(webPkgPath)) {
+      const webPkg = await fs.readJson(webPkgPath);
+      if (webPkg.scripts?.dev) {
+        webPkg.scripts["alchemy:dev"] = webPkg.scripts.dev;
+        delete webPkg.scripts.dev;
+        await fs.writeJson(webPkgPath, webPkg, { spaces: 2 });
+      }
+    }
+  }
+
   const serverDir = path.join(projectDir, "apps/server");
   if (await fs.pathExists(serverDir)) {
     await setupAlchemyServerDeploy(serverDir, projectDir);
