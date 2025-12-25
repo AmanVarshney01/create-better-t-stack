@@ -5,7 +5,6 @@ import type { AvailableDependencies } from "../../constants";
 import type { ProjectConfig } from "../../types";
 
 import { addPackageDependency } from "../../utils/add-package-deps";
-import { setupEnvPackageDependencies } from "./env-package-setup";
 
 type WorkspaceContext = {
   projectName: string;
@@ -42,15 +41,9 @@ export async function setupWorkspaceDependencies(projectDir: string, options: Pr
     envDep,
   };
 
-  if (packages.env.exists) {
-    const isCloudflare =
-      options.serverDeploy === "cloudflare" || options.webDeploy === "cloudflare";
-    const infraDep = isCloudflare ? { [`@${projectName}/infra`]: workspaceVersion } : {};
-
-    await setupEnvPackageDependencies(packages.env.dir, options, configDep, infraDep);
-  }
-
   await Promise.all([
+    setupEnvPackage(packages.env, packages.infra, ctx),
+    setupInfraPackage(packages.infra, ctx),
     setupDbPackage(packages.db, ctx),
     setupAuthPackage(packages.auth, packages.db, ctx),
     setupApiPackage(packages.api, packages.auth, packages.db, ctx),
@@ -74,6 +67,7 @@ async function detectPackages(projectDir: string): Promise<Record<string, Packag
   const packagePaths = {
     config: "packages/config",
     env: "packages/env",
+    infra: "packages/infra",
     db: "packages/db",
     auth: "packages/auth",
     api: "packages/api",
@@ -92,6 +86,37 @@ async function detectPackages(projectDir: string): Promise<Record<string, Packag
   );
 
   return Object.fromEntries(entries);
+}
+
+async function setupEnvPackage(pkg: PackageInfo, infraPkg: PackageInfo, ctx: WorkspaceContext) {
+  if (!pkg.exists) return;
+
+  const runtimeDevDeps = getRuntimeDevDeps(ctx.options.runtime, ctx.options.backend);
+
+  const customDevDeps: Record<string, string> = { ...ctx.configDep };
+  const isCloudflare =
+    ctx.options.serverDeploy === "cloudflare" || ctx.options.webDeploy === "cloudflare";
+  if (isCloudflare && infraPkg.exists) {
+    customDevDeps[`@${ctx.projectName}/infra`] = ctx.workspaceVersion;
+  }
+
+  await addPackageDependency({
+    dependencies: ctx.commonDeps,
+    devDependencies: [...ctx.commonDevDeps, ...runtimeDevDeps],
+    customDevDependencies: customDevDeps,
+    projectDir: pkg.dir,
+  });
+}
+
+async function setupInfraPackage(pkg: PackageInfo, ctx: WorkspaceContext) {
+  if (!pkg.exists) return;
+
+  await addPackageDependency({
+    dependencies: ctx.commonDeps,
+    devDependencies: ctx.commonDevDeps,
+    customDevDependencies: ctx.configDep,
+    projectDir: pkg.dir,
+  });
 }
 
 async function setupDbPackage(pkg: PackageInfo, ctx: WorkspaceContext) {

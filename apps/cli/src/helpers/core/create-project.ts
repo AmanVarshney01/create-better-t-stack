@@ -16,8 +16,10 @@ import { setupServerDeploy } from "../deployment/server-deploy-setup";
 import { setupWebDeploy } from "../deployment/web-deploy-setup";
 import { setupAuth } from "./auth-setup";
 import { createReadme } from "./create-readme";
+import { setupEnvPackageDependencies } from "./env-package-setup";
 import { setupEnvironmentVariables } from "./env-setup";
 import { initializeGit } from "./git";
+import { setupInfraPackageDependencies } from "./infra-package-setup";
 import { installDependencies } from "./install-dependencies";
 import { setupPayments } from "./payments-setup";
 import { displayPostInstallInstructions } from "./post-installation";
@@ -70,6 +72,11 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
     await setupAddonsTemplate(projectDir, options);
 
     await setupDeploymentTemplates(projectDir, options);
+
+    await setupEnvPackageDependencies(projectDir, options);
+    if (options.serverDeploy === "cloudflare" || options.webDeploy === "cloudflare") {
+      await setupInfraPackageDependencies(projectDir, options);
+    }
 
     await setupApi(options);
 

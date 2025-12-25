@@ -1,21 +1,19 @@
+import fs from "fs-extra";
+import path from "node:path";
+
 import type { AvailableDependencies } from "../../constants";
 import type { ProjectConfig } from "../../types";
 
 import { addPackageDependency } from "../../utils/add-package-deps";
 
-export async function setupEnvPackageDependencies(
-  envDir: string,
-  options: ProjectConfig,
-  configDep: Record<string, string>,
-  infraDep: Record<string, string>,
-) {
+export async function setupEnvPackageDependencies(projectDir: string, options: ProjectConfig) {
+  const envDir = path.join(projectDir, "packages/env");
+  if (!(await fs.pathExists(envDir))) return;
+
   const t3EnvDeps = getT3EnvDeps(options);
-  const runtimeDevDeps = getRuntimeDevDeps(options.runtime, options.backend);
 
   await addPackageDependency({
     dependencies: t3EnvDeps,
-    devDependencies: ["typescript", ...runtimeDevDeps],
-    customDevDependencies: { ...configDep, ...infraDep },
     projectDir: envDir,
   });
 }
@@ -38,20 +36,4 @@ function getT3EnvDeps(options: ProjectConfig): AvailableDependencies[] {
   }
 
   return deps;
-}
-
-function getRuntimeDevDeps(
-  runtime: ProjectConfig["runtime"],
-  backend: ProjectConfig["backend"],
-): AvailableDependencies[] {
-  if (runtime === "none" && backend === "self") {
-    return ["@types/node"];
-  }
-  if (runtime === "node" || runtime === "workers") {
-    return ["@types/node"];
-  }
-  if (runtime === "bun") {
-    return ["@types/bun"];
-  }
-  return [];
 }

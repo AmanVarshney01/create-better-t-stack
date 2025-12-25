@@ -33,6 +33,7 @@ export async function setupCatalogs(projectDir: string, options: ProjectConfig) 
     "packages/backend",
     "packages/config",
     "packages/env",
+    "packages/infra",
   ];
 
   const packagesInfo: PackageInfo[] = [];
