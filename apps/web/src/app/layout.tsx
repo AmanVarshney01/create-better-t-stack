@@ -1,10 +1,13 @@
-import { RootProvider } from "fumadocs-ui/provider/next";
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import type { ReactNode } from "react";
-import { cn } from "@/lib/utils";
-import "./global.css";
+
+import { RootProvider } from "fumadocs-ui/provider/next";
+import { Geist, Geist_Mono } from "next/font/google";
+
 import Providers from "@/components/providers";
+
+import "./global.css";
+import { cn } from "@/lib/utils";
 
 const geist = Geist({
   subsets: ["latin"],

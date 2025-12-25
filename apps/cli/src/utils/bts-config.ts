@@ -1,7 +1,9 @@
-import path from "node:path";
 import fs from "fs-extra";
 import * as JSONC from "jsonc-parser";
+import path from "node:path";
+
 import type { BetterTStackConfig, ProjectConfig } from "../types";
+
 import { getLatestCLIVersion } from "./get-latest-cli-version";
 
 const BTS_CONFIG_FILE = "bts.jsonc";

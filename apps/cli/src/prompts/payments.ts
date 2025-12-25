@@ -1,6 +1,8 @@
 import { isCancel, select } from "@clack/prompts";
-import { DEFAULT_CONFIG } from "../constants";
+
 import type { Auth, Backend, Frontend, Payments } from "../types";
+
+import { DEFAULT_CONFIG } from "../constants";
 import { splitFrontends } from "../utils/compatibility-rules";
 import { exitCancelled } from "../utils/errors";
 

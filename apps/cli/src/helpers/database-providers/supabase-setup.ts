@@ -1,10 +1,12 @@
-import path from "node:path";
 import { isCancel, log, select } from "@clack/prompts";
 import { consola } from "consola";
 import { $, type ExecaError, execa } from "execa";
 import fs from "fs-extra";
+import path from "node:path";
 import pc from "picocolors";
+
 import type { PackageManager, ProjectConfig } from "../../types";
+
 import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";

@@ -2,6 +2,7 @@ import { spinner } from "@clack/prompts";
 import consola from "consola";
 import { $ } from "execa";
 import pc from "picocolors";
+
 import type { Addons, PackageManager } from "../../types";
 
 export async function installDependencies({

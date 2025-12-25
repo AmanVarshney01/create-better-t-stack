@@ -2,7 +2,9 @@
 import { Check, ClipboardCopy } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
+
 import { cn } from "@/lib/utils";
+
 import PackageIcon from "./icons";
 
 const CodeContainer = () => {

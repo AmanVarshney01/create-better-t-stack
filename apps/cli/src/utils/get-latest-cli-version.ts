@@ -1,5 +1,6 @@
-import path from "node:path";
 import fs from "fs-extra";
+import path from "node:path";
+
 import { PKG_ROOT } from "../constants";
 
 export const getLatestCLIVersion = () => {

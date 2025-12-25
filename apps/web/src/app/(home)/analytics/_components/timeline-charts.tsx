@@ -12,8 +12,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+
 import { ChartContainer, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
+
 import type { AggregatedAnalyticsData } from "./types";
+
 import { CHART_COLORS, chartConfig, getColor, truncateLabel } from "./types";
 
 function ChartCard({

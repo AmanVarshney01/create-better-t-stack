@@ -1,10 +1,12 @@
-import path from "node:path";
 import { cancel, isCancel, log, select, text } from "@clack/prompts";
 import consola from "consola";
 import { $ } from "execa";
 import fs from "fs-extra";
+import path from "node:path";
 import pc from "picocolors";
+
 import type { ProjectConfig } from "../../types";
+
 import { commandExists } from "../../utils/command-exists";
 import { exitCancelled } from "../../utils/errors";
 import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";

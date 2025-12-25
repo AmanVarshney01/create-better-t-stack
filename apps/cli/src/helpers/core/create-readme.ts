@@ -1,6 +1,7 @@
-import path from "node:path";
 import consola from "consola";
 import fs from "fs-extra";
+import path from "node:path";
+
 import type {
   Addons,
   API,

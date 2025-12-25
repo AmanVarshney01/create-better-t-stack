@@ -1,6 +1,7 @@
-import path from "node:path";
 import fs from "fs-extra";
+import path from "node:path";
 import yaml from "yaml";
+
 import type { ProjectConfig } from "../types";
 
 type PackageInfo = {

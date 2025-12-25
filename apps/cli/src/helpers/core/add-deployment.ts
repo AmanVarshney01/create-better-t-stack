@@ -1,7 +1,9 @@
-import path from "node:path";
 import { log } from "@clack/prompts";
+import path from "node:path";
 import pc from "picocolors";
+
 import type { AddInput, ProjectConfig, ServerDeploy, WebDeploy } from "../../types";
+
 import { updateBtsConfig } from "../../utils/bts-config";
 import { exitWithError } from "../../utils/errors";
 import { setupServerDeploy } from "../deployment/server-deploy-setup";

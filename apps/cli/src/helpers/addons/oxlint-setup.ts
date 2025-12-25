@@ -1,8 +1,10 @@
-import path from "node:path";
 import { spinner } from "@clack/prompts";
 import { $ } from "execa";
 import fs from "fs-extra";
+import path from "node:path";
+
 import type { PackageManager } from "../../types";
+
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 

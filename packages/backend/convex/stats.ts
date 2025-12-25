@@ -1,4 +1,5 @@
 import { OssStats } from "@erquhart/convex-oss-stats";
+
 import { components } from "./_generated/api";
 
 export const ossStats = new OssStats(components.ossStats, {

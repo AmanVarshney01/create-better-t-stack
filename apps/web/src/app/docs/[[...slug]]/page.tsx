@@ -2,6 +2,7 @@ import * as TabsComponents from "fumadocs-ui/components/tabs";
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/layouts/notebook/page";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import { notFound } from "next/navigation";
+
 import { LLMCopyButton, ViewOptions } from "@/components/ai/page-actions";
 import { source } from "@/lib/source";
 

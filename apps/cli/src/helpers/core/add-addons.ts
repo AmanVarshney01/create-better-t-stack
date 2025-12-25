@@ -1,7 +1,9 @@
-import path from "node:path";
 import { log } from "@clack/prompts";
+import path from "node:path";
 import pc from "picocolors";
+
 import type { AddInput, Addons, ProjectConfig } from "../../types";
+
 import { updateBtsConfig } from "../../utils/bts-config";
 import { validateAddonCompatibility } from "../../utils/compatibility-rules";
 import { exitWithError } from "../../utils/errors";

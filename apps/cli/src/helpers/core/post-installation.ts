@@ -1,6 +1,8 @@
 import { consola } from "consola";
 import pc from "picocolors";
+
 import type { Database, DatabaseSetup, ORM, ProjectConfig, Runtime } from "../../types";
+
 import { getDockerStatus } from "../../utils/docker-utils";
 export async function displayPostInstallInstructions(
   config: ProjectConfig & { depsInstalled: boolean },

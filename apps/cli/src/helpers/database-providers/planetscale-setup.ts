@@ -1,6 +1,8 @@
-import path from "node:path";
 import fs from "fs-extra";
+import path from "node:path";
+
 import type { ProjectConfig } from "../../types";
+
 import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
 
 export async function setupPlanetScale(config: ProjectConfig) {

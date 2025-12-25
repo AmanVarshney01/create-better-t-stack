@@ -1,7 +1,9 @@
-import path from "node:path";
 import fs from "fs-extra";
+import path from "node:path";
+
 import type { AvailableDependencies } from "../../constants";
 import type { ProjectConfig } from "../../types";
+
 import { addPackageDependency } from "../../utils/add-package-deps";
 
 export async function setupWorkspaceDependencies(projectDir: string, options: ProjectConfig) {

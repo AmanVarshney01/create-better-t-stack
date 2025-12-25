@@ -1,6 +1,8 @@
-import path from "node:path";
 import { $ } from "execa";
+import path from "node:path";
+
 import type { PackageManager } from "../../types";
+
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 // having problems running this in convex + better-auth

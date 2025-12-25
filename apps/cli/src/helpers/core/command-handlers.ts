@@ -1,17 +1,18 @@
-import path from "node:path";
 import { intro, log, outro } from "@clack/prompts";
 import consola from "consola";
 import fs from "fs-extra";
+import path from "node:path";
 import pc from "picocolors";
+
+import type { AddInput, CreateInput, DirectoryConflict, ProjectConfig } from "../../types";
+
 import { getDefaultConfig } from "../../constants";
 import { getAddonsToAdd } from "../../prompts/addons";
 import { gatherConfig } from "../../prompts/config-prompts";
 import { getProjectName } from "../../prompts/project-name";
 import { getServerDeploymentToAdd } from "../../prompts/server-deploy";
 import { getDeploymentToAdd } from "../../prompts/web-deploy";
-import type { AddInput, CreateInput, DirectoryConflict, ProjectConfig } from "../../types";
 import { trackProjectCreation } from "../../utils/analytics";
-
 import { displayConfig } from "../../utils/display-config";
 import { exitWithError, handleError } from "../../utils/errors";
 import { generateReproducibleCommand } from "../../utils/generate-reproducible-command";

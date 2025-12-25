@@ -1,8 +1,10 @@
-import path from "node:path";
 import consola from "consola";
 import fs from "fs-extra";
 import handlebars from "handlebars";
+import path from "node:path";
+
 import type { ProjectConfig } from "../types";
+
 import { formatFile } from "./file-formatter";
 
 const BINARY_EXTENSIONS = new Set([".png", ".ico", ".svg"]);

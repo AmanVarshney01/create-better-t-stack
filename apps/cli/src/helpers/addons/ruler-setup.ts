@@ -1,9 +1,11 @@
-import path from "node:path";
 import { autocompleteMultiselect, isCancel, log, spinner } from "@clack/prompts";
 import { $ } from "execa";
 import fs from "fs-extra";
+import path from "node:path";
 import pc from "picocolors";
+
 import type { ProjectConfig } from "../../types";
+
 import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionArgs, getPackageExecutionCommand } from "../../utils/package-runner";
 

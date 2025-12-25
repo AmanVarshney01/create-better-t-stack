@@ -2,7 +2,9 @@ export const dynamic = "force-static";
 
 import { api } from "@better-t-stack/backend/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
+
 import { fetchSponsors } from "@/lib/sponsors";
+
 import CommandSection from "./_components/command-section";
 import Footer from "./_components/footer";
 import HeroSection from "./_components/hero-section";

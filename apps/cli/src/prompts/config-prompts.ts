@@ -1,4 +1,5 @@
 import { group } from "@clack/prompts";
+
 import type {
   Addons,
   API,
@@ -16,6 +17,7 @@ import type {
   ServerDeploy,
   WebDeploy,
 } from "../types";
+
 import { exitCancelled } from "../utils/errors";
 import { getAddonsChoice } from "./addons";
 import { getApiChoice } from "./api";

@@ -1,9 +1,11 @@
-import path from "node:path";
 import { isCancel, log, select, spinner } from "@clack/prompts";
 import { $ } from "execa";
 import fs from "fs-extra";
+import path from "node:path";
 import pc from "picocolors";
+
 import type { ProjectConfig } from "../../types";
+
 import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 

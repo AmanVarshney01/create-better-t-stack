@@ -1,8 +1,8 @@
-import { mkdir } from "node:fs/promises";
-import { join } from "node:path";
 import { createRouterClient } from "@orpc/server";
 import { expect } from "bun:test";
-import { router } from "../src/index";
+import { mkdir } from "node:fs/promises";
+import { join } from "node:path";
+
 import type {
   CreateInput,
   InitResult,
@@ -20,6 +20,8 @@ import type {
   ServerDeploy,
   DatabaseSetup,
 } from "../src/types";
+
+import { router } from "../src/index";
 import {
   AddonsSchema,
   APISchema,

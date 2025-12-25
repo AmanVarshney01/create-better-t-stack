@@ -1,6 +1,8 @@
 import { log } from "@clack/prompts";
 import fs from "fs-extra";
+
 import type { ProjectConfig } from "../../types";
+
 import { writeBtsConfig } from "../../utils/bts-config";
 import { exitWithError } from "../../utils/errors";
 import { setupCatalogs } from "../../utils/setup-catalogs";

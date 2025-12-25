@@ -1,7 +1,9 @@
 import { autocompleteMultiselect, group, log, multiselect, spinner } from "@clack/prompts";
 import { $ } from "execa";
 import pc from "picocolors";
+
 import type { ProjectConfig } from "../../types";
+
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
