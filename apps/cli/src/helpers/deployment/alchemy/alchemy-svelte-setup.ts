@@ -18,7 +18,6 @@ export async function setupSvelteAlchemyDeploy(
     devDependencies: ["alchemy", "@sveltejs/adapter-cloudflare"],
     projectDir: webAppDir,
   });
-  // Scripts are handled by packages/infra package
 
   const svelteConfigPath = path.join(webAppDir, "svelte.config.js");
   if (!(await fs.pathExists(svelteConfigPath))) return;

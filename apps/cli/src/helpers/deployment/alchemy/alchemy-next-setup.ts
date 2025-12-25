@@ -18,7 +18,6 @@ export async function setupNextAlchemyDeploy(
     devDependencies: ["alchemy", "wrangler", "@cloudflare/workers-types"],
     projectDir: webAppDir,
   });
-  // Scripts are handled by packages/infra package
 
   const openNextConfigPath = path.join(webAppDir, "open-next.config.ts");
   const openNextConfigContent = `import { defineCloudflareConfig } from "@opennextjs/cloudflare";

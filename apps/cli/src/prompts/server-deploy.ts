@@ -17,7 +17,7 @@ function getDeploymentDisplay(deployment: ServerDeploy): {
 } {
   if (deployment === "cloudflare") {
     return {
-      label: "Alchemy",
+      label: "Cloudflare",
       hint: "Deploy to Cloudflare Workers using Alchemy",
     };
   }

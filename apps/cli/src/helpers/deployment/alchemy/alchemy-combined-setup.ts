@@ -36,7 +36,6 @@ export async function setupCombinedAlchemyDeploy(
   packageManager: PackageManager,
   config: ProjectConfig,
 ) {
-  // Setup infra scripts and rename dev scripts
   await setupInfraScripts(projectDir, packageManager, config);
 
   const serverDir = path.join(projectDir, "apps/server");
@@ -97,7 +96,6 @@ export async function setupInfraScripts(
   if (await fs.pathExists(rootPkgPath)) {
     const pkg = await fs.readJson(rootPkgPath);
 
-    // Add deploy/destroy scripts that run from packages/infra
     const filter = getInfraFilter(packageManager, hasTurborepo, infraWorkspace);
 
     pkg.scripts = {
@@ -108,7 +106,6 @@ export async function setupInfraScripts(
     await fs.writeJson(rootPkgPath, pkg, { spaces: 2 });
   }
 
-  // Rename dev script from apps that are deployed via cloudflare (infra handles them)
   if (config.serverDeploy === "cloudflare") {
     const serverPkgPath = path.join(projectDir, "apps/server/package.json");
     if (await fs.pathExists(serverPkgPath)) {

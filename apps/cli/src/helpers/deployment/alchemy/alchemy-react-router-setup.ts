@@ -17,5 +17,4 @@ export async function setupReactRouterAlchemyDeploy(
     devDependencies: ["alchemy"],
     projectDir: webAppDir,
   });
-  // Scripts are handled by packages/infra package
 }

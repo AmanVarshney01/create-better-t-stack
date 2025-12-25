@@ -24,7 +24,6 @@ export async function setupWebDeploy(config: ProjectConfig) {
     return;
   }
 
-  // Setup infra scripts for individual web cloudflare deploy
   await setupInfraScripts(projectDir, packageManager, config);
 
   const isNext = frontend.includes("next");

@@ -19,7 +19,6 @@ export async function setupServerDeploy(config: ProjectConfig) {
   if (!(await fs.pathExists(serverDir))) return;
 
   if (serverDeploy === "cloudflare") {
-    // Setup infra scripts for individual server cloudflare deploy
     await setupInfraScripts(projectDir, packageManager, config);
     await setupAlchemyServerDeploy(serverDir, projectDir);
   }
@@ -28,7 +27,6 @@ export async function setupServerDeploy(config: ProjectConfig) {
 export async function setupAlchemyServerDeploy(serverDir: string, projectDir?: string) {
   if (!(await fs.pathExists(serverDir))) return;
 
-  // Add Cloudflare types to server package
   await addPackageDependency({
     devDependencies: ["alchemy", "wrangler", "@types/node", "@cloudflare/workers-types"],
     projectDir: serverDir,
@@ -37,7 +35,6 @@ export async function setupAlchemyServerDeploy(serverDir: string, projectDir?: s
   if (projectDir) {
     await addAlchemyPackagesDependencies(projectDir);
   }
-  // Scripts are handled by packages/infra package
 }
 
 async function addAlchemyPackagesDependencies(projectDir: string) {

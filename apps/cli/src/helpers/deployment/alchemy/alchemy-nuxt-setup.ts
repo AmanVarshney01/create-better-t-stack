@@ -18,8 +18,6 @@ export async function setupNuxtAlchemyDeploy(
     devDependencies: ["alchemy", "nitro-cloudflare-dev", "wrangler"],
     projectDir: webAppDir,
   });
-  // Scripts are handled by packages/infra package
-
   const nuxtConfigPath = path.join(webAppDir, "nuxt.config.ts");
   if (!(await fs.pathExists(nuxtConfigPath))) return;
 
