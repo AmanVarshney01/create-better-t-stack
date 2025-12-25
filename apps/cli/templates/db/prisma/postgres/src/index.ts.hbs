@@ -9,7 +9,7 @@ neonConfig.poolQueryViaFetch = true;
 
 const prisma = new PrismaClient({
 	adapter: new PrismaNeon({
-		connectionString: env.DATABASE_URL || "",
+		connectionString: env.DATABASE_URL,
 	}),
 });
 
@@ -17,7 +17,7 @@ const prisma = new PrismaClient({
 import { PrismaPg } from "@prisma/adapter-pg";
 
 const adapter = new PrismaPg({
-	connectionString: env.DATABASE_URL || "",
+	connectionString: env.DATABASE_URL,
 });
 
 const prisma = new PrismaClient({ adapter });
@@ -25,7 +25,7 @@ const prisma = new PrismaClient({ adapter });
 {{else}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaPg({ connectionString: env.DATABASE_URL || "" });
+const adapter = new PrismaPg({ connectionString: env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 {{/if}}
