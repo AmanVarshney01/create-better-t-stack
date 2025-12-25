@@ -51,6 +51,15 @@ export async function setupWorkspaceDependencies(projectDir: string, options: Pr
     ? { [`@${projectName}/env`]: workspaceVersion }
     : {};
 
+  if (envExists) {
+    await addPackageDependency({
+      dependencies: commonDeps,
+      devDependencies: commonDevDeps,
+      customDevDependencies: configDep,
+      projectDir: envDir,
+    });
+  }
+
   if (dbExists) {
     await addPackageDependency({
       dependencies: commonDeps,
