@@ -3,7 +3,6 @@ import path from "node:path";
 
 import type { PackageManager, ProjectConfig } from "../../../types";
 
-import { addPackageDependency } from "../../../utils/add-package-deps";
 import { setupAlchemyServerDeploy } from "../server-deploy-setup";
 import { setupNextAlchemyDeploy } from "./alchemy-next-setup";
 import { setupNuxtAlchemyDeploy } from "./alchemy-nuxt-setup";
