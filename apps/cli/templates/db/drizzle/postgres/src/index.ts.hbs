@@ -27,7 +27,7 @@ import * as schema from "./schema";
 {{#if (eq dbSetup "neon")}}
 import { neon, neonConfig } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { env } from "cloudflare:workers";
+import { env } from "@{{projectName}}/env/server";
 import ws from "ws";
 
 neonConfig.webSocketConstructor = ws;
@@ -37,7 +37,7 @@ const sql = neon(env.DATABASE_URL || "");
 export const db = drizzle(sql, { schema });
 {{else}}
 import { drizzle } from "drizzle-orm/node-postgres";
-import { env } from "cloudflare:workers";
+import { env } from "@{{projectName}}/env/server";
 
 export const db = drizzle(env.DATABASE_URL || "", { schema });
 {{/if}}

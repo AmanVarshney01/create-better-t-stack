@@ -2,7 +2,7 @@ import { PrismaClient } from "../prisma/generated/client";
 
 {{#if (eq dbSetup "d1")}}
 import { PrismaD1 } from "@prisma/adapter-d1";
-import { env } from "cloudflare:workers";
+import { env } from "@{{projectName}}/env/server";
 
 const adapter = new PrismaD1(env.DB);
 const prisma = new PrismaClient({ adapter });
@@ -10,11 +10,7 @@ const prisma = new PrismaClient({ adapter });
 export default prisma;
 {{else}}
 import { PrismaLibSql } from "@prisma/adapter-libsql";
-{{#if (eq runtime "workers")}}
-import { env } from "cloudflare:workers";
-{{else}}
 import { env } from "@{{projectName}}/env/server";
-{{/if}}
 
 const adapter = new PrismaLibSql({
 	url: env.DATABASE_URL,

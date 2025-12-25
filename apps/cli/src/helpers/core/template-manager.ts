@@ -293,8 +293,7 @@ async function setupEnvPackage(projectDir: string, context: ProjectConfig) {
     await processAndCopyFiles("package.json.hbs", envBaseDir, envPackageDir, context);
   }
 
-  const needsServerEnv =
-    context.backend !== "none" && context.backend !== "convex" && context.runtime !== "workers";
+  const needsServerEnv = context.backend !== "none" && context.backend !== "convex";
 
   if (needsServerEnv) {
     const serverSrc = path.join(envBaseDir, "src/server.ts.hbs");
@@ -975,20 +974,9 @@ async function addEnvDtsToPackages(
   context: ProjectConfig,
   alchemyTemplateSrc: string,
 ) {
-  const packages = ["packages/api", "packages/auth", "packages/db"];
-
-  for (const packageName of packages) {
-    const packageDir = path.join(projectDir, packageName);
-    if (await fs.pathExists(packageDir)) {
-      const envDtsPath = path.join(packageDir, "env.d.ts");
-      await processTemplate(path.join(alchemyTemplateSrc, "env.d.ts.hbs"), envDtsPath, context);
-      await setupEnvDtsImport(envDtsPath, projectDir, context);
-    }
-  }
-
-  const serverAppDir = path.join(projectDir, "apps/server");
-  if (await fs.pathExists(serverAppDir)) {
-    const envDtsPath = path.join(serverAppDir, "env.d.ts");
+  const envPackageDir = path.join(projectDir, "packages/env");
+  if (await fs.pathExists(envPackageDir)) {
+    const envDtsPath = path.join(envPackageDir, "env.d.ts");
     await processTemplate(path.join(alchemyTemplateSrc, "env.d.ts.hbs"), envDtsPath, context);
     await setupEnvDtsImport(envDtsPath, projectDir, context);
   }

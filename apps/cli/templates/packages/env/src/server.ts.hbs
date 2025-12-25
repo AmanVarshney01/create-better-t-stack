@@ -1,3 +1,8 @@
+{{#if (eq runtime "workers")}}
+// For Cloudflare Workers, env is accessed via cloudflare:workers module
+// Types are defined in env.d.ts based on your alchemy.run.ts bindings
+export { env } from "cloudflare:workers";
+{{else}}
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
@@ -29,3 +34,4 @@ export const env = createEnv({
 	runtimeEnv: process.env,
 	emptyStringAsUndefined: true,
 });
+{{/if}}

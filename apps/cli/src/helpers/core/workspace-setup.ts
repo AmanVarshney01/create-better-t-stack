@@ -199,6 +199,8 @@ export async function setupWorkspaceDependencies(projectDir: string, options: Pr
   await addPackageDependency({
     dependencies: commonDeps,
     devDependencies: [...commonDevDeps, ...runtimeDevDeps],
+    customDependencies: envDep,
+    customDevDependencies: configDep,
     projectDir,
   });
 }

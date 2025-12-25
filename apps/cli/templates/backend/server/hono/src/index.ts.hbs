@@ -1,9 +1,4 @@
-{{#if (or (eq runtime "bun") (eq runtime "node"))}}
 import { env } from "@{{projectName}}/env/server";
-{{/if}}
-{{#if (eq runtime "workers")}}
-import { env } from "cloudflare:workers";
-{{/if}}
 {{#if (eq api "orpc")}}
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";

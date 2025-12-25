@@ -19,12 +19,12 @@ import * as schema from "./schema";
 
 {{#if (eq dbSetup "d1")}}
 import { drizzle } from "drizzle-orm/d1";
-import { env } from "cloudflare:workers";
+import { env } from "@{{projectName}}/env/server";
 
 export const db = drizzle(env.DB, { schema });
 {{else}}
 import { drizzle } from "drizzle-orm/libsql";
-import { env } from "cloudflare:workers";
+import { env } from "@{{projectName}}/env/server";
 import { createClient } from "@libsql/client";
 
 const client = createClient({

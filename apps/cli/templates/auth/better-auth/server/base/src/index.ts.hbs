@@ -123,13 +123,13 @@ export const auth = betterAuth({
 {{#if (eq runtime "workers")}}
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { env } from "@{{projectName}}/env/server";
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
 {{/if}}
 import { db } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
-import { env } from "cloudflare:workers";
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
