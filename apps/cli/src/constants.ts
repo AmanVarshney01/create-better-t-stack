@@ -169,6 +169,9 @@ export const dependencyVersionMap = {
   dotenv: "^17.2.2",
   tsdown: "^0.16.5",
   zod: "^4.1.13",
+  "@t3-oss/env-core": "^0.13.1",
+  "@t3-oss/env-nextjs": "^0.13.1",
+  "@t3-oss/env-nuxt": "^0.13.1",
   srvx: "0.8.15",
 
   "@polar-sh/better-auth": "^1.1.3",

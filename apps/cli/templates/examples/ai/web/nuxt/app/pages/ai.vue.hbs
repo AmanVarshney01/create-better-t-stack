@@ -6,15 +6,13 @@ import { DefaultChatTransport } from 'ai'
 import { ref } from 'vue'
 
 const config = useRuntimeConfig()
-const serverUrl = config.public.serverURL
-
 const messages: UIMessage[] = []
 const input = ref('')
 
 const chat = new Chat({
   messages,
   transport: new DefaultChatTransport({
-    api: `${serverUrl}/ai`,
+    api: `${config.public.NUXT_PUBLIC_SERVER_URL}/ai`,
   }),
   onError(error) {
     console.error('Chat error:', error)

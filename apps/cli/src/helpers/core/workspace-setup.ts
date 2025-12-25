@@ -53,8 +53,29 @@ export async function setupWorkspaceDependencies(projectDir: string, options: Pr
 
   if (envExists) {
     const runtimeDevDeps = getRuntimeDevDeps(runtime, backend);
+
+    // Determine which T3 Env package to use based on frontend
+    const t3EnvDeps: AvailableDependencies[] = ["zod"];
+    const hasNextJs = options.frontend.includes("next");
+    const hasNuxt = options.frontend.includes("nuxt");
+
+    if (hasNextJs) {
+      t3EnvDeps.push("@t3-oss/env-nextjs");
+    } else if (hasNuxt) {
+      t3EnvDeps.push("@t3-oss/env-nuxt");
+    } else {
+      t3EnvDeps.push("@t3-oss/env-core");
+    }
+
+    // Add core for server env if not using Nuxt (which handles it differently)
+    if (backend !== "convex" && backend !== "none" && runtime !== "workers") {
+      if (!t3EnvDeps.includes("@t3-oss/env-core")) {
+        t3EnvDeps.push("@t3-oss/env-core");
+      }
+    }
+
     await addPackageDependency({
-      dependencies: commonDeps,
+      dependencies: t3EnvDeps,
       devDependencies: [...commonDevDeps, ...runtimeDevDeps],
       customDevDependencies: configDep,
       projectDir: envDir,

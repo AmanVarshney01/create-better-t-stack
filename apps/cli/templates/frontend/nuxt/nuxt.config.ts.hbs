@@ -1,3 +1,5 @@
+import "@{{projectName}}/env/web";
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: 'latest',
@@ -17,10 +19,11 @@ export default defineNuxtConfig({
   convex: {
     url: process.env.NUXT_PUBLIC_CONVEX_URL,
   },
-  {{/if}}
+  {{else}}
   runtimeConfig: {
     public: {
-      serverURL: process.env.NUXT_PUBLIC_SERVER_URL,
+      NUXT_PUBLIC_SERVER_URL: process.env.NUXT_PUBLIC_SERVER_URL,
     }
-  }
+  },
+  {{/if}}
 })
