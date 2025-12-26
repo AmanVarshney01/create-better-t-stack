@@ -59,7 +59,16 @@ export const env = createEnv({
 	},
 	runtimeEnv: (import.meta as any).env,
 {{/if}}
-{{else if (ne backend "self")}}
+{{else if (or (eq backend "self") (eq backend "self-next") (eq backend "self-tanstack-start"))}}
+{{#if (includes frontend "next")}}
+	client: {},
+	runtimeEnv: {},
+{{else}}
+	clientPrefix: "VITE_",
+	client: {},
+	runtimeEnv: (import.meta as any).env,
+{{/if}}
+{{else if (ne backend "none")}}
 {{#if (includes frontend "next")}}
 	client: {
 		NEXT_PUBLIC_SERVER_URL: z.url(),
