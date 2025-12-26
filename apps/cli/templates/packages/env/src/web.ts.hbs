@@ -59,7 +59,7 @@ export const env = createEnv({
 	},
 	runtimeEnv: (import.meta as any).env,
 {{/if}}
-{{else if (or (eq backend "self") (eq backend "self-next") (eq backend "self-tanstack-start"))}}
+{{else if (eq backend "self")}}
 {{#if (includes frontend "next")}}
 	client: {},
 	runtimeEnv: {},
