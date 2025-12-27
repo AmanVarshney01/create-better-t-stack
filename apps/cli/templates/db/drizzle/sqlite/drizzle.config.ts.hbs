@@ -1,13 +1,9 @@
 import { defineConfig } from "drizzle-kit";
-import dotenv from "dotenv";
-
-dotenv.config({
-    {{#if (eq backend "self")}}
-    path: "../../apps/web/.env",
-    {{else}}
-    path: "../../apps/server/.env",
-    {{/if}}
-});
+{{#if (eq backend "self")}}
+    import { env } from "@{{projectName}}/env/web";
+{{else}}
+    import { env } from "@{{projectName}}/env/server";
+{{/if}}
 
 export default defineConfig({
   schema: "./src/schema",
@@ -19,9 +15,9 @@ export default defineConfig({
   {{else}}
   dialect: "turso",
   dbCredentials: {
-    url: process.env.DATABASE_URL || "",
+    url: env.DATABASE_URL,
     {{#if (eq dbSetup "turso")}}
-    authToken: process.env.DATABASE_AUTH_TOKEN,
+    authToken: env.DATABASE_AUTH_TOKEN,
     {{/if}}
   },
   {{/if}}
