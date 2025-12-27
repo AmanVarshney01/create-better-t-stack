@@ -9,6 +9,16 @@ dotenv.config({
     {{/if}}
 });
 
+if (!process.env.DATABASE_URL) {
+  throw new Error("Missing DATABASE_URL");
+}
+
+{{#if (eq dbSetup "turso")}}
+if (!process.env.DATABASE_AUTH_TOKEN) {
+  throw new Error("Missing DATABASE_AUTH_TOKEN");
+}
+{{/if}}
+
 export default defineConfig({
   schema: "./src/schema",
   out: "./src/migrations",
@@ -19,7 +29,7 @@ export default defineConfig({
   {{else}}
   dialect: "turso",
   dbCredentials: {
-    url: process.env.DATABASE_URL || "",
+    url: process.env.DATABASE_URL,
     {{#if (eq dbSetup "turso")}}
     authToken: process.env.DATABASE_AUTH_TOKEN,
     {{/if}}

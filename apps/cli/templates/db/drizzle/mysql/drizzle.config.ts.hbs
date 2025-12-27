@@ -9,11 +9,15 @@ dotenv.config({
     {{/if}}
 });
 
+if (!process.env.DATABASE_URL) {
+  throw new Error("Missing DATABASE_URL");
+}
+
 export default defineConfig({
   schema: "./src/schema",
   out: "./src/migrations",
   dialect: "mysql",
   dbCredentials: {
-    url: process.env.DATABASE_URL || "",
+    url: process.env.DATABASE_URL,
   },
 });
