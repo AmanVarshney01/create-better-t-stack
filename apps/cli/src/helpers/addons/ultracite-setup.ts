@@ -4,7 +4,6 @@ import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 
-import { addPackageDependency } from "../../utils/add-package-deps";
 import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 import { setupBiome } from "./addons-setup";
@@ -132,7 +131,7 @@ function getFrameworksFromFrontend(frontend: string[]): string[] {
   return Array.from(frameworks);
 }
 
-export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
+export async function setupUltracite(config: ProjectConfig, gitHooks: string[]) {
   const { packageManager, projectDir, frontend } = config;
 
   try {
@@ -199,8 +198,11 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
       ultraciteArgs.push("--hooks", ...hooks);
     }
 
-    if (hasHusky) {
-      ultraciteArgs.push("--integrations", "husky", "lint-staged");
+    if (gitHooks.length > 0) {
+      ultraciteArgs.push("--integrations", gitHooks.join(" "));
+      if (gitHooks.includes("husky")) {
+        ultraciteArgs.push("lint-staged");
+      }
     }
 
     const ultraciteArgsString = ultraciteArgs.join(" ");
@@ -211,13 +213,6 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
     s.start("Running Ultracite init command...");
 
     await $({ cwd: projectDir, env: { CI: "true" } })`${args}`;
-
-    if (hasHusky) {
-      await addPackageDependency({
-        devDependencies: ["husky", "lint-staged"],
-        projectDir,
-      });
-    }
 
     s.stop("Ultracite setup successfully!");
   } catch (error) {

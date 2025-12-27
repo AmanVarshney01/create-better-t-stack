@@ -44,6 +44,10 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "Ruler";
       hint = "Centralize your AI rules";
       break;
+    case "lefthook":
+      label = "Lefthook";
+      hint = "Fast and powerful Git hooks manager";
+      break;
     case "husky":
       label = "Husky";
       hint = "Modern native Git hooks made easy";
@@ -56,14 +60,7 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "Fumadocs";
       hint = "Build excellent documentation site";
       break;
-    case "opentui":
-      label = "OpenTUI";
-      hint = "Build terminal user interfaces";
-      break;
-    case "wxt":
-      label = "WXT";
-      hint = "Build browser extensions";
-      break;
+
     default:
       label = addon;
       hint = `Add ${addon}`;
@@ -75,7 +72,8 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 const ADDON_GROUPS = {
   Documentation: ["starlight", "fumadocs"],
   Linting: ["biome", "oxlint", "ultracite"],
-  Other: ["ruler", "pwa", "tauri", "husky", "opentui", "wxt", "turborepo"],
+  "Git Hooks": ["lefthook", "husky"],
+  Other: ["ruler", "turborepo", "pwa", "tauri"],
 };
 
 export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[], auth?: Auth) {
@@ -85,6 +83,7 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
   const groupedOptions: Record<string, AddonOption[]> = {
     Documentation: [],
     Linting: [],
+    "Git Hooks": [],
     Other: [],
   };
 
@@ -101,6 +100,8 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
       groupedOptions.Documentation.push(option);
     } else if (ADDON_GROUPS.Linting.includes(addon)) {
       groupedOptions.Linting.push(option);
+    } else if (ADDON_GROUPS["Git Hooks"].includes(addon)) {
+      groupedOptions["Git Hooks"].push(option);
     } else if (ADDON_GROUPS.Other.includes(addon)) {
       groupedOptions.Other.push(option);
     }
@@ -146,6 +147,7 @@ export async function getAddonsToAdd(
   const groupedOptions: Record<string, AddonOption[]> = {
     Documentation: [],
     Linting: [],
+    "Git Hooks": [],
     Other: [],
   };
 
@@ -166,6 +168,8 @@ export async function getAddonsToAdd(
       groupedOptions.Documentation.push(option);
     } else if (ADDON_GROUPS.Linting.includes(addon)) {
       groupedOptions.Linting.push(option);
+    } else if (ADDON_GROUPS["Git Hooks"].includes(addon)) {
+      groupedOptions["Git Hooks"].push(option);
     } else if (ADDON_GROUPS.Other.includes(addon)) {
       groupedOptions.Other.push(option);
     }
