@@ -1,24 +1,13 @@
 import { authClient } from "@/lib/auth-client";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Text,
-  TextInput,
-  Pressable,
-  View,
-} from "react-native";
-import { Card, useThemeColor } from "heroui-native";
+import { Text, View } from "react-native";
+import { Button, ErrorView, Spinner, Surface, TextField } from "heroui-native";
 
 export function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const mutedColor = useThemeColor("muted");
-  const accentColor = useThemeColor("accent");
-  const foregroundColor = useThemeColor("foreground");
-  const dangerColor = useThemeColor("danger");
 
   const handleLogin = async () => {
     setIsLoading(true);
@@ -46,46 +35,39 @@ export function SignIn() {
   };
 
   return (
-    <Card variant="secondary" className="mt-6 p-4">
-      <Card.Title className="mb-4">Sign In</Card.Title>
+    <Surface variant="secondary" className="p-4 rounded-lg">
+      <Text className="text-foreground font-medium mb-4">Sign In</Text>
 
-      {error && (
-        <View className="mb-4 p-3 bg-danger/10 rounded-lg">
-          <Text className="text-danger text-sm">{error}</Text>
-        </View>
-      )}
+      <ErrorView isInvalid={!!error} className="mb-3">
+        {error}
+      </ErrorView>
 
-      <TextInput
-        className="mb-3 py-3 px-4 rounded-lg bg-surface text-foreground border border-divider"
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        placeholderTextColor={mutedColor}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
+      <View className="gap-3">
+        <TextField>
+          <TextField.Label>Email</TextField.Label>
+          <TextField.Input
+            value={email}
+            onChangeText={setEmail}
+            placeholder="email@example.com"
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </TextField>
 
-      <TextInput
-        className="mb-4 py-3 px-4 rounded-lg bg-surface text-foreground border border-divider"
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        placeholderTextColor={mutedColor}
-        secureTextEntry
-      />
+        <TextField>
+          <TextField.Label>Password</TextField.Label>
+          <TextField.Input
+            value={password}
+            onChangeText={setPassword}
+            placeholder="••••••••"
+            secureTextEntry
+          />
+        </TextField>
 
-      <Pressable
-        onPress={handleLogin}
-        disabled={isLoading}
-        className="bg-accent p-4 rounded-lg flex-row justify-center items-center active:opacity-70"
-      >
-        {isLoading ? (
-          <ActivityIndicator size="small" color={foregroundColor} />
-        ) : (
-          <Text className="text-foreground font-medium">Sign In</Text>
-        )}
-      </Pressable>
-    </Card>
+        <Button onPress={handleLogin} isDisabled={isLoading} className="mt-1">
+          {isLoading ? <Spinner size="sm" color="default" /> : <Button.Label>Sign In</Button.Label>}
+        </Button>
+      </View>
+    </Surface>
   );
 }
-

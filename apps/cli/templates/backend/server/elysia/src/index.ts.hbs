@@ -6,7 +6,8 @@ import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 {{#if (includes examples "ai")}}
 import { google } from "@ai-sdk/google";
-import { convertToModelMessages, streamText } from "ai";
+import { convertToModelMessages, streamText, wrapLanguageModel } from "ai";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
 {{#if (eq api "trpc")}}
 import { createContext } from "@{{projectName}}/api/context";
@@ -103,9 +104,13 @@ const app = new Elysia()
 	.post("/ai", async (context) => {
 		const body = await context.request.json();
 		const uiMessages = body.messages || [];
-		const result = streamText({
+		const model = wrapLanguageModel({
 			model: google("gemini-2.5-flash"),
-			messages: convertToModelMessages(uiMessages)
+			middleware: devToolsMiddleware(),
+		});
+		const result = streamText({
+			model,
+			messages: await convertToModelMessages(uiMessages)
 		});
 
 		return result.toUIMessageStreamResponse();
