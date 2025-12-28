@@ -370,13 +370,12 @@ export function validateFrontendConstraints(
 export function validateApiConstraints(config: Partial<ProjectConfig>, options: CLIInput) {
   if (config.api === "none") {
     if (
-      options.examples &&
-      !(options.examples.length === 1 && options.examples[0] === "none") &&
+      options.examples?.includes("todo") &&
       options.backend !== "convex" &&
       options.backend !== "none"
     ) {
       exitWithError(
-        "Cannot use '--examples' when '--api' is set to 'none'. Please remove the --examples flag or choose an API type.",
+        "Cannot use '--examples todo' when '--api' is set to 'none'. The todo example requires an API layer. Please remove 'todo' from --examples or choose an API type.",
       );
     }
   }
@@ -430,6 +429,7 @@ export function validateFullConfig(
     config.backend,
     config.database,
     config.frontend ?? [],
+    config.api,
   );
 
   validatePaymentsCompatibility(
@@ -461,6 +461,7 @@ export function validateConfigForProgrammaticUse(config: Partial<ProjectConfig>)
       config.backend,
       config.database,
       config.frontend ?? [],
+      config.api,
     );
   } catch (error) {
     if (error instanceof Error) {
