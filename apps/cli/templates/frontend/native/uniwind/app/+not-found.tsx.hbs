@@ -1,30 +1,25 @@
-import { Container } from "@/components/container";
 import { Link, Stack } from "expo-router";
-import { Text, View, Pressable } from "react-native";
-import { Card } from "heroui-native";
+import { Button, Surface } from "heroui-native";
+import { Text, View } from "react-native";
+
+import { Container } from "@/components/container";
 
 export default function NotFoundScreen() {
 	return (
 		<>
-			<Stack.Screen options=\{{ title: "Oops!" }} />
+			<Stack.Screen options=\{{ title: "Not Found" }} />
 			<Container>
-				<View className="flex-1 justify-center items-center p-6">
-					<Card variant="secondary" className="items-center p-8 max-w-md">
-						<Text className="text-6xl mb-4">🤔</Text>
-						<Card.Title className="text-2xl text-center mb-2">
-							Page Not Found
-						</Card.Title>
-						<Card.Description className="text-center mb-6">
-							Sorry, the page you're looking for doesn't exist.
-						</Card.Description>
-					<Link href="/" asChild>
-						<Pressable className="bg-accent px-6 py-3 rounded-lg active:opacity-70">
-							<Text className="text-accent-foreground font-medium text-base">
-								Go to Home
-							</Text>
-						</Pressable>
-					</Link>
-					</Card>
+				<View className="flex-1 justify-center items-center p-4">
+					<Surface variant="secondary" className="items-center p-6 max-w-sm rounded-lg">
+						<Text className="text-4xl mb-3">🤔</Text>
+						<Text className="text-foreground font-medium text-lg mb-1">Page Not Found</Text>
+						<Text className="text-muted text-sm text-center mb-4">
+							The page you're looking for doesn't exist.
+						</Text>
+						<Link href="/" asChild>
+							<Button size="sm">Go Home</Button>
+						</Link>
+					</Surface>
 				</View>
 			</Container>
 		</>
