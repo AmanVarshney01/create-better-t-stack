@@ -20,7 +20,7 @@
     },
     "apps/cli": {
       "name": "create-better-t-stack",
-      "version": "3.12.5",
+      "version": "3.12.6",
       "bin": {
         "create-better-t-stack": "dist/cli.mjs",
       },
@@ -130,7 +130,7 @@
     },
     "packages/create-bts": {
       "name": "create-bts",
-      "version": "3.12.5",
+      "version": "3.12.6",
       "bin": {
         "create-bts": "cli.js",
       },
@@ -140,7 +140,7 @@
     },
     "packages/types": {
       "name": "@better-t-stack/types",
-      "version": "3.12.5",
+      "version": "3.12.6",
       "dependencies": {
         "zod": "^4.1.13",
       },
