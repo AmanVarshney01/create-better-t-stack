@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { google } from "@ai-sdk/google";
-import { streamText, type UIMessage, convertToModelMessages } from "ai";
+import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
 
 export const Route = createFileRoute("/api/ai/$")({
   server: {
@@ -9,9 +10,13 @@ export const Route = createFileRoute("/api/ai/$")({
         try {
           const { messages }: { messages: UIMessage[] } = await request.json();
 
-          const result = streamText({
+          const model = wrapLanguageModel({
             model: google("gemini-2.5-flash"),
-            messages: convertToModelMessages(messages),
+            middleware: devToolsMiddleware(),
+          });
+          const result = streamText({
+            model,
+            messages: await convertToModelMessages(messages),
           });
 
           return result.toUIMessageStreamResponse();

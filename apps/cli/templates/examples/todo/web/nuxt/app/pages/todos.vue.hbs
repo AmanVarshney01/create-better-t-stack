@@ -72,7 +72,7 @@ function handleDeleteTodo(id: number) {
 </script>
 
 <template>
-  <div class="mx-auto w-full max-w-md py-10">
+  <UContainer class="py-8 max-w-md">
     <UCard>
       <template #header>
         <div>
@@ -80,12 +80,13 @@ function handleDeleteTodo(id: number) {
           <div class="text-muted text-sm">Manage your tasks efficiently</div>
         </div>
       </template>
+
       <form @submit.prevent="handleAddTodo" class="mb-6 flex items-center gap-2">
         <UInput
           v-model="newTodoText"
           placeholder="Add a new task..."
           autocomplete="off"
-          class="w-full"
+          class="flex-1"
           {{#if (eq backend "convex")}}
           :disabled="isCreatePending"
           {{/if}}
@@ -93,103 +94,127 @@ function handleDeleteTodo(id: number) {
         <UButton
           type="submit"
           {{#if (eq backend "convex")}}
-          :disabled="isCreatePending || !newTodoText.trim()"
+          :loading="isCreatePending"
+          :disabled="!newTodoText.trim()"
+          {{else}}
+          :loading="createMutation.isPending.value"
           {{/if}}
         >
-          {{#if (eq backend "convex")}}
-            <span v-if="isCreatePending">
-              <UIcon name="i-lucide-loader-2" class="animate-spin" />
-            </span>
-            <span v-else>Add</span>
-          {{else}}
-            Add
-          {{/if}}
+          Add
         </UButton>
       </form>
 
       {{#if (eq backend "convex")}}
-        <p v-if="error || deleteError" class="mb-4 text-red-500">
-          Error: \{{ error?.message || deleteError?.message }}
-        </p>
-        <div v-if="isPending" class="flex justify-center py-4">
-          <UIcon name="i-lucide-loader-2" class="animate-spin w-6 h-6" />
-        </div>
-        <p v-else-if="data?.length === 0" class="py-4 text-center">
-          No todos yet. Add one above!
-        </p>
-        <ul v-else-if="data" class="space-y-2">
-          <li
-            v-for="todo in data"
-            :key="todo._id"
-            class="flex items-center justify-between rounded-md border p-2"
-          >
-            <div class="flex items-center gap-2">
-              <UCheckbox
-                :model-value="todo.completed"
-                @update:model-value="() => handleToggleTodo(todo._id, todo.completed)"
-                :id="`todo-${todo._id}`"
-              />
-              <label
-                :for="`todo-${todo._id}`"
-                :class="{ 'line-through text-muted': todo.completed }"
-                class="cursor-pointer"
-              >
-                \{{ todo.text }}
-              </label>
-            </div>
-            <UButton
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              square
-              @click="handleDeleteTodo(todo._id)"
-              aria-label="Delete todo"
-              icon="i-lucide-trash-2"
+      <!-- Loading State -->
+      <div v-if="isPending" class="space-y-2">
+        <USkeleton v-for="i in 3" :key="i" class="h-12 w-full" />
+      </div>
+
+      <!-- Error State -->
+      <UAlert
+        v-else-if="error || deleteError"
+        color="error"
+        icon="i-lucide-alert-circle"
+        title="Error"
+        :description="error?.message || deleteError?.message"
+      />
+
+      <!-- Empty State -->
+      <UEmpty
+        v-else-if="data?.length === 0"
+        icon="i-lucide-clipboard-list"
+        title="No todos yet"
+        description="Add your first task above!"
+      />
+
+      <!-- Todo List -->
+      <ul v-else-if="data" class="space-y-2">
+        <li
+          v-for="todo in data"
+          :key="todo._id"
+          class="flex items-center justify-between rounded-md border p-3"
+        >
+          <div class="flex items-center gap-3">
+            <UCheckbox
+              :model-value="todo.completed"
+              @update:model-value="() => handleToggleTodo(todo._id, todo.completed)"
+              :id="`todo-${todo._id}`"
             />
-          </li>
-        </ul>
+            <label
+              :for="`todo-${todo._id}`"
+              :class="{ 'line-through text-muted': todo.completed }"
+              class="cursor-pointer"
+            >
+              \{{ todo.text }}
+            </label>
+          </div>
+          <UButton
+            color="error"
+            variant="ghost"
+            size="sm"
+            square
+            @click="handleDeleteTodo(todo._id)"
+            aria-label="Delete todo"
+            icon="i-lucide-trash-2"
+          />
+        </li>
+      </ul>
       {{else}}
-        <div v-if="todos.status.value === 'pending'" class="flex justify-center py-4">
-          <UIcon name="i-lucide-loader-2" class="animate-spin w-6 h-6" />
-        </div>
-        <p v-else-if="todos.status.value === 'error'" class="py-4 text-center text-red-500">
-          Error: \{{ todos.error.value?.message || 'Failed to load todos' }}
-        </p>
-        <p v-else-if="todos.data.value?.length === 0" class="py-4 text-center">
-          No todos yet. Add one above!
-        </p>
-        <ul v-else class="space-y-2">
-          <li
-            v-for="todo in todos.data.value"
-            :key="todo.id"
-            class="flex items-center justify-between rounded-md border p-2"
-          >
-            <div class="flex items-center gap-2">
-              <UCheckbox
-                :model-value="todo.completed"
-                @update:model-value="() => handleToggleTodo(todo.id, todo.completed)"
-                :id="`todo-${todo.id}`"
-              />
-              <label
-                :for="`todo-${todo.id}`"
-                :class="{ 'line-through text-muted': todo.completed }"
-                class="cursor-pointer"
-              >
-                \{{ todo.text }}
-              </label>
-            </div>
-            <UButton
-              color="neutral"
-              variant="ghost"
-              size="sm"
-              square
-              @click="handleDeleteTodo(todo.id)"
-              aria-label="Delete todo"
-              icon="i-lucide-trash-2"
+      <!-- Loading State -->
+      <div v-if="todos.status.value === 'pending'" class="space-y-2">
+        <USkeleton v-for="i in 3" :key="i" class="h-12 w-full" />
+      </div>
+
+      <!-- Error State -->
+      <UAlert
+        v-else-if="todos.status.value === 'error'"
+        color="error"
+        icon="i-lucide-alert-circle"
+        title="Failed to load todos"
+        :description="todos.error.value?.message"
+      />
+
+      <!-- Empty State -->
+      <UEmpty
+        v-else-if="todos.data.value?.length === 0"
+        icon="i-lucide-clipboard-list"
+        title="No todos yet"
+        description="Add your first task above!"
+      />
+
+      <!-- Todo List -->
+      <ul v-else class="space-y-2">
+        <li
+          v-for="todo in todos.data.value"
+          :key="todo.id"
+          class="flex items-center justify-between rounded-md border p-3"
+        >
+          <div class="flex items-center gap-3">
+            <UCheckbox
+              :model-value="todo.completed"
+              @update:model-value="() => handleToggleTodo(todo.id, todo.completed)"
+              :id="`todo-${todo.id}`"
             />
-          </li>
-        </ul>
+            <label
+              :for="`todo-${todo.id}`"
+              :class="{ 'line-through text-muted': todo.completed }"
+              class="cursor-pointer"
+            >
+              \{{ todo.text }}
+            </label>
+          </div>
+          <UButton
+            color="error"
+            variant="ghost"
+            size="sm"
+            square
+            @click="handleDeleteTodo(todo.id)"
+            aria-label="Delete todo"
+            icon="i-lucide-trash-2"
+          />
+        </li>
+      </ul>
       {{/if}}
     </UCard>
-  </div>
+  </UContainer>
 </template>
