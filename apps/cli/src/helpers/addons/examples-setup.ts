@@ -87,12 +87,12 @@ async function setupAIDependencies(config: ProjectConfig) {
     });
   } else if (backend === "self" && webClientDirExists) {
     await addPackageDependency({
-      dependencies: ["ai", "@ai-sdk/google"],
+      dependencies: ["ai", "@ai-sdk/google", "@ai-sdk/devtools"],
       projectDir: webClientDir,
     });
   } else if (serverDirExists && backend !== "none") {
     await addPackageDependency({
-      dependencies: ["ai", "@ai-sdk/google"],
+      dependencies: ["ai", "@ai-sdk/google", "@ai-sdk/devtools"],
       projectDir: serverDir,
     });
   }

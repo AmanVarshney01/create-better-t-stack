@@ -56,6 +56,10 @@ export async function getAuthChoice(
       });
     }
 
+    if (options.length === 0) {
+      return "none" as Auth;
+    }
+
     options.push({ value: "none", label: "None", hint: "No auth" });
 
     const response = await select({

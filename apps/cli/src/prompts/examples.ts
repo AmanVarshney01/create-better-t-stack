@@ -19,19 +19,10 @@ export async function getExamplesChoice(
     return [];
   }
 
-  if (backend !== "convex") {
-    if (api === "none") {
-      return [];
-    }
-    if (database === "none") {
-      return [];
-    }
-  }
-
   let response: Examples[] | symbol = [];
   const options: { value: Examples; label: string; hint: string }[] = [];
 
-  if (isExampleTodoAllowed(backend, database)) {
+  if (isExampleTodoAllowed(backend, database, api)) {
     options.push({
       value: "todo" as const,
       label: "Todo App",
