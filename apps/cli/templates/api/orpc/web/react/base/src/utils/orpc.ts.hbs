@@ -11,7 +11,7 @@ import { appRouter } from "@{{projectName}}/api/routers/index";
 import { createContext } from "@{{projectName}}/api/context";
 {{else if (includes frontend "tanstack-start")}}
 import type { RouterClient } from "@orpc/server";
-import { appRouter } from "@{{projectName}}/api/routers/index";
+import type { AppRouter } from "@{{projectName}}/api/routers/index";
 import { env } from "@{{projectName}}/env/web";
 {{else}}
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
@@ -73,10 +73,10 @@ const link = new RPCLink({
 });
 
 const getORPCClient = () => {
-	return createORPCClient(link) as RouterClient<typeof appRouter>;
+	return createORPCClient(link) as RouterClient<AppRouter>;
 };
 
-export const client: RouterClient<typeof appRouter> = getORPCClient();
+export const client: RouterClient<AppRouter> = getORPCClient();
 {{else}}
 export const link = new RPCLink({
 {{#if (and (eq backend "self") (includes frontend "next"))}}
