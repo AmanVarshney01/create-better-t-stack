@@ -1,8 +1,7 @@
-import { isCancel, select } from "@clack/prompts";
-
 import type { Backend, DatabaseSetup, ORM, Runtime } from "../types";
 
 import { exitCancelled } from "../utils/errors";
+import { isCancel, navigableSelect } from "./navigable";
 
 export async function getDBSetupChoice(
   databaseType: string,
@@ -102,7 +101,7 @@ export async function getDBSetupChoice(
     return "none";
   }
 
-  const response = await select<DatabaseSetup>({
+  const response = await navigableSelect<DatabaseSetup>({
     message: `Select ${databaseType} setup option`,
     options,
     initialValue: "none",

@@ -1,10 +1,16 @@
-import { isCancel, multiselect, select } from "@clack/prompts";
-
 import type { Backend, Frontend } from "../types";
 
 import { DEFAULT_CONFIG } from "../constants";
 import { isFrontendAllowedWithBackend } from "../utils/compatibility-rules";
 import { exitCancelled } from "../utils/errors";
+import {
+  GO_BACK_SYMBOL,
+  isCancel,
+  isGoBack,
+  navigableMultiselect,
+  navigableSelect,
+  setIsFirstPrompt,
+} from "./navigable";
 
 export async function getFrontendChoice(
   frontendOptions?: Frontend[],
@@ -13,7 +19,7 @@ export async function getFrontendChoice(
 ) {
   if (frontendOptions !== undefined) return frontendOptions;
 
-  const frontendTypes = await multiselect({
+  const frontendTypes = await navigableMultiselect({
     message: "Select project type",
     options: [
       {
@@ -31,7 +37,11 @@ export async function getFrontendChoice(
     initialValues: ["web"],
   });
 
+  if (isGoBack(frontendTypes)) return GO_BACK_SYMBOL as any;
   if (isCancel(frontendTypes)) return exitCancelled("Operation cancelled");
+
+  // Enable back navigation for sub-prompts
+  setIsFirstPrompt(false);
 
   const result: Frontend[] = [];
 
@@ -78,19 +88,20 @@ export async function getFrontendChoice(
       isFrontendAllowedWithBackend(option.value, backend, auth),
     );
 
-    const webFramework = await select<Frontend>({
+    const webFramework = await navigableSelect<Frontend>({
       message: "Choose web",
       options: webOptions,
       initialValue: DEFAULT_CONFIG.frontend[0],
     });
 
+    if (isGoBack(webFramework)) return GO_BACK_SYMBOL as any;
     if (isCancel(webFramework)) return exitCancelled("Operation cancelled");
 
-    result.push(webFramework);
+    result.push(webFramework as Frontend);
   }
 
   if (frontendTypes.includes("native")) {
-    const nativeFramework = await select<Frontend>({
+    const nativeFramework = await navigableSelect<Frontend>({
       message: "Choose native",
       options: [
         {
@@ -112,8 +123,9 @@ export async function getFrontendChoice(
       initialValue: "native-bare",
     });
 
+    if (isGoBack(nativeFramework)) return GO_BACK_SYMBOL as any;
     if (isCancel(nativeFramework)) return exitCancelled("Operation cancelled");
-    result.push(nativeFramework);
+    result.push(nativeFramework as Frontend);
   }
 
   return result;

@@ -1,0 +1,13 @@
+name: Format
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  format:
+    if: github.repository_owner == 'bombshell-dev'
+    uses: bombshell-dev/automation/.github/workflows/format.yml@main
+    secrets: inherit

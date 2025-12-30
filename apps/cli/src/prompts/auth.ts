@@ -1,9 +1,8 @@
-import { isCancel, select } from "@clack/prompts";
-
 import type { Auth, Backend } from "../types";
 
 import { DEFAULT_CONFIG } from "../constants";
 import { exitCancelled } from "../utils/errors";
+import { isCancel, navigableSelect } from "./navigable";
 
 export async function getAuthChoice(
   auth: Auth | undefined,
@@ -62,7 +61,7 @@ export async function getAuthChoice(
 
     options.push({ value: "none", label: "None", hint: "No auth" });
 
-    const response = await select({
+    const response = await navigableSelect({
       message: "Select authentication provider",
       options,
       initialValue: "none",
@@ -71,7 +70,7 @@ export async function getAuthChoice(
     return response as Auth;
   }
 
-  const response = await select({
+  const response = await navigableSelect({
     message: "Select authentication provider",
     options: [
       {

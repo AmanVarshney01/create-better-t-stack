@@ -1,9 +1,8 @@
-import { isCancel, select } from "@clack/prompts";
-
 import type { Backend, Database, ORM, Runtime } from "../types";
 
 import { DEFAULT_CONFIG } from "../constants";
 import { exitCancelled } from "../utils/errors";
+import { isCancel, navigableSelect } from "./navigable";
 
 const ormOptions = {
   prisma: {
@@ -42,7 +41,7 @@ export async function getORMChoice(
       ? [ormOptions.prisma, ormOptions.mongoose]
       : [ormOptions.drizzle, ormOptions.prisma];
 
-  const response = await select<ORM>({
+  const response = await navigableSelect<ORM>({
     message: "Select ORM",
     options,
     initialValue:
