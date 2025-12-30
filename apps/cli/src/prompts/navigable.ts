@@ -35,7 +35,7 @@ const S_CHECKBOX_ACTIVE = unicode ? "◻" : "[•]";
 const S_CHECKBOX_SELECTED = unicode ? "◼" : "[+]";
 const S_CHECKBOX_INACTIVE = unicode ? "◻" : "[ ]";
 
-const symbol = (state: State) => {
+function symbol(state: State) {
   switch (state) {
     case "initial":
     case "active":
@@ -47,7 +47,7 @@ const symbol = (state: State) => {
     case "submit":
       return pc.green(S_STEP_SUBMIT);
   }
-};
+}
 
 const KEYBOARD_HINT = pc.dim(
   `${pc.gray("↑/↓")} navigate • ${pc.gray("enter")} confirm • ${pc.gray("b")} back • ${pc.gray("ctrl+c")} cancel`,

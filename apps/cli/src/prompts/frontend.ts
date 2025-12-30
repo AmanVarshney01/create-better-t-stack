@@ -17,7 +17,7 @@ export async function getFrontendChoice(
   frontendOptions?: Frontend[],
   backend?: Backend,
   auth?: string,
-) {
+): Promise<Frontend[] | symbol> {
   if (frontendOptions !== undefined) return frontendOptions;
 
   while (true) {
@@ -41,7 +41,7 @@ export async function getFrontendChoice(
       initialValues: ["web"],
     });
 
-    if (isGoBack(frontendTypes)) return GO_BACK_SYMBOL as any;
+    if (isGoBack(frontendTypes)) return GO_BACK_SYMBOL;
     if (isCancel(frontendTypes)) return exitCancelled("Operation cancelled");
 
     setIsFirstPrompt(false);

@@ -2,10 +2,9 @@
  * Navigable group - a group of prompts that allows going back
  */
 
-import { isCancel } from "@clack/prompts";
-
 import { didLastPromptShowUI, setIsFirstPrompt, setLastPromptShownUI } from "../utils/context";
 import { isGoBack } from "../utils/navigation";
+import { isCancel } from "./navigable";
 
 type Prettify<T> = {
   [P in keyof T]: T[P];
