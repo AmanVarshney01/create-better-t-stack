@@ -1,9 +1,7 @@
 /**
  * Navigable prompt wrappers using @clack/core
- * These prompts return GO_BACK_SYMBOL when Escape is pressed (instead of canceling)
+ * These prompts return GO_BACK_SYMBOL when 'b' is pressed (instead of canceling)
  */
-
-import type { Key } from "node:readline";
 
 import {
   ConfirmPrompt,
@@ -24,7 +22,6 @@ import {
 } from "../utils/context";
 import { GO_BACK_SYMBOL } from "../utils/navigation";
 
-// Unicode symbols
 const unicode = process.platform !== "win32";
 const S_STEP_ACTIVE = unicode ? "◆" : "*";
 const S_STEP_CANCEL = unicode ? "■" : "x";
@@ -80,6 +77,22 @@ function getMultiHint(): string {
   return ctxIsFirstPrompt() ? KEYBOARD_HINT_MULTI_FIRST : KEYBOARD_HINT_MULTI;
 }
 
+async function runWithNavigation<T>(prompt: any): Promise<T | symbol> {
+  let goBack = false;
+
+  prompt.on("key", (char: string | undefined) => {
+    if (char === "b" && !ctxIsFirstPrompt()) {
+      goBack = true;
+      prompt.state = "cancel";
+    }
+  });
+
+  ctxSetLastPromptShownUI(true);
+  const result = await prompt.prompt();
+
+  return goBack ? GO_BACK_SYMBOL : result;
+}
+
 interface SelectOption<T> {
   value: T;
   label?: string;
@@ -94,8 +107,6 @@ export interface NavigableSelectOptions<T> {
 }
 
 export async function navigableSelect<T>(opts: NavigableSelectOptions<T>): Promise<T | symbol> {
-  let goBack = false;
-
   const opt = (
     option: SelectOption<T>,
     state: "inactive" | "active" | "selected" | "cancelled" | "disabled",
@@ -141,25 +152,7 @@ export async function navigableSelect<T>(opts: NavigableSelectOptions<T>): Promi
     },
   });
 
-  // Listen for 'b' key to trigger go-back
-  // biome-ignore lint/suspicious/noExplicitAny: clack core types don't expose proper key event signature
-  (prompt as any).on("key", (_char: string | undefined, _key: Key) => {
-    if (_char === "b" && !ctxIsFirstPrompt()) {
-      goBack = true;
-      // Set state directly to trigger cancel flow
-      (prompt as any).state = "cancel";
-    }
-  });
-
-  // Mark that this prompt is showing UI
-  ctxSetLastPromptShownUI(true);
-  const result = await prompt.prompt();
-
-  if (goBack) {
-    return GO_BACK_SYMBOL;
-  }
-
-  return result as T | symbol;
+  return runWithNavigation(prompt) as Promise<T | symbol>;
 }
 
 export interface NavigableMultiselectOptions<T> {
@@ -172,7 +165,6 @@ export interface NavigableMultiselectOptions<T> {
 export async function navigableMultiselect<T>(
   opts: NavigableMultiselectOptions<T>,
 ): Promise<T[] | symbol> {
-  let goBack = false;
   const required = opts.required ?? true;
 
   const opt = (
@@ -272,22 +264,7 @@ export async function navigableMultiselect<T>(
     },
   });
 
-  // biome-ignore lint/suspicious/noExplicitAny: clack core types don't expose proper key event signature
-  (prompt as any).on("key", (_char: string | undefined, _key: Key) => {
-    if (_char === "b" && !ctxIsFirstPrompt()) {
-      goBack = true;
-      (prompt as any).state = "cancel";
-    }
-  });
-
-  ctxSetLastPromptShownUI(true);
-  const result = await prompt.prompt();
-
-  if (goBack) {
-    return GO_BACK_SYMBOL;
-  }
-
-  return result as T[] | symbol;
+  return runWithNavigation(prompt) as Promise<T[] | symbol>;
 }
 
 export interface NavigableConfirmOptions {
@@ -298,7 +275,6 @@ export interface NavigableConfirmOptions {
 }
 
 export async function navigableConfirm(opts: NavigableConfirmOptions): Promise<boolean | symbol> {
-  let goBack = false;
   const active = opts.active ?? "Yes";
   const inactive = opts.inactive ?? "No";
 
@@ -331,22 +307,7 @@ export async function navigableConfirm(opts: NavigableConfirmOptions): Promise<b
     },
   });
 
-  // biome-ignore lint/suspicious/noExplicitAny: clack core types don't expose proper key event signature
-  (prompt as any).on("key", (_char: string | undefined, _key: Key) => {
-    if (_char === "b" && !ctxIsFirstPrompt()) {
-      goBack = true;
-      (prompt as any).state = "cancel";
-    }
-  });
-
-  ctxSetLastPromptShownUI(true);
-  const result = await prompt.prompt();
-
-  if (goBack) {
-    return GO_BACK_SYMBOL;
-  }
-
-  return result as boolean | symbol;
+  return runWithNavigation(prompt) as Promise<boolean | symbol>;
 }
 
 export interface NavigableTextOptions {
@@ -358,8 +319,6 @@ export interface NavigableTextOptions {
 }
 
 export async function navigableText(opts: NavigableTextOptions): Promise<string | symbol> {
-  let goBack = false;
-
   const prompt = new TextPrompt({
     validate: opts.validate,
     placeholder: opts.placeholder,
@@ -396,22 +355,7 @@ export async function navigableText(opts: NavigableTextOptions): Promise<string 
     },
   });
 
-  // biome-ignore lint/suspicious/noExplicitAny: clack core types don't expose proper key event signature
-  (prompt as any).on("key", (_char: string | undefined, _key: Key) => {
-    if (_char === "b" && !ctxIsFirstPrompt()) {
-      goBack = true;
-      (prompt as any).state = "cancel";
-    }
-  });
-
-  ctxSetLastPromptShownUI(true);
-  const result = await prompt.prompt();
-
-  if (goBack) {
-    return GO_BACK_SYMBOL;
-  }
-
-  return result as string | symbol;
+  return runWithNavigation(prompt) as Promise<string | symbol>;
 }
 
 export interface GroupMultiSelectOption<T> {
@@ -431,7 +375,6 @@ export interface NavigableGroupMultiselectOptions<T> {
 export async function navigableGroupMultiselect<T>(
   opts: NavigableGroupMultiselectOptions<T>,
 ): Promise<T[] | symbol> {
-  let goBack = false;
   const required = opts.required ?? true;
 
   const opt = (
@@ -575,25 +518,8 @@ export async function navigableGroupMultiselect<T>(
     },
   });
 
-  // biome-ignore lint/suspicious/noExplicitAny: clack core types don't expose proper key event signature
-  (prompt as any).on("key", (_char: string | undefined, _key: Key) => {
-    if (_char === "b" && !ctxIsFirstPrompt()) {
-      goBack = true;
-      (prompt as any).state = "cancel";
-    }
-  });
-
-  ctxSetLastPromptShownUI(true);
-  const result = await prompt.prompt();
-
-  if (goBack) {
-    return GO_BACK_SYMBOL;
-  }
-
-  return result as T[] | symbol;
+  return runWithNavigation(prompt) as Promise<T[] | symbol>;
 }
 
-// Re-export isCancel and navigation symbols for convenience
 export { isCancel };
 export { isGoBack, GO_BACK_SYMBOL } from "../utils/navigation";
-// setIsFirstPrompt is already exported at its declaration

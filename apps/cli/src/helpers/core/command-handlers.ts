@@ -92,6 +92,9 @@ export async function createProjectHandler(
           shouldClearDirectory = result.shouldClearDirectory;
         }
       } catch (error) {
+        if (error instanceof UserCancelledError || error instanceof CLIError) {
+          throw error;
+        }
         const elapsedTimeMs = Date.now() - startTime;
         return {
           success: false,
@@ -240,7 +243,7 @@ export async function createProjectHandler(
             relativePath: "",
           };
         }
-        throw error;
+        return;
       }
       if (error instanceof CLIError) {
         if (isSilent()) {
@@ -409,7 +412,8 @@ export async function addAddonsHandler(input: AddInput) {
     outro("Add command completed successfully!");
   } catch (error) {
     if (error instanceof UserCancelledError) {
-      throw error;
+      // Exit cleanly without stack trace
+      return;
     }
     if (error instanceof CLIError) {
       throw error;

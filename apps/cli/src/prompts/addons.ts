@@ -1,10 +1,8 @@
-import { isCancel } from "@clack/prompts";
-
 import { DEFAULT_CONFIG } from "../constants";
 import { type Addons, AddonsSchema, type Auth, type Frontend } from "../types";
 import { getCompatibleAddons, validateAddonCompatibility } from "../utils/compatibility-rules";
 import { exitCancelled } from "../utils/errors";
-import { navigableGroupMultiselect } from "./navigable";
+import { isCancel, navigableGroupMultiselect } from "./navigable";
 
 type AddonOption = {
   value: Addons;

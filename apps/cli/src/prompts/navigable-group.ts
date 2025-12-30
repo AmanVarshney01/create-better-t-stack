@@ -40,49 +40,42 @@ export async function navigableGroup<T>(
   const results = {} as any;
   const promptNames = Object.keys(prompts) as (keyof T)[];
   let currentIndex = 0;
-  // Flag to track if we're in go-back mode
   let goingBack = false;
 
   while (currentIndex < promptNames.length) {
     const name = promptNames[currentIndex];
     const prompt = prompts[name];
 
-    // Set whether we're on the first prompt (disable go-back if so)
     setIsFirstPrompt(currentIndex === 0);
 
-    // Reset the UI shown flag before calling prompt
     setLastPromptShownUI(false);
 
     const result = await prompt({ results })?.catch((e) => {
       throw e;
     });
 
-    // Check for go-back
     if (isGoBack(result)) {
       goingBack = true;
       if (currentIndex > 0) {
-        // Go back to previous prompt
         const prevName = promptNames[currentIndex - 1];
         delete results[prevName];
         currentIndex--;
         continue;
       }
-      // Already at first prompt, can't go back further
       goingBack = false;
       continue;
     }
 
-    // Check for cancel
-    if (typeof opts?.onCancel === "function" && isCancel(result)) {
-      results[name] = "canceled";
-      opts.onCancel({ results });
-      continue;
+    if (isCancel(result)) {
+      if (typeof opts?.onCancel === "function") {
+        results[name] = "canceled";
+        opts.onCancel({ results });
+      }
+      setIsFirstPrompt(false);
+      return results;
     }
 
-    // If we're going back and this prompt didn't show UI (auto-skipped),
-    // continue going back to find a prompt that actually shows UI
     if (goingBack && !didLastPromptShowUI()) {
-      // This prompt auto-completed without showing UI - keep going back
       if (currentIndex > 0) {
         const prevName = promptNames[currentIndex - 1];
         delete results[prevName];
@@ -91,14 +84,12 @@ export async function navigableGroup<T>(
       }
     }
 
-    // Reset going back flag since we either showed UI or hit the start
     goingBack = false;
 
     results[name] = result;
     currentIndex++;
   }
 
-  // Reset the first prompt flag
   setIsFirstPrompt(false);
 
   return results;
