@@ -12,7 +12,7 @@ export async function getPackageManagerChoice(packageManager?: PackageManager) {
   const response = await navigableSelect<PackageManager>({
     message: "Choose package manager",
     options: [
-      { value: "npm", label: "npm", hint: "Node Package Manager" },
+      { value: "npm", label: "npm", hint: "not recommended" },
       {
         value: "pnpm",
         label: "pnpm",

@@ -240,7 +240,7 @@ export async function createProjectHandler(
             relativePath: "",
           };
         }
-        process.exit(0);
+        throw error;
       }
       if (error instanceof CLIError) {
         if (isSilent()) {
@@ -255,7 +255,7 @@ export async function createProjectHandler(
             relativePath: "",
           };
         }
-        process.exit(1);
+        throw error;
       }
       throw error;
     }
@@ -409,10 +409,10 @@ export async function addAddonsHandler(input: AddInput) {
     outro("Add command completed successfully!");
   } catch (error) {
     if (error instanceof UserCancelledError) {
-      process.exit(0);
+      throw error;
     }
     if (error instanceof CLIError) {
-      process.exit(1);
+      throw error;
     }
     handleError(error, "Failed to add addons or deployment");
   }
