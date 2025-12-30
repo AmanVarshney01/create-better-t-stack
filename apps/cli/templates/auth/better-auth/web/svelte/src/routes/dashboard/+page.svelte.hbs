@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { authClient } from '$lib/auth-client';
 	{{#if (eq api "orpc")}}
@@ -7,33 +6,38 @@
 	import { createQuery } from '@tanstack/svelte-query';
 	{{/if}}
 	{{#if (eq payments "polar")}}
-	let customerState: any = null;
+	let customerState = $state<{ activeSubscriptions?: unknown[] } | null>(null);
 	{{/if}}
 
 	const sessionQuery = authClient.useSession();
 
 	{{#if (eq api "orpc")}}
 	const privateDataQuery = createQuery(orpc.privateData.queryOptions());
-    {{/if}}
+	{{/if}}
 
-	onMount(() => {
-		const { data: session, isPending } = $sessionQuery;
-		if (!session && !isPending) {
+	// Reactive redirect - runs when session state changes
+	$effect(() => {
+		if (!$sessionQuery.isPending && !$sessionQuery.data) {
 			goto('/login');
 		}
-		{{#if (eq payments "polar")}}
-		if (session) {
+	});
+
+	{{#if (eq payments "polar")}}
+	// Fetch customer state when session is available
+	$effect(() => {
+		if ($sessionQuery.data) {
 			authClient.customer.state().then(({ data }) => {
 				customerState = data;
 			});
 		}
-		{{/if}}
 	});
+	{{/if}}
 </script>
 
 {#if $sessionQuery.isPending}
 	<div>Loading...</div>
 {:else if !$sessionQuery.data}
+	<div>Redirecting to login...</div>
 {:else}
 	<div>
 		<h1>Dashboard</h1>

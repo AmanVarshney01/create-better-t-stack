@@ -24,7 +24,7 @@
     import { queryClient } from '$lib/orpc';
     import Header from '../components/Header.svelte';
 
-	let { children } = $props();
+	const { children } = $props();
 </script>
 
 <QueryClientProvider client={queryClient}>
@@ -41,7 +41,7 @@
 	import '../app.css';
     import Header from '../components/Header.svelte';
 
-	let { children } = $props();
+	const { children } = $props();
 </script>
 
 <div class="grid h-svh grid-rows-[auto_1fr]">
