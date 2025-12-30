@@ -4,6 +4,7 @@ import fs from "fs-extra";
 import type { ProjectConfig } from "../../types";
 
 import { writeBtsConfig } from "../../utils/bts-config";
+import { isSilent } from "../../utils/context";
 import { exitWithError } from "../../utils/errors";
 import { setupCatalogs } from "../../utils/setup-catalogs";
 import { setupAddons } from "../addons/addons-setup";
@@ -39,12 +40,9 @@ import {
 
 export interface CreateProjectOptions {
   manualDb?: boolean;
-  /** When true, skip all console output (for programmatic API use) */
-  silent?: boolean;
 }
 
 export async function createProject(options: ProjectConfig, cliInput: CreateProjectOptions = {}) {
-  const { silent = false } = cliInput;
   const projectDir = options.projectDir;
   const isConvex = options.backend === "convex";
   const isSelfBackend = options.backend === "self";
@@ -121,7 +119,7 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
 
     await writeBtsConfig(options);
 
-    if (!silent) log.success("Project template successfully scaffolded!");
+    if (!isSilent()) log.success("Project template successfully scaffolded!");
 
     if (options.install) {
       await installDependencies({
@@ -132,7 +130,7 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
 
     await initializeGit(projectDir, options.git);
 
-    if (!silent) {
+    if (!isSilent()) {
       await displayPostInstallInstructions({
         ...options,
         depsInstalled: options.install,
@@ -142,10 +140,10 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
     return projectDir;
   } catch (error) {
     if (error instanceof Error) {
-      if (!silent) console.error(error.stack);
+      if (!isSilent()) console.error(error.stack);
       exitWithError(`Error during project creation: ${error.message}`);
     } else {
-      if (!silent) console.error(error);
+      if (!isSilent()) console.error(error);
       exitWithError(`An unexpected error occurred: ${String(error)}`);
     }
   }

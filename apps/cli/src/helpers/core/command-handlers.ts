@@ -13,8 +13,9 @@ import { getProjectName } from "../../prompts/project-name";
 import { getServerDeploymentToAdd } from "../../prompts/server-deploy";
 import { getDeploymentToAdd } from "../../prompts/web-deploy";
 import { trackProjectCreation } from "../../utils/analytics";
+import { isSilent, runWithContextAsync } from "../../utils/context";
 import { displayConfig } from "../../utils/display-config";
-import { exitWithError, handleError } from "../../utils/errors";
+import { CLIError, exitWithError, handleError, UserCancelledError } from "../../utils/errors";
 import { generateReproducibleCommand } from "../../utils/generate-reproducible-command";
 import { handleDirectoryConflict, setupProjectDirectory } from "../../utils/project-directory";
 import { renderTitle } from "../../utils/render-title";
@@ -32,7 +33,6 @@ import { detectProjectConfig } from "./detect-project-config";
 import { installDependencies } from "./install-dependencies";
 
 export interface CreateHandlerOptions {
-  /** When true, skip all console output (for programmatic API use) */
   silent?: boolean;
 }
 
@@ -41,185 +41,228 @@ export async function createProjectHandler(
   options: CreateHandlerOptions = {},
 ) {
   const { silent = false } = options;
-  const startTime = Date.now();
-  const timeScaffolded = new Date().toISOString();
 
-  if (!silent && input.renderTitle !== false) {
-    renderTitle();
-  }
-  if (!silent) intro(pc.magenta("Creating a new Better-T-Stack project"));
+  return runWithContextAsync({ silent }, async () => {
+    const startTime = Date.now();
+    const timeScaffolded = new Date().toISOString();
 
-  if (!silent && input.yolo) {
-    consola.fatal("YOLO mode enabled - skipping checks. Things may break!");
-  }
-
-  let currentPathInput: string;
-  if (input.yes && input.projectName) {
-    currentPathInput = input.projectName;
-  } else if (input.yes) {
-    const defaultConfig = getDefaultConfig();
-    let defaultName: string = defaultConfig.relativePath;
-    let counter = 1;
-    while (
-      (await fs.pathExists(path.resolve(process.cwd(), defaultName))) &&
-      (await fs.readdir(path.resolve(process.cwd(), defaultName))).length > 0
-    ) {
-      defaultName = `${defaultConfig.projectName}-${counter}`;
-      counter++;
-    }
-    currentPathInput = defaultName;
-  } else {
-    currentPathInput = await getProjectName(input.projectName);
-  }
-
-  let finalPathInput: string;
-  let shouldClearDirectory: boolean;
-
-  try {
-    if (input.directoryConflict) {
-      const result = await handleDirectoryConflictProgrammatically(
-        currentPathInput,
-        input.directoryConflict,
-      );
-      finalPathInput = result.finalPathInput;
-      shouldClearDirectory = result.shouldClearDirectory;
-    } else {
-      const result = await handleDirectoryConflict(currentPathInput);
-      finalPathInput = result.finalPathInput;
-      shouldClearDirectory = result.shouldClearDirectory;
-    }
-  } catch (error) {
-    const elapsedTimeMs = Date.now() - startTime;
-    return {
-      success: false,
-      projectConfig: {
-        projectName: "",
-        projectDir: "",
-        relativePath: "",
-        database: "none",
-        orm: "none",
-        backend: "none",
-        runtime: "none",
-        frontend: [],
-        addons: [],
-        examples: [],
-        auth: "none",
-        payments: "none",
-        git: false,
-        packageManager: "npm",
-        install: false,
-        dbSetup: "none",
-        api: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-      } satisfies ProjectConfig,
-      reproducibleCommand: "",
-      timeScaffolded,
-      elapsedTimeMs,
-      projectDirectory: "",
-      relativePath: "",
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
-
-  const { finalResolvedPath, finalBaseName } = await setupProjectDirectory(
-    finalPathInput,
-    shouldClearDirectory,
-  );
-
-  const originalInput = {
-    ...input,
-    projectDirectory: input.projectName,
-  };
-
-  const providedFlags = getProvidedFlags(originalInput);
-
-  let cliInput = originalInput;
-
-  if (input.template && input.template !== "none") {
-    const templateConfig = getTemplateConfig(input.template);
-    if (templateConfig) {
-      const templateName = input.template.toUpperCase();
-      const templateDescription = getTemplateDescription(input.template);
-      if (!silent) {
-        log.message(pc.bold(pc.cyan(`Using template: ${pc.white(templateName)}`)));
-        log.message(pc.dim(`   ${templateDescription}`));
+    try {
+      if (!isSilent() && input.renderTitle !== false) {
+        renderTitle();
       }
-      const userOverrides: Record<string, unknown> = {};
-      for (const [key, value] of Object.entries(originalInput)) {
-        if (value !== undefined) {
-          userOverrides[key] = value;
+      if (!isSilent()) intro(pc.magenta("Creating a new Better-T-Stack project"));
+
+      if (!isSilent() && input.yolo) {
+        consola.fatal("YOLO mode enabled - skipping checks. Things may break!");
+      }
+
+      let currentPathInput: string;
+      if (input.yes && input.projectName) {
+        currentPathInput = input.projectName;
+      } else if (input.yes) {
+        const defaultConfig = getDefaultConfig();
+        let defaultName: string = defaultConfig.relativePath;
+        let counter = 1;
+        while (
+          (await fs.pathExists(path.resolve(process.cwd(), defaultName))) &&
+          (await fs.readdir(path.resolve(process.cwd(), defaultName))).length > 0
+        ) {
+          defaultName = `${defaultConfig.projectName}-${counter}`;
+          counter++;
+        }
+        currentPathInput = defaultName;
+      } else {
+        currentPathInput = await getProjectName(input.projectName);
+      }
+
+      let finalPathInput: string;
+      let shouldClearDirectory: boolean;
+
+      try {
+        if (input.directoryConflict) {
+          const result = await handleDirectoryConflictProgrammatically(
+            currentPathInput,
+            input.directoryConflict,
+          );
+          finalPathInput = result.finalPathInput;
+          shouldClearDirectory = result.shouldClearDirectory;
+        } else {
+          const result = await handleDirectoryConflict(currentPathInput);
+          finalPathInput = result.finalPathInput;
+          shouldClearDirectory = result.shouldClearDirectory;
+        }
+      } catch (error) {
+        if (error instanceof UserCancelledError || error instanceof CLIError) {
+          throw error;
+        }
+        const elapsedTimeMs = Date.now() - startTime;
+        return {
+          success: false,
+          projectConfig: {
+            projectName: "",
+            projectDir: "",
+            relativePath: "",
+            database: "none",
+            orm: "none",
+            backend: "none",
+            runtime: "none",
+            frontend: [],
+            addons: [],
+            examples: [],
+            auth: "none",
+            payments: "none",
+            git: false,
+            packageManager: "npm",
+            install: false,
+            dbSetup: "none",
+            api: "none",
+            webDeploy: "none",
+            serverDeploy: "none",
+          } satisfies ProjectConfig,
+          reproducibleCommand: "",
+          timeScaffolded,
+          elapsedTimeMs,
+          projectDirectory: "",
+          relativePath: "",
+          error: error instanceof Error ? error.message : String(error),
+        };
+      }
+
+      const { finalResolvedPath, finalBaseName } = await setupProjectDirectory(
+        finalPathInput,
+        shouldClearDirectory,
+      );
+
+      const originalInput = {
+        ...input,
+        projectDirectory: input.projectName,
+      };
+
+      const providedFlags = getProvidedFlags(originalInput);
+
+      let cliInput = originalInput;
+
+      if (input.template && input.template !== "none") {
+        const templateConfig = getTemplateConfig(input.template);
+        if (templateConfig) {
+          const templateName = input.template.toUpperCase();
+          const templateDescription = getTemplateDescription(input.template);
+          if (!isSilent()) {
+            log.message(pc.bold(pc.cyan(`Using template: ${pc.white(templateName)}`)));
+            log.message(pc.dim(`   ${templateDescription}`));
+          }
+          const userOverrides: Record<string, unknown> = {};
+          for (const [key, value] of Object.entries(originalInput)) {
+            if (value !== undefined) {
+              userOverrides[key] = value;
+            }
+          }
+          cliInput = {
+            ...templateConfig,
+            ...userOverrides,
+            template: input.template,
+            projectDirectory: originalInput.projectDirectory,
+          };
         }
       }
-      cliInput = {
-        ...templateConfig,
-        ...userOverrides,
-        template: input.template,
-        projectDirectory: originalInput.projectDirectory,
+
+      let config: ProjectConfig;
+      if (cliInput.yes) {
+        const flagConfig = processProvidedFlagsWithoutValidation(cliInput, finalBaseName);
+
+        config = {
+          ...getDefaultConfig(),
+          ...flagConfig,
+          projectName: finalBaseName,
+          projectDir: finalResolvedPath,
+          relativePath: finalPathInput,
+        };
+
+        validateConfigCompatibility(config, providedFlags, cliInput);
+
+        if (!isSilent()) {
+          log.info(pc.yellow("Using default/flag options (config prompts skipped):"));
+          log.message(displayConfig(config));
+        }
+      } else {
+        const flagConfig = processAndValidateFlags(cliInput, providedFlags, finalBaseName);
+        const { projectName: _projectNameFromFlags, ...otherFlags } = flagConfig;
+
+        if (!isSilent() && Object.keys(otherFlags).length > 0) {
+          log.info(pc.yellow("Using these pre-selected options:"));
+          log.message(displayConfig(otherFlags));
+          log.message("");
+        }
+
+        config = await gatherConfig(flagConfig, finalBaseName, finalResolvedPath, finalPathInput);
+      }
+
+      await createProject(config, {
+        manualDb: cliInput.manualDb ?? input.manualDb,
+      });
+
+      const reproducibleCommand = generateReproducibleCommand(config);
+      if (!isSilent()) {
+        log.success(
+          pc.blue(
+            `You can reproduce this setup with the following command:\n${reproducibleCommand}`,
+          ),
+        );
+      }
+
+      await trackProjectCreation(config, input.disableAnalytics);
+
+      const elapsedTimeMs = Date.now() - startTime;
+      if (!isSilent()) {
+        const elapsedTimeInSeconds = (elapsedTimeMs / 1000).toFixed(2);
+        outro(
+          pc.magenta(`Project created successfully in ${pc.bold(elapsedTimeInSeconds)} seconds!`),
+        );
+      }
+
+      return {
+        success: true,
+        projectConfig: config,
+        reproducibleCommand,
+        timeScaffolded,
+        elapsedTimeMs,
+        projectDirectory: config.projectDir,
+        relativePath: config.relativePath,
       };
+    } catch (error) {
+      if (error instanceof UserCancelledError) {
+        if (isSilent()) {
+          return {
+            success: false,
+            error: error.message,
+            projectConfig: {} as ProjectConfig,
+            reproducibleCommand: "",
+            timeScaffolded,
+            elapsedTimeMs: Date.now() - startTime,
+            projectDirectory: "",
+            relativePath: "",
+          };
+        }
+        return;
+      }
+      if (error instanceof CLIError) {
+        if (isSilent()) {
+          return {
+            success: false,
+            error: error.message,
+            projectConfig: {} as ProjectConfig,
+            reproducibleCommand: "",
+            timeScaffolded,
+            elapsedTimeMs: Date.now() - startTime,
+            projectDirectory: "",
+            relativePath: "",
+          };
+        }
+        throw error;
+      }
+      throw error;
     }
-  }
-
-  let config: ProjectConfig;
-  if (cliInput.yes) {
-    const flagConfig = processProvidedFlagsWithoutValidation(cliInput, finalBaseName);
-
-    config = {
-      ...getDefaultConfig(),
-      ...flagConfig,
-      projectName: finalBaseName,
-      projectDir: finalResolvedPath,
-      relativePath: finalPathInput,
-    };
-
-    validateConfigCompatibility(config, providedFlags, cliInput);
-
-    if (!silent) {
-      log.info(pc.yellow("Using default/flag options (config prompts skipped):"));
-      log.message(displayConfig(config));
-    }
-  } else {
-    const flagConfig = processAndValidateFlags(cliInput, providedFlags, finalBaseName);
-    const { projectName: _projectNameFromFlags, ...otherFlags } = flagConfig;
-
-    if (!silent && Object.keys(otherFlags).length > 0) {
-      log.info(pc.yellow("Using these pre-selected options:"));
-      log.message(displayConfig(otherFlags));
-      log.message("");
-    }
-
-    config = await gatherConfig(flagConfig, finalBaseName, finalResolvedPath, finalPathInput);
-  }
-
-  await createProject(config, {
-    manualDb: cliInput.manualDb ?? input.manualDb,
-    silent,
   });
-
-  const reproducibleCommand = generateReproducibleCommand(config);
-  if (!silent) {
-    log.success(
-      pc.blue(`You can reproduce this setup with the following command:\n${reproducibleCommand}`),
-    );
-  }
-
-  await trackProjectCreation(config, input.disableAnalytics);
-
-  const elapsedTimeMs = Date.now() - startTime;
-  if (!silent) {
-    const elapsedTimeInSeconds = (elapsedTimeMs / 1000).toFixed(2);
-    outro(pc.magenta(`Project created successfully in ${pc.bold(elapsedTimeInSeconds)} seconds!`));
-  }
-
-  return {
-    success: true,
-    projectConfig: config,
-    reproducibleCommand,
-    timeScaffolded,
-    elapsedTimeMs,
-    projectDirectory: config.projectDir,
-    relativePath: config.relativePath,
-  };
 }
 
 async function handleDirectoryConflictProgrammatically(
@@ -368,6 +411,13 @@ export async function addAddonsHandler(input: AddInput) {
 
     outro("Add command completed successfully!");
   } catch (error) {
+    if (error instanceof UserCancelledError) {
+      // Exit cleanly without stack trace
+      return;
+    }
+    if (error instanceof CLIError) {
+      throw error;
+    }
     handleError(error, "Failed to add addons or deployment");
   }
 }

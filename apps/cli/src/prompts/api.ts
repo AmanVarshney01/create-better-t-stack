@@ -1,9 +1,8 @@
-import { isCancel, select } from "@clack/prompts";
-
 import type { API, Backend, Frontend } from "../types";
 
 import { allowedApisForFrontends } from "../utils/compatibility-rules";
 import { exitCancelled } from "../utils/errors";
+import { isCancel, navigableSelect } from "./navigable";
 
 export async function getApiChoice(
   Api?: API | undefined,
@@ -39,7 +38,7 @@ export async function getApiChoice(
           },
   );
 
-  const apiType = await select<API>({
+  const apiType = await navigableSelect<API>({
     message: "Select API type",
     options: apiOptions,
     initialValue: apiOptions[0].value,

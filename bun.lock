@@ -26,6 +26,7 @@
       },
       "dependencies": {
         "@better-t-stack/types": "workspace:*",
+        "@clack/core": "^0.5.0",
         "@clack/prompts": "^1.0.0-alpha.8",
         "@orpc/server": "^1.13.0",
         "consola": "^3.4.2",
