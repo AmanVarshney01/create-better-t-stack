@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import * as FilesComponents from "fumadocs-ui/components/files";
 import * as TabsComponents from "fumadocs-ui/components/tabs";
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/layouts/notebook/page";
@@ -6,7 +8,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { LLMCopyButton, ViewOptions } from "@/components/ai/page-actions";
-import { source } from "@/lib/source";
+import { getPageImage, source } from "@/lib/source";
 
 export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const params = await props.params;
@@ -60,12 +62,29 @@ export async function generateStaticParams() {
   return source.generateParams();
 }
 
-export async function generateMetadata({ params }: PageProps<"/docs/[[...slug]]">) {
+export async function generateMetadata({
+  params,
+}: PageProps<"/docs/[[...slug]]">): Promise<Metadata> {
   const { slug = [] } = await params;
   const page = source.getPage(slug);
   if (!page) notFound();
+
+  const image = getPageImage(page);
+
   return {
     title: page.data.title,
     description: page.data.description,
+    openGraph: {
+      title: page.data.title,
+      description: page.data.description,
+      type: "article",
+      images: image.url,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: page.data.title,
+      description: page.data.description,
+      images: image.url,
+    },
   };
 }
