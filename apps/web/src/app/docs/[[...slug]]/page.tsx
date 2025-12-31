@@ -1,6 +1,7 @@
 import * as TabsComponents from "fumadocs-ui/components/tabs";
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/layouts/notebook/page";
 import defaultMdxComponents from "fumadocs-ui/mdx";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { LLMCopyButton, ViewOptions } from "@/components/ai/page-actions";
@@ -17,6 +18,29 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
     <DocsPage toc={page.data.toc} tableOfContent={{ style: "clerk" }} full={page.data.full}>
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
+      {page.data.author && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span>by</span>
+          {page.data.author.url ? (
+            <Link
+              href={page.data.author.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-fd-primary hover:underline"
+            >
+              {page.data.author.name}
+            </Link>
+          ) : (
+            <span className="font-medium">{page.data.author.name}</span>
+          )}
+          {page.data.date && (
+            <>
+              <span>·</span>
+              <time dateTime={page.data.date}>{page.data.date}</time>
+            </>
+          )}
+        </div>
+      )}
       <div className="flex flex-row items-center gap-2 border-b pt-2 pb-6">
         <LLMCopyButton markdownUrl={`${page.url}.mdx`} />
         <ViewOptions
