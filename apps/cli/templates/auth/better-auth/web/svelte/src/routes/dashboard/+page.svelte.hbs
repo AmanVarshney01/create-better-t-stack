@@ -15,7 +15,6 @@
 	const privateDataQuery = createQuery(orpc.privateData.queryOptions());
 	{{/if}}
 
-	// Reactive redirect - runs when session state changes
 	$effect(() => {
 		if (!$sessionQuery.isPending && !$sessionQuery.data) {
 			goto('/login');
@@ -23,7 +22,6 @@
 	});
 
 	{{#if (eq payments "polar")}}
-	// Fetch customer state when session is available
 	$effect(() => {
 		if ($sessionQuery.data) {
 			authClient.customer.state().then(({ data }) => {
