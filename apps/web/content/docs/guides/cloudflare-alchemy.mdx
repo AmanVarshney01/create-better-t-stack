@@ -252,18 +252,22 @@ bun run deploy --env-file .env.prod
 
 Each stage stores its state in a separate directory:
 
-```
-.alchemy/
-├── dev/              # Development resources
-│   ├── web.json
-│   └── server.json
-├── staging/          # Staging resources
-│   ├── web.json
-│   └── server.json
-└── prod/             # Production resources
-    ├── web.json
-    └── server.json
-```
+<Files>
+  <Folder name=".alchemy" defaultOpen>
+    <Folder name="dev" defaultOpen>
+      <File name="web.json" />
+      <File name="server.json" />
+    </Folder>
+    <Folder name="staging">
+      <File name="web.json" />
+      <File name="server.json" />
+    </Folder>
+    <Folder name="prod">
+      <File name="web.json" />
+      <File name="server.json" />
+    </Folder>
+  </Folder>
+</Files>
 
 This ensures complete isolation between environments.
 

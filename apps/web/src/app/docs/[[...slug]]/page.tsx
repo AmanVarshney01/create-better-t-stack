@@ -1,3 +1,4 @@
+import * as FilesComponents from "fumadocs-ui/components/files";
 import * as TabsComponents from "fumadocs-ui/components/tabs";
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/layouts/notebook/page";
 import defaultMdxComponents from "fumadocs-ui/mdx";
@@ -49,7 +50,7 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
         />
       </div>
       <DocsBody>
-        <MDX components={{ ...defaultMdxComponents, ...TabsComponents }} />
+        <MDX components={{ ...defaultMdxComponents, ...TabsComponents, ...FilesComponents }} />
       </DocsBody>
     </DocsPage>
   );

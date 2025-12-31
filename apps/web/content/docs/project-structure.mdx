@@ -11,18 +11,23 @@ Better-T-Stack CLI scaffolds a monorepo with `apps/*` and, when needed, `package
 
 At the repository root you will see:
 
-```
-/
-├── apps/                  # Applications (web, server, native, docs)
-├── packages/             # Only when needed (e.g. Convex backend)
-├── package.json          # Root package.json (scripts updated by CLI)
-├── bts.jsonc             # Better‑T Stack configuration (always written)
-├── turbo.json            # Only when addon "turborepo" is selected
-├── pnpm-workspace.yaml   # Only when packageManager=pnpm
-├── bunfig.toml           # Only when packageManager=bun
-├── .npmrc                # pnpm + (native or nuxt) for alias resolution
-└── README.md             # Generated quickstart
-```
+<Files>
+  <Folder name="/" defaultOpen>
+    <Folder name="apps">
+      <File name="..." />
+    </Folder>
+    <Folder name="packages">
+      <File name="..." />
+    </Folder>
+    <File name="package.json" />
+    <File name="bts.jsonc" />
+    <File name="turbo.json" />
+    <File name="pnpm-workspace.yaml" />
+    <File name="bunfig.toml" />
+    <File name=".npmrc" />
+    <File name="README.md" />
+  </Folder>
+</Files>
 
 Notes:
 
@@ -33,77 +38,112 @@ Notes:
 
 ### Non-Convex backends (hono, express, fastify, elysia, next)
 
-```
-my-app/
-├── apps/
-│   ├── web/           # Present if you picked a web framework
-│   ├── server/        # Backend API (framework depends on your choice)
-│   ├── native/        # Present if you picked React Native (Expo)
-│   └── docs/          # Present if you picked the Starlight/Fumadocs addon
-└── packages/          # May exist but not used by default
-```
+<Files>
+  <Folder name="my-app" defaultOpen>
+    <Folder name="apps" defaultOpen>
+      <Folder name="web">
+        <File name="..." />
+      </Folder>
+      <Folder name="server">
+        <File name="..." />
+      </Folder>
+      <Folder name="native">
+        <File name="..." />
+      </Folder>
+      <Folder name="docs">
+        <File name="..." />
+      </Folder>
+    </Folder>
+    <Folder name="packages">
+      <File name="..." />
+    </Folder>
+  </Folder>
+</Files>
 
 ### Convex backend
 
-```
-my-app/
-├── apps/
-│   ├── web/           # Present if you picked a web framework
-│   ├── native/        # Present if you picked React Native (Expo)
-│   └── docs/          # Present if you picked the Starlight/Fumadocs addon
-└── packages/
-    └── backend/       # Convex functions, schema and config
-```
+<Files>
+  <Folder name="my-app" defaultOpen>
+    <Folder name="apps" defaultOpen>
+      <Folder name="web">
+        <File name="..." />
+      </Folder>
+      <Folder name="native">
+        <File name="..." />
+      </Folder>
+      <Folder name="docs">
+        <File name="..." />
+      </Folder>
+    </Folder>
+    <Folder name="packages" defaultOpen>
+      <Folder name="backend">
+        <File name="..." />
+      </Folder>
+    </Folder>
+  </Folder>
+</Files>
 
 ## Frontend Structure (apps/web)
 
-The structure varies by framework. Items marked “(auth)” or “(API)” appear only when those options are enabled.
+The structure varies by framework. Items marked "(auth)" or "(API)" appear only when those options are enabled.
 
 ### React with TanStack Router
 
-```
-apps/web/
-├── src/
-│   ├── components/
-│   │   ├── ui/                 # shadcn/ui primitives (from web base)
-│   │   ├── header.tsx
-│   │   ├── loader.tsx
-│   │   ├── mode-toggle.tsx
-│   │   └── theme-provider.tsx
-│   ├── routes/
-│   │   ├── __root.tsx          # Root layout
-│   │   └── index.tsx           # Home
-│   ├── lib/
-│   │   └── utils.ts
-│   ├── utils/
-│   │   └── trpc.ts (API=trpc) | orpc.ts (API=orpc)
-│   ├── main.tsx
-│   └── index.css
-├── index.html
-├── components.json            # shadcn/ui config
-├── tsconfig.json
-├── vite.config.ts
-└── package.json
-```
+<Files>
+  <Folder name="apps/web" defaultOpen>
+    <Folder name="src" defaultOpen>
+      <Folder name="components" defaultOpen>
+        <Folder name="ui">
+          <File name="..." />
+        </Folder>
+        <File name="header.tsx" />
+        <File name="loader.tsx" />
+        <File name="mode-toggle.tsx" />
+        <File name="theme-provider.tsx" />
+      </Folder>
+      <Folder name="routes">
+        <File name="__root.tsx" />
+        <File name="index.tsx" />
+      </Folder>
+      <Folder name="lib">
+        <File name="utils.ts" />
+      </Folder>
+      <Folder name="utils">
+        <File name="trpc.ts" />
+      </Folder>
+      <File name="main.tsx" />
+      <File name="index.css" />
+    </Folder>
+    <File name="index.html" />
+    <File name="components.json" />
+    <File name="tsconfig.json" />
+    <File name="vite.config.ts" />
+    <File name="package.json" />
+  </Folder>
+</Files>
 
 ### Next.js
 
-```
-apps/web/
-├── src/
-│   ├── app/
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   └── components/
-│       ├── mode-toggle.tsx
-│       ├── providers.tsx
-│       └── theme-provider.tsx
-├── components.json
-├── next.config.ts
-├── postcss.config.mjs
-├── tsconfig.json
-└── package.json
-```
+<Files>
+  <Folder name="apps/web" defaultOpen>
+    <Folder name="src" defaultOpen>
+      <Folder name="app">
+        <File name="layout.tsx" />
+        <File name="page.tsx" />
+      </Folder>
+      <Folder name="components">
+        <File name="mode-toggle.tsx" />
+        <File name="providers.tsx" />
+        <File name="theme-provider.tsx" />
+      </Folder>
+    </Folder>
+    <File name="components.json" />
+    <File name="next.config.ts" />
+    <File name="postcss.config.mjs" />
+    <File name="tsconfig.json" />
+    <File name="package.json" />
+  </Folder>
+</Files>
 
 Notes:
 
@@ -116,47 +156,56 @@ The server structure depends on your backend choice:
 
 ### Hono backend
 
-```
-apps/server/
-├── src/
-│   ├── routers/
-│   │   └── index.ts          # Base router
-│   └── index.ts              # Hono app entry
-├── package.json
-└── tsconfig.json
-```
+<Files>
+  <Folder name="apps/server" defaultOpen>
+    <Folder name="src" defaultOpen>
+      <Folder name="routers">
+        <File name="index.ts" />
+      </Folder>
+      <File name="index.ts" />
+    </Folder>
+    <File name="package.json" />
+    <File name="tsconfig.json" />
+  </Folder>
+</Files>
 
 ### Express / Fastify / Elysia
 
-```
-apps/server/
-├── src/
-│   └── index.ts              # Framework entry
-├── package.json
-└── tsconfig.json
-```
+<Files>
+  <Folder name="apps/server" defaultOpen>
+    <Folder name="src" defaultOpen>
+      <File name="index.ts" />
+    </Folder>
+    <File name="package.json" />
+    <File name="tsconfig.json" />
+  </Folder>
+</Files>
 
 ### Next (backend)
 
-```
-apps/server/
-├── src/
-│   ├── app/
-│   │   └── route.ts          # App Router endpoint
-│   └── middleware.ts
-├── next.config.ts
-├── tsconfig.json
-└── package.json
-```
+<Files>
+  <Folder name="apps/server" defaultOpen>
+    <Folder name="src" defaultOpen>
+      <Folder name="app">
+        <File name="route.ts" />
+      </Folder>
+      <File name="middleware.ts" />
+    </Folder>
+    <File name="next.config.ts" />
+    <File name="tsconfig.json" />
+    <File name="package.json" />
+  </Folder>
+</Files>
 
 ### Workers runtime (optional)
 
-When `runtime=workers`, you’ll also get:
+When `runtime=workers`, you'll also get:
 
-```
-apps/server/
-└── wrangler.jsonc            # Cloudflare Workers config (template)
-```
+<Files>
+  <Folder name="apps/server" defaultOpen>
+    <File name="wrangler.jsonc" />
+  </Folder>
+</Files>
 
 API and auth scaffolding (conditional):
 
@@ -170,30 +219,44 @@ Added only when you selected a database and ORM:
 
 ### Drizzle ORM
 
-```
-apps/server/
-├── src/db/
-│   └── index.ts              # Database connection
-├── drizzle.config.ts         # Drizzle configuration
-└── drizzle/                  # Generated migrations (after you run commands)
-```
+<Files>
+  <Folder name="apps/server" defaultOpen>
+    <Folder name="src">
+      <Folder name="db">
+        <File name="index.ts" />
+      </Folder>
+    </Folder>
+    <File name="drizzle.config.ts" />
+    <Folder name="drizzle">
+      <File name="..." />
+    </Folder>
+  </Folder>
+</Files>
 
 ### Prisma ORM
 
-```
-apps/server/
-└── prisma/
-    ├── schema.prisma         # Database schema
-    └── migrations/           # Generated after running Prisma commands
-```
+<Files>
+  <Folder name="apps/server" defaultOpen>
+    <Folder name="prisma" defaultOpen>
+      <File name="schema.prisma" />
+      <Folder name="migrations">
+        <File name="..." />
+      </Folder>
+    </Folder>
+  </Folder>
+</Files>
 
 ### Mongoose (MongoDB)
 
-```
-apps/server/
-└── src/db/
-    └── index.ts              # Mongoose connection
-```
+<Files>
+  <Folder name="apps/server" defaultOpen>
+    <Folder name="src">
+      <Folder name="db">
+        <File name="index.ts" />
+      </Folder>
+    </Folder>
+  </Folder>
+</Files>
 
 ### Auth + DB
 
@@ -211,19 +274,29 @@ If `dbSetup=docker`, a `docker-compose.yml` is added in `apps/server/` for your 
 
 Created only when you include React Native (NativeWind or Unistyles):
 
-```
-apps/native/
-├── app/                 # App screens
-│   ├── (tabs)/         # Tab navigation
-│   ├── _layout.tsx     # Root layout
-│   └── index.tsx       # Home screen
-├── components/         # React Native components
-├── lib/               # Utilities
-├── assets/            # Images, fonts
-├── app.json          # Expo configuration
-├── package.json      # Dependencies
-└── tsconfig.json     # TypeScript config
-```
+<Files>
+  <Folder name="apps/native" defaultOpen>
+    <Folder name="app" defaultOpen>
+      <Folder name="(tabs)">
+        <File name="..." />
+      </Folder>
+      <File name="_layout.tsx" />
+      <File name="index.tsx" />
+    </Folder>
+    <Folder name="components">
+      <File name="..." />
+    </Folder>
+    <Folder name="lib">
+      <File name="..." />
+    </Folder>
+    <Folder name="assets">
+      <File name="..." />
+    </Folder>
+    <File name="app.json" />
+    <File name="package.json" />
+    <File name="tsconfig.json" />
+  </Folder>
+</Files>
 
 If an API is selected, a client utility is added:
 
@@ -234,16 +307,23 @@ If an API is selected, a client utility is added:
 
 When using Starlight or Fumadocs addon:
 
-```
-apps/docs/
-├── src/
-│   ├── content/        # Documentation content
-│   │   └── docs/       # Doc pages
-│   └── pages/          # Astro pages (Starlight)
-├── astro.config.mjs    # Astro config (Starlight)
-├── package.json
-└── tsconfig.json
-```
+<Files>
+  <Folder name="apps/docs" defaultOpen>
+    <Folder name="src" defaultOpen>
+      <Folder name="content">
+        <Folder name="docs">
+          <File name="..." />
+        </Folder>
+      </Folder>
+      <Folder name="pages">
+        <File name="..." />
+      </Folder>
+    </Folder>
+    <File name="astro.config.mjs" />
+    <File name="package.json" />
+    <File name="tsconfig.json" />
+  </Folder>
+</Files>
 
 ## Configuration Files
 
@@ -294,10 +374,13 @@ Generated only if you chose the Turborepo addon.
 
 By default, no shared packages are created. You will see `packages/backend` only when using the Convex backend. You can add more packages manually as your repo grows.
 
-```
-packages/
-└── backend/            # Only with Convex backend
-```
+<Files>
+  <Folder name="packages" defaultOpen>
+    <Folder name="backend">
+      <File name="..." />
+    </Folder>
+  </Folder>
+</Files>
 
 ## Development Scripts
 
@@ -349,4 +432,4 @@ Notes:
 - **Extras**: `pnpm-workspace.yaml`, `bunfig.toml`, or `.npmrc` added based on package manager and choices
 - **Deploy**: Workers deploy adds `wrangler.jsonc` templates to the appropriate app(s)
 
-This reflects the actual files written by the CLI so new projects match what’s documented here.
+This reflects the actual files written by the CLI so new projects match what's documented here.
