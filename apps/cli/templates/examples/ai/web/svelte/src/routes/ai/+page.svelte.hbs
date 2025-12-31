@@ -10,7 +10,7 @@
 		}),
 	});
 
-	let messagesEndElement: HTMLDivElement | null = null;
+	let messagesEndElement: HTMLDivElement | null = $state(null);
 
 	$effect(() => {
 		if (chat.messages.length > 0) {
