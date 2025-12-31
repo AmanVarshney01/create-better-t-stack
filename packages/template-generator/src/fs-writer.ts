@@ -1,0 +1,91 @@
+/**
+ * Filesystem Writer - Node.js only module
+ * Writes VirtualFileTree to real filesystem
+ */
+
+import * as fs from "node:fs";
+import * as path from "node:path";
+
+import type { VirtualFileTree, VirtualNode, VirtualFile, VirtualDirectory } from "./types";
+
+/**
+ * Ensure directory exists (recursive mkdir)
+ */
+async function ensureDir(dirPath: string): Promise<void> {
+  await fs.promises.mkdir(dirPath, { recursive: true });
+}
+
+/**
+ * Write a VirtualFileTree to the real filesystem
+ */
+export async function writeTreeToFilesystem(tree: VirtualFileTree, destDir: string): Promise<void> {
+  await writeNode(tree.root, destDir, "");
+}
+
+/**
+ * Recursively write a VirtualNode to the filesystem
+ */
+async function writeNode(node: VirtualNode, baseDir: string, relativePath: string): Promise<void> {
+  const fullPath = path.join(baseDir, relativePath, node.name);
+
+  if (node.type === "file") {
+    const file = node as VirtualFile;
+    await ensureDir(path.dirname(fullPath));
+
+    // Skip binary placeholders
+    if (file.content === "[Binary file]") {
+      return;
+    }
+
+    await fs.promises.writeFile(fullPath, file.content, "utf-8");
+  } else {
+    const dir = node as VirtualDirectory;
+    await ensureDir(fullPath);
+
+    for (const child of dir.children) {
+      await writeNode(child, baseDir, path.join(relativePath, node.name));
+    }
+  }
+}
+
+/**
+ * Write only specific files from a VirtualFileTree
+ * Useful for partial updates or selective file generation
+ */
+export async function writeSelectedFiles(
+  tree: VirtualFileTree,
+  destDir: string,
+  filter: (filePath: string) => boolean,
+): Promise<string[]> {
+  const writtenFiles: string[] = [];
+  await writeSelectedNode(tree.root, destDir, "", filter, writtenFiles);
+  return writtenFiles;
+}
+
+async function writeSelectedNode(
+  node: VirtualNode,
+  baseDir: string,
+  relativePath: string,
+  filter: (filePath: string) => boolean,
+  writtenFiles: string[],
+): Promise<void> {
+  const nodePath = relativePath ? `${relativePath}/${node.name}` : node.name;
+
+  if (node.type === "file") {
+    if (filter(nodePath)) {
+      const file = node as VirtualFile;
+      const fullPath = path.join(baseDir, nodePath);
+      await ensureDir(path.dirname(fullPath));
+
+      if (file.content !== "[Binary file]") {
+        await fs.promises.writeFile(fullPath, file.content, "utf-8");
+        writtenFiles.push(nodePath);
+      }
+    }
+  } else {
+    const dir = node as VirtualDirectory;
+    for (const child of dir.children) {
+      await writeSelectedNode(child, baseDir, nodePath, filter, writtenFiles);
+    }
+  }
+}

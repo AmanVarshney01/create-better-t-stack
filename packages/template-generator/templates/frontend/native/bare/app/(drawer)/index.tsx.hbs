@@ -1,0 +1,234 @@
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+import { Container } from "@/components/container";
+import { useColorScheme } from "@/lib/use-color-scheme";
+import { NAV_THEME } from "@/lib/constants";
+{{#if (eq api "orpc")}}
+import { useQuery } from "@tanstack/react-query";
+import { orpc } from "@/utils/orpc";
+{{/if}}
+{{#if (eq api "trpc")}}
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
+{{/if}}
+{{#if (and (eq backend "convex") (eq auth "clerk"))}}
+import { Link } from "expo-router";
+import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
+import { api } from "@{{ projectName }}/backend/convex/_generated/api";
+import { useUser } from "@clerk/clerk-expo";
+import { SignOutButton } from "@/components/sign-out-button";
+{{else if (and (eq backend "convex") (eq auth "better-auth"))}}
+import { useConvexAuth, useQuery } from "convex/react";
+import { api } from "@{{ projectName }}/backend/convex/_generated/api";
+import { authClient } from "@/lib/auth-client";
+import { SignIn } from "@/components/sign-in";
+import { SignUp } from "@/components/sign-up";
+{{else if (eq backend "convex")}}
+import { useQuery } from "convex/react";
+import { api } from "@{{ projectName }}/backend/convex/_generated/api";
+{{/if}}
+
+export default function Home() {
+const { colorScheme } = useColorScheme();
+const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
+{{#if (eq api "orpc")}}
+const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+{{/if}}
+{{#if (eq api "trpc")}}
+const healthCheck = useQuery(trpc.healthCheck.queryOptions());
+{{/if}}
+{{#if (and (eq backend "convex") (eq auth "clerk"))}}
+const { user } = useUser();
+const healthCheck = useQuery(api.healthCheck.get);
+const privateData = useQuery(api.privateData.get);
+{{else if (and (eq backend "convex") (eq auth "better-auth"))}}
+const healthCheck = useQuery(api.healthCheck.get);
+const { isAuthenticated } = useConvexAuth();
+const user = useQuery(api.auth.getCurrentUser, isAuthenticated ? {} : "skip");
+{{else if (eq backend "convex")}}
+const healthCheck = useQuery(api.healthCheck.get);
+{{/if}}
+
+return (
+<Container>
+  <ScrollView style={styles.scrollView}>
+    <View style={styles.content}>
+      <Text style={[styles.title, { color: theme.text }]}>
+        BETTER T STACK
+      </Text>
+
+      {{#unless (and (eq backend "convex") (eq auth "better-auth"))}}
+      <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        {{#if (eq backend "convex")}}
+        <View style={styles.statusRow}>
+          <View style={[styles.statusIndicator, { backgroundColor: healthCheck ? "#10b981" : "#f59e0b" }]} />
+          <View style={styles.statusContent}>
+            <Text style={[styles.statusTitle, { color: theme.text }]}>
+              Convex
+            </Text>
+            <Text style={[styles.statusText, { color: theme.text, opacity: 0.7 }]}>
+              {healthCheck === undefined
+              ? "Checking..."
+              : healthCheck === "OK"
+              ? "Connected to API"
+              : "API Disconnected"}
+            </Text>
+          </View>
+        </View>
+        {{else}}
+        {{#unless (eq api "none")}}
+        <View style={styles.statusRow}>
+          <View style={[styles.statusIndicator, { backgroundColor: healthCheck.data ? "#10b981" : "#f59e0b" }]} />
+          <View style={styles.statusContent}>
+            <Text style={[styles.statusTitle, { color: theme.text }]}>
+              {{#if (eq api "orpc")}}ORPC{{else}}TRPC{{/if}}
+            </Text>
+            <Text style={[styles.statusText, { color: theme.text, opacity: 0.7 }]}>
+              {healthCheck.isLoading
+              ? "Checking connection..."
+              : healthCheck.data
+              ? "All systems operational"
+              : "Service unavailable"}
+            </Text>
+          </View>
+        </View>
+        {{/unless}}
+        {{/if}}
+      </View>
+      {{/unless}}
+
+      {{#if (and (eq backend "convex") (eq auth "clerk"))}}
+      <Authenticated>
+        <Text style=\{{ color: theme.text }}>Hello {user?.emailAddresses[0].emailAddress}</Text>
+        <Text style=\{{ color: theme.text }}>Private Data: {privateData?.message}</Text>
+        <SignOutButton />
+      </Authenticated>
+      <Unauthenticated>
+        <Link href="/(auth)/sign-in">
+        <Text style=\{{ color: theme.primary }}>Sign in</Text>
+        </Link>
+        <Link href="/(auth)/sign-up">
+        <Text style=\{{ color: theme.primary }}>Sign up</Text>
+        </Link>
+      </Unauthenticated>
+      <AuthLoading>
+        <Text style=\{{ color: theme.text }}>Loading...</Text>
+      </AuthLoading>
+      {{/if}}
+
+      {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
+      {user ? (
+      <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={styles.userHeader}>
+          <Text style={[styles.userText, { color: theme.text }]}>
+            Welcome, <Text style={styles.userName}>{user.name}</Text>
+          </Text>
+        </View>
+        <Text style={[styles.userEmail, { color: theme.text, opacity: 0.7 }]}>
+          {user.email}
+        </Text>
+        <TouchableOpacity style={[styles.signOutButton, { backgroundColor: theme.notification }]} onPress={()=> {
+          authClient.signOut();
+          }}
+          >
+          <Text style={styles.signOutText}>Sign Out</Text>
+        </TouchableOpacity>
+      </View>
+      ) : null}
+      <View style={[styles.statusCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Text style={[styles.statusCardTitle, { color: theme.text }]}>
+          API Status
+        </Text>
+        <View style={styles.statusRow}>
+          <View style={[styles.statusIndicator, { backgroundColor: healthCheck ? "#10b981" : "#ef4444" }]} />
+          <Text style={[styles.statusText, { color: theme.text, opacity: 0.7 }]}>
+            {healthCheck === undefined
+            ? "Checking..."
+            : healthCheck === "OK"
+            ? "Connected to API"
+            : "API Disconnected"}
+          </Text>
+        </View>
+      </View>
+      {!user && (
+      <>
+        <SignIn />
+        <SignUp />
+      </>
+      )}
+      {{/if}}
+    </View>
+  </ScrollView>
+</Container>
+);
+}
+
+const styles = StyleSheet.create({
+scrollView: {
+flex: 1,
+},
+content: {
+padding: 16,
+},
+title: {
+fontSize: 24,
+fontWeight: "bold",
+marginBottom: 16,
+},
+card: {
+padding: 16,
+marginBottom: 16,
+borderWidth: 1,
+},
+statusRow: {
+flexDirection: "row",
+alignItems: "center",
+gap: 8,
+},
+statusIndicator: {
+height: 8,
+width: 8,
+},
+statusContent: {
+flex: 1,
+},
+statusTitle: {
+fontSize: 14,
+fontWeight: "bold",
+},
+statusText: {
+fontSize: 12,
+},
+userCard: {
+marginBottom: 16,
+padding: 16,
+borderWidth: 1,
+},
+userHeader: {
+marginBottom: 8,
+},
+userText: {
+fontSize: 16,
+},
+userName: {
+fontWeight: "bold",
+},
+userEmail: {
+fontSize: 14,
+marginBottom: 12,
+},
+signOutButton: {
+padding: 12,
+},
+signOutText: {
+color: "#ffffff",
+},
+statusCard: {
+marginBottom: 16,
+padding: 16,
+borderWidth: 1,
+},
+statusCardTitle: {
+marginBottom: 8,
+fontWeight: "bold",
+},
+});

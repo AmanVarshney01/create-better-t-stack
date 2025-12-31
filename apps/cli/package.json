@@ -51,6 +51,10 @@
     },
     "./cli": {
       "import": "./dist/cli.mjs"
+    },
+    "./virtual": {
+      "types": "./dist/virtual.d.mts",
+      "import": "./dist/virtual.mjs"
     }
   },
   "publishConfig": {
@@ -67,6 +71,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
+    "@better-t-stack/template-generator": "workspace:*",
     "@better-t-stack/types": "workspace:*",
     "@clack/core": "^0.5.0",
     "@clack/prompts": "^1.0.0-alpha.8",

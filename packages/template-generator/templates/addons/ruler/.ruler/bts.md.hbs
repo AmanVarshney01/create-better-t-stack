@@ -1,0 +1,142 @@
+# Better-T-Stack Project Rules
+
+This is a {{projectName}} project created with Better-T-Stack CLI.
+
+## Project Structure
+
+This is a monorepo with the following structure:
+
+{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start")
+(includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
+- **`apps/web/`** - {{#if (eq backend "self")}}Fullstack application{{else}}Frontend application{{/if}}{{#if (includes frontend "tanstack-router")}} (React with TanStack Router){{else
+if (includes frontend "react-router")}} (React with React Router){{else if (includes frontend "next")}} (Next.js){{else
+if (includes frontend "nuxt")}} (Nuxt.js){{else if (includes frontend "svelte")}} (SvelteKit){{else if (includes
+frontend "solid")}} (SolidStart){{/if}}
+{{/if}}
+
+{{#if (ne backend "convex")}}
+{{#if (and (ne backend "none") (ne backend "self"))}}
+- **`apps/server/`** - Backend server{{#if (eq backend "hono")}} (Hono){{else if (eq backend "express")}}
+(Express){{else if (eq backend "fastify")}} (Fastify){{else if (eq backend "elysia")}} (Elysia){{else if (eq backend
+"next")}} (Next.js API){{/if}}
+{{/if}}
+{{else}}
+- **`packages/backend/`** - Convex backend functions
+{{/if}}
+
+{{#if (or (ne backend "none") (ne backend "convex"))}}
+{{#if (ne api "none")}}
+- **`packages/api/`** - Shared API logic and types
+{{/if}}
+{{#if (and (ne auth "none") (ne backend "convex"))}}
+- **`packages/auth/`** - Authentication logic and utilities
+{{/if}}
+{{#if (and (ne database "none") (ne orm "none") (ne backend "convex"))}}
+- **`packages/db/`** - Database schema and utilities
+{{/if}}
+{{/if}}
+
+{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+- **`apps/native/`** - React Native mobile app{{#if (includes frontend "native-nativewind")}} (with NativeWind){{else if
+(includes frontend "native-unistyles")}} (with Unistyles){{/if}}
+{{/if}}
+
+## Available Scripts
+
+- `{{packageManager}} run dev` - Start all apps in development mode
+{{#if (and (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start")
+(includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid")) (ne backend "self"))}}
+- `{{packageManager}} run dev:web` - Start only the web app
+{{/if}}
+{{#if (and (ne backend "none") (ne backend "convex") (ne backend "self"))}}
+- `{{packageManager}} run dev:server` - Start only the server
+{{/if}}
+{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+- `{{packageManager}} run dev:native` - Start only the native app
+{{/if}}
+
+{{#if (and (ne database "none") (ne orm "none") (ne backend "convex"))}}
+## Database Commands
+
+All database operations should be run from the {{#if (eq backend "self")}}web{{else}}server{{/if}} workspace:
+
+- `{{packageManager}} run db:push` - Push schema changes to database
+- `{{packageManager}} run db:studio` - Open database studio
+- `{{packageManager}} run db:generate` - Generate {{#if (eq orm "drizzle")}}Drizzle{{else if (eq orm
+"prisma")}}Prisma{{else}}{{orm}}{{/if}} files
+- `{{packageManager}} run db:migrate` - Run database migrations
+
+{{#if (eq orm "drizzle")}}
+Database schema files are located in {{#if (eq backend "self")}}`apps/web/src/db/schema/`{{else}}`apps/server/src/db/schema/`{{/if}}
+{{else if (eq orm "prisma")}}
+Database schema is located in {{#if (eq backend "self")}}`apps/web/prisma/schema.prisma`{{else}}`apps/server/prisma/schema.prisma`{{/if}}
+{{else if (eq orm "mongoose")}}
+Database models are located in {{#if (eq backend "self")}}`apps/web/src/db/models/`{{else}}`apps/server/src/db/models/`{{/if}}
+{{/if}}
+{{/if}}
+
+{{#if (ne api "none")}}
+## API Structure
+
+{{#if (eq api "trpc")}}
+- tRPC routers are in {{#if (eq backend "self")}}`packages/api/src/routers/`{{else}}`apps/server/src/routers/`{{/if}}
+- Client-side tRPC utils are in `apps/web/src/utils/trpc.ts`
+{{else if (eq api "orpc")}}
+- oRPC endpoints are in {{#if (eq backend "self")}}`packages/api/src/api/`{{else}}`apps/server/src/api/`{{/if}}
+- Client-side API utils are in `apps/web/src/utils/api.ts`
+{{/if}}
+{{/if}}
+
+{{#if (eq auth "better-auth")}}
+## Authentication
+
+Authentication is enabled in this project:
+{{#if (ne backend "convex")}}
+- Server auth logic is in {{#if (eq backend "self")}}`packages/auth/src/lib/auth.ts`{{else}}`apps/server/src/lib/auth.ts`{{/if}}
+{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start")
+(includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
+- Web app auth client is in `apps/web/src/lib/auth-client.ts`
+{{/if}}
+{{#if (or (includes frontend "native-nativewind") (includes frontend "native-unistyles"))}}
+- Native app auth client is in `apps/native/src/lib/auth-client.ts`
+{{/if}}
+{{else}}
+{{/if}}
+{{/if}}
+
+## Adding More Features
+
+You can add additional addons or deployment options to your project using:
+
+```bash
+{{#if (eq packageManager "bun")}}bunx{{else if (eq packageManager "pnpm")}}pnpx{{else}}npx{{/if}} create-better-t-stack
+add
+```
+
+Available addons you can add:
+- **Documentation**: Starlight, Fumadocs
+- **Linting**: Biome, Oxlint, Ultracite
+- **Other**: Ruler, Turborepo, PWA, Tauri, Husky
+
+You can also add web deployment configurations like Cloudflare Workers support.
+
+## Project Configuration
+
+This project includes a `bts.jsonc` configuration file that stores your Better-T-Stack settings:
+
+- Contains your selected stack configuration (database, ORM, backend, frontend, etc.)
+- Used by the CLI to understand your project structure
+- Safe to delete if not needed
+- Updated automatically when using the `add` command
+
+## Key Points
+
+- This is a {{#if (includes addons "turborepo")}}Turborepo {{/if}}monorepo using {{packageManager}} workspaces
+- Each app has its own `package.json` and dependencies
+- Run commands from the root to execute across all workspaces
+- Run workspace-specific commands with `{{packageManager}} run command-name`
+{{#if (includes addons "turborepo")}}
+- Turborepo handles build caching and parallel execution
+{{/if}}
+- Use `{{#if (eq packageManager "bun")}}bunx{{else if (eq packageManager "pnpm")}}pnpx{{else}}npx{{/if}}
+create-better-t-stack add` to add more features later

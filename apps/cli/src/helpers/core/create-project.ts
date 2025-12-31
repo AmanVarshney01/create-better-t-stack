@@ -1,3 +1,6 @@
+// Use unified generator from template-generator package
+import { generateVirtualProject, EMBEDDED_TEMPLATES } from "@better-t-stack/template-generator";
+import { writeTreeToFilesystem } from "@better-t-stack/template-generator/fs-writer";
 import { log } from "@clack/prompts";
 import fs from "fs-extra";
 
@@ -25,18 +28,6 @@ import { installDependencies } from "./install-dependencies";
 import { setupPayments } from "./payments-setup";
 import { displayPostInstallInstructions } from "./post-installation";
 import { updatePackageConfigurations } from "./project-config";
-import {
-  copyBaseTemplate,
-  handleExtras,
-  setupAddonsTemplate,
-  setupAuthTemplate,
-  setupBackendFramework,
-  setupDeploymentTemplates,
-  setupDockerComposeTemplates,
-  setupExamplesTemplate,
-  setupFrontendTemplates,
-  setupPaymentsTemplate,
-} from "./template-manager";
 
 export interface CreateProjectOptions {
   manualDb?: boolean;
@@ -51,26 +42,20 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
   try {
     await fs.ensureDir(projectDir);
 
-    await copyBaseTemplate(projectDir, options);
-    await setupFrontendTemplates(projectDir, options);
+    // Generate all templates using unified generator
+    const result = await generateVirtualProject({
+      config: options,
+      templates: EMBEDDED_TEMPLATES,
+    });
 
-    await setupBackendFramework(projectDir, options);
-
-    if (needsServerSetup || (isSelfBackend && options.dbSetup === "docker")) {
-      await setupDockerComposeTemplates(projectDir, options);
+    if (!result.success || !result.tree) {
+      throw new Error(result.error || "Failed to generate project templates");
     }
 
-    await setupAuthTemplate(projectDir, options);
-    if (options.payments && options.payments !== "none") {
-      await setupPaymentsTemplate(projectDir, options);
-    }
-    if (options.examples.length > 0 && options.examples[0] !== "none") {
-      await setupExamplesTemplate(projectDir, options);
-    }
-    await setupAddonsTemplate(projectDir, options);
+    // Write generated files to disk
+    await writeTreeToFilesystem(result.tree, projectDir);
 
-    await setupDeploymentTemplates(projectDir, options);
-
+    // Setup dependencies (these are NOT template operations, they modify package.json)
     await setupEnvPackageDependencies(projectDir, options);
     if (options.serverDeploy === "cloudflare" || options.webDeploy === "cloudflare") {
       await setupInfraPackageDependencies(projectDir, options);
@@ -105,7 +90,7 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
       await setupPayments(options);
     }
 
-    await handleExtras(projectDir, options);
+    // Extras (pnpm-workspace, bunfig, npmrc) are now handled by the unified generator
 
     await setupEnvironmentVariables(options);
     await updatePackageConfigurations(projectDir, options);

@@ -1,0 +1,98 @@
+{{#if (includes frontend "next")}}
+import { createEnv } from "@t3-oss/env-nextjs";
+{{else if (includes frontend "nuxt")}}
+import { createEnv } from "@t3-oss/env-nuxt";
+{{else}}
+import { createEnv } from "@t3-oss/env-core";
+{{/if}}
+import { z } from "zod";
+
+{{#if (includes frontend "nuxt")}}
+/**
+ * Nuxt env validation - validates at build time when imported in nuxt.config.ts
+ * For runtime access in components/plugins, use useRuntimeConfig() instead:
+ *   const config = useRuntimeConfig()
+ *   config.public.serverUrl (NUXT_PUBLIC_SERVER_URL maps to serverUrl)
+ */
+{{/if}}
+export const env = createEnv({
+{{#if (eq backend "convex")}}
+{{#if (includes frontend "next")}}
+	client: {
+		NEXT_PUBLIC_CONVEX_URL: z.url(),
+{{#if (eq auth "better-auth")}}
+		NEXT_PUBLIC_CONVEX_SITE_URL: z.url(),
+{{/if}}
+{{#if (eq auth "clerk")}}
+		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+{{/if}}
+	},
+	runtimeEnv: {
+		NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
+{{#if (eq auth "better-auth")}}
+		NEXT_PUBLIC_CONVEX_SITE_URL: process.env.NEXT_PUBLIC_CONVEX_SITE_URL,
+{{/if}}
+{{#if (eq auth "clerk")}}
+		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+{{/if}}
+	},
+{{else if (includes frontend "nuxt")}}
+	client: {
+		NUXT_PUBLIC_CONVEX_URL: z.url(),
+	},
+{{else if (includes frontend "svelte")}}
+	clientPrefix: "PUBLIC_",
+	client: {
+		PUBLIC_CONVEX_URL: z.url(),
+	},
+	runtimeEnv: (import.meta as any).env,
+{{else}}
+	clientPrefix: "VITE_",
+	client: {
+		VITE_CONVEX_URL: z.url(),
+{{#if (eq auth "better-auth")}}
+		VITE_CONVEX_SITE_URL: z.url(),
+{{/if}}
+{{#if (eq auth "clerk")}}
+		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+{{/if}}
+	},
+	runtimeEnv: (import.meta as any).env,
+{{/if}}
+{{else if (eq backend "self")}}
+{{#if (includes frontend "next")}}
+	client: {},
+	runtimeEnv: {},
+{{else}}
+	clientPrefix: "VITE_",
+	client: {},
+	runtimeEnv: (import.meta as any).env,
+{{/if}}
+{{else if (ne backend "none")}}
+{{#if (includes frontend "next")}}
+	client: {
+		NEXT_PUBLIC_SERVER_URL: z.url(),
+	},
+	runtimeEnv: {
+		NEXT_PUBLIC_SERVER_URL: process.env.NEXT_PUBLIC_SERVER_URL,
+	},
+{{else if (includes frontend "nuxt")}}
+	client: {
+		NUXT_PUBLIC_SERVER_URL: z.url(),
+	},
+{{else if (includes frontend "svelte")}}
+	clientPrefix: "PUBLIC_",
+	client: {
+		PUBLIC_SERVER_URL: z.url(),
+	},
+	runtimeEnv: (import.meta as any).env,
+{{else}}
+	clientPrefix: "VITE_",
+	client: {
+		VITE_SERVER_URL: z.url(),
+	},
+	runtimeEnv: (import.meta as any).env,
+{{/if}}
+{{/if}}
+	emptyStringAsUndefined: true,
+});

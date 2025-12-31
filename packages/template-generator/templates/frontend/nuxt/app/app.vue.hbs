@@ -1,0 +1,17 @@
+<script setup lang="ts">
+{{#if (eq api "orpc")}}
+import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
+{{/if}}
+</script>
+
+<template>
+    <NuxtLoadingIndicator />
+    <UApp>
+        <NuxtLayout>
+            <NuxtPage />
+        </NuxtLayout>
+    </UApp>
+    {{#if (eq api "orpc")}}
+    <VueQueryDevtools />
+    {{/if}}
+</template>

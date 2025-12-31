@@ -29,6 +29,7 @@ const config: NextConfig = {
   experimental: {
     turbopackFileSystemCacheForDev: true,
   },
+  serverExternalPackages: ["create-better-t-stack", "fs-extra", "tinyglobby", "handlebars"],
 };
 
 export default withMDX(config);
