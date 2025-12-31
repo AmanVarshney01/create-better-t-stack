@@ -1,5 +1,5 @@
 {
   "title": "Guides",
-  "defaultOpen": false,
-  "pages": ["index"]
+  "defaultOpen": true,
+  "pages": ["index", "cloudflare-alchemy"]
 }
