@@ -5,7 +5,7 @@ import type { GeneratorOptions, GeneratorResult, VirtualFileTree } from "./types
 import { processTemplateString, transformFilename, isBinaryFile } from "./core/template-processor";
 import { VirtualFileSystem } from "./core/virtual-fs";
 import { processPostGeneration } from "./post-processor";
-import { processDependencies } from "./processors";
+import { processDependencies, processReadme } from "./processors";
 
 /**
  * Template data structure for embedded templates
@@ -50,6 +50,9 @@ export async function generateVirtualProject(options: GeneratorOptions): Promise
 
     // Phase 3: Add dependencies to all packages
     processDependencies(vfs, config);
+
+    // Phase 4: Generate README.md
+    processReadme(vfs, config);
 
     const tree: VirtualFileTree = {
       root: vfs.toTree(config.projectName),

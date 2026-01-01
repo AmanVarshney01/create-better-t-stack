@@ -13,6 +13,7 @@ import { processDatabaseDeps } from "./db-deps";
 import { processEnvDeps } from "./env-deps";
 import { processInfraDeps } from "./infra-deps";
 import { processPaymentsDeps } from "./payments-deps";
+import { processReadme } from "./readme-generator";
 import { processRuntimeDeps } from "./runtime-deps";
 import { processWorkspaceDeps } from "./workspace-deps";
 
@@ -43,4 +44,5 @@ export {
   processInfraDeps,
   processBackendDeps,
   processRuntimeDeps,
+  processReadme,
 };

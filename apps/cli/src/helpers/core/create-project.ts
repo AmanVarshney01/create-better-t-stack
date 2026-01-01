@@ -15,7 +15,6 @@ import { setupExamples } from "../addons/examples-setup";
 import { setupDatabase } from "../core/db-setup";
 import { setupServerDeploy } from "../deployment/server-deploy-setup";
 import { setupWebDeploy } from "../deployment/web-deploy-setup";
-import { createReadme } from "./create-readme";
 import { setupEnvironmentVariables } from "./env-setup";
 import { initializeGit } from "./git";
 import { installDependencies } from "./install-dependencies";
@@ -77,9 +76,6 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
     // Deployment CLIs
     await setupWebDeploy(options);
     await setupServerDeploy(options);
-
-    // README generation (TODO: port to generator)
-    await createReadme(projectDir, options);
 
     // BTS config
     await writeBtsConfig(options);
