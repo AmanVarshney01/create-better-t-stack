@@ -116,11 +116,11 @@ export const dependencyVersionMap = {
 
   turbo: "^2.6.3",
 
-  ai: "^5.0.29",
-"@ai-sdk/google": "^2.0.0",
-  "@ai-sdk/vue": "^2.0.0",
-  "@ai-sdk/svelte": "^2.0.0",
-  "@ai-sdk/react": "^2.0.0",
+  ai: "^6.0.3",
+  "@ai-sdk/google": "^3.0.1",
+  "@ai-sdk/vue": "^3.0.3",
+  "@ai-sdk/svelte": "^4.0.3",
+  "@ai-sdk/react": "^3.0.3",
   "@ai-sdk/devtools": "^0.0.2",
   streamdown: "^1.6.10",
   shiki: "^3.20.0",
