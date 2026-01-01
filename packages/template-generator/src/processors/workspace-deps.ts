@@ -7,7 +7,7 @@ import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
-import { addPackageDependency } from "../utils/add-deps";
+import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
 
 export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const {
@@ -43,8 +43,8 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
 
   const isCloudflare = serverDeploy === "cloudflare" || webDeploy === "cloudflare";
   const runtimeDevDeps = getRuntimeDevDeps(runtime, backend);
-  const commonDeps = ["dotenv", "zod"];
-  const commonDevDeps = ["typescript", ...runtimeDevDeps];
+  const commonDeps: AvailableDependencies[] = ["dotenv", "zod"];
+  const commonDevDeps: AvailableDependencies[] = ["typescript", ...runtimeDevDeps];
 
   // Root package
   addPackageDependency({
@@ -207,7 +207,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
 function getRuntimeDevDeps(
   runtime: ProjectConfig["runtime"],
   backend: ProjectConfig["backend"],
-): string[] {
+): AvailableDependencies[] {
   if (runtime === "none" && backend === "self") {
     return ["@types/node"];
   }

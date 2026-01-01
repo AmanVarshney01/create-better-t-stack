@@ -66,7 +66,7 @@ function addApiPackageDeps(vfs: VirtualFileSystem, api: API): void {
     addPackageDependency({
       vfs,
       packagePath: pkgPath,
-      dependencies: ["@trpc/server", "superjson", "zod"],
+      dependencies: ["@trpc/server", "zod"],
     });
   } else if (api === "orpc") {
     addPackageDependency({
@@ -109,40 +109,19 @@ function addWebClientDeps(
 
   if (backend === "convex") return;
 
-  if (api === "trpc") {
-    if (frontendType.hasReactWeb) {
-      addPackageDependency({
-        vfs,
-        packagePath: webPath,
-        dependencies: ["@trpc/client", "@trpc/tanstack-react-query", "superjson"],
-      });
-    } else if (frontendType.hasNuxtWeb) {
-      addPackageDependency({
-        vfs,
-        packagePath: webPath,
-        dependencies: ["@trpc/client", "trpc-nuxt", "superjson"],
-      });
-    } else if (frontendType.hasSvelteWeb) {
-      addPackageDependency({
-        vfs,
-        packagePath: webPath,
-        dependencies: ["@trpc/client", "trpc-svelte-query", "superjson"],
-      });
-    } else if (frontendType.hasSolidWeb) {
-      addPackageDependency({
-        vfs,
-        packagePath: webPath,
-        dependencies: ["@trpc/client", "solid-trpc", "superjson"],
-      });
-    }
-  } else if (api === "orpc") {
-    if (frontendType.hasReactWeb) {
-      addPackageDependency({
-        vfs,
-        packagePath: webPath,
-        dependencies: ["@orpc/client", "@orpc/tanstack-query"],
-      });
-    }
+  // Only add tRPC deps for React-based frontends (templates handle other frameworks)
+  if (api === "trpc" && frontendType.hasReactWeb) {
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: ["@trpc/client", "@trpc/tanstack-react-query"],
+    });
+  } else if (api === "orpc" && frontendType.hasReactWeb) {
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: ["@orpc/client", "@orpc/tanstack-query"],
+    });
   }
 }
 
@@ -156,7 +135,7 @@ function addNativeDeps(vfs: VirtualFileSystem, api: API, backend: Backend): void
     addPackageDependency({
       vfs,
       packagePath: nativePath,
-      dependencies: ["@trpc/client", "@trpc/tanstack-react-query", "superjson"],
+      dependencies: ["@trpc/client", "@trpc/tanstack-react-query"],
     });
   } else if (api === "orpc") {
     addPackageDependency({

@@ -7,7 +7,7 @@ import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
-import { addPackageDependency } from "../utils/add-deps";
+import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
 
 export function processEnvDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const envPath = "packages/env/package.json";
@@ -15,7 +15,7 @@ export function processEnvDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
 
   const { frontend, backend, runtime } = config;
 
-  const deps: string[] = ["zod"];
+  const deps: AvailableDependencies[] = ["zod"];
 
   // Framework-specific T3 env
   if (frontend.includes("next")) {

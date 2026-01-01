@@ -7,7 +7,7 @@ import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
-import { addPackageDependency } from "../utils/add-deps";
+import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
 
 export function processDatabaseDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { database, orm, backend } = config;
@@ -59,8 +59,8 @@ function processPrismaDeps(
     return;
   }
 
-  const deps: string[] = ["@prisma/client"];
-  const devDeps: string[] = ["prisma"];
+  const deps: AvailableDependencies[] = ["@prisma/client"];
+  const devDeps: AvailableDependencies[] = ["prisma"];
 
   // Add adapters based on database type
   if (database === "mysql" && dbSetup === "planetscale") {
@@ -119,8 +119,8 @@ function processDrizzleDeps(
       });
     }
   } else if (database === "postgres") {
-    const deps: string[] = ["drizzle-orm"];
-    const devDeps: string[] = ["drizzle-kit"];
+    const deps: AvailableDependencies[] = ["drizzle-orm"];
+    const devDeps: AvailableDependencies[] = ["drizzle-kit"];
 
     if (dbSetup === "neon") {
       deps.push("@neondatabase/serverless", "ws");

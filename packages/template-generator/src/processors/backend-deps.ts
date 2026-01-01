@@ -7,7 +7,7 @@ import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
-import { addPackageDependency } from "../utils/add-deps";
+import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
 
 export function processBackendDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { backend, runtime, api, auth } = config;
@@ -29,8 +29,8 @@ export function processBackendDeps(vfs: VirtualFileSystem, config: ProjectConfig
   const serverPath = "apps/server/package.json";
   if (!vfs.exists(serverPath) || backend === "self" || backend === "none") return;
 
-  const deps: string[] = [];
-  const devDeps: string[] = [];
+  const deps: AvailableDependencies[] = [];
+  const devDeps: AvailableDependencies[] = [];
 
   // Framework deps
   if (backend === "hono") {
