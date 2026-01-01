@@ -1,10 +1,16 @@
+/**
+ * Template reader - loads templates from embedded or filesystem
+ * Uses modern libraries: pathe, tinyglobby, is-binary-path
+ */
+
+import isBinaryPath from "is-binary-path";
 import fs from "node:fs";
-import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { dirname, join, extname } from "pathe";
 import { glob } from "tinyglobby";
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = dirname(__filename);
 
 /**
  * Get the root path where templates are stored
@@ -13,9 +19,9 @@ export function getTemplatesRoot(): string {
   // In development: templates are in the package root
   // In production (npm): templates are in the installed package
   const possiblePaths = [
-    path.join(__dirname, "../templates"), // From dist/
-    path.join(__dirname, "../../templates"), // From dist/src/
-    path.join(__dirname, "../../../templates"), // Alternative layout
+    join(__dirname, "../templates"), // From dist/
+    join(__dirname, "../../templates"), // From dist/src/
+    join(__dirname, "../../../templates"), // Alternative layout
   ];
 
   for (const p of possiblePaths) {
@@ -33,7 +39,7 @@ export function getTemplatesRoot(): string {
  */
 export async function loadTemplates(prefix?: string): Promise<Map<string, string>> {
   const templatesRoot = getTemplatesRoot();
-  const searchDir = prefix ? path.join(templatesRoot, prefix) : templatesRoot;
+  const searchDir = prefix ? join(templatesRoot, prefix) : templatesRoot;
 
   if (!fs.existsSync(searchDir)) {
     return new Map();
@@ -48,11 +54,11 @@ export async function loadTemplates(prefix?: string): Promise<Map<string, string
   const templates = new Map<string, string>();
 
   for (const file of files) {
-    const fullPath = path.join(searchDir, file);
+    const fullPath = join(searchDir, file);
     const relativePath = prefix ? `${prefix}/${file}` : file;
 
     try {
-      // Skip binary files
+      // Use is-binary-path for comprehensive binary detection
       if (isBinaryPath(file)) {
         templates.set(relativePath, "[Binary file]");
       } else {
@@ -72,7 +78,7 @@ export async function loadTemplates(prefix?: string): Promise<Map<string, string
  */
 export function loadTemplate(relativePath: string): string | undefined {
   const templatesRoot = getTemplatesRoot();
-  const fullPath = path.join(templatesRoot, relativePath);
+  const fullPath = join(templatesRoot, relativePath);
 
   if (!fs.existsSync(fullPath)) {
     return undefined;
@@ -90,7 +96,7 @@ export function loadTemplate(relativePath: string): string | undefined {
  */
 export async function listTemplates(prefix?: string): Promise<string[]> {
   const templatesRoot = getTemplatesRoot();
-  const searchDir = prefix ? path.join(templatesRoot, prefix) : templatesRoot;
+  const searchDir = prefix ? join(templatesRoot, prefix) : templatesRoot;
 
   if (!fs.existsSync(searchDir)) {
     return [];
@@ -107,23 +113,10 @@ export async function listTemplates(prefix?: string): Promise<string[]> {
 
 /**
  * Check if path is a binary file
+ * Uses is-binary-path package for comprehensive detection
  */
-function isBinaryPath(filePath: string): boolean {
-  const binaryExtensions = [
-    ".png",
-    ".ico",
-    ".svg",
-    ".jpg",
-    ".jpeg",
-    ".gif",
-    ".webp",
-    ".woff",
-    ".woff2",
-    ".ttf",
-    ".eot",
-  ];
-  const ext = path.extname(filePath).toLowerCase();
-  return binaryExtensions.includes(ext);
+export function isBinary(filePath: string): boolean {
+  return isBinaryPath(filePath);
 }
 
 export { getTemplatesRoot as TEMPLATES_ROOT };

@@ -1,30 +1,15 @@
+/**
+ * In-memory virtual file system for generating project structures
+ * Uses pathe for cross-platform path handling (works in browser + Node)
+ */
+
+import { dirname, basename, extname, normalize } from "pathe";
+
 import type { VirtualDirectory, VirtualFile } from "../types";
-
-// Pure JS path utilities for browser compatibility
-function dirname(p: string): string {
-  const normalized = p.replace(/\\/g, "/").replace(/\/+$/, "");
-  const lastSlash = normalized.lastIndexOf("/");
-  if (lastSlash === -1) return ".";
-  if (lastSlash === 0) return "/";
-  return normalized.slice(0, lastSlash);
-}
-
-function basename(p: string): string {
-  const normalized = p.replace(/\\/g, "/").replace(/\/+$/, "");
-  const lastSlash = normalized.lastIndexOf("/");
-  return lastSlash === -1 ? normalized : normalized.slice(lastSlash + 1);
-}
-
-function extname(p: string): string {
-  const base = basename(p);
-  const dotIndex = base.lastIndexOf(".");
-  if (dotIndex <= 0) return "";
-  return base.slice(dotIndex);
-}
 
 /**
  * In-memory virtual file system for generating project structures
- * without writing to disk. Browser-compatible - no Node.js dependencies.
+ * without writing to disk. Browser-compatible.
  */
 export class VirtualFileSystem {
   private files: Map<string, string> = new Map();
@@ -279,8 +264,8 @@ export class VirtualFileSystem {
   }
 
   private normalizePath(p: string): string {
-    // Remove leading slash and normalize
-    return p.replace(/^\/+/, "").replace(/\\/g, "/");
+    // Remove leading slash and normalize using pathe
+    return normalize(p).replace(/^\/+/, "");
   }
 
   private getExtension(filename: string): string {

@@ -1,19 +1,13 @@
 /**
  * Filesystem Writer - Node.js only module
  * Writes VirtualFileTree to real filesystem
+ * Uses fs-extra for safer file operations
  */
 
-import * as fs from "node:fs";
-import * as path from "node:path";
+import fs from "fs-extra";
+import { join, dirname } from "pathe";
 
 import type { VirtualFileTree, VirtualNode, VirtualFile, VirtualDirectory } from "./types";
-
-/**
- * Ensure directory exists (recursive mkdir)
- */
-async function ensureDir(dirPath: string): Promise<void> {
-  await fs.promises.mkdir(dirPath, { recursive: true });
-}
 
 /**
  * Write a VirtualFileTree to the real filesystem
@@ -32,24 +26,24 @@ export async function writeTreeToFilesystem(tree: VirtualFileTree, destDir: stri
  * Recursively write a VirtualNode to the filesystem
  */
 async function writeNode(node: VirtualNode, baseDir: string, relativePath: string): Promise<void> {
-  const fullPath = path.join(baseDir, relativePath, node.name);
+  const fullPath = join(baseDir, relativePath, node.name);
 
   if (node.type === "file") {
     const file = node as VirtualFile;
-    await ensureDir(path.dirname(fullPath));
 
     // Skip binary placeholders
     if (file.content === "[Binary file]") {
       return;
     }
 
-    await fs.promises.writeFile(fullPath, file.content, "utf-8");
+    // fs-extra's outputFile creates parent directories automatically
+    await fs.outputFile(fullPath, file.content, "utf-8");
   } else {
     const dir = node as VirtualDirectory;
-    await ensureDir(fullPath);
+    await fs.ensureDir(fullPath);
 
     for (const child of dir.children) {
-      await writeNode(child, baseDir, path.join(relativePath, node.name));
+      await writeNode(child, baseDir, join(relativePath, node.name));
     }
   }
 }
@@ -80,11 +74,11 @@ async function writeSelectedNode(
   if (node.type === "file") {
     if (filter(nodePath)) {
       const file = node as VirtualFile;
-      const fullPath = path.join(baseDir, nodePath);
-      await ensureDir(path.dirname(fullPath));
+      const fullPath = join(baseDir, nodePath);
 
       if (file.content !== "[Binary file]") {
-        await fs.promises.writeFile(fullPath, file.content, "utf-8");
+        // fs-extra's outputFile creates parent directories automatically
+        await fs.outputFile(fullPath, file.content, "utf-8");
         writtenFiles.push(nodePath);
       }
     }
