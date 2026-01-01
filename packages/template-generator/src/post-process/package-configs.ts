@@ -1,11 +1,11 @@
 /**
- * Post-processor - Modifies virtual files after template generation
- * Handles package.json scripts, dependencies, catalogs, and naming
+ * Package.json configuration post-processor
+ * Updates package names, scripts, and workspaces after template generation
  */
 
 import type { ProjectConfig } from "@better-t-stack/types";
 
-import type { VirtualFileSystem } from "./core/virtual-fs";
+import type { VirtualFileSystem } from "../core/virtual-fs";
 
 type PackageJson = {
   name?: string;
@@ -25,17 +25,9 @@ type PackageManagerConfig = {
 };
 
 /**
- * Run all post-processing steps on the virtual filesystem
- */
-export function processPostGeneration(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  updatePackageConfigurations(vfs, config);
-  processCatalogs(vfs, config);
-}
-
-/**
  * Update all package.json files with proper names, scripts, and workspaces
  */
-function updatePackageConfigurations(vfs: VirtualFileSystem, config: ProjectConfig): void {
+export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectConfig): void {
   updateRootPackageJson(vfs, config);
 
   if (config.backend === "convex") {
@@ -252,201 +244,4 @@ function updateConvexPackageJson(vfs: VirtualFileSystem, config: ProjectConfig):
   pkgJson.name = `@${config.projectName}/backend`;
   pkgJson.scripts = pkgJson.scripts || {};
   vfs.writeJson("packages/backend/package.json", pkgJson);
-}
-
-// =============================================================================
-// Catalogs - Deduplicate dependencies across packages
-// =============================================================================
-
-type CatalogEntry = {
-  versions: Set<string>;
-  packages: string[];
-};
-
-function processCatalogs(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  if (config.packageManager === "npm") return;
-
-  const packagePaths = [
-    ".",
-    "apps/server",
-    "apps/web",
-    "apps/native",
-    "apps/fumadocs",
-    "apps/docs",
-    "packages/api",
-    "packages/db",
-    "packages/auth",
-    "packages/backend",
-    "packages/config",
-    "packages/env",
-    "packages/infra",
-  ];
-
-  type PackageInfo = {
-    path: string;
-    dependencies: Record<string, string>;
-    devDependencies: Record<string, string>;
-  };
-
-  const packagesInfo: PackageInfo[] = [];
-
-  for (const pkgPath of packagePaths) {
-    const jsonPath = pkgPath === "." ? "package.json" : `${pkgPath}/package.json`;
-    const pkgJson = vfs.readJson<PackageJson>(jsonPath);
-
-    if (pkgJson) {
-      packagesInfo.push({
-        path: pkgPath,
-        dependencies: (pkgJson.dependencies || {}) as Record<string, string>,
-        devDependencies: (pkgJson.devDependencies || {}) as Record<string, string>,
-      });
-    }
-  }
-
-  const catalog = findDuplicateDependencies(packagesInfo, config.projectName);
-
-  if (Object.keys(catalog).length === 0) return;
-
-  if (config.packageManager === "bun") {
-    setupBunCatalogs(vfs, catalog);
-  } else if (config.packageManager === "pnpm") {
-    setupPnpmCatalogs(vfs, catalog);
-  }
-
-  updatePackageJsonsWithCatalogs(vfs, packagesInfo, catalog);
-}
-
-function findDuplicateDependencies(
-  packagesInfo: {
-    path: string;
-    dependencies: Record<string, string>;
-    devDependencies: Record<string, string>;
-  }[],
-  projectName: string,
-): Record<string, string> {
-  const depCount = new Map<string, CatalogEntry>();
-  const projectScope = `@${projectName}/`;
-
-  for (const pkg of packagesInfo) {
-    const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };
-
-    for (const [depName, version] of Object.entries(allDeps)) {
-      if (depName.startsWith(projectScope)) continue;
-      if (version.startsWith("workspace:")) continue;
-
-      const existing = depCount.get(depName);
-      if (existing) {
-        existing.versions.add(version);
-        existing.packages.push(pkg.path);
-      } else {
-        depCount.set(depName, {
-          versions: new Set([version]),
-          packages: [pkg.path],
-        });
-      }
-    }
-  }
-
-  const catalog: Record<string, string> = {};
-  for (const [depName, info] of depCount.entries()) {
-    if (info.packages.length > 1 && info.versions.size === 1) {
-      const version = Array.from(info.versions)[0];
-      if (version) {
-        catalog[depName] = version;
-      }
-    }
-  }
-
-  return catalog;
-}
-
-function setupBunCatalogs(vfs: VirtualFileSystem, catalog: Record<string, string>): void {
-  const pkgJson = vfs.readJson<PackageJson>("package.json");
-  if (!pkgJson) return;
-
-  if (!pkgJson.workspaces) {
-    pkgJson.workspaces = {};
-  }
-
-  if (Array.isArray(pkgJson.workspaces)) {
-    pkgJson.workspaces = {
-      packages: pkgJson.workspaces,
-      catalog,
-    };
-  } else if (typeof pkgJson.workspaces === "object") {
-    const ws = pkgJson.workspaces as { packages?: string[]; catalog?: Record<string, string> };
-    if (!ws.catalog) {
-      ws.catalog = {};
-    }
-    ws.catalog = { ...ws.catalog, ...catalog };
-  }
-
-  vfs.writeJson("package.json", pkgJson);
-}
-
-function setupPnpmCatalogs(vfs: VirtualFileSystem, catalog: Record<string, string>): void {
-  const content = vfs.readFile("pnpm-workspace.yaml");
-  if (!content) return;
-
-  // Simple YAML handling - add catalog section
-  // Note: For full YAML support, we'd need a YAML library, but for preview this is sufficient
-  const lines = content.split("\n");
-  const hasExistingCatalog = lines.some((line) => line.startsWith("catalog:"));
-
-  if (hasExistingCatalog) {
-    // Find catalog section and append
-    const catalogIndex = lines.findIndex((line) => line.startsWith("catalog:"));
-    const catalogEntries = Object.entries(catalog).map(
-      ([name, version]) => `  ${name}: "${version}"`,
-    );
-    lines.splice(catalogIndex + 1, 0, ...catalogEntries);
-  } else {
-    // Add new catalog section
-    lines.push("catalog:");
-    for (const [name, version] of Object.entries(catalog)) {
-      lines.push(`  ${name}: "${version}"`);
-    }
-  }
-
-  vfs.writeFile("pnpm-workspace.yaml", lines.join("\n"));
-}
-
-function updatePackageJsonsWithCatalogs(
-  vfs: VirtualFileSystem,
-  packagesInfo: {
-    path: string;
-    dependencies: Record<string, string>;
-    devDependencies: Record<string, string>;
-  }[],
-  catalog: Record<string, string>,
-): void {
-  for (const pkg of packagesInfo) {
-    const jsonPath = pkg.path === "." ? "package.json" : `${pkg.path}/package.json`;
-    const pkgJson = vfs.readJson<PackageJson>(jsonPath);
-    if (!pkgJson) continue;
-
-    let updated = false;
-
-    if (pkgJson.dependencies) {
-      for (const depName of Object.keys(pkgJson.dependencies)) {
-        if (catalog[depName]) {
-          (pkgJson.dependencies as Record<string, string>)[depName] = "catalog:";
-          updated = true;
-        }
-      }
-    }
-
-    if (pkgJson.devDependencies) {
-      for (const depName of Object.keys(pkgJson.devDependencies)) {
-        if (catalog[depName]) {
-          (pkgJson.devDependencies as Record<string, string>)[depName] = "catalog:";
-          updated = true;
-        }
-      }
-    }
-
-    if (updated) {
-      vfs.writeJson(jsonPath, pkgJson);
-    }
-  }
 }

@@ -4,7 +4,7 @@ import type { GeneratorOptions, GeneratorResult, VirtualFileTree } from "./types
 
 import { processTemplateString, transformFilename, isBinaryFile } from "./core/template-processor";
 import { VirtualFileSystem } from "./core/virtual-fs";
-import { processPostGeneration } from "./post-processor";
+import { processPostGeneration } from "./post-process";
 import { processDependencies, processReadme } from "./processors";
 
 /**
