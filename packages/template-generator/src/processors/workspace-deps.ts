@@ -18,8 +18,6 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
     database,
     auth,
     api,
-    frontend,
-    addons,
     serverDeploy,
     webDeploy,
   } = config;
@@ -42,11 +40,6 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
 
   const configDep = packages.config ? { [`@${projectName}/config`]: workspaceVersion } : {};
   const envDep = packages.env ? { [`@${projectName}/env`]: workspaceVersion } : {};
-  const dbDep = packages.db ? { [`@${projectName}/db`]: workspaceVersion } : {};
-  const authDep = packages.auth ? { [`@${projectName}/auth`]: workspaceVersion } : {};
-  const apiDep = packages.api ? { [`@${projectName}/api`]: workspaceVersion } : {};
-  const backendDep = packages.backend ? { [`@${projectName}/backend`]: workspaceVersion } : {};
-  const infraDep = packages.infra ? { [`@${projectName}/infra`]: workspaceVersion } : {};
 
   const isCloudflare = serverDeploy === "cloudflare" || webDeploy === "cloudflare";
   const runtimeDevDeps = getRuntimeDevDeps(runtime, backend);

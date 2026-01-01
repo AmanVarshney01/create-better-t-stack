@@ -5,8 +5,6 @@ import { useEffect, useState, useCallback } from "react";
 
 import type { StackState } from "@/lib/constant";
 
-import { cn } from "@/lib/utils";
-
 import { CodeViewer, CodeViewerEmpty } from "./code-viewer";
 import { FileExplorer, type VirtualFile, type VirtualDirectory } from "./file-explorer";
 

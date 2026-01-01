@@ -1,4 +1,4 @@
-import type { VirtualDirectory, VirtualFile, VirtualNode } from "../types";
+import type { VirtualDirectory, VirtualFile } from "../types";
 
 // Pure JS path utilities for browser compatibility
 function dirname(p: string): string {

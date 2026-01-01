@@ -10,7 +10,7 @@ import type { VirtualFileSystem } from "../core/virtual-fs";
 import { addPackageDependency } from "../utils/add-deps";
 
 export function processDatabaseDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { database, orm, dbSetup, backend } = config;
+  const { database, orm, backend } = config;
 
   if (backend === "convex" || database === "none") return;
 

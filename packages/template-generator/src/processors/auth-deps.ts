@@ -3,14 +3,14 @@
  * Adds authentication dependencies based on auth choice
  */
 
-import type { ProjectConfig, Frontend } from "@better-t-stack/types";
+import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { addPackageDependency } from "../utils/add-deps";
 
 export function processAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { auth, frontend, backend } = config;
+  const { auth, backend } = config;
 
   if (!auth || auth === "none") return;
 
