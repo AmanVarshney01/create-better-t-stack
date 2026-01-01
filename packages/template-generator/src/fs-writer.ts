@@ -17,9 +17,15 @@ async function ensureDir(dirPath: string): Promise<void> {
 
 /**
  * Write a VirtualFileTree to the real filesystem
+ * Note: The destDir should be the project directory. The root node name is skipped
+ * since destDir already includes the project name.
  */
 export async function writeTreeToFilesystem(tree: VirtualFileTree, destDir: string): Promise<void> {
-  await writeNode(tree.root, destDir, "");
+  // Skip the root node name (project name) and write children directly to destDir
+  const root = tree.root as VirtualDirectory;
+  for (const child of root.children) {
+    await writeNode(child, destDir, "");
+  }
 }
 
 /**
