@@ -9,7 +9,6 @@ import type { ProjectConfig } from "../../types";
 import { writeBtsConfig } from "../../utils/bts-config";
 import { isSilent } from "../../utils/context";
 import { exitWithError } from "../../utils/errors";
-import { setupCatalogs } from "../../utils/setup-catalogs";
 import { setupAddons } from "../addons/addons-setup";
 import { setupExamples } from "../addons/examples-setup";
 import { setupApi } from "../core/api-setup";
@@ -27,7 +26,6 @@ import { setupInfraPackageDependencies } from "./infra-package-setup";
 import { installDependencies } from "./install-dependencies";
 import { setupPayments } from "./payments-setup";
 import { displayPostInstallInstructions } from "./post-installation";
-import { updatePackageConfigurations } from "./project-config";
 
 export interface CreateProjectOptions {
   manualDb?: boolean;
@@ -42,7 +40,8 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
   try {
     await fs.ensureDir(projectDir);
 
-    // Generate all templates using unified generator
+    // Generate all templates and post-process (scripts, catalogs, naming)
+    // This is the unified generator that handles everything virtual
     const result = await generateVirtualProject({
       config: options,
       templates: EMBEDDED_TEMPLATES,
@@ -55,7 +54,9 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
     // Write generated files to disk
     await writeTreeToFilesystem(result.tree, projectDir);
 
-    // Setup dependencies (these are NOT template operations, they modify package.json)
+    // === CLI-only operations below (external CLIs, disk operations) ===
+
+    // Setup dependencies (add/modify deps in package.json on disk)
     await setupEnvPackageDependencies(projectDir, options);
     if (options.serverDeploy === "cloudflare" || options.webDeploy === "cloudflare") {
       await setupInfraPackageDependencies(projectDir, options);
@@ -90,15 +91,10 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
       await setupPayments(options);
     }
 
-    // Extras (pnpm-workspace, bunfig, npmrc) are now handled by the unified generator
-
     await setupEnvironmentVariables(options);
-    await updatePackageConfigurations(projectDir, options);
 
     await setupWebDeploy(options);
     await setupServerDeploy(options);
-
-    await setupCatalogs(projectDir, options);
 
     await createReadme(projectDir, options);
 

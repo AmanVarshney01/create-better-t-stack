@@ -1,4 +1,4 @@
-import type { VirtualDirectory, VirtualFile, VirtualNode } from "./types";
+import type { VirtualDirectory, VirtualFile, VirtualNode } from "../types";
 
 // Pure JS path utilities for browser compatibility
 function dirname(p: string): string {
@@ -104,6 +104,71 @@ export class VirtualFileSystem {
    */
   getDirectoryCount(): number {
     return this.directories.size;
+  }
+
+  /**
+   * Check if a path exists (file or directory)
+   */
+  exists(path: string): boolean {
+    const normalized = this.normalizePath(path);
+    return this.files.has(normalized) || this.directories.has(normalized);
+  }
+
+  /**
+   * Read and parse a JSON file
+   */
+  readJson<T = unknown>(filePath: string): T | undefined {
+    const content = this.readFile(filePath);
+    if (content === undefined) return undefined;
+    try {
+      return JSON.parse(content) as T;
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
+   * Write an object as JSON to a file
+   */
+  writeJson(filePath: string, data: unknown, spaces = 2): void {
+    const content = JSON.stringify(data, null, spaces);
+    this.writeFile(filePath, content);
+  }
+
+  /**
+   * Delete a file
+   */
+  deleteFile(filePath: string): boolean {
+    return this.files.delete(this.normalizePath(filePath));
+  }
+
+  /**
+   * List immediate children of a directory
+   */
+  listDir(dirPath: string): string[] {
+    const normalized = this.normalizePath(dirPath);
+    const prefix = normalized ? `${normalized}/` : "";
+    const children: Set<string> = new Set();
+
+    // Find matching files
+    for (const filePath of this.files.keys()) {
+      if (normalized === "" || filePath.startsWith(prefix)) {
+        const remaining = normalized === "" ? filePath : filePath.slice(prefix.length);
+        const firstSegment = remaining.split("/")[0];
+        if (firstSegment) children.add(firstSegment);
+      }
+    }
+
+    // Find matching directories
+    for (const dir of this.directories) {
+      if (normalized === "" || dir.startsWith(prefix)) {
+        const remaining = normalized === "" ? dir : dir.slice(prefix.length);
+        const firstSegment = remaining.split("/")[0];
+        if (firstSegment) children.add(firstSegment);
+      }
+    }
+
+    return Array.from(children).sort();
   }
 
   /**

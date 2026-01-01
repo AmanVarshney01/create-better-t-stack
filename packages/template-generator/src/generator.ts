@@ -2,8 +2,10 @@ import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { GeneratorOptions, GeneratorResult, VirtualFileTree } from "./types";
 
-import { processTemplateString, transformFilename, isBinaryFile } from "./template-processor";
-import { VirtualFileSystem } from "./virtual-fs";
+import { processTemplateString, transformFilename, isBinaryFile } from "./core/template-processor";
+import { VirtualFileSystem } from "./core/virtual-fs";
+import { processPostGeneration } from "./post-processor";
+import { processDependencies } from "./processors";
 
 /**
  * Template data structure for embedded templates
@@ -28,7 +30,7 @@ export async function generateVirtualProject(options: GeneratorOptions): Promise
 
     const vfs = new VirtualFileSystem();
 
-    // Process templates based on configuration
+    // Phase 1: Process templates based on configuration
     await processBaseTemplate(vfs, templates, config);
     await processFrontendTemplates(vfs, templates, config);
     await processBackendTemplates(vfs, templates, config);
@@ -42,6 +44,12 @@ export async function generateVirtualProject(options: GeneratorOptions): Promise
     await processExampleTemplates(vfs, templates, config);
     await processExtrasTemplates(vfs, templates, config);
     await processDeployTemplates(vfs, templates, config);
+
+    // Phase 2: Post-process package.json (scripts, naming, catalogs)
+    processPostGeneration(vfs, config);
+
+    // Phase 3: Add dependencies to all packages
+    processDependencies(vfs, config);
 
     const tree: VirtualFileTree = {
       root: vfs.toTree(config.projectName),

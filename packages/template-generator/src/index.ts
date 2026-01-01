@@ -1,7 +1,7 @@
 // Core browser-compatible exports
 export * from "./types";
-export * from "./virtual-fs";
-export * from "./template-processor";
+export * from "./core/virtual-fs";
+export * from "./core/template-processor";
 export * from "./generator";
 
 // Embedded templates for browser usage
