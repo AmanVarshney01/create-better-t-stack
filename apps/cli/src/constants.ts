@@ -116,8 +116,8 @@ export const dependencyVersionMap = {
 
   turbo: "^2.6.3",
 
-  ai: "^5.0.117",
-  "@ai-sdk/google": "^2.0.52",
+  ai: "^5.0.29",
+"@ai-sdk/google": "^2.0.0",
   "@ai-sdk/vue": "^2.0.0",
   "@ai-sdk/svelte": "^2.0.0",
   "@ai-sdk/react": "^2.0.0",
