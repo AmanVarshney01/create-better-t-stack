@@ -1,3 +1,9 @@
+/**
+ * Tauri setup - CLI-only operations
+ * NOTE: Dependencies are handled by template-generator's addons-deps.ts processor
+ * This file only handles external CLI initialization (tauri init)
+ */
+
 import { spinner } from "@clack/prompts";
 import { consola } from "consola";
 import { $ } from "execa";
@@ -7,7 +13,6 @@ import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 
-import { addPackageDependency } from "../../utils/add-package-deps";
 import { getPackageRunnerPrefix } from "../../utils/package-runner";
 
 export async function setupTauri(config: ProjectConfig) {
@@ -22,30 +27,12 @@ export async function setupTauri(config: ProjectConfig) {
   try {
     s.start("Setting up Tauri desktop app support...");
 
-    await addPackageDependency({
-      devDependencies: ["@tauri-apps/cli"],
-      projectDir: clientPackageDir,
-    });
+    // Dependencies and scripts are added by template-generator
+    // This only runs the tauri init CLI
 
-    const clientPackageJsonPath = path.join(clientPackageDir, "package.json");
-    if (await fs.pathExists(clientPackageJsonPath)) {
-      const packageJson = await fs.readJson(clientPackageJsonPath);
-
-      packageJson.scripts = {
-        ...packageJson.scripts,
-        tauri: "tauri",
-        "desktop:dev": "tauri dev",
-        "desktop:build": "tauri build",
-      };
-
-      await fs.writeJson(clientPackageJsonPath, packageJson, { spaces: 2 });
-    }
-
-    const _hasTanstackRouter = frontend.includes("tanstack-router");
     const hasReactRouter = frontend.includes("react-router");
     const hasNuxt = frontend.includes("nuxt");
     const hasSvelte = frontend.includes("svelte");
-    const _hasSolid = frontend.includes("solid");
     const hasNext = frontend.includes("next");
 
     const devUrl =

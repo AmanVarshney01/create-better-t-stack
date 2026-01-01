@@ -1,7 +1,0 @@
-model Todo {
-  id        String  @id @default(auto()) @map("_id") @db.ObjectId
-  text      String
-  completed Boolean @default(false)
-
-  @@map("todo")
-}

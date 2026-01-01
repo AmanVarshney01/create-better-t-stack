@@ -1,13 +1,17 @@
+/**
+ * Ultracite setup - CLI-only operations
+ * NOTE: Dependencies (husky, lint-staged) are handled by template-generator's addons-deps.ts
+ * This file handles interactive prompts and external CLI initialization
+ */
+
 import { autocompleteMultiselect, group, log, multiselect, spinner } from "@clack/prompts";
 import { $ } from "execa";
 import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 
-import { addPackageDependency } from "../../utils/add-package-deps";
 import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
-import { setupBiome } from "./addons-setup";
 
 type UltraciteEditor = "vscode" | "zed";
 type UltraciteAgent =
@@ -42,69 +46,29 @@ const EDITORS = {
 } as const;
 
 const AGENTS = {
-  "vscode-copilot": {
-    label: "VS Code Copilot",
-  },
-  cursor: {
-    label: "Cursor",
-  },
-  windsurf: {
-    label: "Windsurf",
-  },
-  zed: {
-    label: "Zed",
-  },
-  claude: {
-    label: "Claude",
-  },
-  codex: {
-    label: "Codex",
-  },
-  kiro: {
-    label: "Kiro",
-  },
-  cline: {
-    label: "Cline",
-  },
-  amp: {
-    label: "Amp",
-  },
-  aider: {
-    label: "Aider",
-  },
-  "firebase-studio": {
-    label: "Firebase Studio",
-  },
-  "open-hands": {
-    label: "Open Hands",
-  },
-  "gemini-cli": {
-    label: "Gemini CLI",
-  },
-  junie: {
-    label: "Junie",
-  },
-  augmentcode: {
-    label: "AugmentCode",
-  },
-  "kilo-code": {
-    label: "Kilo Code",
-  },
-  goose: {
-    label: "Goose",
-  },
-  "roo-code": {
-    label: "Roo Code",
-  },
+  "vscode-copilot": { label: "VS Code Copilot" },
+  cursor: { label: "Cursor" },
+  windsurf: { label: "Windsurf" },
+  zed: { label: "Zed" },
+  claude: { label: "Claude" },
+  codex: { label: "Codex" },
+  kiro: { label: "Kiro" },
+  cline: { label: "Cline" },
+  amp: { label: "Amp" },
+  aider: { label: "Aider" },
+  "firebase-studio": { label: "Firebase Studio" },
+  "open-hands": { label: "Open Hands" },
+  "gemini-cli": { label: "Gemini CLI" },
+  junie: { label: "Junie" },
+  augmentcode: { label: "AugmentCode" },
+  "kilo-code": { label: "Kilo Code" },
+  goose: { label: "Goose" },
+  "roo-code": { label: "Roo Code" },
 } as const;
 
 const HOOKS = {
-  cursor: {
-    label: "Cursor",
-  },
-  claude: {
-    label: "Claude",
-  },
+  cursor: { label: "Cursor" },
+  claude: { label: "Claude" },
 } as const;
 
 function getFrameworksFromFrontend(frontend: string[]): string[] {
@@ -138,7 +102,8 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
   try {
     log.info("Setting up Ultracite...");
 
-    await setupBiome(projectDir);
+    // Dependencies (biome, husky, lint-staged) are added by template-generator
+    // This only handles interactive prompts and external CLI init
 
     const result = await group(
       {
@@ -212,12 +177,7 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
 
     await $({ cwd: projectDir, env: { CI: "true" } })`${args}`;
 
-    if (hasHusky) {
-      await addPackageDependency({
-        devDependencies: ["husky", "lint-staged"],
-        projectDir,
-      });
-    }
+    // Dependencies are added by template-generator's addons-deps.ts
 
     s.stop("Ultracite setup successfully!");
   } catch (error) {

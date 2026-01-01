@@ -8,9 +8,9 @@ import { updateBtsConfig } from "../../utils/bts-config";
 import { exitWithError } from "../../utils/errors";
 import { setupServerDeploy } from "../deployment/server-deploy-setup";
 import { setupWebDeploy } from "../deployment/web-deploy-setup";
+import { setupDeploymentTemplates } from "./add-templates";
 import { detectProjectConfig, isBetterTStackProject } from "./detect-project-config";
 import { installDependencies } from "./install-dependencies";
-import { setupDeploymentTemplates } from "./template-manager";
 
 export async function addDeploymentToProject(
   input: AddInput & {

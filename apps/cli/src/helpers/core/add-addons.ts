@@ -8,9 +8,9 @@ import { updateBtsConfig } from "../../utils/bts-config";
 import { validateAddonCompatibility } from "../../utils/compatibility-rules";
 import { exitWithError } from "../../utils/errors";
 import { setupAddons } from "../addons/addons-setup";
+import { setupAddonsTemplate } from "./add-templates";
 import { detectProjectConfig, isBetterTStackProject } from "./detect-project-config";
 import { installDependencies } from "./install-dependencies";
-import { setupAddonsTemplate } from "./template-manager";
 
 export async function addAddonsToProject(
   input: AddInput & { addons: Addons[]; suppressInstallMessage?: boolean },

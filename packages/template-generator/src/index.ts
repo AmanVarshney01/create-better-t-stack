@@ -7,6 +7,9 @@ export * from "./generator";
 // Embedded templates for browser usage
 export { EMBEDDED_TEMPLATES, TEMPLATE_COUNT } from "./templates.generated";
 
+// Dependency version map for consistent versions across packages
+export { dependencyVersionMap, type AvailableDependencies } from "./utils/add-deps";
+
 // NOTE: fs-writer and template-reader use Node.js fs module and are NOT exported here
 // For Node.js-only usage (like CLI), import directly:
 // import { writeTreeToFilesystem } from "@better-t-stack/template-generator/fs-writer"
