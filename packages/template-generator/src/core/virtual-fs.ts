@@ -1,54 +1,81 @@
 /**
  * In-memory virtual file system for generating project structures
- * Uses pathe for cross-platform path handling (works in browser + Node)
+ * Uses memfs for Node.js fs API compatibility
+ * Uses pathe for cross-platform path handling
  */
 
-import { dirname, basename, extname, normalize } from "pathe";
+import type { Dirent } from "node:fs";
+
+import { memfs } from "memfs";
+import { dirname, basename, extname, normalize, join } from "pathe";
 
 import type { VirtualDirectory, VirtualFile } from "../types";
 
 /**
- * In-memory virtual file system for generating project structures
- * without writing to disk. Browser-compatible.
+ * In-memory virtual file system using memfs
+ * Provides Node.js fs-like API for generating project structures
  */
 export class VirtualFileSystem {
-  private files: Map<string, string> = new Map();
-  private directories: Set<string> = new Set();
+  private _fs: ReturnType<typeof memfs>["fs"];
+  private _vol: ReturnType<typeof memfs>["vol"];
+
+  constructor() {
+    const { fs, vol } = memfs();
+    this._fs = fs;
+    this._vol = vol;
+  }
 
   /**
    * Write a file to the virtual file system
    */
   writeFile(filePath: string, content: string): void {
     const normalizedPath = this.normalizePath(filePath);
-    this.files.set(normalizedPath, content);
+    const dir = dirname(normalizedPath);
 
-    // Ensure all parent directories exist
-    let dir = dirname(normalizedPath);
-    while (dir && dir !== "." && dir !== "/") {
-      this.directories.add(dir);
-      dir = dirname(dir);
+    // Ensure directory exists
+    if (dir && dir !== "/" && dir !== ".") {
+      this._fs.mkdirSync(dir, { recursive: true });
     }
+
+    this._fs.writeFileSync(normalizedPath, content, { encoding: "utf-8" });
   }
 
   /**
    * Read a file from the virtual file system
    */
   readFile(filePath: string): string | undefined {
-    return this.files.get(this.normalizePath(filePath));
+    const normalizedPath = this.normalizePath(filePath);
+    try {
+      return this._fs.readFileSync(normalizedPath, "utf-8") as string;
+    } catch {
+      return undefined;
+    }
   }
 
   /**
    * Check if a file exists
    */
   fileExists(filePath: string): boolean {
-    return this.files.has(this.normalizePath(filePath));
+    const normalizedPath = this.normalizePath(filePath);
+    try {
+      const stat = this._fs.statSync(normalizedPath);
+      return stat.isFile();
+    } catch {
+      return false;
+    }
   }
 
   /**
    * Check if a directory exists
    */
   directoryExists(dirPath: string): boolean {
-    return this.directories.has(this.normalizePath(dirPath));
+    const normalizedPath = this.normalizePath(dirPath);
+    try {
+      const stat = this._fs.statSync(normalizedPath);
+      return stat.isDirectory();
+    } catch {
+      return false;
+    }
   }
 
   /**
@@ -56,47 +83,73 @@ export class VirtualFileSystem {
    */
   mkdir(dirPath: string): void {
     const normalizedPath = this.normalizePath(dirPath);
-    let dir = normalizedPath;
-    while (dir && dir !== "." && dir !== "/") {
-      this.directories.add(dir);
-      dir = dirname(dir);
-    }
+    this._fs.mkdirSync(normalizedPath, { recursive: true });
   }
 
   /**
    * Get all file paths
    */
   getAllFiles(): string[] {
-    return Array.from(this.files.keys()).sort();
+    const files: string[] = [];
+    this.walkDir("/", files, true);
+    return files.sort();
   }
 
   /**
    * Get all directory paths
    */
   getAllDirectories(): string[] {
-    return Array.from(this.directories).sort();
+    const dirs: string[] = [];
+    this.walkDir("/", dirs, false);
+    return dirs.filter((d) => d !== "/").sort();
+  }
+
+  private walkDir(dir: string, results: string[], filesOnly: boolean): void {
+    try {
+      const entries = this._fs.readdirSync(dir, { withFileTypes: true }) as Dirent[];
+      for (const entry of entries) {
+        const fullPath = join(dir, entry.name);
+        const relativePath = fullPath.replace(/^\//, "");
+
+        if (entry.isDirectory()) {
+          if (!filesOnly) {
+            results.push(relativePath);
+          }
+          this.walkDir(fullPath, results, filesOnly);
+        } else if (entry.isFile() && filesOnly) {
+          results.push(relativePath);
+        }
+      }
+    } catch {
+      // Directory doesn't exist
+    }
   }
 
   /**
    * Get file count
    */
   getFileCount(): number {
-    return this.files.size;
+    return this.getAllFiles().length;
   }
 
   /**
    * Get directory count
    */
   getDirectoryCount(): number {
-    return this.directories.size;
+    return this.getAllDirectories().length;
   }
 
   /**
    * Check if a path exists (file or directory)
    */
   exists(path: string): boolean {
-    const normalized = this.normalizePath(path);
-    return this.files.has(normalized) || this.directories.has(normalized);
+    const normalizedPath = this.normalizePath(path);
+    try {
+      this._fs.statSync(normalizedPath);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**
@@ -124,36 +177,26 @@ export class VirtualFileSystem {
    * Delete a file
    */
   deleteFile(filePath: string): boolean {
-    return this.files.delete(this.normalizePath(filePath));
+    const normalizedPath = this.normalizePath(filePath);
+    try {
+      this._fs.unlinkSync(normalizedPath);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   /**
    * List immediate children of a directory
    */
   listDir(dirPath: string): string[] {
-    const normalized = this.normalizePath(dirPath);
-    const prefix = normalized ? `${normalized}/` : "";
-    const children: Set<string> = new Set();
-
-    // Find matching files
-    for (const filePath of this.files.keys()) {
-      if (normalized === "" || filePath.startsWith(prefix)) {
-        const remaining = normalized === "" ? filePath : filePath.slice(prefix.length);
-        const firstSegment = remaining.split("/")[0];
-        if (firstSegment) children.add(firstSegment);
-      }
+    const normalizedPath = this.normalizePath(dirPath) || "/";
+    try {
+      const entries = this._fs.readdirSync(normalizedPath) as string[];
+      return entries.sort();
+    } catch {
+      return [];
     }
-
-    // Find matching directories
-    for (const dir of this.directories) {
-      if (normalized === "" || dir.startsWith(prefix)) {
-        const remaining = normalized === "" ? dir : dir.slice(prefix.length);
-        const firstSegment = remaining.split("/")[0];
-        if (firstSegment) children.add(firstSegment);
-      }
-    }
-
-    return Array.from(children).sort();
   }
 
   /**
@@ -167,83 +210,45 @@ export class VirtualFileSystem {
       children: [],
     };
 
-    // Build a map of path -> node for quick lookups
-    const nodeMap = new Map<string, VirtualDirectory>();
-    nodeMap.set("", root);
-
-    // Sort paths to ensure parents are created before children
-    const allPaths = [
-      ...Array.from(this.directories).map((d) => ({ path: d, isFile: false })),
-      ...Array.from(this.files.keys()).map((f) => ({ path: f, isFile: true })),
-    ].sort((a, b) => a.path.localeCompare(b.path));
-
-    for (const { path: itemPath, isFile } of allPaths) {
-      const parentPath = dirname(itemPath);
-      const name = basename(itemPath);
-
-      // Ensure parent exists in node map
-      let parent = nodeMap.get(parentPath === "." ? "" : parentPath);
-      if (!parent) {
-        // Create missing parent directories
-        parent = this.ensureParentInMap(parentPath, nodeMap, root);
-      }
-
-      if (isFile) {
-        const file: VirtualFile = {
-          type: "file",
-          path: itemPath,
-          name,
-          content: this.files.get(itemPath) || "",
-          extension: this.getExtension(name),
-        };
-        parent.children.push(file);
-      } else {
-        const dir: VirtualDirectory = {
-          type: "directory",
-          path: itemPath,
-          name,
-          children: [],
-        };
-        parent.children.push(dir);
-        nodeMap.set(itemPath, dir);
-      }
-    }
-
-    // Sort children: directories first, then files, both alphabetically
+    this.buildTree("/", root);
     this.sortChildren(root);
 
     return root;
   }
 
-  private ensureParentInMap(
-    dirPath: string,
-    nodeMap: Map<string, VirtualDirectory>,
-    root: VirtualDirectory,
-  ): VirtualDirectory {
-    const parts = dirPath.split("/").filter(Boolean);
-    let currentPath = "";
-    let currentNode = root;
+  private buildTree(dir: string, parent: VirtualDirectory): void {
+    try {
+      const entries = this._fs.readdirSync(dir, { withFileTypes: true }) as Dirent[];
 
-    for (const part of parts) {
-      const nextPath = currentPath ? `${currentPath}/${part}` : part;
-      let nextNode = nodeMap.get(nextPath);
+      for (const entry of entries) {
+        const fullPath = join(dir, entry.name);
+        const relativePath = fullPath.replace(/^\//, "");
+        const name = entry.name;
 
-      if (!nextNode) {
-        nextNode = {
-          type: "directory",
-          path: nextPath,
-          name: part,
-          children: [],
-        };
-        currentNode.children.push(nextNode);
-        nodeMap.set(nextPath, nextNode);
+        if (entry.isDirectory()) {
+          const dirNode: VirtualDirectory = {
+            type: "directory",
+            path: relativePath,
+            name,
+            children: [],
+          };
+          parent.children.push(dirNode);
+          this.buildTree(fullPath, dirNode);
+        } else if (entry.isFile()) {
+          const content = this._fs.readFileSync(fullPath, "utf-8") as string;
+          const file: VirtualFile = {
+            type: "file",
+            path: relativePath,
+            name,
+            content,
+            extension: this.getExtension(name),
+          };
+          parent.children.push(file);
+        }
       }
-
-      currentPath = nextPath;
-      currentNode = nextNode;
+    } catch {
+      // Directory doesn't exist or can't be read
     }
-
-    return currentNode;
   }
 
   private sortChildren(node: VirtualDirectory): void {
@@ -264,8 +269,9 @@ export class VirtualFileSystem {
   }
 
   private normalizePath(p: string): string {
-    // Remove leading slash and normalize using pathe
-    return normalize(p).replace(/^\/+/, "");
+    // Ensure path starts with / for memfs
+    const normalized = normalize(p).replace(/^\/+/, "");
+    return "/" + normalized;
   }
 
   private getExtension(filename: string): string {
@@ -277,7 +283,23 @@ export class VirtualFileSystem {
    * Clear all files and directories
    */
   clear(): void {
-    this.files.clear();
-    this.directories.clear();
+    // Reset to a fresh memfs instance
+    const { fs, vol } = memfs();
+    this._fs = fs;
+    this._vol = vol;
+  }
+
+  /**
+   * Get the underlying memfs volume (for advanced use cases)
+   */
+  getVolume(): ReturnType<typeof memfs>["vol"] {
+    return this._vol;
+  }
+
+  /**
+   * Get the underlying memfs fs instance (for advanced use cases)
+   */
+  getFs(): ReturnType<typeof memfs>["fs"] {
+    return this._fs;
   }
 }
