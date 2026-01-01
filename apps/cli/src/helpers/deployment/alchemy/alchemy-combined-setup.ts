@@ -3,14 +3,15 @@ import path from "node:path";
 
 import type { PackageManager, ProjectConfig } from "../../../types";
 
-import { setupAlchemyServerDeploy } from "../server-deploy-setup";
 import { setupNextAlchemyDeploy } from "./alchemy-next-setup";
 import { setupNuxtAlchemyDeploy } from "./alchemy-nuxt-setup";
-import { setupReactRouterAlchemyDeploy } from "./alchemy-react-router-setup";
-import { setupSolidAlchemyDeploy } from "./alchemy-solid-setup";
 import { setupSvelteAlchemyDeploy } from "./alchemy-svelte-setup";
-import { setupTanStackRouterAlchemyDeploy } from "./alchemy-tanstack-router-setup";
 import { setupTanStackStartAlchemyDeploy } from "./alchemy-tanstack-start-setup";
+import {
+  setupReactRouterAlchemyDeploy,
+  setupSolidAlchemyDeploy,
+  setupTanStackRouterAlchemyDeploy,
+} from "./alchemy-vite-setup";
 
 function getInfraFilter(
   packageManager: PackageManager,
@@ -38,10 +39,8 @@ export async function setupCombinedAlchemyDeploy(
 ) {
   await setupInfraScripts(projectDir, packageManager, config);
 
-  const serverDir = path.join(projectDir, "apps/server");
-  if (await fs.pathExists(serverDir)) {
-    await setupAlchemyServerDeploy(serverDir, projectDir);
-  }
+  // Server deploy dependencies are handled by template-generator's deploy-deps.ts
+  // No additional CLI operations needed for server
 
   const frontend = config.frontend;
   const isNext = frontend.includes("next");

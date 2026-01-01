@@ -1,10 +1,14 @@
+/**
+ * Alchemy Svelte setup - CLI-only operations
+ * NOTE: Dependencies are handled by template-generator's deploy-deps.ts
+ * This only modifies config files for "add deploy" command
+ */
+
 import fs from "fs-extra";
 import path from "node:path";
 import { IndentationText, Node, Project, QuoteKind } from "ts-morph";
 
 import type { PackageManager } from "../../../types";
-
-import { addPackageDependency } from "../../../utils/add-package-deps";
 
 export async function setupSvelteAlchemyDeploy(
   projectDir: string,
@@ -14,10 +18,8 @@ export async function setupSvelteAlchemyDeploy(
   const webAppDir = path.join(projectDir, "apps/web");
   if (!(await fs.pathExists(webAppDir))) return;
 
-  await addPackageDependency({
-    devDependencies: ["alchemy", "@sveltejs/adapter-cloudflare"],
-    projectDir: webAppDir,
-  });
+  // Dependencies are added by template-generator's deploy-deps.ts
+  // This only modifies svelte.config.js for "add deploy" command
 
   const svelteConfigPath = path.join(webAppDir, "svelte.config.js");
   if (!(await fs.pathExists(svelteConfigPath))) return;

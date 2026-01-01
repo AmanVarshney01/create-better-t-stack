@@ -1,26 +1,34 @@
+/**
+ * Web deploy setup - CLI-only operations
+ * NOTE: Dependencies are handled by template-generator's deploy-deps.ts processor
+ * This file only handles external CLI calls and config modifications for "add deploy" command
+ */
+
 import type { ProjectConfig } from "../../types";
 
-import { addPackageDependency } from "../../utils/add-package-deps";
 import { setupCombinedAlchemyDeploy, setupInfraScripts } from "./alchemy/alchemy-combined-setup";
 import { setupNextAlchemyDeploy } from "./alchemy/alchemy-next-setup";
 import { setupNuxtAlchemyDeploy } from "./alchemy/alchemy-nuxt-setup";
-import { setupReactRouterAlchemyDeploy } from "./alchemy/alchemy-react-router-setup";
-import { setupSolidAlchemyDeploy } from "./alchemy/alchemy-solid-setup";
 import { setupSvelteAlchemyDeploy } from "./alchemy/alchemy-svelte-setup";
-import { setupTanStackRouterAlchemyDeploy } from "./alchemy/alchemy-tanstack-router-setup";
 import { setupTanStackStartAlchemyDeploy } from "./alchemy/alchemy-tanstack-start-setup";
+import {
+  setupReactRouterAlchemyDeploy,
+  setupSolidAlchemyDeploy,
+  setupTanStackRouterAlchemyDeploy,
+} from "./alchemy/alchemy-vite-setup";
 
 export async function setupWebDeploy(config: ProjectConfig) {
   const { webDeploy, serverDeploy, frontend, projectDir } = config;
   const { packageManager } = config;
 
   if (webDeploy === "none") return;
-
   if (webDeploy !== "cloudflare") return;
+
+  // Dependencies are handled by template-generator's deploy-deps.ts
+  // This only handles config modifications and infra scripts for "add deploy" command
 
   if (webDeploy === "cloudflare" && serverDeploy === "cloudflare") {
     await setupCombinedAlchemyDeploy(projectDir, packageManager, config);
-    await addAlchemyPackagesDependencies(projectDir);
     return;
   }
 
@@ -34,6 +42,7 @@ export async function setupWebDeploy(config: ProjectConfig) {
   const isReactRouter = frontend.includes("react-router");
   const isSolid = frontend.includes("solid");
 
+  // These functions now only modify config files (no addPackageDependency)
   if (isNext) {
     await setupNextAlchemyDeploy(projectDir, packageManager);
   } else if (isNuxt) {
@@ -49,13 +58,4 @@ export async function setupWebDeploy(config: ProjectConfig) {
   } else if (isSolid) {
     await setupSolidAlchemyDeploy(projectDir, packageManager);
   }
-
-  await addAlchemyPackagesDependencies(projectDir);
-}
-
-async function addAlchemyPackagesDependencies(projectDir: string) {
-  await addPackageDependency({
-    devDependencies: ["@cloudflare/workers-types"],
-    projectDir,
-  });
 }

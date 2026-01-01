@@ -11,6 +11,7 @@ import { processApiDeps } from "./api-deps";
 import { processAuthDeps } from "./auth-deps";
 import { processBackendDeps } from "./backend-deps";
 import { processDatabaseDeps } from "./db-deps";
+import { processDeployDeps } from "./deploy-deps";
 import { processEnvDeps } from "./env-deps";
 import { processExamplesDeps } from "./examples-deps";
 import { processInfraDeps } from "./infra-deps";
@@ -34,6 +35,7 @@ export function processDependencies(vfs: VirtualFileSystem, config: ProjectConfi
   processApiDeps(vfs, config);
   processAuthDeps(vfs, config);
   processPaymentsDeps(vfs, config);
+  processDeployDeps(vfs, config);
   // Addons and examples last (may depend on other packages)
   processAddonsDeps(vfs, config);
   processExamplesDeps(vfs, config);
@@ -45,6 +47,7 @@ export {
   processAuthDeps,
   processBackendDeps,
   processDatabaseDeps,
+  processDeployDeps,
   processEnvDeps,
   processExamplesDeps,
   processInfraDeps,

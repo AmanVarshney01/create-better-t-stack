@@ -1,9 +1,14 @@
+/**
+ * Server deploy setup - CLI-only operations
+ * NOTE: Dependencies are handled by template-generator's deploy-deps.ts processor
+ * This file only handles external CLI calls for "add deploy" command
+ */
+
 import fs from "fs-extra";
 import path from "node:path";
 
 import type { ProjectConfig } from "../../types";
 
-import { addPackageDependency } from "../../utils/add-package-deps";
 import { setupInfraScripts } from "./alchemy/alchemy-combined-setup";
 
 export async function setupServerDeploy(config: ProjectConfig) {
@@ -11,6 +16,7 @@ export async function setupServerDeploy(config: ProjectConfig) {
 
   if (serverDeploy === "none") return;
 
+  // Combined deploy is handled by web-deploy-setup
   if (serverDeploy === "cloudflare" && webDeploy === "cloudflare") {
     return;
   }
@@ -20,26 +26,6 @@ export async function setupServerDeploy(config: ProjectConfig) {
 
   if (serverDeploy === "cloudflare") {
     await setupInfraScripts(projectDir, packageManager, config);
-    await setupAlchemyServerDeploy(serverDir, projectDir);
+    // Dependencies are handled by template-generator's deploy-deps.ts
   }
-}
-
-export async function setupAlchemyServerDeploy(serverDir: string, projectDir?: string) {
-  if (!(await fs.pathExists(serverDir))) return;
-
-  await addPackageDependency({
-    devDependencies: ["alchemy", "wrangler", "@types/node", "@cloudflare/workers-types"],
-    projectDir: serverDir,
-  });
-
-  if (projectDir) {
-    await addAlchemyPackagesDependencies(projectDir);
-  }
-}
-
-async function addAlchemyPackagesDependencies(projectDir: string) {
-  await addPackageDependency({
-    devDependencies: ["@cloudflare/workers-types"],
-    projectDir,
-  });
 }

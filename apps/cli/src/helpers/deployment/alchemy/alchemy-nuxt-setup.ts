@@ -1,10 +1,14 @@
+/**
+ * Alchemy Nuxt setup - CLI-only operations
+ * NOTE: Dependencies are handled by template-generator's deploy-deps.ts
+ * This only modifies config files for "add deploy" command
+ */
+
 import fs from "fs-extra";
 import path from "node:path";
 import { IndentationText, Node, Project, QuoteKind } from "ts-morph";
 
 import type { PackageManager } from "../../../types";
-
-import { addPackageDependency } from "../../../utils/add-package-deps";
 
 export async function setupNuxtAlchemyDeploy(
   projectDir: string,
@@ -14,10 +18,9 @@ export async function setupNuxtAlchemyDeploy(
   const webAppDir = path.join(projectDir, "apps/web");
   if (!(await fs.pathExists(webAppDir))) return;
 
-  await addPackageDependency({
-    devDependencies: ["alchemy", "nitro-cloudflare-dev", "wrangler"],
-    projectDir: webAppDir,
-  });
+  // Dependencies are added by template-generator's deploy-deps.ts
+  // This only modifies nuxt.config.ts for "add deploy" command
+
   const nuxtConfigPath = path.join(webAppDir, "nuxt.config.ts");
   if (!(await fs.pathExists(nuxtConfigPath))) return;
 

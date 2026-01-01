@@ -1,9 +1,13 @@
+/**
+ * Alchemy Next.js setup - CLI-only operations
+ * NOTE: Dependencies are handled by template-generator's deploy-deps.ts
+ * This only modifies config files for "add deploy" command
+ */
+
 import fs from "fs-extra";
 import path from "node:path";
 
 import type { PackageManager } from "../../../types";
-
-import { addPackageDependency } from "../../../utils/add-package-deps";
 
 export async function setupNextAlchemyDeploy(
   projectDir: string,
@@ -13,11 +17,8 @@ export async function setupNextAlchemyDeploy(
   const webAppDir = path.join(projectDir, "apps/web");
   if (!(await fs.pathExists(webAppDir))) return;
 
-  await addPackageDependency({
-    dependencies: ["@opennextjs/cloudflare"],
-    devDependencies: ["alchemy", "wrangler", "@cloudflare/workers-types"],
-    projectDir: webAppDir,
-  });
+  // Dependencies are added by template-generator's deploy-deps.ts
+  // This only writes config files for "add deploy" command
 
   const openNextConfigPath = path.join(webAppDir, "open-next.config.ts");
   const openNextConfigContent = `import { defineCloudflareConfig } from "@opennextjs/cloudflare";
