@@ -769,6 +769,10 @@ export const getDisabledReason = (
     if (optionId === "convex" && currentStack.webFrontend.includes("solid")) {
       return "Convex is not compatible with Solid";
     }
+    // Workers runtime only works with Hono backend
+    if (currentStack.runtime === "workers" && optionId !== "hono" && optionId !== "none") {
+      return "Workers runtime only works with Hono";
+    }
   }
 
   // ============================================
@@ -876,8 +880,20 @@ export const getDisabledReason = (
   // AUTH CONSTRAINTS
   // ============================================
   if (category === "auth") {
-    if (optionId === "clerk" && currentStack.backend !== "convex") {
-      return "Clerk only works with Convex backend";
+    if (optionId === "clerk") {
+      if (currentStack.backend !== "convex") {
+        return "Clerk only works with Convex backend";
+      }
+      const hasClerkCompatibleFrontend =
+        currentStack.webFrontend.some((f) =>
+          ["react-router", "tanstack-router", "tanstack-start", "next"].includes(f),
+        ) ||
+        currentStack.nativeFrontend.some((f) =>
+          ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
+        );
+      if (!hasClerkCompatibleFrontend) {
+        return "Clerk with Convex requires React Router, TanStack Router, TanStack Start, Next.js, or React Native";
+      }
     }
   }
 

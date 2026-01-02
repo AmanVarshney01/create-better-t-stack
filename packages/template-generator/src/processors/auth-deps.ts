@@ -1,8 +1,3 @@
-/**
- * Auth dependencies processor
- * Adds authentication dependencies based on auth choice
- */
-
 import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
@@ -11,7 +6,6 @@ import { addPackageDependency } from "../utils/add-deps";
 
 export function processAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { auth, backend } = config;
-
   if (!auth || auth === "none") return;
 
   if (backend === "convex") {
@@ -39,7 +33,6 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
   const hasViteReact = frontend.some((f) => ["tanstack-router", "react-router"].includes(f));
 
   if (auth === "clerk") {
-    // Clerk for Convex
     if (webExists) {
       if (hasNextJs) {
         addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@clerk/nextjs"] });
@@ -57,7 +50,6 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
       addPackageDependency({ vfs, packagePath: nativePath, dependencies: ["@clerk/clerk-expo"] });
     }
   } else if (auth === "better-auth") {
-    // Better Auth for Convex
     if (backendExists) {
       addPackageDependency({
         vfs,
@@ -121,34 +113,17 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
   );
 
   if (auth === "better-auth") {
-    // Auth package
     if (authExists) {
-      addPackageDependency({
-        vfs,
-        packagePath: authPath,
-        dependencies: ["better-auth"],
-      });
-
-      // Native expo plugin in auth package
+      addPackageDependency({ vfs, packagePath: authPath, dependencies: ["better-auth"] });
       if (hasNative) {
-        addPackageDependency({
-          vfs,
-          packagePath: authPath,
-          dependencies: ["@better-auth/expo"],
-        });
+        addPackageDependency({ vfs, packagePath: authPath, dependencies: ["@better-auth/expo"] });
       }
     }
 
-    // Web client
     if (hasWebFrontend && webExists) {
-      addPackageDependency({
-        vfs,
-        packagePath: webPath,
-        dependencies: ["better-auth"],
-      });
+      addPackageDependency({ vfs, packagePath: webPath, dependencies: ["better-auth"] });
     }
 
-    // Native client
     if (hasNative && nativeExists) {
       addPackageDependency({
         vfs,

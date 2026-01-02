@@ -1,8 +1,3 @@
-/**
- * README generator processor
- * Generates README.md content based on project configuration
- */
-
 import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
@@ -128,7 +123,7 @@ function generateStackDescription(
   }
 
   if (backend !== "none") {
-    parts.push(backend[0].toUpperCase() + backend.slice(1));
+    parts.push((backend[0]?.toUpperCase() ?? "") + backend.slice(1));
   }
 
   if (!isConvex && api !== "none") {
@@ -185,7 +180,6 @@ function generateProjectStructure(
     ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
   );
 
-  // Web app
   if (hasFrontend) {
     const frontendTypes: Record<string, string> = {
       "tanstack-router": "React + TanStack Router",
@@ -205,25 +199,21 @@ function generateProjectStructure(
     structure.push(`│   ${prefix} web/         # ${desc} (${frontendType})`);
   }
 
-  // Native app
   if (hasNative) {
     structure.push("│   ├── native/      # Mobile application (React Native, Expo)");
   }
 
-  // Docs
   if (addons.includes("starlight")) {
     structure.push("│   ├── docs/        # Documentation site (Astro Starlight)");
   }
 
-  // Server
   if (!isBackendSelf && backend !== "none" && !isConvex) {
-    const backendName = backend[0].toUpperCase() + backend.slice(1);
+    const backendName = (backend[0]?.toUpperCase() ?? "") + backend.slice(1);
     const apiName = api !== "none" ? api.toUpperCase() : "";
     const desc = apiName ? `${backendName}, ${apiName}` : backendName;
     structure.push(`│   └── server/      # Backend API (${desc})`);
   }
 
-  // Packages
   if (isConvex || backend !== "none") {
     structure.push("├── packages/");
 
@@ -269,7 +259,6 @@ function generateFeaturesList(
 
   const features = ["- **TypeScript** - For type safety and improved developer experience"];
 
-  // Frontend frameworks
   const frontendFeatures: Record<string, string> = {
     "tanstack-router": "- **TanStack Router** - File-based routing with full type safety",
     "react-router": "- **React Router** - Declarative routing for React",
@@ -301,7 +290,6 @@ function generateFeaturesList(
     );
   }
 
-  // Backend
   const backendFeatures: Record<string, string> = {
     convex: "- **Convex** - Reactive backend-as-a-service platform",
     hono: "- **Hono** - Lightweight, performant server framework",
@@ -314,20 +302,17 @@ function generateFeaturesList(
     features.push(backendFeatures[backend]);
   }
 
-  // API
   if (!isConvex && api === "trpc") {
     features.push("- **tRPC** - End-to-end type-safe APIs");
   } else if (!isConvex && api === "orpc") {
     features.push("- **oRPC** - End-to-end type-safe APIs with OpenAPI integration");
   }
 
-  // Runtime
   if (!isConvex && backend !== "none" && runtime !== "none") {
     const runtimeName = runtime === "bun" ? "Bun" : runtime === "node" ? "Node.js" : runtime;
     features.push(`- **${runtimeName}** - Runtime environment`);
   }
 
-  // Database
   if (database !== "none" && !isConvex) {
     const ormNames: Record<string, string> = {
       drizzle: "Drizzle",
@@ -346,13 +331,11 @@ function generateFeaturesList(
     );
   }
 
-  // Auth
   if (auth !== "none") {
     const authLabel = auth === "clerk" ? "Clerk" : "Better-Auth";
     features.push(`- **Authentication** - ${authLabel}`);
   }
 
-  // Addons
   const addonFeatures: Record<string, string> = {
     pwa: "- **PWA** - Progressive Web App support",
     tauri: "- **Tauri** - Build native desktop applications",

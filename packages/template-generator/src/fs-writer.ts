@@ -3,13 +3,8 @@ import { join, dirname } from "pathe";
 
 import type { VirtualFileTree, VirtualNode, VirtualFile, VirtualDirectory } from "./types";
 
-async function ensureDir(dirPath: string): Promise<void> {
-  await fs.mkdir(dirPath, { recursive: true });
-}
-
 export async function writeTreeToFilesystem(tree: VirtualFileTree, destDir: string): Promise<void> {
-  const root = tree.root as VirtualDirectory;
-  for (const child of root.children) {
+  for (const child of tree.root.children) {
     await writeNode(child, destDir, "");
   }
 }
@@ -18,19 +13,12 @@ async function writeNode(node: VirtualNode, baseDir: string, relativePath: strin
   const fullPath = join(baseDir, relativePath, node.name);
 
   if (node.type === "file") {
-    const file = node as VirtualFile;
-
-    if (file.content === "[Binary file]") {
-      return;
-    }
-
-    await ensureDir(dirname(fullPath));
-    await fs.writeFile(fullPath, file.content, "utf-8");
+    if ((node as VirtualFile).content === "[Binary file]") return;
+    await fs.mkdir(dirname(fullPath), { recursive: true });
+    await fs.writeFile(fullPath, (node as VirtualFile).content, "utf-8");
   } else {
-    const dir = node as VirtualDirectory;
-    await ensureDir(fullPath);
-
-    for (const child of dir.children) {
+    await fs.mkdir(fullPath, { recursive: true });
+    for (const child of (node as VirtualDirectory).children) {
       await writeNode(child, baseDir, join(relativePath, node.name));
     }
   }
@@ -56,19 +44,13 @@ async function writeSelectedNode(
   const nodePath = relativePath ? `${relativePath}/${node.name}` : node.name;
 
   if (node.type === "file") {
-    if (filter(nodePath)) {
-      const file = node as VirtualFile;
-      const fullPath = join(baseDir, nodePath);
-
-      if (file.content !== "[Binary file]") {
-        await ensureDir(dirname(fullPath));
-        await fs.writeFile(fullPath, file.content, "utf-8");
-        writtenFiles.push(nodePath);
-      }
+    if (filter(nodePath) && (node as VirtualFile).content !== "[Binary file]") {
+      await fs.mkdir(dirname(join(baseDir, nodePath)), { recursive: true });
+      await fs.writeFile(join(baseDir, nodePath), (node as VirtualFile).content, "utf-8");
+      writtenFiles.push(nodePath);
     }
   } else {
-    const dir = node as VirtualDirectory;
-    for (const child of dir.children) {
+    for (const child of (node as VirtualDirectory).children) {
       await writeSelectedNode(child, baseDir, nodePath, filter, writtenFiles);
     }
   }

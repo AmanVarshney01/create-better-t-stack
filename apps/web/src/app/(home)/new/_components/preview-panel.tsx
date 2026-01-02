@@ -1,9 +1,11 @@
 "use client";
 
-import { Loader2, FolderTree, FileCode2 } from "lucide-react";
+import { Loader2, FolderTree, FileCode2, Info } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 
 import type { StackState } from "@/lib/constant";
+
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 import { CodeViewer, CodeViewerEmpty } from "./code-viewer";
 import { FileExplorer, type VirtualFile, type VirtualDirectory } from "./file-explorer";
@@ -133,9 +135,22 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
           <FileCode2 className="h-3.5 w-3.5" />
           <span>{fileCount} files</span>
         </div>
-        {isLoading && (
-          <Loader2 className="ml-auto h-3.5 w-3.5 animate-spin text-muted-foreground" />
-        )}
+        <div className="ml-auto flex items-center gap-2">
+          <Tooltip>
+            <TooltipTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
+              <Info className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Preview info</span>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              <p>
+                This is a static template preview. Files are not formatted. Some features like
+                database provider setup (Turso, Neon, Supabase, etc.) and certain addons (Fumadocs,
+                Starlight, Tauri, etc.) require CLI execution and are not shown here.
+              </p>
+            </TooltipContent>
+          </Tooltip>
+          {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+        </div>
       </div>
 
       {/* Split view */}

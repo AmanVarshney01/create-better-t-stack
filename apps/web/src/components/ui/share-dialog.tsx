@@ -4,7 +4,7 @@ import { Check, Copy, Terminal, Twitter } from "lucide-react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import QRCode from "qrcode";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import type { StackState } from "@/lib/constant";
@@ -133,7 +133,11 @@ export function ShareDialog({ children, stackUrl, stackState }: ShareDialogProps
 
   return (
     <Dialog>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger
+        render={
+          React.isValidElement(children) ? children : <button type="button">{children}</button>
+        }
+      />
       <DialogContent className="grid grid-cols-1 bg-fd-background sm:max-w-md">
         <DialogHeader className="border-border border-b pb-4">
           <div className="flex items-center gap-2">

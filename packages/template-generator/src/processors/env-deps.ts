@@ -1,8 +1,3 @@
-/**
- * Environment package dependencies processor
- * Adds T3 Env deps based on frontend/backend config
- */
-
 import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
@@ -14,10 +9,8 @@ export function processEnvDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
   if (!vfs.exists(envPath)) return;
 
   const { frontend, backend, runtime } = config;
-
   const deps: AvailableDependencies[] = ["zod"];
 
-  // Framework-specific T3 env
   if (frontend.includes("next")) {
     deps.push("@t3-oss/env-nextjs");
   } else if (frontend.includes("nuxt")) {
@@ -26,15 +19,10 @@ export function processEnvDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
     deps.push("@t3-oss/env-core");
   }
 
-  // Server env for non-convex backends
   const needsServerEnv = backend !== "convex" && backend !== "none" && runtime !== "workers";
   if (needsServerEnv && !deps.includes("@t3-oss/env-core")) {
     deps.push("@t3-oss/env-core");
   }
 
-  addPackageDependency({
-    vfs,
-    packagePath: envPath,
-    dependencies: deps,
-  });
+  addPackageDependency({ vfs, packagePath: envPath, dependencies: deps });
 }

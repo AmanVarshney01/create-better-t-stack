@@ -4,5 +4,5 @@
     "order": "asc"
   },
   "experimentalSortPackageJson": true,
-  "ignorePatterns": ["*.hbs", "apps/cli/templates/**"]
+  "ignorePatterns": ["*.hbs", "apps/cli/templates/**", "convex/_generated/**"]
 }

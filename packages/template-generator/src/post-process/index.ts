@@ -13,7 +13,7 @@ import { processPackageConfigs } from "./package-configs";
 /**
  * Run all post-processing steps on the virtual filesystem
  */
-export function processPostGeneration(vfs: VirtualFileSystem, config: ProjectConfig): void {
+export function processPostGeneration(vfs: VirtualFileSystem, config: ProjectConfig) {
   processPackageConfigs(vfs, config);
   processCatalogs(vfs, config);
 }

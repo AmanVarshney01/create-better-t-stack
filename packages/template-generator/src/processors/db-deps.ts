@@ -1,8 +1,3 @@
-/**
- * Database dependencies processor
- * Adds appropriate database dependencies based on ORM, database, and setup choices
- */
-
 import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
@@ -25,11 +20,7 @@ export function processDatabaseDeps(vfs: VirtualFileSystem, config: ProjectConfi
   } else if (orm === "drizzle") {
     processDrizzleDeps(vfs, config, dbPkgPath, webPkgPath, webExists);
   } else if (orm === "mongoose") {
-    addPackageDependency({
-      vfs,
-      packagePath: dbPkgPath,
-      dependencies: ["mongoose"],
-    });
+    addPackageDependency({ vfs, packagePath: dbPkgPath, dependencies: ["mongoose"] });
   }
 }
 
@@ -62,7 +53,6 @@ function processPrismaDeps(
   const deps: AvailableDependencies[] = ["@prisma/client"];
   const devDeps: AvailableDependencies[] = ["prisma"];
 
-  // Add adapters based on database type
   if (database === "mysql" && dbSetup === "planetscale") {
     deps.push("@prisma/adapter-planetscale", "@planetscale/database");
   } else if (database === "mysql") {
@@ -73,6 +63,8 @@ function processPrismaDeps(
     if (dbSetup === "neon") {
       deps.push("@prisma/adapter-neon", "@neondatabase/serverless", "ws");
       devDeps.push("@types/ws");
+    } else if (dbSetup === "prisma-postgres") {
+      deps.push("@prisma/adapter-pg");
     } else {
       deps.push("@prisma/adapter-pg", "pg");
       devDeps.push("@types/pg");
@@ -87,11 +79,7 @@ function processPrismaDeps(
   });
 
   if (webExists) {
-    addPackageDependency({
-      vfs,
-      packagePath: webPkgPath,
-      dependencies: ["@prisma/client"],
-    });
+    addPackageDependency({ vfs, packagePath: webPkgPath, dependencies: ["@prisma/client"] });
   }
 }
 

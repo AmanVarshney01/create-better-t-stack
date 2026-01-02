@@ -1,8 +1,3 @@
-/**
- * Payments dependencies processor
- * Adds Polar SDK deps based on payments config
- */
-
 import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
@@ -11,18 +6,13 @@ import { addPackageDependency } from "../utils/add-deps";
 
 export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { payments, frontend } = config;
-
   if (!payments || payments === "none") return;
 
   const authPath = "packages/auth/package.json";
   const webPath = "apps/web/package.json";
 
-  const authExists = vfs.exists(authPath);
-  const webExists = vfs.exists(webPath);
-
   if (payments === "polar") {
-    // Polar in auth package
-    if (authExists) {
+    if (vfs.exists(authPath)) {
       addPackageDependency({
         vfs,
         packagePath: authPath,
@@ -30,8 +20,7 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
       });
     }
 
-    // Polar in web client
-    if (webExists) {
+    if (vfs.exists(webPath)) {
       const hasWebFrontend = frontend.some((f) =>
         [
           "react-router",
@@ -43,7 +32,6 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
           "solid",
         ].includes(f),
       );
-
       if (hasWebFrontend) {
         addPackageDependency({
           vfs,

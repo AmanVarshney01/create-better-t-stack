@@ -1,7 +1,6 @@
 import fs from "fs-extra";
 import path from "node:path";
 import { format, type FormatOptions } from "oxfmt";
-import { glob } from "tinyglobby";
 
 const formatOptions: FormatOptions = {
   experimentalSortPackageJson: true,
@@ -10,7 +9,7 @@ const formatOptions: FormatOptions = {
   },
 };
 
-export async function formatFile(filePath: string, content: string): Promise<string | null> {
+export async function formatCode(filePath: string, content: string): Promise<string | null> {
   try {
     const result = await format(path.basename(filePath), content, formatOptions);
 
@@ -24,27 +23,28 @@ export async function formatFile(filePath: string, content: string): Promise<str
   }
 }
 
-/**
- * Format all files in a project directory using oxfmt
- */
-export async function formatProjectFiles(projectDir: string): Promise<void> {
-  const files = await glob(["**/*.{ts,tsx,js,jsx,json,mjs,cjs}"], {
-    cwd: projectDir,
-    absolute: true,
-    ignore: ["**/node_modules/**", "**/dist/**", "**/.git/**"],
-  });
+export async function formatProject(projectDir: string) {
+  async function formatDirectory(dir: string) {
+    const entries = await fs.readdir(dir, { withFileTypes: true });
 
-  await Promise.all(
-    files.map(async (filePath) => {
-      try {
-        const content = await fs.readFile(filePath, "utf-8");
-        const formatted = await formatFile(filePath, content);
-        if (formatted && formatted !== content) {
-          await fs.writeFile(filePath, formatted, "utf-8");
+    await Promise.all(
+      entries.map(async (entry) => {
+        const fullPath = path.join(dir, entry.name);
+
+        if (entry.isDirectory()) {
+          await formatDirectory(fullPath);
+        } else if (entry.isFile()) {
+          try {
+            const content = await fs.readFile(fullPath, "utf-8");
+            const formatted = await formatCode(fullPath, content);
+            if (formatted && formatted !== content) {
+              await fs.writeFile(fullPath, formatted, "utf-8");
+            }
+          } catch {}
         }
-      } catch {
-        // Silently skip files that can't be formatted
-      }
-    }),
-  );
+      }),
+    );
+  }
+
+  await formatDirectory(projectDir);
 }

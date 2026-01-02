@@ -2,6 +2,8 @@ import { cancel } from "@clack/prompts";
 import consola from "consola";
 import pc from "picocolors";
 
+import { isSilent } from "./context";
+
 export class UserCancelledError extends Error {
   constructor(message = "Operation cancelled") {
     super(message);
@@ -17,17 +19,26 @@ export class CLIError extends Error {
 }
 
 export function exitWithError(message: string): never {
+  if (isSilent()) {
+    throw new CLIError(message);
+  }
   consola.error(pc.red(message));
-  throw new CLIError(message);
+  process.exit(1);
 }
 
 export function exitCancelled(message = "Operation cancelled"): never {
+  if (isSilent()) {
+    throw new UserCancelledError(message);
+  }
   cancel(pc.red(message));
-  throw new UserCancelledError(message);
+  process.exit(1);
 }
 
 export function handleError(error: unknown, fallbackMessage?: string): never {
   const message = error instanceof Error ? error.message : fallbackMessage || String(error);
+  if (isSilent()) {
+    throw error instanceof Error ? error : new Error(message);
+  }
   consola.error(pc.red(message));
-  throw error instanceof Error ? error : new Error(message);
+  process.exit(1);
 }

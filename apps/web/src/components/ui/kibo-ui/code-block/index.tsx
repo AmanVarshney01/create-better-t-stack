@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentProps, HTMLAttributes, ReactElement, ReactNode } from "react";
+import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
 import type { IconType } from "react-icons";
 
 import { useControllableState } from "@radix-ui/react-use-controllable-state";
@@ -12,7 +12,7 @@ import {
   transformerNotationWordHighlight,
 } from "@shikijs/transformers";
 import { CheckIcon, CopyIcon } from "lucide-react";
-import { cloneElement, createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import {
   SiAstro,
   SiBiome,
@@ -389,7 +389,19 @@ export type CodeBlockSelectProps = ComponentProps<typeof Select>;
 export const CodeBlockSelect = (props: CodeBlockSelectProps) => {
   const { value, onValueChange } = useContext(CodeBlockContext);
 
-  return <Select onValueChange={onValueChange} value={value} {...props} />;
+  return (
+    <Select
+      onValueChange={
+        onValueChange
+          ? (newValue: unknown) => {
+              onValueChange(newValue as string);
+            }
+          : undefined
+      }
+      value={value}
+      {...props}
+    />
+  );
 };
 
 export type CodeBlockSelectTriggerProps = ComponentProps<typeof SelectTrigger>;
@@ -423,14 +435,13 @@ export const CodeBlockSelectItem = ({ className, ...props }: CodeBlockSelectItem
   <SelectItem className={cn("text-sm", className)} {...props} />
 );
 
-export type CodeBlockCopyButtonProps = ComponentProps<typeof Button> & {
+export type CodeBlockCopyButtonProps = Omit<ComponentProps<typeof Button>, "onClick"> & {
   onCopy?: () => void;
   onError?: (error: Error) => void;
   timeout?: number;
 };
 
 export const CodeBlockCopyButton = ({
-  asChild,
   onCopy,
   onError,
   timeout = 2000,
@@ -454,13 +465,6 @@ export const CodeBlockCopyButton = ({
       setTimeout(() => setIsCopied(false), timeout);
     }, onError);
   };
-
-  if (asChild) {
-    return cloneElement(children as ReactElement, {
-      // @ts-expect-error - we know this is a button
-      onClick: copyToClipboard,
-    });
-  }
 
   const Icon = isCopied ? CheckIcon : CopyIcon;
 

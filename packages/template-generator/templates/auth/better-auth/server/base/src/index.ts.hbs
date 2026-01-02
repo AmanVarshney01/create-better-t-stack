@@ -15,6 +15,7 @@ export const auth = betterAuth({
 {{#if (eq database "mysql")}}provider: "mysql",{{/if}}
 {{#if (eq database "mongodb")}}provider: "mongodb",{{/if}}
 	}),
+
 	trustedOrigins: [
 		env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
@@ -33,8 +34,17 @@ export const auth = betterAuth({
 		},
 	},
 {{/if}}
-{{#if (eq payments "polar")}}
 	plugins: [
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+        expo(),
+{{/if}}
+{{#if (and (eq backend "self") (includes frontend "tanstack-start"))}}
+        tanstackStartCookies(),
+{{/if}}
+{{#if (and (eq backend "self") (includes frontend "next"))}}
+        nextCookies(),
+{{/if}}
+{{#if (eq payments "polar")}}
 		polar({
 			client: polarClient,
 			createCustomerOnSignUp: true,
@@ -53,8 +63,8 @@ export const auth = betterAuth({
 				portal(),
 			],
 		}),
-	],
 {{/if}}
+	],
 });
 {{/if}}
 
@@ -69,6 +79,15 @@ import { polarClient } from "./lib/payments";
 {{/if}}
 import { db } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+import { expo } from "@better-auth/expo";
+{{/if}}
+{{#if (and (eq backend "self") (includes frontend "tanstack-start"))}}
+import { tanstackStartCookies } from "better-auth/tanstack-start";
+{{/if}}
+{{#if (and (eq backend "self") (includes frontend "next"))}}
+import { nextCookies } from "better-auth/next-js";
+{{/if}}
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
@@ -95,8 +114,8 @@ export const auth = betterAuth({
 		},
 	},
 {{/if}}
-{{#if (eq payments "polar")}}
 	plugins: [
+{{#if (eq payments "polar")}}
 		polar({
 			client: polarClient,
 			createCustomerOnSignUp: true,
@@ -115,8 +134,8 @@ export const auth = betterAuth({
 				portal(),
 			],
 		}),
-	],
 {{/if}}
+	],
 });
 {{/if}}
 
@@ -130,6 +149,7 @@ import { polarClient } from "./lib/payments";
 {{/if}}
 import { db } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
+
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
@@ -257,6 +277,7 @@ import { env } from "@{{projectName}}/env/server";
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
 {{/if}}
+
 
 export const auth = betterAuth({
 	database: "", // Invalid configuration

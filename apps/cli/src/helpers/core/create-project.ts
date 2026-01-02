@@ -7,17 +7,12 @@ import path from "node:path";
 
 import type { ProjectConfig } from "../../types";
 
-import { setupBetterAuthPlugins } from "../../utils/better-auth-plugin-setup";
 import { writeBtsConfig } from "../../utils/bts-config";
 import { isSilent } from "../../utils/context";
 import { exitWithError } from "../../utils/errors";
-import { formatProjectFiles } from "../../utils/file-formatter";
+import { formatProject } from "../../utils/file-formatter";
 import { setupAddons } from "../addons/addons-setup";
-import { setupExamples } from "../addons/examples-setup";
 import { setupDatabase } from "../core/db-setup";
-import { setupServerDeploy } from "../deployment/server-deploy-setup";
-import { setupWebDeploy } from "../deployment/web-deploy-setup";
-import { setupEnvironmentVariables } from "./env-setup";
 import { initializeGit } from "./git";
 import { installDependencies } from "./install-dependencies";
 import { displayPostInstallInstructions } from "./post-installation";
@@ -43,32 +38,19 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
     }
 
     await writeTreeToFilesystem(result.tree, projectDir);
-    await formatProjectFiles(projectDir);
     await setPackageManagerVersion(projectDir, options.packageManager);
 
     if (!isConvex && options.database !== "none") {
       await setupDatabase(options, cliInput);
     }
 
-    if (options.examples.length > 0 && options.examples[0] !== "none") {
-      await setupExamples(options);
-    }
-
     if (options.addons.length > 0 && options.addons[0] !== "none") {
       await setupAddons(options);
     }
 
-    if (options.auth === "better-auth" && !isConvex) {
-      const authPackageDir = `${projectDir}/packages/auth`;
-      if (await fs.pathExists(authPackageDir)) {
-        await setupBetterAuthPlugins(projectDir, options);
-      }
-    }
-
-    await setupEnvironmentVariables(options);
-    await setupWebDeploy(options);
-    await setupServerDeploy(options);
     await writeBtsConfig(options);
+
+    await formatProject(projectDir);
 
     if (!isSilent()) log.success("Project template successfully scaffolded!");
 

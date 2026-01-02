@@ -78,16 +78,12 @@ export const CodeViewer = memo(function CodeViewer({
         key={filePath}
         data={codeData}
         defaultValue={language}
-        className="flex flex-col h-full border-border"
+        className="flex flex-col h-full"
       >
-        <CodeBlockHeader className="border-border">
-          <CodeBlockFiles className="bg-transparent text-foreground">
+        <CodeBlockHeader className="">
+          <CodeBlockFiles className="">
             {(item) => (
-              <CodeBlockFilename
-                key={item.language}
-                value={item.language}
-                className="bg-transparent text-foreground"
-              >
+              <CodeBlockFilename key={item.language} value={item.language} className="">
                 {filePath}
               </CodeBlockFilename>
             )}

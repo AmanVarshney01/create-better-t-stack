@@ -1,11 +1,24 @@
 {
   "name": "@better-t-stack/template-generator",
-  "version": "0.0.1",
+  "version": "3.13.2",
   "description": "Virtual file system generator for Better-T-Stack templates - works in browsers and Node.js",
+  "keywords": [
+    "better-t-stack",
+    "cli",
+    "template-generator",
+    "typescript",
+    "virtual-fs"
+  ],
+  "homepage": "https://better-t-stack.dev/",
+  "license": "MIT",
+  "author": "Aman Varshney",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AmanVarshney01/create-better-t-stack.git",
+    "directory": "packages/template-generator"
+  },
   "files": [
-    "dist",
-    "scripts",
-    "templates"
+    "dist"
   ],
   "type": "module",
   "exports": {
@@ -29,6 +42,7 @@
     "generate-templates": "bun scripts/generate-templates.ts",
     "prebuild": "bun run generate-templates",
     "build": "tsdown",
+    "prepublishOnly": "bun run build",
     "dev": "tsdown --watch",
     "typecheck": "tsc --noEmit"
   },
@@ -36,7 +50,9 @@
     "@better-t-stack/types": "workspace:*",
     "handlebars": "^4.7.8",
     "memfs": "^4.51.1",
-    "pathe": "^2.0.3"
+    "pathe": "^2.0.3",
+    "ts-morph": "^27.0.2",
+    "yaml": "^2.8.2"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",

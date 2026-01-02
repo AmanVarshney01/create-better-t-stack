@@ -12,7 +12,7 @@ import { getProjectName } from "../../prompts/project-name";
 import { trackProjectCreation } from "../../utils/analytics";
 import { isSilent, runWithContextAsync } from "../../utils/context";
 import { displayConfig } from "../../utils/display-config";
-import { CLIError, exitWithError, handleError, UserCancelledError } from "../../utils/errors";
+import { CLIError, UserCancelledError } from "../../utils/errors";
 import { generateReproducibleCommand } from "../../utils/generate-reproducible-command";
 import { handleDirectoryConflict, setupProjectDirectory } from "../../utils/project-directory";
 import { renderTitle } from "../../utils/render-title";
@@ -24,8 +24,6 @@ import {
   validateConfigCompatibility,
 } from "../../validation";
 import { createProject } from "./create-project";
-import { detectProjectConfig } from "./detect-project-config";
-import { installDependencies } from "./install-dependencies";
 
 export interface CreateHandlerOptions {
   silent?: boolean;

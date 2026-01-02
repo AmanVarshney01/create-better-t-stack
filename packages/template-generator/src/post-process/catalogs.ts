@@ -5,6 +5,8 @@
 
 import type { ProjectConfig } from "@better-t-stack/types";
 
+import yaml from "yaml";
+
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 type PackageJson = {
@@ -132,40 +134,42 @@ function setupBunCatalogs(vfs: VirtualFileSystem, catalog: Record<string, string
       catalog,
     };
   } else if (typeof pkgJson.workspaces === "object") {
-    const ws = pkgJson.workspaces as { packages?: string[]; catalog?: Record<string, string> };
-    if (!ws.catalog) {
-      ws.catalog = {};
+    if (!pkgJson.workspaces.catalog) {
+      pkgJson.workspaces.catalog = {};
     }
-    ws.catalog = { ...ws.catalog, ...catalog };
+    pkgJson.workspaces.catalog = {
+      ...pkgJson.workspaces.catalog,
+      ...catalog,
+    };
   }
 
   vfs.writeJson("package.json", pkgJson);
 }
 
 function setupPnpmCatalogs(vfs: VirtualFileSystem, catalog: Record<string, string>): void {
-  const content = vfs.readFile("pnpm-workspace.yaml");
-  if (!content) return;
+  let content = vfs.readFile("pnpm-workspace.yaml");
 
-  // Simple YAML handling - add catalog section
-  const lines = content.split("\n");
-  const hasExistingCatalog = lines.some((line) => line.startsWith("catalog:"));
-
-  if (hasExistingCatalog) {
-    // Find catalog section and append
-    const catalogIndex = lines.findIndex((line) => line.startsWith("catalog:"));
-    const catalogEntries = Object.entries(catalog).map(
-      ([name, version]) => `  ${name}: "${version}"`,
-    );
-    lines.splice(catalogIndex + 1, 0, ...catalogEntries);
-  } else {
-    // Add new catalog section
-    lines.push("catalog:");
-    for (const [name, version] of Object.entries(catalog)) {
-      lines.push(`  ${name}: "${version}"`);
-    }
+  // Create pnpm-workspace.yaml if it doesn't exist
+  if (!content) {
+    content = `packages:
+  - "apps/*"
+  - "packages/*"
+`;
+    vfs.writeFile("pnpm-workspace.yaml", content);
   }
 
-  vfs.writeFile("pnpm-workspace.yaml", lines.join("\n"));
+  const workspaceYaml = yaml.parse(content);
+
+  if (!workspaceYaml.catalog) {
+    workspaceYaml.catalog = {};
+  }
+
+  workspaceYaml.catalog = {
+    ...workspaceYaml.catalog,
+    ...catalog,
+  };
+
+  vfs.writeFile("pnpm-workspace.yaml", yaml.stringify(workspaceYaml));
 }
 
 function updatePackageJsonsWithCatalogs(
