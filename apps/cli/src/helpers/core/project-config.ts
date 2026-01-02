@@ -1,6 +1,7 @@
 import { log } from "@clack/prompts";
 import { $ } from "execa";
 import fs from "fs-extra";
+import os from "node:os";
 import path from "node:path";
 
 import type { ProjectConfig } from "../../types";
@@ -95,7 +96,7 @@ async function updateRootPackageJson(projectDir: string, options: ProjectConfig)
   }
 
   try {
-    const { stdout } = await $`${packageManager} -v`;
+    const { stdout } = await $({ cwd: os.tmpdir() })`${packageManager} -v`;
     packageJson.packageManager = `${packageManager}@${stdout.trim()}`;
   } catch {
     log.warn(`Could not determine ${packageManager} version.`);
