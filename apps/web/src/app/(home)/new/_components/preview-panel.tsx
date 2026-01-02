@@ -10,6 +10,8 @@ import { FileExplorer, type VirtualFile, type VirtualDirectory } from "./file-ex
 
 interface PreviewPanelProps {
   stack: StackState;
+  selectedFilePath: string | null;
+  onSelectFile: (filePath: string | null) => void;
 }
 
 interface PreviewResponse {
@@ -22,7 +24,7 @@ interface PreviewResponse {
   error?: string;
 }
 
-export function PreviewPanel({ stack }: PreviewPanelProps) {
+export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewPanelProps) {
   const [tree, setTree] = useState<VirtualDirectory | null>(null);
   const [fileCount, setFileCount] = useState(0);
   const [directoryCount, setDirectoryCount] = useState(0);
@@ -47,7 +49,19 @@ export function PreviewPanel({ stack }: PreviewPanelProps) {
         setTree(data.tree.root);
         setFileCount(data.tree.fileCount);
         setDirectoryCount(data.tree.directoryCount);
-        setSelectedFile(null);
+
+        // Restore selected file from query state if it exists
+        if (selectedFilePath) {
+          const file = findFileByPath(data.tree.root, selectedFilePath);
+          if (file) {
+            setSelectedFile(file);
+          } else {
+            setSelectedFile(null);
+            onSelectFile(null);
+          }
+        } else {
+          setSelectedFile(null);
+        }
       } else {
         setError(data.error || "Failed to generate preview");
       }
@@ -66,7 +80,22 @@ export function PreviewPanel({ stack }: PreviewPanelProps) {
 
   const handleSelectFile = (file: VirtualFile) => {
     setSelectedFile(file);
+    onSelectFile(file.path);
   };
+
+  // Helper function to find a file by path in the tree
+  function findFileByPath(node: VirtualDirectory, path: string): VirtualFile | null {
+    for (const child of node.children) {
+      if (child.type === "file" && child.path === path) {
+        return child;
+      }
+      if (child.type === "directory") {
+        const found = findFileByPath(child, path);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
 
   if (isLoading && !tree) {
     return (
@@ -115,7 +144,7 @@ export function PreviewPanel({ stack }: PreviewPanelProps) {
         <div className="w-48 shrink-0 overflow-hidden border-r border-border md:w-56 lg:w-64">
           <FileExplorer
             root={tree}
-            selectedPath={selectedFile?.path || null}
+            selectedPath={selectedFile?.path || selectedFilePath || null}
             onSelectFile={handleSelectFile}
           />
         </div>

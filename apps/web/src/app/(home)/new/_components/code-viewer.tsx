@@ -78,19 +78,23 @@ export const CodeViewer = memo(function CodeViewer({
         key={filePath}
         data={codeData}
         defaultValue={language}
-        className="flex flex-col h-full"
+        className="flex flex-col h-full border-border"
       >
-        <CodeBlockHeader>
-          <CodeBlockFiles>
+        <CodeBlockHeader className="border-border">
+          <CodeBlockFiles className="bg-transparent text-foreground">
             {(item) => (
-              <CodeBlockFilename key={item.language} value={item.language}>
+              <CodeBlockFilename
+                key={item.language}
+                value={item.language}
+                className="bg-transparent text-foreground"
+              >
                 {filePath}
               </CodeBlockFilename>
             )}
           </CodeBlockFiles>
           <CodeBlockCopyButton />
         </CodeBlockHeader>
-        <CodeBlockBody className="flex-1 overflow-auto">
+        <CodeBlockBody className="flex-1 overflow-auto [&_.shiki]:bg-fd-background! dark:[&_.shiki]:bg-fd-background!">
           {(item) => (
             <CodeBlockItem key={item.language} value={item.language}>
               <CodeBlockContent
@@ -118,7 +122,7 @@ export function CodeViewerEmpty({
   message = "Select a file to view its content",
 }: EmptyStateProps) {
   return (
-    <div className="flex h-full items-center justify-center bg-secondary text-muted-foreground">
+    <div className="flex h-full items-center justify-center text-muted-foreground">
       <p className="text-sm">{message}</p>
     </div>
   );

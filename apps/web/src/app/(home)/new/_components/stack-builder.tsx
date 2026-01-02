@@ -47,13 +47,12 @@ function formatProjectName(name: string): string {
 }
 
 const StackBuilder = () => {
-  const [stack, setStack] = useStackState();
+  const [stack, setStack, viewMode, setViewMode, selectedFile, setSelectedFile] = useStackState();
 
   const [command, setCommand] = useState("");
   const [copied, setCopied] = useState(false);
   const [lastSavedStack, setLastSavedStack] = useState<StackState | null>(null);
   const [, setLastChanges] = useState<Array<{ category: string; message: string }>>([]);
-  const [viewMode, setViewMode] = useState<"command" | "preview">("command");
 
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const contentRef = useRef<HTMLDivElement>(null);
@@ -486,7 +485,11 @@ const StackBuilder = () => {
           <div className="flex items-center gap-2 border-b border-border bg-muted/20 px-3 py-2">
             <button
               type="button"
-              onClick={() => setViewMode("command")}
+              onClick={() => {
+                startTransition(() => {
+                  setViewMode("command");
+                });
+              }}
               className={cn(
                 "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
                 viewMode === "command"
@@ -499,7 +502,11 @@ const StackBuilder = () => {
             </button>
             <button
               type="button"
-              onClick={() => setViewMode("preview")}
+              onClick={() => {
+                startTransition(() => {
+                  setViewMode("preview");
+                });
+              }}
               className={cn(
                 "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
                 viewMode === "preview"
@@ -513,7 +520,11 @@ const StackBuilder = () => {
           </div>
 
           {viewMode === "preview" ? (
-            <PreviewPanel stack={stack} />
+            <PreviewPanel
+              stack={stack}
+              selectedFilePath={selectedFile}
+              onSelectFile={setSelectedFile}
+            />
           ) : (
             <ScrollArea ref={contentRef} className="flex-1 overflow-hidden scroll-smooth">
               <main className="p-3 sm:p-4">
