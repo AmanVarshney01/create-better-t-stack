@@ -1,0 +1,89 @@
+"use client";
+
+{{#if (eq backend "convex")}}
+{{#if (eq auth "clerk")}}
+import { useAuth } from "@clerk/nextjs";
+import { ConvexReactClient } from "convex/react";
+import { ConvexProviderWithClerk } from "convex/react-clerk";
+import { env } from "@{{projectName}}/env/web";
+{{else if (eq auth "better-auth")}}
+import { ConvexReactClient } from "convex/react";
+import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
+import { authClient } from "@/lib/auth-client";
+import { env } from "@{{projectName}}/env/web";
+{{else}}
+import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { env } from "@{{projectName}}/env/web";
+{{/if}}
+{{else}}
+{{#unless (eq api "none")}}
+import { QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+{{#if (eq api "orpc")}}
+import { queryClient } from "@/utils/orpc";
+{{/if}}
+{{#if (eq api "trpc")}}
+import { queryClient } from "@/utils/trpc";
+{{/if}}
+{{/unless}}
+{{/if}}
+import { ThemeProvider } from "./theme-provider";
+import { Toaster } from "./ui/sonner";
+
+{{#if (eq backend "convex")}}
+const convex = new ConvexReactClient(env.NEXT_PUBLIC_CONVEX_URL);
+{{/if}}
+
+export default function Providers({
+  children,
+{{#if (and (eq backend "convex") (eq auth "better-auth"))}}
+  initialToken,
+{{/if}}
+}: {
+  children: React.ReactNode;
+{{#if (and (eq backend "convex") (eq auth "better-auth"))}}
+  initialToken?: string | null;
+{{/if}}
+}) {
+  return (
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+    >
+      {{#if (eq backend "convex")}}
+      {{#if (eq auth "clerk")}}
+      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+        {children}
+      </ConvexProviderWithClerk>
+      {{else if (eq auth "better-auth")}}
+      <ConvexBetterAuthProvider
+        client={convex}
+        authClient={authClient}
+        initialToken={initialToken}
+      >
+        {children}
+      </ConvexBetterAuthProvider>
+      {{else}}
+      <ConvexProvider client={convex}>{children}</ConvexProvider>
+      {{/if}}
+      {{else}}
+      {{#unless (eq api "none")}}
+      <QueryClientProvider client={queryClient}>
+        {{#if (eq api "orpc")}}
+        {children}
+        {{/if}}
+        {{#if (eq api "trpc")}}
+        {children}
+        {{/if}}
+        <ReactQueryDevtools />
+      </QueryClientProvider>
+      {{else}}
+      {children}
+      {{/unless}}
+      {{/if}}
+      <Toaster richColors />
+    </ThemeProvider>
+  );
+}

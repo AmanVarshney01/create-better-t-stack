@@ -1,0 +1,333 @@
+import { ScrollView, Text, View, TouchableOpacity } from "react-native";
+import { StyleSheet } from "react-native-unistyles";
+import { Container } from "@/components/container";
+
+{{#if (eq api "orpc")}}
+import { useQuery } from "@tanstack/react-query";
+import { orpc } from "@/utils/orpc";
+{{/if}}
+{{#if (eq api "trpc")}}
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
+{{/if}}
+{{#if (and (eq backend "convex") (eq auth "clerk"))}}
+import { Link } from "expo-router";
+import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
+import { api } from "@{{ projectName }}/backend/convex/_generated/api";
+import { useUser } from "@clerk/clerk-expo";
+import { SignOutButton } from "@/components/sign-out-button";
+{{else if (and (eq backend "convex") (eq auth "better-auth"))}}
+import { useConvexAuth, useQuery } from "convex/react";
+import { api } from "@{{ projectName }}/backend/convex/_generated/api";
+import { authClient } from "@/lib/auth-client";
+import { SignIn } from "@/components/sign-in";
+import { SignUp } from "@/components/sign-up";
+{{else if (eq backend "convex")}}
+import { useQuery } from "convex/react";
+import { api } from "@{{ projectName }}/backend/convex/_generated/api";
+{{/if}}
+
+export default function Home() {
+  {{#if (eq api "orpc")}}
+  const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+  {{/if}}
+  {{#if (eq api "trpc")}}
+  const healthCheck = useQuery(trpc.healthCheck.queryOptions());
+  {{/if}}
+  {{#if (and (eq backend "convex") (eq auth "clerk"))}}
+  const { user } = useUser();
+  const healthCheck = useQuery(api.healthCheck.get);
+  const privateData = useQuery(api.privateData.get);
+  {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
+  const healthCheck = useQuery(api.healthCheck.get);
+  const { isAuthenticated } = useConvexAuth();
+  const user = useQuery(api.auth.getCurrentUser, isAuthenticated ? {} : "skip");
+  {{else if (eq backend "convex")}}
+  const healthCheck = useQuery(api.healthCheck.get);
+  {{/if}}
+
+  return (
+    <Container>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.heroTitle}>
+          BETTER T STACK
+        </Text>
+
+        {{#unless (and (eq backend "convex") (eq auth "better-auth"))}}
+        <View style={styles.statusCard}>
+          <View style={styles.statusHeader}>
+            <Text style={styles.statusTitle}>System Status</Text>
+            <View style={styles.statusBadge}>
+              <Text style={styles.statusBadgeText}>LIVE</Text>
+            </View>
+          </View>
+          {{#if (eq backend "convex")}}
+            {{#unless (eq auth "better-auth")}}
+            <View style={styles.statusRow}>
+              <View
+                style={[
+                  styles.statusDot,
+                  healthCheck === "OK"
+                    ? styles.statusDotSuccess
+                    : styles.statusDotWarning,
+                ]}
+              />
+              <View style={styles.statusContent}>
+                <Text style={styles.statusLabel}>Convex</Text>
+                <Text style={styles.statusDescription}>
+                  {healthCheck === undefined
+                    ? "Checking connection..."
+                    : healthCheck === "OK"
+                    ? "Connected to API"
+                    : "API Disconnected"}
+                </Text>
+              </View>
+            </View>
+            {{/unless}}
+          {{else}}
+            {{#unless (eq api "none")}}
+            <View style={styles.statusRow}>
+              <View
+                style={[
+                  styles.statusDot,
+                  healthCheck.data
+                    ? styles.statusDotSuccess
+                    : styles.statusDotWarning,
+                ]}
+              />
+              <View style={styles.statusContent}>
+                <Text style={styles.statusLabel}>
+                  {{#if (eq api "orpc")}}ORPC{{/if}}
+                  {{#if (eq api "trpc")}}TRPC{{/if}}
+                </Text>
+                <Text style={styles.statusDescription}>
+                  {healthCheck.isLoading
+                    ? "Checking connection..."
+                    : healthCheck.data
+                    ? "Connected to API"
+                    : "API Disconnected"}
+                </Text>
+              </View>
+            </View>
+            {{/unless}}
+          {{/if}}
+        </View>
+        {{/unless}}
+
+        {{#if (and (eq backend "convex") (eq auth "clerk"))}}
+        <Authenticated>
+          <Text>
+            Hello {user?.emailAddresses[0].emailAddress}
+          </Text>
+          <Text>
+            Private Data: {privateData?.message}
+          </Text>
+          <SignOutButton />
+        </Authenticated>
+        <Unauthenticated>
+          <Link href="/(auth)/sign-in">
+            <Text>Sign in</Text>
+          </Link>
+          <Link href="/(auth)/sign-up">
+            <Text>Sign up</Text>
+          </Link>
+        </Unauthenticated>
+        <AuthLoading>
+          <Text>Loading...</Text>
+        </AuthLoading>
+        {{/if}}
+
+        {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
+        {user ? (
+          <View style={styles.userCard}>
+            <View style={styles.userHeader}>
+              <Text style={styles.userWelcome}>
+                Welcome,{" "}
+                <Text style={styles.userName}>{user.name}</Text>
+              </Text>
+            </View>
+            <Text style={styles.userEmail}>{user.email}</Text>
+            <TouchableOpacity
+              style={styles.signOutButton}
+              onPress={() => {
+                authClient.signOut();
+              }}
+            >
+              <Text style={styles.signOutText}>Sign Out</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+        <View style={styles.apiStatusCard}>
+          <Text style={styles.apiStatusTitle}>API Status</Text>
+          <View style={styles.apiStatusRow}>
+            <View
+              style={[
+                styles.statusDot,
+                healthCheck === "OK"
+                  ? styles.statusDotSuccess
+                  : styles.statusDotWarning,
+              ]}
+            />
+            <Text style={styles.apiStatusText}>
+              {healthCheck === undefined
+                ? "Checking..."
+                : healthCheck === "OK"
+                ? "Connected to API"
+                : "API Disconnected"}
+            </Text>
+          </View>
+        </View>
+        {!user && (
+          <>
+            <SignIn />
+            <SignUp />
+          </>
+        )}
+        {{/if}}
+      </ScrollView>
+    </Container>
+  );
+}
+
+const styles = StyleSheet.create((theme) => ({
+  container: {
+    paddingHorizontal: theme.spacing.md,
+  },
+  heroSection: {
+    paddingVertical: theme.spacing.xl,
+  },
+  heroTitle: {
+    fontSize: theme.fontSize["4xl"],
+    fontWeight: "bold",
+    color: theme.colors.foreground,
+    marginBottom: theme.spacing.sm,
+  },
+  heroSubtitle: {
+    fontSize: theme.fontSize.lg,
+    color: theme.colors.mutedForeground,
+    lineHeight: 28,
+  },
+  statusCard: {
+    backgroundColor: theme.colors.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  statusHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: theme.spacing.md,
+  },
+  statusTitle: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: "600",
+    color: theme.colors.cardForeground,
+  },
+  statusBadge: {
+    backgroundColor: theme.colors.secondary,
+    paddingHorizontal: theme.spacing.sm + 4,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: 9999,
+  },
+  statusBadgeText: {
+    fontSize: theme.fontSize.xs,
+    fontWeight: "500",
+    color: theme.colors.secondaryForeground,
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm + 4,
+  },
+  statusDot: {
+    height: 12,
+    width: 12,
+    borderRadius: 6,
+  },
+  statusDotSuccess: {
+    backgroundColor: theme.colors.success,
+  },
+  statusDotWarning: {
+    backgroundColor: "#F59E0B",
+  },
+  statusContent: {
+    flex: 1,
+  },
+  statusLabel: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: "500",
+    color: theme.colors.cardForeground,
+  },
+  statusDescription: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.mutedForeground,
+  },
+  userCard: {
+    backgroundColor: theme.colors.card,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+  },
+  userHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: theme.spacing.xs,
+  },
+  userWelcome: {
+    fontSize: theme.fontSize.base,
+    color: theme.colors.foreground,
+  },
+  userName: {
+    fontWeight: "500",
+  },
+  userEmail: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.mutedForeground,
+    marginBottom: theme.spacing.md,
+  },
+  signOutButton: {
+    backgroundColor: theme.colors.destructive,
+    paddingVertical: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    alignSelf: "flex-start",
+  },
+  signOutText: {
+    color: theme.colors.destructiveForeground,
+    fontWeight: "500",
+  },
+  apiStatusCard: {
+    marginBottom: theme.spacing.md,
+    borderRadius: theme.borderRadius.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    padding: theme.spacing.md,
+  },
+  apiStatusTitle: {
+    marginBottom: theme.spacing.sm,
+    fontWeight: "500",
+    color: theme.colors.foreground,
+  },
+  apiStatusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs,
+  },
+  apiStatusText: {
+    color: theme.colors.mutedForeground,
+  },
+}));

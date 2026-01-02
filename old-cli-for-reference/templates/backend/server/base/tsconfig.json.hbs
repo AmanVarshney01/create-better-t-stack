@@ -1,0 +1,13 @@
+{
+  "extends": "@{{projectName}}/config/tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+		"outDir": "dist",
+		"baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "jsx": "react-jsx"{{#if (eq backend "hono")}},
+    "jsxImportSource": "hono/jsx"{{/if}}
+  }
+}

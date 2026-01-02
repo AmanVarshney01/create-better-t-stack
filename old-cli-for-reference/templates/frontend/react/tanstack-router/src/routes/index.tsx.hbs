@@ -1,0 +1,85 @@
+import { createFileRoute } from "@tanstack/react-router";
+{{#if (eq api "orpc")}}
+import { orpc } from "@/utils/orpc";
+import { useQuery } from "@tanstack/react-query";
+{{/if}}
+{{#if (eq api "trpc")}}
+import { trpc } from "@/utils/trpc";
+import { useQuery } from "@tanstack/react-query";
+{{/if}}
+{{#if (eq backend "convex")}}
+import { useQuery } from "convex/react";
+import { api } from "@{{ projectName }}/backend/convex/_generated/api";
+{{/if}}
+
+export const Route = createFileRoute("/")({
+  component: HomeComponent,
+});
+
+const TITLE_TEXT = `
+ ██████╗ ███████╗████████╗████████╗███████╗██████╗
+ ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗
+ ██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝
+ ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗
+ ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║
+ ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝
+
+ ████████╗    ███████╗████████╗ █████╗  ██████╗██╗  ██╗
+ ╚══██╔══╝    ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
+    ██║       ███████╗   ██║   ███████║██║     █████╔╝
+    ██║       ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
+    ██║       ███████║   ██║   ██║  ██║╚██████╗██║  ██╗
+    ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
+ `;
+
+function HomeComponent() {
+  {{#if (eq api "orpc")}}
+  const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+  {{/if}}
+  {{#if (eq api "trpc")}}
+  const healthCheck = useQuery(trpc.healthCheck.queryOptions());
+  {{/if}}
+  {{#if (eq backend "convex")}}
+  const healthCheck = useQuery(api.healthCheck.get);
+  {{/if}}
+
+  return (
+    <div className="container mx-auto max-w-3xl px-4 py-2">
+      <pre className="overflow-x-auto font-mono text-sm">{TITLE_TEXT}</pre>
+      <div className="grid gap-6">
+        <section className="rounded-lg border p-4">
+          <h2 className="mb-2 font-medium">API Status</h2>
+          {{#if (eq backend "convex")}}
+          <div className="flex items-center gap-2">
+            <div
+              className={`h-2 w-2 rounded-full ${healthCheck === "OK" ? "bg-green-500" : healthCheck === undefined ? "bg-orange-400" : "bg-red-500"}`}
+            />
+            <span className="text-sm text-muted-foreground">
+              {healthCheck === undefined
+                ? "Checking..."
+                : healthCheck === "OK"
+                  ? "Connected"
+                  : "Error"}
+            </span>
+          </div>
+          {{else}}
+            {{#unless (eq api "none")}}
+            <div className="flex items-center gap-2">
+              <div
+                className={`h-2 w-2 rounded-full ${healthCheck.data ? "bg-green-500" : "bg-red-500"}`}
+              />
+              <span className="text-sm text-muted-foreground">
+                {healthCheck.isLoading
+                  ? "Checking..."
+                  : healthCheck.data
+                    ? "Connected"
+                    : "Disconnected"}
+              </span>
+            </div>
+            {{/unless}}
+          {{/if}}
+        </section>
+      </div>
+    </div>
+  );
+}

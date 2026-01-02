@@ -1,0 +1,74 @@
+{
+	"$schema": "https://turbo.build/schema.json",
+	"ui": "tui",
+	"tasks": {
+		"build": {
+			"dependsOn": ["^build"],
+			"inputs": ["$TURBO_DEFAULT$", ".env*"],
+			"outputs": ["dist/**"]
+		},
+		"lint": {
+			"dependsOn": ["^lint"]
+		},
+		"check-types": {
+			"dependsOn": ["^check-types"]
+		},
+		"dev": {
+			"cache": false,
+			"persistent": true
+		}{{#if (eq backend "convex")}},
+		"dev:setup": {
+			"cache": false,
+			"persistent": true
+		}
+		{{else}}{{#unless (or (eq database "none") (eq orm "none"))}},
+		"db:push": {
+			"cache": false,
+			"persistent": true
+		},
+		"db:studio": {
+			"cache": false,
+			"persistent": true
+		},
+		"db:migrate": {
+			"cache": false,
+			"persistent": true
+		},
+		"db:generate": {
+			"cache": false,
+			"persistent": true
+		}
+		{{/unless}}{{/if}}
+		{{#if (eq dbSetup "docker")}},
+		"db:start": {
+			"cache": false,
+			"persistent": true
+		},
+		"db:stop": {
+			"cache": false,
+			"persistent": true
+		},
+		"db:watch": {
+			"cache": false,
+			"persistent": true
+		},
+		"db:down": {
+			"cache": false,
+			"persistent": true
+		}{{/if}}
+		{{#if (and (eq database "sqlite") (ne dbSetup "d1"))}},
+		"db:local": {
+			"cache": false,
+			"persistent": true
+		}
+		{{/if}}
+		{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}},
+		"deploy": {
+			"cache": false
+		},
+		"destroy": {
+			"cache": false
+		}
+		{{/if}}
+	}
+}

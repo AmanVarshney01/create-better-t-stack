@@ -12,6 +12,7 @@ import { setupBetterAuthPlugins } from "../../utils/better-auth-plugin-setup";
 import { writeBtsConfig } from "../../utils/bts-config";
 import { isSilent } from "../../utils/context";
 import { exitWithError } from "../../utils/errors";
+import { formatProjectFiles } from "../../utils/file-formatter";
 import { setupAddons } from "../addons/addons-setup";
 import { setupExamples } from "../addons/examples-setup";
 import { setupDatabase } from "../core/db-setup";
@@ -46,6 +47,9 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
 
     // ==== Phase 2: Write to disk ====
     await writeTreeToFilesystem(result.tree, projectDir);
+
+    // Format all generated files (runs oxfmt for code formatting)
+    await formatProjectFiles(projectDir);
 
     // Set actual package manager version (template-generator uses placeholder)
     await setPackageManagerVersion(projectDir, options.packageManager);

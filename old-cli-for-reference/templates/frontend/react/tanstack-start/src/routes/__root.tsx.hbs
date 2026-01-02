@@ -1,0 +1,208 @@
+import { Toaster } from "@/components/ui/sonner";
+{{#unless (eq backend "convex")}} {{#unless (eq api "none")}}
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+{{/unless}} {{/unless}}
+import {
+  HeadContent,
+  Outlet,
+  Scripts,
+  createRootRouteWithContext,
+{{#if (and (eq backend "convex") (or (eq auth "clerk") (eq auth "better-auth")))}}
+  useRouteContext,
+{{/if}}
+} from "@tanstack/react-router";
+import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
+import Header from "../components/header";
+import appCss from "../index.css?url";
+{{#if (eq backend "convex")}}
+import type { QueryClient } from "@tanstack/react-query";
+import type { ConvexQueryClient } from "@convex-dev/react-query";
+{{else}}
+{{#if (or (eq api "trpc") (eq api "orpc"))}}
+import type { QueryClient } from "@tanstack/react-query";
+{{/if}}
+{{/if}}
+
+{{#if (and (eq backend "convex") (eq auth "clerk"))}}
+import { ClerkProvider, useAuth } from "@clerk/tanstack-react-start";
+import { auth } from "@clerk/tanstack-react-start/server";
+import { createServerFn } from "@tanstack/react-start";
+import { ConvexProviderWithClerk } from "convex/react-clerk";
+
+const fetchClerkAuth = createServerFn({ method: "GET" }).handler(async () => {
+  const clerkAuth = await auth();
+  const token = await clerkAuth.getToken({ template: "convex" });
+  return { userId: clerkAuth.userId, token };
+});
+{{else if (and (eq backend "convex") (eq auth "better-auth"))}}
+import { createServerFn } from "@tanstack/react-start";
+import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
+import { authClient } from "@/lib/auth-client";
+import { getToken } from "@/lib/auth-server";
+
+const getAuth = createServerFn({ method: "GET" }).handler(async () => {
+  return await getToken();
+});
+{{else if (eq backend "convex")}}
+import { ConvexProvider } from "convex/react";
+{{/if}}
+
+{{#if (eq backend "convex")}}
+export interface RouterAppContext {
+  queryClient: QueryClient;
+  convexQueryClient: ConvexQueryClient;
+}
+{{else}}
+  {{#if (eq api "trpc")}}
+import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
+import type { AppRouter } from "@{{projectName}}/api/routers/index";
+export interface RouterAppContext {
+  trpc: TRPCOptionsProxy<AppRouter>;
+  queryClient: QueryClient;
+}
+  {{else if (eq api "orpc")}}
+import type { orpc } from "@/utils/orpc";
+export interface RouterAppContext {
+  orpc: typeof orpc;
+  queryClient: QueryClient;
+}
+  {{else}}
+export interface RouterAppContext {
+}
+  {{/if}}
+{{/if}}
+
+export const Route = createRootRouteWithContext<RouterAppContext>()({
+  head: () => ({
+    meta: [
+      {
+        charSet: "utf-8",
+      },
+      {
+        name: "viewport",
+        content: "width=device-width, initial-scale=1",
+      },
+      {
+        title: "My App",
+      },
+    ],
+    links: [
+      {
+        rel: "stylesheet",
+        href: appCss,
+      },
+    ],
+  }),
+
+  component: RootDocument,
+  {{#if (and (eq backend "convex") (eq auth "clerk"))}}
+  beforeLoad: async (ctx) => {
+    const { userId, token } = await fetchClerkAuth();
+    if (token) {
+      ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
+    }
+    return { userId, token };
+  },
+  {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
+  beforeLoad: async (ctx) => {
+    const token = await getAuth();
+    if (token) {
+      ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
+    }
+    return {
+      isAuthenticated: !!token,
+      token,
+    };
+  },
+  {{/if}}
+});
+
+function RootDocument() {
+  {{#if (and (eq backend "convex") (eq auth "clerk"))}}
+  const context = useRouteContext({ from: Route.id });
+  return (
+    <ClerkProvider>
+      <ConvexProviderWithClerk client={context.convexQueryClient.convexClient} useAuth={useAuth}>
+        <html lang="en" className="dark">
+          <head>
+            <HeadContent />
+          </head>
+          <body>
+            <div className="grid h-svh grid-rows-[auto_1fr]">
+              <Header />
+              <Outlet />
+            </div>
+            <Toaster richColors />
+            <TanStackRouterDevtools position="bottom-left" />
+            <Scripts />
+          </body>
+        </html>
+      </ConvexProviderWithClerk>
+    </ClerkProvider>
+  );
+  {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
+  const context = useRouteContext({ from: Route.id });
+  return (
+    <ConvexBetterAuthProvider
+      client={context.convexQueryClient.convexClient}
+      authClient={authClient}
+      initialToken={context.token}
+    >
+      <html lang="en" className="dark">
+        <head>
+          <HeadContent />
+        </head>
+        <body>
+          <div className="grid h-svh grid-rows-[auto_1fr]">
+            <Header />
+            <Outlet />
+          </div>
+          <Toaster richColors />
+          <TanStackRouterDevtools position="bottom-left" />
+          <Scripts />
+        </body>
+      </html>
+    </ConvexBetterAuthProvider>
+  );
+  {{else if (eq backend "convex")}}
+  const { convexQueryClient } = Route.useRouteContext();
+  return (
+    <ConvexProvider client={convexQueryClient.convexClient}>
+      <html lang="en" className="dark">
+        <head>
+          <HeadContent />
+        </head>
+        <body>
+          <div className="grid h-svh grid-rows-[auto_1fr]">
+            <Header />
+            <Outlet />
+          </div>
+          <Toaster richColors />
+          <TanStackRouterDevtools position="bottom-left" />
+          <Scripts />
+        </body>
+      </html>
+    </ConvexProvider>
+  );
+  {{else}}
+  return (
+    <html lang="en" className="dark">
+      <head>
+        <HeadContent />
+      </head>
+      <body>
+        <div className="grid h-svh grid-rows-[auto_1fr]">
+          <Header />
+          <Outlet />
+        </div>
+        <Toaster richColors />
+        <TanStackRouterDevtools position="bottom-left" />
+        {{#unless (eq api "none")}}
+        <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+        {{/unless}}
+        <Scripts />
+      </body>
+    </html>
+  );
+  {{/if}}
+}

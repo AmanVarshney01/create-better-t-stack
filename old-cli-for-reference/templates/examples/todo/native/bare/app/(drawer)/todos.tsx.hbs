@@ -1,0 +1,521 @@
+import { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+  TouchableOpacity,
+  StyleSheet,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+{{#if (eq backend "convex")}}
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@{{projectName}}/backend/convex/_generated/api";
+import type { Id } from "@{{projectName}}/backend/convex/_generated/dataModel";
+{{else}}
+import { useMutation, useQuery } from "@tanstack/react-query";
+{{/if}}
+import { Container } from "@/components/container";
+import { useColorScheme } from "@/lib/use-color-scheme";
+import { NAV_THEME } from "@/lib/constants";
+{{#unless (eq backend "convex")}}
+  {{#if (eq api "orpc")}}
+import { orpc } from "@/utils/orpc";
+  {{/if}}
+  {{#if (eq api "trpc")}}
+import { trpc } from "@/utils/trpc";
+  {{/if}}
+{{/unless}}
+
+export default function TodosScreen() {
+  const { colorScheme } = useColorScheme();
+  const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
+  const [newTodoText, setNewTodoText] = useState("");
+
+  {{#if (eq backend "convex")}}
+  const todos = useQuery(api.todos.getAll);
+  const createTodoMutation = useMutation(api.todos.create);
+  const toggleTodoMutation = useMutation(api.todos.toggle);
+  const deleteTodoMutation = useMutation(api.todos.deleteTodo);
+
+  async function handleAddTodo() {
+    const text = newTodoText.trim();
+    if (!text) return;
+    await createTodoMutation({ text });
+    setNewTodoText("");
+  }
+
+  function handleToggleTodo(id: Id<"todos">, currentCompleted: boolean) {
+    toggleTodoMutation({ id, completed: !currentCompleted });
+  }
+
+  function handleDeleteTodo(id: Id<"todos">) {
+    Alert.alert("Delete Todo", "Are you sure you want to delete this todo?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => deleteTodoMutation({ id }),
+      },
+    ]);
+  }
+
+  const isLoading = !todos;
+  const completedCount = todos?.filter((t) => t.completed).length || 0;
+  const totalCount = todos?.length || 0;
+  {{else}}
+    {{#if (eq api "orpc")}}
+  const todos = useQuery(orpc.todo.getAll.queryOptions());
+  const createMutation = useMutation(
+    orpc.todo.create.mutationOptions({
+      onSuccess: () => {
+        todos.refetch();
+        setNewTodoText("");
+      },
+    })
+  );
+  const toggleMutation = useMutation(
+    orpc.todo.toggle.mutationOptions({
+      onSuccess: () => {
+        todos.refetch();
+      },
+    })
+  );
+  const deleteMutation = useMutation(
+    orpc.todo.delete.mutationOptions({
+      onSuccess: () => {
+        todos.refetch();
+      },
+    })
+  );
+    {{/if}}
+    {{#if (eq api "trpc")}}
+  const todos = useQuery(trpc.todo.getAll.queryOptions());
+  const createMutation = useMutation(
+    trpc.todo.create.mutationOptions({
+      onSuccess: () => {
+        todos.refetch();
+        setNewTodoText("");
+      },
+    })
+  );
+  const toggleMutation = useMutation(
+    trpc.todo.toggle.mutationOptions({
+      onSuccess: () => {
+        todos.refetch();
+      },
+    })
+  );
+  const deleteMutation = useMutation(
+    trpc.todo.delete.mutationOptions({
+      onSuccess: () => {
+        todos.refetch();
+      },
+    })
+  );
+    {{/if}}
+
+  function handleAddTodo() {
+    if (newTodoText.trim()) {
+      createMutation.mutate({ text: newTodoText });
+    }
+  }
+
+  function handleToggleTodo(id: number, completed: boolean) {
+    toggleMutation.mutate({ id, completed: !completed });
+  }
+
+  function handleDeleteTodo(id: number) {
+    Alert.alert("Delete Todo", "Are you sure you want to delete this todo?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => deleteMutation.mutate({ id }),
+      },
+    ]);
+  }
+
+  const isLoading = todos?.isLoading;
+  const completedCount = todos?.data?.filter((t) => t.completed).length || 0;
+  const totalCount = todos?.data?.length || 0;
+  {{/if}}
+
+  return (
+    <Container>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.contentContainer}
+      >
+        <View style={styles.header}>
+          <View style={styles.headerRow}>
+            <Text style={[styles.title, { color: theme.text }]}>
+              Todo List
+            </Text>
+            {totalCount > 0 && (
+              <View style={[styles.badge, { backgroundColor: theme.primary }]}>
+                <Text style={styles.badgeText}>
+                  {completedCount}/{totalCount}
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+        <View
+          style={[
+            styles.inputCard,
+            { backgroundColor: theme.card, borderColor: theme.border },
+          ]}
+        >
+          <View style={styles.inputRow}>
+            <View style={styles.inputContainer}>
+              <TextInput
+                value={newTodoText}
+                onChangeText={setNewTodoText}
+                placeholder="Add a new task..."
+                placeholderTextColor={theme.text}
+                {{#unless (eq backend "convex")}}
+                editable={!createMutation.isPending}
+                {{/unless}}
+                onSubmitEditing={handleAddTodo}
+                returnKeyType="done"
+                style={[
+                  styles.input,
+                  {
+                    color: theme.text,
+                    borderColor: theme.border,
+                    backgroundColor: theme.background,
+                  },
+                ]}
+              />
+            </View>
+            <TouchableOpacity
+              onPress={handleAddTodo}
+              {{#if (eq backend "convex")}}
+              disabled={!newTodoText.trim()}
+              style={[
+                styles.addButton,
+                {
+                  backgroundColor: !newTodoText.trim()
+                    ? theme.border
+                    : theme.primary,
+                  opacity: !newTodoText.trim() ? 0.5 : 1,
+                },
+              ]}
+            >
+              <Ionicons
+                name="add"
+                size={24}
+                color={newTodoText.trim() ? "#ffffff" : theme.text}
+              />
+              {{else}}
+              disabled={createMutation.isPending || !newTodoText.trim()}
+              style={[
+                styles.addButton,
+                {
+                  backgroundColor:
+                    createMutation.isPending || !newTodoText.trim()
+                      ? theme.border
+                      : theme.primary,
+                  opacity:
+                    createMutation.isPending || !newTodoText.trim() ? 0.5 : 1,
+                },
+              ]}
+            >
+              {createMutation.isPending ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <Ionicons name="add" size={24} color="#ffffff" />
+              )}
+              {{/if}}
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {{#if (eq backend "convex")}}
+        {isLoading && (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color={theme.primary} />
+            <Text
+              style={[styles.loadingText, { color: theme.text, opacity: 0.7 }]}
+            >
+              Loading todos...
+            </Text>
+          </View>
+        )}
+
+        {todos && todos.length === 0 && !isLoading && (
+          <View
+            style={[
+              styles.emptyCard,
+              { backgroundColor: theme.card, borderColor: theme.border },
+            ]}
+          >
+            <Ionicons
+              name="checkbox-outline"
+              size={64}
+              color={theme.text}
+              style=\{{ opacity: 0.5, marginBottom: 16 }}
+            />
+            <Text style={[styles.emptyTitle, { color: theme.text }]}>
+              No todos yet
+            </Text>
+            <Text
+              style={[styles.emptyText, { color: theme.text, opacity: 0.7 }]}
+            >
+              Add your first task to get started!
+            </Text>
+          </View>
+        )}
+
+        {todos && todos.length > 0 && (
+          <View style={styles.todosList}>
+            {todos.map((todo) => (
+              <View
+                key={todo._id}
+                style={[
+                  styles.todoCard,
+                  { backgroundColor: theme.card, borderColor: theme.border },
+                ]}
+              >
+                <View style={styles.todoRow}>
+                  <TouchableOpacity
+                    onPress={() => handleToggleTodo(todo._id, todo.completed)}
+                    style={[styles.checkbox, { borderColor: theme.border }]}
+                  >
+                    {todo.completed && (
+                      <Ionicons
+                        name="checkmark"
+                        size={16}
+                        color={theme.primary}
+                      />
+                    )}
+                  </TouchableOpacity>
+                  <View style={styles.todoTextContainer}>
+                    <Text
+                      style={[
+                        styles.todoText,
+                        { color: theme.text },
+                        todo.completed && {
+                          textDecorationLine: "line-through",
+                          opacity: 0.5,
+                        },
+                      ]}
+                    >
+                      {todo.text}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => handleDeleteTodo(todo._id)}
+                    style={styles.deleteButton}
+                  >
+                    <Ionicons
+                      name="trash-outline"
+                      size={24}
+                      color={theme.notification}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+        {{else}}
+        {isLoading && (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color={theme.primary} />
+            <Text
+              style={[styles.loadingText, { color: theme.text, opacity: 0.7 }]}
+            >
+              Loading todos...
+            </Text>
+          </View>
+        )}
+
+        {todos?.data && todos.data.length === 0 && !isLoading && (
+          <View
+            style={[
+              styles.emptyCard,
+              { backgroundColor: theme.card, borderColor: theme.border },
+            ]}
+          >
+            <Ionicons
+              name="checkbox-outline"
+              size={64}
+              color={theme.text}
+              style=\{{ opacity: 0.5, marginBottom: 16 }}
+            />
+            <Text style={[styles.emptyTitle, { color: theme.text }]}>
+              No todos yet
+            </Text>
+            <Text
+              style={[styles.emptyText, { color: theme.text, opacity: 0.7 }]}
+            >
+              Add your first task to get started!
+            </Text>
+          </View>
+        )}
+
+        {todos?.data && todos.data.length > 0 && (
+          <View style={styles.todosList}>
+            {todos.data.map((todo) => (
+              <View
+                key={todo.id}
+                style={[
+                  styles.todoCard,
+                  { backgroundColor: theme.card, borderColor: theme.border },
+                ]}
+              >
+                <View style={styles.todoRow}>
+                  <TouchableOpacity
+                    onPress={() => handleToggleTodo(todo.id, todo.completed)}
+                    style={[styles.checkbox, { borderColor: theme.border }]}
+                  >
+                    {todo.completed && (
+                      <Ionicons
+                        name="checkmark"
+                        size={16}
+                        color={theme.primary}
+                      />
+                    )}
+                  </TouchableOpacity>
+                  <View style={styles.todoTextContainer}>
+                    <Text
+                      style={[
+                        styles.todoText,
+                        { color: theme.text },
+                        todo.completed && {
+                          textDecorationLine: "line-through",
+                          opacity: 0.5,
+                        },
+                      ]}
+                    >
+                      {todo.text}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => handleDeleteTodo(todo.id)}
+                    style={styles.deleteButton}
+                  >
+                    <Ionicons
+                      name="trash-outline"
+                      size={24}
+                      color={theme.notification}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+        {{/if}}
+      </ScrollView>
+    </Container>
+  );
+}
+
+const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
+  contentContainer: {
+    padding: 16,
+  },
+  header: {
+    marginBottom: 16,
+  },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  badge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  badgeText: {
+    color: "#ffffff",
+    fontSize: 12,
+  },
+  inputCard: {
+    borderWidth: 1,
+    padding: 12,
+    marginBottom: 16,
+  },
+  inputRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  inputContainer: {
+    flex: 1,
+  },
+  input: {
+    borderWidth: 1,
+    padding: 12,
+    fontSize: 16,
+  },
+  addButton: {
+    padding: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  centerContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 32,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 14,
+  },
+  emptyCard: {
+    borderWidth: 1,
+    padding: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 14,
+    textAlign: "center",
+  },
+  todosList: {
+    gap: 8,
+  },
+  todoCard: {
+    borderWidth: 1,
+    padding: 12,
+  },
+  todoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  todoTextContainer: {
+    flex: 1,
+  },
+  todoText: {
+    fontSize: 16,
+  },
+  deleteButton: {
+    padding: 8,
+  },
+});

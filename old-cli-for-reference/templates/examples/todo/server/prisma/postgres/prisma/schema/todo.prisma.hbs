@@ -1,0 +1,7 @@
+model Todo {
+  id        Int     @id @default(autoincrement())
+  text      String
+  completed Boolean @default(false)
+
+  @@map("todo")
+}
