@@ -2,7 +2,9 @@
 import { generateVirtualProject, EMBEDDED_TEMPLATES } from "@better-t-stack/template-generator";
 import { writeTreeToFilesystem } from "@better-t-stack/template-generator/fs-writer";
 import { log } from "@clack/prompts";
+import { $ } from "execa";
 import fs from "fs-extra";
+import path from "node:path";
 
 import type { ProjectConfig } from "../../types";
 
@@ -44,6 +46,9 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
 
     // ==== Phase 2: Write to disk ====
     await writeTreeToFilesystem(result.tree, projectDir);
+
+    // Set actual package manager version (template-generator uses placeholder)
+    await setPackageManagerVersion(projectDir, options.packageManager);
 
     // ==== Phase 3: CLI-only operations (external CLIs, secrets, file mods) ====
 
@@ -112,5 +117,31 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
       if (!isSilent()) console.error(error);
       exitWithError(`An unexpected error occurred: ${String(error)}`);
     }
+  }
+}
+
+/**
+ * Set the actual package manager version in package.json
+ * The template-generator uses a placeholder (@latest) since it can't run shell commands
+ */
+async function setPackageManagerVersion(
+  projectDir: string,
+  packageManager: ProjectConfig["packageManager"],
+): Promise<void> {
+  const pkgJsonPath = path.join(projectDir, "package.json");
+  if (!(await fs.pathExists(pkgJsonPath))) return;
+
+  try {
+    const { stdout } = await $`${packageManager} -v`;
+    const version = stdout.trim();
+    const pkgJson = await fs.readJson(pkgJsonPath);
+    pkgJson.packageManager = `${packageManager}@${version}`;
+    await fs.writeJson(pkgJsonPath, pkgJson, { spaces: 2 });
+  } catch {
+    // If we can't get the version, just remove the packageManager field
+    // to avoid turbo errors
+    const pkgJson = await fs.readJson(pkgJsonPath);
+    delete pkgJson.packageManager;
+    await fs.writeJson(pkgJsonPath, pkgJson, { spaces: 2 });
   }
 }

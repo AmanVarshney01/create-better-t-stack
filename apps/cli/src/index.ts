@@ -4,7 +4,7 @@ import pc from "picocolors";
 import { createCli } from "trpc-cli";
 import z from "zod";
 
-import { addAddonsHandler, createProjectHandler } from "./helpers/core/command-handlers";
+import { createProjectHandler } from "./helpers/core/command-handlers";
 import {
   type Addons,
   AddonsSchema,
@@ -111,30 +111,6 @@ export const router = os.router({
       if (options.verbose) {
         return result;
       }
-    }),
-  add: os
-    .meta({
-      description: "Add addons or deployment configurations to an existing Better-T-Stack project",
-    })
-    .input(
-      z.tuple([
-        z.object({
-          addons: z.array(AddonsSchema).optional().default([]),
-          webDeploy: WebDeploySchema.optional(),
-          serverDeploy: ServerDeploySchema.optional(),
-          projectDir: z.string().optional(),
-          install: z
-            .boolean()
-            .optional()
-            .default(false)
-            .describe("Install dependencies after adding addons or deployment"),
-          packageManager: PackageManagerSchema.optional(),
-        }),
-      ]),
-    )
-    .handler(async ({ input }) => {
-      const [options] = input;
-      await addAddonsHandler(options);
     }),
   sponsors: os.meta({ description: "Show Better-T-Stack sponsors" }).handler(async () => {
     try {

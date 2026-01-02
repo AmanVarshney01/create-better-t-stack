@@ -1,13 +1,20 @@
 /**
  * Filesystem Writer - Node.js only module
  * Writes VirtualFileTree to real filesystem
- * Uses fs-extra for safer file operations
+ * Uses native node:fs/promises for ESM compatibility
  */
 
-import fs from "fs-extra";
+import * as fs from "node:fs/promises";
 import { join, dirname } from "pathe";
 
 import type { VirtualFileTree, VirtualNode, VirtualFile, VirtualDirectory } from "./types";
+
+/**
+ * Ensure directory exists (recursive mkdir)
+ */
+async function ensureDir(dirPath: string): Promise<void> {
+  await fs.mkdir(dirPath, { recursive: true });
+}
 
 /**
  * Write a VirtualFileTree to the real filesystem
@@ -36,11 +43,12 @@ async function writeNode(node: VirtualNode, baseDir: string, relativePath: strin
       return;
     }
 
-    // fs-extra's outputFile creates parent directories automatically
-    await fs.outputFile(fullPath, file.content, "utf-8");
+    // Ensure parent directory exists
+    await ensureDir(dirname(fullPath));
+    await fs.writeFile(fullPath, file.content, "utf-8");
   } else {
     const dir = node as VirtualDirectory;
-    await fs.ensureDir(fullPath);
+    await ensureDir(fullPath);
 
     for (const child of dir.children) {
       await writeNode(child, baseDir, join(relativePath, node.name));
@@ -77,8 +85,8 @@ async function writeSelectedNode(
       const fullPath = join(baseDir, nodePath);
 
       if (file.content !== "[Binary file]") {
-        // fs-extra's outputFile creates parent directories automatically
-        await fs.outputFile(fullPath, file.content, "utf-8");
+        await ensureDir(dirname(fullPath));
+        await fs.writeFile(fullPath, file.content, "utf-8");
         writtenFiles.push(nodePath);
       }
     }
