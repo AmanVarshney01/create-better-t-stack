@@ -61,24 +61,15 @@ export const CodeViewer = memo(function CodeViewer({
   const language = useMemo(() => getLanguage(extension), [extension]);
   const filename = useMemo(() => filePath.split("/").pop() || filePath, [filePath]);
 
-  // Limit content length for performance
-  const displayContent = useMemo(() => {
-    const maxLength = 50000;
-    if (content.length > maxLength) {
-      return content.slice(0, maxLength) + "\n\n// ... (content truncated for performance)";
-    }
-    return content;
-  }, [content]);
-
   const codeData = useMemo(
     () => [
       {
         language,
         filename,
-        code: displayContent,
+        code: content,
       },
     ],
-    [language, filename, displayContent],
+    [language, filename, content],
   );
 
   return (
@@ -102,7 +93,13 @@ export const CodeViewer = memo(function CodeViewer({
         <CodeBlockBody className="flex-1 overflow-auto">
           {(item) => (
             <CodeBlockItem key={item.language} value={item.language}>
-              <CodeBlockContent language={item.language as BundledLanguage}>
+              <CodeBlockContent
+                language={item.language as BundledLanguage}
+                themes={{
+                  light: "catppuccin-latte",
+                  dark: "catppuccin-mocha",
+                }}
+              >
                 {item.code}
               </CodeBlockContent>
             </CodeBlockItem>

@@ -82,9 +82,9 @@ const DirectoryNode = memo(function DirectoryNode({
           <ChevronRight className="h-3 w-3 shrink-0 text-muted-foreground" />
         )}
         {expanded ? (
-          <FolderOpen className="h-4 w-4 shrink-0 text-amber-500" />
+          <FolderOpen className="h-4 w-4 shrink-0 text-primary" />
         ) : (
-          <Folder className="h-4 w-4 shrink-0 text-amber-500" />
+          <Folder className="h-4 w-4 shrink-0 text-primary" />
         )}
         <span className="truncate font-medium">{node.name}</span>
       </button>
@@ -147,71 +147,71 @@ const FileNode = memo(function FileNode({ node, depth, isSelected, onSelect }: F
 
 function getFileColor(extension: string): string {
   const colorMap: Record<string, string> = {
-    // TypeScript/JavaScript
-    ts: "text-blue-500",
-    tsx: "text-blue-400",
-    js: "text-yellow-500",
-    jsx: "text-yellow-400",
-    mjs: "text-yellow-500",
-    cjs: "text-yellow-500",
-    mts: "text-blue-500",
-    cts: "text-blue-500",
+    // TypeScript/JavaScript - use primary/accent variations
+    ts: "text-primary",
+    tsx: "text-primary/80",
+    js: "text-accent",
+    jsx: "text-accent/80",
+    mjs: "text-accent",
+    cjs: "text-accent",
+    mts: "text-primary",
+    cts: "text-primary",
 
-    // Vue
-    vue: "text-green-500",
+    // Vue - use accent
+    vue: "text-accent",
 
-    // Svelte
-    svelte: "text-orange-500",
+    // Svelte - use muted primary
+    svelte: "text-primary/70",
 
-    // Solid
-    solid: "text-blue-600",
+    // Solid - use primary
+    solid: "text-primary",
 
-    // Data formats
-    json: "text-amber-500",
-    yaml: "text-red-400",
-    yml: "text-red-400",
-    toml: "text-orange-400",
-    xml: "text-orange-300",
+    // Data formats - use muted colors
+    json: "text-muted-foreground",
+    yaml: "text-muted-foreground",
+    yml: "text-muted-foreground",
+    toml: "text-muted-foreground",
+    xml: "text-muted-foreground",
 
-    // Markup/Styling
-    md: "text-gray-400",
-    mdx: "text-yellow-400",
-    css: "text-purple-500",
-    scss: "text-pink-400",
-    sass: "text-pink-400",
-    less: "text-indigo-400",
-    html: "text-orange-500",
-    hbs: "text-orange-400",
+    // Markup/Styling - use theme colors
+    md: "text-muted-foreground",
+    mdx: "text-muted-foreground",
+    css: "text-primary/70",
+    scss: "text-primary/60",
+    sass: "text-primary/60",
+    less: "text-primary/60",
+    html: "text-muted-foreground",
+    hbs: "text-muted-foreground",
 
-    // Database/ORM
-    prisma: "text-indigo-500",
-    sql: "text-cyan-500",
+    // Database/ORM - use primary variations
+    prisma: "text-primary/80",
+    sql: "text-primary/70",
 
-    // Config files
-    env: "text-emerald-500",
-    gitignore: "text-gray-500",
-    npmrc: "text-red-400",
-    nvmrc: "text-green-400",
-    editorconfig: "text-gray-400",
-    prettierrc: "text-pink-400",
-    eslintrc: "text-purple-400",
+    // Config files - use muted
+    env: "text-muted-foreground",
+    gitignore: "text-muted-foreground",
+    npmrc: "text-muted-foreground",
+    nvmrc: "text-muted-foreground",
+    editorconfig: "text-muted-foreground",
+    prettierrc: "text-muted-foreground",
+    eslintrc: "text-muted-foreground",
 
-    // Images
-    svg: "text-pink-500",
-    png: "text-green-400",
-    jpg: "text-green-400",
-    jpeg: "text-green-400",
-    gif: "text-green-400",
-    ico: "text-green-400",
-    webp: "text-green-400",
+    // Images - use muted
+    svg: "text-muted-foreground",
+    png: "text-muted-foreground",
+    jpg: "text-muted-foreground",
+    jpeg: "text-muted-foreground",
+    gif: "text-muted-foreground",
+    ico: "text-muted-foreground",
+    webp: "text-muted-foreground",
 
-    // Other
-    sh: "text-green-500",
-    bash: "text-green-500",
-    zsh: "text-green-500",
-    dockerfile: "text-blue-400",
-    lock: "text-gray-500",
-    txt: "text-gray-400",
+    // Other - use muted
+    sh: "text-muted-foreground",
+    bash: "text-muted-foreground",
+    zsh: "text-muted-foreground",
+    dockerfile: "text-muted-foreground",
+    lock: "text-muted-foreground",
+    txt: "text-muted-foreground",
   };
   return colorMap[extension.toLowerCase()] || "text-muted-foreground";
 }
