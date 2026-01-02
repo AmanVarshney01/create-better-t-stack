@@ -82,17 +82,21 @@ async function setupAIDependencies(config: ProjectConfig) {
 
   if (backend === "convex" && convexBackendDirExists) {
     await addPackageDependency({
-      dependencies: ["@convex-dev/agent", "ai", "@ai-sdk/google"],
+      dependencies: ["@convex-dev/agent"],
+      customDependencies: {
+        ai: "^5.0.117",
+        "@ai-sdk/google": "^2.0.52",
+      },
       projectDir: convexBackendDir,
     });
   } else if (backend === "self" && webClientDirExists) {
     await addPackageDependency({
-      dependencies: ["ai", "@ai-sdk/google"],
+      dependencies: ["ai", "@ai-sdk/google", "@ai-sdk/devtools"],
       projectDir: webClientDir,
     });
   } else if (serverDirExists && backend !== "none") {
     await addPackageDependency({
-      dependencies: ["ai", "@ai-sdk/google"],
+      dependencies: ["ai", "@ai-sdk/google", "@ai-sdk/devtools"],
       projectDir: serverDir,
     });
   }

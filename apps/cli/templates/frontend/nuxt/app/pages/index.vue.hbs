@@ -4,8 +4,8 @@ import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 import { useConvexQuery } from "convex-vue";
 {{else}}
   {{#unless (eq api "none")}}
-  const { $orpc } = useNuxtApp()
-  import { useQuery } from '@tanstack/vue-query'
+const { $orpc } = useNuxtApp()
+import { useQuery } from '@tanstack/vue-query'
   {{/unless}}
 {{/if}}
 
@@ -29,50 +29,69 @@ const TITLE_TEXT = `
 const healthCheck = useConvexQuery(api.healthCheck.get, {});
 {{else}}
   {{#unless (eq api "none")}}
-  const healthCheck = useQuery($orpc.healthCheck.queryOptions())
+const healthCheck = useQuery($orpc.healthCheck.queryOptions())
   {{/unless}}
 {{/if}}
 </script>
 
 <template>
-  <div class="container mx-auto max-w-3xl px-4 py-2">
+  <UContainer class="py-8">
     <pre class="overflow-x-auto font-mono text-sm whitespace-pre-wrap">\{{ TITLE_TEXT }}</pre>
-    <div class="grid gap-6 mt-4">
-      <section class="rounded-lg border p-4">
-        <h2 class="mb-2 font-medium">API Status</h2>
+
+    <div class="grid gap-6 mt-6">
+      <UCard>
+        <template #header>
+          <div class="font-medium">API Status</div>
+        </template>
+
+        {{#if (eq backend "convex")}}
         <div class="flex items-center gap-2">
-          {{#if (eq backend "convex")}}
-            <span class="text-sm text-muted-foreground">
-              \{{
-                healthCheck === undefined
-                  ? "Checking..."
-                  : healthCheck.data.value === "OK"
-                    ? "Connected"
-                    : "Error"
-              }}
-            </span>
-          {{else}}
-            {{#unless (eq api "none")}}
-            <div class="flex items-center gap-2">
-              <span class="text-sm text-muted-foreground">
-                <template v-if="healthCheck.status.value === 'pending'">
-                  Checking...
-                </template>
-                <template v-else-if="healthCheck.status.value === 'success'">
-                  Connected (\{{ healthCheck.data.value }})
-                </template>
-                <template v-else-if="healthCheck.status.value === 'error'">
-                  Error: \{{ healthCheck.error.value?.message || 'Failed to connect' }}
-                </template>
-                 <template v-else>
-                  Idle
-                </template>
-              </span>
-            </div>
-            {{/unless}}
-          {{/if}}
+          <UIcon
+            :name="healthCheck === undefined ? 'i-lucide-loader-2' : healthCheck.data.value === 'OK' ? 'i-lucide-check-circle' : 'i-lucide-x-circle'"
+            :class="[
+              healthCheck === undefined ? 'animate-spin text-muted' : '',
+              healthCheck?.data.value === 'OK' ? 'text-success' : 'text-error'
+            ]"
+          />
+          <span class="text-sm">
+            \{{
+              healthCheck === undefined
+                ? "Checking..."
+                : healthCheck.data.value === "OK"
+                  ? "Connected"
+                  : "Error"
+            }}
+          </span>
         </div>
-      </section>
+        {{else}}
+        {{#unless (eq api "none")}}
+        <div class="flex items-center gap-2">
+          <UIcon
+            :name="healthCheck.isLoading.value ? 'i-lucide-loader-2' : healthCheck.isSuccess.value ? 'i-lucide-check-circle' : 'i-lucide-x-circle'"
+            :class="[
+              healthCheck.isLoading.value ? 'animate-spin text-muted' : '',
+              healthCheck.isSuccess.value ? 'text-success' : '',
+              healthCheck.isError.value ? 'text-error' : ''
+            ]"
+          />
+          <span class="text-sm">
+            <template v-if="healthCheck.isLoading.value">
+              Checking...
+            </template>
+            <template v-else-if="healthCheck.isSuccess.value">
+              Connected (\{{ healthCheck.data.value }})
+            </template>
+            <template v-else-if="healthCheck.isError.value">
+              Error: \{{ healthCheck.error.value?.message || 'Failed to connect' }}
+            </template>
+            <template v-else>
+              Idle
+            </template>
+          </span>
+        </div>
+        {{/unless}}
+        {{/if}}
+      </UCard>
     </div>
-  </div>
+  </UContainer>
 </template>

@@ -18,8 +18,9 @@ import { createContext } from "@{{projectName}}/api/context";
 import cors from "cors";
 import express from "express";
 {{#if (includes examples "ai")}}
-import { streamText, type UIMessage, convertToModelMessages } from "ai";
+import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
 import { google } from "@ai-sdk/google";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
 {{#if (eq auth "better-auth")}}
 import { auth } from "@{{projectName}}/auth";
@@ -104,9 +105,13 @@ app.use(express.json());
 {{#if (includes examples "ai")}}
 app.post("/ai", async (req, res) => {
 	const { messages = [] } = (req.body || {}) as { messages: UIMessage[] };
-	const result = streamText({
+	const model = wrapLanguageModel({
 		model: google("gemini-2.5-flash"),
-		messages: convertToModelMessages(messages),
+		middleware: devToolsMiddleware(),
+	});
+	const result = streamText({
+		model,
+		messages: await convertToModelMessages(messages),
 	});
 	result.pipeUIMessageStreamToResponse(res);
 });

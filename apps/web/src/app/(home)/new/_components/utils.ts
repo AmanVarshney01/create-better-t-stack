@@ -544,16 +544,16 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   // EXAMPLES CONSTRAINTS
   // ============================================
 
-  // Todo example requires database (unless Convex)
-  if (
-    nextStack.examples.includes("todo") &&
-    nextStack.database === "none" &&
-    nextStack.backend !== "convex"
-  ) {
-    nextStack.examples = nextStack.examples.filter((e) => e !== "todo");
-    if (nextStack.examples.length === 0) nextStack.examples = ["none"];
-    changed = true;
-    changes.push({ category: "examples", message: "Todo removed (requires database)" });
+  // Todo example requires database AND API (unless Convex)
+  if (nextStack.examples.includes("todo") && nextStack.backend !== "convex") {
+    const needsRemoval = nextStack.database === "none" || nextStack.api === "none";
+    if (needsRemoval) {
+      const reason = nextStack.database === "none" ? "requires database" : "requires API layer";
+      nextStack.examples = nextStack.examples.filter((e) => e !== "todo");
+      if (nextStack.examples.length === 0) nextStack.examples = ["none"];
+      changed = true;
+      changes.push({ category: "examples", message: `Todo removed (${reason})` });
+    }
   }
 
   // AI example constraints
@@ -909,12 +909,13 @@ export const getDisabledReason = (
   // EXAMPLES CONSTRAINTS
   // ============================================
   if (category === "examples") {
-    if (
-      optionId === "todo" &&
-      currentStack.database === "none" &&
-      currentStack.backend !== "convex"
-    ) {
-      return "Todo example requires a database";
+    if (optionId === "todo" && currentStack.backend !== "convex") {
+      if (currentStack.database === "none") {
+        return "Todo example requires a database";
+      }
+      if (currentStack.api === "none") {
+        return "Todo example requires an API layer (tRPC or oRPC)";
+      }
     }
     if (optionId === "ai") {
       if (currentStack.webFrontend.includes("solid")) {

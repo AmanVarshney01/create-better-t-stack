@@ -1,9 +1,8 @@
-import { isCancel, select } from "@clack/prompts";
-
 import type { Backend, Frontend } from "../types";
 
 import { DEFAULT_CONFIG } from "../constants";
 import { exitCancelled } from "../utils/errors";
+import { isCancel, navigableSelect } from "./navigable";
 
 // Temporarily restrict to Next.js and TanStack Start only for backend="self"
 const FULLSTACK_FRONTENDS: readonly Frontend[] = [
@@ -73,7 +72,7 @@ export async function getBackendFrameworkChoice(
     hint: "No backend server",
   });
 
-  const response = await select<Backend>({
+  const response = await navigableSelect<Backend>({
     message: "Select backend",
     options: backendOptions,
     initialValue: hasFullstackFrontend ? "self" : DEFAULT_CONFIG.backend,

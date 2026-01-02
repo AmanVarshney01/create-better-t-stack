@@ -1,4 +1,5 @@
-import { defineConfig, defineDocs, metaSchema } from "fumadocs-mdx/config";
+import { defineConfig, defineDocs, frontmatterSchema, metaSchema } from "fumadocs-mdx/config";
+import { z } from "zod";
 
 export const docs = defineDocs({
   dir: "content/docs",
@@ -6,6 +7,15 @@ export const docs = defineDocs({
     postprocess: {
       includeProcessedMarkdown: true,
     },
+    schema: frontmatterSchema.extend({
+      author: z
+        .object({
+          name: z.string(),
+          url: z.string().url().optional(),
+        })
+        .optional(),
+      date: z.string().optional(),
+    }),
   },
   meta: {
     schema: metaSchema,

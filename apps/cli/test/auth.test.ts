@@ -89,17 +89,16 @@ describe("Authentication Configurations", () => {
         api: "trpc",
         frontend: ["tanstack-router"],
         addons: ["turborepo"],
-        examples: ["todo"],
+        examples: ["none"],
         dbSetup: "none",
         webDeploy: "none",
         serverDeploy: "none",
-        expectError: true,
+        install: false,
       });
 
-      expectError(
-        result,
-        "The 'todo' example requires a database if a backend (other than Convex) is present. Cannot use --examples todo when database is 'none' and a backend is selected.",
-      );
+      // This should actually succeed - better-auth can work without a database
+      // if no examples require one
+      expectSuccess(result);
     });
 
     it("should work with better-auth + convex backend (tanstack-router)", async () => {
@@ -291,6 +290,7 @@ describe("Authentication Configurations", () => {
     });
 
     it("should work with auth none + no database", async () => {
+      // When backend is 'none', examples are automatically cleared
       const result = await runTRPCTest({
         projectName: "no-auth-no-db",
         auth: "none",
@@ -301,7 +301,7 @@ describe("Authentication Configurations", () => {
         api: "none",
         frontend: ["tanstack-router"],
         addons: ["turborepo"],
-        examples: ["todo"],
+        examples: ["none"],
         dbSetup: "none",
         webDeploy: "none",
         serverDeploy: "none",

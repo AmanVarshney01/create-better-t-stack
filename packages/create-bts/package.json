@@ -1,6 +1,6 @@
 {
   "name": "create-bts",
-  "version": "3.12.5",
+  "version": "3.13.2",
   "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations (alias for create-better-t-stack)",
   "keywords": [
     "better-auth",
@@ -62,6 +62,6 @@
     "access": "public"
   },
   "dependencies": {
-    "create-better-t-stack": "^3.12.5"
+    "create-better-t-stack": "^3.13.2"
   }
 }

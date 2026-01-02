@@ -1,19 +1,18 @@
-import { isCancel, select } from "@clack/prompts";
-
 import type { PackageManager } from "../types";
 
 import { exitCancelled } from "../utils/errors";
 import { getUserPkgManager } from "../utils/get-package-manager";
+import { isCancel, navigableSelect } from "./navigable";
 
 export async function getPackageManagerChoice(packageManager?: PackageManager) {
   if (packageManager !== undefined) return packageManager;
 
   const detectedPackageManager = getUserPkgManager();
 
-  const response = await select<PackageManager>({
+  const response = await navigableSelect<PackageManager>({
     message: "Choose package manager",
     options: [
-      { value: "npm", label: "npm", hint: "Node Package Manager" },
+      { value: "npm", label: "npm", hint: "not recommended" },
       {
         value: "pnpm",
         label: "pnpm",

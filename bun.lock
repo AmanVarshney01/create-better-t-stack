@@ -20,12 +20,13 @@
     },
     "apps/cli": {
       "name": "create-better-t-stack",
-      "version": "3.12.5",
+      "version": "3.13.2",
       "bin": {
         "create-better-t-stack": "dist/cli.mjs",
       },
       "dependencies": {
         "@better-t-stack/types": "workspace:*",
+        "@clack/core": "^0.5.0",
         "@clack/prompts": "^1.0.0-alpha.8",
         "@orpc/server": "^1.13.0",
         "consola": "^3.4.2",
@@ -130,7 +131,7 @@
     },
     "packages/create-bts": {
       "name": "create-bts",
-      "version": "3.12.5",
+      "version": "3.13.2",
       "bin": {
         "create-bts": "cli.js",
       },
@@ -140,7 +141,7 @@
     },
     "packages/types": {
       "name": "@better-t-stack/types",
-      "version": "3.12.5",
+      "version": "3.13.2",
       "dependencies": {
         "zod": "^4.1.13",
       },

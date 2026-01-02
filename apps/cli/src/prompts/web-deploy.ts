@@ -1,10 +1,9 @@
-import { isCancel, select } from "@clack/prompts";
-
 import type { Backend, Frontend, Runtime, WebDeploy } from "../types";
 
 import { DEFAULT_CONFIG } from "../constants";
 import { WEB_FRAMEWORKS } from "../utils/compatibility";
 import { exitCancelled } from "../utils/errors";
+import { isCancel, navigableSelect } from "./navigable";
 
 function hasWebFrontend(frontends: Frontend[]) {
   return frontends.some((f) => WEB_FRAMEWORKS.includes(f));
@@ -54,7 +53,7 @@ export async function getDeploymentChoice(
     };
   });
 
-  const response = await select<WebDeploy>({
+  const response = await navigableSelect<WebDeploy>({
     message: "Select web deployment",
     options,
     initialValue: DEFAULT_CONFIG.webDeploy,
@@ -97,7 +96,7 @@ export async function getDeploymentToAdd(frontend: Frontend[], existingDeploymen
     return "none";
   }
 
-  const response = await select<WebDeploy>({
+  const response = await navigableSelect<WebDeploy>({
     message: "Select web deployment",
     options,
     initialValue: DEFAULT_CONFIG.webDeploy,
