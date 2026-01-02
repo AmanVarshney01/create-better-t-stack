@@ -3,30 +3,30 @@
   "version": "0.0.1",
   "description": "Virtual file system generator for Better-T-Stack templates - works in browsers and Node.js",
   "files": [
-    "dist"
+    "dist",
+    "scripts",
+    "templates"
   ],
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
     },
     "./fs-writer": {
-      "types": "./dist/fs-writer.d.ts",
-      "import": "./dist/fs-writer.js"
+      "types": "./dist/fs-writer.d.mts",
+      "default": "./dist/fs-writer.mjs"
     },
     "./template-reader": {
-      "types": "./dist/template-reader.d.ts",
-      "import": "./dist/template-reader.js"
+      "types": "./dist/template-reader.d.mts",
+      "default": "./dist/template-reader.mjs"
     }
   },
   "scripts": {
-    "generate-templates": "tsx scripts/generate-templates.ts",
+    "generate-templates": "bun scripts/generate-templates.ts",
     "prebuild": "bun run generate-templates",
-    "build": "tsup src/index.ts src/fs-writer.ts src/template-reader.ts --format esm --dts",
-    "dev": "tsup src/index.ts src/fs-writer.ts src/template-reader.ts --format esm --dts --watch",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -41,8 +41,7 @@
     "fs-extra": "^11.3.3",
     "is-binary-path": "^3.0.0",
     "tinyglobby": "^0.2.15",
-    "tsup": "^8.3.5",
-    "tsx": "^4.19.0",
+    "tsdown": "^0.17.2",
     "typescript": "^5.7.2"
   }
 }
