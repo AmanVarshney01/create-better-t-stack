@@ -58,6 +58,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@better-t-stack/backend": "workspace:*",
+        "@better-t-stack/template-generator": "workspace:*",
         "@better-t-stack/types": "workspace:*",
         "@erquhart/convex-oss-stats": "^0.8.2",
         "@number-flow/react": "^0.5.10",
