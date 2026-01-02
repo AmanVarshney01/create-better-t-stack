@@ -7,16 +7,7 @@ import { VirtualFileSystem } from "./core/virtual-fs";
 import { processPostGeneration } from "./post-process";
 import { processDependencies, processReadme } from "./processors";
 
-/**
- * Template data structure for embedded templates
- * Key: template path (relative to templates directory)
- * Value: template content
- */
 export type TemplateData = Map<string, string>;
-
-/**
- * Generate a virtual file tree from project configuration
- */
 export async function generateVirtualProject(options: GeneratorOptions): Promise<GeneratorResult> {
   try {
     const { config, templates } = options;
@@ -70,9 +61,6 @@ export async function generateVirtualProject(options: GeneratorOptions): Promise
   }
 }
 
-/**
- * Check if templates exist for a given prefix
- */
 function hasTemplatesWithPrefix(templates: TemplateData, prefix: string): boolean {
   const normalizedPrefix = prefix.endsWith("/") ? prefix : `${prefix}/`;
   for (const path of templates.keys()) {
@@ -81,9 +69,6 @@ function hasTemplatesWithPrefix(templates: TemplateData, prefix: string): boolea
   return false;
 }
 
-/**
- * Process templates from a specific directory prefix
- */
 function processTemplatesFromPrefix(
   vfs: VirtualFileSystem,
   templates: TemplateData,
@@ -117,10 +102,6 @@ function processTemplatesFromPrefix(
   }
 }
 
-// =============================================================================
-// Base Template
-// =============================================================================
-
 async function processBaseTemplate(
   vfs: VirtualFileSystem,
   templates: TemplateData,
@@ -128,10 +109,6 @@ async function processBaseTemplate(
 ): Promise<void> {
   processTemplatesFromPrefix(vfs, templates, "base", "", config);
 }
-
-// =============================================================================
-// Frontend Templates
-// =============================================================================
 
 async function processFrontendTemplates(
   vfs: VirtualFileSystem,
@@ -200,10 +177,6 @@ async function processFrontendTemplates(
   }
 }
 
-// =============================================================================
-// Backend Templates
-// =============================================================================
-
 async function processBackendTemplates(
   vfs: VirtualFileSystem,
   templates: TemplateData,
@@ -238,10 +211,6 @@ async function processBackendTemplates(
   );
 }
 
-// =============================================================================
-// Database Templates
-// =============================================================================
-
 async function processDbTemplates(
   vfs: VirtualFileSystem,
   templates: TemplateData,
@@ -261,9 +230,7 @@ async function processDbTemplates(
   );
 }
 
-// =============================================================================
 // API Templates
-// =============================================================================
 
 async function processApiTemplates(
   vfs: VirtualFileSystem,
@@ -318,10 +285,6 @@ async function processApiTemplates(
   }
 }
 
-// =============================================================================
-// Config Package
-// =============================================================================
-
 async function processConfigPackage(
   vfs: VirtualFileSystem,
   templates: TemplateData,
@@ -329,10 +292,6 @@ async function processConfigPackage(
 ): Promise<void> {
   processTemplatesFromPrefix(vfs, templates, "packages/config", "packages/config", config);
 }
-
-// =============================================================================
-// Env Package
-// =============================================================================
 
 async function processEnvPackage(
   vfs: VirtualFileSystem,
@@ -361,10 +320,6 @@ async function processEnvPackage(
   // Copy base env package files
   processTemplatesFromPrefix(vfs, templates, "packages/env", "packages/env", config);
 }
-
-// =============================================================================
-// Auth Templates
-// =============================================================================
 
 async function processAuthTemplates(
   vfs: VirtualFileSystem,
@@ -603,10 +558,6 @@ async function processAuthTemplates(
   }
 }
 
-// =============================================================================
-// Payments Templates
-// =============================================================================
-
 async function processPaymentsTemplates(
   vfs: VirtualFileSystem,
   templates: TemplateData,
@@ -674,10 +625,6 @@ async function processPaymentsTemplates(
   }
 }
 
-// =============================================================================
-// Addon Templates
-// =============================================================================
-
 async function processAddonTemplates(
   vfs: VirtualFileSystem,
   templates: TemplateData,
@@ -704,10 +651,6 @@ async function processAddonTemplates(
     processTemplatesFromPrefix(vfs, templates, `addons/${addon}`, "", config);
   }
 }
-
-// =============================================================================
-// Example Templates
-// =============================================================================
 
 async function processExampleTemplates(
   vfs: VirtualFileSystem,
@@ -834,10 +777,6 @@ async function processExampleTemplates(
   }
 }
 
-// =============================================================================
-// Extras Templates (pnpm-workspace, bunfig, npmrc)
-// =============================================================================
-
 async function processExtrasTemplates(
   vfs: VirtualFileSystem,
   templates: TemplateData,
@@ -862,10 +801,6 @@ async function processExtrasTemplates(
     processTemplatesFromPrefix(vfs, templates, "extras/_npmrc", "", config);
   }
 }
-
-// =============================================================================
-// Deploy Templates
-// =============================================================================
 
 async function processDeployTemplates(
   vfs: VirtualFileSystem,

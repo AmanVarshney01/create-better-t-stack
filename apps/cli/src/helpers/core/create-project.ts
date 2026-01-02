@@ -1,4 +1,3 @@
-// Use unified generator from template-generator package
 import { generateVirtualProject, EMBEDDED_TEMPLATES } from "@better-t-stack/template-generator";
 import { writeTreeToFilesystem } from "@better-t-stack/template-generator/fs-writer";
 import { log } from "@clack/prompts";
@@ -34,8 +33,6 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
   try {
     await fs.ensureDir(projectDir);
 
-    // ==== Phase 1: Generate virtual project ====
-    // Generator handles: templates, scripts, naming, catalogs, ALL dependencies
     const result = await generateVirtualProject({
       config: options,
       templates: EMBEDDED_TEMPLATES,
@@ -45,33 +42,22 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
       throw new Error(result.error || "Failed to generate project templates");
     }
 
-    // ==== Phase 2: Write to disk ====
     await writeTreeToFilesystem(result.tree, projectDir);
-
-    // Format all generated files (runs oxfmt for code formatting)
     await formatProjectFiles(projectDir);
-
-    // Set actual package manager version (template-generator uses placeholder)
     await setPackageManagerVersion(projectDir, options.packageManager);
 
-    // ==== Phase 3: CLI-only operations (external CLIs, secrets, file mods) ====
-
-    // Database provider setup (runs turso, neon, prisma-postgres CLIs)
     if (!isConvex && options.database !== "none") {
       await setupDatabase(options, cliInput);
     }
 
-    // Examples may need external CLI setup
     if (options.examples.length > 0 && options.examples[0] !== "none") {
       await setupExamples(options);
     }
 
-    // Addons may need external CLI setup (biome, starlight, etc.)
     if (options.addons.length > 0 && options.addons[0] !== "none") {
       await setupAddons(options);
     }
 
-    // Better Auth plugin file modifications (CLI-only)
     if (options.auth === "better-auth" && !isConvex) {
       const authPackageDir = `${projectDir}/packages/auth`;
       if (await fs.pathExists(authPackageDir)) {
@@ -79,21 +65,13 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
       }
     }
 
-    // Environment variables with generated secrets
     await setupEnvironmentVariables(options);
-
-    // Deployment CLIs
     await setupWebDeploy(options);
     await setupServerDeploy(options);
-
-    // BTS config
     await writeBtsConfig(options);
 
     if (!isSilent()) log.success("Project template successfully scaffolded!");
 
-    // ==== Phase 4: Post-scaffolding ====
-
-    // Install dependencies
     if (options.install) {
       await installDependencies({
         projectDir,
@@ -101,10 +79,8 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
       });
     }
 
-    // Git init
     await initializeGit(projectDir, options.git);
 
-    // Post-install instructions
     if (!isSilent()) {
       await displayPostInstallInstructions({
         ...options,
@@ -124,10 +100,6 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
   }
 }
 
-/**
- * Set the actual package manager version in package.json
- * The template-generator uses a placeholder (@latest) since it can't run shell commands
- */
 async function setPackageManagerVersion(
   projectDir: string,
   packageManager: ProjectConfig["packageManager"],
@@ -142,8 +114,6 @@ async function setPackageManagerVersion(
     pkgJson.packageManager = `${packageManager}@${version}`;
     await fs.writeJson(pkgJsonPath, pkgJson, { spaces: 2 });
   } catch {
-    // If we can't get the version, just remove the packageManager field
-    // to avoid turbo errors
     const pkgJson = await fs.readJson(pkgJsonPath);
     delete pkgJson.packageManager;
     await fs.writeJson(pkgJsonPath, pkgJson, { spaces: 2 });

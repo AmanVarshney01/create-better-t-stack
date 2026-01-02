@@ -1,9 +1,3 @@
-/**
- * In-memory virtual file system for generating project structures
- * Uses memfs for Node.js fs API compatibility
- * Uses pathe for cross-platform path handling
- */
-
 import type { Dirent } from "node:fs";
 
 import { memfs } from "memfs";
@@ -11,10 +5,6 @@ import { dirname, basename, extname, normalize, join } from "pathe";
 
 import type { VirtualDirectory, VirtualFile } from "../types";
 
-/**
- * In-memory virtual file system using memfs
- * Provides Node.js fs-like API for generating project structures
- */
 export class VirtualFileSystem {
   private _fs: ReturnType<typeof memfs>["fs"];
   private _vol: ReturnType<typeof memfs>["vol"];
@@ -25,14 +15,10 @@ export class VirtualFileSystem {
     this._vol = vol;
   }
 
-  /**
-   * Write a file to the virtual file system
-   */
   writeFile(filePath: string, content: string): void {
     const normalizedPath = this.normalizePath(filePath);
     const dir = dirname(normalizedPath);
 
-    // Ensure directory exists
     if (dir && dir !== "/" && dir !== ".") {
       this._fs.mkdirSync(dir, { recursive: true });
     }
@@ -40,9 +26,6 @@ export class VirtualFileSystem {
     this._fs.writeFileSync(normalizedPath, content, { encoding: "utf-8" });
   }
 
-  /**
-   * Read a file from the virtual file system
-   */
   readFile(filePath: string): string | undefined {
     const normalizedPath = this.normalizePath(filePath);
     try {
@@ -52,9 +35,6 @@ export class VirtualFileSystem {
     }
   }
 
-  /**
-   * Check if a file exists
-   */
   fileExists(filePath: string): boolean {
     const normalizedPath = this.normalizePath(filePath);
     try {
@@ -65,9 +45,6 @@ export class VirtualFileSystem {
     }
   }
 
-  /**
-   * Check if a directory exists
-   */
   directoryExists(dirPath: string): boolean {
     const normalizedPath = this.normalizePath(dirPath);
     try {
@@ -78,26 +55,17 @@ export class VirtualFileSystem {
     }
   }
 
-  /**
-   * Create a directory (and all parent directories)
-   */
   mkdir(dirPath: string): void {
     const normalizedPath = this.normalizePath(dirPath);
     this._fs.mkdirSync(normalizedPath, { recursive: true });
   }
 
-  /**
-   * Get all file paths
-   */
   getAllFiles(): string[] {
     const files: string[] = [];
     this.walkDir("/", files, true);
     return files.sort();
   }
 
-  /**
-   * Get all directory paths
-   */
   getAllDirectories(): string[] {
     const dirs: string[] = [];
     this.walkDir("/", dirs, false);
@@ -125,23 +93,14 @@ export class VirtualFileSystem {
     }
   }
 
-  /**
-   * Get file count
-   */
   getFileCount(): number {
     return this.getAllFiles().length;
   }
 
-  /**
-   * Get directory count
-   */
   getDirectoryCount(): number {
     return this.getAllDirectories().length;
   }
 
-  /**
-   * Check if a path exists (file or directory)
-   */
   exists(path: string): boolean {
     const normalizedPath = this.normalizePath(path);
     try {
@@ -152,9 +111,6 @@ export class VirtualFileSystem {
     }
   }
 
-  /**
-   * Read and parse a JSON file
-   */
   readJson<T = unknown>(filePath: string): T | undefined {
     const content = this.readFile(filePath);
     if (content === undefined) return undefined;
@@ -165,17 +121,11 @@ export class VirtualFileSystem {
     }
   }
 
-  /**
-   * Write an object as JSON to a file
-   */
   writeJson(filePath: string, data: unknown, spaces = 2): void {
     const content = JSON.stringify(data, null, spaces);
     this.writeFile(filePath, content);
   }
 
-  /**
-   * Delete a file
-   */
   deleteFile(filePath: string): boolean {
     const normalizedPath = this.normalizePath(filePath);
     try {
@@ -186,9 +136,6 @@ export class VirtualFileSystem {
     }
   }
 
-  /**
-   * List immediate children of a directory
-   */
   listDir(dirPath: string): string[] {
     const normalizedPath = this.normalizePath(dirPath) || "/";
     try {
@@ -199,9 +146,6 @@ export class VirtualFileSystem {
     }
   }
 
-  /**
-   * Convert the virtual file system to a tree structure
-   */
   toTree(rootName: string = "project"): VirtualDirectory {
     const root: VirtualDirectory = {
       type: "directory",
@@ -253,14 +197,11 @@ export class VirtualFileSystem {
 
   private sortChildren(node: VirtualDirectory): void {
     node.children.sort((a, b) => {
-      // Directories first
       if (a.type === "directory" && b.type === "file") return -1;
       if (a.type === "file" && b.type === "directory") return 1;
-      // Then alphabetically
       return a.name.localeCompare(b.name);
     });
 
-    // Recursively sort children of directories
     for (const child of node.children) {
       if (child.type === "directory") {
         this.sortChildren(child);
@@ -269,7 +210,6 @@ export class VirtualFileSystem {
   }
 
   private normalizePath(p: string): string {
-    // Ensure path starts with / for memfs
     const normalized = normalize(p).replace(/^\/+/, "");
     return "/" + normalized;
   }
@@ -279,26 +219,16 @@ export class VirtualFileSystem {
     return ext.startsWith(".") ? ext.slice(1) : ext;
   }
 
-  /**
-   * Clear all files and directories
-   */
   clear(): void {
-    // Reset to a fresh memfs instance
     const { fs, vol } = memfs();
     this._fs = fs;
     this._vol = vol;
   }
 
-  /**
-   * Get the underlying memfs volume (for advanced use cases)
-   */
   getVolume(): ReturnType<typeof memfs>["vol"] {
     return this._vol;
   }
 
-  /**
-   * Get the underlying memfs fs instance (for advanced use cases)
-   */
   getFs(): ReturnType<typeof memfs>["fs"] {
     return this._fs;
   }

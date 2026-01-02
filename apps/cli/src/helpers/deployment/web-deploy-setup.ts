@@ -1,9 +1,3 @@
-/**
- * Web deploy setup - CLI-only operations
- * NOTE: Dependencies are handled by template-generator's deploy-deps.ts processor
- * This file only handles external CLI calls and config modifications for "add deploy" command
- */
-
 import type { ProjectConfig } from "../../types";
 
 import { setupCombinedAlchemyDeploy, setupInfraScripts } from "./alchemy/alchemy-combined-setup";
@@ -24,9 +18,6 @@ export async function setupWebDeploy(config: ProjectConfig) {
   if (webDeploy === "none") return;
   if (webDeploy !== "cloudflare") return;
 
-  // Dependencies are handled by template-generator's deploy-deps.ts
-  // This only handles config modifications and infra scripts for "add deploy" command
-
   if (webDeploy === "cloudflare" && serverDeploy === "cloudflare") {
     await setupCombinedAlchemyDeploy(projectDir, packageManager, config);
     return;
@@ -42,7 +33,6 @@ export async function setupWebDeploy(config: ProjectConfig) {
   const isReactRouter = frontend.includes("react-router");
   const isSolid = frontend.includes("solid");
 
-  // These functions now only modify config files (no addPackageDependency)
   if (isNext) {
     await setupNextAlchemyDeploy(projectDir, packageManager);
   } else if (isNuxt) {

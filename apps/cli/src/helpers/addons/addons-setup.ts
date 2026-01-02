@@ -4,8 +4,6 @@ import path from "node:path";
 import pc from "picocolors";
 
 import type { Frontend, ProjectConfig } from "../../types";
-// NOTE: Dependencies are now handled by template-generator's addons-deps.ts processor
-// This file only contains CLI-specific operations (external CLI calls, logs, etc.)
 
 import { setupFumadocs } from "./fumadocs-setup";
 import { setupOxlint } from "./oxlint-setup";
@@ -27,7 +25,6 @@ export async function setupAddons(config: ProjectConfig, isAddCommand = false) {
   const hasSolidFrontend = frontend.includes("solid");
   const hasNextFrontend = frontend.includes("next");
 
-  // Turborepo - deps handled by template-generator, just log for add command
   if (addons.includes("turborepo") && isAddCommand) {
     log.info(`${pc.yellow("Update your package.json scripts:")}
 
@@ -38,7 +35,6 @@ ${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
 		`);
   }
 
-  // Tauri - external CLI init
   if (
     addons.includes("tauri") &&
     (hasReactWebFrontend ||
@@ -50,7 +46,6 @@ ${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
     await setupTauri(config);
   }
 
-  // Ultracite - external CLI init
   const hasUltracite = addons.includes("ultracite");
   const hasHusky = addons.includes("husky");
   const hasOxlint = addons.includes("oxlint");
@@ -59,32 +54,26 @@ ${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
     await setupUltracite(config, hasHusky);
   }
 
-  // Oxlint - external CLI init
   if (hasOxlint) {
     await setupOxlint(projectDir, packageManager);
   }
 
-  // Starlight - external CLI init
   if (addons.includes("starlight")) {
     await setupStarlight(config);
   }
 
-  // Ruler - external CLI init
   if (addons.includes("ruler")) {
     await setupRuler(config);
   }
 
-  // Fumadocs - external CLI init
   if (addons.includes("fumadocs")) {
     await setupFumadocs(config);
   }
 
-  // OpenTUI - external CLI init
   if (addons.includes("opentui")) {
     await setupTui(config);
   }
 
-  // WXT - external CLI init
   if (addons.includes("wxt")) {
     await setupWxt(config);
   }

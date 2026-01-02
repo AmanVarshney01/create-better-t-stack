@@ -1,49 +1,29 @@
-/**
- * Filesystem Writer - Node.js only module
- * Writes VirtualFileTree to real filesystem
- * Uses native node:fs/promises for ESM compatibility
- */
-
 import * as fs from "node:fs/promises";
 import { join, dirname } from "pathe";
 
 import type { VirtualFileTree, VirtualNode, VirtualFile, VirtualDirectory } from "./types";
 
-/**
- * Ensure directory exists (recursive mkdir)
- */
 async function ensureDir(dirPath: string): Promise<void> {
   await fs.mkdir(dirPath, { recursive: true });
 }
 
-/**
- * Write a VirtualFileTree to the real filesystem
- * Note: The destDir should be the project directory. The root node name is skipped
- * since destDir already includes the project name.
- */
 export async function writeTreeToFilesystem(tree: VirtualFileTree, destDir: string): Promise<void> {
-  // Skip the root node name (project name) and write children directly to destDir
   const root = tree.root as VirtualDirectory;
   for (const child of root.children) {
     await writeNode(child, destDir, "");
   }
 }
 
-/**
- * Recursively write a VirtualNode to the filesystem
- */
 async function writeNode(node: VirtualNode, baseDir: string, relativePath: string): Promise<void> {
   const fullPath = join(baseDir, relativePath, node.name);
 
   if (node.type === "file") {
     const file = node as VirtualFile;
 
-    // Skip binary placeholders
     if (file.content === "[Binary file]") {
       return;
     }
 
-    // Ensure parent directory exists
     await ensureDir(dirname(fullPath));
     await fs.writeFile(fullPath, file.content, "utf-8");
   } else {
@@ -56,10 +36,6 @@ async function writeNode(node: VirtualNode, baseDir: string, relativePath: strin
   }
 }
 
-/**
- * Write only specific files from a VirtualFileTree
- * Useful for partial updates or selective file generation
- */
 export async function writeSelectedFiles(
   tree: VirtualFileTree,
   destDir: string,

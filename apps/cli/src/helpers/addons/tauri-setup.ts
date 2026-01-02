@@ -1,9 +1,3 @@
-/**
- * Tauri setup - CLI-only operations
- * NOTE: Dependencies are handled by template-generator's addons-deps.ts processor
- * This file only handles external CLI initialization (tauri init)
- */
-
 import { spinner } from "@clack/prompts";
 import { consola } from "consola";
 import { $ } from "execa";
@@ -26,9 +20,6 @@ export async function setupTauri(config: ProjectConfig) {
 
   try {
     s.start("Setting up Tauri desktop app support...");
-
-    // Dependencies and scripts are added by template-generator
-    // This only runs the tauri init CLI
 
     const hasReactRouter = frontend.includes("react-router");
     const hasNuxt = frontend.includes("nuxt");
