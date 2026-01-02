@@ -6,7 +6,7 @@ import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test
 
 describe("Addon Configurations", () => {
   describe("Universal Addons (no frontend restrictions)", () => {
-    const universalAddons = ["biome", "husky", "turborepo", "oxlint"];
+    const universalAddons = ["biome", "husky", "turborepo", "oxlint", "nix-flake"];
 
     for (const addon of universalAddons) {
       it(`should work with ${addon} addon on any frontend`, async () => {
@@ -290,6 +290,7 @@ describe("Addon Configurations", () => {
       "husky",
       "turborepo",
       "oxlint",
+      "nix-flake",
       // Note: starlight, ultracite, ruler, fumadocs are prompt-controlled only
     ];
 
