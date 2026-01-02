@@ -1,4 +1,5 @@
 import type { UrlKeys } from "nuqs";
+
 import type { StackState } from "@/lib/constant";
 
 export const stackUrlKeys: UrlKeys<Record<keyof StackState, unknown>> = {

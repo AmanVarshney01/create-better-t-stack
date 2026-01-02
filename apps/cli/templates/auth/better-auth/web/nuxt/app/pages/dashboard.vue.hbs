@@ -2,15 +2,15 @@
 {{#if (eq api "orpc")}}
 import { useQuery } from '@tanstack/vue-query'
 {{/if}}
-const {$authClient} = useNuxtApp()
+
+const { $authClient, $orpc } = useNuxtApp()
 
 definePageMeta({
   middleware: ['auth']
 })
 
-const { $orpc } = useNuxtApp()
-
 const session = $authClient.useSession()
+
 {{#if (eq payments "polar")}}
 const customerState = ref<any>(null)
 {{/if}}
@@ -34,34 +34,66 @@ const hasProSubscription = computed(() =>
   customerState.value?.activeSubscriptions?.length! > 0
 )
 {{/if}}
-
 </script>
 
 <template>
-  <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4">Dashboard</h1>
-    <div v-if="session?.data?.user">
-        <p class="mb-2">Welcome \{{ session.data.user.name }}</p>
+  <UContainer class="py-8">
+    <UPageHeader
+      title="Dashboard"
+      :description="session?.data?.user ? `Welcome back, ${session.data.user.name}!` : 'Loading...'"
+    />
+
+    <div class="mt-6 space-y-4">
+      {{#if (eq api "orpc")}}
+      <UCard>
+        <template #header>
+          <div class="font-medium">Private Data</div>
+        </template>
+
+        <USkeleton v-if="privateData.status.value === 'pending'" class="h-6 w-48" />
+
+        <UAlert
+          v-else-if="privateData.status.value === 'error'"
+          color="error"
+          icon="i-lucide-alert-circle"
+          title="Error loading data"
+          :description="privateData.error.value?.message || 'Failed to load private data'"
+        />
+
+        <div v-else-if="privateData.data.value" class="flex items-center gap-2">
+          <UIcon name="i-lucide-check-circle" class="text-success" />
+          <span>\{{ privateData.data.value.message }}</span>
+        </div>
+      </UCard>
+      {{/if}}
+
+      {{#if (eq payments "polar")}}
+      <UCard>
+        <template #header>
+          <div class="font-medium">Subscription</div>
+        </template>
+
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <UIcon :name="hasProSubscription ? 'i-lucide-crown' : 'i-lucide-user'" :class="hasProSubscription ? 'text-warning' : 'text-muted'" />
+            <span>Plan: \{{ hasProSubscription ? "Pro" : "Free" }}</span>
+          </div>
+          <UButton 
+            v-if="hasProSubscription"
+            variant="outline"
+            @click="() => { $authClient.customer.portal() }"
+          >
+            Manage Subscription
+          </UButton>
+          <UButton 
+            v-else
+            @click="() => { $authClient.checkout({ slug: 'pro' }) }"
+          >
+            Upgrade to Pro
+          </UButton>
+        </div>
+      </UCard>
+      {{/if}}
     </div>
-    {{#if (eq api "orpc")}}
-    <div v-if="privateData.status.value === 'pending'">Loading private data...</div>
-    <div v-else-if="privateData.status.value === 'error'">Error loading private data: \{{ privateData.error.value?.message }}</div>
-    <p v-else-if="privateData.data.value">API: \{{ privateData.data.value.message }}</p>
-    {{/if}}
-    {{#if (eq payments "polar")}}
-    <p class="mb-2">Plan: \{{ hasProSubscription ? "Pro" : "Free" }}</p>
-    <UButton 
-      v-if="hasProSubscription"
-      @click="() => { $authClient.customer.portal() }"
-    >
-      Manage Subscription
-    </UButton>
-    <UButton 
-      v-else
-      @click="() => { $authClient.checkout({ slug: 'pro' }) }"
-    >
-      Upgrade to Pro
-    </UButton>
-    {{/if}}
-  </div>
+  </UContainer>
 </template>

@@ -1,5 +1,7 @@
 import { describe, it } from "bun:test";
+
 import type { Backend, Runtime } from "../src/types";
+
 import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
 describe("Integration Tests - Real World Scenarios", () => {
@@ -17,8 +19,8 @@ describe("Integration Tests - Real World Scenarios", () => {
         addons: ["biome", "turborepo"],
         examples: ["todo", "ai"],
         dbSetup: "none",
-        webDeploy: "alchemy",
-        serverDeploy: "alchemy",
+        webDeploy: "cloudflare",
+        serverDeploy: "cloudflare",
         install: false,
       });
 
@@ -38,8 +40,8 @@ describe("Integration Tests - Real World Scenarios", () => {
         addons: ["biome", "husky"],
         examples: ["ai"], // AI works with Nuxt
         dbSetup: "none",
-        webDeploy: "alchemy",
-        serverDeploy: "alchemy",
+        webDeploy: "cloudflare",
+        serverDeploy: "cloudflare",
         install: false,
       });
 
@@ -59,7 +61,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         addons: ["biome", "turborepo"],
         examples: ["todo", "ai"],
         dbSetup: "none",
-        webDeploy: "alchemy",
+        webDeploy: "cloudflare",
         serverDeploy: "none", // No server deployment for self backend
         install: false,
       });
@@ -101,7 +103,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         addons: ["biome", "turborepo"],
         examples: ["todo"],
         dbSetup: "none",
-        webDeploy: "alchemy",
+        webDeploy: "cloudflare",
         serverDeploy: "none",
         install: false,
       });
@@ -122,7 +124,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         addons: ["biome"],
         examples: ["ai"],
         dbSetup: "none",
-        webDeploy: "alchemy",
+        webDeploy: "cloudflare",
         serverDeploy: "none",
         install: false,
       });
@@ -143,7 +145,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         addons: ["biome"],
         examples: ["ai"],
         dbSetup: "none",
-        webDeploy: "alchemy",
+        webDeploy: "cloudflare",
         serverDeploy: "none",
         install: false,
       });
@@ -207,7 +209,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         examples: ["todo"],
         dbSetup: "none",
         webDeploy: "none",
-        serverDeploy: "alchemy",
+        serverDeploy: "cloudflare",
         install: false,
       });
 
@@ -269,8 +271,8 @@ describe("Integration Tests - Real World Scenarios", () => {
         addons: ["biome", "pwa"],
         examples: ["todo"], // AI not compatible with Solid
         dbSetup: "none",
-        webDeploy: "alchemy",
-        serverDeploy: "alchemy",
+        webDeploy: "cloudflare",
+        serverDeploy: "cloudflare",
         install: false,
       });
 
@@ -292,7 +294,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         addons: ["biome", "pwa"],
         examples: ["none"],
         dbSetup: "none",
-        webDeploy: "alchemy",
+        webDeploy: "cloudflare",
         serverDeploy: "none",
         install: false,
       });
@@ -313,7 +315,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         addons: ["biome", "husky"],
         examples: ["none"],
         dbSetup: "none",
-        webDeploy: "alchemy",
+        webDeploy: "cloudflare",
         serverDeploy: "none",
         install: false,
       });
@@ -359,7 +361,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         examples: ["none"],
         dbSetup: "none",
         webDeploy: "none",
-        serverDeploy: "alchemy",
+        serverDeploy: "cloudflare",
         expectError: true,
       });
 
@@ -512,7 +514,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         addons: ["none"],
         examples: ["none"],
         dbSetup: "none",
-        webDeploy: "alchemy", // Requires web frontend
+        webDeploy: "cloudflare", // Requires web frontend
         serverDeploy: "none",
         expectError: true,
       });
@@ -535,8 +537,8 @@ describe("Integration Tests - Real World Scenarios", () => {
         addons: ["biome", "husky", "turborepo"],
         examples: ["todo", "ai"],
         dbSetup: "none",
-        webDeploy: "alchemy",
-        serverDeploy: "alchemy",
+        webDeploy: "cloudflare",
+        serverDeploy: "cloudflare",
         install: false,
       });
 
@@ -631,7 +633,7 @@ describe("Integration Tests - Real World Scenarios", () => {
 
         // Handle workers runtime requirements
         if (runtime === "workers") {
-          config.serverDeploy = "alchemy";
+          config.serverDeploy = "cloudflare";
         }
 
         const result = await runTRPCTest(config);

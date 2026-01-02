@@ -1,5 +1,7 @@
 import { describe, it } from "bun:test";
+
 import type { Backend, Frontend, Runtime } from "../src/types";
+
 import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
 describe("Backend and Runtime Combinations", () => {
@@ -65,7 +67,7 @@ describe("Backend and Runtime Combinations", () => {
 
         // Set server deployment for workers runtime
         if (runtime === "workers") {
-          config.serverDeploy = "alchemy";
+          config.serverDeploy = "cloudflare";
         }
 
         const result = await runTRPCTest(config);
@@ -287,7 +289,7 @@ describe("Backend and Runtime Combinations", () => {
         examples: ["none"],
         dbSetup: "none",
         webDeploy: "none",
-        serverDeploy: "alchemy", // Workers requires server deployment
+        serverDeploy: "cloudflare", // Workers requires server deployment
         install: false,
       });
 

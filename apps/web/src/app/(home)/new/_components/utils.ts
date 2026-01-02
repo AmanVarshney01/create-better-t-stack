@@ -246,11 +246,11 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
 
   // Workers runtime requires server deployment
   if (nextStack.runtime === "workers" && nextStack.serverDeploy === "none") {
-    nextStack.serverDeploy = "alchemy";
+    nextStack.serverDeploy = "cloudflare";
     changed = true;
     changes.push({
       category: "runtime",
-      message: "Server deploy set to 'Alchemy' (required for Workers)",
+      message: "Server deploy set to 'Cloudflare' (required for Workers)",
     });
   }
 
@@ -544,16 +544,16 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   // EXAMPLES CONSTRAINTS
   // ============================================
 
-  // Todo example requires database (unless Convex)
-  if (
-    nextStack.examples.includes("todo") &&
-    nextStack.database === "none" &&
-    nextStack.backend !== "convex"
-  ) {
-    nextStack.examples = nextStack.examples.filter((e) => e !== "todo");
-    if (nextStack.examples.length === 0) nextStack.examples = ["none"];
-    changed = true;
-    changes.push({ category: "examples", message: "Todo removed (requires database)" });
+  // Todo example requires database AND API (unless Convex)
+  if (nextStack.examples.includes("todo") && nextStack.backend !== "convex") {
+    const needsRemoval = nextStack.database === "none" || nextStack.api === "none";
+    if (needsRemoval) {
+      const reason = nextStack.database === "none" ? "requires database" : "requires API layer";
+      nextStack.examples = nextStack.examples.filter((e) => e !== "todo");
+      if (nextStack.examples.length === 0) nextStack.examples = ["none"];
+      changed = true;
+      changes.push({ category: "examples", message: `Todo removed (${reason})` });
+    }
   }
 
   // AI example constraints
@@ -597,13 +597,13 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   }
 
   // Server deploy constraints
-  if (nextStack.serverDeploy === "alchemy") {
+  if (nextStack.serverDeploy === "cloudflare") {
     if (nextStack.runtime !== "workers" || nextStack.backend !== "hono") {
       nextStack.serverDeploy = "none";
       changed = true;
       changes.push({
         category: "serverDeploy",
-        message: "Server deploy set to 'None' (Alchemy requires Workers + Hono)",
+        message: "Server deploy set to 'None' (Cloudflare requires Workers + Hono)",
       });
     }
   }
@@ -909,12 +909,13 @@ export const getDisabledReason = (
   // EXAMPLES CONSTRAINTS
   // ============================================
   if (category === "examples") {
-    if (
-      optionId === "todo" &&
-      currentStack.database === "none" &&
-      currentStack.backend !== "convex"
-    ) {
-      return "Todo example requires a database";
+    if (optionId === "todo" && currentStack.backend !== "convex") {
+      if (currentStack.database === "none") {
+        return "Todo example requires a database";
+      }
+      if (currentStack.api === "none") {
+        return "Todo example requires an API layer (tRPC or oRPC)";
+      }
     }
     if (optionId === "ai") {
       if (currentStack.webFrontend.includes("solid")) {
@@ -942,9 +943,9 @@ export const getDisabledReason = (
   }
 
   if (category === "serverDeploy") {
-    if (optionId === "alchemy") {
-      if (currentStack.runtime !== "workers") return "Alchemy requires Workers runtime";
-      if (currentStack.backend !== "hono") return "Alchemy requires Hono backend";
+    if (optionId === "cloudflare") {
+      if (currentStack.runtime !== "workers") return "Cloudflare requires Workers runtime";
+      if (currentStack.backend !== "hono") return "Cloudflare requires Hono backend";
     }
     if (optionId !== "none") {
       const noServerDeploy = ["none", "convex", "self-next", "self-tanstack-start"];

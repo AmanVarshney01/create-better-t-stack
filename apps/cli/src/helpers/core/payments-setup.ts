@@ -1,6 +1,8 @@
-import path from "node:path";
 import fs from "fs-extra";
+import path from "node:path";
+
 import type { ProjectConfig } from "../../types";
+
 import { addPackageDependency } from "../../utils/add-package-deps";
 
 export async function setupPayments(config: ProjectConfig) {

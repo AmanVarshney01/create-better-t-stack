@@ -1,8 +1,10 @@
-import path from "node:path";
 import consola from "consola";
 import fs from "fs-extra";
+import path from "node:path";
 import pc from "picocolors";
+
 import type { ProjectConfig } from "../../types";
+
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { setupBetterAuthPlugins } from "../../utils/better-auth-plugin-setup";
 
@@ -59,13 +61,13 @@ export async function setupAuth(config: ProjectConfig) {
         if (convexBackendDirExists) {
           await addPackageDependency({
             dependencies: ["better-auth", "@convex-dev/better-auth"],
-            customDependencies: { "better-auth": "1.4.7" },
+            customDependencies: { "better-auth": "1.4.9" },
             projectDir: convexBackendDir,
           });
           if (hasNativeForBA) {
             await addPackageDependency({
               dependencies: ["@better-auth/expo"],
-              customDependencies: { "@better-auth/expo": "1.4.7" },
+              customDependencies: { "@better-auth/expo": "1.4.9" },
               projectDir: convexBackendDir,
             });
           }
@@ -81,19 +83,19 @@ export async function setupAuth(config: ProjectConfig) {
           if (hasNextJs) {
             await addPackageDependency({
               dependencies: ["better-auth", "@convex-dev/better-auth"],
-              customDependencies: { "better-auth": "1.4.7" },
+              customDependencies: { "better-auth": "1.4.9" },
               projectDir: clientDir,
             });
           } else if (hasTanStackStart) {
             await addPackageDependency({
               dependencies: ["better-auth", "@convex-dev/better-auth"],
-              customDependencies: { "better-auth": "1.4.7" },
+              customDependencies: { "better-auth": "1.4.9" },
               projectDir: clientDir,
             });
           } else if (hasViteReactOther) {
             await addPackageDependency({
               dependencies: ["better-auth", "@convex-dev/better-auth"],
-              customDependencies: { "better-auth": "1.4.7" },
+              customDependencies: { "better-auth": "1.4.9" },
               projectDir: clientDir,
             });
           }
@@ -106,8 +108,8 @@ export async function setupAuth(config: ProjectConfig) {
           await addPackageDependency({
             dependencies: ["better-auth", "@better-auth/expo", "@convex-dev/better-auth"],
             customDependencies: {
-              "better-auth": "1.4.7",
-              "@better-auth/expo": "1.4.7",
+              "better-auth": "1.4.9",
+              "@better-auth/expo": "1.4.9",
             },
             projectDir: nativeDir,
           });

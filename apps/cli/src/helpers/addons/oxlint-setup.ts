@@ -1,10 +1,12 @@
-import path from "node:path";
 import { spinner } from "@clack/prompts";
-import { execa } from "execa";
+import { $ } from "execa";
 import fs from "fs-extra";
+import path from "node:path";
+
 import type { PackageManager } from "../../types";
+
 import { addPackageDependency } from "../../utils/add-package-deps";
-import { getPackageExecutionCommand } from "../../utils/package-runner";
+import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 export async function setupOxlint(projectDir: string, packageManager: PackageManager) {
   await addPackageDependency({
@@ -26,19 +28,11 @@ export async function setupOxlint(projectDir: string, packageManager: PackageMan
 
   const s = spinner();
 
-  const oxlintInitCommand = getPackageExecutionCommand(packageManager, "oxlint@latest --init");
+  const oxlintArgs = getPackageExecutionArgs(packageManager, "oxlint@latest --init");
   s.start("Initializing oxlint and oxfmt...");
-  await execa(oxlintInitCommand, {
-    cwd: projectDir,
-    env: { CI: "true" },
-    shell: true,
-  });
+  await $({ cwd: projectDir, env: { CI: "true" } })`${oxlintArgs}`;
 
-  const oxfmtInitCommand = getPackageExecutionCommand(packageManager, "oxfmt@latest --init");
-  await execa(oxfmtInitCommand, {
-    cwd: projectDir,
-    env: { CI: "true" },
-    shell: true,
-  });
+  const oxfmtArgs = getPackageExecutionArgs(packageManager, "oxfmt@latest --init");
+  await $({ cwd: projectDir, env: { CI: "true" } })`${oxfmtArgs}`;
   s.stop("oxlint and oxfmt initialized successfully!");
 }

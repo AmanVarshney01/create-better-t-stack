@@ -1,6 +1,7 @@
 "use client";
 
 import { Terminal } from "lucide-react";
+
 import Footer from "../../_components/footer";
 import ShowcaseItem from "../_components/ShowcaseItem";
 

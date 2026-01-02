@@ -1,21 +1,22 @@
-{{#if (eq webDeploy "alchemy")}}
+import "@{{projectName}}/env/web";
+{{#if (eq webDeploy "cloudflare")}}
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 {{/if}}
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
 	typedRoutes: true,
-    reactCompiler: true,
+	reactCompiler: true,
 	{{#if (includes examples "ai")}}
-    transpilePackages: ["shiki"],
-    {{/if}}
-    {{#if (eq dbSetup "turso")}}
-    serverExternalPackages: ["libsql", "@libsql/client"],
-    {{/if}}
+	transpilePackages: ["shiki"],
+	{{/if}}
+	{{#if (eq dbSetup "turso")}}
+	serverExternalPackages: ["libsql", "@libsql/client"],
+	{{/if}}
 };
 
 export default nextConfig;
 
-{{#if (eq webDeploy "alchemy")}}
+{{#if (eq webDeploy "cloudflare")}}
 initOpenNextCloudflareForDev();
 {{/if}}

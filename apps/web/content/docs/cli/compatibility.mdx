@@ -133,6 +133,7 @@ create-better-t-stack --frontend next native-nativewind
 | `neon`            | `postgres`                     | Serverless PostgreSQL                                                   |
 | `supabase`        | `postgres`                     | PostgreSQL with additional features                                     |
 | `prisma-postgres` | `postgres`                     | Managed PostgreSQL via Prisma                                           |
+| `planetscale`     | `mysql`, `postgres`            | PlanetScale serverless database                                         |
 | `mongodb-atlas`   | `mongodb`                      | Managed MongoDB                                                         |
 | `docker`          | `postgres`, `mysql`, `mongodb` | Not compatible with `sqlite` or Workers                                 |
 
@@ -165,7 +166,7 @@ create-better-t-stack --frontend next native-nativewind
 
 ### Web Deployment
 
-- `--web-deploy wrangler` requires a web frontend
+- `--web-deploy alchemy` requires a web frontend
 - Cannot be used with native-only projects
 
 ## Authentication Requirements

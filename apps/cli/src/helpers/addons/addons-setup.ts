@@ -1,8 +1,10 @@
-import path from "node:path";
 import { log } from "@clack/prompts";
 import fs from "fs-extra";
+import path from "node:path";
 import pc from "picocolors";
+
 import type { Frontend, ProjectConfig } from "../../types";
+
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { setupFumadocs } from "./fumadocs-setup";
 import { setupOxlint } from "./oxlint-setup";
@@ -11,8 +13,8 @@ import { setupStarlight } from "./starlight-setup";
 import { setupTauri } from "./tauri-setup";
 import { setupTui } from "./tui-setup";
 import { setupUltracite } from "./ultracite-setup";
-import { setupWxt } from "./wxt-setup";
 import { addPwaToViteConfig } from "./vite-pwa-setup";
+import { setupWxt } from "./wxt-setup";
 
 export async function setupAddons(config: ProjectConfig, isAddCommand = false) {
   const { addons, frontend, projectDir, packageManager } = config;

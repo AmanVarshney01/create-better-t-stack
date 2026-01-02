@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+
 import { Suspense } from "react";
+
 import StackBuilder from "./_components/stack-builder";
 
 export const metadata: Metadata = {

@@ -6,14 +6,8 @@ import { queryClient } from "@/utils/trpc";
 import { queryClient } from "@/utils/orpc";
 {{/if}}
 import { useState } from "react";
-import {
-ActivityIndicator,
-Text,
-TextInput,
-Pressable,
-View,
-} from "react-native";
-import { Card, useThemeColor } from "heroui-native";
+import { Text, View } from "react-native";
+import { Button, ErrorView, Spinner, Surface, TextField } from "heroui-native";
 
 function signUpHandler({
 name,
@@ -24,6 +18,15 @@ setIsLoading,
 setName,
 setEmail,
 setPassword,
+}: {
+  name: string;
+  email: string;
+  password: string;
+  setError: (error: string | null) => void;
+  setIsLoading: (loading: boolean) => void;
+  setName: (name: string) => void;
+  setEmail: (email: string) => void;
+  setPassword: (password: string) => void;
 }) {
 setIsLoading(true);
 setError(null);
@@ -64,11 +67,6 @@ const [password, setPassword] = useState("");
 const [isLoading, setIsLoading] = useState(false);
 const [error, setError] = useState<string | null>(null);
 
-  const mutedColor = useThemeColor("muted");
-  const accentColor = useThemeColor("accent");
-  const foregroundColor = useThemeColor("foreground");
-  const dangerColor = useThemeColor("danger");
-
   function handlePress() {
   signUpHandler({
   name,
@@ -83,34 +81,48 @@ const [error, setError] = useState<string | null>(null);
   }
 
   return (
-  <Card variant="secondary" className="mt-6 p-4">
-    <Card.Title className="mb-4">Create Account</Card.Title>
+  <Surface variant="secondary" className="p-4 rounded-lg">
+    <Text className="text-foreground font-medium mb-4">Create Account</Text>
 
-    {error && (
-    <View className="mb-4 p-3 bg-danger/10 rounded-lg">
-      <Text className="text-danger text-sm">{error}</Text>
+    <ErrorView isInvalid={!!error} className="mb-3">
+      {error}
+    </ErrorView>
+
+    <View className="gap-3">
+      <TextField>
+        <TextField.Label>Name</TextField.Label>
+        <TextField.Input value={name} onChangeText={setName} placeholder="John Doe" />
+      </TextField>
+
+      <TextField>
+        <TextField.Label>Email</TextField.Label>
+        <TextField.Input
+          value={email}
+          onChangeText={setEmail}
+          placeholder="email@example.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+      </TextField>
+
+      <TextField>
+        <TextField.Label>Password</TextField.Label>
+        <TextField.Input
+          value={password}
+          onChangeText={setPassword}
+          placeholder="••••••••"
+          secureTextEntry
+        />
+      </TextField>
+
+      <Button onPress={handlePress} isDisabled={isLoading} className="mt-1">
+        {isLoading ? (
+          <Spinner size="sm" color="default" />
+        ) : (
+          <Button.Label>Create Account</Button.Label>
+        )}
+      </Button>
     </View>
-    )}
-
-    <TextInput className="mb-3 py-3 px-4 rounded-lg bg-surface text-foreground border border-divider" placeholder="Name"
-      value={name} onChangeText={setName} placeholderTextColor={mutedColor} />
-
-    <TextInput className="mb-3 py-3 px-4 rounded-lg bg-surface text-foreground border border-divider"
-      placeholder="Email" value={email} onChangeText={setEmail} placeholderTextColor={mutedColor}
-      keyboardType="email-address" autoCapitalize="none" />
-
-    <TextInput className="mb-4 py-3 px-4 rounded-lg bg-surface text-foreground border border-divider"
-      placeholder="Password" value={password} onChangeText={setPassword} placeholderTextColor={mutedColor}
-      secureTextEntry />
-
-    <Pressable onPress={handlePress} disabled={isLoading}
-      className="bg-accent p-4 rounded-lg flex-row justify-center items-center active:opacity-70">
-      {isLoading ? (
-      <ActivityIndicator size="small" color={foregroundColor} />
-      ) : (
-      <Text className="text-foreground font-medium">Sign Up</Text>
-      )}
-    </Pressable>
-  </Card>
+  </Surface>
   );
   }

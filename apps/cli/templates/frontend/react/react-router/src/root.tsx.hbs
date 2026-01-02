@@ -14,6 +14,7 @@ import { Toaster } from "./components/ui/sonner";
 
 {{#if (eq backend "convex")}}
 import { ConvexReactClient } from "convex/react";
+import { env } from "@{{projectName}}/env/web";
 {{#if (eq auth "clerk")}}
 import { ClerkProvider, useAuth } from "@clerk/clerk-react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
@@ -63,12 +64,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 {{#if (eq backend "convex")}}
 export default function App() {
-  const convex = new ConvexReactClient(
-    import.meta.env.VITE_CONVEX_URL as string,
-  );
+  const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
   {{#if (eq auth "clerk")}}
   return (
-    <ClerkProvider publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}>
+    <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <ThemeProvider
           attribute="class"

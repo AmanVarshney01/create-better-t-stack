@@ -1,7 +1,9 @@
-import os from "node:os";
 import { $ } from "execa";
+import os from "node:os";
 import pc from "picocolors";
+
 import type { Database } from "../types";
+
 import { commandExists } from "./command-exists";
 
 export async function isDockerInstalled() {

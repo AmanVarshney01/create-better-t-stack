@@ -1,7 +1,9 @@
-import path from "node:path";
 import fs from "fs-extra";
+import path from "node:path";
+
 import type { AvailableDependencies } from "../../constants";
 import type { API, Backend, Frontend, ProjectConfig } from "../../types";
+
 import { addPackageDependency } from "../../utils/add-package-deps";
 
 function getFrontendType(frontend: Frontend[]): {
@@ -154,6 +156,7 @@ function getConvexDependencies(frontend: Frontend[]) {
 
   if (frontend.includes("tanstack-start")) {
     deps.web.dependencies.push("@convex-dev/react-query");
+    deps.web.dependencies.push("@tanstack/react-router-ssr-query");
   }
   if (frontend.includes("svelte")) {
     deps.web.dependencies.push("convex-svelte");

@@ -1,8 +1,8 @@
-import { groupMultiselect, isCancel } from "@clack/prompts";
 import { DEFAULT_CONFIG } from "../constants";
 import { type Addons, AddonsSchema, type Auth, type Frontend } from "../types";
 import { getCompatibleAddons, validateAddonCompatibility } from "../utils/compatibility-rules";
 import { exitCancelled } from "../utils/errors";
+import { isCancel, navigableGroupMultiselect } from "./navigable";
 
 type AddonOption = {
   value: Addons;
@@ -128,12 +128,11 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
     ),
   );
 
-  const response = await groupMultiselect<Addons>({
+  const response = await navigableGroupMultiselect<Addons>({
     message: "Select addons",
     options: groupedOptions,
     initialValues: initialValues,
     required: false,
-    selectableGroups: false,
   });
 
   if (isCancel(response)) return exitCancelled("Operation cancelled");
@@ -191,11 +190,10 @@ export async function getAddonsToAdd(
     return [];
   }
 
-  const response = await groupMultiselect<Addons>({
+  const response = await navigableGroupMultiselect<Addons>({
     message: "Select addons to add",
     options: groupedOptions,
     required: false,
-    selectableGroups: false,
   });
 
   if (isCancel(response)) return exitCancelled("Operation cancelled");

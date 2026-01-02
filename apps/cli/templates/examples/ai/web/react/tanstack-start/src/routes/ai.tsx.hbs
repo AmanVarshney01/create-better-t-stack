@@ -148,6 +148,9 @@ import { DefaultChatTransport } from "ai";
 import { Send } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 import { Streamdown } from "streamdown";
+{{#unless (eq backend "self")}}
+import { env } from "@{{projectName}}/env/web";
+{{/unless}}
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -160,7 +163,7 @@ function RouteComponent() {
   const [input, setInput] = useState("");
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
-      api: {{#if (eq backend "self")}}"/api/ai"{{else}}`${import.meta.env.VITE_SERVER_URL}/ai`{{/if}},
+      api: {{#if (eq backend "self")}}"/api/ai"{{else}}`${env.VITE_SERVER_URL}/ai`{{/if}},
     }),
   });
 

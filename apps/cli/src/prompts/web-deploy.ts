@@ -1,8 +1,9 @@
-import { isCancel, select } from "@clack/prompts";
-import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Frontend, Runtime, WebDeploy } from "../types";
+
+import { DEFAULT_CONFIG } from "../constants";
 import { WEB_FRAMEWORKS } from "../utils/compatibility";
 import { exitCancelled } from "../utils/errors";
+import { isCancel, navigableSelect } from "./navigable";
 
 function hasWebFrontend(frontends: Frontend[]) {
   return frontends.some((f) => WEB_FRAMEWORKS.includes(f));
@@ -18,9 +19,9 @@ function getDeploymentDisplay(deployment: WebDeploy): {
   label: string;
   hint: string;
 } {
-  if (deployment === "alchemy") {
+  if (deployment === "cloudflare") {
     return {
-      label: "Alchemy",
+      label: "Cloudflare",
       hint: "Deploy to Cloudflare Workers using Alchemy",
     };
   }
@@ -41,7 +42,7 @@ export async function getDeploymentChoice(
     return "none";
   }
 
-  const availableDeployments = ["alchemy", "none"];
+  const availableDeployments = ["cloudflare", "none"];
 
   const options: DeploymentOption[] = availableDeployments.map((deploy) => {
     const { label, hint } = getDeploymentDisplay(deploy as WebDeploy);
@@ -52,7 +53,7 @@ export async function getDeploymentChoice(
     };
   });
 
-  const response = await select<WebDeploy>({
+  const response = await navigableSelect<WebDeploy>({
     message: "Select web deployment",
     options,
     initialValue: DEFAULT_CONFIG.webDeploy,
@@ -70,10 +71,10 @@ export async function getDeploymentToAdd(frontend: Frontend[], existingDeploymen
 
   const options: DeploymentOption[] = [];
 
-  if (existingDeployment !== "alchemy") {
-    const { label, hint } = getDeploymentDisplay("alchemy");
+  if (existingDeployment !== "cloudflare") {
+    const { label, hint } = getDeploymentDisplay("cloudflare");
     options.push({
-      value: "alchemy",
+      value: "cloudflare",
       label,
       hint,
     });
@@ -95,7 +96,7 @@ export async function getDeploymentToAdd(frontend: Frontend[], existingDeploymen
     return "none";
   }
 
-  const response = await select<WebDeploy>({
+  const response = await navigableSelect<WebDeploy>({
     message: "Select web deployment",
     options,
     initialValue: DEFAULT_CONFIG.webDeploy,

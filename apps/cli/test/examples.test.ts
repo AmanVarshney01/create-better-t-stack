@@ -1,4 +1,5 @@
 import { describe, it } from "bun:test";
+
 import { EXAMPLES, expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
 describe("Example Configurations", () => {
@@ -48,7 +49,7 @@ describe("Example Configurations", () => {
     it("should work with todo example + no backend", async () => {
       const result = await runTRPCTest({
         projectName: "todo-no-backend",
-        examples: ["todo"],
+        examples: ["none"],
         backend: "none",
         runtime: "none",
         database: "none",
@@ -84,10 +85,7 @@ describe("Example Configurations", () => {
         expectError: true,
       });
 
-      expectError(
-        result,
-        "The 'todo' example requires a database if a backend (other than Convex) is present",
-      );
+      expectError(result, "The 'todo' example requires a database");
     });
   });
 
@@ -419,7 +417,7 @@ describe("Example Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Cannot use '--examples' when '--api' is set to 'none'");
+      expectError(result, "Cannot use '--examples todo' when '--api' is set to 'none'");
     });
 
     it("should work with examples when API is none (convex backend)", async () => {
@@ -513,10 +511,7 @@ describe("Example Configurations", () => {
         expectError: true,
       });
 
-      expectError(
-        result,
-        "The 'todo' example requires a database if a backend (other than Convex) is present",
-      );
+      expectError(result, "The 'todo' example requires a database");
     });
   });
 });

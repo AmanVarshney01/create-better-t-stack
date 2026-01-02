@@ -1,7 +1,9 @@
-import path from "node:path";
 import fs from "fs-extra";
+import path from "node:path";
+
 import type { AvailableDependencies } from "../../constants";
 import type { ProjectConfig } from "../../types";
+
 import { addPackageDependency } from "../../utils/add-package-deps";
 
 export async function setupExamples(config: ProjectConfig) {
@@ -80,17 +82,21 @@ async function setupAIDependencies(config: ProjectConfig) {
 
   if (backend === "convex" && convexBackendDirExists) {
     await addPackageDependency({
-      dependencies: ["@convex-dev/agent", "ai", "@ai-sdk/google"],
+      dependencies: ["@convex-dev/agent"],
+      customDependencies: {
+        ai: "^5.0.117",
+        "@ai-sdk/google": "^2.0.52",
+      },
       projectDir: convexBackendDir,
     });
   } else if (backend === "self" && webClientDirExists) {
     await addPackageDependency({
-      dependencies: ["ai", "@ai-sdk/google"],
+      dependencies: ["ai", "@ai-sdk/google", "@ai-sdk/devtools"],
       projectDir: webClientDir,
     });
   } else if (serverDirExists && backend !== "none") {
     await addPackageDependency({
-      dependencies: ["ai", "@ai-sdk/google"],
+      dependencies: ["ai", "@ai-sdk/google", "@ai-sdk/devtools"],
       projectDir: serverDir,
     });
   }

@@ -1,10 +1,11 @@
-import path from "node:path";
 import fs from "fs-extra";
+import path from "node:path";
 import { glob } from "tinyglobby";
-import { PKG_ROOT } from "../../constants";
+
 import type { ProjectConfig } from "../../types";
+
+import { PKG_ROOT } from "../../constants";
 import { processTemplate } from "../../utils/template-processor";
-import { setupEnvDtsImport } from "../deployment/alchemy/env-dts-setup";
 
 export async function processAndCopyFiles(
   sourcePattern: string | string[],
@@ -265,8 +266,90 @@ async function setupServerApp(projectDir: string, context: ProjectConfig) {
   }
 }
 
+async function setupEnvPackage(projectDir: string, context: ProjectConfig) {
+  const hasWebFrontend = context.frontend.some((f) =>
+    [
+      "tanstack-router",
+      "react-router",
+      "tanstack-start",
+      "next",
+      "nuxt",
+      "svelte",
+      "solid",
+    ].includes(f),
+  );
+  const hasNative = context.frontend.some((f) =>
+    ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
+  );
+
+  if (!hasWebFrontend && !hasNative && context.backend === "none") {
+    return;
+  }
+
+  const envPackageDir = path.join(projectDir, "packages/env");
+  await fs.ensureDir(envPackageDir);
+
+  const envBaseDir = path.join(PKG_ROOT, "templates/packages/env");
+
+  const packageJsonSrc = path.join(envBaseDir, "package.json.hbs");
+  if (await fs.pathExists(packageJsonSrc)) {
+    await processAndCopyFiles("package.json.hbs", envBaseDir, envPackageDir, context);
+  }
+
+  const tsconfigSrc = path.join(envBaseDir, "tsconfig.json.hbs");
+  if (await fs.pathExists(tsconfigSrc)) {
+    await processAndCopyFiles("tsconfig.json.hbs", envBaseDir, envPackageDir, context);
+  }
+
+  const needsServerEnv = context.backend !== "none" && context.backend !== "convex";
+
+  if (needsServerEnv) {
+    const serverSrc = path.join(envBaseDir, "src/server.ts.hbs");
+    if (await fs.pathExists(serverSrc)) {
+      await fs.ensureDir(path.join(envPackageDir, "src"));
+      await processAndCopyFiles("src/server.ts.hbs", envBaseDir, envPackageDir, context);
+    }
+  }
+
+  if (hasWebFrontend) {
+    const webSrc = path.join(envBaseDir, "src/web.ts.hbs");
+    if (await fs.pathExists(webSrc)) {
+      await fs.ensureDir(path.join(envPackageDir, "src"));
+      await processAndCopyFiles("src/web.ts.hbs", envBaseDir, envPackageDir, context);
+    }
+  }
+
+  if (hasNative) {
+    const nativeSrc = path.join(envBaseDir, "src/native.ts.hbs");
+    if (await fs.pathExists(nativeSrc)) {
+      await fs.ensureDir(path.join(envPackageDir, "src"));
+      await processAndCopyFiles("src/native.ts.hbs", envBaseDir, envPackageDir, context);
+    }
+  }
+
+  const packageJsonPath = path.join(envPackageDir, "package.json");
+  if (await fs.pathExists(packageJsonPath)) {
+    const packageJson = await fs.readJson(packageJsonPath);
+    const exports: Record<string, string> = {};
+
+    if (needsServerEnv) {
+      exports["./server"] = "./src/server.ts";
+    }
+    if (hasWebFrontend) {
+      exports["./web"] = "./src/web.ts";
+    }
+    if (hasNative) {
+      exports["./native"] = "./src/native.ts";
+    }
+
+    packageJson.exports = exports;
+    await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+  }
+}
+
 export async function setupBackendFramework(projectDir: string, context: ProjectConfig) {
   await setupConfigPackage(projectDir, context);
+  await setupEnvPackage(projectDir, context);
 
   if (context.backend === "none") {
     return;
@@ -807,51 +890,31 @@ export async function setupDockerComposeTemplates(projectDir: string, context: P
 export async function setupDeploymentTemplates(projectDir: string, context: ProjectConfig) {
   const isBackendSelf = context.backend === "self";
 
-  if (context.webDeploy === "alchemy" || context.serverDeploy === "alchemy") {
-    const alchemyTemplateSrc = path.join(PKG_ROOT, "templates/deploy/alchemy");
+  if (context.webDeploy === "cloudflare" || context.serverDeploy === "cloudflare") {
+    const infraTemplateSrc = path.join(PKG_ROOT, "templates/packages/infra");
+    const infraDir = path.join(projectDir, "packages/infra");
 
-    if (context.webDeploy === "alchemy" && (context.serverDeploy === "alchemy" || isBackendSelf)) {
-      if (await fs.pathExists(alchemyTemplateSrc)) {
-        const webAppDir = path.join(projectDir, "apps/web");
-        const destDir = isBackendSelf && (await fs.pathExists(webAppDir)) ? webAppDir : projectDir;
-        await processAndCopyFiles("alchemy.run.ts.hbs", alchemyTemplateSrc, destDir, context);
+    if (await fs.pathExists(infraTemplateSrc)) {
+      await fs.ensureDir(infraDir);
 
-        if (!isBackendSelf) {
-          await addEnvDtsToPackages(projectDir, context, alchemyTemplateSrc);
-        }
-      }
-    } else {
-      if (context.webDeploy === "alchemy") {
-        const webAppDir = path.join(projectDir, "apps/web");
-        if ((await fs.pathExists(alchemyTemplateSrc)) && (await fs.pathExists(webAppDir))) {
-          await processAndCopyFiles("alchemy.run.ts.hbs", alchemyTemplateSrc, webAppDir, context);
+      await processAndCopyFiles("package.json.hbs", infraTemplateSrc, infraDir, context);
 
-          if (!isBackendSelf) {
-            await addEnvDtsToPackages(projectDir, context, alchemyTemplateSrc);
-          }
-        }
-      }
+      await processAndCopyFiles("alchemy.run.ts.hbs", infraTemplateSrc, infraDir, context);
+    }
 
-      if (context.serverDeploy === "alchemy" && !isBackendSelf) {
-        const serverAppDir = path.join(projectDir, "apps/server");
-        if ((await fs.pathExists(alchemyTemplateSrc)) && (await fs.pathExists(serverAppDir))) {
-          await processAndCopyFiles(
-            "alchemy.run.ts.hbs",
-            alchemyTemplateSrc,
-            serverAppDir,
-            context,
-          );
-          const envDtsPath = path.join(serverAppDir, "env.d.ts");
-          await processTemplate(path.join(alchemyTemplateSrc, "env.d.ts.hbs"), envDtsPath, context);
-          await setupEnvDtsImport(envDtsPath, projectDir, context);
+    if (!isBackendSelf) {
+      const envTemplateSrc = path.join(PKG_ROOT, "templates/packages/env");
+      const envDir = path.join(projectDir, "packages/env");
+      const envDtsTemplatePath = path.join(envTemplateSrc, "env.d.ts.hbs");
 
-          await addEnvDtsToPackages(projectDir, context, alchemyTemplateSrc);
-        }
+      if (await fs.pathExists(envDtsTemplatePath)) {
+        const envDtsPath = path.join(envDir, "env.d.ts");
+        await processTemplate(envDtsTemplatePath, envDtsPath, context);
       }
     }
   }
 
-  if (context.webDeploy !== "none" && context.webDeploy !== "alchemy") {
+  if (context.webDeploy !== "none" && context.webDeploy !== "cloudflare") {
     const webAppDir = path.join(projectDir, "apps/web");
     if (await fs.pathExists(webAppDir)) {
       const frontends = context.frontend;
@@ -880,7 +943,7 @@ export async function setupDeploymentTemplates(projectDir: string, context: Proj
     }
   }
 
-  if (context.serverDeploy !== "none" && context.serverDeploy !== "alchemy" && !isBackendSelf) {
+  if (context.serverDeploy !== "none" && context.serverDeploy !== "cloudflare" && !isBackendSelf) {
     const serverAppDir = path.join(projectDir, "apps/server");
     if (await fs.pathExists(serverAppDir)) {
       const deployTemplateSrc = path.join(
@@ -891,29 +954,5 @@ export async function setupDeploymentTemplates(projectDir: string, context: Proj
         await processAndCopyFiles("**/*", deployTemplateSrc, serverAppDir, context);
       }
     }
-  }
-}
-
-async function addEnvDtsToPackages(
-  projectDir: string,
-  context: ProjectConfig,
-  alchemyTemplateSrc: string,
-) {
-  const packages = ["packages/api", "packages/auth", "packages/db"];
-
-  for (const packageName of packages) {
-    const packageDir = path.join(projectDir, packageName);
-    if (await fs.pathExists(packageDir)) {
-      const envDtsPath = path.join(packageDir, "env.d.ts");
-      await processTemplate(path.join(alchemyTemplateSrc, "env.d.ts.hbs"), envDtsPath, context);
-      await setupEnvDtsImport(envDtsPath, projectDir, context);
-    }
-  }
-
-  const serverAppDir = path.join(projectDir, "apps/server");
-  if (await fs.pathExists(serverAppDir)) {
-    const envDtsPath = path.join(serverAppDir, "env.d.ts");
-    await processTemplate(path.join(alchemyTemplateSrc, "env.d.ts.hbs"), envDtsPath, context);
-    await setupEnvDtsImport(envDtsPath, projectDir, context);
   }
 }

@@ -1,4 +1,5 @@
 import type { z } from "zod";
+
 import type {
   DatabaseSchema,
   ORMSchema,
@@ -67,22 +68,3 @@ export type NativeFrontend = Extract<
   Frontend,
   "native-bare" | "native-uniwind" | "native-unistyles" | "none"
 >;
-
-export type TechCategory =
-  | "api"
-  | "webFrontend"
-  | "nativeFrontend"
-  | "runtime"
-  | "backend"
-  | "database"
-  | "orm"
-  | "dbSetup"
-  | "webDeploy"
-  | "serverDeploy"
-  | "auth"
-  | "payments"
-  | "packageManager"
-  | "addons"
-  | "examples"
-  | "git"
-  | "install";

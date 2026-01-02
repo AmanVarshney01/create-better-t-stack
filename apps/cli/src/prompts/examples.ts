@@ -1,8 +1,9 @@
-import { isCancel, multiselect } from "@clack/prompts";
-import { DEFAULT_CONFIG } from "../constants";
 import type { API, Backend, Database, Examples, Frontend } from "../types";
+
+import { DEFAULT_CONFIG } from "../constants";
 import { isExampleAIAllowed, isExampleTodoAllowed } from "../utils/compatibility-rules";
 import { exitCancelled } from "../utils/errors";
+import { isCancel, navigableMultiselect } from "./navigable";
 
 export async function getExamplesChoice(
   examples?: Examples[],
@@ -17,19 +18,10 @@ export async function getExamplesChoice(
     return [];
   }
 
-  if (backend !== "convex") {
-    if (api === "none") {
-      return [];
-    }
-    if (database === "none") {
-      return [];
-    }
-  }
-
   let response: Examples[] | symbol = [];
   const options: { value: Examples; label: string; hint: string }[] = [];
 
-  if (isExampleTodoAllowed(backend, database)) {
+  if (isExampleTodoAllowed(backend, database, api)) {
     options.push({
       value: "todo" as const,
       label: "Todo App",
@@ -47,7 +39,7 @@ export async function getExamplesChoice(
 
   if (options.length === 0) return [];
 
-  response = await multiselect<Examples>({
+  response = await navigableMultiselect<Examples>({
     message: "Include examples",
     options: options,
     required: false,

@@ -1,21 +1,25 @@
-import path from "node:path";
 import fs from "fs-extra";
+import path from "node:path";
+
 import type { ProjectConfig } from "../../types";
+
 import { addPackageDependency } from "../../utils/add-package-deps";
+import { setupInfraScripts } from "./alchemy/alchemy-combined-setup";
 
 export async function setupServerDeploy(config: ProjectConfig) {
-  const { serverDeploy, webDeploy, projectDir } = config;
+  const { serverDeploy, webDeploy, projectDir, packageManager } = config;
 
   if (serverDeploy === "none") return;
 
-  if (serverDeploy === "alchemy" && webDeploy === "alchemy") {
+  if (serverDeploy === "cloudflare" && webDeploy === "cloudflare") {
     return;
   }
 
   const serverDir = path.join(projectDir, "apps/server");
   if (!(await fs.pathExists(serverDir))) return;
 
-  if (serverDeploy === "alchemy") {
+  if (serverDeploy === "cloudflare") {
+    await setupInfraScripts(projectDir, packageManager, config);
     await setupAlchemyServerDeploy(serverDir, projectDir);
   }
 }
@@ -30,20 +34,6 @@ export async function setupAlchemyServerDeploy(serverDir: string, projectDir?: s
 
   if (projectDir) {
     await addAlchemyPackagesDependencies(projectDir);
-  }
-
-  const packageJsonPath = path.join(serverDir, "package.json");
-  if (await fs.pathExists(packageJsonPath)) {
-    const packageJson = await fs.readJson(packageJsonPath);
-
-    packageJson.scripts = {
-      ...packageJson.scripts,
-      dev: "alchemy dev",
-      deploy: "alchemy deploy",
-      destroy: "alchemy destroy",
-    };
-
-    await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
   }
 }
 

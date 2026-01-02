@@ -1,6 +1,8 @@
+import type { Metadata } from "next";
+
 import { api } from "@better-t-stack/backend/convex/_generated/api";
 import { preloadQuery } from "convex/nextjs";
-import type { Metadata } from "next";
+
 import { AnalyticsClient } from "./analytics-client";
 
 export const metadata: Metadata = {

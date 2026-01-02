@@ -1,9 +1,27 @@
-import { mkdir } from "node:fs/promises";
-import { join } from "node:path";
 import { createRouterClient } from "@orpc/server";
 import { expect } from "bun:test";
+import { mkdir } from "node:fs/promises";
+import { join } from "node:path";
+
+import type {
+  CreateInput,
+  InitResult,
+  Database,
+  ORM,
+  Backend,
+  Runtime,
+  Frontend,
+  Addons,
+  Examples,
+  Auth,
+  Payments,
+  API,
+  WebDeploy,
+  ServerDeploy,
+  DatabaseSetup,
+} from "../src/types";
+
 import { router } from "../src/index";
-import type { CreateInput, InitResult } from "../src/types";
 import {
   AddonsSchema,
   APISchema,
@@ -20,9 +38,6 @@ import {
   ServerDeploySchema,
   WebDeploySchema,
 } from "../src/types";
-
-// Re-export setup utilities for backward compatibility
-export { cleanupSmokeDirectory, ensureSmokeDirectory, SMOKE_DIR } from "./setup";
 
 // Smoke directory path - use the same as setup.ts
 const SMOKE_DIR_PATH = join(import.meta.dir, "..", ".smoke");
@@ -91,13 +106,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     // Directory may already exist
   }
 
-  // Store original environment
-  const originalProgrammatic = process.env.BTS_PROGRAMMATIC;
-
   try {
-    // Set programmatic mode to ensure errors are thrown instead of process.exit
-    process.env.BTS_PROGRAMMATIC = "1";
-
     // Suppress console output
     suppressConsole();
 
@@ -169,7 +178,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
       ...cleanOptions
     } = options as TestConfig;
 
-    const result = await caller.init([projectPath, cleanOptions]);
+    const result = await caller.create([projectPath, cleanOptions]);
 
     return {
       success: result?.success ?? false,
@@ -185,13 +194,6 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
       config,
     };
   } finally {
-    // Always restore original environment
-    if (originalProgrammatic === undefined) {
-      delete process.env.BTS_PROGRAMMATIC;
-    } else {
-      process.env.BTS_PROGRAMMATIC = originalProgrammatic;
-    }
-
     // Restore console methods
     restoreConsole();
   }
@@ -229,22 +231,6 @@ export function createTestConfig(
 function extractEnumValues<T extends string>(schema: { options: readonly T[] }): readonly T[] {
   return schema.options;
 }
-
-// Inferred types and values from Zod schemas - no duplication with types.ts!
-export type PackageManager = (typeof PackageManagerSchema)["options"][number];
-export type Database = (typeof DatabaseSchema)["options"][number];
-export type ORM = (typeof ORMSchema)["options"][number];
-export type Backend = (typeof BackendSchema)["options"][number];
-export type Runtime = (typeof RuntimeSchema)["options"][number];
-export type Frontend = (typeof FrontendSchema)["options"][number];
-export type Addons = (typeof AddonsSchema)["options"][number];
-export type Examples = (typeof ExamplesSchema)["options"][number];
-export type Auth = (typeof AuthSchema)["options"][number];
-export type Payments = (typeof PaymentsSchema)["options"][number];
-export type API = (typeof APISchema)["options"][number];
-export type WebDeploy = (typeof WebDeploySchema)["options"][number];
-export type ServerDeploy = (typeof ServerDeploySchema)["options"][number];
-export type DatabaseSetup = (typeof DatabaseSetupSchema)["options"][number];
 
 // Test data generators inferred from Zod schemas
 export const PACKAGE_MANAGERS = extractEnumValues(PackageManagerSchema);

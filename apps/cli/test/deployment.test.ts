@@ -1,4 +1,5 @@
 import { describe, it } from "bun:test";
+
 import {
   expectError,
   expectSuccess,
@@ -61,7 +62,7 @@ describe("Deployment Configurations", () => {
     it("should fail with web deploy but no web frontend", async () => {
       const result = await runTRPCTest({
         projectName: "web-deploy-no-web-frontend-fail",
-        webDeploy: "alchemy",
+        webDeploy: "cloudflare",
         serverDeploy: "none",
         frontend: ["native-bare"], // Native frontend only
         backend: "hono",
@@ -82,7 +83,7 @@ describe("Deployment Configurations", () => {
     it("should work with web deploy + mixed web and native frontends", async () => {
       const result = await runTRPCTest({
         projectName: "web-deploy-mixed-frontends",
-        webDeploy: "alchemy",
+        webDeploy: "cloudflare",
         serverDeploy: "none",
         frontend: ["tanstack-router", "native-bare"],
         backend: "hono",
@@ -114,7 +115,7 @@ describe("Deployment Configurations", () => {
       for (const frontend of webFrontends) {
         const config: TestConfig = {
           projectName: `web-deploy-${frontend}`,
-          webDeploy: "alchemy",
+          webDeploy: "cloudflare",
           serverDeploy: "none",
           frontend: [frontend],
           backend: "hono",
@@ -152,7 +153,7 @@ describe("Deployment Configurations", () => {
             webDeploy: "none",
             serverDeploy: serverDeploy,
             backend: "hono",
-            runtime: serverDeploy === "alchemy" ? "workers" : "bun",
+            runtime: serverDeploy === "cloudflare" ? "workers" : "bun",
             database: "sqlite",
             orm: "drizzle",
             auth: "none",
@@ -194,7 +195,7 @@ describe("Deployment Configurations", () => {
       const result = await runTRPCTest({
         projectName: "server-deploy-no-backend-fail",
         webDeploy: "none",
-        serverDeploy: "alchemy",
+        serverDeploy: "cloudflare",
         backend: "none",
         runtime: "none",
         database: "none",
@@ -237,7 +238,7 @@ describe("Deployment Configurations", () => {
         // Set appropriate runtime
         if (backend === "hono") {
           config.runtime = "workers";
-          config.serverDeploy = "alchemy";
+          config.serverDeploy = "cloudflare";
         } else {
           config.runtime = "bun";
           config.serverDeploy = "none";
@@ -252,7 +253,7 @@ describe("Deployment Configurations", () => {
       const result = await runTRPCTest({
         projectName: "server-deploy-convex-fail",
         webDeploy: "none",
-        serverDeploy: "alchemy",
+        serverDeploy: "cloudflare",
         backend: "convex",
         runtime: "none",
         database: "none",
@@ -276,7 +277,7 @@ describe("Deployment Configurations", () => {
         projectName: "workers-server-deploy",
         webDeploy: "none",
         runtime: "workers",
-        serverDeploy: "alchemy",
+        serverDeploy: "cloudflare",
         backend: "hono",
         database: "sqlite",
         orm: "drizzle",
@@ -318,8 +319,8 @@ describe("Deployment Configurations", () => {
     it("should work with both web and server deploy", async () => {
       const result = await runTRPCTest({
         projectName: "web-server-deploy-combo",
-        webDeploy: "alchemy",
-        serverDeploy: "alchemy",
+        webDeploy: "cloudflare",
+        serverDeploy: "cloudflare",
         backend: "hono",
         runtime: "workers",
         database: "sqlite",
@@ -339,8 +340,8 @@ describe("Deployment Configurations", () => {
     it("should work with different deploy providers", async () => {
       const result = await runTRPCTest({
         projectName: "different-deploy-providers",
-        webDeploy: "alchemy",
-        serverDeploy: "alchemy",
+        webDeploy: "cloudflare",
+        serverDeploy: "cloudflare",
         backend: "hono",
         runtime: "workers",
         database: "sqlite",
@@ -360,7 +361,7 @@ describe("Deployment Configurations", () => {
     it("should work with web deploy only", async () => {
       const result = await runTRPCTest({
         projectName: "web-deploy-only",
-        webDeploy: "alchemy",
+        webDeploy: "cloudflare",
         serverDeploy: "none",
         backend: "hono",
         runtime: "bun",
@@ -382,7 +383,7 @@ describe("Deployment Configurations", () => {
       const result = await runTRPCTest({
         projectName: "server-deploy-only",
         webDeploy: "none",
-        serverDeploy: "alchemy",
+        serverDeploy: "cloudflare",
         backend: "hono",
         runtime: "workers",
         database: "sqlite",
@@ -404,7 +405,7 @@ describe("Deployment Configurations", () => {
     it("should work with deployment + self backend", async () => {
       const result = await runTRPCTest({
         projectName: "deploy-self-backend",
-        webDeploy: "alchemy",
+        webDeploy: "cloudflare",
         serverDeploy: "none", // Self backend doesn't use server deployment
         backend: "self",
         runtime: "none",
@@ -425,8 +426,8 @@ describe("Deployment Configurations", () => {
     it("should work with deployment + fullstack setup", async () => {
       const result = await runTRPCTest({
         projectName: "deploy-fullstack",
-        webDeploy: "alchemy",
-        serverDeploy: "alchemy",
+        webDeploy: "cloudflare",
+        serverDeploy: "cloudflare",
         backend: "hono",
         runtime: "workers",
         database: "sqlite",
@@ -449,8 +450,8 @@ describe("Deployment Configurations", () => {
       webDeploy: TestConfig["webDeploy"];
       serverDeploy: TestConfig["serverDeploy"];
     }> = [
-      { webDeploy: "alchemy", serverDeploy: "alchemy" },
-      { webDeploy: "none", serverDeploy: "alchemy" },
+      { webDeploy: "cloudflare", serverDeploy: "cloudflare" },
+      { webDeploy: "none", serverDeploy: "cloudflare" },
       { webDeploy: "none", serverDeploy: "none" },
     ];
 
@@ -509,8 +510,8 @@ describe("Deployment Configurations", () => {
     it("should handle deployment with complex configurations", async () => {
       const result = await runTRPCTest({
         projectName: "complex-deployment",
-        webDeploy: "alchemy",
-        serverDeploy: "alchemy",
+        webDeploy: "cloudflare",
+        serverDeploy: "cloudflare",
         backend: "hono",
         runtime: "workers",
         database: "sqlite",
@@ -530,7 +531,7 @@ describe("Deployment Configurations", () => {
       // This should fail because we have web deploy but only native frontend
       const result = await runTRPCTest({
         projectName: "deployment-constraints-fail",
-        webDeploy: "alchemy",
+        webDeploy: "cloudflare",
         serverDeploy: "none",
         backend: "none", // No backend but we have server deploy
         runtime: "none",

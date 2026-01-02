@@ -1,5 +1,6 @@
 import { Github, Globe, Star } from "lucide-react";
 import Image from "next/image";
+
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { formatSponsorUrl, getSponsorUrl, shouldShowLifetimeTotal } from "@/lib/sponsor-utils";
 import { fetchSponsors } from "@/lib/sponsors";

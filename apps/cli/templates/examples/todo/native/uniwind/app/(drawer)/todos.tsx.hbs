@@ -1,13 +1,5 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  ScrollView,
-  ActivityIndicator,
-  Alert,
-  Pressable,
-} from "react-native";
+import { View, Text, ScrollView, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
@@ -25,7 +17,7 @@ import { Container } from "@/components/container";
     import { trpc } from "@/utils/trpc";
   {{/if}}
 {{/unless}}
-import { Card, Checkbox, useThemeColor, Chip } from "heroui-native";
+import { Button, Checkbox, Chip, Spinner, Surface, TextField, useThemeColor } from "heroui-native";
 
 export default function TodosScreen() {
   const [newTodoText, setNewTodoText] = useState("");
@@ -76,7 +68,6 @@ export default function TodosScreen() {
   {{/if}}
 
   const mutedColor = useThemeColor("muted");
-  const accentColor = useThemeColor("accent");
   const dangerColor = useThemeColor("danger");
   const foregroundColor = useThemeColor("foreground");
 
@@ -135,12 +126,10 @@ export default function TodosScreen() {
 
   return (
     <Container>
-      <ScrollView className="flex-1" contentContainerClassName="p-6">
-        <View className="mb-6">
-          <View className="flex-row items-center justify-between mb-2">
-            <Text className="text-3xl font-bold text-foreground">
-              Todo List
-            </Text>
+      <ScrollView className="flex-1" contentContainerClassName="p-4">
+        <View className="py-4 mb-4">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-2xl font-semibold text-foreground tracking-tight">Tasks</Text>
             {totalCount > 0 && (
               <Chip variant="secondary" color="accent" size="sm">
                 <Chip.Label>
@@ -151,140 +140,138 @@ export default function TodosScreen() {
           </View>
         </View>
 
-        <Card variant="secondary" className="mb-6 p-4">
-          <View className="flex-row items-center gap-3">
+        <Surface variant="secondary" className="mb-4 p-3 rounded-lg">
+          <View className="flex-row items-center gap-2">
             <View className="flex-1">
-              <TextInput
-                value={newTodoText}
-                onChangeText={setNewTodoText}
-                placeholder="Add a new task..."
-                placeholderTextColor={mutedColor}
-                {{#unless (eq backend "convex")}}
-                  editable={!createMutation.isPending}
-                {{/unless}}
-                onSubmitEditing={handleAddTodo}
-                returnKeyType="done"
-                className="text-foreground text-base py-3 px-4 border border-divider rounded-lg bg-surface"
-              />
+              <TextField>
+                <TextField.Input
+                  value={newTodoText}
+                  onChangeText={setNewTodoText}
+                  placeholder="Add a new task..."
+                  {{#unless (eq backend "convex")}}
+                    editable={!createMutation.isPending}
+                  {{/unless}}
+                  onSubmitEditing={handleAddTodo}
+                  returnKeyType="done"
+                />
+              </TextField>
             </View>
-            <Pressable
-              onPress={handleAddTodo}
+            <Button
+              isIconOnly
               {{#if (eq backend "convex")}}
-                disabled={!newTodoText.trim()}
-                className={`p-3 rounded-lg active:opacity-70 ${newTodoText.trim() ? "bg-accent" : "bg-surface"}`}
+                variant={!newTodoText.trim() ? "secondary" : "primary"}
+                isDisabled={!newTodoText.trim()}
               {{else}}
-                disabled={createMutation.isPending || !newTodoText.trim()}
-                className={`p-3 rounded-lg active:opacity-70 ${(createMutation.isPending || !newTodoText.trim()) ? "bg-surface" : "bg-accent"}`}
+                variant={createMutation.isPending || !newTodoText.trim() ? "secondary" : "primary"}
+                isDisabled={createMutation.isPending || !newTodoText.trim()}
               {{/if}}
+              onPress={handleAddTodo}
+              size="sm"
             >
               {{#if (eq backend "convex")}}
                 <Ionicons
                   name="add"
-                  size={24}
+                  size={20}
                   color={newTodoText.trim() ? foregroundColor : mutedColor}
                 />
               {{else}}
                 {createMutation.isPending ? (
-                  <ActivityIndicator size="small" color={foregroundColor} />
+                  <Spinner size="sm" color="default" />
                 ) : (
                   <Ionicons
                     name="add"
-                    size={24}
+                    size={20}
                     color={(createMutation.isPending || !newTodoText.trim()) ? mutedColor : foregroundColor}
                   />
                 )}
               {{/if}}
-            </Pressable>
+            </Button>
           </View>
-        </Card>
+        </Surface>
 
         {{#if (eq backend "convex")}}
           {isLoading && (
             <View className="items-center justify-center py-12">
-              <ActivityIndicator size="large" color={accentColor} />
-              <Text className="text-muted mt-4">Loading todos...</Text>
+              <Spinner size="lg" />
+              <Text className="text-muted text-sm mt-3">Loading tasks...</Text>
             </View>
           )}
 
           {todos && todos.length === 0 && !isLoading && (
-            <Card className="items-center justify-center py-12">
-              <Ionicons name="checkbox-outline" size={64} color={mutedColor} style=\{{ marginBottom: 16 }} />
-              <Text className="text-foreground text-lg font-semibold mb-2">
-                No todos yet
-              </Text>
-              <Text className="text-muted text-center">
-                Add your first task to get started!
-              </Text>
-            </Card>
+            <Surface variant="secondary" className="items-center justify-center py-10 rounded-lg">
+              <Ionicons name="checkbox-outline" size={40} color={mutedColor} />
+              <Text className="text-foreground font-medium mt-3">No tasks yet</Text>
+              <Text className="text-muted text-xs mt-1">Add your first task to get started</Text>
+            </Surface>
           )}
 
           {todos && todos.length > 0 && (
-            <View className="gap-3">
+            <View className="gap-2">
               {todos.map((todo) => (
-                <Card key={todo._id} variant="secondary" className="p-4">
+                <Surface key={todo._id} variant="secondary" className="p-3 rounded-lg">
                   <View className="flex-row items-center gap-3">
                     <Checkbox
                       isSelected={todo.completed}
                       onSelectedChange={() => handleToggleTodo(todo._id, todo.completed)}
                     />
                     <View className="flex-1">
-                      <Text className={`text-base ${todo.completed ? "text-muted line-through" : "text-foreground"}`}>
+                      <Text className={`text-sm ${todo.completed ? "text-muted line-through" : "text-foreground"}`}>
                         {todo.text}
                       </Text>
                     </View>
-                    <Pressable
+                    <Button
+                      isIconOnly
+                      variant="ghost"
                       onPress={() => handleDeleteTodo(todo._id)}
-                      className="p-2 rounded-lg active:opacity-70"
+                      size="sm"
                     >
-                      <Ionicons name="trash-outline" size={24} color={dangerColor} />
-                    </Pressable>
+                      <Ionicons name="trash-outline" size={16} color={dangerColor} />
+                    </Button>
                   </View>
-                </Card>
+                </Surface>
               ))}
             </View>
           )}
         {{else}}
           {isLoading && (
             <View className="items-center justify-center py-12">
-              <ActivityIndicator size="large" color={accentColor} />
-              <Text className="text-muted mt-4">Loading todos...</Text>
+              <Spinner size="lg" />
+              <Text className="text-muted text-sm mt-3">Loading tasks...</Text>
             </View>
           )}
 
           {todos?.data && todos.data.length === 0 && !isLoading && (
-            <Card className="items-center justify-center py-12">
-              <Ionicons name="checkbox-outline" size={64} color={mutedColor} style=\{{ marginBottom: 16 }} />
-              <Text className="text-foreground text-lg font-semibold mb-2">
-                No todos yet
-              </Text>
-              <Text className="text-muted text-center">
-                Add your first task to get started!
-              </Text>
-            </Card>
+            <Surface variant="secondary" className="items-center justify-center py-10 rounded-lg">
+              <Ionicons name="checkbox-outline" size={40} color={mutedColor} />
+              <Text className="text-foreground font-medium mt-3">No tasks yet</Text>
+              <Text className="text-muted text-xs mt-1">Add your first task to get started</Text>
+            </Surface>
           )}
 
           {todos?.data && todos.data.length > 0 && (
-            <View className="gap-3">
+            <View className="gap-2">
               {todos.data.map((todo) => (
-                <Card key={todo.id} variant="secondary" className="p-4">
+                <Surface key={todo.id} variant="secondary" className="p-3 rounded-lg">
                   <View className="flex-row items-center gap-3">
                     <Checkbox
                       isSelected={todo.completed}
                       onSelectedChange={() => handleToggleTodo(todo.id, todo.completed)}
                     />
                     <View className="flex-1">
-                      <Text className={`text-base ${todo.completed ? "text-muted line-through" : "text-foreground"}`}>
+                      <Text className={`text-sm ${todo.completed ? "text-muted line-through" : "text-foreground"}`}>
                         {todo.text}
                       </Text>
                     </View>
-                    <Pressable
+                    <Button
+                      isIconOnly
+                      variant="ghost"
                       onPress={() => handleDeleteTodo(todo.id)}
-                      className="p-2 rounded-lg active:opacity-70"
+                      size="sm"
                     >
-                      <Ionicons name="trash-outline" size={24} color={dangerColor} />
-                    </Pressable>
+                      <Ionicons name="trash-outline" size={16} color={dangerColor} />
+                    </Button>
                   </View>
-                </Card>
+                </Surface>
               ))}
             </View>
           )}

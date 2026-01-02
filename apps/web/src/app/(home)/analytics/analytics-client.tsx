@@ -3,8 +3,10 @@
 import { api } from "@better-t-stack/backend/convex/_generated/api";
 import { type Preloaded, usePreloadedQuery, useQuery } from "convex/react";
 import { useState } from "react";
-import AnalyticsPage from "./_components/analytics-page";
+
 import type { AggregatedAnalyticsData, Distribution } from "./_components/types";
+
+import AnalyticsPage from "./_components/analytics-page";
 
 type EventRow = {
   _id: string;

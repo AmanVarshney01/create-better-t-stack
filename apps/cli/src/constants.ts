@@ -1,5 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
 import { getUserPkgManager } from "./utils/get-package-manager";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -42,8 +43,8 @@ export const DEFAULT_CONFIG = getDefaultConfig();
 export const dependencyVersionMap = {
   typescript: "^5",
 
-  "better-auth": "^1.4.7",
-  "@better-auth/expo": "^1.4.7",
+  "better-auth": "^1.4.9",
+  "@better-auth/expo": "^1.4.9",
 
   "@clerk/nextjs": "^6.31.5",
   "@clerk/clerk-react": "^5.45.0",
@@ -91,7 +92,7 @@ export const dependencyVersionMap = {
   "lint-staged": "^16.1.2",
 
   tsx: "^4.19.2",
-  "@types/node": "^22.13.11",
+  "@types/node": "^22.13.14",
 
   "@types/bun": "^1.3.4",
 
@@ -115,13 +116,14 @@ export const dependencyVersionMap = {
 
   turbo: "^2.6.3",
 
-  ai: "^5.0.49",
-  "@ai-sdk/google": "^2.0.51",
-  "@ai-sdk/vue": "^2.0.49",
-  "@ai-sdk/svelte": "^3.0.39",
-  "@ai-sdk/react": "^2.0.39",
+  ai: "^6.0.3",
+  "@ai-sdk/google": "^3.0.1",
+  "@ai-sdk/vue": "^3.0.3",
+  "@ai-sdk/svelte": "^4.0.3",
+  "@ai-sdk/react": "^3.0.3",
+  "@ai-sdk/devtools": "^0.0.2",
   streamdown: "^1.6.10",
-  shiki: "^3.12.2",
+  shiki: "^3.20.0",
 
   "@orpc/server": "^1.12.2",
   "@orpc/client": "^1.12.2",
@@ -133,7 +135,7 @@ export const dependencyVersionMap = {
   "@trpc/server": "^11.7.2",
   "@trpc/client": "^11.7.2",
 
-  next: "^16.0.10",
+  next: "^16.1.1",
 
   convex: "^1.31.2",
   "@convex-dev/react-query": "^0.1.0",
@@ -141,7 +143,7 @@ export const dependencyVersionMap = {
   "convex-svelte": "^0.0.12",
   "convex-nuxt": "0.1.5",
   "convex-vue": "^0.1.5",
-  "@convex-dev/better-auth": "^0.10.6",
+  "@convex-dev/better-auth": "^0.10.9",
 
   "@tanstack/svelte-query": "^5.85.3",
   "@tanstack/svelte-query-devtools": "^5.85.3",
@@ -151,6 +153,7 @@ export const dependencyVersionMap = {
 
   "@tanstack/react-query-devtools": "^5.91.1",
   "@tanstack/react-query": "^5.90.12",
+  "@tanstack/react-router-ssr-query": "^1.142.7",
 
   "@tanstack/solid-query": "^5.87.4",
   "@tanstack/solid-query-devtools": "^5.87.4",
@@ -163,11 +166,14 @@ export const dependencyVersionMap = {
   "@sveltejs/adapter-cloudflare": "^7.2.4",
   "@cloudflare/workers-types": "^4.20251213.0",
 
-  alchemy: "^0.81.2",
+  alchemy: "^0.82.1",
 
   dotenv: "^17.2.2",
   tsdown: "^0.16.5",
   zod: "^4.1.13",
+  "@t3-oss/env-core": "^0.13.1",
+  "@t3-oss/env-nextjs": "^0.13.1",
+  "@t3-oss/env-nuxt": "^0.13.1",
   srvx: "0.8.15",
 
   "@polar-sh/better-auth": "^1.1.3",

@@ -28,19 +28,22 @@ create-better-t-stack [project-directory] [options]
 - `--install / --no-install`: Install dependencies after creation
 - `--git / --no-git`: Initialize Git repository
 - `--frontend <types...>`: Web and/or native frameworks (see [Options](/docs/cli/options#frontend))
-- `--backend <framework>`: `hono`, `express`, `fastify`, `elysia`, `next`, `convex`, `none`
+- `--backend <framework>`: `hono`, `express`, `fastify`, `elysia`, `convex`, `self`, `none`
 - `--runtime <runtime>`: `bun`, `node`, `workers` (`none` only with `--backend convex` or `--backend none`)
 - `--database <type>`: `none`, `sqlite`, `postgres`, `mysql`, `mongodb`
 - `--orm <type>`: `none`, `drizzle`, `prisma`, `mongoose`
 - `--api <type>`: `none`, `trpc`, `orpc`
 - `--auth <provider>`: `better-auth`, `clerk`, `none` (see [Options](/docs/cli/options#authentication))
-- `--db-setup <setup>`: `none`, `turso`, `d1`, `neon`, `supabase`, `prisma-postgres`, `mongodb-atlas`, `docker`
+- `--payments <provider>`: `polar`, `none`
+- `--db-setup <setup>`: `none`, `turso`, `d1`, `neon`, `supabase`, `prisma-postgres`, `planetscale`, `mongodb-atlas`, `docker`
 - `--examples <types...>`: `none`, `todo`, `ai`
-- `--web-deploy <setup>`: `none`, `wrangler`, `alchemy`
-- `--server-deploy <setup>`: `none`, `wrangler`, `alchemy`
+- `--web-deploy <setup>`: `none`, `alchemy`
+- `--server-deploy <setup>`: `none`, `alchemy`
+- `--template <type>`: `none`, `mern`, `pern`, `t3`, `uniwind`
 - `--directory-conflict <strategy>`: `merge`, `overwrite`, `increment`, `error`
 - `--render-title / --no-render-title`: Show/hide ASCII art title
 - `--disable-analytics / --no-disable-analytics`: Control analytics collection
+- `--manual-db`: Skip automatic database setup prompts
 
 See the full reference in [Options](/docs/cli/options).
 
@@ -68,8 +71,8 @@ create-better-t-stack add [options]
 ### Options
 
 - `--addons <types...>`: Addons to add (see [Addons](/docs/cli/options#addons))
-- `--web-deploy <setup>`: Web deployment setup (`none`, `wrangler`, `alchemy`)
-- `--server-deploy <setup>`: Server deployment setup (`none`, `wrangler`, `alchemy`)
+- `--web-deploy <setup>`: Web deployment setup (`none`, `alchemy`)
+- `--server-deploy <setup>`: Server deployment setup (`none`, `alchemy`)
 - `--project-dir <path>`: Project directory (defaults to current directory)
 - `--install`: Install dependencies after adding
 - `--package-manager <pm>`: Package manager to use
@@ -84,7 +87,7 @@ create-better-t-stack add
 create-better-t-stack add --addons pwa tauri --install
 
 # Add deployment setup
-create-better-t-stack add --web-deploy wrangler
+create-better-t-stack add --web-deploy alchemy
 ```
 
 ## `sponsors`
@@ -161,22 +164,17 @@ create-better-t-stack add --addons tauri starlight --install
 For advanced use cases, automation, or integration with other tools, you can use the [Programmatic API](/docs/cli/programmatic-api) to create projects from Node.js code:
 
 ```typescript
-import { init } from "create-better-t-stack";
+import { create } from "create-better-t-stack";
 
-// Create multiple projects programmatically
-const projects = [
-  { name: "api", config: { frontend: ["none"], backend: "hono" } },
-  { name: "web", config: { frontend: ["next"], backend: "none" } }
-];
+const result = await create("my-app", {
+  frontend: ["tanstack-router"],
+  backend: "hono",
+  database: "sqlite",
+  orm: "drizzle",
+});
 
-for (const { name, config } of projects) {
-  const result = await init(name, {
-    yes: true,
-    ...config,
-    directoryConflict: "increment"
-  });
-
-  console.log(result.success ? `✅ ${name}` : `❌ ${name}: ${result.error}`);
+if (result.success) {
+  console.log(`Project created at: ${result.projectDirectory}`);
 }
 ```
 

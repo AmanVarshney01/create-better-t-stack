@@ -1,6 +1,9 @@
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, Tooltip, XAxis, YAxis } from "recharts";
+
 import { ChartContainer, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
+
 import type { AggregatedAnalyticsData, Distribution } from "./types";
+
 import { chartConfig, getColor, truncateLabel } from "./types";
 
 function CustomYAxisTick({

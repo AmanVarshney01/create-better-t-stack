@@ -1,6 +1,6 @@
 {{#if (eq runtime "workers")}}
 import { PrismaClient } from "../prisma/generated/client";
-import { env } from "cloudflare:workers";
+import { env } from "@{{projectName}}/env/server";
 {{#if (eq dbSetup "neon")}}
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { neonConfig } from "@neondatabase/serverless";
@@ -8,16 +8,16 @@ import { neonConfig } from "@neondatabase/serverless";
 neonConfig.poolQueryViaFetch = true;
 
 const prisma = new PrismaClient({
-  adapter: new PrismaNeon({
-    connectionString: env.DATABASE_URL || "",
-  }),
+	adapter: new PrismaNeon({
+		connectionString: env.DATABASE_URL,
+	}),
 });
 
 {{else if (eq dbSetup "prisma-postgres")}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
 const adapter = new PrismaPg({
-  connectionString: env.DATABASE_URL || "",
+	connectionString: env.DATABASE_URL,
 });
 
 const prisma = new PrismaClient({ adapter });
@@ -25,7 +25,7 @@ const prisma = new PrismaClient({ adapter });
 {{else}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaPg({ connectionString: env.DATABASE_URL || "" });
+const adapter = new PrismaPg({ connectionString: env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 {{/if}}
@@ -33,6 +33,7 @@ const prisma = new PrismaClient({ adapter });
 export default prisma;
 {{else}}
 import { PrismaClient } from "../prisma/generated/client";
+import { env } from "@{{projectName}}/env/server";
 {{#if (eq dbSetup "neon")}}
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { neonConfig } from "@neondatabase/serverless";
@@ -42,7 +43,7 @@ neonConfig.webSocketConstructor = ws;
 neonConfig.poolQueryViaFetch = true;
 
 const adapter = new PrismaNeon({
-    connectionString: process.env.DATABASE_URL || "",
+	connectionString: env.DATABASE_URL,
 });
 
 const prisma = new PrismaClient({ adapter });
@@ -51,7 +52,7 @@ const prisma = new PrismaClient({ adapter });
 import { PrismaPg } from "@prisma/adapter-pg";
 
 const adapter = new PrismaPg({
-    connectionString: process.env.DATABASE_URL || "",
+	connectionString: env.DATABASE_URL,
 });
 
 const prisma = new PrismaClient({ adapter });
@@ -59,7 +60,7 @@ const prisma = new PrismaClient({ adapter });
 {{else}}
 import { PrismaPg } from "@prisma/adapter-pg";
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL || "" });
+const adapter = new PrismaPg({ connectionString: env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 {{/if}}

@@ -1,7 +1,8 @@
-import { isCancel, select } from "@clack/prompts";
-import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Runtime } from "../types";
+
+import { DEFAULT_CONFIG } from "../constants";
 import { exitCancelled } from "../utils/errors";
+import { isCancel, navigableSelect } from "./navigable";
 
 export async function getRuntimeChoice(runtime?: Runtime, backend?: Backend) {
   if (backend === "convex" || backend === "none" || backend === "self") {
@@ -35,7 +36,7 @@ export async function getRuntimeChoice(runtime?: Runtime, backend?: Backend) {
     });
   }
 
-  const response = await select<Runtime>({
+  const response = await navigableSelect<Runtime>({
     message: "Select runtime",
     options: runtimeOptions,
     initialValue: DEFAULT_CONFIG.runtime,

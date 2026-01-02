@@ -1,7 +1,8 @@
-import { isCancel, select } from "@clack/prompts";
-import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Database, Runtime } from "../types";
+
+import { DEFAULT_CONFIG } from "../constants";
 import { exitCancelled } from "../utils/errors";
+import { isCancel, navigableSelect } from "./navigable";
 
 export async function getDatabaseChoice(database?: Database, backend?: Backend, runtime?: Runtime) {
   if (backend === "convex" || backend === "none") {
@@ -45,7 +46,7 @@ export async function getDatabaseChoice(database?: Database, backend?: Backend, 
     });
   }
 
-  const response = await select<Database>({
+  const response = await navigableSelect<Database>({
     message: "Select database",
     options: databaseOptions,
     initialValue: DEFAULT_CONFIG.database,

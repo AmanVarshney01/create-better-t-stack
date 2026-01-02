@@ -1,13 +1,15 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+
+import type { AggregatedAnalyticsData } from "./types";
+
 import Footer from "../../_components/footer";
 import { AnalyticsHeader } from "./analytics-header";
 import { DevToolsSection } from "./dev-environment-charts";
 import { MetricsCards } from "./metrics-cards";
 import { StackSection } from "./stack-configuration-charts";
 import { TimelineSection } from "./timeline-charts";
-import type { AggregatedAnalyticsData } from "./types";
 
 export default function AnalyticsPage({
   data,

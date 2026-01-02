@@ -55,6 +55,19 @@
 		"db:down": {
 			"cache": false,
 			"persistent": true
+		}{{/if}}
+		{{#if (and (eq database "sqlite") (ne dbSetup "d1"))}},
+		"db:local": {
+			"cache": false,
+			"persistent": true
+		}
+		{{/if}}
+		{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}},
+		"deploy": {
+			"cache": false
+		},
+		"destroy": {
+			"cache": false
 		}
 		{{/if}}
 	}

@@ -4,10 +4,12 @@ import { Check, Copy, Edit, Share2, Terminal } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+
+import type { LoadedStackState } from "@/lib/stack-url-state";
+
 import { ShareDialog } from "@/components/ui/share-dialog";
 import { TechBadge } from "@/components/ui/tech-badge";
 import { type StackState, TECH_OPTIONS } from "@/lib/constant";
-import type { LoadedStackState } from "@/lib/stack-url-state";
 import {
   CATEGORY_ORDER,
   generateStackCommand,

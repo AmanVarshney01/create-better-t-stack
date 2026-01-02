@@ -3,97 +3,111 @@ import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-{{#if (includes frontend "tanstack-start")}}
+{{#if (and (includes frontend "tanstack-start") (eq backend "self"))}}
 import { createRouterClient } from "@orpc/server";
 import type { RouterClient } from "@orpc/server";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 import { createContext } from "@{{projectName}}/api/context";
+{{else if (includes frontend "tanstack-start")}}
+import type { RouterClient } from "@orpc/server";
+import type { AppRouter } from "@{{projectName}}/api/routers/index";
+import { env } from "@{{projectName}}/env/web";
 {{else}}
 import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
+{{#unless (eq backend "self")}}
+import { env } from "@{{projectName}}/env/web";
+{{/unless}}
 {{/if}}
 
 export const queryClient = new QueryClient({
-  queryCache: new QueryCache({
-    onError: (error, query) => {
-      toast.error(`Error: ${error.message}`, {
-        action: {
-          label: "retry",
-          onClick: query.invalidate,
-        },
-      });
-    },
-  }),
+	queryCache: new QueryCache({
+		onError: (error, query) => {
+			toast.error(`Error: ${error.message}`, {
+				action: {
+					label: "retry",
+					onClick: query.invalidate,
+				},
+			});
+		},
+	}),
 });
 
-{{#if (includes frontend "tanstack-start")}}
+{{#if (and (includes frontend "tanstack-start") (eq backend "self"))}}
 const getORPCClient = createIsomorphicFn()
-  .server(() =>
-    createRouterClient(appRouter, {
-      context: async ({ req }) => {
-        {{#if (eq backend "self")}}
-        return createContext({ req });
-        {{else if (eq backend "hono")}}
-        return createContext({ context: req });
-        {{else if (eq backend "elysia")}}
-        return createContext({ context: req });
-        {{else if (eq backend "express")}}
-        return createContext({ req });
-        {{else if (eq backend "fastify")}}
-        return createContext(req.headers);
-        {{else}}
-        return createContext();
-        {{/if}}
-      },
-    }),
-  )
-  .client((): RouterClient<typeof appRouter> => {
-    const link = new RPCLink({
-      url: {{#if (eq backend "self")}}`${window.location.origin}/api/rpc`{{else}}`${import.meta.env.VITE_SERVER_URL}/rpc`{{/if}},
-      {{#if (eq auth "better-auth")}}
-      fetch(url, options) {
-        return fetch(url, {
-          ...options,
-          credentials: "include",
-        });
-      },
-      {{/if}}
-    });
+	.server(() =>
+		createRouterClient(appRouter, {
+			context: async ({ req }) => {
+				return createContext({ req });
+			},
+		}),
+	)
+	.client((): RouterClient<typeof appRouter> => {
+			const link = new RPCLink({
+			url: `${window.location.origin}/api/rpc`,
+{{#if (eq auth "better-auth")}}
+			fetch(url, options) {
+				return fetch(url, {
+					...options,
+					credentials: "include",
+				});
+			},
+{{/if}}
+		});
 
-    return createORPCClient(link);
-  });
+		return createORPCClient(link);
+	});
 
 export const client: RouterClient<typeof appRouter> = getORPCClient();
+{{else if (includes frontend "tanstack-start")}}
+const link = new RPCLink({
+	url: `${env.VITE_SERVER_URL}/rpc`,
+{{#if (eq auth "better-auth")}}
+	fetch(url, options) {
+		return fetch(url, {
+			...options,
+			credentials: "include",
+		});
+	},
+{{/if}}
+});
+
+const getORPCClient = () => {
+	return createORPCClient(link) as RouterClient<AppRouter>;
+};
+
+export const client: RouterClient<AppRouter> = getORPCClient();
 {{else}}
 export const link = new RPCLink({
-  {{#if (and (eq backend "self") (includes frontend "next"))}}
-  url: `${typeof window !== "undefined" ? window.location.origin : "http://localhost:3001"}/api/rpc`,
-  {{else if (includes frontend "next")}}
-  url: `${process.env.NEXT_PUBLIC_SERVER_URL}/rpc`,
-  {{else}}
-  url: `${import.meta.env.VITE_SERVER_URL}/rpc`,
-  {{/if}}
-  {{#if (eq auth "better-auth")}}
-  fetch(url, options) {
-    return fetch(url, {
-      ...options,
-      credentials: "include",
-    });
-  },
-  {{#if (includes frontend "next")}}
-  headers: async () => {
-    if (typeof window !== "undefined") {
-      return {}
-    }
+{{#if (and (eq backend "self") (includes frontend "next"))}}
+	url: `${typeof window !== "undefined" ? window.location.origin : "http://localhost:3001"}/api/rpc`,
+{{else if (includes frontend "next")}}
+	url: `${env.NEXT_PUBLIC_SERVER_URL}/rpc`,
+{{else}}
+	url: `${env.VITE_SERVER_URL}/rpc`,
+{{/if}}
+{{#if (eq auth "better-auth")}}
+	fetch(url, options) {
+		return fetch(url, {
+			...options,
+			credentials: "include",
+		});
+	},
+{{#if (includes frontend "next")}}
+	headers: async () => {
+		if (typeof window !== "undefined") {
+			return {}
+		}
 
-    const { headers } = await import("next/headers")
-    return Object.fromEntries(await headers())
-  },
-  {{/if}}
-  {{/if}}
+		const { headers } = await import("next/headers")
+		return Object.fromEntries(await headers())
+	},
+{{/if}}
+{{/if}}
 });
 
 export const client: AppRouterClient = createORPCClient(link)
 {{/if}}
 
 export const orpc = createTanstackQueryUtils(client)
+

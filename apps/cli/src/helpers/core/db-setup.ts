@@ -1,9 +1,11 @@
-import path from "node:path";
 import consola from "consola";
 import fs from "fs-extra";
+import path from "node:path";
 import pc from "picocolors";
+
 import type { AvailableDependencies } from "../../constants";
 import type { ProjectConfig } from "../../types";
+
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { setupCloudflareD1 } from "../database-providers/d1-setup";
 import { setupDockerCompose } from "../database-providers/docker-compose-setup";

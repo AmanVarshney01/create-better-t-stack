@@ -1,9 +1,4 @@
-{{#if (or (eq runtime "bun") (eq runtime "node"))}}
-import "dotenv/config";
-{{/if}}
-{{#if (eq runtime "workers")}}
-import { env } from "cloudflare:workers";
-{{/if}}
+import { env } from "@{{projectName}}/env/server";
 {{#if (eq api "orpc")}}
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
@@ -25,32 +20,29 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 {{#if (and (includes examples "ai") (or (eq runtime "bun") (eq runtime "node")))}}
-import { streamText, convertToModelMessages } from "ai";
+import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
 import { google } from "@ai-sdk/google";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
 {{#if (and (includes examples "ai") (eq runtime "workers"))}}
-import { streamText, convertToModelMessages } from "ai";
+import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
 
 const app = new Hono();
 
 app.use(logger());
 app.use(
-  "/*",
-  cors({
-    {{#if (or (eq runtime "bun") (eq runtime "node"))}}
-    origin: process.env.CORS_ORIGIN || "",
-    {{/if}}
-    {{#if (eq runtime "workers")}}
-    origin: env.CORS_ORIGIN || "",
-    {{/if}}
-    allowMethods: ["GET", "POST", "OPTIONS"],
-    {{#if (eq auth "better-auth")}}
-    allowHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-    {{/if}}
-  })
+	"/*",
+	cors({
+		origin: env.CORS_ORIGIN,
+		allowMethods: ["GET", "POST", "OPTIONS"],
+{{#if (eq auth "better-auth")}}
+		allowHeaders: ["Content-Type", "Authorization"],
+		credentials: true,
+{{/if}}
+	})
 );
 
 {{#if (eq auth "better-auth")}}
@@ -59,107 +51,115 @@ app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 {{#if (eq api "orpc")}}
 export const apiHandler = new OpenAPIHandler(appRouter, {
-  plugins: [
-    new OpenAPIReferencePlugin({
-      schemaConverters: [new ZodToJsonSchemaConverter()],
-    }),
-  ],
-  interceptors: [
-    onError((error) => {
-      console.error(error);
-    }),
-  ],
+	plugins: [
+		new OpenAPIReferencePlugin({
+			schemaConverters: [new ZodToJsonSchemaConverter()],
+		}),
+	],
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
 });
 
 export const rpcHandler = new RPCHandler(appRouter, {
-  interceptors: [
-    onError((error) => {
-      console.error(error);
-    }),
-  ],
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
 });
 
 app.use("/*", async (c, next) => {
-  const context = await createContext({ context: c });
+	const context = await createContext({ context: c });
 
-  const rpcResult = await rpcHandler.handle(c.req.raw, {
-    prefix: "/rpc",
-    context: context,
-  });
+	const rpcResult = await rpcHandler.handle(c.req.raw, {
+		prefix: "/rpc",
+		context: context,
+	});
 
-  if (rpcResult.matched) {
-    return c.newResponse(rpcResult.response.body, rpcResult.response);
-  }
+	if (rpcResult.matched) {
+		return c.newResponse(rpcResult.response.body, rpcResult.response);
+	}
 
-  const apiResult = await apiHandler.handle(c.req.raw, {
-    prefix: "/api-reference",
-    context: context,
-  });
+	const apiResult = await apiHandler.handle(c.req.raw, {
+		prefix: "/api-reference",
+		context: context,
+	});
 
-  if (apiResult.matched) {
-    return c.newResponse(apiResult.response.body, apiResult.response);
-  }
+	if (apiResult.matched) {
+		return c.newResponse(apiResult.response.body, apiResult.response);
+	}
 
-  await next();
+	await next();
 });
 {{/if}}
 
 {{#if (eq api "trpc")}}
 app.use(
-  "/trpc/*",
-  trpcServer({
-    router: appRouter,
-    createContext: (_opts, context) => {
-      return createContext({ context });
-    },
-  })
+	"/trpc/*",
+	trpcServer({
+		router: appRouter,
+		createContext: (_opts, context) => {
+			return createContext({ context });
+		},
+	})
 );
 {{/if}}
 
 {{#if (and (includes examples "ai") (or (eq runtime "bun") (eq runtime "node")))}}
 app.post("/ai", async (c) => {
-  const body = await c.req.json();
-  const uiMessages = body.messages || [];
-  const result = streamText({
-    model: google("gemini-2.5-flash"),
-    messages: convertToModelMessages(uiMessages),
-  });
+	const body = await c.req.json();
+	const uiMessages = body.messages || [];
+	const model = wrapLanguageModel({
+		model: google("gemini-2.5-flash"),
+		middleware: devToolsMiddleware(),
+	});
+	const result = streamText({
+		model,
+		messages: await convertToModelMessages(uiMessages),
+	});
 
-  return result.toUIMessageStreamResponse();
+	return result.toUIMessageStreamResponse();
 });
 {{/if}}
 
 {{#if (and (includes examples "ai") (eq runtime "workers"))}}
 app.post("/ai", async (c) => {
-  const body = await c.req.json();
-  const uiMessages = body.messages || [];
-  const google = createGoogleGenerativeAI({
-    apiKey: env.GOOGLE_GENERATIVE_AI_API_KEY,
-  });
-  const result = streamText({
-    model: google("gemini-2.5-flash"),
-    messages: convertToModelMessages(uiMessages),
-  });
+	const body = await c.req.json();
+	const uiMessages = body.messages || [];
+	const google = createGoogleGenerativeAI({
+		apiKey: env.GOOGLE_GENERATIVE_AI_API_KEY,
+	});
+	const model = wrapLanguageModel({
+		model: google("gemini-2.5-flash"),
+		middleware: devToolsMiddleware(),
+	});
+	const result = streamText({
+		model,
+		messages: await convertToModelMessages(uiMessages),
+	});
 
-  return result.toUIMessageStreamResponse();
+	return result.toUIMessageStreamResponse();
 });
 {{/if}}
 
 app.get("/", (c) => {
-  return c.text("OK");
+	return c.text("OK");
 });
 
 {{#if (eq runtime "node")}}
 import { serve } from "@hono/node-server";
 
 serve(
-  {
-    fetch: app.fetch,
-    port: 3000,
-  },
-  (info) => {
-    console.log(`Server is running on http://localhost:${info.port}`);
-  }
+	{
+		fetch: app.fetch,
+		port: 3000,
+	},
+	(info) => {
+		console.log(`Server is running on http://localhost:${info.port}`);
+	}
 );
 {{else}}
 {{#if (eq runtime "bun")}}

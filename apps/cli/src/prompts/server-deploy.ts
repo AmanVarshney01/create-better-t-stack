@@ -1,7 +1,8 @@
-import { isCancel, select } from "@clack/prompts";
-import { DEFAULT_CONFIG } from "../constants";
 import type { Backend, Runtime, ServerDeploy, WebDeploy } from "../types";
+
+import { DEFAULT_CONFIG } from "../constants";
 import { exitCancelled } from "../utils/errors";
+import { isCancel, navigableSelect } from "./navigable";
 
 type DeploymentOption = {
   value: ServerDeploy;
@@ -13,9 +14,9 @@ function getDeploymentDisplay(deployment: ServerDeploy): {
   label: string;
   hint: string;
 } {
-  if (deployment === "alchemy") {
+  if (deployment === "cloudflare") {
     return {
-      label: "Alchemy",
+      label: "Cloudflare",
       hint: "Deploy to Cloudflare Workers using Alchemy",
     };
   }
@@ -41,9 +42,9 @@ export async function getServerDeploymentChoice(
     return "none";
   }
 
-  // Auto-select alchemy for workers runtime since it's the only valid option
+  // Auto-select cloudflare for workers runtime since it's the only valid option
   if (runtime === "workers") {
-    return "alchemy";
+    return "cloudflare";
   }
 
   return "none";
@@ -61,10 +62,10 @@ export async function getServerDeploymentToAdd(
   const options: DeploymentOption[] = [];
 
   if (runtime === "workers") {
-    if (existingDeployment !== "alchemy") {
-      const { label, hint } = getDeploymentDisplay("alchemy");
+    if (existingDeployment !== "cloudflare") {
+      const { label, hint } = getDeploymentDisplay("cloudflare");
       options.push({
-        value: "alchemy",
+        value: "cloudflare",
         label,
         hint,
       });
@@ -79,7 +80,7 @@ export async function getServerDeploymentToAdd(
     return "none";
   }
 
-  const response = await select<ServerDeploy>({
+  const response = await navigableSelect<ServerDeploy>({
     message: "Select server deployment",
     options,
     initialValue: DEFAULT_CONFIG.serverDeploy,

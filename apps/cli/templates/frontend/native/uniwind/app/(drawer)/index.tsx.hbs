@@ -1,4 +1,4 @@
-import { Text, View, TouchableOpacity } from "react-native";
+import { Text, View } from "react-native";
 import { Container } from "@/components/container";
 {{#if (eq api "orpc")}}
 import { useQuery } from "@tanstack/react-query";
@@ -27,7 +27,7 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 {{#unless (or (eq backend "none") (and (eq backend "convex") (eq auth "better-auth")))}}
 import { Ionicons } from "@expo/vector-icons";
 {{/unless}}
-import { Card, Chip, useThemeColor } from "heroui-native";
+import { Button, Chip, Divider, Spinner, Surface, useThemeColor } from "heroui-native";
 
 export default function Home() {
 {{#if (eq api "orpc")}}
@@ -48,7 +48,6 @@ const user = useQuery(api.auth.getCurrentUser, isAuthenticated ? {} : "skip");
 const healthCheck = useQuery(api.healthCheck.get);
 {{/if}}
 {{#unless (eq backend "none")}}
-const mutedColor = useThemeColor("muted");
 const successColor = useThemeColor("success");
 const dangerColor = useThemeColor("danger");
 
@@ -64,28 +63,32 @@ const isLoading = healthCheck?.isLoading;
 {{/unless}}
 
 return (
-<Container className="p-6">
-  <View className="py-4 mb-6">
-    <Text className="text-4xl font-bold text-foreground mb-2">
-      BETTER T STACK
+<Container className="p-4">
+  <View className="py-6 mb-4">
+    <Text className="text-3xl font-semibold text-foreground tracking-tight">
+      Better T Stack
     </Text>
+    <Text className="text-muted text-sm mt-1">Full-stack TypeScript starter</Text>
   </View>
 
   {{#unless (or (eq backend "none") (and (eq backend "convex") (eq auth "better-auth")))}}
-  <Card variant="secondary" className="p-6">
-    <View className="flex-row items-center justify-between mb-4">
-      <Card.Title>System Status</Card.Title>
+  <Surface variant="secondary" className="p-4 rounded-lg">
+    <View className="flex-row items-center justify-between mb-3">
+      <Text className="text-foreground font-medium">System Status</Text>
       <Chip variant="secondary" color={isConnected ? "success" : "danger" } size="sm">
         <Chip.Label>
           {isConnected ? "LIVE" : "OFFLINE"}
         </Chip.Label>
       </Chip>
     </View>
-    <Card className="p-4">
+
+    <Divider className="mb-3" />
+
+    <Surface variant="tertiary" className="p-3 rounded-md">
       <View className="flex-row items-center">
-        <View className={`w-3 h-3 rounded-full mr-3 ${ isConnected ? "bg-success" : "bg-muted" }`} />
+        <View className={`w-2 h-2 rounded-full mr-3 ${ isConnected ? "bg-success" : "bg-muted" }`} />
         <View className="flex-1">
-          <Text className="text-foreground font-medium mb-1">
+          <Text className="text-foreground text-sm font-medium">
             {{#if (eq backend "convex")}}
             Convex Backend
             {{else}}
@@ -94,77 +97,80 @@ return (
             {{/unless}}
             {{/if}}
           </Text>
-          <Card.Description>
+          <Text className="text-muted text-xs mt-0.5">
             {isLoading
             ? "Checking connection..."
             : isConnected
             ? "Connected to API"
             : "API Disconnected"}
-          </Card.Description>
+          </Text>
         </View>
-        {isLoading && (
-        <Ionicons name="hourglass-outline" size={20} color={mutedColor} />
-        )}
+        {isLoading && <Spinner size="sm" />}
         {!isLoading && isConnected && (
-        <Ionicons name="checkmark-circle" size={20} color={successColor} />
+        <Ionicons name="checkmark-circle" size={18} color={successColor} />
         )}
         {!isLoading && !isConnected && (
-        <Ionicons name="close-circle" size={20} color={dangerColor} />
+        <Ionicons name="close-circle" size={18} color={dangerColor} />
         )}
       </View>
-    </Card>
-  </Card>
+    </Surface>
+  </Surface>
   {{/unless}}
 
   {{#if (and (eq backend "convex") (eq auth "clerk"))}}
   <Authenticated>
-    <Card variant="secondary" className="mt-6 p-4">
-      <Text className="text-foreground text-base mb-2">
-        Hello {user?.emailAddresses[0].emailAddress}
-      </Text>
-      <Text className="text-muted text-sm mb-4">
-        Private Data: {privateData?.message}
-      </Text>
-      <SignOutButton />
-    </Card>
+    <Surface variant="secondary" className="mt-4 p-4 rounded-lg">
+      <View className="flex-row items-center justify-between">
+        <View className="flex-1">
+          <Text className="text-foreground font-medium">{user?.emailAddresses[0].emailAddress}</Text>
+          <Text className="text-muted text-xs mt-0.5">Private: {privateData?.message}</Text>
+        </View>
+        <SignOutButton />
+      </View>
+    </Surface>
   </Authenticated>
   <Unauthenticated>
-    <View className="mt-6 gap-4">
+    <View className="mt-4 gap-3">
       <Link href="/(auth)/sign-in" asChild>
-      <Text className="text-primary font-semibold">Sign in</Text>
+        <Button variant="secondary"><Button.Label>Sign In</Button.Label></Button>
       </Link>
       <Link href="/(auth)/sign-up" asChild>
-      <Text className="text-primary font-semibold">Sign up</Text>
+        <Button variant="ghost"><Button.Label>Sign Up</Button.Label></Button>
       </Link>
     </View>
   </Unauthenticated>
   <AuthLoading>
-    <Text className="text-muted">Loading...</Text>
+    <View className="mt-4 items-center">
+      <Spinner size="sm" />
+    </View>
   </AuthLoading>
   {{/if}}
 
   {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
   {user ? (
-  <Card variant="secondary" className="p-4 mb-4">
-    <View className="mb-2">
-      <Text className="text-foreground text-base">
-        Welcome, <Text className="font-semibold">{user.name}</Text>
-      </Text>
-    </View>
-    <Text className="text-muted text-sm mb-4">{user.email}</Text>
-    <TouchableOpacity className="bg-danger px-4 py-2 rounded-md self-start" onPress={()=> {
-      authClient.signOut();
-      }}
+  <Surface variant="secondary" className="mb-4 p-4 rounded-lg">
+    <View className="flex-row items-center justify-between">
+      <View className="flex-1">
+        <Text className="text-foreground font-medium">{user.name}</Text>
+        <Text className="text-muted text-xs mt-0.5">{user.email}</Text>
+      </View>
+      <Button
+        variant="destructive"
+        size="sm"
+        onPress={() => {
+          authClient.signOut();
+        }}
       >
-      <Text className="text-danger-foreground font-medium">Sign Out</Text>
-    </TouchableOpacity>
-  </Card>
+        Sign Out
+      </Button>
+    </View>
+  </Surface>
   ) : null}
-  <Card variant="secondary" className="p-4 mb-4">
+  <Surface variant="secondary" className="p-4 rounded-lg">
     <Text className="text-foreground font-medium mb-2">API Status</Text>
     <View className="flex-row items-center gap-2">
-      <View className={`w-3 h-3 rounded-full ${healthCheck==="OK" ? "bg-success" : "bg-danger" }`} />
-      <Text className="text-muted">
+      <View className={`w-2 h-2 rounded-full ${healthCheck==="OK" ? "bg-success" : "bg-danger" }`} />
+      <Text className="text-muted text-xs">
         {healthCheck === undefined
         ? "Checking..."
         : healthCheck === "OK"
@@ -172,12 +178,12 @@ return (
         : "API Disconnected"}
       </Text>
     </View>
-  </Card>
+  </Surface>
   {!user && (
-  <>
+  <View className="mt-4 gap-4">
     <SignIn />
     <SignUp />
-  </>
+  </View>
   )}
   {{/if}}
 </Container>

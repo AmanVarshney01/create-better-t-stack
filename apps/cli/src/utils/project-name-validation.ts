@@ -1,4 +1,5 @@
 import path from "node:path";
+
 import { ProjectNameSchema } from "../types";
 import { exitWithError } from "./errors";
 

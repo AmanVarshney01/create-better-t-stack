@@ -1,9 +1,11 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
+
+import type { StackState } from "@/lib/constant";
+
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { StackState } from "@/lib/constant";
 import { cn } from "@/lib/utils";
 
 interface YoloToggleProps {

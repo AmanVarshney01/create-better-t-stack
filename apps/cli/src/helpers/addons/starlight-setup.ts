@@ -1,11 +1,13 @@
-import path from "node:path";
 import { spinner } from "@clack/prompts";
 import consola from "consola";
-import { execa } from "execa";
+import { $ } from "execa";
 import fs from "fs-extra";
+import path from "node:path";
 import pc from "picocolors";
+
 import type { ProjectConfig } from "../../types";
-import { getPackageExecutionCommand } from "../../utils/package-runner";
+
+import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 export async function setupStarlight(config: ProjectConfig) {
   const { packageManager, projectDir } = config;
@@ -27,19 +29,12 @@ export async function setupStarlight(config: ProjectConfig) {
     const starlightArgsString = starlightArgs.join(" ");
 
     const commandWithArgs = `create-astro@latest ${starlightArgsString}`;
-
-    const starlightInitCommand = getPackageExecutionCommand(packageManager, commandWithArgs);
+    const args = getPackageExecutionArgs(packageManager, commandWithArgs);
 
     const appsDir = path.join(projectDir, "apps");
     await fs.ensureDir(appsDir);
 
-    await execa(starlightInitCommand, {
-      cwd: appsDir,
-      env: {
-        CI: "true",
-      },
-      shell: true,
-    });
+    await $({ cwd: appsDir, env: { CI: "true" } })`${args}`;
 
     s.stop("Starlight docs setup successfully!");
   } catch (error) {

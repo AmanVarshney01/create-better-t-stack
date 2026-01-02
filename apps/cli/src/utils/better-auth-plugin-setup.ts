@@ -1,5 +1,7 @@
 import { SyntaxKind } from "ts-morph";
+
 import type { ProjectConfig } from "../types";
+
 import { ensureArrayProperty, tsProject } from "./ts-morph";
 
 export async function setupBetterAuthPlugins(projectDir: string, config: ProjectConfig) {

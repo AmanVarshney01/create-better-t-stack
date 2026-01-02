@@ -1,4 +1,8 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "experimentalSortImports": {
+    "order": "asc"
+  },
+  "experimentalSortPackageJson": true,
   "ignorePatterns": ["*.hbs", "apps/cli/templates/**"]
 }
