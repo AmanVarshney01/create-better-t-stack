@@ -22,6 +22,9 @@
       "default": "./dist/template-reader.mjs"
     }
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "generate-templates": "bun scripts/generate-templates.ts",
     "prebuild": "bun run generate-templates",

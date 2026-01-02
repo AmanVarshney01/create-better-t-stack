@@ -6,6 +6,10 @@ import { join } from "node:path";
 const CLI_PACKAGE_JSON_PATH = join(process.cwd(), "apps/cli/package.json");
 const ALIAS_PACKAGE_JSON_PATH = join(process.cwd(), "packages/create-bts/package.json");
 const TYPES_PACKAGE_JSON_PATH = join(process.cwd(), "packages/types/package.json");
+const TEMPLATE_GENERATOR_PACKAGE_JSON_PATH = join(
+  process.cwd(),
+  "packages/template-generator/package.json",
+);
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
@@ -157,6 +161,13 @@ async function main(): Promise<void> {
   const originalAliasPackageJsonString = await readFile(ALIAS_PACKAGE_JSON_PATH, "utf-8");
   const typesPackageJson = JSON.parse(await readFile(TYPES_PACKAGE_JSON_PATH, "utf-8"));
   const originalTypesPackageJsonString = await readFile(TYPES_PACKAGE_JSON_PATH, "utf-8");
+  const templateGeneratorPackageJson = JSON.parse(
+    await readFile(TEMPLATE_GENERATOR_PACKAGE_JSON_PATH, "utf-8"),
+  );
+  const originalTemplateGeneratorPackageJsonString = await readFile(
+    TEMPLATE_GENERATOR_PACKAGE_JSON_PATH,
+    "utf-8",
+  );
   let restored = false;
 
   try {
@@ -184,9 +195,40 @@ async function main(): Promise<void> {
       throw err;
     }
 
-    // Update CLI package version and types dependency
+    // Update template-generator package version and types dependency, build, and publish
+    templateGeneratorPackageJson.version = canaryVersion;
+    templateGeneratorPackageJson.dependencies["@better-t-stack/types"] = canaryVersion;
+    await writeFile(
+      TEMPLATE_GENERATOR_PACKAGE_JSON_PATH,
+      `${JSON.stringify(templateGeneratorPackageJson, null, 2)}\n`,
+    );
+
+    const templateGeneratorBuildSpin = spinner();
+    templateGeneratorBuildSpin.start("Building template-generator package...");
+    try {
+      await $`cd packages/template-generator && bun run build`;
+      templateGeneratorBuildSpin.stop("Template-generator build complete");
+    } catch (err) {
+      templateGeneratorBuildSpin.stop("Template-generator build failed");
+      throw err;
+    }
+
+    const templateGeneratorPubSpin = spinner();
+    templateGeneratorPubSpin.start(
+      `Publishing @better-t-stack/template-generator@${canaryVersion} (canary)...`,
+    );
+    try {
+      await $`cd packages/template-generator && bun publish --access public --tag canary`;
+      templateGeneratorPubSpin.stop("Template-generator package published");
+    } catch (err) {
+      templateGeneratorPubSpin.stop("Template-generator publish failed");
+      throw err;
+    }
+
+    // Update CLI package version and dependencies
     packageJson.version = canaryVersion;
     packageJson.dependencies["@better-t-stack/types"] = canaryVersion;
+    packageJson.dependencies["@better-t-stack/template-generator"] = canaryVersion;
     await writeFile(CLI_PACKAGE_JSON_PATH, `${JSON.stringify(packageJson, null, 2)}\n`);
 
     // Update alias package version
@@ -237,17 +279,28 @@ async function main(): Promise<void> {
     await writeFile(CLI_PACKAGE_JSON_PATH, originalPackageJsonString);
     await writeFile(ALIAS_PACKAGE_JSON_PATH, originalAliasPackageJsonString);
     await writeFile(TYPES_PACKAGE_JSON_PATH, originalTypesPackageJsonString);
+    await writeFile(
+      TEMPLATE_GENERATOR_PACKAGE_JSON_PATH,
+      originalTemplateGeneratorPackageJsonString,
+    );
     restored = true;
 
     console.log(`✅ Published canary v${canaryVersion} for all packages`);
     console.log(`📦 NPM: https://www.npmjs.com/package/${packageName}/v/${canaryVersion}`);
     console.log(`📦 NPM: https://www.npmjs.com/package/create-bts/v/${canaryVersion}`);
     console.log(`📦 NPM: https://www.npmjs.com/package/@better-t-stack/types/v/${canaryVersion}`);
+    console.log(
+      `📦 NPM: https://www.npmjs.com/package/@better-t-stack/template-generator/v/${canaryVersion}`,
+    );
   } finally {
     if (!restored) {
       await writeFile(CLI_PACKAGE_JSON_PATH, originalPackageJsonString);
       await writeFile(ALIAS_PACKAGE_JSON_PATH, originalAliasPackageJsonString);
       await writeFile(TYPES_PACKAGE_JSON_PATH, originalTypesPackageJsonString);
+      await writeFile(
+        TEMPLATE_GENERATOR_PACKAGE_JSON_PATH,
+        originalTemplateGeneratorPackageJsonString,
+      );
     }
   }
 }
