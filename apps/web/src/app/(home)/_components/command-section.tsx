@@ -38,15 +38,17 @@ export default function CommandSection() {
             <span className="font-semibold text-sm">CLI_COMMAND</span>
           </div>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="flex items-center gap-2 rounded border border-border px-3 py-1.5 text-xs transition-colors hover:bg-muted/10"
-              >
-                <PackageIcon pm={selectedPM} className="h-3 w-3" />
-                <span>{selectedPM.toUpperCase()}</span>
-                <ChevronDown className="h-3 w-3" />
-              </button>
+            <DropdownMenuTrigger
+              render={
+                <button
+                  type="button"
+                  className="flex items-center gap-2 rounded border border-border px-3 py-1.5 text-xs transition-colors hover:bg-muted/10"
+                />
+              }
+            >
+              <PackageIcon pm={selectedPM} className="h-3 w-3" />
+              <span>{selectedPM.toUpperCase()}</span>
+              <ChevronDown className="h-3 w-3" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {(["bun", "pnpm", "npm"] as const).map((pm) => (

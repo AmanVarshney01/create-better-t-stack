@@ -21,23 +21,25 @@ export async function SpecialSponsorBanner() {
 
           return (
             <HoverCard key={entry.githubId}>
-              <HoverCardTrigger asChild>
-                <a
-                  href={sponsorUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={entry.name}
-                  className="inline-flex"
-                >
-                  <Image
-                    src={entry.avatarUrl}
-                    alt={entry.name}
-                    width={66}
-                    height={66}
-                    className="size-12 rounded border border-border"
-                    unoptimized
+              <HoverCardTrigger
+                render={
+                  <a
+                    href={sponsorUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={entry.name}
+                    className="inline-flex"
                   />
-                </a>
+                }
+              >
+                <Image
+                  src={entry.avatarUrl}
+                  alt={entry.name}
+                  width={66}
+                  height={66}
+                  className="size-12 rounded border border-border"
+                  unoptimized
+                />
               </HoverCardTrigger>
               <HoverCardContent align="start" sideOffset={8} className="bg-fd-background">
                 <div className="space-y-3">

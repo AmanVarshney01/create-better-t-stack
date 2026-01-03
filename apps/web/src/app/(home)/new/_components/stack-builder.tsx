@@ -2,7 +2,15 @@
 
 import type React from "react";
 
-import { Check, ChevronDown, ClipboardCopy, InfoIcon, Settings, Terminal } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  ClipboardCopy,
+  FolderTree,
+  InfoIcon,
+  Settings,
+  Terminal,
+} from "lucide-react";
 import { motion } from "motion/react";
 import { startTransition, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -22,6 +30,7 @@ import { cn } from "@/lib/utils";
 import { ActionButtons } from "./action-buttons";
 import { getBadgeColors } from "./get-badge-color";
 import { PresetDropdown } from "./preset-dropdown";
+import { PreviewPanel } from "./preview-panel";
 import { ShareButton } from "./share-button";
 import { TechIcon } from "./tech-icon";
 import {
@@ -38,7 +47,7 @@ function formatProjectName(name: string): string {
 }
 
 const StackBuilder = () => {
-  const [stack, setStack] = useStackState();
+  const [stack, setStack, viewMode, setViewMode, selectedFile, setSelectedFile] = useStackState();
 
   const [command, setCommand] = useState("");
   const [copied, setCopied] = useState(false);
@@ -46,8 +55,20 @@ const StackBuilder = () => {
   const [, setLastChanges] = useState<Array<{ category: string; message: string }>>([]);
 
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
-  const contentRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const lastAppliedStackString = useRef<string>("");
+
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      const viewport = scrollAreaRef.current.querySelector<HTMLDivElement>(
+        '[data-slot="scroll-area-viewport"]',
+      );
+      if (viewport) {
+        contentRef.current = viewport;
+      }
+    }
+  }, [viewMode]);
 
   const compatibilityAnalysis = analyzeStackCompatibility(stack);
 
@@ -360,7 +381,7 @@ const StackBuilder = () => {
 
   return (
     <TooltipProvider>
-      <div className="grid w-full grid-cols-1 overflow-hidden border-border text-foreground sm:grid-cols-[auto_1fr]">
+      <div className="grid h-full w-full grid-cols-1 overflow-hidden border-border text-foreground sm:grid-cols-[auto_1fr]">
         <div className="flex w-full flex-col border-border border-r sm:max-w-3xs md:max-w-xs lg:max-w-sm">
           <ScrollArea className="flex-1">
             <div className="flex h-full flex-col gap-3 p-3 sm:p-4 md:h-[calc(100vh-64px)]">
@@ -450,15 +471,17 @@ const StackBuilder = () => {
                     <PresetDropdown onApplyPreset={applyPreset} />
 
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          type="button"
-                          className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-fd-background px-2 py-1.5 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
-                        >
-                          <Settings className="h-3 w-3" />
-                          Settings
-                          <ChevronDown className="ml-auto h-3 w-3" />
-                        </button>
+                      <DropdownMenuTrigger
+                        render={
+                          <button
+                            type="button"
+                            className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-fd-background px-2 py-1.5 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
+                          />
+                        }
+                      >
+                        <Settings className="h-3 w-3" />
+                        Settings
+                        <ChevronDown className="ml-auto h-3 w-3" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-64 bg-fd-background">
                         <YoloToggle stack={stack} onToggle={(yolo) => setStack({ yolo })} />
@@ -472,150 +495,202 @@ const StackBuilder = () => {
         </div>
 
         <div className="flex flex-1 flex-col overflow-hidden">
-          <ScrollArea ref={contentRef} className="flex-1 overflow-hidden scroll-smooth">
-            <main className="p-3 sm:p-4">
-              {CATEGORY_ORDER.map((categoryKey) => {
-                const categoryOptions =
-                  TECH_OPTIONS[categoryKey as keyof typeof TECH_OPTIONS] || [];
-                const categoryDisplayName = getCategoryDisplayName(categoryKey);
+          {/* View mode toggle */}
+          <div className="flex items-center gap-2 border-b border-border bg-muted/20 px-3 py-2">
+            <button
+              type="button"
+              onClick={() => {
+                startTransition(() => {
+                  setViewMode("command");
+                });
+              }}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+                viewMode === "command"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+              )}
+            >
+              <Terminal className="h-3.5 w-3.5" />
+              Configure
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                startTransition(() => {
+                  setViewMode("preview");
+                });
+              }}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+                viewMode === "preview"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+              )}
+            >
+              <FolderTree className="h-3.5 w-3.5" />
+              Preview
+            </button>
+          </div>
 
-                const filteredOptions = categoryOptions;
+          {viewMode === "preview" ? (
+            <PreviewPanel
+              stack={stack}
+              selectedFilePath={selectedFile}
+              onSelectFile={setSelectedFile}
+            />
+          ) : (
+            <div ref={scrollAreaRef} className="flex-1 min-h-0">
+              <ScrollArea className="h-full overflow-hidden scroll-smooth">
+                <main className="p-3 sm:p-4">
+                  {CATEGORY_ORDER.map((categoryKey) => {
+                    const categoryOptions =
+                      TECH_OPTIONS[categoryKey as keyof typeof TECH_OPTIONS] || [];
+                    const categoryDisplayName = getCategoryDisplayName(categoryKey);
 
-                if (filteredOptions.length === 0) return null;
+                    const filteredOptions = categoryOptions;
 
-                return (
-                  <section
-                    ref={(el) => {
-                      sectionRefs.current[categoryKey] = el;
-                    }}
-                    key={categoryKey}
-                    id={`section-${categoryKey}`}
-                    className="mb-6 scroll-mt-4 sm:mb-8"
-                  >
-                    <div className="mb-3 flex items-center border-border border-b pb-2 text-muted-foreground">
-                      <Terminal className="mr-2 h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
-                      <h2 className="font-semibold text-foreground text-sm sm:text-base">
-                        {categoryDisplayName}
-                      </h2>
-                      {compatibilityAnalysis.notes[categoryKey]?.hasIssue && (
-                        <Tooltip delayDuration={100}>
-                          <TooltipTrigger asChild>
-                            <InfoIcon className="ml-2 h-4 w-4 shrink-0 cursor-help text-muted-foreground" />
-                          </TooltipTrigger>
-                          <TooltipContent side="top" align="start">
-                            <ul className="list-disc space-y-1 pl-4 text-xs">
-                              {compatibilityAnalysis.notes[categoryKey].notes.map((note) => (
-                                <li key={note}>{note}</li>
-                              ))}
-                            </ul>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                    </div>
+                    if (filteredOptions.length === 0) return null;
 
-                    <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 sm:gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
-                      {filteredOptions.map((tech) => {
-                        let isSelected = false;
-                        const category = categoryKey as keyof StackState;
-                        const currentValue = stack[category];
+                    return (
+                      <section
+                        ref={(el) => {
+                          sectionRefs.current[categoryKey] = el;
+                        }}
+                        key={categoryKey}
+                        id={`section-${categoryKey}`}
+                        className="mb-6 scroll-mt-4 sm:mb-8"
+                      >
+                        <div className="mb-3 flex items-center border-border border-b pb-2 text-muted-foreground">
+                          <Terminal className="mr-2 h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
+                          <h2 className="font-semibold text-foreground text-sm sm:text-base">
+                            {categoryDisplayName}
+                          </h2>
+                          {compatibilityAnalysis.notes[categoryKey]?.hasIssue && (
+                            <Tooltip delay={100}>
+                              <TooltipTrigger
+                                render={
+                                  <InfoIcon className="ml-2 h-4 w-4 shrink-0 cursor-help text-muted-foreground" />
+                                }
+                              />
+                              <TooltipContent side="top" align="start">
+                                <ul className="list-disc space-y-1 pl-4 text-xs">
+                                  {compatibilityAnalysis.notes[categoryKey].notes.map((note) => (
+                                    <li key={note}>{note}</li>
+                                  ))}
+                                </ul>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
 
-                        if (
-                          category === "addons" ||
-                          category === "examples" ||
-                          category === "webFrontend" ||
-                          category === "nativeFrontend"
-                        ) {
-                          isSelected = ((currentValue as string[]) || []).includes(tech.id);
-                        } else {
-                          isSelected = currentValue === tech.id;
-                        }
+                        <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 sm:gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4">
+                          {filteredOptions.map((tech) => {
+                            let isSelected = false;
+                            const category = categoryKey as keyof StackState;
+                            const currentValue = stack[category];
 
-                        const isDisabled = !isOptionCompatible(
-                          stack,
-                          categoryKey as keyof typeof TECH_OPTIONS,
-                          tech.id,
-                        );
+                            if (
+                              category === "addons" ||
+                              category === "examples" ||
+                              category === "webFrontend" ||
+                              category === "nativeFrontend"
+                            ) {
+                              isSelected = ((currentValue as string[]) || []).includes(tech.id);
+                            } else {
+                              isSelected = currentValue === tech.id;
+                            }
 
-                        const disabledReason = isDisabled
-                          ? getDisabledReason(
+                            const isDisabled = !isOptionCompatible(
                               stack,
                               categoryKey as keyof typeof TECH_OPTIONS,
                               tech.id,
-                            )
-                          : null;
+                            );
 
-                        return (
-                          <Tooltip key={tech.id} delayDuration={100}>
-                            <TooltipTrigger asChild>
-                              <motion.div
-                                className={cn(
-                                  "relative cursor-pointer rounded border p-2 transition-all sm:p-3",
-                                  isSelected
-                                    ? "border-primary bg-primary/10"
-                                    : isDisabled
-                                      ? "border-destructive/30 bg-destructive/5 opacity-50 hover:opacity-75"
-                                      : "border-border hover:border-muted hover:bg-muted",
-                                )}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() =>
-                                  handleTechSelect(
-                                    categoryKey as keyof typeof TECH_OPTIONS,
-                                    tech.id,
-                                  )
-                                }
-                              >
-                                <div className="flex items-start">
-                                  <div className="grow">
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center">
-                                        {tech.icon !== "" && (
-                                          <TechIcon
-                                            icon={tech.icon}
-                                            name={tech.name}
-                                            className={cn(
-                                              "mr-1.5 h-3 w-3 sm:h-4 sm:w-4",
-                                              tech.className,
-                                            )}
-                                          />
-                                        )}
-                                        <span
-                                          className={cn(
-                                            "font-medium text-xs sm:text-sm",
-                                            isSelected ? "text-primary" : "text-foreground",
+                            const disabledReason = isDisabled
+                              ? getDisabledReason(
+                                  stack,
+                                  categoryKey as keyof typeof TECH_OPTIONS,
+                                  tech.id,
+                                )
+                              : null;
+
+                            return (
+                              <Tooltip key={tech.id} delay={100}>
+                                <TooltipTrigger
+                                  render={
+                                    <motion.div
+                                      className={cn(
+                                        "relative cursor-pointer rounded border p-2 transition-all sm:p-3",
+                                        isSelected
+                                          ? "border-primary bg-primary/10"
+                                          : isDisabled
+                                            ? "border-destructive/30 bg-destructive/5 opacity-50 hover:opacity-75"
+                                            : "border-border hover:border-muted hover:bg-muted",
+                                      )}
+                                      whileHover={{ scale: 1.02 }}
+                                      whileTap={{ scale: 0.98 }}
+                                      onClick={() =>
+                                        handleTechSelect(
+                                          categoryKey as keyof typeof TECH_OPTIONS,
+                                          tech.id,
+                                        )
+                                      }
+                                    />
+                                  }
+                                >
+                                  <div className="flex items-start">
+                                    <div className="grow">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center">
+                                          {tech.icon !== "" && (
+                                            <TechIcon
+                                              icon={tech.icon}
+                                              name={tech.name}
+                                              className={cn(
+                                                "mr-1.5 h-3 w-3 sm:h-4 sm:w-4",
+                                                tech.className,
+                                              )}
+                                            />
                                           )}
-                                        >
-                                          {tech.name}
-                                        </span>
+                                          <span
+                                            className={cn(
+                                              "font-medium text-xs sm:text-sm",
+                                              isSelected ? "text-primary" : "text-foreground",
+                                            )}
+                                          >
+                                            {tech.name}
+                                          </span>
+                                        </div>
                                       </div>
+                                      <p className="mt-0.5 text-muted-foreground text-xs">
+                                        {tech.description}
+                                      </p>
                                     </div>
-                                    <p className="mt-0.5 text-muted-foreground text-xs">
-                                      {tech.description}
-                                    </p>
                                   </div>
-                                </div>
-                                {tech.default && !isSelected && (
-                                  <span className="absolute top-1 right-1 ml-2 shrink-0 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
-                                    Default
-                                  </span>
+                                  {tech.default && !isSelected && (
+                                    <span className="absolute top-1 right-1 ml-2 shrink-0 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
+                                      Default
+                                    </span>
+                                  )}
+                                </TooltipTrigger>
+                                {disabledReason && (
+                                  <TooltipContent side="top" align="center" className="max-w-xs">
+                                    <p className="text-xs">{disabledReason}</p>
+                                  </TooltipContent>
                                 )}
-                              </motion.div>
-                            </TooltipTrigger>
-                            {disabledReason && (
-                              <TooltipContent side="top" align="center" className="max-w-xs">
-                                <p className="text-xs">{disabledReason}</p>
-                              </TooltipContent>
-                            )}
-                          </Tooltip>
-                        );
-                      })}
-                    </div>
-                  </section>
-                );
-              })}
-              <div className="h-10" />
-            </main>
-          </ScrollArea>
+                              </Tooltip>
+                            );
+                          })}
+                        </div>
+                      </section>
+                    );
+                  })}
+                  <div className="h-10" />
+                </main>
+              </ScrollArea>
+            </div>
+          )}
         </div>
       </div>
     </TooltipProvider>

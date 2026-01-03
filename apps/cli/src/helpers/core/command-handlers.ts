@@ -4,18 +4,15 @@ import fs from "fs-extra";
 import path from "node:path";
 import pc from "picocolors";
 
-import type { AddInput, CreateInput, DirectoryConflict, ProjectConfig } from "../../types";
+import type { CreateInput, DirectoryConflict, ProjectConfig } from "../../types";
 
 import { getDefaultConfig } from "../../constants";
-import { getAddonsToAdd } from "../../prompts/addons";
 import { gatherConfig } from "../../prompts/config-prompts";
 import { getProjectName } from "../../prompts/project-name";
-import { getServerDeploymentToAdd } from "../../prompts/server-deploy";
-import { getDeploymentToAdd } from "../../prompts/web-deploy";
 import { trackProjectCreation } from "../../utils/analytics";
 import { isSilent, runWithContextAsync } from "../../utils/context";
 import { displayConfig } from "../../utils/display-config";
-import { CLIError, exitWithError, handleError, UserCancelledError } from "../../utils/errors";
+import { CLIError, UserCancelledError } from "../../utils/errors";
 import { generateReproducibleCommand } from "../../utils/generate-reproducible-command";
 import { handleDirectoryConflict, setupProjectDirectory } from "../../utils/project-directory";
 import { renderTitle } from "../../utils/render-title";
@@ -26,11 +23,7 @@ import {
   processProvidedFlagsWithoutValidation,
   validateConfigCompatibility,
 } from "../../validation";
-import { addAddonsToProject } from "./add-addons";
-import { addDeploymentToProject } from "./add-deployment";
 import { createProject } from "./create-project";
-import { detectProjectConfig } from "./detect-project-config";
-import { installDependencies } from "./install-dependencies";
 
 export interface CreateHandlerOptions {
   silent?: boolean;
@@ -312,112 +305,5 @@ async function handleDirectoryConflictProgrammatically(
 
     default:
       throw new Error(`Unknown directory conflict strategy: ${strategy}`);
-  }
-}
-
-export async function addAddonsHandler(input: AddInput) {
-  try {
-    const projectDir = input.projectDir || process.cwd();
-    const detectedConfig = await detectProjectConfig(projectDir);
-
-    if (!detectedConfig) {
-      exitWithError(
-        "Could not detect project configuration. Please ensure this is a valid Better-T-Stack project.",
-      );
-    }
-
-    if (!input.addons || input.addons.length === 0) {
-      const addonsPrompt = await getAddonsToAdd(
-        detectedConfig.frontend || [],
-        detectedConfig.addons || [],
-        detectedConfig.auth,
-      );
-
-      if (addonsPrompt.length > 0) {
-        input.addons = addonsPrompt;
-      }
-    }
-
-    if (!input.webDeploy) {
-      const deploymentPrompt = await getDeploymentToAdd(
-        detectedConfig.frontend || [],
-        detectedConfig.webDeploy,
-      );
-
-      if (deploymentPrompt !== "none") {
-        input.webDeploy = deploymentPrompt;
-      }
-    }
-
-    if (!input.serverDeploy) {
-      const serverDeploymentPrompt = await getServerDeploymentToAdd(
-        detectedConfig.runtime,
-        detectedConfig.serverDeploy,
-        detectedConfig.backend,
-      );
-
-      if (serverDeploymentPrompt !== "none") {
-        input.serverDeploy = serverDeploymentPrompt;
-      }
-    }
-
-    const packageManager = input.packageManager || detectedConfig.packageManager || "npm";
-
-    let somethingAdded = false;
-
-    if (input.addons && input.addons.length > 0) {
-      await addAddonsToProject({
-        ...input,
-        install: false,
-        suppressInstallMessage: true,
-        addons: input.addons,
-      });
-      somethingAdded = true;
-    }
-
-    if (input.webDeploy && input.webDeploy !== "none") {
-      await addDeploymentToProject({
-        ...input,
-        install: false,
-        suppressInstallMessage: true,
-        webDeploy: input.webDeploy,
-      });
-      somethingAdded = true;
-    }
-
-    if (input.serverDeploy && input.serverDeploy !== "none") {
-      await addDeploymentToProject({
-        ...input,
-        install: false,
-        suppressInstallMessage: true,
-        serverDeploy: input.serverDeploy,
-      });
-      somethingAdded = true;
-    }
-
-    if (!somethingAdded) {
-      outro(pc.yellow("No addons or deployment configurations to add."));
-      return;
-    }
-
-    if (input.install) {
-      await installDependencies({
-        projectDir,
-        packageManager,
-      });
-    } else {
-      log.info(`Run ${pc.bold(`${packageManager} install`)} to install dependencies`);
-    }
-
-    outro("Add command completed successfully!");
-  } catch (error) {
-    if (error instanceof UserCancelledError) {
-      // Exit cleanly without stack trace
-      return;
-    }
-    if (error instanceof CLIError) {
-      throw error;
-    }
-    handleError(error, "Failed to add addons or deployment");
   }
 }
