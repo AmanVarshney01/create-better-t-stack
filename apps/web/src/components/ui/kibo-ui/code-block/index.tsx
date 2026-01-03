@@ -326,7 +326,7 @@ export const CodeBlock = ({
 
   return (
     <CodeBlockContext.Provider value={{ value, onValueChange, data }}>
-      <div className={cn("size-full overflow-hidden rounded-md border", className)} {...props} />
+      <div className={cn("size-full overflow-hidden rounded-md", className)} {...props} />
     </CodeBlockContext.Provider>
   );
 };
@@ -334,10 +334,7 @@ export const CodeBlock = ({
 export type CodeBlockHeaderProps = HTMLAttributes<HTMLDivElement>;
 
 export const CodeBlockHeader = ({ className, ...props }: CodeBlockHeaderProps) => (
-  <div
-    className={cn("flex flex-row items-center border-b bg-secondary p-1", className)}
-    {...props}
-  />
+  <div className={cn("flex flex-row items-center border-b p-1", className)} {...props} />
 );
 
 export type CodeBlockFilesProps = Omit<HTMLAttributes<HTMLDivElement>, "children"> & {
@@ -380,10 +377,7 @@ export const CodeBlockFilename = ({
   }
 
   return (
-    <div
-      className="flex items-center gap-2 bg-secondary px-4 py-1.5 text-muted-foreground text-xs"
-      {...props}
-    >
+    <div className="flex items-center gap-2 px-4 py-1.5 text-muted-foreground text-xs" {...props}>
       {Icon && <Icon className="h-4 w-4 shrink-0" />}
       <span className="flex-1 truncate">{children}</span>
     </div>
@@ -487,11 +481,13 @@ export const CodeBlockCopyButton = ({
   );
 };
 
-type CodeBlockFallbackProps = HTMLAttributes<HTMLDivElement>;
+type CodeBlockFallbackProps = HTMLAttributes<HTMLDivElement> & {
+  className?: string;
+};
 
-const CodeBlockFallback = ({ children, ...props }: CodeBlockFallbackProps) => (
-  <div {...props}>
-    <pre className="w-full">
+const CodeBlockFallback = ({ children, className, ...props }: CodeBlockFallbackProps) => (
+  <div className={cn("bg-fd-background", className)} {...props}>
+    <pre className="w-full bg-fd-background">
       <code>
         {children
           ?.toString()
@@ -565,6 +561,7 @@ export const CodeBlockContent = ({
   themes,
   language,
   syntaxHighlighting = true,
+  className,
   ...props
 }: CodeBlockContentProps) => {
   const [html, setHtml] = useState<string | null>(null);
@@ -581,11 +578,12 @@ export const CodeBlockContent = ({
   }, [children, themes, syntaxHighlighting, language]);
 
   if (!(syntaxHighlighting && html)) {
-    return <CodeBlockFallback>{children}</CodeBlockFallback>;
+    return <CodeBlockFallback className={className}>{children}</CodeBlockFallback>;
   }
 
   return (
     <div
+      className={className}
       // biome-ignore lint/security/noDangerouslySetInnerHtml: "Kinda how Shiki works"
       dangerouslySetInnerHTML={{ __html: html }}
       {...props}

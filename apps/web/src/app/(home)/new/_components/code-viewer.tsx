@@ -73,24 +73,24 @@ export const CodeViewer = memo(function CodeViewer({
   );
 
   return (
-    <div className="flex h-full flex-col overflow-hidden">
+    <div className="flex h-full flex-col overflow-hidden bg-fd-background">
       <CodeBlock
         key={filePath}
         data={codeData}
         defaultValue={language}
-        className="flex flex-col h-full"
+        className="flex flex-col h-full bg-fd-background"
       >
-        <CodeBlockHeader className="">
-          <CodeBlockFiles className="">
+        <CodeBlockHeader>
+          <CodeBlockFiles>
             {(item) => (
-              <CodeBlockFilename key={item.language} value={item.language} className="">
+              <CodeBlockFilename key={item.language} value={item.language}>
                 {filePath}
               </CodeBlockFilename>
             )}
           </CodeBlockFiles>
           <CodeBlockCopyButton />
         </CodeBlockHeader>
-        <CodeBlockBody className="flex-1 overflow-auto [&_.shiki]:bg-fd-background! dark:[&_.shiki]:bg-fd-background!">
+        <CodeBlockBody className="flex-1 overflow-auto [&_.shiki]:bg-fd-background! dark:[&_.shiki]:bg-fd-background! bg-fd-background">
           {(item) => (
             <CodeBlockItem key={item.language} value={item.language}>
               <CodeBlockContent
@@ -99,6 +99,7 @@ export const CodeViewer = memo(function CodeViewer({
                   light: "catppuccin-latte",
                   dark: "catppuccin-mocha",
                 }}
+                className="bg-fd-background"
               >
                 {item.code}
               </CodeBlockContent>

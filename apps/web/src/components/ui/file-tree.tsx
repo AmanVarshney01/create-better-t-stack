@@ -228,7 +228,7 @@ type FileProps = {
 function File({
   value,
   className,
-  handleSelect,
+  handleSelect: _handleSelect,
   isSelectable = true,
   isSelect,
   fileIcon,
@@ -267,13 +267,7 @@ type CollapseButtonProps = {
   children?: React.ReactNode;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
-function CollapseButton({
-  className,
-  elements,
-  expandAll = false,
-  children,
-  ...props
-}: CollapseButtonProps) {
+function CollapseButton({ elements, expandAll = false, children, ...props }: CollapseButtonProps) {
   const { expandedItems, setExpandedItems } = useTree();
 
   const expendAllTree = useCallback(
