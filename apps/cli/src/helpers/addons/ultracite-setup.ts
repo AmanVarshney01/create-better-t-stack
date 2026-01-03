@@ -30,7 +30,7 @@ type UltraciteAgent =
   | "goose"
   | "roo-code";
 
-type UltraciteHook = "cursor" | "claude";
+type UltraciteHook = "cursor" | "windsurf";
 
 const EDITORS = {
   vscode: {
@@ -102,8 +102,8 @@ const HOOKS = {
   cursor: {
     label: "Cursor",
   },
-  claude: {
-    label: "Claude",
+  windsurf: {
+    label: "Windsurf",
   },
 } as const;
 
