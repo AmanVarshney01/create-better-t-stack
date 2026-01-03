@@ -3,7 +3,7 @@
 import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
 import type { IconType } from "react-icons";
 
-import { useControllableState } from "@radix-ui/react-use-controllable-state";
+import { useControlled } from "@base-ui/utils/useControlled";
 import {
   transformerNotationDiff,
   transformerNotationErrorLevel,
@@ -312,11 +312,17 @@ export const CodeBlock = ({
   data,
   ...props
 }: CodeBlockProps) => {
-  const [value, onValueChange] = useControllableState({
-    defaultProp: defaultValue ?? "",
-    prop: controlledValue,
-    onChange: controlledOnValueChange,
+  const [value, setValue] = useControlled({
+    controlled: controlledValue,
+    default: defaultValue ?? "",
+    name: "CodeBlock",
+    state: "value",
   });
+
+  const onValueChange = (newValue: string) => {
+    setValue(newValue);
+    controlledOnValueChange?.(newValue);
+  };
 
   return (
     <CodeBlockContext.Provider value={{ value, onValueChange, data }}>
