@@ -1,7 +1,7 @@
 import fs from "fs-extra";
 import path from "node:path";
 
-import type { Frontend, ProjectConfig } from "../../types";
+import type { ProjectConfig } from "../../types";
 
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { setupFumadocs } from "./fumadocs-setup";
@@ -78,17 +78,6 @@ export async function setupAddons(config: ProjectConfig) {
   if (hasUltracite) {
     await setupUltracite(config, hasHusky);
   }
-}
-
-function getWebAppDir(projectDir: string, frontends: Frontend[]) {
-  if (
-    frontends.some((f) =>
-      ["react-router", "tanstack-router", "nuxt", "svelte", "solid"].includes(f),
-    )
-  ) {
-    return path.join(projectDir, "apps/web");
-  }
-  return path.join(projectDir, "apps/web");
 }
 
 export async function setupBiome(projectDir: string) {
