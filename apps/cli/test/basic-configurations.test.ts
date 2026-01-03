@@ -169,7 +169,7 @@ describe("Basic Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Input validation failed");
+      expectError(result, "Invalid project name");
     });
 
     it("should fail when combining --yes with configuration flags", async () => {
