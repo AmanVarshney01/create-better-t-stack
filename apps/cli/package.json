@@ -66,7 +66,7 @@
     "test": "bun run build && bun test",
     "test:watch": "bun run build && bun test --watch",
     "test:coverage": "bun run build && bun test --coverage",
-    "test:ci": "bun run build && AGENT=1 bun test --bail=5",
+    "test:ci": "bun run build && CI=1 bun test --bail=5",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
