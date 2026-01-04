@@ -11,10 +11,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export function LiveLogs() {
-  const events = useQuery(api.analytics.getAllEvents, { range: "30m" });
   const [isOpen, setIsOpen] = useState(false);
 
-  if (events === undefined) return null;
+  const events = useQuery(api.analytics.getAllEvents, isOpen ? { range: "30m" } : "skip");
 
   return (
     <div className="rounded border border-border bg-fd-background overflow-hidden">
@@ -43,7 +42,7 @@ export function LiveLogs() {
           </div>
         </div>
         <span className="text-muted-foreground text-xs font-mono group-hover:text-foreground transition-colors">
-          {isOpen ? "[COLLAPSE]" : `[${events.length} EVENTS]`}
+          {isOpen ? "[COLLAPSE]" : "[EXPAND FEED]"}
         </span>
       </Button>
 
@@ -57,7 +56,7 @@ export function LiveLogs() {
             style={{ overflow: "hidden" }}
           >
             <div className="border-t border-border p-4 bg-muted/5 font-mono text-xs">
-              {events.length === 0 ? (
+              {!events || events.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 gap-3">
                   <div className="rounded-full border border-border bg-fd-background p-3">
                     <Radio className="h-5 w-5 text-muted-foreground" />
@@ -97,7 +96,6 @@ export function LiveLogs() {
                           transition={{ duration: 0.2 }}
                           className="rounded border border-border/50 bg-fd-background p-3 hover:border-border transition-colors"
                         >
-                          {/* Header */}
                           <div className="flex items-center justify-between mb-2 pb-2 border-b border-border/30">
                             <div className="flex items-center gap-2">
                               <span className="text-primary">{">"}</span>
@@ -119,12 +117,13 @@ export function LiveLogs() {
                               )}
                             </div>
                             <div className="flex items-center gap-2 text-muted-foreground text-[10px]">
-                              <span>{time}</span>
-                              <span className="opacity-50">({timeAgo})</span>
+                              <span suppressHydrationWarning>{time}</span>
+                              <span className="opacity-50" suppressHydrationWarning>
+                                ({timeAgo})
+                              </span>
                             </div>
                           </div>
 
-                          {/* Stack Info */}
                           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-[11px]">
                             {event.frontend && event.frontend.length > 0 && (
                               <div className="flex items-center gap-1.5">
