@@ -363,7 +363,7 @@ function buildServerVars(
         if (runtime === "workers" || webDeploy === "cloudflare" || serverDeploy === "cloudflare") {
           databaseUrl = "http://127.0.0.1:8080";
         } else {
-          databaseUrl = "file:../local.db";
+          databaseUrl = "file:../../local.db";
         }
         break;
     }

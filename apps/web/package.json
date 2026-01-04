@@ -5,7 +5,7 @@
   "scripts": {
     "prebuild": "cd ../../packages/types && bun run build && cd ../template-generator && bun run build",
     "build": "next build",
-    "dev": "next dev",
+    "dev": "next dev --port 3333",
     "start": "next start",
     "postinstall": "fumadocs-mdx",
     "generate-schema": "bun scripts/generate-schema.ts"
