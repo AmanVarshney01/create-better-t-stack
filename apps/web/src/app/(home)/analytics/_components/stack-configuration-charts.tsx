@@ -37,15 +37,19 @@ function ChartCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded border border-border">
-      <div className="border-border border-b px-4 py-3">
-        <div className="flex items-center gap-2">
-          <span className="text-primary text-xs">$</span>
-          <span className="font-semibold text-sm">{title}</span>
+    <div className="group rounded border border-border bg-fd-background transition-colors hover:bg-muted/10">
+      <div className="space-y-4 p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-primary text-xs">$</span>
+              <span className="font-semibold font-mono text-sm">{title}</span>
+            </div>
+            <p className="text-muted-foreground text-xs">{description}</p>
+          </div>
         </div>
-        <p className="mt-1 text-muted-foreground text-xs">{description}</p>
+        {children}
       </div>
-      <div className="p-4">{children}</div>
     </div>
   );
 }

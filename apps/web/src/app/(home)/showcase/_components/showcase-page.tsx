@@ -26,10 +26,10 @@ export default function ShowcasePage({
         <div className="mb-8">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
             <div className="flex items-center gap-2">
-              <Terminal className="h-4 w-4 text-primary" />
-              <span className="font-bold text-lg sm:text-xl">PROJECT_SHOWCASE.SH</span>
+              <Terminal className="h-5 w-5 text-primary" />
+              <span className="font-bold font-mono text-lg sm:text-xl">PROJECT_SHOWCASE.SH</span>
             </div>
-            <div className="h-px flex-1 bg-border" />
+            <div className="hidden h-px flex-1 bg-border sm:block" />
             <span className="text-muted-foreground text-xs">
               [{showcaseProjects.length} PROJECTS FOUND]
             </span>
@@ -37,7 +37,7 @@ export default function ShowcasePage({
         </div>
 
         {showcaseProjects.length === 0 ? (
-          <div className="rounded border border-border p-8">
+          <div className="rounded border border-border bg-fd-background p-8">
             <div className="text-center">
               <div className="mb-4 flex items-center justify-center gap-2">
                 <span className="text-muted-foreground">NO_SHOWCASE_PROJECTS_FOUND.NULL</span>
@@ -59,7 +59,7 @@ export default function ShowcasePage({
         )}
 
         <div className="mt-8">
-          <div className="rounded border border-border p-4">
+          <div className="rounded border border-border bg-fd-background p-4">
             <div className="flex items-center gap-2 text-sm">
               <span className="text-primary">$</span>
               <span className="text-muted-foreground">

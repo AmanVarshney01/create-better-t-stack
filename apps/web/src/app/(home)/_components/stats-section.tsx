@@ -32,10 +32,10 @@ export default function StatsSection() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <Link href="/analytics">
-        <div className="cursor-pointer rounded border border-border p-4 transition-colors hover:bg-muted/10">
+        <div className="group cursor-pointer rounded border border-border bg-fd-background p-4 transition-colors hover:bg-muted/10">
           <div className="mb-3 flex items-center gap-2">
             <Terminal className="h-4 w-4 text-primary" />
-            <span className="font-semibold text-sm sm:text-base">CLI_ANALYTICS.JSON</span>
+            <span className="font-semibold font-mono text-sm sm:text-base">CLI_ANALYTICS.JSON</span>
           </div>
 
           <div className="space-y-3">
@@ -87,10 +87,10 @@ export default function StatsSection() {
         target="_blank"
         rel="noopener noreferrer"
       >
-        <div className="cursor-pointer rounded border border-border p-4 transition-colors hover:bg-muted/10">
+        <div className="group cursor-pointer rounded border border-border bg-fd-background p-4 transition-colors hover:bg-muted/10">
           <div className="mb-3 flex items-center gap-2">
             <Github className="h-4 w-4 text-primary" />
-            <span className="font-semibold text-sm sm:text-base">GITHUB_REPO.GIT</span>
+            <span className="font-semibold font-mono text-sm sm:text-base">GITHUB_REPO.GIT</span>
           </div>
 
           <div className="space-y-3">
@@ -139,10 +139,10 @@ export default function StatsSection() {
         target="_blank"
         rel="noopener noreferrer"
       >
-        <div className="cursor-pointer rounded border border-border p-4 transition-colors hover:bg-muted/10">
+        <div className="group cursor-pointer rounded border border-border bg-fd-background p-4 transition-colors hover:bg-muted/10">
           <div className="mb-3 flex items-center gap-2">
             <Terminal className="h-4 w-4 text-primary" />
-            <span className="font-semibold text-sm sm:text-base">NPM_PACKAGE.JS</span>
+            <span className="font-semibold font-mono text-sm sm:text-base">NPM_PACKAGE.JS</span>
           </div>
 
           <div className="space-y-3">
