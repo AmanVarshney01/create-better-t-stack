@@ -18,7 +18,8 @@
     "directory": "packages/template-generator"
   },
   "files": [
-    "dist"
+    "dist",
+    "templates-binary"
   ],
   "type": "module",
   "exports": {

@@ -1,6 +1,7 @@
 import type { ProjectConfig } from "@better-t-stack/types";
 
 import Handlebars from "handlebars";
+import isBinaryPath from "is-binary-path";
 
 Handlebars.registerHelper("eq", (a, b) => a === b);
 Handlebars.registerHelper("ne", (a, b) => a !== b);
@@ -8,15 +9,12 @@ Handlebars.registerHelper("and", (...args) => args.slice(0, -1).every(Boolean));
 Handlebars.registerHelper("or", (...args) => args.slice(0, -1).some(Boolean));
 Handlebars.registerHelper("includes", (arr, val) => Array.isArray(arr) && arr.includes(val));
 
-const BINARY_EXTENSIONS = new Set([".png", ".ico", ".svg", ".jpg", ".jpeg", ".gif", ".webp"]);
-
 export function processTemplateString(content: string, context: ProjectConfig): string {
   return Handlebars.compile(content)(context);
 }
 
 export function isBinaryFile(filePath: string): boolean {
-  const ext = filePath.slice(filePath.lastIndexOf(".")).toLowerCase();
-  return BINARY_EXTENSIONS.has(ext);
+  return isBinaryPath(filePath);
 }
 
 export function transformFilename(filename: string): string {

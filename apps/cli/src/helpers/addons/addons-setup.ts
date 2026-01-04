@@ -6,6 +6,7 @@ import type { ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { setupFumadocs } from "./fumadocs-setup";
 import { setupOxlint } from "./oxlint-setup";
+import { setupRuler } from "./ruler-setup";
 import { setupStarlight } from "./starlight-setup";
 import { setupTauri } from "./tauri-setup";
 import { setupTui } from "./tui-setup";
@@ -77,6 +78,10 @@ export async function setupAddons(config: ProjectConfig) {
 
   if (hasUltracite) {
     await setupUltracite(config, hasHusky);
+  }
+
+  if (addons.includes("ruler")) {
+    await setupRuler(config);
   }
 }
 
