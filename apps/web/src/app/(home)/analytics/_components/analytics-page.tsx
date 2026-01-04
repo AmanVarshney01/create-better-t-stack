@@ -33,11 +33,7 @@ export default function AnalyticsPage({
   return (
     <div className="mx-auto min-h-svh">
       <div className="container mx-auto space-y-10 px-4 py-8 pt-16">
-        <AnalyticsHeader
-          totalProjects={data.totalProjects}
-          lastUpdated={data.lastUpdated}
-          legacy={legacy}
-        />
+        <AnalyticsHeader lastUpdated={data.lastUpdated} legacy={legacy} />
 
         <RangeSelector value={range} onChange={onRangeChange} isLoading={isLoading} />
 

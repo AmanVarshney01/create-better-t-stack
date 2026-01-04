@@ -3,11 +3,9 @@ import { Terminal } from "lucide-react";
 import Link from "next/link";
 
 export function AnalyticsHeader({
-  totalProjects,
   lastUpdated,
   legacy,
 }: {
-  totalProjects: number;
   lastUpdated: string | null;
   legacy: {
     total: number;

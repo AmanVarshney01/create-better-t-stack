@@ -242,36 +242,10 @@ export const getDailyStats = query({
 export const getAllEvents = query({
   args: {
     range: v.union(v.literal("30d"), v.literal("7d"), v.literal("1d"), v.literal("30m")),
-    limit: v.optional(v.number()),
   },
-  returns: v.array(
-    v.object({
-      _id: v.id("analyticsEvents"),
-      _creationTime: v.number(),
-      database: v.optional(v.string()),
-      orm: v.optional(v.string()),
-      backend: v.optional(v.string()),
-      runtime: v.optional(v.string()),
-      frontend: v.optional(v.array(v.string())),
-      addons: v.optional(v.array(v.string())),
-      examples: v.optional(v.array(v.string())),
-      auth: v.optional(v.string()),
-      payments: v.optional(v.string()),
-      git: v.optional(v.boolean()),
-      packageManager: v.optional(v.string()),
-      install: v.optional(v.boolean()),
-      dbSetup: v.optional(v.string()),
-      api: v.optional(v.string()),
-      webDeploy: v.optional(v.string()),
-      serverDeploy: v.optional(v.string()),
-      cli_version: v.optional(v.string()),
-      node_version: v.optional(v.string()),
-      platform: v.optional(v.string()),
-    }),
-  ),
   handler: async (ctx, args) => {
     const now = Date.now();
-    let cutoff = 0;
+    let cutoff: number;
 
     if (args.range === "30d") {
       cutoff = now - 30 * 24 * 60 * 60 * 1000;
@@ -283,16 +257,13 @@ export const getAllEvents = query({
       cutoff = now - 30 * 60 * 1000; // 30 mins
     }
 
-    const limit = args.limit ?? 100;
-    const result = [];
+    const events = await ctx.db
+      .query("analyticsEvents")
+      .order("desc")
+      .filter((q) => q.gte(q.field("_creationTime"), cutoff))
+      .collect();
 
-    for await (const ev of ctx.db.query("analyticsEvents").order("desc")) {
-      if (ev._creationTime < cutoff) break;
-      result.push(ev);
-      if (result.length >= limit) break;
-    }
-
-    return result;
+    return events;
   },
 });
 
