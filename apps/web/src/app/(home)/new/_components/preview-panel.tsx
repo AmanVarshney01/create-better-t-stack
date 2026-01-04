@@ -1,11 +1,12 @@
 "use client";
 
-import { Loader2, FolderTree, FileCode2, Info } from "lucide-react";
+import { Loader2, FolderTree, FileCode2, Info, ChevronLeft } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 
 import type { StackState } from "@/lib/constant";
 
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 import { CodeViewer, CodeViewerEmpty } from "./code-viewer";
 import { FileExplorer, type VirtualFile, type VirtualDirectory } from "./file-explorer";
@@ -33,6 +34,8 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
   const [selectedFile, setSelectedFile] = useState<VirtualFile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // On mobile, track whether we're viewing the file tree or the code
+  const [mobileView, setMobileView] = useState<"tree" | "code">("tree");
 
   const fetchPreview = useCallback(async () => {
     setIsLoading(true);
@@ -57,12 +60,15 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
           const file = findFileByPath(data.tree.root, selectedFilePath);
           if (file) {
             setSelectedFile(file);
+            setMobileView("code");
           } else {
             setSelectedFile(null);
             onSelectFile(null);
+            setMobileView("tree");
           }
         } else {
           setSelectedFile(null);
+          setMobileView("tree");
         }
       } else {
         setError(data.error || "Failed to generate preview");
@@ -83,6 +89,11 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
   const handleSelectFile = (file: VirtualFile) => {
     setSelectedFile(file);
     onSelectFile(file.path);
+    setMobileView("code");
+  };
+
+  const handleBackToTree = () => {
+    setMobileView("tree");
   };
 
   // Helper function to find a file by path in the tree
@@ -126,15 +137,42 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
   return (
     <div className="flex h-full flex-col overflow-hidden">
       {/* Stats bar */}
-      <div className="flex items-center gap-4 border-b border-border bg-muted/20 px-3 py-1.5">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+      <div className="flex items-center gap-2 border-b border-border bg-muted/20 px-3 py-1.5 sm:gap-4">
+        {/* Mobile back button when viewing code */}
+        {mobileView === "code" && selectedFile && (
+          <button
+            type="button"
+            onClick={handleBackToTree}
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground sm:hidden"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            <span>Files</span>
+          </button>
+        )}
+        <div
+          className={cn(
+            "flex items-center gap-1.5 text-xs text-muted-foreground",
+            mobileView === "code" && "hidden sm:flex",
+          )}
+        >
           <FolderTree className="h-3.5 w-3.5" />
           <span>{directoryCount} folders</span>
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <div
+          className={cn(
+            "flex items-center gap-1.5 text-xs text-muted-foreground",
+            mobileView === "code" && "hidden sm:flex",
+          )}
+        >
           <FileCode2 className="h-3.5 w-3.5" />
           <span>{fileCount} files</span>
         </div>
+        {/* Show current file name on mobile */}
+        {mobileView === "code" && selectedFile && (
+          <span className="truncate text-xs text-foreground sm:hidden">
+            {selectedFile.path.split("/").pop()}
+          </span>
+        )}
         <div className="ml-auto flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
@@ -153,10 +191,16 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
         </div>
       </div>
 
-      {/* Split view */}
+      {/* Split view - side by side on desktop, toggle on mobile */}
       <div className="flex flex-1 overflow-hidden">
-        {/* File explorer */}
-        <div className="w-48 shrink-0 overflow-hidden border-r border-border md:w-56 lg:w-64">
+        {/* File explorer - full width on mobile when tree view, hidden when code view */}
+        <div
+          className={cn(
+            "shrink-0 overflow-hidden border-r border-border",
+            "w-full sm:w-48 md:w-56 lg:w-64",
+            mobileView === "code" ? "hidden sm:block" : "block",
+          )}
+        >
           <FileExplorer
             root={tree}
             selectedPath={selectedFile?.path || selectedFilePath || null}
@@ -164,8 +208,13 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
           />
         </div>
 
-        {/* Code viewer */}
-        <div className="flex-1 overflow-hidden">
+        {/* Code viewer - full width on mobile when code view, hidden when tree view */}
+        <div
+          className={cn(
+            "flex-1 overflow-hidden",
+            mobileView === "tree" ? "hidden sm:block" : "block",
+          )}
+        >
           {selectedFile ? (
             <CodeViewer
               filePath={selectedFile.path}
