@@ -61,8 +61,9 @@ export const ingestEvent = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const now = Date.now();
-    await ctx.db.insert("analyticsEvents", args);
+    const id = await ctx.db.insert("analyticsEvents", args);
+    const event = await ctx.db.get(id);
+    const now = event!._creationTime;
 
     const hourKey = String(new Date(now).getUTCHours()).padStart(2, "0");
     const fe = args.frontend?.[0] || "none";
@@ -225,7 +226,8 @@ export const getDailyStats = query({
   handler: async (ctx, args) => {
     const days = args.days ?? 30;
     const now = Date.now();
-    const cutoffDate = new Date(now - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const today = new Date(now).toISOString().slice(0, 10);
+    const cutoffDate = new Date(now - (days - 1) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
     const allDaily = await ctx.db
       .query("analyticsDailyStats")
@@ -234,36 +236,20 @@ export const getDailyStats = query({
       .collect();
 
     return allDaily
-      .filter((d) => d.date >= cutoffDate)
+      .filter((d) => d.date >= cutoffDate && d.date <= today)
       .map((d) => ({ date: d.date, count: d.count }));
   },
 });
 
-export const getAllEvents = query({
-  args: {
-    range: v.union(v.literal("30d"), v.literal("7d"), v.literal("1d"), v.literal("30m")),
-  },
-  handler: async (ctx, args) => {
-    const now = Date.now();
-    let cutoff: number;
-
-    if (args.range === "30d") {
-      cutoff = now - 30 * 24 * 60 * 60 * 1000;
-    } else if (args.range === "7d") {
-      cutoff = now - 7 * 24 * 60 * 60 * 1000;
-    } else if (args.range === "1d") {
-      cutoff = now - 24 * 60 * 60 * 1000;
-    } else {
-      cutoff = now - 30 * 60 * 1000; // 30 mins
-    }
-
-    const events = await ctx.db
+export const getRecentEvents = query({
+  args: {},
+  handler: async (ctx) => {
+    const cutoff = Date.now() - 30 * 60 * 1000;
+    return await ctx.db
       .query("analyticsEvents")
       .order("desc")
       .filter((q) => q.gte(q.field("_creationTime"), cutoff))
       .collect();
-
-    return events;
   },
 });
 

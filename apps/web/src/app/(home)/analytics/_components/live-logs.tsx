@@ -14,7 +14,7 @@ export function LiveLogs() {
   const [isOpen, setIsOpen] = useState(false);
 
   // Only fetch when expanded - pass "skip" to skip the query when closed
-  const events = useQuery(api.analytics.getAllEvents, isOpen ? { range: "30m" } : "skip");
+  const events = useQuery(api.analytics.getRecentEvents, isOpen ? {} : "skip");
 
   return (
     <div className="rounded-md border border-border bg-[#0C0C0C] overflow-hidden shadow-sm">
