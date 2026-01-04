@@ -241,7 +241,8 @@ export const getDailyStats = query({
 
 export const getAllEvents = query({
   args: {
-    range: v.union(v.literal("30d"), v.literal("7d"), v.literal("1d")),
+    range: v.union(v.literal("30d"), v.literal("7d"), v.literal("1d"), v.literal("30m")),
+    limit: v.optional(v.number()),
   },
   returns: v.array(
     v.object({
@@ -270,14 +271,25 @@ export const getAllEvents = query({
   ),
   handler: async (ctx, args) => {
     const now = Date.now();
-    const days = args.range === "30d" ? 30 : args.range === "7d" ? 7 : 1;
-    const cutoff = now - days * 24 * 60 * 60 * 1000;
+    let cutoff = 0;
 
+    if (args.range === "30d") {
+      cutoff = now - 30 * 24 * 60 * 60 * 1000;
+    } else if (args.range === "7d") {
+      cutoff = now - 7 * 24 * 60 * 60 * 1000;
+    } else if (args.range === "1d") {
+      cutoff = now - 24 * 60 * 60 * 1000;
+    } else {
+      cutoff = now - 30 * 60 * 1000; // 30 mins
+    }
+
+    const limit = args.limit ?? 100;
     const result = [];
 
     for await (const ev of ctx.db.query("analyticsEvents").order("desc")) {
       if (ev._creationTime < cutoff) break;
       result.push(ev);
+      if (result.length >= limit) break;
     }
 
     return result;

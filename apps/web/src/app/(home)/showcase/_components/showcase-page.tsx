@@ -37,7 +37,7 @@ export default function ShowcasePage({
         </div>
 
         {showcaseProjects.length === 0 ? (
-          <div className="rounded border border-border p-8">
+          <div className="rounded border border-border bg-fd-background p-8">
             <div className="text-center">
               <div className="mb-4 flex items-center justify-center gap-2">
                 <span className="text-muted-foreground">NO_SHOWCASE_PROJECTS_FOUND.NULL</span>
@@ -59,7 +59,7 @@ export default function ShowcasePage({
         )}
 
         <div className="mt-8">
-          <div className="rounded border border-border p-4">
+          <div className="rounded border border-border bg-fd-background p-4">
             <div className="flex items-center gap-2 text-sm">
               <span className="text-primary">$</span>
               <span className="text-muted-foreground">

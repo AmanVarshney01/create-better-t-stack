@@ -3,120 +3,212 @@
 import { api } from "@better-t-stack/backend/convex/_generated/api";
 import { useQuery } from "convex/react";
 import { formatDistanceToNow } from "date-fns";
-import { Terminal, Activity, Server, Database, Globe } from "lucide-react";
+import { ChevronRight, Terminal, Radio } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { useState } from "react";
 
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export function LiveLogs() {
-  const events = useQuery(api.analytics.getAllEvents, { range: "1d" });
+  const events = useQuery(api.analytics.getAllEvents, { range: "30m" });
+  const [isOpen, setIsOpen] = useState(false);
 
-  if (!events) {
-    return (
-      <div className="rounded border border-border bg-fd-background p-4 animate-pulse h-[300px]">
-        <div className="flex items-center gap-2 mb-4">
-          <Terminal className="h-4 w-4 text-primary" />
-          <span className="font-bold font-mono text-sm">LIVE_PROJECT_LOGS.SH</span>
-        </div>
-        <div className="space-y-2">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-4 bg-muted/20 rounded w-full" />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  if (events === undefined) return null;
 
   return (
-    <div className="rounded border border-border bg-fd-background p-4 flex flex-col h-[400px]">
-      <div className="flex items-center justify-between mb-4 flex-shrink-0">
+    <div className="rounded border border-border bg-fd-background overflow-hidden">
+      <Button
+        variant="ghost"
+        className="w-full flex items-center justify-between p-4 h-auto hover:bg-muted/10 rounded-none group"
+        onClick={() => setIsOpen(!isOpen)}
+      >
         <div className="flex items-center gap-2">
-          <Terminal className="h-5 w-5 text-primary" />
-          <span className="font-bold font-mono text-lg sm:text-lg">LIVE_PROJECT_LOGS.SH</span>
+          <ChevronRight
+            className={cn(
+              "h-4 w-4 text-muted-foreground transition-transform duration-200",
+              isOpen && "rotate-90",
+            )}
+          />
+          <Terminal className="h-4 w-4 text-primary" />
+          <span className="font-bold font-mono text-sm">LIVE_PROJECT_LOGS.SH</span>
           <div className="flex items-center gap-1.5 ml-2 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20">
-            <span className="relative flex h-2 w-2">
+            <span className="relative flex h-1.5 w-1.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary"></span>
             </span>
-            <span className="text-[10px] font-mono font-medium text-primary">ONLINE</span>
+            <span className="text-[10px] font-mono font-medium text-primary leading-none">
+              ONLINE
+            </span>
           </div>
         </div>
-        <span className="text-muted-foreground text-xs font-mono hidden sm:inline-block">
-          [{events.length} EVENTS BUFFERED]
+        <span className="text-muted-foreground text-xs font-mono group-hover:text-foreground transition-colors">
+          {isOpen ? "[COLLAPSE]" : `[${events.length} EVENTS]`}
         </span>
-      </div>
+      </Button>
 
-      <div className="flex-1 min-h-0 rounded border border-border/50 bg-muted/10 font-mono text-xs sm:text-sm overflow-hidden relative">
-        <ScrollArea className="h-full w-full p-4">
-          <div className="space-y-1">
-            <AnimatePresence initial={false}>
-              {events.map((event) => {
-                const stackParts = [];
-                if (event.backend) stackParts.push(event.backend);
-                if (event.frontend && event.frontend.length > 0) stackParts.push(event.frontend[0]);
-                if (event.database) stackParts.push(event.database);
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            style={{ overflow: "hidden" }}
+          >
+            <div className="border-t border-border p-4 bg-muted/5 font-mono text-xs">
+              {events.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 gap-3">
+                  <div className="rounded-full border border-border bg-fd-background p-3">
+                    <Radio className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div className="text-center space-y-1">
+                    <p className="font-mono text-muted-foreground text-sm">
+                      NO_RECENT_ACTIVITY.LOG
+                    </p>
+                    <p className="text-muted-foreground/60 text-xs">
+                      No projects created in the last 30 minutes
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground/50 mt-2">
+                    <span className="text-primary">$</span>
+                    <span>awaiting next scaffold event...</span>
+                    <span className="animate-pulse">_</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <AnimatePresence initial={false} mode="popLayout">
+                    {events.map((event) => {
+                      const timeAgo = formatDistanceToNow(event._creationTime, { addSuffix: true });
+                      const time = new Date(event._creationTime).toLocaleTimeString([], {
+                        hour12: false,
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                      });
 
-                const stackString = stackParts.join(" + ");
-                const timeAgo = formatDistanceToNow(event._creationTime, { addSuffix: true });
+                      return (
+                        <motion.div
+                          key={event._id}
+                          layout
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="rounded border border-border/50 bg-fd-background p-3 hover:border-border transition-colors"
+                        >
+                          {/* Header */}
+                          <div className="flex items-center justify-between mb-2 pb-2 border-b border-border/30">
+                            <div className="flex items-center gap-2">
+                              <span className="text-primary">{">"}</span>
+                              <span className="font-semibold text-foreground">
+                                New Project Created
+                              </span>
+                              {event.packageManager && (
+                                <span
+                                  className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${
+                                    event.packageManager === "bun"
+                                      ? "bg-orange-500/10 text-orange-500"
+                                      : event.packageManager === "pnpm"
+                                        ? "bg-yellow-500/10 text-yellow-500"
+                                        : "bg-red-500/10 text-red-500"
+                                  }`}
+                                >
+                                  {event.packageManager}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 text-muted-foreground text-[10px]">
+                              <span>{time}</span>
+                              <span className="opacity-50">({timeAgo})</span>
+                            </div>
+                          </div>
 
-                return (
-                  <motion.div
-                    key={event._id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 py-1.5 border-b border-border/30 last:border-0 hover:bg-muted/10 px-2 rounded-sm"
-                  >
-                    <div className="flex items-center gap-2 min-w-[140px] text-muted-foreground">
-                      <span className="text-primary/70 shrink-0 select-none">{">"}</span>
-                      <span className="shrink-0 font-medium tabular-nums opacity-70 w-[110px]">
-                        {new Date(event._creationTime).toLocaleTimeString([], {
-                          hour12: false,
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          second: "2-digit",
-                        })}
-                      </span>
-                    </div>
-
-                    <div className="flex-1 flex flex-wrap items-center gap-2">
-                      <span className="text-foreground font-semibold">New Project Scaffolded</span>
-                      <span className="text-muted-foreground hidden sm:inline">-</span>
-                      <div className="flex items-center gap-1.5 text-accent">{stackString}</div>
-                    </div>
-
-                    <div className="flex items-center gap-3 shrink-0 text-[10px] sm:text-xs">
-                      <span
-                        className={`px-1.5 py-0.5 rounded border ${
-                          event.packageManager === "bun"
-                            ? "border-orange-500/20 text-orange-500 bg-orange-500/10"
-                            : event.packageManager === "pnpm"
-                              ? "border-yellow-500/20 text-yellow-500 bg-yellow-500/10"
-                              : "border-red-500/20 text-red-500 bg-red-500/10"
-                        }`}
-                      >
-                        {event.packageManager}
-                      </span>
-                      <span className="text-muted-foreground w-[80px] text-right truncate">
-                        {timeAgo}
-                      </span>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-
-            {events.length === 0 && (
-              <div className="text-muted-foreground italic py-4 text-center">
-                // Waiting for incoming connections...
-              </div>
-            )}
-          </div>
-        </ScrollArea>
-
-        {/* Scanline effect overlay */}
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-10 bg-[length:100%_2px,3px_100%] opacity-20"></div>
-      </div>
+                          {/* Stack Info */}
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-[11px]">
+                            {event.frontend && event.frontend.length > 0 && (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-muted-foreground">frontend:</span>
+                                <span className="text-accent">{event.frontend.join(", ")}</span>
+                              </div>
+                            )}
+                            {event.backend && (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-muted-foreground">backend:</span>
+                                <span className="text-accent">{event.backend}</span>
+                              </div>
+                            )}
+                            {event.database && (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-muted-foreground">database:</span>
+                                <span className="text-accent">{event.database}</span>
+                              </div>
+                            )}
+                            {event.orm && (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-muted-foreground">orm:</span>
+                                <span className="text-accent">{event.orm}</span>
+                              </div>
+                            )}
+                            {event.api && (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-muted-foreground">api:</span>
+                                <span className="text-accent">{event.api}</span>
+                              </div>
+                            )}
+                            {event.auth && (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-muted-foreground">auth:</span>
+                                <span className="text-accent">{event.auth}</span>
+                              </div>
+                            )}
+                            {event.runtime && (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-muted-foreground">runtime:</span>
+                                <span className="text-accent">{event.runtime}</span>
+                              </div>
+                            )}
+                            {event.platform && (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-muted-foreground">platform:</span>
+                                <span className="text-accent">{event.platform}</span>
+                              </div>
+                            )}
+                            {event.dbSetup && (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-muted-foreground">db_setup:</span>
+                                <span className="text-accent">{event.dbSetup}</span>
+                              </div>
+                            )}
+                            {event.addons && event.addons.length > 0 && (
+                              <div className="flex items-center gap-1.5 col-span-2">
+                                <span className="text-muted-foreground">addons:</span>
+                                <span className="text-accent">{event.addons.join(", ")}</span>
+                              </div>
+                            )}
+                            {event.examples && event.examples.length > 0 && (
+                              <div className="flex items-center gap-1.5 col-span-2">
+                                <span className="text-muted-foreground">examples:</span>
+                                <span className="text-accent">{event.examples.join(", ")}</span>
+                              </div>
+                            )}
+                            {event.cli_version && (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-muted-foreground">cli:</span>
+                                <span className="text-accent">{event.cli_version}</span>
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

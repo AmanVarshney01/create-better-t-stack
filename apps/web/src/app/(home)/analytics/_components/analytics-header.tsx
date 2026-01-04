@@ -33,11 +33,6 @@ export function AnalyticsHeader({
             Real-time usage statistics from create-better-t-stack
           </p>
         </div>
-
-        <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-1.5 font-mono text-xs">
-          <span className="text-muted-foreground">Total Projects:</span>
-          <span className="font-bold text-foreground">{totalProjects.toLocaleString()}</span>
-        </div>
       </div>
 
       <div className="rounded-lg border border-border bg-fd-background p-4 font-mono text-sm shadow-sm transition-colors hover:border-primary/50">
