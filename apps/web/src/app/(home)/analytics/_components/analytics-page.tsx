@@ -7,6 +7,7 @@ import type { AggregatedAnalyticsData } from "./types";
 import Footer from "../../_components/footer";
 import { AnalyticsHeader } from "./analytics-header";
 import { DevToolsSection } from "./dev-environment-charts";
+import { LiveLogs } from "./live-logs";
 import { MetricsCards } from "./metrics-cards";
 import { StackSection } from "./stack-configuration-charts";
 import { TimelineSection } from "./timeline-charts";
@@ -42,6 +43,12 @@ export default function AnalyticsPage({
 
         <MetricsCards data={data} />
 
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          <div className="lg:col-span-3">
+            <LiveLogs />
+          </div>
+        </div>
+
         <TimelineSection data={data} />
 
         <StackSection data={data} />
@@ -70,26 +77,33 @@ function RangeSelector({
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <span className="text-muted-foreground text-sm">Range:</span>
-      <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap items-center gap-4">
+      <span className="font-mono text-muted-foreground text-sm uppercase tracking-wider">
+        Range:
+      </span>
+      <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/30 p-1">
         {options.map((opt) => (
           <button
             key={opt.value}
             type="button"
             onClick={() => onChange(opt.value)}
             disabled={isLoading}
-            className={`rounded border px-3 py-1 text-sm transition-colors disabled:opacity-50 ${
+            className={`rounded-md px-3 py-1.5 font-medium text-xs transition-all disabled:opacity-50 ${
               value === opt.value
-                ? "border-primary bg-primary/10 text-primary"
-                : "border-border text-foreground hover:bg-muted/60"
+                ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+                : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
             }`}
           >
             {opt.label}
           </button>
         ))}
       </div>
-      {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+      {isLoading && (
+        <div className="flex items-center gap-2 text-primary">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span className="font-mono text-xs">syncing...</span>
+        </div>
+      )}
     </div>
   );
 }

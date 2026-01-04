@@ -23,63 +23,84 @@ export function AnalyticsHeader({
 
   return (
     <div className="mb-4">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
-        <div className="flex items-center gap-2">
-          <Terminal className="h-5 w-5 text-primary" />
-          <span className="font-bold text-lg sm:text-xl">CLI_ANALYTICS</span>
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4 sm:flex-nowrap">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 text-primary">
+            <Terminal className="h-5 w-5" />
+            <h1 className="font-bold font-mono text-xl sm:text-2xl">CLI_ANALYTICS.JSON</h1>
+          </div>
+          <p className="text-muted-foreground text-sm">
+            Real-time usage statistics from create-better-t-stack
+          </p>
         </div>
-        <div className="hidden h-px flex-1 bg-border sm:block" />
-        <span className="text-muted-foreground text-xs">
-          [{totalProjects.toLocaleString()} projects]
-        </span>
+
+        <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-1.5 font-mono text-xs">
+          <span className="text-muted-foreground">Total Projects:</span>
+          <span className="font-bold text-foreground">{totalProjects.toLocaleString()}</span>
+        </div>
       </div>
 
-      <div className="rounded rounded-b-none border border-border p-4 font-mono text-sm">
-        <div className="flex items-center gap-2">
-          <span className="text-primary">$</span>
-          <span>Real-time analytics from Better-T-Stack CLI</span>
-        </div>
-        <div className="mt-2 flex items-center gap-2 text-muted-foreground">
-          <span className="text-primary">$</span>
-          <span>No personal data collected - anonymous usage stats only</span>
-        </div>
-        <div className="mt-2 flex items-center gap-2 text-muted-foreground">
-          <span className="text-primary">$</span>
-          <span>
-            Source:{" "}
-            <Link
-              href="https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/cli/src/utils/analytics.ts"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent underline hover:text-primary"
-            >
-              analytics.ts
-            </Link>
-          </span>
-        </div>
-        {formattedDate && (
-          <div className="mt-2 flex items-center gap-2 text-muted-foreground">
-            <span className="text-primary">$</span>
-            <span>Last event: {formattedDate}</span>
-          </div>
-        )}
-        <div className="mt-2 flex flex-col gap-1 rounded border border-border/60 bg-muted/30 p-3 text-muted-foreground text-xs">
+      <div className="rounded-lg border border-border bg-fd-background p-4 font-mono text-sm shadow-sm transition-colors hover:border-primary/50">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <span className="text-primary">$</span>
-            <span className="font-semibold text-foreground">Legacy totals (pre-Convex)</span>
+            <span className="text-muted-foreground">status:</span>
+            <span className="text-green-500">online</span>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <span className="font-mono text-foreground">
-              {legacy.total.toLocaleString()} projects
+          {formattedDate && (
+            <div className="flex items-center gap-2 text-muted-foreground text-xs">
+              <span>last_event:</span>
+              <span className="text-foreground">{formattedDate}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="my-3 h-px w-full bg-border/50" />
+
+        <div className="space-y-1.5 text-muted-foreground text-xs">
+          <div className="flex items-start gap-2">
+            <span className="mt-0.5 text-primary shrink-0">&gt;</span>
+            <span>No personal data collected - anonymous usage stats only</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="mt-0.5 text-primary shrink-0">&gt;</span>
+            <span>
+              Source code:{" "}
+              <Link
+                href="https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/cli/src/utils/analytics.ts"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent underline underline-offset-2 hover:text-primary"
+              >
+                apps/cli/src/utils/analytics.ts
+              </Link>
             </span>
-            <span className="font-mono">avg/day {legacy.avgPerDay.toFixed(1)}</span>
-            <span className="font-mono">as of {legacyDate}</span>
-            <span className="font-mono">source: {legacy.source}</span>
           </div>
-          <span>
-            Notes: Legacy stats are frozen at the last PostHog run; live Convex stats continue
-            below.
-          </span>
+        </div>
+
+        <div className="mt-4 flex flex-col gap-2 rounded border border-border/50 bg-muted/20 p-3 text-xs">
+          <div className="flex items-center gap-2 font-semibold">
+            <span className="text-primary">#</span>
+            <span className="text-foreground">Legacy Data (pre-Convex)</span>
+          </div>
+          <div className="grid grid-cols-1 gap-x-8 gap-y-1 sm:grid-cols-2 md:grid-cols-4">
+            <div>
+              <span className="text-muted-foreground">Total:</span>{" "}
+              <span className="text-foreground">{legacy.total.toLocaleString()}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Avg/Day:</span>{" "}
+              <span className="text-foreground">{legacy.avgPerDay.toFixed(1)}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">As of:</span>{" "}
+              <span className="text-foreground">{legacyDate}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Source:</span>{" "}
+              <span className="text-foreground">{legacy.source}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

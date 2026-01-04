@@ -611,7 +611,7 @@ const StackBuilder = () => {
                         >
                           <div className="mb-3 flex items-center border-border border-b pb-2 text-muted-foreground">
                             <Terminal className="mr-2 h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
-                            <h2 className="font-semibold text-foreground text-sm sm:text-base">
+                            <h2 className="font-semibold font-mono text-foreground text-sm sm:text-base">
                               {categoryDisplayName}
                             </h2>
                             {compatibilityAnalysis.notes[categoryKey]?.hasIssue && (
@@ -674,7 +674,7 @@ const StackBuilder = () => {
                                             ? "border-primary bg-primary/10"
                                             : isDisabled
                                               ? "border-destructive/30 bg-destructive/5 opacity-50 hover:opacity-75"
-                                              : "border-border hover:border-muted hover:bg-muted",
+                                              : "border-border bg-fd-background hover:border-muted hover:bg-muted/10",
                                         )}
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
@@ -770,7 +770,7 @@ const StackBuilder = () => {
                       >
                         <div className="mb-3 flex items-center border-border border-b pb-2 text-muted-foreground">
                           <Terminal className="mr-2 h-4 w-4 shrink-0" />
-                          <h2 className="font-semibold text-foreground text-sm">
+                          <h2 className="font-semibold font-mono text-foreground text-sm">
                             {categoryDisplayName}
                           </h2>
                           {compatibilityAnalysis.notes[categoryKey]?.hasIssue && (

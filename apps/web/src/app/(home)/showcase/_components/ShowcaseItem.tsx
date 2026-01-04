@@ -26,14 +26,16 @@ export default function ShowcaseItem({
   const projectId = `PROJECT_${String(index + 1).padStart(3, "0")}`;
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded border border-border">
+    <div className="group flex h-full flex-col overflow-hidden rounded border border-border bg-fd-background transition-colors hover:bg-muted/10">
       <div className="border-border border-b px-3 py-2">
         <div className="flex items-center gap-2">
           <File className="h-3 w-3 text-primary" />
-          <span className="font-semibold text-foreground text-xs">{projectId}.PROJECT</span>
+          <span className="font-semibold font-mono text-foreground text-xs">
+            {projectId}.PROJECT
+          </span>
           <div className="ml-auto flex items-center gap-2 text-muted-foreground text-xs">
             <span>•</span>
-            <span>{tags.length} DEPS</span>
+            <span className="font-mono">{tags.length} DEPS</span>
           </div>
         </div>
       </div>
