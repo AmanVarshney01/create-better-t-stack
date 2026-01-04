@@ -21,6 +21,20 @@ export function getTemplatesRoot(): string {
   throw new Error("Templates directory not found. Checked: " + possiblePaths.join(", "));
 }
 
+export function getBinaryTemplatesRoot(): string {
+  const possiblePaths = [
+    join(__dirname, "../templates-binary"),
+    join(__dirname, "../../templates-binary"),
+    join(__dirname, "../../../templates-binary"),
+  ];
+
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) return p;
+  }
+
+  throw new Error("Binary templates directory not found. Checked: " + possiblePaths.join(", "));
+}
+
 export async function loadTemplates(prefix?: string): Promise<Map<string, string>> {
   const templatesRoot = getTemplatesRoot();
   const searchDir = prefix ? join(templatesRoot, prefix) : templatesRoot;

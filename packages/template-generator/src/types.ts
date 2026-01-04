@@ -6,6 +6,7 @@ export interface VirtualFile {
   name: string;
   content: string;
   extension: string;
+  sourcePath?: string; // Original template path for binary files
 }
 
 export interface VirtualDirectory {

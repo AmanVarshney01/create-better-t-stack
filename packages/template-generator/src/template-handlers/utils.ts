@@ -35,7 +35,9 @@ export function processSingleTemplate(
     processedContent = content;
   }
 
-  vfs.writeFile(destPath, processedContent);
+  // Pass original template path for binary files
+  const sourcePath = isBinaryFile(templateKey) ? templateKey : undefined;
+  vfs.writeFile(destPath, processedContent, sourcePath);
 }
 
 export function processTemplatesFromPrefix(
@@ -63,6 +65,8 @@ export function processTemplatesFromPrefix(
       processedContent = content;
     }
 
-    vfs.writeFile(destPath, processedContent);
+    // Pass original template path for binary files
+    const sourcePath = isBinaryFile(templatePath) ? templatePath : undefined;
+    vfs.writeFile(destPath, processedContent, sourcePath);
   }
 }

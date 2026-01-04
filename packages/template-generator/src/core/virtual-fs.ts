@@ -8,6 +8,7 @@ import type { VirtualDirectory, VirtualFile } from "../types";
 export class VirtualFileSystem {
   private _fs: ReturnType<typeof memfs>["fs"];
   private _vol: ReturnType<typeof memfs>["vol"];
+  private _sourcePathMap: Map<string, string> = new Map();
 
   constructor() {
     const { fs, vol } = memfs();
@@ -15,13 +16,16 @@ export class VirtualFileSystem {
     this._vol = vol;
   }
 
-  writeFile(filePath: string, content: string): void {
+  writeFile(filePath: string, content: string, sourcePath?: string): void {
     const path = this.normalizePath(filePath);
     const dir = dirname(path);
     if (dir && dir !== "/" && dir !== ".") {
       this._fs.mkdirSync(dir, { recursive: true });
     }
     this._fs.writeFileSync(path, content, { encoding: "utf-8" });
+    if (sourcePath) {
+      this._sourcePathMap.set(path, sourcePath);
+    }
   }
 
   readFile(filePath: string): string | undefined {
@@ -123,6 +127,7 @@ export class VirtualFileSystem {
     const { fs, vol } = memfs();
     this._fs = fs;
     this._vol = vol;
+    this._sourcePathMap.clear();
   }
 
   getVolume() {
@@ -163,13 +168,18 @@ export class VirtualFileSystem {
           this.buildTree(fullPath, dirNode);
         } else if (entry.isFile()) {
           const content = this._fs.readFileSync(fullPath, "utf-8") as string;
-          parent.children.push({
+          const sourcePath = this._sourcePathMap.get(fullPath);
+          const fileNode: VirtualFile = {
             type: "file",
             path: relativePath,
             name: entry.name,
             content,
             extension: extname(entry.name).slice(1),
-          } as VirtualFile);
+          };
+          if (sourcePath) {
+            fileNode.sourcePath = sourcePath;
+          }
+          parent.children.push(fileNode);
         }
       }
     } catch {}
