@@ -18,6 +18,7 @@ import { processPaymentsDeps } from "./payments-deps";
 import { processPwaPlugins } from "./pwa-plugins";
 import { processReadme } from "./readme-generator";
 import { processRuntimeDeps } from "./runtime-deps";
+import { processTurboConfig } from "./turbo-generator";
 import { processWorkspaceDeps } from "./workspace-deps";
 
 export function processDependencies(vfs: VirtualFileSystem, config: ProjectConfig): void {
@@ -33,6 +34,7 @@ export function processDependencies(vfs: VirtualFileSystem, config: ProjectConfi
   processDeployDeps(vfs, config);
   processAddonsDeps(vfs, config);
   processExamplesDeps(vfs, config);
+  processTurboConfig(vfs, config);
 }
 
 export {
@@ -48,6 +50,7 @@ export {
   processPaymentsDeps,
   processReadme,
   processRuntimeDeps,
+  processTurboConfig,
   processWorkspaceDeps,
   processAuthPlugins,
   processAlchemyPlugins,

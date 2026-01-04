@@ -14,6 +14,9 @@ export async function processAddonTemplates(
   for (const addon of config.addons) {
     if (addon === "none") continue;
 
+    // turborepo is handled programmatically by turbo-generator.ts
+    if (addon === "turborepo") continue;
+
     if (addon === "pwa") {
       if (config.frontend.includes("next")) {
         processTemplatesFromPrefix(vfs, templates, "addons/pwa/apps/web/next", "apps/web", config);
