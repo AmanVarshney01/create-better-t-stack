@@ -1,94 +1,58 @@
-import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, Tooltip, XAxis, YAxis } from "recharts";
+"use client";
 
-import { ChartContainer, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
+import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, YAxis } from "recharts";
+
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 
 import type { AggregatedAnalyticsData, Distribution } from "./types";
 
-import { chartConfig, getColor, truncateLabel } from "./types";
+import { ChartCard } from "./chart-card";
 
-function CustomYAxisTick({
-  x,
-  y,
-  payload,
-  maxChars = 11,
-}: {
-  x: number;
-  y: number;
-  payload: { value: string };
-  maxChars?: number;
-}) {
-  const label = truncateLabel(String(payload.value), maxChars);
-  return (
-    <g transform={`translate(${x},${y})`}>
-      <text x={-4} y={0} dy={4} textAnchor="end" fill="hsl(var(--muted-foreground))" fontSize={11}>
-        {label}
-      </text>
-    </g>
-  );
-}
+const CHART_COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+];
 
-function ChartCard({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="group rounded border border-border bg-fd-background transition-colors hover:bg-muted/10">
-      <div className="space-y-4 p-4">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-primary text-xs">$</span>
-              <span className="font-semibold font-mono text-sm">{title}</span>
-            </div>
-            <p className="text-muted-foreground text-xs">{description}</p>
-          </div>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function CustomTooltip({
-  active,
-  payload,
-}: {
-  active?: boolean;
-  payload?: Array<{ value: number; payload: { name: string } }>;
-}) {
-  if (!active || !payload?.length) return null;
-  const item = payload[0];
-  return (
-    <div className="rounded border border-border/50 bg-background px-3 py-2 text-xs shadow-lg">
-      <p className="font-medium">{item.payload.name}</p>
-      <p className="text-muted-foreground">{item.value.toLocaleString()} projects</p>
-    </div>
-  );
+function getChartConfig(data: Distribution): ChartConfig {
+  const config: ChartConfig = {};
+  for (const [index, item] of data.entries()) {
+    config[item.name] = {
+      label: item.name,
+      color: CHART_COLORS[index % CHART_COLORS.length],
+    };
+  }
+  return config;
 }
 
 function BarChartComponent({ data, height = 280 }: { data: Distribution; height?: number }) {
+  const chartConfig = getChartConfig(data);
+
   return (
-    <ChartContainer config={chartConfig} style={{ height }} className="w-full">
-      <BarChart data={data} layout="vertical" margin={{ left: 4, right: 12, top: 4, bottom: 4 }}>
-        <CartesianGrid horizontal={false} className="stroke-border/40" />
-        <XAxis type="number" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
-        <YAxis
+    <ChartContainer config={chartConfig} style={{ height }} className="w-full min-h-[200px]">
+      <BarChart accessibilityLayer data={data} margin={{ left: -10, right: 8, top: 8, bottom: 4 }}>
+        <CartesianGrid vertical={false} />
+        <XAxis
           dataKey="name"
-          type="category"
           tickLine={false}
           axisLine={false}
-          width={85}
-          tick={(props) => <CustomYAxisTick {...props} maxChars={11} />}
+          tickMargin={10}
+          tickFormatter={(value) => (value.length > 20 ? `${value.slice(0, 20)}…` : value)}
         />
-        <Tooltip content={<CustomTooltip />} cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }} />
-        <Bar dataKey="value" radius={3}>
-          {data.map((entry, i) => (
-            <Cell key={entry.name} fill={getColor(i)} />
+        <YAxis tickLine={false} axisLine={false} width={35} />
+        <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
+        <Bar dataKey="value" radius={4}>
+          {data.map((entry, index) => (
+            <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
           ))}
         </Bar>
       </BarChart>
@@ -97,26 +61,12 @@ function BarChartComponent({ data, height = 280 }: { data: Distribution; height?
 }
 
 function PieChartComponent({ data }: { data: Distribution }) {
-  const total = data.reduce((sum, d) => sum + d.value, 0);
+  const chartConfig = getChartConfig(data);
 
   return (
-    <ChartContainer config={chartConfig} className="h-[280px] w-full">
+    <ChartContainer config={chartConfig} className="h-[280px] w-full min-h-[200px]">
       <PieChart>
-        <Tooltip
-          content={({ active, payload }) => {
-            if (!active || !payload?.length) return null;
-            const item = payload[0].payload as { name: string; value: number };
-            const percent = ((item.value / total) * 100).toFixed(1);
-            return (
-              <div className="rounded border border-border/50 bg-background px-3 py-2 text-xs shadow-lg">
-                <p className="font-medium">{item.name}</p>
-                <p className="text-muted-foreground">
-                  {item.value.toLocaleString()} ({percent}%)
-                </p>
-              </div>
-            );
-          }}
-        />
+        <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
         <Pie
           data={data}
           cx="50%"
@@ -124,17 +74,14 @@ function PieChartComponent({ data }: { data: Distribution }) {
           outerRadius={65}
           innerRadius={35}
           dataKey="value"
+          nameKey="name"
           paddingAngle={2}
         >
-          {data.map((entry, i) => (
-            <Cell key={entry.name} fill={getColor(i)} />
+          {data.map((entry, index) => (
+            <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
           ))}
         </Pie>
-        <ChartLegend
-          content={<ChartLegendContent nameKey="name" />}
-          formatter={(value) => truncateLabel(String(value), 10)}
-          wrapperStyle={{ fontSize: 11 }}
-        />
+        <ChartLegend content={<ChartLegendContent nameKey="name" />} />
       </PieChart>
     </ChartContainer>
   );
