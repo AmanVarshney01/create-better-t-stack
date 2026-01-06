@@ -58,7 +58,7 @@ function VerticalBarChart({ data, height = 280 }: { data: Distribution; height?:
           tickMargin={10}
           tickFormatter={(value) => (value.length > 20 ? `${value.slice(0, 20)}…` : value)}
         />
-        <YAxis tickLine={false} axisLine={false} />
+        <YAxis tickLine={false} axisLine={false} width={16} />
         <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
         <Bar dataKey="value" radius={4}>
           {data.map((entry, index) => (
@@ -88,7 +88,7 @@ function VersionBarChart({ data, height = 280 }: { data: VersionDistribution; he
           tickMargin={10}
           tickFormatter={(value) => (value.length > 7 ? `${value.slice(0, 7)}…` : value)}
         />
-        <YAxis tickLine={false} axisLine={false} />
+        <YAxis tickLine={false} axisLine={false} width={16} />
         <ChartTooltip content={<ChartTooltipContent hideIndicator />} />
         <Bar dataKey="count" fill="var(--chart-5)" radius={4} />
       </BarChart>

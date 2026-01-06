@@ -52,7 +52,7 @@ function BarChartComponent({ data, height = 280 }: { data: Distribution; height?
           tickMargin={10}
           tickFormatter={(value) => (value.length > 20 ? `${value.slice(0, 20)}…` : value)}
         />
-        <YAxis tickLine={false} axisLine={false} />
+        <YAxis tickLine={false} axisLine={false} width={16} />
         <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
         <Bar dataKey="value" radius={4}>
           {data.map((entry, index) => (
