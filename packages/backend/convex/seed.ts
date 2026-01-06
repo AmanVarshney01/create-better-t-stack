@@ -353,10 +353,16 @@ export const ingestSeedEvent = internalMutation({
 });
 
 export const rebuildStats = mutation({
-  args: {},
+  args: {
+    preserveTimeline: v.optional(v.boolean()),
+  },
   returns: v.null(),
-  handler: async (ctx) => {
+  handler: async (ctx, args) => {
+    const preserveTimeline = args.preserveTimeline ?? true;
+
     const existingStats = await ctx.db.query("analyticsStats").first();
+    const existingHourlyDistribution = existingStats?.hourlyDistribution || {};
+
     if (existingStats) {
       await ctx.db.delete(existingStats._id);
     }
@@ -386,7 +392,7 @@ export const rebuildStats = mutation({
       install: { ...emptyDist },
       nodeVersion: { ...emptyDist },
       cliVersion: { ...emptyDist },
-      hourlyDistribution: { ...emptyDist },
+      hourlyDistribution: preserveTimeline ? { ...existingHourlyDistribution } : { ...emptyDist },
       stackCombinations: { ...emptyDist },
       dbOrmCombinations: { ...emptyDist },
     };
@@ -397,7 +403,6 @@ export const rebuildStats = mutation({
         stats.lastEventTime = ev._creationTime;
       }
 
-      const hourKey = String(new Date(ev._creationTime).getUTCHours()).padStart(2, "0");
       const fe = ev.frontend?.[0] || "none";
       const be = ev.backend || "none";
       const stackKey = `${be} + ${fe}`;
@@ -449,7 +454,11 @@ export const rebuildStats = mutation({
       if (ev.cli_version)
         stats.cliVersion[ev.cli_version] = (stats.cliVersion[ev.cli_version] || 0) + 1;
 
-      stats.hourlyDistribution[hourKey] = (stats.hourlyDistribution[hourKey] || 0) + 1;
+      if (!preserveTimeline) {
+        const hourKey = String(new Date(ev._creationTime).getUTCHours()).padStart(2, "0");
+        stats.hourlyDistribution[hourKey] = (stats.hourlyDistribution[hourKey] || 0) + 1;
+      }
+
       stats.stackCombinations[stackKey] = (stats.stackCombinations[stackKey] || 0) + 1;
       stats.dbOrmCombinations[dbOrmKey] = (stats.dbOrmCombinations[dbOrmKey] || 0) + 1;
     }
