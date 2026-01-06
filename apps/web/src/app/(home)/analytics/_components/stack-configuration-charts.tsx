@@ -39,7 +39,7 @@ function BarChartComponent({ data, height = 280 }: { data: Distribution; height?
 
   return (
     <ChartContainer config={chartConfig} style={{ height }} className="w-full min-h-[200px]">
-      <BarChart accessibilityLayer data={data} margin={{ left: -10, right: 8, top: 8, bottom: 4 }}>
+      <BarChart accessibilityLayer data={data}>
         <CartesianGrid vertical={false} />
         <XAxis
           dataKey="name"
@@ -48,7 +48,7 @@ function BarChartComponent({ data, height = 280 }: { data: Distribution; height?
           tickMargin={10}
           tickFormatter={(value) => (value.length > 20 ? `${value.slice(0, 20)}…` : value)}
         />
-        <YAxis tickLine={false} axisLine={false} width={35} />
+        <YAxis tickLine={false} axisLine={false} />
         <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
         <Bar dataKey="value" radius={4}>
           {data.map((entry, index) => (
@@ -144,13 +144,11 @@ export function StackSection({ data }: { data: AggregatedAnalyticsData }) {
         <ChartCard title="runtime.pie" description="JavaScript runtime preference">
           <PieChartComponent data={runtimeDistribution} />
         </ChartCard>
-
-        {dbSetupDistribution.length > 0 && (
-          <ChartCard title="db_hosting.bar" description="Database hosting service choices">
-            <BarChartComponent data={dbSetupDistribution} />
-          </ChartCard>
-        )}
       </div>
+
+      <ChartCard title="db_hosting.bar" description="Database hosting service choices">
+        <BarChartComponent data={dbSetupDistribution} height={320} />
+      </ChartCard>
 
       <ChartCard title="db_orm_combos.bar" description="Popular database + ORM combinations">
         <BarChartComponent data={databaseORMCombinations} height={320} />

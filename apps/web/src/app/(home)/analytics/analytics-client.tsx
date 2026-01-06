@@ -61,16 +61,10 @@ function buildFromPrecomputed(
   const platformDistribution = recordToDistribution(stats.platform);
   const addonsDistribution = recordToDistribution(stats.addons);
   const examplesDistribution = recordToDistribution(stats.examples);
-  const dbSetupDistribution = recordToDistribution(stats.dbSetup).filter((d) => d.name !== "none");
-  const webDeployDistribution = recordToDistribution(stats.webDeploy).filter(
-    (d) => d.name !== "none",
-  );
-  const serverDeployDistribution = recordToDistribution(stats.serverDeploy).filter(
-    (d) => d.name !== "none",
-  );
-  const paymentsDistribution = recordToDistribution(stats.payments).filter(
-    (d) => d.name !== "none",
-  );
+  const dbSetupDistribution = recordToDistribution(stats.dbSetup);
+  const webDeployDistribution = recordToDistribution(stats.webDeploy);
+  const serverDeployDistribution = recordToDistribution(stats.serverDeploy);
+  const paymentsDistribution = recordToDistribution(stats.payments);
   const gitDistribution = recordToDistribution(stats.git);
   const installDistribution = recordToDistribution(stats.install);
   const nodeVersionDistribution = recordToDistribution(stats.nodeVersion).map((d) => ({

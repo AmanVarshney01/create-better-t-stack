@@ -45,7 +45,7 @@ function VerticalBarChart({ data, height = 280 }: { data: Distribution; height?:
 
   return (
     <ChartContainer config={chartConfig} className="w-full min-h-[200px]" style={{ height }}>
-      <BarChart accessibilityLayer data={data} margin={{ left: -10, right: 8, top: 8, bottom: 4 }}>
+      <BarChart accessibilityLayer data={data}>
         <CartesianGrid vertical={false} />
         <XAxis
           dataKey="name"
@@ -54,7 +54,7 @@ function VerticalBarChart({ data, height = 280 }: { data: Distribution; height?:
           tickMargin={10}
           tickFormatter={(value) => (value.length > 20 ? `${value.slice(0, 20)}…` : value)}
         />
-        <YAxis tickLine={false} axisLine={false} width={35} />
+        <YAxis tickLine={false} axisLine={false} />
         <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
         <Bar dataKey="value" radius={4}>
           {data.map((entry, index) => (
@@ -71,7 +71,7 @@ function VersionBarChart({ data, height = 280 }: { data: VersionDistribution; he
 
   return (
     <ChartContainer config={chartConfig} className="w-full min-h-[200px]" style={{ height }}>
-      <BarChart accessibilityLayer data={data} margin={{ left: -10, right: 8, top: 8, bottom: 4 }}>
+      <BarChart accessibilityLayer data={data}>
         <CartesianGrid vertical={false} />
         <XAxis
           dataKey="version"
@@ -80,7 +80,7 @@ function VersionBarChart({ data, height = 280 }: { data: VersionDistribution; he
           tickMargin={10}
           tickFormatter={(value) => (value.length > 7 ? `${value.slice(0, 7)}…` : value)}
         />
-        <YAxis tickLine={false} axisLine={false} width={35} />
+        <YAxis tickLine={false} axisLine={false} />
         <ChartTooltip content={<ChartTooltipContent hideIndicator />} />
         <Bar dataKey="count" fill="var(--chart-5)" radius={4} />
       </BarChart>

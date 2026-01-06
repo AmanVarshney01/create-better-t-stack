@@ -72,11 +72,7 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
       <div className="grid gap-6 lg:grid-cols-2">
         <ChartCard title="daily_projects.chart" description="Project creations over time">
           <ChartContainer config={areaChartConfig} className="h-[280px] w-full min-h-[200px]">
-            <AreaChart
-              accessibilityLayer
-              data={timeSeries}
-              margin={{ left: -10, right: 8, top: 8, bottom: 4 }}
-            >
+            <AreaChart accessibilityLayer data={timeSeries}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="date"
@@ -86,7 +82,7 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
                 tickFormatter={(val) => format(parseISO(val), "d")}
                 interval="preserveStartEnd"
               />
-              <YAxis tickLine={false} axisLine={false} width={35} />
+              <YAxis tickLine={false} axisLine={false} />
               <ChartTooltip
                 content={
                   <ChartTooltipContent
@@ -112,11 +108,7 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
 
         <ChartCard title="monthly_trends.bar" description="Monthly project volume">
           <ChartContainer config={barChartConfig} className="h-[280px] w-full min-h-[200px]">
-            <BarChart
-              accessibilityLayer
-              data={monthlyTimeSeries}
-              margin={{ left: -10, right: 8, top: 8, bottom: 4 }}
-            >
+            <BarChart accessibilityLayer data={monthlyTimeSeries}>
               <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="month"
@@ -125,7 +117,7 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
                 tickMargin={10}
                 tickFormatter={(val) => val.slice(5)}
               />
-              <YAxis tickLine={false} axisLine={false} width={35} />
+              <YAxis tickLine={false} axisLine={false} />
               <ChartTooltip content={<ChartTooltipContent hideIndicator />} />
               <Bar dataKey="count" fill="var(--chart-2)" radius={4} />
             </BarChart>
@@ -157,11 +149,7 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
 
         <ChartCard title="hourly_activity.bar" description="Projects by hour (UTC)">
           <ChartContainer config={hourlyChartConfig} className="h-[280px] w-full min-h-[200px]">
-            <BarChart
-              accessibilityLayer
-              data={hourlyDistribution}
-              margin={{ left: -10, right: 8, top: 8, bottom: 4 }}
-            >
+            <BarChart accessibilityLayer data={hourlyDistribution}>
               <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="hour"
@@ -171,7 +159,7 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
                 interval={3}
                 tickFormatter={(val) => val.replace(":00", "")}
               />
-              <YAxis tickLine={false} axisLine={false} width={30} />
+              <YAxis tickLine={false} axisLine={false} />
               <ChartTooltip
                 content={
                   <ChartTooltipContent labelFormatter={(value) => `${value} UTC`} hideIndicator />
