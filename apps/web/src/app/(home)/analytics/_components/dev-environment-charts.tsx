@@ -44,7 +44,11 @@ function VerticalBarChart({ data, height = 280 }: { data: Distribution; height?:
   const chartConfig = getChartConfig(data);
 
   return (
-    <ChartContainer config={chartConfig} className="w-full min-h-[200px]" style={{ height }}>
+    <ChartContainer
+      config={chartConfig}
+      className="aspect-auto w-full min-h-[200px]"
+      style={{ height }}
+    >
       <BarChart accessibilityLayer data={data}>
         <CartesianGrid vertical={false} />
         <XAxis
@@ -70,7 +74,11 @@ function VersionBarChart({ data, height = 280 }: { data: VersionDistribution; he
   const chartConfig = getVersionChartConfig();
 
   return (
-    <ChartContainer config={chartConfig} className="w-full min-h-[200px]" style={{ height }}>
+    <ChartContainer
+      config={chartConfig}
+      className="aspect-auto w-full min-h-[200px]"
+      style={{ height }}
+    >
       <BarChart accessibilityLayer data={data}>
         <CartesianGrid vertical={false} />
         <XAxis
@@ -92,7 +100,7 @@ function PieChartComponent({ data }: { data: Distribution }) {
   const chartConfig = getChartConfig(data);
 
   return (
-    <ChartContainer config={chartConfig} className="h-[280px] w-full min-h-[200px]">
+    <ChartContainer config={chartConfig} className="aspect-auto h-[280px] w-full min-h-[200px]">
       <PieChart>
         <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
         <Pie

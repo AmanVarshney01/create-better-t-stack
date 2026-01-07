@@ -71,7 +71,10 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <ChartCard title="daily_projects.chart" description="Project creations over time">
-          <ChartContainer config={areaChartConfig} className="h-[280px] w-full min-h-[200px]">
+          <ChartContainer
+            config={areaChartConfig}
+            className="aspect-auto h-[280px] w-full min-h-[200px]"
+          >
             <AreaChart accessibilityLayer data={timeSeries}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
@@ -107,7 +110,10 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
         </ChartCard>
 
         <ChartCard title="monthly_trends.bar" description="Monthly project volume">
-          <ChartContainer config={barChartConfig} className="h-[280px] w-full min-h-[200px]">
+          <ChartContainer
+            config={barChartConfig}
+            className="aspect-auto h-[280px] w-full min-h-[200px]"
+          >
             <BarChart accessibilityLayer data={monthlyTimeSeries}>
               <CartesianGrid vertical={false} />
               <XAxis
@@ -125,7 +131,10 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
         </ChartCard>
 
         <ChartCard title="platform_distribution.pie" description="Operating system usage">
-          <ChartContainer config={platformChartConfig} className="h-[280px] w-full min-h-[200px]">
+          <ChartContainer
+            config={platformChartConfig}
+            className="aspect-auto h-[280px] w-full min-h-[200px]"
+          >
             <PieChart>
               <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
               <Pie
@@ -148,7 +157,10 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
         </ChartCard>
 
         <ChartCard title="hourly_activity.bar" description="Projects by hour (UTC)">
-          <ChartContainer config={hourlyChartConfig} className="h-[280px] w-full min-h-[200px]">
+          <ChartContainer
+            config={hourlyChartConfig}
+            className="aspect-auto h-[280px] w-full min-h-[200px]"
+          >
             <BarChart accessibilityLayer data={hourlyDistribution}>
               <CartesianGrid vertical={false} />
               <XAxis
