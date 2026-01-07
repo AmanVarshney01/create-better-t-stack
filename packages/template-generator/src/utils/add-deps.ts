@@ -69,9 +69,9 @@ export const dependencyVersionMap = {
 
   "@elysiajs/node": "^1.3.1",
 
-  "@elysiajs/cors": "^1.3.3",
+  "@elysiajs/cors": "^1.4.1",
   "@elysiajs/trpc": "^1.1.0",
-  elysia: "^1.3.21",
+  elysia: "^1.4.21",
 
   "@hono/node-server": "^1.14.4",
   "@hono/trpc-server": "^0.4.0",
