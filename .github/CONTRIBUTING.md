@@ -95,33 +95,7 @@ This repository is organized as a monorepo containing:
    npx convex env set GITHUB_WEBHOOK_SECRET=xxxxx
    ```
 
-5. **Seed the database (optional)**
-   To populate the database with sample analytics data for local development, run:
-
-   ```bash
-   cd packages/backend
-   npx convex run seed:seedAnalytics
-   ```
-
-   You can customize the seeding with optional arguments:
-
-   ```bash
-   # Seed 200 events over 90 days, clearing existing data first
-   npx convex run seed:seedAnalytics '{"count": 200, "days": 90, "clearExisting": true}'
-   ```
-
-   Available options:
-   - `count`: Number of events to generate (default: 100)
-   - `days`: Time range in days for events (default: 60)
-   - `clearExisting`: Clear existing data before seeding (default: false)
-
-   To rebuild aggregated stats from existing events:
-
-   ```bash
-   npx convex run seed:rebuildStats
-   ```
-
-6. **Start the documentation website**
+5. **Start the documentation website**
    ```bash
    bun dev
    ```
