@@ -85,7 +85,7 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
                 tickFormatter={(val) => format(parseISO(val), "d")}
                 interval="preserveStartEnd"
               />
-              <YAxis tickLine={false} axisLine={false} width={16} />
+              <YAxis tickLine={false} axisLine={false} />
               <ChartTooltip
                 content={
                   <ChartTooltipContent
@@ -123,7 +123,7 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
                 tickMargin={10}
                 tickFormatter={(val) => val.slice(5)}
               />
-              <YAxis tickLine={false} axisLine={false} width={16} />
+              <YAxis tickLine={false} axisLine={false} />
               <ChartTooltip content={<ChartTooltipContent hideIndicator />} />
               <Bar dataKey="count" fill="var(--chart-2)" radius={4} />
             </BarChart>
@@ -171,7 +171,7 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
                 interval={3}
                 tickFormatter={(val) => val.replace(":00", "")}
               />
-              <YAxis tickLine={false} axisLine={false} width={16} />
+              <YAxis tickLine={false} axisLine={false} />
               <ChartTooltip
                 content={
                   <ChartTooltipContent labelFormatter={(value) => `${value} UTC`} hideIndicator />
