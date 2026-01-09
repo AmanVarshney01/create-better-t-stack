@@ -63,11 +63,19 @@ This project uses Convex as a backend. You'll need to set up Convex before runni
 ${packageManagerRunCmd} dev:setup
 \`\`\`
 
-Follow the prompts to create a new Convex project and connect it to your application.${
-        auth === "clerk"
-          ? " See [Convex + Clerk guide](https://docs.convex.dev/auth/clerk) for auth setup."
-          : ""
-      }`
+Follow the prompts to create a new Convex project and connect it to your application.
+
+Copy environment variables from \`packages/backend/.env.local\` to \`apps/*/.env\`.
+${
+  auth === "clerk"
+    ? `
+### Clerk Authentication Setup
+
+- Follow the guide: [Convex + Clerk](https://docs.convex.dev/auth/clerk)
+- Set \`CLERK_JWT_ISSUER_DOMAIN\` in Convex Dashboard
+- Set \`CLERK_PUBLISHABLE_KEY\` in \`apps/*/.env\``
+    : ""
+}`
     : generateDatabaseSetup(database, packageManagerRunCmd, orm, dbSetup, backend)
 }
 
@@ -84,6 +92,7 @@ ${
     : ""
 }
 ${generateDeploymentCommands(packageManagerRunCmd, webDeploy, serverDeploy)}
+${generateGitHooksSection(packageManagerRunCmd, addons)}
 
 ## Project Structure
 
@@ -492,17 +501,17 @@ function generateDeploymentCommands(
 
   if (webDeploy === "cloudflare" && serverDeploy !== "cloudflare") {
     lines.push(
-      `- Web dev: cd apps/web && ${packageManagerRunCmd} dev`,
-      `- Web deploy: cd apps/web && ${packageManagerRunCmd} deploy`,
-      `- Web destroy: cd apps/web && ${packageManagerRunCmd} destroy`,
+      `- Dev: cd apps/web && ${packageManagerRunCmd} alchemy dev`,
+      `- Deploy: cd apps/web && ${packageManagerRunCmd} deploy`,
+      `- Destroy: cd apps/web && ${packageManagerRunCmd} destroy`,
     );
   }
 
   if (serverDeploy === "cloudflare" && webDeploy !== "cloudflare") {
     lines.push(
-      `- Server dev: cd apps/server && ${packageManagerRunCmd} dev`,
-      `- Server deploy: cd apps/server && ${packageManagerRunCmd} deploy`,
-      `- Server destroy: cd apps/server && ${packageManagerRunCmd} destroy`,
+      `- Dev: cd apps/server && ${packageManagerRunCmd} dev`,
+      `- Deploy: cd apps/server && ${packageManagerRunCmd} deploy`,
+      `- Destroy: cd apps/server && ${packageManagerRunCmd} destroy`,
     );
   }
 
@@ -520,4 +529,28 @@ function generateDeploymentCommands(
   );
 
   return `${lines.join("\n")}\n`;
+}
+
+function generateGitHooksSection(
+  packageManagerRunCmd: string,
+  addons: ProjectConfig["addons"],
+): string {
+  const hasHusky = addons.includes("husky");
+  const hasLinting = addons.includes("biome") || addons.includes("oxlint");
+
+  if (!hasHusky && !hasLinting) {
+    return "";
+  }
+
+  const lines: string[] = ["## Git Hooks and Formatting", ""];
+
+  if (hasHusky) {
+    lines.push(`- Initialize hooks: \`${packageManagerRunCmd} prepare\``);
+  }
+
+  if (hasLinting) {
+    lines.push(`- Format and lint fix: \`${packageManagerRunCmd} check\``);
+  }
+
+  return `${lines.join("\n")}\n\n`;
 }
