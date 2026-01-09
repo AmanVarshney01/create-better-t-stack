@@ -1,4 +1,4 @@
-import { autocompleteMultiselect, group, log, multiselect, spinner } from "@clack/prompts";
+import { group, log, multiselect, select, spinner } from "@clack/prompts";
 import { $ } from "execa";
 import pc from "picocolors";
 
@@ -6,104 +6,90 @@ import type { ProjectConfig } from "../../types";
 
 import { exitCancelled } from "../../utils/errors";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
-import { setupBiome } from "./addons-setup";
 
-type UltraciteEditor = "vscode" | "zed";
-type UltraciteAgent =
-  | "vscode-copilot"
+type UltraciteLinter = "biome" | "eslint" | "oxlint";
+
+type UltraciteEditor =
+  | "vscode"
   | "cursor"
   | "windsurf"
-  | "zed"
+  | "antigravity"
+  | "kiro"
+  | "trae"
+  | "void"
+  | "zed";
+
+type UltraciteAgent =
   | "claude"
   | "codex"
-  | "kiro"
+  | "jules"
+  | "copilot"
   | "cline"
   | "amp"
   | "aider"
   | "firebase-studio"
   | "open-hands"
-  | "gemini-cli"
+  | "gemini"
   | "junie"
   | "augmentcode"
   | "kilo-code"
   | "goose"
-  | "roo-code";
+  | "roo-code"
+  | "warp"
+  | "droid"
+  | "opencode"
+  | "crush"
+  | "qwen"
+  | "amazon-q-cli"
+  | "firebender";
 
-type UltraciteHook = "cursor" | "claude";
+type UltraciteHook = "cursor" | "windsurf";
+
+const LINTERS = {
+  biome: { label: "Biome", hint: "Fast formatter and linter" },
+  eslint: { label: "ESLint", hint: "Traditional JavaScript linter" },
+  oxlint: { label: "Oxlint", hint: "Oxidation compiler linter" },
+} as const;
 
 const EDITORS = {
-  vscode: {
-    label: "VSCode / Cursor / Windsurf",
-  },
-  zed: {
-    label: "Zed",
-  },
+  vscode: { label: "VS Code" },
+  cursor: { label: "Cursor" },
+  windsurf: { label: "Windsurf" },
+  antigravity: { label: "Antigravity" },
+  kiro: { label: "Kiro" },
+  trae: { label: "Trae" },
+  void: { label: "Void" },
+  zed: { label: "Zed" },
 } as const;
 
 const AGENTS = {
-  "vscode-copilot": {
-    label: "VS Code Copilot",
-  },
-  cursor: {
-    label: "Cursor",
-  },
-  windsurf: {
-    label: "Windsurf",
-  },
-  zed: {
-    label: "Zed",
-  },
-  claude: {
-    label: "Claude",
-  },
-  codex: {
-    label: "Codex",
-  },
-  kiro: {
-    label: "Kiro",
-  },
-  cline: {
-    label: "Cline",
-  },
-  amp: {
-    label: "Amp",
-  },
-  aider: {
-    label: "Aider",
-  },
-  "firebase-studio": {
-    label: "Firebase Studio",
-  },
-  "open-hands": {
-    label: "Open Hands",
-  },
-  "gemini-cli": {
-    label: "Gemini CLI",
-  },
-  junie: {
-    label: "Junie",
-  },
-  augmentcode: {
-    label: "AugmentCode",
-  },
-  "kilo-code": {
-    label: "Kilo Code",
-  },
-  goose: {
-    label: "Goose",
-  },
-  "roo-code": {
-    label: "Roo Code",
-  },
+  claude: { label: "Claude" },
+  codex: { label: "Codex" },
+  jules: { label: "Jules" },
+  copilot: { label: "GitHub Copilot" },
+  cline: { label: "Cline" },
+  amp: { label: "Amp" },
+  aider: { label: "Aider" },
+  "firebase-studio": { label: "Firebase Studio" },
+  "open-hands": { label: "Open Hands" },
+  gemini: { label: "Gemini" },
+  junie: { label: "Junie" },
+  augmentcode: { label: "AugmentCode" },
+  "kilo-code": { label: "Kilo Code" },
+  goose: { label: "Goose" },
+  "roo-code": { label: "Roo Code" },
+  warp: { label: "Warp" },
+  droid: { label: "Droid" },
+  opencode: { label: "OpenCode" },
+  crush: { label: "Crush" },
+  qwen: { label: "Qwen" },
+  "amazon-q-cli": { label: "Amazon Q CLI" },
+  firebender: { label: "Firebender" },
 } as const;
 
 const HOOKS = {
-  cursor: {
-    label: "Cursor",
-  },
-  claude: {
-    label: "Claude",
-  },
+  cursor: { label: "Cursor" },
+  windsurf: { label: "Windsurf" },
 } as const;
 
 function getFrameworksFromFrontend(frontend: string[]): string[] {
@@ -137,10 +123,18 @@ export async function setupUltracite(config: ProjectConfig, gitHooks: string[]) 
   try {
     log.info("Setting up Ultracite...");
 
-    await setupBiome(projectDir);
-
     const result = await group(
       {
+        linter: () =>
+          select<UltraciteLinter>({
+            message: "Choose linter/formatter",
+            options: Object.entries(LINTERS).map(([key, linter]) => ({
+              value: key as UltraciteLinter,
+              label: linter.label,
+              hint: linter.hint,
+            })),
+            initialValue: "biome" as UltraciteLinter,
+          }),
         editors: () =>
           multiselect<UltraciteEditor>({
             message: "Choose editors",
@@ -151,7 +145,7 @@ export async function setupUltracite(config: ProjectConfig, gitHooks: string[]) 
             required: true,
           }),
         agents: () =>
-          autocompleteMultiselect<UltraciteAgent>({
+          multiselect<UltraciteAgent>({
             message: "Choose agents",
             options: Object.entries(AGENTS).map(([key, agent]) => ({
               value: key as UltraciteAgent,
@@ -160,7 +154,7 @@ export async function setupUltracite(config: ProjectConfig, gitHooks: string[]) 
             required: true,
           }),
         hooks: () =>
-          autocompleteMultiselect<UltraciteHook>({
+          multiselect<UltraciteHook>({
             message: "Choose hooks",
             options: Object.entries(HOOKS).map(([key, hook]) => ({
               value: key as UltraciteHook,
@@ -175,12 +169,13 @@ export async function setupUltracite(config: ProjectConfig, gitHooks: string[]) 
       },
     );
 
+    const linter = result.linter as UltraciteLinter;
     const editors = result.editors as UltraciteEditor[];
     const agents = result.agents as UltraciteAgent[];
     const hooks = result.hooks as UltraciteHook[];
     const frameworks = getFrameworksFromFrontend(frontend);
 
-    const ultraciteArgs = ["init", "--pm", packageManager];
+    const ultraciteArgs = ["init", "--pm", packageManager, "--linter", linter];
 
     if (frameworks.length > 0) {
       ultraciteArgs.push("--frameworks", ...frameworks);

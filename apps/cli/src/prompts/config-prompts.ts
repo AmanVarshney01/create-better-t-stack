@@ -1,5 +1,3 @@
-import { group } from "@clack/prompts";
-
 import type {
   Addons,
   API,
@@ -29,6 +27,7 @@ import { getExamplesChoice } from "./examples";
 import { getFrontendChoice } from "./frontend";
 import { getGitChoice } from "./git";
 import { getinstallChoice } from "./install";
+import { navigableGroup } from "./navigable-group";
 import { getORMChoice } from "./orm";
 import { getPackageManagerChoice } from "./package-manager";
 import { getPaymentsChoice } from "./payments";
@@ -61,7 +60,7 @@ export async function gatherConfig(
   projectDir: string,
   relativePath: string,
 ) {
-  const result = await group<PromptGroupResults>(
+  const result = await navigableGroup<PromptGroupResults>(
     {
       frontend: () => getFrontendChoice(flags.frontend, flags.backend, flags.auth),
       backend: ({ results }) => getBackendFrameworkChoice(flags.backend, results.frontend),

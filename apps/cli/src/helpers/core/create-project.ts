@@ -1,127 +1,58 @@
+import { generateVirtualProject, EMBEDDED_TEMPLATES } from "@better-t-stack/template-generator";
+import { writeTreeToFilesystem } from "@better-t-stack/template-generator/fs-writer";
 import { log } from "@clack/prompts";
+import { $ } from "execa";
 import fs from "fs-extra";
+import path from "node:path";
 
 import type { ProjectConfig } from "../../types";
 
 import { writeBtsConfig } from "../../utils/bts-config";
+import { isSilent } from "../../utils/context";
 import { exitWithError } from "../../utils/errors";
-import { setupCatalogs } from "../../utils/setup-catalogs";
+import { formatProject } from "../../utils/file-formatter";
 import { setupAddons } from "../addons/addons-setup";
-import { setupExamples } from "../addons/examples-setup";
-import { setupApi } from "../core/api-setup";
-import { setupBackendDependencies } from "../core/backend-setup";
 import { setupDatabase } from "../core/db-setup";
-import { setupRuntime } from "../core/runtime-setup";
-import { setupServerDeploy } from "../deployment/server-deploy-setup";
-import { setupWebDeploy } from "../deployment/web-deploy-setup";
-import { setupAuth } from "./auth-setup";
-import { createReadme } from "./create-readme";
-import { setupEnvPackageDependencies } from "./env-package-setup";
-import { setupEnvironmentVariables } from "./env-setup";
 import { initializeGit } from "./git";
-import { setupInfraPackageDependencies } from "./infra-package-setup";
 import { installDependencies } from "./install-dependencies";
-import { setupPayments } from "./payments-setup";
 import { displayPostInstallInstructions } from "./post-installation";
-import { updatePackageConfigurations } from "./project-config";
-import {
-  copyBaseTemplate,
-  handleExtras,
-  setupAddonsTemplate,
-  setupAuthTemplate,
-  setupBackendFramework,
-  setupDeploymentTemplates,
-  setupDockerComposeTemplates,
-  setupExamplesTemplate,
-  setupFrontendTemplates,
-  setupPaymentsTemplate,
-} from "./template-manager";
 
 export interface CreateProjectOptions {
   manualDb?: boolean;
-  /** When true, skip all console output (for programmatic API use) */
-  silent?: boolean;
 }
 
 export async function createProject(options: ProjectConfig, cliInput: CreateProjectOptions = {}) {
-  const { silent = false } = cliInput;
   const projectDir = options.projectDir;
   const isConvex = options.backend === "convex";
-  const isSelfBackend = options.backend === "self";
-  const needsServerSetup = !isConvex && !isSelfBackend;
 
   try {
     await fs.ensureDir(projectDir);
 
-    await copyBaseTemplate(projectDir, options);
-    await setupFrontendTemplates(projectDir, options);
+    const result = await generateVirtualProject({
+      config: options,
+      templates: EMBEDDED_TEMPLATES,
+    });
 
-    await setupBackendFramework(projectDir, options);
-
-    if (needsServerSetup || (isSelfBackend && options.dbSetup === "docker")) {
-      await setupDockerComposeTemplates(projectDir, options);
+    if (!result.success || !result.tree) {
+      throw new Error(result.error || "Failed to generate project templates");
     }
 
-    await setupAuthTemplate(projectDir, options);
-    if (options.payments && options.payments !== "none") {
-      await setupPaymentsTemplate(projectDir, options);
-    }
-    if (options.examples.length > 0 && options.examples[0] !== "none") {
-      await setupExamplesTemplate(projectDir, options);
-    }
-    await setupAddonsTemplate(projectDir, options);
+    await writeTreeToFilesystem(result.tree, projectDir);
+    await setPackageManagerVersion(projectDir, options.packageManager);
 
-    await setupDeploymentTemplates(projectDir, options);
-
-    await setupEnvPackageDependencies(projectDir, options);
-    if (options.serverDeploy === "cloudflare" || options.webDeploy === "cloudflare") {
-      await setupInfraPackageDependencies(projectDir, options);
-    }
-
-    await setupApi(options);
-
-    if (isConvex || needsServerSetup) {
-      await setupBackendDependencies(options);
-    }
-
-    if (!isConvex) {
-      if (needsServerSetup) {
-        await setupRuntime(options);
-      }
+    if (!isConvex && options.database !== "none") {
       await setupDatabase(options, cliInput);
-    }
-
-    if (options.examples.length > 0 && options.examples[0] !== "none") {
-      await setupExamples(options);
     }
 
     if (options.addons.length > 0 && options.addons[0] !== "none") {
       await setupAddons(options);
     }
 
-    if (options.auth && options.auth !== "none") {
-      await setupAuth(options);
-    }
-
-    if (options.payments && options.payments !== "none") {
-      await setupPayments(options);
-    }
-
-    await handleExtras(projectDir, options);
-
-    await setupEnvironmentVariables(options);
-    await updatePackageConfigurations(projectDir, options);
-
-    await setupWebDeploy(options);
-    await setupServerDeploy(options);
-
-    await setupCatalogs(projectDir, options);
-
-    await createReadme(projectDir, options);
-
     await writeBtsConfig(options);
 
-    if (!silent) log.success("Project template successfully scaffolded!");
+    await formatProject(projectDir);
+
+    if (!isSilent()) log.success("Project template successfully scaffolded!");
 
     if (options.install) {
       await installDependencies({
@@ -132,7 +63,7 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
 
     await initializeGit(projectDir, options.git);
 
-    if (!silent) {
+    if (!isSilent()) {
       await displayPostInstallInstructions({
         ...options,
         depsInstalled: options.install,
@@ -142,11 +73,31 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
     return projectDir;
   } catch (error) {
     if (error instanceof Error) {
-      if (!silent) console.error(error.stack);
+      if (!isSilent()) console.error(error.stack);
       exitWithError(`Error during project creation: ${error.message}`);
     } else {
-      if (!silent) console.error(error);
+      if (!isSilent()) console.error(error);
       exitWithError(`An unexpected error occurred: ${String(error)}`);
     }
+  }
+}
+
+async function setPackageManagerVersion(
+  projectDir: string,
+  packageManager: ProjectConfig["packageManager"],
+): Promise<void> {
+  const pkgJsonPath = path.join(projectDir, "package.json");
+  if (!(await fs.pathExists(pkgJsonPath))) return;
+
+  try {
+    const { stdout } = await $`${packageManager} -v`;
+    const version = stdout.trim();
+    const pkgJson = await fs.readJson(pkgJsonPath);
+    pkgJson.packageManager = `${packageManager}@${version}`;
+    await fs.writeJson(pkgJsonPath, pkgJson, { spaces: 2 });
+  } catch {
+    const pkgJson = await fs.readJson(pkgJsonPath);
+    delete pkgJson.packageManager;
+    await fs.writeJson(pkgJsonPath, pkgJson, { spaces: 2 });
   }
 }

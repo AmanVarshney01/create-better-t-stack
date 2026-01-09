@@ -1,0 +1,67 @@
+{
+  "name": "@better-t-stack/template-generator",
+  "version": "3.14.2",
+  "description": "Virtual file system generator for Better-T-Stack templates - works in browsers and Node.js",
+  "keywords": [
+    "better-t-stack",
+    "cli",
+    "template-generator",
+    "typescript",
+    "virtual-fs"
+  ],
+  "homepage": "https://better-t-stack.dev/",
+  "license": "MIT",
+  "author": "Aman Varshney",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AmanVarshney01/create-better-t-stack.git",
+    "directory": "packages/template-generator"
+  },
+  "files": [
+    "dist",
+    "templates-binary"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    },
+    "./fs-writer": {
+      "types": "./dist/fs-writer.d.mts",
+      "default": "./dist/fs-writer.mjs"
+    },
+    "./template-reader": {
+      "types": "./dist/template-reader.d.mts",
+      "default": "./dist/template-reader.mjs"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "generate-templates": "bun scripts/generate-templates.ts",
+    "prebuild": "bun run generate-templates",
+    "build": "tsdown",
+    "prepublishOnly": "bun run build",
+    "dev": "tsdown --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@better-t-stack/types": "^3.14.2",
+    "handlebars": "^4.7.8",
+    "memfs": "^4.51.1",
+    "pathe": "^2.0.3",
+    "ts-morph": "^27.0.2",
+    "yaml": "^2.8.2"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.10.2",
+    "fs-extra": "^11.3.3",
+    "is-binary-path": "^3.0.0",
+    "tinyglobby": "^0.2.15",
+    "tsdown": "^0.17.2",
+    "typescript": "^5.7.2"
+  }
+}

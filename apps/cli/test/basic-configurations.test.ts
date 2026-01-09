@@ -107,7 +107,7 @@ describe("Basic Configurations", () => {
 
   describe("Installation Options", () => {
     // Skip install test in CI to avoid timeouts
-    const runInstallTest = process.env.AGENT ? it.skip : it;
+    const runInstallTest = process.env.CI ? it.skip : it;
 
     runInstallTest(
       "should work with install enabled",
@@ -169,7 +169,7 @@ describe("Basic Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Input validation failed");
+      expectError(result, "Invalid project name");
     });
 
     it("should fail when combining --yes with configuration flags", async () => {

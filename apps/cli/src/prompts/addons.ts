@@ -1,9 +1,8 @@
-import { groupMultiselect, isCancel } from "@clack/prompts";
-
 import { DEFAULT_CONFIG } from "../constants";
 import { type Addons, AddonsSchema, type Auth, type Frontend } from "../types";
 import { getCompatibleAddons, validateAddonCompatibility } from "../utils/compatibility-rules";
 import { exitCancelled } from "../utils/errors";
+import { isCancel, navigableGroupMultiselect } from "./navigable";
 
 type AddonOption = {
   value: Addons;
@@ -60,7 +59,14 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "Fumadocs";
       hint = "Build excellent documentation site";
       break;
-
+    case "opentui":
+      label = "OpenTUI";
+      hint = "Build terminal user interfaces";
+      break;
+    case "wxt":
+      label = "WXT";
+      hint = "Build browser extensions";
+      break;
     default:
       label = addon;
       hint = `Add ${addon}`;
@@ -70,10 +76,9 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 }
 
 const ADDON_GROUPS = {
+  Tooling: ["turborepo", "biome", "oxlint", "ultracite", "husky", "lefthook"],
   Documentation: ["starlight", "fumadocs"],
-  Linting: ["biome", "oxlint", "ultracite"],
-  "Git Hooks": ["lefthook", "husky"],
-  Other: ["ruler", "turborepo", "pwa", "tauri"],
+  Extensions: ["pwa", "tauri", "opentui", "wxt", "ruler"],
 };
 
 export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[], auth?: Auth) {
@@ -81,10 +86,9 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
 
   const allAddons = AddonsSchema.options.filter((addon) => addon !== "none");
   const groupedOptions: Record<string, AddonOption[]> = {
+    Tooling: [],
     Documentation: [],
-    Linting: [],
-    "Git Hooks": [],
-    Other: [],
+    Extensions: [],
   };
 
   const frontendsArray = frontends || [];
@@ -96,14 +100,12 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
     const { label, hint } = getAddonDisplay(addon);
     const option = { value: addon, label, hint };
 
-    if (ADDON_GROUPS.Documentation.includes(addon)) {
+    if (ADDON_GROUPS.Tooling.includes(addon)) {
+      groupedOptions.Tooling.push(option);
+    } else if (ADDON_GROUPS.Documentation.includes(addon)) {
       groupedOptions.Documentation.push(option);
-    } else if (ADDON_GROUPS.Linting.includes(addon)) {
-      groupedOptions.Linting.push(option);
-    } else if (ADDON_GROUPS["Git Hooks"].includes(addon)) {
-      groupedOptions["Git Hooks"].push(option);
-    } else if (ADDON_GROUPS.Other.includes(addon)) {
-      groupedOptions.Other.push(option);
+    } else if (ADDON_GROUPS.Extensions.includes(addon)) {
+      groupedOptions.Extensions.push(option);
     }
   }
 
@@ -126,12 +128,11 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
     ),
   );
 
-  const response = await groupMultiselect<Addons>({
+  const response = await navigableGroupMultiselect<Addons>({
     message: "Select addons",
     options: groupedOptions,
     initialValues: initialValues,
     required: false,
-    selectableGroups: false,
   });
 
   if (isCancel(response)) return exitCancelled("Operation cancelled");
@@ -145,10 +146,9 @@ export async function getAddonsToAdd(
   auth?: Auth,
 ) {
   const groupedOptions: Record<string, AddonOption[]> = {
+    Tooling: [],
     Documentation: [],
-    Linting: [],
-    "Git Hooks": [],
-    Other: [],
+    Extensions: [],
   };
 
   const frontendArray = frontend || [];
@@ -164,14 +164,12 @@ export async function getAddonsToAdd(
     const { label, hint } = getAddonDisplay(addon);
     const option = { value: addon, label, hint };
 
-    if (ADDON_GROUPS.Documentation.includes(addon)) {
+    if (ADDON_GROUPS.Tooling.includes(addon)) {
+      groupedOptions.Tooling.push(option);
+    } else if (ADDON_GROUPS.Documentation.includes(addon)) {
       groupedOptions.Documentation.push(option);
-    } else if (ADDON_GROUPS.Linting.includes(addon)) {
-      groupedOptions.Linting.push(option);
-    } else if (ADDON_GROUPS["Git Hooks"].includes(addon)) {
-      groupedOptions["Git Hooks"].push(option);
-    } else if (ADDON_GROUPS.Other.includes(addon)) {
-      groupedOptions.Other.push(option);
+    } else if (ADDON_GROUPS.Extensions.includes(addon)) {
+      groupedOptions.Extensions.push(option);
     }
   }
 
@@ -192,11 +190,10 @@ export async function getAddonsToAdd(
     return [];
   }
 
-  const response = await groupMultiselect<Addons>({
+  const response = await navigableGroupMultiselect<Addons>({
     message: "Select addons to add",
     options: groupedOptions,
     required: false,
-    selectableGroups: false,
   });
 
   if (isCancel(response)) return exitCancelled("Operation cancelled");

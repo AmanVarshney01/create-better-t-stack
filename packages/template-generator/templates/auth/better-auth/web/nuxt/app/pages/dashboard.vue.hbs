@@ -1,0 +1,99 @@
+<script setup lang="ts">
+{{#if (eq api "orpc")}}
+import { useQuery } from '@tanstack/vue-query'
+{{/if}}
+
+const { $authClient, $orpc } = useNuxtApp()
+
+definePageMeta({
+  middleware: ['auth']
+})
+
+const session = $authClient.useSession()
+
+{{#if (eq payments "polar")}}
+const customerState = ref<any>(null)
+{{/if}}
+
+{{#if (eq api "orpc")}}
+const privateData = useQuery({
+  ...$orpc.privateData.queryOptions(),
+  enabled: computed(() => !!session.value?.data?.user)
+})
+{{/if}}
+
+{{#if (eq payments "polar")}}
+onMounted(async () => {
+  if (session.value?.data) {
+    const { data } = await $authClient.customer.state()
+    customerState.value = data
+  }
+})
+
+const hasProSubscription = computed(() => 
+  customerState.value?.activeSubscriptions?.length! > 0
+)
+{{/if}}
+</script>
+
+<template>
+  <UContainer class="py-8">
+    <UPageHeader
+      title="Dashboard"
+      :description="session?.data?.user ? `Welcome back, ${session.data.user.name}!` : 'Loading...'"
+    />
+
+    <div class="mt-6 space-y-4">
+      {{#if (eq api "orpc")}}
+      <UCard>
+        <template #header>
+          <div class="font-medium">Private Data</div>
+        </template>
+
+        <USkeleton v-if="privateData.status.value === 'pending'" class="h-6 w-48" />
+
+        <UAlert
+          v-else-if="privateData.status.value === 'error'"
+          color="error"
+          icon="i-lucide-alert-circle"
+          title="Error loading data"
+          :description="privateData.error.value?.message || 'Failed to load private data'"
+        />
+
+        <div v-else-if="privateData.data.value" class="flex items-center gap-2">
+          <UIcon name="i-lucide-check-circle" class="text-success" />
+          <span>\{{ privateData.data.value.message }}</span>
+        </div>
+      </UCard>
+      {{/if}}
+
+      {{#if (eq payments "polar")}}
+      <UCard>
+        <template #header>
+          <div class="font-medium">Subscription</div>
+        </template>
+
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <UIcon :name="hasProSubscription ? 'i-lucide-crown' : 'i-lucide-user'" :class="hasProSubscription ? 'text-warning' : 'text-muted'" />
+            <span>Plan: \{{ hasProSubscription ? "Pro" : "Free" }}</span>
+          </div>
+          <UButton 
+            v-if="hasProSubscription"
+            variant="outline"
+            @click="() => { $authClient.customer.portal() }"
+          >
+            Manage Subscription
+          </UButton>
+          <UButton 
+            v-else
+            @click="() => { $authClient.checkout({ slug: 'pro' }) }"
+          >
+            Upgrade to Pro
+          </UButton>
+        </div>
+      </UCard>
+      {{/if}}
+    </div>
+  </UContainer>
+</template>

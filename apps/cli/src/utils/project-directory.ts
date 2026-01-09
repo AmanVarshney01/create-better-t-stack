@@ -4,9 +4,10 @@ import path from "node:path";
 import pc from "picocolors";
 
 import { getProjectName } from "../prompts/project-name";
+import { isSilent } from "./context";
 import { exitCancelled, handleError } from "./errors";
 
-export async function handleDirectoryConflict(currentPathInput: string, silent = false) {
+export async function handleDirectoryConflict(currentPathInput: string) {
   while (true) {
     const resolvedPath = path.resolve(process.cwd(), currentPathInput);
     const dirExists = await fs.pathExists(resolvedPath);
@@ -16,7 +17,7 @@ export async function handleDirectoryConflict(currentPathInput: string, silent =
       return { finalPathInput: currentPathInput, shouldClearDirectory: false };
     }
 
-    if (silent) {
+    if (isSilent()) {
       throw new Error(
         `Directory "${currentPathInput}" already exists and is not empty. In silent mode, please provide a different project name or clear the directory manually.`,
       );

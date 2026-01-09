@@ -61,8 +61,9 @@ export const ingestEvent = internalMutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const now = Date.now();
-    await ctx.db.insert("analyticsEvents", args);
+    const id = await ctx.db.insert("analyticsEvents", args);
+    const event = await ctx.db.get(id);
+    const now = event!._creationTime;
 
     const hourKey = String(new Date(now).getUTCHours()).padStart(2, "0");
     const fe = args.frontend?.[0] || "none";
@@ -225,7 +226,8 @@ export const getDailyStats = query({
   handler: async (ctx, args) => {
     const days = args.days ?? 30;
     const now = Date.now();
-    const cutoffDate = new Date(now - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const today = new Date(now).toISOString().slice(0, 10);
+    const cutoffDate = new Date(now - (days - 1) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
     const allDaily = await ctx.db
       .query("analyticsDailyStats")
@@ -234,53 +236,20 @@ export const getDailyStats = query({
       .collect();
 
     return allDaily
-      .filter((d) => d.date >= cutoffDate)
+      .filter((d) => d.date >= cutoffDate && d.date <= today)
       .map((d) => ({ date: d.date, count: d.count }));
   },
 });
 
-export const getAllEvents = query({
-  args: {
-    range: v.union(v.literal("30d"), v.literal("7d"), v.literal("1d")),
-  },
-  returns: v.array(
-    v.object({
-      _id: v.id("analyticsEvents"),
-      _creationTime: v.number(),
-      database: v.optional(v.string()),
-      orm: v.optional(v.string()),
-      backend: v.optional(v.string()),
-      runtime: v.optional(v.string()),
-      frontend: v.optional(v.array(v.string())),
-      addons: v.optional(v.array(v.string())),
-      examples: v.optional(v.array(v.string())),
-      auth: v.optional(v.string()),
-      payments: v.optional(v.string()),
-      git: v.optional(v.boolean()),
-      packageManager: v.optional(v.string()),
-      install: v.optional(v.boolean()),
-      dbSetup: v.optional(v.string()),
-      api: v.optional(v.string()),
-      webDeploy: v.optional(v.string()),
-      serverDeploy: v.optional(v.string()),
-      cli_version: v.optional(v.string()),
-      node_version: v.optional(v.string()),
-      platform: v.optional(v.string()),
-    }),
-  ),
-  handler: async (ctx, args) => {
-    const now = Date.now();
-    const days = args.range === "30d" ? 30 : args.range === "7d" ? 7 : 1;
-    const cutoff = now - days * 24 * 60 * 60 * 1000;
-
-    const result = [];
-
-    for await (const ev of ctx.db.query("analyticsEvents").order("desc")) {
-      if (ev._creationTime < cutoff) break;
-      result.push(ev);
-    }
-
-    return result;
+export const getRecentEvents = query({
+  args: {},
+  handler: async (ctx) => {
+    const cutoff = Date.now() - 30 * 60 * 1000;
+    return await ctx.db
+      .query("analyticsEvents")
+      .order("desc")
+      .filter((q) => q.gte(q.field("_creationTime"), cutoff))
+      .collect();
   },
 });
 

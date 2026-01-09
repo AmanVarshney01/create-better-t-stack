@@ -1,0 +1,331 @@
+{{#if (eq backend "convex")}}
+import { Ionicons } from "@expo/vector-icons";
+import {
+  useUIMessages,
+  useSmoothText,
+  type UIMessage,
+} from "@convex-dev/agent/react";
+import { api } from "@{{projectName}}/backend/convex/_generated/api";
+import { useMutation } from "convex/react";
+import { Button, Divider, Spinner, Surface, TextField, useThemeColor } from "heroui-native";
+import { useRef, useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+
+import { Container } from "@/components/container";
+
+function MessageContent({
+  text,
+  isStreaming,
+}: {
+  text: string;
+  isStreaming: boolean;
+}) {
+  const [visibleText] = useSmoothText(text, {
+    startStreaming: isStreaming,
+  });
+  return <Text className="text-foreground text-sm leading-relaxed">{visibleText}</Text>;
+}
+
+export default function AIScreen() {
+  const [input, setInput] = useState("");
+  const [threadId, setThreadId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const mutedColor = useThemeColor("muted");
+  const foregroundColor = useThemeColor("foreground");
+
+  const createThread = useMutation(api.chat.createNewThread);
+  const sendMessage = useMutation(api.chat.sendMessage);
+
+  const { results: messages } = useUIMessages(
+    api.chat.listMessages,
+    threadId ? { threadId } : "skip",
+    { initialNumItems: 50, stream: true },
+  );
+
+  const hasStreamingMessage = messages?.some(
+    (m: UIMessage) => m.status === "streaming",
+  );
+
+  useEffect(() => {
+    scrollViewRef.current?.scrollToEnd({ animated: true });
+  }, [messages]);
+
+  const onSubmit = async () => {
+    const value = input.trim();
+    if (!value || isLoading) return;
+
+    setIsLoading(true);
+    setInput("");
+
+    try {
+      let currentThreadId = threadId;
+      if (!currentThreadId) {
+        currentThreadId = await createThread();
+        setThreadId(currentThreadId);
+      }
+
+      await sendMessage({ threadId: currentThreadId, prompt: value });
+    } catch (error) {
+      console.error("Failed to send message:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Container>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View className="flex-1 px-4 py-4">
+          <View className="py-4 mb-4">
+            <Text className="text-2xl font-semibold text-foreground tracking-tight">AI Chat</Text>
+            <Text className="text-muted text-sm mt-1">Chat with our AI assistant</Text>
+          </View>
+
+          <ScrollView
+            ref={scrollViewRef}
+            className="flex-1 mb-4"
+            showsVerticalScrollIndicator={false}
+          >
+            {!messages || messages.length === 0 ? (
+              <View className="flex-1 justify-center items-center py-10">
+                <Ionicons name="chatbubble-ellipses-outline" size={32} color={mutedColor} />
+                <Text className="text-muted text-sm mt-3">Ask me anything to get started</Text>
+              </View>
+            ) : (
+              <View className="gap-2">
+                {messages.map((message: UIMessage) => (
+                  <Surface
+                    key={message.key}
+                    variant={message.role === "user" ? "tertiary" : "secondary"}
+                    className={`p-3 rounded-lg ${message.role === "user" ? "ml-10" : "mr-10"}`}
+                  >
+                    <Text className="text-xs font-medium mb-1 text-muted">
+                      {message.role === "user" ? "You" : "AI"}
+                    </Text>
+                    <MessageContent
+                      text={message.text ?? ""}
+                      isStreaming={message.status === "streaming"}
+                    />
+                  </Surface>
+                ))}
+                {isLoading && !hasStreamingMessage && (
+                  <Surface variant="secondary" className="p-3 mr-10 rounded-lg">
+                    <Text className="text-xs font-medium mb-1 text-muted">AI</Text>
+                    <View className="flex-row items-center gap-2">
+                      <Spinner size="sm" />
+                      <Text className="text-muted text-sm">Thinking...</Text>
+                    </View>
+                  </Surface>
+                )}
+              </View>
+            )}
+          </ScrollView>
+
+          <Divider className="mb-3" />
+
+          <View className="flex-row items-center gap-2">
+            <View className="flex-1">
+              <TextField>
+                <TextField.Input
+                  value={input}
+                  onChangeText={setInput}
+                  placeholder="Type a message..."
+                  onSubmitEditing={onSubmit}
+                  editable={!isLoading}
+                  autoFocus
+                />
+              </TextField>
+            </View>
+            <Button
+              isIconOnly
+              variant={input.trim() && !isLoading ? "primary" : "secondary"}
+              onPress={onSubmit}
+              isDisabled={!input.trim() || isLoading}
+              size="sm"
+            >
+              <Ionicons
+                name="arrow-up"
+                size={18}
+                color={input.trim() && !isLoading ? foregroundColor : mutedColor}
+              />
+            </Button>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Container>
+  );
+}
+{{else}}
+import { useRef, useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
+import { fetch as expoFetch } from "expo/fetch";
+import { Ionicons } from "@expo/vector-icons";
+import { Container } from "@/components/container";
+import { Button, Divider, ErrorView, Spinner, Surface, TextField, useThemeColor } from "heroui-native";
+import { env } from "@{{projectName}}/env/native";
+
+const generateAPIUrl = (relativePath: string) => {
+  const serverUrl = env.EXPO_PUBLIC_SERVER_URL;
+  if (!serverUrl) {
+    throw new Error(
+      "EXPO_PUBLIC_SERVER_URL environment variable is not defined"
+    );
+  }
+  const path = relativePath.startsWith("/") ? relativePath : `/${relativePath}`;
+  return serverUrl.concat(path);
+};
+
+export default function AIScreen() {
+  const [input, setInput] = useState("");
+  const { messages, error, sendMessage } = useChat({
+    transport: new DefaultChatTransport({
+      fetch: expoFetch as unknown as typeof globalThis.fetch,
+      api: generateAPIUrl("/ai"),
+    }),
+    onError: (error) => console.error(error, "AI Chat Error"),
+  });
+  const scrollViewRef = useRef<ScrollView>(null);
+  const foregroundColor = useThemeColor("foreground");
+  const mutedColor = useThemeColor("muted");
+
+  useEffect(() => {
+    scrollViewRef.current?.scrollToEnd({ animated: true });
+  }, [messages]);
+
+  const onSubmit = () => {
+    const value = input.trim();
+    if (value) {
+      sendMessage({ text: value });
+      setInput("");
+    }
+  };
+
+  if (error) {
+    return (
+      <Container>
+        <View className="flex-1 justify-center items-center px-4">
+          <Surface variant="secondary" className="p-4 rounded-lg">
+            <ErrorView isInvalid>
+              <Text className="text-danger text-center font-medium mb-1">
+                {error.message}
+              </Text>
+              <Text className="text-muted text-center text-xs">
+                Please check your connection and try again.
+              </Text>
+            </ErrorView>
+          </Surface>
+        </View>
+      </Container>
+    );
+  }
+
+  return (
+    <Container>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View className="flex-1 px-4 py-4">
+          <View className="py-4 mb-4">
+            <Text className="text-2xl font-semibold text-foreground tracking-tight">AI Chat</Text>
+            <Text className="text-muted text-sm mt-1">Chat with our AI assistant</Text>
+          </View>
+
+          <ScrollView
+            ref={scrollViewRef}
+            className="flex-1 mb-4"
+            showsVerticalScrollIndicator={false}
+          >
+            {messages.length === 0 ? (
+              <View className="flex-1 justify-center items-center py-10">
+                <Ionicons name="chatbubble-ellipses-outline" size={32} color={mutedColor} />
+                <Text className="text-muted text-sm mt-3">Ask me anything to get started</Text>
+              </View>
+            ) : (
+              <View className="gap-2">
+                {messages.map((message) => (
+                  <Surface
+                    key={message.id}
+                    variant={message.role === "user" ? "tertiary" : "secondary"}
+                    className={`p-3 rounded-lg ${message.role === "user" ? "ml-10" : "mr-10"}`}
+                  >
+                    <Text className="text-xs font-medium mb-1 text-muted">
+                      {message.role === "user" ? "You" : "AI"}
+                    </Text>
+                    <View className="gap-1">
+                      {message.parts.map((part, i) =>
+                        part.type === "text" ? (
+                          <Text
+                            key={`${message.id}-${i}`}
+                            className="text-foreground text-sm leading-relaxed"
+                          >
+                            {part.text}
+                          </Text>
+                        ) : (
+                          <Text
+                            key={`${message.id}-${i}`}
+                            className="text-foreground text-sm leading-relaxed"
+                          >
+                            {JSON.stringify(part)}
+                          </Text>
+                        )
+                      )}
+                    </View>
+                  </Surface>
+                ))}
+              </View>
+            )}
+          </ScrollView>
+
+          <Divider className="mb-3" />
+
+          <View className="flex-row items-center gap-2">
+            <View className="flex-1">
+              <TextField>
+                <TextField.Input
+                  value={input}
+                  onChangeText={setInput}
+                  placeholder="Type a message..."
+                  onSubmitEditing={onSubmit}
+                  autoFocus
+                />
+              </TextField>
+            </View>
+            <Button
+              isIconOnly
+              variant={input.trim() ? "primary" : "secondary"}
+              onPress={onSubmit}
+              isDisabled={!input.trim()}
+              size="sm"
+            >
+              <Ionicons
+                name="arrow-up"
+                size={18}
+                color={input.trim() ? foregroundColor : mutedColor}
+              />
+            </Button>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Container>
+  );
+}
+{{/if}}

@@ -112,7 +112,7 @@ export function StackDisplay({ stackState }: StackDisplayProps) {
         <div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
           <div className="flex items-center gap-2">
             <Terminal className="h-5 w-5 text-primary" />
-            <span className="font-bold text-lg sm:text-xl">STACK_DISPLAY.SH</span>
+            <span className="font-bold font-mono text-lg sm:text-xl">STACK_DISPLAY.SH</span>
           </div>
           <div className="hidden h-px flex-1 bg-border sm:block" />
           <span className="w-full text-right text-muted-foreground text-xs sm:w-auto sm:text-left">
@@ -120,7 +120,7 @@ export function StackDisplay({ stackState }: StackDisplayProps) {
           </span>
         </div>
 
-        <div className="space-y-2 rounded border border-border bg-muted/20 p-4">
+        <div className="space-y-2 rounded border border-border bg-fd-background p-4">
           <div className="flex items-center gap-2 text-sm">
             <span className="text-primary">$</span>
             <span className="text-foreground">./display_stack --summary</span>
@@ -165,7 +165,7 @@ export function StackDisplay({ stackState }: StackDisplayProps) {
             </span>
           </div>
 
-          <div className="flex items-center justify-between rounded border border-border bg-muted/20 p-3">
+          <div className="flex items-center justify-between rounded border border-border bg-fd-background p-3">
             <div className="flex items-center gap-2 font-mono text-sm">
               <span className="text-primary">$</span>
               <span className="text-foreground">{command}</span>

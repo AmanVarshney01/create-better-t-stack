@@ -1,3 +1,5 @@
+"use client";
+
 import { format, parseISO } from "date-fns";
 import {
   Area,
@@ -8,64 +10,57 @@ import {
   Cell,
   Pie,
   PieChart,
-  Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
 
-import { ChartContainer, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
+import {
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 
-import type { AggregatedAnalyticsData } from "./types";
+import type { AggregatedAnalyticsData, Distribution } from "./types";
 
-import { CHART_COLORS, chartConfig, getColor, truncateLabel } from "./types";
+import { ChartCard } from "./chart-card";
 
-function ChartCard({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded border border-border">
-      <div className="border-border border-b px-4 py-3">
-        <div className="flex items-center gap-2">
-          <span className="text-primary text-xs">$</span>
-          <span className="font-semibold text-sm">{title}</span>
-        </div>
-        <p className="mt-1 text-muted-foreground text-xs">{description}</p>
-      </div>
-      <div className="p-4">{children}</div>
-    </div>
-  );
+const CHART_COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+];
+
+function getChartConfig(data: Distribution): ChartConfig {
+  const config: ChartConfig = {};
+  for (const [index, item] of data.entries()) {
+    config[item.name] = {
+      label: item.name,
+      color: CHART_COLORS[index % CHART_COLORS.length],
+    };
+  }
+  return config;
 }
 
-function SimpleTooltip({
-  active,
-  payload,
-  label,
-  formatLabel,
-}: {
-  active?: boolean;
-  payload?: Array<{ value: number }>;
-  label?: string;
-  formatLabel?: (label: string) => string;
-}) {
-  if (!active || !payload?.length) return null;
-  const displayLabel = formatLabel && label ? formatLabel(label) : label;
-  return (
-    <div className="rounded border border-border/50 bg-background px-3 py-2 text-xs shadow-lg">
-      <p className="font-medium">{displayLabel}</p>
-      <p className="text-muted-foreground">{payload[0].value.toLocaleString()} projects</p>
-    </div>
-  );
-}
+const areaChartConfig = {
+  count: { label: "Projects", color: "var(--chart-1)" },
+} satisfies ChartConfig;
+
+const barChartConfig = {
+  count: { label: "Projects", color: "var(--chart-2)" },
+} satisfies ChartConfig;
+
+const hourlyChartConfig = {
+  count: { label: "Projects", color: "var(--chart-3)" },
+} satisfies ChartConfig;
 
 export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
   const { timeSeries, monthlyTimeSeries, platformDistribution, hourlyDistribution } = data;
-  const platformTotal = platformDistribution.reduce((sum, d) => sum + d.value, 0);
+  const platformChartConfig = getChartConfig(platformDistribution);
 
   return (
     <div className="space-y-6">
@@ -76,34 +71,37 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <ChartCard title="daily_projects.chart" description="Project creations over time">
-          <ChartContainer config={chartConfig} className="h-[280px] w-full">
-            <AreaChart data={timeSeries} margin={{ left: -10, right: 8, top: 8, bottom: 4 }}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
+          <ChartContainer
+            config={areaChartConfig}
+            className="aspect-auto h-[280px] w-full min-h-[200px]"
+          >
+            <AreaChart accessibilityLayer data={timeSeries}>
+              <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="date"
                 tickLine={false}
                 axisLine={false}
+                tickMargin={10}
                 tickFormatter={(val) => format(parseISO(val), "d")}
-                tick={{ fontSize: 10 }}
                 interval="preserveStartEnd"
               />
-              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} width={35} />
-              <Tooltip
-                content={({ active, payload, label }) => (
-                  <SimpleTooltip
-                    active={active}
-                    payload={payload as Array<{ value: number }>}
-                    label={label}
-                    formatLabel={(l) => format(parseISO(l), "MMM d, yyyy")}
+              <YAxis tickLine={false} axisLine={false} />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    labelFormatter={(_, payload) => {
+                      const item = payload?.[0]?.payload as { date: string } | undefined;
+                      return item ? format(parseISO(item.date), "MMM d, yyyy") : "";
+                    }}
+                    hideIndicator
                   />
-                )}
-                cursor={{ stroke: "hsl(var(--muted-foreground))", strokeWidth: 1 }}
+                }
               />
               <Area
                 type="monotone"
                 dataKey="count"
-                stroke={CHART_COLORS[0]}
-                fill={CHART_COLORS[0]}
+                stroke="var(--chart-1)"
+                fill="var(--chart-1)"
                 fillOpacity={0.2}
                 strokeWidth={2}
               />
@@ -112,54 +110,33 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
         </ChartCard>
 
         <ChartCard title="monthly_trends.bar" description="Monthly project volume">
-          <ChartContainer config={chartConfig} className="h-[280px] w-full">
-            <BarChart data={monthlyTimeSeries} margin={{ left: -10, right: 8, top: 8, bottom: 4 }}>
-              <CartesianGrid vertical={false} className="stroke-border/40" />
+          <ChartContainer
+            config={barChartConfig}
+            className="aspect-auto h-[280px] w-full min-h-[200px]"
+          >
+            <BarChart accessibilityLayer data={monthlyTimeSeries}>
+              <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="month"
                 tickLine={false}
                 axisLine={false}
-                tick={{ fontSize: 10 }}
+                tickMargin={10}
                 tickFormatter={(val) => val.slice(5)}
               />
-              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} width={35} />
-              <Tooltip
-                content={({ active, payload, label }) => (
-                  <SimpleTooltip
-                    active={active}
-                    payload={payload as Array<{ value: number }>}
-                    label={label}
-                  />
-                )}
-                cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }}
-              />
-              <Bar dataKey="count" radius={3}>
-                {monthlyTimeSeries.map((_, i) => (
-                  <Cell key={i} fill={CHART_COLORS[1]} />
-                ))}
-              </Bar>
+              <YAxis tickLine={false} axisLine={false} />
+              <ChartTooltip content={<ChartTooltipContent hideIndicator />} />
+              <Bar dataKey="count" fill="var(--chart-2)" radius={4} />
             </BarChart>
           </ChartContainer>
         </ChartCard>
 
         <ChartCard title="platform_distribution.pie" description="Operating system usage">
-          <ChartContainer config={chartConfig} className="h-[280px] w-full">
+          <ChartContainer
+            config={platformChartConfig}
+            className="aspect-auto h-[280px] w-full min-h-[200px]"
+          >
             <PieChart>
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (!active || !payload?.length) return null;
-                  const item = payload[0].payload as { name: string; value: number };
-                  const percent = ((item.value / platformTotal) * 100).toFixed(1);
-                  return (
-                    <div className="rounded border border-border/50 bg-background px-3 py-2 text-xs shadow-lg">
-                      <p className="font-medium">{item.name}</p>
-                      <p className="text-muted-foreground">
-                        {item.value.toLocaleString()} ({percent}%)
-                      </p>
-                    </div>
-                  );
-                }}
-              />
+              <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
               <Pie
                 data={platformDistribution}
                 cx="50%"
@@ -167,50 +144,40 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
                 outerRadius={65}
                 innerRadius={35}
                 dataKey="value"
+                nameKey="name"
                 paddingAngle={2}
               >
-                {platformDistribution.map((entry, i) => (
-                  <Cell key={entry.name} fill={getColor(i)} />
+                {platformDistribution.map((entry, index) => (
+                  <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                 ))}
               </Pie>
-              <ChartLegend
-                content={<ChartLegendContent nameKey="name" />}
-                formatter={(value) => truncateLabel(String(value), 10)}
-                wrapperStyle={{ fontSize: 11 }}
-              />
+              <ChartLegend content={<ChartLegendContent nameKey="name" />} />
             </PieChart>
           </ChartContainer>
         </ChartCard>
 
         <ChartCard title="hourly_activity.bar" description="Projects by hour (UTC)">
-          <ChartContainer config={chartConfig} className="h-[280px] w-full">
-            <BarChart data={hourlyDistribution} margin={{ left: -10, right: 8, top: 8, bottom: 4 }}>
-              <CartesianGrid vertical={false} className="stroke-border/40" />
+          <ChartContainer
+            config={hourlyChartConfig}
+            className="aspect-auto h-[280px] w-full min-h-[200px]"
+          >
+            <BarChart accessibilityLayer data={hourlyDistribution}>
+              <CartesianGrid vertical={false} />
               <XAxis
                 dataKey="hour"
                 tickLine={false}
                 axisLine={false}
-                tick={{ fontSize: 9 }}
+                tickMargin={10}
                 interval={3}
                 tickFormatter={(val) => val.replace(":00", "")}
               />
-              <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} width={30} />
-              <Tooltip
-                content={({ active, payload, label }) => (
-                  <SimpleTooltip
-                    active={active}
-                    payload={payload as Array<{ value: number }>}
-                    label={label}
-                    formatLabel={(l) => `${l} UTC`}
-                  />
-                )}
-                cursor={{ fill: "hsl(var(--muted))", opacity: 0.3 }}
+              <YAxis tickLine={false} axisLine={false} />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent labelFormatter={(value) => `${value} UTC`} hideIndicator />
+                }
               />
-              <Bar dataKey="count" radius={2}>
-                {hourlyDistribution.map((_, i) => (
-                  <Cell key={i} fill={CHART_COLORS[2]} />
-                ))}
-              </Bar>
+              <Bar dataKey="count" fill="var(--chart-3)" radius={4} />
             </BarChart>
           </ChartContainer>
         </ChartCard>

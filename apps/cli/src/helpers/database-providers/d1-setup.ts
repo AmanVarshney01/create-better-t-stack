@@ -3,7 +3,7 @@ import path from "node:path";
 import type { ProjectConfig } from "../../types";
 
 import { addPackageDependency } from "../../utils/add-package-deps";
-import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
+import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
 
 export async function setupCloudflareD1(config: ProjectConfig) {
   const { projectDir, serverDeploy, orm, backend } = config;

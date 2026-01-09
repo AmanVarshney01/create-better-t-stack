@@ -7,8 +7,8 @@ import pc from "picocolors";
 
 import type { PackageManager, ProjectConfig } from "../../types";
 
+import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
-import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
 
 type PrismaConfig = {
   databaseUrl: string;
