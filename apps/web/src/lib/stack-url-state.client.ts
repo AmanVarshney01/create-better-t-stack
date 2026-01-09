@@ -47,6 +47,8 @@ export const stackParsers = {
     getValidIds("serverDeploy"),
   ).withDefault(DEFAULT_STACK.serverDeploy),
   yolo: parseAsStringEnum<StackState["yolo"]>(["true", "false"]).withDefault(DEFAULT_STACK.yolo),
+  viewMode: parseAsStringEnum<"command" | "preview">(["command", "preview"]).withDefault("command"),
+  selectedFile: parseAsString.withDefault(""),
 };
 
 export const stackQueryStatesOptions = {
@@ -57,15 +59,48 @@ export const stackQueryStatesOptions = {
 };
 
 export function useStackState() {
-  const [stack, setStack] = useQueryStates(stackParsers, stackQueryStatesOptions);
+  const [queryState, setQueryState] = useQueryStates(stackParsers, stackQueryStatesOptions);
+
+  const stack: StackState = {
+    projectName: queryState.projectName,
+    webFrontend: queryState.webFrontend,
+    nativeFrontend: queryState.nativeFrontend,
+    runtime: queryState.runtime,
+    backend: queryState.backend,
+    api: queryState.api,
+    database: queryState.database,
+    orm: queryState.orm,
+    dbSetup: queryState.dbSetup,
+    auth: queryState.auth,
+    payments: queryState.payments,
+    packageManager: queryState.packageManager,
+    addons: queryState.addons,
+    examples: queryState.examples,
+    git: queryState.git,
+    install: queryState.install,
+    webDeploy: queryState.webDeploy,
+    serverDeploy: queryState.serverDeploy,
+    yolo: queryState.yolo,
+  };
+
+  const viewMode = queryState.viewMode;
+  const selectedFile = queryState.selectedFile;
 
   const updateStack = async (
     updates: Partial<StackState> | ((prev: StackState) => Partial<StackState>),
   ) => {
     const newStack = typeof updates === "function" ? updates(stack) : updates;
     const finalStack = { ...stack, ...newStack };
-    await setStack(finalStack);
+    await setQueryState({ ...finalStack, viewMode, selectedFile });
   };
 
-  return [stack, updateStack] as const;
+  const setViewMode = async (mode: "command" | "preview") => {
+    await setQueryState({ viewMode: mode, selectedFile });
+  };
+
+  const setSelectedFile = async (filePath: string | null) => {
+    await setQueryState({ selectedFile: filePath || "" });
+  };
+
+  return [stack, updateStack, viewMode, setViewMode, selectedFile, setSelectedFile] as const;
 }

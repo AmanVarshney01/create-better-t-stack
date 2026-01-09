@@ -1,6 +1,6 @@
 {
   "name": "create-better-t-stack",
-  "version": "3.13.2",
+  "version": "3.14.2",
   "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
   "keywords": [
     "better-auth",
@@ -40,8 +40,7 @@
     "create-better-t-stack": "dist/cli.mjs"
   },
   "files": [
-    "dist",
-    "templates"
+    "dist"
   ],
   "type": "module",
   "exports": {
@@ -51,6 +50,10 @@
     },
     "./cli": {
       "import": "./dist/cli.mjs"
+    },
+    "./virtual": {
+      "types": "./dist/virtual.d.mts",
+      "import": "./dist/virtual.mjs"
     }
   },
   "publishConfig": {
@@ -63,10 +66,11 @@
     "test": "bun run build && bun test",
     "test:watch": "bun run build && bun test --watch",
     "test:coverage": "bun run build && bun test --coverage",
-    "test:ci": "bun run build && AGENT=1 bun test --bail=5",
+    "test:ci": "bun run build && CI=1 bun test --bail=5",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
+    "@better-t-stack/template-generator": "workspace:*",
     "@better-t-stack/types": "workspace:*",
     "@clack/core": "^0.5.0",
     "@clack/prompts": "^1.0.0-alpha.8",

@@ -35,6 +35,9 @@ jobs:
       - name: Build Types
         run: cd packages/types && bun run build
 
+      - name: Build Template Generator
+        run: cd packages/template-generator && bun run build
+
       - name: Build and Test CLI
         working-directory: apps/cli
         run: bun run build && bun run test:ci

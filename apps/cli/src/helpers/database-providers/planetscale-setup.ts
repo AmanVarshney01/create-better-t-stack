@@ -3,7 +3,7 @@ import path from "node:path";
 
 import type { ProjectConfig } from "../../types";
 
-import { addEnvVariablesToFile, type EnvVariable } from "../core/env-setup";
+import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
 
 export async function setupPlanetScale(config: ProjectConfig) {
   const { projectDir, database, orm, backend } = config;

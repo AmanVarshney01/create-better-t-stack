@@ -4,7 +4,7 @@ import pc from "picocolors";
 import { createCli } from "trpc-cli";
 import z from "zod";
 
-import { addAddonsHandler, createProjectHandler } from "./helpers/core/command-handlers";
+import { createProjectHandler } from "./helpers/core/command-handlers";
 import {
   type Addons,
   AddonsSchema,
@@ -112,30 +112,6 @@ export const router = os.router({
         return result;
       }
     }),
-  add: os
-    .meta({
-      description: "Add addons or deployment configurations to an existing Better-T-Stack project",
-    })
-    .input(
-      z.tuple([
-        z.object({
-          addons: z.array(AddonsSchema).optional().default([]),
-          webDeploy: WebDeploySchema.optional(),
-          serverDeploy: ServerDeploySchema.optional(),
-          projectDir: z.string().optional(),
-          install: z
-            .boolean()
-            .optional()
-            .default(false)
-            .describe("Install dependencies after adding addons or deployment"),
-          packageManager: PackageManagerSchema.optional(),
-        }),
-      ]),
-    )
-    .handler(async ({ input }) => {
-      const [options] = input;
-      await addAddonsHandler(options);
-    }),
   sponsors: os.meta({ description: "Show Better-T-Stack sponsors" }).handler(async () => {
     try {
       renderTitle();
@@ -236,6 +212,93 @@ export async function docs() {
 
 export async function builder() {
   return caller.builder();
+}
+
+// Re-export virtual filesystem types for programmatic usage
+export {
+  VirtualFileSystem,
+  type VirtualFileTree,
+  type VirtualFile,
+  type VirtualDirectory,
+  type VirtualNode,
+  type GeneratorOptions,
+  type GeneratorResult,
+  EMBEDDED_TEMPLATES,
+  TEMPLATE_COUNT,
+  generateVirtualProject,
+} from "@better-t-stack/template-generator";
+
+// Import for createVirtual
+import {
+  generateVirtualProject as generate,
+  type VirtualFileTree,
+  EMBEDDED_TEMPLATES,
+} from "@better-t-stack/template-generator";
+
+/**
+ * Programmatic API to generate a project in-memory (virtual filesystem).
+ * Returns a VirtualFileTree without writing to disk.
+ * Useful for web previews and testing.
+ *
+ * @example
+ * ```typescript
+ * import { createVirtual, EMBEDDED_TEMPLATES } from "create-better-t-stack";
+ *
+ * const result = await createVirtual({
+ *   frontend: ["tanstack-router"],
+ *   backend: "hono",
+ *   runtime: "bun",
+ *   database: "sqlite",
+ *   orm: "drizzle",
+ * });
+ *
+ * if (result.success) {
+ *   console.log(`Generated ${result.tree.fileCount} files`);
+ * }
+ * ```
+ */
+export async function createVirtual(
+  options: Partial<Omit<ProjectConfig, "projectDir" | "relativePath">>,
+): Promise<{ success: boolean; tree?: VirtualFileTree; error?: string }> {
+  try {
+    const config: ProjectConfig = {
+      projectName: options.projectName || "my-project",
+      projectDir: "/virtual",
+      relativePath: "./virtual",
+      database: options.database || "none",
+      orm: options.orm || "none",
+      backend: options.backend || "hono",
+      runtime: options.runtime || "bun",
+      frontend: options.frontend || ["tanstack-router"],
+      addons: options.addons || [],
+      examples: options.examples || [],
+      auth: options.auth || "none",
+      payments: options.payments || "none",
+      git: options.git ?? false,
+      packageManager: options.packageManager || "bun",
+      install: false,
+      dbSetup: options.dbSetup || "none",
+      api: options.api || "trpc",
+      webDeploy: options.webDeploy || "none",
+      serverDeploy: options.serverDeploy || "none",
+    };
+
+    const result = await generate({
+      config,
+      templates: EMBEDDED_TEMPLATES,
+    });
+
+    if (result.success && result.tree) {
+      return { success: true, tree: result.tree };
+    }
+
+    return { success: false, error: result.error || "Unknown error" };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
 }
 
 export type {

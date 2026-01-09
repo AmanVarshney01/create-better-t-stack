@@ -26,14 +26,16 @@ export default function ShowcaseItem({
   const projectId = `PROJECT_${String(index + 1).padStart(3, "0")}`;
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded border border-border">
-      <div className="border-border border-b px-3 py-2">
+    <div className="group flex h-full flex-col overflow-hidden rounded border border-border bg-fd-background transition-colors hover:bg-muted/10">
+      <div className="px-4 py-3">
         <div className="flex items-center gap-2">
           <File className="h-3 w-3 text-primary" />
-          <span className="font-semibold text-foreground text-xs">{projectId}.PROJECT</span>
+          <span className="font-semibold font-mono text-foreground text-xs">
+            {projectId}.PROJECT
+          </span>
           <div className="ml-auto flex items-center gap-2 text-muted-foreground text-xs">
             <span>•</span>
-            <span>{tags.length} DEPS</span>
+            <span className="font-mono">{tags.length} DEPS</span>
           </div>
         </div>
       </div>
@@ -49,7 +51,7 @@ export default function ShowcaseItem({
         <div className="absolute inset-0 bg-black/20 opacity-0 transition-opacity duration-300 hover:opacity-100" />
       </div>
 
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col p-4 pt-4">
         <h3 className="mb-2 font-bold text-lg text-primary">{title}</h3>
 
         <p className="mb-4 flex-grow text-muted-foreground text-sm leading-relaxed">
@@ -100,7 +102,7 @@ export default function ShowcaseItem({
             )}
           </div>
 
-          <div className="border-border border-t pt-2">
+          <div className="border-border/50 border-t pt-3">
             <div className="flex items-center gap-2 text-xs">
               <span className="text-primary">$</span>
               <span className="text-muted-foreground">echo &quot;Status: READY&quot;</span>

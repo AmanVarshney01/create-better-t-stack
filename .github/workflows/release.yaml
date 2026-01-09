@@ -107,12 +107,31 @@ jobs:
           BTS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
-      - name: Update CLI types dependency and version
+      - name: Update template-generator package version and types dependency
+        if: steps.check-version.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          cd packages/template-generator
+          jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["@better-t-stack/types"] = $dep' package.json > tmp.json && mv tmp.json package.json
+
+      - name: Build template-generator package
+        if: steps.check-version.outputs.exists == 'false'
+        run: cd packages/template-generator && bun run build
+
+      - name: Publish template-generator to NPM
+        if: steps.check-version.outputs.exists == 'false'
+        run: cd packages/template-generator && bun publish --access public
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          BTS_TELEMETRY: 1
+          CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
+
+      - name: Update CLI types and template-generator dependencies and version
         if: steps.check-version.outputs.exists == 'false'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           cd apps/cli
-          jq --arg v "^$VERSION" '.dependencies["@better-t-stack/types"] = $v' package.json > tmp.json && mv tmp.json package.json
+          jq --arg v "^$VERSION" '.dependencies["@better-t-stack/types"] = $v | .dependencies["@better-t-stack/template-generator"] = $v' package.json > tmp.json && mv tmp.json package.json
 
       - name: Build CLI
         if: steps.check-version.outputs.exists == 'false'
@@ -154,6 +173,7 @@ jobs:
           echo "- [create-better-t-stack@$VERSION](https://www.npmjs.com/package/create-better-t-stack/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
           echo "- [create-bts@$VERSION](https://www.npmjs.com/package/create-bts/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
           echo "- [@better-t-stack/types@$VERSION](https://www.npmjs.com/package/@better-t-stack/types/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
+          echo "- [@better-t-stack/template-generator@$VERSION](https://www.npmjs.com/package/@better-t-stack/template-generator/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### GitHub Release" >> $GITHUB_STEP_SUMMARY
           echo "[v$VERSION](https://github.com/${{ github.repository }}/releases/tag/v$VERSION)" >> $GITHUB_STEP_SUMMARY

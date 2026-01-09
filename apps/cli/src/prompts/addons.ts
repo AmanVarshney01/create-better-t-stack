@@ -72,9 +72,9 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 }
 
 const ADDON_GROUPS = {
+  Tooling: ["turborepo", "biome", "oxlint", "ultracite", "husky"],
   Documentation: ["starlight", "fumadocs"],
-  Linting: ["biome", "oxlint", "ultracite"],
-  Other: ["ruler", "pwa", "tauri", "husky", "opentui", "wxt", "turborepo"],
+  Extensions: ["pwa", "tauri", "opentui", "wxt", "ruler"],
 };
 
 export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[], auth?: Auth) {
@@ -82,9 +82,9 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
 
   const allAddons = AddonsSchema.options.filter((addon) => addon !== "none");
   const groupedOptions: Record<string, AddonOption[]> = {
+    Tooling: [],
     Documentation: [],
-    Linting: [],
-    Other: [],
+    Extensions: [],
   };
 
   const frontendsArray = frontends || [];
@@ -96,12 +96,12 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
     const { label, hint } = getAddonDisplay(addon);
     const option = { value: addon, label, hint };
 
-    if (ADDON_GROUPS.Documentation.includes(addon)) {
+    if (ADDON_GROUPS.Tooling.includes(addon)) {
+      groupedOptions.Tooling.push(option);
+    } else if (ADDON_GROUPS.Documentation.includes(addon)) {
       groupedOptions.Documentation.push(option);
-    } else if (ADDON_GROUPS.Linting.includes(addon)) {
-      groupedOptions.Linting.push(option);
-    } else if (ADDON_GROUPS.Other.includes(addon)) {
-      groupedOptions.Other.push(option);
+    } else if (ADDON_GROUPS.Extensions.includes(addon)) {
+      groupedOptions.Extensions.push(option);
     }
   }
 
@@ -142,9 +142,9 @@ export async function getAddonsToAdd(
   auth?: Auth,
 ) {
   const groupedOptions: Record<string, AddonOption[]> = {
+    Tooling: [],
     Documentation: [],
-    Linting: [],
-    Other: [],
+    Extensions: [],
   };
 
   const frontendArray = frontend || [];
@@ -160,12 +160,12 @@ export async function getAddonsToAdd(
     const { label, hint } = getAddonDisplay(addon);
     const option = { value: addon, label, hint };
 
-    if (ADDON_GROUPS.Documentation.includes(addon)) {
+    if (ADDON_GROUPS.Tooling.includes(addon)) {
+      groupedOptions.Tooling.push(option);
+    } else if (ADDON_GROUPS.Documentation.includes(addon)) {
       groupedOptions.Documentation.push(option);
-    } else if (ADDON_GROUPS.Linting.includes(addon)) {
-      groupedOptions.Linting.push(option);
-    } else if (ADDON_GROUPS.Other.includes(addon)) {
-      groupedOptions.Other.push(option);
+    } else if (ADDON_GROUPS.Extensions.includes(addon)) {
+      groupedOptions.Extensions.push(option);
     }
   }
 
