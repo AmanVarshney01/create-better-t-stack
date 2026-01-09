@@ -65,17 +65,17 @@ ${packageManagerRunCmd} dev:setup
 
 Follow the prompts to create a new Convex project and connect it to your application.
 
-Copy environment variables from \`packages/backend/.env.local\` to \`apps/*/.env\`.${
-        auth === "clerk"
-          ? `
-
+Copy environment variables from \`packages/backend/.env.local\` to \`apps/*/.env\`.
+${
+  auth === "clerk"
+    ? `
 ### Clerk Authentication Setup
 
 - Follow the guide: [Convex + Clerk](https://docs.convex.dev/auth/clerk)
 - Set \`CLERK_JWT_ISSUER_DOMAIN\` in Convex Dashboard
 - Set \`CLERK_PUBLISHABLE_KEY\` in \`apps/*/.env\``
-          : ""
-      }`
+    : ""
+}`
     : generateDatabaseSetup(database, packageManagerRunCmd, orm, dbSetup, backend)
 }
 
