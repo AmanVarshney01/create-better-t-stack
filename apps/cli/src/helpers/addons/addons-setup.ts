@@ -121,7 +121,6 @@ export async function setupHusky(projectDir: string, linter?: "biome" | "oxlint"
   if (await fs.pathExists(packageJsonPath)) {
     const packageJson = await fs.readJson(packageJsonPath);
 
-    // Husky v9+ handles missing .git gracefully
     packageJson.scripts = {
       ...packageJson.scripts,
       prepare: "husky",
@@ -151,19 +150,7 @@ export async function setupLefthook(projectDir: string, linter?: "biome" | "oxli
     projectDir,
   });
 
-  const packageJsonPath = path.join(projectDir, "package.json");
-  if (await fs.pathExists(packageJsonPath)) {
-    const packageJson = await fs.readJson(packageJsonPath);
-
-    // Lefthook prepare script (same pattern as husky)
-    packageJson.scripts = {
-      ...packageJson.scripts,
-      prepare: "lefthook install",
-    };
-
-    await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
-  }
-
+  // lefthook npm package auto-installs hooks via postinstall, no prepare script needed
   const lefthookConfig = generateLefthookConfig(linter);
   const lefthookPath = path.join(projectDir, "lefthook.yml");
   await fs.writeFile(lefthookPath, lefthookConfig);
