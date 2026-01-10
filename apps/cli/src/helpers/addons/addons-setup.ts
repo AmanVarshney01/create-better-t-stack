@@ -192,7 +192,6 @@ function generateLefthookConfig(linter?: "biome" | "oxlint"): string {
     run: oxlint --fix .
     stage_fixed: true
   - name: oxfmt
-    glob: "*.{js,ts,cjs,mjs,jsx,tsx}"
     run: oxfmt --write {staged_files}
     stage_fixed: true`;
   } else {
