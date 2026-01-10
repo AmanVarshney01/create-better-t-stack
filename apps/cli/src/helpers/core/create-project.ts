@@ -54,15 +54,14 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
 
     if (!isSilent()) log.success("Project template successfully scaffolded!");
 
-    // Git init must happen BEFORE install so prepare scripts (husky/lefthook) work
-    await initializeGit(projectDir, options.git);
-
     if (options.install) {
       await installDependencies({
         projectDir,
         packageManager: options.packageManager,
       });
     }
+
+    await initializeGit(projectDir, options.git);
 
     if (!isSilent()) {
       await displayPostInstallInstructions({
