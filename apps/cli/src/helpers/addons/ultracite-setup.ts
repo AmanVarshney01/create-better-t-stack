@@ -41,9 +41,12 @@ type UltraciteAgent =
   | "crush"
   | "qwen"
   | "amazon-q-cli"
-  | "firebender";
+  | "firebender"
+  | "cursor-cli"
+  | "mistral-vibe"
+  | "vercel";
 
-type UltraciteHook = "cursor" | "windsurf";
+type UltraciteHook = "cursor" | "windsurf" | "claude";
 
 const LINTERS = {
   biome: { label: "Biome", hint: "Fast formatter and linter" },
@@ -85,11 +88,15 @@ const AGENTS = {
   qwen: { label: "Qwen" },
   "amazon-q-cli": { label: "Amazon Q CLI" },
   firebender: { label: "Firebender" },
+  "cursor-cli": { label: "Cursor CLI" },
+  "mistral-vibe": { label: "Mistral Vibe" },
+  vercel: { label: "Vercel" },
 } as const;
 
 const HOOKS = {
   cursor: { label: "Cursor" },
   windsurf: { label: "Windsurf" },
+  claude: { label: "Claude" },
 } as const;
 
 function getFrameworksFromFrontend(frontend: string[]): string[] {
@@ -117,7 +124,7 @@ function getFrameworksFromFrontend(frontend: string[]): string[] {
   return Array.from(frameworks);
 }
 
-export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
+export async function setupUltracite(config: ProjectConfig, gitHooks: string[]) {
   const { packageManager, projectDir, frontend } = config;
 
   try {
@@ -193,8 +200,12 @@ export async function setupUltracite(config: ProjectConfig, hasHusky: boolean) {
       ultraciteArgs.push("--hooks", ...hooks);
     }
 
-    if (hasHusky) {
-      ultraciteArgs.push("--integrations", "husky", "lint-staged");
+    if (gitHooks.length > 0) {
+      const integrations = [...gitHooks];
+      if (gitHooks.includes("husky")) {
+        integrations.push("lint-staged");
+      }
+      ultraciteArgs.push("--integrations", ...integrations);
     }
 
     const ultraciteArgsString = ultraciteArgs.join(" ");

@@ -36,6 +36,7 @@ export const AddonsSchema = z
     "tauri",
     "starlight",
     "biome",
+    "lefthook",
     "husky",
     "ruler",
     "turborepo",

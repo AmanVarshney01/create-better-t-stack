@@ -6,7 +6,7 @@ import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test
 
 describe("Addon Configurations", () => {
   describe("Universal Addons (no frontend restrictions)", () => {
-    const universalAddons = ["biome", "husky", "turborepo", "oxlint"];
+    const universalAddons = ["biome", "lefthook", "husky", "turborepo", "oxlint"];
 
     for (const addon of universalAddons) {
       it(`should work with ${addon} addon on any frontend`, async () => {
@@ -178,6 +178,27 @@ describe("Addon Configurations", () => {
       const result = await runTRPCTest({
         projectName: "multiple-addons",
         addons: ["biome", "husky", "turborepo", "pwa"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with lefthook and husky together", async () => {
+      const result = await runTRPCTest({
+        projectName: "both-git-hooks",
+        addons: ["lefthook", "husky"],
         frontend: ["tanstack-router"],
         backend: "hono",
         runtime: "bun",

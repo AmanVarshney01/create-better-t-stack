@@ -43,6 +43,10 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "Ruler";
       hint = "Centralize your AI rules";
       break;
+    case "lefthook":
+      label = "Lefthook";
+      hint = "Fast and powerful Git hooks manager";
+      break;
     case "husky":
       label = "Husky";
       hint = "Modern native Git hooks made easy";
@@ -72,7 +76,7 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 }
 
 const ADDON_GROUPS = {
-  Tooling: ["turborepo", "biome", "oxlint", "ultracite", "husky"],
+  Tooling: ["turborepo", "biome", "oxlint", "ultracite", "husky", "lefthook"],
   Documentation: ["starlight", "fumadocs"],
   Extensions: ["pwa", "tauri", "opentui", "wxt", "ruler"],
 };

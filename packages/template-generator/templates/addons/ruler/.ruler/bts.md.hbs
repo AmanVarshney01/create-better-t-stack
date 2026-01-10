@@ -119,3 +119,6 @@ This project includes a `bts.jsonc` configuration file that stores your Better-T
 {{#if (includes addons "turborepo")}}
 - Turborepo handles build caching and parallel execution
 {{/if}}
+{{#if (or (includes addons "husky") (includes addons "lefthook"))}}
+- Git hooks are configured with {{#if (includes addons "husky")}}Husky{{else}}Lefthook{{/if}} for pre-commit checks
+{{/if}}

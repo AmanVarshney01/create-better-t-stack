@@ -39,7 +39,12 @@ export async function displayPostInstallInstructions(
     packageManager === "npm" ? "npm run" : packageManager === "pnpm" ? "pnpm run" : "bun run";
   const cdCmd = `cd ${relativePath}`;
   const hasHusky = addons?.includes("husky");
-  const hasLinting = addons?.includes("biome") || addons?.includes("oxlint");
+  const hasLefthook = addons?.includes("lefthook");
+  const hasGitHooksOrLinting =
+    addons?.includes("husky") ||
+    addons?.includes("biome") ||
+    addons?.includes("lefthook") ||
+    addons?.includes("oxlint");
 
   const databaseInstructions =
     !isConvex && database !== "none"
@@ -56,7 +61,8 @@ export async function displayPostInstallInstructions(
 
   const tauriInstructions = addons?.includes("tauri") ? getTauriInstructions(runCmd) : "";
   const huskyInstructions = hasHusky ? getHuskyInstructions(runCmd) : "";
-  const lintingInstructions = hasLinting ? getLintingInstructions(runCmd) : "";
+  const lefthookInstructions = hasLefthook ? getLefthookInstructions(packageManager) : "";
+  const lintingInstructions = hasGitHooksOrLinting ? getLintingInstructions(runCmd) : "";
   const nativeInstructions =
     (frontend?.includes("native-bare") ||
       frontend?.includes("native-uniwind") ||
@@ -184,6 +190,7 @@ export async function displayPostInstallInstructions(
   if (databaseInstructions) output += `\n${databaseInstructions.trim()}\n`;
   if (tauriInstructions) output += `\n${tauriInstructions.trim()}\n`;
   if (huskyInstructions) output += `\n${huskyInstructions.trim()}\n`;
+  if (lefthookInstructions) output += `\n${lefthookInstructions.trim()}\n`;
   if (lintingInstructions) output += `\n${lintingInstructions.trim()}\n`;
   if (pwaInstructions) output += `\n${pwaInstructions.trim()}\n`;
   if (alchemyDeployInstructions) output += `\n${alchemyDeployInstructions.trim()}\n`;
@@ -248,6 +255,13 @@ function getLintingInstructions(runCmd: string) {
   return `${pc.bold("Linting and formatting:")}\n${pc.cyan(
     "•",
   )} Format and lint fix: ${`${runCmd} check`}\n`;
+}
+
+function getLefthookInstructions(packageManager: string) {
+  const cmd = packageManager === "npm" ? "npx" : packageManager;
+  return `${pc.bold("Git hooks with Lefthook:")}\n${pc.cyan(
+    "•",
+  )} Install hooks: ${cmd} lefthook install\n`;
 }
 
 async function getDatabaseInstructions(
