@@ -174,32 +174,31 @@ export async function setupLefthook(projectDir: string, linter?: "biome" | "oxli
     await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
   }
 
-  // Create lefthook.yml file
   const lefthookConfig = generateLefthookConfig(linter);
   const lefthookPath = path.join(projectDir, "lefthook.yml");
   await fs.writeFile(lefthookPath, lefthookConfig);
 }
 
 function generateLefthookConfig(linter?: "biome" | "oxlint"): string {
-  let preCommitCommands = "";
+  let jobs = "";
 
   if (linter === "biome") {
-    preCommitCommands = `    biome:
-      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
-      run: biome check --no-errors-on-unmatched --files-ignore-unknown=true --colors=off {staged_files}
-      stage_fixed: true`;
+    jobs = `  - name: biome
+    glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
+    run: biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+    stage_fixed: true`;
   } else if (linter === "oxlint") {
-    preCommitCommands = `    oxlint:
-      run: oxlint --fix .
-      stage_fixed: true
-    oxfmt:
-      glob: "*.{js,ts,cjs,mjs,jsx,tsx}"
-      run: oxfmt --write {staged_files}
-      stage_fixed: true`;
+    jobs = `  - name: oxlint
+    run: oxlint --fix .
+    stage_fixed: true
+  - name: oxfmt
+    glob: "*.{js,ts,cjs,mjs,jsx,tsx}"
+    run: oxfmt --write {staged_files}
+    stage_fixed: true`;
   } else {
-    preCommitCommands = `    # Add your pre-commit commands here
-    # example:
-    #   run: npm run lint`;
+    jobs = `  # Add your pre-commit jobs here
+  # - name: lint
+  #   run: npm run lint`;
   }
 
   return `# Lefthook configuration
@@ -207,7 +206,7 @@ function generateLefthookConfig(linter?: "biome" | "oxlint"): string {
 
 pre-commit:
   parallel: true
-  commands:
-${preCommitCommands}
+  jobs:
+${jobs}
 `;
 }
