@@ -121,11 +121,10 @@ export async function setupHusky(projectDir: string, linter?: "biome" | "oxlint"
   if (await fs.pathExists(packageJsonPath)) {
     const packageJson = await fs.readJson(packageJsonPath);
 
-    // Add prepare script for husky (runs after git is initialized)
-    // Using postinstall with git check to avoid failures when no .git exists
+    // Husky v9+ handles missing .git gracefully
     packageJson.scripts = {
       ...packageJson.scripts,
-      prepare: "git rev-parse --git-dir > /dev/null 2>&1 && husky || true",
+      prepare: "husky",
     };
 
     if (linter === "oxlint") {
@@ -156,11 +155,10 @@ export async function setupLefthook(projectDir: string, linter?: "biome" | "oxli
   if (await fs.pathExists(packageJsonPath)) {
     const packageJson = await fs.readJson(packageJsonPath);
 
-    // Add prepare script for lefthook (runs after git is initialized)
-    // Using postinstall with git check to avoid failures when no .git exists
+    // Lefthook prepare script (same pattern as husky)
     packageJson.scripts = {
       ...packageJson.scripts,
-      prepare: "git rev-parse --git-dir > /dev/null 2>&1 && lefthook install || true",
+      prepare: "lefthook install",
     };
 
     await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
