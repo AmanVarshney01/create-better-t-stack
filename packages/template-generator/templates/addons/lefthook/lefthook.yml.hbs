@@ -11,7 +11,7 @@ pre-commit:
       stage_fixed: true
 {{else if (includes addons "oxlint")}}
     - name: oxlint
-      run: {{packageManager}} oxlint --fix .
+      run: {{packageManager}} oxlint --fix {staged_files}
       stage_fixed: true
     - name: oxfmt
       run: {{packageManager}} oxfmt --write {staged_files}
