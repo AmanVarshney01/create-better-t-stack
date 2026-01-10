@@ -121,15 +121,11 @@ export async function setupHusky(projectDir: string, linter?: "biome" | "oxlint"
   if (await fs.pathExists(packageJsonPath)) {
     const packageJson = await fs.readJson(packageJsonPath);
 
-    // Check if lefthook is also present and update prepare script accordingly
-    const currentPrepare = packageJson.scripts?.prepare;
-    const prepareScript = currentPrepare?.includes("lefthook install")
-      ? `${currentPrepare} && husky`
-      : "husky";
-
+    // Add prepare script for husky (runs after git is initialized)
+    // Using postinstall with git check to avoid failures when no .git exists
     packageJson.scripts = {
       ...packageJson.scripts,
-      prepare: prepareScript,
+      prepare: "git rev-parse --git-dir > /dev/null 2>&1 && husky || true",
     };
 
     if (linter === "oxlint") {
@@ -160,15 +156,11 @@ export async function setupLefthook(projectDir: string, linter?: "biome" | "oxli
   if (await fs.pathExists(packageJsonPath)) {
     const packageJson = await fs.readJson(packageJsonPath);
 
-    // Check if husky is also present and update prepare script accordingly
-    const currentPrepare = packageJson.scripts?.prepare;
-    const prepareScript = currentPrepare?.includes("husky")
-      ? `lefthook install && ${currentPrepare}`
-      : "lefthook install";
-
+    // Add prepare script for lefthook (runs after git is initialized)
+    // Using postinstall with git check to avoid failures when no .git exists
     packageJson.scripts = {
       ...packageJson.scripts,
-      prepare: prepareScript,
+      prepare: "git rev-parse --git-dir > /dev/null 2>&1 && lefthook install || true",
     };
 
     await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
