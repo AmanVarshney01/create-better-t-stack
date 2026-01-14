@@ -63,6 +63,8 @@ export const env = createEnv({
 {{#if (includes frontend "next")}}
 	client: {},
 	runtimeEnv: {},
+{{else if (includes frontend "nuxt")}}
+	client: {},
 {{else}}
 	clientPrefix: "VITE_",
 	client: {},

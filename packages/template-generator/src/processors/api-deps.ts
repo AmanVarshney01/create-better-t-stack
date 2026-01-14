@@ -115,7 +115,7 @@ function addSelfBackendWebDeps(
   if (backend !== "self") return;
 
   const webPath = "apps/web/package.json";
-  if (!vfs.exists(webPath) || !frontendType.hasReactWeb) return;
+  if (!vfs.exists(webPath)) return;
 
   // When backend is "self", add server deps to web too
   if (api === "trpc") {

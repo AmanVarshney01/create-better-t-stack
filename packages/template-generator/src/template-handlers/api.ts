@@ -2,7 +2,7 @@ import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
-import { type TemplateData, processTemplatesFromPrefix } from "./utils";
+import { type TemplateData, processTemplatesFromPrefix, processSingleTemplate } from "./utils";
 
 export async function processApiTemplates(
   vfs: VirtualFileSystem,
@@ -46,7 +46,25 @@ export async function processApiTemplates(
       );
     }
   } else if (hasNuxtWeb && config.api === "orpc") {
-    processTemplatesFromPrefix(vfs, templates, `api/${config.api}/web/nuxt`, "apps/web", config);
+    if (config.backend === "self") {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `api/${config.api}/fullstack/nuxt`,
+        "apps/web",
+        config,
+      );
+      // Only include vue-query from web templates, skip generic orpc.ts
+      processSingleTemplate(
+        vfs,
+        templates,
+        `api/${config.api}/web/nuxt/app/plugins/vue-query.ts`,
+        "apps/web/app/plugins/vue-query.ts",
+        config,
+      );
+    } else {
+      processTemplatesFromPrefix(vfs, templates, `api/${config.api}/web/nuxt`, "apps/web", config);
+    }
   } else if (hasSvelteWeb && config.api === "orpc") {
     processTemplatesFromPrefix(vfs, templates, `api/${config.api}/web/svelte`, "apps/web", config);
   } else if (hasSolidWeb && config.api === "orpc") {

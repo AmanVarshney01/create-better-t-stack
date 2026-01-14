@@ -460,6 +460,50 @@ describe("Frontend Configurations", () => {
     });
   });
 
+  describe("Nuxt with Self Backend", () => {
+    it("should work with Nuxt and self backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "nuxt-self-backend",
+        frontend: ["nuxt"],
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "orpc",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with Nuxt and traditional backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "nuxt-traditional-backend",
+        frontend: ["nuxt"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "orpc",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+  });
+
   describe("Web Deploy Constraints", () => {
     it("should work with web frontend + web deploy", async () => {
       const result = await runTRPCTest({

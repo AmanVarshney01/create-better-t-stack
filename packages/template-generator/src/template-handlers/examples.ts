@@ -80,6 +80,15 @@ export async function processExampleTemplates(
         }
       }
     } else if (hasNuxtWeb) {
+      if (config.backend === "self") {
+        processTemplatesFromPrefix(
+          vfs,
+          templates,
+          `examples/${example}/fullstack/nuxt`,
+          "apps/web",
+          config,
+        );
+      }
       processTemplatesFromPrefix(
         vfs,
         templates,

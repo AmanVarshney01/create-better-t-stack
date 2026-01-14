@@ -196,7 +196,7 @@ function buildNativeVars(
   let serverUrl = "http://localhost:3000";
 
   if (backend === "self") {
-    // Both TanStack Start and Next.js use port 3001 for fullstack
+    // TanStack Start, Next.js, and Nuxt use port 3001 for fullstack
     serverUrl = "http://localhost:3001";
   }
 
