@@ -30,22 +30,22 @@ export const dependencyVersionMap = {
   libsql: "0.5.22",
 
   "@neondatabase/serverless": "^1.0.2",
-  pg: "^8.16.3",
-  "@types/pg": "^8.15.6",
+  pg: "^8.17.1",
+  "@types/pg": "^8.16.0",
   "@types/ws": "^8.18.1",
   ws: "^8.18.3",
 
   mysql2: "^3.14.0",
 
-  "@prisma/client": "^7.1.0",
-  prisma: "^7.1.0",
-  "@prisma/adapter-d1": "^7.1.0",
-  "@prisma/adapter-neon": "^7.1.0",
-  "@prisma/adapter-mariadb": "^7.1.0",
-  "@prisma/adapter-libsql": "^7.1.0",
-  "@prisma/adapter-better-sqlite3": "^7.1.0",
-  "@prisma/adapter-pg": "^7.1.0",
-  "@prisma/adapter-planetscale": "^7.1.0",
+  "@prisma/client": "^7.2.0",
+  prisma: "^7.2.0",
+  "@prisma/adapter-d1": "^7.2.0",
+  "@prisma/adapter-neon": "^7.2.0",
+  "@prisma/adapter-mariadb": "^7.2.0",
+  "@prisma/adapter-libsql": "^7.2.0",
+  "@prisma/adapter-better-sqlite3": "^7.2.0",
+  "@prisma/adapter-pg": "^7.2.0",
+  "@prisma/adapter-planetscale": "^7.2.0",
 
   mongoose: "^8.14.0",
 
