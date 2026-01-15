@@ -110,7 +110,7 @@ function addSelfBackendWebDeps(
   vfs: VirtualFileSystem,
   api: API,
   backend: Backend,
-  frontendType: FrontendType,
+  _frontendType: FrontendType,
 ): void {
   if (backend !== "self") return;
 

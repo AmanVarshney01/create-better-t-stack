@@ -2,7 +2,6 @@ import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
-import { BatchLinkPlugin } from "@orpc/client/plugins";
 
 export default defineNuxtPlugin(() => {
   const rpcLink = new RPCLink({
