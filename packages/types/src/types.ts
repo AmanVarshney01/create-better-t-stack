@@ -24,6 +24,7 @@ import type {
   ProjectConfigSchema,
   BetterTStackConfigSchema,
   InitResultSchema,
+  AstroIntegrationSchema,
 } from "./schemas";
 
 // Inferred types from Zod schemas
@@ -44,6 +45,7 @@ export type ServerDeploy = z.infer<typeof ServerDeploySchema>;
 export type DirectoryConflict = z.infer<typeof DirectoryConflictSchema>;
 export type Template = z.infer<typeof TemplateSchema>;
 export type ProjectName = z.infer<typeof ProjectNameSchema>;
+export type AstroIntegration = z.infer<typeof AstroIntegrationSchema>;
 
 export type CreateInput = z.infer<typeof CreateInputSchema>;
 export type AddInput = z.infer<typeof AddInputSchema>;
@@ -61,6 +63,7 @@ export type WebFrontend = Extract<
   | "nuxt"
   | "svelte"
   | "solid"
+  | "astro"
   | "none"
 >;
 

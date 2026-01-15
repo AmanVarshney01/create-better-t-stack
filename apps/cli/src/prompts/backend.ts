@@ -4,10 +4,11 @@ import { DEFAULT_CONFIG } from "../constants";
 import { exitCancelled } from "../utils/errors";
 import { isCancel, navigableSelect } from "./navigable";
 
-// Temporarily restrict to Next.js and TanStack Start only for backend="self"
+// Temporarily restrict to Next.js, TanStack Start, and Astro only for backend="self"
 const FULLSTACK_FRONTENDS: readonly Frontend[] = [
   "next",
   "tanstack-start",
+  "astro",
   // "nuxt",      // TODO: Add support in future update
   // "svelte",    // TODO: Add support in future update
 ] as const;

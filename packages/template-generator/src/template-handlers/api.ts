@@ -20,6 +20,7 @@ export async function processApiTemplates(
   const hasNuxtWeb = config.frontend.includes("nuxt");
   const hasSvelteWeb = config.frontend.includes("svelte");
   const hasSolidWeb = config.frontend.includes("solid");
+  const hasAstroWeb = config.frontend.includes("astro");
 
   if (hasReactWeb) {
     processTemplatesFromPrefix(
@@ -41,6 +42,31 @@ export async function processApiTemplates(
         vfs,
         templates,
         `api/${config.api}/fullstack/${reactFramework}`,
+        "apps/web",
+        config,
+      );
+    }
+  } else if (hasAstroWeb) {
+    // Astro with React integration can use tRPC or oRPC
+    if (config.astroIntegration === "react") {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `api/${config.api}/web/react/base`,
+        "apps/web",
+        config,
+      );
+    } else if (config.api === "orpc") {
+      // Non-React Astro integrations use oRPC
+      processTemplatesFromPrefix(vfs, templates, `api/${config.api}/web/astro`, "apps/web", config);
+    }
+
+    // Astro fullstack mode
+    if (config.backend === "self") {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `api/${config.api}/fullstack/astro`,
         "apps/web",
         config,
       );

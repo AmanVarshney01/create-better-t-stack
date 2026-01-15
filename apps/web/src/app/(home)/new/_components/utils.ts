@@ -24,11 +24,13 @@ export function validateProjectName(name: string): string | undefined {
 }
 
 export const hasPWACompatibleFrontend = (webFrontend: string[]) =>
-  webFrontend.some((f) => ["tanstack-router", "react-router", "solid", "next"].includes(f));
+  webFrontend.some((f) =>
+    ["tanstack-router", "react-router", "solid", "next", "astro"].includes(f),
+  );
 
 export const hasTauriCompatibleFrontend = (webFrontend: string[]) =>
   webFrontend.some((f) =>
-    ["tanstack-router", "react-router", "nuxt", "svelte", "solid", "next"].includes(f),
+    ["tanstack-router", "react-router", "nuxt", "svelte", "solid", "next", "astro"].includes(f),
   );
 
 export const getCategoryDisplayName = (categoryKey: string): string => {
@@ -99,6 +101,13 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
       if (nextStack.webFrontend.length === 0) nextStack.webFrontend = ["none"];
       changed = true;
       changes.push({ category: "backend", message: "Removed Solid (incompatible with Convex)" });
+    }
+    if (nextStack.webFrontend.includes("astro")) {
+      nextStack.webFrontend = nextStack.webFrontend.filter((f) => f !== "astro");
+      if (nextStack.webFrontend.length === 0) nextStack.webFrontend = ["none"];
+      nextStack.astroIntegration = "none";
+      changed = true;
+      changes.push({ category: "backend", message: "Removed Astro (incompatible with Convex)" });
     }
 
     // Remove AI example if incompatible frontends are selected (Convex AI only supports React-based frontends)
@@ -192,7 +201,11 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   }
 
   // Self (fullstack) backend constraints
-  if (nextStack.backend === "self-next" || nextStack.backend === "self-tanstack-start") {
+  if (
+    nextStack.backend === "self-next" ||
+    nextStack.backend === "self-tanstack-start" ||
+    nextStack.backend === "self-astro"
+  ) {
     // Fullstack uses frontend's API routes, no separate runtime needed
     if (nextStack.runtime !== "none") {
       nextStack.runtime = "none";
@@ -231,6 +244,17 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
         message: "Frontend set to 'TanStack Start' (required for TanStack Start fullstack)",
       });
     }
+    if (nextStack.backend === "self-astro" && !nextStack.webFrontend.includes("astro")) {
+      nextStack.webFrontend = ["astro"];
+      if (nextStack.astroIntegration === "none") {
+        nextStack.astroIntegration = "react";
+      }
+      changed = true;
+      changes.push({
+        category: "backend",
+        message: "Frontend set to 'Astro' (required for Astro fullstack)",
+      });
+    }
   }
 
   // ============================================
@@ -266,13 +290,14 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     });
   }
 
-  // Runtime "none" only for convex, self-next, self-tanstack-start
+  // Runtime "none" only for convex, self-next, self-tanstack-start, self-astro
   if (
     nextStack.runtime === "none" &&
     nextStack.backend !== "convex" &&
     nextStack.backend !== "none" &&
     nextStack.backend !== "self-next" &&
-    nextStack.backend !== "self-tanstack-start"
+    nextStack.backend !== "self-tanstack-start" &&
+    nextStack.backend !== "self-astro"
   ) {
     nextStack.runtime = DEFAULT_STACK.runtime;
     changed = true;
@@ -473,6 +498,47 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
       changed = true;
       changes.push({ category: "api", message: "API set to 'oRPC' (required for this frontend)" });
     }
+
+    // Astro with non-React integration requires oRPC
+    if (
+      nextStack.webFrontend.includes("astro") &&
+      nextStack.astroIntegration !== "react" &&
+      nextStack.api === "trpc"
+    ) {
+      nextStack.api = "orpc";
+      changed = true;
+      changes.push({
+        category: "api",
+        message: "API set to 'oRPC' (tRPC requires React integration with Astro)",
+      });
+    }
+  }
+
+  // ============================================
+  // ASTRO INTEGRATION CONSTRAINTS
+  // ============================================
+
+  // If Astro is not selected, reset astroIntegration
+  if (!nextStack.webFrontend.includes("astro") && nextStack.astroIntegration !== "none") {
+    nextStack.astroIntegration = "none";
+    changed = true;
+    changes.push({
+      category: "astroIntegration",
+      message: "Astro integration reset (Astro not selected)",
+    });
+  }
+
+  // If Astro is selected but no integration is set, default to react
+  if (nextStack.webFrontend.includes("astro") && nextStack.astroIntegration === "none") {
+    // Only set default if api is trpc (which requires react)
+    if (nextStack.api === "trpc") {
+      nextStack.astroIntegration = "react";
+      changed = true;
+      changes.push({
+        category: "astroIntegration",
+        message: "Astro integration set to 'React' (required for tRPC)",
+      });
+    }
   }
 
   // ============================================
@@ -610,7 +676,7 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
 
   if (
     nextStack.serverDeploy !== "none" &&
-    ["none", "convex", "self-next", "self-tanstack-start"].includes(nextStack.backend)
+    ["none", "convex", "self-next", "self-tanstack-start", "self-astro"].includes(nextStack.backend)
   ) {
     nextStack.serverDeploy = "none";
     changed = true;
@@ -676,6 +742,9 @@ export const getDisabledReason = (
     }
     if (category === "webFrontend" && optionId === "solid") {
       return "Solid is not compatible with Convex";
+    }
+    if (category === "webFrontend" && optionId === "astro") {
+      return "Astro is not compatible with Convex";
     }
     if (category === "examples" && optionId === "ai") {
       const hasIncompatibleFrontend = currentStack.webFrontend.some((f) =>
@@ -753,6 +822,18 @@ export const getDisabledReason = (
     }
   }
 
+  if (currentStack.backend === "self-astro") {
+    if (category === "runtime" && optionId !== "none") {
+      return "Astro fullstack uses built-in API routes";
+    }
+    if (category === "webFrontend" && optionId !== "astro" && optionId !== "none") {
+      return "Astro fullstack requires Astro frontend";
+    }
+    if (category === "serverDeploy" && optionId !== "none") {
+      return "Fullstack uses frontend deployment";
+    }
+  }
+
   // ============================================
   // BACKEND SELECTION CONSTRAINTS
   // ============================================
@@ -766,8 +847,14 @@ export const getDisabledReason = (
     ) {
       return "Requires TanStack Start frontend";
     }
+    if (optionId === "self-astro" && !currentStack.webFrontend.includes("astro")) {
+      return "Requires Astro frontend";
+    }
     if (optionId === "convex" && currentStack.webFrontend.includes("solid")) {
       return "Convex is not compatible with Solid";
+    }
+    if (optionId === "convex" && currentStack.webFrontend.includes("astro")) {
+      return "Convex is not compatible with Astro";
     }
     // Workers runtime only works with Hono backend
     if (currentStack.runtime === "workers" && optionId !== "hono" && optionId !== "none") {
@@ -783,7 +870,7 @@ export const getDisabledReason = (
       return "Workers requires Hono backend";
     }
     if (optionId === "none") {
-      const allowedBackends = ["convex", "none", "self-next", "self-tanstack-start"];
+      const allowedBackends = ["convex", "none", "self-next", "self-tanstack-start", "self-astro"];
       if (!allowedBackends.includes(currentStack.backend)) {
         return "Runtime 'None' only for Convex or fullstack backends";
       }
@@ -874,6 +961,27 @@ export const getDisabledReason = (
       );
       return `${frontendName} requires oRPC, not tRPC`;
     }
+    // Astro with non-React integration requires oRPC
+    if (
+      currentStack.webFrontend.includes("astro") &&
+      currentStack.astroIntegration !== "react" &&
+      currentStack.astroIntegration !== "none"
+    ) {
+      return `Astro with ${currentStack.astroIntegration} integration requires oRPC, not tRPC`;
+    }
+  }
+
+  // ============================================
+  // ASTRO INTEGRATION CONSTRAINTS
+  // ============================================
+  if (category === "astroIntegration") {
+    if (!currentStack.webFrontend.includes("astro") && optionId !== "none") {
+      return "Astro integration requires Astro frontend";
+    }
+    // tRPC requires React integration
+    if (currentStack.api === "trpc" && optionId !== "react" && optionId !== "none") {
+      return "tRPC requires React integration with Astro";
+    }
   }
 
   // ============================================
@@ -914,10 +1022,10 @@ export const getDisabledReason = (
   // ============================================
   if (category === "addons") {
     if (optionId === "pwa" && !hasPWACompatibleFrontend(currentStack.webFrontend)) {
-      return "PWA requires TanStack Router, React Router, Solid, or Next.js";
+      return "PWA requires TanStack Router, React Router, Solid, Next.js, or Astro";
     }
     if (optionId === "tauri" && !hasTauriCompatibleFrontend(currentStack.webFrontend)) {
-      return "Tauri requires TanStack Router, React Router, Nuxt, Svelte, Solid, or Next.js";
+      return "Tauri requires TanStack Router, React Router, Nuxt, Svelte, Solid, Next.js, or Astro";
     }
   }
 
@@ -964,7 +1072,7 @@ export const getDisabledReason = (
       if (currentStack.backend !== "hono") return "Cloudflare requires Hono backend";
     }
     if (optionId !== "none") {
-      const noServerDeploy = ["none", "convex", "self-next", "self-tanstack-start"];
+      const noServerDeploy = ["none", "convex", "self-next", "self-tanstack-start", "self-astro"];
       if (noServerDeploy.includes(currentStack.backend)) {
         return "Server deployment not needed for this backend";
       }

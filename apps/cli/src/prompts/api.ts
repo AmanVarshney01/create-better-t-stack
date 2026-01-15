@@ -1,4 +1,4 @@
-import type { API, Backend, Frontend } from "../types";
+import type { API, AstroIntegration, Backend, Frontend } from "../types";
 
 import { allowedApisForFrontends } from "../utils/compatibility-rules";
 import { exitCancelled } from "../utils/errors";
@@ -8,12 +8,13 @@ export async function getApiChoice(
   Api?: API | undefined,
   frontend?: Frontend[],
   backend?: Backend,
+  astroIntegration?: AstroIntegration,
 ) {
   if (backend === "convex" || backend === "none") {
     return "none";
   }
 
-  const allowed = allowedApisForFrontends(frontend ?? []);
+  const allowed = allowedApisForFrontends(frontend ?? [], astroIntegration);
 
   if (Api) {
     return allowed.includes(Api) ? Api : allowed[0];

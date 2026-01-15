@@ -1,0 +1,77 @@
+---
+import Layout from '@/layouts/Layout.astro';
+{{#if (ne astroIntegration "none")}}
+{{#if (eq astroIntegration "react")}}
+import Counter from '@/components/Counter';
+{{/if}}
+{{#if (eq astroIntegration "vue")}}
+import Counter from '@/components/Counter.vue';
+{{/if}}
+{{#if (eq astroIntegration "svelte")}}
+import Counter from '@/components/Counter.svelte';
+{{/if}}
+{{#if (eq astroIntegration "solid")}}
+import Counter from '@/components/Counter';
+{{/if}}
+{{/if}}
+---
+
+<Layout title="{{projectName}}">
+	<div class="flex flex-col items-center justify-center gap-8 py-12">
+		<div class="text-center">
+			<h1 class="mb-4 text-4xl font-bold tracking-tight sm:text-5xl">
+				Welcome to <span class="text-primary">{{projectName}}</span>
+			</h1>
+			<p class="text-lg text-muted-foreground">
+				Built with Astro and Better-T-Stack
+			</p>
+		</div>
+
+{{#if (ne astroIntegration "none")}}
+		<div class="mt-8 rounded-lg border border-border bg-card p-6 shadow-sm">
+			<h2 class="mb-4 text-xl font-semibold">Interactive Counter</h2>
+			<p class="mb-4 text-sm text-muted-foreground">
+				This is an island component using {{astroIntegration}} with client-side hydration.
+			</p>
+			<Counter client:load />
+		</div>
+{{else}}
+		<div class="mt-8 rounded-lg border border-border bg-card p-6 shadow-sm">
+			<h2 class="mb-4 text-xl font-semibold">Static Site</h2>
+			<p class="text-sm text-muted-foreground">
+				This is a static Astro site without client-side JavaScript framework.
+			</p>
+		</div>
+{{/if}}
+
+		<div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+			<a
+				href="https://docs.astro.build/"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary"
+			>
+				<h3 class="font-semibold">Astro Docs</h3>
+				<p class="text-sm text-muted-foreground">Learn about Astro's features and API.</p>
+			</a>
+			<a
+				href="https://better-t-stack.dev"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary"
+			>
+				<h3 class="font-semibold">Better-T-Stack</h3>
+				<p class="text-sm text-muted-foreground">Full-stack TypeScript development.</p>
+			</a>
+			<a
+				href="https://astro.build/integrations/"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="rounded-lg border border-border bg-card p-4 transition-colors hover:border-primary"
+			>
+				<h3 class="font-semibold">Integrations</h3>
+				<p class="text-sm text-muted-foreground">Extend Astro with plugins and frameworks.</p>
+			</a>
+		</div>
+	</div>
+</Layout>

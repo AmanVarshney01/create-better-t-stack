@@ -4,6 +4,7 @@ import { stackUrlKeys } from "@/lib/stack-url-keys";
 const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
   "webFrontend",
   "nativeFrontend",
+  "astroIntegration",
   "backend",
   "runtime",
   "api",
@@ -71,7 +72,7 @@ export function generateStackCommand(stack: StackState) {
 
   // Map web interface backend IDs to CLI backend flags
   const mapBackendToCli = (backend: string) => {
-    if (backend === "self-next" || backend === "self-tanstack-start") {
+    if (backend === "self-next" || backend === "self-tanstack-start" || backend === "self-astro") {
       return "self";
     }
     return backend;
@@ -83,6 +84,10 @@ export function generateStackCommand(stack: StackState) {
         .filter((v, _, arr) => v !== "none" || arr.length === 1)
         .join(" ") || "none"
     }`,
+    // Add astro-integration flag only when Astro is selected
+    ...(stack.webFrontend.includes("astro") && stack.astroIntegration !== "none"
+      ? [`--astro-integration ${stack.astroIntegration}`]
+      : []),
     `--backend ${mapBackendToCli(stack.backend)}`,
     `--runtime ${stack.runtime}`,
     `--api ${stack.api}`,

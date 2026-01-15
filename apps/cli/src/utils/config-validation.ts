@@ -338,7 +338,7 @@ export function validateBackendConstraints(
   }
 
   if (backend === "convex" && providedFlags.has("frontend") && options.frontend) {
-    const incompatibleFrontends = options.frontend.filter((f) => f === "solid");
+    const incompatibleFrontends = options.frontend.filter((f) => ["solid", "astro"].includes(f));
     if (incompatibleFrontends.length > 0) {
       exitWithError(
         `The following frontends are not compatible with '--backend convex': ${incompatibleFrontends.join(
@@ -359,7 +359,7 @@ export function validateFrontendConstraints(
     ensureSingleWebAndNative(frontend);
 
     if (providedFlags.has("api") && providedFlags.has("frontend") && config.api) {
-      validateApiFrontendCompatibility(config.api, frontend);
+      validateApiFrontendCompatibility(config.api, frontend, config.astroIntegration);
     }
   }
 
@@ -448,7 +448,7 @@ export function validateConfigForProgrammaticUse(config: Partial<ProjectConfig>)
       ensureSingleWebAndNative(config.frontend);
     }
 
-    validateApiFrontendCompatibility(config.api, config.frontend);
+    validateApiFrontendCompatibility(config.api, config.frontend, config.astroIntegration);
 
     validatePaymentsCompatibility(config.payments, config.auth, config.backend, config.frontend);
 

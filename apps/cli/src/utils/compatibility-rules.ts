@@ -1,6 +1,7 @@
 import type {
   Addons,
   API,
+  AstroIntegration,
   Auth,
   Backend,
   CLIInput,
@@ -34,7 +35,7 @@ export function ensureSingleWebAndNative(frontends: Frontend[]) {
   const { web, native } = splitFrontends(frontends);
   if (web.length > 1) {
     exitWithError(
-      "Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, nuxt, svelte, solid",
+      "Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, nuxt, svelte, solid, astro",
     );
   }
   if (native.length > 1) {
@@ -44,10 +45,11 @@ export function ensureSingleWebAndNative(frontends: Frontend[]) {
   }
 }
 
-// Temporarily restrict to Next.js and TanStack Start only for backend="self"
+// Temporarily restrict to Next.js, TanStack Start, and Astro only for backend="self"
 const FULLSTACK_FRONTENDS: readonly Frontend[] = [
   "next",
   "tanstack-start",
+  "astro",
   // "nuxt",      // TODO: Add support in future update
   // "svelte",    // TODO: Add support in future update
 ] as const;
@@ -66,7 +68,7 @@ export function validateSelfBackendCompatibility(
 
     if (!hasSupportedWeb) {
       exitWithError(
-        "Backend 'self' (fullstack) currently only supports Next.js and TanStack Start frontends. Please use --frontend next or --frontend tanstack-start. Support for Nuxt and SvelteKit will be added in a future update.",
+        "Backend 'self' (fullstack) currently only supports Next.js, TanStack Start, and Astro frontends. Please use --frontend next, --frontend tanstack-start, or --frontend astro. Support for Nuxt and SvelteKit will be added in a future update.",
       );
     }
 
@@ -80,7 +82,7 @@ export function validateSelfBackendCompatibility(
   const hasFullstackFrontend = frontends.some((f) => FULLSTACK_FRONTENDS.includes(f));
   if (providedFlags.has("backend") && !hasFullstackFrontend && backend === "self") {
     exitWithError(
-      "Backend 'self' (fullstack) currently only supports Next.js and TanStack Start frontends. Please use --frontend next or --frontend tanstack-start or choose a different backend. Support for Nuxt and SvelteKit will be added in a future update.",
+      "Backend 'self' (fullstack) currently only supports Next.js, TanStack Start, and Astro frontends. Please use --frontend next, --frontend tanstack-start, --frontend astro, or choose a different backend. Support for Nuxt and SvelteKit will be added in a future update.",
     );
   }
 }
@@ -143,13 +145,26 @@ export function validateWorkersCompatibility(
   }
 }
 
-export function validateApiFrontendCompatibility(api: API | undefined, frontends: Frontend[] = []) {
+export function validateApiFrontendCompatibility(
+  api: API | undefined,
+  frontends: Frontend[] = [],
+  astroIntegration?: AstroIntegration,
+) {
   const includesNuxt = frontends.includes("nuxt");
   const includesSvelte = frontends.includes("svelte");
   const includesSolid = frontends.includes("solid");
+  const includesAstro = frontends.includes("astro");
+
   if ((includesNuxt || includesSvelte || includesSolid) && api === "trpc") {
     exitWithError(
       `tRPC API is not supported with '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"}' frontend. Please use --api orpc or --api none or remove '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"}' from --frontend.`,
+    );
+  }
+
+  // Astro with non-React integrations doesn't support tRPC
+  if (includesAstro && astroIntegration && astroIntegration !== "react" && api === "trpc") {
+    exitWithError(
+      `tRPC API requires React integration with Astro. Please use --api orpc or --api none, or use --astro-integration react.`,
     );
   }
 }
@@ -160,6 +175,7 @@ export function isFrontendAllowedWithBackend(
   auth?: string,
 ) {
   if (backend === "convex" && frontend === "solid") return false;
+  if (backend === "convex" && frontend === "astro") return false;
 
   if (auth === "clerk" && backend === "convex") {
     const incompatibleFrontends = ["nuxt", "svelte", "solid"];
@@ -169,14 +185,26 @@ export function isFrontendAllowedWithBackend(
   return true;
 }
 
-export function allowedApisForFrontends(frontends: Frontend[] = []) {
+export function allowedApisForFrontends(
+  frontends: Frontend[] = [],
+  astroIntegration?: AstroIntegration,
+) {
   const includesNuxt = frontends.includes("nuxt");
   const includesSvelte = frontends.includes("svelte");
   const includesSolid = frontends.includes("solid");
+  const includesAstro = frontends.includes("astro");
   const base: API[] = ["trpc", "orpc", "none"];
+
+  // Nuxt, Svelte, and Solid only support oRPC
   if (includesNuxt || includesSvelte || includesSolid) {
     return ["orpc", "none"];
   }
+
+  // Astro with non-React integrations only supports oRPC
+  if (includesAstro && astroIntegration && astroIntegration !== "react") {
+    return ["orpc", "none"];
+  }
+
   return base;
 }
 

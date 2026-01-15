@@ -13,6 +13,9 @@ export const stackParsers = {
   projectName: parseAsString.withDefault(DEFAULT_STACK.projectName ?? "my-better-t-app"),
   webFrontend: parseAsArrayOf(parseAsString).withDefault(DEFAULT_STACK.webFrontend),
   nativeFrontend: parseAsArrayOf(parseAsString).withDefault(DEFAULT_STACK.nativeFrontend),
+  astroIntegration: parseAsStringEnum<StackState["astroIntegration"]>(
+    getValidIds("astroIntegration"),
+  ).withDefault(DEFAULT_STACK.astroIntegration),
   runtime: parseAsStringEnum<StackState["runtime"]>(getValidIds("runtime")).withDefault(
     DEFAULT_STACK.runtime,
   ),
@@ -65,6 +68,7 @@ export function useStackState() {
     projectName: queryState.projectName,
     webFrontend: queryState.webFrontend,
     nativeFrontend: queryState.nativeFrontend,
+    astroIntegration: queryState.astroIntegration,
     runtime: queryState.runtime,
     backend: queryState.backend,
     api: queryState.api,

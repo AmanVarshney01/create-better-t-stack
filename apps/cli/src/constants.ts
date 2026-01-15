@@ -47,8 +47,8 @@ export function getDefaultConfig() {
 export const DEFAULT_CONFIG = getDefaultConfig();
 
 export const ADDON_COMPATIBILITY = {
-  pwa: ["tanstack-router", "react-router", "solid", "next"],
-  tauri: ["tanstack-router", "react-router", "nuxt", "svelte", "solid", "next"],
+  pwa: ["tanstack-router", "react-router", "solid", "next", "astro"],
+  tauri: ["tanstack-router", "react-router", "nuxt", "svelte", "solid", "next", "astro"],
   biome: [],
   husky: [],
   lefthook: [],

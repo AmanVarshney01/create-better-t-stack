@@ -8,6 +8,7 @@ export const stackUrlKeys: UrlKeys<
   projectName: "name",
   webFrontend: "fe-w",
   nativeFrontend: "fe-n",
+  astroIntegration: "ai",
   runtime: "rt",
   backend: "be",
   api: "api",

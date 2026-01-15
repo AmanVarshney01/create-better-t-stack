@@ -1,0 +1,48 @@
+import { defineConfig } from 'astro/config';
+import tailwindcss from '@tailwindcss/vite';
+{{#if (eq astroIntegration "react")}}
+import react from '@astrojs/react';
+{{/if}}
+{{#if (eq astroIntegration "vue")}}
+import vue from '@astrojs/vue';
+{{/if}}
+{{#if (eq astroIntegration "svelte")}}
+import svelte from '@astrojs/svelte';
+{{/if}}
+{{#if (eq astroIntegration "solid")}}
+import solidJs from '@astrojs/solid-js';
+{{/if}}
+{{#if (eq backend "self")}}
+import node from '@astrojs/node';
+{{/if}}
+{{#if (eq runtime "workers")}}
+import cloudflare from '@astrojs/cloudflare';
+{{/if}}
+
+export default defineConfig({
+	integrations: [
+{{#if (eq astroIntegration "react")}}
+		react(),
+{{/if}}
+{{#if (eq astroIntegration "vue")}}
+		vue(),
+{{/if}}
+{{#if (eq astroIntegration "svelte")}}
+		svelte(),
+{{/if}}
+{{#if (eq astroIntegration "solid")}}
+		solidJs(),
+{{/if}}
+	],
+	vite: {
+		plugins: [tailwindcss()],
+	},
+{{#if (or (eq backend "self") (eq runtime "workers"))}}
+	output: 'server',
+{{#if (eq backend "self")}}
+	adapter: node({ mode: 'standalone' }),
+{{else if (eq runtime "workers")}}
+	adapter: cloudflare(),
+{{/if}}
+{{/if}}
+});

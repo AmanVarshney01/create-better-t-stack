@@ -1,0 +1,28 @@
+---
+import '@/styles/global.css';
+import Header from '@/components/Header.astro';
+
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" class="dark">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content="Astro website built with Better-T-Stack" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+	</head>
+	<body class="min-h-screen bg-background text-foreground antialiased">
+		<Header />
+		<main class="container mx-auto px-4 py-8">
+			<slot />
+		</main>
+	</body>
+</html>

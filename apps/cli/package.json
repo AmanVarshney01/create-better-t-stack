@@ -67,6 +67,7 @@
     "test:watch": "bun run build && bun test --watch",
     "test:coverage": "bun run build && bun test --coverage",
     "test:ci": "bun run build && CI=1 bun test --bail=5",
+    "test:astro-combos": "bun run build && bun run scripts/test-astro-combinations.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

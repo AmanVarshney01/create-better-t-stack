@@ -24,6 +24,7 @@ import { create } from "../src/index";
 import {
   AddonsSchema,
   APISchema,
+  AstroIntegrationSchema,
   AuthSchema,
   BackendSchema,
   DatabaseSchema,
@@ -78,6 +79,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     "backend",
     "runtime",
     "frontend",
+    "astroIntegration",
     "addons",
     "examples",
     "auth",
@@ -180,6 +182,7 @@ export const ORMS = extractEnumValues(ORMSchema);
 export const BACKENDS = extractEnumValues(BackendSchema);
 export const RUNTIMES = extractEnumValues(RuntimeSchema);
 export const FRONTENDS = extractEnumValues(FrontendSchema);
+export const ASTRO_INTEGRATIONS = extractEnumValues(AstroIntegrationSchema);
 export const ADDONS = extractEnumValues(AddonsSchema);
 export const EXAMPLES = extractEnumValues(ExamplesSchema);
 export const AUTH_PROVIDERS = extractEnumValues(AuthSchema);

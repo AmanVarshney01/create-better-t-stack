@@ -3,6 +3,7 @@ export type TechCategory =
   | "api"
   | "webFrontend"
   | "nativeFrontend"
+  | "astroIntegration"
   | "runtime"
   | "backend"
   | "database"

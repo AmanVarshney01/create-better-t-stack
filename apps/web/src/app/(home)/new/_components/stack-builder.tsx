@@ -12,7 +12,7 @@ import {
   Settings,
   Terminal,
 } from "lucide-react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { startTransition, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -592,6 +592,9 @@ const StackBuilder = () => {
                 <ScrollArea className="h-full overflow-hidden scroll-smooth">
                   <main className="p-3 sm:p-4">
                     {CATEGORY_ORDER.map((categoryKey) => {
+                      // Skip astroIntegration - it will be rendered conditionally
+                      if (categoryKey === "astroIntegration") return null;
+
                       const categoryOptions =
                         TECH_OPTIONS[categoryKey as keyof typeof TECH_OPTIONS] || [];
                       const categoryDisplayName = getCategoryDisplayName(categoryKey);
@@ -601,17 +604,289 @@ const StackBuilder = () => {
                       if (filteredOptions.length === 0) return null;
 
                       return (
-                        <section
-                          ref={(el) => {
-                            sectionRefs.current[categoryKey] = el;
-                          }}
-                          key={categoryKey}
-                          id={`section-${categoryKey}`}
-                          className="mb-6 scroll-mt-4 sm:mb-8"
-                        >
+                        <div key={categoryKey}>
+                          <section
+                            ref={(el) => {
+                              sectionRefs.current[categoryKey] = el;
+                            }}
+                            id={`section-${categoryKey}`}
+                            className="mb-6 scroll-mt-4 sm:mb-8"
+                          >
+                            <div className="mb-3 flex items-center border-border border-b pb-2 text-muted-foreground">
+                              <Terminal className="mr-2 h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
+                              <h2 className="font-semibold font-mono text-foreground text-sm sm:text-base">
+                                {categoryDisplayName}
+                              </h2>
+                              {compatibilityAnalysis.notes[categoryKey]?.hasIssue && (
+                                <Tooltip delay={100}>
+                                  <TooltipTrigger
+                                    render={
+                                      <InfoIcon className="ml-2 h-4 w-4 shrink-0 cursor-help text-muted-foreground" />
+                                    }
+                                  />
+                                  <TooltipContent side="top" align="start">
+                                    <ul className="list-disc space-y-1 pl-4 text-xs">
+                                      {compatibilityAnalysis.notes[categoryKey].notes.map(
+                                        (note) => (
+                                          <li key={note}>{note}</li>
+                                        ),
+                                      )}
+                                    </ul>
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3 2xl:grid-cols-4">
+                              {filteredOptions.map((tech) => {
+                                let isSelected = false;
+                                const category = categoryKey as keyof StackState;
+                                const currentValue = stack[category];
+
+                                if (
+                                  category === "addons" ||
+                                  category === "examples" ||
+                                  category === "webFrontend" ||
+                                  category === "nativeFrontend"
+                                ) {
+                                  isSelected = ((currentValue as string[]) || []).includes(tech.id);
+                                } else {
+                                  isSelected = currentValue === tech.id;
+                                }
+
+                                const isDisabled = !isOptionCompatible(
+                                  stack,
+                                  categoryKey as keyof typeof TECH_OPTIONS,
+                                  tech.id,
+                                );
+
+                                const disabledReason = isDisabled
+                                  ? getDisabledReason(
+                                      stack,
+                                      categoryKey as keyof typeof TECH_OPTIONS,
+                                      tech.id,
+                                    )
+                                  : null;
+
+                                return (
+                                  <Tooltip key={tech.id} delay={100}>
+                                    <TooltipTrigger
+                                      render={
+                                        <motion.div
+                                          className={cn(
+                                            "relative cursor-pointer rounded border p-2 transition-all sm:p-3",
+                                            isSelected
+                                              ? "border-primary bg-primary/10"
+                                              : isDisabled
+                                                ? "border-destructive/30 bg-destructive/5 opacity-50 hover:opacity-75"
+                                                : "border-border bg-fd-background hover:border-muted hover:bg-muted/10",
+                                          )}
+                                          whileHover={{ scale: 1.02 }}
+                                          whileTap={{ scale: 0.98 }}
+                                          onClick={() =>
+                                            handleTechSelect(
+                                              categoryKey as keyof typeof TECH_OPTIONS,
+                                              tech.id,
+                                            )
+                                          }
+                                        />
+                                      }
+                                    >
+                                      <div className="flex items-start">
+                                        <div className="grow">
+                                          <div className="flex items-center justify-between">
+                                            <div className="flex items-center">
+                                              {tech.icon !== "" && (
+                                                <TechIcon
+                                                  icon={tech.icon}
+                                                  name={tech.name}
+                                                  className={cn(
+                                                    "mr-1.5 h-3 w-3 sm:h-4 sm:w-4",
+                                                    tech.className,
+                                                  )}
+                                                />
+                                              )}
+                                              <span
+                                                className={cn(
+                                                  "font-medium text-xs sm:text-sm",
+                                                  isSelected ? "text-primary" : "text-foreground",
+                                                )}
+                                              >
+                                                {tech.name}
+                                              </span>
+                                            </div>
+                                          </div>
+                                          <p className="mt-0.5 text-muted-foreground text-xs">
+                                            {tech.description}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      {tech.default && !isSelected && (
+                                        <span className="absolute top-1 right-1 ml-2 shrink-0 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
+                                          Default
+                                        </span>
+                                      )}
+                                    </TooltipTrigger>
+                                    {disabledReason && (
+                                      <TooltipContent
+                                        side="top"
+                                        align="center"
+                                        className="max-w-xs"
+                                      >
+                                        <p className="text-xs">{disabledReason}</p>
+                                      </TooltipContent>
+                                    )}
+                                  </Tooltip>
+                                );
+                              })}
+                            </div>
+                          </section>
+
+                          {/* Astro Integration - shown only when Astro is selected, right after webFrontend */}
+                          {categoryKey === "webFrontend" && (
+                            <AnimatePresence>
+                              {stack.webFrontend.includes("astro") && (
+                                <motion.section
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: "auto" }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                                  className="mb-6 scroll-mt-4 sm:mb-8 overflow-hidden"
+                                >
+                                  <div className="mb-3 flex items-center border-border border-b pb-2 text-muted-foreground">
+                                    <Terminal className="mr-2 h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
+                                    <h2 className="font-semibold font-mono text-foreground text-sm sm:text-base">
+                                      Astro Integration
+                                    </h2>
+                                  </div>
+                                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3 2xl:grid-cols-4">
+                                    {(TECH_OPTIONS.astroIntegration || []).map((tech) => {
+                                      const isSelected = stack.astroIntegration === tech.id;
+                                      const isDisabled = !isOptionCompatible(
+                                        stack,
+                                        "astroIntegration",
+                                        tech.id,
+                                      );
+                                      const disabledReason = isDisabled
+                                        ? getDisabledReason(stack, "astroIntegration", tech.id)
+                                        : null;
+
+                                      return (
+                                        <Tooltip key={tech.id} delay={100}>
+                                          <TooltipTrigger
+                                            render={
+                                              <motion.div
+                                                className={cn(
+                                                  "relative cursor-pointer rounded border p-2 transition-all sm:p-3",
+                                                  isSelected
+                                                    ? "border-primary bg-primary/10"
+                                                    : isDisabled
+                                                      ? "border-destructive/30 bg-destructive/5 opacity-50 hover:opacity-75"
+                                                      : "border-border bg-fd-background hover:border-muted hover:bg-muted/10",
+                                                )}
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
+                                                onClick={() =>
+                                                  handleTechSelect("astroIntegration", tech.id)
+                                                }
+                                              />
+                                            }
+                                          >
+                                            <div className="flex items-start">
+                                              <div className="grow">
+                                                <div className="flex items-center justify-between">
+                                                  <div className="flex items-center">
+                                                    {tech.icon !== "" && (
+                                                      <TechIcon
+                                                        icon={tech.icon}
+                                                        name={tech.name}
+                                                        className={cn(
+                                                          "mr-1.5 h-3 w-3 sm:h-4 sm:w-4",
+                                                          tech.className,
+                                                        )}
+                                                      />
+                                                    )}
+                                                    <span
+                                                      className={cn(
+                                                        "font-medium text-xs sm:text-sm",
+                                                        isSelected
+                                                          ? "text-primary"
+                                                          : "text-foreground",
+                                                      )}
+                                                    >
+                                                      {tech.name}
+                                                    </span>
+                                                  </div>
+                                                </div>
+                                                <p className="mt-0.5 text-muted-foreground text-xs">
+                                                  {tech.description}
+                                                </p>
+                                              </div>
+                                            </div>
+                                            {tech.default && !isSelected && (
+                                              <span className="absolute top-1 right-1 ml-2 shrink-0 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
+                                                Default
+                                              </span>
+                                            )}
+                                          </TooltipTrigger>
+                                          {disabledReason && (
+                                            <TooltipContent
+                                              side="top"
+                                              align="center"
+                                              className="max-w-xs"
+                                            >
+                                              <p className="text-xs">{disabledReason}</p>
+                                            </TooltipContent>
+                                          )}
+                                        </Tooltip>
+                                      );
+                                    })}
+                                  </div>
+                                </motion.section>
+                              )}
+                            </AnimatePresence>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    <div className="h-10" />
+                  </main>
+                </ScrollArea>
+              </div>
+            </TabsContent>
+            <TabsContent value="preview" className="flex-1 min-h-0 overflow-hidden">
+              <PreviewPanel
+                stack={stack}
+                selectedFilePath={selectedFile}
+                onSelectFile={setSelectedFile}
+              />
+            </TabsContent>
+          </Tabs>
+
+          {/* Mobile content - shown based on mobileTab */}
+          <div className="flex flex-1 flex-col overflow-hidden sm:hidden">
+            {mobileTab === "configure" && (
+              <ScrollArea className="h-full overflow-hidden scroll-smooth">
+                <main className="p-3">
+                  {CATEGORY_ORDER.map((categoryKey) => {
+                    // Skip astroIntegration - it will be rendered conditionally
+                    if (categoryKey === "astroIntegration") return null;
+
+                    const categoryOptions =
+                      TECH_OPTIONS[categoryKey as keyof typeof TECH_OPTIONS] || [];
+                    const categoryDisplayName = getCategoryDisplayName(categoryKey);
+
+                    const filteredOptions = categoryOptions;
+
+                    if (filteredOptions.length === 0) return null;
+
+                    return (
+                      <div key={categoryKey}>
+                        <section id={`section-mobile-${categoryKey}`} className="mb-6 scroll-mt-4">
                           <div className="mb-3 flex items-center border-border border-b pb-2 text-muted-foreground">
-                            <Terminal className="mr-2 h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
-                            <h2 className="font-semibold font-mono text-foreground text-sm sm:text-base">
+                            <Terminal className="mr-2 h-4 w-4 shrink-0" />
+                            <h2 className="font-semibold font-mono text-foreground text-sm">
                               {categoryDisplayName}
                             </h2>
                             {compatibilityAnalysis.notes[categoryKey]?.hasIssue && (
@@ -632,7 +907,7 @@ const StackBuilder = () => {
                             )}
                           </div>
 
-                          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3 2xl:grid-cols-4">
+                          <div className="grid grid-cols-1 gap-2">
                             {filteredOptions.map((tech) => {
                               let isSelected = false;
                               const category = categoryKey as keyof StackState;
@@ -655,222 +930,147 @@ const StackBuilder = () => {
                                 tech.id,
                               );
 
-                              const disabledReason = isDisabled
-                                ? getDisabledReason(
-                                    stack,
-                                    categoryKey as keyof typeof TECH_OPTIONS,
-                                    tech.id,
-                                  )
-                                : null;
-
                               return (
-                                <Tooltip key={tech.id} delay={100}>
-                                  <TooltipTrigger
-                                    render={
-                                      <motion.div
-                                        className={cn(
-                                          "relative cursor-pointer rounded border p-2 transition-all sm:p-3",
-                                          isSelected
-                                            ? "border-primary bg-primary/10"
-                                            : isDisabled
-                                              ? "border-destructive/30 bg-destructive/5 opacity-50 hover:opacity-75"
-                                              : "border-border bg-fd-background hover:border-muted hover:bg-muted/10",
-                                        )}
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() =>
-                                          handleTechSelect(
-                                            categoryKey as keyof typeof TECH_OPTIONS,
-                                            tech.id,
-                                          )
-                                        }
-                                      />
-                                    }
-                                  >
-                                    <div className="flex items-start">
-                                      <div className="grow">
-                                        <div className="flex items-center justify-between">
-                                          <div className="flex items-center">
-                                            {tech.icon !== "" && (
-                                              <TechIcon
-                                                icon={tech.icon}
-                                                name={tech.name}
-                                                className={cn(
-                                                  "mr-1.5 h-3 w-3 sm:h-4 sm:w-4",
-                                                  tech.className,
-                                                )}
-                                              />
-                                            )}
-                                            <span
-                                              className={cn(
-                                                "font-medium text-xs sm:text-sm",
-                                                isSelected ? "text-primary" : "text-foreground",
-                                              )}
-                                            >
-                                              {tech.name}
-                                            </span>
-                                          </div>
-                                        </div>
-                                        <p className="mt-0.5 text-muted-foreground text-xs">
-                                          {tech.description}
-                                        </p>
-                                      </div>
-                                    </div>
-                                    {tech.default && !isSelected && (
-                                      <span className="absolute top-1 right-1 ml-2 shrink-0 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
-                                        Default
-                                      </span>
-                                    )}
-                                  </TooltipTrigger>
-                                  {disabledReason && (
-                                    <TooltipContent side="top" align="center" className="max-w-xs">
-                                      <p className="text-xs">{disabledReason}</p>
-                                    </TooltipContent>
+                                <motion.div
+                                  key={tech.id}
+                                  className={cn(
+                                    "relative cursor-pointer rounded border p-3 transition-all",
+                                    isSelected
+                                      ? "border-primary bg-primary/10"
+                                      : isDisabled
+                                        ? "border-destructive/30 bg-destructive/5 opacity-50"
+                                        : "border-border hover:border-muted hover:bg-muted",
                                   )}
-                                </Tooltip>
+                                  whileTap={{ scale: 0.98 }}
+                                  onClick={() =>
+                                    handleTechSelect(
+                                      categoryKey as keyof typeof TECH_OPTIONS,
+                                      tech.id,
+                                    )
+                                  }
+                                >
+                                  <div className="flex items-start">
+                                    <div className="grow">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center">
+                                          {tech.icon !== "" && (
+                                            <TechIcon
+                                              icon={tech.icon}
+                                              name={tech.name}
+                                              className={cn("mr-1.5 h-4 w-4", tech.className)}
+                                            />
+                                          )}
+                                          <span
+                                            className={cn(
+                                              "font-medium text-sm",
+                                              isSelected ? "text-primary" : "text-foreground",
+                                            )}
+                                          >
+                                            {tech.name}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <p className="mt-0.5 text-muted-foreground text-xs">
+                                        {tech.description}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  {tech.default && !isSelected && (
+                                    <span className="absolute top-1 right-1 ml-2 shrink-0 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
+                                      Default
+                                    </span>
+                                  )}
+                                </motion.div>
                               );
                             })}
                           </div>
                         </section>
-                      );
-                    })}
-                    <div className="h-10" />
-                  </main>
-                </ScrollArea>
-              </div>
-            </TabsContent>
-            <TabsContent value="preview" className="flex-1 min-h-0 overflow-hidden">
-              <PreviewPanel
-                stack={stack}
-                selectedFilePath={selectedFile}
-                onSelectFile={setSelectedFile}
-              />
-            </TabsContent>
-          </Tabs>
 
-          {/* Mobile content - shown based on mobileTab */}
-          <div className="flex flex-1 flex-col overflow-hidden sm:hidden">
-            {mobileTab === "configure" && (
-              <ScrollArea className="h-full overflow-hidden scroll-smooth">
-                <main className="p-3">
-                  {CATEGORY_ORDER.map((categoryKey) => {
-                    const categoryOptions =
-                      TECH_OPTIONS[categoryKey as keyof typeof TECH_OPTIONS] || [];
-                    const categoryDisplayName = getCategoryDisplayName(categoryKey);
-
-                    const filteredOptions = categoryOptions;
-
-                    if (filteredOptions.length === 0) return null;
-
-                    return (
-                      <section
-                        key={categoryKey}
-                        id={`section-mobile-${categoryKey}`}
-                        className="mb-6 scroll-mt-4"
-                      >
-                        <div className="mb-3 flex items-center border-border border-b pb-2 text-muted-foreground">
-                          <Terminal className="mr-2 h-4 w-4 shrink-0" />
-                          <h2 className="font-semibold font-mono text-foreground text-sm">
-                            {categoryDisplayName}
-                          </h2>
-                          {compatibilityAnalysis.notes[categoryKey]?.hasIssue && (
-                            <Tooltip delay={100}>
-                              <TooltipTrigger
-                                render={
-                                  <InfoIcon className="ml-2 h-4 w-4 shrink-0 cursor-help text-muted-foreground" />
-                                }
-                              />
-                              <TooltipContent side="top" align="start">
-                                <ul className="list-disc space-y-1 pl-4 text-xs">
-                                  {compatibilityAnalysis.notes[categoryKey].notes.map((note) => (
-                                    <li key={note}>{note}</li>
-                                  ))}
-                                </ul>
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-1 gap-2">
-                          {filteredOptions.map((tech) => {
-                            let isSelected = false;
-                            const category = categoryKey as keyof StackState;
-                            const currentValue = stack[category];
-
-                            if (
-                              category === "addons" ||
-                              category === "examples" ||
-                              category === "webFrontend" ||
-                              category === "nativeFrontend"
-                            ) {
-                              isSelected = ((currentValue as string[]) || []).includes(tech.id);
-                            } else {
-                              isSelected = currentValue === tech.id;
-                            }
-
-                            const isDisabled = !isOptionCompatible(
-                              stack,
-                              categoryKey as keyof typeof TECH_OPTIONS,
-                              tech.id,
-                            );
-
-                            return (
-                              <motion.div
-                                key={tech.id}
-                                className={cn(
-                                  "relative cursor-pointer rounded border p-3 transition-all",
-                                  isSelected
-                                    ? "border-primary bg-primary/10"
-                                    : isDisabled
-                                      ? "border-destructive/30 bg-destructive/5 opacity-50"
-                                      : "border-border hover:border-muted hover:bg-muted",
-                                )}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() =>
-                                  handleTechSelect(
-                                    categoryKey as keyof typeof TECH_OPTIONS,
-                                    tech.id,
-                                  )
-                                }
+                        {/* Astro Integration - shown only when Astro is selected, right after webFrontend (Mobile) */}
+                        {categoryKey === "webFrontend" && (
+                          <AnimatePresence>
+                            {stack.webFrontend.includes("astro") && (
+                              <motion.section
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.3, ease: "easeInOut" }}
+                                className="mb-6 scroll-mt-4 overflow-hidden"
                               >
-                                <div className="flex items-start">
-                                  <div className="grow">
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center">
-                                        {tech.icon !== "" && (
-                                          <TechIcon
-                                            icon={tech.icon}
-                                            name={tech.name}
-                                            className={cn("mr-1.5 h-4 w-4", tech.className)}
-                                          />
-                                        )}
-                                        <span
-                                          className={cn(
-                                            "font-medium text-sm",
-                                            isSelected ? "text-primary" : "text-foreground",
-                                          )}
-                                        >
-                                          {tech.name}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    <p className="mt-0.5 text-muted-foreground text-xs">
-                                      {tech.description}
-                                    </p>
-                                  </div>
+                                <div className="mb-3 flex items-center border-border border-b pb-2 text-muted-foreground">
+                                  <Terminal className="mr-2 h-4 w-4 shrink-0" />
+                                  <h2 className="font-semibold font-mono text-foreground text-sm">
+                                    Astro Integration
+                                  </h2>
                                 </div>
-                                {tech.default && !isSelected && (
-                                  <span className="absolute top-1 right-1 ml-2 shrink-0 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
-                                    Default
-                                  </span>
-                                )}
-                              </motion.div>
-                            );
-                          })}
-                        </div>
-                      </section>
+                                <div className="grid grid-cols-1 gap-2">
+                                  {(TECH_OPTIONS.astroIntegration || []).map((tech) => {
+                                    const isSelected = stack.astroIntegration === tech.id;
+                                    const isDisabled = !isOptionCompatible(
+                                      stack,
+                                      "astroIntegration",
+                                      tech.id,
+                                    );
+
+                                    return (
+                                      <motion.div
+                                        key={tech.id}
+                                        className={cn(
+                                          "relative cursor-pointer rounded border p-3 transition-all",
+                                          isSelected
+                                            ? "border-primary bg-primary/10"
+                                            : isDisabled
+                                              ? "border-destructive/30 bg-destructive/5 opacity-50"
+                                              : "border-border hover:border-muted hover:bg-muted",
+                                        )}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={() =>
+                                          handleTechSelect("astroIntegration", tech.id)
+                                        }
+                                      >
+                                        <div className="flex items-start">
+                                          <div className="grow">
+                                            <div className="flex items-center justify-between">
+                                              <div className="flex items-center">
+                                                {tech.icon !== "" && (
+                                                  <TechIcon
+                                                    icon={tech.icon}
+                                                    name={tech.name}
+                                                    className={cn("mr-1.5 h-4 w-4", tech.className)}
+                                                  />
+                                                )}
+                                                <span
+                                                  className={cn(
+                                                    "font-medium text-sm",
+                                                    isSelected ? "text-primary" : "text-foreground",
+                                                  )}
+                                                >
+                                                  {tech.name}
+                                                </span>
+                                              </div>
+                                            </div>
+                                            <p className="mt-0.5 text-muted-foreground text-xs">
+                                              {tech.description}
+                                            </p>
+                                          </div>
+                                        </div>
+                                        {tech.default && !isSelected && (
+                                          <span className="absolute top-1 right-1 ml-2 shrink-0 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
+                                            Default
+                                          </span>
+                                        )}
+                                      </motion.div>
+                                    );
+                                  })}
+                                </div>
+                              </motion.section>
+                            )}
+                          </AnimatePresence>
+                        )}
+                      </div>
                     );
                   })}
+
                   <div className="h-10" />
                 </main>
               </ScrollArea>

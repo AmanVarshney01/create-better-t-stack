@@ -26,9 +26,14 @@ export const FrontendSchema = z
     "native-unistyles",
     "svelte",
     "solid",
+    "astro",
     "none",
   ])
   .describe("Frontend framework");
+
+export const AstroIntegrationSchema = z
+  .enum(["react", "vue", "svelte", "solid", "none"])
+  .describe("Astro UI framework integration");
 
 export const AddonsSchema = z
   .enum([
@@ -131,6 +136,7 @@ export const CreateInputSchema = z.object({
   renderTitle: z.boolean().optional(),
   disableAnalytics: z.boolean().optional(),
   manualDb: z.boolean().optional(),
+  astroIntegration: AstroIntegrationSchema.optional(),
 });
 
 export const AddInputSchema = z.object({
@@ -166,6 +172,7 @@ export const ProjectConfigSchema = z.object({
   api: APISchema,
   webDeploy: WebDeploySchema,
   serverDeploy: ServerDeploySchema,
+  astroIntegration: AstroIntegrationSchema.optional(),
 });
 
 export const BetterTStackConfigSchema = z.object({
@@ -185,6 +192,7 @@ export const BetterTStackConfigSchema = z.object({
   api: APISchema,
   webDeploy: WebDeploySchema,
   serverDeploy: ServerDeploySchema,
+  astroIntegration: AstroIntegrationSchema.optional(),
 });
 
 export const BetterTStackConfigFileSchema = z
@@ -225,3 +233,4 @@ export const WEB_DEPLOY_VALUES = WebDeploySchema.options;
 export const SERVER_DEPLOY_VALUES = ServerDeploySchema.options;
 export const DIRECTORY_CONFLICT_VALUES = DirectoryConflictSchema.options;
 export const TEMPLATE_VALUES = TemplateSchema.options;
+export const ASTRO_INTEGRATION_VALUES = AstroIntegrationSchema.options;

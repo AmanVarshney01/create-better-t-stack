@@ -1,0 +1,19 @@
+<script lang="ts">
+	let count = $state(0);
+</script>
+
+<div class="flex items-center gap-4">
+	<button
+		onclick={() => count--}
+		class="rounded-md bg-secondary px-4 py-2 text-secondary-foreground transition-colors hover:bg-secondary/80"
+	>
+		-
+	</button>
+	<span class="min-w-[3rem] text-center text-2xl font-bold">{count}</span>
+	<button
+		onclick={() => count++}
+		class="rounded-md bg-primary px-4 py-2 text-primary-foreground transition-colors hover:bg-primary/80"
+	>
+		+
+	</button>
+</div>

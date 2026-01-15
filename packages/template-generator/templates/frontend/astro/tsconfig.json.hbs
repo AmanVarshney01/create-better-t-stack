@@ -1,0 +1,18 @@
+{
+	"extends": "astro/tsconfigs/strict",
+	"compilerOptions": {
+		"baseUrl": ".",
+		"paths": {
+			"@/*": ["./src/*"]
+		}
+{{#if (eq astroIntegration "react")}}
+		,"jsx": "react-jsx",
+		"jsxImportSource": "react"
+{{/if}}
+{{#if (eq astroIntegration "solid")}}
+		,"jsx": "preserve",
+		"jsxImportSource": "solid-js"
+{{/if}}
+	},
+	"include": ["src/**/*", "env.d.ts"]
+}

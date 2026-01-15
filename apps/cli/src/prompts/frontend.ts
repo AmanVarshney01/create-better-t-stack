@@ -82,6 +82,11 @@ export async function getFrontendChoice(
           hint: "Simple and performant reactivity for building user interfaces",
         },
         {
+          value: "astro" as const,
+          label: "Astro",
+          hint: "Content-focused with Island Architecture",
+        },
+        {
           value: "tanstack-start" as const,
           label: "TanStack Start",
           hint: "SSR, Server Functions, API Routes and more with TanStack Router",

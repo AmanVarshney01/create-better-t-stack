@@ -1,0 +1,16 @@
+import type { APIRoute } from 'astro';
+import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
+import { appRouter } from '@{{projectName}}/api/routers/index';
+import { createContext } from '@{{projectName}}/api/context';
+
+const handler: APIRoute = async ({ request }) => {
+	return fetchRequestHandler({
+		endpoint: '/api/trpc',
+		req: request,
+		router: appRouter,
+		createContext: () => createContext(request),
+	});
+};
+
+export const GET = handler;
+export const POST = handler;

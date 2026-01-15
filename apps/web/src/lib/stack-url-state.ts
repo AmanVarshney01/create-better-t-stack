@@ -20,6 +20,9 @@ const serverStackParsers = {
   nativeFrontend: parseAsArrayOfServer(parseAsStringServer).withDefault(
     DEFAULT_STACK.nativeFrontend,
   ),
+  astroIntegration: parseAsStringEnumServer<StackState["astroIntegration"]>(
+    getValidIds("astroIntegration"),
+  ).withDefault(DEFAULT_STACK.astroIntegration),
   runtime: parseAsStringEnumServer<StackState["runtime"]>(getValidIds("runtime")).withDefault(
     DEFAULT_STACK.runtime,
   ),

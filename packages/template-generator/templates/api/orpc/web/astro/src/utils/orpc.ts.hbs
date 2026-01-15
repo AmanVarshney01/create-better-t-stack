@@ -1,0 +1,16 @@
+import { createORPCClient } from '@orpc/client';
+import { RPCLink } from '@orpc/client/fetch';
+import type { appRouter } from '@{{projectName}}/api/routers/index';
+
+const link = new RPCLink({
+{{#if (eq backend "self")}}
+	url: '/api/rpc',
+{{else}}
+	url: import.meta.env.PUBLIC_SERVER_URL
+		? `${import.meta.env.PUBLIC_SERVER_URL}/rpc`
+		: 'http://localhost:3001/rpc',
+{{/if}}
+	headers: () => ({}),
+});
+
+export const client = createORPCClient<typeof appRouter>(link);

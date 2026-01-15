@@ -447,7 +447,7 @@ describe("Backend and Runtime Combinations", () => {
 
       expectError(
         result,
-        "Backend 'self' (fullstack) currently only supports Next.js and TanStack Start frontends. Please use --frontend next or --frontend tanstack-start. Support for Nuxt and SvelteKit will be added in a future update.",
+        "Backend 'self' (fullstack) currently only supports Next.js, TanStack Start, and Astro frontends. Please use --frontend next, --frontend tanstack-start, or --frontend astro. Support for Nuxt and SvelteKit will be added in a future update.",
       );
     });
 

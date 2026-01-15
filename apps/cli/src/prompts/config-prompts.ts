@@ -1,6 +1,7 @@
 import type {
   Addons,
   API,
+  AstroIntegration,
   Auth,
   Backend,
   Database,
@@ -19,6 +20,7 @@ import type {
 import { exitCancelled } from "../utils/errors";
 import { getAddonsChoice } from "./addons";
 import { getApiChoice } from "./api";
+import { getAstroIntegrationChoice } from "./astro-integration";
 import { getAuthChoice } from "./auth";
 import { getBackendFrameworkChoice } from "./backend";
 import { getDatabaseChoice } from "./database";
@@ -37,6 +39,7 @@ import { getDeploymentChoice } from "./web-deploy";
 
 type PromptGroupResults = {
   frontend: Frontend[];
+  astroIntegration: AstroIntegration | undefined;
   backend: Backend;
   runtime: Runtime;
   database: Database;
@@ -63,6 +66,12 @@ export async function gatherConfig(
   const result = await navigableGroup<PromptGroupResults>(
     {
       frontend: () => getFrontendChoice(flags.frontend, flags.backend, flags.auth),
+      astroIntegration: ({ results }) => {
+        if (results.frontend?.includes("astro")) {
+          return getAstroIntegrationChoice(flags.astroIntegration);
+        }
+        return Promise.resolve(undefined);
+      },
       backend: ({ results }) => getBackendFrameworkChoice(flags.backend, results.frontend),
       runtime: ({ results }) => getRuntimeChoice(flags.runtime, results.backend),
       database: ({ results }) =>
@@ -76,7 +85,12 @@ export async function gatherConfig(
           results.runtime,
         ),
       api: ({ results }) =>
-        getApiChoice(flags.api, results.frontend, results.backend) as Promise<API>,
+        getApiChoice(
+          flags.api,
+          results.frontend,
+          results.backend,
+          results.astroIntegration,
+        ) as Promise<API>,
       auth: ({ results }) => getAuthChoice(flags.auth, results.backend, results.frontend),
       payments: ({ results }) =>
         getPaymentsChoice(flags.payments, results.auth, results.backend, results.frontend),
@@ -120,6 +134,7 @@ export async function gatherConfig(
     projectDir: projectDir,
     relativePath: relativePath,
     frontend: result.frontend,
+    astroIntegration: result.astroIntegration,
     backend: result.backend,
     runtime: result.runtime,
     database: result.database,

@@ -15,6 +15,7 @@ describe("Frontend Configurations", () => {
       "native-unistyles",
       "svelte",
       "solid",
+      "astro",
     ] satisfies ReadonlyArray<
       | "tanstack-router"
       | "react-router"
@@ -26,6 +27,7 @@ describe("Frontend Configurations", () => {
       | "native-unistyles"
       | "svelte"
       | "solid"
+      | "astro"
     >;
 
     for (const frontend of singleFrontends) {
@@ -37,7 +39,21 @@ describe("Frontend Configurations", () => {
         };
 
         // Set compatible defaults based on frontend
-        if (frontend === "solid") {
+        if (frontend === "astro") {
+          // Astro with React integration supports tRPC
+          config.astroIntegration = "react";
+          config.backend = "hono";
+          config.runtime = "bun";
+          config.database = "sqlite";
+          config.orm = "drizzle";
+          config.auth = "none";
+          config.api = "trpc";
+          config.addons = ["none"];
+          config.examples = ["none"];
+          config.dbSetup = "none";
+          config.webDeploy = "none";
+          config.serverDeploy = "none";
+        } else if (frontend === "solid") {
           // Solid is not compatible with Convex backend
           config.backend = "hono";
           config.runtime = "bun";

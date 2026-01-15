@@ -11,6 +11,7 @@ const CORE_STACK_FLAGS = new Set([
   "backend",
   "runtime",
   "frontend",
+  "astroIntegration",
   "addons",
   "examples",
   "auth",

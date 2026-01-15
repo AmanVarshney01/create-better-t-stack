@@ -15,12 +15,13 @@ export async function processFrontendTemplates(
   const hasNuxtWeb = config.frontend.includes("nuxt");
   const hasSvelteWeb = config.frontend.includes("svelte");
   const hasSolidWeb = config.frontend.includes("solid");
+  const hasAstroWeb = config.frontend.includes("astro");
   const hasNativeBare = config.frontend.includes("native-bare");
   const hasNativeUniwind = config.frontend.includes("native-uniwind");
   const hasUnistyles = config.frontend.includes("native-unistyles");
   const isConvex = config.backend === "convex";
 
-  if (hasReactWeb || hasNuxtWeb || hasSvelteWeb || hasSolidWeb) {
+  if (hasReactWeb || hasNuxtWeb || hasSvelteWeb || hasSolidWeb || hasAstroWeb) {
     if (hasReactWeb) {
       processTemplatesFromPrefix(vfs, templates, "frontend/react/web-base", "apps/web", config);
 
@@ -42,6 +43,20 @@ export async function processFrontendTemplates(
       processTemplatesFromPrefix(vfs, templates, "frontend/svelte", "apps/web", config);
     } else if (hasSolidWeb) {
       processTemplatesFromPrefix(vfs, templates, "frontend/solid", "apps/web", config);
+    } else if (hasAstroWeb) {
+      // Process base Astro templates
+      processTemplatesFromPrefix(vfs, templates, "frontend/astro", "apps/web", config);
+
+      // Process integration-specific templates (React, Vue, Svelte, Solid)
+      if (config.astroIntegration && config.astroIntegration !== "none") {
+        processTemplatesFromPrefix(
+          vfs,
+          templates,
+          `frontend/astro/integrations/${config.astroIntegration}`,
+          "apps/web",
+          config,
+        );
+      }
     }
   }
 

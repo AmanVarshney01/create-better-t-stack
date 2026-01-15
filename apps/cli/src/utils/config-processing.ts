@@ -2,6 +2,7 @@ import path from "node:path";
 
 import type {
   API,
+  AstroIntegration,
   Auth,
   Backend,
   CLIInput,
@@ -94,6 +95,10 @@ export function processFlags(options: CLIInput, projectName?: string) {
 
   if (options.frontend && options.frontend.length > 0) {
     config.frontend = processArrayOption(options.frontend);
+  }
+
+  if (options.astroIntegration) {
+    config.astroIntegration = options.astroIntegration as AstroIntegration;
   }
 
   if (options.addons && options.addons.length > 0) {
