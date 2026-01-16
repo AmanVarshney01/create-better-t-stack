@@ -1,9 +1,24 @@
 @import "tailwindcss";
-@import "fumadocs-ui/css/neutral.css";
-@import "fumadocs-ui/css/preset.css";
 @import "tw-animate-css";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+/* Custom utilities for fumadocs compatibility */
+@utility bg-fd-background {
+  background-color: var(--background);
+}
+
+@utility text-fd-primary {
+  color: var(--color-fd-primary);
+}
+
+@utility bg-fd-primary {
+  background-color: var(--color-fd-primary);
+}
+
+@utility text-fd-primary-foreground {
+  color: var(--color-fd-primary-foreground);
+}
 
 .react-tweet-theme {
   --tweet-container-margin: 0 !important;

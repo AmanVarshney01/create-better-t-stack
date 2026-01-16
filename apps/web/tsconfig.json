@@ -16,22 +16,10 @@
     "jsx": "react-jsx",
     "incremental": true,
     "paths": {
-      "fumadocs-mdx:collections/*": [".source/*"],
       "@/*": ["./src/*"],
       "@/public/*": ["./public/*"]
-    },
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ]
+    }
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
-  ],
-  "exclude": ["node_modules"]
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", ".output"]
 }

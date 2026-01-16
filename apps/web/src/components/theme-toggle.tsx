@@ -1,5 +1,3 @@
-"use client";
-
 import { Switch } from "@base-ui/react/switch";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";

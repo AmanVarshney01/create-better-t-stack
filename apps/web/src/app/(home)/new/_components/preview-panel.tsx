@@ -1,11 +1,10 @@
-"use client";
-
 import { Loader2, FolderTree, FileCode2, Info, ChevronLeft } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 
 import type { StackState } from "@/lib/constant";
 
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { generatePreview } from "@/lib/server-functions";
 import { cn } from "@/lib/utils";
 
 import { CodeViewer, CodeViewerEmpty } from "./code-viewer";
@@ -42,13 +41,7 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
     setError(null);
 
     try {
-      const response = await fetch("/api/preview", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(stack),
-      });
-
-      const data: PreviewResponse = await response.json();
+      const data = await generatePreview({ data: stack });
 
       if (data.success && data.tree) {
         setTree(data.tree.root);
