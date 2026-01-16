@@ -14,12 +14,11 @@ export default defineNuxtConfig({
   devServer: {
     port: 3001
   },
-  ssr: true,
   {{#if (eq backend "convex")}}
   convex: {
     url: process.env.NUXT_PUBLIC_CONVEX_URL,
   },
-  {{else}}
+  {{else if (ne backend "self")}}
   runtimeConfig: {
     public: {
       serverUrl: process.env.NUXT_PUBLIC_SERVER_URL,

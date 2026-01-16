@@ -99,7 +99,7 @@ function addEnvVariablesToContent(currentContent: string, variables: EnvVariable
     envContent += contentToAdd;
   }
 
-  return envContent.trimEnd();
+  return `${envContent.trimEnd()}\n`;
 }
 
 function writeEnvFile(vfs: VirtualFileSystem, envPath: string, variables: EnvVariable[]): void {
