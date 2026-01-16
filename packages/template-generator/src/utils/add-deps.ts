@@ -148,8 +148,8 @@ export const dependencyVersionMap = {
   "@t3-oss/env-nuxt": "^0.13.1",
   srvx: "0.8.15",
 
-  "@polar-sh/better-auth": "^1.1.3",
-  "@polar-sh/sdk": "^0.34.16",
+  "@polar-sh/better-auth": "^1.6.4",
+  "@polar-sh/sdk": "^0.42.2",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;
