@@ -86,6 +86,8 @@ export const WebDeploySchema = z.enum(["cloudflare", "none"]).describe("Web depl
 
 export const ServerDeploySchema = z.enum(["cloudflare", "none"]).describe("Server deployment");
 
+export const AISchema = z.enum(["vercel-ai", "langchain", "llamaindex", "none"]).describe("AI SDK");
+
 export const DirectoryConflictSchema = z
   .enum(["merge", "overwrite", "increment", "error"])
   .describe("How to handle existing directory conflicts");
@@ -137,6 +139,7 @@ export const CreateInputSchema = z.object({
   disableAnalytics: z.boolean().optional(),
   manualDb: z.boolean().optional(),
   astroIntegration: AstroIntegrationSchema.optional(),
+  ai: AISchema.optional(),
 });
 
 export const AddInputSchema = z.object({
@@ -173,6 +176,7 @@ export const ProjectConfigSchema = z.object({
   webDeploy: WebDeploySchema,
   serverDeploy: ServerDeploySchema,
   astroIntegration: AstroIntegrationSchema.optional(),
+  ai: AISchema,
 });
 
 export const BetterTStackConfigSchema = z.object({
@@ -193,6 +197,7 @@ export const BetterTStackConfigSchema = z.object({
   webDeploy: WebDeploySchema,
   serverDeploy: ServerDeploySchema,
   astroIntegration: AstroIntegrationSchema.optional(),
+  ai: AISchema,
 });
 
 export const BetterTStackConfigFileSchema = z
@@ -234,3 +239,4 @@ export const SERVER_DEPLOY_VALUES = ServerDeploySchema.options;
 export const DIRECTORY_CONFLICT_VALUES = DirectoryConflictSchema.options;
 export const TEMPLATE_VALUES = TemplateSchema.options;
 export const ASTRO_INTEGRATION_VALUES = AstroIntegrationSchema.options;
+export const AI_VALUES = AISchema.options;
