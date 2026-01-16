@@ -44,6 +44,10 @@ export function displayConfig(config: Partial<ProjectConfig>) {
     configDisplay.push(`${pc.blue("Payments:")} ${String(config.payments)}`);
   }
 
+  if (config.effect !== undefined) {
+    configDisplay.push(`${pc.blue("Effect:")} ${String(config.effect)}`);
+  }
+
   if (config.addons !== undefined) {
     const addons = Array.isArray(config.addons) ? config.addons : [config.addons];
     const addonsText = addons.length > 0 && addons[0] !== undefined ? addons.join(", ") : "none";

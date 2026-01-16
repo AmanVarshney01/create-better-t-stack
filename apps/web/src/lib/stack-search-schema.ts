@@ -23,6 +23,7 @@ export const stackSearchSchema = z.object({
   dbs: z.string().catch(DEFAULT_STACK.dbSetup),
   au: z.string().catch(DEFAULT_STACK.auth),
   pay: z.string().catch(DEFAULT_STACK.payments),
+  eff: z.string().catch(DEFAULT_STACK.effect),
   pm: z.string().catch(DEFAULT_STACK.packageManager),
   add: commaSeparatedArray(DEFAULT_STACK.addons),
   ex: commaSeparatedArray(DEFAULT_STACK.examples),

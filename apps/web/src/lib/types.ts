@@ -13,6 +13,7 @@ export type TechCategory =
   | "serverDeploy"
   | "auth"
   | "payments"
+  | "effect"
   | "packageManager"
   | "addons"
   | "examples"

@@ -24,6 +24,12 @@ interface StackState {
   api?: string;
   auth?: string;
   payments?: string;
+  effect?: string;
+  ai?: string;
+  stateManagement?: string;
+  forms?: string;
+  testing?: string;
+  email?: string;
   addons?: string[];
   examples?: string[];
   git?: boolean | string;
@@ -62,6 +68,12 @@ function stackStateToConfig(state: StackState): ProjectConfig {
     examples: (state.examples || []).filter((e) => e !== "none") as ProjectConfig["examples"],
     auth: (state.auth || "none") as ProjectConfig["auth"],
     payments: (state.payments || "none") as ProjectConfig["payments"],
+    effect: (state.effect || "none") as ProjectConfig["effect"],
+    ai: (state.ai || "none") as ProjectConfig["ai"],
+    stateManagement: (state.stateManagement || "none") as ProjectConfig["stateManagement"],
+    forms: (state.forms || "none") as ProjectConfig["forms"],
+    testing: (state.testing || "none") as ProjectConfig["testing"],
+    email: (state.email || "none") as ProjectConfig["email"],
     git,
     packageManager: (state.packageManager || "bun") as ProjectConfig["packageManager"],
     install: false,

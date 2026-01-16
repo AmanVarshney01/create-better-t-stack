@@ -16,6 +16,7 @@ export function generateReproducibleCommand(config: ProjectConfig) {
   flags.push(`--api ${config.api}`);
   flags.push(`--auth ${config.auth}`);
   flags.push(`--payments ${config.payments}`);
+  flags.push(`--effect ${config.effect}`);
 
   if (config.addons && config.addons.length > 0) {
     flags.push(`--addons ${config.addons.join(" ")}`);

@@ -17,6 +17,7 @@ export const stackUrlKeys: UrlKeys<
   dbSetup: "dbs",
   auth: "au",
   payments: "pay",
+  effect: "eff",
   packageManager: "pm",
   addons: "add",
   examples: "ex",

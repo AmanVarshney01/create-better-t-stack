@@ -6,6 +6,7 @@ import type {
   Backend,
   Database,
   DatabaseSetup,
+  Effect,
   Examples,
   Frontend,
   ORM,
@@ -25,6 +26,7 @@ import { getAuthChoice } from "./auth";
 import { getBackendFrameworkChoice } from "./backend";
 import { getDatabaseChoice } from "./database";
 import { getDBSetupChoice } from "./database-setup";
+import { getEffectChoice } from "./effect";
 import { getExamplesChoice } from "./examples";
 import { getFrontendChoice } from "./frontend";
 import { getGitChoice } from "./git";
@@ -47,6 +49,7 @@ type PromptGroupResults = {
   api: API;
   auth: Auth;
   payments: Payments;
+  effect: Effect;
   addons: Addons[];
   examples: Examples[];
   dbSetup: DatabaseSetup;
@@ -94,6 +97,7 @@ export async function gatherConfig(
       auth: ({ results }) => getAuthChoice(flags.auth, results.backend, results.frontend),
       payments: ({ results }) =>
         getPaymentsChoice(flags.payments, results.auth, results.backend, results.frontend),
+      effect: () => getEffectChoice(flags.effect),
       addons: ({ results }) => getAddonsChoice(flags.addons, results.frontend, results.auth),
       examples: ({ results }) =>
         getExamplesChoice(
@@ -141,6 +145,7 @@ export async function gatherConfig(
     orm: result.orm,
     auth: result.auth,
     payments: result.payments,
+    effect: result.effect,
     addons: result.addons,
     examples: result.examples,
     git: result.git,

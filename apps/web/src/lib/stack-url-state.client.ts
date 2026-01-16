@@ -22,6 +22,7 @@ function searchToStack(search: StackSearchParams | undefined): StackState {
     dbSetup: search.dbs ?? DEFAULT_STACK.dbSetup,
     auth: search.au ?? DEFAULT_STACK.auth,
     payments: search.pay ?? DEFAULT_STACK.payments,
+    effect: search.eff ?? DEFAULT_STACK.effect,
     packageManager: search.pm ?? DEFAULT_STACK.packageManager,
     addons: search.add ?? DEFAULT_STACK.addons,
     examples: search.ex ?? DEFAULT_STACK.examples,

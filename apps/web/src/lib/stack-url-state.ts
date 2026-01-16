@@ -40,6 +40,7 @@ export function loadStackParams(
       dbSetup: getString("dbSetup", DEFAULT_STACK.dbSetup),
       auth: getString("auth", DEFAULT_STACK.auth),
       payments: getString("payments", DEFAULT_STACK.payments),
+      effect: getString("effect", DEFAULT_STACK.effect),
       packageManager: getString("packageManager", DEFAULT_STACK.packageManager),
       addons: getArray("addons", DEFAULT_STACK.addons),
       examples: getArray("examples", DEFAULT_STACK.examples),
@@ -88,6 +89,7 @@ export function serializeStackParams(basePath: string, stack: StackState): strin
   addParam("dbSetup", stack.dbSetup);
   addParam("auth", stack.auth);
   addParam("payments", stack.payments);
+  addParam("effect", stack.effect);
   addParam("packageManager", stack.packageManager);
   addParam("addons", stack.addons);
   addParam("examples", stack.examples);

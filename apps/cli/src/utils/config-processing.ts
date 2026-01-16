@@ -8,6 +8,7 @@ import type {
   CLIInput,
   Database,
   DatabaseSetup,
+  Effect,
   ORM,
   PackageManager,
   Payments,
@@ -58,6 +59,10 @@ export function processFlags(options: CLIInput, projectName?: string) {
 
   if (options.payments !== undefined) {
     config.payments = options.payments as Payments;
+  }
+
+  if (options.effect !== undefined) {
+    config.effect = options.effect as Effect;
   }
 
   if (options.git !== undefined) {

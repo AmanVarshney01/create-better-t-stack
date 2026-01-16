@@ -150,6 +150,31 @@ export const dependencyVersionMap = {
 
   "@polar-sh/better-auth": "^1.1.3",
   "@polar-sh/sdk": "^0.34.16",
+
+  // Effect ecosystem
+  effect: "^3.16.1",
+  "@effect/schema": "^0.75.8",
+  "@effect/platform": "^0.78.1",
+  "@effect/platform-node": "^0.74.1",
+  "@effect/platform-bun": "^0.58.1",
+  "@effect/platform-browser": "^0.57.1",
+  "@effect/sql": "^0.35.1",
+  "@effect/sql-sqlite-node": "^0.29.1",
+  "@effect/sql-sqlite-bun": "^0.29.1",
+  "@effect/sql-pg": "^0.29.1",
+  "@effect/sql-mysql2": "^0.29.1",
+  "@effect/sql-libsql": "^0.29.1",
+  "@effect/sql-drizzle": "^0.26.1",
+  "@effect/cli": "^0.56.1",
+  "@effect/vitest": "^0.17.1",
+  "@effect/opentelemetry": "^0.43.1",
+  "@effect/rpc": "^0.51.1",
+  "@effect/rpc-http": "^0.51.1",
+  "@effect/cluster": "^0.26.1",
+  "@effect/workflow": "^0.26.1",
+  "@effect/ai": "^0.5.1",
+  "@effect/ai-openai": "^0.5.1",
+  "@effect/ai-anthropic": "^0.5.1",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;
