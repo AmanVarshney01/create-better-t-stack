@@ -18,7 +18,8 @@ export async function getPaymentsChoice(
   }
 
   const isPolarCompatible =
-    (auth === "better-auth" || auth === "clerk") &&
+    ((backend === "convex" && (auth === "better-auth" || auth === "clerk")) ||
+      (backend !== "convex" && auth === "better-auth")) &&
     (frontends?.length === 0 || splitFrontends(frontends).web.length > 0);
 
   // Always show options, but only include polar if compatible

@@ -29,7 +29,7 @@ export const env = createEnv({
 {{#if (eq payments "polar")}}
 		POLAR_ACCESS_TOKEN: z.string().min(1),
 		POLAR_SUCCESS_URL: z.url(),
-		POLAR_SERVER: z.enum(["sandbox", "production"]).default("sandbox"),
+		POLAR_SERVER: z.enum(["sandbox", "production"]),
 {{/if}}
 		CORS_ORIGIN: z.url(),
 		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),

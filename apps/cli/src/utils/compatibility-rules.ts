@@ -294,7 +294,7 @@ export function validatePaymentsCompatibility(
     // Polar requires authentication (Better Auth or Clerk)
     if (!auth || auth === "none") {
       exitWithError(
-        "Polar payments requires authentication. Please use '--auth better-auth' or '--auth clerk' with Convex backend.",
+        "Polar payments requires authentication. Please use '--auth better-auth' or '--auth clerk'.",
       );
     }
 

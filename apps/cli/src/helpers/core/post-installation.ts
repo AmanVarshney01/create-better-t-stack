@@ -395,7 +395,16 @@ function getClerkInstructions() {
 
 function getPolarInstructions(backend: Backend) {
   if (backend === "convex") {
-    return `${pc.bold("Polar Payments Setup:")}\n${pc.cyan("•")} Get Organization Access Token (OAT) from ${pc.underline("https://sandbox.polar.sh/dashboard/<YOUR_ORG_SLUG>/settings")} (Settings → Organization → Access Tokens)\n${pc.cyan("•")} Set the access token: ${pc.white("npx convex env set POLAR_ACCESS_TOKEN <your_OAT>")}\n${pc.cyan("•")} Set server environment: ${pc.white("npx convex env set POLAR_SERVER sandbox")}\n${pc.cyan("•")} Run ${pc.white("npx convex dev")} to start your dev server (creates /polar/events endpoint)\n${pc.cyan("•")} Create webhook in Polar Dashboard → Settings → Webhooks:\n${pc.white("   - URL: https://<YOUR_CONVEX_URL>/polar/events")}\n${pc.white("   - Secret: Copy the generated secret and run: npx convex env set POLAR_WEBHOOK_SECRET <secret>")}`;
+    return (
+      `${pc.bold("Polar Payments Setup:")}\n` +
+      `${pc.cyan("•")} Get OAT from ${pc.underline("https://sandbox.polar.sh/dashboard/<YOUR_ORG_SLUG>/settings")}\n` +
+      `${pc.cyan("•")} Set token: ${pc.white("npx convex env set POLAR_ACCESS_TOKEN <your_OAT>")}\n` +
+      `${pc.cyan("•")} Set server: ${pc.white("npx convex env set POLAR_SERVER sandbox")}\n` +
+      `${pc.cyan("•")} Run ${pc.white("npx convex dev")} (creates /polar/events endpoint)\n` +
+      `${pc.cyan("•")} Create webhook in Polar Dashboard → Settings → Webhooks:\n` +
+      `${pc.white("   - URL: https://<YOUR_CONVEX_URL>/polar/events")}\n` +
+      `${pc.white("   - Secret: npx convex env set POLAR_WEBHOOK_SECRET <secret>")}`
+    );
   }
 
   const envPath = backend === "self" ? "apps/web/.env" : "apps/server/.env";

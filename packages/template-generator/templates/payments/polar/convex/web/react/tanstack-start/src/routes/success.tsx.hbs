@@ -5,7 +5,7 @@ import { api } from "../../../../convex/_generated/api";
 export const Route = createFileRoute("/success")({
 	component: SuccessPage,
 	validateSearch: (search) => ({
-		checkout_id: search.checkout_id as string,
+		checkout_id: typeof search.checkout_id === "string" ? search.checkout_id : undefined,
 	}),
 });
 

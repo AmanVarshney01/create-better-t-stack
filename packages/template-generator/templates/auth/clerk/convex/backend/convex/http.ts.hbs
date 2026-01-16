@@ -12,9 +12,7 @@ polar.registerRoutes(http, {
 		console.log("New subscription:", event.data.id);
 	},
 	onSubscriptionUpdated: async (_ctx, event: WebhookSubscriptionUpdatedPayload) => {
-		if (event.data.canceledAt) {
-			console.log("Subscription canceled:", event.data.id);
-		}
+		console.log("Subscription updated:", event.data.id);
 	},
 });
 

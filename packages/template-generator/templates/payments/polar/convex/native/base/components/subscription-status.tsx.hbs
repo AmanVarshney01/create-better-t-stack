@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useRouter } from "expo-router";
-import { ActivityIndicator, View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Linking, ActivityIndicator, View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
 export const SubscriptionStatus = () => {
   const router = useRouter();
@@ -14,8 +14,7 @@ export const SubscriptionStatus = () => {
     try {
       const result = await generateCheckoutLink({ productId });
       if (result.checkoutUrl) {
-        // In native apps, you might want to use a WebView or open the URL externally
-        router.push({ pathname: "/success", params: { checkoutId: "pending" } });
+        await Linking.openURL(result.checkoutUrl);
       }
     } catch (error) {
       console.error("Failed to create checkout:", error);
@@ -26,7 +25,7 @@ export const SubscriptionStatus = () => {
     try {
       const result = await generateCustomerPortalUrl({});
       if (result.portalUrl) {
-        router.push({ pathname: "/success", params: { checkoutId: "portal" } });
+        await Linking.openURL(result.portalUrl);
       }
     } catch (error) {
       console.error("Failed to open customer portal:", error);
