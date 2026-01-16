@@ -4,8 +4,11 @@ import {
 	crossDomainClient,
 } from "@convex-dev/better-auth/client/plugins";
 import { env } from "@{{projectName}}/env/web";
+{{#if (eq payments "polar")}}
+import { polarClient } from "@polar-sh/better-auth";
+{{/if}}
 
 export const authClient = createAuthClient({
 	baseURL: env.VITE_CONVEX_SITE_URL,
-	plugins: [convexClient(), crossDomainClient()],
+	plugins: [convexClient(), crossDomainClient(){{#if (eq payments "polar")}}, polarClient(){{/if}}],
 });

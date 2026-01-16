@@ -14,7 +14,7 @@ type PackageJson = {
 export const dependencyVersionMap = {
   typescript: "^5",
 
-  "better-auth": "^1.4.9",
+  "better-auth": "^1.4.12",
   "@better-auth/expo": "^1.4.9",
 
   "@clerk/nextjs": "^6.31.5",
@@ -115,7 +115,8 @@ export const dependencyVersionMap = {
   "convex-svelte": "^0.0.12",
   "convex-nuxt": "0.1.5",
   "convex-vue": "^0.1.5",
-  "@convex-dev/better-auth": "^0.10.9",
+  "@convex-dev/better-auth": "^0.10.10",
+  "@convex-dev/polar": "^0.7.3",
 
   "@tanstack/svelte-query": "^5.85.3",
   "@tanstack/svelte-query-devtools": "^5.85.3",
@@ -148,8 +149,17 @@ export const dependencyVersionMap = {
   "@t3-oss/env-nuxt": "^0.13.1",
   srvx: "0.8.15",
 
-  "@polar-sh/better-auth": "^1.1.3",
-  "@polar-sh/sdk": "^0.34.16",
+  // IMPORTANT: Convex's @convex-dev/better-auth currently peers on better-auth 1.4.9 (exact).
+  // Polar's newer @polar-sh/better-auth versions peer on better-auth ^1.4.12, which conflicts.
+  // Pin to a compatible Polar plugin series.
+  "@polar-sh/better-auth": "1.6.4",
+  // Ensure Polar deps resolve to versions compatible with the pinned plugin
+  "@polar-sh/checkout": "^0.1.14",
+  "@polar-sh/sdk": "^0.42.2",
+
+  // Satisfy Stripe peer deps required by @polar-sh/checkout
+  "@stripe/react-stripe-js": "^4.0.2",
+  "@stripe/stripe-js": "^7.1.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

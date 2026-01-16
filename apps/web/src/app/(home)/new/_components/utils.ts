@@ -493,21 +493,27 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   // ============================================
 
   if (nextStack.payments === "polar") {
-    if (nextStack.auth !== "better-auth") {
+    // Polar requires authentication (Better Auth or Clerk)
+    // For non-Convex backends, only Better Auth is supported
+    // For Convex backend, both Better Auth and Clerk are supported
+    const isAuthCompatible =
+      nextStack.auth === "better-auth" ||
+      (nextStack.backend === "convex" && nextStack.auth === "clerk");
+
+    if (!isAuthCompatible) {
       nextStack.payments = "none";
       changed = true;
-      changes.push({
-        category: "payments",
-        message: "Payments set to 'None' (Polar requires Better Auth)",
-      });
-    }
-    if (nextStack.backend === "convex") {
-      nextStack.payments = "none";
-      changed = true;
-      changes.push({
-        category: "payments",
-        message: "Payments set to 'None' (Polar incompatible with Convex)",
-      });
+      if (nextStack.backend === "convex") {
+        changes.push({
+          category: "payments",
+          message: "Payments set to 'None' (Polar requires Better Auth or Clerk with Convex)",
+        });
+      } else {
+        changes.push({
+          category: "payments",
+          message: "Payments set to 'None' (Polar requires Better Auth)",
+        });
+      }
     }
     const hasWebFrontend = nextStack.webFrontend.some((f) => f !== "none");
     if (!hasWebFrontend) {
@@ -688,9 +694,7 @@ export const getDisabledReason = (
         return `Convex AI example only supports React-based frontends (not ${frontendName})`;
       }
     }
-    if (category === "payments" && optionId === "polar") {
-      return "Polar is not compatible with Convex";
-    }
+    // Polar is now compatible with Convex (added in CLI)
   }
 
   // ============================================
@@ -901,8 +905,14 @@ export const getDisabledReason = (
   // PAYMENTS CONSTRAINTS
   // ============================================
   if (category === "payments" && optionId === "polar") {
-    if (currentStack.auth !== "better-auth") {
-      return "Polar requires Better Auth";
+    // Polar requires authentication (Better Auth or Clerk with Convex)
+    const isAuthCompatible =
+      currentStack.auth === "better-auth" ||
+      (currentStack.backend === "convex" && currentStack.auth === "clerk");
+    if (!isAuthCompatible) {
+      return currentStack.backend === "convex"
+        ? "Polar requires Better Auth or Clerk with Convex"
+        : "Polar requires Better Auth";
     }
     if (!currentStack.webFrontend.some((f) => f !== "none")) {
       return "Polar requires a web frontend";

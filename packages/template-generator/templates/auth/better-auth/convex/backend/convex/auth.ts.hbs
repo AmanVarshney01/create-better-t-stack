@@ -7,6 +7,10 @@ import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
 {{else}}
 import { convex } from "@convex-dev/better-auth/plugins";
 {{/if}}
+{{#if (eq payments "polar")}}
+import { Polar } from "@polar-sh/sdk";
+import { polar, checkout } from "@polar-sh/better-auth";
+{{/if}}
 import { components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { query } from "./_generated/server";
@@ -23,6 +27,14 @@ const nativeAppUrl = process.env.NATIVE_APP_URL || "mybettertapp://";
 {{/if}}
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
+
+{{#if (eq payments "polar")}}
+// Initialize Polar client for Better Auth integration
+export const polarClient = new Polar({
+	accessToken: process.env.POLAR_ACCESS_TOKEN!,
+	server: process.env.POLAR_SERVER === "production" ? "production" : "sandbox",
+});
+{{/if}}
 
 function createAuth(ctx: GenericCtx<DataModel>) {
   return betterAuth({
@@ -54,6 +66,19 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         authConfig,
         jwksRotateOnTokenGenerationError: true,
       }),
+      {{#if (eq payments "polar")}}
+      polar({
+        client: polarClient,
+        createCustomerOnSignUp: true,
+        use: [
+          checkout({
+            products: [],
+            successUrl: process.env.POLAR_SUCCESS_URL!,
+            authenticatedUsersOnly: true,
+          }),
+        ],
+      }),
+      {{/if}}
     ],
   });
 }

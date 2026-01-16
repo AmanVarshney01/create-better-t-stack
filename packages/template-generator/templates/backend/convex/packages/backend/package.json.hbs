@@ -11,5 +11,21 @@
   "devDependencies": {
     "@types/node": "^24.3.0"
   },
-  "dependencies": {}
+  "dependencies": {
+{{#if (eq payments "polar")}}
+    "@polar-sh/sdk": "^0.42.2",
+{{/if}}
+{{#if (and (eq payments "polar") (eq auth "better-auth"))}}
+    "@polar-sh/better-auth": "1.6.4",
+{{/if}}
+{{#if (eq auth "better-auth")}}
+    "@convex-dev/better-auth": "^0.10.10",
+{{/if}}
+{{#if (eq payments "polar")}}
+    "@convex-dev/polar": "^0.7.3"{{#if (includes examples "ai")}},{{/if}}
+{{/if}}
+{{#if (includes examples "ai")}}
+    "@convex-dev/agent": "^0.3.2"
+{{/if}}
+  }
 }

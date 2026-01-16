@@ -18,26 +18,26 @@ export async function getPaymentsChoice(
   }
 
   const isPolarCompatible =
-    auth === "better-auth" &&
-    backend !== "convex" &&
+    ((backend === "convex" && (auth === "better-auth" || auth === "clerk")) ||
+      (backend !== "convex" && auth === "better-auth")) &&
     (frontends?.length === 0 || splitFrontends(frontends).web.length > 0);
 
-  if (!isPolarCompatible) {
-    return "none" as Payments;
-  }
+  // Always show options, but only include polar if compatible
+  const options = [];
 
-  const options = [
-    {
+  if (isPolarCompatible) {
+    options.push({
       value: "polar" as Payments,
       label: "Polar",
       hint: "Turn your software into a business. 6 lines of code.",
-    },
-    {
-      value: "none" as Payments,
-      label: "None",
-      hint: "No payments integration",
-    },
-  ];
+    });
+  }
+
+  options.push({
+    value: "none" as Payments,
+    label: "None",
+    hint: "No payments integration",
+  });
 
   const response = await navigableSelect<Payments>({
     message: "Select payments provider",
