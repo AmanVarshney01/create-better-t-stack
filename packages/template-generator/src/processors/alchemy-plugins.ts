@@ -63,6 +63,17 @@ function processNuxtAlchemy(vfs: VirtualFileSystem) {
   });
 
   const sourceFile = project.createSourceFile("nuxt.config.ts", content);
+
+  const hasAlchemyImport = sourceFile
+    .getImportDeclarations()
+    .some((decl) => decl.getModuleSpecifierValue() === "alchemy/cloudflare/nuxt");
+  if (!hasAlchemyImport) {
+    sourceFile.addImportDeclaration({
+      moduleSpecifier: "alchemy/cloudflare/nuxt",
+      defaultImport: "alchemy",
+    });
+  }
+
   const exportAssignment = sourceFile.getExportAssignment((d) => !d.isExportEquals());
 
   if (!exportAssignment) return;
@@ -85,11 +96,12 @@ function processNuxtAlchemy(vfs: VirtualFileSystem) {
       configObject.addPropertyAssignment({
         name: "nitro",
         initializer: `{
-    preset: "cloudflare_module",
-    cloudflare: {
-      deployConfig: true,
-      nodeCompat: true
-    }
+    preset: "cloudflare-module",
+    cloudflare: alchemy(),
+    prerender: {
+      routes: ["/"],
+      autoSubfolderIndex: false,
+    },
   }`,
       });
     }
