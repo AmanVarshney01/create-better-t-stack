@@ -106,6 +106,10 @@ export const TestingSchema = z
   .enum(["vitest", "playwright", "vitest-playwright", "none"])
   .describe("Testing framework (vitest-playwright includes both unit and e2e testing)");
 
+export const EmailSchema = z
+  .enum(["react-email", "resend", "none"])
+  .describe("Email solution (resend includes react-email)");
+
 export const DirectoryConflictSchema = z
   .enum(["merge", "overwrite", "increment", "error"])
   .describe("How to handle existing directory conflicts");
@@ -162,6 +166,7 @@ export const CreateInputSchema = z.object({
   stateManagement: StateManagementSchema.optional(),
   forms: FormsSchema.optional(),
   testing: TestingSchema.optional(),
+  email: EmailSchema.optional(),
 });
 
 export const AddInputSchema = z.object({
@@ -203,6 +208,7 @@ export const ProjectConfigSchema = z.object({
   stateManagement: StateManagementSchema,
   forms: FormsSchema,
   testing: TestingSchema,
+  email: EmailSchema,
 });
 
 export const BetterTStackConfigSchema = z.object({
@@ -228,6 +234,7 @@ export const BetterTStackConfigSchema = z.object({
   stateManagement: StateManagementSchema,
   forms: FormsSchema,
   testing: TestingSchema,
+  email: EmailSchema,
 });
 
 export const BetterTStackConfigFileSchema = z
@@ -274,3 +281,4 @@ export const EFFECT_VALUES = EffectSchema.options;
 export const STATE_MANAGEMENT_VALUES = StateManagementSchema.options;
 export const FORMS_VALUES = FormsSchema.options;
 export const TESTING_VALUES = TestingSchema.options;
+export const EMAIL_VALUES = EmailSchema.options;
