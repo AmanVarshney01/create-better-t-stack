@@ -2,12 +2,10 @@ import { api } from "@better-t-stack/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 
-import type {
-  AggregatedAnalyticsData,
-  Distribution,
-} from "@/app/(home)/analytics/_components/types";
+import type { AggregatedAnalyticsData, Distribution } from "@/components/analytics/types";
 
-import AnalyticsPage from "@/app/(home)/analytics/_components/analytics-page";
+import AnalyticsPage from "@/components/analytics/analytics-page";
+import { isConvexConfigured } from "@/lib/convex";
 
 export const Route = createFileRoute("/analytics")({
   head: () => ({
@@ -215,7 +213,7 @@ const emptyData: AggregatedAnalyticsData = {
   },
 };
 
-function AnalyticsRoute() {
+function AnalyticsRouteContent() {
   const stats = useQuery(api.analytics.getStats, {});
   const dailyStats = useQuery(api.analytics.getDailyStats, {});
 
@@ -229,4 +227,17 @@ function AnalyticsRoute() {
   };
 
   return <AnalyticsPage data={data} legacy={legacy} />;
+}
+
+function AnalyticsRoute() {
+  if (!isConvexConfigured) {
+    const legacy = {
+      total: 55434,
+      avgPerDay: 326.1,
+      lastUpdatedIso: "2025-11-13T10:10:00.000Z",
+      source: "PostHog (legacy)",
+    };
+    return <AnalyticsPage data={emptyData} legacy={legacy} />;
+  }
+  return <AnalyticsRouteContent />;
 }

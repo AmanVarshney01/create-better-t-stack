@@ -1,6 +1,6 @@
 "use client";
+import { Link } from "@tanstack/react-router";
 import { Check, ChevronDown, ChevronRight, Copy, Terminal, Zap } from "lucide-react";
-import Link from "next/link";
 import { useState } from "react";
 
 import {
@@ -91,7 +91,7 @@ export default function CommandSection() {
         </div>
       </div>
 
-      <Link href="/new">
+      <Link to="/new">
         <div className="group flex h-full cursor-pointer flex-col justify-between rounded border border-border bg-fd-background p-4 transition-colors hover:bg-muted/10">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">

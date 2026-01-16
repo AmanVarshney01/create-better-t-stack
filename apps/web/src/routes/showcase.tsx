@@ -2,7 +2,8 @@ import { api } from "@better-t-stack/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 
-import ShowcasePage from "@/app/(home)/showcase/_components/showcase-page";
+import ShowcasePage from "@/components/showcase/showcase-page";
+import { isConvexConfigured } from "@/lib/convex";
 
 export const Route = createFileRoute("/showcase")({
   head: () => ({
@@ -37,8 +38,15 @@ export const Route = createFileRoute("/showcase")({
   component: ShowcaseRoute,
 });
 
-function ShowcaseRoute() {
+function ShowcaseRouteContent() {
   const showcaseProjects = useQuery(api.showcase.getShowcaseProjects);
 
   return <ShowcasePage showcaseProjects={showcaseProjects ?? []} />;
+}
+
+function ShowcaseRoute() {
+  if (!isConvexConfigured) {
+    return <ShowcasePage showcaseProjects={[]} />;
+  }
+  return <ShowcaseRouteContent />;
 }

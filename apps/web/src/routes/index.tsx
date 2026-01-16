@@ -8,6 +8,7 @@ import HeroSection from "@/components/home/hero-section";
 import SponsorsSection from "@/components/home/sponsors-section";
 import StatsSection from "@/components/home/stats-section";
 import Testimonials from "@/components/home/testimonials";
+import { isConvexConfigured } from "@/lib/convex";
 import { fetchSponsors } from "@/lib/sponsors";
 
 export const Route = createFileRoute("/")({
@@ -18,7 +19,7 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
-function HomePage() {
+function HomePageContent() {
   const { sponsorsData } = Route.useLoaderData();
 
   // Use Convex React hooks for real-time data
@@ -43,4 +44,27 @@ function HomePage() {
       <Footer />
     </main>
   );
+}
+
+function HomePageWithoutConvex() {
+  const { sponsorsData } = Route.useLoaderData();
+
+  return (
+    <main className="container mx-auto min-h-svh">
+      <div className="mx-auto flex flex-col gap-8 px-4 pt-12">
+        <HeroSection />
+        <CommandSection />
+        <SponsorsSection sponsorsData={sponsorsData} />
+        <Testimonials tweets={[]} videos={[]} />
+      </div>
+      <Footer />
+    </main>
+  );
+}
+
+function HomePage() {
+  if (!isConvexConfigured) {
+    return <HomePageWithoutConvex />;
+  }
+  return <HomePageContent />;
 }

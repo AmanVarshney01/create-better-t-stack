@@ -1,10 +1,9 @@
 "use client";
 
 import { motion } from "motion/react";
-import { useTheme } from "next-themes";
-import Image from "next/image";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 type TechOption = {
@@ -42,13 +41,12 @@ function TechIcon({ icon, name, className }: { icon: string; name: string; class
   }
 
   return (
-    <Image
+    <img
       src={iconSrc}
       alt={`${name} icon`}
       width={24}
       height={24}
       className={cn("h-6 w-6 object-contain", className)}
-      unoptimized
     />
   );
 }

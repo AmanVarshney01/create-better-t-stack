@@ -1,11 +1,10 @@
 import type { ReactNode } from "react";
 
 import { Outlet, HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
-import { ThemeProvider } from "next-themes";
 
 import { Navbar } from "@/components/navbar";
 import Providers from "@/components/providers";
-import "@/app/global.css";
+import "@/styles/global.css";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -49,7 +48,20 @@ export const Route = createRootRoute({
         content: "https://r2.better-t-stack.dev/og.png",
       },
     ],
-    links: [{ rel: "icon", href: "/logo.svg" }],
+    links: [
+      { rel: "icon", href: "/logo.svg" },
+      { rel: "preconnect", href: "https://api.fontshare.com" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap",
+      },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap",
+      },
+    ],
   }),
   component: RootComponent,
 });
@@ -70,14 +82,7 @@ function RootDocument({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body className="bg-background text-foreground">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <Providers>{children}</Providers>
-        </ThemeProvider>
+        <Providers>{children}</Providers>
         <Scripts />
       </body>
     </html>

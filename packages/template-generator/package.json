@@ -45,6 +45,7 @@
     "build": "tsdown",
     "prepublishOnly": "bun run build",
     "dev": "tsdown --watch",
+    "lint": "oxlint . && tsc --noEmit",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Suspense } from "react";
 
-import { StackDisplay } from "@/app/(home)/stack/_components/stack-display";
+import { StackDisplay } from "@/components/stack/stack-display";
 import { DEFAULT_STACK, type StackState } from "@/lib/constant";
 import { stackUrlKeys } from "@/lib/stack-url-keys";
 

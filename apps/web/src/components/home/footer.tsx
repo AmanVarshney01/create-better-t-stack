@@ -1,8 +1,4 @@
 import { Github } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-
-import npmIcon from "@/public/icon/npm.svg";
 
 const Footer = () => {
   return (
@@ -17,22 +13,24 @@ const Footer = () => {
               Type-safe, modern TypeScript scaffolding for full-stack web development
             </p>
             <div className="flex space-x-4">
-              <Link
+              <a
                 href="https://github.com/AmanVarshney01/create-better-t-stack"
                 target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                 aria-label="GitHub Repository"
               >
                 <Github size={20} />
-              </Link>
-              <Link
+              </a>
+              <a
                 href="https://www.npmjs.com/package/create-better-t-stack"
                 target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center rounded-md p-2 text-muted-foreground invert-0 transition-colors hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:invert"
                 aria-label="NPM Package"
               >
-                <Image src={npmIcon} alt="NPM" width={20} height={20} />
-              </Link>
+                <img src="/icon/npm.svg" alt="NPM" width={20} height={20} />
+              </a>
             </div>
           </div>
 
@@ -40,31 +38,34 @@ const Footer = () => {
             <h3 className="mb-3 font-semibold text-base text-foreground sm:mb-4">Resources</h3>
             <ul className="space-y-2 text-muted-foreground text-sm sm:space-y-3 sm:text-base">
               <li>
-                <Link
+                <a
                   target="_blank"
+                  rel="noopener noreferrer"
                   href="https://github.com/AmanVarshney01/create-better-t-stack"
                   className="inline-block transition-colors hover:text-primary focus:text-primary focus:outline-none"
                 >
                   GitHub Repository
-                </Link>
+                </a>
               </li>
               <li>
-                <Link
+                <a
                   target="_blank"
+                  rel="noopener noreferrer"
                   href="https://www.npmjs.com/package/create-better-t-stack"
                   className="inline-block transition-colors hover:text-primary focus:text-primary focus:outline-none"
                 >
                   NPM Package
-                </Link>
+                </a>
               </li>
               <li>
-                <Link
+                <a
                   target="_blank"
+                  rel="noopener noreferrer"
                   href="https://my-better-t-app-client.pages.dev/"
                   className="inline-block transition-colors hover:text-primary focus:text-primary focus:outline-none"
                 >
                   Demo Application
-                </Link>
+                </a>
               </li>
             </ul>
           </div>

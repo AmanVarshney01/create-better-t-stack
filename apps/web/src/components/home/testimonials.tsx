@@ -2,7 +2,6 @@
 
 import { ChevronDown, ChevronUp, Play, Terminal } from "lucide-react";
 import { motion } from "motion/react";
-import Image from "next/image";
 import { useState } from "react";
 import { Tweet, type TwitterComponents } from "react-tweet";
 
@@ -11,13 +10,20 @@ export const components: TwitterComponents = {
     if (!props.src || props.src === "") {
       return <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted" />;
     }
-    return <Image {...props} alt={props.alt || "User avatar"} unoptimized />;
+    return <img {...props} alt={props.alt || "User avatar"} />;
   },
   MediaImg: (props) => {
     if (!props.src || props.src === "") {
       return <div className="flex h-32 w-full items-center justify-center rounded bg-muted" />;
     }
-    return <Image {...props} alt={props.alt || "Media content"} fill unoptimized />;
+    const { fill, ...rest } = props as typeof props & { fill?: boolean };
+    return (
+      <img
+        {...rest}
+        alt={props.alt || "Media content"}
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+    );
   },
 };
 

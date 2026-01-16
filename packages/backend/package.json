@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "convex dev",
     "dev:setup": "convex dev --configure --until-success",
-    "deploy": "convex deploy"
+    "deploy": "convex deploy",
+    "lint": "oxlint . && tsc --noEmit"
   },
   "dependencies": {
     "@convex-dev/crons": "^0.2.0",

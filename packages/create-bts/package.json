@@ -61,6 +61,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "scripts": {
+    "lint": "oxlint ."
+  },
   "dependencies": {
     "create-better-t-stack": "^3.15.0"
   }

@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { zodValidator } from "@tanstack/zod-adapter";
-import { Suspense } from "react";
+import { Suspense, lazy } from "react";
 
-import StackBuilder from "@/app/(home)/new/_components/stack-builder";
 import { stackSearchSchema } from "@/lib/stack-search-schema";
+
+// Lazy load StackBuilder to isolate it from the main bundle
+const StackBuilder = lazy(() => import("@/components/stack-builder/stack-builder"));
 
 export const Route = createFileRoute("/new")({
   validateSearch: zodValidator(stackSearchSchema),
@@ -41,7 +43,11 @@ export const Route = createFileRoute("/new")({
 
 function StackBuilderPage() {
   return (
-    <Suspense>
+    <Suspense
+      fallback={
+        <div className="flex h-[calc(100vh-64px)] items-center justify-center">Loading...</div>
+      }
+    >
       <div className="grid h-[calc(100vh-64px)] w-full flex-1 grid-cols-1 overflow-hidden">
         <StackBuilder />
       </div>

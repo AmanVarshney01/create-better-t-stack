@@ -1,8 +1,6 @@
 "use client";
 
 import { Check, Copy, Terminal, Twitter } from "lucide-react";
-import { useTheme } from "next-themes";
-import Image from "next/image";
 import QRCode from "qrcode";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -20,6 +18,7 @@ import {
 import { TechBadge } from "@/components/ui/tech-badge";
 import { TECH_OPTIONS } from "@/lib/constant";
 import { CATEGORY_ORDER } from "@/lib/stack-utils";
+import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 interface ShareDialogProps {
@@ -190,7 +189,7 @@ export function ShareDialog({ children, stackUrl, stackState }: ShareDialogProps
               <div className="flex items-center justify-center rounded border border-border bg-muted/20 p-4">
                 <div className="flex h-32 w-32 items-center justify-center">
                   {qrCodeDataUrl ? (
-                    <Image
+                    <img
                       src={qrCodeDataUrl}
                       width={128}
                       height={128}

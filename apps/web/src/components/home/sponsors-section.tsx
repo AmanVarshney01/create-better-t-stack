@@ -1,6 +1,5 @@
 "use client";
 import { ChevronDown, ChevronUp, Github, Globe, Heart, Star, Terminal } from "lucide-react";
-import Image from "next/image";
 import { useState } from "react";
 
 import type { SponsorsData } from "@/lib/types";
@@ -85,13 +84,12 @@ export default function SponsorsSection({ sponsorsData }: { sponsorsData: Sponso
                       <div className="p-4">
                         <div className="flex gap-4">
                           <div className="flex-shrink-0">
-                            <Image
+                            <img
                               src={entry.avatarUrl}
                               alt={entry.name}
                               width={100}
                               height={100}
                               className="rounded border border-border transition-colors duration-300"
-                              unoptimized
                             />
                           </div>
                           <div className="grid grid-cols-1 grid-rows-[1fr_auto] justify-between py-2">
@@ -166,13 +164,12 @@ export default function SponsorsSection({ sponsorsData }: { sponsorsData: Sponso
                       <div className="p-4">
                         <div className="flex gap-4">
                           <div className="flex-shrink-0">
-                            <Image
+                            <img
                               src={entry.avatarUrl}
                               alt={entry.name}
                               width={100}
                               height={100}
                               className="rounded border border-border transition-colors duration-300"
-                              unoptimized
                             />
                           </div>
                           <div className="grid grid-cols-1 grid-rows-[1fr_auto] justify-between py-2">
@@ -276,13 +273,12 @@ export default function SponsorsSection({ sponsorsData }: { sponsorsData: Sponso
                         <div className="p-4">
                           <div className="flex gap-4">
                             <div className="flex-shrink-0">
-                              <Image
+                              <img
                                 src={entry.avatarUrl}
                                 alt={entry.name}
                                 width={80}
                                 height={80}
                                 className="rounded border border-border/70"
-                                unoptimized
                               />
                             </div>
                             <div className="grid grid-cols-1 grid-rows-[1fr_auto] justify-between">
