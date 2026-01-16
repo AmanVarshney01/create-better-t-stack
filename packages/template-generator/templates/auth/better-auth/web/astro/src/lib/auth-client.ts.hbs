@@ -1,0 +1,10 @@
+import { createAuthClient } from "better-auth/client";
+{{#if (eq payments "polar")}}
+import { polarClient } from "@polar-sh/better-auth";
+{{/if}}
+
+export const authClient = createAuthClient({
+{{#if (eq payments "polar")}}
+  plugins: [polarClient()],
+{{/if}}
+});

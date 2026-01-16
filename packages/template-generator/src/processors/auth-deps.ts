@@ -109,6 +109,7 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
       "nuxt",
       "svelte",
       "solid",
+      "astro",
     ].includes(f),
   );
 

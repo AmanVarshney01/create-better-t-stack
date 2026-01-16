@@ -140,9 +140,9 @@ The generated `alchemy.run.ts` loads environment variables using dotenv:
 import { config } from "dotenv";
 
 // Load from multiple locations (order matters - later files override)
-config({ path: "./.env" });                    // packages/infra/.env
-config({ path: "../../apps/web/.env" });       // apps/web/.env
-config({ path: "../../apps/server/.env" });    // apps/server/.env
+config({ path: "./.env" }); // packages/infra/.env
+config({ path: "../../apps/web/.env" }); // apps/web/.env
+config({ path: "../../apps/server/.env" }); // apps/server/.env
 ```
 
 This allows you to:
@@ -206,9 +206,7 @@ env:
   ALCHEMY_PASSWORD: ${{ secrets.ALCHEMY_PASSWORD }}
 ```
 
-<Callout type="info">
-  Generate a strong password: `openssl rand -base64 32`
-</Callout>
+<Callout type="info">Generate a strong password: `openssl rand -base64 32`</Callout>
 
 Without `ALCHEMY_PASSWORD`, any operation involving secrets will fail. Store this password securely and never commit it to source control.
 
@@ -306,9 +304,7 @@ export const server = await Worker("server", {
 
   bindings: {
     // Different URLs per environment
-    CORS_ORIGIN: isProd
-      ? "https://myapp.com"
-      : `https://${app.stage}.myapp.com`,
+    CORS_ORIGIN: isProd ? "https://myapp.com" : `https://${app.stage}.myapp.com`,
   },
 });
 ```
@@ -378,7 +374,7 @@ export default {
     const value = await env.KV.get("key");
     const apiKey = env.API_KEY;
     return new Response(`Value: ${value}`);
-  }
+  },
 };
 ```
 
@@ -501,13 +497,15 @@ This removes:
 - All associated bindings
 
 <Callout type="warn">
-  **Warning**: `destroy` permanently deletes your deployed resources. Database data will be lost unless you've configured `delete: false` or exported backups.
+  **Warning**: `destroy` permanently deletes your deployed resources. Database data will be lost
+  unless you've configured `delete: false` or exported backups.
 </Callout>
 
 ## Continous Integration
 
 <Callout type="warn">
-  **Important**: By default, Alchemy uses local file-based state storage. This can cause issues in CI/CD where the filesystem is ephemeral.
+  **Important**: By default, Alchemy uses local file-based state storage. This can cause issues in
+  CI/CD where the filesystem is ephemeral.
 </Callout>
 
 For CI/CD, you should either:
@@ -565,7 +563,9 @@ export const auth = betterAuth({
 ```
 
 <Callout type="info">
-  The generated auth configuration includes these settings commented out. Uncomment them and replace the domain with your actual workers subdomain (e.g., `.your-subdomain.workers.dev`) when deploying to production.
+  The generated auth configuration includes these settings commented out. Uncomment them and replace
+  the domain with your actual workers subdomain (e.g., `.your-subdomain.workers.dev`) when deploying
+  to production.
 </Callout>
 
 Pay careful attention to CORS settings when moving between stages. A configuration that works locally may fail in production (and vice versa) if CORS origins or cookie domains don't match your actual deployment URLs.

@@ -55,6 +55,26 @@ export async function createContext({ headers }: CreateContextOptions) {
 {{/if}}
 }
 
+{{else if (and (eq backend 'self') (includes frontend "astro"))}}
+{{#if (eq auth "better-auth")}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+
+export type CreateContextOptions = {
+  headers: Headers;
+};
+
+export async function createContext({ headers }: CreateContextOptions) {
+{{#if (eq auth "better-auth")}}
+  const session = await auth.api.getSession({ headers });
+  return {
+    session,
+  };
+{{else}}
+  return {};
+{{/if}}
+}
+
 {{else if (eq backend 'hono')}}
 import type { Context as HonoContext } from "hono";
 {{#if (eq auth "better-auth")}}

@@ -9,6 +9,7 @@ type FrontendType = {
   hasNuxtWeb: boolean;
   hasSvelteWeb: boolean;
   hasSolidWeb: boolean;
+  hasAstroWeb: boolean;
   hasNative: boolean;
 };
 
@@ -20,6 +21,7 @@ function getFrontendType(frontend: Frontend[]): FrontendType {
     hasNuxtWeb: frontend.includes("nuxt"),
     hasSvelteWeb: frontend.includes("svelte"),
     hasSolidWeb: frontend.includes("solid"),
+    hasAstroWeb: frontend.includes("astro"),
     hasNative: frontend.some((f) =>
       ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
     ),
@@ -184,6 +186,13 @@ function addWebClientDeps(
         "@tanstack/solid-query",
       ],
       devDependencies: ["@tanstack/solid-query-devtools", "@tanstack/solid-router-devtools"],
+    });
+  } else if (api === "orpc" && frontendType.hasAstroWeb) {
+    // Astro uses vanilla oRPC client without TanStack Query
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: ["@orpc/client"],
     });
   }
 }

@@ -49,6 +49,7 @@ const FULLSTACK_FRONTENDS: readonly Frontend[] = [
   "next",
   "tanstack-start",
   "nuxt",
+  "astro",
   // "svelte",    // TODO: Add support in future update
 ] as const;
 
@@ -147,9 +148,10 @@ export function validateApiFrontendCompatibility(api: API | undefined, frontends
   const includesNuxt = frontends.includes("nuxt");
   const includesSvelte = frontends.includes("svelte");
   const includesSolid = frontends.includes("solid");
-  if ((includesNuxt || includesSvelte || includesSolid) && api === "trpc") {
+  const includesAstro = frontends.includes("astro");
+  if ((includesNuxt || includesSvelte || includesSolid || includesAstro) && api === "trpc") {
     exitWithError(
-      `tRPC API is not supported with '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"}' frontend. Please use --api orpc or --api none or remove '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"}' from --frontend.`,
+      `tRPC API is not supported with '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : includesSolid ? "solid" : "astro"}' frontend. Please use --api orpc or --api none or remove '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : includesSolid ? "solid" : "astro"}' from --frontend.`,
     );
   }
 }
@@ -159,10 +161,10 @@ export function isFrontendAllowedWithBackend(
   backend?: ProjectConfig["backend"],
   auth?: string,
 ) {
-  if (backend === "convex" && frontend === "solid") return false;
+  if (backend === "convex" && (frontend === "solid" || frontend === "astro")) return false;
 
   if (auth === "clerk" && backend === "convex") {
-    const incompatibleFrontends = ["nuxt", "svelte", "solid"];
+    const incompatibleFrontends = ["nuxt", "svelte", "solid", "astro"];
     if (incompatibleFrontends.includes(frontend)) return false;
   }
 
@@ -173,8 +175,9 @@ export function allowedApisForFrontends(frontends: Frontend[] = []) {
   const includesNuxt = frontends.includes("nuxt");
   const includesSvelte = frontends.includes("svelte");
   const includesSolid = frontends.includes("solid");
+  const includesAstro = frontends.includes("astro");
   const base: API[] = ["trpc", "orpc", "none"];
-  if (includesNuxt || includesSvelte || includesSolid) {
+  if (includesNuxt || includesSvelte || includesSolid || includesAstro) {
     return ["orpc", "none"];
   }
   return base;
@@ -194,7 +197,8 @@ export function isExampleTodoAllowed(
 
 export function isExampleAIAllowed(backend?: ProjectConfig["backend"], frontends: Frontend[] = []) {
   const includesSolid = frontends.includes("solid");
-  if (includesSolid) return false;
+  const includesAstro = frontends.includes("astro");
+  if (includesSolid || includesAstro) return false;
 
   // Convex AI example only supports React-based frontends (not Svelte or Nuxt)
   if (backend === "convex") {

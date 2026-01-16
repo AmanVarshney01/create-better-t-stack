@@ -1,0 +1,81 @@
+---
+const links = [
+  { to: "/", label: "Home" },
+  {{#if (eq auth "better-auth")}}
+  { to: "/dashboard", label: "Dashboard" },
+  {{/if}}
+  {{#if (includes examples "todo")}}
+  { to: "/todos", label: "Todos" },
+  {{/if}}
+  {{#if (includes examples "ai")}}
+  { to: "/ai", label: "AI Chat" },
+  {{/if}}
+];
+---
+
+<div>
+  <div class="flex flex-row items-center justify-between px-4 py-2 md:px-6">
+    <nav class="flex gap-4 text-lg">
+      {links.map((link) => (
+        <a href={link.to} class="text-white hover:text-neutral-400 transition-colors">
+          {link.label}
+        </a>
+      ))}
+    </nav>
+    <div class="flex items-center gap-2" id="user-menu-container">
+      {{#if (eq auth "better-auth")}}
+      <a href="/login" id="login-link" class="rounded px-3 py-1.5 text-sm bg-indigo-600 hover:bg-indigo-700 text-white transition-colors">
+        Sign In
+      </a>
+      <div id="user-menu" class="hidden flex items-center gap-3">
+        <span class="text-sm text-neutral-400 hidden sm:inline" id="user-display"></span>
+        <button
+          id="signout-button"
+          class="rounded px-3 py-1.5 text-sm bg-red-600 hover:bg-red-700 text-white transition-colors"
+        >
+          Sign Out
+        </button>
+      </div>
+      {{/if}}
+    </div>
+  </div>
+  <hr class="border-neutral-800" />
+</div>
+
+{{#if (eq auth "better-auth")}}
+<script>
+  import { authClient } from "../lib/auth-client";
+
+  const loginLink = document.getElementById("login-link");
+  const userMenu = document.getElementById("user-menu");
+  const userDisplay = document.getElementById("user-display");
+  const signOutButton = document.getElementById("signout-button");
+
+  async function checkSession() {
+    try {
+      const { data: session } = await authClient.getSession();
+      if (session?.user) {
+        loginLink?.classList.add("hidden");
+        userMenu?.classList.remove("hidden");
+        if (userDisplay) {
+          userDisplay.textContent = session.user.name || session.user.email?.split("@")[0] || "User";
+        }
+      }
+    } catch (e) {
+      // Not logged in
+    }
+  }
+
+  signOutButton?.addEventListener("click", async () => {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          window.location.href = "/";
+        },
+      },
+    });
+  });
+
+  checkSession();
+</script>
+{{/if}}

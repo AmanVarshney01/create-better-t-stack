@@ -20,6 +20,7 @@ export async function processApiTemplates(
   const hasNuxtWeb = config.frontend.includes("nuxt");
   const hasSvelteWeb = config.frontend.includes("svelte");
   const hasSolidWeb = config.frontend.includes("solid");
+  const hasAstroWeb = config.frontend.includes("astro");
 
   if (hasReactWeb) {
     processTemplatesFromPrefix(
@@ -69,5 +70,18 @@ export async function processApiTemplates(
     processTemplatesFromPrefix(vfs, templates, `api/${config.api}/web/svelte`, "apps/web", config);
   } else if (hasSolidWeb && config.api === "orpc") {
     processTemplatesFromPrefix(vfs, templates, `api/${config.api}/web/solid`, "apps/web", config);
+  } else if (hasAstroWeb && config.api === "orpc") {
+    // Always include the orpc client (handles both self and external backend)
+    processTemplatesFromPrefix(vfs, templates, `api/${config.api}/web/astro`, "apps/web", config);
+    // Add fullstack API routes when backend=self
+    if (config.backend === "self") {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `api/${config.api}/fullstack/astro`,
+        "apps/web",
+        config,
+      );
+    }
   }
 }

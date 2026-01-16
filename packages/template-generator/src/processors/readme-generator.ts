@@ -30,8 +30,9 @@ function generateReadmeContent(options: ProjectConfig): string {
     ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
   );
   const hasSvelte = frontend.includes("svelte");
+  const hasAstro = frontend.includes("astro");
   const packageManagerRunCmd = `${packageManager} run`;
-  const webPort = hasReactRouter || hasSvelte ? "5173" : "3001";
+  const webPort = hasReactRouter || hasSvelte ? "5173" : hasAstro ? "4321" : "3001";
 
   const stackDescription = generateStackDescription(frontend, backend, api, isConvex);
 
@@ -122,6 +123,7 @@ function generateStackDescription(
     svelte: "SvelteKit",
     nuxt: "Nuxt",
     solid: "SolidJS",
+    astro: "Astro",
   };
 
   for (const fe of frontend) {
@@ -198,6 +200,7 @@ function generateProjectStructure(
       svelte: "SvelteKit",
       nuxt: "Nuxt",
       solid: "SolidJS",
+      astro: "Astro",
     };
     const frontendType = frontend.find((f) => frontendTypes[f])
       ? frontendTypes[frontend.find((f) => frontendTypes[f]) || ""]
@@ -276,6 +279,7 @@ function generateFeaturesList(
     svelte: "- **SvelteKit** - Web framework for building Svelte apps",
     nuxt: "- **Nuxt** - The Intuitive Vue Framework",
     solid: "- **SolidJS** - Simple and performant reactivity",
+    astro: "- **Astro** - The web framework for content-driven websites",
   };
 
   for (const fe of frontend) {
