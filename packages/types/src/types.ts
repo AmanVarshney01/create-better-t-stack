@@ -25,6 +25,7 @@ import type {
   BetterTStackConfigSchema,
   InitResultSchema,
   AstroIntegrationSchema,
+  AISchema,
 } from "./schemas";
 
 // Inferred types from Zod schemas
@@ -46,6 +47,7 @@ export type DirectoryConflict = z.infer<typeof DirectoryConflictSchema>;
 export type Template = z.infer<typeof TemplateSchema>;
 export type ProjectName = z.infer<typeof ProjectNameSchema>;
 export type AstroIntegration = z.infer<typeof AstroIntegrationSchema>;
+export type AI = z.infer<typeof AISchema>;
 
 export type CreateInput = z.infer<typeof CreateInputSchema>;
 export type AddInput = z.infer<typeof AddInputSchema>;
