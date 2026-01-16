@@ -120,6 +120,13 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
     scripts["db:down"] = pmConfig.filter(dbPackageName, "db:down");
   }
 
+  // Add deploy/destroy scripts when using alchemy (cloudflare deployment)
+  const infraPackageName = `@${projectName}/infra`;
+  if (config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare") {
+    scripts.deploy = pmConfig.filter(infraPackageName, "deploy");
+    scripts.destroy = pmConfig.filter(infraPackageName, "destroy");
+  }
+
   // Note: packageManager version is set by CLI at runtime since it requires running the actual CLI
   // For preview purposes, we just show the configured package manager
   pkgJson.packageManager = `${packageManager}@latest`;
@@ -173,6 +180,7 @@ function getPackageManagerConfig(
         filter: (workspace, script) => `npm run ${script} --workspace ${workspace}`,
       };
     case "bun":
+    default:
       return {
         dev: "bun run --filter '*' dev",
         build: "bun run --filter '*' build",
@@ -256,7 +264,7 @@ function updateEnvPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): vo
   pkgJson.name = `@${config.projectName}/env`;
 
   // Set exports based on which env files exist
-  const hasWebFrontend = config.frontend.some((f) =>
+  const hasWebFrontend = config.frontend.some((f: string) =>
     [
       "tanstack-router",
       "react-router",
@@ -267,7 +275,7 @@ function updateEnvPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): vo
       "solid",
     ].includes(f),
   );
-  const hasNative = config.frontend.some((f) =>
+  const hasNative = config.frontend.some((f: string) =>
     ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
   );
   const needsServerEnv = config.backend !== "none" && config.backend !== "convex";
