@@ -1,20 +1,11 @@
-import { httpRouter } from "convex/server";
-import { authComponent, createAuth } from "./auth";
 {{#if (eq payments "polar")}}
+import { httpRouter } from "convex/server";
 import { polar } from "./polar";
 import type { WebhookSubscriptionCreatedPayload } from "@polar-sh/sdk/models/components/webhooksubscriptioncreatedpayload.js";
 import type { WebhookSubscriptionUpdatedPayload } from "@polar-sh/sdk/models/components/webhooksubscriptionupdatedpayload.js";
-{{/if}}
 
 const http = httpRouter();
 
-{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
-authComponent.registerRoutes(http, createAuth, { cors: true });
-{{else}}
-authComponent.registerRoutes(http, createAuth);
-{{/if}}
-
-{{#if (eq payments "polar")}}
 // Register Polar webhook handler at /polar/events
 polar.registerRoutes(http, {
 	onSubscriptionCreated: async (_ctx, event: WebhookSubscriptionCreatedPayload) => {
@@ -26,6 +17,6 @@ polar.registerRoutes(http, {
 		}
 	},
 });
-{{/if}}
 
 export default http;
+{{/if}}

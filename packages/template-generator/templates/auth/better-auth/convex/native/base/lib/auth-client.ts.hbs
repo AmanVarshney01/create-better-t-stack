@@ -4,6 +4,9 @@ import { expoClient } from "@better-auth/expo/client";
 import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
 import { env } from "@{{projectName}}/env/native";
+{{#if (eq payments "polar")}}
+import { polarClient } from "@polar-sh/better-auth";
+{{/if}}
 
 export const authClient = createAuthClient({
 	baseURL: env.EXPO_PUBLIC_CONVEX_SITE_URL,
@@ -13,6 +16,6 @@ export const authClient = createAuthClient({
 			storagePrefix: Constants.expoConfig?.scheme as string,
 			storage: SecureStore,
 		}),
-		convexClient(),
+		convexClient(){{#if (eq payments "polar")}}, polarClient(){{/if}},
 	],
 });

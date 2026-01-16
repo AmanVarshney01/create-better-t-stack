@@ -285,15 +285,30 @@ export function validateAddonsAgainstFrontends(
 export function validatePaymentsCompatibility(
   payments: Payments | undefined,
   auth: Auth | undefined,
-  _backend: Backend | undefined,
+  backend: Backend | undefined,
   frontends: Frontend[] = [],
 ) {
   if (!payments || payments === "none") return;
 
   if (payments === "polar") {
-    if (!auth || auth === "none" || auth !== "better-auth") {
+    // Polar requires authentication (Better Auth or Clerk)
+    if (!auth || auth === "none") {
       exitWithError(
-        "Polar payments requires Better Auth. Please use '--auth better-auth' or choose a different payments provider.",
+        "Polar payments requires authentication. Please use '--auth better-auth' or '--auth clerk' with Convex backend.",
+      );
+    }
+
+    // For non-Convex backends, only Better Auth is supported (uses @polar-sh/better-auth)
+    if (backend !== "convex" && auth !== "better-auth") {
+      exitWithError(
+        "Polar payments requires Better Auth for non-Convex backends. Please use '--auth better-auth' or choose a different payments provider.",
+      );
+    }
+
+    // For Convex backend, both Better Auth and Clerk are supported (uses @convex-dev/polar)
+    if (backend === "convex" && auth !== "better-auth" && auth !== "clerk") {
+      exitWithError(
+        "Polar payments with Convex requires Better Auth or Clerk. Please use '--auth better-auth' or '--auth clerk'.",
       );
     }
 

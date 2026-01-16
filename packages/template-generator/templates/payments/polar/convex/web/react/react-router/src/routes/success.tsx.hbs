@@ -1,0 +1,44 @@
+import { useSearchParams } from "react-router";
+import { useQuery } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
+
+export default function SuccessPage() {
+	const [searchParams] = useSearchParams();
+	const checkout_id = searchParams.get("checkout_id");
+	const subscription = useQuery(api.polar.getCurrentSubscription);
+
+	return (
+		<div className="container mx-auto px-4 py-8">
+			<div className="max-w-md mx-auto text-center">
+				<div className="mb-4 text-green-500">
+					<svg
+						className="w-16 h-16 mx-auto"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							strokeLinecap="round"
+							strokeLinejoin="round"
+							strokeWidth={2}
+							d="M5 13l4 4L19 7"
+						/>
+					</svg>
+				</div>
+				<h1 className="text-2xl font-bold mb-2">Payment Successful!</h1>
+				<p className="text-gray-600 mb-4">Thank you for your purchase.</p>
+				{checkout_id && (
+					<p className="text-sm text-gray-500">Checkout ID: {checkout_id}</p>
+				)}
+				{subscription && (
+					<div className="mt-4 p-4 bg-gray-100 rounded">
+						<p className="font-medium">Your subscription is now active</p>
+						<p className="text-sm text-gray-600">
+							Plan: {subscription.productKey}
+						</p>
+					</div>
+				)}
+			</div>
+		</div>
+	);
+}

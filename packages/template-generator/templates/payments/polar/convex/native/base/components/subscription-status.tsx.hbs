@@ -1,0 +1,153 @@
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { useRouter } from "expo-router";
+import { ActivityIndicator, View, Text, TouchableOpacity, StyleSheet } from "react-native";
+
+export const SubscriptionStatus = () => {
+  const router = useRouter();
+  const subscription = useQuery(api.polar.getCurrentSubscription);
+  const generateCheckoutLink = useMutation(api.polar.generateCheckoutLink);
+  const generateCustomerPortalUrl = useMutation(api.polar.generateCustomerPortalUrl);
+  const isLoading = generateCheckoutLink.isPending || generateCustomerPortalUrl.isPending;
+
+  const handleSubscribe = async (productId: string) => {
+    try {
+      const result = await generateCheckoutLink({ productId });
+      if (result.checkoutUrl) {
+        // In native apps, you might want to use a WebView or open the URL externally
+        router.push({ pathname: "/success", params: { checkoutId: "pending" } });
+      }
+    } catch (error) {
+      console.error("Failed to create checkout:", error);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      const result = await generateCustomerPortalUrl({});
+      if (result.portalUrl) {
+        router.push({ pathname: "/success", params: { checkoutId: "portal" } });
+      }
+    } catch (error) {
+      console.error("Failed to open customer portal:", error);
+    }
+  };
+
+  if (subscription === undefined) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="small" color="#6366f1" />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>Subscription</Text>
+      
+      {subscription ? (
+        <View style={styles.subscriptionInfo}>
+          <Text style={styles.status}>
+            Status: {subscription.status || "active"}
+          </Text>
+          <Text style={styles.cancelAt}>
+            {subscription.cancelAtPeriodEnd
+              ? "Cancels at end of billing period"
+              : "Renews automatically"}
+          </Text>
+          
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleManageSubscription}
+            disabled={isLoading}
+          >
+            <Text style={styles.buttonText}>Manage Subscription</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View style={styles.noSubscription}>
+          <Text style={styles.message}>
+            You don't have an active subscription
+          </Text>
+          
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => handleSubscribe("proMonthly")}
+            disabled={isLoading}
+          >
+            <Text style={styles.buttonText}>
+              {isLoading ? "Loading..." : "Subscribe - $9.99/mo"}
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.button, styles.secondaryButton]}
+            onPress={() => handleSubscribe("proYearly")}
+            disabled={isLoading}
+          >
+            <Text style={[styles.buttonText, styles.secondaryButtonText]}>
+              {isLoading ? "Loading..." : "Subscribe - $99.99/yr"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 20,
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 20,
+    color: "#1f2937",
+  },
+  subscriptionInfo: {
+    alignItems: "center",
+  },
+  status: {
+    fontSize: 16,
+    color: "#059669",
+    marginBottom: 8,
+  },
+  cancelAt: {
+    fontSize: 14,
+    color: "#6b7280",
+    marginBottom: 20,
+  },
+  noSubscription: {
+    alignItems: "center",
+  },
+  message: {
+    fontSize: 16,
+    color: "#6b7280",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  button: {
+    backgroundColor: "#6366f1",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+    minWidth: 200,
+    alignItems: "center",
+  },
+  secondaryButton: {
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: "#6366f1",
+  },
+  buttonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  secondaryButtonText: {
+    color: "#6366f1",
+  },
+});

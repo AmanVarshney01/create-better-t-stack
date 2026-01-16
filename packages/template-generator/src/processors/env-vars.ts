@@ -236,6 +236,8 @@ function buildConvexBackendVars(
   frontend: string[],
   auth: ProjectConfig["auth"],
   examples: ProjectConfig["examples"],
+  payments: ProjectConfig["payments"],
+  backend: ProjectConfig["backend"],
 ): EnvVariable[] {
   const hasNextJs = frontend.includes("next");
   const hasNative =
@@ -262,11 +264,35 @@ function buildConvexBackendVars(
     });
   }
 
+  // Polar environment variables for Convex
+  if (payments === "polar") {
+    vars.push(
+      {
+        key: "POLAR_ACCESS_TOKEN",
+        value: "",
+        condition: true,
+        comment: "Polar access token (create in Polar dashboard → Settings → API)",
+      },
+      {
+        key: "POLAR_SUCCESS_URL",
+        value: "http://localhost:3001/success?checkout_id={CHECKOUT_ID}",
+        condition: true,
+        comment: "URL to redirect after successful checkout",
+      },
+      {
+        key: "POLAR_SERVER",
+        value: "sandbox",
+        condition: true,
+        comment: "Polar server: 'sandbox' or 'production'",
+      },
+    );
+  }
+
   if (auth === "better-auth") {
     if (hasNative) {
       vars.push({
         key: "EXPO_PUBLIC_CONVEX_SITE_URL",
-        value: "",
+        value: "https://<YOUR_CONVEX_URL>",
         condition: true,
         comment: "Same as CONVEX_URL but ends in .site",
       });
@@ -276,7 +302,7 @@ function buildConvexBackendVars(
       vars.push(
         {
           key: hasNextJs ? "NEXT_PUBLIC_CONVEX_SITE_URL" : "VITE_CONVEX_SITE_URL",
-          value: "",
+          value: "https://<YOUR_CONVEX_URL>",
           condition: true,
           comment: "Same as CONVEX_URL but ends in .site",
         },
@@ -290,6 +316,16 @@ function buildConvexBackendVars(
     }
   }
 
+  // Convex deployment info - automatically set by `npx convex dev`
+  if (backend === "convex") {
+    vars.push({
+      key: "CONVEX_URL",
+      value: "",
+      condition: true,
+      comment: "Convex deployment URL (set automatically by convex dev)",
+    });
+  }
+
   return vars;
 }
 
@@ -297,6 +333,7 @@ function buildConvexCommentBlocks(
   frontend: string[],
   auth: ProjectConfig["auth"],
   examples: ProjectConfig["examples"],
+  payments: ProjectConfig["payments"],
 ): string {
   const hasWeb =
     frontend.includes("react-router") ||
@@ -320,6 +357,12 @@ function buildConvexCommentBlocks(
     commentBlocks += `# Set Convex environment variables
 # npx convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)
 ${hasWeb ? "# npx convex env set SITE_URL http://localhost:3001\n" : ""}`;
+  }
+
+  if (payments === "polar") {
+    commentBlocks += `# Set Polar webhook secret after creating webhook in Polar Dashboard
+# npx convex env set POLAR_WEBHOOK_SECRET=<webhook_secret>
+`;
   }
 
   return commentBlocks;
@@ -469,7 +512,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
       const envLocalPath = `${convexBackendDir}/.env.local`;
 
       // Write comment blocks first
-      const commentBlocks = buildConvexCommentBlocks(frontend, auth, examples);
+      const commentBlocks = buildConvexCommentBlocks(frontend, auth, examples, payments);
       if (commentBlocks) {
         let currentContent = "";
         if (vfs.exists(envLocalPath)) {
@@ -479,7 +522,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
       }
 
       // Then add variables
-      const convexBackendVars = buildConvexBackendVars(frontend, auth, examples);
+      const convexBackendVars = buildConvexBackendVars(frontend, auth, examples, payments, backend);
       if (convexBackendVars.length > 0) {
         let existingContent = "";
         if (vfs.exists(envLocalPath)) {

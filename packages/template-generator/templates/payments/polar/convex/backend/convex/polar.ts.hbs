@@ -1,0 +1,85 @@
+import { Polar } from "@convex-dev/polar";
+import { api, components } from "./_generated/api";
+
+export const polar = new Polar(components.polar, {
+	/**
+	 * Get the current authenticated user's info for Polar
+	 * This links Polar customers to your auth system
+	 */
+	getUserInfo: async (ctx): Promise<{ userId: string; email: string }> => {
+{{#if (eq auth "better-auth")}}
+		const authUser = await ctx.runQuery(api.auth.getCurrentUser, {});
+		if (!authUser) {
+			throw new Error("Authentication required for Polar operations");
+		}
+		return {
+			userId: authUser._id,
+			email: authUser.email,
+		};
+{{else if (eq auth "clerk")}}
+		const identity = await ctx.auth.getUserIdentity();
+		if (!identity) {
+			throw new Error("Authentication required for Polar operations");
+		}
+		return {
+			userId: identity.subject,
+			email: identity.email ?? "",
+		};
+{{else}}
+		// No auth configured - this should not happen as Polar requires auth
+		throw new Error("Authentication is required for Polar integration");
+{{/if}}
+	},
+
+	/**
+	 * Configure your Polar products here
+	 * Replace with your actual Polar product IDs from the dashboard
+	 */
+	products: {
+		// Example product configuration - customize for your needs
+		proMonthly: "your-polar-product-id-monthly",
+		proYearly: "your-polar-product-id-yearly",
+	},
+
+	// Server environment is configured via POLAR_SERVER env var
+	// Organization token is configured via POLAR_ORGANIZATION_TOKEN env var
+});
+export const {
+	// Get products configured in the products map above
+	getConfiguredProducts,
+
+	// List all products from Polar
+	listAllProducts,
+
+	// Generate a checkout link for a product
+	generateCheckoutLink,
+
+	// Generate a customer portal URL
+	generateCustomerPortalUrl,
+
+	// Change current subscription to a different product
+	changeCurrentSubscription,
+
+	// Cancel current subscription
+	cancelCurrentSubscription,
+
+	// Get current user's subscription status
+	getCurrentSubscription,
+} = polar.api();
+
+/**
+ * To get the current user's subscription status, use polar.getCurrentSubscription
+ * in a separate file to avoid circular dependencies. Example:
+ *
+ * // In convex/subscriptions.ts
+ * import { query } from "./_generated/server";
+ * import { polar } from "./polar";
+ *
+ * export const getCurrentSubscription = query({
+ *   args: {},
+ *   handler: async (ctx) => {
+ *     // Get your user ID from auth, then:
+ *     return await polar.getCurrentSubscription(ctx, { userId });
+ *   },
+ * });
+ */

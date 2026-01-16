@@ -88,3 +88,64 @@ function handleButtonPress() {
 Use the Convex CLI to push your functions to a deployment. See everything
 the Convex CLI can do by running `npx convex -h` in your project root
 directory. To learn more, launch the docs with `npx convex docs`.
+
+## {{#if (eq payments "polar")}}
+
+## Polar Payments Setup
+
+You've configured Polar for payment processing. Here's how to set it up:
+
+### 1. Create a Product in Polar
+
+1. Go to [polar.sh](https://polar.sh) and create an organization
+2. Navigate to **Products** → **New Product**
+3. Fill in:
+   - **Name**: e.g., "Pro Subscription"
+   - **Type**: One-time or Recurring
+   - **Price**: Your pricing
+4. Click **Create Product**
+5. Copy the product key (from the URL or product page)
+
+### 2. Create an Access Token
+
+1. Go to **Settings** → **API** → **New Access Token**
+2. Name: `app-production` (or `app-sandbox` for testing)
+3. Expiration: 30 days
+4. **Scopes**: Select all available scopes
+5. Copy the token immediately (won't be shown again!)
+
+### 3. Configure Environment Variables
+
+```bash
+# Set your access token
+npx convex env set POLAR_ACCESS_TOKEN "pk_live_..."
+
+# Set server (sandbox for testing, production for live)
+npx convex env set POLAR_SERVER "sandbox"
+
+# Set success URL (Polar will replace {CHECKOUT_ID})
+npx convex env set POLAR_SUCCESS_URL "http://localhost:3001/success?checkout_id={CHECKOUT_ID}"
+```
+
+### 4. Update Product Configuration
+
+Open `auth.ts` and update the products:
+
+```typescript
+export const polar = new Polar(components.polar, {
+  products: {
+    proMonthly: "your-polar-product-key",
+  },
+  // ...
+});
+```
+
+### 5. Testing
+
+Use sandbox mode with test card: `4242 4242 4242 4242`
+
+### Resources
+
+- [Polar Documentation](https://docs.polar.sh/)
+- [@polar-sh/better-auth](https://docs.polar.sh/integrations/better-auth)
+  {{/if}}
