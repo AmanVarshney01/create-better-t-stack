@@ -32,6 +32,7 @@ export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectCon
   updateConfigPackageJson(vfs, config);
   updateEnvPackageJson(vfs, config);
   updateInfraPackageJson(vfs, config);
+  renameDevScriptsForAlchemy(vfs, config);
 
   if (config.backend === "convex") {
     updateConvexPackageJson(vfs, config);
@@ -303,4 +304,30 @@ function updateConvexPackageJson(vfs: VirtualFileSystem, config: ProjectConfig):
   pkgJson.name = `@${config.projectName}/backend`;
   pkgJson.scripts = pkgJson.scripts || {};
   vfs.writeJson("packages/backend/package.json", pkgJson);
+}
+
+function renameDevScriptsForAlchemy(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  const { serverDeploy, webDeploy, backend } = config;
+
+  // Rename server dev script to dev:bare when serverDeploy is cloudflare
+  if (serverDeploy === "cloudflare" && backend !== "self") {
+    const serverPkgPath = "apps/server/package.json";
+    const serverPkg = vfs.readJson<PackageJson>(serverPkgPath);
+    if (serverPkg?.scripts?.dev) {
+      serverPkg.scripts["dev:bare"] = serverPkg.scripts.dev;
+      delete serverPkg.scripts.dev;
+      vfs.writeJson(serverPkgPath, serverPkg);
+    }
+  }
+
+  // Rename web dev script to dev:bare when webDeploy is cloudflare
+  if (webDeploy === "cloudflare") {
+    const webPkgPath = "apps/web/package.json";
+    const webPkg = vfs.readJson<PackageJson>(webPkgPath);
+    if (webPkg?.scripts?.dev) {
+      webPkg.scripts["dev:bare"] = webPkg.scripts.dev;
+      delete webPkg.scripts.dev;
+      vfs.writeJson(webPkgPath, webPkg);
+    }
+  }
 }
