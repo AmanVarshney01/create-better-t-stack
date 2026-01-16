@@ -98,6 +98,10 @@ export const StateManagementSchema = z
   .enum(["zustand", "jotai", "nanostores", "none"])
   .describe("State management library");
 
+export const FormsSchema = z
+  .enum(["tanstack-form", "react-hook-form", "none"])
+  .describe("Form handling library");
+
 export const DirectoryConflictSchema = z
   .enum(["merge", "overwrite", "increment", "error"])
   .describe("How to handle existing directory conflicts");
@@ -152,6 +156,7 @@ export const CreateInputSchema = z.object({
   ai: AISchema.optional(),
   effect: EffectSchema.optional(),
   stateManagement: StateManagementSchema.optional(),
+  forms: FormsSchema.optional(),
 });
 
 export const AddInputSchema = z.object({
@@ -191,6 +196,7 @@ export const ProjectConfigSchema = z.object({
   ai: AISchema,
   effect: EffectSchema,
   stateManagement: StateManagementSchema,
+  forms: FormsSchema,
 });
 
 export const BetterTStackConfigSchema = z.object({
@@ -214,6 +220,7 @@ export const BetterTStackConfigSchema = z.object({
   ai: AISchema,
   effect: EffectSchema,
   stateManagement: StateManagementSchema,
+  forms: FormsSchema,
 });
 
 export const BetterTStackConfigFileSchema = z
@@ -258,3 +265,4 @@ export const ASTRO_INTEGRATION_VALUES = AstroIntegrationSchema.options;
 export const AI_VALUES = AISchema.options;
 export const EFFECT_VALUES = EffectSchema.options;
 export const STATE_MANAGEMENT_VALUES = StateManagementSchema.options;
+export const FORMS_VALUES = FormsSchema.options;

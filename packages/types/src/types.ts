@@ -28,6 +28,7 @@ import type {
   AISchema,
   EffectSchema,
   StateManagementSchema,
+  FormsSchema,
 } from "./schemas";
 
 // Inferred types from Zod schemas
@@ -52,6 +53,7 @@ export type AstroIntegration = z.infer<typeof AstroIntegrationSchema>;
 export type AI = z.infer<typeof AISchema>;
 export type Effect = z.infer<typeof EffectSchema>;
 export type StateManagement = z.infer<typeof StateManagementSchema>;
+export type Forms = z.infer<typeof FormsSchema>;
 
 export type CreateInput = z.infer<typeof CreateInputSchema>;
 export type AddInput = z.infer<typeof AddInputSchema>;
