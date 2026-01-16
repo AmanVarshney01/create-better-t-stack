@@ -44,11 +44,11 @@ export function ensureSingleWebAndNative(frontends: Frontend[]) {
   }
 }
 
-// Temporarily restrict to Next.js and TanStack Start only for backend="self"
+// Frontends that support backend="self" (fullstack mode with built-in server routes)
 const FULLSTACK_FRONTENDS: readonly Frontend[] = [
   "next",
   "tanstack-start",
-  // "nuxt",      // TODO: Add support in future update
+  "nuxt",
   // "svelte",    // TODO: Add support in future update
 ] as const;
 
@@ -66,7 +66,7 @@ export function validateSelfBackendCompatibility(
 
     if (!hasSupportedWeb) {
       exitWithError(
-        "Backend 'self' (fullstack) currently only supports Next.js and TanStack Start frontends. Please use --frontend next or --frontend tanstack-start. Support for Nuxt and SvelteKit will be added in a future update.",
+        "Backend 'self' (fullstack) currently only supports Next.js, TanStack Start, and Nuxt frontends. Please use --frontend next, --frontend tanstack-start, or --frontend nuxt. Support for SvelteKit will be added in a future update.",
       );
     }
 
@@ -80,7 +80,7 @@ export function validateSelfBackendCompatibility(
   const hasFullstackFrontend = frontends.some((f) => FULLSTACK_FRONTENDS.includes(f));
   if (providedFlags.has("backend") && !hasFullstackFrontend && backend === "self") {
     exitWithError(
-      "Backend 'self' (fullstack) currently only supports Next.js and TanStack Start frontends. Please use --frontend next or --frontend tanstack-start or choose a different backend. Support for Nuxt and SvelteKit will be added in a future update.",
+      "Backend 'self' (fullstack) currently only supports Next.js, TanStack Start, and Nuxt frontends. Please use --frontend next, --frontend tanstack-start, --frontend nuxt, or choose a different backend. Support for SvelteKit will be added in a future update.",
     );
   }
 }

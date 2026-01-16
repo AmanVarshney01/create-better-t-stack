@@ -110,12 +110,12 @@ function addSelfBackendWebDeps(
   vfs: VirtualFileSystem,
   api: API,
   backend: Backend,
-  frontendType: FrontendType,
+  _frontendType: FrontendType,
 ): void {
   if (backend !== "self") return;
 
   const webPath = "apps/web/package.json";
-  if (!vfs.exists(webPath) || !frontendType.hasReactWeb) return;
+  if (!vfs.exists(webPath)) return;
 
   // When backend is "self", add server deps to web too
   if (api === "trpc") {

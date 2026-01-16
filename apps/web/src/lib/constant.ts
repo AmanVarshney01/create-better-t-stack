@@ -224,6 +224,13 @@ export const TECH_OPTIONS: Record<
       color: "from-purple-400 to-purple-600",
     },
     {
+      id: "self-nuxt",
+      name: "Fullstack Nuxt",
+      description: "Use Nuxt's built-in server routes",
+      icon: `${ICON_BASE_URL}/nuxt.svg`,
+      color: "from-green-400 to-green-700",
+    },
+    {
       id: "none",
       name: "No Backend",
       description: "Skip backend integration (frontend only)",

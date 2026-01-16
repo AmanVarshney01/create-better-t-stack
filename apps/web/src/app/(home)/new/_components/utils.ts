@@ -192,7 +192,11 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   }
 
   // Self (fullstack) backend constraints
-  if (nextStack.backend === "self-next" || nextStack.backend === "self-tanstack-start") {
+  if (
+    nextStack.backend === "self-next" ||
+    nextStack.backend === "self-tanstack-start" ||
+    nextStack.backend === "self-nuxt"
+  ) {
     // Fullstack uses frontend's API routes, no separate runtime needed
     if (nextStack.runtime !== "none") {
       nextStack.runtime = "none";
@@ -231,6 +235,14 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
         message: "Frontend set to 'TanStack Start' (required for TanStack Start fullstack)",
       });
     }
+    if (nextStack.backend === "self-nuxt" && !nextStack.webFrontend.includes("nuxt")) {
+      nextStack.webFrontend = ["nuxt"];
+      changed = true;
+      changes.push({
+        category: "backend",
+        message: "Frontend set to 'Nuxt' (required for Nuxt fullstack)",
+      });
+    }
   }
 
   // ============================================
@@ -266,13 +278,14 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     });
   }
 
-  // Runtime "none" only for convex, self-next, self-tanstack-start
+  // Runtime "none" only for convex, self-next, self-tanstack-start, self-nuxt
   if (
     nextStack.runtime === "none" &&
     nextStack.backend !== "convex" &&
     nextStack.backend !== "none" &&
     nextStack.backend !== "self-next" &&
-    nextStack.backend !== "self-tanstack-start"
+    nextStack.backend !== "self-tanstack-start" &&
+    nextStack.backend !== "self-nuxt"
   ) {
     nextStack.runtime = DEFAULT_STACK.runtime;
     changed = true;
@@ -610,7 +623,7 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
 
   if (
     nextStack.serverDeploy !== "none" &&
-    ["none", "convex", "self-next", "self-tanstack-start"].includes(nextStack.backend)
+    ["none", "convex", "self-next", "self-tanstack-start", "self-nuxt"].includes(nextStack.backend)
   ) {
     nextStack.serverDeploy = "none";
     changed = true;
@@ -741,6 +754,21 @@ export const getDisabledReason = (
     }
   }
 
+  if (currentStack.backend === "self-nuxt") {
+    if (category === "runtime" && optionId !== "none") {
+      return "Nuxt fullstack uses built-in server routes";
+    }
+    if (category === "webFrontend" && optionId !== "nuxt" && optionId !== "none") {
+      return "Nuxt fullstack requires Nuxt frontend";
+    }
+    if (category === "serverDeploy" && optionId !== "none") {
+      return "Fullstack uses frontend deployment";
+    }
+    if (category === "api" && optionId === "trpc") {
+      return "tRPC is not compatible with Nuxt (use oRPC)";
+    }
+  }
+
   if (currentStack.backend === "self-tanstack-start") {
     if (category === "runtime" && optionId !== "none") {
       return "TanStack Start fullstack uses built-in API routes";
@@ -766,6 +794,9 @@ export const getDisabledReason = (
     ) {
       return "Requires TanStack Start frontend";
     }
+    if (optionId === "self-nuxt" && !currentStack.webFrontend.includes("nuxt")) {
+      return "Requires Nuxt frontend";
+    }
     if (optionId === "convex" && currentStack.webFrontend.includes("solid")) {
       return "Convex is not compatible with Solid";
     }
@@ -783,7 +814,7 @@ export const getDisabledReason = (
       return "Workers requires Hono backend";
     }
     if (optionId === "none") {
-      const allowedBackends = ["convex", "none", "self-next", "self-tanstack-start"];
+      const allowedBackends = ["convex", "none", "self-next", "self-tanstack-start", "self-nuxt"];
       if (!allowedBackends.includes(currentStack.backend)) {
         return "Runtime 'None' only for Convex or fullstack backends";
       }
@@ -964,7 +995,7 @@ export const getDisabledReason = (
       if (currentStack.backend !== "hono") return "Cloudflare requires Hono backend";
     }
     if (optionId !== "none") {
-      const noServerDeploy = ["none", "convex", "self-next", "self-tanstack-start"];
+      const noServerDeploy = ["none", "convex", "self-next", "self-tanstack-start", "self-nuxt"];
       if (noServerDeploy.includes(currentStack.backend)) {
         return "Server deployment not needed for this backend";
       }

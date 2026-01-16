@@ -189,6 +189,15 @@ export async function processAuthTemplates(
       }
     }
   } else if (hasNuxtWeb) {
+    if (config.backend === "self") {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `auth/${authProvider}/fullstack/nuxt`,
+        "apps/web",
+        config,
+      );
+    }
     processTemplatesFromPrefix(vfs, templates, `auth/${authProvider}/web/nuxt`, "apps/web", config);
   } else if (hasSvelteWeb) {
     processTemplatesFromPrefix(
