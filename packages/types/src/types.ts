@@ -29,6 +29,7 @@ import type {
   EffectSchema,
   StateManagementSchema,
   FormsSchema,
+  TestingSchema,
 } from "./schemas";
 
 // Inferred types from Zod schemas
@@ -54,6 +55,7 @@ export type AI = z.infer<typeof AISchema>;
 export type Effect = z.infer<typeof EffectSchema>;
 export type StateManagement = z.infer<typeof StateManagementSchema>;
 export type Forms = z.infer<typeof FormsSchema>;
+export type Testing = z.infer<typeof TestingSchema>;
 
 export type CreateInput = z.infer<typeof CreateInputSchema>;
 export type AddInput = z.infer<typeof AddInputSchema>;

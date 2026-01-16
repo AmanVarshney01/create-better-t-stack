@@ -102,6 +102,10 @@ export const FormsSchema = z
   .enum(["tanstack-form", "react-hook-form", "none"])
   .describe("Form handling library");
 
+export const TestingSchema = z
+  .enum(["vitest", "playwright", "vitest-playwright", "none"])
+  .describe("Testing framework (vitest-playwright includes both unit and e2e testing)");
+
 export const DirectoryConflictSchema = z
   .enum(["merge", "overwrite", "increment", "error"])
   .describe("How to handle existing directory conflicts");
@@ -157,6 +161,7 @@ export const CreateInputSchema = z.object({
   effect: EffectSchema.optional(),
   stateManagement: StateManagementSchema.optional(),
   forms: FormsSchema.optional(),
+  testing: TestingSchema.optional(),
 });
 
 export const AddInputSchema = z.object({
@@ -197,6 +202,7 @@ export const ProjectConfigSchema = z.object({
   effect: EffectSchema,
   stateManagement: StateManagementSchema,
   forms: FormsSchema,
+  testing: TestingSchema,
 });
 
 export const BetterTStackConfigSchema = z.object({
@@ -221,6 +227,7 @@ export const BetterTStackConfigSchema = z.object({
   effect: EffectSchema,
   stateManagement: StateManagementSchema,
   forms: FormsSchema,
+  testing: TestingSchema,
 });
 
 export const BetterTStackConfigFileSchema = z
@@ -266,3 +273,4 @@ export const AI_VALUES = AISchema.options;
 export const EFFECT_VALUES = EffectSchema.options;
 export const STATE_MANAGEMENT_VALUES = StateManagementSchema.options;
 export const FORMS_VALUES = FormsSchema.options;
+export const TESTING_VALUES = TestingSchema.options;
