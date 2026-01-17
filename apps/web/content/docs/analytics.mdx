@@ -21,24 +21,11 @@ Not collected:
 
 Telemetry is enabled by default. To disable:
 
-<Tabs groupId="installtab" defaultValue="npm" persist>
-  <TabsList>
-    <TabsTrigger value="npm">npm</TabsTrigger>
-    <TabsTrigger value="pnpm">pnpm</TabsTrigger>
-    <TabsTrigger value="bun">bun</TabsTrigger>
-  </TabsList>
-  <TabsContent value="npm">
-    ```bash BTS_TELEMETRY_DISABLED=1 npx create-better-t-stack@latest ```
-  </TabsContent>
-  <TabsContent value="pnpm">
-    ```bash BTS_TELEMETRY_DISABLED=1 pnpm create better-t-stack@latest ```
-  </TabsContent>
-  <TabsContent value="bun">
-    ```bash BTS_TELEMETRY_DISABLED=1 bun create better-t-stack@latest ```
-  </TabsContent>
-</Tabs>
+```bash
+BTS_TELEMETRY_DISABLED=1 npx create-better-t-stack@latest
+```
 
-<Callout title="Note">The above commands disable it for a single run.</Callout>
+<Callout title="Note">The above command disables it for a single run.</Callout>
 
 Add `export BTS_TELEMETRY_DISABLED=1` to your shell profile to make it permanent.
 

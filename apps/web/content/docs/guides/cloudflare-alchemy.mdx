@@ -34,23 +34,30 @@ When you scaffold a project with Cloudflare deployment enabled, Better-T-Stack g
 
 When creating a project:
 
-```bash
-# Combined deployment (web + server)
-bun create bts@latest my-app \
+**Combined deployment (web + server):**
+
+```npm
+npm create better-t-stack@latest my-app \
   --frontend tanstack-router \
   --backend hono \
   --runtime workers \
   --web-deploy cloudflare \
   --server-deploy cloudflare
+```
 
-# Web-only (e.g., with Convex backend)
-bun create bts@latest my-app \
+**Web-only (e.g., with Convex backend):**
+
+```npm
+npm create better-t-stack@latest my-app \
   --frontend tanstack-start \
   --backend convex \
   --web-deploy cloudflare
+```
 
-# Server-only
-bun create bts@latest my-app \
+**Server-only:**
+
+```npm
+npm create better-t-stack@latest my-app \
   --frontend none \
   --backend hono \
   --runtime workers \
