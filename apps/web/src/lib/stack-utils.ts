@@ -71,7 +71,12 @@ export function generateStackCommand(stack: StackState) {
 
   // Map web interface backend IDs to CLI backend flags
   const mapBackendToCli = (backend: string) => {
-    if (backend === "self-next" || backend === "self-tanstack-start" || backend === "self-nuxt") {
+    if (
+      backend === "self-next" ||
+      backend === "self-tanstack-start" ||
+      backend === "self-nuxt" ||
+      backend === "self-astro"
+    ) {
       return "self";
     }
     return backend;

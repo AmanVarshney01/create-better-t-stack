@@ -2,8 +2,14 @@ import { createAuthClient } from "better-auth/client";
 {{#if (eq payments "polar")}}
 import { polarClient } from "@polar-sh/better-auth";
 {{/if}}
+{{#if (ne backend "self")}}
+import { PUBLIC_SERVER_URL } from "astro:env/client";
+{{/if}}
 
 export const authClient = createAuthClient({
+{{#if (ne backend "self")}}
+  baseURL: PUBLIC_SERVER_URL,
+{{/if}}
 {{#if (eq payments "polar")}}
   plugins: [polarClient()],
 {{/if}}

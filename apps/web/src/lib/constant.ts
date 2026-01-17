@@ -96,6 +96,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "astro",
+      name: "Astro",
+      description: "The web framework for content-driven websites",
+      icon: `${ICON_BASE_URL}/astro.svg`,
+      color: "from-purple-500 to-orange-500",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Web Frontend",
       description: "No web-based frontend",
@@ -229,6 +237,13 @@ export const TECH_OPTIONS: Record<
       description: "Use Nuxt's built-in server routes",
       icon: `${ICON_BASE_URL}/nuxt.svg`,
       color: "from-green-400 to-green-700",
+    },
+    {
+      id: "self-astro",
+      name: "Fullstack Astro",
+      description: "Use Astro's built-in API routes",
+      icon: `${ICON_BASE_URL}/astro.svg`,
+      color: "from-purple-500 to-orange-500",
     },
     {
       id: "none",

@@ -65,7 +65,7 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,
-        devDependencies: ["alchemy", "@cloudflare/workers-types"],
+        devDependencies: ["alchemy", "@astrojs/cloudflare", "@cloudflare/workers-types"],
       });
     } else if (
       frontend.includes("tanstack-router") ||
