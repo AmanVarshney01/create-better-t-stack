@@ -4,8 +4,9 @@ import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { addPackageDependency } from "../utils/add-deps";
 
-export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { payments, frontend, backend } = config;
+export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfig) {
+  const { payments, backend } = config;
+  const frontend = config.frontend ?? [];
   if (!payments || payments === "none") return;
 
   const authPath = "packages/auth/package.json";

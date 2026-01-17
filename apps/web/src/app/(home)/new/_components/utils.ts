@@ -721,7 +721,7 @@ export const getDisabledReason = (
         return `Convex AI example only supports React-based frontends (not ${frontendName})`;
       }
     }
-    // Polar is now compatible with Convex (added in CLI)
+    // Polar is compatible with Convex when using Better Auth or Clerk
   }
 
   // ============================================

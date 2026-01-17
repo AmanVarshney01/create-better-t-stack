@@ -268,10 +268,16 @@ function buildConvexBackendVars(
 
   // Polar environment variables for Convex
   if (payments === "polar") {
-    // Use port 5173 for react-router and svelte, otherwise 3001
     const hasReactRouter = frontend.includes("react-router");
     const hasSvelte = frontend.includes("svelte");
-    const polarPort = hasReactRouter || hasSvelte ? "5173" : "3001";
+    const hasAstro = frontend.includes("astro");
+
+    let polarPort = "3001";
+    if (hasAstro) {
+      polarPort = "4321";
+    } else if (hasReactRouter || hasSvelte) {
+      polarPort = "5173";
+    }
 
     vars.push(
       {
