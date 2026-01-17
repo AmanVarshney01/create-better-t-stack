@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useRouter } from "expo-router";
@@ -8,9 +9,10 @@ export const SubscriptionStatus = () => {
   const subscription = useQuery(api.polar.getCurrentSubscription);
   const generateCheckoutLink = useMutation(api.polar.generateCheckoutLink);
   const generateCustomerPortalUrl = useMutation(api.polar.generateCustomerPortalUrl);
-  const isLoading = generateCheckoutLink.isPending || generateCustomerPortalUrl.isPending;
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubscribe = async (productId: string) => {
+    setIsLoading(true);
     try {
       const result = await generateCheckoutLink({ productId });
       if (result.checkoutUrl) {
@@ -18,10 +20,13 @@ export const SubscriptionStatus = () => {
       }
     } catch (error) {
       console.error("Failed to create checkout:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleManageSubscription = async () => {
+    setIsLoading(true);
     try {
       const result = await generateCustomerPortalUrl({});
       if (result.portalUrl) {
@@ -29,6 +34,8 @@ export const SubscriptionStatus = () => {
       }
     } catch (error) {
       console.error("Failed to open customer portal:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 

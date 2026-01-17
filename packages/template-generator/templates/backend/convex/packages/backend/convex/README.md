@@ -111,7 +111,12 @@ You've configured Polar for payment processing. Here's how to set it up:
 1. Go to **Settings** → **API** → **New Access Token**
 2. Name: `app-production` (or `app-sandbox` for testing)
 3. Expiration: 30 days
-4. **Scopes**: Select all available scopes
+4. **Scopes**: Select only the required scopes:
+   - `products:read` - Read product information
+   - `checkouts:write` - Create checkout sessions
+   - `webhooks:read` - Read webhook configurations
+   - `subscriptions:read` - Read subscription status
+   - `subscriptions:write` - Manage subscriptions
 5. Copy the token immediately (won't be shown again!)
 
 ### 3. Configure Environment Variables
@@ -129,7 +134,7 @@ npx convex env set POLAR_SUCCESS_URL "http://localhost:3001/success?checkout_id=
 
 ### 4. Update Product Configuration
 
-Open `auth.ts` and update the products:
+Open `polar.ts` and update the products:
 
 ```typescript
 export const polar = new Polar(components.polar, {

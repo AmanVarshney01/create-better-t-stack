@@ -238,7 +238,7 @@ function buildConvexBackendVars(
   examples: ProjectConfig["examples"],
   payments: ProjectConfig["payments"],
   backend: ProjectConfig["backend"],
-): EnvVariable[] {
+) {
   const hasNextJs = frontend.includes("next");
   const hasNative =
     frontend.includes("native-bare") ||
@@ -339,7 +339,7 @@ function buildConvexCommentBlocks(
   auth: ProjectConfig["auth"],
   examples: ProjectConfig["examples"],
   payments: ProjectConfig["payments"],
-): string {
+) {
   const hasWeb =
     frontend.includes("react-router") ||
     frontend.includes("tanstack-router") ||

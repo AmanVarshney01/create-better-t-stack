@@ -291,11 +291,19 @@ export function validatePaymentsCompatibility(
   if (!payments || payments === "none") return;
 
   if (payments === "polar") {
-    // Polar requires authentication (Better Auth or Clerk)
+    // Polar requires authentication
+    // For Convex: Better Auth or Clerk are supported (uses @convex-dev/polar)
+    // For non-Convex: Only Better Auth is supported (uses @polar-sh/better-auth)
     if (!auth || auth === "none") {
-      exitWithError(
-        "Polar payments requires authentication. Please use '--auth better-auth' or '--auth clerk'.",
-      );
+      if (backend === "convex") {
+        exitWithError(
+          "Polar payments requires authentication. Please use '--auth better-auth' or '--auth clerk'.",
+        );
+      } else {
+        exitWithError(
+          "Polar payments requires Better Auth. Please use '--auth better-auth'.",
+        );
+      }
     }
 
     // For non-Convex backends, only Better Auth is supported (uses @polar-sh/better-auth)

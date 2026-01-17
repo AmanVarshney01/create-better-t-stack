@@ -12,9 +12,12 @@ export const polar = new Polar(components.polar, {
 		if (!authUser) {
 			throw new Error("Authentication required for Polar operations");
 		}
+		if (!authUser.email) {
+			throw new Error("Email is required for Polar operations");
+		}
 		return {
 			userId: authUser._id,
-			email: authUser.email ?? "",
+			email: authUser.email,
 		};
 {{else if (eq auth "clerk")}}
 		const identity = await ctx.auth.getUserIdentity();
