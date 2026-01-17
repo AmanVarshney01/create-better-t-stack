@@ -9,6 +9,7 @@ type FrontendType = {
   hasNuxtWeb: boolean;
   hasSvelteWeb: boolean;
   hasSolidWeb: boolean;
+  hasAstroWeb: boolean;
   hasNative: boolean;
 };
 
@@ -20,6 +21,7 @@ function getFrontendType(frontend: Frontend[]): FrontendType {
     hasNuxtWeb: frontend.includes("nuxt"),
     hasSvelteWeb: frontend.includes("svelte"),
     hasSolidWeb: frontend.includes("solid"),
+    hasAstroWeb: frontend.includes("astro"),
     hasNative: frontend.some((f) =>
       ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
     ),
@@ -110,12 +112,12 @@ function addSelfBackendWebDeps(
   vfs: VirtualFileSystem,
   api: API,
   backend: Backend,
-  frontendType: FrontendType,
+  _frontendType: FrontendType,
 ): void {
   if (backend !== "self") return;
 
   const webPath = "apps/web/package.json";
-  if (!vfs.exists(webPath) || !frontendType.hasReactWeb) return;
+  if (!vfs.exists(webPath)) return;
 
   // When backend is "self", add server deps to web too
   if (api === "trpc") {
@@ -184,6 +186,13 @@ function addWebClientDeps(
         "@tanstack/solid-query",
       ],
       devDependencies: ["@tanstack/solid-query-devtools", "@tanstack/solid-router-devtools"],
+    });
+  } else if (api === "orpc" && frontendType.hasAstroWeb) {
+    // Astro uses vanilla oRPC client without TanStack Query
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: ["@orpc/client"],
     });
   }
 }

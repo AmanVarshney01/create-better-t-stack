@@ -2,6 +2,8 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 {{else if (includes frontend "nuxt")}}
 import { createEnv } from "@t3-oss/env-nuxt";
+{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}
+import { createEnv } from "@t3-oss/env-core";
 {{else}}
 import { createEnv } from "@t3-oss/env-core";
 {{/if}}
@@ -40,7 +42,7 @@ export const env = createEnv({
 	client: {
 		NUXT_PUBLIC_CONVEX_URL: z.url(),
 	},
-{{else if (includes frontend "svelte")}}
+{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}
 	clientPrefix: "PUBLIC_",
 	client: {
 		PUBLIC_CONVEX_URL: z.url(),
@@ -63,6 +65,8 @@ export const env = createEnv({
 {{#if (includes frontend "next")}}
 	client: {},
 	runtimeEnv: {},
+{{else if (includes frontend "nuxt")}}
+	client: {},
 {{else}}
 	clientPrefix: "VITE_",
 	client: {},
@@ -80,7 +84,7 @@ export const env = createEnv({
 	client: {
 		NUXT_PUBLIC_SERVER_URL: z.url(),
 	},
-{{else if (includes frontend "svelte")}}
+{{else if (or (includes frontend "svelte") (includes frontend "astro"))}}
 	clientPrefix: "PUBLIC_",
 	client: {
 		PUBLIC_SERVER_URL: z.url(),

@@ -32,6 +32,7 @@ export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectCon
   updateConfigPackageJson(vfs, config);
   updateEnvPackageJson(vfs, config);
   updateInfraPackageJson(vfs, config);
+  renameDevScriptsForAlchemy(vfs, config);
 
   if (config.backend === "convex") {
     updateConvexPackageJson(vfs, config);
@@ -119,6 +120,13 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
     scripts["db:down"] = pmConfig.filter(dbPackageName, "db:down");
   }
 
+  // Add deploy/destroy scripts when using alchemy (cloudflare deployment)
+  const infraPackageName = `@${projectName}/infra`;
+  if (config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare") {
+    scripts.deploy = pmConfig.filter(infraPackageName, "deploy");
+    scripts.destroy = pmConfig.filter(infraPackageName, "destroy");
+  }
+
   // Note: packageManager version is set by CLI at runtime since it requires running the actual CLI
   // For preview purposes, we just show the configured package manager
   pkgJson.packageManager = `${packageManager}@latest`;
@@ -172,6 +180,7 @@ function getPackageManagerConfig(
         filter: (workspace, script) => `npm run ${script} --workspace ${workspace}`,
       };
     case "bun":
+    default:
       return {
         dev: "bun run --filter '*' dev",
         build: "bun run --filter '*' build",
@@ -255,7 +264,7 @@ function updateEnvPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): vo
   pkgJson.name = `@${config.projectName}/env`;
 
   // Set exports based on which env files exist
-  const hasWebFrontend = config.frontend.some((f) =>
+  const hasWebFrontend = config.frontend.some((f: string) =>
     [
       "tanstack-router",
       "react-router",
@@ -266,7 +275,7 @@ function updateEnvPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): vo
       "solid",
     ].includes(f),
   );
-  const hasNative = config.frontend.some((f) =>
+  const hasNative = config.frontend.some((f: string) =>
     ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
   );
   const needsServerEnv = config.backend !== "none" && config.backend !== "convex";
@@ -303,4 +312,30 @@ function updateConvexPackageJson(vfs: VirtualFileSystem, config: ProjectConfig):
   pkgJson.name = `@${config.projectName}/backend`;
   pkgJson.scripts = pkgJson.scripts || {};
   vfs.writeJson("packages/backend/package.json", pkgJson);
+}
+
+function renameDevScriptsForAlchemy(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  const { serverDeploy, webDeploy, backend } = config;
+
+  // Rename server dev script to dev:bare when serverDeploy is cloudflare
+  if (serverDeploy === "cloudflare" && backend !== "self") {
+    const serverPkgPath = "apps/server/package.json";
+    const serverPkg = vfs.readJson<PackageJson>(serverPkgPath);
+    if (serverPkg?.scripts?.dev) {
+      serverPkg.scripts["dev:bare"] = serverPkg.scripts.dev;
+      delete serverPkg.scripts.dev;
+      vfs.writeJson(serverPkgPath, serverPkg);
+    }
+  }
+
+  // Rename web dev script to dev:bare when webDeploy is cloudflare
+  if (webDeploy === "cloudflare") {
+    const webPkgPath = "apps/web/package.json";
+    const webPkg = vfs.readJson<PackageJson>(webPkgPath);
+    if (webPkg?.scripts?.dev) {
+      webPkg.scripts["dev:bare"] = webPkg.scripts.dev;
+      delete webPkg.scripts.dev;
+      vfs.writeJson(webPkgPath, webPkg);
+    }
+  }
 }

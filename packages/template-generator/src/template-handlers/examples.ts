@@ -17,6 +17,7 @@ export async function processExampleTemplates(
   const hasNuxtWeb = config.frontend.includes("nuxt");
   const hasSvelteWeb = config.frontend.includes("svelte");
   const hasSolidWeb = config.frontend.includes("solid");
+  const hasAstroWeb = config.frontend.includes("astro");
   const hasNativeBare = config.frontend.includes("native-bare");
   const hasUniwind = config.frontend.includes("native-uniwind");
   const hasUnistyles = config.frontend.includes("native-unistyles");
@@ -80,6 +81,15 @@ export async function processExampleTemplates(
         }
       }
     } else if (hasNuxtWeb) {
+      if (config.backend === "self") {
+        processTemplatesFromPrefix(
+          vfs,
+          templates,
+          `examples/${example}/fullstack/nuxt`,
+          "apps/web",
+          config,
+        );
+      }
       processTemplatesFromPrefix(
         vfs,
         templates,
@@ -100,6 +110,14 @@ export async function processExampleTemplates(
         vfs,
         templates,
         `examples/${example}/web/solid`,
+        "apps/web",
+        config,
+      );
+    } else if (hasAstroWeb) {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `examples/${example}/web/astro`,
         "apps/web",
         config,
       );

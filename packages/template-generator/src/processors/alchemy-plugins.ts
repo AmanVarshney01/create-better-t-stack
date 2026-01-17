@@ -13,6 +13,7 @@ export function processAlchemyPlugins(vfs: VirtualFileSystem, config: ProjectCon
   const isNuxt = frontend.includes("nuxt");
   const isSvelte = frontend.includes("svelte");
   const isTanstackStart = frontend.includes("tanstack-start");
+  const isAstro = frontend.includes("astro");
 
   if (isNext) {
     processNextAlchemy(vfs);
@@ -22,6 +23,8 @@ export function processAlchemyPlugins(vfs: VirtualFileSystem, config: ProjectCon
     processSvelteAlchemy(vfs);
   } else if (isTanstackStart) {
     processTanStackStartAlchemy(vfs);
+  } else if (isAstro) {
+    processAstroAlchemy(vfs);
   }
 }
 
@@ -63,6 +66,17 @@ function processNuxtAlchemy(vfs: VirtualFileSystem) {
   });
 
   const sourceFile = project.createSourceFile("nuxt.config.ts", content);
+
+  const hasAlchemyImport = sourceFile
+    .getImportDeclarations()
+    .some((decl) => decl.getModuleSpecifierValue() === "alchemy/cloudflare/nuxt");
+  if (!hasAlchemyImport) {
+    sourceFile.addImportDeclaration({
+      moduleSpecifier: "alchemy/cloudflare/nuxt",
+      defaultImport: "alchemy",
+    });
+  }
+
   const exportAssignment = sourceFile.getExportAssignment((d) => !d.isExportEquals());
 
   if (!exportAssignment) return;
@@ -85,11 +99,12 @@ function processNuxtAlchemy(vfs: VirtualFileSystem) {
       configObject.addPropertyAssignment({
         name: "nitro",
         initializer: `{
-    preset: "cloudflare_module",
-    cloudflare: {
-      deployConfig: true,
-      nodeCompat: true
-    }
+    preset: "cloudflare-module",
+    cloudflare: alchemy(),
+    prerender: {
+      routes: ["/"],
+      autoSubfolderIndex: false,
+    },
   }`,
       });
     }
@@ -240,4 +255,59 @@ function processTanStackStartAlchemy(vfs: VirtualFileSystem) {
   }
 
   vfs.writeFile(viteConfigPath, sourceFile.getFullText());
+}
+
+function processAstroAlchemy(vfs: VirtualFileSystem) {
+  const webAppDir = "apps/web";
+  const astroConfigPath = `${webAppDir}/astro.config.mjs`;
+
+  if (!vfs.exists(astroConfigPath)) return;
+
+  const content = vfs.readFile(astroConfigPath);
+  const project = new Project({
+    useInMemoryFileSystem: true,
+    manipulationSettings: {
+      indentationText: IndentationText.TwoSpaces,
+      quoteKind: QuoteKind.Double,
+    },
+  });
+
+  const sourceFile = project.createSourceFile("astro.config.mjs", content);
+
+  // Replace @astrojs/node import with alchemy/cloudflare/astro
+  const importDeclarations = sourceFile.getImportDeclarations();
+  const nodeAdapterImport = importDeclarations.find(
+    (imp) => imp.getModuleSpecifierValue() === "@astrojs/node",
+  );
+
+  if (nodeAdapterImport) {
+    nodeAdapterImport.setModuleSpecifier("alchemy/cloudflare/astro");
+    nodeAdapterImport.removeDefaultImport();
+    nodeAdapterImport.setDefaultImport("alchemy");
+  } else {
+    sourceFile.insertImportDeclaration(0, {
+      moduleSpecifier: "alchemy/cloudflare/astro",
+      defaultImport: "alchemy",
+    });
+  }
+
+  // Update adapter: node({ mode: "standalone" }) -> alchemy()
+  const exportAssignment = sourceFile.getExportAssignment((d) => !d.isExportEquals());
+  if (exportAssignment) {
+    const defineConfigCall = exportAssignment.getExpression();
+    if (
+      Node.isCallExpression(defineConfigCall) &&
+      defineConfigCall.getExpression().getText() === "defineConfig"
+    ) {
+      const configObject = defineConfigCall.getArguments()[0];
+      if (Node.isObjectLiteralExpression(configObject)) {
+        const adapterProperty = configObject.getProperty("adapter");
+        if (adapterProperty && Node.isPropertyAssignment(adapterProperty)) {
+          adapterProperty.setInitializer("alchemy()");
+        }
+      }
+    }
+  }
+
+  vfs.writeFile(astroConfigPath, sourceFile.getFullText());
 }

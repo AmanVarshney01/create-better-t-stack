@@ -26,6 +26,7 @@ export const FrontendSchema = z
     "native-unistyles",
     "svelte",
     "solid",
+    "astro",
     "none",
   ])
   .describe("Frontend framework");

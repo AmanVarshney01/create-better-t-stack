@@ -30,22 +30,22 @@ export const dependencyVersionMap = {
   libsql: "0.5.22",
 
   "@neondatabase/serverless": "^1.0.2",
-  pg: "^8.16.3",
-  "@types/pg": "^8.15.6",
+  pg: "^8.17.1",
+  "@types/pg": "^8.16.0",
   "@types/ws": "^8.18.1",
   ws: "^8.18.3",
 
   mysql2: "^3.14.0",
 
-  "@prisma/client": "^7.1.0",
-  prisma: "^7.1.0",
-  "@prisma/adapter-d1": "^7.1.0",
-  "@prisma/adapter-neon": "^7.1.0",
-  "@prisma/adapter-mariadb": "^7.1.0",
-  "@prisma/adapter-libsql": "^7.1.0",
-  "@prisma/adapter-better-sqlite3": "^7.1.0",
-  "@prisma/adapter-pg": "^7.1.0",
-  "@prisma/adapter-planetscale": "^7.1.0",
+  "@prisma/client": "^7.2.0",
+  prisma: "^7.2.0",
+  "@prisma/adapter-d1": "^7.2.0",
+  "@prisma/adapter-neon": "^7.2.0",
+  "@prisma/adapter-mariadb": "^7.2.0",
+  "@prisma/adapter-libsql": "^7.2.0",
+  "@prisma/adapter-better-sqlite3": "^7.2.0",
+  "@prisma/adapter-pg": "^7.2.0",
+  "@prisma/adapter-planetscale": "^7.2.0",
 
   mongoose: "^8.14.0",
 
@@ -138,6 +138,7 @@ export const dependencyVersionMap = {
   "nitro-cloudflare-dev": "^0.2.2",
   "@sveltejs/adapter-cloudflare": "^7.2.4",
   "@cloudflare/workers-types": "^4.20251213.0",
+  "@astrojs/cloudflare": "^12.6.12",
 
   alchemy: "^0.82.1",
 
@@ -149,15 +150,9 @@ export const dependencyVersionMap = {
   "@t3-oss/env-nuxt": "^0.13.1",
   srvx: "0.8.15",
 
-  // IMPORTANT: Convex's @convex-dev/better-auth currently peers on better-auth 1.4.9 (exact).
-  // Polar's newer @polar-sh/better-auth versions peer on better-auth ^1.4.12, which conflicts.
-  // Pin to a compatible Polar plugin series.
-  "@polar-sh/better-auth": "1.6.4",
-  // Ensure Polar deps resolve to versions compatible with the pinned plugin
+  "@polar-sh/better-auth": "^1.6.4",
   "@polar-sh/checkout": "^0.1.14",
   "@polar-sh/sdk": "^0.42.2",
-
-  // Satisfy Stripe peer deps required by @polar-sh/checkout
   "@stripe/react-stripe-js": "^4.0.2",
   "@stripe/stripe-js": "^7.1.0",
 } as const;

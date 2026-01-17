@@ -1,0 +1,24 @@
+import { createRouterClient } from "@orpc/server";
+import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import { createContext } from "@{{projectName}}/api/context";
+
+export default defineNuxtPlugin(async () => {
+  const event = useRequestEvent();
+
+  const context = await createContext({
+    headers: event?.headers ?? new Headers(),
+  });
+
+  const client = createRouterClient(appRouter, {
+    context,
+  });
+
+  const orpc = createTanstackQueryUtils(client);
+
+  return {
+    provide: {
+      orpc,
+    },
+  };
+});

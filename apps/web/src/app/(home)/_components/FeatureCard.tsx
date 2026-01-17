@@ -36,7 +36,10 @@ function TechIcon({ icon, name, className }: { icon: string; name: string; class
   let iconSrc = icon;
   if (
     theme === "light" &&
-    (icon.includes("drizzle") || icon.includes("prisma") || icon.includes("express"))
+    (icon.includes("drizzle") ||
+      icon.includes("prisma") ||
+      icon.includes("express") ||
+      icon.includes("astro"))
   ) {
     iconSrc = icon.replace(".svg", "-light.svg");
   }

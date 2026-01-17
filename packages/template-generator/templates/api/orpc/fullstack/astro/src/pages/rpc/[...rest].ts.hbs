@@ -1,0 +1,26 @@
+import type { APIRoute } from "astro";
+import { RPCHandler } from "@orpc/server/fetch";
+import { onError } from "@orpc/server";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import { createContext } from "@{{projectName}}/api/context";
+
+const handler = new RPCHandler(appRouter, {
+  interceptors: [
+    onError((error) => {
+      console.error(error);
+    }),
+  ],
+});
+
+export const prerender = false;
+
+export const ALL: APIRoute = async ({ request }) => {
+  const context = await createContext({ headers: request.headers });
+
+  const { response } = await handler.handle(request, {
+    prefix: "/rpc",
+    context,
+  });
+
+  return response ?? new Response("Not found", { status: 404 });
+};
