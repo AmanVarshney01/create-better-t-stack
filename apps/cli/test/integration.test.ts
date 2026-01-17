@@ -498,7 +498,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         expectError: true,
       });
 
-      expectError(result, "Polar payments requires authentication");
+      expectError(result, "Polar payments requires Better Auth");
     });
 
     it("should fail with deployment constraint violation", async () => {
