@@ -5,22 +5,22 @@
     "": {
       "name": "better-t-stack",
       "dependencies": {
-        "@clack/prompts": "latest",
+        "@clack/prompts": "^0.11.0",
       },
       "devDependencies": {
-        "@types/bun": "latest",
-        "changelogithub": "latest",
-        "lefthook": "latest",
-        "lint-staged": "latest",
-        "oxfmt": "latest",
-        "oxlint": "latest",
-        "turbo": "latest",
-        "typescript": "latest",
+        "@types/bun": "^1.3.6",
+        "changelogithub": "^14.0.0",
+        "lefthook": "^2.0.15",
+        "lint-staged": "^16.2.7",
+        "oxfmt": "^0.24.0",
+        "oxlint": "^1.39.0",
+        "turbo": "^2.7.4",
+        "typescript": "5.9.3",
       },
     },
     "apps/cli": {
       "name": "create-better-t-stack",
-      "version": "3.16.1",
+      "version": "3.17.0",
       "bin": {
         "create-better-t-stack": "dist/cli.mjs",
       },
@@ -131,7 +131,7 @@
     },
     "packages/create-bts": {
       "name": "create-bts",
-      "version": "3.16.1",
+      "version": "3.17.0",
       "bin": {
         "create-bts": "cli.js",
       },
@@ -141,9 +141,9 @@
     },
     "packages/template-generator": {
       "name": "@better-t-stack/template-generator",
-      "version": "3.16.1",
+      "version": "3.17.0",
       "dependencies": {
-        "@better-t-stack/types": "^3.16.1",
+        "@better-t-stack/types": "^3.17.0",
         "handlebars": "^4.7.8",
         "memfs": "^4.51.1",
         "pathe": "^2.0.3",
@@ -162,7 +162,7 @@
     },
     "packages/types": {
       "name": "@better-t-stack/types",
-      "version": "3.16.1",
+      "version": "3.17.0",
       "dependencies": {
         "zod": "^4.1.13",
       },
