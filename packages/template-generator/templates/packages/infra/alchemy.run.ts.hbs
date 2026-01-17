@@ -14,6 +14,8 @@ import { Vite } from "alchemy/cloudflare";
 import { ReactRouter } from "alchemy/cloudflare";
 {{else if (includes frontend "solid")}}
 import { Vite } from "alchemy/cloudflare";
+{{else if (includes frontend "astro")}}
+import { Astro } from "alchemy/cloudflare";
 {{/if}}
 {{/if}}
 {{#if (eq serverDeploy "cloudflare")}}
@@ -244,6 +246,41 @@ export const web = await Vite("web", {
     {{/if}}
     {{else if (ne backend "self")}}
     VITE_SERVER_URL: alchemy.env.VITE_SERVER_URL!,
+    {{/if}}
+  }
+});
+{{else if (includes frontend "astro")}}
+export const web = await Astro("web", {
+  cwd: "../../apps/web",
+  bindings: {
+    {{#if (ne backend "self")}}
+    PUBLIC_SERVER_URL: alchemy.env.PUBLIC_SERVER_URL!,
+    {{/if}}
+    {{#if (eq backend "self")}}
+    {{#if (eq dbSetup "d1")}}
+    DB: db,
+    {{else if (ne database "none")}}
+    DATABASE_URL: alchemy.secret.env.DATABASE_URL!,
+    {{/if}}
+    CORS_ORIGIN: alchemy.env.CORS_ORIGIN!,
+    {{#if (eq auth "better-auth")}}
+    BETTER_AUTH_SECRET: alchemy.secret.env.BETTER_AUTH_SECRET!,
+    BETTER_AUTH_URL: alchemy.env.BETTER_AUTH_URL!,
+    {{/if}}
+    {{#if (eq payments "polar")}}
+    POLAR_ACCESS_TOKEN: alchemy.secret.env.POLAR_ACCESS_TOKEN!,
+    POLAR_SUCCESS_URL: alchemy.env.POLAR_SUCCESS_URL!,
+    {{/if}}
+    {{#if (eq dbSetup "turso")}}
+    DATABASE_AUTH_TOKEN: alchemy.secret.env.DATABASE_AUTH_TOKEN!,
+    {{/if}}
+    {{#if (eq database "mysql")}}
+    {{#if (eq orm "drizzle")}}
+    DATABASE_HOST: alchemy.env.DATABASE_HOST!,
+    DATABASE_USERNAME: alchemy.env.DATABASE_USERNAME!,
+    DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
+    {{/if}}
+    {{/if}}
     {{/if}}
   }
 });

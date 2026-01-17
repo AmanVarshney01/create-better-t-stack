@@ -61,11 +61,16 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
         packagePath: webPkgPath,
         devDependencies: ["alchemy", "@cloudflare/vite-plugin", "wrangler"],
       });
+    } else if (frontend.includes("astro")) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPkgPath,
+        devDependencies: ["alchemy", "@cloudflare/workers-types"],
+      });
     } else if (
       frontend.includes("tanstack-router") ||
       frontend.includes("react-router") ||
-      frontend.includes("solid") ||
-      frontend.includes("astro")
+      frontend.includes("solid")
     ) {
       addPackageDependency({ vfs, packagePath: webPkgPath, devDependencies: ["alchemy"] });
     }

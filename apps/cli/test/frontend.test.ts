@@ -15,6 +15,7 @@ describe("Frontend Configurations", () => {
       "native-unistyles",
       "svelte",
       "solid",
+      "astro",
     ] satisfies ReadonlyArray<
       | "tanstack-router"
       | "react-router"
@@ -26,6 +27,7 @@ describe("Frontend Configurations", () => {
       | "native-unistyles"
       | "svelte"
       | "solid"
+      | "astro"
     >;
 
     for (const frontend of singleFrontends) {
@@ -70,6 +72,19 @@ describe("Frontend Configurations", () => {
           config.orm = "drizzle";
           config.auth = "none";
           config.api = "orpc"; // tRPC not supported with nuxt/svelte
+          config.addons = ["none"];
+          config.examples = ["none"];
+          config.dbSetup = "none";
+          config.webDeploy = "none";
+          config.serverDeploy = "none";
+        } else if (frontend === "astro") {
+          // Astro uses oRPC, not Convex compatible
+          config.backend = "hono";
+          config.runtime = "bun";
+          config.database = "sqlite";
+          config.orm = "drizzle";
+          config.auth = "none";
+          config.api = "orpc"; // tRPC not supported with astro
           config.addons = ["none"];
           config.examples = ["none"];
           config.dbSetup = "none";
@@ -180,7 +195,28 @@ describe("Frontend Configurations", () => {
       expectError(result, "tRPC API is not supported with 'solid' frontend");
     });
 
-    const frontends = ["nuxt", "svelte", "solid"] as const;
+    it("should fail with Astro + tRPC", async () => {
+      const result = await runTRPCTest({
+        projectName: "astro-trpc-fail",
+        frontend: ["astro"],
+        api: "trpc",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "tRPC API is not supported with 'astro' frontend");
+    });
+
+    const frontends = ["nuxt", "svelte", "solid", "astro"] as const;
     for (const frontend of frontends) {
       it(`should work with ${frontend} + oRPC`, async () => {
         const result = await runTRPCTest({
@@ -227,6 +263,30 @@ describe("Frontend Configurations", () => {
       expectError(
         result,
         "The following frontends are not compatible with '--backend convex': solid. Please choose a different frontend or backend.",
+      );
+    });
+
+    it("should fail Astro + Convex", async () => {
+      const result = await runTRPCTest({
+        projectName: "astro-convex-fail",
+        frontend: ["astro"],
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(
+        result,
+        "The following frontends are not compatible with '--backend convex': astro. Please choose a different frontend or backend.",
       );
     });
 
@@ -486,6 +546,50 @@ describe("Frontend Configurations", () => {
       const result = await runTRPCTest({
         projectName: "nuxt-traditional-backend",
         frontend: ["nuxt"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "orpc",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+  });
+
+  describe("Astro with Self Backend", () => {
+    it("should work with Astro and self backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "astro-self-backend",
+        frontend: ["astro"],
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "orpc",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with Astro and traditional backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "astro-traditional-backend",
+        frontend: ["astro"],
         backend: "hono",
         runtime: "bun",
         database: "sqlite",

@@ -7,6 +7,7 @@ import node from "@astrojs/node";
 export default defineConfig({
   output: "server",
   adapter: node({ mode: "standalone" }),
+{{#if (ne backend "self")}}
   env: {
     schema: {
       PUBLIC_SERVER_URL: envField.string({
@@ -16,6 +17,7 @@ export default defineConfig({
       }),
     },
   },
+{{/if}}
   vite: {
     plugins: [tailwindcss()],
   },
