@@ -338,7 +338,7 @@ export function validateBackendConstraints(
   }
 
   if (backend === "convex" && providedFlags.has("frontend") && options.frontend) {
-    const incompatibleFrontends = options.frontend.filter((f) => f === "solid");
+    const incompatibleFrontends = options.frontend.filter((f) => f === "solid" || f === "astro");
     if (incompatibleFrontends.length > 0) {
       exitWithError(
         `The following frontends are not compatible with '--backend convex': ${incompatibleFrontends.join(

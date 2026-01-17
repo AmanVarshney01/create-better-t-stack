@@ -1,0 +1,26 @@
+import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
+
+import { createORPCClient } from "@orpc/client";
+import { RPCLink } from "@orpc/client/fetch";
+
+{{#if (eq backend "self")}}
+export const link = new RPCLink({
+  url: `${window.location.origin}/rpc`,
+});
+{{else}}
+import { PUBLIC_SERVER_URL } from "astro:env/client";
+
+export const link = new RPCLink({
+  url: `${PUBLIC_SERVER_URL}/rpc`,
+{{#if (eq auth "better-auth")}}
+  fetch(url, options) {
+    return fetch(url, {
+      ...options,
+      credentials: "include",
+    });
+  },
+{{/if}}
+});
+{{/if}}
+
+export const orpc: AppRouterClient = createORPCClient(link);

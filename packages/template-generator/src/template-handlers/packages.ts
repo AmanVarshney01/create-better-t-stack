@@ -26,6 +26,7 @@ export async function processEnvPackage(
       "nuxt",
       "svelte",
       "solid",
+      "astro",
     ].includes(f),
   );
   const hasNative = config.frontend.some((f) =>

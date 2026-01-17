@@ -30,6 +30,7 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
           "nuxt",
           "svelte",
           "solid",
+          "astro",
         ].includes(f),
       );
       if (hasWebFrontend) {

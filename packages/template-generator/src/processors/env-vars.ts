@@ -41,6 +41,7 @@ function getClientServerVar(frontend: string[], backend: ProjectConfig["backend"
   const hasNextJs = frontend.includes("next");
   const hasNuxt = frontend.includes("nuxt");
   const hasSvelte = frontend.includes("svelte");
+  const hasAstro = frontend.includes("astro");
   const hasTanstackStart = frontend.includes("tanstack-start");
 
   // For fullstack self, no base URL is needed (same-origin)
@@ -51,7 +52,7 @@ function getClientServerVar(frontend: string[], backend: ProjectConfig["backend"
   let key = "VITE_SERVER_URL";
   if (hasNextJs) key = "NEXT_PUBLIC_SERVER_URL";
   else if (hasNuxt) key = "NUXT_PUBLIC_SERVER_URL";
-  else if (hasSvelte) key = "PUBLIC_SERVER_URL";
+  else if (hasSvelte || hasAstro) key = "PUBLIC_SERVER_URL";
   else if (hasTanstackStart) key = "VITE_SERVER_URL";
 
   return { key, value: "http://localhost:3000", write: true } as const;
@@ -249,7 +250,8 @@ function buildConvexBackendVars(
     hasNextJs ||
     frontend.includes("nuxt") ||
     frontend.includes("solid") ||
-    frontend.includes("svelte");
+    frontend.includes("svelte") ||
+    frontend.includes("astro");
 
   const vars: EnvVariable[] = [];
 
@@ -305,7 +307,8 @@ function buildConvexCommentBlocks(
     frontend.includes("next") ||
     frontend.includes("nuxt") ||
     frontend.includes("solid") ||
-    frontend.includes("svelte");
+    frontend.includes("svelte") ||
+    frontend.includes("astro");
 
   let commentBlocks = "";
 
@@ -339,12 +342,15 @@ function buildServerVars(
 ): EnvVariable[] {
   const hasReactRouter = frontend.includes("react-router");
   const hasSvelte = frontend.includes("svelte");
+  const hasAstro = frontend.includes("astro");
 
   let corsOrigin = "http://localhost:3001";
-  if (backend === "self") {
-    corsOrigin = "http://localhost:3001";
+  if (hasAstro) {
+    corsOrigin = "http://localhost:4321";
   } else if (hasReactRouter || hasSvelte) {
     corsOrigin = "http://localhost:5173";
+  } else if (backend === "self") {
+    corsOrigin = "http://localhost:3001";
   }
 
   let databaseUrl: string | null = null;
@@ -429,6 +435,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
   const hasNuxt = frontend.includes("nuxt");
   const hasSvelte = frontend.includes("svelte");
   const hasSolid = frontend.includes("solid");
+  const hasAstro = frontend.includes("astro");
   const hasWebFrontend =
     hasReactRouter ||
     hasTanStackRouter ||
@@ -436,7 +443,8 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     hasNextJs ||
     hasNuxt ||
     hasSolid ||
-    hasSvelte;
+    hasSvelte ||
+    hasAstro;
 
   // --- Client App .env ---
   if (hasWebFrontend) {

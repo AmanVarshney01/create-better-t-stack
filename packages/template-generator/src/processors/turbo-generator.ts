@@ -73,6 +73,11 @@ function getBaseTasks(frontend: string[]): Record<string, TurboTask> {
     buildOutputs.push(".svelte-kit/**", "build/**");
   }
 
+  // Astro outputs to dist/**
+  if (frontend.includes("astro")) {
+    buildOutputs.push(".astro/**");
+  }
+
   return {
     build: {
       dependsOn: ["^build"],

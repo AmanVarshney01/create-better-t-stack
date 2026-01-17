@@ -11,34 +11,9 @@ The Better-T-Stack CLI can be used programmatically in your Node.js applications
 
 Install the package in your Node.js project:
 
-<Tabs groupId="installtab" defaultValue="npm" persist>
-  <TabsList>
-    <TabsTrigger value="npm">
-      npm
-    </TabsTrigger>
-    <TabsTrigger value="pnpm">
-      pnpm
-    </TabsTrigger>
-    <TabsTrigger value="bun">
-      bun
-    </TabsTrigger>
-  </TabsList>
-  <TabsContent value="npm">
-    ```bash
-    npm install create-better-t-stack
-    ```
-  </TabsContent>
-  <TabsContent value="pnpm">
-    ```bash
-    pnpm add create-better-t-stack
-    ```
-  </TabsContent>
-  <TabsContent value="bun">
-    ```bash
-    bun add create-better-t-stack
-    ```
-  </TabsContent>
-</Tabs>
+```npm
+npm i create-better-t-stack
+```
 
 ## Quick Start
 
@@ -121,7 +96,7 @@ const result = await create("my-project", {
   frontend: ["next"],
   backend: "hono",
   database: "postgres",
-  orm: "drizzle"
+  orm: "drizzle",
 });
 ```
 
@@ -152,30 +127,30 @@ Configuration options for project creation:
 ```typescript
 interface CreateInput {
   projectName?: string;
-  template?: Template;              // "none" | "mern" | "pern" | "t3" | "uniwind"
-  yes?: boolean;                    // Skip prompts, use defaults
-  yolo?: boolean;                   // Bypass validations (not recommended)
-  verbose?: boolean;               // Show JSON result (CLI only, programmatic always returns result)
-  database?: Database;              // "none" | "sqlite" | "postgres" | "mysql" | "mongodb"
-  orm?: ORM;                        // "none" | "drizzle" | "prisma" | "mongoose"
-  auth?: Auth;                      // "better-auth" | "clerk" | "none"
-  payments?: Payments;             // "polar" | "none"
-  frontend?: Frontend[];            // Array of frontend frameworks
-  addons?: Addons[];               // Array of addons
-  examples?: Examples[];           // Array of examples
-  git?: boolean;                   // Initialize git repo
+  template?: Template; // "none" | "mern" | "pern" | "t3" | "uniwind"
+  yes?: boolean; // Skip prompts, use defaults
+  yolo?: boolean; // Bypass validations (not recommended)
+  verbose?: boolean; // Show JSON result (CLI only, programmatic always returns result)
+  database?: Database; // "none" | "sqlite" | "postgres" | "mysql" | "mongodb"
+  orm?: ORM; // "none" | "drizzle" | "prisma" | "mongoose"
+  auth?: Auth; // "better-auth" | "clerk" | "none"
+  payments?: Payments; // "polar" | "none"
+  frontend?: Frontend[]; // Array of frontend frameworks
+  addons?: Addons[]; // Array of addons
+  examples?: Examples[]; // Array of examples
+  git?: boolean; // Initialize git repo
   packageManager?: PackageManager; // "npm" | "pnpm" | "bun"
-  install?: boolean;               // Install dependencies
-  dbSetup?: DatabaseSetup;         // Database hosting setup
-  backend?: Backend;               // Backend framework
-  runtime?: Runtime;               // Runtime environment
-  api?: API;                       // API type
-  webDeploy?: WebDeploy;          // Web deployment setup
-  serverDeploy?: ServerDeploy;    // Server deployment setup
+  install?: boolean; // Install dependencies
+  dbSetup?: DatabaseSetup; // Database hosting setup
+  backend?: Backend; // Backend framework
+  runtime?: Runtime; // Runtime environment
+  api?: API; // API type
+  webDeploy?: WebDeploy; // Web deployment setup
+  serverDeploy?: ServerDeploy; // Server deployment setup
   directoryConflict?: DirectoryConflict; // "merge" | "overwrite" | "increment" | "error"
-  renderTitle?: boolean;           // Show ASCII art title
-  disableAnalytics?: boolean;      // Disable analytics and telemetry
-  manualDb?: boolean;              // Skip automatic database setup prompts
+  renderTitle?: boolean; // Show ASCII art title
+  disableAnalytics?: boolean; // Disable analytics and telemetry
+  manualDb?: boolean; // Skip automatic database setup prompts
 }
 ```
 
@@ -185,14 +160,14 @@ Result object returned by `init()`:
 
 ```typescript
 interface InitResult {
-  success: boolean;                // Whether operation succeeded
-  projectConfig: ProjectConfig;    // Final project configuration
-  reproducibleCommand: string;     // CLI command to recreate project
-  timeScaffolded: string;          // ISO timestamp of creation
-  elapsedTimeMs: number;          // Time taken in milliseconds
-  projectDirectory: string;        // Absolute path to project
-  relativePath: string;           // Relative path to project
-  error?: string;                 // Error message if failed
+  success: boolean; // Whether operation succeeded
+  projectConfig: ProjectConfig; // Final project configuration
+  reproducibleCommand: string; // CLI command to recreate project
+  timeScaffolded: string; // ISO timestamp of creation
+  elapsedTimeMs: number; // Time taken in milliseconds
+  projectDirectory: string; // Absolute path to project
+  relativePath: string; // Relative path to project
+  error?: string; // Error message if failed
 }
 ```
 
@@ -204,16 +179,16 @@ Control how existing directories are handled:
 
 ```typescript
 // Merge with existing files (careful with conflicts)
-directoryConflict: "merge"
+directoryConflict: "merge";
 
 // Completely overwrite existing directory
-directoryConflict: "overwrite"
+directoryConflict: "overwrite";
 
 // Create new directory with incremented name (my-app-1)
-directoryConflict: "increment"
+directoryConflict: "increment";
 
 // Throw error if directory exists
-directoryConflict: "error"
+directoryConflict: "error";
 ```
 
 ### Title Rendering
@@ -222,10 +197,10 @@ Control CLI output appearance:
 
 ```typescript
 // Hide ASCII art title (useful for automated scripts)
-renderTitle: false
+renderTitle: false;
 
 // Show ASCII art title (default)
-renderTitle: true
+renderTitle: true;
 ```
 
 ### YOLO Mode
@@ -234,7 +209,7 @@ Bypass validation checks (not recommended):
 
 ```typescript
 // Skip compatibility validations
-yolo: true
+yolo: true;
 ```
 
 ## Error Handling
@@ -247,7 +222,7 @@ Directory conflict errors return structured results instead of throwing:
 
 ```typescript
 const result = await init("existing-dir", {
-  directoryConflict: "error"
+  directoryConflict: "error",
 });
 
 if (!result.success) {
@@ -264,7 +239,7 @@ Validation errors still throw exceptions (maintains CLI compatibility):
 try {
   await init("test", {
     database: "mongodb",
-    orm: "drizzle" // Invalid combination
+    orm: "drizzle", // Invalid combination
   });
 } catch (error) {
   console.error(error.message); // "MongoDB requires Mongoose or Prisma ORM"
@@ -296,7 +271,7 @@ const result = await create("my-app", {
   database: "postgres",
   orm: "drizzle",
   auth: "better-auth",
-  yes: true
+  yes: true,
 });
 ```
 
@@ -317,6 +292,6 @@ const result = await init("my-app", {
   examples: ["todo"],
   packageManager: "bun",
   install: false,
-  git: true
+  git: true,
 });
 ```

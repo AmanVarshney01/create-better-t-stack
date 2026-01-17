@@ -17,6 +17,7 @@ export async function processAuthTemplates(
   const hasNuxtWeb = config.frontend.includes("nuxt");
   const hasSvelteWeb = config.frontend.includes("svelte");
   const hasSolidWeb = config.frontend.includes("solid");
+  const hasAstroWeb = config.frontend.includes("astro");
   const hasNativeBare = config.frontend.includes("native-bare");
   const hasUniwind = config.frontend.includes("native-uniwind");
   const hasUnistyles = config.frontend.includes("native-unistyles");
@@ -212,6 +213,23 @@ export async function processAuthTemplates(
       vfs,
       templates,
       `auth/${authProvider}/web/solid`,
+      "apps/web",
+      config,
+    );
+  } else if (hasAstroWeb) {
+    if (config.backend === "self" && authProvider === "better-auth") {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `auth/${authProvider}/fullstack/astro`,
+        "apps/web",
+        config,
+      );
+    }
+    processTemplatesFromPrefix(
+      vfs,
+      templates,
+      `auth/${authProvider}/web/astro`,
       "apps/web",
       config,
     );

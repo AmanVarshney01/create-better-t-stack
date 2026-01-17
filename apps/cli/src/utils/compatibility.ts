@@ -8,4 +8,5 @@ export const WEB_FRAMEWORKS: readonly Frontend[] = [
   "nuxt",
   "svelte",
   "solid",
+  "astro",
 ] as const;
