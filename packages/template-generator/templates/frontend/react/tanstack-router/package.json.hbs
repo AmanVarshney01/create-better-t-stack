@@ -11,21 +11,25 @@
 		"check-types": "tsc --noEmit"
 	},
 	"dependencies": {
+{{#if (eq uiLibrary "shadcn-ui")}}
         "@hookform/resolvers": "^5.1.1",
         "@base-ui/react": "^1.0.0",
         "shadcn": "^3.6.2",
         "@tanstack/react-form": "^1.12.3",
-		"@tailwindcss/vite": "^4.0.15",
-		"@tanstack/react-router": "^1.141.1",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"lucide-react": "^0.473.0",
         "next-themes": "^0.4.6",
-		"react": "19.2.3",
-		"react-dom": "19.2.3",
         "sonner": "^2.0.5",
 		"tailwind-merge": "^3.3.1",
-		"tw-animate-css": "^1.2.5"
+{{/if}}
+{{#if (eq cssFramework "tailwind")}}
+		"@tailwindcss/vite": "^4.0.15",
+		"tw-animate-css": "^1.2.5",
+{{/if}}
+		"@tanstack/react-router": "^1.141.1",
+		"react": "19.2.3",
+		"react-dom": "19.2.3"
 	},
 	"devDependencies": {
 		"@tanstack/react-router-devtools": "^1.141.1",
@@ -34,8 +38,10 @@
 		"@types/react": "19.2.7",
 		"@types/react-dom": "19.2.3",
 		"@vitejs/plugin-react": "^4.3.4",
+{{#if (eq cssFramework "tailwind")}}
 		"postcss": "^8.5.3",
 		"tailwindcss": "^4.0.15",
+{{/if}}
 		"vite": "^6.2.2"
 	}
 }

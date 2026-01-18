@@ -32,6 +32,8 @@ export function loadStackParams(
       webFrontend: getArray("webFrontend", DEFAULT_STACK.webFrontend),
       nativeFrontend: getArray("nativeFrontend", DEFAULT_STACK.nativeFrontend),
       astroIntegration: getString("astroIntegration", DEFAULT_STACK.astroIntegration),
+      cssFramework: getString("cssFramework", DEFAULT_STACK.cssFramework),
+      uiLibrary: getString("uiLibrary", DEFAULT_STACK.uiLibrary),
       runtime: getString("runtime", DEFAULT_STACK.runtime),
       backend: getString("backend", DEFAULT_STACK.backend),
       api: getString("api", DEFAULT_STACK.api),
@@ -40,9 +42,11 @@ export function loadStackParams(
       dbSetup: getString("dbSetup", DEFAULT_STACK.dbSetup),
       auth: getString("auth", DEFAULT_STACK.auth),
       payments: getString("payments", DEFAULT_STACK.payments),
-      effect: getString("effect", DEFAULT_STACK.effect),
+      backendLibraries: getString("backendLibraries", DEFAULT_STACK.backendLibraries),
+      codeQuality: getArray("codeQuality", DEFAULT_STACK.codeQuality),
+      documentation: getArray("documentation", DEFAULT_STACK.documentation),
+      appPlatforms: getArray("appPlatforms", DEFAULT_STACK.appPlatforms),
       packageManager: getString("packageManager", DEFAULT_STACK.packageManager),
-      addons: getArray("addons", DEFAULT_STACK.addons),
       examples: getArray("examples", DEFAULT_STACK.examples),
       git: getString("git", DEFAULT_STACK.git),
       install: getString("install", DEFAULT_STACK.install),
@@ -81,6 +85,8 @@ export function serializeStackParams(basePath: string, stack: StackState): strin
   addParam("webFrontend", stack.webFrontend);
   addParam("nativeFrontend", stack.nativeFrontend);
   addParam("astroIntegration", stack.astroIntegration);
+  addParam("cssFramework", stack.cssFramework);
+  addParam("uiLibrary", stack.uiLibrary);
   addParam("runtime", stack.runtime);
   addParam("backend", stack.backend);
   addParam("api", stack.api);
@@ -89,9 +95,11 @@ export function serializeStackParams(basePath: string, stack: StackState): strin
   addParam("dbSetup", stack.dbSetup);
   addParam("auth", stack.auth);
   addParam("payments", stack.payments);
-  addParam("effect", stack.effect);
+  addParam("backendLibraries", stack.backendLibraries);
+  addParam("codeQuality", stack.codeQuality);
+  addParam("documentation", stack.documentation);
+  addParam("appPlatforms", stack.appPlatforms);
   addParam("packageManager", stack.packageManager);
-  addParam("addons", stack.addons);
   addParam("examples", stack.examples);
   addParam("git", stack.git);
   addParam("install", stack.install);

@@ -4,9 +4,11 @@ import type {
   AstroIntegration,
   Auth,
   Backend,
+  CSSFramework,
   Database,
   DatabaseSetup,
   Effect,
+  Email,
   Examples,
   Frontend,
   ORM,
@@ -15,18 +17,22 @@ import type {
   ProjectConfig,
   Runtime,
   ServerDeploy,
+  UILibrary,
   WebDeploy,
 } from "../types";
 
+import { hasWebStyling } from "../utils/compatibility-rules";
 import { exitCancelled } from "../utils/errors";
 import { getAddonsChoice } from "./addons";
 import { getApiChoice } from "./api";
 import { getAstroIntegrationChoice } from "./astro-integration";
 import { getAuthChoice } from "./auth";
 import { getBackendFrameworkChoice } from "./backend";
+import { getCSSFrameworkChoice } from "./css-framework";
 import { getDatabaseChoice } from "./database";
 import { getDBSetupChoice } from "./database-setup";
 import { getEffectChoice } from "./effect";
+import { getEmailChoice } from "./email";
 import { getExamplesChoice } from "./examples";
 import { getFrontendChoice } from "./frontend";
 import { getGitChoice } from "./git";
@@ -37,11 +43,14 @@ import { getPackageManagerChoice } from "./package-manager";
 import { getPaymentsChoice } from "./payments";
 import { getRuntimeChoice } from "./runtime";
 import { getServerDeploymentChoice } from "./server-deploy";
+import { getUILibraryChoice } from "./ui-library";
 import { getDeploymentChoice } from "./web-deploy";
 
 type PromptGroupResults = {
   frontend: Frontend[];
   astroIntegration: AstroIntegration | undefined;
+  uiLibrary: UILibrary;
+  cssFramework: CSSFramework;
   backend: Backend;
   runtime: Runtime;
   database: Database;
@@ -49,6 +58,7 @@ type PromptGroupResults = {
   api: API;
   auth: Auth;
   payments: Payments;
+  email: Email;
   effect: Effect;
   addons: Addons[];
   examples: Examples[];
@@ -75,6 +85,18 @@ export async function gatherConfig(
         }
         return Promise.resolve(undefined);
       },
+      uiLibrary: ({ results }) => {
+        if (hasWebStyling(results.frontend)) {
+          return getUILibraryChoice(flags.uiLibrary, results.frontend);
+        }
+        return Promise.resolve("none" as UILibrary);
+      },
+      cssFramework: ({ results }) => {
+        if (hasWebStyling(results.frontend)) {
+          return getCSSFrameworkChoice(flags.cssFramework, results.uiLibrary);
+        }
+        return Promise.resolve("none" as CSSFramework);
+      },
       backend: ({ results }) => getBackendFrameworkChoice(flags.backend, results.frontend),
       runtime: ({ results }) => getRuntimeChoice(flags.runtime, results.backend),
       database: ({ results }) =>
@@ -97,6 +119,7 @@ export async function gatherConfig(
       auth: ({ results }) => getAuthChoice(flags.auth, results.backend, results.frontend),
       payments: ({ results }) =>
         getPaymentsChoice(flags.payments, results.auth, results.backend, results.frontend),
+      email: ({ results }) => getEmailChoice(flags.email, results.backend),
       effect: () => getEffectChoice(flags.effect),
       addons: ({ results }) => getAddonsChoice(flags.addons, results.frontend, results.auth),
       examples: ({ results }) =>
@@ -139,12 +162,15 @@ export async function gatherConfig(
     relativePath: relativePath,
     frontend: result.frontend,
     astroIntegration: result.astroIntegration,
+    uiLibrary: result.uiLibrary,
+    cssFramework: result.cssFramework,
     backend: result.backend,
     runtime: result.runtime,
     database: result.database,
     orm: result.orm,
     auth: result.auth,
     payments: result.payments,
+    email: result.email,
     effect: result.effect,
     addons: result.addons,
     examples: result.examples,

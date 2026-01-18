@@ -1,4 +1,3 @@
-import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 export function TechIcon({
@@ -10,34 +9,21 @@ export function TechIcon({
   name: string;
   className?: string;
 }) {
-  const { theme } = useTheme();
-
   if (!icon) return null;
 
-  if (!icon.startsWith("https://")) {
-    return <span className={cn("inline-flex items-center text-lg", className)}>{icon}</span>;
+  // Handle URLs (CDN) and local paths (/icon/)
+  if (icon.startsWith("https://") || icon.startsWith("/")) {
+    return (
+      <img
+        src={icon}
+        alt={`${name} icon`}
+        width={20}
+        height={20}
+        className={cn("inline-block", className)}
+      />
+    );
   }
 
-  let iconSrc = icon;
-  if (
-    theme === "light" &&
-    (icon.includes("drizzle") ||
-      icon.includes("prisma") ||
-      icon.includes("express") ||
-      icon.includes("clerk") ||
-      icon.includes("planetscale") ||
-      icon.includes("polar"))
-  ) {
-    iconSrc = icon.replace(".svg", "-light.svg");
-  }
-
-  return (
-    <img
-      src={iconSrc}
-      alt={`${name} icon`}
-      width={20}
-      height={20}
-      className={cn("inline-block", className)}
-    />
-  );
+  // Handle text/emoji icons
+  return <span className={cn("inline-flex items-center text-lg", className)}>{icon}</span>;
 }

@@ -110,6 +110,23 @@ export const EmailSchema = z
   .enum(["react-email", "resend", "none"])
   .describe("Email solution (resend includes react-email)");
 
+export const CSSFrameworkSchema = z
+  .enum(["tailwind", "scss", "less", "postcss-only", "none"])
+  .describe("CSS framework/preprocessor");
+
+export const UILibrarySchema = z
+  .enum([
+    "shadcn-ui",
+    "daisyui",
+    "radix-ui",
+    "headless-ui",
+    "park-ui",
+    "chakra-ui",
+    "nextui",
+    "none",
+  ])
+  .describe("UI component library");
+
 export const DirectoryConflictSchema = z
   .enum(["merge", "overwrite", "increment", "error"])
   .describe("How to handle existing directory conflicts");
@@ -167,6 +184,8 @@ export const CreateInputSchema = z.object({
   forms: FormsSchema.optional(),
   testing: TestingSchema.optional(),
   email: EmailSchema.optional(),
+  cssFramework: CSSFrameworkSchema.optional(),
+  uiLibrary: UILibrarySchema.optional(),
 });
 
 export const AddInputSchema = z.object({
@@ -209,6 +228,8 @@ export const ProjectConfigSchema = z.object({
   forms: FormsSchema,
   testing: TestingSchema,
   email: EmailSchema,
+  cssFramework: CSSFrameworkSchema,
+  uiLibrary: UILibrarySchema,
 });
 
 export const BetterTStackConfigSchema = z.object({
@@ -235,6 +256,8 @@ export const BetterTStackConfigSchema = z.object({
   forms: FormsSchema,
   testing: TestingSchema,
   email: EmailSchema,
+  cssFramework: CSSFrameworkSchema,
+  uiLibrary: UILibrarySchema,
 });
 
 export const BetterTStackConfigFileSchema = z
@@ -282,3 +305,5 @@ export const STATE_MANAGEMENT_VALUES = StateManagementSchema.options;
 export const FORMS_VALUES = FormsSchema.options;
 export const TESTING_VALUES = TestingSchema.options;
 export const EMAIL_VALUES = EmailSchema.options;
+export const CSS_FRAMEWORK_VALUES = CSSFrameworkSchema.options;
+export const UI_LIBRARY_VALUES = UILibrarySchema.options;

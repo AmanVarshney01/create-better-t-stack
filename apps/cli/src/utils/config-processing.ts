@@ -6,15 +6,18 @@ import type {
   Auth,
   Backend,
   CLIInput,
+  CSSFramework,
   Database,
   DatabaseSetup,
   Effect,
+  Email,
   ORM,
   PackageManager,
   Payments,
   ProjectConfig,
   Runtime,
   ServerDeploy,
+  UILibrary,
   WebDeploy,
 } from "../types";
 
@@ -61,6 +64,10 @@ export function processFlags(options: CLIInput, projectName?: string) {
     config.payments = options.payments as Payments;
   }
 
+  if (options.email !== undefined) {
+    config.email = options.email as Email;
+  }
+
   if (options.effect !== undefined) {
     config.effect = options.effect as Effect;
   }
@@ -104,6 +111,14 @@ export function processFlags(options: CLIInput, projectName?: string) {
 
   if (options.astroIntegration) {
     config.astroIntegration = options.astroIntegration as AstroIntegration;
+  }
+
+  if (options.cssFramework) {
+    config.cssFramework = options.cssFramework as CSSFramework;
+  }
+
+  if (options.uiLibrary) {
+    config.uiLibrary = options.uiLibrary as UILibrary;
   }
 
   if (options.addons && options.addons.length > 0) {

@@ -587,23 +587,146 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   }
 
   // ============================================
-  // ADDONS CONSTRAINTS
+  // EMAIL CONSTRAINTS
+  // ============================================
+
+  if (nextStack.email !== "none") {
+    if (nextStack.backend === "convex") {
+      nextStack.email = "none";
+      changed = true;
+      changes.push({
+        category: "email",
+        message: "Email set to 'None' (incompatible with Convex)",
+      });
+    }
+    if (nextStack.backend === "none") {
+      nextStack.email = "none";
+      changed = true;
+      changes.push({
+        category: "email",
+        message: "Email set to 'None' (requires backend)",
+      });
+    }
+  }
+
+  // ============================================
+  // CSS FRAMEWORK & UI LIBRARY CONSTRAINTS
+  // ============================================
+
+  // If no web frontend, reset CSS framework and UI library to none
+  if (!nextStack.webFrontend.some((f) => f !== "none")) {
+    if (nextStack.cssFramework !== "none") {
+      nextStack.cssFramework = "none";
+      changed = true;
+      changes.push({
+        category: "cssFramework",
+        message: "CSS framework set to 'None' (no web frontend)",
+      });
+    }
+    if (nextStack.uiLibrary !== "none") {
+      nextStack.uiLibrary = "none";
+      changed = true;
+      changes.push({
+        category: "uiLibrary",
+        message: "UI library set to 'None' (no web frontend)",
+      });
+    }
+  }
+
+  // UI libraries requiring Tailwind - auto-adjust CSS framework or clear UI library
+  const requiresTailwind = ["shadcn-ui", "daisyui", "nextui"].includes(nextStack.uiLibrary);
+  if (requiresTailwind && nextStack.cssFramework !== "tailwind") {
+    // Auto-set Tailwind when selecting a Tailwind-dependent UI library
+    nextStack.cssFramework = "tailwind";
+    changed = true;
+    changes.push({
+      category: "cssFramework",
+      message: `CSS framework set to 'Tailwind' (required by ${nextStack.uiLibrary})`,
+    });
+  }
+
+  // React-only UI libraries - check frontend compatibility
+  const reactOnlyLibraries = ["shadcn-ui", "radix-ui", "chakra-ui", "nextui"];
+  const reactFrontends = ["tanstack-router", "react-router", "tanstack-start", "next"];
+  if (reactOnlyLibraries.includes(nextStack.uiLibrary)) {
+    const hasReactFrontend = nextStack.webFrontend.some((f) => reactFrontends.includes(f));
+    const hasAstroReact =
+      nextStack.webFrontend.includes("astro") && nextStack.astroIntegration === "react";
+    if (!hasReactFrontend && !hasAstroReact && nextStack.webFrontend.some((f) => f !== "none")) {
+      // Reset to a compatible UI library (daisyui works with all frontends)
+      nextStack.uiLibrary = "daisyui";
+      changed = true;
+      changes.push({
+        category: "uiLibrary",
+        message:
+          "UI library changed to 'daisyUI' (React-only library incompatible with this frontend)",
+      });
+    }
+  }
+
+  // Headless UI requires React or Vue
+  if (nextStack.uiLibrary === "headless-ui") {
+    const hasReactFrontend = nextStack.webFrontend.some((f) => reactFrontends.includes(f));
+    const hasVueFrontend = nextStack.webFrontend.includes("nuxt");
+    const hasAstroReactOrVue =
+      nextStack.webFrontend.includes("astro") &&
+      ["react", "vue"].includes(nextStack.astroIntegration);
+    if (!hasReactFrontend && !hasVueFrontend && !hasAstroReactOrVue) {
+      nextStack.uiLibrary = "daisyui";
+      changed = true;
+      changes.push({
+        category: "uiLibrary",
+        message: "UI library changed to 'daisyUI' (Headless UI requires React or Vue)",
+      });
+    }
+  }
+
+  // Park UI requires React, Vue, or Solid
+  if (nextStack.uiLibrary === "park-ui") {
+    const hasReactFrontend = nextStack.webFrontend.some((f) => reactFrontends.includes(f));
+    const hasVueFrontend = nextStack.webFrontend.includes("nuxt");
+    const hasSolidFrontend = nextStack.webFrontend.includes("solid");
+    const hasAstroCompatible =
+      nextStack.webFrontend.includes("astro") &&
+      ["react", "vue", "solid"].includes(nextStack.astroIntegration);
+    if (
+      !hasReactFrontend &&
+      !hasVueFrontend &&
+      !hasSolidFrontend &&
+      !hasAstroCompatible &&
+      nextStack.webFrontend.some((f) => f !== "none")
+    ) {
+      nextStack.uiLibrary = "daisyui";
+      changed = true;
+      changes.push({
+        category: "uiLibrary",
+        message: "UI library changed to 'daisyUI' (Park UI requires React, Vue, or Solid)",
+      });
+    }
+  }
+
+  // ============================================
+  // APP PLATFORMS CONSTRAINTS
   // ============================================
 
   const pwaCompat = hasPWACompatibleFrontend(nextStack.webFrontend);
   const tauriCompat = hasTauriCompatibleFrontend(nextStack.webFrontend);
 
-  if (!pwaCompat && nextStack.addons.includes("pwa")) {
-    nextStack.addons = nextStack.addons.filter((a) => a !== "pwa");
-    if (nextStack.addons.length === 0) nextStack.addons = ["none"];
+  if (!pwaCompat && nextStack.appPlatforms.includes("pwa")) {
+    nextStack.appPlatforms = nextStack.appPlatforms.filter((a) => a !== "pwa");
     changed = true;
-    changes.push({ category: "addons", message: "PWA removed (requires compatible frontend)" });
+    changes.push({
+      category: "appPlatforms",
+      message: "PWA removed (requires compatible frontend)",
+    });
   }
-  if (!tauriCompat && nextStack.addons.includes("tauri")) {
-    nextStack.addons = nextStack.addons.filter((a) => a !== "tauri");
-    if (nextStack.addons.length === 0) nextStack.addons = ["none"];
+  if (!tauriCompat && nextStack.appPlatforms.includes("tauri")) {
+    nextStack.appPlatforms = nextStack.appPlatforms.filter((a) => a !== "tauri");
     changed = true;
-    changes.push({ category: "addons", message: "Tauri removed (requires compatible frontend)" });
+    changes.push({
+      category: "appPlatforms",
+      message: "Tauri removed (requires compatible frontend)",
+    });
   }
 
   // ============================================
@@ -1018,9 +1141,21 @@ export const getDisabledReason = (
   }
 
   // ============================================
-  // ADDONS CONSTRAINTS
+  // EMAIL CONSTRAINTS
   // ============================================
-  if (category === "addons") {
+  if (category === "email" && optionId !== "none") {
+    if (currentStack.backend === "convex") {
+      return "Email integration is not available with Convex backend";
+    }
+    if (currentStack.backend === "none") {
+      return "Email integration requires a backend";
+    }
+  }
+
+  // ============================================
+  // APP PLATFORMS CONSTRAINTS
+  // ============================================
+  if (category === "appPlatforms") {
     if (optionId === "pwa" && !hasPWACompatibleFrontend(currentStack.webFrontend)) {
       return "PWA requires TanStack Router, React Router, Solid, Next.js, or Astro";
     }
@@ -1053,6 +1188,95 @@ export const getDisabledReason = (
           const frontendName = currentStack.webFrontend.find((f) => ["svelte", "nuxt"].includes(f));
           return `Convex AI example only supports React-based frontends (not ${frontendName})`;
         }
+      }
+    }
+  }
+
+  // ============================================
+  // CSS FRAMEWORK CONSTRAINTS
+  // ============================================
+  if (category === "cssFramework") {
+    // CSS frameworks only apply to web frontends
+    if (!currentStack.webFrontend.some((f) => f !== "none")) {
+      if (optionId !== "none") {
+        return "CSS framework requires a web frontend";
+      }
+    }
+    // Some UI libraries require Tailwind
+    const requiresTailwind = ["shadcn-ui", "daisyui", "nextui"].includes(currentStack.uiLibrary);
+    if (requiresTailwind && optionId !== "tailwind") {
+      return `${currentStack.uiLibrary === "shadcn-ui" ? "shadcn/ui" : currentStack.uiLibrary === "daisyui" ? "daisyUI" : "NextUI"} requires Tailwind CSS`;
+    }
+  }
+
+  // ============================================
+  // UI LIBRARY CONSTRAINTS
+  // ============================================
+  if (category === "uiLibrary") {
+    // UI libraries only apply to web frontends
+    if (!currentStack.webFrontend.some((f) => f !== "none")) {
+      if (optionId !== "none") {
+        return "UI library requires a web frontend";
+      }
+    }
+
+    // React-only UI libraries
+    const reactOnlyLibraries = ["shadcn-ui", "radix-ui", "chakra-ui", "nextui"];
+    const reactFrontends = ["tanstack-router", "react-router", "tanstack-start", "next"];
+
+    if (reactOnlyLibraries.includes(optionId)) {
+      const hasReactFrontend = currentStack.webFrontend.some((f) => reactFrontends.includes(f));
+      // Astro with React integration also works
+      const hasAstroReact =
+        currentStack.webFrontend.includes("astro") && currentStack.astroIntegration === "react";
+      if (!hasReactFrontend && !hasAstroReact) {
+        const libraryName =
+          optionId === "shadcn-ui"
+            ? "shadcn/ui"
+            : optionId === "radix-ui"
+              ? "Radix UI"
+              : optionId === "chakra-ui"
+                ? "Chakra UI"
+                : "NextUI";
+        return `${libraryName} requires a React-based frontend`;
+      }
+    }
+
+    // Headless UI works with React and Vue
+    if (optionId === "headless-ui") {
+      const hasReactFrontend = currentStack.webFrontend.some((f) => reactFrontends.includes(f));
+      const hasVueFrontend = currentStack.webFrontend.includes("nuxt");
+      const hasAstroReactOrVue =
+        currentStack.webFrontend.includes("astro") &&
+        ["react", "vue"].includes(currentStack.astroIntegration);
+      if (!hasReactFrontend && !hasVueFrontend && !hasAstroReactOrVue) {
+        return "Headless UI requires React or Vue frontend";
+      }
+    }
+
+    // Park UI works with React, Vue, and Solid
+    if (optionId === "park-ui") {
+      const hasReactFrontend = currentStack.webFrontend.some((f) => reactFrontends.includes(f));
+      const hasVueFrontend = currentStack.webFrontend.includes("nuxt");
+      const hasSolidFrontend = currentStack.webFrontend.includes("solid");
+      const hasAstroCompatible =
+        currentStack.webFrontend.includes("astro") &&
+        ["react", "vue", "solid"].includes(currentStack.astroIntegration);
+      if (!hasReactFrontend && !hasVueFrontend && !hasSolidFrontend && !hasAstroCompatible) {
+        return "Park UI requires React, Vue, or Solid frontend";
+      }
+      // Park UI requires a CSS framework (not "none")
+      if (currentStack.cssFramework === "none") {
+        return "Park UI requires a CSS framework";
+      }
+    }
+
+    // UI libraries requiring Tailwind
+    if (["shadcn-ui", "daisyui", "nextui"].includes(optionId)) {
+      if (currentStack.cssFramework !== "tailwind") {
+        const libraryName =
+          optionId === "shadcn-ui" ? "shadcn/ui" : optionId === "daisyui" ? "daisyUI" : "NextUI";
+        return `${libraryName} requires Tailwind CSS`;
       }
     }
   }

@@ -103,7 +103,9 @@ const StackBuilder = () => {
       if (
         catKey === "webFrontend" ||
         catKey === "nativeFrontend" ||
-        catKey === "addons" ||
+        catKey === "codeQuality" ||
+        catKey === "documentation" ||
+        catKey === "appPlatforms" ||
         catKey === "examples"
       ) {
         if (catKey === "webFrontend" || catKey === "nativeFrontend") {
@@ -113,13 +115,15 @@ const StackBuilder = () => {
         } else {
           const numToPick = Math.floor(Math.random() * Math.min(options.length, 4));
           if (numToPick === 0) {
-            randomStack[catKey as "addons" | "examples"] = ["none"];
+            (randomStack as Record<string, string[]>)[catKey] = [];
           } else {
             const shuffledOptions = [...options]
               .filter((opt) => opt.id !== "none")
               .sort(() => 0.5 - Math.random())
               .slice(0, numToPick);
-            randomStack[catKey as "addons" | "examples"] = shuffledOptions.map((opt) => opt.id);
+            (randomStack as Record<string, string[]>)[catKey] = shuffledOptions.map(
+              (opt) => opt.id,
+            );
           }
         }
       } else {
@@ -280,7 +284,9 @@ const StackBuilder = () => {
         if (
           catKey === "webFrontend" ||
           catKey === "nativeFrontend" ||
-          catKey === "addons" ||
+          catKey === "codeQuality" ||
+          catKey === "documentation" ||
+          catKey === "appPlatforms" ||
           catKey === "examples"
         ) {
           const currentArray = Array.isArray(currentValue) ? [...currentValue] : [];
@@ -316,7 +322,14 @@ const StackBuilder = () => {
             if (nextArray.length > 1) {
               nextArray = nextArray.filter((id) => id !== "none");
             }
-            if (nextArray.length === 0 && (catKey === "addons" || catKey === "examples")) {
+            if (
+              nextArray.length === 0 &&
+              (catKey === "codeQuality" ||
+                catKey === "documentation" ||
+                catKey === "appPlatforms" ||
+                catKey === "examples")
+            ) {
+              // These categories can be empty - no need to set to ["none"]
             } else if (nextArray.length === 0) {
               nextArray = ["none"];
             }
@@ -425,6 +438,7 @@ const StackBuilder = () => {
             <Terminal className="h-4 w-4" />
             <span>Configure</span>
           </button>
+          {/* Mobile preview tab hidden for now - re-enable when ready
           <button
             type="button"
             onClick={() => setMobileTab("preview")}
@@ -438,6 +452,7 @@ const StackBuilder = () => {
             <FolderTree className="h-4 w-4" />
             <span>Preview</span>
           </button>
+          */}
         </div>
 
         {/* Left sidebar - hidden on mobile unless summary tab selected */}
@@ -587,6 +602,7 @@ const StackBuilder = () => {
                   <Terminal className="h-3.5 w-3.5" />
                   Configure
                 </TabsTrigger>
+                {/* Preview tab hidden for now - re-enable when ready
                 <TabsTrigger
                   value="preview"
                   className="relative gap-2 rounded-none border-b-2 border-transparent bg-transparent px-2 py-3 text-xs font-medium text-muted-foreground transition-none data-active:border-primary data-active:bg-transparent data-active:text-foreground data-active:shadow-none hover:text-foreground"
@@ -594,6 +610,7 @@ const StackBuilder = () => {
                   <FolderTree className="h-3.5 w-3.5" />
                   Preview
                 </TabsTrigger>
+                */}
               </TabsList>
             </div>
             <TabsContent value="command" className="flex-1 min-h-0 overflow-hidden">
@@ -653,7 +670,9 @@ const StackBuilder = () => {
                                 const currentValue = stack[category];
 
                                 if (
-                                  category === "addons" ||
+                                  category === "codeQuality" ||
+                                  category === "documentation" ||
+                                  category === "appPlatforms" ||
                                   category === "examples" ||
                                   category === "webFrontend" ||
                                   category === "nativeFrontend"
@@ -844,6 +863,7 @@ const StackBuilder = () => {
                 </ScrollArea>
               </div>
             </TabsContent>
+            {/* Preview panel hidden for now - re-enable when ready
             <TabsContent value="preview" className="flex-1 min-h-0 overflow-hidden">
               <PreviewPanel
                 stack={stack}
@@ -851,6 +871,7 @@ const StackBuilder = () => {
                 onSelectFile={setSelectedFile}
               />
             </TabsContent>
+            */}
           </Tabs>
 
           {/* Mobile content - shown based on mobileTab */}
@@ -903,7 +924,9 @@ const StackBuilder = () => {
                               const currentValue = stack[category];
 
                               if (
-                                category === "addons" ||
+                                category === "codeQuality" ||
+                                category === "documentation" ||
+                                category === "appPlatforms" ||
                                 category === "examples" ||
                                 category === "webFrontend" ||
                                 category === "nativeFrontend"
@@ -1064,6 +1087,7 @@ const StackBuilder = () => {
                 </main>
               </ScrollArea>
             )}
+            {/* Mobile preview hidden for now - re-enable when ready
             {mobileTab === "preview" && (
               <PreviewPanel
                 stack={stack}
@@ -1071,6 +1095,7 @@ const StackBuilder = () => {
                 onSelectFile={setSelectedFile}
               />
             )}
+            */}
           </div>
         </div>
       </div>

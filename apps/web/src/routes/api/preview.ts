@@ -17,6 +17,8 @@ interface StackState {
   webFrontend?: string[];
   nativeFrontend?: string[];
   astroIntegration?: string;
+  cssFramework?: string;
+  uiLibrary?: string;
   backend?: string;
   runtime?: string;
   database?: string;
@@ -24,13 +26,15 @@ interface StackState {
   api?: string;
   auth?: string;
   payments?: string;
-  effect?: string;
+  backendLibraries?: string;
   ai?: string;
   stateManagement?: string;
   forms?: string;
   testing?: string;
   email?: string;
-  addons?: string[];
+  codeQuality?: string[];
+  documentation?: string[];
+  appPlatforms?: string[];
   examples?: string[];
   git?: boolean | string;
   packageManager?: string;
@@ -64,11 +68,15 @@ function stackStateToConfig(state: StackState): ProjectConfig {
     backend: backend as ProjectConfig["backend"],
     runtime: (state.runtime || "bun") as ProjectConfig["runtime"],
     frontend: frontend.length > 0 ? frontend : ["tanstack-router"],
-    addons: (state.addons || []).filter((a) => a !== "none") as ProjectConfig["addons"],
+    addons: [
+      ...(state.codeQuality || []),
+      ...(state.documentation || []),
+      ...(state.appPlatforms || []),
+    ].filter((a) => a !== "none") as ProjectConfig["addons"],
     examples: (state.examples || []).filter((e) => e !== "none") as ProjectConfig["examples"],
     auth: (state.auth || "none") as ProjectConfig["auth"],
     payments: (state.payments || "none") as ProjectConfig["payments"],
-    effect: (state.effect || "none") as ProjectConfig["effect"],
+    effect: (state.backendLibraries || "none") as ProjectConfig["effect"],
     ai: (state.ai || "none") as ProjectConfig["ai"],
     stateManagement: (state.stateManagement || "none") as ProjectConfig["stateManagement"],
     forms: (state.forms || "none") as ProjectConfig["forms"],
@@ -81,6 +89,8 @@ function stackStateToConfig(state: StackState): ProjectConfig {
     api: (state.api || "trpc") as ProjectConfig["api"],
     webDeploy: (state.webDeploy || "none") as ProjectConfig["webDeploy"],
     serverDeploy: (state.serverDeploy || "none") as ProjectConfig["serverDeploy"],
+    cssFramework: (state.cssFramework || "tailwind") as ProjectConfig["cssFramework"],
+    uiLibrary: (state.uiLibrary || "shadcn-ui") as ProjectConfig["uiLibrary"],
   };
 }
 

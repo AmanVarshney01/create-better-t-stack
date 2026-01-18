@@ -17,6 +17,8 @@ export function generateReproducibleCommand(config: ProjectConfig) {
   flags.push(`--auth ${config.auth}`);
   flags.push(`--payments ${config.payments}`);
   flags.push(`--effect ${config.effect}`);
+  flags.push(`--css-framework ${config.cssFramework}`);
+  flags.push(`--ui-library ${config.uiLibrary}`);
 
   if (config.addons && config.addons.length > 0) {
     flags.push(`--addons ${config.addons.join(" ")}`);

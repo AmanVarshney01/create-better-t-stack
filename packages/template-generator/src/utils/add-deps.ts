@@ -151,6 +151,11 @@ export const dependencyVersionMap = {
   "@polar-sh/better-auth": "^1.1.3",
   "@polar-sh/sdk": "^0.34.16",
 
+  // Email
+  resend: "^4.5.1",
+  "@react-email/components": "^0.0.36",
+  "react-email": "^3.0.6",
+
   // Effect ecosystem
   effect: "^3.16.1",
   "@effect/schema": "^0.75.8",
@@ -175,6 +180,36 @@ export const dependencyVersionMap = {
   "@effect/ai": "^0.5.1",
   "@effect/ai-openai": "^0.5.1",
   "@effect/ai-anthropic": "^0.5.1",
+
+  // CSS preprocessors
+  sass: "^1.86.0",
+  less: "^4.3.0",
+
+  // UI libraries
+  "@radix-ui/react-dialog": "^1.1.14",
+  "@radix-ui/react-dropdown-menu": "^2.1.15",
+  "@radix-ui/react-slot": "^1.2.3",
+  "@radix-ui/react-label": "^2.1.4",
+  "@radix-ui/react-checkbox": "^1.3.2",
+  "@radix-ui/react-select": "^2.2.5",
+  "@radix-ui/react-toast": "^1.2.14",
+  "@radix-ui/react-popover": "^1.1.14",
+  "@radix-ui/react-switch": "^1.1.7",
+  "@radix-ui/react-tabs": "^1.1.7",
+
+  "@headlessui/react": "^2.3.1",
+  "@headlessui/vue": "^1.8.1",
+
+  "@park-ui/panda-preset": "^0.47.0",
+  "@park-ui/ark": "^0.47.0",
+
+  "@chakra-ui/react": "^3.21.3",
+  "@emotion/react": "^11.14.0",
+
+  "@heroui/react": "^2.8.3",
+  "framer-motion": "^12.17.0",
+
+  daisyui: "^4.12.28",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

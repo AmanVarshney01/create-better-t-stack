@@ -5,14 +5,16 @@ import type {
   Auth,
   Backend,
   CLIInput,
+  CSSFramework,
   Frontend,
   Payments,
   ProjectConfig,
   ServerDeploy,
+  UILibrary,
   WebDeploy,
 } from "../types";
 
-import { ADDON_COMPATIBILITY } from "../constants";
+import { ADDON_COMPATIBILITY, UI_LIBRARY_COMPATIBILITY } from "../constants";
 import { WEB_FRAMEWORKS } from "./compatibility";
 import { exitWithError } from "./errors";
 
@@ -371,4 +373,83 @@ export function validateExamplesCompatibility(
       );
     }
   }
+}
+
+/**
+ * Validates that a UI library is compatible with the selected frontend(s)
+ */
+export function validateUILibraryFrontendCompatibility(
+  uiLibrary: UILibrary | undefined,
+  frontends: Frontend[] = [],
+) {
+  if (!uiLibrary || uiLibrary === "none") return;
+
+  const { web } = splitFrontends(frontends);
+  if (web.length === 0) return;
+
+  const compatibility = UI_LIBRARY_COMPATIBILITY[uiLibrary];
+  const webFrontend = web[0];
+
+  if (!compatibility.frontends.includes(webFrontend)) {
+    const supportedList = compatibility.frontends.join(", ");
+    exitWithError(
+      `UI library '${uiLibrary}' is not compatible with '${webFrontend}' frontend. Supported frontends: ${supportedList}`,
+    );
+  }
+}
+
+/**
+ * Validates that a UI library is compatible with the selected CSS framework
+ */
+export function validateUILibraryCSSFrameworkCompatibility(
+  uiLibrary: UILibrary | undefined,
+  cssFramework: CSSFramework | undefined,
+) {
+  if (!uiLibrary || uiLibrary === "none") return;
+  if (!cssFramework) return;
+
+  const compatibility = UI_LIBRARY_COMPATIBILITY[uiLibrary];
+
+  if (!compatibility.cssFrameworks.includes(cssFramework)) {
+    const supportedList = compatibility.cssFrameworks.join(", ");
+    exitWithError(
+      `UI library '${uiLibrary}' is not compatible with '${cssFramework}' CSS framework. Supported CSS frameworks: ${supportedList}`,
+    );
+  }
+}
+
+/**
+ * Gets list of UI libraries compatible with the selected frontend(s)
+ */
+export function getCompatibleUILibraries(frontends: Frontend[] = []): UILibrary[] {
+  const { web } = splitFrontends(frontends);
+  if (web.length === 0) return ["none"];
+
+  const webFrontend = web[0];
+
+  const allUILibraries = Object.keys(UI_LIBRARY_COMPATIBILITY) as UILibrary[];
+  return allUILibraries.filter((lib) => {
+    const compatibility = UI_LIBRARY_COMPATIBILITY[lib];
+    return compatibility.frontends.includes(webFrontend);
+  });
+}
+
+/**
+ * Gets list of CSS frameworks compatible with the selected UI library
+ */
+export function getCompatibleCSSFrameworks(uiLibrary: UILibrary | undefined): CSSFramework[] {
+  if (!uiLibrary || uiLibrary === "none") {
+    return ["tailwind", "scss", "less", "postcss-only", "none"];
+  }
+
+  const compatibility = UI_LIBRARY_COMPATIBILITY[uiLibrary];
+  return compatibility.cssFrameworks as unknown as CSSFramework[];
+}
+
+/**
+ * Checks if a frontend has web styling (excludes native-only frontends)
+ */
+export function hasWebStyling(frontends: Frontend[] = []): boolean {
+  const { web } = splitFrontends(frontends);
+  return web.length > 0;
 }

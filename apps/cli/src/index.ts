@@ -16,6 +16,8 @@ import {
   BackendSchema,
   type BetterTStackConfig,
   type CreateInput,
+  type CSSFramework,
+  CSSFrameworkSchema,
   type Database,
   DatabaseSchema,
   type DatabaseSetup,
@@ -24,6 +26,8 @@ import {
   DirectoryConflictSchema,
   type Effect,
   EffectSchema,
+  type Email,
+  EmailSchema,
   type Examples,
   ExamplesSchema,
   type Frontend,
@@ -43,6 +47,8 @@ import {
   ServerDeploySchema,
   type Template,
   TemplateSchema,
+  type UILibrary,
+  UILibrarySchema,
   type WebDeploy,
   WebDeploySchema,
 } from "./types";
@@ -79,6 +85,7 @@ export const router = os.router({
           orm: ORMSchema.optional(),
           auth: AuthSchema.optional(),
           payments: PaymentsSchema.optional(),
+          email: EmailSchema.optional(),
           effect: EffectSchema.optional(),
           frontend: z.array(FrontendSchema).optional(),
           addons: z.array(AddonsSchema).optional(),
@@ -90,6 +97,8 @@ export const router = os.router({
           backend: BackendSchema.optional(),
           runtime: RuntimeSchema.optional(),
           api: APISchema.optional(),
+          cssFramework: CSSFrameworkSchema.optional(),
+          uiLibrary: UILibrarySchema.optional(),
           webDeploy: WebDeploySchema.optional(),
           serverDeploy: ServerDeploySchema.optional(),
           directoryConflict: DirectoryConflictSchema.optional(),
@@ -277,6 +286,7 @@ export async function createVirtual(
       examples: options.examples || [],
       auth: options.auth || "none",
       payments: options.payments || "none",
+      email: options.email || "none",
       effect: options.effect || "none",
       git: options.git ?? false,
       packageManager: options.packageManager || "bun",
@@ -285,6 +295,8 @@ export async function createVirtual(
       api: options.api || "trpc",
       webDeploy: options.webDeploy || "none",
       serverDeploy: options.serverDeploy || "none",
+      cssFramework: options.cssFramework || "tailwind",
+      uiLibrary: options.uiLibrary || "shadcn-ui",
     };
 
     const result = await generate({
@@ -326,4 +338,6 @@ export type {
   ServerDeploy,
   Template,
   DirectoryConflict,
+  CSSFramework,
+  UILibrary,
 };

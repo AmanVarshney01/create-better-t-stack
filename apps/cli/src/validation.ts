@@ -17,9 +17,13 @@ const CORE_STACK_FLAGS = new Set([
   "auth",
   "dbSetup",
   "payments",
+  "email",
   "api",
   "webDeploy",
   "serverDeploy",
+  "cssFramework",
+  "uiLibrary",
+  "effect",
 ]);
 
 function validateYesFlagCombination(options: CLIInput, providedFlags: Set<string>) {

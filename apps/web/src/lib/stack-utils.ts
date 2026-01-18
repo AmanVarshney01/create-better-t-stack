@@ -5,7 +5,10 @@ const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
   "webFrontend",
   "nativeFrontend",
   "astroIntegration",
+  "cssFramework",
+  "uiLibrary",
   "backend",
+  "backendLibraries",
   "runtime",
   "api",
   "database",
@@ -15,9 +18,11 @@ const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
   "serverDeploy",
   "auth",
   "payments",
-  "effect",
+  "email",
+  "codeQuality",
+  "documentation",
+  "appPlatforms",
   "packageManager",
-  "addons",
   "examples",
   "git",
   "install",
@@ -89,12 +94,15 @@ export function generateStackCommand(stack: StackState) {
     ...(stack.webFrontend.includes("astro") && stack.astroIntegration !== "none"
       ? [`--astro-integration ${stack.astroIntegration}`]
       : []),
+    `--css-framework ${stack.cssFramework}`,
+    `--ui-library ${stack.uiLibrary}`,
     `--backend ${mapBackendToCli(stack.backend)}`,
     `--runtime ${stack.runtime}`,
     `--api ${stack.api}`,
     `--auth ${stack.auth}`,
     `--payments ${stack.payments}`,
-    `--effect ${stack.effect}`,
+    `--email ${stack.email}`,
+    `--effect ${stack.backendLibraries}`,
     `--database ${stack.database}`,
     `--orm ${stack.orm}`,
     `--db-setup ${stack.dbSetup}`,
@@ -104,8 +112,8 @@ export function generateStackCommand(stack: StackState) {
     `--server-deploy ${stack.serverDeploy}`,
     stack.install === "false" ? "--no-install" : "--install",
     `--addons ${
-      stack.addons.length > 0
-        ? stack.addons
+      [...stack.codeQuality, ...stack.documentation, ...stack.appPlatforms].length > 0
+        ? [...stack.codeQuality, ...stack.documentation, ...stack.appPlatforms]
             .filter((addon) =>
               [
                 "pwa",
