@@ -98,6 +98,10 @@ export async function displayPostInstallInstructions(
       "solid",
     ].includes(f),
   );
+  const betterAuthConvexInstructions =
+    isConvex && config.auth === "better-auth"
+      ? getBetterAuthConvexInstructions(hasWeb ?? false)
+      : "";
   const hasNative =
     frontend?.includes("native-bare") ||
     frontend?.includes("native-uniwind") ||
@@ -196,6 +200,7 @@ export async function displayPostInstallInstructions(
   if (alchemyDeployInstructions) output += `\n${alchemyDeployInstructions.trim()}\n`;
   if (starlightInstructions) output += `\n${starlightInstructions.trim()}\n`;
   if (clerkInstructions) output += `\n${clerkInstructions.trim()}\n`;
+  if (betterAuthConvexInstructions) output += `\n${betterAuthConvexInstructions.trim()}\n`;
   if (polarInstructions) output += `\n${polarInstructions.trim()}\n`;
 
   if (noOrmWarning) output += `\n${noOrmWarning.trim()}\n`;
@@ -391,6 +396,16 @@ function getBunWebNativeWarning() {
 
 function getClerkInstructions() {
   return `${pc.bold("Clerk Authentication Setup:")}\n${pc.cyan("•")} Follow the guide: ${pc.underline("https://docs.convex.dev/auth/clerk")}\n${pc.cyan("•")} Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard\n${pc.cyan("•")} Set CLERK_PUBLISHABLE_KEY in apps/*/.env`;
+}
+
+function getBetterAuthConvexInstructions(hasWeb: boolean) {
+  return (
+    `${pc.bold("Better Auth + Convex Setup:")}\n` +
+    `${pc.cyan("•")} Set environment variables from ${pc.white("packages/backend")}:\n` +
+    `${pc.white("   cd packages/backend")}\n` +
+    `${pc.white("   npx convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)")}\n` +
+    (hasWeb ? `${pc.white("   npx convex env set SITE_URL http://localhost:3001")}\n` : "")
+  );
 }
 
 function getPolarInstructions(backend: Backend) {
