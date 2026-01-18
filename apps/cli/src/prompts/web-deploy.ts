@@ -2,7 +2,7 @@ import type { Backend, Frontend, Runtime, WebDeploy } from "../types";
 
 import { DEFAULT_CONFIG } from "../constants";
 import { WEB_FRAMEWORKS } from "../utils/compatibility";
-import { exitCancelled } from "../utils/errors";
+import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableSelect } from "./navigable";
 
 function hasWebFrontend(frontends: Frontend[]) {
@@ -59,7 +59,7 @@ export async function getDeploymentChoice(
     initialValue: DEFAULT_CONFIG.webDeploy,
   });
 
-  if (isCancel(response)) return exitCancelled("Operation cancelled");
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }
@@ -102,7 +102,7 @@ export async function getDeploymentToAdd(frontend: Frontend[], existingDeploymen
     initialValue: DEFAULT_CONFIG.webDeploy,
   });
 
-  if (isCancel(response)) return exitCancelled("Operation cancelled");
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }

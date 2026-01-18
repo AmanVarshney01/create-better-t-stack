@@ -1,4 +1,6 @@
-import type { GeneratorOptions, GeneratorResult, VirtualFileTree } from "./types";
+import { Result } from "better-result";
+
+import type { GeneratorOptions, VirtualFileTree } from "./types";
 
 import { VirtualFileSystem } from "./core/virtual-fs";
 import { processCatalogs, processPackageConfigs } from "./post-process";
@@ -26,54 +28,80 @@ import {
   processExtrasTemplates,
   processDeployTemplates,
 } from "./template-handlers";
+import { GeneratorError } from "./types";
 
 export type { TemplateData };
 
-export async function generateVirtualProject(options: GeneratorOptions): Promise<GeneratorResult> {
-  try {
-    const { config, templates } = options;
+/**
+ * Generates a virtual project file tree from templates and configuration.
+ * Returns a Result type for type-safe error handling.
+ *
+ * @example
+ * ```typescript
+ * const result = await generate(options);
+ * result.match({
+ *   ok: (tree) => console.log(`Generated ${tree.fileCount} files`),
+ *   err: (error) => console.error(`Failed: ${error.message}`),
+ * });
+ * ```
+ */
+export async function generate(
+  options: GeneratorOptions,
+): Promise<Result<VirtualFileTree, GeneratorError>> {
+  return Result.tryPromise({
+    try: async () => {
+      const { config, templates } = options;
 
-    if (!templates || templates.size === 0) {
-      return {
-        success: false,
-        error: "No templates provided. Templates must be passed via the templates option.",
+      if (!templates || templates.size === 0) {
+        throw new GeneratorError({
+          message: "No templates provided. Templates must be passed via the templates option.",
+          phase: "initialization",
+        });
+      }
+
+      const vfs = new VirtualFileSystem();
+
+      await processBaseTemplate(vfs, templates, config);
+      await processFrontendTemplates(vfs, templates, config);
+      await processBackendTemplates(vfs, templates, config);
+      await processDbTemplates(vfs, templates, config);
+      await processApiTemplates(vfs, templates, config);
+      await processConfigPackage(vfs, templates, config);
+      await processEnvPackage(vfs, templates, config);
+      await processAuthTemplates(vfs, templates, config);
+      await processPaymentsTemplates(vfs, templates, config);
+      await processAddonTemplates(vfs, templates, config);
+      await processExampleTemplates(vfs, templates, config);
+      await processExtrasTemplates(vfs, templates, config);
+      await processDeployTemplates(vfs, templates, config);
+
+      processPackageConfigs(vfs, config);
+      processDependencies(vfs, config);
+      processEnvVariables(vfs, config);
+      processAuthPlugins(vfs, config);
+      processAlchemyPlugins(vfs, config);
+      processPwaPlugins(vfs, config);
+      processCatalogs(vfs, config);
+      processReadme(vfs, config);
+
+      const tree: VirtualFileTree = {
+        root: vfs.toTree(config.projectName),
+        fileCount: vfs.getFileCount(),
+        directoryCount: vfs.getDirectoryCount(),
+        config,
       };
-    }
 
-    const vfs = new VirtualFileSystem();
-
-    await processBaseTemplate(vfs, templates, config);
-    await processFrontendTemplates(vfs, templates, config);
-    await processBackendTemplates(vfs, templates, config);
-    await processDbTemplates(vfs, templates, config);
-    await processApiTemplates(vfs, templates, config);
-    await processConfigPackage(vfs, templates, config);
-    await processEnvPackage(vfs, templates, config);
-    await processAuthTemplates(vfs, templates, config);
-    await processPaymentsTemplates(vfs, templates, config);
-    await processAddonTemplates(vfs, templates, config);
-    await processExampleTemplates(vfs, templates, config);
-    await processExtrasTemplates(vfs, templates, config);
-    await processDeployTemplates(vfs, templates, config);
-
-    processPackageConfigs(vfs, config);
-    processDependencies(vfs, config);
-    processEnvVariables(vfs, config);
-    processAuthPlugins(vfs, config);
-    processAlchemyPlugins(vfs, config);
-    processPwaPlugins(vfs, config);
-    processCatalogs(vfs, config);
-    processReadme(vfs, config);
-
-    const tree: VirtualFileTree = {
-      root: vfs.toTree(config.projectName),
-      fileCount: vfs.getFileCount(),
-      directoryCount: vfs.getDirectoryCount(),
-      config,
-    };
-
-    return { success: true, tree };
-  } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : String(error) };
-  }
+      return tree;
+    },
+    catch: (e) => {
+      if (GeneratorError.is(e)) {
+        return e;
+      }
+      return new GeneratorError({
+        message: e instanceof Error ? e.message : String(e),
+        phase: "unknown",
+        cause: e,
+      });
+    },
+  });
 }

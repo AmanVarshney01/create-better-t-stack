@@ -1,9 +1,13 @@
+import { Result } from "better-result";
+
 import type { CLIInput, ProjectConfig } from "./types";
 
 import { getProvidedFlags, processFlags, validateArrayOptions } from "./utils/config-processing";
 import { validateConfigForProgrammaticUse, validateFullConfig } from "./utils/config-validation";
-import { exitWithError } from "./utils/errors";
+import { ValidationError } from "./utils/errors";
 import { extractAndValidateProjectName } from "./utils/project-name-validation";
+
+type ValidationResult<T> = Result<T, ValidationError>;
 
 const CORE_STACK_FLAGS = new Set([
   "database",
@@ -21,11 +25,14 @@ const CORE_STACK_FLAGS = new Set([
   "serverDeploy",
 ]);
 
-function validateYesFlagCombination(options: CLIInput, providedFlags: Set<string>) {
-  if (!options.yes) return;
+function validateYesFlagCombination(
+  options: CLIInput,
+  providedFlags: Set<string>,
+): ValidationResult<void> {
+  if (!options.yes) return Result.ok(undefined);
 
   if (options.template && options.template !== "none") {
-    return;
+    return Result.ok(undefined);
   }
 
   const coreStackFlagsProvided = Array.from(providedFlags).filter((flag) =>
@@ -33,85 +40,104 @@ function validateYesFlagCombination(options: CLIInput, providedFlags: Set<string
   );
 
   if (coreStackFlagsProvided.length > 0) {
-    exitWithError(
-      `Cannot combine --yes with core stack configuration flags: ${coreStackFlagsProvided.map((f) => `--${f}`).join(", ")}. ` +
-        "The --yes flag uses default configuration. Remove these flags or use --yes without them.",
+    return Result.err(
+      new ValidationError({
+        message:
+          `Cannot combine --yes with core stack configuration flags: ${coreStackFlagsProvided.map((f) => `--${f}`).join(", ")}. ` +
+          "The --yes flag uses default configuration. Remove these flags or use --yes without them.",
+      }),
     );
   }
+
+  return Result.ok(undefined);
 }
 
 export function processAndValidateFlags(
   options: CLIInput,
   providedFlags: Set<string>,
   projectName?: string,
-) {
+): ValidationResult<Partial<ProjectConfig>> {
   if (options.yolo) {
     const cfg = processFlags(options, projectName);
-    const validatedProjectName = extractAndValidateProjectName(
+    const validatedProjectNameResult = extractAndValidateProjectName(
       projectName,
       options.projectDirectory,
-      true,
     );
-    if (validatedProjectName) {
-      cfg.projectName = validatedProjectName;
+    if (validatedProjectNameResult.isOk() && validatedProjectNameResult.value) {
+      cfg.projectName = validatedProjectNameResult.value;
     }
-    return cfg;
+    return Result.ok(cfg);
   }
 
-  validateYesFlagCombination(options, providedFlags);
+  const yesFlagResult = validateYesFlagCombination(options, providedFlags);
+  if (yesFlagResult.isErr()) {
+    return Result.err(yesFlagResult.error);
+  }
 
-  try {
-    validateArrayOptions(options);
-  } catch (error) {
-    exitWithError(error instanceof Error ? error.message : String(error));
+  const arrayOptionsResult = validateArrayOptions(options);
+  if (arrayOptionsResult.isErr()) {
+    return Result.err(arrayOptionsResult.error);
   }
 
   const config = processFlags(options, projectName);
 
-  const validatedProjectName = extractAndValidateProjectName(
+  const validatedProjectNameResult = extractAndValidateProjectName(
     projectName,
     options.projectDirectory,
-    false,
   );
-  if (validatedProjectName) {
-    config.projectName = validatedProjectName;
+  if (validatedProjectNameResult.isErr()) {
+    return Result.err(validatedProjectNameResult.error);
+  }
+  if (validatedProjectNameResult.value) {
+    config.projectName = validatedProjectNameResult.value;
   }
 
-  validateFullConfig(config, providedFlags, options);
+  const fullConfigResult = validateFullConfig(config, providedFlags, options);
+  if (fullConfigResult.isErr()) {
+    return Result.err(fullConfigResult.error);
+  }
 
-  return config;
+  return Result.ok(config);
 }
 
-export function processProvidedFlagsWithoutValidation(options: CLIInput, projectName?: string) {
+export function processProvidedFlagsWithoutValidation(
+  options: CLIInput,
+  projectName?: string,
+): ValidationResult<Partial<ProjectConfig>> {
   if (!options.yolo) {
     const providedFlags = getProvidedFlags(options);
-    validateYesFlagCombination(options, providedFlags);
+    const yesFlagResult = validateYesFlagCombination(options, providedFlags);
+    if (yesFlagResult.isErr()) {
+      return Result.err(yesFlagResult.error);
+    }
   }
 
   const config = processFlags(options, projectName);
 
-  const validatedProjectName = extractAndValidateProjectName(
+  const validatedProjectNameResult = extractAndValidateProjectName(
     projectName,
     options.projectDirectory,
-    true,
   );
-  if (validatedProjectName) {
-    config.projectName = validatedProjectName;
+  if (validatedProjectNameResult.isErr()) {
+    return Result.err(validatedProjectNameResult.error);
+  }
+  if (validatedProjectNameResult.value) {
+    config.projectName = validatedProjectNameResult.value;
   }
 
-  return config;
+  return Result.ok(config);
 }
 
 export function validateConfigCompatibility(
   config: Partial<ProjectConfig>,
   providedFlags?: Set<string>,
   options?: CLIInput,
-) {
-  if (options?.yolo) return;
+): ValidationResult<void> {
+  if (options?.yolo) return Result.ok(undefined);
   if (options && providedFlags) {
-    validateFullConfig(config, providedFlags, options);
+    return validateFullConfig(config, providedFlags, options);
   } else {
-    validateConfigForProgrammaticUse(config);
+    return validateConfigForProgrammaticUse(config);
   }
 }
 

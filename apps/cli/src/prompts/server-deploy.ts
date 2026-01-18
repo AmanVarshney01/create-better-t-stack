@@ -1,7 +1,7 @@
 import type { Backend, Runtime, ServerDeploy, WebDeploy } from "../types";
 
 import { DEFAULT_CONFIG } from "../constants";
-import { exitCancelled } from "../utils/errors";
+import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableSelect } from "./navigable";
 
 type DeploymentOption = {
@@ -86,7 +86,7 @@ export async function getServerDeploymentToAdd(
     initialValue: DEFAULT_CONFIG.serverDeploy,
   });
 
-  if (isCancel(response)) return exitCancelled("Operation cancelled");
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }

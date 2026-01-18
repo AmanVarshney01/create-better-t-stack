@@ -1,5 +1,7 @@
 import type { ProjectConfig } from "@better-t-stack/types";
 
+import { TaggedError } from "better-result";
+
 export interface VirtualFile {
   type: "file";
   path: string;
@@ -31,8 +33,11 @@ export interface GeneratorOptions {
   templates?: Map<string, string>;
 }
 
-export interface GeneratorResult {
-  success: boolean;
-  tree?: VirtualFileTree;
-  error?: string;
-}
+/**
+ * Error class for template generation failures
+ */
+export class GeneratorError extends TaggedError("GeneratorError")<{
+  message: string;
+  phase?: string;
+  cause?: unknown;
+}>() {}

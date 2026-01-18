@@ -1,7 +1,7 @@
 import type { API, Backend, Frontend } from "../types";
 
 import { allowedApisForFrontends } from "../utils/compatibility-rules";
-import { exitCancelled } from "../utils/errors";
+import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableSelect } from "./navigable";
 
 export async function getApiChoice(
@@ -44,7 +44,7 @@ export async function getApiChoice(
     initialValue: apiOptions[0].value,
   });
 
-  if (isCancel(apiType)) return exitCancelled("Operation cancelled");
+  if (isCancel(apiType)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return apiType;
 }

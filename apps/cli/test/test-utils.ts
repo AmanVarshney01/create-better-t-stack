@@ -20,7 +20,7 @@ import type {
   DatabaseSetup,
 } from "../src/types";
 
-import { create } from "../src/index";
+import { create, UserCancelledError, CLIError, ProjectCreationError } from "../src/index";
 import {
   AddonsSchema,
   APISchema,
@@ -128,14 +128,39 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
   };
 
   // Use the programmatic create() API which runs in silent mode
-  // and returns JSON errors instead of calling process.exit()
+  // and returns a Result type instead of calling process.exit()
   const result = await create(projectPath, options);
 
+  // Handle the Result type from better-result
+  if (result.isOk()) {
+    const initResult = result.value;
+    return {
+      success: true,
+      result: initResult,
+      error: undefined,
+      projectDir: initResult.projectDirectory,
+      config,
+    };
+  }
+
+  // Handle error case - extract error message based on error type
+  const error = result.error;
+  let errorMessage: string;
+  if (UserCancelledError.is(error)) {
+    errorMessage = error.message || "User cancelled";
+  } else if (CLIError.is(error)) {
+    errorMessage = error.message;
+  } else if (ProjectCreationError.is(error)) {
+    errorMessage = error.message;
+  } else {
+    errorMessage = String(error);
+  }
+
   return {
-    success: result.success,
-    result: result.success ? result : undefined,
-    error: result.success ? undefined : result.error,
-    projectDir: result.success ? result.projectDirectory : undefined,
+    success: false,
+    result: undefined,
+    error: errorMessage,
+    projectDir: undefined,
     config,
   };
 }

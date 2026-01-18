@@ -1,9 +1,15 @@
 import { log } from "@clack/prompts";
+import { Result } from "better-result";
 import { $ } from "execa";
 import pc from "picocolors";
 
-export async function initializeGit(projectDir: string, useGit: boolean) {
-  if (!useGit) return;
+import { ProjectCreationError } from "../../utils/errors";
+
+export async function initializeGit(
+  projectDir: string,
+  useGit: boolean,
+): Promise<Result<void, ProjectCreationError>> {
+  if (!useGit) return Result.ok(undefined);
 
   const gitVersionResult = await $({
     cwd: projectDir,
@@ -13,7 +19,7 @@ export async function initializeGit(projectDir: string, useGit: boolean) {
 
   if (gitVersionResult.exitCode !== 0) {
     log.warn(pc.yellow("Git is not installed"));
-    return;
+    return Result.ok(undefined);
   }
 
   const result = await $({
@@ -23,9 +29,24 @@ export async function initializeGit(projectDir: string, useGit: boolean) {
   })`git init`;
 
   if (result.exitCode !== 0) {
-    throw new Error(`Git initialization failed: ${result.stderr}`);
+    return Result.err(
+      new ProjectCreationError({
+        phase: "git-initialization",
+        message: `Git initialization failed: ${result.stderr}`,
+      }),
+    );
   }
 
-  await $({ cwd: projectDir })`git add -A`;
-  await $({ cwd: projectDir })`git commit -m ${"initial commit"}`;
+  return Result.tryPromise({
+    try: async () => {
+      await $({ cwd: projectDir })`git add -A`;
+      await $({ cwd: projectDir })`git commit -m ${"initial commit"}`;
+    },
+    catch: (e) =>
+      new ProjectCreationError({
+        phase: "git-initialization",
+        message: `Git commit failed: ${e instanceof Error ? e.message : String(e)}`,
+        cause: e,
+      }),
+  });
 }

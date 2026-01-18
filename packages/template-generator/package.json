@@ -49,6 +49,7 @@
   },
   "dependencies": {
     "@better-t-stack/types": "^3.17.1",
+    "better-result": "^2.3.0",
     "handlebars": "^4.7.8",
     "memfs": "^4.51.1",
     "pathe": "^2.0.3",
