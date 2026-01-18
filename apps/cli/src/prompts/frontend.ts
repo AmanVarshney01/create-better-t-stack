@@ -3,7 +3,7 @@ import type { Backend, Frontend } from "../types";
 import { DEFAULT_CONFIG } from "../constants";
 import { isFrontendAllowedWithBackend } from "../utils/compatibility-rules";
 import { isFirstPrompt } from "../utils/context";
-import { exitCancelled } from "../utils/errors";
+import { UserCancelledError } from "../utils/errors";
 import {
   GO_BACK_SYMBOL,
   isCancel,
@@ -42,7 +42,7 @@ export async function getFrontendChoice(
     });
 
     if (isGoBack(frontendTypes)) return GO_BACK_SYMBOL;
-    if (isCancel(frontendTypes)) return exitCancelled("Operation cancelled");
+    if (isCancel(frontendTypes)) throw new UserCancelledError({ message: "Operation cancelled" });
 
     setIsFirstPrompt(false);
 
@@ -106,7 +106,7 @@ export async function getFrontendChoice(
       if (isGoBack(webFramework)) {
         shouldRestart = true;
       } else if (isCancel(webFramework)) {
-        return exitCancelled("Operation cancelled");
+        throw new UserCancelledError({ message: "Operation cancelled" });
       } else {
         result.push(webFramework as Frontend);
       }
@@ -148,7 +148,7 @@ export async function getFrontendChoice(
           continue;
         }
       } else if (isCancel(nativeFramework)) {
-        return exitCancelled("Operation cancelled");
+        throw new UserCancelledError({ message: "Operation cancelled" });
       } else {
         result.push(nativeFramework as Frontend);
       }

@@ -9,7 +9,7 @@ import type { ProjectConfig } from "../../types";
 
 import { commandExists } from "../../utils/command-exists";
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
-import { exitCancelled } from "../../utils/errors";
+import { UserCancelledError } from "../../utils/errors";
 
 type TursoConfig = {
   dbUrl: string;
@@ -113,7 +113,7 @@ async function selectTursoGroup() {
     options: groupOptions,
   });
 
-  if (isCancel(selectedGroup)) return exitCancelled("Operation cancelled");
+  if (isCancel(selectedGroup)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return selectedGroup as string;
 }
@@ -218,7 +218,7 @@ export async function setupTurso(config: ProjectConfig, cliInput?: { manualDb?: 
       initialValue: "auto",
     });
 
-    if (isCancel(mode)) return exitCancelled("Operation cancelled");
+    if (isCancel(mode)) throw new UserCancelledError({ message: "Operation cancelled" });
 
     if (mode === "manual") {
       await writeEnvFile(projectDir, backend);
@@ -250,7 +250,7 @@ export async function setupTurso(config: ProjectConfig, cliInput?: { manualDb?: 
         initialValue: true,
       });
 
-      if (isCancel(shouldInstall)) return exitCancelled("Operation cancelled");
+      if (isCancel(shouldInstall)) throw new UserCancelledError({ message: "Operation cancelled" });
 
       if (!shouldInstall) {
         await writeEnvFile(projectDir, backend);
@@ -280,7 +280,8 @@ export async function setupTurso(config: ProjectConfig, cliInput?: { manualDb?: 
         placeholder: suggestedName,
       });
 
-      if (isCancel(dbNameResponse)) return exitCancelled("Operation cancelled");
+      if (isCancel(dbNameResponse))
+        throw new UserCancelledError({ message: "Operation cancelled" });
 
       dbName = dbNameResponse as string;
 

@@ -8,7 +8,7 @@ import pc from "picocolors";
 import type { PackageManager, ProjectConfig } from "../../types";
 
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
-import { exitCancelled } from "../../utils/errors";
+import { UserCancelledError } from "../../utils/errors";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 async function writeSupabaseEnvFile(
@@ -169,7 +169,7 @@ export async function setupSupabase(config: ProjectConfig, cliInput?: { manualDb
       initialValue: "auto",
     });
 
-    if (isCancel(mode)) return exitCancelled("Operation cancelled");
+    if (isCancel(mode)) throw new UserCancelledError({ message: "Operation cancelled" });
 
     if (mode === "manual") {
       displayManualSupabaseInstructions();

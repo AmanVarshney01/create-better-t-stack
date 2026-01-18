@@ -1,7 +1,7 @@
 import { DEFAULT_CONFIG } from "../constants";
 import { type Addons, AddonsSchema, type Auth, type Frontend } from "../types";
 import { getCompatibleAddons, validateAddonCompatibility } from "../utils/compatibility-rules";
-import { exitCancelled } from "../utils/errors";
+import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableGroupMultiselect } from "./navigable";
 
 type AddonOption = {
@@ -135,7 +135,7 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
     required: false,
   });
 
-  if (isCancel(response)) return exitCancelled("Operation cancelled");
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }
@@ -196,7 +196,7 @@ export async function getAddonsToAdd(
     required: false,
   });
 
-  if (isCancel(response)) return exitCancelled("Operation cancelled");
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }

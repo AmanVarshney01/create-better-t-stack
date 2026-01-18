@@ -1,3 +1,4 @@
+import { Result, TaggedError } from "better-result";
 import * as fs from "node:fs/promises";
 import { join, dirname } from "pathe";
 
@@ -7,13 +8,44 @@ import { getBinaryTemplatesRoot } from "./core/template-reader";
 
 const BINARY_FILE_MARKER = "[Binary file]";
 
-export async function writeTreeToFilesystem(tree: VirtualFileTree, destDir: string): Promise<void> {
-  for (const child of tree.root.children) {
-    await writeNode(child, destDir, "");
-  }
+/**
+ * Error class for filesystem write failures
+ */
+export class FileWriteError extends TaggedError("FileWriteError")<{
+  message: string;
+  path?: string;
+  cause?: unknown;
+}>() {}
+
+/**
+ * Writes a virtual file tree to the filesystem.
+ * Returns a Result type for type-safe error handling.
+ */
+export async function writeTree(
+  tree: VirtualFileTree,
+  destDir: string,
+): Promise<Result<void, FileWriteError>> {
+  return Result.tryPromise({
+    try: async () => {
+      for (const child of tree.root.children) {
+        await writeNodeInternal(child, destDir, "");
+      }
+    },
+    catch: (e) => {
+      if (FileWriteError.is(e)) return e;
+      return new FileWriteError({
+        message: e instanceof Error ? e.message : String(e),
+        cause: e,
+      });
+    },
+  });
 }
 
-async function writeNode(node: VirtualNode, baseDir: string, relativePath: string): Promise<void> {
+async function writeNodeInternal(
+  node: VirtualNode,
+  baseDir: string,
+  relativePath: string,
+): Promise<void> {
   const fullPath = join(baseDir, relativePath, node.name);
   const nodePath = relativePath ? join(relativePath, node.name) : node.name;
 
@@ -29,22 +61,37 @@ async function writeNode(node: VirtualNode, baseDir: string, relativePath: strin
   } else {
     await fs.mkdir(fullPath, { recursive: true });
     for (const child of (node as VirtualDirectory).children) {
-      await writeNode(child, baseDir, nodePath);
+      await writeNodeInternal(child, baseDir, nodePath);
     }
   }
 }
 
-export async function writeSelectedFiles(
+/**
+ * Writes selected files from a virtual file tree to the filesystem.
+ * Returns a Result with the list of written file paths.
+ */
+export async function writeSelected(
   tree: VirtualFileTree,
   destDir: string,
   filter: (filePath: string) => boolean,
-): Promise<string[]> {
-  const writtenFiles: string[] = [];
-  await writeSelectedNode(tree.root, destDir, "", filter, writtenFiles);
-  return writtenFiles;
+): Promise<Result<string[], FileWriteError>> {
+  return Result.tryPromise({
+    try: async () => {
+      const writtenFiles: string[] = [];
+      await writeSelectedNodeInternal(tree.root, destDir, "", filter, writtenFiles);
+      return writtenFiles;
+    },
+    catch: (e) => {
+      if (FileWriteError.is(e)) return e;
+      return new FileWriteError({
+        message: e instanceof Error ? e.message : String(e),
+        cause: e,
+      });
+    },
+  });
 }
 
-async function writeSelectedNode(
+async function writeSelectedNodeInternal(
   node: VirtualNode,
   baseDir: string,
   relativePath: string,
@@ -67,7 +114,7 @@ async function writeSelectedNode(
     }
   } else {
     for (const child of (node as VirtualDirectory).children) {
-      await writeSelectedNode(child, baseDir, nodePath, filter, writtenFiles);
+      await writeSelectedNodeInternal(child, baseDir, nodePath, filter, writtenFiles);
     }
   }
 }
@@ -75,10 +122,6 @@ async function writeSelectedNode(
 async function copyBinaryFile(templatePath: string, destPath: string): Promise<void> {
   const templatesRoot = getBinaryTemplatesRoot();
   const sourcePath = join(templatesRoot, templatePath);
-
-  try {
-    await fs.copyFile(sourcePath, destPath);
-  } catch (error) {
-    console.warn(`Failed to copy binary file: ${templatePath}`, error);
-  }
+  // Let errors propagate - they'll be caught by the Result wrapper
+  await fs.copyFile(sourcePath, destPath);
 }

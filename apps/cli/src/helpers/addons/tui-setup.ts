@@ -6,7 +6,7 @@ import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 
-import { exitCancelled } from "../../utils/errors";
+import { UserCancelledError } from "../../utils/errors";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 type TuiTemplate = "core" | "react" | "solid";
@@ -42,7 +42,7 @@ export async function setupTui(config: ProjectConfig) {
       initialValue: "core",
     });
 
-    if (isCancel(template)) return exitCancelled("Operation cancelled");
+    if (isCancel(template)) throw new UserCancelledError({ message: "Operation cancelled" });
 
     const commandWithArgs = `create-tui@latest --template ${template} --no-git --no-install tui`;
     const args = getPackageExecutionArgs(packageManager, commandWithArgs);

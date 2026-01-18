@@ -1,6 +1,9 @@
+import { Result } from "better-result";
 import fs from "fs-extra";
 import path from "node:path";
 import { format, type FormatOptions } from "oxfmt";
+
+import { ProjectCreationError } from "./errors";
 
 const formatOptions: FormatOptions = {
   experimentalSortPackageJson: true,
@@ -23,28 +26,42 @@ export async function formatCode(filePath: string, content: string): Promise<str
   }
 }
 
-export async function formatProject(projectDir: string) {
-  async function formatDirectory(dir: string) {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
+export async function formatProject(
+  projectDir: string,
+): Promise<Result<void, ProjectCreationError>> {
+  return Result.tryPromise({
+    try: async () => {
+      async function formatDirectory(dir: string) {
+        const entries = await fs.readdir(dir, { withFileTypes: true });
 
-    await Promise.all(
-      entries.map(async (entry) => {
-        const fullPath = path.join(dir, entry.name);
+        await Promise.all(
+          entries.map(async (entry) => {
+            const fullPath = path.join(dir, entry.name);
 
-        if (entry.isDirectory()) {
-          await formatDirectory(fullPath);
-        } else if (entry.isFile()) {
-          try {
-            const content = await fs.readFile(fullPath, "utf-8");
-            const formatted = await formatCode(fullPath, content);
-            if (formatted && formatted !== content) {
-              await fs.writeFile(fullPath, formatted, "utf-8");
+            if (entry.isDirectory()) {
+              await formatDirectory(fullPath);
+            } else if (entry.isFile()) {
+              try {
+                const content = await fs.readFile(fullPath, "utf-8");
+                const formatted = await formatCode(fullPath, content);
+                if (formatted && formatted !== content) {
+                  await fs.writeFile(fullPath, formatted, "utf-8");
+                }
+              } catch {
+                // Ignore individual file formatting errors
+              }
             }
-          } catch {}
-        }
-      }),
-    );
-  }
+          }),
+        );
+      }
 
-  await formatDirectory(projectDir);
+      await formatDirectory(projectDir);
+    },
+    catch: (e) =>
+      new ProjectCreationError({
+        phase: "formatting",
+        message: `Failed to format project: ${e instanceof Error ? e.message : String(e)}`,
+        cause: e,
+      }),
+  });
 }

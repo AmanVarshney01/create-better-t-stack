@@ -6,6 +6,7 @@
       "name": "better-t-stack",
       "dependencies": {
         "@clack/prompts": "^0.11.0",
+        "better-result": "^2.3.0",
       },
       "devDependencies": {
         "@types/bun": "^1.3.6",
@@ -994,6 +995,8 @@
     "baseline-browser-mapping": ["baseline-browser-mapping@2.9.14", "", { "bin": { "baseline-browser-mapping": "dist/cli.js" } }, "sha512-B0xUquLkiGLgHhpPBqvl7GWegWBUNuujQ6kXd/r1U38ElPT6Ok8KZ8e+FpUGEc2ZoRQUzq/aUnaKFc/svWUGSg=="],
 
     "before-after-hook": ["before-after-hook@3.0.2", "", {}, "sha512-Nik3Sc0ncrMK4UUdXQmAnRtzmNQTAAXmXIopizwZ1W1t8QmfJj+zL4OA2I7XPTPW5z5TDqv4hRo/JzouDJnX3A=="],
+
+    "better-result": ["better-result@2.3.0", "", { "dependencies": { "@clack/prompts": "^0.11.0" }, "bin": { "better-result": "bin/cli.mjs" } }, "sha512-CqTRSRU41PbMlzsnXfcU1bmyxxHUJSIBjyM3EagGbqclxBdy7Om+FrY9x3ix9XR7WdsHIyZhBp67eY8m8JCiNQ=="],
 
     "binary-extensions": ["binary-extensions@3.1.0", "", {}, "sha512-Jvvd9hy1w+xUad8+ckQsWA/V1AoyubOvqn0aygjMOVM4BfIaRav1NFS3LsTSDaV4n4FtcCtQXvzep1E6MboqwQ=="],
 

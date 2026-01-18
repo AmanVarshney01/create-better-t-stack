@@ -43,3 +43,6 @@ yarn-error.log*
 .idea
 
 templates-binary
+
+# opensrc - source code for packages
+opensrc/

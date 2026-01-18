@@ -16,7 +16,7 @@ import type {
   WebDeploy,
 } from "../types";
 
-import { exitCancelled } from "../utils/errors";
+import { UserCancelledError } from "../utils/errors";
 import { getAddonsChoice } from "./addons";
 import { getApiChoice } from "./api";
 import { getAuthChoice } from "./auth";
@@ -111,7 +111,9 @@ export async function gatherConfig(
       install: () => getinstallChoice(flags.install),
     },
     {
-      onCancel: () => exitCancelled("Operation cancelled"),
+      onCancel: () => {
+        throw new UserCancelledError({ message: "Operation cancelled" });
+      },
     },
   );
 

@@ -9,7 +9,7 @@ import type { ProjectConfig } from "../../types";
 
 import { commandExists } from "../../utils/command-exists";
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
-import { exitCancelled } from "../../utils/errors";
+import { UserCancelledError } from "../../utils/errors";
 
 type MongoDBConfig = {
   connectionString: string;
@@ -148,7 +148,7 @@ export async function setupMongoDBAtlas(config: ProjectConfig, cliInput?: { manu
       initialValue: "auto",
     });
 
-    if (isCancel(mode)) return exitCancelled("Operation cancelled");
+    if (isCancel(mode)) throw new UserCancelledError({ message: "Operation cancelled" });
 
     if (mode === "manual") {
       log.info("MongoDB Atlas manual setup selected");

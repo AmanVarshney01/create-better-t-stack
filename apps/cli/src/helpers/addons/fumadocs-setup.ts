@@ -7,7 +7,7 @@ import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 
-import { exitCancelled } from "../../utils/errors";
+import { UserCancelledError } from "../../utils/errors";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 type FumadocsTemplate =
@@ -61,7 +61,7 @@ export async function setupFumadocs(config: ProjectConfig) {
       initialValue: "next-mdx",
     });
 
-    if (isCancel(template)) return exitCancelled("Operation cancelled");
+    if (isCancel(template)) throw new UserCancelledError({ message: "Operation cancelled" });
 
     const templateArg = TEMPLATES[template].value;
 

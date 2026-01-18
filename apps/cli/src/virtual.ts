@@ -5,8 +5,8 @@
 
 // Re-export everything from template-generator for web/programmatic usage
 export {
-  // Generator function
-  generateVirtualProject,
+  // Generator functions
+  generate,
   // Virtual file system types
   VirtualFileSystem,
   type VirtualFileTree,
@@ -15,7 +15,10 @@ export {
   type VirtualNode,
   // Generator types
   type GeneratorOptions,
-  type GeneratorResult,
+  // Error types
+  GeneratorError,
+  // Result type for consumers
+  Result,
   // Embedded templates for browser usage
   EMBEDDED_TEMPLATES,
   TEMPLATE_COUNT,

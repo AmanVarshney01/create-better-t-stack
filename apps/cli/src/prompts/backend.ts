@@ -1,7 +1,7 @@
 import type { Backend, Frontend } from "../types";
 
 import { DEFAULT_CONFIG } from "../constants";
-import { exitCancelled } from "../utils/errors";
+import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableSelect } from "./navigable";
 
 // Frontends that support backend="self" (fullstack mode with built-in server routes)
@@ -79,7 +79,7 @@ export async function getBackendFrameworkChoice(
     initialValue: hasFullstackFrontend ? "self" : DEFAULT_CONFIG.backend,
   });
 
-  if (isCancel(response)) return exitCancelled("Operation cancelled");
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }

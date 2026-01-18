@@ -4,7 +4,7 @@ import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 
-import { exitCancelled } from "../../utils/errors";
+import { UserCancelledError } from "../../utils/errors";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 type UltraciteLinter = "biome" | "eslint" | "oxlint";
@@ -171,7 +171,7 @@ export async function setupUltracite(config: ProjectConfig, gitHooks: string[]) 
       },
       {
         onCancel: () => {
-          exitCancelled("Operation cancelled");
+          throw new UserCancelledError({ message: "Operation cancelled" });
         },
       },
     );

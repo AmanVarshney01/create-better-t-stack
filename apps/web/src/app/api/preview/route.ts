@@ -1,10 +1,7 @@
 import type { ProjectConfig } from "@better-t-stack/types";
 
-import {
-  generateVirtualProject,
-  EMBEDDED_TEMPLATES,
-  type VirtualNode,
-} from "@better-t-stack/template-generator";
+import { generate, type VirtualNode } from "@better-t-stack/template-generator";
+import { EMBEDDED_TEMPLATES } from "@better-t-stack/template-generator";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -14,25 +11,28 @@ export async function POST(request: Request) {
     // Convert StackState from web to CLI options format
     const config = stackStateToConfig(body);
 
-    // Generate project to virtual filesystem using embedded templates
-    const result = await generateVirtualProject({
+    // Generate project to virtual filesystem using Result-based API
+    const result = await generate({
       config,
       templates: EMBEDDED_TEMPLATES,
     });
 
-    if (!result.success || !result.tree) {
-      throw new Error(result.error || "Failed to generate project");
+    // Handle Result type
+    if (result.isErr()) {
+      throw new Error(result.error.message);
     }
 
+    const tree = result.value;
+
     // Transform VirtualFileTree to web's expected format
-    const transformedRoot = transformTree(result.tree.root);
+    const transformedRoot = transformTree(tree.root);
 
     return NextResponse.json({
       success: true,
       tree: {
         root: transformedRoot,
-        fileCount: result.tree.fileCount,
-        directoryCount: result.tree.directoryCount,
+        fileCount: tree.fileCount,
+        directoryCount: tree.directoryCount,
       },
     });
   } catch (error) {

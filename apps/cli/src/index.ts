@@ -1,5 +1,6 @@
 import { intro, log } from "@clack/prompts";
 import { createRouterClient, os } from "@orpc/server";
+import { Result } from "better-result";
 import pc from "picocolors";
 import { createCli } from "trpc-cli";
 import z from "zod";
@@ -44,7 +45,7 @@ import {
   type WebDeploy,
   WebDeploySchema,
 } from "./types";
-import { handleError } from "./utils/errors";
+import { CLIError, ProjectCreationError, UserCancelledError, displayError } from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
 import { openUrl } from "./utils/open-url";
 import { renderTitle } from "./utils/render-title";
@@ -113,13 +114,22 @@ export const router = os.router({
       }
     }),
   sponsors: os.meta({ description: "Show Better-T-Stack sponsors" }).handler(async () => {
-    try {
-      renderTitle();
-      intro(pc.magenta("Better-T-Stack Sponsors"));
-      const sponsors = await fetchSponsors();
-      displaySponsors(sponsors);
-    } catch (error) {
-      handleError(error, "Failed to display sponsors");
+    const result = await Result.tryPromise({
+      try: async () => {
+        renderTitle();
+        intro(pc.magenta("Better-T-Stack Sponsors"));
+        const sponsors = await fetchSponsors();
+        displaySponsors(sponsors);
+      },
+      catch: (e: unknown) =>
+        new CLIError({
+          message: e instanceof Error ? e.message : "Failed to display sponsors",
+          cause: e,
+        }),
+    });
+    if (result.isErr()) {
+      displayError(result.error);
+      process.exit(1);
     }
   }),
   docs: os.meta({ description: "Open Better-T-Stack documentation" }).handler(async () => {
@@ -152,13 +162,21 @@ export function createBtsCli() {
   });
 }
 
+// Re-export Result type from better-result for programmatic API consumers
+export { Result } from "better-result";
+
+/**
+ * Error types that can be returned from create/createVirtual
+ */
+export type CreateError = UserCancelledError | CLIError | ProjectCreationError;
+
 /**
  * Programmatic API to create a new Better-T-Stack project.
- * Returns pure JSON - no console output, no interactive prompts.
+ * Returns a Result type - no console output, no interactive prompts.
  *
  * @example
  * ```typescript
- * import { create } from "create-better-t-stack";
+ * import { create, Result } from "create-better-t-stack";
  *
  * const result = await create("my-app", {
  *   frontend: ["tanstack-router"],
@@ -168,15 +186,19 @@ export function createBtsCli() {
  *   orm: "drizzle",
  * });
  *
- * if (result.success) {
- *   console.log(`Project created at: ${result.projectDirectory}`);
- * }
+ * result.match({
+ *   ok: (data) => console.log(`Project created at: ${data.projectDirectory}`),
+ *   err: (error) => console.error(`Failed: ${error.message}`),
+ * });
+ *
+ * // Or use unwrapOr for a default value
+ * const data = result.unwrapOr(null);
  * ```
  */
 export async function create(
   projectName?: string,
   options?: Partial<CreateInput>,
-): Promise<InitResult> {
+): Promise<Result<InitResult, CreateError>> {
   const input = {
     ...options,
     projectName,
@@ -186,20 +208,30 @@ export async function create(
     directoryConflict: options?.directoryConflict ?? "error",
   } as CreateInput & { projectName?: string };
 
-  try {
-    return (await createProjectHandler(input, { silent: true })) as InitResult;
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-      projectConfig: {} as ProjectConfig,
-      reproducibleCommand: "",
-      timeScaffolded: new Date().toISOString(),
-      elapsedTimeMs: 0,
-      projectDirectory: "",
-      relativePath: "",
-    };
-  }
+  return Result.tryPromise({
+    try: async () => {
+      const result = await createProjectHandler(input, { silent: true });
+      if (!result) {
+        // User cancelled (undefined return means cancellation in CLI mode)
+        throw new UserCancelledError({ message: "Operation cancelled" });
+      }
+      if (!result.success) {
+        throw new CLIError({
+          message: result.error || "Unknown error occurred",
+        });
+      }
+      return result as InitResult;
+    },
+    catch: (e: unknown) => {
+      if (e instanceof UserCancelledError) return e;
+      if (e instanceof CLIError) return e;
+      if (e instanceof ProjectCreationError) return e;
+      return new CLIError({
+        message: e instanceof Error ? e.message : String(e),
+        cause: e,
+      });
+    },
+  });
 }
 
 export async function sponsors() {
@@ -222,27 +254,28 @@ export {
   type VirtualDirectory,
   type VirtualNode,
   type GeneratorOptions,
-  type GeneratorResult,
+  GeneratorError,
+  generate,
   EMBEDDED_TEMPLATES,
   TEMPLATE_COUNT,
-  generateVirtualProject,
 } from "@better-t-stack/template-generator";
 
 // Import for createVirtual
 import {
-  generateVirtualProject as generate,
+  generate,
+  GeneratorError,
   type VirtualFileTree,
   EMBEDDED_TEMPLATES,
 } from "@better-t-stack/template-generator";
 
 /**
  * Programmatic API to generate a project in-memory (virtual filesystem).
- * Returns a VirtualFileTree without writing to disk.
+ * Returns a Result with a VirtualFileTree without writing to disk.
  * Useful for web previews and testing.
  *
  * @example
  * ```typescript
- * import { createVirtual, EMBEDDED_TEMPLATES } from "create-better-t-stack";
+ * import { createVirtual, EMBEDDED_TEMPLATES, Result } from "create-better-t-stack";
  *
  * const result = await createVirtual({
  *   frontend: ["tanstack-router"],
@@ -252,53 +285,41 @@ import {
  *   orm: "drizzle",
  * });
  *
- * if (result.success) {
- *   console.log(`Generated ${result.tree.fileCount} files`);
- * }
+ * result.match({
+ *   ok: (tree) => console.log(`Generated ${tree.fileCount} files`),
+ *   err: (error) => console.error(`Failed: ${error.message}`),
+ * });
  * ```
  */
 export async function createVirtual(
   options: Partial<Omit<ProjectConfig, "projectDir" | "relativePath">>,
-): Promise<{ success: boolean; tree?: VirtualFileTree; error?: string }> {
-  try {
-    const config: ProjectConfig = {
-      projectName: options.projectName || "my-project",
-      projectDir: "/virtual",
-      relativePath: "./virtual",
-      database: options.database || "none",
-      orm: options.orm || "none",
-      backend: options.backend || "hono",
-      runtime: options.runtime || "bun",
-      frontend: options.frontend || ["tanstack-router"],
-      addons: options.addons || [],
-      examples: options.examples || [],
-      auth: options.auth || "none",
-      payments: options.payments || "none",
-      git: options.git ?? false,
-      packageManager: options.packageManager || "bun",
-      install: false,
-      dbSetup: options.dbSetup || "none",
-      api: options.api || "trpc",
-      webDeploy: options.webDeploy || "none",
-      serverDeploy: options.serverDeploy || "none",
-    };
+): Promise<Result<VirtualFileTree, GeneratorError>> {
+  const config: ProjectConfig = {
+    projectName: options.projectName || "my-project",
+    projectDir: "/virtual",
+    relativePath: "./virtual",
+    database: options.database || "none",
+    orm: options.orm || "none",
+    backend: options.backend || "hono",
+    runtime: options.runtime || "bun",
+    frontend: options.frontend || ["tanstack-router"],
+    addons: options.addons || [],
+    examples: options.examples || [],
+    auth: options.auth || "none",
+    payments: options.payments || "none",
+    git: options.git ?? false,
+    packageManager: options.packageManager || "bun",
+    install: false,
+    dbSetup: options.dbSetup || "none",
+    api: options.api || "trpc",
+    webDeploy: options.webDeploy || "none",
+    serverDeploy: options.serverDeploy || "none",
+  };
 
-    const result = await generate({
-      config,
-      templates: EMBEDDED_TEMPLATES,
-    });
-
-    if (result.success && result.tree) {
-      return { success: true, tree: result.tree };
-    }
-
-    return { success: false, error: result.error || "Unknown error" };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
+  return generate({
+    config,
+    templates: EMBEDDED_TEMPLATES,
+  });
 }
 
 export type {
@@ -322,3 +343,14 @@ export type {
   Template,
   DirectoryConflict,
 };
+
+// Re-export error types for consumers
+export {
+  UserCancelledError,
+  CLIError,
+  ProjectCreationError,
+  ValidationError,
+  CompatibilityError,
+  DirectoryConflictError,
+  DatabaseSetupError,
+} from "./utils/errors";

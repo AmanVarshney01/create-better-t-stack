@@ -2,7 +2,7 @@ import type { API, Backend, Database, Examples, Frontend } from "../types";
 
 import { DEFAULT_CONFIG } from "../constants";
 import { isExampleAIAllowed, isExampleTodoAllowed } from "../utils/compatibility-rules";
-import { exitCancelled } from "../utils/errors";
+import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableMultiselect } from "./navigable";
 
 export async function getExamplesChoice(
@@ -46,7 +46,7 @@ export async function getExamplesChoice(
     initialValues: DEFAULT_CONFIG.examples?.filter((ex) => options.some((o) => o.value === ex)),
   });
 
-  if (isCancel(response)) return exitCancelled("Operation cancelled");
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }

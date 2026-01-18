@@ -6,7 +6,7 @@ import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 
-import { exitCancelled } from "../../utils/errors";
+import { UserCancelledError } from "../../utils/errors";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 type WxtTemplate = "vanilla" | "vue" | "react" | "solid" | "svelte";
@@ -50,7 +50,7 @@ export async function setupWxt(config: ProjectConfig) {
       initialValue: "react",
     });
 
-    if (isCancel(template)) return exitCancelled("Operation cancelled");
+    if (isCancel(template)) throw new UserCancelledError({ message: "Operation cancelled" });
 
     const commandWithArgs = `wxt@latest init extension --template ${template} --pm ${packageManager}`;
     const args = getPackageExecutionArgs(packageManager, commandWithArgs);

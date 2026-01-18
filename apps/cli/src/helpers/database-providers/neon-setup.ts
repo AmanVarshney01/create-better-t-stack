@@ -8,7 +8,7 @@ import pc from "picocolors";
 import type { PackageManager, ProjectConfig } from "../../types";
 
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
-import { exitCancelled } from "../../utils/errors";
+import { UserCancelledError } from "../../utils/errors";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 type NeonConfig = {
@@ -173,7 +173,7 @@ export async function setupNeonPostgres(config: ProjectConfig, cliInput?: { manu
       initialValue: "auto",
     });
 
-    if (isCancel(mode)) return exitCancelled("Operation cancelled");
+    if (isCancel(mode)) throw new UserCancelledError({ message: "Operation cancelled" });
 
     if (mode === "manual") {
       await writeEnvFile(projectDir, backend);
@@ -198,7 +198,7 @@ export async function setupNeonPostgres(config: ProjectConfig, cliInput?: { manu
       initialValue: "neondb",
     });
 
-    if (isCancel(setupMethod)) return exitCancelled("Operation cancelled");
+    if (isCancel(setupMethod)) throw new UserCancelledError({ message: "Operation cancelled" });
 
     if (setupMethod === "neondb") {
       await setupWithNeonDb(projectDir, packageManager, backend);
@@ -216,7 +216,8 @@ export async function setupNeonPostgres(config: ProjectConfig, cliInput?: { manu
         initialValue: NEON_REGIONS[0].value,
       });
 
-      if (isCancel(projectName) || isCancel(regionId)) return exitCancelled("Operation cancelled");
+      if (isCancel(projectName) || isCancel(regionId))
+        throw new UserCancelledError({ message: "Operation cancelled" });
 
       const neonConfig = await createNeonProject(projectName as string, regionId, packageManager);
 

@@ -6,7 +6,7 @@ import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 
-import { exitCancelled } from "../../utils/errors";
+import { UserCancelledError } from "../../utils/errors";
 import { getPackageExecutionArgs, getPackageExecutionCommand } from "../../utils/package-runner";
 
 export async function setupRuler(config: ProjectConfig) {
@@ -67,7 +67,7 @@ export async function setupRuler(config: ProjectConfig) {
       required: false,
     });
 
-    if (isCancel(selectedEditors)) return exitCancelled("Operation cancelled");
+    if (isCancel(selectedEditors)) throw new UserCancelledError({ message: "Operation cancelled" });
 
     if (selectedEditors.length === 0) {
       log.info("No AI assistants selected. To apply rules later, run:");
