@@ -85,6 +85,16 @@ function addApiPackageDeps(
   if (backend === "express") {
     addPackageDependency({ vfs, packagePath: pkgPath, devDependencies: ["@types/express"] });
   }
+
+  // Add hono types for hono backend
+  if (backend === "hono") {
+    addPackageDependency({ vfs, packagePath: pkgPath, devDependencies: ["hono"] });
+  }
+
+  // Add elysia types for elysia backend
+  if (backend === "elysia") {
+    addPackageDependency({ vfs, packagePath: pkgPath, devDependencies: ["elysia"] });
+  }
 }
 
 function addServerDeps(vfs: VirtualFileSystem, api: API, backend: Backend): void {
