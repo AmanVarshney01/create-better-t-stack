@@ -1,0 +1,209 @@
+import { ConvexHttpClient } from "convex/browser";
+import type { api } from "@{{projectName}}/db/convex/_generated/api";
+
+type WhereClause = {
+  field: string;
+  operator: string;
+  value: unknown;
+};
+
+/**
+ * Better-Auth adapter for Convex database-only mode.
+ * Uses ConvexHttpClient to communicate with Convex functions.
+ */
+export function convexHttpAdapter(convexUrl: string) {
+  const client = new ConvexHttpClient(convexUrl);
+
+  const transformWhere = (where?: WhereClause[]): WhereClause[] => {
+    if (!where) return [];
+    return where.map((w) => ({
+      field: w.field === "id" ? "id" : w.field,
+      operator: w.operator,
+      value: w.value instanceof Date ? w.value.getTime() : w.value,
+    }));
+  };
+
+  const transformOutput = (data: Record<string, unknown> | null): Record<string, unknown> | null => {
+    if (!data) return null;
+    const result = { ...data };
+    // Convert timestamps back to dates
+    if (typeof result.createdAt === "number") {
+      result.createdAt = new Date(result.createdAt);
+    }
+    if (typeof result.updatedAt === "number") {
+      result.updatedAt = new Date(result.updatedAt);
+    }
+    if (typeof result.expiresAt === "number") {
+      result.expiresAt = new Date(result.expiresAt);
+    }
+    if (typeof result.accessTokenExpiresAt === "number") {
+      result.accessTokenExpiresAt = new Date(result.accessTokenExpiresAt);
+    }
+    if (typeof result.refreshTokenExpiresAt === "number") {
+      result.refreshTokenExpiresAt = new Date(result.refreshTokenExpiresAt);
+    }
+    return result;
+  };
+
+  const transformInput = (data: Record<string, unknown>): Record<string, unknown> => {
+    const result = { ...data };
+    // Convert dates to timestamps
+    for (const [key, value] of Object.entries(result)) {
+      if (value instanceof Date) {
+        result[key] = value.getTime();
+      }
+    }
+    return result;
+  };
+
+  return {
+    id: "convex-http",
+
+    create: async <T extends Record<string, unknown>>({
+      model,
+      data,
+    }: {
+      model: string;
+      data: T;
+    }): Promise<T> => {
+      const result = await client.mutation(
+        "authAdapter:create" as unknown as typeof api.authAdapter.create,
+        {
+          model,
+          data: transformInput(data),
+        }
+      );
+      return transformOutput(result) as T;
+    },
+
+    findOne: async <T>({
+      model,
+      where,
+    }: {
+      model: string;
+      where: WhereClause[];
+    }): Promise<T | null> => {
+      const result = await client.query(
+        "authAdapter:findOne" as unknown as typeof api.authAdapter.findOne,
+        {
+          model,
+          where: transformWhere(where),
+        }
+      );
+      return transformOutput(result) as T | null;
+    },
+
+    findMany: async <T>({
+      model,
+      where,
+      limit,
+      offset,
+      sortBy,
+    }: {
+      model: string;
+      where?: WhereClause[];
+      limit?: number;
+      offset?: number;
+      sortBy?: { field: string; direction: "asc" | "desc" };
+    }): Promise<T[]> => {
+      const results = await client.query(
+        "authAdapter:findMany" as unknown as typeof api.authAdapter.findMany,
+        {
+          model,
+          where: transformWhere(where),
+          limit,
+          offset,
+          sortBy,
+        }
+      );
+      return (results as Record<string, unknown>[]).map((r) => transformOutput(r) as T);
+    },
+
+    update: async <T>({
+      model,
+      where,
+      update: updateData,
+    }: {
+      model: string;
+      where: WhereClause[];
+      update: Record<string, unknown>;
+    }): Promise<T | null> => {
+      const result = await client.mutation(
+        "authAdapter:update" as unknown as typeof api.authAdapter.update,
+        {
+          model,
+          where: transformWhere(where),
+          data: transformInput(updateData),
+        }
+      );
+      return transformOutput(result) as T | null;
+    },
+
+    updateMany: async ({
+      model,
+      where,
+      update: updateData,
+    }: {
+      model: string;
+      where: WhereClause[];
+      update: Record<string, unknown>;
+    }): Promise<number> => {
+      return await client.mutation(
+        "authAdapter:updateMany" as unknown as typeof api.authAdapter.updateMany,
+        {
+          model,
+          where: transformWhere(where),
+          data: transformInput(updateData),
+        }
+      );
+    },
+
+    delete: async ({
+      model,
+      where,
+    }: {
+      model: string;
+      where: WhereClause[];
+    }): Promise<void> => {
+      await client.mutation(
+        "authAdapter:deleteOne" as unknown as typeof api.authAdapter.deleteOne,
+        {
+          model,
+          where: transformWhere(where),
+        }
+      );
+    },
+
+    deleteMany: async ({
+      model,
+      where,
+    }: {
+      model: string;
+      where: WhereClause[];
+    }): Promise<number> => {
+      return await client.mutation(
+        "authAdapter:deleteMany" as unknown as typeof api.authAdapter.deleteMany,
+        {
+          model,
+          where: transformWhere(where),
+        }
+      );
+    },
+
+    count: async ({
+      model,
+      where,
+    }: {
+      model: string;
+      where?: WhereClause[];
+    }): Promise<number> => {
+      return await client.query(
+        "authAdapter:count" as unknown as typeof api.authAdapter.count,
+        {
+          model,
+          where: transformWhere(where),
+        }
+      );
+    },
+  };
+}

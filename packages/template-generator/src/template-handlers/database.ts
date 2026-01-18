@@ -9,8 +9,19 @@ export async function processDbTemplates(
   templates: TemplateData,
   config: ProjectConfig,
 ): Promise<void> {
-  if (config.database === "none" || config.orm === "none") return;
+  if (config.database === "none") return;
+
+  // Convex database (database-only mode, not full backend)
+  if (config.database === "convex" && config.backend !== "convex") {
+    processTemplatesFromPrefix(vfs, templates, "db/convex", "packages/db", config);
+    return;
+  }
+
+  // Full Convex backend handles its own database setup
   if (config.backend === "convex") return;
+
+  // Traditional ORM-based databases
+  if (config.orm === "none") return;
 
   processTemplatesFromPrefix(vfs, templates, "db/base", "packages/db", config);
   processTemplatesFromPrefix(vfs, templates, `db/${config.orm}/base`, "packages/db", config);

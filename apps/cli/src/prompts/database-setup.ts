@@ -10,7 +10,8 @@ export async function getDBSetupChoice(
   backend?: Backend,
   runtime?: Runtime,
 ) {
-  if (backend === "convex") {
+  // Convex backend or Convex database handles its own setup
+  if (backend === "convex" || databaseType === "convex") {
     return "none";
   }
 

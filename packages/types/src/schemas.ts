@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const DatabaseSchema = z
-  .enum(["none", "sqlite", "postgres", "mysql", "mongodb"])
+  .enum(["none", "sqlite", "postgres", "mysql", "mongodb", "convex"])
   .describe("Database type");
 
 export const ORMSchema = z.enum(["drizzle", "prisma", "mongoose", "none"]).describe("ORM type");

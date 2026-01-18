@@ -1,0 +1,9 @@
+import { ConvexHttpClient } from "convex/browser";
+import { env } from "@{{projectName}}/env/server";
+
+// HTTP client for use in API routes (Hono, Express, etc.)
+// This allows you to call Convex functions from your backend
+export const convex = new ConvexHttpClient(env.CONVEX_URL);
+
+// Re-export the API types for convenience
+export type { api } from "../convex/_generated/api";

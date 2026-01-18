@@ -1,0 +1,366 @@
+import { mutation, query } from "./_generated/server";
+import { v } from "convex/values";
+
+// Generic CRUD operations for Better-Auth adapter
+// These functions are called via ConvexHttpClient from the auth package
+
+// ============================================
+// CREATE
+// ============================================
+export const create = mutation({
+  args: {
+    model: v.string(),
+    data: v.any(),
+  },
+  handler: async (ctx, args) => {
+    const { model, data } = args;
+    const tableName = model as "user" | "session" | "account" | "verification";
+    
+    // Generate ID if not provided
+    const id = data.id || crypto.randomUUID();
+    const now = Date.now();
+    
+    const record = {
+      ...data,
+      id,
+      createdAt: data.createdAt || now,
+      updatedAt: data.updatedAt || now,
+    };
+    
+    const docId = await ctx.db.insert(tableName, record);
+    const doc = await ctx.db.get(docId);
+    
+    return doc ? { ...doc, id: doc.id } : null;
+  },
+});
+
+// ============================================
+// FIND ONE
+// ============================================
+export const findOne = query({
+  args: {
+    model: v.string(),
+    where: v.array(v.object({
+      field: v.string(),
+      operator: v.string(),
+      value: v.any(),
+    })),
+  },
+  handler: async (ctx, args) => {
+    const { model, where } = args;
+    const tableName = model as "user" | "session" | "account" | "verification";
+    
+    // Start with all records
+    let records = await ctx.db.query(tableName).collect();
+    
+    // Apply filters
+    for (const condition of where) {
+      records = records.filter((record: Record<string, unknown>) => {
+        const fieldValue = record[condition.field];
+        switch (condition.operator) {
+          case "eq":
+            return fieldValue === condition.value;
+          case "ne":
+            return fieldValue !== condition.value;
+          case "gt":
+            return (fieldValue as number) > (condition.value as number);
+          case "gte":
+            return (fieldValue as number) >= (condition.value as number);
+          case "lt":
+            return (fieldValue as number) < (condition.value as number);
+          case "lte":
+            return (fieldValue as number) <= (condition.value as number);
+          case "in":
+            return Array.isArray(condition.value) && condition.value.includes(fieldValue);
+          default:
+            return fieldValue === condition.value;
+        }
+      });
+    }
+    
+    return records[0] || null;
+  },
+});
+
+// ============================================
+// FIND MANY
+// ============================================
+export const findMany = query({
+  args: {
+    model: v.string(),
+    where: v.optional(v.array(v.object({
+      field: v.string(),
+      operator: v.string(),
+      value: v.any(),
+    }))),
+    limit: v.optional(v.number()),
+    offset: v.optional(v.number()),
+    sortBy: v.optional(v.object({
+      field: v.string(),
+      direction: v.union(v.literal("asc"), v.literal("desc")),
+    })),
+  },
+  handler: async (ctx, args) => {
+    const { model, where, limit, offset, sortBy } = args;
+    const tableName = model as "user" | "session" | "account" | "verification";
+    
+    let records = await ctx.db.query(tableName).collect();
+    
+    // Apply filters
+    if (where) {
+      for (const condition of where) {
+        records = records.filter((record: Record<string, unknown>) => {
+          const fieldValue = record[condition.field];
+          switch (condition.operator) {
+            case "eq":
+              return fieldValue === condition.value;
+            case "ne":
+              return fieldValue !== condition.value;
+            case "gt":
+              return (fieldValue as number) > (condition.value as number);
+            case "gte":
+              return (fieldValue as number) >= (condition.value as number);
+            case "lt":
+              return (fieldValue as number) < (condition.value as number);
+            case "lte":
+              return (fieldValue as number) <= (condition.value as number);
+            case "in":
+              return Array.isArray(condition.value) && condition.value.includes(fieldValue);
+            default:
+              return fieldValue === condition.value;
+          }
+        });
+      }
+    }
+    
+    // Apply sorting
+    if (sortBy) {
+      records.sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
+        const aVal = a[sortBy.field];
+        const bVal = b[sortBy.field];
+        if (aVal < bVal) return sortBy.direction === "asc" ? -1 : 1;
+        if (aVal > bVal) return sortBy.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    
+    // Apply offset and limit
+    if (offset) {
+      records = records.slice(offset);
+    }
+    if (limit) {
+      records = records.slice(0, limit);
+    }
+    
+    return records;
+  },
+});
+
+// ============================================
+// UPDATE
+// ============================================
+export const update = mutation({
+  args: {
+    model: v.string(),
+    where: v.array(v.object({
+      field: v.string(),
+      operator: v.string(),
+      value: v.any(),
+    })),
+    data: v.any(),
+  },
+  handler: async (ctx, args) => {
+    const { model, where, data } = args;
+    const tableName = model as "user" | "session" | "account" | "verification";
+    
+    let records = await ctx.db.query(tableName).collect();
+    
+    // Find matching record
+    for (const condition of where) {
+      records = records.filter((record: Record<string, unknown>) => {
+        const fieldValue = record[condition.field];
+        switch (condition.operator) {
+          case "eq":
+            return fieldValue === condition.value;
+          default:
+            return fieldValue === condition.value;
+        }
+      });
+    }
+    
+    const record = records[0];
+    if (!record) return null;
+    
+    // Update the record
+    const updateData = {
+      ...data,
+      updatedAt: Date.now(),
+    };
+    
+    await ctx.db.patch(record._id, updateData);
+    const updated = await ctx.db.get(record._id);
+    
+    return updated;
+  },
+});
+
+// ============================================
+// UPDATE MANY
+// ============================================
+export const updateMany = mutation({
+  args: {
+    model: v.string(),
+    where: v.array(v.object({
+      field: v.string(),
+      operator: v.string(),
+      value: v.any(),
+    })),
+    data: v.any(),
+  },
+  handler: async (ctx, args) => {
+    const { model, where, data } = args;
+    const tableName = model as "user" | "session" | "account" | "verification";
+    
+    let records = await ctx.db.query(tableName).collect();
+    
+    // Find matching records
+    for (const condition of where) {
+      records = records.filter((record: Record<string, unknown>) => {
+        const fieldValue = record[condition.field];
+        switch (condition.operator) {
+          case "eq":
+            return fieldValue === condition.value;
+          default:
+            return fieldValue === condition.value;
+        }
+      });
+    }
+    
+    // Update all matching records
+    const updateData = {
+      ...data,
+      updatedAt: Date.now(),
+    };
+    
+    for (const record of records) {
+      await ctx.db.patch(record._id, updateData);
+    }
+    
+    return records.length;
+  },
+});
+
+// ============================================
+// DELETE
+// ============================================
+export const deleteOne = mutation({
+  args: {
+    model: v.string(),
+    where: v.array(v.object({
+      field: v.string(),
+      operator: v.string(),
+      value: v.any(),
+    })),
+  },
+  handler: async (ctx, args) => {
+    const { model, where } = args;
+    const tableName = model as "user" | "session" | "account" | "verification";
+    
+    let records = await ctx.db.query(tableName).collect();
+    
+    // Find matching record
+    for (const condition of where) {
+      records = records.filter((record: Record<string, unknown>) => {
+        const fieldValue = record[condition.field];
+        switch (condition.operator) {
+          case "eq":
+            return fieldValue === condition.value;
+          default:
+            return fieldValue === condition.value;
+        }
+      });
+    }
+    
+    const record = records[0];
+    if (record) {
+      await ctx.db.delete(record._id);
+    }
+  },
+});
+
+// ============================================
+// DELETE MANY
+// ============================================
+export const deleteMany = mutation({
+  args: {
+    model: v.string(),
+    where: v.array(v.object({
+      field: v.string(),
+      operator: v.string(),
+      value: v.any(),
+    })),
+  },
+  handler: async (ctx, args) => {
+    const { model, where } = args;
+    const tableName = model as "user" | "session" | "account" | "verification";
+    
+    let records = await ctx.db.query(tableName).collect();
+    
+    // Find matching records
+    for (const condition of where) {
+      records = records.filter((record: Record<string, unknown>) => {
+        const fieldValue = record[condition.field];
+        switch (condition.operator) {
+          case "eq":
+            return fieldValue === condition.value;
+          default:
+            return fieldValue === condition.value;
+        }
+      });
+    }
+    
+    // Delete all matching records
+    for (const record of records) {
+      await ctx.db.delete(record._id);
+    }
+    
+    return records.length;
+  },
+});
+
+// ============================================
+// COUNT
+// ============================================
+export const count = query({
+  args: {
+    model: v.string(),
+    where: v.optional(v.array(v.object({
+      field: v.string(),
+      operator: v.string(),
+      value: v.any(),
+    }))),
+  },
+  handler: async (ctx, args) => {
+    const { model, where } = args;
+    const tableName = model as "user" | "session" | "account" | "verification";
+    
+    let records = await ctx.db.query(tableName).collect();
+    
+    // Apply filters
+    if (where) {
+      for (const condition of where) {
+        records = records.filter((record: Record<string, unknown>) => {
+          const fieldValue = record[condition.field];
+          switch (condition.operator) {
+            case "eq":
+              return fieldValue === condition.value;
+            default:
+              return fieldValue === condition.value;
+          }
+        });
+      }
+    }
+    
+    return records.length;
+  },
+});

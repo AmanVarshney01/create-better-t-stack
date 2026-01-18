@@ -7,7 +7,22 @@ import { addPackageDependency, type AvailableDependencies } from "../utils/add-d
 export function processDatabaseDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { database, orm, backend } = config;
 
-  if (backend === "convex" || database === "none") return;
+  // Skip if no database or full Convex backend (handles its own deps)
+  if (database === "none") return;
+  if (backend === "convex") return;
+
+  // Convex database-only mode
+  if (database === "convex") {
+    const dbPkgPath = "packages/db/package.json";
+    if (!vfs.exists(dbPkgPath)) return;
+
+    addPackageDependency({
+      vfs,
+      packagePath: dbPkgPath,
+      dependencies: ["convex"],
+    });
+    return;
+  }
 
   const dbPkgPath = "packages/db/package.json";
   const webPkgPath = "apps/web/package.json";

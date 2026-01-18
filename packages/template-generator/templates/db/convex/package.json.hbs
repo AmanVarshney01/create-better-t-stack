@@ -1,0 +1,23 @@
+{
+  "name": "@{{projectName}}/db",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    },
+    "./convex": {
+      "default": "./convex/_generated/api.d.ts"
+    }
+  },
+  "scripts": {
+    "dev": "convex dev",
+    "dev:setup": "convex dev --configure --until-success"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0"
+  },
+  "dependencies": {}
+}

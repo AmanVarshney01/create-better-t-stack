@@ -71,10 +71,10 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   // ============================================
 
   if (nextStack.backend === "convex") {
-    // Convex handles its own runtime, database, orm, api, dbSetup
+    // Convex backend forces convex database, handles its own runtime, orm, api, dbSetup
     const convexOverrides: Partial<StackState> = {
       runtime: "none",
-      database: "none",
+      database: "convex",
       orm: "none",
       api: "none",
       dbSetup: "none",
@@ -308,6 +308,28 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   // ============================================
   // DATABASE & ORM CONSTRAINTS (CLI-like flow)
   // ============================================
+
+  // Convex database-only mode (not full Convex backend)
+  if (nextStack.database === "convex" && nextStack.backend !== "convex") {
+    // Convex database has its own schema system, no ORM needed
+    if (nextStack.orm !== "none") {
+      nextStack.orm = "none";
+      changed = true;
+      changes.push({
+        category: "database",
+        message: "ORM set to 'None' (Convex has its own schema system)",
+      });
+    }
+    // Convex handles its own setup
+    if (nextStack.dbSetup !== "none") {
+      nextStack.dbSetup = "none";
+      changed = true;
+      changes.push({
+        category: "database",
+        message: "DB Setup set to 'None' (Convex handles its own setup)",
+      });
+    }
+  }
 
   // Skip if backend doesn't use database
   if (nextStack.backend !== "convex" && nextStack.backend !== "none") {
@@ -875,6 +897,10 @@ export const getDisabledReason = (
     if (optionId === "mongodb" && currentStack.runtime === "workers") {
       return "MongoDB is not compatible with Workers runtime";
     }
+    // Convex database not available with full Convex backend (redundant)
+    if (optionId === "convex" && currentStack.backend === "convex") {
+      return "Convex backend already uses Convex database";
+    }
     // Allow all databases when ORM is none - system will auto-select ORM
   }
 
@@ -882,12 +908,20 @@ export const getDisabledReason = (
   // ORM CONSTRAINTS
   // ============================================
   if (category === "orm") {
+    // Convex database doesn't use traditional ORMs
+    if (currentStack.database === "convex" && optionId !== "none") {
+      return "Convex has its own schema system";
+    }
     if (optionId === "mongoose") {
       if (currentStack.runtime === "workers") {
         return "Mongoose requires MongoDB, which is incompatible with Workers";
       }
       // Only block if a non-MongoDB database is EXPLICITLY selected
-      if (currentStack.database !== "none" && currentStack.database !== "mongodb") {
+      if (
+        currentStack.database !== "none" &&
+        currentStack.database !== "mongodb" &&
+        currentStack.database !== "convex"
+      ) {
         return "Mongoose only works with MongoDB";
       }
       // Allow when database is "none" - system will auto-select MongoDB
@@ -895,7 +929,11 @@ export const getDisabledReason = (
     if (optionId === "drizzle" && currentStack.database === "mongodb") {
       return "Drizzle does not support MongoDB";
     }
-    if (optionId === "none" && currentStack.database !== "none") {
+    if (
+      optionId === "none" &&
+      currentStack.database !== "none" &&
+      currentStack.database !== "convex"
+    ) {
       return "Database requires an ORM";
     }
   }
@@ -906,6 +944,10 @@ export const getDisabledReason = (
   if (category === "dbSetup" && optionId !== "none") {
     if (currentStack.database === "none") {
       return "Select a database first";
+    }
+    // Convex handles its own setup
+    if (currentStack.database === "convex") {
+      return "Convex handles its own database setup";
     }
 
     // Database-specific setups

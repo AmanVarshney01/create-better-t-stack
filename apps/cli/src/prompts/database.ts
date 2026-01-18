@@ -5,7 +5,12 @@ import { exitCancelled } from "../utils/errors";
 import { isCancel, navigableSelect } from "./navigable";
 
 export async function getDatabaseChoice(database?: Database, backend?: Backend, runtime?: Runtime) {
-  if (backend === "convex" || backend === "none") {
+  // Full Convex backend forces convex database
+  if (backend === "convex") {
+    return "convex";
+  }
+
+  if (backend === "none") {
     return "none";
   }
 
@@ -45,6 +50,13 @@ export async function getDatabaseChoice(database?: Database, backend?: Backend, 
       hint: "open-source NoSQL database that stores data in JSON-like documents called BSON",
     });
   }
+
+  // Convex as database-only option (works with any backend except full Convex)
+  databaseOptions.push({
+    value: "convex",
+    label: "Convex",
+    hint: "reactive database with realtime sync (database-only mode)",
+  });
 
   const response = await navigableSelect<Database>({
     message: "Select database",

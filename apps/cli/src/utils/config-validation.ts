@@ -19,6 +19,16 @@ export function validateDatabaseOrmAuth(cfg: Partial<ProjectConfig>, flags?: Set
   const orm = cfg.orm;
   const has = (k: string) => (flags ? flags.has(k) : true);
 
+  // Convex database has its own schema system, no ORM needed
+  if (db === "convex") {
+    if (has("orm") && orm && orm !== "none") {
+      exitWithError(
+        "Convex database has its own schema system. Please use '--orm none' with '--database convex'.",
+      );
+    }
+    return;
+  }
+
   if (has("orm") && has("database") && orm === "mongoose" && db !== "mongodb") {
     exitWithError(
       "Mongoose ORM requires MongoDB database. Please use '--database mongodb' or choose a different ORM.",
@@ -154,8 +164,30 @@ export function validateConvexConstraints(
   config: Partial<ProjectConfig>,
   providedFlags: Set<string>,
 ) {
-  const { backend } = config;
+  const { backend, database } = config;
 
+  // Validate Convex as database-only mode (database=convex with non-convex backend)
+  if (database === "convex" && backend !== "convex") {
+    const has = (k: string) => providedFlags.has(k);
+
+    // Convex database requires ORM to be none (Convex has its own schema system)
+    if (has("orm") && config.orm !== "none") {
+      exitWithError(
+        "Convex database has its own schema system. Please use '--orm none' with '--database convex'.",
+      );
+    }
+
+    // Convex database handles its own setup
+    if (has("dbSetup") && config.dbSetup !== "none") {
+      exitWithError(
+        "Convex database handles its own setup. Please use '--db-setup none' with '--database convex'.",
+      );
+    }
+
+    return;
+  }
+
+  // Validate full Convex backend mode
   if (backend !== "convex") {
     return;
   }
@@ -168,9 +200,10 @@ export function validateConvexConstraints(
     );
   }
 
-  if (has("database") && config.database !== "none") {
+  // Convex backend forces database to "convex"
+  if (has("database") && config.database !== "convex") {
     exitWithError(
-      "Convex backend requires '--database none'. Please remove the --database flag or set it to 'none'.",
+      "Convex backend uses Convex as database. Please use '--database convex' or remove the --database flag.",
     );
   }
 

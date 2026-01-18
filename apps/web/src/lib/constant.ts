@@ -284,6 +284,13 @@ export const TECH_OPTIONS: Record<
       color: "from-green-400 to-green-600",
     },
     {
+      id: "convex",
+      name: "Convex",
+      description: "Reactive database with realtime sync (database-only)",
+      icon: `${ICON_BASE_URL}/convex.svg`,
+      color: "from-pink-400 to-pink-600",
+    },
+    {
       id: "none",
       name: "No Database",
       description: "Skip database integration",

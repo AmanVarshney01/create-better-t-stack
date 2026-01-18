@@ -188,8 +188,8 @@ export function isExampleTodoAllowed(
   database?: ProjectConfig["database"],
   api?: API,
 ) {
-  // Convex handles its own data layer, no need for database or API
-  if (backend === "convex") return true;
+  // Convex backend or Convex database handles its own data layer
+  if (backend === "convex" || database === "convex") return true;
   // Todo requires both database and API to communicate
   if (database === "none" || api === "none") return false;
   return true;
@@ -304,9 +304,7 @@ export function validatePaymentsCompatibility(
           "Polar payments requires authentication. Please use '--auth better-auth' or '--auth clerk'.",
         );
       } else {
-        exitWithError(
-          "Polar payments requires Better Auth. Please use '--auth better-auth'.",
-        );
+        exitWithError("Polar payments requires Better Auth. Please use '--auth better-auth'.");
       }
     }
 
@@ -333,6 +331,30 @@ export function validatePaymentsCompatibility(
   }
 }
 
+export function validateConvexDatabaseCompatibility(
+  providedFlags: Set<string>,
+  options: CLIInput,
+  config: Partial<ProjectConfig>,
+) {
+  const database = config.database || options.database;
+  const orm = config.orm || options.orm;
+  const dbSetup = config.dbSetup || options.dbSetup;
+
+  // Convex database requires ORM to be none (Convex has its own schema system)
+  if (database === "convex" && orm && orm !== "none") {
+    exitWithError(
+      "Convex database has its own schema system and doesn't use traditional ORMs. Please use '--orm none' with '--database convex'.",
+    );
+  }
+
+  // Convex database handles its own setup
+  if (database === "convex" && dbSetup && dbSetup !== "none") {
+    exitWithError(
+      "Convex database handles its own setup through the Convex dashboard. Please use '--db-setup none' with '--database convex'.",
+    );
+  }
+}
+
 export function validateExamplesCompatibility(
   examples: string[] | undefined,
   backend: ProjectConfig["backend"] | undefined,
@@ -342,7 +364,9 @@ export function validateExamplesCompatibility(
 ) {
   const examplesArr = examples ?? [];
   if (examplesArr.length === 0 || examplesArr.includes("none")) return;
-  if (examplesArr.includes("todo") && backend !== "convex") {
+
+  // Todo example works with Convex backend OR Convex database
+  if (examplesArr.includes("todo") && backend !== "convex" && database !== "convex") {
     if (database === "none") {
       exitWithError(
         "The 'todo' example requires a database. Cannot use --examples todo when database is 'none'.",

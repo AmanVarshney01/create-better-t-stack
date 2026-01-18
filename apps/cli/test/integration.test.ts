@@ -95,7 +95,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         projectName: "convex-clerk-app",
         backend: "convex",
         runtime: "none",
-        database: "none",
+        database: "convex",
         orm: "none",
         auth: "clerk",
         api: "none",
@@ -116,7 +116,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         projectName: "convex-ai-react-app",
         backend: "convex",
         runtime: "none",
-        database: "none",
+        database: "convex",
         orm: "none",
         auth: "better-auth",
         api: "none",
@@ -137,7 +137,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         projectName: "convex-ai-next-app",
         backend: "convex",
         runtime: "none",
-        database: "none",
+        database: "convex",
         orm: "none",
         auth: "better-auth",
         api: "none",
@@ -397,7 +397,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         projectName: "clerk-svelte-fail",
         backend: "convex",
         runtime: "none",
-        database: "none",
+        database: "convex",
         orm: "none",
         auth: "clerk",
         api: "none",
@@ -460,7 +460,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         projectName: "convex-ai-svelte-fail",
         backend: "convex",
         runtime: "none",
-        database: "none",
+        database: "convex",
         orm: "none",
         auth: "none",
         api: "none",
@@ -610,7 +610,7 @@ describe("Integration Tests - Real World Scenarios", () => {
 
         // Set appropriate defaults
         if (backend === "convex") {
-          config.database = "none";
+          config.database = "convex";
           config.orm = "none";
           config.auth = "clerk";
           config.api = "none";

@@ -29,7 +29,8 @@ export async function getORMChoice(
   backend?: Backend,
   runtime?: Runtime,
 ) {
-  if (backend === "convex") {
+  // Convex backend or Convex database doesn't need traditional ORM
+  if (backend === "convex" || database === "convex") {
     return "none";
   }
 

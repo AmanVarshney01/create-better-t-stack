@@ -107,7 +107,7 @@ describe("Authentication Configurations", () => {
         auth: "better-auth",
         backend: "convex",
         runtime: "none",
-        database: "none",
+        database: "convex",
         orm: "none",
         api: "none",
         frontend: ["tanstack-router"],
@@ -172,7 +172,7 @@ describe("Authentication Configurations", () => {
         auth: "clerk",
         backend: "convex",
         runtime: "none",
-        database: "none",
+        database: "convex",
         orm: "none",
         api: "none",
         frontend: ["tanstack-router"],
@@ -225,7 +225,7 @@ describe("Authentication Configurations", () => {
           auth: "clerk",
           backend: "convex",
           runtime: "none",
-          database: "none",
+          database: "convex",
           webDeploy: "none",
           serverDeploy: "none",
           addons: ["turborepo"],
@@ -250,7 +250,7 @@ describe("Authentication Configurations", () => {
           auth: "clerk",
           backend: "convex",
           runtime: "none",
-          database: "none",
+          database: "convex",
           orm: "none",
           api: "none",
           frontend: [frontend as Frontend],
@@ -317,7 +317,7 @@ describe("Authentication Configurations", () => {
         auth: "none",
         backend: "convex",
         runtime: "none",
-        database: "none",
+        database: "convex",
         orm: "none",
         api: "none",
         frontend: ["tanstack-router"],
@@ -424,7 +424,7 @@ describe("Authentication Configurations", () => {
         if (auth === "clerk") {
           config.backend = "convex";
           config.runtime = "none";
-          config.database = "none";
+          config.database = "convex";
           config.orm = "none";
           config.api = "none";
         } else if (auth === "better-auth") {

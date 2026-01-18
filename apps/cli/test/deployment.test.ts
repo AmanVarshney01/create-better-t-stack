@@ -256,7 +256,7 @@ describe("Deployment Configurations", () => {
         serverDeploy: "cloudflare",
         backend: "convex",
         runtime: "none",
-        database: "none",
+        database: "convex",
         orm: "none",
         auth: "clerk",
         api: "none",

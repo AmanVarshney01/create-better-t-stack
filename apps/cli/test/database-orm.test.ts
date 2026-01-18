@@ -176,7 +176,7 @@ describe("Database and ORM Combinations", () => {
     it("should work with auth but no database (convex backend)", async () => {
       const result = await runTRPCTest({
         projectName: "convex-auth-no-db",
-        database: "none",
+        database: "convex",
         orm: "none",
         auth: "none",
         backend: "convex",

@@ -43,7 +43,7 @@ describe("Backend and Runtime Combinations", () => {
 
         // Set appropriate defaults based on backend
         if (backend === "convex") {
-          config.database = "none";
+          config.database = "convex";
           config.orm = "none";
           config.auth = "clerk";
           config.api = "none";
@@ -183,7 +183,7 @@ describe("Backend and Runtime Combinations", () => {
 
         // Set appropriate defaults based on backend
         if (backend === "convex") {
-          config.database = "none";
+          config.database = "convex";
           config.orm = "none";
           config.auth = "clerk";
           config.api = "none";
@@ -216,7 +216,7 @@ describe("Backend and Runtime Combinations", () => {
         projectName: "convex-app",
         backend: "convex",
         runtime: "none",
-        database: "none",
+        database: "convex",
         orm: "none",
         auth: "clerk",
         api: "none",
@@ -237,7 +237,7 @@ describe("Backend and Runtime Combinations", () => {
         projectName: "convex-better-auth-success",
         backend: "convex",
         runtime: "none",
-        database: "none",
+        database: "convex",
         orm: "none",
         auth: "better-auth",
         api: "none",
@@ -252,7 +252,7 @@ describe("Backend and Runtime Combinations", () => {
       expectSuccess(result);
     });
 
-    it("should fail convex with database", async () => {
+    it("should fail convex with non-convex database", async () => {
       const result = await runTRPCTest({
         projectName: "convex-with-db",
         backend: "convex",
@@ -270,7 +270,10 @@ describe("Backend and Runtime Combinations", () => {
         expectError: true,
       });
 
-      expectError(result, "Convex backend requires '--database none'");
+      expectError(
+        result,
+        "Convex backend uses Convex as database. Please use '--database convex' or remove the --database flag.",
+      );
     });
   });
 
@@ -363,7 +366,7 @@ describe("Backend and Runtime Combinations", () => {
         switch (backend) {
           case "convex":
             config.runtime = "none";
-            config.database = "none";
+            config.database = "convex";
             config.orm = "none";
             config.auth = "clerk";
             config.api = "none";

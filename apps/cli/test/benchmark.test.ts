@@ -327,7 +327,7 @@ describe("CLI Performance Benchmarks", () => {
         frontend: ["tanstack-router"],
         backend: "convex",
         runtime: "none",
-        database: "none",
+        database: "convex",
         orm: "none",
         auth: "none",
         api: "none",
