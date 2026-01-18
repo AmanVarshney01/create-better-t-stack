@@ -17,8 +17,12 @@ export const queryClient = new QueryClient({
 });
 
 export const link = new RPCLink({
-{{#if (and (eq backend "self") (not (includes frontend "astro")))}}
+{{#if (eq backend "self")}}
+{{#unless (includes frontend "astro")}}
 	url: `${env.EXPO_PUBLIC_SERVER_URL}/api/rpc`,
+{{else}}
+	url: `${env.EXPO_PUBLIC_SERVER_URL}/rpc`,
+{{/unless}}
 {{else}}
 	url: `${env.EXPO_PUBLIC_SERVER_URL}/rpc`,
 {{/if}}
