@@ -56,7 +56,7 @@ export async function createProject(
         result.mapError(
           (e) =>
             new ProjectCreationError({
-              phase: "template-generation",
+              phase: e.phase || "template-generation",
               message: e.message,
               cause: e,
             }),

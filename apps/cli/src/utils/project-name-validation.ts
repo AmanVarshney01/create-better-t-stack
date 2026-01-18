@@ -23,7 +23,6 @@ export function validateProjectName(name: string): ValidationResult<void> {
 export function extractAndValidateProjectName(
   projectName?: string,
   projectDirectory?: string,
-  _throwOnError = false,
 ): ValidationResult<string> {
   const derivedName =
     projectName ||

@@ -62,7 +62,6 @@ export function processAndValidateFlags(
     const validatedProjectNameResult = extractAndValidateProjectName(
       projectName,
       options.projectDirectory,
-      true,
     );
     if (validatedProjectNameResult.isOk() && validatedProjectNameResult.value) {
       cfg.projectName = validatedProjectNameResult.value;
@@ -90,7 +89,6 @@ export function processAndValidateFlags(
   const validatedProjectNameResult = extractAndValidateProjectName(
     projectName,
     options.projectDirectory,
-    false,
   );
   if (validatedProjectNameResult.isErr()) {
     return Result.err(validatedProjectNameResult.error);
@@ -124,7 +122,6 @@ export function processProvidedFlagsWithoutValidation(
   const validatedProjectNameResult = extractAndValidateProjectName(
     projectName,
     options.projectDirectory,
-    true,
   );
   if (validatedProjectNameResult.isErr()) {
     return Result.err(validatedProjectNameResult.error);
