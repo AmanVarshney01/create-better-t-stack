@@ -80,59 +80,65 @@ ${configContent}`;
   });
 }
 
-export async function readBtsConfig(projectDir: string) {
-  try {
-    const configPath = path.join(projectDir, BTS_CONFIG_FILE);
+export async function readBtsConfig(projectDir: string): Promise<BetterTStackConfig | null> {
+  const result = await Result.tryPromise({
+    try: async () => {
+      const configPath = path.join(projectDir, BTS_CONFIG_FILE);
 
-    if (!(await fs.pathExists(configPath))) {
-      return null;
-    }
+      if (!(await fs.pathExists(configPath))) {
+        return null;
+      }
 
-    const configContent = await fs.readFile(configPath, "utf-8");
+      const configContent = await fs.readFile(configPath, "utf-8");
 
-    const errors: JSONC.ParseError[] = [];
-    const config = JSONC.parse(configContent, errors, {
-      allowTrailingComma: true,
-      disallowComments: false,
-    }) as BetterTStackConfig;
+      const errors: JSONC.ParseError[] = [];
+      const config = JSONC.parse(configContent, errors, {
+        allowTrailingComma: true,
+        disallowComments: false,
+      }) as BetterTStackConfig;
 
-    if (errors.length > 0) {
-      console.warn("Warning: Found errors parsing bts.jsonc:", errors);
-      return null;
-    }
+      if (errors.length > 0) {
+        console.warn("Warning: Found errors parsing bts.jsonc:", errors);
+        return null;
+      }
 
-    return config;
-  } catch {
-    return null;
-  }
+      return config;
+    },
+    catch: () => null,
+  });
+
+  return result.isOk() ? result.value : null;
 }
 
 export async function updateBtsConfig(
   projectDir: string,
   updates: Partial<Pick<BetterTStackConfig, "addons" | "webDeploy" | "serverDeploy">>,
-) {
-  try {
-    const configPath = path.join(projectDir, BTS_CONFIG_FILE);
+): Promise<void> {
+  await Result.tryPromise({
+    try: async () => {
+      const configPath = path.join(projectDir, BTS_CONFIG_FILE);
 
-    if (!(await fs.pathExists(configPath))) {
-      return;
-    }
+      if (!(await fs.pathExists(configPath))) {
+        return;
+      }
 
-    const configContent = await fs.readFile(configPath, "utf-8");
+      const configContent = await fs.readFile(configPath, "utf-8");
 
-    let modifiedContent = configContent;
+      let modifiedContent = configContent;
 
-    for (const [key, value] of Object.entries(updates)) {
-      const editResult = JSONC.modify(modifiedContent, [key], value, {
-        formattingOptions: {
-          tabSize: 2,
-          insertSpaces: true,
-          eol: "\n",
-        },
-      });
-      modifiedContent = JSONC.applyEdits(modifiedContent, editResult);
-    }
+      for (const [key, value] of Object.entries(updates)) {
+        const editResult = JSONC.modify(modifiedContent, [key], value, {
+          formattingOptions: {
+            tabSize: 2,
+            insertSpaces: true,
+            eol: "\n",
+          },
+        });
+        modifiedContent = JSONC.applyEdits(modifiedContent, editResult);
+      }
 
-    await fs.writeFile(configPath, modifiedContent, "utf-8");
-  } catch {}
+      await fs.writeFile(configPath, modifiedContent, "utf-8");
+    },
+    catch: () => undefined, // Silent failure
+  });
 }

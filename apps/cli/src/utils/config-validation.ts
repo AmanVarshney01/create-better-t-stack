@@ -450,7 +450,7 @@ export function validateFullConfig(
     yield* validateWorkersCompatibility(providedFlags, options, config);
 
     if (config.runtime === "workers" && config.serverDeploy === "none") {
-      return validationErr(
+      yield* validationErr(
         "Cloudflare Workers runtime requires a server deployment. Please choose 'alchemy' for --server-deploy.",
       );
     }
@@ -460,7 +460,7 @@ export function validateFullConfig(
       config.serverDeploy === "cloudflare" &&
       config.runtime !== "workers"
     ) {
-      return validationErr(
+      yield* validationErr(
         `Server deployment '${config.serverDeploy}' requires '--runtime workers'. Please use '--runtime workers' or choose a different server deployment.`,
       );
     }

@@ -74,14 +74,9 @@ export function processAndValidateFlags(
     return Result.err(yesFlagResult.error);
   }
 
-  try {
-    validateArrayOptions(options);
-  } catch (error) {
-    return Result.err(
-      new ValidationError({
-        message: error instanceof Error ? error.message : String(error),
-      }),
-    );
+  const arrayOptionsResult = validateArrayOptions(options);
+  if (arrayOptionsResult.isErr()) {
+    return Result.err(arrayOptionsResult.error);
   }
 
   const config = processFlags(options, projectName);

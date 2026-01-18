@@ -1,3 +1,4 @@
+import { Result } from "better-result";
 import { $ } from "execa";
 import os from "node:os";
 import pc from "picocolors";
@@ -10,13 +11,16 @@ export async function isDockerInstalled() {
   return commandExists("docker");
 }
 
-export async function isDockerRunning() {
-  try {
-    await $`docker info`;
-    return true;
-  } catch {
-    return false;
-  }
+export async function isDockerRunning(): Promise<boolean> {
+  const result = await Result.tryPromise({
+    try: async () => {
+      await $`docker info`;
+      return true;
+    },
+    catch: () => false,
+  });
+
+  return result.isOk() ? result.value : false;
 }
 
 export function getDockerInstallInstructions(platform: string, database: Database) {

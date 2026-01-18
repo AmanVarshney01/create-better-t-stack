@@ -1,4 +1,5 @@
 import { isCancel, log, select, spinner } from "@clack/prompts";
+import { Result } from "better-result";
 import fs from "fs-extra";
 import path from "node:path";
 import pc from "picocolors";
@@ -97,16 +98,22 @@ export async function setupProjectDirectory(
   if (shouldClearDirectory) {
     const s = spinner();
     s.start(`Clearing directory "${finalResolvedPath}"...`);
-    try {
-      await fs.emptyDir(finalResolvedPath);
-      s.stop(`Directory "${finalResolvedPath}" cleared.`);
-    } catch (error) {
+
+    const clearResult = await Result.tryPromise({
+      try: () => fs.emptyDir(finalResolvedPath),
+      catch: (error) =>
+        new CLIError({
+          message: `Failed to clear directory "${finalResolvedPath}".`,
+          cause: error,
+        }),
+    });
+
+    if (clearResult.isErr()) {
       s.stop(pc.red(`Failed to clear directory "${finalResolvedPath}".`));
-      throw new CLIError({
-        message: `Failed to clear directory "${finalResolvedPath}".`,
-        cause: error,
-      });
+      throw clearResult.error;
     }
+
+    s.stop(`Directory "${finalResolvedPath}" cleared.`);
   } else {
     await fs.ensureDir(finalResolvedPath);
   }

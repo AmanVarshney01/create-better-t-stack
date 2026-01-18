@@ -154,20 +154,28 @@ async function setPackageManagerVersion(
     return Result.ok(undefined);
   }
 
+  // First, try to get the version
+  const versionResult = await Result.tryPromise({
+    try: async () => {
+      const { stdout } = await $`${packageManager} -v`;
+      return stdout.trim();
+    },
+    catch: () => null, // Return null if we can't get version
+  });
+
+  // Now update the package.json
   return Result.tryPromise({
     try: async () => {
-      try {
-        const { stdout } = await $`${packageManager} -v`;
-        const version = stdout.trim();
-        const pkgJson = await fs.readJson(pkgJsonPath);
-        pkgJson.packageManager = `${packageManager}@${version}`;
-        await fs.writeJson(pkgJsonPath, pkgJson, { spaces: 2 });
-      } catch {
+      const pkgJson = await fs.readJson(pkgJsonPath);
+
+      if (versionResult.isOk() && versionResult.value) {
+        pkgJson.packageManager = `${packageManager}@${versionResult.value}`;
+      } else {
         // If we can't get the version, just remove the packageManager field
-        const pkgJson = await fs.readJson(pkgJsonPath);
         delete pkgJson.packageManager;
-        await fs.writeJson(pkgJsonPath, pkgJson, { spaces: 2 });
       }
+
+      await fs.writeJson(pkgJsonPath, pkgJson, { spaces: 2 });
     },
     catch: (e) =>
       new ProjectCreationError({

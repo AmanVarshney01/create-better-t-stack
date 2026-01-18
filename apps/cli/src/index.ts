@@ -134,19 +134,25 @@ export const router = os.router({
   }),
   docs: os.meta({ description: "Open Better-T-Stack documentation" }).handler(async () => {
     const DOCS_URL = "https://better-t-stack.dev/docs";
-    try {
-      await openUrl(DOCS_URL);
+    const result = await Result.tryPromise({
+      try: () => openUrl(DOCS_URL),
+      catch: () => null,
+    });
+    if (result.isOk()) {
       log.success(pc.blue("Opened docs in your default browser."));
-    } catch {
+    } else {
       log.message(`Please visit ${DOCS_URL}`);
     }
   }),
   builder: os.meta({ description: "Open the web-based stack builder" }).handler(async () => {
     const BUILDER_URL = "https://better-t-stack.dev/new";
-    try {
-      await openUrl(BUILDER_URL);
+    const result = await Result.tryPromise({
+      try: () => openUrl(BUILDER_URL),
+      catch: () => null,
+    });
+    if (result.isOk()) {
       log.success(pc.blue("Opened builder in your default browser."));
-    } catch {
+    } else {
       log.message(`Please visit ${BUILDER_URL}`);
     }
   }),

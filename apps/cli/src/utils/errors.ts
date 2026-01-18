@@ -92,6 +92,19 @@ export class DatabaseSetupError extends TaggedError("DatabaseSetupError")<{
   }
 }
 
+/**
+ * Addon setup error for failures during addon configuration
+ */
+export class AddonSetupError extends TaggedError("AddonSetupError")<{
+  addon: string;
+  message: string;
+  cause?: unknown;
+}>() {
+  constructor(args: { addon: string; message: string; cause?: unknown }) {
+    super(args);
+  }
+}
+
 // ============================================================================
 // Error Type Unions
 // ============================================================================
@@ -106,7 +119,8 @@ export type AppError =
   | CompatibilityError
   | DirectoryConflictError
   | ProjectCreationError
-  | DatabaseSetupError;
+  | DatabaseSetupError
+  | AddonSetupError;
 
 // ============================================================================
 // Result Helper Functions
@@ -174,6 +188,17 @@ export function databaseSetupError(
   cause?: unknown,
 ): Result<never, DatabaseSetupError> {
   return Result.err(new DatabaseSetupError({ provider, message, cause }));
+}
+
+/**
+ * Create an addon setup error Result
+ */
+export function addonSetupError(
+  addon: string,
+  message: string,
+  cause?: unknown,
+): Result<never, AddonSetupError> {
+  return Result.err(new AddonSetupError({ addon, message, cause }));
 }
 
 // ============================================================================

@@ -13,17 +13,20 @@ const formatOptions: FormatOptions = {
 };
 
 export async function formatCode(filePath: string, content: string): Promise<string | null> {
-  try {
-    const result = await format(path.basename(filePath), content, formatOptions);
+  const result = await Result.tryPromise({
+    try: async () => {
+      const formatResult = await format(path.basename(filePath), content, formatOptions);
 
-    if (result.errors && result.errors.length > 0) {
-      return null;
-    }
+      if (formatResult.errors && formatResult.errors.length > 0) {
+        return null;
+      }
 
-    return result.code;
-  } catch {
-    return null;
-  }
+      return formatResult.code;
+    },
+    catch: () => null,
+  });
+
+  return result.isOk() ? result.value : null;
 }
 
 export async function formatProject(
@@ -41,15 +44,18 @@ export async function formatProject(
             if (entry.isDirectory()) {
               await formatDirectory(fullPath);
             } else if (entry.isFile()) {
-              try {
-                const content = await fs.readFile(fullPath, "utf-8");
-                const formatted = await formatCode(fullPath, content);
-                if (formatted && formatted !== content) {
-                  await fs.writeFile(fullPath, formatted, "utf-8");
-                }
-              } catch {
-                // Ignore individual file formatting errors
-              }
+              const fileResult = await Result.tryPromise({
+                try: async () => {
+                  const content = await fs.readFile(fullPath, "utf-8");
+                  const formatted = await formatCode(fullPath, content);
+                  if (formatted && formatted !== content) {
+                    await fs.writeFile(fullPath, formatted, "utf-8");
+                  }
+                },
+                catch: () => undefined, // Ignore individual file formatting errors
+              });
+              // Result is intentionally unused - we silently ignore errors
+              void fileResult;
             }
           }),
         );
