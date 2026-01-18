@@ -16,6 +16,14 @@ export function displayConfig(config: Partial<ProjectConfig>) {
     configDisplay.push(`${pc.blue("Frontend:")} ${frontendText}`);
   }
 
+  if (config.uiLibrary !== undefined) {
+    configDisplay.push(`${pc.blue("UI Library:")} ${String(config.uiLibrary)}`);
+  }
+
+  if (config.cssFramework !== undefined) {
+    configDisplay.push(`${pc.blue("CSS Framework:")} ${String(config.cssFramework)}`);
+  }
+
   if (config.backend !== undefined) {
     configDisplay.push(`${pc.blue("Backend:")} ${String(config.backend)}`);
   }
@@ -42,6 +50,10 @@ export function displayConfig(config: Partial<ProjectConfig>) {
 
   if (config.payments !== undefined) {
     configDisplay.push(`${pc.blue("Payments:")} ${String(config.payments)}`);
+  }
+
+  if (config.effect !== undefined) {
+    configDisplay.push(`${pc.blue("Effect:")} ${String(config.effect)}`);
   }
 
   if (config.addons !== undefined) {

@@ -8,8 +8,11 @@ import { processApiDeps } from "./api-deps";
 import { processAuthDeps } from "./auth-deps";
 import { processAuthPlugins } from "./auth-plugins";
 import { processBackendDeps } from "./backend-deps";
+import { processCSSAndUILibraryDeps } from "./css-ui-deps";
 import { processDatabaseDeps } from "./db-deps";
 import { processDeployDeps } from "./deploy-deps";
+import { processEffectDeps } from "./effect-deps";
+import { processEmailDeps } from "./email-deps";
 import { processEnvDeps } from "./env-deps";
 import { processEnvVariables } from "./env-vars";
 import { processExamplesDeps } from "./examples-deps";
@@ -31,9 +34,12 @@ export function processDependencies(vfs: VirtualFileSystem, config: ProjectConfi
   processApiDeps(vfs, config);
   processAuthDeps(vfs, config);
   processPaymentsDeps(vfs, config);
+  processEmailDeps(vfs, config);
   processDeployDeps(vfs, config);
   processAddonsDeps(vfs, config);
   processExamplesDeps(vfs, config);
+  processEffectDeps(vfs, config);
+  processCSSAndUILibraryDeps(vfs, config);
   processTurboConfig(vfs, config);
 }
 
@@ -42,8 +48,11 @@ export {
   processApiDeps,
   processAuthDeps,
   processBackendDeps,
+  processCSSAndUILibraryDeps,
   processDatabaseDeps,
   processDeployDeps,
+  processEffectDeps,
+  processEmailDeps,
   processEnvDeps,
   processExamplesDeps,
   processInfraDeps,

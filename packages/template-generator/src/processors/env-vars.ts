@@ -335,6 +335,7 @@ function buildServerVars(
   webDeploy: ProjectConfig["webDeploy"],
   serverDeploy: ProjectConfig["serverDeploy"],
   payments: ProjectConfig["payments"],
+  email: ProjectConfig["email"],
   examples: ProjectConfig["examples"],
 ): EnvVariable[] {
   const hasReactRouter = frontend.includes("react-router");
@@ -391,6 +392,18 @@ function buildServerVars(
       condition: payments === "polar",
     },
     {
+      key: "RESEND_API_KEY",
+      value: "",
+      condition: email === "resend",
+      comment: "Resend API key - get it at https://resend.com",
+    },
+    {
+      key: "RESEND_FROM_EMAIL",
+      value: "onboarding@resend.dev",
+      condition: email === "resend",
+      comment: "Email address to send from (must be verified in Resend)",
+    },
+    {
       key: "CORS_ORIGIN",
       value: corsOrigin,
       condition: true,
@@ -414,6 +427,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     frontend,
     database,
     auth,
+    email,
     examples,
     dbSetup,
     webDeploy,
@@ -503,6 +517,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     webDeploy,
     serverDeploy,
     payments,
+    email,
     examples,
   );
 

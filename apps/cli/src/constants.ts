@@ -1,6 +1,8 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import type { CSSFramework, Frontend, UILibrary } from "./types";
+
 import { getUserPkgManager } from "./utils/get-package-manager";
 
 // Re-export from template-generator (single source of truth)
@@ -21,6 +23,8 @@ export const DEFAULT_CONFIG_BASE = {
   orm: "drizzle",
   auth: "better-auth",
   payments: "none",
+  email: "none",
+  effect: "none",
   addons: ["turborepo"],
   examples: [],
   git: true,
@@ -31,6 +35,8 @@ export const DEFAULT_CONFIG_BASE = {
   api: "trpc",
   webDeploy: "none",
   serverDeploy: "none",
+  cssFramework: "tailwind",
+  uiLibrary: "shadcn-ui",
 } as const;
 
 export function getDefaultConfig() {
@@ -61,4 +67,86 @@ export const ADDON_COMPATIBILITY = {
   opentui: [],
   wxt: [],
   none: [],
+} as const;
+
+/**
+ * UI Library compatibility rules
+ * Defines which frontends and CSS frameworks each UI library supports
+ */
+export const UI_LIBRARY_COMPATIBILITY: Record<
+  UILibrary,
+  {
+    frontends: readonly Frontend[];
+    cssFrameworks: readonly CSSFramework[];
+  }
+> = {
+  "shadcn-ui": {
+    frontends: ["tanstack-router", "react-router", "tanstack-start", "next"],
+    cssFrameworks: ["tailwind"],
+  },
+  daisyui: {
+    frontends: [
+      "tanstack-router",
+      "react-router",
+      "tanstack-start",
+      "next",
+      "nuxt",
+      "svelte",
+      "solid",
+      "astro",
+    ],
+    cssFrameworks: ["tailwind"],
+  },
+  "radix-ui": {
+    frontends: ["tanstack-router", "react-router", "tanstack-start", "next"],
+    cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
+  },
+  "headless-ui": {
+    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "nuxt"],
+    cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
+  },
+  "park-ui": {
+    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "nuxt", "solid"],
+    cssFrameworks: ["tailwind", "scss", "less", "postcss-only"],
+  },
+  "chakra-ui": {
+    frontends: ["tanstack-router", "react-router", "tanstack-start", "next"],
+    cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
+  },
+  nextui: {
+    frontends: ["tanstack-router", "react-router", "tanstack-start", "next"],
+    cssFrameworks: ["tailwind"],
+  },
+  none: {
+    frontends: [
+      "tanstack-router",
+      "react-router",
+      "tanstack-start",
+      "next",
+      "nuxt",
+      "svelte",
+      "solid",
+      "astro",
+    ],
+    cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
+  },
+} as const;
+
+/**
+ * Default UI library for each frontend framework
+ * Falls back based on what's compatible
+ */
+export const DEFAULT_UI_LIBRARY_BY_FRONTEND: Record<Frontend, UILibrary> = {
+  "tanstack-router": "shadcn-ui",
+  "react-router": "shadcn-ui",
+  "tanstack-start": "shadcn-ui",
+  next: "shadcn-ui",
+  nuxt: "daisyui",
+  svelte: "daisyui",
+  solid: "daisyui",
+  astro: "daisyui",
+  "native-bare": "none",
+  "native-uniwind": "none",
+  "native-unistyles": "none",
+  none: "none",
 } as const;

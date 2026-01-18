@@ -86,6 +86,47 @@ export const WebDeploySchema = z.enum(["cloudflare", "none"]).describe("Web depl
 
 export const ServerDeploySchema = z.enum(["cloudflare", "none"]).describe("Server deployment");
 
+export const AISchema = z.enum(["vercel-ai", "langchain", "llamaindex", "none"]).describe("AI SDK");
+
+export const EffectSchema = z
+  .enum(["effect", "effect-full", "none"])
+  .describe(
+    "Effect ecosystem (effect-full includes @effect/schema, @effect/platform, @effect/sql)",
+  );
+
+export const StateManagementSchema = z
+  .enum(["zustand", "jotai", "nanostores", "none"])
+  .describe("State management library");
+
+export const FormsSchema = z
+  .enum(["tanstack-form", "react-hook-form", "none"])
+  .describe("Form handling library");
+
+export const TestingSchema = z
+  .enum(["vitest", "playwright", "vitest-playwright", "none"])
+  .describe("Testing framework (vitest-playwright includes both unit and e2e testing)");
+
+export const EmailSchema = z
+  .enum(["react-email", "resend", "none"])
+  .describe("Email solution (resend includes react-email)");
+
+export const CSSFrameworkSchema = z
+  .enum(["tailwind", "scss", "less", "postcss-only", "none"])
+  .describe("CSS framework/preprocessor");
+
+export const UILibrarySchema = z
+  .enum([
+    "shadcn-ui",
+    "daisyui",
+    "radix-ui",
+    "headless-ui",
+    "park-ui",
+    "chakra-ui",
+    "nextui",
+    "none",
+  ])
+  .describe("UI component library");
+
 export const DirectoryConflictSchema = z
   .enum(["merge", "overwrite", "increment", "error"])
   .describe("How to handle existing directory conflicts");
@@ -137,6 +178,14 @@ export const CreateInputSchema = z.object({
   disableAnalytics: z.boolean().optional(),
   manualDb: z.boolean().optional(),
   astroIntegration: AstroIntegrationSchema.optional(),
+  ai: AISchema.optional(),
+  effect: EffectSchema.optional(),
+  stateManagement: StateManagementSchema.optional(),
+  forms: FormsSchema.optional(),
+  testing: TestingSchema.optional(),
+  email: EmailSchema.optional(),
+  cssFramework: CSSFrameworkSchema.optional(),
+  uiLibrary: UILibrarySchema.optional(),
 });
 
 export const AddInputSchema = z.object({
@@ -173,6 +222,14 @@ export const ProjectConfigSchema = z.object({
   webDeploy: WebDeploySchema,
   serverDeploy: ServerDeploySchema,
   astroIntegration: AstroIntegrationSchema.optional(),
+  ai: AISchema,
+  effect: EffectSchema,
+  stateManagement: StateManagementSchema,
+  forms: FormsSchema,
+  testing: TestingSchema,
+  email: EmailSchema,
+  cssFramework: CSSFrameworkSchema,
+  uiLibrary: UILibrarySchema,
 });
 
 export const BetterTStackConfigSchema = z.object({
@@ -193,6 +250,14 @@ export const BetterTStackConfigSchema = z.object({
   webDeploy: WebDeploySchema,
   serverDeploy: ServerDeploySchema,
   astroIntegration: AstroIntegrationSchema.optional(),
+  ai: AISchema,
+  effect: EffectSchema,
+  stateManagement: StateManagementSchema,
+  forms: FormsSchema,
+  testing: TestingSchema,
+  email: EmailSchema,
+  cssFramework: CSSFrameworkSchema,
+  uiLibrary: UILibrarySchema,
 });
 
 export const BetterTStackConfigFileSchema = z
@@ -234,3 +299,11 @@ export const SERVER_DEPLOY_VALUES = ServerDeploySchema.options;
 export const DIRECTORY_CONFLICT_VALUES = DirectoryConflictSchema.options;
 export const TEMPLATE_VALUES = TemplateSchema.options;
 export const ASTRO_INTEGRATION_VALUES = AstroIntegrationSchema.options;
+export const AI_VALUES = AISchema.options;
+export const EFFECT_VALUES = EffectSchema.options;
+export const STATE_MANAGEMENT_VALUES = StateManagementSchema.options;
+export const FORMS_VALUES = FormsSchema.options;
+export const TESTING_VALUES = TestingSchema.options;
+export const EMAIL_VALUES = EmailSchema.options;
+export const CSS_FRAMEWORK_VALUES = CSSFrameworkSchema.options;
+export const UI_LIBRARY_VALUES = UILibrarySchema.options;

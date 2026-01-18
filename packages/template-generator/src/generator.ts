@@ -21,6 +21,7 @@ import {
   processEnvPackage,
   processAuthTemplates,
   processPaymentsTemplates,
+  processEmailTemplates,
   processAddonTemplates,
   processExampleTemplates,
   processExtrasTemplates,
@@ -51,6 +52,7 @@ export async function generateVirtualProject(options: GeneratorOptions): Promise
     await processEnvPackage(vfs, templates, config);
     await processAuthTemplates(vfs, templates, config);
     await processPaymentsTemplates(vfs, templates, config);
+    await processEmailTemplates(vfs, templates, config);
     await processAddonTemplates(vfs, templates, config);
     await processExampleTemplates(vfs, templates, config);
     await processExtrasTemplates(vfs, templates, config);

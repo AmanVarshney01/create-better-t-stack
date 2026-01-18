@@ -9,6 +9,8 @@ import {
   validatePaymentsCompatibility,
   validateSelfBackendCompatibility,
   validateServerDeployRequiresBackend,
+  validateUILibraryCSSFrameworkCompatibility,
+  validateUILibraryFrontendCompatibility,
   validateWebDeployRequiresWebFrontend,
   validateWorkersCompatibility,
 } from "./compatibility-rules";
@@ -438,6 +440,9 @@ export function validateFullConfig(
     config.backend,
     config.frontend ?? [],
   );
+
+  validateUILibraryFrontendCompatibility(config.uiLibrary, config.frontend ?? []);
+  validateUILibraryCSSFrameworkCompatibility(config.uiLibrary, config.cssFramework);
 }
 
 export function validateConfigForProgrammaticUse(config: Partial<ProjectConfig>) {
@@ -463,6 +468,9 @@ export function validateConfigForProgrammaticUse(config: Partial<ProjectConfig>)
       config.frontend ?? [],
       config.api,
     );
+
+    validateUILibraryFrontendCompatibility(config.uiLibrary, config.frontend ?? []);
+    validateUILibraryCSSFrameworkCompatibility(config.uiLibrary, config.cssFramework);
   } catch (error) {
     if (error instanceof Error) {
       throw error;

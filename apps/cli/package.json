@@ -62,6 +62,7 @@
   "scripts": {
     "build": "tsdown --publint",
     "dev": "tsdown --watch",
+    "lint": "oxlint . && tsc --noEmit",
     "check-types": "tsc --noEmit",
     "test": "bun run build && bun test",
     "test:watch": "bun run build && bun test --watch",

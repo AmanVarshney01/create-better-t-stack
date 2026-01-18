@@ -1,12 +1,16 @@
+{{#if (eq cssFramework "tailwind")}}
 @import 'tailwindcss';
 @import 'tw-animate-css';
+{{#if (eq uiLibrary "shadcn-ui")}}
 @import 'shadcn/tailwind.css';
+{{/if}}
 {{#if (includes examples "ai")}}
 @source "../node_modules/streamdown/dist/*.js";
 {{/if}}
 
 @custom-variant dark (&:is(.dark *));
 
+{{#if (eq uiLibrary "shadcn-ui")}}
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -129,3 +133,43 @@
     @apply font-sans;
   }
 }
+{{else}}
+/* Basic Tailwind setup without shadcn-ui theme */
+@layer base {
+  body {
+    font-family: 'Inter Variable', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+{{/if}}
+{{else}}
+/* Non-Tailwind CSS framework styles */
+:root {
+  --color-background: #ffffff;
+  --color-foreground: #1a1a1a;
+  --color-primary: #3b82f6;
+  --color-secondary: #64748b;
+}
+
+.dark {
+  --color-background: #1a1a1a;
+  --color-foreground: #fafafa;
+  --color-primary: #60a5fa;
+  --color-secondary: #94a3b8;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter Variable', system-ui, sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+{{/if}}

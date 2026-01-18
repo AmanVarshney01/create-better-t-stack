@@ -1,110 +1,85 @@
-"use client";
-import { parseAsArrayOf, parseAsString, parseAsStringEnum, useQueryStates } from "nuqs";
+import { useSearch } from "@tanstack/react-router";
+import { useCallback, useState, useEffect, useRef } from "react";
 
-import { DEFAULT_STACK, type StackState, TECH_OPTIONS } from "@/lib/constant";
+import { DEFAULT_STACK, type StackState } from "@/lib/constant";
 
-import { stackUrlKeys } from "./stack-url-keys";
+import type { StackSearchParams } from "./stack-search-schema";
 
-const getValidIds = (category: keyof typeof TECH_OPTIONS): string[] => {
-  return TECH_OPTIONS[category]?.map((opt) => opt.id) ?? [];
-};
+// Convert from URL search params (short keys) to StackState
+function searchToStack(search: StackSearchParams | undefined): StackState {
+  if (!search) return DEFAULT_STACK;
 
-export const stackParsers = {
-  projectName: parseAsString.withDefault(DEFAULT_STACK.projectName ?? "my-better-t-app"),
-  webFrontend: parseAsArrayOf(parseAsString).withDefault(DEFAULT_STACK.webFrontend),
-  nativeFrontend: parseAsArrayOf(parseAsString).withDefault(DEFAULT_STACK.nativeFrontend),
-  astroIntegration: parseAsStringEnum<StackState["astroIntegration"]>(
-    getValidIds("astroIntegration"),
-  ).withDefault(DEFAULT_STACK.astroIntegration),
-  runtime: parseAsStringEnum<StackState["runtime"]>(getValidIds("runtime")).withDefault(
-    DEFAULT_STACK.runtime,
-  ),
-  backend: parseAsStringEnum<StackState["backend"]>(getValidIds("backend")).withDefault(
-    DEFAULT_STACK.backend,
-  ),
-  api: parseAsStringEnum<StackState["api"]>(getValidIds("api")).withDefault(DEFAULT_STACK.api),
-  database: parseAsStringEnum<StackState["database"]>(getValidIds("database")).withDefault(
-    DEFAULT_STACK.database,
-  ),
-  orm: parseAsStringEnum<StackState["orm"]>(getValidIds("orm")).withDefault(DEFAULT_STACK.orm),
-  dbSetup: parseAsStringEnum<StackState["dbSetup"]>(getValidIds("dbSetup")).withDefault(
-    DEFAULT_STACK.dbSetup,
-  ),
-  auth: parseAsStringEnum<StackState["auth"]>(getValidIds("auth")).withDefault(DEFAULT_STACK.auth),
-  payments: parseAsStringEnum<StackState["payments"]>(getValidIds("payments")).withDefault(
-    DEFAULT_STACK.payments,
-  ),
-  packageManager: parseAsStringEnum<StackState["packageManager"]>(
-    getValidIds("packageManager"),
-  ).withDefault(DEFAULT_STACK.packageManager),
-  addons: parseAsArrayOf(parseAsString).withDefault(DEFAULT_STACK.addons),
-  examples: parseAsArrayOf(parseAsString).withDefault(DEFAULT_STACK.examples),
-  git: parseAsStringEnum<StackState["git"]>(["true", "false"]).withDefault(DEFAULT_STACK.git),
-  install: parseAsStringEnum<StackState["install"]>(["true", "false"]).withDefault(
-    DEFAULT_STACK.install,
-  ),
-  webDeploy: parseAsStringEnum<StackState["webDeploy"]>(getValidIds("webDeploy")).withDefault(
-    DEFAULT_STACK.webDeploy,
-  ),
-  serverDeploy: parseAsStringEnum<StackState["serverDeploy"]>(
-    getValidIds("serverDeploy"),
-  ).withDefault(DEFAULT_STACK.serverDeploy),
-  yolo: parseAsStringEnum<StackState["yolo"]>(["true", "false"]).withDefault(DEFAULT_STACK.yolo),
-  viewMode: parseAsStringEnum<"command" | "preview">(["command", "preview"]).withDefault("command"),
-  selectedFile: parseAsString.withDefault(""),
-};
-
-export const stackQueryStatesOptions = {
-  history: "replace" as const,
-  shallow: false,
-  urlKeys: stackUrlKeys,
-  clearOnDefault: true,
-};
+  return {
+    projectName: search.name ?? DEFAULT_STACK.projectName,
+    webFrontend: search["fe-w"] ?? DEFAULT_STACK.webFrontend,
+    nativeFrontend: search["fe-n"] ?? DEFAULT_STACK.nativeFrontend,
+    astroIntegration: search.ai ?? DEFAULT_STACK.astroIntegration,
+    cssFramework: search.css ?? DEFAULT_STACK.cssFramework,
+    uiLibrary: search.ui ?? DEFAULT_STACK.uiLibrary,
+    runtime: search.rt ?? DEFAULT_STACK.runtime,
+    backend: search.be ?? DEFAULT_STACK.backend,
+    api: search.api ?? DEFAULT_STACK.api,
+    database: search.db ?? DEFAULT_STACK.database,
+    orm: search.orm ?? DEFAULT_STACK.orm,
+    dbSetup: search.dbs ?? DEFAULT_STACK.dbSetup,
+    auth: search.au ?? DEFAULT_STACK.auth,
+    payments: search.pay ?? DEFAULT_STACK.payments,
+    backendLibraries: search.bl ?? DEFAULT_STACK.backendLibraries,
+    codeQuality: search.cq ?? DEFAULT_STACK.codeQuality,
+    documentation: search.doc ?? DEFAULT_STACK.documentation,
+    appPlatforms: search.ap ?? DEFAULT_STACK.appPlatforms,
+    packageManager: search.pm ?? DEFAULT_STACK.packageManager,
+    examples: search.ex ?? DEFAULT_STACK.examples,
+    git: search.git ?? DEFAULT_STACK.git,
+    install: search.i ?? DEFAULT_STACK.install,
+    webDeploy: search.wd ?? DEFAULT_STACK.webDeploy,
+    serverDeploy: search.sd ?? DEFAULT_STACK.serverDeploy,
+    yolo: search.yolo ?? DEFAULT_STACK.yolo,
+  };
+}
 
 export function useStackState() {
-  const [queryState, setQueryState] = useQueryStates(stackParsers, stackQueryStatesOptions);
+  // Always initialize with DEFAULT_STACK to avoid hydration mismatch
+  const [stack, setStackState] = useState<StackState>(DEFAULT_STACK);
+  const [viewMode, setViewModeState] = useState<"command" | "preview">("command");
+  const [selectedFile, setSelectedFileState] = useState<string>("");
+  const initialized = useRef(false);
 
-  const stack: StackState = {
-    projectName: queryState.projectName,
-    webFrontend: queryState.webFrontend,
-    nativeFrontend: queryState.nativeFrontend,
-    astroIntegration: queryState.astroIntegration,
-    runtime: queryState.runtime,
-    backend: queryState.backend,
-    api: queryState.api,
-    database: queryState.database,
-    orm: queryState.orm,
-    dbSetup: queryState.dbSetup,
-    auth: queryState.auth,
-    payments: queryState.payments,
-    packageManager: queryState.packageManager,
-    addons: queryState.addons,
-    examples: queryState.examples,
-    git: queryState.git,
-    install: queryState.install,
-    webDeploy: queryState.webDeploy,
-    serverDeploy: queryState.serverDeploy,
-    yolo: queryState.yolo,
-  };
+  // Get search params from the route
+  const search = useSearch({ from: "/new", strict: false }) as StackSearchParams | undefined;
 
-  const viewMode = queryState.viewMode;
-  const selectedFile = queryState.selectedFile;
+  // Initialize from URL on client mount only (for shared links)
+  useEffect(() => {
+    if (!initialized.current && search) {
+      initialized.current = true;
+      const initialStack = searchToStack(search);
+      setStackState(initialStack);
+      setViewModeState(search.view || "command");
+      setSelectedFileState(search.file || "");
+    }
+  }, [search]);
 
-  const updateStack = async (
-    updates: Partial<StackState> | ((prev: StackState) => Partial<StackState>),
-  ) => {
-    const newStack = typeof updates === "function" ? updates(stack) : updates;
-    const finalStack = { ...stack, ...newStack };
-    await setQueryState({ ...finalStack, viewMode, selectedFile });
-  };
+  const updateStack = useCallback(
+    (updates: Partial<StackState> | ((prev: StackState) => Partial<StackState>)) => {
+      console.log("[useStackState] updateStack called with:", updates);
+      setStackState((currentStack) => {
+        const newUpdates = typeof updates === "function" ? updates(currentStack) : updates;
+        console.log("[useStackState] newUpdates:", newUpdates);
+        const merged = { ...currentStack, ...newUpdates };
+        console.log("[useStackState] merged result:", merged);
+        return merged;
+      });
+    },
+    [],
+  );
 
-  const setViewMode = async (mode: "command" | "preview") => {
-    await setQueryState({ viewMode: mode, selectedFile });
-  };
+  const setViewMode = useCallback((mode: "command" | "preview") => {
+    setViewModeState(mode);
+  }, []);
 
-  const setSelectedFile = async (filePath: string | null) => {
-    await setQueryState({ selectedFile: filePath || "" });
-  };
+  const setSelectedFile = useCallback((filePath: string | null) => {
+    setSelectedFileState(filePath || "");
+  }, []);
 
   return [stack, updateStack, viewMode, setViewMode, selectedFile, setSelectedFile] as const;
 }

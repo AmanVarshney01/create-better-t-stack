@@ -1,8 +1,6 @@
 "use client";
 
-import { useTheme } from "next-themes";
-import Image from "next/image";
-
+import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 interface TechBadgeProps {
@@ -68,14 +66,12 @@ function TechIcon({ icon, name, className }: { icon: string; name: string; class
   }
 
   return (
-    <Image
-      suppressHydrationWarning
+    <img
       src={iconSrc}
       alt={`${name} icon`}
       width={20}
       height={20}
       className={cn("inline-block", className)}
-      unoptimized
     />
   );
 }

@@ -1,19 +1,28 @@
-"use client";
-
 import { ConvexProvider, ConvexReactClient } from "convex/react";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/lib/theme";
 
-const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL || "");
+const convexUrl = import.meta.env.VITE_CONVEX_URL;
+const convex = convexUrl ? new ConvexReactClient(convexUrl) : null;
 
 export default function Providers({ children }: { children: React.ReactNode }) {
+  // If Convex is not configured, render without ConvexProvider
+  if (!convex) {
+    return (
+      <ThemeProvider>
+        {children}
+        <Toaster />
+      </ThemeProvider>
+    );
+  }
+
   return (
-    <>
+    <ThemeProvider>
       <ConvexProvider client={convex}>
-        <NuqsAdapter>{children}</NuqsAdapter>
+        {children}
+        <Toaster />
       </ConvexProvider>
-      <Toaster />
-    </>
+    </ThemeProvider>
   );
 }

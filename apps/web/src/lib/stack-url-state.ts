@@ -1,78 +1,114 @@
-import {
-  createLoader,
-  createSerializer,
-  parseAsArrayOf as parseAsArrayOfServer,
-  parseAsStringEnum as parseAsStringEnumServer,
-  parseAsString as parseAsStringServer,
-  type UrlKeys,
-} from "nuqs/server";
-
-import { DEFAULT_STACK, type StackState, TECH_OPTIONS } from "@/lib/constant";
+import { DEFAULT_STACK, type StackState } from "@/lib/constant";
 import { stackUrlKeys } from "@/lib/stack-url-keys";
 
-const getValidIds = (category: keyof typeof TECH_OPTIONS): string[] => {
-  return TECH_OPTIONS[category]?.map((opt) => opt.id) ?? [];
-};
+// Parse search params to StackState (used on server side)
+export function loadStackParams(
+  searchParams:
+    | Record<string, string | string[] | undefined>
+    | Promise<Record<string, string | string[] | undefined>>,
+): Promise<StackState> | StackState {
+  const parseSync = (params: Record<string, string | string[] | undefined>): StackState => {
+    const getString = (key: string, defaultValue: string): string => {
+      const urlKey = stackUrlKeys[key as keyof typeof stackUrlKeys] || key;
+      const value = params[urlKey];
+      if (typeof value === "string") return value;
+      return defaultValue;
+    };
 
-const serverStackParsers = {
-  projectName: parseAsStringServer.withDefault(DEFAULT_STACK.projectName || "my-better-t-app"),
-  webFrontend: parseAsArrayOfServer(parseAsStringServer).withDefault(DEFAULT_STACK.webFrontend),
-  nativeFrontend: parseAsArrayOfServer(parseAsStringServer).withDefault(
-    DEFAULT_STACK.nativeFrontend,
-  ),
-  astroIntegration: parseAsStringEnumServer<StackState["astroIntegration"]>(
-    getValidIds("astroIntegration"),
-  ).withDefault(DEFAULT_STACK.astroIntegration),
-  runtime: parseAsStringEnumServer<StackState["runtime"]>(getValidIds("runtime")).withDefault(
-    DEFAULT_STACK.runtime,
-  ),
-  backend: parseAsStringEnumServer<StackState["backend"]>(getValidIds("backend")).withDefault(
-    DEFAULT_STACK.backend,
-  ),
-  api: parseAsStringEnumServer<StackState["api"]>(getValidIds("api")).withDefault(
-    DEFAULT_STACK.api,
-  ),
-  database: parseAsStringEnumServer<StackState["database"]>(getValidIds("database")).withDefault(
-    DEFAULT_STACK.database,
-  ),
-  orm: parseAsStringEnumServer<StackState["orm"]>(getValidIds("orm")).withDefault(
-    DEFAULT_STACK.orm,
-  ),
-  dbSetup: parseAsStringEnumServer<StackState["dbSetup"]>(getValidIds("dbSetup")).withDefault(
-    DEFAULT_STACK.dbSetup,
-  ),
-  auth: parseAsStringEnumServer<StackState["auth"]>(getValidIds("auth")).withDefault(
-    DEFAULT_STACK.auth,
-  ),
-  payments: parseAsStringEnumServer<StackState["payments"]>(getValidIds("payments")).withDefault(
-    DEFAULT_STACK.payments,
-  ),
-  packageManager: parseAsStringEnumServer<StackState["packageManager"]>(
-    getValidIds("packageManager"),
-  ).withDefault(DEFAULT_STACK.packageManager),
-  addons: parseAsArrayOfServer(parseAsStringServer).withDefault(DEFAULT_STACK.addons),
-  examples: parseAsArrayOfServer(parseAsStringServer).withDefault(DEFAULT_STACK.examples),
-  git: parseAsStringEnumServer<StackState["git"]>(["true", "false"]).withDefault(DEFAULT_STACK.git),
-  install: parseAsStringEnumServer<StackState["install"]>(["true", "false"]).withDefault(
-    DEFAULT_STACK.install,
-  ),
-  webDeploy: parseAsStringEnumServer<StackState["webDeploy"]>(getValidIds("webDeploy")).withDefault(
-    DEFAULT_STACK.webDeploy,
-  ),
-  serverDeploy: parseAsStringEnumServer<StackState["serverDeploy"]>(
-    getValidIds("serverDeploy"),
-  ).withDefault(DEFAULT_STACK.serverDeploy),
-  yolo: parseAsStringEnumServer<StackState["yolo"]>(["true", "false"]).withDefault(
-    DEFAULT_STACK.yolo,
-  ),
-};
+    const getArray = (key: string, defaultValue: string[]): string[] => {
+      const urlKey = stackUrlKeys[key as keyof typeof stackUrlKeys] || key;
+      const value = params[urlKey];
+      if (typeof value === "string") {
+        return value.split(",").filter(Boolean);
+      }
+      if (Array.isArray(value)) {
+        return value.filter((v): v is string => typeof v === "string");
+      }
+      return defaultValue;
+    };
 
-export const loadStackParams = createLoader(serverStackParsers, {
-  urlKeys: stackUrlKeys as UrlKeys<typeof serverStackParsers>,
-});
+    return {
+      projectName: getString("projectName", DEFAULT_STACK.projectName ?? "my-better-t-app"),
+      webFrontend: getArray("webFrontend", DEFAULT_STACK.webFrontend),
+      nativeFrontend: getArray("nativeFrontend", DEFAULT_STACK.nativeFrontend),
+      astroIntegration: getString("astroIntegration", DEFAULT_STACK.astroIntegration),
+      cssFramework: getString("cssFramework", DEFAULT_STACK.cssFramework),
+      uiLibrary: getString("uiLibrary", DEFAULT_STACK.uiLibrary),
+      runtime: getString("runtime", DEFAULT_STACK.runtime),
+      backend: getString("backend", DEFAULT_STACK.backend),
+      api: getString("api", DEFAULT_STACK.api),
+      database: getString("database", DEFAULT_STACK.database),
+      orm: getString("orm", DEFAULT_STACK.orm),
+      dbSetup: getString("dbSetup", DEFAULT_STACK.dbSetup),
+      auth: getString("auth", DEFAULT_STACK.auth),
+      payments: getString("payments", DEFAULT_STACK.payments),
+      backendLibraries: getString("backendLibraries", DEFAULT_STACK.backendLibraries),
+      codeQuality: getArray("codeQuality", DEFAULT_STACK.codeQuality),
+      documentation: getArray("documentation", DEFAULT_STACK.documentation),
+      appPlatforms: getArray("appPlatforms", DEFAULT_STACK.appPlatforms),
+      packageManager: getString("packageManager", DEFAULT_STACK.packageManager),
+      examples: getArray("examples", DEFAULT_STACK.examples),
+      git: getString("git", DEFAULT_STACK.git),
+      install: getString("install", DEFAULT_STACK.install),
+      webDeploy: getString("webDeploy", DEFAULT_STACK.webDeploy),
+      serverDeploy: getString("serverDeploy", DEFAULT_STACK.serverDeploy),
+      yolo: getString("yolo", DEFAULT_STACK.yolo),
+    };
+  };
 
-export const serializeStackParams = createSerializer(serverStackParsers, {
-  urlKeys: stackUrlKeys as UrlKeys<typeof serverStackParsers>,
-});
+  if (searchParams instanceof Promise) {
+    return searchParams.then(parseSync);
+  }
+  return parseSync(searchParams);
+}
 
-export type LoadedStackState = Awaited<ReturnType<typeof loadStackParams>>;
+// Serialize StackState to URL string
+export function serializeStackParams(basePath: string, stack: StackState): string {
+  const params = new URLSearchParams();
+
+  const addParam = (key: keyof StackState, value: string | string[] | null) => {
+    const urlKey = stackUrlKeys[key] || key;
+    const defaultValue = DEFAULT_STACK[key];
+
+    if (Array.isArray(value)) {
+      const serialized = value.join(",");
+      const defaultSerialized = Array.isArray(defaultValue) ? defaultValue.join(",") : "";
+      if (serialized !== defaultSerialized) {
+        params.set(urlKey, serialized);
+      }
+    } else if (value !== null && value !== defaultValue) {
+      params.set(urlKey, value);
+    }
+  };
+
+  addParam("projectName", stack.projectName);
+  addParam("webFrontend", stack.webFrontend);
+  addParam("nativeFrontend", stack.nativeFrontend);
+  addParam("astroIntegration", stack.astroIntegration);
+  addParam("cssFramework", stack.cssFramework);
+  addParam("uiLibrary", stack.uiLibrary);
+  addParam("runtime", stack.runtime);
+  addParam("backend", stack.backend);
+  addParam("api", stack.api);
+  addParam("database", stack.database);
+  addParam("orm", stack.orm);
+  addParam("dbSetup", stack.dbSetup);
+  addParam("auth", stack.auth);
+  addParam("payments", stack.payments);
+  addParam("backendLibraries", stack.backendLibraries);
+  addParam("codeQuality", stack.codeQuality);
+  addParam("documentation", stack.documentation);
+  addParam("appPlatforms", stack.appPlatforms);
+  addParam("packageManager", stack.packageManager);
+  addParam("examples", stack.examples);
+  addParam("git", stack.git);
+  addParam("install", stack.install);
+  addParam("webDeploy", stack.webDeploy);
+  addParam("serverDeploy", stack.serverDeploy);
+  addParam("yolo", stack.yolo);
+
+  const queryString = params.toString();
+  return queryString ? `${basePath}?${queryString}` : basePath;
+}
+
+export type LoadedStackState = StackState;

@@ -18,6 +18,9 @@ import type {
   WebDeploy,
   ServerDeploy,
   DatabaseSetup,
+  CSSFramework,
+  UILibrary,
+  Effect,
 } from "../src/types";
 
 import { create } from "../src/index";
@@ -27,8 +30,10 @@ import {
   AstroIntegrationSchema,
   AuthSchema,
   BackendSchema,
+  CSSFrameworkSchema,
   DatabaseSchema,
   DatabaseSetupSchema,
+  EffectSchema,
   ExamplesSchema,
   FrontendSchema,
   ORMSchema,
@@ -36,6 +41,7 @@ import {
   PaymentsSchema,
   RuntimeSchema,
   ServerDeploySchema,
+  UILibrarySchema,
   WebDeploySchema,
 } from "../src/types";
 
@@ -84,10 +90,14 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     "examples",
     "auth",
     "payments",
+    "email",
     "dbSetup",
     "api",
     "webDeploy",
     "serverDeploy",
+    "cssFramework",
+    "uiLibrary",
+    "effect",
   ];
   const hasSpecificCoreConfig = coreStackFlags.some((flag) => config[flag] !== undefined);
 
@@ -112,6 +122,11 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
         dbSetup: "none" as DatabaseSetup,
         webDeploy: "none" as WebDeploy,
         serverDeploy: "none" as ServerDeploy,
+        cssFramework: "tailwind" as CSSFramework,
+        // Use "none" as default - compatible with all frontends
+        // Tests for specific UI libraries should specify explicitly
+        uiLibrary: "none" as UILibrary,
+        effect: "none" as Effect,
       };
 
   // Build options object - let the CLI handle all validation
@@ -191,6 +206,9 @@ export const API_TYPES = extractEnumValues(APISchema);
 export const WEB_DEPLOYS = extractEnumValues(WebDeploySchema);
 export const SERVER_DEPLOYS = extractEnumValues(ServerDeploySchema);
 export const DB_SETUPS = extractEnumValues(DatabaseSetupSchema);
+export const CSS_FRAMEWORKS = extractEnumValues(CSSFrameworkSchema);
+export const UI_LIBRARIES = extractEnumValues(UILibrarySchema);
+export const EFFECTS = extractEnumValues(EffectSchema);
 
 // Convenience functions for common test patterns
 export function createBasicConfig(overrides: Partial<TestConfig> = {}): TestConfig {

@@ -1,5 +1,4 @@
 import { Github, Globe, Star } from "lucide-react";
-import Image from "next/image";
 
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { formatSponsorUrl, getSponsorUrl, shouldShowLifetimeTotal } from "@/lib/sponsor-utils";
@@ -32,13 +31,12 @@ export async function SpecialSponsorBanner() {
                   />
                 }
               >
-                <Image
+                <img
                   src={entry.avatarUrl}
                   alt={entry.name}
                   width={66}
                   height={66}
                   className="size-12 rounded border border-border"
-                  unoptimized
                 />
               </HoverCardTrigger>
               <HoverCardContent align="start" sideOffset={8} className="bg-fd-background">
@@ -52,13 +50,12 @@ export async function SpecialSponsorBanner() {
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <Image
+                    <img
                       src={entry.avatarUrl}
                       alt={entry.name}
                       width={80}
                       height={80}
                       className="rounded border border-border"
-                      unoptimized
                     />
                     <div className="grid grid-cols-1 grid-rows-[1fr_auto]">
                       <div>

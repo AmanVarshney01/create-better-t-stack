@@ -2,11 +2,9 @@ import type { SponsorsData } from "./types";
 
 const SPONSORS_URL = "https://sponsors.better-t-stack.dev/sponsors.json";
 
-export async function fetchSponsors() {
+export async function fetchSponsors(): Promise<SponsorsData> {
   try {
-    const response = await fetch(SPONSORS_URL, {
-      next: { revalidate: 3600 },
-    });
+    const response = await fetch(SPONSORS_URL);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch sponsors: ${response.status}`);
