@@ -86,6 +86,12 @@ export const dependencyVersionMap = {
   fastify: "^5.3.3",
   "@fastify/cors": "^11.0.1",
 
+  "@nestjs/core": "^11.0.20",
+  "@nestjs/common": "^11.0.20",
+  "@nestjs/platform-express": "^11.0.20",
+  "reflect-metadata": "^0.2.2",
+  rxjs: "^7.8.1",
+
   turbo: "^2.6.3",
 
   ai: "^6.0.3",

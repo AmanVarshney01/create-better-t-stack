@@ -250,6 +250,13 @@ export const TECH_OPTIONS: Record<
       className: "invert-0 dark:invert",
     },
     {
+      id: "nestjs",
+      name: "NestJS",
+      description: "Progressive Node.js framework for enterprise apps",
+      icon: "https://cdn.simpleicons.org/nestjs/E0234E",
+      color: "from-red-500 to-red-700",
+    },
+    {
       id: "convex",
       name: "Convex",
       description: "Reactive backend-as-a-service",

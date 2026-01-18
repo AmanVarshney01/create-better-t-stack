@@ -1,0 +1,21 @@
+import { Injectable } from "@nestjs/common";
+import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { google } from "@ai-sdk/google";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
+import type { Request, Response } from "express";
+
+@Injectable()
+export class AiService {
+	async streamChat(req: Request, res: Response) {
+		const { messages = [] } = (req.body || {}) as { messages: UIMessage[] };
+		const model = wrapLanguageModel({
+			model: google("gemini-2.5-flash"),
+			middleware: devToolsMiddleware(),
+		});
+		const result = streamText({
+			model,
+			messages: await convertToModelMessages(messages),
+		});
+		result.pipeUIMessageStreamToResponse(res);
+	}
+}

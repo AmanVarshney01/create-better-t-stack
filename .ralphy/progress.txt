@@ -1,0 +1,40 @@
+# Ralphy Progress Log
+
+## 2026-01-19: NestJS Backend Framework Implementation
+
+### Task: Implement NestJS as a backend framework option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "nestjs" to BackendSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added NestJS dependency versions:
+   - @nestjs/core: ^11.0.20
+   - @nestjs/common: ^11.0.20
+   - @nestjs/platform-express: ^11.0.20
+   - reflect-metadata: ^0.2.2
+   - rxjs: ^7.8.1
+3. **packages/template-generator/src/processors/backend-deps.ts**: Added NestJS dependency processing
+4. **packages/template-generator/templates/backend/server/nestjs/**: Created NestJS templates:
+   - src/index.ts.hbs - Main bootstrap file with NestFactory
+   - src/app.module.ts.hbs - Root module with conditional tRPC/oRPC/AI imports
+   - src/app.controller.ts.hbs - Root controller
+   - src/app.service.ts.hbs - Root service
+   - src/trpc/trpc.module.ts.hbs - tRPC integration module
+   - src/trpc/trpc.middleware.ts.hbs - tRPC middleware adapter
+   - src/orpc/orpc.module.ts.hbs - oRPC integration module
+   - src/orpc/orpc.middleware.ts.hbs - oRPC middleware adapter
+   - src/ai/ai.module.ts.hbs - AI example module
+   - src/ai/ai.controller.ts.hbs - AI controller
+   - src/ai/ai.service.ts.hbs - AI service with streaming support
+5. **apps/web/src/lib/constant.ts**: Added NestJS to web builder backend options
+
+### Features:
+- Full NestJS module/controller/service architecture
+- tRPC integration via Express middleware adapter
+- oRPC integration via Express middleware adapter
+- Better-Auth integration support
+- AI SDK integration with streaming responses
+- CORS configuration
+- Compatible with Node.js runtime
+
+### Status: COMPLETE
+

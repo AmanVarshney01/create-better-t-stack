@@ -1,0 +1,13 @@
+import { Controller, Post, Req, Res } from "@nestjs/common";
+import { AiService } from "./ai.service";
+import type { Request, Response } from "express";
+
+@Controller("ai")
+export class AiController {
+	constructor(private readonly aiService: AiService) {}
+
+	@Post()
+	async chat(@Req() req: Request, @Res() res: Response) {
+		return this.aiService.streamChat(req, res);
+	}
+}

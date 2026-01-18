@@ -1,0 +1,29 @@
+import { Module } from "@nestjs/common";
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
+{{#if (eq api "trpc")}}
+import { TrpcModule } from "./trpc/trpc.module";
+{{/if}}
+{{#if (eq api "orpc")}}
+import { OrpcModule } from "./orpc/orpc.module";
+{{/if}}
+{{#if (includes examples "ai")}}
+import { AiModule } from "./ai/ai.module";
+{{/if}}
+
+@Module({
+	imports: [
+{{#if (eq api "trpc")}}
+		TrpcModule,
+{{/if}}
+{{#if (eq api "orpc")}}
+		OrpcModule,
+{{/if}}
+{{#if (includes examples "ai")}}
+		AiModule,
+{{/if}}
+	],
+	controllers: [AppController],
+	providers: [AppService],
+})
+export class AppModule {}

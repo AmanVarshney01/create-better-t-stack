@@ -7,7 +7,7 @@ export const DatabaseSchema = z
 export const ORMSchema = z.enum(["drizzle", "prisma", "mongoose", "none"]).describe("ORM type");
 
 export const BackendSchema = z
-  .enum(["hono", "express", "fastify", "elysia", "convex", "self", "none"])
+  .enum(["hono", "express", "fastify", "elysia", "nestjs", "convex", "self", "none"])
   .describe("Backend framework");
 
 export const RuntimeSchema = z

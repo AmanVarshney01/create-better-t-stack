@@ -32,6 +32,16 @@ export function processBackendDeps(vfs: VirtualFileSystem, config: ProjectConfig
     devDeps.push("@types/express", "@types/cors");
   } else if (backend === "fastify") {
     deps.push("fastify", "@fastify/cors");
+  } else if (backend === "nestjs") {
+    deps.push(
+      "@nestjs/core",
+      "@nestjs/common",
+      "@nestjs/platform-express",
+      "reflect-metadata",
+      "rxjs",
+      "express",
+    );
+    devDeps.push("@types/express");
   }
 
   if (api === "trpc") {

@@ -1,0 +1,17 @@
+import { Injectable, type NestMiddleware } from "@nestjs/common";
+import { createExpressMiddleware } from "@trpc/server/adapters/express";
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+import type { Request, Response, NextFunction } from "express";
+
+@Injectable()
+export class TrpcMiddleware implements NestMiddleware {
+	private trpcMiddleware = createExpressMiddleware({
+		router: appRouter,
+		createContext,
+	});
+
+	use(req: Request, res: Response, next: NextFunction) {
+		this.trpcMiddleware(req, res, next);
+	}
+}

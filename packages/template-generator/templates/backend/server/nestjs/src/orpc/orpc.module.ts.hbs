@@ -1,0 +1,9 @@
+import { Module, type MiddlewareConsumer, type NestModule } from "@nestjs/common";
+import { OrpcMiddleware } from "./orpc.middleware";
+
+@Module({})
+export class OrpcModule implements NestModule {
+	configure(consumer: MiddlewareConsumer) {
+		consumer.apply(OrpcMiddleware).forRoutes("rpc/*path", "api-reference/*path");
+	}
+}
