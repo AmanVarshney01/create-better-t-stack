@@ -20,12 +20,22 @@ export function processEmailDeps(vfs: VirtualFileSystem, config: ProjectConfig):
     });
   }
 
-  // Add React Email components for both resend and react-email options
+  // Add Nodemailer for nodemailer option
+  if (email === "nodemailer" && vfs.exists(serverPath)) {
+    addPackageDependency({
+      vfs,
+      packagePath: serverPath,
+      dependencies: ["nodemailer"],
+      devDependencies: ["@types/nodemailer"],
+    });
+  }
+
+  // Add React Email components for resend and react-email options (not nodemailer)
   const hasReactWeb = frontend.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
   );
 
-  if (hasReactWeb && vfs.exists(serverPath)) {
+  if (hasReactWeb && vfs.exists(serverPath) && (email === "resend" || email === "react-email")) {
     addPackageDependency({
       vfs,
       packagePath: serverPath,

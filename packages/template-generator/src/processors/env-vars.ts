@@ -404,6 +404,42 @@ function buildServerVars(
       comment: "Email address to send from (must be verified in Resend)",
     },
     {
+      key: "SMTP_HOST",
+      value: "smtp.ethereal.email",
+      condition: email === "nodemailer",
+      comment: "SMTP server host - use smtp.ethereal.email for testing",
+    },
+    {
+      key: "SMTP_PORT",
+      value: "587",
+      condition: email === "nodemailer",
+      comment: "SMTP server port (587 for TLS, 465 for SSL)",
+    },
+    {
+      key: "SMTP_SECURE",
+      value: "false",
+      condition: email === "nodemailer",
+      comment: "Use SSL/TLS (true for port 465, false for 587)",
+    },
+    {
+      key: "SMTP_USER",
+      value: "",
+      condition: email === "nodemailer",
+      comment: "SMTP username/email",
+    },
+    {
+      key: "SMTP_PASS",
+      value: "",
+      condition: email === "nodemailer",
+      comment: "SMTP password or app-specific password",
+    },
+    {
+      key: "SMTP_FROM_EMAIL",
+      value: "noreply@example.com",
+      condition: email === "nodemailer",
+      comment: "Default from email address",
+    },
+    {
       key: "CORS_ORIGIN",
       value: corsOrigin,
       condition: true,

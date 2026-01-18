@@ -38,3 +38,42 @@
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Nodemailer Email Option Implementation
+
+### Task: Implement Nodemailer as an email sending option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "nodemailer" to EmailSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Nodemailer dependency versions:
+   - nodemailer: ^6.10.1
+   - @types/nodemailer: ^6.4.17
+3. **packages/template-generator/src/processors/email-deps.ts**: Added Nodemailer dependency processing
+4. **packages/template-generator/src/processors/env-vars.ts**: Added SMTP environment variables:
+   - SMTP_HOST
+   - SMTP_PORT
+   - SMTP_SECURE
+   - SMTP_USER
+   - SMTP_PASS
+   - SMTP_FROM_EMAIL
+5. **packages/template-generator/templates/email/nodemailer/server/base/src/lib/email.ts.hbs**: Created Nodemailer email utility template with:
+   - SMTP transporter configuration
+   - sendEmail function with attachments support
+   - verifyEmailConnection function for connection testing
+   - getTransporter function for advanced usage
+6. **apps/web/src/lib/constant.ts**: Added Nodemailer to web builder email options
+7. **apps/web/src/lib/stack-url-state.ts**: Added email field to stack state
+8. **apps/web/src/lib/stack-url-state.client.ts**: Added email field to client state
+9. **apps/web/src/lib/stack-search-schema.ts**: Added "em" (email) URL param
+10. **apps/cli/test/email.test.ts**: Added comprehensive Nodemailer tests
+
+### Features:
+- SMTP-based email sending via Nodemailer
+- Support for Ethereal (testing), Gmail, SendGrid, AWS SES, and other SMTP providers
+- Attachment support
+- Connection verification utility
+- SSL/TLS configuration options
+- Compatible with all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+
+### Status: COMPLETE
+

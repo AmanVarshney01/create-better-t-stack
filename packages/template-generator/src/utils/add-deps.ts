@@ -161,6 +161,8 @@ export const dependencyVersionMap = {
   resend: "^4.5.1",
   "@react-email/components": "^0.0.36",
   "react-email": "^3.0.6",
+  nodemailer: "^6.10.1",
+  "@types/nodemailer": "^6.4.17",
 
   // Effect ecosystem
   effect: "^3.16.1",

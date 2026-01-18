@@ -526,6 +526,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "nodemailer",
+      name: "Nodemailer",
+      description: "Classic Node.js email sending via SMTP",
+      icon: "https://cdn.simpleicons.org/nodedotjs/5FA04E",
+      color: "from-green-400 to-green-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Email",
       description: "Skip email integration",

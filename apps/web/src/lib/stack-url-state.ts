@@ -42,6 +42,7 @@ export function loadStackParams(
       dbSetup: getString("dbSetup", DEFAULT_STACK.dbSetup),
       auth: getString("auth", DEFAULT_STACK.auth),
       payments: getString("payments", DEFAULT_STACK.payments),
+      email: getString("email", DEFAULT_STACK.email),
       backendLibraries: getString("backendLibraries", DEFAULT_STACK.backendLibraries),
       codeQuality: getArray("codeQuality", DEFAULT_STACK.codeQuality),
       documentation: getArray("documentation", DEFAULT_STACK.documentation),
@@ -95,6 +96,7 @@ export function serializeStackParams(basePath: string, stack: StackState): strin
   addParam("dbSetup", stack.dbSetup);
   addParam("auth", stack.auth);
   addParam("payments", stack.payments);
+  addParam("email", stack.email);
   addParam("backendLibraries", stack.backendLibraries);
   addParam("codeQuality", stack.codeQuality);
   addParam("documentation", stack.documentation);

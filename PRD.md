@@ -119,7 +119,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 
 - [x] **Resend** - Modern email API for developers
 - [x] **React Email** - Build emails using React components
-- [ ] **Nodemailer** - Classic Node.js email sending
+- [x] **Nodemailer** - Classic Node.js email sending
 - [ ] **Plunk** - Open-source email platform
 - [ ] **Postmark** - Transactional email service
 - [ ] **SendGrid** - Email delivery service

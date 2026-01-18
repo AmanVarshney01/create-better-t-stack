@@ -107,8 +107,8 @@ export const TestingSchema = z
   .describe("Testing framework (vitest-playwright includes both unit and e2e testing)");
 
 export const EmailSchema = z
-  .enum(["react-email", "resend", "none"])
-  .describe("Email solution (resend includes react-email)");
+  .enum(["react-email", "resend", "nodemailer", "none"])
+  .describe("Email solution (resend includes react-email, nodemailer is classic Node.js email)");
 
 export const CSSFrameworkSchema = z
   .enum(["tailwind", "scss", "less", "postcss-only", "none"])
