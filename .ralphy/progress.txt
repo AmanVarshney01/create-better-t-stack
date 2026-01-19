@@ -2687,3 +2687,83 @@ Implemented Uppy as a new file upload option. Uppy is a modular, plugin-based fi
 - Dashboard UI with drag-and-drop, progress bar, file preview
 - Framework-specific adapters with hooks and components
 - Supports multiple upload sources (local files, webcam, URL, cloud storage)
+
+---
+
+## 2026-01-19 - Encore.ts Backend Framework Implementation
+
+Implemented Encore.ts as a new backend framework option. Encore.ts is an open-source TypeScript backend framework with built-in infrastructure management, type-safe APIs, and its own deployment platform.
+
+**Changes Made:**
+1. **packages/types/src/schemas.ts**: Added "encore" to BackendSchema enum
+
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Encore.ts dependency version:
+   - encore.dev: ^1.50.0
+
+3. **packages/template-generator/src/processors/backend-deps.ts**: Added Encore.ts handling to add encore.dev dependency when backend is "encore"
+
+4. **packages/template-generator/src/processors/runtime-deps.ts**: Added encore to list of backends that skip runtime processing (Encore has its own runtime via CLI)
+
+5. **packages/template-generator/src/template-handlers/backend.ts**: Added special handling for Encore backend (uses only encore templates, not base templates)
+
+6. **packages/template-generator/templates/backend/server/encore/**: Created Encore.ts templates:
+   - package.json.hbs - With Encore-specific scripts (encore run, encore build)
+   - encore.app.hbs - Encore application definition file
+   - encore.service.ts.hbs - Service definition file
+   - tsconfig.json.hbs - TypeScript configuration with Encore paths
+   - src/index.ts.hbs - Main API file with Encore endpoint definitions
+   - _gitignore - Git ignore file for Encore generated files
+
+7. **apps/web/src/lib/constant.ts**: Added Encore.ts to TECH_OPTIONS.backend:
+   - id: "encore"
+   - name: "Encore.ts"
+   - description: "Type-safe backend with built-in infrastructure"
+   - icon: encore.dev/assets/branding/logo/logo.svg
+   - color: "from-violet-500 to-indigo-700"
+
+8. **apps/cli/src/utils/config-validation.ts**: 
+   - Added validateEncoreConstraints function with constraints:
+     - runtime must be "none" (Encore has its own runtime)
+     - api must be "none" (Encore has its own API system)
+     - database must be "none" (Encore manages databases)
+     - orm must be "none" (Encore has own database abstractions)
+     - dbSetup must be "none" (Encore manages infrastructure)
+     - serverDeploy must be "none" (Encore has own deployment)
+   - Updated validateBackendConstraints to allow encore with runtime none
+   - Added validateEncoreConstraints to validateFullConfig call chain
+
+9. **apps/cli/test/encore.test.ts**: Created comprehensive test suite (12 tests):
+   - Tests for valid Encore configurations (basic, Next.js, React frontends)
+   - Tests for proper project structure generation
+   - Tests for invalid configurations (non-none runtime, database, orm, api, server-deploy)
+   - All tests verify Encore-specific constraints and file generation
+
+10. **apps/cli/test/backend-runtime.test.ts**: Updated to include Encore:
+    - Added encore to valid backend-runtime combinations
+    - Updated error messages to include encore
+    - Added encore to "All Backend Types" test list
+
+**Test Results:**
+- All 12 Encore-specific tests pass
+- All 1024 tests pass (2 pre-existing Qwik failures unrelated to this change)
+- Linting passes (pre-existing issues in other files unrelated to this change)
+
+**Key Features:**
+- Type-safe backend framework with automatic infrastructure management
+- Uses Encore CLI for development (encore run) and deployment
+- Creates proper Encore project structure with encore.app and encore.service.ts
+- Supports all web frontends (React, Vue, Svelte, etc.)
+- Integrates with Better-Fullstack's validation system with proper constraints
+
+**Important Notes:**
+- Encore.ts requires the Encore CLI to be installed separately
+- Encore manages its own databases, so external database/ORM options are disabled
+- Encore has its own API system, so tRPC/oRPC/ts-rest are not used
+- Encore has its own deployment platform (encore.dev)
+
+**Framework Support:**
+- Runtime: none (uses Encore CLI runtime)
+- API: none (uses Encore's native API)
+- Database: none (uses Encore's database primitives)
+- ORM: none (uses Encore's database abstractions)
+- Works with all web frontends in Better-Fullstack

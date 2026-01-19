@@ -1,0 +1,71 @@
+import { api } from "encore.dev/api";
+{{#if (eq auth "better-auth")}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+{{#if (and (includes examples "ai") (or (eq runtime "bun") (eq runtime "node")))}}
+import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
+import { google } from "@ai-sdk/google";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
+{{/if}}
+
+interface Response {
+	message: string;
+}
+
+interface HealthResponse {
+	status: string;
+	timestamp: string;
+}
+
+// Health check endpoint
+export const health = api(
+	{ expose: true, method: "GET", path: "/health" },
+	async (): Promise<HealthResponse> => {
+		return {
+			status: "ok",
+			timestamp: new Date().toISOString(),
+		};
+	}
+);
+
+// Hello world endpoint
+export const hello = api(
+	{ expose: true, method: "GET", path: "/hello/:name" },
+	async ({ name }: { name: string }): Promise<Response> => {
+		return { message: `Hello ${name}!` };
+	}
+);
+
+// Root endpoint
+export const root = api(
+	{ expose: true, method: "GET", path: "/" },
+	async (): Promise<Response> => {
+		return { message: "OK" };
+	}
+);
+{{#if (and (includes examples "ai") (or (eq runtime "bun") (eq runtime "node")))}}
+
+interface AIRequest {
+	messages: Array<{ role: string; content: string }>;
+}
+
+// AI chat endpoint (Encore.ts uses native streaming)
+export const chat = api(
+	{ expose: true, method: "POST", path: "/ai" },
+	async (req: AIRequest): Promise<Response> => {
+		const model = wrapLanguageModel({
+			model: google("gemini-2.5-flash"),
+			middleware: devToolsMiddleware(),
+		});
+
+		const result = await streamText({
+			model,
+			messages: await convertToModelMessages(req.messages),
+		});
+
+		// For simple response - streaming would need Encore's streaming API
+		const text = await result.text;
+		return { message: text };
+	}
+);
+{{/if}}

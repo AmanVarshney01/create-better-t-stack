@@ -22,6 +22,7 @@ describe("Backend and Runtime Combinations", () => {
 
       // Special cases
       { backend: "convex" as const, runtime: "none" as const },
+      { backend: "encore" as const, runtime: "none" as const },
       { backend: "none" as const, runtime: "none" as const },
       { backend: "self" as const, runtime: "none" as const },
     ];
@@ -46,6 +47,11 @@ describe("Backend and Runtime Combinations", () => {
           config.database = "none";
           config.orm = "none";
           config.auth = "clerk";
+          config.api = "none";
+        } else if (backend === "encore") {
+          config.database = "none";
+          config.orm = "none";
+          config.auth = "none";
           config.api = "none";
         } else if (backend === "none") {
           config.database = "none";
@@ -149,18 +155,18 @@ describe("Backend and Runtime Combinations", () => {
         frontend: ["next"], // Need to specify Next.js frontend for self backend
       },
 
-      // Runtime none only works with convex, none, or self backend
+      // Runtime none only works with convex, encore, none, or self backend
       {
         backend: "hono",
         runtime: "none",
         error:
-          "'--runtime none' is only supported with '--backend convex', '--backend none', or '--backend self'",
+          "'--runtime none' is only supported with '--backend convex', '--backend none', '--backend self', or '--backend encore'",
       },
       {
         backend: "express",
         runtime: "none",
         error:
-          "'--runtime none' is only supported with '--backend convex', '--backend none', or '--backend self'",
+          "'--runtime none' is only supported with '--backend convex', '--backend none', '--backend self', or '--backend encore'",
       },
     ];
 
@@ -343,7 +349,17 @@ describe("Backend and Runtime Combinations", () => {
   });
 
   describe("All Backend Types", () => {
-    const backends = ["hono", "express", "fastify", "elysia", "convex", "none", "self"] as const;
+    const backends = [
+      "hono",
+      "express",
+      "fastify",
+      "elysia",
+      "nestjs",
+      "encore",
+      "convex",
+      "none",
+      "self",
+    ] as const;
 
     for (const backend of backends) {
       it(`should work with appropriate defaults for ${backend}`, async () => {
@@ -366,6 +382,13 @@ describe("Backend and Runtime Combinations", () => {
             config.database = "none";
             config.orm = "none";
             config.auth = "clerk";
+            config.api = "none";
+            break;
+          case "encore":
+            config.runtime = "none";
+            config.database = "none";
+            config.orm = "none";
+            config.auth = "none";
             config.api = "none";
             break;
           case "none":

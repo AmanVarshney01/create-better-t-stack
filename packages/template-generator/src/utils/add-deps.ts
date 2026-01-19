@@ -118,6 +118,9 @@ export const dependencyVersionMap = {
   "reflect-metadata": "^0.2.2",
   rxjs: "^7.8.1",
 
+  // Encore.ts
+  "encore.dev": "^1.50.0",
+
   turbo: "^2.6.3",
 
   ai: "^6.0.3",

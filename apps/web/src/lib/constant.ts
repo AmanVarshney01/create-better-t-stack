@@ -297,6 +297,13 @@ export const TECH_OPTIONS: Record<
       color: "from-red-500 to-red-700",
     },
     {
+      id: "encore",
+      name: "Encore.ts",
+      description: "Type-safe backend with built-in infrastructure",
+      icon: "https://encore.dev/assets/branding/logo/logo.svg",
+      color: "from-violet-500 to-indigo-700",
+    },
+    {
       id: "convex",
       name: "Convex",
       description: "Reactive backend-as-a-service",

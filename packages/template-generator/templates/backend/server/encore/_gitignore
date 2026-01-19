@@ -1,0 +1,20 @@
+# Encore.ts generated files
+encore.gen/
+.encore/
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

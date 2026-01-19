@@ -24,6 +24,11 @@ export async function processBackendTemplates(
 
   if (config.backend === "self") return;
 
+  if (config.backend === "encore") {
+    processTemplatesFromPrefix(vfs, templates, "backend/server/encore", "apps/server", config);
+    return;
+  }
+
   processTemplatesFromPrefix(vfs, templates, "backend/server/base", "apps/server", config);
   processTemplatesFromPrefix(
     vfs,

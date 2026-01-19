@@ -42,6 +42,8 @@ export function processBackendDeps(vfs: VirtualFileSystem, config: ProjectConfig
       "express",
     );
     devDeps.push("@types/express");
+  } else if (backend === "encore") {
+    deps.push("encore.dev");
   }
 
   if (api === "trpc") {

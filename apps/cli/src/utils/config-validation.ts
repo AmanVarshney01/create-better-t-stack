@@ -324,6 +324,55 @@ export function validateSelfBackendConstraints(
   }
 }
 
+export function validateEncoreConstraints(
+  config: Partial<ProjectConfig>,
+  providedFlags: Set<string>,
+) {
+  const { backend } = config;
+
+  if (backend !== "encore") {
+    return;
+  }
+
+  const has = (k: string) => providedFlags.has(k);
+
+  if (has("runtime") && config.runtime !== "none") {
+    exitWithError(
+      "Encore.ts backend requires '--runtime none'. Encore has its own runtime via the Encore CLI. Please remove the --runtime flag or set it to 'none'.",
+    );
+  }
+
+  if (has("api") && config.api !== "none") {
+    exitWithError(
+      "Encore.ts backend requires '--api none'. Encore has its own type-safe API system. Please remove the --api flag or set it to 'none'.",
+    );
+  }
+
+  if (has("database") && config.database !== "none") {
+    exitWithError(
+      "Encore.ts backend requires '--database none'. Encore manages databases through its infrastructure primitives. Please remove the --database flag or set it to 'none'.",
+    );
+  }
+
+  if (has("orm") && config.orm !== "none") {
+    exitWithError(
+      "Encore.ts backend requires '--orm none'. Encore has its own database abstractions. Please remove the --orm flag or set it to 'none'.",
+    );
+  }
+
+  if (has("dbSetup") && config.dbSetup !== "none") {
+    exitWithError(
+      "Encore.ts backend requires '--db-setup none'. Encore manages infrastructure automatically. Please remove the --db-setup flag or set it to 'none'.",
+    );
+  }
+
+  if (has("serverDeploy") && config.serverDeploy !== "none") {
+    exitWithError(
+      "Encore.ts backend requires '--server-deploy none'. Encore has its own deployment platform. Please remove the --server-deploy flag or set it to 'none'.",
+    );
+  }
+}
+
 export function validateBackendConstraints(
   config: Partial<ProjectConfig>,
   providedFlags: Set<string>,
@@ -355,11 +404,12 @@ export function validateBackendConstraints(
     backend &&
     backend !== "convex" &&
     backend !== "none" &&
-    backend !== "self"
+    backend !== "self" &&
+    backend !== "encore"
   ) {
     if (providedFlags.has("runtime") && options.runtime === "none") {
       exitWithError(
-        "'--runtime none' is only supported with '--backend convex', '--backend none', or '--backend self'. Please choose 'bun', 'node', or remove the --runtime flag.",
+        "'--runtime none' is only supported with '--backend convex', '--backend none', '--backend self', or '--backend encore'. Please choose 'bun', 'node', or remove the --runtime flag.",
       );
     }
   }
@@ -419,6 +469,7 @@ export function validateFullConfig(
   validateConvexConstraints(config, providedFlags);
   validateBackendNoneConstraints(config, providedFlags);
   validateSelfBackendConstraints(config, providedFlags);
+  validateEncoreConstraints(config, providedFlags);
   validateBackendConstraints(config, providedFlags, options);
 
   validateFrontendConstraints(config, providedFlags);
