@@ -76,7 +76,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 
 - [x] **Valibot** - Smaller bundle alternative to Zod
 - [x] **ArkType** - TypeScript-first validation, 2-4x faster than Zod
-- [ ] **TypeBox** - JSON Schema type builder
+- [x] **TypeBox** - JSON Schema type builder
 - [ ] **Typia** - Super-fast validation via compile-time transform
 - [ ] **runtypes** - Runtime type validation
 - [ ] **@effect/schema** - Effect ecosystem schema validation

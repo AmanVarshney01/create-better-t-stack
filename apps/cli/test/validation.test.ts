@@ -235,6 +235,122 @@ describe("Validation Library Options", () => {
     });
   });
 
+  describe("TypeBox with React frontends", () => {
+    test("typebox with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "typebox-tanstack-router",
+          frontend: ["tanstack-router"],
+          validation: "typebox",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("typebox with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "typebox-react-router",
+          frontend: ["react-router"],
+          validation: "typebox",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("typebox with Next.js", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "typebox-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          validation: "typebox",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("typebox with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "typebox-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          validation: "typebox",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("TypeBox with different backends", () => {
+    test("typebox with Hono backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "typebox-hono",
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          validation: "typebox",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("typebox with Express backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "typebox-express",
+          frontend: ["tanstack-router"],
+          backend: "express",
+          runtime: "node",
+          validation: "typebox",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("typebox with Fastify backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "typebox-fastify",
+          frontend: ["tanstack-router"],
+          backend: "fastify",
+          runtime: "node",
+          validation: "typebox",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("TypeBox with native apps", () => {
+    test("typebox with native-bare", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "typebox-native-bare",
+          frontend: ["native-bare"],
+          backend: "hono",
+          validation: "typebox",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("typebox with native-uniwind", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "typebox-native-uniwind",
+          frontend: ["native-uniwind"],
+          backend: "hono",
+          validation: "typebox",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("Zod validation (default)", () => {
     test("zod with TanStack Router (explicit)", async () => {
       const result = await runTRPCTest(

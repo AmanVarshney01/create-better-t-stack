@@ -74,6 +74,9 @@ function getValidationDeps(validation: ProjectConfig["validation"]): AvailableDe
     case "arktype":
       deps.push("arktype");
       break;
+    case "typebox":
+      deps.push("@sinclair/typebox");
+      break;
   }
 
   return deps;

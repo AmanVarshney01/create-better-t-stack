@@ -810,6 +810,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "typebox",
+      name: "TypeBox",
+      description: "JSON Schema type builder for TypeScript",
+      icon: "",
+      color: "from-sky-400 to-sky-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Validation",
       description: "Use Zod internally only (no additional library)",
