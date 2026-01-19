@@ -176,6 +176,82 @@ describe("State Management Options", () => {
     });
   });
 
+  describe("XState with React frontends", () => {
+    test("xstate with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "xstate-tanstack-router",
+          frontend: ["tanstack-router"],
+          stateManagement: "xstate",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("xstate with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "xstate-react-router",
+          frontend: ["react-router"],
+          stateManagement: "xstate",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("xstate with Next.js", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "xstate-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          stateManagement: "xstate",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("xstate with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "xstate-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          stateManagement: "xstate",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("XState with native apps", () => {
+    test("xstate with native-bare", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "xstate-native-bare",
+          frontend: ["native-bare"],
+          backend: "hono",
+          stateManagement: "xstate",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("xstate with native-uniwind", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "xstate-native-uniwind",
+          frontend: ["native-uniwind"],
+          backend: "hono",
+          stateManagement: "xstate",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("No state management", () => {
     test("none state management option", async () => {
       const result = await runTRPCTest(

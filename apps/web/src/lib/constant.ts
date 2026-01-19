@@ -634,6 +634,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "xstate",
+      name: "XState",
+      description: "State machines and statecharts for complex logic",
+      icon: "https://cdn.simpleicons.org/xstate/2C3E50",
+      color: "from-slate-600 to-slate-800",
+      default: false,
+    },
+    {
       id: "none",
       name: "No State Management",
       description: "Skip state management setup",

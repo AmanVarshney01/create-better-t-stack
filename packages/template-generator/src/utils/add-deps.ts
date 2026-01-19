@@ -252,6 +252,8 @@ export const dependencyVersionMap = {
   "react-redux": "^9.2.0",
   mobx: "^6.13.5",
   "mobx-react-lite": "^4.1.0",
+  xstate: "^5.19.4",
+  "@xstate/react": "^5.0.4",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

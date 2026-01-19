@@ -74,6 +74,9 @@ function getStateManagementDeps(
     case "mobx":
       deps.push("mobx", "mobx-react-lite");
       break;
+    case "xstate":
+      deps.push("xstate", "@xstate/react");
+      break;
   }
 
   return deps;
