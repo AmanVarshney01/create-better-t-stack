@@ -117,6 +117,7 @@ export async function createProjectHandler(
             uiLibrary: "none",
             ai: "none",
             stateManagement: "none",
+            validation: "zod",
             forms: "react-hook-form",
             testing: "vitest",
           } satisfies ProjectConfig,

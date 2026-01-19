@@ -115,6 +115,10 @@ export const FormsSchema = z
   .enum(["tanstack-form", "react-hook-form", "none"])
   .describe("Form handling library");
 
+export const ValidationSchema = z
+  .enum(["zod", "valibot", "none"])
+  .describe("Schema validation library (none uses Zod as default for internal usage)");
+
 export const TestingSchema = z
   .enum(["vitest", "playwright", "vitest-playwright", "none"])
   .describe("Testing framework (vitest-playwright includes both unit and e2e testing)");
@@ -199,6 +203,7 @@ export const CreateInputSchema = z.object({
   email: EmailSchema.optional(),
   cssFramework: CSSFrameworkSchema.optional(),
   uiLibrary: UILibrarySchema.optional(),
+  validation: ValidationSchema.optional(),
 });
 
 export const AddInputSchema = z.object({
@@ -243,6 +248,7 @@ export const ProjectConfigSchema = z.object({
   email: EmailSchema,
   cssFramework: CSSFrameworkSchema,
   uiLibrary: UILibrarySchema,
+  validation: ValidationSchema,
 });
 
 export const BetterTStackConfigSchema = z.object({
@@ -271,6 +277,7 @@ export const BetterTStackConfigSchema = z.object({
   email: EmailSchema,
   cssFramework: CSSFrameworkSchema,
   uiLibrary: UILibrarySchema,
+  validation: ValidationSchema,
 });
 
 export const BetterTStackConfigFileSchema = z
@@ -320,3 +327,4 @@ export const TESTING_VALUES = TestingSchema.options;
 export const EMAIL_VALUES = EmailSchema.options;
 export const CSS_FRAMEWORK_VALUES = CSSFrameworkSchema.options;
 export const UI_LIBRARY_VALUES = UILibrarySchema.options;
+export const VALIDATION_VALUES = ValidationSchema.options;

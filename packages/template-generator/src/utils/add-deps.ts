@@ -265,6 +265,9 @@ export const dependencyVersionMap = {
   "@tanstack/react-store": "^0.8.0",
   "@legendapp/state": "^3.0.0",
   "@legendapp/state-react": "^4.0.0",
+
+  // Validation libraries
+  valibot: "^1.1.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

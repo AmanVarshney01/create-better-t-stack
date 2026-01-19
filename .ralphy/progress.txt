@@ -593,3 +593,60 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Valibot Validation Library Implementation
+
+### Task: Implement Valibot as a validation library option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Created ValidationSchema with "zod", "valibot", "none" options
+   - Added validation to CreateInputSchema, ProjectConfigSchema, BetterTStackConfigSchema
+   - Added VALIDATION_VALUES export
+2. **packages/types/src/types.ts**: Added Validation type export
+3. **packages/template-generator/src/utils/add-deps.ts**: Added Valibot dependency version:
+   - valibot: ^1.1.0
+4. **packages/template-generator/src/processors/validation-deps.ts**: Created new validation processor:
+   - Handles valibot dependency addition
+   - Adds dependencies to api, server, web, and native packages
+   - Skips processing for "zod" and "none" (zod is added by workspace-deps)
+5. **packages/template-generator/src/processors/index.ts**: Registered validation processor
+6. **apps/web/src/lib/types.ts**: Added "validation" to TechCategory type
+7. **apps/web/src/lib/constant.ts**: Added validation options to TECH_OPTIONS:
+   - Zod (default), Valibot, No Validation
+   - Added validation to StackState type and DEFAULT_STACK
+8. **apps/web/src/lib/stack-url-state.ts**: Added validation to URL state parsing and serialization
+9. **apps/web/src/lib/stack-url-state.client.ts**: Added validation to client-side state
+10. **apps/web/src/lib/stack-search-schema.ts**: Added "va" URL param for validation
+11. **apps/web/src/lib/stack-url-keys.ts**: Added validation URL key mapping
+12. **apps/cli/src/index.ts**: Added ValidationSchema to CLI router input
+13. **apps/cli/src/constants.ts**: Added validation to DEFAULT_CONFIG_BASE
+14. **apps/cli/src/utils/config-processing.ts**: Added Validation processing to processFlags function
+15. **apps/cli/src/prompts/config-prompts.ts**: Added validation to gatherConfig return
+16. **apps/cli/src/helpers/core/command-handlers.ts**: Added validation to error config
+17. **apps/cli/src/utils/bts-config.ts**: Added validation field to btsConfig
+18. **apps/cli/test/test-utils.ts**: Added Validation type and schema support
+19. **apps/cli/test/validation.test.ts**: Created comprehensive validation tests:
+    - Valibot with TanStack Router, React Router, Next.js, TanStack Start
+    - Valibot with different backends (Hono, Express, Fastify)
+    - Valibot with native apps (native-bare, native-uniwind)
+    - Zod validation (default) tests
+    - No validation option tests
+
+### Features:
+- Valibot as a smaller bundle alternative to Zod (~1KB vs ~12KB)
+- Support for all React-based frontends (TanStack Router, React Router, TanStack Start, Next.js)
+- Support for React Native (Expo) apps
+- Support for all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+- Full web builder UI integration with validation section
+- URL parameter support for sharing configurations
+- Zod remains available internally for internal usage even when Valibot is selected
+
+### Technical Notes:
+- Valibot provides similar functionality to Zod with a much smaller bundle size
+- Validation dependencies are added to api, server, web, and native packages
+- Zod is still included by default via workspace-deps for internal usage
+- Valibot can be used as the primary validation library in user code
+- Uses Valibot v1.1.0 with latest API
+
+### Status: COMPLETE
+

@@ -45,6 +45,7 @@ export function loadStackParams(
       email: getString("email", DEFAULT_STACK.email),
       backendLibraries: getString("backendLibraries", DEFAULT_STACK.backendLibraries),
       stateManagement: getString("stateManagement", DEFAULT_STACK.stateManagement),
+      validation: getString("validation", DEFAULT_STACK.validation),
       codeQuality: getArray("codeQuality", DEFAULT_STACK.codeQuality),
       documentation: getArray("documentation", DEFAULT_STACK.documentation),
       appPlatforms: getArray("appPlatforms", DEFAULT_STACK.appPlatforms),
@@ -100,6 +101,7 @@ export function serializeStackParams(basePath: string, stack: StackState): strin
   addParam("email", stack.email);
   addParam("backendLibraries", stack.backendLibraries);
   addParam("stateManagement", stack.stateManagement);
+  addParam("validation", stack.validation);
   addParam("codeQuality", stack.codeQuality);
   addParam("documentation", stack.documentation);
   addParam("appPlatforms", stack.appPlatforms);

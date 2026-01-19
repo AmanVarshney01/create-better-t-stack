@@ -26,6 +26,7 @@ export const DEFAULT_CONFIG_BASE = {
   email: "none",
   effect: "none",
   stateManagement: "none",
+  validation: "zod",
   forms: "react-hook-form",
   testing: "vitest",
   ai: "none",

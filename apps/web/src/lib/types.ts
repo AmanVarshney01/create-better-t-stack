@@ -16,6 +16,7 @@ export type TechCategory =
   | "email"
   | "backendLibraries"
   | "stateManagement"
+  | "validation"
   | "cssFramework"
   | "uiLibrary"
   | "codeQuality"

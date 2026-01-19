@@ -184,6 +184,7 @@ export async function gatherConfig(
     // These fields don't have prompts yet, use defaults
     ai: flags.ai ?? "none",
     stateManagement: flags.stateManagement ?? "none",
+    validation: flags.validation ?? "zod",
     forms: flags.forms ?? "react-hook-form",
     testing: flags.testing ?? "vitest",
   };

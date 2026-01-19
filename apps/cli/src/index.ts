@@ -53,6 +53,7 @@ import {
   TestingSchema,
   type UILibrary,
   UILibrarySchema,
+  ValidationSchema,
   type WebDeploy,
   WebDeploySchema,
 } from "./types";
@@ -92,6 +93,7 @@ export const router = os.router({
           email: EmailSchema.optional(),
           effect: EffectSchema.optional(),
           stateManagement: StateManagementSchema.optional(),
+          validation: ValidationSchema.optional(),
           forms: FormsSchema.optional(),
           testing: TestingSchema.optional(),
           ai: AISchema.optional(),

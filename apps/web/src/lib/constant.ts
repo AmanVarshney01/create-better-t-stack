@@ -681,6 +681,32 @@ export const TECH_OPTIONS: Record<
       default: true,
     },
   ],
+  validation: [
+    {
+      id: "zod",
+      name: "Zod",
+      description: "TypeScript-first schema validation (default)",
+      icon: "https://cdn.simpleicons.org/zod/3E67B1",
+      color: "from-blue-500 to-blue-700",
+      default: true,
+    },
+    {
+      id: "valibot",
+      name: "Valibot",
+      description: "Smaller bundle alternative to Zod (~1KB)",
+      icon: "",
+      color: "from-yellow-400 to-yellow-600",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No Validation",
+      description: "Use Zod internally only (no additional library)",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: false,
+    },
+  ],
   cssFramework: [
     {
       id: "tailwind",
@@ -1192,6 +1218,7 @@ export type StackState = {
   email: string;
   backendLibraries: string;
   stateManagement: string;
+  validation: string;
   cssFramework: string;
   uiLibrary: string;
   codeQuality: string[];
@@ -1222,6 +1249,7 @@ export const DEFAULT_STACK: StackState = {
   email: "none",
   backendLibraries: "none",
   stateManagement: "none",
+  validation: "zod",
   cssFramework: "tailwind",
   uiLibrary: "shadcn-ui",
   codeQuality: [],

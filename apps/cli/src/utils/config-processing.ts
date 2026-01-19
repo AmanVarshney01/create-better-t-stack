@@ -19,6 +19,7 @@ import type {
   ServerDeploy,
   StateManagement,
   UILibrary,
+  Validation,
   WebDeploy,
 } from "../types";
 
@@ -75,6 +76,10 @@ export function processFlags(options: CLIInput, projectName?: string) {
 
   if (options.stateManagement !== undefined) {
     config.stateManagement = options.stateManagement as StateManagement;
+  }
+
+  if (options.validation !== undefined) {
+    config.validation = options.validation as Validation;
   }
 
   if (options.git !== undefined) {

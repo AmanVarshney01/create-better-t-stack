@@ -22,6 +22,7 @@ export const stackUrlKeys: UrlKeys<
   email: "em",
   backendLibraries: "bl",
   stateManagement: "sm",
+  validation: "val",
   codeQuality: "cq",
   documentation: "doc",
   appPlatforms: "ap",
