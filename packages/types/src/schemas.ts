@@ -82,7 +82,7 @@ export const AuthSchema = z
   .enum(["better-auth", "clerk", "nextauth", "none"])
   .describe("Authentication provider");
 
-export const PaymentsSchema = z.enum(["polar", "none"]).describe("Payments provider");
+export const PaymentsSchema = z.enum(["polar", "stripe", "none"]).describe("Payments provider");
 
 export const WebDeploySchema = z.enum(["cloudflare", "none"]).describe("Web deployment");
 

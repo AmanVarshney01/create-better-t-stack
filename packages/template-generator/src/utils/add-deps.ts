@@ -287,6 +287,11 @@ export const dependencyVersionMap = {
 
   // Animation
   motion: "^12.17.0",
+
+  // Payments - Stripe
+  stripe: "^17.5.0",
+  "@stripe/stripe-js": "^5.5.0",
+  "@stripe/react-stripe-js": "^3.1.1",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

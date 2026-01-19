@@ -529,6 +529,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "stripe",
+      name: "Stripe",
+      description: "Industry standard payment processing",
+      icon: "https://cdn.simpleicons.org/stripe/635BFF",
+      color: "from-indigo-500 to-purple-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Payments",
       description: "Skip payments integration",

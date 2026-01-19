@@ -115,11 +115,14 @@ function buildClientVars(
   frontend: string[],
   backend: ProjectConfig["backend"],
   auth: ProjectConfig["auth"],
+  payments: ProjectConfig["payments"],
 ): EnvVariable[] {
   const hasNextJs = frontend.includes("next");
   const hasReactRouter = frontend.includes("react-router");
   const hasTanStackRouter = frontend.includes("tanstack-router");
   const hasTanStackStart = frontend.includes("tanstack-start");
+  const hasNuxt = frontend.includes("nuxt");
+  const hasSvelte = frontend.includes("svelte");
 
   const baseVar = getClientServerVar(frontend, backend);
   const envVarName = backend === "convex" ? getConvexVar(frontend) : baseVar.key;
@@ -182,6 +185,21 @@ function buildClientVars(
         condition: true,
       });
     }
+  }
+
+  // Stripe publishable key for client-side
+  if (payments === "stripe") {
+    let stripeKeyName = "VITE_STRIPE_PUBLISHABLE_KEY";
+    if (hasNextJs) stripeKeyName = "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY";
+    else if (hasNuxt) stripeKeyName = "NUXT_PUBLIC_STRIPE_PUBLISHABLE_KEY";
+    else if (hasSvelte) stripeKeyName = "PUBLIC_STRIPE_PUBLISHABLE_KEY";
+
+    vars.push({
+      key: stripeKeyName,
+      value: "",
+      condition: true,
+      comment: "Stripe publishable key - get it at https://dashboard.stripe.com/apikeys",
+    });
   }
 
   return vars;
@@ -428,6 +446,18 @@ function buildServerVars(
       condition: payments === "polar",
     },
     {
+      key: "STRIPE_SECRET_KEY",
+      value: "",
+      condition: payments === "stripe",
+      comment: "Stripe secret key - get it at https://dashboard.stripe.com/apikeys",
+    },
+    {
+      key: "STRIPE_WEBHOOK_SECRET",
+      value: "",
+      condition: payments === "stripe",
+      comment: "Stripe webhook signing secret - get it when creating a webhook endpoint",
+    },
+    {
       key: "RESEND_API_KEY",
       value: "",
       condition: email === "resend",
@@ -529,7 +559,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     const clientDir = "apps/web";
     if (vfs.directoryExists(clientDir)) {
       const envPath = `${clientDir}/.env`;
-      const clientVars = buildClientVars(frontend, backend, auth);
+      const clientVars = buildClientVars(frontend, backend, auth, payments);
       writeEnvFile(vfs, envPath, clientVars);
     }
   }

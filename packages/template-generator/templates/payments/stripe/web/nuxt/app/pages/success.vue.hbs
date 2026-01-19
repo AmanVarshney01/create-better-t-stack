@@ -1,0 +1,16 @@
+<script setup lang="ts">
+const route = useRoute()
+const session_id = route.query.session_id as string
+</script>
+
+<template>
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-4">Payment Successful!</h1>
+    <p class="text-gray-600 mb-4">
+      Thank you for your purchase. Your payment has been processed successfully.
+    </p>
+    <p v-if="session_id" class="text-sm text-gray-500">
+      Session ID: \{{ session_id }}
+    </p>
+  </div>
+</template>

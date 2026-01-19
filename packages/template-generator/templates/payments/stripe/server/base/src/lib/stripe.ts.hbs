@@ -1,0 +1,67 @@
+import Stripe from "stripe";
+import { env } from "@{{projectName}}/env/server";
+
+export const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
+	apiVersion: "2024-12-18",
+});
+
+export async function createCheckoutSession(params: {
+	priceId: string;
+	successUrl: string;
+	cancelUrl: string;
+	customerId?: string;
+	metadata?: Record<string, string>;
+}) {
+	const session = await stripe.checkout.sessions.create({
+		mode: "payment",
+		payment_method_types: ["card"],
+		line_items: [
+			{
+				price: params.priceId,
+				quantity: 1,
+			},
+		],
+		success_url: params.successUrl,
+		cancel_url: params.cancelUrl,
+		customer: params.customerId,
+		metadata: params.metadata,
+	});
+
+	return session;
+}
+
+export async function createSubscriptionCheckout(params: {
+	priceId: string;
+	successUrl: string;
+	cancelUrl: string;
+	customerId?: string;
+	metadata?: Record<string, string>;
+}) {
+	const session = await stripe.checkout.sessions.create({
+		mode: "subscription",
+		payment_method_types: ["card"],
+		line_items: [
+			{
+				price: params.priceId,
+				quantity: 1,
+			},
+		],
+		success_url: params.successUrl,
+		cancel_url: params.cancelUrl,
+		customer: params.customerId,
+		metadata: params.metadata,
+	});
+
+	return session;
+}
+
+export async function constructWebhookEvent(
+	payload: string | Buffer,
+	signature: string,
+) {
+	return stripe.webhooks.constructEvent(
+		payload,
+		signature,
+		env.STRIPE_WEBHOOK_SECRET,
+	);
+}

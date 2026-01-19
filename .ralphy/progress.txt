@@ -900,3 +900,64 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Stripe Payments Integration
+
+### Task: Implement Stripe as a payment provider option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "stripe" to PaymentsSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Stripe dependency versions:
+   - stripe: ^17.5.0 (server-side SDK)
+   - @stripe/stripe-js: ^5.5.0 (client-side SDK)
+   - @stripe/react-stripe-js: ^3.1.1 (React bindings)
+3. **packages/template-generator/src/processors/payments-deps.ts**: Added Stripe dependency processing:
+   - Server-side stripe package for backend (apps/server)
+   - Server-side stripe package for auth package (packages/auth)
+   - Client-side @stripe/stripe-js and @stripe/react-stripe-js for React frontends
+   - Client-side @stripe/stripe-js for non-React frontends (Nuxt, Svelte, Solid)
+4. **packages/template-generator/src/processors/env-vars.ts**: Added Stripe environment variables:
+   - STRIPE_SECRET_KEY (server-side)
+   - STRIPE_WEBHOOK_SECRET (server-side)
+   - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY / VITE_STRIPE_PUBLISHABLE_KEY / etc. (client-side, framework-dependent)
+5. **packages/template-generator/templates/payments/stripe/**: Created Stripe templates:
+   - server/base/src/lib/stripe.ts.hbs - Server-side Stripe initialization with checkout and webhook utilities
+   - web/react/next/src/app/success/page.tsx.hbs - Next.js success page
+   - web/react/tanstack-router/src/routes/success.tsx.hbs - TanStack Router success page
+   - web/react/react-router/src/routes/success.tsx.hbs - React Router success page
+   - web/react/tanstack-start/src/routes/success.tsx.hbs - TanStack Start success page
+   - web/nuxt/app/pages/success.vue.hbs - Nuxt success page
+   - web/svelte/src/routes/success/+page.svelte.hbs - Svelte success page
+   - web/solid/src/routes/success.tsx.hbs - Solid success page
+6. **apps/web/src/lib/constant.ts**: Added Stripe to web builder payments options with indigo/purple icon
+7. **apps/cli/test/payments.test.ts**: Created comprehensive Stripe tests:
+   - Stripe with TanStack Router, React Router, Next.js, TanStack Start
+   - Stripe with different backends (Hono, Express, Fastify, Elysia)
+   - Stripe with non-React frontends (Nuxt, Svelte, Solid)
+   - Polar with Better Auth (for comparison)
+   - None option test
+
+### Features:
+- Industry standard Stripe payment processing
+- Server-side SDK (stripe) for secure API calls
+- Client-side SDK (@stripe/stripe-js) for Stripe Elements and Checkout
+- React bindings (@stripe/react-stripe-js) for React-based frontends
+- Checkout session creation (one-time and subscription)
+- Webhook event construction and verification
+- Support for all React-based frontends (TanStack Router, React Router, TanStack Start, Next.js)
+- Support for non-React frontends (Nuxt, Svelte, Solid)
+- Support for all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+- Full web builder UI integration
+- Environment variables with helpful comments
+
+### Technical Notes:
+- Stripe uses separate server and client SDKs for security
+- Server SDK handles sensitive operations (creating sessions, verifying webhooks)
+- Client SDK handles UI elements (Stripe Elements, Checkout redirect)
+- Uses latest Stripe API version (2024-12-18)
+- Webhook secret is required for secure event verification
+- Success pages show session_id from Stripe Checkout redirect
+- All 13 tests pass
+
+### Status: COMPLETE
+
