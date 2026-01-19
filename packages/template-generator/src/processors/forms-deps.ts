@@ -65,6 +65,9 @@ function getFormsDeps(
     case "final-form":
       deps.push("final-form", "react-final-form");
       break;
+    case "conform":
+      deps.push("@conform-to/react", "@conform-to/zod");
+      break;
     // react-hook-form and tanstack-form are handled elsewhere or already included
     // No additional deps needed for those cases
   }

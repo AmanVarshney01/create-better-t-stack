@@ -2394,3 +2394,36 @@ Implemented Final Form as a new form library option. Final Form is a framework-a
 - Minimal bundle size (~9.5KB for core + React wrapper)
 - Compatible with all React-based web frontends and React Native apps
 - Field-level and form-level validation support
+
+---
+
+## 2026-01-19 - Conform Form Library Implementation
+
+Implemented Conform as a new form library option. Conform is a type-safe form validation library utilizing web fundamentals to progressively enhance HTML Forms with full support for server frameworks like Remix and Next.js.
+
+**Changes Made:**
+1. **packages/types/src/schemas.ts**: Added "conform" to FormsSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Conform dependency versions:
+   - @conform-to/react: ^1.8.2
+   - @conform-to/zod: ^1.8.2
+3. **packages/template-generator/src/processors/forms-deps.ts**: Added Conform dependency processing:
+   - Adds @conform-to/react and @conform-to/zod packages to web and native apps
+4. **apps/web/src/lib/constant.ts**: Added Conform to web builder form options with emerald gradient
+5. **apps/cli/test/forms.test.ts**: Added comprehensive Conform tests:
+   - 4 tests with React frontends (TanStack Router, React Router, Next.js, TanStack Start)
+   - 4 tests with different backends (Hono, Express, Fastify, Elysia)
+   - 2 tests with native apps (native-bare, native-uniwind)
+
+**Test Results:**
+- All 32 form library tests pass (including 10 new Conform tests)
+- TypeScript checks pass for types and template-generator packages
+- Pre-existing TypeScript errors in apps/cli/src/prompts/config-prompts.ts unrelated to this change
+
+**Key Features:**
+- Progressive enhancement first APIs (works without JavaScript)
+- Type-safe field inference with full TypeScript support
+- Built-in Zod integration via @conform-to/zod
+- Fine-grained subscription for optimal performance
+- Built-in accessibility helpers
+- Compatible with all React-based web frontends and React Native apps
+- Ideal for server-first frameworks like Remix, Next.js, and React Router

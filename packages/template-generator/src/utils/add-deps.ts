@@ -320,6 +320,8 @@ export const dependencyVersionMap = {
   yup: "^1.6.1",
   "final-form": "^4.20.10",
   "react-final-form": "^6.5.9",
+  "@conform-to/react": "^1.8.2",
+  "@conform-to/zod": "^1.8.2",
 
   // Real-time/WebSocket
   "socket.io": "^4.8.1",

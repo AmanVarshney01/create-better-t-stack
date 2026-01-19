@@ -832,6 +832,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "conform",
+      name: "Conform",
+      description: "Progressive enhancement forms with Zod validation",
+      icon: "",
+      color: "from-emerald-500 to-emerald-700",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Form Library",
       description: "Build custom form handling",

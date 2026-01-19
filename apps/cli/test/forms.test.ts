@@ -271,6 +271,134 @@ describe("Form Library Options", () => {
     });
   });
 
+  describe("Conform with React frontends", () => {
+    test("conform with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "conform-tanstack-router",
+          frontend: ["tanstack-router"],
+          forms: "conform",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("conform with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "conform-react-router",
+          frontend: ["react-router"],
+          forms: "conform",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("conform with Next.js", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "conform-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          forms: "conform",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("conform with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "conform-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          forms: "conform",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Conform with different backends", () => {
+    test("conform with Hono backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "conform-hono",
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          forms: "conform",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("conform with Express backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "conform-express",
+          frontend: ["tanstack-router"],
+          backend: "express",
+          runtime: "node",
+          forms: "conform",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("conform with Fastify backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "conform-fastify",
+          frontend: ["tanstack-router"],
+          backend: "fastify",
+          runtime: "node",
+          forms: "conform",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("conform with Elysia backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "conform-elysia",
+          frontend: ["tanstack-router"],
+          backend: "elysia",
+          forms: "conform",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Conform with native apps", () => {
+    test("conform with native-bare", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "conform-native-bare",
+          frontend: ["native-bare"],
+          backend: "hono",
+          forms: "conform",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("conform with native-uniwind", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "conform-native-uniwind",
+          frontend: ["native-uniwind"],
+          backend: "hono",
+          forms: "conform",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("No form library", () => {
     test("none form library option", async () => {
       const result = await runTRPCTest(
