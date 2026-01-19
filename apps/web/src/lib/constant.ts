@@ -633,6 +633,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "postmark",
+      name: "Postmark",
+      description: "Fast transactional email service",
+      icon: "https://cdn.simpleicons.org/postmark/FFDE00",
+      color: "from-yellow-400 to-yellow-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Email",
       description: "Skip email integration",

@@ -1732,3 +1732,49 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 - Linting passes for all modified files
 
 ### Status: COMPLETE
+
+
+## 2026-01-19: Postmark Email Service Implementation
+
+### Task: Implement Postmark as an email service option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "postmark" to EmailSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Postmark dependency version:
+   - postmark: ^4.0.5
+3. **packages/template-generator/src/processors/email-deps.ts**: Added Postmark dependency processing
+4. **packages/template-generator/src/processors/env-vars.ts**: Added Postmark environment variables:
+   - POSTMARK_SERVER_TOKEN
+   - POSTMARK_FROM_EMAIL
+5. **packages/template-generator/templates/email/postmark/server/base/src/lib/email.ts.hbs**: Created Postmark email utility template with:
+   - sendEmail function for basic email sending
+   - sendTemplateEmail function for using Postmark templates
+   - sendBatchEmails function for batch sending (up to 500)
+   - getPostmarkClient function for advanced usage
+   - Support for attachments and tags
+6. **apps/web/src/lib/constant.ts**: Added Postmark to web builder email options with yellow icon
+7. **apps/cli/test/email.test.ts**: Added comprehensive Postmark tests:
+   - Postmark with Hono backend
+   - Postmark with Express backend
+   - Postmark with Fastify backend
+   - Postmark with Elysia backend
+   - Postmark environment variable tests
+   - Test to verify react-email is NOT included with Postmark
+
+### Features:
+- Fast transactional email delivery via Postmark API
+- Support for Postmark templates (sendTemplateEmail)
+- Batch email sending (up to 500 emails per batch)
+- Attachment support with Base64 encoding
+- Tag support for email categorization
+- Compatible with all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+
+### Technical Notes:
+- Postmark uses Server API Token for authentication (not API key)
+- Sender signatures must be verified in Postmark dashboard
+- Postmark has excellent delivery rates for transactional emails
+- Uses postmark npm package v4.0.5
+- All 38 email tests pass (including 9 new Postmark tests)
+- Linting passes for all modified files
+
+### Status: COMPLETE

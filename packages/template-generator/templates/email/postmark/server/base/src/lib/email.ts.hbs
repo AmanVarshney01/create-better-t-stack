@@ -1,0 +1,139 @@
+import * as postmark from "postmark";
+
+// Initialize Postmark client with Server API Token
+const client = new postmark.ServerClient(process.env.POSTMARK_SERVER_TOKEN || "");
+
+export interface SendEmailOptions {
+  to: string | string[];
+  subject: string;
+  html?: string;
+  text?: string;
+  from?: string;
+  replyTo?: string;
+  tag?: string;
+  attachments?: Array<{
+    name: string;
+    content: string; // Base64 encoded content
+    contentType: string;
+    contentId?: string;
+  }>;
+}
+
+/**
+ * Send an email using Postmark
+ * @see https://postmarkapp.com/developer/user-guide/send-email-with-api
+ */
+export async function sendEmail(options: SendEmailOptions) {
+  const { to, subject, html, text, from, replyTo, tag, attachments } = options;
+
+  const fromAddress = from || process.env.POSTMARK_FROM_EMAIL || "noreply@example.com";
+  const toAddresses = Array.isArray(to) ? to.join(", ") : to;
+
+  try {
+    const response = await client.sendEmail({
+      From: fromAddress,
+      To: toAddresses,
+      Subject: subject,
+      HtmlBody: html,
+      TextBody: text,
+      ReplyTo: replyTo,
+      Tag: tag,
+      Attachments: attachments?.map((a) => ({
+        Name: a.name,
+        Content: a.content,
+        ContentType: a.contentType,
+        ContentID: a.contentId,
+      })),
+    });
+
+    console.log("Email sent:", response.MessageID);
+    return { success: true, messageId: response.MessageID };
+  } catch (error) {
+    console.error("Email sending error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Send an email using a Postmark template
+ * @see https://postmarkapp.com/developer/user-guide/send-email-with-templates
+ */
+export async function sendTemplateEmail(options: {
+  to: string | string[];
+  templateId: number;
+  templateModel: Record<string, unknown>;
+  from?: string;
+  tag?: string;
+}) {
+  const { to, templateId, templateModel, from, tag } = options;
+
+  const fromAddress = from || process.env.POSTMARK_FROM_EMAIL || "noreply@example.com";
+  const toAddresses = Array.isArray(to) ? to.join(", ") : to;
+
+  try {
+    const response = await client.sendEmailWithTemplate({
+      From: fromAddress,
+      To: toAddresses,
+      TemplateId: templateId,
+      TemplateModel: templateModel,
+      Tag: tag,
+    });
+
+    console.log("Template email sent:", response.MessageID);
+    return { success: true, messageId: response.MessageID };
+  } catch (error) {
+    console.error("Template email sending error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Send batch emails (up to 500 per batch)
+ * @see https://postmarkapp.com/developer/user-guide/send-email-with-api#batch-emails
+ */
+export async function sendBatchEmails(
+  emails: Array<{
+    to: string;
+    subject: string;
+    html?: string;
+    text?: string;
+    from?: string;
+    tag?: string;
+  }>
+) {
+  const fromAddress = process.env.POSTMARK_FROM_EMAIL || "noreply@example.com";
+
+  const messages = emails.map((email) => ({
+    From: email.from || fromAddress,
+    To: email.to,
+    Subject: email.subject,
+    HtmlBody: email.html,
+    TextBody: email.text,
+    Tag: email.tag,
+  }));
+
+  try {
+    const responses = await client.sendEmailBatch(messages);
+    console.log(`Batch of ${responses.length} emails sent`);
+    return {
+      success: true,
+      results: responses.map((r) => ({
+        messageId: r.MessageID,
+        errorCode: r.ErrorCode,
+        message: r.Message,
+      })),
+    };
+  } catch (error) {
+    console.error("Batch email sending error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get the Postmark client instance for advanced usage
+ */
+export function getPostmarkClient() {
+  return client;
+}
+
+export { client };

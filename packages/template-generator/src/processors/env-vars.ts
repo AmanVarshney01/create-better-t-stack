@@ -571,6 +571,18 @@ function buildServerVars(
       comment: "Default from email address",
     },
     {
+      key: "POSTMARK_SERVER_TOKEN",
+      value: "",
+      condition: email === "postmark",
+      comment: "Postmark Server API Token - get it at https://postmarkapp.com",
+    },
+    {
+      key: "POSTMARK_FROM_EMAIL",
+      value: "noreply@example.com",
+      condition: email === "postmark",
+      comment: "Email address to send from (must have verified sender signature in Postmark)",
+    },
+    {
       key: "CORS_ORIGIN",
       value: corsOrigin,
       condition: true,
