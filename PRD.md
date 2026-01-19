@@ -175,7 +175,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 - [x] **Cypress** - E2E testing alternative to Playwright
 - [x] **Testing Library** - DOM testing utilities _(auto-included with Vitest/Jest for React/Vue/Svelte frontends)_
 - [x] **MSW** - Mock Service Worker for API mocking _(added as addon option with handler templates for both browser and Node.js)_
-- [ ] **Storybook** - Component development/testing
+- [x] **Storybook** - Component development/testing _(added as addon option with framework-specific Storybook packages for React, Next.js, Vue, Svelte, and Solid)_
 
 ---
 

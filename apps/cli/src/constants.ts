@@ -96,6 +96,7 @@ export const ADDON_COMPATIBILITY = {
   opentui: [],
   wxt: [],
   msw: [],
+  storybook: ["tanstack-router", "react-router", "next", "nuxt", "svelte", "solid"],
   none: [],
 } as const;
 

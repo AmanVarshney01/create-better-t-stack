@@ -1,0 +1,214 @@
+{{#if (or (eq frontend "tanstack-router") (eq frontend "react-router") (eq frontend "next") (eq frontend "solid"))}}
+import type { Meta, StoryObj } from "{{#if (eq frontend "next")}}@storybook/nextjs{{else}}@storybook/react-vite{{/if}}";
+
+// Example Button component for demonstration
+// Replace this with your actual component imports
+const Button = ({
+  primary = false,
+  size = "medium",
+  label,
+  onClick,
+}: {
+  primary?: boolean;
+  size?: "small" | "medium" | "large";
+  label: string;
+  onClick?: () => void;
+}) => {
+  const baseStyles = "font-semibold rounded-lg transition-colors";
+  const sizeStyles = {
+    small: "px-3 py-1.5 text-sm",
+    medium: "px-4 py-2 text-base",
+    large: "px-6 py-3 text-lg",
+  };
+  const variantStyles = primary
+    ? "bg-blue-600 text-white hover:bg-blue-700"
+    : "bg-gray-200 text-gray-900 hover:bg-gray-300";
+
+  return (
+    <button
+      type="button"
+      className={`${baseStyles} ${sizeStyles[size]} ${variantStyles}`}
+      onClick={onClick}
+    >
+      {label}
+    </button>
+  );
+};
+
+const meta: Meta<typeof Button> = {
+  title: "Example/Button",
+  component: Button,
+  parameters: {
+    layout: "centered",
+  },
+  tags: ["autodocs"],
+  argTypes: {
+    size: {
+      control: { type: "select" },
+      options: ["small", "medium", "large"],
+    },
+    onClick: { action: "clicked" },
+  },
+};
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Primary: Story = {
+  args: {
+    primary: true,
+    label: "Primary Button",
+  },
+};
+
+export const Secondary: Story = {
+  args: {
+    label: "Secondary Button",
+  },
+};
+
+export const Large: Story = {
+  args: {
+    size: "large",
+    label: "Large Button",
+  },
+};
+
+export const Small: Story = {
+  args: {
+    size: "small",
+    label: "Small Button",
+  },
+};
+{{else if (eq frontend "nuxt")}}
+import type { Meta, StoryObj } from "@storybook/vue3-vite";
+import { fn } from "@storybook/test";
+
+// Example Button component for demonstration
+const Button = {
+  name: "Button",
+  props: {
+    primary: { type: Boolean, default: false },
+    size: { type: String, default: "medium" },
+    label: { type: String, required: true },
+  },
+  emits: ["click"],
+  template: `
+    <button
+      type="button"
+      :class="[
+        'font-semibold rounded-lg transition-colors',
+        size === 'small' ? 'px-3 py-1.5 text-sm' : size === 'large' ? 'px-6 py-3 text-lg' : 'px-4 py-2 text-base',
+        primary ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-200 text-gray-900 hover:bg-gray-300'
+      ]"
+      @click="$emit('click')"
+    >
+      \{{ label }}
+    </button>
+  `,
+};
+
+const meta: Meta<typeof Button> = {
+  title: "Example/Button",
+  component: Button,
+  parameters: {
+    layout: "centered",
+  },
+  tags: ["autodocs"],
+  argTypes: {
+    size: {
+      control: { type: "select" },
+      options: ["small", "medium", "large"],
+    },
+  },
+  args: {
+    onClick: fn(),
+  },
+};
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Primary: Story = {
+  args: {
+    primary: true,
+    label: "Primary Button",
+  },
+};
+
+export const Secondary: Story = {
+  args: {
+    label: "Secondary Button",
+  },
+};
+{{else if (eq frontend "svelte")}}
+import type { Meta, StoryObj } from "@storybook/svelte-vite";
+import { fn } from "@storybook/test";
+
+// Example Button component for demonstration
+// In real usage, import your actual Svelte component
+const Button = {
+  render: (args: { primary?: boolean; size?: string; label: string }) => ({
+    Component: {
+      // Simplified Svelte-like component representation
+      $$: { on_mount: [], on_destroy: [], after_update: [], context: new Map() },
+    },
+    props: args,
+  }),
+};
+
+const meta: Meta<typeof Button> = {
+  title: "Example/Button",
+  component: Button as any,
+  parameters: {
+    layout: "centered",
+  },
+  tags: ["autodocs"],
+  argTypes: {
+    size: {
+      control: { type: "select" },
+      options: ["small", "medium", "large"],
+    },
+  },
+  args: {
+    onClick: fn(),
+  },
+};
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Primary: Story = {
+  args: {
+    primary: true,
+    label: "Primary Button",
+  },
+};
+
+export const Secondary: Story = {
+  args: {
+    label: "Secondary Button",
+  },
+};
+{{else}}
+// Generic Storybook example
+import type { Meta, StoryObj } from "@storybook/react-vite";
+
+const Button = ({ label }: { label: string }) => (
+  <button type="button">{label}</button>
+);
+
+const meta: Meta<typeof Button> = {
+  title: "Example/Button",
+  component: Button,
+};
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: {
+    label: "Click me",
+  },
+};
+{{/if}}

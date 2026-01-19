@@ -2276,3 +2276,49 @@ Implemented Dodo Payments as a new payment provider option. Dodo Payments is a M
 - Environment-based configuration (test_mode/live_mode)
 - Compatible with all web frontends and backend frameworks
 - Webhook secret support for secure event handling
+
+---
+
+## 2026-01-19 - Storybook Addon Implementation
+
+Implemented Storybook as a new addon option for component development and testing. Storybook is an open-source tool for building UI components and pages in isolation, enabling faster development and testing workflows.
+
+**Changes Made:**
+1. **packages/types/src/schemas.ts**: Added "storybook" to AddonsSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Storybook dependency versions:
+   - storybook: ^9.0.15 (core)
+   - @storybook/react-vite: ^9.0.15 (React + Vite)
+   - @storybook/vue3-vite: ^9.0.15 (Vue 3 + Vite)
+   - @storybook/svelte-vite: ^9.0.15 (Svelte + Vite)
+   - @storybook/nextjs: ^9.0.15 (Next.js)
+   - @storybook/addon-essentials: ^9.0.15
+   - @storybook/addon-interactions: ^9.0.15
+   - @storybook/test: ^9.0.15
+3. **packages/template-generator/src/processors/addons-deps.ts**: Added Storybook dependency processing:
+   - Framework detection for React Vite, Next.js, Vue/Nuxt, Svelte, Solid
+   - Adds appropriate framework-specific Storybook renderer
+   - Adds npm scripts: "storybook" and "build-storybook"
+4. **packages/template-generator/src/template-handlers/addons.ts**: Added Storybook template routing
+5. **Created template files:**
+   - templates/addons/storybook/apps/web/.storybook/main.ts.hbs (Storybook configuration)
+   - templates/addons/storybook/apps/web/.storybook/preview.ts.hbs (Preview configuration)
+   - templates/addons/storybook/apps/web/src/stories/Button.stories.ts.hbs (Example story)
+6. **apps/web/src/lib/constant.ts**: Added Storybook to web builder addons with pink gradient
+7. **apps/cli/src/constants.ts**: Added Storybook to ADDON_COMPATIBILITY with frontend restrictions:
+   - Compatible: tanstack-router, react-router, next, nuxt, svelte, solid
+8. **apps/cli/test/addons.test.ts**: Added comprehensive Storybook tests:
+   - 6 tests for compatible frontends
+   - Dependency verification tests
+   - Framework-specific package tests (React Vite, Next.js)
+   - Script verification tests
+   - Incompatible frontend tests
+
+**Test Results:**
+- All 61 addon tests pass
+- Pre-existing TypeScript lint errors in config-prompts.ts (unrelated to this change)
+
+**Key Features:**
+- Framework-specific Storybook packages automatically selected based on frontend choice
+- Example Button component story with full documentation and variants
+- Configured for autodocs, interaction testing, and essential addons
+- Compatible with React, Next.js, Vue/Nuxt, Svelte, and Solid frontends

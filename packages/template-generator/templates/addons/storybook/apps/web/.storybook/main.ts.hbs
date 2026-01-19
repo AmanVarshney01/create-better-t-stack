@@ -1,0 +1,15 @@
+import type { StorybookConfig } from "{{#if (eq frontend "next")}}@storybook/nextjs{{else if (or (eq frontend "tanstack-router") (eq frontend "react-router") (eq frontend "solid"))}}@storybook/react-vite{{else if (eq frontend "nuxt")}}@storybook/vue3-vite{{else if (eq frontend "svelte")}}@storybook/svelte-vite{{else}}@storybook/react-vite{{/if}}";
+
+const config: StorybookConfig = {
+  stories: ["../src/**/*.mdx", "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
+  addons: [
+    "@storybook/addon-essentials",
+    "@storybook/addon-interactions",
+  ],
+  framework: {
+    name: "{{#if (eq frontend "next")}}@storybook/nextjs{{else if (or (eq frontend "tanstack-router") (eq frontend "react-router") (eq frontend "solid"))}}@storybook/react-vite{{else if (eq frontend "nuxt")}}@storybook/vue3-vite{{else if (eq frontend "svelte")}}@storybook/svelte-vite{{else}}@storybook/react-vite{{/if}}",
+    options: {},
+  },
+};
+
+export default config;

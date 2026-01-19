@@ -1,0 +1,27 @@
+{{#if (eq frontend "next")}}
+import type { Preview } from "@storybook/nextjs";
+{{else if (or (eq frontend "tanstack-router") (eq frontend "react-router") (eq frontend "solid"))}}
+import type { Preview } from "@storybook/react-vite";
+{{else if (eq frontend "nuxt")}}
+import type { Preview } from "@storybook/vue3-vite";
+{{else if (eq frontend "svelte")}}
+import type { Preview } from "@storybook/svelte-vite";
+{{else}}
+import type { Preview } from "@storybook/react-vite";
+{{/if}}
+{{#if (eq cssFramework "tailwind")}}
+import "../src/index.css";
+{{/if}}
+
+const preview: Preview = {
+  parameters: {
+    controls: {
+      matchers: {
+        color: /(background|color)$/i,
+        date: /Date$/i,
+      },
+    },
+  },
+};
+
+export default preview;

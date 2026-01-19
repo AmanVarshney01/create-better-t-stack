@@ -354,6 +354,16 @@ export const dependencyVersionMap = {
   // MSW (Mock Service Worker)
   msw: "^2.7.0",
 
+  // Storybook
+  storybook: "^9.0.15",
+  "@storybook/react-vite": "^9.0.15",
+  "@storybook/vue3-vite": "^9.0.15",
+  "@storybook/svelte-vite": "^9.0.15",
+  "@storybook/nextjs": "^9.0.15",
+  "@storybook/addon-essentials": "^9.0.15",
+  "@storybook/addon-interactions": "^9.0.15",
+  "@storybook/test": "^9.0.15",
+
   // Animation
   motion: "^12.17.0",
   gsap: "^3.12.7",

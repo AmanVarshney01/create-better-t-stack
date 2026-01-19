@@ -338,6 +338,199 @@ describe("Addon Configurations", () => {
         }
       });
     });
+
+    describe("Storybook Addon", () => {
+      const storybookCompatibleFrontends = [
+        "tanstack-router",
+        "react-router",
+        "next",
+        "nuxt",
+        "svelte",
+        "solid",
+      ];
+
+      for (const frontend of storybookCompatibleFrontends) {
+        it(`should work with Storybook + ${frontend}`, async () => {
+          const config: TestConfig = {
+            projectName: `storybook-${frontend}`,
+            addons: ["storybook"],
+            frontend: [frontend as Frontend],
+            backend: "hono",
+            runtime: "bun",
+            database: "sqlite",
+            orm: "drizzle",
+            auth: "none",
+            examples: ["none"],
+            dbSetup: "none",
+            webDeploy: "none",
+            serverDeploy: "none",
+            install: false,
+          };
+
+          if (["nuxt", "svelte", "solid"].includes(frontend)) {
+            config.api = "orpc";
+          } else {
+            config.api = "trpc";
+          }
+
+          const result = await runTRPCTest(config);
+          expectSuccess(result);
+        });
+      }
+
+      it("should add Storybook dependencies to web package.json", async () => {
+        const result = await runTRPCTest({
+          projectName: "storybook-deps-check",
+          addons: ["storybook"],
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          api: "trpc",
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+
+        const webPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "web")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (webPackageJson?.content) {
+          const pkgJson = JSON.parse(webPackageJson.content);
+          expect(pkgJson.devDependencies?.storybook).toBeDefined();
+          expect(pkgJson.devDependencies?.["@storybook/addon-essentials"]).toBeDefined();
+          expect(pkgJson.devDependencies?.["@storybook/addon-interactions"]).toBeDefined();
+          expect(pkgJson.devDependencies?.["@storybook/test"]).toBeDefined();
+        }
+      });
+
+      it("should add correct framework-specific Storybook package for React Vite", async () => {
+        const result = await runTRPCTest({
+          projectName: "storybook-react-vite",
+          addons: ["storybook"],
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          api: "trpc",
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+
+        const webPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "web")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (webPackageJson?.content) {
+          const pkgJson = JSON.parse(webPackageJson.content);
+          expect(pkgJson.devDependencies?.["@storybook/react-vite"]).toBeDefined();
+        }
+      });
+
+      it("should add correct framework-specific Storybook package for Next.js", async () => {
+        const result = await runTRPCTest({
+          projectName: "storybook-nextjs",
+          addons: ["storybook"],
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "better-auth",
+          api: "trpc",
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+
+        const webPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "web")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (webPackageJson?.content) {
+          const pkgJson = JSON.parse(webPackageJson.content);
+          expect(pkgJson.devDependencies?.["@storybook/nextjs"]).toBeDefined();
+        }
+      });
+
+      it("should add Storybook scripts to web package.json", async () => {
+        const result = await runTRPCTest({
+          projectName: "storybook-scripts-check",
+          addons: ["storybook"],
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          api: "trpc",
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+
+        const webPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "web")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (webPackageJson?.content) {
+          const pkgJson = JSON.parse(webPackageJson.content);
+          expect(pkgJson.scripts?.storybook).toBe("storybook dev -p 6006");
+          expect(pkgJson.scripts?.["build-storybook"]).toBe("storybook build");
+        }
+      });
+
+      const storybookIncompatibleFrontends = ["native-bare", "native-uniwind", "native-unistyles"];
+
+      for (const frontend of storybookIncompatibleFrontends) {
+        it(`should fail with Storybook + ${frontend}`, async () => {
+          const result = await runTRPCTest({
+            projectName: `storybook-${frontend}-fail`,
+            addons: ["storybook"],
+            frontend: [frontend as Frontend],
+            backend: "hono",
+            runtime: "bun",
+            database: "sqlite",
+            orm: "drizzle",
+            auth: "none",
+            api: "trpc",
+            examples: ["none"],
+            dbSetup: "none",
+            webDeploy: "none",
+            serverDeploy: "none",
+            expectError: true,
+          });
+
+          expectError(result, "storybook addon requires one of these frontends");
+        });
+      }
+    });
   });
 
   describe("Multiple Addons", () => {
@@ -479,6 +672,7 @@ describe("Addon Configurations", () => {
       "turborepo",
       "oxlint",
       "msw",
+      "storybook",
       // Note: starlight, ultracite, ruler, fumadocs are prompt-controlled only
     ];
 

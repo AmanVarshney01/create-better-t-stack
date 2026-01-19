@@ -1160,6 +1160,14 @@ export const TECH_OPTIONS: Record<
       color: "from-orange-500 to-orange-700",
       default: false,
     },
+    {
+      id: "storybook",
+      name: "Storybook",
+      description: "Component development and testing workshop",
+      icon: "https://cdn.simpleicons.org/storybook/FF4785",
+      color: "from-pink-500 to-pink-700",
+      default: false,
+    },
   ],
   examples: [
     {

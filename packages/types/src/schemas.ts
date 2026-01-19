@@ -57,6 +57,7 @@ export const AddonsSchema = z
     "opentui",
     "wxt",
     "msw",
+    "storybook",
     "none",
   ])
   .describe("Additional addons");

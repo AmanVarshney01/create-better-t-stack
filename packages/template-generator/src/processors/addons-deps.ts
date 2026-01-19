@@ -74,4 +74,51 @@ export function processAddonsDeps(vfs: VirtualFileSystem, config: ProjectConfig)
       addPackageDependency({ vfs, packagePath: serverPkgPath, devDependencies: ["msw"] });
     }
   }
+
+  // Storybook - Component development and testing
+  if (config.addons.includes("storybook")) {
+    const webPkgPath = "apps/web/package.json";
+    if (vfs.exists(webPkgPath)) {
+      // Determine framework-specific Storybook package
+      const hasReactVite =
+        config.frontend.includes("tanstack-router") || config.frontend.includes("react-router");
+      const hasNext = config.frontend.includes("next");
+      const hasVue = config.frontend.includes("nuxt");
+      const hasSvelte = config.frontend.includes("svelte");
+      const hasSolid = config.frontend.includes("solid");
+
+      // Base Storybook dependencies
+      const devDeps: Parameters<typeof addPackageDependency>[0]["devDependencies"] = [
+        "storybook",
+        "@storybook/addon-essentials",
+        "@storybook/addon-interactions",
+        "@storybook/test",
+      ];
+
+      // Add framework-specific renderer
+      if (hasNext) {
+        devDeps.push("@storybook/nextjs");
+      } else if (hasReactVite || hasSolid) {
+        // Solid can use React Storybook with adapter, but for now use React-Vite
+        devDeps.push("@storybook/react-vite");
+      } else if (hasVue) {
+        devDeps.push("@storybook/vue3-vite");
+      } else if (hasSvelte) {
+        devDeps.push("@storybook/svelte-vite");
+      }
+
+      addPackageDependency({ vfs, packagePath: webPkgPath, devDependencies: devDeps });
+
+      // Add Storybook scripts
+      const webPkg = vfs.readJson<PackageJson>(webPkgPath);
+      if (webPkg) {
+        webPkg.scripts = {
+          ...webPkg.scripts,
+          storybook: "storybook dev -p 6006",
+          "build-storybook": "storybook build",
+        };
+        vfs.writeJson(webPkgPath, webPkg);
+      }
+    }
+  }
 }

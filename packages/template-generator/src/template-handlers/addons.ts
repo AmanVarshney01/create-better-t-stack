@@ -39,6 +39,14 @@ export async function processAddonTemplates(
       continue;
     }
 
+    // Storybook templates - only add to existing web packages
+    if (addon === "storybook") {
+      if (vfs.exists("apps/web/package.json")) {
+        processTemplatesFromPrefix(vfs, templates, "addons/storybook/apps/web", "apps/web", config);
+      }
+      continue;
+    }
+
     processTemplatesFromPrefix(vfs, templates, `addons/${addon}`, "", config);
   }
 }
