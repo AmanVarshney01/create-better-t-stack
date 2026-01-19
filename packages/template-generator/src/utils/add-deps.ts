@@ -254,6 +254,7 @@ export const dependencyVersionMap = {
   "mobx-react-lite": "^4.1.0",
   xstate: "^5.19.4",
   "@xstate/react": "^5.0.4",
+  valtio: "^2.1.2",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

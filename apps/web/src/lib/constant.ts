@@ -642,6 +642,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "valtio",
+      name: "Valtio",
+      description: "Proxy-based state (same authors as Zustand)",
+      icon: "",
+      color: "from-teal-400 to-teal-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No State Management",
       description: "Skip state management setup",

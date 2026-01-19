@@ -77,6 +77,9 @@ function getStateManagementDeps(
     case "xstate":
       deps.push("xstate", "@xstate/react");
       break;
+    case "valtio":
+      deps.push("valtio");
+      break;
   }
 
   return deps;

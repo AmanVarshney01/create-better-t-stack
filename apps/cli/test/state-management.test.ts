@@ -252,6 +252,82 @@ describe("State Management Options", () => {
     });
   });
 
+  describe("Valtio with React frontends", () => {
+    test("valtio with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "valtio-tanstack-router",
+          frontend: ["tanstack-router"],
+          stateManagement: "valtio",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("valtio with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "valtio-react-router",
+          frontend: ["react-router"],
+          stateManagement: "valtio",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("valtio with Next.js", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "valtio-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          stateManagement: "valtio",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("valtio with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "valtio-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          stateManagement: "valtio",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Valtio with native apps", () => {
+    test("valtio with native-bare", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "valtio-native-bare",
+          frontend: ["native-bare"],
+          backend: "hono",
+          stateManagement: "valtio",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("valtio with native-uniwind", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "valtio-native-uniwind",
+          frontend: ["native-uniwind"],
+          backend: "hono",
+          stateManagement: "valtio",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("No state management", () => {
     test("none state management option", async () => {
       const result = await runTRPCTest(

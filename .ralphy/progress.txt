@@ -414,3 +414,35 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Valtio State Management Implementation
+
+### Task: Implement Valtio as a state management option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "valtio" to StateManagementSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Valtio dependency version:
+   - valtio: ^2.1.2
+3. **packages/template-generator/src/processors/state-management-deps.ts**: Added Valtio case to handle valtio dependency
+4. **apps/web/src/lib/constant.ts**: Added Valtio to web builder state management options with teal icon
+5. **apps/cli/test/state-management.test.ts**: Added Valtio tests for:
+   - Valtio with TanStack Router
+   - Valtio with React Router
+   - Valtio with Next.js
+   - Valtio with TanStack Start
+   - Valtio with React Native (native-bare, native-uniwind)
+
+### Features:
+- Valtio proxy-based state management
+- Support for all React-based frontends (TanStack Router, React Router, TanStack Start, Next.js)
+- Support for React Native (Expo) apps
+- Full web builder UI integration
+
+### Technical Notes:
+- Valtio uses JavaScript Proxies for automatic state tracking
+- Created by the same authors as Zustand (Daishi Kato / Poimandres)
+- Valtio dependencies are only added to React-based packages
+- Simple API: just mutate the proxy state and components re-render automatically
+
+### Status: COMPLETE
+
