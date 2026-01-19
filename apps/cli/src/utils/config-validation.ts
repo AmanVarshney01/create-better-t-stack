@@ -6,6 +6,7 @@ import {
   validateAddonsAgainstFrontends,
   validateApiFrontendCompatibility,
   validateExamplesCompatibility,
+  validateNextAuthCompatibility,
   validatePaymentsCompatibility,
   validateSelfBackendCompatibility,
   validateServerDeployRequiresBackend,
@@ -441,6 +442,8 @@ export function validateFullConfig(
     config.frontend ?? [],
   );
 
+  validateNextAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
+
   validateUILibraryFrontendCompatibility(config.uiLibrary, config.frontend ?? []);
   validateUILibraryCSSFrameworkCompatibility(config.uiLibrary, config.cssFramework);
 }
@@ -456,6 +459,8 @@ export function validateConfigForProgrammaticUse(config: Partial<ProjectConfig>)
     validateApiFrontendCompatibility(config.api, config.frontend, config.astroIntegration);
 
     validatePaymentsCompatibility(config.payments, config.auth, config.backend, config.frontend);
+
+    validateNextAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
 
     if (config.addons && config.addons.length > 0) {
       validateAddonsAgainstFrontends(config.addons, config.frontend, config.auth);

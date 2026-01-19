@@ -22,6 +22,12 @@ export const dependencyVersionMap = {
   "@clerk/tanstack-react-start": "^0.26.3",
   "@clerk/clerk-expo": "^2.14.25",
 
+  // Auth.js (NextAuth v5)
+  "next-auth": "^5.0.0-beta.28",
+  "@auth/core": "^0.39.1",
+  "@auth/drizzle-adapter": "^1.8.1",
+  "@auth/prisma-adapter": "^2.9.1",
+
   "drizzle-orm": "^0.45.1",
   "drizzle-kit": "^0.31.8",
   "@planetscale/database": "^1.19.0",

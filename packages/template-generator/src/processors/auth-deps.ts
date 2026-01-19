@@ -35,7 +35,11 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
   if (auth === "clerk") {
     if (webExists) {
       if (hasNextJs) {
-        addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@clerk/nextjs"] });
+        addPackageDependency({
+          vfs,
+          packagePath: webPath,
+          dependencies: ["@clerk/nextjs"],
+        });
       } else if (hasTanStackStart) {
         addPackageDependency({
           vfs,
@@ -43,11 +47,19 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
           dependencies: ["@clerk/tanstack-react-start", "srvx"],
         });
       } else if (hasViteReact) {
-        addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@clerk/clerk-react"] });
+        addPackageDependency({
+          vfs,
+          packagePath: webPath,
+          dependencies: ["@clerk/clerk-react"],
+        });
       }
     }
     if (nativeExists && hasNative) {
-      addPackageDependency({ vfs, packagePath: nativePath, dependencies: ["@clerk/clerk-expo"] });
+      addPackageDependency({
+        vfs,
+        packagePath: nativePath,
+        dependencies: ["@clerk/clerk-expo"],
+      });
     }
   } else if (auth === "better-auth") {
     if (backendExists) {
@@ -81,7 +93,10 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
         vfs,
         packagePath: nativePath,
         dependencies: ["better-auth", "@better-auth/expo", "@convex-dev/better-auth"],
-        customDependencies: { "better-auth": "1.4.9", "@better-auth/expo": "1.4.9" },
+        customDependencies: {
+          "better-auth": "1.4.9",
+          "@better-auth/expo": "1.4.9",
+        },
       });
     }
   }
@@ -114,14 +129,26 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
 
   if (auth === "better-auth") {
     if (authExists) {
-      addPackageDependency({ vfs, packagePath: authPath, dependencies: ["better-auth"] });
+      addPackageDependency({
+        vfs,
+        packagePath: authPath,
+        dependencies: ["better-auth"],
+      });
       if (hasNative) {
-        addPackageDependency({ vfs, packagePath: authPath, dependencies: ["@better-auth/expo"] });
+        addPackageDependency({
+          vfs,
+          packagePath: authPath,
+          dependencies: ["@better-auth/expo"],
+        });
       }
     }
 
     if (hasWebFrontend && webExists) {
-      addPackageDependency({ vfs, packagePath: webPath, dependencies: ["better-auth"] });
+      addPackageDependency({
+        vfs,
+        packagePath: webPath,
+        dependencies: ["better-auth"],
+      });
     }
 
     if (hasNative && nativeExists) {
@@ -130,6 +157,33 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
         packagePath: nativePath,
         dependencies: ["better-auth", "@better-auth/expo"],
       });
+    }
+  } else if (auth === "nextauth") {
+    const { orm } = config;
+    const hasNextJs = frontend.includes("next");
+
+    // NextAuth only works with Next.js (self backend)
+    if (hasNextJs && webExists) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPath,
+        dependencies: ["next-auth", "@auth/core"],
+      });
+
+      // Add ORM-specific adapter
+      if (orm === "drizzle") {
+        addPackageDependency({
+          vfs,
+          packagePath: webPath,
+          dependencies: ["@auth/drizzle-adapter"],
+        });
+      } else if (orm === "prisma") {
+        addPackageDependency({
+          vfs,
+          packagePath: webPath,
+          dependencies: ["@auth/prisma-adapter"],
+        });
+      }
     }
   }
 }

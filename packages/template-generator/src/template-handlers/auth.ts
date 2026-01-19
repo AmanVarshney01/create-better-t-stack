@@ -2,7 +2,7 @@ import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
-import { type TemplateData, processTemplatesFromPrefix } from "./utils";
+import { processTemplatesFromPrefix, type TemplateData } from "./utils";
 
 export async function processAuthTemplates(
   vfs: VirtualFileSystem,
@@ -130,6 +130,31 @@ export async function processAuthTemplates(
           config,
         );
       }
+    }
+    return;
+  }
+
+  // NextAuth is specifically for Next.js fullstack (self backend)
+  if (
+    authProvider === "nextauth" &&
+    config.backend === "self" &&
+    config.frontend.includes("next")
+  ) {
+    // Process fullstack templates (auth config and API route)
+    processTemplatesFromPrefix(vfs, templates, "auth/nextauth/fullstack/next", "apps/web", config);
+
+    // Process web templates (components and client utilities)
+    processTemplatesFromPrefix(vfs, templates, "auth/nextauth/web/react/next", "apps/web", config);
+
+    // Process database schema templates if ORM is configured
+    if (config.orm !== "none" && config.database !== "none") {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `auth/nextauth/server/db/${config.orm}/${config.database}`,
+        "packages/db",
+        config,
+      );
     }
     return;
   }

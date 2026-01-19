@@ -165,6 +165,155 @@ describe("Authentication Configurations", () => {
     }
   });
 
+  describe("Auth.js (NextAuth) Provider", () => {
+    it("should work with nextauth + self backend + next + drizzle", async () => {
+      const result = await runTRPCTest({
+        projectName: "nextauth-self-next-drizzle",
+        auth: "nextauth",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with nextauth + self backend + next + prisma", async () => {
+      const result = await runTRPCTest({
+        projectName: "nextauth-self-next-prisma",
+        auth: "nextauth",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "prisma",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with nextauth + self backend + next + sqlite", async () => {
+      const result = await runTRPCTest({
+        projectName: "nextauth-self-next-sqlite",
+        auth: "nextauth",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should fail with nextauth + non-self backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "nextauth-non-self-fail",
+        auth: "nextauth",
+        backend: "hono",
+        runtime: "bun",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "Auth.js (NextAuth) is only supported with the 'self' backend");
+    });
+
+    it("should fail with nextauth + non-next frontend", async () => {
+      const result = await runTRPCTest({
+        projectName: "nextauth-non-next-fail",
+        auth: "nextauth",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["tanstack-start"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "Auth.js (NextAuth) requires Next.js frontend");
+    });
+
+    it("should fail with nextauth + tanstack-router frontend", async () => {
+      const result = await runTRPCTest({
+        projectName: "nextauth-tanstack-router-fail",
+        auth: "nextauth",
+        backend: "hono",
+        runtime: "bun",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "Auth.js (NextAuth)");
+    });
+
+    it("should fail with nextauth + convex backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "nextauth-convex-fail",
+        auth: "nextauth",
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        api: "none",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "Auth.js (NextAuth) is only supported with the 'self' backend");
+    });
+  });
+
   describe("Clerk Provider", () => {
     it("should work with clerk + convex", async () => {
       const result = await runTRPCTest({
@@ -427,6 +576,13 @@ describe("Authentication Configurations", () => {
           config.database = "none";
           config.orm = "none";
           config.api = "none";
+        } else if (auth === "nextauth") {
+          config.backend = "self";
+          config.runtime = "none";
+          config.database = "postgres";
+          config.orm = "drizzle";
+          config.api = "trpc";
+          config.frontend = ["next"];
         } else if (auth === "better-auth") {
           config.backend = "hono";
           config.runtime = "bun";

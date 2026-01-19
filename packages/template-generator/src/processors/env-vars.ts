@@ -374,12 +374,48 @@ function buildServerVars(
     {
       key: "BETTER_AUTH_SECRET",
       value: generateAuthSecret(),
-      condition: !!auth,
+      condition: auth === "better-auth",
     },
     {
       key: "BETTER_AUTH_URL",
       value: backend === "self" ? "http://localhost:3001" : "http://localhost:3000",
-      condition: !!auth,
+      condition: auth === "better-auth",
+    },
+    {
+      key: "AUTH_SECRET",
+      value: generateAuthSecret(),
+      condition: auth === "nextauth",
+      comment: "NextAuth.js secret - generate with: openssl rand -base64 32",
+    },
+    {
+      key: "AUTH_TRUST_HOST",
+      value: "true",
+      condition: auth === "nextauth",
+      comment: "Trust the host header for NextAuth",
+    },
+    {
+      key: "AUTH_GITHUB_ID",
+      value: "",
+      condition: auth === "nextauth",
+      comment: "GitHub OAuth App Client ID (optional)",
+    },
+    {
+      key: "AUTH_GITHUB_SECRET",
+      value: "",
+      condition: auth === "nextauth",
+      comment: "GitHub OAuth App Client Secret (optional)",
+    },
+    {
+      key: "AUTH_GOOGLE_ID",
+      value: "",
+      condition: auth === "nextauth",
+      comment: "Google OAuth Client ID (optional)",
+    },
+    {
+      key: "AUTH_GOOGLE_SECRET",
+      value: "",
+      condition: auth === "nextauth",
+      comment: "Google OAuth Client Secret (optional)",
     },
     {
       key: "POLAR_ACCESS_TOKEN",

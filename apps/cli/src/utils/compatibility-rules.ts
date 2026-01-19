@@ -216,7 +216,35 @@ export function isFrontendAllowedWithBackend(
     if (incompatibleFrontends.includes(frontend)) return false;
   }
 
+  // NextAuth only works with Next.js frontend and self backend
+  if (auth === "nextauth") {
+    if (frontend !== "next") return false;
+    if (backend !== "self") return false;
+  }
+
   return true;
+}
+
+export function validateNextAuthCompatibility(
+  auth: Auth | undefined,
+  backend: Backend | undefined,
+  frontends: Frontend[] = [],
+) {
+  if (auth !== "nextauth") return;
+
+  const hasNextJs = frontends.includes("next");
+
+  if (backend !== "self") {
+    exitWithError(
+      "Auth.js (NextAuth) is only supported with the 'self' backend (fullstack Next.js). Please use '--backend self' or choose a different auth provider.",
+    );
+  }
+
+  if (!hasNextJs) {
+    exitWithError(
+      "Auth.js (NextAuth) requires Next.js frontend. Please use '--frontend next' or choose a different auth provider.",
+    );
+  }
 }
 
 export function allowedApisForFrontends(

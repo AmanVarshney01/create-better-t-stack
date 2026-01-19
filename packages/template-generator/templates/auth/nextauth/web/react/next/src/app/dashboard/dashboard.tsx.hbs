@@ -1,0 +1,49 @@
+"use client";
+
+import type { User } from "next-auth";
+import UserMenu from "@/components/user-menu";
+import { AuthProvider } from "@/components/providers";
+
+export default function Dashboard({ user }: { user: User }) {
+  return (
+    <AuthProvider>
+      <div className="min-h-screen bg-background">
+        <header className="border-b">
+          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 className="text-xl font-bold">Dashboard</h1>
+            <UserMenu />
+          </div>
+        </header>
+        <main className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <h2 className="text-2xl font-bold mb-4">
+              Welcome, {user.name || user.email}!
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              You are now signed in with Auth.js (NextAuth).
+            </p>
+            <div className="bg-card border rounded-lg p-6">
+              <h3 className="font-semibold mb-2">Your Profile</h3>
+              <dl className="space-y-2">
+                {user.name && (
+                  <div>
+                    <dt className="text-sm text-muted-foreground">Name</dt>
+                    <dd className="font-medium">{user.name}</dd>
+                  </div>
+                )}
+                <div>
+                  <dt className="text-sm text-muted-foreground">Email</dt>
+                  <dd className="font-medium">{user.email}</dd>
+                </div>
+                <div>
+                  <dt className="text-sm text-muted-foreground">User ID</dt>
+                  <dd className="font-mono text-sm">{user.id}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+        </main>
+      </div>
+    </AuthProvider>
+  );
+}

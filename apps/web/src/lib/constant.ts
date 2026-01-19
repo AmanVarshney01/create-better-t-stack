@@ -505,6 +505,13 @@ export const TECH_OPTIONS: Record<
       color: "from-blue-400 to-blue-600",
     },
     {
+      id: "nextauth",
+      name: "Auth.js (NextAuth)",
+      description: "Open source authentication for Next.js",
+      icon: "https://cdn.simpleicons.org/auth0/EB5424",
+      color: "from-orange-400 to-orange-600",
+    },
+    {
       id: "none",
       name: "No Auth",
       description: "Skip authentication",

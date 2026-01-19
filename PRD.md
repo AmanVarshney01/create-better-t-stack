@@ -97,7 +97,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 
 ## **AUTHENTICATION**
 
-- [ ] **Auth.js (NextAuth)** - Framework-agnostic auth
+- [x] **Auth.js (NextAuth)** - Framework-agnostic auth _(implemented for Next.js fullstack with self backend)_
 - [ ] **Lucia** - _(deprecated but educational resource)_
 - [ ] **Stack Auth** - Open-source auth platform
 - [ ] **Supabase Auth** - Auth with Supabase integration

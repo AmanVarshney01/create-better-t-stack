@@ -515,3 +515,81 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Auth.js (NextAuth) Authentication Implementation
+
+### Task: Implement Auth.js (NextAuth) as an authentication option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "nextauth" to AuthSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Auth.js dependency versions:
+   - next-auth: ^5.0.0-beta.28
+   - @auth/core: ^0.39.1
+   - @auth/drizzle-adapter: ^1.8.1
+   - @auth/prisma-adapter: ^2.9.1
+3. **packages/template-generator/src/processors/auth-deps.ts**: Added NextAuth dependency processing:
+   - Core next-auth and @auth/core packages
+   - @auth/drizzle-adapter for Drizzle ORM
+   - @auth/prisma-adapter for Prisma ORM
+4. **packages/template-generator/src/template-handlers/auth.ts**: Added NextAuth template processing:
+   - Handles fullstack Next.js templates
+   - Handles web React/Next.js templates
+   - Handles database schema templates for Drizzle and Prisma
+5. **packages/template-generator/templates/auth/nextauth/**: Created NextAuth templates:
+   - fullstack/next/src/lib/auth.ts.hbs - Main NextAuth configuration with GitHub and Google providers
+   - fullstack/next/src/app/api/auth/[...nextauth]/route.ts.hbs - API route handler
+   - fullstack/next/src/middleware.ts.hbs - Auth middleware for protected routes
+   - web/react/next/src/lib/auth-client.ts.hbs - Client-side auth utilities
+   - web/react/next/src/components/providers.tsx.hbs - SessionProvider wrapper
+   - web/react/next/src/components/sign-in-form.tsx.hbs - Sign-in form component
+   - web/react/next/src/components/sign-up-form.tsx.hbs - Sign-up form component
+   - web/react/next/src/components/user-menu.tsx.hbs - User dropdown menu
+   - web/react/next/src/app/login/page.tsx.hbs - Login page
+   - web/react/next/src/app/dashboard/page.tsx.hbs - Protected dashboard page
+   - web/react/next/src/app/dashboard/dashboard.tsx.hbs - Dashboard client component
+   - server/db/drizzle/postgres/src/schema/auth.ts.hbs - Drizzle Postgres auth schema
+   - server/db/drizzle/sqlite/src/schema/auth.ts.hbs - Drizzle SQLite auth schema
+   - server/db/drizzle/mysql/src/schema/auth.ts.hbs - Drizzle MySQL auth schema
+   - server/db/prisma/postgres/prisma/schema/auth.prisma.hbs - Prisma Postgres auth schema
+   - server/db/prisma/sqlite/prisma/schema/auth.prisma.hbs - Prisma SQLite auth schema
+   - server/db/prisma/mysql/prisma/schema/auth.prisma.hbs - Prisma MySQL auth schema
+6. **apps/web/src/lib/constant.ts**: Added NextAuth to web builder authentication options with orange icon
+7. **apps/cli/src/utils/compatibility-rules.ts**: Added NextAuth validation rules:
+   - validateNextAuthCompatibility function to ensure NextAuth only works with self backend and Next.js frontend
+   - Updated isFrontendAllowedWithBackend to check NextAuth constraints
+8. **apps/cli/src/utils/config-validation.ts**: Added validateNextAuthCompatibility import and call
+9. **packages/template-generator/src/processors/env-vars.ts**: Added NextAuth environment variables:
+   - AUTH_SECRET - NextAuth.js secret
+   - AUTH_TRUST_HOST - Trust host header
+   - AUTH_GITHUB_ID - GitHub OAuth client ID
+   - AUTH_GITHUB_SECRET - GitHub OAuth client secret
+   - AUTH_GOOGLE_ID - Google OAuth client ID
+   - AUTH_GOOGLE_SECRET - Google OAuth client secret
+10. **apps/cli/test/auth.test.ts**: Added comprehensive NextAuth tests:
+    - NextAuth with self backend + Next.js + Drizzle
+    - NextAuth with self backend + Next.js + Prisma
+    - NextAuth with self backend + Next.js + SQLite
+    - Failure test: NextAuth with non-self backend
+    - Failure test: NextAuth with non-Next.js frontend
+    - Failure test: NextAuth with Convex backend
+
+### Features:
+- Auth.js v5 (NextAuth) authentication for Next.js fullstack apps
+- OAuth providers: GitHub, Google (easily extensible)
+- Database adapters: Drizzle and Prisma
+- Session strategies: Database and JWT support
+- Protected routes via middleware
+- Client-side auth utilities with useSession hook
+- Pre-built UI components: sign-in form, sign-up form, user menu
+- Login and dashboard pages
+- Database schemas for all supported databases (PostgreSQL, SQLite, MySQL)
+
+### Technical Notes:
+- Auth.js v5 (NextAuth) is specifically designed for Next.js fullstack applications
+- Requires self backend (Next.js API routes handle auth)
+- Uses @auth/drizzle-adapter or @auth/prisma-adapter based on ORM choice
+- Environment variables follow Auth.js conventions (AUTH_* prefix)
+- Validation rules ensure NextAuth is only used with compatible configurations
+
+### Status: COMPLETE
+
