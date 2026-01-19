@@ -69,6 +69,10 @@ function getAnimationDeps(
       // Use platform-specific package
       deps.push(isNative ? "@react-spring/native" : "@react-spring/web");
       break;
+    case "auto-animate":
+      // Same package works for both web and native
+      deps.push("@formkit/auto-animate");
+      break;
   }
 
   return deps;

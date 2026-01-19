@@ -189,6 +189,68 @@ describe("Animation", () => {
     });
   });
 
+  describe("Auto Animate", () => {
+    test("auto-animate with TanStack Router", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-auto-animate-tanstack",
+        frontend: ["tanstack-router"],
+        animation: "auto-animate",
+      });
+      expectSuccess(result);
+    });
+
+    test("auto-animate with React Router", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-auto-animate-react-router",
+        frontend: ["react-router"],
+        animation: "auto-animate",
+      });
+      expectSuccess(result);
+    });
+
+    test("auto-animate with Next.js", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-auto-animate-next",
+        frontend: ["next"],
+        backend: "self",
+        runtime: "none",
+        animation: "auto-animate",
+      });
+      expectSuccess(result);
+    });
+
+    test("auto-animate with TanStack Start", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-auto-animate-tanstack-start",
+        frontend: ["tanstack-start"],
+        backend: "self",
+        runtime: "none",
+        animation: "auto-animate",
+      });
+      expectSuccess(result);
+    });
+
+    test("auto-animate with React Native (native-bare)", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-auto-animate-native-bare",
+        frontend: ["native-bare"],
+        backend: "hono",
+        animation: "auto-animate",
+      });
+      expectSuccess(result);
+    });
+
+    test("auto-animate with React Native (native-uniwind)", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-auto-animate-native-uniwind",
+        frontend: ["native-uniwind"],
+        backend: "hono",
+        animation: "auto-animate",
+      });
+      expectSuccess(result);
+    });
+  });
+
   describe("No Animation", () => {
     test("no animation with TanStack Router", async () => {
       const result = await runTRPCTest({

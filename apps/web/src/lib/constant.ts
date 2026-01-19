@@ -1148,6 +1148,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "auto-animate",
+      name: "Auto Animate",
+      description: "Zero-config, drop-in animation utility",
+      icon: "https://cdn.simpleicons.org/formkit/00DC82",
+      color: "from-green-400 to-emerald-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Animation",
       description: "Skip animation library setup",

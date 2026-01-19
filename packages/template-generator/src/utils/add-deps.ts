@@ -316,6 +316,7 @@ export const dependencyVersionMap = {
   gsap: "^3.12.7",
   "@react-spring/web": "^9.7.5",
   "@react-spring/native": "^9.7.5",
+  "@formkit/auto-animate": "^0.8.2",
 
   // Payments - Stripe
   stripe: "^17.5.0",

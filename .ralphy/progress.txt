@@ -1696,3 +1696,39 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+
+## 2026-01-19: Auto Animate Animation Library Implementation
+
+### Task: Implement Auto Animate as an animation library option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "auto-animate" to AnimationSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Auto Animate dependency version:
+   - @formkit/auto-animate: ^0.8.2
+3. **packages/template-generator/src/processors/animation-deps.ts**: Added auto-animate case to handle @formkit/auto-animate dependency (same package works for both web and native)
+4. **apps/web/src/lib/constant.ts**: Added Auto Animate to web builder animation options with green FormKit icon
+5. **apps/cli/test/animation.test.ts**: Added comprehensive Auto Animate tests:
+   - Auto Animate with TanStack Router
+   - Auto Animate with React Router
+   - Auto Animate with Next.js
+   - Auto Animate with TanStack Start
+   - Auto Animate with React Native (native-bare)
+   - Auto Animate with React Native (native-uniwind)
+
+### Features:
+- @formkit/auto-animate zero-config drop-in animation utility
+- Support for all React-based frontends (TanStack Router, React Router, TanStack Start, Next.js)
+- Support for React Native (Expo) apps
+- Full web builder UI integration with animation section
+- Same package works for both web and native platforms
+
+### Technical Notes:
+- Auto Animate provides zero-config smooth transitions with a single line of code
+- Works with React, Vue, Solid, Svelte, and vanilla JavaScript
+- No need for keyframes or complex configuration - just wrap elements
+- Uses @formkit/auto-animate v0.8.2
+- All 6 Auto Animate tests pass
+- Linting passes for all modified files
+
+### Status: COMPLETE
