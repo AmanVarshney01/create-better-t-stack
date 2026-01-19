@@ -48,6 +48,15 @@ export function processEmailDeps(vfs: VirtualFileSystem, config: ProjectConfig):
     });
   }
 
+  // Add AWS SES for aws-ses option
+  if (email === "aws-ses" && vfs.exists(serverPath)) {
+    addPackageDependency({
+      vfs,
+      packagePath: serverPath,
+      dependencies: ["@aws-sdk/client-ses"],
+    });
+  }
+
   // Add React Email components for resend and react-email options (not nodemailer)
   const hasReactWeb = frontend.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),

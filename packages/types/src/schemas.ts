@@ -130,9 +130,9 @@ export const TestingSchema = z
   .describe("Testing framework (vitest-playwright includes both unit and e2e testing)");
 
 export const EmailSchema = z
-  .enum(["react-email", "resend", "nodemailer", "postmark", "sendgrid", "none"])
+  .enum(["react-email", "resend", "nodemailer", "postmark", "sendgrid", "aws-ses", "none"])
   .describe(
-    "Email solution (resend includes react-email, nodemailer is classic Node.js email, postmark/sendgrid are transactional email services)",
+    "Email solution (resend includes react-email, nodemailer is classic Node.js email, postmark/sendgrid/aws-ses are transactional email services)",
   );
 
 export const RealtimeSchema = z

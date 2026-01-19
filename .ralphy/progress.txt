@@ -1981,3 +1981,56 @@ Implemented React Aria (react-aria-components) as a new UI component library opt
   - Nitro: File-based routing framework with own conventions (powers Nuxt)
 - These frameworks don't fit the Better-Fullstack approach of pluggable backend components
 - Proceeded with React Aria as it fits the UI library pattern
+
+
+---
+
+## Session: 2026-01-19
+
+### Task: Add AWS SES as email service option
+
+**Status:** ✅ Completed
+
+**Summary:**
+Implemented AWS SES (@aws-sdk/client-ses) as a new email service option. AWS Simple Email Service (SES) is Amazon's scalable, cost-effective email sending service used by many production applications.
+
+**Changes Made:**
+1. **packages/types/src/schemas.ts**: Added "aws-ses" to EmailSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added AWS SDK dependency:
+   - @aws-sdk/client-ses: ^3.970.0
+3. **packages/template-generator/src/processors/email-deps.ts**: Added AWS SES dependency processing for server package
+4. **packages/template-generator/src/processors/env-vars.ts**: Added AWS SES environment variables:
+   - AWS_REGION (default: us-east-1)
+   - AWS_ACCESS_KEY_ID
+   - AWS_SECRET_ACCESS_KEY
+   - AWS_SES_FROM_EMAIL
+5. **packages/template-generator/templates/email/aws-ses/server/base/src/lib/email.ts.hbs**: Created AWS SES email utility template with:
+   - SES client initialization with credentials
+   - sendEmail function for simple text/HTML emails
+   - sendRawEmail function for emails with attachments (MIME format)
+   - sendBatchEmails function for sending multiple emails
+   - Support for CC, BCC, reply-to addresses
+   - getSESClient function for advanced usage
+6. **apps/web/src/lib/constant.ts**: Added AWS SES to web builder email options with orange gradient
+7. **apps/cli/test/email.test.ts**: Added comprehensive AWS SES tests:
+   - 4 tests for compatible backends (hono, express, fastify, elysia)
+   - 1 test for dependency verification (@aws-sdk/client-ses)
+   - 1 test for react-email exclusion
+   - 1 test for environment variable verification
+   - 2 tests for fullstack frameworks (next, tanstack-start)
+   - 1 test for nestjs backend
+   - Updated "All Email Options" test to include aws-ses
+
+**Test Results:**
+- All 59 email tests pass (including 10+ new AWS SES tests)
+- Linting passes with only pre-existing warnings
+
+**Key Features:**
+- Full AWS SDK v3 support (modern JavaScript SDK)
+- Simple email sending with SendEmailCommand
+- Raw email sending with attachments via SendRawEmailCommand
+- Support for multiple recipients (to, cc, bcc)
+- Batch email sending capability
+- UTF-8 charset support for international content
+- Environment-based configuration (region, credentials, from address)
+- Compatible with all backends (hono, express, fastify, elysia, nestjs, self)

@@ -123,7 +123,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 - [ ] **Plunk** - Open-source email platform
 - [x] **Postmark** - Transactional email service
 - [x] **SendGrid** - Email delivery service
-- [ ] **AWS SES** - Amazon's email service
+- [x] **AWS SES** - Amazon's email service
 - [ ] **Mailgun** - Email API service
 
 ---
@@ -1342,7 +1342,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 - [x] **Resend** - Modern email API
 - [ ] **SendGrid** - Email delivery
 - [ ] **Postmark** - Transactional email
-- [ ] **AWS SES** - Amazon email
+- [x] **AWS SES** - Amazon email
 - [ ] **Mailgun** - Email API
 - [ ] **Mailchimp** - Email marketing
 

@@ -649,6 +649,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "aws-ses",
+      name: "AWS SES",
+      description: "Amazon Simple Email Service",
+      icon: "https://cdn.simpleicons.org/amazonwebservices/FF9900",
+      color: "from-orange-400 to-orange-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Email",
       description: "Skip email integration",

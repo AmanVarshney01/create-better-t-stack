@@ -197,6 +197,7 @@ export const dependencyVersionMap = {
   "@types/nodemailer": "^6.4.17",
   postmark: "^4.0.5",
   "@sendgrid/mail": "^8.1.4",
+  "@aws-sdk/client-ses": "^3.970.0",
 
   // Effect ecosystem
   effect: "^3.16.1",

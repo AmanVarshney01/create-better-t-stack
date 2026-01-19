@@ -1,0 +1,214 @@
+import { SESClient, SendEmailCommand, SendRawEmailCommand } from "@aws-sdk/client-ses";
+
+// Initialize AWS SES client
+const sesClient = new SESClient({
+  region: process.env.AWS_REGION || "us-east-1",
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+  },
+});
+
+export interface SendEmailOptions {
+  to: string | string[];
+  subject: string;
+  html?: string;
+  text?: string;
+  from?: string;
+  replyTo?: string | string[];
+  cc?: string | string[];
+  bcc?: string | string[];
+}
+
+/**
+ * Send an email using AWS SES
+ * @see https://docs.aws.amazon.com/ses/latest/APIReference/API_SendEmail.html
+ */
+export async function sendEmail(options: SendEmailOptions) {
+  const { to, subject, html, text, from, replyTo, cc, bcc } = options;
+
+  const fromAddress = from || process.env.AWS_SES_FROM_EMAIL || "noreply@example.com";
+  const toAddresses = Array.isArray(to) ? to : [to];
+  const replyToAddresses = replyTo ? (Array.isArray(replyTo) ? replyTo : [replyTo]) : undefined;
+  const ccAddresses = cc ? (Array.isArray(cc) ? cc : [cc]) : undefined;
+  const bccAddresses = bcc ? (Array.isArray(bcc) ? bcc : [bcc]) : undefined;
+
+  const command = new SendEmailCommand({
+    Source: fromAddress,
+    Destination: {
+      ToAddresses: toAddresses,
+      CcAddresses: ccAddresses,
+      BccAddresses: bccAddresses,
+    },
+    Message: {
+      Subject: {
+        Data: subject,
+        Charset: "UTF-8",
+      },
+      Body: {
+        ...(html && {
+          Html: {
+            Data: html,
+            Charset: "UTF-8",
+          },
+        }),
+        ...(text && {
+          Text: {
+            Data: text,
+            Charset: "UTF-8",
+          },
+        }),
+      },
+    },
+    ReplyToAddresses: replyToAddresses,
+  });
+
+  try {
+    const response = await sesClient.send(command);
+    console.log("Email sent:", response.MessageId);
+    return { success: true, messageId: response.MessageId };
+  } catch (error) {
+    console.error("Email sending error:", error);
+    throw error;
+  }
+}
+
+export interface SendRawEmailOptions {
+  to: string | string[];
+  subject: string;
+  html?: string;
+  text?: string;
+  from?: string;
+  replyTo?: string;
+  attachments?: Array<{
+    filename: string;
+    content: string | Buffer;
+    contentType: string;
+  }>;
+}
+
+/**
+ * Send a raw email with attachments using AWS SES
+ * @see https://docs.aws.amazon.com/ses/latest/APIReference/API_SendRawEmail.html
+ */
+export async function sendRawEmail(options: SendRawEmailOptions) {
+  const { to, subject, html, text, from, replyTo, attachments } = options;
+
+  const fromAddress = from || process.env.AWS_SES_FROM_EMAIL || "noreply@example.com";
+  const toAddresses = Array.isArray(to) ? to : [to];
+
+  // Build MIME message
+  const boundary = `----=_Part_${Date.now().toString(36)}`;
+  const mixedBoundary = `----=_Mixed_${Date.now().toString(36)}`;
+
+  let rawMessage = "";
+  rawMessage += `From: ${fromAddress}\r\n`;
+  rawMessage += `To: ${toAddresses.join(", ")}\r\n`;
+  rawMessage += `Subject: ${subject}\r\n`;
+  if (replyTo) {
+    rawMessage += `Reply-To: ${replyTo}\r\n`;
+  }
+  rawMessage += "MIME-Version: 1.0\r\n";
+
+  if (attachments && attachments.length > 0) {
+    rawMessage += `Content-Type: multipart/mixed; boundary="${mixedBoundary}"\r\n\r\n`;
+    rawMessage += `--${mixedBoundary}\r\n`;
+    rawMessage += `Content-Type: multipart/alternative; boundary="${boundary}"\r\n\r\n`;
+  } else {
+    rawMessage += `Content-Type: multipart/alternative; boundary="${boundary}"\r\n\r\n`;
+  }
+
+  // Text part
+  if (text) {
+    rawMessage += `--${boundary}\r\n`;
+    rawMessage += "Content-Type: text/plain; charset=UTF-8\r\n";
+    rawMessage += "Content-Transfer-Encoding: 7bit\r\n\r\n";
+    rawMessage += `${text}\r\n`;
+  }
+
+  // HTML part
+  if (html) {
+    rawMessage += `--${boundary}\r\n`;
+    rawMessage += "Content-Type: text/html; charset=UTF-8\r\n";
+    rawMessage += "Content-Transfer-Encoding: 7bit\r\n\r\n";
+    rawMessage += `${html}\r\n`;
+  }
+
+  rawMessage += `--${boundary}--\r\n`;
+
+  // Attachments
+  if (attachments && attachments.length > 0) {
+    for (const attachment of attachments) {
+      rawMessage += `--${mixedBoundary}\r\n`;
+      rawMessage += `Content-Type: ${attachment.contentType}; name="${attachment.filename}"\r\n`;
+      rawMessage += "Content-Transfer-Encoding: base64\r\n";
+      rawMessage += `Content-Disposition: attachment; filename="${attachment.filename}"\r\n\r\n`;
+
+      const content =
+        typeof attachment.content === "string"
+          ? attachment.content
+          : attachment.content.toString("base64");
+
+      rawMessage += `${content}\r\n`;
+    }
+    rawMessage += `--${mixedBoundary}--\r\n`;
+  }
+
+  const command = new SendRawEmailCommand({
+    RawMessage: {
+      Data: Buffer.from(rawMessage),
+    },
+  });
+
+  try {
+    const response = await sesClient.send(command);
+    console.log("Raw email sent:", response.MessageId);
+    return { success: true, messageId: response.MessageId };
+  } catch (error) {
+    console.error("Raw email sending error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Send multiple emails (note: SES has rate limits, consider using bulk sending for large volumes)
+ */
+export async function sendBatchEmails(
+  emails: Array<{
+    to: string | string[];
+    subject: string;
+    html?: string;
+    text?: string;
+    from?: string;
+  }>
+) {
+  const results = await Promise.allSettled(
+    emails.map((email) => sendEmail(email))
+  );
+
+  const successful = results.filter((r) => r.status === "fulfilled").length;
+  const failed = results.filter((r) => r.status === "rejected").length;
+
+  console.log(`Batch emails: ${successful} sent, ${failed} failed`);
+
+  return {
+    success: failed === 0,
+    total: emails.length,
+    successful,
+    failed,
+    results: results.map((r, i) => ({
+      email: emails[i]?.to,
+      status: r.status,
+      ...(r.status === "fulfilled" ? { messageId: r.value.messageId } : { error: r.reason }),
+    })),
+  };
+}
+
+/**
+ * Get the SES client for advanced usage
+ */
+export function getSESClient() {
+  return sesClient;
+}
+
+export { sesClient, SESClient, SendEmailCommand, SendRawEmailCommand };

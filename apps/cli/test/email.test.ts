@@ -312,6 +312,7 @@ describe("Email Configurations", () => {
       "nodemailer",
       "postmark",
       "sendgrid",
+      "aws-ses",
       "none",
     ];
 
@@ -794,6 +795,225 @@ describe("Email Configurations", () => {
         expect(envFile.content).toContain("SENDGRID_API_KEY");
         expect(envFile.content).toContain("SENDGRID_FROM_EMAIL");
       }
+    });
+  });
+
+  describe("AWS SES Email", () => {
+    it("should work with aws-ses + hono backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "aws-ses-hono",
+        email: "aws-ses",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that AWS SES dependencies were added
+      const serverPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "packages")
+        ?.children?.find((c: any) => c.name === "server")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (serverPackageJson?.content) {
+        const pkgJson = JSON.parse(serverPackageJson.content);
+        expect(pkgJson.dependencies?.["@aws-sdk/client-ses"]).toBeDefined();
+      }
+    });
+
+    it("should work with aws-ses + express backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "aws-ses-express",
+        email: "aws-ses",
+        backend: "express",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should not include react-email components with aws-ses", async () => {
+      const result = await runTRPCTest({
+        projectName: "aws-ses-no-react-email",
+        email: "aws-ses",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that react-email dependencies were NOT added for aws-ses
+      const serverPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "packages")
+        ?.children?.find((c: any) => c.name === "server")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (serverPackageJson?.content) {
+        const pkgJson = JSON.parse(serverPackageJson.content);
+        expect(pkgJson.dependencies?.["@react-email/components"]).toBeUndefined();
+        expect(pkgJson.dependencies?.["react-email"]).toBeUndefined();
+      }
+    });
+
+    const compatibleBackends: Backend[] = ["hono", "express", "fastify", "elysia"];
+
+    for (const backend of compatibleBackends) {
+      it(`should work with aws-ses + ${backend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `aws-ses-${backend}`,
+          email: "aws-ses",
+          backend,
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          api: "trpc",
+          auth: "better-auth",
+          frontend: ["tanstack-router"],
+          addons: ["turborepo"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+    }
+
+    it("should add AWS SES environment variables when email is aws-ses", async () => {
+      const result = await runTRPCTest({
+        projectName: "aws-ses-env-vars",
+        email: "aws-ses",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that env variables were added
+      const serverDir = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "apps")
+        ?.children?.find((c: any) => c.name === "server");
+
+      const envFile = serverDir?.children?.find((c: any) => c.name === ".env");
+
+      if (envFile?.content) {
+        expect(envFile.content).toContain("AWS_REGION");
+        expect(envFile.content).toContain("AWS_ACCESS_KEY_ID");
+        expect(envFile.content).toContain("AWS_SECRET_ACCESS_KEY");
+        expect(envFile.content).toContain("AWS_SES_FROM_EMAIL");
+      }
+    });
+
+    it("should work with aws-ses + next.js fullstack", async () => {
+      const result = await runTRPCTest({
+        projectName: "aws-ses-next",
+        email: "aws-ses",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with aws-ses + tanstack-start fullstack", async () => {
+      const result = await runTRPCTest({
+        projectName: "aws-ses-tanstack-start",
+        email: "aws-ses",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-start"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with aws-ses + nestjs backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "aws-ses-nestjs",
+        email: "aws-ses",
+        backend: "nestjs",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
     });
   });
 });

@@ -596,6 +596,30 @@ function buildServerVars(
       comment: "Email address to send from (must be verified in SendGrid)",
     },
     {
+      key: "AWS_REGION",
+      value: "us-east-1",
+      condition: email === "aws-ses",
+      comment: "AWS region for SES (e.g., us-east-1, eu-west-1)",
+    },
+    {
+      key: "AWS_ACCESS_KEY_ID",
+      value: "",
+      condition: email === "aws-ses",
+      comment: "AWS access key ID - get it at https://console.aws.amazon.com/iam",
+    },
+    {
+      key: "AWS_SECRET_ACCESS_KEY",
+      value: "",
+      condition: email === "aws-ses",
+      comment: "AWS secret access key",
+    },
+    {
+      key: "AWS_SES_FROM_EMAIL",
+      value: "noreply@example.com",
+      condition: email === "aws-ses",
+      comment: "Email address to send from (must be verified in AWS SES)",
+    },
+    {
       key: "CORS_ORIGIN",
       value: corsOrigin,
       condition: true,
