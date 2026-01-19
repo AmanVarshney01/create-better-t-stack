@@ -583,6 +583,19 @@ function buildServerVars(
       comment: "Email address to send from (must have verified sender signature in Postmark)",
     },
     {
+      key: "SENDGRID_API_KEY",
+      value: "",
+      condition: email === "sendgrid",
+      comment:
+        "SendGrid API key - get it at https://sendgrid.com/docs/ui/account-and-settings/api-keys/",
+    },
+    {
+      key: "SENDGRID_FROM_EMAIL",
+      value: "noreply@example.com",
+      condition: email === "sendgrid",
+      comment: "Email address to send from (must be verified in SendGrid)",
+    },
+    {
       key: "CORS_ORIGIN",
       value: corsOrigin,
       condition: true,

@@ -1778,3 +1778,50 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 - Linting passes for all modified files
 
 ### Status: COMPLETE
+
+
+## 2026-01-19: SendGrid Email Service Implementation
+
+### Task: Implement SendGrid as an email service option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "sendgrid" to EmailSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added SendGrid dependency version:
+   - @sendgrid/mail: ^8.1.4
+3. **packages/template-generator/src/processors/email-deps.ts**: Added SendGrid dependency processing
+4. **packages/template-generator/src/processors/env-vars.ts**: Added SendGrid environment variables:
+   - SENDGRID_API_KEY
+   - SENDGRID_FROM_EMAIL
+5. **packages/template-generator/templates/email/sendgrid/server/base/src/lib/email.ts.hbs**: Created SendGrid email utility template with:
+   - sendEmail function for basic email sending
+   - sendBatchEmails function for batch sending (up to 1000)
+   - sendTemplateEmail function for using SendGrid dynamic templates
+   - getSendGridClient function for advanced usage
+   - Support for attachments, categories, and scheduled sending
+6. **apps/web/src/lib/constant.ts**: Added SendGrid to web builder email options with blue icon
+7. **apps/cli/test/email.test.ts**: Added comprehensive SendGrid tests:
+   - SendGrid with Hono backend
+   - SendGrid with Express backend
+   - SendGrid with Fastify backend
+   - SendGrid with Elysia backend
+   - SendGrid environment variable tests
+   - Test to verify react-email is NOT included with SendGrid
+
+### Features:
+- Scalable email delivery via SendGrid API
+- Support for SendGrid dynamic templates (sendTemplateEmail)
+- Batch email sending (up to 1000 emails per batch)
+- Attachment support
+- Email categories for analytics tracking
+- Scheduled sending with Unix timestamp
+- Compatible with all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+
+### Technical Notes:
+- SendGrid uses API Key authentication
+- Sender email must be verified in SendGrid dashboard
+- SendGrid supports both single/batch emails and dynamic template-based emails
+- Uses @sendgrid/mail npm package v8.1.4
+- All 47 email tests pass (including 9 new SendGrid tests)
+- Linting passes for all modified files
+
+### Status: COMPLETE

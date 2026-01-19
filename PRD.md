@@ -122,7 +122,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 - [x] **Nodemailer** - Classic Node.js email sending
 - [ ] **Plunk** - Open-source email platform
 - [x] **Postmark** - Transactional email service
-- [ ] **SendGrid** - Email delivery service
+- [x] **SendGrid** - Email delivery service
 - [ ] **AWS SES** - Amazon's email service
 - [ ] **Mailgun** - Email API service
 

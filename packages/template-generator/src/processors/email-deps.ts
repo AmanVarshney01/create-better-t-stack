@@ -39,6 +39,15 @@ export function processEmailDeps(vfs: VirtualFileSystem, config: ProjectConfig):
     });
   }
 
+  // Add SendGrid for sendgrid option
+  if (email === "sendgrid" && vfs.exists(serverPath)) {
+    addPackageDependency({
+      vfs,
+      packagePath: serverPath,
+      dependencies: ["@sendgrid/mail"],
+    });
+  }
+
   // Add React Email components for resend and react-email options (not nodemailer)
   const hasReactWeb = frontend.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),

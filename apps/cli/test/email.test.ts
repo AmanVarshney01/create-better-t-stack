@@ -306,7 +306,14 @@ describe("Email Configurations", () => {
   });
 
   describe("All Email Options", () => {
-    const emailOptions: Email[] = ["resend", "react-email", "nodemailer", "postmark", "none"];
+    const emailOptions: Email[] = [
+      "resend",
+      "react-email",
+      "nodemailer",
+      "postmark",
+      "sendgrid",
+      "none",
+    ];
 
     for (const email of emailOptions) {
       it(`should work with email: ${email}`, async () => {
@@ -635,6 +642,157 @@ describe("Email Configurations", () => {
       if (envFile?.content) {
         expect(envFile.content).toContain("POSTMARK_SERVER_TOKEN");
         expect(envFile.content).toContain("POSTMARK_FROM_EMAIL");
+      }
+    });
+  });
+
+  describe("SendGrid Email", () => {
+    it("should work with sendgrid + hono backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "sendgrid-hono",
+        email: "sendgrid",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that SendGrid dependencies were added
+      const serverPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "packages")
+        ?.children?.find((c: any) => c.name === "server")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (serverPackageJson?.content) {
+        const pkgJson = JSON.parse(serverPackageJson.content);
+        expect(pkgJson.dependencies?.["@sendgrid/mail"]).toBeDefined();
+      }
+    });
+
+    it("should work with sendgrid + express backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "sendgrid-express",
+        email: "sendgrid",
+        backend: "express",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should not include react-email components with sendgrid", async () => {
+      const result = await runTRPCTest({
+        projectName: "sendgrid-no-react-email",
+        email: "sendgrid",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that react-email dependencies were NOT added for sendgrid
+      const serverPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "packages")
+        ?.children?.find((c: any) => c.name === "server")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (serverPackageJson?.content) {
+        const pkgJson = JSON.parse(serverPackageJson.content);
+        expect(pkgJson.dependencies?.["@react-email/components"]).toBeUndefined();
+        expect(pkgJson.dependencies?.["react-email"]).toBeUndefined();
+      }
+    });
+
+    const compatibleBackends: Backend[] = ["hono", "express", "fastify", "elysia"];
+
+    for (const backend of compatibleBackends) {
+      it(`should work with sendgrid + ${backend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `sendgrid-${backend}`,
+          email: "sendgrid",
+          backend,
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          api: "trpc",
+          auth: "better-auth",
+          frontend: ["tanstack-router"],
+          addons: ["turborepo"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+    }
+
+    it("should add SENDGRID environment variables when email is sendgrid", async () => {
+      const result = await runTRPCTest({
+        projectName: "sendgrid-env-vars",
+        email: "sendgrid",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that env variables were added
+      const serverDir = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "apps")
+        ?.children?.find((c: any) => c.name === "server");
+
+      const envFile = serverDir?.children?.find((c: any) => c.name === ".env");
+
+      if (envFile?.content) {
+        expect(envFile.content).toContain("SENDGRID_API_KEY");
+        expect(envFile.content).toContain("SENDGRID_FROM_EMAIL");
       }
     });
   });

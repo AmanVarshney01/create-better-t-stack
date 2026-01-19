@@ -641,6 +641,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "sendgrid",
+      name: "SendGrid",
+      description: "Scalable email delivery platform",
+      icon: "https://cdn.simpleicons.org/sendgrid/1A82E2",
+      color: "from-blue-400 to-blue-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Email",
       description: "Skip email integration",
