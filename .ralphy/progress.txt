@@ -1617,3 +1617,43 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Runtypes Validation Library Implementation
+
+### Task: Implement Runtypes as a validation library option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "runtypes" to ValidationSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Runtypes dependency version:
+   - runtypes: ^7.0.4
+3. **packages/template-generator/src/processors/validation-deps.ts**: Added Runtypes case to handle runtypes dependency
+4. **apps/web/src/lib/constant.ts**: Added Runtypes to web builder validation options with orange icon
+5. **apps/cli/test/validation.test.ts**: Added comprehensive Runtypes tests:
+   - Runtypes with TanStack Router
+   - Runtypes with React Router
+   - Runtypes with Next.js
+   - Runtypes with TanStack Start
+   - Runtypes with Hono backend
+   - Runtypes with Express backend
+   - Runtypes with Fastify backend
+   - Runtypes with React Native (native-bare, native-uniwind)
+
+### Features:
+- Runtypes runtime type validation with composable validators
+- Support for all React-based frontends (TanStack Router, React Router, TanStack Start, Next.js)
+- Support for React Native (Expo) apps
+- Support for all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+- Full web builder UI integration with validation section
+- URL parameter support for sharing configurations
+
+### Technical Notes:
+- Runtypes provides runtime type checking with composable type validators
+- Validates primitives, literals, arrays, tuples, objects, unions, intersections and more
+- Validation dependencies are added to api, server, web, and native packages
+- Zod is still included by default via workspace-deps for internal usage
+- Runtypes can be used as the primary validation library in user code
+- Uses Runtypes v7.0.4 with latest features
+- All 48 validation tests pass (including 9 new Runtypes tests)
+
+### Status: COMPLETE
+

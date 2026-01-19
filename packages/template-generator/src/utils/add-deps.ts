@@ -291,6 +291,7 @@ export const dependencyVersionMap = {
   arktype: "^2.1.29",
   "@sinclair/typebox": "^0.34.31",
   typia: "^9.7.1",
+  runtypes: "^7.0.4",
 
   // Form libraries
   formik: "^2.4.6",

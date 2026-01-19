@@ -80,6 +80,9 @@ function getValidationDeps(validation: ProjectConfig["validation"]): AvailableDe
     case "typia":
       deps.push("typia");
       break;
+    case "runtypes":
+      deps.push("runtypes");
+      break;
   }
 
   return deps;

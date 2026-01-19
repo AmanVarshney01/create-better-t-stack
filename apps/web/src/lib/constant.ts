@@ -826,6 +826,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "runtypes",
+      name: "Runtypes",
+      description: "Runtime type validation with composable validators",
+      icon: "",
+      color: "from-orange-400 to-orange-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Validation",
       description: "Use Zod internally only (no additional library)",

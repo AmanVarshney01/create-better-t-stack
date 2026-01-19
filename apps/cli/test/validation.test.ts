@@ -467,6 +467,122 @@ describe("Validation Library Options", () => {
     });
   });
 
+  describe("Runtypes with React frontends", () => {
+    test("runtypes with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "runtypes-tanstack-router",
+          frontend: ["tanstack-router"],
+          validation: "runtypes",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("runtypes with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "runtypes-react-router",
+          frontend: ["react-router"],
+          validation: "runtypes",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("runtypes with Next.js", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "runtypes-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          validation: "runtypes",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("runtypes with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "runtypes-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          validation: "runtypes",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Runtypes with different backends", () => {
+    test("runtypes with Hono backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "runtypes-hono",
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          validation: "runtypes",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("runtypes with Express backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "runtypes-express",
+          frontend: ["tanstack-router"],
+          backend: "express",
+          runtime: "node",
+          validation: "runtypes",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("runtypes with Fastify backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "runtypes-fastify",
+          frontend: ["tanstack-router"],
+          backend: "fastify",
+          runtime: "node",
+          validation: "runtypes",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Runtypes with native apps", () => {
+    test("runtypes with native-bare", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "runtypes-native-bare",
+          frontend: ["native-bare"],
+          backend: "hono",
+          validation: "runtypes",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("runtypes with native-uniwind", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "runtypes-native-uniwind",
+          frontend: ["native-uniwind"],
+          backend: "hono",
+          validation: "runtypes",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("Zod validation (default)", () => {
     test("zod with TanStack Router (explicit)", async () => {
       const result = await runTRPCTest(
