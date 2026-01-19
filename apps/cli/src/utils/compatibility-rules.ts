@@ -37,7 +37,7 @@ export function ensureSingleWebAndNative(frontends: Frontend[]) {
   const { web, native } = splitFrontends(frontends);
   if (web.length > 1) {
     exitWithError(
-      "Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, nuxt, svelte, solid, astro, qwik, angular, redwood",
+      "Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, nuxt, svelte, solid, astro, qwik, angular, redwood, fresh",
     );
   }
   if (native.length > 1) {
@@ -159,6 +159,7 @@ export function validateApiFrontendCompatibility(
   const includesQwik = frontends.includes("qwik");
   const includesAngular = frontends.includes("angular");
   const includesRedwood = frontends.includes("redwood");
+  const includesFresh = frontends.includes("fresh");
 
   // ts-rest requires React like tRPC
   if ((includesNuxt || includesSvelte || includesSolid) && (api === "trpc" || api === "ts-rest")) {
@@ -189,6 +190,13 @@ export function validateApiFrontendCompatibility(
     );
   }
 
+  // Fresh (Deno) has its own built-in server capabilities and doesn't support external API layers
+  if (includesFresh && api && api !== "none") {
+    exitWithError(
+      `Fresh has its own built-in server capabilities (Deno-native) and doesn't support external API layers (tRPC/oRPC/ts-rest). Please use --api none with Fresh.`,
+    );
+  }
+
   // Astro with non-React integrations doesn't support tRPC or ts-rest
   if (
     includesAstro &&
@@ -213,6 +221,7 @@ export function isFrontendAllowedWithBackend(
   if (backend === "convex" && frontend === "qwik") return false;
   if (backend === "convex" && frontend === "angular") return false;
   if (backend === "convex" && frontend === "redwood") return false;
+  if (backend === "convex" && frontend === "fresh") return false;
 
   // Qwik has its own built-in server, only works with backend=none
   if (frontend === "qwik" && backend && backend !== "none") return false;
@@ -222,6 +231,9 @@ export function isFrontendAllowedWithBackend(
 
   // RedwoodJS has its own built-in GraphQL API, only works with backend=none
   if (frontend === "redwood" && backend && backend !== "none") return false;
+
+  // Fresh (Deno) has its own built-in server, only works with backend=none
+  if (frontend === "fresh" && backend && backend !== "none") return false;
 
   if (auth === "clerk" && backend === "convex") {
     const incompatibleFrontends = ["nuxt", "svelte", "solid"];
@@ -270,6 +282,7 @@ export function allowedApisForFrontends(
   const includesQwik = frontends.includes("qwik");
   const includesAngular = frontends.includes("angular");
   const includesRedwood = frontends.includes("redwood");
+  const includesFresh = frontends.includes("fresh");
   const base: API[] = ["trpc", "orpc", "ts-rest", "none"];
 
   // Qwik uses its own server capabilities, only none is allowed
@@ -284,6 +297,11 @@ export function allowedApisForFrontends(
 
   // RedwoodJS uses its own GraphQL API, only none is allowed
   if (includesRedwood) {
+    return ["none"];
+  }
+
+  // Fresh (Deno) uses its own built-in server, only none is allowed
+  if (includesFresh) {
     return ["none"];
   }
 

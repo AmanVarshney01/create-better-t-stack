@@ -1,0 +1,19 @@
+import type { PageProps } from "$fresh/server.ts";
+import Header from "../components/Header.tsx";
+
+export default function Layout({ Component, state }: PageProps) {
+  return (
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>{state.title ?? "{{projectName}}"}</title>
+        <link rel="stylesheet" href="/styles.css" />
+      </head>
+      <body{{#if (eq cssFramework "tailwind")}} class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen"{{/if}}>
+        <Header />
+        <Component />
+      </body>
+    </html>
+  );
+}

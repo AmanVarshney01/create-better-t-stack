@@ -317,6 +317,11 @@ export const dependencyVersionMap = {
   "@redwoodjs/graphql-server": "^8.6.1",
   "@redwoodjs/vite": "^8.6.1",
   "@redwoodjs/project-config": "^8.6.1",
+
+  // Fresh (Deno-native framework - uses JSR/deno.json, not npm)
+  // These are reference versions for Fresh ecosystem
+  preact: "^10.25.4",
+  "preact-render-to-string": "^6.5.12",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

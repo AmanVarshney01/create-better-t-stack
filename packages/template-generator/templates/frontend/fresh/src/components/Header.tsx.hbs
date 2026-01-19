@@ -1,0 +1,29 @@
+export default function Header() {
+  return (
+    <header{{#if (eq cssFramework "tailwind")}} class="bg-black/20 backdrop-blur-md border-b border-white/10"{{/if}}>
+      <nav{{#if (eq cssFramework "tailwind")}} class="container mx-auto px-4 py-4 flex items-center justify-between"{{/if}}>
+        <a href="/"{{#if (eq cssFramework "tailwind")}} class="text-xl font-bold text-white hover:text-cyan-400 transition-colors"{{/if}}>
+          {{projectName}}
+        </a>
+        <div{{#if (eq cssFramework "tailwind")}} class="flex items-center gap-6"{{/if}}>
+          <a
+            href="https://fresh.deno.dev/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+            {{#if (eq cssFramework "tailwind")}}class="text-gray-300 hover:text-white transition-colors"{{/if}}
+          >
+            Docs
+          </a>
+          <a
+            href="https://github.com/denoland/fresh"
+            target="_blank"
+            rel="noopener noreferrer"
+            {{#if (eq cssFramework "tailwind")}}class="text-gray-300 hover:text-white transition-colors"{{/if}}
+          >
+            GitHub
+          </a>
+        </div>
+      </nav>
+    </header>
+  );
+}

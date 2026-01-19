@@ -1246,3 +1246,67 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Fresh Frontend Framework Implementation
+
+### Task: Implement Fresh as a frontend framework option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "fresh" to FrontendSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Fresh-related dependency versions:
+   - preact: ^10.25.4
+   - preact-render-to-string: ^6.5.12
+3. **apps/cli/src/utils/compatibility.ts**: Added "fresh" to WEB_FRAMEWORKS array
+4. **apps/cli/src/utils/compatibility-rules.ts**: Added Fresh-specific validations:
+   - Fresh must use backend="none" (has built-in Deno server capabilities)
+   - Fresh must use api="none" (has built-in API routes)
+   - Fresh not compatible with Convex backend
+   - Updated error messages and allowedApisForFrontends
+5. **apps/cli/src/constants.ts**: Added Fresh to compatibility mappings:
+   - Added to ADDON_COMPATIBILITY (pwa, tauri)
+   - Added to UI_LIBRARY_COMPATIBILITY (daisyui, none)
+   - Added fresh: "daisyui" to DEFAULT_UI_LIBRARY_BY_FRONTEND
+6. **apps/web/src/lib/constant.ts**: Added Fresh to web builder frontend options with teal/cyan gradient icon
+7. **packages/template-generator/src/template-handlers/frontend.ts**: Added Fresh frontend processing
+8. **packages/template-generator/templates/frontend/fresh/**: Created Fresh templates:
+   - deno.json.hbs - Deno configuration with JSR imports
+   - main.ts - App entry point with Fresh server
+   - dev.ts - Development server script
+   - fresh.config.ts.hbs - Fresh configuration with Tailwind plugin
+   - utils.ts - State and define helpers
+   - src/routes/_layout.tsx.hbs - Root layout component
+   - src/routes/index.tsx.hbs - Home page with islands demo
+   - src/components/Header.tsx.hbs - Header navigation component
+   - src/islands/Counter.tsx.hbs - Interactive counter island using Preact signals
+   - static/styles.css.hbs - Tailwind/plain CSS styles
+   - static/favicon.svg - Fresh favicon
+   - tailwind.config.ts.hbs - Tailwind configuration
+   - _gitignore - Git ignore file
+9. **apps/cli/test/frontend.test.ts**: Added Fresh tests:
+   - Fresh standalone (should pass)
+   - Fresh with tRPC (should fail)
+   - Fresh with oRPC (should fail)
+   - Fresh with ts-rest (should fail)
+
+### Features:
+- Deno-native full-stack web framework with islands architecture
+- JSR (JavaScript Registry) imports via deno.json
+- Preact for rendering with @preact/signals for reactive state
+- Islands architecture for optimal client-side JavaScript loading
+- Built-in SSR and file-based routing
+- Tailwind CSS support via Fresh Tailwind plugin
+- Standalone mode (no external backend needed - Fresh has built-in server)
+- Compatible with PWA and Tauri addons
+- daisyUI is the default UI library for Fresh
+
+### Technical Notes:
+- Fresh uses Deno's native module system (JSR and npm: specifiers)
+- Fresh has its own built-in server capabilities, works only with backend="none"
+- Uses Preact instead of React for smaller bundle size
+- Islands architecture ships zero JavaScript by default, hydrating only interactive components
+- Uses @preact/signals for fine-grained reactive state management
+- Fresh 2.0 alpha provides Express/Hono-like API patterns
+- All 4 Fresh-specific tests pass
+
+### Status: COMPLETE
+

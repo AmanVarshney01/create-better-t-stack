@@ -1,0 +1,29 @@
+import { useSignal } from "@preact/signals";
+
+interface CounterProps {
+  start: number;
+}
+
+export default function Counter({ start }: CounterProps) {
+  const count = useSignal(start);
+
+  return (
+    <div{{#if (eq cssFramework "tailwind")}} class="flex items-center gap-4"{{/if}}>
+      <button
+        onClick={() => count.value--}
+        {{#if (eq cssFramework "tailwind")}}class="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold transition-colors"{{/if}}
+      >
+        -
+      </button>
+      <span{{#if (eq cssFramework "tailwind")}} class="text-3xl font-bold text-white min-w-[60px] text-center"{{/if}}>
+        {count}
+      </span>
+      <button
+        onClick={() => count.value++}
+        {{#if (eq cssFramework "tailwind")}}class="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg font-semibold transition-colors"{{/if}}
+      >
+        +
+      </button>
+    </div>
+  );
+}

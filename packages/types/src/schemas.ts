@@ -32,6 +32,7 @@ export const FrontendSchema = z
     "qwik",
     "angular",
     "redwood",
+    "fresh",
     "none",
   ])
   .describe("Frontend framework");

@@ -1,0 +1,53 @@
+import { define } from "../../utils.ts";
+import Counter from "../islands/Counter.tsx";
+
+export const handler = define.handlers({
+  GET(ctx) {
+    ctx.state.title = "Home | {{projectName}}";
+    return ctx.render();
+  },
+});
+
+export default define.page(function Home() {
+  return (
+    <main{{#if (eq cssFramework "tailwind")}} class="container mx-auto px-4 py-16"{{/if}}>
+      <div{{#if (eq cssFramework "tailwind")}} class="flex flex-col items-center justify-center text-center"{{/if}}>
+        <h1{{#if (eq cssFramework "tailwind")}} class="text-5xl font-bold text-white mb-6"{{/if}}>
+          Welcome to <span{{#if (eq cssFramework "tailwind")}} class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500"{{/if}}>Fresh</span>
+        </h1>
+        <p{{#if (eq cssFramework "tailwind")}} class="text-xl text-gray-300 mb-8 max-w-2xl"{{/if}}>
+          A Deno-native full-stack web framework with islands architecture for optimal performance.
+        </p>
+
+        <div{{#if (eq cssFramework "tailwind")}} class="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20"{{/if}}>
+          <h2{{#if (eq cssFramework "tailwind")}} class="text-2xl font-semibold text-white mb-4"{{/if}}>Interactive Island</h2>
+          <Counter start={0} />
+        </div>
+
+        <div{{#if (eq cssFramework "tailwind")}} class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6"{{/if}}>
+          <FeatureCard
+            title="Islands Architecture"
+            description="Ship zero JavaScript by default, hydrate only interactive components."
+          />
+          <FeatureCard
+            title="Deno Native"
+            description="Built for Deno with first-class TypeScript support and modern APIs."
+          />
+          <FeatureCard
+            title="Fast by Default"
+            description="No build step for development, instant page loads with streaming."
+          />
+        </div>
+      </div>
+    </main>
+  );
+});
+
+function FeatureCard({ title, description }: { title: string; description: string }) {
+  return (
+    <div{{#if (eq cssFramework "tailwind")}} class="bg-white/5 backdrop-blur rounded-xl p-6 border border-white/10 hover:border-cyan-500/50 transition-colors"{{/if}}>
+      <h3{{#if (eq cssFramework "tailwind")}} class="text-lg font-semibold text-white mb-2"{{/if}}>{title}</h3>
+      <p{{#if (eq cssFramework "tailwind")}} class="text-gray-400"{{/if}}>{description}</p>
+    </div>
+  );
+}

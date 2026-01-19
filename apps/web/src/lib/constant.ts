@@ -134,6 +134,15 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "fresh",
+      name: "Fresh",
+      description: "Deno-native framework with islands architecture",
+      icon: "https://cdn.simpleicons.org/deno/000000",
+      color: "from-teal-400 to-cyan-600",
+      default: false,
+      className: "invert-0 dark:invert",
+    },
+    {
       id: "none",
       name: "No Web Frontend",
       description: "No web-based frontend",

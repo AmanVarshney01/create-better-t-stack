@@ -19,6 +19,7 @@ export async function processFrontendTemplates(
   const hasQwikWeb = config.frontend.includes("qwik");
   const hasAngularWeb = config.frontend.includes("angular");
   const hasRedwoodWeb = config.frontend.includes("redwood");
+  const hasFreshWeb = config.frontend.includes("fresh");
   const hasNativeBare = config.frontend.includes("native-bare");
   const hasNativeUniwind = config.frontend.includes("native-uniwind");
   const hasUnistyles = config.frontend.includes("native-unistyles");
@@ -32,7 +33,8 @@ export async function processFrontendTemplates(
     hasAstroWeb ||
     hasQwikWeb ||
     hasAngularWeb ||
-    hasRedwoodWeb
+    hasRedwoodWeb ||
+    hasFreshWeb
   ) {
     if (hasReactWeb) {
       processTemplatesFromPrefix(vfs, templates, "frontend/react/web-base", "apps/web", config);
@@ -76,6 +78,9 @@ export async function processFrontendTemplates(
     } else if (hasRedwoodWeb) {
       // RedwoodJS has its own monorepo structure at the root level
       processTemplatesFromPrefix(vfs, templates, "frontend/redwood", ".", config);
+    } else if (hasFreshWeb) {
+      // Fresh (Deno) outputs to apps/web like other frameworks
+      processTemplatesFromPrefix(vfs, templates, "frontend/fresh", "apps/web", config);
     }
   }
 

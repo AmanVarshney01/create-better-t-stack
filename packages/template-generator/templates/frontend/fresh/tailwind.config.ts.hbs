@@ -1,0 +1,21 @@
+{{#if (eq cssFramework "tailwind")}}
+import type { Config } from "tailwindcss";
+
+export default {
+  content: [
+    "{routes,islands,components}/**/*.{ts,tsx}",
+    "src/**/*.{ts,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [{{#if (eq uiLibrary "daisyui")}}
+    require("daisyui"),
+  {{/if}}],
+{{#if (eq uiLibrary "daisyui")}}
+  daisyui: {
+    themes: ["dark", "light"],
+  },
+{{/if}}
+} satisfies Config;
+{{/if}}

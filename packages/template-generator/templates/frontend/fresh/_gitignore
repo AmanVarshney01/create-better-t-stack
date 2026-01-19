@@ -1,0 +1,22 @@
+# Fresh build output
+_fresh/
+
+# Deno
+.deno/
+
+# Editor directories
+.idea/
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs
+*.log

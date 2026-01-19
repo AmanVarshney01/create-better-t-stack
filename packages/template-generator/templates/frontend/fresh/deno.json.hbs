@@ -1,0 +1,42 @@
+{
+  "lock": false,
+  "tasks": {
+    "check": "deno fmt --check && deno lint && deno check **/*.ts && deno check **/*.tsx",
+    "cli": "echo \"import '\\$fresh/src/dev/cli.ts'\" | deno run --unstable -A -",
+    "manifest": "deno task cli manifest $(pwd)",
+    "dev": "deno run -A --watch=static/,routes/ dev.ts",
+    "build": "deno run -A dev.ts build",
+    "preview": "deno run -A main.ts",
+    "update": "deno run -A -r jsr:@fresh/update ."
+  },
+  "lint": {
+    "rules": {
+      "tags": [
+        "fresh",
+        "recommended"
+      ]
+    }
+  },
+  "exclude": [
+    "**/_fresh/*"
+  ],
+  "imports": {
+    "$fresh/": "jsr:@fresh/core@^2.0.0-alpha/",
+    "preact": "npm:preact@^10.25.4",
+    "preact/": "npm:preact@^10.25.4/",
+    "@preact/signals": "npm:@preact/signals@^2.0.0",
+    "@preact/signals-core": "npm:@preact/signals-core@^2.0.0"{{#if (eq cssFramework "tailwind")}},
+    "tailwindcss": "npm:tailwindcss@^3.4.17",
+    "tailwindcss/plugin": "npm:tailwindcss@^3.4.17/plugin.js"{{/if}}
+  },
+  "compilerOptions": {
+    "lib": [
+      "dom",
+      "dom.asynciterable",
+      "deno.ns"
+    ],
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
+  },
+  "nodeModulesDir": "auto"
+}

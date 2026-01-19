@@ -19,6 +19,7 @@ describe("Frontend Configurations", () => {
       "qwik",
       "angular",
       "redwood",
+      "fresh",
     ] satisfies ReadonlyArray<
       | "tanstack-router"
       | "react-router"
@@ -34,6 +35,7 @@ describe("Frontend Configurations", () => {
       | "qwik"
       | "angular"
       | "redwood"
+      | "fresh"
     >;
 
     for (const frontend of singleFrontends) {
@@ -125,6 +127,19 @@ describe("Frontend Configurations", () => {
           config.serverDeploy = "none";
         } else if (frontend === "redwood") {
           // RedwoodJS has its own built-in GraphQL API, using standalone mode
+          config.backend = "none";
+          config.runtime = "none";
+          config.database = "none";
+          config.orm = "none";
+          config.auth = "none";
+          config.api = "none";
+          config.addons = ["none"];
+          config.examples = ["none"];
+          config.dbSetup = "none";
+          config.webDeploy = "none";
+          config.serverDeploy = "none";
+        } else if (frontend === "fresh") {
+          // Fresh (Deno) has its own built-in server, using standalone mode
           config.backend = "none";
           config.runtime = "none";
           config.database = "none";
@@ -397,6 +412,95 @@ describe("Frontend Configurations", () => {
       });
 
       // Backend 'none' validation catches this - RedwoodJS requires backend=none which requires api=none
+      expectError(result, "Backend 'none' requires '--api none'");
+    });
+  });
+
+  describe("Fresh Frontend", () => {
+    it("should work with Fresh standalone (no backend)", async () => {
+      const result = await runTRPCTest({
+        projectName: "fresh-standalone",
+        frontend: ["fresh"],
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should fail Fresh with tRPC API", async () => {
+      const result = await runTRPCTest({
+        projectName: "fresh-trpc-fail",
+        frontend: ["fresh"],
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "trpc",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      // Backend 'none' validation catches this - Fresh requires backend=none which requires api=none
+      expectError(result, "Backend 'none' requires '--api none'");
+    });
+
+    it("should fail Fresh with oRPC API", async () => {
+      const result = await runTRPCTest({
+        projectName: "fresh-orpc-fail",
+        frontend: ["fresh"],
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "orpc",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      // Backend 'none' validation catches this - Fresh requires backend=none which requires api=none
+      expectError(result, "Backend 'none' requires '--api none'");
+    });
+
+    it("should fail Fresh with ts-rest API", async () => {
+      const result = await runTRPCTest({
+        projectName: "fresh-ts-rest-fail",
+        frontend: ["fresh"],
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "ts-rest",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      // Backend 'none' validation catches this - Fresh requires backend=none which requires api=none
       expectError(result, "Backend 'none' requires '--api none'");
     });
   });

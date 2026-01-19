@@ -36,7 +36,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 - [x] **Qwik** - Resumable framework with instant load times
 - [x] **Angular** - Enterprise-grade framework by Google
 - [x] **RedwoodJS** - Opinionated fullstack (React + GraphQL + Prisma)
-- [ ] **Fresh** - Deno-native framework with islands architecture
+- [x] **Fresh** - Deno-native framework with islands architecture
 
 ---
 
