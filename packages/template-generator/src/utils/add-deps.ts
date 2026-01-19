@@ -229,6 +229,19 @@ export const dependencyVersionMap = {
   "@builder.io/qwik": "^1.14.1",
   "@builder.io/qwik-city": "^1.14.1",
   "@builder.io/qwik-react": "^0.7.0",
+
+  // Angular
+  "@angular/core": "^19.2.0",
+  "@angular/common": "^19.2.0",
+  "@angular/compiler": "^19.2.0",
+  "@angular/platform-browser": "^19.2.0",
+  "@angular/platform-browser-dynamic": "^19.2.0",
+  "@angular/router": "^19.2.0",
+  "@angular/forms": "^19.2.0",
+  "@angular/animations": "^19.2.0",
+  "@angular-devkit/build-angular": "^19.2.0",
+  "@angular/cli": "^19.2.0",
+  "@angular/compiler-cli": "^19.2.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

@@ -17,6 +17,7 @@ describe("Frontend Configurations", () => {
       "solid",
       "astro",
       "qwik",
+      "angular",
     ] satisfies ReadonlyArray<
       | "tanstack-router"
       | "react-router"
@@ -30,6 +31,7 @@ describe("Frontend Configurations", () => {
       | "solid"
       | "astro"
       | "qwik"
+      | "angular"
     >;
 
     for (const frontend of singleFrontends) {
@@ -95,6 +97,19 @@ describe("Frontend Configurations", () => {
           config.serverDeploy = "none";
         } else if (frontend === "qwik") {
           // Qwik has its own built-in server, using standalone mode
+          config.backend = "none";
+          config.runtime = "none";
+          config.database = "none";
+          config.orm = "none";
+          config.auth = "none";
+          config.api = "none";
+          config.addons = ["none"];
+          config.examples = ["none"];
+          config.dbSetup = "none";
+          config.webDeploy = "none";
+          config.serverDeploy = "none";
+        } else if (frontend === "angular") {
+          // Angular has its own built-in dev server, using standalone mode
           config.backend = "none";
           config.runtime = "none";
           config.database = "none";
@@ -189,6 +204,95 @@ describe("Frontend Configurations", () => {
       });
 
       // Backend 'none' validation catches this - Qwik requires backend=none which requires api=none
+      expectError(result, "Backend 'none' requires '--api none'");
+    });
+  });
+
+  describe("Angular Frontend", () => {
+    it("should work with Angular standalone (no backend)", async () => {
+      const result = await runTRPCTest({
+        projectName: "angular-standalone",
+        frontend: ["angular"],
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should fail Angular with tRPC API", async () => {
+      const result = await runTRPCTest({
+        projectName: "angular-trpc-fail",
+        frontend: ["angular"],
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "trpc",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      // Backend 'none' validation catches this - Angular requires backend=none which requires api=none
+      expectError(result, "Backend 'none' requires '--api none'");
+    });
+
+    it("should fail Angular with oRPC API", async () => {
+      const result = await runTRPCTest({
+        projectName: "angular-orpc-fail",
+        frontend: ["angular"],
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "orpc",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      // Backend 'none' validation catches this - Angular requires backend=none which requires api=none
+      expectError(result, "Backend 'none' requires '--api none'");
+    });
+
+    it("should fail Angular with ts-rest API", async () => {
+      const result = await runTRPCTest({
+        projectName: "angular-ts-rest-fail",
+        frontend: ["angular"],
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "ts-rest",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      // Backend 'none' validation catches this - Angular requires backend=none which requires api=none
       expectError(result, "Backend 'none' requires '--api none'");
     });
   });

@@ -17,12 +17,21 @@ export async function processFrontendTemplates(
   const hasSolidWeb = config.frontend.includes("solid");
   const hasAstroWeb = config.frontend.includes("astro");
   const hasQwikWeb = config.frontend.includes("qwik");
+  const hasAngularWeb = config.frontend.includes("angular");
   const hasNativeBare = config.frontend.includes("native-bare");
   const hasNativeUniwind = config.frontend.includes("native-uniwind");
   const hasUnistyles = config.frontend.includes("native-unistyles");
   const isConvex = config.backend === "convex";
 
-  if (hasReactWeb || hasNuxtWeb || hasSvelteWeb || hasSolidWeb || hasAstroWeb || hasQwikWeb) {
+  if (
+    hasReactWeb ||
+    hasNuxtWeb ||
+    hasSvelteWeb ||
+    hasSolidWeb ||
+    hasAstroWeb ||
+    hasQwikWeb ||
+    hasAngularWeb
+  ) {
     if (hasReactWeb) {
       processTemplatesFromPrefix(vfs, templates, "frontend/react/web-base", "apps/web", config);
 
@@ -60,6 +69,8 @@ export async function processFrontendTemplates(
       }
     } else if (hasQwikWeb) {
       processTemplatesFromPrefix(vfs, templates, "frontend/qwik", "apps/web", config);
+    } else if (hasAngularWeb) {
+      processTemplatesFromPrefix(vfs, templates, "frontend/angular", "apps/web", config);
     }
   }
 

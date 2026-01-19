@@ -28,6 +28,7 @@ export const FrontendSchema = z
     "solid",
     "astro",
     "qwik",
+    "angular",
     "none",
   ])
   .describe("Frontend framework");

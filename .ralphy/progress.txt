@@ -221,3 +221,71 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Angular Frontend Framework Implementation
+
+### Task: Implement Angular as a frontend framework option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "angular" to FrontendSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Angular dependency versions:
+   - @angular/core: ^19.2.0
+   - @angular/common: ^19.2.0
+   - @angular/compiler: ^19.2.0
+   - @angular/platform-browser: ^19.2.0
+   - @angular/platform-browser-dynamic: ^19.2.0
+   - @angular/router: ^19.2.0
+   - @angular/forms: ^19.2.0
+   - @angular/animations: ^19.2.0
+   - @angular-devkit/build-angular: ^19.2.0
+   - @angular/cli: ^19.2.0
+   - @angular/compiler-cli: ^19.2.0
+3. **packages/template-generator/templates/frontend/angular/**: Created Angular templates:
+   - package.json.hbs - Angular project dependencies
+   - angular.json.hbs - Angular CLI workspace configuration
+   - tsconfig.json.hbs - TypeScript config for Angular
+   - tsconfig.app.json - App-specific TypeScript config
+   - src/index.html - HTML entry point
+   - src/main.ts - Bootstrap entry point
+   - src/styles.css.hbs - Global styles with Tailwind conditional
+   - src/app/app.config.ts - Application configuration
+   - src/app/app.routes.ts - Router configuration
+   - src/app/app.component.ts.hbs - Root component
+   - src/app/components/header.component.ts.hbs - Header component
+   - src/app/pages/home/home.component.ts.hbs - Home page component
+   - public/favicon.svg - Favicon
+   - _gitignore - Git ignore file
+4. **packages/template-generator/src/template-handlers/frontend.ts**: Added Angular frontend processing
+5. **apps/web/src/lib/constant.ts**: Added Angular to web builder frontend options with red icon
+6. **apps/cli/src/utils/compatibility.ts**: Added "angular" to WEB_FRAMEWORKS
+7. **apps/cli/src/utils/compatibility-rules.ts**: Added Angular-specific validations:
+   - Angular must use backend="none" (has its own built-in dev server)
+   - Angular must use api="none" (uses its own HttpClient, doesn't support tRPC/oRPC/ts-rest)
+   - Updated isFrontendAllowedWithBackend and allowedApisForFrontends
+   - Angular not compatible with Convex backend
+8. **apps/cli/src/constants.ts**: Added Angular to compatibility mappings:
+   - Added to ADDON_COMPATIBILITY (pwa, tauri)
+   - Added to UI_LIBRARY_COMPATIBILITY (daisyui, none)
+   - Added angular: "daisyui" to DEFAULT_UI_LIBRARY_BY_FRONTEND
+9. **apps/cli/test/frontend.test.ts**: Added Angular-specific tests:
+   - Test for Angular standalone (no backend)
+   - Tests for Angular incompatibility with tRPC, oRPC, and ts-rest APIs
+
+### Features:
+- Full Angular 19 standalone components architecture (no NgModule required)
+- Angular CLI workspace configuration
+- Built-in routing with @angular/router
+- Tailwind CSS conditional support (via daisyUI)
+- Standalone mode (no external backend needed - Angular has its own dev server)
+- Compatible with PWA and Tauri addons
+- Signals-ready reactive architecture
+
+### Technical Notes:
+- Angular uses standalone components by default (Angular 14+)
+- Angular has its own HttpClient for API calls
+- Angular works standalone (backend="none") because it has its own dev server via Angular CLI
+- daisyUI is the default UI library for Angular (shadcn-ui requires React)
+- Uses Angular 19 with latest standalone component patterns
+
+### Status: COMPLETE
+

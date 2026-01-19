@@ -118,6 +118,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "angular",
+      name: "Angular",
+      description: "Enterprise-grade TypeScript framework by Google",
+      icon: "https://cdn.simpleicons.org/angular/DD0031",
+      color: "from-red-500 to-red-700",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Web Frontend",
       description: "No web-based frontend",

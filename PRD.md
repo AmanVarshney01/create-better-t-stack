@@ -34,7 +34,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 
 - [x] **Remix** - Full-stack framework with SSR focus _(implemented as "React Router" - Remix merged into React Router v7 framework mode)_
 - [x] **Qwik** - Resumable framework with instant load times
-- [ ] **Angular** - Enterprise-grade framework by Google
+- [x] **Angular** - Enterprise-grade framework by Google
 - [ ] **RedwoodJS** - Opinionated fullstack (React + GraphQL + Prisma)
 - [ ] **Fresh** - Deno-native framework with islands architecture
 

@@ -1,0 +1,29 @@
+import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { HeaderComponent } from './components/header.component';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [RouterOutlet, HeaderComponent],
+  template: `
+    {{#if (eq cssFramework "tailwind")}}
+    <div class="grid grid-rows-[auto_1fr] min-h-screen">
+      <app-header />
+      <main>
+        <router-outlet />
+      </main>
+    </div>
+    {{else}}
+    <div [style.display]="'grid'" [style.gridTemplateRows]="'auto 1fr'" [style.minHeight]="'100vh'">
+      <app-header />
+      <main>
+        <router-outlet />
+      </main>
+    </div>
+    {{/if}}
+  `,
+})
+export class AppComponent {
+  title = 'Better T Stack';
+}

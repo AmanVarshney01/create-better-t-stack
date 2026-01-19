@@ -1,0 +1,72 @@
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-home',
+  standalone: true,
+  template: `
+    {{#if (eq cssFramework "tailwind")}}
+    <div class="container mx-auto max-w-3xl px-4 py-2">
+      <pre class="overflow-x-auto font-mono text-sm whitespace-pre">{{ titleText }}</pre>
+      <div class="grid gap-6 mt-6">
+        <section class="rounded-lg border border-gray-200 dark:border-gray-800 p-4">
+          <h2 class="mb-2 font-medium">Welcome to Angular</h2>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            Angular is a platform and framework for building single-page client applications
+            using HTML and TypeScript. It implements core and optional functionality as a
+            set of TypeScript libraries that you import into your applications.
+          </p>
+        </section>
+        <section class="rounded-lg border border-gray-200 dark:border-gray-800 p-4">
+          <h2 class="mb-2 font-medium">Key Features</h2>
+          <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-400 space-y-1">
+            <li>Standalone components - No NgModule required</li>
+            <li>Signals - Fine-grained reactivity</li>
+            <li>Built-in routing and forms</li>
+            <li>Dependency injection</li>
+          </ul>
+        </section>
+      </div>
+    </div>
+    {{else}}
+    <div [style.maxWidth]="'48rem'" [style.margin]="'0 auto'" [style.padding]="'0.5rem 1rem'">
+      <pre [style.overflow]="'auto'" [style.fontFamily]="'monospace'" [style.fontSize]="'0.875rem'" [style.whiteSpace]="'pre'">{{ titleText }}</pre>
+      <div [style.display]="'grid'" [style.gap]="'1.5rem'" [style.marginTop]="'1.5rem'">
+        <section [style.borderRadius]="'0.5rem'" [style.border]="'1px solid var(--border-color)'" [style.padding]="'1rem'">
+          <h2 [style.marginBottom]="'0.5rem'" [style.fontWeight]="500">Welcome to Angular</h2>
+          <p [style.fontSize]="'0.875rem'" [style.color]="'var(--muted-color)'">
+            Angular is a platform and framework for building single-page client applications
+            using HTML and TypeScript. It implements core and optional functionality as a
+            set of TypeScript libraries that you import into your applications.
+          </p>
+        </section>
+        <section [style.borderRadius]="'0.5rem'" [style.border]="'1px solid var(--border-color)'" [style.padding]="'1rem'">
+          <h2 [style.marginBottom]="'0.5rem'" [style.fontWeight]="500">Key Features</h2>
+          <ul [style.fontSize]="'0.875rem'" [style.color]="'var(--muted-color)'" [style.listStyleType]="'disc'" [style.paddingLeft]="'1.5rem'">
+            <li>Standalone components - No NgModule required</li>
+            <li>Signals - Fine-grained reactivity</li>
+            <li>Built-in routing and forms</li>
+            <li>Dependency injection</li>
+          </ul>
+        </section>
+      </div>
+    </div>
+    {{/if}}
+  `,
+})
+export class HomeComponent {
+  titleText = `
+ \u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2557
+ \u2588\u2588\u2554\u2550\u2550\u2588\u2588\u2557\u2588\u2588\u2554\u2550\u2550\u2550\u2550\u255D\u255A\u2550\u2550\u2588\u2588\u2554\u2550\u2550\u255D\u255A\u2550\u2550\u2588\u2588\u2554\u2550\u2550\u255D\u2588\u2588\u2554\u2550\u2550\u2550\u2550\u255D\u2588\u2588\u2554\u2550\u2550\u2588\u2588\u2557
+ \u2588\u2588\u2588\u2588\u2588\u2588\u2554\u255D\u2588\u2588\u2588\u2588\u2588\u2557     \u2588\u2588\u2551      \u2588\u2588\u2551   \u2588\u2588\u2588\u2588\u2588\u2557  \u2588\u2588\u2588\u2588\u2588\u2588\u2554\u255D
+ \u2588\u2588\u2554\u2550\u2550\u2588\u2588\u2557\u2588\u2588\u2554\u2550\u2550\u255D     \u2588\u2588\u2551      \u2588\u2588\u2551   \u2588\u2588\u2554\u2550\u2550\u255D  \u2588\u2588\u2554\u2550\u2550\u2588\u2588\u2557
+ \u2588\u2588\u2588\u2588\u2588\u2588\u2554\u255D\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557   \u2588\u2588\u2551      \u2588\u2588\u2551   \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2551  \u2588\u2588\u2557
+ \u255A\u2550\u2550\u2550\u2550\u2550\u255D \u255A\u2550\u2550\u2550\u2550\u2550\u2550\u255D   \u255A\u2550\u255D      \u255A\u2550\u255D   \u255A\u2550\u2550\u2550\u2550\u2550\u2550\u255D\u255A\u2550\u255D  \u255A\u2550\u255D
+
+ \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557    \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557 \u2588\u2588\u2588\u2588\u2588\u2557  \u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2557  \u2588\u2588\u2557
+ \u255A\u2550\u2550\u2588\u2588\u2554\u2550\u2550\u255D    \u2588\u2588\u2554\u2550\u2550\u2550\u2550\u255D\u255A\u2550\u2550\u2588\u2588\u2554\u2550\u2550\u255D\u2588\u2588\u2554\u2550\u2550\u2588\u2588\u2557\u2588\u2588\u2554\u2550\u2550\u2550\u2550\u255D\u2588\u2588\u2551 \u2588\u2588\u2554\u255D
+    \u2588\u2588\u2551       \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2557   \u2588\u2588\u2551   \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2551\u2588\u2588\u2551     \u2588\u2588\u2588\u2588\u2588\u2554\u255D
+    \u2588\u2588\u2551       \u255A\u2550\u2550\u2550\u2550\u2588\u2588\u2551   \u2588\u2588\u2551   \u2588\u2588\u2554\u2550\u2550\u2588\u2588\u2551\u2588\u2588\u2551     \u2588\u2588\u2554\u2550\u2588\u2588\u2557
+    \u2588\u2588\u2551       \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2551   \u2588\u2588\u2551   \u2588\u2588\u2551  \u2588\u2588\u2551\u255A\u2588\u2588\u2588\u2588\u2588\u2588\u2557\u2588\u2588\u2551  \u2588\u2588\u2557
+    \u255A\u2550\u255D       \u255A\u2550\u2550\u2550\u2550\u2550\u2550\u255D   \u255A\u2550\u255D   \u255A\u2550\u255D  \u255A\u2550\u255D \u255A\u2550\u2550\u2550\u2550\u2550\u255D\u255A\u2550\u255D  \u255A\u2550\u255D
+`;
+}
