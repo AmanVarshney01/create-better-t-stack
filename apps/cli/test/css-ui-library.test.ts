@@ -790,4 +790,95 @@ describe("CSS Framework and UI Library Configurations", () => {
       });
     }
   });
+
+  describe("Base UI Tests", () => {
+    // Base UI works with React frontends (from MUI team, Radix successor)
+    const baseUICompatibleFrontends: Frontend[] = [
+      "tanstack-router",
+      "react-router",
+      "tanstack-start",
+      "next",
+    ];
+
+    for (const frontend of baseUICompatibleFrontends) {
+      it(`should work with base-ui + ${frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `baseui-${frontend}`,
+          uiLibrary: "base-ui",
+          cssFramework: "tailwind",
+          frontend: [frontend],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          api: "trpc",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+    }
+
+    // Base UI should fail with non-React frontends
+    const baseUIIncompatibleFrontends: Frontend[] = ["nuxt", "svelte", "solid", "astro"];
+
+    for (const frontend of baseUIIncompatibleFrontends) {
+      it(`should fail with base-ui + ${frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `baseui-${frontend}-fail`,
+          uiLibrary: "base-ui",
+          cssFramework: "tailwind",
+          frontend: [frontend],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          api: "orpc",
+          webDeploy: "none",
+          serverDeploy: "none",
+          expectError: true,
+        });
+
+        expectError(result, "not compatible");
+      });
+    }
+
+    // Base UI is unstyled, works with any CSS framework
+    const allCssFrameworks: CSSFramework[] = ["tailwind", "scss", "less", "postcss-only", "none"];
+
+    for (const cssFramework of allCssFrameworks) {
+      it(`should work with base-ui + ${cssFramework}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `baseui-css-${cssFramework}`,
+          uiLibrary: "base-ui",
+          cssFramework,
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          api: "trpc",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+    }
+  });
 });

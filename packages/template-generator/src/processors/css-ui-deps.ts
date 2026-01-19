@@ -126,6 +126,12 @@ export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConf
         deps.push("@mantine/core", "@mantine/hooks");
       }
       break;
+
+    case "base-ui":
+      if (hasReactWeb) {
+        deps.push("@base-ui-components/react");
+      }
+      break;
   }
 
   if (deps.length > 0) {

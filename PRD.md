@@ -143,7 +143,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 ## **UI COMPONENT LIBRARIES**
 
 - [x] **shadcn/ui** - Copy-paste components on Radix
-- [ ] **Base UI** - Unstyled components (Radix successor)
+- [x] **Base UI** - Unstyled components (Radix successor)
 - [ ] **Ark UI** - Headless UI for React/Vue/Solid
 - [ ] **React Aria** - Adobe's accessible components
 - [x] **Mantine** - Full-featured component library

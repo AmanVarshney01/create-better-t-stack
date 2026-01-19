@@ -34,6 +34,14 @@ const UI_LIBRARY_OPTIONS: Record<UILibrary, { label: string; hint: string }> = {
     label: "NextUI",
     hint: "Beautiful, fast and modern React UI library",
   },
+  mantine: {
+    label: "Mantine",
+    hint: "Full-featured React component library with 120+ components",
+  },
+  "base-ui": {
+    label: "Base UI",
+    hint: "Unstyled, accessible components from MUI team (Radix successor)",
+  },
   none: {
     label: "None",
     hint: "No UI component library",

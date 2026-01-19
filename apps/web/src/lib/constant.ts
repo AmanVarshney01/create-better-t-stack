@@ -966,6 +966,13 @@ export const TECH_OPTIONS: Record<
       color: "from-blue-400 to-blue-600",
     },
     {
+      id: "base-ui",
+      name: "Base UI",
+      description: "Unstyled components from MUI team (Radix successor)",
+      icon: "https://cdn.simpleicons.org/mui/007FFF",
+      color: "from-blue-500 to-blue-700",
+    },
+    {
       id: "none",
       name: "No UI Library",
       description: "Build custom components",

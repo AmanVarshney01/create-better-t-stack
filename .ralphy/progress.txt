@@ -1862,3 +1862,34 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 - Linting passes for all modified files
 
 ### Status: COMPLETE
+
+---
+
+## Session: 2026-01-19
+
+### Task: Add Base UI as UI component library option
+
+**Status:** ✅ Completed
+
+**Summary:**
+Implemented Base UI (@base-ui-components/react) as a new UI component library option. Base UI is the successor to Radix UI from the MUI team, providing unstyled, accessible React components.
+
+**Changes Made:**
+1. **packages/types/src/schemas.ts**: Added "base-ui" to UILibrarySchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added @base-ui-components/react dependency (^1.0.0-rc.0)
+3. **packages/template-generator/src/processors/css-ui-deps.ts**: Added Base UI dependency processing for React frontends
+4. **apps/cli/src/constants.ts**: Added Base UI compatibility rules (React frontends, all CSS frameworks)
+5. **apps/cli/src/prompts/ui-library.ts**: Added Base UI and Mantine options to UI_LIBRARY_OPTIONS
+6. **apps/web/src/lib/constant.ts**: Added Base UI to web builder UI with icon and description
+7. **apps/cli/test/css-ui-library.test.ts**: Added 13 tests for Base UI (compatibility with React frontends, incompatibility with non-React, CSS framework flexibility)
+
+**Test Results:**
+- All 13 Base UI tests pass
+- All 105 CSS/UI library tests pass
+- Build succeeds
+
+**Notes:**
+- Base UI is React-only (compatible with tanstack-router, react-router, tanstack-start, next)
+- Base UI is unstyled, so it works with any CSS framework (tailwind, scss, less, postcss-only, none)
+- Pre-existing TypeScript lint errors in config-prompts.ts (unrelated to this change) still exist
+

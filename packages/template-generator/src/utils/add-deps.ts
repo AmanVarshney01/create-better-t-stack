@@ -255,6 +255,9 @@ export const dependencyVersionMap = {
   "@mantine/core": "^8.3.12",
   "@mantine/hooks": "^8.3.12",
 
+  // Base UI
+  "@base-ui-components/react": "^1.0.0-rc.0",
+
   daisyui: "^4.12.28",
 
   // Qwik

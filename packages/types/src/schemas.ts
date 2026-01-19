@@ -157,6 +157,7 @@ export const UILibrarySchema = z
     "chakra-ui",
     "nextui",
     "mantine",
+    "base-ui",
     "none",
   ])
   .describe("UI component library");
