@@ -95,7 +95,12 @@ export const web = await Nextjs("web", {
     DATABASE_PASSWORD: alchemy.secret.env.DATABASE_PASSWORD!,
     {{/if}}
     {{/if}}
-  }
+  },
+  dev: {
+    env: {
+      PORT: "3001",
+    },
+  },
 });
 {{else if (includes frontend "nuxt")}}
 export const web = await Nuxt("web", {
