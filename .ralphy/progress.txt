@@ -1310,3 +1310,36 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+## 2026-01-19: GSAP Animation Library Implementation
+
+### Task: Implement GSAP as an animation library option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "gsap" to AnimationSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added GSAP dependency version:
+   - gsap: ^3.12.7
+3. **packages/template-generator/src/processors/animation-deps.ts**: Added GSAP case to handle gsap dependency
+4. **apps/web/src/lib/constant.ts**: Added GSAP to web builder animation options with green icon
+5. **apps/cli/test/animation.test.ts**: Added comprehensive GSAP tests:
+   - GSAP with TanStack Router
+   - GSAP with React Router
+   - GSAP with Next.js
+   - GSAP with TanStack Start
+   - GSAP with React Native (native-bare, native-uniwind)
+
+### Features:
+- GSAP (GreenSock Animation Platform) professional-grade animation engine
+- Support for all React-based frontends (TanStack Router, React Router, TanStack Start, Next.js)
+- Support for React Native (Expo) apps
+- Full web builder UI integration with animation section
+- URL parameter support for sharing configurations
+
+### Technical Notes:
+- GSAP is a professional-grade JavaScript animation library
+- Works with any frontend framework (React, Vue, vanilla JS, etc.)
+- Animation dependencies are only added to React-based packages (web and native)
+- Uses GSAP v3.12.7 with latest features
+- All 13 animation tests pass (7 Framer Motion + 6 GSAP)
+
+### Status: COMPLETE
+

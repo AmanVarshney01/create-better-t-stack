@@ -182,7 +182,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 ## **ANIMATION**
 
 - [x] **Framer Motion / Motion** - Declarative animations for React
-- [ ] **GSAP** - Professional-grade animation engine
+- [x] **GSAP** - Professional-grade animation engine
 - [ ] **React Spring** - Physics-based animations
 - [ ] **Auto Animate** - Zero-config animations
 - [ ] **Lottie** - After Effects animations

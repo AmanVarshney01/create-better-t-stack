@@ -59,6 +59,9 @@ function getAnimationDeps(animation: ProjectConfig["animation"]): AvailableDepen
     case "framer-motion":
       deps.push("motion");
       break;
+    case "gsap":
+      deps.push("gsap");
+      break;
   }
 
   return deps;

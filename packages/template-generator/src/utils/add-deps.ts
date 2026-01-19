@@ -295,6 +295,7 @@ export const dependencyVersionMap = {
 
   // Animation
   motion: "^12.17.0",
+  gsap: "^3.12.7",
 
   // Payments - Stripe
   stripe: "^17.5.0",

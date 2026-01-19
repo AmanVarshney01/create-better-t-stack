@@ -1079,6 +1079,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "gsap",
+      name: "GSAP",
+      description: "Professional-grade animation engine for the web",
+      icon: "https://cdn.simpleicons.org/greensock/88CE02",
+      color: "from-green-500 to-green-700",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Animation",
       description: "Skip animation library setup",

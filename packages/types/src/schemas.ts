@@ -137,7 +137,9 @@ export const RealtimeSchema = z
   .enum(["socket-io", "none"])
   .describe("Real-time/WebSocket solution");
 
-export const AnimationSchema = z.enum(["framer-motion", "none"]).describe("Animation library");
+export const AnimationSchema = z
+  .enum(["framer-motion", "gsap", "none"])
+  .describe("Animation library");
 
 export const CSSFrameworkSchema = z
   .enum(["tailwind", "scss", "less", "postcss-only", "none"])

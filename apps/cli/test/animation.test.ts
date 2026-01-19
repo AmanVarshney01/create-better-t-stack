@@ -65,6 +65,68 @@ describe("Animation", () => {
     });
   });
 
+  describe("GSAP", () => {
+    test("gsap with TanStack Router", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-gsap-tanstack",
+        frontend: ["tanstack-router"],
+        animation: "gsap",
+      });
+      expectSuccess(result);
+    });
+
+    test("gsap with React Router", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-gsap-react-router",
+        frontend: ["react-router"],
+        animation: "gsap",
+      });
+      expectSuccess(result);
+    });
+
+    test("gsap with Next.js", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-gsap-next",
+        frontend: ["next"],
+        backend: "self",
+        runtime: "none",
+        animation: "gsap",
+      });
+      expectSuccess(result);
+    });
+
+    test("gsap with TanStack Start", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-gsap-tanstack-start",
+        frontend: ["tanstack-start"],
+        backend: "self",
+        runtime: "none",
+        animation: "gsap",
+      });
+      expectSuccess(result);
+    });
+
+    test("gsap with React Native (native-bare)", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-gsap-native-bare",
+        frontend: ["native-bare"],
+        backend: "hono",
+        animation: "gsap",
+      });
+      expectSuccess(result);
+    });
+
+    test("gsap with React Native (native-uniwind)", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-gsap-native-uniwind",
+        frontend: ["native-uniwind"],
+        backend: "hono",
+        animation: "gsap",
+      });
+      expectSuccess(result);
+    });
+  });
+
   describe("No Animation", () => {
     test("no animation with TanStack Router", async () => {
       const result = await runTRPCTest({
