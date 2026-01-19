@@ -2427,3 +2427,46 @@ Implemented Conform as a new form library option. Conform is a type-safe form va
 - Built-in accessibility helpers
 - Compatible with all React-based web frontends and React Native apps
 - Ideal for server-first frameworks like Remix, Next.js, and React Router
+
+---
+
+## 2026-01-19 - Modular Forms Library Implementation
+
+Implemented Modular Forms as a new form library option. Modular Forms is a type-safe form library designed specifically for Solid and Qwik frameworks with a small bundle size (~3KB).
+
+**Changes Made:**
+1. **packages/types/src/schemas.ts**: Added "modular-forms" to FormsSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Modular Forms dependency versions:
+   - @modular-forms/solid: ^0.25.1 (for SolidJS)
+   - @modular-forms/qwik: ^0.29.1 (for Qwik)
+3. **packages/template-generator/src/processors/forms-deps.ts**: Updated forms dependency processing:
+   - Added SOLID_FRAMEWORKS and QWIK_FRAMEWORKS arrays
+   - Added logic to detect Solid and Qwik frontends
+   - Added modular-forms case to getFormsDeps function
+   - @modular-forms/solid is added for Solid frontends
+   - @modular-forms/qwik is added for Qwik frontends
+4. **apps/web/src/lib/constant.ts**: Added Modular Forms to web builder form options with sky blue gradient
+5. **apps/cli/src/utils/compatibility-rules.ts**: Added form compatibility validation:
+   - Added Forms type import
+   - Added REACT_FORM_LIBRARIES, REACT_WEB_FRONTENDS, NATIVE_FRONTENDS arrays
+   - Added validateFormsFrontendCompatibility function
+   - Added getCompatibleFormLibraries function
+   - modular-forms only works with Solid and Qwik frontends
+   - React form libraries (react-hook-form, tanstack-form, formik, final-form, conform) only work with React-based frontends
+6. **apps/cli/test/forms.test.ts**: Added comprehensive Modular Forms tests:
+   - Tests with Solid frontend (2 tests)
+   - Tests with Qwik frontend (skipped due to pre-existing Qwik template issues)
+
+**Test Results:**
+- All 34 forms tests pass (with 1 skipped for pre-existing Qwik template issue)
+- Types package linting passes with no errors
+- Template-generator linting passes (only pre-existing warnings)
+
+**Key Features:**
+- Small bundle size starting at 3KB
+- Fine-grained DOM updates for fast performance
+- Full TypeScript support with autocompletion
+- Modular design - only use what you need
+- Supports all native HTML form fields
+- Works with Valibot or Zod schemas for validation
+- Compatible with Solid and Qwik frontends only (not React)

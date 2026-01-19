@@ -15,6 +15,12 @@ const REACT_WEB_FRAMEWORKS: Frontend[] = [
 // Native frameworks (always React-based)
 const NATIVE_FRAMEWORKS: Frontend[] = ["native-bare", "native-uniwind", "native-unistyles"];
 
+// SolidJS frameworks
+const SOLID_FRAMEWORKS: Frontend[] = ["solid"];
+
+// Qwik frameworks
+const QWIK_FRAMEWORKS: Frontend[] = ["qwik"];
+
 export function processFormsDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { forms, frontend } = config;
 
@@ -24,11 +30,13 @@ export function processFormsDeps(vfs: VirtualFileSystem, config: ProjectConfig):
   // Determine which packages need form library deps
   const hasReactWeb = frontend.some((f) => REACT_WEB_FRAMEWORKS.includes(f));
   const hasNative = frontend.some((f) => NATIVE_FRAMEWORKS.includes(f));
+  const hasSolid = frontend.some((f) => SOLID_FRAMEWORKS.includes(f));
+  const hasQwik = frontend.some((f) => QWIK_FRAMEWORKS.includes(f));
 
   // Add to web package if it's a React-based web frontend
   const webPath = "apps/web/package.json";
   if (hasReactWeb && vfs.exists(webPath)) {
-    const deps = getFormsDeps(forms, "web");
+    const deps = getFormsDeps(forms, "react");
     if (deps.length > 0) {
       addPackageDependency({
         vfs,
@@ -41,7 +49,7 @@ export function processFormsDeps(vfs: VirtualFileSystem, config: ProjectConfig):
   // Add to native package if it exists
   const nativePath = "apps/native/package.json";
   if (hasNative && vfs.exists(nativePath)) {
-    const deps = getFormsDeps(forms, "native");
+    const deps = getFormsDeps(forms, "react");
     if (deps.length > 0) {
       addPackageDependency({
         vfs,
@@ -50,23 +58,60 @@ export function processFormsDeps(vfs: VirtualFileSystem, config: ProjectConfig):
       });
     }
   }
+
+  // Add to Solid web package if it exists
+  if (hasSolid && vfs.exists(webPath)) {
+    const deps = getFormsDeps(forms, "solid");
+    if (deps.length > 0) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPath,
+        dependencies: deps,
+      });
+    }
+  }
+
+  // Add to Qwik web package if it exists
+  if (hasQwik && vfs.exists(webPath)) {
+    const deps = getFormsDeps(forms, "qwik");
+    if (deps.length > 0) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPath,
+        dependencies: deps,
+      });
+    }
+  }
 }
 
 function getFormsDeps(
   forms: ProjectConfig["forms"],
-  _target: "web" | "native",
+  target: "react" | "solid" | "qwik",
 ): AvailableDependencies[] {
   const deps: AvailableDependencies[] = [];
 
   switch (forms) {
     case "formik":
-      deps.push("formik", "yup");
+      if (target === "react") {
+        deps.push("formik", "yup");
+      }
       break;
     case "final-form":
-      deps.push("final-form", "react-final-form");
+      if (target === "react") {
+        deps.push("final-form", "react-final-form");
+      }
       break;
     case "conform":
-      deps.push("@conform-to/react", "@conform-to/zod");
+      if (target === "react") {
+        deps.push("@conform-to/react", "@conform-to/zod");
+      }
+      break;
+    case "modular-forms":
+      if (target === "solid") {
+        deps.push("@modular-forms/solid");
+      } else if (target === "qwik") {
+        deps.push("@modular-forms/qwik");
+      }
       break;
     // react-hook-form and tanstack-form are handled elsewhere or already included
     // No additional deps needed for those cases

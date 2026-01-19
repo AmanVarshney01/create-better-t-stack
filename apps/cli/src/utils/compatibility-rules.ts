@@ -6,6 +6,7 @@ import type {
   Backend,
   CLIInput,
   CSSFramework,
+  Forms,
   Frontend,
   Payments,
   ProjectConfig,
@@ -560,4 +561,99 @@ export function getCompatibleCSSFrameworks(uiLibrary: UILibrary | undefined): CS
 export function hasWebStyling(frontends: Frontend[] = []): boolean {
   const { web } = splitFrontends(frontends);
   return web.length > 0;
+}
+
+// React-based form libraries
+const REACT_FORM_LIBRARIES: Forms[] = [
+  "react-hook-form",
+  "tanstack-form",
+  "formik",
+  "final-form",
+  "conform",
+];
+
+// React-based frontends (web)
+const REACT_WEB_FRONTENDS: Frontend[] = [
+  "tanstack-router",
+  "react-router",
+  "tanstack-start",
+  "next",
+];
+
+// Native frontends (always React-based)
+const NATIVE_FRONTENDS: Frontend[] = ["native-bare", "native-uniwind", "native-unistyles"];
+
+/**
+ * Validates that a form library is compatible with the selected frontend(s)
+ */
+export function validateFormsFrontendCompatibility(
+  forms: Forms | undefined,
+  frontends: Frontend[] = [],
+) {
+  if (!forms || forms === "none") return;
+
+  const hasSolid = frontends.includes("solid");
+  const hasQwik = frontends.includes("qwik");
+  const hasReactWeb = frontends.some((f) => REACT_WEB_FRONTENDS.includes(f));
+  const hasNative = frontends.some((f) => NATIVE_FRONTENDS.includes(f));
+  const hasReact = hasReactWeb || hasNative;
+
+  // modular-forms is only for Solid and Qwik
+  if (forms === "modular-forms") {
+    if (!hasSolid && !hasQwik) {
+      exitWithError(
+        `Modular Forms is designed for Solid and Qwik frontends only. Please use a React-based form library (react-hook-form, tanstack-form, formik, final-form, conform) or select solid/qwik frontend.`,
+      );
+    }
+  }
+
+  // React form libraries are only for React-based frontends
+  if (REACT_FORM_LIBRARIES.includes(forms)) {
+    if (hasSolid || hasQwik) {
+      exitWithError(
+        `${forms} is a React-based form library and is not compatible with ${hasSolid ? "Solid" : "Qwik"} frontend. Please use modular-forms for ${hasSolid ? "Solid" : "Qwik"}.`,
+      );
+    }
+    if (!hasReact) {
+      // Allow if there's no frontend selected yet - prompts will handle this
+      const { web } = splitFrontends(frontends);
+      if (web.length > 0) {
+        exitWithError(
+          `${forms} is a React-based form library. It requires a React-based frontend (tanstack-router, react-router, tanstack-start, next, or native).`,
+        );
+      }
+    }
+  }
+}
+
+/**
+ * Gets list of form libraries compatible with the selected frontend(s)
+ */
+export function getCompatibleFormLibraries(frontends: Frontend[] = []): Forms[] {
+  const hasSolid = frontends.includes("solid");
+  const hasQwik = frontends.includes("qwik");
+  const hasReactWeb = frontends.some((f) => REACT_WEB_FRONTENDS.includes(f));
+  const hasNative = frontends.some((f) => NATIVE_FRONTENDS.includes(f));
+  const hasReact = hasReactWeb || hasNative;
+
+  // Solid or Qwik - only modular-forms
+  if (hasSolid || hasQwik) {
+    return ["modular-forms", "none"];
+  }
+
+  // React frontends - all React form libraries
+  if (hasReact) {
+    return ["react-hook-form", "tanstack-form", "formik", "final-form", "conform", "none"];
+  }
+
+  // No frontend selected or non-React/Solid/Qwik - return all options
+  return [
+    "react-hook-form",
+    "tanstack-form",
+    "formik",
+    "final-form",
+    "conform",
+    "modular-forms",
+    "none",
+  ];
 }

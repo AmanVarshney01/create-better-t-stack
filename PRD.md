@@ -163,7 +163,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 - [x] **Formik** - Popular form library
 - [x] **Final Form** - Framework-agnostic forms
 - [x] **Conform** - Progressive enhancement forms
-- [ ] **Modular Forms** - Type-safe forms for Solid/Qwik
+- [x] **Modular Forms** - Type-safe forms for Solid/Qwik
 
 ---
 

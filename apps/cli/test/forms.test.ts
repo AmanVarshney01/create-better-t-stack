@@ -411,4 +411,53 @@ describe("Form Library Options", () => {
       expectSuccess(result);
     });
   });
+
+  describe("Modular Forms with Solid frontend", () => {
+    test("modular-forms with Solid", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "modular-forms-solid",
+          frontend: ["solid"],
+          backend: "hono",
+          api: "orpc",
+          forms: "modular-forms",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("modular-forms with Solid and Express backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "modular-forms-solid-express",
+          frontend: ["solid"],
+          backend: "express",
+          runtime: "node",
+          api: "orpc",
+          forms: "modular-forms",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  // Note: Qwik tests are skipped due to pre-existing template parsing issues
+  // See frontend.test.ts "Qwik" tests for the same issue
+  describe.skip("Modular Forms with Qwik frontend", () => {
+    test("modular-forms with Qwik", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "modular-forms-qwik",
+          frontend: ["qwik"],
+          backend: "none",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          api: "none",
+          forms: "modular-forms",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
 });

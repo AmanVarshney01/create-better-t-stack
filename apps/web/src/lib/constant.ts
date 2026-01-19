@@ -840,6 +840,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "modular-forms",
+      name: "Modular Forms",
+      description: "Type-safe forms for Solid and Qwik (3KB bundle)",
+      icon: "",
+      color: "from-sky-400 to-sky-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Form Library",
       description: "Build custom form handling",
