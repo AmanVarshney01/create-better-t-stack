@@ -12,18 +12,21 @@ describe("Database and ORM Combinations", () => {
       { database: "sqlite" as Database, orm: "prisma" as ORM },
       { database: "sqlite" as Database, orm: "typeorm" as ORM },
       { database: "sqlite" as Database, orm: "kysely" as ORM },
+      { database: "sqlite" as Database, orm: "mikroorm" as ORM },
 
       // PostgreSQL combinations
       { database: "postgres" as Database, orm: "drizzle" as ORM },
       { database: "postgres" as Database, orm: "prisma" as ORM },
       { database: "postgres" as Database, orm: "typeorm" as ORM },
       { database: "postgres" as Database, orm: "kysely" as ORM },
+      { database: "postgres" as Database, orm: "mikroorm" as ORM },
 
       // MySQL combinations
       { database: "mysql" as Database, orm: "drizzle" as ORM },
       { database: "mysql" as Database, orm: "prisma" as ORM },
       { database: "mysql" as Database, orm: "typeorm" as ORM },
       { database: "mysql" as Database, orm: "kysely" as ORM },
+      { database: "mysql" as Database, orm: "mikroorm" as ORM },
 
       // MongoDB combinations
       { database: "mongodb" as Database, orm: "mongoose" as ORM },
@@ -84,6 +87,13 @@ describe("Database and ORM Combinations", () => {
         error: "Kysely does not support MongoDB",
       },
 
+      // MongoDB with MikroORM (not supported)
+      {
+        database: "mongodb" as Database,
+        orm: "mikroorm" as ORM,
+        error: "MikroORM does not support MongoDB in Better-T-Stack",
+      },
+
       // Mongoose with non-MongoDB
       {
         database: "sqlite" as Database,
@@ -132,6 +142,11 @@ describe("Database and ORM Combinations", () => {
       {
         database: "none" as Database,
         orm: "kysely" as ORM,
+        error: "ORM selection requires a database",
+      },
+      {
+        database: "none" as Database,
+        orm: "mikroorm" as ORM,
         error: "ORM selection requires a database",
       },
     ];

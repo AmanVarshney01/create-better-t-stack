@@ -63,6 +63,13 @@ export const dependencyVersionMap = {
   // Kysely
   kysely: "^0.28.3",
 
+  // MikroORM
+  "@mikro-orm/core": "^6.5.3",
+  "@mikro-orm/sqlite": "^6.5.3",
+  "@mikro-orm/postgresql": "^6.5.3",
+  "@mikro-orm/mysql": "^6.5.3",
+  "@mikro-orm/better-sqlite": "^6.5.3",
+
   "vite-plugin-pwa": "^1.0.1",
   "@vite-pwa/assets-generator": "^1.0.0",
 

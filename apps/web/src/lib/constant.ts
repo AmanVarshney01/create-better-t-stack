@@ -410,6 +410,13 @@ export const TECH_OPTIONS: Record<
       color: "from-blue-500 to-blue-700",
     },
     {
+      id: "mikroorm",
+      name: "MikroORM",
+      description: "Data Mapper ORM for DDD",
+      icon: "https://mikro-orm.io/img/logo.svg",
+      color: "from-cyan-500 to-cyan-700",
+    },
+    {
       id: "none",
       name: "No ORM",
       description: "Skip ORM integration",

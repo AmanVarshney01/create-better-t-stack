@@ -1391,3 +1391,57 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: MikroORM ORM Implementation
+
+### Task: Implement MikroORM as an ORM option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "mikroorm" to ORMSchema enum (already done in previous session)
+2. **packages/template-generator/src/utils/add-deps.ts**: Added MikroORM dependency versions:
+   - @mikro-orm/core: ^6.5.3
+   - @mikro-orm/sqlite: ^6.5.3
+   - @mikro-orm/postgresql: ^6.5.3
+   - @mikro-orm/mysql: ^6.5.3
+   - @mikro-orm/better-sqlite: ^6.5.3
+3. **apps/cli/src/prompts/orm.ts**: Added MikroORM option with description "Data Mapper ORM for DDD"
+4. **apps/cli/src/utils/config-validation.ts**: Added MikroORM validation rules:
+   - MikroORM does not support MongoDB in Better-T-Stack
+   - Updated error messages to include mikroorm as valid option
+5. **packages/template-generator/src/processors/db-deps.ts**: Added processMikroORMDeps function:
+   - SQLite: @mikro-orm/core, @mikro-orm/better-sqlite
+   - PostgreSQL: @mikro-orm/core, @mikro-orm/postgresql
+   - MySQL: @mikro-orm/core, @mikro-orm/mysql
+6. **packages/template-generator/src/processors/examples-deps.ts**: Added MikroORM and Kysely to todo example dependencies
+7. **packages/template-generator/templates/db/mikroorm/**: Created MikroORM templates:
+   - sqlite/src/index.ts.hbs - SQLite dialect configuration with BetterSqliteDriver
+   - postgres/src/index.ts.hbs - PostgreSQL dialect configuration with SSL for Neon
+   - mysql/src/index.ts.hbs - MySQL dialect configuration with SSL for PlanetScale
+   - base/src/entities/index.ts.hbs - Entity exports with conditional auth/todo entities
+8. **apps/web/src/lib/constant.ts**: Added MikroORM to web builder ORM options with cyan icon
+9. **apps/cli/test/database-orm.test.ts**: Added MikroORM tests:
+   - Valid combinations: sqlite+mikroorm, postgres+mikroorm, mysql+mikroorm
+   - Invalid combination: mongodb+mikroorm (should fail)
+   - Invalid combination: none+mikroorm (should fail)
+
+### Features:
+- MikroORM Data Mapper ORM for Domain-Driven Design
+- Support for SQLite, PostgreSQL, and MySQL databases
+- Database-specific driver packages (@mikro-orm/better-sqlite, @mikro-orm/postgresql, @mikro-orm/mysql)
+- Database-specific SSL configurations (Neon for PostgreSQL, PlanetScale for MySQL)
+- Entity Manager pattern with fork() for request isolation
+- Full CLI integration with prompts and validation
+- Full web builder UI integration
+- Compatible with Better-Auth and todo examples
+
+### Technical Notes:
+- MikroORM uses database-specific driver packages (not a single package)
+- Uses @mikro-orm/better-sqlite for SQLite (synchronous, performant)
+- Uses @mikro-orm/postgresql for PostgreSQL
+- Uses @mikro-orm/mysql for MySQL
+- Configuration uses Options<Driver> pattern for type-safe config
+- Entity Manager fork() provides request-scoped isolation
+- All 39 database-orm tests pass
+
+### Status: COMPLETE
+

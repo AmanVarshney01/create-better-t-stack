@@ -25,6 +25,8 @@ export function processDatabaseDeps(vfs: VirtualFileSystem, config: ProjectConfi
     processTypeORMDeps(vfs, config, dbPkgPath);
   } else if (orm === "kysely") {
     processKyselyDeps(vfs, config, dbPkgPath);
+  } else if (orm === "mikroorm") {
+    processMikroORMDeps(vfs, config, dbPkgPath);
   }
 }
 
@@ -199,6 +201,39 @@ function processKyselyDeps(vfs: VirtualFileSystem, config: ProjectConfig, dbPkgP
     });
   } else if (database === "mysql") {
     deps.push("mysql2");
+    addPackageDependency({
+      vfs,
+      packagePath: dbPkgPath,
+      dependencies: deps,
+    });
+  }
+}
+
+function processMikroORMDeps(
+  vfs: VirtualFileSystem,
+  config: ProjectConfig,
+  dbPkgPath: string,
+): void {
+  const { database } = config;
+
+  const deps: AvailableDependencies[] = ["@mikro-orm/core"];
+
+  if (database === "sqlite") {
+    deps.push("@mikro-orm/better-sqlite");
+    addPackageDependency({
+      vfs,
+      packagePath: dbPkgPath,
+      dependencies: deps,
+    });
+  } else if (database === "postgres") {
+    deps.push("@mikro-orm/postgresql");
+    addPackageDependency({
+      vfs,
+      packagePath: dbPkgPath,
+      dependencies: deps,
+    });
+  } else if (database === "mysql") {
+    deps.push("@mikro-orm/mysql");
     addPackageDependency({
       vfs,
       packagePath: dbPkgPath,

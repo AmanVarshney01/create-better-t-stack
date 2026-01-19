@@ -1,0 +1,39 @@
+import { MikroORM, type Options } from "@mikro-orm/core";
+import { PostgreSqlDriver } from "@mikro-orm/postgresql";
+import { env } from "@{{projectName}}/env/server";
+
+const config: Options<PostgreSqlDriver> = {
+	driver: PostgreSqlDriver,
+	clientUrl: env.DATABASE_URL,
+	entities: ["./src/entities"],
+	entitiesTs: ["./src/entities"],
+	debug: process.env.NODE_ENV !== "production",
+{{#if (eq dbSetup "neon")}}
+	driverOptions: {
+		connection: {
+			ssl: {
+				rejectUnauthorized: false,
+			},
+		},
+	},
+{{/if}}
+};
+
+let orm: MikroORM<PostgreSqlDriver> | null = null;
+
+export const initializeDatabase = async () => {
+	if (!orm) {
+		orm = await MikroORM.init(config);
+	}
+	return orm;
+};
+
+export const getEntityManager = async () => {
+	const db = await initializeDatabase();
+	return db.em.fork();
+};
+
+export const db = {
+	getORM: initializeDatabase,
+	getEM: getEntityManager,
+};

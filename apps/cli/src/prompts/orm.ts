@@ -30,6 +30,11 @@ const ormOptions = {
     label: "Kysely",
     hint: "Type-safe SQL query builder",
   },
+  mikroorm: {
+    value: "mikroorm" as const,
+    label: "MikroORM",
+    hint: "Data Mapper ORM for DDD",
+  },
 };
 
 export async function getORMChoice(
@@ -49,7 +54,13 @@ export async function getORMChoice(
   const options =
     database === "mongodb"
       ? [ormOptions.prisma, ormOptions.mongoose]
-      : [ormOptions.drizzle, ormOptions.prisma, ormOptions.typeorm, ormOptions.kysely];
+      : [
+          ormOptions.drizzle,
+          ormOptions.prisma,
+          ormOptions.typeorm,
+          ormOptions.kysely,
+          ormOptions.mikroorm,
+        ];
 
   const response = await navigableSelect<ORM>({
     message: "Select ORM",

@@ -35,6 +35,10 @@ function setupTodoDependencies(vfs: VirtualFileSystem, config: ProjectConfig): v
     addPackageDependency({ vfs, packagePath: apiPkgPath, dependencies: ["mongoose"] });
   } else if (orm === "typeorm") {
     addPackageDependency({ vfs, packagePath: apiPkgPath, dependencies: ["typeorm"] });
+  } else if (orm === "kysely") {
+    addPackageDependency({ vfs, packagePath: apiPkgPath, dependencies: ["kysely"] });
+  } else if (orm === "mikroorm") {
+    addPackageDependency({ vfs, packagePath: apiPkgPath, dependencies: ["@mikro-orm/core"] });
   }
 }
 
