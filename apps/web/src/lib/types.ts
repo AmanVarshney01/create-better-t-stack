@@ -18,6 +18,7 @@ export type TechCategory =
   | "stateManagement"
   | "forms"
   | "validation"
+  | "realtime"
   | "cssFramework"
   | "uiLibrary"
   | "codeQuality"

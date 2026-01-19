@@ -127,6 +127,10 @@ export const EmailSchema = z
   .enum(["react-email", "resend", "nodemailer", "none"])
   .describe("Email solution (resend includes react-email, nodemailer is classic Node.js email)");
 
+export const RealtimeSchema = z
+  .enum(["socket-io", "none"])
+  .describe("Real-time/WebSocket solution");
+
 export const CSSFrameworkSchema = z
   .enum(["tailwind", "scss", "less", "postcss-only", "none"])
   .describe("CSS framework/preprocessor");
@@ -204,6 +208,7 @@ export const CreateInputSchema = z.object({
   cssFramework: CSSFrameworkSchema.optional(),
   uiLibrary: UILibrarySchema.optional(),
   validation: ValidationSchema.optional(),
+  realtime: RealtimeSchema.optional(),
 });
 
 export const AddInputSchema = z.object({
@@ -249,6 +254,7 @@ export const ProjectConfigSchema = z.object({
   cssFramework: CSSFrameworkSchema,
   uiLibrary: UILibrarySchema,
   validation: ValidationSchema,
+  realtime: RealtimeSchema,
 });
 
 export const BetterTStackConfigSchema = z.object({
@@ -278,6 +284,7 @@ export const BetterTStackConfigSchema = z.object({
   cssFramework: CSSFrameworkSchema,
   uiLibrary: UILibrarySchema,
   validation: ValidationSchema,
+  realtime: RealtimeSchema,
 });
 
 export const BetterTStackConfigFileSchema = z
@@ -328,3 +335,4 @@ export const EMAIL_VALUES = EmailSchema.options;
 export const CSS_FRAMEWORK_VALUES = CSSFrameworkSchema.options;
 export const UI_LIBRARY_VALUES = UILibrarySchema.options;
 export const VALIDATION_VALUES = ValidationSchema.options;
+export const REALTIME_VALUES = RealtimeSchema.options;

@@ -25,6 +25,7 @@ import type {
   StateManagement,
   Forms,
   Validation,
+  Realtime,
 } from "../src/types";
 
 import { create } from "../src/index";
@@ -44,6 +45,7 @@ import {
   ORMSchema,
   PackageManagerSchema,
   PaymentsSchema,
+  RealtimeSchema,
   RuntimeSchema,
   ServerDeploySchema,
   StateManagementSchema,
@@ -108,6 +110,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     "stateManagement",
     "forms",
     "validation",
+    "realtime",
   ];
   const hasSpecificCoreConfig = coreStackFlags.some((flag) => config[flag] !== undefined);
 
@@ -141,6 +144,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
         stateManagement: "none" as StateManagement,
         forms: "react-hook-form" as Forms,
         validation: "zod" as Validation,
+        realtime: "none" as Realtime,
       };
 
   // Build options object - let the CLI handle all validation
@@ -226,6 +230,7 @@ export const EFFECTS = extractEnumValues(EffectSchema);
 export const STATE_MANAGEMENTS = extractEnumValues(StateManagementSchema);
 export const FORMS = extractEnumValues(FormsSchema);
 export const VALIDATIONS = extractEnumValues(ValidationSchema);
+export const REALTIMES = extractEnumValues(RealtimeSchema);
 
 // Convenience functions for common test patterns
 export function createBasicConfig(overrides: Partial<TestConfig> = {}): TestConfig {

@@ -29,6 +29,7 @@ export const stackSearchSchema = z.object({
   bl: z.string().catch(DEFAULT_STACK.backendLibraries),
   sm: z.string().catch(DEFAULT_STACK.stateManagement),
   val: z.string().catch(DEFAULT_STACK.validation),
+  rt2: z.string().catch(DEFAULT_STACK.realtime),
   cq: commaSeparatedArray(DEFAULT_STACK.codeQuality),
   doc: commaSeparatedArray(DEFAULT_STACK.documentation),
   ap: commaSeparatedArray(DEFAULT_STACK.appPlatforms),

@@ -733,3 +733,64 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Socket.IO Real-time/WebSocket Implementation
+
+### Task: Implement Socket.IO as a real-time/websocket option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added RealtimeSchema with "socket-io" and "none" options
+   - Added realtime to CreateInputSchema, ProjectConfigSchema, BetterTStackConfigSchema
+   - Added REALTIME_VALUES export
+2. **packages/types/src/types.ts**: Added Realtime type export
+3. **packages/template-generator/src/utils/add-deps.ts**: Added Socket.IO dependency versions:
+   - socket.io: ^4.8.1 (server)
+   - socket.io-client: ^4.8.1 (client)
+4. **packages/template-generator/src/processors/realtime-deps.ts**: Created new realtime processor:
+   - Handles socket.io server dependency for backend apps
+   - Handles socket.io-client dependency for web and native apps
+   - Only applies to React-based frontends with a backend
+   - Skips Convex backend (has own real-time)
+5. **packages/template-generator/src/processors/index.ts**: Registered realtime processor
+6. **apps/cli/src/index.ts**: Added RealtimeSchema to CLI router input and createVirtual function
+7. **apps/cli/src/constants.ts**: Added realtime: "none" to DEFAULT_CONFIG_BASE
+8. **apps/cli/src/utils/config-processing.ts**: Added Realtime processing to processFlags function
+9. **apps/cli/src/utils/bts-config.ts**: Added realtime field to btsConfig
+10. **apps/cli/src/prompts/config-prompts.ts**: Added realtime to gatherConfig return
+11. **apps/cli/src/helpers/core/command-handlers.ts**: Added realtime to error config
+12. **apps/web/src/lib/types.ts**: Added "realtime" to TechCategory type
+13. **apps/web/src/lib/constant.ts**: Added realtime section to TECH_OPTIONS:
+    - Socket.IO option with icon and description
+    - None option for no real-time
+    - Added realtime to StackState type and DEFAULT_STACK
+14. **apps/web/src/lib/stack-url-state.ts**: Added realtime to URL state parsing and serialization
+15. **apps/web/src/lib/stack-url-state.client.ts**: Added realtime to client-side state (rt2 key)
+16. **apps/web/src/lib/stack-search-schema.ts**: Added "rt2" URL param for realtime
+17. **apps/web/src/lib/stack-url-keys.ts**: Added realtime URL key mapping
+18. **apps/cli/test/test-utils.ts**: Added Realtime type and schema support
+19. **apps/cli/test/realtime.test.ts**: Created comprehensive Socket.IO tests:
+    - Socket.IO with TanStack Router, React Router, Next.js, TanStack Start
+    - Socket.IO with different backends (Hono, Express, Fastify, Elysia)
+    - Socket.IO with native apps (native-bare, native-uniwind)
+    - None option test
+
+### Features:
+- Socket.IO real-time bidirectional communication
+- Server-side socket.io package for backend frameworks
+- Client-side socket.io-client for web and native apps
+- Support for all React-based frontends (TanStack Router, React Router, TanStack Start, Next.js)
+- Support for React Native (Expo) apps
+- Support for all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+- Full web builder UI integration with realtime section
+- URL parameter support for sharing configurations
+
+### Technical Notes:
+- Socket.IO provides real-time, bidirectional, event-based communication
+- Includes automatic reconnection, fallback to long-polling, and room support
+- Server dependencies only added when a backend exists (not for frontend-only or Convex)
+- Client dependencies added to web and native packages
+- Uses "rt2" URL key to avoid conflict with runtime "rt" key
+- All 11 tests pass
+
+### Status: COMPLETE
+

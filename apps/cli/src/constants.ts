@@ -30,6 +30,7 @@ export const DEFAULT_CONFIG_BASE = {
   forms: "react-hook-form",
   testing: "vitest",
   ai: "none",
+  realtime: "none",
   addons: ["turborepo"],
   examples: [],
   git: true,

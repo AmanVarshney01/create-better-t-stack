@@ -34,6 +34,7 @@ import type {
   CSSFrameworkSchema,
   UILibrarySchema,
   ValidationSchema,
+  RealtimeSchema,
 } from "./schemas";
 
 // Inferred types from Zod schemas
@@ -64,6 +65,7 @@ export type Email = z.infer<typeof EmailSchema>;
 export type CSSFramework = z.infer<typeof CSSFrameworkSchema>;
 export type UILibrary = z.infer<typeof UILibrarySchema>;
 export type Validation = z.infer<typeof ValidationSchema>;
+export type Realtime = z.infer<typeof RealtimeSchema>;
 
 export type CreateInput = z.infer<typeof CreateInputSchema>;
 export type AddInput = z.infer<typeof AddInputSchema>;

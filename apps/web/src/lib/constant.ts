@@ -1002,6 +1002,25 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
   ],
+  realtime: [
+    {
+      id: "socket-io",
+      name: "Socket.IO",
+      description: "Real-time bidirectional communication with fallbacks",
+      icon: "https://cdn.simpleicons.org/socketdotio/010101",
+      color: "from-gray-600 to-gray-800",
+      default: false,
+      className: "invert-0 dark:invert",
+    },
+    {
+      id: "none",
+      name: "No Real-time",
+      description: "Skip real-time/WebSocket integration",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
   git: [
     {
       id: "true",
@@ -1261,6 +1280,7 @@ export type StackState = {
   backendLibraries: string;
   stateManagement: string;
   validation: string;
+  realtime: string;
   cssFramework: string;
   uiLibrary: string;
   codeQuality: string[];
@@ -1292,6 +1312,7 @@ export const DEFAULT_STACK: StackState = {
   backendLibraries: "none",
   stateManagement: "none",
   validation: "zod",
+  realtime: "none",
   cssFramework: "tailwind",
   uiLibrary: "shadcn-ui",
   codeQuality: [],

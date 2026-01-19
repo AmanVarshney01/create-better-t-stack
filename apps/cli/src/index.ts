@@ -56,6 +56,8 @@ import {
   ValidationSchema,
   type WebDeploy,
   WebDeploySchema,
+  RealtimeSchema,
+  type Realtime,
 } from "./types";
 import { handleError } from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
@@ -97,6 +99,7 @@ export const router = os.router({
           forms: FormsSchema.optional(),
           testing: TestingSchema.optional(),
           ai: AISchema.optional(),
+          realtime: RealtimeSchema.optional(),
           frontend: z.array(FrontendSchema).optional(),
           addons: z.array(AddonsSchema).optional(),
           examples: z.array(ExamplesSchema).optional(),
@@ -311,6 +314,8 @@ export async function createVirtual(
       stateManagement: options.stateManagement || "none",
       forms: options.forms || "react-hook-form",
       testing: options.testing || "vitest",
+      validation: options.validation || "zod",
+      realtime: options.realtime || "none",
     };
 
     const result = await generate({
@@ -354,4 +359,5 @@ export type {
   DirectoryConflict,
   CSSFramework,
   UILibrary,
+  Realtime,
 };

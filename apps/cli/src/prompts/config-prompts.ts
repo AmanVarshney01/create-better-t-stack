@@ -187,5 +187,6 @@ export async function gatherConfig(
     validation: flags.validation ?? "zod",
     forms: flags.forms ?? "react-hook-form",
     testing: flags.testing ?? "vitest",
+    realtime: flags.realtime ?? "none",
   };
 }

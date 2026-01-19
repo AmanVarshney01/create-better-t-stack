@@ -130,7 +130,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 
 ## **REAL-TIME / WEBSOCKETS**
 
-- [ ] **Socket.IO** - Classic real-time library
+- [x] **Socket.IO** - Classic real-time library
 - [ ] **PartyKit** - Edge-native multiplayer infrastructure
 - [ ] **Ably** - Real-time messaging platform
 - [ ] **Pusher** - Real-time communication APIs

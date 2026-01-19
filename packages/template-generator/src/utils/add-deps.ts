@@ -273,6 +273,10 @@ export const dependencyVersionMap = {
   // Form libraries
   formik: "^2.4.6",
   yup: "^1.6.1",
+
+  // Real-time/WebSocket
+  "socket.io": "^4.8.1",
+  "socket.io-client": "^4.8.1",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

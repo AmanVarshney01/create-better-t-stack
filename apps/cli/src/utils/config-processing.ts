@@ -15,6 +15,7 @@ import type {
   PackageManager,
   Payments,
   ProjectConfig,
+  Realtime,
   Runtime,
   ServerDeploy,
   StateManagement,
@@ -80,6 +81,10 @@ export function processFlags(options: CLIInput, projectName?: string) {
 
   if (options.validation !== undefined) {
     config.validation = options.validation as Validation;
+  }
+
+  if (options.realtime !== undefined) {
+    config.realtime = options.realtime as Realtime;
   }
 
   if (options.git !== undefined) {

@@ -120,6 +120,7 @@ export async function createProjectHandler(
             validation: "zod",
             forms: "react-hook-form",
             testing: "vitest",
+            realtime: "none",
           } satisfies ProjectConfig,
           reproducibleCommand: "",
           timeScaffolded,

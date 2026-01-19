@@ -28,6 +28,7 @@ function searchToStack(search: StackSearchParams | undefined): StackState {
     backendLibraries: search.bl ?? DEFAULT_STACK.backendLibraries,
     stateManagement: search.sm ?? DEFAULT_STACK.stateManagement,
     validation: search.val ?? DEFAULT_STACK.validation,
+    realtime: search.rt2 ?? DEFAULT_STACK.realtime,
     codeQuality: search.cq ?? DEFAULT_STACK.codeQuality,
     documentation: search.doc ?? DEFAULT_STACK.documentation,
     appPlatforms: search.ap ?? DEFAULT_STACK.appPlatforms,
