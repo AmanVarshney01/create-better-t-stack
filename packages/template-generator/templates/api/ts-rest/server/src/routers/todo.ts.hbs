@@ -1,0 +1,75 @@
+{{#if (includes examples "todo")}}
+import type { Context } from "../context";
+import { db } from "@{{projectName}}/db";
+import { todos } from "@{{projectName}}/db/schema";
+import { eq } from "drizzle-orm";
+
+export function todoHandlers(ctx: Context) {
+  return {
+    getAll: async () => {
+      const allTodos = await db.select().from(todos).orderBy(todos.createdAt);
+      return {
+        status: 200 as const,
+        body: allTodos.map((t) => ({
+          ...t,
+          createdAt: t.createdAt.toISOString(),
+        })),
+      };
+    },
+    create: async ({ body }: { body: { content: string } }) => {
+      const [newTodo] = await db
+        .insert(todos)
+        .values({ content: body.content })
+        .returning();
+      return {
+        status: 201 as const,
+        body: {
+          ...newTodo,
+          createdAt: newTodo.createdAt.toISOString(),
+        },
+      };
+    },
+    toggle: async ({ params }: { params: { id: number } }) => {
+      const [existing] = await db
+        .select()
+        .from(todos)
+        .where(eq(todos.id, params.id));
+      if (!existing) {
+        return {
+          status: 404 as const,
+          body: { message: "Todo not found" },
+        };
+      }
+      const [updated] = await db
+        .update(todos)
+        .set({ completed: !existing.completed })
+        .where(eq(todos.id, params.id))
+        .returning();
+      return {
+        status: 200 as const,
+        body: {
+          ...updated,
+          createdAt: updated.createdAt.toISOString(),
+        },
+      };
+    },
+    delete: async ({ params }: { params: { id: number } }) => {
+      const [existing] = await db
+        .select()
+        .from(todos)
+        .where(eq(todos.id, params.id));
+      if (!existing) {
+        return {
+          status: 404 as const,
+          body: { message: "Todo not found" },
+        };
+      }
+      await db.delete(todos).where(eq(todos.id, params.id));
+      return {
+        status: 200 as const,
+        body: { success: true },
+      };
+    },
+  };
+}
+{{/if}}

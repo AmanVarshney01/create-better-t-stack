@@ -80,7 +80,7 @@ export async function processFrontendTemplates(
       );
     }
 
-    if (!isConvex && (config.api === "trpc" || config.api === "orpc")) {
+    if (!isConvex && (config.api === "trpc" || config.api === "orpc" || config.api === "ts-rest")) {
       processTemplatesFromPrefix(vfs, templates, `api/${config.api}/native`, "apps/native", config);
     }
   }

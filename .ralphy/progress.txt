@@ -156,3 +156,68 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: ts-rest API Layer Implementation
+
+### Task: Implement ts-rest as an API layer option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "ts-rest" to APISchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added ts-rest dependency versions:
+   - @ts-rest/core: ^3.55.0
+   - @ts-rest/react-query: ^3.55.0
+   - @ts-rest/serverless: ^3.55.0
+   - @ts-rest/next: ^3.55.0
+3. **packages/template-generator/src/processors/api-deps.ts**: Added ts-rest dependency processing for:
+   - API package dependencies (core + zod)
+   - Server dependencies (core + serverless)
+   - Self backend web dependencies (core + serverless + next)
+   - Web client dependencies (core + react-query)
+   - Native client dependencies (core + react-query)
+4. **packages/template-generator/templates/api/ts-rest/server/**: Created server templates:
+   - src/index.ts.hbs - Contract definition with health check, private data, and todos endpoints
+   - src/context.ts.hbs - Context creation for all backends (Hono, Elysia, Express, Fastify, Next.js, TanStack Start, Astro)
+   - src/routers/index.ts.hbs - Router implementation with handlers
+   - src/routers/todo.ts.hbs - Todo handlers with Drizzle ORM integration
+5. **packages/template-generator/templates/api/ts-rest/web/react/base/src/utils/ts-rest.ts.hbs**: React web client template with React Query integration
+6. **packages/template-generator/templates/api/ts-rest/native/utils/ts-rest.ts.hbs**: React Native client template
+7. **packages/template-generator/templates/api/ts-rest/fullstack/**: Fullstack templates:
+   - next/src/app/api/rest/[[...rest]]/route.ts.hbs - Next.js API route handler
+   - next/src/utils/ts-rest.ts.hbs - Next.js client
+   - tanstack-start/src/routes/api/rest/$.ts.hbs - TanStack Start route handler
+   - tanstack-start/src/utils/ts-rest.ts.hbs - TanStack Start client
+   - astro/src/pages/api/rest/[...rest].ts.hbs - Astro API route handler
+   - astro/src/utils/ts-rest.ts.hbs - Astro client
+8. **packages/template-generator/src/template-handlers/frontend.ts**: Updated to include ts-rest for native templates
+9. **apps/web/src/lib/constant.ts**: Added ts-rest to web builder API options
+10. **apps/cli/src/utils/compatibility-rules.ts**: Updated compatibility rules:
+    - Added ts-rest to base API array
+    - ts-rest requires React (like tRPC) - not compatible with Nuxt, Svelte, or Solid
+    - ts-rest requires React integration for Astro
+11. **apps/cli/test/api.test.ts**: Added comprehensive ts-rest tests:
+    - Frontend compatibility tests (React frameworks pass, non-React fail)
+    - Backend compatibility tests (Hono, Express, Fastify, Elysia)
+    - Authentication tests (better-auth)
+    - Fullstack mode tests (Next.js, TanStack Start, Astro)
+12. **apps/cli/test/test-utils.ts**: Added Email type import and default
+
+### Features:
+- Contract-first API design using Zod schemas
+- End-to-end type safety between client and server
+- React Query integration for data fetching
+- Support for all React-based frontends (TanStack Router, React Router, TanStack Start, Next.js)
+- Support for React Native (Expo) clients
+- Fullstack mode support (Next.js, TanStack Start, Astro with React integration)
+- Better-Auth integration support
+- Todo example with CRUD operations
+- Compatible with Hono, Express, Fastify, and Elysia backends
+
+### Technical Notes:
+- ts-rest provides RPC-like experience for REST APIs
+- Uses @ts-rest/react-query for React Query bindings
+- Uses @ts-rest/serverless for serverless handlers
+- Requires React integration (like tRPC) for client-side type safety
+- Contract defines API shape with Zod schemas for request/response validation
+
+### Status: COMPLETE
+

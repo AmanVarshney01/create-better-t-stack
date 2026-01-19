@@ -29,6 +29,13 @@ export const TECH_OPTIONS: Record<
       color: "from-indigo-400 to-indigo-600",
     },
     {
+      id: "ts-rest",
+      name: "ts-rest",
+      description: "RPC-like client for REST APIs",
+      icon: "",
+      color: "from-green-400 to-green-600",
+    },
+    {
       id: "none",
       name: "No API",
       description: "No API layer (API routes disabled)",

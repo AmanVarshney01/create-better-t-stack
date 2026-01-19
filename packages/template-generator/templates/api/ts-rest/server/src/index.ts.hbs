@@ -1,0 +1,103 @@
+import { initContract } from "@ts-rest/core";
+import { z } from "zod";
+
+const c = initContract();
+
+export const contract = c.router({
+  healthCheck: {
+    method: "GET",
+    path: "/health",
+    responses: {
+      200: z.literal("OK"),
+    },
+  },
+{{#if (eq auth "better-auth")}}
+  privateData: {
+    method: "GET",
+    path: "/private",
+    responses: {
+      200: z.object({
+        message: z.string(),
+        user: z.object({
+          id: z.string(),
+          email: z.string(),
+          name: z.string().nullable(),
+        }),
+      }),
+      401: z.object({
+        message: z.string(),
+      }),
+    },
+  },
+{{/if}}
+{{#if (includes examples "todo")}}
+  todos: {
+    getAll: {
+      method: "GET",
+      path: "/todos",
+      responses: {
+        200: z.array(
+          z.object({
+            id: z.number(),
+            content: z.string(),
+            completed: z.boolean(),
+            createdAt: z.string(),
+          })
+        ),
+      },
+    },
+    create: {
+      method: "POST",
+      path: "/todos",
+      body: z.object({
+        content: z.string().min(1),
+      }),
+      responses: {
+        201: z.object({
+          id: z.number(),
+          content: z.string(),
+          completed: z.boolean(),
+          createdAt: z.string(),
+        }),
+      },
+    },
+    toggle: {
+      method: "PATCH",
+      path: "/todos/:id/toggle",
+      pathParams: z.object({
+        id: z.coerce.number(),
+      }),
+      body: z.object({}),
+      responses: {
+        200: z.object({
+          id: z.number(),
+          content: z.string(),
+          completed: z.boolean(),
+          createdAt: z.string(),
+        }),
+        404: z.object({
+          message: z.string(),
+        }),
+      },
+    },
+    delete: {
+      method: "DELETE",
+      path: "/todos/:id",
+      pathParams: z.object({
+        id: z.coerce.number(),
+      }),
+      body: z.object({}),
+      responses: {
+        200: z.object({
+          success: z.boolean(),
+        }),
+        404: z.object({
+          message: z.string(),
+        }),
+      },
+    },
+  },
+{{/if}}
+});
+
+export type AppContract = typeof contract;

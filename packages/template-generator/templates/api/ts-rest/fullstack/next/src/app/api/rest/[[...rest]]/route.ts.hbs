@@ -1,0 +1,58 @@
+import { createNextHandler } from "@ts-rest/serverless/next";
+import { contract } from "@{{projectName}}/api/index";
+import { createRouter } from "@{{projectName}}/api/routers";
+import { createContext } from "@{{projectName}}/api/context";
+{{#if (eq auth "better-auth")}}
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+{{/if}}
+
+const handler = createNextHandler(
+  contract,
+  async (args, { request }) => {
+{{#if (eq auth "better-auth")}}
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+    const ctx = createContext(request, session);
+{{else}}
+    const ctx = createContext(request);
+{{/if}}
+    const router = createRouter(ctx);
+    
+    // Handle nested routes
+    const path = args.appRoute.path;
+    if (path.startsWith("/todos")) {
+      const method = args.appRoute.method;
+      if (method === "GET" && path === "/todos") {
+        return router.todos.getAll();
+      }
+      if (method === "POST" && path === "/todos") {
+        return router.todos.create(args as any);
+      }
+      if (method === "PATCH" && path.includes("/toggle")) {
+        return router.todos.toggle(args as any);
+      }
+      if (method === "DELETE") {
+        return router.todos.delete(args as any);
+      }
+    }
+    
+    if (path === "/health") {
+      return router.healthCheck();
+    }
+{{#if (eq auth "better-auth")}}
+    if (path === "/private") {
+      return router.privateData();
+    }
+{{/if}}
+    
+    return { status: 404 as const, body: { message: "Not found" } };
+  },
+  {
+    basePath: "/api/rest",
+    jsonQuery: true,
+  }
+);
+
+export { handler as GET, handler as POST, handler as PATCH, handler as DELETE };

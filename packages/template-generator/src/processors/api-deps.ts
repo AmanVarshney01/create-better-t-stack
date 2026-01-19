@@ -67,6 +67,12 @@ function addApiPackageDeps(
       packagePath: pkgPath,
       dependencies: ["@orpc/server", "@orpc/client", "@orpc/openapi", "@orpc/zod", "zod"],
     });
+  } else if (api === "ts-rest") {
+    addPackageDependency({
+      vfs,
+      packagePath: pkgPath,
+      dependencies: ["@ts-rest/core", "zod"],
+    });
   }
 
   // Add next dep for api package when backend is self and frontend includes next
@@ -103,6 +109,12 @@ function addServerDeps(vfs: VirtualFileSystem, api: API, backend: Backend): void
       packagePath: serverPath,
       dependencies: ["@orpc/server", "@orpc/openapi"],
     });
+  } else if (api === "ts-rest") {
+    addPackageDependency({
+      vfs,
+      packagePath: serverPath,
+      dependencies: ["@ts-rest/core", "@ts-rest/serverless"],
+    });
   }
 }
 
@@ -130,6 +142,12 @@ function addSelfBackendWebDeps(
       packagePath: webPath,
       dependencies: ["@orpc/server", "@orpc/client", "@orpc/openapi", "@orpc/zod"],
     });
+  } else if (api === "ts-rest") {
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: ["@ts-rest/core", "@ts-rest/serverless", "@ts-rest/next"],
+    });
   }
 }
 
@@ -147,6 +165,12 @@ function addWebClientDeps(
       vfs,
       packagePath: webPath,
       dependencies: ["@trpc/tanstack-react-query", "@trpc/client", "@trpc/server"],
+    });
+  } else if (api === "ts-rest" && frontendType.hasReactWeb) {
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: ["@ts-rest/core", "@ts-rest/react-query"],
     });
   } else if (api === "orpc" && frontendType.hasReactWeb) {
     addPackageDependency({
@@ -205,6 +229,12 @@ function addNativeDeps(vfs: VirtualFileSystem, api: API, backend: Backend): void
       vfs,
       packagePath: nativePath,
       dependencies: ["@orpc/tanstack-query", "@orpc/client"],
+    });
+  } else if (api === "ts-rest") {
+    addPackageDependency({
+      vfs,
+      packagePath: nativePath,
+      dependencies: ["@ts-rest/core", "@ts-rest/react-query"],
     });
   }
 }

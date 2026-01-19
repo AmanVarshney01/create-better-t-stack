@@ -158,9 +158,11 @@ export function validateApiFrontendCompatibility(
   const includesAstro = frontends.includes("astro");
   const includesQwik = frontends.includes("qwik");
 
-  if ((includesNuxt || includesSvelte || includesSolid) && api === "trpc") {
+  // ts-rest requires React like tRPC
+  if ((includesNuxt || includesSvelte || includesSolid) && (api === "trpc" || api === "ts-rest")) {
+    const apiName = api === "trpc" ? "tRPC" : "ts-rest";
     exitWithError(
-      `tRPC API is not supported with '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"}' frontend. Please use --api orpc or --api none or remove '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"}' from --frontend.`,
+      `${apiName} API is not supported with '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"}' frontend. Please use --api orpc or --api none or remove '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"}' from --frontend.`,
     );
   }
 
@@ -171,10 +173,16 @@ export function validateApiFrontendCompatibility(
     );
   }
 
-  // Astro with non-React integrations doesn't support tRPC
-  if (includesAstro && astroIntegration && astroIntegration !== "react" && api === "trpc") {
+  // Astro with non-React integrations doesn't support tRPC or ts-rest
+  if (
+    includesAstro &&
+    astroIntegration &&
+    astroIntegration !== "react" &&
+    (api === "trpc" || api === "ts-rest")
+  ) {
+    const apiName = api === "trpc" ? "tRPC" : "ts-rest";
     exitWithError(
-      `tRPC API requires React integration with Astro. Please use --api orpc or --api none, or use --astro-integration react.`,
+      `${apiName} API requires React integration with Astro. Please use --api orpc or --api none, or use --astro-integration react.`,
     );
   }
 }
@@ -208,7 +216,7 @@ export function allowedApisForFrontends(
   const includesSolid = frontends.includes("solid");
   const includesAstro = frontends.includes("astro");
   const includesQwik = frontends.includes("qwik");
-  const base: API[] = ["trpc", "orpc", "none"];
+  const base: API[] = ["trpc", "orpc", "ts-rest", "none"];
 
   // Qwik uses its own server capabilities, only none is allowed
   if (includesQwik) {

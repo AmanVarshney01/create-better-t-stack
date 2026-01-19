@@ -1,0 +1,146 @@
+{{#if (eq backend "hono")}}
+import type { Context as HonoContext } from "hono";
+{{#if (eq auth "better-auth")}}
+import type { Session, User } from "better-auth";
+{{/if}}
+
+export type Context = {
+  honoContext: HonoContext;
+{{#if (eq auth "better-auth")}}
+  session: { user: User; session: Session } | null;
+{{/if}}
+};
+
+export function createContext(c: HonoContext{{#if (eq auth "better-auth")}}, session: { user: User; session: Session } | null{{/if}}): Context {
+  return {
+    honoContext: c,
+{{#if (eq auth "better-auth")}}
+    session,
+{{/if}}
+  };
+}
+{{else if (eq backend "elysia")}}
+{{#if (eq auth "better-auth")}}
+import type { Session, User } from "better-auth";
+{{/if}}
+
+export type Context = {
+{{#if (eq auth "better-auth")}}
+  session: { user: User; session: Session } | null;
+{{/if}}
+};
+
+export function createContext({{#if (eq auth "better-auth")}}session: { user: User; session: Session } | null{{/if}}): Context {
+  return {
+{{#if (eq auth "better-auth")}}
+    session,
+{{/if}}
+  };
+}
+{{else if (eq backend "express")}}
+import type { Request } from "express";
+{{#if (eq auth "better-auth")}}
+import type { Session, User } from "better-auth";
+{{/if}}
+
+export type Context = {
+  req: Request;
+{{#if (eq auth "better-auth")}}
+  session: { user: User; session: Session } | null;
+{{/if}}
+};
+
+export function createContext(req: Request{{#if (eq auth "better-auth")}}, session: { user: User; session: Session } | null{{/if}}): Context {
+  return {
+    req,
+{{#if (eq auth "better-auth")}}
+    session,
+{{/if}}
+  };
+}
+{{else if (eq backend "fastify")}}
+import type { FastifyRequest } from "fastify";
+{{#if (eq auth "better-auth")}}
+import type { Session, User } from "better-auth";
+{{/if}}
+
+export type Context = {
+  req: FastifyRequest;
+{{#if (eq auth "better-auth")}}
+  session: { user: User; session: Session } | null;
+{{/if}}
+};
+
+export function createContext(req: FastifyRequest{{#if (eq auth "better-auth")}}, session: { user: User; session: Session } | null{{/if}}): Context {
+  return {
+    req,
+{{#if (eq auth "better-auth")}}
+    session,
+{{/if}}
+  };
+}
+{{else if (eq backend "self")}}
+{{#if (includes frontend "next")}}
+import type { NextRequest } from "next/server";
+{{#if (eq auth "better-auth")}}
+import type { Session, User } from "better-auth";
+{{/if}}
+
+export type Context = {
+  req: NextRequest;
+{{#if (eq auth "better-auth")}}
+  session: { user: User; session: Session } | null;
+{{/if}}
+};
+
+export function createContext(req: NextRequest{{#if (eq auth "better-auth")}}, session: { user: User; session: Session } | null{{/if}}): Context {
+  return {
+    req,
+{{#if (eq auth "better-auth")}}
+    session,
+{{/if}}
+  };
+}
+{{else if (includes frontend "tanstack-start")}}
+{{#if (eq auth "better-auth")}}
+import type { Session, User } from "better-auth";
+{{/if}}
+
+export type Context = {
+  request: Request;
+{{#if (eq auth "better-auth")}}
+  session: { user: User; session: Session } | null;
+{{/if}}
+};
+
+export function createContext(request: Request{{#if (eq auth "better-auth")}}, session: { user: User; session: Session } | null{{/if}}): Context {
+  return {
+    request,
+{{#if (eq auth "better-auth")}}
+    session,
+{{/if}}
+  };
+}
+{{else if (includes frontend "astro")}}
+import type { APIContext } from "astro";
+{{#if (eq auth "better-auth")}}
+import type { Session, User } from "better-auth";
+{{/if}}
+
+export type Context = {
+  astroContext: APIContext;
+{{#if (eq auth "better-auth")}}
+  session: { user: User; session: Session } | null;
+{{/if}}
+};
+
+export function createContext(astroContext: APIContext{{#if (eq auth "better-auth")}}, session: { user: User; session: Session } | null{{/if}}): Context {
+  return {
+    astroContext,
+{{#if (eq auth "better-auth")}}
+    session,
+{{/if}}
+  };
+}
+{{/if}}
+{{/if}}

@@ -1,0 +1,57 @@
+import { createAPIFileRoute } from "@tanstack/react-start/api";
+import { tsr } from "@ts-rest/serverless";
+import { contract } from "@{{projectName}}/api/index";
+import { createRouter } from "@{{projectName}}/api/routers";
+import { createContext } from "@{{projectName}}/api/context";
+{{#if (eq auth "better-auth")}}
+import { auth } from "@/lib/auth";
+{{/if}}
+
+const handler = tsr.router(contract, async (args) => {
+{{#if (eq auth "better-auth")}}
+  const request = args.request;
+  const session = await auth.api.getSession({
+    headers: request.headers,
+  });
+  const ctx = createContext(request, session);
+{{else}}
+  const ctx = createContext(args.request);
+{{/if}}
+  const router = createRouter(ctx);
+
+  // Handle nested routes
+  const path = args.appRoute.path;
+  if (path.startsWith("/todos")) {
+    const method = args.appRoute.method;
+    if (method === "GET" && path === "/todos") {
+      return router.todos.getAll();
+    }
+    if (method === "POST" && path === "/todos") {
+      return router.todos.create(args as any);
+    }
+    if (method === "PATCH" && path.includes("/toggle")) {
+      return router.todos.toggle(args as any);
+    }
+    if (method === "DELETE") {
+      return router.todos.delete(args as any);
+    }
+  }
+
+  if (path === "/health") {
+    return router.healthCheck();
+  }
+{{#if (eq auth "better-auth")}}
+  if (path === "/private") {
+    return router.privateData();
+  }
+{{/if}}
+
+  return { status: 404 as const, body: { message: "Not found" } };
+});
+
+export const APIRoute = createAPIFileRoute("/api/rest/$")({
+  GET: ({ request }) => handler.fetch(request),
+  POST: ({ request }) => handler.fetch(request),
+  PATCH: ({ request }) => handler.fetch(request),
+  DELETE: ({ request }) => handler.fetch(request),
+});

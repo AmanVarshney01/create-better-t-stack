@@ -109,6 +109,12 @@ export const dependencyVersionMap = {
   "@orpc/zod": "^1.12.2",
   "@orpc/tanstack-query": "^1.12.2",
 
+  // ts-rest
+  "@ts-rest/core": "^3.55.0",
+  "@ts-rest/react-query": "^3.55.0",
+  "@ts-rest/serverless": "^3.55.0",
+  "@ts-rest/next": "^3.55.0",
+
   "@trpc/tanstack-react-query": "^11.7.2",
   "@trpc/server": "^11.7.2",
   "@trpc/client": "^11.7.2",

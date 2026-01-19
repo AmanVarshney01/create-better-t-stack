@@ -1,0 +1,40 @@
+import { contract } from "../index";
+import type { Context } from "../context";
+{{#if (includes examples "todo")}}
+import { todoHandlers } from "./todo";
+{{/if}}
+
+export function createRouter(ctx: Context) {
+  return {
+    healthCheck: async () => {
+      return {
+        status: 200 as const,
+        body: "OK" as const,
+      };
+    },
+{{#if (eq auth "better-auth")}}
+    privateData: async () => {
+      if (!ctx.session) {
+        return {
+          status: 401 as const,
+          body: {
+            message: "Authentication required",
+          },
+        };
+      }
+      return {
+        status: 200 as const,
+        body: {
+          message: "This is private",
+          user: ctx.session.user,
+        },
+      };
+    },
+{{/if}}
+{{#if (includes examples "todo")}}
+    todos: todoHandlers(ctx),
+{{/if}}
+  };
+}
+
+export type AppRouter = ReturnType<typeof createRouter>;

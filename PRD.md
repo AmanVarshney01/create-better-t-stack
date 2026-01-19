@@ -53,7 +53,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 
 ## **API LAYER**
 
-- [ ] **ts-rest** - RPC-like client for pure REST APIs
+- [x] **ts-rest** - RPC-like client for pure REST APIs
 - [ ] **Garph** - Fullstack GraphQL Framework
 - [ ] **Pothos** - GraphQL schema builder for TypeScript
 - [ ] **Effect/RPC** - RPC for Effect ecosystem

@@ -1,0 +1,25 @@
+import { QueryClient } from "@tanstack/react-query";
+import { initClient, tsRestFetchApi } from "@ts-rest/core";
+import { initTsrReactQuery } from "@ts-rest/react-query";
+import { contract } from "@{{projectName}}/api/index";
+import { env } from "@{{projectName}}/env/web";
+
+export const queryClient = new QueryClient({
+	defaultOptions: {
+		queries: {
+			retry: 2,
+			staleTime: 1000 * 60,
+		},
+	},
+});
+
+const client = initClient(contract, {
+	baseUrl: `${env.VITE_SERVER_URL}/rest`,
+	baseHeaders: {},
+{{#if (eq auth "better-auth")}}
+	credentials: "include",
+{{/if}}
+	api: tsRestFetchApi,
+});
+
+export const tsr = initTsrReactQuery(contract, client);

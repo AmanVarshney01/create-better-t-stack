@@ -21,6 +21,7 @@ import type {
   CSSFramework,
   UILibrary,
   Effect,
+  Email,
 } from "../src/types";
 
 import { create } from "../src/index";
@@ -127,6 +128,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
         // Tests for specific UI libraries should specify explicitly
         uiLibrary: "none" as UILibrary,
         effect: "none" as Effect,
+        email: "none" as Email,
       };
 
   // Build options object - let the CLI handle all validation
