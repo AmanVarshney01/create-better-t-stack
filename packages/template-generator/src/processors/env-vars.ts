@@ -674,6 +674,18 @@ function buildServerVars(
       comment: "Email address to send from (must be authorized in Mailgun)",
     },
     {
+      key: "PLUNK_API_KEY",
+      value: "",
+      condition: email === "plunk",
+      comment: "Plunk secret API key - get it at https://app.useplunk.com",
+    },
+    {
+      key: "PLUNK_FROM_EMAIL",
+      value: "noreply@example.com",
+      condition: email === "plunk",
+      comment: "Email address to send from",
+    },
+    {
       key: "CORS_ORIGIN",
       value: corsOrigin,
       condition: true,

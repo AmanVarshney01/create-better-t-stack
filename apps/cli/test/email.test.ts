@@ -314,6 +314,7 @@ describe("Email Configurations", () => {
       "sendgrid",
       "aws-ses",
       "mailgun",
+      "plunk",
       "none",
     ];
 
@@ -1218,6 +1219,223 @@ describe("Email Configurations", () => {
       const result = await runTRPCTest({
         projectName: "mailgun-nestjs",
         email: "mailgun",
+        backend: "nestjs",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+  });
+
+  describe("Plunk Email", () => {
+    it("should work with plunk + hono backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "plunk-hono",
+        email: "plunk",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that Plunk dependencies were added
+      const serverPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "packages")
+        ?.children?.find((c: any) => c.name === "server")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (serverPackageJson?.content) {
+        const pkgJson = JSON.parse(serverPackageJson.content);
+        expect(pkgJson.dependencies?.["@plunk/node"]).toBeDefined();
+      }
+    });
+
+    it("should work with plunk + express backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "plunk-express",
+        email: "plunk",
+        backend: "express",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should not include react-email components with plunk", async () => {
+      const result = await runTRPCTest({
+        projectName: "plunk-no-react-email",
+        email: "plunk",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that react-email dependencies were NOT added for plunk
+      const serverPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "packages")
+        ?.children?.find((c: any) => c.name === "server")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (serverPackageJson?.content) {
+        const pkgJson = JSON.parse(serverPackageJson.content);
+        expect(pkgJson.dependencies?.["@react-email/components"]).toBeUndefined();
+        expect(pkgJson.dependencies?.["react-email"]).toBeUndefined();
+      }
+    });
+
+    const compatibleBackends: Backend[] = ["hono", "express", "fastify", "elysia"];
+
+    for (const backend of compatibleBackends) {
+      it(`should work with plunk + ${backend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `plunk-${backend}`,
+          email: "plunk",
+          backend,
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          api: "trpc",
+          auth: "better-auth",
+          frontend: ["tanstack-router"],
+          addons: ["turborepo"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+    }
+
+    it("should add PLUNK environment variables when email is plunk", async () => {
+      const result = await runTRPCTest({
+        projectName: "plunk-env-vars",
+        email: "plunk",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that env variables were added
+      const serverDir = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "apps")
+        ?.children?.find((c: any) => c.name === "server");
+
+      const envFile = serverDir?.children?.find((c: any) => c.name === ".env");
+
+      if (envFile?.content) {
+        expect(envFile.content).toContain("PLUNK_API_KEY");
+        expect(envFile.content).toContain("PLUNK_FROM_EMAIL");
+      }
+    });
+
+    it("should work with plunk + next.js fullstack", async () => {
+      const result = await runTRPCTest({
+        projectName: "plunk-next",
+        email: "plunk",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with plunk + tanstack-start fullstack", async () => {
+      const result = await runTRPCTest({
+        projectName: "plunk-tanstack-start",
+        email: "plunk",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-start"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with plunk + nestjs backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "plunk-nestjs",
+        email: "plunk",
         backend: "nestjs",
         runtime: "node",
         database: "sqlite",

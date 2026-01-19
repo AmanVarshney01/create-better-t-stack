@@ -66,6 +66,15 @@ export function processEmailDeps(vfs: VirtualFileSystem, config: ProjectConfig):
     });
   }
 
+  // Add Plunk for plunk option
+  if (email === "plunk" && vfs.exists(serverPath)) {
+    addPackageDependency({
+      vfs,
+      packagePath: serverPath,
+      dependencies: ["@plunk/node"],
+    });
+  }
+
   // Add React Email components for resend and react-email options (not nodemailer)
   const hasReactWeb = frontend.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),

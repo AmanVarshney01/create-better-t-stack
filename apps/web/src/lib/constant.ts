@@ -673,6 +673,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "plunk",
+      name: "Plunk",
+      description: "Open-source email platform with event tracking",
+      icon: "https://cdn.simpleicons.org/mail/8B5CF6",
+      color: "from-violet-400 to-violet-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Email",
       description: "Skip email integration",

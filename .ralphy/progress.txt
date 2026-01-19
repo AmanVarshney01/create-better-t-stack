@@ -2322,3 +2322,43 @@ Implemented Storybook as a new addon option for component development and testin
 - Example Button component story with full documentation and variants
 - Configured for autodocs, interaction testing, and essential addons
 - Compatible with React, Next.js, Vue/Nuxt, Svelte, and Solid frontends
+
+---
+
+## 2026-01-19 - Plunk Email Provider Implementation
+
+Implemented Plunk as a new email provider option. Plunk is an open-source email platform built on AWS SES that provides transactional emails and event-driven automations.
+
+**Changes Made:**
+1. **packages/types/src/schemas.ts**: Added "plunk" to EmailSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Plunk dependency version:
+   - @plunk/node: ^3.0.2
+3. **packages/template-generator/src/processors/email-deps.ts**: Added Plunk dependency processing:
+   - Server-side: `@plunk/node` added to apps/server
+4. **packages/template-generator/src/processors/env-vars.ts**: Added Plunk environment variables:
+   - PLUNK_API_KEY (secret API key from useplunk.com)
+   - PLUNK_FROM_EMAIL (sender email address)
+5. **packages/template-generator/templates/email/plunk/server/base/src/lib/email.ts.hbs**: Created Plunk email utility template with:
+   - sendEmail function for sending individual emails
+   - trackEvent function for tracking events (triggering automations)
+   - getPlunkClient function for advanced usage
+6. **apps/web/src/lib/constant.ts**: Added Plunk to web builder email options with violet gradient
+7. **apps/cli/test/email.test.ts**: Added comprehensive Plunk tests:
+   - Tests with different backends (hono, express, fastify, elysia, nestjs)
+   - Tests with fullstack frameworks (Next.js, TanStack Start)
+   - Dependency verification tests
+   - Environment variable verification tests
+   - Updated "All Email Options" test to include plunk
+
+**Test Results:**
+- All 83 email tests pass (including 12 new Plunk tests)
+- Template-generator linting passes with only pre-existing warnings
+- Types package linting passes with no errors
+
+**Key Features:**
+- Simple API for sending transactional emails
+- Event tracking for triggering automated email sequences
+- Support for custom headers and reply-to addresses
+- Self-hosted option with custom base URL configuration
+- Compatible with all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+- Works with fullstack frameworks (Next.js, TanStack Start)

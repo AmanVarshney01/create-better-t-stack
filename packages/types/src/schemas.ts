@@ -140,10 +140,11 @@ export const EmailSchema = z
     "sendgrid",
     "aws-ses",
     "mailgun",
+    "plunk",
     "none",
   ])
   .describe(
-    "Email solution (resend includes react-email, nodemailer is classic Node.js email, postmark/sendgrid/aws-ses/mailgun are transactional email services)",
+    "Email solution (resend includes react-email, nodemailer is classic Node.js email, postmark/sendgrid/aws-ses/mailgun/plunk are transactional email services)",
   );
 
 export const RealtimeSchema = z

@@ -200,6 +200,7 @@ export const dependencyVersionMap = {
   "@aws-sdk/client-ses": "^3.970.0",
   "mailgun.js": "^10.2.3",
   "form-data": "^4.0.1",
+  "@plunk/node": "^3.0.2",
 
   // Effect ecosystem
   effect: "^3.16.1",
