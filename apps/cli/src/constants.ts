@@ -24,6 +24,7 @@ export const DEFAULT_CONFIG_BASE = {
   auth: "better-auth",
   payments: "none",
   email: "none",
+  fileUpload: "none",
   effect: "none",
   stateManagement: "none",
   validation: "zod",

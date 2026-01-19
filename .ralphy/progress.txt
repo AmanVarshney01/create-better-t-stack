@@ -2470,3 +2470,84 @@ Implemented Modular Forms as a new form library option. Modular Forms is a type-
 - Supports all native HTML form fields
 - Works with Valibot or Zod schemas for validation
 - Compatible with Solid and Qwik frontends only (not React)
+
+---
+
+## 2026-01-19 - UploadThing File Upload Implementation
+
+Implemented UploadThing as a new file upload option. UploadThing is a TypeScript-first file upload library with built-in validation and framework-specific adapters.
+
+**Changes Made:**
+1. **packages/types/src/schemas.ts**: Added FileUploadSchema enum with "uploadthing" and "none" options
+   - Added to CreateInputSchema (optional)
+   - Added to ProjectConfigSchema (required)
+   - Added to BetterTStackConfigSchema (optional)
+   - Exported FILE_UPLOAD_VALUES for enum access
+
+2. **packages/types/src/types.ts**: Added FileUpload type export
+
+3. **packages/template-generator/src/utils/add-deps.ts**: Added UploadThing dependency versions:
+   - uploadthing: ^7.8.0 (server SDK)
+   - @uploadthing/react: ^7.3.0 (React adapter)
+   - @uploadthing/svelte: ^7.3.0 (Svelte adapter)
+   - @uploadthing/vue: ^7.3.0 (Vue adapter)
+   - @uploadthing/solid: ^7.3.0 (Solid adapter)
+   - @uploadthing/nuxt: ^7.3.0 (Nuxt module)
+   - @uploadthing/expo: ^7.3.0 (Expo/React Native adapter)
+
+4. **packages/template-generator/src/processors/file-upload-deps.ts**: Created new processor to handle UploadThing dependencies:
+   - Adds server SDK to packages/server for separate backends
+   - Adds framework-specific client SDK to apps/web:
+     - @uploadthing/react for React-based web frontends
+     - @uploadthing/svelte for Svelte
+     - @uploadthing/nuxt for Nuxt
+     - @uploadthing/solid for SolidJS
+     - Astro integration support based on selected UI framework
+   - For fullstack frameworks (Next.js, TanStack Start), adds both server and client SDK to web package
+   - Adds @uploadthing/expo for native apps (React Native/Expo)
+
+5. **packages/template-generator/src/processors/index.ts**: Registered processFileUploadDeps in the dependency processing pipeline
+
+6. **packages/template-generator/src/processors/env-vars.ts**: Added UPLOADTHING_TOKEN environment variable:
+   - Added fileUpload parameter extraction
+   - Added conditional env var with dashboard link comment
+
+7. **apps/web/src/lib/constant.ts**: Added fileUpload to TECH_OPTIONS, StackState type, and DEFAULT_STACK
+
+8. **apps/web/src/lib/stack-utils.ts**: Added "fileUpload" to CATEGORY_ORDER and command generation
+
+9. **apps/web/src/lib/stack-url-keys.ts**: Added fileUpload: "fu" URL parameter mapping
+
+10. **apps/cli/src/index.ts**: Added FileUploadSchema to CLI options
+
+11. **apps/cli/src/constants.ts**: Added fileUpload: "none" to DEFAULT_CONFIG_BASE
+
+12. **apps/cli/src/prompts/config-prompts.ts**: Added fileUpload to return object
+
+13. **apps/cli/src/utils/bts-config.ts**: Added fileUpload to BetterTStackConfig interface and template
+
+14. **apps/cli/src/helpers/core/command-handlers.ts**: Added fileUpload: "none" to error ProjectConfig
+
+15. **apps/cli/test/test-utils.ts**: Added FileUpload type, FileUploadSchema import, and fileUpload to core stack flags and defaults
+
+16. **apps/cli/test/file-upload.test.ts**: Created comprehensive test suite (26 tests):
+    - Tests with different backends (hono, express, fastify, elysia)
+    - Tests with fullstack frameworks (Next.js, TanStack Start)
+    - Tests with various frontends (React, Svelte, Nuxt, Solid)
+    - Tests for native apps (Expo)
+    - Tests for environment variables
+    - Tests for fileUpload: none
+
+**Test Results:**
+- All 26 file-upload tests pass
+- All 994 existing tests continue to pass (2 failures are pre-existing issues with Tauri+Svelte and Qwik)
+- Types package linting passes
+- Template-generator linting passes (only pre-existing warnings)
+
+**Key Features:**
+- TypeScript-first file uploads with built-in validation
+- Framework-specific adapters for React, Svelte, Vue, Solid, Nuxt, and Expo
+- Automatic server SDK installation for separate backends
+- Fullstack framework support (server+client in same package)
+- UPLOADTHING_TOKEN environment variable configuration
+- Web builder UI integration with "fu" URL parameter shorthand

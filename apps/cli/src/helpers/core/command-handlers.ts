@@ -105,6 +105,7 @@ export async function createProjectHandler(
             auth: "none",
             payments: "none",
             email: "none",
+            fileUpload: "none",
             effect: "none",
             git: false,
             packageManager: "npm",

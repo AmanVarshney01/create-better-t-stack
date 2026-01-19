@@ -401,6 +401,7 @@ function buildServerVars(
   payments: ProjectConfig["payments"],
   email: ProjectConfig["email"],
   examples: ProjectConfig["examples"],
+  fileUpload: ProjectConfig["fileUpload"],
 ): EnvVariable[] {
   const hasReactRouter = frontend.includes("react-router");
   const hasSvelte = frontend.includes("svelte");
@@ -686,6 +687,12 @@ function buildServerVars(
       comment: "Email address to send from",
     },
     {
+      key: "UPLOADTHING_TOKEN",
+      value: "",
+      condition: fileUpload === "uploadthing",
+      comment: "UploadThing token - get it at https://uploadthing.com/dashboard",
+    },
+    {
       key: "CORS_ORIGIN",
       value: corsOrigin,
       condition: true,
@@ -716,6 +723,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     serverDeploy,
     runtime,
     payments,
+    fileUpload,
   } = config;
 
   const hasReactRouter = frontend.includes("react-router");
@@ -801,6 +809,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     payments,
     email,
     examples,
+    fileUpload,
   );
 
   if (backend === "self") {

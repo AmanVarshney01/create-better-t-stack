@@ -17,6 +17,7 @@ import { processEmailDeps } from "./email-deps";
 import { processEnvDeps } from "./env-deps";
 import { processEnvVariables } from "./env-vars";
 import { processExamplesDeps } from "./examples-deps";
+import { processFileUploadDeps } from "./file-upload-deps";
 import { processFormsDeps } from "./forms-deps";
 import { processInfraDeps } from "./infra-deps";
 import { processPaymentsDeps } from "./payments-deps";
@@ -41,6 +42,7 @@ export function processDependencies(vfs: VirtualFileSystem, config: ProjectConfi
   processAuthDeps(vfs, config);
   processPaymentsDeps(vfs, config);
   processEmailDeps(vfs, config);
+  processFileUploadDeps(vfs, config);
   processDeployDeps(vfs, config);
   processAddonsDeps(vfs, config);
   processExamplesDeps(vfs, config);
@@ -67,6 +69,7 @@ export {
   processEffectDeps,
   processEmailDeps,
   processEnvDeps,
+  processFileUploadDeps,
   processExamplesDeps,
   processFormsDeps,
   processInfraDeps,

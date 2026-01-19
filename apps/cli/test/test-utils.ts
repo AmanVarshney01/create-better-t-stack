@@ -28,6 +28,7 @@ import type {
   Validation,
   Realtime,
   Animation,
+  FileUpload,
 } from "../src/types";
 
 import { create } from "../src/index";
@@ -43,6 +44,7 @@ import {
   DatabaseSetupSchema,
   EffectSchema,
   ExamplesSchema,
+  FileUploadSchema,
   FormsSchema,
   FrontendSchema,
   ORMSchema,
@@ -104,6 +106,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     "auth",
     "payments",
     "email",
+    "fileUpload",
     "dbSetup",
     "api",
     "webDeploy",
@@ -147,6 +150,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
         uiLibrary: "none" as UILibrary,
         effect: "none" as Effect,
         email: "none" as Email,
+        fileUpload: "none" as FileUpload,
         stateManagement: "none" as StateManagement,
         forms: "react-hook-form" as Forms,
         testing: "vitest" as Testing,
@@ -241,6 +245,7 @@ export const TESTINGS = extractEnumValues(TestingSchema);
 export const VALIDATIONS = extractEnumValues(ValidationSchema);
 export const REALTIMES = extractEnumValues(RealtimeSchema);
 export const ANIMATIONS = extractEnumValues(AnimationSchema);
+export const FILE_UPLOADS = extractEnumValues(FileUploadSchema);
 
 // Convenience functions for common test patterns
 export function createBasicConfig(overrides: Partial<TestConfig> = {}): TestConfig {

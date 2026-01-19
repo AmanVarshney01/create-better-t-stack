@@ -191,7 +191,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 
 ## **FILE UPLOAD / STORAGE**
 
-- [ ] **UploadThing** - TypeScript-first file uploads
+- [x] **UploadThing** - TypeScript-first file uploads
 - [ ] **Filepond** - Flexible file upload library
 - [ ] **Uppy** - Modular file uploader
 - [ ] **TUS** - Resumable upload protocol
@@ -1355,7 +1355,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 - [ ] **DigitalOcean Spaces** - Object storage
 - [ ] **Backblaze B2** - Cloud storage
 - [ ] **Minio** - Self-hosted S3
-- [ ] **UploadThing** - File uploads
+- [x] **UploadThing** - File uploads
 
 ---
 

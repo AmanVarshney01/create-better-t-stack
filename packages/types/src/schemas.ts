@@ -163,6 +163,8 @@ export const AnimationSchema = z
   .enum(["framer-motion", "gsap", "react-spring", "auto-animate", "lottie", "none"])
   .describe("Animation library");
 
+export const FileUploadSchema = z.enum(["uploadthing", "none"]).describe("File upload solution");
+
 export const CSSFrameworkSchema = z
   .enum(["tailwind", "scss", "less", "postcss-only", "none"])
   .describe("CSS framework/preprocessor");
@@ -246,6 +248,7 @@ export const CreateInputSchema = z.object({
   validation: ValidationSchema.optional(),
   realtime: RealtimeSchema.optional(),
   animation: AnimationSchema.optional(),
+  fileUpload: FileUploadSchema.optional(),
 });
 
 export const AddInputSchema = z.object({
@@ -293,6 +296,7 @@ export const ProjectConfigSchema = z.object({
   validation: ValidationSchema,
   realtime: RealtimeSchema,
   animation: AnimationSchema,
+  fileUpload: FileUploadSchema,
 });
 
 export const BetterTStackConfigSchema = z.object({
@@ -324,6 +328,7 @@ export const BetterTStackConfigSchema = z.object({
   validation: ValidationSchema,
   realtime: RealtimeSchema,
   animation: AnimationSchema,
+  fileUpload: FileUploadSchema,
 });
 
 export const BetterTStackConfigFileSchema = z
@@ -376,3 +381,4 @@ export const UI_LIBRARY_VALUES = UILibrarySchema.options;
 export const VALIDATION_VALUES = ValidationSchema.options;
 export const REALTIME_VALUES = RealtimeSchema.options;
 export const ANIMATION_VALUES = AnimationSchema.options;
+export const FILE_UPLOAD_VALUES = FileUploadSchema.options;

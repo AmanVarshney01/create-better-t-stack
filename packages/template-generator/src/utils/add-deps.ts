@@ -396,6 +396,15 @@ export const dependencyVersionMap = {
   dodopayments: "^0.23.0",
   "dodopayments-checkout": "^0.2.1",
 
+  // File Upload - UploadThing
+  uploadthing: "^7.8.0",
+  "@uploadthing/react": "^7.3.0",
+  "@uploadthing/svelte": "^7.3.0",
+  "@uploadthing/vue": "^7.3.0",
+  "@uploadthing/solid": "^7.3.0",
+  "@uploadthing/nuxt": "^7.3.0",
+  "@uploadthing/expo": "^7.3.0",
+
   // RedwoodJS
   "@redwoodjs/core": "^8.8.0",
   "@redwoodjs/web": "^8.6.1",

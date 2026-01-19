@@ -689,6 +689,24 @@ export const TECH_OPTIONS: Record<
       default: true,
     },
   ],
+  fileUpload: [
+    {
+      id: "uploadthing",
+      name: "UploadThing",
+      description: "TypeScript-first file uploads with built-in validation",
+      icon: "https://uploadthing.com/favicon.ico",
+      color: "from-red-400 to-red-600",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No File Upload",
+      description: "Skip file upload integration",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
   backendLibraries: [
     {
       id: "effect",
@@ -1595,6 +1613,7 @@ export type StackState = {
   auth: string;
   payments: string;
   email: string;
+  fileUpload: string;
   backendLibraries: string;
   stateManagement: string;
   validation: string;
@@ -1629,6 +1648,7 @@ export const DEFAULT_STACK: StackState = {
   auth: "better-auth",
   payments: "none",
   email: "none",
+  fileUpload: "none",
   backendLibraries: "none",
   stateManagement: "none",
   validation: "zod",

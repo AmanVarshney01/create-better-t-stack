@@ -189,5 +189,6 @@ export async function gatherConfig(
     testing: flags.testing ?? "vitest",
     realtime: flags.realtime ?? "none",
     animation: flags.animation ?? "none",
+    fileUpload: flags.fileUpload ?? "none",
   };
 }
