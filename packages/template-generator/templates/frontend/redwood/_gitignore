@@ -1,0 +1,31 @@
+# RedwoodJS
+.redwood/
+.netlify/
+.vercel/
+dist/
+node_modules/
+*.log
+
+# Prisma
+api/db/dev.db
+api/db/dev.db-journal
+api/db/migrations/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+web/dist/
+api/dist/

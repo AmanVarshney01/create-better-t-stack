@@ -37,7 +37,7 @@ export function ensureSingleWebAndNative(frontends: Frontend[]) {
   const { web, native } = splitFrontends(frontends);
   if (web.length > 1) {
     exitWithError(
-      "Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, nuxt, svelte, solid, astro, qwik, angular",
+      "Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, nuxt, svelte, solid, astro, qwik, angular, redwood",
     );
   }
   if (native.length > 1) {
@@ -158,6 +158,7 @@ export function validateApiFrontendCompatibility(
   const includesAstro = frontends.includes("astro");
   const includesQwik = frontends.includes("qwik");
   const includesAngular = frontends.includes("angular");
+  const includesRedwood = frontends.includes("redwood");
 
   // ts-rest requires React like tRPC
   if ((includesNuxt || includesSvelte || includesSolid) && (api === "trpc" || api === "ts-rest")) {
@@ -178,6 +179,13 @@ export function validateApiFrontendCompatibility(
   if (includesAngular && api && api !== "none") {
     exitWithError(
       `Angular has its own built-in HttpClient and doesn't support external API layers (tRPC/oRPC/ts-rest). Please use --api none with Angular.`,
+    );
+  }
+
+  // RedwoodJS has its own built-in GraphQL API and doesn't support external API layers
+  if (includesRedwood && api && api !== "none") {
+    exitWithError(
+      `RedwoodJS has its own built-in GraphQL API and doesn't support external API layers (tRPC/oRPC/ts-rest). Please use --api none with RedwoodJS.`,
     );
   }
 
@@ -204,12 +212,16 @@ export function isFrontendAllowedWithBackend(
   if (backend === "convex" && frontend === "astro") return false;
   if (backend === "convex" && frontend === "qwik") return false;
   if (backend === "convex" && frontend === "angular") return false;
+  if (backend === "convex" && frontend === "redwood") return false;
 
   // Qwik has its own built-in server, only works with backend=none
   if (frontend === "qwik" && backend && backend !== "none") return false;
 
   // Angular has its own built-in dev server, only works with backend=none
   if (frontend === "angular" && backend && backend !== "none") return false;
+
+  // RedwoodJS has its own built-in GraphQL API, only works with backend=none
+  if (frontend === "redwood" && backend && backend !== "none") return false;
 
   if (auth === "clerk" && backend === "convex") {
     const incompatibleFrontends = ["nuxt", "svelte", "solid"];
@@ -257,6 +269,7 @@ export function allowedApisForFrontends(
   const includesAstro = frontends.includes("astro");
   const includesQwik = frontends.includes("qwik");
   const includesAngular = frontends.includes("angular");
+  const includesRedwood = frontends.includes("redwood");
   const base: API[] = ["trpc", "orpc", "ts-rest", "none"];
 
   // Qwik uses its own server capabilities, only none is allowed
@@ -266,6 +279,11 @@ export function allowedApisForFrontends(
 
   // Angular uses its own HttpClient, only none is allowed
   if (includesAngular) {
+    return ["none"];
+  }
+
+  // RedwoodJS uses its own GraphQL API, only none is allowed
+  if (includesRedwood) {
     return ["none"];
   }
 

@@ -304,6 +304,16 @@ export const dependencyVersionMap = {
   // Payments - Paddle
   "@paddle/paddle-node-sdk": "^1.8.0",
   "@paddle/paddle-js": "^1.3.0",
+
+  // RedwoodJS
+  "@redwoodjs/core": "^8.8.0",
+  "@redwoodjs/web": "^8.6.1",
+  "@redwoodjs/api": "^8.6.1",
+  "@redwoodjs/router": "^8.6.1",
+  "@redwoodjs/forms": "^8.6.1",
+  "@redwoodjs/graphql-server": "^8.6.1",
+  "@redwoodjs/vite": "^8.6.1",
+  "@redwoodjs/project-config": "^8.6.1",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

@@ -126,6 +126,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "redwood",
+      name: "RedwoodJS",
+      description: "Opinionated fullstack (React + GraphQL + Prisma)",
+      icon: "https://cdn.simpleicons.org/redwoodjs/BF4722",
+      color: "from-red-600 to-orange-500",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Web Frontend",
       description: "No web-based frontend",

@@ -11,4 +11,5 @@ export const WEB_FRAMEWORKS: readonly Frontend[] = [
   "astro",
   "qwik",
   "angular",
+  "redwood",
 ] as const;

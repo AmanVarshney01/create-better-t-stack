@@ -1129,3 +1129,84 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: RedwoodJS Frontend Framework Implementation
+
+### Task: Implement RedwoodJS as a frontend framework option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "redwood" to FrontendSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added RedwoodJS dependency versions:
+   - @redwoodjs/core: ^8.8.0
+   - @redwoodjs/web: ^8.6.1
+   - @redwoodjs/api: ^8.6.1
+   - @redwoodjs/router: ^8.6.1
+   - @redwoodjs/forms: ^8.6.1
+   - @redwoodjs/graphql-server: ^8.6.1
+   - @redwoodjs/vite: ^8.6.1
+   - @redwoodjs/project-config: ^8.6.1
+3. **packages/template-generator/templates/frontend/redwood/**: Created RedwoodJS templates:
+   - redwood.toml.hbs - RedwoodJS configuration file
+   - package.json.hbs - Root monorepo package.json
+   - graphql.config.js - GraphQL configuration
+   - api/package.json.hbs - API workspace package.json
+   - api/tsconfig.json - API TypeScript configuration
+   - api/db/schema.prisma.hbs - Prisma schema with User/Post models
+   - api/src/functions/graphql.ts.hbs - GraphQL function handler
+   - api/src/lib/db.ts.hbs - Prisma client initialization
+   - api/src/lib/logger.ts.hbs - Pino logger setup
+   - api/src/graphql/posts.sdl.ts.hbs - GraphQL SDL for posts
+   - api/src/services/posts/posts.ts.hbs - Posts service implementation
+   - web/package.json.hbs - Web workspace package.json
+   - web/tsconfig.json - Web TypeScript configuration
+   - web/vite.config.ts.hbs - Vite configuration for RedwoodJS
+   - web/src/App.tsx.hbs - React app with Apollo/Router providers
+   - web/src/Routes.tsx.hbs - Route definitions
+   - web/src/entry.client.tsx.hbs - Client entry point
+   - web/src/index.css.hbs - Base styles
+   - web/src/pages/HomePage/HomePage.tsx.hbs - Home page component
+   - web/src/pages/NotFoundPage/NotFoundPage.tsx.hbs - 404 page component
+4. **packages/template-generator/src/template-handlers/frontend.ts**: Added RedwoodJS processing:
+   - RedwoodJS uses root-level monorepo structure (outputs to "." not "apps/web")
+5. **apps/cli/src/utils/compatibility.ts**: Added "redwood" to WEB_FRAMEWORKS array
+6. **apps/cli/src/utils/compatibility-rules.ts**: Added RedwoodJS validation rules:
+   - RedwoodJS must use backend="none" (has built-in GraphQL API)
+   - RedwoodJS must use api="none" (has built-in GraphQL)
+   - RedwoodJS is not compatible with Convex backend
+7. **apps/cli/src/constants.ts**: Added RedwoodJS compatibility:
+   - ADDON_COMPATIBILITY: pwa, tauri
+   - UI_LIBRARY_COMPATIBILITY: daisyui, none
+   - DEFAULT_UI_LIBRARY_BY_FRONTEND: redwood -> "daisyui"
+8. **apps/web/src/lib/constant.ts**: Added RedwoodJS to web builder UI:
+   - ID: redwood
+   - Name: RedwoodJS
+   - Description: Opinionated fullstack (React + GraphQL + Prisma)
+   - Icon: RedwoodJS red logo
+   - Color: from-red-600 to-orange-500
+9. **apps/cli/test/frontend.test.ts**: Added RedwoodJS tests:
+   - RedwoodJS standalone (should pass)
+   - RedwoodJS with tRPC (should fail)
+   - RedwoodJS with oRPC (should fail)
+   - RedwoodJS with ts-rest (should fail)
+
+### Features:
+- Opinionated fullstack framework with React, GraphQL, and Prisma
+- Monorepo structure with api/ and web/ workspaces
+- SDL-first GraphQL schema definition
+- Built-in Prisma ORM integration
+- Pino-based logging
+- Apollo Client for GraphQL queries
+- RedwoodJS Router for navigation
+- Vite-based build system
+
+### Technical Notes:
+- RedwoodJS has its own monorepo structure at root level (not apps/web)
+- Built-in GraphQL API means backend="none" and api="none" are required
+- Uses SDL-first approach for GraphQL schema definition
+- Prisma is built-in and configured automatically
+- Not compatible with external backends (Hono, Express, etc.)
+- Not compatible with tRPC, oRPC, or ts-rest (uses GraphQL)
+- All 4 RedwoodJS-specific tests pass
+
+### Status: COMPLETE
+

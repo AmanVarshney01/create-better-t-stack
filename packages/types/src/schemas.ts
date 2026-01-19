@@ -31,6 +31,7 @@ export const FrontendSchema = z
     "astro",
     "qwik",
     "angular",
+    "redwood",
     "none",
   ])
   .describe("Frontend framework");

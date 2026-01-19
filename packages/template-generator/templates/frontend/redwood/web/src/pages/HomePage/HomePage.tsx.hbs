@@ -1,0 +1,63 @@
+import { Link, routes } from '@redwoodjs/router'
+import { Metadata } from '@redwoodjs/web'
+
+const HomePage = () => {
+  return (
+    <>
+      <Metadata title="Home" description="Home page" />
+
+      <main{{#if (eq cssFramework "tailwind")}} className="min-h-screen bg-slate-900 text-slate-100 flex flex-col items-center justify-center p-8"{{/if}}>
+        <div{{#if (eq cssFramework "tailwind")}} className="max-w-4xl mx-auto text-center"{{/if}}>
+          <h1{{#if (eq cssFramework "tailwind")}} className="text-5xl font-bold text-cyan-400 mb-6"{{/if}}>
+            Welcome to RedwoodJS
+          </h1>
+          <p{{#if (eq cssFramework "tailwind")}} className="text-xl text-slate-300 mb-8"{{/if}}>
+            Built with the Better T Stack
+          </p>
+
+          <div{{#if (eq cssFramework "tailwind")}} className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12"{{/if}}>
+            <div{{#if (eq cssFramework "tailwind")}} className="bg-slate-800 p-6 rounded-lg border border-slate-700"{{/if}}>
+              <h3{{#if (eq cssFramework "tailwind")}} className="text-lg font-semibold text-cyan-400 mb-2"{{/if}}>
+                React Frontend
+              </h3>
+              <p{{#if (eq cssFramework "tailwind")}} className="text-slate-400 text-sm"{{/if}}>
+                Modern React with file-based routing and Cells for data fetching.
+              </p>
+            </div>
+
+            <div{{#if (eq cssFramework "tailwind")}} className="bg-slate-800 p-6 rounded-lg border border-slate-700"{{/if}}>
+              <h3{{#if (eq cssFramework "tailwind")}} className="text-lg font-semibold text-cyan-400 mb-2"{{/if}}>
+                GraphQL API
+              </h3>
+              <p{{#if (eq cssFramework "tailwind")}} className="text-slate-400 text-sm"{{/if}}>
+                Type-safe GraphQL with auto-generated types and SDL-first schema.
+              </p>
+            </div>
+
+            <div{{#if (eq cssFramework "tailwind")}} className="bg-slate-800 p-6 rounded-lg border border-slate-700"{{/if}}>
+              <h3{{#if (eq cssFramework "tailwind")}} className="text-lg font-semibold text-cyan-400 mb-2"{{/if}}>
+                Prisma ORM
+              </h3>
+              <p{{#if (eq cssFramework "tailwind")}} className="text-slate-400 text-sm"{{/if}}>
+                Database access made easy with Prisma and automatic migrations.
+              </p>
+            </div>
+          </div>
+
+          <div{{#if (eq cssFramework "tailwind")}} className="mt-12"{{/if}}>
+            <a
+              href="https://redwoodjs.com/docs"
+              target="_blank"
+              rel="noopener noreferrer"
+              {{#if (eq cssFramework "tailwind")}}className="inline-block bg-cyan-500 text-slate-900 px-6 py-3 rounded-lg font-semibold hover:bg-cyan-400 transition-colors"{{/if}}
+            >
+              Read the Docs
+            </a>
+          </div>
+        </div>
+      </main>
+    </>
+  )
+}
+
+export default HomePage

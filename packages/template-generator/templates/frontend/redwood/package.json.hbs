@@ -1,0 +1,21 @@
+{
+  "name": "{{projectName}}",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "api",
+      "web"
+    ]
+  },
+  "devDependencies": {
+    "@redwoodjs/core": "^8.8.0"
+  },
+  "eslintConfig": {
+    "extends": "@redwoodjs/eslint-config",
+    "root": true
+  },
+  "engines": {
+    "node": ">=20.x"
+  },
+  "packageManager": "{{packageManager}}@latest"
+}

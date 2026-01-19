@@ -1,0 +1,22 @@
+// Don't forget to tell Prisma about your database:
+// https://www.prisma.io/docs/reference/database-reference/connection-urls
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = "native"
+}
+
+// Define your own datamodels here and run `yarn rw prisma migrate dev`
+// to create migrations for them and apply to your dev DB.
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  title     String
+  body      String
+  createdAt DateTime @default(now())
+}
