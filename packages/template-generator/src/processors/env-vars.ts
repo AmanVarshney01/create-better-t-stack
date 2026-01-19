@@ -231,6 +231,23 @@ function buildClientVars(
     );
   }
 
+  // Dodo Payments environment for client-side
+  if (payments === "dodo") {
+    vars.push({
+      key: hasNextJs
+        ? "NEXT_PUBLIC_DODO_ENVIRONMENT"
+        : hasNuxt
+          ? "NUXT_PUBLIC_DODO_ENVIRONMENT"
+          : hasSvelte
+            ? "PUBLIC_DODO_ENVIRONMENT"
+            : "VITE_DODO_ENVIRONMENT",
+      value: "test_mode",
+      condition: true,
+      comment:
+        "Dodo Payments environment - use 'test_mode' for testing, 'live_mode' for production",
+    });
+  }
+
   return vars;
 }
 
@@ -521,6 +538,25 @@ function buildServerVars(
       value: "sandbox",
       condition: payments === "paddle",
       comment: "Paddle environment - use 'sandbox' for testing, 'production' for live",
+    },
+    {
+      key: "DODO_PAYMENTS_API_KEY",
+      value: "",
+      condition: payments === "dodo",
+      comment: "Dodo Payments API key - get it at https://dashboard.dodopayments.com",
+    },
+    {
+      key: "DODO_PAYMENTS_WEBHOOK_SECRET",
+      value: "",
+      condition: payments === "dodo",
+      comment: "Dodo Payments webhook secret - get it when creating a webhook endpoint",
+    },
+    {
+      key: "DODO_PAYMENTS_ENVIRONMENT",
+      value: "test_mode",
+      condition: payments === "dodo",
+      comment:
+        "Dodo Payments environment - use 'test_mode' for testing, 'live_mode' for production",
     },
     {
       key: "RESEND_API_KEY",

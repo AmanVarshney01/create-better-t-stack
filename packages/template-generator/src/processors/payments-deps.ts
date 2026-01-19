@@ -154,4 +154,49 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
       }
     }
   }
+
+  if (payments === "dodo") {
+    const serverPath = "apps/server/package.json";
+
+    // Add server-side Dodo Payments SDK
+    if (vfs.exists(serverPath)) {
+      addPackageDependency({
+        vfs,
+        packagePath: serverPath,
+        dependencies: ["dodopayments"],
+      });
+    }
+
+    // Also add to auth package if it exists (for webhook handling)
+    if (vfs.exists(authPath)) {
+      addPackageDependency({
+        vfs,
+        packagePath: authPath,
+        dependencies: ["dodopayments"],
+      });
+    }
+
+    // Add client-side Dodo Payments checkout for web frontends
+    if (vfs.exists(webPath)) {
+      const hasWebFrontend = frontend.some((f) =>
+        [
+          "react-router",
+          "tanstack-router",
+          "tanstack-start",
+          "next",
+          "nuxt",
+          "svelte",
+          "solid",
+        ].includes(f),
+      );
+
+      if (hasWebFrontend) {
+        addPackageDependency({
+          vfs,
+          packagePath: webPath,
+          dependencies: ["dodopayments-checkout"],
+        });
+      }
+    }
+  }
 }

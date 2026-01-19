@@ -449,6 +449,150 @@ describe("Payments Options", () => {
     });
   });
 
+  describe("Dodo Payments with React frontends", () => {
+    test("dodo with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "dodo-tanstack-router",
+          frontend: ["tanstack-router"],
+          payments: "dodo",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("dodo with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "dodo-react-router",
+          frontend: ["react-router"],
+          payments: "dodo",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("dodo with Next.js fullstack", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "dodo-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          payments: "dodo",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("dodo with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "dodo-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          payments: "dodo",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Dodo Payments with different backends", () => {
+    test("dodo with Hono backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "dodo-hono",
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          payments: "dodo",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("dodo with Express backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "dodo-express",
+          frontend: ["tanstack-router"],
+          backend: "express",
+          runtime: "node",
+          payments: "dodo",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("dodo with Fastify backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "dodo-fastify",
+          frontend: ["tanstack-router"],
+          backend: "fastify",
+          runtime: "node",
+          payments: "dodo",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("dodo with Elysia backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "dodo-elysia",
+          frontend: ["tanstack-router"],
+          backend: "elysia",
+          runtime: "bun",
+          payments: "dodo",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Dodo Payments with non-React frontends", () => {
+    test("dodo with Nuxt", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "dodo-nuxt",
+          frontend: ["nuxt"],
+          backend: "hono",
+          api: "none",
+          payments: "dodo",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("dodo with Svelte", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "dodo-svelte",
+          frontend: ["svelte"],
+          backend: "hono",
+          api: "none",
+          payments: "dodo",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("dodo with Solid", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "dodo-solid",
+          frontend: ["solid"],
+          backend: "hono",
+          api: "none",
+          payments: "dodo",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("No payments option", () => {
     test("none payments option", async () => {
       const result = await runTRPCTest(

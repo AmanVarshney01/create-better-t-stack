@@ -375,6 +375,10 @@ export const dependencyVersionMap = {
   "@paddle/paddle-node-sdk": "^1.8.0",
   "@paddle/paddle-js": "^1.3.0",
 
+  // Payments - Dodo Payments
+  dodopayments: "^0.23.0",
+  "dodopayments-checkout": "^0.2.1",
+
   // RedwoodJS
   "@redwoodjs/core": "^8.8.0",
   "@redwoodjs/web": "^8.6.1",

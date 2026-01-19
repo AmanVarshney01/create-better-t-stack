@@ -2235,3 +2235,44 @@ Implemented MSW (Mock Service Worker) v2.7.0 as a new addon option. MSW is an in
 - Compatible with all frontends and backends
 - Works with Vitest, Jest, Playwright, and Cypress testing frameworks
 - No frontend restrictions (universal addon)
+
+
+---
+
+## Session: 2026-01-19
+
+### Task: Add Dodo Payments as payment option
+
+**Status:** ✅ Completed
+
+**Summary:**
+Implemented Dodo Payments as a new payment provider option. Dodo Payments is a Merchant-of-Record (MoR) platform built for AI and SaaS businesses, enabling sales in 150+ countries with automatic tax, fraud, and compliance handling.
+
+**Changes Made:**
+1. **packages/types/src/schemas.ts**: Added "dodo" to PaymentsSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Dodo Payments dependency versions:
+   - dodopayments: ^0.23.0 (server-side SDK)
+   - dodopayments-checkout: ^0.2.1 (client-side checkout overlay)
+3. **packages/template-generator/src/processors/payments-deps.ts**: Added Dodo Payments dependency processing:
+   - Server-side: `dodopayments` added to apps/server and packages/auth
+   - Client-side: `dodopayments-checkout` added to apps/web for web frontends
+4. **packages/template-generator/src/processors/env-vars.ts**: Added Dodo Payments environment variables:
+   - Client-side: VITE_DODO_ENVIRONMENT / NEXT_PUBLIC_DODO_ENVIRONMENT / etc.
+   - Server-side: DODO_PAYMENTS_API_KEY, DODO_PAYMENTS_WEBHOOK_SECRET, DODO_PAYMENTS_ENVIRONMENT
+5. **apps/web/src/lib/constant.ts**: Added Dodo Payments to web builder payments options with indigo-blue gradient
+6. **apps/cli/test/payments.test.ts**: Added comprehensive Dodo Payments tests:
+   - 4 tests with React frontends (TanStack Router, React Router, Next.js, TanStack Start)
+   - 4 tests with different backends (Hono, Express, Fastify, Elysia)
+   - 3 tests with non-React frontends (Nuxt, Svelte, Solid)
+
+**Test Results:**
+- All 46 payment tests pass (including 11 new Dodo Payments tests)
+- Template-generator linting passes with only pre-existing warnings
+- Types package linting passes with no errors
+
+**Key Features:**
+- Server-side SDK for checkout sessions, payments, subscriptions, and webhooks
+- Client-side checkout overlay for embedded payment experiences
+- Environment-based configuration (test_mode/live_mode)
+- Compatible with all web frontends and backend frameworks
+- Webhook secret support for secure event handling

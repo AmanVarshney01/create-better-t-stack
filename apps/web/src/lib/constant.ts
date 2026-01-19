@@ -598,6 +598,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "dodo",
+      name: "Dodo Payments",
+      description: "MoR for AI and SaaS in 150+ countries",
+      icon: "https://cdn.simpleicons.org/dodo/4F46E5",
+      color: "from-indigo-500 to-blue-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Payments",
       description: "Skip payments integration",
