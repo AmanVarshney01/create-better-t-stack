@@ -60,6 +60,9 @@ export const dependencyVersionMap = {
   "better-sqlite3": "^11.9.1",
   "@types/better-sqlite3": "^7.6.13",
 
+  // Kysely
+  kysely: "^0.28.3",
+
   "vite-plugin-pwa": "^1.0.1",
   "@vite-pwa/assets-generator": "^1.0.0",
 

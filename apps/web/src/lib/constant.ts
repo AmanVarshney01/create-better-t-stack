@@ -403,6 +403,13 @@ export const TECH_OPTIONS: Record<
       color: "from-red-400 to-red-600",
     },
     {
+      id: "kysely",
+      name: "Kysely",
+      description: "Type-safe SQL query builder",
+      icon: "https://kysely.dev/img/logo.svg",
+      color: "from-blue-500 to-blue-700",
+    },
+    {
       id: "none",
       name: "No ORM",
       description: "Skip ORM integration",

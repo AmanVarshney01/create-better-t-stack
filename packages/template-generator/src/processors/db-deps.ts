@@ -23,6 +23,8 @@ export function processDatabaseDeps(vfs: VirtualFileSystem, config: ProjectConfi
     addPackageDependency({ vfs, packagePath: dbPkgPath, dependencies: ["mongoose"] });
   } else if (orm === "typeorm") {
     processTypeORMDeps(vfs, config, dbPkgPath);
+  } else if (orm === "kysely") {
+    processKyselyDeps(vfs, config, dbPkgPath);
   }
 }
 
@@ -147,6 +149,37 @@ function processTypeORMDeps(
   const { database } = config;
 
   const deps: AvailableDependencies[] = ["typeorm", "reflect-metadata"];
+
+  if (database === "sqlite") {
+    deps.push("better-sqlite3");
+    addPackageDependency({
+      vfs,
+      packagePath: dbPkgPath,
+      dependencies: deps,
+      devDependencies: ["@types/better-sqlite3"],
+    });
+  } else if (database === "postgres") {
+    deps.push("pg");
+    addPackageDependency({
+      vfs,
+      packagePath: dbPkgPath,
+      dependencies: deps,
+      devDependencies: ["@types/pg"],
+    });
+  } else if (database === "mysql") {
+    deps.push("mysql2");
+    addPackageDependency({
+      vfs,
+      packagePath: dbPkgPath,
+      dependencies: deps,
+    });
+  }
+}
+
+function processKyselyDeps(vfs: VirtualFileSystem, config: ProjectConfig, dbPkgPath: string): void {
+  const { database } = config;
+
+  const deps: AvailableDependencies[] = ["kysely"];
 
   if (database === "sqlite") {
     deps.push("better-sqlite3");

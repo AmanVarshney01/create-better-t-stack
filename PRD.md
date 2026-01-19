@@ -66,7 +66,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 - [x] **TypeORM** - Traditional ORM with Active Record/Data Mapper
 - [ ] **MikroORM** - Data Mapper ORM for DDD
 - [ ] **Sequelize** - Mature ORM with wide adoption
-- [ ] **Kysely** - Type-safe SQL query builder
+- [x] **Kysely** - Type-safe SQL query builder
 - [ ] **EdgeDB** - Graph-relational database with built-in types
 - [ ] **SurrealDB** - Multi-model database with TypeScript SDK
 

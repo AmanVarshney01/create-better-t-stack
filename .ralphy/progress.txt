@@ -1343,3 +1343,51 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Kysely ORM Implementation
+
+### Task: Implement Kysely as an ORM option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "kysely" to ORMSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Kysely dependency version:
+   - kysely: ^0.28.3
+3. **apps/cli/src/prompts/orm.ts**: Added Kysely option with description "Type-safe SQL query builder"
+4. **apps/cli/src/utils/config-validation.ts**: Added Kysely validation rules:
+   - Kysely does not support MongoDB (similar to Drizzle/TypeORM)
+   - Updated error messages to include Kysely as valid option for SQL databases
+5. **packages/template-generator/src/processors/db-deps.ts**: Added processKyselyDeps function:
+   - SQLite: kysely, better-sqlite3
+   - PostgreSQL: kysely, pg
+   - MySQL: kysely, mysql2
+6. **packages/template-generator/templates/db/kysely/**: Created Kysely templates:
+   - sqlite/src/index.ts.hbs - SQLite dialect configuration with better-sqlite3
+   - postgres/src/index.ts.hbs - PostgreSQL dialect configuration with SSL for Neon
+   - mysql/src/index.ts.hbs - MySQL dialect configuration with SSL for PlanetScale
+   - base/src/schema/index.ts.hbs - Type-safe database schema interfaces
+7. **apps/web/src/lib/constant.ts**: Added Kysely to web builder ORM options with blue icon
+8. **apps/cli/test/database-orm.test.ts**: Added Kysely tests:
+   - Valid combinations: sqlite+kysely, postgres+kysely, mysql+kysely
+   - Invalid combination: mongodb+kysely (should fail)
+
+### Features:
+- Kysely type-safe SQL query builder
+- Support for SQLite, PostgreSQL, and MySQL databases
+- Dialect-specific configurations with proper drivers
+- Database-specific SSL configurations (Neon for PostgreSQL, PlanetScale for MySQL)
+- Type-safe database schema interfaces using Generated and ColumnType
+- Full CLI integration with prompts and validation
+- Full web builder UI integration
+- Compatible with Better-Auth and todo examples
+
+### Technical Notes:
+- Kysely uses dialect-specific configurations (SqliteDialect, PostgresDialect, MysqlDialect)
+- Uses better-sqlite3 driver for SQLite (synchronous, performant)
+- Uses pg driver for PostgreSQL
+- Uses mysql2 driver for MySQL
+- Schema types use Kysely's Generated<T> for auto-increment columns
+- ColumnType<T, Insert, Update> for timestamp columns
+- All 34 database-orm tests pass
+
+### Status: COMPLETE
+

@@ -1,0 +1,19 @@
+import { env } from "@{{projectName}}/env/server";
+import { Kysely, PostgresDialect } from "kysely";
+import { Pool } from "pg";
+import type { Database as DB } from "./schema";
+
+const dialect = new PostgresDialect({
+	pool: new Pool({
+		connectionString: env.DATABASE_URL,
+{{#if (eq dbSetup "neon")}}
+		ssl: {
+			rejectUnauthorized: false,
+		},
+{{/if}}
+	}),
+});
+
+export const db = new Kysely<DB>({
+	dialect,
+});

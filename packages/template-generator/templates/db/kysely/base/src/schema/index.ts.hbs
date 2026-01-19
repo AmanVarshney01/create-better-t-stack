@@ -1,0 +1,73 @@
+import type { Generated, ColumnType } from "kysely";
+
+{{#if (eq auth "better-auth")}}
+// Auth tables
+export interface UserTable {
+	id: string;
+	name: string;
+	email: string;
+	emailVerified: number;
+	image: string | null;
+	createdAt: ColumnType<Date, string | undefined, never>;
+	updatedAt: ColumnType<Date, string | undefined, never>;
+}
+
+export interface SessionTable {
+	id: string;
+	expiresAt: ColumnType<Date, string, string>;
+	token: string;
+	createdAt: ColumnType<Date, string | undefined, never>;
+	updatedAt: ColumnType<Date, string | undefined, never>;
+	ipAddress: string | null;
+	userAgent: string | null;
+	userId: string;
+}
+
+export interface AccountTable {
+	id: string;
+	accountId: string;
+	providerId: string;
+	userId: string;
+	accessToken: string | null;
+	refreshToken: string | null;
+	idToken: string | null;
+	accessTokenExpiresAt: ColumnType<Date, string | null, string | null>;
+	refreshTokenExpiresAt: ColumnType<Date, string | null, string | null>;
+	scope: string | null;
+	password: string | null;
+	createdAt: ColumnType<Date, string | undefined, never>;
+	updatedAt: ColumnType<Date, string | undefined, never>;
+}
+
+export interface VerificationTable {
+	id: string;
+	identifier: string;
+	value: string;
+	expiresAt: ColumnType<Date, string, string>;
+	createdAt: ColumnType<Date, string | undefined, never>;
+	updatedAt: ColumnType<Date, string | undefined, never>;
+}
+{{/if}}
+
+{{#if (includes examples "todo")}}
+// Todo table
+export interface TodoTable {
+	id: Generated<number>;
+	text: string;
+	completed: number;
+	createdAt: ColumnType<Date, string | undefined, never>;
+}
+{{/if}}
+
+// Database interface - lists all tables
+export interface Database {
+{{#if (eq auth "better-auth")}}
+	user: UserTable;
+	session: SessionTable;
+	account: AccountTable;
+	verification: VerificationTable;
+{{/if}}
+{{#if (includes examples "todo")}}
+	todo: TodoTable;
+{{/if}}
+}

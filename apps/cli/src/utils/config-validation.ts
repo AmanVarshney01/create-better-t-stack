@@ -40,6 +40,12 @@ export function validateDatabaseOrmAuth(cfg: Partial<ProjectConfig>, flags?: Set
     );
   }
 
+  if (has("orm") && has("database") && orm === "kysely" && db === "mongodb") {
+    exitWithError(
+      "Kysely does not support MongoDB. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
+    );
+  }
+
   if (
     has("database") &&
     has("orm") &&
@@ -56,7 +62,7 @@ export function validateDatabaseOrmAuth(cfg: Partial<ProjectConfig>, flags?: Set
 
   if (has("database") && has("orm") && db && db !== "none" && orm === "none") {
     exitWithError(
-      "Database selection requires an ORM. Please choose '--orm drizzle', '--orm prisma', '--orm typeorm', or '--orm mongoose'.",
+      "Database selection requires an ORM. Please choose '--orm drizzle', '--orm prisma', '--orm typeorm', '--orm kysely', or '--orm mongoose'.",
     );
   }
 
