@@ -420,6 +420,249 @@ describe("File Upload Configurations", () => {
     });
   });
 
+  describe("Uppy File Upload", () => {
+    it("should work with uppy + tanstack-router (React)", async () => {
+      const result = await runTRPCTest({
+        projectName: "uppy-tanstack-router",
+        fileUpload: "uppy",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that Uppy and @uppy/react were added to apps/web
+      const webPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "apps")
+        ?.children?.find((c: any) => c.name === "web")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (webPackageJson?.content) {
+        const pkgJson = JSON.parse(webPackageJson.content);
+        expect(pkgJson.dependencies?.["@uppy/core"]).toBeDefined();
+        expect(pkgJson.dependencies?.["@uppy/dashboard"]).toBeDefined();
+        expect(pkgJson.dependencies?.["@uppy/react"]).toBeDefined();
+        expect(pkgJson.dependencies?.["@uppy/xhr-upload"]).toBeDefined();
+        expect(pkgJson.dependencies?.["@uppy/tus"]).toBeDefined();
+      }
+    });
+
+    it("should work with uppy + next.js fullstack", async () => {
+      const result = await runTRPCTest({
+        projectName: "uppy-next",
+        fileUpload: "uppy",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Uppy is client-side only, should be in web package
+      const webPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "apps")
+        ?.children?.find((c: any) => c.name === "web")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (webPackageJson?.content) {
+        const pkgJson = JSON.parse(webPackageJson.content);
+        expect(pkgJson.dependencies?.["@uppy/core"]).toBeDefined();
+        expect(pkgJson.dependencies?.["@uppy/react"]).toBeDefined();
+      }
+    });
+
+    it("should work with uppy + svelte frontend", async () => {
+      const result = await runTRPCTest({
+        projectName: "uppy-svelte",
+        fileUpload: "uppy",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "orpc",
+        auth: "better-auth",
+        frontend: ["svelte"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that @uppy/svelte was added
+      const webPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "apps")
+        ?.children?.find((c: any) => c.name === "web")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (webPackageJson?.content) {
+        const pkgJson = JSON.parse(webPackageJson.content);
+        expect(pkgJson.dependencies?.["@uppy/core"]).toBeDefined();
+        expect(pkgJson.dependencies?.["@uppy/svelte"]).toBeDefined();
+      }
+    });
+
+    it("should work with uppy + nuxt frontend", async () => {
+      const result = await runTRPCTest({
+        projectName: "uppy-nuxt",
+        fileUpload: "uppy",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "orpc",
+        auth: "better-auth",
+        frontend: ["nuxt"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that @uppy/vue was added
+      const webPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "apps")
+        ?.children?.find((c: any) => c.name === "web")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (webPackageJson?.content) {
+        const pkgJson = JSON.parse(webPackageJson.content);
+        expect(pkgJson.dependencies?.["@uppy/core"]).toBeDefined();
+        expect(pkgJson.dependencies?.["@uppy/vue"]).toBeDefined();
+      }
+    });
+
+    it("should work with uppy + angular frontend", async () => {
+      const result = await runTRPCTest({
+        projectName: "uppy-angular",
+        fileUpload: "uppy",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "none", // Angular doesn't support external API layers
+        auth: "better-auth",
+        frontend: ["angular"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that @uppy/angular was added
+      const webPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "apps")
+        ?.children?.find((c: any) => c.name === "web")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (webPackageJson?.content) {
+        const pkgJson = JSON.parse(webPackageJson.content);
+        expect(pkgJson.dependencies?.["@uppy/core"]).toBeDefined();
+        expect(pkgJson.dependencies?.["@uppy/angular"]).toBeDefined();
+      }
+    });
+
+    it("should work with uppy + solid frontend (vanilla JS)", async () => {
+      const result = await runTRPCTest({
+        projectName: "uppy-solid",
+        fileUpload: "uppy",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "orpc",
+        auth: "better-auth",
+        frontend: ["solid"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Solid uses vanilla Uppy (no official adapter)
+      const webPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "apps")
+        ?.children?.find((c: any) => c.name === "web")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (webPackageJson?.content) {
+        const pkgJson = JSON.parse(webPackageJson.content);
+        expect(pkgJson.dependencies?.["@uppy/core"]).toBeDefined();
+        expect(pkgJson.dependencies?.["@uppy/dashboard"]).toBeDefined();
+      }
+    });
+
+    it("should not add server SDK for uppy (client-side only)", async () => {
+      const result = await runTRPCTest({
+        projectName: "uppy-no-server-sdk",
+        fileUpload: "uppy",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Uppy should NOT be in server package (it's client-side only)
+      const serverPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "packages")
+        ?.children?.find((c: any) => c.name === "server")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (serverPackageJson?.content) {
+        const pkgJson = JSON.parse(serverPackageJson.content);
+        expect(pkgJson.dependencies?.["@uppy/core"]).toBeUndefined();
+        expect(pkgJson.dependencies?.["@uppy/react"]).toBeUndefined();
+      }
+    });
+  });
+
   describe("No File Upload", () => {
     it("should work with fileUpload: none", async () => {
       const result = await runTRPCTest({
@@ -699,7 +942,7 @@ describe("File Upload Configurations", () => {
   });
 
   describe("All File Upload Options", () => {
-    const fileUploadOptions: FileUpload[] = ["uploadthing", "filepond", "none"];
+    const fileUploadOptions: FileUpload[] = ["uploadthing", "filepond", "uppy", "none"];
 
     for (const fileUpload of fileUploadOptions) {
       it(`should work with fileUpload: ${fileUpload}`, async () => {

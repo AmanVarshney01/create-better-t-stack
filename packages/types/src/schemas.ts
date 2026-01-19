@@ -164,7 +164,7 @@ export const AnimationSchema = z
   .describe("Animation library");
 
 export const FileUploadSchema = z
-  .enum(["uploadthing", "filepond", "none"])
+  .enum(["uploadthing", "filepond", "uppy", "none"])
   .describe("File upload solution");
 
 export const CSSFrameworkSchema = z

@@ -707,6 +707,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "uppy",
+      name: "Uppy",
+      description: "Modular file uploader with resumable uploads and plugins",
+      icon: "https://uppy.io/img/logo.svg",
+      color: "from-cyan-400 to-teal-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No File Upload",
       description: "Skip file upload integration",

@@ -2612,3 +2612,78 @@ Implemented FilePond as a new file upload option. FilePond is a flexible, pure J
 - Svelte (via svelte-filepond): svelte
 - Vue (via vue-filepond): nuxt
 - Other frameworks (vanilla JS): solid, qwik, angular, astro (without React/Vue/Svelte integration)
+
+---
+
+## 2026-01-19 - Uppy File Upload Implementation
+
+Implemented Uppy as a new file upload option. Uppy is a modular, plugin-based file uploader with support for resumable uploads via tus protocol, multiple upload sources, and framework-specific adapters.
+
+**Changes Made:**
+1. **packages/types/src/schemas.ts**: Added "uppy" to FileUploadSchema enum
+
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Uppy dependency versions:
+   - @uppy/core: ^4.4.0 (core library)
+   - @uppy/dashboard: ^4.3.2 (dashboard UI)
+   - @uppy/drag-drop: ^4.1.1 (drag-and-drop area)
+   - @uppy/progress-bar: ^4.2.0 (progress bar component)
+   - @uppy/xhr-upload: ^4.3.0 (XHR upload plugin)
+   - @uppy/tus: ^4.2.0 (tus resumable uploads)
+   - @uppy/react: ^4.1.0 (React adapter)
+   - @uppy/svelte: ^4.1.0 (Svelte adapter)
+   - @uppy/vue: ^4.1.0 (Vue adapter)
+   - @uppy/angular: ^0.8.0 (Angular adapter)
+
+3. **packages/template-generator/src/processors/file-upload-deps.ts**: Added processUppyDeps function:
+   - Added ANGULAR_FRONTENDS constant
+   - Added UPPY_CORE_PACKAGES constant with common Uppy packages
+   - Created processUppyDeps() helper function for Uppy dependencies
+   - Uppy adds framework-specific adapters:
+     - @uppy/react for React-based frontends (tanstack-router, react-router, tanstack-start, next)
+     - @uppy/svelte for Svelte frontend
+     - @uppy/vue for Vue/Nuxt frontend
+     - @uppy/angular for Angular frontend
+     - vanilla Uppy for other frontends (Solid, Qwik, Astro without UI integration)
+   - All Uppy installations include core packages (core, dashboard, drag-drop, progress-bar, xhr-upload, tus)
+
+4. **apps/web/src/lib/constant.ts**: Added Uppy to TECH_OPTIONS.fileUpload:
+   - id: "uppy"
+   - name: "Uppy"
+   - description: "Modular file uploader with resumable uploads and plugins"
+   - icon: "https://uppy.io/img/logo.svg"
+   - color: "from-cyan-400 to-teal-600"
+
+5. **apps/cli/test/file-upload.test.ts**: Added comprehensive Uppy tests (8 new tests):
+   - Tests with React frontend (tanstack-router)
+   - Tests with Next.js fullstack
+   - Tests with Svelte frontend
+   - Tests with Nuxt frontend (Vue)
+   - Tests with Angular frontend
+   - Tests with Solid frontend (vanilla JS)
+   - Tests verifying Uppy is client-side only (no server SDK)
+   - Updated "All File Upload Options" test to include uppy
+
+**Test Results:**
+- All 41 file-upload tests pass (including 8 new Uppy tests)
+- Types package linting passes with 0 errors
+- Template-generator linting passes (only 2 pre-existing warnings unrelated to this change)
+
+**Key Differences from Other File Upload Options:**
+- UploadThing: Full service with server SDK and UPLOADTHING_TOKEN required
+- FilePond: Client-side only with image preview focus
+- Uppy: Client-side only with modular plugin architecture, resumable uploads via tus protocol
+
+**Framework Support:**
+- React (via @uppy/react): tanstack-router, react-router, tanstack-start, next
+- Svelte (via @uppy/svelte): svelte
+- Vue (via @uppy/vue): nuxt
+- Angular (via @uppy/angular): angular
+- Other frameworks (vanilla JS): solid, qwik, astro (without React/Vue/Svelte integration)
+
+**Key Features:**
+- Modular plugin architecture - only include what you need
+- Resumable uploads via tus protocol (@uppy/tus)
+- XHR uploads for standard file upload (@uppy/xhr-upload)
+- Dashboard UI with drag-and-drop, progress bar, file preview
+- Framework-specific adapters with hooks and components
+- Supports multiple upload sources (local files, webcam, URL, cloud storage)

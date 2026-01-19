@@ -193,7 +193,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 
 - [x] **UploadThing** - TypeScript-first file uploads
 - [x] **Filepond** - Flexible file upload library
-- [ ] **Uppy** - Modular file uploader
+- [x] **Uppy** - Modular file uploader
 - [ ] **TUS** - Resumable upload protocol
 
 ---

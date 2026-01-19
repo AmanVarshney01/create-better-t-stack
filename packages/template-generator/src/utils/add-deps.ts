@@ -414,6 +414,18 @@ export const dependencyVersionMap = {
   "filepond-plugin-file-validate-type": "^1.2.9",
   "filepond-plugin-file-validate-size": "^2.2.8",
 
+  // File Upload - Uppy
+  "@uppy/core": "^4.4.0",
+  "@uppy/dashboard": "^4.3.2",
+  "@uppy/drag-drop": "^4.1.1",
+  "@uppy/progress-bar": "^4.2.0",
+  "@uppy/xhr-upload": "^4.3.0",
+  "@uppy/tus": "^4.2.0",
+  "@uppy/react": "^4.1.0",
+  "@uppy/svelte": "^4.1.0",
+  "@uppy/vue": "^4.1.0",
+  "@uppy/angular": "^0.8.0",
+
   // RedwoodJS
   "@redwoodjs/core": "^8.8.0",
   "@redwoodjs/web": "^8.6.1",

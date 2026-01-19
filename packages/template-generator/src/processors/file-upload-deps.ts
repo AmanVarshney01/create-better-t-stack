@@ -10,6 +10,7 @@ const SVELTE_FRONTENDS = ["svelte"];
 const VUE_FRONTENDS = ["nuxt"];
 const SOLID_FRONTENDS = ["solid"];
 const ASTRO_FRONTENDS = ["astro"];
+const ANGULAR_FRONTENDS = ["angular"];
 
 // Fullstack frameworks that have their own backend
 const FULLSTACK_WITH_SELF_BACKEND = ["next", "tanstack-start", "astro", "nuxt", "svelte", "solid"];
@@ -22,6 +23,16 @@ const FILEPOND_PLUGINS: AvailableDependencies[] = [
   "filepond-plugin-file-validate-size",
 ];
 
+// Common Uppy packages for all frameworks
+const UPPY_CORE_PACKAGES: AvailableDependencies[] = [
+  "@uppy/core",
+  "@uppy/dashboard",
+  "@uppy/drag-drop",
+  "@uppy/progress-bar",
+  "@uppy/xhr-upload",
+  "@uppy/tus",
+];
+
 export function processFileUploadDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { fileUpload } = config;
 
@@ -32,6 +43,8 @@ export function processFileUploadDeps(vfs: VirtualFileSystem, config: ProjectCon
     processUploadthingDeps(vfs, config);
   } else if (fileUpload === "filepond") {
     processFilepondDeps(vfs, config);
+  } else if (fileUpload === "uppy") {
+    processUppyDeps(vfs, config);
   }
 }
 
@@ -210,6 +223,83 @@ function processFilepondDeps(vfs: VirtualFileSystem, config: ProjectConfig): voi
       vfs,
       packagePath: webPath,
       dependencies: FILEPOND_PLUGINS,
+    });
+  }
+}
+
+function processUppyDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  const { frontend, astroIntegration } = config;
+
+  const webPath = "apps/web/package.json";
+  if (!vfs.exists(webPath)) return;
+
+  const hasReactWeb = frontend.some((f) => REACT_WEB_FRONTENDS.includes(f));
+  const hasSvelte = frontend.some((f) => SVELTE_FRONTENDS.includes(f));
+  const hasVue = frontend.some((f) => VUE_FRONTENDS.includes(f));
+  const hasAngular = frontend.some((f) => ANGULAR_FRONTENDS.includes(f));
+  const hasAstro = frontend.some((f) => ASTRO_FRONTENDS.includes(f));
+
+  // Uppy is a client-side only library (no server SDK needed)
+  // Add framework-specific adapter + core packages
+  if (hasReactWeb) {
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: [...UPPY_CORE_PACKAGES, "@uppy/react"],
+    });
+  } else if (hasSvelte) {
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: [...UPPY_CORE_PACKAGES, "@uppy/svelte"],
+    });
+  } else if (hasVue) {
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: [...UPPY_CORE_PACKAGES, "@uppy/vue"],
+    });
+  } else if (hasAngular) {
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: [...UPPY_CORE_PACKAGES, "@uppy/angular"],
+    });
+  } else if (hasAstro) {
+    // Astro with framework integration
+    if (astroIntegration === "react") {
+      addPackageDependency({
+        vfs,
+        packagePath: webPath,
+        dependencies: [...UPPY_CORE_PACKAGES, "@uppy/react"],
+      });
+    } else if (astroIntegration === "vue") {
+      addPackageDependency({
+        vfs,
+        packagePath: webPath,
+        dependencies: [...UPPY_CORE_PACKAGES, "@uppy/vue"],
+      });
+    } else if (astroIntegration === "svelte") {
+      addPackageDependency({
+        vfs,
+        packagePath: webPath,
+        dependencies: [...UPPY_CORE_PACKAGES, "@uppy/svelte"],
+      });
+    } else {
+      // Astro without UI integration - add vanilla Uppy
+      addPackageDependency({
+        vfs,
+        packagePath: webPath,
+        dependencies: UPPY_CORE_PACKAGES,
+      });
+    }
+  } else {
+    // For other frontends (Solid, Qwik, etc.), add vanilla Uppy
+    // These can use Uppy directly via its vanilla JS API
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: UPPY_CORE_PACKAGES,
     });
   }
 }
