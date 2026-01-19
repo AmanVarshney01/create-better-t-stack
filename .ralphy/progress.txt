@@ -2154,3 +2154,35 @@ Implemented Testing Library (@testing-library/dom, @testing-library/react, @test
 - Pre-existing TypeScript errors in apps/cli/src/prompts/config-prompts.ts unrelated to this change
 - Pre-existing TypeScript errors in apps/web unrelated to this change
 - Qwik test skipped due to pre-existing Handlebars template parsing error in Qwik templates
+
+## 2026-01-19: Lottie Animation Library Implementation
+
+### Task: Implement Lottie as an animation library option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "lottie" to AnimationSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Lottie dependency versions:
+   - lottie-react: ^2.4.1 (for web)
+   - lottie-react-native: ^7.1.0 (for React Native)
+3. **packages/template-generator/src/processors/animation-deps.ts**: Added Lottie dependency processing with platform detection:
+   - Uses lottie-react for web React frameworks
+   - Uses lottie-react-native for React Native frameworks
+4. **apps/web/src/lib/constant.ts**: Added Lottie to web builder animation options with:
+   - Icon using Airbnb's Simple Icons
+   - Pink to red gradient color theme
+5. **apps/cli/test/animation.test.ts**: Added comprehensive Lottie tests for:
+   - TanStack Router
+   - React Router
+   - Next.js
+   - TanStack Start
+   - React Native (native-bare)
+   - React Native (native-uniwind)
+
+### Features:
+- Render After Effects animations natively using JSON-based Lottie format
+- lottie-react wraps lottie-web for web applications
+- lottie-react-native provides native iOS/Android support
+- Compatible with all React-based web and mobile frontends
+- Supports animations from LottieFiles and other sources
+
+### Status: COMPLETE

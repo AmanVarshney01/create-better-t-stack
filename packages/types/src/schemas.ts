@@ -149,7 +149,7 @@ export const RealtimeSchema = z
   .describe("Real-time/WebSocket solution");
 
 export const AnimationSchema = z
-  .enum(["framer-motion", "gsap", "react-spring", "auto-animate", "none"])
+  .enum(["framer-motion", "gsap", "react-spring", "auto-animate", "lottie", "none"])
   .describe("Animation library");
 
 export const CSSFrameworkSchema = z

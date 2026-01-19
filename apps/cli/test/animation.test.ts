@@ -251,6 +251,68 @@ describe("Animation", () => {
     });
   });
 
+  describe("Lottie", () => {
+    test("lottie with TanStack Router", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-lottie-tanstack",
+        frontend: ["tanstack-router"],
+        animation: "lottie",
+      });
+      expectSuccess(result);
+    });
+
+    test("lottie with React Router", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-lottie-react-router",
+        frontend: ["react-router"],
+        animation: "lottie",
+      });
+      expectSuccess(result);
+    });
+
+    test("lottie with Next.js", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-lottie-next",
+        frontend: ["next"],
+        backend: "self",
+        runtime: "none",
+        animation: "lottie",
+      });
+      expectSuccess(result);
+    });
+
+    test("lottie with TanStack Start", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-lottie-tanstack-start",
+        frontend: ["tanstack-start"],
+        backend: "self",
+        runtime: "none",
+        animation: "lottie",
+      });
+      expectSuccess(result);
+    });
+
+    test("lottie with React Native (native-bare)", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-lottie-native-bare",
+        frontend: ["native-bare"],
+        backend: "hono",
+        animation: "lottie",
+      });
+      expectSuccess(result);
+    });
+
+    test("lottie with React Native (native-uniwind)", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-lottie-native-uniwind",
+        frontend: ["native-uniwind"],
+        backend: "hono",
+        animation: "lottie",
+      });
+      expectSuccess(result);
+    });
+  });
+
   describe("No Animation", () => {
     test("no animation with TanStack Router", async () => {
       const result = await runTRPCTest({

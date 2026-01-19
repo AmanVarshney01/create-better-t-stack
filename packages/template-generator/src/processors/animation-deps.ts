@@ -73,6 +73,10 @@ function getAnimationDeps(
       // Same package works for both web and native
       deps.push("@formkit/auto-animate");
       break;
+    case "lottie":
+      // Use platform-specific Lottie package
+      deps.push(isNative ? "lottie-react-native" : "lottie-react");
+      break;
   }
 
   return deps;

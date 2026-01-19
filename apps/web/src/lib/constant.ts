@@ -1216,6 +1216,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "lottie",
+      name: "Lottie",
+      description: "Render After Effects animations natively",
+      icon: "https://cdn.simpleicons.org/airbnb/FF5A5F",
+      color: "from-pink-500 to-red-500",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Animation",
       description: "Skip animation library setup",

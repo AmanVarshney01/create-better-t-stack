@@ -357,6 +357,8 @@ export const dependencyVersionMap = {
   "@react-spring/web": "^9.7.5",
   "@react-spring/native": "^9.7.5",
   "@formkit/auto-animate": "^0.8.2",
+  "lottie-react": "^2.4.1",
+  "lottie-react-native": "^7.1.0",
 
   // Payments - Stripe
   stripe: "^17.5.0",
