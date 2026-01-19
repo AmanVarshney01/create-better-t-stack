@@ -63,6 +63,8 @@ import {
   type Animation,
   LoggingSchema,
   type Logging,
+  ObservabilitySchema,
+  type Observability,
 } from "./types";
 import { handleError } from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
@@ -108,6 +110,7 @@ export const router = os.router({
           realtime: RealtimeSchema.optional(),
           animation: AnimationSchema.optional(),
           logging: LoggingSchema.optional(),
+          observability: ObservabilitySchema.optional(),
           frontend: z.array(FrontendSchema).optional(),
           addons: z.array(AddonsSchema).optional(),
           examples: z.array(ExamplesSchema).optional(),
@@ -327,6 +330,7 @@ export async function createVirtual(
       realtime: options.realtime || "none",
       animation: options.animation || "none",
       logging: options.logging || "none",
+      observability: options.observability || "none",
     };
 
     const result = await generate({

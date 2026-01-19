@@ -16,6 +16,7 @@ export type TechCategory =
   | "email"
   | "fileUpload"
   | "logging"
+  | "observability"
   | "backendLibraries"
   | "stateManagement"
   | "forms"

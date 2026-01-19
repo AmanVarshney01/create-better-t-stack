@@ -13,3 +13,4 @@ export { processExampleTemplates } from "./examples";
 export { processExtrasTemplates } from "./extras";
 export { processDeployTemplates } from "./deploy";
 export { processLoggingTemplates } from "./logging";
+export { processObservabilityTemplates } from "./observability";

@@ -30,6 +30,7 @@ import type {
   Animation,
   FileUpload,
   Logging,
+  Observability,
 } from "../src/types";
 
 import { create } from "../src/index";
@@ -47,6 +48,7 @@ import {
   ExamplesSchema,
   FileUploadSchema,
   LoggingSchema,
+  ObservabilitySchema,
   FormsSchema,
   FrontendSchema,
   ORMSchema,
@@ -123,6 +125,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     "realtime",
     "animation",
     "logging",
+    "observability",
   ];
   const hasSpecificCoreConfig = coreStackFlags.some((flag) => config[flag] !== undefined);
 
@@ -161,6 +164,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
         realtime: "none" as Realtime,
         animation: "none" as Animation,
         logging: "none" as Logging,
+        observability: "none" as Observability,
       };
 
   // Build options object - let the CLI handle all validation
@@ -251,6 +255,7 @@ export const REALTIMES = extractEnumValues(RealtimeSchema);
 export const ANIMATIONS = extractEnumValues(AnimationSchema);
 export const FILE_UPLOADS = extractEnumValues(FileUploadSchema);
 export const LOGGINGS = extractEnumValues(LoggingSchema);
+export const OBSERVABILITIES = extractEnumValues(ObservabilitySchema);
 
 // Convenience functions for common test patterns
 export function createBasicConfig(overrides: Partial<TestConfig> = {}): TestConfig {

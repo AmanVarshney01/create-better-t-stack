@@ -1,0 +1,136 @@
+import { NodeSDK } from "@opentelemetry/sdk-node";
+import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-http";
+import { Resource } from "@opentelemetry/resources";
+import {
+  ATTR_SERVICE_NAME,
+  ATTR_SERVICE_VERSION,
+  ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
+} from "@opentelemetry/semantic-conventions";
+import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
+
+// Service configuration from environment variables
+const serviceName = process.env.OTEL_SERVICE_NAME || "{{projectName}}-server";
+const serviceVersion = process.env.OTEL_SERVICE_VERSION || "1.0.0";
+const environment = process.env.NODE_ENV || "development";
+
+// OTLP endpoint configuration
+// Default to localhost:4318 for local development with Jaeger or OTEL Collector
+const otlpEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || "http://localhost:4318";
+
+// Create resource with service information
+const resource = new Resource({
+  [ATTR_SERVICE_NAME]: serviceName,
+  [ATTR_SERVICE_VERSION]: serviceVersion,
+  [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: environment,
+});
+
+// Configure trace exporter
+const traceExporter = new OTLPTraceExporter({
+  url: `${otlpEndpoint}/v1/traces`,
+});
+
+// Configure metric exporter
+const metricExporter = new OTLPMetricExporter({
+  url: `${otlpEndpoint}/v1/metrics`,
+});
+
+// Initialize OpenTelemetry SDK
+const sdk = new NodeSDK({
+  resource,
+  traceExporter,
+  metricReader: new PeriodicExportingMetricReader({
+    exporter: metricExporter,
+    // Export metrics every 30 seconds
+    exportIntervalMillis: 30000,
+  }),
+  instrumentations: [
+    getNodeAutoInstrumentations({
+      // Disable fs instrumentation to reduce noise
+      "@opentelemetry/instrumentation-fs": {
+        enabled: false,
+      },
+      // Configure HTTP instrumentation
+      "@opentelemetry/instrumentation-http": {
+        enabled: true,
+      },
+    }),
+  ],
+});
+
+/**
+ * Start the OpenTelemetry SDK
+ * Call this at the very beginning of your application, before any other imports
+ *
+ * @example
+ * // At the top of your main entry file (e.g., index.ts)
+ * import { startTracing } from './lib/tracing';
+ * startTracing();
+ *
+ * // Then import and start your application
+ * import { app } from './app';
+ */
+export function startTracing(): void {
+  sdk.start();
+  console.log(`[OpenTelemetry] Tracing started for service: ${serviceName}`);
+  console.log(`[OpenTelemetry] Exporting to: ${otlpEndpoint}`);
+}
+
+/**
+ * Gracefully shutdown the SDK
+ * Call this before your application exits to ensure all spans are flushed
+ *
+ * @example
+ * process.on('SIGTERM', async () => {
+ *   await shutdownTracing();
+ *   process.exit(0);
+ * });
+ */
+export async function shutdownTracing(): Promise<void> {
+  try {
+    await sdk.shutdown();
+    console.log("[OpenTelemetry] Tracing shutdown complete");
+  } catch (error) {
+    console.error("[OpenTelemetry] Error shutting down tracing:", error);
+  }
+}
+
+/**
+ * Get the OpenTelemetry API for manual instrumentation
+ * Use this when you need to create custom spans or add attributes
+ *
+ * @example
+ * import { trace } from '@opentelemetry/api';
+ *
+ * const tracer = trace.getTracer('my-component');
+ * const span = tracer.startSpan('my-operation');
+ * try {
+ *   // ... do work
+ *   span.setAttribute('result', 'success');
+ * } catch (error) {
+ *   span.recordException(error);
+ *   span.setStatus({ code: SpanStatusCode.ERROR });
+ * } finally {
+ *   span.end();
+ * }
+ */
+export { trace, context, SpanStatusCode } from "@opentelemetry/api";
+
+/**
+ * Environment Variables:
+ *
+ * OTEL_SERVICE_NAME - Service name for tracing (default: {{projectName}}-server)
+ * OTEL_SERVICE_VERSION - Service version (default: 1.0.0)
+ * OTEL_EXPORTER_OTLP_ENDPOINT - OTLP collector endpoint (default: http://localhost:4318)
+ *
+ * Common OTLP backends:
+ * - Jaeger: http://localhost:4318 (with OTLP enabled)
+ * - OTEL Collector: http://localhost:4318
+ * - Grafana Tempo: Your Tempo endpoint
+ * - Honeycomb: https://api.honeycomb.io (requires API key header)
+ * - Datadog: https://trace.agent.datadoghq.com
+ *
+ * For production, configure OTEL_EXPORTER_OTLP_HEADERS for authentication:
+ * OTEL_EXPORTER_OTLP_HEADERS="x-honeycomb-team=your-api-key"
+ */

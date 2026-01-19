@@ -184,6 +184,10 @@ export const LoggingSchema = z
   .enum(["pino", "winston", "none"])
   .describe("Server-side logging framework");
 
+export const ObservabilitySchema = z
+  .enum(["opentelemetry", "none"])
+  .describe("Observability and distributed tracing");
+
 export const CSSFrameworkSchema = z
   .enum(["tailwind", "scss", "less", "postcss-only", "none"])
   .describe("CSS framework/preprocessor");
@@ -269,6 +273,7 @@ export const CreateInputSchema = z.object({
   animation: AnimationSchema.optional(),
   fileUpload: FileUploadSchema.optional(),
   logging: LoggingSchema.optional(),
+  observability: ObservabilitySchema.optional(),
 });
 
 export const AddInputSchema = z.object({
@@ -318,6 +323,7 @@ export const ProjectConfigSchema = z.object({
   animation: AnimationSchema,
   fileUpload: FileUploadSchema,
   logging: LoggingSchema,
+  observability: ObservabilitySchema,
 });
 
 export const BetterTStackConfigSchema = z.object({
@@ -351,6 +357,7 @@ export const BetterTStackConfigSchema = z.object({
   animation: AnimationSchema,
   fileUpload: FileUploadSchema,
   logging: LoggingSchema,
+  observability: ObservabilitySchema,
 });
 
 export const BetterTStackConfigFileSchema = z
@@ -405,3 +412,4 @@ export const REALTIME_VALUES = RealtimeSchema.options;
 export const ANIMATION_VALUES = AnimationSchema.options;
 export const FILE_UPLOAD_VALUES = FileUploadSchema.options;
 export const LOGGING_VALUES = LoggingSchema.options;
+export const OBSERVABILITY_VALUES = ObservabilitySchema.options;

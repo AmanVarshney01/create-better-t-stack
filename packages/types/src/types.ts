@@ -38,6 +38,7 @@ import type {
   AnimationSchema,
   FileUploadSchema,
   LoggingSchema,
+  ObservabilitySchema,
 } from "./schemas";
 
 // Inferred types from Zod schemas
@@ -72,6 +73,7 @@ export type Realtime = z.infer<typeof RealtimeSchema>;
 export type Animation = z.infer<typeof AnimationSchema>;
 export type FileUpload = z.infer<typeof FileUploadSchema>;
 export type Logging = z.infer<typeof LoggingSchema>;
+export type Observability = z.infer<typeof ObservabilitySchema>;
 
 export type CreateInput = z.infer<typeof CreateInputSchema>;
 export type AddInput = z.infer<typeof AddInputSchema>;

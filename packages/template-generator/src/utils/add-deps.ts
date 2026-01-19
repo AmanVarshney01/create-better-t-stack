@@ -461,6 +461,15 @@ export const dependencyVersionMap = {
   "pino-pretty": "^13.0.0",
   "pino-http": "^10.4.0",
   winston: "^3.19.0",
+
+  // OpenTelemetry
+  "@opentelemetry/api": "^1.9.0",
+  "@opentelemetry/sdk-node": "^0.57.2",
+  "@opentelemetry/auto-instrumentations-node": "^0.56.1",
+  "@opentelemetry/exporter-trace-otlp-http": "^0.57.2",
+  "@opentelemetry/exporter-metrics-otlp-http": "^0.57.2",
+  "@opentelemetry/resources": "^1.30.1",
+  "@opentelemetry/semantic-conventions": "^1.30.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

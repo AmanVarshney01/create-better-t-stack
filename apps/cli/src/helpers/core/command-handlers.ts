@@ -124,6 +124,7 @@ export async function createProjectHandler(
             realtime: "none",
             animation: "none",
             logging: "none",
+            observability: "none",
           } satisfies ProjectConfig,
           reproducibleCommand: "",
           timeScaffolded,

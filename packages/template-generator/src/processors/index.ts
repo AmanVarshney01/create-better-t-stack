@@ -21,6 +21,7 @@ import { processFileUploadDeps } from "./file-upload-deps";
 import { processFormsDeps } from "./forms-deps";
 import { processInfraDeps } from "./infra-deps";
 import { processLoggingDeps } from "./logging-deps";
+import { processObservabilityDeps } from "./observability-deps";
 import { processPaymentsDeps } from "./payments-deps";
 import { processPwaPlugins } from "./pwa-plugins";
 import { processReadme } from "./readme-generator";
@@ -55,6 +56,7 @@ export function processDependencies(vfs: VirtualFileSystem, config: ProjectConfi
   processAnimationDeps(vfs, config);
   processTestingDeps(vfs, config);
   processLoggingDeps(vfs, config);
+  processObservabilityDeps(vfs, config);
   processCSSAndUILibraryDeps(vfs, config);
   processTurboConfig(vfs, config);
 }
@@ -76,6 +78,7 @@ export {
   processFormsDeps,
   processInfraDeps,
   processLoggingDeps,
+  processObservabilityDeps,
   processPaymentsDeps,
   processReadme,
   processRealtimeDeps,

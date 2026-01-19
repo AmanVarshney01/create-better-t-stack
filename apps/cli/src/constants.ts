@@ -34,6 +34,7 @@ export const DEFAULT_CONFIG_BASE = {
   realtime: "none",
   animation: "none",
   logging: "none",
+  observability: "none",
   addons: ["turborepo"],
   examples: [],
   git: true,

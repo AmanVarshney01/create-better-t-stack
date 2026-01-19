@@ -777,6 +777,24 @@ export const TECH_OPTIONS: Record<
       default: true,
     },
   ],
+  observability: [
+    {
+      id: "opentelemetry",
+      name: "OpenTelemetry",
+      description: "Observability framework for traces, metrics, and logs",
+      icon: "",
+      color: "from-blue-400 to-cyan-500",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No Observability",
+      description: "Skip observability/tracing setup",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
   backendLibraries: [
     {
       id: "effect",
@@ -1685,6 +1703,7 @@ export type StackState = {
   email: string;
   fileUpload: string;
   logging: string;
+  observability: string;
   backendLibraries: string;
   stateManagement: string;
   validation: string;
@@ -1721,6 +1740,7 @@ export const DEFAULT_STACK: StackState = {
   email: "none",
   fileUpload: "none",
   logging: "none",
+  observability: "none",
   backendLibraries: "none",
   stateManagement: "none",
   validation: "zod",

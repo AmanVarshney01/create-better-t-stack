@@ -3112,3 +3112,70 @@ Implemented feTS as a new backend framework option. feTS is a TypeScript HTTP Fr
 - Linting passes for all modified files
 
 ### Status: COMPLETE
+
+
+## 2026-01-19: OpenTelemetry Observability Implementation
+
+### Task: Implement OpenTelemetry as an observability option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added ObservabilitySchema with "opentelemetry" and "none" options
+2. **packages/types/src/types.ts**: Added Observability type export
+3. **packages/template-generator/src/utils/add-deps.ts**: Added OpenTelemetry dependency versions:
+   - @opentelemetry/api: ^1.9.0
+   - @opentelemetry/sdk-node: ^0.57.2
+   - @opentelemetry/auto-instrumentations-node: ^0.56.1
+   - @opentelemetry/exporter-trace-otlp-http: ^0.57.2
+   - @opentelemetry/exporter-metrics-otlp-http: ^0.57.2
+   - @opentelemetry/resources: ^1.30.1
+   - @opentelemetry/semantic-conventions: ^1.30.0
+4. **packages/template-generator/src/processors/observability-deps.ts**: Created processor to add OpenTelemetry dependencies to server package.json
+5. **packages/template-generator/src/processors/index.ts**: Added observability deps processor and export
+6. **packages/template-generator/src/template-handlers/observability.ts**: Created template handler for observability templates
+7. **packages/template-generator/src/template-handlers/index.ts**: Exported processObservabilityTemplates
+8. **packages/template-generator/src/generator.ts**: Added processObservabilityTemplates call
+9. **packages/template-generator/templates/observability/opentelemetry/server/base/src/lib/tracing.ts.hbs**: Created OpenTelemetry tracing template with:
+   - Auto-instrumentation for HTTP, filesystem, and more
+   - OTLP trace exporter for sending traces to backends (Jaeger, OTEL Collector, Tempo, etc.)
+   - OTLP metric exporter for periodic metrics reporting
+   - Resource configuration with service name, version, and environment
+   - startTracing() and shutdownTracing() utility functions
+   - Manual instrumentation helpers (trace, context, SpanStatusCode exports)
+10. **packages/template-generator/src/processors/env-vars.ts**: Added OpenTelemetry environment variables:
+    - OTEL_SERVICE_NAME
+    - OTEL_EXPORTER_OTLP_ENDPOINT
+11. **apps/cli/src/constants.ts**: Added observability: "none" to DEFAULT_CONFIG_BASE
+12. **apps/cli/src/index.ts**: Added ObservabilitySchema and --observability flag
+13. **apps/cli/src/prompts/config-prompts.ts**: Added observability field
+14. **apps/cli/src/helpers/core/command-handlers.ts**: Added observability to error config
+15. **apps/cli/src/utils/bts-config.ts**: Added observability to BTS config
+16. **apps/cli/test/test-utils.ts**: Added Observability type and test utilities
+17. **apps/cli/test/observability.test.ts**: Created 9 comprehensive tests for OpenTelemetry observability
+18. **apps/web/src/lib/constant.ts**: Added observability section to TECH_OPTIONS and DEFAULT_STACK
+19. **apps/web/src/lib/stack-url-keys.ts**: Added "observability" URL key
+20. **apps/web/src/lib/stack-utils.ts**: Added observability to CLI command generation
+21. **apps/web/src/lib/types.ts**: Added "observability" to TechCategory
+
+### Features:
+- Full OpenTelemetry SDK integration with auto-instrumentation
+- Distributed tracing with OTLP HTTP exporter
+- Metrics collection with periodic export
+- Support for popular backends: Jaeger, OTEL Collector, Grafana Tempo, Honeycomb, Datadog
+- Development-friendly console logging on startup
+- Graceful shutdown with span flushing
+- Environment variable configuration for service name and endpoint
+- Compatible with all backends except Convex (uses own observability)
+
+### Test Results:
+- 9 tests pass across multiple backend configurations:
+  - OpenTelemetry with Hono
+  - OpenTelemetry with Express
+  - OpenTelemetry with Fastify
+  - OpenTelemetry with Elysia
+  - OpenTelemetry with Nitro
+  - OpenTelemetry with NestJS
+  - OpenTelemetry with feTS
+  - OpenTelemetry with Next.js (fullstack)
+  - No observability (none option)
+
+### Status: COMPLETE

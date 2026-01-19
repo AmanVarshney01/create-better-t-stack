@@ -403,6 +403,7 @@ function buildServerVars(
   examples: ProjectConfig["examples"],
   fileUpload: ProjectConfig["fileUpload"],
   logging: ProjectConfig["logging"],
+  observability: ProjectConfig["observability"],
 ): EnvVariable[] {
   const hasReactRouter = frontend.includes("react-router");
   const hasSvelte = frontend.includes("svelte");
@@ -714,6 +715,18 @@ function buildServerVars(
       condition: logging === "pino",
       comment: "Pino log level - trace, debug, info, warn, error, or fatal",
     },
+    {
+      key: "OTEL_SERVICE_NAME",
+      value: "",
+      condition: observability === "opentelemetry",
+      comment: "OpenTelemetry service name (defaults to project name if not set)",
+    },
+    {
+      key: "OTEL_EXPORTER_OTLP_ENDPOINT",
+      value: "http://localhost:4318",
+      condition: observability === "opentelemetry",
+      comment: "OTLP exporter endpoint (Jaeger, OTEL Collector, Tempo, etc.)",
+    },
   ];
 }
 
@@ -732,6 +745,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     payments,
     fileUpload,
     logging,
+    observability,
   } = config;
 
   const hasReactRouter = frontend.includes("react-router");
@@ -819,6 +833,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     examples,
     fileUpload,
     logging,
+    observability,
   );
 
   if (backend === "self") {

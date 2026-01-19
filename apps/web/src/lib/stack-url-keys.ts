@@ -22,6 +22,7 @@ export const stackUrlKeys: UrlKeys<
   email: "em",
   fileUpload: "fu",
   logging: "log",
+  observability: "obs",
   backendLibraries: "bl",
   stateManagement: "sm",
   validation: "val",

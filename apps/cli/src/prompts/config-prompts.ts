@@ -191,5 +191,6 @@ export async function gatherConfig(
     animation: flags.animation ?? "none",
     fileUpload: flags.fileUpload ?? "none",
     logging: flags.logging ?? "none",
+    observability: flags.observability ?? "none",
   };
 }
