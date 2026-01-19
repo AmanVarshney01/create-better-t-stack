@@ -834,6 +834,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "effect-schema",
+      name: "@effect/schema",
+      description: "Effect ecosystem schema validation with powerful transformations",
+      icon: "",
+      color: "from-black to-gray-700",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Validation",
       description: "Use Zod internally only (no additional library)",

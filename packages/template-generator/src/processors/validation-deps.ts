@@ -83,6 +83,10 @@ function getValidationDeps(validation: ProjectConfig["validation"]): AvailableDe
     case "runtypes":
       deps.push("runtypes");
       break;
+    case "effect-schema":
+      deps.push("@effect/schema");
+      deps.push("effect");
+      break;
   }
 
   return deps;

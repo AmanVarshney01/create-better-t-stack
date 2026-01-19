@@ -583,6 +583,122 @@ describe("Validation Library Options", () => {
     });
   });
 
+  describe("@effect/schema with React frontends", () => {
+    test("effect-schema with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "effect-schema-tanstack-router",
+          frontend: ["tanstack-router"],
+          validation: "effect-schema",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("effect-schema with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "effect-schema-react-router",
+          frontend: ["react-router"],
+          validation: "effect-schema",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("effect-schema with Next.js", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "effect-schema-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          validation: "effect-schema",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("effect-schema with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "effect-schema-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          validation: "effect-schema",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("@effect/schema with different backends", () => {
+    test("effect-schema with Hono backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "effect-schema-hono",
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          validation: "effect-schema",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("effect-schema with Express backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "effect-schema-express",
+          frontend: ["tanstack-router"],
+          backend: "express",
+          runtime: "node",
+          validation: "effect-schema",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("effect-schema with Fastify backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "effect-schema-fastify",
+          frontend: ["tanstack-router"],
+          backend: "fastify",
+          runtime: "node",
+          validation: "effect-schema",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("@effect/schema with native apps", () => {
+    test("effect-schema with native-bare", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "effect-schema-native-bare",
+          frontend: ["native-bare"],
+          backend: "hono",
+          validation: "effect-schema",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("effect-schema with native-uniwind", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "effect-schema-native-uniwind",
+          frontend: ["native-uniwind"],
+          backend: "hono",
+          validation: "effect-schema",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("Zod validation (default)", () => {
     test("zod with TanStack Router (explicit)", async () => {
       const result = await runTRPCTest(

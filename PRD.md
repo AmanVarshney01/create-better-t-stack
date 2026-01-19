@@ -79,7 +79,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 - [x] **TypeBox** - JSON Schema type builder
 - [x] **Typia** - Super-fast validation via compile-time transform
 - [x] **runtypes** - Runtime type validation
-- [ ] **@effect/schema** - Effect ecosystem schema validation
+- [x] **@effect/schema** - Effect ecosystem schema validation
 
 ---
 

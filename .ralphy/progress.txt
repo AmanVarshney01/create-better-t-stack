@@ -1657,3 +1657,42 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: @effect/schema Validation Library Implementation
+
+### Task: Implement @effect/schema as a validation library option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "effect-schema" to ValidationSchema enum
+2. **packages/template-generator/src/processors/validation-deps.ts**: Added effect-schema case to handle @effect/schema and effect dependencies
+3. **apps/web/src/lib/constant.ts**: Added @effect/schema to web builder validation options with black/gray icon
+4. **apps/cli/test/validation.test.ts**: Added comprehensive @effect/schema tests:
+   - @effect/schema with TanStack Router
+   - @effect/schema with React Router
+   - @effect/schema with Next.js
+   - @effect/schema with TanStack Start
+   - @effect/schema with Hono backend
+   - @effect/schema with Express backend
+   - @effect/schema with Fastify backend
+   - @effect/schema with React Native (native-bare, native-uniwind)
+
+### Features:
+- @effect/schema validation library from the Effect ecosystem
+- Support for all React-based frontends (TanStack Router, React Router, TanStack Start, Next.js)
+- Support for React Native (Expo) apps
+- Support for all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+- Full web builder UI integration with validation section
+- URL parameter support for sharing configurations
+- Includes effect core dependency (required for @effect/schema)
+
+### Technical Notes:
+- @effect/schema is part of the Effect ecosystem and provides powerful schema validation with transformations
+- Requires the effect package as a peer dependency
+- Validation dependencies are added to api, server, web, and native packages
+- Zod is still included by default via workspace-deps for internal usage
+- @effect/schema can be used as the primary validation library in user code
+- Uses @effect/schema v0.75.8 with latest features
+- All 57 validation tests pass (including 9 new @effect/schema tests)
+
+### Status: COMPLETE
+
