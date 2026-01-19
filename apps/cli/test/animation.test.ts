@@ -127,6 +127,68 @@ describe("Animation", () => {
     });
   });
 
+  describe("React Spring", () => {
+    test("react-spring with TanStack Router", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-react-spring-tanstack",
+        frontend: ["tanstack-router"],
+        animation: "react-spring",
+      });
+      expectSuccess(result);
+    });
+
+    test("react-spring with React Router", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-react-spring-react-router",
+        frontend: ["react-router"],
+        animation: "react-spring",
+      });
+      expectSuccess(result);
+    });
+
+    test("react-spring with Next.js", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-react-spring-next",
+        frontend: ["next"],
+        backend: "self",
+        runtime: "none",
+        animation: "react-spring",
+      });
+      expectSuccess(result);
+    });
+
+    test("react-spring with TanStack Start", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-react-spring-tanstack-start",
+        frontend: ["tanstack-start"],
+        backend: "self",
+        runtime: "none",
+        animation: "react-spring",
+      });
+      expectSuccess(result);
+    });
+
+    test("react-spring with React Native (native-bare)", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-react-spring-native-bare",
+        frontend: ["native-bare"],
+        backend: "hono",
+        animation: "react-spring",
+      });
+      expectSuccess(result);
+    });
+
+    test("react-spring with React Native (native-uniwind)", async () => {
+      const result = await runTRPCTest({
+        projectName: "animation-react-spring-native-uniwind",
+        frontend: ["native-uniwind"],
+        backend: "hono",
+        animation: "react-spring",
+      });
+      expectSuccess(result);
+    });
+  });
+
   describe("No Animation", () => {
     test("no animation with TanStack Router", async () => {
       const result = await runTRPCTest({

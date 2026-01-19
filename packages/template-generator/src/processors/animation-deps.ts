@@ -28,7 +28,7 @@ export function processAnimationDeps(vfs: VirtualFileSystem, config: ProjectConf
   // Add to web package if it's a React-based web frontend
   const webPath = "apps/web/package.json";
   if (hasReactWeb && vfs.exists(webPath)) {
-    const deps = getAnimationDeps(animation);
+    const deps = getAnimationDeps(animation, false);
     if (deps.length > 0) {
       addPackageDependency({
         vfs,
@@ -41,7 +41,7 @@ export function processAnimationDeps(vfs: VirtualFileSystem, config: ProjectConf
   // Add to native package if it exists
   const nativePath = "apps/native/package.json";
   if (hasNative && vfs.exists(nativePath)) {
-    const deps = getAnimationDeps(animation);
+    const deps = getAnimationDeps(animation, true);
     if (deps.length > 0) {
       addPackageDependency({
         vfs,
@@ -52,7 +52,10 @@ export function processAnimationDeps(vfs: VirtualFileSystem, config: ProjectConf
   }
 }
 
-function getAnimationDeps(animation: ProjectConfig["animation"]): AvailableDependencies[] {
+function getAnimationDeps(
+  animation: ProjectConfig["animation"],
+  isNative: boolean,
+): AvailableDependencies[] {
   const deps: AvailableDependencies[] = [];
 
   switch (animation) {
@@ -61,6 +64,10 @@ function getAnimationDeps(animation: ProjectConfig["animation"]): AvailableDepen
       break;
     case "gsap":
       deps.push("gsap");
+      break;
+    case "react-spring":
+      // Use platform-specific package
+      deps.push(isNative ? "@react-spring/native" : "@react-spring/web");
       break;
   }
 

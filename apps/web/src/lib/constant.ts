@@ -1108,6 +1108,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "react-spring",
+      name: "React Spring",
+      description: "Physics-based animations for fluid interactions",
+      icon: "",
+      color: "from-pink-400 to-pink-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Animation",
       description: "Skip animation library setup",

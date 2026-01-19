@@ -1496,3 +1496,43 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: React Spring Animation Library Implementation
+
+### Task: Implement React Spring as an animation library option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "react-spring" to AnimationSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added React Spring dependency versions:
+   - @react-spring/web: ^9.7.5
+   - @react-spring/native: ^9.7.5
+3. **packages/template-generator/src/processors/animation-deps.ts**: Added React Spring case with platform-specific handling:
+   - Web packages get @react-spring/web
+   - Native packages get @react-spring/native
+   - Updated getAnimationDeps function to take isNative parameter
+4. **apps/web/src/lib/constant.ts**: Added React Spring to web builder animation options with pink icon
+5. **apps/cli/test/animation.test.ts**: Added comprehensive React Spring tests:
+   - React Spring with TanStack Router
+   - React Spring with React Router
+   - React Spring with Next.js
+   - React Spring with TanStack Start
+   - React Spring with React Native (native-bare, native-uniwind)
+
+### Features:
+- React Spring physics-based animation library
+- Platform-specific packages (@react-spring/web for web, @react-spring/native for React Native)
+- Support for all React-based frontends (TanStack Router, React Router, TanStack Start, Next.js)
+- Support for React Native (Expo) apps
+- Full web builder UI integration with animation section
+- URL parameter support for sharing configurations
+
+### Technical Notes:
+- React Spring provides fluid, physics-based animations for React applications
+- Uses spring physics for natural-feeling animations
+- Platform-specific packages ensure optimal bundle sizes and native integration
+- Animation dependencies are only added to React-based packages (web and native)
+- Uses React Spring v9.7.5 with latest features
+- All 19 animation tests pass (7 Framer Motion + 6 GSAP + 6 React Spring)
+
+### Status: COMPLETE
+
