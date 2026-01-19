@@ -73,6 +73,12 @@ function addApiPackageDeps(
       packagePath: pkgPath,
       dependencies: ["@ts-rest/core", "zod"],
     });
+  } else if (api === "garph") {
+    addPackageDependency({
+      vfs,
+      packagePath: pkgPath,
+      dependencies: ["garph", "graphql-yoga", "graphql"],
+    });
   }
 
   // Add next dep for api package when backend is self and frontend includes next
@@ -115,6 +121,12 @@ function addServerDeps(vfs: VirtualFileSystem, api: API, backend: Backend): void
       packagePath: serverPath,
       dependencies: ["@ts-rest/core", "@ts-rest/serverless"],
     });
+  } else if (api === "garph") {
+    addPackageDependency({
+      vfs,
+      packagePath: serverPath,
+      dependencies: ["garph", "graphql-yoga", "graphql"],
+    });
   }
 }
 
@@ -147,6 +159,12 @@ function addSelfBackendWebDeps(
       vfs,
       packagePath: webPath,
       dependencies: ["@ts-rest/core", "@ts-rest/serverless", "@ts-rest/next"],
+    });
+  } else if (api === "garph") {
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: ["garph", "graphql-yoga", "graphql"],
     });
   }
 }
@@ -209,6 +227,12 @@ function addWebClientDeps(
       ],
       devDependencies: ["@tanstack/solid-query-devtools", "@tanstack/solid-router-devtools"],
     });
+  } else if (api === "garph" && frontendType.hasReactWeb) {
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: ["@garph/gqty", "gqty"],
+    });
   }
 }
 
@@ -235,6 +259,12 @@ function addNativeDeps(vfs: VirtualFileSystem, api: API, backend: Backend): void
       vfs,
       packagePath: nativePath,
       dependencies: ["@ts-rest/core", "@ts-rest/react-query"],
+    });
+  } else if (api === "garph") {
+    addPackageDependency({
+      vfs,
+      packagePath: nativePath,
+      dependencies: ["@garph/gqty", "gqty"],
     });
   }
 }

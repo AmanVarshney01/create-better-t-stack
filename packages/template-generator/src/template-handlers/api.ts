@@ -56,8 +56,8 @@ export async function processApiTemplates(
         "apps/web",
         config,
       );
-    } else if (config.api === "orpc") {
-      // Non-React Astro integrations use oRPC
+    } else if (config.api === "orpc" || config.api === "garph") {
+      // Non-React Astro integrations use oRPC or Garph
       processTemplatesFromPrefix(vfs, templates, `api/${config.api}/web/astro`, "apps/web", config);
     }
 

@@ -350,6 +350,226 @@ describe("API Configurations", () => {
     }
   });
 
+  describe("Garph API", () => {
+    const reactFrontends = ["tanstack-router", "react-router", "tanstack-start", "next"];
+
+    for (const frontend of reactFrontends) {
+      it(`should work with Garph + ${frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `garph-${frontend}`,
+          api: "garph",
+          frontend: [frontend as Frontend],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+    }
+
+    const nativeFrontends = ["native-bare", "native-uniwind", "native-unistyles"];
+
+    for (const frontend of nativeFrontends) {
+      it(`should work with Garph + ${frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `garph-${frontend}`,
+          api: "garph",
+          frontend: [frontend as Frontend],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+    }
+
+    it("should fail with Garph + Nuxt", async () => {
+      const result = await runTRPCTest({
+        projectName: "garph-nuxt-fail",
+        api: "garph",
+        frontend: ["nuxt"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "garph API is not supported with 'nuxt' frontend");
+    });
+
+    it("should fail with Garph + Svelte", async () => {
+      const result = await runTRPCTest({
+        projectName: "garph-svelte-fail",
+        api: "garph",
+        frontend: ["svelte"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "garph API is not supported with 'svelte' frontend");
+    });
+
+    it("should fail with Garph + Solid", async () => {
+      const result = await runTRPCTest({
+        projectName: "garph-solid-fail",
+        api: "garph",
+        frontend: ["solid"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "garph API is not supported with 'solid' frontend");
+    });
+
+    const backends = ["hono", "express", "fastify", "elysia"];
+
+    for (const backend of backends) {
+      it(`should work with Garph + ${backend}`, async () => {
+        const config: TestConfig = {
+          projectName: `garph-${backend}`,
+          api: "garph",
+          backend: backend as Backend,
+          frontend: ["tanstack-router"],
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        };
+
+        if (backend === "elysia") {
+          config.runtime = "bun";
+        } else {
+          config.runtime = "bun";
+        }
+
+        const result = await runTRPCTest(config);
+        expectSuccess(result);
+      });
+    }
+
+    it("should work with Garph + better-auth", async () => {
+      const result = await runTRPCTest({
+        projectName: "garph-better-auth",
+        api: "garph",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    const fullstackFrontends = ["next", "tanstack-start", "astro"];
+
+    for (const frontend of fullstackFrontends) {
+      it(`should work with Garph + self backend + ${frontend}`, async () => {
+        const config: TestConfig = {
+          projectName: `garph-self-${frontend}`,
+          api: "garph",
+          frontend: [frontend as Frontend],
+          backend: "self",
+          runtime: "none",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        };
+
+        // Astro requires React integration for Garph
+        if (frontend === "astro") {
+          config.astroIntegration = "react";
+        }
+
+        const result = await runTRPCTest(config);
+
+        expectSuccess(result);
+      });
+    }
+
+    it("should work with Garph + todo example", async () => {
+      const result = await runTRPCTest({
+        projectName: "garph-todo",
+        api: "garph",
+        examples: ["todo"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+  });
+
   describe("oRPC API", () => {
     const frontends = [
       "tanstack-router",
@@ -700,7 +920,7 @@ describe("API Configurations", () => {
   });
 
   describe("All API Types", () => {
-    const apis = ["trpc", "orpc", "ts-rest", "none"];
+    const apis = ["trpc", "orpc", "ts-rest", "garph", "none"];
 
     for (const api of apis) {
       it(`should work with ${api} API`, async () => {

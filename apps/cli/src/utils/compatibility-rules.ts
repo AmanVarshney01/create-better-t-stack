@@ -165,9 +165,12 @@ export function validateApiFrontendCompatibility(
   const includesRedwood = frontends.includes("redwood");
   const includesFresh = frontends.includes("fresh");
 
-  // ts-rest requires React like tRPC
-  if ((includesNuxt || includesSvelte || includesSolid) && (api === "trpc" || api === "ts-rest")) {
-    const apiName = api === "trpc" ? "tRPC" : "ts-rest";
+  // ts-rest and garph require React like tRPC
+  if (
+    (includesNuxt || includesSvelte || includesSolid) &&
+    (api === "trpc" || api === "ts-rest" || api === "garph")
+  ) {
+    const apiName = api === "trpc" ? "tRPC" : api === "ts-rest" ? "ts-rest" : "garph";
     exitWithError(
       `${apiName} API is not supported with '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"}' frontend. Please use --api orpc or --api none or remove '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"}' from --frontend.`,
     );
@@ -183,32 +186,32 @@ export function validateApiFrontendCompatibility(
   // Angular has its own HttpClient and doesn't support external API layers
   if (includesAngular && api && api !== "none") {
     exitWithError(
-      `Angular has its own built-in HttpClient and doesn't support external API layers (tRPC/oRPC/ts-rest). Please use --api none with Angular.`,
+      `Angular has its own built-in HttpClient and doesn't support external API layers (tRPC/oRPC/ts-rest/garph). Please use --api none with Angular.`,
     );
   }
 
   // RedwoodJS has its own built-in GraphQL API and doesn't support external API layers
   if (includesRedwood && api && api !== "none") {
     exitWithError(
-      `RedwoodJS has its own built-in GraphQL API and doesn't support external API layers (tRPC/oRPC/ts-rest). Please use --api none with RedwoodJS.`,
+      `RedwoodJS has its own built-in GraphQL API and doesn't support external API layers (tRPC/oRPC/ts-rest/garph). Please use --api none with RedwoodJS.`,
     );
   }
 
   // Fresh (Deno) has its own built-in server capabilities and doesn't support external API layers
   if (includesFresh && api && api !== "none") {
     exitWithError(
-      `Fresh has its own built-in server capabilities (Deno-native) and doesn't support external API layers (tRPC/oRPC/ts-rest). Please use --api none with Fresh.`,
+      `Fresh has its own built-in server capabilities (Deno-native) and doesn't support external API layers (tRPC/oRPC/ts-rest/garph). Please use --api none with Fresh.`,
     );
   }
 
-  // Astro with non-React integrations doesn't support tRPC or ts-rest
+  // Astro with non-React integrations doesn't support tRPC, ts-rest, or garph
   if (
     includesAstro &&
     astroIntegration &&
     astroIntegration !== "react" &&
-    (api === "trpc" || api === "ts-rest")
+    (api === "trpc" || api === "ts-rest" || api === "garph")
   ) {
-    const apiName = api === "trpc" ? "tRPC" : "ts-rest";
+    const apiName = api === "trpc" ? "tRPC" : api === "ts-rest" ? "ts-rest" : "garph";
     exitWithError(
       `${apiName} API requires React integration with Astro. Please use --api orpc or --api none, or use --astro-integration react.`,
     );
@@ -287,7 +290,7 @@ export function allowedApisForFrontends(
   const includesAngular = frontends.includes("angular");
   const includesRedwood = frontends.includes("redwood");
   const includesFresh = frontends.includes("fresh");
-  const base: API[] = ["trpc", "orpc", "ts-rest", "none"];
+  const base: API[] = ["trpc", "orpc", "ts-rest", "garph", "none"];
 
   // Qwik uses its own server capabilities, only none is allowed
   if (includesQwik) {

@@ -1,0 +1,52 @@
+import { QueryClient } from "@tanstack/react-query";
+import { createClient, type InferClient } from "@garph/gqty";
+import {
+  createGeneratedSchema,
+  createScalarsEnumsHash,
+} from "@garph/gqty/dist/utils";
+import {
+  g,
+  queryType,
+  mutationType,
+{{#if (includes examples "todo")}}
+  todoType,
+{{/if}}
+} from "@{{projectName}}/api/index";
+import { API_URL } from "@/lib/api";
+
+// Create QueryClient for React Query integration
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      staleTime: 1000 * 60,
+    },
+  },
+});
+
+// Generate schema and scalars for GQty client
+const generatedSchema = createGeneratedSchema(g);
+const scalarsEnumsHash = createScalarsEnumsHash(g);
+
+// Create type-safe GraphQL client
+export const client = createClient<{
+  query: InferClient<typeof queryType>;
+  mutation: InferClient<typeof mutationType>;
+}>({
+  generatedSchema,
+  scalarsEnumsHash,
+  url: `${API_URL}/graphql`,
+{{#if (eq auth "better-auth")}}
+  credentials: "include",
+{{/if}}
+});
+
+// Export typed query and mutation functions
+export const { query, mutation, resolved } = client;
+
+// Helper for React Query integration
+export async function graphqlFetcher<T>(
+  fn: () => T | Promise<T>
+): Promise<T> {
+  return resolved(fn);
+}

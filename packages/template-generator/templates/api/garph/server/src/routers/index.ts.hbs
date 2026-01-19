@@ -1,0 +1,45 @@
+import { g, buildSchema, type InferResolvers, queryType, mutationType } from "../index";
+import type { Context } from "../context";
+{{#if (includes examples "todo")}}
+import { todoResolvers } from "./todo";
+{{/if}}
+
+export function createResolvers(ctx: Context): InferResolvers<{ Query: typeof queryType; Mutation: typeof mutationType }, { context: Context }> {
+{{#if (includes examples "todo")}}
+  const todos = todoResolvers(ctx);
+{{/if}}
+
+  return {
+    Query: {
+      health: () => "OK",
+{{#if (eq auth "better-auth")}}
+      privateData: () => {
+        if (!ctx.session) {
+          return null;
+        }
+        return {
+          message: "This is private data",
+          user: ctx.session.user,
+        };
+      },
+{{/if}}
+{{#if (includes examples "todo")}}
+      todos: todos.getAll,
+      todo: todos.getOne,
+{{/if}}
+    },
+    Mutation: {
+{{#if (includes examples "todo")}}
+      createTodo: todos.create,
+      toggleTodo: todos.toggle,
+      deleteTodo: todos.delete,
+{{/if}}
+      _empty: () => null,
+    },
+  };
+}
+
+export function createSchema(ctx: Context) {
+  const resolvers = createResolvers(ctx);
+  return buildSchema({ g, resolvers });
+}

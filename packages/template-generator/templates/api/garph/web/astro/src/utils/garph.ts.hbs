@@ -1,0 +1,41 @@
+import { createClient, type InferClient } from "@garph/gqty";
+import {
+  createGeneratedSchema,
+  createScalarsEnumsHash,
+} from "@garph/gqty/dist/utils";
+import {
+  g,
+  queryType,
+  mutationType,
+{{#if (includes examples "todo")}}
+  todoType,
+{{/if}}
+} from "@{{projectName}}/api/index";
+import { env } from "@{{projectName}}/env/web";
+
+// Generate schema and scalars for GQty client
+const generatedSchema = createGeneratedSchema(g);
+const scalarsEnumsHash = createScalarsEnumsHash(g);
+
+// Create type-safe GraphQL client
+export const client = createClient<{
+  query: InferClient<typeof queryType>;
+  mutation: InferClient<typeof mutationType>;
+}>({
+  generatedSchema,
+  scalarsEnumsHash,
+  url: `${env.VITE_SERVER_URL}/graphql`,
+{{#if (eq auth "better-auth")}}
+  credentials: "include",
+{{/if}}
+});
+
+// Export typed query and mutation functions
+export const { query, mutation, resolved } = client;
+
+// Helper for fetching data
+export async function graphqlFetcher<T>(
+  fn: () => T | Promise<T>
+): Promise<T> {
+  return resolved(fn);
+}

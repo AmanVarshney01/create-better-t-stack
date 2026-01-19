@@ -36,6 +36,13 @@ export const TECH_OPTIONS: Record<
       color: "from-green-400 to-green-600",
     },
     {
+      id: "garph",
+      name: "Garph",
+      description: "Fullstack GraphQL Framework for TypeScript",
+      icon: "",
+      color: "from-pink-400 to-pink-600",
+    },
+    {
       id: "none",
       name: "No API",
       description: "No API layer (API routes disabled)",

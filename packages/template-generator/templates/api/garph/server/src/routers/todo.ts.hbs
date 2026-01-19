@@ -1,0 +1,61 @@
+{{#if (includes examples "todo")}}
+import type { Context } from "../context";
+import { db } from "@{{projectName}}/db";
+import { todos } from "@{{projectName}}/db/schema";
+import { eq } from "drizzle-orm";
+
+export function todoResolvers(ctx: Context) {
+  return {
+    getAll: async () => {
+      const allTodos = await db.select().from(todos).orderBy(todos.createdAt);
+      return allTodos.map((t) => ({
+        ...t,
+        createdAt: t.createdAt.toISOString(),
+      }));
+    },
+    getOne: async (_: unknown, args: { id: number }) => {
+      const [todo] = await db.select().from(todos).where(eq(todos.id, args.id));
+      if (!todo) return null;
+      return {
+        ...todo,
+        createdAt: todo.createdAt.toISOString(),
+      };
+    },
+    create: async (_: unknown, args: { content: string }) => {
+      const [newTodo] = await db
+        .insert(todos)
+        .values({ content: args.content })
+        .returning();
+      return {
+        ...newTodo,
+        createdAt: newTodo.createdAt.toISOString(),
+      };
+    },
+    toggle: async (_: unknown, args: { id: number }) => {
+      const [existing] = await db
+        .select()
+        .from(todos)
+        .where(eq(todos.id, args.id));
+      if (!existing) return null;
+      const [updated] = await db
+        .update(todos)
+        .set({ completed: !existing.completed })
+        .where(eq(todos.id, args.id))
+        .returning();
+      return {
+        ...updated,
+        createdAt: updated.createdAt.toISOString(),
+      };
+    },
+    delete: async (_: unknown, args: { id: number }) => {
+      const [existing] = await db
+        .select()
+        .from(todos)
+        .where(eq(todos.id, args.id));
+      if (!existing) return false;
+      await db.delete(todos).where(eq(todos.id, args.id));
+      return true;
+    },
+  };
+}
+{{/if}}

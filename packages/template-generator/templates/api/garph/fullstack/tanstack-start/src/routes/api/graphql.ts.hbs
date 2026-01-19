@@ -1,0 +1,38 @@
+import { createAPIFileRoute } from "@tanstack/react-start/api";
+import { createYoga } from "graphql-yoga";
+import { createSchema } from "@{{projectName}}/api/routers";
+import { createContext } from "@{{projectName}}/api/context";
+{{#if (eq auth "better-auth")}}
+import { auth } from "@/lib/auth";
+{{/if}}
+
+const yoga = createYoga({
+  graphqlEndpoint: "/api/graphql",
+  fetchAPI: { Response },
+  context: async ({ request }) => {
+{{#if (eq auth "better-auth")}}
+    const session = await auth.api.getSession({
+      headers: request.headers,
+    });
+    return createContext(request, session);
+{{else}}
+    return createContext(request);
+{{/if}}
+  },
+  schema: async ({ request }) => {
+{{#if (eq auth "better-auth")}}
+    const session = await auth.api.getSession({
+      headers: request.headers,
+    });
+    const ctx = createContext(request, session);
+{{else}}
+    const ctx = createContext(request);
+{{/if}}
+    return createSchema(ctx);
+  },
+});
+
+export const APIRoute = createAPIFileRoute("/api/graphql")({
+  GET: async ({ request }) => yoga.handleRequest(request, {}),
+  POST: async ({ request }) => yoga.handleRequest(request, {}),
+});

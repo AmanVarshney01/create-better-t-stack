@@ -3179,3 +3179,65 @@ Implemented feTS as a new backend framework option. feTS is a TypeScript HTTP Fr
   - No observability (none option)
 
 ### Status: COMPLETE
+
+## 2026-01-19: Garph GraphQL Framework Implementation
+
+### Task: Implement Garph as an API layer option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "garph" to APISchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Garph dependency versions:
+   - garph: ^0.6.8
+   - graphql-yoga: ^5.10.11
+   - graphql: ^16.11.0
+   - @garph/gqty: ^1.3.5
+   - gqty: ^3.5.0
+3. **packages/template-generator/src/processors/api-deps.ts**: Added Garph dependency processing in:
+   - addApiPackageDeps() - API contract package
+   - addServerDeps() - Server implementation
+   - addSelfBackendWebDeps() - Self-hosted fullstack
+   - addWebClientDeps() - React/GQty client integration
+   - addNativeDeps() - React Native support
+4. **packages/template-generator/src/template-handlers/api.ts**: Updated to support Garph with Astro
+5. **packages/template-generator/templates/api/garph/**: Created Garph templates:
+   - server/src/index.ts.hbs - GraphQL schema definition with Garph type builder
+   - server/src/context.ts.hbs - Context handling for all backend frameworks
+   - server/src/routers/index.ts.hbs - Resolver creation and schema building
+   - server/src/routers/todo.ts.hbs - Todo example resolvers
+   - server/package.json.hbs, tsconfig.json.hbs, _gitignore
+   - web/react/base/src/utils/garph.ts.hbs - GQty client for React
+   - web/astro/src/utils/garph.ts.hbs - GQty client for Astro
+   - native/utils/garph.ts.hbs - GQty client for React Native
+   - fullstack/next/src/app/api/graphql/route.ts.hbs - Next.js GraphQL route handler
+   - fullstack/next/src/utils/garph.ts.hbs - Next.js client setup
+   - fullstack/tanstack-start/src/routes/api/graphql.ts.hbs - TanStack Start route
+   - fullstack/tanstack-start/src/utils/garph.ts.hbs - TanStack Start client
+   - fullstack/astro/src/pages/api/graphql.ts.hbs - Astro GraphQL route
+   - fullstack/astro/src/utils/garph.ts.hbs - Astro client setup
+6. **apps/web/src/lib/constant.ts**: Added Garph to web builder API options
+7. **apps/cli/src/utils/compatibility-rules.ts**: Added Garph to API compatibility rules:
+   - Garph requires React like tRPC and ts-rest
+   - Added to validation error messages
+   - Added to allowedApisForFrontends()
+8. **apps/cli/test/api.test.ts**: Added comprehensive Garph tests:
+   - Tests for React frontends (tanstack-router, react-router, tanstack-start, next)
+   - Tests for native frontends (native-bare, native-uniwind, native-unistyles)
+   - Error tests for non-React frontends (nuxt, svelte, solid)
+   - Tests for all backends (hono, express, fastify, elysia)
+   - Test for better-auth integration
+   - Tests for fullstack mode (next, tanstack-start, astro with React)
+   - Test for todo example
+
+### Features:
+- Full Garph GraphQL type-safe schema definition
+- GraphQL Yoga server integration
+- GQty client for type-safe GraphQL queries
+- Support for all React-based frontends
+- Support for all backend frameworks (Hono, Express, Fastify, Elysia)
+- Self-hosted fullstack mode support (Next.js, TanStack Start, Astro)
+- Better-Auth integration support
+- Todo example with full CRUD operations
+- React Native support
+
+### Status: COMPLETE
+

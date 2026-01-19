@@ -156,6 +156,13 @@ export const dependencyVersionMap = {
   "@ts-rest/serverless": "^3.55.0",
   "@ts-rest/next": "^3.55.0",
 
+  // Garph (GraphQL)
+  garph: "^0.6.8",
+  "graphql-yoga": "^5.10.11",
+  graphql: "^16.11.0",
+  "@garph/gqty": "^1.3.5",
+  gqty: "^3.5.0",
+
   "@trpc/tanstack-react-query": "^11.7.2",
   "@trpc/server": "^11.7.2",
   "@trpc/client": "^11.7.2",

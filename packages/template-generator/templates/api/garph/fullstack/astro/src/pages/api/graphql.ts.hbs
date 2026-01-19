@@ -1,0 +1,47 @@
+import type { APIRoute } from "astro";
+import { createYoga } from "graphql-yoga";
+import { createSchema } from "@{{projectName}}/api/routers";
+import { createContext } from "@{{projectName}}/api/context";
+{{#if (eq auth "better-auth")}}
+import { auth } from "@/lib/auth";
+{{/if}}
+
+const yoga = createYoga({
+  graphqlEndpoint: "/api/graphql",
+  fetchAPI: { Response },
+  context: async ({ request }) => {
+{{#if (eq auth "better-auth")}}
+    const session = await auth.api.getSession({
+      headers: request.headers,
+    });
+    // Create a minimal API context for Astro
+    const astroContext = { request } as any;
+    return createContext(astroContext, session);
+{{else}}
+    // Create a minimal API context for Astro
+    const astroContext = { request } as any;
+    return createContext(astroContext);
+{{/if}}
+  },
+  schema: async ({ request }) => {
+{{#if (eq auth "better-auth")}}
+    const session = await auth.api.getSession({
+      headers: request.headers,
+    });
+    const astroContext = { request } as any;
+    const ctx = createContext(astroContext, session);
+{{else}}
+    const astroContext = { request } as any;
+    const ctx = createContext(astroContext);
+{{/if}}
+    return createSchema(ctx);
+  },
+});
+
+export const GET: APIRoute = async ({ request }) => {
+  return yoga.handleRequest(request, {});
+};
+
+export const POST: APIRoute = async ({ request }) => {
+  return yoga.handleRequest(request, {});
+};
