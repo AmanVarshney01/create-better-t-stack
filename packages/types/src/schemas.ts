@@ -156,6 +156,7 @@ export const UILibrarySchema = z
     "park-ui",
     "chakra-ui",
     "nextui",
+    "mantine",
     "none",
   ])
   .describe("UI component library");

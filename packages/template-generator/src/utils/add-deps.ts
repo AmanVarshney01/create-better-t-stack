@@ -251,6 +251,10 @@ export const dependencyVersionMap = {
   "@heroui/react": "^2.8.3",
   "framer-motion": "^12.17.0",
 
+  // Mantine
+  "@mantine/core": "^8.3.12",
+  "@mantine/hooks": "^8.3.12",
+
   daisyui: "^4.12.28",
 
   // Qwik

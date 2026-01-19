@@ -150,6 +150,10 @@ export const UI_LIBRARY_COMPATIBILITY: Record<
     frontends: ["tanstack-router", "react-router", "tanstack-start", "next"],
     cssFrameworks: ["tailwind"],
   },
+  mantine: {
+    frontends: ["tanstack-router", "react-router", "tanstack-start", "next"],
+    cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
+  },
   none: {
     frontends: [
       "tanstack-router",

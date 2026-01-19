@@ -699,4 +699,95 @@ describe("CSS Framework and UI Library Configurations", () => {
       expectError(result, "not compatible");
     });
   });
+
+  describe("Mantine Tests", () => {
+    // Mantine works with React frontends
+    const mantineCompatibleFrontends: Frontend[] = [
+      "tanstack-router",
+      "react-router",
+      "tanstack-start",
+      "next",
+    ];
+
+    for (const frontend of mantineCompatibleFrontends) {
+      it(`should work with mantine + ${frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `mantine-${frontend}`,
+          uiLibrary: "mantine",
+          cssFramework: "tailwind",
+          frontend: [frontend],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          api: "trpc",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+    }
+
+    // Mantine should fail with non-React frontends
+    const mantineIncompatibleFrontends: Frontend[] = ["nuxt", "svelte", "solid", "astro"];
+
+    for (const frontend of mantineIncompatibleFrontends) {
+      it(`should fail with mantine + ${frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `mantine-${frontend}-fail`,
+          uiLibrary: "mantine",
+          cssFramework: "tailwind",
+          frontend: [frontend],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          api: "orpc",
+          webDeploy: "none",
+          serverDeploy: "none",
+          expectError: true,
+        });
+
+        expectError(result, "not compatible");
+      });
+    }
+
+    // Mantine works with any CSS framework (has its own styling)
+    const allCssFrameworks: CSSFramework[] = ["tailwind", "scss", "less", "postcss-only", "none"];
+
+    for (const cssFramework of allCssFrameworks) {
+      it(`should work with mantine + ${cssFramework}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `mantine-css-${cssFramework}`,
+          uiLibrary: "mantine",
+          cssFramework,
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          api: "trpc",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+    }
+  });
 });

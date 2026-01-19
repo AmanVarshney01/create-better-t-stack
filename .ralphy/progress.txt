@@ -1825,3 +1825,40 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 - Linting passes for all modified files
 
 ### Status: COMPLETE
+
+
+## 2026-01-19: Mantine UI Library Implementation
+
+### Task: Implement Mantine as a UI component library option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "mantine" to UILibrarySchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Mantine dependency versions:
+   - @mantine/core: ^8.3.12
+   - @mantine/hooks: ^8.3.12
+3. **packages/template-generator/src/processors/css-ui-deps.ts**: Added Mantine dependency processing for React frontends
+4. **apps/web/src/lib/constant.ts**: Added Mantine to web builder UI library options with blue icon
+5. **apps/cli/src/constants.ts**: Added Mantine to UI_LIBRARY_COMPATIBILITY with:
+   - Compatible frontends: tanstack-router, react-router, tanstack-start, next (React-only)
+   - Compatible CSS frameworks: tailwind, scss, less, postcss-only, none (works with any)
+6. **apps/cli/test/css-ui-library.test.ts**: Added comprehensive Mantine tests:
+   - Mantine with all React frontends (tanstack-router, react-router, tanstack-start, next)
+   - Mantine incompatibility tests with non-React frontends (nuxt, svelte, solid, astro)
+   - Mantine with all CSS frameworks (tailwind, scss, less, postcss-only, none)
+
+### Features:
+- Full-featured React component library with 120+ components
+- 70+ hooks for state management and UI interactions
+- Works with any CSS framework (has its own styling system)
+- React-only (tanstack-router, react-router, tanstack-start, next)
+- Dark/light theme support built-in
+- Accessible components out of the box
+
+### Technical Notes:
+- Mantine v8 is the latest major version
+- Uses @mantine/core for components and @mantine/hooks for hooks
+- Mantine has its own CSS-in-JS styling system, so it works independently of CSS frameworks
+- All 92 CSS/UI library tests pass (including 13 new Mantine tests)
+- Linting passes for all modified files
+
+### Status: COMPLETE

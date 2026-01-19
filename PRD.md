@@ -146,7 +146,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 - [ ] **Base UI** - Unstyled components (Radix successor)
 - [ ] **Ark UI** - Headless UI for React/Vue/Solid
 - [ ] **React Aria** - Adobe's accessible components
-- [ ] **Mantine** - Full-featured component library
+- [x] **Mantine** - Full-featured component library
 - [x] **Chakra UI** - Accessible component library
 - [x] **NextUI** - Beautiful components for Next.js
 - [x] **Park UI** - Components on Ark UI

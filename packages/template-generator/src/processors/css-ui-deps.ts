@@ -120,6 +120,12 @@ export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConf
         deps.push("@heroui/react", "framer-motion");
       }
       break;
+
+    case "mantine":
+      if (hasReactWeb) {
+        deps.push("@mantine/core", "@mantine/hooks");
+      }
+      break;
   }
 
   if (deps.length > 0) {

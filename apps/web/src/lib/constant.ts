@@ -959,6 +959,13 @@ export const TECH_OPTIONS: Record<
       className: "invert-0 dark:invert",
     },
     {
+      id: "mantine",
+      name: "Mantine",
+      description: "Full-featured React component library",
+      icon: "https://cdn.simpleicons.org/mantine/339AF0",
+      color: "from-blue-400 to-blue-600",
+    },
+    {
       id: "none",
       name: "No UI Library",
       description: "Build custom components",
