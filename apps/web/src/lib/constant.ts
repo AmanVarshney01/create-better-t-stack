@@ -699,6 +699,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "filepond",
+      name: "FilePond",
+      description: "Flexible file upload with image preview and drag & drop",
+      icon: "https://pqina.nl/filepond/logo-dark.svg",
+      color: "from-yellow-400 to-amber-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No File Upload",
       description: "Skip file upload integration",

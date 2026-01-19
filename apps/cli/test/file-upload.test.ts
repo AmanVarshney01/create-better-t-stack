@@ -211,6 +211,215 @@ describe("File Upload Configurations", () => {
     }
   });
 
+  describe("FilePond File Upload", () => {
+    it("should work with filepond + tanstack-router (React)", async () => {
+      const result = await runTRPCTest({
+        projectName: "filepond-tanstack-router",
+        fileUpload: "filepond",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that FilePond and react-filepond were added to apps/web
+      const webPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "apps")
+        ?.children?.find((c: any) => c.name === "web")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (webPackageJson?.content) {
+        const pkgJson = JSON.parse(webPackageJson.content);
+        expect(pkgJson.dependencies?.filepond).toBeDefined();
+        expect(pkgJson.dependencies?.["react-filepond"]).toBeDefined();
+        expect(pkgJson.dependencies?.["filepond-plugin-image-preview"]).toBeDefined();
+        expect(pkgJson.dependencies?.["filepond-plugin-file-validate-type"]).toBeDefined();
+        expect(pkgJson.dependencies?.["filepond-plugin-file-validate-size"]).toBeDefined();
+      }
+    });
+
+    it("should work with filepond + next.js fullstack", async () => {
+      const result = await runTRPCTest({
+        projectName: "filepond-next",
+        fileUpload: "filepond",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // FilePond is client-side only, should be in web package
+      const webPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "apps")
+        ?.children?.find((c: any) => c.name === "web")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (webPackageJson?.content) {
+        const pkgJson = JSON.parse(webPackageJson.content);
+        expect(pkgJson.dependencies?.filepond).toBeDefined();
+        expect(pkgJson.dependencies?.["react-filepond"]).toBeDefined();
+      }
+    });
+
+    it("should work with filepond + svelte frontend", async () => {
+      const result = await runTRPCTest({
+        projectName: "filepond-svelte",
+        fileUpload: "filepond",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "orpc",
+        auth: "better-auth",
+        frontend: ["svelte"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that svelte-filepond was added
+      const webPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "apps")
+        ?.children?.find((c: any) => c.name === "web")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (webPackageJson?.content) {
+        const pkgJson = JSON.parse(webPackageJson.content);
+        expect(pkgJson.dependencies?.filepond).toBeDefined();
+        expect(pkgJson.dependencies?.["svelte-filepond"]).toBeDefined();
+      }
+    });
+
+    it("should work with filepond + nuxt frontend", async () => {
+      const result = await runTRPCTest({
+        projectName: "filepond-nuxt",
+        fileUpload: "filepond",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "orpc",
+        auth: "better-auth",
+        frontend: ["nuxt"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that vue-filepond was added
+      const webPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "apps")
+        ?.children?.find((c: any) => c.name === "web")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (webPackageJson?.content) {
+        const pkgJson = JSON.parse(webPackageJson.content);
+        expect(pkgJson.dependencies?.filepond).toBeDefined();
+        expect(pkgJson.dependencies?.["vue-filepond"]).toBeDefined();
+      }
+    });
+
+    it("should work with filepond + solid frontend (vanilla JS)", async () => {
+      const result = await runTRPCTest({
+        projectName: "filepond-solid",
+        fileUpload: "filepond",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "orpc",
+        auth: "better-auth",
+        frontend: ["solid"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Solid uses vanilla FilePond (no official adapter)
+      const webPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "apps")
+        ?.children?.find((c: any) => c.name === "web")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (webPackageJson?.content) {
+        const pkgJson = JSON.parse(webPackageJson.content);
+        expect(pkgJson.dependencies?.filepond).toBeDefined();
+        expect(pkgJson.dependencies?.["filepond-plugin-image-preview"]).toBeDefined();
+      }
+    });
+
+    it("should not add server SDK for filepond (client-side only)", async () => {
+      const result = await runTRPCTest({
+        projectName: "filepond-no-server-sdk",
+        fileUpload: "filepond",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // FilePond should NOT be in server package (it's client-side only)
+      const serverPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "packages")
+        ?.children?.find((c: any) => c.name === "server")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (serverPackageJson?.content) {
+        const pkgJson = JSON.parse(serverPackageJson.content);
+        expect(pkgJson.dependencies?.filepond).toBeUndefined();
+        expect(pkgJson.dependencies?.["react-filepond"]).toBeUndefined();
+      }
+    });
+  });
+
   describe("No File Upload", () => {
     it("should work with fileUpload: none", async () => {
       const result = await runTRPCTest({
@@ -490,7 +699,7 @@ describe("File Upload Configurations", () => {
   });
 
   describe("All File Upload Options", () => {
-    const fileUploadOptions: FileUpload[] = ["uploadthing", "none"];
+    const fileUploadOptions: FileUpload[] = ["uploadthing", "filepond", "none"];
 
     for (const fileUpload of fileUploadOptions) {
       it(`should work with fileUpload: ${fileUpload}`, async () => {

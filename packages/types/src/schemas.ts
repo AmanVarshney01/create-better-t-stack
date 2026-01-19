@@ -163,7 +163,9 @@ export const AnimationSchema = z
   .enum(["framer-motion", "gsap", "react-spring", "auto-animate", "lottie", "none"])
   .describe("Animation library");
 
-export const FileUploadSchema = z.enum(["uploadthing", "none"]).describe("File upload solution");
+export const FileUploadSchema = z
+  .enum(["uploadthing", "filepond", "none"])
+  .describe("File upload solution");
 
 export const CSSFrameworkSchema = z
   .enum(["tailwind", "scss", "less", "postcss-only", "none"])

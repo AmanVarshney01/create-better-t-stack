@@ -2551,3 +2551,64 @@ Implemented UploadThing as a new file upload option. UploadThing is a TypeScript
 - Fullstack framework support (server+client in same package)
 - UPLOADTHING_TOKEN environment variable configuration
 - Web builder UI integration with "fu" URL parameter shorthand
+
+---
+
+## 2026-01-19 - FilePond File Upload Implementation
+
+Implemented FilePond as a new file upload option. FilePond is a flexible, pure JavaScript file upload library with a smooth user experience, drag & drop support, and image preview capabilities.
+
+**Changes Made:**
+1. **packages/types/src/schemas.ts**: Added "filepond" to FileUploadSchema enum
+
+2. **packages/template-generator/src/utils/add-deps.ts**: Added FilePond dependency versions:
+   - filepond: ^4.32.10 (core library)
+   - react-filepond: ^7.1.2 (React adapter)
+   - svelte-filepond: ^1.0.2 (Svelte adapter)
+   - vue-filepond: ^7.0.4 (Vue adapter)
+   - filepond-plugin-image-preview: ^4.6.12 (image preview plugin)
+   - filepond-plugin-file-validate-type: ^1.2.9 (file type validation)
+   - filepond-plugin-file-validate-size: ^2.2.8 (file size validation)
+
+3. **packages/template-generator/src/processors/file-upload-deps.ts**: Refactored to support multiple file upload options:
+   - Created processUploadthingDeps() helper function for UploadThing
+   - Created processFilepondDeps() helper function for FilePond
+   - FilePond adds framework-specific adapters:
+     - react-filepond for React-based frontends (tanstack-router, react-router, tanstack-start, next)
+     - svelte-filepond for Svelte frontend
+     - vue-filepond for Vue/Nuxt frontend
+     - vanilla filepond for other frontends (Solid, Qwik, Angular, Astro without UI integration)
+   - All FilePond installations include common plugins (image-preview, file-validate-type, file-validate-size)
+
+4. **apps/web/src/lib/constant.ts**: Added FilePond to TECH_OPTIONS.fileUpload:
+   - id: "filepond"
+   - name: "FilePond"
+   - description: "Flexible file upload with image preview and drag & drop"
+   - icon: pqina.nl/filepond/logo-dark.svg
+   - color: "from-yellow-400 to-amber-600"
+
+5. **apps/cli/test/file-upload.test.ts**: Added comprehensive FilePond tests:
+   - Tests with React frontend (tanstack-router)
+   - Tests with Next.js fullstack
+   - Tests with Svelte frontend
+   - Tests with Nuxt frontend
+   - Tests with Solid frontend (vanilla JS)
+   - Tests verifying FilePond is client-side only (no server SDK)
+   - Updated "All File Upload Options" test to include filepond
+
+**Test Results:**
+- All 33 file-upload tests pass
+- Types package linting passes with 0 errors
+- Template-generator linting passes with 0 errors (2 pre-existing warnings unrelated to this change)
+
+**Key Differences from UploadThing:**
+- FilePond is purely client-side (no server SDK needed) - handles file selection and UI only
+- UploadThing is a full service with server and client SDKs for end-to-end file upload
+- FilePond works with any backend upload endpoint you implement
+- UploadThing requires their hosted service with UPLOADTHING_TOKEN
+
+**Framework Support:**
+- React (via react-filepond): tanstack-router, react-router, tanstack-start, next
+- Svelte (via svelte-filepond): svelte
+- Vue (via vue-filepond): nuxt
+- Other frameworks (vanilla JS): solid, qwik, angular, astro (without React/Vue/Svelte integration)

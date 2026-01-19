@@ -405,6 +405,15 @@ export const dependencyVersionMap = {
   "@uploadthing/nuxt": "^7.3.0",
   "@uploadthing/expo": "^7.3.0",
 
+  // File Upload - FilePond
+  filepond: "^4.32.10",
+  "react-filepond": "^7.1.2",
+  "svelte-filepond": "^1.0.2",
+  "vue-filepond": "^7.0.4",
+  "filepond-plugin-image-preview": "^4.6.12",
+  "filepond-plugin-file-validate-type": "^1.2.9",
+  "filepond-plugin-file-validate-size": "^2.2.8",
+
   // RedwoodJS
   "@redwoodjs/core": "^8.8.0",
   "@redwoodjs/web": "^8.6.1",
