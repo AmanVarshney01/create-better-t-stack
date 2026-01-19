@@ -1021,6 +1021,48 @@ export const TECH_OPTIONS: Record<
       default: true,
     },
   ],
+  testing: [
+    {
+      id: "vitest",
+      name: "Vitest",
+      description: "Blazing fast Vite-native unit test framework",
+      icon: "https://cdn.simpleicons.org/vitest/6E9F18",
+      color: "from-green-400 to-green-600",
+      default: true,
+    },
+    {
+      id: "jest",
+      name: "Jest",
+      description: "Classic testing framework with great ecosystem",
+      icon: "https://cdn.simpleicons.org/jest/C21325",
+      color: "from-red-400 to-red-600",
+      default: false,
+    },
+    {
+      id: "playwright",
+      name: "Playwright",
+      description: "End-to-end testing framework by Microsoft",
+      icon: "https://cdn.simpleicons.org/playwright/2EAD33",
+      color: "from-emerald-400 to-emerald-600",
+      default: false,
+    },
+    {
+      id: "vitest-playwright",
+      name: "Vitest + Playwright",
+      description: "Both unit and E2E testing for complete coverage",
+      icon: "https://cdn.simpleicons.org/vitest/6E9F18",
+      color: "from-green-500 to-emerald-600",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No Testing",
+      description: "Skip testing framework setup",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: false,
+    },
+  ],
   git: [
     {
       id: "true",
@@ -1280,6 +1322,7 @@ export type StackState = {
   backendLibraries: string;
   stateManagement: string;
   validation: string;
+  testing: string;
   realtime: string;
   cssFramework: string;
   uiLibrary: string;
@@ -1312,6 +1355,7 @@ export const DEFAULT_STACK: StackState = {
   backendLibraries: "none",
   stateManagement: "none",
   validation: "zod",
+  testing: "vitest",
   realtime: "none",
   cssFramework: "tailwind",
   uiLibrary: "shadcn-ui",

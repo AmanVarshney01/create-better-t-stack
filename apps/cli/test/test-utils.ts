@@ -24,6 +24,7 @@ import type {
   Email,
   StateManagement,
   Forms,
+  Testing,
   Validation,
   Realtime,
 } from "../src/types";
@@ -49,6 +50,7 @@ import {
   RuntimeSchema,
   ServerDeploySchema,
   StateManagementSchema,
+  TestingSchema,
   UILibrarySchema,
   ValidationSchema,
   WebDeploySchema,
@@ -109,6 +111,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     "effect",
     "stateManagement",
     "forms",
+    "testing",
     "validation",
     "realtime",
   ];
@@ -143,6 +146,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
         email: "none" as Email,
         stateManagement: "none" as StateManagement,
         forms: "react-hook-form" as Forms,
+        testing: "vitest" as Testing,
         validation: "zod" as Validation,
         realtime: "none" as Realtime,
       };
@@ -229,6 +233,7 @@ export const UI_LIBRARIES = extractEnumValues(UILibrarySchema);
 export const EFFECTS = extractEnumValues(EffectSchema);
 export const STATE_MANAGEMENTS = extractEnumValues(StateManagementSchema);
 export const FORMS = extractEnumValues(FormsSchema);
+export const TESTINGS = extractEnumValues(TestingSchema);
 export const VALIDATIONS = extractEnumValues(ValidationSchema);
 export const REALTIMES = extractEnumValues(RealtimeSchema);
 

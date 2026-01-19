@@ -277,6 +277,13 @@ export const dependencyVersionMap = {
   // Real-time/WebSocket
   "socket.io": "^4.8.1",
   "socket.io-client": "^4.8.1",
+
+  // Testing - Jest
+  jest: "^29.7.0",
+  "@types/jest": "^29.5.14",
+  "ts-jest": "^29.2.5",
+  "@jest/globals": "^29.7.0",
+  "jest-environment-jsdom": "^29.7.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

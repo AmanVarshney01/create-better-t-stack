@@ -46,6 +46,7 @@ export function loadStackParams(
       backendLibraries: getString("backendLibraries", DEFAULT_STACK.backendLibraries),
       stateManagement: getString("stateManagement", DEFAULT_STACK.stateManagement),
       validation: getString("validation", DEFAULT_STACK.validation),
+      testing: getString("testing", DEFAULT_STACK.testing),
       realtime: getString("realtime", DEFAULT_STACK.realtime),
       codeQuality: getArray("codeQuality", DEFAULT_STACK.codeQuality),
       documentation: getArray("documentation", DEFAULT_STACK.documentation),
@@ -103,6 +104,7 @@ export function serializeStackParams(basePath: string, stack: StackState): strin
   addParam("backendLibraries", stack.backendLibraries);
   addParam("stateManagement", stack.stateManagement);
   addParam("validation", stack.validation);
+  addParam("testing", stack.testing);
   addParam("realtime", stack.realtime);
   addParam("codeQuality", stack.codeQuality);
   addParam("documentation", stack.documentation);

@@ -794,3 +794,56 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Jest Testing Framework Implementation
+
+### Task: Implement Jest as a testing framework option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "jest" to TestingSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Jest dependency versions:
+   - jest: ^29.7.0
+   - @types/jest: ^29.5.14
+   - ts-jest: ^29.2.5
+   - @jest/globals: ^29.7.0
+   - jest-environment-jsdom: ^29.7.0
+3. **packages/template-generator/src/processors/testing-deps.ts**: Created new testing processor:
+   - Handles jest dependency addition to server, web, and api packages
+   - Adds dependencies as devDependencies
+4. **packages/template-generator/src/processors/index.ts**: Registered testing processor
+5. **apps/web/src/lib/types.ts**: Added "testing" to TechCategory type
+6. **apps/web/src/lib/constant.ts**: Added testing section to TECH_OPTIONS:
+   - Vitest (default), Jest, Playwright, Vitest + Playwright, None
+   - Added testing to StackState type and DEFAULT_STACK (default: "vitest")
+7. **apps/web/src/lib/stack-url-state.ts**: Added testing to URL state parsing and serialization
+8. **apps/web/src/lib/stack-url-state.client.ts**: Added testing to client-side state (tst key)
+9. **apps/web/src/lib/stack-search-schema.ts**: Added "tst" URL param for testing
+10. **apps/web/src/lib/stack-url-keys.ts**: Added testing URL key mapping
+11. **apps/cli/test/test-utils.ts**: Added Testing type and schema support
+12. **apps/cli/test/testing.test.ts**: Created comprehensive Jest tests:
+    - Jest with TanStack Router, React Router, Next.js, TanStack Start
+    - Jest with different backends (Hono, Express, Fastify)
+    - Vitest (default) tests
+    - Playwright E2E tests
+    - Vitest + Playwright combined tests
+    - None option test
+
+### Features:
+- Jest classic testing framework with TypeScript support via ts-jest
+- Support for all React-based frontends (TanStack Router, React Router, TanStack Start, Next.js)
+- Support for all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+- Full web builder UI integration with testing section
+- URL parameter support for sharing configurations
+- Includes @types/jest for type definitions
+- Includes @jest/globals for Jest global types
+
+### Technical Notes:
+- Jest is the classic, widely-adopted testing framework
+- ts-jest provides TypeScript support for Jest
+- jest-environment-jsdom provides browser-like environment for DOM testing
+- Testing dependencies are added as devDependencies to server, web, and api packages
+- Uses "tst" URL key for the testing parameter
+- All 12 tests pass
+
+### Status: COMPLETE
+
