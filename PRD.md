@@ -47,7 +47,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 - [x] **AdonisJS** - Full-featured MVC framework for Node.js _(requires Node.js runtime)_
 - [x] **Nitro** - Universal server framework (powers Nuxt) _(supports Node.js, Bun, and Cloudflare Workers)_
 - [ ] **tREST** - Type-safe REST APIs (alternative to tRPC)
-- [ ] **feTS** - TypeScript HTTP Framework with e2e type-safety
+- [x] **feTS** - TypeScript HTTP Framework with e2e type-safety _(by The Guild, uses fets npm package)_
 
 ---
 

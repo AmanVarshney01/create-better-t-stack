@@ -91,7 +91,7 @@ export function validateSelfBackendCompatibility(
 }
 
 // Backends that support Cloudflare Workers runtime
-const WORKERS_COMPATIBLE_BACKENDS: readonly Backend[] = ["hono", "nitro"] as const;
+const WORKERS_COMPATIBLE_BACKENDS: readonly Backend[] = ["hono", "nitro", "fets"] as const;
 
 export function validateWorkersCompatibility(
   providedFlags: Set<string>,
@@ -105,7 +105,7 @@ export function validateWorkersCompatibility(
     !WORKERS_COMPATIBLE_BACKENDS.includes(config.backend)
   ) {
     exitWithError(
-      `Cloudflare Workers runtime (--runtime workers) is only supported with Hono or Nitro backend. Current backend: ${config.backend}. Please use '--backend hono' or '--backend nitro' or choose a different runtime.`,
+      `Cloudflare Workers runtime (--runtime workers) is only supported with Hono, Nitro, or feTS backend. Current backend: ${config.backend}. Please use '--backend hono', '--backend nitro', or '--backend fets', or choose a different runtime.`,
     );
   }
 
@@ -116,7 +116,7 @@ export function validateWorkersCompatibility(
     config.runtime === "workers"
   ) {
     exitWithError(
-      `Backend '${config.backend}' is not compatible with Cloudflare Workers runtime. Cloudflare Workers runtime is only supported with Hono or Nitro backend. Please use '--backend hono' or '--backend nitro' or choose a different runtime.`,
+      `Backend '${config.backend}' is not compatible with Cloudflare Workers runtime. Cloudflare Workers runtime is only supported with Hono, Nitro, or feTS backend. Please use '--backend hono', '--backend nitro', or '--backend fets', or choose a different runtime.`,
     );
   }
 

@@ -39,6 +39,12 @@ export async function processBackendTemplates(
     return;
   }
 
+  if (config.backend === "fets") {
+    processTemplatesFromPrefix(vfs, templates, "backend/server/base", "apps/server", config);
+    processTemplatesFromPrefix(vfs, templates, "backend/server/fets", "apps/server", config);
+    return;
+  }
+
   processTemplatesFromPrefix(vfs, templates, "backend/server/base", "apps/server", config);
   processTemplatesFromPrefix(
     vfs,

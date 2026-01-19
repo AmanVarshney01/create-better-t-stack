@@ -1,0 +1,336 @@
+import { env } from "@{{projectName}}/env/server";
+{{#if (eq api "orpc")}}
+import { OpenAPIHandler } from "@orpc/openapi/fetch";
+import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
+import { RPCHandler } from "@orpc/server/fetch";
+import { onError } from "@orpc/server";
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+{{/if}}
+{{#if (eq api "trpc")}}
+import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+{{/if}}
+{{#if (eq auth "better-auth")}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+import { createRouter, Response } from "fets";
+{{#if (and (includes examples "ai") (or (eq runtime "bun") (eq runtime "node")))}}
+import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
+import { google } from "@ai-sdk/google";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
+{{/if}}
+{{#if (and (includes examples "ai") (eq runtime "workers"))}}
+import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
+{{/if}}
+
+const router = createRouter({
+	openAPI: {
+		info: {
+			title: "{{projectName}} API",
+			version: "1.0.0",
+		},
+	},
+	swaggerUI: {
+		endpoint: "/docs",
+	},
+})
+	.route({
+		method: "GET",
+		path: "/",
+		schemas: {
+			responses: {
+				200: {
+					type: "object",
+					properties: {
+						status: { type: "string" },
+					},
+					required: ["status"],
+					additionalProperties: false,
+				},
+			},
+		},
+		handler: () => Response.json({ status: "OK" }),
+	})
+{{#if (eq auth "better-auth")}}
+	.route({
+		method: "GET",
+		path: "/api/auth/*",
+		handler: (request) => auth.handler(request),
+	})
+	.route({
+		method: "POST",
+		path: "/api/auth/*",
+		handler: (request) => auth.handler(request),
+	})
+{{/if}}
+{{#if (eq api "trpc")}}
+	.route({
+		method: "GET",
+		path: "/trpc/*",
+		handler: (request) =>
+			fetchRequestHandler({
+				endpoint: "/trpc",
+				req: request,
+				router: appRouter,
+				createContext: () => createContext({ context: request }),
+			}),
+	})
+	.route({
+		method: "POST",
+		path: "/trpc/*",
+		handler: (request) =>
+			fetchRequestHandler({
+				endpoint: "/trpc",
+				req: request,
+				router: appRouter,
+				createContext: () => createContext({ context: request }),
+			}),
+	})
+{{/if}}
+{{#if (eq api "orpc")}}
+	.route({
+		method: "GET",
+		path: "/rpc/*",
+		handler: async (request) => {
+			const context = await createContext({ context: request });
+			const rpcHandler = new RPCHandler(appRouter, {
+				interceptors: [
+					onError((error) => {
+						console.error(error);
+					}),
+				],
+			});
+			const result = await rpcHandler.handle(request, {
+				prefix: "/rpc",
+				context,
+			});
+			if (result.matched) {
+				return result.response;
+			}
+			return Response.json({ error: "Not found" }, { status: 404 });
+		},
+	})
+	.route({
+		method: "POST",
+		path: "/rpc/*",
+		handler: async (request) => {
+			const context = await createContext({ context: request });
+			const rpcHandler = new RPCHandler(appRouter, {
+				interceptors: [
+					onError((error) => {
+						console.error(error);
+					}),
+				],
+			});
+			const result = await rpcHandler.handle(request, {
+				prefix: "/rpc",
+				context,
+			});
+			if (result.matched) {
+				return result.response;
+			}
+			return Response.json({ error: "Not found" }, { status: 404 });
+		},
+	})
+	.route({
+		method: "GET",
+		path: "/api-reference/*",
+		handler: async (request) => {
+			const context = await createContext({ context: request });
+			const apiHandler = new OpenAPIHandler(appRouter, {
+				plugins: [
+					new OpenAPIReferencePlugin({
+						schemaConverters: [new ZodToJsonSchemaConverter()],
+					}),
+				],
+				interceptors: [
+					onError((error) => {
+						console.error(error);
+					}),
+				],
+			});
+			const result = await apiHandler.handle(request, {
+				prefix: "/api-reference",
+				context,
+			});
+			if (result.matched) {
+				return result.response;
+			}
+			return Response.json({ error: "Not found" }, { status: 404 });
+		},
+	})
+{{/if}}
+{{#if (and (includes examples "ai") (or (eq runtime "bun") (eq runtime "node")))}}
+	.route({
+		method: "POST",
+		path: "/ai",
+		handler: async (request) => {
+			const body = await request.json();
+			const uiMessages = body.messages || [];
+			const model = wrapLanguageModel({
+				model: google("gemini-2.5-flash"),
+				middleware: devToolsMiddleware(),
+			});
+			const result = streamText({
+				model,
+				messages: await convertToModelMessages(uiMessages),
+			});
+			return result.toUIMessageStreamResponse();
+		},
+	})
+{{/if}}
+{{#if (and (includes examples "ai") (eq runtime "workers"))}}
+	.route({
+		method: "POST",
+		path: "/ai",
+		handler: async (request) => {
+			const body = await request.json();
+			const uiMessages = body.messages || [];
+			const google = createGoogleGenerativeAI({
+				apiKey: env.GOOGLE_GENERATIVE_AI_API_KEY,
+			});
+			const model = wrapLanguageModel({
+				model: google("gemini-2.5-flash"),
+				middleware: devToolsMiddleware(),
+			});
+			const result = streamText({
+				model,
+				messages: await convertToModelMessages(uiMessages),
+			});
+			return result.toUIMessageStreamResponse();
+		},
+	})
+{{/if}};
+
+{{#if (eq runtime "node")}}
+import { createServer } from "node:http";
+
+// Add CORS middleware wrapper
+const corsOrigin = env.CORS_ORIGIN;
+
+const corsMiddleware = (handler: typeof router) => {
+	return async (request: Request): Promise<globalThis.Response> => {
+		// Handle preflight OPTIONS request
+		if (request.method === "OPTIONS") {
+			return new globalThis.Response(null, {
+				status: 204,
+				headers: {
+					"Access-Control-Allow-Origin": corsOrigin,
+					"Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+{{#if (eq auth "better-auth")}}
+					"Access-Control-Allow-Headers": "Content-Type, Authorization",
+					"Access-Control-Allow-Credentials": "true",
+{{else}}
+					"Access-Control-Allow-Headers": "Content-Type",
+{{/if}}
+				},
+			});
+		}
+
+		const response = await handler.fetch(request);
+		const newHeaders = new Headers(response.headers);
+		newHeaders.set("Access-Control-Allow-Origin", corsOrigin);
+		newHeaders.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+{{#if (eq auth "better-auth")}}
+		newHeaders.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+		newHeaders.set("Access-Control-Allow-Credentials", "true");
+{{else}}
+		newHeaders.set("Access-Control-Allow-Headers", "Content-Type");
+{{/if}}
+
+		return new globalThis.Response(response.body, {
+			status: response.status,
+			statusText: response.statusText,
+			headers: newHeaders,
+		});
+	};
+};
+
+const handler = corsMiddleware(router);
+
+createServer((req, res) => {
+	const url = new URL(req.url || "/", `http://${req.headers.host}`);
+	const headers: Record<string, string> = {};
+	for (const [key, value] of Object.entries(req.headers)) {
+		if (value) headers[key] = Array.isArray(value) ? value.join(", ") : value;
+	}
+
+	const body: Buffer[] = [];
+	req.on("data", (chunk) => body.push(chunk));
+	req.on("end", async () => {
+		const request = new Request(url.href, {
+			method: req.method,
+			headers,
+			body: req.method !== "GET" && req.method !== "HEAD" ? Buffer.concat(body) : undefined,
+		});
+
+		const response = await handler(request);
+		res.statusCode = response.status;
+		response.headers.forEach((value, key) => {
+			res.setHeader(key, value);
+		});
+		const responseBody = await response.arrayBuffer();
+		res.end(Buffer.from(responseBody));
+	});
+}).listen(3000, () => {
+	console.log("Server is running on http://localhost:3000");
+	console.log("Swagger UI is available at http://localhost:3000/docs");
+});
+{{else}}
+{{#if (eq runtime "bun")}}
+const corsOrigin = env.CORS_ORIGIN;
+
+const corsMiddleware = (handler: typeof router) => {
+	return async (request: Request): Promise<globalThis.Response> => {
+		if (request.method === "OPTIONS") {
+			return new globalThis.Response(null, {
+				status: 204,
+				headers: {
+					"Access-Control-Allow-Origin": corsOrigin,
+					"Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+{{#if (eq auth "better-auth")}}
+					"Access-Control-Allow-Headers": "Content-Type, Authorization",
+					"Access-Control-Allow-Credentials": "true",
+{{else}}
+					"Access-Control-Allow-Headers": "Content-Type",
+{{/if}}
+				},
+			});
+		}
+
+		const response = await handler.fetch(request);
+		const newHeaders = new Headers(response.headers);
+		newHeaders.set("Access-Control-Allow-Origin", corsOrigin);
+		newHeaders.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+{{#if (eq auth "better-auth")}}
+		newHeaders.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+		newHeaders.set("Access-Control-Allow-Credentials", "true");
+{{else}}
+		newHeaders.set("Access-Control-Allow-Headers", "Content-Type");
+{{/if}}
+
+		return new globalThis.Response(response.body, {
+			status: response.status,
+			statusText: response.statusText,
+			headers: newHeaders,
+		});
+	};
+};
+
+const server = Bun.serve({
+	port: 3000,
+	fetch: corsMiddleware(router),
+});
+
+console.log(`Server is running on http://localhost:${server.port}`);
+console.log(`Swagger UI is available at http://localhost:${server.port}/docs`);
+{{/if}}
+{{#if (eq runtime "workers")}}
+export default router;
+{{/if}}
+{{/if}}

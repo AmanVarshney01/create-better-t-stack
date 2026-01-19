@@ -57,6 +57,11 @@ export async function getBackendFrameworkChoice(
       label: "Elysia",
       hint: "Ergonomic web framework for building backend servers",
     },
+    {
+      value: "fets" as const,
+      label: "feTS",
+      hint: "TypeScript HTTP Framework with e2e type-safety",
+    },
   );
 
   if (!hasIncompatibleFrontend) {

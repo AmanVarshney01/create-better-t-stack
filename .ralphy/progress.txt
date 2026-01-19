@@ -2940,3 +2940,77 @@ Implemented Nitro as a new backend framework option. Nitro is a universal server
 - API: trpc, orpc, none
 - Auth: better-auth, none
 - Works with all web frontends
+
+---
+
+## 2026-01-19 - feTS Backend Framework Implementation
+
+Implemented feTS as a new backend framework option. feTS is a TypeScript HTTP Framework by The Guild focusing on e2e type-safety, easy setup, performance & great developer experience.
+
+**Changes Made:**
+1. **packages/types/src/schemas.ts**: Added "fets" to BackendSchema enum
+
+2. **packages/template-generator/src/utils/add-deps.ts**: Added feTS dependency versions:
+   - fets: ^0.8.5
+
+3. **packages/template-generator/src/processors/backend-deps.ts**: Added feTS handling to inject dependencies:
+   - fets
+
+4. **packages/template-generator/src/template-handlers/backend.ts**: Added feTS backend handling to use base + fets template pattern (similar to Hono, Express, etc.)
+
+5. **packages/template-generator/templates/backend/server/fets/**: Created feTS templates:
+   - src/index.ts.hbs - Main server file with createRouter and Response from fets
+
+6. **apps/web/src/lib/constant.ts**: Added feTS to TECH_OPTIONS.backend:
+   - id: "fets"
+   - name: "feTS"
+   - description: "TypeScript HTTP Framework with e2e type-safety"
+   - icon: "/icon/fets.svg"
+   - color: "from-blue-600 to-cyan-700"
+
+7. **apps/web/public/icon/fets.svg**: Created feTS icon (blue to cyan gradient with "fS" text)
+
+8. **apps/cli/src/prompts/backend.ts**: Added feTS to backend prompt options:
+   - value: "fets"
+   - label: "feTS"
+   - hint: "TypeScript HTTP Framework with e2e type-safety"
+
+9. **apps/cli/src/utils/compatibility-rules.ts**: 
+   - Added "fets" to WORKERS_COMPATIBLE_BACKENDS constant
+   - Updated error messages to mention "Hono, Nitro, or feTS"
+
+10. **apps/cli/test/fets.test.ts**: Created comprehensive test suite (13 tests):
+    - Tests for valid feTS configurations with different runtimes (node, bun, workers)
+    - Tests for frontend combinations (TanStack Router, Next.js, TanStack Start, Nuxt)
+    - Tests for API layer combinations (tRPC, oRPC, none)
+    - Tests for authentication (better-auth)
+    - Tests for database/ORM combinations (postgres/drizzle, mysql/prisma)
+    - Tests for project structure validation
+
+**Test Results:**
+- All 13 feTS-specific tests pass
+- Linting passes for all modified files
+
+**Key Features:**
+- Full feTS server structure with createRouter and Response from fets
+- Built-in OpenAPI documentation at /docs via Swagger UI
+- tRPC integration via fetch request handler adapter
+- oRPC integration via fetch handlers with OpenAPI reference
+- Better-Auth integration via native request handler
+- AI SDK integration with streaming responses
+- CORS middleware wrapper for Node.js and Bun runtimes
+- Multi-runtime support: Node.js, Bun, and Cloudflare Workers
+
+**Important Notes:**
+- feTS supports all three runtimes: node, bun, and workers
+- Uses createServer from node:http for Node.js
+- Uses Bun.serve for Bun runtime
+- Exports default router for Cloudflare Workers
+- Creates proper feTS project structure compatible with Better-Fullstack's tRPC/oRPC/Better-Auth ecosystem
+- feTS is developed by The Guild (same team behind GraphQL Yoga, GraphQL Mesh, etc.)
+
+**Framework Support:**
+- Runtime: node, bun, workers (all three supported)
+- API: trpc, orpc, none
+- Auth: better-auth, none
+- Works with all web frontends

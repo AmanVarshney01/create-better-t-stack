@@ -318,6 +318,13 @@ export const TECH_OPTIONS: Record<
       color: "from-cyan-500 to-teal-700",
     },
     {
+      id: "fets",
+      name: "feTS",
+      description: "TypeScript HTTP Framework with e2e type-safety",
+      icon: "/icon/fets.svg",
+      color: "from-blue-600 to-cyan-700",
+    },
+    {
       id: "convex",
       name: "Convex",
       description: "Reactive backend-as-a-service",

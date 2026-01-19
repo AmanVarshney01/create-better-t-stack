@@ -14,6 +14,7 @@ export const BackendSchema = z
     "express",
     "fastify",
     "elysia",
+    "fets",
     "nestjs",
     "adonisjs",
     "nitro",
