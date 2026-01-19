@@ -1445,3 +1445,54 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Sequelize ORM Implementation
+
+### Task: Implement Sequelize as an ORM option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "sequelize" to ORMSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Sequelize dependency versions:
+   - sequelize: ^6.37.5
+   - sequelize-typescript: ^2.1.6
+   - sqlite3: ^5.1.7
+3. **apps/cli/src/prompts/orm.ts**: Added Sequelize option with description "Mature ORM with wide adoption"
+4. **apps/cli/src/utils/config-validation.ts**: Added Sequelize validation rules:
+   - Sequelize does not support MongoDB
+   - Updated error messages to include sequelize as valid ORM option
+5. **packages/template-generator/src/processors/db-deps.ts**: Added processSequelizeDeps function:
+   - SQLite: sequelize, sequelize-typescript, sqlite3
+   - PostgreSQL: sequelize, sequelize-typescript, pg
+   - MySQL: sequelize, sequelize-typescript, mysql2
+6. **packages/template-generator/src/processors/examples-deps.ts**: Added Sequelize to todo example dependencies
+7. **packages/template-generator/templates/db/sequelize/**: Created Sequelize templates:
+   - sqlite/src/index.ts.hbs - SQLite dialect configuration with file storage
+   - postgres/src/index.ts.hbs - PostgreSQL dialect configuration with SSL for Neon
+   - mysql/src/index.ts.hbs - MySQL dialect configuration with SSL for PlanetScale
+   - base/src/models/index.ts.hbs - Model exports with conditional auth/todo models
+8. **apps/web/src/lib/constant.ts**: Added Sequelize to web builder ORM options with blue icon
+9. **apps/cli/test/database-orm.test.ts**: Added Sequelize tests:
+   - Valid combinations: sqlite+sequelize, postgres+sequelize, mysql+sequelize
+   - Invalid combination: mongodb+sequelize (should fail)
+   - Invalid combination: none+sequelize (should fail)
+
+### Features:
+- Sequelize ORM with sequelize-typescript for TypeScript decorators
+- Support for SQLite, PostgreSQL, and MySQL databases
+- Database-specific dialect configurations
+- Database-specific SSL configurations (Neon for PostgreSQL, PlanetScale for MySQL)
+- Auto-sync and model loading configuration
+- Full CLI integration with prompts and validation
+- Full web builder UI integration
+- Compatible with Better-Auth and todo examples
+
+### Technical Notes:
+- Sequelize is one of the most mature and widely adopted ORMs for Node.js
+- Uses sequelize-typescript for TypeScript decorator-based model definitions
+- Uses dialect-specific drivers (sqlite3, pg, mysql2)
+- Configuration uses Sequelize constructor with dialect options
+- Model files are auto-loaded from the models directory
+- All 44 database-orm tests pass
+
+### Status: COMPLETE
+

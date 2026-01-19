@@ -39,6 +39,8 @@ function setupTodoDependencies(vfs: VirtualFileSystem, config: ProjectConfig): v
     addPackageDependency({ vfs, packagePath: apiPkgPath, dependencies: ["kysely"] });
   } else if (orm === "mikroorm") {
     addPackageDependency({ vfs, packagePath: apiPkgPath, dependencies: ["@mikro-orm/core"] });
+  } else if (orm === "sequelize") {
+    addPackageDependency({ vfs, packagePath: apiPkgPath, dependencies: ["sequelize"] });
   }
 }
 

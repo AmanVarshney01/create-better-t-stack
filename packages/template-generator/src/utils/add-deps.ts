@@ -70,6 +70,11 @@ export const dependencyVersionMap = {
   "@mikro-orm/mysql": "^6.5.3",
   "@mikro-orm/better-sqlite": "^6.5.3",
 
+  // Sequelize
+  sequelize: "^6.37.5",
+  "sequelize-typescript": "^2.1.6",
+  sqlite3: "^5.1.7",
+
   "vite-plugin-pwa": "^1.0.1",
   "@vite-pwa/assets-generator": "^1.0.0",
 

@@ -417,6 +417,13 @@ export const TECH_OPTIONS: Record<
       color: "from-cyan-500 to-cyan-700",
     },
     {
+      id: "sequelize",
+      name: "Sequelize",
+      description: "Mature ORM with wide adoption",
+      icon: "https://cdn.simpleicons.org/sequelize/52B0E7",
+      color: "from-blue-400 to-blue-600",
+    },
+    {
       id: "none",
       name: "No ORM",
       description: "Skip ORM integration",

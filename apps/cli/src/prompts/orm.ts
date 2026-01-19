@@ -35,6 +35,11 @@ const ormOptions = {
     label: "MikroORM",
     hint: "Data Mapper ORM for DDD",
   },
+  sequelize: {
+    value: "sequelize" as const,
+    label: "Sequelize",
+    hint: "Mature ORM with wide adoption",
+  },
 };
 
 export async function getORMChoice(
@@ -60,6 +65,7 @@ export async function getORMChoice(
           ormOptions.typeorm,
           ormOptions.kysely,
           ormOptions.mikroorm,
+          ormOptions.sequelize,
         ];
 
   const response = await navigableSelect<ORM>({

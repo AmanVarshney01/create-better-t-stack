@@ -1,0 +1,24 @@
+import { Sequelize } from "sequelize-typescript";
+import { env } from "@{{projectName}}/env/server";
+
+export const sequelize = new Sequelize(env.DATABASE_URL, {
+	dialect: "postgres",
+	logging: false,
+	models: [__dirname + "/models/**/*.ts"],
+{{#if (eq dbSetup "neon")}}
+	dialectOptions: {
+		ssl: {
+			require: true,
+			rejectUnauthorized: false,
+		},
+	},
+{{/if}}
+});
+
+export const initializeDatabase = async () => {
+	await sequelize.authenticate();
+	await sequelize.sync();
+	return sequelize;
+};
+
+export const db = sequelize;

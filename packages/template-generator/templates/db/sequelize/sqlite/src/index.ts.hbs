@@ -1,0 +1,19 @@
+import { Sequelize } from "sequelize-typescript";
+import { env } from "@{{projectName}}/env/server";
+
+const dbPath = env.DATABASE_URL.replace("file:", "");
+
+export const sequelize = new Sequelize({
+	dialect: "sqlite",
+	storage: dbPath,
+	logging: false,
+	models: [__dirname + "/models/**/*.ts"],
+});
+
+export const initializeDatabase = async () => {
+	await sequelize.authenticate();
+	await sequelize.sync();
+	return sequelize;
+};
+
+export const db = sequelize;
