@@ -63,7 +63,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 
 ## **ORMs & DATABASE**
 
-- [ ] **TypeORM** - Traditional ORM with Active Record/Data Mapper
+- [x] **TypeORM** - Traditional ORM with Active Record/Data Mapper
 - [ ] **MikroORM** - Data Mapper ORM for DDD
 - [ ] **Sequelize** - Mature ORM with wide adoption
 - [ ] **Kysely** - Type-safe SQL query builder

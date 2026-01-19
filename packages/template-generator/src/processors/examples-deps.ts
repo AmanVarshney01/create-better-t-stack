@@ -33,6 +33,8 @@ function setupTodoDependencies(vfs: VirtualFileSystem, config: ProjectConfig): v
     addPackageDependency({ vfs, packagePath: apiPkgPath, dependencies: ["@prisma/client"] });
   } else if (orm === "mongoose") {
     addPackageDependency({ vfs, packagePath: apiPkgPath, dependencies: ["mongoose"] });
+  } else if (orm === "typeorm") {
+    addPackageDependency({ vfs, packagePath: apiPkgPath, dependencies: ["typeorm"] });
   }
 }
 

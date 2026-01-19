@@ -4,7 +4,9 @@ export const DatabaseSchema = z
   .enum(["none", "sqlite", "postgres", "mysql", "mongodb"])
   .describe("Database type");
 
-export const ORMSchema = z.enum(["drizzle", "prisma", "mongoose", "none"]).describe("ORM type");
+export const ORMSchema = z
+  .enum(["drizzle", "prisma", "mongoose", "typeorm", "none"])
+  .describe("ORM type");
 
 export const BackendSchema = z
   .enum(["hono", "express", "fastify", "elysia", "nestjs", "convex", "self", "none"])

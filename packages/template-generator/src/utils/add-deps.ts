@@ -55,6 +55,11 @@ export const dependencyVersionMap = {
 
   mongoose: "^8.14.0",
 
+  // TypeORM
+  typeorm: "^0.3.23",
+  "better-sqlite3": "^11.9.1",
+  "@types/better-sqlite3": "^7.6.13",
+
   "vite-plugin-pwa": "^1.0.1",
   "@vite-pwa/assets-generator": "^1.0.0",
 

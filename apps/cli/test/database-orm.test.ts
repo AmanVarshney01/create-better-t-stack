@@ -10,14 +10,17 @@ describe("Database and ORM Combinations", () => {
       // SQLite combinations
       { database: "sqlite" as Database, orm: "drizzle" as ORM },
       { database: "sqlite" as Database, orm: "prisma" as ORM },
+      { database: "sqlite" as Database, orm: "typeorm" as ORM },
 
       // PostgreSQL combinations
       { database: "postgres" as Database, orm: "drizzle" as ORM },
       { database: "postgres" as Database, orm: "prisma" as ORM },
+      { database: "postgres" as Database, orm: "typeorm" as ORM },
 
       // MySQL combinations
       { database: "mysql" as Database, orm: "drizzle" as ORM },
       { database: "mysql" as Database, orm: "prisma" as ORM },
+      { database: "mysql" as Database, orm: "typeorm" as ORM },
 
       // MongoDB combinations
       { database: "mongodb" as Database, orm: "mongoose" as ORM },
@@ -64,6 +67,13 @@ describe("Database and ORM Combinations", () => {
         error: "Drizzle ORM does not support MongoDB",
       },
 
+      // MongoDB with TypeORM (not supported)
+      {
+        database: "mongodb" as Database,
+        orm: "typeorm" as ORM,
+        error: "TypeORM does not support MongoDB in Better-T-Stack",
+      },
+
       // Mongoose with non-MongoDB
       {
         database: "sqlite" as Database,
@@ -102,6 +112,11 @@ describe("Database and ORM Combinations", () => {
       {
         database: "none" as Database,
         orm: "prisma" as ORM,
+        error: "ORM selection requires a database",
+      },
+      {
+        database: "none" as Database,
+        orm: "typeorm" as ORM,
         error: "ORM selection requires a database",
       },
     ];

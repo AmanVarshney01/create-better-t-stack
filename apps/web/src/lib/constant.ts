@@ -379,6 +379,13 @@ export const TECH_OPTIONS: Record<
       color: "from-blue-400 to-blue-600",
     },
     {
+      id: "typeorm",
+      name: "TypeORM",
+      description: "Traditional ORM with Active Record/Data Mapper",
+      icon: "https://cdn.simpleicons.org/typeorm/E83524",
+      color: "from-red-400 to-red-600",
+    },
+    {
       id: "none",
       name: "No ORM",
       description: "Skip ORM integration",

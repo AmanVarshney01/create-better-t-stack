@@ -961,3 +961,55 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: TypeORM ORM Implementation
+
+### Task: Implement TypeORM as an ORM option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "typeorm" to ORMSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added TypeORM dependency versions:
+   - typeorm: ^0.3.23
+   - better-sqlite3: ^11.9.1
+   - @types/better-sqlite3: ^7.6.13
+   - (reflect-metadata already exists for NestJS)
+3. **apps/cli/src/prompts/orm.ts**: Added TypeORM option with description "Traditional ORM with Active Record/Data Mapper"
+4. **apps/cli/src/utils/config-validation.ts**: Added TypeORM validation rules:
+   - TypeORM does not support MongoDB (similar to Drizzle)
+   - Updated error messages to include TypeORM as valid option
+5. **packages/template-generator/src/processors/db-deps.ts**: Added processTypeORMDeps function:
+   - SQLite: typeorm, reflect-metadata, better-sqlite3
+   - PostgreSQL: typeorm, reflect-metadata, pg
+   - MySQL: typeorm, reflect-metadata, mysql2
+6. **packages/template-generator/src/processors/examples-deps.ts**: Added TypeORM to todo example dependencies
+7. **packages/template-generator/templates/db/typeorm/**: Created TypeORM templates:
+   - base/src/entities/index.ts.hbs - Entity exports with conditional auth/todo entities
+   - sqlite/src/index.ts.hbs - SQLite DataSource configuration with better-sqlite3
+   - postgres/src/index.ts.hbs - PostgreSQL DataSource configuration with SSL for Neon
+   - mysql/src/index.ts.hbs - MySQL DataSource configuration with SSL for PlanetScale
+8. **apps/web/src/lib/constant.ts**: Added TypeORM to web builder ORM options with red icon
+9. **apps/cli/test/database-orm.test.ts**: Added TypeORM tests:
+   - Valid combinations: sqlite+typeorm, postgres+typeorm, mysql+typeorm
+   - Invalid combination: mongodb+typeorm (should fail)
+   - Invalid combination: none+typeorm (should fail)
+
+### Features:
+- TypeORM with Active Record/Data Mapper pattern support
+- Support for SQLite, PostgreSQL, and MySQL databases
+- DataSource configuration with auto-sync and migrations support
+- Database-specific SSL configurations (Neon for PostgreSQL, PlanetScale for MySQL)
+- Full CLI integration with prompts and validation
+- Full web builder UI integration
+- Compatible with Better-Auth and todo examples
+
+### Technical Notes:
+- TypeORM uses the DataSource pattern for database connections
+- Uses better-sqlite3 driver for SQLite (synchronous, performant)
+- Uses pg driver for PostgreSQL
+- Uses mysql2 driver for MySQL
+- reflect-metadata is required for TypeORM decorators (already included for NestJS)
+- synchronize: true is enabled for development (should be disabled in production)
+- All 29 database-orm tests pass
+
+### Status: COMPLETE
+

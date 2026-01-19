@@ -1,0 +1,27 @@
+import "reflect-metadata";
+import { DataSource } from "typeorm";
+import { env } from "@{{projectName}}/env/server";
+
+export const AppDataSource = new DataSource({
+	type: "postgres",
+	url: env.DATABASE_URL,
+	synchronize: true,
+	logging: false,
+	entities: ["src/entities/**/*.ts"],
+	migrations: ["src/migrations/**/*.ts"],
+	subscribers: ["src/subscribers/**/*.ts"],
+{{#if (eq dbSetup "neon")}}
+	ssl: {
+		rejectUnauthorized: false,
+	},
+{{/if}}
+});
+
+export const initializeDatabase = async () => {
+	if (!AppDataSource.isInitialized) {
+		await AppDataSource.initialize();
+	}
+	return AppDataSource;
+};
+
+export const db = AppDataSource;

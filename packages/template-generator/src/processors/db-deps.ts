@@ -21,6 +21,8 @@ export function processDatabaseDeps(vfs: VirtualFileSystem, config: ProjectConfi
     processDrizzleDeps(vfs, config, dbPkgPath, webPkgPath, webExists);
   } else if (orm === "mongoose") {
     addPackageDependency({ vfs, packagePath: dbPkgPath, dependencies: ["mongoose"] });
+  } else if (orm === "typeorm") {
+    processTypeORMDeps(vfs, config, dbPkgPath);
   }
 }
 
@@ -133,6 +135,41 @@ function processDrizzleDeps(
           ? ["drizzle-orm", "@planetscale/database"]
           : ["drizzle-orm", "mysql2"],
       devDependencies: ["drizzle-kit"],
+    });
+  }
+}
+
+function processTypeORMDeps(
+  vfs: VirtualFileSystem,
+  config: ProjectConfig,
+  dbPkgPath: string,
+): void {
+  const { database } = config;
+
+  const deps: AvailableDependencies[] = ["typeorm", "reflect-metadata"];
+
+  if (database === "sqlite") {
+    deps.push("better-sqlite3");
+    addPackageDependency({
+      vfs,
+      packagePath: dbPkgPath,
+      dependencies: deps,
+      devDependencies: ["@types/better-sqlite3"],
+    });
+  } else if (database === "postgres") {
+    deps.push("pg");
+    addPackageDependency({
+      vfs,
+      packagePath: dbPkgPath,
+      dependencies: deps,
+      devDependencies: ["@types/pg"],
+    });
+  } else if (database === "mysql") {
+    deps.push("mysql2");
+    addPackageDependency({
+      vfs,
+      packagePath: dbPkgPath,
+      dependencies: deps,
     });
   }
 }

@@ -20,6 +20,11 @@ const ormOptions = {
     label: "Drizzle",
     hint: "Lightweight and performant TypeScript ORM",
   },
+  typeorm: {
+    value: "typeorm" as const,
+    label: "TypeORM",
+    hint: "Traditional ORM with Active Record/Data Mapper",
+  },
 };
 
 export async function getORMChoice(
@@ -39,7 +44,7 @@ export async function getORMChoice(
   const options =
     database === "mongodb"
       ? [ormOptions.prisma, ormOptions.mongoose]
-      : [ormOptions.drizzle, ormOptions.prisma];
+      : [ormOptions.drizzle, ormOptions.prisma, ormOptions.typeorm];
 
   const response = await navigableSelect<ORM>({
     message: "Select ORM",
