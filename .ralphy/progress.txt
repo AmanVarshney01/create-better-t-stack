@@ -1067,3 +1067,65 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Paddle Payments Integration
+
+### Task: Implement Paddle as a payment provider option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "paddle" to PaymentsSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Paddle dependency versions:
+   - @paddle/paddle-node-sdk: ^1.8.0 (server-side SDK)
+   - @paddle/paddle-js: ^1.3.0 (client-side SDK)
+3. **packages/template-generator/src/processors/payments-deps.ts**: Added Paddle dependency processing:
+   - Server-side @paddle/paddle-node-sdk for backend (apps/server)
+   - Server-side @paddle/paddle-node-sdk for auth package (packages/auth)
+   - Client-side @paddle/paddle-js for web frontends
+4. **packages/template-generator/src/processors/env-vars.ts**: Added Paddle environment variables:
+   - PADDLE_API_KEY (server-side API key)
+   - PADDLE_WEBHOOK_SECRET (webhook signing secret)
+   - PADDLE_ENVIRONMENT (sandbox/production)
+   - VITE_PADDLE_CLIENT_TOKEN / NEXT_PUBLIC_PADDLE_CLIENT_TOKEN / etc. (client-side, framework-dependent)
+   - VITE_PADDLE_ENVIRONMENT / NEXT_PUBLIC_PADDLE_ENVIRONMENT / etc. (client-side environment)
+5. **packages/template-generator/templates/payments/paddle/**: Created Paddle templates:
+   - server/base/src/lib/paddle.ts.hbs - Server-side SDK with products, prices, customers, subscriptions, transactions, and webhook utilities
+   - web/react/next/src/app/success/page.tsx.hbs - Next.js success page
+   - web/react/tanstack-router/src/routes/success.tsx.hbs - TanStack Router success page
+   - web/react/react-router/src/routes/success.tsx.hbs - React Router success page
+   - web/react/tanstack-start/src/routes/success.tsx.hbs - TanStack Start success page
+   - web/nuxt/app/pages/success.vue.hbs - Nuxt success page
+   - web/svelte/src/routes/success/+page.svelte.hbs - Svelte success page
+   - web/solid/src/routes/success.tsx.hbs - Solid success page
+6. **apps/web/src/lib/constant.ts**: Added Paddle to web builder payments options with slate/gray icon
+7. **apps/cli/test/payments.test.ts**: Added comprehensive Paddle tests:
+   - Paddle with TanStack Router, React Router, Next.js, TanStack Start
+   - Paddle with different backends (Hono, Express, Fastify, Elysia)
+   - Paddle with non-React frontends (Nuxt, Svelte, Solid)
+
+### Features:
+- Paddle MoR (Merchant of Record) platform with global tax compliance
+- Server-side SDK (@paddle/paddle-node-sdk) for secure API calls
+- Client-side SDK (@paddle/paddle-js) for Paddle.js checkout overlay
+- Product and price management
+- Customer management (list, get, create)
+- Subscription management (list, get, cancel, pause, resume)
+- Transaction management (list, get)
+- Webhook signature verification using Paddle SDK's built-in unmarshal function
+- Support for sandbox and production environments
+- Support for all React-based frontends (TanStack Router, React Router, TanStack Start, Next.js)
+- Support for non-React frontends (Nuxt, Svelte, Solid)
+- Support for all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+- Full web builder UI integration
+- Environment variables with helpful comments
+
+### Technical Notes:
+- Paddle is a Merchant of Record, handling global sales tax, VAT, and compliance
+- The server SDK handles API operations securely (API key must not be exposed)
+- The client SDK (@paddle/paddle-js) provides the checkout overlay
+- Uses official @paddle/paddle-node-sdk (v1.8.0) and @paddle/paddle-js (v1.3.0)
+- Webhook verification uses Paddle SDK's built-in unmarshal method
+- Success pages show transaction_id from Paddle checkout redirect
+- All 35 payments tests pass
+
+### Status: COMPLETE
+

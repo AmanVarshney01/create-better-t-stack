@@ -1,0 +1,21 @@
+import { createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/success")({
+	component: SuccessPage,
+});
+
+function SuccessPage() {
+	const { transaction_id } = Route.useSearch<{ transaction_id?: string }>();
+
+	return (
+		<div className="container mx-auto px-4 py-8">
+			<h1 className="text-2xl font-bold mb-4">Payment Successful!</h1>
+			<p className="text-gray-600 mb-4">
+				Thank you for your purchase. Your payment has been processed successfully.
+			</p>
+			{transaction_id && (
+				<p className="text-sm text-gray-500">Transaction ID: {transaction_id}</p>
+			)}
+		</div>
+	);
+}

@@ -202,6 +202,35 @@ function buildClientVars(
     });
   }
 
+  // Paddle client token for client-side
+  if (payments === "paddle") {
+    let paddleTokenName = "VITE_PADDLE_CLIENT_TOKEN";
+    if (hasNextJs) paddleTokenName = "NEXT_PUBLIC_PADDLE_CLIENT_TOKEN";
+    else if (hasNuxt) paddleTokenName = "NUXT_PUBLIC_PADDLE_CLIENT_TOKEN";
+    else if (hasSvelte) paddleTokenName = "PUBLIC_PADDLE_CLIENT_TOKEN";
+
+    vars.push(
+      {
+        key: paddleTokenName,
+        value: "",
+        condition: true,
+        comment: "Paddle client-side token - get it at Paddle > Developer Tools > Authentication",
+      },
+      {
+        key: hasNextJs
+          ? "NEXT_PUBLIC_PADDLE_ENVIRONMENT"
+          : hasNuxt
+            ? "NUXT_PUBLIC_PADDLE_ENVIRONMENT"
+            : hasSvelte
+              ? "PUBLIC_PADDLE_ENVIRONMENT"
+              : "VITE_PADDLE_ENVIRONMENT",
+        value: "sandbox",
+        condition: true,
+        comment: "Paddle environment - use 'sandbox' for testing, 'production' for live",
+      },
+    );
+  }
+
   return vars;
 }
 
@@ -474,6 +503,24 @@ function buildServerVars(
       value: "",
       condition: payments === "lemon-squeezy",
       comment: "Lemon Squeezy webhook signing secret - get it when creating a webhook",
+    },
+    {
+      key: "PADDLE_API_KEY",
+      value: "",
+      condition: payments === "paddle",
+      comment: "Paddle API key - get it at Paddle > Developer Tools > Authentication",
+    },
+    {
+      key: "PADDLE_WEBHOOK_SECRET",
+      value: "",
+      condition: payments === "paddle",
+      comment: "Paddle webhook secret key - get it when creating a notification destination",
+    },
+    {
+      key: "PADDLE_ENVIRONMENT",
+      value: "sandbox",
+      condition: payments === "paddle",
+      comment: "Paddle environment - use 'sandbox' for testing, 'production' for live",
     },
     {
       key: "RESEND_API_KEY",

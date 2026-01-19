@@ -1,0 +1,174 @@
+import {
+	Paddle,
+	Environment,
+	type Product,
+	type Price,
+	type Subscription,
+	type Customer,
+	type Transaction,
+	type EventEntity,
+} from "@paddle/paddle-node-sdk";
+import { env } from "@{{projectName}}/env/server";
+
+// Initialize Paddle with your API key
+const paddle = new Paddle(env.PADDLE_API_KEY, {
+	environment: env.PADDLE_ENVIRONMENT === "production" ? Environment.production : Environment.sandbox,
+});
+
+export { paddle };
+
+// Products
+export async function listProducts(): Promise<Product[]> {
+	const products: Product[] = [];
+	const productCollection = paddle.products.list();
+
+	for await (const product of productCollection) {
+		products.push(product);
+	}
+
+	return products;
+}
+
+export async function getProduct(productId: string): Promise<Product> {
+	return paddle.products.get(productId);
+}
+
+// Prices
+export async function listPrices(productId?: string): Promise<Price[]> {
+	const prices: Price[] = [];
+	const priceCollection = paddle.prices.list(productId ? { productId: [productId] } : undefined);
+
+	for await (const price of priceCollection) {
+		prices.push(price);
+	}
+
+	return prices;
+}
+
+export async function getPrice(priceId: string): Promise<Price> {
+	return paddle.prices.get(priceId);
+}
+
+// Customers
+export async function listCustomers(email?: string): Promise<Customer[]> {
+	const customers: Customer[] = [];
+	const customerCollection = paddle.customers.list(email ? { email: [email] } : undefined);
+
+	for await (const customer of customerCollection) {
+		customers.push(customer);
+	}
+
+	return customers;
+}
+
+export async function getCustomer(customerId: string): Promise<Customer> {
+	return paddle.customers.get(customerId);
+}
+
+export async function createCustomer(params: {
+	email: string;
+	name?: string;
+	locale?: string;
+}): Promise<Customer> {
+	return paddle.customers.create(params);
+}
+
+// Subscriptions
+export async function listSubscriptions(customerId?: string): Promise<Subscription[]> {
+	const subscriptions: Subscription[] = [];
+	const subscriptionCollection = paddle.subscriptions.list(
+		customerId ? { customerId: [customerId] } : undefined
+	);
+
+	for await (const subscription of subscriptionCollection) {
+		subscriptions.push(subscription);
+	}
+
+	return subscriptions;
+}
+
+export async function getSubscription(subscriptionId: string): Promise<Subscription> {
+	return paddle.subscriptions.get(subscriptionId);
+}
+
+export async function cancelSubscription(
+	subscriptionId: string,
+	effectiveFrom?: "immediately" | "next_billing_period"
+): Promise<Subscription> {
+	return paddle.subscriptions.cancel(subscriptionId, {
+		effectiveFrom: effectiveFrom ?? "next_billing_period",
+	});
+}
+
+export async function pauseSubscription(subscriptionId: string): Promise<Subscription> {
+	return paddle.subscriptions.pause(subscriptionId, {});
+}
+
+export async function resumeSubscription(subscriptionId: string): Promise<Subscription> {
+	return paddle.subscriptions.resume(subscriptionId, {
+		effectiveFrom: "immediately",
+	});
+}
+
+// Transactions
+export async function listTransactions(customerId?: string): Promise<Transaction[]> {
+	const transactions: Transaction[] = [];
+	const transactionCollection = paddle.transactions.list(
+		customerId ? { customerId: [customerId] } : undefined
+	);
+
+	for await (const transaction of transactionCollection) {
+		transactions.push(transaction);
+	}
+
+	return transactions;
+}
+
+export async function getTransaction(transactionId: string): Promise<Transaction> {
+	return paddle.transactions.get(transactionId);
+}
+
+// Webhook verification
+export function verifyWebhookSignature(
+	requestBody: string,
+	signature: string
+): EventEntity | null {
+	try {
+		// Paddle SDK handles webhook verification internally
+		const event = paddle.webhooks.unmarshal(requestBody, env.PADDLE_WEBHOOK_SECRET, signature);
+		return event;
+	} catch (error) {
+		console.error("Webhook verification failed:", error);
+		return null;
+	}
+}
+
+// Webhook event types
+export type WebhookEventType =
+	| "transaction.billed"
+	| "transaction.canceled"
+	| "transaction.completed"
+	| "transaction.created"
+	| "transaction.paid"
+	| "transaction.past_due"
+	| "transaction.payment_failed"
+	| "transaction.ready"
+	| "transaction.updated"
+	| "subscription.activated"
+	| "subscription.canceled"
+	| "subscription.created"
+	| "subscription.imported"
+	| "subscription.past_due"
+	| "subscription.paused"
+	| "subscription.resumed"
+	| "subscription.trialing"
+	| "subscription.updated"
+	| "customer.created"
+	| "customer.imported"
+	| "customer.updated"
+	| "product.created"
+	| "product.imported"
+	| "product.updated"
+	| "price.created"
+	| "price.imported"
+	| "price.updated";

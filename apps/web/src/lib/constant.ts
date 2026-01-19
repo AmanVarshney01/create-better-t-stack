@@ -552,6 +552,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "paddle",
+      name: "Paddle",
+      description: "MoR platform with global tax compliance",
+      icon: "https://cdn.simpleicons.org/paddle/3D3D3D",
+      color: "from-slate-500 to-slate-700",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Payments",
       description: "Skip payments integration",

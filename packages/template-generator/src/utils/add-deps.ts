@@ -300,6 +300,10 @@ export const dependencyVersionMap = {
 
   // Payments - Lemon Squeezy
   "@lemonsqueezy/lemonsqueezy.js": "^4.0.0",
+
+  // Payments - Paddle
+  "@paddle/paddle-node-sdk": "^1.8.0",
+  "@paddle/paddle-js": "^1.3.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

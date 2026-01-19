@@ -1,0 +1,20 @@
+export default async function SuccessPage({
+	searchParams,
+}: {
+	searchParams: Promise<{ transaction_id?: string }>
+}) {
+	const params = await searchParams;
+	const transactionId = params.transaction_id;
+
+	return (
+		<div className="container mx-auto px-4 py-8">
+			<h1 className="text-2xl font-bold mb-4">Payment Successful!</h1>
+			<p className="text-gray-600 mb-4">
+				Thank you for your purchase. Your payment has been processed successfully.
+			</p>
+			{transactionId && (
+				<p className="text-sm text-gray-500">Transaction ID: {transactionId}</p>
+			)}
+		</div>
+	);
+}

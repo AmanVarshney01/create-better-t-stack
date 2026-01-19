@@ -109,4 +109,49 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
       });
     }
   }
+
+  if (payments === "paddle") {
+    const serverPath = "apps/server/package.json";
+
+    // Add server-side Paddle SDK
+    if (vfs.exists(serverPath)) {
+      addPackageDependency({
+        vfs,
+        packagePath: serverPath,
+        dependencies: ["@paddle/paddle-node-sdk"],
+      });
+    }
+
+    // Also add to auth package if it exists (for webhook handling)
+    if (vfs.exists(authPath)) {
+      addPackageDependency({
+        vfs,
+        packagePath: authPath,
+        dependencies: ["@paddle/paddle-node-sdk"],
+      });
+    }
+
+    // Add client-side Paddle.js for web frontends
+    if (vfs.exists(webPath)) {
+      const hasWebFrontend = frontend.some((f) =>
+        [
+          "react-router",
+          "tanstack-router",
+          "tanstack-start",
+          "next",
+          "nuxt",
+          "svelte",
+          "solid",
+        ].includes(f),
+      );
+
+      if (hasWebFrontend) {
+        addPackageDependency({
+          vfs,
+          packagePath: webPath,
+          dependencies: ["@paddle/paddle-js"],
+        });
+      }
+    }
+  }
 }

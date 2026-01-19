@@ -305,6 +305,150 @@ describe("Payments Options", () => {
     });
   });
 
+  describe("Paddle with React frontends", () => {
+    test("paddle with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "paddle-tanstack-router",
+          frontend: ["tanstack-router"],
+          payments: "paddle",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("paddle with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "paddle-react-router",
+          frontend: ["react-router"],
+          payments: "paddle",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("paddle with Next.js fullstack", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "paddle-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          payments: "paddle",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("paddle with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "paddle-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          payments: "paddle",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Paddle with different backends", () => {
+    test("paddle with Hono backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "paddle-hono",
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          payments: "paddle",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("paddle with Express backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "paddle-express",
+          frontend: ["tanstack-router"],
+          backend: "express",
+          runtime: "node",
+          payments: "paddle",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("paddle with Fastify backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "paddle-fastify",
+          frontend: ["tanstack-router"],
+          backend: "fastify",
+          runtime: "node",
+          payments: "paddle",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("paddle with Elysia backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "paddle-elysia",
+          frontend: ["tanstack-router"],
+          backend: "elysia",
+          runtime: "bun",
+          payments: "paddle",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Paddle with non-React frontends", () => {
+    test("paddle with Nuxt", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "paddle-nuxt",
+          frontend: ["nuxt"],
+          backend: "hono",
+          api: "none",
+          payments: "paddle",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("paddle with Svelte", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "paddle-svelte",
+          frontend: ["svelte"],
+          backend: "hono",
+          api: "none",
+          payments: "paddle",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("paddle with Solid", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "paddle-solid",
+          frontend: ["solid"],
+          backend: "hono",
+          api: "none",
+          payments: "paddle",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("No payments option", () => {
     test("none payments option", async () => {
       const result = await runTRPCTest(
