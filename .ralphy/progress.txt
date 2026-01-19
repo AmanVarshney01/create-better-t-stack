@@ -77,3 +77,26 @@
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Remix Frontend Framework - Documentation Update
+
+### Task: Mark Remix as complete in PRD (already implemented as React Router v7)
+
+### Background:
+Remix has been merged into React Router v7 framework mode. The existing "React Router" option in Better-Fullstack uses React Router v7 framework mode, which includes all Remix functionality:
+- File-based routing with `@react-router/fs-routes`
+- Server-side rendering with `@react-router/node` and `@react-router/serve`
+- Data loading with loaders and actions
+- Full-stack framework capabilities via `@react-router/dev` Vite plugin
+
+### Changes Made:
+1. **PRD.md**: Updated Remix entry from `[ ]` to `[x]` with note explaining it's implemented as "React Router" (React Router v7 framework mode, the Remix successor)
+
+### Rationale:
+- Remix v3 was cancelled; React Router v7 is the official successor
+- The codebase already has full React Router v7 framework mode support under the "react-router" frontend option
+- Users looking for "Remix" functionality will find it in the "React Router" option
+- No new code implementation needed - this is a documentation update to reflect existing functionality
+
+### Status: COMPLETE
+

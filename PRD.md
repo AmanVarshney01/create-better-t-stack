@@ -32,7 +32,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 
 ## **FRONTEND FRAMEWORKS**
 
-- [ ] **Remix** - Full-stack framework with SSR focus, now under Shopify
+- [x] **Remix** - Full-stack framework with SSR focus _(implemented as "React Router" - Remix merged into React Router v7 framework mode)_
 - [ ] **Qwik** - Resumable framework with instant load times
 - [ ] **Angular** - Enterprise-grade framework by Google
 - [ ] **RedwoodJS** - Opinionated fullstack (React + GraphQL + Prisma)
