@@ -124,7 +124,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 - [x] **Postmark** - Transactional email service
 - [x] **SendGrid** - Email delivery service
 - [x] **AWS SES** - Amazon's email service
-- [ ] **Mailgun** - Email API service
+- [x] **Mailgun** - Email API service
 
 ---
 

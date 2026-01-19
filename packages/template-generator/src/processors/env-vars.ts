@@ -620,6 +620,24 @@ function buildServerVars(
       comment: "Email address to send from (must be verified in AWS SES)",
     },
     {
+      key: "MAILGUN_API_KEY",
+      value: "",
+      condition: email === "mailgun",
+      comment: "Mailgun API key - get it at https://app.mailgun.com/app/account/security/api_keys",
+    },
+    {
+      key: "MAILGUN_DOMAIN",
+      value: "",
+      condition: email === "mailgun",
+      comment: "Mailgun sending domain (e.g., mg.yourdomain.com)",
+    },
+    {
+      key: "MAILGUN_FROM_EMAIL",
+      value: "noreply@example.com",
+      condition: email === "mailgun",
+      comment: "Email address to send from (must be authorized in Mailgun)",
+    },
+    {
       key: "CORS_ORIGIN",
       value: corsOrigin,
       condition: true,

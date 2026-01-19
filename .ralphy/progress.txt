@@ -2034,3 +2034,57 @@ Implemented AWS SES (@aws-sdk/client-ses) as a new email service option. AWS Sim
 - UTF-8 charset support for international content
 - Environment-based configuration (region, credentials, from address)
 - Compatible with all backends (hono, express, fastify, elysia, nestjs, self)
+
+
+---
+
+## Session: 2026-01-19
+
+### Task: Add Mailgun as email service option
+
+**Status:** ✅ Completed
+
+**Summary:**
+Implemented Mailgun (mailgun.js) as a new email service option. Mailgun is a powerful email API service used by many production applications for transactional and marketing emails.
+
+**Changes Made:**
+1. **packages/types/src/schemas.ts**: Added "mailgun" to EmailSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Mailgun dependencies:
+   - mailgun.js: ^10.2.3
+   - form-data: ^4.0.1
+3. **packages/template-generator/src/processors/email-deps.ts**: Added Mailgun dependency processing for server package
+4. **packages/template-generator/src/processors/env-vars.ts**: Added Mailgun environment variables:
+   - MAILGUN_API_KEY
+   - MAILGUN_DOMAIN
+   - MAILGUN_FROM_EMAIL
+5. **packages/template-generator/templates/email/mailgun/server/base/src/lib/email.ts.hbs**: Created Mailgun email utility template with:
+   - Mailgun client initialization with FormData
+   - sendEmail function for text/HTML emails with attachments
+   - sendBatchEmails function using recipient variables
+   - sendTemplateEmail function for Mailgun templates
+   - validateEmail function using Mailgun validation API
+   - Support for CC, BCC, reply-to, tags, and tracking options
+   - getMailgunClient function for advanced usage
+6. **apps/web/src/lib/constant.ts**: Added Mailgun to web builder email options with red gradient
+7. **apps/cli/test/email.test.ts**: Added comprehensive Mailgun tests:
+   - 4 tests for compatible backends (hono, express, fastify, elysia)
+   - 1 test for dependency verification (mailgun.js, form-data)
+   - 1 test for react-email exclusion
+   - 1 test for environment variable verification
+   - 2 tests for fullstack frameworks (next, tanstack-start)
+   - 1 test for nestjs backend
+   - Updated "All Email Options" test to include mailgun
+
+**Test Results:**
+- All 71 email tests pass (including 10+ new Mailgun tests)
+- TypeScript passes on all modified packages
+- Pre-existing TypeScript errors in config-prompts.ts unrelated to this change
+
+**Key Features:**
+- Official Mailgun JavaScript SDK (mailgun.js v10)
+- Simple and batch email sending
+- Mailgun template support with variables
+- Email validation API support
+- Tracking options (clicks, opens)
+- Environment-based configuration (API key, domain, from address)
+- Compatible with all backends (hono, express, fastify, elysia, nestjs, self)

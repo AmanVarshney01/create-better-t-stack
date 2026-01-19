@@ -313,6 +313,7 @@ describe("Email Configurations", () => {
       "postmark",
       "sendgrid",
       "aws-ses",
+      "mailgun",
       "none",
     ];
 
@@ -998,6 +999,225 @@ describe("Email Configurations", () => {
       const result = await runTRPCTest({
         projectName: "aws-ses-nestjs",
         email: "aws-ses",
+        backend: "nestjs",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+  });
+
+  describe("Mailgun Email", () => {
+    it("should work with mailgun + hono backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "mailgun-hono",
+        email: "mailgun",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that Mailgun dependencies were added
+      const serverPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "packages")
+        ?.children?.find((c: any) => c.name === "server")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (serverPackageJson?.content) {
+        const pkgJson = JSON.parse(serverPackageJson.content);
+        expect(pkgJson.dependencies?.["mailgun.js"]).toBeDefined();
+        expect(pkgJson.dependencies?.["form-data"]).toBeDefined();
+      }
+    });
+
+    it("should work with mailgun + express backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "mailgun-express",
+        email: "mailgun",
+        backend: "express",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should not include react-email components with mailgun", async () => {
+      const result = await runTRPCTest({
+        projectName: "mailgun-no-react-email",
+        email: "mailgun",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that react-email dependencies were NOT added for mailgun
+      const serverPackageJson = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "packages")
+        ?.children?.find((c: any) => c.name === "server")
+        ?.children?.find((c: any) => c.name === "package.json");
+
+      if (serverPackageJson?.content) {
+        const pkgJson = JSON.parse(serverPackageJson.content);
+        expect(pkgJson.dependencies?.["@react-email/components"]).toBeUndefined();
+        expect(pkgJson.dependencies?.["react-email"]).toBeUndefined();
+      }
+    });
+
+    const compatibleBackends: Backend[] = ["hono", "express", "fastify", "elysia"];
+
+    for (const backend of compatibleBackends) {
+      it(`should work with mailgun + ${backend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `mailgun-${backend}`,
+          email: "mailgun",
+          backend,
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          api: "trpc",
+          auth: "better-auth",
+          frontend: ["tanstack-router"],
+          addons: ["turborepo"],
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+    }
+
+    it("should add MAILGUN environment variables when email is mailgun", async () => {
+      const result = await runTRPCTest({
+        projectName: "mailgun-env-vars",
+        email: "mailgun",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that env variables were added
+      const serverDir = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "apps")
+        ?.children?.find((c: any) => c.name === "server");
+
+      const envFile = serverDir?.children?.find((c: any) => c.name === ".env");
+
+      if (envFile?.content) {
+        expect(envFile.content).toContain("MAILGUN_API_KEY");
+        expect(envFile.content).toContain("MAILGUN_DOMAIN");
+        expect(envFile.content).toContain("MAILGUN_FROM_EMAIL");
+      }
+    });
+
+    it("should work with mailgun + next.js fullstack", async () => {
+      const result = await runTRPCTest({
+        projectName: "mailgun-next",
+        email: "mailgun",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with mailgun + tanstack-start fullstack", async () => {
+      const result = await runTRPCTest({
+        projectName: "mailgun-tanstack-start",
+        email: "mailgun",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-start"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with mailgun + nestjs backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "mailgun-nestjs",
+        email: "mailgun",
         backend: "nestjs",
         runtime: "node",
         database: "sqlite",

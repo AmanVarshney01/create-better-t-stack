@@ -57,6 +57,15 @@ export function processEmailDeps(vfs: VirtualFileSystem, config: ProjectConfig):
     });
   }
 
+  // Add Mailgun for mailgun option
+  if (email === "mailgun" && vfs.exists(serverPath)) {
+    addPackageDependency({
+      vfs,
+      packagePath: serverPath,
+      dependencies: ["mailgun.js", "form-data"],
+    });
+  }
+
   // Add React Email components for resend and react-email options (not nodemailer)
   const hasReactWeb = frontend.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),

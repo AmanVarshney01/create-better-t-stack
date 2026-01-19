@@ -1,0 +1,207 @@
+import Mailgun from "mailgun.js";
+import FormData from "form-data";
+
+// Initialize Mailgun client
+const mailgun = new Mailgun(FormData);
+const mg = mailgun.client({
+  username: "api",
+  key: process.env.MAILGUN_API_KEY || "",
+});
+
+const DOMAIN = process.env.MAILGUN_DOMAIN || "";
+
+export interface SendEmailOptions {
+  to: string | string[];
+  subject: string;
+  html?: string;
+  text?: string;
+  from?: string;
+  replyTo?: string;
+  cc?: string | string[];
+  bcc?: string | string[];
+  attachments?: Array<{
+    filename: string;
+    data: Buffer | string;
+    contentType?: string;
+  }>;
+  tags?: string[];
+  trackingClicks?: boolean;
+  trackingOpens?: boolean;
+}
+
+/**
+ * Send an email using Mailgun
+ * @see https://documentation.mailgun.com/en/latest/api-sending-messages.html
+ */
+export async function sendEmail(options: SendEmailOptions) {
+  const {
+    to,
+    subject,
+    html,
+    text,
+    from,
+    replyTo,
+    cc,
+    bcc,
+    attachments,
+    tags,
+    trackingClicks,
+    trackingOpens,
+  } = options;
+
+  const fromAddress = from || process.env.MAILGUN_FROM_EMAIL || "noreply@example.com";
+  const toAddresses = Array.isArray(to) ? to.join(",") : to;
+
+  try {
+    const messageData: Record<string, unknown> = {
+      from: fromAddress,
+      to: toAddresses,
+      subject,
+    };
+
+    if (html) messageData.html = html;
+    if (text) messageData.text = text;
+    if (replyTo) messageData["h:Reply-To"] = replyTo;
+    if (cc) messageData.cc = Array.isArray(cc) ? cc.join(",") : cc;
+    if (bcc) messageData.bcc = Array.isArray(bcc) ? bcc.join(",") : bcc;
+    if (tags) messageData["o:tag"] = tags;
+    if (trackingClicks !== undefined) messageData["o:tracking-clicks"] = trackingClicks ? "yes" : "no";
+    if (trackingOpens !== undefined) messageData["o:tracking-opens"] = trackingOpens ? "yes" : "no";
+
+    if (attachments && attachments.length > 0) {
+      messageData.attachment = attachments.map((att) => ({
+        filename: att.filename,
+        data: att.data,
+        contentType: att.contentType,
+      }));
+    }
+
+    const response = await mg.messages.create(DOMAIN, messageData);
+    console.log("Email sent:", response.id);
+    return { success: true, messageId: response.id };
+  } catch (error) {
+    console.error("Email sending error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Send multiple emails in a batch using Mailgun's recipient variables
+ * @see https://documentation.mailgun.com/en/latest/user_manual.html#batch-sending
+ */
+export async function sendBatchEmails(
+  emails: Array<{
+    to: string;
+    subject: string;
+    html?: string;
+    text?: string;
+    variables?: Record<string, string>;
+  }>,
+  commonOptions?: {
+    from?: string;
+    tags?: string[];
+  }
+) {
+  const fromAddress =
+    commonOptions?.from || process.env.MAILGUN_FROM_EMAIL || "noreply@example.com";
+
+  // Mailgun batch sending uses recipient variables
+  const recipients = emails.map((e) => e.to);
+  const recipientVariables: Record<string, Record<string, string>> = {};
+
+  for (const email of emails) {
+    if (email.variables) {
+      recipientVariables[email.to] = email.variables;
+    }
+  }
+
+  try {
+    // For batch emails, we use the first email as template
+    const firstEmail = emails[0];
+    if (!firstEmail) throw new Error("No emails provided");
+
+    const messageData: Record<string, unknown> = {
+      from: fromAddress,
+      to: recipients,
+      subject: firstEmail.subject,
+      "recipient-variables": JSON.stringify(recipientVariables),
+    };
+
+    if (firstEmail.html) messageData.html = firstEmail.html;
+    if (firstEmail.text) messageData.text = firstEmail.text;
+    if (commonOptions?.tags) messageData["o:tag"] = commonOptions.tags;
+
+    const response = await mg.messages.create(DOMAIN, messageData);
+    console.log(`Batch of ${emails.length} emails queued:`, response.id);
+    return { success: true, messageId: response.id };
+  } catch (error) {
+    console.error("Batch email sending error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Send an email using a Mailgun template
+ * @see https://documentation.mailgun.com/en/latest/api-sending-messages.html#sending-via-api
+ */
+export async function sendTemplateEmail(options: {
+  to: string | string[];
+  template: string;
+  variables: Record<string, string>;
+  subject?: string;
+  from?: string;
+  tags?: string[];
+}) {
+  const { to, template, variables, subject, from, tags } = options;
+
+  const fromAddress = from || process.env.MAILGUN_FROM_EMAIL || "noreply@example.com";
+  const toAddresses = Array.isArray(to) ? to.join(",") : to;
+
+  try {
+    const messageData: Record<string, unknown> = {
+      from: fromAddress,
+      to: toAddresses,
+      template,
+      "h:X-Mailgun-Variables": JSON.stringify(variables),
+    };
+
+    if (subject) messageData.subject = subject;
+    if (tags) messageData["o:tag"] = tags;
+
+    const response = await mg.messages.create(DOMAIN, messageData);
+    console.log("Template email sent:", response.id);
+    return { success: true, messageId: response.id };
+  } catch (error) {
+    console.error("Template email sending error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Validate an email address using Mailgun's email validation API
+ * Note: This requires the email validation feature to be enabled on your account
+ * @see https://documentation.mailgun.com/en/latest/api-email-validation.html
+ */
+export async function validateEmail(email: string) {
+  try {
+    const result = await mg.validate.get(email);
+    return {
+      valid: result.is_valid,
+      didYouMean: result.did_you_mean,
+      isDisposable: result.is_disposable_address,
+      isRoleAddress: result.is_role_address,
+    };
+  } catch (error) {
+    console.error("Email validation error:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get the Mailgun client for advanced usage
+ */
+export function getMailgunClient() {
+  return mg;
+}
+
+export { mg as mailgun };

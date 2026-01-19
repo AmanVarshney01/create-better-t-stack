@@ -657,6 +657,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "mailgun",
+      name: "Mailgun",
+      description: "Powerful email API for developers",
+      icon: "https://cdn.simpleicons.org/mailgun/F06B66",
+      color: "from-red-400 to-red-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Email",
       description: "Skip email integration",
