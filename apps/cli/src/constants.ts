@@ -170,6 +170,10 @@ export const UI_LIBRARY_COMPATIBILITY: Record<
     ],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
+  "react-aria": {
+    frontends: ["tanstack-router", "react-router", "tanstack-start", "next"],
+    cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
+  },
   none: {
     frontends: [
       "tanstack-router",

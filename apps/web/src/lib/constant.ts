@@ -980,6 +980,13 @@ export const TECH_OPTIONS: Record<
       color: "from-green-500 to-teal-600",
     },
     {
+      id: "react-aria",
+      name: "React Aria",
+      description: "Adobe's accessible, unstyled UI components",
+      icon: "",
+      color: "from-red-500 to-red-700",
+    },
+    {
       id: "none",
       name: "No UI Library",
       description: "Build custom components",

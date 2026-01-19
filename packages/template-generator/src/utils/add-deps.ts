@@ -264,6 +264,9 @@ export const dependencyVersionMap = {
   "@ark-ui/solid": "^5.30.0",
   "@ark-ui/svelte": "^5.15.0",
 
+  // React Aria (Adobe's accessible components for React)
+  "react-aria-components": "^1.14.0",
+
   daisyui: "^4.12.28",
 
   // Qwik

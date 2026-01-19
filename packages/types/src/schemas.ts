@@ -159,6 +159,7 @@ export const UILibrarySchema = z
     "mantine",
     "base-ui",
     "ark-ui",
+    "react-aria",
     "none",
   ])
   .describe("UI component library");

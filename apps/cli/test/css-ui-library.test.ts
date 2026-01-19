@@ -1044,4 +1044,95 @@ describe("CSS Framework and UI Library Configurations", () => {
       });
     }
   });
+
+  describe("React Aria Tests", () => {
+    // React Aria works with React frontends (Adobe's accessible components)
+    const reactAriaCompatibleFrontends: Frontend[] = [
+      "tanstack-router",
+      "react-router",
+      "tanstack-start",
+      "next",
+    ];
+
+    for (const frontend of reactAriaCompatibleFrontends) {
+      it(`should work with react-aria + ${frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `reactaria-${frontend}`,
+          uiLibrary: "react-aria",
+          cssFramework: "tailwind",
+          frontend: [frontend],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          api: "trpc",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+    }
+
+    // React Aria should fail with non-React frontends
+    const reactAriaIncompatibleFrontends: Frontend[] = ["nuxt", "svelte", "solid", "astro"];
+
+    for (const frontend of reactAriaIncompatibleFrontends) {
+      it(`should fail with react-aria + ${frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `reactaria-${frontend}-fail`,
+          uiLibrary: "react-aria",
+          cssFramework: "tailwind",
+          frontend: [frontend],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          api: "orpc",
+          webDeploy: "none",
+          serverDeploy: "none",
+          expectError: true,
+        });
+
+        expectError(result, "not compatible");
+      });
+    }
+
+    // React Aria is unstyled, works with any CSS framework
+    const allCssFrameworks: CSSFramework[] = ["tailwind", "scss", "less", "postcss-only", "none"];
+
+    for (const cssFramework of allCssFrameworks) {
+      it(`should work with react-aria + ${cssFramework}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `reactaria-css-${cssFramework}`,
+          uiLibrary: "react-aria",
+          cssFramework,
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          api: "trpc",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+    }
+  });
 });

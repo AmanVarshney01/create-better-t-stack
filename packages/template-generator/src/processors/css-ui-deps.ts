@@ -145,6 +145,12 @@ export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConf
         deps.push("@ark-ui/svelte");
       }
       break;
+
+    case "react-aria":
+      if (hasReactWeb) {
+        deps.push("react-aria-components");
+      }
+      break;
   }
 
   if (deps.length > 0) {

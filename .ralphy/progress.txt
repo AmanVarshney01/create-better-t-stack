@@ -1936,3 +1936,48 @@ Implemented Ark UI (@ark-ui/react, @ark-ui/vue, @ark-ui/solid, @ark-ui/svelte) a
 - 45+ accessible UI components
 - Built on Zag.js state machines for predictable behavior
 - WAI-ARIA compliant with keyboard navigation support
+
+
+---
+
+## Session: 2026-01-19
+
+### Task: Add React Aria as UI component library option
+
+**Status:** ✅ Completed
+
+**Summary:**
+Implemented React Aria (react-aria-components) as a new UI component library option. React Aria is Adobe's accessible, unstyled component library for React that provides WAI-ARIA compliant components with keyboard navigation, focus management, and accessibility built-in.
+
+**Changes Made:**
+1. **packages/types/src/schemas.ts**: Added "react-aria" to UILibrarySchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added react-aria-components dependency (^1.14.0)
+3. **packages/template-generator/src/processors/css-ui-deps.ts**: Added React Aria dependency processing for React frontends
+4. **apps/cli/src/constants.ts**: Added React Aria compatibility rules:
+   - Compatible frontends: tanstack-router, react-router, tanstack-start, next (React-only)
+   - Compatible CSS frameworks: tailwind, scss, less, postcss-only, none (unstyled)
+5. **apps/cli/src/prompts/ui-library.ts**: Added React Aria option with description
+6. **apps/web/src/lib/constant.ts**: Added React Aria to web builder UI library options with red gradient
+7. **apps/cli/test/css-ui-library.test.ts**: Added comprehensive React Aria tests (13 new tests):
+   - 4 tests for React frontends compatibility (tanstack-router, react-router, tanstack-start, next)
+   - 4 tests for non-React frontends incompatibility (nuxt, svelte, solid, astro)
+   - 5 tests for CSS framework flexibility (tailwind, scss, less, postcss-only, none)
+
+**Test Results:**
+- All 133 CSS/UI library tests pass (including 13 new React Aria tests)
+- Pre-existing TypeScript errors in config-prompts.ts unrelated to this change
+
+**Key Features:**
+- React-only (compatible with tanstack-router, react-router, tanstack-start, next)
+- Unstyled/headless components (works with any CSS framework)
+- WAI-ARIA compliant with full accessibility support
+- Keyboard navigation and focus management
+- Internationalization support
+
+**Notes:**
+- Researched Encore.ts, AdonisJS, and Nitro as potential backend options but determined they are not suitable for Better-Fullstack integration:
+  - Encore.ts: Requires dedicated CLI and platform, infrastructure-as-code approach
+  - AdonisJS: Full-stack MVC framework with own CLI and conventions
+  - Nitro: File-based routing framework with own conventions (powers Nuxt)
+- These frameworks don't fit the Better-Fullstack approach of pluggable backend components
+- Proceeded with React Aria as it fits the UI library pattern

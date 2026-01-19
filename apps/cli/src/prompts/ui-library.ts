@@ -46,6 +46,10 @@ const UI_LIBRARY_OPTIONS: Record<UILibrary, { label: string; hint: string }> = {
     label: "Ark UI",
     hint: "Headless, accessible UI components for React, Vue, Solid, and Svelte",
   },
+  "react-aria": {
+    label: "React Aria",
+    hint: "Adobe's accessible, unstyled UI components for React",
+  },
   none: {
     label: "None",
     hint: "No UI component library",
