@@ -71,6 +71,9 @@ function getValidationDeps(validation: ProjectConfig["validation"]): AvailableDe
     case "valibot":
       deps.push("valibot");
       break;
+    case "arktype":
+      deps.push("arktype");
+      break;
   }
 
   return deps;

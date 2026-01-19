@@ -119,6 +119,122 @@ describe("Validation Library Options", () => {
     });
   });
 
+  describe("ArkType with React frontends", () => {
+    test("arktype with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "arktype-tanstack-router",
+          frontend: ["tanstack-router"],
+          validation: "arktype",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("arktype with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "arktype-react-router",
+          frontend: ["react-router"],
+          validation: "arktype",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("arktype with Next.js", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "arktype-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          validation: "arktype",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("arktype with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "arktype-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          validation: "arktype",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("ArkType with different backends", () => {
+    test("arktype with Hono backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "arktype-hono",
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          validation: "arktype",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("arktype with Express backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "arktype-express",
+          frontend: ["tanstack-router"],
+          backend: "express",
+          runtime: "node",
+          validation: "arktype",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("arktype with Fastify backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "arktype-fastify",
+          frontend: ["tanstack-router"],
+          backend: "fastify",
+          runtime: "node",
+          validation: "arktype",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("ArkType with native apps", () => {
+    test("arktype with native-bare", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "arktype-native-bare",
+          frontend: ["native-bare"],
+          backend: "hono",
+          validation: "arktype",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("arktype with native-uniwind", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "arktype-native-uniwind",
+          frontend: ["native-uniwind"],
+          backend: "hono",
+          validation: "arktype",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("Zod validation (default)", () => {
     test("zod with TanStack Router (explicit)", async () => {
       const result = await runTRPCTest(

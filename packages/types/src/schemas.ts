@@ -116,7 +116,7 @@ export const FormsSchema = z
   .describe("Form handling library");
 
 export const ValidationSchema = z
-  .enum(["zod", "valibot", "none"])
+  .enum(["zod", "valibot", "arktype", "none"])
   .describe("Schema validation library (none uses Zod as default for internal usage)");
 
 export const TestingSchema = z

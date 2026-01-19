@@ -268,6 +268,7 @@ export const dependencyVersionMap = {
 
   // Validation libraries
   valibot: "^1.1.0",
+  arktype: "^2.1.29",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

@@ -699,6 +699,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "arktype",
+      name: "ArkType",
+      description: "TypeScript-first validation, 2-4x faster than Zod",
+      icon: "",
+      color: "from-purple-400 to-purple-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Validation",
       description: "Use Zod internally only (no additional library)",
