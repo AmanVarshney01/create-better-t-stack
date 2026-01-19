@@ -761,6 +761,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "winston",
+      name: "Winston",
+      description: "Flexible logging library with multiple transports",
+      icon: "",
+      color: "from-blue-400 to-blue-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Logging",
       description: "Skip logging framework setup",

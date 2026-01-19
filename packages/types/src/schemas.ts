@@ -180,7 +180,9 @@ export const FileUploadSchema = z
   .enum(["uploadthing", "filepond", "uppy", "none"])
   .describe("File upload solution");
 
-export const LoggingSchema = z.enum(["pino", "none"]).describe("Server-side logging framework");
+export const LoggingSchema = z
+  .enum(["pino", "winston", "none"])
+  .describe("Server-side logging framework");
 
 export const CSSFrameworkSchema = z
   .enum(["tailwind", "scss", "less", "postcss-only", "none"])

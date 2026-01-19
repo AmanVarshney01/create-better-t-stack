@@ -3072,3 +3072,43 @@ Implemented feTS as a new backend framework option. feTS is a TypeScript HTTP Fr
   - No logging (none option)
 
 ### Status: COMPLETE
+
+
+## 2026-01-19: Winston Logger Implementation
+
+### Task: Implement Winston as a server-side logging option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "winston" to LoggingSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Winston dependency version:
+   - winston: ^3.19.0
+3. **packages/template-generator/src/processors/logging-deps.ts**: Added Winston dependency processing for server package.json
+4. **packages/template-generator/templates/logging/winston/server/base/src/lib/logger.ts.hbs**: Created Winston logger template with:
+   - Development mode with colorized, human-readable output
+   - Production mode with JSON output for log aggregation
+   - Configurable log levels via LOG_LEVEL env var (npm levels: error, warn, info, http, verbose, debug, silly)
+   - createChildLogger helper for component-specific loggers
+   - Error stack trace support in production
+5. **apps/web/src/lib/constant.ts**: Added Winston to TECH_OPTIONS logging section:
+   - id: "winston"
+   - name: "Winston"
+   - description: "Flexible logging library with multiple transports"
+   - color: "from-blue-400 to-blue-600"
+6. **apps/cli/test/logging.test.ts**: Added 8 Winston-specific tests:
+   - Tests for Winston with hono, express, fastify, elysia, nitro, nestjs, fets backends
+   - Test for Winston with Next.js fullstack
+   - Updated no-logging test to verify Winston is also not added
+
+### Features:
+- Flexible logging with npm log level convention
+- Development-friendly colorized console output
+- Production-optimized JSON output for log aggregation services
+- Error stack trace preservation
+- Child logger support for contextual logging
+- Compatible with all backends except Convex (uses own logging)
+
+### Test Results:
+- 17 tests pass (8 new Winston tests + 8 existing Pino tests + 1 no-logging test)
+- Linting passes for all modified files
+
+### Status: COMPLETE

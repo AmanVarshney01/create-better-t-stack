@@ -20,4 +20,13 @@ export function processLoggingDeps(vfs: VirtualFileSystem, config: ProjectConfig
       devDependencies: ["pino-pretty"],
     });
   }
+
+  // Add Winston for winston option
+  if (logging === "winston" && vfs.exists(serverPath)) {
+    addPackageDependency({
+      vfs,
+      packagePath: serverPath,
+      dependencies: ["winston"],
+    });
+  }
 }

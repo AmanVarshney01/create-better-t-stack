@@ -210,7 +210,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 ## **LOGGING / OBSERVABILITY**
 
 - [x] **Pino** - Fast JSON logger
-- [ ] **Winston** - Flexible logging library
+- [x] **Winston** - Flexible logging library
 - [ ] **OpenTelemetry** - Observability standard
 - [ ] **Sentry** - Error tracking
 - [ ] **LogTail/BetterStack** - Log management

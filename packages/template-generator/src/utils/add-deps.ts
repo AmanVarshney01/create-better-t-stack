@@ -460,6 +460,7 @@ export const dependencyVersionMap = {
   pino: "^9.6.0",
   "pino-pretty": "^13.0.0",
   "pino-http": "^10.4.0",
+  winston: "^3.19.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;
