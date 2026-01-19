@@ -2767,3 +2767,86 @@ Implemented Encore.ts as a new backend framework option. Encore.ts is an open-so
 - Database: none (uses Encore's database primitives)
 - ORM: none (uses Encore's database abstractions)
 - Works with all web frontends in Better-Fullstack
+
+---
+
+## 2026-01-19 - AdonisJS Backend Framework Implementation
+
+Implemented AdonisJS as a new backend framework option. AdonisJS is a full-featured MVC framework for Node.js with batteries-included features like routing, validation, ORM, and authentication.
+
+**Changes Made:**
+1. **packages/types/src/schemas.ts**: Added "adonisjs" to BackendSchema enum
+
+2. **packages/template-generator/src/utils/add-deps.ts**: Added AdonisJS dependency versions:
+   - @adonisjs/core: ^6.19.0
+   - @adonisjs/cors: ^2.2.1
+   - @adonisjs/tsconfig: ^1.4.0
+
+3. **packages/template-generator/src/processors/backend-deps.ts**: Added AdonisJS handling to inject dependencies:
+   - @adonisjs/core
+   - @adonisjs/cors
+   - reflect-metadata
+   - @adonisjs/tsconfig (dev dependency)
+   - @types/node (dev dependency)
+
+4. **packages/template-generator/src/processors/runtime-deps.ts**: Added adonisjs to list of backends that skip runtime processing (AdonisJS has its own Ace CLI for dev/start scripts)
+
+5. **packages/template-generator/src/template-handlers/backend.ts**: Added special handling for AdonisJS backend to use only AdonisJS templates (similar to Encore.ts pattern)
+
+6. **packages/template-generator/templates/backend/server/adonisjs/**: Created AdonisJS templates:
+   - package.json.hbs - Package with AdonisJS-specific scripts (node ace serve --watch, node ace build)
+   - tsconfig.json.hbs - TypeScript configuration extending @adonisjs/tsconfig
+   - adonisrc.ts.hbs - AdonisJS configuration file with providers and preloads
+   - bin/server.ts.hbs - Server entry point using Ignitor
+   - start/routes.ts.hbs - Routes file with tRPC/oRPC/Better-Auth integration
+   - config/app.ts.hbs - Application configuration
+   - _gitignore - Git ignore file
+
+7. **apps/web/src/lib/constant.ts**: Added AdonisJS to TECH_OPTIONS.backend:
+   - id: "adonisjs"
+   - name: "AdonisJS"
+   - description: "Full-featured MVC framework for Node.js"
+   - icon: SimpleIcons CDN for AdonisJS logo
+   - color: "from-indigo-500 to-purple-700"
+
+8. **apps/cli/src/utils/config-validation.ts**: 
+   - Added validateAdonisJSConstraints function with constraint:
+     - runtime must be "node" (AdonisJS currently only supports Node.js)
+   - Added validateAdonisJSConstraints to validateFullConfig call chain
+
+9. **apps/cli/test/backend-runtime.test.ts**: Updated to include AdonisJS:
+   - Added adonisjs to valid backend-runtime combinations (adonisjs + node)
+   - Added adonisjs to invalid combinations (adonisjs + bun, adonisjs + workers)
+   - Added adonisjs to "All Backend Types" test list with proper defaults
+
+10. **apps/cli/test/adonisjs.test.ts**: Created comprehensive test suite (9 tests):
+    - Tests for valid AdonisJS configurations (basic, Next.js frontend, with better-auth, with oRPC)
+    - Tests for proper project structure generation (verifies adonisrc.ts, routes.ts, bin/server.ts, config/app.ts)
+    - Tests for invalid configurations (bun runtime, workers runtime, none runtime)
+
+**Test Results:**
+- All 9 AdonisJS-specific tests pass
+- All 48 backend-runtime tests pass
+- Linting passes for all modified files (pre-existing issue in config-prompts.ts unrelated to this change)
+
+**Key Features:**
+- Full AdonisJS v6 project structure with Ace CLI integration
+- Uses @adonisjs/core for the HTTP server and routing
+- tRPC integration via Express middleware adapter
+- oRPC integration via node handlers
+- Better-Auth integration via node handler
+- AI SDK integration with streaming responses
+- CORS configuration built into routes
+
+**Important Notes:**
+- AdonisJS requires Node.js runtime (--runtime node)
+- Uses Ace CLI for development (node ace serve --watch) and build (node ace build)
+- Creates proper AdonisJS project structure (adonisrc.ts, start/routes.ts, bin/server.ts, config/app.ts)
+- Compatible with all web frontends in Better-Fullstack
+- Integrates with Better-Fullstack's tRPC/oRPC/Better-Auth ecosystem
+
+**Framework Support:**
+- Runtime: node only (AdonisJS is Node.js specific)
+- API: trpc, orpc, none
+- Auth: better-auth, none
+- Works with all web frontends

@@ -20,6 +20,8 @@ describe("Backend and Runtime Combinations", () => {
 
       { backend: "elysia" as const, runtime: "bun" as const },
 
+      { backend: "adonisjs" as const, runtime: "node" as const },
+
       // Special cases
       { backend: "convex" as const, runtime: "none" as const },
       { backend: "encore" as const, runtime: "none" as const },
@@ -153,6 +155,18 @@ describe("Backend and Runtime Combinations", () => {
         runtime: "workers",
         error: "Backend 'self' (fullstack) requires '--runtime none'",
         frontend: ["next"], // Need to specify Next.js frontend for self backend
+      },
+
+      // AdonisJS only supports Node.js runtime
+      {
+        backend: "adonisjs",
+        runtime: "bun",
+        error: "AdonisJS backend requires '--runtime node'",
+      },
+      {
+        backend: "adonisjs",
+        runtime: "workers",
+        error: "AdonisJS backend requires '--runtime node'",
       },
 
       // Runtime none only works with convex, encore, none, or self backend
@@ -355,6 +369,7 @@ describe("Backend and Runtime Combinations", () => {
       "fastify",
       "elysia",
       "nestjs",
+      "adonisjs",
       "encore",
       "convex",
       "none",
@@ -408,6 +423,13 @@ describe("Backend and Runtime Combinations", () => {
             break;
           case "elysia":
             config.runtime = "bun";
+            config.database = "sqlite";
+            config.orm = "drizzle";
+            config.auth = "none";
+            config.api = "trpc";
+            break;
+          case "adonisjs":
+            config.runtime = "node";
             config.database = "sqlite";
             config.orm = "drizzle";
             config.auth = "none";

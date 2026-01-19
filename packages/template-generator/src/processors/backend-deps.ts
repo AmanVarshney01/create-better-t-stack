@@ -44,6 +44,9 @@ export function processBackendDeps(vfs: VirtualFileSystem, config: ProjectConfig
     devDeps.push("@types/express");
   } else if (backend === "encore") {
     deps.push("encore.dev");
+  } else if (backend === "adonisjs") {
+    deps.push("@adonisjs/core", "@adonisjs/cors", "reflect-metadata");
+    devDeps.push("@adonisjs/tsconfig", "@types/node");
   }
 
   if (api === "trpc") {

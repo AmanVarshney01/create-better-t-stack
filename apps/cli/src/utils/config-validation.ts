@@ -373,6 +373,25 @@ export function validateEncoreConstraints(
   }
 }
 
+export function validateAdonisJSConstraints(
+  config: Partial<ProjectConfig>,
+  providedFlags: Set<string>,
+) {
+  const { backend } = config;
+
+  if (backend !== "adonisjs") {
+    return;
+  }
+
+  const has = (k: string) => providedFlags.has(k);
+
+  if (has("runtime") && config.runtime !== "node") {
+    exitWithError(
+      "AdonisJS backend requires '--runtime node'. AdonisJS currently only supports Node.js runtime. Please use '--runtime node' or remove the --runtime flag.",
+    );
+  }
+}
+
 export function validateBackendConstraints(
   config: Partial<ProjectConfig>,
   providedFlags: Set<string>,
@@ -470,6 +489,7 @@ export function validateFullConfig(
   validateBackendNoneConstraints(config, providedFlags);
   validateSelfBackendConstraints(config, providedFlags);
   validateEncoreConstraints(config, providedFlags);
+  validateAdonisJSConstraints(config, providedFlags);
   validateBackendConstraints(config, providedFlags, options);
 
   validateFrontendConstraints(config, providedFlags);

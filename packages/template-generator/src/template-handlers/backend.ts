@@ -29,6 +29,11 @@ export async function processBackendTemplates(
     return;
   }
 
+  if (config.backend === "adonisjs") {
+    processTemplatesFromPrefix(vfs, templates, "backend/server/adonisjs", "apps/server", config);
+    return;
+  }
+
   processTemplatesFromPrefix(vfs, templates, "backend/server/base", "apps/server", config);
   processTemplatesFromPrefix(
     vfs,

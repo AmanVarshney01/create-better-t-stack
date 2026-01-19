@@ -1,0 +1,151 @@
+import { env } from "@{{projectName}}/env/server";
+{{#if (eq api "trpc")}}
+import { createExpressMiddleware } from "@trpc/server/adapters/express";
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+{{/if}}
+{{#if (eq api "orpc")}}
+import { OpenAPIHandler } from "@orpc/openapi/node";
+import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
+import { RPCHandler } from "@orpc/server/node";
+import { onError } from "@orpc/server";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+{{#if (eq auth "better-auth")}}
+import { createContext } from "@{{projectName}}/api/context";
+{{/if}}
+{{/if}}
+{{#if (includes examples "ai")}}
+import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+import { google } from "@ai-sdk/google";
+import { devToolsMiddleware } from "@ai-sdk/devtools";
+{{/if}}
+{{#if (eq auth "better-auth")}}
+import { auth } from "@{{projectName}}/auth";
+import { toNodeHandler } from "better-auth/node";
+{{/if}}
+import router from "@adonisjs/core/services/router";
+
+// CORS headers helper
+const setCorsHeaders = (response: any) => {
+	const origin = env.CORS_ORIGIN;
+	response.header("Access-Control-Allow-Origin", origin);
+	response.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+{{#if (eq auth "better-auth")}}
+	response.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+	response.header("Access-Control-Allow-Credentials", "true");
+{{else}}
+	response.header("Access-Control-Allow-Headers", "Content-Type");
+{{/if}}
+};
+
+// CORS preflight handler
+router.options("*", ({ response }) => {
+	setCorsHeaders(response);
+	return response.status(204);
+});
+
+// Health check endpoint
+router.get("/", ({ response }) => {
+	setCorsHeaders(response);
+	return response.send("OK");
+});
+
+{{#if (eq auth "better-auth")}}
+// Better Auth handler
+const authHandler = toNodeHandler(auth);
+router.any("/api/auth/*", async ({ request, response }) => {
+	setCorsHeaders(response);
+	return new Promise<void>((resolve) => {
+		authHandler(request.request as any, response.response as any, () => {
+			resolve();
+		});
+	});
+});
+{{/if}}
+
+{{#if (eq api "trpc")}}
+// tRPC middleware adapter for AdonisJS
+const trpcMiddleware = createExpressMiddleware({
+	router: appRouter,
+	createContext,
+});
+
+router.any("/trpc/*", async ({ request, response }) => {
+	setCorsHeaders(response);
+	return new Promise<void>((resolve) => {
+		trpcMiddleware(request.request as any, response.response as any, () => {
+			resolve();
+		});
+	});
+});
+{{/if}}
+
+{{#if (eq api "orpc")}}
+const rpcHandler = new RPCHandler(appRouter, {
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
+});
+const apiHandler = new OpenAPIHandler(appRouter, {
+	plugins: [
+		new OpenAPIReferencePlugin({
+			schemaConverters: [new ZodToJsonSchemaConverter()],
+		}),
+	],
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
+});
+
+router.any("/rpc/*", async ({ request, response }) => {
+	setCorsHeaders(response);
+	const result = await rpcHandler.handle(request.request as any, response.response as any, {
+		prefix: "/rpc",
+{{#if (eq auth "better-auth")}}
+		context: await createContext({ req: request.request as any }),
+{{else}}
+		context: {},
+{{/if}}
+	});
+	if (!result.matched) {
+		return response.status(404).send("Not Found");
+	}
+});
+
+router.any("/api-reference/*", async ({ request, response }) => {
+	setCorsHeaders(response);
+	const result = await apiHandler.handle(request.request as any, response.response as any, {
+		prefix: "/api-reference",
+{{#if (eq auth "better-auth")}}
+		context: await createContext({ req: request.request as any }),
+{{else}}
+		context: {},
+{{/if}}
+	});
+	if (!result.matched) {
+		return response.status(404).send("Not Found");
+	}
+});
+{{/if}}
+
+{{#if (includes examples "ai")}}
+router.post("/ai", async ({ request, response }) => {
+	setCorsHeaders(response);
+	const body = request.body() as { messages?: UIMessage[] };
+	const messages = body.messages || [];
+	const model = wrapLanguageModel({
+		model: google("gemini-2.5-flash"),
+		middleware: devToolsMiddleware(),
+	});
+	const result = streamText({
+		model,
+		messages: await convertToModelMessages(messages),
+	});
+	result.pipeUIMessageStreamToResponse(response.response as any);
+});
+{{/if}}

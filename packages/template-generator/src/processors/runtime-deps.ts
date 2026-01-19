@@ -12,7 +12,13 @@ type PackageJson = {
 export function processRuntimeDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { runtime, backend } = config;
 
-  if (backend === "convex" || backend === "self" || backend === "encore" || runtime === "none")
+  if (
+    backend === "convex" ||
+    backend === "self" ||
+    backend === "encore" ||
+    backend === "adonisjs" ||
+    runtime === "none"
+  )
     return;
 
   const serverPath = "apps/server/package.json";

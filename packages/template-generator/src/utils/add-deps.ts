@@ -121,6 +121,11 @@ export const dependencyVersionMap = {
   // Encore.ts
   "encore.dev": "^1.50.0",
 
+  // AdonisJS
+  "@adonisjs/core": "^6.19.0",
+  "@adonisjs/cors": "^2.2.1",
+  "@adonisjs/tsconfig": "^1.4.0",
+
   turbo: "^2.6.3",
 
   ai: "^6.0.3",

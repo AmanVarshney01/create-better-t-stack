@@ -304,6 +304,13 @@ export const TECH_OPTIONS: Record<
       color: "from-violet-500 to-indigo-700",
     },
     {
+      id: "adonisjs",
+      name: "AdonisJS",
+      description: "Full-featured MVC framework for Node.js",
+      icon: "https://cdn.simpleicons.org/adonisjs/5A45FF",
+      color: "from-indigo-500 to-purple-700",
+    },
+    {
       id: "convex",
       name: "Convex",
       description: "Reactive backend-as-a-service",

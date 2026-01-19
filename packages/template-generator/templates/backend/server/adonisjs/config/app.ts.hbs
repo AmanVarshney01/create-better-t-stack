@@ -1,0 +1,9 @@
+import { defineConfig } from "@adonisjs/core/http";
+
+export default defineConfig({
+	generateRequestId: true,
+	useAsyncLocalStorage: true,
+	qs: {
+		parse: {},
+	},
+});

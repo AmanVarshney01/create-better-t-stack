@@ -1,0 +1,15 @@
+{
+	"extends": "@adonisjs/tsconfig/tsconfig.app.json",
+	"compilerOptions": {
+		"outDir": "./build",
+		"rootDir": ".",
+		"paths": {
+			"#controllers/*": ["./app/controllers/*.js"],
+			"#middleware/*": ["./app/middleware/*.js"],
+			"#start/*": ["./start/*.js"],
+			"#config/*": ["./config/*.js"]
+		}
+	},
+	"include": ["**/*.ts"],
+	"exclude": ["node_modules", "build"]
+}
