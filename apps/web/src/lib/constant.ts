@@ -1228,7 +1228,8 @@ export const TECH_OPTIONS: Record<
     {
       id: "vitest",
       name: "Vitest",
-      description: "Blazing fast Vite-native unit test framework",
+      description:
+        "Blazing fast Vite-native unit test framework with Testing Library support for React/Vue/Svelte",
       icon: "https://cdn.simpleicons.org/vitest/6E9F18",
       color: "from-green-400 to-green-600",
       default: true,
@@ -1236,7 +1237,7 @@ export const TECH_OPTIONS: Record<
     {
       id: "jest",
       name: "Jest",
-      description: "Classic testing framework with great ecosystem",
+      description: "Classic testing framework with Testing Library support for React/Vue/Svelte",
       icon: "https://cdn.simpleicons.org/jest/C21325",
       color: "from-red-400 to-red-600",
       default: false,
@@ -1252,7 +1253,7 @@ export const TECH_OPTIONS: Record<
     {
       id: "vitest-playwright",
       name: "Vitest + Playwright",
-      description: "Both unit and E2E testing for complete coverage",
+      description: "Both unit and E2E testing with Testing Library support for complete coverage",
       icon: "https://cdn.simpleicons.org/vitest/6E9F18",
       color: "from-green-500 to-emerald-600",
       default: false,

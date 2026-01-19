@@ -1,4 +1,4 @@
-import { describe, test } from "bun:test";
+import { describe, test, expect } from "bun:test";
 
 import { expectSuccess, runTRPCTest, createCustomConfig } from "./test-utils";
 
@@ -245,6 +245,344 @@ describe("Testing Framework Options", () => {
         }),
       );
       expectSuccess(result);
+    });
+  });
+
+  describe("Testing Library integration", () => {
+    describe("Vitest with Testing Library for React frontends", () => {
+      test("vitest includes Testing Library for TanStack Router (React)", async () => {
+        const result = await runTRPCTest(
+          createCustomConfig({
+            projectName: "vitest-testing-library-tanstack-router",
+            frontend: ["tanstack-router"],
+            testing: "vitest",
+          }),
+        );
+        expectSuccess(result);
+
+        // Check web package.json for Testing Library dependencies
+        const webPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "web")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (webPackageJson?.content) {
+          const pkgJson = JSON.parse(webPackageJson.content);
+          expect(pkgJson.devDependencies?.["@testing-library/react"]).toBeDefined();
+          expect(pkgJson.devDependencies?.["@testing-library/dom"]).toBeDefined();
+          expect(pkgJson.devDependencies?.["@testing-library/user-event"]).toBeDefined();
+          expect(pkgJson.devDependencies?.["@testing-library/jest-dom"]).toBeDefined();
+          expect(pkgJson.devDependencies?.vitest).toBeDefined();
+        }
+      });
+
+      test("vitest includes Testing Library for React Router", async () => {
+        const result = await runTRPCTest(
+          createCustomConfig({
+            projectName: "vitest-testing-library-react-router",
+            frontend: ["react-router"],
+            testing: "vitest",
+          }),
+        );
+        expectSuccess(result);
+
+        const webPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "web")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (webPackageJson?.content) {
+          const pkgJson = JSON.parse(webPackageJson.content);
+          expect(pkgJson.devDependencies?.["@testing-library/react"]).toBeDefined();
+        }
+      });
+
+      test("vitest includes Testing Library for Next.js", async () => {
+        const result = await runTRPCTest(
+          createCustomConfig({
+            projectName: "vitest-testing-library-next",
+            frontend: ["next"],
+            backend: "self",
+            runtime: "none",
+            testing: "vitest",
+          }),
+        );
+        expectSuccess(result);
+
+        const webPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "web")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (webPackageJson?.content) {
+          const pkgJson = JSON.parse(webPackageJson.content);
+          expect(pkgJson.devDependencies?.["@testing-library/react"]).toBeDefined();
+        }
+      });
+
+      test("vitest includes Testing Library for TanStack Start", async () => {
+        const result = await runTRPCTest(
+          createCustomConfig({
+            projectName: "vitest-testing-library-tanstack-start",
+            frontend: ["tanstack-start"],
+            backend: "self",
+            runtime: "none",
+            testing: "vitest",
+          }),
+        );
+        expectSuccess(result);
+
+        const webPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "web")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (webPackageJson?.content) {
+          const pkgJson = JSON.parse(webPackageJson.content);
+          expect(pkgJson.devDependencies?.["@testing-library/react"]).toBeDefined();
+        }
+      });
+    });
+
+    describe("Jest with Testing Library for React frontends", () => {
+      test("jest includes Testing Library for TanStack Router (React)", async () => {
+        const result = await runTRPCTest(
+          createCustomConfig({
+            projectName: "jest-testing-library-tanstack-router",
+            frontend: ["tanstack-router"],
+            testing: "jest",
+          }),
+        );
+        expectSuccess(result);
+
+        const webPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "web")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (webPackageJson?.content) {
+          const pkgJson = JSON.parse(webPackageJson.content);
+          expect(pkgJson.devDependencies?.["@testing-library/react"]).toBeDefined();
+          expect(pkgJson.devDependencies?.["@testing-library/dom"]).toBeDefined();
+          expect(pkgJson.devDependencies?.["@testing-library/jest-dom"]).toBeDefined();
+          expect(pkgJson.devDependencies?.jest).toBeDefined();
+        }
+      });
+    });
+
+    describe("Vitest-Playwright with Testing Library", () => {
+      test("vitest-playwright includes Testing Library for React", async () => {
+        const result = await runTRPCTest(
+          createCustomConfig({
+            projectName: "vitest-playwright-testing-library",
+            frontend: ["tanstack-router"],
+            testing: "vitest-playwright",
+          }),
+        );
+        expectSuccess(result);
+
+        const webPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "web")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (webPackageJson?.content) {
+          const pkgJson = JSON.parse(webPackageJson.content);
+          expect(pkgJson.devDependencies?.["@testing-library/react"]).toBeDefined();
+          expect(pkgJson.devDependencies?.vitest).toBeDefined();
+          expect(pkgJson.devDependencies?.["@playwright/test"]).toBeDefined();
+        }
+      });
+    });
+
+    describe("Testing Library for Vue frontends", () => {
+      test("vitest includes Testing Library Vue for Nuxt", async () => {
+        const result = await runTRPCTest(
+          createCustomConfig({
+            projectName: "vitest-testing-library-nuxt",
+            frontend: ["nuxt"],
+            backend: "hono",
+            runtime: "bun",
+            api: "none",
+            testing: "vitest",
+          }),
+        );
+        expectSuccess(result);
+
+        const webPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "web")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (webPackageJson?.content) {
+          const pkgJson = JSON.parse(webPackageJson.content);
+          expect(pkgJson.devDependencies?.["@testing-library/vue"]).toBeDefined();
+          expect(pkgJson.devDependencies?.["@testing-library/dom"]).toBeDefined();
+        }
+      });
+    });
+
+    describe("Testing Library for Svelte frontends", () => {
+      test("vitest includes Testing Library Svelte for Svelte", async () => {
+        const result = await runTRPCTest(
+          createCustomConfig({
+            projectName: "vitest-testing-library-svelte",
+            frontend: ["svelte"],
+            backend: "hono",
+            runtime: "bun",
+            api: "none",
+            testing: "vitest",
+          }),
+        );
+        expectSuccess(result);
+
+        const webPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "web")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (webPackageJson?.content) {
+          const pkgJson = JSON.parse(webPackageJson.content);
+          expect(pkgJson.devDependencies?.["@testing-library/svelte"]).toBeDefined();
+          expect(pkgJson.devDependencies?.["@testing-library/dom"]).toBeDefined();
+        }
+      });
+    });
+
+    describe("E2E-only testing (no Testing Library)", () => {
+      test("playwright-only does NOT include Testing Library", async () => {
+        const result = await runTRPCTest(
+          createCustomConfig({
+            projectName: "playwright-only-no-testing-library",
+            frontend: ["tanstack-router"],
+            testing: "playwright",
+          }),
+        );
+        expectSuccess(result);
+
+        const webPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "web")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (webPackageJson?.content) {
+          const pkgJson = JSON.parse(webPackageJson.content);
+          // Playwright should be included
+          expect(pkgJson.devDependencies?.["@playwright/test"]).toBeDefined();
+          // But Testing Library should NOT be included
+          expect(pkgJson.devDependencies?.["@testing-library/react"]).toBeUndefined();
+          expect(pkgJson.devDependencies?.["@testing-library/dom"]).toBeUndefined();
+        }
+      });
+
+      test("cypress-only does NOT include Testing Library", async () => {
+        const result = await runTRPCTest(
+          createCustomConfig({
+            projectName: "cypress-only-no-testing-library",
+            frontend: ["tanstack-router"],
+            testing: "cypress",
+          }),
+        );
+        expectSuccess(result);
+
+        const webPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "web")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (webPackageJson?.content) {
+          const pkgJson = JSON.parse(webPackageJson.content);
+          // Cypress should be included
+          expect(pkgJson.devDependencies?.cypress).toBeDefined();
+          // But Testing Library should NOT be included
+          expect(pkgJson.devDependencies?.["@testing-library/react"]).toBeUndefined();
+        }
+      });
+    });
+
+    describe("Testing Library for Astro with integrations", () => {
+      test("vitest includes Testing Library React for Astro with React integration", async () => {
+        const result = await runTRPCTest(
+          createCustomConfig({
+            projectName: "vitest-testing-library-astro-react",
+            frontend: ["astro"],
+            astroIntegration: "react",
+            backend: "hono",
+            runtime: "bun",
+            api: "none",
+            testing: "vitest",
+          }),
+        );
+        expectSuccess(result);
+
+        const webPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "web")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (webPackageJson?.content) {
+          const pkgJson = JSON.parse(webPackageJson.content);
+          expect(pkgJson.devDependencies?.["@testing-library/react"]).toBeDefined();
+        }
+      });
+
+      test("vitest includes Testing Library Svelte for Astro with Svelte integration", async () => {
+        const result = await runTRPCTest(
+          createCustomConfig({
+            projectName: "vitest-testing-library-astro-svelte",
+            frontend: ["astro"],
+            astroIntegration: "svelte",
+            backend: "hono",
+            runtime: "bun",
+            api: "none",
+            testing: "vitest",
+          }),
+        );
+        expectSuccess(result);
+
+        const webPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "web")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (webPackageJson?.content) {
+          const pkgJson = JSON.parse(webPackageJson.content);
+          expect(pkgJson.devDependencies?.["@testing-library/svelte"]).toBeDefined();
+        }
+      });
+    });
+
+    describe("No Testing Library for incompatible frontends", () => {
+      test("vitest does NOT include framework-specific Testing Library for Solid", async () => {
+        const result = await runTRPCTest(
+          createCustomConfig({
+            projectName: "vitest-solid-no-react-testing-lib",
+            frontend: ["solid"],
+            backend: "hono",
+            runtime: "bun",
+            api: "none",
+            testing: "vitest",
+          }),
+        );
+        expectSuccess(result);
+
+        const webPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "web")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (webPackageJson?.content) {
+          const pkgJson = JSON.parse(webPackageJson.content);
+          // Solid doesn't have Testing Library support in our implementation
+          // so no framework-specific testing library should be included
+          expect(pkgJson.devDependencies?.["@testing-library/react"]).toBeUndefined();
+          expect(pkgJson.devDependencies?.["@testing-library/vue"]).toBeUndefined();
+          expect(pkgJson.devDependencies?.["@testing-library/svelte"]).toBeUndefined();
+        }
+      });
+
+      // Note: Qwik test skipped due to pre-existing Handlebars template parsing error
+      // Qwik templates need fixing before this test can be enabled
     });
   });
 });

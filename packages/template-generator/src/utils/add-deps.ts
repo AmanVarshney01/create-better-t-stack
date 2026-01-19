@@ -332,6 +332,25 @@ export const dependencyVersionMap = {
   // Testing - Cypress
   cypress: "^14.3.3",
 
+  // Testing - Vitest
+  vitest: "^3.1.1",
+  "@vitest/ui": "^3.1.1",
+  "@vitest/coverage-v8": "^3.1.1",
+  jsdom: "^26.0.0",
+  "happy-dom": "^18.0.1",
+
+  // Testing - Playwright
+  "@playwright/test": "^1.52.0",
+  playwright: "^1.52.0",
+
+  // Testing Library
+  "@testing-library/dom": "^10.4.0",
+  "@testing-library/react": "^16.2.0",
+  "@testing-library/vue": "^8.1.0",
+  "@testing-library/svelte": "^5.2.7",
+  "@testing-library/jest-dom": "^6.6.3",
+  "@testing-library/user-event": "^14.6.1",
+
   // Animation
   motion: "^12.17.0",
   gsap: "^3.12.7",

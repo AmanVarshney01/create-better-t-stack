@@ -173,7 +173,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 - [x] **Playwright** - E2E testing framework
 - [x] **Jest** - Classic testing framework
 - [x] **Cypress** - E2E testing alternative to Playwright
-- [ ] **Testing Library** - DOM testing utilities
+- [x] **Testing Library** - DOM testing utilities _(auto-included with Vitest/Jest for React/Vue/Svelte frontends)_
 - [ ] **MSW** - Mock Service Worker for API mocking
 - [ ] **Storybook** - Component development/testing
 

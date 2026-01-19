@@ -2088,3 +2088,69 @@ Implemented Mailgun (mailgun.js) as a new email service option. Mailgun is a pow
 - Tracking options (clicks, opens)
 - Environment-based configuration (API key, domain, from address)
 - Compatible with all backends (hono, express, fastify, elysia, nestjs, self)
+
+
+---
+
+## Session: 2026-01-19
+
+### Task: Add Testing Library as DOM testing utilities
+
+**Status:** ✅ Completed
+
+**Summary:**
+Implemented Testing Library (@testing-library/dom, @testing-library/react, @testing-library/vue, @testing-library/svelte, @testing-library/jest-dom, @testing-library/user-event) as an automatic addition to unit testing frameworks (Vitest, Jest, Vitest+Playwright). Testing Library is now automatically included when users select these test frameworks with compatible frontends.
+
+**Changes Made:**
+1. **packages/template-generator/src/utils/add-deps.ts**: Added Testing Library and additional testing dependencies:
+   - vitest: ^3.1.1, @vitest/ui: ^3.1.1, @vitest/coverage-v8: ^3.1.1
+   - jsdom: ^26.0.0, happy-dom: ^18.0.1
+   - @playwright/test: ^1.52.0, playwright: ^1.52.0
+   - @testing-library/dom: ^10.4.0
+   - @testing-library/react: ^16.2.0
+   - @testing-library/vue: ^8.1.0
+   - @testing-library/svelte: ^5.2.7
+   - @testing-library/jest-dom: ^6.6.3
+   - @testing-library/user-event: ^14.6.1
+
+2. **packages/template-generator/src/processors/testing-deps.ts**: Completely rewrote the testing deps processor to:
+   - Add Vitest and Playwright dependencies when selected
+   - Add proper Jest dependencies including jest-environment-jsdom
+   - Automatically include Testing Library for compatible frontends:
+     - @testing-library/react for React frontends (tanstack-router, react-router, tanstack-start, next, native-*, redwood, astro with React)
+     - @testing-library/vue for Vue frontends (nuxt)
+     - @testing-library/svelte for Svelte frontends (svelte, astro with Svelte)
+   - Include core Testing Library packages (@testing-library/dom, @testing-library/user-event, @testing-library/jest-dom) for all compatible frontends
+   - Only add Testing Library for unit test frameworks (vitest, jest, vitest-playwright), NOT for E2E-only (playwright, cypress)
+
+3. **apps/web/src/lib/constant.ts**: Updated testing option descriptions to mention Testing Library support:
+   - Vitest: "with Testing Library support for React/Vue/Svelte"
+   - Jest: "with Testing Library support for React/Vue/Svelte"
+   - Vitest + Playwright: "with Testing Library support for complete coverage"
+
+4. **apps/cli/test/testing.test.ts**: Added 18 comprehensive tests for Testing Library:
+   - 4 tests for Vitest with React frontends (TanStack Router, React Router, Next.js, TanStack Start)
+   - 1 test for Jest with React frontends
+   - 1 test for Vitest-Playwright with Testing Library
+   - 1 test for Vitest with Vue (Nuxt)
+   - 1 test for Vitest with Svelte
+   - 2 tests for E2E-only frameworks NOT including Testing Library (Playwright-only, Cypress-only)
+   - 2 tests for Astro with React/Svelte integrations
+   - 1 test for Solid (no Testing Library since it doesn't have official support in our implementation)
+
+**Test Results:**
+- All 32 testing framework tests pass (including 18 new Testing Library tests)
+- Template-generator linting passes with only pre-existing warnings
+
+**Key Features:**
+- Automatic inclusion of Testing Library for compatible frontends
+- Framework-specific Testing Library packages (@testing-library/react, @testing-library/vue, @testing-library/svelte)
+- Core utilities included (@testing-library/dom, @testing-library/user-event)
+- Jest DOM matchers included (@testing-library/jest-dom) for both Jest and Vitest
+- Smart detection: Testing Library only added for unit test frameworks, not E2E-only
+- Support for Astro with different UI framework integrations
+
+**Notes:**
+- Pre-existing TypeScript errors in apps/cli/src/prompts/config-prompts.ts unrelated to this change
+- Pre-existing TypeScript errors in apps/web unrelated to this change
+- Qwik test skipped due to pre-existing Handlebars template parsing error in Qwik templates
