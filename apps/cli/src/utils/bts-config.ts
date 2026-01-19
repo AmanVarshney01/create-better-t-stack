@@ -36,6 +36,7 @@ export async function writeBtsConfig(projectConfig: ProjectConfig) {
     cssFramework: projectConfig.cssFramework,
     uiLibrary: projectConfig.uiLibrary,
     realtime: projectConfig.realtime,
+    animation: projectConfig.animation,
   };
 
   const baseContent = {
@@ -66,6 +67,7 @@ export async function writeBtsConfig(projectConfig: ProjectConfig) {
     cssFramework: btsConfig.cssFramework,
     uiLibrary: btsConfig.uiLibrary,
     realtime: btsConfig.realtime,
+    animation: btsConfig.animation,
   };
 
   let configContent = JSON.stringify(baseContent);

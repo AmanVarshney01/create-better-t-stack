@@ -58,6 +58,8 @@ import {
   WebDeploySchema,
   RealtimeSchema,
   type Realtime,
+  AnimationSchema,
+  type Animation,
 } from "./types";
 import { handleError } from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
@@ -100,6 +102,7 @@ export const router = os.router({
           testing: TestingSchema.optional(),
           ai: AISchema.optional(),
           realtime: RealtimeSchema.optional(),
+          animation: AnimationSchema.optional(),
           frontend: z.array(FrontendSchema).optional(),
           addons: z.array(AddonsSchema).optional(),
           examples: z.array(ExamplesSchema).optional(),
@@ -316,6 +319,7 @@ export async function createVirtual(
       testing: options.testing || "vitest",
       validation: options.validation || "zod",
       realtime: options.realtime || "none",
+      animation: options.animation || "none",
     };
 
     const result = await generate({
@@ -360,4 +364,5 @@ export type {
   CSSFramework,
   UILibrary,
   Realtime,
+  Animation,
 };

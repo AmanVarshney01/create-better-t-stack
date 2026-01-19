@@ -48,6 +48,7 @@ export function loadStackParams(
       validation: getString("validation", DEFAULT_STACK.validation),
       testing: getString("testing", DEFAULT_STACK.testing),
       realtime: getString("realtime", DEFAULT_STACK.realtime),
+      animation: getString("animation", DEFAULT_STACK.animation),
       codeQuality: getArray("codeQuality", DEFAULT_STACK.codeQuality),
       documentation: getArray("documentation", DEFAULT_STACK.documentation),
       appPlatforms: getArray("appPlatforms", DEFAULT_STACK.appPlatforms),
@@ -106,6 +107,7 @@ export function serializeStackParams(basePath: string, stack: StackState): strin
   addParam("validation", stack.validation);
   addParam("testing", stack.testing);
   addParam("realtime", stack.realtime);
+  addParam("animation", stack.animation);
   addParam("codeQuality", stack.codeQuality);
   addParam("documentation", stack.documentation);
   addParam("appPlatforms", stack.appPlatforms);

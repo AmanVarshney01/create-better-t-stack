@@ -4,6 +4,7 @@ import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { processAddonsDeps } from "./addons-deps";
 import { processAlchemyPlugins } from "./alchemy-plugins";
+import { processAnimationDeps } from "./animation-deps";
 import { processApiDeps } from "./api-deps";
 import { processAuthDeps } from "./auth-deps";
 import { processAuthPlugins } from "./auth-plugins";
@@ -48,6 +49,7 @@ export function processDependencies(vfs: VirtualFileSystem, config: ProjectConfi
   processFormsDeps(vfs, config);
   processValidationDeps(vfs, config);
   processRealtimeDeps(vfs, config);
+  processAnimationDeps(vfs, config);
   processTestingDeps(vfs, config);
   processCSSAndUILibraryDeps(vfs, config);
   processTurboConfig(vfs, config);
@@ -55,6 +57,7 @@ export function processDependencies(vfs: VirtualFileSystem, config: ProjectConfi
 
 export {
   processAddonsDeps,
+  processAnimationDeps,
   processApiDeps,
   processAuthDeps,
   processBackendDeps,

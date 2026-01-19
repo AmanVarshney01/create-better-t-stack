@@ -1021,6 +1021,24 @@ export const TECH_OPTIONS: Record<
       default: true,
     },
   ],
+  animation: [
+    {
+      id: "framer-motion",
+      name: "Framer Motion",
+      description: "Production-ready declarative animations for React",
+      icon: "https://cdn.simpleicons.org/framer/0055FF",
+      color: "from-blue-500 to-purple-600",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No Animation",
+      description: "Skip animation library setup",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
   testing: [
     {
       id: "vitest",
@@ -1324,6 +1342,7 @@ export type StackState = {
   validation: string;
   testing: string;
   realtime: string;
+  animation: string;
   cssFramework: string;
   uiLibrary: string;
   codeQuality: string[];
@@ -1357,6 +1376,7 @@ export const DEFAULT_STACK: StackState = {
   validation: "zod",
   testing: "vitest",
   realtime: "none",
+  animation: "none",
   cssFramework: "tailwind",
   uiLibrary: "shadcn-ui",
   codeQuality: [],

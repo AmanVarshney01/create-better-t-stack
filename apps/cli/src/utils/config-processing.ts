@@ -1,6 +1,7 @@
 import path from "node:path";
 
 import type {
+  Animation,
   API,
   AstroIntegration,
   Auth,
@@ -85,6 +86,10 @@ export function processFlags(options: CLIInput, projectName?: string) {
 
   if (options.realtime !== undefined) {
     config.realtime = options.realtime as Realtime;
+  }
+
+  if (options.animation !== undefined) {
+    config.animation = options.animation as Animation;
   }
 
   if (options.git !== undefined) {

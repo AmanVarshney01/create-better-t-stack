@@ -131,6 +131,8 @@ export const RealtimeSchema = z
   .enum(["socket-io", "none"])
   .describe("Real-time/WebSocket solution");
 
+export const AnimationSchema = z.enum(["framer-motion", "none"]).describe("Animation library");
+
 export const CSSFrameworkSchema = z
   .enum(["tailwind", "scss", "less", "postcss-only", "none"])
   .describe("CSS framework/preprocessor");
@@ -209,6 +211,7 @@ export const CreateInputSchema = z.object({
   uiLibrary: UILibrarySchema.optional(),
   validation: ValidationSchema.optional(),
   realtime: RealtimeSchema.optional(),
+  animation: AnimationSchema.optional(),
 });
 
 export const AddInputSchema = z.object({
@@ -255,6 +258,7 @@ export const ProjectConfigSchema = z.object({
   uiLibrary: UILibrarySchema,
   validation: ValidationSchema,
   realtime: RealtimeSchema,
+  animation: AnimationSchema,
 });
 
 export const BetterTStackConfigSchema = z.object({
@@ -285,6 +289,7 @@ export const BetterTStackConfigSchema = z.object({
   uiLibrary: UILibrarySchema,
   validation: ValidationSchema,
   realtime: RealtimeSchema,
+  animation: AnimationSchema,
 });
 
 export const BetterTStackConfigFileSchema = z
@@ -336,3 +341,4 @@ export const CSS_FRAMEWORK_VALUES = CSSFrameworkSchema.options;
 export const UI_LIBRARY_VALUES = UILibrarySchema.options;
 export const VALIDATION_VALUES = ValidationSchema.options;
 export const REALTIME_VALUES = RealtimeSchema.options;
+export const ANIMATION_VALUES = AnimationSchema.options;

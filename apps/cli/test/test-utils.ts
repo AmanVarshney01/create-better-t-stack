@@ -27,11 +27,13 @@ import type {
   Testing,
   Validation,
   Realtime,
+  Animation,
 } from "../src/types";
 
 import { create } from "../src/index";
 import {
   AddonsSchema,
+  AnimationSchema,
   APISchema,
   AstroIntegrationSchema,
   AuthSchema,
@@ -114,6 +116,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     "testing",
     "validation",
     "realtime",
+    "animation",
   ];
   const hasSpecificCoreConfig = coreStackFlags.some((flag) => config[flag] !== undefined);
 
@@ -149,6 +152,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
         testing: "vitest" as Testing,
         validation: "zod" as Validation,
         realtime: "none" as Realtime,
+        animation: "none" as Animation,
       };
 
   // Build options object - let the CLI handle all validation
@@ -236,6 +240,7 @@ export const FORMS = extractEnumValues(FormsSchema);
 export const TESTINGS = extractEnumValues(TestingSchema);
 export const VALIDATIONS = extractEnumValues(ValidationSchema);
 export const REALTIMES = extractEnumValues(RealtimeSchema);
+export const ANIMATIONS = extractEnumValues(AnimationSchema);
 
 // Convenience functions for common test patterns
 export function createBasicConfig(overrides: Partial<TestConfig> = {}): TestConfig {

@@ -121,6 +121,7 @@ export async function createProjectHandler(
             forms: "react-hook-form",
             testing: "vitest",
             realtime: "none",
+            animation: "none",
           } satisfies ProjectConfig,
           reproducibleCommand: "",
           timeScaffolded,

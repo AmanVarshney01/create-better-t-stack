@@ -188,5 +188,6 @@ export async function gatherConfig(
     forms: flags.forms ?? "react-hook-form",
     testing: flags.testing ?? "vitest",
     realtime: flags.realtime ?? "none",
+    animation: flags.animation ?? "none",
   };
 }

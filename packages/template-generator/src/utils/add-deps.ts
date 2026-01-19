@@ -284,6 +284,9 @@ export const dependencyVersionMap = {
   "ts-jest": "^29.2.5",
   "@jest/globals": "^29.7.0",
   "jest-environment-jsdom": "^29.7.0",
+
+  // Animation
+  motion: "^12.17.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

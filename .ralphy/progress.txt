@@ -847,3 +847,56 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Framer Motion / Motion Animation Library Implementation
+
+### Task: Implement Framer Motion / Motion as an animation library option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added AnimationSchema with "framer-motion" and "none" options
+   - Added animation to CreateInputSchema, ProjectConfigSchema, BetterTStackConfigSchema
+   - Added ANIMATION_VALUES export
+2. **packages/types/src/types.ts**: Added Animation type export
+3. **packages/template-generator/src/utils/add-deps.ts**: Added motion dependency version:
+   - motion: ^12.17.0 (note: framer-motion is already in deps as ^12.17.0 for NextUI)
+4. **packages/template-generator/src/processors/animation-deps.ts**: Created new animation processor:
+   - Handles motion dependency addition to web and native packages
+   - Only applies to React-based frontends
+5. **packages/template-generator/src/processors/index.ts**: Registered animation processor
+6. **apps/cli/src/index.ts**: Added AnimationSchema to CLI router input and createVirtual function
+7. **apps/cli/src/constants.ts**: Added animation: "none" to DEFAULT_CONFIG_BASE
+8. **apps/cli/src/utils/config-processing.ts**: Added Animation processing to processFlags function
+9. **apps/cli/src/utils/bts-config.ts**: Added animation field to btsConfig
+10. **apps/cli/src/prompts/config-prompts.ts**: Added animation to gatherConfig return
+11. **apps/cli/src/helpers/core/command-handlers.ts**: Added animation to error config
+12. **apps/web/src/lib/types.ts**: Added "animation" to TechCategory type
+13. **apps/web/src/lib/constant.ts**: Added animation section to TECH_OPTIONS:
+    - Framer Motion option with icon and description
+    - None option for no animation
+    - Added animation to StackState type and DEFAULT_STACK
+14. **apps/web/src/lib/stack-url-state.ts**: Added animation to URL state parsing and serialization
+15. **apps/web/src/lib/stack-url-state.client.ts**: Added animation to client-side state (anim key)
+16. **apps/web/src/lib/stack-search-schema.ts**: Added "anim" URL param for animation
+17. **apps/web/src/lib/stack-url-keys.ts**: Added animation URL key mapping
+18. **apps/cli/test/test-utils.ts**: Added Animation type and schema support
+19. **apps/cli/test/animation.test.ts**: Created comprehensive animation tests:
+    - Framer Motion with TanStack Router, React Router, Next.js, TanStack Start
+    - Framer Motion with React Native (native-bare, native-uniwind)
+    - None option test
+
+### Features:
+- Framer Motion (via motion package) declarative animations for React
+- Support for all React-based frontends (TanStack Router, React Router, TanStack Start, Next.js)
+- Support for React Native (Expo) apps
+- Full web builder UI integration with animation section
+- URL parameter support for sharing configurations
+
+### Technical Notes:
+- Framer Motion is now called "motion" (same library, rebranded)
+- The "motion" package is the modern, production-ready animation library for React
+- Animation dependencies are only added to React-based packages (web and native)
+- Uses "anim" URL key for the animation parameter
+- All 7 tests pass
+
+### Status: COMPLETE
+

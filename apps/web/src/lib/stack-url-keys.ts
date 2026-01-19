@@ -25,6 +25,7 @@ export const stackUrlKeys: UrlKeys<
   validation: "val",
   testing: "tst",
   realtime: "rt2",
+  animation: "anim",
   codeQuality: "cq",
   documentation: "doc",
   appPlatforms: "ap",
