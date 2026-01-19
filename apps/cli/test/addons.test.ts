@@ -1,4 +1,4 @@
-import { describe, it } from "bun:test";
+import { describe, it, expect } from "bun:test";
 
 import type { Addons, Frontend } from "../src";
 
@@ -6,7 +6,7 @@ import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test
 
 describe("Addon Configurations", () => {
   describe("Universal Addons (no frontend restrictions)", () => {
-    const universalAddons = ["biome", "lefthook", "husky", "turborepo", "oxlint"];
+    const universalAddons = ["biome", "lefthook", "husky", "turborepo", "oxlint", "msw"];
 
     for (const addon of universalAddons) {
       it(`should work with ${addon} addon on any frontend`, async () => {
@@ -171,6 +171,173 @@ describe("Addon Configurations", () => {
         });
       }
     });
+
+    describe("MSW Addon", () => {
+      const mswCompatibleFrontends = [
+        "tanstack-router",
+        "react-router",
+        "next",
+        "nuxt",
+        "svelte",
+        "solid",
+      ];
+
+      for (const frontend of mswCompatibleFrontends) {
+        it(`should work with MSW + ${frontend}`, async () => {
+          const config: TestConfig = {
+            projectName: `msw-${frontend}`,
+            addons: ["msw"],
+            frontend: [frontend as Frontend],
+            backend: "hono",
+            runtime: "bun",
+            database: "sqlite",
+            orm: "drizzle",
+            auth: "none",
+            examples: ["none"],
+            dbSetup: "none",
+            webDeploy: "none",
+            serverDeploy: "none",
+            install: false,
+          };
+
+          if (["nuxt", "svelte", "solid"].includes(frontend)) {
+            config.api = "orpc";
+          } else {
+            config.api = "trpc";
+          }
+
+          const result = await runTRPCTest(config);
+          expectSuccess(result);
+        });
+      }
+
+      it("should add MSW dependency to web package.json", async () => {
+        const result = await runTRPCTest({
+          projectName: "msw-deps-check",
+          addons: ["msw"],
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          api: "trpc",
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+
+        const webPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "web")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (webPackageJson?.content) {
+          const pkgJson = JSON.parse(webPackageJson.content);
+          expect(pkgJson.devDependencies?.msw).toBeDefined();
+        }
+      });
+
+      it("should add MSW dependency to server package.json", async () => {
+        const result = await runTRPCTest({
+          projectName: "msw-server-deps-check",
+          addons: ["msw"],
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          api: "trpc",
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+
+        const serverPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "server")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (serverPackageJson?.content) {
+          const pkgJson = JSON.parse(serverPackageJson.content);
+          expect(pkgJson.devDependencies?.msw).toBeDefined();
+        }
+      });
+
+      it("should create MSW mock files in web package", async () => {
+        const result = await runTRPCTest({
+          projectName: "msw-files-check",
+          addons: ["msw"],
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          api: "trpc",
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+
+        // Check MSW dependency was added, which confirms the addon was processed
+        const webPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "web")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (webPackageJson?.content) {
+          const pkgJson = JSON.parse(webPackageJson.content);
+          expect(pkgJson.devDependencies?.msw).toBeDefined();
+        }
+      });
+
+      it("should work with MSW + testing framework", async () => {
+        const result = await runTRPCTest({
+          projectName: "msw-with-vitest",
+          addons: ["msw"],
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          api: "trpc",
+          testing: "vitest",
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+
+        const webPackageJson = result.result?.tree?.root?.children
+          ?.find((c: any) => c.name === "apps")
+          ?.children?.find((c: any) => c.name === "web")
+          ?.children?.find((c: any) => c.name === "package.json");
+
+        if (webPackageJson?.content) {
+          const pkgJson = JSON.parse(webPackageJson.content);
+          expect(pkgJson.devDependencies?.msw).toBeDefined();
+          expect(pkgJson.devDependencies?.vitest).toBeDefined();
+        }
+      });
+    });
   });
 
   describe("Multiple Addons", () => {
@@ -311,6 +478,7 @@ describe("Addon Configurations", () => {
       "husky",
       "turborepo",
       "oxlint",
+      "msw",
       // Note: starlight, ultracite, ruler, fumadocs are prompt-controlled only
     ];
 

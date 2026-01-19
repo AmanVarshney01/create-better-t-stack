@@ -351,6 +351,9 @@ export const dependencyVersionMap = {
   "@testing-library/jest-dom": "^6.6.3",
   "@testing-library/user-event": "^14.6.1",
 
+  // MSW (Mock Service Worker)
+  msw: "^2.7.0",
+
   // Animation
   motion: "^12.17.0",
   gsap: "^3.12.7",

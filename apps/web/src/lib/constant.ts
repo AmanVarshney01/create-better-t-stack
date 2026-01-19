@@ -1144,6 +1144,14 @@ export const TECH_OPTIONS: Record<
       color: "from-cyan-500 to-cyan-700",
       default: false,
     },
+    {
+      id: "msw",
+      name: "MSW",
+      description: "Mock Service Worker for API mocking in tests and development",
+      icon: "",
+      color: "from-orange-500 to-orange-700",
+      default: false,
+    },
   ],
   examples: [
     {

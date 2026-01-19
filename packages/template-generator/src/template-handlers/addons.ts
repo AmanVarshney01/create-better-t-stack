@@ -28,6 +28,17 @@ export async function processAddonTemplates(
       continue;
     }
 
+    // MSW templates - only add to existing packages
+    if (addon === "msw") {
+      if (vfs.exists("apps/web/package.json")) {
+        processTemplatesFromPrefix(vfs, templates, "addons/msw/apps/web", "apps/web", config);
+      }
+      if (vfs.exists("apps/server/package.json")) {
+        processTemplatesFromPrefix(vfs, templates, "addons/msw/apps/server", "apps/server", config);
+      }
+      continue;
+    }
+
     processTemplatesFromPrefix(vfs, templates, `addons/${addon}`, "", config);
   }
 }

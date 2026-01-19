@@ -56,6 +56,7 @@ export const AddonsSchema = z
     "oxlint",
     "opentui",
     "wxt",
+    "msw",
     "none",
   ])
   .describe("Additional addons");

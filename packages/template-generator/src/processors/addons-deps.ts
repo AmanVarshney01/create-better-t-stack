@@ -58,4 +58,20 @@ export function processAddonsDeps(vfs: VirtualFileSystem, config: ProjectConfig)
       }
     }
   }
+
+  // MSW (Mock Service Worker) - API mocking for testing and development
+  if (config.addons.includes("msw")) {
+    const webPkgPath = "apps/web/package.json";
+    const serverPkgPath = "apps/server/package.json";
+
+    // Add MSW to web package (for browser-based mocking)
+    if (vfs.exists(webPkgPath)) {
+      addPackageDependency({ vfs, packagePath: webPkgPath, devDependencies: ["msw"] });
+    }
+
+    // Add MSW to server package (for Node.js-based mocking in tests)
+    if (vfs.exists(serverPkgPath)) {
+      addPackageDependency({ vfs, packagePath: serverPkgPath, devDependencies: ["msw"] });
+    }
+  }
 }
