@@ -2362,3 +2362,35 @@ Implemented Plunk as a new email provider option. Plunk is an open-source email 
 - Self-hosted option with custom base URL configuration
 - Compatible with all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
 - Works with fullstack frameworks (Next.js, TanStack Start)
+
+---
+
+## 2026-01-19 - Final Form Library Implementation
+
+Implemented Final Form as a new form library option. Final Form is a framework-agnostic, subscription-based form state management library built with pure JavaScript and zero dependencies.
+
+**Changes Made:**
+1. **packages/types/src/schemas.ts**: Added "final-form" to FormsSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Final Form dependency versions:
+   - final-form: ^4.20.10
+   - react-final-form: ^6.5.9
+3. **packages/template-generator/src/processors/forms-deps.ts**: Added Final Form dependency processing:
+   - Adds final-form and react-final-form packages to web and native apps
+4. **apps/web/src/lib/constant.ts**: Added Final Form to web builder form options with purple gradient
+5. **apps/cli/test/forms.test.ts**: Added comprehensive Final Form tests:
+   - 4 tests with React frontends (TanStack Router, React Router, Next.js, TanStack Start)
+   - 4 tests with different backends (Hono, Express, Fastify, Elysia)
+   - 2 tests with native apps (native-bare, native-uniwind)
+
+**Test Results:**
+- All 22 form library tests pass (including 10 new Final Form tests)
+- TypeScript checks pass for types and template-generator packages
+- Pre-existing TypeScript errors in apps/cli/src/prompts/config-prompts.ts unrelated to this change
+
+**Key Features:**
+- Framework-agnostic core library (pure JavaScript, zero dependencies)
+- Observer pattern for selective re-rendering (similar to Redux selectors)
+- React Final Form wrapper for React integration
+- Minimal bundle size (~9.5KB for core + React wrapper)
+- Compatible with all React-based web frontends and React Native apps
+- Field-level and form-level validation support

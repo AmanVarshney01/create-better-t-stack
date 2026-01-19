@@ -120,7 +120,7 @@ export const StateManagementSchema = z
   .describe("State management library");
 
 export const FormsSchema = z
-  .enum(["tanstack-form", "react-hook-form", "formik", "none"])
+  .enum(["tanstack-form", "react-hook-form", "formik", "final-form", "none"])
   .describe("Form handling library");
 
 export const ValidationSchema = z

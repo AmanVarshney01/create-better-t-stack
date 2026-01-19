@@ -824,6 +824,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "final-form",
+      name: "Final Form",
+      description: "Framework-agnostic form state management",
+      icon: "",
+      color: "from-purple-500 to-purple-700",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Form Library",
       description: "Build custom form handling",

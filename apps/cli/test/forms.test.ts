@@ -143,6 +143,134 @@ describe("Form Library Options", () => {
     });
   });
 
+  describe("Final Form with React frontends", () => {
+    test("final-form with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "final-form-tanstack-router",
+          frontend: ["tanstack-router"],
+          forms: "final-form",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("final-form with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "final-form-react-router",
+          frontend: ["react-router"],
+          forms: "final-form",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("final-form with Next.js", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "final-form-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          forms: "final-form",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("final-form with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "final-form-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          forms: "final-form",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Final Form with different backends", () => {
+    test("final-form with Hono backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "final-form-hono",
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          forms: "final-form",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("final-form with Express backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "final-form-express",
+          frontend: ["tanstack-router"],
+          backend: "express",
+          runtime: "node",
+          forms: "final-form",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("final-form with Fastify backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "final-form-fastify",
+          frontend: ["tanstack-router"],
+          backend: "fastify",
+          runtime: "node",
+          forms: "final-form",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("final-form with Elysia backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "final-form-elysia",
+          frontend: ["tanstack-router"],
+          backend: "elysia",
+          forms: "final-form",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Final Form with native apps", () => {
+    test("final-form with native-bare", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "final-form-native-bare",
+          frontend: ["native-bare"],
+          backend: "hono",
+          forms: "final-form",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("final-form with native-uniwind", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "final-form-native-uniwind",
+          frontend: ["native-uniwind"],
+          backend: "hono",
+          forms: "final-form",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("No form library", () => {
     test("none form library option", async () => {
       const result = await runTRPCTest(

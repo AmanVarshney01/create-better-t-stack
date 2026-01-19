@@ -62,6 +62,9 @@ function getFormsDeps(
     case "formik":
       deps.push("formik", "yup");
       break;
+    case "final-form":
+      deps.push("final-form", "react-final-form");
+      break;
     // react-hook-form and tanstack-form are handled elsewhere or already included
     // No additional deps needed for those cases
   }
