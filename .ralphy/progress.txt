@@ -2850,3 +2850,93 @@ Implemented AdonisJS as a new backend framework option. AdonisJS is a full-featu
 - API: trpc, orpc, none
 - Auth: better-auth, none
 - Works with all web frontends
+
+---
+
+## 2026-01-19 - Nitro Backend Framework Implementation
+
+Implemented Nitro as a new backend framework option. Nitro is a universal server framework by UnJS that powers Nuxt.js and can run anywhere - Node.js, Bun, Cloudflare Workers, Deno, and more.
+
+**Changes Made:**
+1. **packages/types/src/schemas.ts**: Added "nitro" to BackendSchema enum
+
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Nitro dependency versions:
+   - nitropack: ^2.11.12
+   - h3: ^1.15.3
+
+3. **packages/template-generator/src/processors/backend-deps.ts**: Added Nitro handling to inject dependencies:
+   - nitropack
+   - h3
+
+4. **packages/template-generator/src/processors/runtime-deps.ts**: Added nitro to list of backends that skip runtime processing (Nitro has its own CLI for dev/start scripts)
+
+5. **packages/template-generator/src/template-handlers/backend.ts**: Added special handling for Nitro backend to use framework-specific template folder (similar to Encore.ts and AdonisJS pattern)
+
+6. **packages/template-generator/templates/backend/server/nitro/**: Created Nitro templates:
+   - package.json.hbs - Package with Nitro-specific scripts (nitro dev, nitro build)
+   - tsconfig.json.hbs - TypeScript configuration with nitropack types
+   - nitro.config.ts.hbs - Nitro configuration with preset based on runtime (node-server, bun, cloudflare-module)
+   - _gitignore - Git ignore file for .output and .nitro directories
+   - routes/index.ts.hbs - Health check endpoint
+   - routes/api/auth/[...path].ts.hbs - Better-Auth handler
+   - routes/trpc/[...path].ts.hbs - tRPC handler using fetch adapter
+   - routes/rpc/[...path].ts.hbs - oRPC RPC handler
+   - routes/api-reference/[...path].ts.hbs - oRPC OpenAPI reference handler
+   - routes/ai.post.ts.hbs - AI SDK streaming endpoint
+
+7. **apps/web/src/lib/constant.ts**: Added Nitro to TECH_OPTIONS.backend:
+   - id: "nitro"
+   - name: "Nitro"
+   - description: "Universal server framework (powers Nuxt)"
+   - icon: "/icon/nitro.svg"
+   - color: "from-cyan-500 to-teal-700"
+
+8. **apps/web/public/icon/nitro.svg**: Created Nitro icon (teal gradient with N letter design)
+
+9. **apps/cli/src/utils/compatibility-rules.ts**: 
+   - Added WORKERS_COMPATIBLE_BACKENDS constant with ["hono", "nitro"]
+   - Updated validateWorkersCompatibility to allow Nitro with workers runtime
+   - Updated error messages to mention "Hono or Nitro"
+
+10. **apps/cli/test/backend-runtime.test.ts**: Updated to include Nitro:
+    - Added nitro to valid backend-runtime combinations (nitro + node, nitro + bun, nitro + workers)
+    - Added nitro to "All Backend Types" test list with proper defaults
+    - Updated error messages for workers runtime validation
+
+11. **apps/cli/test/nitro.test.ts**: Created comprehensive test suite (13 tests):
+    - Tests for valid Nitro configurations with different runtimes (node, bun, workers)
+    - Tests for frontend combinations (TanStack Router, Next.js, TanStack Start, Nuxt)
+    - Tests for API layer combinations (tRPC, oRPC, none)
+    - Tests for authentication (better-auth)
+    - Tests for database/ORM combinations (postgres/drizzle, mysql/prisma)
+    - Tests for project structure validation
+
+**Test Results:**
+- All 13 Nitro-specific tests pass
+- All 52 backend-runtime tests pass
+- Linting passes for all modified files
+
+**Key Features:**
+- Full Nitro v3 project structure with file-based routing in `routes/` directory
+- Uses `nitropack` package for the Nitro framework
+- Uses `h3` for the HTTP layer (Nitro's HTTP library)
+- tRPC integration via fetch request handler adapter
+- oRPC integration via node handlers with OpenAPI reference
+- Better-Auth integration via node handler
+- AI SDK integration with streaming responses
+- CORS configuration via route rules
+- Multi-runtime support: Node.js, Bun, and Cloudflare Workers
+
+**Important Notes:**
+- Nitro supports all three runtimes: node, bun, and workers
+- Uses Nitro CLI for development (nitro dev) and build (nitro build)
+- Creates proper Nitro project structure (nitro.config.ts, routes/, package.json)
+- Compatible with all web frontends in Better-Fullstack
+- Integrates with Better-Fullstack's tRPC/oRPC/Better-Auth ecosystem
+- Nitro is the underlying server framework that powers Nuxt.js
+
+**Framework Support:**
+- Runtime: node, bun, workers (all three supported)
+- API: trpc, orpc, none
+- Auth: better-auth, none
+- Works with all web frontends

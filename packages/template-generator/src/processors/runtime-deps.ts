@@ -17,6 +17,7 @@ export function processRuntimeDeps(vfs: VirtualFileSystem, config: ProjectConfig
     backend === "self" ||
     backend === "encore" ||
     backend === "adonisjs" ||
+    backend === "nitro" ||
     runtime === "none"
   )
     return;

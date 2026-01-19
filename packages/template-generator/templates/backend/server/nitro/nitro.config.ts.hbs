@@ -1,0 +1,33 @@
+import { defineNitroConfig } from "nitropack/config";
+
+export default defineNitroConfig({
+	// Server configuration
+	compatibilityDate: "2025-01-01",
+{{#if (eq runtime "node")}}
+	preset: "node-server",
+{{/if}}
+{{#if (eq runtime "bun")}}
+	preset: "bun",
+{{/if}}
+{{#if (eq runtime "workers")}}
+	preset: "cloudflare-module",
+{{/if}}
+	// Enable source maps for debugging
+	sourcemap: true,
+	// Route rules
+	routeRules: {
+		"/**": {
+			cors: true,
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+{{#if (eq auth "better-auth")}}
+				"Access-Control-Allow-Headers": "Content-Type, Authorization",
+				"Access-Control-Allow-Credentials": "true",
+{{else}}
+				"Access-Control-Allow-Headers": "Content-Type",
+{{/if}}
+			},
+		},
+	},
+});

@@ -34,6 +34,11 @@ export async function processBackendTemplates(
     return;
   }
 
+  if (config.backend === "nitro") {
+    processTemplatesFromPrefix(vfs, templates, "backend/server/nitro", "apps/server", config);
+    return;
+  }
+
   processTemplatesFromPrefix(vfs, templates, "backend/server/base", "apps/server", config);
   processTemplatesFromPrefix(
     vfs,

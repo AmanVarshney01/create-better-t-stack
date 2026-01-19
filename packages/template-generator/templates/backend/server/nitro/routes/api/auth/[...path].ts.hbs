@@ -1,0 +1,16 @@
+{{#if (eq auth "better-auth")}}
+import { auth } from "@{{projectName}}/auth";
+import { toNodeHandler } from "better-auth/node";
+
+const authHandler = toNodeHandler(auth);
+
+export default defineEventHandler(async (event) => {
+	const { req, res } = event.node;
+	await authHandler(req, res);
+});
+{{else}}
+// Auth placeholder - Better Auth not configured
+export default defineEventHandler(() => {
+	return { error: "Auth not configured" };
+});
+{{/if}}

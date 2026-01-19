@@ -1,0 +1,44 @@
+{{#if (eq api "orpc")}}
+import { OpenAPIHandler } from "@orpc/openapi/node";
+import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
+import { onError } from "@orpc/server";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+{{#if (eq auth "better-auth")}}
+import { createContext } from "@{{projectName}}/api/context";
+{{/if}}
+
+const apiHandler = new OpenAPIHandler(appRouter, {
+	plugins: [
+		new OpenAPIReferencePlugin({
+			schemaConverters: [new ZodToJsonSchemaConverter()],
+		}),
+	],
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
+});
+
+export default defineEventHandler(async (event) => {
+	const { req, res } = event.node;
+	const result = await apiHandler.handle(req, res, {
+		prefix: "/api-reference",
+{{#if (eq auth "better-auth")}}
+		context: await createContext({ req }),
+{{else}}
+		context: {},
+{{/if}}
+	});
+	if (!result.matched) {
+		setResponseStatus(event, 404);
+		return "Not Found";
+	}
+});
+{{else}}
+// OpenAPI reference placeholder - oRPC not configured
+export default defineEventHandler(() => {
+	return { error: "OpenAPI reference not configured" };
+});
+{{/if}}

@@ -1,0 +1,37 @@
+{{#if (includes examples "ai")}}
+import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
+{{#if (or (eq runtime "bun") (eq runtime "node"))}}
+import { google } from "@ai-sdk/google";
+{{else}}
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { env } from "@{{projectName}}/env/server";
+{{/if}}
+import { devToolsMiddleware } from "@ai-sdk/devtools";
+
+export default defineEventHandler(async (event) => {
+	const body = await readBody<{ messages?: UIMessage[] }>(event);
+	const messages = body.messages || [];
+
+{{#if (eq runtime "workers")}}
+	const google = createGoogleGenerativeAI({
+		apiKey: env.GOOGLE_GENERATIVE_AI_API_KEY,
+	});
+{{/if}}
+	const model = wrapLanguageModel({
+		model: google("gemini-2.5-flash"),
+		middleware: devToolsMiddleware(),
+	});
+
+	const result = streamText({
+		model,
+		messages: await convertToModelMessages(messages),
+	});
+
+	return result.toUIMessageStreamResponse();
+});
+{{else}}
+// AI placeholder - AI example not included
+export default defineEventHandler(() => {
+	return { error: "AI not configured" };
+});
+{{/if}}

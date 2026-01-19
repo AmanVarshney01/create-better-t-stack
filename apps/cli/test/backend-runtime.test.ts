@@ -22,6 +22,10 @@ describe("Backend and Runtime Combinations", () => {
 
       { backend: "adonisjs" as const, runtime: "node" as const },
 
+      { backend: "nitro" as const, runtime: "bun" as const },
+      { backend: "nitro" as const, runtime: "node" as const },
+      { backend: "nitro" as const, runtime: "workers" as const },
+
       // Special cases
       { backend: "convex" as const, runtime: "none" as const },
       { backend: "encore" as const, runtime: "none" as const },
@@ -86,21 +90,24 @@ describe("Backend and Runtime Combinations", () => {
 
   describe("Invalid Backend-Runtime Combinations", () => {
     const invalidCombinations = [
-      // Workers runtime only works with Hono
+      // Workers runtime only works with Hono or Nitro
       {
         backend: "express" as const,
         runtime: "workers" as const,
-        error: "Cloudflare Workers runtime (--runtime workers) is only supported with Hono backend",
+        error:
+          "Cloudflare Workers runtime (--runtime workers) is only supported with Hono or Nitro backend",
       },
       {
         backend: "fastify",
         runtime: "workers",
-        error: "Cloudflare Workers runtime (--runtime workers) is only supported with Hono backend",
+        error:
+          "Cloudflare Workers runtime (--runtime workers) is only supported with Hono or Nitro backend",
       },
       {
         backend: "elysia",
         runtime: "workers",
-        error: "Cloudflare Workers runtime (--runtime workers) is only supported with Hono backend",
+        error:
+          "Cloudflare Workers runtime (--runtime workers) is only supported with Hono or Nitro backend",
       },
 
       // Convex backend requires runtime none
@@ -370,6 +377,7 @@ describe("Backend and Runtime Combinations", () => {
       "elysia",
       "nestjs",
       "adonisjs",
+      "nitro",
       "encore",
       "convex",
       "none",
@@ -430,6 +438,13 @@ describe("Backend and Runtime Combinations", () => {
             break;
           case "adonisjs":
             config.runtime = "node";
+            config.database = "sqlite";
+            config.orm = "drizzle";
+            config.auth = "none";
+            config.api = "trpc";
+            break;
+          case "nitro":
+            config.runtime = "bun";
             config.database = "sqlite";
             config.orm = "drizzle";
             config.auth = "none";

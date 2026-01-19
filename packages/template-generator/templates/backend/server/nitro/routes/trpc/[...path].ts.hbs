@@ -1,0 +1,20 @@
+{{#if (eq api "trpc")}}
+import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+import { createContext } from "@{{projectName}}/api/context";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+
+export default defineEventHandler(async (event) => {
+	const response = await fetchRequestHandler({
+		endpoint: "/trpc",
+		req: event.node.req as unknown as Request,
+		router: appRouter,
+		createContext: ({ req }) => createContext({ req }),
+	});
+	return response;
+});
+{{else}}
+// tRPC placeholder - not configured
+export default defineEventHandler(() => {
+	return { error: "tRPC not configured" };
+});
+{{/if}}

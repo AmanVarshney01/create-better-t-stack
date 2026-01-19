@@ -126,6 +126,10 @@ export const dependencyVersionMap = {
   "@adonisjs/cors": "^2.2.1",
   "@adonisjs/tsconfig": "^1.4.0",
 
+  // Nitro
+  nitropack: "^2.11.12",
+  h3: "^1.15.3",
+
   turbo: "^2.6.3",
 
   ai: "^6.0.3",

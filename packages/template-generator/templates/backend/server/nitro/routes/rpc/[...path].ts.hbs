@@ -1,0 +1,37 @@
+{{#if (eq api "orpc")}}
+import { RPCHandler } from "@orpc/server/node";
+import { onError } from "@orpc/server";
+import { appRouter } from "@{{projectName}}/api/routers/index";
+{{#if (eq auth "better-auth")}}
+import { createContext } from "@{{projectName}}/api/context";
+{{/if}}
+
+const rpcHandler = new RPCHandler(appRouter, {
+	interceptors: [
+		onError((error) => {
+			console.error(error);
+		}),
+	],
+});
+
+export default defineEventHandler(async (event) => {
+	const { req, res } = event.node;
+	const result = await rpcHandler.handle(req, res, {
+		prefix: "/rpc",
+{{#if (eq auth "better-auth")}}
+		context: await createContext({ req }),
+{{else}}
+		context: {},
+{{/if}}
+	});
+	if (!result.matched) {
+		setResponseStatus(event, 404);
+		return "Not Found";
+	}
+});
+{{else}}
+// oRPC placeholder - not configured
+export default defineEventHandler(() => {
+	return { error: "oRPC not configured" };
+});
+{{/if}}

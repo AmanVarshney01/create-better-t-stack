@@ -47,6 +47,8 @@ export function processBackendDeps(vfs: VirtualFileSystem, config: ProjectConfig
   } else if (backend === "adonisjs") {
     deps.push("@adonisjs/core", "@adonisjs/cors", "reflect-metadata");
     devDeps.push("@adonisjs/tsconfig", "@types/node");
+  } else if (backend === "nitro") {
+    deps.push("nitropack", "h3");
   }
 
   if (api === "trpc") {

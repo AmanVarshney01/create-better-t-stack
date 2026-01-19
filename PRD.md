@@ -45,7 +45,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 - [x] **NestJS** - Enterprise-grade, Angular-style backend framework
 - [x] **Encore.ts** - Type-safe backend with built-in infrastructure _(requires Encore CLI)_
 - [x] **AdonisJS** - Full-featured MVC framework for Node.js _(requires Node.js runtime)_
-- [ ] **Nitro** - Universal server framework (powers Nuxt)
+- [x] **Nitro** - Universal server framework (powers Nuxt) _(supports Node.js, Bun, and Cloudflare Workers)_
 - [ ] **tREST** - Type-safe REST APIs (alternative to tRPC)
 - [ ] **feTS** - TypeScript HTTP Framework with e2e type-safety
 

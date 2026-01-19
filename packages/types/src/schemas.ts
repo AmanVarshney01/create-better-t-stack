@@ -16,6 +16,7 @@ export const BackendSchema = z
     "elysia",
     "nestjs",
     "adonisjs",
+    "nitro",
     "encore",
     "convex",
     "self",

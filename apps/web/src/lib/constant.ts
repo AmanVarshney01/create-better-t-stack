@@ -311,6 +311,13 @@ export const TECH_OPTIONS: Record<
       color: "from-indigo-500 to-purple-700",
     },
     {
+      id: "nitro",
+      name: "Nitro",
+      description: "Universal server framework (powers Nuxt)",
+      icon: "/icon/nitro.svg",
+      color: "from-cyan-500 to-teal-700",
+    },
+    {
       id: "convex",
       name: "Convex",
       description: "Reactive backend-as-a-service",
