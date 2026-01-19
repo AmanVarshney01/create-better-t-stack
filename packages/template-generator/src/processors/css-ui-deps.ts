@@ -58,6 +58,7 @@ export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConf
   );
   const hasNuxt = frontend.includes("nuxt");
   const hasSolid = frontend.includes("solid");
+  const hasSvelte = frontend.includes("svelte");
 
   if (uiLibrary === "none" || uiLibrary === "shadcn-ui") {
     // shadcn-ui is handled by the shadcn CLI, not as a package dependency
@@ -130,6 +131,18 @@ export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConf
     case "base-ui":
       if (hasReactWeb) {
         deps.push("@base-ui-components/react");
+      }
+      break;
+
+    case "ark-ui":
+      if (hasReactWeb) {
+        deps.push("@ark-ui/react");
+      } else if (hasNuxt) {
+        deps.push("@ark-ui/vue");
+      } else if (hasSolid) {
+        deps.push("@ark-ui/solid");
+      } else if (hasSvelte) {
+        deps.push("@ark-ui/svelte");
       }
       break;
   }

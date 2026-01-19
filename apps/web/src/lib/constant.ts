@@ -973,6 +973,13 @@ export const TECH_OPTIONS: Record<
       color: "from-blue-500 to-blue-700",
     },
     {
+      id: "ark-ui",
+      name: "Ark UI",
+      description: "Headless UI for React, Vue, Solid, and Svelte",
+      icon: "",
+      color: "from-green-500 to-teal-600",
+    },
+    {
       id: "none",
       name: "No UI Library",
       description: "Build custom components",

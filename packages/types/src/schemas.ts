@@ -158,6 +158,7 @@ export const UILibrarySchema = z
     "nextui",
     "mantine",
     "base-ui",
+    "ark-ui",
     "none",
   ])
   .describe("UI component library");

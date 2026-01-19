@@ -1893,3 +1893,46 @@ Implemented Base UI (@base-ui-components/react) as a new UI component library op
 - Base UI is unstyled, so it works with any CSS framework (tailwind, scss, less, postcss-only, none)
 - Pre-existing TypeScript lint errors in config-prompts.ts (unrelated to this change) still exist
 
+
+---
+
+## Session: 2026-01-19
+
+### Task: Add Ark UI as UI component library option
+
+**Status:** ✅ Completed
+
+**Summary:**
+Implemented Ark UI (@ark-ui/react, @ark-ui/vue, @ark-ui/solid, @ark-ui/svelte) as a new UI component library option. Ark UI is a headless component library from the Chakra UI team that provides 45+ accessible, unstyled components that work across React, Vue, Solid, and Svelte.
+
+**Changes Made:**
+1. **packages/types/src/schemas.ts**: Added "ark-ui" to UILibrarySchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Ark UI dependencies:
+   - @ark-ui/react: ^5.30.0
+   - @ark-ui/vue: ^5.26.2
+   - @ark-ui/solid: ^5.30.0
+   - @ark-ui/svelte: ^5.15.0
+3. **packages/template-generator/src/processors/css-ui-deps.ts**: Added Ark UI dependency processing for React, Vue (Nuxt), Solid, and Svelte frontends
+4. **apps/cli/src/constants.ts**: Added Ark UI compatibility rules:
+   - Compatible frontends: tanstack-router, react-router, tanstack-start, next, nuxt, svelte, solid
+   - Compatible CSS frameworks: tailwind, scss, less, postcss-only, none (unstyled)
+5. **apps/cli/src/prompts/ui-library.ts**: Added Ark UI option with description
+6. **apps/web/src/lib/constant.ts**: Added Ark UI to web builder UI library options with green/teal gradient
+7. **apps/cli/test/css-ui-library.test.ts**: Added comprehensive Ark UI tests (17 new tests):
+   - 4 tests for React frontends (tanstack-router, react-router, tanstack-start, next)
+   - 1 test for Nuxt (Vue)
+   - 1 test for Solid
+   - 1 test for Svelte
+   - 3 tests for incompatible frontends (astro, qwik, angular)
+   - 5 tests for CSS framework flexibility (tailwind, scss, less, postcss-only, none)
+
+**Test Results:**
+- All 120 CSS/UI library tests pass (including 17 new Ark UI tests)
+- Pre-existing TypeScript errors in config-prompts.ts unrelated to this change
+
+**Key Features:**
+- Multi-framework support: React, Vue, Solid, Svelte
+- Unstyled/headless components (works with any CSS framework)
+- 45+ accessible UI components
+- Built on Zag.js state machines for predictable behavior
+- WAI-ARIA compliant with keyboard navigation support

@@ -42,6 +42,10 @@ const UI_LIBRARY_OPTIONS: Record<UILibrary, { label: string; hint: string }> = {
     label: "Base UI",
     hint: "Unstyled, accessible components from MUI team (Radix successor)",
   },
+  "ark-ui": {
+    label: "Ark UI",
+    hint: "Headless, accessible UI components for React, Vue, Solid, and Svelte",
+  },
   none: {
     label: "None",
     hint: "No UI component library",

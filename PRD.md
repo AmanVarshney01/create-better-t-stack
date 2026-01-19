@@ -144,7 +144,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 
 - [x] **shadcn/ui** - Copy-paste components on Radix
 - [x] **Base UI** - Unstyled components (Radix successor)
-- [ ] **Ark UI** - Headless UI for React/Vue/Solid
+- [x] **Ark UI** - Headless UI for React/Vue/Solid/Svelte
 - [ ] **React Aria** - Adobe's accessible components
 - [x] **Mantine** - Full-featured component library
 - [x] **Chakra UI** - Accessible component library

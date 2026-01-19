@@ -258,6 +258,12 @@ export const dependencyVersionMap = {
   // Base UI
   "@base-ui-components/react": "^1.0.0-rc.0",
 
+  // Ark UI (headless components for React/Vue/Solid/Svelte)
+  "@ark-ui/react": "^5.30.0",
+  "@ark-ui/vue": "^5.26.2",
+  "@ark-ui/solid": "^5.30.0",
+  "@ark-ui/svelte": "^5.15.0",
+
   daisyui: "^4.12.28",
 
   // Qwik

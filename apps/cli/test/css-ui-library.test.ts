@@ -881,4 +881,167 @@ describe("CSS Framework and UI Library Configurations", () => {
       });
     }
   });
+
+  describe("Ark UI Tests", () => {
+    // Ark UI works with React, Vue (Nuxt), Solid, and Svelte frontends
+    const arkUIReactFrontends: Frontend[] = [
+      "tanstack-router",
+      "react-router",
+      "tanstack-start",
+      "next",
+    ];
+
+    for (const frontend of arkUIReactFrontends) {
+      it(`should work with ark-ui + ${frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `arkui-${frontend}`,
+          uiLibrary: "ark-ui",
+          cssFramework: "tailwind",
+          frontend: [frontend],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          api: "trpc",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+    }
+
+    // Ark UI works with Vue (Nuxt)
+    it("should work with ark-ui + nuxt", async () => {
+      const result = await runTRPCTest({
+        projectName: "arkui-nuxt",
+        uiLibrary: "ark-ui",
+        cssFramework: "tailwind",
+        frontend: ["nuxt"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        api: "orpc",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    // Ark UI works with Solid
+    it("should work with ark-ui + solid", async () => {
+      const result = await runTRPCTest({
+        projectName: "arkui-solid",
+        uiLibrary: "ark-ui",
+        cssFramework: "tailwind",
+        frontend: ["solid"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        api: "orpc",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    // Ark UI works with Svelte
+    it("should work with ark-ui + svelte", async () => {
+      const result = await runTRPCTest({
+        projectName: "arkui-svelte",
+        uiLibrary: "ark-ui",
+        cssFramework: "tailwind",
+        frontend: ["svelte"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        api: "orpc",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    // Ark UI should fail with incompatible frontends (Astro, Qwik, Angular)
+    const arkUIIncompatibleFrontends: Frontend[] = ["astro", "qwik", "angular"];
+
+    for (const frontend of arkUIIncompatibleFrontends) {
+      it(`should fail with ark-ui + ${frontend}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `arkui-${frontend}-fail`,
+          uiLibrary: "ark-ui",
+          cssFramework: "tailwind",
+          frontend: [frontend],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          api: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          expectError: true,
+        });
+
+        expectError(result, "not compatible");
+      });
+    }
+
+    // Ark UI is unstyled, works with any CSS framework
+    const allCssFrameworks: CSSFramework[] = ["tailwind", "scss", "less", "postcss-only", "none"];
+
+    for (const cssFramework of allCssFrameworks) {
+      it(`should work with ark-ui + ${cssFramework}`, async () => {
+        const result = await runTRPCTest({
+          projectName: `arkui-css-${cssFramework}`,
+          uiLibrary: "ark-ui",
+          cssFramework,
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          addons: ["none"],
+          examples: ["none"],
+          dbSetup: "none",
+          api: "trpc",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+    }
+  });
 });
