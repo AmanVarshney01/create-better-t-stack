@@ -100,3 +100,59 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Qwik Frontend Framework Implementation
+
+### Task: Implement Qwik as a frontend framework option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "qwik" to FrontendSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Qwik dependency versions:
+   - @builder.io/qwik: ^1.14.1
+   - @builder.io/qwik-city: ^1.14.1
+   - @builder.io/qwik-react: ^0.7.0
+3. **packages/template-generator/templates/frontend/qwik/**: Created Qwik templates:
+   - package.json.hbs - Qwik project dependencies with Tailwind conditional
+   - vite.config.ts.hbs - Vite config with Qwik plugins
+   - tsconfig.json.hbs - TypeScript config for Qwik
+   - src/root.tsx.hbs - Root component with QwikCityProvider
+   - src/entry.ssr.tsx - SSR entry point
+   - src/entry.preview.tsx - Preview entry point
+   - src/global.css.hbs - Global styles with Tailwind conditional
+   - src/components/router-head/router-head.tsx - Document head component
+   - src/components/header.tsx.hbs - Header with navigation
+   - src/routes/layout.tsx.hbs - Root layout with Better T Stack styling
+   - src/routes/index.tsx.hbs - Home page
+   - public/favicon.svg, manifest.json, robots.txt, _gitignore
+4. **packages/template-generator/src/template-handlers/frontend.ts**: Added Qwik frontend processing
+5. **packages/template-generator/src/processors/css-ui-deps.ts**: Added Qwik to frontend checks
+6. **apps/cli/src/utils/compatibility.ts**: Added "qwik" to WEB_FRAMEWORKS
+7. **apps/cli/src/utils/compatibility-rules.ts**: Added Qwik-specific validations:
+   - Qwik must use backend="none" (has its own built-in server capabilities)
+   - Qwik must use api="none" (doesn't support tRPC/oRPC external API layers)
+   - Updated isFrontendAllowedWithBackend and allowedApisForFrontends
+8. **apps/cli/src/constants.ts**: Added Qwik to compatibility mappings:
+   - Added to ADDON_COMPATIBILITY (pwa, tauri)
+   - Added to UI_LIBRARY_COMPATIBILITY (daisyui, none)
+   - Added qwik: "daisyui" to DEFAULT_UI_LIBRARY_BY_FRONTEND
+9. **apps/web/src/lib/constant.ts**: Added Qwik to web builder frontend options with purple icon
+10. **apps/cli/test/frontend.test.ts**: Added Qwik-specific tests:
+    - Test for Qwik standalone (no backend)
+    - Tests for Qwik incompatibility with tRPC and oRPC APIs
+
+### Features:
+- Full Qwik City framework support with file-based routing
+- Resumable architecture for instant load times
+- SSR and preview entry points
+- Tailwind CSS conditional support (via daisyUI)
+- Standalone mode (no external backend needed - Qwik has built-in server capabilities)
+- Compatible with PWA and Tauri addons
+
+### Technical Notes:
+- Qwik uses resumability instead of hydration for superior performance
+- Qwik City provides file-based routing similar to Next.js/SvelteKit
+- Qwik works standalone (backend="none") because it has its own server capabilities
+- daisyUI is the default UI library for Qwik (shadcn-ui requires React)
+
+### Status: COMPLETE
+

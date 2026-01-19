@@ -103,6 +103,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "qwik",
+      name: "Qwik",
+      description: "Resumable framework with instant load times",
+      icon: "https://cdn.simpleicons.org/qwik/AC7EF4",
+      color: "from-purple-400 to-purple-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Web Frontend",
       description: "No web-based frontend",

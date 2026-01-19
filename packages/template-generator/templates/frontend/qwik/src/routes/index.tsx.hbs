@@ -1,0 +1,80 @@
+import { component$ } from "@builder.io/qwik";
+import type { DocumentHead } from "@builder.io/qwik-city";
+
+const TITLE_TEXT = `
+ ██████╗ ███████╗████████╗████████╗███████╗██████╗
+ ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗
+ ██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝
+ ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗
+ ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║
+ ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝
+
+ ████████╗    ███████╗████████╗ █████╗  ██████╗██╗  ██╗
+ ╚══██╔══╝    ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
+    ██║       ███████╗   ██║   ███████║██║     █████╔╝
+    ██║       ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
+    ██║       ███████║   ██║   ██║  ██║╚██████╗██║  ██╗
+    ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
+`;
+
+export default component$(() => {
+  return (
+    {{#if (eq cssFramework "tailwind")}}
+    <div class="container mx-auto max-w-3xl px-4 py-2">
+      <pre class="overflow-x-auto font-mono text-sm whitespace-pre">{TITLE_TEXT}</pre>
+      <div class="grid gap-6 mt-6">
+        <section class="rounded-lg border border-gray-200 dark:border-gray-800 p-4">
+          <h2 class="mb-2 font-medium">Welcome to Qwik</h2>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            Qwik is a resumable framework that delivers instant apps at scale.
+            It achieves this by serializing the application state and resuming
+            execution on the client without re-running the entire application.
+          </p>
+        </section>
+        <section class="rounded-lg border border-gray-200 dark:border-gray-800 p-4">
+          <h2 class="mb-2 font-medium">Key Features</h2>
+          <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-400 space-y-1">
+            <li>Resumability - No hydration overhead</li>
+            <li>Lazy loading by default</li>
+            <li>Familiar JSX syntax</li>
+            <li>Built-in optimizations</li>
+          </ul>
+        </section>
+      </div>
+    </div>
+    {{else}}
+    <div style={{ maxWidth: "48rem", margin: "0 auto", padding: "0.5rem 1rem" }}>
+      <pre style={{ overflow: "auto", fontFamily: "monospace", fontSize: "0.875rem", whiteSpace: "pre" }}>{TITLE_TEXT}</pre>
+      <div style={{ display: "grid", gap: "1.5rem", marginTop: "1.5rem" }}>
+        <section style={{ borderRadius: "0.5rem", border: "1px solid var(--border-color)", padding: "1rem" }}>
+          <h2 style={{ marginBottom: "0.5rem", fontWeight: 500 }}>Welcome to Qwik</h2>
+          <p style={{ fontSize: "0.875rem", color: "var(--muted-color)" }}>
+            Qwik is a resumable framework that delivers instant apps at scale.
+            It achieves this by serializing the application state and resuming
+            execution on the client without re-running the entire application.
+          </p>
+        </section>
+        <section style={{ borderRadius: "0.5rem", border: "1px solid var(--border-color)", padding: "1rem" }}>
+          <h2 style={{ marginBottom: "0.5rem", fontWeight: 500 }}>Key Features</h2>
+          <ul style={{ fontSize: "0.875rem", color: "var(--muted-color)", listStyleType: "disc", paddingLeft: "1.5rem" }}>
+            <li>Resumability - No hydration overhead</li>
+            <li>Lazy loading by default</li>
+            <li>Familiar JSX syntax</li>
+            <li>Built-in optimizations</li>
+          </ul>
+        </section>
+      </div>
+    </div>
+    {{/if}}
+  );
+});
+
+export const head: DocumentHead = {
+  title: "Better T Stack - Qwik",
+  meta: [
+    {
+      name: "description",
+      content: "Better T Stack with Qwik - Resumable framework with instant load times",
+    },
+  ],
+};

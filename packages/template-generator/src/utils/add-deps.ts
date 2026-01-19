@@ -218,6 +218,11 @@ export const dependencyVersionMap = {
   "framer-motion": "^12.17.0",
 
   daisyui: "^4.12.28",
+
+  // Qwik
+  "@builder.io/qwik": "^1.14.1",
+  "@builder.io/qwik-city": "^1.14.1",
+  "@builder.io/qwik-react": "^0.7.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

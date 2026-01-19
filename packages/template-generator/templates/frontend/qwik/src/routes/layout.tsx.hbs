@@ -1,0 +1,30 @@
+import { component$, Slot } from "@builder.io/qwik";
+import type { RequestHandler } from "@builder.io/qwik-city";
+import Header from "@/components/header";
+
+export const onGet: RequestHandler = async ({ cacheControl }) => {
+  cacheControl({
+    staleWhileRevalidate: 60 * 60 * 24 * 7,
+    maxAge: 5,
+  });
+};
+
+export default component$(() => {
+  return (
+    {{#if (eq cssFramework "tailwind")}}
+    <div class="grid grid-rows-[auto_1fr] min-h-screen">
+      <Header />
+      <main>
+        <Slot />
+      </main>
+    </div>
+    {{else}}
+    <div style={{ display: "grid", gridTemplateRows: "auto 1fr", minHeight: "100vh" }}>
+      <Header />
+      <main>
+        <Slot />
+      </main>
+    </div>
+    {{/if}}
+  );
+});

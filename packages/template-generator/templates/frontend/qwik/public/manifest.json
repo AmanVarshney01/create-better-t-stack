@@ -1,0 +1,16 @@
+{
+  "short_name": "Better T Stack",
+  "name": "Better T Stack - Qwik",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0a0a0a",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#AC7EF4"
+}

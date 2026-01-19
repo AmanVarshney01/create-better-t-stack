@@ -1,0 +1,55 @@
+import { component$ } from "@builder.io/qwik";
+import { Link } from "@builder.io/qwik-city";
+
+export default component$(() => {
+  const links = [
+    { href: "/", label: "Home" },
+    {{#if (eq auth "better-auth")}}
+    { href: "/dashboard", label: "Dashboard" },
+    {{/if}}
+    {{#if (includes examples "todo")}}
+    { href: "/todos", label: "Todos" },
+    {{/if}}
+    {{#if (includes examples "ai")}}
+    { href: "/ai", label: "AI Chat" },
+    {{/if}}
+  ];
+
+  return (
+    <header>
+      {{#if (eq cssFramework "tailwind")}}
+      <div class="flex flex-row items-center justify-between px-4 py-2">
+        <nav class="flex gap-4 text-lg">
+          {links.map((link) => (
+            <Link key={link.href} href={link.href} class="hover:underline">
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+        <div class="flex items-center gap-2">
+          {{#if (eq auth "better-auth")}}
+          {/* User menu component would go here */}
+          {{/if}}
+        </div>
+      </div>
+      <hr class="border-gray-200 dark:border-gray-800" />
+      {{else}}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem 1rem" }}>
+        <nav style={{ display: "flex", gap: "1rem", fontSize: "1.125rem" }}>
+          {links.map((link) => (
+            <Link key={link.href} href={link.href}>
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          {{#if (eq auth "better-auth")}}
+          {/* User menu component would go here */}
+          {{/if}}
+        </div>
+      </div>
+      <hr style={{ borderColor: "var(--border-color)" }} />
+      {{/if}}
+    </header>
+  );
+});

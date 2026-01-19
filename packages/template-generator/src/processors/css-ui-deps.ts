@@ -20,6 +20,7 @@ export function processCSSFrameworkDeps(vfs: VirtualFileSystem, config: ProjectC
       "svelte",
       "solid",
       "astro",
+      "qwik",
     ].includes(f),
   );
 

@@ -37,7 +37,7 @@ export function ensureSingleWebAndNative(frontends: Frontend[]) {
   const { web, native } = splitFrontends(frontends);
   if (web.length > 1) {
     exitWithError(
-      "Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, nuxt, svelte, solid, astro",
+      "Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, nuxt, svelte, solid, astro, qwik",
     );
   }
   if (native.length > 1) {
@@ -156,10 +156,18 @@ export function validateApiFrontendCompatibility(
   const includesSvelte = frontends.includes("svelte");
   const includesSolid = frontends.includes("solid");
   const includesAstro = frontends.includes("astro");
+  const includesQwik = frontends.includes("qwik");
 
   if ((includesNuxt || includesSvelte || includesSolid) && api === "trpc") {
     exitWithError(
       `tRPC API is not supported with '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"}' frontend. Please use --api orpc or --api none or remove '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"}' from --frontend.`,
+    );
+  }
+
+  // Qwik has its own server-side capabilities, doesn't support traditional API layer
+  if (includesQwik && api && api !== "none") {
+    exitWithError(
+      `Qwik has its own built-in server capabilities and doesn't support external API layers (tRPC/oRPC). Please use --api none with Qwik.`,
     );
   }
 
@@ -178,6 +186,10 @@ export function isFrontendAllowedWithBackend(
 ) {
   if (backend === "convex" && frontend === "solid") return false;
   if (backend === "convex" && frontend === "astro") return false;
+  if (backend === "convex" && frontend === "qwik") return false;
+
+  // Qwik has its own built-in server, only works with backend=none
+  if (frontend === "qwik" && backend && backend !== "none") return false;
 
   if (auth === "clerk" && backend === "convex") {
     const incompatibleFrontends = ["nuxt", "svelte", "solid"];
@@ -195,7 +207,13 @@ export function allowedApisForFrontends(
   const includesSvelte = frontends.includes("svelte");
   const includesSolid = frontends.includes("solid");
   const includesAstro = frontends.includes("astro");
+  const includesQwik = frontends.includes("qwik");
   const base: API[] = ["trpc", "orpc", "none"];
+
+  // Qwik uses its own server capabilities, only none is allowed
+  if (includesQwik) {
+    return ["none"];
+  }
 
   // Nuxt, Svelte, and Solid only support oRPC
   if (includesNuxt || includesSvelte || includesSolid) {

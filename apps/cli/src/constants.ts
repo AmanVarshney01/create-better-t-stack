@@ -53,8 +53,8 @@ export function getDefaultConfig() {
 export const DEFAULT_CONFIG = getDefaultConfig();
 
 export const ADDON_COMPATIBILITY = {
-  pwa: ["tanstack-router", "react-router", "solid", "next", "astro"],
-  tauri: ["tanstack-router", "react-router", "nuxt", "svelte", "solid", "next", "astro"],
+  pwa: ["tanstack-router", "react-router", "solid", "next", "astro", "qwik"],
+  tauri: ["tanstack-router", "react-router", "nuxt", "svelte", "solid", "next", "astro", "qwik"],
   biome: [],
   husky: [],
   lefthook: [],
@@ -94,6 +94,7 @@ export const UI_LIBRARY_COMPATIBILITY: Record<
       "svelte",
       "solid",
       "astro",
+      "qwik",
     ],
     cssFrameworks: ["tailwind"],
   },
@@ -127,6 +128,7 @@ export const UI_LIBRARY_COMPATIBILITY: Record<
       "svelte",
       "solid",
       "astro",
+      "qwik",
     ],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
@@ -145,6 +147,7 @@ export const DEFAULT_UI_LIBRARY_BY_FRONTEND: Record<Frontend, UILibrary> = {
   svelte: "daisyui",
   solid: "daisyui",
   astro: "daisyui",
+  qwik: "daisyui",
   "native-bare": "none",
   "native-uniwind": "none",
   "native-unistyles": "none",

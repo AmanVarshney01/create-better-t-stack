@@ -16,6 +16,7 @@ describe("Frontend Configurations", () => {
       "svelte",
       "solid",
       "astro",
+      "qwik",
     ] satisfies ReadonlyArray<
       | "tanstack-router"
       | "react-router"
@@ -28,6 +29,7 @@ describe("Frontend Configurations", () => {
       | "svelte"
       | "solid"
       | "astro"
+      | "qwik"
     >;
 
     for (const frontend of singleFrontends) {
@@ -91,6 +93,19 @@ describe("Frontend Configurations", () => {
           config.dbSetup = "none";
           config.webDeploy = "none";
           config.serverDeploy = "none";
+        } else if (frontend === "qwik") {
+          // Qwik has its own built-in server, using standalone mode
+          config.backend = "none";
+          config.runtime = "none";
+          config.database = "none";
+          config.orm = "none";
+          config.auth = "none";
+          config.api = "none";
+          config.addons = ["none"];
+          config.examples = ["none"];
+          config.dbSetup = "none";
+          config.webDeploy = "none";
+          config.serverDeploy = "none";
         } else {
           config.backend = "hono";
           config.runtime = "bun";
@@ -109,6 +124,73 @@ describe("Frontend Configurations", () => {
         expectSuccess(result);
       });
     }
+  });
+
+  describe("Qwik Frontend", () => {
+    it("should work with Qwik standalone (no backend)", async () => {
+      const result = await runTRPCTest({
+        projectName: "qwik-standalone",
+        frontend: ["qwik"],
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should fail Qwik with tRPC API", async () => {
+      const result = await runTRPCTest({
+        projectName: "qwik-trpc-fail",
+        frontend: ["qwik"],
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "trpc",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      // Backend 'none' validation catches this - Qwik requires backend=none which requires api=none
+      expectError(result, "Backend 'none' requires '--api none'");
+    });
+
+    it("should fail Qwik with oRPC API", async () => {
+      const result = await runTRPCTest({
+        projectName: "qwik-orpc-fail",
+        frontend: ["qwik"],
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "orpc",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      // Backend 'none' validation catches this - Qwik requires backend=none which requires api=none
+      expectError(result, "Backend 'none' requires '--api none'");
+    });
   });
 
   describe("Frontend Compatibility with API", () => {
