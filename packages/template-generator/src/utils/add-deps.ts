@@ -290,6 +290,7 @@ export const dependencyVersionMap = {
   valibot: "^1.1.0",
   arktype: "^2.1.29",
   "@sinclair/typebox": "^0.34.31",
+  typia: "^9.7.1",
 
   // Form libraries
   formik: "^2.4.6",

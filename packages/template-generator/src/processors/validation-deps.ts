@@ -77,6 +77,9 @@ function getValidationDeps(validation: ProjectConfig["validation"]): AvailableDe
     case "typebox":
       deps.push("@sinclair/typebox");
       break;
+    case "typia":
+      deps.push("typia");
+      break;
   }
 
   return deps;

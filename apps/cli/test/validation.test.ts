@@ -351,6 +351,122 @@ describe("Validation Library Options", () => {
     });
   });
 
+  describe("Typia with React frontends", () => {
+    test("typia with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "typia-tanstack-router",
+          frontend: ["tanstack-router"],
+          validation: "typia",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("typia with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "typia-react-router",
+          frontend: ["react-router"],
+          validation: "typia",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("typia with Next.js", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "typia-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          validation: "typia",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("typia with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "typia-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          validation: "typia",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Typia with different backends", () => {
+    test("typia with Hono backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "typia-hono",
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          validation: "typia",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("typia with Express backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "typia-express",
+          frontend: ["tanstack-router"],
+          backend: "express",
+          runtime: "node",
+          validation: "typia",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("typia with Fastify backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "typia-fastify",
+          frontend: ["tanstack-router"],
+          backend: "fastify",
+          runtime: "node",
+          validation: "typia",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Typia with native apps", () => {
+    test("typia with native-bare", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "typia-native-bare",
+          frontend: ["native-bare"],
+          backend: "hono",
+          validation: "typia",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("typia with native-uniwind", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "typia-native-uniwind",
+          frontend: ["native-uniwind"],
+          backend: "hono",
+          validation: "typia",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("Zod validation (default)", () => {
     test("zod with TanStack Router (explicit)", async () => {
       const result = await runTRPCTest(

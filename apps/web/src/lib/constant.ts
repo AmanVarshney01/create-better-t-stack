@@ -818,6 +818,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "typia",
+      name: "Typia",
+      description: "Super-fast validation via compile-time transform",
+      icon: "",
+      color: "from-green-400 to-green-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Validation",
       description: "Use Zod internally only (no additional library)",

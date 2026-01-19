@@ -1576,3 +1576,44 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Typia Validation Library Implementation
+
+### Task: Implement Typia as a validation library option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "typia" to ValidationSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Typia dependency version:
+   - typia: ^9.7.1
+3. **packages/template-generator/src/processors/validation-deps.ts**: Added Typia case to handle typia dependency
+4. **apps/web/src/lib/constant.ts**: Added Typia to web builder validation options with green icon
+5. **apps/cli/test/validation.test.ts**: Added comprehensive Typia tests:
+   - Typia with TanStack Router
+   - Typia with React Router
+   - Typia with Next.js
+   - Typia with TanStack Start
+   - Typia with Hono backend
+   - Typia with Express backend
+   - Typia with Fastify backend
+   - Typia with React Native (native-bare, native-uniwind)
+
+### Features:
+- Typia super-fast validation via compile-time TypeScript transformation
+- Support for all React-based frontends (TanStack Router, React Router, TanStack Start, Next.js)
+- Support for React Native (Expo) apps
+- Support for all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+- Full web builder UI integration with validation section
+- URL parameter support for sharing configurations
+
+### Technical Notes:
+- Typia transforms TypeScript types to runtime validation functions at compile time
+- 20,000x faster than class-validator according to benchmarks
+- Uses pure TypeScript types without additional schema definitions
+- Validation dependencies are added to api, server, web, and native packages
+- Zod is still included by default via workspace-deps for internal usage
+- Typia can be used as the primary validation library in user code
+- Uses Typia v9.7.1 with latest features
+- All 39 validation tests pass (including 9 new Typia tests)
+
+### Status: COMPLETE
+
