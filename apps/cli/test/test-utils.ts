@@ -22,6 +22,7 @@ import type {
   UILibrary,
   Effect,
   Email,
+  StateManagement,
 } from "../src/types";
 
 import { create } from "../src/index";
@@ -42,6 +43,7 @@ import {
   PaymentsSchema,
   RuntimeSchema,
   ServerDeploySchema,
+  StateManagementSchema,
   UILibrarySchema,
   WebDeploySchema,
 } from "../src/types";
@@ -99,6 +101,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     "cssFramework",
     "uiLibrary",
     "effect",
+    "stateManagement",
   ];
   const hasSpecificCoreConfig = coreStackFlags.some((flag) => config[flag] !== undefined);
 
@@ -129,6 +132,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
         uiLibrary: "none" as UILibrary,
         effect: "none" as Effect,
         email: "none" as Email,
+        stateManagement: "none" as StateManagement,
       };
 
   // Build options object - let the CLI handle all validation
@@ -211,6 +215,7 @@ export const DB_SETUPS = extractEnumValues(DatabaseSetupSchema);
 export const CSS_FRAMEWORKS = extractEnumValues(CSSFrameworkSchema);
 export const UI_LIBRARIES = extractEnumValues(UILibrarySchema);
 export const EFFECTS = extractEnumValues(EffectSchema);
+export const STATE_MANAGEMENTS = extractEnumValues(StateManagementSchema);
 
 // Convenience functions for common test patterns
 export function createBasicConfig(overrides: Partial<TestConfig> = {}): TestConfig {

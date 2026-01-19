@@ -21,6 +21,7 @@ export const stackUrlKeys: UrlKeys<
   payments: "pay",
   email: "em",
   backendLibraries: "bl",
+  stateManagement: "sm",
   codeQuality: "cq",
   documentation: "doc",
   appPlatforms: "ap",

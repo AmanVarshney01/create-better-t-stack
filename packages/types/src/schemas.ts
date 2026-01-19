@@ -97,7 +97,7 @@ export const EffectSchema = z
   );
 
 export const StateManagementSchema = z
-  .enum(["zustand", "jotai", "nanostores", "none"])
+  .enum(["zustand", "jotai", "nanostores", "redux-toolkit", "none"])
   .describe("State management library");
 
 export const FormsSchema = z

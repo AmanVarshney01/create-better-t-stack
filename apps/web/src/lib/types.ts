@@ -15,6 +15,7 @@ export type TechCategory =
   | "payments"
   | "email"
   | "backendLibraries"
+  | "stateManagement"
   | "cssFramework"
   | "uiLibrary"
   | "codeQuality"

@@ -26,6 +26,7 @@ function searchToStack(search: StackSearchParams | undefined): StackState {
     payments: search.pay ?? DEFAULT_STACK.payments,
     email: search.em ?? DEFAULT_STACK.email,
     backendLibraries: search.bl ?? DEFAULT_STACK.backendLibraries,
+    stateManagement: search.sm ?? DEFAULT_STACK.stateManagement,
     codeQuality: search.cq ?? DEFAULT_STACK.codeQuality,
     documentation: search.doc ?? DEFAULT_STACK.documentation,
     appPlatforms: search.ap ?? DEFAULT_STACK.appPlatforms,

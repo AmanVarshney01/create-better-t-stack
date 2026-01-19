@@ -591,6 +591,49 @@ export const TECH_OPTIONS: Record<
       default: true,
     },
   ],
+  stateManagement: [
+    {
+      id: "zustand",
+      name: "Zustand",
+      description: "Lightweight state management with simple API",
+      icon: "",
+      color: "from-amber-400 to-amber-600",
+      default: false,
+    },
+    {
+      id: "jotai",
+      name: "Jotai",
+      description: "Primitive and flexible atomic state",
+      icon: "",
+      color: "from-gray-600 to-gray-800",
+      default: false,
+      className: "invert-0 dark:invert",
+    },
+    {
+      id: "nanostores",
+      name: "Nanostores",
+      description: "Tiny state manager (1KB) for all frameworks",
+      icon: "",
+      color: "from-blue-400 to-blue-600",
+      default: false,
+    },
+    {
+      id: "redux-toolkit",
+      name: "Redux Toolkit",
+      description: "Enterprise-standard state with excellent TS support",
+      icon: "https://cdn.simpleicons.org/redux/764ABC",
+      color: "from-purple-500 to-purple-700",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No State Management",
+      description: "Skip state management setup",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
   cssFramework: [
     {
       id: "tailwind",
@@ -901,6 +944,7 @@ export const PRESET_TEMPLATES = [
       payments: "none",
       email: "none",
       backendLibraries: "none",
+      stateManagement: "none",
       codeQuality: [],
       documentation: [],
       appPlatforms: ["turborepo"],
@@ -934,6 +978,7 @@ export const PRESET_TEMPLATES = [
       payments: "none",
       email: "none",
       backendLibraries: "none",
+      stateManagement: "none",
       codeQuality: [],
       documentation: [],
       appPlatforms: ["turborepo"],
@@ -967,6 +1012,7 @@ export const PRESET_TEMPLATES = [
       payments: "none",
       email: "none",
       backendLibraries: "none",
+      stateManagement: "none",
       codeQuality: ["biome"],
       documentation: [],
       appPlatforms: ["turborepo"],
@@ -1000,6 +1046,7 @@ export const PRESET_TEMPLATES = [
       payments: "none",
       email: "none",
       backendLibraries: "none",
+      stateManagement: "none",
       codeQuality: [],
       documentation: [],
       appPlatforms: [],
@@ -1033,6 +1080,7 @@ export const PRESET_TEMPLATES = [
       payments: "none",
       email: "none",
       backendLibraries: "none",
+      stateManagement: "none",
       codeQuality: [],
       documentation: [],
       appPlatforms: ["turborepo"],
@@ -1066,6 +1114,7 @@ export const PRESET_TEMPLATES = [
       payments: "none",
       email: "none",
       backendLibraries: "none",
+      stateManagement: "none",
       codeQuality: [],
       documentation: [],
       appPlatforms: ["turborepo"],
@@ -1095,6 +1144,7 @@ export type StackState = {
   payments: string;
   email: string;
   backendLibraries: string;
+  stateManagement: string;
   cssFramework: string;
   uiLibrary: string;
   codeQuality: string[];
@@ -1124,6 +1174,7 @@ export const DEFAULT_STACK: StackState = {
   payments: "none",
   email: "none",
   backendLibraries: "none",
+  stateManagement: "none",
   cssFramework: "tailwind",
   uiLibrary: "shadcn-ui",
   codeQuality: [],

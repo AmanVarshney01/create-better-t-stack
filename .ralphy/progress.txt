@@ -289,3 +289,54 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Redux Toolkit State Management Implementation
+
+### Task: Implement Redux Toolkit as a state management option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "redux-toolkit" to StateManagementSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added state management dependency versions:
+   - @reduxjs/toolkit: ^2.8.2
+   - react-redux: ^9.2.0
+   - zustand: ^5.0.5
+   - jotai: ^2.12.5
+   - nanostores: ^0.11.3
+   - @nanostores/react: ^0.8.4
+3. **packages/template-generator/src/processors/state-management-deps.ts**: Created new state management processor:
+   - Handles zustand, jotai, nanostores, and redux-toolkit
+   - Adds dependencies to web and native packages
+   - Only applies to React-based frontends
+4. **packages/template-generator/src/processors/index.ts**: Registered state management processor
+5. **apps/web/src/lib/types.ts**: Added "stateManagement" to TechCategory type
+6. **apps/web/src/lib/constant.ts**: Added stateManagement options to TECH_OPTIONS:
+   - Zustand, Jotai, Nanostores, Redux Toolkit, None
+   - Added stateManagement to StackState type and DEFAULT_STACK
+   - Updated all PRESET_TEMPLATES with stateManagement field
+7. **apps/web/src/lib/stack-url-state.ts**: Added stateManagement to URL state parsing and serialization
+8. **apps/web/src/lib/stack-url-state.client.ts**: Added stateManagement to client-side state
+9. **apps/web/src/lib/stack-search-schema.ts**: Added "sm" URL param for stateManagement
+10. **apps/web/src/lib/stack-url-keys.ts**: Added stateManagement URL key mapping
+11. **apps/cli/test/test-utils.ts**: Added StateManagement type and schema support
+12. **apps/cli/test/state-management.test.ts**: Created comprehensive state management tests:
+    - Redux Toolkit with TanStack Router, React Router, Next.js, TanStack Start
+    - Zustand, Jotai, Nanostores with TanStack Router
+    - State management with native apps (native-bare, native-uniwind)
+    - None option test
+
+### Features:
+- Redux Toolkit with @reduxjs/toolkit and react-redux
+- Support for all React-based frontends (TanStack Router, React Router, TanStack Start, Next.js)
+- Support for React Native (Expo) apps
+- Alternative state management options: Zustand, Jotai, Nanostores
+- Full web builder UI integration with state management section
+- URL parameter support for sharing configurations
+
+### Technical Notes:
+- Redux Toolkit is the modern, recommended way to use Redux
+- State management dependencies are only added to React-based packages
+- The processor supports both web and native targets
+- All state management options work with React and React Native
+
+### Status: COMPLETE
+

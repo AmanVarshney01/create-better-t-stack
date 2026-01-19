@@ -242,6 +242,14 @@ export const dependencyVersionMap = {
   "@angular-devkit/build-angular": "^19.2.0",
   "@angular/cli": "^19.2.0",
   "@angular/compiler-cli": "^19.2.0",
+
+  // State management
+  zustand: "^5.0.5",
+  jotai: "^2.12.5",
+  nanostores: "^0.11.3",
+  "@nanostores/react": "^0.8.4",
+  "@reduxjs/toolkit": "^2.8.2",
+  "react-redux": "^9.2.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

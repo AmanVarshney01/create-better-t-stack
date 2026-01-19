@@ -85,7 +85,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 
 ## **STATE MANAGEMENT**
 
-- [ ] **Redux Toolkit** - Enterprise-standard with excellent TS support
+- [x] **Redux Toolkit** - Enterprise-standard with excellent TS support
 - [ ] **MobX** - Observable-based reactive state
 - [ ] **XState** - State machines and statecharts
 - [ ] **Valtio** - Proxy-based state (same authors as Zustand)
