@@ -91,7 +91,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 - [x] **Valtio** - Proxy-based state (same authors as Zustand)
 - [ ] **Recoil** - _(deprecated, but still used)_
 - [ ] **Legend State** - High-performance observable state
-- [ ] **TanStack Store** - Framework-agnostic store
+- [x] **TanStack Store** - Framework-agnostic store
 
 ---
 

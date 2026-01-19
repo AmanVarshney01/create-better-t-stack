@@ -255,6 +255,8 @@ export const dependencyVersionMap = {
   xstate: "^5.19.4",
   "@xstate/react": "^5.0.4",
   valtio: "^2.1.2",
+  "@tanstack/store": "^0.8.0",
+  "@tanstack/react-store": "^0.8.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

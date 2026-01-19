@@ -80,6 +80,9 @@ function getStateManagementDeps(
     case "valtio":
       deps.push("valtio");
       break;
+    case "tanstack-store":
+      deps.push("@tanstack/store", "@tanstack/react-store");
+      break;
   }
 
   return deps;

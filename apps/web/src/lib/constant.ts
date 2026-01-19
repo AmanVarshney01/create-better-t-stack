@@ -650,6 +650,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "tanstack-store",
+      name: "TanStack Store",
+      description: "Framework-agnostic store powering TanStack ecosystem",
+      icon: "",
+      color: "from-red-400 to-orange-500",
+      default: false,
+    },
+    {
       id: "none",
       name: "No State Management",
       description: "Skip state management setup",

@@ -328,6 +328,82 @@ describe("State Management Options", () => {
     });
   });
 
+  describe("TanStack Store with React frontends", () => {
+    test("tanstack-store with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "tanstack-store-tanstack-router",
+          frontend: ["tanstack-router"],
+          stateManagement: "tanstack-store",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("tanstack-store with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "tanstack-store-react-router",
+          frontend: ["react-router"],
+          stateManagement: "tanstack-store",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("tanstack-store with Next.js", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "tanstack-store-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          stateManagement: "tanstack-store",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("tanstack-store with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "tanstack-store-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          stateManagement: "tanstack-store",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("TanStack Store with native apps", () => {
+    test("tanstack-store with native-bare", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "tanstack-store-native-bare",
+          frontend: ["native-bare"],
+          backend: "hono",
+          stateManagement: "tanstack-store",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("tanstack-store with native-uniwind", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "tanstack-store-native-uniwind",
+          frontend: ["native-uniwind"],
+          backend: "hono",
+          stateManagement: "tanstack-store",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("No state management", () => {
     test("none state management option", async () => {
       const result = await runTRPCTest(

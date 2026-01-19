@@ -446,3 +446,37 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: TanStack Store State Management Implementation
+
+### Task: Implement TanStack Store as a state management option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "tanstack-store" to StateManagementSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added TanStack Store dependency versions:
+   - @tanstack/store: ^0.8.0
+   - @tanstack/react-store: ^0.8.0
+3. **packages/template-generator/src/processors/state-management-deps.ts**: Added TanStack Store case to handle @tanstack/store and @tanstack/react-store dependencies
+4. **apps/web/src/lib/constant.ts**: Added TanStack Store to web builder state management options with red-orange gradient
+5. **apps/cli/test/state-management.test.ts**: Added TanStack Store tests for:
+   - TanStack Store with TanStack Router
+   - TanStack Store with React Router
+   - TanStack Store with Next.js
+   - TanStack Store with TanStack Start
+   - TanStack Store with React Native (native-bare, native-uniwind)
+
+### Features:
+- TanStack Store with @tanstack/store core and @tanstack/react-store React bindings
+- Support for all React-based frontends (TanStack Router, React Router, TanStack Start, Next.js)
+- Support for React Native (Expo) apps
+- Framework-agnostic store that powers the TanStack ecosystem
+- Full web builder UI integration
+
+### Technical Notes:
+- TanStack Store is the core state management library powering TanStack Query, TanStack Router, and other TanStack tools
+- @tanstack/react-store provides React-specific hooks and bindings
+- TanStack Store dependencies are only added to React-based packages
+- Uses immutable, reactive data store architecture
+
+### Status: COMPLETE
+
