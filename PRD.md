@@ -109,7 +109,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 ## **PAYMENTS**
 
 - [x] **Stripe** - Industry standard payment gateway
-- [ ] **Lemon Squeezy** - MoR for digital products (acquired by Stripe)
+- [x] **Lemon Squeezy** - MoR for digital products (acquired by Stripe)
 - [ ] **Paddle** - MoR with tax handling
 - [ ] **Dodo Payments** - MoR alternative
 

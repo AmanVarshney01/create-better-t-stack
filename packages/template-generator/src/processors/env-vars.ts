@@ -458,6 +458,24 @@ function buildServerVars(
       comment: "Stripe webhook signing secret - get it when creating a webhook endpoint",
     },
     {
+      key: "LEMONSQUEEZY_API_KEY",
+      value: "",
+      condition: payments === "lemon-squeezy",
+      comment: "Lemon Squeezy API key - get it at Settings > API in your dashboard",
+    },
+    {
+      key: "LEMONSQUEEZY_STORE_ID",
+      value: "",
+      condition: payments === "lemon-squeezy",
+      comment: "Lemon Squeezy Store ID - found in your store settings",
+    },
+    {
+      key: "LEMONSQUEEZY_WEBHOOK_SECRET",
+      value: "",
+      condition: payments === "lemon-squeezy",
+      comment: "Lemon Squeezy webhook signing secret - get it when creating a webhook",
+    },
+    {
       key: "RESEND_API_KEY",
       value: "",
       condition: email === "resend",

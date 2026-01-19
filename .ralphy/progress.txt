@@ -1013,3 +1013,57 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Lemon Squeezy Payments Integration
+
+### Task: Implement Lemon Squeezy as a payment provider option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "lemon-squeezy" to PaymentsSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Lemon Squeezy dependency version:
+   - @lemonsqueezy/lemonsqueezy.js: ^4.0.0
+3. **packages/template-generator/src/processors/payments-deps.ts**: Added Lemon Squeezy dependency processing:
+   - Server-side @lemonsqueezy/lemonsqueezy.js for backend (apps/server)
+   - Server-side @lemonsqueezy/lemonsqueezy.js for auth package (packages/auth)
+4. **packages/template-generator/src/processors/env-vars.ts**: Added Lemon Squeezy environment variables:
+   - LEMONSQUEEZY_API_KEY (API key from dashboard)
+   - LEMONSQUEEZY_STORE_ID (Store ID)
+   - LEMONSQUEEZY_WEBHOOK_SECRET (Webhook signing secret)
+5. **packages/template-generator/templates/payments/lemon-squeezy/**: Created Lemon Squeezy templates:
+   - server/base/src/lib/lemonsqueezy.ts.hbs - Server-side SDK with checkout, products, subscriptions, and webhook utilities
+   - web/react/next/src/app/success/page.tsx.hbs - Next.js success page
+   - web/react/tanstack-router/src/routes/success.tsx.hbs - TanStack Router success page
+   - web/react/react-router/src/routes/success.tsx.hbs - React Router success page
+   - web/react/tanstack-start/src/routes/success.tsx.hbs - TanStack Start success page
+   - web/nuxt/app/pages/success.vue.hbs - Nuxt success page
+   - web/svelte/src/routes/success/+page.svelte.hbs - Svelte success page
+   - web/solid/src/routes/success.tsx.hbs - Solid success page
+6. **apps/web/src/lib/constant.ts**: Added Lemon Squeezy to web builder payments options with yellow icon
+7. **apps/cli/test/payments.test.ts**: Added comprehensive Lemon Squeezy tests:
+   - Lemon Squeezy with TanStack Router, React Router, Next.js, TanStack Start
+   - Lemon Squeezy with different backends (Hono, Express, Fastify, Elysia)
+   - Lemon Squeezy with non-React frontends (Nuxt, Svelte, Solid)
+
+### Features:
+- Lemon Squeezy MoR (Merchant of Record) for digital products
+- Server-side SDK with full API access (security-first design)
+- Checkout session creation with customizable options
+- Product and variant management
+- Subscription management (list, get, cancel)
+- Webhook signature verification for secure event handling
+- Support for all React-based frontends (TanStack Router, React Router, TanStack Start, Next.js)
+- Support for non-React frontends (Nuxt, Svelte, Solid)
+- Support for all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+- Full web builder UI integration
+- Environment variables with helpful comments
+
+### Technical Notes:
+- Lemon Squeezy is a Merchant of Record, handling sales tax and compliance
+- The SDK is server-side only for security (API key must not be exposed)
+- Uses official @lemonsqueezy/lemonsqueezy.js SDK (v4.0.0)
+- Webhook verification uses HMAC-SHA256 for security
+- Success pages show checkout_id from Lemon Squeezy redirect
+- All 24 payments tests pass
+
+### Status: COMPLETE
+

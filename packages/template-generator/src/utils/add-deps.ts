@@ -297,6 +297,9 @@ export const dependencyVersionMap = {
   stripe: "^17.5.0",
   "@stripe/stripe-js": "^5.5.0",
   "@stripe/react-stripe-js": "^3.1.1",
+
+  // Payments - Lemon Squeezy
+  "@lemonsqueezy/lemonsqueezy.js": "^4.0.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

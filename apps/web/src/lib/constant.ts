@@ -544,6 +544,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "lemon-squeezy",
+      name: "Lemon Squeezy",
+      description: "MoR for digital products with tax handling",
+      icon: "https://cdn.simpleicons.org/lemonsqueezy/FFC233",
+      color: "from-yellow-400 to-yellow-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Payments",
       description: "Skip payments integration",

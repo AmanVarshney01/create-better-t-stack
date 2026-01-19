@@ -1,0 +1,203 @@
+import {
+	lemonSqueezySetup,
+	createCheckout,
+	getCheckout,
+	listProducts,
+	getProduct,
+	listVariants,
+	getVariant,
+	listSubscriptions,
+	getSubscription,
+	cancelSubscription,
+	type Checkout,
+	type Product,
+	type Variant,
+	type Subscription,
+} from "@lemonsqueezy/lemonsqueezy.js";
+import { env } from "@{{projectName}}/env/server";
+
+// Initialize Lemon Squeezy with your API key
+lemonSqueezySetup({
+	apiKey: env.LEMONSQUEEZY_API_KEY,
+	onError: (error) => console.error("Lemon Squeezy Error:", error),
+});
+
+export async function createCheckoutSession(params: {
+	variantId: number;
+	customData?: Record<string, string | number | boolean>;
+	checkoutOptions?: {
+		embed?: boolean;
+		media?: boolean;
+		logo?: boolean;
+		desc?: boolean;
+		discount?: boolean;
+		dark?: boolean;
+		subscriptionPreview?: boolean;
+		buttonColor?: string;
+	};
+	productOptions?: {
+		name?: string;
+		description?: string;
+		redirectUrl?: string;
+		receiptButtonText?: string;
+		receiptLinkUrl?: string;
+		receiptThankYouNote?: string;
+		enabledVariants?: number[];
+	};
+	checkoutData?: {
+		email?: string;
+		name?: string;
+		billingAddress?: {
+			country: string;
+			zip?: string;
+		};
+		taxNumber?: string;
+		discountCode?: string;
+	};
+	expiresAt?: string;
+	preview?: boolean;
+	testMode?: boolean;
+}) {
+	const { data, error } = await createCheckout(env.LEMONSQUEEZY_STORE_ID, params.variantId, {
+		customData: params.customData,
+		checkoutOptions: params.checkoutOptions,
+		productOptions: params.productOptions,
+		checkoutData: params.checkoutData,
+		expiresAt: params.expiresAt,
+		preview: params.preview,
+		testMode: params.testMode,
+	});
+
+	if (error) {
+		throw new Error(`Failed to create checkout: ${error.message}`);
+	}
+
+	return data;
+}
+
+export async function getCheckoutById(checkoutId: string): Promise<Checkout | null> {
+	const { data, error } = await getCheckout(checkoutId);
+
+	if (error) {
+		throw new Error(`Failed to get checkout: ${error.message}`);
+	}
+
+	return data;
+}
+
+export async function getProducts(): Promise<Product[]> {
+	const { data, error } = await listProducts({
+		filter: { storeId: env.LEMONSQUEEZY_STORE_ID },
+	});
+
+	if (error) {
+		throw new Error(`Failed to list products: ${error.message}`);
+	}
+
+	return data?.data ?? [];
+}
+
+export async function getProductById(productId: string): Promise<Product | null> {
+	const { data, error } = await getProduct(productId);
+
+	if (error) {
+		throw new Error(`Failed to get product: ${error.message}`);
+	}
+
+	return data;
+}
+
+export async function getVariants(productId?: string): Promise<Variant[]> {
+	const { data, error } = await listVariants({
+		filter: productId ? { productId } : undefined,
+	});
+
+	if (error) {
+		throw new Error(`Failed to list variants: ${error.message}`);
+	}
+
+	return data?.data ?? [];
+}
+
+export async function getVariantById(variantId: string): Promise<Variant | null> {
+	const { data, error } = await getVariant(variantId);
+
+	if (error) {
+		throw new Error(`Failed to get variant: ${error.message}`);
+	}
+
+	return data;
+}
+
+export async function getUserSubscriptions(customerId?: string): Promise<Subscription[]> {
+	const { data, error } = await listSubscriptions({
+		filter: customerId ? { customerId } : undefined,
+	});
+
+	if (error) {
+		throw new Error(`Failed to list subscriptions: ${error.message}`);
+	}
+
+	return data?.data ?? [];
+}
+
+export async function getSubscriptionById(subscriptionId: string): Promise<Subscription | null> {
+	const { data, error } = await getSubscription(subscriptionId);
+
+	if (error) {
+		throw new Error(`Failed to get subscription: ${error.message}`);
+	}
+
+	return data;
+}
+
+export async function cancelUserSubscription(subscriptionId: string): Promise<Subscription | null> {
+	const { data, error } = await cancelSubscription(subscriptionId);
+
+	if (error) {
+		throw new Error(`Failed to cancel subscription: ${error.message}`);
+	}
+
+	return data;
+}
+
+export function verifyWebhookSignature(
+	payload: string,
+	signature: string,
+): boolean {
+	// Lemon Squeezy uses HMAC-SHA256 for webhook signatures
+	const crypto = require("crypto");
+	const hmac = crypto.createHmac("sha256", env.LEMONSQUEEZY_WEBHOOK_SECRET);
+	const digest = hmac.update(payload).digest("hex");
+	return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(digest));
+}
+
+export type WebhookEvent =
+	| "order_created"
+	| "order_refunded"
+	| "subscription_created"
+	| "subscription_updated"
+	| "subscription_cancelled"
+	| "subscription_resumed"
+	| "subscription_expired"
+	| "subscription_paused"
+	| "subscription_unpaused"
+	| "subscription_payment_success"
+	| "subscription_payment_failed"
+	| "subscription_payment_recovered"
+	| "license_key_created"
+	| "license_key_updated";
+
+export interface WebhookPayload {
+	meta: {
+		event_name: WebhookEvent;
+		custom_data?: Record<string, string | number | boolean>;
+		webhook_id: string;
+	};
+	data: {
+		type: string;
+		id: string;
+		attributes: Record<string, unknown>;
+		relationships?: Record<string, unknown>;
+	};
+}

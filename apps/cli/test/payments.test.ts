@@ -161,6 +161,150 @@ describe("Payments Options", () => {
     });
   });
 
+  describe("Lemon Squeezy with React frontends", () => {
+    test("lemon-squeezy with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "lemonsqueezy-tanstack-router",
+          frontend: ["tanstack-router"],
+          payments: "lemon-squeezy",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("lemon-squeezy with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "lemonsqueezy-react-router",
+          frontend: ["react-router"],
+          payments: "lemon-squeezy",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("lemon-squeezy with Next.js fullstack", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "lemonsqueezy-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          payments: "lemon-squeezy",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("lemon-squeezy with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "lemonsqueezy-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          payments: "lemon-squeezy",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Lemon Squeezy with different backends", () => {
+    test("lemon-squeezy with Hono backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "lemonsqueezy-hono",
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          payments: "lemon-squeezy",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("lemon-squeezy with Express backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "lemonsqueezy-express",
+          frontend: ["tanstack-router"],
+          backend: "express",
+          runtime: "node",
+          payments: "lemon-squeezy",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("lemon-squeezy with Fastify backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "lemonsqueezy-fastify",
+          frontend: ["tanstack-router"],
+          backend: "fastify",
+          runtime: "node",
+          payments: "lemon-squeezy",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("lemon-squeezy with Elysia backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "lemonsqueezy-elysia",
+          frontend: ["tanstack-router"],
+          backend: "elysia",
+          runtime: "bun",
+          payments: "lemon-squeezy",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Lemon Squeezy with non-React frontends", () => {
+    test("lemon-squeezy with Nuxt", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "lemonsqueezy-nuxt",
+          frontend: ["nuxt"],
+          backend: "hono",
+          api: "none",
+          payments: "lemon-squeezy",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("lemon-squeezy with Svelte", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "lemonsqueezy-svelte",
+          frontend: ["svelte"],
+          backend: "hono",
+          api: "none",
+          payments: "lemon-squeezy",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("lemon-squeezy with Solid", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "lemonsqueezy-solid",
+          frontend: ["solid"],
+          backend: "hono",
+          api: "none",
+          payments: "lemon-squeezy",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("No payments option", () => {
     test("none payments option", async () => {
       const result = await runTRPCTest(

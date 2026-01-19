@@ -87,4 +87,26 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
       }
     }
   }
+
+  if (payments === "lemon-squeezy") {
+    const serverPath = "apps/server/package.json";
+
+    // Add server-side Lemon Squeezy SDK (server-side only for security)
+    if (vfs.exists(serverPath)) {
+      addPackageDependency({
+        vfs,
+        packagePath: serverPath,
+        dependencies: ["@lemonsqueezy/lemonsqueezy.js"],
+      });
+    }
+
+    // Also add to auth package if it exists (for webhook handling)
+    if (vfs.exists(authPath)) {
+      addPackageDependency({
+        vfs,
+        packagePath: authPath,
+        dependencies: ["@lemonsqueezy/lemonsqueezy.js"],
+      });
+    }
+  }
 }
