@@ -1,0 +1,120 @@
+{{#if (eq rustWebFramework "axum")}}
+use axum::{routing::get, Json, Router};
+use serde::Serialize;
+use tower_http::cors::CorsLayer;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+
+#[derive(Serialize)]
+struct HealthResponse {
+    status: &'static str,
+    message: &'static str,
+}
+
+async fn health() -> Json<HealthResponse> {
+    Json(HealthResponse {
+        status: "ok",
+        message: "Server is running",
+    })
+}
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    // Load environment variables
+    dotenvy::dotenv().ok();
+
+    // Initialize tracing
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "debug".into()))
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
+    // Build router
+    let app = Router::new()
+        .route("/health", get(health))
+        .layer(CorsLayer::permissive());
+
+    // Get host and port from environment
+    let host = std::env::var("HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+    let port = std::env::var("PORT").unwrap_or_else(|_| "3000".to_string());
+    let addr = format!("{}:{}", host, port);
+
+    tracing::info!("Starting server at http://{}", addr);
+
+    // Start server
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
+    axum::serve(listener, app).await?;
+
+    Ok(())
+}
+{{else if (eq rustWebFramework "actix-web")}}
+use actix_cors::Cors;
+use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
+use serde::Serialize;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+
+#[derive(Serialize)]
+struct HealthResponse {
+    status: &'static str,
+    message: &'static str,
+}
+
+#[get("/health")]
+async fn health() -> impl Responder {
+    HttpResponse::Ok().json(HealthResponse {
+        status: "ok",
+        message: "Server is running",
+    })
+}
+
+#[actix_web::main]
+async fn main() -> anyhow::Result<()> {
+    // Load environment variables
+    dotenvy::dotenv().ok();
+
+    // Initialize tracing
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "debug".into()))
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
+    // Get host and port from environment
+    let host = std::env::var("HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+    let port: u16 = std::env::var("PORT")
+        .unwrap_or_else(|_| "3000".to_string())
+        .parse()?;
+
+    tracing::info!("Starting server at http://{}:{}", host, port);
+
+    // Start server
+    HttpServer::new(|| {
+        let cors = Cors::permissive();
+        App::new()
+            .wrap(cors)
+            .service(health)
+    })
+    .bind((host, port))?
+    .run()
+    .await?;
+
+    Ok(())
+}
+{{else}}
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    // Load environment variables
+    dotenvy::dotenv().ok();
+
+    // Initialize tracing
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "debug".into()))
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
+    tracing::info!("Hello from {{projectName}}!");
+    tracing::info!("Add a web framework (axum or actix-web) to start building your API.");
+
+    Ok(())
+}
+{{/if}}

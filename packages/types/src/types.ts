@@ -39,6 +39,13 @@ import type {
   FileUploadSchema,
   LoggingSchema,
   ObservabilitySchema,
+  EcosystemSchema,
+  RustWebFrameworkSchema,
+  RustFrontendSchema,
+  RustOrmSchema,
+  RustApiSchema,
+  RustCliSchema,
+  RustLibrariesSchema,
 } from "./schemas";
 
 // Inferred types from Zod schemas
@@ -74,6 +81,13 @@ export type Animation = z.infer<typeof AnimationSchema>;
 export type FileUpload = z.infer<typeof FileUploadSchema>;
 export type Logging = z.infer<typeof LoggingSchema>;
 export type Observability = z.infer<typeof ObservabilitySchema>;
+export type Ecosystem = z.infer<typeof EcosystemSchema>;
+export type RustWebFramework = z.infer<typeof RustWebFrameworkSchema>;
+export type RustFrontend = z.infer<typeof RustFrontendSchema>;
+export type RustOrm = z.infer<typeof RustOrmSchema>;
+export type RustApi = z.infer<typeof RustApiSchema>;
+export type RustCli = z.infer<typeof RustCliSchema>;
+export type RustLibraries = z.infer<typeof RustLibrariesSchema>;
 
 export type CreateInput = z.infer<typeof CreateInputSchema>;
 export type AddInput = z.infer<typeof AddInputSchema>;

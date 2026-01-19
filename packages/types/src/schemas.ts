@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+export const EcosystemSchema = z
+  .enum(["typescript", "rust"])
+  .describe("Language ecosystem (typescript or rust)");
+
 export const DatabaseSchema = z
   .enum(["none", "sqlite", "postgres", "mysql", "mongodb"])
   .describe("Database type");
@@ -188,6 +192,29 @@ export const ObservabilitySchema = z
   .enum(["opentelemetry", "none"])
   .describe("Observability and distributed tracing");
 
+// Rust ecosystem schemas
+export const RustWebFrameworkSchema = z
+  .enum(["axum", "actix-web", "none"])
+  .describe("Rust web framework");
+
+export const RustFrontendSchema = z
+  .enum(["leptos", "dioxus", "none"])
+  .describe("Rust WASM frontend framework");
+
+export const RustOrmSchema = z
+  .enum(["sea-orm", "sqlx", "none"])
+  .describe("Rust ORM/database layer");
+
+export const RustApiSchema = z
+  .enum(["tonic", "async-graphql", "none"])
+  .describe("Rust API layer (gRPC/GraphQL)");
+
+export const RustCliSchema = z.enum(["clap", "ratatui", "none"]).describe("Rust CLI tools");
+
+export const RustLibrariesSchema = z
+  .enum(["serde", "validator", "jsonwebtoken", "argon2", "tokio-test", "mockall", "none"])
+  .describe("Rust core libraries");
+
 export const CSSFrameworkSchema = z
   .enum(["tailwind", "scss", "less", "postcss-only", "none"])
   .describe("CSS framework/preprocessor");
@@ -239,6 +266,7 @@ export const CreateInputSchema = z.object({
   yes: z.boolean().optional(),
   yolo: z.boolean().optional(),
   verbose: z.boolean().optional(),
+  ecosystem: EcosystemSchema.optional(),
   database: DatabaseSchema.optional(),
   orm: ORMSchema.optional(),
   auth: AuthSchema.optional(),
@@ -274,6 +302,13 @@ export const CreateInputSchema = z.object({
   fileUpload: FileUploadSchema.optional(),
   logging: LoggingSchema.optional(),
   observability: ObservabilitySchema.optional(),
+  // Rust ecosystem options
+  rustWebFramework: RustWebFrameworkSchema.optional(),
+  rustFrontend: RustFrontendSchema.optional(),
+  rustOrm: RustOrmSchema.optional(),
+  rustApi: RustApiSchema.optional(),
+  rustCli: RustCliSchema.optional(),
+  rustLibraries: z.array(RustLibrariesSchema).optional(),
 });
 
 export const AddInputSchema = z.object({
@@ -293,6 +328,7 @@ export const ProjectConfigSchema = z.object({
   projectName: z.string(),
   projectDir: z.string(),
   relativePath: z.string(),
+  ecosystem: EcosystemSchema,
   database: DatabaseSchema,
   orm: ORMSchema,
   backend: BackendSchema,
@@ -324,11 +360,19 @@ export const ProjectConfigSchema = z.object({
   fileUpload: FileUploadSchema,
   logging: LoggingSchema,
   observability: ObservabilitySchema,
+  // Rust ecosystem options
+  rustWebFramework: RustWebFrameworkSchema,
+  rustFrontend: RustFrontendSchema,
+  rustOrm: RustOrmSchema,
+  rustApi: RustApiSchema,
+  rustCli: RustCliSchema,
+  rustLibraries: z.array(RustLibrariesSchema),
 });
 
 export const BetterTStackConfigSchema = z.object({
   version: z.string().describe("CLI version used to create this project"),
   createdAt: z.string().describe("Timestamp when the project was created"),
+  ecosystem: EcosystemSchema,
   database: DatabaseSchema,
   orm: ORMSchema,
   backend: BackendSchema,
@@ -358,6 +402,13 @@ export const BetterTStackConfigSchema = z.object({
   fileUpload: FileUploadSchema,
   logging: LoggingSchema,
   observability: ObservabilitySchema,
+  // Rust ecosystem options
+  rustWebFramework: RustWebFrameworkSchema,
+  rustFrontend: RustFrontendSchema,
+  rustOrm: RustOrmSchema,
+  rustApi: RustApiSchema,
+  rustCli: RustCliSchema,
+  rustLibraries: z.array(RustLibrariesSchema),
 });
 
 export const BetterTStackConfigFileSchema = z
@@ -413,3 +464,10 @@ export const ANIMATION_VALUES = AnimationSchema.options;
 export const FILE_UPLOAD_VALUES = FileUploadSchema.options;
 export const LOGGING_VALUES = LoggingSchema.options;
 export const OBSERVABILITY_VALUES = ObservabilitySchema.options;
+export const ECOSYSTEM_VALUES = EcosystemSchema.options;
+export const RUST_WEB_FRAMEWORK_VALUES = RustWebFrameworkSchema.options;
+export const RUST_FRONTEND_VALUES = RustFrontendSchema.options;
+export const RUST_ORM_VALUES = RustOrmSchema.options;
+export const RUST_API_VALUES = RustApiSchema.options;
+export const RUST_CLI_VALUES = RustCliSchema.options;
+export const RUST_LIBRARIES_VALUES = RustLibrariesSchema.options;

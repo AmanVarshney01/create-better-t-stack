@@ -1,0 +1,63 @@
+# Ralphy Configuration
+# https://github.com/michaelshimeles/ralphy
+
+# Project info
+project:
+  name: "better-fullstack"
+  language: "TypeScript"
+  framework: "TanStack Start, Convex, Bun"
+  description: "Full-stack CLI scaffolding tool - fork of Better-T-Stack for creating full-stack projects"
+
+# Commands
+commands:
+  test: "bun test"
+  lint: "bun run check"
+  build: "bun run build"
+
+# Rules - instructions the AI MUST follow
+# These are injected into every prompt
+rules:
+  # Core philosophy
+  - "This is a full-stack CLI tool for creating full-stack projects. Every new library, framework, or language added MUST be tested with comprehensive tests before moving to the next task."
+  - "Never ask for user confirmation or commands. Execute everything autonomously. If something fails, fix it and retry."
+  - "Write the BEST possible tests for any new functionality - unit tests, integration tests, and E2E tests where applicable."
+
+  # Testing requirements
+  - "When adding a new library/framework: 1) Add the dependency 2) Write tests proving it works 3) Run tests 4) Only proceed if tests pass"
+  - "Use Bun's built-in test runner (bun test) for all tests"
+  - "Test files should be colocated with source files as *.test.ts or in a __tests__ directory"
+  - "Tests must cover: happy path, edge cases, error handling, and integration with existing code"
+
+  # Tech stack rules
+  - "Use Bun for all package management and scripts (not npm/yarn/pnpm)"
+  - "Use TailwindCSS v4 syntax for styling (not v3)"
+  - "Use TanStack Router file-based routing conventions for the web app"
+  - "Use Convex patterns: query for reads, mutation for writes, action for external APIs"
+  - "Use TypeScript strict mode - no 'any' types"
+
+  # Code quality
+  - "Run 'bun run check' (oxfmt + oxlint) before considering any task complete"
+  - "Run 'bun run build' to verify the build passes"
+  - "Follow existing patterns in the codebase - check similar files first"
+  - "Keep components small and focused - split large components"
+
+  # Monorepo structure
+  - "CLI code goes in apps/cli/"
+  - "Website code goes in apps/web/"
+  - "Backend (Convex) code goes in packages/backend/convex/"
+  - "Shared types go in packages/types/"
+  - "Template generation logic goes in packages/template-generator/"
+
+  # Git workflow
+  - "Make atomic commits with clear messages"
+  - "Commit after each completed story/task"
+
+# Boundaries - files/folders the AI should not modify
+boundaries:
+  never_touch:
+    - "*.lock"
+    - "bun.lock"
+    - "node_modules/**"
+    - ".git/**"
+    - "packages/backend/convex/_generated/**"
+    - "apps/web/src/routeTree.gen.ts"

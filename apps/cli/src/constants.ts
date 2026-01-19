@@ -18,6 +18,7 @@ export const PKG_ROOT = path.join(distPath, "../");
 export const DEFAULT_CONFIG_BASE = {
   projectName: "my-better-t-app",
   relativePath: "my-better-t-app",
+  ecosystem: "typescript",
   frontend: ["tanstack-router"],
   database: "sqlite",
   orm: "drizzle",
@@ -47,6 +48,13 @@ export const DEFAULT_CONFIG_BASE = {
   serverDeploy: "none",
   cssFramework: "tailwind",
   uiLibrary: "shadcn-ui",
+  // Rust ecosystem defaults
+  rustWebFramework: "none",
+  rustFrontend: "none",
+  rustOrm: "none",
+  rustApi: "none",
+  rustCli: "none",
+  rustLibraries: [],
 } as const;
 
 export function getDefaultConfig() {
@@ -57,6 +65,7 @@ export function getDefaultConfig() {
     frontend: [...DEFAULT_CONFIG_BASE.frontend],
     addons: [...DEFAULT_CONFIG_BASE.addons],
     examples: [...DEFAULT_CONFIG_BASE.examples],
+    rustLibraries: [...DEFAULT_CONFIG_BASE.rustLibraries],
   };
 }
 

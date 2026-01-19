@@ -3313,3 +3313,84 @@ Implemented feTS as a new backend framework option. feTS is a TypeScript HTTP Fr
 - Ready for future Rust framework implementations (Axum, Actix-web, Leptos, Dioxus, etc.)
 
 ### Status: COMPLETE
+
+## 2026-01-19: Rust Language Support Implementation
+
+### Task: Add Rust as a language option in the CLI and template generator with Cargo.toml scaffolding
+
+### Changes Made:
+
+1. **packages/types/src/schemas.ts**:
+   - Added `EcosystemSchema` enum with "typescript" and "rust" options
+   - Added `RustWebFrameworkSchema` enum (axum, actix-web, none)
+   - Added `RustFrontendSchema` enum (leptos, dioxus, none)
+   - Added `RustOrmSchema` enum (sea-orm, sqlx, none)
+   - Added `RustApiSchema` enum (tonic, async-graphql, none)
+   - Added `RustCliSchema` enum (clap, ratatui, none)
+   - Added `RustLibrariesSchema` enum (serde, validator, jsonwebtoken, argon2, tokio-test, mockall, none)
+   - Updated `CreateInputSchema`, `ProjectConfigSchema`, and `BetterTStackConfigSchema` to include ecosystem and Rust fields
+   - Added exports for all new schema values
+
+2. **packages/types/src/types.ts**:
+   - Added type exports for all new Rust-related types (Ecosystem, RustWebFramework, RustFrontend, RustOrm, RustApi, RustCli, RustLibraries)
+
+3. **packages/template-generator/templates/rust-base/**:
+   - Created `Cargo.toml.hbs` - Workspace Cargo.toml with conditional dependencies based on selected options
+   - Created `_gitignore` - Rust-specific gitignore file
+   - Created `rust-toolchain.toml` - Rust toolchain configuration (stable channel)
+   - Created `.env.example` - Environment variables template
+   - Created `crates/server/Cargo.toml.hbs` - Server crate manifest with conditional dependencies
+   - Created `crates/server/src/main.rs.hbs` - Server entry point with Axum or Actix-web support
+
+4. **packages/template-generator/src/template-handlers/rust-base.ts**:
+   - Created new template handler for Rust base templates
+   - Only processes Rust templates when ecosystem is "rust"
+
+5. **packages/template-generator/src/template-handlers/index.ts**:
+   - Added export for `processRustBaseTemplate`
+
+6. **packages/template-generator/src/generator.ts**:
+   - Updated `generateVirtualProject` to conditionally process TypeScript or Rust templates based on ecosystem
+   - Rust projects use Cargo.toml structure, TypeScript projects use package.json structure
+
+7. **apps/cli/src/constants.ts**:
+   - Added ecosystem and Rust defaults to `DEFAULT_CONFIG_BASE`
+   - Updated `getDefaultConfig` to include rustLibraries array
+
+8. **apps/cli/src/index.ts**:
+   - Added ecosystem parameter to CLI command
+   - Added all Rust-specific parameters (rustWebFramework, rustFrontend, rustOrm, rustApi, rustCli, rustLibraries)
+   - Updated `createVirtual` function to include ecosystem and Rust options
+   - Added type exports for Rust-related types
+
+9. **apps/cli/src/helpers/core/command-handlers.ts**:
+   - Updated error return to include ecosystem and Rust fields in ProjectConfig
+
+10. **apps/cli/src/prompts/config-prompts.ts**:
+    - Updated `gatherConfig` return to include ecosystem and Rust fields (defaults to TypeScript)
+
+11. **apps/cli/src/utils/bts-config.ts**:
+    - Updated `writeBtsConfig` to include ecosystem and Rust fields in the config file
+
+12. **apps/cli/test/rust-ecosystem.test.ts**:
+    - Created comprehensive tests for Rust ecosystem:
+      - Schema definition tests (all Rust schemas properly defined)
+      - Virtual project generation tests for various Rust configurations
+      - TypeScript backward compatibility tests
+      - Ecosystem switching tests
+
+13. **apps/cli/test/test-utils.ts**:
+    - Added Rust-related schema exports for testing
+
+### Features:
+- Full Rust ecosystem support in CLI with `--ecosystem rust` flag
+- Cargo workspace setup with proper project structure
+- Support for Axum and Actix-web web frameworks
+- Support for SQLx and SeaORM database layers
+- Support for Tonic (gRPC) and async-graphql API layers
+- Support for Clap and Ratatui CLI tools
+- Core libraries support (serde, validator, jsonwebtoken, argon2, tokio-test, mockall)
+- Backward compatible with TypeScript ecosystem (default)
+- 21 passing tests covering all Rust ecosystem functionality
+
+### Status: COMPLETE

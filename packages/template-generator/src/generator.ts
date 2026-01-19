@@ -13,6 +13,7 @@ import {
 import {
   type TemplateData,
   processBaseTemplate,
+  processRustBaseTemplate,
   processFrontendTemplates,
   processBackendTemplates,
   processDbTemplates,
@@ -45,30 +46,38 @@ export async function generateVirtualProject(options: GeneratorOptions): Promise
 
     const vfs = new VirtualFileSystem();
 
-    await processBaseTemplate(vfs, templates, config);
-    await processFrontendTemplates(vfs, templates, config);
-    await processBackendTemplates(vfs, templates, config);
-    await processDbTemplates(vfs, templates, config);
-    await processApiTemplates(vfs, templates, config);
-    await processConfigPackage(vfs, templates, config);
-    await processEnvPackage(vfs, templates, config);
-    await processAuthTemplates(vfs, templates, config);
-    await processPaymentsTemplates(vfs, templates, config);
-    await processEmailTemplates(vfs, templates, config);
-    await processAddonTemplates(vfs, templates, config);
-    await processExampleTemplates(vfs, templates, config);
-    await processExtrasTemplates(vfs, templates, config);
-    await processDeployTemplates(vfs, templates, config);
-    await processLoggingTemplates(vfs, templates, config);
-    await processObservabilityTemplates(vfs, templates, config);
+    // Process base templates based on ecosystem
+    if (config.ecosystem === "rust") {
+      // Rust ecosystem - use Cargo.toml and Rust project structure
+      await processRustBaseTemplate(vfs, templates, config);
+    } else {
+      // TypeScript ecosystem - use package.json and TypeScript project structure
+      await processBaseTemplate(vfs, templates, config);
+      await processFrontendTemplates(vfs, templates, config);
+      await processBackendTemplates(vfs, templates, config);
+      await processDbTemplates(vfs, templates, config);
+      await processApiTemplates(vfs, templates, config);
+      await processConfigPackage(vfs, templates, config);
+      await processEnvPackage(vfs, templates, config);
+      await processAuthTemplates(vfs, templates, config);
+      await processPaymentsTemplates(vfs, templates, config);
+      await processEmailTemplates(vfs, templates, config);
+      await processAddonTemplates(vfs, templates, config);
+      await processExampleTemplates(vfs, templates, config);
+      await processExtrasTemplates(vfs, templates, config);
+      await processDeployTemplates(vfs, templates, config);
+      await processLoggingTemplates(vfs, templates, config);
+      await processObservabilityTemplates(vfs, templates, config);
 
-    processPackageConfigs(vfs, config);
-    processDependencies(vfs, config);
-    processEnvVariables(vfs, config);
-    processAuthPlugins(vfs, config);
-    processAlchemyPlugins(vfs, config);
-    processPwaPlugins(vfs, config);
-    processCatalogs(vfs, config);
+      processPackageConfigs(vfs, config);
+      processDependencies(vfs, config);
+      processEnvVariables(vfs, config);
+      processAuthPlugins(vfs, config);
+      processAlchemyPlugins(vfs, config);
+      processPwaPlugins(vfs, config);
+      processCatalogs(vfs, config);
+    }
+
     processReadme(vfs, config);
 
     const tree: VirtualFileTree = {

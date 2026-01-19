@@ -19,7 +19,7 @@
 ## **Step 1: Ecosystem Setup** (MUST COMPLETE FIRST)
 
 - [x] **Rust Ecosystem Tab** - Add new "Rust" tab to Builder page with proper UI/UX matching existing tabs
-- [ ] **Rust Language Support** - Add Rust as a language option in the CLI and template generator with Cargo.toml scaffolding
+- [x] **Rust Language Support** - Add Rust as a language option in the CLI and template generator with Cargo.toml scaffolding
 - [ ] **Rust Base Template** - Create base Rust project template with proper directory structure, Cargo workspace setup
 - [ ] **Rust Ecosystem Tests** - Write comprehensive tests verifying Rust ecosystem selection works end-to-end
 

@@ -1,5 +1,6 @@
 export { type TemplateData, processTemplatesFromPrefix, hasTemplatesWithPrefix } from "./utils";
 export { processBaseTemplate } from "./base";
+export { processRustBaseTemplate } from "./rust-base";
 export { processFrontendTemplates } from "./frontend";
 export { processBackendTemplates } from "./backend";
 export { processDbTemplates } from "./database";

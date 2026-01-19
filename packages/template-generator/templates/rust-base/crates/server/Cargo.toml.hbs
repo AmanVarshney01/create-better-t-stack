@@ -1,0 +1,72 @@
+[package]
+name = "{{projectName}}-server"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+# Async runtime
+tokio.workspace = true
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling
+thiserror.workspace = true
+anyhow.workspace = true
+
+# Logging
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+# Environment
+dotenvy.workspace = true
+
+{{#if (eq rustWebFramework "axum")}}
+# Web framework
+axum.workspace = true
+tower.workspace = true
+tower-http.workspace = true
+{{/if}}
+{{#if (eq rustWebFramework "actix-web")}}
+# Web framework
+actix-web.workspace = true
+actix-rt.workspace = true
+actix-cors.workspace = true
+{{/if}}
+
+{{#if (eq rustOrm "sqlx")}}
+# Database
+sqlx.workspace = true
+{{/if}}
+{{#if (eq rustOrm "sea-orm")}}
+# Database
+sea-orm.workspace = true
+{{/if}}
+
+{{#if (eq rustApi "tonic")}}
+# gRPC
+tonic.workspace = true
+prost.workspace = true
+{{/if}}
+{{#if (eq rustApi "async-graphql")}}
+# GraphQL
+async-graphql.workspace = true
+async-graphql-axum.workspace = true
+{{/if}}
+
+{{#if (includes rustLibraries "validator")}}
+validator.workspace = true
+{{/if}}
+{{#if (includes rustLibraries "jsonwebtoken")}}
+jsonwebtoken.workspace = true
+{{/if}}
+{{#if (includes rustLibraries "argon2")}}
+argon2.workspace = true
+{{/if}}
+
+[[bin]]
+name = "server"
+path = "src/main.rs"

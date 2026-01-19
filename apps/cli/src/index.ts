@@ -25,6 +25,8 @@ import {
   DatabaseSetupSchema,
   type DirectoryConflict,
   DirectoryConflictSchema,
+  type Ecosystem,
+  EcosystemSchema,
   type Effect,
   EffectSchema,
   type Email,
@@ -65,6 +67,18 @@ import {
   type Logging,
   ObservabilitySchema,
   type Observability,
+  RustWebFrameworkSchema,
+  type RustWebFramework,
+  RustFrontendSchema,
+  type RustFrontend,
+  RustOrmSchema,
+  type RustOrm,
+  RustApiSchema,
+  type RustApi,
+  RustCliSchema,
+  type RustCli,
+  RustLibrariesSchema,
+  type RustLibraries,
 } from "./types";
 import { handleError } from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
@@ -95,6 +109,7 @@ export const router = os.router({
             .optional()
             .default(false)
             .describe("Show detailed result information"),
+          ecosystem: EcosystemSchema.optional().describe("Language ecosystem (typescript or rust)"),
           database: DatabaseSchema.optional(),
           orm: ORMSchema.optional(),
           auth: AuthSchema.optional(),
@@ -133,6 +148,17 @@ export const router = os.router({
             .optional()
             .default(false)
             .describe("Skip automatic/manual database setup prompt and use manual setup"),
+          // Rust ecosystem options
+          rustWebFramework: RustWebFrameworkSchema.optional().describe(
+            "Rust web framework (axum, actix-web)",
+          ),
+          rustFrontend: RustFrontendSchema.optional().describe(
+            "Rust WASM frontend (leptos, dioxus)",
+          ),
+          rustOrm: RustOrmSchema.optional().describe("Rust ORM/database (sea-orm, sqlx)"),
+          rustApi: RustApiSchema.optional().describe("Rust API layer (tonic, async-graphql)"),
+          rustCli: RustCliSchema.optional().describe("Rust CLI tools (clap, ratatui)"),
+          rustLibraries: z.array(RustLibrariesSchema).optional().describe("Rust core libraries"),
         }),
       ]),
     )
@@ -301,6 +327,7 @@ export async function createVirtual(
       projectName: options.projectName || "my-project",
       projectDir: "/virtual",
       relativePath: "./virtual",
+      ecosystem: options.ecosystem || "typescript",
       database: options.database || "none",
       orm: options.orm || "none",
       backend: options.backend || "hono",
@@ -331,6 +358,13 @@ export async function createVirtual(
       animation: options.animation || "none",
       logging: options.logging || "none",
       observability: options.observability || "none",
+      // Rust ecosystem options
+      rustWebFramework: options.rustWebFramework || "none",
+      rustFrontend: options.rustFrontend || "none",
+      rustOrm: options.rustOrm || "none",
+      rustApi: options.rustApi || "none",
+      rustCli: options.rustCli || "none",
+      rustLibraries: options.rustLibraries || [],
     };
 
     const result = await generate({
@@ -355,6 +389,7 @@ export type {
   CreateInput,
   InitResult,
   BetterTStackConfig,
+  Ecosystem,
   Database,
   ORM,
   Backend,
@@ -377,4 +412,10 @@ export type {
   Realtime,
   Animation,
   Logging,
+  RustWebFramework,
+  RustFrontend,
+  RustOrm,
+  RustApi,
+  RustCli,
+  RustLibraries,
 };

@@ -12,6 +12,7 @@ export async function writeBtsConfig(projectConfig: ProjectConfig) {
   const btsConfig: BetterTStackConfig = {
     version: getLatestCLIVersion(),
     createdAt: new Date().toISOString(),
+    ecosystem: projectConfig.ecosystem,
     database: projectConfig.database,
     orm: projectConfig.orm,
     backend: projectConfig.backend,
@@ -40,12 +41,19 @@ export async function writeBtsConfig(projectConfig: ProjectConfig) {
     animation: projectConfig.animation,
     logging: projectConfig.logging,
     observability: projectConfig.observability,
+    rustWebFramework: projectConfig.rustWebFramework,
+    rustFrontend: projectConfig.rustFrontend,
+    rustOrm: projectConfig.rustOrm,
+    rustApi: projectConfig.rustApi,
+    rustCli: projectConfig.rustCli,
+    rustLibraries: projectConfig.rustLibraries,
   };
 
   const baseContent = {
     $schema: "https://r2.better-t-stack.dev/schema.json",
     version: btsConfig.version,
     createdAt: btsConfig.createdAt,
+    ecosystem: btsConfig.ecosystem,
     database: btsConfig.database,
     orm: btsConfig.orm,
     backend: btsConfig.backend,
@@ -74,6 +82,12 @@ export async function writeBtsConfig(projectConfig: ProjectConfig) {
     animation: btsConfig.animation,
     logging: btsConfig.logging,
     observability: btsConfig.observability,
+    rustWebFramework: btsConfig.rustWebFramework,
+    rustFrontend: btsConfig.rustFrontend,
+    rustOrm: btsConfig.rustOrm,
+    rustApi: btsConfig.rustApi,
+    rustCli: btsConfig.rustCli,
+    rustLibraries: btsConfig.rustLibraries,
   };
 
   let configContent = JSON.stringify(baseContent);

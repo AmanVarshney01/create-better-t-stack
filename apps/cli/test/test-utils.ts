@@ -44,6 +44,7 @@ import {
   CSSFrameworkSchema,
   DatabaseSchema,
   DatabaseSetupSchema,
+  EcosystemSchema,
   EffectSchema,
   ExamplesSchema,
   FileUploadSchema,
@@ -62,6 +63,12 @@ import {
   UILibrarySchema,
   ValidationSchema,
   WebDeploySchema,
+  RustWebFrameworkSchema,
+  RustFrontendSchema,
+  RustOrmSchema,
+  RustApiSchema,
+  RustCliSchema,
+  RustLibrariesSchema,
 } from "../src/types";
 
 // Smoke directory path - use the same as setup.ts
@@ -256,6 +263,13 @@ export const ANIMATIONS = extractEnumValues(AnimationSchema);
 export const FILE_UPLOADS = extractEnumValues(FileUploadSchema);
 export const LOGGINGS = extractEnumValues(LoggingSchema);
 export const OBSERVABILITIES = extractEnumValues(ObservabilitySchema);
+export const ECOSYSTEMS = extractEnumValues(EcosystemSchema);
+export const RUST_WEB_FRAMEWORKS = extractEnumValues(RustWebFrameworkSchema);
+export const RUST_FRONTENDS = extractEnumValues(RustFrontendSchema);
+export const RUST_ORMS = extractEnumValues(RustOrmSchema);
+export const RUST_APIS = extractEnumValues(RustApiSchema);
+export const RUST_CLIS = extractEnumValues(RustCliSchema);
+export const RUST_LIBRARIES = extractEnumValues(RustLibrariesSchema);
 
 // Convenience functions for common test patterns
 export function createBasicConfig(overrides: Partial<TestConfig> = {}): TestConfig {

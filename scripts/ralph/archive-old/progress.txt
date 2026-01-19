@@ -1,0 +1,181 @@
+# Ralph Progress Log
+Started: Initial setup
+---
+
+## Codebase Patterns
+- TanStack Start routes must export `Route` using `createFileRoute`
+- Use `@base-ui/react` for UI primitives
+- TailwindCSS v4 uses different syntax from v3
+- Components should be in `src/components/` not `src/app/`
+- Convex functions go in `packages/backend/convex/`
+- Schema definitions go in `packages/types/src/schemas.ts`
+- CLI prompts follow pattern in `apps/cli/src/prompts/*.ts`
+- Use navigableSelect for single choice, navigableGroupMultiselect for multiple
+
+## Project Architecture Notes
+- This is a CLI scaffolding tool for TypeScript projects
+- Website uses TanStack Start (being migrated from Next.js)
+- Backend uses Convex for real-time data
+- Schemas in packages/types define all CLI options
+- Template generation in packages/template-generator
+
+---
+
+## 2026-01-16 - MIG-001 (BLOCKED)
+- **Story**: Move home page components to components/home/
+- **Status**: BLOCKED by upstream TanStack Start bug
+- **What was already done (in "Before Ralph" commit):**
+  - Created `apps/web/src/components/home/` directory
+  - Moved all 11 component files from `apps/web/src/app/(home)/_components/`
+  - Updated imports in `apps/web/src/routes/index.tsx` to use `@/components/home/`
+- **Verification Results:**
+  - ✅ Dev mode works (`bun run dev` starts server on port 3333)
+  - ✅ `bun run check` passes (only warnings, no errors)
+  - ❌ `bun run build` fails with SSR bundling error
+- **Root Cause**: Known TanStack Start bug where server-only SSR code leaks into client bundle
+  - Error: `"Readable" is not exported by "__vite-browser-external"`
+  - File: `@tanstack/router-core/dist/esm/ssr/transformStreamWithRouter.js`
+  - GitHub Issue: https://github.com/TanStack/router/issues/4022
+- **Learnings:**
+  - The TanStack Start build issue is a known upstream bug, not related to component migration
+  - Version mismatch: package.json specifies `^1.121.0` but bun resolves to `1.150.0`
+  - Cannot complete MIG-001 until TanStack Start fixes their SSR bundling
+---
+
+## 2026-01-16 - AI-001
+- **Story**: Add AI SDK schema to types
+- **Status**: COMPLETED ✅
+- **What was implemented:**
+  - Added `AISchema` to `packages/types/src/schemas.ts` with options: vercel-ai, langchain, llamaindex, none
+  - Added `ai` field to `ProjectConfigSchema`
+  - Added `ai` field to `CreateInputSchema`
+  - Added `ai` field to `BetterTStackConfigSchema`
+  - Exported `AI_VALUES`
+- **Files changed:**
+  - `packages/types/src/schemas.ts`
+- **Test results:**
+  - ✅ `bun run check` passes (only warnings, no errors)
+  - ✅ `packages/types` builds successfully
+  - ✅ `apps/cli` builds successfully
+  - Note: `apps/web` build still fails due to unrelated TanStack Start upstream bug (MIG-001)
+- **Learnings for future iterations:**
+  - Schema stories (AI-001, EFF-001, ECO-*) can proceed independently of migration stories
+  - Web build failure is an upstream TanStack Start issue, not related to schema changes
+  - Follow the pattern: add schema definition, add to config schemas, export values
+---
+
+## 2026-01-16 - AI-002
+- **Story**: Add AI SDK prompt to CLI
+- **Status**: COMPLETED ✅
+- **What was implemented:**
+  - Created `apps/cli/src/prompts/ai.ts` with `getAIChoice` function
+  - Options: Vercel AI SDK (hint: supports OpenAI, Anthropic, Google), LangChain, LlamaIndex, None
+  - Added `AI` type export to `packages/types/src/types.ts`
+- **Files changed:**
+  - `apps/cli/src/prompts/ai.ts` (new file)
+  - `packages/types/src/types.ts` (added AI type)
+- **Test results:**
+  - ✅ `bun run check` passes
+  - ✅ `packages/types` builds successfully
+  - ✅ `apps/cli` builds successfully
+- **Learnings for future iterations:**
+  - Prompt files follow pattern: import type, create options array, use navigableSelect
+  - Don't forget to add the type export to types.ts when adding new schemas
+---
+
+## 2026-01-16 - EFF-001
+- **Story**: Add Effect ecosystem schema to types
+- **Status**: COMPLETED ✅
+- **What was implemented:**
+  - Added `EffectSchema` to `packages/types/src/schemas.ts` with options: effect, effect-full, none
+  - effect = core only, effect-full = effect + @effect/schema + @effect/platform + @effect/sql
+  - Added `effect` field to `ProjectConfigSchema`, `CreateInputSchema`, `BetterTStackConfigSchema`
+  - Exported `EFFECT_VALUES`
+  - Added `Effect` type export to `packages/types/src/types.ts`
+- **Files changed:**
+  - `packages/types/src/schemas.ts`
+  - `packages/types/src/types.ts`
+- **Test results:**
+  - ✅ `bun run check` passes
+  - ✅ `packages/types` builds successfully
+  - ✅ `apps/cli` builds successfully
+---
+
+## 2026-01-16 - EFF-002
+- **Story**: Add Effect prompt to CLI
+- **Status**: COMPLETED ✅
+- **What was implemented:**
+  - Created `apps/cli/src/prompts/effect.ts` with `getEffectChoice` function
+  - Options: Effect (core), Effect Full (with schema, platform, sql), None
+  - Hint for Effect: "Powerful effect system for TypeScript"
+  - Hint for Effect Full: "Full Effect ecosystem with schema validation, platform abstractions, and SQL"
+- **Files changed:**
+  - `apps/cli/src/prompts/effect.ts` (new file)
+- **Test results:**
+  - ✅ `bun run check` passes
+  - ✅ `apps/cli` builds successfully
+---
+
+## 2026-01-16 - ECO-001
+- **Story**: Add state management schema to types
+- **Status**: COMPLETED ✅
+- **What was implemented:**
+  - Added `StateManagementSchema` to `packages/types/src/schemas.ts` with options: zustand, jotai, nanostores, none
+  - Added `stateManagement` field to `BetterTStackConfigSchema` (was already in ProjectConfigSchema and CreateInputSchema)
+  - Exported `STATE_MANAGEMENT_VALUES`
+  - Added `StateManagement` type export to `packages/types/src/types.ts`
+- **Files changed:**
+  - `packages/types/src/schemas.ts`
+  - `packages/types/src/types.ts`
+- **Test results:**
+  - ✅ `bun run check` passes (only pre-existing warnings, no errors)
+  - ✅ `packages/types` builds successfully
+  - ✅ `apps/cli` builds successfully
+  - ✅ `packages/template-generator` builds successfully
+  - Note: `apps/web` build still fails due to unrelated TanStack Start upstream bug (MIG-001)
+- **Learnings for future iterations:**
+  - Some schema changes may have been partially done in previous commits - always verify current state before modifying
+  - Schema stories can proceed independently of migration stories (MIG-001 through MIG-008 are blocked)
+---
+
+## 2026-01-16 - ECO-002
+- **Story**: Add forms schema to types
+- **Status**: COMPLETED ✅
+- **What was implemented:**
+  - Added `FormsSchema` to `packages/types/src/schemas.ts` with options: tanstack-form, react-hook-form, none
+  - Added `forms` field to `ProjectConfigSchema`, `CreateInputSchema`, `BetterTStackConfigSchema`
+  - Exported `FORMS_VALUES`
+  - Added `Forms` type export to `packages/types/src/types.ts`
+- **Files changed:**
+  - `packages/types/src/schemas.ts`
+  - `packages/types/src/types.ts`
+- **Test results:**
+  - ✅ `bun run check` passes (only pre-existing warnings, no errors)
+  - ✅ `packages/types` builds successfully
+  - ✅ `apps/cli` builds successfully
+  - Note: `apps/web` build still fails due to unrelated TanStack Start upstream bug (MIG-001)
+- **Learnings for future iterations:**
+  - Follow the established schema pattern: add schema, add to config schemas, export values, add type
+  - Schema stories continue to proceed independently of blocked migration stories
+---
+
+## 2026-01-16 - ECO-003
+- **Story**: Add testing schema to types
+- **Status**: COMPLETED ✅
+- **What was implemented:**
+  - Added `TestingSchema` to `packages/types/src/schemas.ts` with options: vitest, playwright, vitest-playwright, none
+  - vitest-playwright = both unit and e2e testing
+  - Added `testing` field to `ProjectConfigSchema`, `CreateInputSchema`, `BetterTStackConfigSchema`
+  - Exported `TESTING_VALUES`
+  - Added `Testing` type export to `packages/types/src/types.ts`
+- **Files changed:**
+  - `packages/types/src/schemas.ts`
+  - `packages/types/src/types.ts`
+- **Test results:**
+  - ✅ `bun run check` passes (only pre-existing warnings, no errors)
+  - ✅ `packages/types` builds successfully
+  - ✅ `apps/cli` builds successfully
+  - Note: `apps/web` build still fails due to unrelated TanStack Start upstream bug (MIG-001)
+- **Learnings for future iterations:**
+  - Continuing to follow the established schema pattern successfully
+---

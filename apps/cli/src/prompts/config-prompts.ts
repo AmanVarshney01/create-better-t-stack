@@ -192,5 +192,14 @@ export async function gatherConfig(
     fileUpload: flags.fileUpload ?? "none",
     logging: flags.logging ?? "none",
     observability: flags.observability ?? "none",
+    // Ecosystem - defaults to TypeScript for the CLI prompts flow
+    ecosystem: flags.ecosystem ?? "typescript",
+    // Rust ecosystem options - use defaults (none) since prompts are for TypeScript
+    rustWebFramework: flags.rustWebFramework ?? "none",
+    rustFrontend: flags.rustFrontend ?? "none",
+    rustOrm: flags.rustOrm ?? "none",
+    rustApi: flags.rustApi ?? "none",
+    rustCli: flags.rustCli ?? "none",
+    rustLibraries: flags.rustLibraries ?? [],
   };
 }

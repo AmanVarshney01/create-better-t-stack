@@ -1,0 +1,498 @@
+{
+  "project": "Better-Fullstack",
+  "branchName": "ralph/full-migration-and-ecosystem",
+  "description": "Complete TanStack Start migration, add Starlight docs, Effect ecosystem, AI SDK, and expand TypeScript ecosystem options",
+  "userStories": [
+    {
+      "id": "MIG-001",
+      "title": "Move home page components to components/home/",
+      "description": "As a developer, I want components organized in the TanStack Start structure.",
+      "acceptanceCriteria": [
+        "Create apps/web/src/components/home/ directory",
+        "Move all files from apps/web/src/app/(home)/_components/ to apps/web/src/components/home/",
+        "Update all imports in apps/web/src/routes/index.tsx to use @/components/home/",
+        "Verify home page renders correctly",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": "Files to move: hero-section.tsx, command-section.tsx, footer.tsx, stats-section.tsx, sponsors-section.tsx, testimonials.tsx, icons.tsx, shiny-text.tsx, npm-package.tsx, FeatureCard.tsx, code-container.tsx"
+    },
+    {
+      "id": "MIG-002",
+      "title": "Move Stack Builder components to components/stack-builder/",
+      "description": "As a developer, I want Stack Builder components in proper location.",
+      "acceptanceCriteria": [
+        "Create apps/web/src/components/stack-builder/ directory",
+        "Move all files from apps/web/src/app/(home)/new/_components/ to apps/web/src/components/stack-builder/",
+        "Update imports in apps/web/src/routes/new.tsx",
+        "Verify /new route works correctly",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": "Files: stack-builder.tsx, code-viewer.tsx, file-explorer.tsx, preset-dropdown.tsx, tech-icon.tsx, yolo-toggle.tsx, share-button.tsx, action-buttons.tsx, get-badge-color.ts, utils.ts, preview-panel.tsx"
+    },
+    {
+      "id": "MIG-003",
+      "title": "Move analytics components to components/analytics/",
+      "description": "As a developer, I want analytics components in proper location.",
+      "acceptanceCriteria": [
+        "Create apps/web/src/components/analytics/ directory",
+        "Move files from apps/web/src/app/(home)/analytics/_components/",
+        "Move analytics-client.tsx from apps/web/src/app/(home)/analytics/",
+        "Update imports in apps/web/src/routes/analytics.tsx",
+        "Verify /analytics route works",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "MIG-004",
+      "title": "Move showcase components to components/showcase/",
+      "description": "As a developer, I want showcase components in proper location.",
+      "acceptanceCriteria": [
+        "Create apps/web/src/components/showcase/ directory",
+        "Move files from apps/web/src/app/(home)/showcase/_components/",
+        "Update imports in apps/web/src/routes/showcase.tsx",
+        "Verify /showcase route works",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "MIG-005",
+      "title": "Move stack display components",
+      "description": "As a developer, I want stack page components in proper location.",
+      "acceptanceCriteria": [
+        "Move apps/web/src/app/(home)/stack/_components/ to apps/web/src/components/stack/",
+        "Update imports in apps/web/src/routes/stack.tsx",
+        "Verify /stack route works",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "MIG-006",
+      "title": "Move global styles to src/styles/",
+      "description": "As a developer, I want styles in a proper location.",
+      "acceptanceCriteria": [
+        "Create apps/web/src/styles/ directory",
+        "Move apps/web/src/app/global.css to apps/web/src/styles/global.css",
+        "Update import in apps/web/src/routes/__root.tsx",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "MIG-007",
+      "title": "Clean up old Next.js app directory",
+      "description": "As a developer, I want to remove migrated Next.js files.",
+      "acceptanceCriteria": [
+        "Remove apps/web/src/app/(home)/ directory entirely",
+        "Keep apps/web/src/app/docs/ for now (handled separately)",
+        "Keep apps/web/src/app/api/ routes if any exist",
+        "Verify all routes still work after cleanup",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": "Only remove after all components are migrated and verified"
+    },
+    {
+      "id": "MIG-008",
+      "title": "Set up Starlight docs as separate app",
+      "description": "As a user, I want documentation using Starlight instead of fumadocs.",
+      "acceptanceCriteria": [
+        "Starlight addon already exists - verify it works with current setup",
+        "Create apps/docs/ using Starlight template if not exists",
+        "Move content from apps/web/content/docs/ to apps/docs/src/content/docs/",
+        "Update turbo.json to include docs app",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": "Starlight is Astro-based, will be a separate app in the monorepo"
+    },
+    {
+      "id": "AI-001",
+      "title": "Add AI SDK schema to types",
+      "description": "As a CLI user, I want to choose an AI SDK for my project.",
+      "acceptanceCriteria": [
+        "Add AISchema to packages/types/src/schemas.ts: vercel-ai, langchain, llamaindex, none",
+        "Add ai field to ProjectConfigSchema",
+        "Add ai field to CreateInputSchema",
+        "Add ai field to BetterTStackConfigSchema",
+        "Export AI_VALUES",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": "Reference: scripts/ralph/examples/add-ai-schema.example.ts"
+    },
+    {
+      "id": "AI-002",
+      "title": "Add AI SDK prompt to CLI",
+      "description": "As a CLI user, I want to be prompted for AI SDK choice.",
+      "acceptanceCriteria": [
+        "Create apps/cli/src/prompts/ai.ts with getAIChoice function",
+        "Options: Vercel AI SDK (hint: supports OpenAI, Anthropic, Google), LangChain, LlamaIndex, None",
+        "Follow pattern from apps/cli/src/prompts/api.ts",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "EFF-001",
+      "title": "Add Effect ecosystem schema to types",
+      "description": "As a CLI user, I want to choose Effect-ts for my project.",
+      "acceptanceCriteria": [
+        "Add EffectSchema to packages/types/src/schemas.ts: effect, effect-full, none",
+        "effect = core only, effect-full = effect + @effect/schema + @effect/platform + @effect/sql",
+        "Add effect field to ProjectConfigSchema, CreateInputSchema, BetterTStackConfigSchema",
+        "Export EFFECT_VALUES",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 11,
+      "passes": true,
+      "notes": "Effect is a powerful functional programming library for TypeScript"
+    },
+    {
+      "id": "EFF-002",
+      "title": "Add Effect prompt to CLI",
+      "description": "As a CLI user, I want to be prompted for Effect choice.",
+      "acceptanceCriteria": [
+        "Create apps/cli/src/prompts/effect.ts with getEffectChoice function",
+        "Options: Effect (core), Effect Full (with schema, platform, sql), None",
+        "Hint for Effect: 'Powerful effect system for TypeScript'",
+        "Hint for Effect Full: 'Full Effect ecosystem with schema validation, platform abstractions, and SQL'",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 12,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "ECO-001",
+      "title": "Add state management schema to types",
+      "description": "As a CLI user, I want to choose a state management library.",
+      "acceptanceCriteria": [
+        "Add StateManagementSchema: zustand, jotai, nanostores, none",
+        "Add to ProjectConfigSchema, CreateInputSchema, BetterTStackConfigSchema",
+        "Export STATE_MANAGEMENT_VALUES",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 13,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "ECO-002",
+      "title": "Add forms schema to types",
+      "description": "As a CLI user, I want to choose a form library.",
+      "acceptanceCriteria": [
+        "Add FormsSchema: tanstack-form, react-hook-form, none",
+        "Add to ProjectConfigSchema, CreateInputSchema, BetterTStackConfigSchema",
+        "Export FORMS_VALUES",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 14,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "ECO-003",
+      "title": "Add testing schema to types",
+      "description": "As a CLI user, I want to choose a testing framework.",
+      "acceptanceCriteria": [
+        "Add TestingSchema: vitest, playwright, vitest-playwright, none",
+        "vitest-playwright = both unit and e2e testing",
+        "Add to ProjectConfigSchema, CreateInputSchema, BetterTStackConfigSchema",
+        "Export TESTING_VALUES",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 15,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "ECO-004",
+      "title": "Add email schema to types",
+      "description": "As a CLI user, I want to choose an email solution.",
+      "acceptanceCriteria": [
+        "Add EmailSchema: react-email, resend, none",
+        "Add to ProjectConfigSchema, CreateInputSchema, BetterTStackConfigSchema",
+        "Export EMAIL_VALUES",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 16,
+      "passes": true,
+      "notes": "resend includes react-email"
+    },
+    {
+      "id": "ECO-005",
+      "title": "Add file uploads schema to types",
+      "description": "As a CLI user, I want to choose a file upload solution.",
+      "acceptanceCriteria": [
+        "Add FileUploadsSchema: uploadthing, none",
+        "Add to ProjectConfigSchema, CreateInputSchema, BetterTStackConfigSchema",
+        "Export FILE_UPLOADS_VALUES",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "ECO-006",
+      "title": "Add monitoring schema to types",
+      "description": "As a CLI user, I want to choose a monitoring/error tracking solution.",
+      "acceptanceCriteria": [
+        "Add MonitoringSchema: sentry, axiom, none",
+        "Add to ProjectConfigSchema, CreateInputSchema, BetterTStackConfigSchema",
+        "Export MONITORING_VALUES",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "ECO-007",
+      "title": "Add background jobs schema to types",
+      "description": "As a CLI user, I want to choose a background jobs solution.",
+      "acceptanceCriteria": [
+        "Add BackgroundJobsSchema: trigger-dev, inngest, none",
+        "Add to ProjectConfigSchema, CreateInputSchema, BetterTStackConfigSchema",
+        "Export BACKGROUND_JOBS_VALUES",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "ECO-008",
+      "title": "Add analytics schema to types",
+      "description": "As a CLI user, I want to choose an analytics solution.",
+      "acceptanceCriteria": [
+        "Add AnalyticsSchema: posthog, plausible, umami, none",
+        "Add to ProjectConfigSchema, CreateInputSchema, BetterTStackConfigSchema",
+        "Export ANALYTICS_VALUES",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "ECO-009",
+      "title": "Add caching/redis schema to types",
+      "description": "As a CLI user, I want to choose a caching solution.",
+      "acceptanceCriteria": [
+        "Add CachingSchema: upstash, none",
+        "Upstash provides Redis + Rate Limiting + QStash",
+        "Add to ProjectConfigSchema, CreateInputSchema, BetterTStackConfigSchema",
+        "Export CACHING_VALUES",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 21,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "ECO-010",
+      "title": "Add real-time/websockets schema to types",
+      "description": "As a CLI user, I want to choose a real-time solution.",
+      "acceptanceCriteria": [
+        "Add RealtimeSchema: partykit, socketio, pusher, ably, none",
+        "Add to ProjectConfigSchema, CreateInputSchema, BetterTStackConfigSchema",
+        "Export REALTIME_VALUES",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 22,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "ECO-011",
+      "title": "Add search schema to types",
+      "description": "As a CLI user, I want to choose a search solution.",
+      "acceptanceCriteria": [
+        "Add SearchSchema: meilisearch, typesense, algolia, none",
+        "Add to ProjectConfigSchema, CreateInputSchema, BetterTStackConfigSchema",
+        "Export SEARCH_VALUES",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 23,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "ECO-012",
+      "title": "Add CMS schema to types",
+      "description": "As a CLI user, I want to choose a headless CMS.",
+      "acceptanceCriteria": [
+        "Add CMSSchema: payload, sanity, none",
+        "Add to ProjectConfigSchema, CreateInputSchema, BetterTStackConfigSchema",
+        "Export CMS_VALUES",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 24,
+      "passes": false,
+      "notes": "Payload is self-hosted, Sanity is hosted"
+    },
+    {
+      "id": "ECO-013",
+      "title": "Expand deployment options",
+      "description": "As a CLI user, I want more deployment target options.",
+      "acceptanceCriteria": [
+        "Update WebDeploySchema to include: vercel, cloudflare, railway, fly-io, render, none",
+        "Keep existing cloudflare logic, add new options",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 25,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "ECO-014",
+      "title": "Expand payments options",
+      "description": "As a CLI user, I want more payment provider options.",
+      "acceptanceCriteria": [
+        "Update PaymentsSchema to include: stripe, polar, lemonsqueezy, none",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 26,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "ECO-015",
+      "title": "Expand auth options",
+      "description": "As a CLI user, I want more authentication options.",
+      "acceptanceCriteria": [
+        "Update AuthSchema to include: better-auth, clerk, lucia, authjs, none",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 27,
+      "passes": false,
+      "notes": "lucia and authjs are open-source alternatives"
+    },
+    {
+      "id": "ECO-016",
+      "title": "Add rich text editor schema to types",
+      "description": "As a CLI user, I want to choose a rich text editor.",
+      "acceptanceCriteria": [
+        "Add EditorSchema: tiptap, novel, lexical, none",
+        "novel is AI-powered editor built on tiptap",
+        "Add to ProjectConfigSchema, CreateInputSchema, BetterTStackConfigSchema",
+        "Export EDITOR_VALUES",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 28,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "ECO-017",
+      "title": "Add tables schema to types",
+      "description": "As a CLI user, I want to choose a data table solution.",
+      "acceptanceCriteria": [
+        "Add TablesSchema: tanstack-table, ag-grid, none",
+        "Add to ProjectConfigSchema, CreateInputSchema, BetterTStackConfigSchema",
+        "Export TABLES_VALUES",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 29,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "ECO-018",
+      "title": "Add i18n schema to types",
+      "description": "As a CLI user, I want to choose an internationalization library.",
+      "acceptanceCriteria": [
+        "Add I18nSchema: i18next, paraglide, none",
+        "paraglide is from inlang, compile-time i18n",
+        "Add to ProjectConfigSchema, CreateInputSchema, BetterTStackConfigSchema",
+        "Export I18N_VALUES",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 30,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "ECO-019",
+      "title": "Add validation alternatives schema",
+      "description": "As a CLI user, I want to choose a validation library.",
+      "acceptanceCriteria": [
+        "Add ValidationSchema: zod, valibot, arktype, effect-schema, none",
+        "effect-schema should show only if effect is selected",
+        "Add to ProjectConfigSchema, CreateInputSchema, BetterTStackConfigSchema",
+        "Export VALIDATION_VALUES",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 31,
+      "passes": false,
+      "notes": "valibot is smaller, arktype is fastest"
+    },
+    {
+      "id": "ECO-020",
+      "title": "Add logging schema to types",
+      "description": "As a CLI user, I want to choose a logging solution.",
+      "acceptanceCriteria": [
+        "Add LoggingSchema: pino, winston, consola, none",
+        "Add to ProjectConfigSchema, CreateInputSchema, BetterTStackConfigSchema",
+        "Export LOGGING_VALUES",
+        "bun run check passes",
+        "bun run build passes"
+      ],
+      "priority": 32,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
