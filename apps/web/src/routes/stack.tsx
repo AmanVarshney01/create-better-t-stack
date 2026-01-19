@@ -22,6 +22,7 @@ function parseStackFromSearch(search: Record<string, unknown>): StackState {
 
   // Use direct URL key strings to avoid type issues
   return {
+    ecosystem: parseString(search["eco"], DEFAULT_STACK.ecosystem) as StackState["ecosystem"],
     projectName: parseString(search["name"], DEFAULT_STACK.projectName),
     webFrontend: parseArray(search["fe-w"], DEFAULT_STACK.webFrontend),
     nativeFrontend: parseArray(search["fe-n"], DEFAULT_STACK.nativeFrontend),
@@ -42,10 +43,25 @@ function parseStackFromSearch(search: Record<string, unknown>): StackState {
     dbSetup: parseString(search["dbs"], DEFAULT_STACK.dbSetup) as StackState["dbSetup"],
     auth: parseString(search["au"], DEFAULT_STACK.auth) as StackState["auth"],
     payments: parseString(search["pay"], DEFAULT_STACK.payments) as StackState["payments"],
+    email: parseString(search["em"], DEFAULT_STACK.email) as StackState["email"],
+    fileUpload: parseString(search["fu"], DEFAULT_STACK.fileUpload) as StackState["fileUpload"],
+    logging: parseString(search["log"], DEFAULT_STACK.logging) as StackState["logging"],
+    observability: parseString(
+      search["obs"],
+      DEFAULT_STACK.observability,
+    ) as StackState["observability"],
     backendLibraries: parseString(
       search["bl"],
       DEFAULT_STACK.backendLibraries,
     ) as StackState["backendLibraries"],
+    stateManagement: parseString(
+      search["sm"],
+      DEFAULT_STACK.stateManagement,
+    ) as StackState["stateManagement"],
+    validation: parseString(search["val"], DEFAULT_STACK.validation) as StackState["validation"],
+    testing: parseString(search["tst"], DEFAULT_STACK.testing) as StackState["testing"],
+    realtime: parseString(search["rt2"], DEFAULT_STACK.realtime) as StackState["realtime"],
+    animation: parseString(search["anim"], DEFAULT_STACK.animation) as StackState["animation"],
     codeQuality: parseArray(search["cq"], DEFAULT_STACK.codeQuality),
     documentation: parseArray(search["doc"], DEFAULT_STACK.documentation),
     appPlatforms: parseArray(search["ap"], DEFAULT_STACK.appPlatforms),
@@ -62,6 +78,22 @@ function parseStackFromSearch(search: Record<string, unknown>): StackState {
       DEFAULT_STACK.serverDeploy,
     ) as StackState["serverDeploy"],
     yolo: parseString(search["yolo"], DEFAULT_STACK.yolo) as StackState["yolo"],
+    // Rust ecosystem fields
+    rustWebFramework: parseString(
+      search["rwf"],
+      DEFAULT_STACK.rustWebFramework,
+    ) as StackState["rustWebFramework"],
+    rustFrontend: parseString(
+      search["rfe"],
+      DEFAULT_STACK.rustFrontend,
+    ) as StackState["rustFrontend"],
+    rustOrm: parseString(search["rorm"], DEFAULT_STACK.rustOrm) as StackState["rustOrm"],
+    rustApi: parseString(search["rapi"], DEFAULT_STACK.rustApi) as StackState["rustApi"],
+    rustCli: parseString(search["rcli"], DEFAULT_STACK.rustCli) as StackState["rustCli"],
+    rustLibraries: parseString(
+      search["rlib"],
+      DEFAULT_STACK.rustLibraries,
+    ) as StackState["rustLibraries"],
   };
 }
 

@@ -11,6 +11,7 @@ const commaSeparatedArray = (defaultValue: string[]) =>
 
 // The raw search schema matches URL query params (using short keys)
 export const stackSearchSchema = z.object({
+  eco: z.enum(["typescript", "rust"]).catch(DEFAULT_STACK.ecosystem),
   name: z.string().catch(DEFAULT_STACK.projectName ?? "my-better-t-app"),
   "fe-w": commaSeparatedArray(DEFAULT_STACK.webFrontend),
   "fe-n": commaSeparatedArray(DEFAULT_STACK.nativeFrontend),
@@ -26,6 +27,9 @@ export const stackSearchSchema = z.object({
   au: z.string().catch(DEFAULT_STACK.auth),
   pay: z.string().catch(DEFAULT_STACK.payments),
   em: z.string().catch(DEFAULT_STACK.email),
+  fu: z.string().catch(DEFAULT_STACK.fileUpload),
+  log: z.string().catch(DEFAULT_STACK.logging),
+  obs: z.string().catch(DEFAULT_STACK.observability),
   bl: z.string().catch(DEFAULT_STACK.backendLibraries),
   sm: z.string().catch(DEFAULT_STACK.stateManagement),
   val: z.string().catch(DEFAULT_STACK.validation),
@@ -42,6 +46,13 @@ export const stackSearchSchema = z.object({
   wd: z.string().catch(DEFAULT_STACK.webDeploy),
   sd: z.string().catch(DEFAULT_STACK.serverDeploy),
   yolo: z.string().catch(DEFAULT_STACK.yolo),
+  // Rust ecosystem fields
+  rwf: z.string().catch(DEFAULT_STACK.rustWebFramework),
+  rfe: z.string().catch(DEFAULT_STACK.rustFrontend),
+  rorm: z.string().catch(DEFAULT_STACK.rustOrm),
+  rapi: z.string().catch(DEFAULT_STACK.rustApi),
+  rcli: z.string().catch(DEFAULT_STACK.rustCli),
+  rlib: z.string().catch(DEFAULT_STACK.rustLibraries),
   view: z.enum(["command", "preview"]).catch("command"),
   file: z.string().catch(""),
 });

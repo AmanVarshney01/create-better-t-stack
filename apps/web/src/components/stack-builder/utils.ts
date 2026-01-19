@@ -34,6 +34,20 @@ export const hasTauriCompatibleFrontend = (webFrontend: string[]) =>
   );
 
 export const getCategoryDisplayName = (categoryKey: string): string => {
+  // Custom display names for Rust categories
+  const rustCategoryNames: Record<string, string> = {
+    rustWebFramework: "Rust Web Framework",
+    rustFrontend: "Rust Frontend (WASM)",
+    rustOrm: "Rust ORM / Database",
+    rustApi: "Rust API Layer",
+    rustCli: "Rust CLI Tools",
+    rustLibraries: "Rust Core Libraries",
+  };
+
+  if (rustCategoryNames[categoryKey]) {
+    return rustCategoryNames[categoryKey];
+  }
+
   const result = categoryKey.replace(/([A-Z])/g, " $1");
   return result.charAt(0).toUpperCase() + result.slice(1);
 };

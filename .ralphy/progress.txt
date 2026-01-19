@@ -3241,3 +3241,75 @@ Implemented feTS as a new backend framework option. feTS is a TypeScript HTTP Fr
 
 ### Status: COMPLETE
 
+
+
+## 2026-01-19: Rust Ecosystem Tab Implementation
+
+### Task: Add new "Rust" tab to Builder page with proper UI/UX matching existing tabs
+
+### Changes Made:
+1. **apps/web/src/lib/types.ts**: Added Ecosystem type and Rust-specific TechCategory types:
+   - Added `Ecosystem = "typescript" | "rust"` type
+   - Added `rustWebFramework`, `rustFrontend`, `rustOrm`, `rustApi`, `rustCli`, `rustLibraries` to TechCategory
+
+2. **apps/web/src/lib/constant.ts**: 
+   - Added ECOSYSTEMS constant with TypeScript and Rust ecosystem definitions
+   - Added ECOSYSTEM_CATEGORIES mapping each ecosystem to its available categories
+   - Added Rust category options to TECH_OPTIONS (rustWebFramework, rustFrontend, etc.)
+   - Added ecosystem field to StackState type
+   - Added rust fields to StackState and DEFAULT_STACK
+   - Updated PRESET_TEMPLATES type to use Partial<StackState>
+
+3. **apps/web/src/lib/stack-utils.ts**:
+   - Added TYPESCRIPT_CATEGORY_ORDER for TypeScript ecosystem categories
+   - Added RUST_CATEGORY_ORDER for Rust ecosystem categories
+   - Updated CATEGORY_ORDER to include all categories
+   - Exported new category order arrays
+
+4. **apps/web/src/lib/stack-url-keys.ts**: Added URL keys for ecosystem and rust fields:
+   - eco (ecosystem)
+   - rwf (rustWebFramework), rfe (rustFrontend), rorm (rustOrm), rapi (rustApi), rcli (rustCli), rlib (rustLibraries)
+
+5. **apps/web/src/lib/stack-search-schema.ts**: Added Zod schema for ecosystem and rust fields
+
+6. **apps/web/src/lib/stack-url-state.client.ts**: Added ecosystem and rust field parsing from URL
+
+7. **apps/web/src/lib/stack-url-state.ts**: Added ecosystem and rust field serialization/parsing
+
+8. **apps/web/src/routes/stack.tsx**: Added ecosystem and rust field parsing for stack sharing page
+
+9. **apps/web/src/components/stack-builder/stack-builder.tsx**:
+   - Added Ecosystem selector UI at the top of Configure view
+   - Added ECOSYSTEMS and RUST_CATEGORY_ORDER/TYPESCRIPT_CATEGORY_ORDER imports
+   - Updated category rendering to filter by selected ecosystem
+   - Fixed preset application to merge with DEFAULT_STACK
+
+10. **apps/web/src/components/stack-builder/utils.ts**: Added display names for Rust categories:
+    - rustWebFramework → "Rust Web Framework"
+    - rustFrontend → "Rust Frontend (WASM)"
+    - rustOrm → "Rust ORM / Database"
+    - rustApi → "Rust API Layer"
+    - rustCli → "Rust CLI Tools"
+    - rustLibraries → "Rust Core Libraries"
+
+11. **apps/web/test/rust-ecosystem.test.ts**: Added comprehensive tests (31 tests, all passing):
+    - Tests for Ecosystem type validity
+    - Tests for ECOSYSTEMS constant structure
+    - Tests for ECOSYSTEM_CATEGORIES mapping
+    - Tests for TECH_OPTIONS Rust categories
+    - Tests for DEFAULT_STACK rust defaults
+    - Tests for StackState type fields
+    - Tests for category order arrays
+    - Tests for getCategoryDisplayName function
+
+### Features:
+- New Ecosystem selector at top of Builder page with TypeScript and Rust options
+- Visual ecosystem buttons with icons, names, and descriptions
+- Dynamic category filtering based on selected ecosystem
+- Rust ecosystem shows only rust-specific categories (Web Framework, Frontend WASM, ORM, API, CLI, Core Libraries)
+- URL state persistence for ecosystem selection
+- Preset templates merge with DEFAULT_STACK to ensure all fields present
+- Full type safety with TypeScript
+- Ready for future Rust framework implementations (Axum, Actix-web, Leptos, Dioxus, etc.)
+
+### Status: COMPLETE

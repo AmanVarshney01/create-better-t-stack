@@ -10,6 +10,7 @@ function searchToStack(search: StackSearchParams | undefined): StackState {
   if (!search) return DEFAULT_STACK;
 
   return {
+    ecosystem: search.eco ?? DEFAULT_STACK.ecosystem,
     projectName: search.name ?? DEFAULT_STACK.projectName,
     webFrontend: search["fe-w"] ?? DEFAULT_STACK.webFrontend,
     nativeFrontend: search["fe-n"] ?? DEFAULT_STACK.nativeFrontend,
@@ -25,6 +26,9 @@ function searchToStack(search: StackSearchParams | undefined): StackState {
     auth: search.au ?? DEFAULT_STACK.auth,
     payments: search.pay ?? DEFAULT_STACK.payments,
     email: search.em ?? DEFAULT_STACK.email,
+    fileUpload: search.fu ?? DEFAULT_STACK.fileUpload,
+    logging: search.log ?? DEFAULT_STACK.logging,
+    observability: search.obs ?? DEFAULT_STACK.observability,
     backendLibraries: search.bl ?? DEFAULT_STACK.backendLibraries,
     stateManagement: search.sm ?? DEFAULT_STACK.stateManagement,
     validation: search.val ?? DEFAULT_STACK.validation,
@@ -41,6 +45,13 @@ function searchToStack(search: StackSearchParams | undefined): StackState {
     webDeploy: search.wd ?? DEFAULT_STACK.webDeploy,
     serverDeploy: search.sd ?? DEFAULT_STACK.serverDeploy,
     yolo: search.yolo ?? DEFAULT_STACK.yolo,
+    // Rust ecosystem fields
+    rustWebFramework: search.rwf ?? DEFAULT_STACK.rustWebFramework,
+    rustFrontend: search.rfe ?? DEFAULT_STACK.rustFrontend,
+    rustOrm: search.rorm ?? DEFAULT_STACK.rustOrm,
+    rustApi: search.rapi ?? DEFAULT_STACK.rustApi,
+    rustCli: search.rcli ?? DEFAULT_STACK.rustCli,
+    rustLibraries: search.rlib ?? DEFAULT_STACK.rustLibraries,
   };
 }
 

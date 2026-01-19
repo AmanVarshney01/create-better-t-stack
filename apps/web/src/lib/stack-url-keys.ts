@@ -5,6 +5,7 @@ import type { StackState } from "@/lib/constant";
 export const stackUrlKeys: UrlKeys<
   Record<keyof StackState, unknown> & { viewMode: unknown; selectedFile: unknown }
 > = {
+  ecosystem: "eco",
   projectName: "name",
   webFrontend: "fe-w",
   nativeFrontend: "fe-n",
@@ -39,6 +40,13 @@ export const stackUrlKeys: UrlKeys<
   webDeploy: "wd",
   serverDeploy: "sd",
   yolo: "yolo",
+  // Rust ecosystem fields
+  rustWebFramework: "rwf",
+  rustFrontend: "rfe",
+  rustOrm: "rorm",
+  rustApi: "rapi",
+  rustCli: "rcli",
+  rustLibraries: "rlib",
   viewMode: "view",
   selectedFile: "file",
 };

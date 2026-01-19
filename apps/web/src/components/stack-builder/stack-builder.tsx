@@ -16,6 +16,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { startTransition, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import type { Ecosystem } from "@/lib/types";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,9 +26,21 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { DEFAULT_STACK, PRESET_TEMPLATES, type StackState, TECH_OPTIONS } from "@/lib/constant";
+import {
+  DEFAULT_STACK,
+  ECOSYSTEMS,
+  PRESET_TEMPLATES,
+  type StackState,
+  TECH_OPTIONS,
+} from "@/lib/constant";
 import { useStackState } from "@/lib/stack-url-state.client";
-import { CATEGORY_ORDER, generateStackCommand, generateStackSharingUrl } from "@/lib/stack-utils";
+import {
+  CATEGORY_ORDER,
+  generateStackCommand,
+  generateStackSharingUrl,
+  RUST_CATEGORY_ORDER,
+  TYPESCRIPT_CATEGORY_ORDER,
+} from "@/lib/stack-utils";
 import { cn } from "@/lib/utils";
 
 import { ActionButtons } from "./action-buttons";
@@ -343,12 +357,13 @@ const StackBuilder = () => {
           }
         } else {
           if (currentValue !== techId) {
-            update[catKey] = techId;
+            // Type cast needed because techId is string but some fields have narrower types
+            (update as Record<string, string>)[catKey] = techId;
           } else {
             if ((category === "git" || category === "install") && techId === "false") {
-              update[catKey] = "true";
+              (update as Record<string, string>)[catKey] = "true";
             } else if ((category === "git" || category === "install") && techId === "true") {
-              update[catKey] = "false";
+              (update as Record<string, string>)[catKey] = "false";
             }
           }
         }
@@ -392,13 +407,11 @@ const StackBuilder = () => {
   };
 
   const applyPreset = (presetId: string) => {
-    const preset = PRESET_TEMPLATES.find(
-      (template: { id: string; name: string; description: string; stack: StackState }) =>
-        template.id === presetId,
-    );
+    const preset = PRESET_TEMPLATES.find((template) => template.id === presetId);
     if (preset) {
       startTransition(() => {
-        setStack(preset.stack);
+        // Merge preset with DEFAULT_STACK to ensure all fields are present
+        setStack({ ...DEFAULT_STACK, ...preset.stack } as StackState);
       });
       contentRef.current?.scrollTo(0, 0);
       toast.success(`Applied preset: ${preset.name}`);
@@ -617,7 +630,67 @@ const StackBuilder = () => {
               <div ref={scrollAreaRef} className="h-full">
                 <ScrollArea className="h-full overflow-hidden scroll-smooth">
                   <main className="p-3 sm:p-4">
-                    {CATEGORY_ORDER.map((categoryKey) => {
+                    {/* Ecosystem Tabs */}
+                    <div className="mb-6 sm:mb-8">
+                      <div className="mb-3 flex items-center border-border border-b pb-2 text-muted-foreground">
+                        <Terminal className="mr-2 h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
+                        <h2 className="font-semibold font-mono text-foreground text-sm sm:text-base">
+                          Ecosystem
+                        </h2>
+                      </div>
+                      <div className="flex gap-2">
+                        {ECOSYSTEMS.map((ecosystem) => {
+                          const isSelected = stack.ecosystem === ecosystem.id;
+                          return (
+                            <motion.button
+                              key={ecosystem.id}
+                              type="button"
+                              className={cn(
+                                "relative flex items-center gap-2 rounded-lg border px-4 py-3 transition-all",
+                                isSelected
+                                  ? "border-primary bg-primary/10"
+                                  : "border-border bg-fd-background hover:border-muted hover:bg-muted/10",
+                              )}
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => {
+                                startTransition(() => {
+                                  setStack({ ecosystem: ecosystem.id as Ecosystem });
+                                });
+                              }}
+                            >
+                              <TechIcon
+                                icon={ecosystem.icon}
+                                name={ecosystem.name}
+                                className={cn(
+                                  "h-5 w-5",
+                                  ecosystem.id === "rust" && "invert-0 dark:invert",
+                                )}
+                              />
+                              <div className="text-left">
+                                <span
+                                  className={cn(
+                                    "font-medium text-sm",
+                                    isSelected ? "text-primary" : "text-foreground",
+                                  )}
+                                >
+                                  {ecosystem.name}
+                                </span>
+                                <p className="text-muted-foreground text-xs">
+                                  {ecosystem.description}
+                                </p>
+                              </div>
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Category sections filtered by ecosystem */}
+                    {(stack.ecosystem === "rust"
+                      ? RUST_CATEGORY_ORDER
+                      : TYPESCRIPT_CATEGORY_ORDER
+                    ).map((categoryKey) => {
                       // Skip astroIntegration - it will be rendered conditionally
                       if (categoryKey === "astroIntegration") return null;
 

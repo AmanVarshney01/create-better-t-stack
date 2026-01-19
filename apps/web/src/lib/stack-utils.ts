@@ -1,7 +1,8 @@
 import { DEFAULT_STACK, isStackDefault, type StackState, TECH_OPTIONS } from "@/lib/constant";
 import { stackUrlKeys } from "@/lib/stack-url-keys";
 
-const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
+// TypeScript ecosystem category order
+const TYPESCRIPT_CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
   "webFrontend",
   "nativeFrontend",
   "astroIntegration",
@@ -29,6 +30,30 @@ const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
   "examples",
   "git",
   "install",
+];
+
+// Rust ecosystem category order
+const RUST_CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
+  "rustWebFramework",
+  "rustFrontend",
+  "rustOrm",
+  "rustApi",
+  "rustCli",
+  "rustLibraries",
+  "git",
+  "install",
+];
+
+// Combined category order for backwards compatibility
+const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
+  ...TYPESCRIPT_CATEGORY_ORDER,
+  // Rust categories (excluding duplicates like git, install)
+  "rustWebFramework",
+  "rustFrontend",
+  "rustOrm",
+  "rustApi",
+  "rustCli",
+  "rustLibraries",
 ];
 
 export function generateStackSummary(stack: StackState) {
@@ -180,4 +205,4 @@ export function generateStackSharingUrl(stack: StackState, baseUrl?: string) {
   return `${origin}/stack${searchString ? `?${searchString}` : ""}`;
 }
 
-export { CATEGORY_ORDER };
+export { CATEGORY_ORDER, TYPESCRIPT_CATEGORY_ORDER, RUST_CATEGORY_ORDER };

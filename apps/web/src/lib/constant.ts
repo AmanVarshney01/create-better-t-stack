@@ -1,4 +1,4 @@
-import type { TechCategory } from "./types";
+import type { Ecosystem, TechCategory } from "./types";
 
 export const TECH_OPTIONS: Record<
   TechCategory,
@@ -1486,9 +1486,142 @@ export const TECH_OPTIONS: Record<
       color: "from-yellow-400 to-yellow-600",
     },
   ],
+  // Rust ecosystem categories (to be populated in subsequent PRD tasks)
+  rustWebFramework: [
+    {
+      id: "none",
+      name: "No Web Framework",
+      description: "Skip Rust web framework",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
+  rustFrontend: [
+    {
+      id: "none",
+      name: "No WASM Frontend",
+      description: "Skip Rust WASM frontend",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
+  rustOrm: [
+    {
+      id: "none",
+      name: "No ORM",
+      description: "Skip Rust ORM",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
+  rustApi: [
+    {
+      id: "none",
+      name: "No API Layer",
+      description: "Skip Rust API layer",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
+  rustCli: [
+    {
+      id: "none",
+      name: "No CLI Tools",
+      description: "Skip Rust CLI tools",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
+  rustLibraries: [
+    {
+      id: "none",
+      name: "No Core Libraries",
+      description: "Skip Rust core libraries",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
 };
 
-export const PRESET_TEMPLATES = [
+// Ecosystem configuration
+export const ECOSYSTEMS: {
+  id: Ecosystem;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+}[] = [
+  {
+    id: "typescript",
+    name: "TypeScript",
+    description: "Full-stack TypeScript ecosystem",
+    icon: "https://cdn.simpleicons.org/typescript/3178C6",
+    color: "from-blue-500 to-blue-700",
+  },
+  {
+    id: "rust",
+    name: "Rust",
+    description: "High-performance Rust ecosystem",
+    icon: "https://cdn.simpleicons.org/rust/000000",
+    color: "from-orange-500 to-orange-700",
+  },
+];
+
+// Categories available for each ecosystem
+export const ECOSYSTEM_CATEGORIES: Record<Ecosystem, TechCategory[]> = {
+  typescript: [
+    "webFrontend",
+    "nativeFrontend",
+    "astroIntegration",
+    "cssFramework",
+    "uiLibrary",
+    "backend",
+    "backendLibraries",
+    "runtime",
+    "api",
+    "database",
+    "orm",
+    "dbSetup",
+    "webDeploy",
+    "serverDeploy",
+    "auth",
+    "payments",
+    "email",
+    "fileUpload",
+    "logging",
+    "observability",
+    "codeQuality",
+    "documentation",
+    "appPlatforms",
+    "packageManager",
+    "examples",
+    "git",
+    "install",
+  ],
+  rust: [
+    "rustWebFramework",
+    "rustFrontend",
+    "rustOrm",
+    "rustApi",
+    "rustCli",
+    "rustLibraries",
+    "git",
+    "install",
+  ],
+};
+
+export const PRESET_TEMPLATES: {
+  id: string;
+  name: string;
+  description: string;
+  stack: Partial<StackState>;
+}[] = [
   {
     id: "mern",
     name: "MERN Stack",
@@ -1696,6 +1829,7 @@ export const PRESET_TEMPLATES = [
 ];
 
 export type StackState = {
+  ecosystem: Ecosystem;
   projectName: string | null;
   webFrontend: string[];
   nativeFrontend: string[];
@@ -1730,9 +1864,17 @@ export type StackState = {
   webDeploy: string;
   serverDeploy: string;
   yolo: string;
+  // Rust ecosystem fields
+  rustWebFramework: string;
+  rustFrontend: string;
+  rustOrm: string;
+  rustApi: string;
+  rustCli: string;
+  rustLibraries: string;
 };
 
 export const DEFAULT_STACK: StackState = {
+  ecosystem: "typescript",
   projectName: "my-better-t-app",
   webFrontend: ["tanstack-router"],
   nativeFrontend: ["none"],
@@ -1767,6 +1909,13 @@ export const DEFAULT_STACK: StackState = {
   webDeploy: "none",
   serverDeploy: "none",
   yolo: "false",
+  // Rust ecosystem defaults
+  rustWebFramework: "none",
+  rustFrontend: "none",
+  rustOrm: "none",
+  rustApi: "none",
+  rustCli: "none",
+  rustLibraries: "none",
 };
 
 export const isStackDefault = <K extends keyof StackState>(

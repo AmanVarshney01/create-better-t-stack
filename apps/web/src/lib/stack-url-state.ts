@@ -28,6 +28,7 @@ export function loadStackParams(
     };
 
     return {
+      ecosystem: getString("ecosystem", DEFAULT_STACK.ecosystem) as "typescript" | "rust",
       projectName: getString("projectName", DEFAULT_STACK.projectName ?? "my-better-t-app"),
       webFrontend: getArray("webFrontend", DEFAULT_STACK.webFrontend),
       nativeFrontend: getArray("nativeFrontend", DEFAULT_STACK.nativeFrontend),
@@ -43,6 +44,9 @@ export function loadStackParams(
       auth: getString("auth", DEFAULT_STACK.auth),
       payments: getString("payments", DEFAULT_STACK.payments),
       email: getString("email", DEFAULT_STACK.email),
+      fileUpload: getString("fileUpload", DEFAULT_STACK.fileUpload),
+      logging: getString("logging", DEFAULT_STACK.logging),
+      observability: getString("observability", DEFAULT_STACK.observability),
       backendLibraries: getString("backendLibraries", DEFAULT_STACK.backendLibraries),
       stateManagement: getString("stateManagement", DEFAULT_STACK.stateManagement),
       validation: getString("validation", DEFAULT_STACK.validation),
@@ -59,6 +63,13 @@ export function loadStackParams(
       webDeploy: getString("webDeploy", DEFAULT_STACK.webDeploy),
       serverDeploy: getString("serverDeploy", DEFAULT_STACK.serverDeploy),
       yolo: getString("yolo", DEFAULT_STACK.yolo),
+      // Rust ecosystem fields
+      rustWebFramework: getString("rustWebFramework", DEFAULT_STACK.rustWebFramework),
+      rustFrontend: getString("rustFrontend", DEFAULT_STACK.rustFrontend),
+      rustOrm: getString("rustOrm", DEFAULT_STACK.rustOrm),
+      rustApi: getString("rustApi", DEFAULT_STACK.rustApi),
+      rustCli: getString("rustCli", DEFAULT_STACK.rustCli),
+      rustLibraries: getString("rustLibraries", DEFAULT_STACK.rustLibraries),
     };
   };
 
@@ -87,6 +98,7 @@ export function serializeStackParams(basePath: string, stack: StackState): strin
     }
   };
 
+  addParam("ecosystem", stack.ecosystem);
   addParam("projectName", stack.projectName);
   addParam("webFrontend", stack.webFrontend);
   addParam("nativeFrontend", stack.nativeFrontend);
@@ -102,6 +114,9 @@ export function serializeStackParams(basePath: string, stack: StackState): strin
   addParam("auth", stack.auth);
   addParam("payments", stack.payments);
   addParam("email", stack.email);
+  addParam("fileUpload", stack.fileUpload);
+  addParam("logging", stack.logging);
+  addParam("observability", stack.observability);
   addParam("backendLibraries", stack.backendLibraries);
   addParam("stateManagement", stack.stateManagement);
   addParam("validation", stack.validation);
@@ -118,6 +133,13 @@ export function serializeStackParams(basePath: string, stack: StackState): strin
   addParam("webDeploy", stack.webDeploy);
   addParam("serverDeploy", stack.serverDeploy);
   addParam("yolo", stack.yolo);
+  // Rust ecosystem fields
+  addParam("rustWebFramework", stack.rustWebFramework);
+  addParam("rustFrontend", stack.rustFrontend);
+  addParam("rustOrm", stack.rustOrm);
+  addParam("rustApi", stack.rustApi);
+  addParam("rustCli", stack.rustCli);
+  addParam("rustLibraries", stack.rustLibraries);
 
   const queryString = params.toString();
   return queryString ? `${basePath}?${queryString}` : basePath;
