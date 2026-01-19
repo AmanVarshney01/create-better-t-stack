@@ -455,6 +455,11 @@ export const dependencyVersionMap = {
   // These are reference versions for Fresh ecosystem
   preact: "^10.25.4",
   "preact-render-to-string": "^6.5.12",
+
+  // Logging
+  pino: "^9.6.0",
+  "pino-pretty": "^13.0.0",
+  "pino-http": "^10.4.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

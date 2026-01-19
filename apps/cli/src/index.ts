@@ -61,6 +61,8 @@ import {
   type Realtime,
   AnimationSchema,
   type Animation,
+  LoggingSchema,
+  type Logging,
 } from "./types";
 import { handleError } from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
@@ -105,6 +107,7 @@ export const router = os.router({
           ai: AISchema.optional(),
           realtime: RealtimeSchema.optional(),
           animation: AnimationSchema.optional(),
+          logging: LoggingSchema.optional(),
           frontend: z.array(FrontendSchema).optional(),
           addons: z.array(AddonsSchema).optional(),
           examples: z.array(ExamplesSchema).optional(),
@@ -323,6 +326,7 @@ export async function createVirtual(
       validation: options.validation || "zod",
       realtime: options.realtime || "none",
       animation: options.animation || "none",
+      logging: options.logging || "none",
     };
 
     const result = await generate({
@@ -368,4 +372,5 @@ export type {
   UILibrary,
   Realtime,
   Animation,
+  Logging,
 };

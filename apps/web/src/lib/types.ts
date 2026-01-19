@@ -14,6 +14,8 @@ export type TechCategory =
   | "auth"
   | "payments"
   | "email"
+  | "fileUpload"
+  | "logging"
   | "backendLibraries"
   | "stateManagement"
   | "forms"

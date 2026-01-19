@@ -21,6 +21,7 @@ export const stackUrlKeys: UrlKeys<
   payments: "pay",
   email: "em",
   fileUpload: "fu",
+  logging: "log",
   backendLibraries: "bl",
   stateManagement: "sm",
   validation: "val",

@@ -180,6 +180,8 @@ export const FileUploadSchema = z
   .enum(["uploadthing", "filepond", "uppy", "none"])
   .describe("File upload solution");
 
+export const LoggingSchema = z.enum(["pino", "none"]).describe("Server-side logging framework");
+
 export const CSSFrameworkSchema = z
   .enum(["tailwind", "scss", "less", "postcss-only", "none"])
   .describe("CSS framework/preprocessor");
@@ -264,6 +266,7 @@ export const CreateInputSchema = z.object({
   realtime: RealtimeSchema.optional(),
   animation: AnimationSchema.optional(),
   fileUpload: FileUploadSchema.optional(),
+  logging: LoggingSchema.optional(),
 });
 
 export const AddInputSchema = z.object({
@@ -312,6 +315,7 @@ export const ProjectConfigSchema = z.object({
   realtime: RealtimeSchema,
   animation: AnimationSchema,
   fileUpload: FileUploadSchema,
+  logging: LoggingSchema,
 });
 
 export const BetterTStackConfigSchema = z.object({
@@ -344,6 +348,7 @@ export const BetterTStackConfigSchema = z.object({
   realtime: RealtimeSchema,
   animation: AnimationSchema,
   fileUpload: FileUploadSchema,
+  logging: LoggingSchema,
 });
 
 export const BetterTStackConfigFileSchema = z
@@ -397,3 +402,4 @@ export const VALIDATION_VALUES = ValidationSchema.options;
 export const REALTIME_VALUES = RealtimeSchema.options;
 export const ANIMATION_VALUES = AnimationSchema.options;
 export const FILE_UPLOAD_VALUES = FileUploadSchema.options;
+export const LOGGING_VALUES = LoggingSchema.options;

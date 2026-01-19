@@ -751,6 +751,24 @@ export const TECH_OPTIONS: Record<
       default: true,
     },
   ],
+  logging: [
+    {
+      id: "pino",
+      name: "Pino",
+      description: "Fast JSON logger with minimal overhead",
+      icon: "",
+      color: "from-green-400 to-green-600",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No Logging",
+      description: "Skip logging framework setup",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
   backendLibraries: [
     {
       id: "effect",
@@ -1658,6 +1676,7 @@ export type StackState = {
   payments: string;
   email: string;
   fileUpload: string;
+  logging: string;
   backendLibraries: string;
   stateManagement: string;
   validation: string;
@@ -1693,6 +1712,7 @@ export const DEFAULT_STACK: StackState = {
   payments: "none",
   email: "none",
   fileUpload: "none",
+  logging: "none",
   backendLibraries: "none",
   stateManagement: "none",
   validation: "zod",

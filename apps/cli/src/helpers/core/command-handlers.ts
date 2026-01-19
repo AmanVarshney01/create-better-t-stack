@@ -123,6 +123,7 @@ export async function createProjectHandler(
             testing: "vitest",
             realtime: "none",
             animation: "none",
+            logging: "none",
           } satisfies ProjectConfig,
           reproducibleCommand: "",
           timeScaffolded,

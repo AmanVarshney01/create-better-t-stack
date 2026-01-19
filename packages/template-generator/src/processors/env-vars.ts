@@ -402,6 +402,7 @@ function buildServerVars(
   email: ProjectConfig["email"],
   examples: ProjectConfig["examples"],
   fileUpload: ProjectConfig["fileUpload"],
+  logging: ProjectConfig["logging"],
 ): EnvVariable[] {
   const hasReactRouter = frontend.includes("react-router");
   const hasSvelte = frontend.includes("svelte");
@@ -707,6 +708,12 @@ function buildServerVars(
       value: databaseUrl,
       condition: database !== "none" && dbSetup === "none",
     },
+    {
+      key: "LOG_LEVEL",
+      value: "info",
+      condition: logging === "pino",
+      comment: "Pino log level - trace, debug, info, warn, error, or fatal",
+    },
   ];
 }
 
@@ -724,6 +731,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     runtime,
     payments,
     fileUpload,
+    logging,
   } = config;
 
   const hasReactRouter = frontend.includes("react-router");
@@ -810,6 +818,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     email,
     examples,
     fileUpload,
+    logging,
   );
 
   if (backend === "self") {

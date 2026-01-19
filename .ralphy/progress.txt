@@ -3014,3 +3014,61 @@ Implemented feTS as a new backend framework option. feTS is a TypeScript HTTP Fr
 - API: trpc, orpc, none
 - Auth: better-auth, none
 - Works with all web frontends
+
+
+## 2026-01-19: Pino Logger Implementation
+
+### Task: Implement Pino as a server-side logging option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added LoggingSchema with "pino" and "none" options
+2. **packages/types/src/types.ts**: Added Logging type export
+3. **packages/template-generator/src/utils/add-deps.ts**: Added Pino dependency versions:
+   - pino: ^9.6.0
+   - pino-pretty: ^13.0.0
+   - pino-http: ^10.4.0
+4. **packages/template-generator/templates/logging/pino/server/base/src/lib/logger.ts.hbs**: Created Pino logger template with:
+   - Development mode with pino-pretty for readable logs
+   - Production mode with JSON output
+   - Configurable log levels via LOG_LEVEL env var
+   - createChildLogger helper for component-specific loggers
+5. **packages/template-generator/src/processors/logging-deps.ts**: Created processor to add Pino dependencies to server package.json
+6. **packages/template-generator/src/processors/index.ts**: Added logging deps processor
+7. **packages/template-generator/src/processors/env-vars.ts**: Added LOG_LEVEL environment variable for Pino
+8. **packages/template-generator/src/template-handlers/logging.ts**: Created template handler for logging templates
+9. **packages/template-generator/src/template-handlers/index.ts**: Exported processLoggingTemplates
+10. **packages/template-generator/src/generator.ts**: Added processLoggingTemplates call
+11. **apps/cli/src/constants.ts**: Added logging: "none" to DEFAULT_CONFIG_BASE
+12. **apps/cli/src/index.ts**: Added LoggingSchema and --logging flag
+13. **apps/cli/src/prompts/config-prompts.ts**: Added logging field
+14. **apps/cli/src/helpers/core/command-handlers.ts**: Added logging to error config
+15. **apps/cli/src/utils/bts-config.ts**: Added logging to BTS config
+16. **apps/cli/test/test-utils.ts**: Added Logging type and test utilities
+17. **apps/cli/test/logging.test.ts**: Created 9 comprehensive tests for Pino logging
+18. **apps/web/src/lib/constant.ts**: Added logging section to TECH_OPTIONS and DEFAULT_STACK
+19. **apps/web/src/lib/stack-url-keys.ts**: Added "logging" URL key
+20. **apps/web/src/lib/stack-utils.ts**: Added logging to CLI command generation
+21. **apps/web/src/lib/types.ts**: Added "logging" to TechCategory
+
+### Features:
+- Fast JSON logging with minimal overhead
+- Development-friendly pretty printing with pino-pretty
+- Production-optimized JSON output
+- Configurable log levels: trace, debug, info, warn, error, fatal
+- Child logger support for component-specific logging
+- HTTP request logging support via pino-http
+- Compatible with all backends except Convex (uses own logging)
+
+### Test Results:
+- 9 tests pass across multiple backend configurations:
+  - Pino with Hono
+  - Pino with Express
+  - Pino with Fastify
+  - Pino with Elysia
+  - Pino with Nitro
+  - Pino with NestJS
+  - Pino with feTS
+  - Pino with Next.js (fullstack)
+  - No logging (none option)
+
+### Status: COMPLETE

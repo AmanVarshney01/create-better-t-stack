@@ -29,6 +29,7 @@ import type {
   Realtime,
   Animation,
   FileUpload,
+  Logging,
 } from "../src/types";
 
 import { create } from "../src/index";
@@ -45,6 +46,7 @@ import {
   EffectSchema,
   ExamplesSchema,
   FileUploadSchema,
+  LoggingSchema,
   FormsSchema,
   FrontendSchema,
   ORMSchema,
@@ -120,6 +122,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     "validation",
     "realtime",
     "animation",
+    "logging",
   ];
   const hasSpecificCoreConfig = coreStackFlags.some((flag) => config[flag] !== undefined);
 
@@ -157,6 +160,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
         validation: "zod" as Validation,
         realtime: "none" as Realtime,
         animation: "none" as Animation,
+        logging: "none" as Logging,
       };
 
   // Build options object - let the CLI handle all validation
@@ -246,6 +250,7 @@ export const VALIDATIONS = extractEnumValues(ValidationSchema);
 export const REALTIMES = extractEnumValues(RealtimeSchema);
 export const ANIMATIONS = extractEnumValues(AnimationSchema);
 export const FILE_UPLOADS = extractEnumValues(FileUploadSchema);
+export const LOGGINGS = extractEnumValues(LoggingSchema);
 
 // Convenience functions for common test patterns
 export function createBasicConfig(overrides: Partial<TestConfig> = {}): TestConfig {

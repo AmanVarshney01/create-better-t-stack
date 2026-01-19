@@ -33,6 +33,7 @@ export const DEFAULT_CONFIG_BASE = {
   ai: "none",
   realtime: "none",
   animation: "none",
+  logging: "none",
   addons: ["turborepo"],
   examples: [],
   git: true,

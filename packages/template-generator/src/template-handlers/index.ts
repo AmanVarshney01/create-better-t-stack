@@ -12,3 +12,4 @@ export { processAddonTemplates } from "./addons";
 export { processExampleTemplates } from "./examples";
 export { processExtrasTemplates } from "./extras";
 export { processDeployTemplates } from "./deploy";
+export { processLoggingTemplates } from "./logging";
