@@ -1210,3 +1210,39 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Cypress E2E Testing Framework Implementation
+
+### Task: Implement Cypress as an E2E testing framework option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "cypress" to TestingSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Cypress dependency version:
+   - cypress: ^14.3.3
+3. **packages/template-generator/src/processors/testing-deps.ts**: Added Cypress case to handle cypress dependency
+4. **apps/web/src/lib/constant.ts**: Added Cypress to web builder testing options with teal icon
+5. **apps/cli/test/testing.test.ts**: Added comprehensive Cypress tests:
+   - Cypress with TanStack Router
+   - Cypress with React Router
+   - Cypress with Next.js
+   - Cypress with TanStack Start
+   - Cypress with Hono backend
+   - Cypress with Express backend
+   - Cypress with Fastify backend
+
+### Features:
+- Cypress E2E testing framework with time travel debugging
+- Support for all React-based frontends (TanStack Router, React Router, TanStack Start, Next.js)
+- Support for all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+- Full web builder UI integration with testing section
+- URL parameter support for sharing configurations
+
+### Technical Notes:
+- Cypress provides E2E testing with time travel debugging and automatic waiting
+- Cypress uses a unique test runner with real browser testing
+- Dependencies are added as devDependencies to server, web, and api packages
+- Uses Cypress v14.3.3 with the latest features
+- All 19 testing framework tests pass (including 7 new Cypress tests)
+
+### Status: COMPLETE
+

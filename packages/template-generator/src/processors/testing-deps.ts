@@ -65,6 +65,9 @@ function getTestingDeps(testing: ProjectConfig["testing"]): {
     case "jest":
       devDeps.push("jest", "@types/jest", "ts-jest", "@jest/globals");
       break;
+    case "cypress":
+      devDeps.push("cypress");
+      break;
     // vitest, playwright, vitest-playwright are handled elsewhere or are not in the dependency map
     // They may already be included in workspace templates or have their own processors
   }

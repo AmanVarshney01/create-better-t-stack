@@ -145,6 +145,96 @@ describe("Testing Framework Options", () => {
     });
   });
 
+  describe("Cypress E2E testing", () => {
+    test("cypress with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "cypress-tanstack-router",
+          frontend: ["tanstack-router"],
+          testing: "cypress",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("cypress with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "cypress-react-router",
+          frontend: ["react-router"],
+          testing: "cypress",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("cypress with Next.js", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "cypress-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          testing: "cypress",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("cypress with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "cypress-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          testing: "cypress",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Cypress with different backends", () => {
+    test("cypress with Hono backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "cypress-hono",
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          testing: "cypress",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("cypress with Express backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "cypress-express",
+          frontend: ["tanstack-router"],
+          backend: "express",
+          runtime: "node",
+          testing: "cypress",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("cypress with Fastify backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "cypress-fastify",
+          frontend: ["tanstack-router"],
+          backend: "fastify",
+          runtime: "node",
+          testing: "cypress",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("No testing option", () => {
     test("none testing option", async () => {
       const result = await runTRPCTest(

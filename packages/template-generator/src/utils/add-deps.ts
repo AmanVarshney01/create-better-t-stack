@@ -290,6 +290,9 @@ export const dependencyVersionMap = {
   "@jest/globals": "^29.7.0",
   "jest-environment-jsdom": "^29.7.0",
 
+  // Testing - Cypress
+  cypress: "^14.3.3",
+
   // Animation
   motion: "^12.17.0",
 

@@ -125,7 +125,7 @@ export const ValidationSchema = z
   .describe("Schema validation library (none uses Zod as default for internal usage)");
 
 export const TestingSchema = z
-  .enum(["vitest", "playwright", "vitest-playwright", "jest", "none"])
+  .enum(["vitest", "playwright", "vitest-playwright", "jest", "cypress", "none"])
   .describe("Testing framework (vitest-playwright includes both unit and e2e testing)");
 
 export const EmailSchema = z

@@ -1112,6 +1112,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "cypress",
+      name: "Cypress",
+      description: "E2E testing with time travel debugging",
+      icon: "https://cdn.simpleicons.org/cypress/69D3A7",
+      color: "from-teal-400 to-teal-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Testing",
       description: "Skip testing framework setup",
