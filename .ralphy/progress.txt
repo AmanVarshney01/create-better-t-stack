@@ -340,3 +340,43 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: MobX State Management Implementation
+
+### Task: Implement MobX as a state management option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "mobx" to StateManagementSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added MobX dependency versions:
+   - mobx: ^6.13.5
+   - mobx-react-lite: ^4.1.0
+3. **packages/template-generator/src/processors/state-management-deps.ts**: Added MobX case to handle mobx and mobx-react-lite dependencies
+4. **apps/web/src/lib/constant.ts**: Added MobX to web builder state management options with orange icon
+5. **apps/cli/src/index.ts**: Added stateManagement, forms, testing, ai schemas to CLI router input
+6. **apps/cli/src/constants.ts**: Added stateManagement, forms, testing, ai to DEFAULT_CONFIG_BASE
+7. **apps/cli/src/utils/config-processing.ts**: Added StateManagement processing to processFlags function
+8. **apps/cli/src/prompts/config-prompts.ts**: Added ai, stateManagement, forms, testing to gatherConfig return
+9. **apps/cli/src/helpers/core/command-handlers.ts**: Added ai, stateManagement, forms, testing to error config
+10. **apps/cli/src/utils/bts-config.ts**: Added missing fields to btsConfig (email, effect, ai, stateManagement, forms, testing, cssFramework, uiLibrary)
+11. **apps/cli/test/state-management.test.ts**: Added MobX tests for:
+    - MobX with TanStack Router
+    - MobX with React Router
+    - MobX with Next.js
+    - MobX with TanStack Start
+    - MobX with React Native (native-bare)
+
+### Features:
+- MobX with mobx and mobx-react-lite for lightweight React bindings
+- Support for all React-based frontends (TanStack Router, React Router, TanStack Start, Next.js)
+- Support for React Native (Expo) apps
+- Observable-based reactive state management
+- Full web builder UI integration
+
+### Technical Notes:
+- MobX uses observable state with automatic tracking of changes
+- mobx-react-lite provides lightweight React bindings (recommended over mobx-react for functional components)
+- MobX dependencies are only added to React-based packages
+- Fixed CLI config flow to properly pass stateManagement option from CLI flags to generator
+
+### Status: COMPLETE
+

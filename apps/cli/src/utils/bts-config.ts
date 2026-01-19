@@ -21,11 +21,19 @@ export async function writeBtsConfig(projectConfig: ProjectConfig) {
     examples: projectConfig.examples,
     auth: projectConfig.auth,
     payments: projectConfig.payments,
+    email: projectConfig.email,
+    effect: projectConfig.effect,
+    ai: projectConfig.ai,
+    stateManagement: projectConfig.stateManagement,
+    forms: projectConfig.forms,
+    testing: projectConfig.testing,
     packageManager: projectConfig.packageManager,
     dbSetup: projectConfig.dbSetup,
     api: projectConfig.api,
     webDeploy: projectConfig.webDeploy,
     serverDeploy: projectConfig.serverDeploy,
+    cssFramework: projectConfig.cssFramework,
+    uiLibrary: projectConfig.uiLibrary,
   };
 
   const baseContent = {
@@ -41,11 +49,19 @@ export async function writeBtsConfig(projectConfig: ProjectConfig) {
     examples: btsConfig.examples,
     auth: btsConfig.auth,
     payments: btsConfig.payments,
+    email: btsConfig.email,
+    effect: btsConfig.effect,
+    ai: btsConfig.ai,
+    stateManagement: btsConfig.stateManagement,
+    forms: btsConfig.forms,
+    testing: btsConfig.testing,
     packageManager: btsConfig.packageManager,
     dbSetup: btsConfig.dbSetup,
     api: btsConfig.api,
     webDeploy: btsConfig.webDeploy,
     serverDeploy: btsConfig.serverDeploy,
+    cssFramework: btsConfig.cssFramework,
+    uiLibrary: btsConfig.uiLibrary,
   };
 
   let configContent = JSON.stringify(baseContent);

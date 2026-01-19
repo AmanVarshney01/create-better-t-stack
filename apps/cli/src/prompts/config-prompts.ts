@@ -181,5 +181,10 @@ export async function gatherConfig(
     api: result.api,
     webDeploy: result.webDeploy,
     serverDeploy: result.serverDeploy,
+    // These fields don't have prompts yet, use defaults
+    ai: flags.ai ?? "none",
+    stateManagement: flags.stateManagement ?? "none",
+    forms: flags.forms ?? "react-hook-form",
+    testing: flags.testing ?? "vitest",
   };
 }

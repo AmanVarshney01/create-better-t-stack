@@ -626,6 +626,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "mobx",
+      name: "MobX",
+      description: "Observable-based reactive state management",
+      icon: "https://cdn.simpleicons.org/mobx/FF9955",
+      color: "from-orange-400 to-orange-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No State Management",
       description: "Skip state management setup",

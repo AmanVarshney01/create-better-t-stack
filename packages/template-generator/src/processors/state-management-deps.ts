@@ -71,6 +71,9 @@ function getStateManagementDeps(
     case "redux-toolkit":
       deps.push("@reduxjs/toolkit", "react-redux");
       break;
+    case "mobx":
+      deps.push("mobx", "mobx-react-lite");
+      break;
   }
 
   return deps;

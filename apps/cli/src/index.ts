@@ -8,6 +8,7 @@ import { createProjectHandler } from "./helpers/core/command-handlers";
 import {
   type Addons,
   AddonsSchema,
+  AISchema,
   type API,
   APISchema,
   type Auth,
@@ -30,6 +31,7 @@ import {
   EmailSchema,
   type Examples,
   ExamplesSchema,
+  FormsSchema,
   type Frontend,
   FrontendSchema,
   type InitResult,
@@ -45,8 +47,10 @@ import {
   RuntimeSchema,
   type ServerDeploy,
   ServerDeploySchema,
+  StateManagementSchema,
   type Template,
   TemplateSchema,
+  TestingSchema,
   type UILibrary,
   UILibrarySchema,
   type WebDeploy,
@@ -87,6 +91,10 @@ export const router = os.router({
           payments: PaymentsSchema.optional(),
           email: EmailSchema.optional(),
           effect: EffectSchema.optional(),
+          stateManagement: StateManagementSchema.optional(),
+          forms: FormsSchema.optional(),
+          testing: TestingSchema.optional(),
+          ai: AISchema.optional(),
           frontend: z.array(FrontendSchema).optional(),
           addons: z.array(AddonsSchema).optional(),
           examples: z.array(ExamplesSchema).optional(),
@@ -297,6 +305,10 @@ export async function createVirtual(
       serverDeploy: options.serverDeploy || "none",
       cssFramework: options.cssFramework || "tailwind",
       uiLibrary: options.uiLibrary || "shadcn-ui",
+      ai: options.ai || "none",
+      stateManagement: options.stateManagement || "none",
+      forms: options.forms || "react-hook-form",
+      testing: options.testing || "vitest",
     };
 
     const result = await generate({

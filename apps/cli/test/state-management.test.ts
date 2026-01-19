@@ -86,6 +86,56 @@ describe("State Management Options", () => {
       );
       expectSuccess(result);
     });
+
+    test("mobx with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "mobx-tanstack-router",
+          frontend: ["tanstack-router"],
+          stateManagement: "mobx",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("MobX with React frontends", () => {
+    test("mobx with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "mobx-react-router",
+          frontend: ["react-router"],
+          stateManagement: "mobx",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("mobx with Next.js", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "mobx-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          stateManagement: "mobx",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("mobx with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "mobx-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          stateManagement: "mobx",
+        }),
+      );
+      expectSuccess(result);
+    });
   });
 
   describe("State management with native apps", () => {
@@ -108,6 +158,18 @@ describe("State Management Options", () => {
           frontend: ["native-uniwind"],
           backend: "hono",
           stateManagement: "zustand",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("mobx with native-bare", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "mobx-native-bare",
+          frontend: ["native-bare"],
+          backend: "hono",
+          stateManagement: "mobx",
         }),
       );
       expectSuccess(result);

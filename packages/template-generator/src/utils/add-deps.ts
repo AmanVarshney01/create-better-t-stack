@@ -250,6 +250,8 @@ export const dependencyVersionMap = {
   "@nanostores/react": "^0.8.4",
   "@reduxjs/toolkit": "^2.8.2",
   "react-redux": "^9.2.0",
+  mobx: "^6.13.5",
+  "mobx-react-lite": "^4.1.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

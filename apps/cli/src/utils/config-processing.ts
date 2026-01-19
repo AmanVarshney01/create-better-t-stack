@@ -17,6 +17,7 @@ import type {
   ProjectConfig,
   Runtime,
   ServerDeploy,
+  StateManagement,
   UILibrary,
   WebDeploy,
 } from "../types";
@@ -70,6 +71,10 @@ export function processFlags(options: CLIInput, projectName?: string) {
 
   if (options.effect !== undefined) {
     config.effect = options.effect as Effect;
+  }
+
+  if (options.stateManagement !== undefined) {
+    config.stateManagement = options.stateManagement as StateManagement;
   }
 
   if (options.git !== undefined) {
