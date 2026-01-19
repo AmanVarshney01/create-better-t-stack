@@ -689,3 +689,47 @@ Remix has been merged into React Router v7 framework mode. The existing "React R
 
 ### Status: COMPLETE
 
+
+## 2026-01-19: Formik Form Library Implementation
+
+### Task: Implement Formik as a form library option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "formik" to FormsSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Formik and Yup dependency versions:
+   - formik: ^2.4.6
+   - yup: ^1.6.1
+3. **packages/template-generator/src/processors/forms-deps.ts**: Created new forms processor:
+   - Handles formik dependency addition with yup validation library
+   - Adds dependencies to web and native packages
+   - Only applies to React-based frontends
+4. **packages/template-generator/src/processors/index.ts**: Registered forms processor
+5. **apps/web/src/lib/types.ts**: Added "forms" to TechCategory type
+6. **apps/web/src/lib/constant.ts**: Added forms section to TECH_OPTIONS:
+   - React Hook Form (default), TanStack Form, Formik, None
+   - Full UI integration with icons and descriptions
+7. **apps/cli/test/test-utils.ts**: Added Forms type, schema import, and coreStackFlags support
+8. **apps/cli/test/forms.test.ts**: Created comprehensive Formik tests:
+   - Formik with TanStack Router, React Router, Next.js, TanStack Start
+   - Formik with different backends (Hono, Express, Fastify)
+   - Formik with native apps (native-bare, native-uniwind)
+   - Tests for React Hook Form and TanStack Form
+   - None option test
+
+### Features:
+- Formik form state management library with Yup validation
+- Support for all React-based frontends (TanStack Router, React Router, TanStack Start, Next.js)
+- Support for React Native (Expo) apps
+- Support for all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+- Full web builder UI integration with forms section
+- Compatible with all existing validation options
+
+### Technical Notes:
+- Formik is a popular form library for React with excellent validation support
+- Yup is included as the recommended validation library for Formik
+- Forms dependencies are only added to React-based packages (web and native)
+- The processor follows the same pattern as state-management-deps.ts
+- All 12 tests pass
+
+### Status: COMPLETE
+

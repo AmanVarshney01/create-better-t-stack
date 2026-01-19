@@ -23,6 +23,7 @@ import type {
   Effect,
   Email,
   StateManagement,
+  Forms,
   Validation,
 } from "../src/types";
 
@@ -38,6 +39,7 @@ import {
   DatabaseSetupSchema,
   EffectSchema,
   ExamplesSchema,
+  FormsSchema,
   FrontendSchema,
   ORMSchema,
   PackageManagerSchema,
@@ -104,6 +106,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     "uiLibrary",
     "effect",
     "stateManagement",
+    "forms",
     "validation",
   ];
   const hasSpecificCoreConfig = coreStackFlags.some((flag) => config[flag] !== undefined);
@@ -136,6 +139,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
         effect: "none" as Effect,
         email: "none" as Email,
         stateManagement: "none" as StateManagement,
+        forms: "react-hook-form" as Forms,
         validation: "zod" as Validation,
       };
 
@@ -220,6 +224,7 @@ export const CSS_FRAMEWORKS = extractEnumValues(CSSFrameworkSchema);
 export const UI_LIBRARIES = extractEnumValues(UILibrarySchema);
 export const EFFECTS = extractEnumValues(EffectSchema);
 export const STATE_MANAGEMENTS = extractEnumValues(StateManagementSchema);
+export const FORMS = extractEnumValues(FormsSchema);
 export const VALIDATIONS = extractEnumValues(ValidationSchema);
 
 // Convenience functions for common test patterns

@@ -269,6 +269,10 @@ export const dependencyVersionMap = {
   // Validation libraries
   valibot: "^1.1.0",
   arktype: "^2.1.29",
+
+  // Form libraries
+  formik: "^2.4.6",
+  yup: "^1.6.1",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

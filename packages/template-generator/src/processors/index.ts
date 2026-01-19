@@ -16,6 +16,7 @@ import { processEmailDeps } from "./email-deps";
 import { processEnvDeps } from "./env-deps";
 import { processEnvVariables } from "./env-vars";
 import { processExamplesDeps } from "./examples-deps";
+import { processFormsDeps } from "./forms-deps";
 import { processInfraDeps } from "./infra-deps";
 import { processPaymentsDeps } from "./payments-deps";
 import { processPwaPlugins } from "./pwa-plugins";
@@ -42,6 +43,7 @@ export function processDependencies(vfs: VirtualFileSystem, config: ProjectConfi
   processExamplesDeps(vfs, config);
   processEffectDeps(vfs, config);
   processStateManagementDeps(vfs, config);
+  processFormsDeps(vfs, config);
   processValidationDeps(vfs, config);
   processCSSAndUILibraryDeps(vfs, config);
   processTurboConfig(vfs, config);
@@ -59,6 +61,7 @@ export {
   processEmailDeps,
   processEnvDeps,
   processExamplesDeps,
+  processFormsDeps,
   processInfraDeps,
   processPaymentsDeps,
   processReadme,

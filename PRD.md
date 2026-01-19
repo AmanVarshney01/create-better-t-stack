@@ -160,7 +160,7 @@ This document contains a comprehensive roadmap for expanding Better-Fullstack be
 
 - [x] **React Hook Form** - Performant forms with validation
 - [x] **TanStack Form** - Framework-agnostic form library
-- [ ] **Formik** - Popular form library
+- [x] **Formik** - Popular form library
 - [ ] **Final Form** - Framework-agnostic forms
 - [ ] **Conform** - Progressive enhancement forms
 - [ ] **Modular Forms** - Type-safe forms for Solid/Qwik

@@ -681,6 +681,40 @@ export const TECH_OPTIONS: Record<
       default: true,
     },
   ],
+  forms: [
+    {
+      id: "react-hook-form",
+      name: "React Hook Form",
+      description: "Performant, flexible form validation library",
+      icon: "https://cdn.simpleicons.org/reacthookform/EC5990",
+      color: "from-pink-400 to-pink-600",
+      default: true,
+    },
+    {
+      id: "tanstack-form",
+      name: "TanStack Form",
+      description: "Fully-typed, framework-agnostic form library",
+      icon: "/icon/tanstack.png",
+      color: "from-cyan-400 to-cyan-600",
+      default: false,
+    },
+    {
+      id: "formik",
+      name: "Formik",
+      description: "Popular form state management with Yup validation",
+      icon: "",
+      color: "from-blue-500 to-blue-700",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No Form Library",
+      description: "Build custom form handling",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: false,
+    },
+  ],
   validation: [
     {
       id: "zod",
