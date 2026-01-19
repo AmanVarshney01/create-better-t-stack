@@ -658,6 +658,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "legend-state",
+      name: "Legend State",
+      description: "High-performance observable state for React",
+      icon: "",
+      color: "from-violet-400 to-violet-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No State Management",
       description: "Skip state management setup",

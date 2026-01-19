@@ -257,6 +257,8 @@ export const dependencyVersionMap = {
   valtio: "^2.1.2",
   "@tanstack/store": "^0.8.0",
   "@tanstack/react-store": "^0.8.0",
+  "@legendapp/state": "^3.0.0",
+  "@legendapp/state-react": "^4.0.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

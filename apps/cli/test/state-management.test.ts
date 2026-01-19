@@ -404,6 +404,82 @@ describe("State Management Options", () => {
     });
   });
 
+  describe("Legend State with React frontends", () => {
+    test("legend-state with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "legend-state-tanstack-router",
+          frontend: ["tanstack-router"],
+          stateManagement: "legend-state",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("legend-state with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "legend-state-react-router",
+          frontend: ["react-router"],
+          stateManagement: "legend-state",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("legend-state with Next.js", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "legend-state-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          stateManagement: "legend-state",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("legend-state with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "legend-state-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          stateManagement: "legend-state",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Legend State with native apps", () => {
+    test("legend-state with native-bare", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "legend-state-native-bare",
+          frontend: ["native-bare"],
+          backend: "hono",
+          stateManagement: "legend-state",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("legend-state with native-uniwind", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "legend-state-native-uniwind",
+          frontend: ["native-uniwind"],
+          backend: "hono",
+          stateManagement: "legend-state",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("No state management", () => {
     test("none state management option", async () => {
       const result = await runTRPCTest(

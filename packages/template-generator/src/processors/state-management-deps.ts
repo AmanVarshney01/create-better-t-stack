@@ -83,6 +83,9 @@ function getStateManagementDeps(
     case "tanstack-store":
       deps.push("@tanstack/store", "@tanstack/react-store");
       break;
+    case "legend-state":
+      deps.push("@legendapp/state", "@legendapp/state-react");
+      break;
   }
 
   return deps;

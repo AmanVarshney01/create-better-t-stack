@@ -106,6 +106,7 @@ export const StateManagementSchema = z
     "xstate",
     "valtio",
     "tanstack-store",
+    "legend-state",
     "none",
   ])
   .describe("State management library");
