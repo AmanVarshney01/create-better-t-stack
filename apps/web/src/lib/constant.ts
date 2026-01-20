@@ -1419,6 +1419,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "ably",
+      name: "Ably",
+      description: "Real-time messaging platform with pub/sub and presence",
+      icon: "https://cdn.simpleicons.org/ably/FF5416",
+      color: "from-orange-500 to-red-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Real-time",
       description: "Skip real-time/WebSocket integration",

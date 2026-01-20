@@ -4488,3 +4488,39 @@ The argon2 crate was already implemented in the template generator and CLI tests
 ### Tests: 5 new tests added, all passing
 
 ### Status: COMPLETE
+
+
+## 2026-01-20: Ably Real-Time Messaging Platform Implementation
+
+### Task: Implement Ably as a real-time/WebSocket option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "ably" to RealtimeSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Ably dependency version:
+   - ably: ^2.6.3
+3. **packages/template-generator/src/processors/realtime-deps.ts**: Added Ably dependency processing:
+   - Server-side: "ably" package
+   - Client-side: "ably" package (same package for both)
+4. **apps/web/src/lib/constant.ts**: Added Ably to web builder realtime options with:
+   - id: "ably"
+   - name: "Ably"
+   - description: "Real-time messaging platform with pub/sub and presence"
+   - icon: Ably logo from simpleicons
+   - color: orange-to-red gradient
+5. **apps/cli/test/realtime.test.ts**: Added comprehensive Ably tests:
+   - Ably with React frontends (TanStack Router, React Router, Next.js, TanStack Start)
+   - Ably with different backends (Hono, Express, Fastify, Elysia)
+   - Ably with native apps (native-bare, native-uniwind)
+
+### Features:
+- Real-time pub/sub messaging via Ably
+- Presence channel support
+- Compatible with all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+- Compatible with all React web frontends
+- Compatible with React Native apps
+- Uses the same "ably" package for both server and client (unified SDK)
+
+### Tests:
+- All 26 realtime tests pass including 10 new Ably tests
+
+### Status: COMPLETE

@@ -196,6 +196,135 @@ describe("Real-time/WebSocket Options", () => {
     });
   });
 
+  describe("Ably with React frontends", () => {
+    test("ably with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "ably-tanstack-router",
+          frontend: ["tanstack-router"],
+          realtime: "ably",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("ably with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "ably-react-router",
+          frontend: ["react-router"],
+          realtime: "ably",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("ably with Next.js fullstack", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "ably-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          realtime: "ably",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("ably with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "ably-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          realtime: "ably",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Ably with different backends", () => {
+    test("ably with Hono backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "ably-hono",
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          realtime: "ably",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("ably with Express backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "ably-express",
+          frontend: ["tanstack-router"],
+          backend: "express",
+          runtime: "node",
+          realtime: "ably",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("ably with Fastify backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "ably-fastify",
+          frontend: ["tanstack-router"],
+          backend: "fastify",
+          runtime: "node",
+          realtime: "ably",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("ably with Elysia backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "ably-elysia",
+          frontend: ["tanstack-router"],
+          backend: "elysia",
+          runtime: "bun",
+          realtime: "ably",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Ably with native apps", () => {
+    test("ably with native-bare", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "ably-native-bare",
+          frontend: ["native-bare"],
+          backend: "hono",
+          realtime: "ably",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("ably with native-uniwind", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "ably-native-uniwind",
+          frontend: ["native-uniwind"],
+          backend: "hono",
+          realtime: "ably",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("No real-time option", () => {
     test("none realtime option", async () => {
       const result = await runTRPCTest(

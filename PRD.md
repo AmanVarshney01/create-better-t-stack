@@ -91,7 +91,7 @@
 
 - [x] **Socket.IO** - Classic real-time library
 - [x] **PartyKit** - Edge-native multiplayer infrastructure
-- [ ] **Ably** - Real-time messaging platform
+- [x] **Ably** - Real-time messaging platform
 - [ ] **Pusher** - Real-time communication APIs
 - [ ] **Liveblocks** - Collaboration infrastructure
 - [ ] **Y.js** - CRDT for real-time collaboration

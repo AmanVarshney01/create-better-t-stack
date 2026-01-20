@@ -78,6 +78,9 @@ function getRealtimeServerDeps(realtime: ProjectConfig["realtime"]): AvailableDe
     case "partykit":
       deps.push("partykit");
       break;
+    case "ably":
+      deps.push("ably");
+      break;
   }
 
   return deps;
@@ -92,6 +95,10 @@ function getRealtimeClientDeps(realtime: ProjectConfig["realtime"]): AvailableDe
       break;
     case "partykit":
       deps.push("partysocket");
+      break;
+    case "ably":
+      // Ably uses the same package for client and server
+      deps.push("ably");
       break;
   }
 
