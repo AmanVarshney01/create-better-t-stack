@@ -1,0 +1,128 @@
+/**
+ * Inngest utility functions for triggering events from your backend
+ * @see https://www.inngest.com/docs
+ */
+import { inngest } from "../inngest/client";
+
+// Type definitions for event payloads
+export interface EmailPayload {
+  to: string;
+  subject: string;
+  body: string;
+  templateId?: string;
+}
+
+export interface NotificationPayload {
+  userId: string;
+  type: "push" | "in-app" | "sms";
+  title: string;
+  message: string;
+  data?: Record<string, unknown>;
+}
+
+export interface DataProcessingPayload {
+  dataId: string;
+  operation: "transform" | "aggregate" | "export";
+}
+
+export interface UserSignupPayload {
+  userId: string;
+  email: string;
+  name: string;
+}
+
+/**
+ * Trigger an email event
+ * @example
+ * await triggerEmail({
+ *   to: "user@example.com",
+ *   subject: "Welcome!",
+ *   body: "Thanks for signing up."
+ * });
+ */
+export async function triggerEmail(payload: EmailPayload) {
+  return inngest.send({
+    name: "app/email.send",
+    data: payload,
+  });
+}
+
+/**
+ * Trigger a notification event
+ * @example
+ * await triggerNotification({
+ *   userId: "user_123",
+ *   type: "push",
+ *   title: "New message",
+ *   message: "You have a new message!"
+ * });
+ */
+export async function triggerNotification(payload: NotificationPayload) {
+  return inngest.send({
+    name: "app/notification.send",
+    data: payload,
+  });
+}
+
+/**
+ * Trigger a data processing event
+ * @example
+ * await triggerDataProcessing({
+ *   dataId: "data_456",
+ *   operation: "transform"
+ * });
+ */
+export async function triggerDataProcessing(payload: DataProcessingPayload) {
+  return inngest.send({
+    name: "app/data.process",
+    data: payload,
+  });
+}
+
+/**
+ * Cancel a running data processing job
+ * @example
+ * await cancelDataProcessing("data_456");
+ */
+export async function cancelDataProcessing(dataId: string) {
+  return inngest.send({
+    name: "app/data.cancel",
+    data: { dataId },
+  });
+}
+
+/**
+ * Trigger user signup welcome sequence
+ * @example
+ * await triggerWelcomeSequence({
+ *   userId: "user_123",
+ *   email: "user@example.com",
+ *   name: "John"
+ * });
+ */
+export async function triggerWelcomeSequence(payload: UserSignupPayload) {
+  return inngest.send({
+    name: "app/user.signup",
+    data: payload,
+  });
+}
+
+/**
+ * Trigger multiple events in a batch
+ * @example
+ * await triggerEmailBatch([
+ *   { to: "user1@example.com", subject: "Hello", body: "Hi!" },
+ *   { to: "user2@example.com", subject: "Hello", body: "Hi!" }
+ * ]);
+ */
+export async function triggerEmailBatch(payloads: EmailPayload[]) {
+  return inngest.send(
+    payloads.map((data) => ({
+      name: "app/email.send" as const,
+      data,
+    }))
+  );
+}
+
+// Re-export the inngest client for advanced usage
+export { inngest };

@@ -1,0 +1,12 @@
+import { Inngest } from "inngest";
+
+/**
+ * Inngest client configuration
+ * @see https://www.inngest.com/docs
+ */
+export const inngest = new Inngest({
+  id: "{{projectName}}",
+  // Event key is optional for local development
+  // Required in production - get it at https://app.inngest.com
+  eventKey: process.env.INNGEST_EVENT_KEY,
+});

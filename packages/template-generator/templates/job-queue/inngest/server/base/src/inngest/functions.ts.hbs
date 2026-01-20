@@ -1,0 +1,278 @@
+import { inngest } from "./client";
+
+/**
+ * Example email sending function
+ * Triggered by: inngest.send({ name: "app/email.send", data: { to, subject, body } })
+ * @see https://www.inngest.com/docs/functions
+ */
+export const sendEmail = inngest.createFunction(
+  {
+    id: "send-email",
+    // Retry configuration
+    retries: 3,
+  },
+  { event: "app/email.send" },
+  async ({ event, step }) => {
+    const { to, subject, body, templateId } = event.data;
+
+    // Use steps for reliable execution with automatic retries
+    const result = await step.run("send-email", async () => {
+      // TODO: Implement your email sending logic here
+      // Example with a hypothetical email service:
+      // await emailService.send({ to, subject, body, templateId });
+
+      // Simulate email sending
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      return {
+        sent: true,
+        to,
+        timestamp: new Date().toISOString(),
+      };
+    });
+
+    return result;
+  }
+);
+
+/**
+ * Example notification function
+ * Supports different notification types: push, in-app, sms
+ */
+export const sendNotification = inngest.createFunction(
+  {
+    id: "send-notification",
+    retries: 3,
+  },
+  { event: "app/notification.send" },
+  async ({ event, step }) => {
+    const { userId, type, title, message, data } = event.data;
+
+    const result = await step.run("send-notification", async () => {
+      // TODO: Implement your notification logic here
+      // switch (type) {
+      //   case "push":
+      //     await pushService.send(userId, { title, message, data });
+      //     break;
+      //   case "in-app":
+      //     await inAppNotificationService.create(userId, { title, message, data });
+      //     break;
+      //   case "sms":
+      //     await smsService.send(userId, message);
+      //     break;
+      // }
+
+      // Simulate notification processing
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      return {
+        sent: true,
+        type,
+        userId,
+        timestamp: new Date().toISOString(),
+      };
+    });
+
+    return result;
+  }
+);
+
+/**
+ * Example data processing function with multiple steps
+ * Demonstrates step-based workflows for complex operations
+ */
+export const processData = inngest.createFunction(
+  {
+    id: "process-data",
+    retries: 2,
+    // Cancel if another run for the same dataId starts
+    cancelOn: [
+      {
+        event: "app/data.cancel",
+        match: "data.dataId",
+      },
+    ],
+  },
+  { event: "app/data.process" },
+  async ({ event, step }) => {
+    const { dataId, operation } = event.data;
+
+    // Step 1: Validate input
+    await step.run("validate", async () => {
+      if (!dataId) {
+        throw new Error("Data ID is required");
+      }
+    });
+
+    // Step 2: Process data based on operation
+    const result = await step.run("process", async () => {
+      // TODO: Implement your data processing logic here
+      // const data = await database.getData(dataId);
+      // switch (operation) {
+      //   case "transform":
+      //     return await transformData(data);
+      //   case "aggregate":
+      //     return await aggregateData(data);
+      //   case "export":
+      //     return await exportData(data);
+      // }
+
+      // Simulate data processing
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      return {
+        processed: true,
+        dataId,
+        operation,
+      };
+    });
+
+    // Step 3: Send completion notification
+    await step.sendEvent("send-completion-notification", {
+      name: "app/notification.send",
+      data: {
+        userId: "system",
+        type: "in-app" as const,
+        title: "Processing Complete",
+        message: `Data ${dataId} has been ${operation}ed successfully`,
+      },
+    });
+
+    return {
+      ...result,
+      timestamp: new Date().toISOString(),
+    };
+  }
+);
+
+/**
+ * Example scheduled function (cron job)
+ * Runs every hour - customize the cron pattern as needed
+ * @see https://www.inngest.com/docs/guides/scheduled-functions
+ */
+export const hourlyCleanup = inngest.createFunction(
+  { id: "hourly-cleanup" },
+  { cron: "0 * * * *" }, // Every hour at minute 0
+  async ({ step }) => {
+    const result = await step.run("cleanup", async () => {
+      // TODO: Implement your cleanup logic here
+      // await database.deleteExpiredSessions();
+      // await cache.clearStale();
+
+      // Simulate cleanup
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      return {
+        cleaned: true,
+        timestamp: new Date().toISOString(),
+      };
+    });
+
+    return result;
+  }
+);
+
+/**
+ * Example daily report function with timezone
+ * Runs at 9 AM UTC - change timezone as needed
+ */
+export const dailyReport = inngest.createFunction(
+  { id: "daily-report" },
+  { cron: "TZ=UTC 0 9 * * *" }, // 9 AM UTC every day
+  async ({ step }) => {
+    // Step 1: Generate report data
+    const reportData = await step.run("generate-report", async () => {
+      // TODO: Implement your report generation logic here
+      // const stats = await analytics.getDailyStats();
+      // return generateReportData(stats);
+
+      // Simulate report generation
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      return {
+        generatedAt: new Date().toISOString(),
+        metrics: {
+          users: 100,
+          events: 500,
+        },
+      };
+    });
+
+    // Step 2: Send report via email
+    await step.sendEvent("send-report-email", {
+      name: "app/email.send",
+      data: {
+        to: "admin@example.com",
+        subject: "Daily Report",
+        body: `Daily metrics: ${JSON.stringify(reportData.metrics)}`,
+      },
+    });
+
+    return {
+      reportGenerated: true,
+      timestamp: new Date().toISOString(),
+    };
+  }
+);
+
+/**
+ * Example delayed function
+ * Demonstrates using step.sleep for delayed execution
+ */
+export const welcomeSequence = inngest.createFunction(
+  { id: "welcome-sequence" },
+  { event: "app/user.signup" },
+  async ({ event, step }) => {
+    const { userId, email, name } = event.data;
+
+    // Send immediate welcome email
+    await step.sendEvent("send-welcome", {
+      name: "app/email.send",
+      data: {
+        to: email,
+        subject: "Welcome to {{projectName}}!",
+        body: `Hi ${name}, welcome aboard!`,
+      },
+    });
+
+    // Wait 1 day before sending tips email
+    await step.sleep("wait-1-day", "1d");
+
+    await step.sendEvent("send-tips", {
+      name: "app/email.send",
+      data: {
+        to: email,
+        subject: "Getting Started Tips",
+        body: `Hi ${name}, here are some tips to get the most out of {{projectName}}...`,
+      },
+    });
+
+    // Wait 3 more days before sending feature highlight
+    await step.sleep("wait-3-days", "3d");
+
+    await step.sendEvent("send-features", {
+      name: "app/email.send",
+      data: {
+        to: email,
+        subject: "Discover More Features",
+        body: `Hi ${name}, have you tried these features yet?`,
+      },
+    });
+
+    return {
+      completed: true,
+      userId,
+      timestamp: new Date().toISOString(),
+    };
+  }
+);
+
+// Export all functions for the serve handler
+export const functions = [
+  sendEmail,
+  sendNotification,
+  processData,
+  hourlyCleanup,
+  dailyReport,
+  welcomeSequence,
+];

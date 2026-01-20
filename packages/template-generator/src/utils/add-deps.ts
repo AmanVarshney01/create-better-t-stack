@@ -392,6 +392,7 @@ export const dependencyVersionMap = {
   bullmq: "^5.34.8",
   ioredis: "^5.4.2",
   "@trigger.dev/sdk": "^4.1.1",
+  inngest: "^3.33.0",
 
   // Testing - Jest
   jest: "^29.7.0",

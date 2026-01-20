@@ -4725,3 +4725,48 @@ Tests: 15 passing
 - Works with fullstack frameworks (Next.js, TanStack Start)
 
 ### Status: COMPLETE
+
+
+## 2026-01-20: Inngest Event-Driven Functions Implementation
+
+### Task: Implement Inngest as a job queue/background worker option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "inngest" to JobQueueSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Inngest dependency:
+   - inngest: ^3.33.0
+3. **packages/template-generator/src/processors/job-queue-deps.ts**: Added Inngest case to dependency processing
+4. **packages/template-generator/src/processors/env-vars.ts**: Added Inngest environment variables:
+   - INNGEST_EVENT_KEY
+   - INNGEST_SIGNING_KEY
+5. **packages/template-generator/templates/job-queue/inngest/**: Created Inngest templates:
+   - server/base/src/inngest/client.ts.hbs - Inngest client configuration
+   - server/base/src/inngest/functions.ts.hbs - Event-driven function definitions:
+     - sendEmail - Email sending function
+     - sendNotification - Multi-type notification function
+     - processData - Data processing with cancellation support
+     - hourlyCleanup - Scheduled cleanup cron job
+     - dailyReport - Daily report with timezone support
+     - welcomeSequence - Delayed welcome email sequence
+   - server/base/src/lib/inngest.ts.hbs - Utility functions for triggering events
+6. **apps/web/src/lib/constant.ts**: Added Inngest to web builder job queue options
+7. **apps/web/public/icon/inngest.svg**: Added Inngest icon
+8. **apps/cli/test/job-queue.test.ts**: Added 13 comprehensive tests for Inngest:
+   - With different backends (Hono, Express, Fastify, Elysia, NestJS)
+   - With fullstack frameworks (Next.js, TanStack Start)
+   - With different frontends (TanStack Router, React Router, Svelte, Solid)
+   - With database setups (PostgreSQL+Drizzle, SQLite+Prisma)
+
+### Features:
+- Event-driven function execution with Inngest SDK
+- Step-based workflows for reliable multi-step processes
+- Built-in retry configuration per function
+- Scheduled/cron functions with timezone support
+- Event-based cancellation support
+- Sleep/delay functionality for timed workflows
+- Batch event triggering
+- Type-safe event payloads and trigger utilities
+- Compatible with all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+- Works with fullstack frameworks (Next.js, TanStack Start)
+
+### Status: COMPLETE

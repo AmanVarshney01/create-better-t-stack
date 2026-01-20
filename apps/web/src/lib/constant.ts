@@ -1477,6 +1477,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "inngest",
+      name: "Inngest",
+      description: "Event-driven functions with built-in queuing and scheduling",
+      icon: "/icon/inngest.svg",
+      color: "from-indigo-500 to-purple-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Job Queue",
       description: "Skip job queue/background worker setup",

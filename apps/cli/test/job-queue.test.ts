@@ -361,6 +361,178 @@ describe("Job Queue Options", () => {
     });
   });
 
+  describe("Inngest with different backends", () => {
+    test("inngest with Hono backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "inngest-hono",
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          jobQueue: "inngest",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("inngest with Express backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "inngest-express",
+          frontend: ["tanstack-router"],
+          backend: "express",
+          runtime: "node",
+          jobQueue: "inngest",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("inngest with Fastify backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "inngest-fastify",
+          frontend: ["tanstack-router"],
+          backend: "fastify",
+          runtime: "node",
+          jobQueue: "inngest",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("inngest with Elysia backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "inngest-elysia",
+          frontend: ["tanstack-router"],
+          backend: "elysia",
+          runtime: "bun",
+          jobQueue: "inngest",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("inngest with NestJS backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "inngest-nestjs",
+          frontend: ["tanstack-router"],
+          backend: "nestjs",
+          runtime: "node",
+          jobQueue: "inngest",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Inngest with fullstack frameworks", () => {
+    test("inngest with Next.js fullstack", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "inngest-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          jobQueue: "inngest",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("inngest with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "inngest-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          jobQueue: "inngest",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Inngest with different frontends", () => {
+    test("inngest with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "inngest-tanstack-router",
+          frontend: ["tanstack-router"],
+          jobQueue: "inngest",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("inngest with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "inngest-react-router",
+          frontend: ["react-router"],
+          jobQueue: "inngest",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("inngest with Svelte", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "inngest-svelte",
+          frontend: ["svelte"],
+          uiLibrary: "daisyui",
+          api: "orpc",
+          jobQueue: "inngest",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("inngest with Solid", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "inngest-solid",
+          frontend: ["solid"],
+          uiLibrary: "daisyui",
+          api: "orpc",
+          jobQueue: "inngest",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Inngest with database setups", () => {
+    test("inngest with PostgreSQL and Drizzle", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "inngest-postgres-drizzle",
+          frontend: ["tanstack-router"],
+          database: "postgres",
+          orm: "drizzle",
+          jobQueue: "inngest",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("inngest with SQLite and Prisma", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "inngest-sqlite-prisma",
+          frontend: ["tanstack-router"],
+          database: "sqlite",
+          orm: "prisma",
+          jobQueue: "inngest",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("No job queue option", () => {
     test("none job queue option", async () => {
       const result = await runTRPCTest(

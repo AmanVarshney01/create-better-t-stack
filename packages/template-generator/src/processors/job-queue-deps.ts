@@ -38,6 +38,9 @@ function getJobQueueDeps(jobQueue: ProjectConfig["jobQueue"]): AvailableDependen
     case "trigger-dev":
       deps.push("@trigger.dev/sdk");
       break;
+    case "inngest":
+      deps.push("inngest");
+      break;
   }
 
   return deps;

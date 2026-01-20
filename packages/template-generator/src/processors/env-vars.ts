@@ -758,6 +758,18 @@ function buildServerVars(
       condition: jobQueue === "trigger-dev",
       comment: "Trigger.dev project ID (e.g., proj_xxxxxxxxxxxx)",
     },
+    {
+      key: "INNGEST_EVENT_KEY",
+      value: "",
+      condition: jobQueue === "inngest",
+      comment: "Inngest Event Key (from app.inngest.com)",
+    },
+    {
+      key: "INNGEST_SIGNING_KEY",
+      value: "",
+      condition: jobQueue === "inngest",
+      comment: "Inngest Signing Key for webhook verification",
+    },
   ];
 }
 
