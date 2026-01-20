@@ -1619,12 +1619,20 @@ export const TECH_OPTIONS: Record<
   ],
   rustLibraries: [
     {
+      id: "serde",
+      name: "Serde",
+      description: "De facto standard serialization framework (always included)",
+      icon: "",
+      color: "from-orange-500 to-orange-700",
+      default: true,
+    },
+    {
       id: "none",
-      name: "No Core Libraries",
-      description: "Skip Rust core libraries",
+      name: "No Additional Libraries",
+      description: "Skip additional Rust core libraries",
       icon: "",
       color: "from-gray-400 to-gray-600",
-      default: true,
+      default: false,
     },
   ],
 };
@@ -1995,7 +2003,7 @@ export const DEFAULT_STACK: StackState = {
   rustOrm: "sea-orm",
   rustApi: "none",
   rustCli: "none",
-  rustLibraries: "none",
+  rustLibraries: "serde",
 };
 
 export const isStackDefault = <K extends keyof StackState>(

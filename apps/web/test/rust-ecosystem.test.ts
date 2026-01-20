@@ -145,6 +145,23 @@ describe("Rust Ecosystem Tab", () => {
       expect(noneOption?.default).toBe(false);
       expect(noneOption?.name).toBe("No WASM Frontend");
     });
+
+    it("should have Serde as default for rustLibraries", () => {
+      const options = TECH_OPTIONS.rustLibraries;
+      const serdeOption = options.find((o) => o.id === "serde");
+      expect(serdeOption).toBeDefined();
+      expect(serdeOption?.default).toBe(true);
+      expect(serdeOption?.name).toBe("Serde");
+      expect(serdeOption?.description).toContain("serialization");
+    });
+
+    it("should have none option for rustLibraries when user wants additional libraries only", () => {
+      const options = TECH_OPTIONS.rustLibraries;
+      const noneOption = options.find((o) => o.id === "none");
+      expect(noneOption).toBeDefined();
+      expect(noneOption?.default).toBe(false);
+      expect(noneOption?.name).toBe("No Additional Libraries");
+    });
   });
 
   describe("DEFAULT_STACK", () => {
@@ -158,7 +175,11 @@ describe("Rust Ecosystem Tab", () => {
       expect(DEFAULT_STACK.rustOrm).toBe("sea-orm");
       expect(DEFAULT_STACK.rustApi).toBe("none");
       expect(DEFAULT_STACK.rustCli).toBe("none");
-      expect(DEFAULT_STACK.rustLibraries).toBe("none");
+      expect(DEFAULT_STACK.rustLibraries).toBe("serde");
+    });
+
+    it("should have serde as the default for rustLibraries", () => {
+      expect(DEFAULT_STACK.rustLibraries).toBe("serde");
     });
   });
 

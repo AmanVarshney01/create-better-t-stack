@@ -3967,3 +3967,43 @@ Actix-web was already fully implemented in the codebase alongside Axum during th
 - Cross-platform support via crossterm backend
 
 ### Status: COMPLETE
+
+
+## 2026-01-20: Serde Serialization Framework - Web UI Exposure
+
+### Task: Expose serde in web UI as a core library option
+
+### Background:
+Serde was already implemented as a core workspace dependency in all Rust projects (always included in Cargo.toml). The task was to properly expose it in the web UI's rustLibraries category for visibility and documentation purposes.
+
+### Changes Made:
+1. **apps/web/src/lib/constant.ts**: Added serde option to TECH_OPTIONS.rustLibraries:
+   - id: "serde"
+   - name: "Serde"
+   - description: "De facto standard serialization framework (always included)"
+   - color: "from-orange-500 to-orange-700"
+   - default: true
+   - Updated "none" option description to "No Additional Libraries"
+2. **apps/web/src/lib/constant.ts**: Updated DEFAULT_STACK.rustLibraries from "none" to "serde"
+3. **apps/web/src/lib/stack-utils.ts**: Updated CLI flag logic to skip passing --libraries flag when serde is selected (since it's always included)
+4. **apps/web/test/rust-ecosystem.test.ts**: Added tests:
+   - Updated DEFAULT_STACK.rustLibraries expectation to "serde"
+   - Added test for serde as default for rustLibraries
+   - Added test verifying serde option properties
+   - Added test verifying updated "none" option
+
+### Technical Notes:
+- Serde is a core dependency, always included in workspace dependencies (not conditional)
+- Located at packages/template-generator/templates/rust-base/Cargo.toml.hbs lines 33-35
+- Used throughout all Rust crates (server, client, cli, tui)
+- Provides `#[derive(Serialize, Deserialize)]` macros via features = ["derive"]
+- serde_json always included for JSON serialization
+
+### Tests:
+- All 141 Rust ecosystem tests pass
+- New tests verify:
+  - Serde is default option for rustLibraries
+  - Serde option has correct name and description
+  - "none" option updated to "No Additional Libraries"
+
+### Status: COMPLETE

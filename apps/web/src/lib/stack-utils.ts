@@ -83,6 +83,14 @@ export function generateStackSummary(stack: StackState) {
 }
 
 export function generateStackCommand(stack: StackState) {
+  const projectName = stack.projectName || "my-better-t-app";
+
+  // Handle Rust ecosystem
+  if (stack.ecosystem === "rust") {
+    return generateRustCommand(stack, projectName);
+  }
+
+  // TypeScript ecosystem
   const packageManagerCommands = {
     npm: "npx create-better-t-stack@latest",
     pnpm: "pnpm create better-t-stack@latest",
@@ -92,7 +100,6 @@ export function generateStackCommand(stack: StackState) {
   const base =
     packageManagerCommands[stack.packageManager as keyof typeof packageManagerCommands] ||
     packageManagerCommands.default;
-  const projectName = stack.projectName || "my-better-t-app";
 
   const isStackDefaultExceptProjectName = Object.entries(DEFAULT_STACK).every(
     ([key]) =>
@@ -173,6 +180,38 @@ export function generateStackCommand(stack: StackState) {
   }
 
   return `${base} ${projectName} ${flags.join(" ")}`;
+}
+
+function generateRustCommand(stack: StackState, projectName: string) {
+  // For Rust projects, use cargo init with appropriate setup
+  const flags: string[] = [];
+
+  if (stack.rustWebFramework !== "none") {
+    flags.push(`--web-framework ${stack.rustWebFramework}`);
+  }
+  if (stack.rustFrontend !== "none") {
+    flags.push(`--frontend ${stack.rustFrontend}`);
+  }
+  if (stack.rustOrm !== "none") {
+    flags.push(`--orm ${stack.rustOrm}`);
+  }
+  if (stack.rustApi !== "none") {
+    flags.push(`--api ${stack.rustApi}`);
+  }
+  if (stack.rustCli !== "none") {
+    flags.push(`--cli ${stack.rustCli}`);
+  }
+  if (stack.rustLibraries !== "none" && stack.rustLibraries !== "serde") {
+    flags.push(`--libraries ${stack.rustLibraries}`);
+  }
+  if (stack.git === "false") {
+    flags.push("--no-git");
+  }
+
+  // Rust ecosystem command - placeholder until CLI supports Rust
+  const base = "cargo new";
+  const flagStr = flags.length > 0 ? ` # Options: ${flags.join(" ")}` : "";
+  return `${base} ${projectName}${flagStr}`;
 }
 
 export function generateStackUrlFromState(stack: StackState, baseUrl?: string) {
