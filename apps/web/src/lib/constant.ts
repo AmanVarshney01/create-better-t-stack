@@ -1523,6 +1523,14 @@ export const TECH_OPTIONS: Record<
       default: true,
     },
     {
+      id: "dioxus",
+      name: "Dioxus",
+      description: "React-like GUI library for web, desktop, and mobile",
+      icon: "/icon/dioxus.svg",
+      color: "from-cyan-500 to-blue-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No WASM Frontend",
       description: "Skip Rust WASM frontend",

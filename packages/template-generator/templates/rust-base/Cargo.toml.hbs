@@ -5,6 +5,9 @@ members = [
 {{#if (eq rustFrontend "leptos")}}
     "crates/client",
 {{/if}}
+{{#if (eq rustFrontend "dioxus")}}
+    "crates/dioxus-client",
+{{/if}}
 ]
 
 [workspace.package]
@@ -78,6 +81,14 @@ log = "0.4"
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 web-sys = { version = "0.3", features = ["Window", "Document", "Element", "HtmlElement", "console"] }
+{{/if}}
+{{#if (eq rustFrontend "dioxus")}}
+# Frontend (Dioxus)
+dioxus = { version = "0.6", features = ["router"] }
+dioxus-router = "0.6"
+dioxus-logger = "0.6"
+console_error_panic_hook = "0.1"
+wasm-bindgen = "0.2"
 {{/if}}
 
 {{#if (eq rustCli "clap")}}

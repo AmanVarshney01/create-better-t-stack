@@ -627,6 +627,18 @@ function generateRustReadmeContent(config: ProjectConfig): string {
       "│       ├── src/lib.rs",
       "│       └── style/main.css",
     );
+  } else if (rustFrontend === "dioxus") {
+    structure.push(
+      "├── crates/",
+      "│   ├── server/           # Backend API server",
+      "│   │   ├── Cargo.toml",
+      "│   │   └── src/main.rs",
+      "│   └── dioxus-client/    # Dioxus WASM frontend",
+      "│       ├── Cargo.toml",
+      "│       ├── Dioxus.toml   # Dioxus CLI config",
+      "│       ├── src/main.rs",
+      "│       └── assets/main.css",
+    );
   } else {
     structure.push(
       "├── crates/",
@@ -653,6 +665,10 @@ function generateRustReadmeContent(config: ProjectConfig): string {
     scripts += `
 - \`cd crates/client && trunk serve\`: Start Leptos dev server
 - \`cd crates/client && trunk build --release\`: Build Leptos for production`;
+  } else if (rustFrontend === "dioxus") {
+    scripts += `
+- \`cd crates/dioxus-client && dx serve\`: Start Dioxus dev server
+- \`cd crates/dioxus-client && dx build --release\`: Build Dioxus for production`;
   }
 
   return `# ${projectName}
@@ -666,7 +682,7 @@ ${features.join("\n")}
 ## Prerequisites
 
 - [Rust](https://rustup.rs/) (stable toolchain)
-${rustFrontend === "leptos" ? "- [Trunk](https://trunkrs.dev/) (`cargo install trunk`)\n- [wasm32-unknown-unknown target](https://rustwasm.github.io/docs/book/) (`rustup target add wasm32-unknown-unknown`)" : ""}
+${rustFrontend === "leptos" ? "- [Trunk](https://trunkrs.dev/) (`cargo install trunk`)\n- [wasm32-unknown-unknown target](https://rustwasm.github.io/docs/book/) (`rustup target add wasm32-unknown-unknown`)" : ""}${rustFrontend === "dioxus" ? "- [Dioxus CLI](https://dioxuslabs.com/learn/0.6/getting_started) (`cargo install dioxus-cli`)\n- [wasm32-unknown-unknown target](https://rustwasm.github.io/docs/book/) (`rustup target add wasm32-unknown-unknown`)" : ""}
 
 ## Getting Started
 
@@ -698,7 +714,21 @@ trunk serve
 The frontend will be available at [http://localhost:8080](http://localhost:8080).
 `
     : ""
-}
+}${
+    rustFrontend === "dioxus"
+      ? `### Running the Frontend
+
+In a separate terminal, start the Dioxus frontend:
+
+\`\`\`bash
+cd crates/dioxus-client
+dx serve
+\`\`\`
+
+The frontend will be available at [http://localhost:8080](http://localhost:8080).
+`
+      : ""
+  }
 ## Project Structure
 
 \`\`\`

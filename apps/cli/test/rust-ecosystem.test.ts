@@ -941,6 +941,263 @@ describe("Rust Ecosystem", () => {
     });
   });
 
+  describe("Dioxus Frontend", () => {
+    it("should include Dioxus dependencies in workspace Cargo.toml", async () => {
+      const result = await createVirtual({
+        projectName: "rust-dioxus-deps",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "dioxus",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain("dioxus");
+      expect(cargoContent).toContain("dioxus-router");
+      expect(cargoContent).toContain("dioxus-logger");
+      expect(cargoContent).toContain("wasm-bindgen");
+      expect(cargoContent).toContain("console_error_panic_hook");
+    });
+
+    it("should include dioxus-client crate in workspace members", async () => {
+      const result = await createVirtual({
+        projectName: "rust-dioxus-workspace",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "dioxus",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain('"crates/dioxus-client"');
+    });
+
+    it("should create dioxus-client crate directory structure", async () => {
+      const result = await createVirtual({
+        projectName: "rust-dioxus-structure",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "dioxus",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify dioxus-client crate files
+      expect(hasFile(root, "crates/dioxus-client/Cargo.toml")).toBe(true);
+      expect(hasFile(root, "crates/dioxus-client/src/main.rs")).toBe(true);
+      expect(hasFile(root, "crates/dioxus-client/Dioxus.toml")).toBe(true);
+      expect(hasFile(root, "crates/dioxus-client/assets/main.css")).toBe(true);
+    });
+
+    it("should have correct dioxus-client Cargo.toml with workspace references", async () => {
+      const result = await createVirtual({
+        projectName: "rust-dioxus-client-cargo",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "dioxus",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const clientCargoContent = getFileContent(root, "crates/dioxus-client/Cargo.toml");
+      expect(clientCargoContent).toBeDefined();
+      expect(clientCargoContent).toContain('name = "rust-dioxus-client-cargo-client"');
+      expect(clientCargoContent).toContain("dioxus.workspace = true");
+      expect(clientCargoContent).toContain("dioxus-router.workspace = true");
+    });
+
+    it("should have correct main.rs with Dioxus components", async () => {
+      const result = await createVirtual({
+        projectName: "rust-dioxus-main",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "dioxus",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainRsContent = getFileContent(root, "crates/dioxus-client/src/main.rs");
+      expect(mainRsContent).toBeDefined();
+      expect(mainRsContent).toContain("use dioxus::prelude::*");
+      expect(mainRsContent).toContain("use dioxus_router::prelude::*");
+      expect(mainRsContent).toContain("#[component]");
+      expect(mainRsContent).toContain("fn App()");
+      expect(mainRsContent).toContain("fn Home()");
+      expect(mainRsContent).toContain("fn About()");
+      expect(mainRsContent).toContain("Router::<Route>");
+      expect(mainRsContent).toContain("launch(App)");
+    });
+
+    it("should have Dioxus.toml configuration", async () => {
+      const result = await createVirtual({
+        projectName: "rust-dioxus-config",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "dioxus",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const dioxusContent = getFileContent(root, "crates/dioxus-client/Dioxus.toml");
+      expect(dioxusContent).toBeDefined();
+      expect(dioxusContent).toContain("[application]");
+      expect(dioxusContent).toContain('default_platform = "web"');
+      expect(dioxusContent).toContain("[web.app]");
+      expect(dioxusContent).toContain("[web.watcher]");
+    });
+
+    it("should include wasm32 target in rust-toolchain.toml for Dioxus", async () => {
+      const result = await createVirtual({
+        projectName: "rust-dioxus-toolchain",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "dioxus",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const toolchainContent = getFileContent(root, "rust-toolchain.toml");
+      expect(toolchainContent).toBeDefined();
+      expect(toolchainContent).toContain("wasm32-unknown-unknown");
+    });
+
+    it("should NOT include dioxus-client crate when dioxus is not selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-no-dioxus",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Should not have dioxus-client crate
+      expect(hasFile(root, "crates/dioxus-client/Cargo.toml")).toBe(false);
+      expect(hasFile(root, "crates/dioxus-client/src/main.rs")).toBe(false);
+
+      // Workspace should not include dioxus-client
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).not.toContain('"crates/dioxus-client"');
+      expect(cargoContent).not.toContain("dioxus =");
+    });
+
+    it("should include backend framework info in Dioxus About page", async () => {
+      const result = await createVirtual({
+        projectName: "rust-dioxus-about-axum",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "dioxus",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainRsContent = getFileContent(root, "crates/dioxus-client/src/main.rs");
+      expect(mainRsContent).toBeDefined();
+      expect(mainRsContent).toContain("Axum");
+    });
+
+    it("should work with Actix-web backend", async () => {
+      const result = await createVirtual({
+        projectName: "rust-dioxus-actix",
+        ecosystem: "rust",
+        rustWebFramework: "actix-web",
+        rustFrontend: "dioxus",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify both server and dioxus-client crates exist
+      expect(hasFile(root, "crates/server/Cargo.toml")).toBe(true);
+      expect(hasFile(root, "crates/dioxus-client/Cargo.toml")).toBe(true);
+
+      // Verify Actix-web in server
+      const serverCargoContent = getFileContent(root, "crates/server/Cargo.toml");
+      expect(serverCargoContent).toContain("actix-web.workspace = true");
+
+      // Verify About page shows Actix-web
+      const mainRsContent = getFileContent(root, "crates/dioxus-client/src/main.rs");
+      expect(mainRsContent).toContain("Actix-web");
+    });
+
+    it("should NOT include Leptos client crate when Dioxus is selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-dioxus-no-leptos",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "dioxus",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Should have dioxus-client but not leptos client
+      expect(hasFile(root, "crates/dioxus-client/Cargo.toml")).toBe(true);
+      expect(hasFile(root, "crates/client/Cargo.toml")).toBe(false);
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toContain('"crates/dioxus-client"');
+      expect(cargoContent).not.toContain('"crates/client"');
+    });
+  });
+
   describe("Full-stack Rust Project", () => {
     it("should create a complete Rust project with all options", async () => {
       const result = await createVirtual({

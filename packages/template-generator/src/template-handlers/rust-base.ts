@@ -15,12 +15,16 @@ export async function processRustBaseTemplate(
 
   const prefix = "rust-base/";
   const hasLeptos = config.rustFrontend === "leptos";
+  const hasDioxus = config.rustFrontend === "dioxus";
 
   for (const [templatePath, content] of templates) {
     if (!templatePath.startsWith(prefix)) continue;
 
     // Skip client crate templates if Leptos is not selected
     if (!hasLeptos && templatePath.includes("crates/client/")) continue;
+
+    // Skip dioxus-client crate templates if Dioxus is not selected
+    if (!hasDioxus && templatePath.includes("crates/dioxus-client/")) continue;
 
     const relativePath = templatePath.slice(prefix.length);
     const outputPath = transformFilename(relativePath);

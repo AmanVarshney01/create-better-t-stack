@@ -3600,3 +3600,60 @@ Actix-web was already fully implemented in the codebase alongside Axum during th
 - Works with both Axum and Actix-web backends
 
 ### Status: COMPLETE
+
+## 2026-01-20: Dioxus WASM Frontend Framework Implementation
+
+### Task: Implement Dioxus as a Rust WASM frontend framework option
+
+### Changes Made:
+1. **packages/template-generator/templates/rust-base/crates/dioxus-client/**: Created Dioxus client templates:
+   - Cargo.toml.hbs - Dioxus client crate dependencies with workspace references
+   - Dioxus.toml.hbs - Dioxus CLI configuration file
+   - src/main.rs.hbs - Main application with Router, Home, and About components
+   - assets/main.css - Dioxus-themed CSS styling
+
+2. **packages/template-generator/templates/rust-base/Cargo.toml.hbs**: Added Dioxus support:
+   - Added "crates/dioxus-client" to workspace members when rustFrontend is "dioxus"
+   - Added Dioxus dependencies (dioxus v0.6, dioxus-router, dioxus-logger, console_error_panic_hook, wasm-bindgen)
+
+3. **packages/template-generator/templates/rust-base/rust-toolchain.toml.hbs**: Updated to include wasm32-unknown-unknown target for both Leptos and Dioxus
+
+4. **packages/template-generator/src/template-handlers/rust-base.ts**: Added hasDioxus check to skip dioxus-client templates when Dioxus is not selected
+
+5. **apps/web/src/lib/constant.ts**: Added Dioxus to rustFrontend options in TECH_OPTIONS:
+   - id: "dioxus"
+   - name: "Dioxus"
+   - description: "React-like GUI library for web, desktop, and mobile"
+   - icon: "/icon/dioxus.svg"
+   - color: "from-cyan-500 to-blue-600"
+
+6. **packages/template-generator/src/processors/readme-generator.ts**: Added Dioxus-specific README generation:
+   - Project structure showing dioxus-client crate
+   - Dioxus CLI commands (dx serve, dx build --release)
+   - Prerequisites for Dioxus CLI and wasm32 target
+   - Running instructions for Dioxus frontend
+
+7. **apps/web/public/icon/dioxus.svg**: Added Dioxus icon (cyan-themed circular logo)
+
+8. **apps/cli/test/rust-ecosystem.test.ts**: Added comprehensive Dioxus tests:
+   - Dioxus dependencies in workspace Cargo.toml
+   - dioxus-client crate in workspace members
+   - dioxus-client directory structure
+   - Dioxus main.rs with components and router
+   - Dioxus.toml configuration
+   - wasm32 target in rust-toolchain.toml
+   - Backend framework info in About page
+   - Verification that Leptos client is not included when Dioxus is selected
+
+### Features:
+- Full Dioxus 0.6 client-side rendering (CSR) support
+- React-like component architecture with signals
+- Dioxus Router integration with typed routes
+- Console logging via dioxus-logger
+- WASM panic hook for better error messages
+- Compatible with both Axum and Actix-web backends
+- Responsive CSS with cyan/blue color scheme
+- Counter example component on home page
+- About page with technology stack info
+
+### Status: COMPLETE

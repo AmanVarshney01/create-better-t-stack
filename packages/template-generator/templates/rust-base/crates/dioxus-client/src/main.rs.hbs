@@ -1,0 +1,95 @@
+#![allow(non_snake_case)]
+
+use dioxus::prelude::*;
+use dioxus_router::prelude::*;
+use tracing::info;
+
+/// Application routes
+#[derive(Clone, Routable, Debug, PartialEq)]
+enum Route {
+    #[route("/")]
+    Home {},
+    #[route("/about")]
+    About {},
+}
+
+fn main() {
+    // Set up better panic messages in console
+    console_error_panic_hook::set_once();
+
+    // Initialize logging
+    dioxus_logger::init(tracing::Level::INFO).expect("Failed to init logger");
+
+    info!("Starting Dioxus client application");
+
+    launch(App);
+}
+
+/// Main application component
+fn App() -> Element {
+    rsx! {
+        Router::<Route> {}
+    }
+}
+
+/// Home page component
+#[component]
+fn Home() -> Element {
+    let mut count = use_signal(|| 0);
+
+    rsx! {
+        div { class: "container",
+            div { class: "home",
+                h1 { "Welcome to {{projectName}}" }
+                p { "A full-stack Rust application powered by Dioxus" }
+
+                div { class: "counter",
+                    button {
+                        class: "btn",
+                        onclick: move |_| count -= 1,
+                        "-"
+                    }
+                    span { class: "count", "{count}" }
+                    button {
+                        class: "btn",
+                        onclick: move |_| count += 1,
+                        "+"
+                    }
+                }
+
+                nav {
+                    Link { to: Route::About {}, "About" }
+                }
+            }
+        }
+    }
+}
+
+/// About page component
+#[component]
+fn About() -> Element {
+    rsx! {
+        div { class: "container",
+            div { class: "about",
+                h1 { "About" }
+                p { "This application was generated with Better-Fullstack using the Dioxus framework." }
+
+                h2 { "Technology Stack" }
+                ul {
+                    li { "Dioxus - React-like reactive framework" }
+                    li { "Rust + WebAssembly - High-performance frontend" }
+{{#if (eq rustWebFramework "axum")}}
+                    li { "Axum - Ergonomic web framework by Tokio team" }
+{{/if}}
+{{#if (eq rustWebFramework "actix-web")}}
+                    li { "Actix-web - Powerful, pragmatic web framework" }
+{{/if}}
+                }
+
+                nav {
+                    Link { to: Route::Home {}, "Back to Home" }
+                }
+            }
+        }
+    }
+}

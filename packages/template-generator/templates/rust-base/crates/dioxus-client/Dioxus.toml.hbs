@@ -1,0 +1,17 @@
+[application]
+name = "{{projectName}}"
+default_platform = "web"
+
+[web.app]
+title = "{{projectName}}"
+
+[web.watcher]
+reload_html = true
+watch_path = ["src", "assets"]
+
+[web.resource]
+dev_serve_crate = true
+style = ["assets/main.css"]
+
+[web.https]
+enabled = false

@@ -1,0 +1,32 @@
+[package]
+name = "{{projectName}}-client"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "{{projectName}}-client"
+path = "src/main.rs"
+
+[dependencies]
+# Dioxus framework
+dioxus.workspace = true
+dioxus-router.workspace = true
+
+# Logging
+tracing.workspace = true
+dioxus-logger.workspace = true
+
+# WASM utilities
+wasm-bindgen.workspace = true
+console_error_panic_hook.workspace = true
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+[features]
+default = ["web"]
+web = ["dioxus/web"]
+desktop = ["dioxus/desktop"]
