@@ -93,7 +93,7 @@
 - [x] **PartyKit** - Edge-native multiplayer infrastructure
 - [x] **Ably** - Real-time messaging platform
 - [x] **Pusher** - Real-time communication APIs
-- [ ] **Liveblocks** - Collaboration infrastructure
+- [x] **Liveblocks** - Collaboration infrastructure
 - [ ] **Y.js** - CRDT for real-time collaboration
 
 ---

@@ -1435,6 +1435,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "liveblocks",
+      name: "Liveblocks",
+      description: "Collaboration infrastructure for multiplayer experiences",
+      icon: "https://cdn.simpleicons.org/liveblocks/6366F1",
+      color: "from-indigo-500 to-purple-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Real-time",
       description: "Skip real-time/WebSocket integration",

@@ -84,6 +84,9 @@ function getRealtimeServerDeps(realtime: ProjectConfig["realtime"]): AvailableDe
     case "pusher":
       deps.push("pusher");
       break;
+    case "liveblocks":
+      deps.push("@liveblocks/node");
+      break;
   }
 
   return deps;
@@ -105,6 +108,10 @@ function getRealtimeClientDeps(realtime: ProjectConfig["realtime"]): AvailableDe
       break;
     case "pusher":
       deps.push("pusher-js");
+      break;
+    case "liveblocks":
+      deps.push("@liveblocks/client");
+      deps.push("@liveblocks/react");
       break;
   }
 

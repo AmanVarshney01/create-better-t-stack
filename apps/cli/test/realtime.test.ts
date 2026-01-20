@@ -454,6 +454,135 @@ describe("Real-time/WebSocket Options", () => {
     });
   });
 
+  describe("Liveblocks with React frontends", () => {
+    test("liveblocks with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "liveblocks-tanstack-router",
+          frontend: ["tanstack-router"],
+          realtime: "liveblocks",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("liveblocks with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "liveblocks-react-router",
+          frontend: ["react-router"],
+          realtime: "liveblocks",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("liveblocks with Next.js fullstack", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "liveblocks-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          realtime: "liveblocks",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("liveblocks with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "liveblocks-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          realtime: "liveblocks",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Liveblocks with different backends", () => {
+    test("liveblocks with Hono backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "liveblocks-hono",
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          realtime: "liveblocks",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("liveblocks with Express backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "liveblocks-express",
+          frontend: ["tanstack-router"],
+          backend: "express",
+          runtime: "node",
+          realtime: "liveblocks",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("liveblocks with Fastify backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "liveblocks-fastify",
+          frontend: ["tanstack-router"],
+          backend: "fastify",
+          runtime: "node",
+          realtime: "liveblocks",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("liveblocks with Elysia backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "liveblocks-elysia",
+          frontend: ["tanstack-router"],
+          backend: "elysia",
+          runtime: "bun",
+          realtime: "liveblocks",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Liveblocks with native apps", () => {
+    test("liveblocks with native-bare", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "liveblocks-native-bare",
+          frontend: ["native-bare"],
+          backend: "hono",
+          realtime: "liveblocks",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("liveblocks with native-uniwind", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "liveblocks-native-uniwind",
+          frontend: ["native-uniwind"],
+          backend: "hono",
+          realtime: "liveblocks",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("No real-time option", () => {
     test("none realtime option", async () => {
       const result = await runTRPCTest(

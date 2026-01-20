@@ -379,6 +379,9 @@ export const dependencyVersionMap = {
   ably: "^2.6.3",
   pusher: "^5.2.0",
   "pusher-js": "^8.4.0-rc2",
+  "@liveblocks/client": "^3.11.0",
+  "@liveblocks/react": "^3.13.2",
+  "@liveblocks/node": "^3.11.0",
 
   // Testing - Jest
   jest: "^29.7.0",

@@ -4562,3 +4562,36 @@ The argon2 crate was already implemented in the template generator and CLI tests
 - 10 new Pusher tests added, all passing
 
 ### Status: COMPLETE
+
+
+## 2026-01-20: Liveblocks Real-Time Collaboration Infrastructure
+
+### Task: Implement Liveblocks as a real-time/WebSocket option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "liveblocks" to RealtimeSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Liveblocks dependency versions:
+   - @liveblocks/client: ^3.11.0
+   - @liveblocks/react: ^3.13.2
+   - @liveblocks/node: ^3.11.0
+3. **packages/template-generator/src/processors/realtime-deps.ts**: Added Liveblocks dependency processing:
+   - Server deps: @liveblocks/node
+   - Client deps: @liveblocks/client, @liveblocks/react
+4. **apps/web/src/lib/constant.ts**: Added Liveblocks to web builder realtime options with proper icon and styling
+5. **apps/cli/test/realtime.test.ts**: Added comprehensive Liveblocks tests:
+   - React frontends (TanStack Router, React Router, Next.js fullstack, TanStack Start)
+   - Different backends (Hono, Express, Fastify, Elysia)
+   - Native apps (native-bare, native-uniwind)
+
+### Features:
+- Collaboration infrastructure for multiplayer experiences
+- React integration with @liveblocks/react hooks
+- Server-side authorization with @liveblocks/node
+- Compatible with all supported backends (Hono, Express, Fastify, Elysia, NestJS, etc.)
+- Support for React-based web frontends and native apps
+
+### Tests:
+- 10 new test cases added covering various frontend/backend combinations
+- All 46 realtime tests pass
+
+### Status: COMPLETE
