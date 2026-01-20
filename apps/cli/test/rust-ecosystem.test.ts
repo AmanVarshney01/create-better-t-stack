@@ -1218,6 +1218,80 @@ describe("Rust Ecosystem", () => {
       expect(cargoContent).toContain("clap");
       expect(cargoContent).toContain('features = ["derive"]');
     });
+
+    it("should include cli crate in workspace members when clap is selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-clap-workspace",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "clap",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain('"crates/cli"');
+    });
+
+    it("should create CLI crate with proper structure when clap is selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-clap-crate",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "clap",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Check CLI crate Cargo.toml exists
+      const cliCargoContent = getFileContent(root, "crates/cli/Cargo.toml");
+      expect(cliCargoContent).toBeDefined();
+      expect(cliCargoContent).toContain("rust-clap-crate-cli");
+      expect(cliCargoContent).toContain("clap.workspace = true");
+
+      // Check CLI main.rs exists with clap usage
+      const cliMainContent = getFileContent(root, "crates/cli/src/main.rs");
+      expect(cliMainContent).toBeDefined();
+      expect(cliMainContent).toContain("use clap::{Parser, Subcommand}");
+      expect(cliMainContent).toContain("#[derive(Parser, Debug)]");
+      expect(cliMainContent).toContain("Commands");
+    });
+
+    it("should NOT create CLI crate when clap is not selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-no-cli",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // CLI crate should not exist
+      const cliCargoContent = getFileContent(root, "crates/cli/Cargo.toml");
+      expect(cliCargoContent).toBeUndefined();
+
+      // Workspace should not include cli
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).not.toContain('"crates/cli"');
+    });
   });
 
   describe("Ratatui TUI", () => {

@@ -1593,6 +1593,14 @@ export const TECH_OPTIONS: Record<
   ],
   rustCli: [
     {
+      id: "clap",
+      name: "Clap",
+      description: "CLI argument parser with derive macros (most popular)",
+      icon: "",
+      color: "from-purple-500 to-purple-700",
+      default: false,
+    },
+    {
       id: "none",
       name: "No CLI Tools",
       description: "Skip Rust CLI tools",

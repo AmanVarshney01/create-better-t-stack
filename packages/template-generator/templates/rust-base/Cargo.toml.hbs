@@ -11,6 +11,9 @@ members = [
 {{#if (eq rustFrontend "dioxus")}}
     "crates/dioxus-client",
 {{/if}}
+{{#if (eq rustCli "clap")}}
+    "crates/cli",
+{{/if}}
 ]
 
 [workspace.package]

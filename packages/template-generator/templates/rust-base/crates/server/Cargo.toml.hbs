@@ -73,6 +73,11 @@ jsonwebtoken.workspace = true
 {{#if (includes rustLibraries "argon2")}}
 argon2.workspace = true
 {{/if}}
+{{#if (eq rustCli "clap")}}
+
+# CLI
+clap.workspace = true
+{{/if}}
 
 [[bin]]
 name = "server"

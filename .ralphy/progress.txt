@@ -3859,3 +3859,60 @@ Actix-web was already fully implemented in the codebase alongside Axum during th
   - ORM integration (SeaORM/SQLx)
 
 ### Status: COMPLETE
+
+
+## 2026-01-20: Clap CLI Argument Parser Implementation
+
+### Task: Implement Clap CLI argument parser for Rust ecosystem
+
+### Changes Made:
+1. **apps/web/src/lib/constant.ts**: Added "clap" to TECH_OPTIONS.rustCli with:
+   - id: "clap"
+   - name: "Clap"
+   - description: "CLI argument parser with derive macros (most popular)"
+   - color: "from-purple-500 to-purple-700"
+
+2. **packages/template-generator/templates/rust-base/Cargo.toml.hbs**: Updated workspace members to include cli crate when clap is selected:
+   - Added conditional `"crates/cli"` member
+
+3. **packages/template-generator/templates/rust-base/crates/server/Cargo.toml.hbs**: Added conditional clap dependency reference:
+   - Added `clap.workspace = true` when rustCli is "clap"
+
+4. **packages/template-generator/templates/rust-base/crates/cli/Cargo.toml.hbs**: Created new CLI crate Cargo.toml with:
+   - Package name: {{projectName}}-cli
+   - Dependencies: clap, tokio, serde, serde_json, anyhow, tracing, dotenvy
+
+5. **packages/template-generator/templates/rust-base/crates/cli/src/main.rs.hbs**: Created CLI example implementation with:
+   - Clap Parser derive macro usage
+   - Subcommands: Start, Check, Migrate, Generate
+   - Global arguments: verbose, config
+   - Example commands demonstrating clap patterns
+
+6. **packages/template-generator/src/template-handlers/rust-base.ts**: Added conditional skipping for CLI crate:
+   - Added hasClap check
+   - Skip crates/cli/ templates when clap is not selected
+
+7. **apps/cli/test/rust-ecosystem.test.ts**: Added comprehensive tests:
+   - Test for clap dependencies in workspace Cargo.toml
+   - Test for cli crate in workspace members
+   - Test for CLI crate structure (Cargo.toml and main.rs)
+   - Test to ensure CLI crate is NOT created when clap is not selected
+
+### Features:
+- Full clap v4 integration with derive macros
+- Separate CLI binary crate for better organization
+- Example subcommands: start, check, migrate, generate
+- Support for global flags (verbose, config file)
+- Proper async runtime with tokio
+- Tracing integration for logging
+
+### Testing:
+- All 90 Rust ecosystem tests pass
+- New clap tests verify:
+  - Dependency inclusion in workspace Cargo.toml
+  - CLI crate membership in workspace
+  - CLI crate file structure
+  - Clap import and derive usage
+  - No CLI crate when clap is not selected
+
+### Status: COMPLETE

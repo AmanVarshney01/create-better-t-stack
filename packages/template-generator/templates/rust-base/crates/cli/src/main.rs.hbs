@@ -1,0 +1,172 @@
+use anyhow::Result;
+use clap::{Parser, Subcommand};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+
+/// {{projectName}} CLI - Command-line interface
+#[derive(Parser, Debug)]
+#[command(name = "{{projectName}}")]
+#[command(author, version, about, long_about = None)]
+struct Cli {
+    /// Turn on verbose output
+    #[arg(short, long, global = true)]
+    verbose: bool,
+
+    /// Config file path
+    #[arg(short, long, global = true)]
+    config: Option<String>,
+
+    #[command(subcommand)]
+    command: Commands,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    /// Start the application
+    Start {
+        /// Port to listen on
+        #[arg(short, long, default_value = "3000")]
+        port: u16,
+
+        /// Host to bind to
+        #[arg(short = 'H', long, default_value = "127.0.0.1")]
+        host: String,
+    },
+
+    /// Check configuration and health
+    Check {
+        /// Check database connection
+        #[arg(long)]
+        database: bool,
+
+        /// Check all services
+        #[arg(long)]
+        all: bool,
+    },
+
+    /// Run database migrations
+    Migrate {
+        /// Run pending migrations
+        #[arg(long)]
+        up: bool,
+
+        /// Rollback last migration
+        #[arg(long)]
+        down: bool,
+
+        /// Migration status
+        #[arg(long)]
+        status: bool,
+    },
+
+    /// Generate project components
+    Generate {
+        /// Component type to generate
+        #[arg(value_enum)]
+        component: GenerateComponent,
+
+        /// Name for the generated component
+        name: String,
+    },
+}
+
+#[derive(clap::ValueEnum, Clone, Debug)]
+enum GenerateComponent {
+    /// Generate a new model
+    Model,
+    /// Generate a new handler/controller
+    Handler,
+    /// Generate a new service
+    Service,
+    /// Generate a new migration
+    Migration,
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    // Load environment variables
+    dotenvy::dotenv().ok();
+
+    let cli = Cli::parse();
+
+    // Initialize tracing with verbosity level
+    let filter = if cli.verbose { "debug" } else { "info" };
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| filter.into()))
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
+    if let Some(config_path) = &cli.config {
+        tracing::info!("Using config file: {}", config_path);
+    }
+
+    match cli.command {
+        Commands::Start { port, host } => {
+            tracing::info!("Starting server on {}:{}", host, port);
+            // TODO: Implement server start logic
+            // This is where you would start your Axum/Actix server
+            println!("Server would start on {}:{}", host, port);
+        }
+
+        Commands::Check { database, all } => {
+            tracing::info!("Running health checks...");
+
+            if database || all {
+                tracing::info!("Checking database connection...");
+                // TODO: Implement database check
+                println!("Database check: Not implemented");
+            }
+
+            if all {
+                tracing::info!("Checking all services...");
+                // TODO: Implement other service checks
+                println!("All checks complete");
+            }
+
+            if !database && !all {
+                println!("No checks specified. Use --database or --all");
+            }
+        }
+
+        Commands::Migrate { up, down, status } => {
+            if status {
+                tracing::info!("Checking migration status...");
+                // TODO: Implement migration status check
+                println!("Migration status: Not implemented");
+            } else if up {
+                tracing::info!("Running pending migrations...");
+                // TODO: Implement migration up
+                println!("Migrations run: Not implemented");
+            } else if down {
+                tracing::info!("Rolling back last migration...");
+                // TODO: Implement migration down
+                println!("Migration rollback: Not implemented");
+            } else {
+                println!("No migration action specified. Use --up, --down, or --status");
+            }
+        }
+
+        Commands::Generate { component, name } => {
+            tracing::info!("Generating {:?}: {}", component, name);
+            match component {
+                GenerateComponent::Model => {
+                    println!("Would generate model: {}", name);
+                    // TODO: Implement model generation
+                }
+                GenerateComponent::Handler => {
+                    println!("Would generate handler: {}", name);
+                    // TODO: Implement handler generation
+                }
+                GenerateComponent::Service => {
+                    println!("Would generate service: {}", name);
+                    // TODO: Implement service generation
+                }
+                GenerateComponent::Migration => {
+                    println!("Would generate migration: {}", name);
+                    // TODO: Implement migration generation
+                }
+            }
+        }
+    }
+
+    Ok(())
+}

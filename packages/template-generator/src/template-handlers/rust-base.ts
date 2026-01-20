@@ -18,6 +18,7 @@ export async function processRustBaseTemplate(
   const hasDioxus = config.rustFrontend === "dioxus";
   const hasTonic = config.rustApi === "tonic";
   const hasAsyncGraphql = config.rustApi === "async-graphql";
+  const hasClap = config.rustCli === "clap";
 
   for (const [templatePath, content] of templates) {
     if (!templatePath.startsWith(prefix)) continue;
@@ -36,6 +37,9 @@ export async function processRustBaseTemplate(
 
     // Skip graphql.rs if async-graphql is not selected
     if (!hasAsyncGraphql && templatePath.includes("crates/server/src/graphql.rs")) continue;
+
+    // Skip cli crate templates if Clap is not selected
+    if (!hasClap && templatePath.includes("crates/cli/")) continue;
 
     const relativePath = templatePath.slice(prefix.length);
     const outputPath = transformFilename(relativePath);

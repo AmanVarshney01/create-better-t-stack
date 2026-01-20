@@ -1,0 +1,32 @@
+[package]
+name = "{{projectName}}-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Command-line interface for {{projectName}}"
+
+[dependencies]
+# CLI argument parsing
+clap.workspace = true
+
+# Async runtime
+tokio.workspace = true
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling
+anyhow.workspace = true
+
+# Logging
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+# Environment
+dotenvy.workspace = true
+
+[[bin]]
+name = "cli"
+path = "src/main.rs"
