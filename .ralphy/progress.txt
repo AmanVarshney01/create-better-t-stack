@@ -4007,3 +4007,34 @@ Serde was already implemented as a core workspace dependency in all Rust project
   - "none" option updated to "No Additional Libraries"
 
 ### Status: COMPLETE
+
+## 2026-01-20: Validator Library - Web UI Exposure
+
+### Task: Expose validator (derive-based validation) in Rust ecosystem web UI
+
+### Changes Made:
+1. **apps/web/src/lib/constant.ts**: Added validator option to `TECH_OPTIONS.rustLibraries`:
+   - id: "validator"
+   - name: "Validator"
+   - description: "Derive-based validation for structs and fields"
+   - color: "from-green-500 to-green-700"
+   - default: false
+2. **apps/web/test/rust-ecosystem.test.ts**: Added test for validator option in rustLibraries
+
+### Features:
+- The validator library (v0.19) with derive feature was already configured in templates.generated.ts
+- Provides derive-based validation for Rust structs using the `#[derive(Validate)]` macro
+- Supports common validators like `#[validate(email)]`, `#[validate(length(min = 8))]`, etc.
+- Works with all Rust backend frameworks (Axum, Actix-web)
+- README generation already supports documenting validator library
+
+### Technical Details:
+- Workspace dependency: `validator = { version = "0.19", features = ["derive"] }`
+- Per-crate dependency: `validator.workspace = true` (in server crate Cargo.toml)
+- Template conditionals already existed using `{{#if (includes rustLibraries "validator")}}`
+
+### Tests:
+- CLI test: Validates Cargo.toml contains validator dependency with derive feature
+- Web test: Validates TECH_OPTIONS.rustLibraries contains validator option
+
+### Status: COMPLETE

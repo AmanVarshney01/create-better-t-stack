@@ -162,6 +162,15 @@ describe("Rust Ecosystem Tab", () => {
       expect(noneOption?.default).toBe(false);
       expect(noneOption?.name).toBe("No Additional Libraries");
     });
+
+    it("should have Validator option for rustLibraries", () => {
+      const options = TECH_OPTIONS.rustLibraries;
+      const validatorOption = options.find((o) => o.id === "validator");
+      expect(validatorOption).toBeDefined();
+      expect(validatorOption?.default).toBe(false);
+      expect(validatorOption?.name).toBe("Validator");
+      expect(validatorOption?.description).toContain("validation");
+    });
   });
 
   describe("DEFAULT_STACK", () => {

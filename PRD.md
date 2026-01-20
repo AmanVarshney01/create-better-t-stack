@@ -63,7 +63,7 @@
 ## **Step 7: Core Libraries**
 
 - [x] **serde** - Serialization framework (de facto standard)
-- [ ] **validator** - Derive-based validation
+- [x] **validator** - Derive-based validation
 - [ ] **jsonwebtoken** - JWT encoding/decoding
 - [ ] **argon2** - Password hashing
 - [ ] **tokio-test** - Async testing utilities

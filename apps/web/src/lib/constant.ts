@@ -1627,6 +1627,14 @@ export const TECH_OPTIONS: Record<
       default: true,
     },
     {
+      id: "validator",
+      name: "Validator",
+      description: "Derive-based validation for structs and fields",
+      icon: "",
+      color: "from-green-500 to-green-700",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Additional Libraries",
       description: "Skip additional Rust core libraries",
