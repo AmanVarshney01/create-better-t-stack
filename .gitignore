@@ -25,6 +25,8 @@ coverage
 out/
 build
 dist
+.output
+.nitro
 
 
 # Debug
