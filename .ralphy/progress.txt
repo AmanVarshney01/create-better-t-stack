@@ -4451,3 +4451,40 @@ The argon2 crate was already implemented in the template generator and CLI tests
 - Follows same streaming pattern as LangGraph and Google ADK
 
 ### Status: COMPLETE
+
+
+## 2026-01-20: PartyKit Real-time Infrastructure Implementation
+
+### Task: Implement PartyKit as a real-time/WebSocket option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "partykit" to RealtimeSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added PartyKit dependency versions:
+   - partykit: ^0.0.111 (server/CLI package)
+   - partysocket: ^1.0.2 (client WebSocket library)
+3. **packages/template-generator/src/processors/realtime-deps.ts**: 
+   - Updated `getRealtimeServerDeps()` to return "partykit" for server dependencies
+   - Updated `getRealtimeClientDeps()` to return "partysocket" for client dependencies
+4. **apps/web/src/lib/constant.ts**: Added PartyKit to web builder real-time options:
+   - id: "partykit"
+   - name: "PartyKit"
+   - description: "Edge-native multiplayer infrastructure on Cloudflare"
+   - icon: Cloudflare icon (orange)
+   - color: "from-orange-500 to-orange-700"
+5. **apps/cli/test/realtime.test.ts**: Added comprehensive PartyKit tests:
+   - partykit with TanStack Router
+   - partykit with React Router
+   - partykit with Next.js fullstack
+   - partykit with Hono backend
+   - partykit with Express backend
+
+### Features:
+- Edge-native real-time infrastructure powered by Cloudflare Durable Objects
+- PartyKit server (partykit) for building multiplayer room-based applications
+- PartySocket client library with auto-reconnect and React hooks support
+- Works with all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+- Compatible with all React-based frontends (TanStack Router, React Router, Next.js, TanStack Start)
+
+### Tests: 5 new tests added, all passing
+
+### Status: COMPLETE

@@ -374,6 +374,8 @@ export const dependencyVersionMap = {
   // Real-time/WebSocket
   "socket.io": "^4.8.1",
   "socket.io-client": "^4.8.1",
+  partykit: "^0.0.111",
+  partysocket: "^1.0.2",
 
   // Testing - Jest
   jest: "^29.7.0",

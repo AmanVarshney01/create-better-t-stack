@@ -132,6 +132,70 @@ describe("Real-time/WebSocket Options", () => {
     });
   });
 
+  describe("PartyKit with React frontends", () => {
+    test("partykit with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "partykit-tanstack-router",
+          frontend: ["tanstack-router"],
+          realtime: "partykit",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("partykit with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "partykit-react-router",
+          frontend: ["react-router"],
+          realtime: "partykit",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("partykit with Next.js fullstack", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "partykit-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          realtime: "partykit",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("PartyKit with different backends", () => {
+    test("partykit with Hono backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "partykit-hono",
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          realtime: "partykit",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("partykit with Express backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "partykit-express",
+          frontend: ["tanstack-router"],
+          backend: "express",
+          runtime: "node",
+          realtime: "partykit",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("No real-time option", () => {
     test("none realtime option", async () => {
       const result = await runTRPCTest(

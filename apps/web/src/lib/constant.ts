@@ -1411,6 +1411,14 @@ export const TECH_OPTIONS: Record<
       className: "invert-0 dark:invert",
     },
     {
+      id: "partykit",
+      name: "PartyKit",
+      description: "Edge-native multiplayer infrastructure on Cloudflare",
+      icon: "https://cdn.simpleicons.org/cloudflare/F38020",
+      color: "from-orange-500 to-orange-700",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Real-time",
       description: "Skip real-time/WebSocket integration",

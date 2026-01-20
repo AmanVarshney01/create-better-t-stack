@@ -90,7 +90,7 @@
 ## **Real-Time / WebSockets**
 
 - [x] **Socket.IO** - Classic real-time library
-- [ ] **PartyKit** - Edge-native multiplayer infrastructure
+- [x] **PartyKit** - Edge-native multiplayer infrastructure
 - [ ] **Ably** - Real-time messaging platform
 - [ ] **Pusher** - Real-time communication APIs
 - [ ] **Liveblocks** - Collaboration infrastructure

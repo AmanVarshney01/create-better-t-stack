@@ -75,6 +75,9 @@ function getRealtimeServerDeps(realtime: ProjectConfig["realtime"]): AvailableDe
     case "socket-io":
       deps.push("socket.io");
       break;
+    case "partykit":
+      deps.push("partykit");
+      break;
   }
 
   return deps;
@@ -86,6 +89,9 @@ function getRealtimeClientDeps(realtime: ProjectConfig["realtime"]): AvailableDe
   switch (realtime) {
     case "socket-io":
       deps.push("socket.io-client");
+      break;
+    case "partykit":
+      deps.push("partysocket");
       break;
   }
 
