@@ -19,6 +19,7 @@ export async function processRustBaseTemplate(
   const hasTonic = config.rustApi === "tonic";
   const hasAsyncGraphql = config.rustApi === "async-graphql";
   const hasClap = config.rustCli === "clap";
+  const hasRatatui = config.rustCli === "ratatui";
 
   for (const [templatePath, content] of templates) {
     if (!templatePath.startsWith(prefix)) continue;
@@ -40,6 +41,9 @@ export async function processRustBaseTemplate(
 
     // Skip cli crate templates if Clap is not selected
     if (!hasClap && templatePath.includes("crates/cli/")) continue;
+
+    // Skip tui crate templates if Ratatui is not selected
+    if (!hasRatatui && templatePath.includes("crates/tui/")) continue;
 
     const relativePath = templatePath.slice(prefix.length);
     const outputPath = transformFilename(relativePath);

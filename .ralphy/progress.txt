@@ -3916,3 +3916,54 @@ Actix-web was already fully implemented in the codebase alongside Axum during th
   - No CLI crate when clap is not selected
 
 ### Status: COMPLETE
+
+## 2026-01-20: Ratatui TUI Library Implementation
+
+### Task: Implement ratatui TUI library support for Rust ecosystem
+
+### Changes Made:
+1. **packages/template-generator/templates/rust-base/crates/tui/Cargo.toml.hbs**: Created TUI crate Cargo.toml with:
+   - ratatui.workspace = true
+   - crossterm.workspace = true
+   - tracing-appender.workspace = true (for file-based logging while TUI runs)
+   - Other common dependencies (tokio, serde, anyhow, tracing)
+2. **packages/template-generator/templates/rust-base/crates/tui/src/main.rs.hbs**: Created TUI application template with:
+   - Terminal setup with crossterm backend
+   - Alternate screen mode and raw mode handling
+   - Event handling (keyboard input)
+   - UI rendering with tabs, sidebar menu, and content panels
+   - Application state management
+   - File-based logging (can't use terminal while TUI runs)
+3. **packages/template-generator/templates/rust-base/Cargo.toml.hbs**: Updated workspace to:
+   - Include "crates/tui" in workspace members when ratatui is selected
+   - Add tracing-appender = "0.2" dependency for TUI logging
+4. **packages/template-generator/src/template-handlers/rust-base.ts**: Added ratatui template handling:
+   - Added hasRatatui flag check
+   - Skip tui crate templates when ratatui is not selected
+5. **apps/web/src/lib/constant.ts**: Added ratatui option to rustCli with:
+   - id: "ratatui"
+   - name: "Ratatui"
+   - description: "Terminal user interface library for building rich TUIs"
+   - color: "from-emerald-500 to-teal-700"
+6. **apps/cli/test/rust-ecosystem.test.ts**: Added comprehensive tests:
+   - Ratatui dependencies test (ratatui, crossterm, tracing-appender)
+   - TUI crate workspace members test
+   - TUI crate structure test (Cargo.toml and main.rs)
+   - TUI not created when ratatui not selected
+   - CLI not created when ratatui selected (mutual exclusion)
+   - Ratatui with web frameworks test
+   - Ratatui with database options test
+   - TUI main.rs structure test (terminal setup, UI rendering, event handling)
+
+### Features:
+- Full-featured TUI application with ratatui and crossterm
+- Tab-based navigation with keyboard shortcuts
+- Sidebar menu with selection highlighting
+- Multiple content panels (Dashboard, Stats, Config)
+- Counter demo with increment/decrement
+- Status bar with action feedback
+- File-based logging with tracing-appender (logs to logs/tui.log)
+- Proper terminal cleanup on exit
+- Cross-platform support via crossterm backend
+
+### Status: COMPLETE

@@ -14,6 +14,9 @@ members = [
 {{#if (eq rustCli "clap")}}
     "crates/cli",
 {{/if}}
+{{#if (eq rustCli "ratatui")}}
+    "crates/tui",
+{{/if}}
 ]
 
 [workspace.package]
@@ -111,6 +114,7 @@ clap = { version = "4", features = ["derive"] }
 # TUI (Ratatui)
 ratatui = "0.29"
 crossterm = "0.28"
+tracing-appender = "0.2"
 {{/if}}
 
 {{#if (includes rustLibraries "validator")}}

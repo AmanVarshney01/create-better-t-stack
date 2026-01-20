@@ -1601,6 +1601,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "ratatui",
+      name: "Ratatui",
+      description: "Terminal user interface library for building rich TUIs",
+      icon: "",
+      color: "from-emerald-500 to-teal-700",
+      default: false,
+    },
+    {
       id: "none",
       name: "No CLI Tools",
       description: "Skip Rust CLI tools",

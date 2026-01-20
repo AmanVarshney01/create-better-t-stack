@@ -1314,6 +1314,189 @@ describe("Rust Ecosystem", () => {
       expect(cargoContent).toBeDefined();
       expect(cargoContent).toContain("ratatui");
       expect(cargoContent).toContain("crossterm");
+      expect(cargoContent).toContain("tracing-appender");
+    });
+
+    it("should include tui crate in workspace members when ratatui is selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-ratatui-workspace",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "ratatui",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain('"crates/tui"');
+    });
+
+    it("should create TUI crate with proper structure when ratatui is selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-ratatui-crate",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "ratatui",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Check TUI crate Cargo.toml exists
+      const tuiCargoContent = getFileContent(root, "crates/tui/Cargo.toml");
+      expect(tuiCargoContent).toBeDefined();
+      expect(tuiCargoContent).toContain("rust-ratatui-crate-tui");
+      expect(tuiCargoContent).toContain("ratatui.workspace = true");
+      expect(tuiCargoContent).toContain("crossterm.workspace = true");
+      expect(tuiCargoContent).toContain("tracing-appender.workspace = true");
+
+      // Check TUI main.rs exists with ratatui usage
+      const tuiMainContent = getFileContent(root, "crates/tui/src/main.rs");
+      expect(tuiMainContent).toBeDefined();
+      expect(tuiMainContent).toContain("use ratatui::");
+      expect(tuiMainContent).toContain("use crossterm::");
+      expect(tuiMainContent).toContain("struct App");
+      expect(tuiMainContent).toContain("fn ui(");
+    });
+
+    it("should NOT create TUI crate when ratatui is not selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-no-tui",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // TUI crate should not exist
+      const tuiCargoContent = getFileContent(root, "crates/tui/Cargo.toml");
+      expect(tuiCargoContent).toBeUndefined();
+
+      // Workspace should not include tui
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).not.toContain('"crates/tui"');
+    });
+
+    it("should NOT create CLI crate when ratatui is selected instead of clap", async () => {
+      const result = await createVirtual({
+        projectName: "rust-ratatui-no-cli",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "ratatui",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // CLI crate should not exist (only TUI crate)
+      const cliCargoContent = getFileContent(root, "crates/cli/Cargo.toml");
+      expect(cliCargoContent).toBeUndefined();
+
+      // TUI crate should exist
+      const tuiCargoContent = getFileContent(root, "crates/tui/Cargo.toml");
+      expect(tuiCargoContent).toBeDefined();
+
+      // Workspace should include tui but not cli
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toContain('"crates/tui"');
+      expect(cargoContent).not.toContain('"crates/cli"');
+    });
+
+    it("should work with ratatui and web frameworks", async () => {
+      const result = await createVirtual({
+        projectName: "rust-ratatui-axum",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "ratatui",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toContain("ratatui");
+      expect(cargoContent).toContain("axum");
+    });
+
+    it("should work with ratatui and database options", async () => {
+      const result = await createVirtual({
+        projectName: "rust-ratatui-sqlx",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "sqlx",
+        rustApi: "none",
+        rustCli: "ratatui",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toContain("ratatui");
+      expect(cargoContent).toContain("sqlx");
+    });
+
+    it("should have correct TUI main.rs with application structure", async () => {
+      const result = await createVirtual({
+        projectName: "rust-ratatui-structure",
+        ecosystem: "rust",
+        rustWebFramework: "none",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "ratatui",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const tuiMainContent = getFileContent(root, "crates/tui/src/main.rs");
+      expect(tuiMainContent).toBeDefined();
+
+      // Check for main TUI components
+      expect(tuiMainContent).toContain("enable_raw_mode");
+      expect(tuiMainContent).toContain("disable_raw_mode");
+      expect(tuiMainContent).toContain("Terminal::new");
+      expect(tuiMainContent).toContain("CrosstermBackend");
+      expect(tuiMainContent).toContain("EnterAlternateScreen");
+      expect(tuiMainContent).toContain("LeaveAlternateScreen");
+
+      // Check for UI rendering
+      expect(tuiMainContent).toContain("terminal.draw");
+      expect(tuiMainContent).toContain("Block::");
+      expect(tuiMainContent).toContain("Layout::");
+
+      // Check for event handling
+      expect(tuiMainContent).toContain("Event::Key");
+      expect(tuiMainContent).toContain("KeyCode::");
     });
   });
 

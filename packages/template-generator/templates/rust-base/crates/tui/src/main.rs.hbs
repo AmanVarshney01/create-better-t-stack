@@ -1,0 +1,275 @@
+use std::io;
+use std::time::Duration;
+
+use anyhow::Result;
+use crossterm::{
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind},
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
+use ratatui::{
+    prelude::*,
+    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Tabs},
+};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+
+/// Application state
+struct App {
+    /// Current tab index
+    tab_index: usize,
+    /// Menu items for the sidebar
+    menu_items: Vec<&'static str>,
+    /// Current menu selection state
+    menu_state: ListState,
+    /// Counter value for demo
+    counter: i32,
+    /// Status messages
+    status: String,
+    /// Whether the app should quit
+    should_quit: bool,
+}
+
+impl Default for App {
+    fn default() -> Self {
+        let mut menu_state = ListState::default();
+        menu_state.select(Some(0));
+
+        Self {
+            tab_index: 0,
+            menu_items: vec!["Dashboard", "Settings", "Logs", "Help"],
+            menu_state,
+            counter: 0,
+            status: String::from("Ready"),
+            should_quit: false,
+        }
+    }
+}
+
+impl App {
+    /// Handle key events
+    fn handle_key(&mut self, key: KeyCode) {
+        match key {
+            KeyCode::Char('q') | KeyCode::Esc => {
+                self.should_quit = true;
+            }
+            KeyCode::Tab => {
+                self.tab_index = (self.tab_index + 1) % 3;
+            }
+            KeyCode::BackTab => {
+                self.tab_index = if self.tab_index == 0 { 2 } else { self.tab_index - 1 };
+            }
+            KeyCode::Up | KeyCode::Char('k') => {
+                self.menu_previous();
+            }
+            KeyCode::Down | KeyCode::Char('j') => {
+                self.menu_next();
+            }
+            KeyCode::Enter => {
+                if let Some(selected) = self.menu_state.selected() {
+                    self.status = format!("Selected: {}", self.menu_items[selected]);
+                }
+            }
+            KeyCode::Char('+') | KeyCode::Char('=') => {
+                self.counter += 1;
+                self.status = format!("Counter incremented to {}", self.counter);
+            }
+            KeyCode::Char('-') => {
+                self.counter -= 1;
+                self.status = format!("Counter decremented to {}", self.counter);
+            }
+            _ => {}
+        }
+    }
+
+    /// Select previous menu item
+    fn menu_previous(&mut self) {
+        let i = match self.menu_state.selected() {
+            Some(i) => {
+                if i == 0 {
+                    self.menu_items.len() - 1
+                } else {
+                    i - 1
+                }
+            }
+            None => 0,
+        };
+        self.menu_state.select(Some(i));
+    }
+
+    /// Select next menu item
+    fn menu_next(&mut self) {
+        let i = match self.menu_state.selected() {
+            Some(i) => {
+                if i >= self.menu_items.len() - 1 {
+                    0
+                } else {
+                    i + 1
+                }
+            }
+            None => 0,
+        };
+        self.menu_state.select(Some(i));
+    }
+}
+
+fn main() -> Result<()> {
+    // Load environment variables
+    dotenvy::dotenv().ok();
+
+    // Initialize tracing to a file (can't use terminal while TUI is running)
+    let file_appender = tracing_appender::rolling::daily("logs", "tui.log");
+    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()))
+        .with(tracing_subscriber::fmt::layer().with_writer(non_blocking))
+        .init();
+
+    tracing::info!("Starting {{projectName}} TUI");
+
+    // Setup terminal
+    enable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+
+    // Create app state
+    let mut app = App::default();
+
+    // Main loop
+    let result = run_app(&mut terminal, &mut app);
+
+    // Restore terminal
+    disable_raw_mode()?;
+    execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    )?;
+    terminal.show_cursor()?;
+
+    if let Err(err) = result {
+        tracing::error!("Application error: {:?}", err);
+        eprintln!("Error: {:?}", err);
+    }
+
+    tracing::info!("{{projectName}} TUI exited");
+    Ok(())
+}
+
+/// Run the application main loop
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<()> {
+    loop {
+        terminal.draw(|f| ui(f, app))?;
+
+        // Poll for events with a timeout
+        if event::poll(Duration::from_millis(100))? {
+            if let Event::Key(key) = event::read()? {
+                if key.kind == KeyEventKind::Press {
+                    app.handle_key(key.code);
+                }
+            }
+        }
+
+        if app.should_quit {
+            return Ok(());
+        }
+    }
+}
+
+/// Render the UI
+fn ui(f: &mut Frame, app: &mut App) {
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(3), // Tabs
+            Constraint::Min(0),    // Main content
+            Constraint::Length(3), // Status bar
+        ])
+        .split(f.area());
+
+    // Render tabs
+    let tabs = Tabs::new(vec!["Main", "Stats", "Config"])
+        .block(Block::default().borders(Borders::ALL).title(" {{projectName}} TUI "))
+        .select(app.tab_index)
+        .style(Style::default().fg(Color::White))
+        .highlight_style(Style::default().fg(Color::Yellow).bold());
+    f.render_widget(tabs, chunks[0]);
+
+    // Render main content area
+    let main_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(30), Constraint::Percentage(70)])
+        .split(chunks[1]);
+
+    // Render sidebar menu
+    let menu_items: Vec<ListItem> = app
+        .menu_items
+        .iter()
+        .map(|i| ListItem::new(*i).style(Style::default().fg(Color::White)))
+        .collect();
+    let menu = List::new(menu_items)
+        .block(Block::default().borders(Borders::ALL).title(" Menu "))
+        .highlight_style(Style::default().bg(Color::Blue).fg(Color::White).bold())
+        .highlight_symbol("▶ ");
+    f.render_stateful_widget(menu, main_chunks[0], &mut app.menu_state);
+
+    // Render content based on selected tab
+    let content = match app.tab_index {
+        0 => {
+            let text = vec![
+                Line::from("Welcome to {{projectName}} TUI!"),
+                Line::from(""),
+                Line::from(format!("Counter: {}", app.counter)),
+                Line::from(""),
+                Line::from("Keybindings:"),
+                Line::from("  Tab / Shift+Tab  - Switch tabs"),
+                Line::from("  j/k or ↑/↓       - Navigate menu"),
+                Line::from("  Enter            - Select item"),
+                Line::from("  +/-              - Increment/Decrement counter"),
+                Line::from("  q or Esc         - Quit"),
+            ];
+            Paragraph::new(text)
+                .block(Block::default().borders(Borders::ALL).title(" Dashboard "))
+                .style(Style::default().fg(Color::White))
+        }
+        1 => {
+            let text = vec![
+                Line::from("Statistics"),
+                Line::from(""),
+                Line::from(format!("Current counter value: {}", app.counter)),
+                Line::from(format!("Menu items: {}", app.menu_items.len())),
+                Line::from(format!(
+                    "Selected menu item: {}",
+                    app.menu_state
+                        .selected()
+                        .map(|i| app.menu_items[i])
+                        .unwrap_or("None")
+                )),
+            ];
+            Paragraph::new(text)
+                .block(Block::default().borders(Borders::ALL).title(" Stats "))
+                .style(Style::default().fg(Color::Cyan))
+        }
+        _ => {
+            let text = vec![
+                Line::from("Configuration"),
+                Line::from(""),
+                Line::from("This is where you would configure the application."),
+                Line::from(""),
+                Line::from("Environment variables:"),
+                Line::from(format!("  RUST_LOG: {}", std::env::var("RUST_LOG").unwrap_or_else(|_| "not set".to_string()))),
+            ];
+            Paragraph::new(text)
+                .block(Block::default().borders(Borders::ALL).title(" Config "))
+                .style(Style::default().fg(Color::Green))
+        }
+    };
+    f.render_widget(content, main_chunks[1]);
+
+    // Render status bar
+    let status = Paragraph::new(app.status.as_str())
+        .block(Block::default().borders(Borders::ALL).title(" Status "))
+        .style(Style::default().fg(Color::Gray));
+    f.render_widget(status, chunks[2]);
+}

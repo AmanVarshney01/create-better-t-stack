@@ -56,7 +56,7 @@
 ## **Step 6: CLI Tools**
 
 - [x] **clap** - CLI argument parser (derive macros, most popular)
-- [ ] **ratatui** - TUI library (terminal user interfaces)
+- [x] **ratatui** - TUI library (terminal user interfaces)
 
 ---
 
