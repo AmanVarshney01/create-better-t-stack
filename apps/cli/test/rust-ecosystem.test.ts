@@ -462,6 +462,120 @@ describe("Rust Ecosystem", () => {
       expect(serverCargoContent).toBeDefined();
       expect(serverCargoContent).toContain("sea-orm.workspace = true");
     });
+
+    it("should generate SeaORM integration code with Axum", async () => {
+      const result = await createVirtual({
+        projectName: "rust-seaorm-axum",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "sea-orm",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainContent = getFileContent(root, "crates/server/src/main.rs");
+      expect(mainContent).toBeDefined();
+      expect(mainContent).toContain("use sea_orm::{Database, DatabaseConnection}");
+      expect(mainContent).toContain("AppState");
+      expect(mainContent).toContain("DATABASE_URL");
+      expect(mainContent).toContain("Database::connect");
+      expect(mainContent).toContain(".with_state(state)");
+    });
+
+    it("should generate SeaORM integration code with Actix-web", async () => {
+      const result = await createVirtual({
+        projectName: "rust-seaorm-actix",
+        ecosystem: "rust",
+        rustWebFramework: "actix-web",
+        rustFrontend: "none",
+        rustOrm: "sea-orm",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainContent = getFileContent(root, "crates/server/src/main.rs");
+      expect(mainContent).toBeDefined();
+      expect(mainContent).toContain("use sea_orm::{Database, DatabaseConnection}");
+      expect(mainContent).toContain("AppState");
+      expect(mainContent).toContain("DATABASE_URL");
+      expect(mainContent).toContain("Database::connect");
+      expect(mainContent).toContain("web::Data::new(AppState");
+      expect(mainContent).toContain(".app_data(state.clone())");
+    });
+
+    it("should include database health check with SeaORM", async () => {
+      const result = await createVirtual({
+        projectName: "rust-seaorm-health",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "sea-orm",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainContent = getFileContent(root, "crates/server/src/main.rs");
+      expect(mainContent).toBeDefined();
+      expect(mainContent).toContain("db.ping()");
+      expect(mainContent).toContain("database:");
+    });
+
+    it("should work with SeaORM and Leptos frontend", async () => {
+      const result = await createVirtual({
+        projectName: "rust-seaorm-leptos",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "leptos",
+        rustOrm: "sea-orm",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify SeaORM dependencies
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toContain("sea-orm");
+
+      // Verify Leptos frontend exists
+      expect(hasFile(root, "crates/client/Cargo.toml")).toBe(true);
+      expect(hasFile(root, "crates/client/src/lib.rs")).toBe(true);
+    });
+
+    it("should work with SeaORM and async-graphql", async () => {
+      const result = await createVirtual({
+        projectName: "rust-seaorm-graphql",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "sea-orm",
+        rustApi: "async-graphql",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toContain("sea-orm");
+      expect(cargoContent).toContain("async-graphql");
+    });
   });
 
   describe("Tonic gRPC", () => {

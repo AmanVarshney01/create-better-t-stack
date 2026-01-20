@@ -1541,12 +1541,28 @@ export const TECH_OPTIONS: Record<
   ],
   rustOrm: [
     {
+      id: "sea-orm",
+      name: "SeaORM",
+      description: "Async & dynamic ORM with ActiveRecord pattern",
+      icon: "/icon/seaorm.svg",
+      color: "from-cyan-500 to-blue-600",
+      default: true,
+    },
+    {
+      id: "sqlx",
+      name: "SQLx",
+      description: "Async SQL toolkit with compile-time checked queries",
+      icon: "",
+      color: "from-orange-500 to-orange-700",
+      default: false,
+    },
+    {
       id: "none",
       name: "No ORM",
-      description: "Skip Rust ORM",
+      description: "Skip Rust ORM/database layer",
       icon: "",
       color: "from-gray-400 to-gray-600",
-      default: true,
+      default: false,
     },
   ],
   rustApi: [
@@ -1944,7 +1960,7 @@ export const DEFAULT_STACK: StackState = {
   // Rust ecosystem defaults
   rustWebFramework: "axum",
   rustFrontend: "none",
-  rustOrm: "none",
+  rustOrm: "sea-orm",
   rustApi: "none",
   rustCli: "none",
   rustLibraries: "none",

@@ -3,19 +3,48 @@ use axum::{routing::get, Json, Router};
 use serde::Serialize;
 use tower_http::cors::CorsLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+{{#if (eq rustOrm "sea-orm")}}
+use sea_orm::{Database, DatabaseConnection};
+use std::sync::Arc;
+{{/if}}
 
 #[derive(Serialize)]
 struct HealthResponse {
     status: &'static str,
     message: &'static str,
+{{#if (eq rustOrm "sea-orm")}}
+    database: &'static str,
+{{/if}}
 }
 
+{{#if (eq rustOrm "sea-orm")}}
+#[derive(Clone)]
+pub struct AppState {
+    pub db: Arc<DatabaseConnection>,
+}
+
+async fn health(
+    axum::extract::State(state): axum::extract::State<AppState>,
+) -> Json<HealthResponse> {
+    let db_status = if state.db.ping().await.is_ok() {
+        "connected"
+    } else {
+        "disconnected"
+    };
+    Json(HealthResponse {
+        status: "ok",
+        message: "Server is running",
+        database: db_status,
+    })
+}
+{{else}}
 async fn health() -> Json<HealthResponse> {
     Json(HealthResponse {
         status: "ok",
         message: "Server is running",
     })
 }
+{{/if}}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -28,10 +57,28 @@ async fn main() -> anyhow::Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+{{#if (eq rustOrm "sea-orm")}}
+    // Initialize database connection
+    let database_url = std::env::var("DATABASE_URL")
+        .expect("DATABASE_URL must be set");
+
+    tracing::info!("Connecting to database...");
+    let db = Database::connect(&database_url).await?;
+    tracing::info!("Database connected successfully");
+
+    let state = AppState { db: Arc::new(db) };
+
+    // Build router with state
+    let app = Router::new()
+        .route("/health", get(health))
+        .layer(CorsLayer::permissive())
+        .with_state(state);
+{{else}}
     // Build router
     let app = Router::new()
         .route("/health", get(health))
         .layer(CorsLayer::permissive());
+{{/if}}
 
     // Get host and port from environment
     let host = std::env::var("HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
@@ -51,13 +98,39 @@ use actix_cors::Cors;
 use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
 use serde::Serialize;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+{{#if (eq rustOrm "sea-orm")}}
+use sea_orm::{Database, DatabaseConnection};
+use std::sync::Arc;
+{{/if}}
 
 #[derive(Serialize)]
 struct HealthResponse {
     status: &'static str,
     message: &'static str,
+{{#if (eq rustOrm "sea-orm")}}
+    database: &'static str,
+{{/if}}
 }
 
+{{#if (eq rustOrm "sea-orm")}}
+pub struct AppState {
+    pub db: Arc<DatabaseConnection>,
+}
+
+#[get("/health")]
+async fn health(data: web::Data<AppState>) -> impl Responder {
+    let db_status = if data.db.ping().await.is_ok() {
+        "connected"
+    } else {
+        "disconnected"
+    };
+    HttpResponse::Ok().json(HealthResponse {
+        status: "ok",
+        message: "Server is running",
+        database: db_status,
+    })
+}
+{{else}}
 #[get("/health")]
 async fn health() -> impl Responder {
     HttpResponse::Ok().json(HealthResponse {
@@ -65,6 +138,7 @@ async fn health() -> impl Responder {
         message: "Server is running",
     })
 }
+{{/if}}
 
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
@@ -77,6 +151,18 @@ async fn main() -> anyhow::Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+{{#if (eq rustOrm "sea-orm")}}
+    // Initialize database connection
+    let database_url = std::env::var("DATABASE_URL")
+        .expect("DATABASE_URL must be set");
+
+    tracing::info!("Connecting to database...");
+    let db = Database::connect(&database_url).await?;
+    tracing::info!("Database connected successfully");
+
+    let state = web::Data::new(AppState { db: Arc::new(db) });
+{{/if}}
+
     // Get host and port from environment
     let host = std::env::var("HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
     let port: u16 = std::env::var("PORT")
@@ -86,12 +172,22 @@ async fn main() -> anyhow::Result<()> {
     tracing::info!("Starting server at http://{}:{}", host, port);
 
     // Start server
+{{#if (eq rustOrm "sea-orm")}}
+    HttpServer::new(move || {
+        let cors = Cors::permissive();
+        App::new()
+            .wrap(cors)
+            .app_data(state.clone())
+            .service(health)
+    })
+{{else}}
     HttpServer::new(|| {
         let cors = Cors::permissive();
         App::new()
             .wrap(cors)
             .service(health)
     })
+{{/if}}
     .bind((host, port))?
     .run()
     .await?;

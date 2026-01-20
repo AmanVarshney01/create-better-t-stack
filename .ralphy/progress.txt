@@ -3657,3 +3657,57 @@ Actix-web was already fully implemented in the codebase alongside Axum during th
 - About page with technology stack info
 
 ### Status: COMPLETE
+
+## 2026-01-20: SeaORM Rust ORM Support Implementation
+
+### Task: Implement SeaORM as a Rust ORM option for the Rust ecosystem
+
+### Changes Made:
+1. **apps/web/src/lib/constant.ts**: 
+   - Added SeaORM to rustOrm options with icon, color, and description
+   - Added SQLx to rustOrm options for completeness
+   - Set SeaORM as the default Rust ORM option (rustOrm: "sea-orm")
+   - Updated rustOrm array from single "none" option to full ORM selection
+
+2. **apps/web/public/icon/seaorm.svg**: Created custom SeaORM icon with ocean wave gradient and database cylinder design
+
+3. **packages/template-generator/templates/rust-base/crates/server/src/main.rs.hbs**: 
+   - Enhanced Axum web framework section with SeaORM integration:
+     - Database connection setup with sea_orm::Database
+     - AppState struct with DatabaseConnection
+     - Health endpoint with database ping check
+     - Router with_state for state sharing
+   - Enhanced Actix-web section with SeaORM integration:
+     - Database connection setup
+     - AppState with web::Data wrapper
+     - Health endpoint with database status
+     - HttpServer with app_data for state sharing
+
+4. **apps/cli/test/rust-ecosystem.test.ts**: Added comprehensive tests for SeaORM:
+   - Test: SeaORM integration code with Axum (use statements, AppState, DATABASE_URL, with_state)
+   - Test: SeaORM integration code with Actix-web (use statements, AppState, app_data)
+   - Test: Database health check (db.ping())
+   - Test: SeaORM with Leptos frontend combination
+   - Test: SeaORM with async-graphql API combination
+
+### Features:
+- Full SeaORM integration with both Axum and Actix-web frameworks
+- Database connection initialization with DATABASE_URL environment variable
+- Health endpoint returns database connection status
+- AppState pattern for sharing database connection across handlers
+- Support for PostgreSQL, SQLite, and MySQL via SeaORM features
+- Migration support via sea-orm-migration dependency
+- Web UI exposure with selectable option in Rust ecosystem builder
+
+### Pre-existing Implementation:
+- SeaORM was already in the RustOrmSchema enum in packages/types/src/schemas.ts
+- Cargo.toml.hbs already had SeaORM dependencies configured
+- Server Cargo.toml.hbs already referenced sea-orm.workspace = true
+- Basic dependency tests already existed
+
+### New Implementation:
+- Web UI now exposes SeaORM as a selectable option (was previously hidden)
+- main.rs.hbs now includes actual SeaORM integration code (not just dependencies)
+- SeaORM is now the default Rust ORM option
+
+### Status: COMPLETE

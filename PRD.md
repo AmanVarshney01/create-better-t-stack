@@ -41,7 +41,7 @@
 
 ## **Step 4: ORMs & Database**
 
-- [ ] **SeaORM** - Async & dynamic ORM (ActiveRecord pattern)
+- [x] **SeaORM** - Async & dynamic ORM (ActiveRecord pattern)
 - [ ] **SQLx** - Async SQL toolkit (compile-time checked queries)
 
 ---

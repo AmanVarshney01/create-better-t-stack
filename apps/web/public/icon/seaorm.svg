@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="seaGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0077B6"/>
+      <stop offset="50%" stop-color="#00B4D8"/>
+      <stop offset="100%" stop-color="#48CAE4"/>
+    </linearGradient>
+  </defs>
+  <!-- Ocean wave pattern representing SeaORM -->
+  <path d="M10 60 Q25 45 40 60 T70 60 T100 60 V100 H0 V60 Z" fill="url(#seaGradient)" opacity="0.8"/>
+  <path d="M0 70 Q15 55 30 70 T60 70 T90 70 T120 70 V100 H0 V70 Z" fill="url(#seaGradient)" opacity="0.6"/>
+  <!-- Database cylinder on top -->
+  <ellipse cx="50" cy="35" rx="25" ry="8" fill="#0077B6"/>
+  <rect x="25" y="35" width="50" height="20" fill="#0077B6"/>
+  <ellipse cx="50" cy="55" rx="25" ry="8" fill="#00B4D8"/>
+  <ellipse cx="50" cy="35" rx="25" ry="8" fill="#48CAE4" opacity="0.7"/>
+  <!-- Connection lines -->
+  <line x1="35" y1="45" x2="35" y2="52" stroke="#fff" stroke-width="2"/>
+  <line x1="50" y1="45" x2="50" y2="52" stroke="#fff" stroke-width="2"/>
+  <line x1="65" y1="45" x2="65" y2="52" stroke="#fff" stroke-width="2"/>
+</svg>
