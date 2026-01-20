@@ -50,6 +50,8 @@ sea-orm.workspace = true
 # gRPC
 tonic.workspace = true
 prost.workspace = true
+{{projectName}}-proto = { path = "../proto" }
+tokio-stream = "0.1"
 {{/if}}
 {{#if (eq rustApi "async-graphql")}}
 # GraphQL

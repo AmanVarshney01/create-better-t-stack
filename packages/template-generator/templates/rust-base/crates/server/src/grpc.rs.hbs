@@ -1,0 +1,59 @@
+//! gRPC service implementations for {{projectName}}.
+
+use {{projectName}}_proto::{Greeter, GreeterServer, HelloReply, HelloRequest};
+use tokio_stream::wrappers::ReceiverStream;
+use tonic::{Request, Response, Status};
+
+/// Implementation of the Greeter gRPC service.
+#[derive(Debug, Default)]
+pub struct GreeterService;
+
+#[tonic::async_trait]
+impl Greeter for GreeterService {
+    /// Handle a unary greeting request.
+    async fn say_hello(
+        &self,
+        request: Request<HelloRequest>,
+    ) -> Result<Response<HelloReply>, Status> {
+        let name = request.into_inner().name;
+        tracing::info!("Received gRPC request: SayHello from '{}'", name);
+
+        let reply = HelloReply {
+            message: format!("Hello, {}!", name),
+        };
+
+        Ok(Response::new(reply))
+    }
+
+    type SayHelloStreamStream = ReceiverStream<Result<HelloReply, Status>>;
+
+    /// Handle a streaming greeting request.
+    async fn say_hello_stream(
+        &self,
+        request: Request<HelloRequest>,
+    ) -> Result<Response<Self::SayHelloStreamStream>, Status> {
+        let name = request.into_inner().name;
+        tracing::info!("Received gRPC streaming request: SayHelloStream from '{}'", name);
+
+        let (tx, rx) = tokio::sync::mpsc::channel(4);
+
+        tokio::spawn(async move {
+            for i in 1..=5 {
+                let reply = HelloReply {
+                    message: format!("Hello #{} to {}!", i, name),
+                };
+                if tx.send(Ok(reply)).await.is_err() {
+                    break;
+                }
+                tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+            }
+        });
+
+        Ok(Response::new(ReceiverStream::new(rx)))
+    }
+}
+
+/// Create and configure the gRPC server.
+pub fn create_grpc_server() -> GreeterServer<GreeterService> {
+    GreeterServer::new(GreeterService::default())
+}

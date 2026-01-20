@@ -2,6 +2,9 @@
 resolver = "2"
 members = [
     "crates/server",
+{{#if (eq rustApi "tonic")}}
+    "crates/proto",
+{{/if}}
 {{#if (eq rustFrontend "leptos")}}
     "crates/client",
 {{/if}}
@@ -62,6 +65,7 @@ sea-orm-migration = "1.1"
 {{#if (eq rustApi "tonic")}}
 # gRPC (Tonic)
 tonic = "0.12"
+tonic-build = "0.12"
 prost = "0.13"
 {{/if}}
 {{#if (eq rustApi "async-graphql")}}

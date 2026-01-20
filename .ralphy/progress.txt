@@ -3753,3 +3753,58 @@ Actix-web was already fully implemented in the codebase alongside Axum during th
 - AppState uses direct `PgPool` (no Arc needed - PgPool is already Clone + Send + Sync)
 
 ### Status: COMPLETE
+
+## 2026-01-20: Tonic gRPC Implementation for Rust Ecosystem
+
+### Task: Implement tonic gRPC support for Rust ecosystem
+
+### Changes Made:
+1. **apps/web/src/lib/constant.ts**: Added tonic to rustApi options in web UI with icon and description
+2. **packages/template-generator/src/template-handlers/rust-base.ts**: Added conditional logic to:
+   - Skip proto crate templates when tonic is not selected
+   - Skip grpc.rs file when tonic is not selected
+3. **packages/template-generator/templates/rust-base/Cargo.toml.hbs**: 
+   - Added "crates/proto" to workspace members when tonic selected
+   - Added tonic-build to workspace dependencies
+4. **packages/template-generator/templates/rust-base/crates/server/Cargo.toml.hbs**: 
+   - Added proto crate as local dependency when tonic selected
+   - Added tokio-stream for streaming support
+5. **packages/template-generator/templates/rust-base/crates/server/src/main.rs.hbs**: 
+   - Added mod grpc declaration when tonic selected
+   - Added gRPC server startup code for Axum, Actix-web, and standalone scenarios
+   - Runs gRPC on separate port (GRPC_PORT=50051 default)
+   - Uses tokio::select! to run HTTP and gRPC servers concurrently
+6. **packages/template-generator/templates/rust-base/crates/server/src/grpc.rs.hbs**: Created gRPC service implementation:
+   - GreeterService struct implementing Greeter trait
+   - SayHello unary RPC handler
+   - SayHelloStream server streaming RPC handler
+   - create_grpc_server() factory function
+7. **packages/template-generator/templates/rust-base/crates/proto/**: Created proto crate with:
+   - Cargo.toml.hbs - Proto crate manifest with tonic and prost dependencies
+   - build.rs.hbs - Proto compilation script using tonic-build
+   - src/lib.rs.hbs - Proto module exports
+   - proto/greeter.proto.hbs - Example gRPC service definition
+   - src/generated/greeter.rs.hbs - Pre-generated Rust code from proto
+8. **packages/template-generator/templates/rust-base/.env.example**: Added GRPC_PORT environment variable
+9. **apps/cli/test/rust-ecosystem.test.ts**: Added comprehensive tests for tonic gRPC:
+   - Dependency verification tests
+   - Proto crate workspace membership tests
+   - Proto crate file structure tests
+   - gRPC module integration tests for Axum, Actix-web, and standalone
+   - Database integration tests (SQLx, SeaORM)
+   - Negative tests (tonic not selected)
+
+### Features:
+- Production-ready gRPC server with tonic
+- Example Greeter service with unary and streaming RPCs
+- Proto crate with pre-generated code (no protoc required at build time)
+- Integration with Axum, Actix-web, or standalone (no web framework)
+- Concurrent HTTP and gRPC server support
+- Configurable gRPC port via GRPC_PORT environment variable
+- Web UI option to select tonic in Rust ecosystem
+
+### Tests Added:
+- 15 new test cases for tonic gRPC functionality
+- All 81 Rust ecosystem tests passing
+
+### Status: COMPLETE

@@ -1,0 +1,14 @@
+//! Protocol buffer definitions for {{projectName}}.
+//!
+//! This crate contains the generated code from protobuf definitions.
+//! The generated code is committed to version control to avoid requiring
+//! protoc at build time.
+
+/// Generated gRPC service definitions
+pub mod greeter {
+    include!("generated/greeter.rs");
+}
+
+pub use greeter::greeter_server::{Greeter, GreeterServer};
+pub use greeter::greeter_client::GreeterClient;
+pub use greeter::{HelloRequest, HelloReply};

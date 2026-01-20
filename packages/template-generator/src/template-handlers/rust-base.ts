@@ -16,6 +16,7 @@ export async function processRustBaseTemplate(
   const prefix = "rust-base/";
   const hasLeptos = config.rustFrontend === "leptos";
   const hasDioxus = config.rustFrontend === "dioxus";
+  const hasTonic = config.rustApi === "tonic";
 
   for (const [templatePath, content] of templates) {
     if (!templatePath.startsWith(prefix)) continue;
@@ -25,6 +26,12 @@ export async function processRustBaseTemplate(
 
     // Skip dioxus-client crate templates if Dioxus is not selected
     if (!hasDioxus && templatePath.includes("crates/dioxus-client/")) continue;
+
+    // Skip proto crate templates if Tonic is not selected
+    if (!hasTonic && templatePath.includes("crates/proto/")) continue;
+
+    // Skip grpc.rs if Tonic is not selected
+    if (!hasTonic && templatePath.includes("crates/server/src/grpc.rs")) continue;
 
     const relativePath = templatePath.slice(prefix.length);
     const outputPath = transformFilename(relativePath);

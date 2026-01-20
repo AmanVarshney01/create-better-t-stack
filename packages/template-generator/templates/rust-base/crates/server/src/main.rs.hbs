@@ -11,6 +11,10 @@ use std::sync::Arc;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 {{/if}}
+{{#if (eq rustApi "tonic")}}
+
+mod grpc;
+{{/if}}
 
 #[derive(Serialize)]
 struct HealthResponse {
@@ -128,11 +132,41 @@ async fn main() -> anyhow::Result<()> {
     let port = std::env::var("PORT").unwrap_or_else(|_| "3000".to_string());
     let addr = format!("{}:{}", host, port);
 
-    tracing::info!("Starting server at http://{}", addr);
+    tracing::info!("Starting HTTP server at http://{}", addr);
 
+{{#if (eq rustApi "tonic")}}
+    // Start gRPC server on a separate port
+    let grpc_port = std::env::var("GRPC_PORT").unwrap_or_else(|_| "50051".to_string());
+    let grpc_addr = format!("{}:{}", host, grpc_port).parse()?;
+
+    tracing::info!("Starting gRPC server at {}", grpc_addr);
+
+    let grpc_server = tonic::transport::Server::builder()
+        .add_service(grpc::create_grpc_server())
+        .serve(grpc_addr);
+
+    // Start HTTP server
+    let listener = tokio::net::TcpListener::bind(&addr).await?;
+    let http_server = axum::serve(listener, app);
+
+    // Run both servers concurrently
+    tokio::select! {
+        result = http_server => {
+            if let Err(e) = result {
+                tracing::error!("HTTP server error: {}", e);
+            }
+        }
+        result = grpc_server => {
+            if let Err(e) = result {
+                tracing::error!("gRPC server error: {}", e);
+            }
+        }
+    }
+{{else}}
     // Start server
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     axum::serve(listener, app).await?;
+{{/if}}
 
     Ok(())
 }
@@ -148,6 +182,10 @@ use std::sync::Arc;
 {{#if (eq rustOrm "sqlx")}}
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
+{{/if}}
+{{#if (eq rustApi "tonic")}}
+
+mod grpc;
 {{/if}}
 
 #[derive(Serialize)]
@@ -248,8 +286,60 @@ async fn main() -> anyhow::Result<()> {
         .unwrap_or_else(|_| "3000".to_string())
         .parse()?;
 
-    tracing::info!("Starting server at http://{}:{}", host, port);
+    tracing::info!("Starting HTTP server at http://{}:{}", host, port);
 
+{{#if (eq rustApi "tonic")}}
+    // Start gRPC server on a separate port
+    let grpc_port = std::env::var("GRPC_PORT").unwrap_or_else(|_| "50051".to_string());
+    let grpc_host = host.clone();
+    let grpc_addr = format!("{}:{}", grpc_host, grpc_port).parse()?;
+
+    tracing::info!("Starting gRPC server at {}", grpc_addr);
+
+    // Spawn gRPC server in a separate task
+    let grpc_handle = tokio::spawn(async move {
+        tonic::transport::Server::builder()
+            .add_service(grpc::create_grpc_server())
+            .serve(grpc_addr)
+            .await
+    });
+
+    // Start HTTP server
+{{#if (or (eq rustOrm "sea-orm") (eq rustOrm "sqlx"))}}
+    let http_server = HttpServer::new(move || {
+        let cors = Cors::permissive();
+        App::new()
+            .wrap(cors)
+            .app_data(state.clone())
+            .service(health)
+    })
+{{else}}
+    let http_server = HttpServer::new(|| {
+        let cors = Cors::permissive();
+        App::new()
+            .wrap(cors)
+            .service(health)
+    })
+{{/if}}
+    .bind((host, port))?
+    .run();
+
+    // Run both servers concurrently
+    tokio::select! {
+        result = http_server => {
+            if let Err(e) = result {
+                tracing::error!("HTTP server error: {}", e);
+            }
+        }
+        result = grpc_handle => {
+            match result {
+                Ok(Ok(())) => {}
+                Ok(Err(e)) => tracing::error!("gRPC server error: {}", e),
+                Err(e) => tracing::error!("gRPC task error: {}", e),
+            }
+        }
+    }
+{{else}}
     // Start server
 {{#if (or (eq rustOrm "sea-orm") (eq rustOrm "sqlx"))}}
     HttpServer::new(move || {
@@ -270,11 +360,16 @@ async fn main() -> anyhow::Result<()> {
     .bind((host, port))?
     .run()
     .await?;
+{{/if}}
 
     Ok(())
 }
 {{else}}
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+{{#if (eq rustApi "tonic")}}
+
+mod grpc;
+{{/if}}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -287,8 +382,22 @@ async fn main() -> anyhow::Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+{{#if (eq rustApi "tonic")}}
+    // Get host and port from environment
+    let host = std::env::var("HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+    let grpc_port = std::env::var("GRPC_PORT").unwrap_or_else(|_| "50051".to_string());
+    let grpc_addr = format!("{}:{}", host, grpc_port).parse()?;
+
+    tracing::info!("Starting gRPC server at {}", grpc_addr);
+
+    tonic::transport::Server::builder()
+        .add_service(grpc::create_grpc_server())
+        .serve(grpc_addr)
+        .await?;
+{{else}}
     tracing::info!("Hello from {{projectName}}!");
     tracing::info!("Add a web framework (axum or actix-web) to start building your API.");
+{{/if}}
 
     Ok(())
 }

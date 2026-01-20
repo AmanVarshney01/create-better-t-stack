@@ -738,12 +738,292 @@ describe("Rust Ecosystem", () => {
       const cargoContent = getFileContent(root, "Cargo.toml");
       expect(cargoContent).toBeDefined();
       expect(cargoContent).toContain("tonic");
+      expect(cargoContent).toContain("tonic-build");
       expect(cargoContent).toContain("prost");
 
       const serverCargoContent = getFileContent(root, "crates/server/Cargo.toml");
       expect(serverCargoContent).toBeDefined();
       expect(serverCargoContent).toContain("tonic.workspace = true");
       expect(serverCargoContent).toContain("prost.workspace = true");
+    });
+
+    it("should include proto crate in workspace when tonic is selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-tonic-proto",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "tonic",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain('"crates/proto"');
+    });
+
+    it("should create proto crate with all required files", async () => {
+      const result = await createVirtual({
+        projectName: "rust-tonic-files",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "tonic",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify proto crate files exist
+      expect(hasFile(root, "crates/proto/Cargo.toml")).toBe(true);
+      expect(hasFile(root, "crates/proto/build.rs")).toBe(true);
+      expect(hasFile(root, "crates/proto/src/lib.rs")).toBe(true);
+      expect(hasFile(root, "crates/proto/proto/greeter.proto")).toBe(true);
+      expect(hasFile(root, "crates/proto/src/generated/greeter.rs")).toBe(true);
+    });
+
+    it("should have correct proto crate Cargo.toml", async () => {
+      const result = await createVirtual({
+        projectName: "rust-tonic-proto-cargo",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "tonic",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const protoCargoContent = getFileContent(root, "crates/proto/Cargo.toml");
+      expect(protoCargoContent).toBeDefined();
+      expect(protoCargoContent).toContain('name = "rust-tonic-proto-cargo-proto"');
+      expect(protoCargoContent).toContain("tonic.workspace = true");
+      expect(protoCargoContent).toContain("prost.workspace = true");
+      expect(protoCargoContent).toContain("[build-dependencies]");
+      expect(protoCargoContent).toContain("tonic-build.workspace = true");
+    });
+
+    it("should have correct proto definition file", async () => {
+      const result = await createVirtual({
+        projectName: "rust-tonic-proto-def",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "tonic",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const protoContent = getFileContent(root, "crates/proto/proto/greeter.proto");
+      expect(protoContent).toBeDefined();
+      expect(protoContent).toContain('syntax = "proto3"');
+      expect(protoContent).toContain("service Greeter");
+      expect(protoContent).toContain("rpc SayHello");
+      expect(protoContent).toContain("message HelloRequest");
+      expect(protoContent).toContain("message HelloReply");
+    });
+
+    it("should include gRPC module in server main.rs with Axum", async () => {
+      const result = await createVirtual({
+        projectName: "rust-tonic-axum-main",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "tonic",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainRsContent = getFileContent(root, "crates/server/src/main.rs");
+      expect(mainRsContent).toBeDefined();
+      expect(mainRsContent).toContain("mod grpc;");
+      expect(mainRsContent).toContain("GRPC_PORT");
+      expect(mainRsContent).toContain("grpc::create_grpc_server()");
+      expect(mainRsContent).toContain("tonic::transport::Server");
+    });
+
+    it("should include gRPC module in server main.rs with Actix-web", async () => {
+      const result = await createVirtual({
+        projectName: "rust-tonic-actix-main",
+        ecosystem: "rust",
+        rustWebFramework: "actix-web",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "tonic",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainRsContent = getFileContent(root, "crates/server/src/main.rs");
+      expect(mainRsContent).toBeDefined();
+      expect(mainRsContent).toContain("mod grpc;");
+      expect(mainRsContent).toContain("GRPC_PORT");
+      expect(mainRsContent).toContain("grpc::create_grpc_server()");
+    });
+
+    it("should create gRPC service implementation file", async () => {
+      const result = await createVirtual({
+        projectName: "rust-tonic-grpc-service",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "tonic",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      expect(hasFile(root, "crates/server/src/grpc.rs")).toBe(true);
+
+      const grpcContent = getFileContent(root, "crates/server/src/grpc.rs");
+      expect(grpcContent).toBeDefined();
+      expect(grpcContent).toContain("GreeterService");
+      expect(grpcContent).toContain("impl Greeter for GreeterService");
+      expect(grpcContent).toContain("async fn say_hello");
+      expect(grpcContent).toContain("async fn say_hello_stream");
+      expect(grpcContent).toContain("pub fn create_grpc_server()");
+    });
+
+    it("should work with tonic and no web framework", async () => {
+      const result = await createVirtual({
+        projectName: "rust-tonic-no-web",
+        ecosystem: "rust",
+        rustWebFramework: "none",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "tonic",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainRsContent = getFileContent(root, "crates/server/src/main.rs");
+      expect(mainRsContent).toBeDefined();
+      expect(mainRsContent).toContain("mod grpc;");
+      expect(mainRsContent).toContain("tonic::transport::Server");
+      expect(mainRsContent).toContain("GRPC_PORT");
+      // Should not contain axum or actix imports
+      expect(mainRsContent).not.toContain("use axum::");
+      expect(mainRsContent).not.toContain("use actix_web::");
+    });
+
+    it("should work with tonic and SQLx", async () => {
+      const result = await createVirtual({
+        projectName: "rust-tonic-sqlx",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "sqlx",
+        rustApi: "tonic",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toContain("tonic");
+      expect(cargoContent).toContain("sqlx");
+
+      const mainRsContent = getFileContent(root, "crates/server/src/main.rs");
+      expect(mainRsContent).toContain("mod grpc;");
+      expect(mainRsContent).toContain("sqlx");
+    });
+
+    it("should work with tonic and SeaORM", async () => {
+      const result = await createVirtual({
+        projectName: "rust-tonic-seaorm",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "sea-orm",
+        rustApi: "tonic",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toContain("tonic");
+      expect(cargoContent).toContain("sea-orm");
+    });
+
+    it("should NOT include proto crate when tonic is not selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-no-tonic",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      expect(hasFile(root, "crates/proto/Cargo.toml")).toBe(false);
+      expect(hasFile(root, "crates/server/src/grpc.rs")).toBe(false);
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).not.toContain('"crates/proto"');
+      expect(cargoContent).not.toContain("tonic");
+
+      const mainRsContent = getFileContent(root, "crates/server/src/main.rs");
+      expect(mainRsContent).not.toContain("mod grpc;");
+    });
+
+    it("should include proto crate as server dependency", async () => {
+      const result = await createVirtual({
+        projectName: "rust-tonic-server-dep",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "tonic",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const serverCargoContent = getFileContent(root, "crates/server/Cargo.toml");
+      expect(serverCargoContent).toBeDefined();
+      expect(serverCargoContent).toContain("rust-tonic-server-dep-proto");
+      expect(serverCargoContent).toContain('path = "../proto"');
+      expect(serverCargoContent).toContain("tokio-stream");
     });
   });
 

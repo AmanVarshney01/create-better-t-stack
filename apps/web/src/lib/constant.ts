@@ -1567,6 +1567,14 @@ export const TECH_OPTIONS: Record<
   ],
   rustApi: [
     {
+      id: "tonic",
+      name: "Tonic",
+      description: "Production-ready gRPC implementation for Rust",
+      icon: "https://raw.githubusercontent.com/AnyChart/graphicsjs/refs/heads/master/src/vector/primitives/primitives.js",
+      color: "from-orange-500 to-red-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No API Layer",
       description: "Skip Rust API layer",

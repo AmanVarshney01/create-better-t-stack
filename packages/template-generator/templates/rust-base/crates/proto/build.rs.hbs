@@ -1,0 +1,13 @@
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Compile the protobuf definitions
+    tonic_build::configure()
+        .build_server(true)
+        .build_client(true)
+        .out_dir("src/generated")
+        .compile_protos(&["proto/greeter.proto"], &["proto"])?;
+
+    // Tell Cargo to rerun this build script if the proto files change
+    println!("cargo:rerun-if-changed=proto/greeter.proto");
+
+    Ok(())
+}
