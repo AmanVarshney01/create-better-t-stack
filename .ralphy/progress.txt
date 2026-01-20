@@ -4364,3 +4364,45 @@ The argon2 crate was already implemented in the template generator and CLI tests
 - All 23 AI SDK tests pass (including existing tests)
 
 ### Status: COMPLETE
+
+## 2026-01-20: Google ADK (Agent Development Kit) Implementation
+
+### Task: Implement Google ADK as an AI SDK option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "google-adk" to AISchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Google ADK dependency version:
+   - @google/adk: ^0.2.0
+3. **packages/template-generator/src/processors/examples-deps.ts**: Added Google ADK dependency processing:
+   - Added `useGoogleADK = ai === "google-adk"` flag
+   - Added dependency handling for self backend (Next.js, TanStack Start)
+   - Added dependency handling for separate server (Hono, Express, etc.)
+   - Added frontend dependency handling (streamdown for markdown rendering)
+   - Added zod version pinning (^3.25.67) to avoid compatibility issues
+4. **apps/web/src/lib/constant.ts**: Added Google ADK to web builder AI options with:
+   - id: "google-adk"
+   - name: "Google ADK"
+   - description: "Code-first agent development kit for building AI agents"
+   - icon: Google SimpleIcons CDN
+   - color: from-blue-500 to-blue-700
+5. **packages/template-generator/templates/examples/ai/fullstack/next/src/app/api/ai/route.ts.hbs**: Added Google ADK API route template:
+   - LlmAgent configuration with Gemini 2.5 Flash model
+   - Runner for executing agent with streaming support
+   - SSE response format matching other AI SDKs
+6. **packages/template-generator/templates/examples/ai/fullstack/tanstack-start/src/routes/api/ai/$.ts.hbs**: Added Google ADK API route template for TanStack Start
+7. **apps/cli/test/ai-sdk.test.ts**: Added comprehensive Google ADK tests:
+   - Test with AI example + Google ADK + Hono backend
+   - Test with AI example + Google ADK + Next.js (self backend)
+   - Test with AI example + Google ADK + TanStack Start
+   - Test with AI example + Google ADK + Express backend
+   - Test with Google ADK without AI example (SDK only)
+
+### Features:
+- Code-first agent development using @google/adk
+- LlmAgent with configurable model, description, instruction, and tools
+- Runner for executing agents asynchronously
+- Streaming response support via SSE
+- Compatible with Gemini models (gemini-2.5-flash default)
+- Zod integration for tool schemas
+
+### Status: COMPLETE

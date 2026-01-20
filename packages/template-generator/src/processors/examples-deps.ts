@@ -71,6 +71,7 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
   const useVoltAgent = ai === "voltagent";
   const useLangGraph = ai === "langgraph";
   const useOpenAIAgents = ai === "openai-agents";
+  const useGoogleADK = ai === "google-adk";
 
   if (backend === "convex" && convexBackendExists) {
     addPackageDependency({
@@ -104,6 +105,13 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
         vfs,
         packagePath: webPkgPath,
         dependencies: ["@openai/agents"],
+        customDependencies: { zod: "^3.25.67" },
+      });
+    } else if (useGoogleADK) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPkgPath,
+        dependencies: ["@google/adk"],
         customDependencies: { zod: "^3.25.67" },
       });
     } else {
@@ -140,6 +148,13 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
         dependencies: ["@openai/agents"],
         customDependencies: { zod: "^3.25.67" },
       });
+    } else if (useGoogleADK) {
+      addPackageDependency({
+        vfs,
+        packagePath: serverPkgPath,
+        dependencies: ["@google/adk"],
+        customDependencies: { zod: "^3.25.67" },
+      });
     } else {
       addPackageDependency({
         vfs,
@@ -165,6 +180,10 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
       if (hasReactWeb) deps.push("streamdown");
     } else if (useOpenAIAgents) {
       // OpenAI Agents SDK uses native streaming - no special frontend SDK needed
+      // Just add streamdown for markdown rendering
+      if (hasReactWeb) deps.push("streamdown");
+    } else if (useGoogleADK) {
+      // Google ADK uses native streaming - no special frontend SDK needed
       // Just add streamdown for markdown rendering
       if (hasReactWeb) deps.push("streamdown");
     } else {

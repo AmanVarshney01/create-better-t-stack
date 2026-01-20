@@ -120,6 +120,7 @@ export const AISchema = z
     "voltagent",
     "langgraph",
     "openai-agents",
+    "google-adk",
     "langchain",
     "llamaindex",
     "none",

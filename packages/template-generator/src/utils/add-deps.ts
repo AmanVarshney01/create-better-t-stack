@@ -162,6 +162,9 @@ export const dependencyVersionMap = {
   // OpenAI Agents SDK
   "@openai/agents": "^0.0.17",
 
+  // Google ADK (Agent Development Kit)
+  "@google/adk": "^0.2.0",
+
   "@orpc/server": "^1.12.2",
   "@orpc/client": "^1.12.2",
   "@orpc/openapi": "^1.12.2",

@@ -74,6 +74,72 @@ export const Route = createFileRoute("/api/ai/$")({
 		},
 	},
 });
+{{else if (eq ai "google-adk")}}
+import { createFileRoute } from "@tanstack/react-router";
+import { LlmAgent, Runner } from "@google/adk";
+
+const agent = new LlmAgent({
+	name: "chat_agent",
+	model: "gemini-2.5-flash",
+	description: "A helpful AI assistant that can answer questions and help with tasks.",
+	instruction: "You are a helpful AI assistant. Respond to user queries in a clear and concise manner.",
+	tools: [],
+});
+
+export const Route = createFileRoute("/api/ai/$")({
+	server: {
+		handlers: {
+			POST: async ({ request }) => {
+				try {
+					const { messages } = await request.json();
+
+					const lastMessage = messages[messages.length - 1];
+					const userMessage = lastMessage?.content || "";
+
+					const runner = new Runner({ agent, appName: "chat-app" });
+					const result = await runner.runAsync({ userMessage });
+
+					let responseText = "";
+					for await (const event of result) {
+						if (event.content?.parts) {
+							for (const part of event.content.parts) {
+								if (part.text) {
+									responseText += part.text;
+								}
+							}
+						}
+					}
+
+					const encoder = new TextEncoder();
+					const readable = new ReadableStream({
+						start(controller) {
+							controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: responseText })}\n\n`));
+							controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+							controller.close();
+						},
+					});
+
+					return new Response(readable, {
+						headers: {
+							"Content-Type": "text/event-stream",
+							"Cache-Control": "no-cache",
+							Connection: "keep-alive",
+						},
+					});
+				} catch (error) {
+					console.error("AI API error:", error);
+					return new Response(
+						JSON.stringify({ error: "Failed to process AI request" }),
+						{
+							status: 500,
+							headers: { "Content-Type": "application/json" },
+						},
+					);
+				}
+			},
+		},
+	},
+});
 {{else}}
 import { createFileRoute } from "@tanstack/react-router";
 import { google } from "@ai-sdk/google";

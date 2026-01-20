@@ -499,6 +499,118 @@ describe("AI SDK Configuration", () => {
     });
   });
 
+  describe("Google ADK", () => {
+    it("should work with AI example + Google ADK", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-google-adk",
+        examples: ["ai"],
+        ai: "google-adk",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with AI example + Google ADK + Next.js (self backend)", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-google-adk-next",
+        examples: ["ai"],
+        ai: "google-adk",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with AI example + Google ADK + TanStack Start", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-google-adk-start",
+        examples: ["ai"],
+        ai: "google-adk",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "trpc",
+        frontend: ["tanstack-start"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with AI example + Google ADK + Express backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-google-adk-express",
+        examples: ["ai"],
+        ai: "google-adk",
+        backend: "express",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with Google ADK without AI example (SDK only)", async () => {
+      const result = await runTRPCTest({
+        projectName: "google-adk-no-example",
+        examples: ["none"],
+        ai: "google-adk",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+  });
+
   describe("AI SDK none option", () => {
     it("should work with ai: none", async () => {
       const result = await runTRPCTest({

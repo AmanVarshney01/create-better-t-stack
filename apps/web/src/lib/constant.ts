@@ -1375,6 +1375,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "google-adk",
+      name: "Google ADK",
+      description: "Code-first agent development kit for building AI agents",
+      icon: "https://cdn.simpleicons.org/google/4285F4",
+      color: "from-blue-500 to-blue-700",
+      default: false,
+    },
+    {
       id: "none",
       name: "No AI SDK",
       description: "Skip AI SDK integration",

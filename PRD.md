@@ -82,7 +82,7 @@
 - [x] **VoltAgent** - AI agents with observability
 - [x] **LangGraph.js** - Graph-based agent orchestration
 - [x] **OpenAI Agents SDK** - Official OpenAI multi-agent framework
-- [ ] **Google ADK** - Google's agent development kit
+- [x] **Google ADK** - Google's agent development kit
 - [ ] **ModelFusion** - Type-safe AI model library
 
 ---
