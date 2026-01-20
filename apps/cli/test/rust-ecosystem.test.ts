@@ -1,3 +1,5 @@
+import type { VirtualNode, VirtualFile } from "@better-t-stack/template-generator";
+
 import { describe, expect, it } from "bun:test";
 
 import { createVirtual } from "../src/index";
@@ -16,6 +18,42 @@ import {
  */
 function extractEnumValues<T extends string>(schema: { options: readonly T[] }): readonly T[] {
   return schema.options;
+}
+
+/**
+ * Helper function to find a file in the virtual file tree by exact path
+ */
+function findFile(node: VirtualNode, path: string): VirtualFile | undefined {
+  if (node.type === "file") {
+    // Exact match only - normalize to handle leading slashes
+    const normalizedNodePath = node.path.replace(/^\/+/, "");
+    const normalizedPath = path.replace(/^\/+/, "");
+    if (normalizedNodePath === normalizedPath) {
+      return node;
+    }
+    return undefined;
+  }
+
+  for (const child of node.children) {
+    const found = findFile(child, path);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+/**
+ * Helper function to check if a file exists in the virtual file tree
+ */
+function hasFile(node: VirtualNode, path: string): boolean {
+  return findFile(node, path) !== undefined;
+}
+
+/**
+ * Helper function to get file content from virtual file tree
+ */
+function getFileContent(node: VirtualNode, path: string): string | undefined {
+  const file = findFile(node, path);
+  return file?.content;
 }
 
 // Extract all Rust-related enum values
@@ -76,10 +114,10 @@ describe("Rust Ecosystem", () => {
     });
   });
 
-  describe("Virtual Project Generation - Rust Ecosystem", () => {
-    it("should create a basic Rust project with Cargo.toml", async () => {
+  describe("Rust Base Template Structure", () => {
+    it("should create a Rust project with proper Cargo workspace structure", async () => {
       const result = await createVirtual({
-        projectName: "rust-basic",
+        projectName: "rust-workspace",
         ecosystem: "rust",
         rustWebFramework: "none",
         rustFrontend: "none",
@@ -91,12 +129,161 @@ describe("Rust Ecosystem", () => {
 
       expect(result.success).toBe(true);
       expect(result.tree).toBeDefined();
-      expect(result.tree?.fileCount).toBeGreaterThan(0);
+
+      const root = result.tree!.root;
+
+      // Verify workspace files exist
+      expect(hasFile(root, "Cargo.toml")).toBe(true);
+      expect(hasFile(root, "rust-toolchain.toml")).toBe(true);
+      expect(hasFile(root, ".gitignore")).toBe(true);
+      expect(hasFile(root, ".env.example")).toBe(true);
+
+      // Verify crates directory structure
+      expect(hasFile(root, "crates/server/Cargo.toml")).toBe(true);
+      expect(hasFile(root, "crates/server/src/main.rs")).toBe(true);
     });
 
-    it("should create Rust project with Axum web framework", async () => {
+    it("should have correct workspace Cargo.toml structure", async () => {
       const result = await createVirtual({
-        projectName: "rust-axum",
+        projectName: "rust-cargo-check",
+        ecosystem: "rust",
+        rustWebFramework: "none",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+
+      // Verify workspace configuration
+      expect(cargoContent).toContain("[workspace]");
+      expect(cargoContent).toContain('resolver = "2"');
+      expect(cargoContent).toContain("members = [");
+      expect(cargoContent).toContain('"crates/*"');
+
+      // Verify workspace.package
+      expect(cargoContent).toContain("[workspace.package]");
+      expect(cargoContent).toContain('version = "0.1.0"');
+      expect(cargoContent).toContain('edition = "2021"');
+
+      // Verify core workspace dependencies
+      expect(cargoContent).toContain("[workspace.dependencies]");
+      expect(cargoContent).toContain("tokio");
+      expect(cargoContent).toContain("serde");
+      expect(cargoContent).toContain("tracing");
+      expect(cargoContent).toContain("dotenvy");
+    });
+
+    it("should have correct server crate Cargo.toml", async () => {
+      const result = await createVirtual({
+        projectName: "rust-server-check",
+        ecosystem: "rust",
+        rustWebFramework: "none",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const serverCargoContent = getFileContent(root, "crates/server/Cargo.toml");
+      expect(serverCargoContent).toBeDefined();
+
+      // Verify package name uses project name
+      expect(serverCargoContent).toContain("[package]");
+      expect(serverCargoContent).toContain('name = "rust-server-check-server"');
+
+      // Verify workspace inheritance
+      expect(serverCargoContent).toContain("version.workspace = true");
+      expect(serverCargoContent).toContain("edition.workspace = true");
+
+      // Verify dependencies
+      expect(serverCargoContent).toContain("[dependencies]");
+      expect(serverCargoContent).toContain("tokio.workspace = true");
+      expect(serverCargoContent).toContain("serde.workspace = true");
+      expect(serverCargoContent).toContain("tracing.workspace = true");
+    });
+
+    it("should have correct rust-toolchain.toml", async () => {
+      const result = await createVirtual({
+        projectName: "rust-toolchain-check",
+        ecosystem: "rust",
+        rustWebFramework: "none",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const toolchainContent = getFileContent(root, "rust-toolchain.toml");
+      expect(toolchainContent).toBeDefined();
+      expect(toolchainContent).toContain("[toolchain]");
+      expect(toolchainContent).toContain('channel = "stable"');
+      expect(toolchainContent).toContain("rustfmt");
+      expect(toolchainContent).toContain("clippy");
+    });
+
+    it("should have proper .gitignore for Rust projects", async () => {
+      const result = await createVirtual({
+        projectName: "rust-gitignore-check",
+        ecosystem: "rust",
+        rustWebFramework: "none",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const gitignoreContent = getFileContent(root, ".gitignore");
+      expect(gitignoreContent).toBeDefined();
+      expect(gitignoreContent).toContain("/target/");
+      expect(gitignoreContent).toContain(".env");
+    });
+
+    it("should have proper .env.example with Rust environment variables", async () => {
+      const result = await createVirtual({
+        projectName: "rust-env-check",
+        ecosystem: "rust",
+        rustWebFramework: "none",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const envContent = getFileContent(root, ".env.example");
+      expect(envContent).toBeDefined();
+      expect(envContent).toContain("RUST_LOG");
+      expect(envContent).toContain("HOST");
+      expect(envContent).toContain("PORT");
+    });
+  });
+
+  describe("Axum Web Framework", () => {
+    it("should include Axum dependencies in workspace Cargo.toml", async () => {
+      const result = await createVirtual({
+        projectName: "rust-axum-deps",
         ecosystem: "rust",
         rustWebFramework: "axum",
         rustFrontend: "none",
@@ -107,12 +294,70 @@ describe("Rust Ecosystem", () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.tree).toBeDefined();
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain("axum");
+      expect(cargoContent).toContain("tower");
+      expect(cargoContent).toContain("tower-http");
     });
 
-    it("should create Rust project with Actix-web framework", async () => {
+    it("should include Axum dependencies in server crate", async () => {
       const result = await createVirtual({
-        projectName: "rust-actix",
+        projectName: "rust-axum-server",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const serverCargoContent = getFileContent(root, "crates/server/Cargo.toml");
+      expect(serverCargoContent).toBeDefined();
+      expect(serverCargoContent).toContain("axum.workspace = true");
+      expect(serverCargoContent).toContain("tower.workspace = true");
+      expect(serverCargoContent).toContain("tower-http.workspace = true");
+    });
+
+    it("should generate Axum main.rs with router and health endpoint", async () => {
+      const result = await createVirtual({
+        projectName: "rust-axum-main",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainRsContent = getFileContent(root, "crates/server/src/main.rs");
+      expect(mainRsContent).toBeDefined();
+
+      // Verify Axum-specific code
+      expect(mainRsContent).toContain("use axum::");
+      expect(mainRsContent).toContain("Router");
+      expect(mainRsContent).toContain("CorsLayer");
+      expect(mainRsContent).toContain("#[tokio::main]");
+      expect(mainRsContent).toContain("async fn main()");
+      expect(mainRsContent).toContain('route("/health"');
+      expect(mainRsContent).toContain("axum::serve");
+    });
+  });
+
+  describe("Actix-web Framework", () => {
+    it("should include Actix-web dependencies in workspace Cargo.toml", async () => {
+      const result = await createVirtual({
+        projectName: "rust-actix-deps",
         ecosystem: "rust",
         rustWebFramework: "actix-web",
         rustFrontend: "none",
@@ -123,12 +368,47 @@ describe("Rust Ecosystem", () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.tree).toBeDefined();
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain("actix-web");
+      expect(cargoContent).toContain("actix-rt");
+      expect(cargoContent).toContain("actix-cors");
     });
 
-    it("should create Rust project with SQLx ORM", async () => {
+    it("should generate Actix-web main.rs with server configuration", async () => {
       const result = await createVirtual({
-        projectName: "rust-sqlx",
+        projectName: "rust-actix-main",
+        ecosystem: "rust",
+        rustWebFramework: "actix-web",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainRsContent = getFileContent(root, "crates/server/src/main.rs");
+      expect(mainRsContent).toBeDefined();
+
+      // Verify Actix-specific code
+      expect(mainRsContent).toContain("use actix_web::");
+      expect(mainRsContent).toContain("use actix_cors::Cors");
+      expect(mainRsContent).toContain("#[actix_web::main]");
+      expect(mainRsContent).toContain("HttpServer::new");
+      expect(mainRsContent).toContain("App::new()");
+      expect(mainRsContent).toContain('#[get("/health")]');
+    });
+  });
+
+  describe("SQLx ORM", () => {
+    it("should include SQLx dependencies when selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-sqlx-deps",
         ecosystem: "rust",
         rustWebFramework: "axum",
         rustFrontend: "none",
@@ -139,12 +419,27 @@ describe("Rust Ecosystem", () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.tree).toBeDefined();
-    });
+      const root = result.tree!.root;
 
-    it("should create Rust project with SeaORM", async () => {
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain("sqlx");
+      expect(cargoContent).toContain("runtime-tokio");
+      expect(cargoContent).toContain("postgres");
+      expect(cargoContent).toContain("sqlite");
+      expect(cargoContent).toContain("mysql");
+      expect(cargoContent).toContain("migrate");
+
+      const serverCargoContent = getFileContent(root, "crates/server/Cargo.toml");
+      expect(serverCargoContent).toBeDefined();
+      expect(serverCargoContent).toContain("sqlx.workspace = true");
+    });
+  });
+
+  describe("SeaORM", () => {
+    it("should include SeaORM dependencies when selected", async () => {
       const result = await createVirtual({
-        projectName: "rust-sea-orm",
+        projectName: "rust-seaorm-deps",
         ecosystem: "rust",
         rustWebFramework: "axum",
         rustFrontend: "none",
@@ -155,12 +450,24 @@ describe("Rust Ecosystem", () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.tree).toBeDefined();
-    });
+      const root = result.tree!.root;
 
-    it("should create Rust project with Tonic gRPC", async () => {
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain("sea-orm");
+      expect(cargoContent).toContain("sea-orm-migration");
+      expect(cargoContent).toContain("runtime-tokio-rustls");
+
+      const serverCargoContent = getFileContent(root, "crates/server/Cargo.toml");
+      expect(serverCargoContent).toBeDefined();
+      expect(serverCargoContent).toContain("sea-orm.workspace = true");
+    });
+  });
+
+  describe("Tonic gRPC", () => {
+    it("should include Tonic dependencies when selected", async () => {
       const result = await createVirtual({
-        projectName: "rust-tonic",
+        projectName: "rust-tonic-deps",
         ecosystem: "rust",
         rustWebFramework: "axum",
         rustFrontend: "none",
@@ -171,12 +478,24 @@ describe("Rust Ecosystem", () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.tree).toBeDefined();
-    });
+      const root = result.tree!.root;
 
-    it("should create Rust project with async-graphql", async () => {
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain("tonic");
+      expect(cargoContent).toContain("prost");
+
+      const serverCargoContent = getFileContent(root, "crates/server/Cargo.toml");
+      expect(serverCargoContent).toBeDefined();
+      expect(serverCargoContent).toContain("tonic.workspace = true");
+      expect(serverCargoContent).toContain("prost.workspace = true");
+    });
+  });
+
+  describe("async-graphql", () => {
+    it("should include async-graphql dependencies when selected", async () => {
       const result = await createVirtual({
-        projectName: "rust-graphql",
+        projectName: "rust-graphql-deps",
         ecosystem: "rust",
         rustWebFramework: "axum",
         rustFrontend: "none",
@@ -187,12 +506,24 @@ describe("Rust Ecosystem", () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.tree).toBeDefined();
-    });
+      const root = result.tree!.root;
 
-    it("should create Rust project with Clap CLI", async () => {
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain("async-graphql");
+      expect(cargoContent).toContain("async-graphql-axum");
+
+      const serverCargoContent = getFileContent(root, "crates/server/Cargo.toml");
+      expect(serverCargoContent).toBeDefined();
+      expect(serverCargoContent).toContain("async-graphql.workspace = true");
+      expect(serverCargoContent).toContain("async-graphql-axum.workspace = true");
+    });
+  });
+
+  describe("Clap CLI", () => {
+    it("should include Clap dependencies when selected", async () => {
       const result = await createVirtual({
-        projectName: "rust-cli",
+        projectName: "rust-clap-deps",
         ecosystem: "rust",
         rustWebFramework: "none",
         rustFrontend: "none",
@@ -203,12 +534,19 @@ describe("Rust Ecosystem", () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.tree).toBeDefined();
-    });
+      const root = result.tree!.root;
 
-    it("should create Rust project with Ratatui TUI", async () => {
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain("clap");
+      expect(cargoContent).toContain('features = ["derive"]');
+    });
+  });
+
+  describe("Ratatui TUI", () => {
+    it("should include Ratatui dependencies when selected", async () => {
       const result = await createVirtual({
-        projectName: "rust-tui",
+        projectName: "rust-ratatui-deps",
         ecosystem: "rust",
         rustWebFramework: "none",
         rustFrontend: "none",
@@ -219,26 +557,114 @@ describe("Rust Ecosystem", () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.tree).toBeDefined();
-    });
+      const root = result.tree!.root;
 
-    it("should create Rust project with core libraries", async () => {
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain("ratatui");
+      expect(cargoContent).toContain("crossterm");
+    });
+  });
+
+  describe("Rust Libraries", () => {
+    it("should include validator library when selected", async () => {
       const result = await createVirtual({
-        projectName: "rust-libs",
+        projectName: "rust-validator-deps",
         ecosystem: "rust",
         rustWebFramework: "axum",
         rustFrontend: "none",
         rustOrm: "none",
         rustApi: "none",
         rustCli: "none",
-        rustLibraries: ["serde", "validator", "jsonwebtoken", "argon2"],
+        rustLibraries: ["validator"],
       });
 
       expect(result.success).toBe(true);
-      expect(result.tree).toBeDefined();
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain("validator");
+      expect(cargoContent).toContain('features = ["derive"]');
+
+      const serverCargoContent = getFileContent(root, "crates/server/Cargo.toml");
+      expect(serverCargoContent).toBeDefined();
+      expect(serverCargoContent).toContain("validator.workspace = true");
     });
 
-    it("should create full-stack Rust project", async () => {
+    it("should include jsonwebtoken library when selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-jwt-deps",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: ["jsonwebtoken"],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain("jsonwebtoken");
+
+      const serverCargoContent = getFileContent(root, "crates/server/Cargo.toml");
+      expect(serverCargoContent).toBeDefined();
+      expect(serverCargoContent).toContain("jsonwebtoken.workspace = true");
+    });
+
+    it("should include argon2 library when selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-argon2-deps",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: ["argon2"],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain("argon2");
+
+      const serverCargoContent = getFileContent(root, "crates/server/Cargo.toml");
+      expect(serverCargoContent).toBeDefined();
+      expect(serverCargoContent).toContain("argon2.workspace = true");
+    });
+
+    it("should include multiple libraries when selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-multi-libs",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: ["validator", "jsonwebtoken", "argon2"],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain("validator");
+      expect(cargoContent).toContain("jsonwebtoken");
+      expect(cargoContent).toContain("argon2");
+    });
+  });
+
+  describe("Full-stack Rust Project", () => {
+    it("should create a complete Rust project with all options", async () => {
       const result = await createVirtual({
         projectName: "rust-fullstack",
         ecosystem: "rust",
@@ -247,11 +673,89 @@ describe("Rust Ecosystem", () => {
         rustOrm: "sqlx",
         rustApi: "async-graphql",
         rustCli: "clap",
-        rustLibraries: ["serde", "validator", "jsonwebtoken", "argon2"],
+        rustLibraries: ["validator", "jsonwebtoken", "argon2"],
       });
 
       expect(result.success).toBe(true);
       expect(result.tree).toBeDefined();
+
+      const root = result.tree!.root;
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+
+      // Web framework
+      expect(cargoContent).toContain("axum");
+
+      // ORM
+      expect(cargoContent).toContain("sqlx");
+
+      // API
+      expect(cargoContent).toContain("async-graphql");
+
+      // CLI
+      expect(cargoContent).toContain("clap");
+
+      // Libraries
+      expect(cargoContent).toContain("validator");
+      expect(cargoContent).toContain("jsonwebtoken");
+      expect(cargoContent).toContain("argon2");
+    });
+  });
+
+  describe("No Framework Selected", () => {
+    it("should generate basic main.rs without web framework", async () => {
+      const result = await createVirtual({
+        projectName: "rust-no-framework",
+        ecosystem: "rust",
+        rustWebFramework: "none",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainRsContent = getFileContent(root, "crates/server/src/main.rs");
+      expect(mainRsContent).toBeDefined();
+
+      // Should not contain web framework code
+      expect(mainRsContent).not.toContain("use axum::");
+      expect(mainRsContent).not.toContain("use actix_web::");
+
+      // Should have basic tokio main
+      expect(mainRsContent).toContain("#[tokio::main]");
+      expect(mainRsContent).toContain("async fn main()");
+      expect(mainRsContent).toContain("tracing::info!");
+    });
+
+    it("should not include framework dependencies when none selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-minimal",
+        ecosystem: "rust",
+        rustWebFramework: "none",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+
+      // Should not contain framework dependencies
+      expect(cargoContent).not.toContain("axum =");
+      expect(cargoContent).not.toContain("actix-web =");
+      expect(cargoContent).not.toContain("sqlx =");
+      expect(cargoContent).not.toContain("sea-orm =");
+      expect(cargoContent).not.toContain("tonic =");
+      expect(cargoContent).not.toContain("async-graphql =");
     });
   });
 
@@ -259,7 +763,6 @@ describe("Rust Ecosystem", () => {
     it("should default to TypeScript ecosystem when not specified", async () => {
       const result = await createVirtual({
         projectName: "ts-default",
-        // ecosystem not specified - should default to typescript
         frontend: ["tanstack-router"],
         backend: "hono",
         runtime: "bun",
@@ -267,8 +770,10 @@ describe("Rust Ecosystem", () => {
 
       expect(result.success).toBe(true);
       expect(result.tree).toBeDefined();
-      // TypeScript project should have package.json
-      expect(result.tree?.fileCount).toBeGreaterThan(0);
+
+      const root = result.tree!.root;
+      // TypeScript project should have package.json, not Cargo.toml
+      expect(hasFile(root, "package.json")).toBe(true);
     });
 
     it("should create TypeScript project when ecosystem is explicitly set", async () => {
@@ -282,6 +787,9 @@ describe("Rust Ecosystem", () => {
 
       expect(result.success).toBe(true);
       expect(result.tree).toBeDefined();
+
+      const root = result.tree!.root;
+      expect(hasFile(root, "package.json")).toBe(true);
     });
   });
 
@@ -311,9 +819,38 @@ describe("Rust Ecosystem", () => {
       expect(tsResult.success).toBe(true);
       expect(rustResult.success).toBe(true);
 
-      // Both should generate different structures
-      expect(tsResult.tree).toBeDefined();
-      expect(rustResult.tree).toBeDefined();
+      const tsRoot = tsResult.tree!.root;
+      const rustRoot = rustResult.tree!.root;
+
+      // TypeScript should have package.json
+      expect(hasFile(tsRoot, "package.json")).toBe(true);
+      expect(hasFile(tsRoot, "Cargo.toml")).toBe(false);
+
+      // Rust should have Cargo.toml
+      expect(hasFile(rustRoot, "Cargo.toml")).toBe(true);
+      expect(hasFile(rustRoot, "package.json")).toBe(false);
+    });
+  });
+
+  describe("Project Name Handling", () => {
+    it("should use project name in Cargo.toml server crate", async () => {
+      const result = await createVirtual({
+        projectName: "my-awesome-rust-app",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const serverCargoContent = getFileContent(root, "crates/server/Cargo.toml");
+      expect(serverCargoContent).toBeDefined();
+      expect(serverCargoContent).toContain('name = "my-awesome-rust-app-server"');
     });
   });
 });

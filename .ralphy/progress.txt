@@ -3394,3 +3394,37 @@ Implemented feTS as a new backend framework option. feTS is a TypeScript HTTP Fr
 - 21 passing tests covering all Rust ecosystem functionality
 
 ### Status: COMPLETE
+
+## 2026-01-20: Rust Ecosystem Tests Enhancement
+
+### Task: Write comprehensive tests verifying Rust ecosystem selection works end-to-end
+
+### Changes Made:
+1. **apps/cli/test/rust-ecosystem.test.ts**: Enhanced test file with comprehensive tests:
+   - Added helper functions for traversing virtual file tree (findFile, hasFile, getFileContent)
+   - Added tests for Rust base template structure (workspace Cargo.toml, server crate Cargo.toml, rust-toolchain.toml, .gitignore, .env.example)
+   - Added tests for Axum web framework dependencies and main.rs generation
+   - Added tests for Actix-web framework dependencies and main.rs generation
+   - Added tests for SQLx ORM dependencies
+   - Added tests for SeaORM dependencies
+   - Added tests for Tonic gRPC dependencies
+   - Added tests for async-graphql dependencies
+   - Added tests for Clap CLI dependencies
+   - Added tests for Ratatui TUI dependencies
+   - Added tests for Rust libraries (validator, jsonwebtoken, argon2)
+   - Added tests for full-stack Rust project with all options
+   - Added tests for minimal Rust project without frameworks
+   - Added tests verifying TypeScript ecosystem backward compatibility
+   - Added tests for ecosystem switching (TypeScript vs Rust)
+   - Added tests for project name handling
+
+### Note:
+The Rust Base Template was already implemented in a previous commit (192da468). This task verified and enhanced the test coverage to ensure comprehensive end-to-end testing of the Rust ecosystem functionality.
+
+### Test Results:
+- 35 tests pass
+- 204 expect() calls
+- All tests verify actual file contents, not just generation success
+
+### Status: COMPLETE
+

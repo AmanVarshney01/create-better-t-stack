@@ -20,8 +20,8 @@
 
 - [x] **Rust Ecosystem Tab** - Add new "Rust" tab to Builder page with proper UI/UX matching existing tabs
 - [x] **Rust Language Support** - Add Rust as a language option in the CLI and template generator with Cargo.toml scaffolding
-- [ ] **Rust Base Template** - Create base Rust project template with proper directory structure, Cargo workspace setup
-- [ ] **Rust Ecosystem Tests** - Write comprehensive tests verifying Rust ecosystem selection works end-to-end
+- [x] **Rust Base Template** - Create base Rust project template with proper directory structure, Cargo workspace setup
+- [x] **Rust Ecosystem Tests** - Write comprehensive tests verifying Rust ecosystem selection works end-to-end
 
 ---
 
