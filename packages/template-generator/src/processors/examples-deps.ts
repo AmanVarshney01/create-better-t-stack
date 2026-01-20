@@ -70,6 +70,7 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
   const useMastra = ai === "mastra";
   const useVoltAgent = ai === "voltagent";
   const useLangGraph = ai === "langgraph";
+  const useOpenAIAgents = ai === "openai-agents";
 
   if (backend === "convex" && convexBackendExists) {
     addPackageDependency({
@@ -98,6 +99,13 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
         packagePath: webPkgPath,
         dependencies: ["@langchain/langgraph", "@langchain/core", "@langchain/google-genai"],
       });
+    } else if (useOpenAIAgents) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPkgPath,
+        dependencies: ["@openai/agents"],
+        customDependencies: { zod: "^3.25.67" },
+      });
     } else {
       addPackageDependency({
         vfs,
@@ -125,6 +133,13 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
         packagePath: serverPkgPath,
         dependencies: ["@langchain/langgraph", "@langchain/core", "@langchain/google-genai"],
       });
+    } else if (useOpenAIAgents) {
+      addPackageDependency({
+        vfs,
+        packagePath: serverPkgPath,
+        dependencies: ["@openai/agents"],
+        customDependencies: { zod: "^3.25.67" },
+      });
     } else {
       addPackageDependency({
         vfs,
@@ -146,6 +161,10 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
       if (hasReactWeb) deps.push("@ai-sdk/react", "streamdown");
     } else if (useLangGraph) {
       // LangGraph uses native streaming - no special frontend SDK needed
+      // Just add streamdown for markdown rendering
+      if (hasReactWeb) deps.push("streamdown");
+    } else if (useOpenAIAgents) {
+      // OpenAI Agents SDK uses native streaming - no special frontend SDK needed
       // Just add streamdown for markdown rendering
       if (hasReactWeb) deps.push("streamdown");
     } else {

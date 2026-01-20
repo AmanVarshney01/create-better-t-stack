@@ -114,7 +114,16 @@ export const WebDeploySchema = z.enum(["cloudflare", "none"]).describe("Web depl
 export const ServerDeploySchema = z.enum(["cloudflare", "none"]).describe("Server deployment");
 
 export const AISchema = z
-  .enum(["vercel-ai", "mastra", "voltagent", "langgraph", "langchain", "llamaindex", "none"])
+  .enum([
+    "vercel-ai",
+    "mastra",
+    "voltagent",
+    "langgraph",
+    "openai-agents",
+    "langchain",
+    "llamaindex",
+    "none",
+  ])
   .describe("AI SDK");
 
 export const EffectSchema = z

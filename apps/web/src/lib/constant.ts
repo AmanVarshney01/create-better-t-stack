@@ -1367,6 +1367,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "openai-agents",
+      name: "OpenAI Agents SDK",
+      description: "Official multi-agent framework with handoffs and guardrails",
+      icon: "https://cdn.simpleicons.org/openai/412991",
+      color: "from-emerald-500 to-teal-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No AI SDK",
       description: "Skip AI SDK integration",

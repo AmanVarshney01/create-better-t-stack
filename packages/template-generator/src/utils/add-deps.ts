@@ -159,6 +159,9 @@ export const dependencyVersionMap = {
   "@langchain/core": "^1.1.12",
   "@langchain/google-genai": "^2.1.8",
 
+  // OpenAI Agents SDK
+  "@openai/agents": "^0.0.17",
+
   "@orpc/server": "^1.12.2",
   "@orpc/client": "^1.12.2",
   "@orpc/openapi": "^1.12.2",

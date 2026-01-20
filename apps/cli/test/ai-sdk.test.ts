@@ -387,6 +387,118 @@ describe("AI SDK Configuration", () => {
     });
   });
 
+  describe("OpenAI Agents SDK", () => {
+    it("should work with AI example + OpenAI Agents SDK", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-openai-agents",
+        examples: ["ai"],
+        ai: "openai-agents",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with AI example + OpenAI Agents SDK + Next.js (self backend)", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-openai-agents-next",
+        examples: ["ai"],
+        ai: "openai-agents",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with AI example + OpenAI Agents SDK + TanStack Start", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-openai-agents-start",
+        examples: ["ai"],
+        ai: "openai-agents",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "trpc",
+        frontend: ["tanstack-start"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with AI example + OpenAI Agents SDK + Express backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-openai-agents-express",
+        examples: ["ai"],
+        ai: "openai-agents",
+        backend: "express",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with OpenAI Agents SDK without AI example (SDK only)", async () => {
+      const result = await runTRPCTest({
+        projectName: "openai-agents-no-example",
+        examples: ["none"],
+        ai: "openai-agents",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+  });
+
   describe("AI SDK none option", () => {
     it("should work with ai: none", async () => {
       const result = await runTRPCTest({

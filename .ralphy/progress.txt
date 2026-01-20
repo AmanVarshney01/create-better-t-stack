@@ -4321,3 +4321,46 @@ The argon2 crate was already implemented in the template generator and CLI tests
 ### Test Results
 - All 18 AI SDK tests pass (including 4 new LangGraph.js tests)
 - Pre-existing lint warnings unchanged (not related to this task)
+
+
+## 2026-01-20: OpenAI Agents SDK Implementation
+
+### Task: Implement OpenAI Agents SDK as an AI SDK option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "openai-agents" to AISchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added OpenAI Agents SDK dependency version:
+   - @openai/agents: ^0.0.17
+3. **packages/template-generator/src/processors/examples-deps.ts**: Added OpenAI Agents SDK dependency processing:
+   - Added `useOpenAIAgents = ai === "openai-agents"` flag
+   - Added dependency handling for self backend (Next.js, TanStack Start)
+   - Added dependency handling for separate server (Hono, Express, etc.)
+   - Added frontend dependency handling (streamdown for markdown rendering)
+   - Added zod version pinning (^3.25.67) to avoid compatibility issues
+4. **apps/web/src/lib/constant.ts**: Added OpenAI Agents SDK to web builder AI options with:
+   - id: "openai-agents"
+   - name: "OpenAI Agents SDK"
+   - description: "Official multi-agent framework with handoffs and guardrails"
+   - icon: OpenAI SimpleIcons CDN
+   - color: emerald-to-teal gradient
+5. **apps/cli/test/ai-sdk.test.ts**: Added comprehensive tests:
+   - AI example + OpenAI Agents SDK with Hono backend
+   - AI example + OpenAI Agents SDK + Next.js (self backend)
+   - AI example + OpenAI Agents SDK + TanStack Start
+   - AI example + OpenAI Agents SDK + Express backend
+   - OpenAI Agents SDK without AI example (SDK only)
+
+### Features:
+- Official OpenAI multi-agent framework for building agent workflows
+- Lightweight yet powerful framework with minimal abstractions
+- Support for multi-agent handoffs and guardrails
+- Built-in tracing for debugging and optimization
+- Provider-agnostic (supports OpenAI APIs and more)
+- Compatible with Hono, Express, Next.js, TanStack Start backends
+- Zod version pinning to avoid compatibility issues with SDK
+
+### Tests:
+- All 5 OpenAI Agents SDK tests pass
+- All 23 AI SDK tests pass (including existing tests)
+
+### Status: COMPLETE

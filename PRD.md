@@ -81,7 +81,7 @@
 - [x] **Mastra** - TypeScript-native AI agent framework
 - [x] **VoltAgent** - AI agents with observability
 - [x] **LangGraph.js** - Graph-based agent orchestration
-- [ ] **OpenAI Agents SDK** - Official OpenAI multi-agent framework
+- [x] **OpenAI Agents SDK** - Official OpenAI multi-agent framework
 - [ ] **Google ADK** - Google's agent development kit
 - [ ] **ModelFusion** - Type-safe AI model library
 
