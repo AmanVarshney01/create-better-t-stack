@@ -1,10 +1,10 @@
 {
-  "name": "create-better-t-stack",
-  "version": "3.15.0",
+  "name": "create-better-fullstack",
+  "version": "1.0.0",
   "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
   "keywords": [
     "better-auth",
-    "better-t-stack",
+    "better-fullstack",
     "biome",
     "boilerplate",
     "cli",
@@ -28,16 +28,16 @@
     "type-safety",
     "typescript"
   ],
-  "homepage": "https://better-t-stack.dev/",
+  "homepage": "https://github.com/Marve10s/Better-Fullstack",
   "license": "MIT",
-  "author": "Aman Varshney",
+  "author": "Marve10s",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Marve10s/Better-Fullstack.git",
     "directory": "apps/cli"
   },
   "bin": {
-    "create-better-t-stack": "dist/cli.mjs"
+    "create-better-fullstack": "dist/cli.mjs"
   },
   "files": [
     "dist"
@@ -72,8 +72,8 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@better-t-stack/template-generator": "workspace:*",
-    "@better-t-stack/types": "workspace:*",
+    "@better-fullstack/template-generator": "workspace:*",
+    "@better-fullstack/types": "workspace:*",
     "@clack/core": "^0.5.0",
     "@clack/prompts": "^1.0.0-alpha.8",
     "@orpc/server": "^1.13.0",

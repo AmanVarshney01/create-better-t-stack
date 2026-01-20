@@ -45,7 +45,7 @@ jobs:
         id: check-version
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          if npm view create-better-t-stack@$VERSION version 2>/dev/null; then
+          if npm view create-better-fullstack@$VERSION version 2>/dev/null; then
             echo "Version $VERSION already exists on NPM"
             echo "exists=true" >> $GITHUB_OUTPUT
           else
@@ -112,7 +112,7 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           cd packages/template-generator
-          jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["@better-t-stack/types"] = $dep' package.json > tmp.json && mv tmp.json package.json
+          jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["@better-fullstack/types"] = $dep' package.json > tmp.json && mv tmp.json package.json
 
       - name: Build template-generator package
         if: steps.check-version.outputs.exists == 'false'
@@ -131,7 +131,7 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           cd apps/cli
-          jq --arg v "^$VERSION" '.dependencies["@better-t-stack/types"] = $v | .dependencies["@better-t-stack/template-generator"] = $v' package.json > tmp.json && mv tmp.json package.json
+          jq --arg v "^$VERSION" '.dependencies["@better-fullstack/types"] = $v | .dependencies["@better-fullstack/template-generator"] = $v' package.json > tmp.json && mv tmp.json package.json
 
       - name: Build CLI
         if: steps.check-version.outputs.exists == 'false'
@@ -145,7 +145,7 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           cd packages/create-bts
-          jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["create-better-t-stack"] = $dep' package.json > tmp.json && mv tmp.json package.json
+          jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["create-better-fullstack"] = $dep' package.json > tmp.json && mv tmp.json package.json
 
       - name: Publish CLI to NPM
         if: steps.check-version.outputs.exists == 'false'
@@ -170,10 +170,10 @@ jobs:
           echo "## Release v$VERSION Complete!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Published Packages" >> $GITHUB_STEP_SUMMARY
-          echo "- [create-better-t-stack@$VERSION](https://www.npmjs.com/package/create-better-t-stack/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
+          echo "- [create-better-fullstack@$VERSION](https://www.npmjs.com/package/create-better-fullstack/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
           echo "- [create-bts@$VERSION](https://www.npmjs.com/package/create-bts/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
-          echo "- [@better-t-stack/types@$VERSION](https://www.npmjs.com/package/@better-t-stack/types/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
-          echo "- [@better-t-stack/template-generator@$VERSION](https://www.npmjs.com/package/@better-t-stack/template-generator/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
+          echo "- [@better-fullstack/types@$VERSION](https://www.npmjs.com/package/@better-fullstack/types/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
+          echo "- [@better-fullstack/template-generator@$VERSION](https://www.npmjs.com/package/@better-fullstack/template-generator/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### GitHub Release" >> $GITHUB_STEP_SUMMARY
           echo "[v$VERSION](https://github.com/${{ github.repository }}/releases/tag/v$VERSION)" >> $GITHUB_STEP_SUMMARY

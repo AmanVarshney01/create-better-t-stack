@@ -9,7 +9,7 @@ import { getUserPkgManager } from "./utils/get-package-manager";
 export {
   dependencyVersionMap,
   type AvailableDependencies,
-} from "@better-t-stack/template-generator";
+} from "@better-fullstack/template-generator";
 
 const __filename = fileURLToPath(import.meta.url);
 const distPath = path.dirname(__filename);

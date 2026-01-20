@@ -1,17 +1,17 @@
 {
-  "name": "@better-t-stack/types",
-  "version": "3.15.0",
-  "description": "TypeScript types and schemas for create-better-t-stack CLI",
+  "name": "@better-fullstack/types",
+  "version": "1.0.0",
+  "description": "TypeScript types and schemas for create-better-fullstack CLI",
   "keywords": [
-    "better-t-stack",
+    "better-fullstack",
     "cli",
     "schemas",
     "types",
     "typescript"
   ],
-  "homepage": "https://better-t-stack.dev/",
+  "homepage": "https://github.com/Marve10s/Better-Fullstack",
   "license": "MIT",
-  "author": "Aman Varshney",
+  "author": "Marve10s",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Marve10s/Better-Fullstack.git",

@@ -1,5 +1,5 @@
-import { generateVirtualProject, EMBEDDED_TEMPLATES } from "@better-t-stack/template-generator";
-import { writeTreeToFilesystem } from "@better-t-stack/template-generator/fs-writer";
+import { generateVirtualProject, EMBEDDED_TEMPLATES } from "@better-fullstack/template-generator";
+import { writeTreeToFilesystem } from "@better-fullstack/template-generator/fs-writer";
 import { log } from "@clack/prompts";
 import { $ } from "execa";
 import fs from "fs-extra";

@@ -1,15 +1,15 @@
-import type { ProjectConfig } from "@better-t-stack/types";
+import type { ProjectConfig } from "@better-fullstack/types";
 
 import { createFileRoute } from "@tanstack/react-router";
 
-// VirtualNode type definition
+// VirtualNode type definition for transformed output
 interface VirtualNode {
   name: string;
   path: string;
   type: "file" | "directory";
   content?: string;
   extension?: string;
-  children: VirtualNode[];
+  children?: VirtualNode[];
 }
 
 interface StackState {
@@ -63,6 +63,7 @@ function stackStateToConfig(state: StackState): ProjectConfig {
     projectName: state.projectName || "my-better-t-app",
     projectDir: "/virtual",
     relativePath: "./virtual",
+    ecosystem: "typescript" as ProjectConfig["ecosystem"],
     database: (state.database || "none") as ProjectConfig["database"],
     orm: (state.orm || "none") as ProjectConfig["orm"],
     backend: backend as ProjectConfig["backend"],
@@ -91,10 +92,26 @@ function stackStateToConfig(state: StackState): ProjectConfig {
     serverDeploy: (state.serverDeploy || "none") as ProjectConfig["serverDeploy"],
     cssFramework: (state.cssFramework || "tailwind") as ProjectConfig["cssFramework"],
     uiLibrary: (state.uiLibrary || "shadcn-ui") as ProjectConfig["uiLibrary"],
+    validation: "none" as ProjectConfig["validation"],
+    realtime: "none" as ProjectConfig["realtime"],
+    jobQueue: "none" as ProjectConfig["jobQueue"],
+    animation: "none" as ProjectConfig["animation"],
+    fileUpload: "none" as ProjectConfig["fileUpload"],
+    logging: "none" as ProjectConfig["logging"],
+    observability: "none" as ProjectConfig["observability"],
+    cms: "none" as ProjectConfig["cms"],
+    caching: "none" as ProjectConfig["caching"],
+    rustWebFramework: "none" as ProjectConfig["rustWebFramework"],
+    rustFrontend: "none" as ProjectConfig["rustFrontend"],
+    rustOrm: "none" as ProjectConfig["rustOrm"],
+    rustApi: "none" as ProjectConfig["rustApi"],
+    rustCli: "none" as ProjectConfig["rustCli"],
+    rustLibraries: [] as ProjectConfig["rustLibraries"],
   };
 }
 
-function transformTree(node: VirtualNode): Record<string, unknown> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function transformTree(node: any): VirtualNode {
   if (node.type === "file") {
     return {
       name: node.name,
@@ -109,7 +126,7 @@ function transformTree(node: VirtualNode): Record<string, unknown> {
     name: node.name,
     path: node.path,
     type: "directory" as const,
-    children: node.children.map(transformTree),
+    children: node.children?.map(transformTree) || [],
   };
 }
 
@@ -122,7 +139,7 @@ export const Route = createFileRoute("/api/preview")({
 
           // Dynamic import to keep this server-only
           const { generateVirtualProject, EMBEDDED_TEMPLATES } =
-            await import("@better-t-stack/template-generator");
+            await import("@better-fullstack/template-generator");
 
           const config = stackStateToConfig(body);
 

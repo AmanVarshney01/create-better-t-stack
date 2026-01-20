@@ -69,7 +69,7 @@ jobs:
       - name: Update template-generator package version and types dependency
         run: |
           cd packages/template-generator
-          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["@better-t-stack/types"] = $v' package.json > tmp.json && mv tmp.json package.json
+          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["@better-fullstack/types"] = $v' package.json > tmp.json && mv tmp.json package.json
 
       - name: Build template-generator package
         run: cd packages/template-generator && bun run build
@@ -83,12 +83,12 @@ jobs:
       - name: Update CLI package version and dependencies
         run: |
           cd apps/cli
-          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["@better-t-stack/types"] = $v | .dependencies["@better-t-stack/template-generator"] = $v' package.json > tmp.json && mv tmp.json package.json
+          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["@better-fullstack/types"] = $v | .dependencies["@better-fullstack/template-generator"] = $v' package.json > tmp.json && mv tmp.json package.json
 
       - name: Update create-bts alias package version
         run: |
           cd packages/create-bts
-          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["create-better-t-stack"] = $v' package.json > tmp.json && mv tmp.json package.json
+          jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["create-better-fullstack"] = $v' package.json > tmp.json && mv tmp.json package.json
 
       - name: Build CLI
         run: cd apps/cli && bun run build
@@ -128,10 +128,10 @@ jobs:
 
             | Package | Version | NPM Tag |
             |---------|---------|---------|
-            | `create-better-t-stack` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+            | `create-better-fullstack` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
             | `create-bts` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
-            | `@better-t-stack/types` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
-            | `@better-t-stack/template-generator` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+            | `@better-fullstack/types` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+            | `@better-fullstack/template-generator` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
 
             **Commit:** `${{ steps.version.outputs.commit }}`
 
@@ -139,12 +139,12 @@ jobs:
 
             ```bash
             # Using the PR tag (always gets latest for this PR)
-            bunx create-better-t-stack@pr${{ steps.version.outputs.pr }}
-            npx create-better-t-stack@pr${{ steps.version.outputs.pr }}
+            bunx create-better-fullstack@pr${{ steps.version.outputs.pr }}
+            npx create-better-fullstack@pr${{ steps.version.outputs.pr }}
 
             # Using exact version
-            bunx create-better-t-stack@${{ steps.version.outputs.version }}
-            npx create-better-t-stack@${{ steps.version.outputs.version }}
+            bunx create-better-fullstack@${{ steps.version.outputs.version }}
+            npx create-better-fullstack@${{ steps.version.outputs.version }}
 
             # Using the alias
             bunx create-bts@pr${{ steps.version.outputs.pr }}
@@ -152,10 +152,10 @@ jobs:
             ```
 
             ### NPM Links
-            - [create-better-t-stack@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/create-better-t-stack/v/${{ steps.version.outputs.version }})
+            - [create-better-fullstack@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/create-better-fullstack/v/${{ steps.version.outputs.version }})
             - [create-bts@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/create-bts/v/${{ steps.version.outputs.version }})
-            - [@better-t-stack/types@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/@better-t-stack/types/v/${{ steps.version.outputs.version }})
-            - [@better-t-stack/template-generator@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/@better-t-stack/template-generator/v/${{ steps.version.outputs.version }})
+            - [@better-fullstack/types@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/@better-fullstack/types/v/${{ steps.version.outputs.version }})
+            - [@better-fullstack/template-generator@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/@better-fullstack/template-generator/v/${{ steps.version.outputs.version }})
 
             ---
             *To publish a new preview after more commits, remove and re-add the `preview` label.*

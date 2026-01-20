@@ -1,4 +1,4 @@
-import type { ProjectConfig, Database, Runtime, ORM } from "@better-t-stack/types";
+import type { ProjectConfig, Database, Runtime, ORM } from "@better-fullstack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 

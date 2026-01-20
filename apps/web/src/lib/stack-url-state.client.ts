@@ -69,6 +69,7 @@ export function useStackState() {
   const initialized = useRef(false);
 
   // Get search params from the route
+  // @ts-expect-error - route path typing with strict: false
   const search = useSearch({ from: "/new", strict: false }) as StackSearchParams | undefined;
 
   // Initialize from URL on client mount only (for shared links)

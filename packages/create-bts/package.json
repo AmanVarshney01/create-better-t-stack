@@ -1,13 +1,13 @@
 {
-  "name": "create-bts",
-  "version": "3.15.0",
-  "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations (alias for create-better-t-stack)",
+  "name": "create-bfs",
+  "version": "1.0.0",
+  "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations (alias for create-better-fullstack)",
   "keywords": [
     "better-auth",
-    "better-t-stack",
+    "better-fullstack",
+    "bfs",
     "biome",
     "boilerplate",
-    "bts",
     "cli",
     "drizzle",
     "elysia",
@@ -29,16 +29,16 @@
     "type-safety",
     "typescript"
   ],
-  "homepage": "https://better-t-stack.dev/",
+  "homepage": "https://github.com/Marve10s/Better-Fullstack",
   "license": "MIT",
-  "author": "Aman Varshney",
+  "author": "Marve10s",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Marve10s/Better-Fullstack.git",
     "directory": "packages/create-bts"
   },
   "bin": {
-    "create-bts": "cli.js"
+    "create-bfs": "cli.js"
   },
   "files": [
     "cli.js",
@@ -65,6 +65,6 @@
     "lint": "oxlint ."
   },
   "dependencies": {
-    "create-better-t-stack": "^3.15.0"
+    "create-better-fullstack": "^1.0.0"
   }
 }

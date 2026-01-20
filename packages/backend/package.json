@@ -1,5 +1,5 @@
 {
-  "name": "@better-t-stack/backend",
+  "name": "@better-fullstack/backend",
   "version": "1.0.0",
   "private": true,
   "description": "",
@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@convex-dev/crons": "^0.2.0",
-    "@erquhart/convex-oss-stats": "^0.8.2",
     "convex": "^1.31.0",
     "convex-helpers": "^0.1.107"
   },

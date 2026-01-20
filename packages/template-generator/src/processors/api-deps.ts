@@ -1,4 +1,4 @@
-import type { ProjectConfig, Frontend, API, Backend } from "@better-t-stack/types";
+import type { ProjectConfig, Frontend, API, Backend } from "@better-fullstack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 

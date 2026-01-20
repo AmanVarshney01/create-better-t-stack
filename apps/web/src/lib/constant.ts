@@ -1502,6 +1502,34 @@ export const TECH_OPTIONS: Record<
       default: true,
     },
   ],
+  effect: [
+    {
+      id: "effect",
+      name: "Effect (Core)",
+      description: "Powerful effect system for TypeScript",
+      icon: "/icon/effect.svg",
+      color: "from-indigo-400 to-indigo-600",
+      default: false,
+      className: "invert-0 dark:invert",
+    },
+    {
+      id: "effect-full",
+      name: "Effect Full",
+      description: "Full ecosystem with Schema, Platform, and SQL",
+      icon: "/icon/effect.svg",
+      color: "from-purple-400 to-purple-600",
+      className: "invert-0 dark:invert",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "None",
+      description: "No Effect library",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
   caching: [
     {
       id: "upstash-redis",

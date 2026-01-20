@@ -1,10 +1,7 @@
-import type { UrlKeys } from "nuqs";
-
 import type { StackState } from "@/lib/constant";
 
-export const stackUrlKeys: UrlKeys<
-  Record<keyof StackState, unknown> & { viewMode: unknown; selectedFile: unknown }
-> = {
+// Mapping from StackState keys to short URL parameter keys
+export const stackUrlKeys: Record<keyof StackState, string> = {
   ecosystem: "eco",
   projectName: "name",
   webFrontend: "fe-w",
@@ -44,13 +41,10 @@ export const stackUrlKeys: UrlKeys<
   webDeploy: "wd",
   serverDeploy: "sd",
   yolo: "yolo",
-  // Rust ecosystem fields
   rustWebFramework: "rwf",
   rustFrontend: "rfe",
   rustOrm: "rorm",
   rustApi: "rapi",
   rustCli: "rcli",
   rustLibraries: "rlib",
-  viewMode: "view",
-  selectedFile: "file",
 };

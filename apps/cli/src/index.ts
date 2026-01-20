@@ -291,14 +291,14 @@ export {
   EMBEDDED_TEMPLATES,
   TEMPLATE_COUNT,
   generateVirtualProject,
-} from "@better-t-stack/template-generator";
+} from "@better-fullstack/template-generator";
 
 // Import for createVirtual
 import {
   generateVirtualProject as generate,
   type VirtualFileTree,
   EMBEDDED_TEMPLATES,
-} from "@better-t-stack/template-generator";
+} from "@better-fullstack/template-generator";
 
 /**
  * Programmatic API to generate a project in-memory (virtual filesystem).

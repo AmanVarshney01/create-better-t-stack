@@ -9,11 +9,11 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
-    "dev:cli": "turbo run dev --filter=create-better-t-stack",
+    "dev:cli": "turbo run dev --filter=create-better-fullstack",
     "cli": "cd apps/cli && node dist/cli.js",
     "dev:web": "turbo run dev --filter=web",
     "build:web": "turbo run build --filter=web",
-    "build:cli": "turbo run build --filter=create-better-t-stack",
+    "build:cli": "turbo run build --filter=create-better-fullstack",
     "lint": "turbo lint",
     "check": "oxfmt . && oxlint .",
     "prepare": "lefthook install",
@@ -21,7 +21,7 @@
     "bump": "bun run scripts/bump-version.ts",
     "canary": "bun run scripts/canary-release.ts",
     "cleanup-previews": "bun run scripts/cleanup-previews.ts",
-    "deploy:convex": "turbo run --filter=@better-t-stack/backend deploy",
+    "deploy:convex": "turbo run --filter=@better-fullstack/backend deploy",
     "deploy:web": "bun run --filter=web deploy",
     "generate": "bun run --filter=web generate-schema",
     "deploy": "bun run deploy:web"

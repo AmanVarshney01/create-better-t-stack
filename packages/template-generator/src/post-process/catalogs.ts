@@ -3,7 +3,7 @@
  * Deduplicates dependencies across packages using pnpm/bun catalogs
  */
 
-import type { ProjectConfig } from "@better-t-stack/types";
+import type { ProjectConfig } from "@better-fullstack/types";
 
 import yaml from "yaml";
 

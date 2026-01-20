@@ -26,6 +26,7 @@ export type TechCategory =
   | "validation"
   | "testing"
   | "realtime"
+  | "jobQueue"
   | "caching"
   | "animation"
   | "cssFramework"
@@ -39,6 +40,7 @@ export type TechCategory =
   | "ai"
   | "git"
   | "install"
+  | "effect"
   // Rust ecosystem categories
   | "rustWebFramework"
   | "rustFrontend"

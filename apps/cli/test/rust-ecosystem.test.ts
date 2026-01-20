@@ -1,4 +1,4 @@
-import type { VirtualNode, VirtualFile } from "@better-t-stack/template-generator";
+import type { VirtualNode, VirtualFile } from "@better-fullstack/template-generator";
 
 import { describe, expect, it } from "bun:test";
 

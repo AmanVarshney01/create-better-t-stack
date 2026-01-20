@@ -1,6 +1,6 @@
 /**
  * Virtual filesystem export for web preview
- * Re-exports from @better-t-stack/template-generator for browser-compatible usage
+ * Re-exports from @better-fullstack/template-generator for browser-compatible usage
  */
 
 // Re-export everything from template-generator for web/programmatic usage
@@ -19,7 +19,7 @@ export {
   // Embedded templates for browser usage
   EMBEDDED_TEMPLATES,
   TEMPLATE_COUNT,
-} from "@better-t-stack/template-generator";
+} from "@better-fullstack/template-generator";
 
 // Re-export types needed for configuration options
 export type {
@@ -38,4 +38,4 @@ export type {
   WebDeploy,
   ServerDeploy,
   ProjectConfig,
-} from "@better-t-stack/types";
+} from "@better-fullstack/types";
