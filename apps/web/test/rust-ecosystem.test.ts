@@ -180,6 +180,15 @@ describe("Rust Ecosystem Tab", () => {
       expect(jwtOption?.name).toBe("jsonwebtoken");
       expect(jwtOption?.description).toContain("JWT");
     });
+
+    it("should have argon2 option for rustLibraries", () => {
+      const options = TECH_OPTIONS.rustLibraries;
+      const argon2Option = options.find((o) => o.id === "argon2");
+      expect(argon2Option).toBeDefined();
+      expect(argon2Option?.default).toBe(false);
+      expect(argon2Option?.name).toBe("Argon2");
+      expect(argon2Option?.description).toContain("password hashing");
+    });
   });
 
   describe("DEFAULT_STACK", () => {

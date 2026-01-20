@@ -4074,3 +4074,31 @@ Serde was already implemented as a core workspace dependency in all Rust project
 - CLI: 97 tests passing
 
 ### Status: COMPLETE
+
+## 2026-01-20: Argon2 Password Hashing Library - Web UI Exposure
+
+### Task: Expose Argon2 password hashing library in web UI for Rust ecosystem
+
+### Background:
+The argon2 crate was already implemented in the template generator and CLI tests, but was not exposed in the web UI. This task adds the UI option for selecting argon2 in the stack builder.
+
+### Changes Made:
+1. **apps/web/src/lib/constant.ts**: Added argon2 to `rustLibraries` tech options:
+   - id: "argon2"
+   - name: "Argon2"
+   - description: "Secure password hashing (Argon2id winner of PHC)"
+   - color: "from-purple-500 to-purple-700"
+   
+2. **apps/web/test/rust-ecosystem.test.ts**: Added test for argon2 option in rustLibraries
+
+### Features:
+- Argon2 (version 0.5) is the winner of the Password Hashing Competition (PHC)
+- Provides secure password hashing with Argon2id variant (memory-hard, side-channel resistant)
+- Already supported in Cargo.toml templates with conditional include
+- Works with all Rust web frameworks (Axum, Actix-web)
+
+### Tests:
+- All 144 Rust ecosystem tests pass
+- Specific argon2 test verifies the option is present in rustLibraries
+
+### Status: COMPLETE

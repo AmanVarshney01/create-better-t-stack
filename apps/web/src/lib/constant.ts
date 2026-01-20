@@ -1643,6 +1643,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "argon2",
+      name: "Argon2",
+      description: "Secure password hashing (Argon2id winner of PHC)",
+      icon: "",
+      color: "from-purple-500 to-purple-700",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Additional Libraries",
       description: "Skip additional Rust core libraries",

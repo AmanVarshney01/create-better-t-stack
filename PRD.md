@@ -65,7 +65,7 @@
 - [x] **serde** - Serialization framework (de facto standard)
 - [x] **validator** - Derive-based validation
 - [x] **jsonwebtoken** - JWT encoding/decoding
-- [ ] **argon2** - Password hashing
+- [x] **argon2** - Password hashing
 - [ ] **tokio-test** - Async testing utilities
 - [ ] **mockall** - Mocking library
 
