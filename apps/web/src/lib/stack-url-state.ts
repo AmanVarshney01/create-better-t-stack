@@ -58,6 +58,7 @@ export function loadStackParams(
       appPlatforms: getArray("appPlatforms", DEFAULT_STACK.appPlatforms),
       packageManager: getString("packageManager", DEFAULT_STACK.packageManager),
       examples: getArray("examples", DEFAULT_STACK.examples),
+      aiSdk: getString("aiSdk", DEFAULT_STACK.aiSdk),
       git: getString("git", DEFAULT_STACK.git),
       install: getString("install", DEFAULT_STACK.install),
       webDeploy: getString("webDeploy", DEFAULT_STACK.webDeploy),
@@ -128,6 +129,7 @@ export function serializeStackParams(basePath: string, stack: StackState): strin
   addParam("appPlatforms", stack.appPlatforms);
   addParam("packageManager", stack.packageManager);
   addParam("examples", stack.examples);
+  addParam("aiSdk", stack.aiSdk);
   addParam("git", stack.git);
   addParam("install", stack.install);
   addParam("webDeploy", stack.webDeploy);

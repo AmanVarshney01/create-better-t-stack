@@ -45,7 +45,7 @@ function setupTodoDependencies(vfs: VirtualFileSystem, config: ProjectConfig): v
 }
 
 function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { frontend, backend } = config;
+  const { frontend, backend, ai } = config;
 
   const webPkgPath = "apps/web/package.json";
   const nativePkgPath = "apps/native/package.json";
@@ -66,6 +66,9 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
     ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
   );
 
+  // Check if Mastra is selected as the AI SDK
+  const useMastra = ai === "mastra";
+
   if (backend === "convex" && convexBackendExists) {
     addPackageDependency({
       vfs,
@@ -74,23 +77,42 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
       customDependencies: { ai: "^5.0.117", "@ai-sdk/google": "^2.0.52" },
     });
   } else if (backend === "self" && webExists) {
-    addPackageDependency({
-      vfs,
-      packagePath: webPkgPath,
-      dependencies: ["ai", "@ai-sdk/google", "@ai-sdk/devtools"],
-    });
+    if (useMastra) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPkgPath,
+        dependencies: ["mastra", "@mastra/core"],
+      });
+    } else {
+      addPackageDependency({
+        vfs,
+        packagePath: webPkgPath,
+        dependencies: ["ai", "@ai-sdk/google", "@ai-sdk/devtools"],
+      });
+    }
   } else if (serverExists && backend !== "none") {
-    addPackageDependency({
-      vfs,
-      packagePath: serverPkgPath,
-      dependencies: ["ai", "@ai-sdk/google", "@ai-sdk/devtools"],
-    });
+    if (useMastra) {
+      addPackageDependency({
+        vfs,
+        packagePath: serverPkgPath,
+        dependencies: ["mastra", "@mastra/core"],
+      });
+    } else {
+      addPackageDependency({
+        vfs,
+        packagePath: serverPkgPath,
+        dependencies: ["ai", "@ai-sdk/google", "@ai-sdk/devtools"],
+      });
+    }
   }
 
   if (webExists) {
     const deps: AvailableDependencies[] = [];
     if (backend === "convex") {
       if (hasReactWeb) deps.push("@convex-dev/agent", "streamdown");
+    } else if (useMastra) {
+      // Mastra uses @ai-sdk/react for frontend integration
+      if (hasReactWeb) deps.push("@ai-sdk/react", "streamdown");
     } else {
       deps.push("ai");
       if (hasNuxt) deps.push("@ai-sdk/vue");

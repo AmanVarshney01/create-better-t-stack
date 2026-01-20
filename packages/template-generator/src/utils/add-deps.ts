@@ -144,6 +144,10 @@ export const dependencyVersionMap = {
   streamdown: "^1.6.10",
   shiki: "^3.20.0",
 
+  // Mastra AI Framework
+  mastra: "^0.24.9",
+  "@mastra/core": "^0.24.9",
+
   "@orpc/server": "^1.12.2",
   "@orpc/client": "^1.12.2",
   "@orpc/openapi": "^1.12.2",

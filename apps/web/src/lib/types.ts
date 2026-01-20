@@ -34,6 +34,7 @@ export type TechCategory =
   | "appPlatforms"
   | "packageManager"
   | "examples"
+  | "ai"
   | "git"
   | "install"
   // Rust ecosystem categories

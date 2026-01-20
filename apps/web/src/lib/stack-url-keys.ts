@@ -35,6 +35,7 @@ export const stackUrlKeys: UrlKeys<
   appPlatforms: "ap",
   packageManager: "pm",
   examples: "ex",
+  aiSdk: "aisdk",
   git: "git",
   install: "i",
   webDeploy: "wd",

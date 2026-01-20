@@ -1,3 +1,5 @@
+"use client";
+
 import { useSearch } from "@tanstack/react-router";
 import { useCallback, useState, useEffect, useRef } from "react";
 
@@ -40,6 +42,7 @@ function searchToStack(search: StackSearchParams | undefined): StackState {
     appPlatforms: search.ap ?? DEFAULT_STACK.appPlatforms,
     packageManager: search.pm ?? DEFAULT_STACK.packageManager,
     examples: search.ex ?? DEFAULT_STACK.examples,
+    aiSdk: search.aisdk ?? DEFAULT_STACK.aiSdk,
     git: search.git ?? DEFAULT_STACK.git,
     install: search.i ?? DEFAULT_STACK.install,
     webDeploy: search.wd ?? DEFAULT_STACK.webDeploy,

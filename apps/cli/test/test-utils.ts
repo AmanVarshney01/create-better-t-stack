@@ -36,6 +36,7 @@ import type {
 import { create } from "../src/index";
 import {
   AddonsSchema,
+  AISchema,
   AnimationSchema,
   APISchema,
   AstroIntegrationSchema,
@@ -263,6 +264,7 @@ export const ANIMATIONS = extractEnumValues(AnimationSchema);
 export const FILE_UPLOADS = extractEnumValues(FileUploadSchema);
 export const LOGGINGS = extractEnumValues(LoggingSchema);
 export const OBSERVABILITIES = extractEnumValues(ObservabilitySchema);
+export const AI_SDKS = extractEnumValues(AISchema);
 export const ECOSYSTEMS = extractEnumValues(EcosystemSchema);
 export const RUST_WEB_FRAMEWORKS = extractEnumValues(RustWebFrameworkSchema);
 export const RUST_FRONTENDS = extractEnumValues(RustFrontendSchema);

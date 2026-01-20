@@ -1332,6 +1332,33 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
   ],
+  ai: [
+    {
+      id: "vercel-ai",
+      name: "Vercel AI SDK",
+      description: "Unified AI SDK for streaming responses and multiple providers",
+      icon: "https://cdn.simpleicons.org/vercel/000000",
+      color: "from-gray-700 to-black",
+      default: true,
+      className: "invert-0 dark:invert",
+    },
+    {
+      id: "mastra",
+      name: "Mastra",
+      description: "TypeScript-native AI agent framework with workflows",
+      icon: "/icon/mastra.svg",
+      color: "from-purple-500 to-indigo-600",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No AI SDK",
+      description: "Skip AI SDK integration",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: false,
+    },
+  ],
   realtime: [
     {
       id: "socket-io",
@@ -1724,6 +1751,7 @@ export const ECOSYSTEM_CATEGORIES: Record<Ecosystem, TechCategory[]> = {
     "fileUpload",
     "logging",
     "observability",
+    "ai",
     "codeQuality",
     "documentation",
     "appPlatforms",
@@ -1986,6 +2014,7 @@ export type StackState = {
   appPlatforms: string[];
   packageManager: string;
   examples: string[];
+  aiSdk: string;
   git: string;
   install: string;
   api: string;
@@ -2031,6 +2060,7 @@ export const DEFAULT_STACK: StackState = {
   appPlatforms: ["turborepo"],
   packageManager: "bun",
   examples: [],
+  aiSdk: "vercel-ai",
   git: "true",
   install: "true",
   api: "trpc",

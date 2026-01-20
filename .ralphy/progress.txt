@@ -4181,3 +4181,46 @@ The argon2 crate was already implemented in the template generator and CLI tests
 - Test for both tokio-test and mockall together confirms proper [dev-dependencies] section
 
 ### Status: COMPLETE
+
+## 2026-01-20: Mastra AI Agent Framework Implementation
+
+### Task: Implement Mastra as an AI SDK option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "mastra" to AISchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Mastra dependency versions:
+   - mastra: ^0.24.9
+   - @mastra/core: ^0.24.9
+3. **packages/template-generator/src/processors/examples-deps.ts**: Modified setupAIDependencies to check for Mastra:
+   - When ai="mastra", adds mastra and @mastra/core dependencies instead of Vercel AI SDK
+   - Mastra uses @ai-sdk/react for frontend integration (compatible with AI SDK ecosystem)
+4. **apps/web/src/lib/types.ts**: Added "ai" to TechCategory union type
+5. **apps/web/src/lib/constant.ts**: 
+   - Added "ai" category to TECH_OPTIONS with vercel-ai, mastra, and none options
+   - Added "ai" to ECOSYSTEM_CATEGORIES.typescript array
+   - Added "aiSdk" field to StackState type
+   - Added default aiSdk value to DEFAULT_STACK
+6. **apps/web/src/lib/stack-url-keys.ts**: Added aiSdk: "aisdk" URL key mapping
+7. **apps/web/src/lib/stack-search-schema.ts**: Added aisdk parameter to search schema
+8. **apps/web/src/lib/stack-url-state.ts**: Added aiSdk field to loadStackParams and serializeStackParams
+9. **apps/web/src/lib/stack-url-state.client.ts**: Added aiSdk field to searchToStack conversion
+10. **apps/web/public/icon/mastra.svg**: Created Mastra icon for web UI
+11. **apps/cli/test/ai-sdk.test.ts**: Created comprehensive test suite for AI SDK options
+12. **apps/cli/test/test-utils.ts**: Added AISchema import and AI_SDKS export for testing
+
+### Features:
+- Users can now select Mastra as an alternative AI SDK to Vercel AI SDK
+- Mastra dependencies are automatically added when selected
+- Web UI includes new "AI SDK" category for selection
+- Full support for different backend configurations (Hono, Express, NestJS, etc.)
+- Works with self-hosted backends (Next.js, TanStack Start)
+
+### Tests Added:
+- 9 test cases covering:
+  - Vercel AI SDK with various frontends
+  - Mastra with various backends (Hono, Express, Next.js, TanStack Start)
+  - AI SDK without AI example
+  - No AI SDK option
+
+### Status: COMPLETE
+
