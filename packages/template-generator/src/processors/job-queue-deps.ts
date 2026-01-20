@@ -41,6 +41,12 @@ function getJobQueueDeps(jobQueue: ProjectConfig["jobQueue"]): AvailableDependen
     case "inngest":
       deps.push("inngest");
       break;
+    case "temporal":
+      deps.push("@temporalio/client");
+      deps.push("@temporalio/worker");
+      deps.push("@temporalio/workflow");
+      deps.push("@temporalio/activity");
+      break;
   }
 
   return deps;

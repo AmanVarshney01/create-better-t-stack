@@ -1,0 +1,175 @@
+/**
+ * Temporal Activities
+ *
+ * Activities are the building blocks of workflows - they perform the actual work.
+ * Activities can make network calls, interact with databases, or perform any side effects.
+ * They automatically retry on failure based on configuration.
+ *
+ * @see https://docs.temporal.io/develop/typescript/core-application#develop-activities
+ */
+
+// Activity context provides utilities like heartbeating for long-running activities
+// import { Context } from "@temporalio/activity";
+
+/**
+ * Send an email activity
+ * @param to - Recipient email address
+ * @param subject - Email subject
+ * @param body - Email body content
+ */
+export async function sendEmail(
+  to: string,
+  subject: string,
+  body: string
+): Promise<{ sent: boolean; timestamp: string }> {
+  // TODO: Implement your email sending logic here
+  // Example with a hypothetical email service:
+  // await emailService.send({ to, subject, body });
+
+  // Simulate email sending
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  console.log(`[Activity] Sending email to ${to}: ${subject}`);
+
+  return {
+    sent: true,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Send a notification activity
+ * @param userId - User ID to send notification to
+ * @param type - Notification type: "push" | "in-app" | "sms"
+ * @param message - Notification message
+ */
+export async function sendNotification(
+  userId: string,
+  type: "push" | "in-app" | "sms",
+  message: string
+): Promise<{ sent: boolean; type: string; timestamp: string }> {
+  // TODO: Implement your notification logic here
+  // switch (type) {
+  //   case "push":
+  //     await pushService.send(userId, message);
+  //     break;
+  //   case "in-app":
+  //     await inAppNotificationService.create(userId, message);
+  //     break;
+  //   case "sms":
+  //     await smsService.send(userId, message);
+  //     break;
+  // }
+
+  // Simulate notification sending
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
+  console.log(`[Activity] Sending ${type} notification to user ${userId}: ${message}`);
+
+  return {
+    sent: true,
+    type,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Process data activity
+ * @param dataId - ID of the data to process
+ * @param operation - Operation to perform: "transform" | "aggregate" | "export"
+ */
+export async function processData(
+  dataId: string,
+  operation: "transform" | "aggregate" | "export"
+): Promise<{ processed: boolean; dataId: string; operation: string }> {
+  // TODO: Implement your data processing logic here
+  // const data = await database.getData(dataId);
+  // switch (operation) {
+  //   case "transform":
+  //     return await transformData(data);
+  //   case "aggregate":
+  //     return await aggregateData(data);
+  //   case "export":
+  //     return await exportData(data);
+  // }
+
+  // For long-running activities, use heartbeating to report progress
+  // const ctx = Context.current();
+  // ctx.heartbeat("Processing started");
+
+  // Simulate data processing
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  console.log(`[Activity] Processing data ${dataId} with operation ${operation}`);
+
+  return {
+    processed: true,
+    dataId,
+    operation,
+  };
+}
+
+/**
+ * Cleanup activity for scheduled jobs
+ * Removes expired sessions, clears stale cache, etc.
+ */
+export async function performCleanup(): Promise<{ cleaned: boolean; timestamp: string }> {
+  // TODO: Implement your cleanup logic here
+  // await database.deleteExpiredSessions();
+  // await cache.clearStale();
+
+  // Simulate cleanup
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  console.log("[Activity] Performing scheduled cleanup");
+
+  return {
+    cleaned: true,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Generate daily report activity
+ */
+export async function generateReport(): Promise<{
+  generatedAt: string;
+  metrics: { users: number; events: number };
+}> {
+  // TODO: Implement your report generation logic here
+  // const stats = await analytics.getDailyStats();
+  // return generateReportData(stats);
+
+  // Simulate report generation
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  console.log("[Activity] Generating daily report");
+
+  return {
+    generatedAt: new Date().toISOString(),
+    metrics: {
+      users: 100,
+      events: 500,
+    },
+  };
+}
+
+/**
+ * Fetch user data activity
+ * @param userId - User ID to fetch data for
+ */
+export async function fetchUserData(
+  userId: string
+): Promise<{ userId: string; email: string; name: string }> {
+  // TODO: Implement your user data fetching logic
+  // return await database.getUser(userId);
+
+  // Simulate database fetch
+  await new Promise((resolve) => setTimeout(resolve, 300));
+
+  return {
+    userId,
+    email: `user-${userId}@example.com`,
+    name: `User ${userId}`,
+  };
+}

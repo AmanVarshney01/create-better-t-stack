@@ -4770,3 +4770,47 @@ Tests: 15 passing
 - Works with fullstack frameworks (Next.js, TanStack Start)
 
 ### Status: COMPLETE
+
+## 2026-01-20: Temporal Workflow Orchestration Implementation
+
+### Task: Implement Temporal as a job queue/workflow orchestration option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "temporal" to JobQueueSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Temporal dependency versions:
+   - @temporalio/client: ^1.11.7
+   - @temporalio/worker: ^1.11.7
+   - @temporalio/workflow: ^1.11.7
+   - @temporalio/activity: ^1.11.7
+3. **packages/template-generator/src/processors/job-queue-deps.ts**: Added Temporal dependency processing
+4. **packages/template-generator/src/processors/env-vars.ts**: Added Temporal environment variables:
+   - TEMPORAL_ADDRESS (default: localhost:7233)
+   - TEMPORAL_NAMESPACE (default: 'default')
+   - TEMPORAL_TASK_QUEUE (defaults to project name)
+5. **packages/template-generator/templates/job-queue/temporal/server/base/src/temporal/**: Created Temporal templates:
+   - client.ts.hbs - Temporal client connection management
+   - activities.ts.hbs - Activity definitions (email, notification, data processing, cleanup, reports)
+   - workflows.ts.hbs - Workflow definitions with signal handling, sleep, and saga patterns
+   - worker.ts.hbs - Worker configuration and startup
+6. **apps/web/src/lib/constant.ts**: Added Temporal to web builder job queue options
+7. **apps/web/public/icon/temporal.svg**: Added Temporal icon
+8. **apps/cli/test/job-queue.test.ts**: Added comprehensive Temporal tests (14 new tests):
+   - Temporal with different backends (Hono, Express, Fastify, Elysia, NestJS)
+   - Temporal with fullstack frameworks (Next.js, TanStack Start)
+   - Temporal with different frontends (TanStack Router, React Router, Svelte, Solid)
+   - Temporal with database setups (PostgreSQL/Drizzle, SQLite/Prisma)
+
+### Features:
+- Full durable workflow orchestration with Temporal
+- Activity-based architecture for side effects (retries, timeouts)
+- Workflow patterns: signals, sleep, saga/compensation
+- Example workflows: email sending, notifications, data processing, scheduled jobs, welcome sequences, order processing, batch processing
+- Worker configuration with customizable task queue
+- Compatible with all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+- Compatible with fullstack frameworks (Next.js, TanStack Start)
+
+### Test Results:
+- All 54 job queue tests pass (including 14 new Temporal tests)
+- No linting errors in modified files
+
+### Status: COMPLETE

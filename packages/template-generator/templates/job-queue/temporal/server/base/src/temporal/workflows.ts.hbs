@@ -1,0 +1,252 @@
+/**
+ * Temporal Workflows
+ *
+ * Workflows are the core abstraction in Temporal. They orchestrate activities
+ * and other workflows, and are durable - they survive process restarts.
+ *
+ * IMPORTANT: Workflow code must be deterministic!
+ * - No direct I/O, network calls, or random number generation
+ * - Use activities for any non-deterministic operations
+ * - Use workflow.sleep instead of setTimeout
+ *
+ * @see https://docs.temporal.io/develop/typescript/core-application#develop-workflows
+ */
+
+import { proxyActivities, sleep, defineSignal, setHandler, condition } from "@temporalio/workflow";
+
+// Import activity types for type-safe proxy
+import type * as activities from "./activities";
+
+// Create activity proxies with retry policies
+const { sendEmail, sendNotification, processData, performCleanup, generateReport, fetchUserData } =
+  proxyActivities<typeof activities>({
+    // Default activity options
+    startToCloseTimeout: "1 minute",
+    retry: {
+      initialInterval: "1 second",
+      maximumInterval: "1 minute",
+      backoffCoefficient: 2,
+      maximumAttempts: 3,
+    },
+  });
+
+// Define signals for workflow interaction
+export const cancelSignal = defineSignal("cancel");
+
+/**
+ * Email sending workflow
+ * Simple workflow that sends a single email
+ */
+export async function sendEmailWorkflow(
+  to: string,
+  subject: string,
+  body: string
+): Promise<{ sent: boolean; timestamp: string }> {
+  return await sendEmail(to, subject, body);
+}
+
+/**
+ * Notification workflow
+ * Sends a notification to a user
+ */
+export async function sendNotificationWorkflow(
+  userId: string,
+  type: "push" | "in-app" | "sms",
+  message: string
+): Promise<{ sent: boolean; type: string; timestamp: string }> {
+  return await sendNotification(userId, type, message);
+}
+
+/**
+ * Data processing workflow with cancellation support
+ * Demonstrates multi-step workflow with signal handling
+ */
+export async function processDataWorkflow(
+  dataId: string,
+  operation: "transform" | "aggregate" | "export"
+): Promise<{ processed: boolean; dataId: string; operation: string; timestamp: string }> {
+  let cancelled = false;
+
+  // Set up cancellation signal handler
+  setHandler(cancelSignal, () => {
+    cancelled = true;
+  });
+
+  // Step 1: Validate input
+  if (!dataId) {
+    throw new Error("Data ID is required");
+  }
+
+  // Check for cancellation
+  if (cancelled) {
+    return {
+      processed: false,
+      dataId,
+      operation,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  // Step 2: Process data
+  const result = await processData(dataId, operation);
+
+  // Step 3: Send completion notification
+  await sendNotification("system", "in-app", `Data ${dataId} has been ${operation}ed successfully`);
+
+  return {
+    ...result,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Scheduled cleanup workflow
+ * Can be started with a cron schedule
+ *
+ * Start with: client.schedule.create({
+ *   scheduleId: "hourly-cleanup",
+ *   spec: { cronExpressions: ["0 * * * *"] },
+ *   action: { type: "startWorkflow", workflowType: "cleanupWorkflow", ... }
+ * })
+ */
+export async function cleanupWorkflow(): Promise<{ cleaned: boolean; timestamp: string }> {
+  return await performCleanup();
+}
+
+/**
+ * Daily report workflow
+ * Generates a report and sends it via email
+ *
+ * Start with cron schedule: "0 9 * * *" (9 AM daily)
+ */
+export async function dailyReportWorkflow(): Promise<{
+  reportGenerated: boolean;
+  timestamp: string;
+}> {
+  // Step 1: Generate report
+  const reportData = await generateReport();
+
+  // Step 2: Send report via email
+  await sendEmail(
+    "admin@example.com",
+    "Daily Report",
+    `Daily metrics: ${JSON.stringify(reportData.metrics)}`
+  );
+
+  return {
+    reportGenerated: true,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Welcome sequence workflow
+ * Demonstrates long-running workflow with delays
+ *
+ * This workflow sends a series of emails over several days:
+ * - Immediate: Welcome email
+ * - After 1 day: Tips email
+ * - After 3 more days: Feature highlight email
+ */
+export async function welcomeSequenceWorkflow(
+  userId: string
+): Promise<{ completed: boolean; userId: string; timestamp: string }> {
+  // Fetch user data
+  const user = await fetchUserData(userId);
+
+  // Send immediate welcome email
+  await sendEmail(user.email, "Welcome to {{projectName}}!", `Hi ${user.name}, welcome aboard!`);
+
+  // Wait 1 day before sending tips email
+  await sleep("1 day");
+
+  await sendEmail(
+    user.email,
+    "Getting Started Tips",
+    `Hi ${user.name}, here are some tips to get the most out of {{projectName}}...`
+  );
+
+  // Wait 3 more days before sending feature highlight
+  await sleep("3 days");
+
+  await sendEmail(
+    user.email,
+    "Discover More Features",
+    `Hi ${user.name}, have you tried these features yet?`
+  );
+
+  return {
+    completed: true,
+    userId,
+    timestamp: new Date().toISOString(),
+  };
+}
+
+/**
+ * Order processing workflow
+ * Example of a saga pattern with compensation
+ */
+export async function orderProcessingWorkflow(orderId: string): Promise<{
+  success: boolean;
+  orderId: string;
+  steps: string[];
+}> {
+  const completedSteps: string[] = [];
+
+  try {
+    // Step 1: Validate order
+    completedSteps.push("validated");
+
+    // Step 2: Reserve inventory (simulated with notification)
+    await sendNotification("system", "in-app", `Reserving inventory for order ${orderId}`);
+    completedSteps.push("inventory_reserved");
+
+    // Step 3: Process payment (simulated)
+    await sendNotification("system", "in-app", `Processing payment for order ${orderId}`);
+    completedSteps.push("payment_processed");
+
+    // Step 4: Ship order (simulated)
+    await sendNotification("system", "in-app", `Shipping order ${orderId}`);
+    completedSteps.push("shipped");
+
+    // Step 5: Send confirmation email
+    await sendEmail("customer@example.com", "Order Confirmed", `Your order ${orderId} has shipped!`);
+    completedSteps.push("notification_sent");
+
+    return {
+      success: true,
+      orderId,
+      steps: completedSteps,
+    };
+  } catch (error) {
+    // Compensation logic would go here
+    // For example: release inventory, refund payment, etc.
+    return {
+      success: false,
+      orderId,
+      steps: completedSteps,
+    };
+  }
+}
+
+/**
+ * Batch processing workflow with child workflows
+ * Demonstrates parent-child workflow pattern
+ */
+export async function batchEmailWorkflow(
+  recipients: Array<{ email: string; subject: string; body: string }>
+): Promise<{ sent: number; failed: number }> {
+  let sent = 0;
+  let failed = 0;
+
+  for (const recipient of recipients) {
+    try {
+      await sendEmail(recipient.email, recipient.subject, recipient.body);
+      sent++;
+    } catch {
+      failed++;
+    }
+  }
+
+  return { sent, failed };
+}

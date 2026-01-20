@@ -1,0 +1,43 @@
+import { Client, Connection } from "@temporalio/client";
+
+/**
+ * Temporal client configuration
+ * @see https://docs.temporal.io/develop/typescript/core-application
+ */
+
+let client: Client | null = null;
+
+/**
+ * Get or create a Temporal client connection
+ * Reuses existing connection if available
+ */
+export async function getTemporalClient(): Promise<Client> {
+  if (client) {
+    return client;
+  }
+
+  const connection = await Connection.connect({
+    // Connect to Temporal server (default: localhost:7233)
+    // Use TEMPORAL_ADDRESS env var for custom server address
+    address: process.env.TEMPORAL_ADDRESS || "localhost:7233",
+  });
+
+  client = new Client({
+    connection,
+    // Namespace to use (default: "default")
+    namespace: process.env.TEMPORAL_NAMESPACE || "default",
+  });
+
+  return client;
+}
+
+/**
+ * Close the Temporal client connection
+ * Call this during graceful shutdown
+ */
+export async function closeTemporalClient(): Promise<void> {
+  if (client) {
+    await client.connection.close();
+    client = null;
+  }
+}

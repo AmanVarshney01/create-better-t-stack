@@ -190,7 +190,7 @@ export const RealtimeSchema = z
   .describe("Real-time/WebSocket solution");
 
 export const JobQueueSchema = z
-  .enum(["bullmq", "trigger-dev", "inngest", "none"])
+  .enum(["bullmq", "trigger-dev", "inngest", "temporal", "none"])
   .describe("Job queue/background worker solution");
 
 export const AnimationSchema = z

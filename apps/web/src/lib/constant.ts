@@ -1485,6 +1485,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "temporal",
+      name: "Temporal",
+      description: "Durable workflow orchestration for reliable distributed systems",
+      icon: "/icon/temporal.svg",
+      color: "from-blue-500 to-cyan-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Job Queue",
       description: "Skip job queue/background worker setup",

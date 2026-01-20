@@ -393,6 +393,10 @@ export const dependencyVersionMap = {
   ioredis: "^5.4.2",
   "@trigger.dev/sdk": "^4.1.1",
   inngest: "^3.33.0",
+  "@temporalio/client": "^1.11.7",
+  "@temporalio/worker": "^1.11.7",
+  "@temporalio/workflow": "^1.11.7",
+  "@temporalio/activity": "^1.11.7",
 
   // Testing - Jest
   jest: "^29.7.0",

@@ -770,6 +770,24 @@ function buildServerVars(
       condition: jobQueue === "inngest",
       comment: "Inngest Signing Key for webhook verification",
     },
+    {
+      key: "TEMPORAL_ADDRESS",
+      value: "localhost:7233",
+      condition: jobQueue === "temporal",
+      comment: "Temporal server address (default: localhost:7233)",
+    },
+    {
+      key: "TEMPORAL_NAMESPACE",
+      value: "default",
+      condition: jobQueue === "temporal",
+      comment: "Temporal namespace (default: 'default')",
+    },
+    {
+      key: "TEMPORAL_TASK_QUEUE",
+      value: "",
+      condition: jobQueue === "temporal",
+      comment: "Temporal task queue name (defaults to project name if not set)",
+    },
   ];
 }
 

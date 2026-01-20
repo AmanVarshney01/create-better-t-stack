@@ -533,6 +533,178 @@ describe("Job Queue Options", () => {
     });
   });
 
+  describe("Temporal with different backends", () => {
+    test("temporal with Hono backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "temporal-hono",
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          jobQueue: "temporal",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("temporal with Express backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "temporal-express",
+          frontend: ["tanstack-router"],
+          backend: "express",
+          runtime: "node",
+          jobQueue: "temporal",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("temporal with Fastify backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "temporal-fastify",
+          frontend: ["tanstack-router"],
+          backend: "fastify",
+          runtime: "node",
+          jobQueue: "temporal",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("temporal with Elysia backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "temporal-elysia",
+          frontend: ["tanstack-router"],
+          backend: "elysia",
+          runtime: "bun",
+          jobQueue: "temporal",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("temporal with NestJS backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "temporal-nestjs",
+          frontend: ["tanstack-router"],
+          backend: "nestjs",
+          runtime: "node",
+          jobQueue: "temporal",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Temporal with fullstack frameworks", () => {
+    test("temporal with Next.js fullstack", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "temporal-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          jobQueue: "temporal",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("temporal with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "temporal-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          jobQueue: "temporal",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Temporal with different frontends", () => {
+    test("temporal with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "temporal-tanstack-router",
+          frontend: ["tanstack-router"],
+          jobQueue: "temporal",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("temporal with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "temporal-react-router",
+          frontend: ["react-router"],
+          jobQueue: "temporal",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("temporal with Svelte", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "temporal-svelte",
+          frontend: ["svelte"],
+          uiLibrary: "daisyui",
+          api: "orpc",
+          jobQueue: "temporal",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("temporal with Solid", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "temporal-solid",
+          frontend: ["solid"],
+          uiLibrary: "daisyui",
+          api: "orpc",
+          jobQueue: "temporal",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Temporal with database setups", () => {
+    test("temporal with PostgreSQL and Drizzle", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "temporal-postgres-drizzle",
+          frontend: ["tanstack-router"],
+          database: "postgres",
+          orm: "drizzle",
+          jobQueue: "temporal",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("temporal with SQLite and Prisma", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "temporal-sqlite-prisma",
+          frontend: ["tanstack-router"],
+          database: "sqlite",
+          orm: "prisma",
+          jobQueue: "temporal",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("No job queue option", () => {
     test("none job queue option", async () => {
       const result = await runTRPCTest(

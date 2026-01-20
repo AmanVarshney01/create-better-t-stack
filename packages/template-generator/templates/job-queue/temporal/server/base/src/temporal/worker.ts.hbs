@@ -1,0 +1,58 @@
+import { Worker, NativeConnection } from "@temporalio/worker";
+
+import * as activities from "./activities";
+
+/**
+ * Temporal Worker Configuration
+ *
+ * Workers execute workflows and activities. You can run multiple workers
+ * for scalability - they will automatically coordinate via the Temporal server.
+ *
+ * @see https://docs.temporal.io/develop/typescript/core-application#run-a-dev-worker
+ */
+
+const TASK_QUEUE = process.env.TEMPORAL_TASK_QUEUE || "{{projectName}}-task-queue";
+
+/**
+ * Create and run a Temporal worker
+ */
+export async function runWorker(): Promise<void> {
+  // Connect to the Temporal server
+  const connection = await NativeConnection.connect({
+    address: process.env.TEMPORAL_ADDRESS || "localhost:7233",
+  });
+
+  try {
+    // Create a worker that connects to the server and executes workflows/activities
+    const worker = await Worker.create({
+      connection,
+      namespace: process.env.TEMPORAL_NAMESPACE || "default",
+      taskQueue: TASK_QUEUE,
+      // Point to compiled workflow file for bundling
+      workflowsPath: require.resolve("./workflows"),
+      // Register activities directly
+      activities,
+      // Optional: Configure worker behavior
+      maxConcurrentActivityTaskExecutions: 100,
+      maxConcurrentWorkflowTaskExecutions: 100,
+    });
+
+    // Start accepting tasks
+    console.log(`[Temporal Worker] Starting worker on task queue: ${TASK_QUEUE}`);
+    await worker.run();
+  } finally {
+    // Ensure we close the connection when shutting down
+    await connection.close();
+  }
+}
+
+/**
+ * Run the worker when this file is executed directly
+ * Usage: npx ts-node src/temporal/worker.ts
+ */
+if (require.main === module) {
+  runWorker().catch((err) => {
+    console.error("[Temporal Worker] Failed to start:", err);
+    process.exit(1);
+  });
+}
