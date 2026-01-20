@@ -17,6 +17,7 @@ export async function processRustBaseTemplate(
   const hasLeptos = config.rustFrontend === "leptos";
   const hasDioxus = config.rustFrontend === "dioxus";
   const hasTonic = config.rustApi === "tonic";
+  const hasAsyncGraphql = config.rustApi === "async-graphql";
 
   for (const [templatePath, content] of templates) {
     if (!templatePath.startsWith(prefix)) continue;
@@ -32,6 +33,9 @@ export async function processRustBaseTemplate(
 
     // Skip grpc.rs if Tonic is not selected
     if (!hasTonic && templatePath.includes("crates/server/src/grpc.rs")) continue;
+
+    // Skip graphql.rs if async-graphql is not selected
+    if (!hasAsyncGraphql && templatePath.includes("crates/server/src/graphql.rs")) continue;
 
     const relativePath = templatePath.slice(prefix.length);
     const outputPath = transformFilename(relativePath);

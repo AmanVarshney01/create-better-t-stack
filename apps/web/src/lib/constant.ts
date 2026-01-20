@@ -1567,6 +1567,14 @@ export const TECH_OPTIONS: Record<
   ],
   rustApi: [
     {
+      id: "async-graphql",
+      name: "async-graphql",
+      description: "High-performance GraphQL server with full query language support",
+      icon: "/icon/graphql.svg",
+      color: "from-pink-500 to-rose-600",
+      default: false,
+    },
+    {
       id: "tonic",
       name: "Tonic",
       description: "Production-ready gRPC implementation for Rust",

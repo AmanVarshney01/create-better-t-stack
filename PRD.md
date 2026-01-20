@@ -49,7 +49,7 @@
 ## **Step 5: API Layer**
 
 - [x] **tonic** - gRPC implementation (production-ready)
-- [ ] **async-graphql** - High-performance GraphQL server
+- [x] **async-graphql** - High-performance GraphQL server
 
 ---
 

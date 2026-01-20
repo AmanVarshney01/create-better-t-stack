@@ -71,7 +71,12 @@ prost = "0.13"
 {{#if (eq rustApi "async-graphql")}}
 # GraphQL (async-graphql)
 async-graphql = "7"
+{{#if (eq rustWebFramework "axum")}}
 async-graphql-axum = "7"
+{{/if}}
+{{#if (eq rustWebFramework "actix-web")}}
+async-graphql-actix-web = "7"
+{{/if}}
 {{/if}}
 
 {{#if (eq rustFrontend "leptos")}}

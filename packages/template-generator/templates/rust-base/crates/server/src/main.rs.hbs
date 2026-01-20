@@ -15,6 +15,16 @@ use sqlx::PgPool;
 
 mod grpc;
 {{/if}}
+{{#if (eq rustApi "async-graphql")}}
+use async_graphql::http::GraphiQLSource;
+use async_graphql_axum::GraphQL;
+use axum::{
+    response::{Html, IntoResponse},
+    routing::post,
+};
+
+mod graphql;
+{{/if}}
 
 #[derive(Serialize)]
 struct HealthResponse {
@@ -74,6 +84,17 @@ async fn health() -> Json<HealthResponse> {
 }
 {{/if}}
 
+{{#if (eq rustApi "async-graphql")}}
+/// GraphiQL IDE handler
+async fn graphiql() -> impl IntoResponse {
+    Html(
+        GraphiQLSource::build()
+            .endpoint("/graphql")
+            .finish(),
+    )
+}
+{{/if}}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Load environment variables
@@ -96,11 +117,27 @@ async fn main() -> anyhow::Result<()> {
 
     let state = AppState { db: Arc::new(db) };
 
+{{#if (eq rustApi "async-graphql")}}
+    // Build GraphQL schema with database connection
+    let schema = graphql::build_schema(state.db.clone());
+
+    // Build router with GraphQL and state
+    let app = Router::new()
+        .route("/health", get(health))
+        .route("/graphql", post(GraphQL::new(schema)))
+        .route("/graphiql", get(graphiql))
+        .layer(CorsLayer::permissive())
+        .with_state(state);
+
+    tracing::info!("GraphQL endpoint: /graphql");
+    tracing::info!("GraphiQL IDE: /graphiql");
+{{else}}
     // Build router with state
     let app = Router::new()
         .route("/health", get(health))
         .layer(CorsLayer::permissive())
         .with_state(state);
+{{/if}}
 {{else if (eq rustOrm "sqlx")}}
     // Initialize database connection pool
     let database_url = std::env::var("DATABASE_URL")
@@ -113,18 +150,49 @@ async fn main() -> anyhow::Result<()> {
         .await?;
     tracing::info!("Database connected successfully");
 
-    let state = AppState { db: pool };
+    let state = AppState { db: pool.clone() };
 
+{{#if (eq rustApi "async-graphql")}}
+    // Build GraphQL schema with database pool
+    let schema = graphql::build_schema(pool);
+
+    // Build router with GraphQL and state
+    let app = Router::new()
+        .route("/health", get(health))
+        .route("/graphql", post(GraphQL::new(schema)))
+        .route("/graphiql", get(graphiql))
+        .layer(CorsLayer::permissive())
+        .with_state(state);
+
+    tracing::info!("GraphQL endpoint: /graphql");
+    tracing::info!("GraphiQL IDE: /graphiql");
+{{else}}
     // Build router with state
     let app = Router::new()
         .route("/health", get(health))
         .layer(CorsLayer::permissive())
         .with_state(state);
+{{/if}}
+{{else}}
+{{#if (eq rustApi "async-graphql")}}
+    // Build GraphQL schema
+    let schema = graphql::build_schema();
+
+    // Build router with GraphQL
+    let app = Router::new()
+        .route("/health", get(health))
+        .route("/graphql", post(GraphQL::new(schema)))
+        .route("/graphiql", get(graphiql))
+        .layer(CorsLayer::permissive());
+
+    tracing::info!("GraphQL endpoint: /graphql");
+    tracing::info!("GraphiQL IDE: /graphiql");
 {{else}}
     // Build router
     let app = Router::new()
         .route("/health", get(health))
         .layer(CorsLayer::permissive());
+{{/if}}
 {{/if}}
 
     // Get host and port from environment
@@ -187,6 +255,12 @@ use sqlx::PgPool;
 
 mod grpc;
 {{/if}}
+{{#if (eq rustApi "async-graphql")}}
+use async_graphql::http::GraphiQLSource;
+use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
+
+mod graphql;
+{{/if}}
 
 #[derive(Serialize)]
 struct HealthResponse {
@@ -243,6 +317,28 @@ async fn health() -> impl Responder {
 }
 {{/if}}
 
+{{#if (eq rustApi "async-graphql")}}
+/// GraphQL endpoint handler
+async fn graphql_handler(
+    schema: web::Data<graphql::GraphQLSchema>,
+    req: GraphQLRequest,
+) -> GraphQLResponse {
+    schema.execute(req.into_inner()).await.into()
+}
+
+/// GraphiQL IDE handler
+#[get("/graphiql")]
+async fn graphiql() -> impl Responder {
+    HttpResponse::Ok()
+        .content_type("text/html; charset=utf-8")
+        .body(
+            GraphiQLSource::build()
+                .endpoint("/graphql")
+                .finish(),
+        )
+}
+{{/if}}
+
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
     // Load environment variables
@@ -263,7 +359,15 @@ async fn main() -> anyhow::Result<()> {
     let db = Database::connect(&database_url).await?;
     tracing::info!("Database connected successfully");
 
-    let state = web::Data::new(AppState { db: Arc::new(db) });
+    let db_arc = Arc::new(db);
+    let state = web::Data::new(AppState { db: db_arc.clone() });
+{{#if (eq rustApi "async-graphql")}}
+
+    // Build GraphQL schema with database
+    let schema = web::Data::new(graphql::build_schema(db_arc));
+    tracing::info!("GraphQL endpoint: /graphql");
+    tracing::info!("GraphiQL IDE: /graphiql");
+{{/if}}
 {{/if}}
 {{#if (eq rustOrm "sqlx")}}
     // Initialize database connection pool
@@ -277,7 +381,20 @@ async fn main() -> anyhow::Result<()> {
         .await?;
     tracing::info!("Database connected successfully");
 
-    let state = web::Data::new(AppState { db: pool });
+    let state = web::Data::new(AppState { db: pool.clone() });
+{{#if (eq rustApi "async-graphql")}}
+
+    // Build GraphQL schema with database pool
+    let schema = web::Data::new(graphql::build_schema(pool));
+    tracing::info!("GraphQL endpoint: /graphql");
+    tracing::info!("GraphiQL IDE: /graphiql");
+{{/if}}
+{{/if}}
+{{#if (and (not (eq rustOrm "sea-orm")) (not (eq rustOrm "sqlx")) (eq rustApi "async-graphql"))}}
+    // Build GraphQL schema
+    let schema = web::Data::new(graphql::build_schema());
+    tracing::info!("GraphQL endpoint: /graphql");
+    tracing::info!("GraphiQL IDE: /graphiql");
 {{/if}}
 
     // Get host and port from environment
@@ -339,6 +456,33 @@ async fn main() -> anyhow::Result<()> {
             }
         }
     }
+{{else if (eq rustApi "async-graphql")}}
+    // Start server with GraphQL
+{{#if (or (eq rustOrm "sea-orm") (eq rustOrm "sqlx"))}}
+    HttpServer::new(move || {
+        let cors = Cors::permissive();
+        App::new()
+            .wrap(cors)
+            .app_data(state.clone())
+            .app_data(schema.clone())
+            .service(health)
+            .service(graphiql)
+            .route("/graphql", web::post().to(graphql_handler))
+    })
+{{else}}
+    HttpServer::new(move || {
+        let cors = Cors::permissive();
+        App::new()
+            .wrap(cors)
+            .app_data(schema.clone())
+            .service(health)
+            .service(graphiql)
+            .route("/graphql", web::post().to(graphql_handler))
+    })
+{{/if}}
+    .bind((host, port))?
+    .run()
+    .await?;
 {{else}}
     // Start server
 {{#if (or (eq rustOrm "sea-orm") (eq rustOrm "sqlx"))}}

@@ -56,7 +56,12 @@ tokio-stream = "0.1"
 {{#if (eq rustApi "async-graphql")}}
 # GraphQL
 async-graphql.workspace = true
+{{#if (eq rustWebFramework "axum")}}
 async-graphql-axum.workspace = true
+{{/if}}
+{{#if (eq rustWebFramework "actix-web")}}
+async-graphql-actix-web.workspace = true
+{{/if}}
 {{/if}}
 
 {{#if (includes rustLibraries "validator")}}

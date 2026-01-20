@@ -1,0 +1,79 @@
+use async_graphql::{Context, EmptySubscription, Object, Schema};
+{{#if (eq rustOrm "sea-orm")}}
+use sea_orm::DatabaseConnection;
+use std::sync::Arc;
+{{/if}}
+{{#if (eq rustOrm "sqlx")}}
+use sqlx::PgPool;
+{{/if}}
+
+/// GraphQL Query root
+pub struct QueryRoot;
+
+#[Object]
+impl QueryRoot {
+    /// Returns a greeting message
+    async fn hello(&self, name: Option<String>) -> String {
+        format!("Hello, {}!", name.unwrap_or_else(|| "World".to_string()))
+    }
+
+    /// Returns the server status
+    async fn status(&self) -> &'static str {
+        "Server is running"
+    }
+
+{{#if (eq rustOrm "sea-orm")}}
+    /// Example query using database connection
+    async fn db_status(&self, ctx: &Context<'_>) -> async_graphql::Result<String> {
+        let db = ctx.data::<Arc<DatabaseConnection>>()?;
+        match db.ping().await {
+            Ok(_) => Ok("Database connected".to_string()),
+            Err(e) => Ok(format!("Database error: {}", e)),
+        }
+    }
+{{/if}}
+{{#if (eq rustOrm "sqlx")}}
+    /// Example query using database pool
+    async fn db_status(&self, ctx: &Context<'_>) -> async_graphql::Result<String> {
+        let pool = ctx.data::<PgPool>()?;
+        match pool.acquire().await {
+            Ok(_) => Ok("Database connected".to_string()),
+            Err(e) => Ok(format!("Database error: {}", e)),
+        }
+    }
+{{/if}}
+}
+
+/// GraphQL Mutation root
+pub struct MutationRoot;
+
+#[Object]
+impl MutationRoot {
+    /// Example mutation that echoes back a message
+    async fn echo(&self, message: String) -> String {
+        message
+    }
+}
+
+/// The GraphQL schema type
+pub type GraphQLSchema = Schema<QueryRoot, MutationRoot, EmptySubscription>;
+
+/// Build the GraphQL schema with optional data sources
+{{#if (eq rustOrm "sea-orm")}}
+pub fn build_schema(db: Arc<DatabaseConnection>) -> GraphQLSchema {
+    Schema::build(QueryRoot, MutationRoot, EmptySubscription)
+        .data(db)
+        .finish()
+}
+{{else if (eq rustOrm "sqlx")}}
+pub fn build_schema(pool: PgPool) -> GraphQLSchema {
+    Schema::build(QueryRoot, MutationRoot, EmptySubscription)
+        .data(pool)
+        .finish()
+}
+{{else}}
+pub fn build_schema() -> GraphQLSchema {
+    Schema::build(QueryRoot, MutationRoot, EmptySubscription)
+        .finish()
+}
+{{/if}}

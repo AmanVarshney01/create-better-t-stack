@@ -1053,6 +1053,148 @@ describe("Rust Ecosystem", () => {
       expect(serverCargoContent).toContain("async-graphql.workspace = true");
       expect(serverCargoContent).toContain("async-graphql-axum.workspace = true");
     });
+
+    it("should create graphql.rs module when async-graphql selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-graphql-module",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "async-graphql",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify graphql.rs exists
+      expect(hasFile(root, "crates/server/src/graphql.rs")).toBe(true);
+
+      // Verify graphql.rs has proper content
+      const graphqlContent = getFileContent(root, "crates/server/src/graphql.rs");
+      expect(graphqlContent).toBeDefined();
+      expect(graphqlContent).toContain("async_graphql");
+      expect(graphqlContent).toContain("QueryRoot");
+      expect(graphqlContent).toContain("MutationRoot");
+      expect(graphqlContent).toContain("build_schema");
+    });
+
+    it("should NOT create graphql.rs when async-graphql is not selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-no-graphql",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify graphql.rs does NOT exist
+      expect(hasFile(root, "crates/server/src/graphql.rs")).toBe(false);
+    });
+
+    it("should integrate GraphQL with main.rs for Axum", async () => {
+      const result = await createVirtual({
+        projectName: "rust-graphql-axum",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "async-graphql",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainContent = getFileContent(root, "crates/server/src/main.rs");
+      expect(mainContent).toBeDefined();
+      expect(mainContent).toContain("mod graphql");
+      expect(mainContent).toContain("GraphiQLSource");
+      expect(mainContent).toContain('"/graphql"');
+      expect(mainContent).toContain('"/graphiql"');
+    });
+
+    it("should use async-graphql-actix-web for Actix-web framework", async () => {
+      const result = await createVirtual({
+        projectName: "rust-graphql-actix",
+        ecosystem: "rust",
+        rustWebFramework: "actix-web",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "async-graphql",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify Actix-web GraphQL integration
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain("async-graphql-actix-web");
+      expect(cargoContent).not.toContain("async-graphql-axum");
+
+      const serverCargoContent = getFileContent(root, "crates/server/Cargo.toml");
+      expect(serverCargoContent).toBeDefined();
+      expect(serverCargoContent).toContain("async-graphql-actix-web.workspace = true");
+
+      // Verify main.rs has GraphQL integration
+      const mainContent = getFileContent(root, "crates/server/src/main.rs");
+      expect(mainContent).toBeDefined();
+      expect(mainContent).toContain("mod graphql");
+      expect(mainContent).toContain("GraphiQLSource");
+    });
+
+    it("should integrate GraphQL schema with SeaORM database", async () => {
+      const result = await createVirtual({
+        projectName: "rust-graphql-seaorm",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "sea-orm",
+        rustApi: "async-graphql",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const graphqlContent = getFileContent(root, "crates/server/src/graphql.rs");
+      expect(graphqlContent).toBeDefined();
+      expect(graphqlContent).toContain("sea_orm::DatabaseConnection");
+      expect(graphqlContent).toContain("Arc<DatabaseConnection>");
+    });
+
+    it("should integrate GraphQL schema with SQLx database", async () => {
+      const result = await createVirtual({
+        projectName: "rust-graphql-sqlx",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "sqlx",
+        rustApi: "async-graphql",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const graphqlContent = getFileContent(root, "crates/server/src/graphql.rs");
+      expect(graphqlContent).toBeDefined();
+      expect(graphqlContent).toContain("sqlx::PgPool");
+    });
   });
 
   describe("Clap CLI", () => {

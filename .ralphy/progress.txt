@@ -3808,3 +3808,54 @@ Actix-web was already fully implemented in the codebase alongside Axum during th
 - All 81 Rust ecosystem tests passing
 
 ### Status: COMPLETE
+
+## 2026-01-20: async-graphql GraphQL Server Implementation
+
+### Task: Implement async-graphql as a Rust API layer option
+
+### Changes Made:
+1. **apps/web/src/lib/constant.ts**: Added async-graphql to web builder rustApi options with GraphQL icon and pink/rose color scheme
+2. **packages/template-generator/src/core/template-processor.ts**: Added "not" helper to Handlebars for conditional template logic
+3. **packages/template-generator/src/template-handlers/rust-base.ts**: Added hasAsyncGraphql filter to skip graphql.rs when not selected
+4. **packages/template-generator/templates/rust-base/Cargo.toml.hbs**: Updated to conditionally include:
+   - async-graphql for GraphQL core
+   - async-graphql-axum for Axum integration
+   - async-graphql-actix-web for Actix-web integration
+5. **packages/template-generator/templates/rust-base/crates/server/Cargo.toml.hbs**: Added conditional GraphQL dependencies for server crate
+6. **packages/template-generator/templates/rust-base/crates/server/src/graphql.rs.hbs**: NEW GraphQL module template with:
+   - QueryRoot with hello and status queries
+   - MutationRoot with echo mutation
+   - Database integration support for SeaORM and SQLx
+   - Context-aware data access patterns
+7. **packages/template-generator/templates/rust-base/crates/server/src/main.rs.hbs**: Updated for both Axum and Actix-web:
+   - GraphQL imports and module declaration
+   - GraphiQL IDE handler
+   - GraphQL schema building with optional database connections
+   - /graphql POST endpoint
+   - /graphiql GET endpoint for GraphQL IDE
+8. **apps/cli/test/rust-ecosystem.test.ts**: Added comprehensive tests:
+   - GraphQL dependencies verification
+   - graphql.rs module creation
+   - GraphQL NOT created when not selected
+   - Axum GraphQL integration in main.rs
+   - Actix-web async-graphql-actix-web support
+   - SeaORM database integration
+   - SQLx database integration
+
+### Features:
+- Full async-graphql integration for Rust ecosystem
+- Support for both Axum and Actix-web web frameworks
+- GraphiQL IDE for development and testing
+- Optional database integration with SeaORM and SQLx
+- Type-safe GraphQL schema with query and mutation support
+- Proper conditional compilation based on selected options
+
+### Testing:
+- All 87 Rust ecosystem tests pass
+- New async-graphql tests cover:
+  - Dependency inclusion
+  - Module file creation
+  - Framework-specific integration (Axum/Actix-web)
+  - ORM integration (SeaORM/SQLx)
+
+### Status: COMPLETE
