@@ -6,7 +6,7 @@
   "sideEffects": false,
   "scripts": {
     "prebuild": "cd ../../packages/types && bun run build && cd ../template-generator && bun run build",
-    "build": "vite build",
+    "build": "vite build && nitro build --preset vercel",
     "dev": "vite dev --port 3333",
     "start": "node .output/server/index.mjs",
     "lint": "oxlint . && tsc --noEmit",

@@ -5,7 +5,7 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$"],
-      "outputs": ["dist/**", ".output/**"]
+      "outputs": ["dist/**", ".output/**", ".vercel/output/**", ".nitro/**"]
     },
     "lint": {
       "dependsOn": ["^build"],
