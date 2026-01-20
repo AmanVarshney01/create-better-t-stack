@@ -4524,3 +4524,41 @@ The argon2 crate was already implemented in the template generator and CLI tests
 - All 26 realtime tests pass including 10 new Ably tests
 
 ### Status: COMPLETE
+
+
+## 2026-01-20: Pusher Real-Time Communication APIs Implementation
+
+### Task: Implement Pusher as a real-time/WebSocket option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "pusher" to RealtimeSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Pusher dependency versions:
+   - pusher: ^5.2.0 (server SDK)
+   - pusher-js: ^8.4.0-rc2 (client SDK)
+3. **packages/template-generator/src/processors/realtime-deps.ts**: Added Pusher dependency processing:
+   - Server-side: "pusher" package for triggering events
+   - Client-side: "pusher-js" package for subscribing to channels
+4. **apps/web/src/lib/constant.ts**: Added Pusher to web builder realtime options with:
+   - id: "pusher"
+   - name: "Pusher"
+   - description: "Real-time communication APIs with channels and events"
+   - icon: Pusher logo from simpleicons
+   - color: purple-to-indigo gradient
+5. **apps/cli/test/realtime.test.ts**: Added comprehensive Pusher tests:
+   - Pusher with React frontends (TanStack Router, React Router, Next.js, TanStack Start)
+   - Pusher with different backends (Hono, Express, Fastify, Elysia)
+   - Pusher with native apps (native-bare, native-uniwind)
+
+### Features:
+- Real-time pub/sub via Pusher Channels
+- Channel-based event broadcasting
+- Server-side SDK (pusher) for triggering events
+- Client-side SDK (pusher-js) for subscribing to channels
+- Compatible with all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+- Compatible with all React web frontends (TanStack Router, React Router, Next.js, TanStack Start)
+- Compatible with React Native apps
+
+### Tests:
+- 10 new Pusher tests added, all passing
+
+### Status: COMPLETE

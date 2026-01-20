@@ -377,6 +377,8 @@ export const dependencyVersionMap = {
   partykit: "^0.0.111",
   partysocket: "^1.0.2",
   ably: "^2.6.3",
+  pusher: "^5.2.0",
+  "pusher-js": "^8.4.0-rc2",
 
   // Testing - Jest
   jest: "^29.7.0",

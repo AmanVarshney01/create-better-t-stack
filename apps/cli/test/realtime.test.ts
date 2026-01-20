@@ -325,6 +325,135 @@ describe("Real-time/WebSocket Options", () => {
     });
   });
 
+  describe("Pusher with React frontends", () => {
+    test("pusher with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "pusher-tanstack-router",
+          frontend: ["tanstack-router"],
+          realtime: "pusher",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("pusher with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "pusher-react-router",
+          frontend: ["react-router"],
+          realtime: "pusher",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("pusher with Next.js fullstack", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "pusher-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          realtime: "pusher",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("pusher with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "pusher-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          realtime: "pusher",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Pusher with different backends", () => {
+    test("pusher with Hono backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "pusher-hono",
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          realtime: "pusher",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("pusher with Express backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "pusher-express",
+          frontend: ["tanstack-router"],
+          backend: "express",
+          runtime: "node",
+          realtime: "pusher",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("pusher with Fastify backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "pusher-fastify",
+          frontend: ["tanstack-router"],
+          backend: "fastify",
+          runtime: "node",
+          realtime: "pusher",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("pusher with Elysia backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "pusher-elysia",
+          frontend: ["tanstack-router"],
+          backend: "elysia",
+          runtime: "bun",
+          realtime: "pusher",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Pusher with native apps", () => {
+    test("pusher with native-bare", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "pusher-native-bare",
+          frontend: ["native-bare"],
+          backend: "hono",
+          realtime: "pusher",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("pusher with native-uniwind", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "pusher-native-uniwind",
+          frontend: ["native-uniwind"],
+          backend: "hono",
+          realtime: "pusher",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("No real-time option", () => {
     test("none realtime option", async () => {
       const result = await runTRPCTest(

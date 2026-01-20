@@ -81,6 +81,9 @@ function getRealtimeServerDeps(realtime: ProjectConfig["realtime"]): AvailableDe
     case "ably":
       deps.push("ably");
       break;
+    case "pusher":
+      deps.push("pusher");
+      break;
   }
 
   return deps;
@@ -99,6 +102,9 @@ function getRealtimeClientDeps(realtime: ProjectConfig["realtime"]): AvailableDe
     case "ably":
       // Ably uses the same package for client and server
       deps.push("ably");
+      break;
+    case "pusher":
+      deps.push("pusher-js");
       break;
   }
 

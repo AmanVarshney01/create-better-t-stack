@@ -1427,6 +1427,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "pusher",
+      name: "Pusher",
+      description: "Real-time communication APIs with channels and events",
+      icon: "https://cdn.simpleicons.org/pusher/300D4F",
+      color: "from-purple-600 to-indigo-800",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Real-time",
       description: "Skip real-time/WebSocket integration",
