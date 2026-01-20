@@ -72,6 +72,7 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
   const useLangGraph = ai === "langgraph";
   const useOpenAIAgents = ai === "openai-agents";
   const useGoogleADK = ai === "google-adk";
+  const useModelFusion = ai === "modelfusion";
 
   if (backend === "convex" && convexBackendExists) {
     addPackageDependency({
@@ -114,6 +115,12 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
         dependencies: ["@google/adk"],
         customDependencies: { zod: "^3.25.67" },
       });
+    } else if (useModelFusion) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPkgPath,
+        dependencies: ["modelfusion"],
+      });
     } else {
       addPackageDependency({
         vfs,
@@ -155,6 +162,12 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
         dependencies: ["@google/adk"],
         customDependencies: { zod: "^3.25.67" },
       });
+    } else if (useModelFusion) {
+      addPackageDependency({
+        vfs,
+        packagePath: serverPkgPath,
+        dependencies: ["modelfusion"],
+      });
     } else {
       addPackageDependency({
         vfs,
@@ -184,6 +197,10 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
       if (hasReactWeb) deps.push("streamdown");
     } else if (useGoogleADK) {
       // Google ADK uses native streaming - no special frontend SDK needed
+      // Just add streamdown for markdown rendering
+      if (hasReactWeb) deps.push("streamdown");
+    } else if (useModelFusion) {
+      // ModelFusion uses native streaming - no special frontend SDK needed
       // Just add streamdown for markdown rendering
       if (hasReactWeb) deps.push("streamdown");
     } else {

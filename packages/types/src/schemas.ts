@@ -121,6 +121,7 @@ export const AISchema = z
     "langgraph",
     "openai-agents",
     "google-adk",
+    "modelfusion",
     "langchain",
     "llamaindex",
     "none",

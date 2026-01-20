@@ -1383,6 +1383,15 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "modelfusion",
+      name: "ModelFusion",
+      description: "Type-safe AI library for multi-provider text generation",
+      icon: "https://cdn.simpleicons.org/vercel/000000",
+      color: "from-gray-600 to-gray-800",
+      default: false,
+      className: "invert-0 dark:invert",
+    },
+    {
       id: "none",
       name: "No AI SDK",
       description: "Skip AI SDK integration",

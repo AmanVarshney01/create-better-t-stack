@@ -4406,3 +4406,48 @@ The argon2 crate was already implemented in the template generator and CLI tests
 - Zod integration for tool schemas
 
 ### Status: COMPLETE
+
+## 2026-01-20: ModelFusion AI SDK Implementation
+
+### Task: Implement ModelFusion as an AI SDK option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "modelfusion" to AISchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added ModelFusion dependency version:
+   - modelfusion: ^0.137.0
+3. **packages/template-generator/src/processors/examples-deps.ts**: Added ModelFusion dependency processing:
+   - Added useModelFusion check for AI SDK selection
+   - Added backend dependencies for self/server backends
+   - Added frontend dependencies (streamdown for markdown rendering)
+4. **apps/web/src/lib/constant.ts**: Added ModelFusion to web builder AI SDK options:
+   - Icon: Vercel logo (ModelFusion was acquired by Vercel)
+   - Color: gray gradient
+   - Description: "Type-safe AI library for multi-provider text generation"
+5. **packages/template-generator/templates/examples/ai/fullstack/next/src/app/api/ai/route.ts.hbs**: Added ModelFusion backend template for Next.js
+6. **packages/template-generator/templates/examples/ai/fullstack/tanstack-start/src/routes/api/ai/$.ts.hbs**: Added ModelFusion backend template for TanStack Start
+7. **packages/template-generator/templates/examples/ai/web/react/tanstack-router/src/routes/ai.tsx.hbs**: Added ModelFusion frontend template
+8. **packages/template-generator/templates/examples/ai/web/react/react-router/src/routes/ai.tsx.hbs**: Added ModelFusion frontend template
+9. **packages/template-generator/templates/examples/ai/web/react/next/src/app/ai/page.tsx.hbs**: Added ModelFusion frontend template
+10. **packages/template-generator/templates/examples/ai/web/react/tanstack-start/src/routes/ai.tsx.hbs**: Added ModelFusion frontend template
+11. **apps/cli/test/ai-sdk.test.ts**: Added comprehensive tests for ModelFusion:
+    - AI example + ModelFusion with Hono backend
+    - AI example + ModelFusion + Next.js (self backend)
+    - AI example + ModelFusion + TanStack Start
+    - AI example + ModelFusion + Express backend
+    - ModelFusion without AI example (SDK only)
+
+### Features:
+- Multi-provider text generation (OpenAI, Ollama, etc.)
+- Type-safe AI library with TypeScript support
+- Streaming text generation with SSE responses
+- Works with all backend frameworks (Hono, Express, Fastify, etc.)
+- Works with all fullstack frameworks (Next.js, TanStack Start)
+- Frontend integration with streamdown for markdown rendering
+
+### Technical Notes:
+- ModelFusion uses OpenAI as the default provider (gpt-4o-mini model)
+- Supports chat-style message arrays for context
+- Uses Server-Sent Events (SSE) for streaming responses
+- Follows same streaming pattern as LangGraph and Google ADK
+
+### Status: COMPLETE

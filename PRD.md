@@ -83,7 +83,7 @@
 - [x] **LangGraph.js** - Graph-based agent orchestration
 - [x] **OpenAI Agents SDK** - Official OpenAI multi-agent framework
 - [x] **Google ADK** - Google's agent development kit
-- [ ] **ModelFusion** - Type-safe AI model library
+- [x] **ModelFusion** - Type-safe AI model library
 
 ---
 

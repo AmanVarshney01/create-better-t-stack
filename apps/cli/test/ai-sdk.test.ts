@@ -611,6 +611,118 @@ describe("AI SDK Configuration", () => {
     });
   });
 
+  describe("ModelFusion AI Library", () => {
+    it("should work with AI example + ModelFusion", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-modelfusion",
+        examples: ["ai"],
+        ai: "modelfusion",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with AI example + ModelFusion + Next.js (self backend)", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-modelfusion-next",
+        examples: ["ai"],
+        ai: "modelfusion",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with AI example + ModelFusion + TanStack Start", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-modelfusion-start",
+        examples: ["ai"],
+        ai: "modelfusion",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "trpc",
+        frontend: ["tanstack-start"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with AI example + ModelFusion + Express backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-modelfusion-express",
+        examples: ["ai"],
+        ai: "modelfusion",
+        backend: "express",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with ModelFusion without AI example (SDK only)", async () => {
+      const result = await runTRPCTest({
+        projectName: "modelfusion-no-example",
+        examples: ["none"],
+        ai: "modelfusion",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+  });
+
   describe("AI SDK none option", () => {
     it("should work with ai: none", async () => {
       const result = await runTRPCTest({
