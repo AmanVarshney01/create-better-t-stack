@@ -99,13 +99,34 @@ describe("Rust Ecosystem Tab", () => {
         expect(options.length).toBeGreaterThan(0);
       });
 
-      it(`should have a default "none" option for ${category}`, () => {
+      it(`should have a "none" option for ${category}`, () => {
         const options = TECH_OPTIONS[category];
         const noneOption = options.find((o) => o.id === "none");
         expect(noneOption).toBeDefined();
-        expect(noneOption?.default).toBe(true);
+      });
+
+      it(`should have exactly one default option for ${category}`, () => {
+        const options = TECH_OPTIONS[category];
+        const defaultOptions = options.filter((o) => o.default === true);
+        expect(defaultOptions.length).toBe(1);
       });
     }
+
+    it("should have Axum as default for rustWebFramework", () => {
+      const options = TECH_OPTIONS.rustWebFramework;
+      const axumOption = options.find((o) => o.id === "axum");
+      expect(axumOption).toBeDefined();
+      expect(axumOption?.default).toBe(true);
+      expect(axumOption?.name).toBe("Axum");
+      expect(axumOption?.description).toContain("Tokio team");
+    });
+
+    it("should have Actix-web option for rustWebFramework", () => {
+      const options = TECH_OPTIONS.rustWebFramework;
+      const actixOption = options.find((o) => o.id === "actix-web");
+      expect(actixOption).toBeDefined();
+      expect(actixOption?.name).toBe("Actix-web");
+    });
   });
 
   describe("DEFAULT_STACK", () => {
@@ -114,7 +135,7 @@ describe("Rust Ecosystem Tab", () => {
     });
 
     it("should have rust fields with default values", () => {
-      expect(DEFAULT_STACK.rustWebFramework).toBe("none");
+      expect(DEFAULT_STACK.rustWebFramework).toBe("axum");
       expect(DEFAULT_STACK.rustFrontend).toBe("none");
       expect(DEFAULT_STACK.rustOrm).toBe("none");
       expect(DEFAULT_STACK.rustApi).toBe("none");

@@ -3428,3 +3428,49 @@ The Rust Base Template was already implemented in a previous commit (192da468). 
 
 ### Status: COMPLETE
 
+
+## 2026-01-20: Axum Web Framework UI Integration
+
+### Task: Enable Axum as web framework option in Rust ecosystem UI
+
+### Background:
+Axum support was already implemented in the template generator (schemas, templates, dependencies) but was not exposed in the web builder UI. This task enables Axum as the default Rust web framework option.
+
+### Changes Made:
+1. **apps/web/src/lib/constant.ts**:
+   - Added Axum to `TECH_OPTIONS.rustWebFramework` array with:
+     - id: "axum"
+     - name: "Axum"
+     - description: "Ergonomic and modular web framework by Tokio team"
+     - icon: "/icon/axum.svg"
+     - color: "from-blue-500 to-indigo-600"
+     - default: true (set as default option)
+   - Added Actix-web to `TECH_OPTIONS.rustWebFramework` array
+   - Updated `DEFAULT_STACK.rustWebFramework` from "none" to "axum"
+
+2. **apps/web/public/icon/axum.svg**: Created Axum icon (blue gradient circle with "A" letter)
+
+3. **apps/web/public/icon/actix.svg**: Created Actix-web icon (purple gradient circle with arrow shape)
+
+4. **apps/web/test/rust-ecosystem.test.ts**:
+   - Updated tests to expect Axum as the default option for rustWebFramework
+   - Added specific test for Axum option properties
+   - Added test for Actix-web option presence
+   - Updated DEFAULT_STACK test to expect "axum" instead of "none"
+
+### Features:
+- Axum is now the default Rust web framework in the web builder
+- Actix-web is available as an alternative option
+- "No Web Framework" option still available for minimal setups
+- Proper icons for both frameworks
+
+### Existing Template Support (Already Implemented):
+- Axum template generates complete server with:
+  - Router with routing::get
+  - CorsLayer configuration via tower-http
+  - TcpListener binding
+  - Health endpoint at /health
+  - Tracing integration
+  - Environment variable support for HOST/PORT
+
+### Status: COMPLETE

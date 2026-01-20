@@ -27,7 +27,7 @@
 
 ## **Step 2: Web Frameworks** (After ecosystem setup)
 
-- [ ] **Axum** - Ergonomic framework by Tokio team (most popular, async-first)
+- [x] **Axum** - Ergonomic framework by Tokio team (most popular, async-first)
 - [ ] **Actix-web** - Powerful, pragmatic framework (high performance)
 
 ---

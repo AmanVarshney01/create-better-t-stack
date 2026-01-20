@@ -1486,15 +1486,31 @@ export const TECH_OPTIONS: Record<
       color: "from-yellow-400 to-yellow-600",
     },
   ],
-  // Rust ecosystem categories (to be populated in subsequent PRD tasks)
+  // Rust ecosystem categories
   rustWebFramework: [
+    {
+      id: "axum",
+      name: "Axum",
+      description: "Ergonomic and modular web framework by Tokio team",
+      icon: "/icon/axum.svg",
+      color: "from-blue-500 to-indigo-600",
+      default: true,
+    },
+    {
+      id: "actix-web",
+      name: "Actix-web",
+      description: "Powerful, pragmatic, and extremely fast web framework",
+      icon: "/icon/actix.svg",
+      color: "from-purple-500 to-purple-700",
+      default: false,
+    },
     {
       id: "none",
       name: "No Web Framework",
       description: "Skip Rust web framework",
       icon: "",
       color: "from-gray-400 to-gray-600",
-      default: true,
+      default: false,
     },
   ],
   rustFrontend: [
@@ -1910,7 +1926,7 @@ export const DEFAULT_STACK: StackState = {
   serverDeploy: "none",
   yolo: "false",
   // Rust ecosystem defaults
-  rustWebFramework: "none",
+  rustWebFramework: "axum",
   rustFrontend: "none",
   rustOrm: "none",
   rustApi: "none",
