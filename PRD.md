@@ -94,7 +94,7 @@
 - [x] **Ably** - Real-time messaging platform
 - [x] **Pusher** - Real-time communication APIs
 - [x] **Liveblocks** - Collaboration infrastructure
-- [ ] **Y.js** - CRDT for real-time collaboration
+- [x] **Y.js** - CRDT for real-time collaboration
 
 ---
 

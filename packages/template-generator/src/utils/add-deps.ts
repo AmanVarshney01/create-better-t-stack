@@ -382,6 +382,11 @@ export const dependencyVersionMap = {
   "@liveblocks/client": "^3.11.0",
   "@liveblocks/react": "^3.13.2",
   "@liveblocks/node": "^3.11.0",
+  yjs: "^13.6.27",
+  "y-websocket": "^2.1.0",
+  "y-protocols": "^1.0.6",
+  "@y-sweet/sdk": "^0.6.3",
+  "@y-sweet/react": "^0.6.3",
 
   // Testing - Jest
   jest: "^29.7.0",

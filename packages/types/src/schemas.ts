@@ -186,7 +186,7 @@ export const EmailSchema = z
   );
 
 export const RealtimeSchema = z
-  .enum(["socket-io", "partykit", "ably", "pusher", "liveblocks", "none"])
+  .enum(["socket-io", "partykit", "ably", "pusher", "liveblocks", "yjs", "none"])
   .describe("Real-time/WebSocket solution");
 
 export const AnimationSchema = z

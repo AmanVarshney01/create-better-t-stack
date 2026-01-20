@@ -583,6 +583,135 @@ describe("Real-time/WebSocket Options", () => {
     });
   });
 
+  describe("Y.js with React frontends", () => {
+    test("yjs with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "yjs-tanstack-router",
+          frontend: ["tanstack-router"],
+          realtime: "yjs",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("yjs with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "yjs-react-router",
+          frontend: ["react-router"],
+          realtime: "yjs",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("yjs with Next.js fullstack", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "yjs-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          realtime: "yjs",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("yjs with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "yjs-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          realtime: "yjs",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Y.js with different backends", () => {
+    test("yjs with Hono backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "yjs-hono",
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          realtime: "yjs",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("yjs with Express backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "yjs-express",
+          frontend: ["tanstack-router"],
+          backend: "express",
+          runtime: "node",
+          realtime: "yjs",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("yjs with Fastify backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "yjs-fastify",
+          frontend: ["tanstack-router"],
+          backend: "fastify",
+          runtime: "node",
+          realtime: "yjs",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("yjs with Elysia backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "yjs-elysia",
+          frontend: ["tanstack-router"],
+          backend: "elysia",
+          runtime: "bun",
+          realtime: "yjs",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Y.js with native apps", () => {
+    test("yjs with native-bare", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "yjs-native-bare",
+          frontend: ["native-bare"],
+          backend: "hono",
+          realtime: "yjs",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("yjs with native-uniwind", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "yjs-native-uniwind",
+          frontend: ["native-uniwind"],
+          backend: "hono",
+          realtime: "yjs",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("No real-time option", () => {
     test("none realtime option", async () => {
       const result = await runTRPCTest(

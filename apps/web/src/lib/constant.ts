@@ -1443,6 +1443,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "yjs",
+      name: "Y.js",
+      description: "CRDT library for real-time collaboration with conflict-free sync",
+      icon: "",
+      color: "from-emerald-500 to-teal-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Real-time",
       description: "Skip real-time/WebSocket integration",

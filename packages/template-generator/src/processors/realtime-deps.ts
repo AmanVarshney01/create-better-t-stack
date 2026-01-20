@@ -87,6 +87,12 @@ function getRealtimeServerDeps(realtime: ProjectConfig["realtime"]): AvailableDe
     case "liveblocks":
       deps.push("@liveblocks/node");
       break;
+    case "yjs":
+      deps.push("yjs");
+      deps.push("y-websocket");
+      deps.push("y-protocols");
+      deps.push("@y-sweet/sdk");
+      break;
   }
 
   return deps;
@@ -112,6 +118,11 @@ function getRealtimeClientDeps(realtime: ProjectConfig["realtime"]): AvailableDe
     case "liveblocks":
       deps.push("@liveblocks/client");
       deps.push("@liveblocks/react");
+      break;
+    case "yjs":
+      deps.push("yjs");
+      deps.push("y-websocket");
+      deps.push("@y-sweet/react");
       break;
   }
 

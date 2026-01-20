@@ -4595,3 +4595,36 @@ The argon2 crate was already implemented in the template generator and CLI tests
 - All 46 realtime tests pass
 
 ### Status: COMPLETE
+
+## 2026-01-20: Y.js CRDT Real-Time Collaboration Implementation
+
+### Task: Implement Y.js as a real-time collaboration option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "yjs" to RealtimeSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Y.js dependency versions:
+   - yjs: ^13.6.27
+   - y-websocket: ^2.1.0
+   - y-protocols: ^1.0.6
+   - @y-sweet/sdk: ^0.6.3
+   - @y-sweet/react: ^0.6.3
+3. **packages/template-generator/src/processors/realtime-deps.ts**: Added Y.js dependency processing for both server and client:
+   - Server: yjs, y-websocket, y-protocols, @y-sweet/sdk
+   - Client: yjs, y-websocket, @y-sweet/react
+4. **apps/web/src/lib/constant.ts**: Added Y.js to web builder realtime options with description "CRDT library for real-time collaboration with conflict-free sync"
+5. **apps/cli/test/realtime.test.ts**: Added comprehensive Y.js tests (10 tests):
+   - Y.js with React frontends (TanStack Router, React Router, Next.js, TanStack Start)
+   - Y.js with different backends (Hono, Express, Fastify, Elysia)
+   - Y.js with native apps (native-bare, native-uniwind)
+
+### Features:
+- Y.js CRDT data synchronization library for real-time collaboration
+- y-websocket provider for WebSocket-based synchronization
+- y-protocols for CRDT encoding/decoding protocols
+- @y-sweet/sdk for server-side Y.js document management (alternative to y-websocket)
+- @y-sweet/react for React hooks integration with Y.js
+- Conflict-free replicated data type (CRDT) ensures automatic conflict resolution
+- Compatible with all backend frameworks (Hono, Express, Fastify, Elysia)
+- Compatible with all React-based frontends and native apps
+
+### Status: COMPLETE
