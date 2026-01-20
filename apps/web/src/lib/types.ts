@@ -29,6 +29,7 @@ export type TechCategory =
   | "animation"
   | "cssFramework"
   | "uiLibrary"
+  | "cms"
   | "codeQuality"
   | "documentation"
   | "appPlatforms"

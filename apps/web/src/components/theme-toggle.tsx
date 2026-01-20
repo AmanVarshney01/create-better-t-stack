@@ -1,3 +1,5 @@
+"use client";
+
 import { Switch } from "@base-ui/react/switch";
 import { Moon, Sun } from "lucide-react";
 import * as React from "react";

@@ -30,6 +30,7 @@ import {
   processLoggingTemplates,
   processObservabilityTemplates,
   processJobQueueTemplates,
+  processCMSTemplates,
 } from "./template-handlers";
 
 export type { TemplateData };
@@ -70,6 +71,7 @@ export async function generateVirtualProject(options: GeneratorOptions): Promise
       await processLoggingTemplates(vfs, templates, config);
       await processObservabilityTemplates(vfs, templates, config);
       await processJobQueueTemplates(vfs, templates, config);
+      await processCMSTemplates(vfs, templates, config);
 
       processPackageConfigs(vfs, config);
       processDependencies(vfs, config);

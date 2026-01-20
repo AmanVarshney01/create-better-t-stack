@@ -646,7 +646,7 @@ const StackBuilder = () => {
                               key={ecosystem.id}
                               type="button"
                               className={cn(
-                                "relative flex items-center gap-2 rounded-lg border px-4 py-3 transition-all",
+                                "relative flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-3 transition-all",
                                 isSelected
                                   ? "border-primary bg-primary/10"
                                   : "border-border bg-fd-background hover:border-muted hover:bg-muted/10",

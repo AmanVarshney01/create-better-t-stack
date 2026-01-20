@@ -791,6 +791,24 @@ function buildServerVars(
   ];
 }
 
+function buildCMSVars(cms: ProjectConfig["cms"]): EnvVariable[] {
+  const vars: EnvVariable[] = [];
+
+  if (cms === "payload") {
+    vars.push({
+      key: "PAYLOAD_SECRET",
+      value: generateRandomString(
+        32,
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+      ),
+      condition: true,
+      comment: "Payload CMS secret - used for encryption",
+    });
+  }
+
+  return vars;
+}
+
 export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const {
     backend,
@@ -907,6 +925,16 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
   } else if (vfs.directoryExists("apps/server")) {
     const envPath = "apps/server/.env";
     writeEnvFile(vfs, envPath, serverVars);
+  }
+
+  // --- CMS .env (Payload CMS requires Next.js and adds vars to web/.env) ---
+  if (config.cms === "payload" && hasNextJs) {
+    const webDir = "apps/web";
+    if (vfs.directoryExists(webDir)) {
+      const envPath = `${webDir}/.env`;
+      const cmsVars = buildCMSVars(config.cms);
+      writeEnvFile(vfs, envPath, cmsVars);
+    }
   }
 
   // --- Alchemy Infra .env ---

@@ -109,7 +109,7 @@
 
 ## **Headless CMS**
 
-- [ ] **Payload** - TypeScript-first CMS
+- [x] **Payload** - TypeScript-first CMS
 - [ ] **Sanity** - Schema-as-code CMS
 - [ ] **Strapi** - Open-source headless CMS
 

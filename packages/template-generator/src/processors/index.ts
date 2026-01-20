@@ -9,6 +9,7 @@ import { processApiDeps } from "./api-deps";
 import { processAuthDeps } from "./auth-deps";
 import { processAuthPlugins } from "./auth-plugins";
 import { processBackendDeps } from "./backend-deps";
+import { processCMSDeps } from "./cms-deps";
 import { processCSSAndUILibraryDeps } from "./css-ui-deps";
 import { processDatabaseDeps } from "./db-deps";
 import { processDeployDeps } from "./deploy-deps";
@@ -60,6 +61,7 @@ export function processDependencies(vfs: VirtualFileSystem, config: ProjectConfi
   processLoggingDeps(vfs, config);
   processObservabilityDeps(vfs, config);
   processCSSAndUILibraryDeps(vfs, config);
+  processCMSDeps(vfs, config);
   processTurboConfig(vfs, config);
 }
 
@@ -69,6 +71,7 @@ export {
   processApiDeps,
   processAuthDeps,
   processBackendDeps,
+  processCMSDeps,
   processCSSAndUILibraryDeps,
   processDatabaseDeps,
   processDeployDeps,

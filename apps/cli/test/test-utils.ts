@@ -31,6 +31,7 @@ import type {
   FileUpload,
   Logging,
   Observability,
+  CMS,
 } from "../src/types";
 
 import { create } from "../src/index";
@@ -42,6 +43,7 @@ import {
   AstroIntegrationSchema,
   AuthSchema,
   BackendSchema,
+  CMSSchema,
   CSSFrameworkSchema,
   DatabaseSchema,
   DatabaseSetupSchema,
@@ -134,6 +136,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     "animation",
     "logging",
     "observability",
+    "cms",
   ];
   const hasSpecificCoreConfig = coreStackFlags.some((flag) => config[flag] !== undefined);
 
@@ -173,6 +176,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
         animation: "none" as Animation,
         logging: "none" as Logging,
         observability: "none" as Observability,
+        cms: "none" as CMS,
       };
 
   // Build options object - let the CLI handle all validation
@@ -265,6 +269,7 @@ export const FILE_UPLOADS = extractEnumValues(FileUploadSchema);
 export const LOGGINGS = extractEnumValues(LoggingSchema);
 export const OBSERVABILITIES = extractEnumValues(ObservabilitySchema);
 export const AI_SDKS = extractEnumValues(AISchema);
+export const CMS_OPTIONS = extractEnumValues(CMSSchema);
 export const ECOSYSTEMS = extractEnumValues(EcosystemSchema);
 export const RUST_WEB_FRAMEWORKS = extractEnumValues(RustWebFrameworkSchema);
 export const RUST_FRONTENDS = extractEnumValues(RustFrontendSchema);

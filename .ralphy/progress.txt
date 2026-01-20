@@ -4814,3 +4814,59 @@ Tests: 15 passing
 - No linting errors in modified files
 
 ### Status: COMPLETE
+
+## 2026-01-20: Payload CMS Implementation
+
+### Task: Implement Payload as a headless CMS option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: 
+   - Added CMSSchema with options: "payload", "sanity", "strapi", "none"
+   - Added cms field to CreateInputSchema, ProjectConfigSchema, and BetterTStackConfigSchema
+   - Exported CMS_VALUES constant
+2. **packages/types/src/types.ts**: Added CMS type export
+3. **packages/template-generator/src/utils/add-deps.ts**: Added Payload CMS dependency versions:
+   - payload: ^3.14.1
+   - @payloadcms/next: ^3.14.1
+   - @payloadcms/richtext-lexical: ^3.14.1
+   - @payloadcms/db-postgres: ^3.14.1
+   - @payloadcms/db-mongodb: ^3.14.1
+   - @payloadcms/db-sqlite: ^3.14.1
+   - @payloadcms/plugin-seo: ^3.14.1
+   - @payloadcms/storage-s3: ^3.14.1
+4. **packages/template-generator/src/processors/cms-deps.ts**: Created CMS dependency processor
+5. **packages/template-generator/src/processors/index.ts**: Registered CMS processor
+6. **packages/template-generator/src/template-handlers/cms.ts**: Created CMS template handler
+7. **packages/template-generator/src/template-handlers/index.ts**: Exported CMS handler
+8. **packages/template-generator/src/generator.ts**: Added CMS template processing
+9. **packages/template-generator/templates/cms/payload/web/next/**: Created Payload templates:
+   - src/payload.config.ts.hbs - Main Payload configuration with conditional DB adapters
+   - src/payload/collections/Users.ts.hbs - Users collection with auth
+   - src/payload/collections/Media.ts.hbs - Media collection for file uploads
+   - src/payload/collections/Pages.ts.hbs - Pages collection with rich text and versioning
+10. **packages/template-generator/src/processors/env-vars.ts**: Added PAYLOAD_SECRET env variable
+11. **apps/web/src/lib/types.ts**: Added "cms" to TechCategory union type
+12. **apps/web/src/lib/constant.ts**: 
+    - Added cms category to TECH_OPTIONS with Payload, Sanity, Strapi, and none options
+    - Added cms to ECOSYSTEM_CATEGORIES for typescript
+    - Added cms field to StackState type
+    - Added cms default to DEFAULT_STACK
+13. **apps/web/src/lib/stack-url-keys.ts**: Added cms URL key
+14. **apps/web/src/lib/stack-url-state.ts**: Added cms field handling
+15. **apps/web/src/lib/stack-url-state.client.ts**: Added cms client-side state
+16. **apps/web/src/lib/stack-search-schema.ts**: Added cms search param
+17. **apps/web/src/lib/stack-utils.ts**: Added cms to category order and command generation
+18. **apps/web/public/icon/payload.svg**: Added Payload icon
+19. **apps/cli/test/test-utils.ts**: Added CMS to test utilities
+20. **apps/cli/test/cms.test.ts**: Created comprehensive CMS test suite (10 tests)
+
+### Features:
+- Payload CMS v3 integration (Next.js only - tightly integrated)
+- Automatic database adapter selection based on database choice (PostgreSQL, MongoDB, SQLite)
+- Pre-configured collections: Users (with auth), Media, Pages
+- Lexical rich text editor configuration
+- Environment variable (PAYLOAD_SECRET) auto-generation
+- Full type safety with CMS schema
+- Web builder UI integration with all CMS options
+
+### Status: COMPLETE

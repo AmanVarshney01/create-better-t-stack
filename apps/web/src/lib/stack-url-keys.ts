@@ -31,6 +31,7 @@ export const stackUrlKeys: UrlKeys<
   realtime: "rt2",
   jobQueue: "jq",
   animation: "anim",
+  cms: "cms",
   codeQuality: "cq",
   documentation: "doc",
   appPlatforms: "ap",

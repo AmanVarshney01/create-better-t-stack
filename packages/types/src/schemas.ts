@@ -193,6 +193,10 @@ export const JobQueueSchema = z
   .enum(["bullmq", "trigger-dev", "inngest", "temporal", "none"])
   .describe("Job queue/background worker solution");
 
+export const CMSSchema = z
+  .enum(["payload", "sanity", "strapi", "none"])
+  .describe("Headless CMS solution");
+
 export const AnimationSchema = z
   .enum(["framer-motion", "gsap", "react-spring", "auto-animate", "lottie", "none"])
   .describe("Animation library");
@@ -320,6 +324,7 @@ export const CreateInputSchema = z.object({
   fileUpload: FileUploadSchema.optional(),
   logging: LoggingSchema.optional(),
   observability: ObservabilitySchema.optional(),
+  cms: CMSSchema.optional(),
   // Rust ecosystem options
   rustWebFramework: RustWebFrameworkSchema.optional(),
   rustFrontend: RustFrontendSchema.optional(),
@@ -379,6 +384,7 @@ export const ProjectConfigSchema = z.object({
   fileUpload: FileUploadSchema,
   logging: LoggingSchema,
   observability: ObservabilitySchema,
+  cms: CMSSchema,
   // Rust ecosystem options
   rustWebFramework: RustWebFrameworkSchema,
   rustFrontend: RustFrontendSchema,
@@ -422,6 +428,7 @@ export const BetterTStackConfigSchema = z.object({
   fileUpload: FileUploadSchema,
   logging: LoggingSchema,
   observability: ObservabilitySchema,
+  cms: CMSSchema,
   // Rust ecosystem options
   rustWebFramework: RustWebFrameworkSchema,
   rustFrontend: RustFrontendSchema,
@@ -485,6 +492,7 @@ export const ANIMATION_VALUES = AnimationSchema.options;
 export const FILE_UPLOAD_VALUES = FileUploadSchema.options;
 export const LOGGING_VALUES = LoggingSchema.options;
 export const OBSERVABILITY_VALUES = ObservabilitySchema.options;
+export const CMS_VALUES = CMSSchema.options;
 export const ECOSYSTEM_VALUES = EcosystemSchema.options;
 export const RUST_WEB_FRAMEWORK_VALUES = RustWebFrameworkSchema.options;
 export const RUST_FRONTEND_VALUES = RustFrontendSchema.options;

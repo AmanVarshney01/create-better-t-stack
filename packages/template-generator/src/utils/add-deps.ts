@@ -524,6 +524,16 @@ export const dependencyVersionMap = {
   "@opentelemetry/exporter-metrics-otlp-http": "^0.57.2",
   "@opentelemetry/resources": "^1.30.1",
   "@opentelemetry/semantic-conventions": "^1.30.0",
+
+  // Headless CMS - Payload
+  payload: "^3.14.1",
+  "@payloadcms/next": "^3.14.1",
+  "@payloadcms/richtext-lexical": "^3.14.1",
+  "@payloadcms/db-postgres": "^3.14.1",
+  "@payloadcms/db-mongodb": "^3.14.1",
+  "@payloadcms/db-sqlite": "^3.14.1",
+  "@payloadcms/plugin-seo": "^3.14.1",
+  "@payloadcms/storage-s3": "^3.14.1",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

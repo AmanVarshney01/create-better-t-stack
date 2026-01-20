@@ -1602,6 +1602,40 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
   ],
+  cms: [
+    {
+      id: "payload",
+      name: "Payload",
+      description: "TypeScript-first headless CMS with Next.js integration",
+      icon: "/icon/payload.svg",
+      color: "from-slate-700 to-slate-900",
+      default: false,
+    },
+    {
+      id: "sanity",
+      name: "Sanity",
+      description: "Real-time collaborative CMS with schema-as-code",
+      icon: "https://cdn.simpleicons.org/sanity/F03E2F",
+      color: "from-red-500 to-red-700",
+      default: false,
+    },
+    {
+      id: "strapi",
+      name: "Strapi",
+      description: "Open-source headless CMS with admin panel",
+      icon: "https://cdn.simpleicons.org/strapi/4945FF",
+      color: "from-indigo-500 to-purple-600",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No CMS",
+      description: "Skip headless CMS setup",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
   git: [
     {
       id: "true",
@@ -1875,6 +1909,7 @@ export const ECOSYSTEM_CATEGORIES: Record<Ecosystem, TechCategory[]> = {
     "logging",
     "observability",
     "ai",
+    "cms",
     "codeQuality",
     "documentation",
     "appPlatforms",
@@ -2133,6 +2168,7 @@ export type StackState = {
   animation: string;
   cssFramework: string;
   uiLibrary: string;
+  cms: string;
   codeQuality: string[];
   documentation: string[];
   appPlatforms: string[];
@@ -2180,6 +2216,7 @@ export const DEFAULT_STACK: StackState = {
   animation: "none",
   cssFramework: "tailwind",
   uiLibrary: "shadcn-ui",
+  cms: "none",
   codeQuality: [],
   documentation: [],
   appPlatforms: ["turborepo"],

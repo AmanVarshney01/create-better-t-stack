@@ -8,6 +8,10 @@ export default defineConfig({
   server: {
     port: 3333,
   },
+  ssr: {
+    // Bundle react-tweet during SSR to handle its CSS imports
+    noExternal: ["react-tweet"],
+  },
   plugins: [
     tsconfigPaths({
       projects: ["./tsconfig.json"],

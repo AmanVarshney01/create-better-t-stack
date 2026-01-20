@@ -54,6 +54,7 @@ export function loadStackParams(
       realtime: getString("realtime", DEFAULT_STACK.realtime),
       jobQueue: getString("jobQueue", DEFAULT_STACK.jobQueue),
       animation: getString("animation", DEFAULT_STACK.animation),
+      cms: getString("cms", DEFAULT_STACK.cms),
       codeQuality: getArray("codeQuality", DEFAULT_STACK.codeQuality),
       documentation: getArray("documentation", DEFAULT_STACK.documentation),
       appPlatforms: getArray("appPlatforms", DEFAULT_STACK.appPlatforms),
@@ -126,6 +127,7 @@ export function serializeStackParams(basePath: string, stack: StackState): strin
   addParam("realtime", stack.realtime);
   addParam("jobQueue", stack.jobQueue);
   addParam("animation", stack.animation);
+  addParam("cms", stack.cms);
   addParam("codeQuality", stack.codeQuality);
   addParam("documentation", stack.documentation);
   addParam("appPlatforms", stack.appPlatforms);

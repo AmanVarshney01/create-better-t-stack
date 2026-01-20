@@ -1,3 +1,5 @@
+"use client";
+
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 
 import { Toaster } from "@/components/ui/sonner";

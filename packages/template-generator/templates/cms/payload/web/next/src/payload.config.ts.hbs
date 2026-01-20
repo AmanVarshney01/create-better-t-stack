@@ -1,0 +1,56 @@
+import { buildConfig } from "payload";
+import { lexicalEditor } from "@payloadcms/richtext-lexical";
+{{#if (eq database "postgres")}}
+import { postgresAdapter } from "@payloadcms/db-postgres";
+{{else if (eq database "mongodb")}}
+import { mongooseAdapter } from "@payloadcms/db-mongodb";
+{{else}}
+import { sqliteAdapter } from "@payloadcms/db-sqlite";
+{{/if}}
+
+import { Users } from "./payload/collections/Users";
+import { Media } from "./payload/collections/Media";
+import { Pages } from "./payload/collections/Pages";
+
+export default buildConfig({
+  // Rich text editor
+  editor: lexicalEditor(),
+
+  // Collections
+  collections: [Users, Media, Pages],
+
+  // Secret for encryption (should be a complex and secure string)
+  secret: process.env.PAYLOAD_SECRET || "",
+
+  // Database adapter
+{{#if (eq database "postgres")}}
+  db: postgresAdapter({
+    pool: {
+      connectionString: process.env.DATABASE_URL || "",
+    },
+  }),
+{{else if (eq database "mongodb")}}
+  db: mongooseAdapter({
+    url: process.env.DATABASE_URL || "",
+  }),
+{{else}}
+  db: sqliteAdapter({
+    client: {
+      url: process.env.DATABASE_URL || "file:./payload.db",
+    },
+  }),
+{{/if}}
+
+  // Admin panel configuration
+  admin: {
+    // Customize admin panel
+    meta: {
+      titleSuffix: "- {{projectName}}",
+    },
+  },
+
+  // TypeScript configuration
+  typescript: {
+    outputFile: "./src/payload-types.ts",
+  },
+});
