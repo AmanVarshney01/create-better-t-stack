@@ -610,6 +610,9 @@ function generateRustReadmeContent(config: ProjectConfig): string {
   if (libs.includes("argon2")) {
     features.push("- **Argon2** - Secure password hashing");
   }
+  if (libs.includes("tokio-test")) {
+    features.push("- **Tokio Test** - Async testing utilities");
+  }
 
   // Project structure
   const structure: string[] = [`${projectName}/`, "├── Cargo.toml            # Workspace manifest"];

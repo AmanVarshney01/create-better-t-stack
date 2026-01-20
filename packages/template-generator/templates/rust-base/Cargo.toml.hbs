@@ -129,6 +129,10 @@ jsonwebtoken = "9"
 # Password hashing
 argon2 = "0.5"
 {{/if}}
+{{#if (includes rustLibraries "tokio-test")}}
+# Testing
+tokio-test = "0.4"
+{{/if}}
 
 [profile.dev]
 opt-level = 0

@@ -66,7 +66,7 @@
 - [x] **validator** - Derive-based validation
 - [x] **jsonwebtoken** - JWT encoding/decoding
 - [x] **argon2** - Password hashing
-- [ ] **tokio-test** - Async testing utilities
+- [x] **tokio-test** - Async testing utilities
 - [ ] **mockall** - Mocking library
 
 ---

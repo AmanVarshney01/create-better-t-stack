@@ -4102,3 +4102,42 @@ The argon2 crate was already implemented in the template generator and CLI tests
 - Specific argon2 test verifies the option is present in rustLibraries
 
 ### Status: COMPLETE
+
+
+## 2026-01-20: Tokio Test - Async Testing Utilities for Rust Ecosystem
+
+### Task: Implement tokio-test async testing utilities for the Rust ecosystem
+
+### Changes Made:
+1. **apps/web/src/lib/constant.ts**: Added tokio-test to TECH_OPTIONS.rustLibraries:
+   - id: "tokio-test"
+   - name: "Tokio Test"
+   - description: "Async testing utilities for Tokio runtime"
+   - color: "from-cyan-500 to-blue-600"
+
+2. **packages/template-generator/templates/rust-base/Cargo.toml.hbs**: Added tokio-test workspace dependency:
+   - tokio-test = "0.4" (conditionally included when tokio-test is in rustLibraries)
+
+3. **packages/template-generator/templates/rust-base/crates/server/Cargo.toml.hbs**: Added tokio-test as dev-dependency:
+   - [dev-dependencies] section with tokio-test.workspace = true
+   - Only included when tokio-test is selected in rustLibraries
+
+4. **packages/template-generator/src/processors/readme-generator.ts**: Added README feature line:
+   - "**Tokio Test** - Async testing utilities"
+
+5. **apps/cli/test/rust-ecosystem.test.ts**: Added test for tokio-test:
+   - Verifies tokio-test is in workspace Cargo.toml
+   - Verifies [dev-dependencies] section is created in server Cargo.toml
+   - Confirms tokio-test.workspace = true in dev-dependencies
+
+### Features:
+- Tokio Test (version 0.4) provides utilities for testing async Tokio code
+- Added as dev-dependency (not regular dependency) since it's only needed for testing
+- Includes macros like `#[tokio::test]` and utilities for testing async code
+- Works with all Rust web frameworks (Axum, Actix-web)
+
+### Tests:
+- All 98 Rust ecosystem tests pass
+- Specific tokio-test test verifies proper dev-dependency configuration
+
+### Status: COMPLETE

@@ -82,3 +82,8 @@ clap.workspace = true
 [[bin]]
 name = "server"
 path = "src/main.rs"
+
+{{#if (includes rustLibraries "tokio-test")}}
+[dev-dependencies]
+tokio-test.workspace = true
+{{/if}}

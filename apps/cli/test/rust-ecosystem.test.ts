@@ -1574,6 +1574,31 @@ describe("Rust Ecosystem", () => {
       expect(serverCargoContent).toContain("argon2.workspace = true");
     });
 
+    it("should include tokio-test library as dev-dependency when selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-tokio-test-deps",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: ["tokio-test"],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain("tokio-test");
+
+      const serverCargoContent = getFileContent(root, "crates/server/Cargo.toml");
+      expect(serverCargoContent).toBeDefined();
+      expect(serverCargoContent).toContain("[dev-dependencies]");
+      expect(serverCargoContent).toContain("tokio-test.workspace = true");
+    });
+
     it("should include multiple libraries when selected", async () => {
       const result = await createVirtual({
         projectName: "rust-multi-libs",

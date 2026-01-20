@@ -1651,6 +1651,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "tokio-test",
+      name: "Tokio Test",
+      description: "Async testing utilities for Tokio runtime",
+      icon: "",
+      color: "from-cyan-500 to-blue-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Additional Libraries",
       description: "Skip additional Rust core libraries",
