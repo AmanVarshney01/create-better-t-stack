@@ -14,7 +14,7 @@ or
 bun create bts
 ```
 
-For full documentation, please visit [better-t-stack.dev](https://better-t-stack.dev/).
+For full documentation, please visit the [GitHub repository](https://github.com/Marve10s/Better-Fullstack).
 
 ## About
 

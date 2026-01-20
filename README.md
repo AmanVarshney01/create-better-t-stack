@@ -1,19 +1,6 @@
-# Better-T-Stack
+# Better Fullstack
 
-A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations
-
-<br />
-<a href="https://vercel.com/oss">
-  <img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge.svg" />
-</a>
-
-## Sponsors
-
-<p align="center">
-<img src="https://sponsors.amanv.dev/sponsors.png" alt="Sponsors">
-</p>
-
-![demo](https://cdn.jsdelivr.net/gh/amanvarshney01/create-better-t-stack/demo.gif)
+A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations.
 
 ## Philosophy
 
@@ -26,13 +13,13 @@ A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with 
 
 ```bash
 # Using bun (recommended)
-bun create better-t-stack@latest
+bun create better-fullstack@latest
 
 # Using pnpm
-pnpm create better-t-stack@latest
+pnpm create better-fullstack@latest
 
 # Using npm
-npx create-better-t-stack@latest
+npx create-better-fullstack@latest
 ```
 
 ## Features
@@ -56,17 +43,13 @@ Type safety end-to-end, clean monorepo layout, and zero lock-in: you choose only
 This repository is organized as a monorepo containing:
 
 - **CLI**: [`apps/cli`](apps/cli) - The scaffolding CLI tool
-- **Documentation**: [`apps/web`](apps/web) - Official website and documentation
-
-## Documentation
-
-Visit [better-t-stack.dev](https://better-t-stack.dev) for full documentation, guides, and examples. You can also use the visual Stack Builder at `https://better-t-stack.dev/new` to generate a command for your stack.
+- **Website**: [`apps/web`](apps/web) - Official website
 
 ## Development
 
 ```bash
 # Clone the repository
-git clone https://github.com/AmanVarshney01/create-better-t-stack.git
+git clone https://github.com/Marve10s/Better-Fullstack.git
 
 # Install dependencies
 bun install
@@ -78,19 +61,10 @@ bun dev:cli
 bun dev:web
 ```
 
-## Want to contribute?
+## Contributing
 
-Please read the Contribution Guide first and open an issue before starting new features to ensure alignment with project goals.
+Please read the [Contributing Guide](.github/CONTRIBUTING.md) first and open an issue before starting new features to ensure alignment with project goals.
 
-- Docs: [`Contributing`](/apps/web/content/docs/contributing.mdx)
-- Repo guide: [`.github/CONTRIBUTING.md`](.github/CONTRIBUTING.md)
+## License
 
-## Star History
-
-<a href="https://www.star-history.com/#AmanVarshney01/create-better-t-stack&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=AmanVarshney01/create-better-t-stack&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=AmanVarshney01/create-better-t-stack&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=AmanVarshney01/create-better-t-stack&type=Date" />
- </picture>
-</a>
+MIT

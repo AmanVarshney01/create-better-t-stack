@@ -43,7 +43,7 @@ export async function createProjectHandler(
       if (!isSilent() && input.renderTitle !== false) {
         renderTitle();
       }
-      if (!isSilent()) intro(pc.magenta("Creating a new Better-T-Stack project"));
+      if (!isSilent()) intro(pc.magenta("Creating a new Better Fullstack project"));
 
       if (!isSilent() && input.yolo) {
         consola.fatal("YOLO mode enabled - skipping checks. Things may break!");

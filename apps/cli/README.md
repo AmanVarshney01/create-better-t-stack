@@ -1,14 +1,6 @@
-# Create Better-T-Stack CLI
+# Better Fullstack CLI
 
-A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations
-
-## Sponsors
-
-<p align="center">
-<img src="https://sponsors.amanv.dev/sponsors.png" alt="Sponsors">
-</p>
-
-![demo](https://cdn.jsdelivr.net/gh/amanvarshney01/create-better-t-stack@master/demo.gif)
+A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations.
 
 ## Quick Start
 
@@ -74,29 +66,6 @@ Options:
   -h, --help                      Display help
 ```
 
-## Telemetry
-
-This CLI collects anonymous usage data to help improve the tool. The data collected includes:
-
-- Configuration options selected
-- CLI version
-- Node.js version
-- Platform (OS)
-
-**Telemetry is enabled by default in published versions** to help us understand usage patterns and improve the tool.
-
-### Disabling Telemetry
-
-You can disable telemetry by setting the `BTS_TELEMETRY_DISABLED` environment variable:
-
-```bash
-# Disable telemetry for a single run
-BTS_TELEMETRY_DISABLED=1 npx create-better-t-stack
-
-# Disable telemetry globally in your shell profile (.bashrc, .zshrc, etc.)
-export BTS_TELEMETRY_DISABLED=1
-```
-
 ## Examples
 
 Create a project with default configuration:
@@ -122,83 +91,6 @@ Create a project with multiple frontend options (one web + one native):
 ```bash
 npx create-better-t-stack --frontend tanstack-router native-bare
 ```
-
-Create a project with examples:
-
-```bash
-npx create-better-t-stack --examples todo ai
-```
-
-Create a project with Turso database setup:
-
-```bash
-npx create-better-t-stack --database sqlite --orm drizzle --db-setup turso
-```
-
-Create a project with Supabase PostgreSQL setup:
-
-```bash
-npx create-better-t-stack --database postgres --orm drizzle --db-setup supabase --auth
-```
-
-Create a project with Convex backend:
-
-```bash
-npx create-better-t-stack --backend convex --frontend tanstack-router
-```
-
-Create a project with documentation site:
-
-```bash
-npx create-better-t-stack --addons starlight
-```
-
-Create a minimal TypeScript project with no backend:
-
-```bash
-npx create-better-t-stack --backend none --frontend tanstack-router
-```
-
-Create a backend-only project with no frontend:
-
-```bash
-npx create-better-t-stack --frontend none --backend hono --database postgres --orm drizzle
-```
-
-Create a simple frontend-only project:
-
-```bash
-npx create-better-t-stack --backend none --frontend next --addons none --examples none
-```
-
-Create a Cloudflare Workers project:
-
-```bash
-npx create-better-t-stack --backend hono --runtime workers --database sqlite --orm drizzle --db-setup d1
-```
-
-Create a minimal API-only project:
-
-```bash
-npx create-better-t-stack --frontend none --backend hono --api trpc --database none --addons none
-```
-
-## Compatibility Notes
-
-- **Convex backend**: Automatically disables authentication, database, ORM, and API options
-- **Backend 'none'**: If selected, this option will force related options like API, ORM, database, authentication, and runtime to 'none'. Examples will also be disabled (set to none/empty).
-- **Frontend 'none'**: Creates a backend-only project. When selected, PWA, Tauri, and certain examples may be disabled.
-- **API 'none'**: Disables tRPC/oRPC setup. Can be used with backend frameworks for REST APIs or custom API implementations.
-- **Database 'none'**: Disables database setup. Automatically sets ORM to 'none' and disables authentication.
-- **ORM 'none'**: Can be used when you want to handle database operations manually or use a different ORM.
-- **Runtime 'none'**: Only available with Convex backend or when backend is 'none'.
-- **Cloudflare Workers runtime**: Only compatible with Hono backend, Drizzle ORM (or no ORM), and SQLite database (with D1 setup). Not compatible with MongoDB.
-- **Addons 'none'**: Skips all addons (PWA, Tauri, Starlight, Biome, Lefthook,Husky, Turborepo).
-- **Examples 'none'**: Skips all example implementations (todo, AI chat).
-- **SvelteKit, Nuxt, and SolidJS** frontends are only compatible with oRPC API layer
-- **PWA support** requires React with TanStack Router, React Router, or SolidJS
-- **Tauri desktop app** requires React (TanStack Router/React Router), Nuxt, SvelteKit, or SolidJS
-- **AI example** is not compatible with Elysia backend or SolidJS frontend
 
 ## Project Structure
 

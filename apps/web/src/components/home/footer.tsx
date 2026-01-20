@@ -15,7 +15,7 @@ export default function Footer() {
 
           <div className="flex items-center gap-6">
             <a
-              href="https://github.com/better-fullstack/create-better-fullstack"
+              href="https://github.com/Marve10s/Better-Fullstack"
               target="_blank"
               rel="noopener noreferrer"
               className="text-muted-foreground transition-colors hover:text-foreground"

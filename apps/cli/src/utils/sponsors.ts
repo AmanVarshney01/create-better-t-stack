@@ -59,7 +59,7 @@ export function displaySponsors(sponsors: SponsorEntry) {
   const { total_sponsors } = sponsors.summary;
   if (total_sponsors === 0) {
     log.info("No sponsors found. You can be the first one! ✨");
-    outro(pc.cyan("Visit https://github.com/sponsors/AmanVarshney01 to become a sponsor."));
+    outro(pc.cyan("Visit https://github.com/Marve10s/Better-Fullstack to become a sponsor."));
     return;
   }
 
@@ -70,7 +70,7 @@ export function displaySponsors(sponsors: SponsorEntry) {
       pc.blue(`+${total_sponsors - sponsors.specialSponsors.length} more amazing sponsors.\n`),
     );
   }
-  outro(pc.magenta("Visit https://github.com/sponsors/AmanVarshney01 to become a sponsor."));
+  outro(pc.magenta("Visit https://github.com/Marve10s/Better-Fullstack to become a sponsor."));
 }
 
 function displaySponsorsBox(sponsors: SponsorEntry) {

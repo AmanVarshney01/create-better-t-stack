@@ -1,7 +1,7 @@
 "use client";
 
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Check, Copy, Github } from "lucide-react";
+import { ArrowRight, Check, Copy } from "lucide-react";
 import { useState } from "react";
 
 import PackageIcon from "./icons";
@@ -45,7 +45,7 @@ export default function HeroSection() {
             The Power of the Full Stack Builder in the Palm Of My Hand
           </p>
 
-          <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="mt-10">
             <Link
               to="/new"
               className="group inline-flex items-center gap-3 bg-foreground px-8 py-4 font-semibold uppercase tracking-wider text-background transition-all hover:bg-foreground/90"
@@ -53,15 +53,6 @@ export default function HeroSection() {
               Start Building
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
-            <a
-              href="https://github.com/better-fullstack/create-better-fullstack"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              <Github className="h-4 w-4" />
-              <span className="tracking-wide">GitHub</span>
-            </a>
           </div>
         </div>
 

@@ -4,7 +4,7 @@ This file contains instructions and context for AI coding agents working on this
 
 ## Project Overview
 
-**Better-Fullstack** is a fork of [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack) with the goal of creating a full-stack CLI scaffolding tool featuring:
+**Better-Fullstack** is a full-stack CLI scaffolding tool featuring:
 
 - **TanStack Start** for the documentation/marketing website
 - **Convex** as the backend database and real-time sync layer

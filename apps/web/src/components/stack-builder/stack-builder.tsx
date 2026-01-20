@@ -154,9 +154,11 @@ const StackBuilder = () => {
     contentRef.current?.scrollTo(0, 0);
   };
 
-  const selectedBadges = (() => {
-    const badges: React.ReactNode[] = [];
-    for (const category of CATEGORY_ORDER) {
+  const selectedStackCards = (() => {
+    const cards: React.ReactNode[] = [];
+    const categoryOrder =
+      stack.ecosystem === "rust" ? RUST_CATEGORY_ORDER : TYPESCRIPT_CATEGORY_ORDER;
+    for (const category of categoryOrder) {
       const categoryKey = category as keyof StackState;
       const options = TECH_OPTIONS[category as keyof typeof TECH_OPTIONS];
       const selectedValue = stack[categoryKey];
@@ -175,23 +177,28 @@ const StackBuilder = () => {
           if (id === "none") continue;
           const tech = options.find((opt) => opt.id === id);
           if (tech) {
-            badges.push(
-              <span
+            cards.push(
+              <div
                 key={`${category}-${tech.id}`}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs",
+                  "flex items-center gap-3 rounded-lg border p-2.5 transition-colors",
                   getBadgeColors(category),
                 )}
               >
                 {tech.icon !== "" && (
-                  <TechIcon
-                    icon={tech.icon}
-                    name={tech.name}
-                    className={cn("h-3 w-3", tech.className)}
-                  />
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted/50">
+                    <TechIcon
+                      icon={tech.icon}
+                      name={tech.name}
+                      className={cn("h-5 w-5", tech.className)}
+                    />
+                  </div>
                 )}
-                {tech.name}
-              </span>,
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-foreground text-sm">{tech.name}</p>
+                  <p className="truncate text-muted-foreground text-xs">{tech.description}</p>
+                </div>
+              </div>,
             );
           }
         }
@@ -206,21 +213,32 @@ const StackBuilder = () => {
         ) {
           continue;
         }
-        badges.push(
-          <span
+        cards.push(
+          <div
             key={`${category}-${tech.id}`}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs",
+              "flex items-center gap-3 rounded-lg border p-2.5 transition-colors",
               getBadgeColors(category),
             )}
           >
-            <TechIcon icon={tech.icon} name={tech.name} className="h-3 w-3" />
-            {tech.name}
-          </span>,
+            {tech.icon !== "" && (
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted/50">
+                <TechIcon
+                  icon={tech.icon}
+                  name={tech.name}
+                  className={cn("h-5 w-5", tech.className)}
+                />
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-medium text-foreground text-sm">{tech.name}</p>
+              <p className="truncate text-muted-foreground text-xs">{tech.description}</p>
+            </div>
+          </div>,
         );
       }
     }
-    return badges;
+    return cards;
   })();
 
   useEffect(() => {
@@ -477,8 +495,8 @@ const StackBuilder = () => {
         >
           <ScrollArea className="flex-1">
             <div className="flex h-full flex-col gap-3 p-3 sm:p-4 md:h-[calc(100vh-64px)]">
-              <div className="space-y-3">
-                <label className="flex flex-col">
+              <div className="flex flex-1 flex-col gap-3 overflow-hidden">
+                <label className="flex shrink-0 flex-col">
                   <span className="mb-1 text-muted-foreground text-xs">Project Name:</span>
                   <input
                     type="text"
@@ -507,7 +525,7 @@ const StackBuilder = () => {
                   )}
                 </label>
 
-                <div className="rounded border border-border p-2">
+                <div className="shrink-0 rounded border border-border p-2">
                   <div className="flex">
                     <span className="mr-2 select-none text-chart-4">$</span>
                     <code className="block break-all text-muted-foreground text-xs sm:text-sm">
@@ -541,9 +559,13 @@ const StackBuilder = () => {
                   </div>
                 </div>
 
-                <div>
-                  <h3 className="mb-2 font-medium text-foreground text-sm">Selected Stack</h3>
-                  <div className="flex flex-wrap gap-1.5">{selectedBadges}</div>
+                <div className="flex flex-1 flex-col overflow-hidden">
+                  <h3 className="mb-2 font-medium text-foreground text-sm">
+                    Selected Stack ({selectedStackCards.length})
+                  </h3>
+                  <div className="flex-1 overflow-y-auto pr-1">
+                    <div className="flex flex-col gap-2 pb-2">{selectedStackCards}</div>
+                  </div>
                 </div>
               </div>
 
@@ -558,7 +580,7 @@ const StackBuilder = () => {
                   />
 
                   <div className="flex gap-1">
-                    <ShareButton stackUrl={getStackUrl()} stackState={stack} />
+                    <ShareButton stackUrl={getStackUrl()} />
 
                     <PresetDropdown onApplyPreset={applyPreset} />
 

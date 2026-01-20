@@ -91,7 +91,7 @@ import { displaySponsors, fetchSponsors } from "./utils/sponsors";
 export const router = os.router({
   create: os
     .meta({
-      description: "Create a new Better-T-Stack project",
+      description: "Create a new Better Fullstack project",
       default: true,
       negateBooleans: true,
     })
@@ -177,17 +177,17 @@ export const router = os.router({
         return result;
       }
     }),
-  sponsors: os.meta({ description: "Show Better-T-Stack sponsors" }).handler(async () => {
+  sponsors: os.meta({ description: "Show Better Fullstack sponsors" }).handler(async () => {
     try {
       renderTitle();
-      intro(pc.magenta("Better-T-Stack Sponsors"));
+      intro(pc.magenta("Better Fullstack Sponsors"));
       const sponsors = await fetchSponsors();
       displaySponsors(sponsors);
     } catch (error) {
       handleError(error, "Failed to display sponsors");
     }
   }),
-  docs: os.meta({ description: "Open Better-T-Stack documentation" }).handler(async () => {
+  docs: os.meta({ description: "Open Better Fullstack documentation" }).handler(async () => {
     const DOCS_URL = "https://better-t-stack.dev/docs";
     try {
       await openUrl(DOCS_URL);
@@ -218,7 +218,7 @@ export function createBtsCli() {
 }
 
 /**
- * Programmatic API to create a new Better-T-Stack project.
+ * Programmatic API to create a new Better Fullstack project.
  * Returns pure JSON - no console output, no interactive prompts.
  *
  * @example

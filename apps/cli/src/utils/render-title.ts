@@ -36,7 +36,7 @@ export const renderTitle = () => {
   const titleWidth = Math.max(...titleLines.map((line) => line.length));
 
   if (terminalWidth < titleWidth) {
-    const simplifiedTitle = `Better T Stack`;
+    const simplifiedTitle = `Better Fullstack`;
     console.log(gradient(Object.values(catppuccinTheme)).multiline(simplifiedTitle));
   } else {
     console.log(gradient(Object.values(catppuccinTheme)).multiline(TITLE_TEXT));
