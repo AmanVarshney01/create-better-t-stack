@@ -162,6 +162,7 @@ const StackBuilder = () => {
       const categoryKey = category as keyof StackState;
       const options = TECH_OPTIONS[category as keyof typeof TECH_OPTIONS];
       const selectedValue = stack[categoryKey];
+      const categoryDisplayName = getCategoryDisplayName(category);
 
       if (!options) continue;
 
@@ -195,8 +196,10 @@ const StackBuilder = () => {
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
+                  <p className="mb-0.5 truncate text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
+                    {categoryDisplayName}
+                  </p>
                   <p className="truncate font-medium text-foreground text-sm">{tech.name}</p>
-                  <p className="truncate text-muted-foreground text-xs">{tech.description}</p>
                 </div>
               </div>,
             );
@@ -231,8 +234,10 @@ const StackBuilder = () => {
               </div>
             )}
             <div className="min-w-0 flex-1">
+              <p className="mb-0.5 truncate text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
+                {categoryDisplayName}
+              </p>
               <p className="truncate font-medium text-foreground text-sm">{tech.name}</p>
-              <p className="truncate text-muted-foreground text-xs">{tech.description}</p>
             </div>
           </div>,
         );
@@ -660,7 +665,7 @@ const StackBuilder = () => {
                           Ecosystem
                         </h2>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-3">
                         {ECOSYSTEMS.map((ecosystem) => {
                           const isSelected = stack.ecosystem === ecosystem.id;
                           return (
@@ -668,31 +673,38 @@ const StackBuilder = () => {
                               key={ecosystem.id}
                               type="button"
                               className={cn(
-                                "relative flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-3 transition-all",
+                                "group relative flex flex-1 cursor-pointer items-center gap-3 rounded-xl border-2 px-4 py-4 transition-all",
                                 isSelected
-                                  ? "border-primary bg-primary/10"
-                                  : "border-border bg-fd-background hover:border-muted hover:bg-muted/10",
+                                  ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                                  : "border-border bg-fd-background hover:border-primary/30 hover:bg-muted/5",
                               )}
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
+                              whileHover={{ scale: 1.01 }}
+                              whileTap={{ scale: 0.99 }}
                               onClick={() => {
                                 startTransition(() => {
                                   setStack({ ecosystem: ecosystem.id as Ecosystem });
                                 });
                               }}
                             >
-                              <TechIcon
-                                icon={ecosystem.icon}
-                                name={ecosystem.name}
+                              <div
                                 className={cn(
-                                  "h-5 w-5",
-                                  ecosystem.id === "rust" && "invert-0 dark:invert",
+                                  "flex h-12 w-12 shrink-0 items-center justify-center rounded-lg transition-colors",
+                                  isSelected ? "bg-primary/10" : "bg-muted/50 group-hover:bg-muted",
                                 )}
-                              />
+                              >
+                                <TechIcon
+                                  icon={ecosystem.icon}
+                                  name={ecosystem.name}
+                                  className={cn(
+                                    "h-6 w-6",
+                                    ecosystem.id === "rust" && "invert-0 dark:invert",
+                                  )}
+                                />
+                              </div>
                               <div className="text-left">
                                 <span
                                   className={cn(
-                                    "font-medium text-sm",
+                                    "block font-semibold text-base",
                                     isSelected ? "text-primary" : "text-foreground",
                                   )}
                                 >
@@ -795,20 +807,16 @@ const StackBuilder = () => {
                                   <motion.div
                                     key={tech.id}
                                     className={cn(
-                                      "relative cursor-pointer rounded border p-2 transition-all sm:p-3",
+                                      "group relative cursor-pointer rounded-lg border p-3 transition-all sm:p-4",
                                       isSelected
-                                        ? "border-primary bg-primary/10"
+                                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
                                         : isDisabled
                                           ? "border-destructive/30 bg-destructive/5 opacity-50 hover:opacity-75"
-                                          : "border-border bg-fd-background hover:border-muted hover:bg-muted/10",
+                                          : "border-border bg-fd-background hover:border-primary/30 hover:bg-muted/5",
                                     )}
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
+                                    whileHover={{ scale: 1.01 }}
+                                    whileTap={{ scale: 0.99 }}
                                     onClick={(e) => {
-                                      console.log("[StackBuilder] Click event on motion.div", {
-                                        categoryKey,
-                                        techId: tech.id,
-                                      });
                                       e.stopPropagation();
                                       handleTechSelect(
                                         categoryKey as keyof typeof TECH_OPTIONS,
@@ -817,40 +825,42 @@ const StackBuilder = () => {
                                     }}
                                     title={disabledReason || undefined}
                                   >
-                                    <div className="flex items-start">
-                                      <div className="grow">
-                                        <div className="flex items-center justify-between">
-                                          <div className="flex items-center">
-                                            {tech.icon !== "" && (
-                                              <TechIcon
-                                                icon={tech.icon}
-                                                name={tech.name}
-                                                className={cn(
-                                                  "mr-1.5 h-3 w-3 sm:h-4 sm:w-4",
-                                                  tech.className,
-                                                )}
-                                              />
-                                            )}
-                                            <span
-                                              className={cn(
-                                                "font-medium text-xs sm:text-sm",
-                                                isSelected ? "text-primary" : "text-foreground",
-                                              )}
-                                            >
-                                              {tech.name}
-                                            </span>
-                                          </div>
+                                    {tech.default && !isSelected && (
+                                      <span className="absolute top-2 right-2 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
+                                        Default
+                                      </span>
+                                    )}
+                                    <div className="flex items-start gap-3">
+                                      {tech.icon !== "" && (
+                                        <div
+                                          className={cn(
+                                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors",
+                                            isSelected
+                                              ? "bg-primary/10"
+                                              : "bg-muted/50 group-hover:bg-muted",
+                                          )}
+                                        >
+                                          <TechIcon
+                                            icon={tech.icon}
+                                            name={tech.name}
+                                            className={cn("h-5 w-5", tech.className)}
+                                          />
                                         </div>
-                                        <p className="mt-0.5 text-muted-foreground text-xs">
+                                      )}
+                                      <div className="min-w-0 flex-1 pt-0.5">
+                                        <span
+                                          className={cn(
+                                            "block font-semibold text-sm",
+                                            isSelected ? "text-primary" : "text-foreground",
+                                          )}
+                                        >
+                                          {tech.name}
+                                        </span>
+                                        <p className="mt-0.5 line-clamp-2 text-muted-foreground text-xs leading-relaxed">
                                           {tech.description}
                                         </p>
                                       </div>
                                     </div>
-                                    {tech.default && !isSelected && (
-                                      <span className="absolute top-1 right-1 ml-2 shrink-0 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
-                                        Default
-                                      </span>
-                                    )}
                                   </motion.div>
                                 );
                               })}
@@ -890,57 +900,57 @@ const StackBuilder = () => {
                                         <motion.div
                                           key={tech.id}
                                           className={cn(
-                                            "relative cursor-pointer rounded border p-2 transition-all sm:p-3",
+                                            "group relative cursor-pointer rounded-lg border p-3 transition-all sm:p-4",
                                             isSelected
-                                              ? "border-primary bg-primary/10"
+                                              ? "border-primary bg-primary/5 ring-1 ring-primary/20"
                                               : isDisabled
                                                 ? "border-destructive/30 bg-destructive/5 opacity-50 hover:opacity-75"
-                                                : "border-border bg-fd-background hover:border-muted hover:bg-muted/10",
+                                                : "border-border bg-fd-background hover:border-primary/30 hover:bg-muted/5",
                                           )}
-                                          whileHover={{ scale: 1.02 }}
-                                          whileTap={{ scale: 0.98 }}
+                                          whileHover={{ scale: 1.01 }}
+                                          whileTap={{ scale: 0.99 }}
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             handleTechSelect("astroIntegration", tech.id);
                                           }}
                                           title={disabledReason || undefined}
                                         >
-                                          <div className="flex items-start">
-                                            <div className="grow">
-                                              <div className="flex items-center justify-between">
-                                                <div className="flex items-center">
-                                                  {tech.icon !== "" && (
-                                                    <TechIcon
-                                                      icon={tech.icon}
-                                                      name={tech.name}
-                                                      className={cn(
-                                                        "mr-1.5 h-3 w-3 sm:h-4 sm:w-4",
-                                                        tech.className,
-                                                      )}
-                                                    />
-                                                  )}
-                                                  <span
-                                                    className={cn(
-                                                      "font-medium text-xs sm:text-sm",
-                                                      isSelected
-                                                        ? "text-primary"
-                                                        : "text-foreground",
-                                                    )}
-                                                  >
-                                                    {tech.name}
-                                                  </span>
-                                                </div>
+                                          {tech.default && !isSelected && (
+                                            <span className="absolute top-2 right-2 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
+                                              Default
+                                            </span>
+                                          )}
+                                          <div className="flex items-start gap-3">
+                                            {tech.icon !== "" && (
+                                              <div
+                                                className={cn(
+                                                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors",
+                                                  isSelected
+                                                    ? "bg-primary/10"
+                                                    : "bg-muted/50 group-hover:bg-muted",
+                                                )}
+                                              >
+                                                <TechIcon
+                                                  icon={tech.icon}
+                                                  name={tech.name}
+                                                  className={cn("h-5 w-5", tech.className)}
+                                                />
                                               </div>
-                                              <p className="mt-0.5 text-muted-foreground text-xs">
+                                            )}
+                                            <div className="min-w-0 flex-1 pt-0.5">
+                                              <span
+                                                className={cn(
+                                                  "block font-semibold text-sm",
+                                                  isSelected ? "text-primary" : "text-foreground",
+                                                )}
+                                              >
+                                                {tech.name}
+                                              </span>
+                                              <p className="mt-0.5 line-clamp-2 text-muted-foreground text-xs leading-relaxed">
                                                 {tech.description}
                                               </p>
                                             </div>
                                           </div>
-                                          {tech.default && !isSelected && (
-                                            <span className="absolute top-1 right-1 ml-2 shrink-0 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
-                                              Default
-                                            </span>
-                                          )}
                                         </motion.div>
                                       );
                                     })}
@@ -1041,12 +1051,12 @@ const StackBuilder = () => {
                                 <motion.div
                                   key={tech.id}
                                   className={cn(
-                                    "relative cursor-pointer rounded border p-3 transition-all",
+                                    "group relative cursor-pointer rounded-lg border p-3 transition-all",
                                     isSelected
-                                      ? "border-primary bg-primary/10"
+                                      ? "border-primary bg-primary/5 ring-1 ring-primary/20"
                                       : isDisabled
                                         ? "border-destructive/30 bg-destructive/5 opacity-50"
-                                        : "border-border hover:border-muted hover:bg-muted",
+                                        : "border-border bg-fd-background hover:border-primary/30 hover:bg-muted/5",
                                   )}
                                   whileTap={{ scale: 0.98 }}
                                   onClick={() =>
@@ -1056,37 +1066,40 @@ const StackBuilder = () => {
                                     )
                                   }
                                 >
-                                  <div className="flex items-start">
-                                    <div className="grow">
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center">
-                                          {tech.icon !== "" && (
-                                            <TechIcon
-                                              icon={tech.icon}
-                                              name={tech.name}
-                                              className={cn("mr-1.5 h-4 w-4", tech.className)}
-                                            />
-                                          )}
-                                          <span
-                                            className={cn(
-                                              "font-medium text-sm",
-                                              isSelected ? "text-primary" : "text-foreground",
-                                            )}
-                                          >
-                                            {tech.name}
-                                          </span>
-                                        </div>
+                                  {tech.default && !isSelected && (
+                                    <span className="absolute top-2 right-2 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
+                                      Default
+                                    </span>
+                                  )}
+                                  <div className="flex items-start gap-3">
+                                    {tech.icon !== "" && (
+                                      <div
+                                        className={cn(
+                                          "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors",
+                                          isSelected ? "bg-primary/10" : "bg-muted/50",
+                                        )}
+                                      >
+                                        <TechIcon
+                                          icon={tech.icon}
+                                          name={tech.name}
+                                          className={cn("h-5 w-5", tech.className)}
+                                        />
                                       </div>
-                                      <p className="mt-0.5 text-muted-foreground text-xs">
+                                    )}
+                                    <div className="min-w-0 flex-1 pt-0.5">
+                                      <span
+                                        className={cn(
+                                          "block font-semibold text-sm",
+                                          isSelected ? "text-primary" : "text-foreground",
+                                        )}
+                                      >
+                                        {tech.name}
+                                      </span>
+                                      <p className="mt-0.5 line-clamp-2 text-muted-foreground text-xs leading-relaxed">
                                         {tech.description}
                                       </p>
                                     </div>
                                   </div>
-                                  {tech.default && !isSelected && (
-                                    <span className="absolute top-1 right-1 ml-2 shrink-0 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
-                                      Default
-                                    </span>
-                                  )}
                                 </motion.div>
                               );
                             })}
@@ -1123,49 +1136,52 @@ const StackBuilder = () => {
                                       <motion.div
                                         key={tech.id}
                                         className={cn(
-                                          "relative cursor-pointer rounded border p-3 transition-all",
+                                          "group relative cursor-pointer rounded-lg border p-3 transition-all",
                                           isSelected
-                                            ? "border-primary bg-primary/10"
+                                            ? "border-primary bg-primary/5 ring-1 ring-primary/20"
                                             : isDisabled
                                               ? "border-destructive/30 bg-destructive/5 opacity-50"
-                                              : "border-border hover:border-muted hover:bg-muted",
+                                              : "border-border bg-fd-background hover:border-primary/30 hover:bg-muted/5",
                                         )}
                                         whileTap={{ scale: 0.98 }}
                                         onClick={() =>
                                           handleTechSelect("astroIntegration", tech.id)
                                         }
                                       >
-                                        <div className="flex items-start">
-                                          <div className="grow">
-                                            <div className="flex items-center justify-between">
-                                              <div className="flex items-center">
-                                                {tech.icon !== "" && (
-                                                  <TechIcon
-                                                    icon={tech.icon}
-                                                    name={tech.name}
-                                                    className={cn("mr-1.5 h-4 w-4", tech.className)}
-                                                  />
-                                                )}
-                                                <span
-                                                  className={cn(
-                                                    "font-medium text-sm",
-                                                    isSelected ? "text-primary" : "text-foreground",
-                                                  )}
-                                                >
-                                                  {tech.name}
-                                                </span>
-                                              </div>
+                                        {tech.default && !isSelected && (
+                                          <span className="absolute top-2 right-2 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
+                                            Default
+                                          </span>
+                                        )}
+                                        <div className="flex items-start gap-3">
+                                          {tech.icon !== "" && (
+                                            <div
+                                              className={cn(
+                                                "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors",
+                                                isSelected ? "bg-primary/10" : "bg-muted/50",
+                                              )}
+                                            >
+                                              <TechIcon
+                                                icon={tech.icon}
+                                                name={tech.name}
+                                                className={cn("h-5 w-5", tech.className)}
+                                              />
                                             </div>
-                                            <p className="mt-0.5 text-muted-foreground text-xs">
+                                          )}
+                                          <div className="min-w-0 flex-1 pt-0.5">
+                                            <span
+                                              className={cn(
+                                                "block font-semibold text-sm",
+                                                isSelected ? "text-primary" : "text-foreground",
+                                              )}
+                                            >
+                                              {tech.name}
+                                            </span>
+                                            <p className="mt-0.5 line-clamp-2 text-muted-foreground text-xs leading-relaxed">
                                               {tech.description}
                                             </p>
                                           </div>
                                         </div>
-                                        {tech.default && !isSelected && (
-                                          <span className="absolute top-1 right-1 ml-2 shrink-0 rounded bg-muted px-1 py-0.5 text-[10px] text-muted-foreground">
-                                            Default
-                                          </span>
-                                        )}
                                       </motion.div>
                                     );
                                   })}

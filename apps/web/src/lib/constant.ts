@@ -810,6 +810,7 @@ export const TECH_OPTIONS: Record<
       icon: "/icon/effect.svg",
       color: "from-indigo-400 to-indigo-600",
       default: false,
+      className: "invert-0 dark:invert",
     },
     {
       id: "effect-full",
@@ -817,6 +818,7 @@ export const TECH_OPTIONS: Record<
       description: "Full ecosystem with Schema, Platform, and SQL",
       icon: "/icon/effect.svg",
       color: "from-purple-400 to-purple-600",
+      className: "invert-0 dark:invert",
       default: false,
     },
     {

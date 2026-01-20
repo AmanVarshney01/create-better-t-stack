@@ -1,5 +1,7 @@
 # Better Fullstack
 
+> **Note:** This project is a fork of [create-better-t-stack](https://github.com/AmanVarshney01/create-better-t-stack) created by [Aman Varshney](https://github.com/AmanVarshney01).
+
 A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations.
 
 ## Philosophy
