@@ -99,7 +99,7 @@ function parseStackFromSearch(search: Record<string, unknown>): StackState {
   };
 }
 
-export const Route = createFileRoute("/stack")({
+export const Route = createFileRoute("/_stack")({
   head: ({ search }) => {
     const stackState = parseStackFromSearch(search as Record<string, unknown>);
     const projectName = stackState.projectName || "my-better-t-app";

@@ -5,7 +5,7 @@ import { useQuery } from "convex/react";
 import ShowcasePage from "@/components/showcase/showcase-page";
 import { isConvexConfigured } from "@/lib/convex";
 
-export const Route = createFileRoute("/showcase")({
+export const Route = createFileRoute("/_showcase")({
   head: () => ({
     meta: [
       { title: "Showcase - Better-T-Stack" },

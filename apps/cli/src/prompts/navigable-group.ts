@@ -25,7 +25,7 @@ export interface NavigablePromptGroupOptions<T> {
 export type NavigablePromptGroup<T> = {
   [P in keyof T]: (opts: {
     results: Prettify<Partial<PromptGroupAwaitedReturn<Omit<T, P>>>>;
-  }) => undefined | Promise<T[P] | undefined>;
+  }) => undefined | Promise<T[P] | symbol | undefined>;
 };
 
 /**

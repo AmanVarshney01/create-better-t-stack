@@ -1,13 +1,11 @@
 "use client";
 
-import { Switch } from "@base-ui/react/switch";
 import { Moon, Sun } from "lucide-react";
 import * as React from "react";
 
 import { useTheme } from "@/lib/theme";
-import { cn } from "@/lib/utils";
 
-export function ThemeToggle({ className }: { className?: string }) {
+export function ThemeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
@@ -15,49 +13,31 @@ export function ThemeToggle({ className }: { className?: string }) {
     setMounted(true);
   }, []);
 
-  const isChecked = mounted ? resolvedTheme === "dark" : false;
-
-  const handleCheckedChange = (checked: boolean) => {
-    setTheme(checked ? "dark" : "light");
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === "dark" ? "light" : "dark");
   };
 
   if (!mounted) {
     return (
       <button
         type="button"
-        className={cn(
-          "inline-flex h-4 w-9 shrink-0 cursor-not-allowed items-center rounded-full border-2 border-transparent bg-input opacity-50",
-          className,
-        )}
+        className="flex h-8 w-8 items-center justify-center text-muted-foreground"
         disabled
-        aria-label="Toggle theme (loading)"
+        aria-label="Toggle theme"
       >
-        <span className="block h-3 w-3 rounded-full shadow-lg ring-0" />
+        <Sun className="h-4 w-4" />
       </button>
     );
   }
 
   return (
-    <Switch.Root
-      checked={isChecked}
-      onCheckedChange={handleCheckedChange}
-      className={cn(
-        "peer inline-flex h-4 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[checked]:bg-primary data-[unchecked]:bg-input",
-        className,
-      )}
-      aria-label="Toggle theme between light and dark"
+    <button
+      type="button"
+      onClick={toggleTheme}
+      className="flex h-8 w-8 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+      aria-label={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
     >
-      <Switch.Thumb
-        className={cn(
-          "pointer-events-none flex h-3 w-3 items-center justify-center rounded-full shadow-lg ring-0 transition-transform data-[checked]:translate-x-5 data-[unchecked]:translate-x-0",
-        )}
-      >
-        {isChecked ? (
-          <Moon className="size-2 text-foreground" />
-        ) : (
-          <Sun className="size-2 text-foreground" />
-        )}
-      </Switch.Thumb>
-    </Switch.Root>
+      {resolvedTheme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </button>
   );
 }

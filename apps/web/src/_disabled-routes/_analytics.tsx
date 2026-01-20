@@ -7,7 +7,7 @@ import type { AggregatedAnalyticsData, Distribution } from "@/components/analyti
 import AnalyticsPage from "@/components/analytics/analytics-page";
 import { isConvexConfigured } from "@/lib/convex";
 
-export const Route = createFileRoute("/analytics")({
+export const Route = createFileRoute("/_analytics")({
   head: () => ({
     meta: [
       { title: "Analytics - Better-T-Stack" },

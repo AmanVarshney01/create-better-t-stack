@@ -1,20 +1,13 @@
 "use client";
-import { Link } from "@tanstack/react-router";
-import { Check, ChevronDown, ChevronRight, Copy, Terminal, Zap } from "lucide-react";
-import { useState } from "react";
 
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
+import { Link } from "@tanstack/react-router";
+import { ArrowRight, Check, Copy } from "lucide-react";
+import { useState } from "react";
 
 import PackageIcon from "./icons";
 
 export default function CommandSection() {
-  const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const [selectedPM, setSelectedPM] = useState<"npm" | "pnpm" | "bun">("bun");
 
   const commands = {
@@ -23,99 +16,74 @@ export default function CommandSection() {
     bun: "bun create better-t-stack@latest",
   };
 
-  const copyCommand = (command: string, packageManager: string) => {
-    navigator.clipboard.writeText(command);
-    setCopiedCommand(packageManager);
-    setTimeout(() => setCopiedCommand(null), 2000);
+  const copyCommand = () => {
+    navigator.clipboard.writeText(commands[selectedPM]);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <div className="flex h-full flex-col justify-between rounded border border-border bg-fd-background p-4">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Terminal className="h-4 w-4 text-primary" />
-            <span className="font-semibold font-mono text-sm">CLI_COMMAND</span>
+    <div className="mx-auto w-full max-w-3xl space-y-8">
+      <div className="text-center">
+        <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          Quick Start
+        </span>
+      </div>
+
+      <div className="border border-border bg-card">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <div className="flex items-center gap-3">
+            {(["bun", "pnpm", "npm"] as const).map((pm) => (
+              <button
+                key={pm}
+                type="button"
+                onClick={() => setSelectedPM(pm)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium uppercase tracking-wider transition-all ${
+                  selectedPM === pm
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <PackageIcon pm={pm} className="h-3 w-3" />
+                {pm}
+              </button>
+            ))}
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <button
-                  type="button"
-                  className="flex items-center gap-2 rounded border border-border px-3 py-1.5 text-xs transition-colors hover:bg-muted/10"
-                />
-              }
-            >
-              <PackageIcon pm={selectedPM} className="h-3 w-3" />
-              <span>{selectedPM.toUpperCase()}</span>
-              <ChevronDown className="h-3 w-3" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {(["bun", "pnpm", "npm"] as const).map((pm) => (
-                <DropdownMenuItem
-                  key={pm}
-                  onClick={() => setSelectedPM(pm)}
-                  className={cn(
-                    "flex items-center gap-2",
-                    selectedPM === pm && "bg-accent text-background",
-                  )}
-                >
-                  <PackageIcon pm={pm} className="h-3 w-3" />
-                  <span>{pm.toUpperCase()}</span>
-                  {selectedPM === pm && <Check className="ml-auto h-3 w-3 text-background" />}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <button
+            type="button"
+            onClick={copyCommand}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {copied ? (
+              <>
+                <Check className="h-3 w-3" />
+                Copied
+              </>
+            ) : (
+              <>
+                <Copy className="h-3 w-3" />
+                Copy
+              </>
+            )}
+          </button>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex items-center justify-between rounded border border-border bg-fd-background p-3">
-            <div className="flex items-center gap-2 font-mono text-sm">
-              <span className="text-primary">$</span>
-              <span className="text-foreground">{commands[selectedPM]}</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => copyCommand(commands[selectedPM], selectedPM)}
-              className="flex items-center gap-1 rounded border border-border px-2 py-1 text-xs hover:bg-muted/10"
-            >
-              {copiedCommand === selectedPM ? (
-                <Check className="h-3 w-3 text-primary" />
-              ) : (
-                <Copy className="h-3 w-3" />
-              )}
-              {copiedCommand === selectedPM ? "COPIED!" : "COPY"}
-            </button>
-          </div>
+        <div className="px-6 py-8">
+          <code className="font-mono text-sm text-foreground sm:text-base">
+            <span className="text-muted-foreground">$</span> {commands[selectedPM]}
+          </code>
         </div>
       </div>
 
-      <Link to="/new">
-        <div className="group flex h-full cursor-pointer flex-col justify-between rounded border border-border bg-fd-background p-4 transition-colors hover:bg-muted/10">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ChevronRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-1" />
-              <span className="font-semibold font-mono text-sm">STACK_BUILDER</span>
-            </div>
-            <div className="rounded border border-border bg-muted/30 px-2 py-1 text-xs">
-              INTERACTIVE
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between rounded border border-border bg-fd-background p-3">
-              <div className="flex items-center gap-2 text-sm">
-                <Zap className="h-4 w-4 text-primary" />
-                <span className="text-foreground">Interactive configuration wizard</span>
-              </div>
-              <div className="rounded border border-border bg-muted/30 px-2 py-1 text-xs">
-                START
-              </div>
-            </div>
-          </div>
-        </div>
-      </Link>
+      <div className="flex justify-center">
+        <Link
+          to="/new"
+          className="group inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Or use the interactive builder
+          <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
+        </Link>
+      </div>
     </div>
   );
 }
