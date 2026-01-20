@@ -32,6 +32,11 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Other lockfiles (project uses bun)
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
 # Misc
 .DS_Store
 *.pem

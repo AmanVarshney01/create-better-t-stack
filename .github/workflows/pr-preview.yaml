@@ -85,9 +85,9 @@ jobs:
           cd apps/cli
           jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["@better-fullstack/types"] = $v | .dependencies["@better-fullstack/template-generator"] = $v' package.json > tmp.json && mv tmp.json package.json
 
-      - name: Update create-bts alias package version
+      - name: Update create-bfs alias package version
         run: |
-          cd packages/create-bts
+          cd packages/create-bfs
           jq --arg v "${{ steps.version.outputs.version }}" '.version = $v | .dependencies["create-better-fullstack"] = $v' package.json > tmp.json && mv tmp.json package.json
 
       - name: Build CLI
@@ -101,8 +101,8 @@ jobs:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
           BTS_TELEMETRY: 0
 
-      - name: Publish create-bts to NPM
-        run: cd packages/create-bts && bun publish --access public --tag ${{ steps.version.outputs.tag }}
+      - name: Publish create-bfs to NPM
+        run: cd packages/create-bfs && bun publish --access public --tag ${{ steps.version.outputs.tag }}
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
           BTS_TELEMETRY: 0
@@ -129,7 +129,7 @@ jobs:
             | Package | Version | NPM Tag |
             |---------|---------|---------|
             | `create-better-fullstack` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
-            | `create-bts` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
+            | `create-bfs` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
             | `@better-fullstack/types` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
             | `@better-fullstack/template-generator` | `${{ steps.version.outputs.version }}` | `pr${{ steps.version.outputs.pr }}` |
 
@@ -147,13 +147,13 @@ jobs:
             npx create-better-fullstack@${{ steps.version.outputs.version }}
 
             # Using the alias
-            bunx create-bts@pr${{ steps.version.outputs.pr }}
-            npx create-bts@pr${{ steps.version.outputs.pr }}
+            bunx create-bfs@pr${{ steps.version.outputs.pr }}
+            npx create-bfs@pr${{ steps.version.outputs.pr }}
             ```
 
             ### NPM Links
             - [create-better-fullstack@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/create-better-fullstack/v/${{ steps.version.outputs.version }})
-            - [create-bts@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/create-bts/v/${{ steps.version.outputs.version }})
+            - [create-bfs@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/create-bfs/v/${{ steps.version.outputs.version }})
             - [@better-fullstack/types@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/@better-fullstack/types/v/${{ steps.version.outputs.version }})
             - [@better-fullstack/template-generator@${{ steps.version.outputs.version }}](https://www.npmjs.com/package/@better-fullstack/template-generator/v/${{ steps.version.outputs.version }})
 

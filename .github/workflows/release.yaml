@@ -140,11 +140,11 @@ jobs:
           BTS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
-      - name: Update create-bts alias package version
+      - name: Update create-bfs alias package version
         if: steps.check-version.outputs.exists == 'false'
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          cd packages/create-bts
+          cd packages/create-bfs
           jq --arg v "$VERSION" --arg dep "^$VERSION" '.version = $v | .dependencies["create-better-fullstack"] = $dep' package.json > tmp.json && mv tmp.json package.json
 
       - name: Publish CLI to NPM
@@ -155,9 +155,9 @@ jobs:
           BTS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
-      - name: Publish create-bts alias to NPM
+      - name: Publish create-bfs alias to NPM
         if: steps.check-version.outputs.exists == 'false'
-        run: cd packages/create-bts && bun publish --access public
+        run: cd packages/create-bfs && bun publish --access public
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
           BTS_TELEMETRY: 1
@@ -171,7 +171,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Published Packages" >> $GITHUB_STEP_SUMMARY
           echo "- [create-better-fullstack@$VERSION](https://www.npmjs.com/package/create-better-fullstack/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
-          echo "- [create-bts@$VERSION](https://www.npmjs.com/package/create-bts/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
+          echo "- [create-bfs@$VERSION](https://www.npmjs.com/package/create-bfs/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
           echo "- [@better-fullstack/types@$VERSION](https://www.npmjs.com/package/@better-fullstack/types/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
           echo "- [@better-fullstack/template-generator@$VERSION](https://www.npmjs.com/package/@better-fullstack/template-generator/v/$VERSION)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
