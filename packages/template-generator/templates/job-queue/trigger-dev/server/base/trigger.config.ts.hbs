@@ -1,0 +1,56 @@
+import { defineConfig } from "@trigger.dev/sdk/v3";
+
+/**
+ * Trigger.dev configuration
+ * @see https://trigger.dev/docs/config/config-file
+ */
+export default defineConfig({
+  // Your project ref from the Trigger.dev dashboard
+  // Get this from: https://cloud.trigger.dev/
+  project: process.env.TRIGGER_PROJECT_ID || "<your-project-ref>",
+
+  // Directories containing your task definitions
+  dirs: ["./src/trigger"],
+
+  // Retry configuration for all tasks (can be overridden per task)
+  retries: {
+    // Enable retries during development
+    enabledInDev: true,
+    // Default retry settings
+    default: {
+      maxAttempts: 3,
+      minTimeoutInMs: 1000,
+      maxTimeoutInMs: 10000,
+      factor: 2,
+      randomize: true,
+    },
+  },
+
+  // Maximum duration for tasks in seconds (can be overridden per task)
+  maxDuration: 300, // 5 minutes
+
+  // Runtime configuration
+  runtime: "node",
+
+  // Log level for debugging
+  logLevel: "info",
+
+  // Build configuration
+  build: {
+    // Automatically detect external packages
+    autoDetectExternal: true,
+    // Keep function names for better debugging
+    keepNames: true,
+  },
+
+  // Global lifecycle hooks (optional)
+  // onStart: async ({ payload, ctx }) => {
+  //   console.log("Task started:", ctx.task.id);
+  // },
+  // onSuccess: async ({ payload, output, ctx }) => {
+  //   console.log("Task completed:", ctx.task.id);
+  // },
+  // onFailure: async ({ payload, error, ctx }) => {
+  //   console.error("Task failed:", ctx.task.id, error);
+  // },
+});

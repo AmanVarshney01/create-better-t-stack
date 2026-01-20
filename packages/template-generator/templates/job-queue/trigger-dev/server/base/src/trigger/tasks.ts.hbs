@@ -1,0 +1,213 @@
+import { task, logger, schedules, AbortTaskRunError } from "@trigger.dev/sdk/v3";
+
+/**
+ * Example email sending task
+ * Trigger from your backend with: await sendEmailTask.trigger({ to, subject, body })
+ * @see https://trigger.dev/docs
+ */
+export const sendEmailTask = task({
+  id: "send-email",
+  // Retry configuration
+  retry: {
+    maxAttempts: 3,
+    minTimeoutInMs: 1000,
+    maxTimeoutInMs: 10000,
+    factor: 2,
+  },
+  run: async (payload: {
+    to: string;
+    subject: string;
+    body: string;
+    templateId?: string;
+  }) => {
+    const { to, subject, body, templateId } = payload;
+
+    logger.info("Processing email task", { to, subject });
+
+    // TODO: Implement your email sending logic here
+    // Example with a hypothetical email service:
+    // await emailService.send({ to, subject, body, templateId });
+
+    // Simulate email sending
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    logger.info("Email sent successfully", { to });
+
+    return {
+      sent: true,
+      to,
+      timestamp: new Date().toISOString(),
+    };
+  },
+});
+
+/**
+ * Example notification task
+ * Supports different notification types: push, in-app, sms
+ */
+export const sendNotificationTask = task({
+  id: "send-notification",
+  retry: {
+    maxAttempts: 3,
+    minTimeoutInMs: 500,
+    maxTimeoutInMs: 5000,
+    factor: 2,
+  },
+  run: async (payload: {
+    userId: string;
+    type: "push" | "in-app" | "sms";
+    title: string;
+    message: string;
+    data?: Record<string, unknown>;
+  }) => {
+    const { userId, type, title, message, data } = payload;
+
+    logger.info("Processing notification", { userId, type, title });
+
+    // TODO: Implement your notification logic here
+    // switch (type) {
+    //   case "push":
+    //     await pushService.send(userId, { title, message, data });
+    //     break;
+    //   case "in-app":
+    //     await inAppNotificationService.create(userId, { title, message, data });
+    //     break;
+    //   case "sms":
+    //     await smsService.send(userId, message);
+    //     break;
+    // }
+
+    // Simulate notification processing
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    logger.info("Notification sent", { userId, type });
+
+    return {
+      sent: true,
+      type,
+      userId,
+      timestamp: new Date().toISOString(),
+    };
+  },
+});
+
+/**
+ * Example data processing task with error handling
+ * Demonstrates AbortTaskRunError for permanent failures
+ */
+export const processDataTask = task({
+  id: "process-data",
+  // Machine resources (uncomment for larger workloads)
+  // machine: { preset: "medium-1x" }, // 1 vCPU, 2 GB RAM
+  maxDuration: 300, // 5 minutes timeout
+  retry: {
+    maxAttempts: 2,
+  },
+  run: async (payload: {
+    dataId: string;
+    operation: "transform" | "aggregate" | "export";
+  }) => {
+    const { dataId, operation } = payload;
+
+    logger.info("Processing data", { dataId, operation });
+
+    // Example of handling permanent errors
+    if (!dataId) {
+      // This is a known permanent error, don't retry
+      throw new AbortTaskRunError("Data ID is required");
+    }
+
+    // TODO: Implement your data processing logic here
+    // const data = await database.getData(dataId);
+    // switch (operation) {
+    //   case "transform":
+    //     return await transformData(data);
+    //   case "aggregate":
+    //     return await aggregateData(data);
+    //   case "export":
+    //     return await exportData(data);
+    // }
+
+    // Simulate data processing
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    logger.info("Data processing complete", { dataId, operation });
+
+    return {
+      processed: true,
+      dataId,
+      operation,
+      timestamp: new Date().toISOString(),
+    };
+  },
+});
+
+/**
+ * Example scheduled task (cron job)
+ * Runs every hour - customize the cron pattern as needed
+ * @see https://trigger.dev/docs/tasks/scheduled
+ */
+export const hourlyCleanupTask = schedules.task({
+  id: "hourly-cleanup",
+  // Every hour at minute 0
+  cron: "0 * * * *",
+  run: async (payload) => {
+    logger.info("Running scheduled cleanup", {
+      scheduledTime: payload.timestamp,
+      timezone: payload.timezone,
+    });
+
+    // TODO: Implement your cleanup logic here
+    // await database.deleteExpiredSessions();
+    // await cache.clearStale();
+
+    // Simulate cleanup
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    logger.info("Scheduled cleanup complete", {
+      nextRun: payload.upcoming[0],
+    });
+
+    return {
+      cleaned: true,
+      timestamp: new Date().toISOString(),
+    };
+  },
+});
+
+/**
+ * Example daily report task with timezone
+ * Runs at 9 AM in the specified timezone
+ */
+export const dailyReportTask = schedules.task({
+  id: "daily-report",
+  cron: {
+    // 9 AM every day
+    pattern: "0 9 * * *",
+    // Change to your preferred timezone
+    // See: https://cloud.trigger.dev/timezones
+    timezone: "UTC",
+  },
+  run: async (payload) => {
+    logger.info("Generating daily report", {
+      scheduledTime: payload.timestamp,
+      timezone: payload.timezone,
+    });
+
+    // TODO: Implement your report generation logic here
+    // const report = await generateReport();
+    // await sendReportEmail(report);
+
+    // Simulate report generation
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    logger.info("Daily report sent", {
+      nextRun: payload.upcoming[0],
+    });
+
+    return {
+      reportGenerated: true,
+      timestamp: new Date().toISOString(),
+    };
+  },
+});

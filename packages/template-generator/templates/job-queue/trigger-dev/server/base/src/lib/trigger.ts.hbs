@@ -1,0 +1,120 @@
+import { tasks, configure } from "@trigger.dev/sdk/v3";
+import type {
+  sendEmailTask,
+  sendNotificationTask,
+  processDataTask,
+} from "../trigger/tasks";
+
+/**
+ * Configure Trigger.dev SDK
+ * This is called automatically when importing this module
+ * @see https://trigger.dev/docs
+ */
+configure({
+  secretKey: process.env.TRIGGER_SECRET_KEY,
+});
+
+/**
+ * Type-safe task triggering utilities
+ * Use these functions to trigger background tasks from your backend
+ */
+
+// Type definitions for task payloads
+export interface EmailPayload {
+  to: string;
+  subject: string;
+  body: string;
+  templateId?: string;
+}
+
+export interface NotificationPayload {
+  userId: string;
+  type: "push" | "in-app" | "sms";
+  title: string;
+  message: string;
+  data?: Record<string, unknown>;
+}
+
+export interface DataProcessingPayload {
+  dataId: string;
+  operation: "transform" | "aggregate" | "export";
+}
+
+/**
+ * Trigger an email task
+ * @example
+ * const handle = await triggerEmail({
+ *   to: "user@example.com",
+ *   subject: "Welcome!",
+ *   body: "Thanks for signing up."
+ * });
+ */
+export async function triggerEmail(
+  payload: EmailPayload,
+  options?: { delay?: string | number }
+) {
+  return tasks.trigger<typeof sendEmailTask>("send-email", payload, options);
+}
+
+/**
+ * Trigger a notification task
+ * @example
+ * const handle = await triggerNotification({
+ *   userId: "user_123",
+ *   type: "push",
+ *   title: "New message",
+ *   message: "You have a new message!"
+ * });
+ */
+export async function triggerNotification(
+  payload: NotificationPayload,
+  options?: { delay?: string | number }
+) {
+  return tasks.trigger<typeof sendNotificationTask>(
+    "send-notification",
+    payload,
+    options
+  );
+}
+
+/**
+ * Trigger a data processing task
+ * @example
+ * const handle = await triggerDataProcessing({
+ *   dataId: "data_456",
+ *   operation: "transform"
+ * });
+ */
+export async function triggerDataProcessing(
+  payload: DataProcessingPayload,
+  options?: { delay?: string | number }
+) {
+  return tasks.trigger<typeof processDataTask>(
+    "process-data",
+    payload,
+    options
+  );
+}
+
+/**
+ * Trigger multiple emails in batch
+ * @example
+ * const handles = await triggerEmailBatch([
+ *   { to: "user1@example.com", subject: "Hello", body: "Hi!" },
+ *   { to: "user2@example.com", subject: "Hello", body: "Hi!" }
+ * ]);
+ */
+export async function triggerEmailBatch(payloads: EmailPayload[]) {
+  return tasks.batchTrigger<typeof sendEmailTask>(
+    "send-email",
+    payloads.map((payload) => ({ payload }))
+  );
+}
+
+/**
+ * Get the status of a task run
+ * @example
+ * const run = await getTaskRun("run_123");
+ * console.log(run.status); // "COMPLETED" | "FAILED" | "RUNNING" etc.
+ */
+export { tasks };

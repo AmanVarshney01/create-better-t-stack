@@ -1469,6 +1469,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "trigger-dev",
+      name: "Trigger.dev",
+      description: "Background jobs as code with serverless execution",
+      icon: "/icon/trigger-dev.svg",
+      color: "from-green-500 to-emerald-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Job Queue",
       description: "Skip job queue/background worker setup",

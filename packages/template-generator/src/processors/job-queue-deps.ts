@@ -35,6 +35,9 @@ function getJobQueueDeps(jobQueue: ProjectConfig["jobQueue"]): AvailableDependen
       deps.push("bullmq");
       deps.push("ioredis");
       break;
+    case "trigger-dev":
+      deps.push("@trigger.dev/sdk");
+      break;
   }
 
   return deps;

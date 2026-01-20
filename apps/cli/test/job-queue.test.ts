@@ -3,6 +3,178 @@ import { describe, test } from "bun:test";
 import { createCustomConfig, expectSuccess, runTRPCTest } from "./test-utils";
 
 describe("Job Queue Options", () => {
+  describe("Trigger.dev with different backends", () => {
+    test("trigger-dev with Hono backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "trigger-dev-hono",
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          jobQueue: "trigger-dev",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("trigger-dev with Express backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "trigger-dev-express",
+          frontend: ["tanstack-router"],
+          backend: "express",
+          runtime: "node",
+          jobQueue: "trigger-dev",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("trigger-dev with Fastify backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "trigger-dev-fastify",
+          frontend: ["tanstack-router"],
+          backend: "fastify",
+          runtime: "node",
+          jobQueue: "trigger-dev",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("trigger-dev with Elysia backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "trigger-dev-elysia",
+          frontend: ["tanstack-router"],
+          backend: "elysia",
+          runtime: "bun",
+          jobQueue: "trigger-dev",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("trigger-dev with NestJS backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "trigger-dev-nestjs",
+          frontend: ["tanstack-router"],
+          backend: "nestjs",
+          runtime: "node",
+          jobQueue: "trigger-dev",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Trigger.dev with fullstack frameworks", () => {
+    test("trigger-dev with Next.js fullstack", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "trigger-dev-nextjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          jobQueue: "trigger-dev",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("trigger-dev with TanStack Start", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "trigger-dev-tanstack-start",
+          frontend: ["tanstack-start"],
+          backend: "self",
+          runtime: "none",
+          jobQueue: "trigger-dev",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Trigger.dev with different frontends", () => {
+    test("trigger-dev with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "trigger-dev-tanstack-router",
+          frontend: ["tanstack-router"],
+          jobQueue: "trigger-dev",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("trigger-dev with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "trigger-dev-react-router",
+          frontend: ["react-router"],
+          jobQueue: "trigger-dev",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("trigger-dev with Svelte", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "trigger-dev-svelte",
+          frontend: ["svelte"],
+          uiLibrary: "daisyui",
+          api: "orpc",
+          jobQueue: "trigger-dev",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("trigger-dev with Solid", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "trigger-dev-solid",
+          frontend: ["solid"],
+          uiLibrary: "daisyui",
+          api: "orpc",
+          jobQueue: "trigger-dev",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Trigger.dev with database setups", () => {
+    test("trigger-dev with PostgreSQL and Drizzle", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "trigger-dev-postgres-drizzle",
+          frontend: ["tanstack-router"],
+          database: "postgres",
+          orm: "drizzle",
+          jobQueue: "trigger-dev",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("trigger-dev with SQLite and Prisma", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "trigger-dev-sqlite-prisma",
+          frontend: ["tanstack-router"],
+          database: "sqlite",
+          orm: "prisma",
+          jobQueue: "trigger-dev",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("BullMQ with different backends", () => {
     test("bullmq with Hono backend", async () => {
       const result = await runTRPCTest(

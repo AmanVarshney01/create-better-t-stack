@@ -101,7 +101,7 @@
 ## **Job Queues / Background Workers**
 
 - [x] **BullMQ** - Redis-backed job queue
-- [ ] **Trigger.dev** - Background jobs as code
+- [x] **Trigger.dev** - Background jobs as code
 - [ ] **Inngest** - Event-driven functions
 - [ ] **Temporal** - Workflow orchestration
 

@@ -4689,3 +4689,39 @@ Changes Made:
 
 Tests: 15 passing
 
+
+
+## 2026-01-20: Trigger.dev Background Jobs Implementation
+
+### Task: Implement Trigger.dev as a background jobs option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "trigger-dev" to JobQueueSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Trigger.dev dependency:
+   - @trigger.dev/sdk: ^4.1.1
+3. **packages/template-generator/src/processors/job-queue-deps.ts**: Added Trigger.dev dependency processing
+4. **packages/template-generator/src/processors/env-vars.ts**: Added environment variables:
+   - TRIGGER_SECRET_KEY - Trigger.dev secret key from dashboard
+   - TRIGGER_PROJECT_ID - Trigger.dev project ID
+5. **packages/template-generator/templates/job-queue/trigger-dev/**: Created Trigger.dev templates:
+   - server/base/src/trigger/tasks.ts.hbs - Task definitions (email, notification, data processing, scheduled)
+   - server/base/trigger.config.ts.hbs - Trigger.dev configuration
+   - server/base/src/lib/trigger.ts.hbs - Type-safe task triggering utilities
+6. **apps/web/src/lib/constant.ts**: Added Trigger.dev to web builder job queue options
+7. **apps/web/public/icon/trigger-dev.svg**: Added Trigger.dev logo icon
+8. **apps/cli/test/job-queue.test.ts**: Added comprehensive tests for Trigger.dev integration
+
+### Features:
+- Background jobs as code with serverless execution
+- Type-safe task definitions with payload types
+- Automatic retry with exponential backoff
+- Scheduled/cron tasks with timezone support
+- Task lifecycle hooks (onStart, onSuccess, onFailure)
+- AbortTaskRunError for permanent failures (no retry)
+- Batch task triggering support
+- Machine resource configuration
+- Max duration timeout configuration
+- Compatible with all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+- Works with fullstack frameworks (Next.js, TanStack Start)
+
+### Status: COMPLETE

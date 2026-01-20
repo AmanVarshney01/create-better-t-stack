@@ -746,6 +746,18 @@ function buildServerVars(
       condition: jobQueue === "bullmq",
       comment: "Redis password (optional, leave empty for local development)",
     },
+    {
+      key: "TRIGGER_SECRET_KEY",
+      value: "",
+      condition: jobQueue === "trigger-dev",
+      comment: "Trigger.dev secret key (from dashboard.trigger.dev)",
+    },
+    {
+      key: "TRIGGER_PROJECT_ID",
+      value: "",
+      condition: jobQueue === "trigger-dev",
+      comment: "Trigger.dev project ID (e.g., proj_xxxxxxxxxxxx)",
+    },
   ];
 }
 
