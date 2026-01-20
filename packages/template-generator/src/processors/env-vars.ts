@@ -806,6 +806,35 @@ function buildCMSVars(cms: ProjectConfig["cms"]): EnvVariable[] {
     });
   }
 
+  if (cms === "sanity") {
+    vars.push(
+      {
+        key: "NEXT_PUBLIC_SANITY_PROJECT_ID",
+        value: "your-project-id",
+        condition: true,
+        comment: "Sanity project ID - get from sanity.io/manage",
+      },
+      {
+        key: "NEXT_PUBLIC_SANITY_DATASET",
+        value: "production",
+        condition: true,
+        comment: "Sanity dataset name",
+      },
+      {
+        key: "NEXT_PUBLIC_SANITY_API_VERSION",
+        value: new Date().toISOString().split("T")[0],
+        condition: true,
+        comment: "Sanity API version (YYYY-MM-DD format)",
+      },
+      {
+        key: "SANITY_API_READ_TOKEN",
+        value: "",
+        condition: true,
+        comment: "Sanity API read token for server-side operations (optional)",
+      },
+    );
+  }
+
   return vars;
 }
 
@@ -927,8 +956,8 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     writeEnvFile(vfs, envPath, serverVars);
   }
 
-  // --- CMS .env (Payload CMS requires Next.js and adds vars to web/.env) ---
-  if (config.cms === "payload" && hasNextJs) {
+  // --- CMS .env (Payload and Sanity require Next.js and add vars to web/.env) ---
+  if ((config.cms === "payload" || config.cms === "sanity") && hasNextJs) {
     const webDir = "apps/web";
     if (vfs.directoryExists(webDir)) {
       const envPath = `${webDir}/.env`;

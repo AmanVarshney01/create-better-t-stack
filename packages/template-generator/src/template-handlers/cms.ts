@@ -11,11 +11,16 @@ export async function processCMSTemplates(
 ): Promise<void> {
   if (!config.cms || config.cms === "none") return;
 
-  // Payload CMS requires Next.js in v3
+  // Both Payload and Sanity require Next.js for optimal integration
   const hasNext = config.frontend.includes("next");
 
   if (config.cms === "payload" && hasNext) {
     // Process Payload CMS templates for Next.js
     processTemplatesFromPrefix(vfs, templates, "cms/payload/web/next", "apps/web", config);
+  }
+
+  if (config.cms === "sanity" && hasNext) {
+    // Process Sanity CMS templates for Next.js
+    processTemplatesFromPrefix(vfs, templates, "cms/sanity/web/next", "apps/web", config);
   }
 }

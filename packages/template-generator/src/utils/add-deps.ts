@@ -534,6 +534,12 @@ export const dependencyVersionMap = {
   "@payloadcms/db-sqlite": "^3.14.1",
   "@payloadcms/plugin-seo": "^3.14.1",
   "@payloadcms/storage-s3": "^3.14.1",
+
+  // Headless CMS - Sanity
+  sanity: "^3.82.0",
+  "next-sanity": "^9.11.2",
+  "@sanity/image-url": "^1.1.0",
+  "@sanity/vision": "^3.82.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

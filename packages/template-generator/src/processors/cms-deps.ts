@@ -10,7 +10,7 @@ export function processCMSDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
   // Skip if not selected or set to "none"
   if (!cms || cms === "none") return;
 
-  // Payload CMS requires Next.js - it's tightly integrated
+  // Both Payload and Sanity require Next.js for optimal integration
   const hasNext = frontend.includes("next");
 
   if (cms === "payload") {
@@ -20,6 +20,23 @@ export function processCMSDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
     const webPath = "apps/web/package.json";
     if (vfs.exists(webPath)) {
       const deps = getPayloadDeps(database);
+      if (deps.length > 0) {
+        addPackageDependency({
+          vfs,
+          packagePath: webPath,
+          dependencies: deps,
+        });
+      }
+    }
+  }
+
+  if (cms === "sanity") {
+    // Sanity works best with Next.js due to next-sanity integration
+    if (!hasNext) return;
+
+    const webPath = "apps/web/package.json";
+    if (vfs.exists(webPath)) {
+      const deps = getSanityDeps();
       if (deps.length > 0) {
         addPackageDependency({
           vfs,
@@ -56,4 +73,8 @@ function getPayloadDeps(database: ProjectConfig["database"]): AvailableDependenc
   }
 
   return deps;
+}
+
+function getSanityDeps(): AvailableDependencies[] {
+  return ["sanity", "next-sanity", "@sanity/image-url", "@sanity/vision"];
 }

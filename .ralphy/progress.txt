@@ -4870,3 +4870,58 @@ Tests: 15 passing
 - Web builder UI integration with all CMS options
 
 ### Status: COMPLETE
+
+## 2026-01-20: Sanity CMS Implementation
+
+### Task: Implement Sanity as a headless CMS option
+
+### Changes Made:
+1. **packages/template-generator/src/utils/add-deps.ts**: Added Sanity dependency versions:
+   - sanity: ^3.82.0
+   - next-sanity: ^9.11.2
+   - @sanity/image-url: ^1.1.0
+   - @sanity/vision: ^3.82.0
+2. **packages/template-generator/src/processors/cms-deps.ts**: Added Sanity dependency processing for Next.js projects
+3. **packages/template-generator/src/template-handlers/cms.ts**: Added Sanity template handler for Next.js
+4. **packages/template-generator/src/processors/env-vars.ts**: Added Sanity environment variables:
+   - NEXT_PUBLIC_SANITY_PROJECT_ID
+   - NEXT_PUBLIC_SANITY_DATASET
+   - NEXT_PUBLIC_SANITY_API_VERSION
+   - SANITY_API_READ_TOKEN
+5. **packages/template-generator/templates/cms/sanity/web/next/**: Created Sanity templates:
+   - sanity.config.ts.hbs - Main Sanity Studio configuration
+   - sanity.cli.ts.hbs - Sanity CLI configuration
+   - src/sanity/env.ts.hbs - Environment variables export
+   - src/sanity/lib/client.ts.hbs - Sanity client with revalidation support
+   - src/sanity/lib/image.ts.hbs - Image URL builder helper
+   - src/sanity/lib/queries.ts.hbs - GROQ queries for posts, pages, authors
+   - src/sanity/schemas/index.ts.hbs - Schema types export
+   - src/sanity/schemas/author.ts.hbs - Author document schema
+   - src/sanity/schemas/blockContent.ts.hbs - Rich text block content schema
+   - src/sanity/schemas/page.ts.hbs - Page document schema
+   - src/sanity/schemas/post.ts.hbs - Post document schema
+   - src/app/studio/[[...tool]]/page.tsx.hbs - Next.js Studio route
+6. **apps/cli/test/cms.test.ts**: Added comprehensive Sanity tests:
+   - sanity with Next.js and SQLite
+   - sanity with Next.js and PostgreSQL
+   - sanity with Next.js and MongoDB
+   - sanity with Drizzle ORM
+   - sanity with Prisma ORM
+   - sanity with better-auth
+   - sanity with nextauth
+   - sanity without Next.js (graceful skip)
+
+### Features:
+- Full Sanity Studio integration with Next.js
+- Schema-as-code with TypeScript support
+- Pre-built schemas for posts, pages, and authors
+- Rich text editor with block content
+- Image URL builder integration
+- GROQ queries with revalidation support
+- Embedded studio at /studio route
+- Vision tool for query debugging
+- Compatible with all database options (cloud-hosted, no local DB required)
+
+### Tests: All 18 CMS tests pass (8 new Sanity tests added)
+
+### Status: COMPLETE
