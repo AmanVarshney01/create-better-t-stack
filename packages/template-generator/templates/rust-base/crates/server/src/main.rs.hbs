@@ -7,12 +7,16 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use sea_orm::{Database, DatabaseConnection};
 use std::sync::Arc;
 {{/if}}
+{{#if (eq rustOrm "sqlx")}}
+use sqlx::postgres::PgPoolOptions;
+use sqlx::PgPool;
+{{/if}}
 
 #[derive(Serialize)]
 struct HealthResponse {
     status: &'static str,
     message: &'static str,
-{{#if (eq rustOrm "sea-orm")}}
+{{#if (or (eq rustOrm "sea-orm") (eq rustOrm "sqlx"))}}
     database: &'static str,
 {{/if}}
 }
@@ -27,6 +31,26 @@ async fn health(
     axum::extract::State(state): axum::extract::State<AppState>,
 ) -> Json<HealthResponse> {
     let db_status = if state.db.ping().await.is_ok() {
+        "connected"
+    } else {
+        "disconnected"
+    };
+    Json(HealthResponse {
+        status: "ok",
+        message: "Server is running",
+        database: db_status,
+    })
+}
+{{else if (eq rustOrm "sqlx")}}
+#[derive(Clone)]
+pub struct AppState {
+    pub db: PgPool,
+}
+
+async fn health(
+    axum::extract::State(state): axum::extract::State<AppState>,
+) -> Json<HealthResponse> {
+    let db_status = if state.db.acquire().await.is_ok() {
         "connected"
     } else {
         "disconnected"
@@ -73,6 +97,25 @@ async fn main() -> anyhow::Result<()> {
         .route("/health", get(health))
         .layer(CorsLayer::permissive())
         .with_state(state);
+{{else if (eq rustOrm "sqlx")}}
+    // Initialize database connection pool
+    let database_url = std::env::var("DATABASE_URL")
+        .expect("DATABASE_URL must be set");
+
+    tracing::info!("Connecting to database...");
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&database_url)
+        .await?;
+    tracing::info!("Database connected successfully");
+
+    let state = AppState { db: pool };
+
+    // Build router with state
+    let app = Router::new()
+        .route("/health", get(health))
+        .layer(CorsLayer::permissive())
+        .with_state(state);
 {{else}}
     // Build router
     let app = Router::new()
@@ -102,12 +145,16 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use sea_orm::{Database, DatabaseConnection};
 use std::sync::Arc;
 {{/if}}
+{{#if (eq rustOrm "sqlx")}}
+use sqlx::postgres::PgPoolOptions;
+use sqlx::PgPool;
+{{/if}}
 
 #[derive(Serialize)]
 struct HealthResponse {
     status: &'static str,
     message: &'static str,
-{{#if (eq rustOrm "sea-orm")}}
+{{#if (or (eq rustOrm "sea-orm") (eq rustOrm "sqlx"))}}
     database: &'static str,
 {{/if}}
 }
@@ -120,6 +167,24 @@ pub struct AppState {
 #[get("/health")]
 async fn health(data: web::Data<AppState>) -> impl Responder {
     let db_status = if data.db.ping().await.is_ok() {
+        "connected"
+    } else {
+        "disconnected"
+    };
+    HttpResponse::Ok().json(HealthResponse {
+        status: "ok",
+        message: "Server is running",
+        database: db_status,
+    })
+}
+{{else if (eq rustOrm "sqlx")}}
+pub struct AppState {
+    pub db: PgPool,
+}
+
+#[get("/health")]
+async fn health(data: web::Data<AppState>) -> impl Responder {
+    let db_status = if data.db.acquire().await.is_ok() {
         "connected"
     } else {
         "disconnected"
@@ -162,6 +227,20 @@ async fn main() -> anyhow::Result<()> {
 
     let state = web::Data::new(AppState { db: Arc::new(db) });
 {{/if}}
+{{#if (eq rustOrm "sqlx")}}
+    // Initialize database connection pool
+    let database_url = std::env::var("DATABASE_URL")
+        .expect("DATABASE_URL must be set");
+
+    tracing::info!("Connecting to database...");
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&database_url)
+        .await?;
+    tracing::info!("Database connected successfully");
+
+    let state = web::Data::new(AppState { db: pool });
+{{/if}}
 
     // Get host and port from environment
     let host = std::env::var("HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
@@ -172,7 +251,7 @@ async fn main() -> anyhow::Result<()> {
     tracing::info!("Starting server at http://{}:{}", host, port);
 
     // Start server
-{{#if (eq rustOrm "sea-orm")}}
+{{#if (or (eq rustOrm "sea-orm") (eq rustOrm "sqlx"))}}
     HttpServer::new(move || {
         let cors = Cors::permissive();
         App::new()

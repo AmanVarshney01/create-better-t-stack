@@ -3711,3 +3711,45 @@ Actix-web was already fully implemented in the codebase alongside Axum during th
 - SeaORM is now the default Rust ORM option
 
 ### Status: COMPLETE
+
+
+## 2026-01-20: SQLx Async SQL Toolkit Implementation
+
+### Task: Implement SQLx as a Rust ORM/database option
+
+### Changes Made:
+1. **packages/template-generator/templates/rust-base/crates/server/src/main.rs.hbs**: Added SQLx integration code for both Axum and Actix-web frameworks:
+   - Added `use sqlx::postgres::PgPoolOptions` and `use sqlx::PgPool` imports
+   - Added `AppState` struct with `PgPool` field
+   - Added health check endpoint with `db.acquire()` connection test
+   - Added database connection initialization with `PgPoolOptions::new().max_connections(5).connect()`
+   - Added conditional template logic for SQLx alongside existing SeaORM support
+
+2. **apps/cli/test/rust-ecosystem.test.ts**: Added comprehensive SQLx tests:
+   - `should generate SQLx integration code with Axum`
+   - `should generate SQLx integration code with Actix-web`
+   - `should include database health check with SQLx`
+   - `should work with SQLx and Leptos frontend`
+   - `should work with SQLx and Dioxus frontend`
+   - `should work with SQLx and async-graphql`
+
+3. **apps/web/test/rust-ecosystem.test.ts**: Fixed pre-existing test that expected `rustOrm` default to be "none" but actual default is "sea-orm"
+
+4. **PRD.md**: Marked SQLx as complete
+
+### Features:
+- Full SQLx integration with Axum web framework
+- Full SQLx integration with Actix-web framework
+- PostgreSQL connection pool with configurable max connections
+- Database health check endpoint at /health
+- Works with Leptos and Dioxus WASM frontends
+- Works with async-graphql API layer
+- DATABASE_URL environment variable support
+
+### Technical Details:
+- SQLx workspace dependencies already existed in Cargo.toml.hbs with features: runtime-tokio, postgres, sqlite, mysql, migrate
+- Uses `PgPoolOptions` for PostgreSQL connection pooling
+- Health check uses `db.acquire()` to verify connection status
+- AppState uses direct `PgPool` (no Arc needed - PgPool is already Clone + Send + Sync)
+
+### Status: COMPLETE

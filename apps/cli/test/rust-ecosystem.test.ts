@@ -434,6 +434,147 @@ describe("Rust Ecosystem", () => {
       expect(serverCargoContent).toBeDefined();
       expect(serverCargoContent).toContain("sqlx.workspace = true");
     });
+
+    it("should generate SQLx integration code with Axum", async () => {
+      const result = await createVirtual({
+        projectName: "rust-sqlx-axum",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "sqlx",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainContent = getFileContent(root, "crates/server/src/main.rs");
+      expect(mainContent).toBeDefined();
+      expect(mainContent).toContain("use sqlx::postgres::PgPoolOptions");
+      expect(mainContent).toContain("use sqlx::PgPool");
+      expect(mainContent).toContain("AppState");
+      expect(mainContent).toContain("DATABASE_URL");
+      expect(mainContent).toContain("PgPoolOptions::new()");
+      expect(mainContent).toContain(".max_connections(5)");
+      expect(mainContent).toContain(".with_state(state)");
+    });
+
+    it("should generate SQLx integration code with Actix-web", async () => {
+      const result = await createVirtual({
+        projectName: "rust-sqlx-actix",
+        ecosystem: "rust",
+        rustWebFramework: "actix-web",
+        rustFrontend: "none",
+        rustOrm: "sqlx",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainContent = getFileContent(root, "crates/server/src/main.rs");
+      expect(mainContent).toBeDefined();
+      expect(mainContent).toContain("use sqlx::postgres::PgPoolOptions");
+      expect(mainContent).toContain("use sqlx::PgPool");
+      expect(mainContent).toContain("AppState");
+      expect(mainContent).toContain("DATABASE_URL");
+      expect(mainContent).toContain("PgPoolOptions::new()");
+      expect(mainContent).toContain("web::Data::new(AppState");
+      expect(mainContent).toContain(".app_data(state.clone())");
+    });
+
+    it("should include database health check with SQLx", async () => {
+      const result = await createVirtual({
+        projectName: "rust-sqlx-health",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "sqlx",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainContent = getFileContent(root, "crates/server/src/main.rs");
+      expect(mainContent).toBeDefined();
+      expect(mainContent).toContain("db.acquire()");
+      expect(mainContent).toContain("database:");
+    });
+
+    it("should work with SQLx and Leptos frontend", async () => {
+      const result = await createVirtual({
+        projectName: "rust-sqlx-leptos",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "leptos",
+        rustOrm: "sqlx",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify SQLx dependencies
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toContain("sqlx");
+
+      // Verify Leptos frontend exists
+      expect(hasFile(root, "crates/client/Cargo.toml")).toBe(true);
+      expect(hasFile(root, "crates/client/src/lib.rs")).toBe(true);
+    });
+
+    it("should work with SQLx and Dioxus frontend", async () => {
+      const result = await createVirtual({
+        projectName: "rust-sqlx-dioxus",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "dioxus",
+        rustOrm: "sqlx",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify SQLx dependencies
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toContain("sqlx");
+
+      // Verify Dioxus frontend exists
+      expect(hasFile(root, "crates/dioxus-client/Cargo.toml")).toBe(true);
+      expect(hasFile(root, "crates/dioxus-client/src/main.rs")).toBe(true);
+    });
+
+    it("should work with SQLx and async-graphql", async () => {
+      const result = await createVirtual({
+        projectName: "rust-sqlx-graphql",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "sqlx",
+        rustApi: "async-graphql",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toContain("sqlx");
+      expect(cargoContent).toContain("async-graphql");
+    });
   });
 
   describe("SeaORM", () => {

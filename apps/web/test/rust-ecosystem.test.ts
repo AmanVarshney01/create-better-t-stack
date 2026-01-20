@@ -155,7 +155,7 @@ describe("Rust Ecosystem Tab", () => {
     it("should have rust fields with default values", () => {
       expect(DEFAULT_STACK.rustWebFramework).toBe("axum");
       expect(DEFAULT_STACK.rustFrontend).toBe("none");
-      expect(DEFAULT_STACK.rustOrm).toBe("none");
+      expect(DEFAULT_STACK.rustOrm).toBe("sea-orm");
       expect(DEFAULT_STACK.rustApi).toBe("none");
       expect(DEFAULT_STACK.rustCli).toBe("none");
       expect(DEFAULT_STACK.rustLibraries).toBe("none");
