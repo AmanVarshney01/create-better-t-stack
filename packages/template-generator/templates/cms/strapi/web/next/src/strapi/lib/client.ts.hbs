@@ -1,0 +1,88 @@
+import { strapi } from "@strapi/client";
+import { strapiApiUrl, strapiApiToken } from "../env";
+
+// Public client for client-side requests (no auth)
+export const strapiClient = strapi({
+  baseURL: strapiApiUrl,
+});
+
+// Authenticated client for server-side requests
+export const strapiServerClient = strapi({
+  baseURL: strapiApiUrl,
+  auth: strapiApiToken,
+});
+
+// Type-safe fetch helper with revalidation support
+export async function strapiFetch<T>({
+  collection,
+  documentId,
+  params = {},
+  revalidate = 60,
+  tags = [],
+  useAuth = false,
+}: {
+  collection: string;
+  documentId?: string;
+  params?: Record<string, unknown>;
+  revalidate?: number | false;
+  tags?: string[];
+  useAuth?: boolean;
+}): Promise<T> {
+  const client = useAuth ? strapiServerClient : strapiClient;
+  const collectionManager = client.collection(collection);
+
+  // Build fetch options for Next.js caching
+  const fetchOptions = {
+    next: {
+      revalidate: tags.length ? false : revalidate,
+      tags,
+    },
+  };
+
+  if (documentId) {
+    // Fetch single document
+    const response = await collectionManager.findOne(documentId, {
+      ...params,
+      ...fetchOptions,
+    });
+    return response as T;
+  }
+
+  // Fetch collection
+  const response = await collectionManager.find({
+    ...params,
+    ...fetchOptions,
+  });
+  return response as T;
+}
+
+// Helper for single-type content
+export async function strapiFetchSingle<T>({
+  resource,
+  params = {},
+  revalidate = 60,
+  tags = [],
+  useAuth = false,
+}: {
+  resource: string;
+  params?: Record<string, unknown>;
+  revalidate?: number | false;
+  tags?: string[];
+  useAuth?: boolean;
+}): Promise<T> {
+  const client = useAuth ? strapiServerClient : strapiClient;
+  const singleManager = client.single(resource);
+
+  const fetchOptions = {
+    next: {
+      revalidate: tags.length ? false : revalidate,
+      tags,
+    },
+  };
+
+  const response = await singleManager.find({
+    ...params,
+    ...fetchOptions,
+  });
+  return response as T;
+}

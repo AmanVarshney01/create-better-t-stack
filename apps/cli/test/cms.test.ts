@@ -221,6 +221,115 @@ describe("CMS Options", () => {
     });
   });
 
+  describe("Strapi CMS with Next.js", () => {
+    test("strapi with Next.js and SQLite", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "strapi-nextjs-sqlite",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "sqlite",
+          cms: "strapi",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("strapi with Next.js and PostgreSQL", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "strapi-nextjs-postgres",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "postgres",
+          cms: "strapi",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("strapi with Next.js and MongoDB", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "strapi-nextjs-mongodb",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "mongodb",
+          orm: "mongoose",
+          cms: "strapi",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Strapi CMS with different ORMs", () => {
+    test("strapi with Drizzle ORM", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "strapi-drizzle",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "postgres",
+          orm: "drizzle",
+          cms: "strapi",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("strapi with Prisma ORM", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "strapi-prisma",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "postgres",
+          orm: "prisma",
+          cms: "strapi",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Strapi CMS with authentication", () => {
+    test("strapi with better-auth", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "strapi-better-auth",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "sqlite",
+          auth: "better-auth",
+          cms: "strapi",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("strapi with nextauth", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "strapi-nextauth",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "sqlite",
+          auth: "nextauth",
+          cms: "strapi",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("No CMS option", () => {
     test("none CMS option with Next.js", async () => {
       const result = await runTRPCTest(
@@ -271,6 +380,19 @@ describe("CMS Options", () => {
       );
       // Sanity requires Next.js for optimal integration, but the project should still be created
       // The CMS deps processor will skip adding Sanity deps for non-Next.js
+      expectSuccess(result);
+    });
+
+    test("strapi without Next.js should still work (cms deps skipped)", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "strapi-tanstack-router",
+          frontend: ["tanstack-router"],
+          cms: "strapi",
+        }),
+      );
+      // Strapi client requires Next.js for our templates, but the project should still be created
+      // The CMS deps processor will skip adding Strapi deps for non-Next.js
       expectSuccess(result);
     });
   });

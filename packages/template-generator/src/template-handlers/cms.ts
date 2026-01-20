@@ -23,4 +23,9 @@ export async function processCMSTemplates(
     // Process Sanity CMS templates for Next.js
     processTemplatesFromPrefix(vfs, templates, "cms/sanity/web/next", "apps/web", config);
   }
+
+  if (config.cms === "strapi" && hasNext) {
+    // Process Strapi CMS templates for Next.js
+    processTemplatesFromPrefix(vfs, templates, "cms/strapi/web/next", "apps/web", config);
+  }
 }

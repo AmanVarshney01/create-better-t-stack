@@ -540,6 +540,10 @@ export const dependencyVersionMap = {
   "next-sanity": "^9.11.2",
   "@sanity/image-url": "^1.1.0",
   "@sanity/vision": "^3.82.0",
+
+  // Headless CMS - Strapi
+  "@strapi/client": "^1.2.1",
+  qs: "^6.14.0",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

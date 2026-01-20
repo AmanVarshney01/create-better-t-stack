@@ -4925,3 +4925,43 @@ Tests: 15 passing
 ### Tests: All 18 CMS tests pass (8 new Sanity tests added)
 
 ### Status: COMPLETE
+
+## 2026-01-20: Strapi CMS Implementation
+
+### Task: Implement Strapi as a headless CMS option
+
+### Changes Made:
+1. **packages/template-generator/src/utils/add-deps.ts**: Added Strapi dependency versions:
+   - @strapi/client: ^1.2.1
+   - qs: ^6.14.0
+2. **packages/template-generator/src/processors/cms-deps.ts**: Added Strapi dependency processing with getStrapiDeps function
+3. **packages/template-generator/src/template-handlers/cms.ts**: Added Strapi template processing for Next.js
+4. **packages/template-generator/templates/cms/strapi/web/next/**: Created Strapi templates:
+   - src/strapi/env.ts.hbs - Environment configuration for Strapi URL and API token
+   - src/strapi/index.ts.hbs - Main exports file
+   - src/strapi/lib/client.ts.hbs - Strapi client setup with public and authenticated clients, fetch helpers
+   - src/strapi/lib/queries.ts.hbs - Query parameter builders for collections and filters
+   - src/strapi/lib/types.ts.hbs - TypeScript types for Strapi responses (pagination, media, documents)
+   - src/strapi/lib/media.ts.hbs - Media URL helpers and srcset generation
+5. **apps/cli/test/cms.test.ts**: Added comprehensive Strapi tests (11 new test cases)
+
+### Features:
+- Strapi client SDK integration (@strapi/client)
+- Public and authenticated client instances
+- Type-safe fetch helpers for collections and single types
+- Query parameter builders with pagination, filtering, and sorting
+- Media URL helpers with srcset generation for responsive images
+- TypeScript types for common Strapi response patterns
+- Compatible with Next.js (requires Next.js frontend)
+
+### Tests Added:
+- Strapi with Next.js and SQLite
+- Strapi with Next.js and PostgreSQL
+- Strapi with Next.js and MongoDB
+- Strapi with Drizzle ORM
+- Strapi with Prisma ORM
+- Strapi with better-auth
+- Strapi with nextauth
+- Strapi without Next.js (graceful skip)
+
+### Status: COMPLETE

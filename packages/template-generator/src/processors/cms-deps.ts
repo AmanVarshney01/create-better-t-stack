@@ -46,6 +46,23 @@ export function processCMSDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
       }
     }
   }
+
+  if (cms === "strapi") {
+    // Strapi client works with any frontend but we provide Next.js templates
+    if (!hasNext) return;
+
+    const webPath = "apps/web/package.json";
+    if (vfs.exists(webPath)) {
+      const deps = getStrapiDeps();
+      if (deps.length > 0) {
+        addPackageDependency({
+          vfs,
+          packagePath: webPath,
+          dependencies: deps,
+        });
+      }
+    }
+  }
 }
 
 function getPayloadDeps(database: ProjectConfig["database"]): AvailableDependencies[] {
@@ -77,4 +94,8 @@ function getPayloadDeps(database: ProjectConfig["database"]): AvailableDependenc
 
 function getSanityDeps(): AvailableDependencies[] {
   return ["sanity", "next-sanity", "@sanity/image-url", "@sanity/vision"];
+}
+
+function getStrapiDeps(): AvailableDependencies[] {
+  return ["@strapi/client", "qs"];
 }

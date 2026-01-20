@@ -1,0 +1,90 @@
+import { strapiUrl } from "../env";
+import type { StrapiMedia } from "./types";
+
+// Get full URL for Strapi media
+export function getStrapiMediaUrl(media: StrapiMedia | null | undefined): string | null {
+  if (!media?.url) return null;
+
+  // If URL is already absolute, return as-is
+  if (media.url.startsWith("http://") || media.url.startsWith("https://")) {
+    return media.url;
+  }
+
+  // Prepend Strapi URL for relative paths
+  return `${strapiUrl}${media.url}`;
+}
+
+// Get responsive image URL based on format
+export function getStrapiMediaFormat(
+  media: StrapiMedia | null | undefined,
+  format: "thumbnail" | "small" | "medium" | "large" = "medium"
+): string | null {
+  if (!media) return null;
+
+  // Try to get the requested format, fallback to original
+  const formatData = media.formats?.[format];
+  if (formatData?.url) {
+    if (formatData.url.startsWith("http://") || formatData.url.startsWith("https://")) {
+      return formatData.url;
+    }
+    return `${strapiUrl}${formatData.url}`;
+  }
+
+  // Fallback to original
+  return getStrapiMediaUrl(media);
+}
+
+// Get image dimensions
+export function getStrapiMediaDimensions(
+  media: StrapiMedia | null | undefined,
+  format?: "thumbnail" | "small" | "medium" | "large"
+): { width: number; height: number } | null {
+  if (!media) return null;
+
+  if (format && media.formats?.[format]) {
+    const formatData = media.formats[format];
+    return {
+      width: formatData.width,
+      height: formatData.height,
+    };
+  }
+
+  if (media.width && media.height) {
+    return {
+      width: media.width,
+      height: media.height,
+    };
+  }
+
+  return null;
+}
+
+// Generate srcset for responsive images
+export function getStrapiSrcSet(media: StrapiMedia | null | undefined): string | null {
+  if (!media?.formats) return null;
+
+  const srcsetParts: string[] = [];
+  const formats = ["thumbnail", "small", "medium", "large"] as const;
+
+  for (const format of formats) {
+    const formatData = media.formats[format];
+    if (formatData?.url && formatData.width) {
+      const url =
+        formatData.url.startsWith("http://") || formatData.url.startsWith("https://")
+          ? formatData.url
+          : `${strapiUrl}${formatData.url}`;
+      srcsetParts.push(`${url} ${formatData.width}w`);
+    }
+  }
+
+  // Add original as largest
+  if (media.url && media.width) {
+    const url =
+      media.url.startsWith("http://") || media.url.startsWith("https://")
+        ? media.url
+        : `${strapiUrl}${media.url}`;
+    srcsetParts.push(`${url} ${media.width}w`);
+  }
+
+  return srcsetParts.length > 0 ? srcsetParts.join(", ") : null;
+}
