@@ -13,6 +13,21 @@ export async function getAIChoice(ai?: AI) {
       hint: "The AI Toolkit for TypeScript - supports OpenAI, Anthropic, Google, etc.",
     },
     {
+      value: "mastra" as const,
+      label: "Mastra",
+      hint: "TypeScript-native AI agent framework with workflows",
+    },
+    {
+      value: "voltagent" as const,
+      label: "VoltAgent",
+      hint: "AI Agent framework with memory, workflows, and observability",
+    },
+    {
+      value: "langgraph" as const,
+      label: "LangGraph.js",
+      hint: "Graph-based agent orchestration with stateful workflows",
+    },
+    {
       value: "langchain" as const,
       label: "LangChain",
       hint: "Build context-aware reasoning applications",

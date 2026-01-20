@@ -154,6 +154,11 @@ export const dependencyVersionMap = {
   "@voltagent/libsql": "^2.0.3",
   "@voltagent/logger": "^2.0.2",
 
+  // LangGraph.js AI Framework
+  "@langchain/langgraph": "^1.0.15",
+  "@langchain/core": "^1.1.12",
+  "@langchain/google-genai": "^2.1.8",
+
   "@orpc/server": "^1.12.2",
   "@orpc/client": "^1.12.2",
   "@orpc/openapi": "^1.12.2",

@@ -297,6 +297,96 @@ describe("AI SDK Configuration", () => {
     });
   });
 
+  describe("LangGraph.js AI Framework", () => {
+    it("should work with AI example + LangGraph.js", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-langgraph",
+        examples: ["ai"],
+        ai: "langgraph",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with AI example + LangGraph.js + Next.js (self backend)", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-langgraph-next",
+        examples: ["ai"],
+        ai: "langgraph",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with AI example + LangGraph.js + TanStack Start", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-langgraph-start",
+        examples: ["ai"],
+        ai: "langgraph",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "better-auth",
+        api: "trpc",
+        frontend: ["tanstack-start"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with AI example + LangGraph.js + Express backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-langgraph-express",
+        examples: ["ai"],
+        ai: "langgraph",
+        backend: "express",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+  });
+
   describe("AI SDK none option", () => {
     it("should work with ai: none", async () => {
       const result = await runTRPCTest({

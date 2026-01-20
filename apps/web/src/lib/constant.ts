@@ -1359,6 +1359,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "langgraph",
+      name: "LangGraph.js",
+      description: "Graph-based agent orchestration with stateful workflows",
+      icon: "/icon/langgraph.svg",
+      color: "from-green-500 to-teal-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No AI SDK",
       description: "Skip AI SDK integration",

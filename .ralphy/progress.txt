@@ -4277,3 +4277,47 @@ The argon2 crate was already implemented in the template generator and CLI tests
 - All 19 AI SDK tests pass (14 existing + 5 new VoltAgent tests)
 
 ### Status: COMPLETE
+
+## LangGraph.js AI Framework Support (2026-01-20)
+
+### Completed Task
+- **Task**: Add LangGraph.js AI SDK support (TypeScript Ecosystem > AI SDKs)
+- **Status**: Completed
+
+### Changes Made
+1. **Schema Update** (`packages/types/src/schemas.ts`):
+   - Added `"langgraph"` to the AISchema enum
+
+2. **Dependency Management** (`packages/template-generator/src/utils/add-deps.ts`):
+   - Added LangGraph.js dependencies:
+     - `@langchain/langgraph`: ^1.0.15
+     - `@langchain/core`: ^1.1.12
+     - `@langchain/google-genai`: ^2.1.8
+
+3. **Dependency Processor** (`packages/template-generator/src/processors/examples-deps.ts`):
+   - Added LangGraph.js support for backend dependencies (self-hosted and standalone)
+   - Added frontend streamdown dependency for React apps
+
+4. **Web UI Configuration** (`apps/web/src/lib/constant.ts`):
+   - Added LangGraph.js option with description and styling
+
+5. **CLI Prompt** (`apps/cli/src/prompts/ai.ts`):
+   - Added LangGraph.js as a selectable AI SDK option
+
+6. **SVG Icon** (`apps/web/public/icon/langgraph.svg`):
+   - Created graph-themed icon representing LangGraph's agent orchestration concept
+
+7. **Template Updates**:
+   - Backend API routes (Next.js, TanStack Start) with LangGraph.js streaming support
+   - Frontend components (TanStack Router, Next.js, TanStack Start, React Router) with custom SSE streaming
+
+### Tests Added
+- 4 new tests in `apps/cli/test/ai-sdk.test.ts`:
+  - LangGraph.js with Hono backend
+  - LangGraph.js with Next.js (self backend)
+  - LangGraph.js with TanStack Start
+  - LangGraph.js with Express backend
+
+### Test Results
+- All 18 AI SDK tests pass (including 4 new LangGraph.js tests)
+- Pre-existing lint warnings unchanged (not related to this task)

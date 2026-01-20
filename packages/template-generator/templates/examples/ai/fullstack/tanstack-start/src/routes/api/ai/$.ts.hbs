@@ -1,3 +1,80 @@
+{{#if (eq ai "langgraph")}}
+import { createFileRoute } from "@tanstack/react-router";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { HumanMessage, AIMessage, type BaseMessage } from "@langchain/core/messages";
+import { createReactAgent } from "@langchain/langgraph/prebuilt";
+
+const model = new ChatGoogleGenerativeAI({
+	model: "gemini-2.0-flash",
+	temperature: 0,
+});
+
+const agent = createReactAgent({
+	llm: model,
+	tools: [],
+});
+
+export const Route = createFileRoute("/api/ai/$")({
+	server: {
+		handlers: {
+			POST: async ({ request }) => {
+				try {
+					const { messages } = await request.json();
+
+					const langchainMessages: BaseMessage[] = messages.map((msg: { role: string; content: string }) => {
+						if (msg.role === "user") {
+							return new HumanMessage(msg.content);
+						}
+						return new AIMessage(msg.content);
+					});
+
+					const stream = await agent.stream(
+						{ messages: langchainMessages },
+						{ streamMode: "messages" }
+					);
+
+					const encoder = new TextEncoder();
+					const readable = new ReadableStream({
+						async start(controller) {
+							try {
+								for await (const [message] of stream) {
+									if (message.content) {
+										const content = typeof message.content === "string"
+											? message.content
+											: JSON.stringify(message.content);
+										controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content })}\n\n`));
+									}
+								}
+								controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+								controller.close();
+							} catch (error) {
+								controller.error(error);
+							}
+						},
+					});
+
+					return new Response(readable, {
+						headers: {
+							"Content-Type": "text/event-stream",
+							"Cache-Control": "no-cache",
+							Connection: "keep-alive",
+						},
+					});
+				} catch (error) {
+					console.error("AI API error:", error);
+					return new Response(
+						JSON.stringify({ error: "Failed to process AI request" }),
+						{
+							status: 500,
+							headers: { "Content-Type": "application/json" },
+						},
+					);
+				}
+			},
+		},
+	},
+});
+{{else}}
 import { createFileRoute } from "@tanstack/react-router";
 import { google } from "@ai-sdk/google";
 import { streamText, type UIMessage, convertToModelMessages, wrapLanguageModel } from "ai";
@@ -34,3 +111,4 @@ export const Route = createFileRoute("/api/ai/$")({
     },
   },
 });
+{{/if}}

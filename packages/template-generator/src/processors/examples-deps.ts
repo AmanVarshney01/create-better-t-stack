@@ -69,6 +69,7 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
   // Check which AI SDK is selected
   const useMastra = ai === "mastra";
   const useVoltAgent = ai === "voltagent";
+  const useLangGraph = ai === "langgraph";
 
   if (backend === "convex" && convexBackendExists) {
     addPackageDependency({
@@ -91,6 +92,12 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
         dependencies: ["@voltagent/core", "@voltagent/server-hono", "@voltagent/libsql"],
         customDependencies: { ai: "^6.0.0", "@ai-sdk/google": "^3.0.1", zod: "^3.25.76" },
       });
+    } else if (useLangGraph) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPkgPath,
+        dependencies: ["@langchain/langgraph", "@langchain/core", "@langchain/google-genai"],
+      });
     } else {
       addPackageDependency({
         vfs,
@@ -112,6 +119,12 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
         dependencies: ["@voltagent/core", "@voltagent/server-hono", "@voltagent/libsql"],
         customDependencies: { ai: "^6.0.0", "@ai-sdk/google": "^3.0.1", zod: "^3.25.76" },
       });
+    } else if (useLangGraph) {
+      addPackageDependency({
+        vfs,
+        packagePath: serverPkgPath,
+        dependencies: ["@langchain/langgraph", "@langchain/core", "@langchain/google-genai"],
+      });
     } else {
       addPackageDependency({
         vfs,
@@ -131,6 +144,10 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
     } else if (useVoltAgent) {
       // VoltAgent uses @ai-sdk/react for frontend integration (built on Vercel AI SDK)
       if (hasReactWeb) deps.push("@ai-sdk/react", "streamdown");
+    } else if (useLangGraph) {
+      // LangGraph uses native streaming - no special frontend SDK needed
+      // Just add streamdown for markdown rendering
+      if (hasReactWeb) deps.push("streamdown");
     } else {
       deps.push("ai");
       if (hasNuxt) deps.push("@ai-sdk/vue");
