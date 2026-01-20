@@ -34,7 +34,7 @@
 
 ## **Step 3: Frontend (Rust → WASM)**
 
-- [ ] **Leptos** - Fine-grained reactive framework (React-like, SSR support)
+- [x] **Leptos** - Fine-grained reactive framework (React-like, SSR support)
 - [ ] **Dioxus** - React-like GUI library (cross-platform: web, desktop, mobile)
 
 ---

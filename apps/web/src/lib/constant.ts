@@ -1515,12 +1515,20 @@ export const TECH_OPTIONS: Record<
   ],
   rustFrontend: [
     {
+      id: "leptos",
+      name: "Leptos",
+      description: "Fine-grained reactive framework with SSR support",
+      icon: "/icon/leptos.svg",
+      color: "from-red-500 to-orange-600",
+      default: true,
+    },
+    {
       id: "none",
       name: "No WASM Frontend",
       description: "Skip Rust WASM frontend",
       icon: "",
       color: "from-gray-400 to-gray-600",
-      default: true,
+      default: false,
     },
   ],
   rustOrm: [

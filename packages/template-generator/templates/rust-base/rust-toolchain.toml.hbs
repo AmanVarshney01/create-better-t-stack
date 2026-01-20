@@ -1,0 +1,6 @@
+[toolchain]
+channel = "stable"
+components = ["rustfmt", "clippy"]
+{{#if (eq rustFrontend "leptos")}}
+targets = ["wasm32-unknown-unknown"]
+{{/if}}

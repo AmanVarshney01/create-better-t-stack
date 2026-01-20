@@ -165,7 +165,7 @@ describe("Rust Ecosystem", () => {
       expect(cargoContent).toContain("[workspace]");
       expect(cargoContent).toContain('resolver = "2"');
       expect(cargoContent).toContain("members = [");
-      expect(cargoContent).toContain('"crates/*"');
+      expect(cargoContent).toContain('"crates/server"');
 
       // Verify workspace.package
       expect(cargoContent).toContain("[workspace.package]");
@@ -663,6 +663,284 @@ describe("Rust Ecosystem", () => {
     });
   });
 
+  describe("Leptos Frontend", () => {
+    it("should include Leptos dependencies in workspace Cargo.toml", async () => {
+      const result = await createVirtual({
+        projectName: "rust-leptos-deps",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "leptos",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain("leptos");
+      expect(cargoContent).toContain("leptos_router");
+      expect(cargoContent).toContain("leptos_meta");
+      expect(cargoContent).toContain("wasm-bindgen");
+      expect(cargoContent).toContain("console_error_panic_hook");
+    });
+
+    it("should include client crate in workspace members", async () => {
+      const result = await createVirtual({
+        projectName: "rust-leptos-workspace",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "leptos",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain('"crates/client"');
+    });
+
+    it("should create client crate directory structure", async () => {
+      const result = await createVirtual({
+        projectName: "rust-leptos-structure",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "leptos",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify client crate files
+      expect(hasFile(root, "crates/client/Cargo.toml")).toBe(true);
+      expect(hasFile(root, "crates/client/src/lib.rs")).toBe(true);
+      expect(hasFile(root, "crates/client/index.html")).toBe(true);
+      expect(hasFile(root, "crates/client/Trunk.toml")).toBe(true);
+      expect(hasFile(root, "crates/client/style/main.css")).toBe(true);
+    });
+
+    it("should have correct client Cargo.toml with workspace references", async () => {
+      const result = await createVirtual({
+        projectName: "rust-leptos-client-cargo",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "leptos",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const clientCargoContent = getFileContent(root, "crates/client/Cargo.toml");
+      expect(clientCargoContent).toBeDefined();
+      expect(clientCargoContent).toContain('name = "rust-leptos-client-cargo-client"');
+      expect(clientCargoContent).toContain("leptos.workspace = true");
+      expect(clientCargoContent).toContain("leptos_router.workspace = true");
+      expect(clientCargoContent).toContain("leptos_meta.workspace = true");
+      expect(clientCargoContent).toContain('crate-type = ["cdylib", "rlib"]');
+    });
+
+    it("should have correct lib.rs with Leptos components", async () => {
+      const result = await createVirtual({
+        projectName: "rust-leptos-lib",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "leptos",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const libRsContent = getFileContent(root, "crates/client/src/lib.rs");
+      expect(libRsContent).toBeDefined();
+      expect(libRsContent).toContain("use leptos::prelude::*");
+      expect(libRsContent).toContain("#[component]");
+      expect(libRsContent).toContain("pub fn App()");
+      expect(libRsContent).toContain("fn HomePage()");
+      expect(libRsContent).toContain("fn AboutPage()");
+      expect(libRsContent).toContain("Router");
+      expect(libRsContent).toContain("leptos::mount::mount_to_body");
+    });
+
+    it("should have correct index.html with Trunk configuration", async () => {
+      const result = await createVirtual({
+        projectName: "rust-leptos-html",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "leptos",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const htmlContent = getFileContent(root, "crates/client/index.html");
+      expect(htmlContent).toBeDefined();
+      expect(htmlContent).toContain("<!DOCTYPE html>");
+      expect(htmlContent).toContain('data-trunk rel="css"');
+      expect(htmlContent).toContain('data-trunk rel="rust"');
+      expect(htmlContent).toContain("rust-leptos-html");
+    });
+
+    it("should have Trunk.toml configuration", async () => {
+      const result = await createVirtual({
+        projectName: "rust-leptos-trunk",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "leptos",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const trunkContent = getFileContent(root, "crates/client/Trunk.toml");
+      expect(trunkContent).toBeDefined();
+      expect(trunkContent).toContain("[build]");
+      expect(trunkContent).toContain('target = "index.html"');
+      expect(trunkContent).toContain("[serve]");
+      expect(trunkContent).toContain("port = 8080");
+    });
+
+    it("should include wasm32 target in rust-toolchain.toml", async () => {
+      const result = await createVirtual({
+        projectName: "rust-leptos-toolchain",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "leptos",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const toolchainContent = getFileContent(root, "rust-toolchain.toml");
+      expect(toolchainContent).toBeDefined();
+      expect(toolchainContent).toContain("wasm32-unknown-unknown");
+    });
+
+    it("should NOT include client crate when leptos is not selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-no-leptos",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Should not have client crate
+      expect(hasFile(root, "crates/client/Cargo.toml")).toBe(false);
+      expect(hasFile(root, "crates/client/src/lib.rs")).toBe(false);
+
+      // Workspace should not include client
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).not.toContain('"crates/client"');
+      expect(cargoContent).not.toContain("leptos");
+    });
+
+    it("should NOT include wasm32 target when leptos is not selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-no-wasm",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const toolchainContent = getFileContent(root, "rust-toolchain.toml");
+      expect(toolchainContent).toBeDefined();
+      expect(toolchainContent).not.toContain("wasm32-unknown-unknown");
+    });
+
+    it("should include backend framework info in Leptos About page", async () => {
+      const result = await createVirtual({
+        projectName: "rust-leptos-about-axum",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "leptos",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const libRsContent = getFileContent(root, "crates/client/src/lib.rs");
+      expect(libRsContent).toBeDefined();
+      expect(libRsContent).toContain("Axum");
+    });
+
+    it("should work with Actix-web backend", async () => {
+      const result = await createVirtual({
+        projectName: "rust-leptos-actix",
+        ecosystem: "rust",
+        rustWebFramework: "actix-web",
+        rustFrontend: "leptos",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: [],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify both server and client crates exist
+      expect(hasFile(root, "crates/server/Cargo.toml")).toBe(true);
+      expect(hasFile(root, "crates/client/Cargo.toml")).toBe(true);
+
+      // Verify Actix-web in server
+      const serverCargoContent = getFileContent(root, "crates/server/Cargo.toml");
+      expect(serverCargoContent).toContain("actix-web.workspace = true");
+
+      // Verify About page shows Actix-web
+      const libRsContent = getFileContent(root, "crates/client/src/lib.rs");
+      expect(libRsContent).toContain("Actix-web");
+    });
+  });
+
   describe("Full-stack Rust Project", () => {
     it("should create a complete Rust project with all options", async () => {
       const result = await createVirtual({
@@ -686,6 +964,9 @@ describe("Rust Ecosystem", () => {
       // Web framework
       expect(cargoContent).toContain("axum");
 
+      // Frontend
+      expect(cargoContent).toContain("leptos");
+
       // ORM
       expect(cargoContent).toContain("sqlx");
 
@@ -699,6 +980,10 @@ describe("Rust Ecosystem", () => {
       expect(cargoContent).toContain("validator");
       expect(cargoContent).toContain("jsonwebtoken");
       expect(cargoContent).toContain("argon2");
+
+      // Client crate
+      expect(hasFile(root, "crates/client/Cargo.toml")).toBe(true);
+      expect(hasFile(root, "crates/client/src/lib.rs")).toBe(true);
     });
   });
 

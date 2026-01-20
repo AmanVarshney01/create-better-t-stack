@@ -1,0 +1,100 @@
+use leptos::prelude::*;
+use leptos_meta::*;
+use leptos_router::components::*;
+use leptos_router::path;
+
+/// Main application component
+#[component]
+pub fn App() -> impl IntoView {
+    // Provides context for managing document head metadata
+    provide_meta_context();
+
+    view! {
+        <Stylesheet id="leptos" href="/pkg/{{projectName}}_client.css"/>
+        <Title text="{{projectName}} - Built with Leptos"/>
+        <Meta name="description" content="A Rust WASM application built with Leptos"/>
+
+        <Router>
+            <main class="container">
+                <Routes fallback=|| "Page not found.".into_view()>
+                    <Route path=path!("/") view=HomePage/>
+                    <Route path=path!("/about") view=AboutPage/>
+                </Routes>
+            </main>
+        </Router>
+    }
+}
+
+/// Home page component
+#[component]
+fn HomePage() -> impl IntoView {
+    let (count, set_count) = signal(0);
+
+    view! {
+        <div class="home">
+            <h1>"Welcome to {{projectName}}"</h1>
+            <p>"A full-stack Rust application powered by Leptos"</p>
+
+            <div class="counter">
+                <button
+                    class="btn"
+                    on:click=move |_| set_count.update(|n| *n -= 1)
+                >
+                    "-"
+                </button>
+                <span class="count">{count}</span>
+                <button
+                    class="btn"
+                    on:click=move |_| set_count.update(|n| *n += 1)
+                >
+                    "+"
+                </button>
+            </div>
+
+            <nav>
+                <a href="/about">"About"</a>
+            </nav>
+        </div>
+    }
+}
+
+/// About page component
+#[component]
+fn AboutPage() -> impl IntoView {
+    view! {
+        <div class="about">
+            <h1>"About"</h1>
+            <p>"This application was generated with Better-Fullstack using the Leptos framework."</p>
+
+            <h2>"Technology Stack"</h2>
+            <ul>
+                <li>"Leptos - Fine-grained reactive framework"</li>
+                <li>"Rust + WebAssembly - High-performance frontend"</li>
+{{#if (eq rustWebFramework "axum")}}
+                <li>"Axum - Ergonomic web framework by Tokio team"</li>
+{{/if}}
+{{#if (eq rustWebFramework "actix-web")}}
+                <li>"Actix-web - Powerful, pragmatic web framework"</li>
+{{/if}}
+            </ul>
+
+            <nav>
+                <a href="/">"Back to Home"</a>
+            </nav>
+        </div>
+    }
+}
+
+/// Initialize the Leptos client-side app
+#[wasm_bindgen::prelude::wasm_bindgen(start)]
+pub fn main() {
+    // Set up better panic messages in console
+    console_error_panic_hook::set_once();
+
+    // Initialize logging
+    _ = console_log::init_with_level(log::Level::Debug);
+
+    log::info!("Starting Leptos client application");
+
+    leptos::mount::mount_to_body(App);
+}

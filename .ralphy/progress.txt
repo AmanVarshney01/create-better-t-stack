@@ -3515,3 +3515,88 @@ Actix-web was already fully implemented in the codebase alongside Axum during th
 1. **PRD.md**: Updated Actix-web entry from `[ ]` to `[x]`
 
 ### Status: COMPLETE
+
+
+## 2026-01-20: Leptos WASM Frontend Implementation
+
+### Task: Implement Leptos as a Rust WASM frontend option
+
+### Changes Made:
+1. **apps/web/src/lib/constant.ts**: Added Leptos option to rustFrontend with:
+   - id: "leptos"
+   - name: "Leptos"
+   - description: "Fine-grained reactive framework with SSR support"
+   - icon: "/icon/leptos.svg"
+   - color: "from-red-500 to-orange-600"
+   - default: true (now the default for Rust frontend)
+
+2. **packages/template-generator/templates/rust-base/Cargo.toml.hbs**: 
+   - Updated workspace members to explicitly list crates (server, client when leptos)
+   - Added Leptos dependencies when rustFrontend === "leptos":
+     - leptos 0.7 with csr feature
+     - leptos_router 0.7 with csr feature
+     - leptos_meta 0.7 with csr feature
+     - console_error_panic_hook 0.1
+     - console_log 1
+     - log 0.4
+     - wasm-bindgen 0.2
+     - wasm-bindgen-futures 0.4
+     - web-sys 0.3 with Window/Document/Element/HtmlElement/console features
+
+3. **packages/template-generator/templates/rust-base/crates/client/**: Created new Leptos client crate:
+   - Cargo.toml.hbs: Package config with cdylib/rlib crate types, hydrate/ssr features
+   - src/lib.rs.hbs: Full Leptos app with:
+     - App component with Router, Stylesheet, Title, Meta
+     - HomePage component with reactive counter (signal)
+     - AboutPage component showing tech stack (conditional backend display)
+     - WASM initialization with console_error_panic_hook and console_log
+   - index.html.hbs: HTML template with Trunk data attributes
+   - Trunk.toml.hbs: Trunk build configuration (serve on port 8080)
+   - style/main.css: Custom CSS with dark theme
+
+4. **packages/template-generator/templates/rust-base/rust-toolchain.toml.hbs**: 
+   - Converted from static .toml to .hbs template
+   - Added conditional wasm32-unknown-unknown target when Leptos selected
+
+5. **packages/template-generator/src/template-handlers/rust-base.ts**: 
+   - Updated to conditionally skip client crate templates when rustFrontend !== "leptos"
+   - Prevents client crate generation for non-Leptos projects
+
+6. **packages/template-generator/src/processors/readme-generator.ts**: 
+   - Added generateRustReadmeContent() function for Rust projects
+   - Includes Leptos-specific instructions (Trunk install, WASM target)
+   - Shows correct project structure based on selections
+
+7. **apps/cli/test/rust-ecosystem.test.ts**: Added comprehensive Leptos tests:
+   - Should include Leptos dependencies in workspace Cargo.toml
+   - Should include client crate in workspace members
+   - Should create client crate directory structure
+   - Should have correct client Cargo.toml with workspace references
+   - Should have correct lib.rs with Leptos components
+   - Should have correct index.html with Trunk configuration
+   - Should have Trunk.toml configuration
+   - Should include wasm32 target in rust-toolchain.toml
+   - Should NOT include client crate when leptos is not selected
+   - Should NOT include wasm32 target when leptos is not selected
+   - Should include backend framework info in Leptos About page
+   - Should work with Actix-web backend
+
+8. **apps/web/test/rust-ecosystem.test.ts**: Added web UI tests for Leptos option
+
+### Features:
+- Full Leptos 0.7 reactive framework with client-side rendering
+- Router with / (home) and /about pages
+- Reactive counter example demonstrating Leptos signals
+- Trunk build system integration for WASM compilation
+- Custom CSS styling (dark theme)
+- Conditional backend info display in About page (Axum or Actix-web)
+- Proper workspace structure with server and client crates
+- WASM target configuration in rust-toolchain.toml
+
+### Tests Verified (47 CLI tests, 41 web tests passing):
+- All Leptos template generation tests pass
+- Client crate properly excluded when Leptos not selected
+- WASM target properly excluded when Leptos not selected
+- Works with both Axum and Actix-web backends
+
+### Status: COMPLETE

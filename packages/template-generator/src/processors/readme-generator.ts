@@ -3,7 +3,8 @@ import type { ProjectConfig } from "@better-t-stack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 export function processReadme(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const content = generateReadmeContent(config);
+  const content =
+    config.ecosystem === "rust" ? generateRustReadmeContent(config) : generateReadmeContent(config);
   vfs.writeFile("README.md", content);
 }
 
@@ -553,4 +554,159 @@ function generateGitHooksSection(
   }
 
   return `${lines.join("\n")}\n\n`;
+}
+
+function generateRustReadmeContent(config: ProjectConfig): string {
+  const { projectName, rustWebFramework, rustFrontend, rustOrm, rustApi, rustCli, rustLibraries } =
+    config;
+
+  const features: string[] = ["- **Rust** - Memory-safe, high-performance systems programming"];
+
+  // Web framework
+  if (rustWebFramework === "axum") {
+    features.push("- **Axum** - Ergonomic and modular web framework by Tokio team");
+  } else if (rustWebFramework === "actix-web") {
+    features.push("- **Actix-web** - Powerful, pragmatic, and extremely fast web framework");
+  }
+
+  // Frontend
+  if (rustFrontend === "leptos") {
+    features.push("- **Leptos** - Fine-grained reactive framework with SSR support");
+    features.push("- **WebAssembly** - High-performance frontend compiled from Rust");
+  } else if (rustFrontend === "dioxus") {
+    features.push("- **Dioxus** - React-like GUI library for web, desktop, and mobile");
+    features.push("- **WebAssembly** - High-performance frontend compiled from Rust");
+  }
+
+  // ORM
+  if (rustOrm === "sea-orm") {
+    features.push("- **SeaORM** - Async & dynamic ORM with ActiveRecord pattern");
+  } else if (rustOrm === "sqlx") {
+    features.push("- **SQLx** - Async SQL toolkit with compile-time checked queries");
+  }
+
+  // API
+  if (rustApi === "tonic") {
+    features.push("- **Tonic** - Production-ready gRPC implementation");
+  } else if (rustApi === "async-graphql") {
+    features.push("- **async-graphql** - High-performance GraphQL server");
+  }
+
+  // CLI
+  if (rustCli === "clap") {
+    features.push("- **Clap** - CLI argument parser with derive macros");
+  } else if (rustCli === "ratatui") {
+    features.push("- **Ratatui** - Terminal user interface library");
+  }
+
+  // Libraries
+  const libs = Array.isArray(rustLibraries) ? rustLibraries : [];
+  if (libs.includes("validator")) {
+    features.push("- **Validator** - Derive-based validation");
+  }
+  if (libs.includes("jsonwebtoken")) {
+    features.push("- **jsonwebtoken** - JWT encoding/decoding");
+  }
+  if (libs.includes("argon2")) {
+    features.push("- **Argon2** - Secure password hashing");
+  }
+
+  // Project structure
+  const structure: string[] = [`${projectName}/`, "├── Cargo.toml            # Workspace manifest"];
+
+  if (rustFrontend === "leptos") {
+    structure.push(
+      "├── crates/",
+      "│   ├── server/           # Backend API server",
+      "│   │   ├── Cargo.toml",
+      "│   │   └── src/main.rs",
+      "│   └── client/           # Leptos WASM frontend",
+      "│       ├── Cargo.toml",
+      "│       ├── Trunk.toml    # Trunk build config",
+      "│       ├── index.html",
+      "│       ├── src/lib.rs",
+      "│       └── style/main.css",
+    );
+  } else {
+    structure.push(
+      "├── crates/",
+      "│   └── server/           # Backend API server",
+      "│       ├── Cargo.toml",
+      "│       └── src/main.rs",
+    );
+  }
+
+  structure.push(
+    "├── rust-toolchain.toml   # Rust version config",
+    "├── .env.example          # Environment variables",
+    "└── .gitignore",
+  );
+
+  // Scripts
+  let scripts = `- \`cargo build\`: Build all crates
+- \`cargo run --bin server\`: Run the server
+- \`cargo test\`: Run all tests
+- \`cargo clippy\`: Run linter
+- \`cargo fmt\`: Format code`;
+
+  if (rustFrontend === "leptos") {
+    scripts += `
+- \`cd crates/client && trunk serve\`: Start Leptos dev server
+- \`cd crates/client && trunk build --release\`: Build Leptos for production`;
+  }
+
+  return `# ${projectName}
+
+This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a high-performance Rust stack.
+
+## Features
+
+${features.join("\n")}
+
+## Prerequisites
+
+- [Rust](https://rustup.rs/) (stable toolchain)
+${rustFrontend === "leptos" ? "- [Trunk](https://trunkrs.dev/) (`cargo install trunk`)\n- [wasm32-unknown-unknown target](https://rustwasm.github.io/docs/book/) (`rustup target add wasm32-unknown-unknown`)" : ""}
+
+## Getting Started
+
+First, copy the environment file:
+
+\`\`\`bash
+cp .env.example .env
+\`\`\`
+
+Then, build and run the server:
+
+\`\`\`bash
+cargo run --bin server
+\`\`\`
+
+${rustWebFramework !== "none" ? "The API server will be running at [http://localhost:3000](http://localhost:3000)." : ""}
+
+${
+  rustFrontend === "leptos"
+    ? `### Running the Frontend
+
+In a separate terminal, start the Leptos frontend:
+
+\`\`\`bash
+cd crates/client
+trunk serve
+\`\`\`
+
+The frontend will be available at [http://localhost:8080](http://localhost:8080).
+`
+    : ""
+}
+## Project Structure
+
+\`\`\`
+${structure.join("\n")}
+\`\`\`
+
+## Available Commands
+
+${scripts}
+`;
 }

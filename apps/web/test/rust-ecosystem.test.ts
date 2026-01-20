@@ -127,6 +127,24 @@ describe("Rust Ecosystem Tab", () => {
       expect(actixOption).toBeDefined();
       expect(actixOption?.name).toBe("Actix-web");
     });
+
+    it("should have Leptos as default for rustFrontend", () => {
+      const options = TECH_OPTIONS.rustFrontend;
+      const leptosOption = options.find((o) => o.id === "leptos");
+      expect(leptosOption).toBeDefined();
+      expect(leptosOption?.default).toBe(true);
+      expect(leptosOption?.name).toBe("Leptos");
+      expect(leptosOption?.description).toContain("reactive");
+      expect(leptosOption?.description).toContain("SSR");
+    });
+
+    it("should have none option for rustFrontend when user wants to skip", () => {
+      const options = TECH_OPTIONS.rustFrontend;
+      const noneOption = options.find((o) => o.id === "none");
+      expect(noneOption).toBeDefined();
+      expect(noneOption?.default).toBe(false);
+      expect(noneOption?.name).toBe("No WASM Frontend");
+    });
   });
 
   describe("DEFAULT_STACK", () => {
