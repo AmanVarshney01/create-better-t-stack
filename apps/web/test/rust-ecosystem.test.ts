@@ -171,6 +171,15 @@ describe("Rust Ecosystem Tab", () => {
       expect(validatorOption?.name).toBe("Validator");
       expect(validatorOption?.description).toContain("validation");
     });
+
+    it("should have jsonwebtoken option for rustLibraries", () => {
+      const options = TECH_OPTIONS.rustLibraries;
+      const jwtOption = options.find((o) => o.id === "jsonwebtoken");
+      expect(jwtOption).toBeDefined();
+      expect(jwtOption?.default).toBe(false);
+      expect(jwtOption?.name).toBe("jsonwebtoken");
+      expect(jwtOption?.description).toContain("JWT");
+    });
   });
 
   describe("DEFAULT_STACK", () => {

@@ -4038,3 +4038,39 @@ Serde was already implemented as a core workspace dependency in all Rust project
 - Web test: Validates TECH_OPTIONS.rustLibraries contains validator option
 
 ### Status: COMPLETE
+
+## 2026-01-20: jsonwebtoken JWT Library - Rust Ecosystem
+
+### Task: Expose jsonwebtoken JWT library in web UI for Rust ecosystem
+
+### Changes Made:
+1. **apps/web/src/lib/constant.ts**: Added jsonwebtoken to `TECH_OPTIONS.rustLibraries` array:
+   - id: "jsonwebtoken"
+   - name: "jsonwebtoken"
+   - description: "JWT encoding and decoding for authentication"
+   - color: "from-blue-500 to-indigo-700"
+   - default: false
+
+2. **apps/web/test/rust-ecosystem.test.ts**: Added test to verify jsonwebtoken option:
+   - Tests that jsonwebtoken option exists in rustLibraries
+   - Verifies the option has correct name, default value, and description
+
+### Pre-existing Implementation (Already Complete):
+- **packages/types/src/schemas.ts**: `jsonwebtoken` was already in `RustLibrariesSchema` enum
+- **packages/template-generator/templates/rust-base/Cargo.toml.hbs**: jsonwebtoken dependency already configured (version 9)
+- **packages/template-generator/templates/rust-base/crates/server/Cargo.toml.hbs**: `jsonwebtoken.workspace = true` already configured
+- **packages/template-generator/src/processors/readme-generator.ts**: README already handles jsonwebtoken feature description
+- **apps/cli/test/rust-ecosystem.test.ts**: CLI tests for jsonwebtoken already existed
+
+### Features:
+- JWT token encoding and decoding using the jsonwebtoken crate (v9)
+- Support for HS256, HS384, HS512, RS256, RS384, RS512, ES256, ES384 algorithms
+- Token validation with configurable claims (exp, iat, iss, aud, sub)
+- Integration with Axum and Actix-web frameworks
+- Environment variable support via .env.example (JWT_SECRET already documented)
+
+### Tests:
+- Web UI: 46 tests passing
+- CLI: 97 tests passing
+
+### Status: COMPLETE

@@ -1635,6 +1635,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "jsonwebtoken",
+      name: "jsonwebtoken",
+      description: "JWT encoding and decoding for authentication",
+      icon: "",
+      color: "from-blue-500 to-indigo-700",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Additional Libraries",
       description: "Skip additional Rust core libraries",
