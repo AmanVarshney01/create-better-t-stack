@@ -79,7 +79,7 @@
 
 - [x] **Vercel AI SDK** - Unified AI SDK for multiple providers
 - [x] **Mastra** - TypeScript-native AI agent framework
-- [ ] **VoltAgent** - AI agents with observability
+- [x] **VoltAgent** - AI agents with observability
 - [ ] **LangGraph.js** - Graph-based agent orchestration
 - [ ] **OpenAI Agents SDK** - Official OpenAI multi-agent framework
 - [ ] **Google ADK** - Google's agent development kit

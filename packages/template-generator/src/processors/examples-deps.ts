@@ -66,8 +66,9 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
     ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
   );
 
-  // Check if Mastra is selected as the AI SDK
+  // Check which AI SDK is selected
   const useMastra = ai === "mastra";
+  const useVoltAgent = ai === "voltagent";
 
   if (backend === "convex" && convexBackendExists) {
     addPackageDependency({
@@ -83,6 +84,13 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
         packagePath: webPkgPath,
         dependencies: ["mastra", "@mastra/core"],
       });
+    } else if (useVoltAgent) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPkgPath,
+        dependencies: ["@voltagent/core", "@voltagent/server-hono", "@voltagent/libsql"],
+        customDependencies: { ai: "^6.0.0", "@ai-sdk/google": "^3.0.1", zod: "^3.25.76" },
+      });
     } else {
       addPackageDependency({
         vfs,
@@ -96,6 +104,13 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
         vfs,
         packagePath: serverPkgPath,
         dependencies: ["mastra", "@mastra/core"],
+      });
+    } else if (useVoltAgent) {
+      addPackageDependency({
+        vfs,
+        packagePath: serverPkgPath,
+        dependencies: ["@voltagent/core", "@voltagent/server-hono", "@voltagent/libsql"],
+        customDependencies: { ai: "^6.0.0", "@ai-sdk/google": "^3.0.1", zod: "^3.25.76" },
       });
     } else {
       addPackageDependency({
@@ -112,6 +127,9 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
       if (hasReactWeb) deps.push("@convex-dev/agent", "streamdown");
     } else if (useMastra) {
       // Mastra uses @ai-sdk/react for frontend integration
+      if (hasReactWeb) deps.push("@ai-sdk/react", "streamdown");
+    } else if (useVoltAgent) {
+      // VoltAgent uses @ai-sdk/react for frontend integration (built on Vercel AI SDK)
       if (hasReactWeb) deps.push("@ai-sdk/react", "streamdown");
     } else {
       deps.push("ai");

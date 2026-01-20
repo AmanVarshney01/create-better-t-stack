@@ -148,6 +148,12 @@ export const dependencyVersionMap = {
   mastra: "^0.24.9",
   "@mastra/core": "^0.24.9",
 
+  // VoltAgent AI Framework
+  "@voltagent/core": "^2.0.10",
+  "@voltagent/server-hono": "^2.0.3",
+  "@voltagent/libsql": "^2.0.3",
+  "@voltagent/logger": "^2.0.2",
+
   "@orpc/server": "^1.12.2",
   "@orpc/client": "^1.12.2",
   "@orpc/openapi": "^1.12.2",

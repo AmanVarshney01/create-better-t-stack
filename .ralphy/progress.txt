@@ -4224,3 +4224,56 @@ The argon2 crate was already implemented in the template generator and CLI tests
 
 ### Status: COMPLETE
 
+
+
+## 2026-01-20: VoltAgent AI Agent Framework Implementation
+
+### Task: Implement VoltAgent as an AI SDK option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "voltagent" to AISchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added VoltAgent dependency versions:
+   - @voltagent/core: ^2.0.10
+   - @voltagent/server-hono: ^2.0.3
+   - @voltagent/libsql: ^2.0.3
+   - @voltagent/logger: ^2.0.2
+3. **packages/template-generator/src/processors/examples-deps.ts**: Modified setupAIDependencies to check for VoltAgent:
+   - When ai="voltagent", adds VoltAgent core packages plus Vercel AI SDK dependencies (ai, @ai-sdk/google, zod)
+   - VoltAgent uses @ai-sdk/react for frontend integration (built on Vercel AI SDK)
+4. **apps/web/src/lib/constant.ts**: Added VoltAgent option to ai category:
+   - id: "voltagent"
+   - name: "VoltAgent"
+   - description: "AI Agent framework with memory, workflows, and observability"
+   - icon: "/icon/voltagent.svg"
+   - color: "from-yellow-500 to-orange-600"
+5. **apps/web/public/icon/voltagent.svg**: Created VoltAgent icon (lightning bolt design)
+6. **apps/cli/test/ai-sdk.test.ts**: Added comprehensive VoltAgent test suite:
+   - VoltAgent with AI example + Hono backend
+   - VoltAgent with AI example + Next.js (self backend)
+   - VoltAgent with AI example + TanStack Start
+   - VoltAgent with AI example + Express backend
+   - VoltAgent without AI example (SDK only)
+
+### Features:
+- VoltAgent is an open-source TypeScript AI agent framework with built-in observability
+- Users can now select VoltAgent as an alternative AI SDK in both CLI and web UI
+- VoltAgent dependencies are automatically added when selected
+- Full support for different backend configurations (Hono, Express, NestJS, etc.)
+- Works with self-hosted backends (Next.js, TanStack Start)
+- VoltAgent is built on Vercel AI SDK, so it's compatible with the existing ecosystem
+
+### VoltAgent Key Capabilities:
+- Agent Runtime: Define agents with typed roles, tools, memory, and model providers
+- Memory System: Built-in memory with vector search support via libsql
+- Workflow Engine: Declarative multi-step automation
+- Supervisor Agents: Multi-agent orchestration with routing
+- LLM Compatibility: Swap between OpenAI, Anthropic, Google, etc.
+- VoltOps Observability: Trace decisions, monitor performance, optimize workflows
+
+### Tests Added:
+- 5 test cases for VoltAgent specifically:
+  - VoltAgent with AI example + various backends
+  - VoltAgent without AI example (SDK only)
+- All 19 AI SDK tests pass (14 existing + 5 new VoltAgent tests)
+
+### Status: COMPLETE

@@ -1351,6 +1351,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "voltagent",
+      name: "VoltAgent",
+      description: "AI Agent framework with memory, workflows, and observability",
+      icon: "/icon/voltagent.svg",
+      color: "from-yellow-500 to-orange-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No AI SDK",
       description: "Skip AI SDK integration",
