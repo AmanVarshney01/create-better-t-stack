@@ -67,7 +67,7 @@
 - [x] **jsonwebtoken** - JWT encoding/decoding
 - [x] **argon2** - Password hashing
 - [x] **tokio-test** - Async testing utilities
-- [ ] **mockall** - Mocking library
+- [x] **mockall** - Mocking library
 
 ---
 

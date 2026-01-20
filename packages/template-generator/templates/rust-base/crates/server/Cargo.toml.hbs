@@ -83,7 +83,12 @@ clap.workspace = true
 name = "server"
 path = "src/main.rs"
 
-{{#if (includes rustLibraries "tokio-test")}}
+{{#if (or (includes rustLibraries "tokio-test") (includes rustLibraries "mockall"))}}
 [dev-dependencies]
+{{#if (includes rustLibraries "tokio-test")}}
 tokio-test.workspace = true
+{{/if}}
+{{#if (includes rustLibraries "mockall")}}
+mockall.workspace = true
+{{/if}}
 {{/if}}

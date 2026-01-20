@@ -1659,6 +1659,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "mockall",
+      name: "Mockall",
+      description: "Powerful mock objects library for Rust testing",
+      icon: "",
+      color: "from-rose-500 to-pink-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Additional Libraries",
       description: "Skip additional Rust core libraries",

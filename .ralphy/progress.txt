@@ -4141,3 +4141,43 @@ The argon2 crate was already implemented in the template generator and CLI tests
 - Specific tokio-test test verifies proper dev-dependency configuration
 
 ### Status: COMPLETE
+
+
+## 2026-01-20: Mockall Mocking Library Implementation
+
+### Task: Implement mockall as a Rust core library option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: mockall was already added to RustLibrariesSchema enum
+
+2. **apps/web/src/lib/constant.ts**: Added mockall to rustLibraries UI options:
+   - id: "mockall"
+   - name: "Mockall"
+   - description: "Powerful mock objects library for Rust testing"
+   - color: "from-rose-500 to-pink-600"
+
+3. **packages/template-generator/templates/rust-base/Cargo.toml.hbs**: Added mockall workspace dependency:
+   - mockall = "0.13" (when rustLibraries includes "mockall")
+
+4. **packages/template-generator/templates/rust-base/crates/server/Cargo.toml.hbs**: 
+   - Updated [dev-dependencies] section to include mockall when selected
+   - Uses `or` condition to create [dev-dependencies] section when either tokio-test or mockall is selected
+   - mockall.workspace = true
+
+5. **apps/cli/test/rust-ecosystem.test.ts**: Added comprehensive tests:
+   - Test for mockall alone: verifies mockall in workspace Cargo.toml and as dev-dependency
+   - Test for both tokio-test and mockall together: verifies both work together in dev-dependencies
+
+### Features:
+- Mockall (version 0.13) is a powerful mocking library for Rust
+- Added as dev-dependency (not regular dependency) since it's only needed for testing
+- Provides `#[automock]` and `mock!` macros for creating mock objects
+- Supports mocking traits, struct methods, and free functions
+- Works with all Rust web frameworks (Axum, Actix-web)
+
+### Tests:
+- All 100 Rust ecosystem tests pass (2 new tests added for mockall)
+- Specific mockall test verifies proper dev-dependency configuration
+- Test for both tokio-test and mockall together confirms proper [dev-dependencies] section
+
+### Status: COMPLETE

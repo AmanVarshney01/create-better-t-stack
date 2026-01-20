@@ -133,6 +133,10 @@ argon2 = "0.5"
 # Testing
 tokio-test = "0.4"
 {{/if}}
+{{#if (includes rustLibraries "mockall")}}
+# Mocking
+mockall = "0.13"
+{{/if}}
 
 [profile.dev]
 opt-level = 0

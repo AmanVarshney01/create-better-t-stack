@@ -1599,6 +1599,58 @@ describe("Rust Ecosystem", () => {
       expect(serverCargoContent).toContain("tokio-test.workspace = true");
     });
 
+    it("should include mockall library as dev-dependency when selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-mockall-deps",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: ["mockall"],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain("mockall");
+
+      const serverCargoContent = getFileContent(root, "crates/server/Cargo.toml");
+      expect(serverCargoContent).toBeDefined();
+      expect(serverCargoContent).toContain("[dev-dependencies]");
+      expect(serverCargoContent).toContain("mockall.workspace = true");
+    });
+
+    it("should include both tokio-test and mockall as dev-dependencies when both are selected", async () => {
+      const result = await createVirtual({
+        projectName: "rust-test-libs",
+        ecosystem: "rust",
+        rustWebFramework: "axum",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: ["tokio-test", "mockall"],
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const cargoContent = getFileContent(root, "Cargo.toml");
+      expect(cargoContent).toBeDefined();
+      expect(cargoContent).toContain("tokio-test");
+      expect(cargoContent).toContain("mockall");
+
+      const serverCargoContent = getFileContent(root, "crates/server/Cargo.toml");
+      expect(serverCargoContent).toBeDefined();
+      expect(serverCargoContent).toContain("[dev-dependencies]");
+      expect(serverCargoContent).toContain("tokio-test.workspace = true");
+      expect(serverCargoContent).toContain("mockall.workspace = true");
+    });
+
     it("should include multiple libraries when selected", async () => {
       const result = await createVirtual({
         projectName: "rust-multi-libs",
