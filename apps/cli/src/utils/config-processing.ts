@@ -12,6 +12,7 @@ import type {
   DatabaseSetup,
   Effect,
   Email,
+  JobQueue,
   ORM,
   PackageManager,
   Payments,
@@ -86,6 +87,10 @@ export function processFlags(options: CLIInput, projectName?: string) {
 
   if (options.realtime !== undefined) {
     config.realtime = options.realtime as Realtime;
+  }
+
+  if (options.jobQueue !== undefined) {
+    config.jobQueue = options.jobQueue as JobQueue;
   }
 
   if (options.animation !== undefined) {

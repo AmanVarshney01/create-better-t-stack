@@ -189,6 +189,10 @@ export const RealtimeSchema = z
   .enum(["socket-io", "partykit", "ably", "pusher", "liveblocks", "yjs", "none"])
   .describe("Real-time/WebSocket solution");
 
+export const JobQueueSchema = z
+  .enum(["bullmq", "none"])
+  .describe("Job queue/background worker solution");
+
 export const AnimationSchema = z
   .enum(["framer-motion", "gsap", "react-spring", "auto-animate", "lottie", "none"])
   .describe("Animation library");
@@ -311,6 +315,7 @@ export const CreateInputSchema = z.object({
   uiLibrary: UILibrarySchema.optional(),
   validation: ValidationSchema.optional(),
   realtime: RealtimeSchema.optional(),
+  jobQueue: JobQueueSchema.optional(),
   animation: AnimationSchema.optional(),
   fileUpload: FileUploadSchema.optional(),
   logging: LoggingSchema.optional(),
@@ -369,6 +374,7 @@ export const ProjectConfigSchema = z.object({
   uiLibrary: UILibrarySchema,
   validation: ValidationSchema,
   realtime: RealtimeSchema,
+  jobQueue: JobQueueSchema,
   animation: AnimationSchema,
   fileUpload: FileUploadSchema,
   logging: LoggingSchema,
@@ -411,6 +417,7 @@ export const BetterTStackConfigSchema = z.object({
   uiLibrary: UILibrarySchema,
   validation: ValidationSchema,
   realtime: RealtimeSchema,
+  jobQueue: JobQueueSchema,
   animation: AnimationSchema,
   fileUpload: FileUploadSchema,
   logging: LoggingSchema,
@@ -473,6 +480,7 @@ export const CSS_FRAMEWORK_VALUES = CSSFrameworkSchema.options;
 export const UI_LIBRARY_VALUES = UILibrarySchema.options;
 export const VALIDATION_VALUES = ValidationSchema.options;
 export const REALTIME_VALUES = RealtimeSchema.options;
+export const JOB_QUEUE_VALUES = JobQueueSchema.options;
 export const ANIMATION_VALUES = AnimationSchema.options;
 export const FILE_UPLOAD_VALUES = FileUploadSchema.options;
 export const LOGGING_VALUES = LoggingSchema.options;

@@ -35,6 +35,7 @@ import type {
   UILibrarySchema,
   ValidationSchema,
   RealtimeSchema,
+  JobQueueSchema,
   AnimationSchema,
   FileUploadSchema,
   LoggingSchema,
@@ -77,6 +78,7 @@ export type CSSFramework = z.infer<typeof CSSFrameworkSchema>;
 export type UILibrary = z.infer<typeof UILibrarySchema>;
 export type Validation = z.infer<typeof ValidationSchema>;
 export type Realtime = z.infer<typeof RealtimeSchema>;
+export type JobQueue = z.infer<typeof JobQueueSchema>;
 export type Animation = z.infer<typeof AnimationSchema>;
 export type FileUpload = z.infer<typeof FileUploadSchema>;
 export type Logging = z.infer<typeof LoggingSchema>;

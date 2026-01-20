@@ -1459,6 +1459,24 @@ export const TECH_OPTIONS: Record<
       default: true,
     },
   ],
+  jobQueue: [
+    {
+      id: "bullmq",
+      name: "BullMQ",
+      description: "Redis-backed job queue for background tasks and scheduling",
+      icon: "https://cdn.simpleicons.org/redis/DC382D",
+      color: "from-red-500 to-red-700",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No Job Queue",
+      description: "Skip job queue/background worker setup",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
   animation: [
     {
       id: "framer-motion",
@@ -2087,6 +2105,7 @@ export type StackState = {
   validation: string;
   testing: string;
   realtime: string;
+  jobQueue: string;
   animation: string;
   cssFramework: string;
   uiLibrary: string;
@@ -2133,6 +2152,7 @@ export const DEFAULT_STACK: StackState = {
   validation: "zod",
   testing: "vitest",
   realtime: "none",
+  jobQueue: "none",
   animation: "none",
   cssFramework: "tailwind",
   uiLibrary: "shadcn-ui",

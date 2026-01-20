@@ -4628,3 +4628,64 @@ The argon2 crate was already implemented in the template generator and CLI tests
 - Compatible with all React-based frontends and native apps
 
 ### Status: COMPLETE
+
+=== BullMQ Implementation Progress (2026-01-20 15:22) ===
+
+Task: BullMQ - Redis-backed job queue
+Status: COMPLETED
+
+Changes Made:
+1. Schema Updates (packages/types/src/schemas.ts):
+   - Added JobQueueSchema with 'bullmq' and 'none' options
+   - Added jobQueue field to ProjectConfigSchema and BetterTStackConfigSchema
+   - Exported JOB_QUEUE_VALUES
+
+2. Type Updates (packages/types/src/types.ts):
+   - Added JobQueue type export
+
+3. Dependencies (packages/template-generator/src/utils/add-deps.ts):
+   - Added bullmq: "^5.34.8"
+   - Added ioredis: "^5.4.2"
+
+4. Processor (packages/template-generator/src/processors/job-queue-deps.ts):
+   - Created new processor for job queue dependencies
+   - Only adds deps when backend exists and is not convex
+
+5. Templates (packages/template-generator/templates/job-queue/bullmq/):
+   - Created server/base/src/lib/queue.ts.hbs - Queue configuration with Redis connection
+   - Created server/base/src/lib/workers.ts.hbs - Example email and notification workers
+
+6. Template Handler (packages/template-generator/src/template-handlers/job-queue.ts):
+   - Created handler to process job queue templates
+
+7. Generator Integration:
+   - Added processJobQueueDeps to processors/index.ts
+   - Added processJobQueueTemplates to template-handlers/index.ts
+   - Integrated into generator.ts
+
+8. Environment Variables (packages/template-generator/src/processors/env-vars.ts):
+   - Added REDIS_HOST, REDIS_PORT, REDIS_PASSWORD for BullMQ
+
+9. CLI Updates:
+   - Added JobQueueSchema to apps/cli/src/index.ts
+   - Added jobQueue to config-prompts.ts, constants.ts, command-handlers.ts
+   - Added to bts-config.ts and config-processing.ts
+
+10. Web UI Updates:
+    - Added jobQueue to TECH_OPTIONS in constant.ts
+    - Added to StackState type
+    - Added jobQueue URL key (jq) in stack-url-keys.ts
+    - Added to stack-search-schema.ts
+    - Added to stack-url-state.ts and stack-url-state.client.ts
+    - Added to routes/stack.tsx
+    - Added --job-queue flag to stack-utils.ts command builder
+
+11. Tests (apps/cli/test/job-queue.test.ts):
+    - BullMQ with different backends (Hono, Express, Fastify, Elysia, NestJS)
+    - BullMQ with fullstack frameworks (Next.js, TanStack Start)
+    - BullMQ with different frontends (TanStack Router, React Router, Svelte, Solid)
+    - BullMQ with database setups (PostgreSQL+Drizzle, SQLite+Prisma, MySQL+TypeORM)
+    - No job queue option test
+
+Tests: 15 passing
+

@@ -388,6 +388,10 @@ export const dependencyVersionMap = {
   "@y-sweet/sdk": "^0.6.3",
   "@y-sweet/react": "^0.6.3",
 
+  // Job Queues / Background Workers
+  bullmq: "^5.34.8",
+  ioredis: "^5.4.2",
+
   // Testing - Jest
   jest: "^29.7.0",
   "@types/jest": "^29.5.14",

@@ -33,6 +33,7 @@ export const DEFAULT_CONFIG_BASE = {
   testing: "vitest",
   ai: "none",
   realtime: "none",
+  jobQueue: "none",
   animation: "none",
   logging: "none",
   observability: "none",

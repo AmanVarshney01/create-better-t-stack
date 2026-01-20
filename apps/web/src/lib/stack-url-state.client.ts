@@ -36,6 +36,7 @@ function searchToStack(search: StackSearchParams | undefined): StackState {
     validation: search.val ?? DEFAULT_STACK.validation,
     testing: search.tst ?? DEFAULT_STACK.testing,
     realtime: search.rt2 ?? DEFAULT_STACK.realtime,
+    jobQueue: search.jq ?? DEFAULT_STACK.jobQueue,
     animation: search.anim ?? DEFAULT_STACK.animation,
     codeQuality: search.cq ?? DEFAULT_STACK.codeQuality,
     documentation: search.doc ?? DEFAULT_STACK.documentation,

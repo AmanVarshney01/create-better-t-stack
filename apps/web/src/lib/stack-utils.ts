@@ -140,6 +140,7 @@ export function generateStackCommand(stack: StackState) {
     `--file-upload ${stack.fileUpload}`,
     `--logging ${stack.logging}`,
     `--observability ${stack.observability}`,
+    `--job-queue ${stack.jobQueue}`,
     `--effect ${stack.backendLibraries}`,
     `--database ${stack.database}`,
     `--orm ${stack.orm}`,

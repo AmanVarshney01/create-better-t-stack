@@ -188,6 +188,7 @@ export async function gatherConfig(
     forms: flags.forms ?? "react-hook-form",
     testing: flags.testing ?? "vitest",
     realtime: flags.realtime ?? "none",
+    jobQueue: flags.jobQueue ?? "none",
     animation: flags.animation ?? "none",
     fileUpload: flags.fileUpload ?? "none",
     logging: flags.logging ?? "none",

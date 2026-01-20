@@ -404,6 +404,7 @@ function buildServerVars(
   fileUpload: ProjectConfig["fileUpload"],
   logging: ProjectConfig["logging"],
   observability: ProjectConfig["observability"],
+  jobQueue: ProjectConfig["jobQueue"],
 ): EnvVariable[] {
   const hasReactRouter = frontend.includes("react-router");
   const hasSvelte = frontend.includes("svelte");
@@ -727,6 +728,24 @@ function buildServerVars(
       condition: observability === "opentelemetry",
       comment: "OTLP exporter endpoint (Jaeger, OTEL Collector, Tempo, etc.)",
     },
+    {
+      key: "REDIS_HOST",
+      value: "localhost",
+      condition: jobQueue === "bullmq",
+      comment: "Redis host for BullMQ job queue",
+    },
+    {
+      key: "REDIS_PORT",
+      value: "6379",
+      condition: jobQueue === "bullmq",
+      comment: "Redis port for BullMQ job queue",
+    },
+    {
+      key: "REDIS_PASSWORD",
+      value: "",
+      condition: jobQueue === "bullmq",
+      comment: "Redis password (optional, leave empty for local development)",
+    },
   ];
 }
 
@@ -834,6 +853,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     fileUpload,
     logging,
     observability,
+    config.jobQueue,
   );
 
   if (backend === "self") {

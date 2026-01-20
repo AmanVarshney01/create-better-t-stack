@@ -123,6 +123,7 @@ export async function createProjectHandler(
             forms: "react-hook-form",
             testing: "vitest",
             realtime: "none",
+            jobQueue: "none",
             animation: "none",
             logging: "none",
             observability: "none",
