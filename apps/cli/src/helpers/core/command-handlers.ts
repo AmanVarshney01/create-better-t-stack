@@ -133,6 +133,8 @@ export async function createProjectHandler(
             rustApi: "none",
             rustCli: "none",
             rustLibraries: [],
+            cms: "none",
+            caching: "none",
           } satisfies ProjectConfig,
           reproducibleCommand: "",
           timeScaffolded,

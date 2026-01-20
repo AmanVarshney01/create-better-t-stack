@@ -26,6 +26,7 @@ export type TechCategory =
   | "validation"
   | "testing"
   | "realtime"
+  | "caching"
   | "animation"
   | "cssFramework"
   | "uiLibrary"

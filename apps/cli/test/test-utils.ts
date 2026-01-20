@@ -32,6 +32,7 @@ import type {
   Logging,
   Observability,
   CMS,
+  Caching,
 } from "../src/types";
 
 import { create } from "../src/index";
@@ -53,6 +54,7 @@ import {
   FileUploadSchema,
   LoggingSchema,
   ObservabilitySchema,
+  CachingSchema,
   FormsSchema,
   FrontendSchema,
   ORMSchema,
@@ -136,6 +138,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     "animation",
     "logging",
     "observability",
+    "caching",
     "cms",
   ];
   const hasSpecificCoreConfig = coreStackFlags.some((flag) => config[flag] !== undefined);
@@ -176,6 +179,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
         animation: "none" as Animation,
         logging: "none" as Logging,
         observability: "none" as Observability,
+        caching: "none" as Caching,
         cms: "none" as CMS,
       };
 
@@ -270,6 +274,7 @@ export const LOGGINGS = extractEnumValues(LoggingSchema);
 export const OBSERVABILITIES = extractEnumValues(ObservabilitySchema);
 export const AI_SDKS = extractEnumValues(AISchema);
 export const CMS_OPTIONS = extractEnumValues(CMSSchema);
+export const CACHINGS = extractEnumValues(CachingSchema);
 export const ECOSYSTEMS = extractEnumValues(EcosystemSchema);
 export const RUST_WEB_FRAMEWORKS = extractEnumValues(RustWebFrameworkSchema);
 export const RUST_FRONTENDS = extractEnumValues(RustFrontendSchema);

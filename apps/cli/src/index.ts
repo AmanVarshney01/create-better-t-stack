@@ -362,6 +362,8 @@ export async function createVirtual(
       animation: options.animation || "none",
       logging: options.logging || "none",
       observability: options.observability || "none",
+      cms: options.cms || "none",
+      caching: options.caching || "none",
       // Rust ecosystem options
       rustWebFramework: options.rustWebFramework || "none",
       rustFrontend: options.rustFrontend || "none",

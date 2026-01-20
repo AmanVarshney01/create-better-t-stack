@@ -42,6 +42,8 @@ export async function writeBtsConfig(projectConfig: ProjectConfig) {
     animation: projectConfig.animation,
     logging: projectConfig.logging,
     observability: projectConfig.observability,
+    cms: projectConfig.cms,
+    caching: projectConfig.caching,
     rustWebFramework: projectConfig.rustWebFramework,
     rustFrontend: projectConfig.rustFrontend,
     rustOrm: projectConfig.rustOrm,

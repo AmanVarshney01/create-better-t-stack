@@ -36,6 +36,7 @@ export const stackSearchSchema = z.object({
   tst: z.string().catch(DEFAULT_STACK.testing),
   rt2: z.string().catch(DEFAULT_STACK.realtime),
   jq: z.string().catch(DEFAULT_STACK.jobQueue),
+  cache: z.string().catch(DEFAULT_STACK.caching),
   anim: z.string().catch(DEFAULT_STACK.animation),
   cms: z.string().catch(DEFAULT_STACK.cms),
   cq: commaSeparatedArray(DEFAULT_STACK.codeQuality),

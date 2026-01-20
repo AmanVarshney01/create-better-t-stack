@@ -1501,6 +1501,24 @@ export const TECH_OPTIONS: Record<
       default: true,
     },
   ],
+  caching: [
+    {
+      id: "upstash-redis",
+      name: "Upstash Redis",
+      description: "Serverless Redis with REST API for edge and serverless",
+      icon: "https://cdn.simpleicons.org/upstash/00E9A3",
+      color: "from-emerald-500 to-teal-600",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No Caching",
+      description: "Skip caching layer setup",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
   animation: [
     {
       id: "framer-motion",
@@ -1908,6 +1926,7 @@ export const ECOSYSTEM_CATEGORIES: Record<Ecosystem, TechCategory[]> = {
     "fileUpload",
     "logging",
     "observability",
+    "caching",
     "ai",
     "cms",
     "codeQuality",
@@ -2165,6 +2184,7 @@ export type StackState = {
   testing: string;
   realtime: string;
   jobQueue: string;
+  caching: string;
   animation: string;
   cssFramework: string;
   uiLibrary: string;
@@ -2213,6 +2233,7 @@ export const DEFAULT_STACK: StackState = {
   testing: "vitest",
   realtime: "none",
   jobQueue: "none",
+  caching: "none",
   animation: "none",
   cssFramework: "tailwind",
   uiLibrary: "shadcn-ui",

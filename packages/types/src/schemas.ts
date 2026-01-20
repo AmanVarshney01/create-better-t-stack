@@ -197,6 +197,10 @@ export const CMSSchema = z
   .enum(["payload", "sanity", "strapi", "none"])
   .describe("Headless CMS solution");
 
+export const CachingSchema = z
+  .enum(["upstash-redis", "none"])
+  .describe("Caching solution (upstash-redis for serverless Redis)");
+
 export const AnimationSchema = z
   .enum(["framer-motion", "gsap", "react-spring", "auto-animate", "lottie", "none"])
   .describe("Animation library");
@@ -325,6 +329,7 @@ export const CreateInputSchema = z.object({
   logging: LoggingSchema.optional(),
   observability: ObservabilitySchema.optional(),
   cms: CMSSchema.optional(),
+  caching: CachingSchema.optional(),
   // Rust ecosystem options
   rustWebFramework: RustWebFrameworkSchema.optional(),
   rustFrontend: RustFrontendSchema.optional(),
@@ -385,6 +390,7 @@ export const ProjectConfigSchema = z.object({
   logging: LoggingSchema,
   observability: ObservabilitySchema,
   cms: CMSSchema,
+  caching: CachingSchema,
   // Rust ecosystem options
   rustWebFramework: RustWebFrameworkSchema,
   rustFrontend: RustFrontendSchema,
@@ -429,6 +435,7 @@ export const BetterTStackConfigSchema = z.object({
   logging: LoggingSchema,
   observability: ObservabilitySchema,
   cms: CMSSchema,
+  caching: CachingSchema,
   // Rust ecosystem options
   rustWebFramework: RustWebFrameworkSchema,
   rustFrontend: RustFrontendSchema,
@@ -493,6 +500,7 @@ export const FILE_UPLOAD_VALUES = FileUploadSchema.options;
 export const LOGGING_VALUES = LoggingSchema.options;
 export const OBSERVABILITY_VALUES = ObservabilitySchema.options;
 export const CMS_VALUES = CMSSchema.options;
+export const CACHING_VALUES = CachingSchema.options;
 export const ECOSYSTEM_VALUES = EcosystemSchema.options;
 export const RUST_WEB_FRAMEWORK_VALUES = RustWebFrameworkSchema.options;
 export const RUST_FRONTEND_VALUES = RustFrontendSchema.options;

@@ -30,6 +30,7 @@ export const stackUrlKeys: UrlKeys<
   testing: "tst",
   realtime: "rt2",
   jobQueue: "jq",
+  caching: "cache",
   animation: "anim",
   cms: "cms",
   codeQuality: "cq",

@@ -1,0 +1,230 @@
+import { Redis } from "@upstash/redis";
+
+/**
+ * Upstash Redis client for serverless caching
+ * @see https://upstash.com/docs/redis/overall/getstarted
+ */
+export const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
+
+/**
+ * Cache utilities for common caching patterns
+ */
+
+/**
+ * Get a cached value by key
+ */
+export async function cacheGet<T>(key: string): Promise<T | null> {
+  return redis.get<T>(key);
+}
+
+/**
+ * Set a cached value with optional TTL (in seconds)
+ */
+export async function cacheSet<T>(
+  key: string,
+  value: T,
+  options?: { ex?: number; px?: number; nx?: boolean; xx?: boolean }
+): Promise<"OK" | null> {
+  if (options?.ex) {
+    return redis.set(key, value, { ex: options.ex });
+  }
+  if (options?.px) {
+    return redis.set(key, value, { px: options.px });
+  }
+  if (options?.nx) {
+    return redis.set(key, value, { nx: true });
+  }
+  if (options?.xx) {
+    return redis.set(key, value, { xx: true });
+  }
+  return redis.set(key, value);
+}
+
+/**
+ * Delete a cached value
+ */
+export async function cacheDelete(key: string): Promise<number> {
+  return redis.del(key);
+}
+
+/**
+ * Delete multiple cached values
+ */
+export async function cacheDeleteMany(keys: string[]): Promise<number> {
+  if (keys.length === 0) return 0;
+  return redis.del(...keys);
+}
+
+/**
+ * Check if a key exists in cache
+ */
+export async function cacheExists(key: string): Promise<boolean> {
+  const result = await redis.exists(key);
+  return result === 1;
+}
+
+/**
+ * Set expiration time on a key (in seconds)
+ */
+export async function cacheExpire(key: string, seconds: number): Promise<boolean> {
+  const result = await redis.expire(key, seconds);
+  return result === 1;
+}
+
+/**
+ * Get remaining TTL of a key (in seconds)
+ * Returns -1 if key has no expiration, -2 if key doesn't exist
+ */
+export async function cacheTTL(key: string): Promise<number> {
+  return redis.ttl(key);
+}
+
+/**
+ * Increment a numeric value
+ */
+export async function cacheIncr(key: string): Promise<number> {
+  return redis.incr(key);
+}
+
+/**
+ * Increment a numeric value by amount
+ */
+export async function cacheIncrBy(key: string, amount: number): Promise<number> {
+  return redis.incrby(key, amount);
+}
+
+/**
+ * Decrement a numeric value
+ */
+export async function cacheDecr(key: string): Promise<number> {
+  return redis.decr(key);
+}
+
+/**
+ * Get or set pattern - retrieves from cache or executes function and caches result
+ */
+export async function cacheGetOrSet<T>(
+  key: string,
+  fn: () => Promise<T>,
+  ttlSeconds?: number
+): Promise<T> {
+  const cached = await cacheGet<T>(key);
+  if (cached !== null) {
+    return cached;
+  }
+
+  const value = await fn();
+  await cacheSet(key, value, ttlSeconds ? { ex: ttlSeconds } : undefined);
+  return value;
+}
+
+/**
+ * Hash operations - useful for storing objects
+ */
+export const cacheHash = {
+  async get<T>(key: string, field: string): Promise<T | null> {
+    return redis.hget<T>(key, field);
+  },
+
+  async getAll<T extends Record<string, unknown>>(key: string): Promise<T | null> {
+    return redis.hgetall<T>(key);
+  },
+
+  async set(key: string, field: string, value: unknown): Promise<number> {
+    return redis.hset(key, { [field]: value });
+  },
+
+  async setMultiple(key: string, values: Record<string, unknown>): Promise<number> {
+    return redis.hset(key, values);
+  },
+
+  async delete(key: string, ...fields: string[]): Promise<number> {
+    return redis.hdel(key, ...fields);
+  },
+
+  async exists(key: string, field: string): Promise<boolean> {
+    const result = await redis.hexists(key, field);
+    return result === 1;
+  },
+};
+
+/**
+ * List operations - useful for queues, recent items, etc.
+ */
+export const cacheList = {
+  async push(key: string, ...values: unknown[]): Promise<number> {
+    return redis.rpush(key, ...values);
+  },
+
+  async unshift(key: string, ...values: unknown[]): Promise<number> {
+    return redis.lpush(key, ...values);
+  },
+
+  async pop<T>(key: string): Promise<T | null> {
+    return redis.rpop<T>(key);
+  },
+
+  async shift<T>(key: string): Promise<T | null> {
+    return redis.lpop<T>(key);
+  },
+
+  async range<T>(key: string, start: number, stop: number): Promise<T[]> {
+    return redis.lrange<T>(key, start, stop);
+  },
+
+  async length(key: string): Promise<number> {
+    return redis.llen(key);
+  },
+
+  async trim(key: string, start: number, stop: number): Promise<"OK"> {
+    return redis.ltrim(key, start, stop);
+  },
+};
+
+/**
+ * Set operations - useful for unique collections, tags, etc.
+ */
+export const cacheSet_ = {
+  async add(key: string, ...members: unknown[]): Promise<number> {
+    return redis.sadd(key, ...members);
+  },
+
+  async remove(key: string, ...members: unknown[]): Promise<number> {
+    return redis.srem(key, ...members);
+  },
+
+  async members<T>(key: string): Promise<T[]> {
+    return redis.smembers<T>(key);
+  },
+
+  async isMember(key: string, member: unknown): Promise<boolean> {
+    const result = await redis.sismember(key, member);
+    return result === 1;
+  },
+
+  async size(key: string): Promise<number> {
+    return redis.scard(key);
+  },
+};
+
+/**
+ * JSON operations - for complex data structures
+ * Note: Requires Upstash Redis with JSON module enabled
+ */
+export const cacheJson = {
+  async get<T>(key: string, path = "$"): Promise<T | null> {
+    const result = await redis.json.get<T>(key, path);
+    return result;
+  },
+
+  async set(key: string, path: string, value: unknown): Promise<"OK" | null> {
+    return redis.json.set(key, path, value);
+  },
+
+  async delete(key: string, path = "$"): Promise<number> {
+    return redis.json.del(key, path);
+  },
+};

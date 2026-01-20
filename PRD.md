@@ -117,7 +117,7 @@
 
 ## **Caching**
 
-- [ ] **Upstash Redis** - Serverless Redis
+- [x] **Upstash Redis** - Serverless Redis
 
 ---
 

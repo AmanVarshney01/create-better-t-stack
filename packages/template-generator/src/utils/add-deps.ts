@@ -544,6 +544,9 @@ export const dependencyVersionMap = {
   // Headless CMS - Strapi
   "@strapi/client": "^1.2.1",
   qs: "^6.14.0",
+
+  // Caching - Upstash Redis
+  "@upstash/redis": "^1.34.3",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

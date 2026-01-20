@@ -405,6 +405,7 @@ function buildServerVars(
   logging: ProjectConfig["logging"],
   observability: ProjectConfig["observability"],
   jobQueue: ProjectConfig["jobQueue"],
+  caching: ProjectConfig["caching"],
 ): EnvVariable[] {
   const hasReactRouter = frontend.includes("react-router");
   const hasSvelte = frontend.includes("svelte");
@@ -788,6 +789,18 @@ function buildServerVars(
       condition: jobQueue === "temporal",
       comment: "Temporal task queue name (defaults to project name if not set)",
     },
+    {
+      key: "UPSTASH_REDIS_REST_URL",
+      value: "",
+      condition: caching === "upstash-redis",
+      comment: "Upstash Redis REST URL - get it at https://console.upstash.com",
+    },
+    {
+      key: "UPSTASH_REDIS_REST_TOKEN",
+      value: "",
+      condition: caching === "upstash-redis",
+      comment: "Upstash Redis REST token - get it at https://console.upstash.com",
+    },
   ];
 }
 
@@ -943,6 +956,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     logging,
     observability,
     config.jobQueue,
+    config.caching,
   );
 
   if (backend === "self") {

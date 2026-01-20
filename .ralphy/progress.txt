@@ -4965,3 +4965,47 @@ Tests: 15 passing
 - Strapi without Next.js (graceful skip)
 
 ### Status: COMPLETE
+
+## [2026-01-20] Upstash Redis Caching Support
+
+### Completed
+- Added Upstash Redis as a caching option to the TypeScript ecosystem
+- Created CachingSchema with "upstash-redis" and "none" options
+- Added @upstash/redis dependency (v1.34.3)
+- Created caching-deps.ts processor for dependency injection
+- Added UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN environment variables
+- Created comprehensive cache utility template with:
+  - Basic get/set/delete operations
+  - TTL support
+  - Get-or-set pattern for cache-aside
+  - Hash operations for storing objects
+  - List operations for queues/recent items
+  - Set operations for unique collections
+  - JSON operations for complex data
+- Added caching to web UI with "Upstash Redis" option
+- Added caching to StackState, URL state, and search schema
+- Added caching to CLI constants and defaults
+- Wrote 17 comprehensive tests covering various configurations
+- All tests passing
+
+### Files Modified
+- packages/types/src/schemas.ts - Added CachingSchema
+- packages/types/src/types.ts - Added Caching type
+- packages/template-generator/src/utils/add-deps.ts - Added @upstash/redis
+- packages/template-generator/src/processors/caching-deps.ts - New processor
+- packages/template-generator/src/processors/index.ts - Register processor
+- packages/template-generator/src/processors/env-vars.ts - Add env vars
+- packages/template-generator/templates/caching/upstash-redis/* - New templates
+- apps/web/src/lib/constant.ts - Added caching options
+- apps/web/src/lib/types.ts - Added caching category
+- apps/web/src/lib/stack-url-state.ts - Added caching to URL state
+- apps/web/src/lib/stack-url-state.client.ts - Added caching to client state
+- apps/web/src/lib/stack-url-keys.ts - Added caching URL key
+- apps/web/src/lib/stack-search-schema.ts - Added caching to search schema
+- apps/cli/src/constants.ts - Added caching default
+- apps/cli/src/helpers/core/command-handlers.ts - Added caching to config
+- apps/cli/src/index.ts - Added caching to createVirtual
+- apps/cli/src/prompts/config-prompts.ts - Added caching to gatherConfig
+- apps/cli/src/utils/bts-config.ts - Added caching to btsConfig
+- apps/cli/test/caching.test.ts - New test file
+- apps/cli/test/test-utils.ts - Added caching types
