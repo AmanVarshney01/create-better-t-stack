@@ -9,6 +9,11 @@ export default defineConfig({
   server: {
     port: 3333,
   },
+  build: {
+    rollupOptions: {
+      external: ["@jsonjoy.com/util/lib/buffers/Writer"],
+    },
+  },
   plugins: [
     tsconfigPaths({
       projects: ["./tsconfig.json"],
@@ -22,4 +27,8 @@ export default defineConfig({
     viteReact(),
     tailwindcss(),
   ],
+  // @ts-expect-error - nitro config at root level
+  nitro: {
+    preset: "vercel",
+  },
 });

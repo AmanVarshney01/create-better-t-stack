@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "tanstack-start",
+  "framework": null,
   "installCommand": "cd ../.. && bun install",
-  "buildCommand": "bun run build"
+  "buildCommand": "NODE_OPTIONS='--max-old-space-size=8192' bun run build",
+  "outputDirectory": ".vercel/output"
 }
