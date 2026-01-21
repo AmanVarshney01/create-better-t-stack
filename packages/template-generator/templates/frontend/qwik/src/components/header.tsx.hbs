@@ -34,21 +34,21 @@ export default component$(() => {
       </div>
       <hr class="border-gray-200 dark:border-gray-800" />
       {{else}}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem 1rem" }}>
-        <nav style={{ display: "flex", gap: "1rem", fontSize: "1.125rem" }}>
+      <div style=\{{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.5rem 1rem" }}>
+        <nav style=\{{ display: "flex", gap: "1rem", fontSize: "1.125rem" }}>
           {links.map((link) => (
             <Link key={link.href} href={link.href}>
               {link.label}
             </Link>
           ))}
         </nav>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <div style=\{{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           {{#if (eq auth "better-auth")}}
           {/* User menu component would go here */}
           {{/if}}
         </div>
       </div>
-      <hr style={{ borderColor: "var(--border-color)" }} />
+      <hr style=\{{ borderColor: "var(--border-color)" }} />
       {{/if}}
     </header>
   );
