@@ -51,7 +51,7 @@
   "dependencies": {
     "@better-fullstack/types": "^1.1.1",
     "handlebars": "^4.7.8",
-    "memfs": "^4.51.1",
+    "memfs": "4.55.0",
     "pathe": "^2.0.3",
     "ts-morph": "^27.0.2",
     "yaml": "^2.8.2"
