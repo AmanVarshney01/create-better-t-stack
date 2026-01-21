@@ -27,7 +27,6 @@ export default defineConfig({
     viteReact(),
     tailwindcss(),
   ],
-  // @ts-expect-error - nitro config at root level
   nitro: {
     preset: "vercel",
   },
