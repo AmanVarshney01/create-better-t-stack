@@ -2,6 +2,11 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "cd ../.. && bun install",
-  "buildCommand": "NODE_OPTIONS='--max-old-space-size=8192' bun run build",
-  "outputDirectory": ".vercel/output"
+  "buildCommand": "bun run build",
+  "outputDirectory": ".vercel/output",
+  "build": {
+    "env": {
+      "NODE_OPTIONS": "--max-old-space-size=7168"
+    }
+  }
 }

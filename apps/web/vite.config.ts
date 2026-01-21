@@ -10,6 +10,8 @@ export default defineConfig({
     port: 3333,
   },
   build: {
+    sourcemap: false,
+    minify: "esbuild",
     rollupOptions: {
       external: ["@jsonjoy.com/util/lib/buffers/Writer"],
     },
@@ -29,5 +31,7 @@ export default defineConfig({
   ],
   nitro: {
     preset: "vercel",
+    minify: true,
+    sourceMap: false,
   },
 });

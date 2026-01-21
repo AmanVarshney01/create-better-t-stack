@@ -96,3 +96,5 @@ jobs:
 
       - name: Build All Packages
         run: bun run build
+        env:
+          NODE_OPTIONS: "--max-old-space-size=6144"
