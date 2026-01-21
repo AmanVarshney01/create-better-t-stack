@@ -35,7 +35,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Marve10s/Better-Fullstack.git",
-    "directory": "packages/create-bts"
+    "directory": "packages/create-bfs"
   },
   "bin": {
     "create-bfs": "cli.js"
