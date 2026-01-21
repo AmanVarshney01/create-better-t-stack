@@ -1,5 +1,5 @@
 export default {
-  repo: "AmanVarshney01/create-better-t-stack",
+  repo: "Marve10s/Better-Fullstack",
   emoji: true,
   contributors: true,
 };
