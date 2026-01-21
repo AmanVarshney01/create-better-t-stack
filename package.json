@@ -15,6 +15,7 @@
     "build:web": "turbo run build --filter=web",
     "build:cli": "turbo run build --filter=create-better-fullstack",
     "lint": "turbo lint",
+    "test": "turbo test --filter=create-better-fullstack",
     "check": "oxfmt . && oxlint .",
     "prepare": "lefthook install",
     "release": "bun run scripts/release.ts",
