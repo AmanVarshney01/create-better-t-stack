@@ -656,6 +656,111 @@ git push origin main
 
 ---
 
+## Dependency Version Management
+
+The project includes automated dependency version checking to keep `dependencyVersionMap` in `add-deps.ts` up-to-date.
+
+### Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Shared Core Library                          │
+│  packages/template-generator/src/utils/dependency-checker.ts    │
+├─────────────────────────────────────────────────────────────────┤
+│  - fetchLatestVersions(packages)                                │
+│  - checkVersionExists(pkg, version)                             │
+│  - compareVersions(current, latest)                             │
+│  - groupByEcosystem(packages)                                   │
+│  - generateReport(outdated)                                     │
+└─────────────────────────────────────────────────────────────────┘
+            ▲                                    ▲
+            │                                    │
+┌───────────┴───────────┐          ┌────────────┴────────────┐
+│   GitHub Action        │          │   CLI Command           │
+│   .github/workflows/   │          │   apps/cli/src/         │
+│   deps-check.yaml      │          │   commands/update-deps  │
+├────────────────────────┤          ├─────────────────────────┤
+│  - Runs weekly (Mon)   │          │  --check (report only)  │
+│  - Creates PR if       │          │  --patch (safe updates) │
+│    updates found       │          │  --all (with review)    │
+│  - Posts summary       │          │  --ecosystem <name>     │
+└────────────────────────┘          └─────────────────────────┘
+```
+
+### CLI Commands
+
+```bash
+# Check for outdated dependencies (report only)
+bun run update-deps
+
+# Check specific ecosystem
+cd apps/cli && node dist/cli.mjs update-deps --check --ecosystem effect
+
+# Apply safe updates (patch/minor only)
+bun run update-deps:fix
+
+# Interactive mode - review each update
+cd apps/cli && node dist/cli.mjs update-deps --all
+
+# List available ecosystems
+cd apps/cli && node dist/cli.mjs update-deps --list-ecosystems
+
+# Check template version drift
+bun run sync-versions
+```
+
+### Supported Ecosystems
+
+25 ecosystem groups for organizing related packages:
+
+- `effect` - Effect ecosystem (23 packages)
+- `tanstack` - TanStack Query, Router, etc. (12 packages)
+- `prisma` - Prisma ORM and adapters (9 packages)
+- `drizzle` - Drizzle ORM (2 packages)
+- `clerk` - Clerk auth (4 packages)
+- `radix` - Radix UI primitives (10 packages)
+- `opentelemetry` - OpenTelemetry (7 packages)
+- `testing` - Vitest, Playwright, Jest (11 packages)
+- `storybook` - Storybook (8 packages)
+- `trpc`, `orpc`, `ts-rest` - API libraries
+- `angular`, `nestjs` - Angular ecosystem
+- `payload`, `redwood`, `convex` - Full-stack frameworks
+- `cloudflare` - Cloudflare Workers
+- And more...
+
+### GitHub Action
+
+The workflow `.github/workflows/deps-check.yaml`:
+
+- Runs automatically every Monday at 9am UTC
+- Can be manually triggered via workflow_dispatch
+- Creates PRs when updates are found
+- Supports ecosystem filtering and update modes
+
+### Template Version Sync
+
+Detects when hardcoded versions in `.hbs` template files drift from `dependencyVersionMap`:
+
+```bash
+# Check for mismatches
+bun run sync-versions
+
+# Auto-fix mismatches
+cd packages/template-generator && bun run sync-versions:fix
+```
+
+### Key Files
+
+| File                                                            | Purpose                       |
+| --------------------------------------------------------------- | ----------------------------- |
+| `packages/template-generator/src/utils/dependency-checker.ts`   | Core version checking library |
+| `apps/cli/src/commands/update-deps.ts`                          | CLI command handler           |
+| `.github/workflows/deps-check.yaml`                             | Weekly GitHub Action          |
+| `packages/template-generator/scripts/check-deps.ts`             | Script for CI                 |
+| `packages/template-generator/scripts/sync-template-versions.ts` | Template sync script          |
+
+---
+
 ## Ralph (Autonomous Agent Loop)
 
 This project includes Ralph for autonomous development. See `scripts/ralph/README.md`.

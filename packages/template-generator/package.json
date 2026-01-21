@@ -46,7 +46,11 @@
     "prepublishOnly": "bun run build",
     "dev": "tsdown --watch",
     "lint": "oxlint . && tsc --noEmit",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check-deps": "bun scripts/check-deps.ts",
+    "check-deps:fix": "bun scripts/check-deps.ts --apply-patch",
+    "sync-versions": "bun scripts/sync-template-versions.ts",
+    "sync-versions:fix": "bun scripts/sync-template-versions.ts --fix"
   },
   "dependencies": {
     "@better-fullstack/types": "^1.1.6",

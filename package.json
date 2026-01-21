@@ -25,7 +25,10 @@
     "deploy:convex": "turbo run --filter=@better-fullstack/backend deploy",
     "deploy:web": "bun run --filter=web deploy",
     "generate": "bun run --filter=web generate-schema",
-    "deploy": "bun run deploy:web"
+    "deploy": "bun run deploy:web",
+    "update-deps": "bun run --filter=@better-fullstack/template-generator check-deps",
+    "update-deps:fix": "bun run --filter=@better-fullstack/template-generator check-deps:fix",
+    "sync-versions": "bun run --filter=@better-fullstack/template-generator sync-versions"
   },
   "dependencies": {
     "@clack/prompts": "^0.11.0"

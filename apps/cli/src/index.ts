@@ -4,6 +4,7 @@ import pc from "picocolors";
 import { createCli } from "trpc-cli";
 import z from "zod";
 
+import { updateDepsHandler, showEcosystems } from "./commands/update-deps";
 import { createProjectHandler } from "./helpers/core/command-handlers";
 import {
   type Addons,
@@ -215,6 +216,32 @@ export const router = os.router({
       log.message(`Please visit ${BUILDER_URL}`);
     }
   }),
+  "update-deps": os
+    .meta({ description: "Check and update dependency versions in add-deps.ts" })
+    .input(
+      z.object({
+        check: z.boolean().default(false).describe("Report only, no changes"),
+        patch: z.boolean().default(false).describe("Apply patch/minor updates only"),
+        all: z.boolean().default(false).describe("Interactive mode for all updates"),
+        ecosystem: z
+          .string()
+          .optional()
+          .describe("Filter by ecosystem (effect, tanstack, prisma, etc.)"),
+        "list-ecosystems": z.boolean().default(false).describe("List available ecosystems"),
+      }),
+    )
+    .handler(async ({ input }) => {
+      if (input["list-ecosystems"]) {
+        showEcosystems();
+        return;
+      }
+      await updateDepsHandler({
+        check: input.check,
+        patch: input.patch,
+        all: input.all,
+        ecosystem: input.ecosystem,
+      });
+    }),
 });
 
 const caller = createRouterClient(router, { context: {} });
