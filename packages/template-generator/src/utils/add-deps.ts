@@ -323,7 +323,7 @@ export const dependencyVersionMap = {
   // React Aria (Adobe's accessible components for React)
   "react-aria-components": "^1.14.0",
 
-  daisyui: "^4.12.28",
+  daisyui: "^5.0.0",
 
   // Qwik
   "@builder.io/qwik": "^1.14.1",

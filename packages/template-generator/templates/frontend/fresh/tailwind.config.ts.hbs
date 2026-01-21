@@ -1,5 +1,8 @@
 {{#if (eq cssFramework "tailwind")}}
 import type { Config } from "tailwindcss";
+{{#if (eq uiLibrary "daisyui")}}
+import daisyui from "daisyui";
+{{/if}}
 
 export default {
   content: [
@@ -9,9 +12,7 @@ export default {
   theme: {
     extend: {},
   },
-  plugins: [{{#if (eq uiLibrary "daisyui")}}
-    require("daisyui"),
-  {{/if}}],
+  plugins: [{{#if (eq uiLibrary "daisyui")}}daisyui{{/if}}],
 {{#if (eq uiLibrary "daisyui")}}
   daisyui: {
     themes: ["dark", "light"],

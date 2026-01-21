@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 
+import { GitHubStats } from "@/components/github-stats";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export function Navbar() {
@@ -22,14 +23,7 @@ export function Navbar() {
 
         {/* Navigation Links */}
         <div className="flex items-center gap-4 sm:gap-6">
-          <a
-            href="https://github.com/Marve10s/Better-Fullstack"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground sm:block"
-          >
-            GitHub
-          </a>
+          <GitHubStats />
           <a
             href="https://www.npmjs.com/package/create-better-fullstack?activeTab=readme"
             target="_blank"
