@@ -1,6 +1,6 @@
 {
   "name": "@better-fullstack/types",
-  "version": "1.0.0",
+  "version": "1.0.0-canary.45467982",
   "description": "TypeScript types and schemas for create-better-fullstack CLI",
   "keywords": [
     "better-fullstack",
