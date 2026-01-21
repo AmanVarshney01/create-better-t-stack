@@ -26,13 +26,13 @@ export const customSearchItems: CustomSearchItem[] = [
   },
   {
     title: "GitHub Repository",
-    url: "https://github.com/AmanVarshney01/create-better-t-stack",
+    url: "https://github.com/Marve10s/Better-Fullstack",
     content: "GitHub",
     tags: ["github", "source", "code", "repository", "contribute", "star"],
   },
   {
     title: "NPM Package",
-    url: "https://www.npmjs.com/package/create-better-t-stack",
+    url: "https://www.npmjs.com/package/create-better-fullstack",
     content: "NPM",
     tags: ["npm", "package", "install", "cli", "tool"],
   },

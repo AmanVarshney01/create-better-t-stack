@@ -526,7 +526,7 @@ function generateDeploymentCommands(
 
   lines.push(
     "",
-    "For more details, see the guide on [Deploying to Cloudflare with Alchemy](https://www.better-t-stack.dev/docs/guides/cloudflare-alchemy).",
+    "For more details, see the guide on [Deploying to Cloudflare with Alchemy](https://better-fullstack-web.vercel.app/docs/guides/cloudflare-alchemy).",
   );
 
   return `${lines.join("\n")}\n`;

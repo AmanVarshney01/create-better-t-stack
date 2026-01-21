@@ -1,6 +1,6 @@
 import type { SponsorsData } from "./types";
 
-const SPONSORS_URL = "https://sponsors.better-t-stack.dev/sponsors.json";
+const SPONSORS_URL = "https://better-fullstack-web.vercel.app/sponsors.json";
 
 export async function fetchSponsors(): Promise<SponsorsData> {
   try {

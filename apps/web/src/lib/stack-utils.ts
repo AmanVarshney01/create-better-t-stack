@@ -93,9 +93,9 @@ export function generateStackCommand(stack: StackState) {
 
   // TypeScript ecosystem
   const packageManagerCommands = {
-    npm: "npx create-better-t-stack@latest",
-    pnpm: "pnpm create better-t-stack@latest",
-    default: "bun create better-t-stack@latest",
+    npm: "npx create-better-fullstack@latest",
+    pnpm: "pnpm create better-fullstack@latest",
+    default: "bun create better-fullstack@latest",
   };
 
   const base =
@@ -218,7 +218,7 @@ function generateRustCommand(stack: StackState, projectName: string) {
 }
 
 export function generateStackUrlFromState(stack: StackState, baseUrl?: string) {
-  const origin = baseUrl || "https://better-t-stack.dev";
+  const origin = baseUrl || "https://better-fullstack-web.vercel.app";
 
   const stackParams = new URLSearchParams();
   Object.entries(stackUrlKeys).forEach(([stackKey, urlKey]) => {
@@ -233,7 +233,7 @@ export function generateStackUrlFromState(stack: StackState, baseUrl?: string) {
 }
 
 export function generateStackSharingUrl(stack: StackState, baseUrl?: string) {
-  const origin = baseUrl || "https://better-t-stack.dev";
+  const origin = baseUrl || "https://better-fullstack-web.vercel.app";
 
   const stackParams = new URLSearchParams();
   Object.entries(stackUrlKeys).forEach(([stackKey, urlKey]) => {

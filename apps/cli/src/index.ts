@@ -188,7 +188,7 @@ export const router = os.router({
     }
   }),
   docs: os.meta({ description: "Open Better Fullstack documentation" }).handler(async () => {
-    const DOCS_URL = "https://better-t-stack.dev/docs";
+    const DOCS_URL = "https://better-fullstack-web.vercel.app/docs";
     try {
       await openUrl(DOCS_URL);
       log.success(pc.blue("Opened docs in your default browser."));
@@ -197,7 +197,7 @@ export const router = os.router({
     }
   }),
   builder: os.meta({ description: "Open the web-based stack builder" }).handler(async () => {
-    const BUILDER_URL = "https://better-t-stack.dev/new";
+    const BUILDER_URL = "https://better-fullstack-web.vercel.app/new";
     try {
       await openUrl(BUILDER_URL);
       log.success(pc.blue("Opened builder in your default browser."));
@@ -212,7 +212,7 @@ const caller = createRouterClient(router, { context: {} });
 export function createBtsCli() {
   return createCli({
     router,
-    name: "create-better-t-stack",
+    name: "create-better-fullstack",
     version: getLatestCLIVersion(),
   });
 }
@@ -223,7 +223,7 @@ export function createBtsCli() {
  *
  * @example
  * ```typescript
- * import { create } from "create-better-t-stack";
+ * import { create } from "create-better-fullstack";
  *
  * const result = await create("my-app", {
  *   frontend: ["tanstack-router"],
@@ -307,7 +307,7 @@ import {
  *
  * @example
  * ```typescript
- * import { createVirtual, EMBEDDED_TEMPLATES } from "create-better-t-stack";
+ * import { createVirtual, EMBEDDED_TEMPLATES } from "create-better-fullstack";
  *
  * const result = await createVirtual({
  *   frontend: ["tanstack-router"],

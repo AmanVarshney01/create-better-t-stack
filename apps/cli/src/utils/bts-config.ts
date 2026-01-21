@@ -53,7 +53,7 @@ export async function writeBtsConfig(projectConfig: ProjectConfig) {
   };
 
   const baseContent = {
-    $schema: "https://r2.better-t-stack.dev/schema.json",
+    $schema: "https://better-fullstack-web.vercel.app/schema.json",
     version: btsConfig.version,
     createdAt: btsConfig.createdAt,
     ecosystem: btsConfig.ecosystem,
@@ -104,7 +104,7 @@ export async function writeBtsConfig(projectConfig: ProjectConfig) {
 
   configContent = JSONC.applyEdits(configContent, formatResult);
 
-  const finalContent = `// Better-T-Stack configuration file
+  const finalContent = `// Better Fullstack configuration file
 // safe to delete
 
 ${configContent}`;

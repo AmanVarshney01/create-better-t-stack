@@ -8,9 +8,7 @@ const NpmPackage = () => {
   useEffect(() => {
     const getLatestVersion = async () => {
       try {
-        const res = await fetch(
-          "https://api.github.com/repos/AmanVarshney01/create-better-t-stack/releases",
-        );
+        const res = await fetch("https://api.github.com/repos/Marve10s/Better-Fullstack/releases");
         if (!res.ok) throw new Error("Failed to fetch version");
         const data = await res.json();
         const latestVersion = data[0].tag_name.replace(/^v/, "");

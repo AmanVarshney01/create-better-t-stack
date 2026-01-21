@@ -38,7 +38,7 @@ type SponsorEntry = {
   backers: Sponsor[];
 };
 
-export const SPONSORS_JSON_URL = "https://sponsors.better-t-stack.dev/sponsors.json";
+export const SPONSORS_JSON_URL = "https://better-fullstack-web.vercel.app/sponsors.json";
 
 export async function fetchSponsors(url: string = SPONSORS_JSON_URL) {
   const s = spinner();

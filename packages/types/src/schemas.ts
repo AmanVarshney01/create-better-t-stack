@@ -451,9 +451,9 @@ export const BetterTStackConfigFileSchema = z
   })
   .extend(BetterTStackConfigSchema.shape)
   .meta({
-    id: "https://r2.better-t-stack.dev/schema.json",
-    title: "Better-T-Stack Configuration",
-    description: "Configuration file for Better-T-Stack projects",
+    id: "https://better-fullstack-web.vercel.app/schema.json",
+    title: "Better Fullstack Configuration",
+    description: "Configuration file for Better Fullstack projects",
   });
 
 export const InitResultSchema = z.object({

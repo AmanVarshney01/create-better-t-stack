@@ -36,7 +36,7 @@ export function validateDatabaseOrmAuth(cfg: Partial<ProjectConfig>, flags?: Set
 
   if (has("orm") && has("database") && orm === "typeorm" && db === "mongodb") {
     exitWithError(
-      "TypeORM does not support MongoDB in Better-T-Stack. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
+      "TypeORM does not support MongoDB in Better Fullstack. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
     );
   }
 
@@ -48,7 +48,7 @@ export function validateDatabaseOrmAuth(cfg: Partial<ProjectConfig>, flags?: Set
 
   if (has("orm") && has("database") && orm === "mikroorm" && db === "mongodb") {
     exitWithError(
-      "MikroORM does not support MongoDB in Better-T-Stack. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
+      "MikroORM does not support MongoDB in Better Fullstack. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
     );
   }
 

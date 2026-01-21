@@ -80,7 +80,7 @@ describe("Database and ORM Combinations", () => {
       {
         database: "mongodb" as Database,
         orm: "typeorm" as ORM,
-        error: "TypeORM does not support MongoDB in Better-T-Stack",
+        error: "TypeORM does not support MongoDB in Better Fullstack",
       },
 
       // MongoDB with Kysely (not supported)
@@ -94,7 +94,7 @@ describe("Database and ORM Combinations", () => {
       {
         database: "mongodb" as Database,
         orm: "mikroorm" as ORM,
-        error: "MikroORM does not support MongoDB in Better-T-Stack",
+        error: "MikroORM does not support MongoDB in Better Fullstack",
       },
 
       // MongoDB with Sequelize (not supported)
