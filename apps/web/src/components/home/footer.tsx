@@ -1,51 +1,41 @@
-import { Github } from "lucide-react";
+"use client";
 
 export default function Footer() {
   return (
     <footer className="border-t border-border">
-      <div className="container mx-auto px-6 py-12">
-        <div className="flex flex-col items-center justify-between gap-8 sm:flex-row">
-          <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-8">
-            <span className="font-display text-sm font-semibold uppercase tracking-wider">
-              Better Fullstack
-            </span>
-            <span className="hidden h-4 w-px bg-border sm:block" />
-            <span className="text-sm text-muted-foreground">Type-safe TypeScript scaffolding</span>
-          </div>
-
-          <div className="flex items-center gap-6">
-            <a
-              href="https://github.com/Marve10s/Better-Fullstack"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground transition-colors hover:text-foreground"
-              aria-label="GitHub"
-            >
-              <Github className="h-5 w-5" />
-            </a>
-            <a
-              href="https://www.npmjs.com/package/create-better-t-stack"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-muted-foreground transition-colors hover:text-foreground"
-              aria-label="NPM"
-            >
-              <img
-                src="/icon/npm.svg"
-                alt="NPM"
-                width={20}
-                height={20}
-                className="opacity-60 transition-opacity hover:opacity-100 dark:invert"
-              />
-            </a>
-          </div>
+      <div className="mx-auto max-w-3xl px-4 py-12">
+        {/* Links */}
+        <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
+          <a
+            href="https://github.com/Marve10s/Better-Fullstack"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground transition-colors hover:text-foreground"
+          >
+            GitHub
+          </a>
+          <a
+            href="https://www.npmjs.com/package/create-better-fullstack?activeTab=readme"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-muted-foreground transition-colors hover:text-foreground"
+          >
+            npm
+          </a>
         </div>
 
-        <div className="mt-8 flex justify-center">
-          <p className="text-xs text-muted-foreground">
-            {new Date().getFullYear()} Better Fullstack
-          </p>
-        </div>
+        {/* Copyright */}
+        <p className="mt-8 text-center text-xs text-muted-foreground">
+          {new Date().getFullYear()} Better Fullstack · Built by{" "}
+          <a
+            href="https://elkamali.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground hover:underline"
+          >
+            Ibrahim Elkamali
+          </a>
+        </p>
       </div>
     </footer>
   );

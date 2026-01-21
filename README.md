@@ -1,50 +1,121 @@
 # Better Fullstack
 
-> **Note:** This project is a fork of [create-better-t-stack](https://github.com/AmanVarshney01/create-better-t-stack) created by [Aman Varshney](https://github.com/AmanVarshney01).
+A CLI-first toolkit for building Full Stack applications. Skip the configuration. Ship the code.
 
-A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations.
+**Website:** [better-fullstack-web.vercel.app](https://better-fullstack-web.vercel.app/)
 
-**Website:** [https://better-fullstack-web.vercel.app/](https://better-fullstack-web.vercel.app/)
+> Fork of [create-better-t-stack](https://github.com/AmanVarshney01/create-better-t-stack) by [Aman Varshney](https://github.com/AmanVarshney01)
 
 ## Quick Start
 
 ```bash
-# Using bun (recommended)
 bun create better-fullstack@latest
+```
 
-# Using pnpm
+```bash
 pnpm create better-fullstack@latest
+```
 
-# Using npm
+```bash
 npx create-better-fullstack@latest
 ```
 
-## Repository Structure
+## What You Get
 
-This repository is organized as a monorepo containing:
+Pick only what you need. Everything is optional.
 
-- **CLI**: [`apps/cli`](apps/cli) - The scaffolding CLI tool
-- **Website**: [`apps/web`](apps/web) - Official website
+### Frontend
+
+React (TanStack Router, React Router, TanStack Start), Next.js, Nuxt, SvelteKit, SolidStart, Astro, Qwik, Angular, RedwoodJS, Fresh, React Native (NativeWind, Unistyles)
+
+### Backend
+
+Hono, Express, Fastify, Elysia, feTS, NestJS, AdonisJS, Nitro, Encore, Convex
+
+### Database & ORM
+
+SQLite, PostgreSQL, MySQL, MongoDB with Drizzle, Prisma, TypeORM, Kysely, MikroORM, Sequelize, or Mongoose
+
+### API Layer
+
+tRPC, oRPC, ts-rest, Garph (GraphQL)
+
+### Auth & Payments
+
+Better Auth, Clerk, NextAuth | Polar, Stripe, Lemon Squeezy, Paddle, Dodo
+
+### AI SDKs
+
+Vercel AI, Mastra, VoltAgent, LangGraph, OpenAI Agents, Google ADK, ModelFusion, LangChain, LlamaIndex
+
+### State & Forms
+
+Zustand, Jotai, Redux Toolkit, XState, TanStack Store | TanStack Form, React Hook Form, Formik, Conform
+
+### Testing
+
+Vitest, Playwright, Jest, Cypress
+
+### Real-time & Jobs
+
+Socket.IO, PartyKit, Ably, Pusher, Liveblocks, Yjs | BullMQ, Trigger.dev, Inngest, Temporal
+
+### Email
+
+React Email, Resend, Nodemailer, Postmark, SendGrid, AWS SES, Mailgun, Plunk
+
+### UI & Styling
+
+Tailwind CSS, shadcn/ui, Radix UI, Headless UI, Chakra UI, Mantine, DaisyUI, NextUI, Park UI | Framer Motion, GSAP, React Spring
+
+### Tooling
+
+Turborepo, Biome, Oxlint, Husky, Lefthook, Storybook, MSW
+
+### Docs & Desktop
+
+Starlight, Fumadocs | Tauri, PWA, WXT (Browser Extensions)
+
+### Infra & Observability
+
+Turso, Neon, Supabase, PlanetScale, MongoDB Atlas, Cloudflare D1 | Upstash Redis, OpenTelemetry, Pino, Winston
+
+### Rust Ecosystem
+
+Axum, Actix Web | Leptos, Dioxus | SeaORM, SQLx | tonic (gRPC), async-graphql
+
+## Templates
+
+Start with a pre-configured stack:
+
+```bash
+bun create better-fullstack --template t3      # T3-style stack
+bun create better-fullstack --template mern    # MongoDB, Express, React, Node
+bun create better-fullstack --template pern    # PostgreSQL, Express, React, Node
+```
+
+## Flags
+
+```bash
+--yes          # Accept defaults
+--yolo         # Random configuration
+--no-git       # Skip git init
+--no-install   # Skip dependency installation
+```
 
 ## Development
 
 ```bash
-# Clone the repository
 git clone https://github.com/Marve10s/Better-Fullstack.git
-
-# Install dependencies
+cd Better-Fullstack
 bun install
-
-# Start CLI development
-bun dev:cli
-
-# Start website development
-bun dev:web
+bun dev:cli    # CLI development
+bun dev:web    # Website development
 ```
 
 ## Contributing
 
-Please read the [Contributing Guide](.github/CONTRIBUTING.md) first and open an issue before starting new features to ensure alignment with project goals.
+See [Contributing Guide](.github/CONTRIBUTING.md). Open an issue before starting new features.
 
 ## License
 

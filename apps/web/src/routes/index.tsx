@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import FeaturesSection from "@/components/home/features-section";
 import Footer from "@/components/home/footer";
 import HeroSection from "@/components/home/hero-section";
-import SponsorSection from "@/components/home/sponsor-section";
+import SponsorsSection from "@/components/home/sponsors-section";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -10,10 +11,14 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   return (
-    <main className="container mx-auto min-h-svh px-6">
-      <HeroSection />
-      <SponsorSection />
-      <Footer />
+    <main className="min-h-svh">
+      {/* Bordered layout container like OpenCode */}
+      <div className="mx-auto max-w-5xl border-x border-border">
+        <HeroSection />
+        <FeaturesSection />
+        <SponsorsSection />
+        <Footer />
+      </div>
     </main>
   );
 }

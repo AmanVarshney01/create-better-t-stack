@@ -1,7 +1,7 @@
 {
   "name": "create-bfs",
   "version": "1.0.0",
-  "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations (alias for create-better-fullstack)",
+  "description": "Alias for create-better-fullstack - A CLI-first toolkit for building Full Stack applications.",
   "keywords": [
     "better-auth",
     "better-fullstack",

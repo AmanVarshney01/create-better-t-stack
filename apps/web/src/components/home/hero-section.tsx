@@ -1,19 +1,19 @@
 "use client";
 
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Check, Copy } from "lucide-react";
+import { Check, Copy, ArrowRight } from "lucide-react";
 import { useState } from "react";
 
 import PackageIcon from "./icons";
 
 export default function HeroSection() {
+  const [selectedPM, setSelectedPM] = useState<"bun" | "pnpm" | "npm">("bun");
   const [copied, setCopied] = useState(false);
-  const [selectedPM, setSelectedPM] = useState<"npm" | "pnpm" | "bun">("bun");
 
   const commands = {
-    npm: "npx create-better-t-stack@latest",
-    pnpm: "pnpm create better-t-stack@latest",
-    bun: "bun create better-t-stack@latest",
+    npm: "npx create-better-fullstack@latest",
+    pnpm: "pnpm create better-fullstack@latest",
+    bun: "bun create better-fullstack@latest",
   };
 
   const copyCommand = () => {
@@ -23,96 +23,155 @@ export default function HeroSection() {
   };
 
   return (
-    <div className="relative flex min-h-[80vh] items-center py-24">
-      <div
-        className="absolute inset-0 opacity-[0.03] dark:opacity-[0.04]"
-        style={{
-          backgroundImage: `linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)`,
-          backgroundSize: "80px 80px",
-        }}
-      />
+    <div className="flex flex-col items-center px-4 pt-12 pb-8 sm:pt-16">
+      {/* Announcement Badge */}
+      <div className="mb-6 flex items-center gap-2 text-xs sm:mb-8 sm:text-sm">
+        <span className="rounded bg-foreground px-2 py-0.5 text-xs font-medium text-background">
+          Fork
+        </span>
+        <span className="text-muted-foreground">
+          Based on{" "}
+          <a
+            href="https://github.com/better-t-stack/create-better-t-stack"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-foreground underline-offset-4 hover:underline"
+          >
+            create-better-t-stack
+          </a>
+        </span>
+      </div>
 
-      <div className="relative z-10 grid w-full grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-20">
-        <div className="flex flex-col justify-center">
-          <h1 className="font-display text-6xl font-black uppercase leading-[0.9] tracking-tight sm:text-7xl lg:text-8xl">
-            <span className="block text-foreground">Better</span>
-            <span className="mt-2 inline-block border-2 border-foreground px-3 py-1 text-foreground">
-              Fullstack
-            </span>
-          </h1>
+      {/* Main Heading */}
+      <h1 className="max-w-3xl text-center font-mono text-2xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">
+        The full-stack app scaffolder
+      </h1>
 
-          <p className="mt-10 max-w-md text-lg leading-relaxed text-muted-foreground">
-            The Power of the Full Stack Builder in the Palm Of My Hand
-          </p>
+      {/* Description */}
+      <p className="mt-4 max-w-xl text-center text-sm text-muted-foreground sm:mt-6 sm:text-lg">
+        Production-ready templates with your choice of framework, database, auth, and more.
+      </p>
 
-          <div className="mt-10">
-            <Link
-              to="/new"
-              className="group inline-flex items-center gap-3 bg-foreground px-8 py-4 font-semibold uppercase tracking-wider text-background transition-all hover:bg-foreground/90"
+      {/* Package Manager Tabs */}
+      <div className="mt-8 w-full max-w-2xl sm:mt-10">
+        <div className="flex border-b border-border">
+          {(["bun", "pnpm", "npm"] as const).map((pm) => (
+            <button
+              key={pm}
+              type="button"
+              onClick={() => setSelectedPM(pm)}
+              className={`flex items-center gap-1.5 border-b-2 px-3 py-2 text-xs font-medium transition-colors sm:gap-2 sm:px-4 sm:text-sm ${
+                selectedPM === pm
+                  ? "border-foreground text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              }`}
             >
-              Start Building
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-          </div>
+              <PackageIcon pm={pm} className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              {pm}
+            </button>
+          ))}
         </div>
 
-        <div className="flex flex-col justify-center">
-          <div className="border border-border bg-card">
-            <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                Quick Start
-              </span>
-              <div className="flex items-center gap-2">
-                {(["bun", "pnpm", "npm"] as const).map((pm) => (
-                  <button
-                    key={pm}
-                    type="button"
-                    onClick={() => setSelectedPM(pm)}
-                    className={`flex items-center gap-1.5 px-2 py-1 text-xs font-medium uppercase tracking-wider transition-all ${
-                      selectedPM === pm
-                        ? "bg-foreground text-background"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <PackageIcon pm={pm} className="h-3 w-3" />
-                    {pm}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between px-6 py-6">
-              <code className="font-mono text-sm text-foreground">
-                <span className="text-muted-foreground">$</span> {commands[selectedPM]}
-              </code>
-              <button
-                type="button"
-                onClick={copyCommand}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-              </button>
-            </div>
+        {/* Command Box + Builder Button Row */}
+        <div className="mt-3 flex flex-col gap-2 sm:mt-4 sm:flex-row sm:items-stretch sm:gap-3">
+          <div className="flex flex-1 items-center justify-between rounded-lg border border-border bg-muted/30 px-3 py-2.5 sm:px-4 sm:py-3">
+            <code className="truncate font-mono text-xs sm:text-sm">{commands[selectedPM]}</code>
+            <button
+              type="button"
+              onClick={copyCommand}
+              className="ml-3 flex-shrink-0 text-muted-foreground transition-colors hover:text-foreground sm:ml-4"
+              aria-label="Copy command"
+            >
+              {copied ? (
+                <Check className="h-3.5 w-3.5 text-green-500 sm:h-4 sm:w-4" />
+              ) : (
+                <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              )}
+            </button>
           </div>
-
-          <div className="mt-6 flex items-center gap-4">
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-xs uppercase tracking-wider text-muted-foreground">or</span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-
           <Link
             to="/new"
-            className="group mt-6 flex items-center justify-between border border-border bg-card p-6 transition-all hover:border-foreground"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-foreground px-4 py-2.5 text-xs font-medium text-background transition-colors hover:bg-foreground/90 sm:gap-2 sm:px-5 sm:text-sm"
           >
-            <div>
-              <span className="font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                Interactive
-              </span>
-              <p className="mt-1 font-semibold text-foreground">Use the Stack Builder</p>
-            </div>
-            <ArrowRight className="h-5 w-5 text-muted-foreground transition-all group-hover:translate-x-1 group-hover:text-foreground" />
+            Builder
+            <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           </Link>
+        </div>
+      </div>
+
+      {/* Terminal Demo */}
+      <div className="mt-8 w-full max-w-4xl overflow-hidden rounded-xl border border-border bg-[#0a0a0a] shadow-2xl sm:mt-12">
+        {/* Terminal Header */}
+        <div className="flex items-center justify-between border-b border-white/10 px-3 py-2 sm:px-4 sm:py-3">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="h-2.5 w-2.5 rounded-full bg-[#ff5f57] sm:h-3 sm:w-3" />
+            <div className="h-2.5 w-2.5 rounded-full bg-[#febc2e] sm:h-3 sm:w-3" />
+            <div className="h-2.5 w-2.5 rounded-full bg-[#28c840] sm:h-3 sm:w-3" />
+          </div>
+          <span className="font-mono text-[10px] text-white/50 sm:text-xs">terminal</span>
+          <div className="w-[40px] sm:w-[52px]" />
+        </div>
+
+        {/* Terminal Content */}
+        <div className="overflow-x-auto p-4 font-mono text-xs sm:p-6 sm:text-sm">
+          {/* Mobile: Simple text logo */}
+          <div className="mb-4 block sm:hidden">
+            <span className="text-lg font-bold tracking-wider text-white">BETTER</span>
+            <span className="text-lg font-bold tracking-wider text-white/40"> FULLSTACK</span>
+          </div>
+
+          {/* Desktop: ASCII Logo */}
+          <div className="hidden leading-tight sm:block">
+            <pre className="text-[10px] text-white md:text-xs lg:text-sm">
+              {`  ██████╗ ███████╗████████╗████████╗███████╗██████╗
+  ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗
+  ██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝
+  ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗
+  ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║
+  ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝`}
+            </pre>
+            <pre className="text-[10px] text-white/40 md:text-xs lg:text-sm">
+              {`  ███████╗██╗   ██╗██╗     ██╗     ███████╗████████╗ █████╗  ██████╗██╗  ██╗
+  ██╔════╝██║   ██║██║     ██║     ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
+  █████╗  ██║   ██║██║     ██║     ███████╗   ██║   ███████║██║     █████╔╝
+  ██╔══╝  ██║   ██║██║     ██║     ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
+  ██║     ╚██████╔╝███████╗███████╗███████║   ██║   ██║  ██║╚██████╗██║  ██╗
+  ╚═╝      ╚═════╝ ╚══════╝╚══════╝╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝`}
+            </pre>
+          </div>
+
+          <div className="mt-4 space-y-1.5 text-white/70 sm:mt-6 sm:space-y-2">
+            <p>
+              <span className="text-green-400">❯</span>{" "}
+              <span className="text-white">{commands[selectedPM]}</span>
+            </p>
+            <p className="text-white/50">┌ create-better-fullstack</p>
+            <p className="text-white/50">│</p>
+            <p>
+              <span className="text-cyan-400">◆</span>{" "}
+              <span className="text-white/50">Project name:</span>{" "}
+              <span className="text-white">my-app</span>
+            </p>
+            <p>
+              <span className="text-cyan-400">◆</span>{" "}
+              <span className="text-white/50">Framework:</span>{" "}
+              <span className="text-white">Tanstack Start</span>
+            </p>
+            <p>
+              <span className="text-cyan-400">◆</span>{" "}
+              <span className="text-white/50">Database:</span>{" "}
+              <span className="text-white">PostgreSQL + Drizzle</span>
+            </p>
+            <p>
+              <span className="text-cyan-400">◆</span> <span className="text-white/50">Auth:</span>{" "}
+              <span className="text-white">Better Auth</span>
+            </p>
+            <p className="text-white/50">│</p>
+            <p>
+              <span className="text-green-400">✓</span>{" "}
+              <span className="text-white">Project created successfully!</span>
+            </p>
+          </div>
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 {
   "name": "create-better-fullstack",
   "version": "1.0.0",
-  "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
+  "description": "A CLI-first toolkit for building Full Stack applications. Skip the configuration. Ship the code.",
   "keywords": [
     "better-auth",
     "better-fullstack",
