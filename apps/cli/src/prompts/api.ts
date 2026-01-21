@@ -19,25 +19,35 @@ export async function getApiChoice(
   if (Api) {
     return allowed.includes(Api) ? Api : allowed[0];
   }
-  const apiOptions = allowed.map((a) =>
-    a === "trpc"
-      ? {
-          value: "trpc" as const,
-          label: "tRPC",
-          hint: "End-to-end typesafe APIs made easy",
-        }
-      : a === "orpc"
-        ? {
-            value: "orpc" as const,
-            label: "oRPC",
-            hint: "End-to-end type-safe APIs that adhere to OpenAPI standards",
-          }
-        : {
-            value: "none" as const,
-            label: "None",
-            hint: "No API layer (e.g. for full-stack frameworks like Next.js with Route Handlers)",
-          },
-  );
+  const apiOptionMap: Record<API, { value: API; label: string; hint: string }> = {
+    trpc: {
+      value: "trpc",
+      label: "tRPC",
+      hint: "End-to-end typesafe APIs made easy",
+    },
+    orpc: {
+      value: "orpc",
+      label: "oRPC",
+      hint: "End-to-end type-safe APIs that adhere to OpenAPI standards",
+    },
+    "ts-rest": {
+      value: "ts-rest",
+      label: "ts-rest",
+      hint: "RPC-like client, contract, and server implementation for REST APIs",
+    },
+    garph: {
+      value: "garph",
+      label: "Garph",
+      hint: "Fullstack GraphQL framework with end-to-end type safety",
+    },
+    none: {
+      value: "none",
+      label: "None",
+      hint: "No API layer (e.g. for full-stack frameworks like Next.js with Route Handlers)",
+    },
+  };
+
+  const apiOptions = allowed.map((a) => apiOptionMap[a as API]);
 
   const apiType = await navigableSelect<API>({
     message: "Select API type",

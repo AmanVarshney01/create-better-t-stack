@@ -70,16 +70,37 @@ export async function getAuthChoice(
     return response as Auth;
   }
 
+  // NextAuth only works with Next.js frontend and self backend
+  const hasNextJs = frontend?.includes("next");
+  const isSelfBackend = backend === "self";
+  const supportsNextAuth = hasNextJs && isSelfBackend;
+
+  const options = [
+    {
+      value: "better-auth",
+      label: "Better-Auth",
+      hint: "comprehensive auth framework for TypeScript",
+    },
+    {
+      value: "clerk",
+      label: "Clerk",
+      hint: "More than auth, Complete User Management",
+    },
+  ];
+
+  if (supportsNextAuth) {
+    options.push({
+      value: "nextauth",
+      label: "Auth.js (NextAuth)",
+      hint: "Authentication for Next.js (formerly NextAuth.js)",
+    });
+  }
+
+  options.push({ value: "none", label: "None", hint: "No authentication" });
+
   const response = await navigableSelect({
     message: "Select authentication provider",
-    options: [
-      {
-        value: "better-auth",
-        label: "Better-Auth",
-        hint: "comprehensive auth framework for TypeScript",
-      },
-      { value: "none", label: "None" },
-    ],
+    options,
     initialValue: DEFAULT_CONFIG.auth,
   });
 

@@ -91,6 +91,26 @@ export async function getFrontendChoice(
           label: "TanStack Start",
           hint: "SSR, Server Functions, API Routes and more with TanStack Router",
         },
+        {
+          value: "qwik" as const,
+          label: "Qwik",
+          hint: "Resumable framework with instant load times",
+        },
+        {
+          value: "angular" as const,
+          label: "Angular",
+          hint: "Enterprise-grade TypeScript framework by Google",
+        },
+        {
+          value: "redwood" as const,
+          label: "RedwoodJS",
+          hint: "Opinionated fullstack (React + GraphQL + Prisma)",
+        },
+        {
+          value: "fresh" as const,
+          label: "Fresh",
+          hint: "Deno-native framework with islands architecture",
+        },
       ];
 
       const webOptions = allWebOptions.filter((option) =>

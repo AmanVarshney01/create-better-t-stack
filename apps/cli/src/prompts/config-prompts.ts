@@ -11,6 +11,7 @@ import type {
   CSSFramework,
   Database,
   DatabaseSetup,
+  Ecosystem,
   Effect,
   Email,
   Examples,
@@ -25,6 +26,12 @@ import type {
   Payments,
   ProjectConfig,
   Realtime,
+  RustApi,
+  RustCli,
+  RustFrontend,
+  RustLibraries,
+  RustOrm,
+  RustWebFramework,
   Runtime,
   ServerDeploy,
   StateManagement,
@@ -48,6 +55,7 @@ import { getCMSChoice } from "./cms";
 import { getCSSFrameworkChoice } from "./css-framework";
 import { getDatabaseChoice } from "./database";
 import { getDBSetupChoice } from "./database-setup";
+import { getEcosystemChoice } from "./ecosystem";
 import { getEffectChoice } from "./effect";
 import { getEmailChoice } from "./email";
 import { getExamplesChoice } from "./examples";
@@ -65,6 +73,14 @@ import { getPackageManagerChoice } from "./package-manager";
 import { getPaymentsChoice } from "./payments";
 import { getRealtimeChoice } from "./realtime";
 import { getRuntimeChoice } from "./runtime";
+import {
+  getRustApiChoice,
+  getRustCliChoice,
+  getRustFrontendChoice,
+  getRustLibrariesChoice,
+  getRustOrmChoice,
+  getRustWebFrameworkChoice,
+} from "./rust-ecosystem";
 import { getServerDeploymentChoice } from "./server-deploy";
 import { getStateManagementChoice } from "./state-management";
 import { getTestingChoice } from "./testing";
@@ -73,6 +89,9 @@ import { getValidationChoice } from "./validation";
 import { getDeploymentChoice } from "./web-deploy";
 
 type PromptGroupResults = {
+  // Ecosystem choice first
+  ecosystem: Ecosystem;
+  // TypeScript ecosystem
   frontend: Frontend[];
   astroIntegration: AstroIntegration | undefined;
   uiLibrary: UILibrary;
@@ -91,7 +110,6 @@ type PromptGroupResults = {
   dbSetup: DatabaseSetup;
   webDeploy: WebDeploy;
   serverDeploy: ServerDeploy;
-  // New prompts
   ai: AI;
   validation: Validation;
   forms: Forms;
@@ -105,6 +123,13 @@ type PromptGroupResults = {
   observability: Observability;
   cms: CMS;
   caching: Caching;
+  // Rust ecosystem
+  rustWebFramework: RustWebFramework;
+  rustFrontend: RustFrontend;
+  rustOrm: RustOrm;
+  rustApi: RustApi;
+  rustCli: RustCli;
+  rustLibraries: RustLibraries[];
   // Keep at end
   git: boolean;
   packageManager: PackageManager;
@@ -119,90 +144,201 @@ export async function gatherConfig(
 ) {
   const result = await navigableGroup<PromptGroupResults>(
     {
-      frontend: () => getFrontendChoice(flags.frontend, flags.backend, flags.auth),
+      // Ecosystem choice first
+      ecosystem: () => getEcosystemChoice(flags.ecosystem),
+      // TypeScript ecosystem prompts (skip if Rust)
+      frontend: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve([] as Frontend[]);
+        return getFrontendChoice(flags.frontend, flags.backend, flags.auth);
+      },
       astroIntegration: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve(undefined);
         if (results.frontend?.includes("astro")) {
           return getAstroIntegrationChoice(flags.astroIntegration);
         }
         return Promise.resolve(undefined);
       },
       uiLibrary: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as UILibrary);
         if (hasWebStyling(results.frontend)) {
           return getUILibraryChoice(flags.uiLibrary, results.frontend);
         }
         return Promise.resolve("none" as UILibrary);
       },
       cssFramework: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as CSSFramework);
         if (hasWebStyling(results.frontend)) {
           return getCSSFrameworkChoice(flags.cssFramework, results.uiLibrary);
         }
         return Promise.resolve("none" as CSSFramework);
       },
-      backend: ({ results }) => getBackendFrameworkChoice(flags.backend, results.frontend),
-      runtime: ({ results }) => getRuntimeChoice(flags.runtime, results.backend),
-      database: ({ results }) =>
-        getDatabaseChoice(flags.database, results.backend, results.runtime),
-      orm: ({ results }) =>
-        getORMChoice(
+      backend: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as Backend);
+        return getBackendFrameworkChoice(flags.backend, results.frontend);
+      },
+      runtime: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as Runtime);
+        return getRuntimeChoice(flags.runtime, results.backend);
+      },
+      database: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as Database);
+        return getDatabaseChoice(flags.database, results.backend, results.runtime);
+      },
+      orm: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as ORM);
+        return getORMChoice(
           flags.orm,
           results.database !== "none",
           results.database,
           results.backend,
           results.runtime,
-        ),
-      api: ({ results }) =>
-        getApiChoice(
+        );
+      },
+      api: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as API);
+        return getApiChoice(
           flags.api,
           results.frontend,
           results.backend,
           results.astroIntegration,
-        ) as Promise<API>,
-      auth: ({ results }) => getAuthChoice(flags.auth, results.backend, results.frontend),
-      payments: ({ results }) =>
-        getPaymentsChoice(flags.payments, results.auth, results.backend, results.frontend),
-      email: ({ results }) => getEmailChoice(flags.email, results.backend),
-      effect: () => getEffectChoice(flags.effect),
-      addons: ({ results }) => getAddonsChoice(flags.addons, results.frontend, results.auth),
-      examples: ({ results }) =>
-        getExamplesChoice(
+        ) as Promise<API>;
+      },
+      auth: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as Auth);
+        return getAuthChoice(flags.auth, results.backend, results.frontend);
+      },
+      payments: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as Payments);
+        return getPaymentsChoice(flags.payments, results.auth, results.backend, results.frontend);
+      },
+      email: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as Email);
+        return getEmailChoice(flags.email, results.backend);
+      },
+      effect: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as Effect);
+        return getEffectChoice(flags.effect);
+      },
+      addons: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve([] as Addons[]);
+        return getAddonsChoice(flags.addons, results.frontend, results.auth);
+      },
+      examples: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve([] as Examples[]);
+        return getExamplesChoice(
           flags.examples,
           results.database,
           results.frontend,
           results.backend,
           results.api,
-        ) as Promise<Examples[]>,
-      dbSetup: ({ results }) =>
-        getDBSetupChoice(
+        ) as Promise<Examples[]>;
+      },
+      dbSetup: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as DatabaseSetup);
+        return getDBSetupChoice(
           results.database ?? "none",
           flags.dbSetup,
           results.orm,
           results.backend,
           results.runtime,
-        ),
-      webDeploy: ({ results }) =>
-        getDeploymentChoice(flags.webDeploy, results.runtime, results.backend, results.frontend),
-      serverDeploy: ({ results }) =>
-        getServerDeploymentChoice(
+        );
+      },
+      webDeploy: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as WebDeploy);
+        return getDeploymentChoice(
+          flags.webDeploy,
+          results.runtime,
+          results.backend,
+          results.frontend,
+        );
+      },
+      serverDeploy: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as ServerDeploy);
+        return getServerDeploymentChoice(
           flags.serverDeploy,
           results.runtime,
           results.backend,
           results.webDeploy,
-        ),
-      // New prompts
-      ai: () => getAIChoice(flags.ai),
-      validation: () => getValidationChoice(flags.validation),
-      forms: ({ results }) => getFormsChoice(flags.forms, results.frontend),
-      stateManagement: ({ results }) =>
-        getStateManagementChoice(flags.stateManagement, results.frontend),
-      animation: ({ results }) => getAnimationChoice(flags.animation, results.frontend),
-      testing: () => getTestingChoice(flags.testing),
-      realtime: ({ results }) => getRealtimeChoice(flags.realtime, results.backend),
-      jobQueue: ({ results }) => getJobQueueChoice(flags.jobQueue, results.backend),
-      fileUpload: ({ results }) => getFileUploadChoice(flags.fileUpload, results.backend),
-      logging: ({ results }) => getLoggingChoice(flags.logging, results.backend),
-      observability: ({ results }) => getObservabilityChoice(flags.observability, results.backend),
-      cms: ({ results }) => getCMSChoice(flags.cms, results.backend),
-      caching: ({ results }) => getCachingChoice(flags.caching, results.backend),
+        );
+      },
+      // TypeScript-specific prompts
+      ai: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as AI);
+        return getAIChoice(flags.ai);
+      },
+      validation: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as Validation);
+        return getValidationChoice(flags.validation);
+      },
+      forms: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as Forms);
+        return getFormsChoice(flags.forms, results.frontend);
+      },
+      stateManagement: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as StateManagement);
+        return getStateManagementChoice(flags.stateManagement, results.frontend);
+      },
+      animation: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as Animation);
+        return getAnimationChoice(flags.animation, results.frontend);
+      },
+      testing: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as Testing);
+        return getTestingChoice(flags.testing);
+      },
+      realtime: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as Realtime);
+        return getRealtimeChoice(flags.realtime, results.backend);
+      },
+      jobQueue: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as JobQueue);
+        return getJobQueueChoice(flags.jobQueue, results.backend);
+      },
+      fileUpload: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as FileUpload);
+        return getFileUploadChoice(flags.fileUpload, results.backend);
+      },
+      logging: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as Logging);
+        return getLoggingChoice(flags.logging, results.backend);
+      },
+      observability: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as Observability);
+        return getObservabilityChoice(flags.observability, results.backend);
+      },
+      cms: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as CMS);
+        return getCMSChoice(flags.cms, results.backend);
+      },
+      caching: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as Caching);
+        return getCachingChoice(flags.caching, results.backend);
+      },
+      // Rust ecosystem prompts (skip if TypeScript)
+      rustWebFramework: ({ results }) => {
+        if (results.ecosystem === "typescript") return Promise.resolve("none" as RustWebFramework);
+        return getRustWebFrameworkChoice(flags.rustWebFramework);
+      },
+      rustFrontend: ({ results }) => {
+        if (results.ecosystem === "typescript") return Promise.resolve("none" as RustFrontend);
+        return getRustFrontendChoice(flags.rustFrontend);
+      },
+      rustOrm: ({ results }) => {
+        if (results.ecosystem === "typescript") return Promise.resolve("none" as RustOrm);
+        return getRustOrmChoice(flags.rustOrm);
+      },
+      rustApi: ({ results }) => {
+        if (results.ecosystem === "typescript") return Promise.resolve("none" as RustApi);
+        return getRustApiChoice(flags.rustApi);
+      },
+      rustCli: ({ results }) => {
+        if (results.ecosystem === "typescript") return Promise.resolve("none" as RustCli);
+        return getRustCliChoice(flags.rustCli);
+      },
+      rustLibraries: ({ results }) => {
+        if (results.ecosystem === "typescript") return Promise.resolve([] as RustLibraries[]);
+        return getRustLibrariesChoice(flags.rustLibraries);
+      },
       // Keep at end
       git: () => getGitChoice(flags.git),
       packageManager: () => getPackageManagerChoice(flags.packageManager),
@@ -252,14 +388,14 @@ export async function gatherConfig(
     observability: result.observability,
     cms: result.cms,
     caching: result.caching,
-    // Ecosystem - defaults to TypeScript for the CLI prompts flow
-    ecosystem: flags.ecosystem ?? "typescript",
-    // Rust ecosystem options - use defaults (none) since prompts are for TypeScript
-    rustWebFramework: flags.rustWebFramework ?? "none",
-    rustFrontend: flags.rustFrontend ?? "none",
-    rustOrm: flags.rustOrm ?? "none",
-    rustApi: flags.rustApi ?? "none",
-    rustCli: flags.rustCli ?? "none",
-    rustLibraries: flags.rustLibraries ?? [],
+    // Ecosystem
+    ecosystem: result.ecosystem,
+    // Rust ecosystem options
+    rustWebFramework: result.rustWebFramework,
+    rustFrontend: result.rustFrontend,
+    rustOrm: result.rustOrm,
+    rustApi: result.rustApi,
+    rustCli: result.rustCli,
+    rustLibraries: result.rustLibraries,
   };
 }

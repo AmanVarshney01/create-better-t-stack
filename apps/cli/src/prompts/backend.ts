@@ -62,6 +62,26 @@ export async function getBackendFrameworkChoice(
       label: "feTS",
       hint: "TypeScript HTTP Framework with e2e type-safety",
     },
+    {
+      value: "nestjs" as const,
+      label: "NestJS",
+      hint: "Progressive Node.js framework for scalable applications",
+    },
+    {
+      value: "adonisjs" as const,
+      label: "AdonisJS",
+      hint: "Full-featured MVC framework for Node.js",
+    },
+    {
+      value: "nitro" as const,
+      label: "Nitro",
+      hint: "Universal server framework from UnJS",
+    },
+    {
+      value: "encore" as const,
+      label: "Encore",
+      hint: "Backend development platform with built-in infrastructure",
+    },
   );
 
   if (!hasIncompatibleFrontend) {

@@ -362,18 +362,26 @@ describe("CLI and Builder Sync", () => {
 describe("StackState and CLI Input Sync", () => {
   it("should have all StackState fields represented in CLI", () => {
     // Read the constant.ts to find StackState fields
-    const constantPath = join(
-      process.cwd(),
-      "..",
-      "..",
-      "apps",
-      "web",
-      "src",
-      "lib",
-      "constant.ts",
-    );
+    const possiblePaths = [
+      join(process.cwd(), "..", "web", "src", "lib", "constant.ts"),
+      join(process.cwd(), "..", "..", "apps", "web", "src", "lib", "constant.ts"),
+      join(process.cwd(), "apps", "web", "src", "lib", "constant.ts"),
+    ];
 
-    const content = readFileSync(constantPath, "utf-8");
+    let content = "";
+    for (const path of possiblePaths) {
+      try {
+        content = readFileSync(path, "utf-8");
+        break;
+      } catch {
+        continue;
+      }
+    }
+
+    if (!content) {
+      console.warn("Could not find constant.ts");
+      return;
+    }
 
     // Extract StackState type fields
     const stackStateMatch = content.match(/export type StackState\s*=\s*\{([^}]+)\}/);
@@ -409,4 +417,301 @@ describe("StackState and CLI Input Sync", () => {
     expect(fieldsToCheck.length).toBeGreaterThan(20);
     console.log(`StackState has ${fieldsToCheck.length} configuration fields (excluding basics)`);
   });
+});
+
+// Parse CLI prompt files to extract option values
+function parsePromptOptions(promptPath: string, functionName?: string): string[] {
+  try {
+    const content = readFileSync(promptPath, "utf-8");
+
+    let searchContent = content;
+
+    // If a function name is provided, only search within that function
+    if (functionName) {
+      const funcStart = content.indexOf(`function ${functionName}`);
+      if (funcStart === -1) {
+        return [];
+      }
+      // Find the end of this function (next export or function declaration)
+      const nextFunc = content.indexOf("\nexport", funcStart + 1);
+      const nextAsyncFunc = content.indexOf("\nasync function", funcStart + 50);
+      const endIndex = Math.min(
+        nextFunc > 0 ? nextFunc : content.length,
+        nextAsyncFunc > 0 ? nextAsyncFunc : content.length,
+      );
+      searchContent = content.slice(funcStart, endIndex);
+    }
+
+    // Extract all value: "xxx" patterns (with or without "as const")
+    const valueRegex = /value:\s*["']([^"']+)["']/g;
+    const values: string[] = [];
+    let match: RegExpExecArray | null;
+
+    // biome-ignore lint/suspicious/noAssignInExpressions: needed for regex iteration
+    while ((match = valueRegex.exec(searchContent)) !== null) {
+      values.push(match[1]);
+    }
+
+    return [...new Set(values)]; // Remove duplicates
+  } catch {
+    return [];
+  }
+}
+
+// Mapping from prompt file to schema values
+const PROMPT_SCHEMA_MAP: Record<
+  string,
+  { file: string; schema: readonly string[]; name: string; functionName?: string }
+> = {
+  frontend: {
+    file: "frontend.ts",
+    schema: FRONTEND_VALUES,
+    name: "FrontendSchema",
+  },
+  backend: {
+    file: "backend.ts",
+    schema: BACKEND_VALUES,
+    name: "BackendSchema",
+  },
+  ai: {
+    file: "ai.ts",
+    schema: AI_VALUES,
+    name: "AISchema",
+  },
+  animation: {
+    file: "animation.ts",
+    schema: ANIMATION_VALUES,
+    name: "AnimationSchema",
+  },
+  api: {
+    file: "api.ts",
+    schema: API_VALUES,
+    name: "APISchema",
+  },
+  auth: {
+    file: "auth.ts",
+    schema: AUTH_VALUES,
+    name: "AuthSchema",
+  },
+  caching: {
+    file: "caching.ts",
+    schema: CACHING_VALUES,
+    name: "CachingSchema",
+  },
+  cms: {
+    file: "cms.ts",
+    schema: CMS_VALUES,
+    name: "CMSSchema",
+  },
+  cssFramework: {
+    file: "css-framework.ts",
+    schema: CSS_FRAMEWORK_VALUES,
+    name: "CSSFrameworkSchema",
+  },
+  database: {
+    file: "database.ts",
+    schema: DATABASE_VALUES,
+    name: "DatabaseSchema",
+  },
+  dbSetup: {
+    file: "database-setup.ts",
+    schema: DATABASE_SETUP_VALUES,
+    name: "DatabaseSetupSchema",
+  },
+  email: {
+    file: "email.ts",
+    schema: EMAIL_VALUES,
+    name: "EmailSchema",
+  },
+  fileUpload: {
+    file: "file-upload.ts",
+    schema: FILE_UPLOAD_VALUES,
+    name: "FileUploadSchema",
+  },
+  forms: {
+    file: "forms.ts",
+    schema: FORMS_VALUES,
+    name: "FormsSchema",
+  },
+  jobQueue: {
+    file: "job-queue.ts",
+    schema: JOB_QUEUE_VALUES,
+    name: "JobQueueSchema",
+  },
+  logging: {
+    file: "logging.ts",
+    schema: LOGGING_VALUES,
+    name: "LoggingSchema",
+  },
+  observability: {
+    file: "observability.ts",
+    schema: OBSERVABILITY_VALUES,
+    name: "ObservabilitySchema",
+  },
+  orm: {
+    file: "orm.ts",
+    schema: ORM_VALUES,
+    name: "ORMSchema",
+  },
+  payments: {
+    file: "payments.ts",
+    schema: PAYMENTS_VALUES,
+    name: "PaymentsSchema",
+  },
+  realtime: {
+    file: "realtime.ts",
+    schema: REALTIME_VALUES,
+    name: "RealtimeSchema",
+  },
+  runtime: {
+    file: "runtime.ts",
+    schema: RUNTIME_VALUES,
+    name: "RuntimeSchema",
+  },
+  stateManagement: {
+    file: "state-management.ts",
+    schema: STATE_MANAGEMENT_VALUES,
+    name: "StateManagementSchema",
+  },
+  testing: {
+    file: "testing.ts",
+    schema: TESTING_VALUES,
+    name: "TestingSchema",
+  },
+  uiLibrary: {
+    file: "ui-library.ts",
+    schema: UI_LIBRARY_VALUES,
+    name: "UILibrarySchema",
+  },
+  validation: {
+    file: "validation.ts",
+    schema: VALIDATION_VALUES,
+    name: "ValidationSchema",
+  },
+  astroIntegration: {
+    file: "astro-integration.ts",
+    schema: ASTRO_INTEGRATION_VALUES,
+    name: "AstroIntegrationSchema",
+  },
+  rustWebFramework: {
+    file: "rust-ecosystem.ts",
+    schema: RUST_WEB_FRAMEWORK_VALUES,
+    name: "RustWebFrameworkSchema",
+    functionName: "getRustWebFrameworkChoice",
+  },
+  rustFrontend: {
+    file: "rust-ecosystem.ts",
+    schema: RUST_FRONTEND_VALUES,
+    name: "RustFrontendSchema",
+    functionName: "getRustFrontendChoice",
+  },
+  rustOrm: {
+    file: "rust-ecosystem.ts",
+    schema: RUST_ORM_VALUES,
+    name: "RustOrmSchema",
+    functionName: "getRustOrmChoice",
+  },
+  rustApi: {
+    file: "rust-ecosystem.ts",
+    schema: RUST_API_VALUES,
+    name: "RustApiSchema",
+    functionName: "getRustApiChoice",
+  },
+  rustCli: {
+    file: "rust-ecosystem.ts",
+    schema: RUST_CLI_VALUES,
+    name: "RustCliSchema",
+    functionName: "getRustCliChoice",
+  },
+};
+
+describe("CLI Prompts vs Schemas Sync", () => {
+  // Some options are intentionally excluded from interactive prompts
+  // but still valid in schema (for CLI flags)
+  const intentionallyExcludedFromPrompts: Record<string, string[]> = {
+    // "none" for frontend is handled by not selecting any option
+    frontend: ["none"],
+    // "self" is conditionally shown based on frontend choice
+    backend: [],
+    // Effect "effect-full" might not be shown interactively
+    effect: [],
+    // "none" for ORM is handled by the database selection
+    orm: ["none"],
+    // "none" for runtime is auto-selected when backend is convex/none/self
+    runtime: ["none"],
+  };
+
+  // Values that appear in prompts but are not schema values
+  // (e.g., category selectors, navigation options)
+  const nonSchemaPromptValues: Record<string, string[]> = {
+    // "web" and "native" are category selectors, not actual frontends
+    frontend: ["web", "native"],
+  };
+
+  for (const [category, config] of Object.entries(PROMPT_SCHEMA_MAP)) {
+    describe(`Prompt: ${category} (${config.file})`, () => {
+      const possiblePaths = [
+        join(process.cwd(), "src", "prompts", config.file),
+        join(process.cwd(), "..", "cli", "src", "prompts", config.file),
+        join(process.cwd(), "..", "..", "apps", "cli", "src", "prompts", config.file),
+      ];
+
+      let promptOptions: string[] = [];
+      for (const path of possiblePaths) {
+        promptOptions = parsePromptOptions(path, config.functionName);
+        if (promptOptions.length > 0) break;
+      }
+
+      it(`should show all ${config.name} options in the prompt`, () => {
+        if (promptOptions.length === 0) {
+          console.warn(`Could not parse ${config.file} - skipping`);
+          return;
+        }
+
+        const promptSet = new Set(promptOptions);
+        const excluded = intentionallyExcludedFromPrompts[category] || [];
+        const missingFromPrompt: string[] = [];
+
+        for (const schemaOption of config.schema) {
+          if (!promptSet.has(schemaOption) && !excluded.includes(schemaOption)) {
+            missingFromPrompt.push(schemaOption);
+          }
+        }
+
+        if (missingFromPrompt.length > 0) {
+          console.error(
+            `\n[${category}] Schema options NOT shown in prompt (${config.file}):\n  - ${missingFromPrompt.join("\n  - ")}`,
+          );
+          console.error(`\nFix: Add these options to apps/cli/src/prompts/${config.file}`);
+        }
+
+        expect(missingFromPrompt).toEqual([]);
+      });
+
+      it(`should only show valid ${config.name} options`, () => {
+        if (promptOptions.length === 0) {
+          return;
+        }
+
+        const schemaSet = new Set(config.schema);
+        const nonSchemaValues = nonSchemaPromptValues[category] || [];
+        const invalidOptions: string[] = [];
+
+        for (const promptOption of promptOptions) {
+          if (!schemaSet.has(promptOption) && !nonSchemaValues.includes(promptOption)) {
+            invalidOptions.push(promptOption);
+          }
+        }
+
+        if (invalidOptions.length > 0) {
+          console.error(
+            `\n[${category}] Prompt options NOT in schema:\n  - ${invalidOptions.join("\n  - ")}`,
+          );
+          console.error(`\nFix: Either add to packages/types/src/schemas.ts or remove from prompt`);
+        }
+
+        expect(invalidOptions).toEqual([]);
+      });
+    });
+  }
 });

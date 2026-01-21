@@ -29,6 +29,36 @@ export async function getEmailChoice(email?: Email, backend?: Backend) {
       hint: "Build emails using React components (no sending service).",
     },
     {
+      value: "nodemailer" as Email,
+      label: "Nodemailer",
+      hint: "Classic Node.js email sending library.",
+    },
+    {
+      value: "postmark" as Email,
+      label: "Postmark",
+      hint: "Transactional email service with high deliverability.",
+    },
+    {
+      value: "sendgrid" as Email,
+      label: "SendGrid",
+      hint: "Email delivery and marketing platform by Twilio.",
+    },
+    {
+      value: "aws-ses" as Email,
+      label: "AWS SES",
+      hint: "Amazon Simple Email Service for scalable email.",
+    },
+    {
+      value: "mailgun" as Email,
+      label: "Mailgun",
+      hint: "Email API service for sending and tracking emails.",
+    },
+    {
+      value: "plunk" as Email,
+      label: "Plunk",
+      hint: "Open-source email platform for developers.",
+    },
+    {
       value: "none" as Email,
       label: "None",
       hint: "No email integration",
