@@ -5,6 +5,7 @@ import type {
   Backend,
   Database,
   DatabaseSetup,
+  Ecosystem,
   Frontend,
   ORM,
   ProjectConfig,
@@ -31,7 +32,14 @@ export async function displayPostInstallInstructions(
     dbSetup,
     webDeploy,
     serverDeploy,
+    ecosystem,
   } = config;
+
+  // Handle Rust projects with different instructions
+  if (ecosystem === "rust") {
+    displayRustInstructions(config);
+    return;
+  }
 
   const isConvex = backend === "convex";
   const isBackendSelf = backend === "self";
@@ -422,4 +430,77 @@ function getAlchemyDeployInstructions(
   }
 
   return instructions.length ? `\n${instructions.join("\n")}` : "";
+}
+
+function displayRustInstructions(config: ProjectConfig & { depsInstalled: boolean }) {
+  const { relativePath, rustWebFramework, rustFrontend, rustOrm, rustApi, rustCli } = config;
+
+  const cdCmd = `cd ${relativePath}`;
+
+  let output = `${pc.bold("Next steps")}\n${pc.cyan("1.")} ${cdCmd}\n`;
+  let stepCounter = 2;
+
+  // Rust projects use cargo, not npm/pnpm/bun
+  output += `${pc.cyan(`${stepCounter++}.`)} cargo build\n`;
+  output += `${pc.cyan(`${stepCounter++}.`)} cargo run\n`;
+
+  output += `\n${pc.bold("Your Rust project includes:")}\n`;
+
+  if (rustWebFramework && rustWebFramework !== "none") {
+    const frameworkNames: Record<string, string> = {
+      actix: "Actix Web",
+      axum: "Axum",
+      rocket: "Rocket",
+    };
+    output += `${pc.cyan("•")} Web Framework: ${frameworkNames[rustWebFramework] || rustWebFramework}\n`;
+  }
+
+  if (rustFrontend && rustFrontend !== "none") {
+    const frontendNames: Record<string, string> = {
+      leptos: "Leptos",
+      dioxus: "Dioxus",
+      yew: "Yew",
+    };
+    output += `${pc.cyan("•")} Frontend: ${frontendNames[rustFrontend] || rustFrontend}\n`;
+  }
+
+  if (rustOrm && rustOrm !== "none") {
+    const ormNames: Record<string, string> = {
+      diesel: "Diesel",
+      sqlx: "SQLx",
+      "sea-orm": "SeaORM",
+    };
+    output += `${pc.cyan("•")} Database: ${ormNames[rustOrm] || rustOrm}\n`;
+  }
+
+  if (rustApi && rustApi !== "none") {
+    const apiNames: Record<string, string> = {
+      "async-graphql": "async-graphql",
+      juniper: "Juniper",
+    };
+    output += `${pc.cyan("•")} API: ${apiNames[rustApi] || rustApi}\n`;
+  }
+
+  if (rustCli && rustCli !== "none") {
+    const cliNames: Record<string, string> = {
+      clap: "Clap",
+      ratatui: "Ratatui",
+    };
+    output += `${pc.cyan("•")} CLI: ${cliNames[rustCli] || rustCli}\n`;
+  }
+
+  output += `\n${pc.bold("Common Cargo commands:")}\n`;
+  output += `${pc.cyan("•")} Build: cargo build\n`;
+  output += `${pc.cyan("•")} Run: cargo run\n`;
+  output += `${pc.cyan("•")} Test: cargo test\n`;
+  output += `${pc.cyan("•")} Check: cargo check\n`;
+  output += `${pc.cyan("•")} Format: cargo fmt\n`;
+  output += `${pc.cyan("•")} Lint: cargo clippy\n`;
+
+  output += `\n${pc.bold(
+    "Like Better Fullstack?",
+  )} Please consider giving us a star\n   on GitHub:\n`;
+  output += pc.cyan("https://github.com/Marve10s/Better-Fullstack");
+
+  consola.box(output);
 }

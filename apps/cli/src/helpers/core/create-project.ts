@@ -54,7 +54,8 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
 
     if (!isSilent()) log.success("Project template successfully scaffolded!");
 
-    if (options.install) {
+    // Skip npm/pnpm/bun install for Rust projects (they use cargo)
+    if (options.install && options.ecosystem !== "rust") {
       await installDependencies({
         projectDir,
         packageManager: options.packageManager,
