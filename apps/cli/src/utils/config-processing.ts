@@ -1,18 +1,26 @@
 import path from "node:path";
 
 import type {
+  AI,
   Animation,
   API,
   AstroIntegration,
   Auth,
   Backend,
+  Caching,
   CLIInput,
+  CMS,
   CSSFramework,
   Database,
   DatabaseSetup,
+  Ecosystem,
   Effect,
   Email,
+  FileUpload,
+  Forms,
   JobQueue,
+  Logging,
+  Observability,
   ORM,
   PackageManager,
   Payments,
@@ -21,6 +29,7 @@ import type {
   Runtime,
   ServerDeploy,
   StateManagement,
+  Testing,
   UILibrary,
   Validation,
   WebDeploy,
@@ -44,6 +53,10 @@ export function deriveProjectName(projectName?: string, projectDirectory?: strin
 
 export function processFlags(options: CLIInput, projectName?: string) {
   const config: Partial<ProjectConfig> = {};
+
+  if (options.ecosystem) {
+    config.ecosystem = options.ecosystem as Ecosystem;
+  }
 
   if (options.api) {
     config.api = options.api as API;
@@ -95,6 +108,38 @@ export function processFlags(options: CLIInput, projectName?: string) {
 
   if (options.animation !== undefined) {
     config.animation = options.animation as Animation;
+  }
+
+  if (options.ai !== undefined) {
+    config.ai = options.ai as AI;
+  }
+
+  if (options.forms !== undefined) {
+    config.forms = options.forms as Forms;
+  }
+
+  if (options.testing !== undefined) {
+    config.testing = options.testing as Testing;
+  }
+
+  if (options.logging !== undefined) {
+    config.logging = options.logging as Logging;
+  }
+
+  if (options.observability !== undefined) {
+    config.observability = options.observability as Observability;
+  }
+
+  if (options.cms !== undefined) {
+    config.cms = options.cms as CMS;
+  }
+
+  if (options.caching !== undefined) {
+    config.caching = options.caching as Caching;
+  }
+
+  if (options.fileUpload !== undefined) {
+    config.fileUpload = options.fileUpload as FileUpload;
   }
 
   if (options.git !== undefined) {

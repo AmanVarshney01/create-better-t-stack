@@ -33,6 +33,9 @@ import type {
   Observability,
   CMS,
   Caching,
+  Ecosystem,
+  AI,
+  JobQueue,
 } from "../src/types";
 
 import { create } from "../src/index";
@@ -111,6 +114,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
   // Determine if we should use --yes or not
   // Only core stack flags conflict with --yes flag (from CLI error message)
   const coreStackFlags: (keyof TestConfig)[] = [
+    "ecosystem",
     "database",
     "orm",
     "backend",
@@ -140,6 +144,8 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     "observability",
     "caching",
     "cms",
+    "ai",
+    "jobQueue",
   ];
   const hasSpecificCoreConfig = coreStackFlags.some((flag) => config[flag] !== undefined);
 
@@ -151,6 +157,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
   const coreStackDefaults = willUseYesFlag
     ? {}
     : {
+        ecosystem: "typescript" as Ecosystem,
         frontend: ["tanstack-router"] as Frontend[],
         backend: "hono" as Backend,
         runtime: "bun" as Runtime,
@@ -181,6 +188,8 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
         observability: "none" as Observability,
         caching: "none" as Caching,
         cms: "none" as CMS,
+        ai: "none" as AI,
+        jobQueue: "none" as JobQueue,
       };
 
   // Build options object - let the CLI handle all validation
@@ -194,6 +203,8 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     directoryConflict: "overwrite",
     disableAnalytics: true,
     yes: willUseYesFlag,
+    // Always provide ecosystem to avoid prompting (it's required for all tests)
+    ecosystem: config.ecosystem ?? ("typescript" as Ecosystem),
     ...coreStackDefaults,
     ...restConfig,
   };

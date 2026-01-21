@@ -11,6 +11,7 @@ import {
   AISchema,
   type API,
   APISchema,
+  AstroIntegrationSchema,
   type Auth,
   AuthSchema,
   type Backend,
@@ -136,6 +137,9 @@ export const router = os.router({
           cms: CMSSchema.optional().describe("Headless CMS solution"),
           caching: CachingSchema.optional().describe("Caching solution"),
           frontend: z.array(FrontendSchema).optional(),
+          astroIntegration: AstroIntegrationSchema.optional().describe(
+            "Astro UI framework integration (react, vue, svelte, solid)",
+          ),
           addons: z.array(AddonsSchema).optional(),
           examples: z.array(ExamplesSchema).optional(),
           git: z.boolean().optional(),

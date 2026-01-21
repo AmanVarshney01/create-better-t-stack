@@ -3,6 +3,7 @@ import type { ProjectConfig } from "@better-fullstack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { processAddonsDeps } from "./addons-deps";
+import { processAIDeps } from "./ai-deps";
 import { processAlchemyPlugins } from "./alchemy-plugins";
 import { processAnimationDeps } from "./animation-deps";
 import { processApiDeps } from "./api-deps";
@@ -51,6 +52,7 @@ export function processDependencies(vfs: VirtualFileSystem, config: ProjectConfi
   processDeployDeps(vfs, config);
   processAddonsDeps(vfs, config);
   processExamplesDeps(vfs, config);
+  processAIDeps(vfs, config);
   processEffectDeps(vfs, config);
   processStateManagementDeps(vfs, config);
   processFormsDeps(vfs, config);
@@ -69,6 +71,7 @@ export function processDependencies(vfs: VirtualFileSystem, config: ProjectConfi
 
 export {
   processAddonsDeps,
+  processAIDeps,
   processAnimationDeps,
   processApiDeps,
   processAuthDeps,

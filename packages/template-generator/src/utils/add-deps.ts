@@ -168,6 +168,12 @@ export const dependencyVersionMap = {
   // ModelFusion AI Library
   modelfusion: "^0.137.0",
 
+  // LangChain (standalone)
+  langchain: "^0.3.20",
+
+  // LlamaIndex
+  llamaindex: "^0.9.5",
+
   "@orpc/server": "^1.12.2",
   "@orpc/client": "^1.12.2",
   "@orpc/openapi": "^1.12.2",

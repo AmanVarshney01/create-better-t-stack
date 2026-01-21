@@ -715,3 +715,143 @@ describe("CLI Prompts vs Schemas Sync", () => {
     });
   }
 });
+
+// Mapping from schema name to expected CLI flag name
+const SCHEMA_TO_CLI_FLAG: Record<string, string> = {
+  // Core options
+  EcosystemSchema: "ecosystem",
+  DatabaseSchema: "database",
+  ORMSchema: "orm",
+  BackendSchema: "backend",
+  RuntimeSchema: "runtime",
+  FrontendSchema: "frontend",
+  AstroIntegrationSchema: "astroIntegration",
+  AddonsSchema: "addons",
+  ExamplesSchema: "examples",
+  PackageManagerSchema: "packageManager",
+  DatabaseSetupSchema: "dbSetup",
+  APISchema: "api",
+  AuthSchema: "auth",
+  PaymentsSchema: "payments",
+  WebDeploySchema: "webDeploy",
+  ServerDeploySchema: "serverDeploy",
+  DirectoryConflictSchema: "directoryConflict",
+  TemplateSchema: "template",
+  // Feature options
+  AISchema: "ai",
+  EffectSchema: "effect",
+  StateManagementSchema: "stateManagement",
+  FormsSchema: "forms",
+  ValidationSchema: "validation",
+  TestingSchema: "testing",
+  EmailSchema: "email",
+  CSSFrameworkSchema: "cssFramework",
+  UILibrarySchema: "uiLibrary",
+  RealtimeSchema: "realtime",
+  JobQueueSchema: "jobQueue",
+  AnimationSchema: "animation",
+  FileUploadSchema: "fileUpload",
+  LoggingSchema: "logging",
+  ObservabilitySchema: "observability",
+  CMSSchema: "cms",
+  CachingSchema: "caching",
+  // Rust ecosystem
+  RustWebFrameworkSchema: "rustWebFramework",
+  RustFrontendSchema: "rustFrontend",
+  RustOrmSchema: "rustOrm",
+  RustApiSchema: "rustApi",
+  RustCliSchema: "rustCli",
+  RustLibrariesSchema: "rustLibraries",
+};
+
+// Parse CLI router to extract flag names
+function parseCLIRouterFlags(): string[] {
+  const possiblePaths = [
+    join(process.cwd(), "src", "index.ts"),
+    join(process.cwd(), "..", "cli", "src", "index.ts"),
+    join(process.cwd(), "..", "..", "apps", "cli", "src", "index.ts"),
+  ];
+
+  let content = "";
+  for (const path of possiblePaths) {
+    try {
+      content = readFileSync(path, "utf-8");
+      break;
+    } catch {
+      continue;
+    }
+  }
+
+  if (!content) {
+    return [];
+  }
+
+  // Find the z.object({ ... }) section in the router
+  const routerStart = content.indexOf("z.object({");
+  if (routerStart === -1) return [];
+
+  // Find matching closing bracket
+  let bracketCount = 1;
+  let endIndex = routerStart + "z.object({".length;
+
+  for (let i = endIndex; i < content.length && bracketCount > 0; i++) {
+    if (content[i] === "{") bracketCount++;
+    if (content[i] === "}") bracketCount--;
+    endIndex = i;
+  }
+
+  const schemaContent = content.slice(routerStart, endIndex + 1);
+
+  // Extract all flag names (property names before :)
+  const flagRegex = /^\s*(\w+):\s*(?:z\.|[A-Z])/gm;
+  const flags: string[] = [];
+  let match: RegExpExecArray | null;
+
+  while ((match = flagRegex.exec(schemaContent)) !== null) {
+    flags.push(match[1]);
+  }
+
+  return [...new Set(flags)];
+}
+
+describe("CLI Router Flags vs Schemas Sync", () => {
+  const cliFlags = parseCLIRouterFlags();
+
+  it("should have parsed CLI router flags", () => {
+    expect(cliFlags.length).toBeGreaterThan(20);
+    console.log(`Found ${cliFlags.length} CLI flags in router`);
+  });
+
+  it("should have CLI flags for all schema types", () => {
+    const missingFlags: string[] = [];
+    const cliSet = new Set(cliFlags);
+
+    for (const [schemaName, expectedFlag] of Object.entries(SCHEMA_TO_CLI_FLAG)) {
+      if (!cliSet.has(expectedFlag)) {
+        missingFlags.push(
+          `${schemaName} -> --${expectedFlag.replace(/([A-Z])/g, "-$1").toLowerCase()}`,
+        );
+      }
+    }
+
+    if (missingFlags.length > 0) {
+      console.error(`\nSchema types missing CLI flags:\n  - ${missingFlags.join("\n  - ")}`);
+      console.error(`\nFix: Add the missing flags to apps/cli/src/index.ts in the router schema`);
+    }
+
+    expect(missingFlags).toEqual([]);
+  });
+
+  it("should have all expected flags documented", () => {
+    // List of flags that should exist
+    const requiredFlags = Object.values(SCHEMA_TO_CLI_FLAG);
+    const cliSet = new Set(cliFlags);
+    const missing = requiredFlags.filter((f) => !cliSet.has(f));
+
+    if (missing.length > 0) {
+      console.error(`\nRequired CLI flags missing:\n  - ${missing.join("\n  - ")}`);
+    }
+
+    expect(missing).toEqual([]);
+  });
+});
