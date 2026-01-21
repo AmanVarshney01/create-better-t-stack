@@ -1,6 +1,6 @@
 {
   "name": "create-bfs",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Alias for create-better-fullstack - A CLI-first toolkit for building Full Stack applications.",
   "keywords": [
     "better-auth",
@@ -65,6 +65,6 @@
     "lint": "oxlint ."
   },
   "dependencies": {
-    "create-better-fullstack": "^1.0.4"
+    "create-better-fullstack": "^1.0.5"
   }
 }
