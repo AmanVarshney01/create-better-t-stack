@@ -1,6 +1,6 @@
 {
   "name": "create-better-fullstack",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A CLI-first toolkit for building Full Stack applications. Skip the configuration. Ship the code.",
   "keywords": [
     "better-auth",

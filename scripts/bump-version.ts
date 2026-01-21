@@ -124,7 +124,7 @@ async function main(): Promise<void> {
 
   await $`bun install`;
   await $`bun run build:cli`;
-  await $`git add apps/cli/package.json packages/create-bts/package.json packages/types/package.json packages/template-generator/package.json bun.lock`;
+  await $`git add apps/cli/package.json packages/create-bfs/package.json packages/types/package.json packages/template-generator/package.json bun.lock`;
   await $`git commit -m "chore(release): ${newVersion}"`;
 
   // Push the release branch
