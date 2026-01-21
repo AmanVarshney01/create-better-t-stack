@@ -28,6 +28,21 @@ export async function getAIChoice(ai?: AI) {
       hint: "Graph-based agent orchestration with stateful workflows",
     },
     {
+      value: "openai-agents" as const,
+      label: "OpenAI Agents SDK",
+      hint: "Official multi-agent framework with handoffs and guardrails",
+    },
+    {
+      value: "google-adk" as const,
+      label: "Google ADK",
+      hint: "Code-first agent development kit for building AI agents",
+    },
+    {
+      value: "modelfusion" as const,
+      label: "ModelFusion",
+      hint: "Type-safe AI library for multi-provider text generation",
+    },
+    {
       value: "langchain" as const,
       label: "LangChain",
       hint: "Build context-aware reasoning applications",

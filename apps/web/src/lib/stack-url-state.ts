@@ -49,6 +49,7 @@ export function loadStackParams(
       observability: getString("observability", DEFAULT_STACK.observability),
       backendLibraries: getString("backendLibraries", DEFAULT_STACK.backendLibraries),
       stateManagement: getString("stateManagement", DEFAULT_STACK.stateManagement),
+      forms: getString("forms", DEFAULT_STACK.forms),
       validation: getString("validation", DEFAULT_STACK.validation),
       testing: getString("testing", DEFAULT_STACK.testing),
       realtime: getString("realtime", DEFAULT_STACK.realtime),
@@ -123,6 +124,7 @@ export function serializeStackParams(basePath: string, stack: StackState): strin
   addParam("observability", stack.observability);
   addParam("backendLibraries", stack.backendLibraries);
   addParam("stateManagement", stack.stateManagement);
+  addParam("forms", stack.forms);
   addParam("validation", stack.validation);
   addParam("testing", stack.testing);
   addParam("realtime", stack.realtime);

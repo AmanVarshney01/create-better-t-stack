@@ -140,6 +140,52 @@ Backend uses Convex for real-time data:
 4. **Follow existing patterns** - check similar files first
 5. **Small, focused components** - split large components
 
+## Adding New Libraries/Options (CLI + Builder Sync)
+
+**CRITICAL**: When adding ANY new library, option, or category, you MUST update BOTH the CLI AND the web Builder to keep them in sync.
+
+### CLI Updates (apps/cli/)
+
+1. **`packages/types/src/schemas.ts`** - Add Zod schema (e.g., `CMSSchema = z.enum([...])`)
+2. **`packages/types/src/index.ts`** - Export the new type
+3. **`apps/cli/src/index.ts`** - Add to router schema with `.optional().describe()`
+4. **`apps/cli/src/prompts/{category}.ts`** - Create interactive prompt file
+5. **`apps/cli/src/prompts/config-prompts.ts`** - Wire prompt in `navigableGroup` and return object
+
+### Builder Updates (apps/web/)
+
+1. **`src/lib/constant.ts`** - Add to `StackState` type, `DEFAULT_STACK`, and `TECH_OPTIONS`
+2. **`src/lib/stack-url-keys.ts`** - Add short URL key mapping (e.g., `forms: "frm"`)
+3. **`src/lib/stack-search-schema.ts`** - Add to Zod schema
+4. **`src/lib/stack-url-state.ts`** - Add to `parseSync` return object and `serializeStackParams`
+5. **`src/lib/stack-url-state.client.ts`** - Add to `searchToStack` function
+6. **`src/lib/stack-utils.ts`** - Add to `generateStackCommand` flags and `TYPESCRIPT_CATEGORY_ORDER`
+
+### Verification
+
+```bash
+# Test CLI
+cd apps/cli && bun run build
+bun run apps/cli/src/cli.ts --help  # Verify new flag appears
+bun run apps/cli/src/cli.ts         # Test interactive prompts
+
+# Test Builder
+cd apps/web && bun run build        # Ensure no TypeScript errors
+
+# IMPORTANT: Run the sync test to catch missing options
+cd apps/cli && bun test cli-builder-sync
+```
+
+### Automated Sync Test
+
+The `apps/cli/test/cli-builder-sync.test.ts` test automatically verifies that:
+
+- All Builder options exist in the CLI schemas
+- All CLI options exist in the Builder (or are intentionally excluded)
+- No new categories are missing from the mapping
+
+**Always run this test after adding new libraries/options!**
+
 ## Gotchas
 
 - Always use `bun` commands, not `npm` or `yarn`
@@ -148,6 +194,7 @@ Backend uses Convex for real-time data:
 - Route files must export `Route` using `createFileRoute`
 - Convex functions must be in `packages/backend/convex/`
 - The website uses TailwindCSS v4 (different syntax from v3)
+- **CLI and Builder must stay in sync** - see "Adding New Libraries" section above
 
 ## Migration Status
 
@@ -158,6 +205,81 @@ The website is being migrated from Next.js to TanStack Start:
 - [ ] Full page migrations
 - [ ] Server functions migration
 - [ ] Convex integration in routes
+
+## Publishing to NPM
+
+The project publishes 4 packages to npm:
+
+- `create-better-fullstack` - Main CLI package
+- `create-bfs` - Alias package (runs create-better-fullstack)
+- `@better-fullstack/types` - Shared TypeScript types
+- `@better-fullstack/template-generator` - Template generation logic
+
+### Release Process (Automated)
+
+**Simply run:**
+
+```bash
+bun run bump
+```
+
+This interactive script will:
+
+1. Ask for version type (patch/minor/major) or custom version
+2. Create a release branch `release/v{version}`
+3. Update all 4 package.json files with the new version
+4. Build the CLI to verify it works
+5. Commit changes and push the branch
+6. Create a PR automatically via GitHub CLI
+7. Optionally enable auto-merge
+
+**After the PR is merged to main:**
+
+- GitHub Actions automatically detects `chore(release):` commit message
+- Creates a git tag `v{version}`
+- Creates a GitHub Release with changelog
+- Publishes all 4 packages to npm in the correct order
+
+### Version Guidelines
+
+- **Patch** (1.0.5 → 1.0.6): Bug fixes, dependency updates, small improvements
+- **Minor** (1.0.5 → 1.1.0): New features, new CLI options, new libraries added
+- **Major** (1.0.5 → 2.0.0): Breaking changes (changed CLI flags, removed options)
+
+### Manual Steps (if needed)
+
+If the bump script fails or you need manual control:
+
+```bash
+# 1. Make sure you're on main with clean working directory
+git checkout main
+git pull origin main
+git status  # should be clean
+
+# 2. Update versions in all package.json files:
+#    - apps/cli/package.json
+#    - packages/create-bfs/package.json (also update dependency version)
+#    - packages/types/package.json
+#    - packages/template-generator/package.json (also update @better-fullstack/types dependency)
+
+# 3. Build and test
+bun install
+bun run build:cli
+bun run apps/cli/src/cli.ts --help  # verify it works
+
+# 4. Commit with the magic commit message format
+git add -A
+git commit -m "chore(release): 1.0.6"
+
+# 5. Push to main (or create PR)
+git push origin main
+```
+
+### Troubleshooting
+
+- **"Version already exists"**: The release workflow skips if version is already on npm
+- **PR checks failing**: Fix issues, push to the release branch, wait for checks
+- **npm publish fails**: Check `NPM_TOKEN` secret in GitHub repo settings
 
 ## Ralph (Autonomous Agent Loop)
 

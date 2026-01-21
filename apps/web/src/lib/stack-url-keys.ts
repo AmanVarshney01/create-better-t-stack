@@ -23,6 +23,7 @@ export const stackUrlKeys: Record<keyof StackState, string> = {
   observability: "obs",
   backendLibraries: "bl",
   stateManagement: "sm",
+  forms: "frm",
   validation: "val",
   testing: "tst",
   realtime: "rt2",

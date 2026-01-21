@@ -24,14 +24,15 @@ export default defineConfig({
     tanstackStart({
       srcDirectory: "src",
     }),
-    nitro() as PluginOption,
+    nitro({
+      config: {
+        preset: "vercel",
+        minify: true,
+        sourceMap: false,
+      },
+    }) as PluginOption,
     // React's vite plugin must come after TanStack Start's plugin
     viteReact(),
     tailwindcss(),
   ],
-  nitro: {
-    preset: "vercel",
-    minify: true,
-    sourceMap: false,
-  },
 });

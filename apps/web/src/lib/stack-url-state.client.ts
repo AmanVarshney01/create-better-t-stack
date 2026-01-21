@@ -33,6 +33,7 @@ function searchToStack(search: StackSearchParams | undefined): StackState {
     observability: search.obs ?? DEFAULT_STACK.observability,
     backendLibraries: search.bl ?? DEFAULT_STACK.backendLibraries,
     stateManagement: search.sm ?? DEFAULT_STACK.stateManagement,
+    forms: search.frm ?? DEFAULT_STACK.forms,
     validation: search.val ?? DEFAULT_STACK.validation,
     testing: search.tst ?? DEFAULT_STACK.testing,
     realtime: search.rt2 ?? DEFAULT_STACK.realtime,

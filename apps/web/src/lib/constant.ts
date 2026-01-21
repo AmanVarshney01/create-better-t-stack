@@ -1371,7 +1371,7 @@ export const TECH_OPTIONS: Record<
       id: "openai-agents",
       name: "OpenAI Agents SDK",
       description: "Official multi-agent framework with handoffs and guardrails",
-      icon: "https://cdn.simpleicons.org/openai/412991",
+      icon: "/icon/openai.svg",
       color: "from-emerald-500 to-teal-600",
       default: false,
     },
@@ -1391,6 +1391,23 @@ export const TECH_OPTIONS: Record<
       color: "from-gray-600 to-gray-800",
       default: false,
       className: "invert-0 dark:invert",
+    },
+    {
+      id: "langchain",
+      name: "LangChain",
+      description: "Build context-aware reasoning applications",
+      icon: "https://cdn.simpleicons.org/langchain/1C3C3C",
+      color: "from-green-500 to-emerald-700",
+      default: false,
+      className: "invert-0 dark:invert",
+    },
+    {
+      id: "llamaindex",
+      name: "LlamaIndex",
+      description: "Data framework for LLM applications",
+      icon: "",
+      color: "from-purple-500 to-violet-700",
+      default: false,
     },
     {
       id: "none",
@@ -1439,7 +1456,7 @@ export const TECH_OPTIONS: Record<
       id: "liveblocks",
       name: "Liveblocks",
       description: "Collaboration infrastructure for multiplayer experiences",
-      icon: "https://cdn.simpleicons.org/liveblocks/6366F1",
+      icon: "/icon/liveblocks.svg",
       color: "from-indigo-500 to-purple-600",
       default: false,
     },
@@ -1577,7 +1594,7 @@ export const TECH_OPTIONS: Record<
       id: "auto-animate",
       name: "Auto Animate",
       description: "Zero-config, drop-in animation utility",
-      icon: "https://cdn.simpleicons.org/formkit/00DC82",
+      icon: "/icon/auto-animate.svg",
       color: "from-green-400 to-emerald-600",
       default: false,
     },
@@ -1620,7 +1637,7 @@ export const TECH_OPTIONS: Record<
       id: "playwright",
       name: "Playwright",
       description: "End-to-end testing framework by Microsoft",
-      icon: "https://cdn.simpleicons.org/playwright/2EAD33",
+      icon: "/icon/playwright.svg",
       color: "from-emerald-400 to-emerald-600",
       default: false,
     },
@@ -2209,6 +2226,7 @@ export type StackState = {
   observability: string;
   backendLibraries: string;
   stateManagement: string;
+  forms: string;
   validation: string;
   testing: string;
   realtime: string;
@@ -2258,6 +2276,7 @@ export const DEFAULT_STACK: StackState = {
   observability: "none",
   backendLibraries: "none",
   stateManagement: "none",
+  forms: "react-hook-form",
   validation: "zod",
   testing: "vitest",
   realtime: "none",

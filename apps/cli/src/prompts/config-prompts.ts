@@ -1,49 +1,75 @@
 import type {
   Addons,
+  AI,
+  Animation,
   API,
   AstroIntegration,
   Auth,
   Backend,
+  Caching,
+  CMS,
   CSSFramework,
   Database,
   DatabaseSetup,
   Effect,
   Email,
   Examples,
+  FileUpload,
+  Forms,
   Frontend,
+  JobQueue,
+  Logging,
+  Observability,
   ORM,
   PackageManager,
   Payments,
   ProjectConfig,
+  Realtime,
   Runtime,
   ServerDeploy,
+  StateManagement,
+  Testing,
   UILibrary,
+  Validation,
   WebDeploy,
 } from "../types";
 
 import { hasWebStyling } from "../utils/compatibility-rules";
 import { exitCancelled } from "../utils/errors";
 import { getAddonsChoice } from "./addons";
+import { getAIChoice } from "./ai";
+import { getAnimationChoice } from "./animation";
 import { getApiChoice } from "./api";
 import { getAstroIntegrationChoice } from "./astro-integration";
 import { getAuthChoice } from "./auth";
 import { getBackendFrameworkChoice } from "./backend";
+import { getCachingChoice } from "./caching";
+import { getCMSChoice } from "./cms";
 import { getCSSFrameworkChoice } from "./css-framework";
 import { getDatabaseChoice } from "./database";
 import { getDBSetupChoice } from "./database-setup";
 import { getEffectChoice } from "./effect";
 import { getEmailChoice } from "./email";
 import { getExamplesChoice } from "./examples";
+import { getFileUploadChoice } from "./file-upload";
+import { getFormsChoice } from "./forms";
 import { getFrontendChoice } from "./frontend";
 import { getGitChoice } from "./git";
 import { getinstallChoice } from "./install";
+import { getJobQueueChoice } from "./job-queue";
+import { getLoggingChoice } from "./logging";
 import { navigableGroup } from "./navigable-group";
+import { getObservabilityChoice } from "./observability";
 import { getORMChoice } from "./orm";
 import { getPackageManagerChoice } from "./package-manager";
 import { getPaymentsChoice } from "./payments";
+import { getRealtimeChoice } from "./realtime";
 import { getRuntimeChoice } from "./runtime";
 import { getServerDeploymentChoice } from "./server-deploy";
+import { getStateManagementChoice } from "./state-management";
+import { getTestingChoice } from "./testing";
 import { getUILibraryChoice } from "./ui-library";
+import { getValidationChoice } from "./validation";
 import { getDeploymentChoice } from "./web-deploy";
 
 type PromptGroupResults = {
@@ -63,11 +89,26 @@ type PromptGroupResults = {
   addons: Addons[];
   examples: Examples[];
   dbSetup: DatabaseSetup;
+  webDeploy: WebDeploy;
+  serverDeploy: ServerDeploy;
+  // New prompts
+  ai: AI;
+  validation: Validation;
+  forms: Forms;
+  stateManagement: StateManagement;
+  animation: Animation;
+  testing: Testing;
+  realtime: Realtime;
+  jobQueue: JobQueue;
+  fileUpload: FileUpload;
+  logging: Logging;
+  observability: Observability;
+  cms: CMS;
+  caching: Caching;
+  // Keep at end
   git: boolean;
   packageManager: PackageManager;
   install: boolean;
-  webDeploy: WebDeploy;
-  serverDeploy: ServerDeploy;
 };
 
 export async function gatherConfig(
@@ -147,6 +188,22 @@ export async function gatherConfig(
           results.backend,
           results.webDeploy,
         ),
+      // New prompts
+      ai: () => getAIChoice(flags.ai),
+      validation: () => getValidationChoice(flags.validation),
+      forms: ({ results }) => getFormsChoice(flags.forms, results.frontend),
+      stateManagement: ({ results }) =>
+        getStateManagementChoice(flags.stateManagement, results.frontend),
+      animation: ({ results }) => getAnimationChoice(flags.animation, results.frontend),
+      testing: () => getTestingChoice(flags.testing),
+      realtime: ({ results }) => getRealtimeChoice(flags.realtime, results.backend),
+      jobQueue: ({ results }) => getJobQueueChoice(flags.jobQueue, results.backend),
+      fileUpload: ({ results }) => getFileUploadChoice(flags.fileUpload, results.backend),
+      logging: ({ results }) => getLoggingChoice(flags.logging, results.backend),
+      observability: ({ results }) => getObservabilityChoice(flags.observability, results.backend),
+      cms: ({ results }) => getCMSChoice(flags.cms, results.backend),
+      caching: ({ results }) => getCachingChoice(flags.caching, results.backend),
+      // Keep at end
       git: () => getGitChoice(flags.git),
       packageManager: () => getPackageManagerChoice(flags.packageManager),
       install: () => getinstallChoice(flags.install),
@@ -181,20 +238,20 @@ export async function gatherConfig(
     api: result.api,
     webDeploy: result.webDeploy,
     serverDeploy: result.serverDeploy,
-    // These fields don't have prompts yet, use defaults
-    ai: flags.ai ?? "none",
-    stateManagement: flags.stateManagement ?? "none",
-    validation: flags.validation ?? "zod",
-    forms: flags.forms ?? "react-hook-form",
-    testing: flags.testing ?? "vitest",
-    realtime: flags.realtime ?? "none",
-    jobQueue: flags.jobQueue ?? "none",
-    animation: flags.animation ?? "none",
-    fileUpload: flags.fileUpload ?? "none",
-    logging: flags.logging ?? "none",
-    observability: flags.observability ?? "none",
-    cms: flags.cms ?? "none",
-    caching: flags.caching ?? "none",
+    // New prompts
+    ai: result.ai,
+    stateManagement: result.stateManagement,
+    validation: result.validation,
+    forms: result.forms,
+    testing: result.testing,
+    realtime: result.realtime,
+    jobQueue: result.jobQueue,
+    animation: result.animation,
+    fileUpload: result.fileUpload,
+    logging: result.logging,
+    observability: result.observability,
+    cms: result.cms,
+    caching: result.caching,
     // Ecosystem - defaults to TypeScript for the CLI prompts flow
     ecosystem: flags.ecosystem ?? "typescript",
     // Rust ecosystem options - use defaults (none) since prompts are for TypeScript
