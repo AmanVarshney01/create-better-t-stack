@@ -1,44 +1,43 @@
+import { Result } from "better-result";
 import path from "node:path";
 
 import { ProjectNameSchema } from "../types";
-import { exitWithError } from "./errors";
+import { ValidationError } from "./errors";
 
-export function validateProjectName(name: string) {
+type ValidationResult<T> = Result<T, ValidationError>;
+
+export function validateProjectName(name: string): ValidationResult<void> {
   const result = ProjectNameSchema.safeParse(name);
   if (!result.success) {
-    exitWithError(
-      `Invalid project name: ${result.error.issues[0]?.message || "Invalid project name"}`,
+    return Result.err(
+      new ValidationError({
+        field: "projectName",
+        value: name,
+        message: `Invalid project name: ${result.error.issues[0]?.message || "Invalid project name"}`,
+      }),
     );
   }
-}
-
-export function validateProjectNameThrow(name: string) {
-  const result = ProjectNameSchema.safeParse(name);
-  if (!result.success) {
-    throw new Error(`Invalid project name: ${result.error.issues[0]?.message}`);
-  }
+  return Result.ok(undefined);
 }
 
 export function extractAndValidateProjectName(
   projectName?: string,
   projectDirectory?: string,
-  throwOnError = false,
-) {
+): ValidationResult<string> {
   const derivedName =
     projectName ||
     (projectDirectory ? path.basename(path.resolve(process.cwd(), projectDirectory)) : "");
 
   if (!derivedName) {
-    return "";
+    return Result.ok("");
   }
 
   const nameToValidate = projectName ? path.basename(projectName) : derivedName;
 
-  if (throwOnError) {
-    validateProjectNameThrow(nameToValidate);
-  } else {
-    validateProjectName(nameToValidate);
+  const validationResult = validateProjectName(nameToValidate);
+  if (validationResult.isErr()) {
+    return Result.err(validationResult.error);
   }
 
-  return projectName || derivedName;
+  return Result.ok(projectName || derivedName);
 }

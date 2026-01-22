@@ -6,7 +6,7 @@ import pc from "picocolors";
 
 import { DEFAULT_CONFIG } from "../constants";
 import { ProjectNameSchema } from "../types";
-import { exitCancelled } from "../utils/errors";
+import { UserCancelledError } from "../utils/errors";
 
 function isPathWithinCwd(targetPath: string) {
   const resolved = path.resolve(targetPath);
@@ -24,7 +24,7 @@ function validateDirectoryName(name: string) {
   return undefined;
 }
 
-export async function getProjectName(initialName?: string) {
+export async function getProjectName(initialName?: string): Promise<string> {
   if (initialName) {
     if (initialName === ".") {
       return initialName;
@@ -77,7 +77,9 @@ export async function getProjectName(initialName?: string) {
       },
     });
 
-    if (isCancel(response)) return exitCancelled("Operation cancelled.");
+    if (isCancel(response)) {
+      throw new UserCancelledError({ message: "Operation cancelled." });
+    }
 
     projectPath = response || defaultName;
     isValid = true;

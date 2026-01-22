@@ -1,9 +1,13 @@
+import { Result } from "better-result";
+import consola from "consola";
 import fs from "fs-extra";
 import path from "node:path";
+import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 
 import { addPackageDependency } from "../../utils/add-package-deps";
+import { UserCancelledError } from "../../utils/errors";
 import { setupFumadocs } from "./fumadocs-setup";
 import { setupOxlint } from "./oxlint-setup";
 import { setupRuler } from "./ruler-setup";
@@ -12,6 +16,21 @@ import { setupTauri } from "./tauri-setup";
 import { setupTui } from "./tui-setup";
 import { setupUltracite } from "./ultracite-setup";
 import { setupWxt } from "./wxt-setup";
+
+// Helper to run setup and handle Result
+async function runSetup<T>(
+  setupFn: () => Promise<Result<T, UserCancelledError | { message: string }>>,
+): Promise<void> {
+  const result = await setupFn();
+  if (result.isErr()) {
+    // Re-throw user cancellation to propagate up
+    if (UserCancelledError.is(result.error)) {
+      throw result.error;
+    }
+    // Log other errors but don't fail the overall project creation
+    consola.error(pc.red(result.error.message));
+  }
+}
 
 export async function setupAddons(config: ProjectConfig) {
   const { addons, frontend, projectDir } = config;
@@ -32,7 +51,7 @@ export async function setupAddons(config: ProjectConfig) {
       hasSolidFrontend ||
       hasNextFrontend)
   ) {
-    await setupTauri(config);
+    await runSetup(() => setupTauri(config));
   }
 
   const hasUltracite = addons.includes("ultracite");
@@ -45,7 +64,7 @@ export async function setupAddons(config: ProjectConfig) {
     const gitHooks: string[] = [];
     if (hasHusky) gitHooks.push("husky");
     if (hasLefthook) gitHooks.push("lefthook");
-    await setupUltracite(config, gitHooks);
+    await runSetup(() => setupUltracite(config, gitHooks));
   } else {
     if (hasBiome) {
       await setupBiome(projectDir);
@@ -72,23 +91,23 @@ export async function setupAddons(config: ProjectConfig) {
   }
 
   if (addons.includes("starlight")) {
-    await setupStarlight(config);
+    await runSetup(() => setupStarlight(config));
   }
 
   if (addons.includes("fumadocs")) {
-    await setupFumadocs(config);
+    await runSetup(() => setupFumadocs(config));
   }
 
   if (addons.includes("opentui")) {
-    await setupTui(config);
+    await runSetup(() => setupTui(config));
   }
 
   if (addons.includes("wxt")) {
-    await setupWxt(config);
+    await runSetup(() => setupWxt(config));
   }
 
   if (addons.includes("ruler")) {
-    await setupRuler(config);
+    await runSetup(() => setupRuler(config));
   }
 }
 

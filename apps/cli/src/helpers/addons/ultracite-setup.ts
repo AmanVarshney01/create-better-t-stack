@@ -1,10 +1,11 @@
 import { group, log, multiselect, select, spinner } from "@clack/prompts";
+import { Result } from "better-result";
 import { $ } from "execa";
 import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 
-import { exitCancelled } from "../../utils/errors";
+import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 type UltraciteLinter = "biome" | "eslint" | "oxlint";
@@ -47,6 +48,8 @@ type UltraciteAgent =
   | "vercel";
 
 type UltraciteHook = "cursor" | "windsurf" | "claude";
+
+type UltraciteSetupResult = Result<void, AddonSetupError | UserCancelledError>;
 
 const LINTERS = {
   biome: { label: "Biome", hint: "Fast formatter and linter" },
@@ -124,104 +127,147 @@ function getFrameworksFromFrontend(frontend: string[]): string[] {
   return Array.from(frameworks);
 }
 
-export async function setupUltracite(config: ProjectConfig, gitHooks: string[]) {
+export async function setupUltracite(
+  config: ProjectConfig,
+  gitHooks: string[],
+): Promise<UltraciteSetupResult> {
   const { packageManager, projectDir, frontend } = config;
 
-  try {
-    log.info("Setting up Ultracite...");
+  log.info("Setting up Ultracite...");
 
-    const result = await group(
-      {
-        linter: () =>
-          select<UltraciteLinter>({
-            message: "Choose linter/formatter",
-            options: Object.entries(LINTERS).map(([key, linter]) => ({
-              value: key as UltraciteLinter,
-              label: linter.label,
-              hint: linter.hint,
-            })),
-            initialValue: "biome" as UltraciteLinter,
-          }),
-        editors: () =>
-          multiselect<UltraciteEditor>({
-            message: "Choose editors",
-            options: Object.entries(EDITORS).map(([key, editor]) => ({
-              value: key as UltraciteEditor,
-              label: editor.label,
-            })),
-            required: true,
-          }),
-        agents: () =>
-          multiselect<UltraciteAgent>({
-            message: "Choose agents",
-            options: Object.entries(AGENTS).map(([key, agent]) => ({
-              value: key as UltraciteAgent,
-              label: agent.label,
-            })),
-            required: true,
-          }),
-        hooks: () =>
-          multiselect<UltraciteHook>({
-            message: "Choose hooks",
-            options: Object.entries(HOOKS).map(([key, hook]) => ({
-              value: key as UltraciteHook,
-              label: hook.label,
-            })),
-          }),
-      },
-      {
-        onCancel: () => {
-          exitCancelled("Operation cancelled");
+  let result: {
+    linter: UltraciteLinter | symbol;
+    editors: UltraciteEditor[] | symbol;
+    agents: UltraciteAgent[] | symbol;
+    hooks: UltraciteHook[] | symbol;
+  };
+
+  const groupResult = await Result.tryPromise({
+    try: async () => {
+      return await group(
+        {
+          linter: () =>
+            select<UltraciteLinter>({
+              message: "Choose linter/formatter",
+              options: Object.entries(LINTERS).map(([key, linter]) => ({
+                value: key as UltraciteLinter,
+                label: linter.label,
+                hint: linter.hint,
+              })),
+              initialValue: "biome" as UltraciteLinter,
+            }),
+          editors: () =>
+            multiselect<UltraciteEditor>({
+              message: "Choose editors",
+              options: Object.entries(EDITORS).map(([key, editor]) => ({
+                value: key as UltraciteEditor,
+                label: editor.label,
+              })),
+              required: true,
+            }),
+          agents: () =>
+            multiselect<UltraciteAgent>({
+              message: "Choose agents",
+              options: Object.entries(AGENTS).map(([key, agent]) => ({
+                value: key as UltraciteAgent,
+                label: agent.label,
+              })),
+              required: true,
+            }),
+          hooks: () =>
+            multiselect<UltraciteHook>({
+              message: "Choose hooks",
+              options: Object.entries(HOOKS).map(([key, hook]) => ({
+                value: key as UltraciteHook,
+                label: hook.label,
+              })),
+            }),
         },
-      },
-    );
+        {
+          onCancel: () => {
+            throw new UserCancelledError({ message: "Operation cancelled" });
+          },
+        },
+      );
+    },
+    catch: (e) => {
+      if (e instanceof UserCancelledError) return e;
+      return new AddonSetupError({
+        addon: "ultracite",
+        message: `Failed to get user preferences: ${e instanceof Error ? e.message : String(e)}`,
+        cause: e,
+      });
+    },
+  });
 
-    const linter = result.linter as UltraciteLinter;
-    const editors = result.editors as UltraciteEditor[];
-    const agents = result.agents as UltraciteAgent[];
-    const hooks = result.hooks as UltraciteHook[];
-    const frameworks = getFrameworksFromFrontend(frontend);
-
-    const ultraciteArgs = ["init", "--pm", packageManager, "--linter", linter];
-
-    if (frameworks.length > 0) {
-      ultraciteArgs.push("--frameworks", ...frameworks);
+  if (groupResult.isErr()) {
+    if (UserCancelledError.is(groupResult.error)) {
+      return userCancelled(groupResult.error.message);
     }
-
-    if (editors.length > 0) {
-      ultraciteArgs.push("--editors", ...editors);
-    }
-
-    if (agents.length > 0) {
-      ultraciteArgs.push("--agents", ...agents);
-    }
-
-    if (hooks.length > 0) {
-      ultraciteArgs.push("--hooks", ...hooks);
-    }
-
-    if (gitHooks.length > 0) {
-      const integrations = [...gitHooks];
-      if (gitHooks.includes("husky")) {
-        integrations.push("lint-staged");
-      }
-      ultraciteArgs.push("--integrations", ...integrations);
-    }
-
-    const ultraciteArgsString = ultraciteArgs.join(" ");
-    const commandWithArgs = `ultracite@latest ${ultraciteArgsString} --skip-install`;
-    const args = getPackageExecutionArgs(packageManager, commandWithArgs);
-
-    const s = spinner();
-    s.start("Running Ultracite init command...");
-
-    await $({ cwd: projectDir, env: { CI: "true" } })`${args}`;
-
-    s.stop("Ultracite setup successfully!");
-  } catch (error) {
     log.error(pc.red("Failed to set up Ultracite"));
-    if (error instanceof Error) {
-      console.error(pc.red(error.message));
-    }
+    return groupResult;
   }
+
+  result = groupResult.value;
+
+  const linter = result.linter as UltraciteLinter;
+  const editors = result.editors as UltraciteEditor[];
+  const agents = result.agents as UltraciteAgent[];
+  const hooks = result.hooks as UltraciteHook[];
+  const frameworks = getFrameworksFromFrontend(frontend);
+
+  const ultraciteArgs = ["init", "--pm", packageManager, "--linter", linter];
+
+  if (frameworks.length > 0) {
+    ultraciteArgs.push("--frameworks", ...frameworks);
+  }
+
+  if (editors.length > 0) {
+    ultraciteArgs.push("--editors", ...editors);
+  }
+
+  if (agents.length > 0) {
+    ultraciteArgs.push("--agents", ...agents);
+  }
+
+  if (hooks.length > 0) {
+    ultraciteArgs.push("--hooks", ...hooks);
+  }
+
+  if (gitHooks.length > 0) {
+    const integrations = [...gitHooks];
+    if (gitHooks.includes("husky")) {
+      integrations.push("lint-staged");
+    }
+    ultraciteArgs.push("--integrations", ...integrations);
+  }
+
+  const ultraciteArgsString = ultraciteArgs.join(" ");
+  const commandWithArgs = `ultracite@latest ${ultraciteArgsString} --skip-install`;
+  const args = getPackageExecutionArgs(packageManager, commandWithArgs);
+
+  const s = spinner();
+  s.start("Running Ultracite init command...");
+
+  const initResult = await Result.tryPromise({
+    try: async () => {
+      await $({ cwd: projectDir, env: { CI: "true" } })`${args}`;
+    },
+    catch: (e) => {
+      s.stop(pc.red("Failed to run Ultracite init command"));
+      return new AddonSetupError({
+        addon: "ultracite",
+        message: `Failed to set up Ultracite: ${e instanceof Error ? e.message : String(e)}`,
+        cause: e,
+      });
+    },
+  });
+
+  if (initResult.isErr()) {
+    log.error(pc.red("Failed to set up Ultracite"));
+    return initResult;
+  }
+
+  s.stop("Ultracite setup successfully!");
+  return Result.ok(undefined);
 }

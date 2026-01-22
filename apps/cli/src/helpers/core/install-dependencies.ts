@@ -1,9 +1,11 @@
 import { spinner } from "@clack/prompts";
-import consola from "consola";
+import { Result } from "better-result";
 import { $ } from "execa";
 import pc from "picocolors";
 
 import type { Addons, PackageManager } from "../../types";
+
+import { ProjectCreationError } from "../../utils/errors";
 
 export async function installDependencies({
   projectDir,
@@ -12,22 +14,31 @@ export async function installDependencies({
   projectDir: string;
   packageManager: PackageManager;
   addons?: Addons[];
-}) {
+}): Promise<Result<void, ProjectCreationError>> {
   const s = spinner();
 
-  try {
-    s.start(`Running ${packageManager} install...`);
+  s.start(`Running ${packageManager} install...`);
 
-    await $({
-      cwd: projectDir,
-      stderr: "inherit",
-    })`${packageManager} install`;
+  const result = await Result.tryPromise({
+    try: async () => {
+      await $({
+        cwd: projectDir,
+        stderr: "inherit",
+      })`${packageManager} install`;
+    },
+    catch: (e) =>
+      new ProjectCreationError({
+        phase: "dependency-installation",
+        message: `Installation error: ${e instanceof Error ? e.message : String(e)}`,
+        cause: e,
+      }),
+  });
 
+  if (result.isOk()) {
     s.stop("Dependencies installed successfully");
-  } catch (error) {
+  } else {
     s.stop(pc.red("Failed to install dependencies"));
-    if (error instanceof Error) {
-      consola.error(pc.red(`Installation error: ${error.message}`));
-    }
   }
+
+  return result;
 }

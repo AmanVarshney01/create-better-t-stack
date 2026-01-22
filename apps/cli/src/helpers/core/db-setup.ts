@@ -4,6 +4,7 @@
  * Dependencies are handled by the generator's db-deps processor
  */
 
+import { Result } from "better-result";
 import consola from "consola";
 import fs from "fs-extra";
 import path from "node:path";
@@ -11,6 +12,7 @@ import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 
+import { UserCancelledError } from "../../utils/errors";
 import { setupCloudflareD1 } from "../database-providers/d1-setup";
 import { setupDockerCompose } from "../database-providers/docker-compose-setup";
 import { setupMongoDBAtlas } from "../database-providers/mongodb-atlas-setup";
@@ -39,32 +41,41 @@ export async function setupDatabase(config: ProjectConfig, cliInput?: { manualDb
     return;
   }
 
-  try {
-    // Call external database provider CLIs
-    if (dbSetup === "docker") {
-      await setupDockerCompose(config);
-    } else if (database === "sqlite" && dbSetup === "turso") {
-      await setupTurso(config, cliInput);
-    } else if (database === "sqlite" && dbSetup === "d1") {
-      await setupCloudflareD1(config);
-    } else if (database === "postgres") {
-      if (dbSetup === "prisma-postgres") {
-        await setupPrismaPostgres(config, cliInput);
-      } else if (dbSetup === "neon") {
-        await setupNeonPostgres(config, cliInput);
-      } else if (dbSetup === "planetscale") {
-        await setupPlanetScale(config);
-      } else if (dbSetup === "supabase") {
-        await setupSupabase(config, cliInput);
+  // Helper to run setup and handle Result
+  async function runSetup<T>(
+    setupFn: () => Promise<Result<T, UserCancelledError | { message: string }>>,
+  ): Promise<void> {
+    const result = await setupFn();
+    if (result.isErr()) {
+      // Re-throw user cancellation to propagate up
+      if (UserCancelledError.is(result.error)) {
+        throw result.error;
       }
-    } else if (database === "mysql" && dbSetup === "planetscale") {
+      // Log other errors but don't fail the overall project creation
+      consola.error(pc.red(result.error.message));
+    }
+  }
+
+  // Call external database provider CLIs
+  if (dbSetup === "docker") {
+    await runSetup(() => setupDockerCompose(config));
+  } else if (database === "sqlite" && dbSetup === "turso") {
+    await runSetup(() => setupTurso(config, cliInput));
+  } else if (database === "sqlite" && dbSetup === "d1") {
+    await setupCloudflareD1(config);
+  } else if (database === "postgres") {
+    if (dbSetup === "prisma-postgres") {
+      await runSetup(() => setupPrismaPostgres(config, cliInput));
+    } else if (dbSetup === "neon") {
+      await runSetup(() => setupNeonPostgres(config, cliInput));
+    } else if (dbSetup === "planetscale") {
       await setupPlanetScale(config);
-    } else if (database === "mongodb" && dbSetup === "mongodb-atlas") {
-      await setupMongoDBAtlas(config, cliInput);
+    } else if (dbSetup === "supabase") {
+      await runSetup(() => setupSupabase(config, cliInput));
     }
-  } catch (error) {
-    if (error instanceof Error) {
-      consola.error(pc.red(error.message));
-    }
+  } else if (database === "mysql" && dbSetup === "planetscale") {
+    await setupPlanetScale(config);
+  } else if (database === "mongodb" && dbSetup === "mongodb-atlas") {
+    await runSetup(() => setupMongoDBAtlas(config, cliInput));
   }
 }

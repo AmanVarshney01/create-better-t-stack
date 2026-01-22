@@ -1,13 +1,17 @@
 import { isCancel, log, select, spinner } from "@clack/prompts";
+import { Result } from "better-result";
 import fs from "fs-extra";
 import path from "node:path";
 import pc from "picocolors";
 
 import { getProjectName } from "../prompts/project-name";
 import { isSilent } from "./context";
-import { exitCancelled, handleError } from "./errors";
+import { CLIError, UserCancelledError } from "./errors";
 
-export async function handleDirectoryConflict(currentPathInput: string) {
+export async function handleDirectoryConflict(currentPathInput: string): Promise<{
+  finalPathInput: string;
+  shouldClearDirectory: boolean;
+}> {
   while (true) {
     const resolvedPath = path.resolve(process.cwd(), currentPathInput);
     const dirExists = await fs.pathExists(resolvedPath);
@@ -18,9 +22,9 @@ export async function handleDirectoryConflict(currentPathInput: string) {
     }
 
     if (isSilent()) {
-      throw new Error(
-        `Directory "${currentPathInput}" already exists and is not empty. In silent mode, please provide a different project name or clear the directory manually.`,
-      );
+      throw new CLIError({
+        message: `Directory "${currentPathInput}" already exists and is not empty. In silent mode, please provide a different project name or clear the directory manually.`,
+      });
     }
 
     log.warn(`Directory "${pc.yellow(currentPathInput)}" already exists and is not empty.`);
@@ -48,7 +52,9 @@ export async function handleDirectoryConflict(currentPathInput: string) {
       initialValue: "rename",
     });
 
-    if (isCancel(action)) return exitCancelled("Operation cancelled.");
+    if (isCancel(action)) {
+      throw new UserCancelledError({ message: "Operation cancelled." });
+    }
 
     switch (action) {
       case "overwrite":
@@ -69,12 +75,15 @@ export async function handleDirectoryConflict(currentPathInput: string) {
         return await handleDirectoryConflict(newPathInput);
       }
       case "cancel":
-        return exitCancelled("Operation cancelled.");
+        throw new UserCancelledError({ message: "Operation cancelled." });
     }
   }
 }
 
-export async function setupProjectDirectory(finalPathInput: string, shouldClearDirectory: boolean) {
+export async function setupProjectDirectory(
+  finalPathInput: string,
+  shouldClearDirectory: boolean,
+): Promise<{ finalResolvedPath: string; finalBaseName: string }> {
   let finalResolvedPath: string;
   let finalBaseName: string;
 
@@ -89,13 +98,22 @@ export async function setupProjectDirectory(finalPathInput: string, shouldClearD
   if (shouldClearDirectory) {
     const s = spinner();
     s.start(`Clearing directory "${finalResolvedPath}"...`);
-    try {
-      await fs.emptyDir(finalResolvedPath);
-      s.stop(`Directory "${finalResolvedPath}" cleared.`);
-    } catch (error) {
+
+    const clearResult = await Result.tryPromise({
+      try: () => fs.emptyDir(finalResolvedPath),
+      catch: (error) =>
+        new CLIError({
+          message: `Failed to clear directory "${finalResolvedPath}".`,
+          cause: error,
+        }),
+    });
+
+    if (clearResult.isErr()) {
       s.stop(pc.red(`Failed to clear directory "${finalResolvedPath}".`));
-      handleError(error);
+      throw clearResult.error;
     }
+
+    s.stop(`Directory "${finalResolvedPath}" cleared.`);
   } else {
     await fs.ensureDir(finalResolvedPath);
   }

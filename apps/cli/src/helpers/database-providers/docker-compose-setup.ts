@@ -1,23 +1,33 @@
+import { Result } from "better-result";
 import path from "node:path";
 
 import type { Database, ProjectConfig } from "../../types";
 
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
+import { DatabaseSetupError } from "../../utils/errors";
 
-export async function setupDockerCompose(config: ProjectConfig) {
+export async function setupDockerCompose(
+  config: ProjectConfig,
+): Promise<Result<void, DatabaseSetupError>> {
   const { database, projectDir, projectName, backend } = config;
 
   if (database === "none" || database === "sqlite") {
-    return;
+    return Result.ok(undefined);
   }
 
-  try {
-    await writeEnvFile(projectDir, database, projectName, backend);
-  } catch (error) {
-    if (error instanceof Error) {
-      console.error(`Error: ${error.message}`);
-    }
-  }
+  const result = await Result.tryPromise({
+    try: async () => {
+      await writeEnvFile(projectDir, database, projectName, backend);
+    },
+    catch: (e) =>
+      new DatabaseSetupError({
+        provider: "docker-compose",
+        message: `Failed to setup docker compose env: ${e instanceof Error ? e.message : String(e)}`,
+        cause: e,
+      }),
+  });
+
+  return result.isErr() ? result : Result.ok(undefined);
 }
 
 async function writeEnvFile(

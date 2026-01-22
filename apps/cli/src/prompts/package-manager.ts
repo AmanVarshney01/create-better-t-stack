@@ -1,6 +1,6 @@
 import type { PackageManager } from "../types";
 
-import { exitCancelled } from "../utils/errors";
+import { UserCancelledError } from "../utils/errors";
 import { getUserPkgManager } from "../utils/get-package-manager";
 import { isCancel, navigableSelect } from "./navigable";
 
@@ -27,7 +27,7 @@ export async function getPackageManagerChoice(packageManager?: PackageManager) {
     initialValue: detectedPackageManager,
   });
 
-  if (isCancel(response)) return exitCancelled("Operation cancelled");
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }

@@ -7,14 +7,14 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "turbo build",
-    "dev": "turbo dev",
+    "build": "turbo run build",
+    "dev": "turbo run dev",
     "dev:cli": "turbo run dev --filter=create-better-t-stack",
     "cli": "cd apps/cli && node dist/cli.js",
     "dev:web": "turbo run dev --filter=web",
     "build:web": "turbo run build --filter=web",
     "build:cli": "turbo run build --filter=create-better-t-stack",
-    "lint": "turbo lint",
+    "lint": "turbo run lint",
     "check": "oxfmt . && oxlint .",
     "prepare": "lefthook install",
     "release": "bun run scripts/release.ts",
@@ -22,9 +22,9 @@
     "canary": "bun run scripts/canary-release.ts",
     "cleanup-previews": "bun run scripts/cleanup-previews.ts",
     "deploy:convex": "turbo run --filter=@better-t-stack/backend deploy",
-    "deploy:web": "bun run --filter=web deploy",
-    "generate": "bun run --filter=web generate-schema",
-    "deploy": "bun run deploy:web"
+    "deploy:web": "turbo run deploy --filter=web",
+    "generate": "turbo run generate-schema --filter=web",
+    "deploy": "turbo run deploy --filter=web"
   },
   "dependencies": {
     "@clack/prompts": "^0.11.0"

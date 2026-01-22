@@ -1,13 +1,12 @@
 import { isCancel, log, select, spinner } from "@clack/prompts";
-import consola from "consola";
+import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
 import path from "node:path";
-import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 
-import { exitCancelled } from "../../utils/errors";
+import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 type FumadocsTemplate =
@@ -45,56 +44,69 @@ const TEMPLATES = {
   },
 } as const;
 
-export async function setupFumadocs(config: ProjectConfig) {
+export async function setupFumadocs(
+  config: ProjectConfig,
+): Promise<Result<void, AddonSetupError | UserCancelledError>> {
   const { packageManager, projectDir } = config;
 
-  try {
-    log.info("Setting up Fumadocs...");
+  log.info("Setting up Fumadocs...");
 
-    const template = await select<FumadocsTemplate>({
-      message: "Choose a template",
-      options: Object.entries(TEMPLATES).map(([key, template]) => ({
-        value: key as FumadocsTemplate,
-        label: template.label,
-        hint: template.hint,
-      })),
-      initialValue: "next-mdx",
-    });
+  const template = await select<FumadocsTemplate>({
+    message: "Choose a template",
+    options: Object.entries(TEMPLATES).map(([key, template]) => ({
+      value: key as FumadocsTemplate,
+      label: template.label,
+      hint: template.hint,
+    })),
+    initialValue: "next-mdx",
+  });
 
-    if (isCancel(template)) return exitCancelled("Operation cancelled");
-
-    const templateArg = TEMPLATES[template].value;
-
-    const commandWithArgs = `create-fumadocs-app@latest fumadocs --template ${templateArg} --src --pm ${packageManager} --no-git`;
-    const args = getPackageExecutionArgs(packageManager, commandWithArgs);
-
-    const appsDir = path.join(projectDir, "apps");
-    await fs.ensureDir(appsDir);
-
-    const s = spinner();
-    s.start("Running Fumadocs create command...");
-
-    await $({ cwd: appsDir, env: { CI: "true" } })`${args}`;
-
-    const fumadocsDir = path.join(projectDir, "apps", "fumadocs");
-    const packageJsonPath = path.join(fumadocsDir, "package.json");
-
-    if (await fs.pathExists(packageJsonPath)) {
-      const packageJson = await fs.readJson(packageJsonPath);
-      packageJson.name = "fumadocs";
-
-      if (packageJson.scripts?.dev) {
-        packageJson.scripts.dev = `${packageJson.scripts.dev} --port=4000`;
-      }
-
-      await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
-    }
-
-    s.stop("Fumadocs setup complete!");
-  } catch (error) {
-    log.error(pc.red("Failed to set up Fumadocs"));
-    if (error instanceof Error) {
-      consola.error(pc.red(error.message));
-    }
+  if (isCancel(template)) {
+    return userCancelled("Operation cancelled");
   }
+
+  const templateArg = TEMPLATES[template].value;
+
+  const commandWithArgs = `create-fumadocs-app@latest fumadocs --template ${templateArg} --src --pm ${packageManager} --no-git`;
+  const args = getPackageExecutionArgs(packageManager, commandWithArgs);
+
+  const appsDir = path.join(projectDir, "apps");
+  await fs.ensureDir(appsDir);
+
+  const s = spinner();
+  s.start("Running Fumadocs create command...");
+
+  const result = await Result.tryPromise({
+    try: async () => {
+      await $({ cwd: appsDir, env: { CI: "true" } })`${args}`;
+
+      const fumadocsDir = path.join(projectDir, "apps", "fumadocs");
+      const packageJsonPath = path.join(fumadocsDir, "package.json");
+
+      if (await fs.pathExists(packageJsonPath)) {
+        const packageJson = await fs.readJson(packageJsonPath);
+        packageJson.name = "fumadocs";
+
+        if (packageJson.scripts?.dev) {
+          packageJson.scripts.dev = `${packageJson.scripts.dev} --port=4000`;
+        }
+
+        await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+      }
+    },
+    catch: (e) =>
+      new AddonSetupError({
+        addon: "fumadocs",
+        message: `Failed to set up Fumadocs: ${e instanceof Error ? e.message : String(e)}`,
+        cause: e,
+      }),
+  });
+
+  if (result.isErr()) {
+    s.stop("Failed to set up Fumadocs");
+    return result;
+  }
+
+  s.stop("Fumadocs setup complete!");
+  return Result.ok(undefined);
 }

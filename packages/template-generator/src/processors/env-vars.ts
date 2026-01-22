@@ -193,12 +193,14 @@ function buildNativeVars(
   backend: ProjectConfig["backend"],
   auth: ProjectConfig["auth"],
 ): EnvVariable[] {
+  const hasAstro = frontend.includes("astro");
+
   let envVarName = "EXPO_PUBLIC_SERVER_URL";
   let serverUrl = "http://localhost:3000";
 
   if (backend === "self") {
-    // TanStack Start, Next.js, and Nuxt use port 3001 for fullstack
-    serverUrl = "http://localhost:3001";
+    // Astro uses port 4321, others use port 3001 for fullstack
+    serverUrl = hasAstro ? "http://localhost:4321" : "http://localhost:3001";
   }
 
   if (backend === "convex") {
@@ -383,7 +385,12 @@ function buildServerVars(
     },
     {
       key: "BETTER_AUTH_URL",
-      value: backend === "self" ? "http://localhost:3001" : "http://localhost:3000",
+      value:
+        backend === "self"
+          ? hasAstro
+            ? "http://localhost:4321"
+            : "http://localhost:3001"
+          : "http://localhost:3000",
       condition: !!auth,
     },
     {
