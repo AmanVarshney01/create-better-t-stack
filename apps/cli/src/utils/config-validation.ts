@@ -15,6 +15,7 @@ import {
   validateWebDeployRequiresWebFrontend,
   validateWorkersCompatibility,
 } from "./compatibility-rules";
+import { constraintError, incompatibilityError, missingRequirementError } from "./error-formatter";
 import { exitWithError } from "./errors";
 import { validatePeerDependencies } from "./peer-dependency-validator";
 
@@ -24,39 +25,66 @@ export function validateDatabaseOrmAuth(cfg: Partial<ProjectConfig>, flags?: Set
   const has = (k: string) => (flags ? flags.has(k) : true);
 
   if (has("orm") && has("database") && orm === "mongoose" && db !== "mongodb") {
-    exitWithError(
-      "Mongoose ORM requires MongoDB database. Please use '--database mongodb' or choose a different ORM.",
-    );
+    incompatibilityError({
+      message: "Mongoose ORM requires MongoDB database.",
+      provided: { orm: "mongoose", database: db || "none" },
+      suggestions: ["Use --database mongodb", "Choose a different ORM (drizzle, prisma)"],
+    });
   }
 
   if (has("orm") && has("database") && orm === "drizzle" && db === "mongodb") {
-    exitWithError(
-      "Drizzle ORM does not support MongoDB. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
-    );
+    incompatibilityError({
+      message: "Drizzle ORM does not support MongoDB.",
+      provided: { orm: "drizzle", database: "mongodb" },
+      suggestions: [
+        "Use --orm mongoose or --orm prisma for MongoDB",
+        "Choose a different database (postgres, sqlite, mysql)",
+      ],
+    });
   }
 
   if (has("orm") && has("database") && orm === "typeorm" && db === "mongodb") {
-    exitWithError(
-      "TypeORM does not support MongoDB in Better Fullstack. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
-    );
+    incompatibilityError({
+      message: "TypeORM does not support MongoDB in Better Fullstack.",
+      provided: { orm: "typeorm", database: "mongodb" },
+      suggestions: [
+        "Use --orm mongoose or --orm prisma for MongoDB",
+        "Choose a different database (postgres, sqlite, mysql)",
+      ],
+    });
   }
 
   if (has("orm") && has("database") && orm === "kysely" && db === "mongodb") {
-    exitWithError(
-      "Kysely does not support MongoDB. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
-    );
+    incompatibilityError({
+      message: "Kysely does not support MongoDB.",
+      provided: { orm: "kysely", database: "mongodb" },
+      suggestions: [
+        "Use --orm mongoose or --orm prisma for MongoDB",
+        "Choose a different database (postgres, sqlite, mysql)",
+      ],
+    });
   }
 
   if (has("orm") && has("database") && orm === "mikroorm" && db === "mongodb") {
-    exitWithError(
-      "MikroORM does not support MongoDB in Better Fullstack. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
-    );
+    incompatibilityError({
+      message: "MikroORM does not support MongoDB in Better Fullstack.",
+      provided: { orm: "mikroorm", database: "mongodb" },
+      suggestions: [
+        "Use --orm mongoose or --orm prisma for MongoDB",
+        "Choose a different database (postgres, sqlite, mysql)",
+      ],
+    });
   }
 
   if (has("orm") && has("database") && orm === "sequelize" && db === "mongodb") {
-    exitWithError(
-      "Sequelize does not support MongoDB. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
-    );
+    incompatibilityError({
+      message: "Sequelize does not support MongoDB.",
+      provided: { orm: "sequelize", database: "mongodb" },
+      suggestions: [
+        "Use --orm mongoose or --orm prisma for MongoDB",
+        "Choose a different database (postgres, sqlite, mysql)",
+      ],
+    });
   }
 
   if (
@@ -68,21 +96,36 @@ export function validateDatabaseOrmAuth(cfg: Partial<ProjectConfig>, flags?: Set
     orm !== "prisma" &&
     orm !== "none"
   ) {
-    exitWithError(
-      "MongoDB database requires Mongoose or Prisma ORM. Please use '--orm mongoose' or '--orm prisma' or choose a different database.",
-    );
+    incompatibilityError({
+      message: "MongoDB only works with Mongoose or Prisma ORM.",
+      provided: { database: "mongodb", orm },
+      suggestions: ["Use --orm mongoose", "Use --orm prisma"],
+    });
   }
 
   if (has("database") && has("orm") && db && db !== "none" && orm === "none") {
-    exitWithError(
-      "Database selection requires an ORM. Please choose '--orm drizzle', '--orm prisma', '--orm typeorm', '--orm kysely', '--orm mikroorm', '--orm sequelize', or '--orm mongoose'.",
-    );
+    missingRequirementError({
+      message: "Database selection requires an ORM.",
+      provided: { database: db, orm: "none" },
+      suggestions: [
+        "Use --orm drizzle (recommended)",
+        "Use --orm prisma",
+        "Use --orm mongoose (MongoDB only)",
+      ],
+    });
   }
 
   if (has("orm") && has("database") && orm && orm !== "none" && db === "none") {
-    exitWithError(
-      "ORM selection requires a database. Please choose a database or set '--orm none'.",
-    );
+    missingRequirementError({
+      message: "ORM selection requires a database.",
+      provided: { orm, database: "none" },
+      suggestions: [
+        "Use --database postgres",
+        "Use --database sqlite",
+        "Use --database mysql",
+        "Set --orm none",
+      ],
+    });
   }
 }
 
@@ -191,39 +234,51 @@ export function validateConvexConstraints(
   const has = (k: string) => providedFlags.has(k);
 
   if (has("runtime") && config.runtime !== "none") {
-    exitWithError(
-      "Convex backend requires '--runtime none'. Please remove the --runtime flag or set it to 'none'.",
-    );
+    constraintError({
+      message: "Convex backend manages its own runtime.",
+      provided: { backend: "convex", runtime: config.runtime || "" },
+      suggestions: ["Remove --runtime flag", "Set --runtime none"],
+    });
   }
 
   if (has("database") && config.database !== "none") {
-    exitWithError(
-      "Convex backend requires '--database none'. Please remove the --database flag or set it to 'none'.",
-    );
+    constraintError({
+      message: "Convex backend has its own built-in database.",
+      provided: { backend: "convex", database: config.database || "" },
+      suggestions: ["Remove --database flag", "Set --database none"],
+    });
   }
 
   if (has("orm") && config.orm !== "none") {
-    exitWithError(
-      "Convex backend requires '--orm none'. Please remove the --orm flag or set it to 'none'.",
-    );
+    constraintError({
+      message: "Convex backend has its own data layer (no ORM needed).",
+      provided: { backend: "convex", orm: config.orm || "" },
+      suggestions: ["Remove --orm flag", "Set --orm none"],
+    });
   }
 
   if (has("api") && config.api !== "none") {
-    exitWithError(
-      "Convex backend requires '--api none'. Please remove the --api flag or set it to 'none'.",
-    );
+    constraintError({
+      message: "Convex backend has its own built-in API layer.",
+      provided: { backend: "convex", api: config.api || "" },
+      suggestions: ["Remove --api flag", "Set --api none"],
+    });
   }
 
   if (has("dbSetup") && config.dbSetup !== "none") {
-    exitWithError(
-      "Convex backend requires '--db-setup none'. Please remove the --db-setup flag or set it to 'none'.",
-    );
+    constraintError({
+      message: "Convex backend manages its own database infrastructure.",
+      provided: { backend: "convex", "db-setup": config.dbSetup || "" },
+      suggestions: ["Remove --db-setup flag", "Set --db-setup none"],
+    });
   }
 
   if (has("serverDeploy") && config.serverDeploy !== "none") {
-    exitWithError(
-      "Convex backend requires '--server-deploy none'. Please remove the --server-deploy flag or set it to 'none'.",
-    );
+    constraintError({
+      message: "Convex backend has its own deployment platform.",
+      provided: { backend: "convex", "server-deploy": config.serverDeploy || "" },
+      suggestions: ["Remove --server-deploy flag", "Set --server-deploy none"],
+    });
   }
 
   if (has("auth") && config.auth === "better-auth") {
@@ -238,9 +293,16 @@ export function validateConvexConstraints(
     const hasSupportedFrontend = config.frontend?.some((f) => supportedFrontends.includes(f));
 
     if (!hasSupportedFrontend) {
-      exitWithError(
-        "Better-Auth with Convex backend requires a supported frontend (TanStack Router, TanStack Start, Next.js, or Native).",
-      );
+      incompatibilityError({
+        message: "Better-Auth with Convex requires specific frontends.",
+        provided: { backend: "convex", auth: "better-auth", frontend: config.frontend || [] },
+        suggestions: [
+          "Use --frontend tanstack-router",
+          "Use --frontend tanstack-start",
+          "Use --frontend next",
+          "Use a native frontend",
+        ],
+      });
     }
   }
 }

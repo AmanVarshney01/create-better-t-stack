@@ -74,7 +74,7 @@ describe("API Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "tRPC API is not supported with 'nuxt' frontend");
+      expectError(result, "tRPC API requires React-based frontends");
     });
 
     it("should fail with tRPC + Svelte", async () => {
@@ -95,7 +95,7 @@ describe("API Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "tRPC API is not supported with 'svelte' frontend");
+      expectError(result, "tRPC API requires React-based frontends");
     });
 
     it("should fail with tRPC + Solid", async () => {
@@ -116,7 +116,7 @@ describe("API Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "tRPC API is not supported with 'solid' frontend");
+      expectError(result, "tRPC API requires React-based frontends");
     });
 
     const backends = ["hono", "express", "fastify", "elysia"];
@@ -220,7 +220,7 @@ describe("API Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "ts-rest API is not supported with 'nuxt' frontend");
+      expectError(result, "ts-rest API requires React-based frontends");
     });
 
     it("should fail with ts-rest + Svelte", async () => {
@@ -241,7 +241,7 @@ describe("API Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "ts-rest API is not supported with 'svelte' frontend");
+      expectError(result, "ts-rest API requires React-based frontends");
     });
 
     it("should fail with ts-rest + Solid", async () => {
@@ -262,7 +262,7 @@ describe("API Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "ts-rest API is not supported with 'solid' frontend");
+      expectError(result, "ts-rest API requires React-based frontends");
     });
 
     const backends = ["hono", "express", "fastify", "elysia"];
@@ -419,7 +419,7 @@ describe("API Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "garph API is not supported with 'nuxt' frontend");
+      expectError(result, "garph API requires React-based frontends");
     });
 
     it("should fail with Garph + Svelte", async () => {
@@ -440,7 +440,7 @@ describe("API Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "garph API is not supported with 'svelte' frontend");
+      expectError(result, "garph API requires React-based frontends");
     });
 
     it("should fail with Garph + Solid", async () => {
@@ -461,7 +461,7 @@ describe("API Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "garph API is not supported with 'solid' frontend");
+      expectError(result, "garph API requires React-based frontends");
     });
 
     const backends = ["hono", "express", "fastify", "elysia"];

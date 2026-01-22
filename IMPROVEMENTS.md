@@ -6,19 +6,18 @@ A collection of potential improvements for the Better-Fullstack project.
 
 ## CLI & Template Generator
 
-1. **Template validation tests** - Verify all generated templates are valid TypeScript/have no syntax errors -- should be ready
-2. **Generated project E2E tests** - Actually run the generated projects and verify they work (start dev server, hit endpoints) -- should be ready
-3. **Template snapshot tests** - Detect unintended changes to generated output -- should be ready
-4. **Dependency conflict detection** - Warn when selected options have incompatible peer dependencies
-5. **Interactive upgrade command** - `bun run cli upgrade` to update existing projects to newer templates
-6. **Project health check command** - Analyze an existing project and suggest improvements
-7. **Config validation** - Validate `bts.config.json` and warn about deprecated options
+1. **Template validation tests** - Verify all generated templates are valid TypeScript/have no syntax errors _(Implemented)_
+2. **Generated project E2E tests** - Actually run the generated projects and verify they work (start dev server, hit endpoints) _(Implemented)_
+3. **Template snapshot tests** - Detect unintended changes to generated output _(Implemented)_
+4. **Dependency conflict detection** - Warn when selected options have incompatible peer dependencies _(Implemented)_
+5. **Project health check command** - Analyze an existing project and suggest improvements
+6. **Config validation** - Validate `bts.config.json` and warn about deprecated options
 
 ---
 
 ## Testing Infrastructure
 
-8. **Matrix testing** - Test all valid frontend × backend × database combinations automatically
+8. **Matrix testing** - Test all valid frontend × backend × database combinations automatically _(Implemented)_
 9. **Generated project build verification** - CI job that builds sample generated projects
 10. **Performance benchmarks** - Track CLI execution time, template generation speed
 11. **Visual regression tests** - Screenshot testing for the web builder UI
@@ -38,8 +37,6 @@ A collection of potential improvements for the Better-Fullstack project.
 
 ## Developer Experience
 
-18. **VS Code extension** - Snippets, schema validation for config files
-19. **CLI autocomplete** - Shell completions for bash/zsh/fish
 20. **Better error messages** - Suggest fixes for common mistakes
 21. **Offline mode** - Cache npm registry responses for faster repeated runs
 22. **Debug mode** - Verbose logging to diagnose template generation issues
@@ -109,26 +106,76 @@ A collection of potential improvements for the Better-Fullstack project.
 
 ## Current Work
 
-### #1 Template Validation Tests (In Progress)
+### #1-3 Template Validation, E2E, and Snapshot Tests (Completed)
 
-**Goal:** Create tests that verify all generated TypeScript/JavaScript files are syntactically valid and have no type errors.
+**Status:** Implemented in `apps/cli/test/`
 
-**Context:**
+**Files:**
 
-- The CLI generates projects using Handlebars templates from `packages/template-generator/templates/`
-- Generated files include `.ts`, `.tsx`, `.js`, `.json`, `package.json`, config files
-- Current tests verify the CLI creates files, but don't verify the generated code is valid
-- Need to catch template bugs like: missing imports, syntax errors, unclosed brackets, invalid TypeScript
+- `apps/cli/test/template-validation.test.ts` - Validates TypeScript/JSON syntax for all configurations
+- `apps/cli/test/e2e.test.ts` - End-to-end tests that run generated projects
+- `apps/cli/test/template-snapshots.test.ts` - Snapshot tests for generated output
+- `apps/cli/test/validation-utils.ts` - Shared validation utilities
 
-**Approach:**
+---
 
-- Generate sample projects with various configurations
-- Run TypeScript compiler (`tsc --noEmit`) on generated projects
-- Verify no syntax/type errors
-- Integrate into existing test suite
+### #8 Matrix Testing System (Completed)
 
-**Related files:**
+**Status:** Implemented in `apps/cli/test/matrix/`
 
-- `apps/cli/test/` - Existing test infrastructure
-- `packages/template-generator/templates/` - Source templates
-- `apps/cli/test/test-utils.ts` - Test utilities
+**Goal:** Automatically test ALL valid frontend × backend × database × ORM combinations.
+
+**Implementation:**
+
+```
+apps/cli/test/matrix/
+├── combination-generator.ts  # Generates valid combinations from compatibility rules
+└── matrix-test.test.ts       # Test suite that validates all combinations
+```
+
+**Key Statistics:**
+
+- Tier 1 (Core Stack): ~1,451 valid combinations out of 6,600 theoretical (22% coverage)
+- Tier 2 (+ API variations): ~5,588 valid combinations
+- Tier 3 (+ Auth variations): ~16,579 valid combinations
+
+**Compatibility Rules Encoded:**
+
+- Database-ORM compatibility (e.g., MongoDB only works with Mongoose/Prisma)
+- Backend-Runtime compatibility (e.g., Elysia only works with Bun)
+- Frontend-Backend compatibility (e.g., Qwik/Angular/Redwood/Fresh require backend=none)
+- Frontend-API compatibility (e.g., tRPC requires React-based frontends)
+- Special cases: Convex, NextAuth, Astro integrations, Workers runtime
+
+**Usage:**
+
+```bash
+# Run all Tier 1 tests (takes ~3-4 hours)
+bun test ./test/matrix/matrix-test.test.ts
+
+# Run specific combination tests
+bun test ./test/matrix/matrix-test.test.ts -t "validates: tanstack-router_hono_sqlite_drizzle"
+
+# Run edge case tests only
+bun test ./test/matrix/matrix-test.test.ts -t "Edge Cases"
+
+# Run coverage report
+bun test ./test/matrix/matrix-test.test.ts -t "Coverage Report"
+```
+
+**Test Configuration:**
+Edit `TEST_CONFIG` in `matrix-test.test.ts` to enable Tier 2/3 tests:
+
+```typescript
+const TEST_CONFIG = {
+  tier1: true,   // Core stack (~1,451 combinations)
+  tier2: false,  // + API variations (~5,588 combinations)
+  tier3: false,  // + Auth variations (~16,579 combinations)
+};
+```
+
+**Performance:**
+
+- Each test takes ~8-10 seconds (uses `createVirtual()` for in-memory generation)
+- Full Tier 1 suite: ~3-4 hours
+- Recommended: Run as scheduled nightly test or on-demand, not on every PR

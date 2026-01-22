@@ -365,10 +365,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         expectError: true,
       });
 
-      expectError(
-        result,
-        "Cloudflare Workers runtime (--runtime workers) is not compatible with MongoDB database",
-      );
+      expectError(result, "Cloudflare Workers runtime is not compatible with MongoDB");
     });
 
     it("should fail with tRPC + incompatible frontend", async () => {
@@ -389,7 +386,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         expectError: true,
       });
 
-      expectError(result, "tRPC API is not supported with 'nuxt' frontend");
+      expectError(result, "tRPC API requires React-based frontends");
     });
 
     it("should fail with Clerk + incompatible frontend", async () => {

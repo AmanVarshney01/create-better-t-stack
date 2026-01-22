@@ -267,7 +267,7 @@ describe("Deployment Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Convex backend requires '--server-deploy none'");
+      expectError(result, "Convex backend has its own deployment platform");
     });
   });
 

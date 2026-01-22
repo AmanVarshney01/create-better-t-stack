@@ -17,6 +17,7 @@ import type {
 
 import { ADDON_COMPATIBILITY, UI_LIBRARY_COMPATIBILITY } from "../constants";
 import { WEB_FRAMEWORKS } from "./compatibility";
+import { constraintError, incompatibilityError, invalidSelectionError } from "./error-formatter";
 import { exitWithError } from "./errors";
 
 export function isWebFrontend(value: Frontend) {
@@ -37,14 +38,24 @@ export function splitFrontends(values: Frontend[] = []): {
 export function ensureSingleWebAndNative(frontends: Frontend[]) {
   const { web, native } = splitFrontends(frontends);
   if (web.length > 1) {
-    exitWithError(
-      "Cannot select multiple web frameworks. Choose only one of: tanstack-router, tanstack-start, react-router, next, nuxt, svelte, solid, astro, qwik, angular, redwood, fresh",
-    );
+    invalidSelectionError({
+      message: "Only one web framework can be selected per project.",
+      provided: { frontend: web },
+      suggestions: [
+        "Keep one web framework and remove the others",
+        "Use separate projects for multiple web frameworks",
+      ],
+    });
   }
   if (native.length > 1) {
-    exitWithError(
-      "Cannot select multiple native frameworks. Choose only one of: native-bare, native-uniwind, native-unistyles",
-    );
+    invalidSelectionError({
+      message: "Only one native framework can be selected per project.",
+      provided: { frontend: native },
+      suggestions: [
+        "Keep one native framework and remove the others",
+        "Choose: native-bare, native-uniwind, or native-unistyles",
+      ],
+    });
   }
 }
 
@@ -104,9 +115,16 @@ export function validateWorkersCompatibility(
     config.backend &&
     !WORKERS_COMPATIBLE_BACKENDS.includes(config.backend)
   ) {
-    exitWithError(
-      `Cloudflare Workers runtime (--runtime workers) is only supported with Hono, Nitro, or feTS backend. Current backend: ${config.backend}. Please use '--backend hono', '--backend nitro', or '--backend fets', or choose a different runtime.`,
-    );
+    incompatibilityError({
+      message: "Cloudflare Workers runtime requires a compatible backend.",
+      provided: { runtime: "workers", backend: config.backend },
+      suggestions: [
+        "Use --backend hono",
+        "Use --backend nitro",
+        "Use --backend fets",
+        "Choose a different runtime (node, bun)",
+      ],
+    });
   }
 
   if (
@@ -115,9 +133,14 @@ export function validateWorkersCompatibility(
     !WORKERS_COMPATIBLE_BACKENDS.includes(config.backend) &&
     config.runtime === "workers"
   ) {
-    exitWithError(
-      `Backend '${config.backend}' is not compatible with Cloudflare Workers runtime. Cloudflare Workers runtime is only supported with Hono, Nitro, or feTS backend. Please use '--backend hono', '--backend nitro', or '--backend fets', or choose a different runtime.`,
-    );
+    incompatibilityError({
+      message: `Backend '${config.backend}' is not compatible with Workers runtime.`,
+      provided: { backend: config.backend, runtime: "workers" },
+      suggestions: [
+        "Use --backend hono, --backend nitro, or --backend fets",
+        "Choose a different runtime (node, bun)",
+      ],
+    });
   }
 
   if (
@@ -125,9 +148,14 @@ export function validateWorkersCompatibility(
     options.runtime === "workers" &&
     config.database === "mongodb"
   ) {
-    exitWithError(
-      "Cloudflare Workers runtime (--runtime workers) is not compatible with MongoDB database. MongoDB requires Prisma or Mongoose ORM, but Workers runtime only supports Drizzle or Prisma ORM. Please use a different database or runtime.",
-    );
+    incompatibilityError({
+      message: "Cloudflare Workers runtime is not compatible with MongoDB.",
+      provided: { runtime: "workers", database: "mongodb" },
+      suggestions: [
+        "Use a different database (postgres, sqlite, mysql)",
+        "Choose a different runtime (node, bun)",
+      ],
+    });
   }
 
   if (
@@ -135,9 +163,11 @@ export function validateWorkersCompatibility(
     options.runtime === "workers" &&
     config.dbSetup === "docker"
   ) {
-    exitWithError(
-      "Cloudflare Workers runtime (--runtime workers) is not compatible with Docker setup. Workers runtime uses serverless databases (D1) and doesn't support local Docker containers. Please use '--db-setup d1' for SQLite or choose a different runtime.",
-    );
+    incompatibilityError({
+      message: "Cloudflare Workers runtime is not compatible with Docker setup.",
+      provided: { runtime: "workers", "db-setup": "docker" },
+      suggestions: ["Use --db-setup d1 for SQLite", "Choose a different runtime (node, bun)"],
+    });
   }
 
   if (
@@ -145,9 +175,14 @@ export function validateWorkersCompatibility(
     config.database === "mongodb" &&
     config.runtime === "workers"
   ) {
-    exitWithError(
-      "MongoDB database is not compatible with Cloudflare Workers runtime. MongoDB requires Prisma or Mongoose ORM, but Workers runtime only supports Drizzle or Prisma ORM. Please use a different database or runtime.",
-    );
+    incompatibilityError({
+      message: "MongoDB is not compatible with Cloudflare Workers runtime.",
+      provided: { database: "mongodb", runtime: "workers" },
+      suggestions: [
+        "Use a different database (postgres, sqlite, mysql)",
+        "Choose a different runtime (node, bun)",
+      ],
+    });
   }
 }
 
@@ -171,37 +206,52 @@ export function validateApiFrontendCompatibility(
     (api === "trpc" || api === "ts-rest" || api === "garph")
   ) {
     const apiName = api === "trpc" ? "tRPC" : api === "ts-rest" ? "ts-rest" : "garph";
-    exitWithError(
-      `${apiName} API is not supported with '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"}' frontend. Please use --api orpc or --api none or remove '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid"}' from --frontend.`,
-    );
+    const incompatibleFrontend = includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid";
+    incompatibilityError({
+      message: `${apiName} API requires React-based frontends.`,
+      provided: { api, frontend: incompatibleFrontend },
+      suggestions: [
+        "Use --api orpc (works with all frontends)",
+        "Use --api none",
+        "Choose next, react-router, or tanstack-start",
+      ],
+    });
   }
 
   // Qwik has its own server-side capabilities, doesn't support traditional API layer
   if (includesQwik && api && api !== "none") {
-    exitWithError(
-      `Qwik has its own built-in server capabilities and doesn't support external API layers (tRPC/oRPC). Please use --api none with Qwik.`,
-    );
+    incompatibilityError({
+      message: "Qwik has built-in server capabilities and doesn't support external APIs.",
+      provided: { api, frontend: "qwik" },
+      suggestions: ["Use --api none with Qwik"],
+    });
   }
 
   // Angular has its own HttpClient and doesn't support external API layers
   if (includesAngular && api && api !== "none") {
-    exitWithError(
-      `Angular has its own built-in HttpClient and doesn't support external API layers (tRPC/oRPC/ts-rest/garph). Please use --api none with Angular.`,
-    );
+    incompatibilityError({
+      message: "Angular has built-in HttpClient and doesn't support external APIs.",
+      provided: { api, frontend: "angular" },
+      suggestions: ["Use --api none with Angular"],
+    });
   }
 
   // RedwoodJS has its own built-in GraphQL API and doesn't support external API layers
   if (includesRedwood && api && api !== "none") {
-    exitWithError(
-      `RedwoodJS has its own built-in GraphQL API and doesn't support external API layers (tRPC/oRPC/ts-rest/garph). Please use --api none with RedwoodJS.`,
-    );
+    incompatibilityError({
+      message: "RedwoodJS has built-in GraphQL API and doesn't support external APIs.",
+      provided: { api, frontend: "redwood" },
+      suggestions: ["Use --api none with RedwoodJS"],
+    });
   }
 
   // Fresh (Deno) has its own built-in server capabilities and doesn't support external API layers
   if (includesFresh && api && api !== "none") {
-    exitWithError(
-      `Fresh has its own built-in server capabilities (Deno-native) and doesn't support external API layers (tRPC/oRPC/ts-rest/garph). Please use --api none with Fresh.`,
-    );
+    incompatibilityError({
+      message: "Fresh has built-in server capabilities and doesn't support external APIs.",
+      provided: { api, frontend: "fresh" },
+      suggestions: ["Use --api none with Fresh"],
+    });
   }
 
   // Astro with non-React integrations doesn't support tRPC, ts-rest, or garph
@@ -212,9 +262,15 @@ export function validateApiFrontendCompatibility(
     (api === "trpc" || api === "ts-rest" || api === "garph")
   ) {
     const apiName = api === "trpc" ? "tRPC" : api === "ts-rest" ? "ts-rest" : "garph";
-    exitWithError(
-      `${apiName} API requires React integration with Astro. Please use --api orpc or --api none, or use --astro-integration react.`,
-    );
+    incompatibilityError({
+      message: `${apiName} API requires React integration with Astro.`,
+      provided: { api, "astro-integration": astroIntegration },
+      suggestions: [
+        "Use --api orpc (works with all Astro integrations)",
+        "Use --api none",
+        "Use --astro-integration react",
+      ],
+    });
   }
 }
 
@@ -520,20 +576,28 @@ export function validateUILibraryFrontendCompatibility(
     // For non-React integrations, only allow libraries that explicitly support astro
     if (!compatibility.frontends.includes("astro")) {
       const integrationName = astroIntegration || "none";
-      exitWithError(
-        `UI library '${uiLibrary}' requires React. Astro is configured with '${integrationName}' integration. ` +
-          `Please use --astro-integration react or choose a different UI library (e.g., daisyui, ark-ui).`,
-      );
+      incompatibilityError({
+        message: `UI library '${uiLibrary}' requires React.`,
+        provided: { "ui-library": uiLibrary, "astro-integration": integrationName },
+        suggestions: [
+          "Use --astro-integration react",
+          "Choose a different UI library (daisyui, ark-ui)",
+        ],
+      });
     }
     return;
   }
 
   // Original logic for non-Astro frontends
   if (!compatibility.frontends.includes(webFrontend)) {
-    const supportedList = compatibility.frontends.join(", ");
-    exitWithError(
-      `UI library '${uiLibrary}' is not compatible with '${webFrontend}' frontend. Supported frontends: ${supportedList}`,
-    );
+    incompatibilityError({
+      message: `UI library '${uiLibrary}' is not compatible with '${webFrontend}'.`,
+      provided: { "ui-library": uiLibrary, frontend: webFrontend },
+      suggestions: [
+        `Supported frontends: ${compatibility.frontends.join(", ")}`,
+        "Choose a different UI library",
+      ],
+    });
   }
 }
 
@@ -649,26 +713,39 @@ export function validateFormsFrontendCompatibility(
   // modular-forms is only for Solid and Qwik
   if (forms === "modular-forms") {
     if (!hasSolid && !hasQwik) {
-      exitWithError(
-        `Modular Forms is designed for Solid and Qwik frontends only. Please use a React-based form library (react-hook-form, tanstack-form, formik, final-form, conform) or select solid/qwik frontend.`,
-      );
+      incompatibilityError({
+        message: "Modular Forms is designed for Solid and Qwik frontends only.",
+        provided: { forms, frontend: frontends },
+        suggestions: [
+          "Use a React form library: react-hook-form, tanstack-form, formik",
+          "Use --frontend solid or --frontend qwik",
+        ],
+      });
     }
   }
 
   // React form libraries are only for React-based frontends
   if (REACT_FORM_LIBRARIES.includes(forms)) {
     if (hasSolid || hasQwik) {
-      exitWithError(
-        `${forms} is a React-based form library and is not compatible with ${hasSolid ? "Solid" : "Qwik"} frontend. Please use modular-forms for ${hasSolid ? "Solid" : "Qwik"}.`,
-      );
+      const incompatibleFrontend = hasSolid ? "solid" : "qwik";
+      incompatibilityError({
+        message: `${forms} is a React-based form library.`,
+        provided: { forms, frontend: incompatibleFrontend },
+        suggestions: [`Use --forms modular-forms for ${hasSolid ? "Solid" : "Qwik"}`],
+      });
     }
     if (!hasReact) {
       // Allow if there's no frontend selected yet - prompts will handle this
       const { web } = splitFrontends(frontends);
       if (web.length > 0) {
-        exitWithError(
-          `${forms} is a React-based form library. It requires a React-based frontend (tanstack-router, react-router, tanstack-start, next, or native).`,
-        );
+        incompatibilityError({
+          message: `${forms} requires a React-based frontend.`,
+          provided: { forms, frontend: web },
+          suggestions: [
+            "Use tanstack-router, react-router, tanstack-start, or next",
+            "Use --forms modular-forms for Solid or Qwik",
+          ],
+        });
       }
     }
   }
