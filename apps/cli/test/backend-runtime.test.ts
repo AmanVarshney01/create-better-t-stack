@@ -95,19 +95,19 @@ describe("Backend and Runtime Combinations", () => {
         backend: "express" as const,
         runtime: "workers" as const,
         error:
-          "Cloudflare Workers runtime (--runtime workers) is only supported with Hono or Nitro backend",
+          "Cloudflare Workers runtime (--runtime workers) is only supported with Hono, Nitro, or feTS backend",
       },
       {
         backend: "fastify",
         runtime: "workers",
         error:
-          "Cloudflare Workers runtime (--runtime workers) is only supported with Hono or Nitro backend",
+          "Cloudflare Workers runtime (--runtime workers) is only supported with Hono, Nitro, or feTS backend",
       },
       {
         backend: "elysia",
         runtime: "workers",
         error:
-          "Cloudflare Workers runtime (--runtime workers) is only supported with Hono or Nitro backend",
+          "Cloudflare Workers runtime (--runtime workers) is only supported with Hono, Nitro, or feTS backend",
       },
 
       // Convex backend requires runtime none

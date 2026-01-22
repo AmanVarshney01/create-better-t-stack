@@ -1,129 +1,114 @@
-# Contributing to Better Fullstack
+# Contributing
 
-Thank you for your interest in contributing to Better Fullstack! This document provides guidelines and setup instructions for contributors.
+Thanks for wanting to contribute! Here's everything you need to get started.
 
-> **Important**: Before starting work on any new features or major changes, please open an issue first to discuss your proposal and get approval.
+> **Important**: Open an issue before starting work on new features or major changes.
+
+<br>
+
+## TL;DR
+
+```bash
+git clone https://github.com/Marve10s/Better-Fullstack.git
+cd Better-Fullstack
+bun install
+bun dev:cli    # CLI development
+bun dev:web    # Website development
+```
+
+<br>
 
 ## Project Structure
 
-This repository is organized as a monorepo containing:
+```
+├── apps/
+│   ├── cli/     # create-better-fullstack CLI
+│   └── web/     # Documentation website
+└── packages/    # Shared packages
+```
 
-- **CLI**: [`apps/cli`](../apps/cli) - The scaffolding CLI tool (`create-better-fullstack`)
-- **Website**: [`apps/web`](../apps/web) - Official website
+<br>
 
-## Development Setup
+## Development
 
 ### Prerequisites
 
-- Node.js (LTS)
-- Bun (recommended)
-- Git
+- [Node.js](https://nodejs.org/) (LTS)
+- [Bun](https://bun.sh/) (recommended)
 
-### Initial Setup
+### Setup
 
-1. **Clone the repository**
+```bash
+git clone https://github.com/Marve10s/Better-Fullstack.git
+cd Better-Fullstack
+bun install
+```
 
-   ```bash
-   git clone https://github.com/Marve10s/Better-Fullstack.git
-   cd Better-Fullstack
-   ```
+### CLI
 
-2. **Install dependencies**
-   ```bash
-   bun install
-   ```
+```bash
+bun dev:cli
+```
 
-### CLI Development
+Runs tsdown in watch mode. To test globally:
 
-1. **Start development server**
+```bash
+cd apps/cli && bun link
+create-better-fullstack
+```
 
-   ```bash
-   bun dev:cli
-   ```
+### Website
 
-   This runs tsdown build in watch mode, automatically rebuilding on changes.
+```bash
+bun dev:web
+```
 
-2. **Link the CLI globally** (optional, for testing anywhere in your system)
+<br>
 
-   ```bash
-   cd apps/cli
-   bun link
-   ```
+## Testing
 
-   Now you can use `create-better-fullstack` from anywhere in your system.
+```bash
+turbo test              # Run all tests
+turbo build             # Build all packages
+bun run check           # Lint and format
+```
 
-3. **Test the CLI**
-   ```bash
-   create-better-fullstack
-   ```
+See [TESTING.md](../TESTING.md) for the full testing guide.
 
-### Web Development
+<br>
 
-1. **Start the website**
-   ```bash
-   bun dev:web
-   ```
+## Making Changes
 
-## Contribution Guidelines
+1. **Open an issue** — Describe the bug or feature
+2. **Fork & clone** — Create your own copy
+3. **Branch** — `git checkout -b feat/your-feature` or `fix/your-bug`
+4. **Code** — Follow existing patterns
+5. **Test** — `turbo test`
+6. **Check** — `bun run check`
+7. **Commit** — Use conventional commits (see below)
+8. **Push & PR** — Link the related issue
 
-### Standard Contribution Steps
+<br>
 
-1. **Create an issue** (if one doesn't exist)
-   - Describe the bug or feature request
-   - Include steps to reproduce (for bugs)
-   - Discuss the proposed solution
+## Commit Convention
 
-2. **Fork the repository**
-   - Click the "Fork" button on GitHub
-   - Clone your fork locally
+```
+feat: add new feature
+fix: resolve bug
+docs: update documentation
+chore: maintenance tasks
+refactor: code changes without feature/fix
+```
 
-3. **Create a feature branch**
+<br>
 
-   ```bash
-   git checkout -b feature/your-feature-name
-   # or
-   git checkout -b fix/your-bug-fix
-   ```
+## Need Help?
 
-4. **Make your changes**
-   - Follow the existing code style
-   - Update documentation as needed
+- Check [existing issues](https://github.com/Marve10s/Better-Fullstack/issues)
+- Open a [new issue](https://github.com/Marve10s/Better-Fullstack/issues/new) with your question
 
-5. **Test and format your changes**
+<br>
 
-   ```bash
-   # Lint and format files
-   bun run check
-   ```
+---
 
-6. **Commit your changes**
-
-   ```bash
-   git add .
-   git commit -m "feat: add your feature description"
-   # or
-   git commit -m "fix: fix your bug description"
-   ```
-
-7. **Push to your fork**
-
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-
-8. **Create a Pull Request**
-   - Link to the related issue
-   - Describe your changes
-
-## Commit Conventions
-
-Use conventional commit messages:
-
-- `feat: add new feature`
-- `fix: fix bug`
-- `docs: update documentation`
-- `chore: update dependencies`
-
-## License
-
-By contributing to Better Fullstack, you agree that your contributions will be licensed under the MIT License.
+By contributing, you agree that your contributions will be licensed under the [MIT License](../LICENSE).

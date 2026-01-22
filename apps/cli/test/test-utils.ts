@@ -79,8 +79,8 @@ import {
   RustLibrariesSchema,
 } from "../src/types";
 
-// Smoke directory path - use the same as setup.ts
-const SMOKE_DIR_PATH = join(import.meta.dir, "..", ".smoke");
+// Default smoke directory path - use the same as setup.ts
+const DEFAULT_SMOKE_DIR = join(import.meta.dir, "..", ".smoke");
 
 export interface TestResult {
   success: boolean;
@@ -94,6 +94,8 @@ export interface TestConfig extends CreateInput {
   projectName?: string;
   expectError?: boolean;
   expectedErrorMessage?: string;
+  /** Custom smoke directory path (defaults to apps/cli/.smoke) */
+  smokeDir?: string;
 }
 
 /**
@@ -101,15 +103,18 @@ export interface TestConfig extends CreateInput {
  * The create() API runs in silent mode and returns JSON instead of calling process.exit().
  */
 export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
+  // Use custom smoke directory if provided, otherwise use default
+  const smokeDir = config.smokeDir ?? DEFAULT_SMOKE_DIR;
+
   // Ensure smoke directory exists (may be called before global setup in some cases)
   try {
-    await mkdir(SMOKE_DIR_PATH, { recursive: true });
+    await mkdir(smokeDir, { recursive: true });
   } catch {
     // Directory may already exist
   }
 
   const projectName = config.projectName || "default-app";
-  const projectPath = join(SMOKE_DIR_PATH, projectName);
+  const projectPath = join(smokeDir, projectName);
 
   // Determine if we should use --yes or not
   // Only core stack flags conflict with --yes flag (from CLI error message)
@@ -194,7 +199,13 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
 
   // Build options object - let the CLI handle all validation
   // Remove test-specific properties before passing to create()
-  const { projectName: _, expectError: __, expectedErrorMessage: ___, ...restConfig } = config;
+  const {
+    projectName: _,
+    expectError: __,
+    expectedErrorMessage: ___,
+    smokeDir: ____,
+    ...restConfig
+  } = config;
 
   const options: Partial<CreateInput> = {
     install: config.install ?? false,

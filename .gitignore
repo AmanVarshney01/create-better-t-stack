@@ -46,13 +46,11 @@ yarn.lock
 .env*.local
 
 .smoke
+.smoke-e2e
 
 .idea
 
 templates-binary
 
 # Ralph (autonomous agent loop)
-scripts/ralph/prd.json
-scripts/ralph/progress.txt
-scripts/ralph/archive/
-scripts/ralph/.last-branch
+scripts/ralph/
