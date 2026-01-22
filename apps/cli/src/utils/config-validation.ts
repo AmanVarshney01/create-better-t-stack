@@ -16,6 +16,7 @@ import {
   validateWorkersCompatibility,
 } from "./compatibility-rules";
 import { exitWithError } from "./errors";
+import { validatePeerDependencies } from "./peer-dependency-validator";
 
 export function validateDatabaseOrmAuth(cfg: Partial<ProjectConfig>, flags?: Set<string>) {
   const db = cfg.database;
@@ -545,6 +546,9 @@ export function validateFullConfig(
     config.astroIntegration,
   );
   validateUILibraryCSSFrameworkCompatibility(config.uiLibrary, config.cssFramework);
+
+  // Peer dependency conflict detection
+  validatePeerDependencies(config);
 }
 
 export function validateConfigForProgrammaticUse(config: Partial<ProjectConfig>) {
@@ -579,6 +583,9 @@ export function validateConfigForProgrammaticUse(config: Partial<ProjectConfig>)
       config.astroIntegration,
     );
     validateUILibraryCSSFrameworkCompatibility(config.uiLibrary, config.cssFramework);
+
+    // Peer dependency conflict detection
+    validatePeerDependencies(config);
   } catch (error) {
     if (error instanceof Error) {
       throw error;

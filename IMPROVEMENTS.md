@@ -6,9 +6,9 @@ A collection of potential improvements for the Better-Fullstack project.
 
 ## CLI & Template Generator
 
-1. **Template validation tests** - Verify all generated templates are valid TypeScript/have no syntax errors -- should be done
-2. **Generated project E2E tests** - Actually run the generated projects and verify they work (start dev server, hit endpoints) -- in progress
-3. **Template snapshot tests** - Detect unintended changes to generated output
+1. **Template validation tests** - Verify all generated templates are valid TypeScript/have no syntax errors -- should be ready
+2. **Generated project E2E tests** - Actually run the generated projects and verify they work (start dev server, hit endpoints) -- should be ready
+3. **Template snapshot tests** - Detect unintended changes to generated output -- should be ready
 4. **Dependency conflict detection** - Warn when selected options have incompatible peer dependencies
 5. **Interactive upgrade command** - `bun run cli upgrade` to update existing projects to newer templates
 6. **Project health check command** - Analyze an existing project and suggest improvements
