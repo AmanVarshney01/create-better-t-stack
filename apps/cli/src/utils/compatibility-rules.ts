@@ -496,6 +496,7 @@ export function validateExamplesCompatibility(
 export function validateUILibraryFrontendCompatibility(
   uiLibrary: UILibrary | undefined,
   frontends: Frontend[] = [],
+  astroIntegration?: AstroIntegration,
 ) {
   if (!uiLibrary || uiLibrary === "none") return;
 
@@ -505,6 +506,29 @@ export function validateUILibraryFrontendCompatibility(
   const compatibility = UI_LIBRARY_COMPATIBILITY[uiLibrary];
   const webFrontend = web[0];
 
+  // Handle Astro with integrations
+  if (webFrontend === "astro") {
+    // If React integration, treat as React frontend for UI library compatibility
+    if (astroIntegration === "react") {
+      // Check if library supports React frontends
+      const supportsReact = compatibility.frontends.some((f) =>
+        ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+      );
+      if (supportsReact) return; // OK
+    }
+
+    // For non-React integrations, only allow libraries that explicitly support astro
+    if (!compatibility.frontends.includes("astro")) {
+      const integrationName = astroIntegration || "none";
+      exitWithError(
+        `UI library '${uiLibrary}' requires React. Astro is configured with '${integrationName}' integration. ` +
+          `Please use --astro-integration react or choose a different UI library (e.g., daisyui, ark-ui).`,
+      );
+    }
+    return;
+  }
+
+  // Original logic for non-Astro frontends
   if (!compatibility.frontends.includes(webFrontend)) {
     const supportedList = compatibility.frontends.join(", ");
     exitWithError(
@@ -536,7 +560,10 @@ export function validateUILibraryCSSFrameworkCompatibility(
 /**
  * Gets list of UI libraries compatible with the selected frontend(s)
  */
-export function getCompatibleUILibraries(frontends: Frontend[] = []): UILibrary[] {
+export function getCompatibleUILibraries(
+  frontends: Frontend[] = [],
+  astroIntegration?: AstroIntegration,
+): UILibrary[] {
   const { web } = splitFrontends(frontends);
   if (web.length === 0) return ["none"];
 
@@ -544,7 +571,22 @@ export function getCompatibleUILibraries(frontends: Frontend[] = []): UILibrary[
 
   const allUILibraries = Object.keys(UI_LIBRARY_COMPATIBILITY) as UILibrary[];
   return allUILibraries.filter((lib) => {
+    if (lib === "none") return true;
+
     const compatibility = UI_LIBRARY_COMPATIBILITY[lib];
+
+    // Handle Astro with integrations
+    if (webFrontend === "astro") {
+      if (astroIntegration === "react") {
+        // Allow React-compatible libraries
+        return compatibility.frontends.some((f) =>
+          ["tanstack-router", "react-router", "tanstack-start", "next", "astro"].includes(f),
+        );
+      }
+      // Non-React integration - only allow libraries that explicitly support astro
+      return compatibility.frontends.includes("astro");
+    }
+
     return compatibility.frontends.includes(webFrontend);
   });
 }

@@ -149,7 +149,9 @@ describe("CSS Framework and UI Library Configurations", () => {
   });
 
   describe("UI Library + Frontend Incompatibility", () => {
-    const shadcnIncompatibleFrontends: Frontend[] = ["nuxt", "svelte", "solid", "astro"];
+    // Note: "astro" is tested separately in "Astro Integration with UI Libraries" section
+    // because it has a different error message when astroIntegration is considered
+    const shadcnIncompatibleFrontends: Frontend[] = ["nuxt", "svelte", "solid"];
 
     for (const frontend of shadcnIncompatibleFrontends) {
       it(`should fail with shadcn-ui + ${frontend}`, async () => {
@@ -176,7 +178,8 @@ describe("CSS Framework and UI Library Configurations", () => {
       });
     }
 
-    const radixIncompatibleFrontends: Frontend[] = ["nuxt", "svelte", "solid", "astro"];
+    // Note: "astro" is tested separately in "Astro Integration with UI Libraries" section
+    const radixIncompatibleFrontends: Frontend[] = ["nuxt", "svelte", "solid"];
 
     for (const frontend of radixIncompatibleFrontends) {
       it(`should fail with radix-ui + ${frontend}`, async () => {
@@ -490,7 +493,8 @@ describe("CSS Framework and UI Library Configurations", () => {
     }
 
     // chakra-ui and nextui should fail with non-React frontends
-    const nonReactFrontends: Frontend[] = ["nuxt", "svelte", "solid", "astro"];
+    // Note: "astro" is tested separately in "Astro Integration with UI Libraries" section
+    const nonReactFrontends: Frontend[] = ["nuxt", "svelte", "solid"];
 
     for (const frontend of nonReactFrontends) {
       it(`should fail with chakra-ui + ${frontend}`, async () => {
@@ -580,7 +584,8 @@ describe("CSS Framework and UI Library Configurations", () => {
     }
 
     // headless-ui doesn't work with svelte, solid, astro
-    const headlessIncompatibleFrontends: Frontend[] = ["svelte", "solid", "astro"];
+    // Note: "astro" is tested separately in "Astro Integration with UI Libraries" section
+    const headlessIncompatibleFrontends: Frontend[] = ["svelte", "solid"];
 
     for (const frontend of headlessIncompatibleFrontends) {
       it(`should fail with headless-ui + ${frontend}`, async () => {
@@ -648,7 +653,8 @@ describe("CSS Framework and UI Library Configurations", () => {
     }
 
     // park-ui doesn't work with svelte, astro
-    const parkIncompatibleFrontends: Frontend[] = ["svelte", "astro"];
+    // Note: "astro" is tested separately in "Astro Integration with UI Libraries" section
+    const parkIncompatibleFrontends: Frontend[] = ["svelte"];
 
     for (const frontend of parkIncompatibleFrontends) {
       it(`should fail with park-ui + ${frontend}`, async () => {
@@ -735,7 +741,8 @@ describe("CSS Framework and UI Library Configurations", () => {
     }
 
     // Mantine should fail with non-React frontends
-    const mantineIncompatibleFrontends: Frontend[] = ["nuxt", "svelte", "solid", "astro"];
+    // Note: "astro" is tested separately in "Astro Integration with UI Libraries" section
+    const mantineIncompatibleFrontends: Frontend[] = ["nuxt", "svelte", "solid"];
 
     for (const frontend of mantineIncompatibleFrontends) {
       it(`should fail with mantine + ${frontend}`, async () => {
@@ -826,7 +833,8 @@ describe("CSS Framework and UI Library Configurations", () => {
     }
 
     // Base UI should fail with non-React frontends
-    const baseUIIncompatibleFrontends: Frontend[] = ["nuxt", "svelte", "solid", "astro"];
+    // Note: "astro" is tested separately in "Astro Integration with UI Libraries" section
+    const baseUIIncompatibleFrontends: Frontend[] = ["nuxt", "svelte", "solid"];
 
     for (const frontend of baseUIIncompatibleFrontends) {
       it(`should fail with base-ui + ${frontend}`, async () => {
@@ -988,8 +996,9 @@ describe("CSS Framework and UI Library Configurations", () => {
       expectSuccess(result);
     });
 
-    // Ark UI should fail with incompatible frontends (Astro, Qwik, Angular)
-    const arkUIIncompatibleFrontends: Frontend[] = ["astro", "qwik", "angular"];
+    // Ark UI should fail with incompatible frontends (Qwik, Angular)
+    // Note: "astro" is tested separately in "Astro Integration with UI Libraries" section
+    const arkUIIncompatibleFrontends: Frontend[] = ["qwik", "angular"];
 
     for (const frontend of arkUIIncompatibleFrontends) {
       it(`should fail with ark-ui + ${frontend}`, async () => {
@@ -1080,7 +1089,8 @@ describe("CSS Framework and UI Library Configurations", () => {
     }
 
     // React Aria should fail with non-React frontends
-    const reactAriaIncompatibleFrontends: Frontend[] = ["nuxt", "svelte", "solid", "astro"];
+    // Note: "astro" is tested separately in "Astro Integration with UI Libraries" section
+    const reactAriaIncompatibleFrontends: Frontend[] = ["nuxt", "svelte", "solid"];
 
     for (const frontend of reactAriaIncompatibleFrontends) {
       it(`should fail with react-aria + ${frontend}`, async () => {
@@ -1134,5 +1144,275 @@ describe("CSS Framework and UI Library Configurations", () => {
         expectSuccess(result);
       });
     }
+  });
+
+  describe("Astro Integration with UI Libraries", () => {
+    // Astro + React integration should allow React UI libraries
+    it("should allow base-ui with astro + react integration", async () => {
+      const result = await runTRPCTest({
+        projectName: "astro-react-baseui",
+        frontend: ["astro"],
+        astroIntegration: "react",
+        uiLibrary: "base-ui",
+        cssFramework: "tailwind",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        api: "trpc",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should allow shadcn-ui with astro + react integration", async () => {
+      const result = await runTRPCTest({
+        projectName: "astro-react-shadcn",
+        frontend: ["astro"],
+        astroIntegration: "react",
+        uiLibrary: "shadcn-ui",
+        cssFramework: "tailwind",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        api: "trpc",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should allow radix-ui with astro + react integration", async () => {
+      const result = await runTRPCTest({
+        projectName: "astro-react-radix",
+        frontend: ["astro"],
+        astroIntegration: "react",
+        uiLibrary: "radix-ui",
+        cssFramework: "tailwind",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        api: "trpc",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    // Astro + non-React integration should fail with React UI libraries
+    it("should fail base-ui with astro + solid integration", async () => {
+      const result = await runTRPCTest({
+        projectName: "astro-solid-baseui-fail",
+        frontend: ["astro"],
+        astroIntegration: "solid",
+        uiLibrary: "base-ui",
+        cssFramework: "tailwind",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        api: "orpc",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "requires React");
+    });
+
+    it("should fail shadcn-ui with astro + vue integration", async () => {
+      const result = await runTRPCTest({
+        projectName: "astro-vue-shadcn-fail",
+        frontend: ["astro"],
+        astroIntegration: "vue",
+        uiLibrary: "shadcn-ui",
+        cssFramework: "tailwind",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        api: "orpc",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "requires React");
+    });
+
+    it("should fail radix-ui with astro + svelte integration", async () => {
+      const result = await runTRPCTest({
+        projectName: "astro-svelte-radix-fail",
+        frontend: ["astro"],
+        astroIntegration: "svelte",
+        uiLibrary: "radix-ui",
+        cssFramework: "tailwind",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        api: "orpc",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "requires React");
+    });
+
+    it("should fail base-ui with astro + none integration", async () => {
+      const result = await runTRPCTest({
+        projectName: "astro-none-baseui-fail",
+        frontend: ["astro"],
+        astroIntegration: "none",
+        uiLibrary: "base-ui",
+        cssFramework: "tailwind",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        api: "orpc",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "requires React");
+    });
+
+    // Framework-agnostic libraries should work with any Astro integration
+    it("should allow daisyui with astro + solid integration", async () => {
+      const result = await runTRPCTest({
+        projectName: "astro-solid-daisyui",
+        frontend: ["astro"],
+        astroIntegration: "solid",
+        uiLibrary: "daisyui",
+        cssFramework: "tailwind",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        api: "orpc",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should allow daisyui with astro + vue integration", async () => {
+      const result = await runTRPCTest({
+        projectName: "astro-vue-daisyui",
+        frontend: ["astro"],
+        astroIntegration: "vue",
+        uiLibrary: "daisyui",
+        cssFramework: "tailwind",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        api: "orpc",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should allow daisyui with astro + none integration", async () => {
+      const result = await runTRPCTest({
+        projectName: "astro-none-daisyui",
+        frontend: ["astro"],
+        astroIntegration: "none",
+        uiLibrary: "daisyui",
+        cssFramework: "tailwind",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        api: "orpc",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    // No UI library should work with any Astro integration
+    it("should allow no UI library with astro + solid integration", async () => {
+      const result = await runTRPCTest({
+        projectName: "astro-solid-no-ui",
+        frontend: ["astro"],
+        astroIntegration: "solid",
+        uiLibrary: "none",
+        cssFramework: "tailwind",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        api: "orpc",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
   });
 });

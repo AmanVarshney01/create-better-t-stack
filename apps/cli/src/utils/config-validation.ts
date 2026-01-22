@@ -539,7 +539,11 @@ export function validateFullConfig(
 
   validateNextAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
 
-  validateUILibraryFrontendCompatibility(config.uiLibrary, config.frontend ?? []);
+  validateUILibraryFrontendCompatibility(
+    config.uiLibrary,
+    config.frontend ?? [],
+    config.astroIntegration,
+  );
   validateUILibraryCSSFrameworkCompatibility(config.uiLibrary, config.cssFramework);
 }
 
@@ -569,7 +573,11 @@ export function validateConfigForProgrammaticUse(config: Partial<ProjectConfig>)
       config.api,
     );
 
-    validateUILibraryFrontendCompatibility(config.uiLibrary, config.frontend ?? []);
+    validateUILibraryFrontendCompatibility(
+      config.uiLibrary,
+      config.frontend ?? [],
+      config.astroIntegration,
+    );
     validateUILibraryCSSFrameworkCompatibility(config.uiLibrary, config.cssFramework);
   } catch (error) {
     if (error instanceof Error) {

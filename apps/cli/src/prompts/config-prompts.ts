@@ -161,7 +161,7 @@ export async function gatherConfig(
       uiLibrary: ({ results }) => {
         if (results.ecosystem === "rust") return Promise.resolve("none" as UILibrary);
         if (hasWebStyling(results.frontend)) {
-          return getUILibraryChoice(flags.uiLibrary, results.frontend);
+          return getUILibraryChoice(flags.uiLibrary, results.frontend, results.astroIntegration);
         }
         return Promise.resolve("none" as UILibrary);
       },

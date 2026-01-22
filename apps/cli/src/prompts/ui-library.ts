@@ -1,4 +1,4 @@
-import type { Frontend, UILibrary } from "../types";
+import type { AstroIntegration, Frontend, UILibrary } from "../types";
 
 import { DEFAULT_UI_LIBRARY_BY_FRONTEND } from "../constants";
 import { getCompatibleUILibraries, splitFrontends } from "../utils/compatibility-rules";
@@ -59,6 +59,7 @@ const UI_LIBRARY_OPTIONS: Record<UILibrary, { label: string; hint: string }> = {
 export async function getUILibraryChoice(
   uiLibrary?: UILibrary,
   frontends?: Frontend[],
+  astroIntegration?: AstroIntegration,
 ): Promise<UILibrary> {
   const { web } = splitFrontends(frontends);
 
@@ -67,7 +68,7 @@ export async function getUILibraryChoice(
     return "none";
   }
 
-  const compatibleLibraries = getCompatibleUILibraries(frontends);
+  const compatibleLibraries = getCompatibleUILibraries(frontends, astroIntegration);
 
   if (uiLibrary !== undefined) {
     return compatibleLibraries.includes(uiLibrary) ? uiLibrary : compatibleLibraries[0];
