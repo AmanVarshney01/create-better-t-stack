@@ -1,0 +1,302 @@
+import posthog from "posthog-js";
+import type { PropsWithChildren } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+
+// PostHog configuration from environment variables
+{{#if (eq frontend.[0] "next")}}
+const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY || "";
+const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com";
+{{else if (eq frontend.[0] "nuxt")}}
+const posthogKey = process.env.NUXT_PUBLIC_POSTHOG_KEY || "";
+const posthogHost = process.env.NUXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com";
+{{else}}
+const posthogKey = import.meta.env.VITE_POSTHOG_KEY || "";
+const posthogHost = import.meta.env.VITE_POSTHOG_HOST || "https://us.i.posthog.com";
+{{/if}}
+
+// Initialize PostHog only once
+let initialized = false;
+
+function initPostHog() {
+  if (initialized || !posthogKey || typeof window === "undefined") return;
+
+  posthog.init(posthogKey, {
+    api_host: posthogHost,
+    // Capture pageviews automatically
+    capture_pageview: true,
+    // Capture pageleaves for session tracking
+    capture_pageleave: true,
+    // Enable session recording (optional - requires PostHog plan)
+    disable_session_recording: false,
+    // Enable autocapture for clicks, form submissions, etc.
+    autocapture: true,
+    // Persist user identity across sessions
+    persistence: "localStorage+cookie",
+    // Respect Do Not Track browser setting
+    respect_dnt: true,
+  });
+
+  initialized = true;
+}
+
+interface PostHogProviderProps extends PropsWithChildren {
+  /**
+   * User properties for identification
+   * @example { email: "user@example.com", plan: "premium" }
+   */
+  user?: {
+    id?: string;
+    email?: string;
+    [key: string]: unknown;
+  };
+}
+
+/**
+ * PostHog Provider component
+ * Wrap your app with this provider to enable feature flags and analytics
+ *
+ * @example
+ * function App() {
+ *   const user = useAuth();
+ *   return (
+ *     <PostHogProvider user={{ id: user?.id, email: user?.email }}>
+ *       <YourApp />
+ *     </PostHogProvider>
+ *   );
+ * }
+ */
+export function PostHogProvider({ children, user }: PostHogProviderProps) {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    initPostHog();
+    setReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (user?.id && ready) {
+      // Identify user with PostHog
+      posthog.identify(user.id, {
+        email: user.email,
+        ...user,
+      });
+    }
+  }, [user?.id, user?.email, ready]);
+
+  if (!posthogKey) {
+    console.warn("[PostHog] API key not configured, feature flags and analytics disabled");
+  }
+
+  return <>{children}</>;
+}
+
+/**
+ * Hook to check if a feature flag is enabled
+ *
+ * @example
+ * function MyComponent() {
+ *   const showNewFeature = useFeatureFlag("new-feature");
+ *   return showNewFeature ? <NewFeature /> : <OldFeature />;
+ * }
+ */
+export function useFeatureFlag(flagKey: string): boolean {
+  const [enabled, setEnabled] = useState(false);
+
+  useEffect(() => {
+    // Get initial value
+    setEnabled(posthog.isFeatureEnabled(flagKey) ?? false);
+
+    // Listen for changes
+    const unsubscribe = posthog.onFeatureFlags(() => {
+      setEnabled(posthog.isFeatureEnabled(flagKey) ?? false);
+    });
+
+    return () => {
+      if (typeof unsubscribe === "function") {
+        unsubscribe();
+      }
+    };
+  }, [flagKey]);
+
+  return enabled;
+}
+
+/**
+ * Hook to get a feature flag value (for multivariate flags)
+ *
+ * @example
+ * function MyComponent() {
+ *   const buttonColor = useFeatureFlagValue("button-color", "blue");
+ *   return <button style={{ backgroundColor: buttonColor }}>Click me</button>;
+ * }
+ */
+export function useFeatureFlagValue<T extends string | boolean | number>(
+  flagKey: string,
+  defaultValue: T,
+): T {
+  const [value, setValue] = useState<T>(defaultValue);
+
+  useEffect(() => {
+    // Get initial value
+    const flagValue = posthog.getFeatureFlag(flagKey);
+    setValue((flagValue as T) ?? defaultValue);
+
+    // Listen for changes
+    const unsubscribe = posthog.onFeatureFlags(() => {
+      const newValue = posthog.getFeatureFlag(flagKey);
+      setValue((newValue as T) ?? defaultValue);
+    });
+
+    return () => {
+      if (typeof unsubscribe === "function") {
+        unsubscribe();
+      }
+    };
+  }, [flagKey, defaultValue]);
+
+  return value;
+}
+
+/**
+ * Hook to get feature flag payload (JSON data attached to a flag)
+ *
+ * @example
+ * function MyComponent() {
+ *   const config = useFeatureFlagPayload<{ maxItems: number }>("feature-config");
+ *   return <List maxItems={config?.maxItems ?? 10} />;
+ * }
+ */
+export function useFeatureFlagPayload<T = unknown>(flagKey: string): T | undefined {
+  const [payload, setPayload] = useState<T | undefined>(undefined);
+
+  useEffect(() => {
+    // Get initial payload
+    setPayload(posthog.getFeatureFlagPayload(flagKey) as T | undefined);
+
+    // Listen for changes
+    const unsubscribe = posthog.onFeatureFlags(() => {
+      setPayload(posthog.getFeatureFlagPayload(flagKey) as T | undefined);
+    });
+
+    return () => {
+      if (typeof unsubscribe === "function") {
+        unsubscribe();
+      }
+    };
+  }, [flagKey]);
+
+  return payload;
+}
+
+/**
+ * Hook to track events
+ *
+ * @example
+ * function CheckoutButton() {
+ *   const capture = useCapture();
+ *
+ *   const handleClick = () => {
+ *     capture("checkout_started", { items: 3, total: 99.99 });
+ *   };
+ *
+ *   return <button onClick={handleClick}>Checkout</button>;
+ * }
+ */
+export function useCapture() {
+  return useCallback((eventName: string, properties?: Record<string, unknown>) => {
+    posthog.capture(eventName, properties);
+  }, []);
+}
+
+/**
+ * Hook to identify users
+ *
+ * @example
+ * function LoginHandler() {
+ *   const identify = useIdentify();
+ *
+ *   const onLogin = (user) => {
+ *     identify(user.id, { email: user.email, plan: user.plan });
+ *   };
+ * }
+ */
+export function useIdentify() {
+  return useCallback((userId: string, properties?: Record<string, unknown>) => {
+    posthog.identify(userId, properties);
+  }, []);
+}
+
+/**
+ * Hook to reset user identity (for logout)
+ *
+ * @example
+ * function LogoutButton() {
+ *   const reset = useReset();
+ *   return <button onClick={reset}>Logout</button>;
+ * }
+ */
+export function useReset() {
+  return useCallback(() => {
+    posthog.reset();
+  }, []);
+}
+
+/**
+ * Hook to get the PostHog instance for advanced usage
+ */
+export function usePostHog() {
+  return useMemo(() => posthog, []);
+}
+
+// Re-export PostHog for direct access
+export { posthog };
+
+/**
+ * Environment Variables:
+ *
+{{#if (eq frontend.[0] "next")}}
+ * NEXT_PUBLIC_POSTHOG_KEY - PostHog project API key
+ * NEXT_PUBLIC_POSTHOG_HOST - PostHog API host (default: https://us.i.posthog.com)
+{{else if (eq frontend.[0] "nuxt")}}
+ * NUXT_PUBLIC_POSTHOG_KEY - PostHog project API key
+ * NUXT_PUBLIC_POSTHOG_HOST - PostHog API host (default: https://us.i.posthog.com)
+{{else}}
+ * VITE_POSTHOG_KEY - PostHog project API key
+ * VITE_POSTHOG_HOST - PostHog API host (default: https://us.i.posthog.com)
+{{/if}}
+ *
+ * Getting started:
+ * 1. Create an account at https://posthog.com
+ * 2. Create a new project
+ * 3. Copy the Project API key to your .env file
+ * 4. Choose your region (US or EU) and set the host accordingly
+ * 5. Wrap your app with <PostHogProvider>
+ *
+ * Example usage:
+ * ```tsx
+ * // In your app entry point
+ * import { PostHogProvider } from "./lib/posthog";
+ *
+ * function App() {
+ *   const user = useAuth();
+ *   return (
+ *     <PostHogProvider user={{ id: user?.id, email: user?.email }}>
+ *       <Router />
+ *     </PostHogProvider>
+ *   );
+ * }
+ *
+ * // In any component
+ * import { useFeatureFlag, useCapture } from "./lib/posthog";
+ *
+ * function MyComponent() {
+ *   const showBanner = useFeatureFlag("show-banner");
+ *   const capture = useCapture();
+ *
+ *   if (!showBanner) return null;
+ *   return (
+ *     <Banner onClick={() => capture("banner_clicked")} />
+ *   );
+ * }
+ * ```
+ */

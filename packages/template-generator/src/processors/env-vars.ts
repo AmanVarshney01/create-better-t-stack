@@ -281,6 +281,38 @@ function buildClientVars(
     );
   }
 
+  // PostHog feature flags + analytics client-side
+  if (featureFlags === "posthog") {
+    let posthogKeyName = "VITE_POSTHOG_KEY";
+    let posthogHostName = "VITE_POSTHOG_HOST";
+
+    if (hasNextJs) {
+      posthogKeyName = "NEXT_PUBLIC_POSTHOG_KEY";
+      posthogHostName = "NEXT_PUBLIC_POSTHOG_HOST";
+    } else if (hasNuxt) {
+      posthogKeyName = "NUXT_PUBLIC_POSTHOG_KEY";
+      posthogHostName = "NUXT_PUBLIC_POSTHOG_HOST";
+    } else if (hasSvelte) {
+      posthogKeyName = "PUBLIC_POSTHOG_KEY";
+      posthogHostName = "PUBLIC_POSTHOG_HOST";
+    }
+
+    vars.push(
+      {
+        key: posthogKeyName,
+        value: "",
+        condition: true,
+        comment: "PostHog project API key - get it at https://app.posthog.com/project/settings",
+      },
+      {
+        key: posthogHostName,
+        value: "https://us.i.posthog.com",
+        condition: true,
+        comment: "PostHog API host (use https://eu.i.posthog.com for EU region)",
+      },
+    );
+  }
+
   return vars;
 }
 
@@ -843,6 +875,18 @@ function buildServerVars(
       value: "",
       condition: featureFlags === "growthbook",
       comment: "GrowthBook SDK connection client key",
+    },
+    {
+      key: "POSTHOG_API_KEY",
+      value: "",
+      condition: featureFlags === "posthog",
+      comment: "PostHog project API key - get it at https://app.posthog.com/project/settings",
+    },
+    {
+      key: "POSTHOG_HOST",
+      value: "https://us.i.posthog.com",
+      condition: featureFlags === "posthog",
+      comment: "PostHog API host (use https://eu.i.posthog.com for EU region)",
     },
     {
       key: "REDIS_HOST",

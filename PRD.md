@@ -149,7 +149,7 @@
 ## **Feature Flags**
 
 - [x] **GrowthBook** - Open-source feature flags + A/B testing
-- [ ] **PostHog** - Feature flags + analytics
+- [x] **PostHog** - Feature flags + analytics
 
 ---
 

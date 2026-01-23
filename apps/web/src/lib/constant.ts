@@ -848,6 +848,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "posthog",
+      name: "PostHog",
+      description: "Feature flags with analytics, session replay, and A/B testing",
+      icon: "/icon/posthog.svg",
+      color: "from-yellow-500 to-orange-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Feature Flags",
       description: "Skip feature flags setup",

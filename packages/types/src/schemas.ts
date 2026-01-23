@@ -218,7 +218,7 @@ export const ObservabilitySchema = z
   .describe("Observability and distributed tracing");
 
 export const FeatureFlagsSchema = z
-  .enum(["growthbook", "none"])
+  .enum(["growthbook", "posthog", "none"])
   .describe("Feature flags provider for A/B testing and feature management");
 
 // Rust ecosystem schemas

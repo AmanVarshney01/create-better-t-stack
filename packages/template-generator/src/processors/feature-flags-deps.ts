@@ -51,4 +51,42 @@ export function processFeatureFlagsDeps(vfs: VirtualFileSystem, config: ProjectC
       }
     }
   }
+
+  if (featureFlags === "posthog") {
+    // Add client-side PostHog SDK to web app
+    if (hasWebFrontend) {
+      const webPath = "apps/web/package.json";
+      if (vfs.exists(webPath)) {
+        addPackageDependency({
+          vfs,
+          packagePath: webPath,
+          dependencies: ["posthog-js"],
+        });
+      }
+    }
+
+    // Add server-side PostHog SDK to backend
+    if (backend !== "none" && backend !== "convex") {
+      const serverPath = "apps/server/package.json";
+      if (vfs.exists(serverPath)) {
+        addPackageDependency({
+          vfs,
+          packagePath: serverPath,
+          dependencies: ["posthog-node"],
+        });
+      }
+    }
+
+    // For fullstack frameworks (Next.js, etc.), add both SDKs to web
+    if (backend === "self" && hasWebFrontend) {
+      const webPath = "apps/web/package.json";
+      if (vfs.exists(webPath)) {
+        addPackageDependency({
+          vfs,
+          packagePath: webPath,
+          dependencies: ["posthog-js", "posthog-node"],
+        });
+      }
+    }
+  }
 }

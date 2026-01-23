@@ -5390,3 +5390,68 @@ MongoDB support was already fully implemented in the codebase. This task updates
 - Comprehensive documentation in template comments
 
 ### Status: COMPLETE
+
+
+## 2026-01-23: PostHog Feature Flags + Analytics Implementation
+
+### Task: Implement PostHog as a feature flags and analytics option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "posthog" to FeatureFlagsSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added PostHog dependency versions:
+   - posthog-js: ^1.194.9 (client-side)
+   - posthog-node: ^4.3.3 (server-side)
+3. **packages/template-generator/src/processors/feature-flags-deps.ts**: Added PostHog dependency processing:
+   - Adds posthog-js to web apps (React frontends)
+   - Adds posthog-node to server apps (backend)
+   - Adds both SDKs to fullstack apps (Next.js with self backend)
+4. **packages/template-generator/src/processors/env-vars.ts**: Added PostHog environment variables:
+   - Server: POSTHOG_API_KEY, POSTHOG_HOST
+   - Client: VITE_POSTHOG_KEY, VITE_POSTHOG_HOST (with NEXT_PUBLIC_, NUXT_PUBLIC_, PUBLIC_ variants)
+5. **packages/template-generator/templates/feature-flags/posthog/server/base/src/lib/posthog.ts.hbs**: Server-side PostHog client:
+   - getPostHog singleton function
+   - isFeatureEnabled, getFeatureFlagValue, getFeatureFlagPayload async helpers
+   - getAllFlags for bulk flag retrieval
+   - captureEvent for analytics tracking
+   - identifyUser, aliasUser for user identification
+   - setGroup for group analytics
+   - shutdownPostHog for graceful shutdown
+6. **packages/template-generator/templates/feature-flags/posthog/web/react/src/lib/posthog.tsx.hbs**: React client:
+   - PostHogProvider component with user identification support
+   - useFeatureFlag, useFeatureFlagValue, useFeatureFlagPayload hooks
+   - useCapture for event tracking
+   - useIdentify, useReset for user identity management
+   - usePostHog for direct PostHog access
+   - Support for VITE_, NEXT_PUBLIC_, NUXT_PUBLIC_, PUBLIC_ env vars
+7. **apps/web/src/lib/constant.ts**: Added PostHog to featureFlags options:
+   - id: "posthog"
+   - name: "PostHog"
+   - description: "Feature flags with analytics, session replay, and A/B testing"
+   - icon: "/icon/posthog.svg"
+   - color: "from-yellow-500 to-orange-600"
+8. **apps/cli/test/feature-flags.test.ts**: Added comprehensive PostHog tests:
+   - PostHog with Hono, Express, Fastify, Elysia, NestJS backends
+   - PostHog with Next.js fullstack (both posthog-js and posthog-node)
+   - PostHog with React Router frontend
+   - Updated "none" test to verify PostHog deps are not added
+
+### Features:
+- PostHog SDK for feature flags, A/B testing, and analytics
+- Server-side feature evaluation with posthog-node
+- Client-side React integration with posthog-js
+- PostHogProvider component for React apps
+- Custom hooks for feature flags and analytics:
+  - useFeatureFlag: Boolean feature flag check
+  - useFeatureFlagValue: Multivariate flag values
+  - useFeatureFlagPayload: JSON payloads attached to flags
+  - useCapture: Event tracking
+  - useIdentify/useReset: User identification management
+- Automatic pageview and pageleave capture
+- Session recording support (requires PostHog plan)
+- Autocapture for clicks and form submissions
+- Group analytics support
+- Environment variable configuration for API key and host
+- US and EU region support
+- Support for all React-based frontends and backend frameworks
+
+### Status: COMPLETE

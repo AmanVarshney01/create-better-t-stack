@@ -572,6 +572,10 @@ export const dependencyVersionMap = {
   // Feature Flags - GrowthBook
   "@growthbook/growthbook": "^1.3.1",
   "@growthbook/growthbook-react": "^1.3.1",
+
+  // Feature Flags + Analytics - PostHog
+  "posthog-js": "^1.194.9",
+  "posthog-node": "^4.3.3",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

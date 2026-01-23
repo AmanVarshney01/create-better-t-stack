@@ -1,0 +1,266 @@
+import { PostHog } from "posthog-node";
+
+// PostHog configuration from environment variables
+const posthogKey = process.env.POSTHOG_API_KEY || "";
+const posthogHost = process.env.POSTHOG_HOST || "https://us.i.posthog.com";
+
+// Create a singleton PostHog client
+let posthogClient: PostHog | null = null;
+
+/**
+ * Get the PostHog client instance
+ * Creates a singleton client for efficient resource usage
+ */
+export function getPostHog(): PostHog {
+  if (!posthogClient) {
+    if (!posthogKey) {
+      console.warn("[PostHog] API key not configured, feature flags and analytics disabled");
+    }
+    posthogClient = new PostHog(posthogKey || "placeholder", {
+      host: posthogHost,
+      // Flush events in batches for better performance
+      flushAt: 20,
+      // Flush events every 10 seconds
+      flushInterval: 10000,
+    });
+  }
+  return posthogClient;
+}
+
+/**
+ * Check if a feature flag is enabled for a user
+ *
+ * @example
+ * const isEnabled = await isFeatureEnabled("new-feature", "user-123");
+ * if (isEnabled) {
+ *   // Show new feature
+ * }
+ */
+export async function isFeatureEnabled(
+  flagKey: string,
+  distinctId: string,
+  groups?: Record<string, string>,
+): Promise<boolean> {
+  if (!posthogKey) return false;
+
+  const client = getPostHog();
+  return (
+    (await client.isFeatureEnabled(flagKey, distinctId, {
+      groups,
+    })) ?? false
+  );
+}
+
+/**
+ * Get a feature flag value (for multivariate flags)
+ *
+ * @example
+ * const variant = await getFeatureFlagValue("button-color", "user-123", "blue");
+ * console.log(variant); // "red", "blue", or "green"
+ */
+export async function getFeatureFlagValue<T extends string | boolean>(
+  flagKey: string,
+  distinctId: string,
+  defaultValue: T,
+  groups?: Record<string, string>,
+): Promise<T> {
+  if (!posthogKey) return defaultValue;
+
+  const client = getPostHog();
+  const value = await client.getFeatureFlag(flagKey, distinctId, {
+    groups,
+  });
+  return (value as T) ?? defaultValue;
+}
+
+/**
+ * Get feature flag payload (JSON data attached to a flag)
+ *
+ * @example
+ * const config = await getFeatureFlagPayload<{ maxItems: number }>(
+ *   "feature-config",
+ *   "user-123"
+ * );
+ * console.log(config?.maxItems);
+ */
+export async function getFeatureFlagPayload<T = unknown>(
+  flagKey: string,
+  distinctId: string,
+  groups?: Record<string, string>,
+): Promise<T | undefined> {
+  if (!posthogKey) return undefined;
+
+  const client = getPostHog();
+  const payload = await client.getFeatureFlagPayload(flagKey, distinctId, {
+    groups,
+  });
+  return payload as T | undefined;
+}
+
+/**
+ * Get all feature flags for a user
+ *
+ * @example
+ * const flags = await getAllFlags("user-123");
+ * console.log(flags); // { "feature-a": true, "feature-b": "variant-1" }
+ */
+export async function getAllFlags(
+  distinctId: string,
+  groups?: Record<string, string>,
+): Promise<Record<string, string | boolean>> {
+  if (!posthogKey) return {};
+
+  const client = getPostHog();
+  return await client.getAllFlags(distinctId, { groups });
+}
+
+/**
+ * Capture an analytics event
+ *
+ * @example
+ * captureEvent("user-123", "purchase_completed", {
+ *   product_id: "prod-456",
+ *   price: 99.99,
+ *   currency: "USD",
+ * });
+ */
+export function captureEvent(
+  distinctId: string,
+  eventName: string,
+  properties?: Record<string, unknown>,
+): void {
+  const client = getPostHog();
+  client.capture({
+    distinctId,
+    event: eventName,
+    properties,
+  });
+}
+
+/**
+ * Identify a user with properties
+ *
+ * @example
+ * identifyUser("user-123", {
+ *   email: "user@example.com",
+ *   name: "John Doe",
+ *   plan: "premium",
+ * });
+ */
+export function identifyUser(distinctId: string, properties?: Record<string, unknown>): void {
+  const client = getPostHog();
+  client.identify({
+    distinctId,
+    properties,
+  });
+}
+
+/**
+ * Create an alias for a user (link anonymous to identified user)
+ *
+ * @example
+ * // When user signs up, link their anonymous ID to their new user ID
+ * aliasUser("new-user-123", "anon-456");
+ */
+export function aliasUser(distinctId: string, alias: string): void {
+  const client = getPostHog();
+  client.alias({
+    distinctId,
+    alias,
+  });
+}
+
+/**
+ * Set group properties for group analytics
+ *
+ * @example
+ * setGroup("user-123", "company", "acme-corp", {
+ *   name: "Acme Corporation",
+ *   industry: "Technology",
+ *   employees: 500,
+ * });
+ */
+export function setGroup(
+  distinctId: string,
+  groupType: string,
+  groupKey: string,
+  properties?: Record<string, unknown>,
+): void {
+  const client = getPostHog();
+  client.groupIdentify({
+    groupType,
+    groupKey,
+    properties,
+  });
+  // Also associate the user with this group
+  client.capture({
+    distinctId,
+    event: "$groupidentify",
+    properties: {
+      $group_type: groupType,
+      $group_key: groupKey,
+    },
+  });
+}
+
+/**
+ * Flush all pending events (call before shutdown)
+ *
+ * @example
+ * // In your shutdown handler
+ * await shutdownPostHog();
+ */
+export async function shutdownPostHog(): Promise<void> {
+  if (posthogClient) {
+    await posthogClient.shutdown();
+    posthogClient = null;
+  }
+}
+
+// Re-export PostHog class for advanced usage
+export { PostHog };
+
+/**
+ * Environment Variables:
+ *
+ * POSTHOG_API_KEY - PostHog project API key
+ * POSTHOG_HOST - PostHog API host (default: https://us.i.posthog.com)
+ *
+ * Getting started:
+ * 1. Create an account at https://posthog.com
+ * 2. Create a new project
+ * 3. Copy the Project API key to POSTHOG_API_KEY env var
+ * 4. Choose your region and set POSTHOG_HOST:
+ *    - US: https://us.i.posthog.com (default)
+ *    - EU: https://eu.i.posthog.com
+ * 5. Create feature flags in the PostHog dashboard
+ *
+ * Usage in route handlers:
+ * ```typescript
+ * import { isFeatureEnabled, captureEvent } from "./lib/posthog";
+ *
+ * app.get("/api/data", async (c) => {
+ *   const userId = c.get("userId");
+ *
+ *   // Check feature flag
+ *   const useNewAlgorithm = await isFeatureEnabled("new-algorithm", userId);
+ *
+ *   const data = useNewAlgorithm
+ *     ? await getDataV2()
+ *     : await getDataV1();
+ *
+ *   // Track event
+ *   captureEvent(userId, "data_fetched", {
+ *     version: useNewAlgorithm ? "v2" : "v1",
+ *   });
+ *
+ *   return c.json(data);
+ * });
+ *
+ * // Graceful shutdown
+ * process.on("SIGTERM", async () => {
+ *   await shutdownPostHog();
+ *   process.exit(0);
+ * });
+ * ```
+ */
