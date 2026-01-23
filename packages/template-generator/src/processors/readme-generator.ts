@@ -880,6 +880,12 @@ function generatePythonReadmeContent(config: ProjectConfig): string {
     structure.push("│       └── openai_schemas.py # OpenAI request/response models");
   }
 
+  // Add Anthropic SDK files
+  if (aiLibs.includes("anthropic-sdk")) {
+    structure.push("│       ├── anthropic_client.py  # Anthropic SDK client utilities");
+    structure.push("│       └── anthropic_schemas.py # Anthropic request/response models");
+  }
+
   structure.push("├── tests/");
   structure.push("│   ├── __init__.py");
   structure.push("│   └── test_main.py      # Test suite");

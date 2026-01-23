@@ -142,6 +142,45 @@ def test_openai_completion_temperature_validation(client):
     )
     assert response.status_code == 422
 {{/if}}
+{{#if (includes pythonAi "anthropic-sdk")}}
+
+
+def test_anthropic_chat_endpoint_validation(client):
+    """Test Anthropic chat endpoint validates request body."""
+    # Test missing message field
+    response = client.post("/ai/anthropic/chat", json={})
+    assert response.status_code == 422
+
+
+def test_anthropic_chat_endpoint_with_history_validation(client):
+    """Test Anthropic chat endpoint validates history format."""
+    # Test with invalid history format (missing required fields)
+    response = client.post(
+        "/ai/anthropic/chat",
+        json={
+            "message": "Hello",
+            "history": [{"invalid": "field"}],
+        },
+    )
+    assert response.status_code == 422
+
+
+def test_anthropic_completion_endpoint_validation(client):
+    """Test Anthropic completion endpoint validates request body."""
+    # Test missing prompt field
+    response = client.post("/ai/anthropic/completion", json={})
+    assert response.status_code == 422
+
+
+def test_anthropic_completion_temperature_validation(client):
+    """Test Anthropic completion endpoint validates temperature range."""
+    # Test temperature out of range (Anthropic max is 1.0)
+    response = client.post(
+        "/ai/anthropic/completion",
+        json={"prompt": "Hello", "temperature": 1.5},
+    )
+    assert response.status_code == 422
+{{/if}}
 {{#if (and (eq pythonOrm "none") (eq pythonValidation "pydantic"))}}
 
 

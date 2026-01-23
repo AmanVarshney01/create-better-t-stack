@@ -1,0 +1,149 @@
+{{#if (includes pythonAi "anthropic-sdk")}}
+"""Anthropic client for Claude API interactions."""
+
+import os
+from typing import AsyncIterator
+
+import anthropic
+
+
+def get_client() -> anthropic.AsyncAnthropic:
+    """Get a configured Anthropic client instance.
+
+    Returns:
+        A configured AsyncAnthropic instance.
+
+    Raises:
+        ValueError: If ANTHROPIC_API_KEY is not set.
+    """
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        raise ValueError("ANTHROPIC_API_KEY environment variable is not set")
+
+    return anthropic.AsyncAnthropic(api_key=api_key)
+
+
+async def chat(
+    message: str,
+    history: list[dict] | None = None,
+    system_prompt: str = "You are a helpful assistant.",
+    model: str = "claude-sonnet-4-20250514",
+    max_tokens: int = 4096,
+    temperature: float = 0.7,
+) -> str:
+    """Send a message and get a response from Claude.
+
+    Args:
+        message: The user's message.
+        history: Optional conversation history as list of {"role": str, "content": str}.
+        system_prompt: The system prompt to set context.
+        model: The model to use.
+        max_tokens: Maximum number of tokens in the response.
+        temperature: The temperature for generation.
+
+    Returns:
+        The assistant's response.
+    """
+    client = get_client()
+
+    messages: list[anthropic.types.MessageParam] = []
+
+    if history:
+        for msg in history:
+            messages.append({"role": msg["role"], "content": msg["content"]})
+
+    messages.append({"role": "user", "content": message})
+
+    response = await client.messages.create(
+        model=model,
+        max_tokens=max_tokens,
+        system=system_prompt,
+        messages=messages,
+        temperature=temperature,
+    )
+
+    # Extract text from content blocks
+    text_content = ""
+    for block in response.content:
+        if block.type == "text":
+            text_content += block.text
+
+    return text_content
+
+
+async def chat_stream(
+    message: str,
+    history: list[dict] | None = None,
+    system_prompt: str = "You are a helpful assistant.",
+    model: str = "claude-sonnet-4-20250514",
+    max_tokens: int = 4096,
+    temperature: float = 0.7,
+) -> AsyncIterator[str]:
+    """Send a message and stream the response from Claude.
+
+    Args:
+        message: The user's message.
+        history: Optional conversation history.
+        system_prompt: The system prompt to set context.
+        model: The model to use.
+        max_tokens: Maximum number of tokens in the response.
+        temperature: The temperature for generation.
+
+    Yields:
+        Chunks of the assistant's response.
+    """
+    client = get_client()
+
+    messages: list[anthropic.types.MessageParam] = []
+
+    if history:
+        for msg in history:
+            messages.append({"role": msg["role"], "content": msg["content"]})
+
+    messages.append({"role": "user", "content": message})
+
+    async with client.messages.stream(
+        model=model,
+        max_tokens=max_tokens,
+        system=system_prompt,
+        messages=messages,
+        temperature=temperature,
+    ) as stream:
+        async for text in stream.text_stream:
+            yield text
+
+
+async def simple_completion(
+    prompt: str,
+    model: str = "claude-sonnet-4-20250514",
+    max_tokens: int = 4096,
+    temperature: float = 0.7,
+) -> str:
+    """Get a simple completion without conversation history.
+
+    Args:
+        prompt: The prompt to complete.
+        model: The model to use.
+        max_tokens: Maximum number of tokens in the response.
+        temperature: The temperature for generation.
+
+    Returns:
+        The completion response.
+    """
+    client = get_client()
+
+    response = await client.messages.create(
+        model=model,
+        max_tokens=max_tokens,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=temperature,
+    )
+
+    # Extract text from content blocks
+    text_content = ""
+    for block in response.content:
+        if block.type == "text":
+            text_content += block.text
+
+    return text_content
+{{/if}}

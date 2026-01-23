@@ -6334,3 +6334,74 @@ Added comprehensive Pydantic validation support to the Python ecosystem with ful
 - Linting: 150 pass, 0 fail
 
 ### Status: COMPLETE
+
+## 2026-01-23: Anthropic SDK Python AI Framework Implementation
+
+### Task: Implement Anthropic SDK as a Python AI framework option
+
+### Changes Made:
+1. **packages/template-generator/templates/python-base/src/app/anthropic_client.py.hbs**: Created Anthropic SDK client template with:
+   - `get_client()` - AsyncAnthropic client factory
+   - `async def chat()` - Multi-turn conversation support with system prompts
+   - `async def chat_stream()` - Streaming responses using messages.stream()
+   - `async def simple_completion()` - Single prompt completion without history
+   - Default model: claude-sonnet-4-20250514
+   - Default max_tokens: 4096
+
+2. **packages/template-generator/templates/python-base/src/app/anthropic_schemas.py.hbs**: Created Pydantic schemas:
+   - `ChatMessage` - Shared message model
+   - `AnthropicChatRequest` - Chat request with message, history, system_prompt, model, max_tokens, temperature
+   - `AnthropicChatResponse` - Response model
+   - `AnthropicCompletionRequest` - Completion request model
+   - `AnthropicCompletionResponse` - Completion response model
+   - Temperature range: 0.0-1.0 (Anthropic's limit)
+   - Max tokens range: 1-200000
+
+3. **packages/template-generator/templates/python-base/src/app/main.py.hbs**: Added FastAPI integration:
+   - Imports for anthropic_client and anthropic_schemas
+   - `POST /ai/anthropic/chat` - Chat endpoint with history support
+   - `POST /ai/anthropic/chat/stream` - Streaming chat endpoint (SSE)
+   - `POST /ai/anthropic/completion` - Simple completion endpoint
+   - StreamingResponse for real-time token streaming
+
+4. **packages/template-generator/templates/python-base/src/app/settings.py.hbs**: Added Anthropic settings:
+   - `anthropic_api_key: str` - API key from environment
+   - `anthropic_default_model: str` - Default model (claude-sonnet-4-20250514)
+   - `anthropic_default_max_tokens: int` - Default max tokens (4096)
+   - `anthropic_default_temperature: float` - Default temperature (0.7)
+
+5. **packages/template-generator/templates/python-base/tests/test_main.py.hbs**: Added validation tests:
+   - `test_anthropic_chat_endpoint_validation` - Missing message validation
+   - `test_anthropic_chat_endpoint_with_history_validation` - Invalid history format validation
+   - `test_anthropic_completion_endpoint_validation` - Missing prompt validation
+   - `test_anthropic_completion_temperature_validation` - Temperature range validation (max 1.0)
+
+6. **packages/template-generator/src/processors/readme-generator.ts**: Added Anthropic SDK documentation:
+   - Files section includes anthropic_client.py and anthropic_schemas.py
+   - Feature list includes "Anthropic SDK - Official Claude API client"
+
+7. **apps/cli/test/python-language.test.ts**: Added comprehensive tests:
+   - `should create Anthropic SDK client module` - Verifies client functions
+   - `should create Anthropic SDK schemas module` - Verifies Pydantic models
+   - `should integrate Anthropic SDK endpoints with FastAPI` - Verifies endpoint registration
+   - `should add Anthropic SDK settings when pydantic validation is enabled` - Verifies settings
+   - `should include Anthropic SDK validation tests` - Verifies test generation
+   - `should NOT create Anthropic SDK files when pythonAi does not include anthropic-sdk` - Negative test
+   - `should generate README with Anthropic SDK documentation` - Verifies README generation
+
+### Features:
+- Full Anthropic Claude API integration via official SDK
+- Async/await support with AsyncAnthropic client
+- Streaming responses with messages.stream()
+- Multi-turn conversation with history management
+- System prompt support
+- Configurable model, max_tokens, and temperature
+- Pydantic validation for all request/response models
+- Temperature validation (0.0-1.0, Anthropic's limit)
+- Max tokens validation (1-200000)
+- Compatible with FastAPI web framework
+- Integration with pydantic-settings for configuration
+
+### Tests: 85 pass, 0 fail (all Python language tests)
+
+### Status: COMPLETE

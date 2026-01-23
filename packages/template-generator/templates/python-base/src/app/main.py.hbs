@@ -81,6 +81,21 @@ from app.openai_schemas import (
     OpenAICompletionResponse,
 )
 {{/if}}
+{{#if (includes pythonAi "anthropic-sdk")}}
+from fastapi.responses import StreamingResponse
+
+from app.anthropic_client import (
+    chat as anthropic_chat,
+    chat_stream as anthropic_chat_stream,
+    simple_completion as anthropic_completion,
+)
+from app.anthropic_schemas import (
+    AnthropicChatRequest,
+    AnthropicChatResponse,
+    AnthropicCompletionRequest,
+    AnthropicCompletionResponse,
+)
+{{/if}}
 
 
 @asynccontextmanager
@@ -301,6 +316,66 @@ async def openai_completion_endpoint(request: OpenAICompletionRequest):
         temperature=request.temperature or 0.7,
     )
     return OpenAICompletionResponse(completion=completion)
+{{/if}}
+{{#if (includes pythonAi "anthropic-sdk")}}
+
+# Anthropic SDK endpoints
+@app.post("/ai/anthropic/chat", response_model=AnthropicChatResponse)
+async def anthropic_chat_endpoint(request: AnthropicChatRequest):
+    """Chat with Anthropic's Claude API directly.
+
+    Supports conversation history for multi-turn conversations.
+    """
+    history = None
+    if request.history:
+        history = [{"role": msg.role, "content": msg.content} for msg in request.history]
+
+    response = await anthropic_chat(
+        message=request.message,
+        history=history,
+        system_prompt=request.system_prompt or "You are a helpful assistant.",
+        model=request.model or "claude-sonnet-4-20250514",
+        max_tokens=request.max_tokens or 4096,
+        temperature=request.temperature or 0.7,
+    )
+    return AnthropicChatResponse(response=response)
+
+
+@app.post("/ai/anthropic/chat/stream")
+async def anthropic_chat_stream_endpoint(request: AnthropicChatRequest):
+    """Chat with Anthropic's Claude API with streaming response.
+
+    Returns a Server-Sent Events stream of the response.
+    """
+    history = None
+    if request.history:
+        history = [{"role": msg.role, "content": msg.content} for msg in request.history]
+
+    async def generate():
+        async for chunk in anthropic_chat_stream(
+            message=request.message,
+            history=history,
+            system_prompt=request.system_prompt or "You are a helpful assistant.",
+            model=request.model or "claude-sonnet-4-20250514",
+            max_tokens=request.max_tokens or 4096,
+            temperature=request.temperature or 0.7,
+        ):
+            yield f"data: {chunk}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(generate(), media_type="text/event-stream")
+
+
+@app.post("/ai/anthropic/completion", response_model=AnthropicCompletionResponse)
+async def anthropic_completion_endpoint(request: AnthropicCompletionRequest):
+    """Get a simple completion from Anthropic without conversation history."""
+    completion = await anthropic_completion(
+        prompt=request.prompt,
+        model=request.model or "claude-sonnet-4-20250514",
+        max_tokens=request.max_tokens or 4096,
+        temperature=request.temperature or 0.7,
+    )
+    return AnthropicCompletionResponse(completion=completion)
 {{/if}}
 {{#if (and (eq pythonOrm "none") (eq pythonValidation "pydantic"))}}
 

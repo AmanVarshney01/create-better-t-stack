@@ -1662,6 +1662,176 @@ describe("Python Language Support", () => {
       expect(pyprojectContent).toContain("anthropic");
     });
 
+    it("should create Anthropic SDK client module", async () => {
+      const result = await createVirtual({
+        projectName: "python-anthropic-client",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["anthropic-sdk"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify anthropic_client.py exists
+      expect(hasFile(root, "src/app/anthropic_client.py")).toBe(true);
+      const clientContent = getFileContent(root, "src/app/anthropic_client.py");
+      expect(clientContent).toBeDefined();
+      expect(clientContent).toContain("import anthropic");
+      expect(clientContent).toContain("def get_client");
+      expect(clientContent).toContain("async def chat");
+      expect(clientContent).toContain("async def chat_stream");
+      expect(clientContent).toContain("async def simple_completion");
+      expect(clientContent).toContain("AsyncAnthropic");
+    });
+
+    it("should create Anthropic SDK schemas module", async () => {
+      const result = await createVirtual({
+        projectName: "python-anthropic-schemas",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["anthropic-sdk"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify anthropic_schemas.py exists
+      expect(hasFile(root, "src/app/anthropic_schemas.py")).toBe(true);
+      const schemasContent = getFileContent(root, "src/app/anthropic_schemas.py");
+      expect(schemasContent).toBeDefined();
+      expect(schemasContent).toContain("class ChatMessage(BaseModel)");
+      expect(schemasContent).toContain("class AnthropicChatRequest(BaseModel)");
+      expect(schemasContent).toContain("class AnthropicChatResponse(BaseModel)");
+      expect(schemasContent).toContain("class AnthropicCompletionRequest(BaseModel)");
+      expect(schemasContent).toContain("class AnthropicCompletionResponse(BaseModel)");
+    });
+
+    it("should integrate Anthropic SDK endpoints with FastAPI", async () => {
+      const result = await createVirtual({
+        projectName: "python-anthropic-fastapi",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["anthropic-sdk"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainContent = getFileContent(root, "src/app/main.py");
+      expect(mainContent).toBeDefined();
+      expect(mainContent).toContain("from app.anthropic_client import");
+      expect(mainContent).toContain("from app.anthropic_schemas import");
+      expect(mainContent).toContain('@app.post("/ai/anthropic/chat"');
+      expect(mainContent).toContain('@app.post("/ai/anthropic/chat/stream"');
+      expect(mainContent).toContain('@app.post("/ai/anthropic/completion"');
+      expect(mainContent).toContain("StreamingResponse");
+    });
+
+    it("should add Anthropic SDK settings when pydantic validation is enabled", async () => {
+      const result = await createVirtual({
+        projectName: "python-anthropic-settings",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: ["anthropic-sdk"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const settingsContent = getFileContent(root, "src/app/settings.py");
+      expect(settingsContent).toBeDefined();
+      expect(settingsContent).toContain("# Anthropic settings");
+      expect(settingsContent).toContain("anthropic_api_key");
+      expect(settingsContent).toContain("anthropic_default_model");
+      expect(settingsContent).toContain("anthropic_default_max_tokens");
+      expect(settingsContent).toContain("anthropic_default_temperature");
+    });
+
+    it("should include Anthropic SDK validation tests", async () => {
+      const result = await createVirtual({
+        projectName: "python-anthropic-tests",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["anthropic-sdk"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const testContent = getFileContent(root, "tests/test_main.py");
+      expect(testContent).toBeDefined();
+      expect(testContent).toContain("test_anthropic_chat_endpoint_validation");
+      expect(testContent).toContain("test_anthropic_completion_endpoint_validation");
+      expect(testContent).toContain("test_anthropic_completion_temperature_validation");
+    });
+
+    it("should NOT create Anthropic SDK files when pythonAi does not include anthropic-sdk", async () => {
+      const result = await createVirtual({
+        projectName: "python-no-anthropic",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["langchain"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify Anthropic SDK files do NOT exist
+      expect(hasFile(root, "src/app/anthropic_client.py")).toBe(false);
+      expect(hasFile(root, "src/app/anthropic_schemas.py")).toBe(false);
+
+      const mainContent = getFileContent(root, "src/app/main.py");
+      expect(mainContent).not.toContain("anthropic_client");
+      expect(mainContent).not.toContain("/ai/anthropic/chat");
+    });
+
+    it("should generate README with Anthropic SDK documentation", async () => {
+      const result = await createVirtual({
+        projectName: "python-anthropic-readme",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["anthropic-sdk"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const readmeContent = getFileContent(root, "README.md");
+      expect(readmeContent).toBeDefined();
+      expect(readmeContent).toContain("Anthropic SDK");
+      expect(readmeContent).toContain("anthropic_client.py");
+      expect(readmeContent).toContain("anthropic_schemas.py");
+    });
+
     it("should include multiple AI frameworks", async () => {
       const result = await createVirtual({
         projectName: "python-multi-ai-deps",

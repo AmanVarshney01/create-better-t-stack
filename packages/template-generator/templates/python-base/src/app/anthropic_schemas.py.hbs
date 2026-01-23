@@ -1,0 +1,56 @@
+{{#if (includes pythonAi "anthropic-sdk")}}
+"""Pydantic schemas for Anthropic API endpoints."""
+
+from pydantic import BaseModel, Field
+
+
+class ChatMessage(BaseModel):
+    """A single message in a conversation."""
+
+    role: str = Field(..., description="The role of the message sender (user, assistant)")
+    content: str = Field(..., description="The content of the message")
+
+
+class AnthropicChatRequest(BaseModel):
+    """Request body for Anthropic chat endpoint."""
+
+    message: str = Field(..., description="The user's message", min_length=1)
+    history: list[ChatMessage] | None = Field(
+        default=None, description="Optional conversation history"
+    )
+    system_prompt: str | None = Field(
+        default=None, description="Optional system prompt to override default"
+    )
+    model: str | None = Field(default=None, description="Optional model override")
+    max_tokens: int | None = Field(
+        default=None, ge=1, le=200000, description="Optional max tokens override"
+    )
+    temperature: float | None = Field(
+        default=None, ge=0.0, le=1.0, description="Optional temperature override"
+    )
+
+
+class AnthropicChatResponse(BaseModel):
+    """Response body for Anthropic chat endpoint."""
+
+    response: str = Field(..., description="The assistant's response")
+
+
+class AnthropicCompletionRequest(BaseModel):
+    """Request body for Anthropic completion endpoint."""
+
+    prompt: str = Field(..., description="The prompt to complete", min_length=1)
+    model: str | None = Field(default=None, description="Optional model override")
+    max_tokens: int | None = Field(
+        default=None, ge=1, le=200000, description="Optional max tokens override"
+    )
+    temperature: float | None = Field(
+        default=None, ge=0.0, le=1.0, description="Optional temperature override"
+    )
+
+
+class AnthropicCompletionResponse(BaseModel):
+    """Response body for Anthropic completion endpoint."""
+
+    completion: str = Field(..., description="The completion response")
+{{/if}}
