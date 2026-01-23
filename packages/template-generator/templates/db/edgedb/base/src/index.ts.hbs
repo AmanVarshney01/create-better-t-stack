@@ -1,0 +1,12 @@
+import * as edgedb from "edgedb";
+
+// Create a client instance - automatically discovers connection settings
+// from environment variables (EDGEDB_DSN) or edgedb.toml
+export const client = edgedb.createClient();
+
+// For serverless/edge environments, use the HTTP client instead:
+// import { createHttpClient } from "edgedb";
+// export const client = createHttpClient();
+
+// Re-export the client for use in your application
+export { client as db };

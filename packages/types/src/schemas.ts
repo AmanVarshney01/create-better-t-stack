@@ -5,7 +5,7 @@ export const EcosystemSchema = z
   .describe("Language ecosystem (typescript or rust)");
 
 export const DatabaseSchema = z
-  .enum(["none", "sqlite", "postgres", "mysql", "mongodb"])
+  .enum(["none", "sqlite", "postgres", "mysql", "mongodb", "edgedb"])
   .describe("Database type");
 
 export const ORMSchema = z

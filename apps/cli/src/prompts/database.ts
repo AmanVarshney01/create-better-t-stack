@@ -44,6 +44,11 @@ export async function getDatabaseChoice(database?: Database, backend?: Backend, 
       label: "MongoDB",
       hint: "open-source NoSQL database that stores data in JSON-like documents called BSON",
     });
+    databaseOptions.push({
+      value: "edgedb",
+      label: "EdgeDB",
+      hint: "graph-relational database with built-in query builder (no ORM needed)",
+    });
   }
 
   const response = await navigableSelect<Database>({

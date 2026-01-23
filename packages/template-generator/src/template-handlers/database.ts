@@ -9,8 +9,18 @@ export async function processDbTemplates(
   templates: TemplateData,
   config: ProjectConfig,
 ): Promise<void> {
-  if (config.database === "none" || config.orm === "none") return;
+  if (config.database === "none") return;
   if (config.backend === "convex") return;
+
+  // EdgeDB has its own query builder, no ORM needed
+  if (config.database === "edgedb") {
+    processTemplatesFromPrefix(vfs, templates, "db/base", "packages/db", config);
+    processTemplatesFromPrefix(vfs, templates, "db/edgedb/base", "packages/db", config);
+    return;
+  }
+
+  // Other databases require an ORM
+  if (config.orm === "none") return;
 
   processTemplatesFromPrefix(vfs, templates, "db/base", "packages/db", config);
   processTemplatesFromPrefix(vfs, templates, `db/${config.orm}/base`, "packages/db", config);

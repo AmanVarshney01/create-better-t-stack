@@ -564,6 +564,10 @@ export const dependencyVersionMap = {
 
   // Caching - Upstash Redis
   "@upstash/redis": "^1.34.3",
+
+  // EdgeDB
+  edgedb: "^2.0.1",
+  "@edgedb/generate": "^0.6.1",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

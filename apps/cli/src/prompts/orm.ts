@@ -54,6 +54,12 @@ export async function getORMChoice(
   }
 
   if (!hasDatabase) return "none";
+
+  // EdgeDB has its own built-in query builder, no separate ORM needed
+  if (database === "edgedb") {
+    return "none";
+  }
+
   if (orm !== undefined) return orm;
 
   const options =

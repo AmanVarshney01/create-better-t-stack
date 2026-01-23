@@ -5186,3 +5186,52 @@ Tests: 15 passing
 - Compatible with Next.js fullstack mode
 
 ### Status: COMPLETE
+
+---
+
+## Task: EdgeDB Database Support
+**Date**: 2026-01-23
+
+### Summary
+Implemented EdgeDB as a database option in the Better-Fullstack ecosystem. EdgeDB is a graph-relational database with a built-in query builder, so it doesn't require a separate ORM.
+
+### Files Modified/Created:
+1. **packages/types/src/schemas.ts**: Added "edgedb" to DatabaseSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added EdgeDB dependencies:
+   - edgedb: ^2.0.1
+   - @edgedb/generate: ^0.6.1
+3. **packages/template-generator/src/processors/db-deps.ts**: Added processEdgeDBDeps() function and EdgeDB handling in processDatabaseDeps()
+4. **packages/template-generator/src/template-handlers/database.ts**: Updated to handle EdgeDB without ORM requirement
+5. **packages/template-generator/src/processors/env-vars.ts**: Added EdgeDB connection string (EDGEDB_DSN)
+6. **apps/cli/src/prompts/database.ts**: Added EdgeDB option to database prompt
+7. **apps/cli/src/prompts/orm.ts**: Updated to automatically select "none" for EdgeDB
+8. **apps/cli/src/utils/config-validation.ts**: Added validation rules:
+   - EdgeDB allows orm: "none"
+   - EdgeDB rejects any ORM selection with helpful error message
+9. **apps/web/src/lib/constant.ts**: Added EdgeDB to web builder database options
+10. **packages/template-generator/templates/db/edgedb/base/src/index.ts.hbs**: Created EdgeDB client template
+11. **packages/template-generator/templates/db/edgedb/base/dbschema/default.esdl.hbs**: Created EdgeDB schema template with support for:
+    - Todo example type
+    - Better-Auth authentication types (User, Session, Account, Verification)
+12. **packages/template-generator/templates/db/edgedb/base/edgedb.toml.hbs**: Created EdgeDB configuration file
+13. **apps/cli/test/edgedb.test.ts**: Created comprehensive test suite with 8 tests:
+    - Basic EdgeDB configuration
+    - EdgeDB with Node.js runtime
+    - EdgeDB ORM validation (fails with Drizzle/Prisma)
+    - EdgeDB with different backends (Fastify, Elysia)
+    - EdgeDB with different frontends (Next.js, React Router)
+
+### Features:
+- Full EdgeDB client integration (edgedb npm package)
+- Code generation support (@edgedb/generate)
+- EdgeDB schema definition language (.esdl) templates
+- Automatic ORM bypass (EdgeDB has built-in query builder)
+- Environment variable support (EDGEDB_DSN)
+- Compatible with all backend frameworks
+- Compatible with all web frontends
+- Validation to prevent ORM usage with EdgeDB
+
+### Tests: 8 tests passing
+### Linting: Passed
+
+### Status: COMPLETE

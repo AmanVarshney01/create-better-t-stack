@@ -15,6 +15,12 @@ export function processDatabaseDeps(vfs: VirtualFileSystem, config: ProjectConfi
   if (!vfs.exists(dbPkgPath)) return;
   const webExists = vfs.exists(webPkgPath);
 
+  // EdgeDB has its own query builder, no separate ORM needed
+  if (database === "edgedb") {
+    processEdgeDBDeps(vfs, dbPkgPath);
+    return;
+  }
+
   if (orm === "prisma") {
     processPrismaDeps(vfs, config, dbPkgPath, webPkgPath, webExists);
   } else if (orm === "drizzle") {
@@ -276,4 +282,13 @@ function processSequelizeDeps(
       dependencies: deps,
     });
   }
+}
+
+function processEdgeDBDeps(vfs: VirtualFileSystem, dbPkgPath: string): void {
+  addPackageDependency({
+    vfs,
+    packagePath: dbPkgPath,
+    dependencies: ["edgedb"],
+    devDependencies: ["@edgedb/generate"],
+  });
 }

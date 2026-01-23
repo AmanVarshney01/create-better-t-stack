@@ -399,6 +399,13 @@ export const TECH_OPTIONS: Record<
       color: "from-green-400 to-green-600",
     },
     {
+      id: "edgedb",
+      name: "EdgeDB",
+      description: "Graph-relational database with built-in query builder",
+      icon: "/icon/edgedb.svg",
+      color: "from-emerald-500 to-teal-600",
+    },
+    {
       id: "none",
       name: "No Database",
       description: "Skip database integration",

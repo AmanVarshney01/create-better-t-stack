@@ -105,7 +105,8 @@ export function validateDatabaseOrmAuth(cfg: Partial<ProjectConfig>, flags?: Set
     });
   }
 
-  if (has("database") && has("orm") && db && db !== "none" && orm === "none") {
+  // EdgeDB has its own built-in query builder, no separate ORM needed
+  if (has("database") && has("orm") && db && db !== "none" && db !== "edgedb" && orm === "none") {
     missingRequirementError({
       message: "Database selection requires an ORM.",
       provided: { database: db, orm: "none" },
@@ -113,6 +114,18 @@ export function validateDatabaseOrmAuth(cfg: Partial<ProjectConfig>, flags?: Set
         "Use --orm drizzle (recommended)",
         "Use --orm prisma",
         "Use --orm mongoose (MongoDB only)",
+      ],
+    });
+  }
+
+  // EdgeDB should not have an ORM (it has its own query builder)
+  if (has("database") && has("orm") && db === "edgedb" && orm && orm !== "none") {
+    incompatibilityError({
+      message: "EdgeDB has its own built-in query builder and does not require an ORM.",
+      provided: { database: "edgedb", orm },
+      suggestions: [
+        "Use --orm none with EdgeDB",
+        "Choose a different database if you want to use an ORM",
       ],
     });
   }

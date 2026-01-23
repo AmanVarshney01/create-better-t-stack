@@ -1,0 +1,86 @@
+module default {
+{{#if (includes examples "todo")}}
+  # Todo type for the todo example
+  type Todo {
+    required title: str;
+    completed: bool {
+      default := false;
+    };
+    created_at: datetime {
+      default := datetime_current();
+    };
+  }
+{{/if}}
+
+{{#if (eq auth "better-auth")}}
+  # User type for authentication
+  type User {
+    required email: str {
+      constraint exclusive;
+    };
+    required name: str;
+    email_verified: bool {
+      default := false;
+    };
+    image: str;
+    created_at: datetime {
+      default := datetime_current();
+    };
+    updated_at: datetime {
+      default := datetime_current();
+    };
+  }
+
+  # Session type for authentication
+  type Session {
+    required token: str {
+      constraint exclusive;
+    };
+    required expires_at: datetime;
+    ip_address: str;
+    user_agent: str;
+    required user: User;
+    created_at: datetime {
+      default := datetime_current();
+    };
+    updated_at: datetime {
+      default := datetime_current();
+    };
+  }
+
+  # Account type for OAuth providers
+  type Account {
+    required account_id: str;
+    required provider_id: str;
+    access_token: str;
+    refresh_token: str;
+    access_token_expires_at: datetime;
+    refresh_token_expires_at: datetime;
+    scope: str;
+    id_token: str;
+    password: str;
+    required user: User;
+    created_at: datetime {
+      default := datetime_current();
+    };
+    updated_at: datetime {
+      default := datetime_current();
+    };
+
+    constraint exclusive on ((.provider_id, .account_id));
+  }
+
+  # Verification token for email verification
+  type Verification {
+    required identifier: str;
+    required value: str;
+    required expires_at: datetime;
+    created_at: datetime {
+      default := datetime_current();
+    };
+    updated_at: datetime {
+      default := datetime_current();
+    };
+  }
+{{/if}}
+}

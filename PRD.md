@@ -140,7 +140,7 @@
 
 ## **Databases**
 
-- [ ] **EdgeDB** - Graph-relational database
+- [x] **EdgeDB** - Graph-relational database
 - [ ] **MongoDB** - Document database
 - [ ] **Redis** - In-memory data store
 

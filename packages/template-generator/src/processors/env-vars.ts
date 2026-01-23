@@ -436,6 +436,10 @@ function buildServerVars(
           databaseUrl = "file:../../local.db";
         }
         break;
+      case "edgedb":
+        // EdgeDB uses its own connection mechanism via edgedb.toml or EDGEDB_DSN
+        databaseUrl = "edgedb://localhost:5656/edgedb";
+        break;
     }
   }
 
