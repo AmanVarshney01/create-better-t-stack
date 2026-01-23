@@ -5235,3 +5235,50 @@ Implemented EdgeDB as a database option in the Better-Fullstack ecosystem. EdgeD
 ### Linting: Passed
 
 ### Status: COMPLETE
+
+
+## 2026-01-23: MongoDB Document Database - Documentation Update
+
+### Task: Mark MongoDB as complete in PRD (already implemented)
+
+### Background:
+MongoDB support was already fully implemented in the codebase. This task updates the PRD to reflect the current state:
+
+### Already Implemented Features:
+1. **Database Schema**: MongoDB in DatabaseSchema enum (packages/types/src/schemas.ts)
+2. **ORM Support**:
+   - Mongoose ORM for MongoDB (mongoose v8.14.0)
+   - Prisma ORM with MongoDB adapter
+3. **Database Dependencies** (packages/template-generator/src/processors/db-deps.ts):
+   - Mongoose dependency processing
+   - Prisma MongoDB adapter support (6.19.0)
+4. **Environment Variables** (packages/template-generator/src/processors/env-vars.ts):
+   - DATABASE_URL: mongodb://localhost:27017/mydatabase
+5. **Templates**:
+   - Prisma MongoDB schema (templates/db/prisma/mongodb/prisma/schema/schema.prisma.hbs)
+   - Docker Compose MongoDB (templates/db-setup/docker-compose/mongodb/docker-compose.yml.hbs)
+6. **Web Builder Options** (apps/web/src/lib/constant.ts):
+   - MongoDB in database options
+   - MongoDB Atlas in dbSetup options
+   - Mongoose ORM option
+7. **Database Setup Provider**:
+   - MongoDB Atlas setup helper
+
+### Tests Verified:
+- All 45 database ORM tests pass including:
+  - MongoDB + Mongoose combination
+  - MongoDB + Prisma combination
+  - MongoDB validation (fails correctly with incompatible ORMs)
+
+### Changes Made:
+1. **PRD.md**: Updated MongoDB entry from `[ ]` to `[x]`
+
+### Rationale:
+- Feature was already complete, just needed documentation update
+- Tests confirmed working implementation
+- No code changes needed
+
+### Tests: 45 pass, 0 fail
+### Linting: Passed
+
+### Status: COMPLETE
