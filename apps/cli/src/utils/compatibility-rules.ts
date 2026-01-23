@@ -334,6 +334,28 @@ export function validateNextAuthCompatibility(
   }
 }
 
+export function validateStackAuthCompatibility(
+  auth: Auth | undefined,
+  backend: Backend | undefined,
+  frontends: Frontend[] = [],
+) {
+  if (auth !== "stack-auth") return;
+
+  const hasNextJs = frontends.includes("next");
+
+  if (backend !== "self") {
+    exitWithError(
+      "Stack Auth is only supported with the 'self' backend (fullstack Next.js). Please use '--backend self' or choose a different auth provider.",
+    );
+  }
+
+  if (!hasNextJs) {
+    exitWithError(
+      "Stack Auth requires Next.js frontend. Please use '--frontend next' or choose a different auth provider.",
+    );
+  }
+}
+
 export function allowedApisForFrontends(
   frontends: Frontend[] = [],
   astroIntegration?: AstroIntegration,

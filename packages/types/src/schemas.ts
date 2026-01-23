@@ -102,7 +102,7 @@ export const DatabaseSetupSchema = z
 export const APISchema = z.enum(["trpc", "orpc", "ts-rest", "garph", "none"]).describe("API type");
 
 export const AuthSchema = z
-  .enum(["better-auth", "clerk", "nextauth", "none"])
+  .enum(["better-auth", "clerk", "nextauth", "stack-auth", "none"])
   .describe("Authentication provider");
 
 export const PaymentsSchema = z

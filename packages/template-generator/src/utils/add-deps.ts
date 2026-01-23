@@ -28,6 +28,9 @@ export const dependencyVersionMap = {
   "@auth/drizzle-adapter": "^1.8.1",
   "@auth/prisma-adapter": "^2.9.1",
 
+  // Stack Auth
+  "@stackframe/stack": "^2.8.56",
+
   "drizzle-orm": "^0.45.1",
   "drizzle-kit": "^0.31.8",
   "@planetscale/database": "^1.19.0",

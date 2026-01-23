@@ -10,6 +10,7 @@ import {
   validatePaymentsCompatibility,
   validateSelfBackendCompatibility,
   validateServerDeployRequiresBackend,
+  validateStackAuthCompatibility,
   validateUILibraryCSSFrameworkCompatibility,
   validateUILibraryFrontendCompatibility,
   validateWebDeployRequiresWebFrontend,
@@ -601,6 +602,7 @@ export function validateFullConfig(
   );
 
   validateNextAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
+  validateStackAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
 
   validateUILibraryFrontendCompatibility(
     config.uiLibrary,
@@ -626,6 +628,7 @@ export function validateConfigForProgrammaticUse(config: Partial<ProjectConfig>)
     validatePaymentsCompatibility(config.payments, config.auth, config.backend, config.frontend);
 
     validateNextAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
+    validateStackAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
 
     if (config.addons && config.addons.length > 0) {
       validateAddonsAgainstFrontends(config.addons, config.frontend, config.auth);

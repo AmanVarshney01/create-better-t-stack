@@ -592,6 +592,13 @@ export const TECH_OPTIONS: Record<
       color: "from-orange-400 to-orange-600",
     },
     {
+      id: "stack-auth",
+      name: "Stack Auth",
+      description: "Open-source Auth0/Clerk alternative with user management",
+      icon: "/icon/stack-auth.svg",
+      color: "from-purple-400 to-purple-600",
+    },
+    {
       id: "none",
       name: "No Auth",
       description: "Skip authentication",

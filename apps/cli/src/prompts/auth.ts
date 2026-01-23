@@ -70,10 +70,10 @@ export async function getAuthChoice(
     return response as Auth;
   }
 
-  // NextAuth only works with Next.js frontend and self backend
+  // NextAuth and Stack Auth only work with Next.js frontend and self backend
   const hasNextJs = frontend?.includes("next");
   const isSelfBackend = backend === "self";
-  const supportsNextAuth = hasNextJs && isSelfBackend;
+  const supportsNextJsAuth = hasNextJs && isSelfBackend;
 
   const options = [
     {
@@ -88,11 +88,16 @@ export async function getAuthChoice(
     },
   ];
 
-  if (supportsNextAuth) {
+  if (supportsNextJsAuth) {
     options.push({
       value: "nextauth",
       label: "Auth.js (NextAuth)",
       hint: "Authentication for Next.js (formerly NextAuth.js)",
+    });
+    options.push({
+      value: "stack-auth",
+      label: "Stack Auth",
+      hint: "Open-source Auth0/Clerk alternative",
     });
   }
 

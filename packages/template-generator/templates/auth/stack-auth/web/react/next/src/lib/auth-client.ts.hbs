@@ -1,0 +1,19 @@
+"use client";
+
+import { useUser, useStackApp } from "@stackframe/stack";
+
+export { useUser, useStackApp };
+
+export function useAuthClient() {
+  const user = useUser();
+  const app = useStackApp();
+
+  return {
+    user,
+    isAuthenticated: !!user,
+    isLoading: false,
+    signOut: () => user?.signOut(),
+    redirectToSignIn: () => app.redirectToSignIn(),
+    redirectToSignUp: () => app.redirectToSignUp(),
+  };
+}

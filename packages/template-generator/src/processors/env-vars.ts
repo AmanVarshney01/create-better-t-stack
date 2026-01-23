@@ -487,6 +487,24 @@ function buildServerVars(
       comment: "Google OAuth Client Secret (optional)",
     },
     {
+      key: "NEXT_PUBLIC_STACK_PROJECT_ID",
+      value: "",
+      condition: auth === "stack-auth",
+      comment: "Stack Auth Project ID - get it at https://app.stack-auth.com",
+    },
+    {
+      key: "NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY",
+      value: "",
+      condition: auth === "stack-auth",
+      comment: "Stack Auth Publishable Client Key - get it at https://app.stack-auth.com",
+    },
+    {
+      key: "STACK_SECRET_SERVER_KEY",
+      value: "",
+      condition: auth === "stack-auth",
+      comment: "Stack Auth Secret Server Key - get it at https://app.stack-auth.com",
+    },
+    {
       key: "POLAR_ACCESS_TOKEN",
       value: "",
       condition: payments === "polar",

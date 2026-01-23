@@ -1,0 +1,15 @@
+"use client";
+
+import { StackProvider, StackTheme } from "@stackframe/stack";
+import { stackServerApp } from "@/stack/server";
+import type { ReactNode } from "react";
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  return (
+    <StackProvider app={stackServerApp}>
+      <StackTheme>
+        {children}
+      </StackTheme>
+    </StackProvider>
+  );
+}

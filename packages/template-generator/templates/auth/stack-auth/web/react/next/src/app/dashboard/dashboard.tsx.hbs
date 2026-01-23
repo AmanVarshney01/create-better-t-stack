@@ -1,0 +1,44 @@
+"use client";
+
+import { UserButton } from "@stackframe/stack";
+
+interface DashboardProps {
+  user: {
+    id: string;
+    displayName?: string | null;
+    primaryEmail?: string | null;
+  };
+}
+
+export default function Dashboard({ user }: DashboardProps) {
+  return (
+    <div className="min-h-screen p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <UserButton />
+        </div>
+
+        <div className="bg-card rounded-lg shadow p-6">
+          <h2 className="text-xl font-semibold mb-4">Welcome!</h2>
+          <p className="text-muted-foreground">
+            Hello, {user.displayName || user.primaryEmail || "User"}!
+          </p>
+          <p className="text-muted-foreground mt-2">
+            You are now signed in with Stack Auth.
+          </p>
+
+          <div className="mt-6 p-4 bg-muted rounded">
+            <h3 className="font-medium mb-2">Your Profile</h3>
+            <p className="text-sm text-muted-foreground">
+              <strong>Email:</strong> {user.primaryEmail || "Not set"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              <strong>Name:</strong> {user.displayName || "Not set"}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

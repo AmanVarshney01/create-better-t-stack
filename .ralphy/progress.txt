@@ -5009,3 +5009,68 @@ Tests: 15 passing
 - apps/cli/src/utils/bts-config.ts - Added caching to btsConfig
 - apps/cli/test/caching.test.ts - New test file
 - apps/cli/test/test-utils.ts - Added caching types
+
+
+## 2026-01-23: Stack Auth Authentication Provider Implementation
+
+### Task: Implement Stack Auth as an authentication provider option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "stack-auth" to AuthSchema enum
+2. **apps/web/src/lib/constant.ts**: Added Stack Auth to web builder auth options with icon and description
+3. **packages/template-generator/src/utils/add-deps.ts**: Added Stack Auth dependency version:
+   - @stackframe/stack: ^2.8.56
+4. **packages/template-generator/src/processors/auth-deps.ts**: Added Stack Auth dependency processing for Next.js self backend
+5. **packages/template-generator/src/template-handlers/auth.ts**: Added Stack Auth template handling logic for Next.js fullstack
+6. **apps/cli/src/utils/compatibility-rules.ts**: Added validateStackAuthCompatibility function (requires self backend + Next.js)
+7. **apps/cli/src/utils/config-validation.ts**: Added Stack Auth validation calls
+8. **packages/template-generator/src/processors/env-vars.ts**: Added Stack Auth environment variables:
+   - NEXT_PUBLIC_STACK_PROJECT_ID
+   - NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY
+   - STACK_SECRET_SERVER_KEY
+9. **apps/cli/src/prompts/auth.ts**: Added Stack Auth to CLI prompt options for Next.js + self backend
+10. **packages/template-generator/templates/auth/stack-auth/**: Created Stack Auth template files:
+    - fullstack/next/src/stack/server.ts.hbs - StackServerApp initialization
+    - fullstack/next/src/app/handler/[...stack]/page.tsx.hbs - Stack handler route
+    - fullstack/next/src/app/loading.tsx.hbs - Loading state component
+    - web/react/next/src/lib/auth-client.ts.hbs - Client auth utilities
+    - web/react/next/src/components/providers.tsx.hbs - AuthProvider wrapper
+    - web/react/next/src/components/user-menu.tsx.hbs - UserButton component
+    - web/react/next/src/components/sign-in-form.tsx.hbs - SignIn form
+    - web/react/next/src/components/sign-up-form.tsx.hbs - SignUp form
+    - web/react/next/src/app/login/page.tsx.hbs - Login page
+    - web/react/next/src/app/dashboard/page.tsx.hbs - Protected dashboard page
+    - web/react/next/src/app/dashboard/dashboard.tsx.hbs - Dashboard component
+11. **apps/web/public/icon/stack-auth.svg**: Added Stack Auth icon
+12. **apps/cli/test/auth.test.ts**: Added comprehensive Stack Auth tests:
+    - Test for stack-auth + self backend + next
+    - Test for stack-auth + self backend + next + prisma
+    - Test for stack-auth + self backend + next + sqlite
+    - Test for stack-auth + non-self backend (should fail)
+    - Test for stack-auth + non-next frontend (should fail)
+    - Test for stack-auth + tanstack-router frontend (should fail)
+    - Test for stack-auth + convex backend (should fail)
+    - Updated "All Auth Providers" test to include stack-auth
+
+### Features:
+- Full Stack Auth SDK integration (@stackframe/stack)
+- Server-side rendering support with StackServerApp
+- Client-side hooks (useUser, useStackApp) via auth-client.ts
+- Built-in StackHandler for /handler/* routes (sign-in, sign-up, account-settings)
+- AuthProvider with StackProvider and StackTheme wrappers
+- Pre-built components: SignIn, SignUp, UserButton
+- Protected dashboard with server-side authentication check
+- Environment variable configuration for Stack Auth dashboard credentials
+- Compatibility validation (requires Next.js frontend + self backend)
+
+### Limitations:
+- Stack Auth is only available for Next.js fullstack applications (self backend)
+- Does not support Convex, Hono, Express, or other separate backend configurations
+- Does not support React Router, TanStack Start, or other React frameworks
+- Native mobile support not included (Stack Auth primarily targets web)
+
+### Test Results:
+- All 65 auth tests pass
+- All 150 lint tests pass
+
+### Status: COMPLETE

@@ -1,0 +1,27 @@
+"use client";
+
+import { SignUp } from "@stackframe/stack";
+
+export default function SignUpForm({
+  onSwitchToSignIn,
+}: {
+  onSwitchToSignIn: () => void;
+}) {
+  return (
+    <div className="mx-auto w-full mt-10 max-w-md p-6">
+      <SignUp
+        fullPage={false}
+        automaticRedirect={true}
+        extraInfo={
+          <button
+            type="button"
+            onClick={onSwitchToSignIn}
+            className="text-indigo-600 hover:text-indigo-800 text-sm mt-4"
+          >
+            Already have an account? Sign In
+          </button>
+        }
+      />
+    </div>
+  );
+}

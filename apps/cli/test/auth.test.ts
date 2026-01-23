@@ -314,6 +314,155 @@ describe("Authentication Configurations", () => {
     });
   });
 
+  describe("Stack Auth Provider", () => {
+    it("should work with stack-auth + self backend + next", async () => {
+      const result = await runTRPCTest({
+        projectName: "stack-auth-self-next",
+        auth: "stack-auth",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with stack-auth + self backend + next + prisma", async () => {
+      const result = await runTRPCTest({
+        projectName: "stack-auth-self-next-prisma",
+        auth: "stack-auth",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "prisma",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with stack-auth + self backend + next + sqlite", async () => {
+      const result = await runTRPCTest({
+        projectName: "stack-auth-self-next-sqlite",
+        auth: "stack-auth",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should fail with stack-auth + non-self backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "stack-auth-non-self-fail",
+        auth: "stack-auth",
+        backend: "hono",
+        runtime: "bun",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "Stack Auth is only supported with the 'self' backend");
+    });
+
+    it("should fail with stack-auth + non-next frontend", async () => {
+      const result = await runTRPCTest({
+        projectName: "stack-auth-non-next-fail",
+        auth: "stack-auth",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["tanstack-start"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "Stack Auth requires Next.js frontend");
+    });
+
+    it("should fail with stack-auth + tanstack-router frontend", async () => {
+      const result = await runTRPCTest({
+        projectName: "stack-auth-tanstack-router-fail",
+        auth: "stack-auth",
+        backend: "hono",
+        runtime: "bun",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "Stack Auth");
+    });
+
+    it("should fail with stack-auth + convex backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "stack-auth-convex-fail",
+        auth: "stack-auth",
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        api: "none",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "Stack Auth is only supported with the 'self' backend");
+    });
+  });
+
   describe("Clerk Provider", () => {
     it("should work with clerk + convex", async () => {
       const result = await runTRPCTest({
@@ -577,6 +726,13 @@ describe("Authentication Configurations", () => {
           config.orm = "none";
           config.api = "none";
         } else if (auth === "nextauth") {
+          config.backend = "self";
+          config.runtime = "none";
+          config.database = "postgres";
+          config.orm = "drizzle";
+          config.api = "trpc";
+          config.frontend = ["next"];
+        } else if (auth === "stack-auth") {
           config.backend = "self";
           config.runtime = "none";
           config.database = "postgres";

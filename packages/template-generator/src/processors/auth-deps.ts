@@ -185,5 +185,16 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
         });
       }
     }
+  } else if (auth === "stack-auth") {
+    const hasNextJs = frontend.includes("next");
+
+    // Stack Auth only works with Next.js (self backend)
+    if (hasNextJs && webExists) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPath,
+        dependencies: ["@stackframe/stack"],
+      });
+    }
   }
 }
