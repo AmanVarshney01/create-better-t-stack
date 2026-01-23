@@ -52,6 +52,12 @@ export async function writeBtsConfig(projectConfig: ProjectConfig) {
     rustApi: projectConfig.rustApi,
     rustCli: projectConfig.rustCli,
     rustLibraries: projectConfig.rustLibraries,
+    pythonWebFramework: projectConfig.pythonWebFramework,
+    pythonOrm: projectConfig.pythonOrm,
+    pythonValidation: projectConfig.pythonValidation,
+    pythonAi: projectConfig.pythonAi,
+    pythonTaskQueue: projectConfig.pythonTaskQueue,
+    pythonQuality: projectConfig.pythonQuality,
   };
 
   const baseContent = {
@@ -98,6 +104,12 @@ export async function writeBtsConfig(projectConfig: ProjectConfig) {
     rustApi: btsConfig.rustApi,
     rustCli: btsConfig.rustCli,
     rustLibraries: btsConfig.rustLibraries,
+    pythonWebFramework: btsConfig.pythonWebFramework,
+    pythonOrm: btsConfig.pythonOrm,
+    pythonValidation: btsConfig.pythonValidation,
+    pythonAi: btsConfig.pythonAi,
+    pythonTaskQueue: btsConfig.pythonTaskQueue,
+    pythonQuality: btsConfig.pythonQuality,
   };
 
   let configContent = JSON.stringify(baseContent);

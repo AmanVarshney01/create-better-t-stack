@@ -41,6 +41,12 @@ interface StackState {
   dbSetup?: string;
   webDeploy?: string;
   serverDeploy?: string;
+  pythonWebFramework?: string;
+  pythonOrm?: string;
+  pythonValidation?: string;
+  pythonAi?: string;
+  pythonTaskQueue?: string;
+  pythonQuality?: string;
 }
 
 function stackStateToConfig(state: StackState): ProjectConfig {
@@ -109,6 +115,15 @@ function stackStateToConfig(state: StackState): ProjectConfig {
     rustApi: "none" as ProjectConfig["rustApi"],
     rustCli: "none" as ProjectConfig["rustCli"],
     rustLibraries: [] as ProjectConfig["rustLibraries"],
+    pythonWebFramework: (state.pythonWebFramework ||
+      "fastapi") as ProjectConfig["pythonWebFramework"],
+    pythonOrm: (state.pythonOrm || "sqlalchemy") as ProjectConfig["pythonOrm"],
+    pythonValidation: (state.pythonValidation || "pydantic") as ProjectConfig["pythonValidation"],
+    pythonAi: (state.pythonAi
+      ? [state.pythonAi].filter((a) => a !== "none")
+      : []) as ProjectConfig["pythonAi"],
+    pythonTaskQueue: (state.pythonTaskQueue || "none") as ProjectConfig["pythonTaskQueue"],
+    pythonQuality: (state.pythonQuality || "ruff") as ProjectConfig["pythonQuality"],
   };
 }
 

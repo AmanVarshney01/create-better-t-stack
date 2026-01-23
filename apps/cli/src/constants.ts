@@ -60,6 +60,13 @@ export const DEFAULT_CONFIG_BASE = {
   rustApi: "none",
   rustCli: "none",
   rustLibraries: [],
+  // Python ecosystem defaults
+  pythonWebFramework: "fastapi",
+  pythonOrm: "sqlalchemy",
+  pythonValidation: "pydantic",
+  pythonAi: [],
+  pythonTaskQueue: "none",
+  pythonQuality: "ruff",
 } as const;
 
 export function getDefaultConfig() {
@@ -71,6 +78,7 @@ export function getDefaultConfig() {
     addons: [...DEFAULT_CONFIG_BASE.addons],
     examples: [...DEFAULT_CONFIG_BASE.examples],
     rustLibraries: [...DEFAULT_CONFIG_BASE.rustLibraries],
+    pythonAi: [...DEFAULT_CONFIG_BASE.pythonAi],
   };
 }
 

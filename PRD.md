@@ -175,7 +175,7 @@
 
 ## **Step 2: Web Frameworks**
 
-- [ ] **FastAPI** - Modern async API framework
+- [x] **FastAPI** - Modern async API framework
 - [ ] **Django** - Batteries-included framework
 
 ---

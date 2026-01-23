@@ -5809,3 +5809,59 @@ All 28 tests pass successfully with 132 expect() calls.
    - `[x] **Python Ecosystem Tests** - Write comprehensive tests verifying Python ecosystem works`
 
 ### Status: COMPLETE
+
+
+## 2026-01-23: FastAPI Python Web Framework - TypeScript Type Fixes
+
+### Task: Mark FastAPI as complete and fix missing Python type fields
+
+### Background:
+FastAPI was already fully implemented in the codebase with:
+- Templates (pyproject.toml.hbs, main.py.hbs, test_main.py.hbs) with FastAPI conditional support
+- Schema definitions (PythonWebFrameworkSchema includes "fastapi")
+- UI configuration in constant.ts with icon, description, and colors
+- Comprehensive tests in python-language.test.ts and python-ecosystem.test.ts
+
+However, TypeScript linting was failing because Python fields were missing from several files.
+
+### Changes Made:
+1. **apps/cli/src/utils/bts-config.ts**: Added Python fields to btsConfig object and baseContent:
+   - pythonWebFramework
+   - pythonOrm
+   - pythonValidation
+   - pythonAi
+   - pythonTaskQueue
+   - pythonQuality
+
+2. **apps/cli/src/helpers/core/command-handlers.ts**: Added Python fields to default error config:
+   - pythonWebFramework: "none"
+   - pythonOrm: "none"
+   - pythonValidation: "none"
+   - pythonAi: []
+   - pythonTaskQueue: "none"
+   - pythonQuality: "none"
+
+3. **apps/cli/src/constants.ts**: Added Python ecosystem defaults to DEFAULT_CONFIG_BASE:
+   - pythonWebFramework: "fastapi" (default)
+   - pythonOrm: "sqlalchemy" (default)
+   - pythonValidation: "pydantic" (default)
+   - pythonAi: [] (no default)
+   - pythonTaskQueue: "none" (default)
+   - pythonQuality: "ruff" (default)
+   Also updated getDefaultConfig() to spread pythonAi array.
+
+4. **apps/web/src/routes/api/preview.ts**: Added Python fields to StackState interface and stackStateToConfig function:
+   - pythonWebFramework?: string
+   - pythonOrm?: string
+   - pythonValidation?: string
+   - pythonAi?: string
+   - pythonTaskQueue?: string
+   - pythonQuality?: string
+
+5. **PRD.md**: Marked FastAPI as complete
+
+### Test Results:
+- All 85 Python tests pass (python-language.test.ts: 28 tests, python-ecosystem.test.ts: 57 tests)
+- Linting passes (all 9 packages successful)
+
+### Status: COMPLETE
