@@ -5976,3 +5976,64 @@ Added comprehensive SQLAlchemy ORM support to the Python ecosystem with full tem
 - Linting: 0 errors (warnings only)
 
 ### Status: COMPLETE
+
+
+---
+
+## [2026-01-23] SQLModel ORM Implementation Complete
+
+### Task: Implement SQLModel ORM support for Python ecosystem (Step 3: ORMs & Database)
+
+### Summary:
+Added comprehensive SQLModel ORM support to the Python ecosystem with full template generation. SQLModel combines SQLAlchemy and Pydantic, allowing models to serve as both database models and API schemas.
+
+### Changes Made:
+
+1. **Template Files Updated** (`packages/template-generator/templates/python-base/`):
+   - `src/app/database.py.hbs`: Added SQLModel database configuration with create_engine, get_db dependency, and init_db function
+   - `src/app/models.py.hbs`: Added SQLModel models with built-in Pydantic schemas (UserBase, User, Post, UserCreate, UserUpdate, UserResponse, PostCreate, PostUpdate, PostResponse)
+   - `src/app/crud.py.hbs`: Added SQLModel CRUD operations using sqlmodel Session and select
+   - `src/app/main.py.hbs`: Added SQLModel integration with FastAPI including imports from sqlmodel and app.models
+   - `tests/test_database.py.hbs`: Added comprehensive SQLModel tests using sqlmodel.pool StaticPool
+   - `alembic.ini.hbs`: Updated condition to include sqlmodel
+   - `migrations/env.py.hbs`: Added SQLModel support with SQLModel.metadata
+   - `migrations/script.py.mako.hbs`: Updated condition to include sqlmodel
+
+2. **README Generator Update** (`packages/template-generator/src/processors/readme-generator.ts`):
+   - Added SQLModel project structure (database.py, models.py, crud.py)
+   - Updated test_database.py reference for SQLModel
+
+3. **Test Updates** (`apps/cli/test/python-language.test.ts`):
+   - Added 10 new SQLModel tests:
+     - should create SQLModel database module
+     - should create SQLModel models with built-in schemas
+     - should NOT create separate schemas.py for SQLModel
+     - should create SQLModel CRUD module
+     - should create Alembic migration configuration for SQLModel
+     - should create database test file for SQLModel
+     - should integrate SQLModel with FastAPI endpoints
+     - should generate README with SQLModel instructions
+     - should NOT create SQLModel files when pythonOrm is none
+
+### Features Implemented:
+- SQLModel with combined database models and Pydantic schemas
+- User and Post models with validation via Pydantic
+- Full CRUD operations using sqlmodel Session
+- FastAPI integration with automatic schema validation
+- Alembic migration support using SQLModel.metadata
+- Comprehensive test suite with in-memory SQLite fixtures
+- Conditional file generation (files only created when pythonOrm="sqlmodel")
+
+### Key Differences from SQLAlchemy:
+- No separate schemas.py file (SQLModel models ARE the schemas)
+- Uses `from sqlmodel import Session, SQLModel, create_engine` instead of SQLAlchemy
+- Models inherit from SQLModel and use `table=True` for database tables
+- Uses `Field()` for column definitions instead of `mapped_column()`
+- Uses `db.exec(stmt)` instead of `db.execute(stmt)` for queries
+
+### Test Results:
+- Python language tests: 46 pass, 0 fail
+- Python ecosystem tests: 57 pass, 0 fail
+- Linting: 0 errors
+
+### Status: COMPLETE

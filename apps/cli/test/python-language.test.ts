@@ -591,6 +591,244 @@ describe("Python Language Support", () => {
       expect(pyprojectContent).toContain("sqlmodel");
       expect(pyprojectContent).toContain("alembic");
     });
+
+    it("should create SQLModel database module", async () => {
+      const result = await createVirtual({
+        projectName: "python-sqlmodel-database",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "sqlmodel",
+        pythonValidation: "none",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify database.py exists
+      expect(hasFile(root, "src/app/database.py")).toBe(true);
+      const databaseContent = getFileContent(root, "src/app/database.py");
+      expect(databaseContent).toBeDefined();
+      expect(databaseContent).toContain("from sqlmodel import Session, SQLModel, create_engine");
+      expect(databaseContent).toContain("get_db");
+      expect(databaseContent).toContain("init_db");
+    });
+
+    it("should create SQLModel models with built-in schemas", async () => {
+      const result = await createVirtual({
+        projectName: "python-sqlmodel-models",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "sqlmodel",
+        pythonValidation: "none",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify models.py exists
+      expect(hasFile(root, "src/app/models.py")).toBe(true);
+      const modelsContent = getFileContent(root, "src/app/models.py");
+      expect(modelsContent).toBeDefined();
+      expect(modelsContent).toContain("from sqlmodel import Field, SQLModel");
+      expect(modelsContent).toContain("class User(UserBase, table=True)");
+      expect(modelsContent).toContain("class Post(PostBase, table=True)");
+      // SQLModel combines models and schemas
+      expect(modelsContent).toContain("class UserCreate");
+      expect(modelsContent).toContain("class UserUpdate");
+      expect(modelsContent).toContain("class UserResponse");
+      expect(modelsContent).toContain("class PostCreate");
+      expect(modelsContent).toContain("class PostUpdate");
+      expect(modelsContent).toContain("class PostResponse");
+    });
+
+    it("should NOT create separate schemas.py for SQLModel", async () => {
+      const result = await createVirtual({
+        projectName: "python-sqlmodel-no-schemas",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "sqlmodel",
+        pythonValidation: "none",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // SQLModel doesn't need separate schemas.py
+      expect(hasFile(root, "src/app/schemas.py")).toBe(false);
+    });
+
+    it("should create SQLModel CRUD module", async () => {
+      const result = await createVirtual({
+        projectName: "python-sqlmodel-crud",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "sqlmodel",
+        pythonValidation: "none",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify crud.py exists
+      expect(hasFile(root, "src/app/crud.py")).toBe(true);
+      const crudContent = getFileContent(root, "src/app/crud.py");
+      expect(crudContent).toBeDefined();
+      expect(crudContent).toContain("from sqlmodel import Session, select");
+      expect(crudContent).toContain("def get_user");
+      expect(crudContent).toContain("def create_user");
+      expect(crudContent).toContain("def update_user");
+      expect(crudContent).toContain("def delete_user");
+      expect(crudContent).toContain("def get_post");
+      expect(crudContent).toContain("def create_post");
+    });
+
+    it("should create Alembic migration configuration for SQLModel", async () => {
+      const result = await createVirtual({
+        projectName: "python-sqlmodel-alembic",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "sqlmodel",
+        pythonValidation: "none",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify alembic.ini exists
+      expect(hasFile(root, "alembic.ini")).toBe(true);
+      const alembicIniContent = getFileContent(root, "alembic.ini");
+      expect(alembicIniContent).toBeDefined();
+      expect(alembicIniContent).toContain("[alembic]");
+      expect(alembicIniContent).toContain("script_location = migrations");
+
+      // Verify migrations/env.py exists
+      expect(hasFile(root, "migrations/env.py")).toBe(true);
+      const envContent = getFileContent(root, "migrations/env.py");
+      expect(envContent).toBeDefined();
+      expect(envContent).toContain("from alembic import context");
+      expect(envContent).toContain("from sqlmodel import SQLModel");
+      expect(envContent).toContain("target_metadata = SQLModel.metadata");
+
+      // Verify migrations/script.py.mako exists
+      expect(hasFile(root, "migrations/script.py.mako")).toBe(true);
+    });
+
+    it("should create database test file for SQLModel", async () => {
+      const result = await createVirtual({
+        projectName: "python-sqlmodel-tests",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "sqlmodel",
+        pythonValidation: "none",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify test_database.py exists
+      expect(hasFile(root, "tests/test_database.py")).toBe(true);
+      const testContent = getFileContent(root, "tests/test_database.py");
+      expect(testContent).toBeDefined();
+      expect(testContent).toContain("from sqlmodel import Session, SQLModel, create_engine");
+      expect(testContent).toContain("class TestUserModel");
+      expect(testContent).toContain("class TestPostModel");
+      expect(testContent).toContain("class TestUserCrud");
+      expect(testContent).toContain("class TestPostCrud");
+      expect(testContent).toContain("@pytest.fixture");
+      expect(testContent).toContain("db_session");
+    });
+
+    it("should integrate SQLModel with FastAPI endpoints", async () => {
+      const result = await createVirtual({
+        projectName: "python-sqlmodel-fastapi",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "sqlmodel",
+        pythonValidation: "none",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainContent = getFileContent(root, "src/app/main.py");
+      expect(mainContent).toBeDefined();
+      expect(mainContent).toContain("from sqlmodel import Session");
+      expect(mainContent).toContain("from app.database import get_db, init_db");
+      expect(mainContent).toContain("from app import crud");
+      expect(mainContent).toContain("from app.models import");
+      expect(mainContent).toContain('@app.post("/users"');
+      expect(mainContent).toContain('@app.get("/users"');
+      expect(mainContent).toContain('@app.post("/posts"');
+      expect(mainContent).toContain("Depends(get_db)");
+      expect(mainContent).toContain("init_db()");
+    });
+
+    it("should generate README with SQLModel instructions", async () => {
+      const result = await createVirtual({
+        projectName: "python-sqlmodel-readme",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "sqlmodel",
+        pythonValidation: "none",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const readmeContent = getFileContent(root, "README.md");
+      expect(readmeContent).toBeDefined();
+      expect(readmeContent).toContain("SQLModel");
+      expect(readmeContent).toContain("Alembic");
+      expect(readmeContent).toContain("alembic revision");
+      expect(readmeContent).toContain("alembic upgrade head");
+    });
+
+    it("should NOT create SQLModel files when pythonOrm is none", async () => {
+      const result = await createVirtual({
+        projectName: "python-no-sqlmodel",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify SQLModel files do NOT exist
+      expect(hasFile(root, "src/app/database.py")).toBe(false);
+      expect(hasFile(root, "src/app/models.py")).toBe(false);
+      expect(hasFile(root, "src/app/crud.py")).toBe(false);
+      expect(hasFile(root, "alembic.ini")).toBe(false);
+      expect(hasFile(root, "migrations/env.py")).toBe(false);
+    });
   });
 
   describe("Pydantic Validation", () => {

@@ -843,11 +843,18 @@ function generatePythonReadmeContent(config: ProjectConfig): string {
     structure.push("│       └── crud.py       # CRUD operations");
   }
 
+  // Add SQLModel files
+  if (pythonOrm === "sqlmodel") {
+    structure.push("│       ├── database.py   # Database configuration");
+    structure.push("│       ├── models.py     # SQLModel models (with schemas)");
+    structure.push("│       └── crud.py       # CRUD operations");
+  }
+
   structure.push("├── tests/");
   structure.push("│   ├── __init__.py");
   structure.push("│   └── test_main.py      # Test suite");
 
-  if (pythonOrm === "sqlalchemy") {
+  if (pythonOrm === "sqlalchemy" || pythonOrm === "sqlmodel") {
     structure.push("│   └── test_database.py  # Database tests");
   }
 

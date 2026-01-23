@@ -183,7 +183,7 @@
 ## **Step 3: ORMs & Database**
 
 - [x] **SQLAlchemy** - The SQL toolkit and ORM
-- [ ] **SQLModel** - SQLAlchemy + Pydantic
+- [x] **SQLModel** - SQLAlchemy + Pydantic
 
 ---
 

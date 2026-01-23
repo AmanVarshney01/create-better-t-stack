@@ -1,5 +1,5 @@
 {{#if (ne pythonOrm "none")}}
-{{#if (eq pythonOrm "sqlalchemy")}}
+{{#if (or (eq pythonOrm "sqlalchemy") (eq pythonOrm "sqlmodel"))}}
 # Alembic configuration file
 
 [alembic]

@@ -1,5 +1,5 @@
 {{#if (ne pythonOrm "none")}}
-{{#if (eq pythonOrm "sqlalchemy")}}
+{{#if (or (eq pythonOrm "sqlalchemy") (eq pythonOrm "sqlmodel"))}}
 """${message}
 
 Revision ID: ${up_revision}
