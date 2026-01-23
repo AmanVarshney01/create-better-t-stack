@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { Outlet, HeadContent, Scripts, createRootRoute, Link } from "@tanstack/react-router";
+import { Analytics } from "@vercel/analytics/react";
 
 import { Navbar } from "@/components/navbar";
 import Providers from "@/components/providers";
@@ -90,6 +91,7 @@ function RootDocument({ children }: { children: ReactNode }) {
       </head>
       <body className="bg-background text-foreground">
         <Providers>{children}</Providers>
+        <Analytics />
         <Scripts />
       </body>
     </html>

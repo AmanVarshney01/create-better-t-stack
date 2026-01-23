@@ -23,6 +23,7 @@
     "@tanstack/react-router": "^1.150.0",
     "@tanstack/react-start": "^1.150.0",
     "@tanstack/zod-adapter": "^1.150.0",
+    "@vercel/analytics": "^1.6.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "convex": "^1.31.2",

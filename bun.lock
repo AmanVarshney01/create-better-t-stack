@@ -29,7 +29,7 @@
     },
     "apps/cli": {
       "name": "create-better-fullstack",
-      "version": "1.1.3",
+      "version": "1.1.11",
       "bin": {
         "create-better-fullstack": "dist/cli.mjs",
       },
@@ -76,6 +76,7 @@
         "@tanstack/react-router": "^1.150.0",
         "@tanstack/react-start": "^1.150.0",
         "@tanstack/zod-adapter": "^1.150.0",
+        "@vercel/analytics": "^1.6.1",
         "class-variance-authority": "^0.7.1",
         "clsx": "^2.1.1",
         "convex": "^1.31.2",
@@ -132,7 +133,7 @@
     },
     "packages/create-bfs": {
       "name": "create-bfs",
-      "version": "1.1.3",
+      "version": "1.1.11",
       "bin": {
         "create-bfs": "cli.js",
       },
@@ -142,9 +143,9 @@
     },
     "packages/template-generator": {
       "name": "@better-fullstack/template-generator",
-      "version": "1.1.3",
+      "version": "1.1.11",
       "dependencies": {
-        "@better-fullstack/types": "^1.1.1",
+        "@better-fullstack/types": "^1.1.11",
         "handlebars": "^4.7.8",
         "memfs": "4.55.0",
         "pathe": "^2.0.3",
@@ -163,7 +164,7 @@
     },
     "packages/types": {
       "name": "@better-fullstack/types",
-      "version": "1.1.3",
+      "version": "1.1.11",
       "dependencies": {
         "zod": "^4.1.13",
       },
@@ -803,6 +804,8 @@
     "@types/unist": ["@types/unist@3.0.3", "", {}, "sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q=="],
 
     "@ungap/structured-clone": ["@ungap/structured-clone@1.3.0", "", {}, "sha512-WmoN8qaIAo7WTYWbAZuG8PYEhn5fkz7dZrqTBZ7dtt//lL2Gwms1IcnQ5yHqjDfX8Ft5j4YzDM23f87zBfDe9g=="],
+
+    "@vercel/analytics": ["@vercel/analytics@1.6.1", "", { "peerDependencies": { "@remix-run/react": "^2", "@sveltejs/kit": "^1 || ^2", "next": ">= 13", "react": "^18 || ^19 || ^19.0.0-rc", "svelte": ">= 4", "vue": "^3", "vue-router": "^4" }, "optionalPeers": ["@remix-run/react", "@sveltejs/kit", "next", "react", "svelte", "vue", "vue-router"] }, "sha512-oH9He/bEM+6oKlv3chWuOOcp8Y6fo6/PSro8hEkgCW3pu9/OiCXiUpRUogDh3Fs3LH2sosDrx8CxeOLBEE+afg=="],
 
     "@vitejs/plugin-react": ["@vitejs/plugin-react@5.1.2", "", { "dependencies": { "@babel/core": "^7.28.5", "@babel/plugin-transform-react-jsx-self": "^7.27.1", "@babel/plugin-transform-react-jsx-source": "^7.27.1", "@rolldown/pluginutils": "1.0.0-beta.53", "@types/babel__core": "^7.20.5", "react-refresh": "^0.18.0" }, "peerDependencies": { "vite": "^4.2.0 || ^5.0.0 || ^6.0.0 || ^7.0.0" } }, "sha512-EcA07pHJouywpzsoTUqNh5NwGayl2PPVEJKUSinGGSxFGYn+shYbqMGBg6FXDqgXum9Ou/ecb+411ssw8HImJQ=="],
 
