@@ -109,7 +109,7 @@ export async function displayPostInstallInstructions(
 
   const betterAuthConvexInstructions =
     isConvex && config.auth === "better-auth"
-      ? getBetterAuthConvexInstructions(hasWeb ?? false, webPort)
+      ? getBetterAuthConvexInstructions(hasWeb ?? false, webPort, packageManager)
       : "";
 
   const bunWebNativeWarning =
@@ -399,13 +399,14 @@ function getClerkInstructions() {
   return `${pc.bold("Clerk Authentication Setup:")}\n${pc.cyan("•")} Follow the guide: ${pc.underline("https://docs.convex.dev/auth/clerk")}\n${pc.cyan("•")} Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard\n${pc.cyan("•")} Set CLERK_PUBLISHABLE_KEY in apps/*/.env`;
 }
 
-function getBetterAuthConvexInstructions(hasWeb: boolean, webPort: string) {
+function getBetterAuthConvexInstructions(hasWeb: boolean, webPort: string, packageManager: string) {
+  const cmd = packageManager === "npm" ? "npx" : packageManager;
   return (
     `${pc.bold("Better Auth + Convex Setup:")}\n` +
     `${pc.cyan("•")} Set environment variables from ${pc.white("packages/backend")}:\n` +
     `${pc.white("   cd packages/backend")}\n` +
-    `${pc.white("   npx convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)")}\n` +
-    (hasWeb ? `${pc.white(`   npx convex env set SITE_URL http://localhost:${webPort}`)}\n` : "")
+    `${pc.white(`   ${cmd} convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)`)}\n` +
+    (hasWeb ? `${pc.white(`   ${cmd} convex env set SITE_URL http://localhost:${webPort}`)}\n` : "")
   );
 }
 
