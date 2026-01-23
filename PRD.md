@@ -156,7 +156,7 @@
 ## **Analytics**
 
 - [x] **Plausible** - Privacy-focused analytics
-- [ ] **Umami** - Open-source analytics
+- [x] **Umami** - Open-source analytics
 
 ---
 

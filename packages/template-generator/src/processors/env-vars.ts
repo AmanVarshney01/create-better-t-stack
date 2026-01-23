@@ -346,6 +346,38 @@ function buildClientVars(
     );
   }
 
+  // Umami analytics client-side
+  if (analytics === "umami") {
+    let umamiWebsiteIdName = "VITE_UMAMI_WEBSITE_ID";
+    let umamiScriptUrlName = "VITE_UMAMI_SCRIPT_URL";
+
+    if (hasNextJs) {
+      umamiWebsiteIdName = "NEXT_PUBLIC_UMAMI_WEBSITE_ID";
+      umamiScriptUrlName = "NEXT_PUBLIC_UMAMI_SCRIPT_URL";
+    } else if (hasNuxt) {
+      umamiWebsiteIdName = "NUXT_PUBLIC_UMAMI_WEBSITE_ID";
+      umamiScriptUrlName = "NUXT_PUBLIC_UMAMI_SCRIPT_URL";
+    } else if (hasSvelte) {
+      umamiWebsiteIdName = "PUBLIC_UMAMI_WEBSITE_ID";
+      umamiScriptUrlName = "PUBLIC_UMAMI_SCRIPT_URL";
+    }
+
+    vars.push(
+      {
+        key: umamiWebsiteIdName,
+        value: "",
+        condition: true,
+        comment: "Your Umami website ID (get it from your Umami dashboard)",
+      },
+      {
+        key: umamiScriptUrlName,
+        value: "https://cloud.umami.is/script.js",
+        condition: true,
+        comment: "Umami script URL (change if self-hosting)",
+      },
+    );
+  }
+
   return vars;
 }
 

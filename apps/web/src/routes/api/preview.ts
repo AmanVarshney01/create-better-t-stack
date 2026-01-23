@@ -99,6 +99,8 @@ function stackStateToConfig(state: StackState): ProjectConfig {
     fileUpload: "none" as ProjectConfig["fileUpload"],
     logging: "none" as ProjectConfig["logging"],
     observability: "none" as ProjectConfig["observability"],
+    featureFlags: "none" as ProjectConfig["featureFlags"],
+    analytics: "none" as ProjectConfig["analytics"],
     cms: "none" as ProjectConfig["cms"],
     caching: "none" as ProjectConfig["caching"],
     rustWebFramework: "none" as ProjectConfig["rustWebFramework"],

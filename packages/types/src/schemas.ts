@@ -222,7 +222,7 @@ export const FeatureFlagsSchema = z
   .describe("Feature flags provider for A/B testing and feature management");
 
 export const AnalyticsSchema = z
-  .enum(["plausible", "none"])
+  .enum(["plausible", "umami", "none"])
   .describe("Privacy-focused analytics provider");
 
 // Rust ecosystem schemas

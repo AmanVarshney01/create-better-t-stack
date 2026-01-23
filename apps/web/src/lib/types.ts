@@ -32,6 +32,8 @@ export type TechCategory =
   | "cssFramework"
   | "uiLibrary"
   | "cms"
+  | "featureFlags"
+  | "analytics"
   | "codeQuality"
   | "documentation"
   | "appPlatforms"

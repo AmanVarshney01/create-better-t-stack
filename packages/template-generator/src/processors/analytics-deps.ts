@@ -27,4 +27,7 @@ export function processAnalyticsDeps(vfs: VirtualFileSystem, config: ProjectConf
       }
     }
   }
+
+  // Umami uses a script tag approach - no npm dependencies needed
+  // The umami.tsx template handles loading the script dynamically
 }

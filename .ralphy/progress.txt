@@ -5524,3 +5524,53 @@ Implemented Plausible privacy-focused analytics integration.
   - Combined analytics + feature flags (PostHog, GrowthBook)
 
 ### Status: COMPLETE
+
+
+---
+
+## Task: Umami Analytics Integration
+
+**Date:** 2026-01-23 20:05:50
+
+**Status:** Completed
+
+### Summary
+Implemented Umami open-source analytics integration following the existing Plausible analytics pattern.
+
+### Changes Made
+
+1. **Schema Update** (`packages/types/src/schemas.ts`):
+   - Added "umami" option to AnalyticsSchema enum
+
+2. **Template Created** (`packages/template-generator/templates/analytics/umami/web/react/src/lib/umami.tsx.hbs`):
+   - Created React-based Umami provider component
+   - Implemented hooks: useTrackEvent, useTrackPageview, useIdentify, useUmamiStatus
+   - Supports Next.js, Nuxt, and Vite-based frontends with appropriate env var prefixes
+   - Script-based loading (no npm dependencies required)
+   - Full TypeScript support with global type definitions
+
+3. **Dependencies** (`packages/template-generator/src/processors/analytics-deps.ts`):
+   - Added comment noting Umami uses script-based loading (no npm deps)
+
+4. **Environment Variables** (`packages/template-generator/src/processors/env-vars.ts`):
+   - Added UMAMI_WEBSITE_ID and UMAMI_SCRIPT_URL env variables
+   - Framework-specific prefixes (NEXT_PUBLIC_, NUXT_PUBLIC_, VITE_, PUBLIC_)
+
+5. **Web App Type Fixes**:
+   - Added featureFlags and analytics to TechCategory type
+   - Added missing fields to preview.ts config object
+
+6. **Tests** (`apps/cli/test/analytics.test.ts`):
+   - Added 11 new test cases for Umami integration
+   - Tests cover various backend/frontend combinations
+   - Tests verify env variable generation for Next.js and Vite
+   - Tests verify no npm dependencies are added (script-based loading)
+   - Tests verify Umami works with PostHog and GrowthBook feature flags
+
+### Test Results
+- All 22 analytics tests pass
+- All 150 lint tests pass
+
+### PRD Status
+- Marked "Umami - Open-source analytics" as complete in PRD.md
+

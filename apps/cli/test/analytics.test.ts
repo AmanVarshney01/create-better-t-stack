@@ -234,6 +234,255 @@ describe("Analytics Configurations", () => {
     });
   });
 
+  describe("Umami", () => {
+    it("should work with umami + hono backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "umami-hono",
+        analytics: "umami",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Verify Umami template was created in src/lib
+      if (result.projectDir) {
+        const umamiPath = path.join(result.projectDir, "apps/web/src/lib/umami.tsx");
+        expect(await fs.pathExists(umamiPath)).toBe(true);
+      }
+    });
+
+    it("should work with umami + express backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "umami-express",
+        analytics: "umami",
+        backend: "express",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with umami + Next.js fullstack", async () => {
+      const result = await runTRPCTest({
+        projectName: "umami-next",
+        analytics: "umami",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Verify Umami template was created in src/lib for fullstack
+      if (result.projectDir) {
+        const umamiPath = path.join(result.projectDir, "apps/web/src/lib/umami.tsx");
+        expect(await fs.pathExists(umamiPath)).toBe(true);
+      }
+    });
+
+    it("should work with umami + react-router frontend", async () => {
+      const result = await runTRPCTest({
+        projectName: "umami-react-router",
+        analytics: "umami",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["react-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should not add umami to server (client-side only)", async () => {
+      const result = await runTRPCTest({
+        projectName: "umami-no-server",
+        analytics: "umami",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that Umami template was NOT added to server (it's client-side only)
+      if (result.projectDir) {
+        const serverUmamiPath = path.join(result.projectDir, "apps/server/src/lib/umami.tsx");
+        expect(await fs.pathExists(serverUmamiPath)).toBe(false);
+      }
+    });
+
+    it("should work with umami + elysia backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "umami-elysia",
+        analytics: "umami",
+        backend: "elysia",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should create umami.tsx template with correct env vars for Next.js", async () => {
+      const result = await runTRPCTest({
+        projectName: "umami-env-next",
+        analytics: "umami",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check the env file contains the right env vars
+      if (result.projectDir) {
+        const envPath = path.join(result.projectDir, "apps/web/.env");
+        if (await fs.pathExists(envPath)) {
+          const envContent = await fs.readFile(envPath, "utf-8");
+          expect(envContent).toContain("NEXT_PUBLIC_UMAMI_WEBSITE_ID");
+          expect(envContent).toContain("NEXT_PUBLIC_UMAMI_SCRIPT_URL");
+        }
+      }
+    });
+
+    it("should create umami.tsx template with correct env vars for Vite", async () => {
+      const result = await runTRPCTest({
+        projectName: "umami-env-vite",
+        analytics: "umami",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check the env file contains the right env vars
+      if (result.projectDir) {
+        const envPath = path.join(result.projectDir, "apps/web/.env");
+        if (await fs.pathExists(envPath)) {
+          const envContent = await fs.readFile(envPath, "utf-8");
+          expect(envContent).toContain("VITE_UMAMI_WEBSITE_ID");
+          expect(envContent).toContain("VITE_UMAMI_SCRIPT_URL");
+        }
+      }
+    });
+
+    it("should not require npm dependencies (script-based loading)", async () => {
+      const result = await runTRPCTest({
+        projectName: "umami-no-deps",
+        analytics: "umami",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Umami doesn't add any npm dependencies - it uses script tag loading
+      if (result.projectDir) {
+        const webPackageJsonPath = path.join(result.projectDir, "apps/web/package.json");
+        if (await fs.pathExists(webPackageJsonPath)) {
+          const pkgJson = await fs.readJson(webPackageJsonPath);
+          // Umami uses script tag, no npm package needed
+          expect(pkgJson.dependencies?.["@umami/tracker"]).toBeUndefined();
+          expect(pkgJson.dependencies?.["umami"]).toBeUndefined();
+        }
+      }
+    });
+  });
+
   describe("No Analytics (none)", () => {
     it("should not add analytics dependencies when analytics is none", async () => {
       const result = await runTRPCTest({
@@ -329,6 +578,76 @@ describe("Analytics Configurations", () => {
         if (await fs.pathExists(webPackageJsonPath)) {
           const pkgJson = await fs.readJson(webPackageJsonPath);
           expect(pkgJson.dependencies?.["plausible-tracker"]).toBeDefined();
+          expect(pkgJson.dependencies?.["@growthbook/growthbook-react"]).toBeDefined();
+        }
+      }
+    });
+
+    it("should work with umami analytics and posthog feature flags", async () => {
+      const result = await runTRPCTest({
+        projectName: "umami-posthog",
+        analytics: "umami",
+        featureFlags: "posthog",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that Umami template and PostHog dependencies were added to web
+      if (result.projectDir) {
+        const umamiPath = path.join(result.projectDir, "apps/web/src/lib/umami.tsx");
+        expect(await fs.pathExists(umamiPath)).toBe(true);
+
+        const webPackageJsonPath = path.join(result.projectDir, "apps/web/package.json");
+        if (await fs.pathExists(webPackageJsonPath)) {
+          const pkgJson = await fs.readJson(webPackageJsonPath);
+          expect(pkgJson.dependencies?.["posthog-js"]).toBeDefined();
+        }
+      }
+    });
+
+    it("should work with umami analytics and growthbook feature flags", async () => {
+      const result = await runTRPCTest({
+        projectName: "umami-growthbook",
+        analytics: "umami",
+        featureFlags: "growthbook",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that Umami template and GrowthBook dependencies were added to web
+      if (result.projectDir) {
+        const umamiPath = path.join(result.projectDir, "apps/web/src/lib/umami.tsx");
+        expect(await fs.pathExists(umamiPath)).toBe(true);
+
+        const webPackageJsonPath = path.join(result.projectDir, "apps/web/package.json");
+        if (await fs.pathExists(webPackageJsonPath)) {
+          const pkgJson = await fs.readJson(webPackageJsonPath);
           expect(pkgJson.dependencies?.["@growthbook/growthbook-react"]).toBeDefined();
         }
       }

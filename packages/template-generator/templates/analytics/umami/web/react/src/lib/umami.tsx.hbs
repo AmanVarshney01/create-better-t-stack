@@ -1,0 +1,368 @@
+"use client";
+
+import type { PropsWithChildren } from "react";
+import { createContext, useContext, useEffect, useMemo, useCallback, useState, useRef } from "react";
+
+// Umami configuration from environment variables
+{{#if (eq frontend.[0] "next")}}
+const umamiWebsiteId = process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID || "";
+const umamiScriptUrl = process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL || "https://cloud.umami.is/script.js";
+{{else if (eq frontend.[0] "nuxt")}}
+const umamiWebsiteId = process.env.NUXT_PUBLIC_UMAMI_WEBSITE_ID || "";
+const umamiScriptUrl = process.env.NUXT_PUBLIC_UMAMI_SCRIPT_URL || "https://cloud.umami.is/script.js";
+{{else}}
+const umamiWebsiteId = import.meta.env.VITE_UMAMI_WEBSITE_ID || "";
+const umamiScriptUrl = import.meta.env.VITE_UMAMI_SCRIPT_URL || "https://cloud.umami.is/script.js";
+{{/if}}
+
+// Umami global types
+declare global {
+  interface Window {
+    umami?: {
+      track: {
+        (): void;
+        (eventName: string): void;
+        (eventName: string, eventData: Record<string, string | number | boolean>): void;
+        (callback: (props: UmamiPayload) => UmamiPayload): void;
+      };
+      identify: {
+        (uniqueId: string): void;
+        (uniqueId: string, data: Record<string, string | number | boolean>): void;
+        (data: Record<string, string | number | boolean>): void;
+      };
+    };
+  }
+}
+
+interface UmamiPayload {
+  hostname: string;
+  language: string;
+  referrer: string;
+  screen: string;
+  title: string;
+  url: string;
+  website: string;
+}
+
+interface UmamiContextValue {
+  isReady: boolean;
+  isConfigured: boolean;
+  websiteId: string;
+  scriptUrl: string;
+}
+
+// Context for Umami state
+const UmamiContext = createContext<UmamiContextValue | null>(null);
+
+interface UmamiProviderProps extends PropsWithChildren {
+  /**
+   * Enable automatic pageview tracking
+   * @default true
+   */
+  autoPageviews?: boolean;
+  /**
+   * Domains to track (comma-separated). If set, only these domains will be tracked.
+   */
+  domains?: string;
+  /**
+   * Respect user's Do Not Track browser setting
+   * @default false
+   */
+  doNotTrack?: boolean;
+  /**
+   * Tag to categorize events in the Umami dashboard
+   */
+  tag?: string;
+}
+
+/**
+ * Umami Analytics Provider component
+ * Wrap your app with this provider to enable privacy-focused analytics
+ *
+ * @example
+ * function App() {
+ *   return (
+ *     <UmamiProvider>
+ *       <YourApp />
+ *     </UmamiProvider>
+ *   );
+ * }
+ */
+export function UmamiProvider({
+  children,
+  autoPageviews = true,
+  domains,
+  doNotTrack = false,
+  tag,
+}: UmamiProviderProps) {
+  const [ready, setReady] = useState(false);
+  const scriptLoaded = useRef(false);
+
+  useEffect(() => {
+    if (!umamiWebsiteId) {
+      console.warn("[Umami] Website ID not configured, analytics disabled");
+      return;
+    }
+
+    if (scriptLoaded.current) {
+      return;
+    }
+
+    // Check if script already exists
+    const existingScript = document.querySelector(`script[src="${umamiScriptUrl}"]`);
+    if (existingScript) {
+      scriptLoaded.current = true;
+      setReady(true);
+      return;
+    }
+
+    // Create and inject script
+    const script = document.createElement("script");
+    script.src = umamiScriptUrl;
+    script.defer = true;
+    script.setAttribute("data-website-id", umamiWebsiteId);
+
+    if (!autoPageviews) {
+      script.setAttribute("data-auto-track", "false");
+    }
+
+    if (domains) {
+      script.setAttribute("data-domains", domains);
+    }
+
+    if (doNotTrack) {
+      script.setAttribute("data-do-not-track", "true");
+    }
+
+    if (tag) {
+      script.setAttribute("data-tag", tag);
+    }
+
+    script.onload = () => {
+      scriptLoaded.current = true;
+      setReady(true);
+    };
+
+    script.onerror = () => {
+      console.error("[Umami] Failed to load analytics script");
+    };
+
+    document.head.appendChild(script);
+
+    return () => {
+      // Don't remove the script on unmount as it may be needed by other components
+    };
+  }, [autoPageviews, domains, doNotTrack, tag]);
+
+  const contextValue = useMemo<UmamiContextValue>(
+    () => ({
+      isReady: ready,
+      isConfigured: !!umamiWebsiteId,
+      websiteId: umamiWebsiteId,
+      scriptUrl: umamiScriptUrl,
+    }),
+    [ready]
+  );
+
+  return (
+    <UmamiContext.Provider value={contextValue}>
+      {children}
+    </UmamiContext.Provider>
+  );
+}
+
+/**
+ * Hook to access the Umami context
+ */
+export function useUmami() {
+  const context = useContext(UmamiContext);
+  return context;
+}
+
+/**
+ * Hook to track custom events
+ *
+ * @example
+ * function SignupButton() {
+ *   const trackEvent = useTrackEvent();
+ *
+ *   const handleClick = () => {
+ *     trackEvent("signup", { plan: "premium" });
+ *   };
+ *
+ *   return <button onClick={handleClick}>Sign Up</button>;
+ * }
+ */
+export function useTrackEvent() {
+  return useCallback(
+    (
+      eventName: string,
+      eventData?: Record<string, string | number | boolean>
+    ) => {
+      if (!umamiWebsiteId || typeof window === "undefined" || !window.umami) return;
+
+      if (eventData) {
+        window.umami.track(eventName, eventData);
+      } else {
+        window.umami.track(eventName);
+      }
+    },
+    []
+  );
+}
+
+/**
+ * Hook to manually track pageviews
+ * Useful when you need to track virtual pageviews or custom URLs
+ *
+ * @example
+ * function ProductPage({ product }) {
+ *   const trackPageview = useTrackPageview();
+ *
+ *   useEffect(() => {
+ *     trackPageview({ url: `/products/${product.id}`, title: product.name });
+ *   }, [product.id, trackPageview]);
+ * }
+ */
+export function useTrackPageview() {
+  return useCallback(
+    (options?: { url?: string; title?: string; referrer?: string }) => {
+      if (!umamiWebsiteId || typeof window === "undefined" || !window.umami) return;
+
+      if (options) {
+        window.umami.track((props) => ({
+          ...props,
+          ...(options.url && { url: options.url }),
+          ...(options.title && { title: options.title }),
+          ...(options.referrer && { referrer: options.referrer }),
+        }));
+      } else {
+        window.umami.track();
+      }
+    },
+    []
+  );
+}
+
+/**
+ * Hook to identify users across sessions
+ *
+ * @example
+ * function UserProfile({ user }) {
+ *   const identify = useIdentify();
+ *
+ *   useEffect(() => {
+ *     identify(user.id, { name: user.name, plan: user.plan });
+ *   }, [user.id, identify]);
+ * }
+ */
+export function useIdentify() {
+  return useCallback(
+    (
+      uniqueIdOrData: string | Record<string, string | number | boolean>,
+      data?: Record<string, string | number | boolean>
+    ) => {
+      if (!umamiWebsiteId || typeof window === "undefined" || !window.umami) return;
+
+      if (typeof uniqueIdOrData === "string") {
+        if (data) {
+          window.umami.identify(uniqueIdOrData, data);
+        } else {
+          window.umami.identify(uniqueIdOrData);
+        }
+      } else {
+        window.umami.identify(uniqueIdOrData);
+      }
+    },
+    []
+  );
+}
+
+/**
+ * Hook to get the Umami configuration status
+ */
+export function useUmamiStatus() {
+  return useMemo(
+    () => ({
+      isConfigured: !!umamiWebsiteId,
+      websiteId: umamiWebsiteId,
+      scriptUrl: umamiScriptUrl,
+    }),
+    []
+  );
+}
+
+/**
+ * Environment Variables:
+ *
+{{#if (eq frontend.[0] "next")}}
+ * NEXT_PUBLIC_UMAMI_WEBSITE_ID - Your Umami website ID (required)
+ * NEXT_PUBLIC_UMAMI_SCRIPT_URL - Umami script URL (default: https://cloud.umami.is/script.js)
+{{else if (eq frontend.[0] "nuxt")}}
+ * NUXT_PUBLIC_UMAMI_WEBSITE_ID - Your Umami website ID (required)
+ * NUXT_PUBLIC_UMAMI_SCRIPT_URL - Umami script URL (default: https://cloud.umami.is/script.js)
+{{else}}
+ * VITE_UMAMI_WEBSITE_ID - Your Umami website ID (required)
+ * VITE_UMAMI_SCRIPT_URL - Umami script URL (default: https://cloud.umami.is/script.js)
+{{/if}}
+ *
+ * Getting started:
+ * 1. Sign up at https://umami.is (or self-host)
+ * 2. Add your website in the Umami dashboard
+ * 3. Copy your website ID to your .env file
+ * 4. If self-hosting, update the script URL accordingly
+ * 5. Wrap your app with <UmamiProvider>
+ *
+ * Example usage:
+ * ```tsx
+ * // In your app entry point
+ * import { UmamiProvider } from "./lib/umami";
+ *
+ * function App() {
+ *   return (
+ *     <UmamiProvider>
+ *       <Router />
+ *     </UmamiProvider>
+ *   );
+ * }
+ *
+ * // In any component - track custom events
+ * import { useTrackEvent } from "./lib/umami";
+ *
+ * function PurchaseButton({ product }) {
+ *   const trackEvent = useTrackEvent();
+ *
+ *   const handlePurchase = () => {
+ *     trackEvent("purchase", {
+ *       productId: product.id,
+ *       price: product.price
+ *     });
+ *   };
+ *
+ *   return <button onClick={handlePurchase}>Buy Now</button>;
+ * }
+ *
+ * // Identify users
+ * import { useIdentify } from "./lib/umami";
+ *
+ * function AuthProvider({ children, user }) {
+ *   const identify = useIdentify();
+ *
+ *   useEffect(() => {
+ *     if (user) {
+ *       identify(user.id, { plan: user.plan });
+ *     }
+ *   }, [user, identify]);
+ *
+ *   return children;
+ * }
+ * ```
+ *
+ * Features:
+ * - Automatic pageview tracking for SPAs
+ * - Custom event tracking with properties
+ * - User identification across sessions
+ * - Privacy-focused: No cookies, GDPR/CCPA compliant
+ * - Lightweight: ~1KB gzipped
+ * - Open source: Self-hostable
+ */
