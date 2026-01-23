@@ -1,0 +1,195 @@
+{{#if (eq pythonTaskQueue "celery")}}
+"""Celery task definitions for background job processing."""
+
+import time
+from typing import Any
+
+from celery import shared_task
+from celery.utils.log import get_task_logger
+
+from app.celery_app import celery_app
+
+# Task logger
+logger = get_task_logger(__name__)
+
+
+@celery_app.task(bind=True, name="app.tasks.example_task")
+def example_task(self, message: str) -> dict[str, Any]:
+    """Example task that demonstrates basic Celery task structure.
+
+    Args:
+        self: The task instance (bound task).
+        message: A message to process.
+
+    Returns:
+        A dictionary containing the task result.
+    """
+    logger.info(f"Processing example task with message: {message}")
+
+    # Simulate some work
+    time.sleep(2)
+
+    return {
+        "status": "completed",
+        "message": f"Processed: {message}",
+        "task_id": self.request.id,
+    }
+
+
+@celery_app.task(
+    bind=True,
+    name="app.tasks.send_email_task",
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_backoff_max=600,
+    max_retries=3,
+)
+def send_email_task(
+    self,
+    to_email: str,
+    subject: str,
+    body: str,
+) -> dict[str, Any]:
+    """Task to send an email asynchronously.
+
+    This task includes automatic retry with exponential backoff
+    for handling transient failures.
+
+    Args:
+        self: The task instance (bound task).
+        to_email: The recipient email address.
+        subject: The email subject.
+        body: The email body content.
+
+    Returns:
+        A dictionary containing the send status.
+    """
+    logger.info(f"Sending email to {to_email}: {subject}")
+
+    try:
+        # TODO: Implement actual email sending logic here
+        # For example, using smtplib, SendGrid, or another email service
+
+        # Simulate email sending
+        time.sleep(1)
+
+        logger.info(f"Email sent successfully to {to_email}")
+        return {
+            "status": "sent",
+            "to": to_email,
+            "subject": subject,
+            "task_id": self.request.id,
+        }
+    except Exception as exc:
+        logger.error(f"Failed to send email to {to_email}: {exc}")
+        raise self.retry(exc=exc)
+
+
+@celery_app.task(
+    bind=True,
+    name="app.tasks.process_data_task",
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    max_retries=3,
+)
+def process_data_task(
+    self,
+    data: dict[str, Any],
+    operation: str = "default",
+) -> dict[str, Any]:
+    """Task to process data asynchronously.
+
+    Useful for heavy data processing that shouldn't block
+    the main application.
+
+    Args:
+        self: The task instance (bound task).
+        data: The data to process.
+        operation: The type of operation to perform.
+
+    Returns:
+        A dictionary containing the processing result.
+    """
+    logger.info(f"Processing data with operation: {operation}")
+
+    try:
+        # Update task state to show progress
+        self.update_state(
+            state="PROCESSING",
+            meta={"progress": 0, "operation": operation},
+        )
+
+        # Simulate data processing
+        total_items = len(data) if isinstance(data, (list, dict)) else 1
+        processed_items = 0
+
+        # Simulate processing each item
+        for i in range(total_items):
+            time.sleep(0.5)  # Simulate work
+            processed_items += 1
+            self.update_state(
+                state="PROCESSING",
+                meta={
+                    "progress": (processed_items / total_items) * 100,
+                    "operation": operation,
+                    "processed": processed_items,
+                    "total": total_items,
+                },
+            )
+
+        logger.info(f"Data processing completed: {processed_items} items")
+        return {
+            "status": "completed",
+            "operation": operation,
+            "processed_items": processed_items,
+            "task_id": self.request.id,
+        }
+    except Exception as exc:
+        logger.error(f"Data processing failed: {exc}")
+        raise self.retry(exc=exc)
+
+
+@celery_app.task(bind=True, name="app.tasks.scheduled_cleanup_task")
+def scheduled_cleanup_task(self) -> dict[str, Any]:
+    """Periodic task for cleanup operations.
+
+    This task is designed to be run on a schedule using Celery Beat.
+    Configure in celeryconfig.py or through the beat schedule.
+
+    Returns:
+        A dictionary containing the cleanup status.
+    """
+    logger.info("Running scheduled cleanup task")
+
+    # TODO: Implement actual cleanup logic here
+    # For example:
+    # - Clean up expired sessions
+    # - Remove temporary files
+    # - Archive old records
+
+    time.sleep(1)  # Simulate cleanup work
+
+    return {
+        "status": "completed",
+        "task_id": self.request.id,
+        "message": "Cleanup completed successfully",
+    }
+
+
+@shared_task(name="app.tasks.add_numbers")
+def add_numbers(x: int, y: int) -> int:
+    """Simple task example using shared_task decorator.
+
+    The shared_task decorator allows the task to be used
+    without a specific Celery app instance.
+
+    Args:
+        x: First number.
+        y: Second number.
+
+    Returns:
+        The sum of x and y.
+    """
+    logger.info(f"Adding numbers: {x} + {y}")
+    return x + y
+{{/if}}

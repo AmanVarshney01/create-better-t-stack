@@ -132,6 +132,25 @@ from app.crewai_schemas import (
     CrewAICompletionResponse,
 )
 {{/if}}
+{{#if (eq pythonTaskQueue "celery")}}
+from celery.result import AsyncResult
+
+from app.celery_app import celery_app
+from app.tasks import (
+    example_task,
+    send_email_task,
+    process_data_task,
+)
+from app.celery_schemas import (
+    TaskSubmitRequest,
+    TaskSubmitResponse,
+    TaskStatusResponse,
+    EmailTaskRequest,
+    DataProcessRequest,
+    TaskRevokeRequest,
+    TaskRevokeResponse,
+)
+{{/if}}
 
 
 @asynccontextmanager
@@ -550,6 +569,97 @@ async def crewai_completion_endpoint(request: CrewAICompletionRequest):
         verbose=request.verbose if request.verbose is not None else False,
     )
     return CrewAICompletionResponse(completion=completion)
+{{/if}}
+{{#if (eq pythonTaskQueue "celery")}}
+
+# Celery task endpoints
+@app.post("/tasks/submit", response_model=TaskSubmitResponse)
+async def submit_task(request: TaskSubmitRequest):
+    """Submit a background task for processing.
+
+    Returns immediately with a task ID that can be used
+    to check the task status.
+    """
+    result = example_task.delay(request.message)
+    return TaskSubmitResponse(
+        task_id=result.id,
+        status="PENDING",
+    )
+
+
+@app.get("/tasks/{task_id}", response_model=TaskStatusResponse)
+async def get_task_status(task_id: str):
+    """Get the status of a submitted task.
+
+    Returns the current status and result if completed.
+    """
+    result = AsyncResult(task_id, app=celery_app)
+
+    response = TaskStatusResponse(
+        task_id=task_id,
+        status=result.status,
+    )
+
+    if result.ready():
+        if result.successful():
+            response.result = result.result
+        else:
+            response.error = str(result.result)
+    elif result.status == "PROCESSING":
+        # Get progress info from task meta
+        meta = result.info
+        if meta and isinstance(meta, dict):
+            response.progress = meta.get("progress")
+
+    return response
+
+
+@app.post("/tasks/{task_id}/revoke", response_model=TaskRevokeResponse)
+async def revoke_task(task_id: str, request: TaskRevokeRequest):
+    """Revoke a pending or running task.
+
+    If terminate is True, the task will be terminated even
+    if it's currently running.
+    """
+    celery_app.control.revoke(task_id, terminate=request.terminate)
+    return TaskRevokeResponse(
+        task_id=task_id,
+        revoked=True,
+    )
+
+
+@app.post("/tasks/email", response_model=TaskSubmitResponse)
+async def submit_email_task(request: EmailTaskRequest):
+    """Submit an email sending task.
+
+    The email will be sent asynchronously in the background.
+    """
+    result = send_email_task.delay(
+        to_email=request.to_email,
+        subject=request.subject,
+        body=request.body,
+    )
+    return TaskSubmitResponse(
+        task_id=result.id,
+        status="PENDING",
+    )
+
+
+@app.post("/tasks/process-data", response_model=TaskSubmitResponse)
+async def submit_data_processing_task(request: DataProcessRequest):
+    """Submit a data processing task.
+
+    The data will be processed asynchronously. Check task
+    status for progress updates.
+    """
+    result = process_data_task.delay(
+        data=request.data,
+        operation=request.operation or "default",
+    )
+    return TaskSubmitResponse(
+        task_id=result.id,
+        status="PENDING",
+    )
 {{/if}}
 {{#if (and (eq pythonOrm "none") (eq pythonValidation "pydantic"))}}
 

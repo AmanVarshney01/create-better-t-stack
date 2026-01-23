@@ -2245,6 +2245,222 @@ describe("Python Language Support", () => {
       const pyprojectContent = getFileContent(root, "pyproject.toml");
       expect(pyprojectContent).toBeDefined();
       expect(pyprojectContent).toContain("celery");
+      expect(pyprojectContent).toContain("celery[redis]>=5.4.0");
+    });
+
+    it("should create celery_app.py with app configuration", async () => {
+      const result = await createVirtual({
+        projectName: "python-celery-app",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "celery",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      expect(hasFile(root, "src/app/celery_app.py")).toBe(true);
+
+      const celeryAppContent = getFileContent(root, "src/app/celery_app.py");
+      expect(celeryAppContent).toBeDefined();
+      expect(celeryAppContent).toContain("from celery import Celery");
+      expect(celeryAppContent).toContain("celery_app = Celery");
+      expect(celeryAppContent).toContain("CELERY_BROKER_URL");
+      expect(celeryAppContent).toContain("CELERY_RESULT_BACKEND");
+      expect(celeryAppContent).toContain("task_serializer");
+      expect(celeryAppContent).toContain("get_celery_app");
+    });
+
+    it("should create tasks.py with example tasks", async () => {
+      const result = await createVirtual({
+        projectName: "python-celery-tasks",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "celery",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      expect(hasFile(root, "src/app/tasks.py")).toBe(true);
+
+      const tasksContent = getFileContent(root, "src/app/tasks.py");
+      expect(tasksContent).toBeDefined();
+      expect(tasksContent).toContain("@celery_app.task");
+      expect(tasksContent).toContain("example_task");
+      expect(tasksContent).toContain("send_email_task");
+      expect(tasksContent).toContain("process_data_task");
+      expect(tasksContent).toContain("scheduled_cleanup_task");
+      expect(tasksContent).toContain("add_numbers");
+      expect(tasksContent).toContain("autoretry_for");
+      expect(tasksContent).toContain("self.update_state");
+    });
+
+    it("should create celery_schemas.py with Pydantic models", async () => {
+      const result = await createVirtual({
+        projectName: "python-celery-schemas",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "celery",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      expect(hasFile(root, "src/app/celery_schemas.py")).toBe(true);
+
+      const schemasContent = getFileContent(root, "src/app/celery_schemas.py");
+      expect(schemasContent).toBeDefined();
+      expect(schemasContent).toContain("from pydantic import BaseModel");
+      expect(schemasContent).toContain("TaskSubmitRequest");
+      expect(schemasContent).toContain("TaskSubmitResponse");
+      expect(schemasContent).toContain("TaskStatusResponse");
+      expect(schemasContent).toContain("EmailTaskRequest");
+      expect(schemasContent).toContain("DataProcessRequest");
+      expect(schemasContent).toContain("TaskRevokeRequest");
+      expect(schemasContent).toContain("TaskRevokeResponse");
+    });
+
+    it("should add Celery endpoints to main.py for FastAPI", async () => {
+      const result = await createVirtual({
+        projectName: "python-celery-endpoints",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "celery",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainContent = getFileContent(root, "src/app/main.py");
+      expect(mainContent).toBeDefined();
+      expect(mainContent).toContain("from celery.result import AsyncResult");
+      expect(mainContent).toContain("from app.celery_app import celery_app");
+      expect(mainContent).toContain("from app.tasks import");
+      expect(mainContent).toContain("/tasks/submit");
+      expect(mainContent).toContain("/tasks/{task_id}");
+      expect(mainContent).toContain("/tasks/{task_id}/revoke");
+      expect(mainContent).toContain("/tasks/email");
+      expect(mainContent).toContain("/tasks/process-data");
+    });
+
+    it("should include Celery settings in settings.py", async () => {
+      const result = await createVirtual({
+        projectName: "python-celery-settings",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "celery",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const settingsContent = getFileContent(root, "src/app/settings.py");
+      expect(settingsContent).toBeDefined();
+      expect(settingsContent).toContain("celery_broker_url");
+      expect(settingsContent).toContain("celery_result_backend");
+      expect(settingsContent).toContain("redis://localhost:6379/0");
+    });
+
+    it("should include Celery environment variables in .env.example", async () => {
+      const result = await createVirtual({
+        projectName: "python-celery-env",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "celery",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const envContent = getFileContent(root, ".env.example");
+      expect(envContent).toBeDefined();
+      expect(envContent).toContain("CELERY_BROKER_URL");
+      expect(envContent).toContain("CELERY_RESULT_BACKEND");
+    });
+
+    it("should not include Celery files when task queue is none", async () => {
+      const result = await createVirtual({
+        projectName: "python-no-taskqueue",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Celery-specific files should not exist
+      expect(hasFile(root, "src/app/celery_app.py")).toBe(false);
+      expect(hasFile(root, "src/app/tasks.py")).toBe(false);
+      expect(hasFile(root, "src/app/celery_schemas.py")).toBe(false);
+
+      // Main.py should not have Celery imports
+      const mainContent = getFileContent(root, "src/app/main.py");
+      expect(mainContent).toBeDefined();
+      expect(mainContent).not.toContain("from app.celery_app import");
+      expect(mainContent).not.toContain("/tasks/submit");
+
+      // pyproject.toml should not have celery dependency
+      const pyprojectContent = getFileContent(root, "pyproject.toml");
+      expect(pyprojectContent).not.toContain("celery[redis]");
+    });
+
+    it("should work with Celery and other Python options combined", async () => {
+      const result = await createVirtual({
+        projectName: "python-celery-full",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "sqlalchemy",
+        pythonValidation: "pydantic",
+        pythonAi: ["langchain"],
+        pythonTaskQueue: "celery",
+        pythonQuality: "ruff",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify all components are present
+      expect(hasFile(root, "src/app/celery_app.py")).toBe(true);
+      expect(hasFile(root, "src/app/tasks.py")).toBe(true);
+      expect(hasFile(root, "src/app/celery_schemas.py")).toBe(true);
+      expect(hasFile(root, "src/app/database.py")).toBe(true);
+      expect(hasFile(root, "src/app/langchain_client.py")).toBe(true);
+
+      const pyprojectContent = getFileContent(root, "pyproject.toml");
+      expect(pyprojectContent).toContain("celery");
+      expect(pyprojectContent).toContain("sqlalchemy");
+      expect(pyprojectContent).toContain("langchain");
+      expect(pyprojectContent).toContain("ruff");
     });
   });
 

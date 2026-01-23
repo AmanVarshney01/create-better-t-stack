@@ -206,7 +206,7 @@
 
 ## **Step 6: Task Queues & Quality**
 
-- [ ] **Celery** - Distributed task queue
+- [x] **Celery** - Distributed task queue
 - [ ] **Ruff** - Fast Python linter
 
 ---

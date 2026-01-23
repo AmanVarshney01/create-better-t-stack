@@ -6575,3 +6575,73 @@ CrewAI implementation was already complete in the codebase. This task verified t
 ### Lint: 150 pass, 0 fail
 
 ### Status: COMPLETE
+
+## 2026-01-23: Celery Distributed Task Queue Implementation
+
+### Task: Implement Celery as a distributed task queue for Python ecosystem
+
+### Changes Made:
+1. **packages/template-generator/templates/python-base/src/app/celery_app.py.hbs**: Created Celery application configuration template:
+   - Celery app initialization with broker and backend from environment
+   - Task serialization settings (JSON)
+   - Task execution settings (time limits, prefetch multiplier)
+   - Task routing configuration
+   - Retry settings
+   - get_celery_app() helper function
+
+2. **packages/template-generator/templates/python-base/src/app/tasks.py.hbs**: Created example task definitions template:
+   - example_task - Basic task demonstrating structure
+   - send_email_task - Email sending with retry and exponential backoff
+   - process_data_task - Data processing with progress updates via update_state
+   - scheduled_cleanup_task - Periodic task for Celery Beat
+   - add_numbers - Simple shared_task example
+
+3. **packages/template-generator/templates/python-base/src/app/celery_schemas.py.hbs**: Created Pydantic schemas for API endpoints:
+   - TaskSubmitRequest/TaskSubmitResponse - For submitting tasks
+   - TaskStatusResponse - For checking task status with progress
+   - EmailTaskRequest - For email task submission
+   - DataProcessRequest - For data processing task submission
+   - TaskRevokeRequest/TaskRevokeResponse - For revoking tasks
+
+4. **packages/template-generator/templates/python-base/src/app/main.py.hbs**: Added Celery API endpoints for FastAPI:
+   - POST /tasks/submit - Submit a background task
+   - GET /tasks/{task_id} - Check task status and progress
+   - POST /tasks/{task_id}/revoke - Revoke a pending/running task
+   - POST /tasks/email - Submit email sending task
+   - POST /tasks/process-data - Submit data processing task
+
+5. **apps/cli/test/python-language.test.ts**: Added comprehensive tests for Celery:
+   - Celery dependencies in pyproject.toml
+   - celery_app.py file generation and content verification
+   - tasks.py file generation with task decorators
+   - celery_schemas.py file generation with Pydantic models
+   - main.py Celery endpoint integration
+   - settings.py Celery configuration
+   - .env.example Celery environment variables
+   - Negative test: No Celery files when task queue is none
+   - Integration test: Celery works with all other Python options
+
+### Pre-existing Infrastructure (already in place):
+- Schema: PythonTaskQueueSchema with "celery" and "none" options (schemas.ts:268)
+- CLI Prompt: getPythonTaskQueueChoice() in python-ecosystem.ts
+- Settings: celery_broker_url and celery_result_backend in settings.py.hbs
+- Dependencies: celery[redis]>=5.4.0 in pyproject.toml.hbs
+- Environment: CELERY_BROKER_URL and CELERY_RESULT_BACKEND in .env.example
+
+### Features:
+- Full Celery application configuration with Redis broker
+- Multiple example tasks showcasing different patterns:
+  - Basic task structure
+  - Retry with exponential backoff
+  - Progress tracking via update_state
+  - Periodic/scheduled tasks
+  - Shared tasks
+- FastAPI integration with task submission and status endpoints
+- Task revocation support
+- Pydantic schemas for type-safe API
+
+### Test Results:
+- All 108 Python language tests pass
+- 694 expect() assertions verified
+
+### Status: COMPLETE

@@ -1,0 +1,75 @@
+{{#if (eq pythonTaskQueue "celery")}}
+"""Pydantic schemas for Celery task API endpoints."""
+
+from typing import Any
+
+from pydantic import BaseModel, Field
+
+
+class TaskSubmitRequest(BaseModel):
+    """Request body for submitting a task."""
+
+    message: str = Field(
+        ...,
+        description="Message to process",
+        min_length=1,
+        max_length=1000,
+    )
+
+
+class TaskSubmitResponse(BaseModel):
+    """Response body after submitting a task."""
+
+    task_id: str = Field(..., description="The unique task ID")
+    status: str = Field(..., description="Initial task status")
+
+
+class TaskStatusResponse(BaseModel):
+    """Response body for task status check."""
+
+    task_id: str = Field(..., description="The task ID")
+    status: str = Field(..., description="Current task status")
+    result: dict[str, Any] | None = Field(
+        default=None, description="Task result if completed"
+    )
+    progress: float | None = Field(
+        default=None, description="Task progress percentage"
+    )
+    error: str | None = Field(
+        default=None, description="Error message if failed"
+    )
+
+
+class EmailTaskRequest(BaseModel):
+    """Request body for email task."""
+
+    to_email: str = Field(..., description="Recipient email address")
+    subject: str = Field(..., description="Email subject", min_length=1, max_length=200)
+    body: str = Field(..., description="Email body content", min_length=1)
+
+
+class DataProcessRequest(BaseModel):
+    """Request body for data processing task."""
+
+    data: dict[str, Any] = Field(..., description="Data to process")
+    operation: str | None = Field(
+        default="default",
+        description="Type of operation to perform",
+    )
+
+
+class TaskRevokeRequest(BaseModel):
+    """Request body for revoking a task."""
+
+    terminate: bool = Field(
+        default=False,
+        description="Whether to terminate the task if running",
+    )
+
+
+class TaskRevokeResponse(BaseModel):
+    """Response body after revoking a task."""
+
+    task_id: str = Field(..., description="The task ID")
+    revoked: bool = Field(..., description="Whether the task was revoked")
+{{/if}}
