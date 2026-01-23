@@ -2141,6 +2141,7 @@ import { convexClient } from "@convex-dev/better-auth/client/plugins";
 import { expoClient } from "@better-auth/expo/client";
 import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
 import { env } from "@{{projectName}}/env/native";
 
 export const authClient = createAuthClient({
@@ -2149,7 +2150,9 @@ export const authClient = createAuthClient({
 		expoClient({
 			scheme: Constants.expoConfig?.scheme as string,
 			storagePrefix: Constants.expoConfig?.scheme as string,
-			storage: SecureStore,
+			storage: Platform.OS === "web"
+				? window.localStorage
+				: SecureStore,
 		}),
 		convexClient(),
 	],
@@ -4343,6 +4346,7 @@ export { SignUp };
 import { createAuthClient } from "better-auth/react";
 import * as SecureStore from "expo-secure-store";
 import Constants from "expo-constants";
+import { Platform } from "react-native";
 import { env } from "@{{projectName}}/env/native";
 
 export const authClient = createAuthClient({
@@ -4351,7 +4355,9 @@ export const authClient = createAuthClient({
 		expoClient({
 			scheme: Constants.expoConfig?.scheme as string,
 			storagePrefix: Constants.expoConfig?.scheme as string,
-			storage: SecureStore,
+			storage: Platform.OS === "web"
+				? window.localStorage
+				: SecureStore,
 		}),
 	],
 });
