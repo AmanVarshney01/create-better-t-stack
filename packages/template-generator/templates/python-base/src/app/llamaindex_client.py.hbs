@@ -1,0 +1,222 @@
+{{#if (includes pythonAi "llamaindex")}}
+"""LlamaIndex client for RAG-based LLM interactions."""
+
+import os
+from typing import AsyncIterator
+
+from llama_index.core import Settings, VectorStoreIndex, Document
+from llama_index.core.chat_engine import SimpleChatEngine
+from llama_index.core.chat_engine.types import ChatMode
+from llama_index.llms.openai import OpenAI
+from llama_index.embeddings.openai import OpenAIEmbedding
+
+
+def configure_settings(
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+    embed_model: str = "text-embedding-3-small",
+) -> None:
+    """Configure global LlamaIndex settings.
+
+    Args:
+        model: The LLM model to use (default: gpt-4o-mini).
+        temperature: The temperature for generation (0.0-2.0).
+        embed_model: The embedding model to use.
+
+    Raises:
+        ValueError: If OPENAI_API_KEY is not set.
+    """
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY environment variable is not set")
+
+    Settings.llm = OpenAI(model=model, temperature=temperature, api_key=api_key)
+    Settings.embed_model = OpenAIEmbedding(model=embed_model, api_key=api_key)
+
+
+def get_llm(
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+) -> OpenAI:
+    """Get a configured LlamaIndex LLM instance.
+
+    Args:
+        model: The model to use (default: gpt-4o-mini).
+        temperature: The temperature for generation (0.0-2.0).
+
+    Returns:
+        A configured OpenAI LLM instance.
+
+    Raises:
+        ValueError: If OPENAI_API_KEY is not set.
+    """
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY environment variable is not set")
+
+    return OpenAI(model=model, temperature=temperature, api_key=api_key)
+
+
+def create_index_from_texts(
+    texts: list[str],
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+    embed_model: str = "text-embedding-3-small",
+) -> VectorStoreIndex:
+    """Create a VectorStoreIndex from a list of text strings.
+
+    Args:
+        texts: List of text strings to index.
+        model: The LLM model to use.
+        temperature: The temperature for generation.
+        embed_model: The embedding model to use.
+
+    Returns:
+        A VectorStoreIndex containing the indexed documents.
+    """
+    configure_settings(model=model, temperature=temperature, embed_model=embed_model)
+
+    documents = [Document(text=text) for text in texts]
+    index = VectorStoreIndex.from_documents(documents)
+    return index
+
+
+async def query_index(
+    index: VectorStoreIndex,
+    query: str,
+    similarity_top_k: int = 3,
+) -> str:
+    """Query an index and return the response.
+
+    Args:
+        index: The VectorStoreIndex to query.
+        query: The query string.
+        similarity_top_k: Number of similar documents to retrieve.
+
+    Returns:
+        The query response as a string.
+    """
+    query_engine = index.as_query_engine(similarity_top_k=similarity_top_k)
+    response = await query_engine.aquery(query)
+    return str(response)
+
+
+async def query_index_stream(
+    index: VectorStoreIndex,
+    query: str,
+    similarity_top_k: int = 3,
+) -> AsyncIterator[str]:
+    """Query an index and stream the response.
+
+    Args:
+        index: The VectorStoreIndex to query.
+        query: The query string.
+        similarity_top_k: Number of similar documents to retrieve.
+
+    Yields:
+        Chunks of the query response.
+    """
+    query_engine = index.as_query_engine(
+        similarity_top_k=similarity_top_k,
+        streaming=True,
+    )
+    response = await query_engine.aquery(query)
+
+    for token in response.response_gen:
+        yield token
+
+
+async def chat(
+    message: str,
+    history: list[dict] | None = None,
+    system_prompt: str = "You are a helpful assistant.",
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+) -> str:
+    """Send a message and get a response using LlamaIndex chat engine.
+
+    Args:
+        message: The user's message.
+        history: Optional conversation history as list of {"role": str, "content": str}.
+        system_prompt: The system prompt to set context.
+        model: The model to use.
+        temperature: The temperature for generation.
+
+    Returns:
+        The assistant's response.
+    """
+    llm = get_llm(model=model, temperature=temperature)
+
+    chat_engine = SimpleChatEngine.from_defaults(
+        llm=llm,
+        system_prompt=system_prompt,
+    )
+
+    # If we have history, replay it to build context
+    if history:
+        for msg in history:
+            if msg["role"] == "user":
+                # Use non-streaming chat for history replay
+                await chat_engine.achat(msg["content"])
+
+    response = await chat_engine.achat(message)
+    return str(response)
+
+
+async def chat_stream(
+    message: str,
+    history: list[dict] | None = None,
+    system_prompt: str = "You are a helpful assistant.",
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+) -> AsyncIterator[str]:
+    """Send a message and stream the response.
+
+    Args:
+        message: The user's message.
+        history: Optional conversation history.
+        system_prompt: The system prompt to set context.
+        model: The model to use.
+        temperature: The temperature for generation.
+
+    Yields:
+        Chunks of the assistant's response.
+    """
+    llm = get_llm(model=model, temperature=temperature)
+
+    chat_engine = SimpleChatEngine.from_defaults(
+        llm=llm,
+        system_prompt=system_prompt,
+    )
+
+    # If we have history, replay it to build context
+    if history:
+        for msg in history:
+            if msg["role"] == "user":
+                await chat_engine.achat(msg["content"])
+
+    response = await chat_engine.astream_chat(message)
+
+    async for token in response.async_response_gen():
+        yield token
+
+
+def simple_completion(
+    prompt: str,
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+) -> str:
+    """Get a simple completion without conversation history.
+
+    Args:
+        prompt: The prompt to complete.
+        model: The model to use.
+        temperature: The temperature for generation.
+
+    Returns:
+        The completion response.
+    """
+    llm = get_llm(model=model, temperature=temperature)
+    response = llm.complete(prompt)
+    return str(response)
+{{/if}}

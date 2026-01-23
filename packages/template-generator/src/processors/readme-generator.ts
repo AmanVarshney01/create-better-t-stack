@@ -868,6 +868,12 @@ function generatePythonReadmeContent(config: ProjectConfig): string {
     structure.push("│       └── langchain_schemas.py # LangChain request/response models");
   }
 
+  // Add LlamaIndex files
+  if (aiLibs.includes("llamaindex")) {
+    structure.push("│       ├── llamaindex_client.py  # LlamaIndex client utilities");
+    structure.push("│       └── llamaindex_schemas.py # LlamaIndex request/response models");
+  }
+
   structure.push("├── tests/");
   structure.push("│   ├── __init__.py");
   structure.push("│   └── test_main.py      # Test suite");

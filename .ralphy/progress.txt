@@ -6184,3 +6184,80 @@ Added comprehensive Pydantic validation support to the Python ecosystem with ful
 - Linting: 0 errors (39 pre-existing warnings)
 
 ### Status: COMPLETE
+
+
+## 2026-01-23: LlamaIndex AI Framework Implementation
+
+### Task: Implement LlamaIndex as a Python AI/ML framework option
+
+### Changes Made:
+1. **packages/template-generator/templates/python-base/src/app/llamaindex_client.py.hbs**: Created LlamaIndex client template with:
+   - `configure_settings()` - Configure global LlamaIndex settings
+   - `get_llm()` - Get a configured OpenAI LLM instance
+   - `create_index_from_texts()` - Create VectorStoreIndex from text strings
+   - `query_index()` - Query an index and return response
+   - `query_index_stream()` - Query an index with streaming response
+   - `chat()` - Send a message and get a response using SimpleChatEngine
+   - `chat_stream()` - Send a message and stream the response
+   - `simple_completion()` - Get a simple completion without history
+
+2. **packages/template-generator/templates/python-base/src/app/llamaindex_schemas.py.hbs**: Created Pydantic schemas:
+   - `ChatMessage` - Single message in a conversation
+   - `ChatRequest` - Request body for chat endpoint
+   - `ChatResponse` - Response body for chat endpoint
+   - `CompletionRequest` - Request body for completion endpoint
+   - `CompletionResponse` - Response body for completion endpoint
+   - `IndexBuildRequest` - Request body for building an index
+   - `IndexBuildResponse` - Response body for index build
+   - `IndexQueryRequest` - Request body for querying an index
+   - `IndexQueryResponse` - Response body for index query
+
+3. **packages/template-generator/templates/python-base/src/app/main.py.hbs**: Added LlamaIndex endpoints:
+   - `POST /ai/llamaindex/chat` - Chat with conversation history
+   - `POST /ai/llamaindex/chat/stream` - Chat with streaming response (SSE)
+   - `POST /ai/llamaindex/completion` - Simple completion without history
+
+4. **packages/template-generator/templates/python-base/src/app/settings.py.hbs**: Added LlamaIndex settings:
+   - `openai_api_key` - OpenAI API key
+   - `llamaindex_default_model` - Default LLM model (gpt-4o-mini)
+   - `llamaindex_default_temperature` - Default temperature (0.7)
+   - `llamaindex_embed_model` - Default embedding model (text-embedding-3-small)
+
+5. **packages/template-generator/templates/python-base/tests/test_main.py.hbs**: Added validation tests:
+   - `test_llamaindex_chat_endpoint_validation` - Test chat endpoint validates request
+   - `test_llamaindex_chat_endpoint_with_history_validation` - Test history format validation
+   - `test_llamaindex_completion_endpoint_validation` - Test completion endpoint validation
+   - `test_llamaindex_completion_temperature_validation` - Test temperature range (0.0-2.0)
+
+6. **packages/template-generator/templates/python-base/pyproject.toml.hbs**: Added dependencies:
+   - `llama-index>=0.11.0` - Core LlamaIndex framework
+   - `llama-index-llms-openai>=0.3.0` - OpenAI LLM integration
+   - `llama-index-embeddings-openai>=0.3.0` - OpenAI embeddings integration
+
+7. **packages/template-generator/src/processors/readme-generator.ts**: Added LlamaIndex to README:
+   - Project structure shows `llamaindex_client.py` and `llamaindex_schemas.py`
+   - Features list includes "LlamaIndex - Data framework for LLM applications"
+
+8. **apps/cli/test/python-language.test.ts**: Added comprehensive tests:
+   - LlamaIndex dependencies test
+   - LlamaIndex client module creation test
+   - LlamaIndex schemas module creation test
+   - FastAPI integration test
+   - Pydantic settings test
+   - Validation tests test
+   - Negative test (files not created when not selected)
+   - README documentation test
+
+### Features:
+- LlamaIndex chat with conversation history support
+- Streaming responses via Server-Sent Events
+- Simple completion without conversation context
+- VectorStoreIndex creation from text documents
+- Index querying with similarity search
+- Configurable LLM model, temperature, and embedding model
+- OpenAI integration (LLM and embeddings)
+- Compatible with FastAPI web framework
+- Pydantic validation for all endpoints
+
+### Status: COMPLETE
+

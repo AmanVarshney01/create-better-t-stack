@@ -1,0 +1,85 @@
+{{#if (includes pythonAi "llamaindex")}}
+"""Pydantic schemas for LlamaIndex API endpoints."""
+
+from pydantic import BaseModel, Field
+
+
+class ChatMessage(BaseModel):
+    """A single message in a conversation."""
+
+    role: str = Field(..., description="The role of the message sender (user, assistant, system)")
+    content: str = Field(..., description="The content of the message")
+
+
+class ChatRequest(BaseModel):
+    """Request body for chat endpoint."""
+
+    message: str = Field(..., description="The user's message", min_length=1)
+    history: list[ChatMessage] | None = Field(
+        default=None, description="Optional conversation history"
+    )
+    system_prompt: str | None = Field(
+        default=None, description="Optional system prompt to override default"
+    )
+    model: str | None = Field(default=None, description="Optional model override")
+    temperature: float | None = Field(
+        default=None, ge=0.0, le=2.0, description="Optional temperature override"
+    )
+
+
+class ChatResponse(BaseModel):
+    """Response body for chat endpoint."""
+
+    response: str = Field(..., description="The assistant's response")
+
+
+class CompletionRequest(BaseModel):
+    """Request body for simple completion endpoint."""
+
+    prompt: str = Field(..., description="The prompt to complete", min_length=1)
+    model: str | None = Field(default=None, description="Optional model override")
+    temperature: float | None = Field(
+        default=None, ge=0.0, le=2.0, description="Optional temperature override"
+    )
+
+
+class CompletionResponse(BaseModel):
+    """Response body for completion endpoint."""
+
+    completion: str = Field(..., description="The completion response")
+
+
+class IndexBuildRequest(BaseModel):
+    """Request body for building an index from texts."""
+
+    texts: list[str] = Field(
+        ..., description="List of text strings to index", min_length=1
+    )
+    model: str | None = Field(default=None, description="Optional LLM model override")
+    embed_model: str | None = Field(
+        default=None, description="Optional embedding model override"
+    )
+
+
+class IndexBuildResponse(BaseModel):
+    """Response body for index build endpoint."""
+
+    success: bool = Field(..., description="Whether the index was built successfully")
+    document_count: int = Field(..., description="Number of documents indexed")
+    message: str = Field(..., description="Status message")
+
+
+class IndexQueryRequest(BaseModel):
+    """Request body for querying an index."""
+
+    query: str = Field(..., description="The query string", min_length=1)
+    similarity_top_k: int | None = Field(
+        default=3, ge=1, le=20, description="Number of similar documents to retrieve"
+    )
+
+
+class IndexQueryResponse(BaseModel):
+    """Response body for index query endpoint."""
+
+    response: str = Field(..., description="The query response")
+{{/if}}

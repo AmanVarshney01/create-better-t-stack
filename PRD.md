@@ -196,7 +196,7 @@
 ## **Step 5: AI / ML**
 
 - [x] **LangChain** - LLM application framework
-- [ ] **LlamaIndex** - Data framework for LLM apps
+- [x] **LlamaIndex** - Data framework for LLM apps
 - [ ] **OpenAI SDK** - Official OpenAI client
 - [ ] **Anthropic SDK** - Claude API client
 - [ ] **LangGraph** - Graph-based agent orchestration

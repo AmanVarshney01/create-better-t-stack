@@ -43,6 +43,13 @@ class Settings(BaseSettings):
     langchain_default_model: str = "gpt-4o-mini"
     langchain_default_temperature: float = 0.7
 {{/if}}
+{{#if (includes pythonAi "llamaindex")}}
+    # LlamaIndex settings
+    openai_api_key: str = ""
+    llamaindex_default_model: str = "gpt-4o-mini"
+    llamaindex_default_temperature: float = 0.7
+    llamaindex_embed_model: str = "text-embedding-3-small"
+{{/if}}
 {{#if (eq pythonTaskQueue "celery")}}
     # Celery settings
     celery_broker_url: str = "redis://localhost:6379/0"

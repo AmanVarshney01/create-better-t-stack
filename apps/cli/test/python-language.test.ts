@@ -1263,6 +1263,197 @@ describe("Python Language Support", () => {
       expect(readmeContent).toContain("langchain_schemas.py");
     });
 
+    it("should include LlamaIndex dependencies in pyproject.toml", async () => {
+      const result = await createVirtual({
+        projectName: "python-llamaindex-deps",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["llamaindex"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const pyprojectContent = getFileContent(root, "pyproject.toml");
+      expect(pyprojectContent).toBeDefined();
+      expect(pyprojectContent).toContain("llama-index");
+      expect(pyprojectContent).toContain("llama-index-llms-openai");
+      expect(pyprojectContent).toContain("llama-index-embeddings-openai");
+    });
+
+    it("should create LlamaIndex client module", async () => {
+      const result = await createVirtual({
+        projectName: "python-llamaindex-client",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["llamaindex"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify llamaindex_client.py exists
+      expect(hasFile(root, "src/app/llamaindex_client.py")).toBe(true);
+      const clientContent = getFileContent(root, "src/app/llamaindex_client.py");
+      expect(clientContent).toBeDefined();
+      expect(clientContent).toContain("from llama_index.llms.openai import OpenAI");
+      expect(clientContent).toContain("def get_llm");
+      expect(clientContent).toContain("async def chat");
+      expect(clientContent).toContain("async def chat_stream");
+      expect(clientContent).toContain("def simple_completion");
+    });
+
+    it("should create LlamaIndex schemas module", async () => {
+      const result = await createVirtual({
+        projectName: "python-llamaindex-schemas",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["llamaindex"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify llamaindex_schemas.py exists
+      expect(hasFile(root, "src/app/llamaindex_schemas.py")).toBe(true);
+      const schemasContent = getFileContent(root, "src/app/llamaindex_schemas.py");
+      expect(schemasContent).toBeDefined();
+      expect(schemasContent).toContain("class ChatMessage(BaseModel)");
+      expect(schemasContent).toContain("class ChatRequest(BaseModel)");
+      expect(schemasContent).toContain("class ChatResponse(BaseModel)");
+      expect(schemasContent).toContain("class CompletionRequest(BaseModel)");
+      expect(schemasContent).toContain("class CompletionResponse(BaseModel)");
+    });
+
+    it("should integrate LlamaIndex endpoints with FastAPI", async () => {
+      const result = await createVirtual({
+        projectName: "python-llamaindex-fastapi",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["llamaindex"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainContent = getFileContent(root, "src/app/main.py");
+      expect(mainContent).toBeDefined();
+      expect(mainContent).toContain("from app.llamaindex_client import");
+      expect(mainContent).toContain("from app.llamaindex_schemas import");
+      expect(mainContent).toContain('@app.post("/ai/llamaindex/chat"');
+      expect(mainContent).toContain('@app.post("/ai/llamaindex/chat/stream"');
+      expect(mainContent).toContain('@app.post("/ai/llamaindex/completion"');
+      expect(mainContent).toContain("StreamingResponse");
+    });
+
+    it("should add LlamaIndex settings when pydantic validation is enabled", async () => {
+      const result = await createVirtual({
+        projectName: "python-llamaindex-settings",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: ["llamaindex"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const settingsContent = getFileContent(root, "src/app/settings.py");
+      expect(settingsContent).toBeDefined();
+      expect(settingsContent).toContain("# LlamaIndex settings");
+      expect(settingsContent).toContain("openai_api_key");
+      expect(settingsContent).toContain("llamaindex_default_model");
+      expect(settingsContent).toContain("llamaindex_default_temperature");
+      expect(settingsContent).toContain("llamaindex_embed_model");
+    });
+
+    it("should include LlamaIndex validation tests", async () => {
+      const result = await createVirtual({
+        projectName: "python-llamaindex-tests",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["llamaindex"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const testContent = getFileContent(root, "tests/test_main.py");
+      expect(testContent).toBeDefined();
+      expect(testContent).toContain("test_llamaindex_chat_endpoint_validation");
+      expect(testContent).toContain("test_llamaindex_completion_endpoint_validation");
+      expect(testContent).toContain("test_llamaindex_completion_temperature_validation");
+    });
+
+    it("should NOT create LlamaIndex files when pythonAi does not include llamaindex", async () => {
+      const result = await createVirtual({
+        projectName: "python-no-llamaindex",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["openai-sdk"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify LlamaIndex files do NOT exist
+      expect(hasFile(root, "src/app/llamaindex_client.py")).toBe(false);
+      expect(hasFile(root, "src/app/llamaindex_schemas.py")).toBe(false);
+
+      const mainContent = getFileContent(root, "src/app/main.py");
+      expect(mainContent).not.toContain("llamaindex_client");
+      expect(mainContent).not.toContain("/ai/llamaindex/chat");
+    });
+
+    it("should generate README with LlamaIndex documentation", async () => {
+      const result = await createVirtual({
+        projectName: "python-llamaindex-readme",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["llamaindex"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const readmeContent = getFileContent(root, "README.md");
+      expect(readmeContent).toBeDefined();
+      expect(readmeContent).toContain("LlamaIndex");
+      expect(readmeContent).toContain("llamaindex_client.py");
+      expect(readmeContent).toContain("llamaindex_schemas.py");
+    });
+
     it("should include OpenAI SDK dependencies in pyproject.toml", async () => {
       const result = await createVirtual({
         projectName: "python-openai-deps",

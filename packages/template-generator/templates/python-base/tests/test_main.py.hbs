@@ -64,6 +64,45 @@ def test_langchain_completion_temperature_validation(client):
     )
     assert response.status_code == 422
 {{/if}}
+{{#if (includes pythonAi "llamaindex")}}
+
+
+def test_llamaindex_chat_endpoint_validation(client):
+    """Test LlamaIndex chat endpoint validates request body."""
+    # Test missing message field
+    response = client.post("/ai/llamaindex/chat", json={})
+    assert response.status_code == 422
+
+
+def test_llamaindex_chat_endpoint_with_history_validation(client):
+    """Test LlamaIndex chat endpoint validates history format."""
+    # Test with invalid history format (missing required fields)
+    response = client.post(
+        "/ai/llamaindex/chat",
+        json={
+            "message": "Hello",
+            "history": [{"invalid": "field"}],
+        },
+    )
+    assert response.status_code == 422
+
+
+def test_llamaindex_completion_endpoint_validation(client):
+    """Test LlamaIndex completion endpoint validates request body."""
+    # Test missing prompt field
+    response = client.post("/ai/llamaindex/completion", json={})
+    assert response.status_code == 422
+
+
+def test_llamaindex_completion_temperature_validation(client):
+    """Test LlamaIndex completion endpoint validates temperature range."""
+    # Test temperature out of range
+    response = client.post(
+        "/ai/llamaindex/completion",
+        json={"prompt": "Hello", "temperature": 3.0},
+    )
+    assert response.status_code == 422
+{{/if}}
 {{#if (and (eq pythonOrm "none") (eq pythonValidation "pydantic"))}}
 
 

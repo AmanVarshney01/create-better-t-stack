@@ -37,6 +37,8 @@ dependencies = [
 {{/if}}
 {{#if (includes pythonAi "llamaindex")}}
     "llama-index>=0.11.0",
+    "llama-index-llms-openai>=0.3.0",
+    "llama-index-embeddings-openai>=0.3.0",
 {{/if}}
 {{#if (includes pythonAi "openai-sdk")}}
     "openai>=1.55.0",

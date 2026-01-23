@@ -51,6 +51,21 @@ from app.langchain_schemas import (
     CompletionResponse,
 )
 {{/if}}
+{{#if (includes pythonAi "llamaindex")}}
+from fastapi.responses import StreamingResponse
+
+from app.llamaindex_client import (
+    chat as llamaindex_chat,
+    chat_stream as llamaindex_chat_stream,
+    simple_completion as llamaindex_completion,
+)
+from app.llamaindex_schemas import (
+    ChatRequest as LlamaIndexChatRequest,
+    ChatResponse as LlamaIndexChatResponse,
+    CompletionRequest as LlamaIndexCompletionRequest,
+    CompletionResponse as LlamaIndexCompletionResponse,
+)
+{{/if}}
 
 
 @asynccontextmanager
@@ -157,6 +172,63 @@ async def langchain_completion(request: CompletionRequest):
         temperature=request.temperature or 0.7,
     )
     return CompletionResponse(completion=completion)
+{{/if}}
+{{#if (includes pythonAi "llamaindex")}}
+
+# LlamaIndex AI endpoints
+@app.post("/ai/llamaindex/chat", response_model=LlamaIndexChatResponse)
+async def llamaindex_chat_endpoint(request: LlamaIndexChatRequest):
+    """Chat with an AI assistant using LlamaIndex.
+
+    Supports conversation history for multi-turn conversations.
+    """
+    history = None
+    if request.history:
+        history = [{"role": msg.role, "content": msg.content} for msg in request.history]
+
+    response = await llamaindex_chat(
+        message=request.message,
+        history=history,
+        system_prompt=request.system_prompt or "You are a helpful assistant.",
+        model=request.model or "gpt-4o-mini",
+        temperature=request.temperature or 0.7,
+    )
+    return LlamaIndexChatResponse(response=response)
+
+
+@app.post("/ai/llamaindex/chat/stream")
+async def llamaindex_chat_stream_endpoint(request: LlamaIndexChatRequest):
+    """Chat with an AI assistant using LlamaIndex with streaming response.
+
+    Returns a Server-Sent Events stream of the response.
+    """
+    history = None
+    if request.history:
+        history = [{"role": msg.role, "content": msg.content} for msg in request.history]
+
+    async def generate():
+        async for chunk in llamaindex_chat_stream(
+            message=request.message,
+            history=history,
+            system_prompt=request.system_prompt or "You are a helpful assistant.",
+            model=request.model or "gpt-4o-mini",
+            temperature=request.temperature or 0.7,
+        ):
+            yield f"data: {chunk}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(generate(), media_type="text/event-stream")
+
+
+@app.post("/ai/llamaindex/completion", response_model=LlamaIndexCompletionResponse)
+async def llamaindex_completion_endpoint(request: LlamaIndexCompletionRequest):
+    """Get a simple completion from the AI without conversation history."""
+    completion = llamaindex_completion(
+        prompt=request.prompt,
+        model=request.model or "gpt-4o-mini",
+        temperature=request.temperature or 0.7,
+    )
+    return LlamaIndexCompletionResponse(completion=completion)
 {{/if}}
 {{#if (and (eq pythonOrm "none") (eq pythonValidation "pydantic"))}}
 
