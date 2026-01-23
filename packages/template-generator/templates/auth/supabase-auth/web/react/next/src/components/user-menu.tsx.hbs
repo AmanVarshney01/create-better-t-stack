@@ -1,0 +1,46 @@
+"use client";
+
+import { useAuthClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
+
+export default function UserMenu() {
+  const { user, signOut, isLoading } = useAuthClient();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push("/login");
+    router.refresh();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
+    );
+  }
+
+  if (!user) {
+    return (
+      <button
+        onClick={() => router.push("/login")}
+        className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+      >
+        Sign In
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-4">
+      <span className="text-sm text-gray-700">
+        {user.email}
+      </span>
+      <button
+        onClick={handleSignOut}
+        className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+      >
+        Sign Out
+      </button>
+    </div>
+  );
+}

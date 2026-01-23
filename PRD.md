@@ -125,7 +125,7 @@
 
 - [x] **Auth.js (NextAuth)** - Framework-agnostic auth
 - [x] **Stack Auth** - Open-source auth platform
-- [ ] **Supabase Auth** - Auth with Supabase integration
+- [x] **Supabase Auth** - Auth with Supabase integration
 
 ---
 

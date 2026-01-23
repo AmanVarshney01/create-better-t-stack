@@ -196,5 +196,16 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
         dependencies: ["@stackframe/stack"],
       });
     }
+  } else if (auth === "supabase-auth") {
+    const hasNextJs = frontend.includes("next");
+
+    // Supabase Auth only works with Next.js (self backend)
+    if (hasNextJs && webExists) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPath,
+        dependencies: ["@supabase/supabase-js", "@supabase/ssr"],
+      });
+    }
   }
 }

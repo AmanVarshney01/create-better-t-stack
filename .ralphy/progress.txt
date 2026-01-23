@@ -5074,3 +5074,74 @@ Tests: 15 passing
 - All 150 lint tests pass
 
 ### Status: COMPLETE
+
+
+## 2026-01-23: Supabase Auth Authentication Provider Implementation
+
+### Task: Implement Supabase Auth as an authentication provider option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "supabase-auth" to AuthSchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Supabase dependency versions:
+   - @supabase/supabase-js: ^2.49.8
+   - @supabase/ssr: ^0.6.1
+3. **packages/template-generator/src/processors/auth-deps.ts**: Added Supabase Auth dependency processing for Next.js fullstack apps
+4. **packages/template-generator/src/processors/env-vars.ts**: Added Supabase environment variables:
+   - NEXT_PUBLIC_SUPABASE_URL
+   - NEXT_PUBLIC_SUPABASE_ANON_KEY
+   - SUPABASE_SERVICE_ROLE_KEY
+5. **apps/cli/src/utils/compatibility-rules.ts**: Added validateSupabaseAuthCompatibility function and isFrontendAllowedWithBackend check
+6. **apps/cli/src/utils/config-validation.ts**: Added validateSupabaseAuthCompatibility to validation chains
+7. **apps/web/src/lib/constant.ts**: Added Supabase Auth to web builder auth options with icon and description
+8. **apps/cli/src/prompts/auth.ts**: Added Supabase Auth to CLI prompts for Next.js + self backend configurations
+9. **packages/template-generator/src/template-handlers/auth.ts**: Added Supabase Auth template processing logic
+
+### Templates Created:
+**Fullstack (server-side):**
+- packages/template-generator/templates/auth/supabase-auth/fullstack/next/src/lib/supabase/server.ts.hbs - Server client with cookie handling
+- packages/template-generator/templates/auth/supabase-auth/fullstack/next/src/lib/supabase/client.ts.hbs - Browser client
+- packages/template-generator/templates/auth/supabase-auth/fullstack/next/src/lib/supabase/middleware.ts.hbs - Session refresh middleware
+- packages/template-generator/templates/auth/supabase-auth/fullstack/next/src/middleware.ts.hbs - Next.js middleware configuration
+
+**Web (client-side):**
+- packages/template-generator/templates/auth/supabase-auth/web/react/next/src/lib/auth-client.ts.hbs - React hooks for auth state
+- packages/template-generator/templates/auth/supabase-auth/web/react/next/src/components/user-menu.tsx.hbs - User menu component
+- packages/template-generator/templates/auth/supabase-auth/web/react/next/src/components/sign-in-form.tsx.hbs - Sign in form with email/password and OAuth
+- packages/template-generator/templates/auth/supabase-auth/web/react/next/src/components/sign-up-form.tsx.hbs - Sign up form with email confirmation
+- packages/template-generator/templates/auth/supabase-auth/web/react/next/src/app/login/page.tsx.hbs - Login page with toggle between sign in/up
+- packages/template-generator/templates/auth/supabase-auth/web/react/next/src/app/dashboard/page.tsx.hbs - Protected dashboard page
+- packages/template-generator/templates/auth/supabase-auth/web/react/next/src/app/dashboard/dashboard.tsx.hbs - Dashboard component showing user info
+- packages/template-generator/templates/auth/supabase-auth/web/react/next/src/app/auth/callback/route.ts.hbs - OAuth callback handler
+
+### Tests Added (apps/cli/test/auth.test.ts):
+- should work with supabase-auth + self backend + next
+- should work with supabase-auth + self backend + next + prisma
+- should work with supabase-auth + self backend + next + sqlite
+- should fail with supabase-auth + non-self backend
+- should fail with supabase-auth + non-next frontend
+- should fail with supabase-auth + tanstack-router frontend
+- should fail with supabase-auth + convex backend
+
+### Features:
+- Full Supabase Auth integration using @supabase/ssr for server-side rendering
+- Cookie-based session management with proper refresh handling
+- Email/password authentication
+- OAuth support (GitHub, Google)
+- Server-side session validation
+- Protected routes via Next.js middleware
+- useUser and useAuthClient React hooks for client-side auth state
+- Sign in/sign up forms with error handling
+- Protected dashboard with user information display
+- OAuth callback route handler
+
+### Limitations:
+- Supabase Auth is only available for Next.js fullstack applications (self backend)
+- Does not support Convex, Hono, Express, or other separate backend configurations
+- Does not support React Router, TanStack Router, TanStack Start, or other React frameworks
+- Native mobile support not included (Supabase Auth with SSR primarily targets web)
+
+### Test Results:
+- All 1691 tests pass (including 7 new Supabase Auth tests)
+- All 150 lint tests pass
+
+### Status: COMPLETE

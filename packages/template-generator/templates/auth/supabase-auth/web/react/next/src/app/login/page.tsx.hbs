@@ -1,0 +1,19 @@
+"use client";
+
+import { useState } from "react";
+import SignInForm from "@/components/sign-in-form";
+import SignUpForm from "@/components/sign-up-form";
+
+export default function LoginPage() {
+  const [isSignUp, setIsSignUp] = useState(false);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      {isSignUp ? (
+        <SignUpForm onSwitchToSignIn={() => setIsSignUp(false)} />
+      ) : (
+        <SignInForm onSwitchToSignUp={() => setIsSignUp(true)} />
+      )}
+    </div>
+  );
+}

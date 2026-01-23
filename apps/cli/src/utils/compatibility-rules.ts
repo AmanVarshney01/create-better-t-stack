@@ -309,6 +309,12 @@ export function isFrontendAllowedWithBackend(
     if (backend !== "self") return false;
   }
 
+  // Supabase Auth only works with Next.js frontend and self backend
+  if (auth === "supabase-auth") {
+    if (frontend !== "next") return false;
+    if (backend !== "self") return false;
+  }
+
   return true;
 }
 
@@ -352,6 +358,28 @@ export function validateStackAuthCompatibility(
   if (!hasNextJs) {
     exitWithError(
       "Stack Auth requires Next.js frontend. Please use '--frontend next' or choose a different auth provider.",
+    );
+  }
+}
+
+export function validateSupabaseAuthCompatibility(
+  auth: Auth | undefined,
+  backend: Backend | undefined,
+  frontends: Frontend[] = [],
+) {
+  if (auth !== "supabase-auth") return;
+
+  const hasNextJs = frontends.includes("next");
+
+  if (backend !== "self") {
+    exitWithError(
+      "Supabase Auth is only supported with the 'self' backend (fullstack Next.js). Please use '--backend self' or choose a different auth provider.",
+    );
+  }
+
+  if (!hasNextJs) {
+    exitWithError(
+      "Supabase Auth requires Next.js frontend. Please use '--frontend next' or choose a different auth provider.",
     );
   }
 }

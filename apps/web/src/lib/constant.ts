@@ -599,6 +599,13 @@ export const TECH_OPTIONS: Record<
       color: "from-purple-400 to-purple-600",
     },
     {
+      id: "supabase-auth",
+      name: "Supabase Auth",
+      description: "Open-source Auth with Supabase platform integration",
+      icon: "https://cdn.simpleicons.org/supabase/3FCF8E",
+      color: "from-emerald-400 to-emerald-600",
+    },
+    {
       id: "none",
       name: "No Auth",
       description: "Skip authentication",

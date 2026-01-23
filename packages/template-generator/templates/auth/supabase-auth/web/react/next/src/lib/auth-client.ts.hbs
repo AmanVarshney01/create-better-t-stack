@@ -1,0 +1,59 @@
+"use client";
+
+import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
+import type { User } from "@supabase/supabase-js";
+
+export function useUser() {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    // Get initial user
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+      setIsLoading(false);
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  return { user, isLoading };
+}
+
+export function useAuthClient() {
+  const { user, isLoading } = useUser();
+  const supabase = createClient();
+
+  return {
+    user,
+    isAuthenticated: !!user,
+    isLoading,
+    signOut: async () => {
+      await supabase.auth.signOut();
+    },
+    signInWithEmail: async (email: string, password: string) => {
+      return supabase.auth.signInWithPassword({ email, password });
+    },
+    signUpWithEmail: async (email: string, password: string) => {
+      return supabase.auth.signUp({ email, password });
+    },
+    signInWithOAuth: async (provider: "google" | "github") => {
+      return supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+    },
+  };
+}

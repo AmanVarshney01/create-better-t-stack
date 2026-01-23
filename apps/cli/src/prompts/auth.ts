@@ -99,6 +99,11 @@ export async function getAuthChoice(
       label: "Stack Auth",
       hint: "Open-source Auth0/Clerk alternative",
     });
+    options.push({
+      value: "supabase-auth",
+      label: "Supabase Auth",
+      hint: "Auth with Supabase platform integration",
+    });
   }
 
   options.push({ value: "none", label: "None", hint: "No authentication" });

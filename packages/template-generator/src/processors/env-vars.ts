@@ -505,6 +505,25 @@ function buildServerVars(
       comment: "Stack Auth Secret Server Key - get it at https://app.stack-auth.com",
     },
     {
+      key: "NEXT_PUBLIC_SUPABASE_URL",
+      value: "",
+      condition: auth === "supabase-auth",
+      comment: "Supabase Project URL - get it at https://supabase.com/dashboard",
+    },
+    {
+      key: "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      value: "",
+      condition: auth === "supabase-auth",
+      comment: "Supabase Anon/Public Key - get it at https://supabase.com/dashboard",
+    },
+    {
+      key: "SUPABASE_SERVICE_ROLE_KEY",
+      value: "",
+      condition: auth === "supabase-auth",
+      comment:
+        "Supabase Service Role Key (server-side only) - get it at https://supabase.com/dashboard",
+    },
+    {
       key: "POLAR_ACCESS_TOKEN",
       value: "",
       condition: payments === "polar",

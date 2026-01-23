@@ -31,6 +31,10 @@ export const dependencyVersionMap = {
   // Stack Auth
   "@stackframe/stack": "^2.8.56",
 
+  // Supabase Auth
+  "@supabase/supabase-js": "^2.49.8",
+  "@supabase/ssr": "^0.6.1",
+
   "drizzle-orm": "^0.45.1",
   "drizzle-kit": "^0.31.8",
   "@planetscale/database": "^1.19.0",
