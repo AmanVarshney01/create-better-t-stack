@@ -1,0 +1,305 @@
+{{#if (includes pythonAi "langgraph")}}
+"""LangGraph client for building stateful AI agent workflows."""
+
+import os
+from typing import AsyncIterator, Literal
+
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_openai import ChatOpenAI
+from langgraph.graph import END, MessagesState, StateGraph
+
+
+def get_llm(
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+    streaming: bool = False,
+) -> ChatOpenAI:
+    """Get a configured LangChain LLM instance for use with LangGraph.
+
+    Args:
+        model: The model to use (default: gpt-4o-mini).
+        temperature: The temperature for generation (0.0-2.0).
+        streaming: Whether to enable streaming responses.
+
+    Returns:
+        A configured ChatOpenAI instance.
+
+    Raises:
+        ValueError: If OPENAI_API_KEY is not set.
+    """
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY environment variable is not set")
+
+    return ChatOpenAI(
+        model=model,
+        temperature=temperature,
+        streaming=streaming,
+        api_key=api_key,
+    )
+
+
+def create_chat_graph(
+    system_prompt: str = "You are a helpful assistant.",
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+):
+    """Create a simple chat graph using LangGraph.
+
+    This creates a basic conversational agent that processes messages
+    and returns responses using the configured LLM.
+
+    Args:
+        system_prompt: The system prompt to set context.
+        model: The model to use.
+        temperature: The temperature for generation.
+
+    Returns:
+        A compiled LangGraph that accepts messages and returns responses.
+    """
+    llm = get_llm(model=model, temperature=temperature)
+
+    async def chat_node(state: MessagesState) -> dict:
+        """Process messages and generate a response."""
+        messages = state["messages"]
+
+        # Prepend system message if not already present
+        if not messages or not isinstance(messages[0], SystemMessage):
+            messages = [SystemMessage(content=system_prompt)] + list(messages)
+
+        response = await llm.ainvoke(messages)
+        return {"messages": [response]}
+
+    # Build the graph
+    builder = StateGraph(MessagesState)
+    builder.add_node("chat", chat_node)
+    builder.set_entry_point("chat")
+    builder.add_edge("chat", END)
+
+    return builder.compile()
+
+
+def create_agent_graph(
+    system_prompt: str = "You are a helpful assistant.",
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+    max_iterations: int = 10,
+):
+    """Create an agent graph that can reason and take multiple steps.
+
+    This creates an agent that can loop through multiple reasoning steps
+    before providing a final answer.
+
+    Args:
+        system_prompt: The system prompt to set context.
+        model: The model to use.
+        temperature: The temperature for generation.
+        max_iterations: Maximum number of iterations before stopping.
+
+    Returns:
+        A compiled LangGraph agent.
+    """
+    llm = get_llm(model=model, temperature=temperature)
+
+    async def reasoning_node(state: MessagesState) -> dict:
+        """Perform a reasoning step."""
+        messages = state["messages"]
+
+        # Prepend system message if not already present
+        if not messages or not isinstance(messages[0], SystemMessage):
+            messages = [SystemMessage(content=system_prompt)] + list(messages)
+
+        response = await llm.ainvoke(messages)
+        return {"messages": [response]}
+
+    def should_continue(state: MessagesState) -> Literal["reasoning", "__end__"]:
+        """Determine if we should continue reasoning or end."""
+        messages = state["messages"]
+
+        # End if we have too many messages (prevent infinite loops)
+        if len(messages) > max_iterations * 2:
+            return END
+
+        # Check if the last message indicates completion
+        if messages:
+            last_message = messages[-1]
+            if isinstance(last_message, AIMessage):
+                content = last_message.content.lower()
+                # Simple heuristic: end if response seems complete
+                if any(
+                    phrase in content
+                    for phrase in ["final answer", "in conclusion", "to summarize"]
+                ):
+                    return END
+
+        return END  # Default to ending after one response for simple chat
+
+    # Build the graph
+    builder = StateGraph(MessagesState)
+    builder.add_node("reasoning", reasoning_node)
+    builder.set_entry_point("reasoning")
+    builder.add_conditional_edges("reasoning", should_continue, {"reasoning": "reasoning", END: END})
+
+    return builder.compile()
+
+
+async def chat(
+    message: str,
+    history: list[dict] | None = None,
+    system_prompt: str = "You are a helpful assistant.",
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+) -> str:
+    """Send a message and get a response using LangGraph.
+
+    Args:
+        message: The user's message.
+        history: Optional conversation history as list of {"role": str, "content": str}.
+        system_prompt: The system prompt to set context.
+        model: The model to use.
+        temperature: The temperature for generation.
+
+    Returns:
+        The assistant's response.
+    """
+    graph = create_chat_graph(
+        system_prompt=system_prompt,
+        model=model,
+        temperature=temperature,
+    )
+
+    # Build message list from history
+    messages = []
+    if history:
+        for msg in history:
+            if msg["role"] == "user":
+                messages.append(HumanMessage(content=msg["content"]))
+            elif msg["role"] == "assistant":
+                messages.append(AIMessage(content=msg["content"]))
+            elif msg["role"] == "system":
+                messages.append(SystemMessage(content=msg["content"]))
+
+    # Add the current message
+    messages.append(HumanMessage(content=message))
+
+    # Invoke the graph
+    result = await graph.ainvoke({"messages": messages})
+
+    # Extract the last AI message
+    for msg in reversed(result["messages"]):
+        if isinstance(msg, AIMessage):
+            return msg.content
+
+    return ""
+
+
+async def chat_stream(
+    message: str,
+    history: list[dict] | None = None,
+    system_prompt: str = "You are a helpful assistant.",
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+) -> AsyncIterator[str]:
+    """Send a message and stream the response using LangGraph.
+
+    Args:
+        message: The user's message.
+        history: Optional conversation history.
+        system_prompt: The system prompt to set context.
+        model: The model to use.
+        temperature: The temperature for generation.
+
+    Yields:
+        Chunks of the assistant's response.
+    """
+    llm = get_llm(model=model, temperature=temperature, streaming=True)
+
+    # Build message list from history
+    messages = [SystemMessage(content=system_prompt)]
+    if history:
+        for msg in history:
+            if msg["role"] == "user":
+                messages.append(HumanMessage(content=msg["content"]))
+            elif msg["role"] == "assistant":
+                messages.append(AIMessage(content=msg["content"]))
+
+    messages.append(HumanMessage(content=message))
+
+    # Stream directly from the LLM for simplicity
+    async for chunk in llm.astream(messages):
+        if chunk.content:
+            yield chunk.content
+
+
+async def run_agent(
+    message: str,
+    history: list[dict] | None = None,
+    system_prompt: str = "You are a helpful assistant. Think step by step.",
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+    max_iterations: int = 10,
+) -> str:
+    """Run an agent that can perform multi-step reasoning.
+
+    Args:
+        message: The user's message.
+        history: Optional conversation history.
+        system_prompt: The system prompt to set context.
+        model: The model to use.
+        temperature: The temperature for generation.
+        max_iterations: Maximum reasoning iterations.
+
+    Returns:
+        The agent's final response.
+    """
+    graph = create_agent_graph(
+        system_prompt=system_prompt,
+        model=model,
+        temperature=temperature,
+        max_iterations=max_iterations,
+    )
+
+    # Build message list from history
+    messages = []
+    if history:
+        for msg in history:
+            if msg["role"] == "user":
+                messages.append(HumanMessage(content=msg["content"]))
+            elif msg["role"] == "assistant":
+                messages.append(AIMessage(content=msg["content"]))
+            elif msg["role"] == "system":
+                messages.append(SystemMessage(content=msg["content"]))
+
+    # Add the current message
+    messages.append(HumanMessage(content=message))
+
+    # Invoke the graph
+    result = await graph.ainvoke({"messages": messages})
+
+    # Extract the last AI message
+    for msg in reversed(result["messages"]):
+        if isinstance(msg, AIMessage):
+            return msg.content
+
+    return ""
+
+
+def simple_completion(
+    prompt: str,
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+) -> str:
+    """Get a simple completion without conversation history.
+
+    Args:
+        prompt: The prompt to complete.
+        model: The model to use.
+        temperature: The temperature for generation.
+
+    Returns:
+        The completion response.
+    """
+    llm = get_llm(model=model, temperature=temperature)
+    response = llm.invoke(prompt)
+    return response.content
+{{/if}}

@@ -1853,6 +1853,183 @@ describe("Python Language Support", () => {
       expect(pyprojectContent).toContain("openai");
       expect(pyprojectContent).toContain("anthropic");
     });
+
+    it("should include LangGraph dependencies in pyproject.toml", async () => {
+      const result = await createVirtual({
+        projectName: "python-langgraph-deps",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["langgraph"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const pyprojectContent = getFileContent(root, "pyproject.toml");
+      expect(pyprojectContent).toBeDefined();
+      expect(pyprojectContent).toContain("langgraph");
+      expect(pyprojectContent).toContain("langchain-core");
+      expect(pyprojectContent).toContain("langchain-openai");
+    });
+
+    it("should create LangGraph client module", async () => {
+      const result = await createVirtual({
+        projectName: "python-langgraph-client",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["langgraph"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify langgraph_client.py exists
+      expect(hasFile(root, "src/app/langgraph_client.py")).toBe(true);
+      const clientContent = getFileContent(root, "src/app/langgraph_client.py");
+      expect(clientContent).toBeDefined();
+      expect(clientContent).toContain("from langgraph.graph import");
+      expect(clientContent).toContain("def get_llm");
+      expect(clientContent).toContain("async def chat");
+      expect(clientContent).toContain("async def chat_stream");
+      expect(clientContent).toContain("async def run_agent");
+      expect(clientContent).toContain("def simple_completion");
+      expect(clientContent).toContain("create_chat_graph");
+      expect(clientContent).toContain("create_agent_graph");
+    });
+
+    it("should create LangGraph schemas module", async () => {
+      const result = await createVirtual({
+        projectName: "python-langgraph-schemas",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["langgraph"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify langgraph_schemas.py exists
+      expect(hasFile(root, "src/app/langgraph_schemas.py")).toBe(true);
+      const schemasContent = getFileContent(root, "src/app/langgraph_schemas.py");
+      expect(schemasContent).toBeDefined();
+      expect(schemasContent).toContain("class ChatMessage(BaseModel)");
+      expect(schemasContent).toContain("class LangGraphChatRequest(BaseModel)");
+      expect(schemasContent).toContain("class LangGraphChatResponse(BaseModel)");
+      expect(schemasContent).toContain("class LangGraphAgentRequest(BaseModel)");
+      expect(schemasContent).toContain("class LangGraphAgentResponse(BaseModel)");
+      expect(schemasContent).toContain("class LangGraphCompletionRequest(BaseModel)");
+      expect(schemasContent).toContain("class LangGraphCompletionResponse(BaseModel)");
+    });
+
+    it("should integrate LangGraph endpoints with FastAPI", async () => {
+      const result = await createVirtual({
+        projectName: "python-langgraph-fastapi",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["langgraph"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainContent = getFileContent(root, "src/app/main.py");
+      expect(mainContent).toBeDefined();
+      expect(mainContent).toContain("from app.langgraph_client import");
+      expect(mainContent).toContain("from app.langgraph_schemas import");
+      expect(mainContent).toContain('@app.post("/ai/langgraph/chat"');
+      expect(mainContent).toContain('@app.post("/ai/langgraph/chat/stream"');
+      expect(mainContent).toContain('@app.post("/ai/langgraph/agent"');
+      expect(mainContent).toContain('@app.post("/ai/langgraph/completion"');
+      expect(mainContent).toContain("StreamingResponse");
+    });
+
+    it("should add LangGraph settings when pydantic validation is enabled", async () => {
+      const result = await createVirtual({
+        projectName: "python-langgraph-settings",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: ["langgraph"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const settingsContent = getFileContent(root, "src/app/settings.py");
+      expect(settingsContent).toBeDefined();
+      expect(settingsContent).toContain("# LangGraph settings");
+      expect(settingsContent).toContain("openai_api_key");
+      expect(settingsContent).toContain("langgraph_default_model");
+      expect(settingsContent).toContain("langgraph_default_temperature");
+      expect(settingsContent).toContain("langgraph_max_iterations");
+    });
+
+    it("should include LangGraph validation tests", async () => {
+      const result = await createVirtual({
+        projectName: "python-langgraph-tests",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["langgraph"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const testContent = getFileContent(root, "tests/test_main.py");
+      expect(testContent).toBeDefined();
+      expect(testContent).toContain("test_langgraph_chat_endpoint_validation");
+      expect(testContent).toContain("test_langgraph_agent_endpoint_validation");
+      expect(testContent).toContain("test_langgraph_agent_max_iterations_validation");
+      expect(testContent).toContain("test_langgraph_completion_endpoint_validation");
+      expect(testContent).toContain("test_langgraph_completion_temperature_validation");
+    });
+
+    it("should NOT create LangGraph files when pythonAi does not include langgraph", async () => {
+      const result = await createVirtual({
+        projectName: "python-no-langgraph",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["openai-sdk"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify LangGraph files do NOT exist
+      expect(hasFile(root, "src/app/langgraph_client.py")).toBe(false);
+      expect(hasFile(root, "src/app/langgraph_schemas.py")).toBe(false);
+
+      const mainContent = getFileContent(root, "src/app/main.py");
+      expect(mainContent).not.toContain("langgraph_client");
+      expect(mainContent).not.toContain("/ai/langgraph/chat");
+    });
   });
 
   describe("Celery Task Queue", () => {

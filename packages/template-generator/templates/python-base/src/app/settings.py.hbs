@@ -55,6 +55,13 @@ class Settings(BaseSettings):
     llamaindex_default_temperature: float = 0.7
     llamaindex_embed_model: str = "text-embedding-3-small"
 {{/if}}
+{{#if (includes pythonAi "langgraph")}}
+    # LangGraph settings
+    openai_api_key: str = ""
+    langgraph_default_model: str = "gpt-4o-mini"
+    langgraph_default_temperature: float = 0.7
+    langgraph_max_iterations: int = 10
+{{/if}}
 {{#if (eq pythonTaskQueue "celery")}}
     # Celery settings
     celery_broker_url: str = "redis://localhost:6379/0"

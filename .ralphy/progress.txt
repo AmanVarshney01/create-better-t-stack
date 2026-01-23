@@ -6405,3 +6405,88 @@ Added comprehensive Pydantic validation support to the Python ecosystem with ful
 ### Tests: 85 pass, 0 fail (all Python language tests)
 
 ### Status: COMPLETE
+
+---
+
+## Task: LangGraph AI Framework Support for Python
+
+**Date**: 2026-01-23
+**Status**: COMPLETE
+
+### Summary:
+Added LangGraph AI framework support to the Python ecosystem. LangGraph is a low-level orchestration framework for building stateful, multi-agent AI applications.
+
+### Files Modified:
+
+1. **packages/template-generator/templates/python-base/src/app/langgraph_client.py.hbs**: Created new template file:
+   - `get_llm()` - Get configured ChatOpenAI instance
+   - `create_chat_graph()` - Create simple chat StateGraph
+   - `create_agent_graph()` - Create multi-step reasoning agent graph
+   - `chat()` - Async chat function with history support
+   - `chat_stream()` - Async streaming chat with SSE
+   - `run_agent()` - Run multi-step reasoning agent
+   - `simple_completion()` - Simple completion without history
+   - Uses LangGraph StateGraph, MessagesState, and conditional edges
+
+2. **packages/template-generator/templates/python-base/src/app/langgraph_schemas.py.hbs**: Created new template file:
+   - `ChatMessage` - Message in conversation
+   - `LangGraphChatRequest` - Chat request with history support
+   - `LangGraphChatResponse` - Chat response
+   - `LangGraphAgentRequest` - Agent request with max_iterations
+   - `LangGraphAgentResponse` - Agent response
+   - `LangGraphCompletionRequest` - Completion request
+   - `LangGraphCompletionResponse` - Completion response
+   - Max iterations validation: 1-50
+
+3. **packages/template-generator/templates/python-base/src/app/main.py.hbs**: Added FastAPI integration:
+   - Imports for langgraph_client and langgraph_schemas
+   - `POST /ai/langgraph/chat` - Chat endpoint with history support
+   - `POST /ai/langgraph/chat/stream` - Streaming chat endpoint (SSE)
+   - `POST /ai/langgraph/agent` - Multi-step reasoning agent endpoint
+   - `POST /ai/langgraph/completion` - Simple completion endpoint
+   - StreamingResponse for real-time token streaming
+
+4. **packages/template-generator/templates/python-base/src/app/settings.py.hbs**: Added LangGraph settings:
+   - `openai_api_key: str` - API key from environment
+   - `langgraph_default_model: str` - Default model (gpt-4o-mini)
+   - `langgraph_default_temperature: float` - Default temperature (0.7)
+   - `langgraph_max_iterations: int` - Max reasoning iterations (10)
+
+5. **packages/template-generator/templates/python-base/pyproject.toml.hbs**: Updated dependencies:
+   - `langgraph>=0.2.0` (already existed)
+   - Added `langchain-core>=0.3.0` - Core LangChain components
+   - Added `langchain-openai>=0.2.0` - OpenAI integration for LangGraph
+
+6. **packages/template-generator/templates/python-base/tests/test_main.py.hbs**: Added validation tests:
+   - `test_langgraph_chat_endpoint_validation` - Missing message validation
+   - `test_langgraph_chat_endpoint_with_history_validation` - Invalid history format
+   - `test_langgraph_agent_endpoint_validation` - Missing message validation
+   - `test_langgraph_agent_max_iterations_validation` - Max iterations range (1-50)
+   - `test_langgraph_completion_endpoint_validation` - Missing prompt validation
+   - `test_langgraph_completion_temperature_validation` - Temperature range (0-2)
+
+7. **apps/cli/test/python-language.test.ts**: Added comprehensive tests:
+   - `should include LangGraph dependencies in pyproject.toml`
+   - `should create LangGraph client module`
+   - `should create LangGraph schemas module`
+   - `should integrate LangGraph endpoints with FastAPI`
+   - `should add LangGraph settings when pydantic validation is enabled`
+   - `should include LangGraph validation tests`
+   - `should NOT create LangGraph files when pythonAi does not include langgraph`
+
+### Features:
+- LangGraph StateGraph integration for building agent workflows
+- Chat graph for simple conversational agents
+- Agent graph for multi-step reasoning with iteration limits
+- Async/await support throughout
+- Streaming responses via SSE
+- Multi-turn conversation with history management
+- System prompt support
+- Configurable model and temperature
+- Pydantic validation for all request/response models
+- Compatible with FastAPI web framework
+- Integration with pydantic-settings for configuration
+
+### Tests: 92 pass, 0 fail (all Python language tests)
+
+### Status: COMPLETE

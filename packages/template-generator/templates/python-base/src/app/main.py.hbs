@@ -96,6 +96,24 @@ from app.anthropic_schemas import (
     AnthropicCompletionResponse,
 )
 {{/if}}
+{{#if (includes pythonAi "langgraph")}}
+from fastapi.responses import StreamingResponse
+
+from app.langgraph_client import (
+    chat as langgraph_chat,
+    chat_stream as langgraph_chat_stream,
+    run_agent as langgraph_agent,
+    simple_completion as langgraph_completion,
+)
+from app.langgraph_schemas import (
+    LangGraphAgentRequest,
+    LangGraphAgentResponse,
+    LangGraphChatRequest,
+    LangGraphChatResponse,
+    LangGraphCompletionRequest,
+    LangGraphCompletionResponse,
+)
+{{/if}}
 
 
 @asynccontextmanager
@@ -376,6 +394,85 @@ async def anthropic_completion_endpoint(request: AnthropicCompletionRequest):
         temperature=request.temperature or 0.7,
     )
     return AnthropicCompletionResponse(completion=completion)
+{{/if}}
+{{#if (includes pythonAi "langgraph")}}
+
+# LangGraph AI endpoints
+@app.post("/ai/langgraph/chat", response_model=LangGraphChatResponse)
+async def langgraph_chat_endpoint(request: LangGraphChatRequest):
+    """Chat with an AI assistant using LangGraph.
+
+    Supports conversation history for multi-turn conversations.
+    """
+    history = None
+    if request.history:
+        history = [{"role": msg.role, "content": msg.content} for msg in request.history]
+
+    response = await langgraph_chat(
+        message=request.message,
+        history=history,
+        system_prompt=request.system_prompt or "You are a helpful assistant.",
+        model=request.model or "gpt-4o-mini",
+        temperature=request.temperature or 0.7,
+    )
+    return LangGraphChatResponse(response=response)
+
+
+@app.post("/ai/langgraph/chat/stream")
+async def langgraph_chat_stream_endpoint(request: LangGraphChatRequest):
+    """Chat with an AI assistant using LangGraph with streaming response.
+
+    Returns a Server-Sent Events stream of the response.
+    """
+    history = None
+    if request.history:
+        history = [{"role": msg.role, "content": msg.content} for msg in request.history]
+
+    async def generate():
+        async for chunk in langgraph_chat_stream(
+            message=request.message,
+            history=history,
+            system_prompt=request.system_prompt or "You are a helpful assistant.",
+            model=request.model or "gpt-4o-mini",
+            temperature=request.temperature or 0.7,
+        ):
+            yield f"data: {chunk}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(generate(), media_type="text/event-stream")
+
+
+@app.post("/ai/langgraph/agent", response_model=LangGraphAgentResponse)
+async def langgraph_agent_endpoint(request: LangGraphAgentRequest):
+    """Run a LangGraph agent that can perform multi-step reasoning.
+
+    The agent can loop through multiple reasoning steps before providing
+    a final answer. Useful for complex tasks that require planning.
+    """
+    history = None
+    if request.history:
+        history = [{"role": msg.role, "content": msg.content} for msg in request.history]
+
+    response = await langgraph_agent(
+        message=request.message,
+        history=history,
+        system_prompt=request.system_prompt or "You are a helpful assistant. Think step by step.",
+        model=request.model or "gpt-4o-mini",
+        temperature=request.temperature or 0.7,
+        max_iterations=request.max_iterations or 10,
+    )
+    return LangGraphAgentResponse(response=response)
+
+
+@app.post("/ai/langgraph/completion", response_model=LangGraphCompletionResponse)
+async def langgraph_completion_endpoint(request: LangGraphCompletionRequest):
+    """Get a simple completion using LangGraph without conversation history."""
+    completion = langgraph_completion(
+        prompt=request.prompt,
+        model=request.model or "gpt-4o-mini",
+        temperature=request.temperature or 0.7,
+    )
+    return LangGraphCompletionResponse(completion=completion)
 {{/if}}
 {{#if (and (eq pythonOrm "none") (eq pythonValidation "pydantic"))}}
 
