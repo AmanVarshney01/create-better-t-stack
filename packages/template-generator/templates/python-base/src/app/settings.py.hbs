@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     # Anthropic settings
     anthropic_api_key: str = ""
 {{/if}}
+{{#if (includes pythonAi "langchain")}}
+    # LangChain settings
+    openai_api_key: str = ""
+    langchain_default_model: str = "gpt-4o-mini"
+    langchain_default_temperature: float = 0.7
+{{/if}}
 {{#if (eq pythonTaskQueue "celery")}}
     # Celery settings
     celery_broker_url: str = "redis://localhost:6379/0"

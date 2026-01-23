@@ -40,6 +40,17 @@ from app.models import (
     UserUpdate,
 )
 {{/if}}
+{{#if (includes pythonAi "langchain")}}
+from fastapi.responses import StreamingResponse
+
+from app.langchain_client import chat, chat_stream, simple_completion
+from app.langchain_schemas import (
+    ChatRequest,
+    ChatResponse,
+    CompletionRequest,
+    CompletionResponse,
+)
+{{/if}}
 
 
 @asynccontextmanager
@@ -90,6 +101,63 @@ async def health():
     """Health check endpoint."""
     return {"status": "healthy"}
 
+{{#if (includes pythonAi "langchain")}}
+
+# LangChain AI endpoints
+@app.post("/ai/chat", response_model=ChatResponse)
+async def langchain_chat(request: ChatRequest):
+    """Chat with an AI assistant using LangChain.
+
+    Supports conversation history for multi-turn conversations.
+    """
+    history = None
+    if request.history:
+        history = [{"role": msg.role, "content": msg.content} for msg in request.history]
+
+    response = await chat(
+        message=request.message,
+        history=history,
+        system_prompt=request.system_prompt or "You are a helpful assistant.",
+        model=request.model or "gpt-4o-mini",
+        temperature=request.temperature or 0.7,
+    )
+    return ChatResponse(response=response)
+
+
+@app.post("/ai/chat/stream")
+async def langchain_chat_stream(request: ChatRequest):
+    """Chat with an AI assistant using LangChain with streaming response.
+
+    Returns a Server-Sent Events stream of the response.
+    """
+    history = None
+    if request.history:
+        history = [{"role": msg.role, "content": msg.content} for msg in request.history]
+
+    async def generate():
+        async for chunk in chat_stream(
+            message=request.message,
+            history=history,
+            system_prompt=request.system_prompt or "You are a helpful assistant.",
+            model=request.model or "gpt-4o-mini",
+            temperature=request.temperature or 0.7,
+        ):
+            yield f"data: {chunk}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(generate(), media_type="text/event-stream")
+
+
+@app.post("/ai/completion", response_model=CompletionResponse)
+async def langchain_completion(request: CompletionRequest):
+    """Get a simple completion from the AI without conversation history."""
+    completion = simple_completion(
+        prompt=request.prompt,
+        model=request.model or "gpt-4o-mini",
+        temperature=request.temperature or 0.7,
+    )
+    return CompletionResponse(completion=completion)
+{{/if}}
 {{#if (and (eq pythonOrm "none") (eq pythonValidation "pydantic"))}}
 
 # In-memory storage for demo (replace with database in production)

@@ -1093,6 +1093,176 @@ describe("Python Language Support", () => {
       expect(pyprojectContent).toContain("langchain-openai");
     });
 
+    it("should create LangChain client module", async () => {
+      const result = await createVirtual({
+        projectName: "python-langchain-client",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["langchain"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify langchain_client.py exists
+      expect(hasFile(root, "src/app/langchain_client.py")).toBe(true);
+      const clientContent = getFileContent(root, "src/app/langchain_client.py");
+      expect(clientContent).toBeDefined();
+      expect(clientContent).toContain("from langchain_openai import ChatOpenAI");
+      expect(clientContent).toContain("def get_llm");
+      expect(clientContent).toContain("async def chat");
+      expect(clientContent).toContain("async def chat_stream");
+      expect(clientContent).toContain("def simple_completion");
+    });
+
+    it("should create LangChain schemas module", async () => {
+      const result = await createVirtual({
+        projectName: "python-langchain-schemas",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["langchain"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify langchain_schemas.py exists
+      expect(hasFile(root, "src/app/langchain_schemas.py")).toBe(true);
+      const schemasContent = getFileContent(root, "src/app/langchain_schemas.py");
+      expect(schemasContent).toBeDefined();
+      expect(schemasContent).toContain("class ChatMessage(BaseModel)");
+      expect(schemasContent).toContain("class ChatRequest(BaseModel)");
+      expect(schemasContent).toContain("class ChatResponse(BaseModel)");
+      expect(schemasContent).toContain("class CompletionRequest(BaseModel)");
+      expect(schemasContent).toContain("class CompletionResponse(BaseModel)");
+    });
+
+    it("should integrate LangChain endpoints with FastAPI", async () => {
+      const result = await createVirtual({
+        projectName: "python-langchain-fastapi",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["langchain"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainContent = getFileContent(root, "src/app/main.py");
+      expect(mainContent).toBeDefined();
+      expect(mainContent).toContain(
+        "from app.langchain_client import chat, chat_stream, simple_completion",
+      );
+      expect(mainContent).toContain("from app.langchain_schemas import");
+      expect(mainContent).toContain('@app.post("/ai/chat"');
+      expect(mainContent).toContain('@app.post("/ai/chat/stream"');
+      expect(mainContent).toContain('@app.post("/ai/completion"');
+      expect(mainContent).toContain("StreamingResponse");
+    });
+
+    it("should add LangChain settings when pydantic validation is enabled", async () => {
+      const result = await createVirtual({
+        projectName: "python-langchain-settings",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: ["langchain"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const settingsContent = getFileContent(root, "src/app/settings.py");
+      expect(settingsContent).toBeDefined();
+      expect(settingsContent).toContain("# LangChain settings");
+      expect(settingsContent).toContain("openai_api_key");
+      expect(settingsContent).toContain("langchain_default_model");
+      expect(settingsContent).toContain("langchain_default_temperature");
+    });
+
+    it("should include LangChain validation tests", async () => {
+      const result = await createVirtual({
+        projectName: "python-langchain-tests",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["langchain"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const testContent = getFileContent(root, "tests/test_main.py");
+      expect(testContent).toBeDefined();
+      expect(testContent).toContain("test_langchain_chat_endpoint_validation");
+      expect(testContent).toContain("test_langchain_completion_endpoint_validation");
+      expect(testContent).toContain("test_langchain_completion_temperature_validation");
+    });
+
+    it("should NOT create LangChain files when pythonAi does not include langchain", async () => {
+      const result = await createVirtual({
+        projectName: "python-no-langchain",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["openai-sdk"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify LangChain files do NOT exist
+      expect(hasFile(root, "src/app/langchain_client.py")).toBe(false);
+      expect(hasFile(root, "src/app/langchain_schemas.py")).toBe(false);
+
+      const mainContent = getFileContent(root, "src/app/main.py");
+      expect(mainContent).not.toContain("langchain_client");
+      expect(mainContent).not.toContain("/ai/chat");
+    });
+
+    it("should generate README with LangChain documentation", async () => {
+      const result = await createVirtual({
+        projectName: "python-langchain-readme",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["langchain"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const readmeContent = getFileContent(root, "README.md");
+      expect(readmeContent).toBeDefined();
+      expect(readmeContent).toContain("LangChain");
+      expect(readmeContent).toContain("langchain_client.py");
+      expect(readmeContent).toContain("langchain_schemas.py");
+    });
+
     it("should include OpenAI SDK dependencies in pyproject.toml", async () => {
       const result = await createVirtual({
         projectName: "python-openai-deps",

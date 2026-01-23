@@ -788,7 +788,8 @@ function generatePythonReadmeContent(config: ProjectConfig): string {
   // AI/ML
   const aiLibs = Array.isArray(pythonAi) ? pythonAi : [];
   if (aiLibs.includes("langchain")) {
-    features.push("- **LangChain** - Building applications with LLMs");
+    features.push("- **LangChain** - Building applications with LLMs through composability");
+    features.push("- **LangChain OpenAI** - OpenAI integration for LangChain");
   }
   if (aiLibs.includes("llamaindex")) {
     features.push("- **LlamaIndex** - Data framework for LLM applications");
@@ -859,6 +860,12 @@ function generatePythonReadmeContent(config: ProjectConfig): string {
   // Add standalone Pydantic schemas (no ORM)
   if (pythonOrm === "none" && pythonValidation === "pydantic") {
     structure.push("│       └── schemas.py    # Pydantic validation schemas");
+  }
+
+  // Add LangChain files
+  if (aiLibs.includes("langchain")) {
+    structure.push("│       ├── langchain_client.py  # LangChain client utilities");
+    structure.push("│       └── langchain_schemas.py # LangChain request/response models");
   }
 
   structure.push("├── tests/");

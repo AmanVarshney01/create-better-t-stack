@@ -1,0 +1,50 @@
+{{#if (includes pythonAi "langchain")}}
+"""Pydantic schemas for LangChain API endpoints."""
+
+from pydantic import BaseModel, Field
+
+
+class ChatMessage(BaseModel):
+    """A single message in a conversation."""
+
+    role: str = Field(..., description="The role of the message sender (user, assistant, system)")
+    content: str = Field(..., description="The content of the message")
+
+
+class ChatRequest(BaseModel):
+    """Request body for chat endpoint."""
+
+    message: str = Field(..., description="The user's message", min_length=1)
+    history: list[ChatMessage] | None = Field(
+        default=None, description="Optional conversation history"
+    )
+    system_prompt: str | None = Field(
+        default=None, description="Optional system prompt to override default"
+    )
+    model: str | None = Field(default=None, description="Optional model override")
+    temperature: float | None = Field(
+        default=None, ge=0.0, le=2.0, description="Optional temperature override"
+    )
+
+
+class ChatResponse(BaseModel):
+    """Response body for chat endpoint."""
+
+    response: str = Field(..., description="The assistant's response")
+
+
+class CompletionRequest(BaseModel):
+    """Request body for simple completion endpoint."""
+
+    prompt: str = Field(..., description="The prompt to complete", min_length=1)
+    model: str | None = Field(default=None, description="Optional model override")
+    temperature: float | None = Field(
+        default=None, ge=0.0, le=2.0, description="Optional temperature override"
+    )
+
+
+class CompletionResponse(BaseModel):
+    """Response body for completion endpoint."""
+
+    completion: str = Field(..., description="The completion response")
+{{/if}}

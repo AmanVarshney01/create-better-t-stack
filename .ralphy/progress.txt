@@ -6101,3 +6101,86 @@ Added comprehensive Pydantic validation support to the Python ecosystem with ful
 - Linting: 150 pass, 0 fail
 
 ### Status: COMPLETE
+
+
+## 2026-01-23: LangChain AI/ML Framework Implementation
+
+### Task: Implement LangChain as a Python AI/ML framework option
+
+### Changes Made:
+1. **New Template Files Created** (`packages/template-generator/templates/python-base/src/app/`):
+   - `langchain_client.py.hbs`: LangChain client utilities with:
+     - `get_llm()`: Factory function for ChatOpenAI instances
+     - `create_chat_chain()`: Chat chain with conversation history support
+     - `chat()`: Async chat function with history
+     - `chat_stream()`: Async streaming chat function
+     - `simple_completion()`: Simple completion without history
+   - `langchain_schemas.py.hbs`: Pydantic schemas for LangChain API:
+     - `ChatMessage`: Message model (role, content)
+     - `ChatRequest`: Chat endpoint request body
+     - `ChatResponse`: Chat endpoint response
+     - `CompletionRequest`: Completion endpoint request
+     - `CompletionResponse`: Completion endpoint response
+
+2. **Template Files Updated**:
+   - `src/app/main.py.hbs`: Added LangChain API endpoints:
+     - `POST /ai/chat`: Chat with conversation history
+     - `POST /ai/chat/stream`: Streaming chat with SSE
+     - `POST /ai/completion`: Simple completion without history
+   - `src/app/settings.py.hbs`: Added LangChain settings:
+     - `openai_api_key`: API key for OpenAI
+     - `langchain_default_model`: Default model (gpt-4o-mini)
+     - `langchain_default_temperature`: Default temperature (0.7)
+   - `tests/test_main.py.hbs`: Added LangChain validation tests:
+     - `test_langchain_chat_endpoint_validation`
+     - `test_langchain_chat_endpoint_with_history_validation`
+     - `test_langchain_completion_endpoint_validation`
+     - `test_langchain_completion_temperature_validation`
+
+3. **README Generator Update** (`packages/template-generator/src/processors/readme-generator.ts`):
+   - Enhanced LangChain feature description
+   - Added LangChain OpenAI integration to features
+   - Added langchain_client.py and langchain_schemas.py to project structure
+
+4. **Test Updates** (`apps/cli/test/python-language.test.ts`):
+   - Added 8 new LangChain tests:
+     - should create LangChain client module
+     - should create LangChain schemas module
+     - should integrate LangChain endpoints with FastAPI
+     - should add LangChain settings when pydantic validation is enabled
+     - should include LangChain validation tests
+     - should NOT create LangChain files when pythonAi does not include langchain
+     - should generate README with LangChain documentation
+
+5. **Template Regeneration**:
+   - Ran `bun run generate-templates` to embed new template files
+   - Built template-generator package
+
+6. **PRD.md**: Marked LangChain as complete
+
+### Features Implemented:
+- **LangChain Integration**: Full integration with langchain and langchain-openai packages
+- **Chat Endpoints**: Support for both regular and streaming chat responses
+- **Conversation History**: Full support for multi-turn conversations
+- **Configurable Settings**: Model, temperature, and API key configuration
+- **Streaming Support**: Server-Sent Events (SSE) for streaming responses
+- **Pydantic Validation**: Request/response validation with Pydantic schemas
+- **Conditional Generation**: Files only created when pythonAi includes "langchain"
+
+### Key LangChain Features Demonstrated:
+- `ChatOpenAI` for LLM interactions
+- `ChatPromptTemplate` for prompt management
+- `MessagesPlaceholder` for conversation history
+- `StrOutputParser` for response parsing
+- Async streaming with `astream()`
+- System prompts and temperature control
+
+### Dependencies Added:
+- `langchain>=0.3.0`
+- `langchain-openai>=0.2.0`
+
+### Test Results:
+- Python language tests: 63 pass, 0 fail
+- Linting: 0 errors (39 pre-existing warnings)
+
+### Status: COMPLETE

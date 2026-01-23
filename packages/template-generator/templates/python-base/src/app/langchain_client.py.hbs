@@ -1,0 +1,170 @@
+{{#if (includes pythonAi "langchain")}}
+"""LangChain client for LLM interactions."""
+
+import os
+from typing import AsyncIterator
+
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_openai import ChatOpenAI
+
+
+def get_llm(
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+    streaming: bool = False,
+) -> ChatOpenAI:
+    """Get a configured LangChain LLM instance.
+
+    Args:
+        model: The model to use (default: gpt-4o-mini).
+        temperature: The temperature for generation (0.0-2.0).
+        streaming: Whether to enable streaming responses.
+
+    Returns:
+        A configured ChatOpenAI instance.
+
+    Raises:
+        ValueError: If OPENAI_API_KEY is not set.
+    """
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY environment variable is not set")
+
+    return ChatOpenAI(
+        model=model,
+        temperature=temperature,
+        streaming=streaming,
+        api_key=api_key,
+    )
+
+
+def create_chat_chain(
+    system_prompt: str = "You are a helpful assistant.",
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+):
+    """Create a chat chain with conversation history support.
+
+    Args:
+        system_prompt: The system prompt to set context.
+        model: The model to use.
+        temperature: The temperature for generation.
+
+    Returns:
+        A runnable chain that accepts messages and returns responses.
+    """
+    llm = get_llm(model=model, temperature=temperature)
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        MessagesPlaceholder(variable_name="history"),
+        ("human", "{input}"),
+    ])
+
+    chain = prompt | llm | StrOutputParser()
+    return chain
+
+
+async def chat(
+    message: str,
+    history: list[dict] | None = None,
+    system_prompt: str = "You are a helpful assistant.",
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+) -> str:
+    """Send a message and get a response.
+
+    Args:
+        message: The user's message.
+        history: Optional conversation history as list of {"role": str, "content": str}.
+        system_prompt: The system prompt to set context.
+        model: The model to use.
+        temperature: The temperature for generation.
+
+    Returns:
+        The assistant's response.
+    """
+    chain = create_chat_chain(
+        system_prompt=system_prompt,
+        model=model,
+        temperature=temperature,
+    )
+
+    # Convert history to LangChain message format
+    messages = []
+    if history:
+        for msg in history:
+            if msg["role"] == "user":
+                messages.append(HumanMessage(content=msg["content"]))
+            elif msg["role"] == "assistant":
+                messages.append(AIMessage(content=msg["content"]))
+            elif msg["role"] == "system":
+                messages.append(SystemMessage(content=msg["content"]))
+
+    response = await chain.ainvoke({"input": message, "history": messages})
+    return response
+
+
+async def chat_stream(
+    message: str,
+    history: list[dict] | None = None,
+    system_prompt: str = "You are a helpful assistant.",
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+) -> AsyncIterator[str]:
+    """Send a message and stream the response.
+
+    Args:
+        message: The user's message.
+        history: Optional conversation history.
+        system_prompt: The system prompt to set context.
+        model: The model to use.
+        temperature: The temperature for generation.
+
+    Yields:
+        Chunks of the assistant's response.
+    """
+    llm = get_llm(model=model, temperature=temperature, streaming=True)
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", system_prompt),
+        MessagesPlaceholder(variable_name="history"),
+        ("human", "{input}"),
+    ])
+
+    chain = prompt | llm | StrOutputParser()
+
+    # Convert history to LangChain message format
+    messages = []
+    if history:
+        for msg in history:
+            if msg["role"] == "user":
+                messages.append(HumanMessage(content=msg["content"]))
+            elif msg["role"] == "assistant":
+                messages.append(AIMessage(content=msg["content"]))
+
+    async for chunk in chain.astream({"input": message, "history": messages}):
+        yield chunk
+
+
+def simple_completion(
+    prompt: str,
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+) -> str:
+    """Get a simple completion without conversation history.
+
+    Args:
+        prompt: The prompt to complete.
+        model: The model to use.
+        temperature: The temperature for generation.
+
+    Returns:
+        The completion response.
+    """
+    llm = get_llm(model=model, temperature=temperature)
+    response = llm.invoke(prompt)
+    return response.content
+{{/if}}

@@ -195,7 +195,7 @@
 
 ## **Step 5: AI / ML**
 
-- [ ] **LangChain** - LLM application framework
+- [x] **LangChain** - LLM application framework
 - [ ] **LlamaIndex** - Data framework for LLM apps
 - [ ] **OpenAI SDK** - Official OpenAI client
 - [ ] **Anthropic SDK** - Claude API client
