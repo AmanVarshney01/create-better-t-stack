@@ -136,6 +136,7 @@ export async function createProjectHandler(
             cms: "none",
             caching: "none",
             featureFlags: "none",
+            analytics: "none",
           } satisfies ProjectConfig,
           reproducibleCommand: "",
           timeScaffolded,

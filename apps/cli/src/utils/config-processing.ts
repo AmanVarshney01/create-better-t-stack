@@ -2,6 +2,7 @@ import path from "node:path";
 
 import type {
   AI,
+  Analytics,
   Animation,
   API,
   AstroIntegration,
@@ -16,6 +17,7 @@ import type {
   Ecosystem,
   Effect,
   Email,
+  FeatureFlags,
   FileUpload,
   Forms,
   JobQueue,
@@ -136,6 +138,14 @@ export function processFlags(options: CLIInput, projectName?: string) {
 
   if (options.caching !== undefined) {
     config.caching = options.caching as Caching;
+  }
+
+  if (options.analytics !== undefined) {
+    config.analytics = options.analytics as Analytics;
+  }
+
+  if (options.featureFlags !== undefined) {
+    config.featureFlags = options.featureFlags as FeatureFlags;
   }
 
   if (options.fileUpload !== undefined) {

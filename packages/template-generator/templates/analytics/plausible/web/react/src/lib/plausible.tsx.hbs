@@ -1,0 +1,234 @@
+import Plausible from "plausible-tracker";
+import type { PropsWithChildren } from "react";
+import { createContext, useContext, useEffect, useMemo, useCallback, useState } from "react";
+
+// Plausible configuration from environment variables
+{{#if (eq frontend.[0] "next")}}
+const plausibleDomain = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN || "";
+const plausibleApiHost = process.env.NEXT_PUBLIC_PLAUSIBLE_API_HOST || "https://plausible.io";
+{{else if (eq frontend.[0] "nuxt")}}
+const plausibleDomain = process.env.NUXT_PUBLIC_PLAUSIBLE_DOMAIN || "";
+const plausibleApiHost = process.env.NUXT_PUBLIC_PLAUSIBLE_API_HOST || "https://plausible.io";
+{{else}}
+const plausibleDomain = import.meta.env.VITE_PLAUSIBLE_DOMAIN || "";
+const plausibleApiHost = import.meta.env.VITE_PLAUSIBLE_API_HOST || "https://plausible.io";
+{{/if}}
+
+// Create Plausible instance
+const plausible = Plausible({
+  domain: plausibleDomain,
+  apiHost: plausibleApiHost,
+  // Track localhost for development (disable in production if needed)
+  trackLocalhost: true,
+});
+
+// Enable automatic pageview tracking for SPAs
+const { enableAutoPageviews, enableAutoOutboundTracking } = plausible;
+
+// Context for Plausible instance
+const PlausibleContext = createContext<typeof plausible | null>(null);
+
+interface PlausibleProviderProps extends PropsWithChildren {
+  /**
+   * Enable automatic pageview tracking (recommended for SPAs)
+   * @default true
+   */
+  autoPageviews?: boolean;
+  /**
+   * Enable automatic outbound link tracking
+   * @default true
+   */
+  autoOutboundTracking?: boolean;
+}
+
+/**
+ * Plausible Analytics Provider component
+ * Wrap your app with this provider to enable privacy-focused analytics
+ *
+ * @example
+ * function App() {
+ *   return (
+ *     <PlausibleProvider>
+ *       <YourApp />
+ *     </PlausibleProvider>
+ *   );
+ * }
+ */
+export function PlausibleProvider({
+  children,
+  autoPageviews = true,
+  autoOutboundTracking = true,
+}: PlausibleProviderProps) {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    if (!plausibleDomain) {
+      console.warn("[Plausible] Domain not configured, analytics disabled");
+      return;
+    }
+
+    // Enable automatic pageview tracking for SPAs
+    let cleanupPageviews: (() => void) | undefined;
+    if (autoPageviews) {
+      cleanupPageviews = enableAutoPageviews();
+    }
+
+    // Enable automatic outbound link tracking
+    let cleanupOutbound: (() => void) | undefined;
+    if (autoOutboundTracking) {
+      cleanupOutbound = enableAutoOutboundTracking();
+    }
+
+    setReady(true);
+
+    return () => {
+      cleanupPageviews?.();
+      cleanupOutbound?.();
+    };
+  }, [autoPageviews, autoOutboundTracking]);
+
+  return (
+    <PlausibleContext.Provider value={ready ? plausible : null}>
+      {children}
+    </PlausibleContext.Provider>
+  );
+}
+
+/**
+ * Hook to access the Plausible instance
+ */
+export function usePlausible() {
+  const context = useContext(PlausibleContext);
+  return context;
+}
+
+/**
+ * Hook to track custom events
+ *
+ * @example
+ * function SignupButton() {
+ *   const trackEvent = useTrackEvent();
+ *
+ *   const handleClick = () => {
+ *     trackEvent("Signup", { props: { plan: "premium" } });
+ *   };
+ *
+ *   return <button onClick={handleClick}>Sign Up</button>;
+ * }
+ */
+export function useTrackEvent() {
+  return useCallback(
+    (
+      eventName: string,
+      options?: {
+        props?: Record<string, string | number | boolean>;
+        revenue?: { currency: string; amount: number };
+        callback?: () => void;
+      }
+    ) => {
+      if (!plausibleDomain) return;
+      plausible.trackEvent(eventName, options);
+    },
+    []
+  );
+}
+
+/**
+ * Hook to manually track pageviews
+ * Useful when you need to track virtual pageviews or custom URLs
+ *
+ * @example
+ * function ProductPage({ product }) {
+ *   const trackPageview = useTrackPageview();
+ *
+ *   useEffect(() => {
+ *     trackPageview({ url: `/products/${product.id}` });
+ *   }, [product.id, trackPageview]);
+ * }
+ */
+export function useTrackPageview() {
+  return useCallback(
+    (options?: { url?: string; referrer?: string; deviceWidth?: number }) => {
+      if (!plausibleDomain) return;
+      plausible.trackPageview(options);
+    },
+    []
+  );
+}
+
+/**
+ * Hook to get the Plausible configuration status
+ */
+export function usePlausibleStatus() {
+  return useMemo(
+    () => ({
+      isConfigured: !!plausibleDomain,
+      domain: plausibleDomain,
+      apiHost: plausibleApiHost,
+    }),
+    []
+  );
+}
+
+// Re-export the Plausible instance for direct access if needed
+export { plausible };
+
+/**
+ * Environment Variables:
+ *
+{{#if (eq frontend.[0] "next")}}
+ * NEXT_PUBLIC_PLAUSIBLE_DOMAIN - Your website domain (e.g., "example.com")
+ * NEXT_PUBLIC_PLAUSIBLE_API_HOST - Plausible API host (default: https://plausible.io)
+{{else if (eq frontend.[0] "nuxt")}}
+ * NUXT_PUBLIC_PLAUSIBLE_DOMAIN - Your website domain (e.g., "example.com")
+ * NUXT_PUBLIC_PLAUSIBLE_API_HOST - Plausible API host (default: https://plausible.io)
+{{else}}
+ * VITE_PLAUSIBLE_DOMAIN - Your website domain (e.g., "example.com")
+ * VITE_PLAUSIBLE_API_HOST - Plausible API host (default: https://plausible.io)
+{{/if}}
+ *
+ * Getting started:
+ * 1. Sign up at https://plausible.io (or self-host)
+ * 2. Add your domain in the Plausible dashboard
+ * 3. Copy your domain to your .env file
+ * 4. If self-hosting, update the API host accordingly
+ * 5. Wrap your app with <PlausibleProvider>
+ *
+ * Example usage:
+ * ```tsx
+ * // In your app entry point
+ * import { PlausibleProvider } from "./lib/plausible";
+ *
+ * function App() {
+ *   return (
+ *     <PlausibleProvider>
+ *       <Router />
+ *     </PlausibleProvider>
+ *   );
+ * }
+ *
+ * // In any component - track custom events
+ * import { useTrackEvent } from "./lib/plausible";
+ *
+ * function PurchaseButton({ product }) {
+ *   const trackEvent = useTrackEvent();
+ *
+ *   const handlePurchase = () => {
+ *     trackEvent("Purchase", {
+ *       props: { productId: product.id },
+ *       revenue: { currency: "USD", amount: product.price }
+ *     });
+ *   };
+ *
+ *   return <button onClick={handlePurchase}>Buy Now</button>;
+ * }
+ * ```
+ *
+ * Features:
+ * - Automatic pageview tracking for SPAs (React Router, Next.js, etc.)
+ * - Automatic outbound link tracking
+ * - Custom event tracking with properties
+ * - Revenue tracking for e-commerce
+ * - Privacy-focused: No cookies, GDPR/CCPA compliant
+ * - Lightweight: ~1KB gzipped
+ */

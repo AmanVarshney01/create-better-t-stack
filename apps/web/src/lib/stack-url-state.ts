@@ -48,6 +48,7 @@ export function loadStackParams(
       logging: getString("logging", DEFAULT_STACK.logging),
       observability: getString("observability", DEFAULT_STACK.observability),
       featureFlags: getString("featureFlags", DEFAULT_STACK.featureFlags),
+      analytics: getString("analytics", DEFAULT_STACK.analytics),
       backendLibraries: getString("backendLibraries", DEFAULT_STACK.backendLibraries),
       stateManagement: getString("stateManagement", DEFAULT_STACK.stateManagement),
       forms: getString("forms", DEFAULT_STACK.forms),
@@ -124,6 +125,7 @@ export function serializeStackParams(basePath: string, stack: StackState): strin
   addParam("logging", stack.logging);
   addParam("observability", stack.observability);
   addParam("featureFlags", stack.featureFlags);
+  addParam("analytics", stack.analytics);
   addParam("backendLibraries", stack.backendLibraries);
   addParam("stateManagement", stack.stateManagement);
   addParam("forms", stack.forms);

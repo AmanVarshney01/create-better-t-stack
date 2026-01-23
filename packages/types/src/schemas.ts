@@ -221,6 +221,10 @@ export const FeatureFlagsSchema = z
   .enum(["growthbook", "posthog", "none"])
   .describe("Feature flags provider for A/B testing and feature management");
 
+export const AnalyticsSchema = z
+  .enum(["plausible", "none"])
+  .describe("Privacy-focused analytics provider");
+
 // Rust ecosystem schemas
 export const RustWebFrameworkSchema = z
   .enum(["axum", "actix-web", "none"])
@@ -333,6 +337,7 @@ export const CreateInputSchema = z.object({
   logging: LoggingSchema.optional(),
   observability: ObservabilitySchema.optional(),
   featureFlags: FeatureFlagsSchema.optional(),
+  analytics: AnalyticsSchema.optional(),
   cms: CMSSchema.optional(),
   caching: CachingSchema.optional(),
   // Rust ecosystem options
@@ -395,6 +400,7 @@ export const ProjectConfigSchema = z.object({
   logging: LoggingSchema,
   observability: ObservabilitySchema,
   featureFlags: FeatureFlagsSchema,
+  analytics: AnalyticsSchema,
   cms: CMSSchema,
   caching: CachingSchema,
   // Rust ecosystem options
@@ -441,6 +447,7 @@ export const BetterTStackConfigSchema = z.object({
   logging: LoggingSchema,
   observability: ObservabilitySchema,
   featureFlags: FeatureFlagsSchema,
+  analytics: AnalyticsSchema,
   cms: CMSSchema,
   caching: CachingSchema,
   // Rust ecosystem options
@@ -507,6 +514,7 @@ export const FILE_UPLOAD_VALUES = FileUploadSchema.options;
 export const LOGGING_VALUES = LoggingSchema.options;
 export const OBSERVABILITY_VALUES = ObservabilitySchema.options;
 export const FEATURE_FLAGS_VALUES = FeatureFlagsSchema.options;
+export const ANALYTICS_VALUES = AnalyticsSchema.options;
 export const CMS_VALUES = CMSSchema.options;
 export const CACHING_VALUES = CachingSchema.options;
 export const ECOSYSTEM_VALUES = EcosystemSchema.options;

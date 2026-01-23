@@ -1,6 +1,7 @@
 import type {
   Addons,
   AI,
+  Analytics,
   Animation,
   API,
   AstroIntegration,
@@ -123,6 +124,7 @@ type PromptGroupResults = {
   logging: Logging;
   observability: Observability;
   featureFlags: FeatureFlags;
+  analytics: Analytics;
   cms: CMS;
   caching: Caching;
   // Rust ecosystem
@@ -312,6 +314,10 @@ export async function gatherConfig(
         if (results.ecosystem === "rust") return Promise.resolve("none" as FeatureFlags);
         return Promise.resolve(flags.featureFlags || "none") as Promise<FeatureFlags>;
       },
+      analytics: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as Analytics);
+        return Promise.resolve(flags.analytics || "none") as Promise<Analytics>;
+      },
       cms: ({ results }) => {
         if (results.ecosystem === "rust") return Promise.resolve("none" as CMS);
         return getCMSChoice(flags.cms, results.backend);
@@ -397,6 +403,7 @@ export async function gatherConfig(
     logging: result.logging,
     observability: result.observability,
     featureFlags: result.featureFlags,
+    analytics: result.analytics,
     cms: result.cms,
     caching: result.caching,
     // Ecosystem

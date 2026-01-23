@@ -864,6 +864,24 @@ export const TECH_OPTIONS: Record<
       default: true,
     },
   ],
+  analytics: [
+    {
+      id: "plausible",
+      name: "Plausible",
+      description: "Privacy-focused, lightweight analytics - no cookies required",
+      icon: "",
+      color: "from-indigo-500 to-purple-600",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No Analytics",
+      description: "Skip analytics setup",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
   backendLibraries: [
     {
       id: "effect",
@@ -2288,6 +2306,7 @@ export type StackState = {
   logging: string;
   observability: string;
   featureFlags: string;
+  analytics: string;
   backendLibraries: string;
   stateManagement: string;
   forms: string;
@@ -2339,6 +2358,7 @@ export const DEFAULT_STACK: StackState = {
   logging: "none",
   observability: "none",
   featureFlags: "none",
+  analytics: "none",
   backendLibraries: "none",
   stateManagement: "none",
   forms: "react-hook-form",

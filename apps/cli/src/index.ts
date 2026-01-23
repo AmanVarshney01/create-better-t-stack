@@ -71,6 +71,8 @@ import {
   type Logging,
   ObservabilitySchema,
   type Observability,
+  AnalyticsSchema,
+  type Analytics,
   CMSSchema,
   type CMS,
   CachingSchema,
@@ -135,6 +137,7 @@ export const router = os.router({
           animation: AnimationSchema.optional(),
           logging: LoggingSchema.optional(),
           observability: ObservabilitySchema.optional(),
+          analytics: AnalyticsSchema.optional().describe("Privacy-focused analytics"),
           cms: CMSSchema.optional().describe("Headless CMS solution"),
           caching: CachingSchema.optional().describe("Caching solution"),
           frontend: z.array(FrontendSchema).optional(),
@@ -400,6 +403,7 @@ export async function createVirtual(
       logging: options.logging || "none",
       observability: options.observability || "none",
       featureFlags: options.featureFlags || "none",
+      analytics: options.analytics || "none",
       cms: options.cms || "none",
       caching: options.caching || "none",
       // Rust ecosystem options
@@ -464,4 +468,5 @@ export type {
   RustLibraries,
   CMS,
   Caching,
+  Analytics,
 };

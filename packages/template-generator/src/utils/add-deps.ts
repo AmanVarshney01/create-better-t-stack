@@ -576,6 +576,9 @@ export const dependencyVersionMap = {
   // Feature Flags + Analytics - PostHog
   "posthog-js": "^1.194.9",
   "posthog-node": "^4.3.3",
+
+  // Analytics - Plausible
+  "plausible-tracker": "^0.3.9",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

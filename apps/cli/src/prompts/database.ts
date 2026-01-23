@@ -49,6 +49,11 @@ export async function getDatabaseChoice(database?: Database, backend?: Backend, 
       label: "EdgeDB",
       hint: "graph-relational database with built-in query builder (no ORM needed)",
     });
+    databaseOptions.push({
+      value: "redis",
+      label: "Redis",
+      hint: "in-memory data store for caching, sessions, and real-time features",
+    });
   }
 
   const response = await navigableSelect<Database>({

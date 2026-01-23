@@ -41,6 +41,7 @@ import type {
   LoggingSchema,
   ObservabilitySchema,
   FeatureFlagsSchema,
+  AnalyticsSchema,
   CMSSchema,
   CachingSchema,
   EcosystemSchema,
@@ -87,6 +88,7 @@ export type FileUpload = z.infer<typeof FileUploadSchema>;
 export type Logging = z.infer<typeof LoggingSchema>;
 export type Observability = z.infer<typeof ObservabilitySchema>;
 export type FeatureFlags = z.infer<typeof FeatureFlagsSchema>;
+export type Analytics = z.infer<typeof AnalyticsSchema>;
 export type CMS = z.infer<typeof CMSSchema>;
 export type Caching = z.infer<typeof CachingSchema>;
 export type Ecosystem = z.infer<typeof EcosystemSchema>;

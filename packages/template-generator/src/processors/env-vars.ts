@@ -117,6 +117,7 @@ function buildClientVars(
   auth: ProjectConfig["auth"],
   payments: ProjectConfig["payments"],
   featureFlags: ProjectConfig["featureFlags"],
+  analytics: ProjectConfig["analytics"],
 ): EnvVariable[] {
   const hasNextJs = frontend.includes("next");
   const hasReactRouter = frontend.includes("react-router");
@@ -309,6 +310,38 @@ function buildClientVars(
         value: "https://us.i.posthog.com",
         condition: true,
         comment: "PostHog API host (use https://eu.i.posthog.com for EU region)",
+      },
+    );
+  }
+
+  // Plausible analytics client-side
+  if (analytics === "plausible") {
+    let plausibleDomainName = "VITE_PLAUSIBLE_DOMAIN";
+    let plausibleApiHostName = "VITE_PLAUSIBLE_API_HOST";
+
+    if (hasNextJs) {
+      plausibleDomainName = "NEXT_PUBLIC_PLAUSIBLE_DOMAIN";
+      plausibleApiHostName = "NEXT_PUBLIC_PLAUSIBLE_API_HOST";
+    } else if (hasNuxt) {
+      plausibleDomainName = "NUXT_PUBLIC_PLAUSIBLE_DOMAIN";
+      plausibleApiHostName = "NUXT_PUBLIC_PLAUSIBLE_API_HOST";
+    } else if (hasSvelte) {
+      plausibleDomainName = "PUBLIC_PLAUSIBLE_DOMAIN";
+      plausibleApiHostName = "PUBLIC_PLAUSIBLE_API_HOST";
+    }
+
+    vars.push(
+      {
+        key: plausibleDomainName,
+        value: "",
+        condition: true,
+        comment: "Your website domain for Plausible (e.g., example.com)",
+      },
+      {
+        key: plausibleApiHostName,
+        value: "https://plausible.io",
+        condition: true,
+        comment: "Plausible API host (change if self-hosting)",
       },
     );
   }
@@ -1049,7 +1082,14 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     const clientDir = "apps/web";
     if (vfs.directoryExists(clientDir)) {
       const envPath = `${clientDir}/.env`;
-      const clientVars = buildClientVars(frontend, backend, auth, payments, config.featureFlags);
+      const clientVars = buildClientVars(
+        frontend,
+        backend,
+        auth,
+        payments,
+        config.featureFlags,
+        config.analytics,
+      );
       writeEnvFile(vfs, envPath, clientVars);
     }
   }

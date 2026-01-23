@@ -36,6 +36,8 @@ import type {
   Ecosystem,
   AI,
   JobQueue,
+  Analytics,
+  FeatureFlags,
 } from "../src/types";
 
 import { create } from "../src/index";
@@ -77,6 +79,7 @@ import {
   RustApiSchema,
   RustCliSchema,
   RustLibrariesSchema,
+  AnalyticsSchema,
 } from "../src/types";
 
 // Default smoke directory path - use the same as setup.ts
@@ -151,6 +154,8 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     "cms",
     "ai",
     "jobQueue",
+    "analytics",
+    "featureFlags",
   ];
   const hasSpecificCoreConfig = coreStackFlags.some((flag) => config[flag] !== undefined);
 
@@ -195,6 +200,8 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
         cms: "none" as CMS,
         ai: "none" as AI,
         jobQueue: "none" as JobQueue,
+        analytics: "none" as Analytics,
+        featureFlags: "none" as FeatureFlags,
       };
 
   // Build options object - let the CLI handle all validation
@@ -304,6 +311,7 @@ export const RUST_ORMS = extractEnumValues(RustOrmSchema);
 export const RUST_APIS = extractEnumValues(RustApiSchema);
 export const RUST_CLIS = extractEnumValues(RustCliSchema);
 export const RUST_LIBRARIES = extractEnumValues(RustLibrariesSchema);
+export const ANALYTICS = extractEnumValues(AnalyticsSchema);
 
 // Convenience functions for common test patterns
 export function createBasicConfig(overrides: Partial<TestConfig> = {}): TestConfig {

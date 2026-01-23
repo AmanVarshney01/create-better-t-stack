@@ -46,7 +46,7 @@ interface GrowthBookProviderProps extends PropsWithChildren {
  * function App() {
  *   const user = useAuth();
  *   return (
- *     <GrowthBookProvider attributes={{ id: user?.id, plan: user?.plan }}>
+ *     <GrowthBookProvider attributes=\{{ id: user?.id, plan: user?.plan }}>
  *       <YourApp />
  *     </GrowthBookProvider>
  *   );
@@ -95,7 +95,7 @@ export function useFeature(featureKey: string): boolean {
  * @example
  * function MyComponent() {
  *   const buttonColor = useFeatureConfig("button-color", "blue");
- *   return <button style={{ backgroundColor: buttonColor }}>Click me</button>;
+ *   return <button style=\{{ backgroundColor: buttonColor }}>Click me</button>;
  * }
  */
 export function useFeatureConfig<T>(featureKey: string, defaultValue: T): T {
@@ -179,7 +179,7 @@ export { GrowthBook, useGrowthBook, useFeatureIsOn, useFeatureValue };
  * function App() {
  *   const user = useAuth();
  *   return (
- *     <GrowthBookProvider attributes={{ id: user?.id }}>
+ *     <GrowthBookProvider attributes=\{{ id: user?.id }}>
  *       <Router />
  *     </GrowthBookProvider>
  *   );

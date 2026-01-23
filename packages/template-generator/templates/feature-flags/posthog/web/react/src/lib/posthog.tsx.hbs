@@ -59,7 +59,7 @@ interface PostHogProviderProps extends PropsWithChildren {
  * function App() {
  *   const user = useAuth();
  *   return (
- *     <PostHogProvider user={{ id: user?.id, email: user?.email }}>
+ *     <PostHogProvider user=\{{ id: user?.id, email: user?.email }}>
  *       <YourApp />
  *     </PostHogProvider>
  *   );
@@ -127,7 +127,7 @@ export function useFeatureFlag(flagKey: string): boolean {
  * @example
  * function MyComponent() {
  *   const buttonColor = useFeatureFlagValue("button-color", "blue");
- *   return <button style={{ backgroundColor: buttonColor }}>Click me</button>;
+ *   return <button style=\{{ backgroundColor: buttonColor }}>Click me</button>;
  * }
  */
 export function useFeatureFlagValue<T extends string | boolean | number>(
@@ -280,7 +280,7 @@ export { posthog };
  * function App() {
  *   const user = useAuth();
  *   return (
- *     <PostHogProvider user={{ id: user?.id, email: user?.email }}>
+ *     <PostHogProvider user=\{{ id: user?.id, email: user?.email }}>
  *       <Router />
  *     </PostHogProvider>
  *   );

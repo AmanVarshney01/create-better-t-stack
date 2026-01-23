@@ -5455,3 +5455,72 @@ MongoDB support was already fully implemented in the codebase. This task updates
 - Support for all React-based frontends and backend frameworks
 
 ### Status: COMPLETE
+
+---
+
+## Plausible Analytics - 2026-01-23
+
+### Task
+Implemented Plausible privacy-focused analytics integration.
+
+### Files Modified/Created
+
+**New Files:**
+- `packages/template-generator/src/processors/analytics-deps.ts` - Processor for adding analytics dependencies
+- `packages/template-generator/src/template-handlers/analytics.ts` - Template handler for analytics templates
+- `packages/template-generator/templates/analytics/plausible/web/react/src/lib/plausible.tsx.hbs` - React Plausible provider template
+- `apps/cli/test/analytics.test.ts` - Comprehensive tests for analytics feature
+
+**Modified Files:**
+- `packages/types/src/schemas.ts` - Added AnalyticsSchema with plausible/none options
+- `packages/types/src/types.ts` - Added Analytics type export
+- `packages/template-generator/src/utils/add-deps.ts` - Added plausible-tracker dependency
+- `packages/template-generator/src/processors/index.ts` - Registered analytics deps processor
+- `packages/template-generator/src/template-handlers/index.ts` - Exported analytics template handler
+- `packages/template-generator/src/generator.ts` - Added analytics template processing
+- `packages/template-generator/src/processors/env-vars.ts` - Added Plausible env vars for all frontend frameworks
+- `apps/web/src/lib/constant.ts` - Added analytics to TECH_OPTIONS and DEFAULT_STACK
+- `apps/web/src/lib/stack-url-state.ts` - Added analytics to URL state
+- `apps/web/src/lib/stack-url-state.client.ts` - Added analytics to client URL state
+- `apps/web/src/lib/stack-url-keys.ts` - Added analytics URL key
+- `apps/web/src/lib/stack-search-schema.ts` - Added analytics search schema
+- `apps/cli/src/index.ts` - Added analytics CLI option and export
+- `apps/cli/src/constants.ts` - Added analytics default
+- `apps/cli/src/utils/config-processing.ts` - Added analytics and featureFlags config processing
+- `apps/cli/src/utils/bts-config.ts` - Added analytics to bts config
+- `apps/cli/src/prompts/config-prompts.ts` - Added analytics prompt
+- `apps/cli/src/helpers/core/command-handlers.ts` - Added analytics default
+- `apps/cli/test/test-utils.ts` - Added analytics and featureFlags to coreStackFlags
+
+**Bug Fixes:**
+- Fixed Handlebars escape issues in PostHog and GrowthBook templates (style={{ }} in JSDoc comments)
+- Added redis option to database.ts prompt to fix lint sync test
+- Added FeatureFlags to config-processing.ts
+
+### Features:
+- Plausible privacy-focused analytics integration
+- Client-side only (no server SDK required)
+- plausible-tracker npm package for React SPAs
+- PlausibleProvider component with enable/disable toggle
+- Custom hooks for tracking:
+  - usePlausible: Get Plausible instance
+  - useTrackEvent: Custom event tracking
+  - useTrackPageview: Manual pageview tracking
+- Automatic pageview tracking on route change
+- Environment variables:
+  - VITE_PLAUSIBLE_DOMAIN / NEXT_PUBLIC_PLAUSIBLE_DOMAIN / NUXT_PUBLIC_PLAUSIBLE_DOMAIN
+  - VITE_PLAUSIBLE_API_HOST / NEXT_PUBLIC_PLAUSIBLE_API_HOST / NUXT_PUBLIC_PLAUSIBLE_API_HOST
+- Support for self-hosted Plausible instances
+- Works with all React-based frontends (tanstack-router, react-router, tanstack-start, next)
+- Lightweight, privacy-respecting, GDPR compliant
+
+### Tests:
+- 11 comprehensive tests covering:
+  - Plausible with various backend frameworks (Hono, Express, Elysia)
+  - Plausible with different frontends (Next.js, React Router)
+  - Frontend-only configuration (no backend)
+  - Environment variable generation for different frameworks
+  - No analytics (none) configuration
+  - Combined analytics + feature flags (PostHog, GrowthBook)
+
+### Status: COMPLETE
