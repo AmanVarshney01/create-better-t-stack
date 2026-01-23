@@ -28,7 +28,10 @@ export function loadStackParams(
     };
 
     return {
-      ecosystem: getString("ecosystem", DEFAULT_STACK.ecosystem) as "typescript" | "rust",
+      ecosystem: getString("ecosystem", DEFAULT_STACK.ecosystem) as
+        | "typescript"
+        | "rust"
+        | "python",
       projectName: getString("projectName", DEFAULT_STACK.projectName ?? "my-better-t-app"),
       webFrontend: getArray("webFrontend", DEFAULT_STACK.webFrontend),
       nativeFrontend: getArray("nativeFrontend", DEFAULT_STACK.nativeFrontend),
@@ -77,6 +80,13 @@ export function loadStackParams(
       rustApi: getString("rustApi", DEFAULT_STACK.rustApi),
       rustCli: getString("rustCli", DEFAULT_STACK.rustCli),
       rustLibraries: getString("rustLibraries", DEFAULT_STACK.rustLibraries),
+      // Python ecosystem fields
+      pythonWebFramework: getString("pythonWebFramework", DEFAULT_STACK.pythonWebFramework),
+      pythonOrm: getString("pythonOrm", DEFAULT_STACK.pythonOrm),
+      pythonValidation: getString("pythonValidation", DEFAULT_STACK.pythonValidation),
+      pythonAi: getString("pythonAi", DEFAULT_STACK.pythonAi),
+      pythonTaskQueue: getString("pythonTaskQueue", DEFAULT_STACK.pythonTaskQueue),
+      pythonQuality: getString("pythonQuality", DEFAULT_STACK.pythonQuality),
     };
   };
 
@@ -154,6 +164,13 @@ export function serializeStackParams(basePath: string, stack: StackState): strin
   addParam("rustApi", stack.rustApi);
   addParam("rustCli", stack.rustCli);
   addParam("rustLibraries", stack.rustLibraries);
+  // Python ecosystem fields
+  addParam("pythonWebFramework", stack.pythonWebFramework);
+  addParam("pythonOrm", stack.pythonOrm);
+  addParam("pythonValidation", stack.pythonValidation);
+  addParam("pythonAi", stack.pythonAi);
+  addParam("pythonTaskQueue", stack.pythonTaskQueue);
+  addParam("pythonQuality", stack.pythonQuality);
 
   const queryString = params.toString();
   return queryString ? `${basePath}?${queryString}` : basePath;

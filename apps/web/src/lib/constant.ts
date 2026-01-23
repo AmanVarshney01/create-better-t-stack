@@ -2003,6 +2003,172 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
   ],
+  // Python ecosystem options
+  pythonWebFramework: [
+    {
+      id: "fastapi",
+      name: "FastAPI",
+      description: "Modern, fast (high-performance) web framework for building APIs with Python",
+      icon: "https://cdn.simpleicons.org/fastapi/009688",
+      color: "from-teal-500 to-green-600",
+      default: true,
+    },
+    {
+      id: "django",
+      name: "Django",
+      description: "High-level Python web framework with batteries included",
+      icon: "https://cdn.simpleicons.org/django/092E20",
+      color: "from-green-700 to-green-900",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No Web Framework",
+      description: "Skip Python web framework selection",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: false,
+    },
+  ],
+  pythonOrm: [
+    {
+      id: "sqlalchemy",
+      name: "SQLAlchemy",
+      description: "The Python SQL toolkit and Object Relational Mapper",
+      icon: "",
+      color: "from-red-500 to-red-700",
+      default: true,
+    },
+    {
+      id: "sqlmodel",
+      name: "SQLModel",
+      description:
+        "SQL databases in Python, designed for simplicity and compatibility with FastAPI",
+      icon: "",
+      color: "from-teal-500 to-cyan-600",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No ORM",
+      description: "Skip Python ORM selection",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: false,
+    },
+  ],
+  pythonValidation: [
+    {
+      id: "pydantic",
+      name: "Pydantic",
+      description: "Data validation using Python type annotations",
+      icon: "https://cdn.simpleicons.org/pydantic/E92063",
+      color: "from-pink-500 to-rose-600",
+      default: true,
+    },
+    {
+      id: "none",
+      name: "No Validation Library",
+      description: "Skip Python validation library selection",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: false,
+    },
+  ],
+  pythonAi: [
+    {
+      id: "langchain",
+      name: "LangChain",
+      description: "Framework for developing applications powered by language models",
+      icon: "https://cdn.simpleicons.org/langchain/1C3C3C",
+      color: "from-emerald-500 to-green-700",
+      default: false,
+    },
+    {
+      id: "llamaindex",
+      name: "LlamaIndex",
+      description: "Data framework for LLM-based applications",
+      icon: "",
+      color: "from-purple-500 to-violet-700",
+      default: false,
+    },
+    {
+      id: "openai-sdk",
+      name: "OpenAI SDK",
+      description: "Official OpenAI Python client for GPT models",
+      icon: "https://cdn.simpleicons.org/openai/412991",
+      color: "from-gray-700 to-gray-900",
+      default: false,
+    },
+    {
+      id: "anthropic-sdk",
+      name: "Anthropic SDK",
+      description: "Official Anthropic Python client for Claude models",
+      icon: "https://cdn.simpleicons.org/anthropic/191919",
+      color: "from-orange-500 to-amber-600",
+      default: false,
+    },
+    {
+      id: "langgraph",
+      name: "LangGraph",
+      description: "Library for building stateful, multi-actor applications with LLMs",
+      icon: "",
+      color: "from-blue-500 to-indigo-700",
+      default: false,
+    },
+    {
+      id: "crewai",
+      name: "CrewAI",
+      description: "Framework for orchestrating role-playing autonomous AI agents",
+      icon: "",
+      color: "from-cyan-500 to-blue-600",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No AI Framework",
+      description: "Skip Python AI framework selection",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
+  pythonTaskQueue: [
+    {
+      id: "celery",
+      name: "Celery",
+      description: "Distributed task queue for Python",
+      icon: "https://cdn.simpleicons.org/celery/37814A",
+      color: "from-green-500 to-lime-600",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No Task Queue",
+      description: "Skip Python task queue selection",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
+  pythonQuality: [
+    {
+      id: "ruff",
+      name: "Ruff",
+      description: "An extremely fast Python linter and code formatter",
+      icon: "https://cdn.simpleicons.org/ruff/D7FF64",
+      color: "from-yellow-400 to-lime-500",
+      default: true,
+    },
+    {
+      id: "none",
+      name: "No Code Quality Tool",
+      description: "Skip Python code quality tool selection",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: false,
+    },
+  ],
 };
 
 // Ecosystem configuration
@@ -2026,6 +2192,13 @@ export const ECOSYSTEMS: {
     description: "High-performance Rust ecosystem",
     icon: "https://cdn.simpleicons.org/rust/000000",
     color: "from-orange-500 to-orange-700",
+  },
+  {
+    id: "python",
+    name: "Python",
+    description: "Python full-stack ecosystem",
+    icon: "https://cdn.simpleicons.org/python/3776AB",
+    color: "from-blue-400 to-yellow-500",
   },
 ];
 
@@ -2071,6 +2244,16 @@ export const ECOSYSTEM_CATEGORIES: Record<Ecosystem, TechCategory[]> = {
     "rustApi",
     "rustCli",
     "rustLibraries",
+    "git",
+    "install",
+  ],
+  python: [
+    "pythonWebFramework",
+    "pythonOrm",
+    "pythonValidation",
+    "pythonAi",
+    "pythonTaskQueue",
+    "pythonQuality",
     "git",
     "install",
   ],
@@ -2338,6 +2521,13 @@ export type StackState = {
   rustApi: string;
   rustCli: string;
   rustLibraries: string;
+  // Python ecosystem fields
+  pythonWebFramework: string;
+  pythonOrm: string;
+  pythonValidation: string;
+  pythonAi: string;
+  pythonTaskQueue: string;
+  pythonQuality: string;
 };
 
 export const DEFAULT_STACK: StackState = {
@@ -2390,6 +2580,13 @@ export const DEFAULT_STACK: StackState = {
   rustApi: "none",
   rustCli: "none",
   rustLibraries: "serde",
+  // Python ecosystem defaults
+  pythonWebFramework: "fastapi",
+  pythonOrm: "sqlalchemy",
+  pythonValidation: "pydantic",
+  pythonAi: "none",
+  pythonTaskQueue: "none",
+  pythonQuality: "ruff",
 };
 
 export const isStackDefault = <K extends keyof StackState>(

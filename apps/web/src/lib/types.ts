@@ -1,5 +1,5 @@
 // Ecosystem type for selecting language ecosystem
-export type Ecosystem = "typescript" | "rust";
+export type Ecosystem = "typescript" | "rust" | "python";
 
 // TechCategory for the stack builder UI
 export type TechCategory =
@@ -49,7 +49,14 @@ export type TechCategory =
   | "rustOrm"
   | "rustApi"
   | "rustCli"
-  | "rustLibraries";
+  | "rustLibraries"
+  // Python ecosystem categories
+  | "pythonWebFramework"
+  | "pythonOrm"
+  | "pythonValidation"
+  | "pythonAi"
+  | "pythonTaskQueue"
+  | "pythonQuality";
 
 export type TechEdge = {
   id: string;

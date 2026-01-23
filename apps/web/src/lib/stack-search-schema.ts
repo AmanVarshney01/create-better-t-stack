@@ -11,7 +11,7 @@ const commaSeparatedArray = (defaultValue: string[]) =>
 
 // The raw search schema matches URL query params (using short keys)
 export const stackSearchSchema = z.object({
-  eco: z.enum(["typescript", "rust"]).catch(DEFAULT_STACK.ecosystem),
+  eco: z.enum(["typescript", "rust", "python"]).catch(DEFAULT_STACK.ecosystem),
   name: z.string().catch(DEFAULT_STACK.projectName ?? "my-better-t-app"),
   "fe-w": commaSeparatedArray(DEFAULT_STACK.webFrontend),
   "fe-n": commaSeparatedArray(DEFAULT_STACK.nativeFrontend),
@@ -60,6 +60,13 @@ export const stackSearchSchema = z.object({
   rapi: z.string().catch(DEFAULT_STACK.rustApi),
   rcli: z.string().catch(DEFAULT_STACK.rustCli),
   rlib: z.string().catch(DEFAULT_STACK.rustLibraries),
+  // Python ecosystem fields
+  pwf: z.string().catch(DEFAULT_STACK.pythonWebFramework),
+  porm: z.string().catch(DEFAULT_STACK.pythonOrm),
+  pval: z.string().catch(DEFAULT_STACK.pythonValidation),
+  pai: z.string().catch(DEFAULT_STACK.pythonAi),
+  ptq: z.string().catch(DEFAULT_STACK.pythonTaskQueue),
+  pq: z.string().catch(DEFAULT_STACK.pythonQuality),
   view: z.enum(["command", "preview"]).catch("command"),
   file: z.string().catch(""),
 });

@@ -54,6 +54,18 @@ const RUST_CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
   "install",
 ];
 
+// Python ecosystem category order
+const PYTHON_CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
+  "pythonWebFramework",
+  "pythonOrm",
+  "pythonValidation",
+  "pythonAi",
+  "pythonTaskQueue",
+  "pythonQuality",
+  "git",
+  "install",
+];
+
 // Combined category order for backwards compatibility
 const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
   ...TYPESCRIPT_CATEGORY_ORDER,
@@ -64,6 +76,13 @@ const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
   "rustApi",
   "rustCli",
   "rustLibraries",
+  // Python categories (excluding duplicates like git, install)
+  "pythonWebFramework",
+  "pythonOrm",
+  "pythonValidation",
+  "pythonAi",
+  "pythonTaskQueue",
+  "pythonQuality",
 ];
 
 export function generateStackSummary(stack: StackState) {
@@ -98,6 +117,11 @@ export function generateStackCommand(stack: StackState) {
   // Handle Rust ecosystem
   if (stack.ecosystem === "rust") {
     return generateRustCommand(stack, projectName);
+  }
+
+  // Handle Python ecosystem
+  if (stack.ecosystem === "python") {
+    return generatePythonCommand(stack, projectName);
   }
 
   // TypeScript ecosystem
@@ -234,6 +258,38 @@ function generateRustCommand(stack: StackState, projectName: string) {
   return `${base} ${projectName}${flagStr}`;
 }
 
+function generatePythonCommand(stack: StackState, projectName: string) {
+  // For Python projects, use uv init with appropriate setup
+  const flags: string[] = [];
+
+  if (stack.pythonWebFramework !== "none") {
+    flags.push(`--web-framework ${stack.pythonWebFramework}`);
+  }
+  if (stack.pythonOrm !== "none") {
+    flags.push(`--orm ${stack.pythonOrm}`);
+  }
+  if (stack.pythonValidation !== "none") {
+    flags.push(`--validation ${stack.pythonValidation}`);
+  }
+  if (stack.pythonAi !== "none") {
+    flags.push(`--ai ${stack.pythonAi}`);
+  }
+  if (stack.pythonTaskQueue !== "none") {
+    flags.push(`--task-queue ${stack.pythonTaskQueue}`);
+  }
+  if (stack.pythonQuality !== "none") {
+    flags.push(`--quality ${stack.pythonQuality}`);
+  }
+  if (stack.git === "false") {
+    flags.push("--no-git");
+  }
+
+  // Python ecosystem command - placeholder until CLI supports Python
+  const base = "uv init";
+  const flagStr = flags.length > 0 ? ` # Options: ${flags.join(" ")}` : "";
+  return `${base} ${projectName}${flagStr}`;
+}
+
 export function generateStackUrlFromState(stack: StackState, baseUrl?: string) {
   const origin = baseUrl || "https://better-fullstack-web.vercel.app";
 
@@ -264,4 +320,4 @@ export function generateStackSharingUrl(stack: StackState, baseUrl?: string) {
   return `${origin}/stack${searchString ? `?${searchString}` : ""}`;
 }
 
-export { CATEGORY_ORDER, TYPESCRIPT_CATEGORY_ORDER, RUST_CATEGORY_ORDER };
+export { CATEGORY_ORDER, TYPESCRIPT_CATEGORY_ORDER, RUST_CATEGORY_ORDER, PYTHON_CATEGORY_ORDER };

@@ -44,8 +44,22 @@ export const getCategoryDisplayName = (categoryKey: string): string => {
     rustLibraries: "Rust Core Libraries",
   };
 
+  // Custom display names for Python categories
+  const pythonCategoryNames: Record<string, string> = {
+    pythonWebFramework: "Python Web Framework",
+    pythonOrm: "Python ORM / Database",
+    pythonValidation: "Python Validation",
+    pythonAi: "Python AI / ML",
+    pythonTaskQueue: "Python Task Queue",
+    pythonQuality: "Python Code Quality",
+  };
+
   if (rustCategoryNames[categoryKey]) {
     return rustCategoryNames[categoryKey];
+  }
+
+  if (pythonCategoryNames[categoryKey]) {
+    return pythonCategoryNames[categoryKey];
   }
 
   const result = categoryKey.replace(/([A-Z])/g, " $1");

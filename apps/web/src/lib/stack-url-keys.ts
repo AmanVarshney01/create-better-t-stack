@@ -50,4 +50,10 @@ export const stackUrlKeys: Record<keyof StackState, string> = {
   rustApi: "rapi",
   rustCli: "rcli",
   rustLibraries: "rlib",
+  pythonWebFramework: "pwf",
+  pythonOrm: "porm",
+  pythonValidation: "pval",
+  pythonAi: "pai",
+  pythonTaskQueue: "ptq",
+  pythonQuality: "pq",
 };

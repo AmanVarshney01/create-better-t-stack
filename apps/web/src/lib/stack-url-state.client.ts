@@ -61,6 +61,13 @@ function searchToStack(search: StackSearchParams | undefined): StackState {
     rustApi: search.rapi ?? DEFAULT_STACK.rustApi,
     rustCli: search.rcli ?? DEFAULT_STACK.rustCli,
     rustLibraries: search.rlib ?? DEFAULT_STACK.rustLibraries,
+    // Python ecosystem fields
+    pythonWebFramework: search.pwf ?? DEFAULT_STACK.pythonWebFramework,
+    pythonOrm: search.porm ?? DEFAULT_STACK.pythonOrm,
+    pythonValidation: search.pval ?? DEFAULT_STACK.pythonValidation,
+    pythonAi: search.pai ?? DEFAULT_STACK.pythonAi,
+    pythonTaskQueue: search.ptq ?? DEFAULT_STACK.pythonTaskQueue,
+    pythonQuality: search.pq ?? DEFAULT_STACK.pythonQuality,
   };
 }
 

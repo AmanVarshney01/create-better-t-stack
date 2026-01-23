@@ -5574,3 +5574,81 @@ Implemented Umami open-source analytics integration following the existing Plaus
 ### PRD Status
 - Marked "Umami - Open-source analytics" as complete in PRD.md
 
+
+## 2026-01-23: Python Ecosystem Tab Implementation
+
+### Task: Add Python Ecosystem Tab to Builder page
+
+### Changes Made:
+1. **apps/web/src/lib/types.ts**: 
+   - Added "python" to Ecosystem type
+   - Added Python category types: pythonWebFramework, pythonOrm, pythonValidation, pythonAi, pythonTaskQueue, pythonQuality
+
+2. **apps/web/src/lib/constant.ts**: 
+   - Added Python to ECOSYSTEMS array with id, name, description, icon, and color
+   - Added Python to ECOSYSTEM_CATEGORIES mapping
+   - Added TECH_OPTIONS for all Python categories:
+     - pythonWebFramework: FastAPI (default), Django, none
+     - pythonOrm: SQLAlchemy (default), SQLModel, none
+     - pythonValidation: Pydantic (default), none
+     - pythonAi: LangChain, LlamaIndex, OpenAI SDK, Anthropic SDK, LangGraph, CrewAI, none (default)
+     - pythonTaskQueue: Celery, none (default)
+     - pythonQuality: Ruff (default), none
+   - Added Python fields to StackState type
+   - Added Python defaults to DEFAULT_STACK
+
+3. **apps/web/src/lib/stack-utils.ts**: 
+   - Added PYTHON_CATEGORY_ORDER constant
+   - Added Python categories to CATEGORY_ORDER
+   - Added generatePythonCommand function
+   - Updated generateStackCommand to handle Python ecosystem
+   - Exported PYTHON_CATEGORY_ORDER
+
+4. **apps/web/src/components/stack-builder/utils.ts**: 
+   - Added Python category display names mapping
+
+5. **apps/web/src/components/stack-builder/stack-builder.tsx**: 
+   - Imported PYTHON_CATEGORY_ORDER
+   - Updated category order selection to handle Python ecosystem
+
+6. **apps/web/src/lib/stack-url-keys.ts**: 
+   - Added URL keys for Python fields (pwf, porm, pval, pai, ptq, pq)
+
+7. **apps/web/src/lib/stack-url-state.ts**: 
+   - Added Python ecosystem to type
+   - Added Python fields parsing and serialization
+
+8. **apps/web/src/lib/stack-url-state.client.ts**: 
+   - Added Python fields mapping from URL params
+
+9. **apps/web/src/lib/stack-search-schema.ts**: 
+   - Added "python" to ecosystem enum
+   - Added Python field schemas
+
+10. **apps/web/test/python-ecosystem.test.ts**: 
+    - Created comprehensive tests for Python ecosystem tab (56 tests)
+
+11. **apps/web/test/rust-ecosystem.test.ts**: 
+    - Updated ecosystem count from 2 to 3
+
+12. **apps/cli/test/cli-builder-sync.test.ts**: 
+    - Updated unmapped categories tolerance from 5 to 11 to account for Python categories
+
+### Features:
+- Python ecosystem tab visible in Builder UI alongside TypeScript and Rust
+- Python web framework selection (FastAPI, Django)
+- Python ORM selection (SQLAlchemy, SQLModel)
+- Python validation library (Pydantic)
+- Python AI/ML frameworks (LangChain, LlamaIndex, OpenAI SDK, Anthropic SDK, LangGraph, CrewAI)
+- Python task queue (Celery)
+- Python code quality tool (Ruff)
+- URL state persistence for Python selections
+- Command generation for Python projects (using uv init)
+
+### Tests:
+- 56 new tests for Python ecosystem in apps/web/test/python-ecosystem.test.ts
+- All 104 ecosystem tests pass
+- All 150 CLI lint tests pass
+
+### Status: COMPLETE
+

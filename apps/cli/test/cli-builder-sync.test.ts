@@ -355,7 +355,9 @@ describe("CLI and Builder Sync", () => {
     }
 
     // This is a warning, not a failure - some categories might be Builder-only
-    expect(unmappedCategories.length).toBeLessThanOrEqual(5);
+    // Note: Python ecosystem adds 6 categories (pythonWebFramework, pythonOrm, pythonValidation,
+    // pythonAi, pythonTaskQueue, pythonQuality) that will get CLI support in a later task
+    expect(unmappedCategories.length).toBeLessThanOrEqual(11);
   });
 });
 

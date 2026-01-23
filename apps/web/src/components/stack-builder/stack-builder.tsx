@@ -38,6 +38,7 @@ import {
   CATEGORY_ORDER,
   generateStackCommand,
   generateStackSharingUrl,
+  PYTHON_CATEGORY_ORDER,
   RUST_CATEGORY_ORDER,
   TYPESCRIPT_CATEGORY_ORDER,
 } from "@/lib/stack-utils";
@@ -157,7 +158,11 @@ const StackBuilder = () => {
   const selectedStackCards = (() => {
     const cards: React.ReactNode[] = [];
     const categoryOrder =
-      stack.ecosystem === "rust" ? RUST_CATEGORY_ORDER : TYPESCRIPT_CATEGORY_ORDER;
+      stack.ecosystem === "rust"
+        ? RUST_CATEGORY_ORDER
+        : stack.ecosystem === "python"
+          ? PYTHON_CATEGORY_ORDER
+          : TYPESCRIPT_CATEGORY_ORDER;
     for (const category of categoryOrder) {
       const categoryKey = category as keyof StackState;
       const options = TECH_OPTIONS[category as keyof typeof TECH_OPTIONS];
@@ -723,7 +728,9 @@ const StackBuilder = () => {
                     {/* Category sections filtered by ecosystem */}
                     {(stack.ecosystem === "rust"
                       ? RUST_CATEGORY_ORDER
-                      : TYPESCRIPT_CATEGORY_ORDER
+                      : stack.ecosystem === "python"
+                        ? PYTHON_CATEGORY_ORDER
+                        : TYPESCRIPT_CATEGORY_ORDER
                     ).map((categoryKey) => {
                       // Skip astroIntegration - it will be rendered conditionally
                       if (categoryKey === "astroIntegration") return null;
