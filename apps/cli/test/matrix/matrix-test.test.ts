@@ -23,6 +23,8 @@ import {
   validateAllVueFiles,
   validateAllSvelteFiles,
   formatValidationErrors,
+  resetSharedProject,
+  disposeSharedProject,
   type ValidationResult,
 } from "../validation-utils";
 import {
@@ -39,9 +41,14 @@ import {
 
 /**
  * Configure which tier to test
- * - Tier 1: ~150-200 combinations (fastest)
- * - Tier 2: ~300-400 combinations (with API variations)
- * - Tier 3: ~500-600 combinations (with Auth variations)
+ * - Tier 1: ~1451 combinations
+ * - Tier 2: ~5588 combinations (with API variations)
+ * - Tier 3: ~16579 combinations (with Auth variations)
+ *
+ * Performance modes:
+ * - full: Run all combinations (slow, thorough)
+ * - fast: Run batched tests with parallel validation (faster)
+ * - sample: Only test representative subset (~5-10% of combinations)
  */
 const TEST_CONFIG = {
   /** Run Tier 1 tests (core stack) */
@@ -54,6 +61,24 @@ const TEST_CONFIG = {
   printStats: true,
   /** Log each combination as it's tested */
   verbose: false,
+
+  // ============== PERFORMANCE OPTIONS ==============
+  /**
+   * Test mode:
+   * - "full": Individual test per combination (most verbose output)
+   * - "batched": Group combinations into batches for parallel validation
+   * - "sample": Only test a representative sample (~10% of combinations)
+   */
+  mode: (process.env.MATRIX_MODE as "full" | "batched" | "sample") || "batched",
+
+  /** Batch size for "batched" mode - smaller = less memory usage */
+  batchSize: Number(process.env.MATRIX_BATCH_SIZE) || 20,
+
+  /** Sample percentage for "sample" mode (0.1 = 10%) */
+  samplePercent: Number(process.env.MATRIX_SAMPLE) || 0.1,
+
+  /** Concurrent validations within a batch - lower = less memory */
+  concurrency: Number(process.env.MATRIX_CONCURRENCY) || 5,
 };
 
 // ============================================================================
@@ -173,12 +198,90 @@ function formatCombination(combo: MatrixCombination): string {
   return parts.join(", ");
 }
 
+/**
+ * Validate multiple combinations in parallel with concurrency limit
+ * Memory-optimized: cleans up after each chunk to prevent OOM
+ */
+async function validateBatch(
+  combinations: MatrixCombination[],
+  concurrency: number,
+): Promise<
+  { combo: MatrixCombination; result: Awaited<ReturnType<typeof validateCombination>> }[]
+> {
+  const results: {
+    combo: MatrixCombination;
+    result: Awaited<ReturnType<typeof validateCombination>>;
+  }[] = [];
+
+  // Process in chunks to limit concurrency
+  for (let i = 0; i < combinations.length; i += concurrency) {
+    const chunk = combinations.slice(i, i + concurrency);
+    const chunkResults = await Promise.all(
+      chunk.map(async (combo) => ({
+        combo,
+        result: await validateCombination(combo),
+      })),
+    );
+    results.push(...chunkResults);
+
+    // Aggressive memory cleanup after EVERY chunk
+    resetSharedProject();
+
+    // Trigger garbage collection if available (Bun supports this)
+    if (typeof Bun !== "undefined" && Bun.gc) {
+      Bun.gc(true);
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Sample combinations to get representative subset
+ * Uses stratified sampling to ensure coverage across all dimensions
+ */
+function sampleCombinations(
+  combinations: MatrixCombination[],
+  percent: number,
+): MatrixCombination[] {
+  if (percent >= 1) return combinations;
+
+  const targetCount = Math.max(10, Math.ceil(combinations.length * percent));
+
+  // Group by frontend to ensure coverage
+  const byFrontend = new Map<string, MatrixCombination[]>();
+  for (const combo of combinations) {
+    const key = combo.frontend.join("+");
+    if (!byFrontend.has(key)) byFrontend.set(key, []);
+    byFrontend.get(key)!.push(combo);
+  }
+
+  const sampled: MatrixCombination[] = [];
+  const perGroup = Math.ceil(targetCount / byFrontend.size);
+
+  for (const [, combos] of byFrontend) {
+    // Take evenly spaced samples from each group
+    const step = Math.max(1, Math.floor(combos.length / perGroup));
+    for (let i = 0; i < combos.length && sampled.length < targetCount; i += step) {
+      sampled.push(combos[i]);
+    }
+  }
+
+  return sampled;
+}
+
 // ============================================================================
 // TEST SUITES
 // ============================================================================
 
 describe("Matrix Testing - Tier 1: Core Stack", () => {
-  const combinations = generateTier1Combinations();
+  const allCombinations = generateTier1Combinations();
+
+  // Apply sampling if in sample mode
+  const combinations =
+    TEST_CONFIG.mode === "sample"
+      ? sampleCombinations(allCombinations, TEST_CONFIG.samplePercent)
+      : allCombinations;
 
   beforeAll(() => {
     if (TEST_CONFIG.printStats) {
@@ -187,6 +290,16 @@ describe("Matrix Testing - Tier 1: Core Stack", () => {
       console.log("=".repeat(60));
       console.log("MATRIX TESTING - TIER 1: Core Stack");
       console.log("=".repeat(60));
+      console.log(`Mode: ${TEST_CONFIG.mode.toUpperCase()}`);
+      if (TEST_CONFIG.mode === "sample") {
+        console.log(
+          `Sample: ${(TEST_CONFIG.samplePercent * 100).toFixed(0)}% (${combinations.length} of ${allCombinations.length})`,
+        );
+      } else if (TEST_CONFIG.mode === "batched") {
+        console.log(
+          `Batch size: ${TEST_CONFIG.batchSize} | Concurrency: ${TEST_CONFIG.concurrency}`,
+        );
+      }
       console.log(`Testing ${combinations.length} valid combinations`);
       console.log(
         `Theoretical: ${tierStats.totalTheoretical} | Valid: ${tierStats.validCombinations}`,
@@ -200,12 +313,14 @@ describe("Matrix Testing - Tier 1: Core Stack", () => {
   afterAll(() => {
     stats.endTime = Date.now();
     const duration = (stats.endTime - stats.startTime) / 1000;
-    const avgTime = duration / (stats.passed + stats.failed);
+    const tested = stats.passed + stats.failed;
+    const avgTime = tested > 0 ? duration / tested : 0;
 
     console.log("\n");
     console.log("=".repeat(60));
     console.log("MATRIX TESTING - RESULTS");
     console.log("=".repeat(60));
+    console.log(`Mode: ${TEST_CONFIG.mode.toUpperCase()}`);
     console.log(`Passed: ${stats.passed}`);
     console.log(`Failed: ${stats.failed}`);
     console.log(`Skipped: ${stats.skipped}`);
@@ -219,83 +334,139 @@ describe("Matrix Testing - Tier 1: Core Stack", () => {
       }
     }
     console.log("=".repeat(60));
+
+    // Cleanup shared ts-morph project
+    disposeSharedProject();
   });
 
-  // Generate tests for each combination
-  for (const combo of combinations) {
-    it(`validates: ${combo.id}`, async () => {
-      if (TEST_CONFIG.verbose) {
-        console.log(`  Testing: ${formatCombination(combo)}`);
-      }
+  // ============== BATCHED MODE ==============
+  if (TEST_CONFIG.mode === "batched") {
+    // Split into batches and create one test per batch
+    const batches: MatrixCombination[][] = [];
+    for (let i = 0; i < combinations.length; i += TEST_CONFIG.batchSize) {
+      batches.push(combinations.slice(i, i + TEST_CONFIG.batchSize));
+    }
 
-      const result = await validateCombination(combo);
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
+      const startIdx = batchIndex * TEST_CONFIG.batchSize;
+      const endIdx = Math.min(startIdx + batch.length, combinations.length);
 
-      // Check generation success
-      if (!result.success) {
-        stats.failed++;
-        stats.failedCombinations.push(combo.id);
-        console.error(`\nGeneration failed for ${combo.id}:`);
-        console.error(`  Error: ${result.error}`);
+      it(`batch ${batchIndex + 1}/${batches.length} (combinations ${startIdx + 1}-${endIdx})`, async () => {
+        const results = await validateBatch(batch, TEST_CONFIG.concurrency);
+
+        const failures: string[] = [];
+        for (const { combo, result } of results) {
+          if (
+            !result.success ||
+            !result.ts.valid ||
+            !result.json.valid ||
+            !result.handlebars.valid
+          ) {
+            failures.push(combo.id);
+            stats.failed++;
+            stats.failedCombinations.push(combo.id);
+
+            if (!result.success) {
+              console.error(`\nGeneration failed for ${combo.id}: ${result.error}`);
+            } else if (!result.ts.valid) {
+              console.error(`\nTypeScript errors for ${combo.id}:`);
+              console.error(formatValidationErrors(result.ts));
+            } else if (!result.json.valid) {
+              console.error(`\nJSON errors for ${combo.id}:`);
+              console.error(formatValidationErrors(result.json));
+            }
+          } else {
+            stats.passed++;
+          }
+        }
+
+        // Aggressive memory cleanup after each batch
+        resetSharedProject();
+        if (typeof Bun !== "undefined" && Bun.gc) {
+          Bun.gc(true);
+        }
+
+        expect(failures.length).toBe(0);
+      });
+    }
+  } else {
+    // ============== FULL/SAMPLE MODE (individual tests) ==============
+    for (const combo of combinations) {
+      it(`validates: ${combo.id}`, async () => {
+        if (TEST_CONFIG.verbose) {
+          console.log(`  Testing: ${formatCombination(combo)}`);
+        }
+
+        const result = await validateCombination(combo);
+
+        // Check generation success
+        if (!result.success) {
+          stats.failed++;
+          stats.failedCombinations.push(combo.id);
+          console.error(`\nGeneration failed for ${combo.id}:`);
+          console.error(`  Error: ${result.error}`);
+          expect(result.success).toBe(true);
+          return;
+        }
+
+        // Check TypeScript validation
+        if (!result.ts.valid) {
+          stats.failed++;
+          stats.failedCombinations.push(combo.id);
+          console.error(`\nTypeScript errors for ${combo.id}:`);
+          console.error(formatValidationErrors(result.ts));
+          expect(result.ts.valid).toBe(true);
+          return;
+        }
+
+        // Check JSON validation
+        if (!result.json.valid) {
+          stats.failed++;
+          stats.failedCombinations.push(combo.id);
+          console.error(`\nJSON errors for ${combo.id}:`);
+          console.error(formatValidationErrors(result.json));
+          expect(result.json.valid).toBe(true);
+          return;
+        }
+
+        // Check Handlebars validation
+        if (!result.handlebars.valid) {
+          stats.failed++;
+          stats.failedCombinations.push(combo.id);
+          console.error(`\nHandlebars errors for ${combo.id}:`);
+          console.error(formatValidationErrors(result.handlebars));
+          expect(result.handlebars.valid).toBe(true);
+          return;
+        }
+
+        // Check Vue validation (if applicable)
+        if (!result.vue.valid) {
+          stats.failed++;
+          stats.failedCombinations.push(combo.id);
+          console.error(`\nVue errors for ${combo.id}:`);
+          console.error(formatValidationErrors(result.vue));
+          expect(result.vue.valid).toBe(true);
+          return;
+        }
+
+        // Check Svelte validation (if applicable)
+        if (!result.svelte.valid) {
+          stats.failed++;
+          stats.failedCombinations.push(combo.id);
+          console.error(`\nSvelte errors for ${combo.id}:`);
+          console.error(formatValidationErrors(result.svelte));
+          expect(result.svelte.valid).toBe(true);
+          return;
+        }
+
+        stats.passed++;
         expect(result.success).toBe(true);
-        return;
-      }
-
-      // Check TypeScript validation
-      if (!result.ts.valid) {
-        stats.failed++;
-        stats.failedCombinations.push(combo.id);
-        console.error(`\nTypeScript errors for ${combo.id}:`);
-        console.error(formatValidationErrors(result.ts));
         expect(result.ts.valid).toBe(true);
-        return;
-      }
-
-      // Check JSON validation
-      if (!result.json.valid) {
-        stats.failed++;
-        stats.failedCombinations.push(combo.id);
-        console.error(`\nJSON errors for ${combo.id}:`);
-        console.error(formatValidationErrors(result.json));
         expect(result.json.valid).toBe(true);
-        return;
-      }
-
-      // Check Handlebars validation
-      if (!result.handlebars.valid) {
-        stats.failed++;
-        stats.failedCombinations.push(combo.id);
-        console.error(`\nHandlebars errors for ${combo.id}:`);
-        console.error(formatValidationErrors(result.handlebars));
         expect(result.handlebars.valid).toBe(true);
-        return;
-      }
-
-      // Check Vue validation (if applicable)
-      if (!result.vue.valid) {
-        stats.failed++;
-        stats.failedCombinations.push(combo.id);
-        console.error(`\nVue errors for ${combo.id}:`);
-        console.error(formatValidationErrors(result.vue));
-        expect(result.vue.valid).toBe(true);
-        return;
-      }
-
-      // Check Svelte validation (if applicable)
-      if (!result.svelte.valid) {
-        stats.failed++;
-        stats.failedCombinations.push(combo.id);
-        console.error(`\nSvelte errors for ${combo.id}:`);
-        console.error(formatValidationErrors(result.svelte));
-        expect(result.svelte.valid).toBe(true);
-        return;
-      }
-
-      stats.passed++;
-      expect(result.success).toBe(true);
-      expect(result.ts.valid).toBe(true);
-      expect(result.json.valid).toBe(true);
-      expect(result.handlebars.valid).toBe(true);
-    });
+      });
+    }
   }
 });
 

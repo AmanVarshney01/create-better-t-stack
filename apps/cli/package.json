@@ -64,12 +64,15 @@
     "dev": "tsdown --watch",
     "lint": "oxlint . && tsc --noEmit && bun test test/cli-builder-sync.test.ts",
     "check-types": "tsc --noEmit",
-    "test": "bun test",
+    "test": "bun test ./test/*.test.ts",
     "test:watch": "bun test --watch",
     "test:coverage": "bun test --coverage",
     "test:ci": "CI=1 bun test --bail=5",
     "test:e2e": "E2E=1 bun test test/e2e/e2e.e2e.ts",
     "test:astro-combos": "bun run scripts/test-astro-combinations.ts",
+    "test:matrix": "MATRIX_MODE=batched bun test ./test/matrix/matrix-test.test.ts",
+    "test:matrix:fast": "MATRIX_MODE=sample MATRIX_SAMPLE=0.1 bun test ./test/matrix/matrix-test.test.ts",
+    "test:matrix:full": "MATRIX_MODE=full bun test ./test/matrix/matrix-test.test.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

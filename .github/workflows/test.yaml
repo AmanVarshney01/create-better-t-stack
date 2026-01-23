@@ -5,6 +5,20 @@ on:
     branches: [main, master]
   pull_request:
     types: [opened, synchronize, reopened]
+  schedule:
+    # Run full matrix tests nightly at 2 AM UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      matrix_mode:
+        description: "Matrix test mode"
+        required: false
+        default: "batched"
+        type: choice
+        options:
+          - sample
+          - batched
+          - full
 
 concurrency:
   group: test-${{ github.head_ref || github.ref }}
@@ -57,3 +71,58 @@ jobs:
         run: bun run build
         env:
           NODE_OPTIONS: "--max-old-space-size=6144"
+
+  # Fast matrix test on PRs (10% sample for quick feedback)
+  matrix-test-pr:
+    name: Matrix Test (Sample)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: build
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build Packages
+        run: bun run build
+
+      - name: Run Matrix Tests (10% Sample)
+        run: cd apps/cli && bun run test:matrix:fast
+        env:
+          NODE_OPTIONS: "--max-old-space-size=8192"
+
+  # Full matrix test on push to main, schedule, or manual trigger
+  matrix-test-full:
+    name: Matrix Test (Full)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    needs: build
+    if: github.event_name == 'push' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build Packages
+        run: bun run build
+
+      - name: Run Matrix Tests
+        run: cd apps/cli && bun run test:matrix
+        env:
+          NODE_OPTIONS: "--max-old-space-size=8192"
+          MATRIX_MODE: ${{ github.event.inputs.matrix_mode || 'batched' }}

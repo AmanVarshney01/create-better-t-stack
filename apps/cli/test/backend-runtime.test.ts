@@ -94,37 +94,34 @@ describe("Backend and Runtime Combinations", () => {
       {
         backend: "express" as const,
         runtime: "workers" as const,
-        error:
-          "Cloudflare Workers runtime (--runtime workers) is only supported with Hono, Nitro, or feTS backend",
+        error: "Cloudflare Workers runtime requires a compatible backend",
       },
       {
         backend: "fastify",
         runtime: "workers",
-        error:
-          "Cloudflare Workers runtime (--runtime workers) is only supported with Hono, Nitro, or feTS backend",
+        error: "Cloudflare Workers runtime requires a compatible backend",
       },
       {
         backend: "elysia",
         runtime: "workers",
-        error:
-          "Cloudflare Workers runtime (--runtime workers) is only supported with Hono, Nitro, or feTS backend",
+        error: "Cloudflare Workers runtime requires a compatible backend",
       },
 
       // Convex backend requires runtime none
       {
         backend: "convex",
         runtime: "bun",
-        error: "Convex backend requires '--runtime none'",
+        error: "Convex backend manages its own runtime",
       },
       {
         backend: "convex",
         runtime: "node",
-        error: "Convex backend requires '--runtime none'",
+        error: "Convex backend manages its own runtime",
       },
       {
         backend: "convex",
         runtime: "workers",
-        error: "Convex backend requires '--runtime none'",
+        error: "Convex backend manages its own runtime",
       },
 
       // Backend none requires runtime none
@@ -297,7 +294,7 @@ describe("Backend and Runtime Combinations", () => {
         expectError: true,
       });
 
-      expectError(result, "Convex backend requires '--database none'");
+      expectError(result, "Convex backend has its own built-in database");
     });
   });
 
@@ -341,10 +338,7 @@ describe("Backend and Runtime Combinations", () => {
         expectError: true,
       });
 
-      expectError(
-        result,
-        "Cloudflare Workers runtime (--runtime workers) is not compatible with MongoDB database",
-      );
+      expectError(result, "Cloudflare Workers runtime is not compatible with MongoDB");
     });
 
     it("should fail workers without server deployment", async () => {

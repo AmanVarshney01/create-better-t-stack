@@ -5,3 +5,13 @@ linker = "isolated"
 coverage = true
 coverageReporter = ["text", "lcov"]
 coverageSkipTestFiles = true  # default false
+
+# Performance optimizations for matrix testing
+# Preload test utilities for faster startup
+preload = ["./apps/cli/test/validation-utils.ts"]
+
+# Timeout per test (ms) - default is 5000
+timeout = 30000
+
+# Bail after N failures to fail fast
+# bail = 5

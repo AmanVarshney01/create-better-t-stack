@@ -545,7 +545,7 @@ describe("Frontend Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "tRPC API is not supported with 'nuxt' frontend");
+      expectError(result, "tRPC API requires React-based frontends");
     });
 
     it("should fail with Svelte + tRPC", async () => {
@@ -566,7 +566,7 @@ describe("Frontend Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "tRPC API is not supported with 'svelte' frontend");
+      expectError(result, "tRPC API requires React-based frontends");
     });
 
     it("should fail with Solid + tRPC", async () => {
@@ -587,7 +587,7 @@ describe("Frontend Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "tRPC API is not supported with 'solid' frontend");
+      expectError(result, "tRPC API requires React-based frontends");
     });
 
     const frontends = ["nuxt", "svelte", "solid"] as const;
@@ -736,7 +736,7 @@ describe("Frontend Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Cannot select multiple web frameworks");
+      expectError(result, "Only one web framework can be selected per project");
     });
 
     it("should fail with multiple native frontends", async () => {
@@ -757,7 +757,7 @@ describe("Frontend Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Cannot select multiple native frameworks");
+      expectError(result, "Only one native framework can be selected per project");
     });
 
     it("should work with one web + one native frontend", async () => {
