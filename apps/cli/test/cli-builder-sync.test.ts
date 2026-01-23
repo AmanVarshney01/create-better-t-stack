@@ -29,6 +29,11 @@ import {
   FILE_UPLOAD_VALUES,
   FORMS_VALUES,
   FRONTEND_VALUES,
+  GO_API_VALUES,
+  GO_CLI_VALUES,
+  GO_LOGGING_VALUES,
+  GO_ORM_VALUES,
+  GO_WEB_FRAMEWORK_VALUES,
   JOB_QUEUE_VALUES,
   LOGGING_VALUES,
   OBSERVABILITY_VALUES,
@@ -99,6 +104,12 @@ const CLI_SCHEMA_MAP: Record<string, readonly string[]> = {
   rustApi: RUST_API_VALUES,
   rustCli: RUST_CLI_VALUES,
   rustLibraries: RUST_LIBRARIES_VALUES,
+  // Go ecosystem
+  goWebFramework: GO_WEB_FRAMEWORK_VALUES,
+  goOrm: GO_ORM_VALUES,
+  goApi: GO_API_VALUES,
+  goCli: GO_CLI_VALUES,
+  goLogging: GO_LOGGING_VALUES,
 };
 
 // Parse TECH_OPTIONS from the Builder's constant.ts file
@@ -357,6 +368,7 @@ describe("CLI and Builder Sync", () => {
     // This is a warning, not a failure - some categories might be Builder-only
     // Note: Python ecosystem adds 6 categories (pythonWebFramework, pythonOrm, pythonValidation,
     // pythonAi, pythonTaskQueue, pythonQuality) that will get CLI support in a later task
+    // Go ecosystem is now mapped so shouldn't add any unmapped categories
     expect(unmappedCategories.length).toBeLessThanOrEqual(11);
   });
 });

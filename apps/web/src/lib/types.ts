@@ -1,5 +1,5 @@
 // Ecosystem type for selecting language ecosystem
-export type Ecosystem = "typescript" | "rust" | "python";
+export type Ecosystem = "typescript" | "rust" | "python" | "go";
 
 // TechCategory for the stack builder UI
 export type TechCategory =
@@ -56,7 +56,13 @@ export type TechCategory =
   | "pythonValidation"
   | "pythonAi"
   | "pythonTaskQueue"
-  | "pythonQuality";
+  | "pythonQuality"
+  // Go ecosystem categories
+  | "goWebFramework"
+  | "goOrm"
+  | "goApi"
+  | "goCli"
+  | "goLogging";
 
 export type TechEdge = {
   id: string;

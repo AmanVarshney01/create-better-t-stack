@@ -67,6 +67,12 @@ export const DEFAULT_CONFIG_BASE = {
   pythonAi: [],
   pythonTaskQueue: "none",
   pythonQuality: "ruff",
+  // Go ecosystem defaults
+  goWebFramework: "gin",
+  goOrm: "gorm",
+  goApi: "none",
+  goCli: "none",
+  goLogging: "zap",
 } as const;
 
 export function getDefaultConfig() {

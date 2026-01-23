@@ -68,6 +68,12 @@ function searchToStack(search: StackSearchParams | undefined): StackState {
     pythonAi: search.pai ?? DEFAULT_STACK.pythonAi,
     pythonTaskQueue: search.ptq ?? DEFAULT_STACK.pythonTaskQueue,
     pythonQuality: search.pq ?? DEFAULT_STACK.pythonQuality,
+    // Go ecosystem fields
+    goWebFramework: search.gwf ?? DEFAULT_STACK.goWebFramework,
+    goOrm: search.gorm ?? DEFAULT_STACK.goOrm,
+    goApi: search.gapi ?? DEFAULT_STACK.goApi,
+    goCli: search.gcli ?? DEFAULT_STACK.goCli,
+    goLogging: search.glog ?? DEFAULT_STACK.goLogging,
   };
 }
 

@@ -2169,6 +2169,121 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
   ],
+  // Go ecosystem options
+  goWebFramework: [
+    {
+      id: "gin",
+      name: "Gin",
+      description: "High-performance HTTP web framework with martini-like API",
+      icon: "https://cdn.simpleicons.org/gin/00ADD8",
+      color: "from-cyan-500 to-blue-600",
+      default: true,
+    },
+    {
+      id: "echo",
+      name: "Echo",
+      description: "High performance, minimalist Go web framework",
+      icon: "",
+      color: "from-blue-400 to-blue-600",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No Web Framework",
+      description: "Skip Go web framework selection",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: false,
+    },
+  ],
+  goOrm: [
+    {
+      id: "gorm",
+      name: "GORM",
+      description: "The fantastic ORM library for Golang",
+      icon: "",
+      color: "from-cyan-500 to-teal-600",
+      default: true,
+    },
+    {
+      id: "sqlc",
+      name: "sqlc",
+      description: "Generate type-safe Go code from SQL",
+      icon: "",
+      color: "from-orange-500 to-orange-700",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No ORM",
+      description: "Skip Go ORM/database layer selection",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: false,
+    },
+  ],
+  goApi: [
+    {
+      id: "grpc-go",
+      name: "gRPC-Go",
+      description: "The Go implementation of gRPC",
+      icon: "https://cdn.simpleicons.org/grpc/244C5A",
+      color: "from-blue-500 to-indigo-600",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No API Layer",
+      description: "Skip Go API layer selection",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
+  goCli: [
+    {
+      id: "cobra",
+      name: "Cobra",
+      description: "Library for creating powerful modern CLI applications",
+      icon: "",
+      color: "from-purple-500 to-purple-700",
+      default: false,
+    },
+    {
+      id: "bubbletea",
+      name: "Bubble Tea",
+      description: "Powerful TUI framework based on The Elm Architecture",
+      icon: "",
+      color: "from-pink-500 to-rose-600",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No CLI Tools",
+      description: "Skip Go CLI tools selection",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
+  goLogging: [
+    {
+      id: "zap",
+      name: "Zap",
+      description: "Blazing fast, structured, leveled logging in Go",
+      icon: "",
+      color: "from-yellow-500 to-amber-600",
+      default: true,
+    },
+    {
+      id: "none",
+      name: "No Logging Library",
+      description: "Skip Go logging library selection",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: false,
+    },
+  ],
 };
 
 // Ecosystem configuration
@@ -2199,6 +2314,13 @@ export const ECOSYSTEMS: {
     description: "Python full-stack ecosystem",
     icon: "https://cdn.simpleicons.org/python/3776AB",
     color: "from-blue-400 to-yellow-500",
+  },
+  {
+    id: "go",
+    name: "Go",
+    description: "High-performance Go ecosystem",
+    icon: "https://cdn.simpleicons.org/go/00ADD8",
+    color: "from-cyan-500 to-blue-600",
   },
 ];
 
@@ -2257,6 +2379,7 @@ export const ECOSYSTEM_CATEGORIES: Record<Ecosystem, TechCategory[]> = {
     "git",
     "install",
   ],
+  go: ["goWebFramework", "goOrm", "goApi", "goCli", "goLogging", "git", "install"],
 };
 
 export const PRESET_TEMPLATES: {
@@ -2528,6 +2651,12 @@ export type StackState = {
   pythonAi: string;
   pythonTaskQueue: string;
   pythonQuality: string;
+  // Go ecosystem fields
+  goWebFramework: string;
+  goOrm: string;
+  goApi: string;
+  goCli: string;
+  goLogging: string;
 };
 
 export const DEFAULT_STACK: StackState = {
@@ -2587,6 +2716,12 @@ export const DEFAULT_STACK: StackState = {
   pythonAi: "none",
   pythonTaskQueue: "none",
   pythonQuality: "ruff",
+  // Go ecosystem defaults
+  goWebFramework: "gin",
+  goOrm: "gorm",
+  goApi: "none",
+  goCli: "none",
+  goLogging: "zap",
 };
 
 export const isStackDefault = <K extends keyof StackState>(

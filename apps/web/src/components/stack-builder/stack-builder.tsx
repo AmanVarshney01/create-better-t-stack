@@ -38,6 +38,7 @@ import {
   CATEGORY_ORDER,
   generateStackCommand,
   generateStackSharingUrl,
+  GO_CATEGORY_ORDER,
   PYTHON_CATEGORY_ORDER,
   RUST_CATEGORY_ORDER,
   TYPESCRIPT_CATEGORY_ORDER,
@@ -162,7 +163,9 @@ const StackBuilder = () => {
         ? RUST_CATEGORY_ORDER
         : stack.ecosystem === "python"
           ? PYTHON_CATEGORY_ORDER
-          : TYPESCRIPT_CATEGORY_ORDER;
+          : stack.ecosystem === "go"
+            ? GO_CATEGORY_ORDER
+            : TYPESCRIPT_CATEGORY_ORDER;
     for (const category of categoryOrder) {
       const categoryKey = category as keyof StackState;
       const options = TECH_OPTIONS[category as keyof typeof TECH_OPTIONS];
@@ -730,7 +733,9 @@ const StackBuilder = () => {
                       ? RUST_CATEGORY_ORDER
                       : stack.ecosystem === "python"
                         ? PYTHON_CATEGORY_ORDER
-                        : TYPESCRIPT_CATEGORY_ORDER
+                        : stack.ecosystem === "go"
+                          ? GO_CATEGORY_ORDER
+                          : TYPESCRIPT_CATEGORY_ORDER
                     ).map((categoryKey) => {
                       // Skip astroIntegration - it will be rendered conditionally
                       if (categoryKey === "astroIntegration") return null;

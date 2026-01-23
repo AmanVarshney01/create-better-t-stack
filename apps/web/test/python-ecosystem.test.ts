@@ -48,8 +48,8 @@ describe("Python Ecosystem Tab", () => {
       expect(pythonEcosystem?.description).toBe("Python full-stack ecosystem");
     });
 
-    it("should have exactly 3 ecosystems", () => {
-      expect(ECOSYSTEMS).toHaveLength(3);
+    it("should have exactly 4 ecosystems", () => {
+      expect(ECOSYSTEMS).toHaveLength(4);
     });
   });
 

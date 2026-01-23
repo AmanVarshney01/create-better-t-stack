@@ -447,6 +447,12 @@ export async function createVirtual(
       pythonAi: options.pythonAi || [],
       pythonTaskQueue: options.pythonTaskQueue || "none",
       pythonQuality: options.pythonQuality || "none",
+      // Go ecosystem options
+      goWebFramework: options.goWebFramework || "none",
+      goOrm: options.goOrm || "none",
+      goApi: options.goApi || "none",
+      goCli: options.goCli || "none",
+      goLogging: options.goLogging || "none",
     };
 
     const result = await generate({

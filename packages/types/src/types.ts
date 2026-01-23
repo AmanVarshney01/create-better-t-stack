@@ -57,6 +57,11 @@ import type {
   PythonAiSchema,
   PythonTaskQueueSchema,
   PythonQualitySchema,
+  GoWebFrameworkSchema,
+  GoOrmSchema,
+  GoApiSchema,
+  GoCliSchema,
+  GoLoggingSchema,
 } from "./schemas";
 
 // Inferred types from Zod schemas
@@ -110,6 +115,11 @@ export type PythonValidation = z.infer<typeof PythonValidationSchema>;
 export type PythonAi = z.infer<typeof PythonAiSchema>;
 export type PythonTaskQueue = z.infer<typeof PythonTaskQueueSchema>;
 export type PythonQuality = z.infer<typeof PythonQualitySchema>;
+export type GoWebFramework = z.infer<typeof GoWebFrameworkSchema>;
+export type GoOrm = z.infer<typeof GoOrmSchema>;
+export type GoApi = z.infer<typeof GoApiSchema>;
+export type GoCli = z.infer<typeof GoCliSchema>;
+export type GoLogging = z.infer<typeof GoLoggingSchema>;
 
 export type CreateInput = z.infer<typeof CreateInputSchema>;
 export type AddInput = z.infer<typeof AddInputSchema>;

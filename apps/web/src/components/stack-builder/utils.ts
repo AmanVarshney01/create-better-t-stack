@@ -54,12 +54,25 @@ export const getCategoryDisplayName = (categoryKey: string): string => {
     pythonQuality: "Python Code Quality",
   };
 
+  // Custom display names for Go categories
+  const goCategoryNames: Record<string, string> = {
+    goWebFramework: "Go Web Framework",
+    goOrm: "Go ORM / Database",
+    goApi: "Go API Layer",
+    goCli: "Go CLI Tools",
+    goLogging: "Go Logging",
+  };
+
   if (rustCategoryNames[categoryKey]) {
     return rustCategoryNames[categoryKey];
   }
 
   if (pythonCategoryNames[categoryKey]) {
     return pythonCategoryNames[categoryKey];
+  }
+
+  if (goCategoryNames[categoryKey]) {
+    return goCategoryNames[categoryKey];
   }
 
   const result = categoryKey.replace(/([A-Z])/g, " $1");

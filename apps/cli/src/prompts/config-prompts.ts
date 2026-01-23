@@ -20,6 +20,11 @@ import type {
   FileUpload,
   Forms,
   Frontend,
+  GoApi,
+  GoCli,
+  GoLogging,
+  GoOrm,
+  GoWebFramework,
   JobQueue,
   Logging,
   Observability,
@@ -71,6 +76,13 @@ import { getFileUploadChoice } from "./file-upload";
 import { getFormsChoice } from "./forms";
 import { getFrontendChoice } from "./frontend";
 import { getGitChoice } from "./git";
+import {
+  getGoApiChoice,
+  getGoCliChoice,
+  getGoLoggingChoice,
+  getGoOrmChoice,
+  getGoWebFrameworkChoice,
+} from "./go-ecosystem";
 import { getinstallChoice } from "./install";
 import { getJobQueueChoice } from "./job-queue";
 import { getLoggingChoice } from "./logging";
@@ -155,6 +167,12 @@ type PromptGroupResults = {
   pythonAi: PythonAi[];
   pythonTaskQueue: PythonTaskQueue;
   pythonQuality: PythonQuality;
+  // Go ecosystem
+  goWebFramework: GoWebFramework;
+  goOrm: GoOrm;
+  goApi: GoApi;
+  goCli: GoCli;
+  goLogging: GoLogging;
   // Keep at end
   git: boolean;
   packageManager: PackageManager;
@@ -397,11 +415,36 @@ export async function gatherConfig(
         if (results.ecosystem !== "python") return Promise.resolve("none" as PythonQuality);
         return getPythonQualityChoice(flags.pythonQuality);
       },
+      // Go ecosystem prompts (skip if not Go)
+      goWebFramework: ({ results }) => {
+        if (results.ecosystem !== "go") return Promise.resolve("none" as GoWebFramework);
+        return getGoWebFrameworkChoice(flags.goWebFramework);
+      },
+      goOrm: ({ results }) => {
+        if (results.ecosystem !== "go") return Promise.resolve("none" as GoOrm);
+        return getGoOrmChoice(flags.goOrm);
+      },
+      goApi: ({ results }) => {
+        if (results.ecosystem !== "go") return Promise.resolve("none" as GoApi);
+        return getGoApiChoice(flags.goApi);
+      },
+      goCli: ({ results }) => {
+        if (results.ecosystem !== "go") return Promise.resolve("none" as GoCli);
+        return getGoCliChoice(flags.goCli);
+      },
+      goLogging: ({ results }) => {
+        if (results.ecosystem !== "go") return Promise.resolve("none" as GoLogging);
+        return getGoLoggingChoice(flags.goLogging);
+      },
       // Keep at end
       git: () => getGitChoice(flags.git),
       packageManager: ({ results }) => {
-        // Skip package manager prompt for Rust/Python (they use cargo/uv, not npm/pnpm/bun)
-        if (results.ecosystem === "rust" || results.ecosystem === "python")
+        // Skip package manager prompt for Rust/Python/Go (they use cargo/uv/go mod, not npm/pnpm/bun)
+        if (
+          results.ecosystem === "rust" ||
+          results.ecosystem === "python" ||
+          results.ecosystem === "go"
+        )
           return Promise.resolve("npm" as PackageManager);
         return getPackageManagerChoice(flags.packageManager);
       },
@@ -469,5 +512,11 @@ export async function gatherConfig(
     pythonAi: result.pythonAi,
     pythonTaskQueue: result.pythonTaskQueue,
     pythonQuality: result.pythonQuality,
+    // Go ecosystem options
+    goWebFramework: result.goWebFramework,
+    goOrm: result.goOrm,
+    goApi: result.goApi,
+    goCli: result.goCli,
+    goLogging: result.goLogging,
   };
 }

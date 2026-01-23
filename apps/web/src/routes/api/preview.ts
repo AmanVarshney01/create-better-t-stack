@@ -47,6 +47,11 @@ interface StackState {
   pythonAi?: string;
   pythonTaskQueue?: string;
   pythonQuality?: string;
+  goWebFramework?: string;
+  goOrm?: string;
+  goApi?: string;
+  goCli?: string;
+  goLogging?: string;
 }
 
 function stackStateToConfig(state: StackState): ProjectConfig {
@@ -124,6 +129,11 @@ function stackStateToConfig(state: StackState): ProjectConfig {
       : []) as ProjectConfig["pythonAi"],
     pythonTaskQueue: (state.pythonTaskQueue || "none") as ProjectConfig["pythonTaskQueue"],
     pythonQuality: (state.pythonQuality || "ruff") as ProjectConfig["pythonQuality"],
+    goWebFramework: (state.goWebFramework || "gin") as ProjectConfig["goWebFramework"],
+    goOrm: (state.goOrm || "gorm") as ProjectConfig["goOrm"],
+    goApi: (state.goApi || "none") as ProjectConfig["goApi"],
+    goCli: (state.goCli || "none") as ProjectConfig["goCli"],
+    goLogging: (state.goLogging || "zap") as ProjectConfig["goLogging"],
   };
 }
 

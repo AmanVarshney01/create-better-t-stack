@@ -58,6 +58,11 @@ export async function writeBtsConfig(projectConfig: ProjectConfig) {
     pythonAi: projectConfig.pythonAi,
     pythonTaskQueue: projectConfig.pythonTaskQueue,
     pythonQuality: projectConfig.pythonQuality,
+    goWebFramework: projectConfig.goWebFramework,
+    goOrm: projectConfig.goOrm,
+    goApi: projectConfig.goApi,
+    goCli: projectConfig.goCli,
+    goLogging: projectConfig.goLogging,
   };
 
   const baseContent = {
@@ -110,6 +115,11 @@ export async function writeBtsConfig(projectConfig: ProjectConfig) {
     pythonAi: btsConfig.pythonAi,
     pythonTaskQueue: btsConfig.pythonTaskQueue,
     pythonQuality: btsConfig.pythonQuality,
+    goWebFramework: btsConfig.goWebFramework,
+    goOrm: btsConfig.goOrm,
+    goApi: btsConfig.goApi,
+    goCli: btsConfig.goCli,
+    goLogging: btsConfig.goLogging,
   };
 
   let configContent = JSON.stringify(baseContent);

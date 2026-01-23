@@ -56,4 +56,9 @@ export const stackUrlKeys: Record<keyof StackState, string> = {
   pythonAi: "pai",
   pythonTaskQueue: "ptq",
   pythonQuality: "pq",
+  goWebFramework: "gwf",
+  goOrm: "gorm",
+  goApi: "gapi",
+  goCli: "gcli",
+  goLogging: "glog",
 };

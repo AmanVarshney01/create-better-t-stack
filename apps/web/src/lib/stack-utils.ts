@@ -66,6 +66,17 @@ const PYTHON_CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
   "install",
 ];
 
+// Go ecosystem category order
+const GO_CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
+  "goWebFramework",
+  "goOrm",
+  "goApi",
+  "goCli",
+  "goLogging",
+  "git",
+  "install",
+];
+
 // Combined category order for backwards compatibility
 const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
   ...TYPESCRIPT_CATEGORY_ORDER,
@@ -83,6 +94,12 @@ const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
   "pythonAi",
   "pythonTaskQueue",
   "pythonQuality",
+  // Go categories (excluding duplicates like git, install)
+  "goWebFramework",
+  "goOrm",
+  "goApi",
+  "goCli",
+  "goLogging",
 ];
 
 export function generateStackSummary(stack: StackState) {
@@ -122,6 +139,11 @@ export function generateStackCommand(stack: StackState) {
   // Handle Python ecosystem
   if (stack.ecosystem === "python") {
     return generatePythonCommand(stack, projectName);
+  }
+
+  // Handle Go ecosystem
+  if (stack.ecosystem === "go") {
+    return generateGoCommand(stack, projectName);
   }
 
   // TypeScript ecosystem
@@ -290,6 +312,35 @@ function generatePythonCommand(stack: StackState, projectName: string) {
   return `${base} ${projectName}${flagStr}`;
 }
 
+function generateGoCommand(stack: StackState, projectName: string) {
+  // For Go projects, use go mod init with appropriate setup
+  const flags: string[] = [];
+
+  if (stack.goWebFramework !== "none") {
+    flags.push(`--web-framework ${stack.goWebFramework}`);
+  }
+  if (stack.goOrm !== "none") {
+    flags.push(`--orm ${stack.goOrm}`);
+  }
+  if (stack.goApi !== "none") {
+    flags.push(`--api ${stack.goApi}`);
+  }
+  if (stack.goCli !== "none") {
+    flags.push(`--cli ${stack.goCli}`);
+  }
+  if (stack.goLogging !== "none") {
+    flags.push(`--logging ${stack.goLogging}`);
+  }
+  if (stack.git === "false") {
+    flags.push("--no-git");
+  }
+
+  // Go ecosystem command - placeholder until CLI supports Go
+  const base = "go mod init";
+  const flagStr = flags.length > 0 ? ` # Options: ${flags.join(" ")}` : "";
+  return `${base} ${projectName}${flagStr}`;
+}
+
 export function generateStackUrlFromState(stack: StackState, baseUrl?: string) {
   const origin = baseUrl || "https://better-fullstack-web.vercel.app";
 
@@ -320,4 +371,10 @@ export function generateStackSharingUrl(stack: StackState, baseUrl?: string) {
   return `${origin}/stack${searchString ? `?${searchString}` : ""}`;
 }
 
-export { CATEGORY_ORDER, TYPESCRIPT_CATEGORY_ORDER, RUST_CATEGORY_ORDER, PYTHON_CATEGORY_ORDER };
+export {
+  CATEGORY_ORDER,
+  TYPESCRIPT_CATEGORY_ORDER,
+  RUST_CATEGORY_ORDER,
+  PYTHON_CATEGORY_ORDER,
+  GO_CATEGORY_ORDER,
+};

@@ -31,7 +31,8 @@ export function loadStackParams(
       ecosystem: getString("ecosystem", DEFAULT_STACK.ecosystem) as
         | "typescript"
         | "rust"
-        | "python",
+        | "python"
+        | "go",
       projectName: getString("projectName", DEFAULT_STACK.projectName ?? "my-better-t-app"),
       webFrontend: getArray("webFrontend", DEFAULT_STACK.webFrontend),
       nativeFrontend: getArray("nativeFrontend", DEFAULT_STACK.nativeFrontend),
@@ -87,6 +88,12 @@ export function loadStackParams(
       pythonAi: getString("pythonAi", DEFAULT_STACK.pythonAi),
       pythonTaskQueue: getString("pythonTaskQueue", DEFAULT_STACK.pythonTaskQueue),
       pythonQuality: getString("pythonQuality", DEFAULT_STACK.pythonQuality),
+      // Go ecosystem fields
+      goWebFramework: getString("goWebFramework", DEFAULT_STACK.goWebFramework),
+      goOrm: getString("goOrm", DEFAULT_STACK.goOrm),
+      goApi: getString("goApi", DEFAULT_STACK.goApi),
+      goCli: getString("goCli", DEFAULT_STACK.goCli),
+      goLogging: getString("goLogging", DEFAULT_STACK.goLogging),
     };
   };
 
@@ -171,6 +178,12 @@ export function serializeStackParams(basePath: string, stack: StackState): strin
   addParam("pythonAi", stack.pythonAi);
   addParam("pythonTaskQueue", stack.pythonTaskQueue);
   addParam("pythonQuality", stack.pythonQuality);
+  // Go ecosystem fields
+  addParam("goWebFramework", stack.goWebFramework);
+  addParam("goOrm", stack.goOrm);
+  addParam("goApi", stack.goApi);
+  addParam("goCli", stack.goCli);
+  addParam("goLogging", stack.goLogging);
 
   const queryString = params.toString();
   return queryString ? `${basePath}?${queryString}` : basePath;

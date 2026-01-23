@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const EcosystemSchema = z
-  .enum(["typescript", "rust", "python"])
-  .describe("Language ecosystem (typescript, rust, or python)");
+  .enum(["typescript", "rust", "python", "go"])
+  .describe("Language ecosystem (typescript, rust, python, or go)");
 
 export const DatabaseSchema = z
   .enum(["none", "sqlite", "postgres", "mysql", "mongodb", "edgedb", "redis"])
@@ -269,6 +269,17 @@ export const PythonTaskQueueSchema = z.enum(["celery", "none"]).describe("Python
 
 export const PythonQualitySchema = z.enum(["ruff", "none"]).describe("Python code quality tool");
 
+// Go ecosystem schemas
+export const GoWebFrameworkSchema = z.enum(["gin", "echo", "none"]).describe("Go web framework");
+
+export const GoOrmSchema = z.enum(["gorm", "sqlc", "none"]).describe("Go ORM/database layer");
+
+export const GoApiSchema = z.enum(["grpc-go", "none"]).describe("Go API layer (gRPC)");
+
+export const GoCliSchema = z.enum(["cobra", "bubbletea", "none"]).describe("Go CLI tools");
+
+export const GoLoggingSchema = z.enum(["zap", "none"]).describe("Go logging library");
+
 export const CSSFrameworkSchema = z
   .enum(["tailwind", "scss", "less", "postcss-only", "none"])
   .describe("CSS framework/preprocessor");
@@ -375,6 +386,12 @@ export const CreateInputSchema = z.object({
   pythonAi: z.array(PythonAiSchema).optional(),
   pythonTaskQueue: PythonTaskQueueSchema.optional(),
   pythonQuality: PythonQualitySchema.optional(),
+  // Go ecosystem options
+  goWebFramework: GoWebFrameworkSchema.optional(),
+  goOrm: GoOrmSchema.optional(),
+  goApi: GoApiSchema.optional(),
+  goCli: GoCliSchema.optional(),
+  goLogging: GoLoggingSchema.optional(),
 });
 
 export const AddInputSchema = z.object({
@@ -445,6 +462,12 @@ export const ProjectConfigSchema = z.object({
   pythonAi: z.array(PythonAiSchema),
   pythonTaskQueue: PythonTaskQueueSchema,
   pythonQuality: PythonQualitySchema,
+  // Go ecosystem options
+  goWebFramework: GoWebFrameworkSchema,
+  goOrm: GoOrmSchema,
+  goApi: GoApiSchema,
+  goCli: GoCliSchema,
+  goLogging: GoLoggingSchema,
 });
 
 export const BetterTStackConfigSchema = z.object({
@@ -499,6 +522,12 @@ export const BetterTStackConfigSchema = z.object({
   pythonAi: z.array(PythonAiSchema),
   pythonTaskQueue: PythonTaskQueueSchema,
   pythonQuality: PythonQualitySchema,
+  // Go ecosystem options
+  goWebFramework: GoWebFrameworkSchema,
+  goOrm: GoOrmSchema,
+  goApi: GoApiSchema,
+  goCli: GoCliSchema,
+  goLogging: GoLoggingSchema,
 });
 
 export const BetterTStackConfigFileSchema = z
@@ -572,3 +601,8 @@ export const PYTHON_VALIDATION_VALUES = PythonValidationSchema.options;
 export const PYTHON_AI_VALUES = PythonAiSchema.options;
 export const PYTHON_TASK_QUEUE_VALUES = PythonTaskQueueSchema.options;
 export const PYTHON_QUALITY_VALUES = PythonQualitySchema.options;
+export const GO_WEB_FRAMEWORK_VALUES = GoWebFrameworkSchema.options;
+export const GO_ORM_VALUES = GoOrmSchema.options;
+export const GO_API_VALUES = GoApiSchema.options;
+export const GO_CLI_VALUES = GoCliSchema.options;
+export const GO_LOGGING_VALUES = GoLoggingSchema.options;

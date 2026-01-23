@@ -6694,3 +6694,46 @@ The Ruff implementation was already complete in the codebase. This was a verific
 - README generation with Ruff commands
 
 ### Status: COMPLETE (already implemented, verified and documented)
+
+## 2026-01-23: Go Ecosystem Tab Implementation
+
+### Task: Go Ecosystem Tab - Add new "Go" tab to Builder page
+
+### Summary:
+Added full Go ecosystem tab to the Builder page with support for:
+- Go web frameworks (Gin, Echo)
+- Go ORM/database (GORM, sqlc)
+- Go API layer (gRPC-Go)
+- Go CLI tools (Cobra, Bubble Tea)
+- Go logging (Zap)
+
+### Files Modified:
+- apps/web/src/lib/constant.ts - Added Go ecosystem options, categories, StackState fields, and defaults
+- apps/web/src/lib/types.ts - Added Go ecosystem type and TechCategory entries
+- apps/web/src/lib/stack-utils.ts - Added Go category order and command generation
+- apps/web/src/lib/stack-url-keys.ts - Added Go URL key mappings
+- apps/web/src/lib/stack-search-schema.ts - Added Go ecosystem to Zod schema
+- apps/web/src/lib/stack-url-state.ts - Added Go fields to state parsing
+- apps/web/src/lib/stack-url-state.client.ts - Added Go fields to client state
+- apps/web/src/routes/api/preview.ts - Added Go fields to StackState interface and config
+- apps/web/src/components/stack-builder/stack-builder.tsx - Added Go category order support
+- apps/web/src/components/stack-builder/utils.ts - Added Go category display names
+- packages/types/src/schemas.ts - Added Go ecosystem schemas and value exports
+- packages/types/src/types.ts - Added Go type exports
+- apps/cli/src/constants.ts - Added Go ecosystem defaults
+- apps/cli/src/utils/bts-config.ts - Added Go fields to config serialization
+- apps/cli/src/helpers/core/command-handlers.ts - Added Go defaults to error response
+- apps/cli/src/index.ts - Added Go config fields to createVirtual
+- apps/cli/src/prompts/ecosystem.ts - Added Go option to ecosystem selection
+- apps/cli/src/prompts/go-ecosystem.ts - NEW: Created Go ecosystem prompt functions
+- apps/cli/src/prompts/config-prompts.ts - Added Go ecosystem prompts and return fields
+- apps/cli/test/cli-builder-sync.test.ts - Added Go ecosystem to CLI-Builder sync tests
+
+### Files Created:
+- apps/web/test/go-ecosystem.test.ts - Comprehensive tests for Go ecosystem tab
+- apps/cli/src/prompts/go-ecosystem.ts - Go ecosystem CLI prompt functions
+
+### Tests:
+- 44 new Go ecosystem tests passing in apps/web/test/go-ecosystem.test.ts
+- All existing tests updated and passing (148 total in web, 160 in CLI)
+- All linting passes

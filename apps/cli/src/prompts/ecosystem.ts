@@ -22,6 +22,11 @@ export async function getEcosystemChoice(ecosystem?: Ecosystem) {
       label: "Python",
       hint: "Python ecosystem with FastAPI, Django, and AI/ML tools",
     },
+    {
+      value: "go" as const,
+      label: "Go",
+      hint: "Go ecosystem with Gin, Echo, GORM, and more",
+    },
   ];
 
   const response = await navigableSelect<Ecosystem>({
