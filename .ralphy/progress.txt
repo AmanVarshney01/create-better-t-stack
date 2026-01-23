@@ -6645,3 +6645,52 @@ CrewAI implementation was already complete in the codebase. This task verified t
 - 694 expect() assertions verified
 
 ### Status: COMPLETE
+
+---
+
+## 2026-01-23: Ruff - Fast Python Linter
+
+### Task: Implement Ruff support for Python projects
+
+### Analysis:
+The Ruff implementation was already complete in the codebase. This was a verification and documentation task.
+
+### Implementation (Already Completed):
+
+1. **packages/types/src/schemas.ts** (line 270): Schema definition
+   - `PythonQualitySchema = z.enum(["ruff", "none"])`
+   - Integrated into CreateInputSchema, ProjectConfigSchema, and BetterTStackConfigSchema
+
+2. **apps/cli/src/prompts/python-ecosystem.ts** (lines 179-204): CLI prompt
+   - `getPythonQualityChoice()` function with Ruff as default option
+   - Hint: "An extremely fast Python linter and formatter"
+
+3. **packages/template-generator/templates/python-base/pyproject.toml.hbs** (lines 65-101):
+   - Dev dependencies: `ruff>=0.8.0` when pythonQuality is "ruff"
+   - Full Ruff configuration:
+     - target-version = "py311"
+     - line-length = 100
+     - Lint rules: E, W, F, I, B, C4, UP (pycodestyle, Pyflakes, isort, bugbear, comprehensions, pyupgrade)
+     - Formatter: double quotes, space indentation
+
+4. **packages/template-generator/src/processors/readme-generator.ts** (lines 816-928):
+   - Feature list: "**Ruff** - Extremely fast Python linter and formatter"
+   - Commands: `uv run ruff check .` and `uv run ruff format .`
+
+5. **apps/cli/test/python-language.test.ts** (lines 2467-2489): Test coverage
+   - Test for Ruff in dev dependencies
+   - Tests for [tool.ruff], [tool.ruff.lint], [tool.ruff.format] sections
+   - Integration test with full-featured Python project
+
+### Test Results:
+- All 165 CLI tests pass
+- 842 expect() assertions verified
+- Linting passes (150 tests, 146 assertions)
+
+### Features:
+- Ruff as default Python code quality tool
+- Comprehensive lint rules covering code style, errors, imports, and modernization
+- Formatter configuration for consistent code style
+- README generation with Ruff commands
+
+### Status: COMPLETE (already implemented, verified and documented)
