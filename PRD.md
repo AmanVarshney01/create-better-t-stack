@@ -200,7 +200,7 @@
 - [x] **OpenAI SDK** - Official OpenAI client
 - [x] **Anthropic SDK** - Claude API client
 - [x] **LangGraph** - Graph-based agent orchestration
-- [ ] **CrewAI** - Multi-agent orchestration
+- [x] **CrewAI** - Multi-agent orchestration
 
 ---
 

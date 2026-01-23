@@ -62,6 +62,11 @@ class Settings(BaseSettings):
     langgraph_default_temperature: float = 0.7
     langgraph_max_iterations: int = 10
 {{/if}}
+{{#if (includes pythonAi "crewai")}}
+    # CrewAI settings
+    openai_api_key: str = ""
+    crewai_verbose: bool = True
+{{/if}}
 {{#if (eq pythonTaskQueue "celery")}}
     # Celery settings
     celery_broker_url: str = "redis://localhost:6379/0"

@@ -2030,6 +2030,200 @@ describe("Python Language Support", () => {
       expect(mainContent).not.toContain("langgraph_client");
       expect(mainContent).not.toContain("/ai/langgraph/chat");
     });
+
+    it("should include CrewAI dependencies in pyproject.toml", async () => {
+      const result = await createVirtual({
+        projectName: "python-crewai-deps",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["crewai"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const pyprojectContent = getFileContent(root, "pyproject.toml");
+      expect(pyprojectContent).toBeDefined();
+      expect(pyprojectContent).toContain("crewai");
+    });
+
+    it("should create CrewAI client module", async () => {
+      const result = await createVirtual({
+        projectName: "python-crewai-client",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["crewai"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify crewai_client.py exists
+      expect(hasFile(root, "src/app/crewai_client.py")).toBe(true);
+      const clientContent = getFileContent(root, "src/app/crewai_client.py");
+      expect(clientContent).toBeDefined();
+      expect(clientContent).toContain("from crewai import Agent, Crew, Process, Task");
+      expect(clientContent).toContain("def create_agent");
+      expect(clientContent).toContain("def create_task");
+      expect(clientContent).toContain("def create_crew");
+      expect(clientContent).toContain("async def run_research_crew");
+      expect(clientContent).toContain("async def run_analysis_crew");
+      expect(clientContent).toContain("async def run_custom_crew");
+      expect(clientContent).toContain("def simple_completion");
+    });
+
+    it("should create CrewAI schemas module", async () => {
+      const result = await createVirtual({
+        projectName: "python-crewai-schemas",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["crewai"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify crewai_schemas.py exists
+      expect(hasFile(root, "src/app/crewai_schemas.py")).toBe(true);
+      const schemasContent = getFileContent(root, "src/app/crewai_schemas.py");
+      expect(schemasContent).toBeDefined();
+      expect(schemasContent).toContain("class CrewAIResearchRequest(BaseModel)");
+      expect(schemasContent).toContain("class CrewAIResearchResponse(BaseModel)");
+      expect(schemasContent).toContain("class CrewAIAnalysisRequest(BaseModel)");
+      expect(schemasContent).toContain("class CrewAIAnalysisResponse(BaseModel)");
+      expect(schemasContent).toContain("class CrewAICustomRequest(BaseModel)");
+      expect(schemasContent).toContain("class CrewAICustomResponse(BaseModel)");
+      expect(schemasContent).toContain("class CrewAICompletionRequest(BaseModel)");
+      expect(schemasContent).toContain("class CrewAICompletionResponse(BaseModel)");
+    });
+
+    it("should integrate CrewAI endpoints with FastAPI", async () => {
+      const result = await createVirtual({
+        projectName: "python-crewai-fastapi",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["crewai"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainContent = getFileContent(root, "src/app/main.py");
+      expect(mainContent).toBeDefined();
+      expect(mainContent).toContain("from app.crewai_client import");
+      expect(mainContent).toContain("from app.crewai_schemas import");
+      expect(mainContent).toContain('@app.post("/ai/crewai/research"');
+      expect(mainContent).toContain('@app.post("/ai/crewai/analysis"');
+      expect(mainContent).toContain('@app.post("/ai/crewai/custom"');
+      expect(mainContent).toContain('@app.post("/ai/crewai/completion"');
+    });
+
+    it("should add CrewAI settings when pydantic validation is enabled", async () => {
+      const result = await createVirtual({
+        projectName: "python-crewai-settings",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: ["crewai"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const settingsContent = getFileContent(root, "src/app/settings.py");
+      expect(settingsContent).toBeDefined();
+      expect(settingsContent).toContain("# CrewAI settings");
+      expect(settingsContent).toContain("openai_api_key");
+      expect(settingsContent).toContain("crewai_verbose");
+    });
+
+    it("should include CrewAI validation tests", async () => {
+      const result = await createVirtual({
+        projectName: "python-crewai-tests",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["crewai"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const testContent = getFileContent(root, "tests/test_main.py");
+      expect(testContent).toBeDefined();
+      expect(testContent).toContain("test_crewai_research_endpoint_validation");
+      expect(testContent).toContain("test_crewai_analysis_endpoint_validation");
+      expect(testContent).toContain("test_crewai_custom_endpoint_validation");
+      expect(testContent).toContain("test_crewai_completion_endpoint_validation");
+    });
+
+    it("should NOT create CrewAI files when pythonAi does not include crewai", async () => {
+      const result = await createVirtual({
+        projectName: "python-no-crewai",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["openai-sdk"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify CrewAI files do NOT exist
+      expect(hasFile(root, "src/app/crewai_client.py")).toBe(false);
+      expect(hasFile(root, "src/app/crewai_schemas.py")).toBe(false);
+
+      const mainContent = getFileContent(root, "src/app/main.py");
+      expect(mainContent).not.toContain("crewai_client");
+      expect(mainContent).not.toContain("/ai/crewai/research");
+    });
+
+    it("should generate README with CrewAI documentation", async () => {
+      const result = await createVirtual({
+        projectName: "python-crewai-readme",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["crewai"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const readmeContent = getFileContent(root, "README.md");
+      expect(readmeContent).toBeDefined();
+      expect(readmeContent).toContain("CrewAI");
+      expect(readmeContent).toContain("crewai_client.py");
+      expect(readmeContent).toContain("crewai_schemas.py");
+    });
   });
 
   describe("Celery Task Queue", () => {

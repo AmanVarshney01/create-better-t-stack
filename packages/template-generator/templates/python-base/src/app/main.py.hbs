@@ -114,6 +114,24 @@ from app.langgraph_schemas import (
     LangGraphCompletionResponse,
 )
 {{/if}}
+{{#if (includes pythonAi "crewai")}}
+from app.crewai_client import (
+    run_research_crew as crewai_research,
+    run_analysis_crew as crewai_analysis,
+    run_custom_crew as crewai_custom,
+    simple_completion as crewai_completion,
+)
+from app.crewai_schemas import (
+    CrewAIResearchRequest,
+    CrewAIResearchResponse,
+    CrewAIAnalysisRequest,
+    CrewAIAnalysisResponse,
+    CrewAICustomRequest,
+    CrewAICustomResponse,
+    CrewAICompletionRequest,
+    CrewAICompletionResponse,
+)
+{{/if}}
 
 
 @asynccontextmanager
@@ -473,6 +491,65 @@ async def langgraph_completion_endpoint(request: LangGraphCompletionRequest):
         temperature=request.temperature or 0.7,
     )
     return LangGraphCompletionResponse(completion=completion)
+{{/if}}
+{{#if (includes pythonAi "crewai")}}
+
+# CrewAI endpoints
+@app.post("/ai/crewai/research", response_model=CrewAIResearchResponse)
+async def crewai_research_endpoint(request: CrewAIResearchRequest):
+    """Run a research crew that analyzes a topic.
+
+    Creates a crew with researcher and writer agents to analyze
+    a given topic and produce a comprehensive summary.
+    """
+    result = await crewai_research(
+        topic=request.topic,
+        verbose=request.verbose if request.verbose is not None else True,
+    )
+    return CrewAIResearchResponse(result=result)
+
+
+@app.post("/ai/crewai/analysis", response_model=CrewAIAnalysisResponse)
+async def crewai_analysis_endpoint(request: CrewAIAnalysisRequest):
+    """Run an analysis crew that analyzes data.
+
+    Creates a crew with an analyst agent to examine
+    the provided data and generate insights.
+    """
+    result = await crewai_analysis(
+        data=request.data,
+        analysis_type=request.analysis_type or "general",
+        verbose=request.verbose if request.verbose is not None else True,
+    )
+    return CrewAIAnalysisResponse(result=result)
+
+
+@app.post("/ai/crewai/custom", response_model=CrewAICustomResponse)
+async def crewai_custom_endpoint(request: CrewAICustomRequest):
+    """Run a custom crew with a single agent and task.
+
+    Provides a flexible way to create and run a crew with
+    custom agent and task configurations.
+    """
+    result = await crewai_custom(
+        task_description=request.task_description,
+        expected_output=request.expected_output,
+        agent_role=request.agent_role or "Assistant",
+        agent_goal=request.agent_goal or "Complete the assigned task efficiently",
+        agent_backstory=request.agent_backstory or "You are a helpful assistant capable of handling various tasks.",
+        verbose=request.verbose if request.verbose is not None else True,
+    )
+    return CrewAICustomResponse(result=result)
+
+
+@app.post("/ai/crewai/completion", response_model=CrewAICompletionResponse)
+async def crewai_completion_endpoint(request: CrewAICompletionRequest):
+    """Get a simple completion using CrewAI."""
+    completion = crewai_completion(
+        prompt=request.prompt,
+        verbose=request.verbose if request.verbose is not None else False,
+    )
+    return CrewAICompletionResponse(completion=completion)
 {{/if}}
 {{#if (and (eq pythonOrm "none") (eq pythonValidation "pydantic"))}}
 

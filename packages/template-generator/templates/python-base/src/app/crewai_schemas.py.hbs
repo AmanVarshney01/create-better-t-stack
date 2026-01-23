@@ -1,0 +1,82 @@
+{{#if (includes pythonAi "crewai")}}
+"""Pydantic schemas for CrewAI API endpoints."""
+
+from pydantic import BaseModel, Field
+
+
+class CrewAIResearchRequest(BaseModel):
+    """Request body for CrewAI research endpoint."""
+
+    topic: str = Field(..., description="The topic to research", min_length=1)
+    verbose: bool | None = Field(
+        default=None, description="Whether to enable verbose output"
+    )
+
+
+class CrewAIResearchResponse(BaseModel):
+    """Response body for CrewAI research endpoint."""
+
+    result: str = Field(..., description="The research results")
+
+
+class CrewAIAnalysisRequest(BaseModel):
+    """Request body for CrewAI analysis endpoint."""
+
+    data: str = Field(..., description="The data to analyze", min_length=1)
+    analysis_type: str | None = Field(
+        default=None, description="The type of analysis to perform"
+    )
+    verbose: bool | None = Field(
+        default=None, description="Whether to enable verbose output"
+    )
+
+
+class CrewAIAnalysisResponse(BaseModel):
+    """Response body for CrewAI analysis endpoint."""
+
+    result: str = Field(..., description="The analysis results")
+
+
+class CrewAICustomRequest(BaseModel):
+    """Request body for CrewAI custom crew endpoint."""
+
+    task_description: str = Field(
+        ..., description="Description of the task to perform", min_length=1
+    )
+    expected_output: str = Field(
+        ..., description="Expected output from the task", min_length=1
+    )
+    agent_role: str | None = Field(
+        default=None, description="The role of the agent"
+    )
+    agent_goal: str | None = Field(
+        default=None, description="The goal of the agent"
+    )
+    agent_backstory: str | None = Field(
+        default=None, description="The backstory of the agent"
+    )
+    verbose: bool | None = Field(
+        default=None, description="Whether to enable verbose output"
+    )
+
+
+class CrewAICustomResponse(BaseModel):
+    """Response body for CrewAI custom crew endpoint."""
+
+    result: str = Field(..., description="The task result")
+
+
+class CrewAICompletionRequest(BaseModel):
+    """Request body for simple completion endpoint."""
+
+    prompt: str = Field(..., description="The prompt to complete", min_length=1)
+    verbose: bool | None = Field(
+        default=None, description="Whether to enable verbose output"
+    )
+
+
+class CrewAICompletionResponse(BaseModel):
+    """Response body for completion endpoint."""
+
+    completion: str = Field(..., description="The completion response")
+{{/if}}

@@ -1,0 +1,304 @@
+{{#if (includes pythonAi "crewai")}}
+"""CrewAI client for building multi-agent orchestration systems."""
+
+import os
+from typing import AsyncIterator
+
+from crewai import Agent, Crew, Process, Task
+
+
+def get_openai_api_key() -> str:
+    """Get the OpenAI API key from environment.
+
+    Returns:
+        The OpenAI API key.
+
+    Raises:
+        ValueError: If OPENAI_API_KEY is not set.
+    """
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY environment variable is not set")
+    return api_key
+
+
+def create_agent(
+    role: str,
+    goal: str,
+    backstory: str,
+    verbose: bool = True,
+    allow_delegation: bool = False,
+) -> Agent:
+    """Create a CrewAI agent.
+
+    Args:
+        role: The role of the agent.
+        goal: The goal the agent aims to achieve.
+        backstory: The backstory of the agent.
+        verbose: Whether to enable verbose output.
+        allow_delegation: Whether the agent can delegate tasks.
+
+    Returns:
+        A configured CrewAI Agent.
+    """
+    # Ensure API key is set
+    get_openai_api_key()
+
+    return Agent(
+        role=role,
+        goal=goal,
+        backstory=backstory,
+        verbose=verbose,
+        allow_delegation=allow_delegation,
+    )
+
+
+def create_task(
+    description: str,
+    expected_output: str,
+    agent: Agent,
+) -> Task:
+    """Create a CrewAI task.
+
+    Args:
+        description: The description of the task.
+        expected_output: The expected output of the task.
+        agent: The agent assigned to this task.
+
+    Returns:
+        A configured CrewAI Task.
+    """
+    return Task(
+        description=description,
+        expected_output=expected_output,
+        agent=agent,
+    )
+
+
+def create_crew(
+    agents: list[Agent],
+    tasks: list[Task],
+    process: Process = Process.sequential,
+    verbose: bool = True,
+) -> Crew:
+    """Create a CrewAI crew.
+
+    Args:
+        agents: List of agents in the crew.
+        tasks: List of tasks for the crew.
+        process: The process type (sequential or hierarchical).
+        verbose: Whether to enable verbose output.
+
+    Returns:
+        A configured CrewAI Crew.
+    """
+    return Crew(
+        agents=agents,
+        tasks=tasks,
+        process=process,
+        verbose=verbose,
+    )
+
+
+async def run_research_crew(
+    topic: str,
+    verbose: bool = True,
+) -> str:
+    """Run a research crew that analyzes a topic.
+
+    This creates a simple research crew with a researcher and writer
+    to analyze a given topic and produce a summary.
+
+    Args:
+        topic: The topic to research.
+        verbose: Whether to enable verbose output.
+
+    Returns:
+        The research summary.
+    """
+    # Create researcher agent
+    researcher = create_agent(
+        role="Senior Researcher",
+        goal=f"Research and analyze {topic} thoroughly",
+        backstory="You are an expert researcher with a keen eye for detail. "
+        "You specialize in finding accurate and comprehensive information.",
+        verbose=verbose,
+        allow_delegation=False,
+    )
+
+    # Create writer agent
+    writer = create_agent(
+        role="Content Writer",
+        goal="Create clear and engaging content based on research",
+        backstory="You are a skilled writer who excels at making complex topics "
+        "accessible to a general audience.",
+        verbose=verbose,
+        allow_delegation=False,
+    )
+
+    # Create research task
+    research_task = create_task(
+        description=f"Research the topic: {topic}. "
+        "Find key information, trends, and insights.",
+        expected_output="A comprehensive research summary with key findings.",
+        agent=researcher,
+    )
+
+    # Create writing task
+    writing_task = create_task(
+        description="Based on the research findings, write a clear and engaging summary.",
+        expected_output="A well-structured summary suitable for a general audience.",
+        agent=writer,
+    )
+
+    # Create and run the crew
+    crew = create_crew(
+        agents=[researcher, writer],
+        tasks=[research_task, writing_task],
+        process=Process.sequential,
+        verbose=verbose,
+    )
+
+    result = crew.kickoff()
+    return str(result)
+
+
+async def run_analysis_crew(
+    data: str,
+    analysis_type: str = "general",
+    verbose: bool = True,
+) -> str:
+    """Run an analysis crew that analyzes data.
+
+    This creates an analysis crew with an analyst to examine
+    the provided data and generate insights.
+
+    Args:
+        data: The data to analyze.
+        analysis_type: The type of analysis to perform.
+        verbose: Whether to enable verbose output.
+
+    Returns:
+        The analysis results.
+    """
+    # Create analyst agent
+    analyst = create_agent(
+        role="Data Analyst",
+        goal=f"Perform {analysis_type} analysis and provide actionable insights",
+        backstory="You are an experienced data analyst with expertise in "
+        "identifying patterns, trends, and actionable insights from data.",
+        verbose=verbose,
+        allow_delegation=False,
+    )
+
+    # Create analysis task
+    analysis_task = create_task(
+        description=f"Analyze the following data and provide {analysis_type} insights:\n{data}",
+        expected_output="A detailed analysis report with key findings and recommendations.",
+        agent=analyst,
+    )
+
+    # Create and run the crew
+    crew = create_crew(
+        agents=[analyst],
+        tasks=[analysis_task],
+        process=Process.sequential,
+        verbose=verbose,
+    )
+
+    result = crew.kickoff()
+    return str(result)
+
+
+async def run_custom_crew(
+    task_description: str,
+    expected_output: str,
+    agent_role: str = "Assistant",
+    agent_goal: str = "Complete the assigned task efficiently",
+    agent_backstory: str = "You are a helpful assistant capable of handling various tasks.",
+    verbose: bool = True,
+) -> str:
+    """Run a custom crew with a single agent and task.
+
+    This provides a flexible way to create and run a crew with
+    custom agent and task configurations.
+
+    Args:
+        task_description: Description of the task to perform.
+        expected_output: Expected output from the task.
+        agent_role: The role of the agent.
+        agent_goal: The goal of the agent.
+        agent_backstory: The backstory of the agent.
+        verbose: Whether to enable verbose output.
+
+    Returns:
+        The task result.
+    """
+    # Create custom agent
+    agent = create_agent(
+        role=agent_role,
+        goal=agent_goal,
+        backstory=agent_backstory,
+        verbose=verbose,
+        allow_delegation=False,
+    )
+
+    # Create custom task
+    task = create_task(
+        description=task_description,
+        expected_output=expected_output,
+        agent=agent,
+    )
+
+    # Create and run the crew
+    crew = create_crew(
+        agents=[agent],
+        tasks=[task],
+        process=Process.sequential,
+        verbose=verbose,
+    )
+
+    result = crew.kickoff()
+    return str(result)
+
+
+def simple_completion(
+    prompt: str,
+    verbose: bool = False,
+) -> str:
+    """Get a simple completion using CrewAI.
+
+    Args:
+        prompt: The prompt to complete.
+        verbose: Whether to enable verbose output.
+
+    Returns:
+        The completion response.
+    """
+    # Create a simple assistant agent
+    assistant = create_agent(
+        role="Assistant",
+        goal="Provide helpful and accurate responses",
+        backstory="You are a helpful AI assistant.",
+        verbose=verbose,
+        allow_delegation=False,
+    )
+
+    # Create completion task
+    task = create_task(
+        description=prompt,
+        expected_output="A helpful response to the request.",
+        agent=assistant,
+    )
+
+    # Create and run the crew
+    crew = create_crew(
+        agents=[assistant],
+        tasks=[task],
+        process=Process.sequential,
+        verbose=verbose,
+    )
+
+    result = crew.kickoff()
+    return str(result)
+{{/if}}

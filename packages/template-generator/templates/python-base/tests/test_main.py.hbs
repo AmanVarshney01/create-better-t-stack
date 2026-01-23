@@ -237,6 +237,76 @@ def test_langgraph_completion_temperature_validation(client):
     )
     assert response.status_code == 422
 {{/if}}
+{{#if (includes pythonAi "crewai")}}
+
+
+def test_crewai_research_endpoint_validation(client):
+    """Test CrewAI research endpoint validates request body."""
+    # Test missing topic field
+    response = client.post("/ai/crewai/research", json={})
+    assert response.status_code == 422
+
+
+def test_crewai_research_endpoint_empty_topic_validation(client):
+    """Test CrewAI research endpoint validates topic is not empty."""
+    # Test with empty topic
+    response = client.post(
+        "/ai/crewai/research",
+        json={"topic": ""},
+    )
+    assert response.status_code == 422
+
+
+def test_crewai_analysis_endpoint_validation(client):
+    """Test CrewAI analysis endpoint validates request body."""
+    # Test missing data field
+    response = client.post("/ai/crewai/analysis", json={})
+    assert response.status_code == 422
+
+
+def test_crewai_analysis_endpoint_empty_data_validation(client):
+    """Test CrewAI analysis endpoint validates data is not empty."""
+    # Test with empty data
+    response = client.post(
+        "/ai/crewai/analysis",
+        json={"data": ""},
+    )
+    assert response.status_code == 422
+
+
+def test_crewai_custom_endpoint_validation(client):
+    """Test CrewAI custom endpoint validates request body."""
+    # Test missing required fields
+    response = client.post("/ai/crewai/custom", json={})
+    assert response.status_code == 422
+
+
+def test_crewai_custom_endpoint_missing_expected_output_validation(client):
+    """Test CrewAI custom endpoint validates expected_output is required."""
+    # Test missing expected_output
+    response = client.post(
+        "/ai/crewai/custom",
+        json={"task_description": "Do something"},
+    )
+    assert response.status_code == 422
+
+
+def test_crewai_completion_endpoint_validation(client):
+    """Test CrewAI completion endpoint validates request body."""
+    # Test missing prompt field
+    response = client.post("/ai/crewai/completion", json={})
+    assert response.status_code == 422
+
+
+def test_crewai_completion_endpoint_empty_prompt_validation(client):
+    """Test CrewAI completion endpoint validates prompt is not empty."""
+    # Test with empty prompt
+    response = client.post(
+        "/ai/crewai/completion",
+        json={"prompt": ""},
+    )
+    assert response.status_code == 422
+{{/if}}
 {{#if (and (eq pythonOrm "none") (eq pythonValidation "pydantic"))}}
 
 

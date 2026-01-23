@@ -886,6 +886,18 @@ function generatePythonReadmeContent(config: ProjectConfig): string {
     structure.push("│       └── anthropic_schemas.py # Anthropic request/response models");
   }
 
+  // Add LangGraph files
+  if (aiLibs.includes("langgraph")) {
+    structure.push("│       ├── langgraph_client.py  # LangGraph client utilities");
+    structure.push("│       └── langgraph_schemas.py # LangGraph request/response models");
+  }
+
+  // Add CrewAI files
+  if (aiLibs.includes("crewai")) {
+    structure.push("│       ├── crewai_client.py  # CrewAI client utilities");
+    structure.push("│       └── crewai_schemas.py # CrewAI request/response models");
+  }
+
   structure.push("├── tests/");
   structure.push("│   ├── __init__.py");
   structure.push("│   └── test_main.py      # Test suite");
