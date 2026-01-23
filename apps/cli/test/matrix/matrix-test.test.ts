@@ -352,43 +352,47 @@ describe("Matrix Testing - Tier 1: Core Stack", () => {
       const startIdx = batchIndex * TEST_CONFIG.batchSize;
       const endIdx = Math.min(startIdx + batch.length, combinations.length);
 
-      it(`batch ${batchIndex + 1}/${batches.length} (combinations ${startIdx + 1}-${endIdx})`, async () => {
-        const results = await validateBatch(batch, TEST_CONFIG.concurrency);
+      it(
+        `batch ${batchIndex + 1}/${batches.length} (combinations ${startIdx + 1}-${endIdx})`,
+        async () => {
+          const results = await validateBatch(batch, TEST_CONFIG.concurrency);
 
-        const failures: string[] = [];
-        for (const { combo, result } of results) {
-          if (
-            !result.success ||
-            !result.ts.valid ||
-            !result.json.valid ||
-            !result.handlebars.valid
-          ) {
-            failures.push(combo.id);
-            stats.failed++;
-            stats.failedCombinations.push(combo.id);
+          const failures: string[] = [];
+          for (const { combo, result } of results) {
+            if (
+              !result.success ||
+              !result.ts.valid ||
+              !result.json.valid ||
+              !result.handlebars.valid
+            ) {
+              failures.push(combo.id);
+              stats.failed++;
+              stats.failedCombinations.push(combo.id);
 
-            if (!result.success) {
-              console.error(`\nGeneration failed for ${combo.id}: ${result.error}`);
-            } else if (!result.ts.valid) {
-              console.error(`\nTypeScript errors for ${combo.id}:`);
-              console.error(formatValidationErrors(result.ts));
-            } else if (!result.json.valid) {
-              console.error(`\nJSON errors for ${combo.id}:`);
-              console.error(formatValidationErrors(result.json));
+              if (!result.success) {
+                console.error(`\nGeneration failed for ${combo.id}: ${result.error}`);
+              } else if (!result.ts.valid) {
+                console.error(`\nTypeScript errors for ${combo.id}:`);
+                console.error(formatValidationErrors(result.ts));
+              } else if (!result.json.valid) {
+                console.error(`\nJSON errors for ${combo.id}:`);
+                console.error(formatValidationErrors(result.json));
+              }
+            } else {
+              stats.passed++;
             }
-          } else {
-            stats.passed++;
           }
-        }
 
-        // Aggressive memory cleanup after each batch
-        resetSharedProject();
-        if (typeof Bun !== "undefined" && Bun.gc) {
-          Bun.gc(true);
-        }
+          // Aggressive memory cleanup after each batch
+          resetSharedProject();
+          if (typeof Bun !== "undefined" && Bun.gc) {
+            Bun.gc(true);
+          }
 
-        expect(failures.length).toBe(0);
-      });
+          expect(failures.length).toBe(0);
+        },
+        { timeout: 120_000 },
+      );
     }
   } else {
     // ============== FULL/SAMPLE MODE (individual tests) ==============

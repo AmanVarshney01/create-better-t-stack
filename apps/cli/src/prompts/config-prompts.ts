@@ -341,8 +341,12 @@ export async function gatherConfig(
       },
       // Keep at end
       git: () => getGitChoice(flags.git),
-      packageManager: () => getPackageManagerChoice(flags.packageManager),
-      install: () => getinstallChoice(flags.install),
+      packageManager: ({ results }) => {
+        // Skip package manager prompt for Rust (uses cargo, not npm/pnpm/bun)
+        if (results.ecosystem === "rust") return Promise.resolve("npm" as PackageManager);
+        return getPackageManagerChoice(flags.packageManager);
+      },
+      install: ({ results }) => getinstallChoice(flags.install, results.ecosystem),
     },
     {
       onCancel: () => exitCancelled("Operation cancelled"),

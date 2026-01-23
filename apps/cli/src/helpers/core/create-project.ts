@@ -14,7 +14,7 @@ import { formatProject } from "../../utils/file-formatter";
 import { setupAddons } from "../addons/addons-setup";
 import { setupDatabase } from "../core/db-setup";
 import { initializeGit } from "./git";
-import { installDependencies } from "./install-dependencies";
+import { installDependencies, runCargoBuild } from "./install-dependencies";
 import { displayPostInstallInstructions } from "./post-installation";
 
 export interface CreateProjectOptions {
@@ -60,6 +60,11 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
         projectDir,
         packageManager: options.packageManager,
       });
+    }
+
+    // Run cargo build for Rust projects
+    if (options.install && options.ecosystem === "rust") {
+      await runCargoBuild({ projectDir });
     }
 
     await initializeGit(projectDir, options.git);

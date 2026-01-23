@@ -31,3 +31,23 @@ export async function installDependencies({
     }
   }
 }
+
+export async function runCargoBuild({ projectDir }: { projectDir: string }) {
+  const s = spinner();
+
+  try {
+    s.start("Running cargo build...");
+
+    await $({
+      cwd: projectDir,
+      stderr: "inherit",
+    })`cargo build`;
+
+    s.stop("Cargo build completed");
+  } catch (error) {
+    s.stop(pc.red("Cargo build failed"));
+    if (error instanceof Error) {
+      consola.error(pc.red(`Cargo build error: ${error.message}`));
+    }
+  }
+}

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { Outlet, HeadContent, Scripts, createRootRoute, Link } from "@tanstack/react-router";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 import { Navbar } from "@/components/navbar";
 import Providers from "@/components/providers";
@@ -92,6 +93,7 @@ function RootDocument({ children }: { children: ReactNode }) {
       <body className="bg-background text-foreground">
         <Providers>{children}</Providers>
         <Analytics />
+        <SpeedInsights />
         <Scripts />
       </body>
     </html>
