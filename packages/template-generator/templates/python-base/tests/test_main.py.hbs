@@ -1,0 +1,59 @@
+"""Tests for main application."""
+
+{{#if (eq pythonWebFramework "fastapi")}}
+import pytest
+from fastapi.testclient import TestClient
+
+from app.main import app
+
+
+@pytest.fixture
+def client():
+    """Create a test client."""
+    return TestClient(app)
+
+
+def test_root(client):
+    """Test root endpoint."""
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.json() == {"message": "Welcome to {{projectName}}!"}
+
+
+def test_health(client):
+    """Test health endpoint."""
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "healthy"}
+{{/if}}
+{{#if (eq pythonWebFramework "django")}}
+import pytest
+from django.test import Client
+
+
+@pytest.fixture
+def client():
+    """Create a test client."""
+    return Client()
+
+
+def test_root(client):
+    """Test root endpoint."""
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.json() == {"message": "Welcome to {{projectName}}!"}
+
+
+def test_health(client):
+    """Test health endpoint."""
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "healthy"}
+{{/if}}
+{{#if (eq pythonWebFramework "none")}}
+def test_main():
+    """Test main module imports correctly."""
+    from app import main
+
+    assert main is not None
+{{/if}}

@@ -14,7 +14,7 @@ import { formatProject } from "../../utils/file-formatter";
 import { setupAddons } from "../addons/addons-setup";
 import { setupDatabase } from "../core/db-setup";
 import { initializeGit } from "./git";
-import { installDependencies, runCargoBuild } from "./install-dependencies";
+import { installDependencies, runCargoBuild, runUvSync } from "./install-dependencies";
 import { displayPostInstallInstructions } from "./post-installation";
 
 export interface CreateProjectOptions {
@@ -54,8 +54,8 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
 
     if (!isSilent()) log.success("Project template successfully scaffolded!");
 
-    // Skip npm/pnpm/bun install for Rust projects (they use cargo)
-    if (options.install && options.ecosystem !== "rust") {
+    // Skip npm/pnpm/bun install for Rust/Python projects (they use cargo/uv)
+    if (options.install && options.ecosystem === "typescript") {
       await installDependencies({
         projectDir,
         packageManager: options.packageManager,
@@ -65,6 +65,11 @@ export async function createProject(options: ProjectConfig, cliInput: CreateProj
     // Run cargo build for Rust projects
     if (options.install && options.ecosystem === "rust") {
       await runCargoBuild({ projectDir });
+    }
+
+    // Run uv sync for Python projects
+    if (options.install && options.ecosystem === "python") {
+      await runUvSync({ projectDir });
     }
 
     await initializeGit(projectDir, options.git);

@@ -14,6 +14,7 @@ import {
   type TemplateData,
   processBaseTemplate,
   processRustBaseTemplate,
+  processPythonBaseTemplate,
   processFrontendTemplates,
   processBackendTemplates,
   processDbTemplates,
@@ -54,6 +55,9 @@ export async function generateVirtualProject(options: GeneratorOptions): Promise
     if (config.ecosystem === "rust") {
       // Rust ecosystem - use Cargo.toml and Rust project structure
       await processRustBaseTemplate(vfs, templates, config);
+    } else if (config.ecosystem === "python") {
+      // Python ecosystem - use pyproject.toml and Python project structure
+      await processPythonBaseTemplate(vfs, templates, config);
     } else {
       // TypeScript ecosystem - use package.json and TypeScript project structure
       await processBaseTemplate(vfs, templates, config);

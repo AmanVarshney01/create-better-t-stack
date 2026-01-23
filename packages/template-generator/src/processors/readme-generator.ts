@@ -3,8 +3,14 @@ import type { ProjectConfig } from "@better-fullstack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 export function processReadme(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const content =
-    config.ecosystem === "rust" ? generateRustReadmeContent(config) : generateReadmeContent(config);
+  let content: string;
+  if (config.ecosystem === "rust") {
+    content = generateRustReadmeContent(config);
+  } else if (config.ecosystem === "python") {
+    content = generatePythonReadmeContent(config);
+  } else {
+    content = generateReadmeContent(config);
+  }
   vfs.writeFile("README.md", content);
 }
 
@@ -732,6 +738,170 @@ The frontend will be available at [http://localhost:8080](http://localhost:8080)
 `
       : ""
   }
+## Project Structure
+
+\`\`\`
+${structure.join("\n")}
+\`\`\`
+
+## Available Commands
+
+${scripts}
+`;
+}
+
+function generatePythonReadmeContent(config: ProjectConfig): string {
+  const {
+    projectName,
+    pythonWebFramework,
+    pythonOrm,
+    pythonValidation,
+    pythonAi,
+    pythonTaskQueue,
+    pythonQuality,
+  } = config;
+
+  const features: string[] = ["- **Python** - Modern, readable programming language"];
+
+  // Web framework
+  if (pythonWebFramework === "fastapi") {
+    features.push("- **FastAPI** - Modern, fast (high-performance) async web framework");
+  } else if (pythonWebFramework === "django") {
+    features.push("- **Django** - High-level Python web framework with batteries included");
+  }
+
+  // ORM
+  if (pythonOrm === "sqlalchemy") {
+    features.push("- **SQLAlchemy** - The SQL toolkit and ORM for Python");
+    features.push("- **Alembic** - Database migrations for SQLAlchemy");
+  } else if (pythonOrm === "sqlmodel") {
+    features.push("- **SQLModel** - SQL databases with Pydantic and SQLAlchemy");
+    features.push("- **Alembic** - Database migrations");
+  }
+
+  // Validation
+  if (pythonValidation === "pydantic") {
+    features.push("- **Pydantic** - Data validation using Python type hints");
+  }
+
+  // AI/ML
+  const aiLibs = Array.isArray(pythonAi) ? pythonAi : [];
+  if (aiLibs.includes("langchain")) {
+    features.push("- **LangChain** - Building applications with LLMs");
+  }
+  if (aiLibs.includes("llamaindex")) {
+    features.push("- **LlamaIndex** - Data framework for LLM applications");
+  }
+  if (aiLibs.includes("openai-sdk")) {
+    features.push("- **OpenAI SDK** - Official OpenAI Python client");
+  }
+  if (aiLibs.includes("anthropic-sdk")) {
+    features.push("- **Anthropic SDK** - Official Claude API client");
+  }
+  if (aiLibs.includes("langgraph")) {
+    features.push("- **LangGraph** - Graph-based agent orchestration");
+  }
+  if (aiLibs.includes("crewai")) {
+    features.push("- **CrewAI** - Multi-agent orchestration framework");
+  }
+
+  // Task queue
+  if (pythonTaskQueue === "celery") {
+    features.push("- **Celery** - Distributed task queue");
+  }
+
+  // Quality
+  if (pythonQuality === "ruff") {
+    features.push("- **Ruff** - Extremely fast Python linter and formatter");
+  }
+
+  // Project structure
+  const structure: string[] = [
+    `${projectName}/`,
+    "├── pyproject.toml        # Project configuration and dependencies",
+    "├── src/",
+    "│   └── app/",
+    "│       ├── __init__.py",
+    "│       └── main.py       # Application entry point",
+    "├── tests/",
+    "│   ├── __init__.py",
+    "│   └── test_main.py      # Test suite",
+    "├── .env.example          # Environment variables template",
+    "└── .gitignore",
+  ];
+
+  // Scripts
+  let scripts = `- \`uv run python -m app.main\`: Run the application`;
+
+  if (pythonWebFramework === "fastapi") {
+    scripts = `- \`uv run uvicorn app.main:app --reload\`: Start FastAPI dev server
+- \`uv run uvicorn app.main:app\`: Start FastAPI production server`;
+  } else if (pythonWebFramework === "django") {
+    scripts = `- \`uv run python -m app.main\`: Start Django dev server`;
+  }
+
+  scripts += `
+- \`uv run pytest\`: Run tests`;
+
+  if (pythonQuality === "ruff") {
+    scripts += `
+- \`uv run ruff check .\`: Run linter
+- \`uv run ruff format .\`: Format code`;
+  }
+
+  return `# ${projectName}
+
+This project was created with [Better Fullstack](https://github.com/Marve10s/Better-Fullstack), a high-performance Python stack.
+
+## Features
+
+${features.join("\n")}
+
+## Prerequisites
+
+- [Python](https://www.python.org/) 3.11 or higher
+- [uv](https://docs.astral.sh/uv/) (Recommended package manager)
+
+## Getting Started
+
+First, copy the environment file:
+
+\`\`\`bash
+cp .env.example .env
+\`\`\`
+
+Then, install dependencies using uv:
+
+\`\`\`bash
+uv sync
+\`\`\`
+
+${
+  pythonWebFramework === "fastapi"
+    ? `Start the FastAPI development server:
+
+\`\`\`bash
+uv run uvicorn app.main:app --reload
+\`\`\`
+
+The API will be running at [http://localhost:8000](http://localhost:8000).
+`
+    : pythonWebFramework === "django"
+      ? `Start the Django development server:
+
+\`\`\`bash
+uv run python -m app.main
+\`\`\`
+
+The application will be running at [http://localhost:8000](http://localhost:8000).
+`
+      : `Run the application:
+
+\`\`\`bash
+uv run python -m app.main
+\`\`\`
+`
+}
 ## Project Structure
 
 \`\`\`

@@ -1,0 +1,108 @@
+"""Main application entry point."""
+
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+{{#if (eq pythonWebFramework "fastapi")}}
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI(
+    title="{{projectName}}",
+    description="A Python API built with Better Fullstack",
+    version="0.1.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/")
+async def root():
+    """Root endpoint."""
+    return {"message": "Welcome to {{projectName}}!"}
+
+
+@app.get("/health")
+async def health():
+    """Health check endpoint."""
+    return {"status": "healthy"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(
+        "app.main:app",
+        host=os.getenv("HOST", "0.0.0.0"),
+        port=int(os.getenv("PORT", "8000")),
+        reload=True,
+    )
+{{/if}}
+{{#if (eq pythonWebFramework "django")}}
+import django
+from django.conf import settings
+from django.http import JsonResponse
+from django.urls import path
+
+if not settings.configured:
+    settings.configure(
+        DEBUG=os.getenv("DEBUG", "true").lower() == "true",
+        ROOT_URLCONF=__name__,
+        SECRET_KEY=os.getenv("SECRET_KEY", "change-me-in-production"),
+        ALLOWED_HOSTS=["*"],
+        INSTALLED_APPS=[
+            "django.contrib.contenttypes",
+            "django.contrib.auth",
+            "corsheaders",
+        ],
+        MIDDLEWARE=[
+            "corsheaders.middleware.CorsMiddleware",
+            "django.middleware.common.CommonMiddleware",
+        ],
+        CORS_ALLOW_ALL_ORIGINS=True,
+    )
+    django.setup()
+
+
+def root(request):
+    """Root endpoint."""
+    return JsonResponse({"message": "Welcome to {{projectName}}!"})
+
+
+def health(request):
+    """Health check endpoint."""
+    return JsonResponse({"status": "healthy"})
+
+
+urlpatterns = [
+    path("", root),
+    path("health", health),
+]
+
+
+if __name__ == "__main__":
+    from django.core.management import execute_from_command_line
+    import sys
+
+    sys.argv = ["manage.py", "runserver", f"{os.getenv('HOST', '0.0.0.0')}:{os.getenv('PORT', '8000')}"]
+    execute_from_command_line(sys.argv)
+{{/if}}
+{{#if (eq pythonWebFramework "none")}}
+def main():
+    """Main entry point."""
+    print("Welcome to {{projectName}}!")
+    print("Add your application logic here.")
+
+
+if __name__ == "__main__":
+    main()
+{{/if}}

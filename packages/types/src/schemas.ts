@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const EcosystemSchema = z
-  .enum(["typescript", "rust"])
-  .describe("Language ecosystem (typescript or rust)");
+  .enum(["typescript", "rust", "python"])
+  .describe("Language ecosystem (typescript, rust, or python)");
 
 export const DatabaseSchema = z
   .enum(["none", "sqlite", "postgres", "mysql", "mongodb", "edgedb", "redis"])
@@ -248,6 +248,27 @@ export const RustLibrariesSchema = z
   .enum(["serde", "validator", "jsonwebtoken", "argon2", "tokio-test", "mockall", "none"])
   .describe("Rust core libraries");
 
+// Python ecosystem schemas
+export const PythonWebFrameworkSchema = z
+  .enum(["fastapi", "django", "none"])
+  .describe("Python web framework");
+
+export const PythonOrmSchema = z
+  .enum(["sqlalchemy", "sqlmodel", "none"])
+  .describe("Python ORM/database layer");
+
+export const PythonValidationSchema = z
+  .enum(["pydantic", "none"])
+  .describe("Python validation library");
+
+export const PythonAiSchema = z
+  .enum(["langchain", "llamaindex", "openai-sdk", "anthropic-sdk", "langgraph", "crewai", "none"])
+  .describe("Python AI/ML framework");
+
+export const PythonTaskQueueSchema = z.enum(["celery", "none"]).describe("Python task queue");
+
+export const PythonQualitySchema = z.enum(["ruff", "none"]).describe("Python code quality tool");
+
 export const CSSFrameworkSchema = z
   .enum(["tailwind", "scss", "less", "postcss-only", "none"])
   .describe("CSS framework/preprocessor");
@@ -347,6 +368,13 @@ export const CreateInputSchema = z.object({
   rustApi: RustApiSchema.optional(),
   rustCli: RustCliSchema.optional(),
   rustLibraries: z.array(RustLibrariesSchema).optional(),
+  // Python ecosystem options
+  pythonWebFramework: PythonWebFrameworkSchema.optional(),
+  pythonOrm: PythonOrmSchema.optional(),
+  pythonValidation: PythonValidationSchema.optional(),
+  pythonAi: z.array(PythonAiSchema).optional(),
+  pythonTaskQueue: PythonTaskQueueSchema.optional(),
+  pythonQuality: PythonQualitySchema.optional(),
 });
 
 export const AddInputSchema = z.object({
@@ -410,6 +438,13 @@ export const ProjectConfigSchema = z.object({
   rustApi: RustApiSchema,
   rustCli: RustCliSchema,
   rustLibraries: z.array(RustLibrariesSchema),
+  // Python ecosystem options
+  pythonWebFramework: PythonWebFrameworkSchema,
+  pythonOrm: PythonOrmSchema,
+  pythonValidation: PythonValidationSchema,
+  pythonAi: z.array(PythonAiSchema),
+  pythonTaskQueue: PythonTaskQueueSchema,
+  pythonQuality: PythonQualitySchema,
 });
 
 export const BetterTStackConfigSchema = z.object({
@@ -457,6 +492,13 @@ export const BetterTStackConfigSchema = z.object({
   rustApi: RustApiSchema,
   rustCli: RustCliSchema,
   rustLibraries: z.array(RustLibrariesSchema),
+  // Python ecosystem options
+  pythonWebFramework: PythonWebFrameworkSchema,
+  pythonOrm: PythonOrmSchema,
+  pythonValidation: PythonValidationSchema,
+  pythonAi: z.array(PythonAiSchema),
+  pythonTaskQueue: PythonTaskQueueSchema,
+  pythonQuality: PythonQualitySchema,
 });
 
 export const BetterTStackConfigFileSchema = z
@@ -524,3 +566,9 @@ export const RUST_ORM_VALUES = RustOrmSchema.options;
 export const RUST_API_VALUES = RustApiSchema.options;
 export const RUST_CLI_VALUES = RustCliSchema.options;
 export const RUST_LIBRARIES_VALUES = RustLibrariesSchema.options;
+export const PYTHON_WEB_FRAMEWORK_VALUES = PythonWebFrameworkSchema.options;
+export const PYTHON_ORM_VALUES = PythonOrmSchema.options;
+export const PYTHON_VALIDATION_VALUES = PythonValidationSchema.options;
+export const PYTHON_AI_VALUES = PythonAiSchema.options;
+export const PYTHON_TASK_QUEUE_VALUES = PythonTaskQueueSchema.options;
+export const PYTHON_QUALITY_VALUES = PythonQualitySchema.options;

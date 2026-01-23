@@ -28,6 +28,24 @@ export async function getinstallChoice(install?: boolean, ecosystem?: Ecosystem)
     return response;
   }
 
+  // For Python: check uv and show appropriate message
+  if (ecosystem === "python") {
+    const uvInstalled = await commandExists("uv");
+    if (!uvInstalled) {
+      log.warn("uv is not installed. Please install uv from https://docs.astral.sh/uv/");
+      return false;
+    }
+
+    const response = await navigableConfirm({
+      message: "Run uv sync?",
+      initialValue: DEFAULT_CONFIG.install,
+    });
+
+    if (isCancel(response)) return exitCancelled("Operation cancelled");
+
+    return response;
+  }
+
   // For TypeScript: existing behavior
   const response = await navigableConfirm({
     message: "Install dependencies?",

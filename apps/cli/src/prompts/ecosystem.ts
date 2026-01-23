@@ -17,6 +17,11 @@ export async function getEcosystemChoice(ecosystem?: Ecosystem) {
       label: "Rust",
       hint: "Rust ecosystem with Axum, Leptos, and more",
     },
+    {
+      value: "python" as const,
+      label: "Python",
+      hint: "Python ecosystem with FastAPI, Django, and AI/ML tools",
+    },
   ];
 
   const response = await navigableSelect<Ecosystem>({

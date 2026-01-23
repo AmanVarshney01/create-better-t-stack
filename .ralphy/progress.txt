@@ -5652,3 +5652,102 @@ Implemented Umami open-source analytics integration following the existing Plaus
 
 ### Status: COMPLETE
 
+
+---
+## 2026-01-23 20:26:04 - Python Language Support
+
+### Task: Python Language Support - Add Python as a language option with pyproject.toml/uv scaffolding
+
+### Changes Made:
+1. Updated packages/types/src/schemas.ts:
+   - Added 'python' to EcosystemSchema
+   - Added PythonWebFrameworkSchema (fastapi, django, none)
+   - Added PythonOrmSchema (sqlalchemy, sqlmodel, none)
+   - Added PythonValidationSchema (pydantic, none)
+   - Added PythonAiSchema (langchain, llamaindex, openai-sdk, anthropic-sdk, langgraph, crewai, none)
+   - Added PythonTaskQueueSchema (celery, none)
+   - Added PythonQualitySchema (ruff, none)
+   - Updated CreateInputSchema and ProjectConfigSchema with Python options
+   - Added Python-specific value exports
+
+2. Updated packages/types/src/types.ts:
+   - Added Python type exports
+
+3. Updated apps/cli/src/prompts/ecosystem.ts:
+   - Added Python option to ecosystem selection menu
+
+4. Created apps/cli/src/prompts/python-ecosystem.ts:
+   - getPythonWebFrameworkChoice()
+   - getPythonOrmChoice()
+   - getPythonValidationChoice()
+   - getPythonAiChoice()
+   - getPythonTaskQueueChoice()
+   - getPythonQualityChoice()
+
+5. Updated apps/cli/src/prompts/config-prompts.ts:
+   - Added Python type imports
+   - Added Python prompts to navigableGroup
+   - Updated TypeScript prompts to skip when Python is selected
+   - Updated Rust prompts to skip when Python is selected
+
+6. Updated apps/cli/src/prompts/install.ts:
+   - Added uv check for Python projects
+   - Added 'Run uv sync?' prompt for Python
+
+7. Created packages/template-generator/src/template-handlers/python-base.ts:
+   - Handler for processing Python base templates
+
+8. Updated packages/template-generator/src/template-handlers/index.ts:
+   - Export processPythonBaseTemplate
+
+9. Updated packages/template-generator/src/generator.ts:
+   - Added processPythonBaseTemplate import
+   - Added Python ecosystem branch in generateVirtualProject
+
+10. Created packages/template-generator/templates/python-base/:
+    - pyproject.toml.hbs (conditional dependencies based on selections)
+    - _gitignore (Python-specific ignores)
+    - .env.example (Python environment variables)
+    - src/app/__init__.py
+    - src/app/main.py.hbs (FastAPI/Django/basic templates)
+    - tests/__init__.py
+    - tests/test_main.py.hbs (test templates)
+
+11. Updated packages/template-generator/src/processors/readme-generator.ts:
+    - Added generatePythonReadmeContent function
+    - Updated processReadme to handle Python ecosystem
+
+12. Updated apps/cli/src/helpers/core/install-dependencies.ts:
+    - Added runUvSync function for Python projects
+
+13. Updated apps/cli/src/helpers/core/create-project.ts:
+    - Import runUvSync
+    - Added Python branch to run uv sync
+
+14. Updated apps/cli/src/index.ts:
+    - Added Python schema imports
+    - Added Python CLI options
+    - Added Python options to createVirtual function
+    - Added Python type exports
+
+### Tests Added:
+- Created apps/cli/test/python-language.test.ts with 28 comprehensive tests:
+  - Schema definition tests
+  - Base template structure tests
+  - FastAPI integration tests
+  - Django integration tests
+  - SQLAlchemy/SQLModel ORM tests
+  - Pydantic validation tests
+  - AI/ML framework tests (LangChain, OpenAI, Anthropic)
+  - Celery task queue tests
+  - Ruff quality tool tests
+  - README generation tests
+  - Full stack project tests
+  - Ecosystem isolation tests
+
+### Test Results:
+- All 28 Python language tests pass
+- Linting passes (no errors, only pre-existing warnings)
+
+### Status: COMPLETE
+

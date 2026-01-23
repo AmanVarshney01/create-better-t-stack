@@ -51,3 +51,23 @@ export async function runCargoBuild({ projectDir }: { projectDir: string }) {
     }
   }
 }
+
+export async function runUvSync({ projectDir }: { projectDir: string }) {
+  const s = spinner();
+
+  try {
+    s.start("Running uv sync...");
+
+    await $({
+      cwd: projectDir,
+      stderr: "inherit",
+    })`uv sync`;
+
+    s.stop("Python dependencies installed successfully");
+  } catch (error) {
+    s.stop(pc.red("uv sync failed"));
+    if (error instanceof Error) {
+      consola.error(pc.red(`uv sync error: ${error.message}`));
+    }
+  }
+}

@@ -27,6 +27,12 @@ import type {
   PackageManager,
   Payments,
   ProjectConfig,
+  PythonAi,
+  PythonOrm,
+  PythonQuality,
+  PythonTaskQueue,
+  PythonValidation,
+  PythonWebFramework,
   Realtime,
   RustApi,
   RustCli,
@@ -73,6 +79,14 @@ import { getObservabilityChoice } from "./observability";
 import { getORMChoice } from "./orm";
 import { getPackageManagerChoice } from "./package-manager";
 import { getPaymentsChoice } from "./payments";
+import {
+  getPythonAiChoice,
+  getPythonOrmChoice,
+  getPythonQualityChoice,
+  getPythonTaskQueueChoice,
+  getPythonValidationChoice,
+  getPythonWebFrameworkChoice,
+} from "./python-ecosystem";
 import { getRealtimeChoice } from "./realtime";
 import { getRuntimeChoice } from "./runtime";
 import {
@@ -134,6 +148,13 @@ type PromptGroupResults = {
   rustApi: RustApi;
   rustCli: RustCli;
   rustLibraries: RustLibraries[];
+  // Python ecosystem
+  pythonWebFramework: PythonWebFramework;
+  pythonOrm: PythonOrm;
+  pythonValidation: PythonValidation;
+  pythonAi: PythonAi[];
+  pythonTaskQueue: PythonTaskQueue;
+  pythonQuality: PythonQuality;
   // Keep at end
   git: boolean;
   packageManager: PackageManager;
@@ -150,46 +171,46 @@ export async function gatherConfig(
     {
       // Ecosystem choice first
       ecosystem: () => getEcosystemChoice(flags.ecosystem),
-      // TypeScript ecosystem prompts (skip if Rust)
+      // TypeScript ecosystem prompts (skip if Rust or Python)
       frontend: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve([] as Frontend[]);
+        if (results.ecosystem !== "typescript") return Promise.resolve([] as Frontend[]);
         return getFrontendChoice(flags.frontend, flags.backend, flags.auth);
       },
       astroIntegration: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve(undefined);
+        if (results.ecosystem !== "typescript") return Promise.resolve(undefined);
         if (results.frontend?.includes("astro")) {
           return getAstroIntegrationChoice(flags.astroIntegration);
         }
         return Promise.resolve(undefined);
       },
       uiLibrary: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as UILibrary);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as UILibrary);
         if (hasWebStyling(results.frontend)) {
           return getUILibraryChoice(flags.uiLibrary, results.frontend, results.astroIntegration);
         }
         return Promise.resolve("none" as UILibrary);
       },
       cssFramework: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as CSSFramework);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as CSSFramework);
         if (hasWebStyling(results.frontend)) {
           return getCSSFrameworkChoice(flags.cssFramework, results.uiLibrary);
         }
         return Promise.resolve("none" as CSSFramework);
       },
       backend: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as Backend);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as Backend);
         return getBackendFrameworkChoice(flags.backend, results.frontend);
       },
       runtime: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as Runtime);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as Runtime);
         return getRuntimeChoice(flags.runtime, results.backend);
       },
       database: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as Database);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as Database);
         return getDatabaseChoice(flags.database, results.backend, results.runtime);
       },
       orm: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as ORM);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as ORM);
         return getORMChoice(
           flags.orm,
           results.database !== "none",
@@ -199,7 +220,7 @@ export async function gatherConfig(
         );
       },
       api: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as API);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as API);
         return getApiChoice(
           flags.api,
           results.frontend,
@@ -208,27 +229,27 @@ export async function gatherConfig(
         ) as Promise<API>;
       },
       auth: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as Auth);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as Auth);
         return getAuthChoice(flags.auth, results.backend, results.frontend);
       },
       payments: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as Payments);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as Payments);
         return getPaymentsChoice(flags.payments, results.auth, results.backend, results.frontend);
       },
       email: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as Email);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as Email);
         return getEmailChoice(flags.email, results.backend);
       },
       effect: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as Effect);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as Effect);
         return getEffectChoice(flags.effect);
       },
       addons: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve([] as Addons[]);
+        if (results.ecosystem !== "typescript") return Promise.resolve([] as Addons[]);
         return getAddonsChoice(flags.addons, results.frontend, results.auth);
       },
       examples: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve([] as Examples[]);
+        if (results.ecosystem !== "typescript") return Promise.resolve([] as Examples[]);
         return getExamplesChoice(
           flags.examples,
           results.database,
@@ -238,7 +259,7 @@ export async function gatherConfig(
         ) as Promise<Examples[]>;
       },
       dbSetup: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as DatabaseSetup);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as DatabaseSetup);
         return getDBSetupChoice(
           results.database ?? "none",
           flags.dbSetup,
@@ -248,7 +269,7 @@ export async function gatherConfig(
         );
       },
       webDeploy: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as WebDeploy);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as WebDeploy);
         return getDeploymentChoice(
           flags.webDeploy,
           results.runtime,
@@ -257,7 +278,7 @@ export async function gatherConfig(
         );
       },
       serverDeploy: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as ServerDeploy);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as ServerDeploy);
         return getServerDeploymentChoice(
           flags.serverDeploy,
           results.runtime,
@@ -267,95 +288,121 @@ export async function gatherConfig(
       },
       // TypeScript-specific prompts
       ai: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as AI);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as AI);
         return getAIChoice(flags.ai);
       },
       validation: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as Validation);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as Validation);
         return getValidationChoice(flags.validation);
       },
       forms: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as Forms);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as Forms);
         return getFormsChoice(flags.forms, results.frontend);
       },
       stateManagement: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as StateManagement);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as StateManagement);
         return getStateManagementChoice(flags.stateManagement, results.frontend);
       },
       animation: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as Animation);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as Animation);
         return getAnimationChoice(flags.animation, results.frontend);
       },
       testing: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as Testing);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as Testing);
         return getTestingChoice(flags.testing);
       },
       realtime: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as Realtime);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as Realtime);
         return getRealtimeChoice(flags.realtime, results.backend);
       },
       jobQueue: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as JobQueue);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as JobQueue);
         return getJobQueueChoice(flags.jobQueue, results.backend);
       },
       fileUpload: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as FileUpload);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as FileUpload);
         return getFileUploadChoice(flags.fileUpload, results.backend);
       },
       logging: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as Logging);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as Logging);
         return getLoggingChoice(flags.logging, results.backend);
       },
       observability: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as Observability);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as Observability);
         return getObservabilityChoice(flags.observability, results.backend);
       },
       featureFlags: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as FeatureFlags);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as FeatureFlags);
         return Promise.resolve(flags.featureFlags || "none") as Promise<FeatureFlags>;
       },
       analytics: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as Analytics);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as Analytics);
         return Promise.resolve(flags.analytics || "none") as Promise<Analytics>;
       },
       cms: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as CMS);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as CMS);
         return getCMSChoice(flags.cms, results.backend);
       },
       caching: ({ results }) => {
-        if (results.ecosystem === "rust") return Promise.resolve("none" as Caching);
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as Caching);
         return getCachingChoice(flags.caching, results.backend);
       },
-      // Rust ecosystem prompts (skip if TypeScript)
+      // Rust ecosystem prompts (skip if TypeScript or Python)
       rustWebFramework: ({ results }) => {
-        if (results.ecosystem === "typescript") return Promise.resolve("none" as RustWebFramework);
+        if (results.ecosystem !== "rust") return Promise.resolve("none" as RustWebFramework);
         return getRustWebFrameworkChoice(flags.rustWebFramework);
       },
       rustFrontend: ({ results }) => {
-        if (results.ecosystem === "typescript") return Promise.resolve("none" as RustFrontend);
+        if (results.ecosystem !== "rust") return Promise.resolve("none" as RustFrontend);
         return getRustFrontendChoice(flags.rustFrontend);
       },
       rustOrm: ({ results }) => {
-        if (results.ecosystem === "typescript") return Promise.resolve("none" as RustOrm);
+        if (results.ecosystem !== "rust") return Promise.resolve("none" as RustOrm);
         return getRustOrmChoice(flags.rustOrm);
       },
       rustApi: ({ results }) => {
-        if (results.ecosystem === "typescript") return Promise.resolve("none" as RustApi);
+        if (results.ecosystem !== "rust") return Promise.resolve("none" as RustApi);
         return getRustApiChoice(flags.rustApi);
       },
       rustCli: ({ results }) => {
-        if (results.ecosystem === "typescript") return Promise.resolve("none" as RustCli);
+        if (results.ecosystem !== "rust") return Promise.resolve("none" as RustCli);
         return getRustCliChoice(flags.rustCli);
       },
       rustLibraries: ({ results }) => {
-        if (results.ecosystem === "typescript") return Promise.resolve([] as RustLibraries[]);
+        if (results.ecosystem !== "rust") return Promise.resolve([] as RustLibraries[]);
         return getRustLibrariesChoice(flags.rustLibraries);
+      },
+      // Python ecosystem prompts (skip if TypeScript or Rust)
+      pythonWebFramework: ({ results }) => {
+        if (results.ecosystem !== "python") return Promise.resolve("none" as PythonWebFramework);
+        return getPythonWebFrameworkChoice(flags.pythonWebFramework);
+      },
+      pythonOrm: ({ results }) => {
+        if (results.ecosystem !== "python") return Promise.resolve("none" as PythonOrm);
+        return getPythonOrmChoice(flags.pythonOrm);
+      },
+      pythonValidation: ({ results }) => {
+        if (results.ecosystem !== "python") return Promise.resolve("none" as PythonValidation);
+        return getPythonValidationChoice(flags.pythonValidation);
+      },
+      pythonAi: ({ results }) => {
+        if (results.ecosystem !== "python") return Promise.resolve([] as PythonAi[]);
+        return getPythonAiChoice(flags.pythonAi);
+      },
+      pythonTaskQueue: ({ results }) => {
+        if (results.ecosystem !== "python") return Promise.resolve("none" as PythonTaskQueue);
+        return getPythonTaskQueueChoice(flags.pythonTaskQueue);
+      },
+      pythonQuality: ({ results }) => {
+        if (results.ecosystem !== "python") return Promise.resolve("none" as PythonQuality);
+        return getPythonQualityChoice(flags.pythonQuality);
       },
       // Keep at end
       git: () => getGitChoice(flags.git),
       packageManager: ({ results }) => {
-        // Skip package manager prompt for Rust (uses cargo, not npm/pnpm/bun)
-        if (results.ecosystem === "rust") return Promise.resolve("npm" as PackageManager);
+        // Skip package manager prompt for Rust/Python (they use cargo/uv, not npm/pnpm/bun)
+        if (results.ecosystem === "rust" || results.ecosystem === "python")
+          return Promise.resolve("npm" as PackageManager);
         return getPackageManagerChoice(flags.packageManager);
       },
       install: ({ results }) => getinstallChoice(flags.install, results.ecosystem),
@@ -415,5 +462,12 @@ export async function gatherConfig(
     rustApi: result.rustApi,
     rustCli: result.rustCli,
     rustLibraries: result.rustLibraries,
+    // Python ecosystem options
+    pythonWebFramework: result.pythonWebFramework,
+    pythonOrm: result.pythonOrm,
+    pythonValidation: result.pythonValidation,
+    pythonAi: result.pythonAi,
+    pythonTaskQueue: result.pythonTaskQueue,
+    pythonQuality: result.pythonQuality,
   };
 }

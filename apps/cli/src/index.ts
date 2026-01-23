@@ -89,6 +89,18 @@ import {
   type RustCli,
   RustLibrariesSchema,
   type RustLibraries,
+  PythonWebFrameworkSchema,
+  type PythonWebFramework,
+  PythonOrmSchema,
+  type PythonOrm,
+  PythonValidationSchema,
+  type PythonValidation,
+  PythonAiSchema,
+  type PythonAi,
+  PythonTaskQueueSchema,
+  type PythonTaskQueue,
+  PythonQualitySchema,
+  type PythonQuality,
 } from "./types";
 import { handleError } from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
@@ -119,7 +131,9 @@ export const router = os.router({
             .optional()
             .default(false)
             .describe("Show detailed result information"),
-          ecosystem: EcosystemSchema.optional().describe("Language ecosystem (typescript or rust)"),
+          ecosystem: EcosystemSchema.optional().describe(
+            "Language ecosystem (typescript, rust, or python)",
+          ),
           database: DatabaseSchema.optional(),
           orm: ORMSchema.optional(),
           auth: AuthSchema.optional(),
@@ -176,6 +190,19 @@ export const router = os.router({
           rustApi: RustApiSchema.optional().describe("Rust API layer (tonic, async-graphql)"),
           rustCli: RustCliSchema.optional().describe("Rust CLI tools (clap, ratatui)"),
           rustLibraries: z.array(RustLibrariesSchema).optional().describe("Rust core libraries"),
+          // Python ecosystem options
+          pythonWebFramework: PythonWebFrameworkSchema.optional().describe(
+            "Python web framework (fastapi, django)",
+          ),
+          pythonOrm: PythonOrmSchema.optional().describe(
+            "Python ORM/database (sqlalchemy, sqlmodel)",
+          ),
+          pythonValidation: PythonValidationSchema.optional().describe(
+            "Python validation (pydantic)",
+          ),
+          pythonAi: z.array(PythonAiSchema).optional().describe("Python AI/ML frameworks"),
+          pythonTaskQueue: PythonTaskQueueSchema.optional().describe("Python task queue (celery)"),
+          pythonQuality: PythonQualitySchema.optional().describe("Python code quality (ruff)"),
         }),
       ]),
     )
@@ -413,6 +440,13 @@ export async function createVirtual(
       rustApi: options.rustApi || "none",
       rustCli: options.rustCli || "none",
       rustLibraries: options.rustLibraries || [],
+      // Python ecosystem options
+      pythonWebFramework: options.pythonWebFramework || "none",
+      pythonOrm: options.pythonOrm || "none",
+      pythonValidation: options.pythonValidation || "none",
+      pythonAi: options.pythonAi || [],
+      pythonTaskQueue: options.pythonTaskQueue || "none",
+      pythonQuality: options.pythonQuality || "none",
     };
 
     const result = await generate({
@@ -469,4 +503,10 @@ export type {
   CMS,
   Caching,
   Analytics,
+  PythonWebFramework,
+  PythonOrm,
+  PythonValidation,
+  PythonAi,
+  PythonTaskQueue,
+  PythonQuality,
 };

@@ -51,6 +51,12 @@ import type {
   RustApiSchema,
   RustCliSchema,
   RustLibrariesSchema,
+  PythonWebFrameworkSchema,
+  PythonOrmSchema,
+  PythonValidationSchema,
+  PythonAiSchema,
+  PythonTaskQueueSchema,
+  PythonQualitySchema,
 } from "./schemas";
 
 // Inferred types from Zod schemas
@@ -98,6 +104,12 @@ export type RustOrm = z.infer<typeof RustOrmSchema>;
 export type RustApi = z.infer<typeof RustApiSchema>;
 export type RustCli = z.infer<typeof RustCliSchema>;
 export type RustLibraries = z.infer<typeof RustLibrariesSchema>;
+export type PythonWebFramework = z.infer<typeof PythonWebFrameworkSchema>;
+export type PythonOrm = z.infer<typeof PythonOrmSchema>;
+export type PythonValidation = z.infer<typeof PythonValidationSchema>;
+export type PythonAi = z.infer<typeof PythonAiSchema>;
+export type PythonTaskQueue = z.infer<typeof PythonTaskQueueSchema>;
+export type PythonQuality = z.infer<typeof PythonQualitySchema>;
 
 export type CreateInput = z.infer<typeof CreateInputSchema>;
 export type AddInput = z.infer<typeof AddInputSchema>;
