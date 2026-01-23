@@ -27,4 +27,13 @@ export function processObservabilityDeps(vfs: VirtualFileSystem, config: Project
       ],
     });
   }
+
+  // Add Sentry packages
+  if (observability === "sentry" && vfs.exists(serverPath)) {
+    addPackageDependency({
+      vfs,
+      packagePath: serverPath,
+      dependencies: ["@sentry/node", "@sentry/profiling-node"],
+    });
+  }
 }

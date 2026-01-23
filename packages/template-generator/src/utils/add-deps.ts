@@ -538,6 +538,10 @@ export const dependencyVersionMap = {
   "@opentelemetry/resources": "^1.30.1",
   "@opentelemetry/semantic-conventions": "^1.30.0",
 
+  // Sentry
+  "@sentry/node": "^9.1.0",
+  "@sentry/profiling-node": "^9.1.0",
+
   // Headless CMS - Payload
   payload: "^3.14.1",
   "@payloadcms/next": "^3.14.1",

@@ -18,6 +18,11 @@ export async function getObservabilityChoice(observability?: Observability, back
       hint: "Observability framework for traces, metrics, and logs",
     },
     {
+      value: "sentry" as const,
+      label: "Sentry",
+      hint: "Error tracking and performance monitoring",
+    },
+    {
       value: "none" as const,
       label: "None",
       hint: "Skip observability/tracing setup",

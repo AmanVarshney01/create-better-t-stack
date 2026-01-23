@@ -808,6 +808,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "sentry",
+      name: "Sentry",
+      description: "Error tracking and performance monitoring",
+      icon: "https://cdn.simpleicons.org/sentry/362D59",
+      color: "from-purple-400 to-purple-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Observability",
       description: "Skip observability/tracing setup",

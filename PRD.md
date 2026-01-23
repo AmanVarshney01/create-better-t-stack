@@ -134,7 +134,7 @@
 - [x] **Pino** - Fast JSON logger
 - [x] **Winston** - Flexible logging library
 - [x] **OpenTelemetry** - Observability standard
-- [ ] **Sentry** - Error tracking
+- [x] **Sentry** - Error tracking
 
 ---
 
@@ -287,7 +287,7 @@
 
 ## **Monitoring**
 
-- [ ] **Sentry** - Error tracking
+- [x] **Sentry** - Error tracking
 - [ ] **Grafana** - Dashboards
 
 ---

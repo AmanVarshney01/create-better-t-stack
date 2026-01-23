@@ -5145,3 +5145,44 @@ Tests: 15 passing
 - All 150 lint tests pass
 
 ### Status: COMPLETE
+
+## 2026-01-23: Sentry Error Tracking Implementation
+
+### Task: Implement Sentry as an observability/error tracking option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "sentry" to ObservabilitySchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Sentry dependency versions:
+   - @sentry/node: ^9.1.0
+   - @sentry/profiling-node: ^9.1.0
+3. **apps/cli/src/prompts/observability.ts**: Added Sentry option to CLI prompts with hint "Error tracking and performance monitoring"
+4. **packages/template-generator/src/processors/observability-deps.ts**: Added Sentry dependency processing logic
+5. **packages/template-generator/templates/observability/sentry/server/base/src/lib/sentry.ts.hbs**: Created Sentry template with:
+   - initSentry() function for initialization
+   - closeSentry() function for graceful shutdown
+   - captureException() for error tracking
+   - captureMessage() for message logging
+   - setUser() for user context
+   - addBreadcrumb() for debugging context
+   - withSpan() for performance monitoring
+   - Comprehensive documentation and environment variable configuration
+6. **packages/template-generator/src/processors/env-vars.ts**: Added Sentry environment variables:
+   - SENTRY_DSN
+   - SENTRY_ENVIRONMENT
+   - SENTRY_TRACES_SAMPLE_RATE
+   - SENTRY_PROFILES_SAMPLE_RATE
+7. **apps/web/src/lib/constant.ts**: Added Sentry to web builder observability options with purple gradient styling
+8. **apps/cli/test/observability.test.ts**: Added comprehensive tests for Sentry with all backend frameworks:
+   - Hono, Express, Fastify, Elysia, Nitro, NestJS, feTS, and Next.js
+
+### Features:
+- Full Sentry Node.js SDK integration
+- Profiling integration for performance insights
+- Environment-based configuration
+- Error tracking with exception capture
+- Performance monitoring with spans
+- User context and breadcrumb support
+- Compatible with all backend frameworks (Hono, Express, Fastify, Elysia, NestJS, Nitro, feTS)
+- Compatible with Next.js fullstack mode
+
+### Status: COMPLETE

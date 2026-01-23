@@ -201,6 +201,202 @@ describe("Observability Configurations", () => {
     });
   });
 
+  describe("Sentry", () => {
+    it("should work with sentry + hono backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "sentry-hono",
+        observability: "sentry",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that Sentry dependencies were added
+      const packagesServer = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "packages")
+        ?.children?.find((c: any) => c.name === "server");
+
+      const appsServer = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "apps")
+        ?.children?.find((c: any) => c.name === "server");
+
+      const serverDir = packagesServer || appsServer;
+      const serverPackageJson = serverDir?.children?.find((c: any) => c.name === "package.json");
+
+      if (serverPackageJson?.content) {
+        const pkgJson = JSON.parse(serverPackageJson.content);
+        expect(pkgJson.dependencies?.["@sentry/node"]).toBeDefined();
+        expect(pkgJson.dependencies?.["@sentry/profiling-node"]).toBeDefined();
+      }
+    });
+
+    it("should work with sentry + express backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "sentry-express",
+        observability: "sentry",
+        backend: "express",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with sentry + fastify backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "sentry-fastify",
+        observability: "sentry",
+        backend: "fastify",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with sentry + elysia backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "sentry-elysia",
+        observability: "sentry",
+        backend: "elysia",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with sentry + nitro backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "sentry-nitro",
+        observability: "sentry",
+        backend: "nitro",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with sentry + nestjs backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "sentry-nestjs",
+        observability: "sentry",
+        backend: "nestjs",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with sentry + fets backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "sentry-fets",
+        observability: "sentry",
+        backend: "fets",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with sentry + Next.js fullstack", async () => {
+      const result = await runTRPCTest({
+        projectName: "sentry-next",
+        observability: "sentry",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+  });
+
   describe("No Observability (none)", () => {
     it("should not add observability dependencies when observability is none", async () => {
       const result = await runTRPCTest({

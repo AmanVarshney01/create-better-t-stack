@@ -214,7 +214,7 @@ export const LoggingSchema = z
   .describe("Server-side logging framework");
 
 export const ObservabilitySchema = z
-  .enum(["opentelemetry", "none"])
+  .enum(["opentelemetry", "sentry", "none"])
   .describe("Observability and distributed tracing");
 
 // Rust ecosystem schemas

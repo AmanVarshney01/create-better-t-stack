@@ -767,6 +767,30 @@ function buildServerVars(
       comment: "OTLP exporter endpoint (Jaeger, OTEL Collector, Tempo, etc.)",
     },
     {
+      key: "SENTRY_DSN",
+      value: "",
+      condition: observability === "sentry",
+      comment: "Sentry DSN from your project settings",
+    },
+    {
+      key: "SENTRY_ENVIRONMENT",
+      value: "development",
+      condition: observability === "sentry",
+      comment: "Sentry environment (development, staging, production)",
+    },
+    {
+      key: "SENTRY_TRACES_SAMPLE_RATE",
+      value: "1.0",
+      condition: observability === "sentry",
+      comment: "Sentry traces sample rate 0.0-1.0 (reduce in production)",
+    },
+    {
+      key: "SENTRY_PROFILES_SAMPLE_RATE",
+      value: "0.1",
+      condition: observability === "sentry",
+      comment: "Sentry profiles sample rate 0.0-1.0",
+    },
+    {
       key: "REDIS_HOST",
       value: "localhost",
       condition: jobQueue === "bullmq",
