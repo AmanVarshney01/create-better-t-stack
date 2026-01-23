@@ -852,6 +852,223 @@ describe("Python Language Support", () => {
       expect(pyprojectContent).toContain("pydantic");
       expect(pyprojectContent).toContain("pydantic-settings");
     });
+
+    it("should create settings.py with pydantic-settings", async () => {
+      const result = await createVirtual({
+        projectName: "python-pydantic-settings",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const settingsContent = getFileContent(root, "src/app/settings.py");
+      expect(settingsContent).toBeDefined();
+      expect(settingsContent).toContain("from pydantic_settings import BaseSettings");
+      expect(settingsContent).toContain("class Settings(BaseSettings)");
+      expect(settingsContent).toContain("get_settings");
+      expect(settingsContent).toContain("app_name");
+      expect(settingsContent).toContain("debug");
+    });
+
+    it("should create standalone Pydantic schemas when ORM is none", async () => {
+      const result = await createVirtual({
+        projectName: "python-pydantic-schemas",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const schemasContent = getFileContent(root, "src/app/schemas.py");
+      expect(schemasContent).toBeDefined();
+      expect(schemasContent).toContain("from pydantic import BaseModel");
+      expect(schemasContent).toContain("ItemCreate");
+      expect(schemasContent).toContain("ItemResponse");
+      expect(schemasContent).toContain("MessageCreate");
+      expect(schemasContent).toContain("EmailStr");
+    });
+
+    it("should integrate Pydantic validation with FastAPI endpoints", async () => {
+      const result = await createVirtual({
+        projectName: "python-pydantic-fastapi",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainContent = getFileContent(root, "src/app/main.py");
+      expect(mainContent).toBeDefined();
+      expect(mainContent).toContain("from app.settings import get_settings");
+      expect(mainContent).toContain("from app.schemas import ItemCreate");
+      expect(mainContent).toContain("ItemResponse");
+      expect(mainContent).toContain('@app.post("/items"');
+      expect(mainContent).toContain('@app.post("/contact"');
+    });
+
+    it("should include Pydantic validation tests", async () => {
+      const result = await createVirtual({
+        projectName: "python-pydantic-tests",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const testContent = getFileContent(root, "tests/test_main.py");
+      expect(testContent).toBeDefined();
+      expect(testContent).toContain("test_create_item");
+      expect(testContent).toContain("test_create_item_validation_error");
+      expect(testContent).toContain("test_send_message");
+      expect(testContent).toContain("test_send_message_invalid_email");
+      expect(testContent).toContain("422"); // Validation error status code
+    });
+
+    it("should NOT create schemas.py when validation is none", async () => {
+      const result = await createVirtual({
+        projectName: "python-no-validation",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      expect(hasFile(root, "src/app/schemas.py")).toBe(false);
+      expect(hasFile(root, "src/app/settings.py")).toBe(false);
+    });
+
+    it("should NOT create settings.py when validation is none", async () => {
+      const result = await createVirtual({
+        projectName: "python-no-settings",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      expect(hasFile(root, "src/app/settings.py")).toBe(false);
+    });
+
+    it("should include database_url in settings when ORM is selected", async () => {
+      const result = await createVirtual({
+        projectName: "python-pydantic-db-settings",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "sqlalchemy",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const settingsContent = getFileContent(root, "src/app/settings.py");
+      expect(settingsContent).toBeDefined();
+      expect(settingsContent).toContain("database_url");
+    });
+
+    it("should include API key settings when AI SDKs are selected", async () => {
+      const result = await createVirtual({
+        projectName: "python-pydantic-ai-settings",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: ["openai-sdk", "anthropic-sdk"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const settingsContent = getFileContent(root, "src/app/settings.py");
+      expect(settingsContent).toBeDefined();
+      expect(settingsContent).toContain("openai_api_key");
+      expect(settingsContent).toContain("anthropic_api_key");
+    });
+
+    it("should include Celery settings when task queue is selected", async () => {
+      const result = await createVirtual({
+        projectName: "python-pydantic-celery-settings",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "celery",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const settingsContent = getFileContent(root, "src/app/settings.py");
+      expect(settingsContent).toBeDefined();
+      expect(settingsContent).toContain("celery_broker_url");
+      expect(settingsContent).toContain("celery_result_backend");
+    });
+
+    it("should generate README with Pydantic and pydantic-settings features", async () => {
+      const result = await createVirtual({
+        projectName: "python-pydantic-readme",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const readmeContent = getFileContent(root, "README.md");
+      expect(readmeContent).toBeDefined();
+      expect(readmeContent).toContain("Pydantic");
+      expect(readmeContent).toContain("pydantic-settings");
+      expect(readmeContent).toContain("settings.py");
+    });
   });
 
   describe("AI/ML Frameworks", () => {

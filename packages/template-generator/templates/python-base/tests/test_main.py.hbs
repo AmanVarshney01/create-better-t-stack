@@ -25,6 +25,85 @@ def test_health(client):
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "healthy"}
+{{#if (and (eq pythonOrm "none") (eq pythonValidation "pydantic"))}}
+
+
+def test_create_item(client):
+    """Test creating an item with valid data."""
+    response = client.post(
+        "/items",
+        json={"name": "Test Item", "description": "A test item", "price": 9.99, "quantity": 5},
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == "Test Item"
+    assert data["price"] == 9.99
+    assert data["quantity"] == 5
+    assert "id" in data
+
+
+def test_create_item_validation_error(client):
+    """Test validation error for invalid item data."""
+    # Price must be positive
+    response = client.post(
+        "/items",
+        json={"name": "Test Item", "price": -1.0},
+    )
+    assert response.status_code == 422
+
+
+def test_create_item_missing_required_field(client):
+    """Test validation error for missing required field."""
+    response = client.post(
+        "/items",
+        json={"description": "No name or price"},
+    )
+    assert response.status_code == 422
+
+
+def test_list_items(client):
+    """Test listing items."""
+    # Create an item first
+    client.post("/items", json={"name": "Item 1", "price": 10.0})
+    response = client.get("/items")
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
+
+
+def test_get_item_not_found(client):
+    """Test getting non-existent item."""
+    response = client.get("/items/99999")
+    assert response.status_code == 404
+
+
+def test_send_message(client):
+    """Test sending a contact message with validated email."""
+    response = client.post(
+        "/contact",
+        json={
+            "email": "test@example.com",
+            "subject": "Test Subject",
+            "content": "Test message content",
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is True
+    assert "test@example.com" in data["message"]
+
+
+def test_send_message_invalid_email(client):
+    """Test validation error for invalid email."""
+    response = client.post(
+        "/contact",
+        json={
+            "email": "not-an-email",
+            "subject": "Test Subject",
+            "content": "Test message content",
+        },
+    )
+    assert response.status_code == 422
+{{/if}}
 {{/if}}
 {{#if (eq pythonWebFramework "django")}}
 import pytest

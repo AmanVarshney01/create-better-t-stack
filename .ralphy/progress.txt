@@ -6037,3 +6037,67 @@ Added comprehensive SQLModel ORM support to the Python ecosystem with full templ
 - Linting: 0 errors
 
 ### Status: COMPLETE
+
+
+---
+
+## [2026-01-23] Pydantic Validation Implementation Complete
+
+### Task: Implement Pydantic validation library support for Python ecosystem (Step 4: Validation)
+
+### Summary:
+Added comprehensive Pydantic validation support to the Python ecosystem with full template generation, including standalone validation schemas, pydantic-settings for configuration management, and FastAPI integration with example endpoints.
+
+### Changes Made:
+
+1. **New Template Files Created** (`packages/template-generator/templates/python-base/`):
+   - `src/app/settings.py.hbs`: Pydantic-settings configuration with BaseSettings class, environment variable validation, app settings (debug, host, port), database URL settings, API keys for AI SDKs, and Celery settings
+   
+2. **Template Files Updated** (`packages/template-generator/templates/python-base/`):
+   - `src/app/schemas.py.hbs`: Added standalone Pydantic validation schemas for when ORM is "none" (ItemCreate, ItemResponse, MessageCreate, MessageResponse with Field validators)
+   - `src/app/main.py.hbs`: Added Pydantic settings integration, example validation endpoints (/items, /contact) with request body validation
+   - `tests/test_main.py.hbs`: Added comprehensive validation tests (create_item, validation_error, send_message, invalid_email)
+
+3. **README Generator Update** (`packages/template-generator/src/processors/readme-generator.ts`):
+   - Added pydantic-settings to features list
+   - Added settings.py to project structure documentation
+   - Added standalone schemas.py for no-ORM case
+
+4. **Test Updates** (`apps/cli/test/python-language.test.ts`):
+   - Added 11 new Pydantic tests:
+     - should create settings.py with pydantic-settings
+     - should create standalone Pydantic schemas when ORM is none
+     - should integrate Pydantic validation with FastAPI endpoints
+     - should include Pydantic validation tests
+     - should NOT create schemas.py when validation is none
+     - should NOT create settings.py when validation is none
+     - should include database_url in settings when ORM is selected
+     - should include API key settings when AI SDKs are selected
+     - should include Celery settings when task queue is selected
+     - should generate README with Pydantic and pydantic-settings features
+
+5. **PRD.md**: Marked Pydantic as complete
+
+### Features Implemented:
+- **pydantic-settings**: Environment variable validation with BaseSettings, @lru_cache for performance
+- **Standalone schemas**: ItemCreate, ItemResponse, MessageCreate, MessageResponse with Field validators
+- **Field validation**: min_length, max_length, gt (greater than), ge (greater or equal), EmailStr
+- **FastAPI integration**: Request body validation, response models, validation error handling (422 status)
+- **Settings management**: App config (debug, host, port), database URL, API keys, Celery broker settings
+- **Conditional generation**: Files only created when pythonValidation="pydantic"
+- **In-memory storage example**: Demonstrates CRUD without database for quick prototyping
+
+### Key Pydantic Features Demonstrated:
+- `BaseModel` for request/response schemas
+- `Field()` with constraints (min_length, max_length, gt, ge)
+- `EmailStr` for email validation
+- `BaseSettings` for environment variable validation
+- `SettingsConfigDict` for .env file support
+- `@lru_cache` for settings caching
+
+### Test Results:
+- Python language tests: 56 pass, 0 fail
+- Python ecosystem tests: 57 pass, 0 fail
+- Linting: 150 pass, 0 fail
+
+### Status: COMPLETE

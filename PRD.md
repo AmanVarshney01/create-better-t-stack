@@ -189,7 +189,7 @@
 
 ## **Step 4: Validation**
 
-- [ ] **Pydantic** - Data validation using type hints
+- [x] **Pydantic** - Data validation using type hints
 
 ---
 

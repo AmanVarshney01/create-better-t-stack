@@ -782,6 +782,7 @@ function generatePythonReadmeContent(config: ProjectConfig): string {
   // Validation
   if (pythonValidation === "pydantic") {
     features.push("- **Pydantic** - Data validation using Python type hints");
+    features.push("- **pydantic-settings** - Settings management with environment variables");
   }
 
   // AI/ML
@@ -835,6 +836,11 @@ function generatePythonReadmeContent(config: ProjectConfig): string {
   structure.push("│       ├── __init__.py");
   structure.push("│       └── main.py       # Application entry point");
 
+  // Add Pydantic settings file
+  if (pythonValidation === "pydantic") {
+    structure.push("│       ├── settings.py   # Application settings (pydantic-settings)");
+  }
+
   // Add SQLAlchemy files
   if (pythonOrm === "sqlalchemy") {
     structure.push("│       ├── database.py   # Database configuration");
@@ -848,6 +854,11 @@ function generatePythonReadmeContent(config: ProjectConfig): string {
     structure.push("│       ├── database.py   # Database configuration");
     structure.push("│       ├── models.py     # SQLModel models (with schemas)");
     structure.push("│       └── crud.py       # CRUD operations");
+  }
+
+  // Add standalone Pydantic schemas (no ORM)
+  if (pythonOrm === "none" && pythonValidation === "pydantic") {
+    structure.push("│       └── schemas.py    # Pydantic validation schemas");
   }
 
   structure.push("├── tests/");
