@@ -874,6 +874,12 @@ function generatePythonReadmeContent(config: ProjectConfig): string {
     structure.push("│       └── llamaindex_schemas.py # LlamaIndex request/response models");
   }
 
+  // Add OpenAI SDK files
+  if (aiLibs.includes("openai-sdk")) {
+    structure.push("│       ├── openai_client.py  # OpenAI SDK client utilities");
+    structure.push("│       └── openai_schemas.py # OpenAI request/response models");
+  }
+
   structure.push("├── tests/");
   structure.push("│   ├── __init__.py");
   structure.push("│   └── test_main.py      # Test suite");

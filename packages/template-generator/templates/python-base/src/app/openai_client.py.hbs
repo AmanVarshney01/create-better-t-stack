@@ -1,0 +1,134 @@
+{{#if (includes pythonAi "openai-sdk")}}
+"""OpenAI client for direct API interactions."""
+
+import os
+from typing import AsyncIterator
+
+from openai import AsyncOpenAI
+from openai.types.chat import ChatCompletionMessageParam
+
+
+def get_client() -> AsyncOpenAI:
+    """Get a configured OpenAI client instance.
+
+    Returns:
+        A configured AsyncOpenAI instance.
+
+    Raises:
+        ValueError: If OPENAI_API_KEY is not set.
+    """
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY environment variable is not set")
+
+    return AsyncOpenAI(api_key=api_key)
+
+
+async def chat(
+    message: str,
+    history: list[dict] | None = None,
+    system_prompt: str = "You are a helpful assistant.",
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+) -> str:
+    """Send a message and get a response.
+
+    Args:
+        message: The user's message.
+        history: Optional conversation history as list of {"role": str, "content": str}.
+        system_prompt: The system prompt to set context.
+        model: The model to use.
+        temperature: The temperature for generation.
+
+    Returns:
+        The assistant's response.
+    """
+    client = get_client()
+
+    messages: list[ChatCompletionMessageParam] = [
+        {"role": "system", "content": system_prompt}
+    ]
+
+    if history:
+        for msg in history:
+            messages.append({"role": msg["role"], "content": msg["content"]})
+
+    messages.append({"role": "user", "content": message})
+
+    response = await client.chat.completions.create(
+        model=model,
+        messages=messages,
+        temperature=temperature,
+    )
+
+    return response.choices[0].message.content or ""
+
+
+async def chat_stream(
+    message: str,
+    history: list[dict] | None = None,
+    system_prompt: str = "You are a helpful assistant.",
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+) -> AsyncIterator[str]:
+    """Send a message and stream the response.
+
+    Args:
+        message: The user's message.
+        history: Optional conversation history.
+        system_prompt: The system prompt to set context.
+        model: The model to use.
+        temperature: The temperature for generation.
+
+    Yields:
+        Chunks of the assistant's response.
+    """
+    client = get_client()
+
+    messages: list[ChatCompletionMessageParam] = [
+        {"role": "system", "content": system_prompt}
+    ]
+
+    if history:
+        for msg in history:
+            messages.append({"role": msg["role"], "content": msg["content"]})
+
+    messages.append({"role": "user", "content": message})
+
+    stream = await client.chat.completions.create(
+        model=model,
+        messages=messages,
+        temperature=temperature,
+        stream=True,
+    )
+
+    async for chunk in stream:
+        if chunk.choices[0].delta.content:
+            yield chunk.choices[0].delta.content
+
+
+async def simple_completion(
+    prompt: str,
+    model: str = "gpt-4o-mini",
+    temperature: float = 0.7,
+) -> str:
+    """Get a simple completion without conversation history.
+
+    Args:
+        prompt: The prompt to complete.
+        model: The model to use.
+        temperature: The temperature for generation.
+
+    Returns:
+        The completion response.
+    """
+    client = get_client()
+
+    response = await client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": prompt}],
+        temperature=temperature,
+    )
+
+    return response.choices[0].message.content or ""
+{{/if}}

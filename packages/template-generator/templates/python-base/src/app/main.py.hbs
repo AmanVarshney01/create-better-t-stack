@@ -66,6 +66,21 @@ from app.llamaindex_schemas import (
     CompletionResponse as LlamaIndexCompletionResponse,
 )
 {{/if}}
+{{#if (includes pythonAi "openai-sdk")}}
+from fastapi.responses import StreamingResponse
+
+from app.openai_client import (
+    chat as openai_chat,
+    chat_stream as openai_chat_stream,
+    simple_completion as openai_completion,
+)
+from app.openai_schemas import (
+    OpenAIChatRequest,
+    OpenAIChatResponse,
+    OpenAICompletionRequest,
+    OpenAICompletionResponse,
+)
+{{/if}}
 
 
 @asynccontextmanager
@@ -229,6 +244,63 @@ async def llamaindex_completion_endpoint(request: LlamaIndexCompletionRequest):
         temperature=request.temperature or 0.7,
     )
     return LlamaIndexCompletionResponse(completion=completion)
+{{/if}}
+{{#if (includes pythonAi "openai-sdk")}}
+
+# OpenAI SDK endpoints
+@app.post("/ai/openai/chat", response_model=OpenAIChatResponse)
+async def openai_chat_endpoint(request: OpenAIChatRequest):
+    """Chat with OpenAI's API directly.
+
+    Supports conversation history for multi-turn conversations.
+    """
+    history = None
+    if request.history:
+        history = [{"role": msg.role, "content": msg.content} for msg in request.history]
+
+    response = await openai_chat(
+        message=request.message,
+        history=history,
+        system_prompt=request.system_prompt or "You are a helpful assistant.",
+        model=request.model or "gpt-4o-mini",
+        temperature=request.temperature or 0.7,
+    )
+    return OpenAIChatResponse(response=response)
+
+
+@app.post("/ai/openai/chat/stream")
+async def openai_chat_stream_endpoint(request: OpenAIChatRequest):
+    """Chat with OpenAI's API with streaming response.
+
+    Returns a Server-Sent Events stream of the response.
+    """
+    history = None
+    if request.history:
+        history = [{"role": msg.role, "content": msg.content} for msg in request.history]
+
+    async def generate():
+        async for chunk in openai_chat_stream(
+            message=request.message,
+            history=history,
+            system_prompt=request.system_prompt or "You are a helpful assistant.",
+            model=request.model or "gpt-4o-mini",
+            temperature=request.temperature or 0.7,
+        ):
+            yield f"data: {chunk}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(generate(), media_type="text/event-stream")
+
+
+@app.post("/ai/openai/completion", response_model=OpenAICompletionResponse)
+async def openai_completion_endpoint(request: OpenAICompletionRequest):
+    """Get a simple completion from OpenAI without conversation history."""
+    completion = await openai_completion(
+        prompt=request.prompt,
+        model=request.model or "gpt-4o-mini",
+        temperature=request.temperature or 0.7,
+    )
+    return OpenAICompletionResponse(completion=completion)
 {{/if}}
 {{#if (and (eq pythonOrm "none") (eq pythonValidation "pydantic"))}}
 

@@ -1,0 +1,50 @@
+{{#if (includes pythonAi "openai-sdk")}}
+"""Pydantic schemas for OpenAI API endpoints."""
+
+from pydantic import BaseModel, Field
+
+
+class ChatMessage(BaseModel):
+    """A single message in a conversation."""
+
+    role: str = Field(..., description="The role of the message sender (user, assistant, system)")
+    content: str = Field(..., description="The content of the message")
+
+
+class OpenAIChatRequest(BaseModel):
+    """Request body for OpenAI chat endpoint."""
+
+    message: str = Field(..., description="The user's message", min_length=1)
+    history: list[ChatMessage] | None = Field(
+        default=None, description="Optional conversation history"
+    )
+    system_prompt: str | None = Field(
+        default=None, description="Optional system prompt to override default"
+    )
+    model: str | None = Field(default=None, description="Optional model override")
+    temperature: float | None = Field(
+        default=None, ge=0.0, le=2.0, description="Optional temperature override"
+    )
+
+
+class OpenAIChatResponse(BaseModel):
+    """Response body for OpenAI chat endpoint."""
+
+    response: str = Field(..., description="The assistant's response")
+
+
+class OpenAICompletionRequest(BaseModel):
+    """Request body for OpenAI completion endpoint."""
+
+    prompt: str = Field(..., description="The prompt to complete", min_length=1)
+    model: str | None = Field(default=None, description="Optional model override")
+    temperature: float | None = Field(
+        default=None, ge=0.0, le=2.0, description="Optional temperature override"
+    )
+
+
+class OpenAICompletionResponse(BaseModel):
+    """Response body for OpenAI completion endpoint."""
+
+    completion: str = Field(..., description="The completion response")
+{{/if}}

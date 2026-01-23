@@ -1474,6 +1474,174 @@ describe("Python Language Support", () => {
       expect(pyprojectContent).toContain("openai");
     });
 
+    it("should create OpenAI SDK client module", async () => {
+      const result = await createVirtual({
+        projectName: "python-openai-client",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["openai-sdk"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify openai_client.py exists
+      expect(hasFile(root, "src/app/openai_client.py")).toBe(true);
+      const clientContent = getFileContent(root, "src/app/openai_client.py");
+      expect(clientContent).toBeDefined();
+      expect(clientContent).toContain("from openai import AsyncOpenAI");
+      expect(clientContent).toContain("def get_client");
+      expect(clientContent).toContain("async def chat");
+      expect(clientContent).toContain("async def chat_stream");
+      expect(clientContent).toContain("async def simple_completion");
+    });
+
+    it("should create OpenAI SDK schemas module", async () => {
+      const result = await createVirtual({
+        projectName: "python-openai-schemas",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["openai-sdk"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify openai_schemas.py exists
+      expect(hasFile(root, "src/app/openai_schemas.py")).toBe(true);
+      const schemasContent = getFileContent(root, "src/app/openai_schemas.py");
+      expect(schemasContent).toBeDefined();
+      expect(schemasContent).toContain("class ChatMessage(BaseModel)");
+      expect(schemasContent).toContain("class OpenAIChatRequest(BaseModel)");
+      expect(schemasContent).toContain("class OpenAIChatResponse(BaseModel)");
+      expect(schemasContent).toContain("class OpenAICompletionRequest(BaseModel)");
+      expect(schemasContent).toContain("class OpenAICompletionResponse(BaseModel)");
+    });
+
+    it("should integrate OpenAI SDK endpoints with FastAPI", async () => {
+      const result = await createVirtual({
+        projectName: "python-openai-fastapi",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["openai-sdk"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainContent = getFileContent(root, "src/app/main.py");
+      expect(mainContent).toBeDefined();
+      expect(mainContent).toContain("from app.openai_client import");
+      expect(mainContent).toContain("from app.openai_schemas import");
+      expect(mainContent).toContain('@app.post("/ai/openai/chat"');
+      expect(mainContent).toContain('@app.post("/ai/openai/chat/stream"');
+      expect(mainContent).toContain('@app.post("/ai/openai/completion"');
+      expect(mainContent).toContain("StreamingResponse");
+    });
+
+    it("should add OpenAI SDK settings when pydantic validation is enabled", async () => {
+      const result = await createVirtual({
+        projectName: "python-openai-settings",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: ["openai-sdk"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const settingsContent = getFileContent(root, "src/app/settings.py");
+      expect(settingsContent).toBeDefined();
+      expect(settingsContent).toContain("# OpenAI settings");
+      expect(settingsContent).toContain("openai_api_key");
+      expect(settingsContent).toContain("openai_default_model");
+      expect(settingsContent).toContain("openai_default_temperature");
+    });
+
+    it("should include OpenAI SDK validation tests", async () => {
+      const result = await createVirtual({
+        projectName: "python-openai-tests",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["openai-sdk"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const testContent = getFileContent(root, "tests/test_main.py");
+      expect(testContent).toBeDefined();
+      expect(testContent).toContain("test_openai_chat_endpoint_validation");
+      expect(testContent).toContain("test_openai_completion_endpoint_validation");
+      expect(testContent).toContain("test_openai_completion_temperature_validation");
+    });
+
+    it("should NOT create OpenAI SDK files when pythonAi does not include openai-sdk", async () => {
+      const result = await createVirtual({
+        projectName: "python-no-openai",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["langchain"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify OpenAI SDK files do NOT exist
+      expect(hasFile(root, "src/app/openai_client.py")).toBe(false);
+      expect(hasFile(root, "src/app/openai_schemas.py")).toBe(false);
+
+      const mainContent = getFileContent(root, "src/app/main.py");
+      expect(mainContent).not.toContain("openai_client");
+      expect(mainContent).not.toContain("/ai/openai/chat");
+    });
+
+    it("should generate README with OpenAI SDK documentation", async () => {
+      const result = await createVirtual({
+        projectName: "python-openai-readme",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: ["openai-sdk"],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const readmeContent = getFileContent(root, "README.md");
+      expect(readmeContent).toBeDefined();
+      expect(readmeContent).toContain("OpenAI SDK");
+      expect(readmeContent).toContain("openai_client.py");
+      expect(readmeContent).toContain("openai_schemas.py");
+    });
+
     it("should include Anthropic SDK dependencies in pyproject.toml", async () => {
       const result = await createVirtual({
         projectName: "python-anthropic-deps",

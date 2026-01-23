@@ -197,7 +197,7 @@
 
 - [x] **LangChain** - LLM application framework
 - [x] **LlamaIndex** - Data framework for LLM apps
-- [ ] **OpenAI SDK** - Official OpenAI client
+- [x] **OpenAI SDK** - Official OpenAI client
 - [ ] **Anthropic SDK** - Claude API client
 - [ ] **LangGraph** - Graph-based agent orchestration
 - [ ] **CrewAI** - Multi-agent orchestration

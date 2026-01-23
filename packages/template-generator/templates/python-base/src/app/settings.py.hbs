@@ -32,6 +32,8 @@ class Settings(BaseSettings):
 {{#if (includes pythonAi "openai-sdk")}}
     # OpenAI settings
     openai_api_key: str = ""
+    openai_default_model: str = "gpt-4o-mini"
+    openai_default_temperature: float = 0.7
 {{/if}}
 {{#if (includes pythonAi "anthropic-sdk")}}
     # Anthropic settings
