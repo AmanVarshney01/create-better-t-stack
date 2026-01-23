@@ -819,16 +819,40 @@ function generatePythonReadmeContent(config: ProjectConfig): string {
   const structure: string[] = [
     `${projectName}/`,
     "├── pyproject.toml        # Project configuration and dependencies",
-    "├── src/",
-    "│   └── app/",
-    "│       ├── __init__.py",
-    "│       └── main.py       # Application entry point",
-    "├── tests/",
-    "│   ├── __init__.py",
-    "│   └── test_main.py      # Test suite",
-    "├── .env.example          # Environment variables template",
-    "└── .gitignore",
   ];
+
+  // Add Alembic config for SQLAlchemy
+  if (pythonOrm === "sqlalchemy" || pythonOrm === "sqlmodel") {
+    structure.push("├── alembic.ini           # Alembic migration configuration");
+    structure.push("├── migrations/           # Database migrations");
+    structure.push("│   ├── env.py");
+    structure.push("│   ├── script.py.mako");
+    structure.push("│   └── versions/");
+  }
+
+  structure.push("├── src/");
+  structure.push("│   └── app/");
+  structure.push("│       ├── __init__.py");
+  structure.push("│       └── main.py       # Application entry point");
+
+  // Add SQLAlchemy files
+  if (pythonOrm === "sqlalchemy") {
+    structure.push("│       ├── database.py   # Database configuration");
+    structure.push("│       ├── models.py     # SQLAlchemy models");
+    structure.push("│       ├── schemas.py    # Pydantic schemas");
+    structure.push("│       └── crud.py       # CRUD operations");
+  }
+
+  structure.push("├── tests/");
+  structure.push("│   ├── __init__.py");
+  structure.push("│   └── test_main.py      # Test suite");
+
+  if (pythonOrm === "sqlalchemy") {
+    structure.push("│   └── test_database.py  # Database tests");
+  }
+
+  structure.push("├── .env.example          # Environment variables template");
+  structure.push("└── .gitignore");
 
   // Scripts
   let scripts = `- \`uv run python -m app.main\`: Run the application`;
@@ -847,6 +871,13 @@ function generatePythonReadmeContent(config: ProjectConfig): string {
     scripts += `
 - \`uv run ruff check .\`: Run linter
 - \`uv run ruff format .\`: Format code`;
+  }
+
+  if (pythonOrm === "sqlalchemy" || pythonOrm === "sqlmodel") {
+    scripts += `
+- \`uv run alembic revision --autogenerate -m "description"\`: Generate migration
+- \`uv run alembic upgrade head\`: Apply migrations
+- \`uv run alembic downgrade -1\`: Rollback last migration`;
   }
 
   return `# ${projectName}

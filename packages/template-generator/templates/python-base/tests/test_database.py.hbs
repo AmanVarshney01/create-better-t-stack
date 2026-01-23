@@ -1,0 +1,307 @@
+{{#if (ne pythonOrm "none")}}
+{{#if (eq pythonOrm "sqlalchemy")}}
+"""Tests for database models and CRUD operations."""
+
+import pytest
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.pool import StaticPool
+
+from app import crud
+from app.models import Base, Post, User
+{{#if (eq pythonValidation "pydantic")}}
+from app.schemas import PostCreate, PostUpdate, UserCreate, UserUpdate
+{{/if}}
+
+
+@pytest.fixture
+def db_session():
+    """Create a test database session."""
+    # Use in-memory SQLite for testing
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    Base.metadata.create_all(bind=engine)
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    session = TestingSessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+        Base.metadata.drop_all(bind=engine)
+
+
+class TestUserModel:
+    """Tests for User model."""
+
+    def test_create_user(self, db_session: Session):
+        """Test creating a user."""
+        user = User(email="test@example.com", name="Test User")
+        db_session.add(user)
+        db_session.commit()
+        db_session.refresh(user)
+
+        assert user.id is not None
+        assert user.email == "test@example.com"
+        assert user.name == "Test User"
+        assert user.created_at is not None
+        assert user.updated_at is not None
+
+    def test_user_repr(self, db_session: Session):
+        """Test User string representation."""
+        user = User(email="test@example.com")
+        db_session.add(user)
+        db_session.commit()
+
+        assert "test@example.com" in repr(user)
+
+
+class TestPostModel:
+    """Tests for Post model."""
+
+    def test_create_post(self, db_session: Session):
+        """Test creating a post."""
+        user = User(email="author@example.com")
+        db_session.add(user)
+        db_session.commit()
+
+        post = Post(title="Test Post", content="Test content", author_id=user.id)
+        db_session.add(post)
+        db_session.commit()
+        db_session.refresh(post)
+
+        assert post.id is not None
+        assert post.title == "Test Post"
+        assert post.content == "Test content"
+        assert post.author_id == user.id
+        assert post.created_at is not None
+        assert post.updated_at is not None
+
+    def test_post_repr(self, db_session: Session):
+        """Test Post string representation."""
+        post = Post(title="Test Title", author_id=1)
+        db_session.add(post)
+        db_session.commit()
+
+        assert "Test Title" in repr(post)
+
+
+class TestUserCrud:
+    """Tests for User CRUD operations."""
+
+{{#if (eq pythonValidation "pydantic")}}
+    def test_create_user(self, db_session: Session):
+        """Test creating a user via CRUD."""
+        user_data = UserCreate(email="crud@example.com", name="CRUD User")
+        user = crud.create_user(db_session, user_data)
+
+        assert user.id is not None
+        assert user.email == "crud@example.com"
+        assert user.name == "CRUD User"
+{{else}}
+    def test_create_user(self, db_session: Session):
+        """Test creating a user via CRUD."""
+        user = crud.create_user(db_session, email="crud@example.com", name="CRUD User")
+
+        assert user.id is not None
+        assert user.email == "crud@example.com"
+        assert user.name == "CRUD User"
+{{/if}}
+
+    def test_get_user(self, db_session: Session):
+        """Test getting a user by ID."""
+        user = User(email="get@example.com")
+        db_session.add(user)
+        db_session.commit()
+
+        result = crud.get_user(db_session, user.id)
+        assert result is not None
+        assert result.email == "get@example.com"
+
+    def test_get_user_not_found(self, db_session: Session):
+        """Test getting a non-existent user."""
+        result = crud.get_user(db_session, 999)
+        assert result is None
+
+    def test_get_user_by_email(self, db_session: Session):
+        """Test getting a user by email."""
+        user = User(email="email@example.com")
+        db_session.add(user)
+        db_session.commit()
+
+        result = crud.get_user_by_email(db_session, "email@example.com")
+        assert result is not None
+        assert result.id == user.id
+
+    def test_get_users(self, db_session: Session):
+        """Test listing users with pagination."""
+        for i in range(5):
+            db_session.add(User(email=f"user{i}@example.com"))
+        db_session.commit()
+
+        # Test default pagination
+        users = crud.get_users(db_session)
+        assert len(users) == 5
+
+        # Test with limit
+        users = crud.get_users(db_session, limit=2)
+        assert len(users) == 2
+
+        # Test with skip
+        users = crud.get_users(db_session, skip=3)
+        assert len(users) == 2
+
+{{#if (eq pythonValidation "pydantic")}}
+    def test_update_user(self, db_session: Session):
+        """Test updating a user."""
+        user = User(email="old@example.com", name="Old Name")
+        db_session.add(user)
+        db_session.commit()
+
+        update_data = UserUpdate(name="New Name")
+        updated = crud.update_user(db_session, user.id, update_data)
+
+        assert updated is not None
+        assert updated.name == "New Name"
+        assert updated.email == "old@example.com"
+
+    def test_update_user_not_found(self, db_session: Session):
+        """Test updating a non-existent user."""
+        update_data = UserUpdate(name="New Name")
+        result = crud.update_user(db_session, 999, update_data)
+        assert result is None
+{{else}}
+    def test_update_user(self, db_session: Session):
+        """Test updating a user."""
+        user = User(email="old@example.com", name="Old Name")
+        db_session.add(user)
+        db_session.commit()
+
+        updated = crud.update_user(db_session, user.id, name="New Name")
+
+        assert updated is not None
+        assert updated.name == "New Name"
+        assert updated.email == "old@example.com"
+
+    def test_update_user_not_found(self, db_session: Session):
+        """Test updating a non-existent user."""
+        result = crud.update_user(db_session, 999, name="New Name")
+        assert result is None
+{{/if}}
+
+    def test_delete_user(self, db_session: Session):
+        """Test deleting a user."""
+        user = User(email="delete@example.com")
+        db_session.add(user)
+        db_session.commit()
+
+        result = crud.delete_user(db_session, user.id)
+        assert result is True
+        assert crud.get_user(db_session, user.id) is None
+
+    def test_delete_user_not_found(self, db_session: Session):
+        """Test deleting a non-existent user."""
+        result = crud.delete_user(db_session, 999)
+        assert result is False
+
+
+class TestPostCrud:
+    """Tests for Post CRUD operations."""
+
+{{#if (eq pythonValidation "pydantic")}}
+    def test_create_post(self, db_session: Session):
+        """Test creating a post via CRUD."""
+        user = User(email="author@example.com")
+        db_session.add(user)
+        db_session.commit()
+
+        post_data = PostCreate(title="CRUD Post", content="Content", author_id=user.id)
+        post = crud.create_post(db_session, post_data)
+
+        assert post.id is not None
+        assert post.title == "CRUD Post"
+        assert post.author_id == user.id
+{{else}}
+    def test_create_post(self, db_session: Session):
+        """Test creating a post via CRUD."""
+        user = User(email="author@example.com")
+        db_session.add(user)
+        db_session.commit()
+
+        post = crud.create_post(db_session, title="CRUD Post", author_id=user.id, content="Content")
+
+        assert post.id is not None
+        assert post.title == "CRUD Post"
+        assert post.author_id == user.id
+{{/if}}
+
+    def test_get_post(self, db_session: Session):
+        """Test getting a post by ID."""
+        post = Post(title="Get Post", author_id=1)
+        db_session.add(post)
+        db_session.commit()
+
+        result = crud.get_post(db_session, post.id)
+        assert result is not None
+        assert result.title == "Get Post"
+
+    def test_get_posts(self, db_session: Session):
+        """Test listing posts with pagination."""
+        for i in range(5):
+            db_session.add(Post(title=f"Post {i}", author_id=1))
+        db_session.commit()
+
+        posts = crud.get_posts(db_session)
+        assert len(posts) == 5
+
+        posts = crud.get_posts(db_session, limit=2)
+        assert len(posts) == 2
+
+    def test_get_posts_by_author(self, db_session: Session):
+        """Test getting posts by author."""
+        db_session.add(Post(title="Author 1 Post", author_id=1))
+        db_session.add(Post(title="Author 2 Post", author_id=2))
+        db_session.add(Post(title="Author 1 Post 2", author_id=1))
+        db_session.commit()
+
+        posts = crud.get_posts_by_author(db_session, 1)
+        assert len(posts) == 2
+
+{{#if (eq pythonValidation "pydantic")}}
+    def test_update_post(self, db_session: Session):
+        """Test updating a post."""
+        post = Post(title="Old Title", author_id=1)
+        db_session.add(post)
+        db_session.commit()
+
+        update_data = PostUpdate(title="New Title")
+        updated = crud.update_post(db_session, post.id, update_data)
+
+        assert updated is not None
+        assert updated.title == "New Title"
+{{else}}
+    def test_update_post(self, db_session: Session):
+        """Test updating a post."""
+        post = Post(title="Old Title", author_id=1)
+        db_session.add(post)
+        db_session.commit()
+
+        updated = crud.update_post(db_session, post.id, title="New Title")
+
+        assert updated is not None
+        assert updated.title == "New Title"
+{{/if}}
+
+    def test_delete_post(self, db_session: Session):
+        """Test deleting a post."""
+        post = Post(title="Delete Post", author_id=1)
+        db_session.add(post)
+        db_session.commit()
+
+        result = crud.delete_post(db_session, post.id)
+        assert result is True
+        assert crud.get_post(db_session, post.id) is None
+{{/if}}
+{{/if}}

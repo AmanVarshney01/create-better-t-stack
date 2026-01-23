@@ -5903,3 +5903,76 @@ Django support was already fully implemented in the codebase. Verification confi
 
 ### Status: COMPLETE
 
+
+
+---
+
+## [2026-01-23] SQLAlchemy ORM Implementation Complete
+
+### Task: Implement SQLAlchemy ORM support for Python ecosystem (Step 3: ORMs & Database)
+
+### Summary:
+Added comprehensive SQLAlchemy ORM support to the Python ecosystem with full template generation, CRUD operations, database models, Pydantic schemas, Alembic migrations, and FastAPI integration.
+
+### Changes Made:
+
+1. **Template Files Created** (`packages/template-generator/templates/python-base/`):
+   - `src/app/database.py.hbs`: Database configuration with SQLAlchemy engine, SessionLocal, get_db dependency, and init_db function
+   - `src/app/models.py.hbs`: SQLAlchemy models with User and Post example models using modern Mapped type annotations
+   - `src/app/schemas.py.hbs`: Pydantic schemas for request/response validation (UserBase, UserCreate, UserUpdate, UserResponse, PostBase, PostCreate, PostUpdate, PostResponse)
+   - `src/app/crud.py.hbs`: CRUD operations for User and Post models (get, list, create, update, delete)
+   - `alembic.ini.hbs`: Alembic configuration file for database migrations
+   - `migrations/env.py.hbs`: Alembic environment configuration with model metadata import
+   - `migrations/script.py.mako.hbs`: Alembic migration script template
+   - `migrations/versions/_gitkeep`: Placeholder for version files
+   - `tests/test_database.py.hbs`: Comprehensive database tests with pytest fixtures for in-memory SQLite testing
+
+2. **Updated Template Files**:
+   - `src/app/main.py.hbs`: Added SQLAlchemy integration with FastAPI including:
+     - Database initialization on startup via lifespan handler
+     - User CRUD endpoints (/users, /users/{id})
+     - Post CRUD endpoints (/posts, /posts/{id})
+     - Dependency injection for database sessions
+   - `pyproject.toml.hbs`: Added aiosqlite>=0.20.0 dependency for async SQLite support
+
+3. **Template Handler Update** (`packages/template-generator/src/template-handlers/python-base.ts`):
+   - Added logic to skip empty files (templates that evaluate to nothing based on config conditionals)
+
+4. **README Generator Update** (`packages/template-generator/src/processors/readme-generator.ts`):
+   - Updated project structure to include SQLAlchemy files (database.py, models.py, schemas.py, crud.py)
+   - Added Alembic migration directory structure
+   - Added Alembic commands to Available Commands section (revision, upgrade, downgrade)
+
+5. **Test Updates** (`apps/cli/test/python-language.test.ts`):
+   - Added comprehensive SQLAlchemy tests:
+     - should include aiosqlite dependency
+     - should create SQLAlchemy database module
+     - should create SQLAlchemy models module
+     - should create SQLAlchemy schemas module with Pydantic
+     - should create SQLAlchemy CRUD module
+     - should create Alembic migration configuration
+     - should create database test file
+     - should integrate SQLAlchemy with FastAPI endpoints
+     - should generate README with SQLAlchemy instructions
+     - should NOT create SQLAlchemy files when pythonOrm is none
+
+6. **PRD.md**: Marked SQLAlchemy as complete
+
+### Features Implemented:
+- SQLAlchemy 2.0+ with modern Mapped type annotations
+- DeclarativeBase for model definitions
+- User and Post example models with relationships
+- Full CRUD operations with proper error handling
+- Pydantic schemas for data validation
+- FastAPI integration with Depends(get_db) dependency injection
+- Database initialization on app startup
+- Alembic migration support with proper configuration
+- Comprehensive test suite with in-memory SQLite fixtures
+- Conditional file generation (files only created when pythonOrm="sqlalchemy")
+
+### Test Results:
+- Python language tests: 37 pass, 0 fail
+- Python ecosystem tests: 57 pass, 0 fail
+- Linting: 0 errors (warnings only)
+
+### Status: COMPLETE

@@ -21,6 +21,7 @@ dependencies = [
 {{#if (eq pythonOrm "sqlalchemy")}}
     "sqlalchemy>=2.0.36",
     "alembic>=1.14.0",
+    "aiosqlite>=0.20.0",
 {{/if}}
 {{#if (eq pythonOrm "sqlmodel")}}
     "sqlmodel>=0.0.22",

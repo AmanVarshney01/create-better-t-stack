@@ -329,6 +329,244 @@ describe("Python Language Support", () => {
       expect(pyprojectContent).toBeDefined();
       expect(pyprojectContent).toContain("sqlalchemy");
       expect(pyprojectContent).toContain("alembic");
+      expect(pyprojectContent).toContain("aiosqlite");
+    });
+
+    it("should create SQLAlchemy database module", async () => {
+      const result = await createVirtual({
+        projectName: "python-sqlalchemy-database",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "sqlalchemy",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify database.py exists
+      expect(hasFile(root, "src/app/database.py")).toBe(true);
+      const databaseContent = getFileContent(root, "src/app/database.py");
+      expect(databaseContent).toBeDefined();
+      expect(databaseContent).toContain("from sqlalchemy import create_engine");
+      expect(databaseContent).toContain("SessionLocal");
+      expect(databaseContent).toContain("get_db");
+      expect(databaseContent).toContain("init_db");
+    });
+
+    it("should create SQLAlchemy models module", async () => {
+      const result = await createVirtual({
+        projectName: "python-sqlalchemy-models",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "sqlalchemy",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify models.py exists
+      expect(hasFile(root, "src/app/models.py")).toBe(true);
+      const modelsContent = getFileContent(root, "src/app/models.py");
+      expect(modelsContent).toBeDefined();
+      expect(modelsContent).toContain("class Base(DeclarativeBase)");
+      expect(modelsContent).toContain("class User(Base)");
+      expect(modelsContent).toContain("class Post(Base)");
+      expect(modelsContent).toContain("__tablename__");
+    });
+
+    it("should create SQLAlchemy schemas module with Pydantic", async () => {
+      const result = await createVirtual({
+        projectName: "python-sqlalchemy-schemas",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "sqlalchemy",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify schemas.py exists
+      expect(hasFile(root, "src/app/schemas.py")).toBe(true);
+      const schemasContent = getFileContent(root, "src/app/schemas.py");
+      expect(schemasContent).toBeDefined();
+      expect(schemasContent).toContain("from pydantic import BaseModel");
+      expect(schemasContent).toContain("class UserBase(BaseModel)");
+      expect(schemasContent).toContain("class UserCreate");
+      expect(schemasContent).toContain("class UserResponse");
+      expect(schemasContent).toContain("class PostBase(BaseModel)");
+    });
+
+    it("should create SQLAlchemy CRUD module", async () => {
+      const result = await createVirtual({
+        projectName: "python-sqlalchemy-crud",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "sqlalchemy",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify crud.py exists
+      expect(hasFile(root, "src/app/crud.py")).toBe(true);
+      const crudContent = getFileContent(root, "src/app/crud.py");
+      expect(crudContent).toBeDefined();
+      expect(crudContent).toContain("def get_user");
+      expect(crudContent).toContain("def create_user");
+      expect(crudContent).toContain("def update_user");
+      expect(crudContent).toContain("def delete_user");
+      expect(crudContent).toContain("def get_post");
+      expect(crudContent).toContain("def create_post");
+    });
+
+    it("should create Alembic migration configuration", async () => {
+      const result = await createVirtual({
+        projectName: "python-sqlalchemy-alembic",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "sqlalchemy",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify alembic.ini exists
+      expect(hasFile(root, "alembic.ini")).toBe(true);
+      const alembicIniContent = getFileContent(root, "alembic.ini");
+      expect(alembicIniContent).toBeDefined();
+      expect(alembicIniContent).toContain("[alembic]");
+      expect(alembicIniContent).toContain("script_location = migrations");
+
+      // Verify migrations/env.py exists
+      expect(hasFile(root, "migrations/env.py")).toBe(true);
+      const envContent = getFileContent(root, "migrations/env.py");
+      expect(envContent).toBeDefined();
+      expect(envContent).toContain("from alembic import context");
+      expect(envContent).toContain("from app.models import Base");
+      expect(envContent).toContain("target_metadata = Base.metadata");
+
+      // Verify migrations/script.py.mako exists
+      expect(hasFile(root, "migrations/script.py.mako")).toBe(true);
+    });
+
+    it("should create database test file", async () => {
+      const result = await createVirtual({
+        projectName: "python-sqlalchemy-tests",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "sqlalchemy",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify test_database.py exists
+      expect(hasFile(root, "tests/test_database.py")).toBe(true);
+      const testContent = getFileContent(root, "tests/test_database.py");
+      expect(testContent).toBeDefined();
+      expect(testContent).toContain("class TestUserModel");
+      expect(testContent).toContain("class TestPostModel");
+      expect(testContent).toContain("class TestUserCrud");
+      expect(testContent).toContain("class TestPostCrud");
+      expect(testContent).toContain("@pytest.fixture");
+      expect(testContent).toContain("db_session");
+    });
+
+    it("should integrate SQLAlchemy with FastAPI endpoints", async () => {
+      const result = await createVirtual({
+        projectName: "python-sqlalchemy-fastapi",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "sqlalchemy",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainContent = getFileContent(root, "src/app/main.py");
+      expect(mainContent).toBeDefined();
+      expect(mainContent).toContain("from app.database import get_db, init_db");
+      expect(mainContent).toContain("from app import crud");
+      expect(mainContent).toContain("from app.schemas import");
+      expect(mainContent).toContain('@app.post("/users"');
+      expect(mainContent).toContain('@app.get("/users"');
+      expect(mainContent).toContain('@app.post("/posts"');
+      expect(mainContent).toContain("Depends(get_db)");
+      expect(mainContent).toContain("init_db()");
+    });
+
+    it("should generate README with SQLAlchemy instructions", async () => {
+      const result = await createVirtual({
+        projectName: "python-sqlalchemy-readme",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "sqlalchemy",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const readmeContent = getFileContent(root, "README.md");
+      expect(readmeContent).toBeDefined();
+      expect(readmeContent).toContain("SQLAlchemy");
+      expect(readmeContent).toContain("Alembic");
+      expect(readmeContent).toContain("alembic revision");
+      expect(readmeContent).toContain("alembic upgrade head");
+    });
+
+    it("should NOT create SQLAlchemy files when pythonOrm is none", async () => {
+      const result = await createVirtual({
+        projectName: "python-no-sqlalchemy",
+        ecosystem: "python",
+        pythonWebFramework: "fastapi",
+        pythonOrm: "none",
+        pythonValidation: "pydantic",
+        pythonAi: [],
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Verify SQLAlchemy files do NOT exist
+      expect(hasFile(root, "src/app/database.py")).toBe(false);
+      expect(hasFile(root, "src/app/models.py")).toBe(false);
+      expect(hasFile(root, "src/app/crud.py")).toBe(false);
+      expect(hasFile(root, "alembic.ini")).toBe(false);
+      expect(hasFile(root, "migrations/env.py")).toBe(false);
     });
   });
 
