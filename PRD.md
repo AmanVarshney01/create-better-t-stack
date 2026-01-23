@@ -168,8 +168,8 @@
 
 - [x] **Python Ecosystem Tab** - Add new "Python" tab to Builder page
 - [x] **Python Language Support** - Add Python as a language option with pyproject.toml/uv scaffolding
-- [ ] **Python Base Template** - Create base Python project template
-- [ ] **Python Ecosystem Tests** - Write comprehensive tests verifying Python ecosystem works
+- [x] **Python Base Template** - Create base Python project template
+- [x] **Python Ecosystem Tests** - Write comprehensive tests verifying Python ecosystem works
 
 ---
 

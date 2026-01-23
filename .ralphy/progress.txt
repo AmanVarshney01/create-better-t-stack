@@ -5751,3 +5751,61 @@ Implemented Umami open-source analytics integration following the existing Plaus
 
 ### Status: COMPLETE
 
+
+
+## 2026-01-23: Python Base Template and Ecosystem Tests Verification
+
+### Task: Verify Python Base Template and Python Ecosystem Tests are complete
+
+### Investigation Summary:
+Upon investigation, found that the Python base template was already implemented with all necessary files:
+
+1. **packages/template-generator/templates/python-base/pyproject.toml.hbs**: Full project configuration with conditional dependencies for all Python options:
+   - FastAPI/Django web frameworks
+   - SQLAlchemy/SQLModel ORMs
+   - Pydantic validation
+   - AI frameworks (LangChain, LlamaIndex, OpenAI SDK, Anthropic SDK, LangGraph, CrewAI)
+   - Celery task queue
+   - Ruff code quality
+
+2. **packages/template-generator/templates/python-base/_gitignore**: Comprehensive Python gitignore
+
+3. **packages/template-generator/templates/python-base/.env.example**: Environment variables template
+
+4. **packages/template-generator/templates/python-base/src/app/__init__.py**: Package initializer
+
+5. **packages/template-generator/templates/python-base/src/app/main.py.hbs**: Main entry point with:
+   - FastAPI configuration with CORS and health endpoints
+   - Django configuration with URL patterns
+   - Plain Python fallback
+
+6. **packages/template-generator/templates/python-base/tests/__init__.py**: Test package initializer
+
+7. **packages/template-generator/templates/python-base/tests/test_main.py.hbs**: Tests with conditional framework support
+
+8. **packages/template-generator/src/processors/readme-generator.ts**: Dynamic README generation with Python-specific content via `generatePythonReadmeContent()`
+
+### Tests Verification:
+The test file `apps/cli/test/python-language.test.ts` contains 28 comprehensive tests covering:
+- Schema definitions (ecosystems, web frameworks, ORMs, validation, AI, task queues, quality tools)
+- Python base template structure (pyproject.toml, .gitignore, .env.example, README.md)
+- FastAPI web framework integration
+- Django web framework integration
+- SQLAlchemy ORM integration
+- SQLModel ORM integration
+- Pydantic validation integration
+- AI/ML frameworks (LangChain, OpenAI SDK, Anthropic SDK, multiple AI)
+- Celery task queue integration
+- Ruff quality tool integration
+- README generation for FastAPI and Django
+- Full stack Python project with all options
+- Python ecosystem isolation (no TypeScript or Rust files)
+
+All 28 tests pass successfully with 132 expect() calls.
+
+### Changes Made:
+1. **PRD.md**: Marked both tasks as complete:
+   - `[x] **Python Base Template** - Create base Python project template`
+   - `[x] **Python Ecosystem Tests** - Write comprehensive tests verifying Python ecosystem works`
+
+### Status: COMPLETE
