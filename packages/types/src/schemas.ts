@@ -217,6 +217,10 @@ export const ObservabilitySchema = z
   .enum(["opentelemetry", "sentry", "none"])
   .describe("Observability and distributed tracing");
 
+export const FeatureFlagsSchema = z
+  .enum(["growthbook", "none"])
+  .describe("Feature flags provider for A/B testing and feature management");
+
 // Rust ecosystem schemas
 export const RustWebFrameworkSchema = z
   .enum(["axum", "actix-web", "none"])
@@ -328,6 +332,7 @@ export const CreateInputSchema = z.object({
   fileUpload: FileUploadSchema.optional(),
   logging: LoggingSchema.optional(),
   observability: ObservabilitySchema.optional(),
+  featureFlags: FeatureFlagsSchema.optional(),
   cms: CMSSchema.optional(),
   caching: CachingSchema.optional(),
   // Rust ecosystem options
@@ -389,6 +394,7 @@ export const ProjectConfigSchema = z.object({
   fileUpload: FileUploadSchema,
   logging: LoggingSchema,
   observability: ObservabilitySchema,
+  featureFlags: FeatureFlagsSchema,
   cms: CMSSchema,
   caching: CachingSchema,
   // Rust ecosystem options
@@ -434,6 +440,7 @@ export const BetterTStackConfigSchema = z.object({
   fileUpload: FileUploadSchema,
   logging: LoggingSchema,
   observability: ObservabilitySchema,
+  featureFlags: FeatureFlagsSchema,
   cms: CMSSchema,
   caching: CachingSchema,
   // Rust ecosystem options
@@ -499,6 +506,7 @@ export const ANIMATION_VALUES = AnimationSchema.options;
 export const FILE_UPLOAD_VALUES = FileUploadSchema.options;
 export const LOGGING_VALUES = LoggingSchema.options;
 export const OBSERVABILITY_VALUES = ObservabilitySchema.options;
+export const FEATURE_FLAGS_VALUES = FeatureFlagsSchema.options;
 export const CMS_VALUES = CMSSchema.options;
 export const CACHING_VALUES = CachingSchema.options;
 export const ECOSYSTEM_VALUES = EcosystemSchema.options;

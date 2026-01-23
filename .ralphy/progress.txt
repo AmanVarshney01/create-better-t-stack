@@ -5333,3 +5333,60 @@ MongoDB support was already fully implemented in the codebase. This task updates
 - No ORM required (Redis is a key-value store with its own client)
 
 ### Status: COMPLETE
+
+
+## 2026-01-23: GrowthBook Feature Flags Implementation
+
+### Task: Implement GrowthBook as a feature flags option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added FeatureFlagsSchema with "growthbook" and "none" options
+2. **packages/types/src/types.ts**: Added FeatureFlags type export
+3. **packages/template-generator/src/utils/add-deps.ts**: Added GrowthBook dependency versions:
+   - @growthbook/growthbook: ^1.3.1
+   - @growthbook/growthbook-react: ^1.3.1
+4. **packages/template-generator/src/processors/feature-flags-deps.ts**: Created new processor for GrowthBook dependencies:
+   - Adds @growthbook/growthbook-react to web apps (React frontends)
+   - Adds @growthbook/growthbook to server apps (backend)
+   - Adds both SDKs to fullstack apps (Next.js, TanStack Start)
+5. **packages/template-generator/src/processors/index.ts**: Registered feature-flags-deps processor
+6. **packages/template-generator/src/processors/env-vars.ts**: Added GrowthBook environment variables:
+   - Server: GROWTHBOOK_API_HOST, GROWTHBOOK_CLIENT_KEY
+   - Client: VITE_GROWTHBOOK_API_HOST, VITE_GROWTHBOOK_CLIENT_KEY (with NEXT_PUBLIC_, NUXT_PUBLIC_ variants)
+7. **packages/template-generator/src/template-handlers/feature-flags.ts**: Created template handler for feature flags
+8. **packages/template-generator/src/template-handlers/index.ts**: Registered feature-flags template handler
+9. **packages/template-generator/src/generator.ts**: Added processFeatureFlagsTemplates call
+10. **packages/template-generator/templates/feature-flags/growthbook/server/base/src/lib/growthbook.ts.hbs**: Server-side GrowthBook client:
+    - createGrowthBook function with async feature loading
+    - isFeatureEnabled, getFeatureValue, runExperiment, trackEvent helpers
+11. **packages/template-generator/templates/feature-flags/growthbook/web/react/src/lib/growthbook.tsx.hbs**: React client:
+    - GrowthBookProvider component with attributes support
+    - useFeature, useFeatureConfig, useExperiment, useTrackEvent hooks
+    - Support for VITE_, NEXT_PUBLIC_, NUXT_PUBLIC_ env vars
+12. **apps/web/src/lib/constant.ts**: Added featureFlags category to TECH_OPTIONS and ECOSYSTEM_CATEGORIES
+13. **apps/web/src/lib/stack-search-schema.ts**: Added "ff" URL param for featureFlags
+14. **apps/web/src/lib/stack-url-state.ts**: Added featureFlags to state management
+15. **apps/web/src/lib/stack-url-state.client.ts**: Added featureFlags to client state
+16. **apps/web/src/lib/stack-url-keys.ts**: Added featureFlags: "ff" URL key mapping
+17. **apps/cli/src/constants.ts**: Added featureFlags: "none" to DEFAULT_CONFIG_BASE
+18. **apps/cli/src/index.ts**: Added featureFlags to createVirtual config
+19. **apps/cli/src/helpers/core/command-handlers.ts**: Added featureFlags to error config
+20. **apps/cli/src/utils/bts-config.ts**: Added featureFlags to bts.jsonc config
+21. **apps/cli/src/prompts/config-prompts.ts**: Added featureFlags to PromptGroupResults and gatherConfig
+22. **apps/cli/test/feature-flags.test.ts**: Created comprehensive tests:
+    - GrowthBook with Hono, Express, Fastify, Elysia, NestJS backends
+    - GrowthBook with Next.js fullstack
+    - GrowthBook with React Router frontend
+    - No feature flags (none) should not add dependencies
+
+### Features:
+- GrowthBook SDK for feature flags and A/B testing
+- Server-side feature evaluation with @growthbook/growthbook
+- Client-side React integration with @growthbook/growthbook-react
+- GrowthBookProvider component for React apps
+- Custom hooks: useFeature, useFeatureConfig, useExperiment, useTrackEvent
+- Environment variable configuration for API host and client key
+- Support for all React-based frontends and backend frameworks
+- Comprehensive documentation in template comments
+
+### Status: COMPLETE

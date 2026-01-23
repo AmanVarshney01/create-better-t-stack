@@ -47,6 +47,7 @@ export function loadStackParams(
       fileUpload: getString("fileUpload", DEFAULT_STACK.fileUpload),
       logging: getString("logging", DEFAULT_STACK.logging),
       observability: getString("observability", DEFAULT_STACK.observability),
+      featureFlags: getString("featureFlags", DEFAULT_STACK.featureFlags),
       backendLibraries: getString("backendLibraries", DEFAULT_STACK.backendLibraries),
       stateManagement: getString("stateManagement", DEFAULT_STACK.stateManagement),
       forms: getString("forms", DEFAULT_STACK.forms),
@@ -122,6 +123,7 @@ export function serializeStackParams(basePath: string, stack: StackState): strin
   addParam("fileUpload", stack.fileUpload);
   addParam("logging", stack.logging);
   addParam("observability", stack.observability);
+  addParam("featureFlags", stack.featureFlags);
   addParam("backendLibraries", stack.backendLibraries);
   addParam("stateManagement", stack.stateManagement);
   addParam("forms", stack.forms);

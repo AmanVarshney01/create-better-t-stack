@@ -31,6 +31,7 @@ function searchToStack(search: StackSearchParams | undefined): StackState {
     fileUpload: search.fu ?? DEFAULT_STACK.fileUpload,
     logging: search.log ?? DEFAULT_STACK.logging,
     observability: search.obs ?? DEFAULT_STACK.observability,
+    featureFlags: search.ff ?? DEFAULT_STACK.featureFlags,
     backendLibraries: search.bl ?? DEFAULT_STACK.backendLibraries,
     stateManagement: search.sm ?? DEFAULT_STACK.stateManagement,
     forms: search.frm ?? DEFAULT_STACK.forms,

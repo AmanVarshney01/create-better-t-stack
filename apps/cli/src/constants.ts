@@ -38,6 +38,7 @@ export const DEFAULT_CONFIG_BASE = {
   animation: "none",
   logging: "none",
   observability: "none",
+  featureFlags: "none",
   cms: "none",
   addons: ["turborepo"],
   examples: [],

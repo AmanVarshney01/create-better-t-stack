@@ -568,6 +568,10 @@ export const dependencyVersionMap = {
   // EdgeDB
   edgedb: "^2.0.1",
   "@edgedb/generate": "^0.6.1",
+
+  // Feature Flags - GrowthBook
+  "@growthbook/growthbook": "^1.3.1",
+  "@growthbook/growthbook-react": "^1.3.1",
 } as const;
 
 export type AvailableDependencies = keyof typeof dependencyVersionMap;

@@ -1,0 +1,54 @@
+import type { ProjectConfig } from "@better-fullstack/types";
+
+import type { VirtualFileSystem } from "../core/virtual-fs";
+
+import { addPackageDependency } from "../utils/add-deps";
+
+export function processFeatureFlagsDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  const { featureFlags, frontend, backend } = config;
+  if (!featureFlags || featureFlags === "none") return;
+
+  // Check if we have a web frontend
+  const hasWebFrontend = frontend.some(
+    (f) =>
+      f !== "none" && f !== "native-bare" && f !== "native-uniwind" && f !== "native-unistyles",
+  );
+
+  if (featureFlags === "growthbook") {
+    // Add client-side React SDK to web app
+    if (hasWebFrontend) {
+      const webPath = "apps/web/package.json";
+      if (vfs.exists(webPath)) {
+        addPackageDependency({
+          vfs,
+          packagePath: webPath,
+          dependencies: ["@growthbook/growthbook-react"],
+        });
+      }
+    }
+
+    // Add server-side SDK to backend
+    if (backend !== "none" && backend !== "convex") {
+      const serverPath = "apps/server/package.json";
+      if (vfs.exists(serverPath)) {
+        addPackageDependency({
+          vfs,
+          packagePath: serverPath,
+          dependencies: ["@growthbook/growthbook"],
+        });
+      }
+    }
+
+    // For fullstack frameworks (Next.js, etc.), add both SDKs to web
+    if (backend === "self" && hasWebFrontend) {
+      const webPath = "apps/web/package.json";
+      if (vfs.exists(webPath)) {
+        addPackageDependency({
+          vfs,
+          packagePath: webPath,
+          dependencies: ["@growthbook/growthbook-react", "@growthbook/growthbook"],
+        });
+      }
+    }
+  }
+}

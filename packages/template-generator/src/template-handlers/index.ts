@@ -15,5 +15,6 @@ export { processExtrasTemplates } from "./extras";
 export { processDeployTemplates } from "./deploy";
 export { processLoggingTemplates } from "./logging";
 export { processObservabilityTemplates } from "./observability";
+export { processFeatureFlagsTemplates } from "./feature-flags";
 export { processJobQueueTemplates } from "./job-queue";
 export { processCMSTemplates } from "./cms";

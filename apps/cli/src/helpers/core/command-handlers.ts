@@ -135,6 +135,7 @@ export async function createProjectHandler(
             rustLibraries: [],
             cms: "none",
             caching: "none",
+            featureFlags: "none",
           } satisfies ProjectConfig,
           reproducibleCommand: "",
           timeScaffolded,

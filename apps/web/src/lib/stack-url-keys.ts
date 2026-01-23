@@ -21,6 +21,7 @@ export const stackUrlKeys: Record<keyof StackState, string> = {
   fileUpload: "fu",
   logging: "log",
   observability: "obs",
+  featureFlags: "ff",
   backendLibraries: "bl",
   stateManagement: "sm",
   forms: "frm",

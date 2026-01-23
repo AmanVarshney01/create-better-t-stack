@@ -1,0 +1,128 @@
+import { GrowthBook } from "@growthbook/growthbook";
+
+// GrowthBook configuration from environment variables
+const apiHost = process.env.GROWTHBOOK_API_HOST || "https://cdn.growthbook.io";
+const clientKey = process.env.GROWTHBOOK_CLIENT_KEY;
+
+/**
+ * Create a new GrowthBook instance for server-side feature flag evaluation
+ *
+ * @example
+ * const gb = await createGrowthBook({ id: "user-123" });
+ * if (gb.isOn("new-feature")) {
+ *   // Show new feature
+ * }
+ * gb.destroy(); // Clean up when done
+ */
+export async function createGrowthBook(attributes?: Record<string, unknown>): Promise<GrowthBook> {
+  const gb = new GrowthBook({
+    apiHost,
+    clientKey: clientKey || "",
+    attributes: {
+      ...attributes,
+    },
+    // Enable streaming for real-time feature flag updates
+    backgroundSync: true,
+  });
+
+  if (!clientKey) {
+    console.warn("[GrowthBook] Client key not configured, feature flags will use default values");
+    return gb;
+  }
+
+  // Load feature definitions
+  await gb.init({ timeout: 2000 });
+
+  return gb;
+}
+
+/**
+ * Check if a feature is enabled
+ *
+ * @example
+ * const gb = await createGrowthBook({ id: "user-123" });
+ * const isEnabled = isFeatureEnabled(gb, "dark-mode");
+ */
+export function isFeatureEnabled(gb: GrowthBook, featureKey: string): boolean {
+  return gb.isOn(featureKey);
+}
+
+/**
+ * Get a feature value with type safety
+ *
+ * @example
+ * const gb = await createGrowthBook({ id: "user-123" });
+ * const buttonColor = getFeatureValue(gb, "button-color", "blue");
+ */
+export function getFeatureValue<T>(gb: GrowthBook, featureKey: string, defaultValue: T): T {
+  return gb.getFeatureValue(featureKey, defaultValue);
+}
+
+/**
+ * Run an experiment and get the variation
+ *
+ * @example
+ * const gb = await createGrowthBook({ id: "user-123" });
+ * const result = runExperiment(gb, {
+ *   key: "pricing-test",
+ *   variations: ["control", "variant-a", "variant-b"]
+ * });
+ * console.log(result.value); // "control", "variant-a", or "variant-b"
+ */
+export function runExperiment<T>(
+  gb: GrowthBook,
+  experiment: {
+    key: string;
+    variations: T[];
+  },
+) {
+  return gb.run(experiment);
+}
+
+/**
+ * Track an event for analytics
+ *
+ * @example
+ * const gb = await createGrowthBook({ id: "user-123" });
+ * trackEvent(gb, "purchase", { value: 99.99 });
+ */
+export function trackEvent(
+  gb: GrowthBook,
+  eventName: string,
+  properties?: Record<string, unknown>,
+) {
+  gb.track(eventName, properties);
+}
+
+// Re-export GrowthBook for advanced usage
+export { GrowthBook };
+
+/**
+ * Environment Variables:
+ *
+ * GROWTHBOOK_API_HOST - GrowthBook API host (default: https://cdn.growthbook.io)
+ * GROWTHBOOK_CLIENT_KEY - SDK Connection client key from GrowthBook dashboard
+ *
+ * Getting started:
+ * 1. Create an account at https://app.growthbook.io
+ * 2. Create a new SDK Connection (choose "Backend" type)
+ * 3. Copy the Client Key to GROWTHBOOK_CLIENT_KEY env var
+ * 4. Create features in the Features tab
+ *
+ * Usage in route handlers:
+ * ```typescript
+ * import { createGrowthBook } from "./lib/growthbook";
+ *
+ * app.get("/api/data", async (c) => {
+ *   const userId = c.get("userId");
+ *   const gb = await createGrowthBook({ id: userId });
+ *
+ *   const data = gb.isOn("new-data-format")
+ *     ? await getNewData()
+ *     : await getLegacyData();
+ *
+ *   gb.destroy();
+ *   return c.json(data);
+ * });
+ * ```
+ */

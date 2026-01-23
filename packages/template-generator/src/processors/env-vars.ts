@@ -116,6 +116,7 @@ function buildClientVars(
   backend: ProjectConfig["backend"],
   auth: ProjectConfig["auth"],
   payments: ProjectConfig["payments"],
+  featureFlags: ProjectConfig["featureFlags"],
 ): EnvVariable[] {
   const hasNextJs = frontend.includes("next");
   const hasReactRouter = frontend.includes("react-router");
@@ -246,6 +247,38 @@ function buildClientVars(
       comment:
         "Dodo Payments environment - use 'test_mode' for testing, 'live_mode' for production",
     });
+  }
+
+  // GrowthBook feature flags client-side
+  if (featureFlags === "growthbook") {
+    let apiHostName = "VITE_GROWTHBOOK_API_HOST";
+    let clientKeyName = "VITE_GROWTHBOOK_CLIENT_KEY";
+
+    if (hasNextJs) {
+      apiHostName = "NEXT_PUBLIC_GROWTHBOOK_API_HOST";
+      clientKeyName = "NEXT_PUBLIC_GROWTHBOOK_CLIENT_KEY";
+    } else if (hasNuxt) {
+      apiHostName = "NUXT_PUBLIC_GROWTHBOOK_API_HOST";
+      clientKeyName = "NUXT_PUBLIC_GROWTHBOOK_CLIENT_KEY";
+    } else if (hasSvelte) {
+      apiHostName = "PUBLIC_GROWTHBOOK_API_HOST";
+      clientKeyName = "PUBLIC_GROWTHBOOK_CLIENT_KEY";
+    }
+
+    vars.push(
+      {
+        key: apiHostName,
+        value: "https://cdn.growthbook.io",
+        condition: true,
+        comment: "GrowthBook API host URL",
+      },
+      {
+        key: clientKeyName,
+        value: "",
+        condition: true,
+        comment: "GrowthBook SDK connection client key from dashboard",
+      },
+    );
   }
 
   return vars;
@@ -404,6 +437,7 @@ function buildServerVars(
   fileUpload: ProjectConfig["fileUpload"],
   logging: ProjectConfig["logging"],
   observability: ProjectConfig["observability"],
+  featureFlags: ProjectConfig["featureFlags"],
   jobQueue: ProjectConfig["jobQueue"],
   caching: ProjectConfig["caching"],
 ): EnvVariable[] {
@@ -799,6 +833,18 @@ function buildServerVars(
       comment: "Sentry profiles sample rate 0.0-1.0",
     },
     {
+      key: "GROWTHBOOK_API_HOST",
+      value: "https://cdn.growthbook.io",
+      condition: featureFlags === "growthbook",
+      comment: "GrowthBook API host URL",
+    },
+    {
+      key: "GROWTHBOOK_CLIENT_KEY",
+      value: "",
+      condition: featureFlags === "growthbook",
+      comment: "GrowthBook SDK connection client key",
+    },
+    {
       key: "REDIS_HOST",
       value: "localhost",
       condition: jobQueue === "bullmq",
@@ -959,7 +1005,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     const clientDir = "apps/web";
     if (vfs.directoryExists(clientDir)) {
       const envPath = `${clientDir}/.env`;
-      const clientVars = buildClientVars(frontend, backend, auth, payments);
+      const clientVars = buildClientVars(frontend, backend, auth, payments, config.featureFlags);
       writeEnvFile(vfs, envPath, clientVars);
     }
   }
@@ -1024,6 +1070,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     fileUpload,
     logging,
     observability,
+    config.featureFlags,
     config.jobQueue,
     config.caching,
   );

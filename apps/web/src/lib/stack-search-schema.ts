@@ -30,6 +30,7 @@ export const stackSearchSchema = z.object({
   fu: z.string().catch(DEFAULT_STACK.fileUpload),
   log: z.string().catch(DEFAULT_STACK.logging),
   obs: z.string().catch(DEFAULT_STACK.observability),
+  ff: z.string().catch(DEFAULT_STACK.featureFlags),
   bl: z.string().catch(DEFAULT_STACK.backendLibraries),
   sm: z.string().catch(DEFAULT_STACK.stateManagement),
   frm: z.string().catch(DEFAULT_STACK.forms),

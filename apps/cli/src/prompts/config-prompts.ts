@@ -15,6 +15,7 @@ import type {
   Effect,
   Email,
   Examples,
+  FeatureFlags,
   FileUpload,
   Forms,
   Frontend,
@@ -121,6 +122,7 @@ type PromptGroupResults = {
   fileUpload: FileUpload;
   logging: Logging;
   observability: Observability;
+  featureFlags: FeatureFlags;
   cms: CMS;
   caching: Caching;
   // Rust ecosystem
@@ -306,6 +308,10 @@ export async function gatherConfig(
         if (results.ecosystem === "rust") return Promise.resolve("none" as Observability);
         return getObservabilityChoice(flags.observability, results.backend);
       },
+      featureFlags: ({ results }) => {
+        if (results.ecosystem === "rust") return Promise.resolve("none" as FeatureFlags);
+        return Promise.resolve(flags.featureFlags || "none") as Promise<FeatureFlags>;
+      },
       cms: ({ results }) => {
         if (results.ecosystem === "rust") return Promise.resolve("none" as CMS);
         return getCMSChoice(flags.cms, results.backend);
@@ -390,6 +396,7 @@ export async function gatherConfig(
     fileUpload: result.fileUpload,
     logging: result.logging,
     observability: result.observability,
+    featureFlags: result.featureFlags,
     cms: result.cms,
     caching: result.caching,
     // Ecosystem

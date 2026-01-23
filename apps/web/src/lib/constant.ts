@@ -838,6 +838,24 @@ export const TECH_OPTIONS: Record<
       default: true,
     },
   ],
+  featureFlags: [
+    {
+      id: "growthbook",
+      name: "GrowthBook",
+      description: "Open-source feature flags and A/B testing platform",
+      icon: "",
+      color: "from-purple-500 to-indigo-600",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No Feature Flags",
+      description: "Skip feature flags setup",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
   backendLibraries: [
     {
       id: "effect",
@@ -2008,6 +2026,7 @@ export const ECOSYSTEM_CATEGORIES: Record<Ecosystem, TechCategory[]> = {
     "fileUpload",
     "logging",
     "observability",
+    "featureFlags",
     "caching",
     "ai",
     "cms",
@@ -2260,6 +2279,7 @@ export type StackState = {
   fileUpload: string;
   logging: string;
   observability: string;
+  featureFlags: string;
   backendLibraries: string;
   stateManagement: string;
   forms: string;
@@ -2310,6 +2330,7 @@ export const DEFAULT_STACK: StackState = {
   fileUpload: "none",
   logging: "none",
   observability: "none",
+  featureFlags: "none",
   backendLibraries: "none",
   stateManagement: "none",
   forms: "react-hook-form",

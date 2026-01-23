@@ -1,0 +1,199 @@
+import {
+  GrowthBook,
+  GrowthBookProvider as GBProvider,
+  useFeatureIsOn,
+  useFeatureValue,
+  useGrowthBook,
+} from "@growthbook/growthbook-react";
+import type { PropsWithChildren } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+// GrowthBook configuration from environment variables
+{{#if (eq frontend.[0] "next")}}
+const apiHost = process.env.NEXT_PUBLIC_GROWTHBOOK_API_HOST || "https://cdn.growthbook.io";
+const clientKey = process.env.NEXT_PUBLIC_GROWTHBOOK_CLIENT_KEY || "";
+{{else if (eq frontend.[0] "nuxt")}}
+const apiHost = process.env.NUXT_PUBLIC_GROWTHBOOK_API_HOST || "https://cdn.growthbook.io";
+const clientKey = process.env.NUXT_PUBLIC_GROWTHBOOK_CLIENT_KEY || "";
+{{else}}
+const apiHost = import.meta.env.VITE_GROWTHBOOK_API_HOST || "https://cdn.growthbook.io";
+const clientKey = import.meta.env.VITE_GROWTHBOOK_CLIENT_KEY || "";
+{{/if}}
+
+// Create a singleton GrowthBook instance
+const gb = new GrowthBook({
+  apiHost,
+  clientKey,
+  // Enable streaming for real-time feature flag updates
+  backgroundSync: true,
+  // Track experiment views automatically
+  enableDevMode: {{#if (eq backend "self")}}process.env.NODE_ENV{{else}}import.meta.env.MODE{{/if}} === "development",
+});
+
+interface GrowthBookProviderProps extends PropsWithChildren {
+  /**
+   * User attributes for targeting rules
+   * @example { id: "user-123", email: "user@example.com", plan: "premium" }
+   */
+  attributes?: Record<string, unknown>;
+}
+
+/**
+ * GrowthBook Provider component
+ * Wrap your app with this provider to enable feature flags
+ *
+ * @example
+ * function App() {
+ *   const user = useAuth();
+ *   return (
+ *     <GrowthBookProvider attributes={{ id: user?.id, plan: user?.plan }}>
+ *       <YourApp />
+ *     </GrowthBookProvider>
+ *   );
+ * }
+ */
+export function GrowthBookProvider({ children, attributes }: GrowthBookProviderProps) {
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    // Load feature definitions
+    gb.init({ timeout: 2000 }).then(() => {
+      setReady(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    // Update user attributes when they change
+    if (attributes) {
+      gb.setAttributes(attributes);
+    }
+  }, [attributes]);
+
+  if (!clientKey) {
+    console.warn("[GrowthBook] Client key not configured, feature flags will use default values");
+  }
+
+  return <GBProvider growthbook={gb}>{children}</GBProvider>;
+}
+
+/**
+ * Hook to check if a feature is enabled
+ *
+ * @example
+ * function MyComponent() {
+ *   const showNewFeature = useFeature("new-feature");
+ *   return showNewFeature ? <NewFeature /> : <OldFeature />;
+ * }
+ */
+export function useFeature(featureKey: string): boolean {
+  return useFeatureIsOn(featureKey);
+}
+
+/**
+ * Hook to get a feature value
+ *
+ * @example
+ * function MyComponent() {
+ *   const buttonColor = useFeatureConfig("button-color", "blue");
+ *   return <button style={{ backgroundColor: buttonColor }}>Click me</button>;
+ * }
+ */
+export function useFeatureConfig<T>(featureKey: string, defaultValue: T): T {
+  return useFeatureValue(featureKey, defaultValue);
+}
+
+/**
+ * Hook to run an experiment
+ *
+ * @example
+ * function PricingPage() {
+ *   const { value: variation } = useExperiment({
+ *     key: "pricing-test",
+ *     variations: ["control", "variant-a", "variant-b"]
+ *   });
+ *
+ *   return <PricingTable variation={variation} />;
+ * }
+ */
+export function useExperiment<T>(experiment: { key: string; variations: T[] }) {
+  const gb = useGrowthBook();
+  return useMemo(() => {
+    if (!gb) return { value: experiment.variations[0], variationId: 0 };
+    return gb.run(experiment);
+  }, [gb, experiment.key]);
+}
+
+/**
+ * Hook to track events
+ *
+ * @example
+ * function CheckoutButton() {
+ *   const track = useTrackEvent();
+ *
+ *   const handleClick = () => {
+ *     track("checkout_started", { items: 3, total: 99.99 });
+ *   };
+ *
+ *   return <button onClick={handleClick}>Checkout</button>;
+ * }
+ */
+export function useTrackEvent() {
+  const gb = useGrowthBook();
+
+  return (eventName: string, properties?: Record<string, unknown>) => {
+    if (gb) {
+      gb.track(eventName, properties);
+    }
+  };
+}
+
+// Re-export types and hooks for advanced usage
+export { GrowthBook, useGrowthBook, useFeatureIsOn, useFeatureValue };
+
+/**
+ * Environment Variables:
+ *
+{{#if (eq frontend.[0] "next")}}
+ * NEXT_PUBLIC_GROWTHBOOK_API_HOST - GrowthBook API host (default: https://cdn.growthbook.io)
+ * NEXT_PUBLIC_GROWTHBOOK_CLIENT_KEY - SDK Connection client key from GrowthBook dashboard
+{{else if (eq frontend.[0] "nuxt")}}
+ * NUXT_PUBLIC_GROWTHBOOK_API_HOST - GrowthBook API host (default: https://cdn.growthbook.io)
+ * NUXT_PUBLIC_GROWTHBOOK_CLIENT_KEY - SDK Connection client key from GrowthBook dashboard
+{{else}}
+ * VITE_GROWTHBOOK_API_HOST - GrowthBook API host (default: https://cdn.growthbook.io)
+ * VITE_GROWTHBOOK_CLIENT_KEY - SDK Connection client key from GrowthBook dashboard
+{{/if}}
+ *
+ * Getting started:
+ * 1. Create an account at https://app.growthbook.io
+ * 2. Create a new SDK Connection (choose "React" type)
+ * 3. Copy the Client Key to your .env file
+ * 4. Create features in the Features tab
+ * 5. Wrap your app with <GrowthBookProvider>
+ *
+ * Example usage:
+ * ```tsx
+ * // In your app entry point
+ * import { GrowthBookProvider } from "./lib/growthbook";
+ *
+ * function App() {
+ *   const user = useAuth();
+ *   return (
+ *     <GrowthBookProvider attributes={{ id: user?.id }}>
+ *       <Router />
+ *     </GrowthBookProvider>
+ *   );
+ * }
+ *
+ * // In any component
+ * import { useFeature, useFeatureConfig } from "./lib/growthbook";
+ *
+ * function MyComponent() {
+ *   const showBanner = useFeature("show-banner");
+ *   const bannerText = useFeatureConfig("banner-text", "Welcome!");
+ *
+ *   if (!showBanner) return null;
+ *   return <Banner text={bannerText} />;
+ * }
+ * ```
+ */
