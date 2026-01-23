@@ -60,6 +60,11 @@ export async function getORMChoice(
     return "none";
   }
 
+  // Redis is a key-value store and doesn't require an ORM
+  if (database === "redis") {
+    return "none";
+  }
+
   if (orm !== undefined) return orm;
 
   const options =

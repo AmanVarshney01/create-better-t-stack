@@ -21,6 +21,12 @@ export function processDatabaseDeps(vfs: VirtualFileSystem, config: ProjectConfi
     return;
   }
 
+  // Redis uses its own client, no separate ORM needed
+  if (database === "redis") {
+    processRedisDeps(vfs, dbPkgPath);
+    return;
+  }
+
   if (orm === "prisma") {
     processPrismaDeps(vfs, config, dbPkgPath, webPkgPath, webExists);
   } else if (orm === "drizzle") {
@@ -290,5 +296,14 @@ function processEdgeDBDeps(vfs: VirtualFileSystem, dbPkgPath: string): void {
     packagePath: dbPkgPath,
     dependencies: ["edgedb"],
     devDependencies: ["@edgedb/generate"],
+  });
+}
+
+function processRedisDeps(vfs: VirtualFileSystem, dbPkgPath: string): void {
+  // ioredis includes its own TypeScript types, no @types package needed
+  addPackageDependency({
+    vfs,
+    packagePath: dbPkgPath,
+    dependencies: ["ioredis"],
   });
 }

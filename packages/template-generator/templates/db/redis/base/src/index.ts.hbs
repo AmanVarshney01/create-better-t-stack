@@ -1,0 +1,353 @@
+import Redis from "ioredis";
+
+// Create Redis client with connection from environment
+// Supports both REDIS_URL format and individual host/port/password
+const redisUrl = process.env.REDIS_URL || process.env.DATABASE_URL;
+
+export const redis = redisUrl
+  ? new Redis(redisUrl)
+  : new Redis({
+      host: process.env.REDIS_HOST || "localhost",
+      port: parseInt(process.env.REDIS_PORT || "6379", 10),
+      password: process.env.REDIS_PASSWORD || undefined,
+      db: parseInt(process.env.REDIS_DB || "0", 10),
+    });
+
+// Re-export as db for consistency with other database packages
+export { redis as db };
+
+/**
+ * String operations
+ */
+export async function get<T = string>(key: string): Promise<T | null> {
+  const value = await redis.get(key);
+  if (value === null) return null;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return value as T;
+  }
+}
+
+export async function set(
+  key: string,
+  value: unknown,
+  options?: { ex?: number; px?: number; nx?: boolean; xx?: boolean }
+): Promise<"OK" | null> {
+  const serialized = typeof value === "string" ? value : JSON.stringify(value);
+  if (options?.ex) {
+    return redis.set(key, serialized, "EX", options.ex);
+  }
+  if (options?.px) {
+    return redis.set(key, serialized, "PX", options.px);
+  }
+  if (options?.nx) {
+    return redis.set(key, serialized, "NX");
+  }
+  if (options?.xx) {
+    return redis.set(key, serialized, "XX");
+  }
+  return redis.set(key, serialized);
+}
+
+export async function del(...keys: string[]): Promise<number> {
+  if (keys.length === 0) return 0;
+  return redis.del(...keys);
+}
+
+export async function exists(...keys: string[]): Promise<number> {
+  if (keys.length === 0) return 0;
+  return redis.exists(...keys);
+}
+
+export async function expire(key: string, seconds: number): Promise<number> {
+  return redis.expire(key, seconds);
+}
+
+export async function ttl(key: string): Promise<number> {
+  return redis.ttl(key);
+}
+
+export async function incr(key: string): Promise<number> {
+  return redis.incr(key);
+}
+
+export async function incrby(key: string, increment: number): Promise<number> {
+  return redis.incrby(key, increment);
+}
+
+export async function decr(key: string): Promise<number> {
+  return redis.decr(key);
+}
+
+/**
+ * Get or set pattern - retrieves from cache or executes function and caches result
+ */
+export async function getOrSet<T>(
+  key: string,
+  fn: () => Promise<T>,
+  ttlSeconds?: number
+): Promise<T> {
+  const cached = await get<T>(key);
+  if (cached !== null) {
+    return cached;
+  }
+
+  const value = await fn();
+  await set(key, value, ttlSeconds ? { ex: ttlSeconds } : undefined);
+  return value;
+}
+
+/**
+ * Hash operations
+ */
+export const hash = {
+  async get<T = string>(key: string, field: string): Promise<T | null> {
+    const value = await redis.hget(key, field);
+    if (value === null) return null;
+    try {
+      return JSON.parse(value) as T;
+    } catch {
+      return value as T;
+    }
+  },
+
+  async getAll<T extends Record<string, unknown>>(key: string): Promise<T> {
+    const result = await redis.hgetall(key);
+    const parsed: Record<string, unknown> = {};
+    for (const [field, value] of Object.entries(result)) {
+      try {
+        parsed[field] = JSON.parse(value);
+      } catch {
+        parsed[field] = value;
+      }
+    }
+    return parsed as T;
+  },
+
+  async set(key: string, field: string, value: unknown): Promise<number> {
+    const serialized = typeof value === "string" ? value : JSON.stringify(value);
+    return redis.hset(key, field, serialized);
+  },
+
+  async setMultiple(key: string, values: Record<string, unknown>): Promise<"OK"> {
+    const serialized: Record<string, string> = {};
+    for (const [field, value] of Object.entries(values)) {
+      serialized[field] = typeof value === "string" ? value : JSON.stringify(value);
+    }
+    return redis.hset(key, serialized) as unknown as Promise<"OK">;
+  },
+
+  async del(key: string, ...fields: string[]): Promise<number> {
+    return redis.hdel(key, ...fields);
+  },
+
+  async exists(key: string, field: string): Promise<boolean> {
+    const result = await redis.hexists(key, field);
+    return result === 1;
+  },
+
+  async keys(key: string): Promise<string[]> {
+    return redis.hkeys(key);
+  },
+
+  async len(key: string): Promise<number> {
+    return redis.hlen(key);
+  },
+};
+
+/**
+ * List operations
+ */
+export const list = {
+  async push(key: string, ...values: unknown[]): Promise<number> {
+    const serialized = values.map((v) => (typeof v === "string" ? v : JSON.stringify(v)));
+    return redis.rpush(key, ...serialized);
+  },
+
+  async unshift(key: string, ...values: unknown[]): Promise<number> {
+    const serialized = values.map((v) => (typeof v === "string" ? v : JSON.stringify(v)));
+    return redis.lpush(key, ...serialized);
+  },
+
+  async pop<T = string>(key: string): Promise<T | null> {
+    const value = await redis.rpop(key);
+    if (value === null) return null;
+    try {
+      return JSON.parse(value) as T;
+    } catch {
+      return value as T;
+    }
+  },
+
+  async shift<T = string>(key: string): Promise<T | null> {
+    const value = await redis.lpop(key);
+    if (value === null) return null;
+    try {
+      return JSON.parse(value) as T;
+    } catch {
+      return value as T;
+    }
+  },
+
+  async range<T = string>(key: string, start: number, stop: number): Promise<T[]> {
+    const values = await redis.lrange(key, start, stop);
+    return values.map((v) => {
+      try {
+        return JSON.parse(v) as T;
+      } catch {
+        return v as T;
+      }
+    });
+  },
+
+  async len(key: string): Promise<number> {
+    return redis.llen(key);
+  },
+
+  async trim(key: string, start: number, stop: number): Promise<"OK"> {
+    return redis.ltrim(key, start, stop);
+  },
+};
+
+/**
+ * Set operations
+ */
+export const set_ = {
+  async add(key: string, ...members: unknown[]): Promise<number> {
+    const serialized = members.map((m) => (typeof m === "string" ? m : JSON.stringify(m)));
+    return redis.sadd(key, ...serialized);
+  },
+
+  async remove(key: string, ...members: unknown[]): Promise<number> {
+    const serialized = members.map((m) => (typeof m === "string" ? m : JSON.stringify(m)));
+    return redis.srem(key, ...serialized);
+  },
+
+  async members<T = string>(key: string): Promise<T[]> {
+    const values = await redis.smembers(key);
+    return values.map((v) => {
+      try {
+        return JSON.parse(v) as T;
+      } catch {
+        return v as T;
+      }
+    });
+  },
+
+  async isMember(key: string, member: unknown): Promise<boolean> {
+    const serialized = typeof member === "string" ? member : JSON.stringify(member);
+    const result = await redis.sismember(key, serialized);
+    return result === 1;
+  },
+
+  async size(key: string): Promise<number> {
+    return redis.scard(key);
+  },
+};
+
+/**
+ * Sorted set operations
+ */
+export const zset = {
+  async add(key: string, ...scoreMembers: Array<{ score: number; member: unknown }>): Promise<number> {
+    const args: (string | number)[] = [];
+    for (const { score, member } of scoreMembers) {
+      args.push(score, typeof member === "string" ? member : JSON.stringify(member));
+    }
+    return redis.zadd(key, ...args);
+  },
+
+  async range<T = string>(key: string, start: number, stop: number): Promise<T[]> {
+    const values = await redis.zrange(key, start, stop);
+    return values.map((v) => {
+      try {
+        return JSON.parse(v) as T;
+      } catch {
+        return v as T;
+      }
+    });
+  },
+
+  async rangeWithScores<T = string>(
+    key: string,
+    start: number,
+    stop: number
+  ): Promise<Array<{ member: T; score: number }>> {
+    const values = await redis.zrange(key, start, stop, "WITHSCORES");
+    const result: Array<{ member: T; score: number }> = [];
+    for (let i = 0; i < values.length; i += 2) {
+      const memberStr = values[i];
+      const scoreStr = values[i + 1];
+      if (memberStr !== undefined && scoreStr !== undefined) {
+        let member: T;
+        try {
+          member = JSON.parse(memberStr) as T;
+        } catch {
+          member = memberStr as T;
+        }
+        result.push({ member, score: parseFloat(scoreStr) });
+      }
+    }
+    return result;
+  },
+
+  async score(key: string, member: unknown): Promise<number | null> {
+    const serialized = typeof member === "string" ? member : JSON.stringify(member);
+    return redis.zscore(key, serialized);
+  },
+
+  async rank(key: string, member: unknown): Promise<number | null> {
+    const serialized = typeof member === "string" ? member : JSON.stringify(member);
+    return redis.zrank(key, serialized);
+  },
+
+  async remove(key: string, ...members: unknown[]): Promise<number> {
+    const serialized = members.map((m) => (typeof m === "string" ? m : JSON.stringify(m)));
+    return redis.zrem(key, ...serialized);
+  },
+
+  async size(key: string): Promise<number> {
+    return redis.zcard(key);
+  },
+};
+
+/**
+ * Pub/Sub operations
+ */
+export const pubsub = {
+  async publish(channel: string, message: unknown): Promise<number> {
+    const serialized = typeof message === "string" ? message : JSON.stringify(message);
+    return redis.publish(channel, serialized);
+  },
+
+  /**
+   * Subscribe to channel(s) - returns a new Redis client for subscriptions
+   * Note: A Redis client in subscriber mode cannot be used for other commands
+   */
+  createSubscriber(): Redis {
+    return redis.duplicate();
+  },
+};
+
+/**
+ * Utility functions
+ */
+export async function ping(): Promise<string> {
+  return redis.ping();
+}
+
+export async function keys(pattern: string): Promise<string[]> {
+  return redis.keys(pattern);
+}
+
+export async function flushdb(): Promise<"OK"> {
+  return redis.flushdb();
+}
+
+/**
+ * Gracefully close the Redis connection
+ */
+export async function disconnect(): Promise<"OK"> {
+  return redis.quit();
+}

@@ -19,6 +19,13 @@ export async function processDbTemplates(
     return;
   }
 
+  // Redis uses its own client, no ORM needed
+  if (config.database === "redis") {
+    processTemplatesFromPrefix(vfs, templates, "db/base", "packages/db", config);
+    processTemplatesFromPrefix(vfs, templates, "db/redis/base", "packages/db", config);
+    return;
+  }
+
   // Other databases require an ORM
   if (config.orm === "none") return;
 

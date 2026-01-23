@@ -440,6 +440,10 @@ function buildServerVars(
         // EdgeDB uses its own connection mechanism via edgedb.toml or EDGEDB_DSN
         databaseUrl = "edgedb://localhost:5656/edgedb";
         break;
+      case "redis":
+        // Redis uses REDIS_URL for connection
+        databaseUrl = "redis://localhost:6379";
+        break;
     }
   }
 

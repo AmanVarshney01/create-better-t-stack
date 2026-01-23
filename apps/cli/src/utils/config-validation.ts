@@ -106,7 +106,16 @@ export function validateDatabaseOrmAuth(cfg: Partial<ProjectConfig>, flags?: Set
   }
 
   // EdgeDB has its own built-in query builder, no separate ORM needed
-  if (has("database") && has("orm") && db && db !== "none" && db !== "edgedb" && orm === "none") {
+  // Redis is a key-value store and doesn't use traditional ORMs
+  if (
+    has("database") &&
+    has("orm") &&
+    db &&
+    db !== "none" &&
+    db !== "edgedb" &&
+    db !== "redis" &&
+    orm === "none"
+  ) {
     missingRequirementError({
       message: "Database selection requires an ORM.",
       provided: { database: db, orm: "none" },
@@ -125,6 +134,18 @@ export function validateDatabaseOrmAuth(cfg: Partial<ProjectConfig>, flags?: Set
       provided: { database: "edgedb", orm },
       suggestions: [
         "Use --orm none with EdgeDB",
+        "Choose a different database if you want to use an ORM",
+      ],
+    });
+  }
+
+  // Redis should not have an ORM (it's a key-value store with its own client)
+  if (has("database") && has("orm") && db === "redis" && orm && orm !== "none") {
+    incompatibilityError({
+      message: "Redis is a key-value store and does not require an ORM.",
+      provided: { database: "redis", orm },
+      suggestions: [
+        "Use --orm none with Redis",
         "Choose a different database if you want to use an ORM",
       ],
     });

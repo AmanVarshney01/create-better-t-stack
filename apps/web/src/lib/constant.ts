@@ -406,6 +406,13 @@ export const TECH_OPTIONS: Record<
       color: "from-emerald-500 to-teal-600",
     },
     {
+      id: "redis",
+      name: "Redis",
+      description: "In-memory data store for caching and real-time data",
+      icon: "https://cdn.simpleicons.org/redis/DC382D",
+      color: "from-red-500 to-red-700",
+    },
+    {
       id: "none",
       name: "No Database",
       description: "Skip database integration",

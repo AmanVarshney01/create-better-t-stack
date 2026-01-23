@@ -5282,3 +5282,54 @@ MongoDB support was already fully implemented in the codebase. This task updates
 ### Linting: Passed
 
 ### Status: COMPLETE
+
+## 2026-01-23: Redis Database Implementation
+
+### Task: Implement Redis as a database option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "redis" to DatabaseSchema enum
+2. **apps/web/src/lib/constant.ts**: Added Redis UI option to TECH_OPTIONS.database with:
+   - id: "redis"
+   - name: "Redis"
+   - description: "In-memory data store for caching and real-time data"
+   - icon: Redis SimpleIcon
+   - color: from-red-500 to-red-700
+3. **packages/template-generator/src/template-handlers/database.ts**: Added Redis template processing (similar to EdgeDB pattern - no ORM needed)
+4. **packages/template-generator/src/processors/db-deps.ts**: Added processRedisDeps function to add ioredis dependency
+5. **packages/template-generator/src/processors/env-vars.ts**: Added Redis DATABASE_URL handling (redis://localhost:6379)
+6. **packages/template-generator/templates/db/redis/base/src/index.ts.hbs**: Created Redis client template with:
+   - Redis client initialization with environment variable support
+   - String operations (get, set, del, exists, expire, ttl, incr, decr)
+   - getOrSet pattern for cache-aside
+   - Hash operations (get, getAll, set, setMultiple, del, exists, keys, len)
+   - List operations (push, unshift, pop, shift, range, len, trim)
+   - Set operations (add, remove, members, isMember, size)
+   - Sorted set operations (add, range, rangeWithScores, score, rank, remove, size)
+   - Pub/Sub operations (publish, createSubscriber)
+   - Utility functions (ping, keys, flushdb, disconnect)
+7. **packages/template-generator/templates/db-setup/docker-compose/redis/docker-compose.yml.hbs**: Created Redis Docker Compose template with:
+   - Redis Alpine image
+   - AOF persistence enabled
+   - Health check configuration
+   - Data volume for persistence
+8. **apps/cli/src/utils/config-validation.ts**: Added Redis validation to prevent ORM selection
+9. **apps/cli/src/prompts/orm.ts**: Added Redis to skip ORM prompt (like EdgeDB)
+10. **apps/cli/test/redis.test.ts**: Created comprehensive tests for Redis:
+    - Basic Redis configuration
+    - Redis ORM validation (should fail with ORMs)
+    - Redis with different backends (Fastify, Elysia)
+    - Redis with different frontends (Next.js, React Router)
+    - Redis with Docker setup
+
+### Features:
+- Full Redis client support via ioredis
+- Key-value store operations with JSON serialization
+- Hash, List, Set, and Sorted Set data structures
+- Pub/Sub messaging support
+- Docker Compose setup for local development
+- Environment variable configuration (REDIS_URL or individual host/port/password)
+- Compatible with all backend frameworks (Hono, Express, Fastify, Elysia, NestJS, etc.)
+- No ORM required (Redis is a key-value store with its own client)
+
+### Status: COMPLETE
