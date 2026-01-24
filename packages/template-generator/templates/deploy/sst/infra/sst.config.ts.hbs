@@ -1,0 +1,149 @@
+/// <reference path="./.sst/platform/config.d.ts" />
+
+/**
+ * SST Configuration for {{projectName}}
+ * @see https://sst.dev/docs/reference/config
+ */
+export default $config({
+  app(input) {
+    return {
+      name: "{{projectName}}",
+      removal: input?.stage === "production" ? "retain" : "remove",
+      protect: ["production"].includes(input?.stage),
+      home: "aws",
+    };
+  },
+  async run() {
+{{#if (ne serverDeploy "sst")}}
+{{#if (eq webDeploy "sst")}}
+    // Frontend deployment
+{{#if (includes frontend "next")}}
+    const web = new sst.aws.Nextjs("Web", {
+      path: "apps/web",
+    });
+
+    return {
+      web: web.url,
+    };
+{{else if (includes frontend "tanstack-start")}}
+    const web = new sst.aws.TanStackStart("Web", {
+      path: "apps/web",
+    });
+
+    return {
+      web: web.url,
+    };
+{{else if (includes frontend "svelte")}}
+    const web = new sst.aws.SvelteKit("Web", {
+      path: "apps/web",
+    });
+
+    return {
+      web: web.url,
+    };
+{{else if (includes frontend "solid")}}
+    const web = new sst.aws.SolidStart("Web", {
+      path: "apps/web",
+    });
+
+    return {
+      web: web.url,
+    };
+{{else if (includes frontend "nuxt")}}
+    // Static site for Nuxt (SSR not directly supported, use static generation)
+    const web = new sst.aws.StaticSite("Web", {
+      path: "apps/web",
+      build: {
+        command: "{{#if (eq packageManager "bun")}}bun run generate{{else if (eq packageManager "pnpm")}}pnpm run generate{{else}}npm run generate{{/if}}",
+        output: ".output/public",
+      },
+    });
+
+    return {
+      web: web.url,
+    };
+{{else}}
+    // Static site deployment for SPA
+    const web = new sst.aws.StaticSite("Web", {
+      path: "apps/web",
+      build: {
+        command: "{{#if (eq packageManager "bun")}}bun run build{{else if (eq packageManager "pnpm")}}pnpm run build{{else}}npm run build{{/if}}",
+        output: "dist",
+      },
+    });
+
+    return {
+      web: web.url,
+    };
+{{/if}}
+{{/if}}
+{{else if (ne webDeploy "sst")}}
+    // Server deployment only
+    const api = new sst.aws.Function("Api", {
+      handler: "apps/server/dist/index.handler",
+      url: true,
+{{#if (ne database "none")}}
+      environment: {
+        DATABASE_URL: process.env.DATABASE_URL || "",
+      },
+{{/if}}
+    });
+
+    return {
+      api: api.url,
+    };
+{{else}}
+    // Full-stack deployment
+{{#if (includes frontend "next")}}
+    const web = new sst.aws.Nextjs("Web", {
+      path: "apps/web",
+    });
+{{else if (includes frontend "tanstack-start")}}
+    const web = new sst.aws.TanStackStart("Web", {
+      path: "apps/web",
+    });
+{{else if (includes frontend "svelte")}}
+    const web = new sst.aws.SvelteKit("Web", {
+      path: "apps/web",
+    });
+{{else if (includes frontend "solid")}}
+    const web = new sst.aws.SolidStart("Web", {
+      path: "apps/web",
+    });
+{{else if (includes frontend "nuxt")}}
+    // Static site for Nuxt
+    const web = new sst.aws.StaticSite("Web", {
+      path: "apps/web",
+      build: {
+        command: "{{#if (eq packageManager "bun")}}bun run generate{{else if (eq packageManager "pnpm")}}pnpm run generate{{else}}npm run generate{{/if}}",
+        output: ".output/public",
+      },
+    });
+{{else}}
+    // Static site deployment for SPA
+    const web = new sst.aws.StaticSite("Web", {
+      path: "apps/web",
+      build: {
+        command: "{{#if (eq packageManager "bun")}}bun run build{{else if (eq packageManager "pnpm")}}pnpm run build{{else}}npm run build{{/if}}",
+        output: "dist",
+      },
+    });
+{{/if}}
+
+    const api = new sst.aws.Function("Api", {
+      handler: "apps/server/dist/index.handler",
+      url: true,
+{{#if (ne database "none")}}
+      environment: {
+        DATABASE_URL: process.env.DATABASE_URL || "",
+      },
+{{/if}}
+    });
+
+    return {
+      web: web.url,
+      api: api.url,
+    };
+{{/if}}
+  },
+});

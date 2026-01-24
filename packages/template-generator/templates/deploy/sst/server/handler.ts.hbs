@@ -1,0 +1,8 @@
+/**
+ * AWS Lambda handler for {{projectName}} server
+ * This file wraps your server for deployment with SST
+ */
+import { handle } from "hono/aws-lambda";
+import app from "./index";
+
+export const handler = handle(app);

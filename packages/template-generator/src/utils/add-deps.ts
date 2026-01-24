@@ -241,6 +241,12 @@ export const dependencyVersionMap = {
 
   alchemy: "^0.82.1",
 
+  // SST (Serverless Stack)
+  sst: "^3.6.11",
+  "aws-cdk-lib": "^2.174.1",
+  constructs: "^10.4.2",
+  "@opennextjs/aws": "^3.3.0",
+
   dotenv: "^17.2.2",
   tsdown: "^0.16.5",
   zod: "^4.1.13",

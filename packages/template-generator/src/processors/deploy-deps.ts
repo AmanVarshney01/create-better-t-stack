@@ -11,6 +11,8 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
   const isCloudflareServer = serverDeploy === "cloudflare";
   const isFlyWeb = webDeploy === "fly";
   const isRailwayWeb = webDeploy === "railway";
+  const isSstWeb = webDeploy === "sst";
+  const isSstServer = serverDeploy === "sst";
   const isBackendSelf = backend === "self";
 
   // Handle Fly.io web deployment dependencies
@@ -39,6 +41,36 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
           packagePath: webPkgPath,
           devDependencies: ["@sveltejs/adapter-node"],
         });
+      }
+    }
+  }
+
+  // Handle SST deployment dependencies
+  if (isSstWeb || isSstServer) {
+    // Add SST to root package.json
+    addPackageDependency({
+      vfs,
+      packagePath: "package.json",
+      devDependencies: ["sst", "aws-cdk-lib", "constructs"],
+    });
+
+    // Add framework-specific SST adapters for web
+    if (isSstWeb) {
+      const webPkgPath = "apps/web/package.json";
+      if (vfs.exists(webPkgPath)) {
+        if (frontend.includes("next")) {
+          addPackageDependency({
+            vfs,
+            packagePath: webPkgPath,
+            devDependencies: ["@opennextjs/aws"],
+          });
+        } else if (frontend.includes("svelte")) {
+          addPackageDependency({
+            vfs,
+            packagePath: webPkgPath,
+            devDependencies: ["@sveltejs/adapter-node"],
+          });
+        }
       }
     }
   }

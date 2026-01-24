@@ -7405,3 +7405,49 @@ Zap is already fully implemented in the codebase. The implementation includes:
 - Database service integration tested
 
 ### Status: COMPLETE
+
+## SST (AWS Infrastructure) Support - 2026-01-24
+
+### Task
+Implemented SST (Serverless Stack) deployment platform support as a cross-ecosystem feature.
+
+### Changes Made
+1. **Schema Updates** (`packages/types/src/schemas.ts`):
+   - Added "sst" option to WebDeploySchema and ServerDeploySchema enums
+
+2. **UI Constants** (`apps/web/src/lib/constant.ts`):
+   - Added SST entry to webDeploy array with AWS icon and styling
+   - Added SST entry to serverDeploy array with AWS icon and styling
+
+3. **Template Handler** (`packages/template-generator/src/template-handlers/deploy.ts`):
+   - Added processing logic for SST infrastructure templates
+
+4. **Deploy Dependencies** (`packages/template-generator/src/processors/deploy-deps.ts`):
+   - Added SST dependency handling with sst, aws-cdk-lib, and constructs packages
+   - Added framework-specific adapter handling (@opennextjs/aws for Next.js, @sveltejs/adapter-node for SvelteKit)
+
+5. **Dependency Versions** (`packages/template-generator/src/utils/add-deps.ts`):
+   - Added version entries for sst, aws-cdk-lib, constructs, and @opennextjs/aws
+
+6. **SST Templates** (`packages/template-generator/templates/deploy/sst/`):
+   - Created `infra/sst.config.ts.hbs` with full-stack configuration supporting:
+     - Next.js (sst.aws.Nextjs)
+     - TanStack Start (sst.aws.TanStackStart)
+     - SvelteKit (sst.aws.SvelteKit)
+     - SolidStart (sst.aws.SolidStart)
+     - Static sites for SPAs
+     - Lambda functions for API servers
+   - Created `server/handler.ts.hbs` for AWS Lambda handler wrapper
+
+7. **Tests** (`apps/cli/test/sst-deployment.test.ts`):
+   - 23 comprehensive tests covering:
+     - Web deployment for all frontend frameworks
+     - Server deployment for all backend frameworks
+     - Combined fullstack deployments
+     - Package manager variations
+     - Turborepo integration
+     - Database configuration handling
+
+### Test Results
+- All 23 tests pass
+- Linting passes (no errors)

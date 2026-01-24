@@ -585,6 +585,13 @@ export const TECH_OPTIONS: Record<
       color: "from-blue-400 to-blue-600",
     },
     {
+      id: "sst",
+      name: "SST",
+      description: "Deploy to AWS with SST (Serverless Stack)",
+      icon: "https://cdn.simpleicons.org/amazonaws/FF9900",
+      color: "from-orange-400 to-yellow-500",
+    },
+    {
       id: "none",
       name: "None",
       description: "Skip deployment setup",
@@ -621,6 +628,13 @@ export const TECH_OPTIONS: Record<
       description: "Container-based deployment with Dockerfile",
       icon: "https://cdn.simpleicons.org/docker/2496ED",
       color: "from-blue-400 to-blue-600",
+    },
+    {
+      id: "sst",
+      name: "SST",
+      description: "Deploy to AWS with SST (Serverless Stack)",
+      icon: "https://cdn.simpleicons.org/amazonaws/FF9900",
+      color: "from-orange-400 to-yellow-500",
     },
     {
       id: "none",

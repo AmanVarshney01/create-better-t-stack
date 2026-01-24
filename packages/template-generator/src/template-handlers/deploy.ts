@@ -56,4 +56,9 @@ export async function processDeployTemplates(
   if (config.webDeploy === "docker" || config.serverDeploy === "docker") {
     processTemplatesFromPrefix(vfs, templates, "deploy/docker/compose", "", config);
   }
+
+  // Process SST infrastructure templates (root-level sst.config.ts)
+  if (config.webDeploy === "sst" || config.serverDeploy === "sst") {
+    processTemplatesFromPrefix(vfs, templates, "deploy/sst/infra", "", config);
+  }
 }
