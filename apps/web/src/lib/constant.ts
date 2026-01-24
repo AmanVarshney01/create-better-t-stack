@@ -1723,6 +1723,24 @@ export const TECH_OPTIONS: Record<
       default: true,
     },
   ],
+  search: [
+    {
+      id: "meilisearch",
+      name: "Meilisearch",
+      description: "Lightning-fast search engine with typo tolerance and instant results",
+      icon: "https://cdn.simpleicons.org/meilisearch/FF5CAA",
+      color: "from-pink-500 to-rose-600",
+      default: false,
+    },
+    {
+      id: "none",
+      name: "No Search",
+      description: "Skip search engine setup",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
+      default: true,
+    },
+  ],
   animation: [
     {
       id: "framer-motion",

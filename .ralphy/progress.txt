@@ -7491,3 +7491,64 @@ Implemented SST (Serverless Stack) deployment platform support as a cross-ecosys
 - Compatible with any Prometheus-compatible backend (Grafana, Victoria Metrics, etc.)
 
 ### Status: COMPLETE
+
+---
+
+## 2026-01-24 - Meilisearch Search Integration
+
+### Task: Implement Meilisearch - Lightning-fast search (Cross-Ecosystem)
+
+### Implementation Details:
+
+**Schema Updates (packages/types/src/schemas.ts):**
+- Added `SearchSchema` with options: `meilisearch`, `none`
+- Added `search` field to `CreateInputSchema`, `ProjectConfigSchema`, and `BetterTStackConfigSchema`
+- Exported `SEARCH_VALUES` for CLI validation
+
+**Type System (packages/types/src/types.ts):**
+- Added `Search` type inferred from `SearchSchema`
+
+**Dependency Management:**
+- Added `meilisearch: "^0.44.1"` to `dependencyVersionMap` in `add-deps.ts`
+
+**New Files Created:**
+- `packages/template-generator/src/processors/search-deps.ts` - Processes Meilisearch dependencies
+- `packages/template-generator/src/template-handlers/search.ts` - Handles search template processing
+- `packages/template-generator/templates/search/meilisearch/server/base/src/lib/search.ts.hbs` - Meilisearch client utilities template
+- `apps/cli/src/prompts/search.ts` - CLI prompt for search engine selection
+- `apps/cli/test/search.test.ts` - Comprehensive test suite (17 tests)
+
+**Web App Updates (apps/web/src/lib/):**
+- Added `search` to `TechCategory` type in `types.ts`
+- Added search options to `TECH_OPTIONS` in `constant.ts`
+- Added `search` to preview API route
+
+**CLI Updates:**
+- Added search processing to `config-processing.ts`
+- Added search to `config-prompts.ts` prompt flow
+- Added search to default configs in `constants.ts`, `command-handlers.ts`, `bts-config.ts`
+- Added search to test utilities in `test-utils.ts` and `cli-builder-sync.test.ts`
+
+**Generator Updates:**
+- Added `processSearchTemplates` to `generator.ts`
+- Added `processSearchDeps` to `processors/index.ts`
+- Added Meilisearch environment variables (`MEILISEARCH_HOST`, `MEILISEARCH_API_KEY`) to `env-vars.ts`
+
+**Template Features:**
+The Meilisearch template provides:
+- Client initialization with host and API key configuration
+- Index management (create, delete, get, list)
+- Document CRUD operations (add, update, delete, get)
+- Search functionality with query options (filters, pagination)
+- Index settings configuration (searchable, filterable, sortable attributes)
+- Task management (wait, status check)
+- Health check utility
+
+**Test Coverage:**
+- Tests with all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+- Tests with fullstack frameworks (Next.js, TanStack Start)
+- Tests with different frontends (TanStack Router, React Router, Svelte, Solid)
+- Tests with database setups (PostgreSQL/Drizzle, SQLite/Prisma, MySQL/TypeORM)
+- Tests with authentication (Better Auth, Auth.js)
+
+### Status: COMPLETE

@@ -294,7 +294,7 @@
 
 ## **Search**
 
-- [ ] **Meilisearch** - Lightning-fast search
+- [x] **Meilisearch** - Lightning-fast search
 - [ ] **Typesense** - Open-source search
 
 ---

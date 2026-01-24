@@ -537,6 +537,7 @@ function buildServerVars(
   featureFlags: ProjectConfig["featureFlags"],
   jobQueue: ProjectConfig["jobQueue"],
   caching: ProjectConfig["caching"],
+  search: ProjectConfig["search"],
 ): EnvVariable[] {
   const hasReactRouter = frontend.includes("react-router");
   const hasSvelte = frontend.includes("svelte");
@@ -1043,6 +1044,18 @@ function buildServerVars(
       condition: caching === "upstash-redis",
       comment: "Upstash Redis REST token - get it at https://console.upstash.com",
     },
+    {
+      key: "MEILISEARCH_HOST",
+      value: "http://localhost:7700",
+      condition: search === "meilisearch",
+      comment: "Meilisearch host URL - default for local development",
+    },
+    {
+      key: "MEILISEARCH_API_KEY",
+      value: "",
+      condition: search === "meilisearch",
+      comment: "Meilisearch API key (master key for development, search key for production)",
+    },
   ];
 }
 
@@ -1207,6 +1220,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     config.featureFlags,
     config.jobQueue,
     config.caching,
+    config.search,
   );
 
   if (backend === "self") {

@@ -29,6 +29,7 @@ import type {
   ProjectConfig,
   Realtime,
   Runtime,
+  Search,
   ServerDeploy,
   StateManagement,
   Testing,
@@ -138,6 +139,10 @@ export function processFlags(options: CLIInput, projectName?: string) {
 
   if (options.caching !== undefined) {
     config.caching = options.caching as Caching;
+  }
+
+  if (options.search !== undefined) {
+    config.search = options.search as Search;
   }
 
   if (options.analytics !== undefined) {

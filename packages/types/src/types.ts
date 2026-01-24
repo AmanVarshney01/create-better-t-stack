@@ -44,6 +44,7 @@ import type {
   AnalyticsSchema,
   CMSSchema,
   CachingSchema,
+  SearchSchema,
   EcosystemSchema,
   RustWebFrameworkSchema,
   RustFrontendSchema,
@@ -102,6 +103,7 @@ export type FeatureFlags = z.infer<typeof FeatureFlagsSchema>;
 export type Analytics = z.infer<typeof AnalyticsSchema>;
 export type CMS = z.infer<typeof CMSSchema>;
 export type Caching = z.infer<typeof CachingSchema>;
+export type Search = z.infer<typeof SearchSchema>;
 export type Ecosystem = z.infer<typeof EcosystemSchema>;
 export type RustWebFramework = z.infer<typeof RustWebFrameworkSchema>;
 export type RustFrontend = z.infer<typeof RustFrontendSchema>;

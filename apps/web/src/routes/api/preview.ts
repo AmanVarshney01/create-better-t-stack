@@ -114,6 +114,7 @@ function stackStateToConfig(state: StackState): ProjectConfig {
     analytics: "none" as ProjectConfig["analytics"],
     cms: "none" as ProjectConfig["cms"],
     caching: "none" as ProjectConfig["caching"],
+    search: "none" as ProjectConfig["search"],
     rustWebFramework: "none" as ProjectConfig["rustWebFramework"],
     rustFrontend: "none" as ProjectConfig["rustFrontend"],
     rustOrm: "none" as ProjectConfig["rustOrm"],

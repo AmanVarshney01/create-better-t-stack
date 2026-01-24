@@ -206,6 +206,10 @@ export const CachingSchema = z
   .enum(["upstash-redis", "none"])
   .describe("Caching solution (upstash-redis for serverless Redis)");
 
+export const SearchSchema = z
+  .enum(["meilisearch", "none"])
+  .describe("Search engine solution (meilisearch for lightning-fast search)");
+
 export const AnimationSchema = z
   .enum(["framer-motion", "gsap", "react-spring", "auto-animate", "lottie", "none"])
   .describe("Animation library");
@@ -377,6 +381,7 @@ export const CreateInputSchema = z.object({
   analytics: AnalyticsSchema.optional(),
   cms: CMSSchema.optional(),
   caching: CachingSchema.optional(),
+  search: SearchSchema.optional(),
   // Rust ecosystem options
   rustWebFramework: RustWebFrameworkSchema.optional(),
   rustFrontend: RustFrontendSchema.optional(),
@@ -453,6 +458,7 @@ export const ProjectConfigSchema = z.object({
   analytics: AnalyticsSchema,
   cms: CMSSchema,
   caching: CachingSchema,
+  search: SearchSchema,
   // Rust ecosystem options
   rustWebFramework: RustWebFrameworkSchema,
   rustFrontend: RustFrontendSchema,
@@ -513,6 +519,7 @@ export const BetterTStackConfigSchema = z.object({
   analytics: AnalyticsSchema,
   cms: CMSSchema,
   caching: CachingSchema,
+  search: SearchSchema,
   // Rust ecosystem options
   rustWebFramework: RustWebFrameworkSchema,
   rustFrontend: RustFrontendSchema,
@@ -593,6 +600,7 @@ export const FEATURE_FLAGS_VALUES = FeatureFlagsSchema.options;
 export const ANALYTICS_VALUES = AnalyticsSchema.options;
 export const CMS_VALUES = CMSSchema.options;
 export const CACHING_VALUES = CachingSchema.options;
+export const SEARCH_VALUES = SearchSchema.options;
 export const ECOSYSTEM_VALUES = EcosystemSchema.options;
 export const RUST_WEB_FRAMEWORK_VALUES = RustWebFrameworkSchema.options;
 export const RUST_FRONTEND_VALUES = RustFrontendSchema.options;

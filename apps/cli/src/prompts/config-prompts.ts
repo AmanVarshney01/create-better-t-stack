@@ -46,6 +46,7 @@ import type {
   RustOrm,
   RustWebFramework,
   Runtime,
+  Search,
   ServerDeploy,
   StateManagement,
   Testing,
@@ -109,6 +110,7 @@ import {
   getRustOrmChoice,
   getRustWebFrameworkChoice,
 } from "./rust-ecosystem";
+import { getSearchChoice } from "./search";
 import { getServerDeploymentChoice } from "./server-deploy";
 import { getStateManagementChoice } from "./state-management";
 import { getTestingChoice } from "./testing";
@@ -153,6 +155,7 @@ type PromptGroupResults = {
   analytics: Analytics;
   cms: CMS;
   caching: Caching;
+  search: Search;
   // Rust ecosystem
   rustWebFramework: RustWebFramework;
   rustFrontend: RustFrontend;
@@ -365,6 +368,10 @@ export async function gatherConfig(
         if (results.ecosystem !== "typescript") return Promise.resolve("none" as Caching);
         return getCachingChoice(flags.caching, results.backend);
       },
+      search: ({ results }) => {
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as Search);
+        return getSearchChoice(flags.search, results.backend);
+      },
       // Rust ecosystem prompts (skip if TypeScript or Python)
       rustWebFramework: ({ results }) => {
         if (results.ecosystem !== "rust") return Promise.resolve("none" as RustWebFramework);
@@ -496,6 +503,7 @@ export async function gatherConfig(
     analytics: result.analytics,
     cms: result.cms,
     caching: result.caching,
+    search: result.search,
     // Ecosystem
     ecosystem: result.ecosystem,
     // Rust ecosystem options

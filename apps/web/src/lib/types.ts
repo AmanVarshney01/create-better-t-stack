@@ -28,6 +28,7 @@ export type TechCategory =
   | "realtime"
   | "jobQueue"
   | "caching"
+  | "search"
   | "animation"
   | "cssFramework"
   | "uiLibrary"

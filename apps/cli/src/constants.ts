@@ -35,6 +35,7 @@ export const DEFAULT_CONFIG_BASE = {
   realtime: "none",
   jobQueue: "none",
   caching: "none",
+  search: "none",
   animation: "none",
   logging: "none",
   observability: "none",

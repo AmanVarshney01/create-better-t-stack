@@ -33,6 +33,7 @@ import { processPwaPlugins } from "./pwa-plugins";
 import { processReadme } from "./readme-generator";
 import { processRealtimeDeps } from "./realtime-deps";
 import { processRuntimeDeps } from "./runtime-deps";
+import { processSearchDeps } from "./search-deps";
 import { processStateManagementDeps } from "./state-management-deps";
 import { processTestingDeps } from "./testing-deps";
 import { processTurboConfig } from "./turbo-generator";
@@ -70,6 +71,7 @@ export function processDependencies(vfs: VirtualFileSystem, config: ProjectConfi
   processCSSAndUILibraryDeps(vfs, config);
   processCMSDeps(vfs, config);
   processCachingDeps(vfs, config);
+  processSearchDeps(vfs, config);
   processTurboConfig(vfs, config);
 }
 
@@ -82,6 +84,7 @@ export {
   processAuthDeps,
   processBackendDeps,
   processCachingDeps,
+  processSearchDeps,
   processCMSDeps,
   processCSSAndUILibraryDeps,
   processDatabaseDeps,

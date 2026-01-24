@@ -433,6 +433,7 @@ export async function createVirtual(
       analytics: options.analytics || "none",
       cms: options.cms || "none",
       caching: options.caching || "none",
+      search: options.search || "none",
       // Rust ecosystem options
       rustWebFramework: options.rustWebFramework || "none",
       rustFrontend: options.rustFrontend || "none",

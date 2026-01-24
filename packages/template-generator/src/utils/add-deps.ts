@@ -578,6 +578,9 @@ export const dependencyVersionMap = {
   // Caching - Upstash Redis
   "@upstash/redis": "^1.34.3",
 
+  // Search - Meilisearch
+  meilisearch: "^0.44.1",
+
   // EdgeDB
   edgedb: "^2.0.1",
   "@edgedb/generate": "^0.6.1",
