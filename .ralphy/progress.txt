@@ -7666,3 +7666,35 @@ The S3 template provides:
 - Tests for Cloudflare R2 variant
 - Tests for `none` option
 
+
+
+## Cloudflare R2 File Storage Integration
+
+**Date:** 2026-01-24
+**Task:** Cloudflare R2 - S3-compatible storage
+
+### Changes Made:
+1. Created R2 template file at `packages/template-generator/templates/file-storage/r2/server/base/src/lib/storage.ts.hbs`
+   - S3-compatible client configuration with R2 endpoint
+   - All standard storage operations (upload, download, delete, list, copy, move)
+   - Presigned URL generation for uploads/downloads
+   - Public URL generation with custom domain support
+
+2. Added comprehensive tests in `apps/cli/test/file-storage.test.ts`:
+   - R2 with different backends (Hono, Express, Fastify, Elysia, NestJS)
+   - R2 with fullstack frameworks (Next.js, TanStack Start)
+   - R2 with different frontends (TanStack Router, React Router, Svelte, Solid)
+   - R2 with database setups (PostgreSQL/Drizzle, SQLite/Prisma, MySQL/TypeORM)
+   - R2 with authentication (Better Auth, Auth.js)
+
+3. Fixed missing `fileStorage` property in `apps/web/src/routes/api/preview.ts`
+
+### Test Results:
+- All 33 file storage tests pass
+- Linting passes
+
+### Notes:
+- R2 was already partially configured in the codebase (schema, CLI prompts, dependencies, env vars)
+- Only missing piece was the template file
+- R2 uses the same AWS SDK as S3 since it's S3-compatible
+

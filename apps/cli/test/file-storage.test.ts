@@ -242,6 +242,45 @@ describe("File Storage Options", () => {
       );
       expectSuccess(result);
     });
+
+    test("r2 with Fastify backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "r2-fastify",
+          frontend: ["tanstack-router"],
+          backend: "fastify",
+          runtime: "node",
+          fileStorage: "r2",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("r2 with Elysia backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "r2-elysia",
+          frontend: ["tanstack-router"],
+          backend: "elysia",
+          runtime: "bun",
+          fileStorage: "r2",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("r2 with NestJS backend", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "r2-nestjs",
+          frontend: ["tanstack-router"],
+          backend: "nestjs",
+          runtime: "node",
+          fileStorage: "r2",
+        }),
+      );
+      expectSuccess(result);
+    });
   });
 
   describe("Cloudflare R2 with fullstack frameworks", () => {
@@ -265,6 +304,126 @@ describe("File Storage Options", () => {
           frontend: ["tanstack-start"],
           backend: "self",
           runtime: "none",
+          fileStorage: "r2",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Cloudflare R2 with different frontends", () => {
+    test("r2 with TanStack Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "r2-tanstack-router",
+          frontend: ["tanstack-router"],
+          fileStorage: "r2",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("r2 with React Router", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "r2-react-router",
+          frontend: ["react-router"],
+          fileStorage: "r2",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("r2 with Svelte", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "r2-svelte",
+          frontend: ["svelte"],
+          uiLibrary: "daisyui",
+          api: "orpc",
+          fileStorage: "r2",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("r2 with Solid", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "r2-solid",
+          frontend: ["solid"],
+          uiLibrary: "daisyui",
+          api: "orpc",
+          fileStorage: "r2",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Cloudflare R2 with database setups", () => {
+    test("r2 with PostgreSQL and Drizzle", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "r2-postgres-drizzle",
+          frontend: ["tanstack-router"],
+          database: "postgres",
+          orm: "drizzle",
+          fileStorage: "r2",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("r2 with SQLite and Prisma", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "r2-sqlite-prisma",
+          frontend: ["tanstack-router"],
+          database: "sqlite",
+          orm: "prisma",
+          fileStorage: "r2",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("r2 with MySQL and TypeORM", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "r2-mysql-typeorm",
+          frontend: ["tanstack-router"],
+          database: "mysql",
+          orm: "typeorm",
+          runtime: "node",
+          fileStorage: "r2",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("Cloudflare R2 with authentication", () => {
+    test("r2 with Better Auth", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "r2-better-auth",
+          frontend: ["tanstack-router"],
+          auth: "better-auth",
+          fileStorage: "r2",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("r2 with Auth.js", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "r2-authjs",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          auth: "nextauth",
           fileStorage: "r2",
         }),
       );

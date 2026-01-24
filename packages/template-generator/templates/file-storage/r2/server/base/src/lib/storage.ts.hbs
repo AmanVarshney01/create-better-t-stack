@@ -1,0 +1,293 @@
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand,
+  ListObjectsV2Command,
+  HeadObjectCommand,
+  CopyObjectCommand,
+  type PutObjectCommandInput,
+  type GetObjectCommandInput,
+  type ListObjectsV2CommandInput,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+/**
+ * Cloudflare R2 client for file storage (S3-compatible)
+ * @see https://developers.cloudflare.com/r2/api/s3/api/
+ */
+export const r2Client = new S3Client({
+  region: "auto",
+  endpoint: `https://${process.env.R2_ACCOUNT_ID!}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+  },
+});
+
+const BUCKET_NAME = process.env.R2_BUCKET_NAME!;
+
+/**
+ * Storage utilities for common R2 operations
+ */
+
+/**
+ * Upload a file to R2
+ */
+export async function uploadFile(
+  key: string,
+  body: Buffer | Uint8Array | string | ReadableStream,
+  options?: {
+    contentType?: string;
+    metadata?: Record<string, string>;
+  }
+): Promise<{ key: string; etag?: string }> {
+  const input: PutObjectCommandInput = {
+    Bucket: BUCKET_NAME,
+    Key: key,
+    Body: body,
+    ContentType: options?.contentType,
+    Metadata: options?.metadata,
+  };
+
+  const command = new PutObjectCommand(input);
+  const response = await r2Client.send(command);
+
+  return {
+    key,
+    etag: response.ETag,
+  };
+}
+
+/**
+ * Download a file from R2
+ */
+export async function downloadFile(key: string): Promise<{
+  body: ReadableStream | null;
+  contentType?: string;
+  contentLength?: number;
+  metadata?: Record<string, string>;
+}> {
+  const input: GetObjectCommandInput = {
+    Bucket: BUCKET_NAME,
+    Key: key,
+  };
+
+  const command = new GetObjectCommand(input);
+  const response = await r2Client.send(command);
+
+  return {
+    body: response.Body?.transformToWebStream() ?? null,
+    contentType: response.ContentType,
+    contentLength: response.ContentLength,
+    metadata: response.Metadata,
+  };
+}
+
+/**
+ * Download file as Buffer
+ */
+export async function downloadFileAsBuffer(key: string): Promise<Buffer> {
+  const input: GetObjectCommandInput = {
+    Bucket: BUCKET_NAME,
+    Key: key,
+  };
+
+  const command = new GetObjectCommand(input);
+  const response = await r2Client.send(command);
+
+  if (!response.Body) {
+    throw new Error(`File not found: ${key}`);
+  }
+
+  const bytes = await response.Body.transformToByteArray();
+  return Buffer.from(bytes);
+}
+
+/**
+ * Delete a file from R2
+ */
+export async function deleteFile(key: string): Promise<void> {
+  const command = new DeleteObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: key,
+  });
+
+  await r2Client.send(command);
+}
+
+/**
+ * Delete multiple files from R2
+ */
+export async function deleteFiles(keys: string[]): Promise<void> {
+  await Promise.all(keys.map((key) => deleteFile(key)));
+}
+
+/**
+ * List files in a directory/prefix
+ */
+export async function listFiles(
+  prefix?: string,
+  options?: {
+    maxKeys?: number;
+    continuationToken?: string;
+  }
+): Promise<{
+  files: { key: string; size?: number; lastModified?: Date }[];
+  isTruncated: boolean;
+  nextContinuationToken?: string;
+}> {
+  const input: ListObjectsV2CommandInput = {
+    Bucket: BUCKET_NAME,
+    Prefix: prefix,
+    MaxKeys: options?.maxKeys ?? 1000,
+    ContinuationToken: options?.continuationToken,
+  };
+
+  const command = new ListObjectsV2Command(input);
+  const response = await r2Client.send(command);
+
+  return {
+    files: (response.Contents ?? []).map((item) => ({
+      key: item.Key!,
+      size: item.Size,
+      lastModified: item.LastModified,
+    })),
+    isTruncated: response.IsTruncated ?? false,
+    nextContinuationToken: response.NextContinuationToken,
+  };
+}
+
+/**
+ * Check if a file exists
+ */
+export async function fileExists(key: string): Promise<boolean> {
+  try {
+    const command = new HeadObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: key,
+    });
+
+    await r2Client.send(command);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Get file metadata without downloading the file
+ */
+export async function getFileMetadata(key: string): Promise<{
+  contentType?: string;
+  contentLength?: number;
+  lastModified?: Date;
+  metadata?: Record<string, string>;
+} | null> {
+  try {
+    const command = new HeadObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: key,
+    });
+
+    const response = await r2Client.send(command);
+
+    return {
+      contentType: response.ContentType,
+      contentLength: response.ContentLength,
+      lastModified: response.LastModified,
+      metadata: response.Metadata,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Copy a file within R2
+ */
+export async function copyFile(
+  sourceKey: string,
+  destinationKey: string
+): Promise<{ key: string; etag?: string }> {
+  const command = new CopyObjectCommand({
+    Bucket: BUCKET_NAME,
+    CopySource: `${BUCKET_NAME}/${sourceKey}`,
+    Key: destinationKey,
+  });
+
+  const response = await r2Client.send(command);
+
+  return {
+    key: destinationKey,
+    etag: response.CopyObjectResult?.ETag,
+  };
+}
+
+/**
+ * Move a file within R2 (copy then delete)
+ */
+export async function moveFile(
+  sourceKey: string,
+  destinationKey: string
+): Promise<{ key: string; etag?: string }> {
+  const result = await copyFile(sourceKey, destinationKey);
+  await deleteFile(sourceKey);
+  return result;
+}
+
+/**
+ * Generate a presigned URL for uploading a file
+ */
+export async function getUploadUrl(
+  key: string,
+  options?: {
+    expiresIn?: number; // seconds, default 3600 (1 hour)
+    contentType?: string;
+  }
+): Promise<string> {
+  const command = new PutObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: key,
+    ContentType: options?.contentType,
+  });
+
+  return getSignedUrl(r2Client, command, {
+    expiresIn: options?.expiresIn ?? 3600,
+  });
+}
+
+/**
+ * Generate a presigned URL for downloading a file
+ */
+export async function getDownloadUrl(
+  key: string,
+  options?: {
+    expiresIn?: number; // seconds, default 3600 (1 hour)
+    responseContentDisposition?: string;
+  }
+): Promise<string> {
+  const command = new GetObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: key,
+    ResponseContentDisposition: options?.responseContentDisposition,
+  });
+
+  return getSignedUrl(r2Client, command, {
+    expiresIn: options?.expiresIn ?? 3600,
+  });
+}
+
+/**
+ * Get the public URL for a file (requires public bucket or custom domain)
+ * @param key - The file key
+ * @param customDomain - Optional custom domain for public access (e.g., "files.example.com")
+ */
+export function getPublicUrl(key: string, customDomain?: string): string {
+  if (customDomain) {
+    return `https://${customDomain}/${key}`;
+  }
+  // R2 public buckets use the format: https://pub-<hash>.r2.dev/<key>
+  // This requires setting up public access in Cloudflare dashboard
+  return `https://${BUCKET_NAME}.${process.env.R2_ACCOUNT_ID}.r2.dev/${key}`;
+}
