@@ -8,6 +8,8 @@ export function processReadme(vfs: VirtualFileSystem, config: ProjectConfig): vo
     content = generateRustReadmeContent(config);
   } else if (config.ecosystem === "python") {
     content = generatePythonReadmeContent(config);
+  } else if (config.ecosystem === "go") {
+    content = generateGoReadmeContent(config);
   } else {
     content = generateReadmeContent(config);
   }
@@ -997,5 +999,197 @@ ${structure.join("\n")}
 ## Available Commands
 
 ${scripts}
+`;
+}
+
+function generateGoReadmeContent(config: ProjectConfig): string {
+  const { projectName, goWebFramework, goOrm, goApi, goCli, goLogging } = config;
+
+  const features: string[] = ["- **Go** - Fast, reliable, and efficient programming language"];
+
+  // Web framework
+  if (goWebFramework === "gin") {
+    features.push("- **Gin** - High-performance HTTP web framework");
+  } else if (goWebFramework === "echo") {
+    features.push("- **Echo** - High performance, minimalist Go web framework");
+  }
+
+  // ORM/Database
+  if (goOrm === "gorm") {
+    features.push("- **GORM** - Full-featured ORM for Go");
+  } else if (goOrm === "sqlc") {
+    features.push("- **SQLc** - Generate type-safe code from SQL");
+  }
+
+  // API
+  if (goApi === "grpc-go") {
+    features.push("- **gRPC** - High-performance RPC framework");
+  }
+
+  // CLI
+  if (goCli === "cobra") {
+    features.push("- **Cobra** - CLI application framework");
+  } else if (goCli === "bubbletea") {
+    features.push("- **Bubble Tea** - Terminal UI framework");
+  }
+
+  // Logging
+  if (goLogging === "zap") {
+    features.push("- **Zap** - Blazing fast, structured logging");
+  }
+
+  // Project structure
+  const structure: string[] = [`${projectName}/`, "├── go.mod                # Module definition"];
+
+  structure.push("├── cmd/");
+  structure.push("│   └── server/           # HTTP server entry point");
+  structure.push("│       └── main.go");
+
+  if (goCli === "cobra") {
+    structure.push("│   └── cli/              # CLI application");
+    structure.push("│       └── main.go");
+  } else if (goCli === "bubbletea") {
+    structure.push("│   └── tui/              # Terminal UI application");
+    structure.push("│       └── main.go");
+  }
+
+  if (goOrm !== "none") {
+    structure.push("├── internal/");
+    structure.push("│   ├── database/         # Database configuration");
+    structure.push("│   │   └── database.go");
+    if (goOrm === "gorm") {
+      structure.push("│   ├── models/           # GORM models");
+      structure.push("│   │   └── models.go");
+      structure.push("│   └── handlers/         # HTTP handlers");
+      structure.push("│       └── handlers.go");
+    }
+  }
+
+  if (goApi === "grpc-go") {
+    structure.push("├── proto/                # Protocol buffer definitions");
+    structure.push("│   ├── greeter.proto");
+    structure.push("│   ├── greeter.pb.go");
+    structure.push("│   └── greeter_grpc.pb.go");
+  }
+
+  structure.push("├── .env.example          # Environment variables template");
+  structure.push("└── .gitignore");
+
+  // Scripts/Commands
+  let goScripts = `- \`go build ./...\`: Build all packages
+- \`go run cmd/server/main.go\`: Run the server
+- \`go test ./...\`: Run all tests
+- \`go fmt ./...\`: Format code
+- \`go vet ./...\`: Run static analysis`;
+
+  if (goCli === "cobra") {
+    goScripts += `
+- \`go run cmd/cli/main.go\`: Run the CLI application`;
+  } else if (goCli === "bubbletea") {
+    goScripts += `
+- \`go run cmd/tui/main.go\`: Run the TUI application`;
+  }
+
+  if (goApi === "grpc-go") {
+    goScripts += `
+- \`protoc --go_out=. --go-grpc_out=. proto/*.proto\`: Regenerate protobuf code`;
+  }
+
+  // Database setup section
+  let databaseSetup = "";
+  if (goOrm === "gorm") {
+    databaseSetup = `
+## Database Setup
+
+This project uses GORM with SQLite by default. To configure the database:
+
+1. Copy the environment file:
+\`\`\`bash
+cp .env.example .env
+\`\`\`
+
+2. Update \`DATABASE_URL\` in \`.env\` with your database connection string.
+
+Supported databases:
+- SQLite (default): \`DATABASE_URL=./data.db\`
+- PostgreSQL: \`DATABASE_URL=postgres://user:pass@localhost:5432/dbname\`
+`;
+  } else if (goOrm === "sqlc") {
+    databaseSetup = `
+## Database Setup
+
+This project uses SQLc for type-safe SQL. To set up:
+
+1. Copy the environment file:
+\`\`\`bash
+cp .env.example .env
+\`\`\`
+
+2. Update \`DATABASE_URL\` in \`.env\` with your PostgreSQL connection string.
+
+3. Run migrations and generate code:
+\`\`\`bash
+sqlc generate
+\`\`\`
+`;
+  }
+
+  // gRPC setup section
+  let grpcSetup = "";
+  if (goApi === "grpc-go") {
+    grpcSetup = `
+## gRPC Setup
+
+This project includes gRPC support. The server runs both HTTP and gRPC concurrently.
+
+- HTTP server: \`http://localhost:8080\`
+- gRPC server: \`localhost:50051\`
+
+To regenerate protobuf code after modifying \`.proto\` files:
+\`\`\`bash
+protoc --go_out=. --go-grpc_out=. proto/*.proto
+\`\`\`
+`;
+  }
+
+  return `# ${projectName}
+
+This project was created with [Better Fullstack](https://github.com/Marve10s/Better-Fullstack), a high-performance Go stack.
+
+## Features
+
+${features.join("\n")}
+
+## Prerequisites
+
+- [Go](https://go.dev/) 1.22 or higher
+${goApi === "grpc-go" ? "- [Protocol Buffers](https://protobuf.dev/) compiler (`protoc`)\n- [Go gRPC plugins](https://grpc.io/docs/languages/go/quickstart/)" : ""}
+
+## Getting Started
+
+First, copy the environment file:
+
+\`\`\`bash
+cp .env.example .env
+\`\`\`
+
+Then, install dependencies and run the server:
+
+\`\`\`bash
+go mod download
+go run cmd/server/main.go
+\`\`\`
+
+${goWebFramework !== "none" ? `The server will be running at [http://localhost:8080](http://localhost:8080).` : ""}
+${databaseSetup}${grpcSetup}
+## Project Structure
+
+\`\`\`
+${structure.join("\n")}
+\`\`\`
+
+## Available Commands
+
+${goScripts}
 `;
 }

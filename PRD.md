@@ -227,7 +227,7 @@
 ## **Step 2: Web Frameworks**
 
 - [x] **Gin** - High-performance HTTP framework
-- [ ] **Echo** - Minimalist framework
+- [x] **Echo** - Minimalist framework
 
 ---
 

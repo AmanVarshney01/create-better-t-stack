@@ -6833,3 +6833,34 @@ Gin was already fully implemented in a previous session. Verified all components
 ### Files Modified:
 - PRD.md: Marked Gin as complete [x]
 
+
+## 2026-01-24: Echo Go Web Framework Implementation
+
+### Task: Complete Echo Go web framework support and add Go README generation
+
+### Changes Made:
+1. **packages/template-generator/src/processors/readme-generator.ts**:
+   - Added `generateGoReadmeContent()` function for Go ecosystem README generation
+   - Added Go ecosystem check in `processReadme()` function
+   - Includes features list for Gin/Echo, GORM/SQLc, gRPC, Cobra/Bubble Tea, Zap
+   - Database setup section for GORM and SQLc
+   - gRPC setup section when gRPC is enabled
+   - Project structure generation based on selected options
+
+### Features (Pre-existing):
+- Echo support was already implemented in templates:
+  - `go-base/cmd/server/main.go.hbs` - Echo server with middleware (Logger, Recover, CORS)
+  - `go-base/internal/handlers/handlers.go.hbs` - Echo CRUD handlers
+  - `go-base/go.mod.hbs` - Echo v4.12.0 dependency
+  - CLI prompts in `apps/cli/src/prompts/go-ecosystem.ts`
+  - Web constants in `apps/web/src/lib/constant.ts`
+  - Tests in `apps/cli/test/go-language.test.ts`
+
+### Tests:
+- All 39 Go language tests pass including Echo-specific tests:
+  - Echo dependencies test
+  - Echo main.go generation with middleware test
+  - Echo handlers with CRUD operations test
+  - Combined integration scenarios
+
+### Status: COMPLETE
