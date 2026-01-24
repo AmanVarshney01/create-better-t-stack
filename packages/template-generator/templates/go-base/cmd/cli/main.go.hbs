@@ -1,0 +1,69 @@
+{{#if (eq goCli "cobra")}}
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
+)
+
+var (
+	version = "0.1.0"
+	verbose bool
+)
+
+// rootCmd represents the base command
+var rootCmd = &cobra.Command{
+	Use:   "{{projectName}}",
+	Short: "{{projectName}} CLI application",
+	Long: `{{projectName}} is a CLI application built with Cobra.
+
+This tool provides various commands to interact with your application.`,
+	Version: version,
+}
+
+// helloCmd represents the hello command
+var helloCmd = &cobra.Command{
+	Use:   "hello [name]",
+	Short: "Say hello",
+	Long:  `Print a greeting message. Optionally provide a name to personalize the greeting.`,
+	Args:  cobra.MaximumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		name := "World"
+		if len(args) > 0 {
+			name = args[0]
+		}
+		if verbose {
+			fmt.Printf("Running hello command with name: %s\n", name)
+		}
+		fmt.Printf("Hello, %s!\n", name)
+	},
+}
+
+// versionCmd represents the version command
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Print the version number",
+	Long:  `Print the version number of {{projectName}}`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("{{projectName}} v%s\n", version)
+	},
+}
+
+func init() {
+	// Global flags
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+
+	// Add commands
+	rootCmd.AddCommand(helloCmd)
+	rootCmd.AddCommand(versionCmd)
+}
+
+func main() {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+{{/if}}

@@ -1,0 +1,214 @@
+package main
+
+import (
+	"os"
+{{#if (eq goWebFramework "gin")}}
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+{{/if}}
+{{#if (eq goWebFramework "echo")}}
+	"net/http"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+{{/if}}
+{{#if (eq goOrm "gorm")}}
+
+	"{{projectName}}/internal/database"
+{{/if}}
+{{#if (eq goLogging "zap")}}
+
+	"go.uber.org/zap"
+{{/if}}
+	"github.com/joho/godotenv"
+{{#if (eq goApi "grpc-go")}}
+	"net"
+	"sync"
+
+	"{{projectName}}/proto"
+	"google.golang.org/grpc"
+{{/if}}
+)
+
+{{#if (eq goLogging "zap")}}
+var logger *zap.Logger
+
+func initLogger() {
+	var err error
+	logLevel := os.Getenv("LOG_LEVEL")
+	if logLevel == "production" {
+		logger, err = zap.NewProduction()
+	} else {
+		logger, err = zap.NewDevelopment()
+	}
+	if err != nil {
+		panic(err)
+	}
+}
+{{/if}}
+
+func main() {
+	// Load environment variables
+	godotenv.Load()
+
+{{#if (eq goLogging "zap")}}
+	// Initialize logger
+	initLogger()
+	defer logger.Sync()
+
+	logger.Info("Starting {{projectName}} server")
+{{/if}}
+
+{{#if (eq goOrm "gorm")}}
+	// Initialize database
+	db, err := database.InitDB()
+	if err != nil {
+{{#if (eq goLogging "zap")}}
+		logger.Fatal("Failed to connect to database", zap.Error(err))
+{{else}}
+		panic("Failed to connect to database: " + err.Error())
+{{/if}}
+	}
+{{#if (eq goLogging "zap")}}
+	logger.Info("Database connected successfully")
+{{/if}}
+	_ = db // Use db in your handlers
+{{/if}}
+
+	// Get host and port from environment
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "0.0.0.0"
+	}
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	addr := host + ":" + port
+
+{{#if (eq goApi "grpc-go")}}
+	// Start gRPC and HTTP servers concurrently
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	// Start gRPC server
+	go func() {
+		defer wg.Done()
+		grpcPort := os.Getenv("GRPC_PORT")
+		if grpcPort == "" {
+			grpcPort = "50051"
+		}
+		grpcAddr := host + ":" + grpcPort
+{{#if (eq goLogging "zap")}}
+		logger.Info("Starting gRPC server", zap.String("address", grpcAddr))
+{{/if}}
+
+		lis, err := net.Listen("tcp", grpcAddr)
+		if err != nil {
+{{#if (eq goLogging "zap")}}
+			logger.Fatal("Failed to listen for gRPC", zap.Error(err))
+{{else}}
+			panic("Failed to listen for gRPC: " + err.Error())
+{{/if}}
+		}
+
+		grpcServer := grpc.NewServer()
+		proto.RegisterGreeterServer(grpcServer, &proto.GreeterService{})
+		if err := grpcServer.Serve(lis); err != nil {
+{{#if (eq goLogging "zap")}}
+			logger.Fatal("Failed to serve gRPC", zap.Error(err))
+{{else}}
+			panic("Failed to serve gRPC: " + err.Error())
+{{/if}}
+		}
+	}()
+
+	// Start HTTP server
+	go func() {
+		defer wg.Done()
+{{/if}}
+{{#if (eq goWebFramework "gin")}}
+{{#if (eq goLogging "zap")}}
+	logger.Info("Starting HTTP server", zap.String("address", addr))
+{{/if}}
+
+	// Create Gin router
+	r := gin.Default()
+
+	// Health check endpoint
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  "ok",
+			"message": "Server is running",
+		})
+	})
+
+	// Root endpoint
+	r.GET("/", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Welcome to {{projectName}}!",
+		})
+	})
+
+	// Start server
+	if err := r.Run(addr); err != nil {
+{{#if (eq goLogging "zap")}}
+		logger.Fatal("Failed to start server", zap.Error(err))
+{{else}}
+		panic("Failed to start server: " + err.Error())
+{{/if}}
+	}
+{{/if}}
+{{#if (eq goWebFramework "echo")}}
+{{#if (eq goLogging "zap")}}
+	logger.Info("Starting HTTP server", zap.String("address", addr))
+{{/if}}
+
+	// Create Echo instance
+	e := echo.New()
+
+	// Middleware
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+	e.Use(middleware.CORS())
+
+	// Health check endpoint
+	e.GET("/health", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]string{
+			"status":  "ok",
+			"message": "Server is running",
+		})
+	})
+
+	// Root endpoint
+	e.GET("/", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, map[string]string{
+			"message": "Welcome to {{projectName}}!",
+		})
+	})
+
+	// Start server
+	if err := e.Start(addr); err != nil && err != http.ErrServerClosed {
+{{#if (eq goLogging "zap")}}
+		logger.Fatal("Failed to start server", zap.Error(err))
+{{else}}
+		panic("Failed to start server: " + err.Error())
+{{/if}}
+	}
+{{/if}}
+{{#if (eq goWebFramework "none")}}
+{{#if (eq goLogging "zap")}}
+	logger.Info("{{projectName}} started")
+	logger.Info("Add a web framework (gin or echo) to start building your API")
+{{else}}
+	println("{{projectName}} started")
+	println("Add a web framework (gin or echo) to start building your API")
+{{/if}}
+{{/if}}
+{{#if (eq goApi "grpc-go")}}
+	}()
+
+	wg.Wait()
+{{/if}}
+}

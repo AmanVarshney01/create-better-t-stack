@@ -1,0 +1,45 @@
+{{#if (eq goApi "grpc-go")}}
+package proto
+
+import (
+	"context"
+	"fmt"
+	"time"
+)
+
+// GreeterService implements the Greeter gRPC service
+type GreeterService struct {
+	UnimplementedGreeterServer
+}
+
+// SayHello implements the Greeter.SayHello RPC
+func (s *GreeterService) SayHello(ctx context.Context, req *HelloRequest) (*HelloReply, error) {
+	name := req.GetName()
+	if name == "" {
+		name = "World"
+	}
+	return &HelloReply{
+		Message: fmt.Sprintf("Hello, %s!", name),
+	}, nil
+}
+
+// SayHelloStream implements the Greeter.SayHelloStream RPC
+func (s *GreeterService) SayHelloStream(req *HelloRequest, stream Greeter_SayHelloStreamServer) error {
+	name := req.GetName()
+	if name == "" {
+		name = "World"
+	}
+
+	// Send 5 greetings with a small delay
+	for i := 1; i <= 5; i++ {
+		if err := stream.Send(&HelloReply{
+			Message: fmt.Sprintf("Hello #%d, %s!", i, name),
+		}); err != nil {
+			return err
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	return nil
+}
+{{/if}}

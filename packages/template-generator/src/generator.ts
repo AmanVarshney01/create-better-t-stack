@@ -15,6 +15,7 @@ import {
   processBaseTemplate,
   processRustBaseTemplate,
   processPythonBaseTemplate,
+  processGoBaseTemplate,
   processFrontendTemplates,
   processBackendTemplates,
   processDbTemplates,
@@ -58,6 +59,9 @@ export async function generateVirtualProject(options: GeneratorOptions): Promise
     } else if (config.ecosystem === "python") {
       // Python ecosystem - use pyproject.toml and Python project structure
       await processPythonBaseTemplate(vfs, templates, config);
+    } else if (config.ecosystem === "go") {
+      // Go ecosystem - use go.mod and Go project structure
+      await processGoBaseTemplate(vfs, templates, config);
     } else {
       // TypeScript ecosystem - use package.json and TypeScript project structure
       await processBaseTemplate(vfs, templates, config);

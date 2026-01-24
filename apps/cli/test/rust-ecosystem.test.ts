@@ -67,10 +67,12 @@ const RUST_LIBRARIES = extractEnumValues(RustLibrariesSchema);
 
 describe("Rust Ecosystem", () => {
   describe("Schema Definitions", () => {
-    it("should have ecosystem schema with typescript and rust", () => {
+    it("should have ecosystem schema with typescript, rust, python, and go", () => {
       expect(ECOSYSTEMS).toContain("typescript");
       expect(ECOSYSTEMS).toContain("rust");
-      expect(ECOSYSTEMS.length).toBe(2);
+      expect(ECOSYSTEMS).toContain("python");
+      expect(ECOSYSTEMS).toContain("go");
+      expect(ECOSYSTEMS.length).toBe(4);
     });
 
     it("should have rust web framework options", () => {

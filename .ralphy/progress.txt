@@ -6737,3 +6737,58 @@ Added full Go ecosystem tab to the Builder page with support for:
 - 44 new Go ecosystem tests passing in apps/web/test/go-ecosystem.test.ts
 - All existing tests updated and passing (148 total in web, 160 in CLI)
 - All linting passes
+
+## 2026-01-24: Go Ecosystem - Step 1 Complete (Language Support, Base Template, Tests)
+
+### Task: Complete Go Ecosystem Setup (Step 1)
+
+### Changes Made:
+1. **Verified Go Language Support** - Already fully implemented in previous work:
+   - packages/types/src/schemas.ts: Go ecosystem added with GoWebFrameworkSchema, GoOrmSchema, GoApiSchema, GoCliSchema, GoLoggingSchema
+   - packages/types/src/types.ts: Type exports for all Go-related types
+   - apps/cli/src/prompts/ecosystem.ts: Go option in ecosystem selector
+   - apps/cli/src/prompts/go-ecosystem.ts: All Go-specific prompts (web framework, ORM, API, CLI, logging)
+   - apps/cli/src/prompts/config-prompts.ts: Go ecosystem prompts integrated into config gathering
+
+2. **Verified Go Base Template** - Already fully implemented in previous work:
+   - packages/template-generator/templates/go-base/go.mod.hbs: Go module with conditional dependencies
+   - packages/template-generator/templates/go-base/cmd/server/main.go.hbs: Main entry with Gin/Echo/gRPC support
+   - packages/template-generator/templates/go-base/internal/database/database.go.hbs: GORM/SQLc database setup
+   - packages/template-generator/templates/go-base/internal/models/models.go.hbs: User/Post models
+   - packages/template-generator/templates/go-base/internal/handlers/handlers.go.hbs: CRUD handlers for Gin/Echo
+   - packages/template-generator/templates/go-base/cmd/cli/main.go.hbs: Cobra CLI template
+   - packages/template-generator/templates/go-base/cmd/tui/main.go.hbs: Bubble Tea TUI template
+   - packages/template-generator/templates/go-base/proto/: gRPC proto files
+   - packages/template-generator/src/template-handlers/go-base.ts: Go template processor
+   - packages/template-generator/src/generator.ts: Go ecosystem integration
+
+3. **apps/cli/test/go-language.test.ts**: Created comprehensive Go ecosystem tests:
+   - Schema definition tests (all 5 Go config options)
+   - Base template structure tests (go.mod, .gitignore, .env.example, cmd/server)
+   - Gin web framework integration tests
+   - Echo web framework integration tests
+   - GORM ORM integration tests (database, models, handlers)
+   - SQLc integration tests
+   - gRPC integration tests (proto files, server integration)
+   - Cobra CLI integration tests
+   - Bubble Tea TUI integration tests
+   - Zap logging integration tests
+   - Combined integration scenario tests
+   - Cross-ecosystem isolation tests (no TS/Python/Rust files in Go projects)
+
+4. **Updated existing tests for Go ecosystem**:
+   - apps/cli/test/python-language.test.ts: Updated ecosystem count from 3 to 4
+   - apps/cli/test/rust-ecosystem.test.ts: Updated ecosystem count from 2 to 4
+
+### Test Results:
+- 1915 tests pass, 1 skip, 0 fail
+- All Go-related tests passing
+- All existing tests still passing
+
+### PRD Updates:
+- Marked "Go Language Support" as complete
+- Marked "Go Base Template" as complete
+- Marked "Go Ecosystem Tests" as complete
+- All Step 1 items now complete
+
+### Status: COMPLETE

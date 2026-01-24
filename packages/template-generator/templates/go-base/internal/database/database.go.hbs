@@ -1,0 +1,94 @@
+{{#if (eq goOrm "gorm")}}
+package database
+
+import (
+	"os"
+	"strings"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+
+	"{{projectName}}/internal/models"
+)
+
+var DB *gorm.DB
+
+// InitDB initializes the database connection
+func InitDB() (*gorm.DB, error) {
+	var err error
+	dsn := os.Getenv("DATABASE_URL")
+
+	if dsn == "" {
+		// Default to SQLite for development
+		DB, err = gorm.Open(sqlite.Open("app.db"), &gorm.Config{})
+	} else if strings.HasPrefix(dsn, "postgres") {
+		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	} else {
+		// Assume SQLite file path
+		DB, err = gorm.Open(sqlite.Open(dsn), &gorm.Config{})
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Auto-migrate models
+	err = DB.AutoMigrate(&models.User{}, &models.Post{})
+	if err != nil {
+		return nil, err
+	}
+
+	return DB, nil
+}
+
+// GetDB returns the database instance
+func GetDB() *gorm.DB {
+	return DB
+}
+{{/if}}
+{{#if (eq goOrm "sqlc")}}
+package database
+
+import (
+	"context"
+	"os"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+var Pool *pgxpool.Pool
+
+// InitDB initializes the database connection pool
+func InitDB() (*pgxpool.Pool, error) {
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		dsn = "postgres://user:password@localhost:5432/dbname?sslmode=disable"
+	}
+
+	var err error
+	Pool, err = pgxpool.New(context.Background(), dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	// Verify connection
+	if err := Pool.Ping(context.Background()); err != nil {
+		return nil, err
+	}
+
+	return Pool, nil
+}
+
+// GetPool returns the database pool
+func GetPool() *pgxpool.Pool {
+	return Pool
+}
+
+// Close closes the database pool
+func Close() {
+	if Pool != nil {
+		Pool.Close()
+	}
+}
+{{/if}}

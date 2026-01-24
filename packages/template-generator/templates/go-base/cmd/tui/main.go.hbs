@@ -1,0 +1,128 @@
+{{#if (eq goCli "bubbletea")}}
+package main
+
+import (
+	"fmt"
+	"os"
+
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+)
+
+var (
+	titleStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("205")).
+			MarginBottom(1)
+
+	itemStyle = lipgloss.NewStyle().
+			PaddingLeft(2)
+
+	selectedItemStyle = lipgloss.NewStyle().
+				PaddingLeft(2).
+				Foreground(lipgloss.Color("170"))
+
+	helpStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("241")).
+			MarginTop(1)
+)
+
+type model struct {
+	choices  []string
+	cursor   int
+	selected map[int]struct{}
+	quitting bool
+}
+
+func initialModel() model {
+	return model{
+		choices: []string{
+			"Build project",
+			"Run tests",
+			"Deploy application",
+			"View logs",
+			"Exit",
+		},
+		selected: make(map[int]struct{}),
+	}
+}
+
+func (m model) Init() tea.Cmd {
+	return nil
+}
+
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c", "q":
+			m.quitting = true
+			return m, tea.Quit
+		case "up", "k":
+			if m.cursor > 0 {
+				m.cursor--
+			}
+		case "down", "j":
+			if m.cursor < len(m.choices)-1 {
+				m.cursor++
+			}
+		case "enter", " ":
+			if m.cursor == len(m.choices)-1 {
+				// Exit option
+				m.quitting = true
+				return m, tea.Quit
+			}
+			if _, ok := m.selected[m.cursor]; ok {
+				delete(m.selected, m.cursor)
+			} else {
+				m.selected[m.cursor] = struct{}{}
+			}
+		}
+	}
+	return m, nil
+}
+
+func (m model) View() string {
+	if m.quitting {
+		return "Goodbye!\n"
+	}
+
+	s := titleStyle.Render("{{projectName}} TUI") + "\n\n"
+
+	for i, choice := range m.choices {
+		cursor := " "
+		if m.cursor == i {
+			cursor = ">"
+		}
+
+		checked := " "
+		if _, ok := m.selected[i]; ok {
+			checked = "x"
+		}
+
+		style := itemStyle
+		if m.cursor == i {
+			style = selectedItemStyle
+		}
+
+		if i == len(m.choices)-1 {
+			// Exit option doesn't have a checkbox
+			s += style.Render(fmt.Sprintf("%s %s", cursor, choice)) + "\n"
+		} else {
+			s += style.Render(fmt.Sprintf("%s [%s] %s", cursor, checked, choice)) + "\n"
+		}
+	}
+
+	s += helpStyle.Render("\nPress q to quit, space to select, enter to confirm")
+
+	return s
+}
+
+func main() {
+	p := tea.NewProgram(initialModel())
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("Error running program: %v", err)
+		os.Exit(1)
+	}
+}
+{{/if}}

@@ -1,0 +1,35 @@
+module {{projectName}}
+
+go 1.22
+
+require (
+{{#if (eq goWebFramework "gin")}}
+	github.com/gin-gonic/gin v1.10.0
+{{/if}}
+{{#if (eq goWebFramework "echo")}}
+	github.com/labstack/echo/v4 v4.12.0
+{{/if}}
+{{#if (eq goOrm "gorm")}}
+	gorm.io/gorm v1.25.12
+	gorm.io/driver/sqlite v1.5.7
+	gorm.io/driver/postgres v1.5.11
+{{/if}}
+{{#if (eq goOrm "sqlc")}}
+	github.com/jackc/pgx/v5 v5.7.2
+{{/if}}
+{{#if (eq goApi "grpc-go")}}
+	google.golang.org/grpc v1.69.4
+	google.golang.org/protobuf v1.36.3
+{{/if}}
+{{#if (eq goCli "cobra")}}
+	github.com/spf13/cobra v1.8.1
+{{/if}}
+{{#if (eq goCli "bubbletea")}}
+	github.com/charmbracelet/bubbletea v1.2.4
+	github.com/charmbracelet/lipgloss v1.0.0
+{{/if}}
+{{#if (eq goLogging "zap")}}
+	go.uber.org/zap v1.27.0
+{{/if}}
+	github.com/joho/godotenv v1.5.1
+)
