@@ -19,6 +19,7 @@ import { setupPlanetScale } from "../database-providers/planetscale-setup";
 import { setupPrismaPostgres } from "../database-providers/prisma-postgres-setup";
 import { setupSupabase } from "../database-providers/supabase-setup";
 import { setupTurso } from "../database-providers/turso-setup";
+import { setupUpstash } from "../database-providers/upstash-setup";
 
 export async function setupDatabase(config: ProjectConfig, cliInput?: { manualDb?: boolean }) {
   const { database, dbSetup, backend, projectDir } = config;
@@ -61,6 +62,8 @@ export async function setupDatabase(config: ProjectConfig, cliInput?: { manualDb
       await setupPlanetScale(config);
     } else if (database === "mongodb" && dbSetup === "mongodb-atlas") {
       await setupMongoDBAtlas(config, cliInput);
+    } else if (database === "redis" && dbSetup === "upstash") {
+      await setupUpstash(config, cliInput);
     }
   } catch (error) {
     if (error instanceof Error) {

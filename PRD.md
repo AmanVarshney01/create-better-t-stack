@@ -255,8 +255,8 @@
 - [x] **Supabase** - Postgres platform
 - [x] **PlanetScale** - Serverless MySQL
 - [x] **Turso** - Edge SQLite
-- [ ] **MongoDB Atlas** - Managed MongoDB
-- [ ] **Upstash** - Serverless Redis/Kafka
+- [x] **MongoDB Atlas** - Managed MongoDB
+- [x] **Upstash** - Serverless Redis/Kafka
 
 ---
 

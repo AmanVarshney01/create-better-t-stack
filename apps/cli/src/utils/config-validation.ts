@@ -208,6 +208,11 @@ export function validateDatabaseSetup(config: Partial<ProjectConfig>, providedFl
       errorMessage:
         "MongoDB Atlas setup requires MongoDB database. Please use '--database mongodb' or choose a different setup.",
     },
+    upstash: {
+      database: "redis",
+      errorMessage:
+        "Upstash setup requires Redis database. Please use '--database redis' or choose a different setup.",
+    },
     supabase: {
       database: "postgres",
       errorMessage:

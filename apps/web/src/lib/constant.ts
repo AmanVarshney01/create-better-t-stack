@@ -533,9 +533,16 @@ export const TECH_OPTIONS: Record<
       className: "invert-0 dark:invert",
     },
     {
+      id: "upstash",
+      name: "Upstash",
+      description: "Serverless Redis with REST API and global replication",
+      icon: "https://cdn.simpleicons.org/upstash/00E9A3",
+      color: "from-emerald-400 to-teal-600",
+    },
+    {
       id: "docker",
       name: "Docker",
-      description: "Run Postgres/MySQL/MongoDB locally via Docker Compose",
+      description: "Run Postgres/MySQL/MongoDB/Redis locally via Docker Compose",
       icon: "https://cdn.simpleicons.org/docker/2496ED",
       color: "from-blue-500 to-blue-700",
     },

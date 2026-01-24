@@ -7146,3 +7146,43 @@ Zap is already fully implemented in the codebase. The implementation includes:
 - This was a documentation update to reflect existing functionality
 
 ### Status: COMPLETE
+
+
+## 2026-01-24: Upstash Managed Database Service Implementation
+
+### Task: Implement Upstash as a managed database service for Redis
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "upstash" to DatabaseSetupSchema enum
+2. **apps/cli/src/prompts/database-setup.ts**: Added Redis database setup prompts with Upstash option
+3. **packages/template-generator/src/processors/db-deps.ts**: Updated processRedisDeps to use @upstash/redis when dbSetup is "upstash"
+4. **apps/web/src/lib/constant.ts**: Added Upstash to dbSetup options in web UI
+5. **apps/cli/src/helpers/database-providers/upstash-setup.ts**: Created Upstash setup handler with:
+   - Credential entry mode for entering REST URL and token
+   - Manual setup mode with instructions
+   - Environment variable configuration (UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN)
+6. **apps/cli/src/helpers/core/db-setup.ts**: Added setupUpstash import and routing
+7. **apps/cli/src/utils/config-validation.ts**: Added Upstash validation requiring Redis database
+8. **packages/template-generator/templates/db/redis/upstash/src/index.ts.hbs**: Created Upstash Redis client template with:
+   - REST API-based @upstash/redis client
+   - String, hash, list, set, sorted set operations
+   - JSON operations (Upstash Redis supports JSON natively)
+   - Get-or-set caching pattern
+9. **packages/template-generator/src/template-handlers/database.ts**: Updated to route to upstash template when dbSetup is "upstash"
+10. **apps/cli/test/database-setup.test.ts**: Added comprehensive tests for Upstash:
+    - Upstash + Redis success test
+    - Docker + Redis success test
+    - Upstash + non-Redis database failure test
+
+### Features:
+- Serverless Redis with REST API via @upstash/redis
+- No connection pool needed (serverless-friendly)
+- Global edge replication support
+- Comprehensive Redis operations (strings, hashes, lists, sets, sorted sets, JSON)
+- Manual and credential-entry setup modes
+- Compatible with all TypeScript backends (Hono, Express, Fastify, Elysia, NestJS, etc.)
+
+### Note:
+- MongoDB Atlas was already implemented but marked incomplete in PRD - also marked as complete
+
+### Status: COMPLETE

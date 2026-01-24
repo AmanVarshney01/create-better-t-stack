@@ -253,6 +253,74 @@ describe("Database Setup Configurations", () => {
     });
   });
 
+  describe("Redis Database Setups", () => {
+    it("should work with Upstash + Redis", async () => {
+      const result = await runTRPCTest({
+        projectName: "upstash-redis",
+        database: "redis",
+        orm: "none",
+        dbSetup: "upstash",
+        backend: "hono",
+        runtime: "bun",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        examples: ["none"],
+        webDeploy: "none",
+        serverDeploy: "none",
+        manualDb: true,
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with Docker + Redis", async () => {
+      const result = await runTRPCTest({
+        projectName: "docker-redis",
+        database: "redis",
+        orm: "none",
+        dbSetup: "docker",
+        backend: "hono",
+        runtime: "bun",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        examples: ["none"],
+        webDeploy: "none",
+        serverDeploy: "none",
+        manualDb: true,
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should fail with Upstash + non-Redis database", async () => {
+      const result = await runTRPCTest({
+        projectName: "upstash-postgres-fail",
+        database: "postgres",
+        orm: "drizzle",
+        dbSetup: "upstash",
+        backend: "hono",
+        runtime: "bun",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        examples: ["none"],
+        webDeploy: "none",
+        serverDeploy: "none",
+        manualDb: true,
+        expectError: true,
+      });
+
+      expectError(result, "Upstash setup requires Redis database");
+    });
+  });
+
   describe("Docker Database Setup", () => {
     it("should work with Docker + PostgreSQL", async () => {
       const result = await runTRPCTest({
@@ -477,6 +545,10 @@ describe("Database Setup Configurations", () => {
           case "mongodb-atlas":
             config.database = "mongodb";
             config.orm = "mongoose";
+            break;
+          case "upstash":
+            config.database = "redis";
+            config.orm = "none";
             break;
           case "d1":
             config.database = "sqlite";

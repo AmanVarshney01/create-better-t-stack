@@ -1,0 +1,262 @@
+import { Redis } from "@upstash/redis";
+
+// Create Upstash Redis client from environment variables
+// Get your credentials at https://console.upstash.com
+export const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
+
+// Re-export as db for consistency with other database packages
+export { redis as db };
+
+/**
+ * String operations
+ */
+export async function get<T = string>(key: string): Promise<T | null> {
+  return redis.get<T>(key);
+}
+
+export async function set(
+  key: string,
+  value: unknown,
+  options?: { ex?: number; px?: number; nx?: boolean; xx?: boolean }
+): Promise<"OK" | null> {
+  if (options?.ex) {
+    return redis.set(key, value, { ex: options.ex });
+  }
+  if (options?.px) {
+    return redis.set(key, value, { px: options.px });
+  }
+  if (options?.nx) {
+    return redis.set(key, value, { nx: true });
+  }
+  if (options?.xx) {
+    return redis.set(key, value, { xx: true });
+  }
+  return redis.set(key, value);
+}
+
+export async function del(...keys: string[]): Promise<number> {
+  if (keys.length === 0) return 0;
+  return redis.del(...keys);
+}
+
+export async function exists(...keys: string[]): Promise<number> {
+  if (keys.length === 0) return 0;
+  return redis.exists(...keys);
+}
+
+export async function expire(key: string, seconds: number): Promise<number> {
+  return redis.expire(key, seconds);
+}
+
+export async function ttl(key: string): Promise<number> {
+  return redis.ttl(key);
+}
+
+export async function incr(key: string): Promise<number> {
+  return redis.incr(key);
+}
+
+export async function incrby(key: string, increment: number): Promise<number> {
+  return redis.incrby(key, increment);
+}
+
+export async function decr(key: string): Promise<number> {
+  return redis.decr(key);
+}
+
+/**
+ * Get or set pattern - retrieves from cache or executes function and caches result
+ */
+export async function getOrSet<T>(
+  key: string,
+  fn: () => Promise<T>,
+  ttlSeconds?: number
+): Promise<T> {
+  const cached = await get<T>(key);
+  if (cached !== null) {
+    return cached;
+  }
+
+  const value = await fn();
+  await set(key, value, ttlSeconds ? { ex: ttlSeconds } : undefined);
+  return value;
+}
+
+/**
+ * Hash operations
+ */
+export const hash = {
+  async get<T = string>(key: string, field: string): Promise<T | null> {
+    return redis.hget<T>(key, field);
+  },
+
+  async getAll<T extends Record<string, unknown>>(key: string): Promise<T | null> {
+    return redis.hgetall<T>(key);
+  },
+
+  async set(key: string, field: string, value: unknown): Promise<number> {
+    return redis.hset(key, { [field]: value });
+  },
+
+  async setMultiple(key: string, values: Record<string, unknown>): Promise<number> {
+    return redis.hset(key, values);
+  },
+
+  async del(key: string, ...fields: string[]): Promise<number> {
+    return redis.hdel(key, ...fields);
+  },
+
+  async exists(key: string, field: string): Promise<boolean> {
+    const result = await redis.hexists(key, field);
+    return result === 1;
+  },
+
+  async keys(key: string): Promise<string[]> {
+    return redis.hkeys(key);
+  },
+
+  async len(key: string): Promise<number> {
+    return redis.hlen(key);
+  },
+};
+
+/**
+ * List operations
+ */
+export const list = {
+  async push(key: string, ...values: unknown[]): Promise<number> {
+    return redis.rpush(key, ...values);
+  },
+
+  async unshift(key: string, ...values: unknown[]): Promise<number> {
+    return redis.lpush(key, ...values);
+  },
+
+  async pop<T = string>(key: string): Promise<T | null> {
+    return redis.rpop<T>(key);
+  },
+
+  async shift<T = string>(key: string): Promise<T | null> {
+    return redis.lpop<T>(key);
+  },
+
+  async range<T = string>(key: string, start: number, stop: number): Promise<T[]> {
+    return redis.lrange<T>(key, start, stop);
+  },
+
+  async len(key: string): Promise<number> {
+    return redis.llen(key);
+  },
+
+  async trim(key: string, start: number, stop: number): Promise<"OK"> {
+    return redis.ltrim(key, start, stop);
+  },
+};
+
+/**
+ * Set operations
+ */
+export const set_ = {
+  async add(key: string, ...members: unknown[]): Promise<number> {
+    return redis.sadd(key, ...members);
+  },
+
+  async remove(key: string, ...members: unknown[]): Promise<number> {
+    return redis.srem(key, ...members);
+  },
+
+  async members<T = string>(key: string): Promise<T[]> {
+    return redis.smembers<T[]>(key);
+  },
+
+  async isMember(key: string, member: unknown): Promise<boolean> {
+    const result = await redis.sismember(key, member as string);
+    return result === 1;
+  },
+
+  async size(key: string): Promise<number> {
+    return redis.scard(key);
+  },
+};
+
+/**
+ * Sorted set operations
+ */
+export const zset = {
+  async add(key: string, ...scoreMembers: Array<{ score: number; member: unknown }>): Promise<number> {
+    const args = scoreMembers.map(({ score, member }) => ({ score, member }));
+    return redis.zadd(key, ...args);
+  },
+
+  async range<T = string>(key: string, start: number, stop: number): Promise<T[]> {
+    return redis.zrange<T[]>(key, start, stop);
+  },
+
+  async rangeWithScores<T = string>(
+    key: string,
+    start: number,
+    stop: number
+  ): Promise<Array<{ member: T; score: number }>> {
+    const values = await redis.zrange<T[]>(key, start, stop, { withScores: true });
+    const result: Array<{ member: T; score: number }> = [];
+    for (let i = 0; i < values.length; i += 2) {
+      const member = values[i];
+      const score = values[i + 1] as unknown as number;
+      if (member !== undefined) {
+        result.push({ member, score });
+      }
+    }
+    return result;
+  },
+
+  async score(key: string, member: unknown): Promise<number | null> {
+    return redis.zscore(key, member as string);
+  },
+
+  async rank(key: string, member: unknown): Promise<number | null> {
+    return redis.zrank(key, member as string);
+  },
+
+  async remove(key: string, ...members: unknown[]): Promise<number> {
+    return redis.zrem(key, ...members as string[]);
+  },
+
+  async size(key: string): Promise<number> {
+    return redis.zcard(key);
+  },
+};
+
+/**
+ * JSON operations (Upstash Redis supports JSON natively)
+ */
+export const json = {
+  async get<T>(key: string, path = "$"): Promise<T | null> {
+    return redis.json.get<T>(key, path);
+  },
+
+  async set(key: string, path: string, value: unknown): Promise<"OK" | null> {
+    return redis.json.set(key, path, value);
+  },
+
+  async del(key: string, path = "$"): Promise<number> {
+    return redis.json.del(key, path);
+  },
+};
+
+/**
+ * Utility functions
+ */
+export async function ping(): Promise<string> {
+  return redis.ping();
+}
+
+export async function keys(pattern: string): Promise<string[]> {
+  return redis.keys(pattern);
+}
+
+export async function flushdb(): Promise<string> {
+  return redis.flushdb();
+}

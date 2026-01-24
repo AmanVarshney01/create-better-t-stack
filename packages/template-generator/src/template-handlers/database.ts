@@ -22,7 +22,21 @@ export async function processDbTemplates(
   // Redis uses its own client, no ORM needed
   if (config.database === "redis") {
     processTemplatesFromPrefix(vfs, templates, "db/base", "packages/db", config);
-    processTemplatesFromPrefix(vfs, templates, "db/redis/base", "packages/db", config);
+    // Use Upstash REST client for Upstash setup, ioredis for local/docker
+    if (config.dbSetup === "upstash") {
+      processTemplatesFromPrefix(vfs, templates, "db/redis/upstash", "packages/db", config);
+    } else {
+      processTemplatesFromPrefix(vfs, templates, "db/redis/base", "packages/db", config);
+    }
+    if (config.dbSetup === "docker") {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        "db-setup/docker-compose/redis",
+        "packages/db",
+        config,
+      );
+    }
     return;
   }
 

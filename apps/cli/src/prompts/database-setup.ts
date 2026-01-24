@@ -97,6 +97,20 @@ export async function getDBSetupChoice(
       },
       { value: "none" as const, label: "None", hint: "Manual setup" },
     ];
+  } else if (databaseType === "redis") {
+    options = [
+      {
+        value: "upstash" as const,
+        label: "Upstash",
+        hint: "Serverless Redis with REST API",
+      },
+      {
+        value: "docker" as const,
+        label: "Docker",
+        hint: "Run locally with docker compose",
+      },
+      { value: "none" as const, label: "None", hint: "Manual setup" },
+    ];
   } else {
     return "none";
   }

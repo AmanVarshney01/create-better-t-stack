@@ -23,7 +23,7 @@ export function processDatabaseDeps(vfs: VirtualFileSystem, config: ProjectConfi
 
   // Redis uses its own client, no separate ORM needed
   if (database === "redis") {
-    processRedisDeps(vfs, dbPkgPath);
+    processRedisDeps(vfs, config, dbPkgPath);
     return;
   }
 
@@ -299,11 +299,22 @@ function processEdgeDBDeps(vfs: VirtualFileSystem, dbPkgPath: string): void {
   });
 }
 
-function processRedisDeps(vfs: VirtualFileSystem, dbPkgPath: string): void {
-  // ioredis includes its own TypeScript types, no @types package needed
-  addPackageDependency({
-    vfs,
-    packagePath: dbPkgPath,
-    dependencies: ["ioredis"],
-  });
+function processRedisDeps(vfs: VirtualFileSystem, config: ProjectConfig, dbPkgPath: string): void {
+  const { dbSetup } = config;
+
+  if (dbSetup === "upstash") {
+    // Upstash uses REST API with @upstash/redis
+    addPackageDependency({
+      vfs,
+      packagePath: dbPkgPath,
+      dependencies: ["@upstash/redis"],
+    });
+  } else {
+    // Local Redis uses ioredis (includes its own TypeScript types)
+    addPackageDependency({
+      vfs,
+      packagePath: dbPkgPath,
+      dependencies: ["ioredis"],
+    });
+  }
 }

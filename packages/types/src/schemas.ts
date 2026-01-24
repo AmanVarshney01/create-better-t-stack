@@ -93,6 +93,7 @@ export const DatabaseSetupSchema = z
     "planetscale",
     "mongodb-atlas",
     "supabase",
+    "upstash",
     "d1",
     "docker",
     "none",
