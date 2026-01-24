@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-{{#if (eq goOrm "gorm")}}
+{{#if (or (eq goOrm "gorm") (eq goOrm "sqlc"))}}
 
 	"{{projectName}}/internal/database"
 	"{{projectName}}/internal/models"
@@ -214,6 +214,249 @@ func DeletePost(c *gin.Context) {
 
 	c.JSON(http.StatusNoContent, nil)
 }
+{{else if (eq goOrm "sqlc")}}
+// GetUsers returns all users using raw SQL queries
+// Note: After running `sqlc generate`, you can use the generated db.Queries instead
+func GetUsers(c *gin.Context) {
+	ctx := c.Request.Context()
+	rows, err := database.GetPool().Query(ctx, "SELECT id, name, email, created_at, updated_at FROM users ORDER BY id")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	var users []models.User
+	for rows.Next() {
+		var user models.User
+		if err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		users = append(users, user)
+	}
+
+	if users == nil {
+		users = []models.User{}
+	}
+	c.JSON(http.StatusOK, users)
+}
+
+// GetUser returns a user by ID
+func GetUser(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
+
+	ctx := c.Request.Context()
+	var user models.User
+	err = database.GetPool().QueryRow(ctx,
+		"SELECT id, name, email, created_at, updated_at FROM users WHERE id = $1", id,
+	).Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
+}
+
+// CreateUser creates a new user
+func CreateUser(c *gin.Context) {
+	var input models.UserCreate
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx := c.Request.Context()
+	var user models.User
+	err := database.GetPool().QueryRow(ctx,
+		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id, name, email, created_at, updated_at",
+		input.Name, input.Email,
+	).Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, user)
+}
+
+// UpdateUser updates a user
+func UpdateUser(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
+
+	var input models.UserUpdate
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx := c.Request.Context()
+	var user models.User
+	err = database.GetPool().QueryRow(ctx,
+		"UPDATE users SET name = COALESCE($2, name), email = COALESCE($3, email), updated_at = NOW() WHERE id = $1 RETURNING id, name, email, created_at, updated_at",
+		id, input.Name, input.Email,
+	).Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
+}
+
+// DeleteUser deletes a user
+func DeleteUser(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
+
+	ctx := c.Request.Context()
+	result, err := database.GetPool().Exec(ctx, "DELETE FROM users WHERE id = $1", id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if result.RowsAffected() == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}
+
+// GetPosts returns all posts with author information
+func GetPosts(c *gin.Context) {
+	ctx := c.Request.Context()
+	rows, err := database.GetPool().Query(ctx,
+		"SELECT p.id, p.title, p.content, p.published, p.author_id, p.created_at, p.updated_at FROM posts p ORDER BY p.id",
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer rows.Close()
+
+	var posts []models.Post
+	for rows.Next() {
+		var post models.Post
+		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.Published, &post.AuthorID, &post.CreatedAt, &post.UpdatedAt); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		posts = append(posts, post)
+	}
+
+	if posts == nil {
+		posts = []models.Post{}
+	}
+	c.JSON(http.StatusOK, posts)
+}
+
+// GetPost returns a post by ID
+func GetPost(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
+
+	ctx := c.Request.Context()
+	var post models.Post
+	err = database.GetPool().QueryRow(ctx,
+		"SELECT id, title, content, published, author_id, created_at, updated_at FROM posts WHERE id = $1", id,
+	).Scan(&post.ID, &post.Title, &post.Content, &post.Published, &post.AuthorID, &post.CreatedAt, &post.UpdatedAt)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, post)
+}
+
+// CreatePost creates a new post
+func CreatePost(c *gin.Context) {
+	var input models.PostCreate
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx := c.Request.Context()
+	var post models.Post
+	err := database.GetPool().QueryRow(ctx,
+		"INSERT INTO posts (title, content, author_id) VALUES ($1, $2, $3) RETURNING id, title, content, published, author_id, created_at, updated_at",
+		input.Title, input.Content, input.AuthorID,
+	).Scan(&post.ID, &post.Title, &post.Content, &post.Published, &post.AuthorID, &post.CreatedAt, &post.UpdatedAt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, post)
+}
+
+// UpdatePost updates a post
+func UpdatePost(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
+
+	var input models.PostUpdate
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx := c.Request.Context()
+	var post models.Post
+	err = database.GetPool().QueryRow(ctx,
+		"UPDATE posts SET title = COALESCE($2, title), content = COALESCE($3, content), published = COALESCE($4, published), updated_at = NOW() WHERE id = $1 RETURNING id, title, content, published, author_id, created_at, updated_at",
+		id, input.Title, input.Content, input.Published,
+	).Scan(&post.ID, &post.Title, &post.Content, &post.Published, &post.AuthorID, &post.CreatedAt, &post.UpdatedAt)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, post)
+}
+
+// DeletePost deletes a post
+func DeletePost(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
+
+	ctx := c.Request.Context()
+	result, err := database.GetPool().Exec(ctx, "DELETE FROM posts WHERE id = $1", id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if result.RowsAffected() == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+		return
+	}
+
+	c.JSON(http.StatusNoContent, nil)
+}
 {{else}}
 // HealthCheck returns server health status
 func HealthCheck(c *gin.Context) {
@@ -230,7 +473,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-{{#if (eq goOrm "gorm")}}
+{{#if (or (eq goOrm "gorm") (eq goOrm "sqlc"))}}
 
 	"{{projectName}}/internal/database"
 	"{{projectName}}/internal/models"
@@ -411,6 +654,225 @@ func DeletePost(c echo.Context) error {
 
 	if err := database.GetDB().Delete(&models.Post{}, id).Error; err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.NoContent(http.StatusNoContent)
+}
+{{else if (eq goOrm "sqlc")}}
+// GetUsers returns all users using raw SQL queries
+// Note: After running `sqlc generate`, you can use the generated db.Queries instead
+func GetUsers(c echo.Context) error {
+	ctx := c.Request().Context()
+	rows, err := database.GetPool().Query(ctx, "SELECT id, name, email, created_at, updated_at FROM users ORDER BY id")
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	defer rows.Close()
+
+	var users []models.User
+	for rows.Next() {
+		var user models.User
+		if err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt); err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+		users = append(users, user)
+	}
+
+	if users == nil {
+		users = []models.User{}
+	}
+	return c.JSON(http.StatusOK, users)
+}
+
+// GetUser returns a user by ID
+func GetUser(c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+
+	ctx := c.Request().Context()
+	var user models.User
+	err = database.GetPool().QueryRow(ctx,
+		"SELECT id, name, email, created_at, updated_at FROM users WHERE id = $1", id,
+	).Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
+	}
+
+	return c.JSON(http.StatusOK, user)
+}
+
+// CreateUser creates a new user
+func CreateUser(c echo.Context) error {
+	var input models.UserCreate
+	if err := c.Bind(&input); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	ctx := c.Request().Context()
+	var user models.User
+	err := database.GetPool().QueryRow(ctx,
+		"INSERT INTO users (name, email) VALUES ($1, $2) RETURNING id, name, email, created_at, updated_at",
+		input.Name, input.Email,
+	).Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusCreated, user)
+}
+
+// UpdateUser updates a user
+func UpdateUser(c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+
+	var input models.UserUpdate
+	if err := c.Bind(&input); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	ctx := c.Request().Context()
+	var user models.User
+	err = database.GetPool().QueryRow(ctx,
+		"UPDATE users SET name = COALESCE($2, name), email = COALESCE($3, email), updated_at = NOW() WHERE id = $1 RETURNING id, name, email, created_at, updated_at",
+		id, input.Name, input.Email,
+	).Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
+	}
+
+	return c.JSON(http.StatusOK, user)
+}
+
+// DeleteUser deletes a user
+func DeleteUser(c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+
+	ctx := c.Request().Context()
+	result, err := database.GetPool().Exec(ctx, "DELETE FROM users WHERE id = $1", id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	if result.RowsAffected() == 0 {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "User not found"})
+	}
+
+	return c.NoContent(http.StatusNoContent)
+}
+
+// GetPosts returns all posts with author information
+func GetPosts(c echo.Context) error {
+	ctx := c.Request().Context()
+	rows, err := database.GetPool().Query(ctx,
+		"SELECT p.id, p.title, p.content, p.published, p.author_id, p.created_at, p.updated_at FROM posts p ORDER BY p.id",
+	)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	defer rows.Close()
+
+	var posts []models.Post
+	for rows.Next() {
+		var post models.Post
+		if err := rows.Scan(&post.ID, &post.Title, &post.Content, &post.Published, &post.AuthorID, &post.CreatedAt, &post.UpdatedAt); err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+		posts = append(posts, post)
+	}
+
+	if posts == nil {
+		posts = []models.Post{}
+	}
+	return c.JSON(http.StatusOK, posts)
+}
+
+// GetPost returns a post by ID
+func GetPost(c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+
+	ctx := c.Request().Context()
+	var post models.Post
+	err = database.GetPool().QueryRow(ctx,
+		"SELECT id, title, content, published, author_id, created_at, updated_at FROM posts WHERE id = $1", id,
+	).Scan(&post.ID, &post.Title, &post.Content, &post.Published, &post.AuthorID, &post.CreatedAt, &post.UpdatedAt)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "Post not found"})
+	}
+
+	return c.JSON(http.StatusOK, post)
+}
+
+// CreatePost creates a new post
+func CreatePost(c echo.Context) error {
+	var input models.PostCreate
+	if err := c.Bind(&input); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	ctx := c.Request().Context()
+	var post models.Post
+	err := database.GetPool().QueryRow(ctx,
+		"INSERT INTO posts (title, content, author_id) VALUES ($1, $2, $3) RETURNING id, title, content, published, author_id, created_at, updated_at",
+		input.Title, input.Content, input.AuthorID,
+	).Scan(&post.ID, &post.Title, &post.Content, &post.Published, &post.AuthorID, &post.CreatedAt, &post.UpdatedAt)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusCreated, post)
+}
+
+// UpdatePost updates a post
+func UpdatePost(c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+
+	var input models.PostUpdate
+	if err := c.Bind(&input); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+
+	ctx := c.Request().Context()
+	var post models.Post
+	err = database.GetPool().QueryRow(ctx,
+		"UPDATE posts SET title = COALESCE($2, title), content = COALESCE($3, content), published = COALESCE($4, published), updated_at = NOW() WHERE id = $1 RETURNING id, title, content, published, author_id, created_at, updated_at",
+		id, input.Title, input.Content, input.Published,
+	).Scan(&post.ID, &post.Title, &post.Content, &post.Published, &post.AuthorID, &post.CreatedAt, &post.UpdatedAt)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "Post not found"})
+	}
+
+	return c.JSON(http.StatusOK, post)
+}
+
+// DeletePost deletes a post
+func DeletePost(c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid ID"})
+	}
+
+	ctx := c.Request().Context()
+	result, err := database.GetPool().Exec(ctx, "DELETE FROM posts WHERE id = $1", id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	if result.RowsAffected() == 0 {
+		return c.JSON(http.StatusNotFound, map[string]string{"error": "Post not found"})
 	}
 
 	return c.NoContent(http.StatusNoContent)

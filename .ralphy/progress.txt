@@ -6895,3 +6895,74 @@ Verified that GORM support for the Go ecosystem was already fully implemented. A
 ### Files Modified
 - PRD.md: Marked GORM as complete [x]
 
+
+
+## SQLC - Go Type-Safe SQL Code Generator (2026-01-24)
+
+### Summary
+Implemented complete SQLC support for the Go ecosystem, including configuration files, SQL schema/queries, database pool initialization, and CRUD handlers for both Gin and Echo frameworks.
+
+### Implementation Details
+
+#### 1. SQLC Configuration Template (sqlc.yaml.hbs)
+- Created sqlc.yaml configuration template with PostgreSQL engine
+- Configures queries and schema directories
+- Generates Go code with pgx/v5 package
+- Enables JSON tags and empty slices
+
+#### 2. SQL Schema Template (sql/schema/001_schema.sql.hbs)
+- Users table with id, name, email, created_at, updated_at
+- Posts table with foreign key to users
+- Includes indexes for performance
+
+#### 3. SQL Query Templates
+- **sql/queries/users.sql.hbs**: GetUsers, GetUser, GetUserByEmail, CreateUser, UpdateUser, DeleteUser
+- **sql/queries/posts.sql.hbs**: GetPosts, GetPost, GetPostsByAuthor, CreatePost, UpdatePost, DeletePost
+- All queries use proper SQLc annotations (:many, :one, :exec)
+
+#### 4. main.go.hbs Updates
+- Added SQLc pool initialization with database.InitDB()
+- Added defer database.Close() for proper cleanup
+- Added logging support when Zap is enabled
+
+#### 5. handlers.go.hbs Updates
+- Added full CRUD handlers for SQLc with Gin framework
+- Added full CRUD handlers for SQLc with Echo framework
+- Uses database.GetPool() for pgxpool operations
+- Proper context handling with c.Request.Context() / c.Request().Context()
+- Returns empty arrays instead of null for list operations
+
+#### 6. Pre-existing Components (Already Implemented)
+- GoOrmSchema includes 'sqlc' option
+- CLI prompts include SQLc with description
+- Web UI config includes SQLc with orange color branding
+- database.go.hbs has SQLc implementation with pgxpool
+- models.go.hbs has SQLc structs with int64 IDs
+- go.mod.hbs has pgx/v5 dependency
+
+### New Tests Added
+- sqlc.yaml configuration file generation
+- SQL schema file generation
+- SQL query files generation (users.sql, posts.sql)
+- Handlers with pgxpool CRUD operations for Gin
+- Handlers with pgxpool CRUD operations for Echo
+- Models with int64 IDs for SQLc
+- Database pool initialization in main.go
+- Negative test: no sqlc files when GORM is selected
+
+### Test Results
+- All 47 Go language tests passing
+- 9 new SQLc-specific tests all passing
+- Linting passes with 160 tests
+
+### Files Created
+- packages/template-generator/templates/go-base/sqlc.yaml.hbs
+- packages/template-generator/templates/go-base/sql/schema/001_schema.sql.hbs
+- packages/template-generator/templates/go-base/sql/queries/users.sql.hbs
+- packages/template-generator/templates/go-base/sql/queries/posts.sql.hbs
+
+### Files Modified
+- packages/template-generator/templates/go-base/cmd/server/main.go.hbs
+- packages/template-generator/templates/go-base/internal/handlers/handlers.go.hbs
+- apps/cli/test/go-language.test.ts
+- PRD.md: Marked SQLC as complete [x]

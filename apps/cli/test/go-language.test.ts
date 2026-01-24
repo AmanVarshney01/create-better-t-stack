@@ -444,6 +444,192 @@ describe("Go Language Support", () => {
       expect(dbContent).toContain("func InitDB()");
       expect(dbContent).toContain("func GetPool()");
     });
+
+    it("should generate sqlc.yaml configuration file", async () => {
+      const result = await createVirtual({
+        projectName: "go-sqlc-config-check",
+        ecosystem: "go",
+        goWebFramework: "gin",
+        goOrm: "sqlc",
+        goApi: "none",
+        goCli: "none",
+        goLogging: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      expect(hasFile(root, "sqlc.yaml")).toBe(true);
+      const sqlcConfig = getFileContent(root, "sqlc.yaml");
+      expect(sqlcConfig).toBeDefined();
+      expect(sqlcConfig).toContain('version: "2"');
+      expect(sqlcConfig).toContain('engine: "postgresql"');
+      expect(sqlcConfig).toContain('queries: "sql/queries/"');
+      expect(sqlcConfig).toContain('schema: "sql/schema/"');
+      expect(sqlcConfig).toContain('sql_package: "pgx/v5"');
+    });
+
+    it("should generate SQL schema file", async () => {
+      const result = await createVirtual({
+        projectName: "go-sqlc-schema-check",
+        ecosystem: "go",
+        goWebFramework: "gin",
+        goOrm: "sqlc",
+        goApi: "none",
+        goCli: "none",
+        goLogging: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      expect(hasFile(root, "sql/schema/001_schema.sql")).toBe(true);
+      const schemaContent = getFileContent(root, "sql/schema/001_schema.sql");
+      expect(schemaContent).toBeDefined();
+      expect(schemaContent).toContain("CREATE TABLE IF NOT EXISTS users");
+      expect(schemaContent).toContain("CREATE TABLE IF NOT EXISTS posts");
+      expect(schemaContent).toContain("BIGSERIAL PRIMARY KEY");
+    });
+
+    it("should generate SQL query files", async () => {
+      const result = await createVirtual({
+        projectName: "go-sqlc-queries-check",
+        ecosystem: "go",
+        goWebFramework: "gin",
+        goOrm: "sqlc",
+        goApi: "none",
+        goCli: "none",
+        goLogging: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      // Check users queries
+      expect(hasFile(root, "sql/queries/users.sql")).toBe(true);
+      const usersQueries = getFileContent(root, "sql/queries/users.sql");
+      expect(usersQueries).toBeDefined();
+      expect(usersQueries).toContain("-- name: GetUsers :many");
+      expect(usersQueries).toContain("-- name: CreateUser :one");
+      expect(usersQueries).toContain("-- name: DeleteUser :exec");
+
+      // Check posts queries
+      expect(hasFile(root, "sql/queries/posts.sql")).toBe(true);
+      const postsQueries = getFileContent(root, "sql/queries/posts.sql");
+      expect(postsQueries).toBeDefined();
+      expect(postsQueries).toContain("-- name: GetPosts :many");
+      expect(postsQueries).toContain("-- name: CreatePost :one");
+    });
+
+    it("should generate handlers with pgxpool CRUD operations for Gin", async () => {
+      const result = await createVirtual({
+        projectName: "go-sqlc-handlers-gin",
+        ecosystem: "go",
+        goWebFramework: "gin",
+        goOrm: "sqlc",
+        goApi: "none",
+        goCli: "none",
+        goLogging: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const handlersContent = getFileContent(root, "internal/handlers/handlers.go");
+      expect(handlersContent).toBeDefined();
+      expect(handlersContent).toContain("package handlers");
+      expect(handlersContent).toContain("github.com/gin-gonic/gin");
+      expect(handlersContent).toContain("database.GetPool()");
+      expect(handlersContent).toContain("func GetUsers(c *gin.Context)");
+      expect(handlersContent).toContain("func CreateUser(c *gin.Context)");
+      expect(handlersContent).toContain("func DeleteUser(c *gin.Context)");
+      expect(handlersContent).toContain("ctx := c.Request.Context()");
+    });
+
+    it("should generate handlers with pgxpool CRUD operations for Echo", async () => {
+      const result = await createVirtual({
+        projectName: "go-sqlc-handlers-echo",
+        ecosystem: "go",
+        goWebFramework: "echo",
+        goOrm: "sqlc",
+        goApi: "none",
+        goCli: "none",
+        goLogging: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const handlersContent = getFileContent(root, "internal/handlers/handlers.go");
+      expect(handlersContent).toBeDefined();
+      expect(handlersContent).toContain("package handlers");
+      expect(handlersContent).toContain("github.com/labstack/echo/v4");
+      expect(handlersContent).toContain("database.GetPool()");
+      expect(handlersContent).toContain("func GetUsers(c echo.Context) error");
+      expect(handlersContent).toContain("func CreateUser(c echo.Context) error");
+      expect(handlersContent).toContain("ctx := c.Request().Context()");
+    });
+
+    it("should generate models with int64 IDs for SQLc", async () => {
+      const result = await createVirtual({
+        projectName: "go-sqlc-models-check",
+        ecosystem: "go",
+        goWebFramework: "gin",
+        goOrm: "sqlc",
+        goApi: "none",
+        goCli: "none",
+        goLogging: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const modelsContent = getFileContent(root, "internal/models/models.go");
+      expect(modelsContent).toBeDefined();
+      expect(modelsContent).toContain("package models");
+      expect(modelsContent).toContain("type User struct");
+      expect(modelsContent).toContain("ID        int64");
+      expect(modelsContent).not.toContain("gorm.io/gorm");
+    });
+
+    it("should initialize database pool in main.go with SQLc", async () => {
+      const result = await createVirtual({
+        projectName: "go-sqlc-main-check",
+        ecosystem: "go",
+        goWebFramework: "gin",
+        goOrm: "sqlc",
+        goApi: "none",
+        goCli: "none",
+        goLogging: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      const mainContent = getFileContent(root, "cmd/server/main.go");
+      expect(mainContent).toBeDefined();
+      expect(mainContent).toContain("database.InitDB()");
+      expect(mainContent).toContain("defer database.Close()");
+    });
+
+    it("should not generate sqlc files when GORM is selected", async () => {
+      const result = await createVirtual({
+        projectName: "go-gorm-no-sqlc",
+        ecosystem: "go",
+        goWebFramework: "gin",
+        goOrm: "gorm",
+        goApi: "none",
+        goCli: "none",
+        goLogging: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      expect(hasFile(root, "sqlc.yaml")).toBe(false);
+      expect(hasFile(root, "sql/schema/001_schema.sql")).toBe(false);
+      expect(hasFile(root, "sql/queries/users.sql")).toBe(false);
+    });
   });
 
   describe("gRPC Integration", () => {

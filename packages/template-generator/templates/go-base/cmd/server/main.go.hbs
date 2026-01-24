@@ -13,7 +13,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 {{/if}}
-{{#if (eq goOrm "gorm")}}
+{{#if (or (eq goOrm "gorm") (eq goOrm "sqlc"))}}
 
 	"{{projectName}}/internal/database"
 {{/if}}
@@ -74,6 +74,22 @@ func main() {
 	logger.Info("Database connected successfully")
 {{/if}}
 	_ = db // Use db in your handlers
+{{/if}}
+{{#if (eq goOrm "sqlc")}}
+	// Initialize database pool
+	pool, err := database.InitDB()
+	if err != nil {
+{{#if (eq goLogging "zap")}}
+		logger.Fatal("Failed to connect to database", zap.Error(err))
+{{else}}
+		panic("Failed to connect to database: " + err.Error())
+{{/if}}
+	}
+	defer database.Close()
+{{#if (eq goLogging "zap")}}
+	logger.Info("Database pool connected successfully")
+{{/if}}
+	_ = pool // Use pool in your handlers
 {{/if}}
 
 	// Get host and port from environment

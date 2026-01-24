@@ -1,0 +1,15 @@
+{{#if (eq goOrm "sqlc")}}
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "sql/queries/"
+    schema: "sql/schema/"
+    gen:
+      go:
+        package: "db"
+        out: "internal/db"
+        sql_package: "pgx/v5"
+        emit_json_tags: true
+        emit_empty_slices: true
+        emit_result_struct_pointers: true
+{{/if}}

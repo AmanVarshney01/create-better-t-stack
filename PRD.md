@@ -234,7 +234,7 @@
 ## **Step 3: ORMs & Database**
 
 - [x] **GORM** - Full-featured ORM
-- [ ] **SQLC** - Generate type-safe code from SQL
+- [x] **SQLC** - Generate type-safe code from SQL
 
 ---
 

@@ -1,0 +1,38 @@
+{{#if (eq goOrm "sqlc")}}
+-- name: GetPosts :many
+SELECT p.*, u.name as author_name, u.email as author_email
+FROM posts p
+JOIN users u ON p.author_id = u.id
+ORDER BY p.id;
+
+-- name: GetPost :one
+SELECT p.*, u.name as author_name, u.email as author_email
+FROM posts p
+JOIN users u ON p.author_id = u.id
+WHERE p.id = $1;
+
+-- name: GetPostsByAuthor :many
+SELECT p.*, u.name as author_name, u.email as author_email
+FROM posts p
+JOIN users u ON p.author_id = u.id
+WHERE p.author_id = $1
+ORDER BY p.id;
+
+-- name: CreatePost :one
+INSERT INTO posts (title, content, author_id)
+VALUES ($1, $2, $3)
+RETURNING *;
+
+-- name: UpdatePost :one
+UPDATE posts
+SET title = COALESCE($2, title),
+    content = COALESCE($3, content),
+    published = COALESCE($4, published),
+    updated_at = NOW()
+WHERE id = $1
+RETURNING *;
+
+-- name: DeletePost :exec
+DELETE FROM posts
+WHERE id = $1;
+{{/if}}
