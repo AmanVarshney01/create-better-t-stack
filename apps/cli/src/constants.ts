@@ -16,8 +16,8 @@ const distPath = path.dirname(__filename);
 export const PKG_ROOT = path.join(distPath, "../");
 
 export const DEFAULT_CONFIG_BASE = {
-  projectName: "my-better-t-app",
-  relativePath: "my-better-t-app",
+  projectName: "my-app",
+  relativePath: "my-app",
   ecosystem: "typescript",
   frontend: ["tanstack-router"],
   database: "sqlite",
@@ -145,7 +145,7 @@ export const UI_LIBRARY_COMPATIBILITY: Record<
   }
 > = {
   "shadcn-ui": {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next"],
+    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind"],
   },
   daisyui: {
@@ -166,31 +166,39 @@ export const UI_LIBRARY_COMPATIBILITY: Record<
     cssFrameworks: ["tailwind"],
   },
   "radix-ui": {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next"],
+    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   "headless-ui": {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "nuxt"],
+    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "nuxt", "astro"],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   "park-ui": {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "nuxt", "solid"],
+    frontends: [
+      "tanstack-router",
+      "react-router",
+      "tanstack-start",
+      "next",
+      "nuxt",
+      "solid",
+      "astro",
+    ],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only"],
   },
   "chakra-ui": {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next"],
+    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   nextui: {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next"],
+    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind"],
   },
   mantine: {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next"],
+    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   "base-ui": {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next"],
+    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   "ark-ui": {
@@ -202,11 +210,12 @@ export const UI_LIBRARY_COMPATIBILITY: Record<
       "nuxt",
       "svelte",
       "solid",
+      "astro",
     ],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   "react-aria": {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next"],
+    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   none: {

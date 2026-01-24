@@ -1,6 +1,6 @@
 # TypeScript Full-Stack Ecosystem Expansion Ideas
 
-This document contains a comprehensive list of TypeScript frameworks and libraries that could be added to Better-t-stack, organized by category.
+This document contains a comprehensive list of TypeScript frameworks and libraries that could be added to Better Fullstack, organized by category.
 
 ## Status Legend
 
@@ -413,7 +413,7 @@ This document contains a comprehensive list of TypeScript frameworks and librari
 
 ## Summary
 
-This document contains **150+ libraries/frameworks** across **25+ categories** for potential expansion of the Better-t-stack ecosystem.
+This document contains **150+ libraries/frameworks** across **25+ categories** for potential expansion of the Better Fullstack ecosystem.
 
 ### Progress Overview
 

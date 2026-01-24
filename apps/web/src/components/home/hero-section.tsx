@@ -24,7 +24,17 @@ export default function HeroSection() {
 
   return (
     <div className="flex flex-col items-center px-4 pt-12 pb-8 sm:pt-16">
-      {/* Announcement Badge */}
+      {/* Alpha Status Badge */}
+      <div className="mb-4 flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs sm:text-sm">
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
+        </span>
+        <span className="font-medium text-amber-600 dark:text-amber-400">Alpha</span>
+        <span className="text-muted-foreground">— In active development</span>
+      </div>
+
+      {/* Fork Badge */}
       <div className="mb-6 flex items-center gap-2 text-xs sm:mb-8 sm:text-sm">
         <span className="rounded bg-foreground px-2 py-0.5 text-xs font-medium text-background">
           Fork

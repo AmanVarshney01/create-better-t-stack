@@ -33,7 +33,7 @@ export function loadStackParams(
         | "rust"
         | "python"
         | "go",
-      projectName: getString("projectName", DEFAULT_STACK.projectName ?? "my-better-t-app"),
+      projectName: getString("projectName", DEFAULT_STACK.projectName ?? "my-app"),
       webFrontend: getArray("webFrontend", DEFAULT_STACK.webFrontend),
       nativeFrontend: getArray("nativeFrontend", DEFAULT_STACK.nativeFrontend),
       astroIntegration: getString("astroIntegration", DEFAULT_STACK.astroIntegration),

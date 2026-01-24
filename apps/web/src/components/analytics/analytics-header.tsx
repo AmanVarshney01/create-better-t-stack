@@ -27,7 +27,7 @@ export function AnalyticsHeader({
             <h1 className="font-bold font-mono text-xl sm:text-2xl">CLI_ANALYTICS.JSON</h1>
           </div>
           <p className="text-muted-foreground text-sm">
-            Real-time usage statistics from create-better-t-stack
+            Real-time usage statistics from create-better-fullstack
           </p>
         </div>
       </div>
@@ -59,7 +59,7 @@ export function AnalyticsHeader({
             <span>
               Source code:{" "}
               <a
-                href="https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/cli/src/utils/analytics.ts"
+                href="https://github.com/AmanVarshney01/create-better-fullstack/blob/main/apps/cli/src/utils/analytics.ts"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-accent underline underline-offset-2 hover:text-primary"

@@ -5,6 +5,7 @@ import type React from "react";
 import {
   Check,
   ChevronDown,
+  ChevronRight,
   ClipboardCopy,
   FolderTree,
   InfoIcon,
@@ -101,7 +102,7 @@ const StackBuilder = () => {
 
   const getStackUrl = (): string => {
     const stackToUse = compatibilityAnalysis.adjustedStack || stack;
-    const projectName = stackToUse.projectName || "my-better-t-app";
+    const projectName = stackToUse.projectName || "my-app";
     const formattedProjectName = formatProjectName(projectName);
     const stackWithProjectName = {
       ...stackToUse,
@@ -150,7 +151,7 @@ const StackBuilder = () => {
     startTransition(() => {
       setStack({
         ...(randomStack as StackState),
-        projectName: stack.projectName || "my-better-t-app",
+        projectName: stack.projectName || "my-app",
       });
     });
     contentRef.current?.scrollTo(0, 0);
@@ -255,14 +256,14 @@ const StackBuilder = () => {
   })();
 
   useEffect(() => {
-    const savedStack = localStorage.getItem("betterTStackPreference");
+    const savedStack = localStorage.getItem("betterFullstackPreference");
     if (savedStack) {
       try {
         const parsedStack = JSON.parse(savedStack) as StackState;
         setLastSavedStack(parsedStack);
       } catch (e) {
         console.error("Failed to parse saved stack", e);
-        localStorage.removeItem("betterTStackPreference");
+        localStorage.removeItem("betterFullstackPreference");
       }
     }
   }, []);
@@ -301,7 +302,7 @@ const StackBuilder = () => {
 
   useEffect(() => {
     const stackToUse = compatibilityAnalysis.adjustedStack || stack;
-    const projectName = stackToUse.projectName || "my-better-t-app";
+    const projectName = stackToUse.projectName || "my-app";
     const formattedProjectName = formatProjectName(projectName);
     const stackWithProjectName = {
       ...stackToUse,
@@ -419,10 +420,10 @@ const StackBuilder = () => {
 
   const saveCurrentStack = () => {
     const stackToUse = compatibilityAnalysis.adjustedStack || stack;
-    const projectName = stackToUse.projectName || "my-better-t-app";
+    const projectName = stackToUse.projectName || "my-app";
     const formattedProjectName = formatProjectName(projectName);
     const stackToSave = { ...stackToUse, projectName: formattedProjectName };
-    localStorage.setItem("betterTStackPreference", JSON.stringify(stackToSave));
+    localStorage.setItem("betterFullstackPreference", JSON.stringify(stackToSave));
     setLastSavedStack(stackToSave);
     toast.success("Your stack configuration has been saved");
   };
@@ -450,6 +451,47 @@ const StackBuilder = () => {
   };
 
   const [mobileTab, setMobileTab] = useState<MobileTab>("configure");
+
+  // Collapsible sections - these categories can be expanded/collapsed
+  const COLLAPSIBLE_CATEGORIES = [
+    "nativeFrontend",
+    "cssFramework",
+    "payments",
+    "email",
+    "fileUpload",
+    "logging",
+    "observability",
+    "ai",
+    "stateManagement",
+    "forms",
+    "validation",
+    "testing",
+    "realtime",
+    "jobQueue",
+    "caching",
+    "animation",
+    "cms",
+    "documentation",
+  ];
+
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
+    () => new Set(COLLAPSIBLE_CATEGORIES),
+  );
+
+  const toggleSection = (categoryKey: string) => {
+    setCollapsedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryKey)) {
+        next.delete(categoryKey);
+      } else {
+        next.add(categoryKey);
+      }
+      return next;
+    });
+  };
+
+  const isCollapsible = (categoryKey: string) => COLLAPSIBLE_CATEGORIES.includes(categoryKey);
+  const isCollapsed = (categoryKey: string) => collapsedSections.has(categoryKey);
 
   return (
     <TooltipProvider>
@@ -523,16 +565,16 @@ const StackBuilder = () => {
                         ? "border-destructive bg-destructive/10 text-destructive-foreground"
                         : "border-border focus:border-primary",
                     )}
-                    placeholder="my-better-t-app"
+                    placeholder="my-app"
                   />
                   {projectNameError && (
                     <p className="mt-1 text-destructive text-xs">{projectNameError}</p>
                   )}
-                  {(stack.projectName || "my-better-t-app").includes(" ") && (
+                  {(stack.projectName || "my-app").includes(" ") && (
                     <p className="mt-1 text-muted-foreground text-xs">
                       Will be saved as:{" "}
                       <code className="rounded bg-muted px-1 py-0.5 text-xs">
-                        {(stack.projectName || "my-better-t-app").replace(/\s+/g, "-")}
+                        {(stack.projectName || "my-app").replace(/\s+/g, "-")}
                       </code>
                     </p>
                   )}
@@ -757,11 +799,37 @@ const StackBuilder = () => {
                             id={`section-${categoryKey}`}
                             className="mb-6 scroll-mt-4 sm:mb-8"
                           >
-                            <div className="mb-3 flex items-center border-border border-b pb-2 text-muted-foreground">
-                              <Terminal className="mr-2 h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
+                            <div
+                              className={cn(
+                                "mb-3 flex items-center border-border border-b pb-2 text-muted-foreground",
+                                isCollapsible(categoryKey) &&
+                                  "cursor-pointer hover:text-foreground transition-colors",
+                              )}
+                              onClick={
+                                isCollapsible(categoryKey)
+                                  ? () => toggleSection(categoryKey)
+                                  : undefined
+                              }
+                            >
+                              {isCollapsible(categoryKey) ? (
+                                <motion.div
+                                  animate={{ rotate: isCollapsed(categoryKey) ? 0 : 90 }}
+                                  transition={{ duration: 0.2 }}
+                                  className="mr-2"
+                                >
+                                  <ChevronRight className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
+                                </motion.div>
+                              ) : (
+                                <Terminal className="mr-2 h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
+                              )}
                               <h2 className="font-semibold font-mono text-foreground text-sm sm:text-base">
                                 {categoryDisplayName}
                               </h2>
+                              {isCollapsible(categoryKey) && isCollapsed(categoryKey) && (
+                                <span className="ml-2 text-xs text-muted-foreground">
+                                  ({filteredOptions.length} options)
+                                </span>
+                              )}
                               {compatibilityAnalysis.notes[categoryKey]?.hasIssue && (
                                 <Tooltip delay={100}>
                                   <TooltipTrigger
@@ -782,101 +850,115 @@ const StackBuilder = () => {
                               )}
                             </div>
 
-                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3 2xl:grid-cols-4">
-                              {filteredOptions.map((tech) => {
-                                let isSelected = false;
-                                const category = categoryKey as keyof StackState;
-                                const currentValue = stack[category];
+                            <AnimatePresence initial={false}>
+                              {(!isCollapsible(categoryKey) || !isCollapsed(categoryKey)) && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: "auto" }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3 2xl:grid-cols-4">
+                                    {filteredOptions.map((tech) => {
+                                      let isSelected = false;
+                                      const category = categoryKey as keyof StackState;
+                                      const currentValue = stack[category];
 
-                                if (
-                                  category === "codeQuality" ||
-                                  category === "documentation" ||
-                                  category === "appPlatforms" ||
-                                  category === "examples" ||
-                                  category === "webFrontend" ||
-                                  category === "nativeFrontend"
-                                ) {
-                                  isSelected = ((currentValue as string[]) || []).includes(tech.id);
-                                } else {
-                                  isSelected = currentValue === tech.id;
-                                }
+                                      if (
+                                        category === "codeQuality" ||
+                                        category === "documentation" ||
+                                        category === "appPlatforms" ||
+                                        category === "examples" ||
+                                        category === "webFrontend" ||
+                                        category === "nativeFrontend"
+                                      ) {
+                                        isSelected = ((currentValue as string[]) || []).includes(
+                                          tech.id,
+                                        );
+                                      } else {
+                                        isSelected = currentValue === tech.id;
+                                      }
 
-                                const isDisabled = !isOptionCompatible(
-                                  stack,
-                                  categoryKey as keyof typeof TECH_OPTIONS,
-                                  tech.id,
-                                );
-
-                                const disabledReason = isDisabled
-                                  ? getDisabledReason(
-                                      stack,
-                                      categoryKey as keyof typeof TECH_OPTIONS,
-                                      tech.id,
-                                    )
-                                  : null;
-
-                                return (
-                                  <motion.div
-                                    key={tech.id}
-                                    className={cn(
-                                      "group relative cursor-pointer rounded-lg border p-3 transition-all sm:p-4",
-                                      isSelected
-                                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                                        : isDisabled
-                                          ? "border-destructive/30 bg-destructive/5 opacity-50 hover:opacity-75"
-                                          : "border-border bg-fd-background hover:border-primary/30 hover:bg-muted/5",
-                                    )}
-                                    whileHover={{ scale: 1.01 }}
-                                    whileTap={{ scale: 0.99 }}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleTechSelect(
+                                      const isDisabled = !isOptionCompatible(
+                                        stack,
                                         categoryKey as keyof typeof TECH_OPTIONS,
                                         tech.id,
                                       );
-                                    }}
-                                    title={disabledReason || undefined}
-                                  >
-                                    {tech.default && !isSelected && (
-                                      <span className="absolute top-2 right-2 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
-                                        Default
-                                      </span>
-                                    )}
-                                    <div className="flex items-start gap-3">
-                                      {tech.icon !== "" && (
-                                        <div
+
+                                      const disabledReason = isDisabled
+                                        ? getDisabledReason(
+                                            stack,
+                                            categoryKey as keyof typeof TECH_OPTIONS,
+                                            tech.id,
+                                          )
+                                        : null;
+
+                                      return (
+                                        <motion.div
+                                          key={tech.id}
                                           className={cn(
-                                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors",
+                                            "group relative cursor-pointer rounded-lg border p-3 transition-all sm:p-4",
                                             isSelected
-                                              ? "bg-primary/10"
-                                              : "bg-muted/50 group-hover:bg-muted",
+                                              ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                                              : isDisabled
+                                                ? "border-destructive/30 bg-destructive/5 opacity-50 hover:opacity-75"
+                                                : "border-border bg-fd-background hover:border-primary/30 hover:bg-muted/5",
                                           )}
+                                          whileHover={{ scale: 1.01 }}
+                                          whileTap={{ scale: 0.99 }}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleTechSelect(
+                                              categoryKey as keyof typeof TECH_OPTIONS,
+                                              tech.id,
+                                            );
+                                          }}
+                                          title={disabledReason || undefined}
                                         >
-                                          <TechIcon
-                                            icon={tech.icon}
-                                            name={tech.name}
-                                            className={cn("h-5 w-5", tech.className)}
-                                          />
-                                        </div>
-                                      )}
-                                      <div className="min-w-0 flex-1 pt-0.5">
-                                        <span
-                                          className={cn(
-                                            "block font-semibold text-sm",
-                                            isSelected ? "text-primary" : "text-foreground",
+                                          {tech.default && !isSelected && (
+                                            <span className="absolute top-2 right-2 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
+                                              Default
+                                            </span>
                                           )}
-                                        >
-                                          {tech.name}
-                                        </span>
-                                        <p className="mt-0.5 line-clamp-2 text-muted-foreground text-xs leading-relaxed">
-                                          {tech.description}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </motion.div>
-                                );
-                              })}
-                            </div>
+                                          <div className="flex items-start gap-3">
+                                            {tech.icon !== "" && (
+                                              <div
+                                                className={cn(
+                                                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors",
+                                                  isSelected
+                                                    ? "bg-primary/10"
+                                                    : "bg-muted/50 group-hover:bg-muted",
+                                                )}
+                                              >
+                                                <TechIcon
+                                                  icon={tech.icon}
+                                                  name={tech.name}
+                                                  className={cn("h-5 w-5", tech.className)}
+                                                />
+                                              </div>
+                                            )}
+                                            <div className="min-w-0 flex-1 pt-0.5">
+                                              <span
+                                                className={cn(
+                                                  "block font-semibold text-sm",
+                                                  isSelected ? "text-primary" : "text-foreground",
+                                                )}
+                                              >
+                                                {tech.name}
+                                              </span>
+                                              <p className="mt-0.5 line-clamp-2 text-muted-foreground text-xs leading-relaxed">
+                                                {tech.description}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        </motion.div>
+                                      );
+                                    })}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </section>
 
                           {/* Astro Integration - shown only when Astro is selected, right after webFrontend */}
@@ -1011,11 +1093,37 @@ const StackBuilder = () => {
                     return (
                       <div key={categoryKey}>
                         <section id={`section-mobile-${categoryKey}`} className="mb-6 scroll-mt-4">
-                          <div className="mb-3 flex items-center border-border border-b pb-2 text-muted-foreground">
-                            <Terminal className="mr-2 h-4 w-4 shrink-0" />
+                          <div
+                            className={cn(
+                              "mb-3 flex items-center border-border border-b pb-2 text-muted-foreground",
+                              isCollapsible(categoryKey) &&
+                                "cursor-pointer hover:text-foreground transition-colors",
+                            )}
+                            onClick={
+                              isCollapsible(categoryKey)
+                                ? () => toggleSection(categoryKey)
+                                : undefined
+                            }
+                          >
+                            {isCollapsible(categoryKey) ? (
+                              <motion.div
+                                animate={{ rotate: isCollapsed(categoryKey) ? 0 : 90 }}
+                                transition={{ duration: 0.2 }}
+                                className="mr-2"
+                              >
+                                <ChevronRight className="h-4 w-4 shrink-0" />
+                              </motion.div>
+                            ) : (
+                              <Terminal className="mr-2 h-4 w-4 shrink-0" />
+                            )}
                             <h2 className="font-semibold font-mono text-foreground text-sm">
                               {categoryDisplayName}
                             </h2>
+                            {isCollapsible(categoryKey) && isCollapsed(categoryKey) && (
+                              <span className="ml-2 text-xs text-muted-foreground">
+                                ({filteredOptions.length} options)
+                              </span>
+                            )}
                             {compatibilityAnalysis.notes[categoryKey]?.hasIssue && (
                               <Tooltip delay={100}>
                                 <TooltipTrigger
@@ -1034,88 +1142,102 @@ const StackBuilder = () => {
                             )}
                           </div>
 
-                          <div className="grid grid-cols-1 gap-2">
-                            {filteredOptions.map((tech) => {
-                              let isSelected = false;
-                              const category = categoryKey as keyof StackState;
-                              const currentValue = stack[category];
+                          <AnimatePresence initial={false}>
+                            {(!isCollapsible(categoryKey) || !isCollapsed(categoryKey)) && (
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.3, ease: "easeInOut" }}
+                                className="overflow-hidden"
+                              >
+                                <div className="grid grid-cols-1 gap-2">
+                                  {filteredOptions.map((tech) => {
+                                    let isSelected = false;
+                                    const category = categoryKey as keyof StackState;
+                                    const currentValue = stack[category];
 
-                              if (
-                                category === "codeQuality" ||
-                                category === "documentation" ||
-                                category === "appPlatforms" ||
-                                category === "examples" ||
-                                category === "webFrontend" ||
-                                category === "nativeFrontend"
-                              ) {
-                                isSelected = ((currentValue as string[]) || []).includes(tech.id);
-                              } else {
-                                isSelected = currentValue === tech.id;
-                              }
+                                    if (
+                                      category === "codeQuality" ||
+                                      category === "documentation" ||
+                                      category === "appPlatforms" ||
+                                      category === "examples" ||
+                                      category === "webFrontend" ||
+                                      category === "nativeFrontend"
+                                    ) {
+                                      isSelected = ((currentValue as string[]) || []).includes(
+                                        tech.id,
+                                      );
+                                    } else {
+                                      isSelected = currentValue === tech.id;
+                                    }
 
-                              const isDisabled = !isOptionCompatible(
-                                stack,
-                                categoryKey as keyof typeof TECH_OPTIONS,
-                                tech.id,
-                              );
-
-                              return (
-                                <motion.div
-                                  key={tech.id}
-                                  className={cn(
-                                    "group relative cursor-pointer rounded-lg border p-3 transition-all",
-                                    isSelected
-                                      ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                                      : isDisabled
-                                        ? "border-destructive/30 bg-destructive/5 opacity-50"
-                                        : "border-border bg-fd-background hover:border-primary/30 hover:bg-muted/5",
-                                  )}
-                                  whileTap={{ scale: 0.98 }}
-                                  onClick={() =>
-                                    handleTechSelect(
+                                    const isDisabled = !isOptionCompatible(
+                                      stack,
                                       categoryKey as keyof typeof TECH_OPTIONS,
                                       tech.id,
-                                    )
-                                  }
-                                >
-                                  {tech.default && !isSelected && (
-                                    <span className="absolute top-2 right-2 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
-                                      Default
-                                    </span>
-                                  )}
-                                  <div className="flex items-start gap-3">
-                                    {tech.icon !== "" && (
-                                      <div
+                                    );
+
+                                    return (
+                                      <motion.div
+                                        key={tech.id}
                                         className={cn(
-                                          "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors",
-                                          isSelected ? "bg-primary/10" : "bg-muted/50",
+                                          "group relative cursor-pointer rounded-lg border p-3 transition-all",
+                                          isSelected
+                                            ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                                            : isDisabled
+                                              ? "border-destructive/30 bg-destructive/5 opacity-50"
+                                              : "border-border bg-fd-background hover:border-primary/30 hover:bg-muted/5",
                                         )}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={() =>
+                                          handleTechSelect(
+                                            categoryKey as keyof typeof TECH_OPTIONS,
+                                            tech.id,
+                                          )
+                                        }
                                       >
-                                        <TechIcon
-                                          icon={tech.icon}
-                                          name={tech.name}
-                                          className={cn("h-5 w-5", tech.className)}
-                                        />
-                                      </div>
-                                    )}
-                                    <div className="min-w-0 flex-1 pt-0.5">
-                                      <span
-                                        className={cn(
-                                          "block font-semibold text-sm",
-                                          isSelected ? "text-primary" : "text-foreground",
+                                        {tech.default && !isSelected && (
+                                          <span className="absolute top-2 right-2 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
+                                            Default
+                                          </span>
                                         )}
-                                      >
-                                        {tech.name}
-                                      </span>
-                                      <p className="mt-0.5 line-clamp-2 text-muted-foreground text-xs leading-relaxed">
-                                        {tech.description}
-                                      </p>
-                                    </div>
-                                  </div>
-                                </motion.div>
-                              );
-                            })}
-                          </div>
+                                        <div className="flex items-start gap-3">
+                                          {tech.icon !== "" && (
+                                            <div
+                                              className={cn(
+                                                "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors",
+                                                isSelected ? "bg-primary/10" : "bg-muted/50",
+                                              )}
+                                            >
+                                              <TechIcon
+                                                icon={tech.icon}
+                                                name={tech.name}
+                                                className={cn("h-5 w-5", tech.className)}
+                                              />
+                                            </div>
+                                          )}
+                                          <div className="min-w-0 flex-1 pt-0.5">
+                                            <span
+                                              className={cn(
+                                                "block font-semibold text-sm",
+                                                isSelected ? "text-primary" : "text-foreground",
+                                              )}
+                                            >
+                                              {tech.name}
+                                            </span>
+                                            <p className="mt-0.5 line-clamp-2 text-muted-foreground text-xs leading-relaxed">
+                                              {tech.description}
+                                            </p>
+                                          </div>
+                                        </div>
+                                      </motion.div>
+                                    );
+                                  })}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </section>
 
                         {/* Astro Integration - shown only when Astro is selected, right after webFrontend (Mobile) */}

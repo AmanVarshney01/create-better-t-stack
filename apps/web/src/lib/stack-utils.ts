@@ -129,7 +129,7 @@ export function generateStackSummary(stack: StackState) {
 }
 
 export function generateStackCommand(stack: StackState) {
-  const projectName = stack.projectName || "my-better-t-app";
+  const projectName = stack.projectName || "my-app";
 
   // Handle Rust ecosystem
   if (stack.ecosystem === "rust") {

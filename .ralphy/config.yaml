@@ -6,7 +6,7 @@ project:
   name: "better-fullstack"
   language: "TypeScript"
   framework: "TanStack Start, Convex, Bun"
-  description: "Full-stack CLI scaffolding tool - fork of Better-T-Stack for creating full-stack projects"
+  description: "Full-stack CLI scaffolding tool for creating production-ready full-stack projects"
 
 # Commands
 commands:

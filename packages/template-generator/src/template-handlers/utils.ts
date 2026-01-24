@@ -46,11 +46,16 @@ export function processTemplatesFromPrefix(
   prefix: string,
   destPrefix: string,
   config: ProjectConfig,
+  excludePrefixes: string[] = [],
 ): void {
   const normalizedPrefix = prefix.endsWith("/") ? prefix : `${prefix}/`;
+  const normalizedExcludes = excludePrefixes.map((p) => (p.endsWith("/") ? p : `${p}/`));
 
   for (const [templatePath, content] of templates) {
     if (!templatePath.startsWith(normalizedPrefix)) continue;
+
+    // Skip if path matches any exclusion prefix
+    if (normalizedExcludes.some((exclude) => templatePath.startsWith(exclude))) continue;
 
     const relativePath = templatePath.slice(normalizedPrefix.length);
     const outputPath = transformFilename(relativePath);

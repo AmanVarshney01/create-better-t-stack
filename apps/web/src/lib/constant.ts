@@ -2523,7 +2523,7 @@ export const PRESET_TEMPLATES: {
     name: "MERN Stack",
     description: "MongoDB + Express + React + Node.js - Classic MERN stack",
     stack: {
-      projectName: "my-better-t-app",
+      projectName: "my-app",
       webFrontend: ["react-router"],
       nativeFrontend: ["none"],
       astroIntegration: "none",
@@ -2557,7 +2557,7 @@ export const PRESET_TEMPLATES: {
     name: "PERN Stack",
     description: "PostgreSQL + Express + React + Node.js - Popular PERN stack",
     stack: {
-      projectName: "my-better-t-app",
+      projectName: "my-app",
       webFrontend: ["tanstack-router"],
       nativeFrontend: ["none"],
       astroIntegration: "none",
@@ -2591,7 +2591,7 @@ export const PRESET_TEMPLATES: {
     name: "T3 Stack",
     description: "Next.js + tRPC + Prisma + PostgreSQL + Better Auth",
     stack: {
-      projectName: "my-better-t-app",
+      projectName: "my-app",
       webFrontend: ["next"],
       nativeFrontend: ["none"],
       astroIntegration: "none",
@@ -2625,7 +2625,7 @@ export const PRESET_TEMPLATES: {
     name: "Uniwind Native",
     description: "Expo + Uniwind native app with no backend services",
     stack: {
-      projectName: "my-better-t-app",
+      projectName: "my-app",
       webFrontend: ["none"],
       nativeFrontend: ["native-uniwind"],
       astroIntegration: "none",
@@ -2659,7 +2659,7 @@ export const PRESET_TEMPLATES: {
     name: "Astro + React",
     description: "Astro with React integration, tRPC, and Hono backend",
     stack: {
-      projectName: "my-better-t-app",
+      projectName: "my-app",
       webFrontend: ["astro"],
       nativeFrontend: ["none"],
       astroIntegration: "react",
@@ -2693,7 +2693,7 @@ export const PRESET_TEMPLATES: {
     name: "Fullstack Astro",
     description: "Astro with React using built-in API routes (fullstack mode)",
     stack: {
-      projectName: "my-better-t-app",
+      projectName: "my-app",
       webFrontend: ["astro"],
       nativeFrontend: ["none"],
       astroIntegration: "react",
@@ -2791,7 +2791,7 @@ export type StackState = {
 
 export const DEFAULT_STACK: StackState = {
   ecosystem: "typescript",
-  projectName: "my-better-t-app",
+  projectName: "my-app",
   webFrontend: ["tanstack-router"],
   nativeFrontend: ["none"],
   astroIntegration: "none",

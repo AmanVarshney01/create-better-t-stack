@@ -58,8 +58,10 @@ export async function processFrontendTemplates(
     } else if (hasSolidWeb) {
       processTemplatesFromPrefix(vfs, templates, "frontend/solid", "apps/web", config);
     } else if (hasAstroWeb) {
-      // Process base Astro templates
-      processTemplatesFromPrefix(vfs, templates, "frontend/astro", "apps/web", config);
+      // Process base Astro templates (excluding integrations subfolder)
+      processTemplatesFromPrefix(vfs, templates, "frontend/astro", "apps/web", config, [
+        "frontend/astro/integrations",
+      ]);
 
       // Process integration-specific templates (React, Vue, Svelte, Solid)
       if (config.astroIntegration && config.astroIntegration !== "none") {

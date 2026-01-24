@@ -71,7 +71,7 @@ function stackStateToConfig(state: StackState): ProjectConfig {
   const git = typeof state.git === "boolean" ? state.git : state.git === "true";
 
   return {
-    projectName: state.projectName || "my-better-t-app",
+    projectName: state.projectName || "my-app",
     projectDir: "/virtual",
     relativePath: "./virtual",
     ecosystem: "typescript" as ProjectConfig["ecosystem"],

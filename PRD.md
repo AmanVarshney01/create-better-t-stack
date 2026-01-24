@@ -327,3 +327,215 @@
 - Backend Libraries (Effect-ts full)
 - API Layer (ts-rest, Garph)
 - Databases (PostgreSQL, MySQL/MariaDB, SQLite)
+
+---
+
+# PHASE 2: NEW LANGUAGE ECOSYSTEMS (HIGH PRIORITY)
+
+> New backend language ecosystems with massive community adoption
+
+---
+
+## PHP ECOSYSTEM (P0 - HIGH PRIORITY)
+
+> PHP powers 77% of websites. Laravel is the #1 PHP framework.
+
+### **Step 1: Ecosystem Setup** (MUST COMPLETE FIRST)
+
+- [ ] **PHP Ecosystem Tab** - Add new "PHP" tab to Builder page with proper UI/UX
+- [ ] **PHP Language Support** - Add PHP as ecosystem option with composer.json scaffolding
+- [ ] **PHP Base Template** - Create base PHP project template with PSR-4 autoloading
+- [ ] **PHP Ecosystem Tests** - Write comprehensive tests verifying PHP ecosystem works
+
+---
+
+### **Step 2: Web Frameworks**
+
+- [ ] **Laravel** - Full-stack framework (most popular, batteries-included)
+- [ ] **Symfony** - Enterprise-grade components framework
+
+---
+
+### **Step 3: ORMs & Database**
+
+- [ ] **Eloquent** - Laravel's ActiveRecord ORM
+- [ ] **Doctrine** - Data mapper ORM (Symfony default)
+
+---
+
+### **Step 4: Testing & Quality**
+
+- [ ] **PHPUnit** - Unit testing framework
+- [ ] **Pest** - Modern testing framework (Laravel-optimized)
+- [ ] **Laravel Pint** - Code style fixer
+
+---
+
+### **Step 5: Popular Tools**
+
+- [ ] **Livewire** - Full-stack framework for dynamic UIs
+- [ ] **Inertia.js** - SPA without building an API
+
+---
+
+## RUBY ECOSYSTEM (P0 - HIGH PRIORITY)
+
+> Ruby on Rails pioneered modern web development conventions.
+
+### **Step 1: Ecosystem Setup** (MUST COMPLETE FIRST)
+
+- [ ] **Ruby Ecosystem Tab** - Add new "Ruby" tab to Builder page
+- [ ] **Ruby Language Support** - Add Ruby as ecosystem option with Gemfile scaffolding
+- [ ] **Ruby Base Template** - Create base Ruby project template with Bundler
+- [ ] **Ruby Ecosystem Tests** - Write comprehensive tests verifying Ruby ecosystem works
+
+---
+
+### **Step 2: Web Frameworks**
+
+- [ ] **Ruby on Rails** - Full-stack MVC framework (convention over configuration)
+- [ ] **Sinatra** - Micro-framework for simple apps/APIs
+
+---
+
+### **Step 3: ORMs & Database**
+
+- [ ] **ActiveRecord** - Rails' default ORM
+
+---
+
+### **Step 4: Background Jobs**
+
+- [ ] **Sidekiq** - Redis-backed job processing (most popular)
+
+---
+
+### **Step 5: Testing & Quality**
+
+- [ ] **RSpec** - BDD testing framework (most popular)
+- [ ] **RuboCop** - Ruby linter/formatter
+
+---
+
+### **Step 6: Frontend Integration**
+
+- [ ] **Hotwire (Turbo + Stimulus)** - HTML-over-the-wire (Rails default)
+
+---
+
+# PHASE 3: EXISTING ECOSYSTEM GAPS (MEDIUM PRIORITY)
+
+> Fill critical gaps in Python, Rust, Go ecosystems (popular options only)
+
+---
+
+## PYTHON GAPS
+
+### **Web Frameworks**
+
+- [ ] **Flask** - Lightweight micro-framework (2nd most popular after Django)
+- [ ] **Litestar** - Modern async framework (Starlette successor, growing fast)
+
+---
+
+### **Task Queues**
+
+- [ ] **Dramatiq** - Simple, reliable task processing (modern Celery alternative)
+- [ ] **RQ (Redis Queue)** - Simple Redis-based job queue
+
+---
+
+### **Testing**
+
+- [ ] **pytest** - Testing framework (de facto standard, most popular)
+
+---
+
+### **AI/ML**
+
+- [ ] **Instructor** - Structured outputs from LLMs (very popular, simple)
+- [ ] **DSPy** - Programming (not prompting) LLMs (Stanford, growing fast)
+
+---
+
+## RUST GAPS
+
+### **Web Frameworks**
+
+- [ ] **Rocket** - Type-safe web framework (2nd most popular after Axum)
+
+---
+
+### **ORMs**
+
+- [ ] **Diesel** - Safe, extensible ORM (most popular Rust ORM)
+
+---
+
+### **Frontend (WASM)**
+
+- [ ] **Yew** - Component-based framework (most popular Rust WASM framework)
+
+---
+
+### **Libraries**
+
+- [ ] **Tracing** - Application-level tracing (de facto standard for observability)
+
+---
+
+## GO GAPS
+
+### **Web Frameworks**
+
+- [ ] **Fiber** - Express-inspired framework (fastest, very popular)
+- [ ] **Chi** - Lightweight, idiomatic router (popular for APIs)
+
+---
+
+### **ORMs**
+
+- [ ] **Ent** - Facebook's entity framework (type-safe, growing fast)
+
+---
+
+### **Logging**
+
+- [ ] **Zerolog** - Zero allocation JSON logger (most performant)
+
+---
+
+### **Testing**
+
+- [ ] **Testify** - Testing toolkit (de facto standard, most popular)
+
+---
+
+# PHASE 4: FUTURE CONSIDERATION (NOT NOW)
+
+> These ecosystems require significant effort and may be out of scope
+
+The following ecosystems are noted for future consideration but are **NOT prioritized** for now:
+
+- **Java/Kotlin** (Spring Boot) - Enterprise standard but different paradigm
+- **.NET (C#)** (ASP.NET Core) - Microsoft ecosystem, different tooling
+- **Elixir** (Phoenix) - Functional, niche but powerful
+
+These would each require:
+
+- New package manager integration (Maven/Gradle, NuGet, Mix)
+- Entirely different project structures
+- Significant template work
+- May be better as separate projects
+
+---
+
+# Task Priority Summary
+
+| Phase   | Priority | Ecosystems/Features                           | Est. Tasks |
+| ------- | -------- | --------------------------------------------- | ---------- |
+| Phase 2 | P0       | PHP (Laravel, Symfony), Ruby (Rails, Sinatra) | ~25 tasks  |
+| Phase 3 | P1       | Python, Rust, Go gaps (popular only)          | ~15 tasks  |
+| Phase 4 | Future   | Java/Kotlin, .NET, Elixir                     | Deferred   |
+
+**Total Active Tasks: ~40**

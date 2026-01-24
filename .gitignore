@@ -54,3 +54,4 @@ templates-binary
 
 # Ralph (autonomous agent loop)
 scripts/ralph/
+.ralphy

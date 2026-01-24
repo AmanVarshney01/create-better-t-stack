@@ -51,7 +51,7 @@ export function processCSSFrameworkDeps(vfs: VirtualFileSystem, config: ProjectC
  * Process UI library dependencies based on config.uiLibrary
  */
 export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { uiLibrary, frontend, cssFramework } = config;
+  const { uiLibrary, frontend } = config;
 
   const hasReactWeb = frontend.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
@@ -59,6 +59,13 @@ export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConf
   const hasNuxt = frontend.includes("nuxt");
   const hasSolid = frontend.includes("solid");
   const hasSvelte = frontend.includes("svelte");
+
+  // Astro integration detection
+  const hasAstro = frontend.includes("astro");
+  const hasAstroReact = hasAstro && config.astroIntegration === "react";
+  const hasAstroVue = hasAstro && config.astroIntegration === "vue";
+  const hasAstroSvelte = hasAstro && config.astroIntegration === "svelte";
+  const hasAstroSolid = hasAstro && config.astroIntegration === "solid";
 
   if (uiLibrary === "none" || uiLibrary === "shadcn-ui") {
     // shadcn-ui is handled by the shadcn CLI, not as a package dependency
@@ -81,7 +88,7 @@ export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConf
       break;
 
     case "radix-ui":
-      if (hasReactWeb) {
+      if (hasReactWeb || hasAstroReact) {
         deps.push(
           "@radix-ui/react-dialog",
           "@radix-ui/react-dropdown-menu",
@@ -98,56 +105,59 @@ export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConf
       break;
 
     case "headless-ui":
-      if (hasReactWeb) {
+      if (hasReactWeb || hasAstroReact) {
         deps.push("@headlessui/react");
-      } else if (hasNuxt) {
+      } else if (hasNuxt || hasAstroVue) {
         deps.push("@headlessui/vue");
       }
       break;
 
     case "park-ui":
       // Park UI uses Panda CSS preset and Ark UI components
-      deps.push("@park-ui/panda-preset", "@park-ui/ark");
+      // Supported: React, Vue, Solid (via Ark UI)
+      if (hasReactWeb || hasAstroReact || hasNuxt || hasAstroVue || hasSolid || hasAstroSolid) {
+        deps.push("@park-ui/panda-preset", "@park-ui/ark");
+      }
       break;
 
     case "chakra-ui":
-      if (hasReactWeb) {
+      if (hasReactWeb || hasAstroReact) {
         deps.push("@chakra-ui/react", "@emotion/react");
       }
       break;
 
     case "nextui":
-      if (hasReactWeb) {
+      if (hasReactWeb || hasAstroReact) {
         deps.push("@heroui/react", "framer-motion");
       }
       break;
 
     case "mantine":
-      if (hasReactWeb) {
+      if (hasReactWeb || hasAstroReact) {
         deps.push("@mantine/core", "@mantine/hooks");
       }
       break;
 
     case "base-ui":
-      if (hasReactWeb) {
+      if (hasReactWeb || hasAstroReact) {
         deps.push("@base-ui-components/react");
       }
       break;
 
     case "ark-ui":
-      if (hasReactWeb) {
+      if (hasReactWeb || hasAstroReact) {
         deps.push("@ark-ui/react");
-      } else if (hasNuxt) {
+      } else if (hasNuxt || hasAstroVue) {
         deps.push("@ark-ui/vue");
-      } else if (hasSolid) {
+      } else if (hasSolid || hasAstroSolid) {
         deps.push("@ark-ui/solid");
-      } else if (hasSvelte) {
+      } else if (hasSvelte || hasAstroSvelte) {
         deps.push("@ark-ui/svelte");
       }
       break;
 
     case "react-aria":
-      if (hasReactWeb) {
+      if (hasReactWeb || hasAstroReact) {
         deps.push("react-aria-components");
       }
       break;

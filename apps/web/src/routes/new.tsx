@@ -11,30 +11,30 @@ export const Route = createFileRoute("/new")({
   validateSearch: zodValidator(stackSearchSchema),
   head: () => ({
     meta: [
-      { title: "Stack Builder - Better-T-Stack" },
+      { title: "Stack Builder - Better Fullstack" },
       {
         name: "description",
         content: "Interactive UI to roll your own stack",
       },
-      { property: "og:title", content: "Stack Builder - Better-T-Stack" },
+      { property: "og:title", content: "Stack Builder - Better Fullstack" },
       {
         property: "og:description",
         content: "Interactive UI to roll your own stack",
       },
-      { property: "og:url", content: "https://better-t-stack.dev/new" },
+      { property: "og:url", content: "https://better-fullstack.dev/new" },
       {
         property: "og:image",
-        content: "https://r2.better-t-stack.dev/og.png",
+        content: "https://r2.better-fullstack.dev/og.png",
       },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Stack Builder - Better-T-Stack" },
+      { name: "twitter:title", content: "Stack Builder - Better Fullstack" },
       {
         name: "twitter:description",
         content: "Interactive UI to roll your own stack",
       },
       {
         name: "twitter:image",
-        content: "https://r2.better-t-stack.dev/og.png",
+        content: "https://r2.better-fullstack.dev/og.png",
       },
     ],
   }),

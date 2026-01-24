@@ -12,7 +12,7 @@ const commaSeparatedArray = (defaultValue: string[]) =>
 // The raw search schema matches URL query params (using short keys)
 export const stackSearchSchema = z.object({
   eco: z.enum(["typescript", "rust", "python", "go"]).catch(DEFAULT_STACK.ecosystem),
-  name: z.string().catch(DEFAULT_STACK.projectName ?? "my-better-t-app"),
+  name: z.string().catch(DEFAULT_STACK.projectName ?? "my-app"),
   "fe-w": commaSeparatedArray(DEFAULT_STACK.webFrontend),
   "fe-n": commaSeparatedArray(DEFAULT_STACK.nativeFrontend),
   ai: z.string().catch(DEFAULT_STACK.astroIntegration),
