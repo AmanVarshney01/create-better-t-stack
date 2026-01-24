@@ -8,10 +8,10 @@ import path from "node:path";
 
 import type { ProjectConfig } from "../../types";
 
-import { writeBtsConfig } from "../../utils/bts-config";
 import { isSilent } from "../../utils/context";
 import { ProjectCreationError } from "../../utils/errors";
 import { formatProject } from "../../utils/file-formatter";
+import { getLatestCLIVersion } from "../../utils/get-latest-cli-version";
 import { setupAddons } from "../addons/addons-setup";
 import { setupDatabase } from "../core/db-setup";
 import { initializeGit } from "./git";
@@ -52,6 +52,7 @@ export async function createProject(
       generate({
         config: options,
         templates: EMBEDDED_TEMPLATES,
+        version: getLatestCLIVersion(),
       }).then((result) =>
         result.mapError(
           (e) =>
@@ -110,9 +111,6 @@ export async function createProject(
         }),
       );
     }
-
-    // Write BTS config
-    yield* Result.await(writeBtsConfig(options));
 
     // Format project
     yield* Result.await(formatProject(projectDir));

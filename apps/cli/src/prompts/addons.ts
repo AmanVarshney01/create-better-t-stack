@@ -67,6 +67,10 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "WXT";
       hint = "Build browser extensions";
       break;
+    case "skills":
+      label = "Skills";
+      hint = "AI coding agent skills for your stack";
+      break;
     default:
       label = addon;
       hint = `Add ${addon}`;
@@ -78,7 +82,8 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 const ADDON_GROUPS = {
   Tooling: ["turborepo", "biome", "oxlint", "ultracite", "husky", "lefthook"],
   Documentation: ["starlight", "fumadocs"],
-  Extensions: ["pwa", "tauri", "opentui", "wxt", "ruler"],
+  Extensions: ["pwa", "tauri", "opentui", "wxt"],
+  AI: ["ruler", "skills"],
 };
 
 export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[], auth?: Auth) {
@@ -89,6 +94,7 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
     Tooling: [],
     Documentation: [],
     Extensions: [],
+    AI: [],
   };
 
   const frontendsArray = frontends || [];
@@ -106,6 +112,8 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
       groupedOptions.Documentation.push(option);
     } else if (ADDON_GROUPS.Extensions.includes(addon)) {
       groupedOptions.Extensions.push(option);
+    } else if (ADDON_GROUPS.AI.includes(addon)) {
+      groupedOptions.AI.push(option);
     }
   }
 
@@ -149,6 +157,7 @@ export async function getAddonsToAdd(
     Tooling: [],
     Documentation: [],
     Extensions: [],
+    AI: [],
   };
 
   const frontendArray = frontend || [];
@@ -170,6 +179,8 @@ export async function getAddonsToAdd(
       groupedOptions.Documentation.push(option);
     } else if (ADDON_GROUPS.Extensions.includes(addon)) {
       groupedOptions.Extensions.push(option);
+    } else if (ADDON_GROUPS.AI.includes(addon)) {
+      groupedOptions.AI.push(option);
     }
   }
 

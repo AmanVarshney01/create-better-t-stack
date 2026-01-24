@@ -15,6 +15,10 @@ async function generateTemplates() {
   console.log("📦 Generating embedded templates...");
 
   const files = await glob("**/*", { cwd: TEMPLATES_DIR, dot: true, onlyFiles: true });
+
+  // Sort files alphabetically for deterministic output (minimizes git diffs)
+  files.sort((a, b) => a.localeCompare(b));
+
   console.log(`📂 Found ${files.length} template files`);
 
   const entries: string[] = [];
@@ -59,6 +63,9 @@ export const TEMPLATE_COUNT = ${files.length};
 }
 
 async function copyBinaryFiles(binaryFiles: string[]) {
+  // Sort for deterministic output
+  binaryFiles.sort((a, b) => a.localeCompare(b));
+
   console.log(`\n📁 Copying ${binaryFiles.length} binary files to templates-binary/...`);
 
   if (fs.existsSync(BINARY_OUTPUT_DIR)) {
