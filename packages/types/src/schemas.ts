@@ -210,6 +210,10 @@ export const SearchSchema = z
   .enum(["meilisearch", "typesense", "none"])
   .describe("Search engine solution (meilisearch or typesense for lightning-fast search)");
 
+export const FileStorageSchema = z
+  .enum(["s3", "r2", "none"])
+  .describe("File storage solution (AWS S3 or Cloudflare R2 for object storage)");
+
 export const AnimationSchema = z
   .enum(["framer-motion", "gsap", "react-spring", "auto-animate", "lottie", "none"])
   .describe("Animation library");
@@ -382,6 +386,7 @@ export const CreateInputSchema = z.object({
   cms: CMSSchema.optional(),
   caching: CachingSchema.optional(),
   search: SearchSchema.optional(),
+  fileStorage: FileStorageSchema.optional(),
   // Rust ecosystem options
   rustWebFramework: RustWebFrameworkSchema.optional(),
   rustFrontend: RustFrontendSchema.optional(),
@@ -459,6 +464,7 @@ export const ProjectConfigSchema = z.object({
   cms: CMSSchema,
   caching: CachingSchema,
   search: SearchSchema,
+  fileStorage: FileStorageSchema,
   // Rust ecosystem options
   rustWebFramework: RustWebFrameworkSchema,
   rustFrontend: RustFrontendSchema,
@@ -520,6 +526,7 @@ export const BetterTStackConfigSchema = z.object({
   cms: CMSSchema,
   caching: CachingSchema,
   search: SearchSchema,
+  fileStorage: FileStorageSchema,
   // Rust ecosystem options
   rustWebFramework: RustWebFrameworkSchema,
   rustFrontend: RustFrontendSchema,
@@ -601,6 +608,7 @@ export const ANALYTICS_VALUES = AnalyticsSchema.options;
 export const CMS_VALUES = CMSSchema.options;
 export const CACHING_VALUES = CachingSchema.options;
 export const SEARCH_VALUES = SearchSchema.options;
+export const FILE_STORAGE_VALUES = FileStorageSchema.options;
 export const ECOSYSTEM_VALUES = EcosystemSchema.options;
 export const RUST_WEB_FRAMEWORK_VALUES = RustWebFrameworkSchema.options;
 export const RUST_FRONTEND_VALUES = RustFrontendSchema.options;

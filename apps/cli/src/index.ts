@@ -77,6 +77,8 @@ import {
   type CMS,
   CachingSchema,
   type Caching,
+  FileStorageSchema,
+  type FileStorage,
   RustWebFrameworkSchema,
   type RustWebFramework,
   RustFrontendSchema,
@@ -154,6 +156,7 @@ export const router = os.router({
           analytics: AnalyticsSchema.optional().describe("Privacy-focused analytics"),
           cms: CMSSchema.optional().describe("Headless CMS solution"),
           caching: CachingSchema.optional().describe("Caching solution"),
+          fileStorage: FileStorageSchema.optional().describe("File storage solution (S3, R2)"),
           frontend: z.array(FrontendSchema).optional(),
           astroIntegration: AstroIntegrationSchema.optional().describe(
             "Astro UI framework integration (react, vue, svelte, solid)",
@@ -434,6 +437,7 @@ export async function createVirtual(
       cms: options.cms || "none",
       caching: options.caching || "none",
       search: options.search || "none",
+      fileStorage: options.fileStorage || "none",
       // Rust ecosystem options
       rustWebFramework: options.rustWebFramework || "none",
       rustFrontend: options.rustFrontend || "none",

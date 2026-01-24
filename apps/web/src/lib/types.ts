@@ -29,6 +29,7 @@ export type TechCategory =
   | "jobQueue"
   | "caching"
   | "search"
+  | "fileStorage"
   | "animation"
   | "cssFramework"
   | "uiLibrary"

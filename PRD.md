@@ -301,7 +301,7 @@
 
 ## **File Storage**
 
-- [ ] **AWS S3** - Object storage
+- [x] **AWS S3** - Object storage
 - [ ] **Cloudflare R2** - S3-compatible storage
 
 ---

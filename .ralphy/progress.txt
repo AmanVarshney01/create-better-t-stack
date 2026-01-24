@@ -7599,3 +7599,70 @@ The Meilisearch template provides:
 ### PRD Updated:
 - Marked "Typesense - Open-source search" as complete
 
+
+---
+
+## AWS S3 File Storage Integration - 2026-01-24 05:53:21
+
+**Task:** Add AWS S3 file storage support to cross-ecosystem integrations
+
+**Files Created:**
+- `packages/template-generator/src/processors/file-storage-deps.ts` - Processes S3/R2 dependencies
+- `packages/template-generator/src/template-handlers/file-storage.ts` - Handles file storage template processing
+- `packages/template-generator/templates/file-storage/s3/server/base/src/lib/storage.ts.hbs` - AWS S3 client utilities template
+- `apps/cli/src/prompts/file-storage.ts` - CLI prompt for file storage selection
+- `apps/cli/test/file-storage.test.ts` - Comprehensive test suite (21 tests)
+
+**Schema Updates (packages/types/src/schemas.ts):**
+- Added `FileStorageSchema` with options: `s3`, `r2`, `none`
+- Added `fileStorage` field to `CreateInputSchema`, `ProjectConfigSchema`, and `BetterTStackConfigSchema`
+- Exported `FILE_STORAGE_VALUES` for CLI validation
+
+**Type System (packages/types/src/types.ts):**
+- Added `FileStorage` type inferred from `FileStorageSchema`
+
+**Dependency Management (add-deps.ts):**
+- Added `@aws-sdk/client-s3: "^3.970.0"`
+- Added `@aws-sdk/s3-request-presigner: "^3.970.0"`
+
+**Web App Updates (apps/web/src/lib/):**
+- Added `fileStorage` to `TechCategory` type in `types.ts`
+- Added file storage options (AWS S3, Cloudflare R2, None) to `TECH_OPTIONS` in `constant.ts`
+- Also added missing `typesense` option to search category
+
+**CLI Updates:**
+- Added file storage processing to `config-processing.ts`
+- Added file storage to `config-prompts.ts` prompt flow with `PromptGroupResults` type
+- Added file storage to default configs in `constants.ts`, `command-handlers.ts`, `bts-config.ts`
+- Added file storage to test utilities in `test-utils.ts` and `cli-builder-sync.test.ts`
+- Added `fileStorage` CLI flag to `index.ts`
+
+**Generator Updates:**
+- Added `processFileStorageTemplates` to `generator.ts`
+- Added `processFileStorageDeps` to `processors/index.ts`
+- Added S3 and R2 environment variables to `env-vars.ts`:
+  - S3: `AWS_S3_REGION`, `AWS_S3_ACCESS_KEY_ID`, `AWS_S3_SECRET_ACCESS_KEY`, `AWS_S3_BUCKET_NAME`
+  - R2: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`
+
+**Template Features (storage.ts.hbs):**
+The S3 template provides:
+- S3 client initialization with credentials configuration
+- File upload with content type, metadata, and ACL options
+- File download (as stream or buffer)
+- File deletion (single and batch)
+- File listing with pagination
+- File existence check
+- Metadata retrieval
+- File copy and move operations
+- Presigned URL generation for uploads and downloads
+- Public URL generation
+
+**Test Coverage (21 tests):**
+- Tests with all backend frameworks (Hono, Express, Fastify, Elysia, NestJS)
+- Tests with fullstack frameworks (Next.js, TanStack Start)
+- Tests with different frontends (TanStack Router, React Router, Svelte, Solid)
+- Tests with database setups (PostgreSQL/Drizzle, SQLite/Prisma, MySQL/TypeORM)
+- Tests with authentication (Better Auth, Auth.js)
+- Tests for Cloudflare R2 variant
+- Tests for `none` option
+

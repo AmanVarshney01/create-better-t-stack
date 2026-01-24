@@ -47,6 +47,7 @@ import type {
   RustWebFramework,
   Runtime,
   Search,
+  FileStorage,
   ServerDeploy,
   StateManagement,
   Testing,
@@ -73,6 +74,7 @@ import { getEcosystemChoice } from "./ecosystem";
 import { getEffectChoice } from "./effect";
 import { getEmailChoice } from "./email";
 import { getExamplesChoice } from "./examples";
+import { getFileStorageChoice } from "./file-storage";
 import { getFileUploadChoice } from "./file-upload";
 import { getFormsChoice } from "./forms";
 import { getFrontendChoice } from "./frontend";
@@ -156,6 +158,7 @@ type PromptGroupResults = {
   cms: CMS;
   caching: Caching;
   search: Search;
+  fileStorage: FileStorage;
   // Rust ecosystem
   rustWebFramework: RustWebFramework;
   rustFrontend: RustFrontend;
@@ -372,6 +375,10 @@ export async function gatherConfig(
         if (results.ecosystem !== "typescript") return Promise.resolve("none" as Search);
         return getSearchChoice(flags.search, results.backend);
       },
+      fileStorage: ({ results }) => {
+        if (results.ecosystem !== "typescript") return Promise.resolve("none" as FileStorage);
+        return getFileStorageChoice(flags.fileStorage, results.backend);
+      },
       // Rust ecosystem prompts (skip if TypeScript or Python)
       rustWebFramework: ({ results }) => {
         if (results.ecosystem !== "rust") return Promise.resolve("none" as RustWebFramework);
@@ -504,6 +511,7 @@ export async function gatherConfig(
     cms: result.cms,
     caching: result.caching,
     search: result.search,
+    fileStorage: result.fileStorage,
     // Ecosystem
     ecosystem: result.ecosystem,
     // Rust ecosystem options

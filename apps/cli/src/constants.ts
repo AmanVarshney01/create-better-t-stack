@@ -36,6 +36,7 @@ export const DEFAULT_CONFIG_BASE = {
   jobQueue: "none",
   caching: "none",
   search: "none",
+  fileStorage: "none",
   animation: "none",
   logging: "none",
   observability: "none",

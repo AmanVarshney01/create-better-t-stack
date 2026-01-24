@@ -18,6 +18,7 @@ import type {
   Effect,
   Email,
   FeatureFlags,
+  FileStorage,
   FileUpload,
   Forms,
   JobQueue,
@@ -143,6 +144,10 @@ export function processFlags(options: CLIInput, projectName?: string) {
 
   if (options.search !== undefined) {
     config.search = options.search as Search;
+  }
+
+  if (options.fileStorage !== undefined) {
+    config.fileStorage = options.fileStorage as FileStorage;
   }
 
   if (options.analytics !== undefined) {

@@ -267,6 +267,8 @@ export const dependencyVersionMap = {
   postmark: "^4.0.5",
   "@sendgrid/mail": "^8.1.4",
   "@aws-sdk/client-ses": "^3.970.0",
+  "@aws-sdk/client-s3": "^3.970.0",
+  "@aws-sdk/s3-request-presigner": "^3.970.0",
   "mailgun.js": "^10.2.3",
   "form-data": "^4.0.1",
   "@plunk/node": "^3.0.2",

@@ -22,6 +22,7 @@ import { processEnvDeps } from "./env-deps";
 import { processEnvVariables } from "./env-vars";
 import { processExamplesDeps } from "./examples-deps";
 import { processFeatureFlagsDeps } from "./feature-flags-deps";
+import { processFileStorageDeps } from "./file-storage-deps";
 import { processFileUploadDeps } from "./file-upload-deps";
 import { processFormsDeps } from "./forms-deps";
 import { processInfraDeps } from "./infra-deps";
@@ -72,6 +73,7 @@ export function processDependencies(vfs: VirtualFileSystem, config: ProjectConfi
   processCMSDeps(vfs, config);
   processCachingDeps(vfs, config);
   processSearchDeps(vfs, config);
+  processFileStorageDeps(vfs, config);
   processTurboConfig(vfs, config);
 }
 
@@ -85,6 +87,7 @@ export {
   processBackendDeps,
   processCachingDeps,
   processSearchDeps,
+  processFileStorageDeps,
   processCMSDeps,
   processCSSAndUILibraryDeps,
   processDatabaseDeps,

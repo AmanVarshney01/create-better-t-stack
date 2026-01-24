@@ -138,6 +138,7 @@ export async function createProjectHandler(
             search: "none",
             featureFlags: "none",
             analytics: "none",
+            fileStorage: "none",
             pythonWebFramework: "none",
             pythonOrm: "none",
             pythonValidation: "none",

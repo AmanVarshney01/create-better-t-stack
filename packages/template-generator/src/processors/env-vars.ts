@@ -538,6 +538,7 @@ function buildServerVars(
   jobQueue: ProjectConfig["jobQueue"],
   caching: ProjectConfig["caching"],
   search: ProjectConfig["search"],
+  fileStorage: ProjectConfig["fileStorage"],
 ): EnvVariable[] {
   const hasReactRouter = frontend.includes("react-router");
   const hasSvelte = frontend.includes("svelte");
@@ -1080,6 +1081,54 @@ function buildServerVars(
       condition: search === "typesense",
       comment: "Typesense API key - get it from your Typesense server or Typesense Cloud",
     },
+    {
+      key: "AWS_S3_REGION",
+      value: "us-east-1",
+      condition: fileStorage === "s3",
+      comment: "AWS region for S3 bucket (e.g., us-east-1, eu-west-1)",
+    },
+    {
+      key: "AWS_S3_ACCESS_KEY_ID",
+      value: "",
+      condition: fileStorage === "s3",
+      comment: "AWS access key ID - get it at https://console.aws.amazon.com/iam",
+    },
+    {
+      key: "AWS_S3_SECRET_ACCESS_KEY",
+      value: "",
+      condition: fileStorage === "s3",
+      comment: "AWS secret access key",
+    },
+    {
+      key: "AWS_S3_BUCKET_NAME",
+      value: "",
+      condition: fileStorage === "s3",
+      comment: "S3 bucket name for file storage",
+    },
+    {
+      key: "R2_ACCOUNT_ID",
+      value: "",
+      condition: fileStorage === "r2",
+      comment: "Cloudflare account ID - get it at https://dash.cloudflare.com",
+    },
+    {
+      key: "R2_ACCESS_KEY_ID",
+      value: "",
+      condition: fileStorage === "r2",
+      comment: "R2 access key ID - generate at Cloudflare R2 > Manage R2 API Tokens",
+    },
+    {
+      key: "R2_SECRET_ACCESS_KEY",
+      value: "",
+      condition: fileStorage === "r2",
+      comment: "R2 secret access key",
+    },
+    {
+      key: "R2_BUCKET_NAME",
+      value: "",
+      condition: fileStorage === "r2",
+      comment: "R2 bucket name for file storage",
+    },
   ];
 }
 
@@ -1245,6 +1294,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     config.jobQueue,
     config.caching,
     config.search,
+    config.fileStorage,
   );
 
   if (backend === "self") {
