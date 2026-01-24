@@ -6966,3 +6966,44 @@ Implemented complete SQLC support for the Go ecosystem, including configuration 
 - packages/template-generator/templates/go-base/internal/handlers/handlers.go.hbs
 - apps/cli/test/go-language.test.ts
 - PRD.md: Marked SQLC as complete [x]
+
+
+## 2026-01-24: gRPC-Go - Mark as Complete in PRD
+
+### Task: Verify and document gRPC-Go implementation for Go ecosystem
+
+### Status: ALREADY IMPLEMENTED - PRD Update Only
+
+### Verification Performed:
+1. **Schema Definition**: `packages/types/src/schemas.ts` - `GoApiSchema` already includes "grpc-go" option
+2. **Web UI Integration**: `apps/web/src/lib/constant.ts` - gRPC-Go already listed in goApi options with icon
+3. **Template Files**: All gRPC template files already exist:
+   - `packages/template-generator/templates/go-base/proto/greeter.proto.hbs` - Proto service definition
+   - `packages/template-generator/templates/go-base/proto/greeter.go.hbs` - Service implementation
+   - `packages/template-generator/templates/go-base/proto/greeter.pb.go.hbs` - Message types
+   - `packages/template-generator/templates/go-base/proto/greeter_grpc.pb.go.hbs` - gRPC stubs
+4. **Template Handler**: `packages/template-generator/src/template-handlers/go-base.ts` - Already handles gRPC detection
+5. **README Generation**: `packages/template-generator/src/processors/readme-generator.ts` - Already includes gRPC documentation
+6. **Tests**: `apps/cli/test/go-language.test.ts` - Comprehensive gRPC tests already exist (lines 635-713)
+
+### Features Already Implemented:
+- Proto file generation with service definition
+- Unary RPC (SayHello) and Server Streaming RPC (SayHelloStream)
+- Generated gRPC client and server code
+- Concurrent HTTP and gRPC server startup with sync.WaitGroup
+- gRPC dependencies in go.mod (google.golang.org/grpc, google.golang.org/protobuf)
+- README documentation for gRPC setup and protoc commands
+
+### Test Results:
+- All 47 Go language tests pass
+- gRPC-specific tests verified:
+  - gRPC dependencies included in go.mod
+  - Proto files generated when gRPC selected
+  - Proto files not generated when gRPC not selected
+  - gRPC server integration in main.go
+
+### Changes Made:
+1. **PRD.md**: Updated gRPC-Go status from `[ ]` to `[x]` to reflect completed implementation
+
+### Notes:
+This task was already fully implemented in a previous session. The PRD was simply out of sync with the actual implementation status. No code changes were required - only documentation update.
