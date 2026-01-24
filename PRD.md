@@ -264,7 +264,7 @@
 
 - [x] **Better Auth** - Self-hosted auth
 - [x] **Clerk** - User management platform
-- [ ] **Auth0** - Identity platform
+- [x] **Auth0** - Identity platform
 
 ---
 

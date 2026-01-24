@@ -207,5 +207,16 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
         dependencies: ["@supabase/supabase-js", "@supabase/ssr"],
       });
     }
+  } else if (auth === "auth0") {
+    const hasNextJs = frontend.includes("next");
+
+    // Auth0 only works with Next.js (self backend)
+    if (hasNextJs && webExists) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPath,
+        dependencies: ["@auth0/nextjs-auth0"],
+      });
+    }
   }
 }

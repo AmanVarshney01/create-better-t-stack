@@ -35,6 +35,9 @@ export const dependencyVersionMap = {
   "@supabase/supabase-js": "^2.49.8",
   "@supabase/ssr": "^0.6.1",
 
+  // Auth0
+  "@auth0/nextjs-auth0": "^4.5.1",
+
   "drizzle-orm": "^0.45.1",
   "drizzle-kit": "^0.31.8",
   "@planetscale/database": "^1.19.0",

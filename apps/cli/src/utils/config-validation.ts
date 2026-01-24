@@ -5,6 +5,7 @@ import {
   isWebFrontend,
   validateAddonsAgainstFrontends,
   validateApiFrontendCompatibility,
+  validateAuth0Compatibility,
   validateExamplesCompatibility,
   validateNextAuthCompatibility,
   validatePaymentsCompatibility,
@@ -644,6 +645,7 @@ export function validateFullConfig(
   validateNextAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
   validateStackAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
   validateSupabaseAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
+  validateAuth0Compatibility(config.auth, config.backend, config.frontend ?? []);
 
   validateUILibraryFrontendCompatibility(
     config.uiLibrary,
@@ -671,6 +673,7 @@ export function validateConfigForProgrammaticUse(config: Partial<ProjectConfig>)
     validateNextAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
     validateStackAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
     validateSupabaseAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
+    validateAuth0Compatibility(config.auth, config.backend, config.frontend ?? []);
 
     if (config.addons && config.addons.length > 0) {
       validateAddonsAgainstFrontends(config.addons, config.frontend, config.auth);

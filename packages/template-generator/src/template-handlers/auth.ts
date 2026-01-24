@@ -211,6 +211,16 @@ export async function processAuthTemplates(
     return;
   }
 
+  // Auth0 is specifically for Next.js fullstack (self backend)
+  if (authProvider === "auth0" && config.backend === "self" && config.frontend.includes("next")) {
+    // Process fullstack templates (API routes and middleware)
+    processTemplatesFromPrefix(vfs, templates, "auth/auth0/fullstack/next", "apps/web", config);
+
+    // Process web templates (components and client utilities)
+    processTemplatesFromPrefix(vfs, templates, "auth/auth0/web/react/next", "apps/web", config);
+    return;
+  }
+
   if (config.backend !== "convex" && config.backend !== "none") {
     processTemplatesFromPrefix(
       vfs,

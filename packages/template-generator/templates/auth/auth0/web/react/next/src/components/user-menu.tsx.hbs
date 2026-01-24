@@ -1,0 +1,61 @@
+"use client";
+
+import { useAuthClient } from "@/lib/auth-client";
+import Link from "next/link";
+
+export default function UserMenu() {
+  const { user, isAuthenticated, isLoading, signOut, signIn } = useAuthClient();
+
+  if (isLoading) {
+    return (
+      <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <button
+        onClick={signIn}
+        className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
+      >
+        Sign In
+      </button>
+    );
+  }
+
+  return (
+    <div className="relative group">
+      <button className="flex items-center space-x-2">
+        {user?.image ? (
+          <img
+            src={user.image}
+            alt={user.name || "User avatar"}
+            className="h-8 w-8 rounded-full"
+          />
+        ) : (
+          <div className="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-medium">
+            {user?.name?.charAt(0) || user?.email?.charAt(0) || "U"}
+          </div>
+        )}
+        <span className="text-sm font-medium text-gray-700">
+          {user?.name || user?.email}
+        </span>
+      </button>
+
+      <div className="absolute right-0 mt-2 w-48 py-1 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+        <Link
+          href="/dashboard"
+          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+        >
+          Dashboard
+        </Link>
+        <button
+          onClick={signOut}
+          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+        >
+          Sign Out
+        </button>
+      </div>
+    </div>
+  );
+}

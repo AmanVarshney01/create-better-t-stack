@@ -7186,3 +7186,76 @@ Zap is already fully implemented in the codebase. The implementation includes:
 - MongoDB Atlas was already implemented but marked incomplete in PRD - also marked as complete
 
 ### Status: COMPLETE
+
+
+## 2026-01-24: Auth0 Identity Platform Implementation
+
+### Task: Implement Auth0 as an authentication service for Next.js
+
+### Changes Made:
+
+1. **packages/types/src/schemas.ts**: Added "auth0" to AuthSchema enum
+
+2. **apps/web/src/lib/constant.ts**: Added Auth0 entry to TECH_OPTIONS.auth array with:
+   - id: "auth0"
+   - name: "Auth0"
+   - description: "Flexible identity platform for authentication and authorization"
+   - icon: Auth0 icon from simpleicons
+   - color: orange gradient
+
+3. **apps/cli/src/prompts/auth.ts**: Added Auth0 as an option when Next.js + self backend is selected
+
+4. **apps/cli/src/utils/compatibility-rules.ts**: Added validateAuth0Compatibility function:
+   - Requires self backend
+   - Requires Next.js frontend
+
+5. **apps/cli/src/utils/config-validation.ts**: 
+   - Imported and called validateAuth0Compatibility in validation functions
+
+6. **packages/template-generator/src/processors/auth-deps.ts**: Added Auth0 dependency handling:
+   - Adds @auth0/nextjs-auth0 package for Next.js projects
+
+7. **packages/template-generator/src/template-handlers/auth.ts**: Added Auth0 template processing:
+   - Routes to auth0/fullstack/next and auth0/web/react/next templates
+
+8. **packages/template-generator/src/utils/add-deps.ts**: Added "@auth0/nextjs-auth0": "^4.5.1" to dependency map
+
+9. **packages/template-generator/templates/auth/auth0/fullstack/next/**:
+   - src/app/api/auth/[auth0]/route.ts.hbs - API route handler using handleAuth()
+   - src/middleware.ts.hbs - Middleware with withMiddlewareAuthRequired for /dashboard protection
+
+10. **packages/template-generator/templates/auth/auth0/web/react/next/**:
+    - src/lib/auth-client.ts.hbs - useUser and useAuthClient hooks with AuthProvider
+    - src/components/user-menu.tsx.hbs - User menu with avatar and sign out
+    - src/components/sign-in-form.tsx.hbs - Simple sign-in button redirecting to Auth0
+    - src/app/login/page.tsx.hbs - Login page
+    - src/app/dashboard/page.tsx.hbs - Dashboard page wrapper
+    - src/app/dashboard/dashboard.tsx.hbs - Dashboard component with user profile
+
+11. **apps/cli/test/auth.test.ts**: Added comprehensive tests:
+    - Auth0 + self backend + Next.js success tests (with drizzle, prisma, sqlite)
+    - Auth0 + non-self backend failure test
+    - Auth0 + non-Next.js frontend failure test
+    - Auth0 + tanstack-router failure test
+    - Auth0 + convex backend failure test
+    - Updated "All Auth Providers" test to include auth0 config
+
+### Features:
+- Auth0 SDK (@auth0/nextjs-auth0) integration for Next.js
+- Universal Login (redirects to Auth0 hosted login)
+- Middleware protection for authenticated routes
+- UserProvider context for client-side auth state
+- Sign-in, sign-out functionality
+- Dashboard with user profile display
+- Edge middleware support
+
+### Test Results:
+- 81 tests passed (auth.test.ts)
+- 0 failures
+- 162 expect() calls
+
+### Lint Results:
+- 9 lint tasks successful
+- All checks passed (160 tests in lint validation)
+
+### Status: COMPLETE

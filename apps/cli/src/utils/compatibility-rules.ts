@@ -384,6 +384,28 @@ export function validateSupabaseAuthCompatibility(
   }
 }
 
+export function validateAuth0Compatibility(
+  auth: Auth | undefined,
+  backend: Backend | undefined,
+  frontends: Frontend[] = [],
+) {
+  if (auth !== "auth0") return;
+
+  const hasNextJs = frontends.includes("next");
+
+  if (backend !== "self") {
+    exitWithError(
+      "Auth0 is only supported with the 'self' backend (fullstack Next.js). Please use '--backend self' or choose a different auth provider.",
+    );
+  }
+
+  if (!hasNextJs) {
+    exitWithError(
+      "Auth0 requires Next.js frontend. Please use '--frontend next' or choose a different auth provider.",
+    );
+  }
+}
+
 export function allowedApisForFrontends(
   frontends: Frontend[] = [],
   astroIntegration?: AstroIntegration,

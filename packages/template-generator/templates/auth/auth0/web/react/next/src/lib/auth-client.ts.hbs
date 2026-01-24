@@ -1,0 +1,48 @@
+"use client";
+
+import { useUser as useAuth0User, UserProvider } from "@auth0/nextjs-auth0/client";
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  return <UserProvider>{children}</UserProvider>;
+}
+
+export function useUser() {
+  const { user, isLoading, error } = useAuth0User();
+
+  return {
+    user: user
+      ? {
+          id: user.sub || "",
+          email: user.email || "",
+          name: user.name || "",
+          image: user.picture || "",
+        }
+      : null,
+    isLoading,
+    error,
+  };
+}
+
+export function useAuthClient() {
+  const { user, isLoading, error } = useAuth0User();
+
+  return {
+    user: user
+      ? {
+          id: user.sub || "",
+          email: user.email || "",
+          name: user.name || "",
+          image: user.picture || "",
+        }
+      : null,
+    isAuthenticated: !!user,
+    isLoading,
+    error,
+    signOut: () => {
+      window.location.href = "/api/auth/logout";
+    },
+    signIn: () => {
+      window.location.href = "/api/auth/login";
+    },
+  };
+}

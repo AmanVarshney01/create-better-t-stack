@@ -627,6 +627,13 @@ export const TECH_OPTIONS: Record<
       color: "from-emerald-400 to-emerald-600",
     },
     {
+      id: "auth0",
+      name: "Auth0",
+      description: "Flexible identity platform for authentication and authorization",
+      icon: "https://cdn.simpleicons.org/auth0/EB5424",
+      color: "from-orange-400 to-orange-600",
+    },
+    {
       id: "none",
       name: "No Auth",
       description: "Skip authentication",

@@ -1,0 +1,29 @@
+"use client";
+
+import { useAuthClient } from "@/lib/auth-client";
+
+export default function SignInForm() {
+  const { signIn, isLoading } = useAuthClient();
+
+  return (
+    <div className="mx-auto w-full mt-10 max-w-md p-6">
+      <h2 className="text-2xl font-bold text-center mb-6">Sign In</h2>
+
+      <p className="text-center text-gray-600 mb-6">
+        Click the button below to sign in with Auth0.
+      </p>
+
+      <button
+        onClick={signIn}
+        disabled={isLoading}
+        className="w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+      >
+        {isLoading ? "Loading..." : "Sign In with Auth0"}
+      </button>
+
+      <p className="mt-4 text-center text-sm text-gray-500">
+        You'll be redirected to Auth0 to complete the sign-in process.
+      </p>
+    </div>
+  );
+}

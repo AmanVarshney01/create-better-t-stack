@@ -104,6 +104,11 @@ export async function getAuthChoice(
       label: "Supabase Auth",
       hint: "Auth with Supabase platform integration",
     });
+    options.push({
+      value: "auth0",
+      label: "Auth0",
+      hint: "Flexible identity platform for authentication",
+    });
   }
 
   options.push({ value: "none", label: "None", hint: "No authentication" });

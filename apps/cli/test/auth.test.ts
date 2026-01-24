@@ -612,6 +612,155 @@ describe("Authentication Configurations", () => {
     });
   });
 
+  describe("Auth0 Provider", () => {
+    it("should work with auth0 + self backend + next", async () => {
+      const result = await runTRPCTest({
+        projectName: "auth0-self-next",
+        auth: "auth0",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with auth0 + self backend + next + prisma", async () => {
+      const result = await runTRPCTest({
+        projectName: "auth0-self-next-prisma",
+        auth: "auth0",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "prisma",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with auth0 + self backend + next + sqlite", async () => {
+      const result = await runTRPCTest({
+        projectName: "auth0-self-next-sqlite",
+        auth: "auth0",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should fail with auth0 + non-self backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "auth0-non-self-fail",
+        auth: "auth0",
+        backend: "hono",
+        runtime: "bun",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "Auth0 is only supported with the 'self' backend");
+    });
+
+    it("should fail with auth0 + non-next frontend", async () => {
+      const result = await runTRPCTest({
+        projectName: "auth0-non-next-fail",
+        auth: "auth0",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["tanstack-start"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "Auth0 requires Next.js frontend");
+    });
+
+    it("should fail with auth0 + tanstack-router frontend", async () => {
+      const result = await runTRPCTest({
+        projectName: "auth0-tanstack-router-fail",
+        auth: "auth0",
+        backend: "hono",
+        runtime: "bun",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "Auth0");
+    });
+
+    it("should fail with auth0 + convex backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "auth0-convex-fail",
+        auth: "auth0",
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        api: "none",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "Auth0 is only supported with the 'self' backend");
+    });
+  });
+
   describe("Clerk Provider", () => {
     it("should work with clerk + convex", async () => {
       const result = await runTRPCTest({
@@ -889,6 +1038,13 @@ describe("Authentication Configurations", () => {
           config.api = "trpc";
           config.frontend = ["next"];
         } else if (auth === "supabase-auth") {
+          config.backend = "self";
+          config.runtime = "none";
+          config.database = "postgres";
+          config.orm = "drizzle";
+          config.api = "trpc";
+          config.frontend = ["next"];
+        } else if (auth === "auth0") {
           config.backend = "self";
           config.runtime = "none";
           config.database = "postgres";
