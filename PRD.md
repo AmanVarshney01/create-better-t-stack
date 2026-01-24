@@ -241,7 +241,7 @@
 ## **Step 4: API & CLI**
 
 - [x] **gRPC-Go** - Official gRPC implementation
-- [ ] **Cobra** - CLI library
+- [x] **Cobra** - CLI library
 - [ ] **Bubble Tea** - TUI framework
 - [ ] **zap** - High-performance logger
 
