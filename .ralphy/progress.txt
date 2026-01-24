@@ -7044,3 +7044,63 @@ This task was already fully implemented in a previous session. The PRD was simpl
   - File content validation
   - Conditional skipping when not selected
 
+
+
+## 2026-01-24: Bubble Tea TUI Framework - PRD Documentation Update
+
+### Task: Mark Bubble Tea as complete in PRD (already implemented)
+
+### Background:
+Bubble Tea TUI framework for Go was already fully implemented in the codebase but the PRD was not updated to reflect this. This task documents the update to mark it as complete.
+
+### Existing Implementation Details:
+1. **packages/template-generator/templates/go-base/cmd/tui/main.go.hbs**: Full Bubble Tea TUI template (128 lines)
+   - Model with choices, cursor, selected items, and quit flag
+   - The Elm Architecture: Init(), Update(), View() methods
+   - Keyboard navigation (up/down, j/k, space, enter, q)
+   - Lipgloss styling for title, items, selected items, help text
+   - Example menu: Build, Tests, Deploy, Logs, Exit
+
+2. **packages/types/src/schemas.ts**: GoCliSchema includes "bubbletea" option (line 279)
+
+3. **apps/web/src/lib/constant.ts**: Bubble Tea option in goCli category (lines 2254-2261)
+   - Name: "Bubble Tea"
+   - Description: "Powerful TUI framework based on The Elm Architecture"
+   - Color: "from-pink-500 to-rose-600"
+
+4. **apps/cli/src/prompts/go-ecosystem.ts**: CLI prompts for Bubble Tea selection
+
+5. **packages/template-generator/src/template-handlers/go-base.ts**: Template processing logic
+   - Skips cmd/tui/ when Bubble Tea not selected
+   - Includes cmd/tui/ when config.goCli === "bubbletea"
+
+6. **packages/template-generator/src/processors/readme-generator.ts**: README generation
+   - Documents Bubble Tea features
+   - Adds project structure for cmd/tui/
+   - Includes run command: `go run cmd/tui/main.go`
+
+7. **go.mod.hbs**: Dependencies conditionally included
+   - github.com/charmbracelet/bubbletea v1.2.4
+   - github.com/charmbracelet/lipgloss v1.0.0
+
+### Tests:
+- apps/cli/test/go-language.test.ts (lines 775-830):
+  - "should include Bubble Tea dependencies when selected"
+  - "should generate cmd/tui directory when Bubble Tea selected"
+  - "should not generate cmd/tui when Bubble Tea not selected"
+- apps/web/test/go-ecosystem.test.ts (lines 151-157):
+  - "should have Bubble Tea option for goCli"
+
+### Changes Made:
+1. **PRD.md**: Updated Bubble Tea entry from `[ ]` to `[x]`
+
+### Test Results:
+- 91 tests passed across go-language.test.ts and go-ecosystem.test.ts
+- 0 failures
+- 353 expect() calls
+
+### Lint Results:
+- 9 lint tasks successful
+- All checks passed
+
+### Status: COMPLETE
