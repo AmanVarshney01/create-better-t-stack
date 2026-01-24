@@ -581,6 +581,9 @@ export const dependencyVersionMap = {
   // Search - Meilisearch
   meilisearch: "^0.44.1",
 
+  // Search - Typesense
+  typesense: "^2.0.0",
+
   // EdgeDB
   edgedb: "^2.0.1",
   "@edgedb/generate": "^0.6.1",

@@ -207,8 +207,8 @@ export const CachingSchema = z
   .describe("Caching solution (upstash-redis for serverless Redis)");
 
 export const SearchSchema = z
-  .enum(["meilisearch", "none"])
-  .describe("Search engine solution (meilisearch for lightning-fast search)");
+  .enum(["meilisearch", "typesense", "none"])
+  .describe("Search engine solution (meilisearch or typesense for lightning-fast search)");
 
 export const AnimationSchema = z
   .enum(["framer-motion", "gsap", "react-spring", "auto-animate", "lottie", "none"])

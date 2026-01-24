@@ -18,6 +18,11 @@ export async function getSearchChoice(search?: Search, backend?: Backend) {
       hint: "Lightning-fast search engine with typo tolerance",
     },
     {
+      value: "typesense" as const,
+      label: "Typesense",
+      hint: "Fast, typo-tolerant search with built-in vector search",
+    },
+    {
       value: "none" as const,
       label: "None",
       hint: "Skip search engine setup",

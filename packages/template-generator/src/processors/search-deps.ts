@@ -49,6 +49,9 @@ function getSearchDeps(search: ProjectConfig["search"]): AvailableDependencies[]
     case "meilisearch":
       deps.push("meilisearch");
       break;
+    case "typesense":
+      deps.push("typesense");
+      break;
   }
 
   return deps;

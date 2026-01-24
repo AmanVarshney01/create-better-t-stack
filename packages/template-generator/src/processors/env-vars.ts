@@ -1056,6 +1056,30 @@ function buildServerVars(
       condition: search === "meilisearch",
       comment: "Meilisearch API key (master key for development, search key for production)",
     },
+    {
+      key: "TYPESENSE_HOST",
+      value: "localhost",
+      condition: search === "typesense",
+      comment: "Typesense host - default for local development",
+    },
+    {
+      key: "TYPESENSE_PORT",
+      value: "8108",
+      condition: search === "typesense",
+      comment: "Typesense port - default is 8108",
+    },
+    {
+      key: "TYPESENSE_PROTOCOL",
+      value: "http",
+      condition: search === "typesense",
+      comment: "Typesense protocol (http for local, https for production)",
+    },
+    {
+      key: "TYPESENSE_API_KEY",
+      value: "",
+      condition: search === "typesense",
+      comment: "Typesense API key - get it from your Typesense server or Typesense Cloud",
+    },
   ];
 }
 

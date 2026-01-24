@@ -7552,3 +7552,50 @@ The Meilisearch template provides:
 - Tests with authentication (Better Auth, Auth.js)
 
 ### Status: COMPLETE
+
+
+## Typesense Search Engine Integration - 2026-01-24 05:40:02
+
+### Task: Add Typesense search engine support (Cross-Ecosystem)
+
+### Changes Made:
+1. Created Typesense template file at `packages/template-generator/templates/search/typesense/server/base/src/lib/search.ts.hbs`
+   - Client initialization with host, port, protocol, and API key configuration
+   - Search utilities: search, addDocuments, updateDocument, deleteDocument(s), getDocument, exportDocuments
+   - Collection management: createCollection, deleteCollection, getCollections, getCollection, updateCollectionSchema
+   - Alias management: upsertAlias, deleteAlias, getAliases
+   - Multi-search capability across collections
+   - Health check function
+
+2. Updated schema in `packages/types/src/schemas.ts`:
+   - Added "typesense" to SearchSchema enum
+
+3. Updated search dependencies in `packages/template-generator/src/processors/search-deps.ts`:
+   - Added typesense package dependency case
+
+4. Added Typesense version in `packages/template-generator/src/utils/add-deps.ts`:
+   - typesense: "^2.0.0"
+
+5. Added environment variables in `packages/template-generator/src/processors/env-vars.ts`:
+   - TYPESENSE_HOST (default: localhost)
+   - TYPESENSE_PORT (default: 8108)
+   - TYPESENSE_PROTOCOL (default: http)
+   - TYPESENSE_API_KEY
+
+6. Updated CLI prompts in `apps/cli/src/prompts/search.ts`:
+   - Added Typesense option with hint "Fast, typo-tolerant search with built-in vector search"
+
+7. Added comprehensive tests in `apps/cli/test/search.test.ts`:
+   - Typesense with different backends (Hono, Express, Fastify, Elysia, NestJS)
+   - Typesense with fullstack frameworks (Next.js, TanStack Start)
+   - Typesense with different frontends (TanStack Router, React Router, Svelte, Solid)
+   - Typesense with database setups (PostgreSQL+Drizzle, SQLite+Prisma, MySQL+TypeORM)
+   - Typesense with authentication (Better Auth, Auth.js)
+
+### Test Results:
+- All 33 search tests pass
+- Linting passes (0 errors, only pre-existing warnings)
+
+### PRD Updated:
+- Marked "Typesense - Open-source search" as complete
+
