@@ -243,7 +243,7 @@
 - [x] **gRPC-Go** - Official gRPC implementation
 - [x] **Cobra** - CLI library
 - [x] **Bubble Tea** - TUI framework
-- [ ] **zap** - High-performance logger
+- [x] **zap** - High-performance logger
 
 ---
 
