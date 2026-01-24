@@ -1,0 +1,10 @@
+<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="edgedb-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1F8B8B"/>
+      <stop offset="100%" style="stop-color:#0D7377"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="24" fill="url(#edgedb-grad)"/>
+  <path fill="#fff" d="M32 40h48c4.4 0 8 3.6 8 8v4H40v12h40v4c0 4.4-3.6 8-8 8H32V40zm8 40h40c4.4 0 8 3.6 8 8v4H48v12h40v4c0 4.4-3.6 8-8 8H40c-4.4 0-8-3.6-8-8V88c0-4.4 3.6-8 8-8z"/>
+</svg>
