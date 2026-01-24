@@ -280,7 +280,7 @@
 
 ## **Infrastructure**
 
-- [ ] **Docker** - Containerization
+- [x] **Docker** - Containerization
 - [ ] **SST** - AWS infrastructure
 
 ---

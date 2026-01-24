@@ -578,6 +578,13 @@ export const TECH_OPTIONS: Record<
       color: "from-zinc-700 to-zinc-900",
     },
     {
+      id: "docker",
+      name: "Docker",
+      description: "Container-based deployment with Dockerfile",
+      icon: "https://cdn.simpleicons.org/docker/2496ED",
+      color: "from-blue-400 to-blue-600",
+    },
+    {
       id: "none",
       name: "None",
       description: "Skip deployment setup",
@@ -607,6 +614,13 @@ export const TECH_OPTIONS: Record<
       description: "Deploy with Railway cloud development platform",
       icon: "https://cdn.simpleicons.org/railway/0B0D0E",
       color: "from-zinc-700 to-zinc-900",
+    },
+    {
+      id: "docker",
+      name: "Docker",
+      description: "Container-based deployment with Dockerfile",
+      icon: "https://cdn.simpleicons.org/docker/2496ED",
+      color: "from-blue-400 to-blue-600",
     },
     {
       id: "none",

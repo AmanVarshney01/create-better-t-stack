@@ -51,4 +51,9 @@ export async function processDeployTemplates(
       config,
     );
   }
+
+  // Process Docker Compose for fullstack orchestration (when both web and server use Docker)
+  if (config.webDeploy === "docker" || config.serverDeploy === "docker") {
+    processTemplatesFromPrefix(vfs, templates, "deploy/docker/compose", "", config);
+  }
 }

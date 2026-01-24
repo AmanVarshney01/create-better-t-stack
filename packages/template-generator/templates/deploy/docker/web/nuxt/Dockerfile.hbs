@@ -1,0 +1,63 @@
+# Dockerfile for {{projectName}} Nuxt app
+# Optimized multi-stage build for Docker deployment
+
+{{#if (eq packageManager "bun")}}
+FROM oven/bun:1 AS builder
+
+WORKDIR /app
+
+COPY package.json bun.lock* ./
+RUN bun install --frozen-lockfile
+
+COPY . .
+RUN bun run build
+
+FROM oven/bun:1-slim AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOST=0.0.0.0
+
+COPY --from=builder /app/.output ./.output
+
+EXPOSE 3000
+
+CMD ["bun", "run", ".output/server/index.mjs"]
+{{else}}
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+{{#if (eq packageManager "pnpm")}}
+RUN corepack enable && corepack prepare pnpm@latest --activate
+COPY package.json pnpm-lock.yaml* ./
+RUN pnpm install --frozen-lockfile
+{{else}}
+COPY package.json package-lock.json* ./
+RUN npm ci
+{{/if}}
+
+COPY . .
+
+{{#if (eq packageManager "pnpm")}}
+RUN pnpm run build
+{{else}}
+RUN npm run build
+{{/if}}
+
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOST=0.0.0.0
+
+COPY --from=builder /app/.output ./.output
+
+EXPOSE 3000
+
+CMD ["node", ".output/server/index.mjs"]
+{{/if}}

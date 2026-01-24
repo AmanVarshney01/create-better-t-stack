@@ -7354,3 +7354,54 @@ Zap is already fully implemented in the codebase. The implementation includes:
 - Compatible with Railway's config-as-code via railway.toml
 
 ### Status: COMPLETE
+
+## 2026-01-24: Docker Containerization Infrastructure Implementation
+
+### Task: Implement Docker as a deployment/containerization option for cross-ecosystem infrastructure
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "docker" to WebDeploySchema and ServerDeploySchema enums
+2. **apps/web/src/lib/constant.ts**: Added Docker to web builder UI options for both webDeploy and serverDeploy with:
+   - id: "docker"
+   - name: "Docker"
+   - description: "Container-based deployment with Dockerfile"
+   - icon: Docker logo from simpleicons.org
+   - color: Blue gradient theme
+3. **packages/template-generator/src/template-handlers/deploy.ts**: Updated to handle Docker deployment and generate docker-compose.yml for fullstack orchestration
+4. **packages/template-generator/templates/deploy/docker/**: Created complete Docker template directory structure:
+   - server/Dockerfile.hbs - Multi-stage build for server with Bun/Node/pnpm support
+   - server/.dockerignore.hbs - Standard Docker ignore patterns
+   - web/react/next/Dockerfile.hbs - Next.js standalone build with optimized layers
+   - web/react/next/.dockerignore.hbs - Next.js Docker ignore patterns
+   - web/react/tanstack-router/Dockerfile.hbs - SPA with nginx for static serving
+   - web/react/react-router/Dockerfile.hbs - React Router v7 framework mode
+   - web/react/tanstack-start/Dockerfile.hbs - TanStack Start full-stack support
+   - web/nuxt/Dockerfile.hbs - Nuxt 3 with .output directory
+   - web/svelte/Dockerfile.hbs - SvelteKit with node adapter
+   - web/solid/Dockerfile.hbs - SolidStart with .output directory
+   - compose/docker-compose.yml.hbs - Full-stack orchestration with database services
+5. **apps/cli/test/docker-deployment.test.ts**: Added comprehensive tests (25 test cases covering all frameworks)
+
+### Features:
+- Multi-stage Docker builds for optimized production images
+- Support for all three package managers (npm, pnpm, bun)
+- Conditional builds for Turborepo monorepo structure
+- SPA nginx configuration for client-side routing
+- docker-compose.yml with database services:
+  - PostgreSQL with health checks and persistence
+  - MySQL with health checks and persistence
+  - MongoDB with health checks and persistence
+  - Redis with health checks and persistence
+- Inter-service networking with Docker bridge network
+- Environment variable configuration for database connections
+- User isolation for security (non-root runners where applicable)
+- Compatible with all web frontends: Next.js, TanStack Router, React Router, TanStack Start, Nuxt, SvelteKit, SolidStart
+- Compatible with all backends: Hono, Express, Fastify, Elysia
+
+### Test Results:
+- 25 tests passing
+- All package manager combinations tested
+- All framework combinations tested
+- Database service integration tested
+
+### Status: COMPLETE

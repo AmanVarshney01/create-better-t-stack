@@ -1,0 +1,166 @@
+# Docker Compose for {{projectName}}
+# Full-stack container orchestration
+
+name: {{projectName}}
+
+services:
+{{#if (ne webDeploy "none")}}
+{{#if (eq webDeploy "docker")}}
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: {{projectName}}-web
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+{{#if (ne serverDeploy "none")}}
+{{#if (eq serverDeploy "docker")}}
+      - VITE_API_URL=http://server:3001
+{{/if}}
+{{/if}}
+    restart: unless-stopped
+{{#if (ne serverDeploy "none")}}
+{{#if (eq serverDeploy "docker")}}
+    depends_on:
+      - server
+{{/if}}
+{{/if}}
+    networks:
+      - {{projectName}}-network
+
+{{/if}}
+{{/if}}
+{{#if (ne serverDeploy "none")}}
+{{#if (eq serverDeploy "docker")}}
+  server:
+    build:
+      context: ./apps/server
+      dockerfile: Dockerfile
+    container_name: {{projectName}}-server
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+{{#if (ne database "none")}}
+{{#if (eq database "postgres")}}
+      - DATABASE_URL=postgresql://postgres:password@db:5432/{{projectName}}
+{{else if (eq database "mysql")}}
+      - DATABASE_URL=mysql://root:password@db:3306/{{projectName}}
+{{else if (eq database "mongodb")}}
+      - DATABASE_URL=mongodb://db:27017/{{projectName}}
+{{else if (eq database "redis")}}
+      - REDIS_URL=redis://redis:6379
+{{/if}}
+{{/if}}
+    restart: unless-stopped
+{{#if (ne database "none")}}
+{{#if (or (eq database "postgres") (eq database "mysql") (eq database "mongodb"))}}
+    depends_on:
+      - db
+{{else if (eq database "redis")}}
+    depends_on:
+      - redis
+{{/if}}
+{{/if}}
+    networks:
+      - {{projectName}}-network
+
+{{/if}}
+{{/if}}
+{{#if (ne database "none")}}
+{{#if (eq database "postgres")}}
+  db:
+    image: postgres:16-alpine
+    container_name: {{projectName}}-postgres
+    environment:
+      POSTGRES_DB: {{projectName}}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - {{projectName}}_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - {{projectName}}-network
+
+{{else if (eq database "mysql")}}
+  db:
+    image: mysql:8
+    container_name: {{projectName}}-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: {{projectName}}
+    ports:
+      - "3306:3306"
+    volumes:
+      - {{projectName}}_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - {{projectName}}-network
+
+{{else if (eq database "mongodb")}}
+  db:
+    image: mongo:7
+    container_name: {{projectName}}-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - {{projectName}}_mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - {{projectName}}-network
+
+{{else if (eq database "redis")}}
+  redis:
+    image: redis:7-alpine
+    container_name: {{projectName}}-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - {{projectName}}_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - {{projectName}}-network
+
+{{/if}}
+{{/if}}
+networks:
+  {{projectName}}-network:
+    driver: bridge
+
+{{#if (ne database "none")}}
+volumes:
+{{#if (eq database "postgres")}}
+  {{projectName}}_postgres_data:
+{{else if (eq database "mysql")}}
+  {{projectName}}_mysql_data:
+{{else if (eq database "mongodb")}}
+  {{projectName}}_mongodb_data:
+{{else if (eq database "redis")}}
+  {{projectName}}_redis_data:
+{{/if}}
+{{/if}}
