@@ -236,6 +236,7 @@ export const dependencyVersionMap = {
   "@opennextjs/cloudflare": "^1.14.6",
   "nitro-cloudflare-dev": "^0.2.2",
   "@sveltejs/adapter-cloudflare": "^7.2.4",
+  "@sveltejs/adapter-node": "^5.2.12",
   "@cloudflare/workers-types": "^4.20251213.0",
 
   alchemy: "^0.82.1",

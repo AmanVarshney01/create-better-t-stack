@@ -1,0 +1,53 @@
+# Dockerfile for {{projectName}} SolidStart app
+# Static file serving with nginx for Fly.io deployment
+
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+{{#if (eq packageManager "pnpm")}}
+RUN corepack enable && corepack prepare pnpm@latest --activate
+COPY package.json pnpm-lock.yaml* ./
+RUN pnpm install --frozen-lockfile
+{{else if (eq packageManager "bun")}}
+RUN npm install -g bun
+COPY package.json bun.lock* ./
+RUN bun install --frozen-lockfile
+{{else}}
+COPY package.json package-lock.json* ./
+RUN npm ci
+{{/if}}
+
+COPY . .
+
+{{#if (eq packageManager "pnpm")}}
+RUN pnpm run build
+{{else if (eq packageManager "bun")}}
+RUN bun run build
+{{else}}
+RUN npm run build
+{{/if}}
+
+# Production stage with nginx for SPA
+FROM nginx:alpine AS runner
+
+# Copy nginx configuration for SPA routing
+RUN echo 'server { \
+    listen 3000; \
+    root /usr/share/nginx/html; \
+    index index.html; \
+    location / { \
+        try_files $uri $uri/ /index.html; \
+    } \
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2)$ { \
+        expires 1y; \
+        add_header Cache-Control "public, immutable"; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
+
+# Copy built assets
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+EXPOSE 3000
+
+CMD ["nginx", "-g", "daemon off;"]

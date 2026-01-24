@@ -7259,3 +7259,54 @@ Zap is already fully implemented in the codebase. The implementation includes:
 - All checks passed (160 tests in lint validation)
 
 ### Status: COMPLETE
+
+## 2026-01-24: Fly.io Deployment Platform Implementation
+
+### Task: Implement Fly.io as a deployment platform option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "fly" to WebDeploySchema and ServerDeploySchema enums
+2. **apps/web/src/lib/constant.ts**: Added Fly.io entries to webDeploy and serverDeploy arrays with:
+   - Icon from simpleicons.org (flydotio)
+   - Purple color gradient theme
+   - Description: "Deploy globally with Fly.io edge platform"
+3. **packages/template-generator/src/processors/deploy-deps.ts**: Added Fly.io dependency handling:
+   - SvelteKit requires @sveltejs/adapter-node for Docker-based deployments
+4. **packages/template-generator/src/utils/add-deps.ts**: Added @sveltejs/adapter-node version
+5. **packages/template-generator/templates/frontend/react/next/next.config.ts.hbs**: Added standalone output for Next.js when deploying to Fly.io
+6. **packages/template-generator/templates/deploy/fly/**: Created Fly.io deployment templates:
+   - Server templates: fly.toml.hbs, Dockerfile.hbs, .dockerignore.hbs
+   - Web templates for frameworks:
+     - react/next/ (fly.toml.hbs, Dockerfile.hbs, .dockerignore.hbs)
+     - react/tanstack-start/ (fly.toml.hbs, Dockerfile.hbs)
+     - react/tanstack-router/ (fly.toml.hbs, Dockerfile.hbs - nginx for SPA)
+     - react/react-router/ (fly.toml.hbs, Dockerfile.hbs)
+     - nuxt/ (fly.toml.hbs, Dockerfile.hbs)
+     - svelte/ (fly.toml.hbs, Dockerfile.hbs)
+     - solid/ (fly.toml.hbs, Dockerfile.hbs - nginx for SPA)
+7. **packages/template-generator/src/template-handlers/deploy.ts**: Updated to process Fly.io templates
+8. **apps/cli/test/fly-deployment.test.ts**: Added comprehensive tests for Fly.io deployment
+
+### Features:
+- Docker-based deployment with multi-stage builds
+- Support for all web frameworks: Next.js, TanStack Start, TanStack Router, React Router, Nuxt, SvelteKit, Solid
+- Support for all backend frameworks with Docker containerization
+- Package manager support: npm, pnpm, bun
+- Turborepo monorepo support in Dockerfiles
+- Optimized fly.toml configuration:
+  - Auto-stop and auto-start machines
+  - Health checks
+  - Concurrency limits
+  - Memory and CPU allocation
+- Next.js standalone output for optimized Docker builds
+- SvelteKit adapter-node for Docker compatibility
+- Static SPA deployments use nginx (TanStack Router, Solid)
+
+### Configuration Highlights:
+- Primary region: "iad" (configurable)
+- HTTP service with force HTTPS
+- Health check endpoint at "/" or "/health"
+- Shared CPU with 256-512MB memory per framework
+- Request-based concurrency with soft limit 200, hard limit 250
+
+### Status: COMPLETE

@@ -7,6 +7,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
 	typedRoutes: true,
 	reactCompiler: true,
+	{{#if (eq webDeploy "fly")}}
+	output: "standalone",
+	{{/if}}
 	{{#if (includes examples "ai")}}
 	transpilePackages: ["shiki"],
 	{{/if}}

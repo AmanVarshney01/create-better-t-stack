@@ -564,6 +564,13 @@ export const TECH_OPTIONS: Record<
       color: "from-orange-400 to-orange-600",
     },
     {
+      id: "fly",
+      name: "Fly.io",
+      description: "Deploy globally with Fly.io edge platform",
+      icon: "https://cdn.simpleicons.org/flydotio/8B5CF6",
+      color: "from-purple-400 to-purple-600",
+    },
+    {
       id: "none",
       name: "None",
       description: "Skip deployment setup",
@@ -579,6 +586,13 @@ export const TECH_OPTIONS: Record<
       description: "Deploy to Cloudflare Workers using Alchemy",
       icon: "https://cdn.simpleicons.org/cloudflareworkers/F38020",
       color: "from-orange-400 to-orange-600",
+    },
+    {
+      id: "fly",
+      name: "Fly.io",
+      description: "Deploy globally with Fly.io edge platform",
+      icon: "https://cdn.simpleicons.org/flydotio/8B5CF6",
+      color: "from-purple-400 to-purple-600",
     },
     {
       id: "none",

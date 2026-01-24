@@ -9,7 +9,23 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
 
   const isCloudflareWeb = webDeploy === "cloudflare";
   const isCloudflareServer = serverDeploy === "cloudflare";
+  const isFlyWeb = webDeploy === "fly";
   const isBackendSelf = backend === "self";
+
+  // Handle Fly.io web deployment dependencies
+  if (isFlyWeb) {
+    const webPkgPath = "apps/web/package.json";
+    if (vfs.exists(webPkgPath)) {
+      // SvelteKit requires node adapter for Docker-based deployments
+      if (frontend.includes("svelte")) {
+        addPackageDependency({
+          vfs,
+          packagePath: webPkgPath,
+          devDependencies: ["@sveltejs/adapter-node"],
+        });
+      }
+    }
+  }
 
   if (!isCloudflareWeb && !isCloudflareServer) return;
 

@@ -273,7 +273,7 @@
 - [x] **Vercel** - Frontend & serverless
 - [x] **Netlify** - Jamstack platform
 - [x] **Cloudflare Workers** - Edge compute
-- [ ] **Fly.io** - Global application platform
+- [x] **Fly.io** - Global application platform
 - [ ] **Railway** - Cloud development platform
 
 ---

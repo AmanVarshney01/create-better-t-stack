@@ -11,10 +11,12 @@ export async function processDeployTemplates(
 ): Promise<void> {
   const isBackendSelf = config.backend === "self";
 
+  // Process Cloudflare-specific infrastructure templates
   if (config.webDeploy === "cloudflare" || config.serverDeploy === "cloudflare") {
     processTemplatesFromPrefix(vfs, templates, "packages/infra", "packages/infra", config);
   }
 
+  // Process web deployment templates (non-cloudflare)
   if (config.webDeploy !== "none" && config.webDeploy !== "cloudflare") {
     const templateMap: Record<string, string> = {
       "tanstack-router": "react/tanstack-router",
@@ -39,6 +41,7 @@ export async function processDeployTemplates(
     }
   }
 
+  // Process server deployment templates (non-cloudflare)
   if (config.serverDeploy !== "none" && config.serverDeploy !== "cloudflare" && !isBackendSelf) {
     processTemplatesFromPrefix(
       vfs,
