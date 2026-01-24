@@ -176,6 +176,7 @@ export function generateStackCommand(stack: StackState) {
   };
 
   const flags = [
+    `--ecosystem typescript`,
     `--frontend ${
       [...stack.webFrontend, ...stack.nativeFrontend]
         .filter((v, _, arr) => v !== "none" || arr.length === 1)
@@ -249,96 +250,123 @@ export function generateStackCommand(stack: StackState) {
 }
 
 function generateRustCommand(stack: StackState, projectName: string) {
-  // For Rust projects, use cargo init with appropriate setup
-  const flags: string[] = [];
+  const packageManagerCommands = {
+    npm: "npx create-better-fullstack@latest",
+    pnpm: "pnpm create better-fullstack@latest",
+    default: "bun create better-fullstack@latest",
+  };
+
+  const base =
+    packageManagerCommands[stack.packageManager as keyof typeof packageManagerCommands] ||
+    packageManagerCommands.default;
+
+  const flags: string[] = [`--ecosystem rust`];
 
   if (stack.rustWebFramework !== "none") {
-    flags.push(`--web-framework ${stack.rustWebFramework}`);
+    flags.push(`--rust-web-framework ${stack.rustWebFramework}`);
   }
   if (stack.rustFrontend !== "none") {
-    flags.push(`--frontend ${stack.rustFrontend}`);
+    flags.push(`--rust-frontend ${stack.rustFrontend}`);
   }
   if (stack.rustOrm !== "none") {
-    flags.push(`--orm ${stack.rustOrm}`);
+    flags.push(`--rust-orm ${stack.rustOrm}`);
   }
   if (stack.rustApi !== "none") {
-    flags.push(`--api ${stack.rustApi}`);
+    flags.push(`--rust-api ${stack.rustApi}`);
   }
   if (stack.rustCli !== "none") {
-    flags.push(`--cli ${stack.rustCli}`);
+    flags.push(`--rust-cli ${stack.rustCli}`);
   }
   if (stack.rustLibraries !== "none" && stack.rustLibraries !== "serde") {
-    flags.push(`--libraries ${stack.rustLibraries}`);
+    flags.push(`--rust-libraries ${stack.rustLibraries}`);
   }
   if (stack.git === "false") {
     flags.push("--no-git");
   }
+  if (stack.install === "false") {
+    flags.push("--no-install");
+  }
 
-  // Rust ecosystem command - placeholder until CLI supports Rust
-  const base = "cargo new";
-  const flagStr = flags.length > 0 ? ` # Options: ${flags.join(" ")}` : "";
-  return `${base} ${projectName}${flagStr}`;
+  return `${base} ${projectName} ${flags.join(" ")}`;
 }
 
 function generatePythonCommand(stack: StackState, projectName: string) {
-  // For Python projects, use uv init with appropriate setup
-  const flags: string[] = [];
+  const packageManagerCommands = {
+    npm: "npx create-better-fullstack@latest",
+    pnpm: "pnpm create better-fullstack@latest",
+    default: "bun create better-fullstack@latest",
+  };
+
+  const base =
+    packageManagerCommands[stack.packageManager as keyof typeof packageManagerCommands] ||
+    packageManagerCommands.default;
+
+  const flags: string[] = [`--ecosystem python`];
 
   if (stack.pythonWebFramework !== "none") {
-    flags.push(`--web-framework ${stack.pythonWebFramework}`);
+    flags.push(`--python-web-framework ${stack.pythonWebFramework}`);
   }
   if (stack.pythonOrm !== "none") {
-    flags.push(`--orm ${stack.pythonOrm}`);
+    flags.push(`--python-orm ${stack.pythonOrm}`);
   }
   if (stack.pythonValidation !== "none") {
-    flags.push(`--validation ${stack.pythonValidation}`);
+    flags.push(`--python-validation ${stack.pythonValidation}`);
   }
   if (stack.pythonAi !== "none") {
-    flags.push(`--ai ${stack.pythonAi}`);
+    flags.push(`--python-ai ${stack.pythonAi}`);
   }
   if (stack.pythonTaskQueue !== "none") {
-    flags.push(`--task-queue ${stack.pythonTaskQueue}`);
+    flags.push(`--python-task-queue ${stack.pythonTaskQueue}`);
   }
   if (stack.pythonQuality !== "none") {
-    flags.push(`--quality ${stack.pythonQuality}`);
+    flags.push(`--python-quality ${stack.pythonQuality}`);
   }
   if (stack.git === "false") {
     flags.push("--no-git");
   }
+  if (stack.install === "false") {
+    flags.push("--no-install");
+  }
 
-  // Python ecosystem command - placeholder until CLI supports Python
-  const base = "uv init";
-  const flagStr = flags.length > 0 ? ` # Options: ${flags.join(" ")}` : "";
-  return `${base} ${projectName}${flagStr}`;
+  return `${base} ${projectName} ${flags.join(" ")}`;
 }
 
 function generateGoCommand(stack: StackState, projectName: string) {
-  // For Go projects, use go mod init with appropriate setup
-  const flags: string[] = [];
+  const packageManagerCommands = {
+    npm: "npx create-better-fullstack@latest",
+    pnpm: "pnpm create better-fullstack@latest",
+    default: "bun create better-fullstack@latest",
+  };
+
+  const base =
+    packageManagerCommands[stack.packageManager as keyof typeof packageManagerCommands] ||
+    packageManagerCommands.default;
+
+  const flags: string[] = [`--ecosystem go`];
 
   if (stack.goWebFramework !== "none") {
-    flags.push(`--web-framework ${stack.goWebFramework}`);
+    flags.push(`--go-web-framework ${stack.goWebFramework}`);
   }
   if (stack.goOrm !== "none") {
-    flags.push(`--orm ${stack.goOrm}`);
+    flags.push(`--go-orm ${stack.goOrm}`);
   }
   if (stack.goApi !== "none") {
-    flags.push(`--api ${stack.goApi}`);
+    flags.push(`--go-api ${stack.goApi}`);
   }
   if (stack.goCli !== "none") {
-    flags.push(`--cli ${stack.goCli}`);
+    flags.push(`--go-cli ${stack.goCli}`);
   }
   if (stack.goLogging !== "none") {
-    flags.push(`--logging ${stack.goLogging}`);
+    flags.push(`--go-logging ${stack.goLogging}`);
   }
   if (stack.git === "false") {
     flags.push("--no-git");
   }
+  if (stack.install === "false") {
+    flags.push("--no-install");
+  }
 
-  // Go ecosystem command - placeholder until CLI supports Go
-  const base = "go mod init";
-  const flagStr = flags.length > 0 ? ` # Options: ${flags.join(" ")}` : "";
-  return `${base} ${projectName}${flagStr}`;
+  return `${base} ${projectName} ${flags.join(" ")}`;
 }
 
 export function generateStackUrlFromState(stack: StackState, baseUrl?: string) {

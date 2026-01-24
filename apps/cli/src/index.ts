@@ -103,6 +103,16 @@ import {
   type PythonTaskQueue,
   PythonQualitySchema,
   type PythonQuality,
+  GoWebFrameworkSchema,
+  type GoWebFramework,
+  GoOrmSchema,
+  type GoOrm,
+  GoApiSchema,
+  type GoApi,
+  GoCliSchema,
+  type GoCli,
+  GoLoggingSchema,
+  type GoLogging,
 } from "./types";
 import { handleError } from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
@@ -206,6 +216,12 @@ export const router = os.router({
           pythonAi: z.array(PythonAiSchema).optional().describe("Python AI/ML frameworks"),
           pythonTaskQueue: PythonTaskQueueSchema.optional().describe("Python task queue (celery)"),
           pythonQuality: PythonQualitySchema.optional().describe("Python code quality (ruff)"),
+          // Go ecosystem options
+          goWebFramework: GoWebFrameworkSchema.optional().describe("Go web framework (gin, echo)"),
+          goOrm: GoOrmSchema.optional().describe("Go ORM/database (gorm, sqlc)"),
+          goApi: GoApiSchema.optional().describe("Go API layer (grpc-go)"),
+          goCli: GoCliSchema.optional().describe("Go CLI tools (cobra, bubbletea)"),
+          goLogging: GoLoggingSchema.optional().describe("Go logging (zap)"),
         }),
       ]),
     )
@@ -520,4 +536,9 @@ export type {
   PythonAi,
   PythonTaskQueue,
   PythonQuality,
+  GoWebFramework,
+  GoOrm,
+  GoApi,
+  GoCli,
+  GoLogging,
 };

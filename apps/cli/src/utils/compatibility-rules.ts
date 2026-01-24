@@ -636,17 +636,24 @@ export function validateUILibraryFrontendCompatibility(
 
   // Handle Astro with integrations
   if (webFrontend === "astro") {
-    // If React integration, treat as React frontend for UI library compatibility
+    // Check if library supports React frontends
+    const supportsReact = compatibility.frontends.some((f) =>
+      ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+    );
+
+    // Check if library supports non-React frontends (vue, svelte, solid, etc.)
+    const supportsNonReact = compatibility.frontends.some((f) =>
+      ["nuxt", "svelte", "solid", "qwik", "angular"].includes(f),
+    );
+
+    // If React integration, allow React-compatible libraries
     if (astroIntegration === "react") {
-      // Check if library supports React frontends
-      const supportsReact = compatibility.frontends.some((f) =>
-        ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
-      );
       if (supportsReact) return; // OK
     }
 
-    // For non-React integrations, only allow libraries that explicitly support astro
-    if (!compatibility.frontends.includes("astro")) {
+    // For non-React integrations, the library must support non-React frontends
+    // A library that only supports React frontends (+ astro) is a React-only library
+    if (!supportsNonReact) {
       const integrationName = astroIntegration || "none";
       incompatibilityError({
         message: `UI library '${uiLibrary}' requires React.`,
@@ -719,8 +726,11 @@ export function getCompatibleUILibraries(
           ["tanstack-router", "react-router", "tanstack-start", "next", "astro"].includes(f),
         );
       }
-      // Non-React integration - only allow libraries that explicitly support astro
-      return compatibility.frontends.includes("astro");
+      // Non-React integration - only allow libraries that support non-React frontends
+      // A library that only supports React frontends (+ astro) is a React-only library
+      return compatibility.frontends.some((f) =>
+        ["nuxt", "svelte", "solid", "qwik", "angular"].includes(f),
+      );
     }
 
     return compatibility.frontends.includes(webFrontend);
