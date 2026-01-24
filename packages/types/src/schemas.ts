@@ -219,7 +219,7 @@ export const LoggingSchema = z
   .describe("Server-side logging framework");
 
 export const ObservabilitySchema = z
-  .enum(["opentelemetry", "sentry", "none"])
+  .enum(["opentelemetry", "sentry", "grafana", "none"])
   .describe("Observability and distributed tracing");
 
 export const FeatureFlagsSchema = z

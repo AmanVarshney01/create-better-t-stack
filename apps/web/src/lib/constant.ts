@@ -900,6 +900,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "grafana",
+      name: "Grafana",
+      description: "Prometheus metrics for Grafana dashboards and alerting",
+      icon: "https://cdn.simpleicons.org/grafana/F46800",
+      color: "from-orange-400 to-orange-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No Observability",
       description: "Skip observability/tracing setup",

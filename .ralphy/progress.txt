@@ -7451,3 +7451,43 @@ Implemented SST (Serverless Stack) deployment platform support as a cross-ecosys
 ### Test Results
 - All 23 tests pass
 - Linting passes (no errors)
+
+## 2026-01-24: Grafana Dashboard Integration
+
+### Task: Implement Grafana (Prometheus metrics) as an observability option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "grafana" to ObservabilitySchema enum
+2. **packages/template-generator/src/utils/add-deps.ts**: Added Grafana dependency versions:
+   - prom-client: ^15.1.3
+3. **packages/template-generator/src/processors/observability-deps.ts**: Added Grafana dependency processing for prom-client
+4. **packages/template-generator/src/processors/env-vars.ts**: Added Grafana environment variables:
+   - METRICS_PORT: Port for Prometheus metrics endpoint (default: 9090)
+   - METRICS_PATH: Path for metrics endpoint (default: /metrics)
+   - METRICS_PREFIX: Optional prefix for all metric names
+5. **packages/template-generator/templates/observability/grafana/server/base/src/lib/metrics.ts.hbs**: Created Grafana metrics template with:
+   - Prometheus metrics via prom-client
+   - Default Node.js metrics (CPU, memory, event loop, etc.)
+   - Custom application metrics: HTTP requests, request duration, active connections, DB queries, errors
+   - Dedicated metrics server for Prometheus scraping
+   - Helper functions for metrics integration
+6. **apps/web/src/lib/constant.ts**: Added Grafana to web builder observability options
+7. **apps/cli/src/prompts/observability.ts**: Added Grafana option to CLI prompt
+8. **apps/cli/test/observability.test.ts**: Added comprehensive Grafana tests for:
+   - hono, express, fastify, elysia, nitro, nestjs, fets backends
+   - Next.js fullstack configuration
+
+### Features:
+- Prometheus metrics via prom-client for Grafana dashboards
+- Default Node.js metrics collection (CPU, memory, event loop, GC)
+- Pre-configured application metrics:
+  - http_requests_total: Request counter with method, route, status labels
+  - http_request_duration_seconds: Latency histogram
+  - active_connections: Gauge for current connections
+  - db_query_duration_seconds: Database query latency
+  - errors_total: Error counter by type
+- Dedicated metrics server on configurable port (default: 9090)
+- Works with all backend frameworks: hono, express, fastify, elysia, nitro, nestjs, fets
+- Compatible with any Prometheus-compatible backend (Grafana, Victoria Metrics, etc.)
+
+### Status: COMPLETE

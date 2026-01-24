@@ -930,6 +930,24 @@ function buildServerVars(
       comment: "Sentry profiles sample rate 0.0-1.0",
     },
     {
+      key: "METRICS_PORT",
+      value: "9090",
+      condition: observability === "grafana",
+      comment: "Port for Prometheus metrics endpoint (scraped by Grafana)",
+    },
+    {
+      key: "METRICS_PATH",
+      value: "/metrics",
+      condition: observability === "grafana",
+      comment: "Path for Prometheus metrics endpoint",
+    },
+    {
+      key: "METRICS_PREFIX",
+      value: "",
+      condition: observability === "grafana",
+      comment: "Prefix for all metric names (optional, defaults to app name)",
+    },
+    {
       key: "GROWTHBOOK_API_HOST",
       value: "https://cdn.growthbook.io",
       condition: featureFlags === "growthbook",

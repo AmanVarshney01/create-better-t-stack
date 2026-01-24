@@ -36,4 +36,13 @@ export function processObservabilityDeps(vfs: VirtualFileSystem, config: Project
       dependencies: ["@sentry/node", "@sentry/profiling-node"],
     });
   }
+
+  // Add Grafana packages (Prometheus metrics for Grafana dashboards)
+  if (observability === "grafana" && vfs.exists(serverPath)) {
+    addPackageDependency({
+      vfs,
+      packagePath: serverPath,
+      dependencies: ["prom-client"],
+    });
+  }
 }

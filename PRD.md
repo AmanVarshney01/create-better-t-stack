@@ -288,7 +288,7 @@
 ## **Monitoring**
 
 - [x] **Sentry** - Error tracking
-- [ ] **Grafana** - Dashboards
+- [x] **Grafana** - Dashboards
 
 ---
 

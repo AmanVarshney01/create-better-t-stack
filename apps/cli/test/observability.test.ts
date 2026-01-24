@@ -397,6 +397,201 @@ describe("Observability Configurations", () => {
     });
   });
 
+  describe("Grafana", () => {
+    it("should work with grafana + hono backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "grafana-hono",
+        observability: "grafana",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      // Check that Grafana (prom-client) dependencies were added
+      const packagesServer = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "packages")
+        ?.children?.find((c: any) => c.name === "server");
+
+      const appsServer = result.result?.tree?.root?.children
+        ?.find((c: any) => c.name === "apps")
+        ?.children?.find((c: any) => c.name === "server");
+
+      const serverDir = packagesServer || appsServer;
+      const serverPackageJson = serverDir?.children?.find((c: any) => c.name === "package.json");
+
+      if (serverPackageJson?.content) {
+        const pkgJson = JSON.parse(serverPackageJson.content);
+        expect(pkgJson.dependencies?.["prom-client"]).toBeDefined();
+      }
+    });
+
+    it("should work with grafana + express backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "grafana-express",
+        observability: "grafana",
+        backend: "express",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with grafana + fastify backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "grafana-fastify",
+        observability: "grafana",
+        backend: "fastify",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with grafana + elysia backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "grafana-elysia",
+        observability: "grafana",
+        backend: "elysia",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with grafana + nitro backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "grafana-nitro",
+        observability: "grafana",
+        backend: "nitro",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with grafana + nestjs backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "grafana-nestjs",
+        observability: "grafana",
+        backend: "nestjs",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with grafana + fets backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "grafana-fets",
+        observability: "grafana",
+        backend: "fets",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with grafana + Next.js fullstack", async () => {
+      const result = await runTRPCTest({
+        projectName: "grafana-next",
+        observability: "grafana",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        auth: "better-auth",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+  });
+
   describe("No Observability (none)", () => {
     it("should not add observability dependencies when observability is none", async () => {
       const result = await runTRPCTest({

@@ -552,6 +552,9 @@ export const dependencyVersionMap = {
   "@sentry/node": "^9.1.0",
   "@sentry/profiling-node": "^9.1.0",
 
+  // Grafana (Prometheus metrics)
+  "prom-client": "^15.1.3",
+
   // Headless CMS - Payload
   payload: "^3.14.1",
   "@payloadcms/next": "^3.14.1",

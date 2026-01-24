@@ -23,6 +23,11 @@ export async function getObservabilityChoice(observability?: Observability, back
       hint: "Error tracking and performance monitoring",
     },
     {
+      value: "grafana" as const,
+      label: "Grafana",
+      hint: "Prometheus metrics for Grafana dashboards and alerting",
+    },
+    {
       value: "none" as const,
       label: "None",
       hint: "Skip observability/tracing setup",
