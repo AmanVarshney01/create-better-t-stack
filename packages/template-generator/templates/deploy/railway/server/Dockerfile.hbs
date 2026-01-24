@@ -1,0 +1,127 @@
+# Dockerfile for {{projectName}} server
+# Optimized multi-stage build for Railway deployment
+
+{{#if (eq packageManager "bun")}}
+# Build stage
+FROM oven/bun:1 AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json bun.lock* ./
+{{#if (includes addons "turborepo")}}
+COPY apps/server/package.json ./apps/server/
+COPY packages/db/package.json ./packages/db/
+{{/if}}
+
+# Install dependencies
+RUN bun install --frozen-lockfile
+
+# Copy source code
+COPY . .
+
+# Build the application
+{{#if (includes addons "turborepo")}}
+RUN bun run build --filter=@{{projectName}}/server
+{{else}}
+RUN bun run build
+{{/if}}
+
+# Production stage
+FROM oven/bun:1-slim AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3000
+
+# Copy built application
+{{#if (includes addons "turborepo")}}
+COPY --from=builder /app/apps/server/dist ./dist
+COPY --from=builder /app/apps/server/package.json ./
+{{else}}
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json ./
+{{/if}}
+
+# Install production dependencies only
+RUN bun install --production --frozen-lockfile
+
+EXPOSE 3000
+
+CMD ["bun", "run", "dist/index.js"]
+{{else}}
+# Build stage
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Install pnpm if needed
+{{#if (eq packageManager "pnpm")}}
+RUN corepack enable && corepack prepare pnpm@latest --activate
+{{/if}}
+
+# Copy package files
+COPY package.json {{#if (eq packageManager "pnpm")}}pnpm-lock.yaml{{else}}package-lock.json{{/if}} ./
+{{#if (includes addons "turborepo")}}
+COPY apps/server/package.json ./apps/server/
+COPY packages/db/package.json ./packages/db/
+{{/if}}
+
+# Install dependencies
+{{#if (eq packageManager "pnpm")}}
+RUN pnpm install --frozen-lockfile
+{{else}}
+RUN npm ci
+{{/if}}
+
+# Copy source code
+COPY . .
+
+# Build the application
+{{#if (includes addons "turborepo")}}
+{{#if (eq packageManager "pnpm")}}
+RUN pnpm run build --filter=@{{projectName}}/server
+{{else}}
+RUN npm run build --workspace=apps/server
+{{/if}}
+{{else}}
+{{#if (eq packageManager "pnpm")}}
+RUN pnpm run build
+{{else}}
+RUN npm run build
+{{/if}}
+{{/if}}
+
+# Production stage
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=3000
+
+{{#if (eq packageManager "pnpm")}}
+RUN corepack enable && corepack prepare pnpm@latest --activate
+{{/if}}
+
+# Copy built application
+{{#if (includes addons "turborepo")}}
+COPY --from=builder /app/apps/server/dist ./dist
+COPY --from=builder /app/apps/server/package.json ./
+{{else}}
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json ./
+{{/if}}
+
+# Install production dependencies only
+{{#if (eq packageManager "pnpm")}}
+RUN pnpm install --prod --frozen-lockfile
+{{else}}
+RUN npm ci --omit=dev
+{{/if}}
+
+EXPOSE 3000
+
+CMD ["node", "dist/index.js"]
+{{/if}}

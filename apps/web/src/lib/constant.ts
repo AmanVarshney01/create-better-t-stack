@@ -571,6 +571,13 @@ export const TECH_OPTIONS: Record<
       color: "from-purple-400 to-purple-600",
     },
     {
+      id: "railway",
+      name: "Railway",
+      description: "Deploy with Railway cloud development platform",
+      icon: "https://cdn.simpleicons.org/railway/0B0D0E",
+      color: "from-zinc-700 to-zinc-900",
+    },
+    {
       id: "none",
       name: "None",
       description: "Skip deployment setup",
@@ -593,6 +600,13 @@ export const TECH_OPTIONS: Record<
       description: "Deploy globally with Fly.io edge platform",
       icon: "https://cdn.simpleicons.org/flydotio/8B5CF6",
       color: "from-purple-400 to-purple-600",
+    },
+    {
+      id: "railway",
+      name: "Railway",
+      description: "Deploy with Railway cloud development platform",
+      icon: "https://cdn.simpleicons.org/railway/0B0D0E",
+      color: "from-zinc-700 to-zinc-900",
     },
     {
       id: "none",

@@ -1,0 +1,13 @@
+# Railway configuration for {{projectName}} TanStack Start app
+# See https://docs.railway.app/reference/config-as-code for all options
+
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "{{#if (eq packageManager "bun")}}bun run .output/server/index.mjs{{else}}node .output/server/index.mjs{{/if}}"
+healthcheckPath = "/"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3

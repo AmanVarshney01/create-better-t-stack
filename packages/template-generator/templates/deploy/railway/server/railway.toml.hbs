@@ -1,0 +1,13 @@
+# Railway configuration for {{projectName}} server
+# See https://docs.railway.app/reference/config-as-code for all options
+
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "{{#if (eq packageManager "bun")}}bun run dist/index.js{{else}}node dist/index.js{{/if}}"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3

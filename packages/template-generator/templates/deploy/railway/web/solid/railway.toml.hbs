@@ -1,0 +1,12 @@
+# Railway configuration for {{projectName}} SolidStart SPA
+# See https://docs.railway.app/reference/config-as-code for all options
+
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3

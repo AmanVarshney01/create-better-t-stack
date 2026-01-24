@@ -274,7 +274,7 @@
 - [x] **Netlify** - Jamstack platform
 - [x] **Cloudflare Workers** - Edge compute
 - [x] **Fly.io** - Global application platform
-- [ ] **Railway** - Cloud development platform
+- [x] **Railway** - Cloud development platform
 
 ---
 

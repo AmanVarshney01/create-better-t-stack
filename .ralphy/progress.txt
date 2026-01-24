@@ -7310,3 +7310,47 @@ Zap is already fully implemented in the codebase. The implementation includes:
 - Request-based concurrency with soft limit 200, hard limit 250
 
 ### Status: COMPLETE
+
+## 2026-01-24: Railway Deployment Platform Implementation
+
+### Task: Implement Railway as a deployment platform option
+
+### Changes Made:
+1. **packages/types/src/schemas.ts**: Added "railway" to both WebDeploySchema and ServerDeploySchema enums
+2. **apps/web/src/lib/constant.ts**: Added Railway to both webDeploy and serverDeploy arrays with:
+   - Icon: https://cdn.simpleicons.org/railway/0B0D0E
+   - Color: from-zinc-700 to-zinc-900
+   - Description: "Deploy with Railway cloud development platform"
+3. **packages/template-generator/src/processors/deploy-deps.ts**: Added Railway-specific dependency processing:
+   - SvelteKit requires @sveltejs/adapter-node for Docker-based deployments (same as Fly.io)
+4. **packages/template-generator/templates/deploy/railway/**: Created Railway deployment templates:
+   - server/railway.toml.hbs - Railway configuration for server deployment
+   - server/Dockerfile.hbs - Multi-stage Docker build for server (supports npm, pnpm, bun)
+   - server/.dockerignore.hbs - Docker ignore configuration
+   - web/react/next/railway.toml.hbs, Dockerfile.hbs, .dockerignore.hbs - Next.js deployment
+   - web/react/tanstack-router/railway.toml.hbs, Dockerfile.hbs - TanStack Router SPA with nginx
+   - web/react/react-router/railway.toml.hbs, Dockerfile.hbs - React Router SPA with nginx
+   - web/react/tanstack-start/railway.toml.hbs, Dockerfile.hbs - TanStack Start SSR deployment
+   - web/nuxt/railway.toml.hbs, Dockerfile.hbs - Nuxt deployment with Nitro
+   - web/svelte/railway.toml.hbs, Dockerfile.hbs - SvelteKit with node adapter
+   - web/solid/railway.toml.hbs, Dockerfile.hbs - SolidStart SPA with nginx
+5. **apps/cli/test/railway-deployment.test.ts**: Created comprehensive tests (21 tests):
+   - Tests for all 7 web frontends (tanstack-router, react-router, tanstack-start, next, nuxt, svelte, solid)
+   - Tests for 4 backend frameworks (hono, express, fastify, elysia)
+   - Combined web + server deployment tests
+   - Package manager variations (npm, pnpm, bun)
+   - Turborepo monorepo support tests
+   - Mixed deployment provider tests
+
+### Features:
+- Docker-based deployment via Railway's Dockerfile builder
+- Multi-stage builds for optimized production images
+- Support for all package managers (npm, pnpm, bun)
+- SSR frameworks (Next.js, Nuxt, SvelteKit, TanStack Start) with proper server startup
+- SPA frameworks (TanStack Router, React Router, Solid) with nginx static file serving
+- Health check configuration for all deployments
+- Restart policies and error handling
+- Turborepo monorepo support
+- Compatible with Railway's config-as-code via railway.toml
+
+### Status: COMPLETE

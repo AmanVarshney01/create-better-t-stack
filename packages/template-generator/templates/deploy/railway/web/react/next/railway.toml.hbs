@@ -1,0 +1,13 @@
+# Railway configuration for {{projectName}} Next.js app
+# See https://docs.railway.app/reference/config-as-code for all options
+
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "node server.js"
+healthcheckPath = "/"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
