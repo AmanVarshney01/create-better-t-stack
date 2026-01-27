@@ -5,7 +5,6 @@ import ContributorsSection from "@/components/home/contributors-section";
 import FeaturesSection from "@/components/home/features-section";
 import Footer from "@/components/home/footer";
 import HeroSection from "@/components/home/hero-section";
-import SponsorsSection from "@/components/home/sponsors-section";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -19,7 +18,6 @@ function HomePage() {
         <HeroSection />
         <FeaturesSection />
         <CombinationsSection />
-        <SponsorsSection />
         <ContributorsSection />
         <Footer />
       </div>

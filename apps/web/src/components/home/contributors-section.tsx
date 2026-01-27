@@ -1,4 +1,4 @@
-import { Code2, GitPullRequest } from "lucide-react";
+import { Code2, GitPullRequest, Heart } from "lucide-react";
 
 type Contributor = {
   username: string;
@@ -59,16 +59,27 @@ export default function ContributorsSection() {
           ))}
         </div>
 
-        {/* Contribute CTA */}
-        <a
-          href="https://github.com/Marve10s/Better-Fullstack/issues"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-8 inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-        >
-          <GitPullRequest className="h-4 w-4" />
-          Contribute to Better Fullstack
-        </a>
+        {/* CTA Buttons */}
+        <div className="mt-8 flex flex-wrap items-center gap-3">
+          <a
+            href="https://github.com/Marve10s/Better-Fullstack/issues"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+          >
+            <GitPullRequest className="h-4 w-4" />
+            Contribute to Better Fullstack
+          </a>
+          <a
+            href="https://www.patreon.com/c/marve10s"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
+          >
+            <Heart className="h-4 w-4" />
+            Become a Patron
+          </a>
+        </div>
       </div>
     </section>
   );
