@@ -12,6 +12,7 @@
 
 import {
   ADDONS_VALUES,
+  AI_DOCS_VALUES,
   AI_VALUES,
   ANIMATION_VALUES,
   API_VALUES,
@@ -114,6 +115,8 @@ const CLI_SCHEMA_MAP: Record<string, readonly string[]> = {
   goApi: GO_API_VALUES,
   goCli: GO_CLI_VALUES,
   goLogging: GO_LOGGING_VALUES,
+  // AI Docs
+  aiDocs: AI_DOCS_VALUES,
 };
 
 // Parse TECH_OPTIONS from the Builder's constant.ts file
