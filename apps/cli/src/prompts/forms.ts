@@ -20,6 +20,7 @@ export async function getFormsChoice(forms?: Forms, frontends?: Frontend[]) {
   );
   const isSolid = web.includes("solid");
   const isQwik = web.includes("qwik");
+  const isFresh = web.includes("fresh");
 
   // Build options based on frontend
   const options: Array<{ value: Forms; label: string; hint: string }> = [];
@@ -49,12 +50,14 @@ export async function getFormsChoice(forms?: Forms, frontends?: Frontend[]) {
     );
   }
 
-  // TanStack Form works with multiple frameworks
-  options.push({
-    value: "tanstack-form" as const,
-    label: "TanStack Form",
-    hint: "Fully-typed, framework-agnostic form library",
-  });
+  // TanStack Form works with multiple frameworks (but not Fresh/Preact - no adapter exists)
+  if (!isFresh) {
+    options.push({
+      value: "tanstack-form" as const,
+      label: "TanStack Form",
+      hint: "Fully-typed, framework-agnostic form library",
+    });
+  }
 
   // Modular Forms for Solid/Qwik
   if (isSolid || isQwik) {

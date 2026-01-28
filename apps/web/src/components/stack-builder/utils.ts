@@ -804,6 +804,47 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   }
 
   // ============================================
+  // FRESH FRONTEND CONSTRAINTS
+  // Fresh is Preact-based and incompatible with React-specific packages
+  // ============================================
+
+  const isFresh = nextStack.webFrontend.includes("fresh");
+
+  if (isFresh) {
+    // TanStack Form has no Preact adapter
+    if (nextStack.forms === "tanstack-form") {
+      nextStack.forms = "none";
+      changed = true;
+      changes.push({
+        category: "forms",
+        message: "Forms set to 'None' (TanStack Form has no Preact adapter)",
+      });
+    }
+
+    // State management libraries that require React bindings
+    const reactOnlyStateManagement = ["nanostores", "xstate", "tanstack-store"];
+    if (reactOnlyStateManagement.includes(nextStack.stateManagement)) {
+      const oldValue = nextStack.stateManagement;
+      nextStack.stateManagement = "none";
+      changed = true;
+      changes.push({
+        category: "stateManagement",
+        message: `State management set to 'None' (${oldValue} requires React bindings)`,
+      });
+    }
+
+    // Lottie uses lottie-react which requires React
+    if (nextStack.animation === "lottie") {
+      nextStack.animation = "none";
+      changed = true;
+      changes.push({
+        category: "animation",
+        message: "Animation set to 'None' (Lottie requires lottie-react)",
+      });
+    }
+  }
+
+  // ============================================
   // DEPLOYMENT CONSTRAINTS
   // ============================================
 
@@ -1211,6 +1252,35 @@ export const getDisabledReason = (
         }
       }
     }
+  }
+
+  // ============================================
+  // FRESH FRONTEND CONSTRAINTS
+  // Fresh is Preact-based and incompatible with React-specific packages
+  // ============================================
+  const isFresh = currentStack.webFrontend.includes("fresh");
+
+  // Forms: TanStack Form has no Preact adapter
+  if (category === "forms" && optionId === "tanstack-form" && isFresh) {
+    return "TanStack Form has no Preact adapter (Fresh uses Preact)";
+  }
+
+  // State Management: These all require React bindings
+  if (category === "stateManagement" && isFresh) {
+    if (optionId === "nanostores") {
+      return "Nanostores requires @nanostores/react (no Preact support)";
+    }
+    if (optionId === "xstate") {
+      return "XState requires @xstate/react (no Preact support)";
+    }
+    if (optionId === "tanstack-store") {
+      return "TanStack Store requires @tanstack/react-store (no Preact support)";
+    }
+  }
+
+  // Animation: Lottie uses lottie-react which requires React
+  if (category === "animation" && optionId === "lottie" && isFresh) {
+    return "Lottie uses lottie-react which requires React (not Preact)";
   }
 
   // ============================================

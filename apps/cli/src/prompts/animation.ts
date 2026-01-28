@@ -18,6 +18,7 @@ export async function getAnimationChoice(animation?: Animation, frontends?: Fron
   const isReact = web.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next", "redwood"].includes(f),
   );
+  const isFresh = web.includes("fresh");
 
   // Build options based on frontend
   const options: Array<{ value: Animation; label: string; hint: string }> = [];
@@ -49,17 +50,22 @@ export async function getAnimationChoice(animation?: Animation, frontends?: Fron
       label: "Auto Animate",
       hint: "Zero-config, drop-in animation utility",
     },
-    {
+  );
+
+  // Lottie requires lottie-react, not available for Fresh/Preact
+  if (!isFresh) {
+    options.push({
       value: "lottie" as const,
       label: "Lottie",
       hint: "Render After Effects animations natively",
-    },
-    {
-      value: "none" as const,
-      label: "None",
-      hint: "Skip animation library setup",
-    },
-  );
+    });
+  }
+
+  options.push({
+    value: "none" as const,
+    label: "None",
+    hint: "Skip animation library setup",
+  });
 
   const response = await navigableSelect<Animation>({
     message: "Select animation library",

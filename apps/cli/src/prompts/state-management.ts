@@ -21,6 +21,7 @@ export async function getStateManagementChoice(
   const isReact = web.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next", "redwood"].includes(f),
   );
+  const isFresh = web.includes("fresh");
 
   // Build options based on frontend
   const options: Array<{ value: StateManagement; label: string; hint: string }> = [];
@@ -60,29 +61,32 @@ export async function getStateManagementChoice(
     );
   }
 
-  // Framework-agnostic options
-  options.push(
-    {
-      value: "nanostores" as const,
-      label: "Nanostores",
-      hint: "Tiny state manager (1KB) for all frameworks",
-    },
-    {
-      value: "xstate" as const,
-      label: "XState",
-      hint: "State machines and statecharts for complex logic",
-    },
-    {
-      value: "tanstack-store" as const,
-      label: "TanStack Store",
-      hint: "Framework-agnostic store powering TanStack ecosystem",
-    },
-    {
-      value: "none" as const,
-      label: "None",
-      hint: "Skip state management setup",
-    },
-  );
+  // Framework-agnostic options (but require React bindings, so exclude Fresh)
+  if (!isFresh) {
+    options.push(
+      {
+        value: "nanostores" as const,
+        label: "Nanostores",
+        hint: "Tiny state manager (1KB) for all frameworks",
+      },
+      {
+        value: "xstate" as const,
+        label: "XState",
+        hint: "State machines and statecharts for complex logic",
+      },
+      {
+        value: "tanstack-store" as const,
+        label: "TanStack Store",
+        hint: "Framework-agnostic store powering TanStack ecosystem",
+      },
+    );
+  }
+
+  options.push({
+    value: "none" as const,
+    label: "None",
+    hint: "Skip state management setup",
+  });
 
   const response = await navigableSelect<StateManagement>({
     message: "Select state management",

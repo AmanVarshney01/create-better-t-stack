@@ -4,7 +4,7 @@ import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
 
-// React-based web frameworks that support animation libraries
+// React-based web frameworks that support all animation libraries
 const REACT_WEB_FRAMEWORKS: Frontend[] = [
   "tanstack-router",
   "react-router",
@@ -15,6 +15,9 @@ const REACT_WEB_FRAMEWORKS: Frontend[] = [
 // Native frameworks (always React-based)
 const NATIVE_FRAMEWORKS: Frontend[] = ["native-bare", "native-uniwind", "native-unistyles"];
 
+// Framework-agnostic animations that work with any frontend (including Fresh/Preact)
+const FRAMEWORK_AGNOSTIC_ANIMATIONS: ProjectConfig["animation"][] = ["gsap", "auto-animate"];
+
 export function processAnimationDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { animation, frontend } = config;
 
@@ -23,10 +26,12 @@ export function processAnimationDeps(vfs: VirtualFileSystem, config: ProjectConf
 
   // Determine which packages need animation deps
   const hasReactWeb = frontend.some((f) => REACT_WEB_FRAMEWORKS.includes(f));
+  const hasFresh = frontend.includes("fresh");
   const hasNative = frontend.some((f) => NATIVE_FRAMEWORKS.includes(f));
 
-  // Add to web package if it's a React-based web frontend
   const webPath = "apps/web/package.json";
+
+  // Add to web package if it's a React-based web frontend (all animations supported)
   if (hasReactWeb && vfs.exists(webPath)) {
     const deps = getAnimationDeps(animation, false);
     if (deps.length > 0) {
@@ -35,6 +40,20 @@ export function processAnimationDeps(vfs: VirtualFileSystem, config: ProjectConf
         packagePath: webPath,
         dependencies: deps,
       });
+    }
+  }
+
+  // Fresh only supports framework-agnostic animations (GSAP, auto-animate)
+  if (hasFresh && !hasReactWeb && vfs.exists(webPath)) {
+    if (FRAMEWORK_AGNOSTIC_ANIMATIONS.includes(animation)) {
+      const deps = getAnimationDeps(animation, false);
+      if (deps.length > 0) {
+        addPackageDependency({
+          vfs,
+          packagePath: webPath,
+          dependencies: deps,
+        });
+      }
     }
   }
 

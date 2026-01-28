@@ -22,6 +22,11 @@ import type {
   FileStorage,
   FileUpload,
   Forms,
+  GoCli,
+  GoLogging,
+  GoOrm,
+  GoApi,
+  GoWebFramework,
   JobQueue,
   Logging,
   Observability,
@@ -29,7 +34,19 @@ import type {
   PackageManager,
   Payments,
   ProjectConfig,
+  PythonAi,
+  PythonOrm,
+  PythonQuality,
+  PythonTaskQueue,
+  PythonValidation,
+  PythonWebFramework,
   Realtime,
+  RustApi,
+  RustCli,
+  RustFrontend,
+  RustLibraries,
+  RustOrm,
+  RustWebFramework,
   Runtime,
   Search,
   ServerDeploy,
@@ -222,6 +239,77 @@ export function processFlags(options: CLIInput, projectName?: string) {
 
   if (options.aiDocs !== undefined) {
     config.aiDocs = processArrayOption(options.aiDocs) as AiDocs[];
+  }
+
+  // Rust ecosystem options
+  if (options.rustWebFramework !== undefined) {
+    config.rustWebFramework = options.rustWebFramework as RustWebFramework;
+  }
+
+  if (options.rustFrontend !== undefined) {
+    config.rustFrontend = options.rustFrontend as RustFrontend;
+  }
+
+  if (options.rustOrm !== undefined) {
+    config.rustOrm = options.rustOrm as RustOrm;
+  }
+
+  if (options.rustApi !== undefined) {
+    config.rustApi = options.rustApi as RustApi;
+  }
+
+  if (options.rustCli !== undefined) {
+    config.rustCli = options.rustCli as RustCli;
+  }
+
+  if (options.rustLibraries !== undefined) {
+    config.rustLibraries = processArrayOption(options.rustLibraries) as RustLibraries[];
+  }
+
+  // Python ecosystem options
+  if (options.pythonWebFramework !== undefined) {
+    config.pythonWebFramework = options.pythonWebFramework as PythonWebFramework;
+  }
+
+  if (options.pythonOrm !== undefined) {
+    config.pythonOrm = options.pythonOrm as PythonOrm;
+  }
+
+  if (options.pythonValidation !== undefined) {
+    config.pythonValidation = options.pythonValidation as PythonValidation;
+  }
+
+  if (options.pythonAi !== undefined) {
+    config.pythonAi = processArrayOption(options.pythonAi) as PythonAi[];
+  }
+
+  if (options.pythonTaskQueue !== undefined) {
+    config.pythonTaskQueue = options.pythonTaskQueue as PythonTaskQueue;
+  }
+
+  if (options.pythonQuality !== undefined) {
+    config.pythonQuality = options.pythonQuality as PythonQuality;
+  }
+
+  // Go ecosystem options
+  if (options.goWebFramework !== undefined) {
+    config.goWebFramework = options.goWebFramework as GoWebFramework;
+  }
+
+  if (options.goOrm !== undefined) {
+    config.goOrm = options.goOrm as GoOrm;
+  }
+
+  if (options.goApi !== undefined) {
+    config.goApi = options.goApi as GoApi;
+  }
+
+  if (options.goCli !== undefined) {
+    config.goCli = options.goCli as GoCli;
+  }
+
+  if (options.goLogging !== undefined) {
+    config.goLogging = options.goLogging as GoLogging;
   }
 
   return config;
