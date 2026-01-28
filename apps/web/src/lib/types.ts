@@ -42,6 +42,7 @@ export type TechCategory =
   | "packageManager"
   | "examples"
   | "ai"
+  | "aiDocs"
   | "git"
   | "install"
   | "effect"

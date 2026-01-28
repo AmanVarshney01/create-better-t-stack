@@ -113,6 +113,8 @@ import {
   type GoCli,
   GoLoggingSchema,
   type GoLogging,
+  AiDocsSchema,
+  type AiDocs,
 } from "./types";
 import { handleError } from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
@@ -222,6 +224,11 @@ export const router = os.router({
           goApi: GoApiSchema.optional().describe("Go API layer (grpc-go)"),
           goCli: GoCliSchema.optional().describe("Go CLI tools (cobra, bubbletea)"),
           goLogging: GoLoggingSchema.optional().describe("Go logging (zap)"),
+          // AI documentation files
+          aiDocs: z
+            .array(AiDocsSchema)
+            .optional()
+            .describe("AI documentation files (claude-md, agents-md, cursorrules)"),
         }),
       ]),
     )
@@ -474,6 +481,8 @@ export async function createVirtual(
       goApi: options.goApi || "none",
       goCli: options.goCli || "none",
       goLogging: options.goLogging || "none",
+      // AI documentation files
+      aiDocs: options.aiDocs || ["claude-md"],
     };
 
     const result = await generate({
@@ -541,4 +550,5 @@ export type {
   GoApi,
   GoCli,
   GoLogging,
+  AiDocs,
 };

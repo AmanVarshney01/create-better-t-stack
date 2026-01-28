@@ -65,6 +65,7 @@ export async function writeBtsConfig(projectConfig: ProjectConfig) {
     goApi: projectConfig.goApi,
     goCli: projectConfig.goCli,
     goLogging: projectConfig.goLogging,
+    aiDocs: projectConfig.aiDocs,
   };
 
   const baseContent = {
@@ -124,6 +125,7 @@ export async function writeBtsConfig(projectConfig: ProjectConfig) {
     goApi: btsConfig.goApi,
     goCli: btsConfig.goCli,
     goLogging: btsConfig.goLogging,
+    aiDocs: btsConfig.aiDocs,
   };
 
   let configContent = JSON.stringify(baseContent);

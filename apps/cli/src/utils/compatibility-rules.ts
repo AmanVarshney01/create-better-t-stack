@@ -453,18 +453,6 @@ export function allowedApisForFrontends(
   return base;
 }
 
-export function isExampleTodoAllowed(
-  backend?: ProjectConfig["backend"],
-  database?: ProjectConfig["database"],
-  api?: API,
-) {
-  // Convex handles its own data layer, no need for database or API
-  if (backend === "convex") return true;
-  // Todo requires both database and API to communicate
-  if (database === "none" || api === "none") return false;
-  return true;
-}
-
 export function isExampleAIAllowed(backend?: ProjectConfig["backend"], frontends: Frontend[] = []) {
   const includesSolid = frontends.includes("solid");
   if (includesSolid) return false;
@@ -582,24 +570,10 @@ export function validatePaymentsCompatibility(
 export function validateExamplesCompatibility(
   examples: string[] | undefined,
   backend: ProjectConfig["backend"] | undefined,
-  database: ProjectConfig["database"] | undefined,
   frontend?: Frontend[],
-  api?: API,
 ) {
   const examplesArr = examples ?? [];
   if (examplesArr.length === 0 || examplesArr.includes("none")) return;
-  if (examplesArr.includes("todo") && backend !== "convex") {
-    if (database === "none") {
-      exitWithError(
-        "The 'todo' example requires a database. Cannot use --examples todo when database is 'none'.",
-      );
-    }
-    if (api === "none") {
-      exitWithError(
-        "The 'todo' example requires an API layer (tRPC or oRPC). Cannot use --examples todo when api is 'none'.",
-      );
-    }
-  }
 
   if (examplesArr.includes("ai") && (frontend ?? []).includes("solid")) {
     exitWithError("The 'ai' example is not compatible with the Solid frontend.");

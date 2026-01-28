@@ -7,40 +7,8 @@ import { addPackageDependency, type AvailableDependencies } from "../utils/add-d
 export function processExamplesDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   if (!config.examples || config.examples.length === 0 || config.examples[0] === "none") return;
 
-  if (
-    config.examples.includes("todo") &&
-    config.backend !== "convex" &&
-    config.backend !== "none"
-  ) {
-    setupTodoDependencies(vfs, config);
-  }
-
   if (config.examples.includes("ai")) {
     setupAIDependencies(vfs, config);
-  }
-}
-
-function setupTodoDependencies(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { orm, database, backend } = config;
-  const apiPkgPath = "packages/api/package.json";
-  if (!vfs.exists(apiPkgPath) || backend === "none") return;
-
-  if (orm === "drizzle") {
-    const deps: AvailableDependencies[] = ["drizzle-orm"];
-    if (database === "postgres") deps.push("@types/pg");
-    addPackageDependency({ vfs, packagePath: apiPkgPath, dependencies: deps });
-  } else if (orm === "prisma") {
-    addPackageDependency({ vfs, packagePath: apiPkgPath, dependencies: ["@prisma/client"] });
-  } else if (orm === "mongoose") {
-    addPackageDependency({ vfs, packagePath: apiPkgPath, dependencies: ["mongoose"] });
-  } else if (orm === "typeorm") {
-    addPackageDependency({ vfs, packagePath: apiPkgPath, dependencies: ["typeorm"] });
-  } else if (orm === "kysely") {
-    addPackageDependency({ vfs, packagePath: apiPkgPath, dependencies: ["kysely"] });
-  } else if (orm === "mikroorm") {
-    addPackageDependency({ vfs, packagePath: apiPkgPath, dependencies: ["@mikro-orm/core"] });
-  } else if (orm === "sequelize") {
-    addPackageDependency({ vfs, packagePath: apiPkgPath, dependencies: ["sequelize"] });
   }
 }
 

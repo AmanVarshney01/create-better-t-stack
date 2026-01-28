@@ -64,6 +64,7 @@ import type {
   GoApiSchema,
   GoCliSchema,
   GoLoggingSchema,
+  AiDocsSchema,
 } from "./schemas";
 
 // Inferred types from Zod schemas
@@ -124,6 +125,7 @@ export type GoOrm = z.infer<typeof GoOrmSchema>;
 export type GoApi = z.infer<typeof GoApiSchema>;
 export type GoCli = z.infer<typeof GoCliSchema>;
 export type GoLogging = z.infer<typeof GoLoggingSchema>;
+export type AiDocs = z.infer<typeof AiDocsSchema>;
 
 export type CreateInput = z.infer<typeof CreateInputSchema>;
 export type AddInput = z.infer<typeof AddInputSchema>;

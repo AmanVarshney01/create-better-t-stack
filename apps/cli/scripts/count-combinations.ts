@@ -63,7 +63,7 @@ const options = {
     "storybook",
     "none",
   ],
-  examples: ["todo", "ai", "none"],
+  examples: ["ai", "none"],
   packageManager: ["npm", "pnpm", "bun"],
   dbSetup: [
     "turso",

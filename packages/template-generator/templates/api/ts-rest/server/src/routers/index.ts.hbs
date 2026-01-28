@@ -1,8 +1,5 @@
 import { contract } from "../index";
 import type { Context } from "../context";
-{{#if (includes examples "todo")}}
-import { todoHandlers } from "./todo";
-{{/if}}
 
 export function createRouter(ctx: Context) {
   return {
@@ -30,9 +27,6 @@ export function createRouter(ctx: Context) {
         },
       };
     },
-{{/if}}
-{{#if (includes examples "todo")}}
-    todos: todoHandlers(ctx),
 {{/if}}
   };
 }

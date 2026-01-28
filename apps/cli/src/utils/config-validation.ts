@@ -568,18 +568,8 @@ export function validateFrontendConstraints(
   validateWebDeployRequiresWebFrontend(config.webDeploy, hasWebFrontendFlag);
 }
 
-export function validateApiConstraints(config: Partial<ProjectConfig>, options: CLIInput) {
-  if (config.api === "none") {
-    if (
-      options.examples?.includes("todo") &&
-      options.backend !== "convex" &&
-      options.backend !== "none"
-    ) {
-      exitWithError(
-        "Cannot use '--examples todo' when '--api' is set to 'none'. The todo example requires an API layer. Please remove 'todo' from --examples or choose an API type.",
-      );
-    }
-  }
+export function validateApiConstraints(_config: Partial<ProjectConfig>, _options: CLIInput) {
+  // No API constraints currently needed
 }
 
 export function validateFullConfig(
@@ -627,13 +617,7 @@ export function validateFullConfig(
     config.addons = [...new Set(config.addons)];
   }
 
-  validateExamplesCompatibility(
-    config.examples ?? [],
-    config.backend,
-    config.database,
-    config.frontend ?? [],
-    config.api,
-  );
+  validateExamplesCompatibility(config.examples ?? [], config.backend, config.frontend ?? []);
 
   validatePaymentsCompatibility(
     config.payments,
@@ -679,13 +663,7 @@ export function validateConfigForProgrammaticUse(config: Partial<ProjectConfig>)
       validateAddonsAgainstFrontends(config.addons, config.frontend, config.auth);
     }
 
-    validateExamplesCompatibility(
-      config.examples ?? [],
-      config.backend,
-      config.database,
-      config.frontend ?? [],
-      config.api,
-    );
+    validateExamplesCompatibility(config.examples ?? [], config.backend, config.frontend ?? []);
 
     validateUILibraryFrontendCompatibility(
       config.uiLibrary,

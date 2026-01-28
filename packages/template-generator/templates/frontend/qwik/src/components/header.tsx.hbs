@@ -7,9 +7,6 @@ export default component$(() => {
     {{#if (eq auth "better-auth")}}
     { href: "/dashboard", label: "Dashboard" },
     {{/if}}
-    {{#if (includes examples "todo")}}
-    { href: "/todos", label: "Todos" },
-    {{/if}}
     {{#if (includes examples "ai")}}
     { href: "/ai", label: "AI Chat" },
     {{/if}}

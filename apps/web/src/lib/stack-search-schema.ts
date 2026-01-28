@@ -48,6 +48,7 @@ export const stackSearchSchema = z.object({
   pm: z.string().catch(DEFAULT_STACK.packageManager),
   ex: commaSeparatedArray(DEFAULT_STACK.examples),
   aisdk: z.string().catch(DEFAULT_STACK.aiSdk),
+  aid: commaSeparatedArray(DEFAULT_STACK.aiDocs),
   git: z.string().catch(DEFAULT_STACK.git),
   i: z.string().catch(DEFAULT_STACK.install),
   wd: z.string().catch(DEFAULT_STACK.webDeploy),

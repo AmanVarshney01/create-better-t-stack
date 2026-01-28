@@ -75,6 +75,8 @@ export const DEFAULT_CONFIG_BASE = {
   goApi: "none",
   goCli: "none",
   goLogging: "zap",
+  // AI documentation files
+  aiDocs: ["claude-md"],
 } as const;
 
 export function getDefaultConfig() {
@@ -87,6 +89,7 @@ export function getDefaultConfig() {
     examples: [...DEFAULT_CONFIG_BASE.examples],
     rustLibraries: [...DEFAULT_CONFIG_BASE.rustLibraries],
     pythonAi: [...DEFAULT_CONFIG_BASE.pythonAi],
+    aiDocs: [...DEFAULT_CONFIG_BASE.aiDocs],
   };
 }
 

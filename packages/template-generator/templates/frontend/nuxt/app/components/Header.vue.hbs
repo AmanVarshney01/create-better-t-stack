@@ -11,9 +11,6 @@ const items = computed<NavigationMenuItem[]>(() => [
     {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
     { label: "Dashboard", to: "/dashboard", active: route.path.startsWith("/dashboard") },
     {{/if}}
-    {{#if (includes examples "todo")}}
-    { label: "Todos", to: "/todos", active: route.path.startsWith("/todos") },
-    {{/if}}
     {{#if (includes examples "ai")}}
     { label: "AI Chat", to: "/ai", active: route.path.startsWith("/ai") },
     {{/if}}

@@ -71,3 +71,23 @@ export async function runUvSync({ projectDir }: { projectDir: string }) {
     }
   }
 }
+
+export async function runGoModTidy({ projectDir }: { projectDir: string }) {
+  const s = spinner();
+
+  try {
+    s.start("Running go mod tidy...");
+
+    await $({
+      cwd: projectDir,
+      stderr: "inherit",
+    })`go mod tidy`;
+
+    s.stop("Go dependencies installed successfully");
+  } catch (error) {
+    s.stop(pc.red("go mod tidy failed"));
+    if (error instanceof Error) {
+      consola.error(pc.red(`go mod tidy error: ${error.message}`));
+    }
+  }
+}

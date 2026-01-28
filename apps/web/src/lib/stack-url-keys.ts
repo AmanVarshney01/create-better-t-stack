@@ -39,6 +39,7 @@ export const stackUrlKeys: Record<keyof StackState, string> = {
   packageManager: "pm",
   examples: "ex",
   aiSdk: "aisdk",
+  aiDocs: "aid",
   git: "git",
   install: "i",
   webDeploy: "wd",

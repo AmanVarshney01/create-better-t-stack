@@ -548,11 +548,11 @@ describe("API Configurations", () => {
       });
     }
 
-    it("should work with Garph + todo example", async () => {
+    it("should work with Garph + basic example", async () => {
       const result = await runTRPCTest({
-        projectName: "garph-todo",
+        projectName: "garph-basic",
         api: "garph",
-        examples: ["todo"],
+        examples: ["none"],
         frontend: ["tanstack-router"],
         backend: "hono",
         runtime: "bun",
@@ -703,9 +703,9 @@ describe("API Configurations", () => {
       expectSuccess(result);
     });
 
-    it("should fail with API none + examples (non-convex backend)", async () => {
+    it("should work with API none + no examples (non-convex backend)", async () => {
       const result = await runTRPCTest({
-        projectName: "api-none-examples-fail",
+        projectName: "api-none-no-examples",
         api: "none",
         frontend: ["tanstack-router"],
         backend: "hono",
@@ -714,14 +714,14 @@ describe("API Configurations", () => {
         orm: "drizzle",
         auth: "none",
         addons: ["none"],
-        examples: ["todo"],
+        examples: ["none"],
         dbSetup: "none",
         webDeploy: "none",
         serverDeploy: "none",
-        expectError: true,
+        install: false,
       });
 
-      expectError(result);
+      expectSuccess(result);
     });
 
     it("should work with API none + examples + convex backend", async () => {
@@ -735,7 +735,7 @@ describe("API Configurations", () => {
         orm: "none",
         auth: "none",
         addons: ["none"],
-        examples: ["todo"],
+        examples: ["none"],
         dbSetup: "none",
         webDeploy: "none",
         serverDeploy: "none",
@@ -848,11 +848,11 @@ describe("API Configurations", () => {
   });
 
   describe("API with Examples", () => {
-    it("should work with tRPC + todo example", async () => {
+    it("should work with tRPC + AI example", async () => {
       const result = await runTRPCTest({
-        projectName: "trpc-todo",
+        projectName: "trpc-ai",
         api: "trpc",
-        examples: ["todo"],
+        examples: ["ai"],
         frontend: ["tanstack-router"],
         backend: "hono",
         runtime: "bun",
@@ -891,14 +891,14 @@ describe("API Configurations", () => {
     });
 
     const apiExampleCombinations = [
-      { api: "trpc", examples: ["todo", "ai"] },
-      { api: "orpc", examples: ["todo", "ai"] },
+      { api: "trpc", examples: ["ai"] },
+      { api: "orpc", examples: ["ai"] },
     ];
 
     for (const { api, examples } of apiExampleCombinations) {
-      it(`should work with ${api} + both examples`, async () => {
+      it(`should work with ${api} + AI example`, async () => {
         const result = await runTRPCTest({
-          projectName: `${api}-both-examples`,
+          projectName: `${api}-ai-example`,
           api: api as API,
           examples: examples as Examples[],
           frontend: ["tanstack-router"],

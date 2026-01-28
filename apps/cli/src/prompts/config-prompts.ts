@@ -1,6 +1,7 @@
 import type {
   Addons,
   AI,
+  AiDocs,
   Analytics,
   Animation,
   API,
@@ -60,6 +61,7 @@ import { hasWebStyling } from "../utils/compatibility-rules";
 import { exitCancelled } from "../utils/errors";
 import { getAddonsChoice } from "./addons";
 import { getAIChoice } from "./ai";
+import { getAiDocsChoice } from "./ai-docs";
 import { getAnimationChoice } from "./animation";
 import { getApiChoice } from "./api";
 import { getAstroIntegrationChoice } from "./astro-integration";
@@ -180,6 +182,7 @@ type PromptGroupResults = {
   goCli: GoCli;
   goLogging: GoLogging;
   // Keep at end
+  aiDocs: AiDocs[];
   git: boolean;
   packageManager: PackageManager;
   install: boolean;
@@ -274,13 +277,9 @@ export async function gatherConfig(
       },
       examples: ({ results }) => {
         if (results.ecosystem !== "typescript") return Promise.resolve([] as Examples[]);
-        return getExamplesChoice(
-          flags.examples,
-          results.database,
-          results.frontend,
-          results.backend,
-          results.api,
-        ) as Promise<Examples[]>;
+        return getExamplesChoice(flags.examples, results.frontend, results.backend) as Promise<
+          Examples[]
+        >;
       },
       dbSetup: ({ results }) => {
         if (results.ecosystem !== "typescript") return Promise.resolve("none" as DatabaseSetup);
@@ -451,6 +450,7 @@ export async function gatherConfig(
         return getGoLoggingChoice(flags.goLogging);
       },
       // Keep at end
+      aiDocs: () => getAiDocsChoice(flags.aiDocs),
       git: () => getGitChoice(flags.git),
       packageManager: ({ results }) => {
         // Skip package manager prompt for Rust/Python/Go (they use cargo/uv/go mod, not npm/pnpm/bun)
@@ -534,5 +534,7 @@ export async function gatherConfig(
     goApi: result.goApi,
     goCli: result.goCli,
     goLogging: result.goLogging,
+    // AI documentation files
+    aiDocs: result.aiDocs,
   };
 }

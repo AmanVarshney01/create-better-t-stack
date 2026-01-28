@@ -10,6 +10,7 @@ import {
   processPwaPlugins,
   processEnvVariables,
 } from "./processors";
+import { processAiDocs } from "./processors/ai-docs-generator";
 import {
   type TemplateData,
   processBaseTemplate,
@@ -99,6 +100,7 @@ export async function generateVirtualProject(options: GeneratorOptions): Promise
     }
 
     processReadme(vfs, config);
+    processAiDocs(vfs, config);
 
     const tree: VirtualFileTree = {
       root: vfs.toTree(config.projectName),

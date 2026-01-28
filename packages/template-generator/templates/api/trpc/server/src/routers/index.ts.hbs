@@ -1,9 +1,6 @@
 {{#if (eq api "orpc")}}
 import { {{#if (eq auth "better-auth")}}protectedProcedure, {{/if}}publicProcedure } from "../index";
 import type { RouterClient } from "@orpc/server";
-{{#if (includes examples "todo")}}
-import { todoRouter } from "./todo";
-{{/if}}
 
 export const appRouter = {
   healthCheck: publicProcedure.handler(() => {
@@ -17,9 +14,6 @@ export const appRouter = {
     };
   }),
   {{/if}}
-  {{#if (includes examples "todo")}}
-  todo: todoRouter,
-  {{/if}}
 };
 export type AppRouter = typeof appRouter;
 export type AppRouterClient = RouterClient<typeof appRouter>;
@@ -28,9 +22,6 @@ import {
   {{#if (eq auth "better-auth")}}protectedProcedure, {{/if}}publicProcedure,
   router,
 } from "../index";
-{{#if (includes examples "todo")}}
-import { todoRouter } from "./todo";
-{{/if}}
 
 export const appRouter = router({
   healthCheck: publicProcedure.query(() => {
@@ -43,9 +34,6 @@ export const appRouter = router({
       user: ctx.session.user,
     };
   }),
-  {{/if}}
-  {{#if (includes examples "todo")}}
-  todo: todoRouter,
   {{/if}}
 });
 export type AppRouter = typeof appRouter;

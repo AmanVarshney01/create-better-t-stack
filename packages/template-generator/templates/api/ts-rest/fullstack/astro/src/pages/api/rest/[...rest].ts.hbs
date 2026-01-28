@@ -19,24 +19,8 @@ const handler = tsr.router(contract, async (args) => {
 {{/if}}
   const router = createRouter(ctx);
 
-  // Handle nested routes
+  // Handle routes
   const path = args.appRoute.path;
-  if (path.startsWith("/todos")) {
-    const method = args.appRoute.method;
-    if (method === "GET" && path === "/todos") {
-      return router.todos.getAll();
-    }
-    if (method === "POST" && path === "/todos") {
-      return router.todos.create(args as any);
-    }
-    if (method === "PATCH" && path.includes("/toggle")) {
-      return router.todos.toggle(args as any);
-    }
-    if (method === "DELETE") {
-      return router.todos.delete(args as any);
-    }
-  }
-
   if (path === "/health") {
     return router.healthCheck();
   }

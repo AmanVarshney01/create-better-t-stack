@@ -38,6 +38,7 @@ const TYPESCRIPT_CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
   "appPlatforms",
   "packageManager",
   "examples",
+  "aiDocs",
   "git",
   "install",
 ];
@@ -50,6 +51,7 @@ const RUST_CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
   "rustApi",
   "rustCli",
   "rustLibraries",
+  "aiDocs",
   "git",
   "install",
 ];
@@ -62,6 +64,7 @@ const PYTHON_CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
   "pythonAi",
   "pythonTaskQueue",
   "pythonQuality",
+  "aiDocs",
   "git",
   "install",
 ];
@@ -73,6 +76,7 @@ const GO_CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
   "goApi",
   "goCli",
   "goLogging",
+  "aiDocs",
   "git",
   "install",
 ];
@@ -240,6 +244,7 @@ export function generateStackCommand(stack: StackState) {
         : "none"
     }`,
     `--examples ${stack.examples.join(" ") || "none"}`,
+    `--ai-docs ${stack.aiDocs.filter((d) => d !== "none").join(" ") || "none"}`,
   ];
 
   if (stack.yolo === "true") {
@@ -279,6 +284,9 @@ function generateRustCommand(stack: StackState, projectName: string) {
   }
   if (stack.rustLibraries !== "none" && stack.rustLibraries !== "serde") {
     flags.push(`--rust-libraries ${stack.rustLibraries}`);
+  }
+  if (stack.aiDocs.length > 0 && !stack.aiDocs.includes("none")) {
+    flags.push(`--ai-docs ${stack.aiDocs.join(" ")}`);
   }
   if (stack.git === "false") {
     flags.push("--no-git");
@@ -321,6 +329,9 @@ function generatePythonCommand(stack: StackState, projectName: string) {
   if (stack.pythonQuality !== "none") {
     flags.push(`--python-quality ${stack.pythonQuality}`);
   }
+  if (stack.aiDocs.length > 0 && !stack.aiDocs.includes("none")) {
+    flags.push(`--ai-docs ${stack.aiDocs.join(" ")}`);
+  }
   if (stack.git === "false") {
     flags.push("--no-git");
   }
@@ -358,6 +369,9 @@ function generateGoCommand(stack: StackState, projectName: string) {
   }
   if (stack.goLogging !== "none") {
     flags.push(`--go-logging ${stack.goLogging}`);
+  }
+  if (stack.aiDocs.length > 0 && !stack.aiDocs.includes("none")) {
+    flags.push(`--ai-docs ${stack.aiDocs.join(" ")}`);
   }
   if (stack.git === "false") {
     flags.push("--no-git");

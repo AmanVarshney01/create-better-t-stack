@@ -150,6 +150,7 @@ export async function createProjectHandler(
             goApi: "none",
             goCli: "none",
             goLogging: "none",
+            aiDocs: [],
           } satisfies ProjectConfig,
           reproducibleCommand: "",
           timeScaffolded,

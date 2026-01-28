@@ -19,9 +19,6 @@ export default function Header() {
     {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
       { to: "/dashboard", label: "Dashboard" },
     {{/if}}
-    {{#if (includes examples "todo")}}
-    { to: "/todos", label: "Todos" },
-    {{/if}}
     {{#if (includes examples "ai")}}
     { to: "/ai", label: "AI Chat" },
     {{/if}}

@@ -46,6 +46,24 @@ export async function getinstallChoice(install?: boolean, ecosystem?: Ecosystem)
     return response;
   }
 
+  // For Go: check go and show appropriate message
+  if (ecosystem === "go") {
+    const goInstalled = await commandExists("go");
+    if (!goInstalled) {
+      log.warn("Go is not installed. Please install Go from https://go.dev/dl/");
+      return false;
+    }
+
+    const response = await navigableConfirm({
+      message: "Run go mod tidy?",
+      initialValue: DEFAULT_CONFIG.install,
+    });
+
+    if (isCancel(response)) return exitCancelled("Operation cancelled");
+
+    return response;
+  }
+
   // For TypeScript: existing behavior
   const response = await navigableConfirm({
     message: "Install dependencies?",

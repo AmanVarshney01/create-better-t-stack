@@ -3,92 +3,6 @@ import { describe, it } from "bun:test";
 import { EXAMPLES, expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
 describe("Example Configurations", () => {
-  describe("Todo Example", () => {
-    it("should work with todo example + database + backend", async () => {
-      const result = await runTRPCTest({
-        projectName: "todo-with-db",
-        examples: ["todo"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
-      });
-
-      expectSuccess(result);
-    });
-
-    it("should work with todo example + convex backend", async () => {
-      const result = await runTRPCTest({
-        projectName: "todo-convex",
-        examples: ["todo"],
-        backend: "convex",
-        runtime: "none",
-        database: "none",
-        orm: "none",
-        auth: "clerk",
-        api: "none",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
-      });
-
-      expectSuccess(result);
-    });
-
-    it("should work with todo example + no backend", async () => {
-      const result = await runTRPCTest({
-        projectName: "todo-no-backend",
-        examples: ["none"],
-        backend: "none",
-        runtime: "none",
-        database: "none",
-        orm: "none",
-        auth: "none",
-        api: "none",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
-      });
-
-      expectSuccess(result);
-    });
-
-    it("should fail with todo example + backend + no database", async () => {
-      const result = await runTRPCTest({
-        projectName: "todo-backend-no-db-fail",
-        examples: ["todo"],
-        backend: "hono",
-        runtime: "bun",
-        database: "none",
-        orm: "none",
-        auth: "none",
-        api: "trpc",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
-      });
-
-      expectError(result, "The 'todo' example requires a database");
-    });
-  });
-
   describe("AI Example", () => {
     it("should work with AI example + React frontend", async () => {
       const result = await runTRPCTest({
@@ -310,50 +224,6 @@ describe("Example Configurations", () => {
     });
   });
 
-  describe("Multiple Examples", () => {
-    it("should work with both todo and AI examples", async () => {
-      const result = await runTRPCTest({
-        projectName: "todo-ai-combo",
-        examples: ["todo", "ai"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
-      });
-
-      expectSuccess(result);
-    });
-
-    it("should fail with both examples if one is incompatible", async () => {
-      const result = await runTRPCTest({
-        projectName: "todo-ai-solid-fail",
-        examples: ["todo", "ai"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "orpc",
-        frontend: ["solid"],
-        addons: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
-      });
-
-      expectError(result, "The 'ai' example is not compatible with the Solid frontend");
-    });
-  });
-
   describe("Examples with None Option", () => {
     it("should work with examples none", async () => {
       const result = await runTRPCTest({
@@ -379,7 +249,7 @@ describe("Example Configurations", () => {
     it("should fail with none + other examples", async () => {
       const result = await runTRPCTest({
         projectName: "none-with-examples-fail",
-        examples: ["none", "todo"],
+        examples: ["none", "ai"],
         backend: "hono",
         runtime: "bun",
         database: "sqlite",
@@ -395,50 +265,6 @@ describe("Example Configurations", () => {
       });
 
       expectError(result, "Cannot combine 'none' with other examples");
-    });
-  });
-
-  describe("Examples with API None", () => {
-    it("should fail with examples when API is none (non-convex backend)", async () => {
-      const result = await runTRPCTest({
-        projectName: "examples-api-none-fail",
-        examples: ["todo"],
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "none",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
-      });
-
-      expectError(result, "Cannot use '--examples todo' when '--api' is set to 'none'");
-    });
-
-    it("should work with examples when API is none (convex backend)", async () => {
-      const result = await runTRPCTest({
-        projectName: "examples-api-none-convex",
-        examples: ["todo"],
-        backend: "convex",
-        runtime: "none",
-        database: "none",
-        orm: "none",
-        auth: "clerk",
-        api: "none",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
-      });
-
-      expectSuccess(result);
     });
   });
 
@@ -490,28 +316,6 @@ describe("Example Configurations", () => {
       });
 
       expectSuccess(result);
-    });
-
-    it("should handle complex example constraints", async () => {
-      // Todo example with backend but no database should fail
-      const result = await runTRPCTest({
-        projectName: "complex-example-constraints",
-        examples: ["todo"],
-        backend: "express", // Non-convex backend
-        runtime: "bun",
-        database: "none", // No database
-        orm: "none",
-        auth: "none",
-        api: "trpc",
-        frontend: ["tanstack-router"],
-        addons: ["none"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        expectError: true,
-      });
-
-      expectError(result, "The 'todo' example requires a database");
     });
   });
 });

@@ -49,16 +49,6 @@ export interface VerificationTable {
 }
 {{/if}}
 
-{{#if (includes examples "todo")}}
-// Todo table
-export interface TodoTable {
-	id: Generated<number>;
-	text: string;
-	completed: number;
-	createdAt: ColumnType<Date, string | undefined, never>;
-}
-{{/if}}
-
 // Database interface - lists all tables
 export interface Database {
 {{#if (eq auth "better-auth")}}
@@ -66,8 +56,5 @@ export interface Database {
 	session: SessionTable;
 	account: AccountTable;
 	verification: VerificationTable;
-{{/if}}
-{{#if (includes examples "todo")}}
-	todo: TodoTable;
 {{/if}}
 }

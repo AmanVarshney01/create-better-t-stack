@@ -2,6 +2,7 @@ import path from "node:path";
 
 import type {
   AI,
+  AiDocs,
   Analytics,
   Animation,
   API,
@@ -217,6 +218,10 @@ export function processFlags(options: CLIInput, projectName?: string) {
 
   if (options.examples && options.examples.length > 0) {
     config.examples = processArrayOption(options.examples);
+  }
+
+  if (options.aiDocs !== undefined) {
+    config.aiDocs = processArrayOption(options.aiDocs) as AiDocs[];
   }
 
   return config;

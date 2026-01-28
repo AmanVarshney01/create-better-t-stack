@@ -1,15 +1,6 @@
 import { g, buildSchema, InferResolvers } from "garph";
 
 // Define GraphQL types using Garph's type-safe builder
-{{#if (includes examples "todo")}}
-export const todoType = g.type("Todo", {
-  id: g.int(),
-  content: g.string(),
-  completed: g.boolean(),
-  createdAt: g.string(),
-});
-{{/if}}
-
 {{#if (eq auth "better-auth")}}
 export const userType = g.type("User", {
   id: g.string(),
@@ -28,41 +19,15 @@ export const queryType = g.type("Query", {
 {{#if (eq auth "better-auth")}}
   privateData: g.ref(privateDataType).nullable().description("Get private data (requires authentication)"),
 {{/if}}
-{{#if (includes examples "todo")}}
-  todos: g.ref(todoType).list().description("Get all todos"),
-  todo: g
-    .ref(todoType)
-    .nullable()
-    .args({ id: g.int() })
-    .description("Get a single todo by ID"),
-{{/if}}
 });
 
 export const mutationType = g.type("Mutation", {
-{{#if (includes examples "todo")}}
-  createTodo: g
-    .ref(todoType)
-    .args({ content: g.string() })
-    .description("Create a new todo"),
-  toggleTodo: g
-    .ref(todoType)
-    .nullable()
-    .args({ id: g.int() })
-    .description("Toggle a todo's completed status"),
-  deleteTodo: g
-    .boolean()
-    .args({ id: g.int() })
-    .description("Delete a todo"),
-{{/if}}
   _empty: g.string().nullable().description("Placeholder mutation"),
 });
 
 // Export types for resolver type inference
 export type QueryType = typeof queryType;
 export type MutationType = typeof mutationType;
-{{#if (includes examples "todo")}}
-export type TodoType = typeof todoType;
-{{/if}}
 
 // Re-export Garph utilities for use in resolvers
 export { g, buildSchema, type InferResolvers };

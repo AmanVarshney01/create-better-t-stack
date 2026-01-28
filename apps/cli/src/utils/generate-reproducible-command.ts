@@ -35,6 +35,18 @@ export function generateReproducibleCommand(config: ProjectConfig) {
   flags.push(`--db-setup ${config.dbSetup}`);
   flags.push(`--web-deploy ${config.webDeploy}`);
   flags.push(`--server-deploy ${config.serverDeploy}`);
+
+  if (config.aiDocs && config.aiDocs.length > 0) {
+    const validDocs = config.aiDocs.filter((d) => d !== "none");
+    if (validDocs.length > 0) {
+      flags.push(`--ai-docs ${validDocs.join(" ")}`);
+    } else {
+      flags.push("--ai-docs none");
+    }
+  } else {
+    flags.push("--ai-docs none");
+  }
+
   flags.push(config.git ? "--git" : "--no-git");
   flags.push(`--package-manager ${config.packageManager}`);
   flags.push(config.install ? "--install" : "--no-install");

@@ -79,9 +79,7 @@ export const AddonsSchema = z
   ])
   .describe("Additional addons");
 
-export const ExamplesSchema = z
-  .enum(["todo", "ai", "none"])
-  .describe("Example templates to include");
+export const ExamplesSchema = z.enum(["ai", "none"]).describe("Example templates to include");
 
 export const PackageManagerSchema = z.enum(["npm", "pnpm", "bun"]).describe("Package manager");
 
@@ -293,6 +291,10 @@ export const GoCliSchema = z.enum(["cobra", "bubbletea", "none"]).describe("Go C
 
 export const GoLoggingSchema = z.enum(["zap", "none"]).describe("Go logging library");
 
+export const AiDocsSchema = z
+  .enum(["claude-md", "agents-md", "cursorrules", "none"])
+  .describe("AI documentation files (CLAUDE.md, Agents.md, .cursorrules)");
+
 export const CSSFrameworkSchema = z
   .enum(["tailwind", "scss", "less", "postcss-only", "none"])
   .describe("CSS framework/preprocessor");
@@ -407,6 +409,8 @@ export const CreateInputSchema = z.object({
   goApi: GoApiSchema.optional(),
   goCli: GoCliSchema.optional(),
   goLogging: GoLoggingSchema.optional(),
+  // AI documentation files
+  aiDocs: z.array(AiDocsSchema).optional(),
 });
 
 export const AddInputSchema = z.object({
@@ -485,6 +489,8 @@ export const ProjectConfigSchema = z.object({
   goApi: GoApiSchema,
   goCli: GoCliSchema,
   goLogging: GoLoggingSchema,
+  // AI documentation files
+  aiDocs: z.array(AiDocsSchema),
 });
 
 export const BetterTStackConfigSchema = z.object({
@@ -547,6 +553,8 @@ export const BetterTStackConfigSchema = z.object({
   goApi: GoApiSchema,
   goCli: GoCliSchema,
   goLogging: GoLoggingSchema,
+  // AI documentation files
+  aiDocs: z.array(AiDocsSchema),
 });
 
 export const BetterTStackConfigFileSchema = z
@@ -627,3 +635,4 @@ export const GO_ORM_VALUES = GoOrmSchema.options;
 export const GO_API_VALUES = GoApiSchema.options;
 export const GO_CLI_VALUES = GoCliSchema.options;
 export const GO_LOGGING_VALUES = GoLoggingSchema.options;
+export const AI_DOCS_VALUES = AiDocsSchema.options;

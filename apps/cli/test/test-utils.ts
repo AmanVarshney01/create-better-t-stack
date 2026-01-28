@@ -40,11 +40,13 @@ import type {
   JobQueue,
   Analytics,
   FeatureFlags,
+  AiDocs,
 } from "../src/types";
 
 import { create } from "../src/index";
 import {
   AddonsSchema,
+  AiDocsSchema,
   AISchema,
   AnimationSchema,
   APISchema,
@@ -160,6 +162,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     "jobQueue",
     "analytics",
     "featureFlags",
+    "aiDocs",
   ];
   const hasSpecificCoreConfig = coreStackFlags.some((flag) => config[flag] !== undefined);
 
@@ -208,6 +211,7 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
         jobQueue: "none" as JobQueue,
         analytics: "none" as Analytics,
         featureFlags: "none" as FeatureFlags,
+        aiDocs: [] as AiDocs[],
       };
 
   // Build options object - let the CLI handle all validation
@@ -318,6 +322,7 @@ export const RUST_APIS = extractEnumValues(RustApiSchema);
 export const RUST_CLIS = extractEnumValues(RustCliSchema);
 export const RUST_LIBRARIES = extractEnumValues(RustLibrariesSchema);
 export const ANALYTICS = extractEnumValues(AnalyticsSchema);
+export const AI_DOCS = extractEnumValues(AiDocsSchema);
 
 // Convenience functions for common test patterns
 export function createBasicConfig(overrides: Partial<TestConfig> = {}): TestConfig {

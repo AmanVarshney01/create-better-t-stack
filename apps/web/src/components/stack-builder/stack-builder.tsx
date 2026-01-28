@@ -123,7 +123,8 @@ const StackBuilder = () => {
         catKey === "codeQuality" ||
         catKey === "documentation" ||
         catKey === "appPlatforms" ||
-        catKey === "examples"
+        catKey === "examples" ||
+        catKey === "aiDocs"
       ) {
         if (catKey === "webFrontend" || catKey === "nativeFrontend") {
           const randomIndex = Math.floor(Math.random() * options.length);
@@ -333,7 +334,8 @@ const StackBuilder = () => {
           catKey === "codeQuality" ||
           catKey === "documentation" ||
           catKey === "appPlatforms" ||
-          catKey === "examples"
+          catKey === "examples" ||
+          catKey === "aiDocs"
         ) {
           const currentArray = Array.isArray(currentValue) ? [...currentValue] : [];
           let nextArray = [...currentArray];
@@ -871,7 +873,8 @@ const StackBuilder = () => {
                                         category === "appPlatforms" ||
                                         category === "examples" ||
                                         category === "webFrontend" ||
-                                        category === "nativeFrontend"
+                                        category === "nativeFrontend" ||
+                                        category === "aiDocs"
                                       ) {
                                         isSelected = ((currentValue as string[]) || []).includes(
                                           tech.id,
@@ -1163,7 +1166,8 @@ const StackBuilder = () => {
                                       category === "appPlatforms" ||
                                       category === "examples" ||
                                       category === "webFrontend" ||
-                                      category === "nativeFrontend"
+                                      category === "nativeFrontend" ||
+                                      category === "aiDocs"
                                     ) {
                                       isSelected = ((currentValue as string[]) || []).includes(
                                         tech.id,

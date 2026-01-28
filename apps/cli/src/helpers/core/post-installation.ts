@@ -41,6 +41,18 @@ export async function displayPostInstallInstructions(
     return;
   }
 
+  // Handle Go projects with different instructions
+  if (ecosystem === "go") {
+    displayGoInstructions(config);
+    return;
+  }
+
+  // Handle Python projects with different instructions
+  if (ecosystem === "python") {
+    displayPythonInstructions(config);
+    return;
+  }
+
   const isConvex = backend === "convex";
   const isBackendSelf = backend === "self";
   const runCmd =
@@ -496,6 +508,185 @@ function displayRustInstructions(config: ProjectConfig & { depsInstalled: boolea
   output += `${pc.cyan("•")} Check: cargo check\n`;
   output += `${pc.cyan("•")} Format: cargo fmt\n`;
   output += `${pc.cyan("•")} Lint: cargo clippy\n`;
+
+  output += `\n${pc.bold(
+    "Like Better Fullstack?",
+  )} Please consider giving us a star\n   on GitHub:\n`;
+  output += pc.cyan("https://github.com/Marve10s/Better-Fullstack");
+
+  consola.box(output);
+}
+
+function displayGoInstructions(config: ProjectConfig & { depsInstalled: boolean }) {
+  const { relativePath, depsInstalled, goWebFramework, goOrm, goApi, goCli, goLogging } = config;
+
+  const cdCmd = `cd ${relativePath}`;
+
+  let output = `${pc.bold("Next steps")}\n${pc.cyan("1.")} ${cdCmd}\n`;
+  let stepCounter = 2;
+
+  if (!depsInstalled) {
+    output += `${pc.cyan(`${stepCounter++}.`)} go mod tidy\n`;
+  }
+
+  output += `${pc.cyan(`${stepCounter++}.`)} go run cmd/server/main.go\n`;
+
+  output += `\n${pc.bold("Your Go project includes:")}\n`;
+
+  if (goWebFramework && goWebFramework !== "none") {
+    const frameworkNames: Record<string, string> = {
+      gin: "Gin",
+      echo: "Echo",
+    };
+    output += `${pc.cyan("•")} Web Framework: ${frameworkNames[goWebFramework] || goWebFramework}\n`;
+  }
+
+  if (goOrm && goOrm !== "none") {
+    const ormNames: Record<string, string> = {
+      gorm: "GORM",
+      sqlc: "sqlc",
+    };
+    output += `${pc.cyan("•")} Database: ${ormNames[goOrm] || goOrm}\n`;
+  }
+
+  if (goApi && goApi !== "none") {
+    const apiNames: Record<string, string> = {
+      "grpc-go": "gRPC-Go",
+    };
+    output += `${pc.cyan("•")} API: ${apiNames[goApi] || goApi}\n`;
+  }
+
+  if (goCli && goCli !== "none") {
+    const cliNames: Record<string, string> = {
+      cobra: "Cobra",
+      bubbletea: "Bubble Tea",
+    };
+    output += `${pc.cyan("•")} CLI: ${cliNames[goCli] || goCli}\n`;
+  }
+
+  if (goLogging && goLogging !== "none") {
+    const loggingNames: Record<string, string> = {
+      zap: "Zap",
+    };
+    output += `${pc.cyan("•")} Logging: ${loggingNames[goLogging] || goLogging}\n`;
+  }
+
+  output += `\n${pc.bold("Common Go commands:")}\n`;
+  output += `${pc.cyan("•")} Build: go build ./...\n`;
+  output += `${pc.cyan("•")} Run: go run cmd/server/main.go\n`;
+  output += `${pc.cyan("•")} Test: go test ./...\n`;
+  output += `${pc.cyan("•")} Tidy: go mod tidy\n`;
+  output += `${pc.cyan("•")} Format: go fmt ./...\n`;
+  output += `${pc.cyan("•")} Lint: golangci-lint run\n`;
+
+  output += `\n${pc.bold("Your project will be available at:")}\n`;
+  output += `${pc.cyan("•")} API: http://localhost:8080\n`;
+
+  if (goApi === "grpc-go") {
+    output += `${pc.cyan("•")} gRPC: localhost:50051\n`;
+  }
+
+  output += `\n${pc.bold(
+    "Like Better Fullstack?",
+  )} Please consider giving us a star\n   on GitHub:\n`;
+  output += pc.cyan("https://github.com/Marve10s/Better-Fullstack");
+
+  consola.box(output);
+}
+
+function displayPythonInstructions(config: ProjectConfig & { depsInstalled: boolean }) {
+  const {
+    relativePath,
+    depsInstalled,
+    pythonWebFramework,
+    pythonOrm,
+    pythonValidation,
+    pythonAi,
+    pythonTaskQueue,
+    pythonQuality,
+  } = config;
+
+  const cdCmd = `cd ${relativePath}`;
+
+  // Determine run command based on framework
+  let runCommand = "uv run uvicorn app.main:app --reload";
+  if (pythonWebFramework === "django") {
+    runCommand = "uv run python manage.py runserver";
+  }
+
+  let output = `${pc.bold("Next steps")}\n${pc.cyan("1.")} ${cdCmd}\n`;
+  let stepCounter = 2;
+
+  if (!depsInstalled) {
+    output += `${pc.cyan(`${stepCounter++}.`)} uv sync\n`;
+  }
+
+  output += `${pc.cyan(`${stepCounter++}.`)} ${runCommand}\n`;
+
+  output += `\n${pc.bold("Your Python project includes:")}\n`;
+
+  if (pythonWebFramework && pythonWebFramework !== "none") {
+    const frameworkNames: Record<string, string> = {
+      fastapi: "FastAPI",
+      django: "Django",
+    };
+    output += `${pc.cyan("•")} Web Framework: ${frameworkNames[pythonWebFramework] || pythonWebFramework}\n`;
+  }
+
+  if (pythonOrm && pythonOrm !== "none") {
+    const ormNames: Record<string, string> = {
+      sqlalchemy: "SQLAlchemy",
+      sqlmodel: "SQLModel",
+    };
+    output += `${pc.cyan("•")} ORM: ${ormNames[pythonOrm] || pythonOrm}\n`;
+  }
+
+  if (pythonValidation && pythonValidation !== "none") {
+    const validationNames: Record<string, string> = {
+      pydantic: "Pydantic",
+    };
+    output += `${pc.cyan("•")} Validation: ${validationNames[pythonValidation] || pythonValidation}\n`;
+  }
+
+  if (pythonAi && pythonAi.length > 0 && !pythonAi.includes("none")) {
+    const aiNames: Record<string, string> = {
+      langchain: "LangChain",
+      langgraph: "LangGraph",
+      llamaindex: "LlamaIndex",
+      "openai-sdk": "OpenAI SDK",
+      "anthropic-sdk": "Anthropic SDK",
+      crewai: "CrewAI",
+    };
+    const aiList = pythonAi
+      .filter((ai) => ai !== "none")
+      .map((ai) => aiNames[ai] || ai)
+      .join(", ");
+    output += `${pc.cyan("•")} AI: ${aiList}\n`;
+  }
+
+  if (pythonTaskQueue && pythonTaskQueue !== "none") {
+    const taskQueueNames: Record<string, string> = {
+      celery: "Celery",
+    };
+    output += `${pc.cyan("•")} Task Queue: ${taskQueueNames[pythonTaskQueue] || pythonTaskQueue}\n`;
+  }
+
+  if (pythonQuality && pythonQuality !== "none") {
+    const qualityNames: Record<string, string> = {
+      ruff: "Ruff",
+    };
+    output += `${pc.cyan("•")} Code Quality: ${qualityNames[pythonQuality] || pythonQuality}\n`;
+  }
+
+  output += `\n${pc.bold("Common Python commands:")}\n`;
+  output += `${pc.cyan("•")} Install: uv sync\n`;
+  output += `${pc.cyan("•")} Run: ${runCommand}\n`;
+  output += `${pc.cyan("•")} Test: uv run pytest\n`;
+  output += `${pc.cyan("•")} Format: uv run ruff format .\n`;
+  output += `${pc.cyan("•")} Lint: uv run ruff check .\n`;
+
+  output += `\n${pc.bold("Your project will be available at:")}\n`;
+  output += `${pc.cyan("•")} API: http://localhost:8000\n`;
 
   output += `\n${pc.bold(
     "Like Better Fullstack?",

@@ -1,17 +1,4 @@
 module default {
-{{#if (includes examples "todo")}}
-  # Todo type for the todo example
-  type Todo {
-    required title: str;
-    completed: bool {
-      default := false;
-    };
-    created_at: datetime {
-      default := datetime_current();
-    };
-  }
-{{/if}}
-
 {{#if (eq auth "better-auth")}}
   # User type for authentication
   type User {

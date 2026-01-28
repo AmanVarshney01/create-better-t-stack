@@ -520,7 +520,7 @@ describe("Deployment Configurations", () => {
         api: "trpc",
         frontend: ["tanstack-router"], // Single web frontend (compatible with PWA)
         addons: ["pwa", "turborepo"],
-        examples: ["todo"],
+        examples: ["none"],
         install: false,
       });
 

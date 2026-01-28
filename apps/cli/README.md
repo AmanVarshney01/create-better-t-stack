@@ -33,7 +33,7 @@ Options:
   --runtime <runtime>             Runtime (bun, node, workers, none)
   --api <type>                    API type (trpc, orpc, ts-rest, garph, none)
   --addons <types...>             Additional addons
-  --examples <types...>           Examples to include (todo, ai, none)
+  --examples <types...>           Examples to include (ai, none)
   --git / --no-git                Initialize git repository
   --package-manager <pm>          Package manager (npm, pnpm, bun)
   --install / --no-install        Install dependencies

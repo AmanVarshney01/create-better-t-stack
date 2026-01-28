@@ -49,6 +49,7 @@ function searchToStack(search: StackSearchParams | undefined): StackState {
     packageManager: search.pm ?? DEFAULT_STACK.packageManager,
     examples: search.ex ?? DEFAULT_STACK.examples,
     aiSdk: search.aisdk ?? DEFAULT_STACK.aiSdk,
+    aiDocs: search.aid ?? DEFAULT_STACK.aiDocs,
     git: search.git ?? DEFAULT_STACK.git,
     install: search.i ?? DEFAULT_STACK.install,
     webDeploy: search.wd ?? DEFAULT_STACK.webDeploy,

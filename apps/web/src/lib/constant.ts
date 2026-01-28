@@ -1475,14 +1475,6 @@ export const TECH_OPTIONS: Record<
   ],
   examples: [
     {
-      id: "todo",
-      name: "Todo Example",
-      description: "Simple todo application",
-      icon: "",
-      color: "from-indigo-500 to-indigo-700",
-      default: false,
-    },
-    {
       id: "ai",
       name: "AI Example",
       description: "AI integration example using AI SDK",
@@ -1908,6 +1900,37 @@ export const TECH_OPTIONS: Record<
       icon: "",
       color: "from-gray-400 to-gray-600",
       default: true,
+    },
+  ],
+  aiDocs: [
+    {
+      id: "claude-md",
+      name: "CLAUDE.md",
+      description: "Claude Code CLI documentation",
+      icon: "",
+      color: "from-orange-400 to-orange-600",
+      default: true,
+    },
+    {
+      id: "agents-md",
+      name: "Agents.md",
+      description: "Generic AI assistant docs",
+      icon: "",
+      color: "from-purple-400 to-purple-600",
+    },
+    {
+      id: "cursorrules",
+      name: ".cursorrules",
+      description: "Cursor IDE rules file",
+      icon: "",
+      color: "from-blue-400 to-blue-600",
+    },
+    {
+      id: "none",
+      name: "None",
+      description: "Skip AI documentation",
+      icon: "",
+      color: "from-gray-400 to-gray-600",
     },
   ],
   git: [
@@ -2486,6 +2509,7 @@ export const ECOSYSTEM_CATEGORIES: Record<Ecosystem, TechCategory[]> = {
     "appPlatforms",
     "packageManager",
     "examples",
+    "aiDocs",
     "git",
     "install",
   ],
@@ -2496,6 +2520,7 @@ export const ECOSYSTEM_CATEGORIES: Record<Ecosystem, TechCategory[]> = {
     "rustApi",
     "rustCli",
     "rustLibraries",
+    "aiDocs",
     "git",
     "install",
   ],
@@ -2506,10 +2531,11 @@ export const ECOSYSTEM_CATEGORIES: Record<Ecosystem, TechCategory[]> = {
     "pythonAi",
     "pythonTaskQueue",
     "pythonQuality",
+    "aiDocs",
     "git",
     "install",
   ],
-  go: ["goWebFramework", "goOrm", "goApi", "goCli", "goLogging", "git", "install"],
+  go: ["goWebFramework", "goOrm", "goApi", "goCli", "goLogging", "aiDocs", "git", "install"],
 };
 
 export const PRESET_TEMPLATES: {
@@ -2543,7 +2569,7 @@ export const PRESET_TEMPLATES: {
       documentation: [],
       appPlatforms: ["turborepo"],
       packageManager: "bun",
-      examples: ["todo"],
+      examples: [],
       git: "true",
       install: "true",
       api: "orpc",
@@ -2577,7 +2603,7 @@ export const PRESET_TEMPLATES: {
       documentation: [],
       appPlatforms: ["turborepo"],
       packageManager: "bun",
-      examples: ["todo"],
+      examples: [],
       git: "true",
       install: "true",
       api: "trpc",
@@ -2761,6 +2787,7 @@ export type StackState = {
   packageManager: string;
   examples: string[];
   aiSdk: string;
+  aiDocs: string[];
   git: string;
   install: string;
   api: string;
@@ -2826,6 +2853,7 @@ export const DEFAULT_STACK: StackState = {
   packageManager: "bun",
   examples: [],
   aiSdk: "vercel-ai",
+  aiDocs: ["claude-md"],
   git: "true",
   install: "true",
   api: "trpc",
@@ -2876,7 +2904,8 @@ export const isStackDefault = <K extends keyof StackState>(
     key === "codeQuality" ||
     key === "documentation" ||
     key === "appPlatforms" ||
-    key === "examples"
+    key === "examples" ||
+    key === "aiDocs"
   ) {
     if (Array.isArray(defaultValue) && Array.isArray(value)) {
       const sortedDefault = [...defaultValue].sort();

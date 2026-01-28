@@ -406,29 +406,6 @@ describe("Astro Frontend Configurations", () => {
   });
 
   describe("Astro with Examples", () => {
-    it("should work with Astro + React + Todo example", async () => {
-      const config: TestConfig = {
-        projectName: "astro-todo-example",
-        frontend: ["astro"],
-        astroIntegration: "react",
-        backend: "hono",
-        runtime: "bun",
-        database: "sqlite",
-        orm: "drizzle",
-        auth: "none",
-        api: "trpc",
-        addons: ["none"],
-        examples: ["todo"],
-        dbSetup: "none",
-        webDeploy: "none",
-        serverDeploy: "none",
-        install: false,
-      };
-
-      const result = await runTRPCTest(config);
-      expectSuccess(result);
-    });
-
     it("should work with Astro + React + AI example", async () => {
       const config: TestConfig = {
         projectName: "astro-ai-example",
