@@ -94,6 +94,8 @@ export function loadStackParams(
       goApi: getString("goApi", DEFAULT_STACK.goApi),
       goCli: getString("goCli", DEFAULT_STACK.goCli),
       goLogging: getString("goLogging", DEFAULT_STACK.goLogging),
+      // AI Docs
+      aiDocs: getArray("aiDocs", DEFAULT_STACK.aiDocs),
     };
   };
 
@@ -184,6 +186,8 @@ export function serializeStackParams(basePath: string, stack: StackState): strin
   addParam("goApi", stack.goApi);
   addParam("goCli", stack.goCli);
   addParam("goLogging", stack.goLogging);
+  // AI Docs
+  addParam("aiDocs", stack.aiDocs);
 
   const queryString = params.toString();
   return queryString ? `${basePath}?${queryString}` : basePath;

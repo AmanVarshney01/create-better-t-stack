@@ -136,6 +136,7 @@ function stackStateToConfig(state: StackState): ProjectConfig {
     goApi: (state.goApi || "none") as ProjectConfig["goApi"],
     goCli: (state.goCli || "none") as ProjectConfig["goCli"],
     goLogging: (state.goLogging || "zap") as ProjectConfig["goLogging"],
+    aiDocs: (state.aiDocs || []).filter((d) => d !== "none") as ProjectConfig["aiDocs"],
   };
 }
 
