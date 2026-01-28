@@ -92,12 +92,21 @@ async function historyHandler(input: {
   json: boolean;
 }): Promise<void> {
   if (input.clear) {
-    await clearHistory();
+    const clearResult = await clearHistory();
+    if (clearResult.isErr()) {
+      log.warn(pc.yellow(clearResult.error.message));
+      return;
+    }
     log.success(pc.green("Project history cleared."));
     return;
   }
 
-  const entries = await getHistory(input.limit);
+  const historyResult = await getHistory(input.limit);
+  if (historyResult.isErr()) {
+    log.warn(pc.yellow(historyResult.error.message));
+    return;
+  }
+  const entries = historyResult.value;
 
   if (entries.length === 0) {
     log.info(pc.dim("No projects in history yet."));

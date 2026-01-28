@@ -329,8 +329,11 @@ async function createProjectHandlerInternal(
 
     await trackProjectCreation(config, input.disableAnalytics);
 
-    // Track locally in ~/.bts/history.json
-    await addToHistory(config, reproducibleCommand);
+    // Track locally in history.json (non-fatal)
+    const historyResult = await addToHistory(config, reproducibleCommand);
+    if (historyResult.isErr() && !isSilent()) {
+      log.warn(pc.yellow(historyResult.error.message));
+    }
 
     const elapsedTimeMs = Date.now() - startTime;
     if (!isSilent()) {
