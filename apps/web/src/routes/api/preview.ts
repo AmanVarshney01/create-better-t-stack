@@ -52,6 +52,7 @@ interface StackState {
   goApi?: string;
   goCli?: string;
   goLogging?: string;
+  aiDocs?: string[];
 }
 
 function stackStateToConfig(state: StackState): ProjectConfig {
@@ -136,7 +137,7 @@ function stackStateToConfig(state: StackState): ProjectConfig {
     goApi: (state.goApi || "none") as ProjectConfig["goApi"],
     goCli: (state.goCli || "none") as ProjectConfig["goCli"],
     goLogging: (state.goLogging || "zap") as ProjectConfig["goLogging"],
-    aiDocs: (state.aiDocs || []).filter((d) => d !== "none") as ProjectConfig["aiDocs"],
+    aiDocs: (state.aiDocs || []).filter((d: string) => d !== "none") as ProjectConfig["aiDocs"],
   };
 }
 
