@@ -5,6 +5,7 @@ import pc from "picocolors";
 import { createCli } from "trpc-cli";
 import z from "zod";
 
+import { addHandler, type AddResult } from "./helpers/core/add-handler";
 import { createProjectHandler } from "./helpers/core/command-handlers";
 import {
   type Addons,
@@ -48,8 +49,92 @@ import {
 import { CLIError, ProjectCreationError, UserCancelledError, displayError } from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
 import { openUrl } from "./utils/open-url";
+import { clearHistory, getHistory, type ProjectHistoryEntry } from "./utils/project-history";
 import { renderTitle } from "./utils/render-title";
 import { displaySponsors, fetchSponsors } from "./utils/sponsors";
+
+function formatStackSummary(entry: ProjectHistoryEntry): string {
+  const parts: string[] = [];
+
+  if (entry.stack.frontend.length > 0 && !entry.stack.frontend.includes("none")) {
+    parts.push(entry.stack.frontend.join(", "));
+  }
+
+  if (entry.stack.backend && entry.stack.backend !== "none") {
+    parts.push(entry.stack.backend);
+  }
+
+  if (entry.stack.database && entry.stack.database !== "none") {
+    parts.push(entry.stack.database);
+  }
+
+  if (entry.stack.orm && entry.stack.orm !== "none") {
+    parts.push(entry.stack.orm);
+  }
+
+  return parts.length > 0 ? parts.join(" + ") : "minimal";
+}
+
+function formatDate(isoString: string): string {
+  const date = new Date(isoString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+async function historyHandler(input: {
+  limit: number;
+  clear: boolean;
+  json: boolean;
+}): Promise<void> {
+  if (input.clear) {
+    const clearResult = await clearHistory();
+    if (clearResult.isErr()) {
+      log.warn(pc.yellow(clearResult.error.message));
+      return;
+    }
+    log.success(pc.green("Project history cleared."));
+    return;
+  }
+
+  const historyResult = await getHistory(input.limit);
+  if (historyResult.isErr()) {
+    log.warn(pc.yellow(historyResult.error.message));
+    return;
+  }
+  const entries = historyResult.value;
+
+  if (entries.length === 0) {
+    log.info(pc.dim("No projects in history yet."));
+    log.info(pc.dim("Create a project with: create-better-t-stack my-app"));
+    return;
+  }
+
+  if (input.json) {
+    console.log(JSON.stringify(entries, null, 2));
+    return;
+  }
+
+  renderTitle();
+  intro(pc.magenta(`Project History (${entries.length} entries)`));
+
+  for (const [index, entry] of entries.entries()) {
+    const num = pc.dim(`${index + 1}.`);
+    const name = pc.cyan(pc.bold(entry.projectName));
+    const stack = pc.dim(formatStackSummary(entry));
+
+    log.message(`${num} ${name}`);
+    log.message(`   ${pc.dim("Created:")} ${formatDate(entry.createdAt)}`);
+    log.message(`   ${pc.dim("Path:")} ${entry.projectDir}`);
+    log.message(`   ${pc.dim("Stack:")} ${stack}`);
+    log.message(`   ${pc.dim("Command:")} ${pc.dim(entry.reproducibleCommand)}`);
+    log.message("");
+  }
+}
 
 export const router = os.router({
   create: os
@@ -156,6 +241,35 @@ export const router = os.router({
       log.message(`Please visit ${BUILDER_URL}`);
     }
   }),
+  add: os
+    .meta({ description: "Add addons to an existing Better-T-Stack project" })
+    .input(
+      z.object({
+        addons: z.array(AddonsSchema).optional().describe("Addons to add"),
+        install: z
+          .boolean()
+          .optional()
+          .default(false)
+          .describe("Install dependencies after adding"),
+        packageManager: PackageManagerSchema.optional().describe("Package manager to use"),
+        projectDir: z.string().optional().describe("Project directory (defaults to current)"),
+      }),
+    )
+    .handler(async ({ input }) => {
+      await addHandler(input);
+    }),
+  history: os
+    .meta({ description: "Show project creation history" })
+    .input(
+      z.object({
+        limit: z.number().optional().default(10).describe("Number of entries to show"),
+        clear: z.boolean().optional().default(false).describe("Clear all history"),
+        json: z.boolean().optional().default(false).describe("Output as JSON"),
+      }),
+    )
+    .handler(async ({ input }) => {
+      await historyHandler(input);
+    }),
 });
 
 const caller = createRouterClient(router, { context: {} });
@@ -349,6 +463,36 @@ export type {
   Template,
   DirectoryConflict,
 };
+
+export type { AddResult };
+
+/**
+ * Programmatic API to add addons to an existing Better-T-Stack project.
+ *
+ * @example
+ * ```typescript
+ * import { add } from "create-better-t-stack";
+ *
+ * const result = await add({
+ *   addons: ["biome", "husky"],
+ *   install: true,
+ * });
+ *
+ * if (result?.success) {
+ *   console.log(`Added: ${result.addedAddons.join(", ")}`);
+ * }
+ * ```
+ */
+export async function add(
+  options: {
+    addons?: Addons[];
+    install?: boolean;
+    packageManager?: PackageManager;
+    projectDir?: string;
+  } = {},
+): Promise<AddResult | undefined> {
+  return addHandler(options, { silent: true });
+}
 
 // Re-export error types for consumers
 export {

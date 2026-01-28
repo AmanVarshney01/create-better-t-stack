@@ -299,6 +299,7 @@ Additional features to include:
 - `ruler`: Centralize your AI rules with Ruler
 - `opentui`: OpenTUI components
 - `wxt`: WXT browser extension framework
+- `skills`: Install AI agent skills for coding assistants (Cursor, Claude Code, GitHub Copilot, etc.)
 
 ```bash
 create-better-t-stack --addons pwa biome husky
@@ -345,6 +346,36 @@ create-better-t-stack --server-deploy alchemy
 ```
 
 **Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Infrastructure as Code with Alchemy Guide](/docs/guides/alchemy-deployment) for details.
+
+## History
+
+### `history`
+
+View your project creation history. Projects are tracked locally using platform-specific directories:
+
+- **macOS**: `~/Library/Application Support/better-t-stack/history.json`
+- **Linux**: `~/.local/share/better-t-stack/history.json`
+- **Windows**: `%LOCALAPPDATA%\better-t-stack\Data\history.json`
+
+```bash
+# Show last 10 projects
+create-better-t-stack history
+
+# Show last 5 projects
+create-better-t-stack history --limit 5
+
+# Output as JSON
+create-better-t-stack history --json
+
+# Clear all history
+create-better-t-stack history --clear
+```
+
+**Options:**
+
+- `--limit <number>`: Number of entries to show (default: 10)
+- `--clear`: Clear all project history
+- `--json`: Output history as JSON
 
 ## Option Validation
 

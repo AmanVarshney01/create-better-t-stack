@@ -117,6 +117,7 @@ function getDatabaseTasks(): Record<string, TurboTask> {
     },
     "db:migrate": {
       cache: false,
+      persistent: true,
     },
     "db:generate": {
       cache: false,

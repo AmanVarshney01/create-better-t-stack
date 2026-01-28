@@ -77,6 +77,7 @@
     "@orpc/server": "^1.13.4",
     "better-result": "^2.3.0",
     "consola": "^3.4.2",
+    "env-paths": "^4.0.0",
     "execa": "^9.6.1",
     "fs-extra": "^11.3.3",
     "gradient-string": "^3.0.0",

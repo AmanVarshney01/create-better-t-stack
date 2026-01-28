@@ -11,6 +11,7 @@ import { UserCancelledError } from "../../utils/errors";
 import { setupFumadocs } from "./fumadocs-setup";
 import { setupOxlint } from "./oxlint-setup";
 import { setupRuler } from "./ruler-setup";
+import { setupSkills } from "./skills-setup";
 import { setupStarlight } from "./starlight-setup";
 import { setupTauri } from "./tauri-setup";
 import { setupTui } from "./tui-setup";
@@ -108,6 +109,10 @@ export async function setupAddons(config: ProjectConfig) {
 
   if (addons.includes("ruler")) {
     await runSetup(() => setupRuler(config));
+  }
+
+  if (addons.includes("skills")) {
+    await runSetup(() => setupSkills(config));
   }
 }
 

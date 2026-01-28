@@ -1,6 +1,6 @@
-import type { ProjectConfig } from "../types";
+import type { ProjectConfig } from "@better-t-stack/types";
 
-export function generateReproducibleCommand(config: ProjectConfig) {
+export function generateReproducibleCommand(config: ProjectConfig): string {
   const flags: string[] = [];
 
   if (config.frontend && config.frontend.length > 0) {

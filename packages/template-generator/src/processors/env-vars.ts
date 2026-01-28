@@ -377,11 +377,13 @@ function buildServerVars(
     }
   }
 
+  const hasBetterAuth = auth === "better-auth";
+
   return [
     {
       key: "BETTER_AUTH_SECRET",
       value: generateAuthSecret(),
-      condition: !!auth,
+      condition: hasBetterAuth,
     },
     {
       key: "BETTER_AUTH_URL",
@@ -391,7 +393,7 @@ function buildServerVars(
             ? "http://localhost:4321"
             : "http://localhost:3001"
           : "http://localhost:3000",
-      condition: !!auth,
+      condition: hasBetterAuth,
     },
     {
       key: "POLAR_ACCESS_TOKEN",
