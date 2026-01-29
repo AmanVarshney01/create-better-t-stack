@@ -22,7 +22,7 @@ const SOLID_FRAMEWORKS: Frontend[] = ["solid"];
 const QWIK_FRAMEWORKS: Frontend[] = ["qwik"];
 
 export function processFormsDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { forms, frontend } = config;
+  const { forms, frontend, astroIntegration } = config;
 
   // Skip if not selected or set to "none"
   if (!forms || forms === "none") return;
@@ -32,10 +32,12 @@ export function processFormsDeps(vfs: VirtualFileSystem, config: ProjectConfig):
   const hasNative = frontend.some((f) => NATIVE_FRAMEWORKS.includes(f));
   const hasSolid = frontend.some((f) => SOLID_FRAMEWORKS.includes(f));
   const hasQwik = frontend.some((f) => QWIK_FRAMEWORKS.includes(f));
+  // Astro with React integration should be treated as React
+  const hasAstroReact = frontend.includes("astro") && astroIntegration === "react";
 
-  // Add to web package if it's a React-based web frontend
+  // Add to web package if it's a React-based web frontend or Astro with React
   const webPath = "apps/web/package.json";
-  if (hasReactWeb && vfs.exists(webPath)) {
+  if ((hasReactWeb || hasAstroReact) && vfs.exists(webPath)) {
     const deps = getFormsDeps(forms, "react");
     if (deps.length > 0) {
       addPackageDependency({
@@ -113,8 +115,14 @@ function getFormsDeps(
         deps.push("@modular-forms/qwik");
       }
       break;
-    // react-hook-form and tanstack-form are handled elsewhere or already included
-    // No additional deps needed for those cases
+    case "tanstack-form":
+      if (target === "react") {
+        deps.push("@tanstack/react-form");
+      } else if (target === "solid") {
+        deps.push("@tanstack/solid-form");
+      }
+      break;
+    // react-hook-form is already included in templates
   }
 
   return deps;

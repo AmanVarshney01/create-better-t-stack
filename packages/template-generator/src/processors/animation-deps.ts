@@ -12,10 +12,13 @@ const REACT_WEB_FRAMEWORKS: Frontend[] = [
   "next",
 ];
 
+// Non-React frameworks that support framework-agnostic animations
+const OTHER_WEB_FRAMEWORKS: Frontend[] = ["solid", "svelte", "nuxt", "qwik", "astro", "fresh"];
+
 // Native frameworks (always React-based)
 const NATIVE_FRAMEWORKS: Frontend[] = ["native-bare", "native-uniwind", "native-unistyles"];
 
-// Framework-agnostic animations that work with any frontend (including Fresh/Preact)
+// Framework-agnostic animations that work with any frontend
 const FRAMEWORK_AGNOSTIC_ANIMATIONS: ProjectConfig["animation"][] = ["gsap", "auto-animate"];
 
 export function processAnimationDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
@@ -26,7 +29,7 @@ export function processAnimationDeps(vfs: VirtualFileSystem, config: ProjectConf
 
   // Determine which packages need animation deps
   const hasReactWeb = frontend.some((f) => REACT_WEB_FRAMEWORKS.includes(f));
-  const hasFresh = frontend.includes("fresh");
+  const hasOtherWeb = frontend.some((f) => OTHER_WEB_FRAMEWORKS.includes(f));
   const hasNative = frontend.some((f) => NATIVE_FRAMEWORKS.includes(f));
 
   const webPath = "apps/web/package.json";
@@ -43,8 +46,8 @@ export function processAnimationDeps(vfs: VirtualFileSystem, config: ProjectConf
     }
   }
 
-  // Fresh only supports framework-agnostic animations (GSAP, auto-animate)
-  if (hasFresh && !hasReactWeb && vfs.exists(webPath)) {
+  // Non-React frameworks support framework-agnostic animations (GSAP, auto-animate)
+  if (hasOtherWeb && !hasReactWeb && vfs.exists(webPath)) {
     if (FRAMEWORK_AGNOSTIC_ANIMATIONS.includes(animation)) {
       const deps = getAnimationDeps(animation, false);
       if (deps.length > 0) {

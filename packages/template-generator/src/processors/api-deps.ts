@@ -95,6 +95,13 @@ function addApiPackageDeps(
   if (backend === "express") {
     addPackageDependency({ vfs, packagePath: pkgPath, devDependencies: ["@types/express"] });
   }
+
+  // Add backend types to api package (context.ts imports from these)
+  if (backend === "elysia") {
+    addPackageDependency({ vfs, packagePath: pkgPath, dependencies: ["elysia"] });
+  } else if (backend === "hono") {
+    addPackageDependency({ vfs, packagePath: pkgPath, dependencies: ["hono"] });
+  }
 }
 
 function addServerDeps(vfs: VirtualFileSystem, api: API, backend: Backend): void {

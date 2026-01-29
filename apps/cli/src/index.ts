@@ -77,6 +77,8 @@ import {
   type CMS,
   CachingSchema,
   type Caching,
+  SearchSchema,
+  type Search,
   FileStorageSchema,
   type FileStorage,
   RustWebFrameworkSchema,
@@ -168,6 +170,7 @@ export const router = os.router({
           analytics: AnalyticsSchema.optional().describe("Privacy-focused analytics"),
           cms: CMSSchema.optional().describe("Headless CMS solution"),
           caching: CachingSchema.optional().describe("Caching solution"),
+          search: SearchSchema.optional().describe("Search engine solution"),
           fileStorage: FileStorageSchema.optional().describe("File storage solution (S3, R2)"),
           frontend: z.array(FrontendSchema).optional(),
           astroIntegration: AstroIntegrationSchema.optional().describe(

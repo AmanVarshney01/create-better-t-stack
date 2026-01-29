@@ -395,6 +395,8 @@ export const dependencyVersionMap = {
   "@conform-to/zod": "^1.8.2",
   "@modular-forms/solid": "^0.25.1",
   "@modular-forms/qwik": "^0.29.1",
+  "@tanstack/react-form": "^1.12.0",
+  "@tanstack/solid-form": "^1.12.0",
 
   // Real-time/WebSocket
   "socket.io": "^4.8.1",

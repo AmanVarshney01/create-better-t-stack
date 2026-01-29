@@ -280,7 +280,30 @@ import { polarClient } from "./lib/payments";
 
 
 export const auth = betterAuth({
-	database: "", // Invalid configuration
+{{#if (eq database "sqlite")}}
+	database: {
+		provider: "sqlite",
+		url: env.DATABASE_URL ?? "./sqlite.db",
+	},
+{{/if}}
+{{#if (eq database "postgres")}}
+	database: {
+		provider: "pg",
+		url: env.DATABASE_URL,
+	},
+{{/if}}
+{{#if (eq database "mysql")}}
+	database: {
+		provider: "mysql",
+		url: env.DATABASE_URL,
+	},
+{{/if}}
+{{#if (eq database "mongodb")}}
+	database: {
+		provider: "mongodb",
+		url: env.DATABASE_URL,
+	},
+{{/if}}
 	trustedOrigins: [
 		env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
