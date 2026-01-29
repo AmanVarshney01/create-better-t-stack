@@ -193,7 +193,7 @@ async function setupWithNeonDb(
 function displayManualSetupInstructions(target: "apps/web" | "apps/server") {
   log.info(`Manual Neon PostgreSQL Setup Instructions:
 
-1. Visit https://neon.tech and create an account
+1. Get Neon with Better T Stack referral: https://get.neon.com/sbA3tIe
 2. Create a new project from the dashboard
 3. Get your connection string
 4. Add the database URL to the .env file in ${target}/.env
@@ -278,6 +278,8 @@ export async function setupNeonPostgres(
         return envResult;
       }
       displayManualSetupInstructions(target);
+    } else {
+      log.info(`Get Neon with Better T Stack referral: ${pc.cyan("https://get.neon.com/sbA3tIe")}`);
     }
     return neonDbResult;
   }
@@ -326,5 +328,6 @@ export async function setupNeonPostgres(
   }
 
   finalSpinner.stop("Neon database configured!");
+  log.info(`Get Neon with Better T Stack referral: ${pc.cyan("https://get.neon.com/sbA3tIe")}`);
   return Result.ok(undefined);
 }
