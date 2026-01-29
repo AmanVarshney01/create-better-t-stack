@@ -172,7 +172,10 @@ async function setupWithNeonDb(
     return ensureDirResult;
   }
 
-  const packageArgs = getPackageExecutionArgs(packageManager, "get-db@latest --yes");
+  const packageArgs = getPackageExecutionArgs(
+    packageManager,
+    `get-db@latest --yes --ref "sbA3tIe"`,
+  );
 
   return Result.tryPromise({
     try: async () => {
