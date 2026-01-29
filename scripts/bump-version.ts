@@ -20,9 +20,9 @@ async function main(): Promise<void> {
     const bumpType = await select({
       message: "What type of release do you want to create?",
       options: [
-        { value: "patch", label: "Patch (bug fixes) - 2.33.9 → 2.33.10" },
-        { value: "minor", label: "Minor (new features) - 2.33.9 → 2.34.0" },
-        { value: "major", label: "Major (breaking changes) - 2.33.9 → 3.0.0" },
+        { value: "patch", label: "Patch (bug fixes) - 2.33.9  2.33.10" },
+        { value: "minor", label: "Minor (new features) - 2.33.9  2.34.0" },
+        { value: "major", label: "Major (breaking changes) - 2.33.9  3.0.0" },
         { value: "custom", label: "Custom version" },
       ],
     });
@@ -38,7 +38,7 @@ async function main(): Promise<void> {
     }
 
     if (!versionInput) {
-      console.log("❌ No version selected");
+      console.log(" No version selected");
       process.exit(1);
     }
   }
@@ -64,7 +64,7 @@ async function main(): Promise<void> {
         break;
     }
 
-    console.log(`Bumping ${versionInput}: ${currentVersion} → ${newVersion}`);
+    console.log(`Bumping ${versionInput}: ${currentVersion}  ${newVersion}`);
   } else {
     if (!/^\d+\.\d+\.\d+$/.test(versionInput)) {
       console.error("Version must be x.y.z format");
@@ -74,20 +74,20 @@ async function main(): Promise<void> {
   }
 
   if (isDryRun) {
-    console.log(`✅ Would release v${newVersion} (dry run)`);
+    console.log(` Would release v${newVersion} (dry run)`);
     return;
   }
 
   // Check for uncommitted changes
   const statusResult = await $`git status --porcelain`.text();
   if (statusResult.trim()) {
-    console.error("❌ You have uncommitted changes. Please commit or stash them first.");
+    console.error(" You have uncommitted changes. Please commit or stash them first.");
     process.exit(1);
   }
 
   // Create release branch
   const branchName = `release/v${newVersion}`;
-  console.log(`\n📦 Creating release branch: ${branchName}`);
+  console.log(`\n Creating release branch: ${branchName}`);
 
   // Make sure we're on main and up to date
   await $`git checkout main`;
@@ -128,11 +128,11 @@ async function main(): Promise<void> {
   await $`git commit -m "chore(release): ${newVersion}"`;
 
   // Push the release branch
-  console.log(`\n🚀 Pushing release branch...`);
+  console.log(`\n Pushing release branch...`);
   await $`git push -u origin ${branchName}`;
 
   // Create PR using GitHub CLI
-  console.log(`\n📝 Creating pull request...`);
+  console.log(`\n Creating pull request...`);
   const prTitle = `chore(release): ${newVersion}`;
   const prBody = `## Release v${newVersion}
 
@@ -156,13 +156,13 @@ This PR bumps the version to \`${newVersion}\`.
   });
 
   if (shouldAutoMerge) {
-    console.log(`\n🔄 Enabling auto-merge...`);
+    console.log(`\n Enabling auto-merge...`);
     await $`gh pr merge ${branchName} --auto --squash --delete-branch`;
-    console.log(`✅ Auto-merge enabled. PR will merge automatically when tests pass.`);
+    console.log(` Auto-merge enabled. PR will merge automatically when tests pass.`);
   }
 
-  console.log(`\n✅ Release PR created for v${newVersion}`);
-  console.log(`\n📋 Next steps:`);
+  console.log(`\n Release PR created for v${newVersion}`);
+  console.log(`\n Next steps:`);
   console.log(`   1. Wait for the "Test Suite" check to pass`);
   if (!shouldAutoMerge) {
     console.log(`   2. Merge the PR manually`);

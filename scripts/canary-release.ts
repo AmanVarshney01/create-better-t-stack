@@ -40,7 +40,7 @@ async function main(): Promise<void> {
   console.log(`Commit: ${commitHash}`);
 
   if (isDryRun) {
-    console.log(`✅ Would release canary v${canaryVersion} (dry run)`);
+    console.log(` Would release canary v${canaryVersion} (dry run)`);
     return;
   }
 
@@ -52,7 +52,7 @@ async function main(): Promise<void> {
       const canaryVersions = (Array.isArray(versions) ? versions : []).filter(isCanary);
 
       if (!canaryVersions.length) {
-        console.log("ℹ️ No canary versions found to deprecate.");
+        console.log("No canary versions found to deprecate.");
         return;
       }
 
@@ -93,7 +93,7 @@ async function main(): Promise<void> {
       })) as unknown as string[] | symbol;
 
       if (isCancel(selected) || !Array.isArray(selected) || selected.length === 0) {
-        console.log("❌ No selections made. Aborting.");
+        console.log(" No selections made. Aborting.");
         return;
       }
 
@@ -109,7 +109,7 @@ async function main(): Promise<void> {
       depSpin.stop(`Deprecated ${count} version(s).`);
       return;
     } catch (err) {
-      console.error("❌ Failed to fetch versions from npm:", err);
+      console.error(" Failed to fetch versions from npm:", err);
       return;
     }
   }
@@ -132,15 +132,15 @@ async function main(): Promise<void> {
           depSpin.stop(`Deprecated ${count} older canary versions`);
         } catch (err) {
           depSpin.stop("Failed to deprecate older canaries");
-          console.warn("⚠️ Failed to deprecate older canaries:", err);
+          console.warn(" Failed to deprecate older canaries:", err);
         }
         console.error(
-          `❌ ${packageName}@${canaryVersion} is already published on npm. Skipped publish after deprecating older canaries.`,
+          ` ${packageName}@${canaryVersion} is already published on npm. Skipped publish after deprecating older canaries.`,
         );
         return;
       }
       console.error(
-        `❌ ${packageName}@${canaryVersion} is already published on npm. Make a new commit (or clean your workspace) and try again.`,
+        ` ${packageName}@${canaryVersion} is already published on npm. Make a new commit (or clean your workspace) and try again.`,
       );
       return;
     }
@@ -151,7 +151,7 @@ async function main(): Promise<void> {
       message: `Publish ${packageName}@${canaryVersion} with dist-tag "canary"${deprecateOld ? ", then deprecate older canaries" : ""}?`,
     });
     if (isCancel(proceed) || proceed === false) {
-      console.log("❌ Canceled by user.");
+      console.log(" Canceled by user.");
       return;
     }
   }
@@ -260,19 +260,19 @@ async function main(): Promise<void> {
     }
 
     if (deprecateOld) {
-      console.log("🔎 Cleaning up older canary versions (deprecating)...");
+      console.log(" Cleaning up older canary versions (deprecating)...");
       try {
         const versionsJson = await $`npm view ${packageName} versions --json`.text();
         const versions = JSON.parse(versionsJson) as string[];
         const isCanary = (v: string) => v.includes("-canary.") || v.includes("+canary.");
         for (const v of versions) {
           if (!isCanary(v) || v === canaryVersion) continue;
-          console.log(`➡️ Deprecating ${packageName}@${v}`);
+          console.log(` Deprecating ${packageName}@${v}`);
           await $`npm deprecate -f ${`${packageName}@${v}`} "Deprecated canary; use ${packageName}@canary (currently ${canaryVersion})"`;
         }
-        console.log("🧹 Older canaries deprecated.");
+        console.log(" Older canaries deprecated.");
       } catch (err) {
-        console.warn("⚠️ Failed to deprecate older canaries:", err);
+        console.warn(" Failed to deprecate older canaries:", err);
       }
     }
 
@@ -285,12 +285,12 @@ async function main(): Promise<void> {
     );
     restored = true;
 
-    console.log(`✅ Published canary v${canaryVersion} for all packages`);
-    console.log(`📦 NPM: https://www.npmjs.com/package/${packageName}/v/${canaryVersion}`);
-    console.log(`📦 NPM: https://www.npmjs.com/package/create-bts/v/${canaryVersion}`);
-    console.log(`📦 NPM: https://www.npmjs.com/package/@better-fullstack/types/v/${canaryVersion}`);
+    console.log(` Published canary v${canaryVersion} for all packages`);
+    console.log(` NPM: https://www.npmjs.com/package/${packageName}/v/${canaryVersion}`);
+    console.log(` NPM: https://www.npmjs.com/package/create-bts/v/${canaryVersion}`);
+    console.log(` NPM: https://www.npmjs.com/package/@better-fullstack/types/v/${canaryVersion}`);
     console.log(
-      `📦 NPM: https://www.npmjs.com/package/@better-fullstack/template-generator/v/${canaryVersion}`,
+      ` NPM: https://www.npmjs.com/package/@better-fullstack/template-generator/v/${canaryVersion}`,
     );
   } finally {
     if (!restored) {

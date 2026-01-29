@@ -152,33 +152,33 @@ export default function HeroSection() {
 
           <div className="mt-4 space-y-1.5 text-white/70 sm:mt-6 sm:space-y-2">
             <p>
-              <span className="text-green-400">❯</span>{" "}
+              <span className="text-green-400"></span>{" "}
               <span className="text-white">{commands[selectedPM]}</span>
             </p>
             <p className="text-white/50">┌ create-better-fullstack</p>
             <p className="text-white/50">│</p>
             <p>
-              <span className="text-cyan-400">◆</span>{" "}
+              <span className="text-cyan-400"></span>{" "}
               <span className="text-white/50">Project name:</span>{" "}
               <span className="text-white">my-app</span>
             </p>
             <p>
-              <span className="text-cyan-400">◆</span>{" "}
+              <span className="text-cyan-400"></span>{" "}
               <span className="text-white/50">Framework:</span>{" "}
               <span className="text-white">Tanstack Start</span>
             </p>
             <p>
-              <span className="text-cyan-400">◆</span>{" "}
+              <span className="text-cyan-400"></span>{" "}
               <span className="text-white/50">Database:</span>{" "}
               <span className="text-white">PostgreSQL + Drizzle</span>
             </p>
             <p>
-              <span className="text-cyan-400">◆</span> <span className="text-white/50">Auth:</span>{" "}
+              <span className="text-cyan-400"></span> <span className="text-white/50">Auth:</span>{" "}
               <span className="text-white">Better Auth</span>
             </p>
             <p className="text-white/50">│</p>
             <p>
-              <span className="text-green-400">✓</span>{" "}
+              <span className="text-green-400"></span>{" "}
               <span className="text-white">Project created successfully!</span>
             </p>
           </div>

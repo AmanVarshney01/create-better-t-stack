@@ -12,10 +12,10 @@ const OUTPUT_FILE = path.join(__dirname, "../src/templates.generated.ts");
 const BINARY_OUTPUT_DIR = path.join(__dirname, "../templates-binary");
 
 async function generateTemplates() {
-  console.log("📦 Generating embedded templates...");
+  console.log(" Generating embedded templates...");
 
   const files = await glob("**/*", { cwd: TEMPLATES_DIR, dot: true, onlyFiles: true });
-  console.log(`📂 Found ${files.length} template files`);
+  console.log(` Found ${files.length} template files`);
 
   const entries: string[] = [];
   const binaryFiles: string[] = [];
@@ -52,14 +52,14 @@ export const TEMPLATE_COUNT = ${files.length};
   const stats = fs.statSync(OUTPUT_FILE);
   const sizeMB = (stats.size / (1024 * 1024)).toFixed(2);
 
-  console.log(`✅ Generated ${OUTPUT_FILE}`);
-  console.log(`📊 File size: ${sizeMB} MB (${files.length} templates)`);
+  console.log(` Generated ${OUTPUT_FILE}`);
+  console.log(` File size: ${sizeMB} MB (${files.length} templates)`);
 
   await copyBinaryFiles(binaryFiles);
 }
 
 async function copyBinaryFiles(binaryFiles: string[]) {
-  console.log(`\n📁 Copying ${binaryFiles.length} binary files to templates-binary/...`);
+  console.log(`\n Copying ${binaryFiles.length} binary files to templates-binary/...`);
 
   if (fs.existsSync(BINARY_OUTPUT_DIR)) {
     fs.rmSync(BINARY_OUTPUT_DIR, { recursive: true });
@@ -79,10 +79,10 @@ async function copyBinaryFiles(binaryFiles: string[]) {
   }
 
   const sizeKB = (totalSize / 1024).toFixed(2);
-  console.log(`✅ Copied ${binaryFiles.length} binary files (${sizeKB} KB)`);
+  console.log(` Copied ${binaryFiles.length} binary files (${sizeKB} KB)`);
 }
 
 generateTemplates().catch((err) => {
-  console.error("❌ Failed to generate templates:", err);
+  console.error(" Failed to generate templates:", err);
   process.exit(1);
 });

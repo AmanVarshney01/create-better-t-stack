@@ -100,7 +100,7 @@ export function ShareDialog({ children, stackUrl, stackState }: ShareDialogProps
 
   const shareToTwitter = () => {
     const text = encodeURIComponent(
-      `Check out this cool tech stack I configured with Create Better T Stack!\n\n🚀 ${techBadges.length} technologies selected\n\n`,
+      `Check out this cool tech stack I configured with Create Better T Stack!\n\n ${techBadges.length} technologies selected\n\n`,
     );
     const url = encodeURIComponent(stackUrl);
     window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, "_blank");
@@ -154,7 +154,7 @@ export function ShareDialog({ children, stackUrl, stackState }: ShareDialogProps
           <div className="rounded border border-border">
             <div className="border-border border-b px-3 py-2">
               <div className="flex items-center gap-2">
-                <span className="text-primary text-xs">▶</span>
+                <span className="text-primary text-xs"></span>
                 <span className="font-mono font-semibold text-foreground text-xs">
                   DEPENDENCIES.LIST
                 </span>
@@ -181,7 +181,7 @@ export function ShareDialog({ children, stackUrl, stackState }: ShareDialogProps
           <div className="rounded border border-border">
             <div className="border-border border-b px-3 py-2">
               <div className="flex items-center gap-2">
-                <span className="text-primary text-xs">▶</span>
+                <span className="text-primary text-xs"></span>
                 <span className="font-mono font-semibold text-foreground text-xs">QR_CODE.PNG</span>
               </div>
             </div>
@@ -214,7 +214,7 @@ export function ShareDialog({ children, stackUrl, stackState }: ShareDialogProps
           <div className="rounded border border-border">
             <div className="border-border border-b px-3 py-2">
               <div className="flex items-center gap-2">
-                <span className="text-primary text-xs">▶</span>
+                <span className="text-primary text-xs"></span>
                 <span className="font-mono font-semibold text-foreground text-xs">
                   EXPORT_ACTIONS.SH
                 </span>

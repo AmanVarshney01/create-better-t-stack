@@ -141,7 +141,7 @@ async function checkTemplateVersions(): Promise<Mismatch[]> {
         } else {
           matchedPackages++;
           if (options.verbose) {
-            console.log(`  ✓ ${pkg}: ${templateVersion}`);
+            console.log(`   ${pkg}: ${templateVersion}`);
           }
         }
       } else if (options.verbose) {
@@ -203,7 +203,7 @@ async function main() {
   const mismatches = await checkTemplateVersions();
 
   if (mismatches.length === 0) {
-    console.log("✓ All template versions match dependencyVersionMap!");
+    console.log(" All template versions match dependencyVersionMap!");
     process.exit(0);
   }
 
@@ -227,7 +227,7 @@ async function main() {
   if (options.fix) {
     console.log("\nApplying fixes...");
     const fixedCount = await fixMismatches(mismatches);
-    console.log(`\n✓ Fixed ${fixedCount} version mismatches.`);
+    console.log(`\n Fixed ${fixedCount} version mismatches.`);
     console.log("\nRemember to rebuild templates: bun run generate-templates");
   } else {
     console.log("\nRun with --fix to automatically update these versions.");

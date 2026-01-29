@@ -33,7 +33,7 @@ async function main(): Promise<void> {
   await $`git commit -m "chore: update changelog for ${tag}"`;
   await $`git push`;
 
-  console.log(`✅ Generated changelog for ${tag}`);
+  console.log(` Generated changelog for ${tag}`);
 }
 
 main().catch(console.error);

@@ -82,7 +82,7 @@ const TweetCard = ({ tweetId, index }: { tweetId: string; index: number }) => (
     <div className="w-full min-w-0 overflow-hidden rounded border border-border bg-fd-background">
       <div className="sticky top-0 z-10 border-border border-b px-3 py-2">
         <div className="flex items-center gap-2">
-          <span className="text-primary text-xs">▶</span>
+          <span className="text-primary text-xs"></span>
           <span className="font-semibold font-mono text-xs">
             [TWEET_{String(index + 1).padStart(3, "0")}]
           </span>
