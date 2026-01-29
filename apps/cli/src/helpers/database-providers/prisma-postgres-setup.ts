@@ -55,7 +55,7 @@ async function setupWithCreateDb(
 
   const createDbArgs = getPackageExecutionArgs(
     packageManager,
-    `create-db@latest --json --region ${selectedRegion}`,
+    `create-db@latest --json --region ${selectedRegion} --user-agent "aman/better-t-stack"`,
   );
 
   const s = spinner();
