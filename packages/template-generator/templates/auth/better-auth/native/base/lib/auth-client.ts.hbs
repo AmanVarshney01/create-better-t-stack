@@ -2,7 +2,6 @@ import { expoClient } from "@better-auth/expo/client";
 import { createAuthClient } from "better-auth/react";
 import * as SecureStore from "expo-secure-store";
 import Constants from "expo-constants";
-import { Platform } from "react-native";
 import { env } from "@{{projectName}}/env/native";
 
 export const authClient = createAuthClient({
@@ -11,9 +10,7 @@ export const authClient = createAuthClient({
 		expoClient({
 			scheme: Constants.expoConfig?.scheme as string,
 			storagePrefix: Constants.expoConfig?.scheme as string,
-			storage: Platform.OS === "web"
-				? window.localStorage
-				: SecureStore,
+			storage: SecureStore,
 		}),
 	],
 });
