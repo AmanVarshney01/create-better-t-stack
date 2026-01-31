@@ -46,6 +46,7 @@ export const AddonsSchema = z
     "oxlint",
     "opentui",
     "wxt",
+    "docker-compose",
     "skills",
     "none",
   ])
