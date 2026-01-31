@@ -251,7 +251,7 @@ describe("Addon Configurations", () => {
           api: "trpc",
           examples: ["none"],
           dbSetup: "none",
-          webDeploy: "cloudflare",
+          serverDeploy: "cloudflare",
           serverDeploy: "alchemy", // Workers runtime requires server deployment
           expectError: true,
         });
