@@ -80,7 +80,14 @@ export async function gatherConfig(
       auth: ({ results }) => getAuthChoice(flags.auth, results.backend, results.frontend),
       payments: ({ results }) =>
         getPaymentsChoice(flags.payments, results.auth, results.backend, results.frontend),
-      addons: ({ results }) => getAddonsChoice(flags.addons, results.frontend, results.auth),
+      addons: ({ results }) =>
+        getAddonsChoice(
+          flags.addons,
+          results.frontend,
+          results.auth,
+          results.backend,
+          results.runtime,
+        ),
       examples: ({ results }) =>
         getExamplesChoice(
           flags.examples,
