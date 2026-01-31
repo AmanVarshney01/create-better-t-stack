@@ -1,4 +1,6 @@
-import { describe, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 
 import type { Addons, Frontend } from "../src";
 
@@ -170,6 +172,288 @@ describe("Addon Configurations", () => {
           expectError(result, "tauri addon requires one of these frontends");
         });
       }
+    });
+
+    describe("Docker Compose Addon", () => {
+      it("should work with docker-compose + Hono + postgres + drizzle", async () => {
+        const result = await runTRPCTest({
+          projectName: "docker-compose-hono-postgres",
+          addons: ["docker-compose"],
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          runtime: "bun",
+          database: "postgres",
+          orm: "drizzle",
+          auth: "none",
+          api: "trpc",
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+
+      it("should work with docker-compose + Next.js + self backend", async () => {
+        const result = await runTRPCTest({
+          projectName: "docker-compose-nextjs-self",
+          addons: ["docker-compose"],
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "postgres",
+          orm: "drizzle",
+          auth: "none",
+          api: "trpc",
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+
+      it("should fail with docker-compose + Convex backend", async () => {
+        const result = await runTRPCTest({
+          projectName: "docker-compose-convex-fail",
+          addons: ["docker-compose"],
+          frontend: ["tanstack-router"],
+          backend: "convex",
+          runtime: "none",
+          database: "none",
+          orm: "none",
+          auth: "none",
+          api: "none", // Convex requires api: "none"
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          expectError: true,
+        });
+
+        expectError(result, "docker-compose is not compatible with Convex backend");
+      });
+
+      it("should fail with docker-compose + Workers runtime", async () => {
+        const result = await runTRPCTest({
+          projectName: "docker-compose-workers-fail",
+          addons: ["docker-compose"],
+          frontend: ["tanstack-router"],
+          backend: "hono",
+          runtime: "workers",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          api: "trpc",
+          examples: ["none"],
+          dbSetup: "none",
+          serverDeploy: "cloudflare",
+          serverDeploy: "alchemy", // Workers runtime requires server deployment
+          expectError: true,
+        });
+
+        expectError(result, "docker-compose is not compatible with Cloudflare Workers runtime");
+      });
+
+      it("should work with docker-compose + mysql + prisma", async () => {
+        const result = await runTRPCTest({
+          projectName: "docker-compose-mysql-prisma",
+          addons: ["docker-compose"],
+          frontend: ["react-router"],
+          backend: "hono",
+          runtime: "bun",
+          database: "mysql",
+          orm: "prisma",
+          auth: "none",
+          api: "trpc",
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+
+      it("should work with docker-compose + Nuxt + oRPC", async () => {
+        const result = await runTRPCTest({
+          projectName: "docker-compose-nuxt",
+          addons: ["docker-compose"],
+          frontend: ["nuxt"],
+          backend: "hono",
+          runtime: "bun",
+          database: "postgres",
+          orm: "drizzle",
+          auth: "none",
+          api: "orpc",
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+
+      it("should work with docker-compose + Svelte", async () => {
+        const result = await runTRPCTest({
+          projectName: "docker-compose-svelte",
+          addons: ["docker-compose"],
+          frontend: ["svelte"],
+          backend: "hono",
+          runtime: "bun",
+          database: "sqlite",
+          orm: "drizzle",
+          auth: "none",
+          api: "orpc",
+          examples: ["none"],
+          dbSetup: "none",
+          webDeploy: "none",
+          serverDeploy: "none",
+          install: false,
+        });
+
+        expectSuccess(result);
+      });
+
+      describe("Docker Compose File Generation", () => {
+        it("should generate docker-compose.yml at project root", async () => {
+          const result = await runTRPCTest({
+            projectName: "docker-compose-files-root",
+            addons: ["docker-compose"],
+            frontend: ["tanstack-router"],
+            backend: "hono",
+            runtime: "bun",
+            database: "postgres",
+            orm: "drizzle",
+            auth: "none",
+            api: "trpc",
+            examples: ["none"],
+            dbSetup: "none",
+            webDeploy: "none",
+            serverDeploy: "none",
+            install: false,
+          });
+
+          expectSuccess(result);
+          expect(result.projectDir).toBeDefined();
+
+          const dockerComposeYml = join(result.projectDir!, "docker-compose.yml");
+          expect(existsSync(dockerComposeYml)).toBe(true);
+        });
+
+        it("should generate Dockerfile in apps/server when backend exists", async () => {
+          const result = await runTRPCTest({
+            projectName: "docker-compose-files-server",
+            addons: ["docker-compose"],
+            frontend: ["tanstack-router"],
+            backend: "hono",
+            runtime: "bun",
+            database: "postgres",
+            orm: "drizzle",
+            auth: "none",
+            api: "trpc",
+            examples: ["none"],
+            dbSetup: "none",
+            webDeploy: "none",
+            serverDeploy: "none",
+            install: false,
+          });
+
+          expectSuccess(result);
+          expect(result.projectDir).toBeDefined();
+
+          const serverDockerfile = join(result.projectDir!, "apps", "server", "Dockerfile");
+          expect(existsSync(serverDockerfile)).toBe(true);
+        });
+
+        it("should generate Dockerfile in apps/web for Vite-based frontend", async () => {
+          const result = await runTRPCTest({
+            projectName: "docker-compose-files-web",
+            addons: ["docker-compose"],
+            frontend: ["tanstack-router"],
+            backend: "hono",
+            runtime: "bun",
+            database: "postgres",
+            orm: "drizzle",
+            auth: "none",
+            api: "trpc",
+            examples: ["none"],
+            dbSetup: "none",
+            webDeploy: "none",
+            serverDeploy: "none",
+            install: false,
+          });
+
+          expectSuccess(result);
+          expect(result.projectDir).toBeDefined();
+
+          // Vite-based frontends get Dockerfile.vite
+          const webDockerfile = join(result.projectDir!, "apps", "web", "Dockerfile.vite");
+          expect(existsSync(webDockerfile)).toBe(true);
+        });
+
+        it("should generate Dockerfile in apps/web for Next.js + self backend", async () => {
+          const result = await runTRPCTest({
+            projectName: "docker-compose-files-nextjs",
+            addons: ["docker-compose"],
+            frontend: ["next"],
+            backend: "self",
+            runtime: "none",
+            database: "postgres",
+            orm: "drizzle",
+            auth: "none",
+            api: "trpc",
+            examples: ["none"],
+            dbSetup: "none",
+            webDeploy: "none",
+            serverDeploy: "none",
+            install: false,
+          });
+
+          expectSuccess(result);
+          expect(result.projectDir).toBeDefined();
+
+          // With self backend, there should be no server directory but web Dockerfile should exist
+          const dockerComposeYml = join(result.projectDir!, "docker-compose.yml");
+          // Next.js frontend gets Dockerfile.next
+          const webDockerfile = join(result.projectDir!, "apps", "web", "Dockerfile.next");
+
+          expect(existsSync(dockerComposeYml)).toBe(true);
+          expect(existsSync(webDockerfile)).toBe(true);
+        });
+
+        it("should generate .dockerignore files", async () => {
+          const result = await runTRPCTest({
+            projectName: "docker-compose-files-ignore",
+            addons: ["docker-compose"],
+            frontend: ["tanstack-router"],
+            backend: "hono",
+            runtime: "bun",
+            database: "postgres",
+            orm: "drizzle",
+            auth: "none",
+            api: "trpc",
+            examples: ["none"],
+            dbSetup: "none",
+            webDeploy: "none",
+            serverDeploy: "none",
+            install: false,
+          });
+
+          expectSuccess(result);
+          expect(result.projectDir).toBeDefined();
+
+          const rootDockerignore = join(result.projectDir!, ".dockerignore");
+          expect(existsSync(rootDockerignore)).toBe(true);
+        });
+      });
     });
   });
 

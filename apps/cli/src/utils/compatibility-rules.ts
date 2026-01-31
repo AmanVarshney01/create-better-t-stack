@@ -9,6 +9,7 @@ import type {
   Frontend,
   Payments,
   ProjectConfig,
+  Runtime,
   ServerDeploy,
   WebDeploy,
 } from "../types";
@@ -255,6 +256,8 @@ export function validateAddonCompatibility(
   addon: Addons,
   frontend: Frontend[],
   _auth?: Auth,
+  backend?: Backend,
+  runtime?: Runtime,
 ): { isCompatible: boolean; reason?: string } {
   const compatibleFrontends = ADDON_COMPATIBILITY[addon];
 
@@ -272,6 +275,22 @@ export function validateAddonCompatibility(
     }
   }
 
+  // Docker Compose specific compatibility checks
+  if (addon === "docker-compose") {
+    if (backend === "convex") {
+      return {
+        isCompatible: false,
+        reason: "docker-compose is not compatible with Convex backend (managed service)",
+      };
+    }
+    if (runtime === "workers") {
+      return {
+        isCompatible: false,
+        reason: "docker-compose is not compatible with Cloudflare Workers runtime",
+      };
+    }
+  }
+
   return { isCompatible: true };
 }
 
@@ -280,13 +299,15 @@ export function getCompatibleAddons(
   frontend: Frontend[],
   existingAddons: Addons[] = [],
   auth?: Auth,
+  backend?: Backend,
+  runtime?: Runtime,
 ) {
   return allAddons.filter((addon) => {
     if (existingAddons.includes(addon)) return false;
 
     if (addon === "none") return false;
 
-    const { isCompatible } = validateAddonCompatibility(addon, frontend, auth);
+    const { isCompatible } = validateAddonCompatibility(addon, frontend, auth, backend, runtime);
     return isCompatible;
   });
 }
@@ -295,12 +316,20 @@ export function validateAddonsAgainstFrontends(
   addons: Addons[] = [],
   frontends: Frontend[] = [],
   auth?: Auth,
+  backend?: Backend,
+  runtime?: Runtime,
 ): ValidationResult {
   for (const addon of addons) {
     if (addon === "none") continue;
-    const { isCompatible, reason } = validateAddonCompatibility(addon, frontends, auth);
+    const { isCompatible, reason } = validateAddonCompatibility(
+      addon,
+      frontends,
+      auth,
+      backend,
+      runtime,
+    );
     if (!isCompatible) {
-      return validationErr(`Incompatible addon/frontend combination: ${reason}`);
+      return validationErr(`Incompatible addon combination: ${reason}`);
     }
   }
   return Result.ok(undefined);

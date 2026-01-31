@@ -28,6 +28,54 @@ export async function processAddonTemplates(
       continue;
     }
 
+    if (addon === "docker-compose") {
+      // Place docker-compose.yml at project root
+      processTemplatesFromPrefix(vfs, templates, "addons/docker-compose", "", config);
+
+      // Place server Dockerfile if backend exists
+      if (config.backend !== "self" && config.backend !== "none") {
+        processTemplatesFromPrefix(
+          vfs,
+          templates,
+          "addons/docker-compose/apps/server",
+          "apps/server",
+          config,
+        );
+      }
+
+      // Place web Dockerfile based on frontend
+      if (config.frontend.includes("next")) {
+        processTemplatesFromPrefix(
+          vfs,
+          templates,
+          "addons/docker-compose/apps/web",
+          "apps/web",
+          config,
+        );
+      } else if (
+        config.frontend.some((f) =>
+          [
+            "tanstack-router",
+            "react-router",
+            "tanstack-start",
+            "solid",
+            "svelte",
+            "nuxt",
+            "astro",
+          ].includes(f),
+        )
+      ) {
+        processTemplatesFromPrefix(
+          vfs,
+          templates,
+          "addons/docker-compose/apps/web",
+          "apps/web",
+          config,
+        );
+      }
+      continue;
+    }
+
     processTemplatesFromPrefix(vfs, templates, `addons/${addon}`, "", config);
   }
 }

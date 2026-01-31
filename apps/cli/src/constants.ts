@@ -60,6 +60,7 @@ export const ADDON_COMPATIBILITY = {
   fumadocs: [],
   opentui: [],
   wxt: [],
+  "docker-compose": [],
   skills: [],
   none: [],
 } as const;

@@ -1,0 +1,112 @@
+name: {{projectName}}
+
+services:
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+{{#unless (eq backend "self")}}
+{{#unless (eq backend "none")}}
+    depends_on:
+      - server
+{{/unless}}
+{{/unless}}
+{{#unless (eq database "none")}}
+{{#if (eq backend "self")}}
+    depends_on:
+      - db
+{{/if}}
+{{/unless}}
+    restart: unless-stopped
+
+{{#unless (eq backend "self")}}
+{{#unless (eq backend "none")}}
+  server:
+    build:
+      context: ./apps/server
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+{{#unless (eq database "none")}}
+      - DATABASE_URL=${DATABASE_URL}
+    depends_on:
+      db:
+        condition: service_healthy
+{{/unless}}
+    restart: unless-stopped
+{{/unless}}
+{{/unless}}
+
+{{#if (eq database "postgres")}}
+  db:
+    image: postgres:16-alpine
+    container_name: {{projectName}}-postgres
+    environment:
+      POSTGRES_DB: {{projectName}}
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+{{/if}}
+{{#if (eq database "mysql")}}
+  db:
+    image: mysql:8
+    container_name: {{projectName}}-mysql
+    environment:
+      MYSQL_DATABASE: {{projectName}}
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+{{/if}}
+{{#if (eq database "mongodb")}}
+  db:
+    image: mongo:7
+    container_name: {{projectName}}-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: {{projectName}}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
+{{/if}}
