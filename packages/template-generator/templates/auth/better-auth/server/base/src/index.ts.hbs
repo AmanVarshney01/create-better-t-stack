@@ -19,7 +19,15 @@ export const auth = betterAuth({
 	trustedOrigins: [
 		env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-		"mybettertapp://", "exp://"
+		"mybettertapp://",
+		...(env.NODE_ENV === "development"
+			? [
+				"exp://",
+				"exp://**",
+				"exp://192.168.*.*:*/**",
+				"http://localhost:8081",
+			]
+			: []),
 {{/if}}
 	],
 	emailAndPassword: {
@@ -82,7 +90,15 @@ export const auth = betterAuth({
 	trustedOrigins: [
 		env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-		"mybettertapp://", "exp://"
+		"mybettertapp://",
+		...(env.NODE_ENV === "development"
+			? [
+				"exp://",
+				"exp://**",
+				"exp://192.168.*.*:*/**",
+				"http://localhost:8081",
+			]
+			: []),
 {{/if}}
 	],
 	emailAndPassword: {
@@ -144,7 +160,15 @@ export const auth = betterAuth({
 	trustedOrigins: [
 		env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-		"mybettertapp://", "exp://"
+		"mybettertapp://",
+		...(env.NODE_ENV === "development"
+			? [
+				"exp://",
+				"exp://**",
+				"exp://192.168.*.*:*/**",
+				"http://localhost:8081",
+			]
+			: []),
 {{/if}}
 	],
 	emailAndPassword: {
@@ -213,7 +237,15 @@ export const auth = betterAuth({
 	trustedOrigins: [
 		env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-		"mybettertapp://", "exp://"
+		"mybettertapp://",
+		...(env.NODE_ENV === "development"
+			? [
+				"exp://",
+				"exp://**",
+				"exp://192.168.*.*:*/**",
+				"http://localhost:8081",
+			]
+			: []),
 {{/if}}
 	],
 	emailAndPassword: {
@@ -267,7 +299,15 @@ export const auth = betterAuth({
 	trustedOrigins: [
 		env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-		"mybettertapp://", "exp://"
+		"mybettertapp://",
+		...(env.NODE_ENV === "development"
+			? [
+				"exp://",
+				"exp://**",
+				"exp://192.168.*.*:*/**",
+				"http://localhost:8081",
+			]
+			: []),
 {{/if}}
 	],
 	emailAndPassword: {

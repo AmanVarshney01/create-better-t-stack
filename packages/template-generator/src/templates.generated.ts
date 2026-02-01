@@ -653,6 +653,7 @@ import type { AppRouterClient } from "@{{projectName}}/api/routers/index";
 import { env } from "@{{projectName}}/env/native";
 {{#if (eq auth "better-auth")}}
 import { authClient } from "@/lib/auth-client";
+import { Platform } from "react-native";
 {{/if}}
 
 export const queryClient = new QueryClient({
@@ -674,7 +675,19 @@ export const link = new RPCLink({
 	url: \`\${env.EXPO_PUBLIC_SERVER_URL}/rpc\`,
 {{/if}}
 {{#if (eq auth "better-auth")}}
+	fetch:
+		Platform.OS !== "web"
+			? undefined
+			: function (url, options) {
+					return fetch(url, {
+						...options,
+						credentials: "include",
+					});
+				},
 	headers() {
+		if (Platform.OS === "web") {
+			return {};
+		}
 		const headers = new Map<string, string>();
 		const cookies = authClient.getCookie();
 		if (cookies) {
@@ -1337,6 +1350,7 @@ export const Route = createFileRoute('/api/trpc/$')({
 `],
   ["api/trpc/native/utils/trpc.ts.hbs", `{{#if (eq auth "better-auth")}}
 import { authClient } from "@/lib/auth-client";
+import { Platform } from "react-native";
 {{/if}}
 import { QueryClient } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchLink } from "@trpc/client";
@@ -1355,7 +1369,19 @@ const trpcClient = createTRPCClient<AppRouter>({
 			url: \`\${env.EXPO_PUBLIC_SERVER_URL}/trpc\`,
 {{/if}}
 {{#if (eq auth "better-auth")}}
+			fetch:
+				Platform.OS !== "web"
+					? undefined
+					: function (url, options) {
+							return fetch(url, {
+								...options,
+								credentials: "include",
+							});
+						},
 			headers() {
+				if (Platform.OS === "web") {
+					return {};
+				}
 				const headers = new Map<string, string>();
 				const cookies = authClient.getCookie();
 				if (cookies) {
@@ -1799,11 +1825,11 @@ function createAuth(ctx: GenericCtx<DataModel>) {
   return betterAuth({
     {{#if (and (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")) (or (includes frontend "tanstack-start") (includes frontend "next")))}}
     baseURL: siteUrl,
-    trustedOrigins: [siteUrl, nativeAppUrl],
+    trustedOrigins: [siteUrl, nativeAppUrl, ...(process.env.NODE_ENV === "development" ? ["exp://", "exp://**", "exp://192.168.*.*:*/**"] : [])],
     {{else if (and (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")) (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid")))}}
-    trustedOrigins: [siteUrl, nativeAppUrl],
+    trustedOrigins: [siteUrl, nativeAppUrl, ...(process.env.NODE_ENV === "development" ? ["exp://", "exp://**", "exp://192.168.*.*:*/**"] : [])],
     {{else if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-    trustedOrigins: [nativeAppUrl],
+    trustedOrigins: [nativeAppUrl, ...(process.env.NODE_ENV === "development" ? ["exp://", "exp://**", "exp://192.168.*.*:*/**"] : [])],
     {{else if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
     baseURL: siteUrl,
     trustedOrigins: [siteUrl],
@@ -5250,7 +5276,15 @@ export const auth = betterAuth({
 	trustedOrigins: [
 		env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-		"mybettertapp://", "exp://"
+		"mybettertapp://",
+		...(env.NODE_ENV === "development"
+			? [
+				"exp://",
+				"exp://**",
+				"exp://192.168.*.*:*/**",
+				"http://localhost:8081",
+			]
+			: []),
 {{/if}}
 	],
 	emailAndPassword: {
@@ -5313,7 +5347,15 @@ export const auth = betterAuth({
 	trustedOrigins: [
 		env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-		"mybettertapp://", "exp://"
+		"mybettertapp://",
+		...(env.NODE_ENV === "development"
+			? [
+				"exp://",
+				"exp://**",
+				"exp://192.168.*.*:*/**",
+				"http://localhost:8081",
+			]
+			: []),
 {{/if}}
 	],
 	emailAndPassword: {
@@ -5375,7 +5417,15 @@ export const auth = betterAuth({
 	trustedOrigins: [
 		env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-		"mybettertapp://", "exp://"
+		"mybettertapp://",
+		...(env.NODE_ENV === "development"
+			? [
+				"exp://",
+				"exp://**",
+				"exp://192.168.*.*:*/**",
+				"http://localhost:8081",
+			]
+			: []),
 {{/if}}
 	],
 	emailAndPassword: {
@@ -5444,7 +5494,15 @@ export const auth = betterAuth({
 	trustedOrigins: [
 		env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-		"mybettertapp://", "exp://"
+		"mybettertapp://",
+		...(env.NODE_ENV === "development"
+			? [
+				"exp://",
+				"exp://**",
+				"exp://192.168.*.*:*/**",
+				"http://localhost:8081",
+			]
+			: []),
 {{/if}}
 	],
 	emailAndPassword: {
@@ -5498,7 +5556,15 @@ export const auth = betterAuth({
 	trustedOrigins: [
 		env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-		"mybettertapp://", "exp://"
+		"mybettertapp://",
+		...(env.NODE_ENV === "development"
+			? [
+				"exp://",
+				"exp://**",
+				"exp://192.168.*.*:*/**",
+				"http://localhost:8081",
+			]
+			: []),
 {{/if}}
 	],
 	emailAndPassword: {
@@ -20264,19 +20330,21 @@ module.exports = config;
     "web": "expo start --web"
   },
   "dependencies": {
-    "@expo/vector-icons": "^15.0.2",
-    "@react-navigation/bottom-tabs": "^7.3.10",
-    "@react-navigation/drawer": "^7.3.9",
-    "@react-navigation/native": "^7.1.6",
+    "@expo/vector-icons": "^15.0.3",
+    "@react-navigation/bottom-tabs": "^7.4.0",
+    "@react-navigation/drawer": "^7.5.0",
+    "@react-navigation/native": "^7.1.8",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.3.0",
     {{/if}}
     "@tanstack/react-form": "^1.0.5",
-    "expo": "^54.0.0",
+    "babel-preset-expo": "~54.0.10",
+    "expo": "~54.0.33",
     "expo-constants": "~18.0.8",
     "expo-crypto": "~15.0.6",
     "expo-linking": "~8.0.7",
+    "expo-network": "~8.0.8",
     "expo-router": "~6.0.0",
     "expo-secure-store": "~15.0.6",
     "expo-splash-screen": "~31.0.8",
@@ -20286,15 +20354,15 @@ module.exports = config;
     "expo-web-browser": "~15.0.6",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "react-native": "0.81.4",
+    "react-native": "0.81.5",
 		"react-native-edge-to-edge": "^1.7.0",
     "react-native-gesture-handler": "~2.28.0",
-		"react-native-nitro-modules": "^0.29.4",
+		"react-native-nitro-modules": "^0.33.2",
     "react-native-reanimated": "~4.1.0",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
-		"react-native-unistyles": "^3.0.12",
-    "react-native-web": "^0.21.0",
+		"react-native-unistyles": "^3.0.22",
+    "react-native-web": "^0.21.2",
     "react-native-worklets": "^0.5.1"
   },
   "devDependencies": {
