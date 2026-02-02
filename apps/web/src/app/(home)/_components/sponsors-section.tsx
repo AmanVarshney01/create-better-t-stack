@@ -26,19 +26,19 @@ export default function SponsorsSection({ sponsorsData }: { sponsorsData: Sponso
       <div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
         <div className="flex items-center gap-2">
           <Terminal className="h-5 w-5 text-primary" />
-          <span className="font-bold text-lg sm:text-xl">SPONSORS_DATABASE.JSON</span>
+          <span className="font-bold font-mono text-lg sm:text-xl">SPONSORS_DATABASE.JSON</span>
         </div>
         <div className="hidden h-px flex-1 bg-border sm:block" />
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground text-xs">[{totalCurrentSponsors} RECORDS]</span>
-        </div>
+        <span className="w-full text-right font-mono text-muted-foreground text-xs sm:w-auto sm:text-left">
+          [{totalCurrentSponsors} RECORDS]
+        </span>
       </div>
       {totalCurrentSponsors === 0 ? (
         <div className="space-y-4">
           <div className="rounded border border-border p-8">
             <div className="text-center">
               <div className="mb-4 flex items-center justify-center gap-2">
-                <span className="text-muted-foreground">NO_SPONSORS_FOUND.NULL</span>
+                <span className="font-mono text-muted-foreground">NO_SPONSORS_FOUND.NULL</span>
               </div>
               <div className="flex items-center justify-center gap-2 text-sm">
                 <span className="text-primary">$</span>
@@ -237,7 +237,7 @@ export default function SponsorsSection({ sponsorsData }: { sponsorsData: Sponso
                 ) : (
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 )}
-                <span className="font-semibold text-muted-foreground text-sm">
+                <span className="font-semibold font-mono text-muted-foreground text-sm">
                   PAST_SPONSORS.ARCHIVE
                 </span>
                 <span className="text-muted-foreground text-xs">({pastSponsors.length})</span>
@@ -287,7 +287,7 @@ export default function SponsorsSection({ sponsorsData }: { sponsorsData: Sponso
                             </div>
                             <div className="grid grid-cols-1 grid-rows-[1fr_auto] justify-between">
                               <div>
-                                <h3 className="truncate font-semibold text-muted-foreground text-sm">
+                                <h3 className="truncate font-semibold font-mono text-muted-foreground text-sm">
                                   {entry.name}
                                 </h3>
                                 {shouldShowLifetimeTotal(entry) ? (

@@ -101,17 +101,6 @@ export default function ShowcaseItem({
               </Link>
             )}
           </div>
-
-          <div className="border-border/50 border-t pt-3">
-            <div className="flex items-center gap-2 text-xs">
-              <span className="text-primary">$</span>
-              <span className="text-muted-foreground">echo &quot;Status: READY&quot;</span>
-              <div className="ml-auto flex items-center gap-1">
-                <div className="h-1 w-1 animate-pulse rounded-full bg-green-400" />
-                <span className="text-green-400 text-xs">ONLINE</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
