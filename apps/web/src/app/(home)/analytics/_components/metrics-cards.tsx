@@ -55,7 +55,7 @@ export function MetricsCards({ data }: { data: AggregatedAnalyticsData }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <span className="font-bold text-lg">KEY_METRICS</span>
+        <span className="font-bold font-mono text-lg">KEY_METRICS</span>
         <div className="h-px flex-1 bg-border" />
       </div>
 

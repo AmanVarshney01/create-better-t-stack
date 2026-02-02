@@ -35,7 +35,7 @@ export default function StatsSection() {
         <div className="group cursor-pointer rounded border border-border bg-fd-background p-4 transition-colors hover:bg-muted/10">
           <div className="mb-3 flex items-center gap-2">
             <Terminal className="h-4 w-4 text-primary" />
-            <span className="font-semibold font-mono text-sm sm:text-base">CLI_ANALYTICS.JSON</span>
+            <span className="font-bold font-mono text-lg sm:text-xl">CLI_ANALYTICS.JSON</span>
           </div>
 
           <div className="space-y-3">
@@ -90,7 +90,7 @@ export default function StatsSection() {
         <div className="group cursor-pointer rounded border border-border bg-fd-background p-4 transition-colors hover:bg-muted/10">
           <div className="mb-3 flex items-center gap-2">
             <Github className="h-4 w-4 text-primary" />
-            <span className="font-semibold font-mono text-sm sm:text-base">GITHUB_REPO.GIT</span>
+            <span className="font-bold font-mono text-lg sm:text-xl">GITHUB_REPO.GIT</span>
           </div>
 
           <div className="space-y-3">
@@ -142,7 +142,7 @@ export default function StatsSection() {
         <div className="group cursor-pointer rounded border border-border bg-fd-background p-4 transition-colors hover:bg-muted/10">
           <div className="mb-3 flex items-center gap-2">
             <Terminal className="h-4 w-4 text-primary" />
-            <span className="font-semibold font-mono text-sm sm:text-base">NPM_PACKAGE.JS</span>
+            <span className="font-bold font-mono text-lg sm:text-xl">NPM_PACKAGE.JS</span>
           </div>
 
           <div className="space-y-3">

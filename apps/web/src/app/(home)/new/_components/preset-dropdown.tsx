@@ -21,7 +21,7 @@ export function PresetDropdown({ onApplyPreset }: PresetDropdownProps) {
         render={
           <button
             type="button"
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-fd-background px-2 py-1.5 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded border border-border bg-fd-background px-2 py-1.5 font-mono font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
           />
         }
       >

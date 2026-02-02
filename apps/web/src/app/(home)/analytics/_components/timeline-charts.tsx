@@ -65,7 +65,7 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <span className="font-bold text-lg">TIMELINE_ANALYSIS</span>
+        <span className="font-bold font-mono text-lg">TIMELINE_ANALYSIS</span>
         <div className="h-px flex-1 bg-border" />
       </div>
 
