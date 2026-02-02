@@ -62,19 +62,19 @@ export async function setupDatabase(config: ProjectConfig, cliInput?: { manualDb
   } else if (database === "sqlite" && dbSetup === "turso") {
     await runSetup(() => setupTurso(config, cliInput));
   } else if (database === "sqlite" && dbSetup === "d1") {
-    await setupCloudflareD1(config);
+    await runSetup(() => setupCloudflareD1(config));
   } else if (database === "postgres") {
     if (dbSetup === "prisma-postgres") {
       await runSetup(() => setupPrismaPostgres(config, cliInput));
     } else if (dbSetup === "neon") {
       await runSetup(() => setupNeonPostgres(config, cliInput));
     } else if (dbSetup === "planetscale") {
-      await setupPlanetScale(config);
+      await runSetup(() => setupPlanetScale(config));
     } else if (dbSetup === "supabase") {
       await runSetup(() => setupSupabase(config, cliInput));
     }
   } else if (database === "mysql" && dbSetup === "planetscale") {
-    await setupPlanetScale(config);
+    await runSetup(() => setupPlanetScale(config));
   } else if (database === "mongodb" && dbSetup === "mongodb-atlas") {
     await runSetup(() => setupMongoDBAtlas(config, cliInput));
   }

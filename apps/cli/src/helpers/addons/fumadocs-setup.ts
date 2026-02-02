@@ -7,6 +7,7 @@ import path from "node:path";
 import type { ProjectConfig } from "../../types";
 
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
+import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 type FumadocsTemplate =
@@ -59,6 +60,10 @@ const TEMPLATES = {
 export async function setupFumadocs(
   config: ProjectConfig,
 ): Promise<Result<void, AddonSetupError | UserCancelledError>> {
+  if (shouldSkipExternalCommands()) {
+    return Result.ok(undefined);
+  }
+
   const { packageManager, projectDir } = config;
 
   log.info("Setting up Fumadocs...");

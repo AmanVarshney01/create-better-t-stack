@@ -6,7 +6,10 @@ import { PKG_ROOT } from "../constants";
 export const getLatestCLIVersion = () => {
   const packageJsonPath = path.join(PKG_ROOT, "package.json");
 
-  const packageJsonContent = fs.readJSONSync(packageJsonPath);
-
-  return packageJsonContent.version ?? "1.0.0";
+  try {
+    const packageJsonContent = fs.readJSONSync(packageJsonPath);
+    return packageJsonContent.version ?? "1.0.0";
+  } catch {
+    return "1.0.0";
+  }
 };

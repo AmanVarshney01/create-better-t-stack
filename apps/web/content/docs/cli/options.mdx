@@ -184,7 +184,7 @@ create-better-t-stack --backend hono
 
 Runtime environment:
 
-- `none`: No specific runtime (only with `convex` or `none` backend)
+- `none`: No specific runtime (only with `convex`, `none`, or `self` backend)
 - `bun`: Bun runtime
 - `node`: Node.js runtime
 - `workers`: Cloudflare Workers
@@ -220,6 +220,7 @@ Frontend frameworks (can specify multiple):
 - `nuxt`: Nuxt (Vue)
 - `svelte`: SvelteKit
 - `solid`: SolidJS
+- `astro`: Astro
 
 **Native Frameworks:**
 
@@ -326,26 +327,26 @@ create-better-t-stack --examples todo ai
 Web deployment configuration:
 
 - `none`: No deployment setup
-- `alchemy`: Cloudflare Workers deployment (via Alchemy infrastructure as code)
+- `cloudflare`: Cloudflare Workers deployment (via Alchemy infrastructure as code)
 
 ```bash
-create-better-t-stack --web-deploy alchemy
+create-better-t-stack --web-deploy cloudflare
 ```
 
-**Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Infrastructure as Code with Alchemy Guide](/docs/guides/alchemy-deployment) for details.
+**Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Deploying to Cloudflare with Alchemy Guide](/docs/guides/cloudflare-alchemy) for details.
 
 ### `--server-deploy <setup>`
 
 Server deployment configuration:
 
 - `none`: No deployment setup
-- `alchemy`: Cloudflare Workers deployment (when runtime is workers, via Alchemy infrastructure as code)
+- `cloudflare`: Cloudflare Workers deployment (when runtime is workers, via Alchemy infrastructure as code)
 
 ```bash
-create-better-t-stack --server-deploy alchemy
+create-better-t-stack --server-deploy cloudflare
 ```
 
-**Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Infrastructure as Code with Alchemy Guide](/docs/guides/alchemy-deployment) for details.
+**Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Deploying to Cloudflare with Alchemy Guide](/docs/guides/cloudflare-alchemy) for details.
 
 ## History
 
@@ -397,8 +398,8 @@ create-better-t-stack \
   --addons pwa biome \
   --examples todo \
   --package-manager bun \
-  --web-deploy wrangler \
-  --server-deploy alchemy \
+  --web-deploy cloudflare \
+  --server-deploy cloudflare \
   --install
 ```
 

@@ -15,6 +15,8 @@ export async function cleanupSmokeDirectory() {
 // Global setup - runs once before all tests
 beforeAll(async () => {
   try {
+    process.env.BTS_SKIP_EXTERNAL_COMMANDS = "1";
+    process.env.BTS_TEST_MODE = "1";
     await cleanupSmokeDirectory();
     await ensureSmokeDirectory();
   } catch (error) {

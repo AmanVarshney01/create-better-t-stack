@@ -6,6 +6,7 @@ import pc from "picocolors";
 import type { Addons, PackageManager } from "../../types";
 
 import { ProjectCreationError } from "../../utils/errors";
+import { shouldSkipExternalCommands } from "../../utils/external-commands";
 
 export async function installDependencies({
   projectDir,
@@ -15,6 +16,10 @@ export async function installDependencies({
   packageManager: PackageManager;
   addons?: Addons[];
 }): Promise<Result<void, ProjectCreationError>> {
+  if (shouldSkipExternalCommands()) {
+    return Result.ok(undefined);
+  }
+
   const s = spinner();
 
   s.start(`Running ${packageManager} install...`);

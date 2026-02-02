@@ -7,6 +7,7 @@ import type { ProjectConfig } from "../../types";
 
 import { readBtsConfig } from "../../utils/bts-config";
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
+import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 type SkillSource = {
@@ -205,6 +206,10 @@ async function fetchSkillsFromSource(
 export async function setupSkills(
   config: ProjectConfig,
 ): Promise<Result<void, AddonSetupError | UserCancelledError>> {
+  if (shouldSkipExternalCommands()) {
+    return Result.ok(undefined);
+  }
+
   const { packageManager, projectDir } = config;
 
   // Load full config from bts.jsonc to get all addons (existing + new)
