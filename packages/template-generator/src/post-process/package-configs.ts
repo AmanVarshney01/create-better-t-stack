@@ -66,8 +66,7 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   pkgJson.workspaces = workspaces;
 
   const scripts = pkgJson.scripts;
-  const { projectName, packageManager, backend, database, orm, dbSetup, serverDeploy, addons } =
-    config;
+  const { projectName, packageManager, backend, database, orm, dbSetup, addons } = config;
 
   const backendPackageName = backend === "convex" ? `@${projectName}/backend` : "server";
   const dbPackageName = `@${projectName}/db`;

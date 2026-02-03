@@ -171,10 +171,11 @@ function getRecommendedSourceKeys(config: ProjectConfig): string[] {
 function parseSkillsFromOutput(output: string): string[] {
   const skills: string[] = [];
   const lines = output.split("\n");
+  const ansiRegex = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
 
   for (const line of lines) {
     // Strip ANSI codes first
-    const cleanLine = line.replace(/\x1b\[[0-9;]*m/g, "");
+    const cleanLine = line.replace(ansiRegex, "");
 
     // Match lines that start with │ followed by exactly 4 spaces and then a skill name
     const match = cleanLine.match(/^│\s{4}([a-z][a-z0-9-]*)$/);

@@ -23,7 +23,6 @@ function generateReadmeContent(options: ProjectConfig): string {
     api = "trpc",
     webDeploy,
     serverDeploy,
-    dbSetup,
   } = options;
 
   const isConvex = backend === "convex";
