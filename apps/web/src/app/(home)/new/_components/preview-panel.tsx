@@ -38,6 +38,16 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
   const [mobileView, setMobileView] = useState<"tree" | "code">("tree");
   const requestIdRef = useRef(0);
   const abortRef = useRef<AbortController | null>(null);
+  const selectedFilePathRef = useRef<string | null>(selectedFilePath);
+  const onSelectFileRef = useRef(onSelectFile);
+
+  useEffect(() => {
+    selectedFilePathRef.current = selectedFilePath;
+  }, [selectedFilePath]);
+
+  useEffect(() => {
+    onSelectFileRef.current = onSelectFile;
+  }, [onSelectFile]);
 
   const fetchPreview = useCallback(async () => {
     const requestId = requestIdRef.current + 1;
@@ -69,14 +79,15 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
         setDirectoryCount(data.tree.directoryCount);
 
         // Restore selected file from query state if it exists
-        if (selectedFilePath) {
-          const file = findFileByPath(data.tree.root, selectedFilePath);
+        const currentSelectedFilePath = selectedFilePathRef.current;
+        if (currentSelectedFilePath) {
+          const file = findFileByPath(data.tree.root, currentSelectedFilePath);
           if (file) {
             setSelectedFile(file);
             setMobileView("code");
           } else {
             setSelectedFile(null);
-            onSelectFile(null);
+            onSelectFileRef.current(null);
             setMobileView("tree");
           }
         } else {
@@ -95,7 +106,7 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
         setIsLoading(false);
       }
     }
-  }, [stack, selectedFilePath, onSelectFile]);
+  }, [stack]);
 
   // Debounced fetch on stack change
   useEffect(() => {
