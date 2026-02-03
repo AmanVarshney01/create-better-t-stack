@@ -3,6 +3,7 @@ import type { ProjectConfig } from "@better-t-stack/types";
 import { describe, expect, it } from "bun:test";
 
 import { VirtualFileSystem } from "../src/core/virtual-fs";
+import { processPackageConfigs } from "../src/post-process/package-configs";
 import { processReadme } from "../src/processors/readme-generator";
 import { processTurboConfig } from "../src/processors/turbo-generator";
 import { generateReproducibleCommand } from "../src/utils/reproducible-command";
@@ -101,5 +102,23 @@ describe("template-generator logic", () => {
     expect(turbo?.tasks?.["db:generate"]).toBeUndefined();
     expect(turbo?.tasks?.["db:migrate"]).toBeUndefined();
     expect(turbo?.tasks?.["db:studio"]).toBeUndefined();
+  });
+
+  it("adds db:local script for sqlite when using local setup", () => {
+    const vfs = new VirtualFileSystem();
+    vfs.writeJson("package.json", { scripts: {}, workspaces: [] });
+    vfs.writeJson("packages/db/package.json", { scripts: {} });
+
+    processPackageConfigs(
+      vfs,
+      baseConfig({
+        database: "sqlite",
+        orm: "drizzle",
+        dbSetup: "none",
+      }),
+    );
+
+    const dbPkg = vfs.readJson<{ scripts?: Record<string, string> }>("packages/db/package.json");
+    expect(dbPkg?.scripts?.["db:local"]).toBe("turso dev --db-file local.db");
   });
 });

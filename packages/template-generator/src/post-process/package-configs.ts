@@ -200,7 +200,7 @@ function updateDbPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): voi
   pkgJson.scripts = pkgJson.scripts || {};
 
   const scripts = pkgJson.scripts;
-  const { database, orm } = config;
+  const { database, orm, dbSetup } = config;
   const { isD1Alchemy } = getDbScriptSupport(config);
 
   if (database !== "none") {
