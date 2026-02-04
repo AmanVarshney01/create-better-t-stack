@@ -12,7 +12,7 @@ import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 
-import { UserCancelledError } from "../../utils/errors";
+import { DatabaseSetupError, UserCancelledError } from "../../utils/errors";
 import { setupCloudflareD1 } from "../database-providers/d1-setup";
 import { setupDockerCompose } from "../database-providers/docker-compose-setup";
 import { setupMongoDBAtlas } from "../database-providers/mongodb-atlas-setup";
@@ -42,8 +42,8 @@ export async function setupDatabase(config: ProjectConfig, cliInput?: { manualDb
   }
 
   // Helper to run setup and handle Result
-  async function runSetup<T>(
-    setupFn: () => Promise<Result<T, UserCancelledError | { message: string }>>,
+  async function runSetup<T, E extends UserCancelledError | DatabaseSetupError>(
+    setupFn: () => Promise<Result<T, E>>,
   ): Promise<void> {
     const result = await setupFn();
     if (result.isErr()) {

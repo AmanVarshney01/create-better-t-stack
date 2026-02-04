@@ -187,6 +187,10 @@ function parseSkillsFromOutput(output: string): string[] {
   return skills;
 }
 
+function uniqueValues<T>(values: T[]): T[] {
+  return Array.from(new Set(values));
+}
+
 async function fetchSkillsFromSource(
   source: SkillSource,
   packageManager: ProjectConfig["packageManager"],
@@ -225,17 +229,24 @@ export async function setupSkills(
     return Result.ok(undefined);
   }
 
+  const sourceKeys = uniqueValues(recommendedSourceKeys);
   const s = spinner();
   s.start("Fetching available skills...");
 
   // Fetch skills from all recommended sources
   const allSkills: FetchedSkill[] = [];
+  const sources = sourceKeys
+    .map((sourceKey) => SKILL_SOURCES[sourceKey])
+    .filter((source): source is SkillSource => Boolean(source));
 
-  for (const sourceKey of recommendedSourceKeys) {
-    const source = SKILL_SOURCES[sourceKey];
-    if (!source) continue;
+  const fetchedSkills = await Promise.all(
+    sources.map(async (source) => ({
+      source,
+      skills: await fetchSkillsFromSource(source, packageManager, projectDir),
+    })),
+  );
 
-    const skills = await fetchSkillsFromSource(source, packageManager, projectDir);
+  for (const { source, skills } of fetchedSkills) {
     for (const skillName of skills) {
       allSkills.push({
         name: skillName,

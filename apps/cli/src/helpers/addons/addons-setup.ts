@@ -19,8 +19,8 @@ import { setupUltracite } from "./ultracite-setup";
 import { setupWxt } from "./wxt-setup";
 
 // Helper to run setup and handle Result
-async function runSetup<T>(
-  setupFn: () => Promise<Result<T, UserCancelledError | { message: string }>>,
+async function runSetup<T, E extends AddonSetupError | UserCancelledError>(
+  setupFn: () => Promise<Result<T, E>>,
 ): Promise<void> {
   const result = await setupFn();
   if (result.isErr()) {
