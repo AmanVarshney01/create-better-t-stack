@@ -32,10 +32,6 @@ const SKILL_SOURCES: Record<string, SkillSource> = {
     source: "vercel-labs/agent-skills",
     label: "Vercel Agent Skills",
   },
-  "anthropics/skills": {
-    source: "https://github.com/anthropics/skills",
-    label: "Anthropic Skills",
-  },
   "vercel/ai": {
     source: "vercel/ai",
     label: "Vercel AI SDK",
@@ -67,6 +63,14 @@ const SKILL_SOURCES: Record<string, SkillSource> = {
   "supabase/agent-skills": {
     source: "supabase/agent-skills",
     label: "Supabase",
+  },
+  "expo/skills": {
+    source: "expo/skills",
+    label: "Expo",
+  },
+  "prisma/skills": {
+    source: "prisma/skills",
+    label: "Prisma",
   },
   "elysiajs/skills": {
     source: "elysiajs/skills",
@@ -109,13 +113,17 @@ const AVAILABLE_AGENTS: AgentOption[] = [
 
 function getRecommendedSourceKeys(config: ProjectConfig): string[] {
   const sources: string[] = [];
-  const { frontend, backend, dbSetup, auth, examples, addons } = config;
+  const { frontend, backend, dbSetup, auth, examples, addons, orm } = config;
 
   const hasReactBasedFrontend =
     frontend.includes("react-router") ||
     frontend.includes("tanstack-router") ||
     frontend.includes("tanstack-start") ||
     frontend.includes("next");
+  const hasNativeFrontend =
+    frontend.includes("native-bare") ||
+    frontend.includes("native-uniwind") ||
+    frontend.includes("native-unistyles");
 
   if (hasReactBasedFrontend) {
     sources.push("vercel-labs/agent-skills");
@@ -131,6 +139,11 @@ function getRecommendedSourceKeys(config: ProjectConfig): string[] {
     sources.push("heroui-inc/heroui");
   }
 
+  // Expo skills for native projects
+  if (hasNativeFrontend) {
+    sources.push("expo/skills");
+  }
+
   // Better Auth skills
   if (auth === "better-auth") {
     sources.push("better-auth/skills");
@@ -143,6 +156,10 @@ function getRecommendedSourceKeys(config: ProjectConfig): string[] {
 
   if (dbSetup === "supabase") {
     sources.push("supabase/agent-skills");
+  }
+
+  if (orm === "prisma") {
+    sources.push("prisma/skills");
   }
 
   if (examples.includes("ai")) {
