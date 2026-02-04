@@ -23,7 +23,7 @@ export async function setupCloudflareD1(
       const variables: EnvVariable[] = [
         {
           key: "DATABASE_URL",
-          value: `file:${path.join(projectDir, "apps/server", "local.db")}`,
+          value: `file:${path.join(projectDir, targetApp, "local.db")}`,
           condition: true,
         },
       ];
