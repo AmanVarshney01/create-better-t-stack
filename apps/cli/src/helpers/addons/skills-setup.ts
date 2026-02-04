@@ -7,6 +7,7 @@ import type { ProjectConfig } from "../../types";
 
 import { readBtsConfig } from "../../utils/bts-config";
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
+import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 type SkillSource = {
@@ -30,10 +31,6 @@ const SKILL_SOURCES: Record<string, SkillSource> = {
   "vercel-labs/agent-skills": {
     source: "vercel-labs/agent-skills",
     label: "Vercel Agent Skills",
-  },
-  "anthropics/skills": {
-    source: "https://github.com/anthropics/skills",
-    label: "Anthropic Skills",
   },
   "vercel/ai": {
     source: "vercel/ai",
@@ -66,6 +63,14 @@ const SKILL_SOURCES: Record<string, SkillSource> = {
   "supabase/agent-skills": {
     source: "supabase/agent-skills",
     label: "Supabase",
+  },
+  "expo/skills": {
+    source: "expo/skills",
+    label: "Expo",
+  },
+  "prisma/skills": {
+    source: "prisma/skills",
+    label: "Prisma",
   },
   "elysiajs/skills": {
     source: "elysiajs/skills",
@@ -108,13 +113,17 @@ const AVAILABLE_AGENTS: AgentOption[] = [
 
 function getRecommendedSourceKeys(config: ProjectConfig): string[] {
   const sources: string[] = [];
-  const { frontend, backend, dbSetup, auth, examples, addons } = config;
+  const { frontend, backend, dbSetup, auth, examples, addons, orm } = config;
 
   const hasReactBasedFrontend =
     frontend.includes("react-router") ||
     frontend.includes("tanstack-router") ||
     frontend.includes("tanstack-start") ||
     frontend.includes("next");
+  const hasNativeFrontend =
+    frontend.includes("native-bare") ||
+    frontend.includes("native-uniwind") ||
+    frontend.includes("native-unistyles");
 
   if (hasReactBasedFrontend) {
     sources.push("vercel-labs/agent-skills");
@@ -130,6 +139,11 @@ function getRecommendedSourceKeys(config: ProjectConfig): string[] {
     sources.push("heroui-inc/heroui");
   }
 
+  // Expo skills for native projects
+  if (hasNativeFrontend) {
+    sources.push("expo/skills");
+  }
+
   // Better Auth skills
   if (auth === "better-auth") {
     sources.push("better-auth/skills");
@@ -142,6 +156,10 @@ function getRecommendedSourceKeys(config: ProjectConfig): string[] {
 
   if (dbSetup === "supabase") {
     sources.push("supabase/agent-skills");
+  }
+
+  if (orm === "prisma") {
+    sources.push("prisma/skills");
   }
 
   if (examples.includes("ai")) {
@@ -170,10 +188,11 @@ function getRecommendedSourceKeys(config: ProjectConfig): string[] {
 function parseSkillsFromOutput(output: string): string[] {
   const skills: string[] = [];
   const lines = output.split("\n");
+  const ansiRegex = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
 
   for (const line of lines) {
     // Strip ANSI codes first
-    const cleanLine = line.replace(/\x1b\[[0-9;]*m/g, "");
+    const cleanLine = line.replace(ansiRegex, "");
 
     // Match lines that start with │ followed by exactly 4 spaces and then a skill name
     const match = cleanLine.match(/^│\s{4}([a-z][a-z0-9-]*)$/);
@@ -183,6 +202,10 @@ function parseSkillsFromOutput(output: string): string[] {
   }
 
   return skills;
+}
+
+function uniqueValues<T>(values: T[]): T[] {
+  return Array.from(new Set(values));
 }
 
 async function fetchSkillsFromSource(
@@ -205,6 +228,10 @@ async function fetchSkillsFromSource(
 export async function setupSkills(
   config: ProjectConfig,
 ): Promise<Result<void, AddonSetupError | UserCancelledError>> {
+  if (shouldSkipExternalCommands()) {
+    return Result.ok(undefined);
+  }
+
   const { packageManager, projectDir } = config;
 
   // Load full config from bts.jsonc to get all addons (existing + new)
@@ -219,17 +246,24 @@ export async function setupSkills(
     return Result.ok(undefined);
   }
 
+  const sourceKeys = uniqueValues(recommendedSourceKeys);
   const s = spinner();
   s.start("Fetching available skills...");
 
   // Fetch skills from all recommended sources
   const allSkills: FetchedSkill[] = [];
+  const sources = sourceKeys
+    .map((sourceKey) => SKILL_SOURCES[sourceKey])
+    .filter((source): source is SkillSource => Boolean(source));
 
-  for (const sourceKey of recommendedSourceKeys) {
-    const source = SKILL_SOURCES[sourceKey];
-    if (!source) continue;
+  const fetchedSkills = await Promise.all(
+    sources.map(async (source) => ({
+      source,
+      skills: await fetchSkillsFromSource(source, packageManager, projectDir),
+    })),
+  );
 
-    const skills = await fetchSkillsFromSource(source, packageManager, projectDir);
+  for (const { source, skills } of fetchedSkills) {
     for (const skillName of skills) {
       allSkills.push({
         name: skillName,

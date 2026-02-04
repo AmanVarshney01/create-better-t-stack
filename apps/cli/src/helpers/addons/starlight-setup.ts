@@ -7,11 +7,16 @@ import path from "node:path";
 import type { ProjectConfig } from "../../types";
 
 import { AddonSetupError } from "../../utils/errors";
+import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 export async function setupStarlight(
   config: ProjectConfig,
 ): Promise<Result<void, AddonSetupError>> {
+  if (shouldSkipExternalCommands()) {
+    return Result.ok(undefined);
+  }
+
   const { packageManager, projectDir } = config;
   const s = spinner();
 

@@ -8,6 +8,7 @@ import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
+import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 type WxtTemplate = "vanilla" | "vue" | "react" | "solid" | "svelte";
@@ -38,6 +39,10 @@ const TEMPLATES = {
 } as const;
 
 export async function setupWxt(config: ProjectConfig): Promise<WxtSetupResult> {
+  if (shouldSkipExternalCommands()) {
+    return Result.ok(undefined);
+  }
+
   const { packageManager, projectDir } = config;
 
   log.info("Setting up WXT...");

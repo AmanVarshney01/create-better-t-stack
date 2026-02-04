@@ -8,12 +8,13 @@ const NpmPackage = () => {
   useEffect(() => {
     const getLatestVersion = async () => {
       try {
-        const res = await fetch(
-          "https://api.github.com/repos/AmanVarshney01/create-better-t-stack/releases",
-        );
+        const res = await fetch("https://registry.npmjs.org/create-better-t-stack/latest");
         if (!res.ok) throw new Error("Failed to fetch version");
         const data = await res.json();
-        const latestVersion = data[0].tag_name.replace(/^v/, "");
+        const latestVersion =
+          typeof data?.version === "string" && data.version.trim().length > 0
+            ? data.version
+            : "latest";
         setVersion(latestVersion);
       } catch (error) {
         console.error("Error fetching NPM version:", error);

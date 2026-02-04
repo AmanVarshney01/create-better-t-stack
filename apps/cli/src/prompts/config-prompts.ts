@@ -16,6 +16,8 @@ import type {
   WebDeploy,
 } from "../types";
 
+import { DEFAULT_CONFIG } from "../constants";
+import { isSilent } from "../utils/context";
 import { UserCancelledError } from "../utils/errors";
 import { getAddonsChoice } from "./addons";
 import { getApiChoice } from "./api";
@@ -60,6 +62,30 @@ export async function gatherConfig(
   projectDir: string,
   relativePath: string,
 ) {
+  if (isSilent()) {
+    return {
+      projectName,
+      projectDir,
+      relativePath,
+      frontend: flags.frontend ?? [...DEFAULT_CONFIG.frontend],
+      backend: flags.backend ?? DEFAULT_CONFIG.backend,
+      runtime: flags.runtime ?? DEFAULT_CONFIG.runtime,
+      database: flags.database ?? DEFAULT_CONFIG.database,
+      orm: flags.orm ?? DEFAULT_CONFIG.orm,
+      auth: flags.auth ?? DEFAULT_CONFIG.auth,
+      payments: flags.payments ?? DEFAULT_CONFIG.payments,
+      addons: flags.addons ?? [...DEFAULT_CONFIG.addons],
+      examples: flags.examples ?? [...DEFAULT_CONFIG.examples],
+      git: flags.git ?? DEFAULT_CONFIG.git,
+      packageManager: flags.packageManager ?? DEFAULT_CONFIG.packageManager,
+      install: flags.install ?? DEFAULT_CONFIG.install,
+      dbSetup: flags.dbSetup ?? DEFAULT_CONFIG.dbSetup,
+      api: flags.api ?? DEFAULT_CONFIG.api,
+      webDeploy: flags.webDeploy ?? DEFAULT_CONFIG.webDeploy,
+      serverDeploy: flags.serverDeploy ?? DEFAULT_CONFIG.serverDeploy,
+    };
+  }
+
   const result = await navigableGroup<PromptGroupResults>(
     {
       frontend: () => getFrontendChoice(flags.frontend, flags.backend, flags.auth),

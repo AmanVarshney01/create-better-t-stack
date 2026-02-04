@@ -8,11 +8,16 @@ import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
+import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs, getPackageExecutionCommand } from "../../utils/package-runner";
 
 export async function setupRuler(
   config: ProjectConfig,
 ): Promise<Result<void, AddonSetupError | UserCancelledError>> {
+  if (shouldSkipExternalCommands()) {
+    return Result.ok(undefined);
+  }
+
   const { packageManager, projectDir } = config;
 
   log.info("Setting up Ruler...");

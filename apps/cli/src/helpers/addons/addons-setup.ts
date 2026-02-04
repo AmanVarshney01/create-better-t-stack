@@ -7,7 +7,7 @@ import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 
 import { addPackageDependency } from "../../utils/add-package-deps";
-import { UserCancelledError } from "../../utils/errors";
+import { AddonSetupError, UserCancelledError } from "../../utils/errors";
 import { setupFumadocs } from "./fumadocs-setup";
 import { setupOxlint } from "./oxlint-setup";
 import { setupRuler } from "./ruler-setup";
@@ -19,8 +19,8 @@ import { setupUltracite } from "./ultracite-setup";
 import { setupWxt } from "./wxt-setup";
 
 // Helper to run setup and handle Result
-async function runSetup<T>(
-  setupFn: () => Promise<Result<T, UserCancelledError | { message: string }>>,
+async function runSetup<T, E extends AddonSetupError | UserCancelledError>(
+  setupFn: () => Promise<Result<T, E>>,
 ): Promise<void> {
   const result = await setupFn();
   if (result.isErr()) {
@@ -29,6 +29,22 @@ async function runSetup<T>(
       throw result.error;
     }
     // Log other errors but don't fail the overall project creation
+    consola.error(pc.red(result.error.message));
+  }
+}
+
+async function runAddonStep(addon: string, step: () => Promise<void>): Promise<void> {
+  const result = await Result.tryPromise({
+    try: async () => step(),
+    catch: (e) =>
+      new AddonSetupError({
+        addon,
+        message: `Failed to set up ${addon}: ${e instanceof Error ? e.message : String(e)}`,
+        cause: e,
+      }),
+  });
+
+  if (result.isErr()) {
     consola.error(pc.red(result.error.message));
   }
 }
@@ -68,11 +84,11 @@ export async function setupAddons(config: ProjectConfig) {
     await runSetup(() => setupUltracite(config, gitHooks));
   } else {
     if (hasBiome) {
-      await setupBiome(projectDir);
+      await runAddonStep("biome", () => setupBiome(projectDir));
     }
 
     if (hasOxlint) {
-      await setupOxlint(projectDir, config.packageManager);
+      await runSetup(() => setupOxlint(projectDir, config.packageManager));
     }
 
     if (hasHusky || hasLefthook) {
@@ -83,10 +99,10 @@ export async function setupAddons(config: ProjectConfig) {
         linter = "biome";
       }
       if (hasHusky) {
-        await setupHusky(projectDir, linter);
+        await runAddonStep("husky", () => setupHusky(projectDir, linter));
       }
       if (hasLefthook) {
-        await setupLefthook(projectDir);
+        await runAddonStep("lefthook", () => setupLefthook(projectDir));
       }
     }
   }

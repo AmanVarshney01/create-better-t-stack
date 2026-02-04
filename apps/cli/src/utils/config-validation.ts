@@ -451,7 +451,7 @@ export function validateFullConfig(
 
     if (config.runtime === "workers" && config.serverDeploy === "none") {
       yield* validationErr(
-        "Cloudflare Workers runtime requires a server deployment. Please choose 'alchemy' for --server-deploy.",
+        "Cloudflare Workers runtime requires a server deployment. Please choose 'cloudflare' for --server-deploy.",
       );
     }
 

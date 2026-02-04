@@ -1,13 +1,25 @@
 import type { ProjectConfig } from "@better-t-stack/types";
 
+function normalizeMultiValues(values: string[] | undefined): string[] {
+  if (!values || values.length === 0) return [];
+  const filtered = values.filter((value) => value !== "none");
+  return Array.from(new Set(filtered));
+}
+
+function formatMultiFlag(flag: string, values: string[]): string {
+  if (values.length === 0) {
+    return `${flag} none`;
+  }
+  return `${flag} ${values.join(" ")}`;
+}
+
 export function generateReproducibleCommand(config: ProjectConfig): string {
   const flags: string[] = [];
+  const frontend = normalizeMultiValues(config.frontend);
+  const addons = normalizeMultiValues(config.addons);
+  const examples = normalizeMultiValues(config.examples);
 
-  if (config.frontend && config.frontend.length > 0) {
-    flags.push(`--frontend ${config.frontend.join(" ")}`);
-  } else {
-    flags.push("--frontend none");
-  }
+  flags.push(formatMultiFlag("--frontend", frontend));
 
   flags.push(`--backend ${config.backend}`);
   flags.push(`--runtime ${config.runtime}`);
@@ -17,17 +29,8 @@ export function generateReproducibleCommand(config: ProjectConfig): string {
   flags.push(`--auth ${config.auth}`);
   flags.push(`--payments ${config.payments}`);
 
-  if (config.addons && config.addons.length > 0) {
-    flags.push(`--addons ${config.addons.join(" ")}`);
-  } else {
-    flags.push("--addons none");
-  }
-
-  if (config.examples && config.examples.length > 0) {
-    flags.push(`--examples ${config.examples.join(" ")}`);
-  } else {
-    flags.push("--examples none");
-  }
+  flags.push(formatMultiFlag("--addons", addons));
+  flags.push(formatMultiFlag("--examples", examples));
 
   flags.push(`--db-setup ${config.dbSetup}`);
   flags.push(`--web-deploy ${config.webDeploy}`);

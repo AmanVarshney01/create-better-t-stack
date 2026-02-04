@@ -8,6 +8,7 @@ import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
+import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 type TuiTemplate = "core" | "react" | "solid";
@@ -30,6 +31,10 @@ const TEMPLATES = {
 } as const;
 
 export async function setupTui(config: ProjectConfig): Promise<TuiSetupResult> {
+  if (shouldSkipExternalCommands()) {
+    return Result.ok(undefined);
+  }
+
   const { packageManager, projectDir } = config;
 
   log.info("Setting up OpenTUI...");
