@@ -14,21 +14,22 @@ describe("addPackageDependency", () => {
 
     const originalWarn = console.warn;
     const warnCalls: unknown[][] = [];
-    console.warn = (...args) => {
-      warnCalls.push(args);
-    };
 
     try {
+      console.warn = (...args) => {
+        warnCalls.push(args);
+      };
+
       await runWithContextAsync({ silent: true }, async () => {
         await addPackageDependency({
           dependencies: ["missing-dep" as AvailableDependencies],
           projectDir,
         });
       });
+
+      expect(warnCalls.length).toBe(0);
     } finally {
       console.warn = originalWarn;
     }
-
-    expect(warnCalls.length).toBe(0);
   });
 });
