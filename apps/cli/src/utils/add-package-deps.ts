@@ -2,6 +2,7 @@ import fs from "fs-extra";
 import path from "node:path";
 
 import { type AvailableDependencies, dependencyVersionMap } from "../constants";
+import { isSilent } from "./context";
 
 export const addPackageDependency = async (opts: {
   dependencies?: AvailableDependencies[];
@@ -29,7 +30,7 @@ export const addPackageDependency = async (opts: {
     const version = dependencyVersionMap[pkgName];
     if (version) {
       pkgJson.dependencies[pkgName] = version;
-    } else {
+    } else if (!isSilent()) {
       console.warn(`Warning: Dependency ${pkgName} not found in version map.`);
     }
   }
@@ -38,7 +39,7 @@ export const addPackageDependency = async (opts: {
     const version = dependencyVersionMap[pkgName];
     if (version) {
       pkgJson.devDependencies[pkgName] = version;
-    } else {
+    } else if (!isSilent()) {
       console.warn(`Warning: Dev dependency ${pkgName} not found in version map.`);
     }
   }
