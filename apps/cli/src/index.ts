@@ -1,10 +1,10 @@
-import { intro, log } from "@clack/prompts";
 import { createRouterClient, os } from "@orpc/server";
 import { Result } from "better-result";
-import pc from "picocolors";
 import { createCli } from "trpc-cli";
 import z from "zod";
 
+import { historyHandler } from "./commands/history";
+import { openBuilderCommand, openDocsCommand, showSponsorsCommand } from "./commands/meta";
 import { addHandler, type AddResult } from "./helpers/core/add-handler";
 import { createProjectHandler } from "./helpers/core/command-handlers";
 import {
@@ -46,95 +46,8 @@ import {
   type WebDeploy,
   WebDeploySchema,
 } from "./types";
-import { CLIError, ProjectCreationError, UserCancelledError, displayError } from "./utils/errors";
+import { CLIError, ProjectCreationError, UserCancelledError } from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
-import { openUrl } from "./utils/open-url";
-import { clearHistory, getHistory, type ProjectHistoryEntry } from "./utils/project-history";
-import { renderTitle } from "./utils/render-title";
-import { displaySponsors, fetchSponsors } from "./utils/sponsors";
-
-function formatStackSummary(entry: ProjectHistoryEntry): string {
-  const parts: string[] = [];
-
-  if (entry.stack.frontend.length > 0 && !entry.stack.frontend.includes("none")) {
-    parts.push(entry.stack.frontend.join(", "));
-  }
-
-  if (entry.stack.backend && entry.stack.backend !== "none") {
-    parts.push(entry.stack.backend);
-  }
-
-  if (entry.stack.database && entry.stack.database !== "none") {
-    parts.push(entry.stack.database);
-  }
-
-  if (entry.stack.orm && entry.stack.orm !== "none") {
-    parts.push(entry.stack.orm);
-  }
-
-  return parts.length > 0 ? parts.join(" + ") : "minimal";
-}
-
-function formatDate(isoString: string): string {
-  const date = new Date(isoString);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-async function historyHandler(input: {
-  limit: number;
-  clear: boolean;
-  json: boolean;
-}): Promise<void> {
-  if (input.clear) {
-    const clearResult = await clearHistory();
-    if (clearResult.isErr()) {
-      log.warn(pc.yellow(clearResult.error.message));
-      return;
-    }
-    log.success(pc.green("Project history cleared."));
-    return;
-  }
-
-  const historyResult = await getHistory(input.limit);
-  if (historyResult.isErr()) {
-    log.warn(pc.yellow(historyResult.error.message));
-    return;
-  }
-  const entries = historyResult.value;
-
-  if (entries.length === 0) {
-    log.info(pc.dim("No projects in history yet."));
-    log.info(pc.dim("Create a project with: create-better-t-stack my-app"));
-    return;
-  }
-
-  if (input.json) {
-    console.log(JSON.stringify(entries, null, 2));
-    return;
-  }
-
-  renderTitle();
-  intro(pc.magenta(`Project History (${entries.length} entries)`));
-
-  for (const [index, entry] of entries.entries()) {
-    const num = pc.dim(`${index + 1}.`);
-    const name = pc.cyan(pc.bold(entry.projectName));
-    const stack = pc.dim(formatStackSummary(entry));
-
-    log.message(`${num} ${name}`);
-    log.message(`   ${pc.dim("Created:")} ${formatDate(entry.createdAt)}`);
-    log.message(`   ${pc.dim("Path:")} ${entry.projectDir}`);
-    log.message(`   ${pc.dim("Stack:")} ${stack}`);
-    log.message(`   ${pc.dim("Command:")} ${pc.dim(entry.reproducibleCommand)}`);
-    log.message("");
-  }
-}
 
 export const router = os.router({
   create: os
@@ -198,49 +111,9 @@ export const router = os.router({
         return result;
       }
     }),
-  sponsors: os.meta({ description: "Show Better-T-Stack sponsors" }).handler(async () => {
-    const result = await Result.tryPromise({
-      try: async () => {
-        renderTitle();
-        intro(pc.magenta("Better-T-Stack Sponsors"));
-        const sponsors = await fetchSponsors();
-        displaySponsors(sponsors);
-      },
-      catch: (e: unknown) =>
-        new CLIError({
-          message: e instanceof Error ? e.message : "Failed to display sponsors",
-          cause: e,
-        }),
-    });
-    if (result.isErr()) {
-      displayError(result.error);
-      process.exit(1);
-    }
-  }),
-  docs: os.meta({ description: "Open Better-T-Stack documentation" }).handler(async () => {
-    const DOCS_URL = "https://better-t-stack.dev/docs";
-    const result = await Result.tryPromise({
-      try: () => openUrl(DOCS_URL),
-      catch: () => null,
-    });
-    if (result.isOk()) {
-      log.success(pc.blue("Opened docs in your default browser."));
-    } else {
-      log.message(`Please visit ${DOCS_URL}`);
-    }
-  }),
-  builder: os.meta({ description: "Open the web-based stack builder" }).handler(async () => {
-    const BUILDER_URL = "https://better-t-stack.dev/new";
-    const result = await Result.tryPromise({
-      try: () => openUrl(BUILDER_URL),
-      catch: () => null,
-    });
-    if (result.isOk()) {
-      log.success(pc.blue("Opened builder in your default browser."));
-    } else {
-      log.message(`Please visit ${BUILDER_URL}`);
-    }
-  }),
+  sponsors: os.meta({ description: "Show Better-T-Stack sponsors" }).handler(showSponsorsCommand),
+  docs: os.meta({ description: "Open Better-T-Stack documentation" }).handler(openDocsCommand),
+  builder: os.meta({ description: "Open the web-based stack builder" }).handler(openBuilderCommand),
   add: os
     .meta({ description: "Add addons to an existing Better-T-Stack project" })
     .input(

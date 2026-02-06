@@ -5,10 +5,7 @@ import path from "node:path";
 import { PKG_ROOT } from "../constants";
 import { CLIError } from "./errors";
 
-export function getLatestCLIVersionResult(): Result<
-  string | undefined,
-  CLIError
-> {
+export function getLatestCLIVersionResult(): Result<string | undefined, CLIError> {
   const packageJsonPath = path.join(PKG_ROOT, "package.json");
 
   return Result.try({

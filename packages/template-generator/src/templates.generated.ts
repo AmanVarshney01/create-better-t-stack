@@ -9857,8 +9857,6 @@ export default function SignUpScreen() {
   const onSignUpPress = async () => {
     if (!isLoaded) return;
 
-    console.log(emailAddress, password);
-
     // Start sign-up process using email and password provided
     try {
       await signUp.create({
