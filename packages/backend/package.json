@@ -13,8 +13,8 @@
   "dependencies": {
     "@convex-dev/crons": "^0.2.0",
     "@erquhart/convex-oss-stats": "^0.8.2",
-    "convex": "^1.31.0",
-    "convex-helpers": "^0.1.107"
+    "convex": "^1.31.7",
+    "convex-helpers": "^0.1.111"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
