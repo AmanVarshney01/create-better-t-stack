@@ -8,11 +8,16 @@ import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
+import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs, getPackageExecutionCommand } from "../../utils/package-runner";
 
 export async function setupRuler(
   config: ProjectConfig,
 ): Promise<Result<void, AddonSetupError | UserCancelledError>> {
+  if (shouldSkipExternalCommands()) {
+    return Result.ok(undefined);
+  }
+
   const { packageManager, projectDir } = config;
 
   log.info("Setting up Ruler...");
@@ -41,6 +46,7 @@ export async function setupRuler(
     copilot: { label: "GitHub Copilot" },
     crush: { label: "Crush" },
     cursor: { label: "Cursor" },
+    factory: { label: "Factory" },
     firebase: { label: "Firebase Studio" },
     firebender: { label: "Firebender" },
     "gemini-cli": { label: "Gemini CLI" },
@@ -52,6 +58,7 @@ export async function setupRuler(
     mistral: { label: "Mistral" },
     opencode: { label: "OpenCode" },
     openhands: { label: "Open Hands" },
+    pi: { label: "Pi" },
     qwen: { label: "Qwen" },
     roo: { label: "RooCode" },
     trae: { label: "Trae AI" },

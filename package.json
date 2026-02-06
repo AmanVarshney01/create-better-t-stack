@@ -47,5 +47,5 @@
   "engines": {
     "node": ">=20"
   },
-  "packageManager": "bun@1.3.5"
+  "packageManager": "bun@1.3.8"
 }

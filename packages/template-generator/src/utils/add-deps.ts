@@ -14,8 +14,8 @@ type PackageJson = {
 export const dependencyVersionMap = {
   typescript: "^5",
 
-  "better-auth": "^1.4.9",
-  "@better-auth/expo": "^1.4.9",
+  "better-auth": "^1.4.18",
+  "@better-auth/expo": "^1.4.18",
 
   "@clerk/nextjs": "^6.31.5",
   "@clerk/clerk-react": "^5.45.0",
@@ -56,8 +56,8 @@ export const dependencyVersionMap = {
 
   "@biomejs/biome": "^2.2.0",
 
-  oxlint: "^1.34.0",
-  oxfmt: "^0.19.0",
+  oxlint: "^1.41.0",
+  oxfmt: "^0.26.0",
 
   husky: "^9.1.7",
   lefthook: "^2.0.13",

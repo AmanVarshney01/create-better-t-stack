@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { Suspense } from "react";
 
-import StackBuilder from "./_components/stack-builder";
+import { StackBuilder } from "./_components/stack-builder";
 
 export const metadata: Metadata = {
   title: "Stack Builder - Better-T-Stack",

@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2, FolderTree, FileCode2, Info, ChevronLeft } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 
 import type { StackState } from "@/lib/constant";
 
@@ -36,8 +36,26 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
   const [error, setError] = useState<string | null>(null);
   // On mobile, track whether we're viewing the file tree or the code
   const [mobileView, setMobileView] = useState<"tree" | "code">("tree");
+  const requestIdRef = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
+  const selectedFilePathRef = useRef<string | null>(selectedFilePath);
+  const onSelectFileRef = useRef(onSelectFile);
+
+  useEffect(() => {
+    selectedFilePathRef.current = selectedFilePath;
+  }, [selectedFilePath]);
+
+  useEffect(() => {
+    onSelectFileRef.current = onSelectFile;
+  }, [onSelectFile]);
 
   const fetchPreview = useCallback(async () => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     setIsLoading(true);
     setError(null);
 
@@ -46,9 +64,14 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(stack),
+        signal: controller.signal,
       });
 
+      if (requestId !== requestIdRef.current) return;
+
       const data: PreviewResponse = await response.json();
+
+      if (requestId !== requestIdRef.current) return;
 
       if (data.success && data.tree) {
         setTree(data.tree.root);
@@ -56,14 +79,15 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
         setDirectoryCount(data.tree.directoryCount);
 
         // Restore selected file from query state if it exists
-        if (selectedFilePath) {
-          const file = findFileByPath(data.tree.root, selectedFilePath);
+        const currentSelectedFilePath = selectedFilePathRef.current;
+        if (currentSelectedFilePath) {
+          const file = findFileByPath(data.tree.root, currentSelectedFilePath);
           if (file) {
             setSelectedFile(file);
             setMobileView("code");
           } else {
             setSelectedFile(null);
-            onSelectFile(null);
+            onSelectFileRef.current(null);
             setMobileView("tree");
           }
         } else {
@@ -74,16 +98,23 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
         setError(data.error || "Failed to generate preview");
       }
     } catch (err) {
+      if (controller.signal.aborted) return;
+      if (requestId !== requestIdRef.current) return;
       setError(err instanceof Error ? err.message : "Failed to fetch preview");
     } finally {
-      setIsLoading(false);
+      if (requestId === requestIdRef.current) {
+        setIsLoading(false);
+      }
     }
   }, [stack]);
 
   // Debounced fetch on stack change
   useEffect(() => {
     const timeoutId = setTimeout(fetchPreview, 300);
-    return () => clearTimeout(timeoutId);
+    return () => {
+      clearTimeout(timeoutId);
+      abortRef.current?.abort();
+    };
   }, [fetchPreview]);
 
   const handleSelectFile = (file: VirtualFile) => {

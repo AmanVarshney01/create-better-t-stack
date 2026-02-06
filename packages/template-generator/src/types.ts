@@ -31,6 +31,8 @@ export interface GeneratorOptions {
   config: ProjectConfig;
   templateBasePath?: string;
   templates?: Map<string, string>;
+  /** CLI version string for bts.jsonc */
+  version?: string;
 }
 
 /**

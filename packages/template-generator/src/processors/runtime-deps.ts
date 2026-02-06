@@ -24,7 +24,7 @@ export function processRuntimeDeps(vfs: VirtualFileSystem, config: ProjectConfig
 
   if (runtime === "bun") {
     pkgJson.scripts.dev = "bun run --hot src/index.ts";
-    pkgJson.scripts.start = "bun run dist/index.js";
+    pkgJson.scripts.start = "bun run dist/index.mjs";
 
     addPackageDependency({
       vfs,
@@ -33,7 +33,7 @@ export function processRuntimeDeps(vfs: VirtualFileSystem, config: ProjectConfig
     });
   } else if (runtime === "node") {
     pkgJson.scripts.dev = "tsx watch src/index.ts";
-    pkgJson.scripts.start = "node dist/index.js";
+    pkgJson.scripts.start = "node dist/index.mjs";
 
     addPackageDependency({
       vfs,

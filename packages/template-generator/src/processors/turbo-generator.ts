@@ -7,6 +7,8 @@ import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
+import { getDbScriptSupport, type DbScriptSupport } from "../utils/db-scripts";
+
 interface TurboTask {
   dependsOn?: string[];
   inputs?: string[];
@@ -29,18 +31,19 @@ export function processTurboConfig(vfs: VirtualFileSystem, config: ProjectConfig
 }
 
 function generateTurboConfig(config: ProjectConfig): TurboConfig {
-  const { backend, database, orm, dbSetup, webDeploy, serverDeploy, frontend } = config;
+  const { backend, database, dbSetup, webDeploy, serverDeploy, frontend } = config;
 
   const isConvex = backend === "convex";
-  const hasDatabase = database !== "none" && orm !== "none";
+  const dbSupport = getDbScriptSupport(config);
+  const hasDatabase = dbSupport.hasDbScripts;
   const isDocker = dbSetup === "docker";
-  const isSqliteLocal = database === "sqlite" && dbSetup !== "d1";
+  const isSqliteLocal = database === "sqlite" && dbSetup !== "d1" && hasDatabase;
   const hasCloudflare = webDeploy === "cloudflare" || serverDeploy === "cloudflare";
 
   const tasks: Record<string, TurboTask> = {
     ...getBaseTasks(frontend),
     ...(isConvex ? getConvexTasks() : {}),
-    ...(!isConvex && hasDatabase ? getDatabaseTasks() : {}),
+    ...(!isConvex && hasDatabase ? getDatabaseTasks(dbSupport) : {}),
     ...(isDocker ? getDockerTasks() : {}),
     ...(isSqliteLocal ? getSqliteLocalTask() : {}),
     ...(hasCloudflare ? getDeployTasks() : {}),
@@ -106,22 +109,26 @@ function getConvexTasks(): Record<string, TurboTask> {
   };
 }
 
-function getDatabaseTasks(): Record<string, TurboTask> {
-  return {
-    "db:push": {
-      cache: false,
-    },
-    "db:studio": {
-      cache: false,
-      persistent: true,
-    },
-    "db:migrate": {
-      cache: false,
-    },
-    "db:generate": {
-      cache: false,
-    },
-  };
+function getDatabaseTasks(dbSupport: DbScriptSupport): Record<string, TurboTask> {
+  const tasks: Record<string, TurboTask> = {};
+
+  if (dbSupport.hasDbPush) {
+    tasks["db:push"] = { cache: false };
+  }
+
+  if (dbSupport.hasDbGenerate) {
+    tasks["db:generate"] = { cache: false };
+  }
+
+  if (dbSupport.hasDbMigrate) {
+    tasks["db:migrate"] = { cache: false, persistent: true };
+  }
+
+  if (dbSupport.hasDbStudio) {
+    tasks["db:studio"] = { cache: false, persistent: true };
+  }
+
+  return tasks;
 }
 
 function getDockerTasks(): Record<string, TurboTask> {

@@ -32,6 +32,11 @@ export const links: LinkItemType[] = [
     url: "/showcase",
   },
   {
+    text: "Demo",
+    url: "https://my-better-t-app.amanv.cloud/",
+    external: true,
+  },
+  {
     text: "NPM",
     icon: <Image src={npmLogo} alt="npm" className="size-4 invert-0 dark:invert" />,
     label: "NPM",

@@ -1,10 +1,11 @@
-import { intro, log } from "@clack/prompts";
 import { createRouterClient, os } from "@orpc/server";
 import { Result } from "better-result";
-import pc from "picocolors";
 import { createCli } from "trpc-cli";
 import z from "zod";
 
+import { historyHandler } from "./commands/history";
+import { openBuilderCommand, openDocsCommand, showSponsorsCommand } from "./commands/meta";
+import { addHandler, type AddResult } from "./helpers/core/add-handler";
 import { createProjectHandler } from "./helpers/core/command-handlers";
 import {
   type Addons,
@@ -45,11 +46,8 @@ import {
   type WebDeploy,
   WebDeploySchema,
 } from "./types";
-import { CLIError, ProjectCreationError, UserCancelledError, displayError } from "./utils/errors";
+import { CLIError, ProjectCreationError, UserCancelledError } from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
-import { openUrl } from "./utils/open-url";
-import { renderTitle } from "./utils/render-title";
-import { displaySponsors, fetchSponsors } from "./utils/sponsors";
 
 export const router = os.router({
   create: os
@@ -113,49 +111,38 @@ export const router = os.router({
         return result;
       }
     }),
-  sponsors: os.meta({ description: "Show Better-T-Stack sponsors" }).handler(async () => {
-    const result = await Result.tryPromise({
-      try: async () => {
-        renderTitle();
-        intro(pc.magenta("Better-T-Stack Sponsors"));
-        const sponsors = await fetchSponsors();
-        displaySponsors(sponsors);
-      },
-      catch: (e: unknown) =>
-        new CLIError({
-          message: e instanceof Error ? e.message : "Failed to display sponsors",
-          cause: e,
-        }),
-    });
-    if (result.isErr()) {
-      displayError(result.error);
-      process.exit(1);
-    }
-  }),
-  docs: os.meta({ description: "Open Better-T-Stack documentation" }).handler(async () => {
-    const DOCS_URL = "https://better-t-stack.dev/docs";
-    const result = await Result.tryPromise({
-      try: () => openUrl(DOCS_URL),
-      catch: () => null,
-    });
-    if (result.isOk()) {
-      log.success(pc.blue("Opened docs in your default browser."));
-    } else {
-      log.message(`Please visit ${DOCS_URL}`);
-    }
-  }),
-  builder: os.meta({ description: "Open the web-based stack builder" }).handler(async () => {
-    const BUILDER_URL = "https://better-t-stack.dev/new";
-    const result = await Result.tryPromise({
-      try: () => openUrl(BUILDER_URL),
-      catch: () => null,
-    });
-    if (result.isOk()) {
-      log.success(pc.blue("Opened builder in your default browser."));
-    } else {
-      log.message(`Please visit ${BUILDER_URL}`);
-    }
-  }),
+  sponsors: os.meta({ description: "Show Better-T-Stack sponsors" }).handler(showSponsorsCommand),
+  docs: os.meta({ description: "Open Better-T-Stack documentation" }).handler(openDocsCommand),
+  builder: os.meta({ description: "Open the web-based stack builder" }).handler(openBuilderCommand),
+  add: os
+    .meta({ description: "Add addons to an existing Better-T-Stack project" })
+    .input(
+      z.object({
+        addons: z.array(AddonsSchema).optional().describe("Addons to add"),
+        install: z
+          .boolean()
+          .optional()
+          .default(false)
+          .describe("Install dependencies after adding"),
+        packageManager: PackageManagerSchema.optional().describe("Package manager to use"),
+        projectDir: z.string().optional().describe("Project directory (defaults to current)"),
+      }),
+    )
+    .handler(async ({ input }) => {
+      await addHandler(input);
+    }),
+  history: os
+    .meta({ description: "Show project creation history" })
+    .input(
+      z.object({
+        limit: z.number().optional().default(10).describe("Number of entries to show"),
+        clear: z.boolean().optional().default(false).describe("Clear all history"),
+        json: z.boolean().optional().default(false).describe("Output as JSON"),
+      }),
+    )
+    .handler(async ({ input }) => {
+      await historyHandler(input);
+    }),
 });
 
 const caller = createRouterClient(router, { context: {} });
@@ -349,6 +336,36 @@ export type {
   Template,
   DirectoryConflict,
 };
+
+export type { AddResult };
+
+/**
+ * Programmatic API to add addons to an existing Better-T-Stack project.
+ *
+ * @example
+ * ```typescript
+ * import { add } from "create-better-t-stack";
+ *
+ * const result = await add({
+ *   addons: ["biome", "husky"],
+ *   install: true,
+ * });
+ *
+ * if (result?.success) {
+ *   console.log(`Added: ${result.addedAddons.join(", ")}`);
+ * }
+ * ```
+ */
+export async function add(
+  options: {
+    addons?: Addons[];
+    install?: boolean;
+    packageManager?: PackageManager;
+    projectDir?: string;
+  } = {},
+): Promise<AddResult | undefined> {
+  return addHandler(options, { silent: true });
+}
 
 // Re-export error types for consumers
 export {

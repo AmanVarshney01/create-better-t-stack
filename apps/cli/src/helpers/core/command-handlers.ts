@@ -1,3 +1,4 @@
+import { generateReproducibleCommand } from "@better-t-stack/template-generator";
 import { intro, log, outro } from "@clack/prompts";
 import { Result, UnhandledException } from "better-result";
 import consola from "consola";
@@ -21,8 +22,9 @@ import {
   UserCancelledError,
   displayError,
 } from "../../utils/errors";
-import { generateReproducibleCommand } from "../../utils/generate-reproducible-command";
 import { handleDirectoryConflict, setupProjectDirectory } from "../../utils/project-directory";
+import { addToHistory } from "../../utils/project-history";
+import { validateProjectName } from "../../utils/project-name-validation";
 import { renderTitle } from "../../utils/render-title";
 import { getTemplateConfig, getTemplateDescription } from "../../utils/templates";
 import {
@@ -156,7 +158,10 @@ async function createProjectHandlerInternal(
 
     // Get project name
     let currentPathInput: string;
-    if (input.yes && input.projectName) {
+    if (isSilent()) {
+      const silentProjectName = yield* Result.await(resolveProjectNameForSilent(input));
+      currentPathInput = silentProjectName;
+    } else if (input.yes && input.projectName) {
       currentPathInput = input.projectName;
     } else if (input.yes) {
       const defaultConfig = getDefaultConfig();
@@ -319,6 +324,7 @@ async function createProjectHandlerInternal(
     );
 
     const reproducibleCommand = generateReproducibleCommand(config);
+
     if (!isSilent()) {
       log.success(
         pc.blue(`You can reproduce this setup with the following command:\n${reproducibleCommand}`),
@@ -326,6 +332,12 @@ async function createProjectHandlerInternal(
     }
 
     await trackProjectCreation(config, input.disableAnalytics);
+
+    // Track locally in history.json (non-fatal)
+    const historyResult = await addToHistory(config, reproducibleCommand);
+    if (historyResult.isErr() && !isSilent()) {
+      log.warn(pc.yellow(historyResult.error.message));
+    }
 
     const elapsedTimeMs = Date.now() - startTime;
     if (!isSilent()) {
@@ -350,6 +362,45 @@ async function createProjectHandlerInternal(
 interface DirectoryConflictResult {
   finalPathInput: string;
   shouldClearDirectory: boolean;
+}
+
+function isPathWithinCwd(targetPath: string) {
+  const resolved = path.resolve(targetPath);
+  const rel = path.relative(process.cwd(), resolved);
+  return !rel.startsWith("..") && !path.isAbsolute(rel);
+}
+
+async function resolveProjectNameForSilent(
+  input: CreateInput & { projectName?: string },
+): Promise<Result<string, CLIError>> {
+  const defaultConfig = getDefaultConfig();
+  const rawProjectName = input.projectName?.trim() || undefined;
+  const candidate = rawProjectName ?? defaultConfig.relativePath;
+
+  if (candidate === ".") {
+    return Result.ok(candidate);
+  }
+
+  const finalDirName = path.basename(candidate);
+  const validationResult = validateProjectName(finalDirName);
+  if (validationResult.isErr()) {
+    return Result.err(
+      new CLIError({
+        message: validationResult.error.message,
+        cause: validationResult.error,
+      }),
+    );
+  }
+
+  if (!isPathWithinCwd(candidate)) {
+    return Result.err(
+      new CLIError({
+        message: "Project path must be within current directory",
+      }),
+    );
+  }
+
+  return Result.ok(candidate);
 }
 
 async function handleDirectoryConflictResult(

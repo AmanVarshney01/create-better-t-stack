@@ -6,6 +6,7 @@ import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
+import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 type UltraciteLinter = "biome" | "eslint" | "oxlint";
@@ -131,6 +132,10 @@ export async function setupUltracite(
   config: ProjectConfig,
   gitHooks: string[],
 ): Promise<UltraciteSetupResult> {
+  if (shouldSkipExternalCommands()) {
+    return Result.ok(undefined);
+  }
+
   const { packageManager, projectDir, frontend } = config;
 
   log.info("Setting up Ultracite...");

@@ -595,6 +595,14 @@ export const TECH_OPTIONS: Record<
       color: "from-emerald-500 to-emerald-700",
       default: false,
     },
+    {
+      id: "skills",
+      name: "Skills",
+      description: "Install AI agent skills for coding assistants",
+      icon: "",
+      color: "from-pink-500 to-pink-700",
+      default: false,
+    },
   ],
   examples: [
     {

@@ -108,9 +108,9 @@ export function StackSection({ data }: { data: AggregatedAnalyticsData }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
-        <span className="font-bold text-lg">STACK_CONFIGURATION</span>
+        <span className="font-bold font-mono text-lg">STACK_CONFIGURATION</span>
         <div className="h-px flex-1 bg-border" />
-        <span className="text-muted-foreground text-xs">[CORE_CHOICES]</span>
+        <span className="font-mono text-muted-foreground text-xs">[CORE_CHOICES]</span>
       </div>
 
       <ChartCard

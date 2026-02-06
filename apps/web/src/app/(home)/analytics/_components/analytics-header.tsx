@@ -33,7 +33,7 @@ export function AnalyticsHeader({
         </div>
       </div>
 
-      <div className="rounded-lg border border-border bg-fd-background p-4 font-mono text-sm shadow-sm transition-colors hover:border-primary/50">
+      <div className="rounded border border-border bg-fd-background p-4 font-mono text-sm shadow-sm transition-colors hover:border-primary/50">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <span className="text-primary">$</span>
@@ -72,7 +72,7 @@ export function AnalyticsHeader({
         </div>
 
         <div className="mt-4 flex flex-col gap-2 rounded border border-border/50 bg-muted/20 p-3 text-xs">
-          <div className="flex items-center gap-2 font-semibold">
+          <div className="flex items-center gap-2 font-mono font-semibold">
             <span className="text-primary">#</span>
             <span className="text-foreground">Legacy Data (pre-Convex)</span>
           </div>

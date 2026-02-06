@@ -60,5 +60,6 @@ export const ADDON_COMPATIBILITY = {
   fumadocs: [],
   opentui: [],
   wxt: [],
+  skills: [],
   none: [],
 } as const;

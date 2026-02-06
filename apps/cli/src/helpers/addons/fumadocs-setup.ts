@@ -7,20 +7,28 @@ import path from "node:path";
 import type { ProjectConfig } from "../../types";
 
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
+import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 type FumadocsTemplate =
   | "next-mdx"
+  | "next-mdx-static"
   | "waku"
   | "react-router"
   | "react-router-spa"
-  | "tanstack-start";
+  | "tanstack-start"
+  | "tanstack-start-spa";
 
 const TEMPLATES = {
   "next-mdx": {
     label: "Next.js: Fumadocs MDX",
     hint: "Recommended template with MDX support",
     value: "+next+fuma-docs-mdx",
+  },
+  "next-mdx-static": {
+    label: "Next.js: Fumadocs MDX (Static)",
+    hint: "Static export template with MDX support",
+    value: "+next+fuma-docs-mdx+static",
   },
   waku: {
     label: "Waku: Content Collections",
@@ -42,11 +50,20 @@ const TEMPLATES = {
     hint: "Template for Tanstack Start with MDX remote",
     value: "tanstack-start",
   },
+  "tanstack-start-spa": {
+    label: "Tanstack Start: SPA",
+    hint: "Template for Tanstack Start SPA",
+    value: "tanstack-start-spa",
+  },
 } as const;
 
 export async function setupFumadocs(
   config: ProjectConfig,
 ): Promise<Result<void, AddonSetupError | UserCancelledError>> {
+  if (shouldSkipExternalCommands()) {
+    return Result.ok(undefined);
+  }
+
   const { packageManager, projectDir } = config;
 
   log.info("Setting up Fumadocs...");
@@ -66,8 +83,22 @@ export async function setupFumadocs(
   }
 
   const templateArg = TEMPLATES[template].value;
+  const isNextTemplate = template.startsWith("next-");
 
-  const commandWithArgs = `create-fumadocs-app@latest fumadocs --template ${templateArg} --src --pm ${packageManager} --no-git`;
+  // Build command with options
+  const options: string[] = [`--template ${templateArg}`, `--pm ${packageManager}`, "--no-git"];
+
+  // Add --src only for Next.js templates
+  if (isNextTemplate) {
+    options.push("--src");
+  }
+
+  // Use biome if the addon is enabled
+  if (config.addons.includes("biome")) {
+    options.push("--linter biome");
+  }
+
+  const commandWithArgs = `create-fumadocs-app@latest fumadocs ${options.join(" ")}`;
   const args = getPackageExecutionArgs(packageManager, commandWithArgs);
 
   const appsDir = path.join(projectDir, "apps");

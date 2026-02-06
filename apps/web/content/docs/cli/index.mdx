@@ -29,7 +29,7 @@ create-better-t-stack [project-directory] [options]
 - `--git / --no-git`: Initialize Git repository
 - `--frontend <types...>`: Web and/or native frameworks (see [Options](/docs/cli/options#frontend))
 - `--backend <framework>`: `hono`, `express`, `fastify`, `elysia`, `convex`, `self`, `none`
-- `--runtime <runtime>`: `bun`, `node`, `workers` (`none` only with `--backend convex` or `--backend none`)
+- `--runtime <runtime>`: `bun`, `node`, `workers` (`none` only with `--backend convex`, `--backend none`, or `--backend self`)
 - `--database <type>`: `none`, `sqlite`, `postgres`, `mysql`, `mongodb`
 - `--orm <type>`: `none`, `drizzle`, `prisma`, `mongoose`
 - `--api <type>`: `none`, `trpc`, `orpc`
@@ -37,8 +37,8 @@ create-better-t-stack [project-directory] [options]
 - `--payments <provider>`: `polar`, `none`
 - `--db-setup <setup>`: `none`, `turso`, `d1`, `neon`, `supabase`, `prisma-postgres`, `planetscale`, `mongodb-atlas`, `docker`
 - `--examples <types...>`: `none`, `todo`, `ai`
-- `--web-deploy <setup>`: `none`, `alchemy`
-- `--server-deploy <setup>`: `none`, `alchemy`
+- `--web-deploy <setup>`: `none`, `cloudflare`
+- `--server-deploy <setup>`: `none`, `cloudflare`
 - `--template <type>`: `none`, `mern`, `pern`, `t3`, `uniwind`
 - `--directory-conflict <strategy>`: `merge`, `overwrite`, `increment`, `error`
 - `--render-title / --no-render-title`: Show/hide ASCII art title
@@ -71,8 +71,8 @@ create-better-t-stack add [options]
 ### Options
 
 - `--addons <types...>`: Addons to add (see [Addons](/docs/cli/options#addons))
-- `--web-deploy <setup>`: Web deployment setup (`none`, `alchemy`)
-- `--server-deploy <setup>`: Server deployment setup (`none`, `alchemy`)
+- `--web-deploy <setup>`: Web deployment setup (`none`, `cloudflare`)
+- `--server-deploy <setup>`: Server deployment setup (`none`, `cloudflare`)
 - `--project-dir <path>`: Project directory (defaults to current directory)
 - `--install`: Install dependencies after adding
 - `--package-manager <pm>`: Package manager to use
@@ -87,7 +87,7 @@ create-better-t-stack add
 create-better-t-stack add --addons pwa tauri --install
 
 # Add deployment setup
-create-better-t-stack add --web-deploy alchemy
+create-better-t-stack add --web-deploy cloudflare
 ```
 
 ## `sponsors`

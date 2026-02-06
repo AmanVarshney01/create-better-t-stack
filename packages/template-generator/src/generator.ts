@@ -2,6 +2,7 @@ import { Result } from "better-result";
 
 import type { GeneratorOptions, VirtualFileTree } from "./types";
 
+import { writeBtsConfigToVfs } from "./bts-config";
 import { VirtualFileSystem } from "./core/virtual-fs";
 import { processCatalogs, processPackageConfigs } from "./post-process";
 import {
@@ -29,6 +30,7 @@ import {
   processDeployTemplates,
 } from "./template-handlers";
 import { GeneratorError } from "./types";
+import { generateReproducibleCommand } from "./utils/reproducible-command";
 
 export type { TemplateData };
 
@@ -83,6 +85,12 @@ export async function generate(
       processPwaPlugins(vfs, config);
       processCatalogs(vfs, config);
       processReadme(vfs, config);
+
+      // Write bts.jsonc config file
+      if (options.version) {
+        const reproducibleCommand = generateReproducibleCommand(config);
+        writeBtsConfigToVfs(vfs, config, options.version, reproducibleCommand);
+      }
 
       const tree: VirtualFileTree = {
         root: vfs.toTree(config.projectName),
