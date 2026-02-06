@@ -228,10 +228,14 @@ export function useStackBuilder() {
     });
   }
 
-  function copyToClipboard() {
-    navigator.clipboard.writeText(command);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  async function copyToClipboard() {
+    try {
+      await navigator.clipboard.writeText(command);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Unable to copy command. Please copy it manually.");
+    }
   }
 
   function resetStack() {

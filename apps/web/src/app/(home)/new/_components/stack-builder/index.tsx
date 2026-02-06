@@ -30,7 +30,7 @@ import { SelectedStackBadges } from "./selected-stack-badges";
 import { TechCategories } from "./tech-categories";
 import { useStackBuilder } from "./use-stack-builder";
 
-const StackBuilder = () => {
+export function StackBuilder() {
   const {
     applyPreset,
     command,
@@ -306,6 +306,4 @@ const StackBuilder = () => {
       </div>
     </TooltipProvider>
   );
-};
-
-export default StackBuilder;
+}

@@ -11,14 +11,10 @@ const DOCS_URL = "https://better-t-stack.dev/docs";
 const BUILDER_URL = "https://better-t-stack.dev/new";
 
 async function openExternalUrl(url: string, successMessage: string) {
-  const result = await Result.tryPromise({
-    try: () => openUrl(url),
-    catch: () => null,
-  });
-
-  if (result.isOk()) {
+  try {
+    await openUrl(url);
     log.success(pc.blue(successMessage));
-  } else {
+  } catch {
     log.message(`Please visit ${url}`);
   }
 }
