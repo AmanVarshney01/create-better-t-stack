@@ -4,6 +4,7 @@ import { log } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
+import os from "node:os";
 import path from "node:path";
 
 import type { ProjectConfig } from "../../types";
@@ -155,7 +156,8 @@ async function setPackageManagerVersion(
   // First, try to get the version
   const versionResult = await Result.tryPromise({
     try: async () => {
-      const { stdout } = await $`${packageManager} -v`;
+      // Run in a neutral directory to avoid local package manager shims affecting lookup.
+      const { stdout } = await $({ cwd: os.tmpdir() })`${packageManager} -v`;
       return stdout.trim();
     },
     catch: () => null, // Return null if we can't get version
