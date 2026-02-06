@@ -71,7 +71,12 @@ export function generateStackCommand(stack: StackState) {
 
   // Map web interface backend IDs to CLI backend flags
   const mapBackendToCli = (backend: string) => {
-    if (backend === "self-next" || backend === "self-tanstack-start") {
+    if (
+      backend === "self-next" ||
+      backend === "self-tanstack-start" ||
+      backend === "self-nuxt" ||
+      backend === "self-astro"
+    ) {
       return "self";
     }
     return backend;
@@ -105,6 +110,7 @@ export function generateStackCommand(stack: StackState) {
                 "tauri",
                 "starlight",
                 "biome",
+                "lefthook",
                 "husky",
                 "turborepo",
                 "ultracite",
@@ -113,6 +119,7 @@ export function generateStackCommand(stack: StackState) {
                 "ruler",
                 "opentui",
                 "wxt",
+                "skills",
               ].includes(addon),
             )
             .join(" ") || "none"

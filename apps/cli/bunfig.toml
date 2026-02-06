@@ -9,9 +9,4 @@ timeout = 180000
 coverageSkipTestFiles = true
 
 # Exclude patterns from coverage
-coveragePathIgnorePatterns = [
-    "test/**",
-    "dist/**",
-    "templates/**",
-    "node_modules/**",
-]
+coveragePathIgnorePatterns = ["test/**", "dist/**", "templates/**", "node_modules/**"]

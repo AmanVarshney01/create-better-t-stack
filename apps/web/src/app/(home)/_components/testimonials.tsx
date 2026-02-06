@@ -21,6 +21,45 @@ export const components: TwitterComponents = {
   },
 };
 
+const sectionHeaderClass = "mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap";
+const sectionTitleClass = "flex items-center gap-2";
+const sectionTitleTextClass = "font-bold font-mono text-lg sm:text-xl";
+const sectionCountClass =
+  "w-full text-right font-mono text-muted-foreground text-xs sm:w-auto sm:text-left";
+
+const cardHeaderClass =
+  "sticky top-0 z-10 flex items-center gap-2 border-border border-b px-3 py-2";
+
+function ArchiveToggleButton({
+  expanded,
+  count,
+  onToggle,
+}: {
+  expanded: boolean;
+  count: number;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="flex w-full items-center gap-2 rounded border border-border p-2 text-left font-mono transition-colors hover:bg-muted/10"
+    >
+      {expanded ? (
+        <ChevronUp className="h-4 w-4 text-primary" />
+      ) : (
+        <ChevronDown className="h-4 w-4 text-primary" />
+      )}
+      <span className="font-semibold text-muted-foreground text-sm">
+        TWEET_TESTIMONIALS.ARCHIVE
+      </span>
+      <span className="text-muted-foreground text-xs">({count})</span>
+      <div className="mx-2 h-px flex-1 bg-border" />
+      <span className="text-muted-foreground text-xs">{expanded ? "HIDE" : "SHOW"}</span>
+    </button>
+  );
+}
+
 const VideoCard = ({
   video,
   index,
@@ -38,14 +77,12 @@ const VideoCard = ({
       ease: "easeOut",
     }}
   >
-    <div className="w-full min-w-0 overflow-hidden rounded border border-border">
-      <div className="sticky top-0 z-10 border-border border-b px-2 py-2">
-        <div className="flex items-center gap-2">
-          <Play className="h-3 w-3 text-primary" />
-          <span className="font-semibold text-xs">
-            [VIDEO_{String(index + 1).padStart(3, "0")}]
-          </span>
-        </div>
+    <div className="w-full min-w-0 overflow-hidden rounded border border-border bg-fd-background">
+      <div className={cardHeaderClass}>
+        <Play className="h-3 w-3 text-primary" />
+        <span className="font-semibold font-mono text-xs">
+          [VIDEO_{String(index + 1).padStart(3, "0")}]
+        </span>
       </div>
       <div className="w-full min-w-0 overflow-hidden">
         <div className="relative aspect-video w-full">
@@ -73,14 +110,12 @@ const TweetCard = ({ tweetId, index }: { tweetId: string; index: number }) => (
       ease: "easeOut",
     }}
   >
-    <div className="w-full min-w-0 overflow-hidden rounded border border-border">
-      <div className="sticky top-0 z-10 border-border border-b px-3 py-2">
-        <div className="flex items-center gap-2">
-          <span className="text-primary text-xs">▶</span>
-          <span className="font-semibold text-xs">
-            [TWEET_{String(index + 1).padStart(3, "0")}]
-          </span>
-        </div>
+    <div className="w-full min-w-0 overflow-hidden rounded border border-border bg-fd-background">
+      <div className={cardHeaderClass}>
+        <span className="text-primary text-xs">▶</span>
+        <span className="font-semibold font-mono text-xs">
+          [TWEET_{String(index + 1).padStart(3, "0")}]
+        </span>
       </div>
       <div className="w-full min-w-0 overflow-hidden">
         <div style={{ width: "100%", minWidth: 0, maxWidth: "100%" }}>
@@ -133,15 +168,13 @@ export default function Testimonials({
   return (
     <div className="w-full max-w-full overflow-hidden px-4">
       <div className="mb-8">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
-          <div className="flex items-center gap-2">
+        <div className={sectionHeaderClass}>
+          <div className={sectionTitleClass}>
             <Play className="h-5 w-5 text-primary" />
-            <span className="font-bold text-lg sm:text-xl">VIDEO_TESTIMONIALS.LOG</span>
+            <span className={sectionTitleTextClass}>VIDEO_TESTIMONIALS.LOG</span>
           </div>
           <div className="hidden h-px flex-1 bg-border sm:block" />
-          <span className="w-full text-right text-muted-foreground text-xs sm:w-auto sm:text-left">
-            [{videosReversed.length} ENTRIES]
-          </span>
+          <span className={sectionCountClass}>[{videosReversed.length} ENTRIES]</span>
         </div>
 
         <div className="block sm:hidden">
@@ -171,160 +204,118 @@ export default function Testimonials({
         </div>
       </div>
 
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
-        <div className="flex items-center gap-2">
-          <Terminal className="h-5 w-5 text-primary" />
-          <span className="font-bold text-lg sm:text-xl">DEVELOPER_TESTIMONIALS.LOG</span>
+      <div>
+        <div className={sectionHeaderClass}>
+          <div className={sectionTitleClass}>
+            <Terminal className="h-5 w-5 text-primary" />
+            <span className={sectionTitleTextClass}>DEVELOPER_TESTIMONIALS.LOG</span>
+          </div>
+          <div className="hidden h-px flex-1 bg-border sm:block" />
+          <span className={sectionCountClass}>[{tweets.length} ENTRIES]</span>
         </div>
-        <div className="hidden h-px flex-1 bg-border sm:block" />
-        <span className="w-full text-right text-muted-foreground text-xs sm:w-auto sm:text-left">
-          [{tweets.length} ENTRIES]
-        </span>
-      </div>
 
-      <div className="block sm:hidden">
-        <div className="relative">
-          <motion.div
-            className={`flex flex-col gap-4 overflow-hidden transition-all duration-500 ease-in-out ${
-              showAllTweets ? "h-auto" : "h-[500px]"
-            }`}
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {tweets.map((tweet, index) => (
-              <TweetCard key={tweet.tweetId} tweetId={tweet.tweetId} index={index} />
-            ))}
-          </motion.div>
-
-          {!showAllTweets && (
-            <div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-linear-to-t from-muted/20 via-muted/40 to-transparent" />
-          )}
-
-          <div className="my-4">
-            <button
-              type="button"
-              onClick={() => setShowAllTweets(!showAllTweets)}
-              className="flex w-full items-center gap-2 rounded border border-muted p-2 text-left transition-colors hover:bg-muted"
+        <div className="block sm:hidden">
+          <div className="relative">
+            <motion.div
+              className={`flex flex-col gap-4 overflow-hidden transition-all duration-500 ease-in-out ${
+                showAllTweets ? "h-auto" : "h-[700px]"
+              }`}
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
             >
-              {showAllTweets ? (
-                <ChevronUp className="h-4 w-4 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              )}
-              <span className="font-semibold text-muted-foreground text-sm">
-                TWEET_TESTIMONIALS.ARCHIVE
-              </span>
-              <span className="text-muted-foreground text-xs">({tweets.length})</span>
-              <div className="mx-2 h-px flex-1 bg-border" />
-              <span className="text-muted-foreground text-xs">
-                {showAllTweets ? "HIDE" : "SHOW"}
-              </span>
-            </button>
+              {tweets.map((tweet, index) => (
+                <TweetCard key={tweet.tweetId} tweetId={tweet.tweetId} index={index} />
+              ))}
+            </motion.div>
+
+            {!showAllTweets && (
+              <div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-linear-to-t from-background via-background/80 to-transparent" />
+            )}
+
+            <div className="my-4">
+              <ArchiveToggleButton
+                expanded={showAllTweets}
+                count={tweets.length}
+                onToggle={() => setShowAllTweets(!showAllTweets)}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="hidden sm:block lg:hidden">
-        <div className="relative">
-          <motion.div
-            className={`grid grid-cols-2 gap-4 overflow-hidden transition-all duration-500 ease-in-out ${
-              showAllTweets ? "h-auto" : "h-[450px]"
-            }`}
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {getResponsiveColumns(2).map((column, colIndex) => (
-              <motion.div
-                key={`col-2-${column.length > 0 ? column[0] : `empty-${colIndex}`}`}
-                className="flex min-w-0 flex-col gap-4"
-                variants={columnVariants}
-              >
-                {column.map((tweetId, tweetIndex) => {
-                  const globalIndex = colIndex + tweetIndex * 2;
-                  return <TweetCard key={tweetId} tweetId={tweetId} index={globalIndex} />;
-                })}
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {!showAllTweets && (
-            <div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-linear-to-t from-muted/20 via-muted/40 to-transparent" />
-          )}
-
-          <div className="my-4">
-            <button
-              type="button"
-              onClick={() => setShowAllTweets(!showAllTweets)}
-              className="flex w-full items-center gap-2 rounded border border-muted p-2 text-left transition-colors hover:bg-muted"
+        <div className="hidden sm:block lg:hidden">
+          <div className="relative">
+            <motion.div
+              className={`grid grid-cols-2 gap-4 overflow-hidden transition-all duration-500 ease-in-out ${
+                showAllTweets ? "h-auto" : "h-[650px]"
+              }`}
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
             >
-              {showAllTweets ? (
-                <ChevronUp className="h-4 w-4 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              )}
-              <span className="font-semibold text-muted-foreground text-sm">
-                TWEET_TESTIMONIALS.ARCHIVE
-              </span>
-              <span className="text-muted-foreground text-xs">({tweets.length})</span>
-              <div className="mx-2 h-px flex-1 bg-border" />
-              <span className="text-muted-foreground text-xs">
-                {showAllTweets ? "HIDE" : "SHOW"}
-              </span>
-            </button>
+              {getResponsiveColumns(2).map((column, colIndex) => (
+                <motion.div
+                  key={`col-2-${column.length > 0 ? column[0] : `empty-${colIndex}`}`}
+                  className="flex min-w-0 flex-col gap-4"
+                  variants={columnVariants}
+                >
+                  {column.map((tweetId, tweetIndex) => {
+                    const globalIndex = colIndex + tweetIndex * 2;
+                    return <TweetCard key={tweetId} tweetId={tweetId} index={globalIndex} />;
+                  })}
+                </motion.div>
+              ))}
+            </motion.div>
+
+            {!showAllTweets && (
+              <div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-linear-to-t from-background via-background/80 to-transparent" />
+            )}
+
+            <div className="my-4">
+              <ArchiveToggleButton
+                expanded={showAllTweets}
+                count={tweets.length}
+                onToggle={() => setShowAllTweets(!showAllTweets)}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="hidden lg:block">
-        <div className="relative">
-          <motion.div
-            className={`grid grid-cols-3 gap-4 overflow-hidden transition-all duration-500 ease-in-out ${
-              showAllTweets ? "h-auto" : "h-[400px]"
-            }`}
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            {getResponsiveColumns(3).map((column, colIndex) => (
-              <motion.div
-                key={`col-3-${column.length > 0 ? column[0] : `empty-${colIndex}`}`}
-                className="flex min-w-0 flex-col gap-4"
-                variants={columnVariants}
-              >
-                {column.map((tweetId, tweetIndex) => {
-                  const globalIndex = colIndex + tweetIndex * 3;
-                  return <TweetCard key={tweetId} tweetId={tweetId} index={globalIndex} />;
-                })}
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {!showAllTweets && (
-            <div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-linear-to-t from-muted/20 via-muted/40 to-transparent" />
-          )}
-
-          <div className="my-4">
-            <button
-              type="button"
-              onClick={() => setShowAllTweets(!showAllTweets)}
-              className="flex w-full items-center gap-2 rounded border border-muted p-2 text-left transition-colors hover:bg-muted"
+        <div className="hidden lg:block">
+          <div className="relative">
+            <motion.div
+              className={`grid grid-cols-3 gap-4 overflow-hidden transition-all duration-500 ease-in-out ${
+                showAllTweets ? "h-auto" : "h-[600px]"
+              }`}
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
             >
-              {showAllTweets ? (
-                <ChevronUp className="h-4 w-4 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              )}
-              <span className="font-semibold text-muted-foreground text-sm">
-                TWEET_TESTIMONIALS.ARCHIVE
-              </span>
-              <span className="text-muted-foreground text-xs">({tweets.length})</span>
-              <div className="mx-2 h-px flex-1 bg-border" />
-              <span className="text-muted-foreground text-xs">
-                {showAllTweets ? "HIDE" : "SHOW"}
-              </span>
-            </button>
+              {getResponsiveColumns(3).map((column, colIndex) => (
+                <motion.div
+                  key={`col-3-${column.length > 0 ? column[0] : `empty-${colIndex}`}`}
+                  className="flex min-w-0 flex-col gap-4"
+                  variants={columnVariants}
+                >
+                  {column.map((tweetId, tweetIndex) => {
+                    const globalIndex = colIndex + tweetIndex * 3;
+                    return <TweetCard key={tweetId} tweetId={tweetId} index={globalIndex} />;
+                  })}
+                </motion.div>
+              ))}
+            </motion.div>
+
+            {!showAllTweets && (
+              <div className="pointer-events-none absolute right-0 bottom-10 left-0 h-32 bg-linear-to-t from-background via-background/80 to-transparent" />
+            )}
+
+            <div className="my-4">
+              <ArchiveToggleButton
+                expanded={showAllTweets}
+                count={tweets.length}
+                onToggle={() => setShowAllTweets(!showAllTweets)}
+              />
+            </div>
           </div>
         </div>
       </div>

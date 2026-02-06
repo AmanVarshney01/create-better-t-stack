@@ -1,152 +1,187 @@
+import { generate, EMBEDDED_TEMPLATES } from "@better-t-stack/template-generator";
+import { writeTree } from "@better-t-stack/template-generator/fs-writer";
 import { log } from "@clack/prompts";
+import { Result } from "better-result";
+import { $ } from "execa";
 import fs from "fs-extra";
+import os from "node:os";
+import path from "node:path";
 
 import type { ProjectConfig } from "../../types";
 
-import { writeBtsConfig } from "../../utils/bts-config";
-import { exitWithError } from "../../utils/errors";
-import { setupCatalogs } from "../../utils/setup-catalogs";
+import { isSilent } from "../../utils/context";
+import { ProjectCreationError } from "../../utils/errors";
+import { formatProject } from "../../utils/file-formatter";
+import { getLatestCLIVersion } from "../../utils/get-latest-cli-version";
 import { setupAddons } from "../addons/addons-setup";
-import { setupExamples } from "../addons/examples-setup";
-import { setupApi } from "../core/api-setup";
-import { setupBackendDependencies } from "../core/backend-setup";
 import { setupDatabase } from "../core/db-setup";
-import { setupRuntime } from "../core/runtime-setup";
-import { setupServerDeploy } from "../deployment/server-deploy-setup";
-import { setupWebDeploy } from "../deployment/web-deploy-setup";
-import { setupAuth } from "./auth-setup";
-import { createReadme } from "./create-readme";
-import { setupEnvPackageDependencies } from "./env-package-setup";
-import { setupEnvironmentVariables } from "./env-setup";
 import { initializeGit } from "./git";
-import { setupInfraPackageDependencies } from "./infra-package-setup";
 import { installDependencies } from "./install-dependencies";
-import { setupPayments } from "./payments-setup";
 import { displayPostInstallInstructions } from "./post-installation";
-import { updatePackageConfigurations } from "./project-config";
-import {
-  copyBaseTemplate,
-  handleExtras,
-  setupAddonsTemplate,
-  setupAuthTemplate,
-  setupBackendFramework,
-  setupDeploymentTemplates,
-  setupDockerComposeTemplates,
-  setupExamplesTemplate,
-  setupFrontendTemplates,
-  setupPaymentsTemplate,
-} from "./template-manager";
 
 export interface CreateProjectOptions {
   manualDb?: boolean;
-  /** When true, skip all console output (for programmatic API use) */
-  silent?: boolean;
 }
 
-export async function createProject(options: ProjectConfig, cliInput: CreateProjectOptions = {}) {
-  const { silent = false } = cliInput;
-  const projectDir = options.projectDir;
-  const isConvex = options.backend === "convex";
-  const isSelfBackend = options.backend === "self";
-  const needsServerSetup = !isConvex && !isSelfBackend;
+/**
+ * Creates a new project with the given configuration.
+ * Returns a Result with the project directory path on success, or an error on failure.
+ */
+export async function createProject(
+  options: ProjectConfig,
+  cliInput: CreateProjectOptions = {},
+): Promise<Result<string, ProjectCreationError>> {
+  return Result.gen(async function* () {
+    const projectDir = options.projectDir;
+    const isConvex = options.backend === "convex";
 
-  try {
-    await fs.ensureDir(projectDir);
+    // Ensure project directory exists
+    yield* Result.await(
+      Result.tryPromise({
+        try: () => fs.ensureDir(projectDir),
+        catch: (e) =>
+          new ProjectCreationError({
+            phase: "directory-setup",
+            message: `Failed to create project directory: ${e instanceof Error ? e.message : String(e)}`,
+            cause: e,
+          }),
+      }),
+    );
 
-    await copyBaseTemplate(projectDir, options);
-    await setupFrontendTemplates(projectDir, options);
+    // Generate virtual project using Result-based API
+    const tree = yield* Result.await(
+      generate({
+        config: options,
+        templates: EMBEDDED_TEMPLATES,
+        version: getLatestCLIVersion(),
+      }).then((result) =>
+        result.mapError(
+          (e) =>
+            new ProjectCreationError({
+              phase: e.phase || "template-generation",
+              message: e.message,
+              cause: e,
+            }),
+        ),
+      ),
+    );
 
-    await setupBackendFramework(projectDir, options);
+    // Write tree to filesystem using Result-based API
+    yield* Result.await(
+      writeTree(tree, projectDir).then((result) =>
+        result.mapError(
+          (e) =>
+            new ProjectCreationError({
+              phase: "file-writing",
+              message: e.message,
+              cause: e,
+            }),
+        ),
+      ),
+    );
 
-    if (needsServerSetup || (isSelfBackend && options.dbSetup === "docker")) {
-      await setupDockerComposeTemplates(projectDir, options);
+    // Set package manager version
+    yield* Result.await(setPackageManagerVersion(projectDir, options.packageManager));
+
+    // Setup database if needed
+    if (!isConvex && options.database !== "none") {
+      yield* Result.await(
+        Result.tryPromise({
+          try: () => setupDatabase(options, cliInput),
+          catch: (e) =>
+            new ProjectCreationError({
+              phase: "database-setup",
+              message: `Failed to setup database: ${e instanceof Error ? e.message : String(e)}`,
+              cause: e,
+            }),
+        }),
+      );
     }
 
-    await setupAuthTemplate(projectDir, options);
-    if (options.payments && options.payments !== "none") {
-      await setupPaymentsTemplate(projectDir, options);
-    }
-    if (options.examples.length > 0 && options.examples[0] !== "none") {
-      await setupExamplesTemplate(projectDir, options);
-    }
-    await setupAddonsTemplate(projectDir, options);
-
-    await setupDeploymentTemplates(projectDir, options);
-
-    await setupEnvPackageDependencies(projectDir, options);
-    if (options.serverDeploy === "cloudflare" || options.webDeploy === "cloudflare") {
-      await setupInfraPackageDependencies(projectDir, options);
-    }
-
-    await setupApi(options);
-
-    if (isConvex || needsServerSetup) {
-      await setupBackendDependencies(options);
-    }
-
-    if (!isConvex) {
-      if (needsServerSetup) {
-        await setupRuntime(options);
-      }
-      await setupDatabase(options, cliInput);
-    }
-
-    if (options.examples.length > 0 && options.examples[0] !== "none") {
-      await setupExamples(options);
-    }
-
+    // Setup addons if any
     if (options.addons.length > 0 && options.addons[0] !== "none") {
-      await setupAddons(options);
+      yield* Result.await(
+        Result.tryPromise({
+          try: () => setupAddons(options),
+          catch: (e) =>
+            new ProjectCreationError({
+              phase: "addons-setup",
+              message: `Failed to setup addons: ${e instanceof Error ? e.message : String(e)}`,
+              cause: e,
+            }),
+        }),
+      );
     }
 
-    if (options.auth && options.auth !== "none") {
-      await setupAuth(options);
-    }
+    // Format project
+    yield* Result.await(formatProject(projectDir));
 
-    if (options.payments && options.payments !== "none") {
-      await setupPayments(options);
-    }
+    if (!isSilent()) log.success("Project template successfully scaffolded!");
 
-    await handleExtras(projectDir, options);
-
-    await setupEnvironmentVariables(options);
-    await updatePackageConfigurations(projectDir, options);
-
-    await setupWebDeploy(options);
-    await setupServerDeploy(options);
-
-    await setupCatalogs(projectDir, options);
-
-    await createReadme(projectDir, options);
-
-    await writeBtsConfig(options);
-
-    if (!silent) log.success("Project template successfully scaffolded!");
-
+    // Install dependencies if requested
     if (options.install) {
-      await installDependencies({
-        projectDir,
-        packageManager: options.packageManager,
-      });
+      yield* Result.await(
+        installDependencies({
+          projectDir,
+          packageManager: options.packageManager,
+        }),
+      );
     }
 
-    await initializeGit(projectDir, options.git);
+    // Initialize git if requested
+    yield* Result.await(initializeGit(projectDir, options.git));
 
-    if (!silent) {
+    // Display post-install instructions
+    if (!isSilent()) {
       await displayPostInstallInstructions({
         ...options,
         depsInstalled: options.install,
       });
     }
 
-    return projectDir;
-  } catch (error) {
-    if (error instanceof Error) {
-      if (!silent) console.error(error.stack);
-      exitWithError(`Error during project creation: ${error.message}`);
-    } else {
-      if (!silent) console.error(error);
-      exitWithError(`An unexpected error occurred: ${String(error)}`);
-    }
+    return Result.ok(projectDir);
+  });
+}
+
+async function setPackageManagerVersion(
+  projectDir: string,
+  packageManager: ProjectConfig["packageManager"],
+): Promise<Result<void, ProjectCreationError>> {
+  const pkgJsonPath = path.join(projectDir, "package.json");
+
+  if (!(await fs.pathExists(pkgJsonPath))) {
+    return Result.ok(undefined);
   }
+
+  // First, try to get the version
+  const versionResult = await Result.tryPromise({
+    try: async () => {
+      // Run in a neutral directory to avoid local package manager shims affecting lookup.
+      const { stdout } = await $({ cwd: os.tmpdir() })`${packageManager} -v`;
+      return stdout.trim();
+    },
+    catch: () => null, // Return null if we can't get version
+  });
+
+  // Now update the package.json
+  return Result.tryPromise({
+    try: async () => {
+      const pkgJson = await fs.readJson(pkgJsonPath);
+
+      if (versionResult.isOk() && versionResult.value) {
+        pkgJson.packageManager = `${packageManager}@${versionResult.value}`;
+      } else {
+        // If we can't get the version, just remove the packageManager field
+        delete pkgJson.packageManager;
+      }
+
+      await fs.writeJson(pkgJsonPath, pkgJson, { spaces: 2 });
+    },
+    catch: (e) =>
+      new ProjectCreationError({
+        phase: "package-manager-version",
+        message: `Failed to set package manager version: ${e instanceof Error ? e.message : String(e)}`,
+        cause: e,
+      }),
+  });
 }

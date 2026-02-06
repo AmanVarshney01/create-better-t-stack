@@ -184,7 +184,7 @@ create-better-t-stack --backend hono
 
 Runtime environment:
 
-- `none`: No specific runtime (only with `convex` or `none` backend)
+- `none`: No specific runtime (only with `convex`, `none`, or `self` backend)
 - `bun`: Bun runtime
 - `node`: Node.js runtime
 - `workers`: Cloudflare Workers
@@ -220,6 +220,7 @@ Frontend frameworks (can specify multiple):
 - `nuxt`: Nuxt (Vue)
 - `svelte`: SvelteKit
 - `solid`: SolidJS
+- `astro`: Astro
 
 **Native Frameworks:**
 
@@ -291,6 +292,7 @@ Additional features to include:
 - `starlight`: Starlight documentation site
 - `fumadocs`: Fumadocs documentation site
 - `biome`: Biome linting and formatting
+- `lefthook`: Git hooks with Lefthook
 - `husky`: Git hooks with Husky
 - `turborepo`: Turborepo monorepo setup
 - `ultracite`: Ultracite configuration
@@ -298,6 +300,7 @@ Additional features to include:
 - `ruler`: Centralize your AI rules with Ruler
 - `opentui`: OpenTUI components
 - `wxt`: WXT browser extension framework
+- `skills`: Install AI agent skills for coding assistants (Cursor, Claude Code, GitHub Copilot, etc.)
 
 ```bash
 create-better-t-stack --addons pwa biome husky
@@ -324,26 +327,56 @@ create-better-t-stack --examples todo ai
 Web deployment configuration:
 
 - `none`: No deployment setup
-- `alchemy`: Cloudflare Workers deployment (via Alchemy infrastructure as code)
+- `cloudflare`: Cloudflare Workers deployment (via Alchemy infrastructure as code)
 
 ```bash
-create-better-t-stack --web-deploy alchemy
+create-better-t-stack --web-deploy cloudflare
 ```
 
-**Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Infrastructure as Code with Alchemy Guide](/docs/guides/alchemy-deployment) for details.
+**Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Deploying to Cloudflare with Alchemy Guide](/docs/guides/cloudflare-alchemy) for details.
 
 ### `--server-deploy <setup>`
 
 Server deployment configuration:
 
 - `none`: No deployment setup
-- `alchemy`: Cloudflare Workers deployment (when runtime is workers, via Alchemy infrastructure as code)
+- `cloudflare`: Cloudflare Workers deployment (when runtime is workers, via Alchemy infrastructure as code)
 
 ```bash
-create-better-t-stack --server-deploy alchemy
+create-better-t-stack --server-deploy cloudflare
 ```
 
-**Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Infrastructure as Code with Alchemy Guide](/docs/guides/alchemy-deployment) for details.
+**Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Deploying to Cloudflare with Alchemy Guide](/docs/guides/cloudflare-alchemy) for details.
+
+## History
+
+### `history`
+
+View your project creation history. Projects are tracked locally using platform-specific directories:
+
+- **macOS**: `~/Library/Application Support/better-t-stack/history.json`
+- **Linux**: `~/.local/share/better-t-stack/history.json`
+- **Windows**: `%LOCALAPPDATA%\better-t-stack\Data\history.json`
+
+```bash
+# Show last 10 projects
+create-better-t-stack history
+
+# Show last 5 projects
+create-better-t-stack history --limit 5
+
+# Output as JSON
+create-better-t-stack history --json
+
+# Clear all history
+create-better-t-stack history --clear
+```
+
+**Options:**
+
+- `--limit <number>`: Number of entries to show (default: 10)
+- `--clear`: Clear all project history
+- `--json`: Output history as JSON
 
 ## Option Validation
 
@@ -365,8 +398,8 @@ create-better-t-stack \
   --addons pwa biome \
   --examples todo \
   --package-manager bun \
-  --web-deploy wrangler \
-  --server-deploy alchemy \
+  --web-deploy cloudflare \
+  --server-deploy cloudflare \
   --install
 ```
 

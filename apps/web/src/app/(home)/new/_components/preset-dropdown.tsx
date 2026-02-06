@@ -17,15 +17,17 @@ interface PresetDropdownProps {
 export function PresetDropdown({ onApplyPreset }: PresetDropdownProps) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-fd-background px-2 py-1.5 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
-        >
-          <Zap className="h-3 w-3" />
-          Presets
-          <ChevronDown className="ml-auto h-3 w-3" />
-        </button>
+      <DropdownMenuTrigger
+        render={
+          <button
+            type="button"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded border border-border bg-fd-background px-2 py-1.5 font-mono font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
+          />
+        }
+      >
+        <Zap className="h-3 w-3" />
+        Presets
+        <ChevronDown className="ml-auto h-3 w-3" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64 bg-fd-background">
         {PRESET_TEMPLATES.map((preset) => (

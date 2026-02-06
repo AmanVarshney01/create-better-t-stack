@@ -1,10 +1,9 @@
-import { isCancel, select } from "@clack/prompts";
-
 import type { Auth, Backend, Frontend, Payments } from "../types";
 
 import { DEFAULT_CONFIG } from "../constants";
 import { splitFrontends } from "../utils/compatibility-rules";
-import { exitCancelled } from "../utils/errors";
+import { UserCancelledError } from "../utils/errors";
+import { isCancel, navigableSelect } from "./navigable";
 
 export async function getPaymentsChoice(
   payments?: Payments,
@@ -40,13 +39,13 @@ export async function getPaymentsChoice(
     },
   ];
 
-  const response = await select<Payments>({
+  const response = await navigableSelect<Payments>({
     message: "Select payments provider",
     options,
     initialValue: DEFAULT_CONFIG.payments,
   });
 
-  if (isCancel(response)) return exitCancelled("Operation cancelled");
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }

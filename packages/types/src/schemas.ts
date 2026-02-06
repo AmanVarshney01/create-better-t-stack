@@ -26,6 +26,7 @@ export const FrontendSchema = z
     "native-unistyles",
     "svelte",
     "solid",
+    "astro",
     "none",
   ])
   .describe("Frontend framework");
@@ -36,6 +37,7 @@ export const AddonsSchema = z
     "tauri",
     "starlight",
     "biome",
+    "lefthook",
     "husky",
     "ruler",
     "turborepo",
@@ -44,6 +46,7 @@ export const AddonsSchema = z
     "oxlint",
     "opentui",
     "wxt",
+    "skills",
     "none",
   ])
   .describe("Additional addons");
@@ -170,6 +173,7 @@ export const ProjectConfigSchema = z.object({
 export const BetterTStackConfigSchema = z.object({
   version: z.string().describe("CLI version used to create this project"),
   createdAt: z.string().describe("Timestamp when the project was created"),
+  reproducibleCommand: z.string().optional().describe("Command to reproduce this project setup"),
   database: DatabaseSchema,
   orm: ORMSchema,
   backend: BackendSchema,

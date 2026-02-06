@@ -1,89 +1,81 @@
 import { spinner } from "@clack/prompts";
-import { consola } from "consola";
+import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
 import path from "node:path";
-import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 
-import { addPackageDependency } from "../../utils/add-package-deps";
+import { AddonSetupError } from "../../utils/errors";
+import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageRunnerPrefix } from "../../utils/package-runner";
 
-export async function setupTauri(config: ProjectConfig) {
+export async function setupTauri(config: ProjectConfig): Promise<Result<void, AddonSetupError>> {
+  if (shouldSkipExternalCommands()) {
+    return Result.ok(undefined);
+  }
+
   const { packageManager, frontend, projectDir } = config;
   const s = spinner();
   const clientPackageDir = path.join(projectDir, "apps/web");
 
   if (!(await fs.pathExists(clientPackageDir))) {
-    return;
+    return Result.ok(undefined);
   }
 
-  try {
-    s.start("Setting up Tauri desktop app support...");
+  s.start("Setting up Tauri desktop app support...");
 
-    await addPackageDependency({
-      devDependencies: ["@tauri-apps/cli"],
-      projectDir: clientPackageDir,
-    });
+  const hasReactRouter = frontend.includes("react-router");
+  const hasNuxt = frontend.includes("nuxt");
+  const hasSvelte = frontend.includes("svelte");
+  const hasNext = frontend.includes("next");
 
-    const clientPackageJsonPath = path.join(clientPackageDir, "package.json");
-    if (await fs.pathExists(clientPackageJsonPath)) {
-      const packageJson = await fs.readJson(clientPackageJsonPath);
+  const devUrl =
+    hasReactRouter || hasSvelte
+      ? "http://localhost:5173"
+      : hasNext
+        ? "http://localhost:3001"
+        : "http://localhost:3001";
 
-      packageJson.scripts = {
-        ...packageJson.scripts,
-        tauri: "tauri",
-        "desktop:dev": "tauri dev",
-        "desktop:build": "tauri build",
-      };
+  const frontendDist = hasNuxt
+    ? "../.output/public"
+    : hasSvelte
+      ? "../build"
+      : hasNext
+        ? "../.next"
+        : hasReactRouter
+          ? "../build/client"
+          : "../dist";
 
-      await fs.writeJson(clientPackageJsonPath, packageJson, { spaces: 2 });
-    }
+  const tauriArgs = [
+    "@tauri-apps/cli@latest",
+    "init",
+    `--app-name=${path.basename(projectDir)}`,
+    `--window-title=${path.basename(projectDir)}`,
+    `--frontend-dist=${frontendDist}`,
+    `--dev-url=${devUrl}`,
+    `--before-dev-command=${packageManager} run dev`,
+    `--before-build-command=${packageManager} run build`,
+  ];
+  const prefix = getPackageRunnerPrefix(packageManager);
 
-    const _hasTanstackRouter = frontend.includes("tanstack-router");
-    const hasReactRouter = frontend.includes("react-router");
-    const hasNuxt = frontend.includes("nuxt");
-    const hasSvelte = frontend.includes("svelte");
-    const _hasSolid = frontend.includes("solid");
-    const hasNext = frontend.includes("next");
+  const result = await Result.tryPromise({
+    try: async () => {
+      await $({ cwd: clientPackageDir, env: { CI: "true" } })`${[...prefix, ...tauriArgs]}`;
+    },
+    catch: (e) =>
+      new AddonSetupError({
+        addon: "tauri",
+        message: `Failed to set up Tauri: ${e instanceof Error ? e.message : String(e)}`,
+        cause: e,
+      }),
+  });
 
-    const devUrl =
-      hasReactRouter || hasSvelte
-        ? "http://localhost:5173"
-        : hasNext
-          ? "http://localhost:3001"
-          : "http://localhost:3001";
-
-    const frontendDist = hasNuxt
-      ? "../.output/public"
-      : hasSvelte
-        ? "../build"
-        : hasNext
-          ? "../.next"
-          : hasReactRouter
-            ? "../build/client"
-            : "../dist";
-
-    const tauriArgs = [
-      "@tauri-apps/cli@latest",
-      "init",
-      `--app-name=${path.basename(projectDir)}`,
-      `--window-title=${path.basename(projectDir)}`,
-      `--frontend-dist=${frontendDist}`,
-      `--dev-url=${devUrl}`,
-      `--before-dev-command=${packageManager} run dev`,
-      `--before-build-command=${packageManager} run build`,
-    ];
-    const prefix = getPackageRunnerPrefix(packageManager);
-
-    await $({ cwd: clientPackageDir, env: { CI: "true" } })`${[...prefix, ...tauriArgs]}`;
-
-    s.stop("Tauri desktop app support configured successfully!");
-  } catch (error) {
-    s.stop(pc.red("Failed to set up Tauri"));
-    if (error instanceof Error) {
-      consola.error(pc.red(error.message));
-    }
+  if (result.isErr()) {
+    s.stop("Failed to set up Tauri");
+    return result;
   }
+
+  s.stop("Tauri desktop app support configured successfully!");
+  return Result.ok(undefined);
 }

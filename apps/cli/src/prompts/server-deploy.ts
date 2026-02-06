@@ -1,9 +1,8 @@
-import { isCancel, select } from "@clack/prompts";
-
 import type { Backend, Runtime, ServerDeploy, WebDeploy } from "../types";
 
 import { DEFAULT_CONFIG } from "../constants";
-import { exitCancelled } from "../utils/errors";
+import { UserCancelledError } from "../utils/errors";
+import { isCancel, navigableSelect } from "./navigable";
 
 type DeploymentOption = {
   value: ServerDeploy;
@@ -81,13 +80,13 @@ export async function getServerDeploymentToAdd(
     return "none";
   }
 
-  const response = await select<ServerDeploy>({
+  const response = await navigableSelect<ServerDeploy>({
     message: "Select server deployment",
     options,
     initialValue: DEFAULT_CONFIG.serverDeploy,
   });
 
-  if (isCancel(response)) return exitCancelled("Operation cancelled");
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }

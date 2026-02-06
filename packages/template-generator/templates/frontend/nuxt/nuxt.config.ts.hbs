@@ -1,0 +1,28 @@
+import "@{{projectName}}/env/web";
+
+// https://nuxt.com/docs/api/configuration/nuxt-config
+export default defineNuxtConfig({
+  compatibilityDate: 'latest',
+  devtools: { enabled: true },
+  modules: [
+    '@nuxt/ui'
+    {{#if (eq backend "convex")}},
+    'convex-nuxt'
+    {{/if}}
+  ],
+  css: ['~/assets/css/main.css'],
+  devServer: {
+    port: 3001
+  },
+  {{#if (eq backend "convex")}}
+  convex: {
+    url: process.env.NUXT_PUBLIC_CONVEX_URL,
+  },
+  {{else if (ne backend "self")}}
+  runtimeConfig: {
+    public: {
+      serverUrl: process.env.NUXT_PUBLIC_SERVER_URL,
+    }
+  },
+  {{/if}}
+})

@@ -1,23 +1,56 @@
-import { log } from "@clack/prompts";
+import { Result } from "better-result";
+import consola from "consola";
 import fs from "fs-extra";
 import path from "node:path";
 import pc from "picocolors";
 
-import type { Frontend, ProjectConfig } from "../../types";
+import type { ProjectConfig } from "../../types";
 
 import { addPackageDependency } from "../../utils/add-package-deps";
+import { AddonSetupError, UserCancelledError } from "../../utils/errors";
 import { setupFumadocs } from "./fumadocs-setup";
 import { setupOxlint } from "./oxlint-setup";
 import { setupRuler } from "./ruler-setup";
+import { setupSkills } from "./skills-setup";
 import { setupStarlight } from "./starlight-setup";
 import { setupTauri } from "./tauri-setup";
 import { setupTui } from "./tui-setup";
 import { setupUltracite } from "./ultracite-setup";
-import { addPwaToViteConfig } from "./vite-pwa-setup";
 import { setupWxt } from "./wxt-setup";
 
-export async function setupAddons(config: ProjectConfig, isAddCommand = false) {
-  const { addons, frontend, projectDir, packageManager } = config;
+// Helper to run setup and handle Result
+async function runSetup<T, E extends AddonSetupError | UserCancelledError>(
+  setupFn: () => Promise<Result<T, E>>,
+): Promise<void> {
+  const result = await setupFn();
+  if (result.isErr()) {
+    // Re-throw user cancellation to propagate up
+    if (UserCancelledError.is(result.error)) {
+      throw result.error;
+    }
+    // Log other errors but don't fail the overall project creation
+    consola.error(pc.red(result.error.message));
+  }
+}
+
+async function runAddonStep(addon: string, step: () => Promise<void>): Promise<void> {
+  const result = await Result.tryPromise({
+    try: async () => step(),
+    catch: (e) =>
+      new AddonSetupError({
+        addon,
+        message: `Failed to set up ${addon}: ${e instanceof Error ? e.message : String(e)}`,
+        cause: e,
+      }),
+  });
+
+  if (result.isErr()) {
+    consola.error(pc.red(result.error.message));
+  }
+}
+
+export async function setupAddons(config: ProjectConfig) {
+  const { addons, frontend, projectDir } = config;
   const hasReactWebFrontend =
     frontend.includes("react-router") ||
     frontend.includes("tanstack-router") ||
@@ -27,28 +60,6 @@ export async function setupAddons(config: ProjectConfig, isAddCommand = false) {
   const hasSolidFrontend = frontend.includes("solid");
   const hasNextFrontend = frontend.includes("next");
 
-  if (addons.includes("turborepo")) {
-    await addPackageDependency({
-      devDependencies: ["turbo"],
-      projectDir,
-    });
-
-    if (isAddCommand) {
-      log.info(`${pc.yellow("Update your package.json scripts:")}
-
-${pc.dim("Replace:")} ${pc.yellow('"pnpm -r dev"')} ${pc.dim("→")} ${pc.green('"turbo dev"')}
-${pc.dim("Replace:")} ${pc.yellow('"pnpm --filter web dev"')} ${pc.dim(
-        "→",
-      )} ${pc.green('"turbo -F web dev"')}
-
-${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
-		`);
-    }
-  }
-
-  if (addons.includes("pwa") && (hasReactWebFrontend || hasSolidFrontend)) {
-    await setupPwa(projectDir, frontend);
-  }
   if (
     addons.includes("tauri") &&
     (hasReactWebFrontend ||
@@ -57,60 +68,68 @@ ${pc.cyan("Docs:")} ${pc.underline("https://turborepo.com/docs")}
       hasSolidFrontend ||
       hasNextFrontend)
   ) {
-    await setupTauri(config);
+    await runSetup(() => setupTauri(config));
   }
+
   const hasUltracite = addons.includes("ultracite");
   const hasBiome = addons.includes("biome");
   const hasHusky = addons.includes("husky");
+  const hasLefthook = addons.includes("lefthook");
   const hasOxlint = addons.includes("oxlint");
 
   if (hasUltracite) {
-    await setupUltracite(config, hasHusky);
+    const gitHooks: string[] = [];
+    if (hasHusky) gitHooks.push("husky");
+    if (hasLefthook) gitHooks.push("lefthook");
+    await runSetup(() => setupUltracite(config, gitHooks));
   } else {
     if (hasBiome) {
-      await setupBiome(projectDir);
+      await runAddonStep("biome", () => setupBiome(projectDir));
     }
-    if (hasHusky) {
+
+    if (hasOxlint) {
+      await runSetup(() => setupOxlint(projectDir, config.packageManager));
+    }
+
+    if (hasHusky || hasLefthook) {
       let linter: "biome" | "oxlint" | undefined;
       if (hasOxlint) {
         linter = "oxlint";
       } else if (hasBiome) {
         linter = "biome";
       }
-      await setupHusky(projectDir, linter);
+      if (hasHusky) {
+        await runAddonStep("husky", () => setupHusky(projectDir, linter));
+      }
+      if (hasLefthook) {
+        await runAddonStep("lefthook", () => setupLefthook(projectDir));
+      }
     }
   }
 
-  if (hasOxlint) {
-    await setupOxlint(projectDir, packageManager);
-  }
   if (addons.includes("starlight")) {
-    await setupStarlight(config);
+    await runSetup(() => setupStarlight(config));
+  }
+
+  if (addons.includes("fumadocs")) {
+    await runSetup(() => setupFumadocs(config));
+  }
+
+  if (addons.includes("opentui")) {
+    await runSetup(() => setupTui(config));
+  }
+
+  if (addons.includes("wxt")) {
+    await runSetup(() => setupWxt(config));
   }
 
   if (addons.includes("ruler")) {
-    await setupRuler(config);
+    await runSetup(() => setupRuler(config));
   }
-  if (addons.includes("fumadocs")) {
-    await setupFumadocs(config);
-  }
-  if (addons.includes("opentui")) {
-    await setupTui(config);
-  }
-  if (addons.includes("wxt")) {
-    await setupWxt(config);
-  }
-}
 
-function getWebAppDir(projectDir: string, frontends: Frontend[]) {
-  if (
-    frontends.some((f) =>
-      ["react-router", "tanstack-router", "nuxt", "svelte", "solid"].includes(f),
-    )
-  ) {
-    return path.join(projectDir, "apps/web");
+  if (addons.includes("skills")) {
+    await runSetup(() => setupSkills(config));
   }
-  return path.join(projectDir, "apps/web");
 }
 
 export async function setupBiome(projectDir: string) {
@@ -165,39 +184,10 @@ export async function setupHusky(projectDir: string, linter?: "biome" | "oxlint"
   }
 }
 
-async function setupPwa(projectDir: string, frontends: Frontend[]) {
-  const isCompatibleFrontend = frontends.some((f) =>
-    ["react-router", "tanstack-router", "solid"].includes(f),
-  );
-  if (!isCompatibleFrontend) return;
-
-  const clientPackageDir = getWebAppDir(projectDir, frontends);
-
-  if (!(await fs.pathExists(clientPackageDir))) {
-    return;
-  }
-
+export async function setupLefthook(projectDir: string) {
   await addPackageDependency({
-    dependencies: ["vite-plugin-pwa"],
-    devDependencies: ["@vite-pwa/assets-generator"],
-    projectDir: clientPackageDir,
+    devDependencies: ["lefthook"],
+    projectDir,
   });
-
-  const clientPackageJsonPath = path.join(clientPackageDir, "package.json");
-  if (await fs.pathExists(clientPackageJsonPath)) {
-    const packageJson = await fs.readJson(clientPackageJsonPath);
-
-    packageJson.scripts = {
-      ...packageJson.scripts,
-      "generate-pwa-assets": "pwa-assets-generator",
-    };
-
-    await fs.writeJson(clientPackageJsonPath, packageJson, { spaces: 2 });
-  }
-
-  const viteConfigTs = path.join(clientPackageDir, "vite.config.ts");
-
-  if (await fs.pathExists(viteConfigTs)) {
-    await addPwaToViteConfig(viteConfigTs, path.basename(projectDir));
-  }
+  // lefthook.yml is generated by template-generator from templates/addons/lefthook/
 }

@@ -1,4 +1,5 @@
 import { autocompleteMultiselect, isCancel, log, spinner } from "@clack/prompts";
+import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
 import path from "node:path";
@@ -6,108 +7,127 @@ import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 
-import { exitCancelled } from "../../utils/errors";
+import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
+import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs, getPackageExecutionCommand } from "../../utils/package-runner";
 
-export async function setupRuler(config: ProjectConfig) {
+export async function setupRuler(
+  config: ProjectConfig,
+): Promise<Result<void, AddonSetupError | UserCancelledError>> {
+  if (shouldSkipExternalCommands()) {
+    return Result.ok(undefined);
+  }
+
   const { packageManager, projectDir } = config;
 
-  try {
-    log.info("Setting up Ruler...");
+  log.info("Setting up Ruler...");
 
-    const rulerDir = path.join(projectDir, ".ruler");
+  const rulerDir = path.join(projectDir, ".ruler");
 
-    if (!(await fs.pathExists(rulerDir))) {
-      log.error(
-        pc.red(
-          "Ruler template directory not found. Please ensure ruler addon is properly installed.",
-        ),
-      );
-      return;
-    }
+  if (!(await fs.pathExists(rulerDir))) {
+    log.error(
+      pc.red(
+        "Ruler template directory not found. Please ensure ruler addon is properly installed.",
+      ),
+    );
+    return Result.ok(undefined);
+  }
 
-    const EDITORS = {
-      amp: { label: "AMP" },
-      copilot: { label: "GitHub Copilot" },
-      claude: { label: "Claude Code" },
-      codex: { label: "OpenAI Codex CLI" },
-      cursor: { label: "Cursor" },
-      windsurf: { label: "Windsurf" },
-      cline: { label: "Cline" },
-      aider: { label: "Aider" },
-      firebase: { label: "Firebase Studio" },
-      "gemini-cli": { label: "Gemini CLI" },
-      junie: { label: "Junie" },
-      kilocode: { label: "Kilo Code" },
-      opencode: { label: "OpenCode" },
-      crush: { label: "Crush" },
-      zed: { label: "Zed" },
-      qwen: { label: "Qwen" },
-      amazonqcli: { label: "Amazon Q CLI" },
-      augmentcode: { label: "AugmentCode" },
-      firebender: { label: "Firebender" },
-      goose: { label: "Goose" },
-      jules: { label: "Jules" },
-      kiro: { label: "Kiro" },
-      openhands: { label: "Open Hands" },
-      roo: { label: "RooCode" },
-      trae: { label: "Trae AI" },
-      warp: { label: "Warp" },
-    } as const;
+  const EDITORS = {
+    agentsmd: { label: "Agents.md" },
+    aider: { label: "Aider" },
+    amazonqcli: { label: "Amazon Q CLI" },
+    amp: { label: "AMP" },
+    antigravity: { label: "Antigravity" },
+    augmentcode: { label: "AugmentCode" },
+    claude: { label: "Claude Code" },
+    cline: { label: "Cline" },
+    codex: { label: "OpenAI Codex CLI" },
+    copilot: { label: "GitHub Copilot" },
+    crush: { label: "Crush" },
+    cursor: { label: "Cursor" },
+    factory: { label: "Factory" },
+    firebase: { label: "Firebase Studio" },
+    firebender: { label: "Firebender" },
+    "gemini-cli": { label: "Gemini CLI" },
+    goose: { label: "Goose" },
+    jules: { label: "Jules" },
+    junie: { label: "Junie" },
+    kilocode: { label: "Kilo Code" },
+    kiro: { label: "Kiro" },
+    mistral: { label: "Mistral" },
+    opencode: { label: "OpenCode" },
+    openhands: { label: "Open Hands" },
+    pi: { label: "Pi" },
+    qwen: { label: "Qwen" },
+    roo: { label: "RooCode" },
+    trae: { label: "Trae AI" },
+    warp: { label: "Warp" },
+    windsurf: { label: "Windsurf" },
+    zed: { label: "Zed" },
+  } as const;
 
-    const selectedEditors = await autocompleteMultiselect({
-      message: "Select AI assistants for Ruler",
-      options: Object.entries(EDITORS).map(([key, v]) => ({
-        value: key,
-        label: v.label,
-      })),
-      required: false,
-    });
+  const selectedEditors = await autocompleteMultiselect({
+    message: "Select AI assistants for Ruler",
+    options: Object.entries(EDITORS).map(([key, v]) => ({
+      value: key,
+      label: v.label,
+    })),
+    required: false,
+  });
 
-    if (isCancel(selectedEditors)) return exitCancelled("Operation cancelled");
+  if (isCancel(selectedEditors)) {
+    return userCancelled("Operation cancelled");
+  }
 
-    if (selectedEditors.length === 0) {
-      log.info("No AI assistants selected. To apply rules later, run:");
-      log.info(
-        pc.cyan(
-          `${getPackageExecutionCommand(packageManager, "@intellectronica/ruler@latest apply --local-only")}`,
-        ),
-      );
-      return;
-    }
+  if (selectedEditors.length === 0) {
+    log.info("No AI assistants selected. To apply rules later, run:");
+    log.info(
+      pc.cyan(
+        `${getPackageExecutionCommand(packageManager, "@intellectronica/ruler@latest apply --local-only")}`,
+      ),
+    );
+    return Result.ok(undefined);
+  }
 
-    const configFile = path.join(rulerDir, "ruler.toml");
-    const currentConfig = await fs.readFile(configFile, "utf-8");
+  const configFile = path.join(rulerDir, "ruler.toml");
+  const currentConfig = await fs.readFile(configFile, "utf-8");
 
-    let updatedConfig = currentConfig;
+  let updatedConfig = currentConfig;
 
-    const defaultAgentsLine = `default_agents = [${selectedEditors.map((editor) => `"${editor}"`).join(", ")}]`;
-    updatedConfig = updatedConfig.replace(/default_agents = \[\]/, defaultAgentsLine);
+  const defaultAgentsLine = `default_agents = [${selectedEditors.map((editor) => `"${editor}"`).join(", ")}]`;
+  updatedConfig = updatedConfig.replace(/default_agents = \[\]/, defaultAgentsLine);
 
-    await fs.writeFile(configFile, updatedConfig);
+  await fs.writeFile(configFile, updatedConfig);
 
-    await addRulerScriptToPackageJson(projectDir, packageManager);
+  await addRulerScriptToPackageJson(projectDir, packageManager);
 
-    const s = spinner();
-    s.start("Applying rules with Ruler...");
+  const s = spinner();
+  s.start("Applying rules with Ruler...");
 
-    try {
+  const applyResult = await Result.tryPromise({
+    try: async () => {
       const rulerApplyArgs = getPackageExecutionArgs(
         packageManager,
         `@intellectronica/ruler@latest apply --agents ${selectedEditors.join(",")} --local-only`,
       );
       await $({ cwd: projectDir, env: { CI: "true" } })`${rulerApplyArgs}`;
+    },
+    catch: (e) =>
+      new AddonSetupError({
+        addon: "ruler",
+        message: `Failed to apply rules: ${e instanceof Error ? e.message : String(e)}`,
+        cause: e,
+      }),
+  });
 
-      s.stop("Applied rules with Ruler");
-    } catch {
-      s.stop(pc.red("Failed to apply rules"));
-    }
-  } catch (error) {
-    log.error(pc.red("Failed to set up Ruler"));
-    if (error instanceof Error) {
-      console.error(pc.red(error.message));
-    }
+  if (applyResult.isErr()) {
+    s.stop(pc.red("Failed to apply rules"));
+    return applyResult;
   }
+
+  s.stop("Applied rules with Ruler");
+  return Result.ok(undefined);
 }
 
 async function addRulerScriptToPackageJson(

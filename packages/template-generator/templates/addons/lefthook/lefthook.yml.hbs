@@ -1,0 +1,24 @@
+# Lefthook configuration
+# https://github.com/evilmartians/lefthook
+
+pre-commit:
+  parallel: true
+  jobs:
+{{#if (includes addons "biome")}}
+    - name: biome
+      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
+      run: {{packageManager}} biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      stage_fixed: true
+{{else if (includes addons "oxlint")}}
+    - name: oxlint
+      run: {{packageManager}} oxlint --fix {staged_files}
+      stage_fixed: true
+    - name: oxfmt
+      run: {{packageManager}} oxfmt --write {staged_files}
+      stage_fixed: true
+{{else}}
+    # Add your pre-commit commands here
+    # Example:
+    # - name: lint
+    #   run: {{packageManagerRunCmd}} lint
+{{/if}}

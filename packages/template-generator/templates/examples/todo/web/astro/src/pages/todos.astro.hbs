@@ -1,0 +1,163 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Todos - {{projectName}}">
+  <div class="p-4 max-w-2xl mx-auto">
+    <h1 class="text-xl mb-4 text-white">Todos</h1>
+
+    <form id="add-form" class="flex gap-2 mb-4">
+      <input
+        type="text"
+        id="new-todo"
+        placeholder="New task..."
+        class="p-2 flex-grow rounded border border-neutral-700 bg-neutral-800 text-white placeholder-neutral-500"
+      />
+      <button
+        type="submit"
+        id="add-btn"
+        class="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50 hover:bg-blue-600 transition-colors"
+      >
+        Add
+      </button>
+    </form>
+
+    <div id="loading" class="text-neutral-400">Loading...</div>
+    <div id="empty" class="hidden text-neutral-400">No todos yet.</div>
+    <ul id="todo-list" class="space-y-1 hidden"></ul>
+    <p id="error" class="mt-4 text-red-500 hidden"></p>
+  </div>
+</Layout>
+
+<script>
+  import { orpc } from "../lib/orpc";
+
+  interface Todo {
+    id: number;
+    text: string;
+    completed: boolean;
+  }
+
+  const newTodoInput = document.getElementById("new-todo") as HTMLInputElement;
+  const addBtn = document.getElementById("add-btn") as HTMLButtonElement;
+  const addForm = document.getElementById("add-form") as HTMLFormElement;
+  const loadingEl = document.getElementById("loading")!;
+  const emptyEl = document.getElementById("empty")!;
+  const todoList = document.getElementById("todo-list")!;
+  const errorEl = document.getElementById("error")!;
+
+  let todos: Todo[] = [];
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.classList.remove("hidden");
+    setTimeout(() => errorEl.classList.add("hidden"), 3000);
+  }
+
+  function renderTodos() {
+    loadingEl.classList.add("hidden");
+    
+    if (todos.length === 0) {
+      emptyEl.classList.remove("hidden");
+      todoList.classList.add("hidden");
+      return;
+    }
+
+    emptyEl.classList.add("hidden");
+    todoList.classList.remove("hidden");
+    todoList.innerHTML = todos.map(todo => `
+      <li class="flex items-center justify-between p-2 rounded bg-neutral-800/50" data-id="${todo.id}">
+        <div class="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="todo-${todo.id}"
+            ${todo.completed ? "checked" : ""}
+            class="toggle-checkbox cursor-pointer"
+          />
+          <label for="todo-${todo.id}" class="${todo.completed ? "line-through text-neutral-500" : "text-white"}">
+            ${todo.text}
+          </label>
+        </div>
+        <button
+          class="delete-btn text-red-500 px-2 hover:text-red-400 transition-colors"
+          aria-label="Delete todo"
+        >
+          X
+        </button>
+      </li>
+    `).join("");
+
+    // Add event listeners
+    todoList.querySelectorAll(".toggle-checkbox").forEach(checkbox => {
+      checkbox.addEventListener("change", async (e) => {
+        const li = (e.target as HTMLElement).closest("li")!;
+        const id = parseInt(li.dataset.id!);
+        const todo = todos.find(t => t.id === id);
+        if (todo) {
+          await toggleTodo(id, todo.completed);
+        }
+      });
+    });
+
+    todoList.querySelectorAll(".delete-btn").forEach(btn => {
+      btn.addEventListener("click", async (e) => {
+        const li = (e.target as HTMLElement).closest("li")!;
+        const id = parseInt(li.dataset.id!);
+        await deleteTodo(id);
+      });
+    });
+  }
+
+  async function loadTodos() {
+    try {
+      todos = await orpc.todo.getAll();
+      renderTodos();
+    } catch (e) {
+      loadingEl.classList.add("hidden");
+      showError("Failed to load todos");
+    }
+  }
+
+  async function addTodo(text: string) {
+    addBtn.disabled = true;
+    addBtn.textContent = "Adding...";
+    try {
+      await orpc.todo.create({ text });
+      newTodoInput.value = "";
+      await loadTodos();
+    } catch (e) {
+      showError("Failed to add todo");
+    } finally {
+      addBtn.disabled = false;
+      addBtn.textContent = "Add";
+    }
+  }
+
+  async function toggleTodo(id: number, completed: boolean) {
+    try {
+      await orpc.todo.toggle({ id, completed: !completed });
+      await loadTodos();
+    } catch (e) {
+      showError("Failed to update todo");
+    }
+  }
+
+  async function deleteTodo(id: number) {
+    try {
+      await orpc.todo.delete({ id });
+      await loadTodos();
+    } catch (e) {
+      showError("Failed to delete todo");
+    }
+  }
+
+  addForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const text = newTodoInput.value.trim();
+    if (text) {
+      await addTodo(text);
+    }
+  });
+
+  loadTodos();
+</script>

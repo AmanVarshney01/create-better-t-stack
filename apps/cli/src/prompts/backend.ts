@@ -1,15 +1,15 @@
-import { isCancel, select } from "@clack/prompts";
-
 import type { Backend, Frontend } from "../types";
 
 import { DEFAULT_CONFIG } from "../constants";
-import { exitCancelled } from "../utils/errors";
+import { UserCancelledError } from "../utils/errors";
+import { isCancel, navigableSelect } from "./navigable";
 
-// Temporarily restrict to Next.js and TanStack Start only for backend="self"
+// Frontends that support backend="self" (fullstack mode with built-in server routes)
 const FULLSTACK_FRONTENDS: readonly Frontend[] = [
   "next",
   "tanstack-start",
-  // "nuxt",      // TODO: Add support in future update
+  "nuxt",
+  "astro",
   // "svelte",    // TODO: Add support in future update
 ] as const;
 
@@ -19,7 +19,7 @@ export async function getBackendFrameworkChoice(
 ) {
   if (backendFramework !== undefined) return backendFramework;
 
-  const hasIncompatibleFrontend = frontends?.some((f) => f === "solid");
+  const hasIncompatibleFrontend = frontends?.some((f) => f === "solid" || f === "astro");
   const hasFullstackFrontend = frontends?.some((f) => FULLSTACK_FRONTENDS.includes(f));
 
   const backendOptions: Array<{
@@ -73,13 +73,13 @@ export async function getBackendFrameworkChoice(
     hint: "No backend server",
   });
 
-  const response = await select<Backend>({
+  const response = await navigableSelect<Backend>({
     message: "Select backend",
     options: backendOptions,
     initialValue: hasFullstackFrontend ? "self" : DEFAULT_CONFIG.backend,
   });
 
-  if (isCancel(response)) return exitCancelled("Operation cancelled");
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }

@@ -5,109 +5,185 @@ description: Understanding the structure of projects created by Better-T-Stack C
 
 ## Overview
 
-Better-T-Stack CLI scaffolds a monorepo with `apps/*` and, when needed, `packages/*`. The exact structure depends on your choices (frontend, backend, API, database/ORM, auth, addons, runtime, deploy). This page mirrors what the CLI actually writes.
+Better-T-Stack CLI scaffolds a monorepo with `apps/*` and `packages/*`. `packages/config` is always present; other packages and apps appear based on your choices (frontend, backend, API, database/ORM, auth, addons, runtime, deploy). This page mirrors what the CLI actually writes.
 
 ## Root layout
 
 At the repository root you will see:
 
-```
-/
-├── apps/                  # Applications (web, server, native, docs)
-├── packages/             # Only when needed (e.g. Convex backend)
-├── package.json          # Root package.json (scripts updated by CLI)
-├── bts.jsonc             # Better‑T Stack configuration (always written)
-├── turbo.json            # Only when addon "turborepo" is selected
-├── pnpm-workspace.yaml   # Only when packageManager=pnpm
-├── bunfig.toml           # Only when packageManager=bun
-├── .npmrc                # pnpm + (native or nuxt) for alias resolution
-└── README.md             # Generated quickstart
-```
+<Files>
+  <Folder name="/" defaultOpen>
+    <Folder name="apps">
+      <File name="..." />
+    </Folder>
+    <Folder name="packages">
+      <File name="..." />
+    </Folder>
+    <File name="package.json" />
+    <File name="bts.jsonc" />
+    <File name="turbo.json" />
+    <File name="pnpm-workspace.yaml" />
+    <File name="bunfig.toml" />
+    <File name=".npmrc" />
+    <File name="README.md" />
+  </Folder>
+</Files>
 
 Notes:
 
 - `bts.jsonc` lets the CLI detect and enhance your project later; keep it if you plan to use `bts add`.
 - `turbo.json` exists only if you picked the Turborepo addon.
+- `pnpm-workspace.yaml`, `bunfig.toml`, and `.npmrc` are added based on the package manager you choose.
+- `packages/infra` is created only when Cloudflare deployment is enabled.
 
 ## Monorepo structure by backend
 
-### Non-Convex backends (hono, express, fastify, elysia, next)
+### Server backends (hono, express, fastify, elysia)
 
-```
-my-app/
-├── apps/
-│   ├── web/           # Present if you picked a web framework
-│   ├── server/        # Backend API (framework depends on your choice)
-│   ├── native/        # Present if you picked React Native (Expo)
-│   └── docs/          # Present if you picked the Starlight/Fumadocs addon
-└── packages/          # May exist but not used by default
-```
-
-### Convex backend
-
-```
-my-app/
-├── apps/
-│   ├── web/           # Present if you picked a web framework
-│   ├── native/        # Present if you picked React Native (Expo)
-│   └── docs/          # Present if you picked the Starlight/Fumadocs addon
-└── packages/
-    └── backend/       # Convex functions, schema and config
-```
-
-## Frontend Structure (apps/web)
-
-The structure varies by framework. Items marked “(auth)” or “(API)” appear only when those options are enabled.
-
-### React with TanStack Router
-
-```
-apps/web/
-├── src/
-│   ├── components/
-│   │   ├── ui/                 # shadcn/ui primitives (from web base)
-│   │   ├── header.tsx
-│   │   ├── loader.tsx
-│   │   ├── mode-toggle.tsx
-│   │   └── theme-provider.tsx
-│   ├── routes/
-│   │   ├── __root.tsx          # Root layout
-│   │   └── index.tsx           # Home
-│   ├── lib/
-│   │   └── utils.ts
-│   ├── utils/
-│   │   └── trpc.ts (API=trpc) | orpc.ts (API=orpc)
-│   ├── main.tsx
-│   └── index.css
-├── index.html
-├── components.json            # shadcn/ui config
-├── tsconfig.json
-├── vite.config.ts
-└── package.json
-```
-
-### Next.js
-
-```
-apps/web/
-├── src/
-│   ├── app/
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   └── components/
-│       ├── mode-toggle.tsx
-│       ├── providers.tsx
-│       └── theme-provider.tsx
-├── components.json
-├── next.config.ts
-├── postcss.config.mjs
-├── tsconfig.json
-└── package.json
-```
+<Files>
+  <Folder name="my-app" defaultOpen>
+    <Folder name="apps" defaultOpen>
+      <Folder name="web">
+        <File name="..." />
+      </Folder>
+      <Folder name="server">
+        <File name="..." />
+      </Folder>
+      <Folder name="native">
+        <File name="..." />
+      </Folder>
+      <Folder name="docs">
+        <File name="..." />
+      </Folder>
+    </Folder>
+    <Folder name="packages">
+      <File name="..." />
+    </Folder>
+  </Folder>
+</Files>
 
 Notes:
 
-- If you choose `backend=next`, the backend is scaffolded separately in `apps/server`. The web app does not include API routes.
+- `apps/docs` is created only with the Starlight addon.
+- `apps/fumadocs` is created only with the Fumadocs addon.
+
+### Self backend (fullstack)
+
+When `--backend self` is used, API routes live inside `apps/web` (no `apps/server`).
+
+<Files>
+  <Folder name="my-app" defaultOpen>
+    <Folder name="apps" defaultOpen>
+      <Folder name="web">
+        <File name="..." />
+      </Folder>
+      <Folder name="native">
+        <File name="..." />
+      </Folder>
+      <Folder name="docs">
+        <File name="..." />
+      </Folder>
+    </Folder>
+    <Folder name="packages">
+      <File name="..." />
+    </Folder>
+  </Folder>
+</Files>
+
+### Convex backend
+
+<Files>
+  <Folder name="my-app" defaultOpen>
+    <Folder name="apps" defaultOpen>
+      <Folder name="web">
+        <File name="..." />
+      </Folder>
+      <Folder name="native">
+        <File name="..." />
+      </Folder>
+      <Folder name="docs">
+        <File name="..." />
+      </Folder>
+    </Folder>
+    <Folder name="packages" defaultOpen>
+      <Folder name="backend">
+        <File name="..." />
+      </Folder>
+      <Folder name="config">
+        <File name="..." />
+      </Folder>
+      <Folder name="env">
+        <File name="..." />
+      </Folder>
+    </Folder>
+  </Folder>
+</Files>
+
+## Frontend Structure (apps/web)
+
+The structure varies by framework. Items marked "(auth)" or "(API)" appear only when those options are enabled.
+
+### React with TanStack Router
+
+<Files>
+  <Folder name="apps/web" defaultOpen>
+    <Folder name="src" defaultOpen>
+      <Folder name="components" defaultOpen>
+        <Folder name="ui">
+          <File name="..." />
+        </Folder>
+        <File name="header.tsx" />
+        <File name="loader.tsx" />
+        <File name="mode-toggle.tsx" />
+        <File name="theme-provider.tsx" />
+      </Folder>
+      <Folder name="routes">
+        <File name="__root.tsx" />
+        <File name="index.tsx" />
+      </Folder>
+      <Folder name="lib">
+        <File name="utils.ts" />
+      </Folder>
+      <Folder name="utils">
+        <File name="trpc.ts" />
+      </Folder>
+      <File name="main.tsx" />
+      <File name="index.css" />
+    </Folder>
+    <File name="index.html" />
+    <File name="components.json" />
+    <File name="tsconfig.json" />
+    <File name="vite.config.ts" />
+    <File name="package.json" />
+  </Folder>
+</Files>
+
+### Next.js
+
+<Files>
+  <Folder name="apps/web" defaultOpen>
+    <Folder name="src" defaultOpen>
+      <Folder name="app">
+        <File name="layout.tsx" />
+        <File name="page.tsx" />
+      </Folder>
+      <Folder name="components">
+        <File name="mode-toggle.tsx" />
+        <File name="providers.tsx" />
+        <File name="theme-provider.tsx" />
+      </Folder>
+    </Folder>
+    <File name="components.json" />
+    <File name="next.config.ts" />
+    <File name="postcss.config.mjs" />
+    <File name="tsconfig.json" />
+    <File name="package.json" />
+  </Folder>
+</Files>
+
+Notes:
+
+- If you choose `--backend self` with Next.js, TanStack Start, Nuxt, or Astro, API routes live inside `apps/web` (no `apps/server`).
 - (auth) adds `src/app/login/*` and `src/app/dashboard/*` plus sign-in components.
 
 ## Backend Structure (apps/server)
@@ -116,47 +192,34 @@ The server structure depends on your backend choice:
 
 ### Hono backend
 
-```
-apps/server/
-├── src/
-│   ├── routers/
-│   │   └── index.ts          # Base router
-│   └── index.ts              # Hono app entry
-├── package.json
-└── tsconfig.json
-```
+<Files>
+  <Folder name="apps/server" defaultOpen>
+    <Folder name="src" defaultOpen>
+      <Folder name="routers">
+        <File name="index.ts" />
+      </Folder>
+      <File name="index.ts" />
+    </Folder>
+    <File name="package.json" />
+    <File name="tsconfig.json" />
+  </Folder>
+</Files>
 
 ### Express / Fastify / Elysia
 
-```
-apps/server/
-├── src/
-│   └── index.ts              # Framework entry
-├── package.json
-└── tsconfig.json
-```
-
-### Next (backend)
-
-```
-apps/server/
-├── src/
-│   ├── app/
-│   │   └── route.ts          # App Router endpoint
-│   └── middleware.ts
-├── next.config.ts
-├── tsconfig.json
-└── package.json
-```
+<Files>
+  <Folder name="apps/server" defaultOpen>
+    <Folder name="src" defaultOpen>
+      <File name="index.ts" />
+    </Folder>
+    <File name="package.json" />
+    <File name="tsconfig.json" />
+  </Folder>
+</Files>
 
 ### Workers runtime (optional)
 
-When `runtime=workers`, you’ll also get:
-
-```
-apps/server/
-└── wrangler.jsonc            # Cloudflare Workers config (template)
-```
+When `runtime=workers`, the server targets Cloudflare Workers. If you also choose Cloudflare deployment, you'll get `packages/infra/alchemy.run.ts` and related infra files.
 
 API and auth scaffolding (conditional):
 
@@ -170,30 +233,44 @@ Added only when you selected a database and ORM:
 
 ### Drizzle ORM
 
-```
-apps/server/
-├── src/db/
-│   └── index.ts              # Database connection
-├── drizzle.config.ts         # Drizzle configuration
-└── drizzle/                  # Generated migrations (after you run commands)
-```
+<Files>
+  <Folder name="apps/server" defaultOpen>
+    <Folder name="src">
+      <Folder name="db">
+        <File name="index.ts" />
+      </Folder>
+    </Folder>
+    <File name="drizzle.config.ts" />
+    <Folder name="drizzle">
+      <File name="..." />
+    </Folder>
+  </Folder>
+</Files>
 
 ### Prisma ORM
 
-```
-apps/server/
-└── prisma/
-    ├── schema.prisma         # Database schema
-    └── migrations/           # Generated after running Prisma commands
-```
+<Files>
+  <Folder name="apps/server" defaultOpen>
+    <Folder name="prisma" defaultOpen>
+      <File name="schema.prisma" />
+      <Folder name="migrations">
+        <File name="..." />
+      </Folder>
+    </Folder>
+  </Folder>
+</Files>
 
 ### Mongoose (MongoDB)
 
-```
-apps/server/
-└── src/db/
-    └── index.ts              # Mongoose connection
-```
+<Files>
+  <Folder name="apps/server" defaultOpen>
+    <Folder name="src">
+      <Folder name="db">
+        <File name="index.ts" />
+      </Folder>
+    </Folder>
+  </Folder>
+</Files>
 
 ### Auth + DB
 
@@ -211,39 +288,60 @@ If `dbSetup=docker`, a `docker-compose.yml` is added in `apps/server/` for your 
 
 Created only when you include React Native (NativeWind or Unistyles):
 
-```
-apps/native/
-├── app/                 # App screens
-│   ├── (tabs)/         # Tab navigation
-│   ├── _layout.tsx     # Root layout
-│   └── index.tsx       # Home screen
-├── components/         # React Native components
-├── lib/               # Utilities
-├── assets/            # Images, fonts
-├── app.json          # Expo configuration
-├── package.json      # Dependencies
-└── tsconfig.json     # TypeScript config
-```
+<Files>
+  <Folder name="apps/native" defaultOpen>
+    <Folder name="app" defaultOpen>
+      <Folder name="(tabs)">
+        <File name="..." />
+      </Folder>
+      <File name="_layout.tsx" />
+      <File name="index.tsx" />
+    </Folder>
+    <Folder name="components">
+      <File name="..." />
+    </Folder>
+    <Folder name="lib">
+      <File name="..." />
+    </Folder>
+    <Folder name="assets">
+      <File name="..." />
+    </Folder>
+    <File name="app.json" />
+    <File name="package.json" />
+    <File name="tsconfig.json" />
+  </Folder>
+</Files>
 
 If an API is selected, a client utility is added:
 
 - API=trpc: `utils/trpc.ts`
 - API=orpc: `utils/orpc.ts`
 
-## Documentation Structure (apps/docs)
+## Documentation Structure
 
-When using Starlight or Fumadocs addon:
+### Starlight (apps/docs)
 
-```
-apps/docs/
-├── src/
-│   ├── content/        # Documentation content
-│   │   └── docs/       # Doc pages
-│   └── pages/          # Astro pages (Starlight)
-├── astro.config.mjs    # Astro config (Starlight)
-├── package.json
-└── tsconfig.json
-```
+<Files>
+  <Folder name="apps/docs" defaultOpen>
+    <Folder name="src" defaultOpen>
+      <Folder name="content">
+        <Folder name="docs">
+          <File name="..." />
+        </Folder>
+      </Folder>
+      <Folder name="pages">
+        <File name="..." />
+      </Folder>
+    </Folder>
+    <File name="astro.config.mjs" />
+    <File name="package.json" />
+    <File name="tsconfig.json" />
+  </Folder>
+</Files>
+
+### Fumadocs (apps/fumadocs)
+
+Fumadocs is generated by `create-fumadocs-app` inside `apps/fumadocs`. The exact structure depends on the template you choose (MDX vs static).
 
 ## Configuration Files
 
@@ -256,17 +354,17 @@ apps/docs/
   "createdAt": "<timestamp>",
   "database": "<none|sqlite|postgres|mysql|mongodb>",
   "orm": "<none|drizzle|prisma|mongoose>",
-  "backend": "<none|hono|express|fastify|elysia|next|convex>",
-  "runtime": "<bun|node|workers>",
-  "frontend": ["<next|tanstack-router|react-router|tanstack-start|nuxt|svelte|solid>"] ,
-  "addons": ["<turborepo|biome|husky|pwa|starlight>"] ,
+  "backend": "<none|hono|express|fastify|elysia|convex|self>",
+  "runtime": "<bun|node|workers|none>",
+  "frontend": ["<tanstack-router|react-router|tanstack-start|next|nuxt|svelte|solid|astro|native-bare|native-uniwind|native-unistyles|none>"] ,
+  "addons": ["<pwa|tauri|starlight|fumadocs|biome|lefthook|husky|ruler|turborepo|ultracite|oxlint|opentui|wxt|skills|none>"] ,
   "examples": ["<ai|todo|none>"] ,
   "auth": <"better-auth"|"clerk"|"none">,
   "packageManager": "<bun|pnpm|npm>",
-  "dbSetup": "<none|docker|d1>",
+  "dbSetup": "<turso|neon|prisma-postgres|planetscale|mongodb-atlas|supabase|d1|docker|none>",
   "api": "<none|trpc|orpc>",
-  "webDeploy": "<none|wrangler|alchemy>",
-  "serverDeploy": "<none|wrangler|alchemy>"
+  "webDeploy": "<cloudflare|none>",
+  "serverDeploy": "<cloudflare|none>"
 }
 ```
 
@@ -292,12 +390,14 @@ Generated only if you chose the Turborepo addon.
 
 ## Shared packages
 
-By default, no shared packages are created. You will see `packages/backend` only when using the Convex backend. You can add more packages manually as your repo grows.
+Better-T-Stack always creates `packages/config`. Other packages are added based on your selections:
 
-```
-packages/
-└── backend/            # Only with Convex backend
-```
+- `packages/env`: when any frontend is selected or the backend is not `none`
+- `packages/api`: when `--api` is not `none` (non-Convex)
+- `packages/auth`: when `--auth` is not `none` (non-Convex)
+- `packages/db`: when both `--database` and `--orm` are selected (non-Convex)
+- `packages/backend`: Convex backend only
+- `packages/infra`: Cloudflare deployment only
 
 ## Development Scripts
 
@@ -336,10 +436,11 @@ Without Turborepo (example for Bun):
 Notes:
 
 - Convex adds `dev:setup` for initial backend configuration.
+- Database scripts (`db:*`) are added only when a database + ORM are selected (Drizzle/Prisma). D1 + Cloudflare omits `db:studio`.
 
 ## Key Details
 
-- **Monorepo**: `apps/*` always; `packages/*` only when needed (Convex)
+- **Monorepo**: `apps/*` and `packages/*` are created only when relevant (except `packages/config`, which is always present)
 - **React web base**: shadcn/ui primitives, `components.json`, common utilities
 - **API clients**: `src/utils/trpc.ts` or `src/utils/orpc.ts` added to web/native when selected
 - **Auth**: Adds authentication setup based on provider:
@@ -347,6 +448,6 @@ Notes:
   - `clerk`: Clerk provider setup and authentication components
 - **ORM/DB**: Drizzle/Prisma/Mongoose files added only when selected
 - **Extras**: `pnpm-workspace.yaml`, `bunfig.toml`, or `.npmrc` added based on package manager and choices
-- **Deploy**: Workers deploy adds `wrangler.jsonc` templates to the appropriate app(s)
+- **Deploy**: Cloudflare deployment adds `packages/infra/alchemy.run.ts` and related infra files
 
-This reflects the actual files written by the CLI so new projects match what’s documented here.
+This reflects the actual files written by the CLI so new projects match what's documented here.

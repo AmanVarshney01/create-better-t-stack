@@ -1,5 +1,3 @@
-import { group } from "@clack/prompts";
-
 import type {
   Addons,
   API,
@@ -18,7 +16,9 @@ import type {
   WebDeploy,
 } from "../types";
 
-import { exitCancelled } from "../utils/errors";
+import { DEFAULT_CONFIG } from "../constants";
+import { isSilent } from "../utils/context";
+import { UserCancelledError } from "../utils/errors";
 import { getAddonsChoice } from "./addons";
 import { getApiChoice } from "./api";
 import { getAuthChoice } from "./auth";
@@ -29,6 +29,7 @@ import { getExamplesChoice } from "./examples";
 import { getFrontendChoice } from "./frontend";
 import { getGitChoice } from "./git";
 import { getinstallChoice } from "./install";
+import { navigableGroup } from "./navigable-group";
 import { getORMChoice } from "./orm";
 import { getPackageManagerChoice } from "./package-manager";
 import { getPaymentsChoice } from "./payments";
@@ -61,7 +62,31 @@ export async function gatherConfig(
   projectDir: string,
   relativePath: string,
 ) {
-  const result = await group<PromptGroupResults>(
+  if (isSilent()) {
+    return {
+      projectName,
+      projectDir,
+      relativePath,
+      frontend: flags.frontend ?? [...DEFAULT_CONFIG.frontend],
+      backend: flags.backend ?? DEFAULT_CONFIG.backend,
+      runtime: flags.runtime ?? DEFAULT_CONFIG.runtime,
+      database: flags.database ?? DEFAULT_CONFIG.database,
+      orm: flags.orm ?? DEFAULT_CONFIG.orm,
+      auth: flags.auth ?? DEFAULT_CONFIG.auth,
+      payments: flags.payments ?? DEFAULT_CONFIG.payments,
+      addons: flags.addons ?? [...DEFAULT_CONFIG.addons],
+      examples: flags.examples ?? [...DEFAULT_CONFIG.examples],
+      git: flags.git ?? DEFAULT_CONFIG.git,
+      packageManager: flags.packageManager ?? DEFAULT_CONFIG.packageManager,
+      install: flags.install ?? DEFAULT_CONFIG.install,
+      dbSetup: flags.dbSetup ?? DEFAULT_CONFIG.dbSetup,
+      api: flags.api ?? DEFAULT_CONFIG.api,
+      webDeploy: flags.webDeploy ?? DEFAULT_CONFIG.webDeploy,
+      serverDeploy: flags.serverDeploy ?? DEFAULT_CONFIG.serverDeploy,
+    };
+  }
+
+  const result = await navigableGroup<PromptGroupResults>(
     {
       frontend: () => getFrontendChoice(flags.frontend, flags.backend, flags.auth),
       backend: ({ results }) => getBackendFrameworkChoice(flags.backend, results.frontend),
@@ -112,7 +137,9 @@ export async function gatherConfig(
       install: () => getinstallChoice(flags.install),
     },
     {
-      onCancel: () => exitCancelled("Operation cancelled"),
+      onCancel: () => {
+        throw new UserCancelledError({ message: "Operation cancelled" });
+      },
     },
   );
 

@@ -1,3 +1,4 @@
+import { Result } from "better-result";
 import path from "node:path";
 
 import type {
@@ -15,6 +16,8 @@ import type {
   ServerDeploy,
   WebDeploy,
 } from "../types";
+
+import { ValidationError } from "./errors";
 
 export function processArrayOption<T>(options: (T | "none")[] | undefined) {
   if (!options || options.length === 0) return [];
@@ -113,19 +116,31 @@ export function getProvidedFlags(options: CLIInput) {
   );
 }
 
-export function validateNoneExclusivity<T>(
+function validateNoneExclusivity<T>(
   options: (T | "none")[] | undefined,
   optionName: string,
-) {
-  if (!options || options.length === 0) return;
+): Result<void, ValidationError> {
+  if (!options || options.length === 0) return Result.ok(undefined);
 
   if (options.includes("none" as T | "none") && options.length > 1) {
-    throw new Error(`Cannot combine 'none' with other ${optionName}.`);
+    return Result.err(
+      new ValidationError({
+        message: `Cannot combine 'none' with other ${optionName}.`,
+      }),
+    );
   }
+  return Result.ok(undefined);
 }
 
-export function validateArrayOptions(options: CLIInput) {
-  validateNoneExclusivity(options.frontend, "frontend options");
-  validateNoneExclusivity(options.addons, "addons");
-  validateNoneExclusivity(options.examples, "examples");
+export function validateArrayOptions(options: CLIInput): Result<void, ValidationError> {
+  const frontendResult = validateNoneExclusivity(options.frontend, "frontend options");
+  if (frontendResult.isErr()) return frontendResult;
+
+  const addonsResult = validateNoneExclusivity(options.addons, "addons");
+  if (addonsResult.isErr()) return addonsResult;
+
+  const examplesResult = validateNoneExclusivity(options.examples, "examples");
+  if (examplesResult.isErr()) return examplesResult;
+
+  return Result.ok(undefined);
 }

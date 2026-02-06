@@ -1,9 +1,8 @@
-import { groupMultiselect, isCancel } from "@clack/prompts";
-
 import { DEFAULT_CONFIG } from "../constants";
 import { type Addons, AddonsSchema, type Auth, type Frontend } from "../types";
 import { getCompatibleAddons, validateAddonCompatibility } from "../utils/compatibility-rules";
-import { exitCancelled } from "../utils/errors";
+import { UserCancelledError } from "../utils/errors";
+import { isCancel, navigableGroupMultiselect } from "./navigable";
 
 type AddonOption = {
   value: Addons;
@@ -44,6 +43,10 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "Ruler";
       hint = "Centralize your AI rules";
       break;
+    case "lefthook":
+      label = "Lefthook";
+      hint = "Fast and powerful Git hooks manager";
+      break;
     case "husky":
       label = "Husky";
       hint = "Modern native Git hooks made easy";
@@ -64,6 +67,10 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "WXT";
       hint = "Build browser extensions";
       break;
+    case "skills":
+      label = "Skills";
+      hint = "AI coding agent skills for your stack";
+      break;
     default:
       label = addon;
       hint = `Add ${addon}`;
@@ -73,9 +80,10 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 }
 
 const ADDON_GROUPS = {
+  Tooling: ["turborepo", "biome", "oxlint", "ultracite", "husky", "lefthook"],
   Documentation: ["starlight", "fumadocs"],
-  Linting: ["biome", "oxlint", "ultracite"],
-  Other: ["ruler", "pwa", "tauri", "husky", "opentui", "wxt", "turborepo"],
+  Extensions: ["pwa", "tauri", "opentui", "wxt"],
+  AI: ["ruler", "skills"],
 };
 
 export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[], auth?: Auth) {
@@ -83,9 +91,10 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
 
   const allAddons = AddonsSchema.options.filter((addon) => addon !== "none");
   const groupedOptions: Record<string, AddonOption[]> = {
+    Tooling: [],
     Documentation: [],
-    Linting: [],
-    Other: [],
+    Extensions: [],
+    AI: [],
   };
 
   const frontendsArray = frontends || [];
@@ -97,12 +106,14 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
     const { label, hint } = getAddonDisplay(addon);
     const option = { value: addon, label, hint };
 
-    if (ADDON_GROUPS.Documentation.includes(addon)) {
+    if (ADDON_GROUPS.Tooling.includes(addon)) {
+      groupedOptions.Tooling.push(option);
+    } else if (ADDON_GROUPS.Documentation.includes(addon)) {
       groupedOptions.Documentation.push(option);
-    } else if (ADDON_GROUPS.Linting.includes(addon)) {
-      groupedOptions.Linting.push(option);
-    } else if (ADDON_GROUPS.Other.includes(addon)) {
-      groupedOptions.Other.push(option);
+    } else if (ADDON_GROUPS.Extensions.includes(addon)) {
+      groupedOptions.Extensions.push(option);
+    } else if (ADDON_GROUPS.AI.includes(addon)) {
+      groupedOptions.AI.push(option);
     }
   }
 
@@ -125,15 +136,14 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
     ),
   );
 
-  const response = await groupMultiselect<Addons>({
+  const response = await navigableGroupMultiselect<Addons>({
     message: "Select addons",
     options: groupedOptions,
     initialValues: initialValues,
     required: false,
-    selectableGroups: false,
   });
 
-  if (isCancel(response)) return exitCancelled("Operation cancelled");
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }
@@ -144,9 +154,10 @@ export async function getAddonsToAdd(
   auth?: Auth,
 ) {
   const groupedOptions: Record<string, AddonOption[]> = {
+    Tooling: [],
     Documentation: [],
-    Linting: [],
-    Other: [],
+    Extensions: [],
+    AI: [],
   };
 
   const frontendArray = frontend || [];
@@ -162,12 +173,14 @@ export async function getAddonsToAdd(
     const { label, hint } = getAddonDisplay(addon);
     const option = { value: addon, label, hint };
 
-    if (ADDON_GROUPS.Documentation.includes(addon)) {
+    if (ADDON_GROUPS.Tooling.includes(addon)) {
+      groupedOptions.Tooling.push(option);
+    } else if (ADDON_GROUPS.Documentation.includes(addon)) {
       groupedOptions.Documentation.push(option);
-    } else if (ADDON_GROUPS.Linting.includes(addon)) {
-      groupedOptions.Linting.push(option);
-    } else if (ADDON_GROUPS.Other.includes(addon)) {
-      groupedOptions.Other.push(option);
+    } else if (ADDON_GROUPS.Extensions.includes(addon)) {
+      groupedOptions.Extensions.push(option);
+    } else if (ADDON_GROUPS.AI.includes(addon)) {
+      groupedOptions.AI.push(option);
     }
   }
 
@@ -188,14 +201,13 @@ export async function getAddonsToAdd(
     return [];
   }
 
-  const response = await groupMultiselect<Addons>({
+  const response = await navigableGroupMultiselect<Addons>({
     message: "Select addons to add",
     options: groupedOptions,
     required: false,
-    selectableGroups: false,
   });
 
-  if (isCancel(response)) return exitCancelled("Operation cancelled");
+  if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
 
   return response;
 }

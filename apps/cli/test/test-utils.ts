@@ -1,4 +1,3 @@
-import { createRouterClient } from "@orpc/server";
 import { expect } from "bun:test";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
@@ -21,7 +20,7 @@ import type {
   DatabaseSetup,
 } from "../src/types";
 
-import { router } from "../src/index";
+import { create, UserCancelledError, CLIError, ProjectCreationError } from "../src/index";
 import {
   AddonsSchema,
   APISchema,
@@ -42,44 +41,6 @@ import {
 // Smoke directory path - use the same as setup.ts
 const SMOKE_DIR_PATH = join(import.meta.dir, "..", ".smoke");
 
-// Create oRPC caller for direct function calls instead of subprocess
-const defaultContext = {};
-
-// Store original console methods to prevent race conditions when restoring
-const originalConsoleLog = console.log;
-const originalConsoleInfo = console.info;
-const originalConsoleWarn = console.warn;
-const originalConsoleError = console.error;
-const originalStdoutWrite = process.stdout.write;
-const originalStderrWrite = process.stderr.write;
-
-let suppressionCount = 0;
-
-function suppressConsole() {
-  if (suppressionCount === 0) {
-    console.log = () => {};
-    console.info = () => {};
-    console.warn = () => {};
-    console.error = () => {};
-    process.stdout.write = (() => true) as any;
-    process.stderr.write = (() => true) as any;
-  }
-  suppressionCount++;
-}
-
-function restoreConsole() {
-  suppressionCount--;
-  if (suppressionCount <= 0) {
-    suppressionCount = 0;
-    console.log = originalConsoleLog;
-    console.info = originalConsoleInfo;
-    console.warn = originalConsoleWarn;
-    console.error = originalConsoleError;
-    process.stdout.write = originalStdoutWrite;
-    process.stderr.write = originalStderrWrite;
-  }
-}
-
 export interface TestResult {
   success: boolean;
   result?: InitResult;
@@ -95,8 +56,8 @@ export interface TestConfig extends CreateInput {
 }
 
 /**
- * Run tRPC test using direct function calls instead of subprocess
- * This delegates all validation to the CLI's existing logic - much simpler!
+ * Run test using the programmatic create() API instead of the router.
+ * The create() API runs in silent mode and returns JSON instead of calling process.exit().
  */
 export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
   // Ensure smoke directory exists (may be called before global setup in some cases)
@@ -106,97 +67,102 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
     // Directory may already exist
   }
 
-  try {
-    // Suppress console output
-    suppressConsole();
+  const projectName = config.projectName || "default-app";
+  const projectPath = join(SMOKE_DIR_PATH, projectName);
 
-    const caller = createRouterClient(router, { context: defaultContext });
-    const projectName = config.projectName || "default-app";
-    const projectPath = join(SMOKE_DIR_PATH, projectName);
+  // Determine if we should use --yes or not
+  // Only core stack flags conflict with --yes flag (from CLI error message)
+  const coreStackFlags: (keyof TestConfig)[] = [
+    "database",
+    "orm",
+    "backend",
+    "runtime",
+    "frontend",
+    "addons",
+    "examples",
+    "auth",
+    "payments",
+    "dbSetup",
+    "api",
+    "webDeploy",
+    "serverDeploy",
+  ];
+  const hasSpecificCoreConfig = coreStackFlags.some((flag) => config[flag] !== undefined);
 
-    // Determine if we should use --yes or not
-    // Only core stack flags conflict with --yes flag (from CLI error message)
-    const coreStackFlags: (keyof TestConfig)[] = [
-      "database",
-      "orm",
-      "backend",
-      "runtime",
-      "frontend",
-      "addons",
-      "examples",
-      "auth",
-      "payments",
-      "dbSetup",
-      "api",
-      "webDeploy",
-      "serverDeploy",
-    ];
-    const hasSpecificCoreConfig = coreStackFlags.some((flag) => config[flag] !== undefined);
+  // Only use --yes if no core stack flags are provided and not explicitly disabled
+  const willUseYesFlag = config.yes !== undefined ? config.yes : !hasSpecificCoreConfig;
 
-    // Only use --yes if no core stack flags are provided and not explicitly disabled
-    const willUseYesFlag = config.yes !== undefined ? config.yes : !hasSpecificCoreConfig;
+  // Provide defaults for missing core stack options to avoid prompts
+  // But don't provide core stack defaults when yes: true is explicitly set
+  const coreStackDefaults = willUseYesFlag
+    ? {}
+    : {
+        frontend: ["tanstack-router"] as Frontend[],
+        backend: "hono" as Backend,
+        runtime: "bun" as Runtime,
+        api: "trpc" as API,
+        database: "sqlite" as Database,
+        orm: "drizzle" as ORM,
+        auth: "none" as Auth,
+        payments: "none" as Payments,
+        addons: ["none"] as Addons[],
+        examples: ["none"] as Examples[],
+        dbSetup: "none" as DatabaseSetup,
+        webDeploy: "none" as WebDeploy,
+        serverDeploy: "none" as ServerDeploy,
+      };
 
-    // Provide defaults for missing core stack options to avoid prompts
-    // But don't provide core stack defaults when yes: true is explicitly set
-    const coreStackDefaults = willUseYesFlag
-      ? {}
-      : {
-          frontend: ["tanstack-router"] as Frontend[],
-          backend: "hono" as Backend,
-          runtime: "bun" as Runtime,
-          api: "trpc" as API,
-          database: "sqlite" as Database,
-          orm: "drizzle" as ORM,
-          auth: "none" as Auth,
-          payments: "none" as Payments,
-          addons: ["none"] as Addons[],
-          examples: ["none"] as Examples[],
-          dbSetup: "none" as DatabaseSetup,
-          webDeploy: "none" as WebDeploy,
-          serverDeploy: "none" as ServerDeploy,
-        };
+  // Build options object - let the CLI handle all validation
+  // Remove test-specific properties before passing to create()
+  const { projectName: _, expectError: __, expectedErrorMessage: ___, ...restConfig } = config;
 
-    // Build options object - let the CLI handle all validation
-    const options: CreateInput = {
-      renderTitle: false,
-      install: config.install ?? false,
-      git: config.git ?? true,
-      packageManager: config.packageManager ?? "bun",
-      directoryConflict: "overwrite",
-      verbose: true, // Need verbose to get the result
-      disableAnalytics: true,
-      yes: willUseYesFlag,
-      ...coreStackDefaults,
-      ...config,
-    };
+  const options: Partial<CreateInput> = {
+    install: config.install ?? false,
+    git: config.git ?? true,
+    packageManager: config.packageManager ?? "bun",
+    directoryConflict: "overwrite",
+    disableAnalytics: true,
+    yes: willUseYesFlag,
+    ...coreStackDefaults,
+    ...restConfig,
+  };
 
-    // Remove our test-specific properties
-    const {
-      projectName: _,
-      expectError: __,
-      expectedErrorMessage: ___,
-      ...cleanOptions
-    } = options as TestConfig;
+  // Use the programmatic create() API which runs in silent mode
+  // and returns a Result type instead of calling process.exit()
+  const result = await create(projectPath, options);
 
-    const result = await caller.create([projectPath, cleanOptions]);
-
+  // Handle the Result type from better-result
+  if (result.isOk()) {
+    const initResult = result.value;
     return {
-      success: result?.success ?? false,
-      result: result?.success ? result : undefined,
-      error: result?.success ? undefined : result?.error,
-      projectDir: result?.success ? result?.projectDirectory : undefined,
+      success: true,
+      result: initResult,
+      error: undefined,
+      projectDir: initResult.projectDirectory,
       config,
     };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : String(error),
-      config,
-    };
-  } finally {
-    // Restore console methods
-    restoreConsole();
   }
+
+  // Handle error case - extract error message based on error type
+  const error = result.error;
+  let errorMessage: string;
+  if (UserCancelledError.is(error)) {
+    errorMessage = error.message || "User cancelled";
+  } else if (CLIError.is(error)) {
+    errorMessage = error.message;
+  } else if (ProjectCreationError.is(error)) {
+    errorMessage = error.message;
+  } else {
+    errorMessage = String(error);
+  }
+
+  return {
+    success: false,
+    result: undefined,
+    error: errorMessage,
+    projectDir: undefined,
+    config,
+  };
 }
 
 export function expectSuccess(result: TestResult) {

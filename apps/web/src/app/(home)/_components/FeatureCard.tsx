@@ -36,7 +36,10 @@ function TechIcon({ icon, name, className }: { icon: string; name: string; class
   let iconSrc = icon;
   if (
     theme === "light" &&
-    (icon.includes("drizzle") || icon.includes("prisma") || icon.includes("express"))
+    (icon.includes("drizzle") ||
+      icon.includes("prisma") ||
+      icon.includes("express") ||
+      icon.includes("astro"))
   ) {
     iconSrc = icon.replace(".svg", "-light.svg");
   }
@@ -57,7 +60,7 @@ export default function FeatureCard({ title, options, className }: FeatureCardPr
   return (
     <motion.div
       className={cn(
-        "relative flex h-36 flex-col overflow-hidden rounded-lg border border-border bg-card p-2 shadow-sm",
+        "relative flex h-36 flex-col overflow-hidden rounded border border-border bg-fd-background p-2 shadow-sm",
         className,
       )}
       layout
