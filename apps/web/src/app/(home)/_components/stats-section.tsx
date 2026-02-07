@@ -32,7 +32,7 @@ export default function StatsSection() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <Link href="/analytics">
-        <div className="group cursor-pointer rounded border border-border bg-fd-background p-4 transition-colors hover:bg-muted/10">
+        <div className="group cursor-pointer rounded-2xl bg-fd-background/75 p-4 transition-colors hover:bg-muted/10">
           <div className="mb-3 flex items-center gap-2">
             <Terminal className="h-4 w-4 text-primary" />
             <span className="font-bold font-mono text-lg sm:text-xl">CLI_ANALYTICS.JSON</span>
@@ -65,7 +65,7 @@ export default function StatsSection() {
               <span className="font-mono text-foreground text-sm">{avgProjectsPerDay}</span>
             </div>
 
-            <div className="border-border/50 border-t pt-3">
+            <div className="rounded-lg bg-muted/15 px-2.5 py-2">
               <div className="flex items-center justify-between gap-2 text-xs">
                 <span className="font-mono text-muted-foreground">Last Updated</span>
                 <span className="truncate font-mono text-accent">
@@ -87,7 +87,7 @@ export default function StatsSection() {
         target="_blank"
         rel="noopener noreferrer"
       >
-        <div className="group cursor-pointer rounded border border-border bg-fd-background p-4 transition-colors hover:bg-muted/10">
+        <div className="group cursor-pointer rounded-2xl bg-fd-background/75 p-4 transition-colors hover:bg-muted/10">
           <div className="mb-3 flex items-center gap-2">
             <Github className="h-4 w-4 text-primary" />
             <span className="font-bold font-mono text-lg sm:text-xl">GITHUB_REPO.GIT</span>
@@ -122,7 +122,7 @@ export default function StatsSection() {
               </span>
             </div>
 
-            <div className="border-border/50 border-t pt-3">
+            <div className="rounded-lg bg-muted/15 px-2.5 py-2">
               <div className="flex items-center justify-between gap-2 text-xs">
                 <span className="font-mono text-muted-foreground">Repository</span>
                 <span className="truncate font-mono text-accent">
@@ -139,7 +139,7 @@ export default function StatsSection() {
         target="_blank"
         rel="noopener noreferrer"
       >
-        <div className="group cursor-pointer rounded border border-border bg-fd-background p-4 transition-colors hover:bg-muted/10">
+        <div className="group cursor-pointer rounded-2xl bg-fd-background/75 p-4 transition-colors hover:bg-muted/10">
           <div className="mb-3 flex items-center gap-2">
             <Terminal className="h-4 w-4 text-primary" />
             <span className="font-bold font-mono text-lg sm:text-xl">NPM_PACKAGE.JS</span>
@@ -179,7 +179,7 @@ export default function StatsSection() {
               </span>
             </div>
 
-            <div className="border-border/50 border-t pt-3">
+            <div className="rounded-lg bg-muted/15 px-2.5 py-2">
               <div className="flex items-center justify-between gap-2 text-xs">
                 <span className="font-mono text-muted-foreground">Package</span>
                 <span className="truncate font-mono text-accent">create-better-t-stack</span>

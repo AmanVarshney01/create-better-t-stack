@@ -16,7 +16,9 @@ type MetricCardProps = {
 
 function MetricCard({ title, value, subtitle, icon, highlight, animate }: MetricCardProps) {
   return (
-    <div className="group cursor-default rounded border border-border transition-colors hover:bg-muted/10">
+    <div
+      className={`group cursor-default rounded-xl bg-fd-background/85 ring-1 ring-border/35 transition-all duration-200 hover:-translate-y-0.5 hover:ring-primary/35 ${highlight ? "bg-primary/[0.07]" : ""}`}
+    >
       <div className="space-y-3 p-4">
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-2 font-mono text-muted-foreground text-xs uppercase tracking-wide">
@@ -41,8 +43,8 @@ function MetricCard({ title, value, subtitle, icon, highlight, animate }: Metric
           </div>
         )}
 
-        <div className="border-border/50 border-t pt-3">
-          <p className="truncate font-mono text-muted-foreground text-xs">{subtitle}</p>
+        <div className="pt-2">
+          <p className="truncate font-mono text-muted-foreground/90 text-xs">{subtitle}</p>
         </div>
       </div>
     </div>
@@ -56,7 +58,7 @@ export function MetricsCards({ data }: { data: AggregatedAnalyticsData }) {
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <span className="font-bold font-mono text-lg">KEY_METRICS</span>
-        <div className="h-px flex-1 bg-border" />
+        <div className="h-px flex-1 bg-border/50" />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

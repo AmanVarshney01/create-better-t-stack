@@ -95,7 +95,13 @@ export const metadata: Metadata = {
   },
   category: "Technology",
   icons: {
-    icon: "/logo.svg",
+    icon: [
+      { url: "/logo-light.svg", media: "(prefers-color-scheme: light)", type: "image/svg+xml" },
+      { url: "/logo-dark.svg", media: "(prefers-color-scheme: dark)", type: "image/svg+xml" },
+      { url: "/favicon/favicon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon/favicon.svg",
+    apple: "/favicon/apple-touch-icon.png",
   },
 };
 

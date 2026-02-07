@@ -1,5 +1,7 @@
-import { startTransition, useEffect, useRef, useState } from "react";
+import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+
+import type { TechCategory } from "@/lib/types";
 
 import { DEFAULT_STACK, PRESET_TEMPLATES, type StackState, TECH_OPTIONS } from "@/lib/constant";
 import { useStackState } from "@/lib/stack-url-state.client";
@@ -7,7 +9,16 @@ import { CATEGORY_ORDER, generateStackCommand, generateStackSharingUrl } from "@
 
 import { analyzeStackCompatibility, isOptionCompatible, validateProjectName } from "../utils";
 
-export type MobileTab = "summary" | "configure" | "preview";
+export type MobileTab = "build" | "preview";
+
+type CategoryProgressItem = {
+  category: TechCategory;
+  selected: number;
+  total: number;
+  done: boolean;
+};
+
+const CATEGORY_LIST = CATEGORY_ORDER as TechCategory[];
 
 function formatProjectName(name: string): string {
   return name.replace(/\s+/g, "-");
@@ -28,7 +39,8 @@ export function useStackBuilder() {
   const [copied, setCopied] = useState(false);
   const [lastSavedStack, setLastSavedStack] = useState<StackState | null>(null);
   const [, setLastChanges] = useState<Array<{ category: string; message: string }>>([]);
-  const [mobileTab, setMobileTab] = useState<MobileTab>("configure");
+  const [mobileTab, setMobileTab] = useState<MobileTab>("build");
+  const [activeCategory, setActiveCategory] = useState<TechCategory>(CATEGORY_LIST[0]);
 
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const contentRef = useRef<HTMLDivElement | null>(null);
@@ -99,6 +111,67 @@ export function useStackBuilder() {
     setCommand(generateStackCommand(withFormattedProjectName(stackToUse)));
   }, [stack, compatibilityAnalysis.adjustedStack]);
 
+  const categoryProgress = useMemo<Array<CategoryProgressItem>>(() => {
+    return CATEGORY_LIST.map((category) => {
+      const options = TECH_OPTIONS[category] || [];
+      const selectedValue = stack[category as keyof StackState];
+      const realOptionCount = options.filter((option) => option.id !== "none").length;
+
+      if (Array.isArray(selectedValue)) {
+        const selectedReal = selectedValue.filter(
+          (id) => id !== "none" && options.some((option) => option.id === id),
+        );
+        const selectedCount = selectedReal.length;
+        return {
+          category,
+          selected: selectedCount,
+          total: Math.max(realOptionCount, 1),
+          done: selectedCount > 0,
+        };
+      }
+
+      const isSelectedReal =
+        selectedValue !== "none" &&
+        selectedValue !== "false" &&
+        options.some((option) => option.id === selectedValue);
+
+      return {
+        category,
+        selected: isSelectedReal ? 1 : 0,
+        total: 1,
+        done: isSelectedReal,
+      };
+    });
+  }, [stack]);
+
+  const selectedCount = useMemo(() => {
+    return categoryProgress.reduce((total, entry) => total + entry.selected, 0);
+  }, [categoryProgress]);
+
+  const completedCount = useMemo(() => {
+    return categoryProgress.reduce((total, entry) => total + (entry.done ? 1 : 0), 0);
+  }, [categoryProgress]);
+
+  const activeCategoryIndex = CATEGORY_LIST.indexOf(activeCategory);
+
+  function goToCategory(category: TechCategory) {
+    setActiveCategory(category);
+    const section = sectionRefs.current[category];
+    if (section && contentRef.current) {
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  function goNextCategory() {
+    const nextIndex = Math.min(activeCategoryIndex + 1, CATEGORY_LIST.length - 1);
+    goToCategory(CATEGORY_LIST[nextIndex]);
+  }
+
+  function goPrevCategory() {
+    const prevIndex = Math.max(activeCategoryIndex - 1, 0);
+    goToCategory(CATEGORY_LIST[prevIndex]);
+  }
+
   function getStackUrl(): string {
     const stackToUse = compatibilityAnalysis.adjustedStack || stack;
     return generateStackSharingUrl(withFormattedProjectName(stackToUse));
@@ -107,7 +180,7 @@ export function useStackBuilder() {
   function getRandomStack() {
     const randomStack: Partial<StackState> = {};
 
-    for (const category of CATEGORY_ORDER) {
+    for (const category of CATEGORY_LIST) {
       const options = TECH_OPTIONS[category as keyof typeof TECH_OPTIONS] || [];
       if (options.length === 0) {
         continue;
@@ -228,6 +301,28 @@ export function useStackBuilder() {
     });
   }
 
+  function removeSelectedTech(category: TechCategory, techId: string) {
+    const categoryKey = category as keyof StackState;
+    const value = stack[categoryKey];
+    const options = TECH_OPTIONS[category] || [];
+    const hasNoneOption = options.some((option) => option.id === "none");
+
+    if (Array.isArray(value)) {
+      const next = value.filter((id) => id !== techId);
+      const fallback = next.length === 0 && hasNoneOption ? ["none"] : next;
+      startTransition(() => {
+        setStack({ [categoryKey]: fallback } as Partial<StackState>);
+      });
+      return;
+    }
+
+    if (value === techId && hasNoneOption) {
+      startTransition(() => {
+        setStack({ [categoryKey]: "none" } as Partial<StackState>);
+      });
+    }
+  }
+
   async function copyToClipboard() {
     try {
       await navigator.clipboard.writeText(command);
@@ -280,23 +375,33 @@ export function useStackBuilder() {
   }
 
   return {
+    activeCategory,
+    activeCategoryIndex,
     applyPreset,
+    categoryProgress,
     command,
+    completedCount,
     compatibilityAnalysis,
     copied,
     copyToClipboard,
     getRandomStack,
     getStackUrl,
+    goNextCategory,
+    goPrevCategory,
+    goToCategory,
     handleTechSelect,
     lastSavedStack,
     loadSavedStack,
     mobileTab,
     projectNameError,
+    removeSelectedTech,
     resetStack,
     saveCurrentStack,
     scrollAreaRef,
+    selectedCount,
     sectionRefs,
     selectedFile,
+    setActiveCategory,
     setMobileTab,
     setSelectedFile,
     setStack,
