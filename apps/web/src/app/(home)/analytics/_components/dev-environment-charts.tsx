@@ -138,10 +138,12 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <span className="font-bold font-mono text-lg">DEV_TOOLS_AND_CONFIG</span>
-        <div className="h-px flex-1 bg-border" />
-        <span className="font-mono text-muted-foreground text-xs">[TOOLING]</span>
+        <span className="rounded-full bg-muted/30 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
+          [TOOLING]
+        </span>
+        <div className="hidden h-px flex-1 bg-border/45 sm:block" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

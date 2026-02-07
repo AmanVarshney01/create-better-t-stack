@@ -143,38 +143,43 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
 
   if (isLoading && !tree) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="flex h-full items-center justify-center rounded-lg border border-border bg-fd-background">
+        <div className="flex items-center gap-2 rounded border border-border bg-muted/20 px-3 py-2 font-mono text-muted-foreground text-xs">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Rendering file tree
+        </div>
       </div>
     );
   }
 
   if (error && !tree) {
     return (
-      <div className="flex h-full items-center justify-center text-destructive">
-        <p className="text-sm">{error}</p>
+      <div className="flex h-full items-center justify-center rounded-lg border border-border bg-fd-background">
+        <p className="rounded border border-destructive/30 bg-destructive/10 px-3 py-2 font-mono text-destructive text-sm">
+          {error}
+        </p>
       </div>
     );
   }
 
   if (!tree) {
     return (
-      <div className="flex h-full items-center justify-center text-muted-foreground">
-        <p className="text-sm">Generating preview...</p>
+      <div className="flex h-full items-center justify-center rounded-lg border border-border bg-fd-background text-muted-foreground">
+        <p className="font-mono text-sm">Generating preview...</p>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden">
+    <div className="flex h-full flex-col overflow-hidden rounded-lg border border-border/80 bg-fd-background">
       {/* Stats bar */}
-      <div className="flex items-center gap-2 border-b border-border bg-muted/20 px-3 py-1.5 sm:gap-4">
+      <div className="flex items-center gap-2 border-border border-b bg-muted/20 px-3 py-2 sm:gap-4">
         {/* Mobile back button when viewing code */}
         {mobileView === "code" && selectedFile && (
           <button
             type="button"
             onClick={handleBackToTree}
-            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground sm:hidden"
+            className="builder-focus-ring flex items-center gap-1 rounded px-1 py-0.5 font-mono text-xs text-muted-foreground hover:text-foreground sm:hidden"
           >
             <ChevronLeft className="h-4 w-4" />
             <span>Files</span>
@@ -198,9 +203,16 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
           <FileCode2 className="h-3.5 w-3.5" />
           <span>{fileCount} files</span>
         </div>
+        <span
+          className={cn(
+            "hidden rounded border border-border/70 bg-fd-background px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground uppercase tracking-wide sm:inline-flex",
+          )}
+        >
+          {mobileView === "code" ? "Code view" : "Tree view"}
+        </span>
         {/* Show current file name on mobile */}
         {mobileView === "code" && selectedFile && (
-          <span className="truncate text-xs text-foreground sm:hidden">
+          <span className="truncate font-mono text-xs text-foreground sm:hidden">
             {selectedFile.path.split("/").pop()}
           </span>
         )}
@@ -227,7 +239,7 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
         {/* File explorer - full width on mobile when tree view, hidden when code view */}
         <div
           className={cn(
-            "shrink-0 overflow-hidden border-r border-border",
+            "shrink-0 overflow-hidden border-border sm:border-r",
             "w-full sm:w-48 md:w-56 lg:w-64",
             mobileView === "code" ? "hidden sm:block" : "block",
           )}
@@ -242,7 +254,7 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
         {/* Code viewer - full width on mobile when code view, hidden when tree view */}
         <div
           className={cn(
-            "flex-1 overflow-hidden",
+            "flex-1 overflow-hidden bg-fd-background/80",
             mobileView === "tree" ? "hidden sm:block" : "block",
           )}
         >

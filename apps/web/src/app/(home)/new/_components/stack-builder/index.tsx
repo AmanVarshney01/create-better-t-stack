@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  Check,
-  ChevronDown,
-  ClipboardCopy,
-  FolderTree,
-  List,
-  Settings,
-  Terminal,
-} from "lucide-react";
+import { Check, ChevronDown, ClipboardCopy, FolderTree, Settings, Terminal } from "lucide-react";
 import { startTransition } from "react";
 
 import {
@@ -17,7 +9,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
@@ -44,10 +35,11 @@ export function StackBuilder() {
     loadSavedStack,
     mobileTab,
     projectNameError,
+    removeSelectedTech,
     resetStack,
     saveCurrentStack,
     scrollAreaRef,
-    sectionRefs,
+    selectedCount,
     selectedFile,
     setMobileTab,
     setSelectedFile,
@@ -59,131 +51,334 @@ export function StackBuilder() {
 
   return (
     <TooltipProvider>
-      <div className="flex h-full w-full flex-col overflow-hidden border-border text-foreground sm:grid sm:grid-cols-[auto_1fr]">
-        <div className="flex border-b border-border bg-fd-background pl-2 sm:hidden">
-          <button
-            type="button"
-            onClick={() => setMobileTab("summary")}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-2 border-b-2 px-1 py-3 text-xs font-medium transition-all hover:bg-muted/50",
-              mobileTab === "summary"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <List className="h-4 w-4" />
-            <span>Summary</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMobileTab("configure")}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-2 border-b-2 px-1 py-3 text-xs font-medium transition-all hover:bg-muted/50",
-              mobileTab === "configure"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <Terminal className="h-4 w-4" />
-            <span>Configure</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMobileTab("preview")}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-2 border-b-2 px-1 py-3 text-xs font-medium transition-all hover:bg-muted/50",
-              mobileTab === "preview"
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-          >
-            <FolderTree className="h-4 w-4" />
-            <span>Preview</span>
-          </button>
+      <div className="flex h-full w-full flex-col overflow-hidden bg-fd-background text-foreground">
+        <div className="sticky top-0 z-20 border-border border-b bg-fd-background/95 px-3 py-2 backdrop-blur-sm sm:hidden">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 rounded-md bg-muted/20 p-1">
+              <button
+                type="button"
+                onClick={() => setMobileTab("build")}
+                className={cn(
+                  "builder-focus-ring rounded px-2 py-1 font-mono text-[11px] uppercase",
+                  mobileTab === "build"
+                    ? "bg-primary/12 text-primary"
+                    : "text-muted-foreground hover:bg-muted/30",
+                )}
+              >
+                Build
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileTab("preview")}
+                className={cn(
+                  "builder-focus-ring rounded px-2 py-1 font-mono text-[11px] uppercase",
+                  mobileTab === "preview"
+                    ? "bg-primary/12 text-primary"
+                    : "text-muted-foreground hover:bg-muted/30",
+                )}
+              >
+                Preview
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div
-          className={cn(
-            "flex w-full flex-col border-border sm:max-w-3xs sm:border-r md:max-w-xs lg:max-w-sm",
-            mobileTab === "summary" ? "flex" : "hidden sm:flex",
-          )}
-        >
-          <ScrollArea className="flex-1">
-            <div className="flex h-full flex-col gap-3 p-3 sm:p-4 md:h-[calc(100vh-64px)]">
-              <div className="space-y-3">
-                <label className="flex flex-col">
-                  <span className="mb-1 text-muted-foreground text-xs">Project Name:</span>
-                  <input
-                    type="text"
-                    value={stack.projectName || ""}
-                    onChange={(event) => {
-                      setStack({ projectName: event.target.value });
-                    }}
-                    className={cn(
-                      "w-full rounded border px-2 py-1 text-sm focus:outline-none",
-                      projectNameError
-                        ? "border-destructive bg-destructive/10 text-destructive-foreground"
-                        : "border-border focus:border-primary",
-                    )}
-                    placeholder="my-better-t-app"
-                  />
-                  {projectNameError && (
-                    <p className="mt-1 text-destructive text-xs">{projectNameError}</p>
-                  )}
-                  {(stack.projectName || "my-better-t-app").includes(" ") && (
-                    <p className="mt-1 text-muted-foreground text-xs">
-                      Will be saved as:{" "}
-                      <code className="rounded bg-muted px-1 py-0.5 text-xs">
-                        {(stack.projectName || "my-better-t-app").replace(/\s+/g, "-")}
-                      </code>
-                    </p>
-                  )}
-                </label>
-
-                <div className="rounded border border-border p-2">
-                  <div className="flex">
-                    <span className="mr-2 select-none text-chart-4">$</span>
-                    <code className="block break-all text-muted-foreground text-xs sm:text-sm">
-                      {command}
-                    </code>
-                  </div>
-                  <div className="mt-2 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={copyToClipboard}
-                      className={cn(
-                        "flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors",
-                        copied
-                          ? "bg-muted text-chart-4"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+        <div className="hidden h-full flex-1 grid-cols-[24rem_minmax(0,1fr)] overflow-hidden border-border sm:grid">
+          <aside className="flex min-h-0 flex-col overflow-hidden border-border/50 border-r bg-fd-background">
+            <ScrollArea className="min-h-0 flex-1">
+              <div className="p-3">
+                <div className="overflow-hidden rounded-2xl bg-fd-background/80 ring-1 ring-border/35">
+                  <section className="space-y-2 border-border/20 border-b px-3 py-3">
+                    <label className="flex flex-col">
+                      <span className="mb-1 font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
+                        Project Name
+                      </span>
+                      <input
+                        type="text"
+                        value={stack.projectName || ""}
+                        onChange={(event) => {
+                          setStack({ projectName: event.target.value });
+                        }}
+                        className={cn(
+                          "builder-focus-ring w-full rounded-lg border bg-background/80 px-2.5 py-1.5 font-mono text-sm focus:outline-none",
+                          projectNameError
+                            ? "border-destructive bg-destructive/10 text-destructive-foreground"
+                            : "border-border/60 focus:border-primary",
+                        )}
+                        placeholder="my-better-t-app"
+                      />
+                      {projectNameError && (
+                        <p className="mt-1 text-destructive text-xs">{projectNameError}</p>
                       )}
-                      title={copied ? "Copied!" : "Copy command"}
-                    >
-                      {copied ? (
-                        <>
+                    </label>
+                  </section>
+
+                  <section className="space-y-2 border-border/20 border-b px-3 py-3">
+                    <div className="flex items-center justify-between">
+                      <p className="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
+                        CLI Command
+                      </p>
+                      <button
+                        type="button"
+                        onClick={copyToClipboard}
+                        className={cn(
+                          "builder-focus-ring flex items-center gap-1 rounded-md px-2 py-1 font-mono text-[11px] uppercase transition-colors",
+                          copied
+                            ? "bg-primary/14 text-primary"
+                            : "bg-muted/20 text-muted-foreground hover:bg-muted/35 hover:text-foreground",
+                        )}
+                        title={copied ? "Copied!" : "Copy command"}
+                      >
+                        {copied ? (
                           <Check className="h-3 w-3 shrink-0" />
-                          <span>Copied</span>
-                        </>
-                      ) : (
-                        <>
+                        ) : (
                           <ClipboardCopy className="h-3 w-3 shrink-0" />
-                          <span>Copy</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
+                        )}
+                        {copied ? "Copied" : "Copy"}
+                      </button>
+                    </div>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={copyToClipboard}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          copyToClipboard();
+                        }
+                      }}
+                      aria-label="Copy CLI command"
+                      title="Click to copy command"
+                      className="builder-focus-ring cursor-pointer rounded-lg bg-background/75 px-2.5 py-2"
+                    >
+                      <div className="flex items-start gap-2">
+                        <span className="select-none text-chart-4">$</span>
+                        <code className="block break-all font-mono text-muted-foreground text-xs">
+                          {command}
+                        </code>
+                      </div>
+                    </div>
+                  </section>
 
-                <div>
-                  <h3 className="mb-2 font-medium text-foreground text-sm">Selected Stack</h3>
-                  <div className="flex flex-wrap gap-1.5">
-                    <SelectedStackBadges stack={stack} />
-                  </div>
+                  <section className="space-y-2 px-3 py-3">
+                    <div className="flex items-center justify-between">
+                      <p className="font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
+                        Selected stack
+                      </p>
+                      <span className="font-mono text-[11px] text-muted-foreground uppercase">
+                        {selectedCount} picks
+                      </span>
+                    </div>
+                    <SelectedStackBadges stack={stack} onRemove={removeSelectedTech} />
+                  </section>
+
+                  {compatibilityAnalysis.changes.length > 0 && (
+                    <section className="space-y-2 border-border/20 border-t px-3 py-3">
+                      <p className="font-mono text-[11px] text-primary uppercase tracking-wide">
+                        Compatibility Log
+                      </p>
+                      <ul className="space-y-1 rounded-lg bg-primary/7 px-2.5 py-2">
+                        {compatibilityAnalysis.changes.slice(0, 4).map((change, index) => (
+                          <li
+                            key={`${change.category}-${change.message}-${index}`}
+                            className="text-muted-foreground text-xs"
+                          >
+                            • {change.message}
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  )}
                 </div>
               </div>
+            </ScrollArea>
 
-              <div className="mt-auto border-border border-t pt-4">
-                <div className="space-y-3">
+            <div className="border-border/35 border-t bg-fd-background/95 p-3">
+              <div className="rounded-2xl bg-fd-background/80 p-3 ring-1 ring-border/35">
+                <ActionButtons
+                  onReset={resetStack}
+                  onRandom={getRandomStack}
+                  onSave={saveCurrentStack}
+                  onLoad={loadSavedStack}
+                  hasSavedStack={!!lastSavedStack}
+                />
+
+                <div className="mt-2 grid grid-cols-3 gap-1.5">
+                  <ShareButton stackUrl={getStackUrl()} stackState={stack} />
+                  <PresetDropdown onApplyPreset={applyPreset} />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={
+                        <button
+                          type="button"
+                          className="builder-focus-ring flex items-center justify-center gap-1.5 rounded-md bg-muted/20 px-2 py-1.5 font-mono font-medium text-muted-foreground text-xs transition-colors hover:bg-muted/35 hover:text-foreground"
+                        />
+                      }
+                    >
+                      <Settings className="h-3 w-3" />
+                      <span className="sr-only">Settings</span>
+                      <ChevronDown className="h-3 w-3" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-64 bg-fd-background">
+                      <YoloToggle stack={stack} onToggle={(yolo) => setStack({ yolo })} />
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <section className="flex min-h-0 flex-col overflow-hidden">
+            <div className="sticky top-0 z-10 flex items-center gap-2 border-border border-b bg-fd-background px-3 py-2">
+              <div className="flex items-center gap-1 rounded-md bg-muted/20 p-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    startTransition(() => {
+                      setViewMode("command");
+                    });
+                  }}
+                  className={cn(
+                    "builder-focus-ring flex items-center gap-1.5 rounded px-2 py-1 font-mono text-[11px] uppercase tracking-wide",
+                    viewMode === "command"
+                      ? "bg-primary/12 text-primary"
+                      : "text-muted-foreground hover:bg-muted/30",
+                  )}
+                >
+                  <Terminal className="h-3 w-3" />
+                  Configure
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    startTransition(() => {
+                      setViewMode("preview");
+                    });
+                  }}
+                  className={cn(
+                    "builder-focus-ring flex items-center gap-1.5 rounded px-2 py-1 font-mono text-[11px] uppercase tracking-wide",
+                    viewMode === "preview"
+                      ? "bg-primary/12 text-primary"
+                      : "text-muted-foreground hover:bg-muted/30",
+                  )}
+                >
+                  <FolderTree className="h-3 w-3" />
+                  Preview
+                </button>
+              </div>
+            </div>
+
+            {viewMode === "command" ? (
+              <div ref={scrollAreaRef} className="h-full">
+                <ScrollArea className="h-full overflow-hidden scroll-smooth">
+                  <main className="p-3 sm:p-4">
+                    <TechCategories
+                      mode="desktop"
+                      stack={stack}
+                      compatibilityNotes={compatibilityAnalysis.notes}
+                      onSelect={handleTechSelect}
+                      showAllCategories
+                    />
+                  </main>
+                </ScrollArea>
+              </div>
+            ) : (
+              <PreviewPanel
+                stack={stack}
+                selectedFilePath={selectedFile}
+                onSelectFile={setSelectedFile}
+              />
+            )}
+          </section>
+        </div>
+
+        <div className="flex flex-1 flex-col overflow-hidden sm:hidden">
+          {mobileTab === "build" && (
+            <div className="flex min-h-0 flex-1 flex-col">
+              <ScrollArea className="h-full overflow-hidden scroll-smooth">
+                <main className="p-3 pb-6">
+                  <div className="mb-4 space-y-2 rounded-xl bg-muted/10 p-3">
+                    <label className="flex flex-col">
+                      <span className="mb-1 font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
+                        Project Name
+                      </span>
+                      <input
+                        type="text"
+                        value={stack.projectName || ""}
+                        onChange={(event) => {
+                          setStack({ projectName: event.target.value });
+                        }}
+                        className={cn(
+                          "builder-focus-ring w-full rounded-lg border bg-background/75 px-2.5 py-1.5 font-mono text-sm focus:outline-none",
+                          projectNameError
+                            ? "border-destructive bg-destructive/10 text-destructive-foreground"
+                            : "border-border/60 focus:border-primary",
+                        )}
+                        placeholder="my-better-t-app"
+                      />
+                      {projectNameError && (
+                        <p className="mt-1 text-destructive text-xs">{projectNameError}</p>
+                      )}
+                    </label>
+
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide">
+                          CLI Command
+                        </span>
+                        <span
+                          className={cn(
+                            "flex items-center gap-1 rounded-md px-2 py-1 font-mono text-[11px] uppercase",
+                            copied
+                              ? "bg-primary/14 text-primary"
+                              : "bg-muted/20 text-muted-foreground",
+                          )}
+                        >
+                          {copied ? (
+                            <Check className="h-3 w-3 shrink-0" />
+                          ) : (
+                            <ClipboardCopy className="h-3 w-3 shrink-0" />
+                          )}
+                          {copied ? "Copied" : "Tap to copy"}
+                        </span>
+                      </div>
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={copyToClipboard}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            copyToClipboard();
+                          }
+                        }}
+                        className={cn(
+                          "builder-focus-ring rounded-lg bg-background/75 px-2.5 py-2 font-mono text-xs text-muted-foreground ring-1",
+                          copied ? "ring-primary/40" : "ring-border/45",
+                        )}
+                        aria-label="Copy command"
+                        title="Click to copy command"
+                      >
+                        <div className="flex items-start gap-1.5">
+                          <span className="mt-0.5 text-chart-4">$</span>
+                          <code className="break-all">{command}</code>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <TechCategories
+                    mode="mobile"
+                    stack={stack}
+                    compatibilityNotes={compatibilityAnalysis.notes}
+                    onSelect={handleTechSelect}
+                    showAllCategories
+                  />
+                </main>
+              </ScrollArea>
+
+              <div className="border-border/35 border-t bg-fd-background/95 p-3 backdrop-blur-sm">
+                <div className="rounded-xl bg-fd-background/80 p-3 ring-1 ring-border/35">
                   <ActionButtons
                     onReset={resetStack}
                     onRandom={getRandomStack}
@@ -192,23 +387,21 @@ export function StackBuilder() {
                     hasSavedStack={!!lastSavedStack}
                   />
 
-                  <div className="flex gap-1">
+                  <div className="mt-2 grid grid-cols-3 gap-1.5">
                     <ShareButton stackUrl={getStackUrl()} stackState={stack} />
-
                     <PresetDropdown onApplyPreset={applyPreset} />
-
                     <DropdownMenu>
                       <DropdownMenuTrigger
                         render={
                           <button
                             type="button"
-                            className="flex flex-1 items-center justify-center gap-1.5 rounded border border-border bg-fd-background px-2 py-1.5 font-mono font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
+                            className="builder-focus-ring flex items-center justify-center gap-1.5 rounded-md bg-muted/20 px-2 py-1.5 font-mono font-medium text-muted-foreground text-xs transition-colors hover:bg-muted/35 hover:text-foreground"
                           />
                         }
                       >
                         <Settings className="h-3 w-3" />
-                        Settings
-                        <ChevronDown className="ml-auto h-3 w-3" />
+                        <span className="sr-only">Settings</span>
+                        <ChevronDown className="h-3 w-3" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-64 bg-fd-background">
                         <YoloToggle stack={stack} onToggle={(yolo) => setStack({ yolo })} />
@@ -218,90 +411,15 @@ export function StackBuilder() {
                 </div>
               </div>
             </div>
-          </ScrollArea>
-        </div>
-
-        <div
-          className={cn(
-            "flex flex-1 flex-col overflow-hidden",
-            mobileTab === "summary" ? "hidden sm:flex" : "flex",
           )}
-        >
-          <Tabs
-            value={viewMode}
-            onValueChange={(value: string) => {
-              startTransition(() => {
-                setViewMode(value as "command" | "preview");
-              });
-            }}
-            className="hidden sm:flex sm:flex-1 sm:flex-col sm:overflow-hidden"
-          >
-            <div className="flex items-center border-b border-border bg-fd-background sm:px-2">
-              <TabsList
-                variant="line"
-                className="h-auto w-full justify-start gap-4 rounded-none bg-transparent p-0"
-              >
-                <TabsTrigger
-                  value="command"
-                  className="relative gap-2 rounded-none border-b-2 border-transparent bg-transparent px-2 py-3 text-xs font-medium text-muted-foreground transition-none data-active:border-primary data-active:bg-transparent data-active:text-foreground data-active:shadow-none hover:text-foreground"
-                >
-                  <Terminal className="h-3.5 w-3.5" />
-                  Configure
-                </TabsTrigger>
-                <TabsTrigger
-                  value="preview"
-                  className="relative gap-2 rounded-none border-b-2 border-transparent bg-transparent px-2 py-3 text-xs font-medium text-muted-foreground transition-none data-active:border-primary data-active:bg-transparent data-active:text-foreground data-active:shadow-none hover:text-foreground"
-                >
-                  <FolderTree className="h-3.5 w-3.5" />
-                  Preview
-                </TabsTrigger>
-              </TabsList>
-            </div>
-            <TabsContent value="command" className="min-h-0 flex-1 overflow-hidden">
-              <div ref={scrollAreaRef} className="h-full">
-                <ScrollArea className="h-full overflow-hidden scroll-smooth">
-                  <main className="p-3 sm:p-4">
-                    <TechCategories
-                      mode="desktop"
-                      stack={stack}
-                      compatibilityNotes={compatibilityAnalysis.notes}
-                      onSelect={handleTechSelect}
-                      sectionRefs={sectionRefs}
-                    />
-                  </main>
-                </ScrollArea>
-              </div>
-            </TabsContent>
-            <TabsContent value="preview" className="min-h-0 flex-1 overflow-hidden">
-              <PreviewPanel
-                stack={stack}
-                selectedFilePath={selectedFile}
-                onSelectFile={setSelectedFile}
-              />
-            </TabsContent>
-          </Tabs>
 
-          <div className="flex flex-1 flex-col overflow-hidden sm:hidden">
-            {mobileTab === "configure" && (
-              <ScrollArea className="h-full overflow-hidden scroll-smooth">
-                <main className="p-3">
-                  <TechCategories
-                    mode="mobile"
-                    stack={stack}
-                    compatibilityNotes={compatibilityAnalysis.notes}
-                    onSelect={handleTechSelect}
-                  />
-                </main>
-              </ScrollArea>
-            )}
-            {mobileTab === "preview" && (
-              <PreviewPanel
-                stack={stack}
-                selectedFilePath={selectedFile}
-                onSelectFile={setSelectedFile}
-              />
-            )}
-          </div>
+          {mobileTab === "preview" && (
+            <PreviewPanel
+              stack={stack}
+              selectedFilePath={selectedFile}
+              onSelectFile={setSelectedFile}
+            />
+          )}
         </div>
       </div>
     </TooltipProvider>

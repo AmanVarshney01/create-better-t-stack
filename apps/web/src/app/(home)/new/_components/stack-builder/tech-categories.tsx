@@ -1,6 +1,4 @@
-import type React from "react";
-
-import { InfoIcon, Terminal } from "lucide-react";
+import { CheckCircle2, InfoIcon, Terminal } from "lucide-react";
 import { motion } from "motion/react";
 
 import type { StackState } from "@/lib/constant";
@@ -19,10 +17,10 @@ type TechCategoriesProps = {
   stack: StackState;
   compatibilityNotes: Record<string, { hasIssue: boolean; notes: string[] }>;
   onSelect: (category: keyof typeof TECH_OPTIONS, techId: string) => void;
-  sectionRefs?: React.MutableRefObject<Record<string, HTMLElement | null>>;
+  showAllCategories?: boolean;
 };
 
-function getIsSelected(stack: StackState, category: keyof StackState, techId: string): boolean {
+function getIsSelected(stack: StackState, category: keyof StackState, techId: string) {
   const currentValue = stack[category];
 
   if (
@@ -42,13 +40,14 @@ export function TechCategories({
   stack,
   compatibilityNotes,
   onSelect,
-  sectionRefs,
+  showAllCategories = false,
 }: TechCategoriesProps) {
   const isDesktop = mode === "desktop";
+  const categories = showAllCategories ? CATEGORY_ORDER : [CATEGORY_ORDER[0]];
 
   return (
     <>
-      {CATEGORY_ORDER.map((categoryKey) => {
+      {categories.map((categoryKey) => {
         const categoryOptions = TECH_OPTIONS[categoryKey as keyof typeof TECH_OPTIONS] || [];
         const categoryDisplayName = getCategoryDisplayName(categoryKey);
 
@@ -56,28 +55,21 @@ export function TechCategories({
 
         return (
           <section
-            ref={
-              isDesktop
-                ? (el) => {
-                    if (sectionRefs) {
-                      sectionRefs.current[categoryKey] = el;
-                    }
-                  }
-                : undefined
-            }
             key={`${mode}-${categoryKey}`}
             id={isDesktop ? `section-${categoryKey}` : `section-mobile-${categoryKey}`}
             className={cn("mb-6 scroll-mt-4", isDesktop && "sm:mb-8")}
           >
             <div className="mb-3 flex items-center border-border border-b pb-2 text-muted-foreground">
-              <Terminal className={cn("mr-2 h-4 w-4 shrink-0", isDesktop && "sm:h-5 sm:w-5")} />
+              <Terminal
+                className={cn("mr-2 h-4 w-4 shrink-0 text-primary", isDesktop && "sm:h-5 sm:w-5")}
+              />
               <h2
                 className={cn(
                   "font-semibold font-mono text-foreground text-sm",
                   isDesktop && "sm:text-base",
                 )}
               >
-                {categoryDisplayName}
+                {categoryDisplayName.toUpperCase()}
               </h2>
               {compatibilityNotes[categoryKey]?.hasIssue && (
                 <Tooltip delay={100}>
@@ -100,38 +92,48 @@ export function TechCategories({
             <div
               className={cn(
                 "grid gap-2",
-                isDesktop
-                  ? "grid-cols-1 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3 2xl:grid-cols-4"
-                  : "grid-cols-1",
+                isDesktop ? "grid-cols-1 sm:grid-cols-2 xl:grid-cols-3" : "grid-cols-1",
+                isDesktop && "auto-rows-fr",
               )}
             >
               {categoryOptions.map((tech) => {
                 const category = categoryKey as keyof StackState;
                 const isSelected = getIsSelected(stack, category, tech.id);
                 const isDisabled = !isOptionCompatible(stack, categoryKey as TechCategory, tech.id);
-                const disabledReason = isDesktop
-                  ? getDisabledReason(stack, categoryKey as TechCategory, tech.id)
-                  : null;
+                const disabledReason = getDisabledReason(
+                  stack,
+                  categoryKey as TechCategory,
+                  tech.id,
+                );
 
                 const card = (
-                  <motion.div
+                  <motion.button
+                    type="button"
+                    disabled={isDisabled}
+                    aria-disabled={isDisabled}
+                    aria-pressed={isSelected}
+                    aria-label={`${tech.name}${isDisabled && disabledReason ? `. ${disabledReason}` : ""}`}
                     className={cn(
-                      "relative cursor-pointer rounded border p-3 transition-all",
+                      "builder-focus-ring relative h-full w-full text-left rounded-lg p-3 transition-colors",
                       isDesktop && "p-2 sm:p-3",
                       isSelected
-                        ? "border-primary bg-primary/10"
+                        ? "bg-primary/12 ring-1 ring-primary"
                         : isDisabled
-                          ? "border-destructive/30 bg-destructive/5 opacity-50"
-                          : "border-border bg-fd-background hover:border-muted hover:bg-muted/10",
-                      isDesktop && isDisabled && "hover:opacity-75",
+                          ? "cursor-not-allowed bg-destructive/6 ring-1 ring-destructive/25 opacity-80"
+                          : "bg-muted/15 hover:bg-muted/25",
                     )}
-                    whileHover={isDesktop ? { scale: 1.02 } : undefined}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => onSelect(categoryKey as keyof typeof TECH_OPTIONS, tech.id)}
+                    whileHover={isDesktop && !isDisabled ? { scale: 1.01 } : undefined}
+                    whileTap={!isDisabled ? { scale: 0.98 } : undefined}
+                    onClick={() => {
+                      if (isDisabled) {
+                        return;
+                      }
+                      onSelect(categoryKey as keyof typeof TECH_OPTIONS, tech.id);
+                    }}
                   >
                     <div className="flex items-start">
                       <div className="grow">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center">
                             {tech.icon !== "" && (
                               <TechIcon
@@ -154,8 +156,27 @@ export function TechCategories({
                               {tech.name}
                             </span>
                           </div>
+                          {isSelected && <CheckCircle2 className="h-4 w-4 text-primary" />}
                         </div>
                         <p className="mt-0.5 text-muted-foreground text-xs">{tech.description}</p>
+                        {isDesktop ? (
+                          <div className="mt-2 h-7">
+                            {isDisabled && disabledReason ? (
+                              <p className="h-full px-0.5 py-1 text-[11px] text-destructive/90 leading-tight line-clamp-1">
+                                {disabledReason}
+                              </p>
+                            ) : (
+                              <div aria-hidden className="h-full" />
+                            )}
+                          </div>
+                        ) : (
+                          isDisabled &&
+                          disabledReason && (
+                            <p className="mt-2 px-0.5 py-1 text-[11px] text-destructive/90">
+                              {disabledReason}
+                            </p>
+                          )
+                        )}
                       </div>
                     </div>
                     {tech.default && !isSelected && (
@@ -163,7 +184,7 @@ export function TechCategories({
                         Default
                       </span>
                     )}
-                  </motion.div>
+                  </motion.button>
                 );
 
                 if (isDesktop && disabledReason) {
@@ -177,7 +198,11 @@ export function TechCategories({
                   );
                 }
 
-                return <div key={`${mode}-${categoryKey}-${tech.id}`}>{card}</div>;
+                return (
+                  <div key={`${mode}-${categoryKey}-${tech.id}`} className="h-full">
+                    {card}
+                  </div>
+                );
               })}
             </div>
           </section>

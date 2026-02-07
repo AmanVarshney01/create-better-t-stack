@@ -10,7 +10,7 @@ export function ChartCard({
   children: ReactNode;
 }) {
   return (
-    <div className="group rounded border border-border bg-fd-background transition-colors hover:bg-muted/10">
+    <div className="group rounded-xl bg-fd-background/85 ring-1 ring-border/35 transition-all duration-200 hover:-translate-y-0.5 hover:ring-primary/35">
       <div className="space-y-4 p-4">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
