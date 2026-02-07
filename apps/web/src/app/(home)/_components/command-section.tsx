@@ -88,21 +88,14 @@ export default function CommandSection() {
               <span className="text-primary">$</span>
               <span className="text-foreground">{commands[selectedPM]}</span>
             </div>
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                copyCommand(commands[selectedPM], selectedPM);
-              }}
-              className="builder-focus-ring flex items-center gap-1 rounded-md bg-muted/20 px-2 py-1 font-mono text-xs transition-colors hover:bg-muted/35"
-            >
+            <span className="flex items-center gap-1 rounded-md bg-muted/20 px-2 py-1 font-mono text-xs transition-colors group-hover:bg-muted/35">
               {copiedCommand === selectedPM ? (
                 <Check className="h-3 w-3 text-primary" />
               ) : (
                 <Copy className="h-3 w-3" />
               )}
               {copiedCommand === selectedPM ? "COPIED!" : "COPY"}
-            </button>
+            </span>
           </div>
         </div>
       </div>

@@ -20,11 +20,11 @@ type CategoryProgressItem = {
 
 const CATEGORY_LIST = CATEGORY_ORDER as TechCategory[];
 
-function formatProjectName(name: string): string {
+function formatProjectName(name: string) {
   return name.replace(/\s+/g, "-");
 }
 
-function withFormattedProjectName(stack: StackState): StackState {
+function withFormattedProjectName(stack: StackState) {
   const projectName = stack.projectName || "my-better-t-app";
   return {
     ...stack,
@@ -40,9 +40,7 @@ export function useStackBuilder() {
   const [lastSavedStack, setLastSavedStack] = useState<StackState | null>(null);
   const [, setLastChanges] = useState<Array<{ category: string; message: string }>>([]);
   const [mobileTab, setMobileTab] = useState<MobileTab>("build");
-  const [activeCategory, setActiveCategory] = useState<TechCategory>(CATEGORY_LIST[0]);
 
-  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const contentRef = useRef<HTMLDivElement | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement | null>(null);
   const lastAppliedStackString = useRef<string>("");
@@ -148,31 +146,7 @@ export function useStackBuilder() {
     return categoryProgress.reduce((total, entry) => total + entry.selected, 0);
   }, [categoryProgress]);
 
-  const completedCount = useMemo(() => {
-    return categoryProgress.reduce((total, entry) => total + (entry.done ? 1 : 0), 0);
-  }, [categoryProgress]);
-
-  const activeCategoryIndex = CATEGORY_LIST.indexOf(activeCategory);
-
-  function goToCategory(category: TechCategory) {
-    setActiveCategory(category);
-    const section = sectionRefs.current[category];
-    if (section && contentRef.current) {
-      section.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }
-
-  function goNextCategory() {
-    const nextIndex = Math.min(activeCategoryIndex + 1, CATEGORY_LIST.length - 1);
-    goToCategory(CATEGORY_LIST[nextIndex]);
-  }
-
-  function goPrevCategory() {
-    const prevIndex = Math.max(activeCategoryIndex - 1, 0);
-    goToCategory(CATEGORY_LIST[prevIndex]);
-  }
-
-  function getStackUrl(): string {
+  function getStackUrl() {
     const stackToUse = compatibilityAnalysis.adjustedStack || stack;
     return generateStackSharingUrl(withFormattedProjectName(stackToUse));
   }
@@ -306,10 +280,11 @@ export function useStackBuilder() {
     const value = stack[categoryKey];
     const options = TECH_OPTIONS[category] || [];
     const hasNoneOption = options.some((option) => option.id === "none");
+    const forceNoneFallback = category === "addons" || category === "examples";
 
     if (Array.isArray(value)) {
       const next = value.filter((id) => id !== techId);
-      const fallback = next.length === 0 && hasNoneOption ? ["none"] : next;
+      const fallback = next.length === 0 && (hasNoneOption || forceNoneFallback) ? ["none"] : next;
       startTransition(() => {
         setStack({ [categoryKey]: fallback } as Partial<StackState>);
       });
@@ -375,20 +350,13 @@ export function useStackBuilder() {
   }
 
   return {
-    activeCategory,
-    activeCategoryIndex,
     applyPreset,
-    categoryProgress,
     command,
-    completedCount,
     compatibilityAnalysis,
     copied,
     copyToClipboard,
     getRandomStack,
     getStackUrl,
-    goNextCategory,
-    goPrevCategory,
-    goToCategory,
     handleTechSelect,
     lastSavedStack,
     loadSavedStack,
@@ -399,9 +367,7 @@ export function useStackBuilder() {
     saveCurrentStack,
     scrollAreaRef,
     selectedCount,
-    sectionRefs,
     selectedFile,
-    setActiveCategory,
     setMobileTab,
     setSelectedFile,
     setStack,

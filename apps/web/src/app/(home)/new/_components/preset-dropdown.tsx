@@ -11,9 +11,9 @@ import {
 import { PRESET_TEMPLATES } from "@/lib/constant";
 import { generateStackSummary } from "@/lib/stack-utils";
 
-interface PresetDropdownProps {
+type PresetDropdownProps = {
   onApplyPreset: (presetId: string) => void;
-}
+};
 
 export function PresetDropdown({ onApplyPreset }: PresetDropdownProps) {
   return (

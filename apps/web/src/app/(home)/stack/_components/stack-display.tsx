@@ -17,11 +17,10 @@ import {
   generateStackSummary,
   generateStackUrlFromState,
 } from "@/lib/stack-utils";
-import { cn } from "@/lib/utils";
 
-interface StackDisplayProps {
+type StackDisplayProps = {
   stackState: LoadedStackState;
-}
+};
 
 export function StackDisplay({ stackState }: StackDisplayProps) {
   const [copied, setCopied] = useState(false);
@@ -107,7 +106,7 @@ export function StackDisplay({ stackState }: StackDisplayProps) {
   };
 
   return (
-    <main className="container mx-auto mx-auto min-h-svh">
+    <main className="container mx-auto min-h-svh">
       <div className="mx-auto flex flex-col gap-8 px-4 pt-12">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
           <div className="flex items-center gap-2">
@@ -183,22 +182,16 @@ export function StackDisplay({ stackState }: StackDisplayProps) {
               <span className="text-primary">$</span>
               <span className="text-foreground">{command}</span>
             </div>
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                copyCommand();
-              }}
-              className={cn(
-                "flex items-center gap-1 rounded border px-2 py-1 font-mono text-xs transition-colors",
+            <span
+              className={
                 copied
-                  ? "border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400"
-                  : "border-border hover:bg-muted/10",
-              )}
+                  ? "flex items-center gap-1 rounded border border-green-500/20 bg-green-500/10 px-2 py-1 font-mono text-green-600 text-xs transition-colors dark:text-green-400"
+                  : "flex items-center gap-1 rounded border border-border px-2 py-1 font-mono text-xs transition-colors"
+              }
             >
               {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
               {copied ? "COPIED!" : "COPY"}
-            </button>
+            </span>
           </div>
         </div>
 

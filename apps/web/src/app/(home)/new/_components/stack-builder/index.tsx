@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  Check,
-  ChevronDown,
-  ClipboardCopy,
-  FolderTree,
-  ListTree,
-  Settings,
-  Terminal,
-} from "lucide-react";
+import { Check, ChevronDown, ClipboardCopy, FolderTree, Settings, Terminal } from "lucide-react";
 import { startTransition } from "react";
 
 import {
@@ -24,7 +16,6 @@ import { ActionButtons } from "../action-buttons";
 import { PresetDropdown } from "../preset-dropdown";
 import { PreviewPanel } from "../preview-panel";
 import { ShareButton } from "../share-button";
-import { getCategoryDisplayName } from "../utils";
 import { YoloToggle } from "../yolo-toggle";
 import { SelectedStackBadges } from "./selected-stack-badges";
 import { TechCategories } from "./tech-categories";
@@ -32,16 +23,13 @@ import { useStackBuilder } from "./use-stack-builder";
 
 export function StackBuilder() {
   const {
-    activeCategory,
     applyPreset,
-    categoryProgress,
     command,
     compatibilityAnalysis,
     copied,
     copyToClipboard,
     getRandomStack,
     getStackUrl,
-    goToCategory,
     handleTechSelect,
     lastSavedStack,
     loadSavedStack,
@@ -51,7 +39,6 @@ export function StackBuilder() {
     resetStack,
     saveCurrentStack,
     scrollAreaRef,
-    sectionRefs,
     selectedCount,
     selectedFile,
     setMobileTab,
@@ -66,7 +53,7 @@ export function StackBuilder() {
     <TooltipProvider>
       <div className="flex h-full w-full flex-col overflow-hidden bg-fd-background text-foreground">
         <div className="sticky top-0 z-20 border-border border-b bg-fd-background/95 px-3 py-2 backdrop-blur-sm sm:hidden">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 rounded-md bg-muted/20 p-1">
               <button
                 type="button"
@@ -93,43 +80,6 @@ export function StackBuilder() {
                 Preview
               </button>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <button
-                    type="button"
-                    className="builder-focus-ring flex items-center gap-1 rounded-md bg-muted/20 px-2 py-1 font-mono text-[11px] text-muted-foreground uppercase tracking-wide hover:bg-muted/35 hover:text-foreground"
-                  />
-                }
-              >
-                <ListTree className="h-3 w-3" />
-                Jump
-                <ChevronDown className="h-3 w-3" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="max-h-72 w-64 overflow-auto bg-fd-background"
-              >
-                {categoryProgress.map((entry, index) => (
-                  <button
-                    key={entry.category}
-                    type="button"
-                    className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-xs hover:bg-muted/30"
-                    onClick={() => {
-                      goToCategory(entry.category);
-                      setMobileTab("build");
-                    }}
-                  >
-                    <span className="font-mono text-muted-foreground">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <span className="flex-1 truncate">
-                      {getCategoryDisplayName(entry.category)}
-                    </span>
-                  </button>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
 
@@ -228,8 +178,11 @@ export function StackBuilder() {
                         Compatibility Log
                       </p>
                       <ul className="space-y-1 rounded-lg bg-primary/7 px-2.5 py-2">
-                        {compatibilityAnalysis.changes.slice(0, 4).map((change) => (
-                          <li key={change.message} className="text-muted-foreground text-xs">
+                        {compatibilityAnalysis.changes.slice(0, 4).map((change, index) => (
+                          <li
+                            key={`${change.category}-${change.message}-${index}`}
+                            className="text-muted-foreground text-xs"
+                          >
                             • {change.message}
                           </li>
                         ))}
@@ -313,48 +266,6 @@ export function StackBuilder() {
                   Preview
                 </button>
               </div>
-
-              {viewMode === "command" && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    render={
-                      <button
-                        type="button"
-                        className="builder-focus-ring ml-auto flex items-center gap-1 rounded bg-muted/20 px-2 py-1 font-mono text-[11px] text-muted-foreground uppercase tracking-wide hover:bg-muted/35"
-                      />
-                    }
-                  >
-                    <ListTree className="h-3 w-3" />
-                    Jump
-                    <ChevronDown className="h-3 w-3" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="max-h-80 w-72 overflow-auto bg-fd-background"
-                  >
-                    {categoryProgress.map((entry, index) => (
-                      <button
-                        key={entry.category}
-                        type="button"
-                        className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-xs hover:bg-muted/30"
-                        onClick={() => {
-                          goToCategory(entry.category);
-                          startTransition(() => {
-                            setViewMode("command");
-                          });
-                        }}
-                      >
-                        <span className="font-mono text-muted-foreground">
-                          {String(index + 1).padStart(2, "0")}
-                        </span>
-                        <span className="flex-1 truncate">
-                          {getCategoryDisplayName(entry.category)}
-                        </span>
-                      </button>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
             </div>
 
             {viewMode === "command" ? (
@@ -366,8 +277,6 @@ export function StackBuilder() {
                       stack={stack}
                       compatibilityNotes={compatibilityAnalysis.notes}
                       onSelect={handleTechSelect}
-                      sectionRefs={sectionRefs}
-                      activeCategory={activeCategory}
                       showAllCategories
                     />
                   </main>
@@ -407,40 +316,22 @@ export function StackBuilder() {
                         )}
                         placeholder="my-better-t-app"
                       />
+                      {projectNameError && (
+                        <p className="mt-1 text-destructive text-xs">{projectNameError}</p>
+                      )}
                     </label>
 
-                    <div
-                      role="button"
-                      tabIndex={0}
-                      onClick={copyToClipboard}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          copyToClipboard();
-                        }
-                      }}
-                      className={cn(
-                        "builder-focus-ring rounded-lg bg-background/75 px-2.5 py-2 font-mono text-xs text-muted-foreground ring-1",
-                        copied ? "ring-primary/40" : "ring-border/45",
-                      )}
-                      aria-label="Copy command"
-                      title="Click to copy command"
-                    >
-                      <div className="mb-1 flex items-center justify-between gap-2">
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between gap-2">
                         <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-wide">
                           CLI Command
                         </span>
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            copyToClipboard();
-                          }}
+                        <span
                           className={cn(
-                            "builder-focus-ring flex items-center gap-1 rounded-md px-2 py-1 font-mono text-[11px] uppercase transition-colors",
+                            "flex items-center gap-1 rounded-md px-2 py-1 font-mono text-[11px] uppercase",
                             copied
                               ? "bg-primary/14 text-primary"
-                              : "bg-muted/20 text-muted-foreground hover:bg-muted/35 hover:text-foreground",
+                              : "bg-muted/20 text-muted-foreground",
                           )}
                         >
                           {copied ? (
@@ -448,13 +339,30 @@ export function StackBuilder() {
                           ) : (
                             <ClipboardCopy className="h-3 w-3 shrink-0" />
                           )}
-                          {copied ? "Copied" : "Copy"}
-                        </button>
+                          {copied ? "Copied" : "Tap to copy"}
+                        </span>
                       </div>
-
-                      <div className="flex items-start gap-1.5">
-                        <span className="mt-0.5 text-chart-4">$</span>
-                        <code className="break-all">{command}</code>
+                      <div
+                        role="button"
+                        tabIndex={0}
+                        onClick={copyToClipboard}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            copyToClipboard();
+                          }
+                        }}
+                        className={cn(
+                          "builder-focus-ring rounded-lg bg-background/75 px-2.5 py-2 font-mono text-xs text-muted-foreground ring-1",
+                          copied ? "ring-primary/40" : "ring-border/45",
+                        )}
+                        aria-label="Copy command"
+                        title="Click to copy command"
+                      >
+                        <div className="flex items-start gap-1.5">
+                          <span className="mt-0.5 text-chart-4">$</span>
+                          <code className="break-all">{command}</code>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -468,6 +376,40 @@ export function StackBuilder() {
                   />
                 </main>
               </ScrollArea>
+
+              <div className="border-border/35 border-t bg-fd-background/95 p-3 backdrop-blur-sm">
+                <div className="rounded-xl bg-fd-background/80 p-3 ring-1 ring-border/35">
+                  <ActionButtons
+                    onReset={resetStack}
+                    onRandom={getRandomStack}
+                    onSave={saveCurrentStack}
+                    onLoad={loadSavedStack}
+                    hasSavedStack={!!lastSavedStack}
+                  />
+
+                  <div className="mt-2 grid grid-cols-3 gap-1.5">
+                    <ShareButton stackUrl={getStackUrl()} stackState={stack} />
+                    <PresetDropdown onApplyPreset={applyPreset} />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        render={
+                          <button
+                            type="button"
+                            className="builder-focus-ring flex items-center justify-center gap-1.5 rounded-md bg-muted/20 px-2 py-1.5 font-mono font-medium text-muted-foreground text-xs transition-colors hover:bg-muted/35 hover:text-foreground"
+                          />
+                        }
+                      >
+                        <Settings className="h-3 w-3" />
+                        <span className="sr-only">Settings</span>
+                        <ChevronDown className="h-3 w-3" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-64 bg-fd-background">
+                        <YoloToggle stack={stack} onToggle={(yolo) => setStack({ yolo })} />
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

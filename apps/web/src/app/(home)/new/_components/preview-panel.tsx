@@ -206,7 +206,6 @@ export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewP
         <span
           className={cn(
             "hidden rounded border border-border/70 bg-fd-background px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground uppercase tracking-wide sm:inline-flex",
-            mobileView === "code" && "sm:inline-flex",
           )}
         >
           {mobileView === "code" ? "Code view" : "Tree view"}

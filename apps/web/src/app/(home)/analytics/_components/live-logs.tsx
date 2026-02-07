@@ -92,7 +92,7 @@ export function LiveLogs() {
                             key={event._id}
                             initial={{ opacity: 0, x: -5 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.2, delay: index * 0.05 }}
+                            transition={{ duration: 0.2, delay: Math.min(index * 0.05, 0.5) }}
                             className="group flex items-baseline gap-3 px-4 py-1 transition-colors hover:bg-muted/20"
                           >
                             <span

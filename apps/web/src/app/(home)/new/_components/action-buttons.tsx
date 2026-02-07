@@ -2,13 +2,13 @@
 
 import { RefreshCw, Settings, Shuffle, Star } from "lucide-react";
 
-interface ActionButtonsProps {
+type ActionButtonsProps = {
   onReset: () => void;
   onRandom: () => void;
   onSave: () => void;
   onLoad: () => void;
   hasSavedStack: boolean;
-}
+};
 
 export function ActionButtons({
   onReset,

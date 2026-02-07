@@ -1,5 +1,3 @@
-import type React from "react";
-
 import { CheckCircle2, InfoIcon, Terminal } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -19,12 +17,10 @@ type TechCategoriesProps = {
   stack: StackState;
   compatibilityNotes: Record<string, { hasIssue: boolean; notes: string[] }>;
   onSelect: (category: keyof typeof TECH_OPTIONS, techId: string) => void;
-  sectionRefs?: React.MutableRefObject<Record<string, HTMLElement | null>>;
-  activeCategory?: TechCategory;
   showAllCategories?: boolean;
 };
 
-function getIsSelected(stack: StackState, category: keyof StackState, techId: string): boolean {
+function getIsSelected(stack: StackState, category: keyof StackState, techId: string) {
   const currentValue = stack[category];
 
   if (
@@ -44,14 +40,10 @@ export function TechCategories({
   stack,
   compatibilityNotes,
   onSelect,
-  sectionRefs,
-  activeCategory,
   showAllCategories = false,
 }: TechCategoriesProps) {
   const isDesktop = mode === "desktop";
-  const categories = showAllCategories
-    ? CATEGORY_ORDER
-    : [activeCategory ?? CATEGORY_ORDER[0]].filter(Boolean);
+  const categories = showAllCategories ? CATEGORY_ORDER : [CATEGORY_ORDER[0]];
 
   return (
     <>
@@ -63,15 +55,6 @@ export function TechCategories({
 
         return (
           <section
-            ref={
-              isDesktop
-                ? (el) => {
-                    if (sectionRefs) {
-                      sectionRefs.current[categoryKey] = el;
-                    }
-                  }
-                : undefined
-            }
             key={`${mode}-${categoryKey}`}
             id={isDesktop ? `section-${categoryKey}` : `section-mobile-${categoryKey}`}
             className={cn("mb-6 scroll-mt-4", isDesktop && "sm:mb-8")}
@@ -140,7 +123,7 @@ export function TechCategories({
                           : "bg-muted/15 hover:bg-muted/25",
                     )}
                     whileHover={isDesktop && !isDisabled ? { scale: 1.01 } : undefined}
-                    whileTap={{ scale: 0.98 }}
+                    whileTap={!isDisabled ? { scale: 0.98 } : undefined}
                     onClick={() => {
                       if (isDisabled) {
                         return;

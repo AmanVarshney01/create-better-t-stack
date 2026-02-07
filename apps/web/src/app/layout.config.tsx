@@ -10,18 +10,8 @@ import mainLogoLight from "@/public/logo-light.svg";
 
 export const logo = (
   <>
-    <Image
-      alt="better-t-stack"
-      src={mainLogoLight}
-      className="w-8 dark:hidden"
-      aria-label="better-t-stack"
-    />
-    <Image
-      alt="better-t-stack"
-      src={mainLogoDark}
-      className="hidden w-8 dark:block"
-      aria-label="better-t-stack"
-    />
+    <Image alt="better-t-stack" src={mainLogoLight} className="w-8 dark:hidden" />
+    <Image alt="better-t-stack" src={mainLogoDark} className="hidden w-8 dark:block" />
   </>
 );
 

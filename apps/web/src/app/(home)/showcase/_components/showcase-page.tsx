@@ -15,11 +15,7 @@ type ShowcaseProject = {
   tags: string[];
 };
 
-export default function ShowcasePage({
-  showcaseProjects,
-}: {
-  showcaseProjects: Array<ShowcaseProject>;
-}) {
+export function ShowcasePage({ showcaseProjects }: { showcaseProjects: Array<ShowcaseProject> }) {
   return (
     <main className="min-h-svh bg-fd-background">
       <div className="container mx-auto space-y-8 px-4 py-8 pt-16">
@@ -33,32 +29,6 @@ export default function ShowcasePage({
               <p className="text-muted-foreground text-sm">
                 Community projects built with create-better-t-stack
               </p>
-            </div>
-          </div>
-
-          <div className="rounded-xl bg-gradient-to-br from-primary/12 via-fd-background to-fd-background/90 p-4 ring-1 ring-border/40 sm:p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-primary">$</span>
-                <span className="text-muted-foreground">status:</span>
-                <span className="text-foreground">live</span>
-              </div>
-              <span className="rounded-full bg-muted/30 px-2.5 py-1 font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
-                {showcaseProjects.length} projects
-              </span>
-            </div>
-
-            <div className="my-3 h-px w-full bg-border/35" />
-
-            <div className="space-y-1.5 text-muted-foreground text-xs">
-              <div className="flex items-start gap-2">
-                <span className="mt-0.5 shrink-0 text-primary">&gt;</span>
-                <span>Open-source projects submitted by the community</span>
-              </div>
-              <div className="flex items-start gap-2">
-                <span className="mt-0.5 shrink-0 text-primary">&gt;</span>
-                <span>Built with stacks generated using create-better-t-stack</span>
-              </div>
             </div>
           </div>
         </div>
@@ -87,7 +57,15 @@ export default function ShowcasePage({
           <div className="flex items-center gap-2 text-sm">
             <span className="text-primary">$</span>
             <span className="text-muted-foreground">
-              Want to showcase your project? Submit via GitHub issues
+              Want to showcase your project? Submit via{" "}
+              <a
+                href="https://github.com/AmanVarshney01/create-better-t-stack/issues/new/choose"
+                target="_blank"
+                rel="noreferrer"
+                className="underline decoration-border underline-offset-4 transition-colors hover:text-foreground"
+              >
+                GitHub issues
+              </a>
             </span>
           </div>
         </div>
