@@ -3,7 +3,7 @@ import { Result } from "better-result";
 import { $ } from "execa";
 import pc from "picocolors";
 
-import type { PackageManager, ProjectConfig } from "../../types";
+import type { ProjectConfig } from "../../types";
 
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
@@ -55,19 +55,7 @@ function hasReactBasedFrontend(frontend: ProjectConfig["frontend"]): boolean {
   );
 }
 
-function getPackageRunnerWithYesFlag(packageManager: PackageManager | null | undefined): string[] {
-  const prefix = getPackageRunnerPrefix(packageManager);
-  const runner = prefix[0];
-
-  // Ensure the runner itself doesn't prompt for package downloads.
-  if (runner === "bunx") return [...prefix, "-y"];
-  if (runner === "npx") return [...prefix, "-y"];
-  if (runner === "pnpm") return [...prefix, "--yes"];
-
-  return prefix;
-}
-
-export function getRecommendedMcpServers(config: ProjectConfig): McpServerDef[] {
+function getRecommendedMcpServers(config: ProjectConfig): McpServerDef[] {
   const servers: McpServerDef[] = [];
 
   servers.push({
@@ -189,6 +177,15 @@ export function getRecommendedMcpServers(config: ProjectConfig): McpServerDef[] 
     });
   }
 
+  if (config.payments === "polar") {
+    servers.push({
+      key: "polar",
+      label: "Polar",
+      name: "polar",
+      target: "https://mcp.polar.sh/mcp/polar-mcp",
+    });
+  }
+
   return servers;
 }
 
@@ -292,7 +289,7 @@ export async function setupMcp(
   const installSpinner = spinner();
   installSpinner.start("Installing MCP servers...");
 
-  const runner = getPackageRunnerWithYesFlag(packageManager);
+  const runner = getPackageRunnerPrefix(packageManager);
   const globalFlags = scope === "global" ? ["-g"] : [];
 
   for (const server of selectedServers) {
