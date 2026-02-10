@@ -1,4 +1,4 @@
-import { isCancel, log, multiselect, spinner } from "@clack/prompts";
+import { isCancel, log, multiselect, select, spinner } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import pc from "picocolors";
@@ -18,6 +18,8 @@ type AgentOption = {
   value: string;
   label: string;
 };
+
+type InstallScope = "project" | "global";
 
 // Skill sources - using GitHub shorthand or full URLs
 const SKILL_SOURCES = {
@@ -113,7 +115,7 @@ function hasNativeFrontend(frontend: ProjectConfig["frontend"]): boolean {
   );
 }
 
-export function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
+function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
   const sources: SourceKey[] = [];
   const { frontend, backend, dbSetup, auth, examples, addons, orm } = config;
 
@@ -149,7 +151,7 @@ export function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
     sources.push("supabase/agent-skills");
   }
 
-  if (orm === "prisma") {
+  if (orm === "prisma" || dbSetup === "prisma-postgres") {
     sources.push("prisma/skills");
   }
 
@@ -212,10 +214,16 @@ const CURATED_SKILLS_BY_SOURCE: Record<SourceKey, (config: ProjectConfig) => str
     return skills;
   },
   "prisma/skills": (config) => {
-    const skills = ["prisma-cli", "prisma-client-api", "prisma-database-setup"];
-    if (config.database === "postgres") {
+    const skills: string[] = [];
+
+    if (config.orm === "prisma") {
+      skills.push("prisma-cli", "prisma-client-api", "prisma-database-setup");
+    }
+
+    if (config.dbSetup === "prisma-postgres") {
       skills.push("prisma-postgres");
     }
+
     return skills;
   },
   "elysiajs/skills": () => ["elysiajs"],
@@ -232,10 +240,7 @@ const CURATED_SKILLS_BY_SOURCE: Record<SourceKey, (config: ProjectConfig) => str
   ],
 };
 
-export function getCuratedSkillNamesForSourceKey(
-  sourceKey: SourceKey,
-  config: ProjectConfig,
-): string[] {
+function getCuratedSkillNamesForSourceKey(sourceKey: SourceKey, config: ProjectConfig): string[] {
   return CURATED_SKILLS_BY_SOURCE[sourceKey](config);
 }
 
@@ -277,6 +282,27 @@ export async function setupSkills(
 
   if (skillOptions.length === 0) {
     return Result.ok(undefined);
+  }
+
+  const scope = await select<InstallScope>({
+    message: "Where should skills be installed?",
+    options: [
+      {
+        value: "project",
+        label: "Project",
+        hint: "Writes to project config files (recommended for teams)",
+      },
+      {
+        value: "global",
+        label: "Global",
+        hint: "Writes to user-level config files (personal machine)",
+      },
+    ],
+    initialValue: "project",
+  });
+
+  if (isCancel(scope)) {
+    return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
   }
 
   // Select all skills by default
@@ -329,6 +355,7 @@ export async function setupSkills(
 
   // Build repeated -a flags for agents (e.g., -a cursor -a claude-code)
   const agentFlags = (selectedAgents as string[]).map((a) => `-a ${a}`).join(" ");
+  const globalFlag = scope === "global" ? "-g" : "";
 
   // Install skills grouped by source (project scope, no -g flag)
   for (const [source, skills] of Object.entries(skillsBySource)) {
@@ -337,11 +364,11 @@ export async function setupSkills(
 
     const installResult = await Result.tryPromise({
       try: async () => {
-        // Install in project scope (no -g flag)
-        // Format: skills@latest add <source> -s skill1 -s skill2 -a agent1 -a agent2 -y
+        // Format:
+        // skills@latest add <source> [-g] -s skill1 -s skill2 -a agent1 -a agent2 -y
         const args = getPackageExecutionArgs(
           packageManager,
-          `skills@latest add ${source} ${skillFlags} ${agentFlags} -y`,
+          `skills@latest add ${source} ${globalFlag} ${skillFlags} ${agentFlags} -y`,
         );
         await $({ cwd: projectDir, env: { CI: "true" } })`${args}`;
       },
