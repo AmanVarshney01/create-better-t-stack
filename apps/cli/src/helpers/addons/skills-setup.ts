@@ -11,14 +11,7 @@ import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 type SkillSource = {
-  source: string;
   label: string;
-};
-
-type FetchedSkill = {
-  name: string;
-  source: string;
-  sourceLabel: string;
 };
 
 type AgentOption = {
@@ -27,60 +20,52 @@ type AgentOption = {
 };
 
 // Skill sources - using GitHub shorthand or full URLs
-const SKILL_SOURCES: Record<string, SkillSource> = {
+const SKILL_SOURCES = {
   "vercel-labs/agent-skills": {
-    source: "vercel-labs/agent-skills",
     label: "Vercel Agent Skills",
   },
   "vercel/ai": {
-    source: "vercel/ai",
     label: "Vercel AI SDK",
   },
   "vercel/turborepo": {
-    source: "vercel/turborepo",
     label: "Turborepo",
   },
   "yusukebe/hono-skill": {
-    source: "yusukebe/hono-skill",
     label: "Hono Backend",
   },
   "vercel-labs/next-skills": {
-    source: "vercel-labs/next-skills",
     label: "Next.js Best Practices",
   },
+  "nuxt/ui": {
+    label: "Nuxt UI",
+  },
   "heroui-inc/heroui": {
-    source: "heroui-inc/heroui",
     label: "HeroUI Native",
   },
   "better-auth/skills": {
-    source: "better-auth/skills",
     label: "Better Auth",
   },
   "neondatabase/agent-skills": {
-    source: "neondatabase/agent-skills",
     label: "Neon Database",
   },
   "supabase/agent-skills": {
-    source: "supabase/agent-skills",
     label: "Supabase",
   },
   "expo/skills": {
-    source: "expo/skills",
     label: "Expo",
   },
   "prisma/skills": {
-    source: "prisma/skills",
     label: "Prisma",
   },
   "elysiajs/skills": {
-    source: "elysiajs/skills",
     label: "ElysiaJS",
   },
   "waynesutton/convexskills": {
-    source: "waynesutton/convexskills",
     label: "Convex",
   },
-};
+} satisfies Record<string, SkillSource>;
+
+type SourceKey = keyof typeof SKILL_SOURCES;
 
 // All available agents from add-skill CLI
 const AVAILABLE_AGENTS: AgentOption[] = [
@@ -111,45 +96,51 @@ const AVAILABLE_AGENTS: AgentOption[] = [
   { value: "mcpjam", label: "MCPJam" },
 ];
 
-function getRecommendedSourceKeys(config: ProjectConfig): string[] {
-  const sources: string[] = [];
-  const { frontend, backend, dbSetup, auth, examples, addons, orm } = config;
-
-  const hasReactBasedFrontend =
+function hasReactBasedFrontend(frontend: ProjectConfig["frontend"]): boolean {
+  return (
     frontend.includes("react-router") ||
     frontend.includes("tanstack-router") ||
     frontend.includes("tanstack-start") ||
-    frontend.includes("next");
-  const hasNativeFrontend =
+    frontend.includes("next")
+  );
+}
+
+function hasNativeFrontend(frontend: ProjectConfig["frontend"]): boolean {
+  return (
     frontend.includes("native-bare") ||
     frontend.includes("native-uniwind") ||
-    frontend.includes("native-unistyles");
+    frontend.includes("native-unistyles")
+  );
+}
 
-  if (hasReactBasedFrontend) {
+export function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
+  const sources: SourceKey[] = [];
+  const { frontend, backend, dbSetup, auth, examples, addons, orm } = config;
+
+  if (hasReactBasedFrontend(frontend)) {
     sources.push("vercel-labs/agent-skills");
   }
 
-  // Next.js best practices
   if (frontend.includes("next")) {
     sources.push("vercel-labs/next-skills");
   }
 
-  // HeroUI Native skill for Uniwind projects
+  if (frontend.includes("nuxt")) {
+    sources.push("nuxt/ui");
+  }
+
   if (frontend.includes("native-uniwind")) {
     sources.push("heroui-inc/heroui");
   }
 
-  // Expo skills for native projects
-  if (hasNativeFrontend) {
+  if (hasNativeFrontend(frontend)) {
     sources.push("expo/skills");
   }
 
-  // Better Auth skills
   if (auth === "better-auth") {
     sources.push("better-auth/skills");
   }
 
-  // Database setup specific skills
   if (dbSetup === "neon") {
     sources.push("neondatabase/agent-skills");
   }
@@ -185,44 +176,71 @@ function getRecommendedSourceKeys(config: ProjectConfig): string[] {
   return sources;
 }
 
-function parseSkillsFromOutput(output: string): string[] {
-  const skills: string[] = [];
-  const lines = output.split("\n");
-  const ansiRegex = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
-
-  for (const line of lines) {
-    // Strip ANSI codes first
-    const cleanLine = line.replace(ansiRegex, "");
-
-    // Match lines that start with │ followed by exactly 4 spaces and then a skill name
-    const match = cleanLine.match(/^│\s{4}([a-z][a-z0-9-]*)$/);
-    if (match) {
-      skills.push(match[1]);
+const CURATED_SKILLS_BY_SOURCE: Record<SourceKey, (config: ProjectConfig) => string[]> = {
+  "vercel-labs/agent-skills": (config) => {
+    const skills = [
+      "web-design-guidelines",
+      "vercel-composition-patterns",
+      "vercel-react-best-practices",
+    ];
+    if (hasNativeFrontend(config.frontend)) {
+      skills.push("vercel-react-native-skills");
     }
-  }
+    return skills;
+  },
+  "vercel/ai": () => ["ai-sdk"],
+  "vercel/turborepo": () => ["turborepo"],
+  "yusukebe/hono-skill": () => ["hono"],
+  "vercel-labs/next-skills": () => ["next-best-practices", "next-cache-components"],
+  "nuxt/ui": () => ["nuxt-ui"],
+  "heroui-inc/heroui": () => ["heroui-native"],
+  "better-auth/skills": () => ["better-auth-best-practices"],
+  "neondatabase/agent-skills": () => ["neon-postgres"],
+  "supabase/agent-skills": () => ["supabase-postgres-best-practices"],
+  "expo/skills": (config) => {
+    const skills = [
+      "expo-dev-client",
+      "building-native-ui",
+      "native-data-fetching",
+      "expo-deployment",
+      "upgrading-expo",
+      "expo-cicd-workflows",
+    ];
+    if (config.frontend.includes("native-uniwind")) {
+      skills.push("expo-tailwind-setup");
+    }
+    return skills;
+  },
+  "prisma/skills": (config) => {
+    const skills = ["prisma-cli", "prisma-client-api", "prisma-database-setup"];
+    if (config.database === "postgres") {
+      skills.push("prisma-postgres");
+    }
+    return skills;
+  },
+  "elysiajs/skills": () => ["elysiajs"],
+  "waynesutton/convexskills": () => [
+    "convex-best-practices",
+    "convex-functions",
+    "convex-schema-validator",
+    "convex-realtime",
+    "convex-http-actions",
+    "convex-cron-jobs",
+    "convex-file-storage",
+    "convex-migrations",
+    "convex-security-check",
+  ],
+};
 
-  return skills;
+export function getCuratedSkillNamesForSourceKey(
+  sourceKey: SourceKey,
+  config: ProjectConfig,
+): string[] {
+  return CURATED_SKILLS_BY_SOURCE[sourceKey](config);
 }
 
 function uniqueValues<T>(values: T[]): T[] {
   return Array.from(new Set(values));
-}
-
-async function fetchSkillsFromSource(
-  source: SkillSource,
-  packageManager: ProjectConfig["packageManager"],
-  projectDir: string,
-): Promise<string[]> {
-  try {
-    const args = getPackageExecutionArgs(
-      packageManager,
-      `skills@latest add ${source.source} --list`,
-    );
-    const result = await $({ cwd: projectDir, env: { CI: "true" } })`${args}`;
-    return parseSkillsFromOutput(result.stdout);
-  } catch {
-    return [];
-  }
 }
 
 export async function setupSkills(
@@ -247,44 +265,19 @@ export async function setupSkills(
   }
 
   const sourceKeys = uniqueValues(recommendedSourceKeys);
-  const s = spinner();
-  s.start("Fetching available skills...");
+  const skillOptions = sourceKeys.flatMap((sourceKey) => {
+    const source = SKILL_SOURCES[sourceKey];
+    const skillNames = getCuratedSkillNamesForSourceKey(sourceKey, fullConfig);
+    return skillNames.map((skillName) => ({
+      value: `${sourceKey}::${skillName}`,
+      label: skillName,
+      hint: source.label,
+    }));
+  });
 
-  // Fetch skills from all recommended sources
-  const allSkills: FetchedSkill[] = [];
-  const sources = sourceKeys
-    .map((sourceKey) => SKILL_SOURCES[sourceKey])
-    .filter((source): source is SkillSource => Boolean(source));
-
-  const fetchedSkills = await Promise.all(
-    sources.map(async (source) => ({
-      source,
-      skills: await fetchSkillsFromSource(source, packageManager, projectDir),
-    })),
-  );
-
-  for (const { source, skills } of fetchedSkills) {
-    for (const skillName of skills) {
-      allSkills.push({
-        name: skillName,
-        source: source.source,
-        sourceLabel: source.label,
-      });
-    }
-  }
-
-  s.stop("Fetched available skills");
-
-  if (allSkills.length === 0) {
+  if (skillOptions.length === 0) {
     return Result.ok(undefined);
   }
-
-  // Build skill options for multiselect
-  const skillOptions = allSkills.map((skill) => ({
-    value: `${skill.source}::${skill.name}`,
-    label: skill.name,
-    hint: skill.sourceLabel,
-  }));
 
   // Select all skills by default
   const allSkillValues = skillOptions.map((opt) => opt.value);
