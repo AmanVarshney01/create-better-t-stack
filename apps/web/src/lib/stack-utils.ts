@@ -120,6 +120,7 @@ export function generateStackCommand(stack: StackState) {
                 "opentui",
                 "wxt",
                 "skills",
+                "mcp",
               ].includes(addon),
             )
             .join(" ") || "none"
