@@ -71,6 +71,10 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "Skills";
       hint = "AI coding agent skills for your stack";
       break;
+    case "mcp":
+      label = "MCP";
+      hint = "Install MCP servers (docs, databases, SaaS) via add-mcp";
+      break;
     default:
       label = addon;
       hint = `Add ${addon}`;
@@ -83,7 +87,7 @@ const ADDON_GROUPS = {
   Tooling: ["turborepo", "biome", "oxlint", "ultracite", "husky", "lefthook"],
   Documentation: ["starlight", "fumadocs"],
   Extensions: ["pwa", "tauri", "opentui", "wxt"],
-  AI: ["ruler", "skills"],
+  AI: ["ruler", "skills", "mcp"],
 };
 
 export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[], auth?: Auth) {

@@ -603,6 +603,14 @@ export const TECH_OPTIONS: Record<
       color: "from-pink-500 to-pink-700",
       default: false,
     },
+    {
+      id: "mcp",
+      name: "MCP",
+      description: "Install MCP servers for your agents/editors",
+      icon: "",
+      color: "from-emerald-500 to-emerald-700",
+      default: false,
+    },
   ],
   examples: [
     {
