@@ -55,6 +55,14 @@ function hasReactBasedFrontend(frontend: ProjectConfig["frontend"]): boolean {
   );
 }
 
+function hasNativeFrontend(frontend: ProjectConfig["frontend"]): boolean {
+  return (
+    frontend.includes("native-bare") ||
+    frontend.includes("native-uniwind") ||
+    frontend.includes("native-unistyles")
+  );
+}
+
 function getRecommendedMcpServers(config: ProjectConfig): McpServerDef[] {
   const servers: McpServerDef[] = [];
 
@@ -174,6 +182,24 @@ function getRecommendedMcpServers(config: ProjectConfig): McpServerDef[] {
       label: "Better Auth",
       name: "better-auth",
       target: "https://mcp.inkeep.com/better-auth/mcp",
+    });
+  }
+
+  if (config.auth === "clerk") {
+    servers.push({
+      key: "clerk",
+      label: "Clerk",
+      name: "clerk",
+      target: "https://mcp.clerk.com/mcp",
+    });
+  }
+
+  if (hasNativeFrontend(config.frontend)) {
+    servers.push({
+      key: "expo",
+      label: "Expo",
+      name: "expo-mcp",
+      target: "https://mcp.expo.dev/mcp",
     });
   }
 
