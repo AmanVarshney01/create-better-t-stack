@@ -79,6 +79,10 @@ export function SignUp() {
           },
           onSuccess() {
             formApi.reset();
+            toast.show({
+              variant: "success",
+              label: "Account created successfully",
+            });
           },
         },
       );

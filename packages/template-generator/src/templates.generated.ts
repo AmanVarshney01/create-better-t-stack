@@ -2836,6 +2836,10 @@ export function SignIn() {
           },
           onSuccess() {
             formApi.reset();
+            toast.show({
+              variant: "success",
+              label: "Signed in successfully",
+            });
           },
         },
       );
@@ -2998,6 +3002,10 @@ export function SignUp() {
           },
           onSuccess() {
             formApi.reset();
+            toast.show({
+              variant: "success",
+              label: "Account created successfully",
+            });
           },
         },
       );
@@ -5946,6 +5954,10 @@ function SignIn() {
           },
           onSuccess() {
             formApi.reset();
+            toast.show({
+              variant: "success",
+              label: "Signed in successfully",
+            });
             {{#if (eq api "orpc")}}
             queryClient.refetchQueries();
             {{/if}}
@@ -6122,6 +6134,10 @@ export function SignUp() {
           },
           onSuccess() {
             formApi.reset();
+            toast.show({
+              variant: "success",
+              label: "Account created successfully",
+            });
             {{#if (eq api "orpc")}}
             queryClient.refetchQueries();
             {{/if}}

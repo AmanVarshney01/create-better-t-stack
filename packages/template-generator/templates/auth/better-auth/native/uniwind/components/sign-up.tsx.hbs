@@ -85,6 +85,10 @@ export function SignUp() {
           },
           onSuccess() {
             formApi.reset();
+            toast.show({
+              variant: "success",
+              label: "Account created successfully",
+            });
             {{#if (eq api "orpc")}}
             queryClient.refetchQueries();
             {{/if}}

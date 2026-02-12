@@ -77,6 +77,10 @@ function SignIn() {
           },
           onSuccess() {
             formApi.reset();
+            toast.show({
+              variant: "success",
+              label: "Signed in successfully",
+            });
             {{#if (eq api "orpc")}}
             queryClient.refetchQueries();
             {{/if}}
