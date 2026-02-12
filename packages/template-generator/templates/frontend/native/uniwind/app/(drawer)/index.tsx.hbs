@@ -27,7 +27,7 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 {{#unless (or (eq backend "none") (and (eq backend "convex") (eq auth "better-auth")))}}
 import { Ionicons } from "@expo/vector-icons";
 {{/unless}}
-import { Button, Chip, Divider, Spinner, Surface, useThemeColor } from "heroui-native";
+import { Button, Chip, Separator, Spinner, Surface, useThemeColor } from "heroui-native";
 
 export default function Home() {
 {{#if (eq api "orpc")}}
@@ -63,8 +63,8 @@ const isLoading = healthCheck?.isLoading;
 {{/unless}}
 
 return (
-<Container className="p-4">
-  <View className="py-6 mb-4">
+<Container className="px-4 pb-4">
+  <View className="py-6 mb-5">
     <Text className="text-3xl font-semibold text-foreground tracking-tight">
       Better T Stack
     </Text>
@@ -72,7 +72,7 @@ return (
   </View>
 
   {{#unless (or (eq backend "none") (and (eq backend "convex") (eq auth "better-auth")))}}
-  <Surface variant="secondary" className="p-4 rounded-lg">
+  <Surface variant="secondary" className="p-4 rounded-xl">
     <View className="flex-row items-center justify-between mb-3">
       <Text className="text-foreground font-medium">System Status</Text>
       <Chip variant="secondary" color={isConnected ? "success" : "danger" } size="sm">
@@ -82,9 +82,9 @@ return (
       </Chip>
     </View>
 
-    <Divider className="mb-3" />
+    <Separator className="mb-3" />
 
-    <Surface variant="tertiary" className="p-3 rounded-md">
+    <Surface variant="tertiary" className="p-3 rounded-lg">
       <View className="flex-row items-center">
         <View className={`w-2 h-2 rounded-full mr-3 ${ isConnected ? "bg-success" : "bg-muted" }`} />
         <View className="flex-1">
@@ -119,7 +119,7 @@ return (
 
   {{#if (and (eq backend "convex") (eq auth "clerk"))}}
   <Authenticated>
-    <Surface variant="secondary" className="mt-4 p-4 rounded-lg">
+    <Surface variant="secondary" className="mt-5 p-4 rounded-xl">
       <View className="flex-row items-center justify-between">
         <View className="flex-1">
           <Text className="text-foreground font-medium">{user?.emailAddresses[0].emailAddress}</Text>
@@ -148,14 +148,14 @@ return (
 
   {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
   {user ? (
-  <Surface variant="secondary" className="mb-4 p-4 rounded-lg">
+  <Surface variant="secondary" className="mb-4 p-4 rounded-xl">
     <View className="flex-row items-center justify-between">
       <View className="flex-1">
         <Text className="text-foreground font-medium">{user.name}</Text>
         <Text className="text-muted text-xs mt-0.5">{user.email}</Text>
       </View>
       <Button
-        variant="destructive"
+        variant="danger"
         size="sm"
         onPress={() => {
           authClient.signOut();
@@ -166,7 +166,7 @@ return (
     </View>
   </Surface>
   ) : null}
-  <Surface variant="secondary" className="p-4 rounded-lg">
+  <Surface variant="secondary" className="p-4 rounded-xl">
     <Text className="text-foreground font-medium mb-2">API Status</Text>
     <View className="flex-row items-center gap-2">
       <View className={`w-2 h-2 rounded-full ${healthCheck==="OK" ? "bg-success" : "bg-danger" }`} />
@@ -180,7 +180,7 @@ return (
     </View>
   </Surface>
   {!user && (
-  <View className="mt-4 gap-4">
+  <View className="mt-5 gap-4">
     <SignIn />
     <SignUp />
   </View>

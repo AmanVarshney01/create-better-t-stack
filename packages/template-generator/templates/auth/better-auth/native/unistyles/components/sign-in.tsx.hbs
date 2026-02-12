@@ -5,6 +5,7 @@ import { queryClient } from "@/utils/trpc";
 {{#if (eq api "orpc")}}
 import { queryClient } from "@/utils/orpc";
 {{/if}}
+import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -14,82 +15,157 @@ import {
   View,
 } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
+import z from "zod";
+
+const signInSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(8, "Use at least 8 characters"),
+});
+
+function getErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (Array.isArray(error)) {
+    for (const issue of error) {
+      const message = getErrorMessage(issue);
+      if (message) {
+        return message;
+      }
+    }
+    return null;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const maybeError = error as { message?: unknown };
+    if (typeof maybeError.message === "string") {
+      return maybeError.message;
+    }
+  }
+
+  return null;
+}
 
 export function SignIn() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    await authClient.signIn.email(
-      {
-        email,
-        password,
-      },
-      {
-        onError: (error) => {
-          setError(error.error?.message || "Failed to sign in");
-          setIsLoading(false);
+  const form = useForm({
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    validators: {
+      onSubmit: signInSchema,
+    },
+    onSubmit: async ({ value, formApi }) => {
+      await authClient.signIn.email(
+        {
+          email: value.email.trim(),
+          password: value.password,
         },
-        onSuccess: () => {
-          setEmail("");
-          setPassword("");
-          {{#if (eq api "orpc")}}
-          queryClient.refetchQueries();
-          {{/if}}
-          {{#if (eq api "trpc")}}
-          queryClient.refetchQueries();
-          {{/if}}
+        {
+          onError(error) {
+            setError(error.error?.message || "Failed to sign in");
+          },
+          onSuccess() {
+            setError(null);
+            formApi.reset();
+            {{#if (eq api "orpc")}}
+            queryClient.refetchQueries();
+            {{/if}}
+            {{#if (eq api "trpc")}}
+            queryClient.refetchQueries();
+            {{/if}}
+          },
         },
-        onFinished: () => {
-          setIsLoading(false);
-        },
-      },
-    );
-  };
+      );
+    },
+  });
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sign In</Text>
 
-      {error && (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
-
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-
-      <TouchableOpacity
-        onPress={handleLogin}
-        disabled={isLoading}
-        style={styles.button}
+      <form.Subscribe
+        selector={(state) => ({
+          isSubmitting: state.isSubmitting,
+          validationError: getErrorMessage(state.errorMap.onSubmit),
+        })}
       >
-        {isLoading ? (
-          <ActivityIndicator size="small" color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Sign In</Text>
-        )}
-      </TouchableOpacity>
+        {({ isSubmitting, validationError }) => {
+          const formError = error ?? validationError;
+
+          return (
+            <>
+              {formError ? (
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorText}>{formError}</Text>
+                </View>
+              ) : null}
+
+              <form.Field name="email">
+                {(field) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Email"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                )}
+              </form.Field>
+
+              <form.Field name="password">
+                {(field) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Password"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    secureTextEntry
+                    onSubmitEditing={form.handleSubmit}
+                  />
+                )}
+              </form.Field>
+
+              <TouchableOpacity
+                onPress={form.handleSubmit}
+                disabled={isSubmitting}
+                style={styles.button}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>Sign In</Text>
+                )}
+              </TouchableOpacity>
+            </>
+          );
+        }}
+      </form.Subscribe>
     </View>
   );
 }
