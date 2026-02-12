@@ -2387,23 +2387,49 @@ const styles = StyleSheet.create((theme) => ({
 }));
 `],
   ["auth/better-auth/convex/native/uniwind/components/sign-in.tsx.hbs", `import { authClient } from "@/lib/auth-client";
-import { useState } from "react";
-import { Text, View } from "react-native";
-import { Button, ErrorView, Spinner, Surface, TextField } from "heroui-native";
+import { useRef, useState } from "react";
+import { Text, TextInput, View } from "react-native";
+import { Button, FieldError, Input, Label, Spinner, Surface, TextField } from "heroui-native";
+import z from "zod";
+
+const signInSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+});
 
 export function SignIn() {
+  const passwordInputRef = useRef<TextInput>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
+  const trimmedEmail = email.trim();
+  const validationResult = signInSchema.safeParse({
+    email: trimmedEmail,
+    password,
+  });
+  const validationError =
+    showValidationErrors && !validationResult.success
+      ? validationResult.error.issues[0]?.message ?? null
+      : null;
+  const formError = error ?? validationError;
+  const canSubmit = validationResult.success && !isLoading;
 
   const handleLogin = async () => {
+    setShowValidationErrors(true);
+    if (!canSubmit) return;
+
     setIsLoading(true);
     setError(null);
 
     await authClient.signIn.email(
       {
-        email,
+        email: trimmedEmail,
         password,
       },
       {
@@ -2414,6 +2440,7 @@ export function SignIn() {
         onSuccess: () => {
           setEmail("");
           setPassword("");
+          setShowValidationErrors(false);
         },
         onFinished: () => {
           setIsLoading(false);
@@ -2426,33 +2453,51 @@ export function SignIn() {
     <Surface variant="secondary" className="p-4 rounded-lg">
       <Text className="text-foreground font-medium mb-4">Sign In</Text>
 
-      <ErrorView isInvalid={!!error} className="mb-3">
-        {error}
-      </ErrorView>
+      <FieldError isInvalid={!!formError} className="mb-3">
+        {formError}
+      </FieldError>
 
       <View className="gap-3">
         <TextField>
-          <TextField.Label>Email</TextField.Label>
-          <TextField.Input
+          <Label>Email</Label>
+          <Input
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(value) => {
+              setEmail(value);
+              if (error) setError(null);
+            }}
             placeholder="email@example.com"
             keyboardType="email-address"
             autoCapitalize="none"
+            autoComplete="email"
+            textContentType="emailAddress"
+            returnKeyType="next"
+            blurOnSubmit={false}
+            onSubmitEditing={() => {
+              passwordInputRef.current?.focus();
+            }}
           />
         </TextField>
 
         <TextField>
-          <TextField.Label>Password</TextField.Label>
-          <TextField.Input
+          <Label>Password</Label>
+          <Input
+            ref={passwordInputRef}
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(value) => {
+              setPassword(value);
+              if (error) setError(null);
+            }}
             placeholder="••••••••"
             secureTextEntry
+            autoComplete="password"
+            textContentType="password"
+            returnKeyType="go"
+            onSubmitEditing={handleLogin}
           />
         </TextField>
 
-        <Button onPress={handleLogin} isDisabled={isLoading} className="mt-1">
+        <Button onPress={handleLogin} isDisabled={!canSubmit} className="mt-1">
           {isLoading ? <Spinner size="sm" color="default" /> : <Button.Label>Sign In</Button.Label>}
         </Button>
       </View>
@@ -2461,25 +2506,62 @@ export function SignIn() {
 }
 `],
   ["auth/better-auth/convex/native/uniwind/components/sign-up.tsx.hbs", `import { authClient } from "@/lib/auth-client";
-import { useState } from "react";
-import { Text, View } from "react-native";
-import { Button, ErrorView, Spinner, Surface, TextField } from "heroui-native";
+import { useRef, useState } from "react";
+import { Text, TextInput, View } from "react-native";
+import { Button, FieldError, Input, Label, Spinner, Surface, TextField } from "heroui-native";
+import z from "zod";
+
+const signUpSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(8, "Use at least 8 characters"),
+});
 
 export function SignUp() {
+  const emailInputRef = useRef<TextInput>(null);
+  const passwordInputRef = useRef<TextInput>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
+  const trimmedName = name.trim();
+  const trimmedEmail = email.trim();
+  const validationResult = signUpSchema.safeParse({
+    name: trimmedName,
+    email: trimmedEmail,
+    password,
+  });
+  const validationError =
+    showValidationErrors && !validationResult.success
+      ? validationResult.error.issues[0]?.message ?? null
+      : null;
+  const formError = error ?? validationError;
+  const canSubmit = validationResult.success && !isLoading;
 
   const handleSignUp = async () => {
+    setShowValidationErrors(true);
+    if (!canSubmit) return;
+
     setIsLoading(true);
     setError(null);
 
     await authClient.signUp.email(
       {
-        name,
-        email,
+        name: trimmedName,
+        email: trimmedEmail,
         password,
       },
       {
@@ -2491,6 +2573,7 @@ export function SignUp() {
           setName("");
           setEmail("");
           setPassword("");
+          setShowValidationErrors(false);
         },
         onFinished: () => {
           setIsLoading(false);
@@ -2503,38 +2586,71 @@ export function SignUp() {
     <Surface variant="secondary" className="p-4 rounded-lg">
       <Text className="text-foreground font-medium mb-4">Create Account</Text>
 
-      <ErrorView isInvalid={!!error} className="mb-3">
-        {error}
-      </ErrorView>
+      <FieldError isInvalid={!!formError} className="mb-3">
+        {formError}
+      </FieldError>
 
       <View className="gap-3">
         <TextField>
-          <TextField.Label>Name</TextField.Label>
-          <TextField.Input value={name} onChangeText={setName} placeholder="John Doe" />
+          <Label>Name</Label>
+          <Input
+            value={name}
+            onChangeText={(value) => {
+              setName(value);
+              if (error) setError(null);
+            }}
+            placeholder="John Doe"
+            autoComplete="name"
+            textContentType="name"
+            returnKeyType="next"
+            blurOnSubmit={false}
+            onSubmitEditing={() => {
+              emailInputRef.current?.focus();
+            }}
+          />
         </TextField>
 
         <TextField>
-          <TextField.Label>Email</TextField.Label>
-          <TextField.Input
+          <Label>Email</Label>
+          <Input
+            ref={emailInputRef}
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(value) => {
+              setEmail(value);
+              if (error) setError(null);
+            }}
             placeholder="email@example.com"
             keyboardType="email-address"
             autoCapitalize="none"
+            autoComplete="email"
+            textContentType="emailAddress"
+            returnKeyType="next"
+            blurOnSubmit={false}
+            onSubmitEditing={() => {
+              passwordInputRef.current?.focus();
+            }}
           />
         </TextField>
 
         <TextField>
-          <TextField.Label>Password</TextField.Label>
-          <TextField.Input
+          <Label>Password</Label>
+          <Input
+            ref={passwordInputRef}
             value={password}
-            onChangeText={setPassword}
+            onChangeText={(value) => {
+              setPassword(value);
+              if (error) setError(null);
+            }}
             placeholder="••••••••"
             secureTextEntry
+            autoComplete="new-password"
+            textContentType="newPassword"
+            returnKeyType="go"
+            onSubmitEditing={handleSignUp}
           />
         </TextField>
 
-        <Button onPress={handleSignUp} isDisabled={isLoading} className="mt-1">
+        <Button onPress={handleSignUp} isDisabled={!canSubmit} className="mt-1">
           {isLoading ? (
             <Spinner size="sm" color="default" />
           ) : (
@@ -4929,23 +5045,49 @@ import { queryClient } from "@/utils/trpc";
 {{#if (eq api "orpc")}}
 import { queryClient } from "@/utils/orpc";
 {{/if}}
-import { useState } from "react";
-import { Text, View } from "react-native";
-import { Button, ErrorView, Spinner, Surface, TextField } from "heroui-native";
+import { useRef, useState } from "react";
+import { Text, TextInput, View } from "react-native";
+import { Button, FieldError, Input, Label, Spinner, Surface, TextField } from "heroui-native";
+import z from "zod";
+
+const signInSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+});
 
 function SignIn() {
-const [email, setEmail] = useState("");
-const [password, setPassword] = useState("");
-const [isLoading, setIsLoading] = useState(false);
-const [error, setError] = useState<string | null>(null);
+  const passwordInputRef = useRef<TextInput>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
+  const trimmedEmail = email.trim();
+  const validationResult = signInSchema.safeParse({
+    email: trimmedEmail,
+    password,
+  });
+  const validationError =
+    showValidationErrors && !validationResult.success
+      ? validationResult.error.issues[0]?.message ?? null
+      : null;
+  const formError = error ?? validationError;
+  const canSubmit = validationResult.success && !isLoading;
 
   async function handleLogin() {
+  setShowValidationErrors(true);
+  if (!canSubmit) return;
+
   setIsLoading(true);
   setError(null);
 
   await authClient.signIn.email(
   {
-  email,
+  email: trimmedEmail,
   password,
   },
   {
@@ -4956,6 +5098,7 @@ const [error, setError] = useState<string | null>(null);
   onSuccess() {
   setEmail("");
   setPassword("");
+  setShowValidationErrors(false);
   {{#if (eq api "orpc")}}
   queryClient.refetchQueries();
   {{/if}}
@@ -4974,33 +5117,51 @@ const [error, setError] = useState<string | null>(null);
   <Surface variant="secondary" className="p-4 rounded-lg">
     <Text className="text-foreground font-medium mb-4">Sign In</Text>
 
-    <ErrorView isInvalid={!!error} className="mb-3">
-      {error}
-    </ErrorView>
+    <FieldError isInvalid={!!formError} className="mb-3">
+      {formError}
+    </FieldError>
 
     <View className="gap-3">
       <TextField>
-        <TextField.Label>Email</TextField.Label>
-        <TextField.Input
+        <Label>Email</Label>
+        <Input
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(value) => {
+            setEmail(value);
+            if (error) setError(null);
+          }}
           placeholder="email@example.com"
           keyboardType="email-address"
           autoCapitalize="none"
+          autoComplete="email"
+          textContentType="emailAddress"
+          returnKeyType="next"
+          blurOnSubmit={false}
+          onSubmitEditing={() => {
+            passwordInputRef.current?.focus();
+          }}
         />
       </TextField>
 
       <TextField>
-        <TextField.Label>Password</TextField.Label>
-        <TextField.Input
+        <Label>Password</Label>
+        <Input
+          ref={passwordInputRef}
           value={password}
-          onChangeText={setPassword}
+          onChangeText={(value) => {
+            setPassword(value);
+            if (error) setError(null);
+          }}
           placeholder="••••••••"
           secureTextEntry
+          autoComplete="password"
+          textContentType="password"
+          returnKeyType="go"
+          onSubmitEditing={handleLogin}
         />
       </TextField>
 
-      <Button onPress={handleLogin} isDisabled={isLoading} className="mt-1">
+      <Button onPress={handleLogin} isDisabled={!canSubmit} className="mt-1">
         {isLoading ? <Spinner size="sm" color="default" /> : <Button.Label>Sign In</Button.Label>}
       </Button>
     </View>
@@ -5008,7 +5169,8 @@ const [error, setError] = useState<string | null>(null);
   );
   }
 
-  export { SignIn };`],
+  export { SignIn };
+`],
   ["auth/better-auth/native/uniwind/components/sign-up.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 {{#if (eq api "trpc")}}
 import { queryClient } from "@/utils/trpc";
@@ -5016,117 +5178,157 @@ import { queryClient } from "@/utils/trpc";
 {{#if (eq api "orpc")}}
 import { queryClient } from "@/utils/orpc";
 {{/if}}
-import { useState } from "react";
-import { Text, View } from "react-native";
-import { Button, ErrorView, Spinner, Surface, TextField } from "heroui-native";
+import { useRef, useState } from "react";
+import { Text, TextInput, View } from "react-native";
+import { Button, FieldError, Input, Label, Spinner, Surface, TextField } from "heroui-native";
+import z from "zod";
 
-function signUpHandler({
-name,
-email,
-password,
-setError,
-setIsLoading,
-setName,
-setEmail,
-setPassword,
-}: {
-  name: string;
-  email: string;
-  password: string;
-  setError: (error: string | null) => void;
-  setIsLoading: (loading: boolean) => void;
-  setName: (name: string) => void;
-  setEmail: (email: string) => void;
-  setPassword: (password: string) => void;
-}) {
-setIsLoading(true);
-setError(null);
-
-authClient.signUp.email(
-{
-name,
-email,
-password,
-},
-{
-onError(error) {
-setError(error.error?.message || "Failed to sign up");
-setIsLoading(false);
-},
-onSuccess() {
-setName("");
-setEmail("");
-setPassword("");
-{{#if (eq api "orpc")}}
-queryClient.refetchQueries();
-{{/if}}
-{{#if (eq api "trpc")}}
-queryClient.refetchQueries();
-{{/if}}
-},
-onFinished() {
-setIsLoading(false);
-},
-}
-);
-}
+const signUpSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(8, "Use at least 8 characters"),
+});
 
 export function SignUp() {
+const emailInputRef = useRef<TextInput>(null);
+const passwordInputRef = useRef<TextInput>(null);
 const [name, setName] = useState("");
 const [email, setEmail] = useState("");
 const [password, setPassword] = useState("");
 const [isLoading, setIsLoading] = useState(false);
 const [error, setError] = useState<string | null>(null);
-
-  function handlePress() {
-  signUpHandler({
-  name,
-  email,
+const [showValidationErrors, setShowValidationErrors] = useState(false);
+const trimmedName = name.trim();
+const trimmedEmail = email.trim();
+const validationResult = signUpSchema.safeParse({
+  name: trimmedName,
+  email: trimmedEmail,
   password,
-  setError,
-  setIsLoading,
-  setName,
-  setEmail,
-  setPassword,
-  });
+});
+const validationError =
+  showValidationErrors && !validationResult.success
+    ? validationResult.error.issues[0]?.message ?? null
+    : null;
+const formError = error ?? validationError;
+const canSubmit = validationResult.success && !isLoading;
+
+  async function handlePress() {
+  setShowValidationErrors(true);
+  if (!canSubmit) return;
+
+  setIsLoading(true);
+  setError(null);
+
+  await authClient.signUp.email(
+  {
+  name: trimmedName,
+  email: trimmedEmail,
+  password,
+  },
+  {
+  onError(error) {
+  setError(error.error?.message || "Failed to sign up");
+  setIsLoading(false);
+  },
+  onSuccess() {
+  setName("");
+  setEmail("");
+  setPassword("");
+  setShowValidationErrors(false);
+  {{#if (eq api "orpc")}}
+  queryClient.refetchQueries();
+  {{/if}}
+  {{#if (eq api "trpc")}}
+  queryClient.refetchQueries();
+  {{/if}}
+  },
+  onFinished() {
+  setIsLoading(false);
+  },
+  }
+  );
   }
 
   return (
   <Surface variant="secondary" className="p-4 rounded-lg">
     <Text className="text-foreground font-medium mb-4">Create Account</Text>
 
-    <ErrorView isInvalid={!!error} className="mb-3">
-      {error}
-    </ErrorView>
+    <FieldError isInvalid={!!formError} className="mb-3">
+      {formError}
+    </FieldError>
 
     <View className="gap-3">
       <TextField>
-        <TextField.Label>Name</TextField.Label>
-        <TextField.Input value={name} onChangeText={setName} placeholder="John Doe" />
+        <Label>Name</Label>
+        <Input
+          value={name}
+          onChangeText={(value) => {
+            setName(value);
+            if (error) setError(null);
+          }}
+          placeholder="John Doe"
+          autoComplete="name"
+          textContentType="name"
+          returnKeyType="next"
+          blurOnSubmit={false}
+          onSubmitEditing={() => {
+            emailInputRef.current?.focus();
+          }}
+        />
       </TextField>
 
       <TextField>
-        <TextField.Label>Email</TextField.Label>
-        <TextField.Input
+        <Label>Email</Label>
+        <Input
+          ref={emailInputRef}
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(value) => {
+            setEmail(value);
+            if (error) setError(null);
+          }}
           placeholder="email@example.com"
           keyboardType="email-address"
           autoCapitalize="none"
+          autoComplete="email"
+          textContentType="emailAddress"
+          returnKeyType="next"
+          blurOnSubmit={false}
+          onSubmitEditing={() => {
+            passwordInputRef.current?.focus();
+          }}
         />
       </TextField>
 
       <TextField>
-        <TextField.Label>Password</TextField.Label>
-        <TextField.Input
+        <Label>Password</Label>
+        <Input
+          ref={passwordInputRef}
           value={password}
-          onChangeText={setPassword}
+          onChangeText={(value) => {
+            setPassword(value);
+            if (error) setError(null);
+          }}
           placeholder="••••••••"
           secureTextEntry
+          autoComplete="new-password"
+          textContentType="newPassword"
+          returnKeyType="go"
+          onSubmitEditing={handlePress}
         />
       </TextField>
 
-      <Button onPress={handlePress} isDisabled={isLoading} className="mt-1">
+      <Button onPress={handlePress} isDisabled={!canSubmit} className="mt-1">
         {isLoading ? (
           <Spinner size="sm" color="default" />
         ) : (
@@ -5136,7 +5338,8 @@ const [error, setError] = useState<string | null>(null);
     </View>
   </Surface>
   );
-  }`],
+  }
+`],
   ["auth/better-auth/server/base/_gitignore", `# dependencies (bun install)
 node_modules
 
@@ -13065,7 +13268,7 @@ import {
 } from "@convex-dev/agent/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
-import { Button, Divider, Spinner, Surface, TextField, useThemeColor } from "heroui-native";
+import { Button, Separator, Spinner, Surface, Input, TextField, useThemeColor } from "heroui-native";
 import { useRef, useEffect, useState } from "react";
 import {
   View,
@@ -13138,7 +13341,7 @@ export default function AIScreen() {
   };
 
   return (
-    <Container>
+    <Container isScrollable={false}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -13153,19 +13356,21 @@ export default function AIScreen() {
             ref={scrollViewRef}
             className="flex-1 mb-4"
             showsVerticalScrollIndicator={false}
+            contentContainerStyle=\\{{ flexGrow: 1, paddingBottom: 8 }}
+            keyboardShouldPersistTaps="handled"
           >
             {!messages || messages.length === 0 ? (
-              <View className="flex-1 justify-center items-center py-10">
+              <Surface variant="secondary" className="flex-1 justify-center items-center py-8 rounded-xl">
                 <Ionicons name="chatbubble-ellipses-outline" size={32} color={mutedColor} />
                 <Text className="text-muted text-sm mt-3">Ask me anything to get started</Text>
-              </View>
+              </Surface>
             ) : (
-              <View className="gap-2">
+              <View className="gap-3">
                 {messages.map((message: UIMessage) => (
                   <Surface
                     key={message.key}
                     variant={message.role === "user" ? "tertiary" : "secondary"}
-                    className={\`p-3 rounded-lg \${message.role === "user" ? "ml-10" : "mr-10"}\`}
+                    className={\`p-3 rounded-xl \${message.role === "user" ? "ml-8" : "mr-8"}\`}
                   >
                     <Text className="text-xs font-medium mb-1 text-muted">
                       {message.role === "user" ? "You" : "AI"}
@@ -13189,21 +13394,21 @@ export default function AIScreen() {
             )}
           </ScrollView>
 
-          <Divider className="mb-3" />
+          <Separator className="mb-3" />
 
           <View className="flex-row items-center gap-2">
             <View className="flex-1">
-              <TextField>
-                <TextField.Input
-                  value={input}
-                  onChangeText={setInput}
-                  placeholder="Type a message..."
-                  onSubmitEditing={onSubmit}
-                  editable={!isLoading}
-                  autoFocus
-                />
-              </TextField>
-            </View>
+                <TextField>
+                  <Input
+                    value={input}
+                    onChangeText={setInput}
+                    placeholder="Type a message..."
+                    onSubmitEditing={onSubmit}
+                    editable={!isLoading}
+                    returnKeyType="send"
+                  />
+                </TextField>
+              </View>
             <Button
               isIconOnly
               variant={input.trim() && !isLoading ? "primary" : "secondary"}
@@ -13237,7 +13442,7 @@ import { DefaultChatTransport } from "ai";
 import { fetch as expoFetch } from "expo/fetch";
 import { Ionicons } from "@expo/vector-icons";
 import { Container } from "@/components/container";
-import { Button, Divider, ErrorView, Spinner, Surface, TextField, useThemeColor } from "heroui-native";
+import { Button, Separator, FieldError, Spinner, Surface, Input, TextField, useThemeColor } from "heroui-native";
 import { env } from "@{{projectName}}/env/native";
 
 const generateAPIUrl = (relativePath: string) => {
@@ -13253,7 +13458,7 @@ const generateAPIUrl = (relativePath: string) => {
 
 export default function AIScreen() {
   const [input, setInput] = useState("");
-  const { messages, error, sendMessage } = useChat({
+  const { messages, error, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       fetch: expoFetch as unknown as typeof globalThis.fetch,
       api: generateAPIUrl("/ai"),
@@ -13263,6 +13468,7 @@ export default function AIScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const foregroundColor = useThemeColor("foreground");
   const mutedColor = useThemeColor("muted");
+  const isBusy = status === "submitted" || status === "streaming";
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
@@ -13270,7 +13476,7 @@ export default function AIScreen() {
 
   const onSubmit = () => {
     const value = input.trim();
-    if (value) {
+    if (value && !isBusy) {
       sendMessage({ text: value });
       setInput("");
     }
@@ -13278,17 +13484,17 @@ export default function AIScreen() {
 
   if (error) {
     return (
-      <Container>
+      <Container isScrollable={false}>
         <View className="flex-1 justify-center items-center px-4">
           <Surface variant="secondary" className="p-4 rounded-lg">
-            <ErrorView isInvalid>
+            <FieldError isInvalid>
               <Text className="text-danger text-center font-medium mb-1">
                 {error.message}
               </Text>
               <Text className="text-muted text-center text-xs">
                 Please check your connection and try again.
               </Text>
-            </ErrorView>
+            </FieldError>
           </Surface>
         </View>
       </Container>
@@ -13296,7 +13502,7 @@ export default function AIScreen() {
   }
 
   return (
-    <Container>
+    <Container isScrollable={false}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -13311,19 +13517,21 @@ export default function AIScreen() {
             ref={scrollViewRef}
             className="flex-1 mb-4"
             showsVerticalScrollIndicator={false}
+            contentContainerStyle=\\{{ flexGrow: 1, paddingBottom: 8 }}
+            keyboardShouldPersistTaps="handled"
           >
             {messages.length === 0 ? (
-              <View className="flex-1 justify-center items-center py-10">
+              <Surface variant="secondary" className="flex-1 justify-center items-center py-8 rounded-xl">
                 <Ionicons name="chatbubble-ellipses-outline" size={32} color={mutedColor} />
                 <Text className="text-muted text-sm mt-3">Ask me anything to get started</Text>
-              </View>
+              </Surface>
             ) : (
-              <View className="gap-2">
+              <View className="gap-3">
                 {messages.map((message) => (
                   <Surface
                     key={message.id}
                     variant={message.role === "user" ? "tertiary" : "secondary"}
-                    className={\`p-3 rounded-lg \${message.role === "user" ? "ml-10" : "mr-10"}\`}
+                    className={\`p-3 rounded-xl \${message.role === "user" ? "ml-8" : "mr-8"}\`}
                   >
                     <Text className="text-xs font-medium mb-1 text-muted">
                       {message.role === "user" ? "You" : "AI"}
@@ -13349,35 +13557,45 @@ export default function AIScreen() {
                     </View>
                   </Surface>
                 ))}
+                {isBusy && (
+                  <Surface variant="secondary" className="p-3 mr-8 rounded-xl">
+                    <Text className="text-xs font-medium mb-1 text-muted">AI</Text>
+                    <View className="flex-row items-center gap-2">
+                      <Spinner size="sm" />
+                      <Text className="text-muted text-sm">Thinking...</Text>
+                    </View>
+                  </Surface>
+                )}
               </View>
             )}
           </ScrollView>
 
-          <Divider className="mb-3" />
+          <Separator className="mb-3" />
 
           <View className="flex-row items-center gap-2">
             <View className="flex-1">
               <TextField>
-                <TextField.Input
+                <Input
                   value={input}
                   onChangeText={setInput}
                   placeholder="Type a message..."
                   onSubmitEditing={onSubmit}
-                  autoFocus
+                  returnKeyType="send"
+                  editable={!isBusy}
                 />
               </TextField>
             </View>
             <Button
               isIconOnly
-              variant={input.trim() ? "primary" : "secondary"}
+              variant={input.trim() && !isBusy ? "primary" : "secondary"}
               onPress={onSubmit}
-              isDisabled={!input.trim()}
+              isDisabled={!input.trim() || isBusy}
               size="sm"
             >
               <Ionicons
                 name="arrow-up"
                 size={18}
-                color={input.trim() ? foregroundColor : mutedColor}
+                color={input.trim() && !isBusy ? foregroundColor : mutedColor}
               />
             </Button>
           </View>
@@ -15487,7 +15705,7 @@ import { Container } from "@/components/container";
     import { trpc } from "@/utils/trpc";
   {{/if}}
 {{/unless}}
-import { Button, Checkbox, Chip, Spinner, Surface, TextField, useThemeColor } from "heroui-native";
+import { Button, Checkbox, Chip, Spinner, Surface, Input, TextField, useThemeColor } from "heroui-native";
 
 export default function TodosScreen() {
   const [newTodoText, setNewTodoText] = useState("");
@@ -15614,7 +15832,7 @@ export default function TodosScreen() {
           <View className="flex-row items-center gap-2">
             <View className="flex-1">
               <TextField>
-                <TextField.Input
+                <Input
                   value={newTodoText}
                   onChangeText={setNewTodoText}
                   placeholder="Add a new task..."
@@ -20746,7 +20964,7 @@ export default function Home() {
 	return (
 		<Container className="p-6">
 			<View className="flex-1 justify-center items-center">
-				<Card variant="secondary" className="p-8 items-center">
+				<Card variant="secondary" className="p-8 items-center rounded-xl">
 					<Card.Title className="text-3xl mb-2">Tab One</Card.Title>
 				</Card>
 			</View>
@@ -20762,8 +20980,8 @@ export default function TabTwo() {
 	return (
 		<Container className="p-6">
 			<View className="flex-1 justify-center items-center">
-				<Card variant="secondary" className="p-8 items-center">
-					<Card.Title className="text-3xl mb-2">TabTwo</Card.Title>
+				<Card variant="secondary" className="p-8 items-center rounded-xl">
+					<Card.Title className="text-3xl mb-2">Tab Two</Card.Title>
 				</Card>
 			</View>
 		</Container>
@@ -20799,7 +21017,7 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 {{#unless (or (eq backend "none") (and (eq backend "convex") (eq auth "better-auth")))}}
 import { Ionicons } from "@expo/vector-icons";
 {{/unless}}
-import { Button, Chip, Divider, Spinner, Surface, useThemeColor } from "heroui-native";
+import { Button, Chip, Separator, Spinner, Surface, useThemeColor } from "heroui-native";
 
 export default function Home() {
 {{#if (eq api "orpc")}}
@@ -20835,8 +21053,8 @@ const isLoading = healthCheck?.isLoading;
 {{/unless}}
 
 return (
-<Container className="p-4">
-  <View className="py-6 mb-4">
+<Container className="px-4 pb-4">
+  <View className="py-6 mb-5">
     <Text className="text-3xl font-semibold text-foreground tracking-tight">
       Better T Stack
     </Text>
@@ -20844,7 +21062,7 @@ return (
   </View>
 
   {{#unless (or (eq backend "none") (and (eq backend "convex") (eq auth "better-auth")))}}
-  <Surface variant="secondary" className="p-4 rounded-lg">
+  <Surface variant="secondary" className="p-4 rounded-xl">
     <View className="flex-row items-center justify-between mb-3">
       <Text className="text-foreground font-medium">System Status</Text>
       <Chip variant="secondary" color={isConnected ? "success" : "danger" } size="sm">
@@ -20854,9 +21072,9 @@ return (
       </Chip>
     </View>
 
-    <Divider className="mb-3" />
+    <Separator className="mb-3" />
 
-    <Surface variant="tertiary" className="p-3 rounded-md">
+    <Surface variant="tertiary" className="p-3 rounded-lg">
       <View className="flex-row items-center">
         <View className={\`w-2 h-2 rounded-full mr-3 \${ isConnected ? "bg-success" : "bg-muted" }\`} />
         <View className="flex-1">
@@ -20891,7 +21109,7 @@ return (
 
   {{#if (and (eq backend "convex") (eq auth "clerk"))}}
   <Authenticated>
-    <Surface variant="secondary" className="mt-4 p-4 rounded-lg">
+    <Surface variant="secondary" className="mt-5 p-4 rounded-xl">
       <View className="flex-row items-center justify-between">
         <View className="flex-1">
           <Text className="text-foreground font-medium">{user?.emailAddresses[0].emailAddress}</Text>
@@ -20920,14 +21138,14 @@ return (
 
   {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
   {user ? (
-  <Surface variant="secondary" className="mb-4 p-4 rounded-lg">
+  <Surface variant="secondary" className="mb-4 p-4 rounded-xl">
     <View className="flex-row items-center justify-between">
       <View className="flex-1">
         <Text className="text-foreground font-medium">{user.name}</Text>
         <Text className="text-muted text-xs mt-0.5">{user.email}</Text>
       </View>
       <Button
-        variant="destructive"
+        variant="danger"
         size="sm"
         onPress={() => {
           authClient.signOut();
@@ -20938,7 +21156,7 @@ return (
     </View>
   </Surface>
   ) : null}
-  <Surface variant="secondary" className="p-4 rounded-lg">
+  <Surface variant="secondary" className="p-4 rounded-xl">
     <Text className="text-foreground font-medium mb-2">API Status</Text>
     <View className="flex-row items-center gap-2">
       <View className={\`w-2 h-2 rounded-full \${healthCheck==="OK" ? "bg-success" : "bg-danger" }\`} />
@@ -20952,7 +21170,7 @@ return (
     </View>
   </Surface>
   {!user && (
-  <View className="mt-4 gap-4">
+  <View className="mt-5 gap-4">
     <SignIn />
     <SignUp />
   </View>
@@ -20960,7 +21178,8 @@ return (
   {{/if}}
 </Container>
 );
-}`],
+}
+`],
   ["frontend/native/uniwind/app/+not-found.tsx.hbs", `import { Link, Stack } from "expo-router";
 import { Button, Surface } from "heroui-native";
 import { Text, View } from "react-native";
@@ -21029,36 +21248,49 @@ export default Modal;
 `],
   ["frontend/native/uniwind/components/container.tsx.hbs", `import { cn } from "heroui-native";
 import { type PropsWithChildren } from "react";
-import { ScrollView, View, type ViewProps } from "react-native";
+import { ScrollView, View, type ScrollViewProps, type ViewProps } from "react-native";
 import Animated, { type AnimatedProps } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 
 type Props = AnimatedProps<ViewProps> & {
-	className?: string;
+  className?: string;
+  isScrollable?: boolean;
+  scrollViewProps?: Omit<ScrollViewProps, "contentContainerStyle">;
 };
 
 export function Container({
-	children,
-	className,
-	...props
+  children,
+  className,
+  isScrollable = true,
+  scrollViewProps,
+  ...props
 }: PropsWithChildren<Props>) {
-	const insets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets();
 
-	return (
-		<AnimatedView
-			className={cn("flex-1 bg-background", className)}
-			style=\\{{
-				paddingBottom: insets.bottom,
-			}}
-			{...props}
-		>
-			<ScrollView contentContainerStyle=\\{{ flexGrow: 1 }}>
-				{children}
-			</ScrollView>
-		</AnimatedView>
-	);
+  return (
+    <AnimatedView
+      className={cn("flex-1 bg-background", className)}
+      style=\\{{
+        paddingBottom: insets.bottom,
+      }}
+      {...props}
+    >
+      {isScrollable ? (
+        <ScrollView
+          contentContainerStyle=\\{{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          contentInsetAdjustmentBehavior="automatic"
+          {...scrollViewProps}
+        >
+          {children}
+        </ScrollView>
+      ) : (
+        <View className="flex-1">{children}</View>
+      )}
+    </AnimatedView>
+  );
 }
 `],
   ["frontend/native/uniwind/components/theme-toggle.tsx.hbs", `import { Ionicons } from '@expo/vector-icons';
@@ -21168,17 +21400,17 @@ export function useAppTheme() {
 `],
   ["frontend/native/uniwind/metro.config.js.hbs", `const { getDefaultConfig } = require("expo/metro-config");
 const { withUniwindConfig } = require("uniwind/metro");
+const { wrapWithReanimatedMetroConfig } = require("react-native-reanimated/metro-config");
 
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
 
-const uniwindConfig = withUniwindConfig(config, {
+const uniwindConfig = withUniwindConfig(wrapWithReanimatedMetroConfig(config), {
   cssEntryFile: "./global.css",
   dtsFile: "./uniwind-types.d.ts",
 });
 
 module.exports = uniwindConfig;
-
 `],
   ["frontend/native/uniwind/package.json.hbs", `{
   "name": "native",
@@ -21212,7 +21444,7 @@ module.exports = uniwindConfig;
     "expo-router": "~6.0.14",
     "expo-secure-store": "~15.0.7",
     "expo-status-bar": "~3.0.8",
-    "heroui-native": "^1.0.0-beta.9",
+    "heroui-native": "^1.0.0-rc.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
@@ -21227,13 +21459,14 @@ module.exports = uniwindConfig;
     "tailwind-merge": "^3.4.0",
     "tailwind-variants": "^3.2.2",
     "tailwindcss": "^4.1.18",
-    "uniwind": "^1.2.2"
+    "uniwind": "^1.3.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
     "@types/react": "~19.1.0"
   }
-}`],
+}
+`],
   ["frontend/native/uniwind/tsconfig.json.hbs", `{
   "extends": "expo/tsconfig.base",
   "compilerOptions": {

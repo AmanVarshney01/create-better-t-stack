@@ -5,117 +5,157 @@ import { queryClient } from "@/utils/trpc";
 {{#if (eq api "orpc")}}
 import { queryClient } from "@/utils/orpc";
 {{/if}}
-import { useState } from "react";
-import { Text, View } from "react-native";
-import { Button, ErrorView, Spinner, Surface, TextField } from "heroui-native";
+import { useRef, useState } from "react";
+import { Text, TextInput, View } from "react-native";
+import { Button, FieldError, Input, Label, Spinner, Surface, TextField } from "heroui-native";
+import z from "zod";
 
-function signUpHandler({
-name,
-email,
-password,
-setError,
-setIsLoading,
-setName,
-setEmail,
-setPassword,
-}: {
-  name: string;
-  email: string;
-  password: string;
-  setError: (error: string | null) => void;
-  setIsLoading: (loading: boolean) => void;
-  setName: (name: string) => void;
-  setEmail: (email: string) => void;
-  setPassword: (password: string) => void;
-}) {
-setIsLoading(true);
-setError(null);
-
-authClient.signUp.email(
-{
-name,
-email,
-password,
-},
-{
-onError(error) {
-setError(error.error?.message || "Failed to sign up");
-setIsLoading(false);
-},
-onSuccess() {
-setName("");
-setEmail("");
-setPassword("");
-{{#if (eq api "orpc")}}
-queryClient.refetchQueries();
-{{/if}}
-{{#if (eq api "trpc")}}
-queryClient.refetchQueries();
-{{/if}}
-},
-onFinished() {
-setIsLoading(false);
-},
-}
-);
-}
+const signUpSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(8, "Use at least 8 characters"),
+});
 
 export function SignUp() {
+const emailInputRef = useRef<TextInput>(null);
+const passwordInputRef = useRef<TextInput>(null);
 const [name, setName] = useState("");
 const [email, setEmail] = useState("");
 const [password, setPassword] = useState("");
 const [isLoading, setIsLoading] = useState(false);
 const [error, setError] = useState<string | null>(null);
-
-  function handlePress() {
-  signUpHandler({
-  name,
-  email,
+const [showValidationErrors, setShowValidationErrors] = useState(false);
+const trimmedName = name.trim();
+const trimmedEmail = email.trim();
+const validationResult = signUpSchema.safeParse({
+  name: trimmedName,
+  email: trimmedEmail,
   password,
-  setError,
-  setIsLoading,
-  setName,
-  setEmail,
-  setPassword,
-  });
+});
+const validationError =
+  showValidationErrors && !validationResult.success
+    ? validationResult.error.issues[0]?.message ?? null
+    : null;
+const formError = error ?? validationError;
+const canSubmit = validationResult.success && !isLoading;
+
+  async function handlePress() {
+  setShowValidationErrors(true);
+  if (!canSubmit) return;
+
+  setIsLoading(true);
+  setError(null);
+
+  await authClient.signUp.email(
+  {
+  name: trimmedName,
+  email: trimmedEmail,
+  password,
+  },
+  {
+  onError(error) {
+  setError(error.error?.message || "Failed to sign up");
+  setIsLoading(false);
+  },
+  onSuccess() {
+  setName("");
+  setEmail("");
+  setPassword("");
+  setShowValidationErrors(false);
+  {{#if (eq api "orpc")}}
+  queryClient.refetchQueries();
+  {{/if}}
+  {{#if (eq api "trpc")}}
+  queryClient.refetchQueries();
+  {{/if}}
+  },
+  onFinished() {
+  setIsLoading(false);
+  },
+  }
+  );
   }
 
   return (
   <Surface variant="secondary" className="p-4 rounded-lg">
     <Text className="text-foreground font-medium mb-4">Create Account</Text>
 
-    <ErrorView isInvalid={!!error} className="mb-3">
-      {error}
-    </ErrorView>
+    <FieldError isInvalid={!!formError} className="mb-3">
+      {formError}
+    </FieldError>
 
     <View className="gap-3">
       <TextField>
-        <TextField.Label>Name</TextField.Label>
-        <TextField.Input value={name} onChangeText={setName} placeholder="John Doe" />
+        <Label>Name</Label>
+        <Input
+          value={name}
+          onChangeText={(value) => {
+            setName(value);
+            if (error) setError(null);
+          }}
+          placeholder="John Doe"
+          autoComplete="name"
+          textContentType="name"
+          returnKeyType="next"
+          blurOnSubmit={false}
+          onSubmitEditing={() => {
+            emailInputRef.current?.focus();
+          }}
+        />
       </TextField>
 
       <TextField>
-        <TextField.Label>Email</TextField.Label>
-        <TextField.Input
+        <Label>Email</Label>
+        <Input
+          ref={emailInputRef}
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(value) => {
+            setEmail(value);
+            if (error) setError(null);
+          }}
           placeholder="email@example.com"
           keyboardType="email-address"
           autoCapitalize="none"
+          autoComplete="email"
+          textContentType="emailAddress"
+          returnKeyType="next"
+          blurOnSubmit={false}
+          onSubmitEditing={() => {
+            passwordInputRef.current?.focus();
+          }}
         />
       </TextField>
 
       <TextField>
-        <TextField.Label>Password</TextField.Label>
-        <TextField.Input
+        <Label>Password</Label>
+        <Input
+          ref={passwordInputRef}
           value={password}
-          onChangeText={setPassword}
+          onChangeText={(value) => {
+            setPassword(value);
+            if (error) setError(null);
+          }}
           placeholder="••••••••"
           secureTextEntry
+          autoComplete="new-password"
+          textContentType="newPassword"
+          returnKeyType="go"
+          onSubmitEditing={handlePress}
         />
       </TextField>
 
-      <Button onPress={handlePress} isDisabled={isLoading} className="mt-1">
+      <Button onPress={handlePress} isDisabled={!canSubmit} className="mt-1">
         {isLoading ? (
           <Spinner size="sm" color="default" />
         ) : (
