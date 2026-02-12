@@ -8,6 +8,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -86,21 +87,22 @@ export function StackBuilder() {
         <div className="hidden h-full flex-1 grid-cols-[24rem_minmax(0,1fr)] overflow-hidden border-border sm:grid">
           <aside className="flex min-h-0 flex-col overflow-hidden border-border/50 border-r bg-fd-background">
             <ScrollArea className="min-h-0 flex-1">
-              <div className="p-3">
-                <div className="overflow-hidden rounded-2xl bg-fd-background/80 ring-1 ring-border/35">
-                  <section className="space-y-2 border-border/20 border-b px-3 py-3">
+              <div className="p-2">
+                <div className="overflow-hidden rounded-2xl bg-fd-background/80">
+                  <section className="space-y-2 border-b border-border/20 px-3 py-3">
                     <label className="flex flex-col">
                       <span className="mb-1 font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
                         Project Name
                       </span>
-                      <input
+                      <Input
                         type="text"
                         value={stack.projectName || ""}
                         onChange={(event) => {
                           setStack({ projectName: event.target.value });
                         }}
+                        aria-invalid={!!projectNameError}
                         className={cn(
-                          "builder-focus-ring w-full rounded-lg border bg-background/80 px-2.5 py-1.5 font-mono text-sm focus:outline-none",
+                          "builder-focus-ring w-full rounded-lg px-2.5 py-1.5 font-mono text-sm focus:outline-none",
                           projectNameError
                             ? "border-destructive bg-destructive/10 text-destructive-foreground"
                             : "border-border/60 focus:border-primary",
@@ -149,10 +151,9 @@ export function StackBuilder() {
                       }}
                       aria-label="Copy CLI command"
                       title="Click to copy command"
-                      className="builder-focus-ring cursor-pointer rounded-lg bg-background/75 px-2.5 py-2"
+                      className="builder-focus-ring cursor-pointer rounded-lg bg-muted/20 px-2.5 py-2"
                     >
                       <div className="flex items-start gap-2">
-                        <span className="select-none text-chart-4">$</span>
                         <code className="block break-all font-mono text-muted-foreground text-xs">
                           {command}
                         </code>
@@ -193,8 +194,8 @@ export function StackBuilder() {
               </div>
             </ScrollArea>
 
-            <div className="border-border/35 border-t bg-fd-background/95 p-3">
-              <div className="rounded-2xl bg-fd-background/80 p-3 ring-1 ring-border/35">
+            <div className="border-border/35 border-t bg-fd-background/95 p-2">
+              <div className="rounded-2xl bg-fd-background/80 p-2">
                 <ActionButtons
                   onReset={resetStack}
                   onRandom={getRandomStack}
@@ -271,7 +272,7 @@ export function StackBuilder() {
             {viewMode === "command" ? (
               <div ref={scrollAreaRef} className="h-full">
                 <ScrollArea className="h-full overflow-hidden scroll-smooth">
-                  <main className="p-3 sm:p-4">
+                  <main className="p-2 sm:p-4">
                     <TechCategories
                       mode="desktop"
                       stack={stack}
@@ -296,18 +297,19 @@ export function StackBuilder() {
           {mobileTab === "build" && (
             <div className="flex min-h-0 flex-1 flex-col">
               <ScrollArea className="h-full overflow-hidden scroll-smooth">
-                <main className="p-3 pb-6">
-                  <div className="mb-4 space-y-2 rounded-xl bg-muted/10 p-3">
+                <main className="p-2 pb-6">
+                  <div className="mb-4 space-y-2 rounded-xl bg-muted/10 p-2">
                     <label className="flex flex-col">
                       <span className="mb-1 font-mono text-[11px] text-muted-foreground uppercase tracking-wide">
                         Project Name
                       </span>
-                      <input
+                      <Input
                         type="text"
                         value={stack.projectName || ""}
                         onChange={(event) => {
                           setStack({ projectName: event.target.value });
                         }}
+                        aria-invalid={!!projectNameError}
                         className={cn(
                           "builder-focus-ring w-full rounded-lg border bg-background/75 px-2.5 py-1.5 font-mono text-sm focus:outline-none",
                           projectNameError
@@ -377,8 +379,8 @@ export function StackBuilder() {
                 </main>
               </ScrollArea>
 
-              <div className="border-border/35 border-t bg-fd-background/95 p-3 backdrop-blur-sm">
-                <div className="rounded-xl bg-fd-background/80 p-3 ring-1 ring-border/35">
+              <div className="border-border/35 border-t bg-fd-background/95 p-2 backdrop-blur-sm">
+                <div className="rounded-xl bg-fd-background/80 p-2">
                   <ActionButtons
                     onReset={resetStack}
                     onRandom={getRandomStack}
