@@ -24,6 +24,7 @@ import {
 } from "../../utils/errors";
 import { handleDirectoryConflict, setupProjectDirectory } from "../../utils/project-directory";
 import { addToHistory } from "../../utils/project-history";
+import { validateProjectName } from "../../utils/project-name-validation";
 import { renderTitle } from "../../utils/render-title";
 import { getTemplateConfig, getTemplateDescription } from "../../utils/templates";
 import {
@@ -157,7 +158,10 @@ async function createProjectHandlerInternal(
 
     // Get project name
     let currentPathInput: string;
-    if (input.yes && input.projectName) {
+    if (isSilent()) {
+      const silentProjectName = yield* Result.await(resolveProjectNameForSilent(input));
+      currentPathInput = silentProjectName;
+    } else if (input.yes && input.projectName) {
       currentPathInput = input.projectName;
     } else if (input.yes) {
       const defaultConfig = getDefaultConfig();
@@ -358,6 +362,45 @@ async function createProjectHandlerInternal(
 interface DirectoryConflictResult {
   finalPathInput: string;
   shouldClearDirectory: boolean;
+}
+
+function isPathWithinCwd(targetPath: string) {
+  const resolved = path.resolve(targetPath);
+  const rel = path.relative(process.cwd(), resolved);
+  return !rel.startsWith("..") && !path.isAbsolute(rel);
+}
+
+async function resolveProjectNameForSilent(
+  input: CreateInput & { projectName?: string },
+): Promise<Result<string, CLIError>> {
+  const defaultConfig = getDefaultConfig();
+  const rawProjectName = input.projectName?.trim() || undefined;
+  const candidate = rawProjectName ?? defaultConfig.relativePath;
+
+  if (candidate === ".") {
+    return Result.ok(candidate);
+  }
+
+  const finalDirName = path.basename(candidate);
+  const validationResult = validateProjectName(finalDirName);
+  if (validationResult.isErr()) {
+    return Result.err(
+      new CLIError({
+        message: validationResult.error.message,
+        cause: validationResult.error,
+      }),
+    );
+  }
+
+  if (!isPathWithinCwd(candidate)) {
+    return Result.err(
+      new CLIError({
+        message: "Project path must be within current directory",
+      }),
+    );
+  }
+
+  return Result.ok(candidate);
 }
 
 async function handleDirectoryConflictResult(

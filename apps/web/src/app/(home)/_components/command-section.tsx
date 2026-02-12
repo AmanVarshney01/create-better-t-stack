@@ -31,18 +31,18 @@ export default function CommandSection() {
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <div className="flex h-full flex-col justify-between rounded border border-border bg-fd-background p-4">
+      <div className="flex h-full flex-col justify-between rounded-2xl bg-fd-background/75 p-4 transition-colors hover:bg-muted/10">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Terminal className="h-4 w-4 text-primary" />
-            <span className="font-semibold font-mono text-sm">CLI_COMMAND</span>
+            <span className="font-bold font-mono text-lg sm:text-xl">CLI_COMMAND</span>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
                 <button
                   type="button"
-                  className="flex items-center gap-2 rounded border border-border px-3 py-1.5 text-xs transition-colors hover:bg-muted/10"
+                  className="flex items-center gap-2 rounded-md bg-muted/20 px-3 py-1.5 font-mono text-xs transition-colors hover:bg-muted/35"
                 />
               }
             >
@@ -70,46 +70,55 @@ export default function CommandSection() {
         </div>
 
         <div className="space-y-3">
-          <div className="flex items-center justify-between rounded border border-border bg-fd-background p-3">
+          <div
+            role="button"
+            tabIndex={0}
+            className="builder-focus-ring flex cursor-pointer items-center justify-between rounded-xl bg-muted/20 p-3"
+            onClick={() => copyCommand(commands[selectedPM], selectedPM)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                copyCommand(commands[selectedPM], selectedPM);
+              }
+            }}
+            aria-label={`Copy ${selectedPM} command`}
+            title="Click to copy command"
+          >
             <div className="flex items-center gap-2 font-mono text-sm">
               <span className="text-primary">$</span>
               <span className="text-foreground">{commands[selectedPM]}</span>
             </div>
-            <button
-              type="button"
-              onClick={() => copyCommand(commands[selectedPM], selectedPM)}
-              className="flex items-center gap-1 rounded border border-border px-2 py-1 text-xs hover:bg-muted/10"
-            >
+            <span className="flex items-center gap-1 rounded-md bg-muted/20 px-2 py-1 font-mono text-xs transition-colors group-hover:bg-muted/35">
               {copiedCommand === selectedPM ? (
                 <Check className="h-3 w-3 text-primary" />
               ) : (
                 <Copy className="h-3 w-3" />
               )}
               {copiedCommand === selectedPM ? "COPIED!" : "COPY"}
-            </button>
+            </span>
           </div>
         </div>
       </div>
 
       <Link href="/new">
-        <div className="group flex h-full cursor-pointer flex-col justify-between rounded border border-border bg-fd-background p-4 transition-colors hover:bg-muted/10">
+        <div className="group flex h-full cursor-pointer flex-col justify-between rounded-2xl bg-fd-background/75 p-4 transition-colors hover:bg-muted/10">
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ChevronRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-1" />
-              <span className="font-semibold font-mono text-sm">STACK_BUILDER</span>
+              <span className="font-bold font-mono text-lg sm:text-xl">STACK_BUILDER</span>
             </div>
-            <div className="rounded border border-border bg-muted/30 px-2 py-1 text-xs">
+            <div className="rounded-md bg-primary/15 px-2 py-1 font-mono text-xs text-primary">
               INTERACTIVE
             </div>
           </div>
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between rounded border border-border bg-fd-background p-3">
+            <div className="flex items-center justify-between rounded-xl bg-muted/20 p-3">
               <div className="flex items-center gap-2 text-sm">
                 <Zap className="h-4 w-4 text-primary" />
                 <span className="text-foreground">Interactive configuration wizard</span>
               </div>
-              <div className="rounded border border-border bg-muted/30 px-2 py-1 text-xs">
+              <div className="rounded-md bg-primary px-2 py-1 font-mono text-primary-foreground text-xs transition-colors group-hover:bg-primary/90">
                 START
               </div>
             </div>

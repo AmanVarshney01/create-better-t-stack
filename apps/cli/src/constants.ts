@@ -56,6 +56,7 @@ export const ADDON_COMPATIBILITY = {
   starlight: [],
   ultracite: [],
   ruler: [],
+  mcp: [],
   oxlint: [],
   fumadocs: [],
   opentui: [],

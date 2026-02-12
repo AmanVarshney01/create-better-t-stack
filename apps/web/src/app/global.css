@@ -285,6 +285,16 @@
   padding-right: 2px;
 }
 
+.builder-surface {
+  background: color-mix(in srgb, var(--background) 85%, transparent);
+  border: 1px solid var(--border);
+}
+
+.builder-focus-ring:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
 @keyframes blink {
   0%,
   50% {

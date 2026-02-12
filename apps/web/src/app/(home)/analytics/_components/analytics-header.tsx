@@ -20,8 +20,8 @@ export function AnalyticsHeader({
   const legacyDate = format(new Date(legacy.lastUpdatedIso), "MMM d, yyyy 'at' HH:mm");
 
   return (
-    <div className="mb-4">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4 sm:flex-nowrap">
+    <div className="mb-4 space-y-4">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 text-primary">
             <Terminal className="h-5 w-5" />
@@ -33,8 +33,8 @@ export function AnalyticsHeader({
         </div>
       </div>
 
-      <div className="rounded-lg border border-border bg-fd-background p-4 font-mono text-sm shadow-sm transition-colors hover:border-primary/50">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <div className="rounded-xl bg-gradient-to-br from-primary/12 via-fd-background to-fd-background/90 p-4 ring-1 ring-border/40 sm:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <span className="text-primary">$</span>
             <span className="text-muted-foreground">status:</span>
@@ -48,15 +48,15 @@ export function AnalyticsHeader({
           )}
         </div>
 
-        <div className="my-3 h-px w-full bg-border/50" />
+        <div className="my-3 h-px w-full bg-border/35" />
 
         <div className="space-y-1.5 text-muted-foreground text-xs">
           <div className="flex items-start gap-2">
-            <span className="mt-0.5 text-primary shrink-0">&gt;</span>
+            <span className="mt-0.5 shrink-0 text-primary">&gt;</span>
             <span>No personal data collected - anonymous usage stats only</span>
           </div>
           <div className="flex items-start gap-2">
-            <span className="mt-0.5 text-primary shrink-0">&gt;</span>
+            <span className="mt-0.5 shrink-0 text-primary">&gt;</span>
             <span>
               Source code:{" "}
               <Link
@@ -71,8 +71,8 @@ export function AnalyticsHeader({
           </div>
         </div>
 
-        <div className="mt-4 flex flex-col gap-2 rounded border border-border/50 bg-muted/20 p-3 text-xs">
-          <div className="flex items-center gap-2 font-semibold">
+        <div className="mt-4 rounded-lg bg-muted/25 p-3 text-xs">
+          <div className="mb-2 flex items-center gap-2 font-mono font-semibold">
             <span className="text-primary">#</span>
             <span className="text-foreground">Legacy Data (pre-Convex)</span>
           </div>

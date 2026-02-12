@@ -82,11 +82,23 @@ interface StackState {
   payments?: string;
   addons?: string[];
   examples?: string[];
-  git?: boolean;
+  git?: boolean | string;
   packageManager?: string;
   dbSetup?: string;
   webDeploy?: string;
   serverDeploy?: string;
+}
+
+function normalizeBoolean(value: boolean | string | undefined, fallback: boolean): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "string") return value === "true";
+  return fallback;
+}
+
+function normalizeBackend(value?: string): ProjectConfig["backend"] {
+  if (!value) return "hono";
+  if (value.startsWith("self-")) return "self";
+  return value as ProjectConfig["backend"];
 }
 
 function stackStateToConfig(state: StackState): ProjectConfig {
@@ -100,11 +112,9 @@ function stackStateToConfig(state: StackState): ProjectConfig {
     ...nativeFrontend.filter((f) => f !== "none"),
   ] as ProjectConfig["frontend"];
 
-  // Handle self-* backend options
-  let backend = state.backend || "hono";
-  if (backend === "self-next" || backend === "self-tanstack-start") {
-    backend = "self";
-  }
+  const backend = normalizeBackend(state.backend);
+
+  const git = normalizeBoolean(state.git, false);
 
   return {
     projectName: state.projectName || "my-better-t-app",
@@ -112,14 +122,14 @@ function stackStateToConfig(state: StackState): ProjectConfig {
     relativePath: "./virtual",
     database: (state.database || "none") as ProjectConfig["database"],
     orm: (state.orm || "none") as ProjectConfig["orm"],
-    backend: backend as ProjectConfig["backend"],
+    backend,
     runtime: (state.runtime || "bun") as ProjectConfig["runtime"],
-    frontend: frontend.length > 0 ? frontend : ["tanstack-router"],
+    frontend: frontend.length > 0 ? frontend : ["none"],
     addons: (state.addons || []).filter((a) => a !== "none") as ProjectConfig["addons"],
     examples: (state.examples || []).filter((e) => e !== "none") as ProjectConfig["examples"],
     auth: (state.auth || "none") as ProjectConfig["auth"],
     payments: (state.payments || "none") as ProjectConfig["payments"],
-    git: state.git ?? false,
+    git,
     packageManager: (state.packageManager || "bun") as ProjectConfig["packageManager"],
     install: false,
     dbSetup: (state.dbSetup || "none") as ProjectConfig["dbSetup"],

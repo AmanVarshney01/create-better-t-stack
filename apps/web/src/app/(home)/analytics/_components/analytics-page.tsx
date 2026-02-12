@@ -23,17 +23,13 @@ export default function AnalyticsPage({
   };
 }) {
   return (
-    <div className="mx-auto min-h-svh">
+    <div className="mx-auto min-h-svh bg-fd-background">
       <div className="container mx-auto space-y-10 px-4 py-8 pt-16">
         <AnalyticsHeader lastUpdated={data.lastUpdated} legacy={legacy} />
 
         <MetricsCards data={data} />
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          <div className="lg:col-span-3">
-            <LiveLogs />
-          </div>
-        </div>
+        <LiveLogs />
 
         <TimelineSection data={data} />
 

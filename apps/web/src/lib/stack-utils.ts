@@ -119,6 +119,8 @@ export function generateStackCommand(stack: StackState) {
                 "ruler",
                 "opentui",
                 "wxt",
+                "skills",
+                "mcp",
               ].includes(addon),
             )
             .join(" ") || "none"

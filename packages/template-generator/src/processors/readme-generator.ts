@@ -2,6 +2,8 @@ import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
+import { getDbScriptSupport } from "../utils/db-scripts";
+
 export function processReadme(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const content = generateReadmeContent(config);
   vfs.writeFile("README.md", content);
@@ -21,7 +23,6 @@ function generateReadmeContent(options: ProjectConfig): string {
     api = "trpc",
     webDeploy,
     serverDeploy,
-    dbSetup,
   } = options;
 
   const isConvex = backend === "convex";
@@ -77,7 +78,7 @@ ${
 - Set \`CLERK_PUBLISHABLE_KEY\` in \`apps/*/.env\``
     : ""
 }`
-    : generateDatabaseSetup(database, packageManagerRunCmd, orm, dbSetup, backend)
+    : generateDatabaseSetup(options, packageManagerRunCmd)
 }
 
 Then, run the development server:
@@ -98,12 +99,12 @@ ${generateGitHooksSection(packageManagerRunCmd, addons)}
 ## Project Structure
 
 \`\`\`
-${generateProjectStructure(projectName, frontend, backend, addons, isConvex, api, auth)}
+${generateProjectStructure(options)}
 \`\`\`
 
 ## Available Scripts
 
-${generateScriptsList(packageManagerRunCmd, database, orm, hasNative, addons, backend, dbSetup)}
+${generateScriptsList(packageManagerRunCmd, options, hasNative)}
 `;
 }
 
@@ -175,21 +176,16 @@ function generateRunningInstructions(
   return instructions.join("\n");
 }
 
-function generateProjectStructure(
-  projectName: string,
-  frontend: ProjectConfig["frontend"],
-  backend: ProjectConfig["backend"],
-  addons: ProjectConfig["addons"],
-  isConvex: boolean,
-  api: ProjectConfig["api"],
-  auth: ProjectConfig["auth"],
-): string {
+function generateProjectStructure(config: ProjectConfig): string {
+  const { projectName, frontend, backend, addons, api, auth, database, orm } = config;
+  const isConvex = backend === "convex";
   const structure: string[] = [`${projectName}/`, "├── apps/"];
   const hasFrontend = frontend.length > 0 && !frontend.includes("none");
   const isBackendSelf = backend === "self";
   const hasNative = frontend.some((f) =>
     ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
   );
+  const hasDbPackage = !isConvex && database !== "none" && orm !== "none";
 
   if (hasFrontend) {
     const frontendTypes: Record<string, string> = {
@@ -240,11 +236,13 @@ function generateProjectStructure(
     }
 
     if (!isConvex) {
-      structure.push("│   ├── api/         # API layer / business logic");
+      if (api !== "none") {
+        structure.push("│   ├── api/         # API layer / business logic");
+      }
       if (auth !== "none") {
         structure.push("│   ├── auth/        # Authentication configuration & logic");
       }
-      if (api !== "none" || auth !== "none") {
+      if (hasDbPackage) {
         structure.push("│   └── db/          # Database schema & queries");
       }
     }
@@ -368,19 +366,20 @@ function generateFeaturesList(
   return features.join("\n");
 }
 
-function generateDatabaseSetup(
-  database: ProjectConfig["database"],
-  packageManagerRunCmd: string,
-  orm: ProjectConfig["orm"],
-  dbSetup: ProjectConfig["dbSetup"],
-  backend: ProjectConfig["backend"],
-): string {
+function generateDatabaseSetup(config: ProjectConfig, packageManagerRunCmd: string): string {
+  const { database, orm, dbSetup, backend } = config;
   if (database === "none") return "";
 
   const isBackendSelf = backend === "self";
   const envPath = isBackendSelf ? "apps/web/.env" : "apps/server/.env";
-  const ormDesc =
-    orm === "drizzle" ? " with Drizzle ORM" : orm === "prisma" ? " with Prisma" : ` with ${orm}`;
+  const ormLabels: Record<ProjectConfig["orm"], string> = {
+    drizzle: "Drizzle ORM",
+    prisma: "Prisma",
+    mongoose: "Mongoose",
+    none: "ORM",
+  };
+  const ormDesc = orm === "none" ? "" : ` with ${ormLabels[orm] || orm}`;
+  const dbSupport = getDbScriptSupport(config);
 
   let setup = "## Database Setup\n\n";
 
@@ -416,28 +415,28 @@ ${packageManagerRunCmd} db:local
 
   setup += dbDescriptions[database] || "";
 
-  setup += `
+  if (dbSupport.hasDbPush) {
+    setup += `
 
 3. Apply the schema to your database:
 \`\`\`bash
 ${packageManagerRunCmd} db:push
 \`\`\`
 `;
+  }
 
   return setup;
 }
 
 function generateScriptsList(
   packageManagerRunCmd: string,
-  database: ProjectConfig["database"],
-  orm: ProjectConfig["orm"],
+  config: ProjectConfig,
   hasNative: boolean,
-  addons: ProjectConfig["addons"],
-  backend: ProjectConfig["backend"],
-  dbSetup: ProjectConfig["dbSetup"],
 ): string {
+  const { database, addons, backend, dbSetup } = config;
   const isConvex = backend === "convex";
   const isBackendSelf = backend === "self";
+  const dbSupport = getDbScriptSupport(config);
 
   let scripts = `- \`${packageManagerRunCmd} dev\`: Start all applications in development mode
 - \`${packageManagerRunCmd} build\`: Build all applications`;
@@ -458,13 +457,21 @@ function generateScriptsList(
     scripts += `\n- \`${packageManagerRunCmd} dev:native\`: Start the React Native/Expo development server`;
   }
 
-  if (database !== "none" && !isConvex) {
-    scripts += `\n- \`${packageManagerRunCmd} db:push\`: Push schema changes to database
-- \`${packageManagerRunCmd} db:studio\`: Open database studio UI`;
-
-    if (database === "sqlite" && dbSetup !== "d1") {
-      scripts += `\n- \`${packageManagerRunCmd} db:local\`: Start the local SQLite database`;
+  if (dbSupport.hasDbScripts) {
+    scripts += `\n- \`${packageManagerRunCmd} db:push\`: Push schema changes to database`;
+    if (dbSupport.hasDbGenerate) {
+      scripts += `\n- \`${packageManagerRunCmd} db:generate\`: Generate database client/types`;
     }
+    if (dbSupport.hasDbMigrate) {
+      scripts += `\n- \`${packageManagerRunCmd} db:migrate\`: Run database migrations`;
+    }
+    if (dbSupport.hasDbStudio) {
+      scripts += `\n- \`${packageManagerRunCmd} db:studio\`: Open database studio UI`;
+    }
+  }
+
+  if (database === "sqlite" && dbSetup !== "d1" && dbSupport.hasDbScripts) {
+    scripts += `\n- \`${packageManagerRunCmd} db:local\`: Start the local SQLite database`;
   }
 
   if (addons.includes("biome")) {

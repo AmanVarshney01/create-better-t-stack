@@ -7,6 +7,8 @@ import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
+import { getDbScriptSupport } from "../utils/db-scripts";
+
 type PackageJson = {
   name?: string;
   scripts?: Record<string, string>;
@@ -64,16 +66,15 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   pkgJson.workspaces = workspaces;
 
   const scripts = pkgJson.scripts;
-  const { projectName, packageManager, backend, database, orm, dbSetup, serverDeploy, addons } =
-    config;
+  const { projectName, packageManager, backend, database, orm, dbSetup, addons } = config;
 
   const backendPackageName = backend === "convex" ? `@${projectName}/backend` : "server";
   const dbPackageName = `@${projectName}/db`;
   const hasTurborepo = addons.includes("turborepo");
 
-  const needsDbScripts =
-    backend !== "convex" && database !== "none" && orm !== "none" && orm !== "mongoose";
-  const isD1Alchemy = dbSetup === "d1" && serverDeploy === "cloudflare";
+  const dbSupport = getDbScriptSupport(config);
+  const needsDbScripts = dbSupport.hasDbScripts;
+  const isD1Alchemy = dbSupport.isD1Alchemy;
 
   const pmConfig = getPackageManagerConfig(packageManager, hasTurborepo);
 
@@ -198,8 +199,8 @@ function updateDbPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): voi
   pkgJson.scripts = pkgJson.scripts || {};
 
   const scripts = pkgJson.scripts;
-  const { database, orm, dbSetup, serverDeploy } = config;
-  const isD1Alchemy = dbSetup === "d1" && serverDeploy === "cloudflare";
+  const { database, orm, dbSetup } = config;
+  const { isD1Alchemy } = getDbScriptSupport(config);
 
   if (database !== "none") {
     if (database === "sqlite" && dbSetup !== "d1") {

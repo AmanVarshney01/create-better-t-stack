@@ -15,39 +15,34 @@ type ShowcaseProject = {
   tags: string[];
 };
 
-export default function ShowcasePage({
-  showcaseProjects,
-}: {
-  showcaseProjects: Array<ShowcaseProject>;
-}) {
+export function ShowcasePage({ showcaseProjects }: { showcaseProjects: Array<ShowcaseProject> }) {
   return (
-    <main className="container mx-auto min-h-svh">
-      <div className="space-y-8 px-4 py-8 pt-16">
-        <div className="mb-8">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
-            <div className="flex items-center gap-2">
-              <Terminal className="h-5 w-5 text-primary" />
-              <span className="font-bold font-mono text-lg sm:text-xl">PROJECT_SHOWCASE.SH</span>
+    <main className="min-h-svh bg-fd-background">
+      <div className="container mx-auto space-y-8 px-4 py-8 pt-16">
+        <div className="mb-4 space-y-4">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2 text-primary">
+                <Terminal className="h-5 w-5" />
+                <h1 className="font-bold font-mono text-xl sm:text-2xl">PROJECT_SHOWCASE.SH</h1>
+              </div>
+              <p className="text-muted-foreground text-sm">
+                Community projects built with create-better-t-stack
+              </p>
             </div>
-            <div className="hidden h-px flex-1 bg-border sm:block" />
-            <span className="text-muted-foreground text-xs">
-              [{showcaseProjects.length} PROJECTS FOUND]
-            </span>
           </div>
         </div>
 
         {showcaseProjects.length === 0 ? (
-          <div className="rounded border border-border bg-fd-background p-8">
-            <div className="text-center">
-              <div className="mb-4 flex items-center justify-center gap-2">
-                <span className="text-muted-foreground">NO_SHOWCASE_PROJECTS_FOUND.NULL</span>
-              </div>
-              <div className="flex items-center justify-center gap-2 text-sm">
-                <span className="text-primary">$</span>
-                <span className="text-muted-foreground">
-                  Be the first to showcase your project!
-                </span>
-              </div>
+          <div className="rounded-xl bg-fd-background/80 p-8 text-center ring-1 ring-border/35">
+            <div className="mb-4 flex items-center justify-center gap-2">
+              <span className="font-mono text-muted-foreground">
+                NO_SHOWCASE_PROJECTS_FOUND.NULL
+              </span>
+            </div>
+            <div className="flex items-center justify-center gap-2 text-sm">
+              <span className="text-primary">$</span>
+              <span className="text-muted-foreground">Be the first to showcase your project!</span>
             </div>
           </div>
         ) : (
@@ -58,14 +53,20 @@ export default function ShowcasePage({
           </div>
         )}
 
-        <div className="mt-8">
-          <div className="rounded border border-border bg-fd-background p-4">
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-primary">$</span>
-              <span className="text-muted-foreground">
-                Want to showcase your project? Submit via GitHub issues
-              </span>
-            </div>
+        <div className="rounded-xl bg-fd-background/80 p-4 ring-1 ring-border/35">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-primary">$</span>
+            <span className="text-muted-foreground">
+              Want to showcase your project? Submit via{" "}
+              <a
+                href="https://github.com/AmanVarshney01/create-better-t-stack/issues/new/choose"
+                target="_blank"
+                rel="noreferrer"
+                className="underline decoration-border underline-offset-4 transition-colors hover:text-foreground"
+              >
+                GitHub issues
+              </a>
+            </span>
           </div>
         </div>
       </div>
