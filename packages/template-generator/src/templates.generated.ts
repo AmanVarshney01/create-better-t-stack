@@ -11249,14 +11249,8 @@ import { env } from "@{{projectName}}/env/server";
 import * as schema from "./schema";
 
 {{#if (eq dbSetup "neon")}}
-import { neon, neonConfig } from '@neondatabase/serverless';
+import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import ws from "ws";
-
-neonConfig.webSocketConstructor = ws;
-
-// To work in edge environments (Cloudflare Workers, Vercel Edge, etc.), enable querying over fetch
-// neonConfig.poolQueryViaFetch = true
 
 const sql = neon(env.DATABASE_URL);
 export const db = drizzle(sql, { schema });
@@ -11271,13 +11265,9 @@ export const db = drizzle(env.DATABASE_URL, { schema });
 import * as schema from "./schema";
 
 {{#if (eq dbSetup "neon")}}
-import { neon, neonConfig } from '@neondatabase/serverless';
+import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { env } from "@{{projectName}}/env/server";
-import ws from "ws";
-
-neonConfig.webSocketConstructor = ws;
-neonConfig.poolQueryViaFetch = true;
 
 const sql = neon(env.DATABASE_URL || "");
 export const db = drizzle(sql, { schema });
@@ -11592,11 +11582,6 @@ import { PrismaClient } from "../prisma/generated/client";
 import { env } from "@{{projectName}}/env/server";
 {{#if (eq dbSetup "neon")}}
 import { PrismaNeon } from "@prisma/adapter-neon";
-import { neonConfig } from "@neondatabase/serverless";
-import ws from "ws";
-
-neonConfig.webSocketConstructor = ws;
-neonConfig.poolQueryViaFetch = true;
 
 const adapter = new PrismaNeon({
 	connectionString: env.DATABASE_URL,
