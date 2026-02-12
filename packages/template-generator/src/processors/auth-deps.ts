@@ -31,6 +31,9 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
   const hasNextJs = frontend.includes("next");
   const hasTanStackStart = frontend.includes("tanstack-start");
   const hasViteReact = frontend.some((f) => ["tanstack-router", "react-router"].includes(f));
+  const hasSolid = frontend.includes("solid");
+  const hasSvelte = frontend.includes("svelte");
+  const hasReactWebAuthForms = hasNextJs || hasTanStackStart || hasViteReact;
 
   if (auth === "clerk") {
     if (webExists) {
@@ -74,13 +77,32 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
         dependencies: ["better-auth", "@convex-dev/better-auth"],
         customDependencies: { "better-auth": "1.4.9" },
       });
+
+      if (hasReactWebAuthForms) {
+        addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@tanstack/react-form"] });
+      }
+      if (hasSolid) {
+        addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@tanstack/solid-form"] });
+      }
+      if (hasSvelte) {
+        addPackageDependency({
+          vfs,
+          packagePath: webPath,
+          dependencies: ["@tanstack/svelte-form"],
+        });
+      }
     }
 
     if (nativeExists && hasNative) {
       addPackageDependency({
         vfs,
         packagePath: nativePath,
-        dependencies: ["better-auth", "@better-auth/expo", "@convex-dev/better-auth"],
+        dependencies: [
+          "better-auth",
+          "@better-auth/expo",
+          "@convex-dev/better-auth",
+          "@tanstack/react-form",
+        ],
         customDependencies: { "better-auth": "1.4.9", "@better-auth/expo": "1.4.9" },
       });
     }
@@ -112,6 +134,11 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
       "astro",
     ].includes(f),
   );
+  const hasReactWebAuthForms = frontend.some((f) =>
+    ["react-router", "tanstack-router", "tanstack-start", "next"].includes(f),
+  );
+  const hasSolid = frontend.includes("solid");
+  const hasSvelte = frontend.includes("svelte");
 
   if (auth === "better-auth") {
     if (authExists) {
@@ -123,13 +150,27 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
 
     if (hasWebFrontend && webExists) {
       addPackageDependency({ vfs, packagePath: webPath, dependencies: ["better-auth"] });
+
+      if (hasReactWebAuthForms) {
+        addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@tanstack/react-form"] });
+      }
+      if (hasSolid) {
+        addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@tanstack/solid-form"] });
+      }
+      if (hasSvelte) {
+        addPackageDependency({
+          vfs,
+          packagePath: webPath,
+          dependencies: ["@tanstack/svelte-form"],
+        });
+      }
     }
 
     if (hasNative && nativeExists) {
       addPackageDependency({
         vfs,
         packagePath: nativePath,
-        dependencies: ["better-auth", "@better-auth/expo"],
+        dependencies: ["better-auth", "@better-auth/expo", "@tanstack/react-form"],
       });
     }
   }
