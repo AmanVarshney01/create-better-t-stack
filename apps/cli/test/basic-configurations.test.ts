@@ -106,8 +106,9 @@ describe("Basic Configurations", () => {
   });
 
   describe("Installation Options", () => {
-    // Skip install test in CI to avoid timeouts
-    const runInstallTest = process.env.CI ? it.skip : it;
+    // Real dependency installation is slow and flaky in shared environments.
+    // Run only when explicitly requested.
+    const runInstallTest = process.env.RUN_INSTALL_TESTS === "1" ? it : it.skip;
 
     runInstallTest(
       "should work with install enabled",

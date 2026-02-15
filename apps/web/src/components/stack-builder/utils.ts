@@ -122,6 +122,8 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
       api: "none",
       dbSetup: "none",
       serverDeploy: "none",
+      search: "none",
+      fileStorage: "none",
     };
 
     for (const [key, value] of Object.entries(convexOverrides)) {
@@ -216,6 +218,8 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
       dbSetup: "none",
       serverDeploy: "none",
       payments: "none",
+      search: "none",
+      fileStorage: "none",
     };
 
     for (const [key, value] of Object.entries(noneOverrides)) {
@@ -921,6 +925,12 @@ export const getDisabledReason = (
     if (category === "serverDeploy" && optionId !== "none") {
       return "Convex has its own deployment";
     }
+    if (category === "search" && optionId !== "none") {
+      return "Search requires a standalone backend";
+    }
+    if (category === "fileStorage" && optionId !== "none") {
+      return "File storage requires a standalone backend";
+    }
     if (category === "auth" && optionId === "better-auth") {
       const compatible =
         currentStack.webFrontend.some((f) =>
@@ -981,6 +991,12 @@ export const getDisabledReason = (
       return "No backend selected";
     }
     if (category === "payments" && optionId !== "none") {
+      return "No backend selected";
+    }
+    if (category === "search" && optionId !== "none") {
+      return "No backend selected";
+    }
+    if (category === "fileStorage" && optionId !== "none") {
       return "No backend selected";
     }
     if (category === "examples" && optionId !== "none") {

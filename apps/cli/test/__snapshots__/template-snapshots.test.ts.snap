@@ -2,6 +2,7 @@
 
 exports[`Template Snapshots File Structure Snapshots file structure: tanstack-router-minimal 1`] = `
 [
+  "CLAUDE.md",
   "README.md",
   "apps/server/.env",
   "apps/server/package.json",
@@ -56,6 +57,7 @@ exports[`Template Snapshots File Structure Snapshots file structure: tanstack-ro
 
 exports[`Template Snapshots File Structure Snapshots file structure: next-self-fullstack 1`] = `
 [
+  "CLAUDE.md",
   "README.md",
   "apps/web/.env",
   "apps/web/components.json",
@@ -119,6 +121,7 @@ exports[`Template Snapshots File Structure Snapshots file structure: next-self-f
 
 exports[`Template Snapshots File Structure Snapshots file structure: astro-react-integration 1`] = `
 [
+  "CLAUDE.md",
   "README.md",
   "apps/web/.env",
   "apps/web/.npmrc",
@@ -156,6 +159,7 @@ exports[`Template Snapshots File Structure Snapshots file structure: astro-react
 
 exports[`Template Snapshots File Structure Snapshots file structure: nuxt-standalone 1`] = `
 [
+  "CLAUDE.md",
   "README.md",
   "apps/web/.env",
   "apps/web/app/app.config.ts",
@@ -195,6 +199,7 @@ exports[`Template Snapshots File Structure Snapshots file structure: nuxt-standa
 
 exports[`Template Snapshots File Structure Snapshots file structure: express-node-trpc 1`] = `
 [
+  "CLAUDE.md",
   "README.md",
   "apps/server/.env",
   "apps/server/package.json",
@@ -249,6 +254,7 @@ exports[`Template Snapshots File Structure Snapshots file structure: express-nod
 
 exports[`Template Snapshots File Structure Snapshots file structure: hono-bun-orpc 1`] = `
 [
+  "CLAUDE.md",
   "README.md",
   "apps/server/.env",
   "apps/server/package.json",
@@ -303,6 +309,7 @@ exports[`Template Snapshots File Structure Snapshots file structure: hono-bun-or
 
 exports[`Template Snapshots File Structure Snapshots file structure: better-auth-full 1`] = `
 [
+  "CLAUDE.md",
   "README.md",
   "apps/server/.env",
   "apps/server/package.json",
@@ -367,6 +374,7 @@ exports[`Template Snapshots File Structure Snapshots file structure: better-auth
 
 exports[`Template Snapshots File Structure Snapshots file structure: convex-clerk 1`] = `
 [
+  "CLAUDE.md",
   "README.md",
   "apps/web/.env",
   "apps/web/components.json",
@@ -414,6 +422,7 @@ exports[`Template Snapshots File Structure Snapshots file structure: convex-cler
 
 exports[`Template Snapshots File Structure Snapshots file structure: mongodb-mongoose 1`] = `
 [
+  "CLAUDE.md",
   "README.md",
   "apps/server/.env",
   "apps/server/package.json",
@@ -466,6 +475,7 @@ exports[`Template Snapshots File Structure Snapshots file structure: mongodb-mon
 
 exports[`Template Snapshots File Structure Snapshots file structure: postgres-prisma 1`] = `
 [
+  "CLAUDE.md",
   "README.md",
   "apps/server/.env",
   "apps/server/package.json",
@@ -520,6 +530,7 @@ exports[`Template Snapshots File Structure Snapshots file structure: postgres-pr
 
 exports[`Template Snapshots File Structure Snapshots file structure: frontend-only-no-backend 1`] = `
 [
+  "CLAUDE.md",
   "README.md",
   "apps/web/.env",
   "apps/web/components.json",
@@ -558,6 +569,7 @@ exports[`Template Snapshots File Structure Snapshots file structure: frontend-on
 
 exports[`Template Snapshots File Structure Snapshots file structure: native-react-native 1`] = `
 [
+  "CLAUDE.md",
   "README.md",
   "apps/native/.env",
   "apps/native/app.json",
@@ -608,7 +620,7 @@ exports[`Template Snapshots File Structure Snapshots file structure: native-reac
 
 exports[`Template Snapshots Key File Content Snapshots key files: tanstack-router-minimal 1`] = `
 {
-  "fileCount": 54,
+  "fileCount": 55,
   "files": [
     {
       "content": "[exists]",
@@ -633,7 +645,7 @@ exports[`Template Snapshots Key File Content Snapshots key files: tanstack-route
     "@snapshot-tanstack-router-minimal/env": "workspace:*",
     "@snapshot-tanstack-router-minimal/api": "workspace:*",
     "@snapshot-tanstack-router-minimal/db": "workspace:*",
-    "hono": "^4.8.2",
+    "hono": "catalog:",
     "@trpc/server": "catalog:",
     "@hono/trpc-server": "^0.4.0"
   },
@@ -1024,6 +1036,10 @@ export default defineConfig({
       "path": "apps/web/vite.config.ts",
     },
     {
+      "content": "[exists]",
+      "path": "CLAUDE.md",
+    },
+    {
       "content": 
 "{
   "name": "snapshot-tanstack-router-minimal",
@@ -1039,6 +1055,7 @@ export default defineConfig({
       "zod": "^4.1.13",
       "typescript": "^5",
       "@types/bun": "^1.3.4",
+      "hono": "^4.8.2",
       "@trpc/server": "^11.7.2",
       "@libsql/client": "0.15.15",
       "libsql": "0.5.22",
@@ -1097,7 +1114,8 @@ export default defineConfig({
     "@snapshot-tanstack-router-minimal/env": "workspace:*",
     "@snapshot-tanstack-router-minimal/db": "workspace:*",
     "@trpc/server": "catalog:",
-    "@trpc/client": "catalog:"
+    "@trpc/client": "catalog:",
+    "hono": "catalog:"
   }
 }"
 ,
@@ -1353,7 +1371,7 @@ export const db = drizzle({ client, schema });
 
 exports[`Template Snapshots Key File Content Snapshots key files: next-self-fullstack 1`] = `
 {
-  "fileCount": 64,
+  "fileCount": 65,
   "files": [
     {
       "content": "[exists]",
@@ -1617,6 +1635,10 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
 "
 ,
       "path": "apps/web/tsconfig.json",
+    },
+    {
+      "content": "[exists]",
+      "path": "CLAUDE.md",
     },
     {
       "content": 
@@ -2145,7 +2167,7 @@ export {};"
 
 exports[`Template Snapshots Key File Content Snapshots key files: astro-react-integration 1`] = `
 {
-  "fileCount": 37,
+  "fileCount": 38,
   "files": [
     {
       "content": "[exists]",
@@ -2247,6 +2269,10 @@ export const client = createORPCClient<typeof appRouter>(link);
 "
 ,
       "path": "apps/web/tsconfig.json",
+    },
+    {
+      "content": "[exists]",
+      "path": "CLAUDE.md",
     },
     {
       "content": 
@@ -2573,7 +2599,7 @@ export const db = drizzle({ client, schema });
 
 exports[`Template Snapshots Key File Content Snapshots key files: nuxt-standalone 1`] = `
 {
-  "fileCount": 39,
+  "fileCount": 40,
   "files": [
     {
       "content": "[exists]",
@@ -2741,6 +2767,10 @@ export default defineNuxtConfig({
 "
 ,
       "path": "apps/web/tsconfig.json",
+    },
+    {
+      "content": "[exists]",
+      "path": "CLAUDE.md",
     },
     {
       "content": 
@@ -3071,7 +3101,7 @@ export const db = drizzle({ client, schema });
 
 exports[`Template Snapshots Key File Content Snapshots key files: express-node-trpc 1`] = `
 {
-  "fileCount": 54,
+  "fileCount": 55,
   "files": [
     {
       "content": "[exists]",
@@ -3487,6 +3517,10 @@ export default defineConfig({
       "path": "apps/web/vite.config.ts",
     },
     {
+      "content": "[exists]",
+      "path": "CLAUDE.md",
+    },
+    {
       "content": 
 "{
   "name": "snapshot-express-node-trpc",
@@ -3797,7 +3831,7 @@ export default prisma;
 
 exports[`Template Snapshots Key File Content Snapshots key files: hono-bun-orpc 1`] = `
 {
-  "fileCount": 54,
+  "fileCount": 55,
   "files": [
     {
       "content": "[exists]",
@@ -3822,7 +3856,7 @@ exports[`Template Snapshots Key File Content Snapshots key files: hono-bun-orpc 
     "@snapshot-hono-bun-orpc/env": "workspace:*",
     "@snapshot-hono-bun-orpc/api": "workspace:*",
     "@snapshot-hono-bun-orpc/db": "workspace:*",
-    "hono": "^4.8.2",
+    "hono": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/zod": "catalog:"
@@ -4250,6 +4284,10 @@ export default defineConfig({
       "path": "apps/web/vite.config.ts",
     },
     {
+      "content": "[exists]",
+      "path": "CLAUDE.md",
+    },
+    {
       "content": 
 "{
   "name": "snapshot-hono-bun-orpc",
@@ -4265,6 +4303,7 @@ export default defineConfig({
       "zod": "^4.1.13",
       "typescript": "^5",
       "@types/bun": "^1.3.4",
+      "hono": "^4.8.2",
       "@orpc/server": "^1.12.2",
       "@orpc/openapi": "^1.12.2",
       "@orpc/zod": "^1.12.2",
@@ -4327,7 +4366,8 @@ export default defineConfig({
     "@orpc/server": "catalog:",
     "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",
-    "@orpc/zod": "catalog:"
+    "@orpc/zod": "catalog:",
+    "hono": "catalog:"
   }
 }"
 ,
@@ -4580,7 +4620,7 @@ export const db = drizzle({ client, schema });
 
 exports[`Template Snapshots Key File Content Snapshots key files: better-auth-full 1`] = `
 {
-  "fileCount": 65,
+  "fileCount": 66,
   "files": [
     {
       "content": "[exists]",
@@ -4606,7 +4646,7 @@ exports[`Template Snapshots Key File Content Snapshots key files: better-auth-fu
     "@snapshot-better-auth-full/api": "workspace:*",
     "@snapshot-better-auth-full/auth": "workspace:*",
     "@snapshot-better-auth-full/db": "workspace:*",
-    "hono": "^4.8.2",
+    "hono": "catalog:",
     "@trpc/server": "catalog:",
     "@hono/trpc-server": "^0.4.0",
     "better-auth": "catalog:"
@@ -5032,6 +5072,10 @@ export default defineConfig({
       "path": "apps/web/vite.config.ts",
     },
     {
+      "content": "[exists]",
+      "path": "CLAUDE.md",
+    },
+    {
       "content": 
 "{
   "name": "snapshot-better-auth-full",
@@ -5047,6 +5091,7 @@ export default defineConfig({
       "zod": "^4.1.13",
       "typescript": "^5",
       "@types/bun": "^1.3.4",
+      "hono": "^4.8.2",
       "@trpc/server": "^11.7.2",
       "better-auth": "^1.4.9",
       "@trpc/client": "^11.7.2"
@@ -5104,7 +5149,8 @@ export default defineConfig({
     "@snapshot-better-auth-full/auth": "workspace:*",
     "@snapshot-better-auth-full/db": "workspace:*",
     "@trpc/server": "catalog:",
-    "@trpc/client": "catalog:"
+    "@trpc/client": "catalog:",
+    "hono": "catalog:"
   }
 }"
 ,
@@ -5561,7 +5607,7 @@ export {};"
 
 exports[`Template Snapshots Key File Content Snapshots key files: convex-clerk 1`] = `
 {
-  "fileCount": 45,
+  "fileCount": 46,
   "files": [
     {
       "content": "[exists]",
@@ -5841,6 +5887,10 @@ export default defineConfig({
       "path": "apps/web/vite.config.ts",
     },
     {
+      "content": "[exists]",
+      "path": "CLAUDE.md",
+    },
+    {
       "content": 
 "{
   "name": "snapshot-convex-clerk",
@@ -5908,8 +5958,7 @@ export default defineConfig({
 "import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
-export default defineSchema({
-});
+export default defineSchema({});
 "
 ,
       "path": "packages/backend/convex/schema.ts",
@@ -6075,7 +6124,7 @@ export default defineSchema({
 
 exports[`Template Snapshots Key File Content Snapshots key files: mongodb-mongoose 1`] = `
 {
-  "fileCount": 52,
+  "fileCount": 53,
   "files": [
     {
       "content": "[exists]",
@@ -6100,7 +6149,7 @@ exports[`Template Snapshots Key File Content Snapshots key files: mongodb-mongoo
     "@snapshot-mongodb-mongoose/env": "workspace:*",
     "@snapshot-mongodb-mongoose/api": "workspace:*",
     "@snapshot-mongodb-mongoose/db": "workspace:*",
-    "hono": "^4.8.2",
+    "hono": "catalog:",
     "@trpc/server": "catalog:",
     "@hono/trpc-server": "^0.4.0"
   },
@@ -6489,6 +6538,10 @@ export default defineConfig({
       "path": "apps/web/vite.config.ts",
     },
     {
+      "content": "[exists]",
+      "path": "CLAUDE.md",
+    },
+    {
       "content": 
 "{
   "name": "snapshot-mongodb-mongoose",
@@ -6504,6 +6557,7 @@ export default defineConfig({
       "zod": "^4.1.13",
       "typescript": "^5",
       "@types/bun": "^1.3.4",
+      "hono": "^4.8.2",
       "@trpc/server": "^11.7.2",
       "@trpc/client": "^11.7.2"
     }
@@ -6555,7 +6609,8 @@ export default defineConfig({
     "@snapshot-mongodb-mongoose/env": "workspace:*",
     "@snapshot-mongodb-mongoose/db": "workspace:*",
     "@trpc/server": "catalog:",
-    "@trpc/client": "catalog:"
+    "@trpc/client": "catalog:",
+    "hono": "catalog:"
   }
 }"
 ,
@@ -6776,7 +6831,7 @@ export { client };
 
 exports[`Template Snapshots Key File Content Snapshots key files: postgres-prisma 1`] = `
 {
-  "fileCount": 54,
+  "fileCount": 55,
   "files": [
     {
       "content": "[exists]",
@@ -6801,7 +6856,7 @@ exports[`Template Snapshots Key File Content Snapshots key files: postgres-prism
     "@snapshot-postgres-prisma/env": "workspace:*",
     "@snapshot-postgres-prisma/api": "workspace:*",
     "@snapshot-postgres-prisma/db": "workspace:*",
-    "hono": "^4.8.2",
+    "hono": "catalog:",
     "@trpc/server": "catalog:",
     "@hono/trpc-server": "^0.4.0"
   },
@@ -7191,6 +7246,10 @@ export default defineConfig({
       "path": "apps/web/vite.config.ts",
     },
     {
+      "content": "[exists]",
+      "path": "CLAUDE.md",
+    },
+    {
       "content": 
 "{
   "name": "snapshot-postgres-prisma",
@@ -7206,6 +7265,7 @@ export default defineConfig({
       "zod": "^4.1.13",
       "typescript": "^5",
       "@types/bun": "^1.3.4",
+      "hono": "^4.8.2",
       "@trpc/server": "^11.7.2",
       "@prisma/client": "^7.1.0",
       "@trpc/client": "^11.7.2"
@@ -7262,7 +7322,8 @@ export default defineConfig({
     "@snapshot-postgres-prisma/env": "workspace:*",
     "@snapshot-postgres-prisma/db": "workspace:*",
     "@trpc/server": "catalog:",
-    "@trpc/client": "catalog:"
+    "@trpc/client": "catalog:",
+    "hono": "catalog:"
   }
 }"
 ,
@@ -7499,7 +7560,7 @@ export default prisma;
 
 exports[`Template Snapshots Key File Content Snapshots key files: frontend-only-no-backend 1`] = `
 {
-  "fileCount": 35,
+  "fileCount": 36,
   "files": [
     {
       "content": "[exists]",
@@ -7741,6 +7802,10 @@ export default defineConfig({
       "path": "apps/web/vite.config.ts",
     },
     {
+      "content": "[exists]",
+      "path": "CLAUDE.md",
+    },
+    {
       "content": 
 "{
   "name": "snapshot-frontend-only-no-backend",
@@ -7884,7 +7949,7 @@ export default defineConfig({
 
 exports[`Template Snapshots Key File Content Snapshots key files: native-react-native 1`] = `
 {
-  "fileCount": 60,
+  "fileCount": 61,
   "files": [
     {
       "content": "[exists]",
@@ -8241,7 +8306,7 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
     "@snapshot-native-react-native/env": "workspace:*",
     "@snapshot-native-react-native/api": "workspace:*",
     "@snapshot-native-react-native/db": "workspace:*",
-    "hono": "^4.8.2",
+    "hono": "catalog:",
     "@trpc/server": "catalog:",
     "@hono/trpc-server": "^0.4.0"
   },
@@ -8323,6 +8388,10 @@ export default app;
       "path": "apps/server/tsdown.config.ts",
     },
     {
+      "content": "[exists]",
+      "path": "CLAUDE.md",
+    },
+    {
       "content": 
 "{
   "name": "snapshot-native-react-native",
@@ -8338,6 +8407,7 @@ export default app;
       "zod": "^4.1.13",
       "typescript": "^5",
       "@types/bun": "^1.3.4",
+      "hono": "^4.8.2",
       "@trpc/server": "^11.7.2",
       "@trpc/client": "^11.7.2"
     }
@@ -8394,7 +8464,8 @@ export default app;
     "@snapshot-native-react-native/env": "workspace:*",
     "@snapshot-native-react-native/db": "workspace:*",
     "@trpc/server": "catalog:",
-    "@trpc/client": "catalog:"
+    "@trpc/client": "catalog:",
+    "hono": "catalog:"
   }
 }"
 ,
@@ -8651,6 +8722,7 @@ export const db = drizzle({ client, schema });
 exports[`Template Snapshots - Rust Ecosystem Rust File Structure Snapshots file structure: axum-leptos-seaorm 1`] = `
 [
   ".env.example",
+  "CLAUDE.md",
   "Cargo.toml",
   "README.md",
   "crates/client/Cargo.toml",
@@ -8667,6 +8739,7 @@ exports[`Template Snapshots - Rust Ecosystem Rust File Structure Snapshots file 
 exports[`Template Snapshots - Rust Ecosystem Rust File Structure Snapshots file structure: actix-dioxus-sqlx 1`] = `
 [
   ".env.example",
+  "CLAUDE.md",
   "Cargo.toml",
   "README.md",
   "crates/dioxus-client/Cargo.toml",
@@ -8682,6 +8755,7 @@ exports[`Template Snapshots - Rust Ecosystem Rust File Structure Snapshots file 
 exports[`Template Snapshots - Rust Ecosystem Rust File Structure Snapshots file structure: cli-clap 1`] = `
 [
   ".env.example",
+  "CLAUDE.md",
   "Cargo.toml",
   "README.md",
   "crates/cli/Cargo.toml",
@@ -8694,7 +8768,7 @@ exports[`Template Snapshots - Rust Ecosystem Rust File Structure Snapshots file 
 
 exports[`Template Snapshots - Rust Ecosystem Rust Key File Content Snapshots key files: axum-leptos-seaorm 1`] = `
 {
-  "fileCount": 12,
+  "fileCount": 13,
   "files": [
     {
       "content": 
@@ -8787,6 +8861,10 @@ codegen-units = 1
 "
 ,
       "path": "Cargo.toml",
+    },
+    {
+      "content": "[exists]",
+      "path": "CLAUDE.md",
     },
     {
       "content": 
@@ -9082,7 +9160,7 @@ async fn main() -> anyhow::Result<()> {
 
 exports[`Template Snapshots - Rust Ecosystem Rust Key File Content Snapshots key files: actix-dioxus-sqlx 1`] = `
 {
-  "fileCount": 11,
+  "fileCount": 12,
   "files": [
     {
       "content": 
@@ -9172,6 +9250,10 @@ codegen-units = 1
 "
 ,
       "path": "Cargo.toml",
+    },
+    {
+      "content": "[exists]",
+      "path": "CLAUDE.md",
     },
     {
       "content": "[exists]",
@@ -9461,7 +9543,7 @@ async fn main() -> anyhow::Result<()> {
 
 exports[`Template Snapshots - Rust Ecosystem Rust Key File Content Snapshots key files: cli-clap 1`] = `
 {
-  "fileCount": 9,
+  "fileCount": 10,
   "files": [
     {
       "content": 
@@ -9539,6 +9621,10 @@ codegen-units = 1
 "
 ,
       "path": "Cargo.toml",
+    },
+    {
+      "content": "[exists]",
+      "path": "CLAUDE.md",
     },
     {
       "content": 

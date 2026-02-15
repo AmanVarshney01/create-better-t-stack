@@ -16,9 +16,25 @@ export function generateReproducibleCommand(config: ProjectConfig) {
   flags.push(`--api ${config.api}`);
   flags.push(`--auth ${config.auth}`);
   flags.push(`--payments ${config.payments}`);
+  flags.push(`--email ${config.email}`);
+  flags.push(`--file-upload ${config.fileUpload}`);
   flags.push(`--effect ${config.effect}`);
   flags.push(`--css-framework ${config.cssFramework}`);
   flags.push(`--ui-library ${config.uiLibrary}`);
+  flags.push(`--ai ${config.ai}`);
+  flags.push(`--state-management ${config.stateManagement}`);
+  flags.push(`--forms ${config.forms}`);
+  flags.push(`--validation ${config.validation}`);
+  flags.push(`--testing ${config.testing}`);
+  flags.push(`--animation ${config.animation}`);
+  flags.push(`--realtime ${config.realtime}`);
+  flags.push(`--job-queue ${config.jobQueue}`);
+  flags.push(`--logging ${config.logging}`);
+  flags.push(`--observability ${config.observability}`);
+  flags.push(`--caching ${config.caching}`);
+  flags.push(`--cms ${config.cms}`);
+  flags.push(`--search ${config.search}`);
+  flags.push(`--file-storage ${config.fileStorage}`);
 
   if (config.addons && config.addons.length > 0) {
     flags.push(`--addons ${config.addons.join(" ")}`);

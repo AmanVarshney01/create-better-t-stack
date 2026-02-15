@@ -2781,6 +2781,8 @@ export type StackState = {
   cssFramework: string;
   uiLibrary: string;
   cms: string;
+  search: string;
+  fileStorage: string;
   codeQuality: string[];
   documentation: string[];
   appPlatforms: string[];
@@ -2847,6 +2849,8 @@ export const DEFAULT_STACK: StackState = {
   cssFramework: "tailwind",
   uiLibrary: "shadcn-ui",
   cms: "none",
+  search: "none",
+  fileStorage: "none",
   codeQuality: [],
   documentation: [],
   appPlatforms: ["turborepo"],

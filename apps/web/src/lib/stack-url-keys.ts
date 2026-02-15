@@ -33,6 +33,8 @@ export const stackUrlKeys: Record<keyof StackState, string> = {
   caching: "cache",
   animation: "anim",
   cms: "cms",
+  search: "srch",
+  fileStorage: "fs",
   codeQuality: "cq",
   documentation: "doc",
   appPlatforms: "ap",

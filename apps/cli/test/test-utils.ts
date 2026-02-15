@@ -1,6 +1,7 @@
 import { expect } from "bun:test";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
+import { SMOKE_DIR } from "./setup";
 
 import type {
   CreateInput,
@@ -86,8 +87,8 @@ import {
   AnalyticsSchema,
 } from "../src/types";
 
-// Default smoke directory path - use the same as setup.ts
-const DEFAULT_SMOKE_DIR = join(import.meta.dir, "..", ".smoke");
+// Default smoke directory path - keep in sync with setup preload.
+const DEFAULT_SMOKE_DIR = SMOKE_DIR;
 
 export interface TestResult {
   success: boolean;
@@ -226,7 +227,8 @@ export async function runTRPCTest(config: TestConfig): Promise<TestResult> {
 
   const options: Partial<CreateInput> = {
     install: config.install ?? false,
-    git: config.git ?? true,
+    // Git is expensive and not required for most integration checks.
+    git: config.git ?? false,
     packageManager: config.packageManager ?? "bun",
     directoryConflict: "overwrite",
     disableAnalytics: true,
@@ -330,7 +332,7 @@ export function createBasicConfig(overrides: Partial<TestConfig> = {}): TestConf
     projectName: "test-app",
     yes: true, // Use defaults
     install: false,
-    git: true,
+    git: false,
     ...overrides,
   };
 }
@@ -339,7 +341,7 @@ export function createCustomConfig(config: Partial<TestConfig>): TestConfig {
   return {
     projectName: "test-app",
     install: false,
-    git: true,
+    git: false,
     ...config,
   };
 }

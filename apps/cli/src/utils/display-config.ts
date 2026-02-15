@@ -52,8 +52,72 @@ export function displayConfig(config: Partial<ProjectConfig>) {
     configDisplay.push(`${pc.blue("Payments:")} ${String(config.payments)}`);
   }
 
+  if (config.email !== undefined) {
+    configDisplay.push(`${pc.blue("Email:")} ${String(config.email)}`);
+  }
+
+  if (config.fileUpload !== undefined) {
+    configDisplay.push(`${pc.blue("File Upload:")} ${String(config.fileUpload)}`);
+  }
+
   if (config.effect !== undefined) {
     configDisplay.push(`${pc.blue("Effect:")} ${String(config.effect)}`);
+  }
+
+  if (config.ai !== undefined) {
+    configDisplay.push(`${pc.blue("AI:")} ${String(config.ai)}`);
+  }
+
+  if (config.stateManagement !== undefined) {
+    configDisplay.push(`${pc.blue("State Management:")} ${String(config.stateManagement)}`);
+  }
+
+  if (config.forms !== undefined) {
+    configDisplay.push(`${pc.blue("Forms:")} ${String(config.forms)}`);
+  }
+
+  if (config.validation !== undefined) {
+    configDisplay.push(`${pc.blue("Validation:")} ${String(config.validation)}`);
+  }
+
+  if (config.testing !== undefined) {
+    configDisplay.push(`${pc.blue("Testing:")} ${String(config.testing)}`);
+  }
+
+  if (config.animation !== undefined) {
+    configDisplay.push(`${pc.blue("Animation:")} ${String(config.animation)}`);
+  }
+
+  if (config.realtime !== undefined) {
+    configDisplay.push(`${pc.blue("Realtime:")} ${String(config.realtime)}`);
+  }
+
+  if (config.jobQueue !== undefined) {
+    configDisplay.push(`${pc.blue("Job Queue:")} ${String(config.jobQueue)}`);
+  }
+
+  if (config.logging !== undefined) {
+    configDisplay.push(`${pc.blue("Logging:")} ${String(config.logging)}`);
+  }
+
+  if (config.observability !== undefined) {
+    configDisplay.push(`${pc.blue("Observability:")} ${String(config.observability)}`);
+  }
+
+  if (config.caching !== undefined) {
+    configDisplay.push(`${pc.blue("Caching:")} ${String(config.caching)}`);
+  }
+
+  if (config.cms !== undefined) {
+    configDisplay.push(`${pc.blue("CMS:")} ${String(config.cms)}`);
+  }
+
+  if (config.search !== undefined) {
+    configDisplay.push(`${pc.blue("Search:")} ${String(config.search)}`);
+  }
+
+  if (config.fileStorage !== undefined) {
+    configDisplay.push(`${pc.blue("File Storage:")} ${String(config.fileStorage)}`);
   }
 
   if (config.addons !== undefined) {

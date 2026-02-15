@@ -63,6 +63,8 @@ export function loadStackParams(
       caching: getString("caching", DEFAULT_STACK.caching),
       animation: getString("animation", DEFAULT_STACK.animation),
       cms: getString("cms", DEFAULT_STACK.cms),
+      search: getString("search", DEFAULT_STACK.search),
+      fileStorage: getString("fileStorage", DEFAULT_STACK.fileStorage),
       codeQuality: getArray("codeQuality", DEFAULT_STACK.codeQuality),
       documentation: getArray("documentation", DEFAULT_STACK.documentation),
       appPlatforms: getArray("appPlatforms", DEFAULT_STACK.appPlatforms),
@@ -155,6 +157,8 @@ export function serializeStackParams(basePath: string, stack: StackState): strin
   addParam("caching", stack.caching);
   addParam("animation", stack.animation);
   addParam("cms", stack.cms);
+  addParam("search", stack.search);
+  addParam("fileStorage", stack.fileStorage);
   addParam("codeQuality", stack.codeQuality);
   addParam("documentation", stack.documentation);
   addParam("appPlatforms", stack.appPlatforms);

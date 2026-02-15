@@ -43,6 +43,8 @@ function searchToStack(search: StackSearchParams | undefined): StackState {
     caching: search.cache ?? DEFAULT_STACK.caching,
     animation: search.anim ?? DEFAULT_STACK.animation,
     cms: search.cms ?? DEFAULT_STACK.cms,
+    search: search.srch ?? DEFAULT_STACK.search,
+    fileStorage: search.fs ?? DEFAULT_STACK.fileStorage,
     codeQuality: search.cq ?? DEFAULT_STACK.codeQuality,
     documentation: search.doc ?? DEFAULT_STACK.documentation,
     appPlatforms: search.ap ?? DEFAULT_STACK.appPlatforms,

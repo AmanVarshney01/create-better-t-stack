@@ -42,6 +42,8 @@ export const stackSearchSchema = z.object({
   cache: z.string().catch(DEFAULT_STACK.caching),
   anim: z.string().catch(DEFAULT_STACK.animation),
   cms: z.string().catch(DEFAULT_STACK.cms),
+  srch: z.string().catch(DEFAULT_STACK.search),
+  fs: z.string().catch(DEFAULT_STACK.fileStorage),
   cq: commaSeparatedArray(DEFAULT_STACK.codeQuality),
   doc: commaSeparatedArray(DEFAULT_STACK.documentation),
   ap: commaSeparatedArray(DEFAULT_STACK.appPlatforms),

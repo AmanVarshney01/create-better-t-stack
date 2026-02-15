@@ -10,6 +10,7 @@
     "dev": "vite dev --port 3333",
     "start": "node .output/server/index.mjs",
     "lint": "oxlint . && tsc --noEmit",
+    "test": "bun test ./test/*.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
