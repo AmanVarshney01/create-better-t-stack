@@ -10,8 +10,8 @@ export default function manifest(): MetadataRoute.Manifest {
       "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
     start_url: "/new",
     display: "standalone",
-    background_color: "#ffffff",
-    theme_color: "#000000",
+    background_color: "#141415",
+    theme_color: "#9bb4bc",
     icons: [
       {
         src: "/favicon/web-app-manifest-192x192.png",

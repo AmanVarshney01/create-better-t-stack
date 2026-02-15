@@ -147,7 +147,7 @@ function TreeIndicator({ className, ...props }: React.HTMLAttributes<HTMLDivElem
     <div
       dir={direction}
       className={cn(
-        "bg-muted absolute left-1.5 h-full w-px rounded-md py-3 duration-300 ease-in-out hover:bg-slate-300 rtl:right-1.5",
+        "bg-muted absolute left-1.5 h-full w-px rounded-md py-3 duration-300 ease-in-out hover:bg-border rtl:right-1.5",
         className,
       )}
       {...props}

@@ -97,8 +97,8 @@ export const CodeViewer = memo(function CodeViewer({
               <CodeBlockContent
                 language={item.language as BundledLanguage}
                 themes={{
-                  light: "catppuccin-latte",
-                  dark: "catppuccin-mocha",
+                  light: "vitesse-light",
+                  dark: "vesper",
                 }}
                 className="bg-fd-background"
               >

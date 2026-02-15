@@ -33,12 +33,12 @@ export function AnalyticsHeader({
         </div>
       </div>
 
-      <div className="rounded-xl bg-gradient-to-br from-primary/12 via-fd-background to-fd-background/90 p-4 ring-1 ring-border/40 sm:p-5">
+      <div className="rounded-xl p-4 ring-1 ring-border/40 sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <span className="text-primary">$</span>
             <span className="text-muted-foreground">status:</span>
-            <span className="text-green-500">online</span>
+            <span className="text-chart-4">online</span>
           </div>
           {formattedDate && (
             <div className="flex items-center gap-2 text-muted-foreground text-xs">

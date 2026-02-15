@@ -1,5 +1,5 @@
 <svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="8" y="8" width="80" height="80" rx="16" fill="#181825" stroke="#6C7086" stroke-width="3"/>
+  <rect x="8" y="8" width="80" height="80" rx="16" fill="#202022" stroke="#333738" stroke-width="3"/>
   <text
     x="48"
     y="50"
@@ -8,7 +8,7 @@
     font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace"
     font-size="34"
     font-weight="700"
-    fill="#CBA6F7"
+    fill="#9BB4BC"
   >
     $_
   </text>

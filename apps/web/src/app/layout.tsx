@@ -125,8 +125,8 @@ export default function Layout({ children }: { children: ReactNode }) {
             },
           }}
           theme={{
-            enableSystem: true,
-            defaultTheme: "system",
+            enableSystem: false,
+            defaultTheme: "dark",
           }}
         >
           <Providers>{children}</Providers>

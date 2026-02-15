@@ -185,7 +185,7 @@ export function StackDisplay({ stackState }: StackDisplayProps) {
             <span
               className={
                 copied
-                  ? "flex items-center gap-1 rounded border border-green-500/20 bg-green-500/10 px-2 py-1 font-mono text-green-600 text-xs transition-colors dark:text-green-400"
+                  ? "flex items-center gap-1 rounded border border-[color-mix(in_srgb,var(--chart-4)_35%,transparent)] bg-[color-mix(in_srgb,var(--chart-4)_16%,transparent)] px-2 py-1 font-mono text-[var(--chart-4)] text-xs transition-colors"
                   : "flex items-center gap-1 rounded border border-border px-2 py-1 font-mono text-xs transition-colors"
               }
             >

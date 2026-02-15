@@ -1,20 +1,20 @@
 <svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
   <style>
     :root {
-      --logo-bg: #f5eeff;
-      --logo-stroke: #b79aff;
-      --logo-dot-1: #8839ef;
-      --logo-dot-2: #cba6f7;
-      --logo-glyph: #8839ef;
+      --logo-bg: #f3f2f7;
+      --logo-stroke: #c9c8d4;
+      --logo-dot-1: #6e94b2;
+      --logo-dot-2: #bb9dbd;
+      --logo-glyph: #6e94b2;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --logo-bg: #181825;
-        --logo-stroke: #6c7086;
-        --logo-dot-1: #cba6f7;
-        --logo-dot-2: #b4befe;
-        --logo-glyph: #cba6f7;
+        --logo-bg: #202022;
+        --logo-stroke: #333738;
+        --logo-dot-1: #9bb4bc;
+        --logo-dot-2: #bb9dbd;
+        --logo-glyph: #9bb4bc;
       }
     }
   </style>
