@@ -120,7 +120,7 @@ export function SelectedStackBadges({ stack, onRemove }: SelectedStackBadgesProp
                       />
                     )}
                     {tech.name}
-                    <span className="rounded-full p-0.5 hover:bg-black/10 dark:hover:bg-white/10">
+                    <span className="rounded-full p-0.5 hover:bg-muted">
                       <X className="h-2.5 w-2.5" />
                     </span>
                   </button>

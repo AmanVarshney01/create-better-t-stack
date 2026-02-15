@@ -115,8 +115,8 @@ export function ShareDialog({ children, stackUrl, stackState }: ShareDialogProps
           width: 128,
           margin: 2,
           color: {
-            dark: isDark ? "#cdd6f4" : "#11111b",
-            light: isDark ? "#11111b" : "#ffffff",
+            dark: isDark ? "#cdcdcd" : "#252530",
+            light: isDark ? "#141415" : "#f3f2f7",
           },
         });
         setQrCodeDataUrl(dataUrl);
@@ -239,7 +239,7 @@ export function ShareDialog({ children, stackUrl, stackState }: ShareDialogProps
                   className={cn(
                     "flex items-center gap-2 rounded border px-3 py-2 font-mono text-xs transition-all",
                     copied
-                      ? "border-green-500/20 bg-green-500/10 text-green-600 dark:text-green-400"
+                      ? "border-[color-mix(in_srgb,var(--chart-4)_35%,transparent)] bg-[color-mix(in_srgb,var(--chart-4)_16%,transparent)] text-[var(--chart-4)]"
                       : "border-border bg-fd-background text-muted-foreground hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground",
                   )}
                 >

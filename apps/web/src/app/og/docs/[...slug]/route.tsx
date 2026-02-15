@@ -17,7 +17,7 @@ export async function GET(_req: Request, { params }: RouteContext<"/og/docs/[...
         width: "100%",
         display: "flex",
         flexDirection: "column",
-        background: "#0a0a0a",
+        background: "#101012",
         fontFamily: "system-ui, sans-serif",
         position: "relative",
       }}
@@ -28,10 +28,10 @@ export async function GET(_req: Request, { params }: RouteContext<"/og/docs/[...
           flexDirection: "column",
           margin: "40px",
           flex: 1,
-          border: "1px solid #313244",
+          border: "1px solid #333738",
           borderRadius: "8px",
           overflow: "hidden",
-          background: "#11111b",
+          background: "#141415",
         }}
       >
         <div
@@ -39,8 +39,8 @@ export async function GET(_req: Request, { params }: RouteContext<"/og/docs/[...
             display: "flex",
             alignItems: "center",
             padding: "14px 20px",
-            background: "#181825",
-            borderBottom: "1px solid #313244",
+            background: "#202022",
+            borderBottom: "1px solid #333738",
             gap: "8px",
           }}
         >
@@ -50,7 +50,7 @@ export async function GET(_req: Request, { params }: RouteContext<"/og/docs/[...
                 width: "12px",
                 height: "12px",
                 borderRadius: "50%",
-                background: "#f38ba8",
+                background: "#d8647e",
                 display: "flex",
               }}
             />
@@ -59,7 +59,7 @@ export async function GET(_req: Request, { params }: RouteContext<"/og/docs/[...
                 width: "12px",
                 height: "12px",
                 borderRadius: "50%",
-                background: "#f9e2af",
+                background: "#f3be7c",
                 display: "flex",
               }}
             />
@@ -68,7 +68,7 @@ export async function GET(_req: Request, { params }: RouteContext<"/og/docs/[...
                 width: "12px",
                 height: "12px",
                 borderRadius: "50%",
-                background: "#a6e3a1",
+                background: "#7fa563",
                 display: "flex",
               }}
             />
@@ -77,7 +77,7 @@ export async function GET(_req: Request, { params }: RouteContext<"/og/docs/[...
             style={{
               flex: 1,
               textAlign: "center",
-              color: "#585b70",
+              color: "#606079",
               fontSize: "14px",
               fontFamily: "monospace",
               display: "flex",
@@ -102,7 +102,7 @@ export async function GET(_req: Request, { params }: RouteContext<"/og/docs/[...
             style={{
               fontSize: "56px",
               fontWeight: 700,
-              color: "#cdd6f4",
+              color: "#cdcdcd",
               lineHeight: 1.15,
               letterSpacing: "-0.025em",
               display: "flex",
@@ -116,7 +116,7 @@ export async function GET(_req: Request, { params }: RouteContext<"/og/docs/[...
             <div
               style={{
                 fontSize: "24px",
-                color: "#6c7086",
+                color: "#8d8da3",
                 lineHeight: 1.5,
                 display: "flex",
                 flexWrap: "wrap",
@@ -133,14 +133,14 @@ export async function GET(_req: Request, { params }: RouteContext<"/og/docs/[...
             justifyContent: "space-between",
             alignItems: "center",
             padding: "16px 56px",
-            borderTop: "1px solid #313244",
-            background: "#181825",
+            borderTop: "1px solid #333738",
+            background: "#202022",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <span
               style={{
-                color: "#cba6f7",
+                color: "#9bb4bc",
                 fontSize: "18px",
                 fontWeight: 600,
                 display: "flex",
@@ -148,12 +148,12 @@ export async function GET(_req: Request, { params }: RouteContext<"/og/docs/[...
             >
               Better-T Stack
             </span>
-            <span style={{ color: "#313244", fontSize: "18px", display: "flex" }}>/</span>
-            <span style={{ color: "#585b70", fontSize: "16px", display: "flex" }}>docs</span>
+            <span style={{ color: "#333738", fontSize: "18px", display: "flex" }}>/</span>
+            <span style={{ color: "#606079", fontSize: "16px", display: "flex" }}>docs</span>
           </div>
           <div
             style={{
-              color: "#45475a",
+              color: "#8d8da3",
               fontSize: "14px",
               fontFamily: "monospace",
               display: "flex",
