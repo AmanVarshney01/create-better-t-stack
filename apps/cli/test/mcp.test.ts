@@ -23,7 +23,9 @@ describe("MCP Planning", () => {
     if (result.isErr()) return;
 
     expect(result.value.config.relativePath).toBe(".smoke/mcp-plan-test");
-    expect(result.value.reproducibleCommand).toContain("create-better-t-stack");
+    expect(result.value.reproducibleCommand).toMatch(
+      /(?:create-better-t-stack|better-t-stack)@latest/,
+    );
   });
 
   it("should report partial_success when external reports include warnings", () => {
