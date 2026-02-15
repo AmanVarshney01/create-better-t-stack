@@ -89,6 +89,18 @@ ${packageManagerRunCmd} dev
 
 ${generateRunningInstructions(frontend, backend, webPort, hasNative, isConvex)}
 ${
+  api === "connectrpc"
+    ? `
+
+## CONNECTRPC
+
+- **Proto codegen**: Run \`${packageManagerRunCmd} api:codegen\` from the repo root (or \`cd packages/api && ${packageManager} run codegen\`) to regenerate TypeScript from \`packages/api/proto\`.
+- **Adding a service**: Add a new \`.proto\` under \`packages/api/proto\`, run codegen, then implement and register the service in \`packages/api/src/index.ts\`.
+- **Frontend**: Use \`useQuery\` and \`useMutation\` from \`@connectrpc/connect-query\` with the generated query options (see \`packages/api/src/gen\`).
+`
+    : ""
+}
+${
   addons.includes("pwa") && hasReactRouter
     ? "\n## PWA Support with React Router v7\n\nThere is a known compatibility issue between VitePWA and React Router v7.\nSee: https://github.com/vite-pwa/vite-plugin-pwa/issues/809\n"
     : ""
@@ -139,7 +151,7 @@ function generateStackDescription(
   }
 
   if (!isConvex && api !== "none") {
-    parts.push(api.toUpperCase());
+    parts.push(api === "connectrpc" ? "CONNECTRPC" : api.toUpperCase());
   }
 
   return parts.length > 0 ? `${parts.join(", ")}, and more` : "";
@@ -317,6 +329,8 @@ function generateFeaturesList(
     features.push("- **tRPC** - End-to-end type-safe APIs");
   } else if (!isConvex && api === "orpc") {
     features.push("- **oRPC** - End-to-end type-safe APIs with OpenAPI integration");
+  } else if (!isConvex && api === "connectrpc") {
+    features.push("- **CONNECTRPC** - gRPC-web APIs with shared proto types");
   }
 
   if (!isConvex && backend !== "none" && runtime !== "none") {
@@ -452,6 +466,10 @@ function generateScriptsList(
   }
 
   scripts += `\n- \`${packageManagerRunCmd} check-types\`: Check TypeScript types across all apps`;
+
+  if (config.api === "connectrpc") {
+    scripts += `\n- \`${packageManagerRunCmd} api:codegen\`: Regenerate TypeScript from proto files (run from root or \`cd packages/api && ${packageManagerRunCmd} run codegen\`)`;
+  }
 
   if (hasNative) {
     scripts += `\n- \`${packageManagerRunCmd} dev:native\`: Start the React Native/Expo development server`;

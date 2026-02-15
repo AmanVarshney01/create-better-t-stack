@@ -89,23 +89,33 @@ When using `--backend none`, the following options are automatically set:
 
 ### API Framework Support
 
-| Frontend          | tRPC Support | oRPC Support | Notes              |
-| ----------------- | ------------ | ------------ | ------------------ |
-| `tanstack-router` | ✅           | ✅           | Full support       |
-| `react-router`    | ✅           | ✅           | Full support       |
-| `tanstack-start`  | ✅           | ✅           | Full support       |
-| `next`            | ✅           | ✅           | Full support       |
-| `nuxt`            | ❌           | ✅           | tRPC not supported |
-| `svelte`          | ❌           | ✅           | tRPC not supported |
-| `solid`           | ❌           | ✅           | tRPC not supported |
-| Native frameworks | ✅           | ✅           | Full support       |
+| Frontend          | tRPC Support | oRPC Support | CONNECTRPC Support | Notes              |
+| ----------------- | ------------ | ------------ | ------------------ | ------------------ |
+| `tanstack-router` | ✅           | ✅           | ✅                 | Full support       |
+| `react-router`    | ✅           | ✅           | ✅                 | Full support       |
+| `tanstack-start`  | ✅           | ✅           | ✅                 | Full support       |
+| `next`            | ✅           | ✅           | ✅                 | Full support       |
+| `nuxt`            | ❌           | ✅           | ✅                 | tRPC not supported |
+| `svelte`          | ❌           | ✅           | ✅                 | tRPC not supported |
+| `solid`           | ❌           | ✅           | ✅                 | tRPC not supported |
+| `astro`           | ❌           | ✅           | ✅                 | tRPC not supported |
+| Native frameworks | ✅           | ✅           | ✅                 | Full support       |
+
+**CONNECTRPC** requires backend **Express** or **Fastify** (not Hono or Elysia).
 
 ```bash
 # ❌ Invalid - Nuxt with tRPC
 create-better-t-stack --frontend nuxt --api trpc
 
-# ✅ Valid - Nuxt with oRPC
+# ✅ Valid - Nuxt with oRPC or CONNECTRPC
 create-better-t-stack --frontend nuxt --api orpc
+create-better-t-stack --frontend nuxt --api connectrpc --backend express
+
+# ❌ Invalid - CONNECTRPC with Hono
+create-better-t-stack --api connectrpc --backend hono
+
+# ✅ Valid - CONNECTRPC with Express
+create-better-t-stack --api connectrpc --backend express
 ```
 
 ### Frontend Restrictions

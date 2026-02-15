@@ -1,0 +1,40 @@
+import { createConnectTransport } from "@connectrpc/connect-web";
+import {
+	TransportProvider,
+	useMutation,
+	useQuery,
+	useSuspenseQuery,
+} from "@connectrpc/connect-query";
+import { QueryCache, QueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+{{#if (eq backend "self")}}
+const baseUrl =
+	typeof window !== "undefined" ? `${window.location.origin}/api` : "http://localhost:3000/api";
+{{else if (includes frontend "next")}}
+import { env } from "@{{projectName}}/env/web";
+const baseUrl = `${env.NEXT_PUBLIC_SERVER_URL}/api`;
+{{else}}
+import { env } from "@{{projectName}}/env/web";
+const baseUrl = `${env.VITE_SERVER_URL}/api`;
+{{/if}}
+
+export const transport = createConnectTransport({
+	baseUrl,
+	useBinaryFormat: true,
+	credentials: "include",
+});
+
+export const queryClient = new QueryClient({
+	queryCache: new QueryCache({
+		onError: (error, query) => {
+			toast.error(`Error: ${error.message}`, {
+				action: {
+					label: "retry",
+					onClick: () => query.invalidate(),
+				},
+			});
+		},
+	}),
+});
+
+export { TransportProvider, useQuery, useMutation, useSuspenseQuery };

@@ -335,6 +335,363 @@ default_agents = []
 # Enable/disable automatic .gitignore updates (default: true)
 enabled = true
 `],
+  ["api/connectrpc/server/_gitignore", `# dependencies (bun install)
+node_modules
+
+# output
+out
+dist
+*.tgz
+
+# generated
+src/gen
+
+# code coverage
+coverage
+*.lcov
+
+# logs
+logs
+_.log
+report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# caches
+.eslintcache
+.cache
+*.tsbuildinfo
+
+# IntelliJ based IDEs
+.idea
+
+# Finder (MacOS) folder config
+.DS_Store
+`],
+  ["api/connectrpc/server/buf.gen.yaml.hbs", `version: v2
+plugins:
+  - plugin: es
+    out: src/gen
+    opt: target=ts
+  - plugin: connect-es
+    out: src/gen
+    opt: target=ts
+`],
+  ["api/connectrpc/server/buf.yaml.hbs", `version: v2
+modules:
+  - path: proto
+lint:
+  use:
+    - DEFAULT
+breaking:
+  use:
+    - FILE
+`],
+  ["api/connectrpc/server/package.json.hbs", `{
+  "name": "@{{projectName}}/api",
+  "exports": {
+    ".": { "default": "./src/index.ts" },
+    "./*": { "default": "./src/*.ts" }
+  },
+  "type": "module",
+  "scripts": {
+    "codegen": "buf generate"
+  },
+  "devDependencies": {},
+  "dependencies": {}
+}
+`],
+  ["api/connectrpc/server/proto/health/v1/health.proto.hbs", `syntax = "proto3";
+
+package health.v1;
+
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+  string message = 1;
+}
+
+service HealthService {
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+}
+`],
+  ["api/connectrpc/server/proto/todo/v1/todo.proto.hbs", `syntax = "proto3";
+
+package todo.v1;
+
+message TodoItem {
+  int32 id = 1;
+  string text = 2;
+  bool completed = 3;
+}
+
+message GetAllRequest {}
+
+message GetAllResponse {
+  repeated TodoItem items = 1;
+}
+
+message CreateRequest {
+  string text = 1;
+}
+
+message CreateResponse {
+  TodoItem item = 1;
+}
+
+message ToggleRequest {
+  int32 id = 1;
+  bool completed = 2;
+}
+
+message ToggleResponse {
+  TodoItem item = 1;
+}
+
+message DeleteRequest {
+  int32 id = 1;
+}
+
+message DeleteResponse {}
+
+service TodoService {
+  rpc GetAll(GetAllRequest) returns (GetAllResponse);
+  rpc Create(CreateRequest) returns (CreateResponse);
+  rpc Toggle(ToggleRequest) returns (ToggleResponse);
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+}
+`],
+  ["api/connectrpc/server/proto/user/v1/user.proto.hbs", `syntax = "proto3";
+
+package user.v1;
+
+message PrivateDataRequest {}
+
+message PrivateDataResponse {
+  string message = 1;
+  string user_id = 2;
+  string user_email = 3;
+  string user_name = 4;
+}
+
+service UserService {
+  rpc PrivateData(PrivateDataRequest) returns (PrivateDataResponse);
+}
+`],
+  ["api/connectrpc/server/src/context.ts.hbs", `import { createContextKey } from "@connectrpc/connect";
+{{#if (eq backend "express")}}
+import type { Request } from "express";
+{{#if (eq auth "better-auth")}}
+import { fromNodeHeaders } from "better-auth/node";
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+
+export const kUser = createContextKey(
+  null as { id: string; email?: string | null; name?: string | null } | null,
+  { description: "Current user from session" },
+);
+
+export type CreateContextOptions = { req: Request };
+
+export async function getContextValues(opts: CreateContextOptions) {
+  const { createContextValues } = await import("@connectrpc/connect");
+{{#if (eq auth "better-auth")}}
+  const session = await auth.api.getSession({
+    headers: fromNodeHeaders(opts.req.headers),
+  });
+  const user = session?.user ?? null;
+{{else}}
+  const user = null;
+{{/if}}
+  return createContextValues().set(kUser, user);
+}
+{{/if}}
+{{#if (eq backend "fastify")}}
+import type { IncomingHttpHeaders } from "node:http";
+{{#if (eq auth "better-auth")}}
+import { fromNodeHeaders } from "better-auth/node";
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+
+export const kUser = createContextKey(
+  null as { id: string; email?: string | null; name?: string | null } | null,
+  { description: "Current user from session" },
+);
+
+export type CreateContextOptions = IncomingHttpHeaders;
+
+export async function getContextValues(headers: CreateContextOptions) {
+  const { createContextValues } = await import("@connectrpc/connect");
+{{#if (eq auth "better-auth")}}
+  const session = await auth.api.getSession({
+    headers: fromNodeHeaders(headers),
+  });
+  const user = session?.user ?? null;
+{{else}}
+  const user = null;
+{{/if}}
+  return createContextValues().set(kUser, user);
+}
+{{/if}}
+
+`],
+  ["api/connectrpc/server/src/index.ts.hbs", `import type { ConnectRouter } from "@connectrpc/connect";
+import { Code, ConnectError } from "@connectrpc/connect";
+import { HealthService } from "./gen/health/v1/health_pb";
+import { kUser } from "./context";
+{{#if (eq auth "better-auth")}}
+import { UserService } from "./gen/user/v1/user_pb";
+{{/if}}
+{{#if (and (includes examples "todo") (or (eq orm "drizzle") (eq orm "prisma")))}
+import { TodoService } from "./gen/todo/v1/todo_pb";
+{{#if (eq orm "drizzle")}}
+import { db } from "@{{projectName}}/db";
+import { todo } from "@{{projectName}}/db/schema/todo";
+import { eq } from "drizzle-orm";
+{{/if}}
+{{#if (eq orm "prisma")}}
+import prisma from "@{{projectName}}/db";
+{{/if}}
+{{/if}}
+
+export { getContextValues, kUser } from "./context";
+
+export function registerRoutes(router: ConnectRouter) {
+  router.service(HealthService, {
+    healthCheck() {
+      return { message: "OK" };
+    },
+  });
+
+{{#if (eq auth "better-auth")}}
+  router.service(UserService, {
+    async privateData(_req, context) {
+      const user = context.getValue(kUser);
+      if (!user) {
+        throw new ConnectError("Unauthorized", Code.Unauthenticated);
+      }
+      return {
+        message: "This is private",
+        user_id: user.id,
+        user_email: user.email ?? "",
+        user_name: user.name ?? "",
+      };
+    },
+  });
+{{/if}}
+
+{{#if (and (includes examples "todo") (or (eq orm "drizzle") (eq orm "prisma")))}}
+  router.service(TodoService, {
+    async getAll() {
+{{#if (eq orm "drizzle")}}
+      const items = await db.select().from(todo);
+      return {
+        items: items.map((row) => ({
+          id: row.id,
+          text: row.text,
+          completed: row.completed ?? false,
+        })),
+      };
+{{/if}}
+{{#if (eq orm "prisma")}}
+      const items = await prisma.todo.findMany({ orderBy: { id: "asc" } });
+      return {
+        items: items.map((row) => ({
+          id: row.id,
+          text: row.text,
+          completed: row.completed,
+        })),
+      };
+{{/if}}
+    },
+    async create(req) {
+{{#if (eq orm "drizzle")}}
+      const [inserted] = await db
+        .insert(todo)
+        .values({ text: req.text, completed: false })
+        .returning();
+      if (!inserted) throw new ConnectError("Insert failed", Code.Internal);
+      return {
+        item: {
+          id: inserted.id,
+          text: inserted.text,
+          completed: inserted.completed ?? false,
+        },
+      };
+{{/if}}
+{{#if (eq orm "prisma")}}
+      const inserted = await prisma.todo.create({
+        data: { text: req.text, completed: false },
+      });
+      return {
+        item: {
+          id: inserted.id,
+          text: inserted.text,
+          completed: inserted.completed,
+        },
+      };
+{{/if}}
+    },
+    async toggle(req) {
+{{#if (eq orm "drizzle")}}
+      const [updated] = await db
+        .update(todo)
+        .set({ completed: req.completed })
+        .where(eq(todo.id, req.id))
+        .returning();
+      if (!updated) throw new ConnectError("Todo not found", Code.NotFound);
+      return {
+        item: {
+          id: updated.id,
+          text: updated.text,
+          completed: updated.completed ?? false,
+        },
+      };
+{{/if}}
+{{#if (eq orm "prisma")}}
+      const updated = await prisma.todo.update({
+        where: { id: req.id },
+        data: { completed: req.completed },
+      });
+      return {
+        item: {
+          id: updated.id,
+          text: updated.text,
+          completed: updated.completed,
+        },
+      };
+{{/if}}
+    },
+    async delete(req) {
+{{#if (eq orm "drizzle")}}
+      await db.delete(todo).where(eq(todo.id, req.id));
+{{/if}}
+{{#if (eq orm "prisma")}}
+      await prisma.todo.delete({ where: { id: req.id } });
+{{/if}}
+      return {};
+    },
+  });
+{{/if}}
+}
+`],
+  ["api/connectrpc/server/tsconfig.json.hbs", `{
+  "extends": "@{{projectName}}/config/tsconfig.base.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "composite": true
+  },
+  "include": ["src/**/*", "src/gen/**/*"]
+}
+`],
   ["api/orpc/fullstack/astro/src/pages/rpc/[...rest].ts.hbs", `import type { APIRoute } from "astro";
 import { RPCHandler } from "@orpc/server/fetch";
 import { onError } from "@orpc/server";
@@ -26684,4 +27041,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 435;
+export const TEMPLATE_COUNT = 445;

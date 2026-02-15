@@ -39,6 +39,7 @@ export const metadata: Metadata = {
     "turborepo",
     "trpc",
     "orpc",
+    "connectrpc",
     "turso",
     "neon",
     "Better-Auth",

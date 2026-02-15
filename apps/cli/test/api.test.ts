@@ -220,6 +220,92 @@ describe("API Configurations", () => {
     }
   });
 
+  describe("ConnectRPC API", () => {
+    it("should work with connectrpc + express", async () => {
+      const result = await runTRPCTest({
+        projectName: "connectrpc-express",
+        api: "connectrpc",
+        frontend: ["tanstack-router"],
+        backend: "express",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with connectrpc + fastify", async () => {
+      const result = await runTRPCTest({
+        projectName: "connectrpc-fastify",
+        api: "connectrpc",
+        frontend: ["tanstack-router"],
+        backend: "fastify",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should fail with connectrpc + hono", async () => {
+      const result = await runTRPCTest({
+        projectName: "connectrpc-hono-fail",
+        api: "connectrpc",
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "CONNECTRPC requires Express or Fastify backend");
+    });
+
+    it("should fail with connectrpc + elysia", async () => {
+      const result = await runTRPCTest({
+        projectName: "connectrpc-elysia-fail",
+        api: "connectrpc",
+        frontend: ["tanstack-router"],
+        backend: "elysia",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "CONNECTRPC requires Express or Fastify backend");
+    });
+  });
+
   describe("No API", () => {
     it("should work with API none + basic setup", async () => {
       const result = await runTRPCTest({
@@ -501,7 +587,7 @@ describe("API Configurations", () => {
   });
 
   describe("All API Types", () => {
-    const apis = ["trpc", "orpc", "none"];
+    const apis = ["trpc", "orpc", "connectrpc", "none"];
 
     for (const api of apis) {
       it(`should work with ${api} API`, async () => {
@@ -521,6 +607,13 @@ describe("API Configurations", () => {
           config.runtime = "none";
           config.database = "none";
           config.orm = "none";
+          config.auth = "none";
+          config.frontend = ["tanstack-router"];
+        } else if (api === "connectrpc") {
+          config.backend = "express";
+          config.runtime = "bun";
+          config.database = "sqlite";
+          config.orm = "drizzle";
           config.auth = "none";
           config.frontend = ["tanstack-router"];
         } else {

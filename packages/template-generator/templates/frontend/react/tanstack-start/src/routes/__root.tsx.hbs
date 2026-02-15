@@ -18,7 +18,7 @@ import appCss from "../index.css?url";
 import type { QueryClient } from "@tanstack/react-query";
 import type { ConvexQueryClient } from "@convex-dev/react-query";
 {{else}}
-{{#if (or (eq api "trpc") (eq api "orpc"))}}
+{{#if (or (eq api "trpc") (eq api "orpc") (eq api "connectrpc"))}}
 import type { QueryClient } from "@tanstack/react-query";
 {{/if}}
 {{/if}}
@@ -64,6 +64,10 @@ export interface RouterAppContext {
 import type { orpc } from "@/utils/orpc";
 export interface RouterAppContext {
   orpc: typeof orpc;
+  queryClient: QueryClient;
+}
+  {{else if (eq api "connectrpc")}}
+export interface RouterAppContext {
   queryClient: QueryClient;
 }
   {{else}}

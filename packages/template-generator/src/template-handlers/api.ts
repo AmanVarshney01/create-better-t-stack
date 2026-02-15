@@ -36,7 +36,8 @@ export async function processApiTemplates(
     );
     if (
       config.backend === "self" &&
-      (reactFramework === "next" || reactFramework === "tanstack-start")
+      (reactFramework === "next" || reactFramework === "tanstack-start") &&
+      (config.api === "trpc" || config.api === "orpc")
     ) {
       processTemplatesFromPrefix(
         vfs,

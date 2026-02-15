@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package user.v1;
+
+message PrivateDataRequest {}
+
+message PrivateDataResponse {
+  string message = 1;
+  string user_id = 2;
+  string user_email = 3;
+  string user_name = 4;
+}
+
+service UserService {
+  rpc PrivateData(PrivateDataRequest) returns (PrivateDataResponse);
+}

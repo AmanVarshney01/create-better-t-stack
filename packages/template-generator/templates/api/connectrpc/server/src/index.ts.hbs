@@ -1,0 +1,139 @@
+import type { ConnectRouter } from "@connectrpc/connect";
+import { Code, ConnectError } from "@connectrpc/connect";
+import { HealthService } from "./gen/health/v1/health_pb";
+import { kUser } from "./context";
+{{#if (eq auth "better-auth")}}
+import { UserService } from "./gen/user/v1/user_pb";
+{{/if}}
+{{#if (and (includes examples "todo") (or (eq orm "drizzle") (eq orm "prisma")))}
+import { TodoService } from "./gen/todo/v1/todo_pb";
+{{#if (eq orm "drizzle")}}
+import { db } from "@{{projectName}}/db";
+import { todo } from "@{{projectName}}/db/schema/todo";
+import { eq } from "drizzle-orm";
+{{/if}}
+{{#if (eq orm "prisma")}}
+import prisma from "@{{projectName}}/db";
+{{/if}}
+{{/if}}
+
+export { getContextValues, kUser } from "./context";
+
+export function registerRoutes(router: ConnectRouter) {
+  router.service(HealthService, {
+    healthCheck() {
+      return { message: "OK" };
+    },
+  });
+
+{{#if (eq auth "better-auth")}}
+  router.service(UserService, {
+    async privateData(_req, context) {
+      const user = context.getValue(kUser);
+      if (!user) {
+        throw new ConnectError("Unauthorized", Code.Unauthenticated);
+      }
+      return {
+        message: "This is private",
+        user_id: user.id,
+        user_email: user.email ?? "",
+        user_name: user.name ?? "",
+      };
+    },
+  });
+{{/if}}
+
+{{#if (and (includes examples "todo") (or (eq orm "drizzle") (eq orm "prisma")))}}
+  router.service(TodoService, {
+    async getAll() {
+{{#if (eq orm "drizzle")}}
+      const items = await db.select().from(todo);
+      return {
+        items: items.map((row) => ({
+          id: row.id,
+          text: row.text,
+          completed: row.completed ?? false,
+        })),
+      };
+{{/if}}
+{{#if (eq orm "prisma")}}
+      const items = await prisma.todo.findMany({ orderBy: { id: "asc" } });
+      return {
+        items: items.map((row) => ({
+          id: row.id,
+          text: row.text,
+          completed: row.completed,
+        })),
+      };
+{{/if}}
+    },
+    async create(req) {
+{{#if (eq orm "drizzle")}}
+      const [inserted] = await db
+        .insert(todo)
+        .values({ text: req.text, completed: false })
+        .returning();
+      if (!inserted) throw new ConnectError("Insert failed", Code.Internal);
+      return {
+        item: {
+          id: inserted.id,
+          text: inserted.text,
+          completed: inserted.completed ?? false,
+        },
+      };
+{{/if}}
+{{#if (eq orm "prisma")}}
+      const inserted = await prisma.todo.create({
+        data: { text: req.text, completed: false },
+      });
+      return {
+        item: {
+          id: inserted.id,
+          text: inserted.text,
+          completed: inserted.completed,
+        },
+      };
+{{/if}}
+    },
+    async toggle(req) {
+{{#if (eq orm "drizzle")}}
+      const [updated] = await db
+        .update(todo)
+        .set({ completed: req.completed })
+        .where(eq(todo.id, req.id))
+        .returning();
+      if (!updated) throw new ConnectError("Todo not found", Code.NotFound);
+      return {
+        item: {
+          id: updated.id,
+          text: updated.text,
+          completed: updated.completed ?? false,
+        },
+      };
+{{/if}}
+{{#if (eq orm "prisma")}}
+      const updated = await prisma.todo.update({
+        where: { id: req.id },
+        data: { completed: req.completed },
+      });
+      return {
+        item: {
+          id: updated.id,
+          text: updated.text,
+          completed: updated.completed,
+        },
+      };
+{{/if}}
+    },
+    async delete(req) {
+{{#if (eq orm "drizzle")}}
+      await db.delete(todo).where(eq(todo.id, req.id));
+{{/if}}
+{{#if (eq orm "prisma")}}
+      await prisma.todo.delete({ where: { id: req.id } });
+{{/if}}
+      return {};
+    },
+  });
+{{/if}}
+}

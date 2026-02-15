@@ -69,6 +69,17 @@ function addApiPackageDeps(
       packagePath: pkgPath,
       dependencies: ["@orpc/server", "@orpc/client", "@orpc/openapi", "@orpc/zod", "zod"],
     });
+  } else if (api === "connectrpc") {
+    addPackageDependency({
+      vfs,
+      packagePath: pkgPath,
+      dependencies: ["@connectrpc/connect"],
+      devDependencies: [
+        "@bufbuild/buf",
+        "@bufbuild/protoc-gen-es",
+        "@bufbuild/protoc-gen-connect-es",
+      ],
+    });
   }
 
   // Add next dep for api package when backend is self and frontend includes next
@@ -76,7 +87,7 @@ function addApiPackageDeps(
     addPackageDependency({ vfs, packagePath: pkgPath, dependencies: ["next"] });
   }
 
-  // Add better-auth for express/fastify backends
+  // Add better-auth for express/fastify backends (and connectrpc api package)
   if (auth === "better-auth" && (backend === "express" || backend === "fastify")) {
     addPackageDependency({ vfs, packagePath: pkgPath, dependencies: ["better-auth"] });
   }
@@ -115,6 +126,15 @@ function addServerDeps(vfs: VirtualFileSystem, api: API, backend: Backend): void
       packagePath: serverPath,
       dependencies: ["@orpc/server", "@orpc/openapi"],
     });
+  } else if (api === "connectrpc") {
+    const connectDeps: AvailableDependencies[] = ["@connectrpc/connect-node"];
+    if (backend === "express") connectDeps.push("@connectrpc/connect-express");
+    if (backend === "fastify") connectDeps.push("@connectrpc/connect-fastify");
+    addPackageDependency({
+      vfs,
+      packagePath: serverPath,
+      dependencies: connectDeps,
+    });
   }
 }
 
@@ -141,6 +161,12 @@ function addSelfBackendWebDeps(
       vfs,
       packagePath: webPath,
       dependencies: ["@orpc/server", "@orpc/client", "@orpc/openapi", "@orpc/zod"],
+    });
+  } else if (api === "connectrpc") {
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: ["@connectrpc/connect", "@connectrpc/connect-node"],
     });
   }
 }
@@ -203,6 +229,52 @@ function addWebClientDeps(
       vfs,
       packagePath: webPath,
       dependencies: ["@orpc/client"],
+    });
+  } else if (api === "connectrpc" && frontendType.hasReactWeb) {
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: [
+        "@connectrpc/connect-web",
+        "@connectrpc/connect-query",
+        "@tanstack/react-query",
+      ],
+      devDependencies: ["@tanstack/react-query-devtools"],
+    });
+  } else if (api === "connectrpc" && frontendType.hasNuxtWeb) {
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: ["@connectrpc/connect-web", "@connectrpc/connect-query", "@tanstack/vue-query"],
+      devDependencies: ["@tanstack/vue-query-devtools"],
+    });
+  } else if (api === "connectrpc" && frontendType.hasSvelteWeb) {
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: [
+        "@connectrpc/connect-web",
+        "@connectrpc/connect-query",
+        "@tanstack/svelte-query",
+      ],
+      devDependencies: ["@tanstack/svelte-query-devtools"],
+    });
+  } else if (api === "connectrpc" && frontendType.hasSolidWeb) {
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: [
+        "@connectrpc/connect-web",
+        "@connectrpc/connect-query",
+        "@tanstack/solid-query",
+      ],
+      devDependencies: ["@tanstack/solid-query-devtools", "@tanstack/solid-router-devtools"],
+    });
+  } else if (api === "connectrpc" && frontendType.hasAstroWeb) {
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: ["@connectrpc/connect-web", "@connectrpc/connect-query"],
     });
   }
 }

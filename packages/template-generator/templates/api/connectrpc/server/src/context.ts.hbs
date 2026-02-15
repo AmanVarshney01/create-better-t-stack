@@ -1,0 +1,56 @@
+import { createContextKey } from "@connectrpc/connect";
+{{#if (eq backend "express")}}
+import type { Request } from "express";
+{{#if (eq auth "better-auth")}}
+import { fromNodeHeaders } from "better-auth/node";
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+
+export const kUser = createContextKey(
+  null as { id: string; email?: string | null; name?: string | null } | null,
+  { description: "Current user from session" },
+);
+
+export type CreateContextOptions = { req: Request };
+
+export async function getContextValues(opts: CreateContextOptions) {
+  const { createContextValues } = await import("@connectrpc/connect");
+{{#if (eq auth "better-auth")}}
+  const session = await auth.api.getSession({
+    headers: fromNodeHeaders(opts.req.headers),
+  });
+  const user = session?.user ?? null;
+{{else}}
+  const user = null;
+{{/if}}
+  return createContextValues().set(kUser, user);
+}
+{{/if}}
+{{#if (eq backend "fastify")}}
+import type { IncomingHttpHeaders } from "node:http";
+{{#if (eq auth "better-auth")}}
+import { fromNodeHeaders } from "better-auth/node";
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+
+export const kUser = createContextKey(
+  null as { id: string; email?: string | null; name?: string | null } | null,
+  { description: "Current user from session" },
+);
+
+export type CreateContextOptions = IncomingHttpHeaders;
+
+export async function getContextValues(headers: CreateContextOptions) {
+  const { createContextValues } = await import("@connectrpc/connect");
+{{#if (eq auth "better-auth")}}
+  const session = await auth.api.getSession({
+    headers: fromNodeHeaders(headers),
+  });
+  const user = session?.user ?? null;
+{{else}}
+  const user = null;
+{{/if}}
+  return createContextValues().set(kUser, user);
+}
+{{/if}}
+

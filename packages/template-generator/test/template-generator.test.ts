@@ -121,4 +121,19 @@ describe("template-generator logic", () => {
     const dbPkg = vfs.readJson<{ scripts?: Record<string, string> }>("packages/db/package.json");
     expect(dbPkg?.scripts?.["db:local"]).toBe("turso dev --db-file local.db");
   });
+
+  it("includes CONNECTRPC section and api:codegen in README when api is connectrpc", () => {
+    const vfs = new VirtualFileSystem();
+    processReadme(
+      vfs,
+      baseConfig({
+        api: "connectrpc",
+        backend: "express",
+      }),
+    );
+
+    const readme = vfs.readFile("README.md") ?? "";
+    expect(readme).toContain("CONNECTRPC");
+    expect(readme).toContain("api:codegen");
+  });
 });

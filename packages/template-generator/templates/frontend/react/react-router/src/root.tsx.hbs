@@ -31,6 +31,9 @@ import { queryClient } from "./utils/orpc";
     {{#if (eq api "trpc")}}
 import { queryClient } from "./utils/trpc";
     {{/if}}
+    {{#if (eq api "connectrpc")}}
+import { queryClient, transport, TransportProvider } from "./utils/connect";
+    {{/if}}
   {{/unless}}
 {{/if}}
 
@@ -139,6 +142,28 @@ export default function App() {
         </div>
         <Toaster richColors />
       </ThemeProvider>
+      <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+    </QueryClientProvider>
+  );
+}
+{{else if (eq api "connectrpc")}}
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TransportProvider transport={transport}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          disableTransitionOnChange
+          storageKey="vite-ui-theme"
+        >
+          <div className="grid grid-rows-[auto_1fr] h-svh">
+            <Header />
+            <Outlet />
+          </div>
+          <Toaster richColors />
+        </ThemeProvider>
+      </TransportProvider>
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
     </QueryClientProvider>
   );

@@ -7,6 +7,7 @@ import {
   isWebFrontend,
   validateAddonsAgainstFrontends,
   validateApiFrontendCompatibility,
+  validateConnectRpcBackend,
   validateExamplesCompatibility,
   validatePaymentsCompatibility,
   validateSelfBackendCompatibility,
@@ -443,6 +444,7 @@ export function validateFullConfig(
     yield* validateFrontendConstraints(config, providedFlags);
 
     yield* validateApiConstraints(config, options);
+    yield* validateConnectRpcBackend(config);
 
     yield* validateServerDeployRequiresBackend(config.serverDeploy, config.backend);
 
@@ -498,6 +500,7 @@ export function validateConfigForProgrammaticUse(config: Partial<ProjectConfig>)
     }
 
     yield* validateApiFrontendCompatibility(config.api, config.frontend);
+    yield* validateConnectRpcBackend(config);
 
     yield* validatePaymentsCompatibility(
       config.payments,

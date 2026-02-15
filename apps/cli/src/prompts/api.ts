@@ -31,11 +31,17 @@ export async function getApiChoice(
             label: "oRPC",
             hint: "End-to-end type-safe APIs that adhere to OpenAPI standards",
           }
-        : {
-            value: "none" as const,
-            label: "None",
-            hint: "No API layer (e.g. for full-stack frameworks like Next.js with Route Handlers)",
-          },
+        : a === "connectrpc"
+          ? {
+              value: "connectrpc" as const,
+              label: "CONNECTRPC",
+              hint: "gRPC-web APIs with shared types (proto + Buf)",
+            }
+          : {
+              value: "none" as const,
+              label: "None",
+              hint: "No API layer (e.g. for full-stack frameworks like Next.js with Route Handlers)",
+            },
   );
 
   const apiType = await navigableSelect<API>({

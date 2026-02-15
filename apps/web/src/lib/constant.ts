@@ -31,6 +31,13 @@ export const TECH_OPTIONS: Record<
       color: "from-indigo-400 to-indigo-600",
     },
     {
+      id: "connectrpc",
+      name: "CONNECTRPC",
+      description: "gRPC-web APIs with shared proto types",
+      icon: `${ICON_BASE_URL}/connectrpc.svg`,
+      color: "from-emerald-500 to-teal-600",
+    },
+    {
       id: "none",
       name: "No API",
       description: "No API layer (API routes disabled)",

@@ -200,9 +200,11 @@ API layer type:
 - `none`: No API layer
 - `trpc`: tRPC (type-safe)
 - `orpc`: oRPC (OpenAPI-compatible)
+- `connectrpc`: CONNECTRPC (gRPC-web APIs with shared proto types; requires Express or Fastify backend)
 
 ```bash
 create-better-t-stack --api trpc
+create-better-t-stack --api connectrpc --backend express
 ```
 
 ## Frontend Options

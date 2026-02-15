@@ -176,10 +176,16 @@ export async function displayPostInstallInstructions(
       if (api === "orpc") {
         output += `${pc.cyan("•")} OpenAPI (Scalar UI): http://localhost:3000/api-reference\n`;
       }
+      if (api === "connectrpc") {
+        output += `${pc.cyan("•")} Connect/gRPC-web API: http://localhost:3000/api\n`;
+      }
     }
 
     if (isBackendSelf && api === "orpc") {
       output += `${pc.cyan("•")} OpenAPI (Scalar UI): http://localhost:${webPort}/api/rpc/api-reference\n`;
+    }
+    if (isBackendSelf && api === "connectrpc") {
+      output += `${pc.cyan("•")} Connect/gRPC-web API: http://localhost:${webPort}/api\n`;
     }
 
     if (addons?.includes("starlight")) {

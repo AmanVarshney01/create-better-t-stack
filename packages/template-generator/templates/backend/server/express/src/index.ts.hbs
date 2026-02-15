@@ -15,6 +15,10 @@ import { appRouter } from "@{{projectName}}/api/routers/index";
 import { createContext } from "@{{projectName}}/api/context";
 {{/if}}
 {{/if}}
+{{#if (eq api "connectrpc")}}
+import { expressConnectMiddleware } from "@connectrpc/connect-express";
+import { getContextValues, registerRoutes } from "@{{projectName}}/api";
+{{/if}}
 import cors from "cors";
 import express from "express";
 {{#if (includes examples "ai")}}
@@ -51,6 +55,16 @@ app.use(
 		router: appRouter,
 		createContext,
 	})
+);
+{{/if}}
+
+{{#if (eq api "connectrpc")}}
+app.use(
+	"/api",
+	expressConnectMiddleware({
+		routes: (router) => registerRoutes(router),
+		contextValues: (req) => getContextValues({ req }),
+	}),
 );
 {{/if}}
 

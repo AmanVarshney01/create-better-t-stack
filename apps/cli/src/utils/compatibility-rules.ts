@@ -167,10 +167,19 @@ export function validateApiFrontendCompatibility(
   const includesAstro = frontends.includes("astro");
   if ((includesNuxt || includesSvelte || includesSolid || includesAstro) && api === "trpc") {
     return validationErr(
-      `tRPC API is not supported with '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : includesSolid ? "solid" : "astro"}' frontend. Please use --api orpc or --api none or remove '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : includesSolid ? "solid" : "astro"}' from --frontend.`,
+      `tRPC API is not supported with '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : includesSolid ? "solid" : "astro"}' frontend. Please use --api orpc, --api connectrpc, or --api none or remove '${includesNuxt ? "nuxt" : includesSvelte ? "svelte" : includesSolid ? "solid" : "astro"}' from --frontend.`,
     );
   }
   return Result.ok(undefined);
+}
+
+export function validateConnectRpcBackend(config: Partial<ProjectConfig>): ValidationResult {
+  if (config.api !== "connectrpc") return Result.ok(undefined);
+  const backend = config.backend;
+  if (backend === "express" || backend === "fastify") return Result.ok(undefined);
+  return validationErr(
+    "CONNECTRPC requires Express or Fastify backend. Please use --backend express or --backend fastify, or choose a different API type.",
+  );
 }
 
 export function isFrontendAllowedWithBackend(
@@ -193,9 +202,9 @@ export function allowedApisForFrontends(frontends: Frontend[] = []) {
   const includesSvelte = frontends.includes("svelte");
   const includesSolid = frontends.includes("solid");
   const includesAstro = frontends.includes("astro");
-  const base: API[] = ["trpc", "orpc", "none"];
+  const base: API[] = ["trpc", "orpc", "connectrpc", "none"];
   if (includesNuxt || includesSvelte || includesSolid || includesAstro) {
-    return ["orpc", "none"];
+    return ["orpc", "connectrpc", "none"];
   }
   return base;
 }
@@ -350,7 +359,7 @@ export function validateExamplesCompatibility(
     }
     if (api === "none") {
       return validationErr(
-        "The 'todo' example requires an API layer (tRPC or oRPC). Cannot use --examples todo when api is 'none'.",
+        "The 'todo' example requires an API layer (tRPC, oRPC, or CONNECTRPC). Cannot use --examples todo when api is 'none'.",
       );
     }
   }
