@@ -5,6 +5,7 @@ import path from "node:path";
 import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
+import type { AddonSetupContext } from "./types";
 
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
@@ -50,7 +51,7 @@ async function runAddonStep(addon: string, step: () => Promise<void>): Promise<v
   }
 }
 
-export async function setupAddons(config: ProjectConfig) {
+export async function setupAddons(config: ProjectConfig, context: AddonSetupContext = {}) {
   const { addons, frontend, projectDir } = config;
   const hasReactWebFrontend =
     frontend.includes("react-router") ||
@@ -69,7 +70,7 @@ export async function setupAddons(config: ProjectConfig) {
       hasSolidFrontend ||
       hasNextFrontend)
   ) {
-    await runSetup(() => setupTauri(config));
+    await runSetup(() => setupTauri(config, context));
   }
 
   const hasUltracite = addons.includes("ultracite");
@@ -109,11 +110,11 @@ export async function setupAddons(config: ProjectConfig) {
   }
 
   if (addons.includes("starlight")) {
-    await runSetup(() => setupStarlight(config));
+    await runSetup(() => setupStarlight(config, context));
   }
 
   if (addons.includes("fumadocs")) {
-    await runSetup(() => setupFumadocs(config));
+    await runSetup(() => setupFumadocs(config, context));
   }
 
   if (addons.includes("opentui")) {
@@ -121,7 +122,7 @@ export async function setupAddons(config: ProjectConfig) {
   }
 
   if (addons.includes("wxt")) {
-    await runSetup(() => setupWxt(config));
+    await runSetup(() => setupWxt(config, context));
   }
 
   if (addons.includes("ruler")) {
@@ -129,11 +130,11 @@ export async function setupAddons(config: ProjectConfig) {
   }
 
   if (addons.includes("skills")) {
-    await runSetup(() => setupSkills(config));
+    await runSetup(() => setupSkills(config, context));
   }
 
   if (addons.includes("mcp")) {
-    await runSetup(() => setupMcp(config));
+    await runSetup(() => setupMcp(config, context));
   }
 }
 

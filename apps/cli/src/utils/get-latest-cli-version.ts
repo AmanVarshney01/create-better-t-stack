@@ -22,5 +22,6 @@ export function getLatestCLIVersionResult(): Result<string | undefined, CLIError
 }
 
 export function getLatestCLIVersion() {
-  return getLatestCLIVersionResult().unwrapOr("1.0.0");
+  const version = getLatestCLIVersionResult().unwrapOr("1.0.0");
+  return version ?? "1.0.0";
 }

@@ -8,12 +8,14 @@ import os from "node:os";
 import path from "node:path";
 
 import type { ProjectConfig } from "../../types";
+import type { AddonSetupContext, ExternalAddonStepReport } from "../addons/types";
 
 import { isSilent } from "../../utils/context";
 import { ProjectCreationError } from "../../utils/errors";
 import { formatProject } from "../../utils/file-formatter";
 import { getLatestCLIVersion } from "../../utils/get-latest-cli-version";
 import { setupAddons } from "../addons/addons-setup";
+import { writeExternalAddonManifest } from "../addons/external-manifest";
 import { setupDatabase } from "../core/db-setup";
 import { initializeGit } from "./git";
 import { installDependencies } from "./install-dependencies";
@@ -21,6 +23,8 @@ import { displayPostInstallInstructions } from "./post-installation";
 
 export interface CreateProjectOptions {
   manualDb?: boolean;
+  addonSetupContext?: AddonSetupContext;
+  onExternalAddonReports?: (reports: ExternalAddonStepReport[]) => void;
 }
 
 /**
@@ -34,6 +38,8 @@ export async function createProject(
   return Result.gen(async function* () {
     const projectDir = options.projectDir;
     const isConvex = options.backend === "convex";
+
+    const externalReports: ExternalAddonStepReport[] = [];
 
     // Ensure project directory exists
     yield* Result.await(
@@ -100,9 +106,18 @@ export async function createProject(
 
     // Setup addons if any
     if (options.addons.length > 0 && options.addons[0] !== "none") {
+      const baseSetupContext = cliInput.addonSetupContext ?? {};
+      const setupContext: AddonSetupContext = {
+        ...baseSetupContext,
+        collectExternalReport: (report) => {
+          externalReports.push(report);
+          baseSetupContext.collectExternalReport?.(report);
+        },
+      };
+
       yield* Result.await(
         Result.tryPromise({
-          try: () => setupAddons(options),
+          try: () => setupAddons(options, setupContext),
           catch: (e) =>
             new ProjectCreationError({
               phase: "addons-setup",
@@ -112,6 +127,21 @@ export async function createProject(
         }),
       );
     }
+
+    yield* Result.await(
+      Result.tryPromise({
+        try: async () => {
+          await writeExternalAddonManifest(projectDir, externalReports);
+          cliInput.onExternalAddonReports?.(externalReports);
+        },
+        catch: (e) =>
+          new ProjectCreationError({
+            phase: "addons-manifest",
+            message: `Failed to write external addon manifest: ${e instanceof Error ? e.message : String(e)}`,
+            cause: e,
+          }),
+      }),
+    );
 
     // Format project
     yield* Result.await(formatProject(projectDir));

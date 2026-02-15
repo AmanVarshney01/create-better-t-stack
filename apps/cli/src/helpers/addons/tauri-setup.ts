@@ -5,13 +5,24 @@ import fs from "fs-extra";
 import path from "node:path";
 
 import type { ProjectConfig } from "../../types";
+import type { AddonSetupContext } from "./types";
 
 import { AddonSetupError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageRunnerPrefix } from "../../utils/package-runner";
 
-export async function setupTauri(config: ProjectConfig): Promise<Result<void, AddonSetupError>> {
+export async function setupTauri(
+  config: ProjectConfig,
+  context: AddonSetupContext = {},
+): Promise<Result<void, AddonSetupError>> {
+  const emit = context.collectExternalReport;
+
   if (shouldSkipExternalCommands()) {
+    emit?.({
+      addon: "tauri",
+      status: "skipped",
+      warning: "Skipped because BTS_SKIP_EXTERNAL_COMMANDS or BTS_TEST_MODE is enabled.",
+    });
     return Result.ok(undefined);
   }
 
@@ -20,6 +31,11 @@ export async function setupTauri(config: ProjectConfig): Promise<Result<void, Ad
   const clientPackageDir = path.join(projectDir, "apps/web");
 
   if (!(await fs.pathExists(clientPackageDir))) {
+    emit?.({
+      addon: "tauri",
+      status: "skipped",
+      warning: "Skipped because apps/web does not exist in this project.",
+    });
     return Result.ok(undefined);
   }
 
@@ -73,9 +89,22 @@ export async function setupTauri(config: ProjectConfig): Promise<Result<void, Ad
 
   if (result.isErr()) {
     s.stop("Failed to set up Tauri");
+    emit?.({
+      addon: "tauri",
+      status: "failed",
+      commands: [[...prefix, ...tauriArgs].join(" ")],
+      postChecks: ["apps/web/src-tauri exists"],
+      error: result.error.message,
+    });
     return result;
   }
 
   s.stop("Tauri desktop app support configured successfully!");
+  emit?.({
+    addon: "tauri",
+    status: "success",
+    commands: [[...prefix, ...tauriArgs].join(" ")],
+    postChecks: ["apps/web/src-tauri exists"],
+  });
   return Result.ok(undefined);
 }

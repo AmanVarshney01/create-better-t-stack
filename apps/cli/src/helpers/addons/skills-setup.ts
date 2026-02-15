@@ -4,6 +4,7 @@ import { $ } from "execa";
 import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
+import type { AddonSetupContext } from "./types";
 
 import { readBtsConfig } from "../../utils/bts-config";
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
@@ -250,12 +251,21 @@ function uniqueValues<T>(values: T[]): T[] {
 
 export async function setupSkills(
   config: ProjectConfig,
+  context: AddonSetupContext = {},
 ): Promise<Result<void, AddonSetupError | UserCancelledError>> {
+  const emit = context.collectExternalReport;
+
   if (shouldSkipExternalCommands()) {
+    emit?.({
+      addon: "skills",
+      status: "skipped",
+      warning: "Skipped because BTS_SKIP_EXTERNAL_COMMANDS or BTS_TEST_MODE is enabled.",
+    });
     return Result.ok(undefined);
   }
 
   const { packageManager, projectDir } = config;
+  const isInteractive = context.interactive ?? true;
 
   // Load full config from bts.jsonc to get all addons (existing + new)
   const btsConfig = await readBtsConfig(projectDir);
@@ -284,59 +294,95 @@ export async function setupSkills(
     return Result.ok(undefined);
   }
 
-  const scope = await select<InstallScope>({
-    message: "Where should skills be installed?",
-    options: [
-      {
-        value: "project",
-        label: "Project",
-        hint: "Writes to project config files (recommended for teams)",
-      },
-      {
-        value: "global",
-        label: "Global",
-        hint: "Writes to user-level config files (personal machine)",
-      },
-    ],
-    initialValue: "project",
-  });
+  let scope: InstallScope = context.addonOptions?.skills?.scope ?? "project";
 
-  if (isCancel(scope)) {
-    return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+  if (isInteractive) {
+    const selectedScope = await select<InstallScope>({
+      message: "Where should skills be installed?",
+      options: [
+        {
+          value: "project",
+          label: "Project",
+          hint: "Writes to project config files (recommended for teams)",
+        },
+        {
+          value: "global",
+          label: "Global",
+          hint: "Writes to user-level config files (personal machine)",
+        },
+      ],
+      initialValue: scope,
+    });
+
+    if (isCancel(selectedScope)) {
+      return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+    }
+
+    scope = selectedScope;
   }
 
-  // Select all skills by default
   const allSkillValues = skillOptions.map((opt) => opt.value);
+  let selectedSkills: string[] =
+    context.addonOptions?.skills?.skillKeys?.length === 0
+      ? []
+      : (context.addonOptions?.skills?.skillKeys ?? allSkillValues);
 
-  // Prompt user to select skills
-  const selectedSkills = await multiselect({
-    message: "Select skills to install",
-    options: skillOptions,
-    required: false,
-    initialValues: allSkillValues,
-  });
+  if (isInteractive) {
+    const selectedSkillsResult = await multiselect({
+      message: "Select skills to install",
+      options: skillOptions,
+      required: false,
+      initialValues: allSkillValues,
+    });
 
-  if (isCancel(selectedSkills)) {
-    return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+    if (isCancel(selectedSkillsResult)) {
+      return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+    }
+
+    selectedSkills = selectedSkillsResult;
   }
 
   if (selectedSkills.length === 0) {
+    emit?.({
+      addon: "skills",
+      status: "warning",
+      selectedOptions: { scope },
+      warning: "No skills were selected for installation.",
+    });
     return Result.ok(undefined);
   }
 
-  // Prompt user to select agents
-  const selectedAgents = await multiselect({
-    message: "Select agents to install skills to",
-    options: AVAILABLE_AGENTS,
-    required: false,
-    initialValues: ["cursor", "claude-code", "github-copilot"],
-  });
+  let selectedAgents: string[] = context.addonOptions?.skills?.agents ?? [
+    "cursor",
+    "claude-code",
+    "github-copilot",
+  ];
+  selectedAgents = selectedAgents.filter((agent) =>
+    AVAILABLE_AGENTS.some((option) => option.value === agent),
+  );
 
-  if (isCancel(selectedAgents)) {
-    return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+  if (isInteractive) {
+    const selectedAgentsResult = await multiselect({
+      message: "Select agents to install skills to",
+      options: AVAILABLE_AGENTS,
+      required: false,
+      initialValues: selectedAgents,
+    });
+
+    if (isCancel(selectedAgentsResult)) {
+      return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+    }
+
+    selectedAgents = selectedAgentsResult;
   }
 
   if (selectedAgents.length === 0) {
+    emit?.({
+      addon: "skills",
+      status: "warning",
+      selectedOptions: { scope, selectedSkills },
+      warning: "No agents were selected for skills installation.",
+    });
     return Result.ok(undefined);
   }
 
@@ -382,7 +428,30 @@ export async function setupSkills(
 
     if (installResult.isErr()) {
       log.warn(pc.yellow(`Warning: Could not install skills from ${source}`));
+      emit?.({
+        addon: "skills",
+        status: "warning",
+        selectedOptions: {
+          scope,
+          source,
+          skills,
+          agents: selectedAgents,
+        },
+        warning: installResult.error.message,
+      });
+      continue;
     }
+
+    emit?.({
+      addon: "skills",
+      status: "success",
+      selectedOptions: {
+        scope,
+        source,
+        skills,
+        agents: selectedAgents,
+      },
+    });
   }
 
   installSpinner.stop("Skills installed");

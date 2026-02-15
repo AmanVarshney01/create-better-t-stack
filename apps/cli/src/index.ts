@@ -7,6 +7,7 @@ import { historyHandler } from "./commands/history";
 import { openBuilderCommand, openDocsCommand, showSponsorsCommand } from "./commands/meta";
 import { addHandler, type AddResult } from "./helpers/core/add-handler";
 import { createProjectHandler } from "./helpers/core/command-handlers";
+import { startMcpServer } from "./mcp/server";
 import {
   type Addons,
   AddonsSchema,
@@ -143,6 +144,9 @@ export const router = os.router({
     .handler(async ({ input }) => {
       await historyHandler(input);
     }),
+  mcp: os.meta({ description: "Start Better-T-Stack MCP server over stdio" }).handler(async () => {
+    await startMcpServer();
+  }),
 });
 
 const caller = createRouterClient(router, { context: {} });

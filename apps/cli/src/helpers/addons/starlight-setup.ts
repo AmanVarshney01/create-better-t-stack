@@ -5,6 +5,7 @@ import fs from "fs-extra";
 import path from "node:path";
 
 import type { ProjectConfig } from "../../types";
+import type { AddonSetupContext } from "./types";
 
 import { AddonSetupError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
@@ -12,8 +13,16 @@ import { getPackageExecutionArgs } from "../../utils/package-runner";
 
 export async function setupStarlight(
   config: ProjectConfig,
+  context: AddonSetupContext = {},
 ): Promise<Result<void, AddonSetupError>> {
+  const emit = context.collectExternalReport;
+
   if (shouldSkipExternalCommands()) {
+    emit?.({
+      addon: "starlight",
+      status: "skipped",
+      warning: "Skipped because BTS_SKIP_EXTERNAL_COMMANDS or BTS_TEST_MODE is enabled.",
+    });
     return Result.ok(undefined);
   }
 
@@ -54,9 +63,22 @@ export async function setupStarlight(
 
   if (result.isErr()) {
     s.stop("Failed to set up Starlight docs");
+    emit?.({
+      addon: "starlight",
+      status: "failed",
+      commands: [args.join(" ")],
+      postChecks: ["apps/docs exists"],
+      error: result.error.message,
+    });
     return result;
   }
 
   s.stop("Starlight docs setup successfully!");
+  emit?.({
+    addon: "starlight",
+    status: "success",
+    commands: [args.join(" ")],
+    postChecks: ["apps/docs exists"],
+  });
   return Result.ok(undefined);
 }

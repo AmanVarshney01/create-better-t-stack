@@ -17,12 +17,13 @@ export {
   type GeneratorOptions,
   // Error types
   GeneratorError,
-  // Result type for consumers
-  Result,
   // Embedded templates for browser usage
   EMBEDDED_TEMPLATES,
   TEMPLATE_COUNT,
 } from "@better-t-stack/template-generator";
+
+// Result type for consumers
+export { Result } from "better-result";
 
 // Re-export types needed for configuration options
 export type {

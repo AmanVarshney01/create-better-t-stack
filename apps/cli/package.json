@@ -74,6 +74,7 @@
     "@better-t-stack/types": "workspace:*",
     "@clack/core": "^1.0.0",
     "@clack/prompts": "^1.0.0",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "@orpc/server": "^1.13.4",
     "better-result": "^2.7.0",
     "consola": "^3.4.2",

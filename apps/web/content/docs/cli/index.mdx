@@ -120,6 +120,19 @@ create-better-t-stack builder
 
 Opens `https://better-t-stack.dev/new` where you can configure your stack visually.
 
+## `mcp`
+
+Starts the Better-T-Stack MCP server over stdio.
+
+```bash
+create-better-t-stack mcp
+```
+
+Use this when connecting from MCP-capable clients/agents. The server currently exposes:
+
+- `plan_stack`: Validate and preview stack scaffolding without writing files
+- `create_stack`: Scaffold a stack on disk with structured status output
+
 ## Global Options
 
 These options work with any command:

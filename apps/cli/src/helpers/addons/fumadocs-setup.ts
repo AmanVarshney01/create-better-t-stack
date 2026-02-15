@@ -5,19 +5,11 @@ import fs from "fs-extra";
 import path from "node:path";
 
 import type { ProjectConfig } from "../../types";
+import type { AddonSetupContext, FumadocsTemplate } from "./types";
 
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
-
-type FumadocsTemplate =
-  | "next-mdx"
-  | "next-mdx-static"
-  | "waku"
-  | "react-router"
-  | "react-router-spa"
-  | "tanstack-start"
-  | "tanstack-start-spa";
 
 const TEMPLATES = {
   "next-mdx": {
@@ -59,27 +51,42 @@ const TEMPLATES = {
 
 export async function setupFumadocs(
   config: ProjectConfig,
+  context: AddonSetupContext = {},
 ): Promise<Result<void, AddonSetupError | UserCancelledError>> {
+  const emit = context.collectExternalReport;
+
   if (shouldSkipExternalCommands()) {
+    emit?.({
+      addon: "fumadocs",
+      status: "skipped",
+      warning: "Skipped because BTS_SKIP_EXTERNAL_COMMANDS or BTS_TEST_MODE is enabled.",
+    });
     return Result.ok(undefined);
   }
 
   const { packageManager, projectDir } = config;
+  const isInteractive = context.interactive ?? true;
 
   log.info("Setting up Fumadocs...");
 
-  const template = await select<FumadocsTemplate>({
-    message: "Choose a template",
-    options: Object.entries(TEMPLATES).map(([key, template]) => ({
-      value: key as FumadocsTemplate,
-      label: template.label,
-      hint: template.hint,
-    })),
-    initialValue: "next-mdx",
-  });
+  let template: FumadocsTemplate = context.addonOptions?.fumadocs?.template ?? "next-mdx";
 
-  if (isCancel(template)) {
-    return userCancelled("Operation cancelled");
+  if (isInteractive) {
+    const selectedTemplate = await select<FumadocsTemplate>({
+      message: "Choose a template",
+      options: Object.entries(TEMPLATES).map(([key, template]) => ({
+        value: key as FumadocsTemplate,
+        label: template.label,
+        hint: template.hint,
+      })),
+      initialValue: template,
+    });
+
+    if (isCancel(selectedTemplate)) {
+      return userCancelled("Operation cancelled");
+    }
+
+    template = selectedTemplate;
   }
 
   const templateArg = TEMPLATES[template].value;
@@ -114,16 +121,22 @@ export async function setupFumadocs(
       const fumadocsDir = path.join(projectDir, "apps", "fumadocs");
       const packageJsonPath = path.join(fumadocsDir, "package.json");
 
-      if (await fs.pathExists(packageJsonPath)) {
-        const packageJson = await fs.readJson(packageJsonPath);
-        packageJson.name = "fumadocs";
-
-        if (packageJson.scripts?.dev) {
-          packageJson.scripts.dev = `${packageJson.scripts.dev} --port=4000`;
-        }
-
-        await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+      if (!(await fs.pathExists(packageJsonPath))) {
+        throw new AddonSetupError({
+          addon: "fumadocs",
+          message:
+            "Fumadocs generator did not create apps/fumadocs/package.json. Upstream template shape may have changed.",
+        });
       }
+
+      const packageJson = await fs.readJson(packageJsonPath);
+      packageJson.name = "fumadocs";
+
+      if (packageJson.scripts?.dev) {
+        packageJson.scripts.dev = `${packageJson.scripts.dev} --port=4000`;
+      }
+
+      await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
     },
     catch: (e) =>
       new AddonSetupError({
@@ -135,9 +148,30 @@ export async function setupFumadocs(
 
   if (result.isErr()) {
     s.stop("Failed to set up Fumadocs");
+    emit?.({
+      addon: "fumadocs",
+      status: "failed",
+      selectedOptions: { template },
+      commands: [args.join(" ")],
+      postChecks: [
+        "apps/fumadocs/package.json exists",
+        "apps/fumadocs/package.json scripts.dev uses --port=4000",
+      ],
+      error: result.error.message,
+    });
     return result;
   }
 
   s.stop("Fumadocs setup complete!");
+  emit?.({
+    addon: "fumadocs",
+    status: "success",
+    selectedOptions: { template },
+    commands: [args.join(" ")],
+    postChecks: [
+      "apps/fumadocs/package.json exists",
+      "apps/fumadocs/package.json scripts.dev uses --port=4000",
+    ],
+  });
   return Result.ok(undefined);
 }

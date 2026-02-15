@@ -4,6 +4,7 @@ import { $ } from "execa";
 import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
+import type { AddonSetupContext } from "./types";
 
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
@@ -221,34 +222,49 @@ function filterAgentsForScope(scope: InstallScope): AgentOption[] {
 
 export async function setupMcp(
   config: ProjectConfig,
+  context: AddonSetupContext = {},
 ): Promise<Result<void, AddonSetupError | UserCancelledError>> {
+  const emit = context.collectExternalReport;
+
   if (shouldSkipExternalCommands()) {
+    emit?.({
+      addon: "mcp",
+      status: "skipped",
+      warning: "Skipped because BTS_SKIP_EXTERNAL_COMMANDS or BTS_TEST_MODE is enabled.",
+    });
     return Result.ok(undefined);
   }
 
   const { packageManager, projectDir } = config;
+  const isInteractive = context.interactive ?? true;
 
   log.info("Setting up MCP servers...");
 
-  const scope = await select<InstallScope>({
-    message: "Where should MCP servers be installed?",
-    options: [
-      {
-        value: "project",
-        label: "Project",
-        hint: "Writes to project config files (recommended for teams)",
-      },
-      {
-        value: "global",
-        label: "Global",
-        hint: "Writes to user-level config files (personal machine)",
-      },
-    ],
-    initialValue: "project",
-  });
+  let scope: InstallScope = context.addonOptions?.mcp?.scope ?? "project";
 
-  if (isCancel(scope)) {
-    return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+  if (isInteractive) {
+    const selectedScope = await select<InstallScope>({
+      message: "Where should MCP servers be installed?",
+      options: [
+        {
+          value: "project",
+          label: "Project",
+          hint: "Writes to project config files (recommended for teams)",
+        },
+        {
+          value: "global",
+          label: "Global",
+          hint: "Writes to user-level config files (personal machine)",
+        },
+      ],
+      initialValue: scope,
+    });
+
+    if (isCancel(selectedScope)) {
+      return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+    }
+
+    scope = selectedScope;
   }
 
   const recommendedServers = getRecommendedMcpServers(config);
@@ -262,18 +278,33 @@ export async function setupMcp(
     hint: s.target,
   }));
 
-  const selectedServerKeys = await multiselect({
-    message: "Select MCP servers to install",
-    options: serverOptions,
-    required: false,
-    initialValues: serverOptions.map((o) => o.value),
-  });
+  let selectedServerKeys: string[] =
+    context.addonOptions?.mcp?.serverKeys?.length === 0
+      ? []
+      : (context.addonOptions?.mcp?.serverKeys ?? serverOptions.map((o) => o.value));
 
-  if (isCancel(selectedServerKeys)) {
-    return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+  if (isInteractive) {
+    const selectedServersResult = await multiselect({
+      message: "Select MCP servers to install",
+      options: serverOptions,
+      required: false,
+      initialValues: selectedServerKeys,
+    });
+
+    if (isCancel(selectedServersResult)) {
+      return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+    }
+
+    selectedServerKeys = selectedServersResult;
   }
 
   if (selectedServerKeys.length === 0) {
+    emit?.({
+      addon: "mcp",
+      status: "warning",
+      selectedOptions: { scope },
+      warning: "No MCP servers were selected for installation.",
+    });
     return Result.ok(undefined);
   }
 
@@ -286,18 +317,34 @@ export async function setupMcp(
     ["cursor", "claude-code", "vscode"].filter((a) => agentOptions.some((o) => o.value === a)),
   );
 
-  const selectedAgents = await multiselect({
-    message: "Select agents to install MCP servers to",
-    options: agentOptions,
-    required: false,
-    initialValues: defaultAgents,
-  });
+  let selectedAgents: string[] = uniqueValues(
+    (context.addonOptions?.mcp?.agents ?? defaultAgents).filter((agent) =>
+      agentOptions.some((option) => option.value === agent),
+    ),
+  );
 
-  if (isCancel(selectedAgents)) {
-    return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+  if (isInteractive) {
+    const selectedAgentsResult = await multiselect({
+      message: "Select agents to install MCP servers to",
+      options: agentOptions,
+      required: false,
+      initialValues: selectedAgents,
+    });
+
+    if (isCancel(selectedAgentsResult)) {
+      return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+    }
+
+    selectedAgents = selectedAgentsResult;
   }
 
   if (selectedAgents.length === 0) {
+    emit?.({
+      addon: "mcp",
+      status: "warning",
+      selectedOptions: { scope, selectedServerKeys },
+      warning: "No agents were selected for MCP server installation.",
+    });
     return Result.ok(undefined);
   }
 
@@ -309,6 +356,12 @@ export async function setupMcp(
   }
 
   if (selectedServers.length === 0) {
+    emit?.({
+      addon: "mcp",
+      status: "warning",
+      selectedOptions: { scope, selectedServerKeys, selectedAgents },
+      warning: "No matching recommended MCP servers were found for the selected keys.",
+    });
     return Result.ok(undefined);
   }
 
@@ -336,6 +389,7 @@ export async function setupMcp(
       "-y",
     ];
 
+    const postChecks = [`MCP agent configs updated with server '${server.name}'`];
     const installResult = await Result.tryPromise({
       try: async () => {
         await $({ cwd: projectDir, env: { CI: "true" } })`${args}`;
@@ -350,7 +404,34 @@ export async function setupMcp(
 
     if (installResult.isErr()) {
       log.warn(pc.yellow(`Warning: Could not install MCP server '${server.name}'`));
+      emit?.({
+        addon: "mcp",
+        status: "warning",
+        selectedOptions: {
+          scope,
+          server: server.key,
+          serverName: server.name,
+          agents: selectedAgents,
+        },
+        commands: [args.join(" ")],
+        postChecks,
+        warning: installResult.error.message,
+      });
+      continue;
     }
+
+    emit?.({
+      addon: "mcp",
+      status: "success",
+      selectedOptions: {
+        scope,
+        server: server.key,
+        serverName: server.name,
+        agents: selectedAgents,
+      },
+      commands: [args.join(" ")],
+      postChecks,
+    });
   }
 
   installSpinner.stop("MCP servers installed");

@@ -58,7 +58,7 @@ Options:
   --auth                          Include authentication
   --no-auth                       Exclude authentication
   --frontend <types...>           Frontend types (tanstack-router, react-router, tanstack-start, next, nuxt, svelte, solid, native-bare, native-uniwind, native-unistyles, none)
-  --addons <types...>             Additional addons (pwa, tauri, starlight, biome, lefthook, husky, turborepo, fumadocs, ultracite, oxlint, none)
+  --addons <types...>             Additional addons (pwa, tauri, starlight, fumadocs, biome, lefthook, husky, turborepo, ultracite, oxlint, ruler, opentui, wxt, skills, mcp, none)
   --examples <types...>           Examples to include (todo, ai, none)
   --git                           Initialize git repository
   --no-git                        Skip git initialization
@@ -72,6 +72,14 @@ Options:
   --runtime <runtime>             Runtime (bun, node, workers, none)
   --api <type>                    API type (trpc, orpc, none)
   -h, --help                      Display help
+```
+
+Additional commands:
+
+```bash
+create-better-t-stack add [options]    # Add addons to an existing project
+create-better-t-stack history [options] # Show or clear local scaffold history
+create-better-t-stack mcp               # Start MCP server over stdio
 ```
 
 ## Telemetry
