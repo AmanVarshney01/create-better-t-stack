@@ -261,9 +261,10 @@ create-better-t-stack --auth none
 
 **Note:**
 
-- `better-auth` requires both a database and backend framework
+- `better-auth` requires a backend framework (cannot be `none`)
+- if you choose a database, you should also choose an ORM
 - `clerk` is only available with Convex backend
-- Authentication is automatically set to `none` when using `--backend none` or `--database none` (unless using Convex)
+- Authentication is automatically set to `none` when using `--backend none`
 
 ## Payments
 
@@ -298,6 +299,7 @@ Additional features to include:
 - `ultracite`: Ultracite configuration
 - `oxlint`: Oxlint + Oxfmt (linting & formatting)
 - `ruler`: Centralize your AI rules with Ruler
+- `mcp`: Install MCP servers and templates with add-mcp
 - `opentui`: OpenTUI components
 - `wxt`: WXT browser extension framework
 - `skills`: Install AI agent skills for coding assistants (Cursor, Claude Code, GitHub Copilot, etc.)

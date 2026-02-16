@@ -5,11 +5,11 @@ description: Use Better-T-Stack programmatically in your Node.js applications
 
 ## Overview
 
-The Better-T-Stack CLI can be used programmatically in your Node.js applications, allowing you to create projects, add features, and manage configurations through JavaScript/TypeScript code instead of shell commands.
+You can call Better-T-Stack directly from TypeScript/JavaScript without shelling out to the CLI.
+
+The programmatic API is exported from `create-better-t-stack` and is designed for automation tools, internal generators, and scripted workflows.
 
 ## Installation
-
-Install the package in your Node.js project:
 
 ```npm
 npm i create-better-t-stack
@@ -17,281 +17,166 @@ npm i create-better-t-stack
 
 ## Quick Start
 
-### Basic Project Creation
-
 ```typescript
 import { create } from "create-better-t-stack";
 
-async function createProject() {
-  const result = await create("my-app", {
-    yes: true, // Use defaults, no prompts
-    frontend: ["tanstack-router"],
-    backend: "hono",
-    database: "sqlite",
-    orm: "drizzle",
-    auth: "better-auth",
-    packageManager: "bun",
-    install: false, // Don't install deps automatically
-    disableAnalytics: true, // Disable analytics
-  });
-
-  if (result.success) {
-    console.log(`✅ Project created at: ${result.projectDirectory}`);
-    console.log(`📝 Reproducible command: ${result.reproducibleCommand}`);
-    console.log(`⏱️  Time taken: ${result.elapsedTimeMs}ms`);
-  } else {
-    console.error(`❌ Failed: ${result.error}`);
-  }
-}
-
-createProject();
-```
-
-### Directory Conflict Handling
-
-```typescript
-import { create } from "create-better-t-stack";
-
-const result = await create("existing-folder", {
-  yes: true,
-  directoryConflict: "increment", // Creates "existing-folder-1"
-  renderTitle: false, // Hide ASCII art
-});
-```
-
-### Disabling Analytics
-
-You can disable analytics:
-
-```typescript
-import { create } from "create-better-t-stack";
-
-const result = await create("my-private-project", {
-  yes: true,
-  disableAnalytics: true, // No analytics data will be sent
+const result = await create("my-app", {
   frontend: ["tanstack-router"],
   backend: "hono",
+  database: "sqlite",
+  orm: "drizzle",
+  auth: "better-auth",
+  packageManager: "bun",
+  install: false,
+});
+
+result.match({
+  ok: (data) => {
+    console.log(`Project created at: ${data.projectDirectory}`);
+    console.log(`Reproducible command: ${data.reproducibleCommand}`);
+  },
+  err: (error) => {
+    console.error(`Failed: ${error.message}`);
+  },
 });
 ```
-
-> **Note:** Analytics help improve Better-T-Stack by providing insights into usage patterns. When disabled, no data is collected or transmitted.
 
 ## API Reference
 
 ### `create(projectName?, options?)`
 
-Creates a new Better-T-Stack project.
-
-**Parameters:**
-
-- `projectName` (string, optional): Project name or directory path
-- `options` (CreateInput, optional): Configuration options
-
-**Returns:** `Promise<InitResult>`
-
-**Example:**
+Create a new project.
 
 ```typescript
-const result = await create("my-project", {
-  frontend: ["next"],
-  backend: "hono",
-  database: "postgres",
-  orm: "drizzle",
+function create(
+  projectName?: string,
+  options?: Partial<CreateInput>,
+): Promise<Result<InitResult, CreateError>>;
+```
+
+Notes:
+
+- Uses the same option model as the CLI `create` command (`frontend`, `backend`, `database`, `orm`, `api`, `auth`, `addons`, etc.).
+- Runs in silent mode (no interactive prompts / no CLI UI output).
+- Returns a `Result` (`ok`/`err`) instead of exiting the process.
+
+### `add(options?)`
+
+Add addons to an existing Better-T-Stack project.
+
+```typescript
+function add(options?: {
+  addons?: Addons[];
+  install?: boolean;
+  packageManager?: PackageManager;
+  projectDir?: string;
+}): Promise<AddResult | undefined>;
+```
+
+Example:
+
+```typescript
+import { add } from "create-better-t-stack";
+
+const result = await add({
+  projectDir: "./my-app",
+  addons: ["biome", "mcp"],
+  install: true,
 });
+
+if (result?.success) {
+  console.log(`Added: ${result.addedAddons.join(", ")}`);
+} else {
+  console.error(result?.error ?? "Failed to add addons");
+}
 ```
 
 ### `sponsors()`
 
-Display Better-T-Stack sponsors (same as CLI).
-
-**Returns:** `Promise<void>`
+Show sponsors (same behavior as CLI command).
 
 ### `docs()`
 
-Open documentation in browser (same as CLI).
-
-**Returns:** `Promise<void>`
+Open docs URL (same behavior as CLI command).
 
 ### `builder()`
 
-Open web-based stack builder (same as CLI).
+Open the web stack builder (same behavior as CLI command).
 
-**Returns:** `Promise<void>`
+## Result Types
 
-## Type Definitions
-
-### `CreateInput`
-
-Configuration options for project creation:
+### `InitResult` (from `create` on `ok`)
 
 ```typescript
-interface CreateInput {
-  projectName?: string;
-  template?: Template; // "none" | "mern" | "pern" | "t3" | "uniwind"
-  yes?: boolean; // Skip prompts, use defaults
-  yolo?: boolean; // Bypass validations (not recommended)
-  verbose?: boolean; // Show JSON result (CLI only, programmatic always returns result)
-  database?: Database; // "none" | "sqlite" | "postgres" | "mysql" | "mongodb"
-  orm?: ORM; // "none" | "drizzle" | "prisma" | "mongoose"
-  auth?: Auth; // "better-auth" | "clerk" | "none"
-  payments?: Payments; // "polar" | "none"
-  frontend?: Frontend[]; // Array of frontend frameworks
-  addons?: Addons[]; // Array of addons
-  examples?: Examples[]; // Array of examples
-  git?: boolean; // Initialize git repo
-  packageManager?: PackageManager; // "npm" | "pnpm" | "bun"
-  install?: boolean; // Install dependencies
-  dbSetup?: DatabaseSetup; // Database hosting setup
-  backend?: Backend; // Backend framework
-  runtime?: Runtime; // Runtime environment
-  api?: API; // API type
-  webDeploy?: WebDeploy; // Web deployment setup
-  serverDeploy?: ServerDeploy; // Server deployment setup
-  directoryConflict?: DirectoryConflict; // "merge" | "overwrite" | "increment" | "error"
-  renderTitle?: boolean; // Show ASCII art title
-  disableAnalytics?: boolean; // Disable analytics and telemetry
-  manualDb?: boolean; // Skip automatic database setup prompts
-}
+type InitResult = {
+  success: boolean;
+  projectConfig: ProjectConfig;
+  reproducibleCommand: string;
+  timeScaffolded: string;
+  elapsedTimeMs: number;
+  projectDirectory: string;
+  relativePath: string;
+  error?: string;
+};
 ```
 
-### `InitResult`
-
-Result object returned by `init()`:
+### `AddResult` (from `add`)
 
 ```typescript
-interface InitResult {
-  success: boolean; // Whether operation succeeded
-  projectConfig: ProjectConfig; // Final project configuration
-  reproducibleCommand: string; // CLI command to recreate project
-  timeScaffolded: string; // ISO timestamp of creation
-  elapsedTimeMs: number; // Time taken in milliseconds
-  projectDirectory: string; // Absolute path to project
-  relativePath: string; // Relative path to project
-  error?: string; // Error message if failed
-}
+type AddResult = {
+  success: boolean;
+  addedAddons: Addons[];
+  projectDir: string;
+  error?: string;
+};
 ```
 
-## Configuration Options
+### `CreateError`
 
-### Directory Conflict Resolution
+`create()` can return these error types in `Result.err(...)`:
 
-Control how existing directories are handled:
+- `UserCancelledError`
+- `CLIError`
+- `ProjectCreationError`
 
-```typescript
-// Merge with existing files (careful with conflicts)
-directoryConflict: "merge";
-
-// Completely overwrite existing directory
-directoryConflict: "overwrite";
-
-// Create new directory with incremented name (my-app-1)
-directoryConflict: "increment";
-
-// Throw error if directory exists
-directoryConflict: "error";
-```
-
-### Title Rendering
-
-Control CLI output appearance:
+## Error Handling Pattern
 
 ```typescript
-// Hide ASCII art title (useful for automated scripts)
-renderTitle: false;
+import { create } from "create-better-t-stack";
 
-// Show ASCII art title (default)
-renderTitle: true;
-```
-
-### YOLO Mode
-
-Bypass validation checks (not recommended):
-
-```typescript
-// Skip compatibility validations
-yolo: true;
-```
-
-## Error Handling
-
-The programmatic API uses different error handling than the CLI:
-
-### Directory Conflicts
-
-Directory conflict errors return structured results instead of throwing:
-
-```typescript
-const result = await init("existing-dir", {
+const result = await create("existing-dir", {
   directoryConflict: "error",
 });
 
-if (!result.success) {
-  console.log(result.error); // "Directory exists and is not empty..."
-  // Handle gracefully instead of process exit
+if (result.isErr()) {
+  console.error(result.error.message);
+  process.exit(1);
 }
+
+console.log(result.value.projectDirectory);
 ```
 
-### Validation Errors
+## Mapping CLI to Programmatic
 
-Validation errors still throw exceptions (maintains CLI compatibility):
-
-```typescript
-try {
-  await init("test", {
-    database: "mongodb",
-    orm: "drizzle", // Invalid combination
-  });
-} catch (error) {
-  console.error(error.message); // "MongoDB requires Mongoose or Prisma ORM"
-}
-```
-
-## Migration from CLI
-
-### CLI Command to Programmatic API
-
-Convert CLI commands to programmatic calls:
+CLI:
 
 ```bash
-# CLI Command
 create-better-t-stack my-app \
   --frontend tanstack-router \
   --backend hono \
   --database postgres \
   --orm drizzle \
-  --auth better-auth \
-  --yes
+  --auth better-auth
 ```
 
+Programmatic:
+
 ```typescript
-// Programmatic Equivalent
 const result = await create("my-app", {
   frontend: ["tanstack-router"],
   backend: "hono",
   database: "postgres",
   orm: "drizzle",
   auth: "better-auth",
-  yes: true,
-});
-```
-
-### Handling Prompts
-
-CLI prompts become explicit options:
-
-```typescript
-// Instead of interactive prompts, specify all options
-const result = await init("my-app", {
-  yes: true, // Skip all prompts
-  frontend: ["tanstack-router"],
-  backend: "hono",
-  database: "postgres",
-  orm: "drizzle",
-  auth: "better-auth",
-  addons: ["biome", "turborepo"],
-  examples: ["todo"],
-  packageManager: "bun",
-  install: false,
-  git: true,
 });
 ```
