@@ -28,12 +28,12 @@ export function AnalyticsHeader({
             <h1 className="font-bold font-mono text-xl sm:text-2xl">CLI_ANALYTICS.JSON</h1>
           </div>
           <p className="text-muted-foreground text-sm">
-            Real-time usage statistics from create-better-t-stack
+            Real-time usage statistics from create-better-t-stack (powered by Convex)
           </p>
         </div>
       </div>
 
-      <div className="rounded-xl bg-gradient-to-br from-primary/12 via-fd-background to-fd-background/90 p-4 ring-1 ring-border/40 sm:p-5">
+      <div className="rounded-xl p-4 ring-1 ring-border/40 sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <span className="text-primary">$</span>
@@ -58,7 +58,7 @@ export function AnalyticsHeader({
           <div className="flex items-start gap-2">
             <span className="mt-0.5 shrink-0 text-primary">&gt;</span>
             <span>
-              Source code:{" "}
+              Client event source:{" "}
               <Link
                 href="https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/cli/src/utils/analytics.ts"
                 target="_blank"
@@ -66,6 +66,20 @@ export function AnalyticsHeader({
                 className="text-accent underline underline-offset-2 hover:text-primary"
               >
                 apps/cli/src/utils/analytics.ts
+              </Link>
+            </span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="mt-0.5 shrink-0 text-primary">&gt;</span>
+            <span>
+              Backend aggregation:{" "}
+              <Link
+                href="https://github.com/AmanVarshney01/create-better-t-stack/blob/main/packages/backend/convex/analytics.ts"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent underline underline-offset-2 hover:text-primary"
+              >
+                packages/backend/convex/analytics.ts
               </Link>
             </span>
           </div>

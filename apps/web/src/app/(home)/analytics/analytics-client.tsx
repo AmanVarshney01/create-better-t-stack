@@ -196,7 +196,7 @@ export function AnalyticsClient({
     total: 55434,
     avgPerDay: 326.1,
     lastUpdatedIso: "2025-11-13T10:10:00.000Z",
-    source: "PostHog (legacy)",
+    source: "PostHog (legacy, pre-Convex)",
   };
 
   return <AnalyticsPage data={data} legacy={legacy} />;
