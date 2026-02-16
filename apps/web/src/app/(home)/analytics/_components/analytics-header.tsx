@@ -2,9 +2,12 @@ import { format } from "date-fns";
 import { Terminal } from "lucide-react";
 import Link from "next/link";
 
+import { cn } from "@/lib/utils";
+
 export function AnalyticsHeader({
   lastUpdated,
   legacy,
+  connectionStatus,
 }: {
   lastUpdated: string | null;
   legacy: {
@@ -13,11 +16,34 @@ export function AnalyticsHeader({
     lastUpdatedIso: string;
     source: string;
   };
+  connectionStatus: "online" | "connecting" | "reconnecting" | "offline";
 }) {
   const formattedDate = lastUpdated
     ? format(new Date(lastUpdated), "MMM d, yyyy 'at' HH:mm")
     : null;
   const legacyDate = format(new Date(legacy.lastUpdatedIso), "MMM d, yyyy 'at' HH:mm");
+  const statusMeta = {
+    online: {
+      label: "online",
+      textClass: "text-primary",
+      dotClass: "bg-primary",
+    },
+    connecting: {
+      label: "connecting",
+      textClass: "text-muted-foreground",
+      dotClass: "bg-muted-foreground",
+    },
+    reconnecting: {
+      label: "reconnecting",
+      textClass: "text-accent",
+      dotClass: "bg-accent",
+    },
+    offline: {
+      label: "offline",
+      textClass: "text-destructive",
+      dotClass: "bg-destructive",
+    },
+  }[connectionStatus];
 
   return (
     <div className="mb-4 space-y-4">
@@ -38,7 +64,16 @@ export function AnalyticsHeader({
           <div className="flex items-center gap-2">
             <span className="text-primary">$</span>
             <span className="text-muted-foreground">status:</span>
-            <span className="text-green-500">online</span>
+            <span className={cn("inline-flex items-center gap-2", statusMeta.textClass)}>
+              <span
+                className={cn(
+                  "h-2 w-2 rounded-full",
+                  statusMeta.dotClass,
+                  connectionStatus !== "online" && "animate-pulse",
+                )}
+              />
+              {statusMeta.label}
+            </span>
           </div>
           {formattedDate && (
             <div className="flex items-center gap-2 text-muted-foreground text-xs">
