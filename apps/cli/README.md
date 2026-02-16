@@ -111,7 +111,7 @@ npx create-better-t-stack --yes
 Create a project with specific options:
 
 ```bash
-npx create-better-t-stack --database postgres --orm drizzle --auth --addons pwa biome
+npx create-better-t-stack --database postgres --orm drizzle --auth better-auth --addons pwa biome
 ```
 
 Create a project with Elysia backend and Node.js runtime:
