@@ -2,9 +2,7 @@
 import { RPCHandler } from "@orpc/server/node";
 import { onError } from "@orpc/server";
 import { appRouter } from "@{{projectName}}/api/routers/index";
-{{#if (eq auth "better-auth")}}
 import { createContext } from "@{{projectName}}/api/context";
-{{/if}}
 
 const rpcHandler = new RPCHandler(appRouter, {
 	interceptors: [
@@ -21,7 +19,7 @@ export default defineEventHandler(async (event) => {
 {{#if (eq auth "better-auth")}}
 		context: await createContext({ req }),
 {{else}}
-		context: {},
+		context: await createContext(),
 {{/if}}
 	});
 	if (!result.matched) {

@@ -35,7 +35,21 @@ export async function processBackendTemplates(
   }
 
   if (config.backend === "nitro") {
-    processTemplatesFromPrefix(vfs, templates, "backend/server/nitro", "apps/server", config);
+    const excludes: string[] = [];
+    if (config.api !== "trpc") excludes.push("backend/server/nitro/routes/trpc/");
+    if (config.api !== "orpc")
+      excludes.push(
+        "backend/server/nitro/routes/rpc/",
+        "backend/server/nitro/routes/api-reference/",
+      );
+    processTemplatesFromPrefix(
+      vfs,
+      templates,
+      "backend/server/nitro",
+      "apps/server",
+      config,
+      excludes,
+    );
     return;
   }
 

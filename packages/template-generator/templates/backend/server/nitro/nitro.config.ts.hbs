@@ -12,8 +12,7 @@ export default defineNitroConfig({
 {{#if (eq runtime "workers")}}
 	preset: "cloudflare-module",
 {{/if}}
-	// Enable source maps for debugging
-	sourcemap: true,
+	sourceMap: true,
 	// Route rules
 	routeRules: {
 		"/**": {

@@ -1,11 +1,15 @@
 import { reactRouter } from "@react-router/dev/vite";
+{{#if (eq cssFramework "tailwind")}}
 import tailwindcss from "@tailwindcss/vite";
+{{/if}}
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   plugins: [
+    {{#if (eq cssFramework "tailwind")}}
     tailwindcss(),
+    {{/if}}
     reactRouter(),
     tsconfigPaths(),
   ],

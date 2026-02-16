@@ -38,6 +38,7 @@ import {
   processCMSTemplates,
   processSearchTemplates,
   processFileStorageTemplates,
+  processTestingTemplates,
 } from "./template-handlers";
 
 export type { TemplateData };
@@ -89,6 +90,7 @@ export async function generateVirtualProject(options: GeneratorOptions): Promise
       await processCMSTemplates(vfs, templates, config);
       await processSearchTemplates(vfs, templates, config);
       await processFileStorageTemplates(vfs, templates, config);
+      await processTestingTemplates(vfs, templates, config);
 
       processPackageConfigs(vfs, config);
       processDependencies(vfs, config);

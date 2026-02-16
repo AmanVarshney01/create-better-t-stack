@@ -27,6 +27,10 @@ import { queryClient } from "@/utils/trpc";
 {{/if}}
 {{/unless}}
 {{/if}}
+{{#if (eq uiLibrary "mantine")}}
+import { MantineProvider } from "@mantine/core";
+import "@mantine/core/styles.css";
+{{/if}}
 import { ThemeProvider } from "./theme-provider";
 import { Toaster } from "./ui/sonner";
 
@@ -46,6 +50,9 @@ export default function Providers({
 {{/if}}
 }) {
   return (
+    {{#if (eq uiLibrary "mantine")}}
+    <MantineProvider>
+    {{/if}}
     <ThemeProvider
       attribute="class"
       defaultTheme="system"
@@ -85,5 +92,8 @@ export default function Providers({
       {{/if}}
       <Toaster richColors />
     </ThemeProvider>
+    {{#if (eq uiLibrary "mantine")}}
+    </MantineProvider>
+    {{/if}}
   );
 }

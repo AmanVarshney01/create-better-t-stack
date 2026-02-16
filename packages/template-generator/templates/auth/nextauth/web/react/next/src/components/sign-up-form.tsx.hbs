@@ -2,7 +2,11 @@
 
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
+{{#if (eq validation "valibot")}}
+import * as v from "valibot";
+{{else}}
 import z from "zod";
+{{/if}}
 import Loader from "./loader";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -50,6 +54,23 @@ export default function SignUpForm({
       }
     },
     validators: {
+{{#if (eq validation "valibot")}}
+      onSubmit: v.pipe(
+        v.object({
+          name: v.pipe(v.string(), v.minLength(2, "Name must be at least 2 characters")),
+          email: v.pipe(v.string(), v.email("Invalid email address")),
+          password: v.pipe(v.string(), v.minLength(8, "Password must be at least 8 characters")),
+          confirmPassword: v.string(),
+        }),
+        v.forward(
+          v.check(
+            (data) => data.password === data.confirmPassword,
+            "Passwords don't match"
+          ),
+          ["confirmPassword"]
+        )
+      ),
+{{else}}
       onSubmit: z
         .object({
           name: z.string().min(2, "Name must be at least 2 characters"),
@@ -61,6 +82,7 @@ export default function SignUpForm({
           message: "Passwords don't match",
           path: ["confirmPassword"],
         }),
+{{/if}}
     },
   });
 

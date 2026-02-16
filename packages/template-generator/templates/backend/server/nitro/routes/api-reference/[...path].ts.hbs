@@ -4,9 +4,7 @@ import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { onError } from "@orpc/server";
 import { appRouter } from "@{{projectName}}/api/routers/index";
-{{#if (eq auth "better-auth")}}
 import { createContext } from "@{{projectName}}/api/context";
-{{/if}}
 
 const apiHandler = new OpenAPIHandler(appRouter, {
 	plugins: [
@@ -28,7 +26,7 @@ export default defineEventHandler(async (event) => {
 {{#if (eq auth "better-auth")}}
 		context: await createContext({ req }),
 {{else}}
-		context: {},
+		context: await createContext(),
 {{/if}}
 	});
 	if (!result.matched) {

@@ -47,6 +47,8 @@ yarn.lock
 
 .smoke
 .smoke-e2e
+reports/
+COMPARISON-PLAN.md
 
 .idea
 

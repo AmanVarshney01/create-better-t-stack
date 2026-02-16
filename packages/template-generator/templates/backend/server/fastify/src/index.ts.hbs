@@ -17,9 +17,7 @@ import { CORSPlugin } from "@orpc/server/plugins";
 import { onError } from "@orpc/server";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 import { createServer } from "node:http";
-{{#if (eq auth "better-auth")}}
 import { createContext } from "@{{projectName}}/api/context";
-{{/if}}
 {{/if}}
 
 {{#if (includes examples "ai")}}

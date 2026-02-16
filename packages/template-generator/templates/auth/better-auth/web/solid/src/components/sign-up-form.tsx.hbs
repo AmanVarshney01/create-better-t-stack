@@ -1,7 +1,11 @@
 import { authClient } from "@/lib/auth-client";
 import { createForm } from "@tanstack/solid-form";
 import { useNavigate } from "@tanstack/solid-router";
+{{#if (eq validation "valibot")}}
+import * as v from "valibot";
+{{else}}
 import z from "zod";
+{{/if}}
 import { For } from "solid-js";
 
 export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
@@ -36,11 +40,19 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
       );
     },
     validators: {
+{{#if (eq validation "valibot")}}
+      onSubmit: v.object({
+        name: v.pipe(v.string(), v.minLength(2, "Name must be at least 2 characters")),
+        email: v.pipe(v.string(), v.email("Invalid email address")),
+        password: v.pipe(v.string(), v.minLength(8, "Password must be at least 8 characters")),
+      }),
+{{else}}
       onSubmit: z.object({
         name: z.string().min(2, "Name must be at least 2 characters"),
         email: z.email("Invalid email address"),
         password: z.string().min(8, "Password must be at least 8 characters"),
       }),
+{{/if}}
     },
   }));
 

@@ -1,15 +1,26 @@
 <script lang="ts">
 	import { createForm } from '@tanstack/svelte-form';
+{{#if (eq validation "valibot")}}
+	import * as v from 'valibot';
+{{else}}
 	import { z } from 'zod';
+{{/if}}
 	import { authClient } from '$lib/auth-client';
 	import { goto } from '$app/navigation';
 
 	let { switchToSignUp } = $props<{ switchToSignUp: () => void }>();
 
+{{#if (eq validation "valibot")}}
+	const validationSchema = v.object({
+		email: v.pipe(v.string(), v.email('Invalid email address')),
+		password: v.pipe(v.string(), v.minLength(1, 'Password is required')),
+	});
+{{else}}
 	const validationSchema = z.object({
 		email: z.email('Invalid email address'),
 		password: z.string().min(1, 'Password is required'),
 	});
+{{/if}}
 
 	const form = createForm(() => ({
 		defaultValues: { email: '', password: '' },

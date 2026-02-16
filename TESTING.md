@@ -131,6 +131,23 @@ describe("Feature Name", () => {
 });
 ```
 
+### Matrix Harness (CLI E2E)
+
+The matrix harness tests actual CLI invocation across 10 diverse stack combinations (TypeScript, Rust, Python, Go). Unlike the programmatic matrix tests, this runs the real CLI binary end-to-end.
+
+```bash
+# Local source mode (uses repo source, requires build)
+bun scripts/cli-matrix-harness.ts
+
+# Production package mode (uses bun create better-fullstack@latest)
+bun scripts/cli-matrix-harness.ts --prod
+
+# Verbose output
+bun scripts/cli-matrix-harness.ts --verbose
+```
+
+Reports are written to `reports/` (gitignored). Temp projects are created in `$TMPDIR/bfs-matrix-runs/current` and cleaned at the start of each run.
+
 ## Tips
 
 - Tests generate projects in `.smoke/` directory (auto-cleaned)

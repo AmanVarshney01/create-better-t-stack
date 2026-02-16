@@ -1,4 +1,8 @@
 import { Toaster } from "@/components/ui/sonner";
+{{#if (eq uiLibrary "mantine")}}
+import { MantineProvider } from "@mantine/core";
+import "@mantine/core/styles.css";
+{{/if}}
 {{#unless (eq backend "convex")}} {{#unless (eq api "none")}}
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 {{/unless}} {{/unless}}
@@ -128,11 +132,13 @@ function RootDocument() {
             <HeadContent />
           </head>
           <body>
+            {{#if (eq uiLibrary "mantine")}}<MantineProvider>{{/if}}
             <div className="grid h-svh grid-rows-[auto_1fr]">
               <Header />
               <Outlet />
             </div>
             <Toaster richColors />
+            {{#if (eq uiLibrary "mantine")}}</MantineProvider>{{/if}}
             <TanStackRouterDevtools position="bottom-left" />
             <Scripts />
           </body>
@@ -153,11 +159,13 @@ function RootDocument() {
           <HeadContent />
         </head>
         <body>
+          {{#if (eq uiLibrary "mantine")}}<MantineProvider>{{/if}}
           <div className="grid h-svh grid-rows-[auto_1fr]">
             <Header />
             <Outlet />
           </div>
           <Toaster richColors />
+          {{#if (eq uiLibrary "mantine")}}</MantineProvider>{{/if}}
           <TanStackRouterDevtools position="bottom-left" />
           <Scripts />
         </body>
@@ -173,11 +181,13 @@ function RootDocument() {
           <HeadContent />
         </head>
         <body>
+          {{#if (eq uiLibrary "mantine")}}<MantineProvider>{{/if}}
           <div className="grid h-svh grid-rows-[auto_1fr]">
             <Header />
             <Outlet />
           </div>
           <Toaster richColors />
+          {{#if (eq uiLibrary "mantine")}}</MantineProvider>{{/if}}
           <TanStackRouterDevtools position="bottom-left" />
           <Scripts />
         </body>
@@ -191,11 +201,13 @@ function RootDocument() {
         <HeadContent />
       </head>
       <body>
+        {{#if (eq uiLibrary "mantine")}}<MantineProvider>{{/if}}
         <div className="grid h-svh grid-rows-[auto_1fr]">
           <Header />
           <Outlet />
         </div>
         <Toaster richColors />
+        {{#if (eq uiLibrary "mantine")}}</MantineProvider>{{/if}}
         <TanStackRouterDevtools position="bottom-left" />
         {{#unless (eq api "none")}}
         <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />

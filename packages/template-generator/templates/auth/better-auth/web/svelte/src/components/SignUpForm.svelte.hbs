@@ -1,16 +1,28 @@
 <script lang="ts">
 	import { createForm } from '@tanstack/svelte-form';
+{{#if (eq validation "valibot")}}
+	import * as v from 'valibot';
+{{else}}
 	import { z } from 'zod';
+{{/if}}
 	import { authClient } from '$lib/auth-client';
 	import { goto } from '$app/navigation';
 
 	let { switchToSignIn } = $props<{ switchToSignIn: () => void }>();
 
+{{#if (eq validation "valibot")}}
+	const validationSchema = v.object({
+		name: v.pipe(v.string(), v.minLength(2, 'Name must be at least 2 characters')),
+		email: v.pipe(v.string(), v.email('Invalid email address')),
+		password: v.pipe(v.string(), v.minLength(8, 'Password must be at least 8 characters')),
+	});
+{{else}}
 	const validationSchema = z.object({
 		name: z.string().min(2, 'Name must be at least 2 characters'),
 		email: z.email('Invalid email address'),
 		password: z.string().min(8, 'Password must be at least 8 characters'),
 	});
+{{/if}}
 
 
 	const form = createForm(() => ({

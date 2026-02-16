@@ -113,10 +113,13 @@ export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConf
       break;
 
     case "park-ui":
-      // Park UI uses Panda CSS preset and Ark UI components
-      // Supported: React, Vue, Solid (via Ark UI)
-      if (hasReactWeb || hasAstroReact || hasNuxt || hasAstroVue || hasSolid || hasAstroSolid) {
-        deps.push("@park-ui/panda-preset", "@park-ui/ark");
+      deps.push("@park-ui/panda-preset");
+      if (hasReactWeb || hasAstroReact) {
+        deps.push("@ark-ui/react");
+      } else if (hasNuxt || hasAstroVue) {
+        deps.push("@ark-ui/vue");
+      } else if (hasSolid || hasAstroSolid) {
+        deps.push("@ark-ui/solid");
       }
       break;
 

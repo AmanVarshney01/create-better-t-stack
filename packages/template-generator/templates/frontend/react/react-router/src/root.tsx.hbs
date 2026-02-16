@@ -11,6 +11,10 @@ import "./index.css";
 import Header from "./components/header";
 import { ThemeProvider } from "./components/theme-provider";
 import { Toaster } from "./components/ui/sonner";
+{{#if (eq uiLibrary "mantine")}}
+import { MantineProvider } from "@mantine/core";
+import "@mantine/core/styles.css";
+{{/if}}
 
 {{#if (eq backend "convex")}}
 import { ConvexReactClient } from "convex/react";
@@ -69,6 +73,7 @@ export default function App() {
   return (
     <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+        {{#if (eq uiLibrary "mantine")}}<MantineProvider>{{/if}}
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
@@ -81,12 +86,14 @@ export default function App() {
           </div>
           <Toaster richColors />
         </ThemeProvider>
+        {{#if (eq uiLibrary "mantine")}}</MantineProvider>{{/if}}
       </ConvexProviderWithClerk>
     </ClerkProvider>
   );
   {{else}}
   return (
     <ConvexProvider client={convex}>
+      {{#if (eq uiLibrary "mantine")}}<MantineProvider>{{/if}}
       <ThemeProvider
         attribute="class"
         defaultTheme="dark"
@@ -99,6 +106,7 @@ export default function App() {
         </div>
         <Toaster richColors />
       </ThemeProvider>
+      {{#if (eq uiLibrary "mantine")}}</MantineProvider>{{/if}}
     </ConvexProvider>
   );
   {{/if}}
@@ -107,6 +115,7 @@ export default function App() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      {{#if (eq uiLibrary "mantine")}}<MantineProvider>{{/if}}
       <ThemeProvider
         attribute="class"
         defaultTheme="dark"
@@ -119,6 +128,7 @@ export default function App() {
         </div>
         <Toaster richColors />
       </ThemeProvider>
+      {{#if (eq uiLibrary "mantine")}}</MantineProvider>{{/if}}
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
     </QueryClientProvider>
   );
@@ -127,6 +137,7 @@ export default function App() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      {{#if (eq uiLibrary "mantine")}}<MantineProvider>{{/if}}
       <ThemeProvider
         attribute="class"
         defaultTheme="dark"
@@ -139,6 +150,7 @@ export default function App() {
         </div>
         <Toaster richColors />
       </ThemeProvider>
+      {{#if (eq uiLibrary "mantine")}}</MantineProvider>{{/if}}
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
     </QueryClientProvider>
   );
@@ -146,6 +158,7 @@ export default function App() {
 {{else}}
 export default function App() {
   return (
+    {{#if (eq uiLibrary "mantine")}}<MantineProvider>{{/if}}
     <ThemeProvider
       attribute="class"
       defaultTheme="dark"
@@ -158,6 +171,7 @@ export default function App() {
       </div>
       <Toaster richColors />
     </ThemeProvider>
+    {{#if (eq uiLibrary "mantine")}}</MantineProvider>{{/if}}
   );
 }
 {{/if}}

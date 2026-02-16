@@ -1,13 +1,17 @@
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+{{#if (eq cssFramework "tailwind")}}
 import tailwindcss from "@tailwindcss/vite";
+{{/if}}
 import viteReact from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [
     tsconfigPaths(),
+    {{#if (eq cssFramework "tailwind")}}
     tailwindcss(),
+    {{/if}}
     tanstackStart(),
     viteReact(),
   ],

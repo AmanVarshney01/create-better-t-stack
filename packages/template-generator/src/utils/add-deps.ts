@@ -314,11 +314,10 @@ export const dependencyVersionMap = {
   "@radix-ui/react-switch": "^1.1.7",
   "@radix-ui/react-tabs": "^1.1.7",
 
-  "@headlessui/react": "^2.3.1",
-  "@headlessui/vue": "^1.8.1",
+  "@headlessui/react": "^2.2.0",
+  "@headlessui/vue": "^1.7.22",
 
-  "@park-ui/panda-preset": "^0.47.0",
-  "@park-ui/ark": "^0.47.0",
+  "@park-ui/panda-preset": "^0.43.0",
 
   "@chakra-ui/react": "^3.21.3",
   "@emotion/react": "^11.14.0",

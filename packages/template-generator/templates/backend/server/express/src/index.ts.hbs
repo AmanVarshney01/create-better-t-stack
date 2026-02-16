@@ -11,9 +11,7 @@ import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { RPCHandler } from "@orpc/server/node";
 import { onError } from "@orpc/server";
 import { appRouter } from "@{{projectName}}/api/routers/index";
-{{#if (eq auth "better-auth")}}
 import { createContext } from "@{{projectName}}/api/context";
-{{/if}}
 {{/if}}
 import cors from "cors";
 import express from "express";
@@ -78,21 +76,13 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 app.use(async (req, res, next) => {
 	const rpcResult = await rpcHandler.handle(req, res, {
 		prefix: "/rpc",
-{{#if (eq auth "better-auth")}}
 		context: await createContext({ req }),
-{{else}}
-		context: {},
-{{/if}}
 	});
 	if (rpcResult.matched) return;
 
 	const apiResult = await apiHandler.handle(req, res, {
 		prefix: "/api-reference",
-{{#if (eq auth "better-auth")}}
 		context: await createContext({ req }),
-{{else}}
-		context: {},
-{{/if}}
 	});
 	if (apiResult.matched) return;
 

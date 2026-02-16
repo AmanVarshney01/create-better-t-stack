@@ -35,6 +35,29 @@ export async function initializeGit(projectDir: string, useGit: boolean) {
     throw new Error(`Git initialization failed: ${result.stderr}`);
   }
 
+  // Ensure git user config exists (may not be configured in CI environments)
+  const userName = await $({
+    cwd: projectDir,
+    env: gitEnv,
+    reject: false,
+    stderr: "pipe",
+  })`git config user.name`;
+  if (!userName.stdout.trim()) {
+    await $({ cwd: projectDir, env: gitEnv })`git config user.name ${"Better Fullstack"}`;
+  }
+  const userEmail = await $({
+    cwd: projectDir,
+    env: gitEnv,
+    reject: false,
+    stderr: "pipe",
+  })`git config user.email`;
+  if (!userEmail.stdout.trim()) {
+    await $({
+      cwd: projectDir,
+      env: gitEnv,
+    })`git config user.email ${"scaffold@better-fullstack.dev"}`;
+  }
+
   await $({ cwd: projectDir, env: gitEnv })`git add -A`;
   await $({ cwd: projectDir, env: gitEnv })`git commit --no-verify -m ${"initial commit"}`;
 }

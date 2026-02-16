@@ -1,5 +1,9 @@
 <script setup lang="ts">
+{{#if (eq validation "valibot")}}
+import * as v from 'valibot'
+{{else}}
 import * as z from 'zod'
+{{/if}}
 import type { FormSubmitEvent, AuthFormField } from '@nuxt/ui'
 
 const { $authClient } = useNuxtApp()
@@ -33,6 +37,15 @@ const fields: AuthFormField[] = [
   }
 ]
 
+{{#if (eq validation "valibot")}}
+const schema = v.object({
+  name: v.pipe(v.string(), v.minLength(2, 'Name must be at least 2 characters')),
+  email: v.pipe(v.string(), v.email('Invalid email address')),
+  password: v.pipe(v.string(), v.minLength(8, 'Password must be at least 8 characters')),
+})
+
+type Schema = v.InferOutput<typeof schema>
+{{else}}
 const schema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.email('Invalid email address'),
@@ -40,6 +53,7 @@ const schema = z.object({
 })
 
 type Schema = z.output<typeof schema>
+{{/if}}
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   loading.value = true
