@@ -118,6 +118,36 @@ create-better-t-stack builder
 
 Opens `https://better-t-stack.dev/new` where you can configure your stack visually.
 
+## `history`
+
+Shows project creation history stored on your local machine.
+
+```bash
+create-better-t-stack history [options]
+```
+
+### Options
+
+- `--limit <number>`: Number of entries to show (default: 10)
+- `--json`: Output history as JSON
+- `--clear`: Clear all history entries
+
+### Examples
+
+```bash
+# Show latest entries
+create-better-t-stack history
+
+# Show 5 entries
+create-better-t-stack history --limit 5
+
+# JSON output
+create-better-t-stack history --json
+
+# Clear history
+create-better-t-stack history --clear
+```
+
 ## Global Options
 
 These options work with any command:
@@ -155,6 +185,12 @@ create-better-t-stack api-server \
 ```bash
 cd my-existing-project
 create-better-t-stack add --addons tauri starlight --install
+```
+
+### Show Local History
+
+```bash
+create-better-t-stack history --limit 20
 ```
 
 ## Programmatic Usage
