@@ -59,12 +59,9 @@ npm create better-t-stack@latest my-webapp \
 
 ```npm
 npm create better-t-stack@latest my-api \
-  --frontend none \
-  --backend fastify \
-  --runtime node \
-  --database postgres \
-  --orm prisma \
-  --api trpc
+  --frontend tanstack-router \
+  --backend convex \
+  --auth clerk
 ```
 
 ### Mobile App (Expo)
@@ -98,7 +95,7 @@ See the full list in the [CLI Reference](/docs/cli). Key flags:
 - `--api`: trpc, orpc, none
 - `--auth`: better-auth, clerk, none
 - `--payments`: polar, none
-- `--addons`: turborepo, pwa, tauri, biome, lefthook, husky, starlight, fumadocs, ultracite, oxlint, ruler, opentui, wxt, skills, none
+- `--addons`: turborepo, pwa, tauri, biome, lefthook, husky, starlight, fumadocs, ultracite, oxlint, ruler, mcp, opentui, wxt, skills, none
 - `--examples`: todo, ai, none
 
 ## Next Steps
@@ -110,7 +107,7 @@ See the full list in the [CLI Reference](/docs/cli). Key flags:
   <Card href="/docs/project-structure" title="Project Structure">
     See how web/server/native and Convex layouts are generated
   </Card>
-  <Card href="/docs/compatibility" title="Compatibility">
+  <Card href="/docs/cli/compatibility" title="Compatibility">
     Valid combinations for backend, runtime, database, ORM, API
   </Card>
   <Card href="/docs/bts-config" title="bts.jsonc">

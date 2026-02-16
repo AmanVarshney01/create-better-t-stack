@@ -1,96 +1,65 @@
-# AGENTS.md
+# Repository Guidelines
 
-Instructions for AI coding agents working with this codebase.
+## Project Structure & Module Organization
 
-## Development Workflow
+This repo is a Bun + Turborepo monorepo.
 
-### Build & Lint
+- `apps/cli`: published CLI (`create-better-t-stack`), with source in `apps/cli/src` and tests in `apps/cli/test`.
+- `apps/web`: Next.js docs/site (`apps/web/src`, `apps/web/content/docs`, `apps/web/public`).
+- `packages/template-generator`: template generation engine used by the CLI.
+- `packages/types`: shared schemas/types.
+- `packages/backend`: Convex backend used by web features.
 
-- **Package Manager:** Use `bun` for all operations. Do not use `npm`, `yarn`, or `pnpm`.
-- **Install Dependencies:** `bun install`
-- **Build:** `bun run build` (uses TurboRepo)
-- **Lint & Format:** `bun check` (runs `oxfmt` and `oxlint`). Fix issues with `oxfmt .` if needed.
-- **Dev Server:** `bun run dev`
+## Build, Test, and Development Commands
 
-### Testing
+- `bun install`: install workspace dependencies.
+- `bun dev:cli`: watch-build CLI package.
+- `bun dev:web`: run web app locally (`next dev --port 3333`).
+- `bun build`: build all packages/apps through Turbo.
+- `bun build:cli`: build only the CLI target.
+- `bun run check`: format + lint (`oxfmt . && oxlint .`).
+- `cd apps/cli && bun run test`: run CLI tests.
 
-- **Runner:** Use `bun test`.
-- **Run All Tests:** `bun test` (in a specific package/app directory).
-- **Run Single Test File:** `bun test <path/to/file>`
-  - Example: `bun test apps/cli/test/cli.test.ts`
-- **Run Specific Test Case:** `bun test -t "test name pattern"`
-- **Note:** Always run `bun run build` before testing if testing build artifacts, or ensure the test command handles it (e.g., `apps/cli` runs build in its test script).
+## Coding Style & Naming Conventions
 
-## Code Style & Conventions
+- Language: TypeScript (strict mode enabled across projects).
+- Modules: ESM-first (`"type": "module"` where applicable).
+- Formatting/linting: `oxfmt` and `oxlint`; run `bun run check` before committing.
+- File naming: prefer kebab-case files (for example `database-setup.ts`).
+- Symbols: `camelCase` for functions/variables, `PascalCase` for types/components.
+- Keep feature logic near domain folders (`helpers`, `utils`, `template-handlers`).
 
-### General
+## Error Handling Conventions
 
-- **Runtime:** This is a **Bun** project.
-  - Use `Bun.file` over `node:fs`.
-  - Use `Bun.serve` over `express`.
-  - Use `Bun.env` or just `process.env` (auto-loaded).
-- **Paradigm:** Prefer **Functional Programming**. Avoid Object-Oriented patterns (classes) unless strictly required by a framework.
-  - Use standard `function name() {}` declarations for top-level functions (better stack traces/hoisting) instead of arrow functions `const name = () => {}`, unless inside components/callbacks.
-- **Types:** Use **Type Aliases** (`type X = ...`) instead of interfaces (`interface X ...`).
-- **Formatting:** Adhere to `oxfmt` defaults.
-- **Comments:** No emojis in code or comments.
-- **Exports:** Prefer named exports over default exports.
+- In CLI code, prefer `better-result` over ad-hoc `try/catch` for recoverable flows.
+- Return typed `Result<T, E>` and use `Result.ok`, `Result.err`, `Result.try`, and `Result.tryPromise`.
+- Reuse domain errors from `apps/cli/src/utils/errors.ts` (`CLIError`, `ProjectCreationError`, `UserCancelledError`) and convert thrown prompt errors at boundaries.
 
-### Apps & Packages
+## Template Authoring (Handlebars)
 
-- **Monorepo:** Uses TurboRepo.
-- **CLI:** Located in `apps/cli`.
-- **Web:** Located in `apps/web`.
-- **Backend:** Located in `packages/backend` (Convex).
+- Templates live in `packages/template-generator/templates` and use helpers from `packages/template-generator/src/core/template-processor.ts` (`eq`, `ne`, `and`, `or`, `includes`).
+- For conditional ORM-specific output, use helper form with quoted values:
+  - `{{#if (eq orm "prisma")}}`
+  - `{{else if (eq orm "drizzle")}}`
+  - `{{/if}}`
+  - Example: `packages/template-generator/templates/packages/infra/alchemy.run.ts.hbs`.
+- When files must contain literal `{{ ... }}` (Vue/JSX/template syntax), escape opening braces as `\{{` in `.hbs` files so Handlebars does not evaluate them.
+  - Example: `packages/template-generator/templates/frontend/nuxt/app/pages/index.vue.hbs`.
 
-## Framework Specifics
+## Testing Guidelines
 
-### Convex (Backend)
+- Framework: `bun:test`.
+- Test files use `*.test.ts` naming (see `apps/cli/test` and `packages/template-generator/test`).
+- Add or update tests with behavior changes, especially prompt flows, template output, and config validation.
+- Keep tests deterministic; reuse shared setup utilities in `apps/cli/test/setup.ts`.
 
-- **Syntax:** Always use the new object-style syntax for functions.
-  ```ts
-  export const myFunc = query({
-    args: { name: v.string() },
-    returns: v.string(), // Always specify returns
-    handler: async (ctx, args) => { ... }
-  });
-  ```
-- **Validators:** Strict validation required.
-  - Use `v.null()` for void/null returns.
-  - Use `v.id("tableName")` for IDs.
-- **Internal vs Public:**
-  - Public: `query`, `mutation`, `action` (in `convex/` root or subfolders).
-  - Internal: `internalQuery`, `internalMutation`, `internalAction`.
-- **Calling Functions:**
-  - Use `ctx.runQuery(api.path.to.func, args)`.
-  - Use `internal.path.to.func` for internal functions.
-- **Schema:** Defined in `convex/schema.ts` using `defineSchema` and `defineTable`.
-- **Actions:** Use `"use node";` at the top if using Node.js built-ins. Actions do not have DB access (`ctx.db`); use queries/mutations for data.
+## Commit & Pull Request Guidelines
 
-### Handlebars (Templates)
-
-- Avoid generic `if/else`. Use explicit helpers: `{{#if (eq orm "prisma")}}`.
-- Escape double braces if needed: `\{{`.
-
-<!-- opensrc:start -->
-
-## Source Code Reference
-
-Source code for dependencies is available in `opensrc/` for deeper understanding of implementation details.
-
-See `opensrc/sources.json` for the list of available packages and their versions.
-
-Use this source code when you need to understand how a package works internally, not just its types/interface.
-
-### Fetching Additional Source Code
-
-To fetch source code for a package or repository you need to understand, run:
-
-```bash
-npx opensrc <package>           # npm package (e.g., npx opensrc zod)
-npx opensrc pypi:<package>      # Python package (e.g., npx opensrc pypi:requests)
-npx opensrc crates:<package>    # Rust crate (e.g., npx opensrc crates:serde)
-npx opensrc <owner>/<repo>      # GitHub repo (e.g., npx opensrc vercel/ai)
-```
-
-<!-- opensrc:end -->
+- Use Conventional Commits with scope, matching history:
+  - `feat(cli): ...`, `fix(web): ...`, `docs(cli): ...`
+- Open an issue/discussion before major feature work.
+- PRs should include:
+  - clear summary,
+  - linked issue (if applicable),
+  - verification steps run (`bun run check`, relevant tests),
+  - screenshots/GIFs for web UI changes.
