@@ -12,14 +12,15 @@ export async function processObservabilityTemplates(
   if (!config.observability || config.observability === "none") return;
   if (config.backend === "convex") return;
   if (config.backend === "none") return;
-  if (config.backend === "self") return;
+
+  const targetDir = config.backend === "self" ? "apps/web" : "apps/server";
 
   // Process server-side observability templates (OpenTelemetry tracing setup)
   processTemplatesFromPrefix(
     vfs,
     templates,
     `observability/${config.observability}/server/base`,
-    "apps/server",
+    targetDir,
     config,
   );
 }

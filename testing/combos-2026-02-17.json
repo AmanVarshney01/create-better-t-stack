@@ -2,7 +2,7 @@
   "v": 2,
   "d": "2026-02-17",
   "cb": "bun create better-fullstack@latest <name> --no-install --no-git --disable-analytics --package-manager bun ...",
-  "tot": [30, 18, 12, 11],
+  "tot": [40, 26, 14, 13],
   "k": {
     "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
     "r": { "p": "pass", "f": "fail" },
@@ -13,7 +13,8 @@
       "S": "Unused strconv import in generated handlers for echo+grpc without ORM",
       "D": "Fresh (backend=none) deps missing: state-mgmt/logging/email/AI/observability not added to web package.json",
       "A": "ark-ui not compatible with Fresh in @latest (UI library validation)",
-      "E": "backend=self: orphaned apps/server/ dir created by logging/email/observability/etc handlers + post-install msg missing astro/angular in WEB_FRAMEWORKS"
+      "E": "backend=self: orphaned apps/server/ dir created by logging/email/observability/etc handlers + post-install msg missing astro/angular in WEB_FRAMEWORKS",
+      "F": "backend=self: email/logging/observability deps+templates not redirected to apps/web (deps went nowhere, templates went to orphaned apps/server)"
     }
   },
   "rows": [
@@ -361,7 +362,112 @@
       ["actix-web", "none", "sea-orm", "tonic", "none", ["serde", "validator"]],
       "p"
     ],
-    ["go-gin-gorm-cobra-zap", "g", ["gin", "gorm", "none", "cobra", "zap"], "p"]
+    ["go-gin-gorm-cobra-zap", "g", ["gin", "gorm", "none", "cobra", "zap"], "p"],
+    [
+      "ts-tanstack-start-self",
+      "t",
+      [
+        "tanstack-start",
+        "tailwind",
+        "shadcn-ui",
+        "zod",
+        "vitest",
+        "zustand",
+        "self",
+        "trpc",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "stripe",
+        "resend",
+        "tanstack-form"
+      ],
+      "f",
+      "F",
+      1
+    ],
+    [
+      "ts-qwik-hono",
+      "t",
+      ["qwik", "tailwind", "none", "zod", "vitest", "none", "hono", "none", "prisma", "postgres"],
+      "p"
+    ],
+    ["ts-redwood-none", "t", ["redwood", "tailwind", "none", "zod", "vitest", "none", "none"], "p"],
+    [
+      "ts-react-router-hono-turbo",
+      "t",
+      [
+        "react-router",
+        "tailwind",
+        "shadcn-ui",
+        "zod",
+        "vitest-playwright",
+        "none",
+        "hono",
+        "orpc",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "sentry",
+        "pino",
+        "react-hook-form",
+        "framer-motion",
+        "biome",
+        "turborepo"
+      ],
+      "p"
+    ],
+    [
+      "ts-next-convex",
+      "t",
+      ["next", "tailwind", "shadcn-ui", "zod", "vitest", "none", "convex"],
+      "p"
+    ],
+    [
+      "ts-tanstack-elysia-pay",
+      "t",
+      [
+        "tanstack-router",
+        "scss",
+        "radix-ui",
+        "valibot",
+        "vitest",
+        "jotai",
+        "elysia",
+        "orpc",
+        "drizzle",
+        "sqlite",
+        "better-auth",
+        "polar",
+        "nodemailer",
+        "uploadthing",
+        "winston",
+        "opentelemetry",
+        "gsap",
+        "tanstack-form",
+        "biome"
+      ],
+      "p"
+    ],
+    [
+      "python-django-sqlalchemy",
+      "p",
+      ["django", "sqlalchemy", "pydantic", ["none"], "celery", "ruff"],
+      "p"
+    ],
+    [
+      "python-fastapi-langgraph",
+      "p",
+      ["fastapi", "none", "pydantic", ["langgraph", "llamaindex"], "none", "ruff"],
+      "p"
+    ],
+    [
+      "rust-axum-leptos-sqlx",
+      "r",
+      ["axum", "leptos", "sqlx", "none", "none", ["serde", "tokio-test"]],
+      "p"
+    ],
+    ["go-echo-sqlc-grpc-bubbletea", "g", ["echo", "sqlc", "grpc-go", "bubbletea", "none"], "p"]
   ],
   "schema": {
     "row": [

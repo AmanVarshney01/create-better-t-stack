@@ -15,14 +15,17 @@ export function processEmailDeps(vfs: VirtualFileSystem, config: ProjectConfig):
   const serverPath = "apps/server/package.json";
   const webPath = "apps/web/package.json";
 
-  // Determine target path: prefer server, fall back to web for fullstack frontends
+  // Determine target path: self backend targets web, standalone backend targets server,
+  // fullstack frontends (fresh, qwik, etc.) fall back to web
   const hasFullstackFrontend = frontend.some((f) => FULLSTACK_FRONTENDS.includes(f));
   const targetPath =
-    backend !== "none" && vfs.exists(serverPath)
-      ? serverPath
-      : hasFullstackFrontend && vfs.exists(webPath)
-        ? webPath
-        : null;
+    backend === "self" && vfs.exists(webPath)
+      ? webPath
+      : backend !== "none" && vfs.exists(serverPath)
+        ? serverPath
+        : hasFullstackFrontend && vfs.exists(webPath)
+          ? webPath
+          : null;
 
   if (!targetPath) return;
 
