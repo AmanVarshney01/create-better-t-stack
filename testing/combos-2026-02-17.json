@@ -2,7 +2,7 @@
   "v": 2,
   "d": "2026-02-17",
   "cb": "bun create better-fullstack@latest <name> --no-install --no-git --disable-analytics --package-manager bun ...",
-  "tot": [80, 60, 20, 20],
+  "tot": [90, 71, 19, 19],
   "k": {
     "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
     "r": { "p": "pass", "f": "fail" },
@@ -1310,104 +1310,6 @@
         "msw",
         "ai-example",
         "docker"
-      ],
-      "p"
-    ],
-    [
-      "ts-next-mantine-tauri",
-      "t",
-      [
-        "next", "tailwind", "mantine", "typebox", "vitest", "none",
-        "hono", "trpc", "prisma", "postgres", "better-auth",
-        "postmark", "filepond", "react-spring", "pino",
-        "upstash-redis", "plausible", "tauri"
-      ],
-      "p"
-    ],
-    [
-      "ts-tanstack-nextui-umami",
-      "t",
-      [
-        "tanstack-router", "tailwind", "nextui", "typia", "vitest", "none",
-        "fastify", "orpc", "drizzle", "sqlite", "better-auth",
-        "sendgrid", "uppy", "auto-animate", "umami", "tanstack-form"
-      ],
-      "p"
-    ],
-    [
-      "ts-rr-headless-sanity",
-      "t",
-      [
-        "react-router", "tailwind", "headless-ui", "runtypes", "none", "none",
-        "hono", "none", "drizzle", "postgres", "better-auth",
-        "mailgun", "lottie", "sanity", "typesense"
-      ],
-      "p"
-    ],
-    [
-      "ts-next-chakra-starlight",
-      "t",
-      [
-        "next", "tailwind", "chakra-ui", "effect-schema", "none", "none",
-        "self", "trpc", "prisma", "postgres", "better-auth",
-        "aws-ses", "starlight"
-      ],
-      "p"
-    ],
-    [
-      "ts-next-base-ui-email",
-      "t",
-      [
-        "next", "tailwind", "base-ui", "zod", "none", "none",
-        "hono", "trpc", "drizzle", "postgres", "better-auth",
-        "react-email"
-      ],
-      "p"
-    ],
-    [
-      "ts-solid-ark-ui-oxlint",
-      "t",
-      [
-        "solid", "tailwind", "ark-ui", "zod", "vitest", "none",
-        "hono", "none", "drizzle", "postgres", "better-auth",
-        "plunk", "s3", "oxlint"
-      ],
-      "p"
-    ],
-    [
-      "ts-next-native-uniwind",
-      "t",
-      [
-        ["next", "native-uniwind"], "tailwind", "shadcn-ui", "zod", "none", "none",
-        "hono", "trpc", "prisma", "postgres", "better-auth"
-      ],
-      "p"
-    ],
-    [
-      "ts-rr-native-unistyles",
-      "t",
-      [
-        ["react-router", "native-unistyles"], "tailwind", "shadcn-ui", "zod", "none", "none",
-        "express", "none", "drizzle", "postgres", "better-auth"
-      ],
-      "p"
-    ],
-    [
-      "ts-angular-fastify-pino",
-      "t",
-      [
-        "angular", "tailwind", "none", "zod", "vitest", "none",
-        "fastify", "none", "prisma", "postgres", "better-auth",
-        "pino"
-      ],
-      "p"
-    ],
-    [
-      "ts-qwik-express-drizzle",
-      "t",
-      [
-        "qwik", "tailwind", "none", "zod", "none", "none",
-        "express", "none", "drizzle", "sqlite", "better-auth"
       ],
       "p"
     ]
