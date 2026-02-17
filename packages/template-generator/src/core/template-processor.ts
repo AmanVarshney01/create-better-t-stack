@@ -9,6 +9,9 @@ Handlebars.registerHelper("not", (a) => !a);
 Handlebars.registerHelper("and", (...args) => args.slice(0, -1).every(Boolean));
 Handlebars.registerHelper("or", (...args) => args.slice(0, -1).some(Boolean));
 Handlebars.registerHelper("includes", (arr, val) => Array.isArray(arr) && arr.includes(val));
+Handlebars.registerHelper("replace", (value, find, replacement) =>
+  String(value).split(String(find)).join(String(replacement)),
+);
 
 export function processTemplateString(content: string, context: ProjectConfig): string {
   return Handlebars.compile(content)(context);

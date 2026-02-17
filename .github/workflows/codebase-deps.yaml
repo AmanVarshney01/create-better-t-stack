@@ -1,0 +1,80 @@
+name: Codebase Dependency Update
+
+on:
+  schedule:
+    # Run every Monday at 10am UTC
+    - cron: "0 10 * * 1"
+  workflow_dispatch:
+    inputs:
+      update_mode:
+        description: "Update mode"
+        type: choice
+        options:
+          - patch-minor
+          - all
+        default: "patch-minor"
+
+concurrency:
+  group: codebase-deps
+  cancel-in-progress: true
+
+jobs:
+  update:
+    name: Update Workspace Dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Resolve Update Mode
+        id: mode
+        run: |
+          MODE="${{ inputs.update_mode }}"
+          if [ -z "$MODE" ]; then
+            MODE="patch-minor"
+          fi
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "Selected mode: $MODE"
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Update Dependencies
+        run: |
+          if [ "${{ steps.mode.outputs.mode }}" = "all" ]; then
+            bun update --recursive --latest
+          else
+            bun update --recursive
+          fi
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(deps): update codebase dependencies"
+          title: "chore(deps): update codebase dependencies"
+          body: |
+            ## Codebase Dependency Updates
+
+            This PR updates workspace dependencies used by the repository codebase (`package.json` + `bun.lock`).
+
+            - Update mode: `${{ steps.mode.outputs.mode }}`
+            - Scope: root + all Bun workspaces (`--recursive`)
+
+            ---
+            *Automated by [codebase-deps.yaml](.github/workflows/codebase-deps.yaml)*
+          branch: deps/codebase-updates
+          delete-branch: true
+          labels: |
+            dependencies
+            automated

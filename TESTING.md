@@ -154,3 +154,41 @@ Reports are written to `reports/` (gitignored). Temp projects are created in `$T
 - Use `install: false` for faster tests (default)
 - E2E tests take longer (~15-60 seconds each)
 - Run specific test files during development for faster feedback
+
+## Manual Production Create Runs (Non-TypeScript)
+
+Date: 2026-02-17
+Command base:
+
+```bash
+bun create better-fullstack@latest <project-name> --yes --no-install --no-git --disable-analytics ...
+```
+
+Coverage goal: 10 unique templates across `rust`, `python`, and `go` only (no TypeScript).
+
+### Combos Tried
+
+| #   | Project Name                                        | Ecosystem | Key Options                                                              | Result |
+| --- | --------------------------------------------------- | --------- | ------------------------------------------------------------------------ | ------ |
+| 1   | `rust-actix-leptos-seaorm-graphql-ratatui`          | rust      | actix-web + leptos + sea-orm + async-graphql + ratatui + serde/validator | PASS   |
+| 2   | `rust-axum-dioxus-sqlx-tonic-clap`                  | rust      | axum + dioxus + sqlx + tonic + clap + jsonwebtoken/argon2                | PASS   |
+| 3   | `rust-axum-none-sqlx-none-none`                     | rust      | axum + sqlx                                                              | PASS   |
+| 4   | `rust-none-dioxus-none-graphql-clap`                | rust      | dioxus + async-graphql + clap + mockall                                  | PASS   |
+| 5   | `python-django-sqlmodel-celery-ruff-langchain`      | python    | django + sqlmodel + pydantic + langchain + celery + ruff                 | PASS   |
+| 6   | `python-fastapi-sqlmodel-none-openai-crewai`        | python    | fastapi + sqlmodel + openai-sdk + crewai                                 | PASS   |
+| 7   | `python-fastapi-sqlalchemy-pydantic-anthropic-ruff` | python    | fastapi + sqlalchemy + pydantic + anthropic-sdk + ruff                   | PASS   |
+| 8   | `go-echo-gorm-none-cobra-zap`                       | go        | echo + gorm + cobra + zap                                                | PASS   |
+| 9   | `go-gin-sqlc-grpc-bubbletea-none`                   | go        | gin + sqlc + grpc-go + bubbletea                                         | PASS   |
+| 10  | `go-echo-none-grpc-none-zap`                        | go        | echo + grpc-go + zap                                                     | PASS   |
+
+### Verification Performed
+
+- Project creation exit status checked for all 10 runs.
+- Expected ecosystem root files verified (`Cargo.toml`, `pyproject.toml`, `go.mod`).
+- Marker checks confirmed selected options are reflected in generated files for each run.
+- Python syntax check run with `python3 -m compileall -q .` for all Python projects.
+
+### Environment Limits
+
+- `cargo` and `go` were not available in the runner environment during this pass, so `cargo check` and `go build/test` were not executed.
+- No generation errors were observed in CLI output logs for these runs.

@@ -54,6 +54,17 @@ jobs:
         run: |
           cd packages/template-generator
 
+          # Scheduled runs should auto-open PRs with safe updates by default.
+          EFFECTIVE_UPDATE_MODE="${{ inputs.update_mode }}"
+          if [ -z "$EFFECTIVE_UPDATE_MODE" ]; then
+            if [ "${{ github.event_name }}" = "schedule" ]; then
+              EFFECTIVE_UPDATE_MODE="patch-minor"
+            else
+              EFFECTIVE_UPDATE_MODE="check-only"
+            fi
+          fi
+          echo "effective_update_mode=$EFFECTIVE_UPDATE_MODE" >> "$GITHUB_OUTPUT"
+
           # Run the check script
           if [ -n "${{ inputs.ecosystem }}" ]; then
             bun run scripts/check-deps.ts --ecosystem "${{ inputs.ecosystem }}" > ../deps-report.md 2>&1 || true
@@ -61,11 +72,9 @@ jobs:
             bun run scripts/check-deps.ts > ../deps-report.md 2>&1 || true
           fi
 
-          # Check if there are updates
-          if grep -q "outdated: [1-9]" ../deps-report.md 2>/dev/null; then
-            echo "has_updates=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_updates=false" >> $GITHUB_OUTPUT
+          # Fallback if script output wasn't written for any reason.
+          if ! grep -q "^has_updates=" "$GITHUB_OUTPUT"; then
+            echo "has_updates=false" >> "$GITHUB_OUTPUT"
           fi
 
           # Store the report
@@ -73,7 +82,7 @@ jobs:
             echo 'report<<EOF'
             cat ../deps-report.md
             echo EOF
-          } >> $GITHUB_OUTPUT
+          } >> "$GITHUB_OUTPUT"
 
       - name: Display Report
         run: |
@@ -81,18 +90,18 @@ jobs:
           echo "${{ steps.check.outputs.report }}"
 
       - name: Apply Updates (if requested)
-        if: inputs.update_mode == 'patch-minor' || inputs.update_mode == 'all'
+        if: steps.check.outputs.effective_update_mode == 'patch-minor' || steps.check.outputs.effective_update_mode == 'all'
         run: |
           cd packages/template-generator
 
-          if [ "${{ inputs.update_mode }}" == "patch-minor" ]; then
+          if [ "${{ steps.check.outputs.effective_update_mode }}" == "patch-minor" ]; then
             bun run scripts/check-deps.ts --apply-patch
           else
             bun run scripts/check-deps.ts --apply-all
           fi
 
       - name: Create Pull Request
-        if: steps.check.outputs.has_updates == 'true' && (inputs.update_mode == 'patch-minor' || inputs.update_mode == 'all')
+        if: steps.check.outputs.has_updates == 'true' && (steps.check.outputs.effective_update_mode == 'patch-minor' || steps.check.outputs.effective_update_mode == 'all')
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -123,6 +132,8 @@ jobs:
         run: |
           echo "## Dependency Check Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Event:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Mode:** ${{ steps.check.outputs.effective_update_mode }}" >> $GITHUB_STEP_SUMMARY
           echo "**Has Updates:** ${{ steps.check.outputs.has_updates }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Report" >> $GITHUB_STEP_SUMMARY

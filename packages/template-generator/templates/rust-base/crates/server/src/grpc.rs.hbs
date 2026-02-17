@@ -1,6 +1,6 @@
 //! gRPC service implementations for {{projectName}}.
 
-use {{projectName}}_proto::{Greeter, GreeterServer, HelloReply, HelloRequest};
+use {{replace projectName "-" "_"}}_proto::{Greeter, GreeterServer, HelloReply, HelloRequest};
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{Request, Response, Status};
 

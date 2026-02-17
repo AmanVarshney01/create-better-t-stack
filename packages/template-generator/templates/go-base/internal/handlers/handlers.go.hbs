@@ -4,7 +4,9 @@ package handlers
 {{#if (eq goWebFramework "gin")}}
 import (
 	"net/http"
+{{#if (or (eq goOrm "gorm") (eq goOrm "sqlc"))}}
 	"strconv"
+{{/if}}
 
 	"github.com/gin-gonic/gin"
 {{#if (or (eq goOrm "gorm") (eq goOrm "sqlc"))}}
@@ -470,7 +472,9 @@ func HealthCheck(c *gin.Context) {
 {{#if (eq goWebFramework "echo")}}
 import (
 	"net/http"
+{{#if (or (eq goOrm "gorm") (eq goOrm "sqlc"))}}
 	"strconv"
+{{/if}}
 
 	"github.com/labstack/echo/v4"
 {{#if (or (eq goOrm "gorm") (eq goOrm "sqlc"))}}

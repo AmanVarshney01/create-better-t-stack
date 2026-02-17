@@ -1,0 +1,89 @@
+{
+  "v": 2,
+  "d": "2026-02-17",
+  "cb": "bun create better-fullstack@latest <name> --yes --no-install --no-git --disable-analytics ...",
+  "tot": [10, 7, 3, 3],
+  "k": {
+    "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
+    "r": { "p": "pass", "f": "fail" },
+    "e": { "r": "rust", "p": "python", "g": "go" },
+    "i": {
+      "L": "Leptos template invalid features for leptos_meta/leptos_router caused cargo resolution failure",
+      "H": "Generated grpc use-path used hyphenated crate identifier",
+      "S": "Unused strconv import in generated handlers for echo+grpc without ORM"
+    }
+  },
+  "rows": [
+    [
+      "rust-actix-leptos-seaorm-graphql-ratatui",
+      "r",
+      ["actix-web", "leptos", "sea-orm", "async-graphql", "ratatui", ["serde", "validator"]],
+      "f",
+      "L",
+      1
+    ],
+    [
+      "rust-axum-dioxus-sqlx-tonic-clap",
+      "r",
+      ["axum", "dioxus", "sqlx", "tonic", "clap", ["jsonwebtoken", "argon2"]],
+      "f",
+      "H",
+      1
+    ],
+    [
+      "rust-axum-none-sqlx-none-none",
+      "r",
+      ["axum", "none", "sqlx", "none", "none", ["serde"]],
+      "p"
+    ],
+    [
+      "rust-none-dioxus-none-graphql-clap",
+      "r",
+      ["none", "dioxus", "none", "async-graphql", "clap", ["mockall"]],
+      "p"
+    ],
+    [
+      "python-django-sqlmodel-celery-ruff-langchain",
+      "p",
+      ["django", "sqlmodel", "pydantic", ["langchain"], "celery", "ruff"],
+      "p"
+    ],
+    [
+      "python-fastapi-sqlmodel-none-openai-crewai",
+      "p",
+      ["fastapi", "sqlmodel", "none", ["openai-sdk", "crewai"], "none", "none"],
+      "p"
+    ],
+    [
+      "python-fastapi-sqlalchemy-pydantic-anthropic-ruff",
+      "p",
+      ["fastapi", "sqlalchemy", "pydantic", ["anthropic-sdk"], "none", "ruff"],
+      "p"
+    ],
+    ["go-echo-gorm-none-cobra-zap", "g", ["echo", "gorm", "none", "cobra", "zap"], "p"],
+    ["go-gin-sqlc-grpc-bubbletea-none", "g", ["gin", "sqlc", "grpc-go", "bubbletea", "none"], "p"],
+    ["go-echo-none-grpc-none-zap", "g", ["echo", "none", "grpc-go", "none", "zap"], "f", "S", 1]
+  ],
+  "schema": {
+    "row": [
+      "name",
+      "ecosystemCode",
+      "flagsByEcosystemOrder",
+      "resultCode",
+      "issueCode?",
+      "fixedInRepo?(0|1)"
+    ],
+    "flagsOrder": {
+      "r": ["rustWebFramework", "rustFrontend", "rustOrm", "rustApi", "rustCli", "rustLibraries[]"],
+      "p": [
+        "pythonWebFramework",
+        "pythonOrm",
+        "pythonValidation",
+        "pythonAi[]",
+        "pythonTaskQueue",
+        "pythonQuality"
+      ],
+      "g": ["goWebFramework", "goOrm", "goApi", "goCli", "goLogging"]
+    }
+  }
+}
