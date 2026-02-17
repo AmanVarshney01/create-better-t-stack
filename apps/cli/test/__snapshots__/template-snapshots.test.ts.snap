@@ -8857,9 +8857,9 @@ sea-orm-migration = "1.1"
 
 
 # Frontend (Leptos)
-leptos = { version = "0.7", features = ["csr"] }
-leptos_router = { version = "0.7", features = ["csr"] }
-leptos_meta = { version = "0.7", features = ["csr"] }
+leptos = "0.7"
+leptos_router = "0.7"
+leptos_meta = "0.7"
 console_error_panic_hook = "0.1"
 console_log = "1"
 log = "0.4"
@@ -8918,7 +8918,7 @@ serde_json.workspace = true
 
 [features]
 default = []
-hydrate = ["leptos/hydrate", "leptos_router/hydrate", "leptos_meta/hydrate"]
+hydrate = ["leptos/hydrate"]
 ssr = ["leptos/ssr", "leptos_router/ssr", "leptos_meta/ssr"]
 "
 ,
