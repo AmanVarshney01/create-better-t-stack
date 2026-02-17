@@ -12,6 +12,7 @@ export async function processEmailTemplates(
   if (!config.email || config.email === "none") return;
   if (config.backend === "convex") return;
   if (config.backend === "none") return;
+  if (config.backend === "self") return;
 
   // Process server-side email templates (Resend client, email sending utilities)
   processTemplatesFromPrefix(

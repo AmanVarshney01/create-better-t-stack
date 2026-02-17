@@ -14,6 +14,7 @@ import type {
   WebDeploy,
 } from "../../types";
 
+import { WEB_FRAMEWORKS } from "../../utils/compatibility";
 import { getDockerStatus } from "../../utils/docker-utils";
 export async function displayPostInstallInstructions(
   config: ProjectConfig & { depsInstalled: boolean },
@@ -107,17 +108,7 @@ export async function displayPostInstallInstructions(
     backend,
   );
 
-  const hasWeb = frontend?.some((f) =>
-    [
-      "tanstack-router",
-      "react-router",
-      "next",
-      "tanstack-start",
-      "nuxt",
-      "svelte",
-      "solid",
-    ].includes(f),
-  );
+  const hasWeb = frontend?.some((f) => WEB_FRAMEWORKS.includes(f));
   const hasNative =
     frontend?.includes("native-bare") ||
     frontend?.includes("native-uniwind") ||

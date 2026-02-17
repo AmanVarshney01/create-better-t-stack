@@ -2,7 +2,7 @@
   "v": 2,
   "d": "2026-02-17",
   "cb": "bun create better-fullstack@latest <name> --no-install --no-git --disable-analytics --package-manager bun ...",
-  "tot": [20, 8, 12, 9],
+  "tot": [30, 18, 12, 11],
   "k": {
     "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
     "r": { "p": "pass", "f": "fail" },
@@ -12,7 +12,8 @@
       "H": "Generated grpc use-path used hyphenated crate identifier",
       "S": "Unused strconv import in generated handlers for echo+grpc without ORM",
       "D": "Fresh (backend=none) deps missing: state-mgmt/logging/email/AI/observability not added to web package.json",
-      "A": "ark-ui not compatible with Fresh in @latest (UI library validation)"
+      "A": "ark-ui not compatible with Fresh in @latest (UI library validation)",
+      "E": "backend=self: orphaned apps/server/ dir created by logging/email/observability/etc handlers + post-install msg missing astro/angular in WEB_FRAMEWORKS"
     }
   },
   "rows": [
@@ -219,7 +220,148 @@
       "f",
       "D",
       1
-    ]
+    ],
+    [
+      "ts-next-prisma-trpc",
+      "t",
+      [
+        "next",
+        "tailwind",
+        "shadcn-ui",
+        "zod",
+        "vitest",
+        "zustand",
+        "self",
+        "trpc",
+        "prisma",
+        "postgres",
+        "better-auth",
+        "pino"
+      ],
+      "f",
+      "E",
+      1
+    ],
+    [
+      "ts-tanstack-hono-drizzle",
+      "t",
+      [
+        "tanstack-router",
+        "tailwind",
+        "shadcn-ui",
+        "zod",
+        "vitest",
+        "zustand",
+        "hono",
+        "orpc",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "pino"
+      ],
+      "p"
+    ],
+    [
+      "ts-react-router-express",
+      "t",
+      [
+        "react-router",
+        "tailwind",
+        "daisyui",
+        "zod",
+        "vitest",
+        "none",
+        "express",
+        "none",
+        "mongoose",
+        "mongodb",
+        "better-auth"
+      ],
+      "p"
+    ],
+    [
+      "ts-svelte-fastify",
+      "t",
+      [
+        "svelte",
+        "tailwind",
+        "none",
+        "valibot",
+        "vitest",
+        "none",
+        "fastify",
+        "none",
+        "kysely",
+        "postgres"
+      ],
+      "p"
+    ],
+    [
+      "ts-solid-elysia",
+      "t",
+      [
+        "solid",
+        "tailwind",
+        "none",
+        "typebox",
+        "vitest",
+        "none",
+        "elysia",
+        "none",
+        "typeorm",
+        "mysql"
+      ],
+      "p"
+    ],
+    [
+      "ts-astro-react-hono",
+      "t",
+      [
+        "astro",
+        "tailwind",
+        "none",
+        "zod",
+        "vitest",
+        "none",
+        "hono",
+        "none",
+        "drizzle",
+        "postgres",
+        "pino"
+      ],
+      "f",
+      "E",
+      1
+    ],
+    ["ts-nuxt-none", "t", ["nuxt", "tailwind", "none", "zod", "vitest", "none", "none"], "p"],
+    [
+      "ts-angular-nestjs",
+      "t",
+      [
+        "angular",
+        "tailwind",
+        "none",
+        "zod",
+        "vitest",
+        "none",
+        "nestjs",
+        "none",
+        "prisma",
+        "postgres",
+        "better-auth",
+        "pino"
+      ],
+      "f",
+      "E",
+      1
+    ],
+    [
+      "rust-actix-seaorm-tonic",
+      "r",
+      ["actix-web", "none", "sea-orm", "tonic", "none", ["serde", "validator"]],
+      "p"
+    ],
+    ["go-gin-gorm-cobra-zap", "g", ["gin", "gorm", "none", "cobra", "zap"], "p"]
   ],
   "schema": {
     "row": [

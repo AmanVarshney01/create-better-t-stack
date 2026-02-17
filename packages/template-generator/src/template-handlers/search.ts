@@ -12,6 +12,7 @@ export async function processSearchTemplates(
   if (!config.search || config.search === "none") return;
   if (config.backend === "convex") return;
   if (config.backend === "none") return;
+  if (config.backend === "self") return;
 
   // Process server-side search templates
   processTemplatesFromPrefix(

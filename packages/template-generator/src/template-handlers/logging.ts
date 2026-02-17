@@ -12,6 +12,7 @@ export async function processLoggingTemplates(
   if (!config.logging || config.logging === "none") return;
   if (config.backend === "convex") return;
   if (config.backend === "none") return;
+  if (config.backend === "self") return;
 
   // Process server-side logging templates (Pino logger setup)
   processTemplatesFromPrefix(

@@ -12,6 +12,7 @@ export async function processFileStorageTemplates(
   if (!config.fileStorage || config.fileStorage === "none") return;
   if (config.backend === "convex") return;
   if (config.backend === "none") return;
+  if (config.backend === "self") return;
 
   // Process server-side file storage templates
   processTemplatesFromPrefix(

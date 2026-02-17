@@ -12,6 +12,7 @@ export async function processObservabilityTemplates(
   if (!config.observability || config.observability === "none") return;
   if (config.backend === "convex") return;
   if (config.backend === "none") return;
+  if (config.backend === "self") return;
 
   // Process server-side observability templates (OpenTelemetry tracing setup)
   processTemplatesFromPrefix(
