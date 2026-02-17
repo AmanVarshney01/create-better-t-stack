@@ -13,13 +13,24 @@ const REACT_WEB_FRAMEWORKS: Frontend[] = [
 ];
 
 // Non-React frameworks that support framework-agnostic state management
-const OTHER_WEB_FRAMEWORKS: Frontend[] = ["solid", "svelte", "nuxt", "qwik", "astro"];
+const OTHER_WEB_FRAMEWORKS: Frontend[] = ["solid", "svelte", "nuxt", "qwik", "astro", "fresh"];
 
 // Native frameworks (always React-based)
 const NATIVE_FRAMEWORKS: Frontend[] = ["native-bare", "native-uniwind", "native-unistyles"];
 
 // Framework-agnostic state management that works with any frontend
-const FRAMEWORK_AGNOSTIC_STATE: ProjectConfig["stateManagement"][] = ["zustand", "jotai", "valtio"];
+// All state management libraries have framework-agnostic cores
+const FRAMEWORK_AGNOSTIC_STATE: ProjectConfig["stateManagement"][] = [
+  "zustand",
+  "jotai",
+  "valtio",
+  "nanostores",
+  "xstate",
+  "mobx",
+  "redux-toolkit",
+  "tanstack-store",
+  "legend-state",
+];
 
 export function processStateManagementDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { stateManagement, frontend, astroIntegration } = config;

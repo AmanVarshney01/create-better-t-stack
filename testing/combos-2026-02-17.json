@@ -1,16 +1,18 @@
 {
   "v": 2,
   "d": "2026-02-17",
-  "cb": "bun create better-fullstack@latest <name> --yes --no-install --no-git --disable-analytics ...",
-  "tot": [10, 7, 3, 3],
+  "cb": "bun create better-fullstack@latest <name> --no-install --no-git --disable-analytics --package-manager bun ...",
+  "tot": [20, 8, 12, 9],
   "k": {
     "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
     "r": { "p": "pass", "f": "fail" },
-    "e": { "r": "rust", "p": "python", "g": "go" },
+    "e": { "r": "rust", "p": "python", "g": "go", "t": "typescript" },
     "i": {
       "L": "Leptos template invalid features for leptos_meta/leptos_router caused cargo resolution failure",
       "H": "Generated grpc use-path used hyphenated crate identifier",
-      "S": "Unused strconv import in generated handlers for echo+grpc without ORM"
+      "S": "Unused strconv import in generated handlers for echo+grpc without ORM",
+      "D": "Fresh (backend=none) deps missing: state-mgmt/logging/email/AI/observability not added to web package.json",
+      "A": "ark-ui not compatible with Fresh in @latest (UI library validation)"
     }
   },
   "rows": [
@@ -62,7 +64,162 @@
     ],
     ["go-echo-gorm-none-cobra-zap", "g", ["echo", "gorm", "none", "cobra", "zap"], "p"],
     ["go-gin-sqlc-grpc-bubbletea-none", "g", ["gin", "sqlc", "grpc-go", "bubbletea", "none"], "p"],
-    ["go-echo-none-grpc-none-zap", "g", ["echo", "none", "grpc-go", "none", "zap"], "f", "S", 1]
+    ["go-echo-none-grpc-none-zap", "g", ["echo", "none", "grpc-go", "none", "zap"], "f", "S", 1],
+    ["fresh-minimal", "t", ["fresh", "tailwind", "daisyui", "zod", "none", "none", "none"], "p"],
+    [
+      "fresh-vitest-zustand",
+      "t",
+      ["fresh", "tailwind", "daisyui", "zod", "vitest", "zustand", "pino"],
+      "f",
+      "D",
+      1
+    ],
+    [
+      "fresh-playwright-jotai",
+      "t",
+      [
+        "fresh",
+        "tailwind",
+        "daisyui",
+        "valibot",
+        "playwright",
+        "jotai",
+        "sentry",
+        "resend",
+        "framer-motion"
+      ],
+      "f",
+      "D",
+      1
+    ],
+    [
+      "fresh-scss-jest",
+      "t",
+      [
+        "fresh",
+        "scss",
+        "none",
+        "arktype",
+        "jest",
+        "nanostores",
+        "winston",
+        "opentelemetry",
+        "nodemailer",
+        "gsap"
+      ],
+      "f",
+      "D",
+      1
+    ],
+    [
+      "fresh-ai-mastra",
+      "t",
+      [
+        "fresh",
+        "tailwind",
+        "daisyui",
+        "zod",
+        "vitest-playwright",
+        "redux-toolkit",
+        "mastra",
+        "claude-md"
+      ],
+      "f",
+      "D",
+      1
+    ],
+    [
+      "fresh-effect-full",
+      "t",
+      ["fresh", "tailwind", "daisyui", "effect-schema", "none", "xstate", "effect-full", "biome"],
+      "f",
+      "D",
+      1
+    ],
+    [
+      "fresh-ai-vercel",
+      "t",
+      [
+        "fresh",
+        "tailwind",
+        "daisyui",
+        "typebox",
+        "vitest",
+        "valtio",
+        "pino",
+        "grafana",
+        "vercel-ai",
+        "lottie",
+        "pwa"
+      ],
+      "f",
+      "D",
+      1
+    ],
+    [
+      "fresh-deploy-docker",
+      "t",
+      [
+        "fresh",
+        "less",
+        "none",
+        "runtypes",
+        "cypress",
+        "mobx",
+        "postmark",
+        "react-spring",
+        "tauri",
+        "docker"
+      ],
+      "f",
+      "D",
+      1
+    ],
+    [
+      "fresh-postcss-tanstack",
+      "t",
+      [
+        "fresh",
+        "postcss-only",
+        "none",
+        "typia",
+        "none",
+        "tanstack-store",
+        "llamaindex",
+        "sendgrid",
+        "auto-animate",
+        "oxlint",
+        "cloudflare",
+        "agents-md"
+      ],
+      "f",
+      "D",
+      1
+    ],
+    [
+      "fresh-full-stack",
+      "t",
+      [
+        "fresh",
+        "tailwind",
+        "daisyui",
+        "valibot",
+        "vitest",
+        "legend-state",
+        "pino",
+        "sentry",
+        "openai-agents",
+        "effect",
+        "aws-ses",
+        "filepond",
+        "lefthook",
+        "fly",
+        "cursorrules"
+      ],
+      "f",
+      "D",
+      1
+    ]
   ],
   "schema": {
     "row": [
@@ -83,7 +240,16 @@
         "pythonTaskQueue",
         "pythonQuality"
       ],
-      "g": ["goWebFramework", "goOrm", "goApi", "goCli", "goLogging"]
+      "g": ["goWebFramework", "goOrm", "goApi", "goCli", "goLogging"],
+      "t": [
+        "frontend",
+        "cssFramework",
+        "uiLibrary",
+        "validation",
+        "testing",
+        "stateManagement",
+        "...extras"
+      ]
     }
   }
 }
