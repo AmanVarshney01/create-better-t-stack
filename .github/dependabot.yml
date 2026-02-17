@@ -1,4 +1,5 @@
 version: 2
+# Touched on 2026-02-17 to force Dependabot to re-evaluate immediately.
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
