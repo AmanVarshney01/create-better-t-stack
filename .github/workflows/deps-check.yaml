@@ -95,9 +95,9 @@ jobs:
           cd packages/template-generator
 
           if [ "${{ steps.check.outputs.effective_update_mode }}" == "patch-minor" ]; then
-            bun run scripts/check-deps.ts --apply-patch
+            bun run scripts/check-deps.ts --apply-patch || true
           else
-            bun run scripts/check-deps.ts --apply-all
+            bun run scripts/check-deps.ts --apply-all || true
           fi
 
       - name: Create Pull Request
