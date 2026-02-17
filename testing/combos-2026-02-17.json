@@ -2,7 +2,7 @@
   "v": 2,
   "d": "2026-02-17",
   "cb": "bun create better-fullstack@latest <name> --no-install --no-git --disable-analytics --package-manager bun ...",
-  "tot": [60, 40, 20, 19],
+  "tot": [60, 40, 20, 22],
   "k": {
     "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
     "r": { "p": "pass", "f": "fail" },
