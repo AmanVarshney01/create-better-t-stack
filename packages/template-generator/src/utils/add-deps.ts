@@ -375,8 +375,7 @@ export const dependencyVersionMap = {
   valtio: "^2.1.2",
   "@tanstack/store": "^0.8.0",
   "@tanstack/react-store": "^0.8.0",
-  "@legendapp/state": "^3.0.0",
-  "@legendapp/state-react": "^4.0.0",
+  "@legendapp/state": "^2.1.15",
 
   // Validation libraries
   valibot: "^1.1.0",
@@ -457,14 +456,14 @@ export const dependencyVersionMap = {
   msw: "^2.7.0",
 
   // Storybook
-  storybook: "^9.0.15",
-  "@storybook/react-vite": "^9.0.15",
-  "@storybook/vue3-vite": "^9.0.15",
-  "@storybook/svelte-vite": "^9.0.15",
-  "@storybook/nextjs": "^9.0.15",
-  "@storybook/addon-essentials": "^9.0.15",
-  "@storybook/addon-interactions": "^9.0.15",
-  "@storybook/test": "^9.0.15",
+  storybook: "^8.6.0",
+  "@storybook/react-vite": "^8.6.0",
+  "@storybook/vue3-vite": "^8.6.0",
+  "@storybook/svelte-vite": "^8.6.0",
+  "@storybook/nextjs": "^8.6.0",
+  "@storybook/addon-essentials": "^8.6.0",
+  "@storybook/addon-interactions": "^8.6.0",
+  "@storybook/test": "^8.6.0",
 
   // Animation
   motion: "^12.17.0",
@@ -488,8 +487,8 @@ export const dependencyVersionMap = {
   "@paddle/paddle-js": "^1.3.0",
 
   // Payments - Dodo Payments
-  dodopayments: "^0.23.0",
-  "dodopayments-checkout": "^0.2.1",
+  dodopayments: "^2.19.0",
+  "dodopayments-checkout": "^1.8.0",
 
   // File Upload - UploadThing
   uploadthing: "^7.7.0",
