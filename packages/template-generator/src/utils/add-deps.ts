@@ -155,8 +155,8 @@ export const dependencyVersionMap = {
   shiki: "^3.20.0",
 
   // Mastra AI Framework
-  mastra: "^0.24.9",
-  "@mastra/core": "^0.24.9",
+  mastra: "^1.3.1",
+  "@mastra/core": "^1.4.0",
 
   // VoltAgent AI Framework
   "@voltagent/core": "^2.0.10",
@@ -191,10 +191,10 @@ export const dependencyVersionMap = {
   "@orpc/tanstack-query": "^1.12.2",
 
   // ts-rest
-  "@ts-rest/core": "^3.55.0",
-  "@ts-rest/react-query": "^3.55.0",
-  "@ts-rest/serverless": "^3.55.0",
-  "@ts-rest/next": "^3.55.0",
+  "@ts-rest/core": "^3.52.0",
+  "@ts-rest/react-query": "^3.52.0",
+  "@ts-rest/serverless": "^3.52.0",
+  "@ts-rest/next": "^3.52.0",
 
   // Garph (GraphQL)
   garph: "^0.6.8",
@@ -492,7 +492,7 @@ export const dependencyVersionMap = {
   "dodopayments-checkout": "^0.2.1",
 
   // File Upload - UploadThing
-  uploadthing: "^7.8.0",
+  uploadthing: "^7.7.0",
   "@uploadthing/react": "^7.3.0",
   "@uploadthing/svelte": "^7.3.0",
   "@uploadthing/vue": "^7.3.0",
