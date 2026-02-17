@@ -130,7 +130,6 @@ function getStateManagementDeps(
       break;
     case "legend-state":
       deps.push("@legendapp/state");
-      if (isReact) deps.push("@legendapp/state-react");
       break;
   }
 
