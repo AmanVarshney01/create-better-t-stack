@@ -70,6 +70,9 @@ export function processTemplatesFromPrefix(
       processedContent = content;
     }
 
+    // Skip writing empty files (all content was behind unmatched conditionals)
+    if (!isBinaryFile(templatePath) && processedContent.trim() === "") continue;
+
     // Pass original template path for binary files
     const sourcePath = isBinaryFile(templatePath) ? templatePath : undefined;
     vfs.writeFile(destPath, processedContent, sourcePath);

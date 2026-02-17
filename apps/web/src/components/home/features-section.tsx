@@ -51,7 +51,7 @@ export default function FeaturesSection() {
     <section className="border-t border-border py-12 sm:py-16">
       <div className="mx-auto max-w-3xl px-4">
         {/* Section Header */}
-        <h2 className="font-mono text-lg font-bold sm:text-xl">What is Better Fullstack?</h2>
+        <h2 className="font-pixel text-lg font-bold sm:text-xl">What is Better Fullstack?</h2>
         <p className="mt-2 text-sm text-muted-foreground sm:text-base">
           A CLI that scaffolds production-ready apps with your preferred tech stack. Choose from
           100+ options across frameworks, databases, auth, payments, AI, and more.

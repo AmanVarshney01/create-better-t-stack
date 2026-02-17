@@ -142,7 +142,7 @@ export default function Testimonials({
         <div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
           <div className="flex items-center gap-2">
             <Play className="h-5 w-5 text-primary" />
-            <span className="font-bold font-mono text-lg sm:text-xl">VIDEO_TESTIMONIALS.LOG</span>
+            <span className="font-bold font-pixel text-lg sm:text-xl">VIDEO_TESTIMONIALS.LOG</span>
           </div>
           <div className="hidden h-px flex-1 bg-border sm:block" />
           <span className="w-full text-right text-muted-foreground text-xs sm:w-auto sm:text-left">
@@ -180,7 +180,9 @@ export default function Testimonials({
       <div className="mb-6 flex flex-wrap items-center justify-between gap-2 sm:flex-nowrap">
         <div className="flex items-center gap-2">
           <Terminal className="h-5 w-5 text-primary" />
-          <span className="font-bold font-mono text-lg sm:text-xl">DEVELOPER_TESTIMONIALS.LOG</span>
+          <span className="font-bold font-pixel text-lg sm:text-xl">
+            DEVELOPER_TESTIMONIALS.LOG
+          </span>
         </div>
         <div className="hidden h-px flex-1 bg-border sm:block" />
         <span className="w-full text-right text-muted-foreground text-xs sm:w-auto sm:text-left">

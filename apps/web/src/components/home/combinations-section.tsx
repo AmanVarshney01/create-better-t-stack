@@ -49,7 +49,7 @@ export default function CombinationsSection() {
         {/* Section Header */}
         <div className="flex items-center gap-2">
           <Infinity className="h-5 w-5 text-foreground" />
-          <h2 className="font-mono text-lg font-bold sm:text-xl">Infinite Possibilities</h2>
+          <h2 className="font-pixel text-lg font-bold sm:text-xl">Infinite Possibilities</h2>
         </div>
         <p className="mt-2 text-sm text-muted-foreground sm:text-base">
           Mix and match frameworks, databases, auth, payments, AI, and more to create your perfect

@@ -3,9 +3,32 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Geist Pixel fonts */
+@font-face {
+  font-family: "Geist Pixel Square";
+  src: url("/fonts/GeistPixel-Square.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Pixel Grid";
+  src: url("/fonts/GeistPixel-Grid.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+
 /* Font utilities */
 @utility font-display {
   font-family: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+}
+
+@utility font-pixel {
+  font-family: "Geist Pixel Square", ui-monospace, SFMono-Regular, monospace;
+}
+
+@utility font-pixel-grid {
+  font-family: "Geist Pixel Grid", ui-monospace, SFMono-Regular, monospace;
 }
 
 /* Custom utilities for fumadocs compatibility */

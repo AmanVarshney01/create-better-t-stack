@@ -10,7 +10,6 @@ exports[`Template Snapshots File Structure Snapshots file structure: tanstack-ro
   "apps/server/tsconfig.json",
   "apps/server/tsdown.config.ts",
   "apps/web/.env",
-  "apps/web/components.json",
   "apps/web/index.html",
   "apps/web/package.json",
   "apps/web/src/components/header.tsx",
@@ -60,7 +59,6 @@ exports[`Template Snapshots File Structure Snapshots file structure: next-self-f
   "CLAUDE.md",
   "README.md",
   "apps/web/.env",
-  "apps/web/components.json",
   "apps/web/next-env.d.ts",
   "apps/web/next.config.ts",
   "apps/web/package.json",
@@ -207,7 +205,6 @@ exports[`Template Snapshots File Structure Snapshots file structure: express-nod
   "apps/server/tsconfig.json",
   "apps/server/tsdown.config.ts",
   "apps/web/.env",
-  "apps/web/components.json",
   "apps/web/index.html",
   "apps/web/package.json",
   "apps/web/src/components/header.tsx",
@@ -262,7 +259,6 @@ exports[`Template Snapshots File Structure Snapshots file structure: hono-bun-or
   "apps/server/tsconfig.json",
   "apps/server/tsdown.config.ts",
   "apps/web/.env",
-  "apps/web/components.json",
   "apps/web/index.html",
   "apps/web/package.json",
   "apps/web/src/components/header.tsx",
@@ -317,7 +313,6 @@ exports[`Template Snapshots File Structure Snapshots file structure: better-auth
   "apps/server/tsconfig.json",
   "apps/server/tsdown.config.ts",
   "apps/web/.env",
-  "apps/web/components.json",
   "apps/web/index.html",
   "apps/web/package.json",
   "apps/web/src/components/header.tsx",
@@ -377,7 +372,6 @@ exports[`Template Snapshots File Structure Snapshots file structure: convex-cler
   "CLAUDE.md",
   "README.md",
   "apps/web/.env",
-  "apps/web/components.json",
   "apps/web/index.html",
   "apps/web/package.json",
   "apps/web/src/components/header.tsx",
@@ -430,7 +424,6 @@ exports[`Template Snapshots File Structure Snapshots file structure: mongodb-mon
   "apps/server/tsconfig.json",
   "apps/server/tsdown.config.ts",
   "apps/web/.env",
-  "apps/web/components.json",
   "apps/web/index.html",
   "apps/web/package.json",
   "apps/web/src/components/header.tsx",
@@ -483,7 +476,6 @@ exports[`Template Snapshots File Structure Snapshots file structure: postgres-pr
   "apps/server/tsconfig.json",
   "apps/server/tsdown.config.ts",
   "apps/web/.env",
-  "apps/web/components.json",
   "apps/web/index.html",
   "apps/web/package.json",
   "apps/web/src/components/header.tsx",
@@ -533,7 +525,6 @@ exports[`Template Snapshots File Structure Snapshots file structure: frontend-on
   "CLAUDE.md",
   "README.md",
   "apps/web/.env",
-  "apps/web/components.json",
   "apps/web/index.html",
   "apps/web/package.json",
   "apps/web/src/components/header.tsx",
@@ -620,7 +611,7 @@ exports[`Template Snapshots File Structure Snapshots file structure: native-reac
 
 exports[`Template Snapshots Key File Content Snapshots key files: tanstack-router-minimal 1`] = `
 {
-  "fileCount": 55,
+  "fileCount": 54,
   "files": [
     {
       "content": "[exists]",
@@ -732,10 +723,6 @@ export default app;
     },
     {
       "content": "[exists]",
-      "path": "apps/web/components.json",
-    },
-    {
-      "content": "[exists]",
       "path": "apps/web/index.html",
     },
     {
@@ -753,6 +740,13 @@ export default app;
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@base-ui/react": "^1.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.473.0",
+    "next-themes": "^0.4.6",
+    "sonner": "^2.0.5",
+    "tailwind-merge": "^3.3.1",
     "@tailwindcss/vite": "^4.0.15",
     "tw-animate-css": "^1.2.5",
     "@tanstack/react-router": "^1.154.3",
@@ -1371,15 +1365,11 @@ export const db = drizzle({ client, schema });
 
 exports[`Template Snapshots Key File Content Snapshots key files: next-self-fullstack 1`] = `
 {
-  "fileCount": 65,
+  "fileCount": 64,
   "files": [
     {
       "content": "[exists]",
       "path": "apps/web/.env",
-    },
-    {
-      "content": "[exists]",
-      "path": "apps/web/components.json",
     },
     {
       "content": "[exists]",
@@ -1413,6 +1403,13 @@ export default nextConfig;
     "start": "next start"
   },
   "dependencies": {
+    "@base-ui/react": "^1.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.546.0",
+    "next-themes": "^0.4.6",
+    "sonner": "^2.0.5",
+    "tailwind-merge": "^3.3.1",
     "tw-animate-css": "^1.3.4",
     "next": "catalog:",
     "react": "^19.2.3",
@@ -3101,7 +3098,7 @@ export const db = drizzle({ client, schema });
 
 exports[`Template Snapshots Key File Content Snapshots key files: express-node-trpc 1`] = `
 {
-  "fileCount": 55,
+  "fileCount": 54,
   "files": [
     {
       "content": "[exists]",
@@ -3214,10 +3211,6 @@ app.listen(3000, () => {
     },
     {
       "content": "[exists]",
-      "path": "apps/web/components.json",
-    },
-    {
-      "content": "[exists]",
       "path": "apps/web/index.html",
     },
     {
@@ -3235,6 +3228,13 @@ app.listen(3000, () => {
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@base-ui/react": "^1.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.473.0",
+    "next-themes": "^0.4.6",
+    "sonner": "^2.0.5",
+    "tailwind-merge": "^3.3.1",
     "@tailwindcss/vite": "^4.0.15",
     "tw-animate-css": "^1.2.5",
     "@tanstack/react-router": "^1.154.3",
@@ -3831,7 +3831,7 @@ export default prisma;
 
 exports[`Template Snapshots Key File Content Snapshots key files: hono-bun-orpc 1`] = `
 {
-  "fileCount": 55,
+  "fileCount": 54,
   "files": [
     {
       "content": "[exists]",
@@ -3983,10 +3983,6 @@ export default app;
     },
     {
       "content": "[exists]",
-      "path": "apps/web/components.json",
-    },
-    {
-      "content": "[exists]",
       "path": "apps/web/index.html",
     },
     {
@@ -4004,6 +4000,13 @@ export default app;
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@base-ui/react": "^1.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.473.0",
+    "next-themes": "^0.4.6",
+    "sonner": "^2.0.5",
+    "tailwind-merge": "^3.3.1",
     "@tailwindcss/vite": "^4.0.15",
     "tw-animate-css": "^1.2.5",
     "@tanstack/react-router": "^1.154.3",
@@ -4620,7 +4623,7 @@ export const db = drizzle({ client, schema });
 
 exports[`Template Snapshots Key File Content Snapshots key files: better-auth-full 1`] = `
 {
-  "fileCount": 66,
+  "fileCount": 65,
   "files": [
     {
       "content": "[exists]",
@@ -4738,10 +4741,6 @@ export default app;
     },
     {
       "content": "[exists]",
-      "path": "apps/web/components.json",
-    },
-    {
-      "content": "[exists]",
       "path": "apps/web/index.html",
     },
     {
@@ -4759,6 +4758,13 @@ export default app;
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@base-ui/react": "^1.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.473.0",
+    "next-themes": "^0.4.6",
+    "sonner": "^2.0.5",
+    "tailwind-merge": "^3.3.1",
     "@tailwindcss/vite": "^4.0.15",
     "tw-animate-css": "^1.2.5",
     "@tanstack/react-router": "^1.154.3",
@@ -5607,15 +5613,11 @@ export {};"
 
 exports[`Template Snapshots Key File Content Snapshots key files: convex-clerk 1`] = `
 {
-  "fileCount": 46,
+  "fileCount": 45,
   "files": [
     {
       "content": "[exists]",
       "path": "apps/web/.env",
-    },
-    {
-      "content": "[exists]",
-      "path": "apps/web/components.json",
     },
     {
       "content": "[exists]",
@@ -5636,6 +5638,13 @@ exports[`Template Snapshots Key File Content Snapshots key files: convex-clerk 1
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@base-ui/react": "^1.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.473.0",
+    "next-themes": "^0.4.6",
+    "sonner": "^2.0.5",
+    "tailwind-merge": "^3.3.1",
     "@tailwindcss/vite": "^4.0.15",
     "tw-animate-css": "^1.2.5",
     "@tanstack/react-router": "^1.154.3",
@@ -6124,7 +6133,7 @@ export default defineSchema({});
 
 exports[`Template Snapshots Key File Content Snapshots key files: mongodb-mongoose 1`] = `
 {
-  "fileCount": 53,
+  "fileCount": 52,
   "files": [
     {
       "content": "[exists]",
@@ -6236,10 +6245,6 @@ export default app;
     },
     {
       "content": "[exists]",
-      "path": "apps/web/components.json",
-    },
-    {
-      "content": "[exists]",
       "path": "apps/web/index.html",
     },
     {
@@ -6257,6 +6262,13 @@ export default app;
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@base-ui/react": "^1.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.473.0",
+    "next-themes": "^0.4.6",
+    "sonner": "^2.0.5",
+    "tailwind-merge": "^3.3.1",
     "@tailwindcss/vite": "^4.0.15",
     "tw-animate-css": "^1.2.5",
     "@tanstack/react-router": "^1.154.3",
@@ -6831,7 +6843,7 @@ export { client };
 
 exports[`Template Snapshots Key File Content Snapshots key files: postgres-prisma 1`] = `
 {
-  "fileCount": 55,
+  "fileCount": 54,
   "files": [
     {
       "content": "[exists]",
@@ -6943,10 +6955,6 @@ export default app;
     },
     {
       "content": "[exists]",
-      "path": "apps/web/components.json",
-    },
-    {
-      "content": "[exists]",
       "path": "apps/web/index.html",
     },
     {
@@ -6964,6 +6972,13 @@ export default app;
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@base-ui/react": "^1.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.473.0",
+    "next-themes": "^0.4.6",
+    "sonner": "^2.0.5",
+    "tailwind-merge": "^3.3.1",
     "@tailwindcss/vite": "^4.0.15",
     "tw-animate-css": "^1.2.5",
     "@tanstack/react-router": "^1.154.3",
@@ -7560,15 +7575,11 @@ export default prisma;
 
 exports[`Template Snapshots Key File Content Snapshots key files: frontend-only-no-backend 1`] = `
 {
-  "fileCount": 36,
+  "fileCount": 35,
   "files": [
     {
       "content": "[exists]",
       "path": "apps/web/.env",
-    },
-    {
-      "content": "[exists]",
-      "path": "apps/web/components.json",
     },
     {
       "content": "[exists]",
@@ -7589,6 +7600,13 @@ exports[`Template Snapshots Key File Content Snapshots key files: frontend-only-
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
+    "@base-ui/react": "^1.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.473.0",
+    "next-themes": "^0.4.6",
+    "sonner": "^2.0.5",
+    "tailwind-merge": "^3.3.1",
     "@tailwindcss/vite": "^4.0.15",
     "tw-animate-css": "^1.2.5",
     "@tanstack/react-router": "^1.154.3",

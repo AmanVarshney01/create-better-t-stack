@@ -52,7 +52,7 @@ This project was created with [Better Fullstack](https://github.com/Marve10s/Bet
 
 ## Features
 
-${generateFeaturesList(database, auth, addons, orm, runtime, frontend, backend, api)}
+${generateFeaturesList(database, auth, addons, orm, runtime, frontend, backend, api, options)}
 
 ## Getting Started
 
@@ -268,6 +268,7 @@ function generateFeaturesList(
   frontend: ProjectConfig["frontend"],
   backend: ProjectConfig["backend"],
   api: ProjectConfig["api"],
+  options: ProjectConfig,
 ): string {
   const isConvex = backend === "convex";
   const hasNative = frontend.some((f) =>
@@ -302,10 +303,34 @@ function generateFeaturesList(
   }
 
   if (hasFrontend) {
-    features.push(
-      "- **TailwindCSS** - Utility-first CSS for rapid UI development",
-      "- **shadcn/ui** - Reusable UI components",
-    );
+    const cssNames: Record<string, string> = {
+      tailwind: "TailwindCSS",
+      scss: "SCSS",
+      less: "Less",
+      "postcss-only": "PostCSS",
+    };
+    const cssName = cssNames[options.cssFramework || ""] || options.cssFramework;
+    if (cssName && options.cssFramework !== "none") {
+      features.push(`- **${cssName}** - CSS framework`);
+    }
+
+    const uiNames: Record<string, string> = {
+      "shadcn-ui": "shadcn/ui",
+      daisyui: "daisyUI",
+      mantine: "Mantine",
+      "radix-ui": "Radix UI",
+      "headless-ui": "Headless UI",
+      "chakra-ui": "Chakra UI",
+      "base-ui": "Base UI",
+      "park-ui": "Park UI",
+      "ark-ui": "Ark UI",
+      "react-aria": "React Aria",
+      nextui: "HeroUI",
+    };
+    const uiName = uiNames[options.uiLibrary || ""];
+    if (uiName) {
+      features.push(`- **${uiName}** - UI components`);
+    }
   }
 
   const backendFeatures: Record<string, string> = {
@@ -350,7 +375,15 @@ function generateFeaturesList(
   }
 
   if (auth !== "none") {
-    const authLabel = auth === "clerk" ? "Clerk" : "Better-Auth";
+    const authNames: Record<string, string> = {
+      "better-auth": "Better Auth",
+      clerk: "Clerk",
+      nextauth: "NextAuth.js",
+      "supabase-auth": "Supabase Auth",
+      auth0: "Auth0",
+      "stack-auth": "Stack Auth",
+    };
+    const authLabel = authNames[auth] || auth;
     features.push(`- **Authentication** - ${authLabel}`);
   }
 

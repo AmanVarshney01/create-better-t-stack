@@ -3,12 +3,20 @@
 import { StackProvider, StackTheme } from "@stackframe/stack";
 import { stackServerApp } from "@/stack/server";
 import type { ReactNode } from "react";
+{{#if (eq uiLibrary "mantine")}}
+import { MantineProvider } from "@mantine/core";
+import "@mantine/core/styles.css";
+{{/if}}
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export default function Providers({ children }: { children: ReactNode }) {
   return (
     <StackProvider app={stackServerApp}>
       <StackTheme>
+{{#if (eq uiLibrary "mantine")}}
+        <MantineProvider>{children}</MantineProvider>
+{{else}}
         {children}
+{{/if}}
       </StackTheme>
     </StackProvider>
   );

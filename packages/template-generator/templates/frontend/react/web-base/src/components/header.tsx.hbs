@@ -9,14 +9,14 @@ import { Link } from "@tanstack/react-router";
 {{#unless (includes frontend "tanstack-start")}}
 import { ModeToggle } from "./mode-toggle";
 {{/unless}}
-{{#if (and (eq auth "better-auth") (ne backend "convex"))}}
+{{#if (and (ne auth "none") (ne auth "clerk") (ne backend "convex") (or (eq auth "better-auth") (includes frontend "next")))}}
 import UserMenu from "./user-menu";
 {{/if}}
 
 export default function Header() {
   const links = [
     { to: "/", label: "Home" },
-    {{#if (or (eq auth "better-auth") (eq auth "clerk"))}}
+    {{#if (ne auth "none")}}
       { to: "/dashboard", label: "Dashboard" },
     {{/if}}
     {{#if (includes examples "ai")}}
@@ -64,7 +64,7 @@ export default function Header() {
           {{#unless (includes frontend "tanstack-start")}}
           <ModeToggle />
           {{/unless}}
-          {{#if (and (eq auth "better-auth") (ne backend "convex"))}}
+          {{#if (and (ne auth "none") (ne auth "clerk") (ne backend "convex") (or (eq auth "better-auth") (includes frontend "next")))}}
           <UserMenu />
           {{/if}}
         </div>

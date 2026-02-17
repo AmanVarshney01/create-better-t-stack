@@ -33,6 +33,7 @@
     "create-better-fullstack": "workspace:*",
     "culori": "^4.0.2",
     "date-fns": "^4.1.0",
+    "geist": "^1.7.0",
     "lucide-react": "^0.562.0",
     "motion": "^12.23.26",
     "papaparse": "^5.5.3",

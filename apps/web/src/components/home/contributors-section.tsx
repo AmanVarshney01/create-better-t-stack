@@ -46,7 +46,7 @@ export default function ContributorsSection() {
     <section className="border-t border-border py-16">
       <div className="mx-auto max-w-3xl px-4">
         {/* Section Header */}
-        <h2 className="font-mono text-xl font-bold">QA & Contributing</h2>
+        <h2 className="font-pixel text-xl font-bold">QA & Contributing</h2>
         <p className="mt-2 text-muted-foreground">
           Special thanks to our contributors who help improve Better Fullstack through testing,
           feedback, and code contributions.

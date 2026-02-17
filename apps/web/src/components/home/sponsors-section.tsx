@@ -45,7 +45,7 @@ export default function SponsorsSection() {
     <section className="border-t border-border py-16">
       <div className="mx-auto max-w-3xl px-4">
         {/* Section Header */}
-        <h2 className="font-mono text-xl font-bold">Sponsors</h2>
+        <h2 className="font-pixel text-xl font-bold">Sponsors</h2>
         <p className="mt-2 text-muted-foreground">
           Better Fullstack is free and open source. Sponsors help keep the project maintained.
         </p>

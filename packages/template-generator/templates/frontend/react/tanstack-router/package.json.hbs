@@ -11,17 +11,17 @@
 		"check-types": "tsc --noEmit"
 	},
 	"dependencies": {
-{{#if (eq uiLibrary "shadcn-ui")}}
-        "@hookform/resolvers": "^5.1.1",
-        "@base-ui/react": "^1.0.0",
-        "shadcn": "^3.6.2",
-        "@tanstack/react-form": "^1.12.3",
+		"@base-ui/react": "^1.0.0",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
 		"lucide-react": "^0.473.0",
-        "next-themes": "^0.4.6",
-        "sonner": "^2.0.5",
+		"next-themes": "^0.4.6",
+		"sonner": "^2.0.5",
 		"tailwind-merge": "^3.3.1",
+{{#if (eq uiLibrary "shadcn-ui")}}
+		"@hookform/resolvers": "^5.1.1",
+		"shadcn": "^3.6.2",
+		"@tanstack/react-form": "^1.12.3",
 {{/if}}
 {{#if (eq cssFramework "tailwind")}}
 		"@tailwindcss/vite": "^4.0.15",
