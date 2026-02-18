@@ -1,6 +1,6 @@
 {
   "name": "@better-fullstack/template-generator",
-  "version": "1.3.13",
+  "version": "1.3.14",
   "description": "Virtual file system generator for Better-Fullstack templates - works in browsers and Node.js",
   "keywords": [
     "better-fullstack",
