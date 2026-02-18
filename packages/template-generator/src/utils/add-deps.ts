@@ -155,7 +155,7 @@ export const dependencyVersionMap = {
   shiki: "^3.20.0",
 
   // Mastra AI Framework
-  mastra: "^0.24.9",
+  mastra: "^1.3.1",
   "@mastra/core": "^1.4.0",
 
   // VoltAgent AI Framework
@@ -487,7 +487,7 @@ export const dependencyVersionMap = {
   "@paddle/paddle-js": "^1.6.2",
 
   // Payments - Dodo Payments
-  dodopayments: "^0.23.0",
+  dodopayments: "^2.19.0",
   "dodopayments-checkout": "^1.8.0",
 
   // File Upload - UploadThing
