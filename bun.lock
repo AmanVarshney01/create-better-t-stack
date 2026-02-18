@@ -20,7 +20,7 @@
     },
     "apps/cli": {
       "name": "create-better-t-stack",
-      "version": "3.21.0",
+      "version": "3.21.1",
       "bin": {
         "create-better-t-stack": "dist/cli.mjs",
       },
@@ -133,7 +133,7 @@
     },
     "packages/create-bts": {
       "name": "create-bts",
-      "version": "3.21.0",
+      "version": "3.21.1",
       "bin": {
         "create-bts": "cli.js",
       },
@@ -143,9 +143,9 @@
     },
     "packages/template-generator": {
       "name": "@better-t-stack/template-generator",
-      "version": "3.21.0",
+      "version": "3.21.1",
       "dependencies": {
-        "@better-t-stack/types": "^3.21.0",
+        "@better-t-stack/types": "^3.21.1",
         "better-result": "^2.3.0",
         "handlebars": "^4.7.8",
         "memfs": "^4.51.1",
@@ -165,7 +165,7 @@
     },
     "packages/types": {
       "name": "@better-t-stack/types",
-      "version": "3.21.0",
+      "version": "3.21.1",
       "dependencies": {
         "zod": "^4.1.13",
       },
