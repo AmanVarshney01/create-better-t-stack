@@ -53,6 +53,9 @@ const SKILL_SOURCES = {
   "supabase/agent-skills": {
     label: "Supabase",
   },
+  "planetscale/database-skills": {
+    label: "PlanetScale",
+  },
   "expo/skills": {
     label: "Expo",
   },
@@ -64,6 +67,9 @@ const SKILL_SOURCES = {
   },
   "waynesutton/convexskills": {
     label: "Convex",
+  },
+  "msmps/opentui-skill": {
+    label: "OpenTUI Platform",
   },
 } satisfies Record<string, SkillSource>;
 
@@ -151,6 +157,10 @@ function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
     sources.push("supabase/agent-skills");
   }
 
+  if (dbSetup === "planetscale") {
+    sources.push("planetscale/database-skills");
+  }
+
   if (orm === "prisma" || dbSetup === "prisma-postgres") {
     sources.push("prisma/skills");
   }
@@ -173,6 +183,10 @@ function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
 
   if (backend === "convex") {
     sources.push("waynesutton/convexskills");
+  }
+
+  if (addons.includes("opentui")) {
+    sources.push("msmps/opentui-skill");
   }
 
   return sources;
@@ -199,6 +213,21 @@ const CURATED_SKILLS_BY_SOURCE: Record<SourceKey, (config: ProjectConfig) => str
   "better-auth/skills": () => ["better-auth-best-practices"],
   "neondatabase/agent-skills": () => ["neon-postgres"],
   "supabase/agent-skills": () => ["supabase-postgres-best-practices"],
+  "planetscale/database-skills": (config) => {
+    if (config.dbSetup !== "planetscale") {
+      return [];
+    }
+
+    if (config.database === "postgres") {
+      return ["postgres", "neki"];
+    }
+
+    if (config.database === "mysql") {
+      return ["mysql", "vitess"];
+    }
+
+    return [];
+  },
   "expo/skills": (config) => {
     const skills = [
       "expo-dev-client",
@@ -238,6 +267,7 @@ const CURATED_SKILLS_BY_SOURCE: Record<SourceKey, (config: ProjectConfig) => str
     "convex-migrations",
     "convex-security-check",
   ],
+  "msmps/opentui-skill": () => ["opentui"],
 };
 
 function getCuratedSkillNamesForSourceKey(sourceKey: SourceKey, config: ProjectConfig): string[] {
