@@ -101,20 +101,20 @@ When using `--backend none`, the following options are automatically set:
 | `astro`           | ❌           | ✅           | ✅                 | tRPC not supported |
 | Native frameworks | ✅           | ✅           | ✅                 | Full support       |
 
-**CONNECTRPC** requires backend **Express** or **Fastify** (not Hono or Elysia).
+**ConnectRPC** requires backend **Express** or **Fastify** (not Hono or Elysia).
 
 ```bash
 # ❌ Invalid - Nuxt with tRPC
 create-better-t-stack --frontend nuxt --api trpc
 
-# ✅ Valid - Nuxt with oRPC or CONNECTRPC
+# ✅ Valid - Nuxt with oRPC or ConnectRPC
 create-better-t-stack --frontend nuxt --api orpc
 create-better-t-stack --frontend nuxt --api connectrpc --backend express
 
-# ❌ Invalid - CONNECTRPC with Hono
+# ❌ Invalid - ConnectRPC with Hono
 create-better-t-stack --api connectrpc --backend hono
 
-# ✅ Valid - CONNECTRPC with Express
+# ✅ Valid - ConnectRPC with Express
 create-better-t-stack --api connectrpc --backend express
 ```
 

@@ -39,7 +39,7 @@ npx create-better-t-stack@latest
 
 - Frontend: React (TanStack Router, React Router, TanStack Start), Next.js, Nuxt, Svelte, Solid, React Native (NativeWind/Unistyles), or none
 - Backend: Hono, Express, Fastify, Elysia, Next API Routes, Convex, or none
-- API: tRPC, oRPC, or CONNECTRPC (or none)
+- API: tRPC, oRPC, or ConnectRPC (or none)
 - Runtime: Bun, Node.js, or Cloudflare Workers
 - Databases: SQLite, PostgreSQL, MySQL, MongoDB (or none)
 - ORMs: Drizzle, Prisma, Mongoose (or none)

@@ -32,7 +32,7 @@ export const TECH_OPTIONS: Record<
     },
     {
       id: "connectrpc",
-      name: "CONNECTRPC",
+      name: "ConnectRPC",
       description: "gRPC-web APIs with shared proto types",
       icon: `${ICON_BASE_URL}/connectrpc.svg`,
       color: "from-emerald-500 to-teal-600",

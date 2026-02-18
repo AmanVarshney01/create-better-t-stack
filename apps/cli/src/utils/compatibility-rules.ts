@@ -178,7 +178,7 @@ export function validateConnectRpcBackend(config: Partial<ProjectConfig>): Valid
   const backend = config.backend;
   if (backend === "express" || backend === "fastify") return Result.ok(undefined);
   return validationErr(
-    "CONNECTRPC requires Express or Fastify backend. Please use --backend express or --backend fastify, or choose a different API type.",
+    "ConnectRPC requires Express or Fastify backend. Please use --backend express or --backend fastify, or choose a different API type.",
   );
 }
 
@@ -359,7 +359,7 @@ export function validateExamplesCompatibility(
     }
     if (api === "none") {
       return validationErr(
-        "The 'todo' example requires an API layer (tRPC, oRPC, or CONNECTRPC). Cannot use --examples todo when api is 'none'.",
+        "The 'todo' example requires an API layer (tRPC, oRPC, or ConnectRPC). Cannot use --examples todo when api is 'none'.",
       );
     }
   }

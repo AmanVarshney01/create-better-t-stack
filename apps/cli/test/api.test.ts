@@ -281,7 +281,7 @@ describe("API Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "CONNECTRPC requires Express or Fastify backend");
+      expectError(result, "ConnectRPC requires Express or Fastify backend");
     });
 
     it("should fail with connectrpc + elysia", async () => {
@@ -302,7 +302,7 @@ describe("API Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "CONNECTRPC requires Express or Fastify backend");
+      expectError(result, "ConnectRPC requires Express or Fastify backend");
     });
   });
 

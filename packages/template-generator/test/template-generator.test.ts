@@ -122,7 +122,7 @@ describe("template-generator logic", () => {
     expect(dbPkg?.scripts?.["db:local"]).toBe("turso dev --db-file local.db");
   });
 
-  it("includes CONNECTRPC section and api:codegen in README when api is connectrpc", () => {
+  it("includes ConnectRPC section and api:codegen in README when api is connectrpc", () => {
     const vfs = new VirtualFileSystem();
     processReadme(
       vfs,
@@ -133,7 +133,7 @@ describe("template-generator logic", () => {
     );
 
     const readme = vfs.readFile("README.md") ?? "";
-    expect(readme).toContain("CONNECTRPC");
+    expect(readme).toContain("ConnectRPC");
     expect(readme).toContain("api:codegen");
   });
 });

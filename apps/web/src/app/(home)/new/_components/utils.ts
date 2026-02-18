@@ -779,7 +779,7 @@ export const getDisabledReason = (
       return "Fullstack uses frontend deployment";
     }
     if (category === "api" && optionId === "trpc") {
-      return "tRPC is not compatible with Nuxt (use oRPC or CONNECTRPC)";
+      return "tRPC is not compatible with Nuxt (use oRPC or ConnectRPC)";
     }
   }
 
@@ -806,7 +806,7 @@ export const getDisabledReason = (
       return "Fullstack uses frontend deployment";
     }
     if (category === "api" && optionId === "trpc") {
-      return "tRPC is not compatible with Astro (use oRPC or CONNECTRPC)";
+      return "tRPC is not compatible with Astro (use oRPC or ConnectRPC)";
     }
   }
 
@@ -822,7 +822,7 @@ export const getDisabledReason = (
       currentStack.backend !== "none" &&
       currentStack.backend !== "convex"
     ) {
-      return "CONNECTRPC requires Express or Fastify backend";
+      return "ConnectRPC requires Express or Fastify backend";
     }
   }
 
@@ -831,7 +831,7 @@ export const getDisabledReason = (
   // ============================================
   if (category === "backend") {
     if ((optionId === "hono" || optionId === "elysia") && currentStack.api === "connectrpc") {
-      return "CONNECTRPC requires Express or Fastify backend";
+      return "ConnectRPC requires Express or Fastify backend";
     }
     if (optionId === "self-next" && !currentStack.webFrontend.includes("next")) {
       return "Requires Next.js frontend";

@@ -34,7 +34,7 @@ export async function getApiChoice(
         : a === "connectrpc"
           ? {
               value: "connectrpc" as const,
-              label: "CONNECTRPC",
+              label: "ConnectRPC",
               hint: "gRPC-web APIs with shared types (proto + Buf)",
             }
           : {

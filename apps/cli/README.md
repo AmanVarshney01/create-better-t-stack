@@ -34,7 +34,7 @@ Follow the prompts to configure your project or use the `--yes` flag for default
 | **TypeScript**           | End-to-end type safety across all parts of your application                                                                                                                                                                                                |
 | **Frontend**             | • React with TanStack Router<br>• React with React Router<br>• React with TanStack Start (SSR)<br>• Next.js<br>• SvelteKit<br>• Nuxt (Vue)<br>• SolidJS<br>• React Native with NativeWind (via Expo)<br>• React Native with Unistyles (via Expo)<br>• None |
 | **Backend**              | • Hono<br>• Express<br>• Elysia<br>• Next.js API routes<br>• Convex<br>• Fastify<br>• None                                                                                                                                                                 |
-| **API Layer**            | • tRPC (type-safe APIs)<br>• oRPC (OpenAPI-compatible type-safe APIs)<br>• CONNECTRPC (gRPC-web with proto; Express/Fastify only)<br>• None                                                                                                                |
+| **API Layer**            | • tRPC (type-safe APIs)<br>• oRPC (OpenAPI-compatible type-safe APIs)<br>• ConnectRPC (gRPC-web with proto; Express/Fastify only)<br>• None                                                                                                                |
 | **Runtime**              | • Bun<br>• Node.js<br>• Cloudflare Workers<br>• None                                                                                                                                                                                                       |
 | **Database**             | • SQLite<br>• PostgreSQL<br>• MySQL<br>• MongoDB<br>• None                                                                                                                                                                                                 |
 | **ORM**                  | • Drizzle (TypeScript-first)<br>• Prisma (feature-rich)<br>• Mongoose (for MongoDB)<br>• None                                                                                                                                                              |
@@ -197,7 +197,7 @@ npx create-better-t-stack --frontend tanstack-router --backend express --api con
 - **Convex backend**: Requires `database`, `orm`, `api`, `runtime`, and `server-deploy` to be `none`; auth can be `better-auth`, `clerk`, or `none` depending frontend compatibility
 - **Backend 'none'**: If selected, this option will force related options like API, ORM, database, authentication, and runtime to 'none'. Examples will also be disabled (set to none/empty).
 - **Frontend 'none'**: Creates a backend-only project. When selected, PWA, Tauri, and certain examples may be disabled.
-- **API 'none'**: Disables tRPC/oRPC/CONNECTRPC setup. Can be used with backend frameworks for REST APIs or custom API implementations.
+- **API 'none'**: Disables tRPC/oRPC/ConnectRPC setup. Can be used with backend frameworks for REST APIs or custom API implementations.
 - **ConnectRPC** requires Express or Fastify backend (not Hono or Elysia).
 - **Database 'none'**: Disables database setup and requires ORM to be `none`.
 - **ORM 'none'**: Can be used when you want to handle database operations manually or use a different ORM.

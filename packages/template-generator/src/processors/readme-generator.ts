@@ -92,7 +92,7 @@ ${
   api === "connectrpc"
     ? `
 
-## CONNECTRPC
+## ConnectRPC
 
 - **Proto codegen**: Run \`${packageManagerRunCmd} api:codegen\` from the repo root (or \`cd packages/api && ${packageManager} run codegen\`) to regenerate TypeScript from \`packages/api/proto\`.
 - **Adding a service**: Add a new \`.proto\` under \`packages/api/proto\`, run codegen, then implement and register the service in \`packages/api/src/index.ts\`.
@@ -151,7 +151,7 @@ function generateStackDescription(
   }
 
   if (!isConvex && api !== "none") {
-    parts.push(api === "connectrpc" ? "CONNECTRPC" : api.toUpperCase());
+    parts.push(api === "connectrpc" ? "ConnectRPC" : api.toUpperCase());
   }
 
   return parts.length > 0 ? `${parts.join(", ")}, and more` : "";
@@ -330,7 +330,7 @@ function generateFeaturesList(
   } else if (!isConvex && api === "orpc") {
     features.push("- **oRPC** - End-to-end type-safe APIs with OpenAPI integration");
   } else if (!isConvex && api === "connectrpc") {
-    features.push("- **CONNECTRPC** - gRPC-web APIs with shared proto types");
+    features.push("- **ConnectRPC** - gRPC-web APIs with shared proto types");
   }
 
   if (!isConvex && backend !== "none" && runtime !== "none") {
