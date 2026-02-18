@@ -3,6 +3,7 @@ import type { ProjectConfig, Database, Runtime, ORM } from "@better-fullstack/ty
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
+import { getWebPackagePath, getServerPackagePath } from "../utils/project-paths";
 
 export function processEffectDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { effect, runtime, database, orm, testing, backend, frontend } = config;
@@ -15,14 +16,17 @@ export function processEffectDeps(vfs: VirtualFileSystem, config: ProjectConfig)
   );
   const hasServer = backend !== "none" && backend !== "convex" && backend !== "self";
 
+  const webPath = getWebPackagePath(frontend);
+  const serverPath = getServerPackagePath(frontend);
+
   // Add core effect to all relevant packages
-  addEffectCoreDeps(vfs, effect, hasWeb, hasNative, hasServer);
+  addEffectCoreDeps(vfs, effect, hasWeb, hasNative, hasServer, webPath, serverPath);
 
   // For effect-full, add platform and schema packages
   if (effect === "effect-full") {
-    addEffectPlatformDeps(vfs, runtime, hasWeb, hasNative, hasServer);
-    addEffectSqlDeps(vfs, database, orm, runtime);
-    addEffectTestingDeps(vfs, testing);
+    addEffectPlatformDeps(vfs, runtime, hasWeb, hasNative, hasServer, webPath, serverPath);
+    addEffectSqlDeps(vfs, database, orm, runtime, serverPath);
+    addEffectTestingDeps(vfs, testing, webPath, serverPath);
   }
 }
 
@@ -32,6 +36,8 @@ function addEffectCoreDeps(
   hasWeb: boolean,
   hasNative: boolean,
   hasServer: boolean,
+  webPath: string,
+  serverPath: string,
 ): void {
   const deps: AvailableDependencies[] = ["effect"];
 
@@ -41,13 +47,11 @@ function addEffectCoreDeps(
   }
 
   // Add to server package
-  const serverPath = "apps/server/package.json";
   if (hasServer && vfs.exists(serverPath)) {
     addPackageDependency({ vfs, packagePath: serverPath, dependencies: deps });
   }
 
   // Add to web package
-  const webPath = "apps/web/package.json";
   if (hasWeb && vfs.exists(webPath)) {
     addPackageDependency({ vfs, packagePath: webPath, dependencies: deps });
   }
@@ -71,9 +75,9 @@ function addEffectPlatformDeps(
   hasWeb: boolean,
   hasNative: boolean,
   hasServer: boolean,
+  webPath: string,
+  serverPath: string,
 ): void {
-  const serverPath = "apps/server/package.json";
-  const webPath = "apps/web/package.json";
   const nativePath = "apps/native/package.json";
 
   // Add platform packages based on runtime
@@ -112,10 +116,10 @@ function addEffectSqlDeps(
   database: Database,
   orm: ORM,
   runtime: Runtime,
+  serverPath: string,
 ): void {
   if (database === "none") return;
 
-  const serverPath = "apps/server/package.json";
   if (!vfs.exists(serverPath)) return;
 
   const deps: AvailableDependencies[] = ["@effect/sql"];
@@ -141,15 +145,16 @@ function addEffectSqlDeps(
   addPackageDependency({ vfs, packagePath: serverPath, dependencies: deps });
 }
 
-function addEffectTestingDeps(vfs: VirtualFileSystem, testing: ProjectConfig["testing"]): void {
+function addEffectTestingDeps(
+  vfs: VirtualFileSystem,
+  testing: ProjectConfig["testing"],
+  webPath: string,
+  serverPath: string,
+): void {
   if (testing === "none" || testing === "playwright") return;
 
   // Add @effect/vitest to packages that use vitest
-  const packagesToCheck = [
-    "apps/server/package.json",
-    "apps/web/package.json",
-    "packages/api/package.json",
-  ];
+  const packagesToCheck = [serverPath, webPath, "packages/api/package.json"];
 
   for (const pkgPath of packagesToCheck) {
     if (vfs.exists(pkgPath)) {

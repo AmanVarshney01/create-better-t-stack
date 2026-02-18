@@ -18,10 +18,7 @@ mod grpc;
 {{#if (eq rustApi "async-graphql")}}
 use async_graphql::http::GraphiQLSource;
 use async_graphql_axum::GraphQL;
-use axum::{
-    response::{Html, IntoResponse},
-    routing::post,
-};
+use axum::response::{Html, IntoResponse};
 
 mod graphql;
 {{/if}}
@@ -124,7 +121,7 @@ async fn main() -> anyhow::Result<()> {
     // Build router with GraphQL and state
     let app = Router::new()
         .route("/health", get(health))
-        .route("/graphql", post(GraphQL::new(schema)))
+        .route_service("/graphql", GraphQL::new(schema))
         .route("/graphiql", get(graphiql))
         .layer(CorsLayer::permissive())
         .with_state(state);
@@ -159,7 +156,7 @@ async fn main() -> anyhow::Result<()> {
     // Build router with GraphQL and state
     let app = Router::new()
         .route("/health", get(health))
-        .route("/graphql", post(GraphQL::new(schema)))
+        .route_service("/graphql", GraphQL::new(schema))
         .route("/graphiql", get(graphiql))
         .layer(CorsLayer::permissive())
         .with_state(state);
@@ -181,7 +178,7 @@ async fn main() -> anyhow::Result<()> {
     // Build router with GraphQL
     let app = Router::new()
         .route("/health", get(health))
-        .route("/graphql", post(GraphQL::new(schema)))
+        .route_service("/graphql", GraphQL::new(schema))
         .route("/graphiql", get(graphiql))
         .layer(CorsLayer::permissive());
 

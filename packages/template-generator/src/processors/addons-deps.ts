@@ -3,6 +3,7 @@ import type { ProjectConfig } from "@better-fullstack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { addPackageDependency } from "../utils/add-deps";
+import { getWebPackagePath, getServerPackagePath } from "../utils/project-paths";
 
 type PackageJson = {
   name?: string;
@@ -21,12 +22,14 @@ export function processAddonsDeps(vfs: VirtualFileSystem, config: ProjectConfig)
   const hasSolidFrontend = config.frontend.includes("solid");
   const hasPwaCompatibleFrontend = hasViteReactFrontend || hasSolidFrontend;
 
+  const webPkgPath = getWebPackagePath(config.frontend);
+  const serverPkgPath = getServerPackagePath(config.frontend);
+
   if (config.addons.includes("turborepo")) {
     addPackageDependency({ vfs, packagePath: "package.json", devDependencies: ["turbo"] });
   }
 
   if (config.addons.includes("pwa") && hasPwaCompatibleFrontend) {
-    const webPkgPath = "apps/web/package.json";
     if (vfs.exists(webPkgPath)) {
       addPackageDependency({
         vfs,
@@ -43,7 +46,6 @@ export function processAddonsDeps(vfs: VirtualFileSystem, config: ProjectConfig)
   }
 
   if (config.addons.includes("tauri")) {
-    const webPkgPath = "apps/web/package.json";
     if (vfs.exists(webPkgPath)) {
       addPackageDependency({ vfs, packagePath: webPkgPath, devDependencies: ["@tauri-apps/cli"] });
       const webPkg = vfs.readJson<PackageJson>(webPkgPath);
@@ -61,9 +63,6 @@ export function processAddonsDeps(vfs: VirtualFileSystem, config: ProjectConfig)
 
   // MSW (Mock Service Worker) - API mocking for testing and development
   if (config.addons.includes("msw")) {
-    const webPkgPath = "apps/web/package.json";
-    const serverPkgPath = "apps/server/package.json";
-
     // Add MSW to web package (for browser-based mocking)
     if (vfs.exists(webPkgPath)) {
       addPackageDependency({ vfs, packagePath: webPkgPath, devDependencies: ["msw"] });
@@ -77,7 +76,6 @@ export function processAddonsDeps(vfs: VirtualFileSystem, config: ProjectConfig)
 
   // Storybook - Component development and testing
   if (config.addons.includes("storybook")) {
-    const webPkgPath = "apps/web/package.json";
     if (vfs.exists(webPkgPath)) {
       // Determine framework-specific Storybook package
       const hasReactVite =

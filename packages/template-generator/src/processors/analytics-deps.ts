@@ -3,6 +3,7 @@ import type { ProjectConfig } from "@better-fullstack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { addPackageDependency } from "../utils/add-deps";
+import { getWebPackagePath } from "../utils/project-paths";
 
 export function processAnalyticsDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { analytics, frontend } = config;
@@ -17,7 +18,7 @@ export function processAnalyticsDeps(vfs: VirtualFileSystem, config: ProjectConf
   if (analytics === "plausible") {
     // Plausible is client-side only - add to web app
     if (hasWebFrontend) {
-      const webPath = "apps/web/package.json";
+      const webPath = getWebPackagePath(frontend);
       if (vfs.exists(webPath)) {
         addPackageDependency({
           vfs,

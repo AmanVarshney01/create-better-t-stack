@@ -36,11 +36,6 @@ import { PrismaClient } from "../prisma/generated/client";
 import { env } from "@{{projectName}}/env/server";
 {{#if (eq dbSetup "neon")}}
 import { PrismaNeon } from "@prisma/adapter-neon";
-import { neonConfig } from "@neondatabase/serverless";
-import ws from "ws";
-
-neonConfig.webSocketConstructor = ws;
-neonConfig.poolQueryViaFetch = true;
 
 const adapter = new PrismaNeon({
 	connectionString: env.DATABASE_URL,

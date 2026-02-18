@@ -1,8 +1,12 @@
-import type { ProjectConfig } from "@better-fullstack/types";
+import type { Frontend, ProjectConfig } from "@better-fullstack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { addPackageDependency } from "../utils/add-deps";
+import { getWebPackagePath, getServerPackagePath } from "../utils/project-paths";
+
+// Fullstack frontends with built-in servers that use backend=none
+const FULLSTACK_FRONTENDS: Frontend[] = ["fresh", "qwik", "angular", "redwood"];
 
 /**
  * Process AI SDK dependencies based on config.ai selection
@@ -11,18 +15,30 @@ import { addPackageDependency } from "../utils/add-deps";
 export function processAIDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { ai, backend, frontend } = config;
 
-  // Skip if no AI SDK selected or no backend
-  if (ai === "none" || backend === "none") return;
+  // Skip if no AI SDK selected
+  if (ai === "none") return;
 
   // Get the web frontend for client-side AI packages
   const webFrontend = frontend.find((f) => !f.startsWith("native") && f !== "none");
 
-  // Template generator uses apps/web for web frontends, not the framework name
-  const webPath = "apps/web/package.json";
+  // Template generator uses apps/web for web frontends (or web/ for Redwood)
+  const webPath = getWebPackagePath(frontend);
 
   // Determine the target package path based on backend
   // For "self" backend (Next.js, Nuxt, etc.), the server code is in the web app
-  const serverPath = backend === "self" && webFrontend ? webPath : "apps/server/package.json";
+  // For fullstack frontends with built-in servers (Fresh, Qwik, etc.), use web package
+  const hasFullstackFrontend = frontend.some((f) => FULLSTACK_FRONTENDS.includes(f));
+  let serverPath: string;
+
+  if (backend === "self" && webFrontend) {
+    serverPath = webPath;
+  } else if (backend === "none" && hasFullstackFrontend) {
+    serverPath = webPath;
+  } else if (backend === "none") {
+    return;
+  } else {
+    serverPath = getServerPackagePath(frontend);
+  }
 
   // Skip if target doesn't exist
   if (!vfs.exists(serverPath)) return;
@@ -42,7 +58,9 @@ export function processAIDeps(vfs: VirtualFileSystem, config: ProjectConfig): vo
       if (
         frontendPath &&
         webFrontend &&
-        ["tanstack-router", "react-router", "tanstack-start", "next"].includes(webFrontend)
+        ["tanstack-router", "react-router", "tanstack-start", "next", "redwood"].includes(
+          webFrontend,
+        )
       ) {
         addPackageDependency({
           vfs,

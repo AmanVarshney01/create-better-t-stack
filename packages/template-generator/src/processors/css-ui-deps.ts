@@ -3,6 +3,7 @@ import type { ProjectConfig } from "@better-fullstack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
+import { getWebPackagePath } from "../utils/project-paths";
 
 /**
  * Process CSS framework dependencies based on config.cssFramework
@@ -21,12 +22,14 @@ export function processCSSFrameworkDeps(vfs: VirtualFileSystem, config: ProjectC
       "solid",
       "astro",
       "qwik",
+      "angular",
+      "redwood",
     ].includes(f),
   );
 
   if (!hasWeb) return;
 
-  const webPath = "apps/web/package.json";
+  const webPath = getWebPackagePath(frontend);
   if (!vfs.exists(webPath)) return;
 
   // Add CSS preprocessor dependencies
@@ -54,7 +57,7 @@ export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConf
   const { uiLibrary, frontend } = config;
 
   const hasReactWeb = frontend.some((f) =>
-    ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+    ["tanstack-router", "react-router", "tanstack-start", "next", "redwood"].includes(f),
   );
   const hasNuxt = frontend.includes("nuxt");
   const hasSolid = frontend.includes("solid");
@@ -72,7 +75,7 @@ export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConf
     return;
   }
 
-  const webPath = "apps/web/package.json";
+  const webPath = getWebPackagePath(frontend);
   if (!vfs.exists(webPath)) return;
 
   const deps: AvailableDependencies[] = [];

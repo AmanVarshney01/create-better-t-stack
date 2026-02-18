@@ -29,7 +29,7 @@ export async function processFeatureFlagsTemplates(
   }
 
   // Process server-side templates if we have a backend
-  if (config.backend !== "none" && config.backend !== "convex") {
+  if (config.backend !== "none" && config.backend !== "convex" && config.backend !== "self") {
     processTemplatesFromPrefix(
       vfs,
       templates,

@@ -3,6 +3,7 @@ import type { ProjectConfig } from "@better-fullstack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
+import { getWebPackagePath, getServerPackagePath } from "../utils/project-paths";
 
 export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const {
@@ -18,6 +19,8 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
   } = config;
 
   const workspaceVersion = packageManager === "npm" ? "*" : "workspace:*";
+  const webPath = getWebPackagePath(config.frontend);
+  const serverPath = getServerPackagePath(config.frontend);
   const packages = {
     config: vfs.exists("packages/config/package.json"),
     env: vfs.exists("packages/env/package.json"),
@@ -26,8 +29,8 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
     auth: vfs.exists("packages/auth/package.json"),
     api: vfs.exists("packages/api/package.json"),
     backend: vfs.exists("packages/backend/package.json"),
-    server: vfs.exists("apps/server/package.json"),
-    web: vfs.exists("apps/web/package.json"),
+    server: vfs.exists(serverPath),
+    web: vfs.exists(webPath),
     native: vfs.exists("apps/native/package.json"),
   };
 
@@ -132,7 +135,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
     if (database !== "none" && packages.db) serverDeps[`@${projectName}/db`] = workspaceVersion;
     addPackageDependency({
       vfs,
-      packagePath: "apps/server/package.json",
+      packagePath: serverPath,
       dependencies: commonDeps,
       devDependencies: ["typescript", "tsdown"],
       customDependencies: serverDeps,
@@ -148,7 +151,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
       webPackageDeps[`@${projectName}/backend`] = workspaceVersion;
     addPackageDependency({
       vfs,
-      packagePath: "apps/web/package.json",
+      packagePath: webPath,
       dependencies: commonDeps,
       devDependencies: ["typescript"],
       customDependencies: webPackageDeps,

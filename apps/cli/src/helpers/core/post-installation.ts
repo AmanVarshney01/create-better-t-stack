@@ -5,7 +5,6 @@ import type {
   Backend,
   Database,
   DatabaseSetup,
-  Ecosystem,
   Frontend,
   ORM,
   ProjectConfig,
@@ -14,6 +13,7 @@ import type {
   WebDeploy,
 } from "../../types";
 
+import { WEB_FRAMEWORKS } from "../../utils/compatibility";
 import { getDockerStatus } from "../../utils/docker-utils";
 export async function displayPostInstallInstructions(
   config: ProjectConfig & { depsInstalled: boolean },
@@ -107,17 +107,7 @@ export async function displayPostInstallInstructions(
     backend,
   );
 
-  const hasWeb = frontend?.some((f) =>
-    [
-      "tanstack-router",
-      "react-router",
-      "next",
-      "tanstack-start",
-      "nuxt",
-      "svelte",
-      "solid",
-    ].includes(f),
-  );
+  const hasWeb = frontend?.some((f) => WEB_FRAMEWORKS.includes(f));
   const hasNative =
     frontend?.includes("native-bare") ||
     frontend?.includes("native-uniwind") ||
@@ -130,6 +120,10 @@ export async function displayPostInstallInstructions(
   const hasReactRouter = frontend?.includes("react-router");
   const hasSvelte = frontend?.includes("svelte");
   const webPort = hasReactRouter || hasSvelte ? "5173" : "3001";
+  const betterAuthConvexInstructions =
+    isConvex && config.auth === "better-auth"
+      ? getBetterAuthConvexInstructions(hasWeb ?? false, webPort, packageManager)
+      : "";
 
   let output = `${pc.bold("Next steps")}\n${pc.cyan("1.")} ${cdCmd}\n`;
   let stepCounter = 2;
@@ -216,6 +210,7 @@ export async function displayPostInstallInstructions(
   if (alchemyDeployInstructions) output += `\n${alchemyDeployInstructions.trim()}\n`;
   if (starlightInstructions) output += `\n${starlightInstructions.trim()}\n`;
   if (clerkInstructions) output += `\n${clerkInstructions.trim()}\n`;
+  if (betterAuthConvexInstructions) output += `\n${betterAuthConvexInstructions.trim()}\n`;
   if (polarInstructions) output += `\n${polarInstructions.trim()}\n`;
 
   if (noOrmWarning) output += `\n${noOrmWarning.trim()}\n`;
@@ -411,6 +406,17 @@ function getBunWebNativeWarning() {
 
 function getClerkInstructions() {
   return `${pc.bold("Clerk Authentication Setup:")}\n${pc.cyan("•")} Follow the guide: ${pc.underline("https://docs.convex.dev/auth/clerk")}\n${pc.cyan("•")} Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard\n${pc.cyan("•")} Set CLERK_PUBLISHABLE_KEY in apps/*/.env`;
+}
+
+function getBetterAuthConvexInstructions(hasWeb: boolean, webPort: string, packageManager: string) {
+  const cmd = packageManager === "npm" ? "npx" : packageManager;
+  return (
+    `${pc.bold("Better Auth + Convex Setup:")}\n` +
+    `${pc.cyan("•")} Set environment variables from ${pc.white("packages/backend")}:\n` +
+    `${pc.white("   cd packages/backend")}\n` +
+    `${pc.white(`   ${cmd} convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)`)}\n` +
+    (hasWeb ? `${pc.white(`   ${cmd} convex env set SITE_URL http://localhost:${webPort}`)}\n` : "")
+  );
 }
 
 function getPolarInstructions(backend: Backend) {

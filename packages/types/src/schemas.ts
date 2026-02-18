@@ -67,6 +67,8 @@ export const AddonsSchema = z
     "lefthook",
     "husky",
     "ruler",
+    "mcp",
+    "skills",
     "turborepo",
     "fumadocs",
     "ultracite",
