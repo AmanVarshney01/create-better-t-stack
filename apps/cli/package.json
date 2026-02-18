@@ -1,6 +1,6 @@
 {
   "name": "create-better-t-stack",
-  "version": "3.21.0",
+  "version": "3.21.1",
   "description": "A modern CLI tool for scaffolding end-to-end type-safe TypeScript projects with best practices and customizable configurations",
   "keywords": [
     "better-auth",
