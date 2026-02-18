@@ -480,7 +480,7 @@ describe("Backend and Runtime Combinations", () => {
       expectSuccess(result);
     });
 
-    it("should fail self backend with non-Next.js frontend", async () => {
+    it("should fail self backend with unsupported frontend", async () => {
       const result = await runTRPCTest({
         projectName: "self-backend-invalid-frontend",
         backend: "self",
@@ -501,7 +501,7 @@ describe("Backend and Runtime Combinations", () => {
 
       expectError(
         result,
-        "Backend 'self' (fullstack) currently only supports Next.js, TanStack Start, and Astro frontends. Please use --frontend next, --frontend tanstack-start, or --frontend astro. Support for Nuxt and SvelteKit will be added in a future update.",
+        "Backend 'self' (fullstack) only supports Next.js, TanStack Start, Astro, or Nuxt frontends.",
       );
     });
 

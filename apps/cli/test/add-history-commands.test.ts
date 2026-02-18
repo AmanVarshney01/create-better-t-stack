@@ -130,7 +130,9 @@ describe("CLI history command", () => {
     expect(parsedHistory.length).toBe(1);
     expect(parsedHistory[0]?.projectName).toBe("history-app");
     expect(parsedHistory[0]?.projectDir).toContain("history-app");
-    expect(parsedHistory[0]?.reproducibleCommand).toContain("create-better-fullstack");
+    expect(parsedHistory[0]?.reproducibleCommand).toMatch(
+      /(create-better-fullstack|bun create better-fullstack@latest)/,
+    );
 
     const clearResult = await runCli(["history", "--clear"], {
       cwd: root,
