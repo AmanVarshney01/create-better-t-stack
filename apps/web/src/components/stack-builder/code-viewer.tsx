@@ -34,6 +34,7 @@ function getLanguage(extension: string): BundledLanguage {
     css: "css",
     scss: "scss",
     html: "html",
+    astro: "astro",
     vue: "vue",
     svelte: "svelte",
     yaml: "yaml",

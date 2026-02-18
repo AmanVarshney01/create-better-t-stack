@@ -5272,6 +5272,7 @@ import { env } from "@snapshot-better-auth-full/env/server";
 import { db } from "@snapshot-better-auth-full/db";
 import * as schema from "@snapshot-better-auth-full/db/schema/auth";
 
+
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
 provider: "pg",

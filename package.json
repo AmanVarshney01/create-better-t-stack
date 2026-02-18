@@ -30,7 +30,8 @@
     "deploy": "bun run deploy:web",
     "update-deps": "bun run --filter=@better-fullstack/template-generator check-deps",
     "update-deps:fix": "bun run --filter=@better-fullstack/template-generator check-deps:fix",
-    "sync-versions": "bun run --filter=@better-fullstack/template-generator sync-versions"
+    "sync-versions": "bun run --filter=@better-fullstack/template-generator sync-versions",
+    "upstream-gap-report": "bun run scripts/upstream-gap-report.ts --markdown"
   },
   "dependencies": {
     "@clack/prompts": "^0.11.0"

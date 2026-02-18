@@ -4,9 +4,12 @@ import pc from "picocolors";
 import { createCli } from "trpc-cli";
 import z from "zod";
 
+import { historyHandler } from "./commands/history";
 import { updateDepsHandler, showEcosystems } from "./commands/update-deps";
+import { addHandler, type AddResult } from "./helpers/core/add-handler";
 import { createProjectHandler } from "./helpers/core/command-handlers";
 import {
+  type AddInput,
   type Addons,
   AddonsSchema,
   AISchema,
@@ -275,6 +278,37 @@ export const router = os.router({
       log.message(`Please visit ${BUILDER_URL}`);
     }
   }),
+  add: os
+    .meta({ description: "Add addons to an existing Better Fullstack project" })
+    .input(
+      z.object({
+        addons: z.array(AddonsSchema).optional().describe("Addons to add"),
+        webDeploy: WebDeploySchema.optional().describe("Web deployment option to set"),
+        serverDeploy: ServerDeploySchema.optional().describe("Server deployment option to set"),
+        install: z
+          .boolean()
+          .optional()
+          .default(false)
+          .describe("Install dependencies after adding"),
+        packageManager: PackageManagerSchema.optional().describe("Package manager to use"),
+        projectDir: z.string().optional().describe("Project directory (defaults to current)"),
+      }),
+    )
+    .handler(async ({ input }) => {
+      await addHandler(input as AddInput);
+    }),
+  history: os
+    .meta({ description: "Show project creation history" })
+    .input(
+      z.object({
+        limit: z.number().optional().default(10).describe("Number of entries to show"),
+        clear: z.boolean().optional().default(false).describe("Clear all history"),
+        json: z.boolean().optional().default(false).describe("Output as JSON"),
+      }),
+    )
+    .handler(async ({ input }) => {
+      await historyHandler(input);
+    }),
   "update-deps": os
     .meta({ description: "Check and update dependency versions in add-deps.ts" })
     .input(
@@ -373,6 +407,18 @@ export async function docs() {
 
 export async function builder() {
   return caller.builder();
+}
+
+export async function add(input: AddInput): Promise<AddResult | undefined> {
+  return addHandler(input, { silent: true });
+}
+
+export async function history(options?: { limit?: number; clear?: boolean; json?: boolean }) {
+  return caller.history({
+    limit: options?.limit ?? 10,
+    clear: options?.clear ?? false,
+    json: options?.json ?? false,
+  });
 }
 
 // Re-export virtual filesystem types for programmatic usage
@@ -508,6 +554,7 @@ export async function createVirtual(
 
 export type {
   CreateInput,
+  AddInput,
   InitResult,
   BetterTStackConfig,
   Ecosystem,
@@ -554,4 +601,5 @@ export type {
   GoCli,
   GoLogging,
   AiDocs,
+  AddResult,
 };

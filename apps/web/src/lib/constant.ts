@@ -361,6 +361,13 @@ export const TECH_OPTIONS: Record<
       color: "from-purple-500 to-orange-500",
     },
     {
+      id: "self-nuxt",
+      name: "Fullstack Nuxt",
+      description: "Use Nuxt server routes and Nitro runtime",
+      icon: "/icon/nuxt-js.svg",
+      color: "from-green-400 to-green-700",
+    },
+    {
       id: "none",
       name: "No Backend",
       description: "Skip backend integration (frontend only)",

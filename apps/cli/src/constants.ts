@@ -127,6 +127,8 @@ export const ADDON_COMPATIBILITY = {
   starlight: [],
   ultracite: [],
   ruler: [],
+  mcp: [],
+  skills: [],
   oxlint: [],
   fumadocs: [],
   opentui: [],
