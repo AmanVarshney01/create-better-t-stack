@@ -3,6 +3,7 @@ import type { Frontend, ProjectConfig } from "@better-fullstack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
+import { getWebPackagePath } from "../utils/project-paths";
 
 // React-based web frameworks that support all state management libraries
 const REACT_WEB_FRAMEWORKS: Frontend[] = [
@@ -10,16 +11,36 @@ const REACT_WEB_FRAMEWORKS: Frontend[] = [
   "react-router",
   "tanstack-start",
   "next",
+  "redwood",
 ];
 
 // Non-React frameworks that support framework-agnostic state management
-const OTHER_WEB_FRAMEWORKS: Frontend[] = ["solid", "svelte", "nuxt", "qwik", "astro"];
+const OTHER_WEB_FRAMEWORKS: Frontend[] = [
+  "solid",
+  "svelte",
+  "nuxt",
+  "qwik",
+  "astro",
+  "fresh",
+  "angular",
+];
 
 // Native frameworks (always React-based)
 const NATIVE_FRAMEWORKS: Frontend[] = ["native-bare", "native-uniwind", "native-unistyles"];
 
 // Framework-agnostic state management that works with any frontend
-const FRAMEWORK_AGNOSTIC_STATE: ProjectConfig["stateManagement"][] = ["zustand", "jotai", "valtio"];
+// All state management libraries have framework-agnostic cores
+const FRAMEWORK_AGNOSTIC_STATE: ProjectConfig["stateManagement"][] = [
+  "zustand",
+  "jotai",
+  "valtio",
+  "nanostores",
+  "xstate",
+  "mobx",
+  "redux-toolkit",
+  "tanstack-store",
+  "legend-state",
+];
 
 export function processStateManagementDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { stateManagement, frontend, astroIntegration } = config;
@@ -34,7 +55,7 @@ export function processStateManagementDeps(vfs: VirtualFileSystem, config: Proje
   // Astro with React integration should be treated as React
   const hasAstroReact = frontend.includes("astro") && astroIntegration === "react";
 
-  const webPath = "apps/web/package.json";
+  const webPath = getWebPackagePath(frontend);
 
   // Add to web package if it's a React-based web frontend (all state management supported)
   // or Astro with React integration
@@ -119,7 +140,6 @@ function getStateManagementDeps(
       break;
     case "legend-state":
       deps.push("@legendapp/state");
-      if (isReact) deps.push("@legendapp/state-react");
       break;
   }
 

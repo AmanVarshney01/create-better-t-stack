@@ -13,12 +13,14 @@ export async function processEmailTemplates(
   if (config.backend === "convex") return;
   if (config.backend === "none") return;
 
+  const targetDir = config.backend === "self" ? "apps/web" : "apps/server";
+
   // Process server-side email templates (Resend client, email sending utilities)
   processTemplatesFromPrefix(
     vfs,
     templates,
     `email/${config.email}/server/base`,
-    "apps/server",
+    targetDir,
     config,
   );
 
@@ -32,7 +34,7 @@ export async function processEmailTemplates(
       vfs,
       templates,
       `email/${config.email}/components`,
-      "apps/server",
+      targetDir,
       config,
     );
   }

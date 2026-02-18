@@ -20,6 +20,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {
@@ -718,17 +719,16 @@ const StackBuilder = () => {
                       >
                         Project Name
                       </label>
-                      <input
+                      <Input
                         id="project-name"
-                        type="text"
                         value={stack.projectName || ""}
                         onChange={(e) => setStack({ projectName: e.target.value })}
                         placeholder="my-app"
                         className={cn(
-                          "w-full max-w-sm rounded-lg border bg-background px-3 py-2 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary/30",
+                          "max-w-sm",
                           projectNameError
                             ? "border-destructive bg-destructive/10 text-destructive-foreground"
-                            : "border-border focus:border-primary",
+                            : "focus-visible:border-primary",
                         )}
                       />
                       {projectNameError && (

@@ -13,12 +13,14 @@ export async function processLoggingTemplates(
   if (config.backend === "convex") return;
   if (config.backend === "none") return;
 
+  const targetDir = config.backend === "self" ? "apps/web" : "apps/server";
+
   // Process server-side logging templates (Pino logger setup)
   processTemplatesFromPrefix(
     vfs,
     templates,
     `logging/${config.logging}/server/base`,
-    "apps/server",
+    targetDir,
     config,
   );
 }

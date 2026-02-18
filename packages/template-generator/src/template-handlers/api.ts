@@ -2,7 +2,7 @@ import type { ProjectConfig } from "@better-fullstack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
-import { type TemplateData, processTemplatesFromPrefix } from "./utils";
+import { hasTemplatesWithPrefix, type TemplateData, processTemplatesFromPrefix } from "./utils";
 
 export async function processApiTemplates(
   vfs: VirtualFileSystem,
@@ -73,6 +73,18 @@ export async function processApiTemplates(
     }
   } else if (hasNuxtWeb && config.api === "orpc") {
     processTemplatesFromPrefix(vfs, templates, `api/${config.api}/web/nuxt`, "apps/web", config);
+    if (
+      config.backend === "self" &&
+      hasTemplatesWithPrefix(templates, `api/${config.api}/fullstack/nuxt`)
+    ) {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `api/${config.api}/fullstack/nuxt`,
+        "apps/web",
+        config,
+      );
+    }
   } else if (hasSvelteWeb && config.api === "orpc") {
     processTemplatesFromPrefix(vfs, templates, `api/${config.api}/web/svelte`, "apps/web", config);
   } else if (hasSolidWeb && config.api === "orpc") {

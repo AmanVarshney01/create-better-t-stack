@@ -132,7 +132,7 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           cd apps/cli
-          jq --arg v "^$VERSION" '.dependencies["@better-fullstack/types"] = $v | .dependencies["@better-fullstack/template-generator"] = $v' package.json > tmp.json && mv tmp.json package.json
+          jq --arg version "$VERSION" --arg dep "^$VERSION" '.version = $version | .dependencies["@better-fullstack/types"] = $dep | .dependencies["@better-fullstack/template-generator"] = $dep' package.json > tmp.json && mv tmp.json package.json
 
       - name: Build CLI
         if: steps.check-version.outputs.exists == 'false'

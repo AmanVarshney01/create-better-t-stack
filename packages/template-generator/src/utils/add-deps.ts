@@ -155,8 +155,8 @@ export const dependencyVersionMap = {
   shiki: "^3.20.0",
 
   // Mastra AI Framework
-  mastra: "^0.24.9",
-  "@mastra/core": "^0.24.9",
+  mastra: "^1.3.1",
+  "@mastra/core": "^1.4.0",
 
   // VoltAgent AI Framework
   "@voltagent/core": "^2.0.10",
@@ -191,16 +191,16 @@ export const dependencyVersionMap = {
   "@orpc/tanstack-query": "^1.12.2",
 
   // ts-rest
-  "@ts-rest/core": "^3.55.0",
-  "@ts-rest/react-query": "^3.55.0",
-  "@ts-rest/serverless": "^3.55.0",
-  "@ts-rest/next": "^3.55.0",
+  "@ts-rest/core": "^3.52.0",
+  "@ts-rest/react-query": "^3.52.0",
+  "@ts-rest/serverless": "^3.52.0",
+  "@ts-rest/next": "^3.52.0",
 
   // Garph (GraphQL)
   garph: "^0.6.8",
   "graphql-yoga": "^5.10.11",
   graphql: "^16.11.0",
-  "@garph/gqty": "^1.3.5",
+  "@garph/gqty": "^0.4.5",
   gqty: "^3.5.0",
 
   "@trpc/tanstack-react-query": "^11.7.2",
@@ -375,8 +375,7 @@ export const dependencyVersionMap = {
   valtio: "^2.1.2",
   "@tanstack/store": "^0.8.0",
   "@tanstack/react-store": "^0.8.0",
-  "@legendapp/state": "^3.0.0",
-  "@legendapp/state-react": "^4.0.0",
+  "@legendapp/state": "^2.1.15",
 
   // Validation libraries
   valibot: "^1.1.0",
@@ -457,14 +456,14 @@ export const dependencyVersionMap = {
   msw: "^2.7.0",
 
   // Storybook
-  storybook: "^9.0.15",
-  "@storybook/react-vite": "^9.0.15",
-  "@storybook/vue3-vite": "^9.0.15",
-  "@storybook/svelte-vite": "^9.0.15",
-  "@storybook/nextjs": "^9.0.15",
-  "@storybook/addon-essentials": "^9.0.15",
-  "@storybook/addon-interactions": "^9.0.15",
-  "@storybook/test": "^9.0.15",
+  storybook: "^8.6.0",
+  "@storybook/react-vite": "^8.6.0",
+  "@storybook/vue3-vite": "^8.6.0",
+  "@storybook/svelte-vite": "^8.6.0",
+  "@storybook/nextjs": "^8.6.0",
+  "@storybook/addon-essentials": "^8.6.0",
+  "@storybook/addon-interactions": "^8.6.0",
+  "@storybook/test": "^8.6.0",
 
   // Animation
   motion: "^12.17.0",
@@ -488,11 +487,11 @@ export const dependencyVersionMap = {
   "@paddle/paddle-js": "^1.3.0",
 
   // Payments - Dodo Payments
-  dodopayments: "^0.23.0",
-  "dodopayments-checkout": "^0.2.1",
+  dodopayments: "^2.19.0",
+  "dodopayments-checkout": "^1.8.0",
 
   // File Upload - UploadThing
-  uploadthing: "^7.8.0",
+  uploadthing: "^7.7.0",
   "@uploadthing/react": "^7.3.0",
   "@uploadthing/svelte": "^7.3.0",
   "@uploadthing/vue": "^7.3.0",
@@ -510,15 +509,15 @@ export const dependencyVersionMap = {
   "filepond-plugin-file-validate-size": "^2.2.8",
 
   // File Upload - Uppy
-  "@uppy/core": "^4.4.0",
-  "@uppy/dashboard": "^4.3.2",
-  "@uppy/drag-drop": "^4.1.1",
-  "@uppy/progress-bar": "^4.2.0",
-  "@uppy/xhr-upload": "^4.3.0",
-  "@uppy/tus": "^4.2.0",
-  "@uppy/react": "^4.1.0",
-  "@uppy/svelte": "^4.1.0",
-  "@uppy/vue": "^4.1.0",
+  "@uppy/core": "^5.2.0",
+  "@uppy/dashboard": "^5.1.0",
+  "@uppy/drag-drop": "^5.1.0",
+  "@uppy/progress-bar": "^4.3.0",
+  "@uppy/xhr-upload": "^5.1.0",
+  "@uppy/tus": "^5.1.0",
+  "@uppy/react": "^5.2.0",
+  "@uppy/svelte": "^5.2.0",
+  "@uppy/vue": "^3.2.0",
   "@uppy/angular": "^0.8.0",
 
   // RedwoodJS

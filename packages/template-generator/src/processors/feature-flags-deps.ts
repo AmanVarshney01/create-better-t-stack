@@ -3,6 +3,7 @@ import type { ProjectConfig } from "@better-fullstack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { addPackageDependency } from "../utils/add-deps";
+import { getWebPackagePath } from "../utils/project-paths";
 
 export function processFeatureFlagsDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { featureFlags, frontend, backend } = config;
@@ -14,10 +15,11 @@ export function processFeatureFlagsDeps(vfs: VirtualFileSystem, config: ProjectC
       f !== "none" && f !== "native-bare" && f !== "native-uniwind" && f !== "native-unistyles",
   );
 
+  const webPath = getWebPackagePath(frontend);
+
   if (featureFlags === "growthbook") {
     // Add client-side React SDK to web app
     if (hasWebFrontend) {
-      const webPath = "apps/web/package.json";
       if (vfs.exists(webPath)) {
         addPackageDependency({
           vfs,
@@ -41,7 +43,6 @@ export function processFeatureFlagsDeps(vfs: VirtualFileSystem, config: ProjectC
 
     // For fullstack frameworks (Next.js, etc.), add both SDKs to web
     if (backend === "self" && hasWebFrontend) {
-      const webPath = "apps/web/package.json";
       if (vfs.exists(webPath)) {
         addPackageDependency({
           vfs,
@@ -55,7 +56,6 @@ export function processFeatureFlagsDeps(vfs: VirtualFileSystem, config: ProjectC
   if (featureFlags === "posthog") {
     // Add client-side PostHog SDK to web app
     if (hasWebFrontend) {
-      const webPath = "apps/web/package.json";
       if (vfs.exists(webPath)) {
         addPackageDependency({
           vfs,
@@ -79,7 +79,6 @@ export function processFeatureFlagsDeps(vfs: VirtualFileSystem, config: ProjectC
 
     // For fullstack frameworks (Next.js, etc.), add both SDKs to web
     if (backend === "self" && hasWebFrontend) {
-      const webPath = "apps/web/package.json";
       if (vfs.exists(webPath)) {
         addPackageDependency({
           vfs,

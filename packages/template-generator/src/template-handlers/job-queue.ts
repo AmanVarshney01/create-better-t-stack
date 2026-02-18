@@ -12,6 +12,7 @@ export async function processJobQueueTemplates(
   if (!config.jobQueue || config.jobQueue === "none") return;
   if (config.backend === "convex") return;
   if (config.backend === "none") return;
+  if (config.backend === "self") return;
 
   // Process server-side job queue templates
   processTemplatesFromPrefix(

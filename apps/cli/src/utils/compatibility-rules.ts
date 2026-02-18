@@ -17,7 +17,7 @@ import type {
 
 import { ADDON_COMPATIBILITY, UI_LIBRARY_COMPATIBILITY } from "../constants";
 import { WEB_FRAMEWORKS } from "./compatibility";
-import { constraintError, incompatibilityError, invalidSelectionError } from "./error-formatter";
+import { incompatibilityError, invalidSelectionError } from "./error-formatter";
 import { exitWithError } from "./errors";
 
 export function isWebFrontend(value: Frontend) {
@@ -59,13 +59,12 @@ export function ensureSingleWebAndNative(frontends: Frontend[]) {
   }
 }
 
-// Temporarily restrict to Next.js, TanStack Start, and Astro only for backend="self"
+// Frontends with built-in server capabilities for backend="self"
 const FULLSTACK_FRONTENDS: readonly Frontend[] = [
   "next",
   "tanstack-start",
   "astro",
-  // "nuxt",      // TODO: Add support in future update
-  // "svelte",    // TODO: Add support in future update
+  "nuxt",
 ] as const;
 
 export function validateSelfBackendCompatibility(
@@ -82,7 +81,7 @@ export function validateSelfBackendCompatibility(
 
     if (!hasSupportedWeb) {
       exitWithError(
-        "Backend 'self' (fullstack) currently only supports Next.js, TanStack Start, and Astro frontends. Please use --frontend next, --frontend tanstack-start, or --frontend astro. Support for Nuxt and SvelteKit will be added in a future update.",
+        "Backend 'self' (fullstack) only supports Next.js, TanStack Start, Astro, or Nuxt frontends. Please use --frontend next, --frontend tanstack-start, --frontend astro, or --frontend nuxt.",
       );
     }
 
@@ -96,7 +95,7 @@ export function validateSelfBackendCompatibility(
   const hasFullstackFrontend = frontends.some((f) => FULLSTACK_FRONTENDS.includes(f));
   if (providedFlags.has("backend") && !hasFullstackFrontend && backend === "self") {
     exitWithError(
-      "Backend 'self' (fullstack) currently only supports Next.js, TanStack Start, and Astro frontends. Please use --frontend next, --frontend tanstack-start, --frontend astro, or choose a different backend. Support for Nuxt and SvelteKit will be added in a future update.",
+      "Backend 'self' (fullstack) only supports Next.js, TanStack Start, Astro, or Nuxt frontends. Please use --frontend next, --frontend tanstack-start, --frontend astro, --frontend nuxt, or choose a different backend.",
     );
   }
 }

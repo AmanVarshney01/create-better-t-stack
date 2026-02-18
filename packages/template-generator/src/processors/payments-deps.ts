@@ -3,13 +3,15 @@ import type { ProjectConfig } from "@better-fullstack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { addPackageDependency } from "../utils/add-deps";
+import { getWebPackagePath, getServerPackagePath } from "../utils/project-paths";
 
 export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { payments, frontend } = config;
   if (!payments || payments === "none") return;
 
   const authPath = "packages/auth/package.json";
-  const webPath = "apps/web/package.json";
+  const webPath = getWebPackagePath(frontend);
+  const serverPath = getServerPackagePath(frontend);
 
   if (payments === "polar") {
     if (vfs.exists(authPath)) {
@@ -30,6 +32,7 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
           "nuxt",
           "svelte",
           "solid",
+          "redwood",
         ].includes(f),
       );
       if (hasWebFrontend) {
@@ -43,8 +46,6 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
   }
 
   if (payments === "stripe") {
-    const serverPath = "apps/server/package.json";
-
     // Add server-side Stripe SDK
     if (vfs.exists(serverPath)) {
       addPackageDependency({
@@ -66,7 +67,7 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
     // Add client-side Stripe.js for web frontends
     if (vfs.exists(webPath)) {
       const hasReactWeb = frontend.some((f) =>
-        ["react-router", "tanstack-router", "tanstack-start", "next"].includes(f),
+        ["react-router", "tanstack-router", "tanstack-start", "next", "redwood"].includes(f),
       );
       const hasOtherWeb = frontend.some((f) => ["nuxt", "svelte", "solid"].includes(f));
 
@@ -89,8 +90,6 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
   }
 
   if (payments === "lemon-squeezy") {
-    const serverPath = "apps/server/package.json";
-
     // Add server-side Lemon Squeezy SDK (server-side only for security)
     if (vfs.exists(serverPath)) {
       addPackageDependency({
@@ -111,8 +110,6 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
   }
 
   if (payments === "paddle") {
-    const serverPath = "apps/server/package.json";
-
     // Add server-side Paddle SDK
     if (vfs.exists(serverPath)) {
       addPackageDependency({
@@ -142,6 +139,7 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
           "nuxt",
           "svelte",
           "solid",
+          "redwood",
         ].includes(f),
       );
 
@@ -156,8 +154,6 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
   }
 
   if (payments === "dodo") {
-    const serverPath = "apps/server/package.json";
-
     // Add server-side Dodo Payments SDK
     if (vfs.exists(serverPath)) {
       addPackageDependency({
@@ -187,6 +183,7 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
           "nuxt",
           "svelte",
           "solid",
+          "redwood",
         ].includes(f),
       );
 
