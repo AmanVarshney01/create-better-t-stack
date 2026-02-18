@@ -3,6 +3,7 @@ import type { ProjectConfig } from "@better-fullstack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
+import { getWebPackagePath, getServerPackagePath } from "../utils/project-paths";
 
 // React-based frontends that can use @testing-library/react
 const REACT_FRONTENDS = [
@@ -42,9 +43,11 @@ export function processTestingDeps(vfs: VirtualFileSystem, config: ProjectConfig
   // Skip if not selected or "none"
   if (!testing || testing === "none") return;
 
+  const webPath = getWebPackagePath(frontend);
+  const serverPath = getServerPackagePath(frontend);
   const packages = {
-    server: vfs.exists("apps/server/package.json"),
-    web: vfs.exists("apps/web/package.json"),
+    server: vfs.exists(serverPath),
+    web: vfs.exists(webPath),
     api: vfs.exists("packages/api/package.json"),
   };
 
@@ -58,7 +61,7 @@ export function processTestingDeps(vfs: VirtualFileSystem, config: ProjectConfig
   if (packages.server && baseDeps.length > 0) {
     addPackageDependency({
       vfs,
-      packagePath: "apps/server/package.json",
+      packagePath: serverPath,
       devDependencies: baseDeps,
     });
   }
@@ -69,7 +72,7 @@ export function processTestingDeps(vfs: VirtualFileSystem, config: ProjectConfig
     if (webDeps.length > 0) {
       addPackageDependency({
         vfs,
-        packagePath: "apps/web/package.json",
+        packagePath: webPath,
         devDependencies: webDeps,
       });
     }

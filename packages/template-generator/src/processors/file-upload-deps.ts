@@ -3,8 +3,15 @@ import type { ProjectConfig } from "@better-fullstack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
+import { getWebPackagePath, getServerPackagePath } from "../utils/project-paths";
 
-const REACT_WEB_FRONTENDS = ["tanstack-router", "react-router", "tanstack-start", "next"];
+const REACT_WEB_FRONTENDS = [
+  "tanstack-router",
+  "react-router",
+  "tanstack-start",
+  "next",
+  "redwood",
+];
 const NATIVE_FRONTENDS = ["native-bare", "native-uniwind", "native-unistyles"];
 const SVELTE_FRONTENDS = ["svelte"];
 const VUE_FRONTENDS = ["nuxt"];
@@ -53,7 +60,7 @@ function processUploadthingDeps(vfs: VirtualFileSystem, config: ProjectConfig): 
 
   // Server-side SDK
   // Add to apps/server if it exists (separate backend)
-  const serverPath = "apps/server/package.json";
+  const serverPath = getServerPackagePath(frontend);
   if (vfs.exists(serverPath) && backend !== "none" && backend !== "convex") {
     addPackageDependency({
       vfs,
@@ -67,7 +74,7 @@ function processUploadthingDeps(vfs: VirtualFileSystem, config: ProjectConfig): 
     backend === "self" && frontend.some((f) => FULLSTACK_WITH_SELF_BACKEND.includes(f));
 
   // Client-side SDK
-  const webPath = "apps/web/package.json";
+  const webPath = getWebPackagePath(frontend);
   if (vfs.exists(webPath)) {
     const hasReactWeb = frontend.some((f) => REACT_WEB_FRONTENDS.includes(f));
     const hasSvelte = frontend.some((f) => SVELTE_FRONTENDS.includes(f));
@@ -160,7 +167,7 @@ function processUploadthingDeps(vfs: VirtualFileSystem, config: ProjectConfig): 
 function processFilepondDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { frontend, astroIntegration } = config;
 
-  const webPath = "apps/web/package.json";
+  const webPath = getWebPackagePath(frontend);
   if (!vfs.exists(webPath)) return;
 
   const hasReactWeb = frontend.some((f) => REACT_WEB_FRONTENDS.includes(f));
@@ -230,7 +237,7 @@ function processFilepondDeps(vfs: VirtualFileSystem, config: ProjectConfig): voi
 function processUppyDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { frontend, astroIntegration } = config;
 
-  const webPath = "apps/web/package.json";
+  const webPath = getWebPackagePath(frontend);
   if (!vfs.exists(webPath)) return;
 
   const hasReactWeb = frontend.some((f) => REACT_WEB_FRONTENDS.includes(f));

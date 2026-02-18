@@ -3,6 +3,7 @@ import type { Frontend, ProjectConfig } from "@better-fullstack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { addPackageDependency } from "../utils/add-deps";
+import { getWebPackagePath, getServerPackagePath } from "../utils/project-paths";
 
 // Fullstack frontends with built-in servers that use backend=none
 const FULLSTACK_FRONTENDS: Frontend[] = ["fresh", "qwik", "angular", "redwood"];
@@ -12,8 +13,8 @@ export function processObservabilityDeps(vfs: VirtualFileSystem, config: Project
   if (!observability || observability === "none") return;
   if (backend === "convex") return;
 
-  const serverPath = "apps/server/package.json";
-  const webPath = "apps/web/package.json";
+  const serverPath = getServerPackagePath(frontend);
+  const webPath = getWebPackagePath(frontend);
 
   // Determine target path: self backend targets web, standalone backend targets server,
   // fullstack frontends (fresh, qwik, etc.) fall back to web

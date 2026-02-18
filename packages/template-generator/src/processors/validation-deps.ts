@@ -3,6 +3,7 @@ import type { ProjectConfig } from "@better-fullstack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
+import { getWebPackagePath, getServerPackagePath } from "../utils/project-paths";
 
 /**
  * Process validation library dependencies.
@@ -12,15 +13,18 @@ import { addPackageDependency, type AvailableDependencies } from "../utils/add-d
  * but Valibot can be used as the primary validation library in user code.
  */
 export function processValidationDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { validation } = config;
+  const { validation, frontend } = config;
 
   // Skip if not selected, "none", or "zod" (zod is added by workspace-deps already)
   if (!validation || validation === "none" || validation === "zod") return;
 
+  const webPath = getWebPackagePath(frontend);
+  const serverPath = getServerPackagePath(frontend);
+
   const packages = {
     api: vfs.exists("packages/api/package.json"),
-    server: vfs.exists("apps/server/package.json"),
-    web: vfs.exists("apps/web/package.json"),
+    server: vfs.exists(serverPath),
+    web: vfs.exists(webPath),
     native: vfs.exists("apps/native/package.json"),
   };
 
@@ -40,7 +44,7 @@ export function processValidationDeps(vfs: VirtualFileSystem, config: ProjectCon
   if (packages.server) {
     addPackageDependency({
       vfs,
-      packagePath: "apps/server/package.json",
+      packagePath: serverPath,
       dependencies: deps,
     });
   }
@@ -49,7 +53,7 @@ export function processValidationDeps(vfs: VirtualFileSystem, config: ProjectCon
   if (packages.web) {
     addPackageDependency({
       vfs,
-      packagePath: "apps/web/package.json",
+      packagePath: webPath,
       dependencies: deps,
     });
   }

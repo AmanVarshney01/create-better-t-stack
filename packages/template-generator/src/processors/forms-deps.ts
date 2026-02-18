@@ -3,6 +3,7 @@ import type { Frontend, ProjectConfig } from "@better-fullstack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
+import { getWebPackagePath } from "../utils/project-paths";
 
 // React-based web frameworks that support form libraries
 const REACT_WEB_FRAMEWORKS: Frontend[] = [
@@ -10,6 +11,7 @@ const REACT_WEB_FRAMEWORKS: Frontend[] = [
   "react-router",
   "tanstack-start",
   "next",
+  "redwood",
 ];
 
 // Native frameworks (always React-based)
@@ -36,7 +38,7 @@ export function processFormsDeps(vfs: VirtualFileSystem, config: ProjectConfig):
   const hasAstroReact = frontend.includes("astro") && astroIntegration === "react";
 
   // Add to web package if it's a React-based web frontend or Astro with React
-  const webPath = "apps/web/package.json";
+  const webPath = getWebPackagePath(frontend);
   if ((hasReactWeb || hasAstroReact) && vfs.exists(webPath)) {
     const deps = getFormsDeps(forms, "react");
     if (deps.length > 0) {

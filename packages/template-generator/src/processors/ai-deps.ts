@@ -3,6 +3,7 @@ import type { Frontend, ProjectConfig } from "@better-fullstack/types";
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { addPackageDependency } from "../utils/add-deps";
+import { getWebPackagePath, getServerPackagePath } from "../utils/project-paths";
 
 // Fullstack frontends with built-in servers that use backend=none
 const FULLSTACK_FRONTENDS: Frontend[] = ["fresh", "qwik", "angular", "redwood"];
@@ -20,8 +21,8 @@ export function processAIDeps(vfs: VirtualFileSystem, config: ProjectConfig): vo
   // Get the web frontend for client-side AI packages
   const webFrontend = frontend.find((f) => !f.startsWith("native") && f !== "none");
 
-  // Template generator uses apps/web for web frontends, not the framework name
-  const webPath = "apps/web/package.json";
+  // Template generator uses apps/web for web frontends (or web/ for Redwood)
+  const webPath = getWebPackagePath(frontend);
 
   // Determine the target package path based on backend
   // For "self" backend (Next.js, Nuxt, etc.), the server code is in the web app
@@ -36,7 +37,7 @@ export function processAIDeps(vfs: VirtualFileSystem, config: ProjectConfig): vo
   } else if (backend === "none") {
     return;
   } else {
-    serverPath = "apps/server/package.json";
+    serverPath = getServerPackagePath(frontend);
   }
 
   // Skip if target doesn't exist
@@ -57,7 +58,9 @@ export function processAIDeps(vfs: VirtualFileSystem, config: ProjectConfig): vo
       if (
         frontendPath &&
         webFrontend &&
-        ["tanstack-router", "react-router", "tanstack-start", "next"].includes(webFrontend)
+        ["tanstack-router", "react-router", "tanstack-start", "next", "redwood"].includes(
+          webFrontend,
+        )
       ) {
         addPackageDependency({
           vfs,

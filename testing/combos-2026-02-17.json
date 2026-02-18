@@ -2,7 +2,7 @@
   "v": 2,
   "d": "2026-02-17",
   "cb": "bun create better-fullstack@latest <name> --no-install --no-git --disable-analytics --package-manager bun ...",
-  "tot": [100, 81, 19, 19],
+  "tot": [110, 89, 21, 20],
   "k": {
     "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
     "r": { "p": "pass", "f": "fail" },
@@ -16,7 +16,9 @@
       "E": "backend=self: orphaned apps/server/ dir created by logging/email/observability/etc handlers + post-install msg missing astro/angular in WEB_FRAMEWORKS",
       "F": "backend=self: email/logging/observability deps+templates not redirected to apps/web (deps went nowhere, templates went to orphaned apps/server)",
       "G": "Outdated dep versions in add-deps.ts: @ts-rest/* ^3.55.0 (latest 3.52.1), uploadthing ^7.8.0 (latest 7.7.4), mastra/core ^0.24.9 (latest 1.3.1/1.4.0)",
-      "H2": "Outdated/wrong dep versions in add-deps.ts: dodopayments ^0.23.0→^2.19.0, dodopayments-checkout ^0.2.1→^1.8.0, @storybook/* ^9.0.15→^8.6.0 (v9 not published), @legendapp/state-react removed (nonexistent package; React bindings are subpath of @legendapp/state)"
+      "H2": "Outdated/wrong dep versions in add-deps.ts: dodopayments ^0.23.0→^2.19.0, dodopayments-checkout ^0.2.1→^1.8.0, @storybook/* ^9.0.15→^8.6.0 (v9 not published), @legendapp/state-react removed (nonexistent package; React bindings are subpath of @legendapp/state)",
+      "K": "Redwood (backend=none) deps missing: state-mgmt/validation/ui-library not added to web/package.json (redwood uses web/ not apps/web/ path, and missing from framework lists in processors)",
+      "M": "Angular missing from OTHER_WEB_FRAMEWORKS in state-management-deps.ts, animation-deps.ts, and css-ui-deps.ts inline list, causing state-mgmt deps to not be installed"
     }
   },
   "rows": [
@@ -1743,6 +1745,143 @@
         "tanstack-form",
         "d1",
         "cloudflare"
+      ],
+      "p"
+    ],
+    [
+      "rust-actix-dioxus-sqlx-graphql",
+      "r",
+      ["actix-web", "dioxus", "sqlx", "async-graphql", "none", ["serde", "validator"]],
+      "p"
+    ],
+    ["go-gin-sqlc-bubbletea-zap", "g", ["gin", "sqlc", "none", "bubbletea", "zap"], "p"],
+    [
+      "python-django-sqlmodel-anthropic-ruff",
+      "p",
+      ["django", "sqlmodel", "pydantic", ["anthropic-sdk"], "none", "ruff"],
+      "p"
+    ],
+    [
+      "ts-redwood-daisyui-valibot-zustand",
+      "t",
+      ["redwood", "tailwind", "daisyui", "valibot", "vitest", "zustand"],
+      "f",
+      "K"
+    ],
+    [
+      "ts-nuxt-fastify-orpc-prisma-mysql",
+      "t",
+      [
+        "nuxt",
+        "scss",
+        "none",
+        "zod",
+        "cypress",
+        "none",
+        "fastify",
+        "orpc",
+        "prisma",
+        "mysql",
+        "better-auth",
+        "pino"
+      ],
+      "p"
+    ],
+    [
+      "ts-astro-solid-express-orpc-typeorm-mysql",
+      "t",
+      [
+        "astro",
+        "tailwind",
+        "none",
+        "zod",
+        "vitest",
+        "none",
+        "express",
+        "orpc",
+        "typeorm",
+        "mysql",
+        "better-auth"
+      ],
+      "p"
+    ],
+    [
+      "ts-angular-express-redux-drizzle-sqlite",
+      "t",
+      [
+        "angular",
+        "tailwind",
+        "none",
+        "valibot",
+        "vitest",
+        "redux-toolkit",
+        "express",
+        "none",
+        "drizzle",
+        "sqlite",
+        "better-auth",
+        "winston"
+      ],
+      "f",
+      "M",
+      1
+    ],
+    [
+      "ts-svelte-elysia-orpc-prisma-stripe",
+      "t",
+      [
+        "svelte",
+        "scss",
+        "none",
+        "arktype",
+        "vitest",
+        "none",
+        "elysia",
+        "orpc",
+        "prisma",
+        "postgres",
+        "better-auth",
+        "stripe",
+        "resend"
+      ],
+      "p"
+    ],
+    [
+      "ts-solid-fastify-orpc-kysely-jotai",
+      "t",
+      [
+        "solid",
+        "less",
+        "none",
+        "typebox",
+        "jest",
+        "jotai",
+        "fastify",
+        "orpc",
+        "kysely",
+        "postgres",
+        "better-auth",
+        "gsap"
+      ],
+      "p"
+    ],
+    [
+      "ts-qwik-express-sequelize-mysql",
+      "t",
+      [
+        "qwik",
+        "tailwind",
+        "none",
+        "zod",
+        "vitest",
+        "none",
+        "express",
+        "none",
+        "sequelize",
+        "mysql",
+        "better-auth",
+        "bullmq",
+        "winston"
       ],
       "p"
     ]
