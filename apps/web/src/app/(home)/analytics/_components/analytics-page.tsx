@@ -13,6 +13,7 @@ import { TimelineSection } from "./timeline-charts";
 export default function AnalyticsPage({
   data,
   legacy,
+  connectionStatus,
 }: {
   data: AggregatedAnalyticsData;
   legacy: {
@@ -21,11 +22,16 @@ export default function AnalyticsPage({
     lastUpdatedIso: string;
     source: string;
   };
+  connectionStatus: "online" | "connecting" | "reconnecting" | "offline";
 }) {
   return (
     <div className="mx-auto min-h-svh bg-fd-background">
       <div className="container mx-auto space-y-10 px-4 py-8 pt-16">
-        <AnalyticsHeader lastUpdated={data.lastUpdated} legacy={legacy} />
+        <AnalyticsHeader
+          lastUpdated={data.lastUpdated}
+          legacy={legacy}
+          connectionStatus={connectionStatus}
+        />
 
         <MetricsCards data={data} />
 

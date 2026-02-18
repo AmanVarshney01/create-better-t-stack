@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@better-t-stack/backend/convex/_generated/api";
-import { type Preloaded, usePreloadedQuery } from "convex/react";
+import { type Preloaded, useConvexConnectionState, usePreloadedQuery } from "convex/react";
 
 import type { AggregatedAnalyticsData, Distribution } from "./_components/types";
 
@@ -35,6 +35,22 @@ type PrecomputedStats = {
 };
 
 type DailyStats = { date: string; count: number };
+type ConnectionStatus = "online" | "connecting" | "reconnecting" | "offline";
+
+function getConnectionStatus({
+  isWebSocketConnected,
+  hasEverConnected,
+  connectionRetries,
+}: {
+  isWebSocketConnected: boolean;
+  hasEverConnected: boolean;
+  connectionRetries: number;
+}): ConnectionStatus {
+  if (isWebSocketConnected) return "online";
+  if (hasEverConnected) return "reconnecting";
+  if (connectionRetries > 0) return "offline";
+  return "connecting";
+}
 
 function recordToDistribution(record: Record<string, number>): Distribution {
   return Object.entries(record)
@@ -149,6 +165,8 @@ export function AnalyticsClient({
 }) {
   const stats = usePreloadedQuery(preloadedStats);
   const dailyStats = usePreloadedQuery(preloadedDailyStats);
+  const connectionState = useConvexConnectionState();
+  const connectionStatus = getConnectionStatus(connectionState);
 
   const data = stats
     ? buildFromPrecomputed(stats, dailyStats)
@@ -196,8 +214,8 @@ export function AnalyticsClient({
     total: 55434,
     avgPerDay: 326.1,
     lastUpdatedIso: "2025-11-13T10:10:00.000Z",
-    source: "PostHog (legacy)",
+    source: "PostHog (legacy, pre-Convex)",
   };
 
-  return <AnalyticsPage data={data} legacy={legacy} />;
+  return <AnalyticsPage data={data} legacy={legacy} connectionStatus={connectionStatus} />;
 }
