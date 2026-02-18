@@ -5,8 +5,10 @@ import type { ProjectConfig } from "../../types";
 
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { setupFumadocs } from "./fumadocs-setup";
+import { setupMcp } from "./mcp-setup";
 import { setupOxlint } from "./oxlint-setup";
 import { setupRuler } from "./ruler-setup";
+import { setupSkills } from "./skills-setup";
 import { setupStarlight } from "./starlight-setup";
 import { setupTauri } from "./tauri-setup";
 import { setupTui } from "./tui-setup";
@@ -89,6 +91,14 @@ export async function setupAddons(config: ProjectConfig) {
 
   if (addons.includes("ruler")) {
     await setupRuler(config);
+  }
+
+  if (addons.includes("mcp")) {
+    await setupMcp(config);
+  }
+
+  if (addons.includes("skills")) {
+    await setupSkills(config);
   }
 }
 

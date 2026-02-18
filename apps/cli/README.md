@@ -57,6 +57,22 @@ npx create-better-fullstack --backend elysia --runtime node
 npx create-better-fullstack --frontend tanstack-router native-bare
 ```
 
+## Additional Commands
+
+```bash
+# Add new addons to an existing Better Fullstack project
+npx create-better-fullstack add --addons mcp skills --install
+
+# Show recent project history
+npx create-better-fullstack history --limit 10
+
+# Output history as JSON
+npx create-better-fullstack history --json
+
+# Clear saved history
+npx create-better-fullstack history --clear
+```
+
 ## Project Structure
 
 ```

@@ -231,11 +231,12 @@ describe("CLI and Builder Sync", () => {
 
         // Builder-specific options that map to different CLI values
         const builderToCli: Record<string, Record<string, string>> = {
-          // self-next, self-tanstack-start, self-astro all map to "self" in CLI
+          // self-* backends all map to "self" in CLI
           backend: {
             "self-next": "self",
             "self-tanstack-start": "self",
             "self-astro": "self",
+            "self-nuxt": "self",
           },
         };
 
@@ -266,7 +267,7 @@ describe("CLI and Builder Sync", () => {
 
         // Some CLI options are intentionally not shown in Builder UI
         const intentionallyExcluded: Record<string, string[]> = {
-          // "self" backend is mapped from self-next, self-tanstack-start, self-astro in Builder
+          // "self" backend is mapped from self-* variants in Builder
           backend: ["self"],
           // native frontends are in a separate nativeFrontend category in Builder
           webFrontend: ["native-bare", "native-uniwind", "native-unistyles"],
@@ -298,6 +299,8 @@ describe("CLI and Builder Sync", () => {
             "wxt",
             "msw",
             "storybook",
+            "mcp",
+            "skills",
             "none",
           ],
           documentation: [
@@ -314,6 +317,8 @@ describe("CLI and Builder Sync", () => {
             "wxt",
             "msw",
             "storybook",
+            "mcp",
+            "skills",
             "none",
           ],
           appPlatforms: [
@@ -327,6 +332,8 @@ describe("CLI and Builder Sync", () => {
             "oxlint",
             "msw",
             "storybook",
+            "mcp",
+            "skills",
             "none",
           ],
           // examples category may not show "none" explicitly

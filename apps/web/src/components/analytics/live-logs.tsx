@@ -6,12 +6,28 @@ import { ChevronRight, Terminal, Radio } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
 
+import type { AnalyticsConnectionStatus } from "@/components/analytics/analytics-header";
+
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { isConvexConfigured } from "@/lib/convex";
 import { cn } from "@/lib/utils";
 
-function LiveLogsContent() {
+function getConnectionLabel(status: AnalyticsConnectionStatus): string {
+  if (status === "online") return "[CONNECTED]";
+  if (status === "reconnecting") return "[RECONNECTING]";
+  if (status === "offline") return "[OFFLINE]";
+  return "[NOT CONFIGURED]";
+}
+
+function getConnectionClass(status: AnalyticsConnectionStatus): string {
+  if (status === "online") return "text-emerald-400/80";
+  if (status === "reconnecting") return "text-amber-400/80";
+  if (status === "offline") return "text-red-400/80";
+  return "text-muted-foreground/60";
+}
+
+function LiveLogsContent({ connectionStatus }: { connectionStatus: AnalyticsConnectionStatus }) {
   const [isOpen, setIsOpen] = useState(false);
 
   // Only fetch when expanded - pass "skip" to skip the query when closed
@@ -36,9 +52,19 @@ function LiveLogsContent() {
             LIVE_PROJECT_LOGS.SH
           </span>
         </div>
-        <span className="text-muted-foreground/60 text-[10px] font-mono group-hover:text-foreground/80 transition-colors uppercase tracking-wider">
-          {isOpen ? "[COLLAPSE]" : "[EXPAND FEED]"}
-        </span>
+        <div className="flex items-center gap-3">
+          <span
+            className={cn(
+              "text-[10px] font-mono uppercase tracking-wider",
+              getConnectionClass(connectionStatus),
+            )}
+          >
+            {getConnectionLabel(connectionStatus)}
+          </span>
+          <span className="text-muted-foreground/60 text-[10px] font-mono group-hover:text-foreground/80 transition-colors uppercase tracking-wider">
+            {isOpen ? "[COLLAPSE]" : "[EXPAND FEED]"}
+          </span>
+        </div>
       </Button>
 
       <AnimatePresence initial={false}>
@@ -137,7 +163,7 @@ function LiveLogsContent() {
   );
 }
 
-export function LiveLogs() {
+export function LiveLogs({ connectionStatus }: { connectionStatus: AnalyticsConnectionStatus }) {
   if (!isConvexConfigured) {
     // Return a simplified version without Convex
     return (
@@ -150,11 +176,11 @@ export function LiveLogs() {
             </span>
           </div>
           <span className="text-muted-foreground/60 text-[10px] font-mono uppercase tracking-wider">
-            [CONVEX NOT CONFIGURED]
+            [NOT CONFIGURED]
           </span>
         </div>
       </div>
     );
   }
-  return <LiveLogsContent />;
+  return <LiveLogsContent connectionStatus={connectionStatus} />;
 }

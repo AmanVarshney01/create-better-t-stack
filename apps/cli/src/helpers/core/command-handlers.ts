@@ -15,6 +15,7 @@ import { displayConfig } from "../../utils/display-config";
 import { CLIError, UserCancelledError } from "../../utils/errors";
 import { generateReproducibleCommand } from "../../utils/generate-reproducible-command";
 import { handleDirectoryConflict, setupProjectDirectory } from "../../utils/project-directory";
+import { addToHistory } from "../../utils/project-history";
 import { renderTitle } from "../../utils/render-title";
 import { getTemplateConfig, getTemplateDescription } from "../../utils/templates";
 import {
@@ -244,6 +245,17 @@ export async function createProjectHandler(
       }
 
       await trackProjectCreation(config, input.disableAnalytics);
+      try {
+        await addToHistory(config, reproducibleCommand);
+      } catch (historyError) {
+        if (!isSilent()) {
+          log.warn(
+            pc.yellow(
+              `Failed to write project history: ${historyError instanceof Error ? historyError.message : String(historyError)}`,
+            ),
+          );
+        }
+      }
 
       const elapsedTimeMs = Date.now() - startTime;
       if (!isSilent()) {

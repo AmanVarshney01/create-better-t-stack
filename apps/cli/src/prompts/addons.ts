@@ -43,6 +43,14 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "Ruler";
       hint = "Centralize your AI rules";
       break;
+    case "mcp":
+      label = "MCP";
+      hint = "Install MCP server recommendations for your stack";
+      break;
+    case "skills":
+      label = "Skills";
+      hint = "Install curated AI coding skills for your stack";
+      break;
     case "lefthook":
       label = "Lefthook";
       hint = "Fast and powerful Git hooks manager";
@@ -79,6 +87,7 @@ const ADDON_GROUPS = {
   Tooling: ["turborepo", "biome", "oxlint", "ultracite", "husky", "lefthook"],
   Documentation: ["starlight", "fumadocs"],
   Extensions: ["pwa", "tauri", "opentui", "wxt", "ruler"],
+  "AI Agents": ["mcp", "skills"],
 };
 
 export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[], auth?: Auth) {
@@ -89,6 +98,7 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
     Tooling: [],
     Documentation: [],
     Extensions: [],
+    "AI Agents": [],
   };
 
   const frontendsArray = frontends || [];
@@ -106,6 +116,8 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
       groupedOptions.Documentation.push(option);
     } else if (ADDON_GROUPS.Extensions.includes(addon)) {
       groupedOptions.Extensions.push(option);
+    } else if (ADDON_GROUPS["AI Agents"].includes(addon)) {
+      groupedOptions["AI Agents"].push(option);
     }
   }
 
@@ -149,6 +161,7 @@ export async function getAddonsToAdd(
     Tooling: [],
     Documentation: [],
     Extensions: [],
+    "AI Agents": [],
   };
 
   const frontendArray = frontend || [];
@@ -170,6 +183,8 @@ export async function getAddonsToAdd(
       groupedOptions.Documentation.push(option);
     } else if (ADDON_GROUPS.Extensions.includes(addon)) {
       groupedOptions.Extensions.push(option);
+    } else if (ADDON_GROUPS["AI Agents"].includes(addon)) {
+      groupedOptions["AI Agents"].push(option);
     }
   }
 

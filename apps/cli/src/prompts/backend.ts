@@ -4,13 +4,12 @@ import { DEFAULT_CONFIG } from "../constants";
 import { exitCancelled } from "../utils/errors";
 import { isCancel, navigableSelect } from "./navigable";
 
-// Temporarily restrict to Next.js, TanStack Start, and Astro only for backend="self"
+// Frontends with built-in server capabilities for backend="self"
 const FULLSTACK_FRONTENDS: readonly Frontend[] = [
   "next",
   "tanstack-start",
   "astro",
-  // "nuxt",      // TODO: Add support in future update
-  // "svelte",    // TODO: Add support in future update
+  "nuxt",
 ] as const;
 
 export async function getBackendFrameworkChoice(

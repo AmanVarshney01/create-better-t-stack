@@ -1,9 +1,12 @@
 import { format } from "date-fns";
 import { Terminal } from "lucide-react";
 
+export type AnalyticsConnectionStatus = "online" | "reconnecting" | "offline" | "disabled";
+
 export function AnalyticsHeader({
   lastUpdated,
   legacy,
+  connectionStatus,
 }: {
   lastUpdated: string | null;
   legacy: {
@@ -12,11 +15,28 @@ export function AnalyticsHeader({
     lastUpdatedIso: string;
     source: string;
   };
+  connectionStatus: AnalyticsConnectionStatus;
 }) {
   const formattedDate = lastUpdated
     ? format(new Date(lastUpdated), "MMM d, yyyy 'at' HH:mm")
     : null;
   const legacyDate = format(new Date(legacy.lastUpdatedIso), "MMM d, yyyy 'at' HH:mm");
+  const statusColor =
+    connectionStatus === "online"
+      ? "text-green-500"
+      : connectionStatus === "reconnecting"
+        ? "text-amber-500"
+        : connectionStatus === "disabled"
+          ? "text-muted-foreground"
+          : "text-red-500";
+  const statusLabel =
+    connectionStatus === "online"
+      ? "online"
+      : connectionStatus === "reconnecting"
+        ? "reconnecting"
+        : connectionStatus === "offline"
+          ? "offline"
+          : "not-configured";
 
   return (
     <div className="mb-4">
@@ -37,7 +57,7 @@ export function AnalyticsHeader({
           <div className="flex items-center gap-2">
             <span className="text-primary">$</span>
             <span className="text-muted-foreground">status:</span>
-            <span className="text-green-500">online</span>
+            <span className={statusColor}>{statusLabel}</span>
           </div>
           {formattedDate && (
             <div className="flex items-center gap-2 text-muted-foreground text-xs">
