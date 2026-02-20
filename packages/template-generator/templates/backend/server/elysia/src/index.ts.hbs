@@ -74,20 +74,32 @@ const app = new Elysia()
 	})
 {{/if}}
 {{#if (eq api "orpc")}}
-	.all('/rpc*', async (context) => {
-		const { response } = await rpcHandler.handle(context.request, {
-			prefix: '/rpc',
-			context: await createContext({ context })
-		})
-		return response ?? new Response('Not Found', { status: 404 })
-	})
-	.all('/api*', async (context) => {
-		const { response } = await apiHandler.handle(context.request, {
-			prefix: '/api-reference',
-			context: await createContext({ context })
-		})
-		return response ?? new Response('Not Found', { status: 404 })
-	})
+	.all(
+		"/rpc*",
+		async (context) => {
+			const { response } = await rpcHandler.handle(context.request, {
+				prefix: "/rpc",
+				context: await createContext({ context }),
+			});
+			return response ?? new Response("Not Found", { status: 404 });
+		},
+		{
+			parse: "none",
+		}
+	)
+	.all(
+		"/api-reference*",
+		async (context) => {
+			const { response } = await apiHandler.handle(context.request, {
+				prefix: "/api-reference",
+				context: await createContext({ context }),
+			});
+			return response ?? new Response("Not Found", { status: 404 });
+		},
+		{
+			parse: "none",
+		}
+	)
 {{/if}}
 {{#if (eq api "trpc")}}
 	.all("/trpc/*", async (context) => {
