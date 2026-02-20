@@ -1074,6 +1074,7 @@ import { toast } from "sonner";
 import { createRouterClient } from "@orpc/server";
 import type { RouterClient } from "@orpc/server";
 import { createIsomorphicFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 import { createContext } from "@{{projectName}}/api/context";
 {{else if (includes frontend "tanstack-start")}}
@@ -1104,8 +1105,8 @@ export const queryClient = new QueryClient({
 const getORPCClient = createIsomorphicFn()
 	.server(() =>
 		createRouterClient(appRouter, {
-			context: async ({ req }) => {
-				return createContext({ req });
+			context: async () => {
+				return createContext({ req: getRequest() });
 			},
 		}),
 	)
