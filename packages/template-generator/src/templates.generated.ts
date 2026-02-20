@@ -11712,17 +11712,13 @@ import { appRouter, type AppRouter } from "@{{projectName}}/api/routers/index";
 {{/if}}
 
 {{#if (eq api "orpc")}}
-import { OpenAPIHandler } from "@orpc/openapi/node";
+import { OpenAPIHandler } from "@orpc/openapi/fastify";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
-import { RPCHandler } from "@orpc/server/node";
-import { CORSPlugin } from "@orpc/server/plugins";
+import { RPCHandler } from "@orpc/server/fastify";
 import { onError } from "@orpc/server";
-import { appRouter } from "@{{projectName}}/api/routers/index";
-import { createServer } from "node:http";
-{{#if (eq auth "better-auth")}}
 import { createContext } from "@{{projectName}}/api/context";
-{{/if}}
+import { appRouter } from "@{{projectName}}/api/routers/index";
 {{/if}}
 
 {{#if (includes examples "ai")}}
@@ -11749,13 +11745,6 @@ const baseCorsConfig = {
 
 {{#if (eq api "orpc")}}
 const rpcHandler = new RPCHandler(appRouter, {
-	plugins: [
-		new CORSPlugin({
-			origin: env.CORS_ORIGIN,
-			credentials: true,
-			allowHeaders: ["Content-Type", "Authorization"],
-		}),
-	],
 	interceptors: [
 		onError((error) => {
 			console.error(error);
@@ -11778,31 +11767,6 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 
 const fastify = Fastify({
 	logger: true,
-	serverFactory: (fastifyHandler) => {
-		const server = createServer(async (req, res) => {
-			const { matched } = await rpcHandler.handle(req, res, {
-				context: await createContext(req.headers),
-				prefix: "/rpc",
-			});
-
-			if (matched) {
-				return;
-			}
-
-			const apiResult = await apiHandler.handle(req, res, {
-				context: await createContext(req.headers),
-				prefix: "/api-reference",
-			});
-
-			if (apiResult.matched) {
-				return;
-			}
-
-			fastifyHandler(req, res);
-		});
-
-		return server;
-	},
 });
 {{else}}
 const fastify = Fastify({
@@ -11811,6 +11775,37 @@ const fastify = Fastify({
 {{/if}}
 
 fastify.register(fastifyCors, baseCorsConfig);
+
+{{#if (eq api "orpc")}}
+fastify.register(async (rpcApp) => {
+	// Required by oRPC Fastify adapter to preserve body streams.
+	rpcApp.addContentTypeParser("*", (_, payload, done) => {
+		done(null, payload);
+	});
+
+	rpcApp.all("/rpc/*", async (request, reply) => {
+		const { matched } = await rpcHandler.handle(request, reply, {
+			context: await createContext(request.headers),
+			prefix: "/rpc",
+		});
+
+		if (!matched) {
+			reply.status(404).send();
+		}
+	});
+
+	rpcApp.all("/api-reference/*", async (request, reply) => {
+		const { matched } = await apiHandler.handle(request, reply, {
+			context: await createContext(request.headers),
+			prefix: "/api-reference",
+		});
+
+		if (!matched) {
+			reply.status(404).send();
+		}
+	});
+});
+{{/if}}
 
 {{#if (eq auth "better-auth")}}
 fastify.route({
