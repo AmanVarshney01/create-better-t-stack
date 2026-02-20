@@ -18,9 +18,7 @@ import {
   checkAllVersions,
   generateMarkdownReport,
   generateCliReport,
-  getDependencyVersionMap,
   listEcosystems,
-  type CheckResult,
   type VersionInfo,
 } from "../src/utils/dependency-checker";
 
@@ -117,13 +115,11 @@ async function main() {
 
   console.log("Checking dependency versions...\n");
 
-  let checked = 0;
   const result = await checkAllVersions({
     ecosystem: options.ecosystem,
     concurrency: 5,
     delayMs: 100,
     onProgress: (current, total) => {
-      checked = current;
       process.stdout.write(`\rChecking packages (${current}/${total})...`);
     },
   });

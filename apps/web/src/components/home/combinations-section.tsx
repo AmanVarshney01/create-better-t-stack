@@ -1,6 +1,6 @@
 "use client";
 
-import { Infinity, Clock } from "lucide-react";
+import { Infinity as InfinityIcon, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const funFacts = [
@@ -48,7 +48,7 @@ export default function CombinationsSection() {
       <div className="mx-auto max-w-3xl px-4">
         {/* Section Header */}
         <div className="flex items-center gap-2">
-          <Infinity className="h-5 w-5 text-foreground" />
+          <InfinityIcon className="h-5 w-5 text-foreground" />
           <h2 className="font-pixel text-lg font-bold sm:text-xl">Infinite Possibilities</h2>
         </div>
         <p className="mt-2 text-sm text-muted-foreground sm:text-base">

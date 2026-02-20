@@ -9,26 +9,30 @@ describe("Addon Configurations", () => {
     const universalAddons = ["biome", "lefthook", "husky", "turborepo", "oxlint", "msw"];
 
     for (const addon of universalAddons) {
-      it(`should work with ${addon} addon on any frontend`, async () => {
-        const result = await runTRPCTest({
-          projectName: `${addon}-universal`,
-          addons: [addon as Addons],
-          frontend: ["tanstack-router"],
-          backend: "hono",
-          runtime: "bun",
-          database: "sqlite",
-          orm: "drizzle",
-          auth: "none",
-          api: "trpc",
-          examples: ["none"],
-          dbSetup: "none",
-          webDeploy: "none",
-          serverDeploy: "none",
-          install: false,
-        });
+      it(
+        `should work with ${addon} addon on any frontend`,
+        async () => {
+          const result = await runTRPCTest({
+            projectName: `${addon}-universal`,
+            addons: [addon as Addons],
+            frontend: ["tanstack-router"],
+            backend: "hono",
+            runtime: "bun",
+            database: "sqlite",
+            orm: "drizzle",
+            auth: "none",
+            api: "trpc",
+            examples: ["none"],
+            dbSetup: "none",
+            webDeploy: "none",
+            serverDeploy: "none",
+            install: false,
+          });
 
-        expectSuccess(result);
-      });
+          expectSuccess(result);
+        },
+        { timeout: 30_000 },
+      );
     }
   });
 

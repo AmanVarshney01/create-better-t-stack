@@ -115,8 +115,6 @@ async function checkTemplateVersions(): Promise<Mismatch[]> {
   console.log(`Scanning ${files.length} package.json.hbs files...\n`);
 
   const mismatches: Mismatch[] = [];
-  let totalPackages = 0;
-  let matchedPackages = 0;
 
   for (const file of files) {
     const fullPath = path.join(TEMPLATES_DIR, file);
@@ -125,8 +123,6 @@ async function checkTemplateVersions(): Promise<Mismatch[]> {
     const templateVersions = extractVersionsFromTemplate(content);
 
     for (const [pkg, templateVersion] of Object.entries(templateVersions)) {
-      totalPackages++;
-
       // Check if this package is in our version map
       const mapVersion = dependencyVersionMap[pkg as keyof typeof dependencyVersionMap];
 
@@ -138,11 +134,8 @@ async function checkTemplateVersions(): Promise<Mismatch[]> {
             templateVersion,
             mapVersion,
           });
-        } else {
-          matchedPackages++;
-          if (options.verbose) {
-            console.log(`   ${pkg}: ${templateVersion}`);
-          }
+        } else if (options.verbose) {
+          console.log(`   ${pkg}: ${templateVersion}`);
         }
       } else if (options.verbose) {
         console.log(`  ? ${pkg}: ${templateVersion} (not in version map)`);
