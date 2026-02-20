@@ -25,16 +25,6 @@ interface PreviewPanelProps {
   onSelectFile: (filePath: string | null) => void;
 }
 
-interface PreviewResponse {
-  success: boolean;
-  tree?: {
-    root: VirtualDirectory;
-    fileCount: number;
-    directoryCount: number;
-  };
-  error?: string;
-}
-
 export function PreviewPanel({ stack, selectedFilePath, onSelectFile }: PreviewPanelProps) {
   const [tree, setTree] = useState<VirtualDirectory | null>(null);
   const [fileCount, setFileCount] = useState(0);

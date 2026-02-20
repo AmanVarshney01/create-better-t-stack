@@ -54,7 +54,7 @@ export const dependencyVersionMap = {
   mysql2: "^3.14.0",
 
   "@prisma/client": "^7.4.0",
-  prisma: "^7.1.0",
+  prisma: "^7.4.0",
   "@prisma/adapter-d1": "^7.4.0",
   "@prisma/adapter-neon": "^7.4.0",
   "@prisma/adapter-mariadb": "^7.4.0",

@@ -4,26 +4,26 @@ import { describe, test, expect } from "bun:test";
 // These are the ones most likely to cause install failures
 // NOTE: Update these when updating add-deps.ts to ensure tests catch version drift
 const criticalDependencies: Record<string, string> = {
-  // Effect ecosystem (updated 2026-01-21)
+  // Effect ecosystem (updated 2026-02-20)
   effect: "^3.19.14",
   "@effect/schema": "^0.75.5",
-  "@effect/platform": "^0.94.1",
-  "@effect/platform-node": "^0.104.0",
-  "@effect/platform-bun": "^0.87.0",
+  "@effect/platform": "^0.94.5",
+  "@effect/platform-node": "^0.104.1",
+  "@effect/platform-bun": "^0.87.1",
   "@effect/platform-browser": "^0.74.0",
   "@effect/sql": "^0.49.0",
 
   // TanStack - versions can drift
   "@tanstack/react-router-devtools": "^1.154.3",
-  "@tanstack/react-query": "^5.90.12",
-  "@tanstack/store": "^0.8.0",
-  "@tanstack/react-store": "^0.8.0",
+  "@tanstack/react-query": "^5.90.21",
+  "@tanstack/store": "^0.9.1",
+  "@tanstack/react-store": "^0.9.1",
 
   // Core tools
   daisyui: "^5.0.0",
-  "better-auth": "^1.4.9",
+  "better-auth": "^1.4.18",
   "drizzle-orm": "^0.45.1",
-  prisma: "^7.1.0",
+  prisma: "^7.4.0",
   hono: "^4.8.2",
   elysia: "^1.4.21",
 };
