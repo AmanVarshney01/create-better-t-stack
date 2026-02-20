@@ -470,7 +470,7 @@ import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { onError } from "@orpc/server";
 import { BatchHandlerPlugin } from "@orpc/server/plugins";
-import { ZodToJsonSchemaConverter } from "@orpc/zod";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 import { createContext } from "@{{projectName}}/api/context";
 
@@ -11527,20 +11527,32 @@ const app = new Elysia()
 	})
 {{/if}}
 {{#if (eq api "orpc")}}
-	.all('/rpc*', async (context) => {
-		const { response } = await rpcHandler.handle(context.request, {
-			prefix: '/rpc',
-			context: await createContext({ context })
-		})
-		return response ?? new Response('Not Found', { status: 404 })
-	})
-	.all('/api*', async (context) => {
-		const { response } = await apiHandler.handle(context.request, {
-			prefix: '/api-reference',
-			context: await createContext({ context })
-		})
-		return response ?? new Response('Not Found', { status: 404 })
-	})
+	.all(
+		"/rpc*",
+		async (context) => {
+			const { response } = await rpcHandler.handle(context.request, {
+				prefix: "/rpc",
+				context: await createContext({ context }),
+			});
+			return response ?? new Response("Not Found", { status: 404 });
+		},
+		{
+			parse: "none",
+		}
+	)
+	.all(
+		"/api-reference*",
+		async (context) => {
+			const { response } = await apiHandler.handle(context.request, {
+				prefix: "/api-reference",
+				context: await createContext({ context }),
+			});
+			return response ?? new Response("Not Found", { status: 404 });
+		},
+		{
+			parse: "none",
+		}
+	)
 {{/if}}
 {{#if (eq api "trpc")}}
 	.all("/trpc/*", async (context) => {
@@ -11778,9 +11790,9 @@ fastify.register(fastifyCors, baseCorsConfig);
 
 {{#if (eq api "orpc")}}
 fastify.register(async (rpcApp) => {
-	// Required by oRPC Fastify adapter to preserve body streams.
-	rpcApp.addContentTypeParser("*", (_, payload, done) => {
-		done(null, payload);
+	// Fully utilize oRPC features by letting oRPC parse the request body.
+	rpcApp.addContentTypeParser("*", (_, _payload, done) => {
+		done(null, undefined);
 	});
 
 	rpcApp.all("/rpc/*", async (request, reply) => {
