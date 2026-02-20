@@ -7,7 +7,7 @@ import {
 } from "@convex-dev/agent/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
-import { Button, Divider, Spinner, Surface, TextField, useThemeColor } from "heroui-native";
+import { Button, Separator, Spinner, Surface, Input, TextField, useThemeColor } from "heroui-native";
 import { useRef, useEffect, useState } from "react";
 import {
   View,
@@ -80,7 +80,7 @@ export default function AIScreen() {
   };
 
   return (
-    <Container>
+    <Container isScrollable={false}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -95,19 +95,21 @@ export default function AIScreen() {
             ref={scrollViewRef}
             className="flex-1 mb-4"
             showsVerticalScrollIndicator={false}
+            contentContainerStyle=\{{ flexGrow: 1, paddingBottom: 8 }}
+            keyboardShouldPersistTaps="handled"
           >
             {!messages || messages.length === 0 ? (
-              <View className="flex-1 justify-center items-center py-10">
+              <Surface variant="secondary" className="flex-1 justify-center items-center py-8 rounded-xl">
                 <Ionicons name="chatbubble-ellipses-outline" size={32} color={mutedColor} />
                 <Text className="text-muted text-sm mt-3">Ask me anything to get started</Text>
-              </View>
+              </Surface>
             ) : (
-              <View className="gap-2">
+              <View className="gap-3">
                 {messages.map((message: UIMessage) => (
                   <Surface
                     key={message.key}
                     variant={message.role === "user" ? "tertiary" : "secondary"}
-                    className={`p-3 rounded-lg ${message.role === "user" ? "ml-10" : "mr-10"}`}
+                    className={`p-3 rounded-xl ${message.role === "user" ? "ml-8" : "mr-8"}`}
                   >
                     <Text className="text-xs font-medium mb-1 text-muted">
                       {message.role === "user" ? "You" : "AI"}
@@ -131,21 +133,21 @@ export default function AIScreen() {
             )}
           </ScrollView>
 
-          <Divider className="mb-3" />
+          <Separator className="mb-3" />
 
           <View className="flex-row items-center gap-2">
             <View className="flex-1">
-              <TextField>
-                <TextField.Input
-                  value={input}
-                  onChangeText={setInput}
-                  placeholder="Type a message..."
-                  onSubmitEditing={onSubmit}
-                  editable={!isLoading}
-                  autoFocus
-                />
-              </TextField>
-            </View>
+                <TextField>
+                  <Input
+                    value={input}
+                    onChangeText={setInput}
+                    placeholder="Type a message..."
+                    onSubmitEditing={onSubmit}
+                    editable={!isLoading}
+                    returnKeyType="send"
+                  />
+                </TextField>
+              </View>
             <Button
               isIconOnly
               variant={input.trim() && !isLoading ? "primary" : "secondary"}
@@ -179,7 +181,7 @@ import { DefaultChatTransport } from "ai";
 import { fetch as expoFetch } from "expo/fetch";
 import { Ionicons } from "@expo/vector-icons";
 import { Container } from "@/components/container";
-import { Button, Divider, ErrorView, Spinner, Surface, TextField, useThemeColor } from "heroui-native";
+import { Button, Separator, FieldError, Spinner, Surface, Input, TextField, useThemeColor } from "heroui-native";
 import { env } from "@{{projectName}}/env/native";
 
 const generateAPIUrl = (relativePath: string) => {
@@ -195,7 +197,7 @@ const generateAPIUrl = (relativePath: string) => {
 
 export default function AIScreen() {
   const [input, setInput] = useState("");
-  const { messages, error, sendMessage } = useChat({
+  const { messages, error, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       fetch: expoFetch as unknown as typeof globalThis.fetch,
       api: generateAPIUrl("/ai"),
@@ -205,6 +207,7 @@ export default function AIScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const foregroundColor = useThemeColor("foreground");
   const mutedColor = useThemeColor("muted");
+  const isBusy = status === "submitted" || status === "streaming";
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
@@ -212,7 +215,7 @@ export default function AIScreen() {
 
   const onSubmit = () => {
     const value = input.trim();
-    if (value) {
+    if (value && !isBusy) {
       sendMessage({ text: value });
       setInput("");
     }
@@ -220,17 +223,17 @@ export default function AIScreen() {
 
   if (error) {
     return (
-      <Container>
+      <Container isScrollable={false}>
         <View className="flex-1 justify-center items-center px-4">
           <Surface variant="secondary" className="p-4 rounded-lg">
-            <ErrorView isInvalid>
+            <FieldError isInvalid>
               <Text className="text-danger text-center font-medium mb-1">
                 {error.message}
               </Text>
               <Text className="text-muted text-center text-xs">
                 Please check your connection and try again.
               </Text>
-            </ErrorView>
+            </FieldError>
           </Surface>
         </View>
       </Container>
@@ -238,7 +241,7 @@ export default function AIScreen() {
   }
 
   return (
-    <Container>
+    <Container isScrollable={false}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -253,19 +256,21 @@ export default function AIScreen() {
             ref={scrollViewRef}
             className="flex-1 mb-4"
             showsVerticalScrollIndicator={false}
+            contentContainerStyle=\{{ flexGrow: 1, paddingBottom: 8 }}
+            keyboardShouldPersistTaps="handled"
           >
             {messages.length === 0 ? (
-              <View className="flex-1 justify-center items-center py-10">
+              <Surface variant="secondary" className="flex-1 justify-center items-center py-8 rounded-xl">
                 <Ionicons name="chatbubble-ellipses-outline" size={32} color={mutedColor} />
                 <Text className="text-muted text-sm mt-3">Ask me anything to get started</Text>
-              </View>
+              </Surface>
             ) : (
-              <View className="gap-2">
+              <View className="gap-3">
                 {messages.map((message) => (
                   <Surface
                     key={message.id}
                     variant={message.role === "user" ? "tertiary" : "secondary"}
-                    className={`p-3 rounded-lg ${message.role === "user" ? "ml-10" : "mr-10"}`}
+                    className={`p-3 rounded-xl ${message.role === "user" ? "ml-8" : "mr-8"}`}
                   >
                     <Text className="text-xs font-medium mb-1 text-muted">
                       {message.role === "user" ? "You" : "AI"}
@@ -291,35 +296,45 @@ export default function AIScreen() {
                     </View>
                   </Surface>
                 ))}
+                {isBusy && (
+                  <Surface variant="secondary" className="p-3 mr-8 rounded-xl">
+                    <Text className="text-xs font-medium mb-1 text-muted">AI</Text>
+                    <View className="flex-row items-center gap-2">
+                      <Spinner size="sm" />
+                      <Text className="text-muted text-sm">Thinking...</Text>
+                    </View>
+                  </Surface>
+                )}
               </View>
             )}
           </ScrollView>
 
-          <Divider className="mb-3" />
+          <Separator className="mb-3" />
 
           <View className="flex-row items-center gap-2">
             <View className="flex-1">
               <TextField>
-                <TextField.Input
+                <Input
                   value={input}
                   onChangeText={setInput}
                   placeholder="Type a message..."
                   onSubmitEditing={onSubmit}
-                  autoFocus
+                  returnKeyType="send"
+                  editable={!isBusy}
                 />
               </TextField>
             </View>
             <Button
               isIconOnly
-              variant={input.trim() ? "primary" : "secondary"}
+              variant={input.trim() && !isBusy ? "primary" : "secondary"}
               onPress={onSubmit}
-              isDisabled={!input.trim()}
+              isDisabled={!input.trim() || isBusy}
               size="sm"
             >
               <Ionicons
                 name="arrow-up"
                 size={18}
-                color={input.trim() ? foregroundColor : mutedColor}
+                color={input.trim() && !isBusy ? foregroundColor : mutedColor}
               />
             </Button>
           </View>

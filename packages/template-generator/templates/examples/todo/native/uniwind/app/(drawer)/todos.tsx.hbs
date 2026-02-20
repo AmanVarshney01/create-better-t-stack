@@ -17,7 +17,7 @@ import { Container } from "@/components/container";
     import { trpc } from "@/utils/trpc";
   {{/if}}
 {{/unless}}
-import { Button, Checkbox, Chip, Spinner, Surface, TextField, useThemeColor } from "heroui-native";
+import { Button, Checkbox, Chip, Spinner, Surface, Input, TextField, useThemeColor } from "heroui-native";
 
 export default function TodosScreen() {
   const [newTodoText, setNewTodoText] = useState("");
@@ -144,7 +144,7 @@ export default function TodosScreen() {
           <View className="flex-row items-center gap-2">
             <View className="flex-1">
               <TextField>
-                <TextField.Input
+                <Input
                   value={newTodoText}
                   onChangeText={setNewTodoText}
                   placeholder="Add a new task..."

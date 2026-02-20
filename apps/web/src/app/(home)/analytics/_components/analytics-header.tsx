@@ -2,9 +2,12 @@ import { format } from "date-fns";
 import { Terminal } from "lucide-react";
 import Link from "next/link";
 
+import { cn } from "@/lib/utils";
+
 export function AnalyticsHeader({
   lastUpdated,
   legacy,
+  connectionStatus,
 }: {
   lastUpdated: string | null;
   legacy: {
@@ -13,11 +16,34 @@ export function AnalyticsHeader({
     lastUpdatedIso: string;
     source: string;
   };
+  connectionStatus: "online" | "connecting" | "reconnecting" | "offline";
 }) {
   const formattedDate = lastUpdated
     ? format(new Date(lastUpdated), "MMM d, yyyy 'at' HH:mm")
     : null;
   const legacyDate = format(new Date(legacy.lastUpdatedIso), "MMM d, yyyy 'at' HH:mm");
+  const statusMeta = {
+    online: {
+      label: "online",
+      textClass: "text-primary",
+      dotClass: "bg-primary",
+    },
+    connecting: {
+      label: "connecting",
+      textClass: "text-muted-foreground",
+      dotClass: "bg-muted-foreground",
+    },
+    reconnecting: {
+      label: "reconnecting",
+      textClass: "text-accent",
+      dotClass: "bg-accent",
+    },
+    offline: {
+      label: "offline",
+      textClass: "text-destructive",
+      dotClass: "bg-destructive",
+    },
+  }[connectionStatus];
 
   return (
     <div className="mb-4 space-y-4">
@@ -28,17 +54,26 @@ export function AnalyticsHeader({
             <h1 className="font-bold font-mono text-xl sm:text-2xl">CLI_ANALYTICS.JSON</h1>
           </div>
           <p className="text-muted-foreground text-sm">
-            Real-time usage statistics from create-better-t-stack
+            Real-time usage statistics from create-better-t-stack (powered by Convex)
           </p>
         </div>
       </div>
 
-      <div className="rounded-xl bg-gradient-to-br from-primary/12 via-fd-background to-fd-background/90 p-4 ring-1 ring-border/40 sm:p-5">
+      <div className="rounded-xl p-4 ring-1 ring-border/40 sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
             <span className="text-primary">$</span>
             <span className="text-muted-foreground">status:</span>
-            <span className="text-green-500">online</span>
+            <span className={cn("inline-flex items-center gap-2", statusMeta.textClass)}>
+              <span
+                className={cn(
+                  "h-2 w-2 rounded-full",
+                  statusMeta.dotClass,
+                  connectionStatus !== "online" && "animate-pulse",
+                )}
+              />
+              {statusMeta.label}
+            </span>
           </div>
           {formattedDate && (
             <div className="flex items-center gap-2 text-muted-foreground text-xs">
@@ -58,7 +93,7 @@ export function AnalyticsHeader({
           <div className="flex items-start gap-2">
             <span className="mt-0.5 shrink-0 text-primary">&gt;</span>
             <span>
-              Source code:{" "}
+              Client event source:{" "}
               <Link
                 href="https://github.com/AmanVarshney01/create-better-t-stack/blob/main/apps/cli/src/utils/analytics.ts"
                 target="_blank"
@@ -66,6 +101,20 @@ export function AnalyticsHeader({
                 className="text-accent underline underline-offset-2 hover:text-primary"
               >
                 apps/cli/src/utils/analytics.ts
+              </Link>
+            </span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="mt-0.5 shrink-0 text-primary">&gt;</span>
+            <span>
+              Backend aggregation:{" "}
+              <Link
+                href="https://github.com/AmanVarshney01/create-better-t-stack/blob/main/packages/backend/convex/analytics.ts"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent underline underline-offset-2 hover:text-primary"
+              >
+                packages/backend/convex/analytics.ts
               </Link>
             </span>
           </div>

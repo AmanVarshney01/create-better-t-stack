@@ -125,7 +125,10 @@ export const dependencyVersionMap = {
 
   "@tanstack/react-query-devtools": "^5.91.1",
   "@tanstack/react-query": "^5.90.12",
+  "@tanstack/react-form": "^1.28.0",
   "@tanstack/react-router-ssr-query": "^1.142.7",
+  "@tanstack/solid-form": "^1.28.0",
+  "@tanstack/svelte-form": "^1.28.0",
 
   "@tanstack/solid-query": "^5.87.4",
   "@tanstack/solid-query-devtools": "^5.87.4",

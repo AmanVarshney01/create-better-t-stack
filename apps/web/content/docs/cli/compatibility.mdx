@@ -39,12 +39,12 @@ create-better-t-stack --database mongodb --orm mongoose
 
 Cloudflare Workers has specific compatibility requirements:
 
-| Component      | Requirement                   | Reason                                                         |
-| -------------- | ----------------------------- | -------------------------------------------------------------- |
-| Backend        | Must be `hono`                | Only Hono supports Workers runtime                             |
-| ORM            | Must be `drizzle` or `prisma` | Workers supports Drizzle and Prisma; Mongoose is not supported |
-| Database       | Cannot be `mongodb`           | MongoDB requires Prisma/Mongoose                               |
-| Database Setup | Cannot be `docker`            | Workers is serverless, no Docker support                       |
+| Component      | Requirement                              | Reason                                                         |
+| -------------- | ---------------------------------------- | -------------------------------------------------------------- |
+| Backend        | Must be `hono`                           | Only Hono supports Workers runtime                             |
+| ORM            | If DB is used, use `drizzle` or `prisma` | Mongoose is MongoDB-only and MongoDB is not workers-compatible |
+| Database       | Cannot be `mongodb`                      | MongoDB is not compatible with Workers runtime                 |
+| Database Setup | Cannot be `docker`                       | Workers is serverless, no Docker support                       |
 
 ```bash
 # ❌ Invalid - Workers with Express
@@ -61,17 +61,17 @@ create-better-t-stack --runtime workers --backend hono --database sqlite --orm p
 
 #### Convex Backend
 
-When using `--backend convex`, the following options are automatically set:
+When using `--backend convex`, these constraints apply:
 
-- `--auth clerk` (if compatible frontends selected, otherwise `none`)
+- `--runtime none`
 - `--database none` (Convex provides database)
 - `--orm none` (Convex provides data layer)
 - `--api none` (Convex provides API)
-- `--runtime none` (Convex manages runtime)
 - `--db-setup none` (Convex manages hosting)
-- `--examples todo` (Todo example works with Convex)
+- `--server-deploy none`
+- Auth can be `better-auth`, `clerk`, or `none` depending frontend compatibility
 
-**Note:** Convex supports Clerk authentication with compatible frontends (React frameworks, Next.js, TanStack Start, and native frameworks). Nuxt, Svelte, and Solid are not compatible with Clerk.
+**Note:** Convex supports Clerk authentication with compatible frontends (React frameworks, Next.js, TanStack Start, and native frameworks). Nuxt, Svelte, Solid, and Astro are not compatible with Clerk.
 
 #### No Backend
 
@@ -98,6 +98,7 @@ When using `--backend none`, the following options are automatically set:
 | `nuxt`            | ❌           | ✅           | tRPC not supported |
 | `svelte`          | ❌           | ✅           | tRPC not supported |
 | `solid`           | ❌           | ✅           | tRPC not supported |
+| `astro`           | ❌           | ✅           | tRPC not supported |
 | Native frameworks | ✅           | ✅           | Full support       |
 
 ```bash
@@ -119,7 +120,7 @@ create-better-t-stack --frontend nuxt --api orpc
 create-better-t-stack --frontend next tanstack-router
 
 # ✅ Valid - Web + native
-create-better-t-stack --frontend next native-nativewind
+create-better-t-stack --frontend next native-uniwind
 ```
 
 ## Database Setup Compatibility
@@ -185,13 +186,14 @@ Clerk authentication requires:
 
 - Convex backend (`--backend convex`)
 - Compatible frontends (React frameworks, Next.js, TanStack Start, native frameworks)
-- Not compatible with Nuxt, Svelte, or Solid
+- Not compatible with Nuxt, Svelte, Solid, or Astro
 
 ### Payments Requirements
 
 Polar payments require:
 
 - Better-Auth authentication
+- A web frontend (or no frontend selected)
 
 ```bash
 # ✅ Valid - Better-Auth without database
@@ -212,12 +214,14 @@ create-better-t-stack --auth clerk --backend hono
 ### Todo Example
 
 - Requires a database when backend is present (except Convex)
-- Cannot be used with `--backend none` and `--database none`
+- Requires an API layer (`trpc` or `orpc`) for non-Convex backends
+- Cannot be used with `--backend none`
 
 ### AI Example
 
-- Not compatible with `--backend elysia`
 - Not compatible with `--frontend solid`
+- Not compatible with `--frontend astro`
+- With `--backend convex`, Nuxt and Svelte frontends are not supported
 
 ## Common Error Messages
 

@@ -7,7 +7,7 @@ description: Complete reference for all CLI commands
 
 The Better-T-Stack CLI provides several commands to manage your TypeScript projects.
 
-## `init` (Default Command)
+## `create` (Default Command)
 
 Creates a new Better-T-Stack project.
 
@@ -62,7 +62,7 @@ create-better-t-stack --database postgres --backend hono --frontend tanstack-rou
 
 ## `add`
 
-Adds addons or deployment configurations to an existing Better-T-Stack project.
+Adds addons to an existing Better-T-Stack project.
 
 ```bash
 create-better-t-stack add [options]
@@ -71,11 +71,9 @@ create-better-t-stack add [options]
 ### Options
 
 - `--addons <types...>`: Addons to add (see [Addons](/docs/cli/options#addons))
-- `--web-deploy <setup>`: Web deployment setup (`none`, `cloudflare`)
-- `--server-deploy <setup>`: Server deployment setup (`none`, `cloudflare`)
 - `--project-dir <path>`: Project directory (defaults to current directory)
-- `--install`: Install dependencies after adding
-- `--package-manager <pm>`: Package manager to use
+- `--install / --no-install`: Install dependencies after adding
+- `--package-manager <pm>`: Package manager to use (`npm`, `pnpm`, `bun`)
 
 ### Examples
 
@@ -86,8 +84,8 @@ create-better-t-stack add
 # Add specific addons
 create-better-t-stack add --addons pwa tauri --install
 
-# Add deployment setup
-create-better-t-stack add --web-deploy cloudflare
+# Add addons in a specific project directory
+create-better-t-stack add --project-dir ./my-app --addons mcp skills
 ```
 
 ## `sponsors`
@@ -120,6 +118,36 @@ create-better-t-stack builder
 
 Opens `https://better-t-stack.dev/new` where you can configure your stack visually.
 
+## `history`
+
+Shows project creation history stored on your local machine.
+
+```bash
+create-better-t-stack history [options]
+```
+
+### Options
+
+- `--limit <number>`: Number of entries to show (default: 10)
+- `--json`: Output history as JSON
+- `--clear`: Clear all history entries
+
+### Examples
+
+```bash
+# Show latest entries
+create-better-t-stack history
+
+# Show 5 entries
+create-better-t-stack history --limit 5
+
+# JSON output
+create-better-t-stack history --json
+
+# Clear history
+create-better-t-stack history --clear
+```
+
 ## Global Options
 
 These options work with any command:
@@ -137,7 +165,7 @@ create-better-t-stack \
   --orm drizzle \
   --backend hono \
   --frontend tanstack-router \
-  --auth \
+  --auth better-auth \
   --addons pwa biome
 ```
 
@@ -159,6 +187,12 @@ cd my-existing-project
 create-better-t-stack add --addons tauri starlight --install
 ```
 
+### Show Local History
+
+```bash
+create-better-t-stack history --limit 20
+```
+
 ## Programmatic Usage
 
 For advanced use cases, automation, or integration with other tools, you can use the [Programmatic API](/docs/cli/programmatic-api) to create projects from Node.js code:
@@ -173,9 +207,10 @@ const result = await create("my-app", {
   orm: "drizzle",
 });
 
-if (result.success) {
-  console.log(`Project created at: ${result.projectDirectory}`);
-}
+result.match({
+  ok: (data) => console.log(`Project created at: ${data.projectDirectory}`),
+  err: (error) => console.error(`Failed: ${error.message}`),
+});
 ```
 
 This is useful for:

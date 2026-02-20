@@ -470,7 +470,7 @@ import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { onError } from "@orpc/server";
 import { BatchHandlerPlugin } from "@orpc/server/plugins";
-import { ZodToJsonSchemaConverter } from "@orpc/zod";
+import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { appRouter } from "@{{projectName}}/api/routers/index";
 import { createContext } from "@{{projectName}}/api/context";
 
@@ -1827,91 +1827,187 @@ export const get = query({
 });
 `],
   ["auth/better-auth/convex/native/bare/components/sign-in.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
 import {
   ActivityIndicator,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  StyleSheet,
 } from "react-native";
-import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
+import { useColorScheme } from "@/lib/use-color-scheme";
+import z from "zod";
+
+const signInSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(8, "Use at least 8 characters"),
+});
+
+function getErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (Array.isArray(error)) {
+    for (const issue of error) {
+      const message = getErrorMessage(issue);
+      if (message) {
+        return message;
+      }
+    }
+    return null;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const maybeError = error as { message?: unknown };
+    if (typeof maybeError.message === "string") {
+      return maybeError.message;
+    }
+  }
+
+  return null;
+}
 
 function SignIn() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleLogin() {
-    setIsLoading(true);
-    setError(null);
-
-    await authClient.signIn.email(
-      {
-        email,
-        password,
-      },
-      {
-        onError(error) {
-          setError(error.error?.message || "Failed to sign in");
-          setIsLoading(false);
+  const form = useForm({
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    validators: {
+      onSubmit: signInSchema,
+    },
+    onSubmit: async ({ value, formApi }) => {
+      await authClient.signIn.email(
+        {
+          email: value.email.trim(),
+          password: value.password,
         },
-        onSuccess() {
-          setEmail("");
-          setPassword("");
+        {
+          onError(error) {
+            setError(error.error?.message || "Failed to sign in");
+          },
+          onSuccess() {
+            setError(null);
+            formApi.reset();
+          },
         },
-        onFinished() {
-          setIsLoading(false);
-        },
-      }
-    );
-  }
+      );
+    },
+  });
 
   return (
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
       <Text style={[styles.title, { color: theme.text }]}>Sign In</Text>
 
-      {error ? (
-        <View style={[styles.errorContainer, { backgroundColor: theme.notification + "20" }]}>
-          <Text style={[styles.errorText, { color: theme.notification }]}>{error}</Text>
-        </View>
-      ) : null}
-
-      <TextInput
-        style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]}
-        placeholder="Email"
-        placeholderTextColor={theme.text}
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-
-      <TextInput
-        style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]}
-        placeholder="Password"
-        placeholderTextColor={theme.text}
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-
-      <TouchableOpacity
-        onPress={handleLogin}
-        disabled={isLoading}
-        style={[styles.button, { backgroundColor: theme.primary, opacity: isLoading ? 0.5 : 1 }]}
+      <form.Subscribe
+        selector={(state) => ({
+          isSubmitting: state.isSubmitting,
+          validationError: getErrorMessage(state.errorMap.onSubmit),
+        })}
       >
-        {isLoading ? (
-          <ActivityIndicator size="small" color="#ffffff" />
-        ) : (
-          <Text style={styles.buttonText}>Sign In</Text>
-        )}
-      </TouchableOpacity>
+        {({ isSubmitting, validationError }) => {
+          const formError = error ?? validationError;
+
+          return (
+            <>
+              {formError ? (
+                <View style={[styles.errorContainer, { backgroundColor: theme.notification + "20" }]}>
+                  <Text style={[styles.errorText, { color: theme.notification }]}>{formError}</Text>
+                </View>
+              ) : null}
+
+              <form.Field name="email">
+                {(field) => (
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        color: theme.text,
+                        borderColor: theme.border,
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                    placeholder="Email"
+                    placeholderTextColor={theme.text}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                )}
+              </form.Field>
+
+              <form.Field name="password">
+                {(field) => (
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        color: theme.text,
+                        borderColor: theme.border,
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                    placeholder="Password"
+                    placeholderTextColor={theme.text}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    secureTextEntry
+                    onSubmitEditing={form.handleSubmit}
+                  />
+                )}
+              </form.Field>
+
+              <TouchableOpacity
+                onPress={form.handleSubmit}
+                disabled={isSubmitting}
+                style={[
+                  styles.button,
+                  {
+                    backgroundColor: theme.primary,
+                    opacity: isSubmitting ? 0.5 : 1,
+                  },
+                ]}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text style={styles.buttonText}>Sign In</Text>
+                )}
+              </TouchableOpacity>
+            </>
+          );
+        }}
+      </form.Subscribe>
     </View>
   );
 }
@@ -1952,105 +2048,221 @@ const styles = StyleSheet.create({
 });
 
 export { SignIn };
-
 `],
   ["auth/better-auth/convex/native/bare/components/sign-up.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
 import {
   ActivityIndicator,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  StyleSheet,
 } from "react-native";
-import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
+import { useColorScheme } from "@/lib/use-color-scheme";
+import z from "zod";
+
+const signUpSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(8, "Use at least 8 characters"),
+});
+
+function getErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (Array.isArray(error)) {
+    for (const issue of error) {
+      const message = getErrorMessage(issue);
+      if (message) {
+        return message;
+      }
+    }
+    return null;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const maybeError = error as { message?: unknown };
+    if (typeof maybeError.message === "string") {
+      return maybeError.message;
+    }
+  }
+
+  return null;
+}
 
 function SignUp() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSignUp() {
-    setIsLoading(true);
-    setError(null);
-
-    await authClient.signUp.email(
-      {
-        name,
-        email,
-        password,
-      },
-      {
-        onError(error) {
-          setError(error.error?.message || "Failed to sign up");
-          setIsLoading(false);
+  const form = useForm({
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+    },
+    validators: {
+      onSubmit: signUpSchema,
+    },
+    onSubmit: async ({ value, formApi }) => {
+      await authClient.signUp.email(
+        {
+          name: value.name.trim(),
+          email: value.email.trim(),
+          password: value.password,
         },
-        onSuccess() {
-          setName("");
-          setEmail("");
-          setPassword("");
+        {
+          onError(error) {
+            setError(error.error?.message || "Failed to sign up");
+          },
+          onSuccess() {
+            setError(null);
+            formApi.reset();
+          },
         },
-        onFinished() {
-          setIsLoading(false);
-        },
-      }
-    );
-  }
+      );
+    },
+  });
 
   return (
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
       <Text style={[styles.title, { color: theme.text }]}>Create Account</Text>
 
-      {error ? (
-        <View style={[styles.errorContainer, { backgroundColor: theme.notification + "20" }]}>
-          <Text style={[styles.errorText, { color: theme.notification }]}>{error}</Text>
-        </View>
-      ) : null}
-
-      <TextInput
-        style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]}
-        placeholder="Name"
-        placeholderTextColor={theme.text}
-        value={name}
-        onChangeText={setName}
-      />
-
-      <TextInput
-        style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]}
-        placeholder="Email"
-        placeholderTextColor={theme.text}
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-
-      <TextInput
-        style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]}
-        placeholder="Password"
-        placeholderTextColor={theme.text}
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-
-      <TouchableOpacity
-        onPress={handleSignUp}
-        disabled={isLoading}
-        style={[styles.button, { backgroundColor: theme.primary, opacity: isLoading ? 0.5 : 1 }]}
+      <form.Subscribe
+        selector={(state) => ({
+          isSubmitting: state.isSubmitting,
+          validationError: getErrorMessage(state.errorMap.onSubmit),
+        })}
       >
-        {isLoading ? (
-          <ActivityIndicator size="small" color="#ffffff" />
-        ) : (
-          <Text style={styles.buttonText}>Sign Up</Text>
-        )}
-      </TouchableOpacity>
+        {({ isSubmitting, validationError }) => {
+          const formError = error ?? validationError;
+
+          return (
+            <>
+              {formError ? (
+                <View style={[styles.errorContainer, { backgroundColor: theme.notification + "20" }]}>
+                  <Text style={[styles.errorText, { color: theme.notification }]}>{formError}</Text>
+                </View>
+              ) : null}
+
+              <form.Field name="name">
+                {(field) => (
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        color: theme.text,
+                        borderColor: theme.border,
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                    placeholder="Name"
+                    placeholderTextColor={theme.text}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                  />
+                )}
+              </form.Field>
+
+              <form.Field name="email">
+                {(field) => (
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        color: theme.text,
+                        borderColor: theme.border,
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                    placeholder="Email"
+                    placeholderTextColor={theme.text}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                )}
+              </form.Field>
+
+              <form.Field name="password">
+                {(field) => (
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        color: theme.text,
+                        borderColor: theme.border,
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                    placeholder="Password"
+                    placeholderTextColor={theme.text}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    secureTextEntry
+                    onSubmitEditing={form.handleSubmit}
+                  />
+                )}
+              </form.Field>
+
+              <TouchableOpacity
+                onPress={form.handleSubmit}
+                disabled={isSubmitting}
+                style={[
+                  styles.button,
+                  {
+                    backgroundColor: theme.primary,
+                    opacity: isSubmitting ? 0.5 : 1,
+                  },
+                ]}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text style={styles.buttonText}>Sign Up</Text>
+                )}
+              </TouchableOpacity>
+            </>
+          );
+        }}
+      </form.Subscribe>
     </View>
   );
 }
@@ -2091,7 +2303,6 @@ const styles = StyleSheet.create({
 });
 
 export { SignUp };
-
 `],
   ["auth/better-auth/convex/native/base/lib/auth-client.ts.hbs", `import { createAuthClient } from "better-auth/react";
 import { convexClient } from "@convex-dev/better-auth/client/plugins";
@@ -2113,6 +2324,7 @@ export const authClient = createAuthClient({
 });
 `],
   ["auth/better-auth/convex/native/unistyles/components/sign-in.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -2122,76 +2334,151 @@ import {
   View,
 } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
+import z from "zod";
+
+const signInSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(8, "Use at least 8 characters"),
+});
+
+function getErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (Array.isArray(error)) {
+    for (const issue of error) {
+      const message = getErrorMessage(issue);
+      if (message) {
+        return message;
+      }
+    }
+    return null;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const maybeError = error as { message?: unknown };
+    if (typeof maybeError.message === "string") {
+      return maybeError.message;
+    }
+  }
+
+  return null;
+}
 
 export function SignIn() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    await authClient.signIn.email(
-      {
-        email,
-        password,
-      },
-      {
-        onError: (error) => {
-          setError(error.error?.message || "Failed to sign in");
-          setIsLoading(false);
+  const form = useForm({
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    validators: {
+      onSubmit: signInSchema,
+    },
+    onSubmit: async ({ value, formApi }) => {
+      await authClient.signIn.email(
+        {
+          email: value.email.trim(),
+          password: value.password,
         },
-        onSuccess: () => {
-          setEmail("");
-          setPassword("");
+        {
+          onError(error) {
+            setError(error.error?.message || "Failed to sign in");
+          },
+          onSuccess() {
+            setError(null);
+            formApi.reset();
+          },
         },
-        onFinished: () => {
-          setIsLoading(false);
-        },
-      },
-    );
-  };
+      );
+    },
+  });
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sign In</Text>
 
-      {error && (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
-
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-
-      <TouchableOpacity
-        onPress={handleLogin}
-        disabled={isLoading}
-        style={styles.button}
+      <form.Subscribe
+        selector={(state) => ({
+          isSubmitting: state.isSubmitting,
+          validationError: getErrorMessage(state.errorMap.onSubmit),
+        })}
       >
-        {isLoading ? (
-          <ActivityIndicator size="small" color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Sign In</Text>
-        )}
-      </TouchableOpacity>
+        {({ isSubmitting, validationError }) => {
+          const formError = error ?? validationError;
+
+          return (
+            <>
+              {formError ? (
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorText}>{formError}</Text>
+                </View>
+              ) : null}
+
+              <form.Field name="email">
+                {(field) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Email"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                )}
+              </form.Field>
+
+              <form.Field name="password">
+                {(field) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Password"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    secureTextEntry
+                    onSubmitEditing={form.handleSubmit}
+                  />
+                )}
+              </form.Field>
+
+              <TouchableOpacity
+                onPress={form.handleSubmit}
+                disabled={isSubmitting}
+                style={styles.button}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>Sign In</Text>
+                )}
+              </TouchableOpacity>
+            </>
+          );
+        }}
+      </form.Subscribe>
     </View>
   );
 }
@@ -2241,6 +2528,7 @@ const styles = StyleSheet.create((theme) => ({
 }));
 `],
   ["auth/better-auth/convex/native/unistyles/components/sign-up.tsx.hbs", `import { authClient } from "@/lib/auth-client";
+import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -2250,86 +2538,175 @@ import {
   View,
 } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
+import z from "zod";
+
+const signUpSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(8, "Use at least 8 characters"),
+});
+
+function getErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (Array.isArray(error)) {
+    for (const issue of error) {
+      const message = getErrorMessage(issue);
+      if (message) {
+        return message;
+      }
+    }
+    return null;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const maybeError = error as { message?: unknown };
+    if (typeof maybeError.message === "string") {
+      return maybeError.message;
+    }
+  }
+
+  return null;
+}
 
 export function SignUp() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSignUp = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    await authClient.signUp.email(
-      {
-        name,
-        email,
-        password,
-      },
-      {
-        onError: (error) => {
-          setError(error.error?.message || "Failed to sign up");
-          setIsLoading(false);
+  const form = useForm({
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+    },
+    validators: {
+      onSubmit: signUpSchema,
+    },
+    onSubmit: async ({ value, formApi }) => {
+      await authClient.signUp.email(
+        {
+          name: value.name.trim(),
+          email: value.email.trim(),
+          password: value.password,
         },
-        onSuccess: () => {
-          setName("");
-          setEmail("");
-          setPassword("");
+        {
+          onError(error) {
+            setError(error.error?.message || "Failed to sign up");
+          },
+          onSuccess() {
+            setError(null);
+            formApi.reset();
+          },
         },
-        onFinished: () => {
-          setIsLoading(false);
-        },
-      },
-    );
-  };
+      );
+    },
+  });
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Create Account</Text>
 
-      {error && (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
-
-      <TextInput
-        style={styles.input}
-        placeholder="Name"
-        value={name}
-        onChangeText={setName}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-
-      <TextInput
-        style={styles.inputLast}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-
-      <TouchableOpacity
-        onPress={handleSignUp}
-        disabled={isLoading}
-        style={styles.button}
+      <form.Subscribe
+        selector={(state) => ({
+          isSubmitting: state.isSubmitting,
+          validationError: getErrorMessage(state.errorMap.onSubmit),
+        })}
       >
-        {isLoading ? (
-          <ActivityIndicator size="small" color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Sign Up</Text>
-        )}
-      </TouchableOpacity>
+        {({ isSubmitting, validationError }) => {
+          const formError = error ?? validationError;
+
+          return (
+            <>
+              {formError ? (
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorText}>{formError}</Text>
+                </View>
+              ) : null}
+
+              <form.Field name="name">
+                {(field) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Name"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                  />
+                )}
+              </form.Field>
+
+              <form.Field name="email">
+                {(field) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Email"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                )}
+              </form.Field>
+
+              <form.Field name="password">
+                {(field) => (
+                  <TextInput
+                    style={styles.inputLast}
+                    placeholder="Password"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    secureTextEntry
+                    onSubmitEditing={form.handleSubmit}
+                  />
+                )}
+              </form.Field>
+
+              <TouchableOpacity
+                onPress={form.handleSubmit}
+                disabled={isSubmitting}
+                style={styles.button}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>Sign Up</Text>
+                )}
+              </TouchableOpacity>
+            </>
+          );
+        }}
+      </form.Subscribe>
     </View>
   );
 }
@@ -2387,161 +2764,351 @@ const styles = StyleSheet.create((theme) => ({
 }));
 `],
   ["auth/better-auth/convex/native/uniwind/components/sign-in.tsx.hbs", `import { authClient } from "@/lib/auth-client";
-import { useState } from "react";
-import { Text, View } from "react-native";
-import { Button, ErrorView, Spinner, Surface, TextField } from "heroui-native";
+import { useForm } from "@tanstack/react-form";
+import { useRef } from "react";
+import { Text, TextInput, View } from "react-native";
+import { Button, FieldError, Input, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
+import z from "zod";
+
+const signInSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(8, "Use at least 8 characters"),
+});
+
+function getErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (Array.isArray(error)) {
+    for (const issue of error) {
+      const message = getErrorMessage(issue);
+      if (message) {
+        return message;
+      }
+    }
+    return null;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const maybeError = error as { message?: unknown };
+    if (typeof maybeError.message === "string") {
+      return maybeError.message;
+    }
+  }
+
+  return null;
+}
 
 export function SignIn() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const passwordInputRef = useRef<TextInput>(null);
+  const { toast } = useToast();
 
-  const handleLogin = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    await authClient.signIn.email(
-      {
-        email,
-        password,
-      },
-      {
-        onError: (error) => {
-          setError(error.error?.message || "Failed to sign in");
-          setIsLoading(false);
+  const form = useForm({
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    validators: {
+      onSubmit: signInSchema,
+    },
+    onSubmit: async ({ value, formApi }) => {
+      await authClient.signIn.email(
+        {
+          email: value.email.trim(),
+          password: value.password,
         },
-        onSuccess: () => {
-          setEmail("");
-          setPassword("");
+        {
+          onError(error) {
+            toast.show({
+              variant: "danger",
+              label: error.error?.message || "Failed to sign in",
+            });
+          },
+          onSuccess() {
+            formApi.reset();
+            toast.show({
+              variant: "success",
+              label: "Signed in successfully",
+            });
+          },
         },
-        onFinished: () => {
-          setIsLoading(false);
-        },
-      },
-    );
-  };
+      );
+    },
+  });
 
   return (
     <Surface variant="secondary" className="p-4 rounded-lg">
       <Text className="text-foreground font-medium mb-4">Sign In</Text>
 
-      <ErrorView isInvalid={!!error} className="mb-3">
-        {error}
-      </ErrorView>
+      <form.Subscribe
+        selector={(state) => ({
+          isSubmitting: state.isSubmitting,
+          validationError: getErrorMessage(state.errorMap.onSubmit),
+        })}
+      >
+        {({ isSubmitting, validationError }) => {
+          const formError = validationError;
 
-      <View className="gap-3">
-        <TextField>
-          <TextField.Label>Email</TextField.Label>
-          <TextField.Input
-            value={email}
-            onChangeText={setEmail}
-            placeholder="email@example.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-        </TextField>
+          return (
+            <>
+              <FieldError isInvalid={!!formError} className="mb-3">
+                {formError}
+              </FieldError>
 
-        <TextField>
-          <TextField.Label>Password</TextField.Label>
-          <TextField.Input
-            value={password}
-            onChangeText={setPassword}
-            placeholder="••••••••"
-            secureTextEntry
-          />
-        </TextField>
+              <View className="gap-3">
+                <form.Field name="email">
+                  {(field) => (
+                    <TextField>
+                      <Label>Email</Label>
+                      <Input
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={field.handleChange}
+                        placeholder="email@example.com"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoComplete="email"
+                        textContentType="emailAddress"
+                        returnKeyType="next"
+                        blurOnSubmit={false}
+                        onSubmitEditing={() => {
+                          passwordInputRef.current?.focus();
+                        }}
+                      />
+                    </TextField>
+                  )}
+                </form.Field>
 
-        <Button onPress={handleLogin} isDisabled={isLoading} className="mt-1">
-          {isLoading ? <Spinner size="sm" color="default" /> : <Button.Label>Sign In</Button.Label>}
-        </Button>
-      </View>
+                <form.Field name="password">
+                  {(field) => (
+                    <TextField>
+                      <Label>Password</Label>
+                      <Input
+                        ref={passwordInputRef}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={field.handleChange}
+                        placeholder="••••••••"
+                        secureTextEntry
+                        autoComplete="password"
+                        textContentType="password"
+                        returnKeyType="go"
+                        onSubmitEditing={form.handleSubmit}
+                      />
+                    </TextField>
+                  )}
+                </form.Field>
+
+                <Button onPress={form.handleSubmit} isDisabled={isSubmitting} className="mt-1">
+                  {isSubmitting ? <Spinner size="sm" color="default" /> : <Button.Label>Sign In</Button.Label>}
+                </Button>
+              </View>
+            </>
+          );
+        }}
+      </form.Subscribe>
     </Surface>
   );
 }
 `],
   ["auth/better-auth/convex/native/uniwind/components/sign-up.tsx.hbs", `import { authClient } from "@/lib/auth-client";
-import { useState } from "react";
-import { Text, View } from "react-native";
-import { Button, ErrorView, Spinner, Surface, TextField } from "heroui-native";
+import { useForm } from "@tanstack/react-form";
+import { useRef } from "react";
+import { Text, TextInput, View } from "react-native";
+import { Button, FieldError, Input, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
+import z from "zod";
+
+const signUpSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(8, "Use at least 8 characters"),
+});
+
+function getErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (Array.isArray(error)) {
+    for (const issue of error) {
+      const message = getErrorMessage(issue);
+      if (message) {
+        return message;
+      }
+    }
+    return null;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const maybeError = error as { message?: unknown };
+    if (typeof maybeError.message === "string") {
+      return maybeError.message;
+    }
+  }
+
+  return null;
+}
 
 export function SignUp() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const emailInputRef = useRef<TextInput>(null);
+  const passwordInputRef = useRef<TextInput>(null);
+  const { toast } = useToast();
 
-  const handleSignUp = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    await authClient.signUp.email(
-      {
-        name,
-        email,
-        password,
-      },
-      {
-        onError: (error) => {
-          setError(error.error?.message || "Failed to sign up");
-          setIsLoading(false);
+  const form = useForm({
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+    },
+    validators: {
+      onSubmit: signUpSchema,
+    },
+    onSubmit: async ({ value, formApi }) => {
+      await authClient.signUp.email(
+        {
+          name: value.name.trim(),
+          email: value.email.trim(),
+          password: value.password,
         },
-        onSuccess: () => {
-          setName("");
-          setEmail("");
-          setPassword("");
+        {
+          onError(error) {
+            toast.show({
+              variant: "danger",
+              label: error.error?.message || "Failed to sign up",
+            });
+          },
+          onSuccess() {
+            formApi.reset();
+            toast.show({
+              variant: "success",
+              label: "Account created successfully",
+            });
+          },
         },
-        onFinished: () => {
-          setIsLoading(false);
-        },
-      },
-    );
-  };
+      );
+    },
+  });
 
   return (
     <Surface variant="secondary" className="p-4 rounded-lg">
       <Text className="text-foreground font-medium mb-4">Create Account</Text>
 
-      <ErrorView isInvalid={!!error} className="mb-3">
-        {error}
-      </ErrorView>
+      <form.Subscribe
+        selector={(state) => ({
+          isSubmitting: state.isSubmitting,
+          validationError: getErrorMessage(state.errorMap.onSubmit),
+        })}
+      >
+        {({ isSubmitting, validationError }) => {
+          const formError = validationError;
 
-      <View className="gap-3">
-        <TextField>
-          <TextField.Label>Name</TextField.Label>
-          <TextField.Input value={name} onChangeText={setName} placeholder="John Doe" />
-        </TextField>
+          return (
+            <>
+              <FieldError isInvalid={!!formError} className="mb-3">
+                {formError}
+              </FieldError>
 
-        <TextField>
-          <TextField.Label>Email</TextField.Label>
-          <TextField.Input
-            value={email}
-            onChangeText={setEmail}
-            placeholder="email@example.com"
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-        </TextField>
+              <View className="gap-3">
+                <form.Field name="name">
+                  {(field) => (
+                    <TextField>
+                      <Label>Name</Label>
+                      <Input
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={field.handleChange}
+                        placeholder="John Doe"
+                        autoComplete="name"
+                        textContentType="name"
+                        returnKeyType="next"
+                        blurOnSubmit={false}
+                        onSubmitEditing={() => {
+                          emailInputRef.current?.focus();
+                        }}
+                      />
+                    </TextField>
+                  )}
+                </form.Field>
 
-        <TextField>
-          <TextField.Label>Password</TextField.Label>
-          <TextField.Input
-            value={password}
-            onChangeText={setPassword}
-            placeholder="••••••••"
-            secureTextEntry
-          />
-        </TextField>
+                <form.Field name="email">
+                  {(field) => (
+                    <TextField>
+                      <Label>Email</Label>
+                      <Input
+                        ref={emailInputRef}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={field.handleChange}
+                        placeholder="email@example.com"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoComplete="email"
+                        textContentType="emailAddress"
+                        returnKeyType="next"
+                        blurOnSubmit={false}
+                        onSubmitEditing={() => {
+                          passwordInputRef.current?.focus();
+                        }}
+                      />
+                    </TextField>
+                  )}
+                </form.Field>
 
-        <Button onPress={handleSignUp} isDisabled={isLoading} className="mt-1">
-          {isLoading ? (
-            <Spinner size="sm" color="default" />
-          ) : (
-            <Button.Label>Create Account</Button.Label>
-          )}
-        </Button>
-      </View>
+                <form.Field name="password">
+                  {(field) => (
+                    <TextField>
+                      <Label>Password</Label>
+                      <Input
+                        ref={passwordInputRef}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={field.handleChange}
+                        placeholder="••••••••"
+                        secureTextEntry
+                        autoComplete="new-password"
+                        textContentType="newPassword"
+                        returnKeyType="go"
+                        onSubmitEditing={form.handleSubmit}
+                      />
+                    </TextField>
+                  )}
+                </form.Field>
+
+                <Button onPress={form.handleSubmit} isDisabled={isSubmitting} className="mt-1">
+                  {isSubmitting ? (
+                    <Spinner size="sm" color="default" />
+                  ) : (
+                    <Button.Label>Create Account</Button.Label>
+                  )}
+                </Button>
+              </View>
+            </>
+          );
+        }}
+      </form.Subscribe>
     </Surface>
   );
 }
@@ -4021,130 +4588,234 @@ import { queryClient } from "@/utils/trpc";
 {{#if (eq api "orpc")}}
 import { queryClient } from "@/utils/orpc";
 {{/if}}
+import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
 import {
-ActivityIndicator,
-Text,
-TextInput,
-TouchableOpacity,
-View,
-StyleSheet,
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
+import { useColorScheme } from "@/lib/use-color-scheme";
+import z from "zod";
+
+const signInSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(8, "Use at least 8 characters"),
+});
+
+function getErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (Array.isArray(error)) {
+    for (const issue of error) {
+      const message = getErrorMessage(issue);
+      if (message) {
+        return message;
+      }
+    }
+    return null;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const maybeError = error as { message?: unknown };
+    if (typeof maybeError.message === "string") {
+      return maybeError.message;
+    }
+  }
+
+  return null;
+}
 
 function SignIn() {
-const { colorScheme } = useColorScheme();
-const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
-const [form, setForm] = useState({ email: "", password: "" });
-const [isLoading, setIsLoading] = useState(false);
-const [error, setError] = useState<string | null>(null);
+  const { colorScheme } = useColorScheme();
+  const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
+  const [error, setError] = useState<string | null>(null);
 
-    function handleFormChange(field: "email" | "password", value: string) {
-    setForm(prev => ({ ...prev, [field]: value }));
-    }
+  const form = useForm({
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    validators: {
+      onSubmit: signInSchema,
+    },
+    onSubmit: async ({ value, formApi }) => {
+      await authClient.signIn.email(
+        {
+          email: value.email.trim(),
+          password: value.password,
+        },
+        {
+          onError(error) {
+            setError(error.error?.message || "Failed to sign in");
+          },
+          onSuccess() {
+            setError(null);
+            formApi.reset();
+            {{#if (eq api "orpc")}}
+            queryClient.refetchQueries();
+            {{/if}}
+            {{#if (eq api "trpc")}}
+            queryClient.refetchQueries();
+            {{/if}}
+          },
+        },
+      );
+    },
+  });
 
-    async function handleLogin() {
-    setIsLoading(true);
-    setError(null);
-
-    await authClient.signIn.email(
-    {
-    email: form.email,
-    password: form.password,
-    },
-    {
-    onError(error) {
-    setError(error.error?.message || "Failed to sign in");
-    setIsLoading(false);
-    },
-    onSuccess() {
-    setForm({ email: "", password: "" });
-    {{#if (eq api "orpc")}}
-    queryClient.refetchQueries();
-    {{/if}}
-    {{#if (eq api "trpc")}}
-    queryClient.refetchQueries();
-    {{/if}}
-    },
-    onFinished() {
-    setIsLoading(false);
-    },
-    }
-    );
-    }
-
-    return (
+  return (
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
-        <Text style={[styles.title, { color: theme.text }]}>Sign In</Text>
+      <Text style={[styles.title, { color: theme.text }]}>Sign In</Text>
 
-        {error ? (
-        <View style={[styles.errorContainer, { backgroundColor: theme.notification + "20" }]}>
-            <Text style={[styles.errorText, { color: theme.notification }]}>{error}</Text>
-        </View>
-        ) : null}
+      <form.Subscribe
+        selector={(state) => ({
+          isSubmitting: state.isSubmitting,
+          validationError: getErrorMessage(state.errorMap.onSubmit),
+        })}
+      >
+        {({ isSubmitting, validationError }) => {
+          const formError = error ?? validationError;
 
-        <TextInput style={[ styles.input, { color: theme.text, borderColor: theme.border, backgroundColor:
-            theme.background }, ]} placeholder="Email" placeholderTextColor={theme.text} value={form.email}
-            onChangeText={value=> handleFormChange("email", value)}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            />
+          return (
+            <>
+              {formError ? (
+                <View style={[styles.errorContainer, { backgroundColor: theme.notification + "20" }]}>
+                  <Text style={[styles.errorText, { color: theme.notification }]}>{formError}</Text>
+                </View>
+              ) : null}
 
-            <TextInput style={[ styles.input, { color: theme.text, borderColor: theme.border, backgroundColor:
-                theme.background }, ]} placeholder="Password" placeholderTextColor={theme.text} value={form.password}
-                onChangeText={value=> handleFormChange("password", value)}
-                secureTextEntry
-                />
+              <form.Field name="email">
+                {(field) => (
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        color: theme.text,
+                        borderColor: theme.border,
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                    placeholder="Email"
+                    placeholderTextColor={theme.text}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                )}
+              </form.Field>
 
-                <TouchableOpacity onPress={handleLogin} disabled={isLoading} style={[ styles.button, { backgroundColor:
-                    theme.primary, opacity: isLoading ? 0.5 : 1 }, ]}>
-                    {isLoading ? (
-                    <ActivityIndicator size="small" color="#ffffff" />
-                    ) : (
-                    <Text style={styles.buttonText}>Sign In</Text>
-                    )}
-                </TouchableOpacity>
+              <form.Field name="password">
+                {(field) => (
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        color: theme.text,
+                        borderColor: theme.border,
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                    placeholder="Password"
+                    placeholderTextColor={theme.text}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    secureTextEntry
+                    onSubmitEditing={form.handleSubmit}
+                  />
+                )}
+              </form.Field>
+
+              <TouchableOpacity
+                onPress={form.handleSubmit}
+                disabled={isSubmitting}
+                style={[
+                  styles.button,
+                  {
+                    backgroundColor: theme.primary,
+                    opacity: isSubmitting ? 0.5 : 1,
+                  },
+                ]}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text style={styles.buttonText}>Sign In</Text>
+                )}
+              </TouchableOpacity>
+            </>
+          );
+        }}
+      </form.Subscribe>
     </View>
-    );
-    }
+  );
+}
 
-    const styles = StyleSheet.create({
-    card: {
+const styles = StyleSheet.create({
+  card: {
     marginTop: 16,
     padding: 16,
     borderWidth: 1,
-    },
-    title: {
+  },
+  title: {
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 12,
-    },
-    errorContainer: {
+  },
+  errorContainer: {
     marginBottom: 12,
     padding: 8,
-    },
-    errorText: {
+  },
+  errorText: {
     fontSize: 14,
-    },
-    input: {
+  },
+  input: {
     borderWidth: 1,
     padding: 12,
     fontSize: 16,
     marginBottom: 12,
-    },
-    button: {
+  },
+  button: {
     padding: 12,
     alignItems: "center",
     justifyContent: "center",
-    },
-    buttonText: {
+  },
+  buttonText: {
     color: "#ffffff",
     fontSize: 16,
-    },
-    });
+  },
+});
 
-    export { SignIn };`],
+export { SignIn };
+`],
   ["auth/better-auth/native/bare/components/sign-up.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 {{#if (eq api "trpc")}}
 import { queryClient } from "@/utils/trpc";
@@ -4152,108 +4823,225 @@ import { queryClient } from "@/utils/trpc";
 {{#if (eq api "orpc")}}
 import { queryClient } from "@/utils/orpc";
 {{/if}}
+import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
 import {
   ActivityIndicator,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
-  StyleSheet,
 } from "react-native";
-import { useColorScheme } from "@/lib/use-color-scheme";
 import { NAV_THEME } from "@/lib/constants";
+import { useColorScheme } from "@/lib/use-color-scheme";
+import z from "zod";
+
+const signUpSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(8, "Use at least 8 characters"),
+});
+
+function getErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (Array.isArray(error)) {
+    for (const issue of error) {
+      const message = getErrorMessage(issue);
+      if (message) {
+        return message;
+      }
+    }
+    return null;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const maybeError = error as { message?: unknown };
+    if (typeof maybeError.message === "string") {
+      return maybeError.message;
+    }
+  }
+
+  return null;
+}
 
 function SignUp() {
   const { colorScheme } = useColorScheme();
   const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSignUp() {
-    setIsLoading(true);
-    setError(null);
-
-    await authClient.signUp.email(
-      {
-        name,
-        email,
-        password,
-      },
-      {
-        onError(error) {
-          setError(error.error?.message || "Failed to sign up");
-          setIsLoading(false);
+  const form = useForm({
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+    },
+    validators: {
+      onSubmit: signUpSchema,
+    },
+    onSubmit: async ({ value, formApi }) => {
+      await authClient.signUp.email(
+        {
+          name: value.name.trim(),
+          email: value.email.trim(),
+          password: value.password,
         },
-        onSuccess() {
-          setName("");
-          setEmail("");
-          setPassword("");
-          {{#if (eq api "orpc")}}
-          queryClient.refetchQueries();
-          {{/if}}
-          {{#if (eq api "trpc")}}
-          queryClient.refetchQueries();
-          {{/if}}
+        {
+          onError(error) {
+            setError(error.error?.message || "Failed to sign up");
+          },
+          onSuccess() {
+            setError(null);
+            formApi.reset();
+            {{#if (eq api "orpc")}}
+            queryClient.refetchQueries();
+            {{/if}}
+            {{#if (eq api "trpc")}}
+            queryClient.refetchQueries();
+            {{/if}}
+          },
         },
-        onFinished() {
-          setIsLoading(false);
-        },
-      }
-    );
-  }
+      );
+    },
+  });
 
   return (
     <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
       <Text style={[styles.title, { color: theme.text }]}>Create Account</Text>
 
-      {error ? (
-        <View style={[styles.errorContainer, { backgroundColor: theme.notification + "20" }]}>
-          <Text style={[styles.errorText, { color: theme.notification }]}>{error}</Text>
-        </View>
-      ) : null}
-
-      <TextInput
-        style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]}
-        placeholder="Name"
-        placeholderTextColor={theme.text}
-        value={name}
-        onChangeText={setName}
-      />
-
-      <TextInput
-        style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]}
-        placeholder="Email"
-        placeholderTextColor={theme.text}
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-
-      <TextInput
-        style={[styles.input, { color: theme.text, borderColor: theme.border, backgroundColor: theme.background }]}
-        placeholder="Password"
-        placeholderTextColor={theme.text}
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-
-      <TouchableOpacity
-        onPress={handleSignUp}
-        disabled={isLoading}
-        style={[styles.button, { backgroundColor: theme.primary, opacity: isLoading ? 0.5 : 1 }]}
+      <form.Subscribe
+        selector={(state) => ({
+          isSubmitting: state.isSubmitting,
+          validationError: getErrorMessage(state.errorMap.onSubmit),
+        })}
       >
-        {isLoading ? (
-          <ActivityIndicator size="small" color="#ffffff" />
-        ) : (
-          <Text style={styles.buttonText}>Sign Up</Text>
-        )}
-      </TouchableOpacity>
+        {({ isSubmitting, validationError }) => {
+          const formError = error ?? validationError;
+
+          return (
+            <>
+              {formError ? (
+                <View style={[styles.errorContainer, { backgroundColor: theme.notification + "20" }]}>
+                  <Text style={[styles.errorText, { color: theme.notification }]}>{formError}</Text>
+                </View>
+              ) : null}
+
+              <form.Field name="name">
+                {(field) => (
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        color: theme.text,
+                        borderColor: theme.border,
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                    placeholder="Name"
+                    placeholderTextColor={theme.text}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                  />
+                )}
+              </form.Field>
+
+              <form.Field name="email">
+                {(field) => (
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        color: theme.text,
+                        borderColor: theme.border,
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                    placeholder="Email"
+                    placeholderTextColor={theme.text}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                )}
+              </form.Field>
+
+              <form.Field name="password">
+                {(field) => (
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        color: theme.text,
+                        borderColor: theme.border,
+                        backgroundColor: theme.background,
+                      },
+                    ]}
+                    placeholder="Password"
+                    placeholderTextColor={theme.text}
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    secureTextEntry
+                    onSubmitEditing={form.handleSubmit}
+                  />
+                )}
+              </form.Field>
+
+              <TouchableOpacity
+                onPress={form.handleSubmit}
+                disabled={isSubmitting}
+                style={[
+                  styles.button,
+                  {
+                    backgroundColor: theme.primary,
+                    opacity: isSubmitting ? 0.5 : 1,
+                  },
+                ]}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Text style={styles.buttonText}>Sign Up</Text>
+                )}
+              </TouchableOpacity>
+            </>
+          );
+        }}
+      </form.Subscribe>
     </View>
   );
 }
@@ -4294,7 +5082,6 @@ const styles = StyleSheet.create({
 });
 
 export { SignUp };
-
 `],
   ["auth/better-auth/native/base/lib/auth-client.ts.hbs", `import { expoClient } from "@better-auth/expo/client";
 import { createAuthClient } from "better-auth/react";
@@ -4508,6 +5295,7 @@ import { queryClient } from "@/utils/trpc";
 {{#if (eq api "orpc")}}
 import { queryClient } from "@/utils/orpc";
 {{/if}}
+import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -4517,82 +5305,157 @@ import {
   View,
 } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
+import z from "zod";
+
+const signInSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(8, "Use at least 8 characters"),
+});
+
+function getErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (Array.isArray(error)) {
+    for (const issue of error) {
+      const message = getErrorMessage(issue);
+      if (message) {
+        return message;
+      }
+    }
+    return null;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const maybeError = error as { message?: unknown };
+    if (typeof maybeError.message === "string") {
+      return maybeError.message;
+    }
+  }
+
+  return null;
+}
 
 export function SignIn() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    await authClient.signIn.email(
-      {
-        email,
-        password,
-      },
-      {
-        onError: (error) => {
-          setError(error.error?.message || "Failed to sign in");
-          setIsLoading(false);
+  const form = useForm({
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    validators: {
+      onSubmit: signInSchema,
+    },
+    onSubmit: async ({ value, formApi }) => {
+      await authClient.signIn.email(
+        {
+          email: value.email.trim(),
+          password: value.password,
         },
-        onSuccess: () => {
-          setEmail("");
-          setPassword("");
-          {{#if (eq api "orpc")}}
-          queryClient.refetchQueries();
-          {{/if}}
-          {{#if (eq api "trpc")}}
-          queryClient.refetchQueries();
-          {{/if}}
+        {
+          onError(error) {
+            setError(error.error?.message || "Failed to sign in");
+          },
+          onSuccess() {
+            setError(null);
+            formApi.reset();
+            {{#if (eq api "orpc")}}
+            queryClient.refetchQueries();
+            {{/if}}
+            {{#if (eq api "trpc")}}
+            queryClient.refetchQueries();
+            {{/if}}
+          },
         },
-        onFinished: () => {
-          setIsLoading(false);
-        },
-      },
-    );
-  };
+      );
+    },
+  });
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sign In</Text>
 
-      {error && (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
-
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-
-      <TouchableOpacity
-        onPress={handleLogin}
-        disabled={isLoading}
-        style={styles.button}
+      <form.Subscribe
+        selector={(state) => ({
+          isSubmitting: state.isSubmitting,
+          validationError: getErrorMessage(state.errorMap.onSubmit),
+        })}
       >
-        {isLoading ? (
-          <ActivityIndicator size="small" color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Sign In</Text>
-        )}
-      </TouchableOpacity>
+        {({ isSubmitting, validationError }) => {
+          const formError = error ?? validationError;
+
+          return (
+            <>
+              {formError ? (
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorText}>{formError}</Text>
+                </View>
+              ) : null}
+
+              <form.Field name="email">
+                {(field) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Email"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                )}
+              </form.Field>
+
+              <form.Field name="password">
+                {(field) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Password"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    secureTextEntry
+                    onSubmitEditing={form.handleSubmit}
+                  />
+                )}
+              </form.Field>
+
+              <TouchableOpacity
+                onPress={form.handleSubmit}
+                disabled={isSubmitting}
+                style={styles.button}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>Sign In</Text>
+                )}
+              </TouchableOpacity>
+            </>
+          );
+        }}
+      </form.Subscribe>
     </View>
   );
 }
@@ -4648,6 +5511,7 @@ import { queryClient } from "@/utils/trpc";
 {{#if (eq api "orpc")}}
 import { queryClient } from "@/utils/orpc";
 {{/if}}
+import { useForm } from "@tanstack/react-form";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -4657,92 +5521,181 @@ import {
   View,
 } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
+import z from "zod";
+
+const signUpSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(8, "Use at least 8 characters"),
+});
+
+function getErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (Array.isArray(error)) {
+    for (const issue of error) {
+      const message = getErrorMessage(issue);
+      if (message) {
+        return message;
+      }
+    }
+    return null;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const maybeError = error as { message?: unknown };
+    if (typeof maybeError.message === "string") {
+      return maybeError.message;
+    }
+  }
+
+  return null;
+}
 
 export function SignUp() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSignUp = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    await authClient.signUp.email(
-      {
-        name,
-        email,
-        password,
-      },
-      {
-        onError: (error) => {
-          setError(error.error?.message || "Failed to sign up");
-          setIsLoading(false);
+  const form = useForm({
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+    },
+    validators: {
+      onSubmit: signUpSchema,
+    },
+    onSubmit: async ({ value, formApi }) => {
+      await authClient.signUp.email(
+        {
+          name: value.name.trim(),
+          email: value.email.trim(),
+          password: value.password,
         },
-        onSuccess: () => {
-          setName("");
-          setEmail("");
-          setPassword("");
-          {{#if (eq api "orpc")}}
-          queryClient.refetchQueries();
-          {{/if}}
-          {{#if (eq api "trpc")}}
-          queryClient.refetchQueries();
-          {{/if}}
+        {
+          onError(error) {
+            setError(error.error?.message || "Failed to sign up");
+          },
+          onSuccess() {
+            setError(null);
+            formApi.reset();
+            {{#if (eq api "orpc")}}
+            queryClient.refetchQueries();
+            {{/if}}
+            {{#if (eq api "trpc")}}
+            queryClient.refetchQueries();
+            {{/if}}
+          },
         },
-        onFinished: () => {
-          setIsLoading(false);
-        },
-      },
-    );
-  };
+      );
+    },
+  });
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Create Account</Text>
 
-      {error && (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
-
-      <TextInput
-        style={styles.input}
-        placeholder="Name"
-        value={name}
-        onChangeText={setName}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-
-      <TextInput
-        style={styles.inputLast}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-
-      <TouchableOpacity
-        onPress={handleSignUp}
-        disabled={isLoading}
-        style={styles.button}
+      <form.Subscribe
+        selector={(state) => ({
+          isSubmitting: state.isSubmitting,
+          validationError: getErrorMessage(state.errorMap.onSubmit),
+        })}
       >
-        {isLoading ? (
-          <ActivityIndicator size="small" color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Sign Up</Text>
-        )}
-      </TouchableOpacity>
+        {({ isSubmitting, validationError }) => {
+          const formError = error ?? validationError;
+
+          return (
+            <>
+              {formError ? (
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorText}>{formError}</Text>
+                </View>
+              ) : null}
+
+              <form.Field name="name">
+                {(field) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Name"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                  />
+                )}
+              </form.Field>
+
+              <form.Field name="email">
+                {(field) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Email"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                )}
+              </form.Field>
+
+              <form.Field name="password">
+                {(field) => (
+                  <TextInput
+                    style={styles.inputLast}
+                    placeholder="Password"
+                    value={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChangeText={(value) => {
+                      field.handleChange(value);
+                      if (error) {
+                        setError(null);
+                      }
+                    }}
+                    secureTextEntry
+                    onSubmitEditing={form.handleSubmit}
+                  />
+                )}
+              </form.Field>
+
+              <TouchableOpacity
+                onPress={form.handleSubmit}
+                disabled={isSubmitting}
+                style={styles.button}
+              >
+                {isSubmitting ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>Sign Up</Text>
+                )}
+              </TouchableOpacity>
+            </>
+          );
+        }}
+      </form.Subscribe>
     </View>
   );
 }
@@ -4929,86 +5882,171 @@ import { queryClient } from "@/utils/trpc";
 {{#if (eq api "orpc")}}
 import { queryClient } from "@/utils/orpc";
 {{/if}}
-import { useState } from "react";
-import { Text, View } from "react-native";
-import { Button, ErrorView, Spinner, Surface, TextField } from "heroui-native";
+import { useForm } from "@tanstack/react-form";
+import { useRef } from "react";
+import { Text, TextInput, View } from "react-native";
+import { Button, FieldError, Input, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
+import z from "zod";
+
+const signInSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(8, "Use at least 8 characters"),
+});
+
+function getErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (Array.isArray(error)) {
+    for (const issue of error) {
+      const message = getErrorMessage(issue);
+      if (message) {
+        return message;
+      }
+    }
+    return null;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const maybeError = error as { message?: unknown };
+    if (typeof maybeError.message === "string") {
+      return maybeError.message;
+    }
+  }
+
+  return null;
+}
 
 function SignIn() {
-const [email, setEmail] = useState("");
-const [password, setPassword] = useState("");
-const [isLoading, setIsLoading] = useState(false);
-const [error, setError] = useState<string | null>(null);
+  const passwordInputRef = useRef<TextInput>(null);
+  const { toast } = useToast();
 
-  async function handleLogin() {
-  setIsLoading(true);
-  setError(null);
-
-  await authClient.signIn.email(
-  {
-  email,
-  password,
-  },
-  {
-  onError(error) {
-  setError(error.error?.message || "Failed to sign in");
-  setIsLoading(false);
-  },
-  onSuccess() {
-  setEmail("");
-  setPassword("");
-  {{#if (eq api "orpc")}}
-  queryClient.refetchQueries();
-  {{/if}}
-  {{#if (eq api "trpc")}}
-  queryClient.refetchQueries();
-  {{/if}}
-  },
-  onFinished() {
-  setIsLoading(false);
-  },
-  }
-  );
-  }
+  const form = useForm({
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    validators: {
+      onSubmit: signInSchema,
+    },
+    onSubmit: async ({ value, formApi }) => {
+      await authClient.signIn.email(
+        {
+          email: value.email.trim(),
+          password: value.password,
+        },
+        {
+          onError(error) {
+            toast.show({
+              variant: "danger",
+              label: error.error?.message || "Failed to sign in",
+            });
+          },
+          onSuccess() {
+            formApi.reset();
+            toast.show({
+              variant: "success",
+              label: "Signed in successfully",
+            });
+            {{#if (eq api "orpc")}}
+            queryClient.refetchQueries();
+            {{/if}}
+            {{#if (eq api "trpc")}}
+            queryClient.refetchQueries();
+            {{/if}}
+          },
+        },
+      );
+    },
+  });
 
   return (
-  <Surface variant="secondary" className="p-4 rounded-lg">
-    <Text className="text-foreground font-medium mb-4">Sign In</Text>
+    <Surface variant="secondary" className="p-4 rounded-lg">
+      <Text className="text-foreground font-medium mb-4">Sign In</Text>
 
-    <ErrorView isInvalid={!!error} className="mb-3">
-      {error}
-    </ErrorView>
+      <form.Subscribe
+        selector={(state) => ({
+          isSubmitting: state.isSubmitting,
+          validationError: getErrorMessage(state.errorMap.onSubmit),
+        })}
+      >
+        {({ isSubmitting, validationError }) => {
+          const formError = validationError;
 
-    <View className="gap-3">
-      <TextField>
-        <TextField.Label>Email</TextField.Label>
-        <TextField.Input
-          value={email}
-          onChangeText={setEmail}
-          placeholder="email@example.com"
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-      </TextField>
+          return (
+            <>
+              <FieldError isInvalid={!!formError} className="mb-3">
+                {formError}
+              </FieldError>
 
-      <TextField>
-        <TextField.Label>Password</TextField.Label>
-        <TextField.Input
-          value={password}
-          onChangeText={setPassword}
-          placeholder="••••••••"
-          secureTextEntry
-        />
-      </TextField>
+              <View className="gap-3">
+                <form.Field name="email">
+                  {(field) => (
+                    <TextField>
+                      <Label>Email</Label>
+                      <Input
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={field.handleChange}
+                        placeholder="email@example.com"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoComplete="email"
+                        textContentType="emailAddress"
+                        returnKeyType="next"
+                        blurOnSubmit={false}
+                        onSubmitEditing={() => {
+                          passwordInputRef.current?.focus();
+                        }}
+                      />
+                    </TextField>
+                  )}
+                </form.Field>
 
-      <Button onPress={handleLogin} isDisabled={isLoading} className="mt-1">
-        {isLoading ? <Spinner size="sm" color="default" /> : <Button.Label>Sign In</Button.Label>}
-      </Button>
-    </View>
-  </Surface>
+                <form.Field name="password">
+                  {(field) => (
+                    <TextField>
+                      <Label>Password</Label>
+                      <Input
+                        ref={passwordInputRef}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={field.handleChange}
+                        placeholder="••••••••"
+                        secureTextEntry
+                        autoComplete="password"
+                        textContentType="password"
+                        returnKeyType="go"
+                        onSubmitEditing={form.handleSubmit}
+                      />
+                    </TextField>
+                  )}
+                </form.Field>
+
+                <Button onPress={form.handleSubmit} isDisabled={isSubmitting} className="mt-1">
+                  {isSubmitting ? <Spinner size="sm" color="default" /> : <Button.Label>Sign In</Button.Label>}
+                </Button>
+              </View>
+            </>
+          );
+        }}
+      </form.Subscribe>
+    </Surface>
   );
-  }
+}
 
-  export { SignIn };`],
+export { SignIn };
+`],
   ["auth/better-auth/native/uniwind/components/sign-up.tsx.hbs", `import { authClient } from "@/lib/auth-client";
 {{#if (eq api "trpc")}}
 import { queryClient } from "@/utils/trpc";
@@ -5016,127 +6054,203 @@ import { queryClient } from "@/utils/trpc";
 {{#if (eq api "orpc")}}
 import { queryClient } from "@/utils/orpc";
 {{/if}}
-import { useState } from "react";
-import { Text, View } from "react-native";
-import { Button, ErrorView, Spinner, Surface, TextField } from "heroui-native";
+import { useForm } from "@tanstack/react-form";
+import { useRef } from "react";
+import { Text, TextInput, View } from "react-native";
+import { Button, FieldError, Input, Label, Spinner, Surface, TextField, useToast } from "heroui-native";
+import z from "zod";
 
-function signUpHandler({
-name,
-email,
-password,
-setError,
-setIsLoading,
-setName,
-setEmail,
-setPassword,
-}: {
-  name: string;
-  email: string;
-  password: string;
-  setError: (error: string | null) => void;
-  setIsLoading: (loading: boolean) => void;
-  setName: (name: string) => void;
-  setEmail: (email: string) => void;
-  setPassword: (password: string) => void;
-}) {
-setIsLoading(true);
-setError(null);
+const signUpSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .min(2, "Name must be at least 2 characters"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(8, "Use at least 8 characters"),
+});
 
-authClient.signUp.email(
-{
-name,
-email,
-password,
-},
-{
-onError(error) {
-setError(error.error?.message || "Failed to sign up");
-setIsLoading(false);
-},
-onSuccess() {
-setName("");
-setEmail("");
-setPassword("");
-{{#if (eq api "orpc")}}
-queryClient.refetchQueries();
-{{/if}}
-{{#if (eq api "trpc")}}
-queryClient.refetchQueries();
-{{/if}}
-},
-onFinished() {
-setIsLoading(false);
-},
-}
-);
+function getErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (Array.isArray(error)) {
+    for (const issue of error) {
+      const message = getErrorMessage(issue);
+      if (message) {
+        return message;
+      }
+    }
+    return null;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const maybeError = error as { message?: unknown };
+    if (typeof maybeError.message === "string") {
+      return maybeError.message;
+    }
+  }
+
+  return null;
 }
 
 export function SignUp() {
-const [name, setName] = useState("");
-const [email, setEmail] = useState("");
-const [password, setPassword] = useState("");
-const [isLoading, setIsLoading] = useState(false);
-const [error, setError] = useState<string | null>(null);
+  const emailInputRef = useRef<TextInput>(null);
+  const passwordInputRef = useRef<TextInput>(null);
+  const { toast } = useToast();
 
-  function handlePress() {
-  signUpHandler({
-  name,
-  email,
-  password,
-  setError,
-  setIsLoading,
-  setName,
-  setEmail,
-  setPassword,
+  const form = useForm({
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+    },
+    validators: {
+      onSubmit: signUpSchema,
+    },
+    onSubmit: async ({ value, formApi }) => {
+      await authClient.signUp.email(
+        {
+          name: value.name.trim(),
+          email: value.email.trim(),
+          password: value.password,
+        },
+        {
+          onError(error) {
+            toast.show({
+              variant: "danger",
+              label: error.error?.message || "Failed to sign up",
+            });
+          },
+          onSuccess() {
+            formApi.reset();
+            toast.show({
+              variant: "success",
+              label: "Account created successfully",
+            });
+            {{#if (eq api "orpc")}}
+            queryClient.refetchQueries();
+            {{/if}}
+            {{#if (eq api "trpc")}}
+            queryClient.refetchQueries();
+            {{/if}}
+          },
+        },
+      );
+    },
   });
-  }
 
   return (
-  <Surface variant="secondary" className="p-4 rounded-lg">
-    <Text className="text-foreground font-medium mb-4">Create Account</Text>
+    <Surface variant="secondary" className="p-4 rounded-lg">
+      <Text className="text-foreground font-medium mb-4">Create Account</Text>
 
-    <ErrorView isInvalid={!!error} className="mb-3">
-      {error}
-    </ErrorView>
+      <form.Subscribe
+        selector={(state) => ({
+          isSubmitting: state.isSubmitting,
+          validationError: getErrorMessage(state.errorMap.onSubmit),
+        })}
+      >
+        {({ isSubmitting, validationError }) => {
+          const formError = validationError;
 
-    <View className="gap-3">
-      <TextField>
-        <TextField.Label>Name</TextField.Label>
-        <TextField.Input value={name} onChangeText={setName} placeholder="John Doe" />
-      </TextField>
+          return (
+            <>
+              <FieldError isInvalid={!!formError} className="mb-3">
+                {formError}
+              </FieldError>
 
-      <TextField>
-        <TextField.Label>Email</TextField.Label>
-        <TextField.Input
-          value={email}
-          onChangeText={setEmail}
-          placeholder="email@example.com"
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-      </TextField>
+              <View className="gap-3">
+                <form.Field name="name">
+                  {(field) => (
+                    <TextField>
+                      <Label>Name</Label>
+                      <Input
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={field.handleChange}
+                        placeholder="John Doe"
+                        autoComplete="name"
+                        textContentType="name"
+                        returnKeyType="next"
+                        blurOnSubmit={false}
+                        onSubmitEditing={() => {
+                          emailInputRef.current?.focus();
+                        }}
+                      />
+                    </TextField>
+                  )}
+                </form.Field>
 
-      <TextField>
-        <TextField.Label>Password</TextField.Label>
-        <TextField.Input
-          value={password}
-          onChangeText={setPassword}
-          placeholder="••••••••"
-          secureTextEntry
-        />
-      </TextField>
+                <form.Field name="email">
+                  {(field) => (
+                    <TextField>
+                      <Label>Email</Label>
+                      <Input
+                        ref={emailInputRef}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={field.handleChange}
+                        placeholder="email@example.com"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        autoComplete="email"
+                        textContentType="emailAddress"
+                        returnKeyType="next"
+                        blurOnSubmit={false}
+                        onSubmitEditing={() => {
+                          passwordInputRef.current?.focus();
+                        }}
+                      />
+                    </TextField>
+                  )}
+                </form.Field>
 
-      <Button onPress={handlePress} isDisabled={isLoading} className="mt-1">
-        {isLoading ? (
-          <Spinner size="sm" color="default" />
-        ) : (
-          <Button.Label>Create Account</Button.Label>
-        )}
-      </Button>
-    </View>
-  </Surface>
+                <form.Field name="password">
+                  {(field) => (
+                    <TextField>
+                      <Label>Password</Label>
+                      <Input
+                        ref={passwordInputRef}
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChangeText={field.handleChange}
+                        placeholder="••••••••"
+                        secureTextEntry
+                        autoComplete="new-password"
+                        textContentType="newPassword"
+                        returnKeyType="go"
+                        onSubmitEditing={form.handleSubmit}
+                      />
+                    </TextField>
+                  )}
+                </form.Field>
+
+                <Button onPress={form.handleSubmit} isDisabled={isSubmitting} className="mt-1">
+                  {isSubmitting ? (
+                    <Spinner size="sm" color="default" />
+                  ) : (
+                    <Button.Label>Create Account</Button.Label>
+                  )}
+                </Button>
+              </View>
+            </>
+          );
+        }}
+      </form.Subscribe>
+    </Surface>
   );
-  }`],
+}
+`],
   ["auth/better-auth/server/base/_gitignore", `# dependencies (bun install)
 node_modules
 
@@ -10413,20 +11527,32 @@ const app = new Elysia()
 	})
 {{/if}}
 {{#if (eq api "orpc")}}
-	.all('/rpc*', async (context) => {
-		const { response } = await rpcHandler.handle(context.request, {
-			prefix: '/rpc',
-			context: await createContext({ context })
-		})
-		return response ?? new Response('Not Found', { status: 404 })
-	})
-	.all('/api*', async (context) => {
-		const { response } = await apiHandler.handle(context.request, {
-			prefix: '/api-reference',
-			context: await createContext({ context })
-		})
-		return response ?? new Response('Not Found', { status: 404 })
-	})
+	.all(
+		"/rpc*",
+		async (context) => {
+			const { response } = await rpcHandler.handle(context.request, {
+				prefix: "/rpc",
+				context: await createContext({ context }),
+			});
+			return response ?? new Response("Not Found", { status: 404 });
+		},
+		{
+			parse: "none",
+		}
+	)
+	.all(
+		"/api-reference*",
+		async (context) => {
+			const { response } = await apiHandler.handle(context.request, {
+				prefix: "/api-reference",
+				context: await createContext({ context }),
+			});
+			return response ?? new Response("Not Found", { status: 404 });
+		},
+		{
+			parse: "none",
+		}
+	)
 {{/if}}
 {{#if (eq api "trpc")}}
 	.all("/trpc/*", async (context) => {
@@ -10598,17 +11724,13 @@ import { appRouter, type AppRouter } from "@{{projectName}}/api/routers/index";
 {{/if}}
 
 {{#if (eq api "orpc")}}
-import { OpenAPIHandler } from "@orpc/openapi/node";
+import { OpenAPIHandler } from "@orpc/openapi/fastify";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
-import { RPCHandler } from "@orpc/server/node";
-import { CORSPlugin } from "@orpc/server/plugins";
+import { RPCHandler } from "@orpc/server/fastify";
 import { onError } from "@orpc/server";
-import { appRouter } from "@{{projectName}}/api/routers/index";
-import { createServer } from "node:http";
-{{#if (eq auth "better-auth")}}
 import { createContext } from "@{{projectName}}/api/context";
-{{/if}}
+import { appRouter } from "@{{projectName}}/api/routers/index";
 {{/if}}
 
 {{#if (includes examples "ai")}}
@@ -10635,13 +11757,6 @@ const baseCorsConfig = {
 
 {{#if (eq api "orpc")}}
 const rpcHandler = new RPCHandler(appRouter, {
-	plugins: [
-		new CORSPlugin({
-			origin: env.CORS_ORIGIN,
-			credentials: true,
-			allowHeaders: ["Content-Type", "Authorization"],
-		}),
-	],
 	interceptors: [
 		onError((error) => {
 			console.error(error);
@@ -10664,31 +11779,6 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 
 const fastify = Fastify({
 	logger: true,
-	serverFactory: (fastifyHandler) => {
-		const server = createServer(async (req, res) => {
-			const { matched } = await rpcHandler.handle(req, res, {
-				context: await createContext(req.headers),
-				prefix: "/rpc",
-			});
-
-			if (matched) {
-				return;
-			}
-
-			const apiResult = await apiHandler.handle(req, res, {
-				context: await createContext(req.headers),
-				prefix: "/api-reference",
-			});
-
-			if (apiResult.matched) {
-				return;
-			}
-
-			fastifyHandler(req, res);
-		});
-
-		return server;
-	},
 });
 {{else}}
 const fastify = Fastify({
@@ -10697,6 +11787,37 @@ const fastify = Fastify({
 {{/if}}
 
 fastify.register(fastifyCors, baseCorsConfig);
+
+{{#if (eq api "orpc")}}
+fastify.register(async (rpcApp) => {
+	// Fully utilize oRPC features by letting oRPC parse the request body.
+	rpcApp.addContentTypeParser("*", (_, _payload, done) => {
+		done(null, undefined);
+	});
+
+	rpcApp.all("/rpc/*", async (request, reply) => {
+		const { matched } = await rpcHandler.handle(request, reply, {
+			context: await createContext(request.headers),
+			prefix: "/rpc",
+		});
+
+		if (!matched) {
+			reply.status(404).send();
+		}
+	});
+
+	rpcApp.all("/api-reference/*", async (request, reply) => {
+		const { matched } = await apiHandler.handle(request, reply, {
+			context: await createContext(request.headers),
+			prefix: "/api-reference",
+		});
+
+		if (!matched) {
+			reply.status(404).send();
+		}
+	});
+});
+{{/if}}
 
 {{#if (eq auth "better-auth")}}
 fastify.route({
@@ -11249,14 +12370,8 @@ import { env } from "@{{projectName}}/env/server";
 import * as schema from "./schema";
 
 {{#if (eq dbSetup "neon")}}
-import { neon, neonConfig } from '@neondatabase/serverless';
+import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import ws from "ws";
-
-neonConfig.webSocketConstructor = ws;
-
-// To work in edge environments (Cloudflare Workers, Vercel Edge, etc.), enable querying over fetch
-// neonConfig.poolQueryViaFetch = true
 
 const sql = neon(env.DATABASE_URL);
 export const db = drizzle(sql, { schema });
@@ -11271,13 +12386,9 @@ export const db = drizzle(env.DATABASE_URL, { schema });
 import * as schema from "./schema";
 
 {{#if (eq dbSetup "neon")}}
-import { neon, neonConfig } from '@neondatabase/serverless';
+import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { env } from "@{{projectName}}/env/server";
-import ws from "ws";
-
-neonConfig.webSocketConstructor = ws;
-neonConfig.poolQueryViaFetch = true;
 
 const sql = neon(env.DATABASE_URL || "");
 export const db = drizzle(sql, { schema });
@@ -11592,11 +12703,6 @@ import { PrismaClient } from "../prisma/generated/client";
 import { env } from "@{{projectName}}/env/server";
 {{#if (eq dbSetup "neon")}}
 import { PrismaNeon } from "@prisma/adapter-neon";
-import { neonConfig } from "@neondatabase/serverless";
-import ws from "ws";
-
-neonConfig.webSocketConstructor = ws;
-neonConfig.poolQueryViaFetch = true;
 
 const adapter = new PrismaNeon({
 	connectionString: env.DATABASE_URL,
@@ -13080,7 +14186,7 @@ import {
 } from "@convex-dev/agent/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useMutation } from "convex/react";
-import { Button, Divider, Spinner, Surface, TextField, useThemeColor } from "heroui-native";
+import { Button, Separator, Spinner, Surface, Input, TextField, useThemeColor } from "heroui-native";
 import { useRef, useEffect, useState } from "react";
 import {
   View,
@@ -13153,7 +14259,7 @@ export default function AIScreen() {
   };
 
   return (
-    <Container>
+    <Container isScrollable={false}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -13168,19 +14274,21 @@ export default function AIScreen() {
             ref={scrollViewRef}
             className="flex-1 mb-4"
             showsVerticalScrollIndicator={false}
+            contentContainerStyle=\\{{ flexGrow: 1, paddingBottom: 8 }}
+            keyboardShouldPersistTaps="handled"
           >
             {!messages || messages.length === 0 ? (
-              <View className="flex-1 justify-center items-center py-10">
+              <Surface variant="secondary" className="flex-1 justify-center items-center py-8 rounded-xl">
                 <Ionicons name="chatbubble-ellipses-outline" size={32} color={mutedColor} />
                 <Text className="text-muted text-sm mt-3">Ask me anything to get started</Text>
-              </View>
+              </Surface>
             ) : (
-              <View className="gap-2">
+              <View className="gap-3">
                 {messages.map((message: UIMessage) => (
                   <Surface
                     key={message.key}
                     variant={message.role === "user" ? "tertiary" : "secondary"}
-                    className={\`p-3 rounded-lg \${message.role === "user" ? "ml-10" : "mr-10"}\`}
+                    className={\`p-3 rounded-xl \${message.role === "user" ? "ml-8" : "mr-8"}\`}
                   >
                     <Text className="text-xs font-medium mb-1 text-muted">
                       {message.role === "user" ? "You" : "AI"}
@@ -13204,21 +14312,21 @@ export default function AIScreen() {
             )}
           </ScrollView>
 
-          <Divider className="mb-3" />
+          <Separator className="mb-3" />
 
           <View className="flex-row items-center gap-2">
             <View className="flex-1">
-              <TextField>
-                <TextField.Input
-                  value={input}
-                  onChangeText={setInput}
-                  placeholder="Type a message..."
-                  onSubmitEditing={onSubmit}
-                  editable={!isLoading}
-                  autoFocus
-                />
-              </TextField>
-            </View>
+                <TextField>
+                  <Input
+                    value={input}
+                    onChangeText={setInput}
+                    placeholder="Type a message..."
+                    onSubmitEditing={onSubmit}
+                    editable={!isLoading}
+                    returnKeyType="send"
+                  />
+                </TextField>
+              </View>
             <Button
               isIconOnly
               variant={input.trim() && !isLoading ? "primary" : "secondary"}
@@ -13252,7 +14360,7 @@ import { DefaultChatTransport } from "ai";
 import { fetch as expoFetch } from "expo/fetch";
 import { Ionicons } from "@expo/vector-icons";
 import { Container } from "@/components/container";
-import { Button, Divider, ErrorView, Spinner, Surface, TextField, useThemeColor } from "heroui-native";
+import { Button, Separator, FieldError, Spinner, Surface, Input, TextField, useThemeColor } from "heroui-native";
 import { env } from "@{{projectName}}/env/native";
 
 const generateAPIUrl = (relativePath: string) => {
@@ -13268,7 +14376,7 @@ const generateAPIUrl = (relativePath: string) => {
 
 export default function AIScreen() {
   const [input, setInput] = useState("");
-  const { messages, error, sendMessage } = useChat({
+  const { messages, error, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       fetch: expoFetch as unknown as typeof globalThis.fetch,
       api: generateAPIUrl("/ai"),
@@ -13278,6 +14386,7 @@ export default function AIScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const foregroundColor = useThemeColor("foreground");
   const mutedColor = useThemeColor("muted");
+  const isBusy = status === "submitted" || status === "streaming";
 
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
@@ -13285,7 +14394,7 @@ export default function AIScreen() {
 
   const onSubmit = () => {
     const value = input.trim();
-    if (value) {
+    if (value && !isBusy) {
       sendMessage({ text: value });
       setInput("");
     }
@@ -13293,17 +14402,17 @@ export default function AIScreen() {
 
   if (error) {
     return (
-      <Container>
+      <Container isScrollable={false}>
         <View className="flex-1 justify-center items-center px-4">
           <Surface variant="secondary" className="p-4 rounded-lg">
-            <ErrorView isInvalid>
+            <FieldError isInvalid>
               <Text className="text-danger text-center font-medium mb-1">
                 {error.message}
               </Text>
               <Text className="text-muted text-center text-xs">
                 Please check your connection and try again.
               </Text>
-            </ErrorView>
+            </FieldError>
           </Surface>
         </View>
       </Container>
@@ -13311,7 +14420,7 @@ export default function AIScreen() {
   }
 
   return (
-    <Container>
+    <Container isScrollable={false}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -13326,19 +14435,21 @@ export default function AIScreen() {
             ref={scrollViewRef}
             className="flex-1 mb-4"
             showsVerticalScrollIndicator={false}
+            contentContainerStyle=\\{{ flexGrow: 1, paddingBottom: 8 }}
+            keyboardShouldPersistTaps="handled"
           >
             {messages.length === 0 ? (
-              <View className="flex-1 justify-center items-center py-10">
+              <Surface variant="secondary" className="flex-1 justify-center items-center py-8 rounded-xl">
                 <Ionicons name="chatbubble-ellipses-outline" size={32} color={mutedColor} />
                 <Text className="text-muted text-sm mt-3">Ask me anything to get started</Text>
-              </View>
+              </Surface>
             ) : (
-              <View className="gap-2">
+              <View className="gap-3">
                 {messages.map((message) => (
                   <Surface
                     key={message.id}
                     variant={message.role === "user" ? "tertiary" : "secondary"}
-                    className={\`p-3 rounded-lg \${message.role === "user" ? "ml-10" : "mr-10"}\`}
+                    className={\`p-3 rounded-xl \${message.role === "user" ? "ml-8" : "mr-8"}\`}
                   >
                     <Text className="text-xs font-medium mb-1 text-muted">
                       {message.role === "user" ? "You" : "AI"}
@@ -13364,35 +14475,45 @@ export default function AIScreen() {
                     </View>
                   </Surface>
                 ))}
+                {isBusy && (
+                  <Surface variant="secondary" className="p-3 mr-8 rounded-xl">
+                    <Text className="text-xs font-medium mb-1 text-muted">AI</Text>
+                    <View className="flex-row items-center gap-2">
+                      <Spinner size="sm" />
+                      <Text className="text-muted text-sm">Thinking...</Text>
+                    </View>
+                  </Surface>
+                )}
               </View>
             )}
           </ScrollView>
 
-          <Divider className="mb-3" />
+          <Separator className="mb-3" />
 
           <View className="flex-row items-center gap-2">
             <View className="flex-1">
               <TextField>
-                <TextField.Input
+                <Input
                   value={input}
                   onChangeText={setInput}
                   placeholder="Type a message..."
                   onSubmitEditing={onSubmit}
-                  autoFocus
+                  returnKeyType="send"
+                  editable={!isBusy}
                 />
               </TextField>
             </View>
             <Button
               isIconOnly
-              variant={input.trim() ? "primary" : "secondary"}
+              variant={input.trim() && !isBusy ? "primary" : "secondary"}
               onPress={onSubmit}
-              isDisabled={!input.trim()}
+              isDisabled={!input.trim() || isBusy}
               size="sm"
             >
               <Ionicons
                 name="arrow-up"
                 size={18}
-                color={input.trim() ? foregroundColor : mutedColor}
+                color={input.trim() && !isBusy ? foregroundColor : mutedColor}
               />
             </Button>
           </View>
@@ -15502,7 +16623,7 @@ import { Container } from "@/components/container";
     import { trpc } from "@/utils/trpc";
   {{/if}}
 {{/unless}}
-import { Button, Checkbox, Chip, Spinner, Surface, TextField, useThemeColor } from "heroui-native";
+import { Button, Checkbox, Chip, Spinner, Surface, Input, TextField, useThemeColor } from "heroui-native";
 
 export default function TodosScreen() {
   const [newTodoText, setNewTodoText] = useState("");
@@ -15629,7 +16750,7 @@ export default function TodosScreen() {
           <View className="flex-row items-center gap-2">
             <View className="flex-1">
               <TextField>
-                <TextField.Input
+                <Input
                   value={newTodoText}
                   onChangeText={setNewTodoText}
                   placeholder="Add a new task..."
@@ -19205,7 +20326,6 @@ module.exports = config;
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/drawer": "^7.1.1",
     "@react-navigation/native": "^7.0.14",
-    "@tanstack/react-form": "^1.0.5",
     "@tanstack/react-query": "^5.85.5",
     {{#if (includes examples "ai")}}
     "@stardazed/streams-text-encoding": "^1.0.2",
@@ -19239,7 +20359,6 @@ module.exports = config;
   },
   "private": true
 }
-
 `],
   ["frontend/native/bare/tsconfig.json.hbs", `{
 	"extends": "expo/tsconfig.base",
@@ -20267,7 +21386,6 @@ module.exports = config;
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.3.0",
     {{/if}}
-    "@tanstack/react-form": "^1.0.5",
     "babel-preset-expo": "~54.0.10",
     "expo": "~54.0.33",
     "expo-constants": "~18.0.8",
@@ -20814,7 +21932,7 @@ import { api } from "@{{projectName}}/backend/convex/_generated/api";
 {{#unless (or (eq backend "none") (and (eq backend "convex") (eq auth "better-auth")))}}
 import { Ionicons } from "@expo/vector-icons";
 {{/unless}}
-import { Button, Chip, Divider, Spinner, Surface, useThemeColor } from "heroui-native";
+import { Button, Chip, Separator, Spinner, Surface, useThemeColor } from "heroui-native";
 
 export default function Home() {
 {{#if (eq api "orpc")}}
@@ -20850,8 +21968,8 @@ const isLoading = healthCheck?.isLoading;
 {{/unless}}
 
 return (
-<Container className="p-4">
-  <View className="py-6 mb-4">
+<Container className="px-4 pb-4">
+  <View className="py-6 mb-5">
     <Text className="text-3xl font-semibold text-foreground tracking-tight">
       Better T Stack
     </Text>
@@ -20859,7 +21977,7 @@ return (
   </View>
 
   {{#unless (or (eq backend "none") (and (eq backend "convex") (eq auth "better-auth")))}}
-  <Surface variant="secondary" className="p-4 rounded-lg">
+  <Surface variant="secondary" className="p-4 rounded-xl">
     <View className="flex-row items-center justify-between mb-3">
       <Text className="text-foreground font-medium">System Status</Text>
       <Chip variant="secondary" color={isConnected ? "success" : "danger" } size="sm">
@@ -20869,9 +21987,9 @@ return (
       </Chip>
     </View>
 
-    <Divider className="mb-3" />
+    <Separator className="mb-3" />
 
-    <Surface variant="tertiary" className="p-3 rounded-md">
+    <Surface variant="tertiary" className="p-3 rounded-lg">
       <View className="flex-row items-center">
         <View className={\`w-2 h-2 rounded-full mr-3 \${ isConnected ? "bg-success" : "bg-muted" }\`} />
         <View className="flex-1">
@@ -20906,7 +22024,7 @@ return (
 
   {{#if (and (eq backend "convex") (eq auth "clerk"))}}
   <Authenticated>
-    <Surface variant="secondary" className="mt-4 p-4 rounded-lg">
+    <Surface variant="secondary" className="mt-5 p-4 rounded-xl">
       <View className="flex-row items-center justify-between">
         <View className="flex-1">
           <Text className="text-foreground font-medium">{user?.emailAddresses[0].emailAddress}</Text>
@@ -20935,14 +22053,14 @@ return (
 
   {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
   {user ? (
-  <Surface variant="secondary" className="mb-4 p-4 rounded-lg">
+  <Surface variant="secondary" className="mb-4 p-4 rounded-xl">
     <View className="flex-row items-center justify-between">
       <View className="flex-1">
         <Text className="text-foreground font-medium">{user.name}</Text>
         <Text className="text-muted text-xs mt-0.5">{user.email}</Text>
       </View>
       <Button
-        variant="destructive"
+        variant="danger"
         size="sm"
         onPress={() => {
           authClient.signOut();
@@ -20953,7 +22071,7 @@ return (
     </View>
   </Surface>
   ) : null}
-  <Surface variant="secondary" className="p-4 rounded-lg">
+  <Surface variant="secondary" className="p-4 rounded-xl">
     <Text className="text-foreground font-medium mb-2">API Status</Text>
     <View className="flex-row items-center gap-2">
       <View className={\`w-2 h-2 rounded-full \${healthCheck==="OK" ? "bg-success" : "bg-danger" }\`} />
@@ -20967,7 +22085,7 @@ return (
     </View>
   </Surface>
   {!user && (
-  <View className="mt-4 gap-4">
+  <View className="mt-5 gap-4">
     <SignIn />
     <SignUp />
   </View>
@@ -20975,7 +22093,8 @@ return (
   {{/if}}
 </Container>
 );
-}`],
+}
+`],
   ["frontend/native/uniwind/app/+not-found.tsx.hbs", `import { Link, Stack } from "expo-router";
 import { Button, Surface } from "heroui-native";
 import { Text, View } from "react-native";
@@ -21044,36 +22163,49 @@ export default Modal;
 `],
   ["frontend/native/uniwind/components/container.tsx.hbs", `import { cn } from "heroui-native";
 import { type PropsWithChildren } from "react";
-import { ScrollView, View, type ViewProps } from "react-native";
+import { ScrollView, View, type ScrollViewProps, type ViewProps } from "react-native";
 import Animated, { type AnimatedProps } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 
 type Props = AnimatedProps<ViewProps> & {
-	className?: string;
+  className?: string;
+  isScrollable?: boolean;
+  scrollViewProps?: Omit<ScrollViewProps, "contentContainerStyle">;
 };
 
 export function Container({
-	children,
-	className,
-	...props
+  children,
+  className,
+  isScrollable = true,
+  scrollViewProps,
+  ...props
 }: PropsWithChildren<Props>) {
-	const insets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets();
 
-	return (
-		<AnimatedView
-			className={cn("flex-1 bg-background", className)}
-			style=\\{{
-				paddingBottom: insets.bottom,
-			}}
-			{...props}
-		>
-			<ScrollView contentContainerStyle=\\{{ flexGrow: 1 }}>
-				{children}
-			</ScrollView>
-		</AnimatedView>
-	);
+  return (
+    <AnimatedView
+      className={cn("flex-1 bg-background", className)}
+      style=\\{{
+        paddingBottom: insets.bottom,
+      }}
+      {...props}
+    >
+      {isScrollable ? (
+        <ScrollView
+          contentContainerStyle=\\{{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+          contentInsetAdjustmentBehavior="automatic"
+          {...scrollViewProps}
+        >
+          {children}
+        </ScrollView>
+      ) : (
+        <View className="flex-1">{children}</View>
+      )}
+    </AnimatedView>
+  );
 }
 `],
   ["frontend/native/uniwind/components/theme-toggle.tsx.hbs", `import { Ionicons } from '@expo/vector-icons';
@@ -21183,17 +22315,17 @@ export function useAppTheme() {
 `],
   ["frontend/native/uniwind/metro.config.js.hbs", `const { getDefaultConfig } = require("expo/metro-config");
 const { withUniwindConfig } = require("uniwind/metro");
+const { wrapWithReanimatedMetroConfig } = require("react-native-reanimated/metro-config");
 
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
 
-const uniwindConfig = withUniwindConfig(config, {
+const uniwindConfig = withUniwindConfig(wrapWithReanimatedMetroConfig(config), {
   cssEntryFile: "./global.css",
   dtsFile: "./uniwind-types.d.ts",
 });
 
 module.exports = uniwindConfig;
-
 `],
   ["frontend/native/uniwind/package.json.hbs", `{
   "name": "native",
@@ -21227,7 +22359,7 @@ module.exports = uniwindConfig;
     "expo-router": "~6.0.14",
     "expo-secure-store": "~15.0.7",
     "expo-status-bar": "~3.0.8",
-    "heroui-native": "^1.0.0-beta.9",
+    "heroui-native": "^1.0.0-rc.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-native": "0.81.5",
@@ -21242,13 +22374,14 @@ module.exports = uniwindConfig;
     "tailwind-merge": "^3.4.0",
     "tailwind-variants": "^3.2.2",
     "tailwindcss": "^4.1.18",
-    "uniwind": "^1.2.2"
+    "uniwind": "^1.3.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
     "@types/react": "~19.1.0"
   }
-}`],
+}
+`],
   ["frontend/native/uniwind/tsconfig.json.hbs", `{
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
@@ -21601,7 +22734,6 @@ initOpenNextCloudflareForDev();
   "dependencies": {
     "@base-ui/react": "^1.0.0",
     "shadcn": "^3.6.2",
-    "@tanstack/react-form": "^1.27.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.546.0",
@@ -21986,7 +23118,6 @@ export function ThemeProvider({
     "@react-router/fs-routes": "^7.10.1",
     "@react-router/node": "^7.10.1",
     "@react-router/serve": "^7.10.1",
-    "@tanstack/react-form": "^1.27.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "isbot": "^5.1.28",
@@ -22415,7 +23546,6 @@ export default defineConfig({
         "@hookform/resolvers": "^5.1.1",
         "@base-ui/react": "^1.0.0",
         "shadcn": "^3.6.2",
-        "@tanstack/react-form": "^1.12.3",
 		"@tailwindcss/vite": "^4.0.15",
 		"@tanstack/react-router": "^1.141.1",
 		"class-variance-authority": "^0.7.1",
@@ -22816,7 +23946,6 @@ export default defineConfig({
   "dependencies": {
     "@base-ui/react": "^1.0.0",
     "shadcn": "^3.6.2",
-    "@tanstack/react-form": "^1.23.5",
     "@tailwindcss/vite": "^4.1.8",
     "@tanstack/react-query": "^5.80.6",
     "@tanstack/react-router": "^1.141.1",
@@ -24249,7 +25378,6 @@ dist-ssr
   "dependencies": {
     "@tailwindcss/vite": "^4.1.13",
     "@tanstack/router-plugin": "^1.131.44",
-    "@tanstack/solid-form": "^1.20.0",
     "@tanstack/solid-router": "^1.131.44",
     "lucide-solid": "^0.544.0",
     "solid-js": "^1.9.9",
@@ -24571,9 +25699,7 @@ vite.config.ts.timestamp-*
 		"tailwindcss": "^4.1.12",
 		"vite": "^7.1.2"
 	},
-	"dependencies": {
-		"@tanstack/svelte-form": "^1.19.2"
-	}
+	"dependencies": {}
 }
 `],
   ["frontend/svelte/src/app.css", `@import "tailwindcss";
