@@ -20,7 +20,7 @@ async function bootstrap() {
 
 {{#if (eq auth "better-auth")}}
 	const expressApp = app.getHttpAdapter().getInstance();
-	expressApp.all("/api/auth/*path", async (req: any, res: any) => {
+	expressApp.all("/api/auth/*path", async (req: any, _res: any) => {
 		return auth.handler(req);
 	});
 {{/if}}

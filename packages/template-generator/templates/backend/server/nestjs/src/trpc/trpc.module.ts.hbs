@@ -1,3 +1,4 @@
+{{#if (eq api "trpc")}}
 import { Module, type MiddlewareConsumer, type NestModule } from "@nestjs/common";
 import { TrpcMiddleware } from "./trpc.middleware";
 
@@ -7,3 +8,4 @@ export class TrpcModule implements NestModule {
 		consumer.apply(TrpcMiddleware).forRoutes("trpc/*path");
 	}
 }
+{{/if}}

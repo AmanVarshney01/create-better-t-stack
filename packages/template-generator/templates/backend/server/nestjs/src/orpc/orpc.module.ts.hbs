@@ -1,3 +1,4 @@
+{{#if (eq api "orpc")}}
 import { Module, type MiddlewareConsumer, type NestModule } from "@nestjs/common";
 import { OrpcMiddleware } from "./orpc.middleware";
 
@@ -7,3 +8,4 @@ export class OrpcModule implements NestModule {
 		consumer.apply(OrpcMiddleware).forRoutes("rpc/*path", "api-reference/*path");
 	}
 }
+{{/if}}

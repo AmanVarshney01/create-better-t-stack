@@ -1,3 +1,4 @@
+{{#if (includes examples "ai")}}
 import { Controller, Post, Req, Res } from "@nestjs/common";
 import { AiService } from "./ai.service";
 import type { Request, Response } from "express";
@@ -11,3 +12,4 @@ export class AiController {
 		return this.aiService.streamChat(req, res);
 	}
 }
+{{/if}}

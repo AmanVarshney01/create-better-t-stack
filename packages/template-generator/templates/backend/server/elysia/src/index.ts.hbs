@@ -50,9 +50,9 @@ const apiHandler = new OpenAPIHandler(appRouter, {
 {{/if}}
 
 {{#if (eq runtime "node")}}
-const app = new Elysia({ adapter: node() })
+new Elysia({ adapter: node() })
 {{else}}
-const app = new Elysia()
+new Elysia()
 {{/if}}
 	.use(
 		cors({

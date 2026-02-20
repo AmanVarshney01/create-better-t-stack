@@ -1,3 +1,4 @@
+{{#if (eq api "trpc")}}
 import { Injectable, type NestMiddleware } from "@nestjs/common";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { createContext } from "@{{projectName}}/api/context";
@@ -15,3 +16,4 @@ export class TrpcMiddleware implements NestMiddleware {
 		this.trpcMiddleware(req, res, next);
 	}
 }
+{{/if}}

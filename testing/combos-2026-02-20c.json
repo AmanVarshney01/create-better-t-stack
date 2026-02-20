@@ -1,0 +1,213 @@
+{
+  "v": 2,
+  "d": "2026-02-20",
+  "cb": "node /path/to/cli.mjs create <name> --ecosystem typescript --frontend <f> --backend <b> --runtime <r> --database postgres --db-setup neon --orm drizzle --auth better-auth --api <api> --effect <e> --no-install --manual-db --package-manager bun --no-git --disable-analytics ...",
+  "tot": [10, 10, 0, 5],
+  "k": {
+    "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
+    "r": { "p": "pass", "f": "fail" },
+    "e": { "r": "rust", "p": "python", "g": "go", "t": "typescript" },
+    "notes": [
+      "Type-check batch: 10 combos verified with bun install + bun run check-types (not just dep presence)",
+      "CLI invocation changed: cli.mjs create <name> --ecosystem typescript (not ts), --no-install, --manual-db",
+      "5 template bugs found and fixed in repo:",
+      "  BugA: base/tsconfig.json.hbs missing experimentalDecorators+emitDecoratorMetadata for NestJS",
+      "  BugB: nestjs ai.service/controller/module.ts.hbs generated unconditionally (now wrapped in {{#if (includes examples 'ai')}})",
+      "  BugC: nestjs orpc+trpc middleware+module.ts.hbs generated unconditionally (now wrapped in api conditionals)",
+      "  BugD: nestjs index.ts.hbs unused 'res' parameter in better-auth handler (renamed to _res)",
+      "  BugE: adonisjs routes.ts.hbs used router.options() (does not exist) + 3-arg authHandler (fixed to router.route+await)",
+      "  BugF: drizzle db/src/index.ts used './schema' (fails node16 moduleResolution); fixed to './schema/index.js'",
+      "  BugG: elysia index.ts.hbs assigned const app = new Elysia().listen() but never used (removed const app=)",
+      "  BugF also required fixing db/drizzle/base/src/schema/index.ts barrel: export * from './auth' -> './auth.js'",
+      "  './schema/index.js' works for BOTH bundler (other backends) AND node16/nodenext (AdonisJS) moduleResolution",
+      "  Same .js fix applied to mikroorm/sequelize/typeorm schema barrels for consistency",
+      "Rust: cargo check, Go: go mod tidy && go build ./..., Python: python3 -m compileall -q ."
+    ]
+  },
+  "rows": [
+    [
+      "ts-svelte-nestjs-effect",
+      "t",
+      [
+        "svelte",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "nestjs",
+        "node",
+        "none(api)",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "none(effect)"
+      ],
+      "p"
+    ],
+    [
+      "ts-solid-adonisjs-effect",
+      "t",
+      [
+        "solid",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "adonisjs",
+        "node",
+        "none(api)",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "none(effect)"
+      ],
+      "p"
+    ],
+    [
+      "ts-angular-fastify-effect",
+      "t",
+      [
+        "angular",
+        "tailwind",
+        "none",
+        "zod",
+        "none",
+        "none",
+        "fastify",
+        "bun",
+        "orpc",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "effect"
+      ],
+      "p"
+    ],
+    [
+      "ts-tanstack-start-hono-effect",
+      "t",
+      [
+        "tanstack-start",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "hono",
+        "bun",
+        "orpc",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "effect"
+      ],
+      "p"
+    ],
+    [
+      "ts-nuxt-nestjs-effect",
+      "t",
+      [
+        "nuxt",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "nestjs",
+        "node",
+        "none(api)",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "none(effect)"
+      ],
+      "p"
+    ],
+    [
+      "ts-next-elysia-effect",
+      "t",
+      [
+        "next",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "elysia",
+        "bun",
+        "orpc",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "none(effect)"
+      ],
+      "p"
+    ],
+    [
+      "ts-react-router-nestjs-effect",
+      "t",
+      [
+        "react-router",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "nestjs",
+        "node",
+        "none(api)",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "none(effect)"
+      ],
+      "p"
+    ],
+    [
+      "rust-axum-sqlx-tonic-ratatui",
+      "r",
+      ["axum", "none", "sqlx", "tonic", "ratatui", ["serde"]],
+      "p"
+    ],
+    ["go-echo-gorm-cobra-zap", "g", ["echo", "gorm", "none", "cobra", "zap"], "p"],
+    [
+      "python-fastapi-sqlalchemy-langchain-ruff",
+      "p",
+      ["fastapi", "sqlalchemy", "pydantic", ["langchain"], "none", "ruff"],
+      "p"
+    ]
+  ],
+  "schema": {
+    "row": [
+      "name",
+      "ecosystemCode",
+      "flagsByEcosystemOrder",
+      "resultCode",
+      "issueCode?",
+      "fixedInRepo?(0|1)"
+    ],
+    "flagsOrder": {
+      "r": ["rustWebFramework", "rustFrontend", "rustOrm", "rustApi", "rustCli", "rustLibraries[]"],
+      "p": [
+        "pythonWebFramework",
+        "pythonOrm",
+        "pythonValidation",
+        "pythonAi[]",
+        "pythonTaskQueue",
+        "pythonQuality"
+      ],
+      "g": ["goWebFramework", "goOrm", "goApi", "goCli", "goLogging"],
+      "t": [
+        "frontend",
+        "cssFramework",
+        "uiLibrary",
+        "validation",
+        "testing",
+        "stateManagement",
+        "...extras"
+      ]
+    }
+  }
+}

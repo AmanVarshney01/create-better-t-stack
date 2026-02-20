@@ -1,6 +1,6 @@
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 import { env } from "@{{projectName}}/env/server";
-import * as schema from "./schema";
+import * as schema from "./schema/index.js";
 
 {{#if (eq dbSetup "neon")}}
 import { neon } from '@neondatabase/serverless';
@@ -16,7 +16,7 @@ export const db = drizzle(env.DATABASE_URL, { schema });
 {{/if}}
 
 {{#if (eq runtime "workers")}}
-import * as schema from "./schema";
+import * as schema from "./schema/index.js";
 
 {{#if (eq dbSetup "neon")}}
 import { neon } from '@neondatabase/serverless';

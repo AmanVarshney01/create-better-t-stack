@@ -1,6 +1,6 @@
 {{#if (or (eq runtime "bun") (eq runtime "node") (eq runtime "none"))}}
 import { env } from "@{{projectName}}/env/server";
-import * as schema from "./schema";
+import * as schema from "./schema/index.js";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
@@ -15,7 +15,7 @@ export const db = drizzle({ client, schema });
 {{/if}}
 
 {{#if (eq runtime "workers")}}
-import * as schema from "./schema";
+import * as schema from "./schema/index.js";
 
 {{#if (eq dbSetup "d1")}}
 import { drizzle } from "drizzle-orm/d1";

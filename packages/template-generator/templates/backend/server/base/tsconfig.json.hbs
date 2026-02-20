@@ -8,6 +8,8 @@
       "@/*": ["./src/*"]
     },
     "jsx": "react-jsx"{{#if (eq backend "hono")}},
-    "jsxImportSource": "hono/jsx"{{/if}}
+    "jsxImportSource": "hono/jsx"{{/if}}{{#if (eq backend "nestjs")}},
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true{{/if}}
   }
 }

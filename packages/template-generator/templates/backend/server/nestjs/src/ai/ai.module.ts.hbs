@@ -1,3 +1,4 @@
+{{#if (includes examples "ai")}}
 import { Module } from "@nestjs/common";
 import { AiController } from "./ai.controller";
 import { AiService } from "./ai.service";
@@ -7,3 +8,4 @@ import { AiService } from "./ai.service";
 	providers: [AiService],
 })
 export class AiModule {}
+{{/if}}

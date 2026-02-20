@@ -1,0 +1,194 @@
+{
+  "v": 2,
+  "d": "2026-02-20",
+  "cb": "bun create better-fullstack@latest <name> --no-install --no-git --disable-analytics --package-manager bun --ecosystem <eco> ...",
+  "tot": [10, 10, 0, 0],
+  "k": {
+    "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
+    "r": { "p": "pass", "f": "fail" },
+    "e": { "r": "rust", "p": "python", "g": "go", "t": "typescript" },
+    "notes": [
+      "Gap-fill batch: 10 new combos covering untested frontend+backend+effect combinations",
+      "All TypeScript combos include effect-ts (effect or effect-full)",
+      "New compatibility rules discovered this batch:",
+      "  - Qwik doesn't support external APIs or backends (use --backend none --api none)",
+      "  - backend=self (fullstack) requires --runtime none, NOT --runtime bun",
+      "  - --astro-integration <value> required for non-interactive Astro scaffolding",
+      "  - For Rust/Go/Python non-interactive, use --ai-docs claude-md (not --ai-docs none which hangs)",
+      "  - For frontend-only combos (no backend), all optional flags must be explicitly set to none",
+      "  - --examples none required for some combos to avoid prompts",
+      "Verification: cargo check (Rust), go mod tidy && go build ./... (Go), python3 -m compileall -q . (Python) all passed"
+    ]
+  },
+  "rows": [
+    [
+      "ts-nuxt-hono-effect-full",
+      "t",
+      [
+        "nuxt",
+        "tailwind",
+        "none",
+        "zod",
+        "vitest",
+        "none",
+        "hono",
+        "bun",
+        "orpc",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "effect-full"
+      ],
+      "p"
+    ],
+    [
+      "ts-qwik-effect-jotai",
+      "t",
+      ["qwik", "tailwind", "none", "zod", "vitest", "jotai", "none", "none", "effect"],
+      "p"
+    ],
+    [
+      "ts-solid-hono-effect",
+      "t",
+      [
+        "solid",
+        "tailwind",
+        "none",
+        "effect-schema",
+        "vitest",
+        "none",
+        "hono",
+        "bun",
+        "orpc",
+        "postgres",
+        "prisma",
+        "better-auth",
+        "pino",
+        "effect"
+      ],
+      "p"
+    ],
+    [
+      "ts-astro-self-react-effect",
+      "t",
+      [
+        "astro",
+        "react(integration)",
+        "tailwind",
+        "none",
+        "zod",
+        "vitest",
+        "none",
+        "self",
+        "none(api)",
+        "effect"
+      ],
+      "p"
+    ],
+    [
+      "ts-next-nestjs-effect-full",
+      "t",
+      [
+        "next",
+        "tailwind",
+        "shadcn-ui",
+        "zod",
+        "vitest",
+        "zustand",
+        "nestjs",
+        "node",
+        "trpc",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "pino",
+        "effect-full"
+      ],
+      "p"
+    ],
+    [
+      "ts-tanstack-router-fastify-effect",
+      "t",
+      [
+        "tanstack-router",
+        "tailwind",
+        "shadcn-ui",
+        "zod",
+        "vitest",
+        "zustand",
+        "fastify",
+        "bun",
+        "orpc",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "effect"
+      ],
+      "p"
+    ],
+    [
+      "ts-react-router-adonisjs-effect",
+      "t",
+      [
+        "react-router",
+        "tailwind",
+        "none",
+        "valibot",
+        "vitest",
+        "none",
+        "adonisjs",
+        "node",
+        "none(api)",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "effect"
+      ],
+      "p"
+    ],
+    [
+      "rust-actix-dioxus-seaorm-graphql-clap",
+      "r",
+      ["actix-web", "dioxus", "sea-orm", "async-graphql", "clap", ["serde"]],
+      "p"
+    ],
+    ["go-gin-sqlc-grpc-zap", "g", ["gin", "sqlc", "grpc-go", "none", "zap"], "p"],
+    [
+      "python-django-sqlalchemy-openai-ruff",
+      "p",
+      ["django", "sqlalchemy", "pydantic", ["openai-sdk"], "none", "ruff"],
+      "p"
+    ]
+  ],
+  "schema": {
+    "row": [
+      "name",
+      "ecosystemCode",
+      "flagsByEcosystemOrder",
+      "resultCode",
+      "issueCode?",
+      "fixedInRepo?(0|1)"
+    ],
+    "flagsOrder": {
+      "r": ["rustWebFramework", "rustFrontend", "rustOrm", "rustApi", "rustCli", "rustLibraries[]"],
+      "p": [
+        "pythonWebFramework",
+        "pythonOrm",
+        "pythonValidation",
+        "pythonAi[]",
+        "pythonTaskQueue",
+        "pythonQuality"
+      ],
+      "g": ["goWebFramework", "goOrm", "goApi", "goCli", "goLogging"],
+      "t": [
+        "frontend",
+        "cssFramework",
+        "uiLibrary",
+        "validation",
+        "testing",
+        "stateManagement",
+        "...extras"
+      ]
+    }
+  }
+}

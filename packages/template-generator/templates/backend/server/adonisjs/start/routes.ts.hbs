@@ -40,7 +40,7 @@ const setCorsHeaders = (response: any) => {
 };
 
 // CORS preflight handler
-router.options("*", ({ response }) => {
+router.route("*", ["OPTIONS"], ({ response }: { response: any }) => {
 	setCorsHeaders(response);
 	return response.status(204);
 });
@@ -56,11 +56,7 @@ router.get("/", ({ response }) => {
 const authHandler = toNodeHandler(auth);
 router.any("/api/auth/*", async ({ request, response }) => {
 	setCorsHeaders(response);
-	return new Promise<void>((resolve) => {
-		authHandler(request.request as any, response.response as any, () => {
-			resolve();
-		});
-	});
+	await authHandler(request.request as any, response.response as any);
 });
 {{/if}}
 

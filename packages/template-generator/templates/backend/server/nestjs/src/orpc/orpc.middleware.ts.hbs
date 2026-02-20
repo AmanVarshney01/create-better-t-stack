@@ -1,3 +1,4 @@
+{{#if (eq api "orpc")}}
 import { Injectable, type NestMiddleware } from "@nestjs/common";
 import { OpenAPIHandler } from "@orpc/openapi/node";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
@@ -57,3 +58,4 @@ export class OrpcMiddleware implements NestMiddleware {
 		next();
 	}
 }
+{{/if}}

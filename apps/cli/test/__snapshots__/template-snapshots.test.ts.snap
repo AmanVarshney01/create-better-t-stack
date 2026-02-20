@@ -1267,7 +1267,7 @@ export default defineConfig({
     {
       "content": 
 "import { env } from "@snapshot-tanstack-router-minimal/env/server";
-import * as schema from "./schema";
+import * as schema from "./schema/index.js";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
@@ -1967,7 +1967,7 @@ export default defineConfig({
     {
       "content": 
 "import { env } from "@snapshot-next-self-fullstack/env/server";
-import * as schema from "./schema";
+import * as schema from "./schema/index.js";
 
 import { drizzle } from "drizzle-orm/node-postgres";
 
@@ -2078,7 +2078,7 @@ export const accountRelations = relations(account, ({ one }) => ({
     },
     {
       "content": 
-"export * from "./auth";
+"export * from "./auth.js";
 export {};"
 ,
       "path": "packages/db/src/schema/index.ts",
@@ -2499,7 +2499,7 @@ export default defineConfig({
     {
       "content": 
 "import { env } from "@snapshot-astro-react-integration/env/server";
-import * as schema from "./schema";
+import * as schema from "./schema/index.js";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
@@ -2999,7 +2999,7 @@ export default defineConfig({
     {
       "content": 
 "import { env } from "@snapshot-nuxt-standalone/env/server";
-import * as schema from "./schema";
+import * as schema from "./schema/index.js";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
@@ -4525,7 +4525,7 @@ export default defineConfig({
     {
       "content": 
 "import { env } from "@snapshot-hono-bun-orpc/env/server";
-import * as schema from "./schema";
+import * as schema from "./schema/index.js";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
@@ -5418,7 +5418,7 @@ export default defineConfig({
     {
       "content": 
 "import { env } from "@snapshot-better-auth-full/env/server";
-import * as schema from "./schema";
+import * as schema from "./schema/index.js";
 
 import { drizzle } from "drizzle-orm/node-postgres";
 
@@ -5529,7 +5529,7 @@ export const accountRelations = relations(account, ({ one }) => ({
     },
     {
       "content": 
-"export * from "./auth";
+"export * from "./auth.js";
 export {};"
 ,
       "path": "packages/db/src/schema/index.ts",
@@ -8642,7 +8642,7 @@ export default defineConfig({
     {
       "content": 
 "import { env } from "@snapshot-native-react-native/env/server";
-import * as schema from "./schema";
+import * as schema from "./schema/index.js";
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
