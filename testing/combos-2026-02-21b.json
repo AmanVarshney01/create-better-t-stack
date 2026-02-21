@@ -1,0 +1,178 @@
+{
+  "v": 2,
+  "d": "2026-02-21",
+  "cb": "node /path/to/cli.mjs create <name> --ecosystem <eco> ... --no-install --no-git --disable-analytics --ai none",
+  "tot": [10, 10, 0, 3],
+  "k": {
+    "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
+    "r": { "p": "pass", "f": "fail" },
+    "e": { "r": "rust", "p": "python", "g": "go", "t": "typescript" },
+    "notes": [
+      "Batch 5: 10 combos verified with bun install + bun run check-types (TS) / cargo check (Rust) / go build (Go) / python3 -m compileall (Python)",
+      "CLI v1.3.16 tested locally (build from main); --ai none required for non-interactive mode",
+      "3 new bugs found and fixed in repo:",
+      "  BugK: @tanstack/react-form missing from web deps for tanstack-router + better-auth combo",
+      "       sign-in/sign-up forms always import @tanstack/react-form regardless of --forms flag",
+      "       Fixed in auth-deps.ts: add @tanstack/react-form when auth=better-auth + tanstack-router frontend",
+      "  BugM: routeTree.gen.ts missing when tsc type-checks tanstack-router project",
+      "       @tanstack/router-cli (provides tsr binary) was missing from devDeps",
+      "       check-types script changed to 'tsr generate && tsc --noEmit'",
+      "       @tanstack/router-cli added to tanstack-router package.json.hbs devDependencies",
+      "  BugN: unused 'context' param in trpc context.ts when auth=none (hono/elysia backends)",
+      "       and unused TRPCError import in trpc index.ts when auth=none",
+      "       Fixed: use _opts when auth is not better-auth; conditionalize TRPCError import",
+      "Known incompatibility (not fixed): Sequelize + better-auth — no auth adapter",
+      "       Combo 5 uses --auth none to work around this (same pattern as TypeORM in batch 4)"
+    ]
+  },
+  "rows": [
+    [
+      "ts-next-convex",
+      "t",
+      [
+        "next",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "convex",
+        "none(runtime)",
+        "none(api)",
+        "none(orm)",
+        "none(db)",
+        "better-auth",
+        "none(logging)"
+      ],
+      "p"
+    ],
+    [
+      "ts-tanstack-router-hono-mongoose-mongodb",
+      "t",
+      [
+        "tanstack-router",
+        "tailwind",
+        "none",
+        "zod",
+        "none",
+        "none",
+        "hono",
+        "bun",
+        "trpc",
+        "mongoose",
+        "mongodb",
+        "better-auth",
+        "pino"
+      ],
+      "p"
+    ],
+    [
+      "ts-solid-elysia-drizzle-postgres",
+      "t",
+      [
+        "solid",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "elysia",
+        "bun",
+        "orpc",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "none(logging)"
+      ],
+      "p"
+    ],
+    [
+      "ts-svelte-fastify-prisma-mysql",
+      "t",
+      [
+        "svelte",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "fastify",
+        "bun",
+        "orpc",
+        "prisma",
+        "mysql",
+        "better-auth",
+        "none(logging)"
+      ],
+      "p"
+    ],
+    [
+      "ts-react-router-hono-sequelize-postgres",
+      "t",
+      [
+        "react-router",
+        "tailwind",
+        "none",
+        "zod",
+        "none",
+        "none",
+        "hono",
+        "bun",
+        "trpc",
+        "sequelize",
+        "postgres",
+        "none(auth)",
+        "pino"
+      ],
+      "p",
+      "sequelize+better-auth unsupported (no adapter); used --auth none"
+    ],
+    ["rust-axum-sea-orm-tonic", "r", ["axum", "none", "sea-orm", "tonic", "none", []], "p"],
+    ["rust-leptos-clap", "r", ["none", "leptos", "none", "none", "clap", []], "p"],
+    ["go-echo-sqlc-cobra-zap", "g", ["echo", "sqlc", "none", "cobra", "zap"], "p"],
+    ["go-gin-bubbletea", "g", ["gin", "none", "none", "bubbletea", "none"], "p"],
+    [
+      "python-fastapi-sqlmodel-pydantic-ruff",
+      "p",
+      ["fastapi", "sqlmodel", "pydantic", [], "none", "ruff"],
+      "p"
+    ]
+  ],
+  "schema": {
+    "row": [
+      "name",
+      "ecosystemCode",
+      "flagsByEcosystemOrder",
+      "resultCode",
+      "issueCode?",
+      "fixedInRepo?(0|1)"
+    ],
+    "flagsOrder": {
+      "r": ["rustWebFramework", "rustFrontend", "rustOrm", "rustApi", "rustCli", "rustLibraries[]"],
+      "p": [
+        "pythonWebFramework",
+        "pythonOrm",
+        "pythonValidation",
+        "pythonAi[]",
+        "pythonTaskQueue",
+        "pythonQuality"
+      ],
+      "g": ["goWebFramework", "goOrm", "goApi", "goCli", "goLogging"],
+      "t": [
+        "frontend",
+        "cssFramework",
+        "uiLibrary",
+        "validation",
+        "testing",
+        "stateManagement",
+        "backend",
+        "runtime",
+        "api",
+        "orm",
+        "database",
+        "auth",
+        "logging"
+      ]
+    }
+  }
+}
