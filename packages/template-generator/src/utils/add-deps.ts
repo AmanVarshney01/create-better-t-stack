@@ -226,6 +226,7 @@ export const dependencyVersionMap = {
   "@tanstack/react-query-devtools": "^5.91.3",
   "@tanstack/react-query": "^5.90.21",
   "@tanstack/react-router-ssr-query": "^1.160.2",
+  "@tanstack/router-cli": "^1.154.3",
 
   "@tanstack/solid-query": "^5.90.23",
   "@tanstack/solid-query-devtools": "^5.91.3",

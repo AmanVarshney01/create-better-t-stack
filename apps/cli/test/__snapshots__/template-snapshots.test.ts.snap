@@ -737,7 +737,7 @@ export default app;
     "build": "vite build",
     "serve": "vite preview",
     "start": "vite",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsr generate && tsc --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
@@ -765,6 +765,7 @@ export default app;
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.154.3",
+    "@tanstack/router-cli": "^1.154.3",
     "@tanstack/router-plugin": "^1.154.3",
     "@types/node": "^22.13.14",
     "@types/react": "19.2.7",
@@ -1121,7 +1122,7 @@ export default defineConfig({
     },
     {
       "content": 
-"import { initTRPC, TRPCError } from "@trpc/server";
+"import { initTRPC } from "@trpc/server";
 import type { Context } from "./context";
 
 export const t = initTRPC.context<Context>().create();
@@ -3225,7 +3226,7 @@ app.listen(3000, () => {
     "build": "vite build",
     "serve": "vite preview",
     "start": "vite",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsr generate && tsc --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
@@ -3252,6 +3253,7 @@ app.listen(3000, () => {
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.154.3",
+    "@tanstack/router-cli": "^1.154.3",
     "@tanstack/router-plugin": "^1.154.3",
     "@types/node": "catalog:",
     "@types/react": "19.2.7",
@@ -3606,7 +3608,7 @@ export default defineConfig({
     },
     {
       "content": 
-"import { initTRPC, TRPCError } from "@trpc/server";
+"import { initTRPC } from "@trpc/server";
 import type { Context } from "./context";
 
 export const t = initTRPC.context<Context>().create();
@@ -3998,7 +4000,7 @@ export default app;
     "build": "vite build",
     "serve": "vite preview",
     "start": "vite",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsr generate && tsc --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
@@ -4026,6 +4028,7 @@ export default app;
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.154.3",
+    "@tanstack/router-cli": "^1.154.3",
     "@tanstack/router-plugin": "^1.154.3",
     "@types/node": "^22.13.14",
     "@types/react": "19.2.7",
@@ -4756,7 +4759,7 @@ export default app;
     "build": "vite build",
     "serve": "vite preview",
     "start": "vite",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsr generate && tsc --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
@@ -4780,10 +4783,12 @@ export default app;
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
     "@tanstack/react-query": "^5.90.21",
-    "better-auth": "catalog:"
+    "better-auth": "catalog:",
+    "@tanstack/react-form": "^1.28.3"
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.154.3",
+    "@tanstack/router-cli": "^1.154.3",
     "@tanstack/router-plugin": "^1.154.3",
     "@types/node": "^22.13.14",
     "@types/react": "19.2.7",
@@ -5637,7 +5642,7 @@ exports[`Template Snapshots Key File Content Snapshots key files: convex-clerk 1
     "build": "vite build",
     "serve": "vite preview",
     "start": "vite",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsr generate && tsc --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
@@ -5661,6 +5666,7 @@ exports[`Template Snapshots Key File Content Snapshots key files: convex-clerk 1
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.154.3",
+    "@tanstack/router-cli": "^1.154.3",
     "@tanstack/router-plugin": "^1.154.3",
     "@types/node": "^22.13.14",
     "@types/react": "19.2.7",
@@ -6261,7 +6267,7 @@ export default app;
     "build": "vite build",
     "serve": "vite preview",
     "start": "vite",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsr generate && tsc --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
@@ -6287,6 +6293,7 @@ export default app;
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.154.3",
+    "@tanstack/router-cli": "^1.154.3",
     "@tanstack/router-plugin": "^1.154.3",
     "@types/node": "^22.13.14",
     "@types/react": "19.2.7",
@@ -6636,7 +6643,7 @@ export default defineConfig({
     },
     {
       "content": 
-"import { initTRPC, TRPCError } from "@trpc/server";
+"import { initTRPC } from "@trpc/server";
 import type { Context } from "./context";
 
 export const t = initTRPC.context<Context>().create();
@@ -6971,7 +6978,7 @@ export default app;
     "build": "vite build",
     "serve": "vite preview",
     "start": "vite",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsr generate && tsc --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
@@ -6998,6 +7005,7 @@ export default app;
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.154.3",
+    "@tanstack/router-cli": "^1.154.3",
     "@tanstack/router-plugin": "^1.154.3",
     "@types/node": "^22.13.14",
     "@types/react": "19.2.7",
@@ -7352,7 +7360,7 @@ export default defineConfig({
     },
     {
       "content": 
-"import { initTRPC, TRPCError } from "@trpc/server";
+"import { initTRPC } from "@trpc/server";
 import type { Context } from "./context";
 
 export const t = initTRPC.context<Context>().create();
@@ -7600,7 +7608,7 @@ exports[`Template Snapshots Key File Content Snapshots key files: frontend-only-
     "build": "vite build",
     "serve": "vite preview",
     "start": "vite",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsr generate && tsc --noEmit"
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
@@ -7621,6 +7629,7 @@ exports[`Template Snapshots Key File Content Snapshots key files: frontend-only-
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.154.3",
+    "@tanstack/router-cli": "^1.154.3",
     "@tanstack/router-plugin": "^1.154.3",
     "@types/node": "^22.13.14",
     "@types/react": "19.2.7",
@@ -8498,7 +8507,7 @@ export default app;
     },
     {
       "content": 
-"import { initTRPC, TRPCError } from "@trpc/server";
+"import { initTRPC } from "@trpc/server";
 import type { Context } from "./context";
 
 export const t = initTRPC.context<Context>().create();

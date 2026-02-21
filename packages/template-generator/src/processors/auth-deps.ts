@@ -144,10 +144,11 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
     }
 
     if (hasWebFrontend && webExists) {
+      const hasTanstackRouter = frontend.includes("tanstack-router");
       addPackageDependency({
         vfs,
         packagePath: webPath,
-        dependencies: ["better-auth"],
+        dependencies: hasTanstackRouter ? ["better-auth", "@tanstack/react-form"] : ["better-auth"],
       });
     }
 

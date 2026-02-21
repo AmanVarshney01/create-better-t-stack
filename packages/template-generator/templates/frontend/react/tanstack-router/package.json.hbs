@@ -8,7 +8,7 @@
 		"build": "vite build",
 		"serve": "vite preview",
 		"start": "vite",
-		"check-types": "tsc --noEmit"
+		"check-types": "tsr generate && tsc --noEmit"
 	},
 	"dependencies": {
 		"@base-ui/react": "^1.0.0",
@@ -33,6 +33,7 @@
 	},
 	"devDependencies": {
 		"@tanstack/react-router-devtools": "^1.154.3",
+		"@tanstack/router-cli": "^1.154.3",
 		"@tanstack/router-plugin": "^1.154.3",
 		"@types/node": "^22.13.14",
 		"@types/react": "19.2.7",
