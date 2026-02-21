@@ -17,10 +17,9 @@ export const db = drizzle({
 import { drizzle } from "drizzle-orm/mysql2";
 
 export const db = drizzle({
-	connection: {
-		uri: env.DATABASE_URL,
-	},
+	connection: env.DATABASE_URL,
 	schema,
+	mode: "default",
 });
 {{/if}}
 {{/if}}
@@ -45,10 +44,9 @@ import { drizzle } from "drizzle-orm/mysql2";
 import { env } from "@{{projectName}}/env/server";
 
 export const db = drizzle({
-	connection: {
-		uri: env.DATABASE_URL,
-	},
+	connection: env.DATABASE_URL,
 	schema,
+	mode: "default",
 });
 {{/if}}
 {{/if}}
