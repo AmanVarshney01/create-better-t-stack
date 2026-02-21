@@ -1,16 +1,7 @@
 "use client";
 
 import { motion, MotionProps, useInView } from "motion/react";
-import {
-  Children,
-  createContext,
-  isValidElement,
-  ReactNode,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { createContext, ReactNode, useContext, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 

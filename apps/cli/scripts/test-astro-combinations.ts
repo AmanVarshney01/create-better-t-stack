@@ -46,7 +46,6 @@ const ASTRO_INTEGRATIONS = ["react", "vue", "svelte", "solid", "none"] as const;
 const BACKENDS = ["hono", "express", "fastify", "elysia", "self", "none"] as const;
 const DATABASES = ["sqlite", "postgres", "mysql", "none"] as const;
 const APIS = ["trpc", "orpc", "none"] as const;
-const RUNTIMES = ["bun", "node"] as const;
 
 const SMOKE_DIR = join(import.meta.dir, "..", ".smoke-astro-combos");
 

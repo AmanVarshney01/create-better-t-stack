@@ -5,7 +5,6 @@
 import {
   checkAllVersions,
   generateCliReport,
-  getDependencyVersionMap,
   listEcosystems,
   ECOSYSTEM_GROUPS,
   type CheckResult,
@@ -171,7 +170,7 @@ export async function updateDepsHandler(options: UpdateDepsOptions): Promise<voi
       ecosystem,
       concurrency: 5,
       delayMs: 100,
-      onProgress: (checked, total, current) => {
+      onProgress: (checked, total) => {
         s.message(`Checking packages (${checked}/${total})...`);
       },
     });
