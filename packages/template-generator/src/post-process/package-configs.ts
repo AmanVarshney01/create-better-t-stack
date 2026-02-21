@@ -198,6 +198,7 @@ function updateDbPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): voi
     }
 
     if (orm === "prisma") {
+      scripts["postinstall"] = "prisma generate";
       scripts["db:push"] = "prisma db push";
       scripts["db:generate"] = "prisma generate";
       scripts["db:migrate"] = "prisma migrate dev";

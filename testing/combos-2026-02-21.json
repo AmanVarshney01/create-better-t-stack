@@ -1,0 +1,190 @@
+{
+  "v": 2,
+  "d": "2026-02-21",
+  "cb": "node /path/to/cli.mjs create <name> --ecosystem typescript --frontend <f> --backend <b> --runtime <r> --database <db> --orm <orm> --auth <auth> --api <api> --db-setup none --package-manager bun --no-install --no-git --disable-analytics --web-deploy none --server-deploy none --ai-docs claude-md ...",
+  "tot": [10, 10, 0, 2],
+  "k": {
+    "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
+    "r": { "p": "pass", "f": "fail" },
+    "e": { "r": "rust", "p": "python", "g": "go", "t": "typescript" },
+    "notes": [
+      "Batch 4: 10 combos verified with bun install + bun run check-types (TS) / cargo check (Rust) / go build (Go) / python3 -m compileall (Python)",
+      "Worktree was on v1.3.15 branch; batch-3 fixes cherry-picked from main (32354bb7) into worktree templates",
+      "CLI v1.3.15 has new required flags vs v1.3.14: --payments none --email none --file-upload none --web-deploy none --server-deploy none --package-manager bun --no-git",
+      "  Also: --ai none --realtime none --job-queue none --animation none --forms none (all require explicit none)",
+      "  --ai-docs claude-md (not --ai-docs none which hangs), --db-setup none (not --manual-db which prompts)",
+      "  --database (not --db)",
+      "2 new bugs found and fixed in repo:",
+      "  BugI: db/drizzle/mysql/src/index.ts.hbs used connection:{ uri: env.DATABASE_URL } which is wrong for drizzle-orm 0.45.1",
+      "       mysql2 drizzle() expects connection:string with mode:'default' when schema is provided",
+      "       This bug exists on main branch too (same template, same { uri: ... } format)",
+      "  BugJ: db package.json missing postinstall:prisma generate — bun install did not auto-generate Prisma client",
+      "       Fixed in package-configs.ts: added scripts['postinstall'] = 'prisma generate' for orm===prisma",
+      "Known incompatibility (not fixed): TypeORM + better-auth — better-auth has no TypeORM adapter",
+      "       Combo 5 uses --auth none to work around this; CLI does not block this combination",
+      "Batch-3 cherry-picked fixes also active: NestJS tsconfig decorators, NestJS conditionals for orpc/trpc/ai files,",
+      "  NestJS _res, AdonisJS router.route, AdonisJS 2-arg authHandler, Drizzle .js schema barrels, Elysia no const app="
+    ]
+  },
+  "rows": [
+    [
+      "ts-svelte-express-prisma-postgres",
+      "t",
+      [
+        "svelte",
+        "tailwind",
+        "none",
+        "zod",
+        "none",
+        "none",
+        "express",
+        "bun",
+        "orpc",
+        "prisma",
+        "postgres",
+        "better-auth",
+        "pino"
+      ],
+      "p"
+    ],
+    [
+      "ts-nuxt-adonisjs-drizzle-mysql",
+      "t",
+      [
+        "nuxt",
+        "tailwind",
+        "none",
+        "zod",
+        "none",
+        "none",
+        "adonisjs",
+        "node",
+        "none(api)",
+        "drizzle",
+        "mysql",
+        "better-auth",
+        "none(logging)"
+      ],
+      "p"
+    ],
+    [
+      "ts-angular-elysia-drizzle-sqlite",
+      "t",
+      [
+        "angular",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "elysia",
+        "bun",
+        "none(api)",
+        "drizzle",
+        "sqlite",
+        "better-auth",
+        "none(logging)"
+      ],
+      "p"
+    ],
+    [
+      "ts-tanstack-start-nestjs-drizzle-postgres",
+      "t",
+      [
+        "tanstack-start",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "nestjs",
+        "node",
+        "orpc",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "none(logging)"
+      ],
+      "p"
+    ],
+    [
+      "ts-react-router-express-typeorm-mysql",
+      "t",
+      [
+        "react-router",
+        "tailwind",
+        "none",
+        "zod",
+        "none",
+        "none",
+        "express",
+        "bun",
+        "orpc",
+        "typeorm",
+        "mysql",
+        "none(auth)",
+        "pino"
+      ],
+      "p",
+      "typeorm+better-auth unsupported (no adapter); used --auth none"
+    ],
+    [
+      "rust-none-none-none-clap-serde",
+      "r",
+      ["none", "none", "none", "none", "clap", ["serde"]],
+      "p"
+    ],
+    [
+      "rust-actix-none-none-none-serde",
+      "r",
+      ["actix-web", "none", "none", "none", "none", ["serde"]],
+      "p",
+      "1 compiler warning (unused import in generated code)"
+    ],
+    ["go-echo-none-grpc-bubbletea-zap", "g", ["echo", "none", "grpc-go", "bubbletea", "zap"], "p"],
+    ["go-gin-gorm-none-none-zap", "g", ["gin", "gorm", "none", "none", "zap"], "p"],
+    [
+      "python-django-sqlalchemy-crewai-celery",
+      "p",
+      ["django", "sqlalchemy", "pydantic", ["crewai"], "celery", "none"],
+      "p"
+    ]
+  ],
+  "schema": {
+    "row": [
+      "name",
+      "ecosystemCode",
+      "flagsByEcosystemOrder",
+      "resultCode",
+      "issueCode?",
+      "fixedInRepo?(0|1)"
+    ],
+    "flagsOrder": {
+      "r": ["rustWebFramework", "rustFrontend", "rustOrm", "rustApi", "rustCli", "rustLibraries[]"],
+      "p": [
+        "pythonWebFramework",
+        "pythonOrm",
+        "pythonValidation",
+        "pythonAi[]",
+        "pythonTaskQueue",
+        "pythonQuality"
+      ],
+      "g": ["goWebFramework", "goOrm", "goApi", "goCli", "goLogging"],
+      "t": [
+        "frontend",
+        "cssFramework",
+        "uiLibrary",
+        "validation",
+        "testing",
+        "stateManagement",
+        "backend",
+        "runtime",
+        "api",
+        "orm",
+        "database",
+        "auth",
+        "logging"
+      ]
+    }
+  }
+}
