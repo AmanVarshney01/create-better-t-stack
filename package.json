@@ -41,7 +41,7 @@
   },
   "lint-staged": {
     "*": [
-      "bun check"
+      "/Users/giridhar/.bun/bin/bun run check"
     ]
   },
   "engines": {
