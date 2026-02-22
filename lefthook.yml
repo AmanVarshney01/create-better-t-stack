@@ -1,4 +1,4 @@
 pre-commit:
   commands:
     lint-staged:
-      run: $HOME/.bun/bin/bun x lint-staged
+      run: bunx lint-staged
