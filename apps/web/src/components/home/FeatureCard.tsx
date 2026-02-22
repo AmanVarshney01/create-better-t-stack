@@ -3,7 +3,7 @@
 import { motion } from "motion/react";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useTheme } from "@/lib/theme";
+import { TechIcon } from "@/components/ui/tech-icon";
 import { cn } from "@/lib/utils";
 
 type TechOption = {
@@ -18,38 +18,6 @@ type FeatureCardProps = {
   options: TechOption[];
   className?: string;
 };
-
-function TechIcon({ icon, name, className }: { icon: string; name: string; className?: string }) {
-  const { theme } = useTheme();
-
-  if (!icon) return null;
-
-  if (!icon.startsWith("https://")) {
-    return (
-      <span className={cn("flex h-6 w-6 items-center justify-center text-2xl", className)}>
-        {icon}
-      </span>
-    );
-  }
-
-  let iconSrc = icon;
-  if (
-    theme === "light" &&
-    (icon.includes("drizzle") || icon.includes("prisma") || icon.includes("express"))
-  ) {
-    iconSrc = icon.replace(".svg", "-light.svg");
-  }
-
-  return (
-    <img
-      src={iconSrc}
-      alt={`${name} icon`}
-      width={24}
-      height={24}
-      className={cn("h-6 w-6 object-contain", className)}
-    />
-  );
-}
 
 export default function FeatureCard({ title, options, className }: FeatureCardProps) {
   return (
@@ -68,20 +36,8 @@ export default function FeatureCard({ title, options, className }: FeatureCardPr
           <ul className="grid grid-cols-3 gap-2 p-1">
             {options.map((option) => (
               <li key={option.id} title={option.name} className="flex items-center justify-center">
-                {/* {option.icon.startsWith("/") ? (
-									<Image
-										src={option.icon}
-										alt={option.name}
-										width={24}
-										height={24}
-										className="h-6 w-6 object-contain"
-									/>
-								) : (
-									<span className="flex h-6 w-6 items-center justify-center text-2xl">
-										{option.icon}
-									</span>
-								)} */}
                 <TechIcon
+                  techId={option.id}
                   icon={option.icon}
                   name={option.name}
                   className="h-6 w-6 object-contain"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useTheme } from "@/lib/theme";
+import { TechIcon } from "@/components/ui/tech-icon";
 import { cn } from "@/lib/utils";
 
 interface TechBadgeProps {
@@ -8,6 +8,8 @@ interface TechBadgeProps {
   name: string;
   category: string;
   className?: string;
+  /** When provided, uses the registry for theme-aware colour rendering */
+  techId?: string;
 }
 
 const getBadgeColors = (category: string): string => {
@@ -45,38 +47,8 @@ const getBadgeColors = (category: string): string => {
   }
 };
 
-function TechIcon({ icon, name, className }: { icon: string; name: string; className?: string }) {
-  const { theme } = useTheme();
-
-  if (!icon) return null;
-
-  if (!icon.startsWith("https://")) {
-    return <span className={cn("inline-flex items-center text-lg", className)}>{icon}</span>;
-  }
-
-  let iconSrc = icon;
-  if (
-    theme === "light" &&
-    (icon.includes("drizzle") ||
-      icon.includes("prisma") ||
-      icon.includes("express") ||
-      icon.includes("clerk"))
-  ) {
-    iconSrc = icon.replace(".svg", "-light.svg");
-  }
-
-  return (
-    <img
-      src={iconSrc}
-      alt={`${name} icon`}
-      width={20}
-      height={20}
-      className={cn("inline-block", className)}
-    />
-  );
-}
-
-export function TechBadge({ icon, name, category, className }: TechBadgeProps) {
+export function TechBadge({ icon, name, category, className, techId }: TechBadgeProps) {
+  const hasIcon = techId !== undefined || icon !== "";
   return (
     <span
       className={cn(
@@ -85,7 +57,7 @@ export function TechBadge({ icon, name, category, className }: TechBadgeProps) {
         className,
       )}
     >
-      {icon !== "" && <TechIcon icon={icon} name={name} className={cn("h-3 w-3")} />}
+      {hasIcon && <TechIcon techId={techId} icon={icon} name={name} className={cn("h-3 w-3")} />}
       {name}
     </span>
   );

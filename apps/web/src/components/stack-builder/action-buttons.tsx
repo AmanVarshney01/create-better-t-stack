@@ -1,6 +1,8 @@
 "use client";
 
-import { RefreshCw, Settings, Shuffle, Star } from "lucide-react";
+import { Download, RefreshCw, Shuffle, Star } from "lucide-react";
+
+import { cn } from "@/lib/utils";
 
 interface ActionButtonsProps {
   onReset: () => void;
@@ -10,6 +12,9 @@ interface ActionButtonsProps {
   hasSavedStack: boolean;
 }
 
+const btnBase =
+  "flex flex-col items-center justify-center gap-1 rounded-md border border-border bg-fd-background py-2 text-muted-foreground transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground";
+
 export function ActionButtons({
   onReset,
   onRandom,
@@ -18,43 +23,26 @@ export function ActionButtons({
   hasSavedStack,
 }: ActionButtonsProps) {
   return (
-    <div className="flex gap-1">
-      <button
-        type="button"
-        onClick={onReset}
-        className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-fd-background px-2 py-1.5 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
-        title="Reset to defaults"
-      >
-        <RefreshCw className="h-3 w-3" />
-        Reset
+    <div className={cn("grid gap-1", hasSavedStack ? "grid-cols-4" : "grid-cols-3")}>
+      <button type="button" onClick={onReset} title="Reset to defaults" className={btnBase}>
+        <RefreshCw className="h-3.5 w-3.5" />
+        <span className="font-pixel text-[9px] leading-none">Reset</span>
       </button>
-      <button
-        type="button"
-        onClick={onRandom}
-        className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-fd-background px-2 py-1.5 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
-        title="Generate a random stack"
-      >
-        <Shuffle className="h-3 w-3" />
-        Random
+
+      <button type="button" onClick={onRandom} title="Generate a random stack" className={btnBase}>
+        <Shuffle className="h-3.5 w-3.5" />
+        <span className="font-pixel text-[9px] leading-none">Random</span>
       </button>
-      <button
-        type="button"
-        onClick={onSave}
-        className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-fd-background px-2 py-1.5 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
-        title="Save current preferences"
-      >
-        <Star className="h-3 w-3" />
-        Save
+
+      <button type="button" onClick={onSave} title="Save current stack" className={btnBase}>
+        <Star className="h-3.5 w-3.5" />
+        <span className="font-pixel text-[9px] leading-none">Save</span>
       </button>
+
       {hasSavedStack && (
-        <button
-          type="button"
-          onClick={onLoad}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-fd-background px-2 py-1.5 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
-          title="Load saved preferences"
-        >
-          <Settings className="h-3 w-3" />
-          Load
+        <button type="button" onClick={onLoad} title="Load saved stack" className={btnBase}>
+          <Download className="h-3.5 w-3.5" />
+          <span className="font-pixel text-[9px] leading-none">Load</span>
         </button>
       )}
     </div>

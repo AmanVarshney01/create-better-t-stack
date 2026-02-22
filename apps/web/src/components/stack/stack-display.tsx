@@ -64,6 +64,7 @@ export function StackDisplay({ stackState }: StackDisplayProps) {
             badges.push(
               <TechBadge
                 key={`${category}-${tech.id}`}
+                techId={tech.id}
                 icon={tech.icon}
                 name={tech.name}
                 category={category}
@@ -85,6 +86,7 @@ export function StackDisplay({ stackState }: StackDisplayProps) {
         badges.push(
           <TechBadge
             key={`${category}-${tech.id}`}
+            techId={tech.id}
             icon={tech.icon}
             name={tech.name}
             category={category}

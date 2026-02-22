@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Zap } from "lucide-react";
+import { Zap } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -21,13 +21,12 @@ export function PresetDropdown({ onApplyPreset }: PresetDropdownProps) {
         render={
           <button
             type="button"
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-fd-background px-2 py-1.5 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-fd-background px-2 py-1.5 text-muted-foreground transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
           />
         }
       >
-        <Zap className="h-3 w-3" />
-        Presets
-        <ChevronDown className="ml-auto h-3 w-3" />
+        <Zap className="h-3.5 w-3.5" />
+        <span className="font-pixel text-[9px] leading-none">Presets</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64 bg-fd-background">
         {PRESET_TEMPLATES.map((preset) => (
@@ -36,8 +35,8 @@ export function PresetDropdown({ onApplyPreset }: PresetDropdownProps) {
             onClick={() => onApplyPreset(preset.id)}
             className="flex flex-col items-start gap-1 p-3"
           >
-            <div className="font-medium text-sm">{preset.name}</div>
-            <div className="text-xs">{preset.description}</div>
+            <div className="font-pixel text-xs">{preset.name}</div>
+            <div className="text-xs text-muted-foreground">{preset.description}</div>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

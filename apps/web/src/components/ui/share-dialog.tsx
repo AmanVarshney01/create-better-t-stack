@@ -56,6 +56,7 @@ export function ShareDialog({ children, stackUrl, stackState }: ShareDialogProps
             badges.push(
               <TechBadge
                 key={`${category}-${tech.id}`}
+                techId={tech.id}
                 icon={tech.icon}
                 name={tech.name}
                 category={category}
@@ -77,6 +78,7 @@ export function ShareDialog({ children, stackUrl, stackState }: ShareDialogProps
         badges.push(
           <TechBadge
             key={`${category}-${tech.id}`}
+            techId={tech.id}
             icon={tech.icon}
             name={tech.name}
             category={category}

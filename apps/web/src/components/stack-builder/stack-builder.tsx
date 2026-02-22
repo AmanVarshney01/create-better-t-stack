@@ -132,7 +132,7 @@ function SidebarAccordionItem({
             : "text-muted-foreground hover:bg-muted/40 hover:text-foreground",
         )}
       >
-        <span className="truncate pr-2">{displayName}</span>
+        <span className="truncate pr-2 font-pixel">{displayName}</span>
         <div className="flex items-center gap-1.5 shrink-0">
           {compatibilityNotes?.hasIssue && <InfoIcon className="h-3.5 w-3.5 text-amber-500" />}
           {count > 0 && (
@@ -189,11 +189,12 @@ function SidebarAccordionItem({
                     >
                       {selected && <Check className="h-2.5 w-2.5 text-primary-foreground" />}
                     </div>
-                    {option.icon && (
+                    {option.icon !== undefined && (
                       <TechIcon
+                        techId={option.id}
                         icon={option.icon}
                         name={option.name}
-                        className={cn("h-4 w-4", option.className)}
+                        className="h-4 w-4"
                       />
                     )}
                     <span className="truncate">{option.name}</span>
@@ -571,7 +572,7 @@ const StackBuilder = () => {
           >
             {/* Ecosystem Selector */}
             <div className="border-b border-border p-3">
-              <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              <p className="mb-2 font-pixel text-[10px] uppercase tracking-wider text-muted-foreground">
                 Ecosystem
               </p>
               <div className="space-y-1">
@@ -592,15 +593,15 @@ const StackBuilder = () => {
                     )}
                   >
                     <TechIcon
+                      techId={eco.id}
                       icon={eco.icon}
                       name={eco.name}
                       className={cn(
                         "h-4 w-4",
                         stack.ecosystem === eco.id ? "brightness-0 invert" : "",
-                        eco.id === "rust" && stack.ecosystem !== eco.id && "invert-0 dark:invert",
                       )}
                     />
-                    <span className="font-medium">{eco.name}</span>
+                    <span className="font-pixel">{eco.name}</span>
                   </button>
                 ))}
               </div>
@@ -633,9 +634,7 @@ const StackBuilder = () => {
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-1.5">
                     <Terminal className="h-3 w-3 text-muted-foreground" />
-                    <span className="font-mono text-[10px] font-medium text-muted-foreground">
-                      Command
-                    </span>
+                    <span className="font-pixel text-[10px] text-muted-foreground">Command</span>
                   </div>
                   <button
                     type="button"
@@ -684,13 +683,12 @@ const StackBuilder = () => {
                     render={
                       <button
                         type="button"
-                        className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-fd-background px-2 py-1.5 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
+                        className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-fd-background px-2 py-1.5 text-muted-foreground transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
                       />
                     }
                   >
-                    <Settings className="h-3 w-3" />
-                    Settings
-                    <ChevronDown className="ml-auto h-3 w-3" />
+                    <Settings className="h-3.5 w-3.5" />
+                    <span className="font-pixel text-[9px] leading-none">Settings</span>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-64 bg-fd-background">
                     <YoloToggle stack={stack} onToggle={(yolo) => setStack({ yolo })} />
@@ -715,7 +713,7 @@ const StackBuilder = () => {
                     <div className="mb-6">
                       <label
                         htmlFor="project-name"
-                        className="mb-1.5 block font-mono text-[10px] font-medium uppercase tracking-wider text-muted-foreground"
+                        className="mb-1.5 block font-pixel text-[10px] uppercase tracking-wider text-muted-foreground"
                       >
                         Project Name
                       </label>
@@ -766,7 +764,7 @@ const StackBuilder = () => {
                           >
                             <div className="mb-3 flex items-center gap-2 border-border border-b pb-2">
                               <Terminal className="h-4 w-4 shrink-0 text-muted-foreground sm:h-5 sm:w-5" />
-                              <h2 className="font-semibold font-mono text-foreground text-sm sm:text-base">
+                              <h2 className="font-pixel text-foreground text-sm sm:text-base">
                                 {categoryDisplayName}
                               </h2>
                               {compatibilityAnalysis.notes[categoryKey]?.hasIssue && (
@@ -827,9 +825,10 @@ const StackBuilder = () => {
                                           )}
                                         >
                                           <TechIcon
+                                            techId={tech.id}
                                             icon={tech.icon}
                                             name={tech.name}
-                                            className={cn("h-5 w-5", tech.className)}
+                                            className="h-5 w-5"
                                           />
                                         </div>
                                       )}
@@ -869,7 +868,7 @@ const StackBuilder = () => {
                                 >
                                   <div className="mb-3 flex items-center gap-2 border-border border-b pb-2">
                                     <Terminal className="h-4 w-4 shrink-0 text-muted-foreground sm:h-5 sm:w-5" />
-                                    <h2 className="font-semibold font-mono text-foreground text-sm sm:text-base">
+                                    <h2 className="font-pixel text-foreground text-sm sm:text-base">
                                       Astro Integration
                                     </h2>
                                   </div>
@@ -920,9 +919,10 @@ const StackBuilder = () => {
                                                 )}
                                               >
                                                 <TechIcon
+                                                  techId={tech.id}
                                                   icon={tech.icon}
                                                   name={tech.name}
-                                                  className={cn("h-5 w-5", tech.className)}
+                                                  className="h-5 w-5"
                                                 />
                                               </div>
                                             )}

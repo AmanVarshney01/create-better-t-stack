@@ -24,20 +24,15 @@ export function ShareButton({ stackUrl }: ShareButtonProps) {
     <button
       type="button"
       onClick={copyToClipboard}
-      className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-fd-background px-2 py-1.5 font-medium text-muted-foreground text-xs transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
       title={copied ? "Copied!" : "Copy share link"}
+      className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-fd-background px-2 py-1.5 text-muted-foreground transition-all hover:border-muted-foreground/30 hover:bg-muted hover:text-foreground"
     >
       {copied ? (
-        <>
-          <Check className="h-3 w-3 text-green-500" />
-          Copied
-        </>
+        <Check className="h-3.5 w-3.5 text-green-500" />
       ) : (
-        <>
-          <Share2 className="h-3 w-3" />
-          Share
-        </>
+        <Share2 className="h-3.5 w-3.5" />
       )}
+      <span className="font-pixel text-[9px] leading-none">{copied ? "Copied!" : "Share"}</span>
     </button>
   );
 }
