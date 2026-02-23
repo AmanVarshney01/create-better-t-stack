@@ -8,7 +8,7 @@
 import { dependencyVersionMap } from "./add-deps";
 
 // Types
-export type UpdateType = "major" | "minor" | "patch" | "none";
+export type UpdateType = "downgrade" | "major" | "minor" | "patch" | "none";
 
 export type VersionInfo = {
   name: string;
@@ -252,17 +252,89 @@ export function parseVersion(versionSpec: string): {
   };
 }
 
+type ParsedSemver = {
+  major: number;
+  minor: number;
+  patch: number;
+  prerelease: Array<number | string>;
+};
+
+function parseSemver(versionSpec: string): ParsedSemver {
+  const raw = parseVersion(versionSpec).raw;
+  const withoutBuild = raw.split("+")[0] ?? raw;
+  const dashIndex = withoutBuild.indexOf("-");
+  const core = dashIndex === -1 ? withoutBuild : withoutBuild.slice(0, dashIndex);
+  const prereleasePart = dashIndex === -1 ? "" : withoutBuild.slice(dashIndex + 1);
+  const [major = "0", minor = "0", patch = "0"] = core.split(".");
+
+  return {
+    major: parseInt(major, 10) || 0,
+    minor: parseInt(minor, 10) || 0,
+    patch: parseInt(patch, 10) || 0,
+    prerelease: prereleasePart
+      ? prereleasePart
+          .split(".")
+          .filter(Boolean)
+          .map((id) => (/^\d+$/.test(id) ? parseInt(id, 10) : id))
+      : [],
+  };
+}
+
+function comparePrerelease(a: Array<number | string>, b: Array<number | string>): number {
+  if (a.length === 0 && b.length === 0) return 0;
+  if (a.length === 0) return 1;
+  if (b.length === 0) return -1;
+
+  const length = Math.max(a.length, b.length);
+  for (let i = 0; i < length; i++) {
+    const ai = a[i];
+    const bi = b[i];
+
+    if (ai === undefined) return -1;
+    if (bi === undefined) return 1;
+
+    if (typeof ai === "number" && typeof bi === "number") {
+      if (ai !== bi) return ai > bi ? 1 : -1;
+      continue;
+    }
+
+    if (typeof ai === "number") return -1;
+    if (typeof bi === "number") return 1;
+    if (ai !== bi) return ai > bi ? 1 : -1;
+  }
+
+  return 0;
+}
+
+/**
+ * Compare two semver-like specs after removing range operators.
+ * Returns >0 when a > b, <0 when a < b, and 0 when equal.
+ */
+export function compareVersions(a: string, b: string): number {
+  const pa = parseSemver(a);
+  const pb = parseSemver(b);
+
+  if (pa.major !== pb.major) return pa.major - pb.major;
+  if (pa.minor !== pb.minor) return pa.minor - pb.minor;
+  if (pa.patch !== pb.patch) return pa.patch - pb.patch;
+  return comparePrerelease(pa.prerelease, pb.prerelease);
+}
+
 /**
  * Determine the type of update between two versions
  */
 export function getUpdateType(current: string, latest: string): UpdateType {
+  const comparison = compareVersions(latest, current);
   const curr = parseVersion(current);
   const lat = parseVersion(latest);
 
-  if (curr.raw === lat.raw) return "none";
+  if (comparison === 0 && curr.raw === lat.raw) return "none";
+  if (comparison < 0) return "downgrade";
+  if (comparison === 0) return "patch";
   if (lat.major > curr.major) return "major";
   if (lat.minor > curr.minor) return "minor";
   if (lat.patch > curr.patch) return "patch";
+  if (comparison > 0) return "patch";
   return "none";
 }
 
@@ -516,12 +588,13 @@ export async function checkAllVersions(options: {
     }
   }
 
-  // Sort outdated by update type (major > minor > patch)
+  // Sort outdated by update type (downgrade > major > minor > patch)
   const typeOrder: Record<UpdateType, number> = {
-    major: 0,
-    minor: 1,
-    patch: 2,
-    none: 3,
+    downgrade: 0,
+    major: 1,
+    minor: 2,
+    patch: 3,
+    none: 4,
   };
   result.outdated.sort((a, b) => typeOrder[a.updateType] - typeOrder[b.updateType]);
 
@@ -539,7 +612,9 @@ export function generateMarkdownReport(result: CheckResult): string {
 
   // Summary
   lines.push("## Summary\n");
+  const downgradeCount = result.outdated.filter((info) => info.updateType === "downgrade").length;
   lines.push(`- **Outdated**: ${result.outdated.length}`);
+  lines.push(`- **Downgrades detected**: ${downgradeCount}`);
   lines.push(`- **Up to date**: ${result.upToDate.length}`);
   lines.push(`- **Errors**: ${result.errors.length}\n`);
 
@@ -549,6 +624,7 @@ export function generateMarkdownReport(result: CheckResult): string {
 
     // Group by update type
     const byType: Record<UpdateType, VersionInfo[]> = {
+      downgrade: [],
       major: [],
       minor: [],
       patch: [],
@@ -556,6 +632,18 @@ export function generateMarkdownReport(result: CheckResult): string {
     };
     for (const info of result.outdated) {
       byType[info.updateType].push(info);
+    }
+
+    if (byType.downgrade.length > 0) {
+      lines.push("### Downgrades Detected (Manual Review Required)\n");
+      lines.push("| Package | Current | Latest | Ecosystem |");
+      lines.push("|---------|---------|--------|-----------|");
+      for (const info of byType.downgrade) {
+        lines.push(
+          `| ${info.name} | ${info.current} | ${info.latest} | ${info.ecosystem || "-"} |`,
+        );
+      }
+      lines.push("");
     }
 
     if (byType.major.length > 0) {
@@ -623,6 +711,7 @@ export function generateCliReport(result: CheckResult): string {
   if (result.outdated.length > 0) {
     // Group by update type
     const byType: Record<UpdateType, VersionInfo[]> = {
+      downgrade: [],
       major: [],
       minor: [],
       patch: [],
@@ -634,13 +723,22 @@ export function generateCliReport(result: CheckResult): string {
 
     const formatRow = (info: VersionInfo) => {
       const label =
-        info.updateType === "major"
-          ? "[MAJOR]"
-          : info.updateType === "minor"
-            ? "[MINOR]"
-            : "[PATCH]";
+        info.updateType === "downgrade"
+          ? "[DOWNGRADE]"
+          : info.updateType === "major"
+            ? "[MAJOR]"
+            : info.updateType === "minor"
+              ? "[MINOR]"
+              : "[PATCH]";
       return `  ${label.padEnd(8)} ${info.name.padEnd(45)} ${info.current.padEnd(15)} -> ${info.latest}`;
     };
+
+    if (byType.downgrade.length > 0) {
+      lines.push("\nDowngrades Detected (Manual Review Required):");
+      for (const info of byType.downgrade) {
+        lines.push(formatRow(info));
+      }
+    }
 
     if (byType.major.length > 0) {
       lines.push("\nMajor Updates (Breaking Changes Possible):");

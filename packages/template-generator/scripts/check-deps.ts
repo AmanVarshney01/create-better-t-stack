@@ -113,19 +113,30 @@ async function main() {
     }
   }
 
-  console.log("Checking dependency versions...\n");
+  const structuredOutput = options.json || options.markdown;
+  const showProgress = !structuredOutput && process.stderr.isTTY;
+
+  if (!structuredOutput) {
+    console.log("Checking dependency versions...\n");
+  } else {
+    console.error("Checking dependency versions...");
+  }
 
   const result = await checkAllVersions({
     ecosystem: options.ecosystem,
     concurrency: 5,
     delayMs: 100,
-    onProgress: (current, total) => {
-      process.stdout.write(`\rChecking packages (${current}/${total})...`);
-    },
+    onProgress: showProgress
+      ? (current, total) => {
+          process.stderr.write(`\rChecking packages (${current}/${total})...`);
+        }
+      : undefined,
   });
 
   // Clear the progress line
-  process.stdout.write("\r" + " ".repeat(50) + "\r");
+  if (showProgress) {
+    process.stderr.write("\r" + " ".repeat(50) + "\r");
+  }
 
   // Output results
   if (options.json) {
@@ -170,12 +181,14 @@ async function main() {
   if (process.env.GITHUB_OUTPUT) {
     const outputFile = process.env.GITHUB_OUTPUT;
     const outdatedCount = result.outdated.length;
+    const downgradeCount = result.outdated.filter((u) => u.updateType === "downgrade").length;
     const hasUpdates = outdatedCount > 0 ? "true" : "false";
 
     fs.appendFileSync(
       outputFile,
       `has_updates=${hasUpdates}\n` +
         `outdated_count=${outdatedCount}\n` +
+        `downgrade_count=${downgradeCount}\n` +
         `uptodate_count=${result.upToDate.length}\n` +
         `error_count=${result.errors.length}\n`,
     );

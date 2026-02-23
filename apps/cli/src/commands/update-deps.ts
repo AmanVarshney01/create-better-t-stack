@@ -28,6 +28,7 @@ export type UpdateDepsOptions = {
  */
 function formatUpdate(info: VersionInfo): string {
   const typeColors: Record<UpdateType, (s: string) => string> = {
+    downgrade: pc.red,
     major: pc.red,
     minor: pc.yellow,
     patch: pc.green,
@@ -118,6 +119,10 @@ async function interactiveUpdate(updates: VersionInfo[]): Promise<VersionInfo[]>
 
     if (update.updateType === "major") {
       console.log(pc.yellow("  Warning: Breaking changes possible. Check changelog."));
+    } else if (update.updateType === "downgrade") {
+      console.log(
+        pc.red("  Warning: npm latest is lower than current pinned version. Review carefully."),
+      );
     }
 
     const action = await select({
@@ -192,6 +197,7 @@ export async function updateDepsHandler(options: UpdateDepsOptions): Promise<voi
 
   // Determine which updates to apply
   let toApply: VersionInfo[] = [];
+  const downgradeCount = result.outdated.filter((u) => u.updateType === "downgrade").length;
 
   if (patch) {
     // Apply only patch and minor updates automatically
@@ -203,6 +209,11 @@ export async function updateDepsHandler(options: UpdateDepsOptions): Promise<voi
     }
 
     log.info(`Found ${toApply.length} patch/minor updates to apply automatically.`);
+    if (downgradeCount > 0) {
+      log.warn(
+        `${downgradeCount} downgrade${downgradeCount === 1 ? "" : "s"} detected and excluded from --patch mode.`,
+      );
+    }
 
     const shouldProceed = await confirm({
       message: `Apply ${toApply.length} safe updates?`,
@@ -224,7 +235,10 @@ export async function updateDepsHandler(options: UpdateDepsOptions): Promise<voi
   } else {
     // Default: show what would be updated and ask
     const shouldProceed = await confirm({
-      message: `Apply all ${result.outdated.length} updates?`,
+      message:
+        downgradeCount > 0
+          ? `Apply all ${result.outdated.length} updates (including ${downgradeCount} downgrade${downgradeCount === 1 ? "" : "s"})?`
+          : `Apply all ${result.outdated.length} updates?`,
     });
 
     if (isCancel(shouldProceed) || !shouldProceed) {
