@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import Combinations3dSection from "@/components/home/combinations-3d-section";
+import CombinationsSection from "@/components/home/combinations-section";
 import ContributorsSection from "@/components/home/contributors-section";
 import FeaturesSection from "@/components/home/features-section";
 import Footer from "@/components/home/footer";
@@ -17,7 +17,7 @@ function HomePage() {
       <div className="mx-auto max-w-5xl border-x border-border">
         <HeroSection />
         <FeaturesSection />
-        <Combinations3dSection />
+        <CombinationsSection />
         <ContributorsSection />
         <Footer />
       </div>

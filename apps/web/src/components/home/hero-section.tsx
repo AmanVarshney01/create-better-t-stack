@@ -2,7 +2,7 @@
 
 import { Link } from "@tanstack/react-router";
 import { Check, Copy, ArrowRight } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import PackageIcon from "./icons";
 
@@ -11,6 +11,7 @@ type TerminalTab = "ts" | "rust" | "go" | "python";
 type TerminalExample = {
   id: TerminalTab;
   tabLabel: string;
+  iconUrl: string;
   title: string;
   projectName: string;
   ecosystemFlag?: string;
@@ -24,6 +25,7 @@ const terminalExamples: TerminalExample[] = [
   {
     id: "ts",
     tabLabel: "TS",
+    iconUrl: "https://cdn.simpleicons.org/typescript/3178C6",
     title: "TypeScript",
     projectName: "my-saas",
     stackSummary: "TanStack Start + Hono + tRPC",
@@ -40,6 +42,7 @@ const terminalExamples: TerminalExample[] = [
   {
     id: "rust",
     tabLabel: "Rust",
+    iconUrl: "https://cdn.simpleicons.org/rust/FFFFFF",
     title: "Rust",
     projectName: "api-server",
     ecosystemFlag: "--ecosystem rust",
@@ -54,6 +57,7 @@ const terminalExamples: TerminalExample[] = [
   {
     id: "python",
     tabLabel: "Python",
+    iconUrl: "https://cdn.simpleicons.org/python/3776AB",
     title: "Python",
     projectName: "ml-pipeline",
     ecosystemFlag: "--ecosystem python",
@@ -68,6 +72,7 @@ const terminalExamples: TerminalExample[] = [
   {
     id: "go",
     tabLabel: "Go",
+    iconUrl: "https://cdn.simpleicons.org/go/00ADD8",
     title: "Go",
     projectName: "microservice",
     ecosystemFlag: "--ecosystem go",
@@ -100,6 +105,19 @@ export default function HeroSection() {
 
   const activeExample =
     terminalExamples.find((example) => example.id === selectedTerminalTab) ?? terminalExamples[0];
+
+  const contentRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const outer = contentRef.current;
+    const inner = innerRef.current;
+    if (!outer || !inner) return;
+    outer.style.height = `${outer.scrollHeight}px`;
+    requestAnimationFrame(() => {
+      outer.style.height = `${inner.scrollHeight}px`;
+    });
+  }, [selectedTerminalTab]);
 
   return (
     <div className="flex flex-col items-center px-4 pt-12 pb-8 sm:pt-16">
@@ -164,7 +182,7 @@ export default function HeroSection() {
       <div className="mt-8 w-full max-w-4xl overflow-hidden rounded-xl border border-white/10 bg-[#0b0c0f] shadow-[0_20px_80px_-30px_rgba(0,0,0,0.8)] sm:mt-12">
         {/* Terminal Header — Ghostty-style tab bar */}
         <div className="flex divide-x divide-white/[0.07] border-b border-white/[0.08] bg-[#1c1c1e]">
-          {terminalExamples.map((example, index) => {
+          {terminalExamples.map((example) => {
             const isActive = selectedTerminalTab === example.id;
             return (
               <button
@@ -181,9 +199,14 @@ export default function HeroSection() {
                     isActive ? "text-white" : "text-white/40 group-hover:text-white/65"
                   }`}
                 >
-                  {isActive && <span className="text-white/60">✱</span>}
+                  <img
+                    src={example.iconUrl}
+                    alt={example.title}
+                    width={14}
+                    height={14}
+                    className={`h-3 w-3 sm:h-3.5 sm:w-3.5 ${isActive ? "opacity-100" : "opacity-40 group-hover:opacity-65"}`}
+                  />
                   <span>{example.tabLabel}</span>
-                  <span className="hidden text-[10px] text-white/20 sm:inline">⌘{index + 1}</span>
                 </span>
               </button>
             );
@@ -191,66 +214,71 @@ export default function HeroSection() {
         </div>
 
         {/* Terminal Content */}
-        <div className="overflow-x-auto p-4 font-mono text-xs sm:p-6 sm:text-sm">
-          {/* Mobile: Simple text logo */}
-          <div className="mb-4 block sm:hidden">
-            <span className="text-lg font-bold tracking-wider text-white">BETTER</span>
-            <span className="text-lg font-bold tracking-wider text-white/40"> FULLSTACK</span>
-          </div>
+        <div
+          ref={contentRef}
+          className="overflow-hidden transition-[height] duration-300 ease-in-out"
+        >
+          <div ref={innerRef} className="p-4 font-mono text-xs sm:p-6 sm:text-sm">
+            {/* Mobile: Simple text logo */}
+            <div className="mb-4 block sm:hidden">
+              <span className="text-lg font-bold tracking-wider text-white">BETTER</span>
+              <span className="text-lg font-bold tracking-wider text-white/40"> FULLSTACK</span>
+            </div>
 
-          {/* Desktop: ASCII Logo */}
-          <div className="hidden leading-tight sm:block">
-            <pre className="text-[10px] text-white md:text-xs lg:text-sm">
-              {`  ██████╗ ███████╗████████╗████████╗███████╗██████╗
+            {/* Desktop: ASCII Logo */}
+            <div className="hidden leading-tight sm:block">
+              <pre className="text-[10px] text-white md:text-xs lg:text-sm">
+                {`  ██████╗ ███████╗████████╗████████╗███████╗██████╗
   ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗
   ██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝
   ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗
   ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║
   ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝`}
-            </pre>
-            <pre className="text-[10px] text-white/40 md:text-xs lg:text-sm">
-              {`  ███████╗██╗   ██╗██╗     ██╗     ███████╗████████╗ █████╗  ██████╗██╗  ██╗
+              </pre>
+              <pre className="text-[10px] text-white/40 md:text-xs lg:text-sm">
+                {`  ███████╗██╗   ██╗██╗     ██╗     ███████╗████████╗ █████╗  ██████╗██╗  ██╗
   ██╔════╝██║   ██║██║     ██║     ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
   █████╗  ██║   ██║██║     ██║     ███████╗   ██║   ███████║██║     █████╔╝
   ██╔══╝  ██║   ██║██║     ██║     ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
   ██║     ╚██████╔╝███████╗███████╗███████║   ██║   ██║  ██║╚██████╗██║  ██╗
   ╚═╝      ╚═════╝ ╚══════╝╚══════╝╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝`}
-            </pre>
-          </div>
+              </pre>
+            </div>
 
-          <div className="mt-4 sm:mt-6">
-            <div key={activeExample.id} className="space-y-1.5 text-white/80">
-              <p>
-                <span className="text-white/40">$</span>{" "}
-                <span className="text-white">
-                  {commands[selectedPM]} {activeExample.projectName}
-                  {activeExample.ecosystemFlag && (
-                    <>
-                      {" "}
-                      <span className="text-white/40">{activeExample.ecosystemFlag}</span>
-                    </>
-                  )}
-                </span>
-              </p>
-              <p>
-                <span className={activeExample.accentTextClass}>★</span>{" "}
-                <span className={activeExample.accentTextClass}>{activeExample.title}</span>
-                <span className="text-white/30"> · </span>
-                <span className="text-white/70">{activeExample.stackSummary}</span>
-              </p>
-
-              {activeExample.details.map((detail) => (
-                <p key={detail.label} className="pl-3">
-                  <span className="text-green-400">✔</span>{" "}
-                  <span className="text-white/40">{detail.label} </span>
-                  <span className="text-white/80">{detail.value}</span>
+            <div className="mt-4 sm:mt-6">
+              <div key={activeExample.id} className="space-y-1.5 text-white/80">
+                <p>
+                  <span className="text-white/40">$</span>{" "}
+                  <span className="text-white">
+                    {commands[selectedPM]} {activeExample.projectName}
+                    {activeExample.ecosystemFlag && (
+                      <>
+                        {" "}
+                        <span className="text-white/40">{activeExample.ecosystemFlag}</span>
+                      </>
+                    )}
+                  </span>
                 </p>
-              ))}
+                <p>
+                  <span className={activeExample.accentTextClass}>★</span>{" "}
+                  <span className={activeExample.accentTextClass}>{activeExample.title}</span>
+                  <span className="text-white/30"> · </span>
+                  <span className="text-white/70">{activeExample.stackSummary}</span>
+                </p>
 
-              <p className="pt-1">
-                <span className="text-green-400">✔</span>{" "}
-                <span className="text-white/60">{activeExample.footer}</span>
-              </p>
+                {activeExample.details.map((detail) => (
+                  <p key={detail.label} className="pl-3">
+                    <span className="text-green-400">✔</span>{" "}
+                    <span className="text-white/40">{detail.label} </span>
+                    <span className="text-white/80">{detail.value}</span>
+                  </p>
+                ))}
+
+                <p className="pt-1">
+                  <span className="text-green-400">✔</span>{" "}
+                  <span className="text-white/60">{activeExample.footer}</span>
+                </p>
+              </div>
             </div>
           </div>
         </div>

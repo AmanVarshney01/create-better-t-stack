@@ -5,44 +5,52 @@ import { ArrowRight, Check } from "lucide-react";
 
 const features = [
   {
-    title: "TypeScript & Rust",
-    description: "Full ecosystem support for both languages with modern tooling",
+    title: "4 ecosystems",
+    description: "TypeScript, Rust, Python, and Go with native tooling for each",
   },
   {
-    title: "12+ frontend frameworks",
-    description: "Next.js, TanStack Start, Nuxt, Svelte, Solid, Astro, Qwik, Angular, and more",
+    title: "15 frontend frameworks",
+    description: "Web, native mobile, and WASM frontends across all ecosystems",
   },
   {
-    title: "10+ backend frameworks",
-    description: "Hono, Elysia, Express, Fastify, NestJS, Nitro, Convex, and more",
+    title: "17 backend frameworks",
+    description: "From lightweight to batteries-included, across all four languages",
   },
   {
-    title: "Flexible database options",
-    description: "PostgreSQL, MySQL, SQLite, MongoDB with Drizzle, Prisma, or 5 other ORMs",
+    title: "6 databases & 13 ORMs",
+    description: "SQL, NoSQL, and graph databases with type-safe query builders",
   },
   {
-    title: "Type-safe APIs",
-    description: "tRPC, oRPC, ts-rest, or Garph for end-to-end type safety",
+    title: "6 auth providers",
+    description: "Self-hosted and managed authentication out of the box",
   },
   {
-    title: "Auth & payments ready",
-    description: "Better Auth, Clerk, plus Stripe, Polar, Paddle, Lemon Squeezy",
+    title: "5 payment integrations",
+    description: "Subscriptions, one-time payments, and usage-based billing",
   },
   {
-    title: "AI integrations",
-    description: "Vercel AI SDK, Mastra, VoltAgent, LangGraph, OpenAI Agents SDK",
+    title: "12 AI integrations",
+    description: "Agent frameworks, LLM SDKs, and orchestration tools",
   },
   {
-    title: "Real-time & job queues",
-    description: "Socket.IO, PartyKit, Liveblocks, BullMQ, Trigger.dev, Inngest",
+    title: "7 type-safe APIs & gRPC",
+    description: "End-to-end type safety and high-performance RPC",
+  },
+  {
+    title: "6 real-time & 4 job queues",
+    description: "WebSockets, CRDT collaboration, and background task processing",
+  },
+  {
+    title: "11 UI libraries",
+    description: "Accessible component systems and design primitives",
   },
   {
     title: "Native & desktop apps",
-    description: "Expo for mobile, Tauri for desktop, WXT for browser extensions",
+    description: "Mobile, desktop, and browser extension targets",
   },
   {
-    title: "Deploy anywhere",
-    description: "Cloudflare Workers, Vercel, Railway, Fly.io, and more",
+    title: "5 deploy targets",
+    description: "Edge, serverless, containers, and infrastructure-as-code",
   },
 ];
 
@@ -54,7 +62,7 @@ export default function FeaturesSection() {
         <h2 className="font-pixel text-lg font-bold sm:text-xl">What is Better Fullstack?</h2>
         <p className="mt-2 text-sm text-muted-foreground sm:text-base">
           A CLI that scaffolds production-ready apps with your preferred tech stack. Choose from
-          100+ options across frameworks, databases, auth, payments, AI, and more.
+          270+ options across 4 ecosystems, frameworks, databases, auth, payments, AI, and more.
         </p>
 
         {/* Features List */}
