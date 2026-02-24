@@ -11,8 +11,14 @@ export function Navbar() {
       <nav className="container mx-auto flex h-14 items-center justify-between px-6">
         {/* Logo + Builder */}
         <div className="flex items-center gap-4 sm:gap-6">
-          <Link to="/" className="font-mono text-base font-bold tracking-tight sm:text-lg">
+          <Link
+            to="/"
+            className="flex items-center gap-2 font-mono text-base font-bold tracking-tight sm:text-lg"
+          >
             better<span className="text-muted-foreground">fullstack</span>
+            <span className="rounded border border-border px-1.5 py-0.5 font-pixel text-[9px] text-muted-foreground">
+              Alpha
+            </span>
           </Link>
           <Link
             to="/new"

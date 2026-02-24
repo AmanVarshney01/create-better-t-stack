@@ -6,8 +6,84 @@ import { useState } from "react";
 
 import PackageIcon from "./icons";
 
+type TerminalTab = "ts" | "rust" | "go" | "python";
+
+type TerminalExample = {
+  id: TerminalTab;
+  tabLabel: string;
+  title: string;
+  projectName: string;
+  ecosystemFlag?: string;
+  stackSummary: string;
+  accentTextClass: string;
+  details: Array<{ label: string; value: string }>;
+  footer: string;
+};
+
+const terminalExamples: TerminalExample[] = [
+  {
+    id: "ts",
+    tabLabel: "TS",
+    title: "TypeScript",
+    projectName: "my-saas",
+    stackSummary: "TanStack Start + Hono + tRPC",
+    accentTextClass: "text-violet-300",
+    details: [
+      { label: "Database", value: "PostgreSQL · Drizzle ORM · Neon" },
+      { label: "Auth", value: "Better Auth · Clerk" },
+      { label: "Payments", value: "Stripe · Polar" },
+      { label: "AI", value: "Vercel AI SDK · Mastra" },
+      { label: "Addons", value: "Turborepo · Biome · PWA · Tauri" },
+    ],
+    footer: "Scaffolded in 420ms",
+  },
+  {
+    id: "rust",
+    tabLabel: "Rust",
+    title: "Rust",
+    projectName: "api-server",
+    ecosystemFlag: "--ecosystem rust",
+    stackSummary: "Axum + SeaORM + Tonic (gRPC)",
+    accentTextClass: "text-orange-300",
+    details: [
+      { label: "Frontend", value: "Leptos (WASM)" },
+      { label: "CLI", value: "Clap · Ratatui" },
+    ],
+    footer: "Scaffolded in 180ms",
+  },
+  {
+    id: "python",
+    tabLabel: "Python",
+    title: "Python",
+    projectName: "ml-pipeline",
+    ecosystemFlag: "--ecosystem python",
+    stackSummary: "FastAPI + SQLAlchemy + Pydantic",
+    accentTextClass: "text-blue-300",
+    details: [
+      { label: "AI", value: "LangChain · LangGraph · CrewAI" },
+      { label: "Queue", value: "Celery · Ruff" },
+    ],
+    footer: "Scaffolded in 95ms",
+  },
+  {
+    id: "go",
+    tabLabel: "Go",
+    title: "Go",
+    projectName: "microservice",
+    ecosystemFlag: "--ecosystem go",
+    stackSummary: "Gin + GORM + gRPC-Go",
+    accentTextClass: "text-cyan-300",
+    details: [
+      { label: "CLI", value: "Cobra · Bubble Tea" },
+      { label: "Logging", value: "Zap" },
+    ],
+    footer: "Scaffolded in 63ms",
+  },
+];
+
 export default function HeroSection() {
   const [selectedPM, setSelectedPM] = useState<"bun" | "pnpm" | "npm">("bun");
+  const [selectedTerminalTab, setSelectedTerminalTab] = useState<TerminalTab>("ts");
   const [copied, setCopied] = useState(false);
 
   const commands = {
@@ -22,36 +98,11 @@ export default function HeroSection() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const activeExample =
+    terminalExamples.find((example) => example.id === selectedTerminalTab) ?? terminalExamples[0];
+
   return (
     <div className="flex flex-col items-center px-4 pt-12 pb-8 sm:pt-16">
-      {/* Alpha Status Badge */}
-      <div className="mb-4 flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs sm:text-sm">
-        <span className="relative flex h-2 w-2">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
-          <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
-        </span>
-        <span className="font-medium text-amber-600 dark:text-amber-400">Alpha</span>
-        <span className="text-muted-foreground">— In active development</span>
-      </div>
-
-      {/* Fork Badge */}
-      <div className="mb-6 flex items-center gap-2 text-xs sm:mb-8 sm:text-sm">
-        <span className="rounded bg-foreground px-2 py-0.5 text-xs font-medium text-background">
-          Fork
-        </span>
-        <span className="text-muted-foreground">
-          Based on{" "}
-          <a
-            href="https://github.com/better-t-stack/create-better-t-stack"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-foreground underline-offset-4 hover:underline"
-          >
-            create-better-t-stack
-          </a>
-        </span>
-      </div>
-
       {/* Main Heading */}
       <h1 className="max-w-3xl text-center font-mono text-2xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">
         The full-stack app scaffolder
@@ -110,16 +161,33 @@ export default function HeroSection() {
       </div>
 
       {/* Terminal Demo */}
-      <div className="mt-8 w-full max-w-4xl overflow-hidden rounded-xl border border-border bg-[#0a0a0a] shadow-2xl sm:mt-12">
-        {/* Terminal Header */}
-        <div className="flex items-center justify-between border-b border-white/10 px-3 py-2 sm:px-4 sm:py-3">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <div className="h-2.5 w-2.5 rounded-full bg-[#ff5f57] sm:h-3 sm:w-3" />
-            <div className="h-2.5 w-2.5 rounded-full bg-[#febc2e] sm:h-3 sm:w-3" />
-            <div className="h-2.5 w-2.5 rounded-full bg-[#28c840] sm:h-3 sm:w-3" />
-          </div>
-          <span className="font-mono text-[10px] text-white/50 sm:text-xs">terminal</span>
-          <div className="w-[40px] sm:w-[52px]" />
+      <div className="mt-8 w-full max-w-4xl overflow-hidden rounded-xl border border-white/10 bg-[#0b0c0f] shadow-[0_20px_80px_-30px_rgba(0,0,0,0.8)] sm:mt-12">
+        {/* Terminal Header — Ghostty-style tab bar */}
+        <div className="flex divide-x divide-white/[0.07] border-b border-white/[0.08] bg-[#1c1c1e]">
+          {terminalExamples.map((example, index) => {
+            const isActive = selectedTerminalTab === example.id;
+            return (
+              <button
+                key={example.id}
+                type="button"
+                onClick={() => setSelectedTerminalTab(example.id)}
+                className="group relative flex flex-1 items-center justify-center py-2.5 transition-colors sm:py-3"
+              >
+                {isActive && (
+                  <span className="absolute inset-x-2 inset-y-1 rounded-md bg-white/[0.12]" />
+                )}
+                <span
+                  className={`relative flex items-center gap-1.5 font-mono text-[11px] sm:text-xs ${
+                    isActive ? "text-white" : "text-white/40 group-hover:text-white/65"
+                  }`}
+                >
+                  {isActive && <span className="text-white/60">✱</span>}
+                  <span>{example.tabLabel}</span>
+                  <span className="hidden text-[10px] text-white/20 sm:inline">⌘{index + 1}</span>
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Terminal Content */}
@@ -150,37 +218,40 @@ export default function HeroSection() {
             </pre>
           </div>
 
-          <div className="mt-4 space-y-1.5 text-white/70 sm:mt-6 sm:space-y-2">
-            <p>
-              <span className="text-green-400"></span>{" "}
-              <span className="text-white">{commands[selectedPM]}</span>
-            </p>
-            <p className="text-white/50">┌ create-better-fullstack</p>
-            <p className="text-white/50">│</p>
-            <p>
-              <span className="text-cyan-400"></span>{" "}
-              <span className="text-white/50">Project name:</span>{" "}
-              <span className="text-white">my-app</span>
-            </p>
-            <p>
-              <span className="text-cyan-400"></span>{" "}
-              <span className="text-white/50">Framework:</span>{" "}
-              <span className="text-white">Tanstack Start</span>
-            </p>
-            <p>
-              <span className="text-cyan-400"></span>{" "}
-              <span className="text-white/50">Database:</span>{" "}
-              <span className="text-white">PostgreSQL + Drizzle</span>
-            </p>
-            <p>
-              <span className="text-cyan-400"></span> <span className="text-white/50">Auth:</span>{" "}
-              <span className="text-white">Better Auth</span>
-            </p>
-            <p className="text-white/50">│</p>
-            <p>
-              <span className="text-green-400"></span>{" "}
-              <span className="text-white">Project created successfully!</span>
-            </p>
+          <div className="mt-4 sm:mt-6">
+            <div key={activeExample.id} className="space-y-1.5 text-white/80">
+              <p>
+                <span className="text-white/40">$</span>{" "}
+                <span className="text-white">
+                  {commands[selectedPM]} {activeExample.projectName}
+                  {activeExample.ecosystemFlag && (
+                    <>
+                      {" "}
+                      <span className="text-white/40">{activeExample.ecosystemFlag}</span>
+                    </>
+                  )}
+                </span>
+              </p>
+              <p>
+                <span className={activeExample.accentTextClass}>★</span>{" "}
+                <span className={activeExample.accentTextClass}>{activeExample.title}</span>
+                <span className="text-white/30"> · </span>
+                <span className="text-white/70">{activeExample.stackSummary}</span>
+              </p>
+
+              {activeExample.details.map((detail) => (
+                <p key={detail.label} className="pl-3">
+                  <span className="text-green-400">✔</span>{" "}
+                  <span className="text-white/40">{detail.label} </span>
+                  <span className="text-white/80">{detail.value}</span>
+                </p>
+              ))}
+
+              <p className="pt-1">
+                <span className="text-green-400">✔</span>{" "}
+                <span className="text-white/60">{activeExample.footer}</span>
+              </p>
+            </div>
           </div>
         </div>
       </div>

@@ -4,9 +4,11 @@ import { Infinity as InfinityIcon, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const funFacts = [
-  "That's 83 trillion universe lifetimes to test all combinations",
+  "That's 167 trillion universe lifetimes to test all combinations",
   "More combinations than atoms in the observable universe",
+  "Across TypeScript, Rust, Python, and Go ecosystems",
   "Each combination creates a unique, production-ready app",
+  "YOLO mode doubles every single one of them",
 ];
 
 function GlowingNumber() {
@@ -23,11 +25,11 @@ function GlowingNumber() {
     <div className="text-center">
       {/* Main number */}
       <div className="flex items-baseline justify-center gap-1">
-        <span className="text-5xl font-bold font-mono text-foreground sm:text-7xl">3.64</span>
+        <span className="text-5xl font-bold font-mono text-foreground sm:text-7xl">7.28</span>
         <span className="text-3xl font-bold font-mono text-foreground sm:text-5xl">× 10</span>
         <span className="text-2xl font-bold font-mono text-muted-foreground sm:text-3xl">34</span>
       </div>
-      <p className="mt-2 text-sm text-muted-foreground">possible project combinations</p>
+      <p className="mt-2 text-sm text-muted-foreground">valid project combinations</p>
 
       {/* Rotating fun facts */}
       <div className="mt-4 h-6 overflow-hidden">
@@ -67,9 +69,9 @@ export default function CombinationsSection() {
           <div className="text-sm">
             <p className="font-medium">How long to test every combination?</p>
             <p className="mt-1 text-muted-foreground">
-              At 1ms per test: <span className="font-mono text-foreground">1.15 × 10²⁴ years</span>{" "}
-              — that's{" "}
-              <span className="font-medium text-foreground">83 trillion universe lifetimes</span>
+              At 1ms per test: <span className="font-mono text-foreground">2.3 × 10²⁴ years</span> —
+              that's{" "}
+              <span className="font-medium text-foreground">167 trillion universe lifetimes</span>
             </p>
           </div>
         </div>

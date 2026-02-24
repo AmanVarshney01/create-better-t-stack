@@ -9,10 +9,40 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as New5RouteImport } from './routes/new-5'
+import { Route as New4RouteImport } from './routes/new-4'
+import { Route as New3RouteImport } from './routes/new-3'
+import { Route as New2RouteImport } from './routes/new-2'
+import { Route as New1RouteImport } from './routes/new-1'
 import { Route as NewRouteImport } from './routes/new'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPreviewRouteImport } from './routes/api/preview'
 
+const New5Route = New5RouteImport.update({
+  id: '/new-5',
+  path: '/new-5',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const New4Route = New4RouteImport.update({
+  id: '/new-4',
+  path: '/new-4',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const New3Route = New3RouteImport.update({
+  id: '/new-3',
+  path: '/new-3',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const New2Route = New2RouteImport.update({
+  id: '/new-2',
+  path: '/new-2',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const New1Route = New1RouteImport.update({
+  id: '/new-1',
+  path: '/new-1',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const NewRoute = NewRouteImport.update({
   id: '/new',
   path: '/new',
@@ -32,35 +62,115 @@ const ApiPreviewRoute = ApiPreviewRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/new': typeof NewRoute
+  '/new-1': typeof New1Route
+  '/new-2': typeof New2Route
+  '/new-3': typeof New3Route
+  '/new-4': typeof New4Route
+  '/new-5': typeof New5Route
   '/api/preview': typeof ApiPreviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/new': typeof NewRoute
+  '/new-1': typeof New1Route
+  '/new-2': typeof New2Route
+  '/new-3': typeof New3Route
+  '/new-4': typeof New4Route
+  '/new-5': typeof New5Route
   '/api/preview': typeof ApiPreviewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/new': typeof NewRoute
+  '/new-1': typeof New1Route
+  '/new-2': typeof New2Route
+  '/new-3': typeof New3Route
+  '/new-4': typeof New4Route
+  '/new-5': typeof New5Route
   '/api/preview': typeof ApiPreviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/new' | '/api/preview'
+  fullPaths:
+    | '/'
+    | '/new'
+    | '/new-1'
+    | '/new-2'
+    | '/new-3'
+    | '/new-4'
+    | '/new-5'
+    | '/api/preview'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/new' | '/api/preview'
-  id: '__root__' | '/' | '/new' | '/api/preview'
+  to:
+    | '/'
+    | '/new'
+    | '/new-1'
+    | '/new-2'
+    | '/new-3'
+    | '/new-4'
+    | '/new-5'
+    | '/api/preview'
+  id:
+    | '__root__'
+    | '/'
+    | '/new'
+    | '/new-1'
+    | '/new-2'
+    | '/new-3'
+    | '/new-4'
+    | '/new-5'
+    | '/api/preview'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   NewRoute: typeof NewRoute
+  New1Route: typeof New1Route
+  New2Route: typeof New2Route
+  New3Route: typeof New3Route
+  New4Route: typeof New4Route
+  New5Route: typeof New5Route
   ApiPreviewRoute: typeof ApiPreviewRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/new-5': {
+      id: '/new-5'
+      path: '/new-5'
+      fullPath: '/new-5'
+      preLoaderRoute: typeof New5RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/new-4': {
+      id: '/new-4'
+      path: '/new-4'
+      fullPath: '/new-4'
+      preLoaderRoute: typeof New4RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/new-3': {
+      id: '/new-3'
+      path: '/new-3'
+      fullPath: '/new-3'
+      preLoaderRoute: typeof New3RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/new-2': {
+      id: '/new-2'
+      path: '/new-2'
+      fullPath: '/new-2'
+      preLoaderRoute: typeof New2RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/new-1': {
+      id: '/new-1'
+      path: '/new-1'
+      fullPath: '/new-1'
+      preLoaderRoute: typeof New1RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/new': {
       id: '/new'
       path: '/new'
@@ -88,6 +198,11 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   NewRoute: NewRoute,
+  New1Route: New1Route,
+  New2Route: New2Route,
+  New3Route: New3Route,
+  New4Route: New4Route,
+  New5Route: New5Route,
   ApiPreviewRoute: ApiPreviewRoute,
 }
 export const routeTree = rootRouteImport
