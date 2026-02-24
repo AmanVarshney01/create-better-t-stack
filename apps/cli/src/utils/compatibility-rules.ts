@@ -306,6 +306,10 @@ export function isFrontendAllowedWithBackend(
     if (incompatibleFrontends.includes(frontend)) return false;
   }
 
+  if (auth === "clerk" && backend === "self") {
+    if (!["next", "tanstack-start"].includes(frontend)) return false;
+  }
+
   // NextAuth only works with Next.js frontend and self backend
   if (auth === "nextauth") {
     if (frontend !== "next") return false;
@@ -319,6 +323,62 @@ export function isFrontendAllowedWithBackend(
   }
 
   return true;
+}
+
+export function validateClerkCompatibility(
+  auth: Auth | undefined,
+  backend: Backend | undefined,
+  frontends: Frontend[] = [],
+) {
+  if (auth !== "clerk") return;
+
+  if (backend === "convex") {
+    const incompatibleFrontends = frontends.filter((f) => ["nuxt", "svelte", "solid"].includes(f));
+    if (incompatibleFrontends.length > 0) {
+      exitWithError(
+        `In Better-Fullstack, Clerk + Convex is not compatible with the following frontends: ${incompatibleFrontends.join(
+          ", ",
+        )}. Please choose a different frontend or auth provider.`,
+      );
+    }
+    return;
+  }
+
+  if (backend === "self") {
+    const hasNative = frontends.some((f) =>
+      ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
+    );
+    if (hasNative) {
+      exitWithError(
+        "In Better-Fullstack, Clerk with the 'self' backend is currently supported only for web-only Next.js or TanStack Start projects (no native companion app). Please remove the native frontend or choose a different auth provider.",
+      );
+    }
+
+    const hasNextJs = frontends.includes("next");
+    const hasTanStackStart = frontends.includes("tanstack-start");
+
+    if (!hasNextJs && !hasTanStackStart) {
+      if (frontends.includes("astro")) {
+        exitWithError(
+          "In Better-Fullstack, Clerk is not yet supported for Astro fullstack projects. Please use '--frontend next' or '--frontend tanstack-start' with '--backend self', or choose a different auth provider.",
+        );
+      }
+      if (frontends.includes("nuxt")) {
+        exitWithError(
+          "In Better-Fullstack, Clerk is not yet supported for Nuxt fullstack projects. Please use '--frontend next' or '--frontend tanstack-start' with '--backend self', or choose a different auth provider.",
+        );
+      }
+      exitWithError(
+        "In Better-Fullstack, Clerk with the 'self' backend currently requires the Next.js or TanStack Start frontend. Please use '--frontend next' or '--frontend tanstack-start', or choose a different auth provider.",
+      );
+    }
+
+    return;
+  }
+
+  exitWithError(
+    "In Better-Fullstack, Clerk authentication is currently supported with the Convex backend, or with the 'self' backend when using Next.js or TanStack Start. Please choose a supported backend/frontend combination or a different auth provider.",
+  );
 }
 
 export function validateNextAuthCompatibility(

@@ -602,13 +602,32 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   // AUTH CONSTRAINTS
   // ============================================
 
-  if (nextStack.auth === "clerk" && nextStack.backend !== "convex") {
-    nextStack.auth = "none";
-    changed = true;
-    changes.push({
-      category: "auth",
-      message: "Auth set to 'None' (Better-Fullstack currently supports Clerk only with Convex)",
-    });
+  if (nextStack.auth === "clerk") {
+    const supportsClerkBackend =
+      nextStack.backend === "convex" ||
+      nextStack.backend === "self-next" ||
+      nextStack.backend === "self-tanstack-start";
+
+    if (!supportsClerkBackend) {
+      nextStack.auth = "none";
+      changed = true;
+      changes.push({
+        category: "auth",
+        message:
+          "Auth set to 'None' (Better-Fullstack currently supports Clerk with Convex, Next.js fullstack, or TanStack Start fullstack)",
+      });
+    } else if (
+      (nextStack.backend === "self-next" || nextStack.backend === "self-tanstack-start") &&
+      nextStack.nativeFrontend.some((f) => f !== "none")
+    ) {
+      nextStack.auth = "none";
+      changed = true;
+      changes.push({
+        category: "auth",
+        message:
+          "Auth set to 'None' (Better-Fullstack currently supports Clerk with self backend only for web-only Next.js/TanStack Start projects)",
+      });
+    }
   }
 
   // ============================================
@@ -1234,18 +1253,32 @@ export const getDisabledReason = (
   // ============================================
   if (category === "auth") {
     if (optionId === "clerk") {
-      if (currentStack.backend !== "convex") {
-        return "In Better-Fullstack, Clerk is currently supported only with the Convex backend";
-      }
-      const hasClerkCompatibleFrontend =
-        currentStack.webFrontend.some((f) =>
-          ["react-router", "tanstack-router", "tanstack-start", "next"].includes(f),
-        ) ||
-        currentStack.nativeFrontend.some((f) =>
-          ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
-        );
-      if (!hasClerkCompatibleFrontend) {
-        return "Clerk with Convex requires React Router, TanStack Router, TanStack Start, Next.js, or React Native";
+      if (currentStack.backend === "convex") {
+        const hasClerkCompatibleFrontend =
+          currentStack.webFrontend.some((f) =>
+            ["react-router", "tanstack-router", "tanstack-start", "next"].includes(f),
+          ) ||
+          currentStack.nativeFrontend.some((f) =>
+            ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
+          );
+        if (!hasClerkCompatibleFrontend) {
+          return "Clerk with Convex requires React Router, TanStack Router, TanStack Start, Next.js, or React Native";
+        }
+      } else if (
+        currentStack.backend === "self-next" ||
+        currentStack.backend === "self-tanstack-start"
+      ) {
+        if (currentStack.nativeFrontend.some((f) => f !== "none")) {
+          return "In Better-Fullstack, Clerk with self backend is currently supported only for web-only Next.js or TanStack Start projects (no native companion app)";
+        }
+      } else if (currentStack.backend === "self-astro") {
+        return "In Better-Fullstack, Clerk is not yet supported for Astro fullstack projects";
+      } else if (currentStack.backend === "self-nuxt") {
+        return "In Better-Fullstack, Clerk is not yet supported for Nuxt fullstack projects";
+      } else if (currentStack.backend === "none") {
+        return "Clerk requires a backend";
+      } else {
+        return "In Better-Fullstack, Clerk is currently supported with Convex, Next.js fullstack, or TanStack Start fullstack";
       }
     }
   }

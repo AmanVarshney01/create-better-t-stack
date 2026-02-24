@@ -72,8 +72,14 @@ export async function getAuthChoice(
 
   // NextAuth and Stack Auth only work with Next.js frontend and self backend
   const hasNextJs = frontend?.includes("next");
+  const hasTanStackStart = frontend?.includes("tanstack-start");
   const isSelfBackend = backend === "self";
   const supportsNextJsAuth = hasNextJs && isSelfBackend;
+  const hasNativeFrontend = frontend?.some((f) =>
+    ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
+  );
+  const supportsClerkSelf =
+    isSelfBackend && !hasNativeFrontend && Boolean(hasNextJs || hasTanStackStart);
 
   const options = [
     {
@@ -81,12 +87,15 @@ export async function getAuthChoice(
       label: "Better-Auth",
       hint: "comprehensive auth framework for TypeScript",
     },
-    {
+  ];
+
+  if (supportsClerkSelf) {
+    options.push({
       value: "clerk",
       label: "Clerk",
       hint: "More than auth, Complete User Management",
-    },
-  ];
+    });
+  }
 
   if (supportsNextJsAuth) {
     options.push({

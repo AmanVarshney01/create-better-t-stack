@@ -61,11 +61,23 @@ export const env = createEnv({
 {{/if}}
 {{else if (eq backend "self")}}
 {{#if (includes frontend "next")}}
-	client: {},
-	runtimeEnv: {},
+	client: {
+{{#if (eq auth "clerk")}}
+		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+{{/if}}
+	},
+	runtimeEnv: {
+{{#if (eq auth "clerk")}}
+		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+{{/if}}
+	},
 {{else}}
 	clientPrefix: "VITE_",
-	client: {},
+	client: {
+{{#if (and (eq auth "clerk") (includes frontend "tanstack-start"))}}
+		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+{{/if}}
+	},
 	runtimeEnv: (import.meta as any).env,
 {{/if}}
 {{else if (ne backend "none")}}

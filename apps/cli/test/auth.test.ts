@@ -1,4 +1,6 @@
-import { describe, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 import type { Backend, Database, Frontend, ORM } from "../src/types";
 
@@ -247,7 +249,7 @@ describe("Authentication Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Auth.js (NextAuth) is only supported with the 'self' backend");
+      expectError(result, "Auth.js (NextAuth) is currently supported only with the 'self' backend");
     });
 
     it("should fail with nextauth + non-next frontend", async () => {
@@ -268,7 +270,7 @@ describe("Authentication Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Auth.js (NextAuth) requires Next.js frontend");
+      expectError(result, "Auth.js (NextAuth) currently requires the Next.js frontend");
     });
 
     it("should fail with nextauth + tanstack-router frontend", async () => {
@@ -310,7 +312,7 @@ describe("Authentication Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Auth.js (NextAuth) is only supported with the 'self' backend");
+      expectError(result, "Auth.js (NextAuth) is currently supported only with the 'self' backend");
     });
   });
 
@@ -396,7 +398,7 @@ describe("Authentication Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Stack Auth is only supported with the 'self' backend");
+      expectError(result, "Stack Auth is currently supported only with the 'self' backend");
     });
 
     it("should fail with stack-auth + non-next frontend", async () => {
@@ -417,7 +419,7 @@ describe("Authentication Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Stack Auth requires Next.js frontend");
+      expectError(result, "Stack Auth currently requires the Next.js frontend");
     });
 
     it("should fail with stack-auth + tanstack-router frontend", async () => {
@@ -459,7 +461,7 @@ describe("Authentication Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Stack Auth is only supported with the 'self' backend");
+      expectError(result, "Stack Auth is currently supported only with the 'self' backend");
     });
   });
 
@@ -545,7 +547,7 @@ describe("Authentication Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Supabase Auth is only supported with the 'self' backend");
+      expectError(result, "Supabase Auth is currently supported only with the 'self' backend");
     });
 
     it("should fail with supabase-auth + non-next frontend", async () => {
@@ -566,7 +568,7 @@ describe("Authentication Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Supabase Auth requires Next.js frontend");
+      expectError(result, "Supabase Auth currently requires the Next.js frontend");
     });
 
     it("should fail with supabase-auth + tanstack-router frontend", async () => {
@@ -608,7 +610,7 @@ describe("Authentication Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Supabase Auth is only supported with the 'self' backend");
+      expectError(result, "Supabase Auth is currently supported only with the 'self' backend");
     });
   });
 
@@ -694,7 +696,7 @@ describe("Authentication Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Auth0 is only supported with the 'self' backend");
+      expectError(result, "Auth0 is currently supported only with the 'self' backend");
     });
 
     it("should fail with auth0 + non-next frontend", async () => {
@@ -715,7 +717,7 @@ describe("Authentication Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Auth0 requires Next.js frontend");
+      expectError(result, "Auth0 currently requires the Next.js frontend");
     });
 
     it("should fail with auth0 + tanstack-router frontend", async () => {
@@ -757,7 +759,7 @@ describe("Authentication Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Auth0 is only supported with the 'self' backend");
+      expectError(result, "Auth0 is currently supported only with the 'self' backend");
     });
   });
 
@@ -783,9 +785,95 @@ describe("Authentication Configurations", () => {
       expectSuccess(result);
     });
 
-    it("should fail with clerk + non-convex backend", async () => {
+    it("should work with clerk + self backend + next and generate legit templates", async () => {
       const result = await runTRPCTest({
-        projectName: "clerk-non-convex-fail",
+        projectName: "clerk-self-next",
+        auth: "clerk",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["next"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        addons: ["turborepo"],
+        install: false,
+      });
+
+      expectSuccess(result);
+      expect(result.projectDir).toBeDefined();
+
+      const projectDir = result.projectDir!;
+      const middleware = await readFile(join(projectDir, "apps/web/src/middleware.ts"), "utf8");
+      const dashboard = await readFile(join(projectDir, "apps/web/src/app/dashboard/page.tsx"), "utf8");
+      const userMenu = await readFile(
+        join(projectDir, "apps/web/src/components/user-menu.tsx"),
+        "utf8",
+      );
+      const webEnv = await readFile(join(projectDir, "apps/web/.env"), "utf8");
+      const webEnvSchema = await readFile(join(projectDir, "packages/env/src/web.ts"), "utf8");
+      const webPackageJson = await readFile(join(projectDir, "apps/web/package.json"), "utf8");
+
+      expect(middleware).toContain("clerkMiddleware");
+      expect(dashboard).toContain('await auth()');
+      expect(dashboard).toContain('redirect("/")');
+      expect(userMenu).toContain("@clerk/nextjs");
+      expect(webEnv).toContain("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=");
+      expect(webEnv).toContain("CLERK_SECRET_KEY=");
+      expect(webEnvSchema).toContain("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY");
+      expect(webPackageJson).toContain("@clerk/nextjs");
+    });
+
+    it("should work with clerk + self backend + tanstack-start and generate legit templates", async () => {
+      const result = await runTRPCTest({
+        projectName: "clerk-self-tanstack-start",
+        auth: "clerk",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "drizzle",
+        api: "orpc",
+        frontend: ["tanstack-start"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        addons: ["turborepo"],
+        install: false,
+      });
+
+      expectSuccess(result);
+      expect(result.projectDir).toBeDefined();
+
+      const projectDir = result.projectDir!;
+      const startFile = await readFile(join(projectDir, "apps/web/src/start.ts"), "utf8");
+      const dashboard = await readFile(join(projectDir, "apps/web/src/routes/dashboard.tsx"), "utf8");
+      const userMenu = await readFile(
+        join(projectDir, "apps/web/src/components/user-menu.tsx"),
+        "utf8",
+      );
+      const webEnv = await readFile(join(projectDir, "apps/web/.env"), "utf8");
+      const webEnvSchema = await readFile(join(projectDir, "packages/env/src/web.ts"), "utf8");
+      const webPackageJson = await readFile(join(projectDir, "apps/web/package.json"), "utf8");
+
+      expect(startFile).toContain("clerkMiddleware()");
+      expect(dashboard).toContain("@clerk/tanstack-react-start");
+      expect(dashboard).toContain("createServerFn");
+      expect(dashboard).toContain('to: "/"');
+      expect(userMenu).toContain("@clerk/tanstack-react-start");
+      expect(webEnv).toContain("VITE_CLERK_PUBLISHABLE_KEY=");
+      expect(webEnv).toContain("CLERK_SECRET_KEY=");
+      expect(webEnvSchema).toContain("VITE_CLERK_PUBLISHABLE_KEY");
+      expect(webPackageJson).toContain("@clerk/tanstack-react-start");
+      expect(webPackageJson).toContain("\"srvx\"");
+    });
+
+    it("should fail with clerk + unsupported standalone backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "clerk-hono-fail",
         auth: "clerk",
         backend: "hono",
         runtime: "bun",
@@ -801,7 +889,70 @@ describe("Authentication Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Clerk authentication is only supported with the Convex backend");
+      expectError(result, "Clerk authentication is currently supported with the Convex backend");
+    });
+
+    it("should fail with clerk + self backend + astro", async () => {
+      const result = await runTRPCTest({
+        projectName: "clerk-self-astro-fail",
+        auth: "clerk",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "orpc",
+        frontend: ["astro"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        addons: ["turborepo"],
+        expectError: true,
+      });
+
+      expectError(result, "Clerk is not yet supported for Astro fullstack projects");
+    });
+
+    it("should fail with clerk + self backend + nuxt", async () => {
+      const result = await runTRPCTest({
+        projectName: "clerk-self-nuxt-fail",
+        auth: "clerk",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "orpc",
+        frontend: ["nuxt"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        addons: ["turborepo"],
+        expectError: true,
+      });
+
+      expectError(result, "Clerk is not yet supported for Nuxt fullstack projects");
+    });
+
+    it("should fail with clerk + self backend + next + native companion", async () => {
+      const result = await runTRPCTest({
+        projectName: "clerk-self-next-native-fail",
+        auth: "clerk",
+        backend: "self",
+        runtime: "none",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["next", "native-bare"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        addons: ["turborepo"],
+        expectError: true,
+      });
+
+      expectError(result, "supported only for web-only Next.js or TanStack Start projects");
     });
 
     const compatibleFrontends = [
@@ -858,7 +1009,12 @@ describe("Authentication Configurations", () => {
           expectError: true,
         });
 
-        expectError(result, "Clerk authentication is not compatible");
+        expectError(
+          result,
+          frontend === "solid"
+            ? "not compatible with '--backend convex'"
+            : "Clerk + Convex is not compatible",
+        );
       });
     }
   });

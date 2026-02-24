@@ -159,6 +159,23 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
         dependencies: ["better-auth", "@better-auth/expo"],
       });
     }
+  } else if (auth === "clerk") {
+    const hasNextJs = frontend.includes("next");
+    const hasTanStackStart = frontend.includes("tanstack-start");
+
+    if (webExists && hasNextJs) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPath,
+        dependencies: ["@clerk/nextjs"],
+      });
+    } else if (webExists && hasTanStackStart) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPath,
+        dependencies: ["@clerk/tanstack-react-start", "srvx"],
+      });
+    }
   } else if (auth === "nextauth") {
     const { orm } = config;
     const hasNextJs = frontend.includes("next");

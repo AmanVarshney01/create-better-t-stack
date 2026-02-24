@@ -1,0 +1,37 @@
+"use client";
+
+import Link from "next/link";
+import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
+
+export default function UserMenu() {
+  const { isLoaded, user } = useUser();
+
+  if (!isLoaded) {
+    return null;
+  }
+
+  if (!user) {
+    return (
+      <SignInButton>
+        <button
+          type="button"
+          className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground"
+        >
+          Sign In
+        </button>
+      </SignInButton>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <Link
+        href="/dashboard"
+        className="rounded-md border px-3 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground"
+      >
+        Dashboard
+      </Link>
+      <UserButton />
+    </div>
+  );
+}

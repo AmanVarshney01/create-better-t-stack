@@ -6,6 +6,7 @@ import {
   validateAddonsAgainstFrontends,
   validateApiFrontendCompatibility,
   validateAuth0Compatibility,
+  validateClerkCompatibility,
   validateExamplesCompatibility,
   validateNextAuthCompatibility,
   validatePaymentsCompatibility,
@@ -505,25 +506,6 @@ export function validateBackendConstraints(
 ) {
   const { backend } = config;
 
-  if (config.auth === "clerk" && backend !== "convex") {
-    exitWithError(
-      "In Better-Fullstack, Clerk authentication is currently supported only with the Convex backend. Please use '--backend convex' or choose a different auth provider.",
-    );
-  }
-
-  if (backend === "convex" && config.auth === "clerk" && config.frontend) {
-    const incompatibleFrontends = config.frontend.filter((f) =>
-      ["nuxt", "svelte", "solid"].includes(f),
-    );
-    if (incompatibleFrontends.length > 0) {
-      exitWithError(
-        `In Better-Fullstack, Clerk + Convex is not compatible with the following frontends: ${incompatibleFrontends.join(
-          ", ",
-        )}. Please choose a different frontend or auth provider.`,
-      );
-    }
-  }
-
   if (
     providedFlags.has("backend") &&
     backend &&
@@ -627,6 +609,7 @@ export function validateFullConfig(
     config.frontend ?? [],
   );
 
+  validateClerkCompatibility(config.auth, config.backend, config.frontend ?? []);
   validateNextAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
   validateStackAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
   validateSupabaseAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
@@ -655,6 +638,7 @@ export function validateConfigForProgrammaticUse(config: Partial<ProjectConfig>)
 
     validatePaymentsCompatibility(config.payments, config.auth, config.backend, config.frontend);
 
+    validateClerkCompatibility(config.auth, config.backend, config.frontend ?? []);
     validateNextAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
     validateStackAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
     validateSupabaseAuthCompatibility(config.auth, config.backend, config.frontend ?? []);

@@ -61,9 +61,9 @@ First, install the dependencies:
 \`\`\`bash
 ${packageManager} install
 \`\`\`
-${
-  isConvex
-    ? `
+  ${
+    isConvex
+      ? `
 ## Convex Setup
 
 This project uses Convex as a backend. You'll need to set up Convex before running the app:
@@ -85,8 +85,23 @@ ${
 - Set \`CLERK_PUBLISHABLE_KEY\` in \`apps/*/.env\``
     : ""
 }`
-    : generateDatabaseSetup(database, packageManagerRunCmd, orm, dbSetup, backend)
-}
+      : generateDatabaseSetup(database, packageManagerRunCmd, orm, dbSetup, backend)
+  }
+  ${
+    !isConvex &&
+    backend === "self" &&
+    auth === "clerk" &&
+    (frontend.includes("next") || frontend.includes("tanstack-start"))
+      ? `
+## Clerk Authentication Setup
+
+- Create a Clerk application in the [Clerk Dashboard](https://dashboard.clerk.com/)
+- Set Clerk keys in \`apps/web/.env\`:
+  - \`${frontend.includes("next") ? "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" : "VITE_CLERK_PUBLISHABLE_KEY"}\`
+  - \`CLERK_SECRET_KEY\`
+- Clerk middleware and a protected \`/dashboard\` route are already generated`
+      : ""
+  }
 
 Then, run the development server:
 
