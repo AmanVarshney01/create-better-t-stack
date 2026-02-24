@@ -173,6 +173,36 @@ function buildClientVars(
     }
   }
 
+  if (backend === "self" && auth === "clerk") {
+    if (hasNextJs) {
+      vars.push(
+        {
+          key: "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+          value: "",
+          condition: true,
+        },
+        {
+          key: "CLERK_SECRET_KEY",
+          value: "",
+          condition: true,
+        },
+      );
+    } else if (hasTanStackStart) {
+      vars.push(
+        {
+          key: "VITE_CLERK_PUBLISHABLE_KEY",
+          value: "",
+          condition: true,
+        },
+        {
+          key: "CLERK_SECRET_KEY",
+          value: "",
+          condition: true,
+        },
+      );
+    }
+  }
+
   if (backend === "convex" && auth === "better-auth") {
     if (hasNextJs) {
       vars.push({

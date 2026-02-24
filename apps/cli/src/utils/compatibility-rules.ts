@@ -115,7 +115,8 @@ export function validateWorkersCompatibility(
     !WORKERS_COMPATIBLE_BACKENDS.includes(config.backend)
   ) {
     incompatibilityError({
-      message: "Cloudflare Workers runtime requires a compatible backend.",
+      message:
+        "In Better-Fullstack, Cloudflare Workers runtime is currently supported only with compatible backends (Hono, Nitro, or Fets).",
       provided: { runtime: "workers", backend: config.backend },
       suggestions: [
         "Use --backend hono",
@@ -133,7 +134,7 @@ export function validateWorkersCompatibility(
     config.runtime === "workers"
   ) {
     incompatibilityError({
-      message: `Backend '${config.backend}' is not compatible with Workers runtime.`,
+      message: `In Better-Fullstack, backend '${config.backend}' is currently not available with Cloudflare Workers runtime.`,
       provided: { backend: config.backend, runtime: "workers" },
       suggestions: [
         "Use --backend hono, --backend nitro, or --backend fets",
@@ -148,7 +149,8 @@ export function validateWorkersCompatibility(
     config.database === "mongodb"
   ) {
     incompatibilityError({
-      message: "Cloudflare Workers runtime is not compatible with MongoDB.",
+      message:
+        "In Better-Fullstack, Cloudflare Workers runtime is currently not available with MongoDB.",
       provided: { runtime: "workers", database: "mongodb" },
       suggestions: [
         "Use a different database (postgres, sqlite, mysql)",
@@ -163,7 +165,8 @@ export function validateWorkersCompatibility(
     config.dbSetup === "docker"
   ) {
     incompatibilityError({
-      message: "Cloudflare Workers runtime is not compatible with Docker setup.",
+      message:
+        "In Better-Fullstack, Cloudflare Workers runtime is currently not available with Docker database setup.",
       provided: { runtime: "workers", "db-setup": "docker" },
       suggestions: ["Use --db-setup d1 for SQLite", "Choose a different runtime (node, bun)"],
     });
@@ -175,7 +178,8 @@ export function validateWorkersCompatibility(
     config.runtime === "workers"
   ) {
     incompatibilityError({
-      message: "MongoDB is not compatible with Cloudflare Workers runtime.",
+      message:
+        "In Better-Fullstack, MongoDB is currently not available with Cloudflare Workers runtime.",
       provided: { database: "mongodb", runtime: "workers" },
       suggestions: [
         "Use a different database (postgres, sqlite, mysql)",
@@ -302,6 +306,10 @@ export function isFrontendAllowedWithBackend(
     if (incompatibleFrontends.includes(frontend)) return false;
   }
 
+  if (auth === "clerk" && backend === "self") {
+    if (!["next", "tanstack-start"].includes(frontend)) return false;
+  }
+
   // NextAuth only works with Next.js frontend and self backend
   if (auth === "nextauth") {
     if (frontend !== "next") return false;
@@ -317,6 +325,62 @@ export function isFrontendAllowedWithBackend(
   return true;
 }
 
+export function validateClerkCompatibility(
+  auth: Auth | undefined,
+  backend: Backend | undefined,
+  frontends: Frontend[] = [],
+) {
+  if (auth !== "clerk") return;
+
+  if (backend === "convex") {
+    const incompatibleFrontends = frontends.filter((f) => ["nuxt", "svelte", "solid"].includes(f));
+    if (incompatibleFrontends.length > 0) {
+      exitWithError(
+        `In Better-Fullstack, Clerk + Convex is not compatible with the following frontends: ${incompatibleFrontends.join(
+          ", ",
+        )}. Please choose a different frontend or auth provider.`,
+      );
+    }
+    return;
+  }
+
+  if (backend === "self") {
+    const hasNative = frontends.some((f) =>
+      ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
+    );
+    if (hasNative) {
+      exitWithError(
+        "In Better-Fullstack, Clerk with the 'self' backend is currently supported only for web-only Next.js or TanStack Start projects (no native companion app). Please remove the native frontend or choose a different auth provider.",
+      );
+    }
+
+    const hasNextJs = frontends.includes("next");
+    const hasTanStackStart = frontends.includes("tanstack-start");
+
+    if (!hasNextJs && !hasTanStackStart) {
+      if (frontends.includes("astro")) {
+        exitWithError(
+          "In Better-Fullstack, Clerk is not yet supported for Astro fullstack projects. Please use '--frontend next' or '--frontend tanstack-start' with '--backend self', or choose a different auth provider.",
+        );
+      }
+      if (frontends.includes("nuxt")) {
+        exitWithError(
+          "In Better-Fullstack, Clerk is not yet supported for Nuxt fullstack projects. Please use '--frontend next' or '--frontend tanstack-start' with '--backend self', or choose a different auth provider.",
+        );
+      }
+      exitWithError(
+        "In Better-Fullstack, Clerk with the 'self' backend currently requires the Next.js or TanStack Start frontend. Please use '--frontend next' or '--frontend tanstack-start', or choose a different auth provider.",
+      );
+    }
+
+    return;
+  }
+
+  exitWithError(
+    "In Better-Fullstack, Clerk authentication is currently supported with the Convex backend, or with the 'self' backend when using Next.js or TanStack Start. Please choose a supported backend/frontend combination or a different auth provider.",
+  );
+}
+
 export function validateNextAuthCompatibility(
   auth: Auth | undefined,
   backend: Backend | undefined,
@@ -328,13 +392,13 @@ export function validateNextAuthCompatibility(
 
   if (backend !== "self") {
     exitWithError(
-      "Auth.js (NextAuth) is only supported with the 'self' backend (fullstack Next.js). Please use '--backend self' or choose a different auth provider.",
+      "In Better-Fullstack, Auth.js (NextAuth) is currently supported only with the 'self' backend (fullstack Next.js). Please use '--backend self' or choose a different auth provider.",
     );
   }
 
   if (!hasNextJs) {
     exitWithError(
-      "Auth.js (NextAuth) requires Next.js frontend. Please use '--frontend next' or choose a different auth provider.",
+      "In Better-Fullstack, Auth.js (NextAuth) currently requires the Next.js frontend. Please use '--frontend next' or choose a different auth provider.",
     );
   }
 }
@@ -350,13 +414,13 @@ export function validateStackAuthCompatibility(
 
   if (backend !== "self") {
     exitWithError(
-      "Stack Auth is only supported with the 'self' backend (fullstack Next.js). Please use '--backend self' or choose a different auth provider.",
+      "In Better-Fullstack, Stack Auth is currently supported only with the 'self' backend (fullstack Next.js). Please use '--backend self' or choose a different auth provider.",
     );
   }
 
   if (!hasNextJs) {
     exitWithError(
-      "Stack Auth requires Next.js frontend. Please use '--frontend next' or choose a different auth provider.",
+      "In Better-Fullstack, Stack Auth currently requires the Next.js frontend. Please use '--frontend next' or choose a different auth provider.",
     );
   }
 }
@@ -372,13 +436,13 @@ export function validateSupabaseAuthCompatibility(
 
   if (backend !== "self") {
     exitWithError(
-      "Supabase Auth is only supported with the 'self' backend (fullstack Next.js). Please use '--backend self' or choose a different auth provider.",
+      "In Better-Fullstack, Supabase Auth is currently supported only with the 'self' backend (fullstack Next.js). Please use '--backend self' or choose a different auth provider.",
     );
   }
 
   if (!hasNextJs) {
     exitWithError(
-      "Supabase Auth requires Next.js frontend. Please use '--frontend next' or choose a different auth provider.",
+      "In Better-Fullstack, Supabase Auth currently requires the Next.js frontend. Please use '--frontend next' or choose a different auth provider.",
     );
   }
 }
@@ -394,13 +458,13 @@ export function validateAuth0Compatibility(
 
   if (backend !== "self") {
     exitWithError(
-      "Auth0 is only supported with the 'self' backend (fullstack Next.js). Please use '--backend self' or choose a different auth provider.",
+      "In Better-Fullstack, Auth0 is currently supported only with the 'self' backend (fullstack Next.js). Please use '--backend self' or choose a different auth provider.",
     );
   }
 
   if (!hasNextJs) {
     exitWithError(
-      "Auth0 requires Next.js frontend. Please use '--frontend next' or choose a different auth provider.",
+      "In Better-Fullstack, Auth0 currently requires the Next.js frontend. Please use '--frontend next' or choose a different auth provider.",
     );
   }
 }

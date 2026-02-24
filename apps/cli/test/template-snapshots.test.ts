@@ -110,6 +110,28 @@ const SNAPSHOT_CONFIGS: Array<{
       orm: "none",
     },
   },
+  {
+    name: "self-next-clerk",
+    config: {
+      frontend: ["next"],
+      backend: "self",
+      auth: "clerk",
+      api: "trpc",
+      database: "sqlite",
+      orm: "drizzle",
+    },
+  },
+  {
+    name: "self-tanstack-start-clerk",
+    config: {
+      frontend: ["tanstack-start"],
+      backend: "self",
+      auth: "clerk",
+      api: "orpc",
+      database: "sqlite",
+      orm: "drizzle",
+    },
+  },
 
   // === DATABASE/ORM VARIATIONS ===
   {

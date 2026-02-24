@@ -414,6 +414,111 @@ exports[`Template Snapshots File Structure Snapshots file structure: convex-cler
 ]
 `;
 
+exports[`Template Snapshots File Structure Snapshots file structure: self-next-clerk 1`] = `
+[
+  "CLAUDE.md",
+  "README.md",
+  "apps/web/.env",
+  "apps/web/next-env.d.ts",
+  "apps/web/next.config.ts",
+  "apps/web/package.json",
+  "apps/web/postcss.config.mjs",
+  "apps/web/src/app/api/trpc/[trpc]/route.ts",
+  "apps/web/src/app/dashboard/page.tsx",
+  "apps/web/src/app/layout.tsx",
+  "apps/web/src/app/page.tsx",
+  "apps/web/src/components/header.tsx",
+  "apps/web/src/components/loader.tsx",
+  "apps/web/src/components/mode-toggle.tsx",
+  "apps/web/src/components/providers.tsx",
+  "apps/web/src/components/theme-provider.tsx",
+  "apps/web/src/components/ui/button.tsx",
+  "apps/web/src/components/ui/card.tsx",
+  "apps/web/src/components/ui/checkbox.tsx",
+  "apps/web/src/components/ui/dropdown-menu.tsx",
+  "apps/web/src/components/ui/input.tsx",
+  "apps/web/src/components/ui/label.tsx",
+  "apps/web/src/components/ui/skeleton.tsx",
+  "apps/web/src/components/ui/sonner.tsx",
+  "apps/web/src/components/user-menu.tsx",
+  "apps/web/src/index.css",
+  "apps/web/src/lib/utils.ts",
+  "apps/web/src/middleware.ts",
+  "apps/web/src/utils/trpc.ts",
+  "apps/web/tsconfig.json",
+  "package.json",
+  "packages/api/package.json",
+  "packages/api/src/context.ts",
+  "packages/api/src/index.ts",
+  "packages/api/src/routers/index.ts",
+  "packages/api/tsconfig.json",
+  "packages/config/package.json",
+  "packages/config/tsconfig.base.json",
+  "packages/db/drizzle.config.ts",
+  "packages/db/package.json",
+  "packages/db/src/index.ts",
+  "packages/db/src/schema/index.ts",
+  "packages/db/tsconfig.json",
+  "packages/env/package.json",
+  "packages/env/src/native.ts",
+  "packages/env/src/server.ts",
+  "packages/env/src/web.ts",
+  "packages/env/tsconfig.json",
+  "tsconfig.json",
+]
+`;
+
+exports[`Template Snapshots File Structure Snapshots file structure: self-tanstack-start-clerk 1`] = `
+[
+  "CLAUDE.md",
+  "README.md",
+  "apps/web/.env",
+  "apps/web/package.json",
+  "apps/web/public/robots.txt",
+  "apps/web/src/components/header.tsx",
+  "apps/web/src/components/loader.tsx",
+  "apps/web/src/components/ui/button.tsx",
+  "apps/web/src/components/ui/card.tsx",
+  "apps/web/src/components/ui/checkbox.tsx",
+  "apps/web/src/components/ui/dropdown-menu.tsx",
+  "apps/web/src/components/ui/input.tsx",
+  "apps/web/src/components/ui/label.tsx",
+  "apps/web/src/components/ui/skeleton.tsx",
+  "apps/web/src/components/ui/sonner.tsx",
+  "apps/web/src/components/user-menu.tsx",
+  "apps/web/src/index.css",
+  "apps/web/src/lib/utils.ts",
+  "apps/web/src/router.tsx",
+  "apps/web/src/routes/__root.tsx",
+  "apps/web/src/routes/api/rpc/$.ts",
+  "apps/web/src/routes/dashboard.tsx",
+  "apps/web/src/routes/index.tsx",
+  "apps/web/src/start.ts",
+  "apps/web/src/utils/orpc.ts",
+  "apps/web/tsconfig.json",
+  "apps/web/vite.config.ts",
+  "package.json",
+  "packages/api/package.json",
+  "packages/api/src/context.ts",
+  "packages/api/src/index.ts",
+  "packages/api/src/routers/index.ts",
+  "packages/api/tsconfig.json",
+  "packages/config/package.json",
+  "packages/config/tsconfig.base.json",
+  "packages/db/drizzle.config.ts",
+  "packages/db/package.json",
+  "packages/db/src/index.ts",
+  "packages/db/src/schema/index.ts",
+  "packages/db/tsconfig.json",
+  "packages/env/package.json",
+  "packages/env/src/native.ts",
+  "packages/env/src/server.ts",
+  "packages/env/src/web.ts",
+  "packages/env/tsconfig.json",
+  "tsconfig.json",
+]
+`;
+
 exports[`Template Snapshots File Structure Snapshots file structure: mongodb-mongoose 1`] = `
 [
   "CLAUDE.md",
@@ -6129,6 +6234,1257 @@ export default defineSchema({});
       "content": 
 "{
   "extends": "@snapshot-convex-clerk/config/tsconfig.base.json",
+}
+"
+,
+      "path": "tsconfig.json",
+    },
+  ],
+}
+`;
+
+exports[`Template Snapshots Key File Content Snapshots key files: self-next-clerk 1`] = `
+{
+  "fileCount": 54,
+  "files": [
+    {
+      "content": "[exists]",
+      "path": "apps/web/.env",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/next-env.d.ts",
+    },
+    {
+      "content": 
+"import "@snapshot-self-next-clerk/env/web";
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+	typedRoutes: true,
+	reactCompiler: true,
+};
+
+export default nextConfig;
+
+"
+,
+      "path": "apps/web/next.config.ts",
+    },
+    {
+      "content": 
+"{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3001",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.546.0",
+    "next-themes": "^0.4.6",
+    "sonner": "^2.0.5",
+    "tailwind-merge": "^3.3.1",
+    "tw-animate-css": "^1.3.4",
+    "next": "catalog:",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "babel-plugin-react-compiler": "^1.0.0",
+    "dotenv": "catalog:",
+    "zod": "catalog:",
+    "@snapshot-self-next-clerk/env": "workspace:*",
+    "@snapshot-self-next-clerk/api": "workspace:*",
+    "@libsql/client": "catalog:",
+    "libsql": "catalog:",
+    "@trpc/server": "catalog:",
+    "@trpc/client": "catalog:",
+    "@trpc/tanstack-react-query": "^11.10.0",
+    "@tanstack/react-query": "^5.90.21",
+    "@clerk/nextjs": "^6.37.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.10",
+    "tailwindcss": "^4.1.10",
+    "@types/node": "^20",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "catalog:",
+    "@snapshot-self-next-clerk/config": "workspace:*",
+    "@tanstack/react-query-devtools": "^5.91.3"
+  }
+}"
+,
+      "path": "apps/web/package.json",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/postcss.config.mjs",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/app/api/trpc/[trpc]/route.ts",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/app/dashboard/page.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/app/layout.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/app/page.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/header.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/loader.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/mode-toggle.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/providers.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/theme-provider.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/ui/button.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/ui/card.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/ui/checkbox.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/ui/dropdown-menu.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/ui/input.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/ui/label.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/ui/skeleton.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/ui/sonner.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/user-menu.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/index.css",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/lib/utils.ts",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/middleware.ts",
+    },
+    {
+      "content": 
+"import { QueryCache, QueryClient } from '@tanstack/react-query';
+import { createTRPCClient, httpBatchLink } from '@trpc/client';
+import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
+import type { AppRouter } from "@snapshot-self-next-clerk/api/routers/index";
+import { toast } from 'sonner';
+
+export const queryClient = new QueryClient({
+	queryCache: new QueryCache({
+		onError: (error, query) => {
+			toast.error(error.message, {
+				action: {
+					label: "retry",
+					onClick: query.invalidate,
+				},
+			});
+		},
+	}),
+});
+
+const trpcClient = createTRPCClient<AppRouter>({
+	links: [
+		httpBatchLink({
+			url: "/api/trpc",
+		}),
+	],
+})
+
+export const trpc = createTRPCOptionsProxy<AppRouter>({
+	client: trpcClient,
+	queryClient,
+});
+
+"
+,
+      "path": "apps/web/src/utils/trpc.ts",
+    },
+    {
+      "content": 
+"{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "./next-env.d.ts",
+    "./**/*.ts",
+    "./**/*.tsx",
+    "./.next/types/**/*.ts"
+  ],
+  "exclude": [
+    "./node_modules"
+  ]
+}
+"
+,
+      "path": "apps/web/tsconfig.json",
+    },
+    {
+      "content": "[exists]",
+      "path": "CLAUDE.md",
+    },
+    {
+      "content": 
+"{
+  "name": "snapshot-self-next-clerk",
+  "private": true,
+  "type": "module",
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ],
+    "catalog": {
+      "dotenv": "^17.2.2",
+      "zod": "^4.1.13",
+      "typescript": "^5",
+      "@types/bun": "^1.3.9",
+      "next": "^16.1.1",
+      "@libsql/client": "^0.17.0",
+      "libsql": "0.5.22",
+      "@trpc/server": "^11.10.0",
+      "@trpc/client": "^11.10.0"
+    }
+  },
+  "scripts": {
+    "dev": "bun run --filter '*' dev",
+    "build": "bun run --filter '*' build",
+    "check-types": "bun run --filter '*' check-types",
+    "dev:native": "bun run --filter native dev",
+    "dev:web": "bun run --filter web dev",
+    "db:push": "bun run --filter @snapshot-self-next-clerk/db db:push",
+    "db:studio": "bun run --filter @snapshot-self-next-clerk/db db:studio",
+    "db:generate": "bun run --filter @snapshot-self-next-clerk/db db:generate",
+    "db:migrate": "bun run --filter @snapshot-self-next-clerk/db db:migrate",
+    "db:local": "bun run --filter @snapshot-self-next-clerk/db db:local"
+  },
+  "packageManager": "bun@latest",
+  "dependencies": {
+    "dotenv": "catalog:",
+    "zod": "catalog:",
+    "@snapshot-self-next-clerk/env": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@types/bun": "catalog:",
+    "@snapshot-self-next-clerk/config": "workspace:*"
+  }
+}"
+,
+      "path": "package.json",
+    },
+    {
+      "content": 
+"{
+  "name": "@snapshot-self-next-clerk/api",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "type": "module",
+  "scripts": {},
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@snapshot-self-next-clerk/config": "workspace:*"
+  },
+  "dependencies": {
+    "dotenv": "catalog:",
+    "zod": "catalog:",
+    "@snapshot-self-next-clerk/env": "workspace:*",
+    "@snapshot-self-next-clerk/db": "workspace:*",
+    "@trpc/server": "catalog:",
+    "@trpc/client": "catalog:",
+    "next": "catalog:"
+  }
+}"
+,
+      "path": "packages/api/package.json",
+    },
+    {
+      "content": "[exists]",
+      "path": "packages/api/src/context.ts",
+    },
+    {
+      "content": 
+"import { initTRPC } from "@trpc/server";
+import type { Context } from "./context";
+
+export const t = initTRPC.context<Context>().create();
+
+export const router = t.router;
+
+export const publicProcedure = t.procedure;
+
+"
+,
+      "path": "packages/api/src/index.ts",
+    },
+    {
+      "content": 
+"import {
+  publicProcedure,
+  router,
+} from "../index";
+
+export const appRouter = router({
+  healthCheck: publicProcedure.query(() => {
+    return "OK";
+  }),
+});
+export type AppRouter = typeof appRouter;
+"
+,
+      "path": "packages/api/src/routers/index.ts",
+    },
+    {
+      "content": 
+"{
+  "extends": "@snapshot-self-next-clerk/config/tsconfig.base.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "composite": true
+  }
+}"
+,
+      "path": "packages/api/tsconfig.json",
+    },
+    {
+      "content": 
+"{
+  "name": "@snapshot-self-next-clerk/config",
+  "version": "0.0.0",
+  "private": true
+}"
+,
+      "path": "packages/config/package.json",
+    },
+    {
+      "content": 
+"{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ESNext"],
+    "verbatimModuleSyntax": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "types": [
+        "bun"
+
+    ]
+  }
+}"
+,
+      "path": "packages/config/tsconfig.base.json",
+    },
+    {
+      "content": 
+"import { defineConfig } from "drizzle-kit";
+import dotenv from "dotenv";
+
+dotenv.config({
+    path: "../../apps/web/.env",
+});
+
+export default defineConfig({
+  schema: "./src/schema",
+  out: "./src/migrations",
+  dialect: "turso",
+  dbCredentials: {
+    url: process.env.DATABASE_URL || "",
+  },
+});
+"
+,
+      "path": "packages/db/drizzle.config.ts",
+    },
+    {
+      "content": 
+"{
+  "name": "@snapshot-self-next-clerk/db",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "db:local": "turso dev --db-file local.db",
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:studio": "drizzle-kit studio",
+    "db:migrate": "drizzle-kit migrate"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@snapshot-self-next-clerk/config": "workspace:*",
+    "drizzle-kit": "^0.31.9"
+  },
+  "dependencies": {
+    "dotenv": "catalog:",
+    "zod": "catalog:",
+    "@snapshot-self-next-clerk/env": "workspace:*",
+    "drizzle-orm": "^0.45.1",
+    "@libsql/client": "catalog:",
+    "libsql": "catalog:"
+  }
+}"
+,
+      "path": "packages/db/package.json",
+    },
+    {
+      "content": 
+"import { env } from "@snapshot-self-next-clerk/env/server";
+import * as schema from "./schema/index.js";
+import { drizzle } from "drizzle-orm/libsql";
+import { createClient } from "@libsql/client";
+
+const client = createClient({
+	url: env.DATABASE_URL,
+});
+
+export const db = drizzle({ client, schema });
+
+"
+,
+      "path": "packages/db/src/index.ts",
+    },
+    {
+      "content": "export {};",
+      "path": "packages/db/src/schema/index.ts",
+    },
+    {
+      "content": 
+"{
+  "extends": "@snapshot-self-next-clerk/config/tsconfig.base.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "composite": true
+  }
+}"
+,
+      "path": "packages/db/tsconfig.json",
+    },
+    {
+      "content": 
+"{
+  "name": "@snapshot-self-next-clerk/env",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./server": "./src/server.ts",
+    "./web": "./src/web.ts"
+  },
+  "dependencies": {
+    "dotenv": "catalog:",
+    "zod": "catalog:",
+    "@t3-oss/env-nextjs": "^0.13.10",
+    "@t3-oss/env-core": "^0.13.10"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@types/bun": "catalog:",
+    "@snapshot-self-next-clerk/config": "workspace:*"
+  }
+}"
+,
+      "path": "packages/env/package.json",
+    },
+    {
+      "content": "[exists]",
+      "path": "packages/env/src/native.ts",
+    },
+    {
+      "content": "[exists]",
+      "path": "packages/env/src/server.ts",
+    },
+    {
+      "content": "[exists]",
+      "path": "packages/env/src/web.ts",
+    },
+    {
+      "content": 
+"{
+  "extends": "@snapshot-self-next-clerk/config/tsconfig.base.json",
+}
+"
+,
+      "path": "packages/env/tsconfig.json",
+    },
+    {
+      "content": "[exists]",
+      "path": "README.md",
+    },
+    {
+      "content": 
+"{
+  "extends": "@snapshot-self-next-clerk/config/tsconfig.base.json",
+}
+"
+,
+      "path": "tsconfig.json",
+    },
+  ],
+}
+`;
+
+exports[`Template Snapshots Key File Content Snapshots key files: self-tanstack-start-clerk 1`] = `
+{
+  "fileCount": 50,
+  "files": [
+    {
+      "content": "[exists]",
+      "path": "apps/web/.env",
+    },
+    {
+      "content": 
+"{
+  "name": "web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "serve": "vite preview",
+    "dev": "vite dev"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.525.0",
+    "next-themes": "^0.4.6",
+    "sonner": "^2.0.3",
+    "tailwind-merge": "^3.3.1",
+    "@tailwindcss/vite": "^4.1.8",
+    "tailwindcss": "^4.1.3",
+    "tw-animate-css": "^1.2.5",
+    "@tanstack/react-query": "^5.80.6",
+    "@tanstack/react-router": "^1.154.3",
+    "@tanstack/react-router-with-query": "^1.130.17",
+    "@tanstack/react-start": "^1.154.3",
+    "@tanstack/router-plugin": "^1.154.3",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "vite-tsconfig-paths": "^5.1.4",
+    "dotenv": "catalog:",
+    "zod": "catalog:",
+    "@snapshot-self-tanstack-start-clerk/env": "workspace:*",
+    "@snapshot-self-tanstack-start-clerk/api": "workspace:*",
+    "@libsql/client": "catalog:",
+    "libsql": "catalog:",
+    "@orpc/server": "catalog:",
+    "@orpc/client": "catalog:",
+    "@orpc/openapi": "catalog:",
+    "@orpc/zod": "catalog:",
+    "@orpc/tanstack-query": "^1.13.5",
+    "@clerk/tanstack-react-start": "^0.29.2",
+    "srvx": "0.8.15"
+  },
+  "devDependencies": {
+    "@tanstack/react-router-devtools": "^1.154.3",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^16.2.0",
+    "@types/react": "19.2.7",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "^5.0.4",
+    "jsdom": "^26.0.0",
+    "vite": "^7.0.2",
+    "web-vitals": "^5.0.3",
+    "typescript": "catalog:",
+    "@snapshot-self-tanstack-start-clerk/config": "workspace:*",
+    "@tanstack/react-query-devtools": "^5.91.3"
+  }
+}"
+,
+      "path": "apps/web/package.json",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/public/robots.txt",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/header.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/loader.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/ui/button.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/ui/card.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/ui/checkbox.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/ui/dropdown-menu.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/ui/input.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/ui/label.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/ui/skeleton.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/ui/sonner.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/components/user-menu.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/index.css",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/lib/utils.ts",
+    },
+    {
+      "content": 
+"import { createRouter as createTanStackRouter } from "@tanstack/react-router";
+import Loader from "./components/loader";
+import "./index.css";
+import { routeTree } from "./routeTree.gen";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { orpc, queryClient } from "./utils/orpc";
+
+
+export const getRouter = () => {
+	const router = createTanStackRouter({
+		routeTree,
+		scrollRestoration: true,
+		defaultPreloadStaleTime: 0,
+		context: { orpc, queryClient },
+		defaultPendingComponent: () => <Loader />,
+		defaultNotFoundComponent: () => <div>Not Found</div>,
+		Wrap: ({ children }) => (
+			<QueryClientProvider client={queryClient}>
+				{children}
+			</QueryClientProvider>
+		),
+	});
+	return router;
+};
+
+declare module "@tanstack/react-router" {
+	interface Register {
+		router: ReturnType<typeof getRouter>;
+	}
+}
+"
+,
+      "path": "apps/web/src/router.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/routes/__root.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/routes/api/rpc/$.ts",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/routes/dashboard.tsx",
+    },
+    {
+      "content": 
+"import { createFileRoute } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { orpc } from "@/utils/orpc";
+
+export const Route = createFileRoute("/")({
+  component: HomeComponent,
+});
+
+const TITLE_TEXT = \`
+ ██████╗ ███████╗████████╗████████╗███████╗██████╗
+ ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗
+ ██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝
+ ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗
+ ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║
+ ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝
+
+ ████████╗    ███████╗████████╗ █████╗  ██████╗██╗  ██╗
+ ╚══██╔══╝    ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
+    ██║       ███████╗   ██║   ███████║██║     █████╔╝
+    ██║       ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
+    ██║       ███████║   ██║   ██║  ██║╚██████╗██║  ██╗
+    ╚═╝       ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
+ \`;
+
+function HomeComponent() {
+  const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+  
+  return (
+    <div className="container mx-auto max-w-3xl px-4 py-2">
+      <pre className="overflow-x-auto font-mono text-sm">{TITLE_TEXT}</pre>
+      <div className="grid gap-6">
+        <section className="rounded-lg border p-4">
+          <h2 className="mb-2 font-medium">API Status</h2>
+            <div className="flex items-center gap-2">
+              <div
+                className={\`h-2 w-2 rounded-full \${healthCheck.data ? "bg-green-500" : "bg-red-500"}\`}
+              />
+              <span className="text-muted-foreground text-sm">
+                {healthCheck.isLoading
+                  ? "Checking..."
+                  : healthCheck.data
+                    ? "Connected"
+                    : "Disconnected"}
+              </span>
+            </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+"
+,
+      "path": "apps/web/src/routes/index.tsx",
+    },
+    {
+      "content": "[exists]",
+      "path": "apps/web/src/start.ts",
+    },
+    {
+      "content": 
+"import { createORPCClient } from "@orpc/client";
+import { RPCLink } from "@orpc/client/fetch";
+import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+import { QueryCache, QueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { createRouterClient } from "@orpc/server";
+import type { RouterClient } from "@orpc/server";
+import { createIsomorphicFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
+import { appRouter } from "@snapshot-self-tanstack-start-clerk/api/routers/index";
+import { createContext } from "@snapshot-self-tanstack-start-clerk/api/context";
+
+export const queryClient = new QueryClient({
+	queryCache: new QueryCache({
+		onError: (error, query) => {
+			toast.error(\`Error: \${error.message}\`, {
+				action: {
+					label: "retry",
+					onClick: query.invalidate,
+				},
+			});
+		},
+	}),
+});
+
+const getORPCClient = createIsomorphicFn()
+	.server(() =>
+		createRouterClient(appRouter, {
+			context: async () => {
+				return createContext({ req: getRequest() });
+			},
+		}),
+	)
+	.client((): RouterClient<typeof appRouter> => {
+			const link = new RPCLink({
+			url: \`\${window.location.origin}/api/rpc\`,
+		});
+
+		return createORPCClient(link);
+	});
+
+export const client: RouterClient<typeof appRouter> = getORPCClient();
+
+export const orpc = createTanstackQueryUtils(client)
+"
+,
+      "path": "apps/web/src/utils/orpc.ts",
+    },
+    {
+      "content": 
+"{
+  "include": ["**/*.ts", "**/*.tsx"],
+  "compilerOptions": {
+    "target": "ES2022",
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client"],
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "noEmit": true,
+
+    /* Linting */
+    "skipLibCheck": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+"
+,
+      "path": "apps/web/tsconfig.json",
+    },
+    {
+      "content": 
+"import { defineConfig } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import tailwindcss from "@tailwindcss/vite";
+import viteReact from "@vitejs/plugin-react";
+
+export default defineConfig({
+  plugins: [
+    tsconfigPaths(),
+    tailwindcss(),
+    tanstackStart(),
+    viteReact(),
+  ],
+  server: {
+    port: 3001,
+  },
+});"
+,
+      "path": "apps/web/vite.config.ts",
+    },
+    {
+      "content": "[exists]",
+      "path": "CLAUDE.md",
+    },
+    {
+      "content": 
+"{
+  "name": "snapshot-self-tanstack-start-clerk",
+  "private": true,
+  "type": "module",
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ],
+    "catalog": {
+      "dotenv": "^17.2.2",
+      "zod": "^4.1.13",
+      "typescript": "^5",
+      "@types/bun": "^1.3.9",
+      "@libsql/client": "^0.17.0",
+      "libsql": "0.5.22",
+      "@orpc/server": "^1.13.5",
+      "@orpc/client": "^1.13.5",
+      "@orpc/openapi": "^1.13.5",
+      "@orpc/zod": "^1.13.5"
+    }
+  },
+  "scripts": {
+    "dev": "bun run --filter '*' dev",
+    "build": "bun run --filter '*' build",
+    "check-types": "bun run --filter '*' check-types",
+    "dev:native": "bun run --filter native dev",
+    "dev:web": "bun run --filter web dev",
+    "db:push": "bun run --filter @snapshot-self-tanstack-start-clerk/db db:push",
+    "db:studio": "bun run --filter @snapshot-self-tanstack-start-clerk/db db:studio",
+    "db:generate": "bun run --filter @snapshot-self-tanstack-start-clerk/db db:generate",
+    "db:migrate": "bun run --filter @snapshot-self-tanstack-start-clerk/db db:migrate",
+    "db:local": "bun run --filter @snapshot-self-tanstack-start-clerk/db db:local"
+  },
+  "packageManager": "bun@latest",
+  "dependencies": {
+    "dotenv": "catalog:",
+    "zod": "catalog:",
+    "@snapshot-self-tanstack-start-clerk/env": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@types/bun": "catalog:",
+    "@snapshot-self-tanstack-start-clerk/config": "workspace:*"
+  }
+}"
+,
+      "path": "package.json",
+    },
+    {
+      "content": 
+"{
+  "name": "@snapshot-self-tanstack-start-clerk/api",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "type": "module",
+  "scripts": {},
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@snapshot-self-tanstack-start-clerk/config": "workspace:*"
+  },
+  "dependencies": {
+    "dotenv": "catalog:",
+    "zod": "catalog:",
+    "@snapshot-self-tanstack-start-clerk/env": "workspace:*",
+    "@snapshot-self-tanstack-start-clerk/db": "workspace:*",
+    "@orpc/server": "catalog:",
+    "@orpc/client": "catalog:",
+    "@orpc/openapi": "catalog:",
+    "@orpc/zod": "catalog:"
+  }
+}"
+,
+      "path": "packages/api/package.json",
+    },
+    {
+      "content": "[exists]",
+      "path": "packages/api/src/context.ts",
+    },
+    {
+      "content": 
+"import { os } from "@orpc/server";
+import type { Context } from "./context";
+
+export const o = os.$context<Context>();
+
+export const publicProcedure = o;
+
+"
+,
+      "path": "packages/api/src/index.ts",
+    },
+    {
+      "content": 
+"import { publicProcedure } from "../index";
+import type { RouterClient } from "@orpc/server";
+
+export const appRouter = {
+  healthCheck: publicProcedure.handler(() => {
+    return "OK";
+  }),
+};
+export type AppRouter = typeof appRouter;
+export type AppRouterClient = RouterClient<typeof appRouter>;
+"
+,
+      "path": "packages/api/src/routers/index.ts",
+    },
+    {
+      "content": 
+"{
+  "extends": "@snapshot-self-tanstack-start-clerk/config/tsconfig.base.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "composite": true
+  }
+}"
+,
+      "path": "packages/api/tsconfig.json",
+    },
+    {
+      "content": 
+"{
+  "name": "@snapshot-self-tanstack-start-clerk/config",
+  "version": "0.0.0",
+  "private": true
+}"
+,
+      "path": "packages/config/package.json",
+    },
+    {
+      "content": 
+"{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ESNext"],
+    "verbatimModuleSyntax": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "types": [
+        "bun"
+
+    ]
+  }
+}"
+,
+      "path": "packages/config/tsconfig.base.json",
+    },
+    {
+      "content": 
+"import { defineConfig } from "drizzle-kit";
+import dotenv from "dotenv";
+
+dotenv.config({
+    path: "../../apps/web/.env",
+});
+
+export default defineConfig({
+  schema: "./src/schema",
+  out: "./src/migrations",
+  dialect: "turso",
+  dbCredentials: {
+    url: process.env.DATABASE_URL || "",
+  },
+});
+"
+,
+      "path": "packages/db/drizzle.config.ts",
+    },
+    {
+      "content": 
+"{
+  "name": "@snapshot-self-tanstack-start-clerk/db",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "db:local": "turso dev --db-file local.db",
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:studio": "drizzle-kit studio",
+    "db:migrate": "drizzle-kit migrate"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@snapshot-self-tanstack-start-clerk/config": "workspace:*",
+    "drizzle-kit": "^0.31.9"
+  },
+  "dependencies": {
+    "dotenv": "catalog:",
+    "zod": "catalog:",
+    "@snapshot-self-tanstack-start-clerk/env": "workspace:*",
+    "drizzle-orm": "^0.45.1",
+    "@libsql/client": "catalog:",
+    "libsql": "catalog:"
+  }
+}"
+,
+      "path": "packages/db/package.json",
+    },
+    {
+      "content": 
+"import { env } from "@snapshot-self-tanstack-start-clerk/env/server";
+import * as schema from "./schema/index.js";
+import { drizzle } from "drizzle-orm/libsql";
+import { createClient } from "@libsql/client";
+
+const client = createClient({
+	url: env.DATABASE_URL,
+});
+
+export const db = drizzle({ client, schema });
+
+"
+,
+      "path": "packages/db/src/index.ts",
+    },
+    {
+      "content": "export {};",
+      "path": "packages/db/src/schema/index.ts",
+    },
+    {
+      "content": 
+"{
+  "extends": "@snapshot-self-tanstack-start-clerk/config/tsconfig.base.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "composite": true
+  }
+}"
+,
+      "path": "packages/db/tsconfig.json",
+    },
+    {
+      "content": 
+"{
+  "name": "@snapshot-self-tanstack-start-clerk/env",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./server": "./src/server.ts",
+    "./web": "./src/web.ts"
+  },
+  "dependencies": {
+    "dotenv": "catalog:",
+    "zod": "catalog:",
+    "@t3-oss/env-core": "^0.13.10"
+  },
+  "devDependencies": {
+    "typescript": "catalog:",
+    "@types/bun": "catalog:",
+    "@snapshot-self-tanstack-start-clerk/config": "workspace:*"
+  }
+}"
+,
+      "path": "packages/env/package.json",
+    },
+    {
+      "content": "[exists]",
+      "path": "packages/env/src/native.ts",
+    },
+    {
+      "content": "[exists]",
+      "path": "packages/env/src/server.ts",
+    },
+    {
+      "content": "[exists]",
+      "path": "packages/env/src/web.ts",
+    },
+    {
+      "content": 
+"{
+  "extends": "@snapshot-self-tanstack-start-clerk/config/tsconfig.base.json",
+}
+"
+,
+      "path": "packages/env/tsconfig.json",
+    },
+    {
+      "content": "[exists]",
+      "path": "README.md",
+    },
+    {
+      "content": 
+"{
+  "extends": "@snapshot-self-tanstack-start-clerk/config/tsconfig.base.json",
 }
 "
 ,

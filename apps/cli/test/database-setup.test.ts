@@ -407,7 +407,7 @@ describe("Database Setup Configurations", () => {
         expectError: true,
       });
 
-      expectError(result, "Docker setup is not compatible with SQLite database");
+      expectError(result, "Docker setup is currently not available with SQLite database");
     });
   });
 

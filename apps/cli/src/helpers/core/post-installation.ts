@@ -95,7 +95,8 @@ export async function displayPostInstallInstructions(
   const starlightInstructions = addons?.includes("starlight")
     ? getStarlightInstructions(runCmd)
     : "";
-  const clerkInstructions = isConvex && config.auth === "clerk" ? getClerkInstructions() : "";
+  const clerkInstructions =
+    config.auth === "clerk" ? getClerkInstructions(config.backend, config.frontend ?? []) : "";
   const polarInstructions =
     config.payments === "polar" && config.auth === "better-auth"
       ? getPolarInstructions(backend)
@@ -404,8 +405,19 @@ function getBunWebNativeWarning() {
   )} 'bun' might cause issues with web + native apps in a monorepo.\n   Use 'pnpm' if problems arise.`;
 }
 
-function getClerkInstructions() {
-  return `${pc.bold("Clerk Authentication Setup:")}\n${pc.cyan("•")} Follow the guide: ${pc.underline("https://docs.convex.dev/auth/clerk")}\n${pc.cyan("•")} Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard\n${pc.cyan("•")} Set CLERK_PUBLISHABLE_KEY in apps/*/.env`;
+function getClerkInstructions(backend: Backend, frontend: Frontend[]) {
+  if (backend === "convex") {
+    return `${pc.bold("Clerk Authentication Setup:")}\n${pc.cyan("•")} Follow the guide: ${pc.underline("https://docs.convex.dev/auth/clerk")}\n${pc.cyan("•")} Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard\n${pc.cyan("•")} Set CLERK_PUBLISHABLE_KEY in apps/*/.env`;
+  }
+
+  if (backend === "self" && (frontend.includes("next") || frontend.includes("tanstack-start"))) {
+    const publishableKeyVar = frontend.includes("next")
+      ? "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
+      : "VITE_CLERK_PUBLISHABLE_KEY";
+    return `${pc.bold("Clerk Authentication Setup:")}\n${pc.cyan("•")} Create an application in ${pc.underline("https://dashboard.clerk.com/")}\n${pc.cyan("•")} Set ${publishableKeyVar} in ${pc.white("apps/web/.env")}\n${pc.cyan("•")} Set CLERK_SECRET_KEY in ${pc.white("apps/web/.env")}\n${pc.cyan("•")} Clerk middleware and a protected dashboard route are already generated`;
+  }
+
+  return "";
 }
 
 function getBetterAuthConvexInstructions(hasWeb: boolean, webPort: string, packageManager: string) {

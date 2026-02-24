@@ -94,17 +94,20 @@ describe("Backend and Runtime Combinations", () => {
       {
         backend: "express" as const,
         runtime: "workers" as const,
-        error: "Cloudflare Workers runtime requires a compatible backend",
+        error:
+          "Cloudflare Workers runtime is currently supported only with compatible backends",
       },
       {
         backend: "fastify",
         runtime: "workers",
-        error: "Cloudflare Workers runtime requires a compatible backend",
+        error:
+          "Cloudflare Workers runtime is currently supported only with compatible backends",
       },
       {
         backend: "elysia",
         runtime: "workers",
-        error: "Cloudflare Workers runtime requires a compatible backend",
+        error:
+          "Cloudflare Workers runtime is currently supported only with compatible backends",
       },
 
       // Convex backend requires runtime none
@@ -338,7 +341,8 @@ describe("Backend and Runtime Combinations", () => {
         expectError: true,
       });
 
-      expectError(result, "Cloudflare Workers runtime is not compatible with MongoDB");
+      expectError(result, "Cloudflare Workers runtime");
+      expectError(result, "MongoDB");
     });
 
     it("should fail workers without server deployment", async () => {

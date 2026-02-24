@@ -38,6 +38,8 @@ const fetchClerkAuth = createServerFn({ method: "GET" }).handler(async () => {
   const token = await clerkAuth.getToken({ template: "convex" });
   return { userId: clerkAuth.userId, token };
 });
+{{else if (and (eq backend "self") (eq auth "clerk"))}}
+import { ClerkProvider } from "@clerk/tanstack-react-start";
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
 import { createServerFn } from "@tanstack/react-start";
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
@@ -196,6 +198,9 @@ function RootDocument() {
   );
   {{else}}
   return (
+    {{#if (and (eq backend "self") (eq auth "clerk"))}}
+    <ClerkProvider>
+    {{/if}}
     <html lang="en" className="dark">
       <head>
         <HeadContent />
@@ -215,6 +220,9 @@ function RootDocument() {
         <Scripts />
       </body>
     </html>
+    {{#if (and (eq backend "self") (eq auth "clerk"))}}
+    </ClerkProvider>
+    {{/if}}
   );
   {{/if}}
 }

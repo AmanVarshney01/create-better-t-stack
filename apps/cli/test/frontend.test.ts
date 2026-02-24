@@ -683,7 +683,12 @@ describe("Frontend Configurations", () => {
           expectError: true,
         });
 
-        expectError(result, "Clerk authentication is not compatible");
+        expectError(
+          result,
+          frontend === "solid"
+            ? "not compatible with '--backend convex'"
+            : "Clerk + Convex is not compatible",
+        );
       });
     }
 

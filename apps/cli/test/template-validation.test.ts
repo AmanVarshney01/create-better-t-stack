@@ -244,15 +244,29 @@ const ORM_CONFIGS: TSConfig[] = ORMS.filter(
 /**
  * All auth providers
  */
-const AUTH_CONFIGS: TSConfig[] = AUTHS.map((auth) => ({
-  name: `auth-${auth}`,
-  frontend: ["tanstack-router"] as Frontend[],
-  backend: auth === "clerk" ? "convex" : "hono",
-  auth: auth as Auth,
-  api: auth === "clerk" ? "none" : "trpc",
-  database: auth === "clerk" || auth === "none" ? "none" : "sqlite",
-  orm: auth === "clerk" || auth === "none" ? "none" : "drizzle",
-}));
+const AUTH_CONFIGS: TSConfig[] = AUTHS.map((auth) => {
+  if (auth === "clerk") {
+    return {
+      name: "auth-clerk-self-next",
+      frontend: ["next"] as Frontend[],
+      backend: "self" as Backend,
+      auth: "clerk" as Auth,
+      api: "trpc" as API,
+      database: "sqlite" as Database,
+      orm: "drizzle" as ORM,
+    };
+  }
+
+  return {
+    name: `auth-${auth}`,
+    frontend: ["tanstack-router"] as Frontend[],
+    backend: "hono",
+    auth: auth as Auth,
+    api: "trpc",
+    database: auth === "none" ? "none" : "sqlite",
+    orm: auth === "none" ? "none" : "drizzle",
+  };
+});
 
 /**
  * All API types
@@ -328,6 +342,26 @@ const SPECIAL_CONFIGS: TSConfig[] = [
     api: "none",
     database: "none",
     orm: "none",
+  },
+  // Self backend Clerk (Next.js)
+  {
+    name: "self-next-clerk",
+    frontend: ["next"],
+    backend: "self",
+    auth: "clerk",
+    api: "trpc",
+    database: "sqlite",
+    orm: "drizzle",
+  },
+  // Self backend Clerk (TanStack Start)
+  {
+    name: "self-tanstack-start-clerk",
+    frontend: ["tanstack-start"],
+    backend: "self",
+    auth: "clerk",
+    api: "orpc",
+    database: "sqlite",
+    orm: "drizzle",
   },
   // Next.js with NextAuth
   {

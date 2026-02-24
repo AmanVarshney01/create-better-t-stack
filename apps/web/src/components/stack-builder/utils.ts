@@ -340,7 +340,8 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     changed = true;
     changes.push({
       category: "runtime",
-      message: "Database changed to SQLite with D1 (MongoDB incompatible with Workers)",
+      message:
+        "Database changed to SQLite with D1 (Better-Fullstack doesn't support MongoDB with Workers)",
     });
   }
 
@@ -535,7 +536,8 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
         changed = true;
         changes.push({
           category: "dbSetup",
-          message: "DB Setup set to 'D1' (Docker incompatible with Workers)",
+          message:
+            "DB Setup set to 'D1' (Better-Fullstack doesn't support Docker setup with Workers)",
         });
       }
     }
@@ -600,13 +602,32 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   // AUTH CONSTRAINTS
   // ============================================
 
-  if (nextStack.auth === "clerk" && nextStack.backend !== "convex") {
-    nextStack.auth = "none";
-    changed = true;
-    changes.push({
-      category: "auth",
-      message: "Auth set to 'None' (Clerk only works with Convex)",
-    });
+  if (nextStack.auth === "clerk") {
+    const supportsClerkBackend =
+      nextStack.backend === "convex" ||
+      nextStack.backend === "self-next" ||
+      nextStack.backend === "self-tanstack-start";
+
+    if (!supportsClerkBackend) {
+      nextStack.auth = "none";
+      changed = true;
+      changes.push({
+        category: "auth",
+        message:
+          "Auth set to 'None' (Better-Fullstack currently supports Clerk with Convex, Next.js fullstack, or TanStack Start fullstack)",
+      });
+    } else if (
+      (nextStack.backend === "self-next" || nextStack.backend === "self-tanstack-start") &&
+      nextStack.nativeFrontend.some((f) => f !== "none")
+    ) {
+      nextStack.auth = "none";
+      changed = true;
+      changes.push({
+        category: "auth",
+        message:
+          "Auth set to 'None' (Better-Fullstack currently supports Clerk with self backend only for web-only Next.js/TanStack Start projects)",
+      });
+    }
   }
 
   // ============================================
@@ -956,10 +977,10 @@ export const getDisabledReason = (
       }
     }
     if (category === "webFrontend" && optionId === "solid") {
-      return "Solid is not compatible with Convex";
+      return "In Better-Fullstack, the Convex backend is currently not available with Solid";
     }
     if (category === "webFrontend" && optionId === "astro") {
-      return "Astro is not compatible with Convex";
+      return "In Better-Fullstack, the Convex backend is currently not available with Astro";
     }
     if (category === "examples" && optionId === "ai") {
       const hasIncompatibleFrontend = currentStack.webFrontend.some((f) =>
@@ -973,7 +994,7 @@ export const getDisabledReason = (
       }
     }
     if (category === "payments" && optionId === "polar") {
-      return "Polar is not compatible with Convex";
+      return "In Better-Fullstack, Polar is currently not available with the Convex backend";
     }
   }
 
@@ -1087,14 +1108,14 @@ export const getDisabledReason = (
       return "Requires Nuxt frontend";
     }
     if (optionId === "convex" && currentStack.webFrontend.includes("solid")) {
-      return "Convex is not compatible with Solid";
+      return "In Better-Fullstack, Convex is currently not available with Solid";
     }
     if (optionId === "convex" && currentStack.webFrontend.includes("astro")) {
-      return "Convex is not compatible with Astro";
+      return "In Better-Fullstack, Convex is currently not available with Astro";
     }
     // Workers runtime only works with Hono backend
     if (currentStack.runtime === "workers" && optionId !== "hono" && optionId !== "none") {
-      return "Workers runtime only works with Hono";
+      return "In Better-Fullstack, Workers runtime is currently supported only with Hono";
     }
   }
 
@@ -1103,7 +1124,7 @@ export const getDisabledReason = (
   // ============================================
   if (category === "runtime") {
     if (optionId === "workers" && currentStack.backend !== "hono") {
-      return "Workers requires Hono backend";
+      return "In Better-Fullstack, Workers runtime currently requires the Hono backend";
     }
     if (optionId === "none") {
       const allowedBackends = [
@@ -1125,7 +1146,7 @@ export const getDisabledReason = (
   // ============================================
   if (category === "database") {
     if (optionId === "mongodb" && currentStack.runtime === "workers") {
-      return "MongoDB is not compatible with Workers runtime";
+      return "In Better-Fullstack, MongoDB is currently not available with Workers runtime";
     }
     // Allow all databases when ORM is none - system will auto-select ORM
   }
@@ -1136,7 +1157,7 @@ export const getDisabledReason = (
   if (category === "orm") {
     if (optionId === "mongoose") {
       if (currentStack.runtime === "workers") {
-        return "Mongoose requires MongoDB, which is incompatible with Workers";
+        return "Mongoose requires MongoDB, and Better-Fullstack currently doesn't support MongoDB with Workers runtime";
       }
       // Only block if a non-MongoDB database is EXPLICITLY selected
       if (currentStack.database !== "none" && currentStack.database !== "mongodb") {
@@ -1232,18 +1253,32 @@ export const getDisabledReason = (
   // ============================================
   if (category === "auth") {
     if (optionId === "clerk") {
-      if (currentStack.backend !== "convex") {
-        return "Clerk only works with Convex backend";
-      }
-      const hasClerkCompatibleFrontend =
-        currentStack.webFrontend.some((f) =>
-          ["react-router", "tanstack-router", "tanstack-start", "next"].includes(f),
-        ) ||
-        currentStack.nativeFrontend.some((f) =>
-          ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
-        );
-      if (!hasClerkCompatibleFrontend) {
-        return "Clerk with Convex requires React Router, TanStack Router, TanStack Start, Next.js, or React Native";
+      if (currentStack.backend === "convex") {
+        const hasClerkCompatibleFrontend =
+          currentStack.webFrontend.some((f) =>
+            ["react-router", "tanstack-router", "tanstack-start", "next"].includes(f),
+          ) ||
+          currentStack.nativeFrontend.some((f) =>
+            ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
+          );
+        if (!hasClerkCompatibleFrontend) {
+          return "Clerk with Convex requires React Router, TanStack Router, TanStack Start, Next.js, or React Native";
+        }
+      } else if (
+        currentStack.backend === "self-next" ||
+        currentStack.backend === "self-tanstack-start"
+      ) {
+        if (currentStack.nativeFrontend.some((f) => f !== "none")) {
+          return "In Better-Fullstack, Clerk with self backend is currently supported only for web-only Next.js or TanStack Start projects (no native companion app)";
+        }
+      } else if (currentStack.backend === "self-astro") {
+        return "In Better-Fullstack, Clerk is not yet supported for Astro fullstack projects";
+      } else if (currentStack.backend === "self-nuxt") {
+        return "In Better-Fullstack, Clerk is not yet supported for Nuxt fullstack projects";
+      } else if (currentStack.backend === "none") {
+        return "Clerk requires a backend";
+      } else {
+        return "In Better-Fullstack, Clerk is currently supported with Convex, Next.js fullstack, or TanStack Start fullstack";
       }
     }
   }
@@ -1433,8 +1468,12 @@ export const getDisabledReason = (
 
   if (category === "serverDeploy") {
     if (optionId === "cloudflare") {
-      if (currentStack.runtime !== "workers") return "Cloudflare requires Workers runtime";
-      if (currentStack.backend !== "hono") return "Cloudflare requires Hono backend";
+      if (currentStack.runtime !== "workers") {
+        return "In Better-Fullstack, Cloudflare server deploy currently requires Workers runtime";
+      }
+      if (currentStack.backend !== "hono") {
+        return "In Better-Fullstack, Cloudflare server deploy is currently supported only with Hono";
+      }
     }
     if (optionId !== "none") {
       const noServerDeploy = [

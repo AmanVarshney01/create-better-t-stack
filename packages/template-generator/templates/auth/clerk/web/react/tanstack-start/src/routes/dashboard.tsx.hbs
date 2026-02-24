@@ -1,0 +1,40 @@
+import { UserButton } from "@clerk/tanstack-react-start";
+import { auth } from "@clerk/tanstack-react-start/server";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createServerFn } from "@tanstack/react-start";
+
+const getClerkSession = createServerFn({ method: "GET" }).handler(async () => {
+	const clerkAuth = await auth();
+	return {
+		userId: clerkAuth.userId,
+	};
+});
+
+export const Route = createFileRoute("/dashboard")({
+	beforeLoad: async () => {
+		const session = await getClerkSession();
+		if (!session.userId) {
+			throw redirect({
+				to: "/",
+			});
+		}
+		return session;
+	},
+	component: RouteComponent,
+});
+
+function RouteComponent() {
+	const { userId } = Route.useRouteContext();
+
+	return (
+		<div className="p-6">
+			<div className="mb-4 flex items-center justify-between">
+				<h1 className="text-2xl font-semibold">Dashboard</h1>
+				<UserButton />
+			</div>
+			<p className="text-muted-foreground">
+				Protected with Clerk. Signed in user id: {userId}
+			</p>
+		</div>
+	);
+}
