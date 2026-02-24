@@ -1,0 +1,269 @@
+{
+  "v": 2,
+  "d": "2026-02-24",
+  "focus": "elysia-backend",
+  "cb": "bun create better-fullstack@latest <name> --ecosystem typescript --backend elysia --runtime bun ... --no-install --no-git --disable-analytics",
+  "cbRetest": "node /path/to/apps/cli/dist/cli.mjs create <name> --ecosystem typescript ... (same flags)",
+  "tot": [10, 10, 0, 2],
+  "k": {
+    "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
+    "r": { "p": "pass", "f": "fail" },
+    "e": { "t": "typescript" },
+    "notes": [
+      "Elysia-focused batch: 10 combos covering nuxt, tanstack-start, astro, react-router, svelte, next, solid, tanstack-router, angular frontends with elysia backend",
+      "Initial scaffold used bun create better-fullstack@latest (published v1.3.16)",
+      "Type-checking: bun install + bun run check-types (workspace filter)",
+      "5 combos passed immediately (C1, C2, C3, C9, C10)",
+      "5 combos failed initially (C4, C5, C6, C7, C8) - all auth=none with orpc or trpc",
+      "2 new bugs found and fixed in repo templates:",
+      "  BugO: ORPC context.ts hbs - elysia+hono branches used { context } destructuring even when auth=none (noUnusedLocals error)",
+      "       Fixed: wrap function definition in auth conditional, use _opts when auth != better-auth",
+      "       Files: packages/template-generator/templates/api/orpc/server/src/context.ts.hbs",
+      "  BugP: ORPC index.ts hbs - ORPCError always imported unconditionally even when auth=none",
+      "       Fixed: conditional import {{#if (eq auth 'better-auth')}}ORPCError, {{/if}}os",
+      "       File: packages/template-generator/templates/api/orpc/server/src/index.ts.hbs",
+      "Previously-fixed bugs (BugN_trpc_context, BugN_trpc_error, BugM_router_cli) confirmed present in local templates but NOT in published v1.3.16",
+      "All 5 failing combos passed after rebuild and re-test with local CLI",
+      "Final result: 10/10 pass"
+    ]
+  },
+  "rows": [
+    [
+      "ts-nuxt-elysia-drizzle-pg",
+      "t",
+      [
+        "nuxt",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "elysia",
+        "bun",
+        "orpc",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "none(logging)"
+      ],
+      "p"
+    ],
+    [
+      "ts-tanstack-start-elysia-mysql",
+      "t",
+      [
+        "tanstack-start",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "elysia",
+        "bun",
+        "trpc",
+        "drizzle",
+        "mysql",
+        "better-auth",
+        "none(logging)"
+      ],
+      "p"
+    ],
+    [
+      "ts-astro-elysia-drizzle-sqlite",
+      "t",
+      [
+        "astro",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "elysia",
+        "bun",
+        "orpc",
+        "drizzle",
+        "sqlite",
+        "better-auth",
+        "none(logging)"
+      ],
+      "p"
+    ],
+    [
+      "ts-react-router-elysia-prisma-pg",
+      "t",
+      [
+        "react-router",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "elysia",
+        "bun",
+        "orpc",
+        "prisma",
+        "postgres",
+        "none(auth)",
+        "none(logging)"
+      ],
+      "p",
+      "BugO+BugP: orpc context.ts {context} unused + ORPCError unused when auth=none",
+      1
+    ],
+    [
+      "ts-svelte-elysia-mysql-drizzle",
+      "t",
+      [
+        "svelte",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "elysia",
+        "bun",
+        "orpc",
+        "drizzle",
+        "mysql",
+        "none(auth)",
+        "none(logging)"
+      ],
+      "p",
+      "BugO+BugP: orpc context.ts {context} unused + ORPCError unused when auth=none",
+      1
+    ],
+    [
+      "ts-next-elysia-prisma-mysql",
+      "t",
+      [
+        "next",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "elysia",
+        "bun",
+        "trpc",
+        "prisma",
+        "mysql",
+        "none(auth)",
+        "none(logging)"
+      ],
+      "p",
+      "BugN_trpc_not_published: trpc context.ts {context} unused when auth=none (fixed in local repo but not in npm v1.3.16); re-tested with local build",
+      1
+    ],
+    [
+      "ts-solid-elysia-mikroorm-pg",
+      "t",
+      [
+        "solid",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "elysia",
+        "bun",
+        "orpc",
+        "mikroorm",
+        "postgres",
+        "none(auth)",
+        "none(logging)"
+      ],
+      "p",
+      "BugO+BugP: orpc context.ts {context} unused + ORPCError unused when auth=none",
+      1
+    ],
+    [
+      "ts-tanstack-elysia-typeorm-pg",
+      "t",
+      [
+        "tanstack-router",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "elysia",
+        "bun",
+        "trpc",
+        "typeorm",
+        "postgres",
+        "none(auth)",
+        "none(logging)"
+      ],
+      "p",
+      "BugN_trpc_not_published + BugM_router_cli_not_published: both fixed in local repo but not in npm v1.3.16; typeorm used because better-auth has no TypeORM adapter; re-tested with local build",
+      1
+    ],
+    [
+      "ts-react-router-elysia-trpc-auth",
+      "t",
+      [
+        "react-router",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "elysia",
+        "bun",
+        "trpc",
+        "drizzle",
+        "sqlite",
+        "better-auth",
+        "none(logging)"
+      ],
+      "p"
+    ],
+    [
+      "ts-angular-elysia-drizzle-pg",
+      "t",
+      [
+        "angular",
+        "tailwind",
+        "none",
+        "none",
+        "none",
+        "none",
+        "elysia",
+        "bun",
+        "none(api)",
+        "drizzle",
+        "postgres",
+        "none(auth)",
+        "none(logging)"
+      ],
+      "p"
+    ]
+  ],
+  "schema": {
+    "row": [
+      "name",
+      "ecosystemCode",
+      "flagsByEcosystemOrder",
+      "resultCode",
+      "issueCode?",
+      "fixedInRepo?(0|1)"
+    ],
+    "flagsOrder": {
+      "t": [
+        "frontend",
+        "cssFramework",
+        "uiLibrary",
+        "validation",
+        "testing",
+        "stateManagement",
+        "backend",
+        "runtime",
+        "api",
+        "orm",
+        "database",
+        "auth",
+        "logging"
+      ]
+    }
+  }
+}

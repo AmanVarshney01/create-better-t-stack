@@ -45,21 +45,23 @@ export type CreateContextOptions = {
   context: HonoContext;
 };
 
-export async function createContext({ context }: CreateContextOptions) {
 {{#if (eq auth "better-auth")}}
+export async function createContext({ context }: CreateContextOptions) {
   const session = await auth.api.getSession({
     headers: context.req.raw.headers,
   });
   return {
     session,
   };
+}
 {{else}}
+export async function createContext(_opts: CreateContextOptions) {
   // No auth configured
   return {
     session: null,
   };
-{{/if}}
 }
+{{/if}}
 
 {{else if (eq backend 'elysia')}}
 import type { Context as ElysiaContext } from "elysia";
@@ -71,21 +73,23 @@ export type CreateContextOptions = {
   context: ElysiaContext;
 };
 
-export async function createContext({ context }: CreateContextOptions) {
 {{#if (eq auth "better-auth")}}
+export async function createContext({ context }: CreateContextOptions) {
   const session = await auth.api.getSession({
     headers: context.request.headers,
   });
   return {
     session,
   };
+}
 {{else}}
+export async function createContext(_opts: CreateContextOptions) {
   // No auth configured
   return {
     session: null,
   };
-{{/if}}
 }
+{{/if}}
 
 {{else if (eq backend 'express')}}
 import type { Request } from "express";

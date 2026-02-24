@@ -1,4 +1,4 @@
-import { ORPCError, os } from "@orpc/server";
+import { {{#if (eq auth "better-auth")}}ORPCError, {{/if}}os } from "@orpc/server";
 import type { Context } from "./context";
 
 export const o = os.$context<Context>();

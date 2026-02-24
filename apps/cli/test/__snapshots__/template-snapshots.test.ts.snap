@@ -2357,7 +2357,7 @@ export const client = createORPCClient<typeof appRouter>(link);
     },
     {
       "content": 
-"import { ORPCError, os } from "@orpc/server";
+"import { os } from "@orpc/server";
 import type { Context } from "./context";
 
 export const o = os.$context<Context>();
@@ -2857,7 +2857,7 @@ export default defineNuxtConfig({
     },
     {
       "content": 
-"import { ORPCError, os } from "@orpc/server";
+"import { os } from "@orpc/server";
 import type { Context } from "./context";
 
 export const o = os.$context<Context>();
@@ -4386,7 +4386,7 @@ export default defineConfig({
     },
     {
       "content": 
-"import { ORPCError, os } from "@orpc/server";
+"import { os } from "@orpc/server";
 import type { Context } from "./context";
 
 export const o = os.$context<Context>();
