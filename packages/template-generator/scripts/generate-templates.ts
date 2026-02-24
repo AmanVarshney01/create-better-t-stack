@@ -1,6 +1,7 @@
 import isBinaryPath from "is-binary-path";
 import fs from "node:fs";
 import path from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { glob } from "tinyglobby";
 
@@ -10,6 +11,10 @@ const __dirname = path.dirname(__filename);
 const TEMPLATES_DIR = path.join(__dirname, "../templates");
 const OUTPUT_FILE = path.join(__dirname, "../src/templates.generated.ts");
 const BINARY_OUTPUT_DIR = path.join(__dirname, "../templates-binary");
+const GENERATE_TEMPLATES_LOCK_DIR = path.join(__dirname, "../.generate-templates.lock");
+const LOCK_STALE_MS = 5 * 60 * 1000;
+const LOCK_TIMEOUT_MS = 60 * 1000;
+const LOCK_POLL_MS = 100;
 
 async function generateTemplates() {
   console.log(" Generating embedded templates...");
@@ -61,9 +66,8 @@ export const TEMPLATE_COUNT = ${files.length};
 async function copyBinaryFiles(binaryFiles: string[]) {
   console.log(`\n Copying ${binaryFiles.length} binary files to templates-binary/...`);
 
-  if (fs.existsSync(BINARY_OUTPUT_DIR)) {
-    fs.rmSync(BINARY_OUTPUT_DIR, { recursive: true });
-  }
+  // `force: true` avoids a TOCTOU race when multiple generate-templates runs overlap.
+  fs.rmSync(BINARY_OUTPUT_DIR, { recursive: true, force: true });
 
   let totalSize = 0;
 
@@ -82,7 +86,51 @@ async function copyBinaryFiles(binaryFiles: string[]) {
   console.log(` Copied ${binaryFiles.length} binary files (${sizeKB} KB)`);
 }
 
-generateTemplates().catch((err) => {
+function isErrnoError(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error && "code" in error;
+}
+
+async function withGenerateTemplatesLock<T>(fn: () => Promise<T>): Promise<T> {
+  const startedAt = Date.now();
+
+  while (true) {
+    try {
+      fs.mkdirSync(GENERATE_TEMPLATES_LOCK_DIR);
+      break;
+    } catch (error) {
+      if (!isErrnoError(error) || error.code !== "EEXIST") {
+        throw error;
+      }
+
+      try {
+        const lockStats = fs.statSync(GENERATE_TEMPLATES_LOCK_DIR);
+        if (Date.now() - lockStats.mtimeMs > LOCK_STALE_MS) {
+          fs.rmSync(GENERATE_TEMPLATES_LOCK_DIR, { recursive: true, force: true });
+          continue;
+        }
+      } catch {
+        // Lock disappeared between checks; retry immediately.
+        continue;
+      }
+
+      if (Date.now() - startedAt > LOCK_TIMEOUT_MS) {
+        throw new Error(
+          "Timed out waiting for generate-templates lock. Another build may be stuck.",
+        );
+      }
+
+      await sleep(LOCK_POLL_MS);
+    }
+  }
+
+  try {
+    return await fn();
+  } finally {
+    fs.rmSync(GENERATE_TEMPLATES_LOCK_DIR, { recursive: true, force: true });
+  }
+}
+
+withGenerateTemplatesLock(generateTemplates).catch((err) => {
   console.error(" Failed to generate templates:", err);
   process.exit(1);
 });
