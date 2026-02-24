@@ -177,6 +177,7 @@ export const ICON_REGISTRY: Record<string, IconConfig> = {
 
   // ─── Feature Flags ─────────────────────────────────────────────────────────
   growthbook: { type: "si", slug: "growthbook", hex: "4E00DF" },
+  posthog: { type: "si", slug: "posthog", hex: "F54E00" },
 
   // ─── State Management ──────────────────────────────────────────────────────
   "redux-toolkit": { type: "si", slug: "redux", hex: "764ABC" },
@@ -261,10 +262,10 @@ export const ICON_REGISTRY: Record<string, IconConfig> = {
 
   // ─── Search ────────────────────────────────────────────────────────────────
   meilisearch: { type: "si", slug: "meilisearch", hex: "FF5CAA" },
-  typesense: { type: "si", slug: "typesense", hex: "D21F27" },
+  typesense: { type: "local", src: "/icon/typesense.png" },
 
   // ─── File Storage ──────────────────────────────────────────────────────────
-  s3: { type: "si", slug: "amazons3", hex: "569A31" },
+  s3: { type: "local", src: "/icon/aws-s3.svg" },
   r2: { type: "si", slug: "cloudflare", hex: "F38020" },
 
   // ─── Animation ─────────────────────────────────────────────────────────────
