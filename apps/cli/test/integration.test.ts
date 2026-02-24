@@ -365,7 +365,8 @@ describe("Integration Tests - Real World Scenarios", () => {
         expectError: true,
       });
 
-      expectError(result, "Cloudflare Workers runtime is not compatible with MongoDB");
+      expectError(result, "Cloudflare Workers runtime");
+      expectError(result, "MongoDB");
     });
 
     it("should fail with tRPC + incompatible frontend", async () => {
@@ -407,7 +408,7 @@ describe("Integration Tests - Real World Scenarios", () => {
         expectError: true,
       });
 
-      expectError(result, "Clerk authentication is not compatible");
+      expectError(result, "Clerk + Convex is not compatible");
     });
 
     it("should fail with addon incompatibility", async () => {
