@@ -81,8 +81,7 @@ function processPrismaDeps(
     deps.push(dbSetup === "d1" ? "@prisma/adapter-d1" : "@prisma/adapter-libsql");
   } else if (database === "postgres") {
     if (dbSetup === "neon") {
-      deps.push("@prisma/adapter-neon", "@neondatabase/serverless", "ws");
-      devDeps.push("@types/ws");
+      deps.push("@prisma/adapter-neon", "@neondatabase/serverless");
     } else if (dbSetup === "prisma-postgres") {
       deps.push("@prisma/adapter-pg");
     } else {
@@ -131,8 +130,7 @@ function processDrizzleDeps(
     const devDeps: AvailableDependencies[] = ["drizzle-kit"];
 
     if (dbSetup === "neon") {
-      deps.push("@neondatabase/serverless", "ws");
-      devDeps.push("@types/ws");
+      deps.push("@neondatabase/serverless");
     } else {
       deps.push("pg");
       devDeps.push("@types/pg");

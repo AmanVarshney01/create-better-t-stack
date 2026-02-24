@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DEFAULT_STACK,
   ECOSYSTEMS,
@@ -902,9 +902,19 @@ const StackBuilder = () => {
                                             </span>
                                           )}
                                           {tech.legacy && (
-                                            <span className="absolute top-2 right-2 rounded-full bg-amber-500/15 px-2 py-0.5 font-medium text-[10px] text-amber-600 dark:text-amber-400">
-                                              Legacy
-                                            </span>
+                                            <Tooltip>
+                                              <TooltipTrigger
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="absolute top-2 right-2 cursor-default"
+                                              >
+                                                <span className="rounded-sm border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-pixel text-[9px] text-amber-500 dark:text-amber-400">
+                                                  Legacy
+                                                </span>
+                                              </TooltipTrigger>
+                                              <TooltipContent>
+                                                No longer actively maintained
+                                              </TooltipContent>
+                                            </Tooltip>
                                           )}
                                           <div className="flex items-start gap-3">
                                             {tech.icon !== "" && (
@@ -1004,9 +1014,19 @@ const StackBuilder = () => {
                                             </span>
                                           )}
                                           {tech.legacy && (
-                                            <span className="absolute top-2 right-2 rounded-full bg-amber-500/15 px-2 py-0.5 font-medium text-[10px] text-amber-600 dark:text-amber-400">
-                                              Legacy
-                                            </span>
+                                            <Tooltip>
+                                              <TooltipTrigger
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="absolute top-2 right-2 cursor-default"
+                                              >
+                                                <span className="rounded-sm border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-pixel text-[9px] text-amber-500 dark:text-amber-400">
+                                                  Legacy
+                                                </span>
+                                              </TooltipTrigger>
+                                              <TooltipContent>
+                                                No longer actively maintained
+                                              </TooltipContent>
+                                            </Tooltip>
                                           )}
                                           <div className="flex items-start gap-3">
                                             {tech.icon !== "" && (

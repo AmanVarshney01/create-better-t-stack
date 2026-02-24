@@ -143,7 +143,7 @@ export const ICON_REGISTRY: Record<string, IconConfig> = {
   // ─── Auth ──────────────────────────────────────────────────────────────────
   "better-auth": { type: "local", src: "/icon/better-auth.svg" },
   clerk: { type: "si", slug: "clerk", hex: "6C47FF" },
-  nextauth: { type: "si", slug: "authjs", hex: "000000" },
+  nextauth: { type: "local", src: "/icon/nextauth.png" },
   "stack-auth": { type: "local", src: "/icon/stack-auth.svg" },
   "supabase-auth": { type: "si", slug: "supabase", hex: "3FCF8E" },
   auth0: { type: "si", slug: "auth0", hex: "EB5424" },
