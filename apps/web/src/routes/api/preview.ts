@@ -165,6 +165,10 @@ export const Route = createFileRoute("/api/preview")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const noIndexHeaders = {
+          "X-Robots-Tag": "noindex, nofollow, noarchive",
+          "Cache-Control": "no-store",
+        };
         try {
           const body = (await request.json()) as StackState;
 
@@ -185,20 +189,23 @@ export const Route = createFileRoute("/api/preview")({
                 success: false,
                 error: result.error || "Failed to generate project",
               },
-              { status: 500 },
+              { status: 500, headers: noIndexHeaders },
             );
           }
 
           const transformedRoot = transformTree(result.tree.root);
 
-          return Response.json({
-            success: true,
-            tree: {
-              root: transformedRoot,
-              fileCount: result.tree.fileCount,
-              directoryCount: result.tree.directoryCount,
+          return Response.json(
+            {
+              success: true,
+              tree: {
+                root: transformedRoot,
+                fileCount: result.tree.fileCount,
+                directoryCount: result.tree.directoryCount,
+              },
             },
-          });
+            { headers: noIndexHeaders },
+          );
         } catch (error) {
           console.error("Preview generation error:", error);
           return Response.json(
@@ -206,7 +213,7 @@ export const Route = createFileRoute("/api/preview")({
               success: false,
               error: error instanceof Error ? error.message : "Unknown error",
             },
-            { status: 500 },
+            { status: 500, headers: noIndexHeaders },
           );
         }
       },
