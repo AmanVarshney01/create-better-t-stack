@@ -214,6 +214,33 @@ function SidebarAccordionItem({
   );
 }
 
+// ─── Collapsible section config ──────────────────────────────────────────────
+
+const INITIALLY_COLLAPSED_SET = new Set([
+  "nativeFrontend",
+  "payments",
+  "email",
+  "fileUpload",
+  "logging",
+  "observability",
+  "featureFlags",
+  "analytics",
+  "ai",
+  "stateManagement",
+  "forms",
+  "validation",
+  "testing",
+  "realtime",
+  "jobQueue",
+  "caching",
+  "search",
+  "fileStorage",
+  "animation",
+  "cms",
+  "documentation",
+  "appPlatforms",
+]);
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 const StackBuilder = () => {
@@ -225,6 +252,16 @@ const StackBuilder = () => {
   const [, setLastChanges] = useState<Array<{ category: string; message: string }>>([]);
   const [mobileTab, setMobileTab] = useState<MobileTab>("configure");
   const [openCategory, setOpenCategory] = useState<string | null>(null);
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(() => {
+    const initial = new Set(INITIALLY_COLLAPSED_SET);
+    for (const cat of INITIALLY_COLLAPSED_SET) {
+      const catKey = cat as keyof StackState;
+      if (JSON.stringify(stack[catKey]) !== JSON.stringify(DEFAULT_STACK[catKey])) {
+        initial.delete(cat);
+      }
+    }
+    return initial;
+  });
 
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const mainScrollRef = useRef<HTMLDivElement | null>(null);
@@ -504,11 +541,29 @@ const StackBuilder = () => {
 
   const handleAccordionToggle = useCallback((category: string) => {
     setOpenCategory((prev) => (prev === category ? null : category));
+    setCollapsedSections((prev) => {
+      if (!prev.has(category)) return prev;
+      const next = new Set(prev);
+      next.delete(category);
+      return next;
+    });
     // Scroll to the corresponding section in main content
     const sectionEl = sectionRefs.current[category];
     if (sectionEl) {
       sectionEl.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+  }, []);
+
+  const toggleSection = useCallback((categoryKey: string) => {
+    setCollapsedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(categoryKey)) {
+        next.delete(categoryKey);
+      } else {
+        next.add(categoryKey);
+      }
+      return next;
+    });
   }, []);
 
   // ─── Build the categories to show in sidebar (with astro integration) ──
@@ -753,6 +808,12 @@ const StackBuilder = () => {
 
                       if (categoryOptions.length === 0) return null;
 
+                      const isSectionCollapsed = collapsedSections.has(categoryKey);
+                      const sectionSelectedCount = getSelectedCount(
+                        categoryKey as keyof typeof TECH_OPTIONS,
+                        stack,
+                      );
+
                       return (
                         <div key={categoryKey}>
                           <section
@@ -762,94 +823,123 @@ const StackBuilder = () => {
                             id={`section-${categoryKey}`}
                             className="mb-6 scroll-mt-4 sm:mb-8"
                           >
-                            <div className="mb-3 flex items-center gap-2 border-border border-b pb-2">
+                            <button
+                              type="button"
+                              onClick={() => toggleSection(categoryKey)}
+                              className="mb-3 flex w-full items-center gap-2 border-b border-border pb-2 text-left transition-opacity hover:opacity-80"
+                            >
                               <Terminal className="h-4 w-4 shrink-0 text-muted-foreground sm:h-5 sm:w-5" />
-                              <h2 className="font-pixel text-foreground text-sm sm:text-base">
+                              <h2 className="flex-1 font-pixel text-foreground text-sm sm:text-base">
                                 {categoryDisplayName}
                               </h2>
                               {compatibilityAnalysis.notes[categoryKey]?.hasIssue && (
                                 <InfoIcon className="h-4 w-4 shrink-0 text-amber-500" />
                               )}
-                            </div>
-                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3 2xl:grid-cols-4">
-                              {categoryOptions.map((tech) => {
-                                const isSelected = isSelectedCheck(stack, categoryKey, tech.id);
-                                const isDisabled = !isOptionCompatible(
-                                  stack,
-                                  categoryKey as keyof typeof TECH_OPTIONS,
-                                  tech.id,
-                                );
-                                const disabledReason = isDisabled
-                                  ? getDisabledReason(
-                                      stack,
-                                      categoryKey as keyof typeof TECH_OPTIONS,
-                                      tech.id,
-                                    )
-                                  : null;
-
-                                return (
-                                  <motion.div
-                                    key={tech.id}
-                                    className={cn(
-                                      "group relative cursor-pointer rounded-lg border p-3 transition-all sm:p-4",
-                                      isSelected
-                                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                                        : isDisabled
-                                          ? "border-destructive/30 bg-destructive/5 opacity-50 hover:opacity-75"
-                                          : "border-border bg-fd-background hover:border-primary/30 hover:bg-muted/5",
-                                    )}
-                                    whileHover={{ scale: 1.01 }}
-                                    whileTap={{ scale: 0.99 }}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleTechSelect(
+                              {isSectionCollapsed && sectionSelectedCount > 0 && (
+                                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 font-mono text-[10px] font-semibold text-primary-foreground">
+                                  {sectionSelectedCount}
+                                </span>
+                              )}
+                              <motion.div
+                                animate={{ rotate: isSectionCollapsed ? 0 : 180 }}
+                                transition={{ duration: 0.2 }}
+                              >
+                                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                              </motion.div>
+                            </button>
+                            <AnimatePresence initial={false}>
+                              {!isSectionCollapsed && (
+                                <motion.div
+                                  initial={{ height: 0, opacity: 0 }}
+                                  animate={{ height: "auto", opacity: 1 }}
+                                  exit={{ height: 0, opacity: 0 }}
+                                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3 2xl:grid-cols-4">
+                                    {categoryOptions.map((tech) => {
+                                      const isSelected = isSelectedCheck(
+                                        stack,
+                                        categoryKey,
+                                        tech.id,
+                                      );
+                                      const isDisabled = !isOptionCompatible(
+                                        stack,
                                         categoryKey as keyof typeof TECH_OPTIONS,
                                         tech.id,
                                       );
-                                    }}
-                                    title={disabledReason || undefined}
-                                  >
-                                    {tech.default && !isSelected && (
-                                      <span className="absolute top-2 right-2 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
-                                        Default
-                                      </span>
-                                    )}
-                                    <div className="flex items-start gap-3">
-                                      {tech.icon !== "" && (
-                                        <div
+                                      const disabledReason = isDisabled
+                                        ? getDisabledReason(
+                                            stack,
+                                            categoryKey as keyof typeof TECH_OPTIONS,
+                                            tech.id,
+                                          )
+                                        : null;
+
+                                      return (
+                                        <motion.div
+                                          key={tech.id}
                                           className={cn(
-                                            "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors",
+                                            "group relative cursor-pointer rounded-lg border p-3 transition-all sm:p-4",
                                             isSelected
-                                              ? "bg-primary/10"
-                                              : "bg-muted/50 group-hover:bg-muted",
+                                              ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                                              : isDisabled
+                                                ? "border-destructive/30 bg-destructive/5 opacity-50 hover:opacity-75"
+                                                : "border-border bg-fd-background hover:border-primary/40 hover:bg-gradient-to-br hover:from-primary/6 hover:to-transparent hover:shadow-[0_0_10px_0px_hsl(var(--primary)/0.10)]",
                                           )}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleTechSelect(
+                                              categoryKey as keyof typeof TECH_OPTIONS,
+                                              tech.id,
+                                            );
+                                          }}
+                                          title={disabledReason || undefined}
                                         >
-                                          <TechIcon
-                                            techId={tech.id}
-                                            icon={tech.icon}
-                                            name={tech.name}
-                                            className="h-5 w-5"
-                                          />
-                                        </div>
-                                      )}
-                                      <div className="min-w-0 flex-1 pt-0.5">
-                                        <span
-                                          className={cn(
-                                            "block font-semibold text-sm",
-                                            isSelected ? "text-primary" : "text-foreground",
+                                          {tech.default && !isSelected && (
+                                            <span className="absolute top-2 right-2 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
+                                              Default
+                                            </span>
                                           )}
-                                        >
-                                          {tech.name}
-                                        </span>
-                                        <p className="mt-0.5 line-clamp-2 text-muted-foreground text-xs leading-relaxed">
-                                          {tech.description}
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </motion.div>
-                                );
-                              })}
-                            </div>
+                                          <div className="flex items-start gap-3">
+                                            {tech.icon !== "" && (
+                                              <div
+                                                className={cn(
+                                                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors",
+                                                  isSelected
+                                                    ? "bg-primary/10"
+                                                    : "bg-muted/50 group-hover:bg-muted",
+                                                )}
+                                              >
+                                                <TechIcon
+                                                  techId={tech.id}
+                                                  icon={tech.icon}
+                                                  name={tech.name}
+                                                  className="h-5 w-5"
+                                                />
+                                              </div>
+                                            )}
+                                            <div className="min-w-0 flex-1 pt-0.5">
+                                              <span
+                                                className={cn(
+                                                  "block font-semibold text-sm",
+                                                  isSelected ? "text-primary" : "text-foreground",
+                                                )}
+                                              >
+                                                {tech.name}
+                                              </span>
+                                              <p className="mt-0.5 line-clamp-2 text-muted-foreground text-xs leading-relaxed">
+                                                {tech.description}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        </motion.div>
+                                      );
+                                    })}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
                           </section>
 
                           {/* Astro Integration - shown only when Astro is selected, right after webFrontend */}
@@ -893,7 +983,7 @@ const StackBuilder = () => {
                                               ? "border-primary bg-primary/5 ring-1 ring-primary/20"
                                               : isDisabled
                                                 ? "border-destructive/30 bg-destructive/5 opacity-50 hover:opacity-75"
-                                                : "border-border bg-fd-background hover:border-primary/30 hover:bg-muted/5",
+                                                : "border-border bg-fd-background hover:border-primary/40 hover:bg-gradient-to-br hover:from-primary/6 hover:to-transparent hover:shadow-[0_0_10px_0px_hsl(var(--primary)/0.10)]",
                                           )}
                                           whileHover={{ scale: 1.01 }}
                                           whileTap={{ scale: 0.99 }}
