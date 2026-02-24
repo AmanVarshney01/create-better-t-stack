@@ -143,6 +143,58 @@ describe("AI SDK Dependencies", () => {
     }
   });
 
+  it("should install langgraph example runtime deps when AI example is enabled", async () => {
+    const result = await runTRPCTest({
+      projectName: "ai-deps-langgraph-example",
+      ecosystem: "typescript",
+      frontend: ["tanstack-router"],
+      backend: "hono",
+      runtime: "bun",
+      database: "sqlite",
+      orm: "drizzle",
+      api: "trpc",
+      auth: "none",
+      payments: "none",
+      addons: ["none"],
+      examples: ["ai"],
+      dbSetup: "none",
+      webDeploy: "none",
+      serverDeploy: "none",
+      ai: "langgraph",
+      cssFramework: "tailwind",
+      uiLibrary: "none",
+      effect: "none",
+      email: "none",
+      stateManagement: "none",
+      forms: "react-hook-form",
+      testing: "vitest",
+      validation: "zod",
+      realtime: "none",
+      jobQueue: "none",
+      animation: "none",
+      logging: "none",
+      observability: "none",
+      cms: "none",
+      caching: "none",
+      fileUpload: "none",
+      packageManager: "bun",
+    });
+    expectSuccess(result);
+
+    if (result.projectDir) {
+      const serverPkg = await Bun.file(`${result.projectDir}/apps/server/package.json`).json();
+      const webPkg = await Bun.file(`${result.projectDir}/apps/web/package.json`).json();
+
+      expect(serverPkg.dependencies["ai"]).toBeDefined();
+      expect(serverPkg.dependencies["@ai-sdk/google"]).toBeDefined();
+      expect(serverPkg.dependencies["@ai-sdk/devtools"]).toBeDefined();
+      expect(serverPkg.dependencies["@langchain/langgraph"]).toBeDefined();
+
+      expect(webPkg.dependencies["ai"]).toBeDefined();
+      expect(webPkg.dependencies["streamdown"]).toBeDefined();
+    }
+  });
+
   it("should install llamaindex SDK when selected", async () => {
     const result = await runTRPCTest({
       projectName: "ai-deps-llamaindex",

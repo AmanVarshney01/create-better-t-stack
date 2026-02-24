@@ -67,7 +67,14 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
       addPackageDependency({
         vfs,
         packagePath: webPkgPath,
-        dependencies: ["@langchain/langgraph", "@langchain/core", "@langchain/google-genai"],
+        dependencies: [
+          "@langchain/langgraph",
+          "@langchain/core",
+          "@langchain/google-genai",
+          "ai",
+          "@ai-sdk/google",
+          "@ai-sdk/devtools",
+        ],
       });
     } else if (useOpenAIAgents) {
       addPackageDependency({
@@ -114,7 +121,14 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
       addPackageDependency({
         vfs,
         packagePath: serverPkgPath,
-        dependencies: ["@langchain/langgraph", "@langchain/core", "@langchain/google-genai"],
+        dependencies: [
+          "@langchain/langgraph",
+          "@langchain/core",
+          "@langchain/google-genai",
+          "ai",
+          "@ai-sdk/google",
+          "@ai-sdk/devtools",
+        ],
       });
     } else if (useOpenAIAgents) {
       addPackageDependency({
@@ -157,7 +171,8 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
       if (hasReactWeb) deps.push("@ai-sdk/react", "streamdown");
     } else if (useLangGraph) {
       // LangGraph uses native streaming - no special frontend SDK needed
-      // Just add streamdown for markdown rendering
+      // Frontend still uses Vercel AI SDK transport primitives + streamdown for React markdown rendering
+      deps.push("ai");
       if (hasReactWeb) deps.push("streamdown");
     } else if (useOpenAIAgents) {
       // OpenAI Agents SDK uses native streaming - no special frontend SDK needed
