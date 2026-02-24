@@ -118,6 +118,31 @@ function TechResourceButtons({ category, techId }: { category: string; techId: s
   );
 }
 
+function DisabledReasonInline({ reason, compact = false }: { reason: string; compact?: boolean }) {
+  return (
+    <div
+      className={cn(
+        "mt-2 rounded-md border border-destructive/20 bg-destructive/5 px-2 py-1 text-destructive/90",
+        compact ? "text-[9px] leading-tight" : "text-[10px] leading-snug",
+      )}
+    >
+      <span className="font-medium">Unavailable:</span>{" "}
+      <span className={compact ? "line-clamp-1" : "line-clamp-2"}>{reason}</span>
+    </div>
+  );
+}
+
+function CategoryHint({ categoryKey }: { categoryKey: string }) {
+  if (categoryKey !== "appPlatforms") return null;
+
+  return (
+    <div className="mb-3 rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
+      <span className="font-medium text-foreground">MCP / Skills:</span> selecting these adds the
+      addon flags, then the CLI asks follow-up questions to configure servers and skill packs.
+    </div>
+  );
+}
+
 function getSelectedCount(category: keyof typeof TECH_OPTIONS, stack: StackState): number {
   const catKey = category as keyof StackState;
   const value = stack[catKey];
@@ -252,7 +277,10 @@ function SidebarAccordionItem({
                         className="h-4 w-4"
                       />
                     )}
-                    <span className="truncate">{option.name}</span>
+                    <div className="min-w-0 flex-1">
+                      <span className="block truncate">{option.name}</span>
+                      {disabledReason && <DisabledReasonInline reason={disabledReason} compact />}
+                    </div>
                     {option.default && !selected && (
                       <span className="ml-auto shrink-0 rounded bg-muted px-1 py-0.5 text-[9px] text-muted-foreground">
                         default
@@ -911,6 +939,7 @@ const StackBuilder = () => {
                                   transition={{ duration: 0.25, ease: "easeInOut" }}
                                   className="overflow-hidden"
                                 >
+                                  <CategoryHint categoryKey={categoryKey} />
                                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3 2xl:grid-cols-4">
                                     {categoryOptions.map((tech) => {
                                       const isSelected = isSelectedCheck(
@@ -1007,6 +1036,9 @@ const StackBuilder = () => {
                                               <p className="mt-0.5 line-clamp-2 text-muted-foreground text-xs leading-relaxed">
                                                 {tech.description}
                                               </p>
+                                              {isDisabled && disabledReason && (
+                                                <DisabledReasonInline reason={disabledReason} />
+                                              )}
                                             </div>
                                           </div>
                                         </motion.div>
@@ -1119,6 +1151,9 @@ const StackBuilder = () => {
                                               <p className="mt-0.5 line-clamp-2 text-muted-foreground text-xs leading-relaxed">
                                                 {tech.description}
                                               </p>
+                                              {isDisabled && disabledReason && (
+                                                <DisabledReasonInline reason={disabledReason} />
+                                              )}
                                             </div>
                                           </div>
                                         </motion.div>

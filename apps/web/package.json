@@ -11,7 +11,8 @@
     "start": "node .output/server/index.mjs",
     "lint": "oxlint . && tsc --noEmit",
     "test": "bun test ./test/*.test.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "validate:tech-links": "bun run scripts/validate-tech-resource-links.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",

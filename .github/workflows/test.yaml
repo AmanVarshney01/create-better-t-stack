@@ -27,6 +27,9 @@ jobs:
       - name: Install Dependencies
         run: bun install --frozen-lockfile
 
+      - name: Validate Builder Tech Links
+        run: bun run --cwd apps/web validate:tech-links
+
       - name: Build Types
         run: cd packages/types && bun run build
 

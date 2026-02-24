@@ -139,7 +139,10 @@ const BASE_LINKS: LinkMap = {
     docsUrl: "https://docs.turso.tech/",
     githubUrl: "https://github.com/tursodatabase/turso",
   },
-  d1: { docsUrl: "https://developers.cloudflare.com/d1/" },
+  d1: {
+    docsUrl: "https://developers.cloudflare.com/d1/",
+    githubUrl: "https://github.com/cloudflare/workers-sdk",
+  },
   neon: { docsUrl: "https://neon.tech/docs", githubUrl: "https://github.com/neondatabase/neon" },
   "prisma-postgres": {
     docsUrl: "https://www.prisma.io/postgres",
@@ -187,7 +190,10 @@ const BASE_LINKS: LinkMap = {
     githubUrl: "https://github.com/stripe/stripe-node",
   },
   "lemon-squeezy": { docsUrl: "https://docs.lemonsqueezy.com/" },
-  paddle: { docsUrl: "https://developer.paddle.com/" },
+  paddle: {
+    docsUrl: "https://developer.paddle.com/",
+    githubUrl: "https://github.com/PaddleHQ/paddle-node-sdk",
+  },
   dodo: { docsUrl: "https://docs.dodopayments.com/" },
   resend: {
     docsUrl: "https://resend.com/docs",
@@ -201,10 +207,22 @@ const BASE_LINKS: LinkMap = {
     docsUrl: "https://nodemailer.com/",
     githubUrl: "https://github.com/nodemailer/nodemailer",
   },
-  postmark: { docsUrl: "https://postmarkapp.com/developer" },
-  sendgrid: { docsUrl: "https://docs.sendgrid.com/" },
-  "aws-ses": { docsUrl: "https://docs.aws.amazon.com/ses/" },
-  mailgun: { docsUrl: "https://documentation.mailgun.com/" },
+  postmark: {
+    docsUrl: "https://postmarkapp.com/developer",
+    githubUrl: "https://github.com/ActiveCampaign/postmark.js",
+  },
+  sendgrid: {
+    docsUrl: "https://docs.sendgrid.com/",
+    githubUrl: "https://github.com/sendgrid/sendgrid-nodejs",
+  },
+  "aws-ses": {
+    docsUrl: "https://docs.aws.amazon.com/ses/",
+    githubUrl: "https://github.com/aws/aws-sdk-js-v3",
+  },
+  mailgun: {
+    docsUrl: "https://documentation.mailgun.com/",
+    githubUrl: "https://github.com/mailgun/mailgun.js",
+  },
   plunk: { docsUrl: "https://docs.useplunk.com/", githubUrl: "https://github.com/useplunk/plunk" },
   uploadthing: {
     docsUrl: "https://docs.uploadthing.com/",
@@ -428,6 +446,11 @@ const BASE_LINKS: LinkMap = {
     docsUrl: "https://storybook.js.org/docs",
     githubUrl: "https://github.com/storybookjs/storybook",
   },
+  "vitest-playwright": {
+    docsUrl: "https://vitest.dev/guide/browser/playwright.html",
+    githubUrl: "https://github.com/vitest-dev/vitest",
+  },
+  ai: { docsUrl: "https://ai-sdk.dev/docs", githubUrl: "https://github.com/vercel/ai" },
   "vercel-ai": { docsUrl: "https://ai-sdk.dev/docs", githubUrl: "https://github.com/vercel/ai" },
   mastra: { docsUrl: "https://mastra.ai/docs", githubUrl: "https://github.com/mastra-ai/mastra" },
   voltagent: {
@@ -488,8 +511,14 @@ const BASE_LINKS: LinkMap = {
     docsUrl: "https://typesense.org/docs/",
     githubUrl: "https://github.com/typesense/typesense",
   },
-  s3: { docsUrl: "https://docs.aws.amazon.com/AmazonS3/" },
-  r2: { docsUrl: "https://developers.cloudflare.com/r2/" },
+  s3: {
+    docsUrl: "https://docs.aws.amazon.com/AmazonS3/",
+    githubUrl: "https://github.com/aws/aws-sdk-js-v3",
+  },
+  r2: {
+    docsUrl: "https://developers.cloudflare.com/r2/",
+    githubUrl: "https://github.com/cloudflare/workers-sdk",
+  },
   "framer-motion": {
     docsUrl: "https://motion.dev/docs",
     githubUrl: "https://github.com/motiondivision/motion",
@@ -575,7 +604,10 @@ const BASE_LINKS: LinkMap = {
     docsUrl: "https://docs.rs/jsonwebtoken/latest/jsonwebtoken/",
     githubUrl: "https://github.com/Keats/jsonwebtoken",
   },
-  argon2: { docsUrl: "https://docs.rs/argon2/latest/argon2/" },
+  argon2: {
+    docsUrl: "https://docs.rs/argon2/latest/argon2/",
+    githubUrl: "https://github.com/RustCrypto/password-hashes",
+  },
   "tokio-test": {
     docsUrl: "https://docs.rs/tokio-test/latest/tokio_test/",
     githubUrl: "https://github.com/tokio-rs/tokio",

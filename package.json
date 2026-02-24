@@ -46,11 +46,6 @@
     "turbo": "^2.8.10",
     "typescript": "5.9.3"
   },
-  "lint-staged": {
-    "*": [
-      "bun check"
-    ]
-  },
   "engines": {
     "node": ">=20"
   },
