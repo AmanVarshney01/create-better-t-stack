@@ -81,7 +81,9 @@ export const AddonsSchema = z
   ])
   .describe("Additional addons");
 
-export const ExamplesSchema = z.enum(["ai", "none"]).describe("Example templates to include");
+export const ExamplesSchema = z
+  .enum(["ai", "chat-sdk", "none"])
+  .describe("Example templates to include");
 
 export const PackageManagerSchema = z.enum(["npm", "pnpm", "bun"]).describe("Package manager");
 

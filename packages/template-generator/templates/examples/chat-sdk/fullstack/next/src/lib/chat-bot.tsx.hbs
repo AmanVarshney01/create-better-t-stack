@@ -1,0 +1,41 @@
+/** @jsxImportSource chat */
+import { createMemoryState } from "@chat-adapter/state-memory";
+import { createSlackAdapter } from "@chat-adapter/slack";
+import { Actions, Button, Card, CardText as Text, Chat, Divider } from "chat";
+
+export const chatBot = new Chat({
+  userName: process.env.BOT_USERNAME || "mybot",
+  adapters: {
+    slack: createSlackAdapter(),
+  },
+  state: createMemoryState(),
+});
+
+chatBot.onNewMention(async (thread) => {
+  await thread.subscribe();
+  await thread.post(
+    <Card title="Welcome to Chat SDK">
+      <Text>I am now listening to this Slack thread.</Text>
+      <Text>Reply in the thread or click an action below.</Text>
+      <Divider />
+      <Actions>
+        <Button id="hello" style="primary">
+          Say Hello
+        </Button>
+        <Button id="info">Show Info</Button>
+      </Actions>
+    </Card>,
+  );
+});
+
+chatBot.onSubscribedMessage(async (thread, message) => {
+  await thread.post(`You said: ${message.text}`);
+});
+
+chatBot.onAction("hello", async (event) => {
+  await event.thread.post(`Hello, ${event.user.fullName}!`);
+});
+
+chatBot.onAction("info", async (event) => {
+  await event.thread.post(`Platform: ${event.thread.adapter.name}`);
+});

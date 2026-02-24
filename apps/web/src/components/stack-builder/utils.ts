@@ -33,6 +33,31 @@ export const hasTauriCompatibleFrontend = (webFrontend: string[]) =>
     ["tanstack-router", "react-router", "nuxt", "svelte", "solid", "next", "astro"].includes(f),
   );
 
+const isChatSdkExampleSupported = (stack: StackState): boolean => {
+  if (stack.ecosystem !== "typescript") return false;
+
+  if (stack.backend === "self-next" || stack.backend === "self-tanstack-start") {
+    return true;
+  }
+
+  if (stack.backend === "self-nuxt") {
+    return true;
+  }
+
+  if (stack.backend === "hono") {
+    return stack.runtime === "node";
+  }
+
+  return false;
+};
+
+const requiresChatSdkVercelAi = (stack: StackState): boolean => {
+  return (
+    stack.examples.includes("chat-sdk") &&
+    (stack.backend === "self-nuxt" || (stack.backend === "hono" && stack.runtime === "node"))
+  );
+};
+
 export const getCategoryDisplayName = (categoryKey: string): string => {
   // Custom display names for Rust categories
   const rustCategoryNames: Record<string, string> = {
@@ -838,6 +863,40 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     }
   }
 
+  // Chat SDK example constraints (framework-specific profiles in v1)
+  if (nextStack.examples.includes("chat-sdk")) {
+    if (!isChatSdkExampleSupported(nextStack)) {
+      nextStack.examples = nextStack.examples.filter((e) => e !== "chat-sdk");
+      if (nextStack.examples.length === 0) nextStack.examples = ["none"];
+      changed = true;
+
+      let reason = "unsupported stack";
+      if (nextStack.ecosystem !== "typescript") {
+        reason = "TypeScript ecosystem only";
+      } else if (nextStack.backend === "convex") {
+        reason = "Convex backend not supported in v1";
+      } else if (nextStack.backend === "none") {
+        reason = "requires a backend";
+      } else if (nextStack.backend === "hono" && nextStack.runtime !== "node") {
+        reason = "Hono profile requires Node runtime";
+      } else if (nextStack.backend.startsWith("self-")) {
+        reason = "self backend only supports Next.js, TanStack Start, or Nuxt in v1";
+      }
+
+      changes.push({
+        category: "examples",
+        message: `Chat SDK removed (${reason})`,
+      });
+    } else if (requiresChatSdkVercelAi(nextStack) && nextStack.aiSdk !== "vercel-ai") {
+      nextStack.aiSdk = "vercel-ai";
+      changed = true;
+      changes.push({
+        category: "ai",
+        message: "AI SDK set to 'Vercel AI SDK' (required by Chat SDK Nuxt/Hono profile in v1)",
+      });
+    }
+  }
+
   // ============================================
   // FRESH FRONTEND CONSTRAINTS
   // Fresh is Preact-based and incompatible with React-specific packages
@@ -1308,6 +1367,13 @@ export const getDisabledReason = (
   }
 
   // ============================================
+  // AI CONSTRAINTS
+  // ============================================
+  if (category === "ai" && requiresChatSdkVercelAi(currentStack) && optionId !== "vercel-ai") {
+    return "Chat SDK example (Nuxt/Hono profile) requires Vercel AI SDK in v1";
+  }
+
+  // ============================================
   // APP PLATFORMS CONSTRAINTS
   // ============================================
   if (category === "appPlatforms") {
@@ -1335,6 +1401,36 @@ export const getDisabledReason = (
           const frontendName = currentStack.webFrontend.find((f) => ["svelte", "nuxt"].includes(f));
           return `Convex AI example only supports React-based frontends (not ${frontendName})`;
         }
+      }
+    }
+
+    if (optionId === "chat-sdk") {
+      if (currentStack.ecosystem !== "typescript") {
+        return "Chat SDK example is currently available only for TypeScript stacks";
+      }
+      if (currentStack.backend === "convex") {
+        return "Chat SDK example is not supported with Convex backend in v1";
+      }
+      if (currentStack.backend === "self-astro") {
+        return "Chat SDK self backend profile supports Next.js, TanStack Start, or Nuxt in v1";
+      }
+      if (currentStack.backend === "self-next" || currentStack.backend === "self-tanstack-start") {
+        return null;
+      }
+      if (currentStack.backend === "self-nuxt") {
+        return null;
+      }
+      if (currentStack.backend === "hono") {
+        if (currentStack.runtime !== "node") {
+          return "Chat SDK Hono profile requires Node runtime in v1";
+        }
+        return null;
+      }
+      if (currentStack.backend.startsWith("self-")) {
+        return "Chat SDK self backend profile supports Next.js, TanStack Start, or Nuxt in v1";
+      }
+      if (currentStack.backend !== "none") {
+        return "Chat SDK example is only supported for self (Next/TanStack Start/Nuxt) or Hono+Node in v1";
       }
     }
   }

@@ -1510,6 +1510,15 @@ export const TECH_OPTIONS: Record<
       color: "from-purple-500 to-purple-700",
       default: false,
     },
+    {
+      id: "chat-sdk",
+      name: "Chat SDK Bots",
+      description:
+        "Framework-specific Chat SDK bot example (Next/TanStack Start: Slack, Nuxt: Discord, Hono: GitHub review)",
+      icon: "",
+      color: "from-sky-500 to-indigo-700",
+      default: false,
+    },
   ],
   ai: [
     {

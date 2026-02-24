@@ -1,0 +1,43 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { chatBot } from "@/lib/chat-bot";
+
+export const Route = createFileRoute("/api/webhooks/$")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        const url = new URL(request.url);
+        const platform = url.pathname.split("/").filter(Boolean).pop();
+
+        if (!platform) {
+          return new Response("Missing platform", { status: 400 });
+        }
+
+        const handler = chatBot.webhooks[platform as keyof typeof chatBot.webhooks];
+        if (!handler) {
+          return new Response(`Unknown platform: ${platform}`, { status: 404 });
+        }
+
+        return handler(request, {
+          waitUntil: (task) => {
+            void task.catch((error) => {
+              console.error("[chat-sdk] background webhook task failed", error);
+            });
+          },
+        });
+      },
+      GET: async ({ request }) => {
+        const url = new URL(request.url);
+        const platform = url.pathname.split("/").filter(Boolean).pop();
+        if (!platform) {
+          return new Response("Missing platform", { status: 400 });
+        }
+
+        const isConfigured = chatBot.webhooks[platform as keyof typeof chatBot.webhooks] !== undefined;
+        return new Response(
+          isConfigured ? `${platform} webhook endpoint is active` : `${platform} adapter not configured`,
+          { status: isConfigured ? 200 : 404 },
+        );
+      },
+    },
+  },
+});

@@ -1,0 +1,33 @@
+import { after } from "next/server";
+import { chatBot } from "@/lib/chat-bot";
+
+type Platform = keyof typeof chatBot.webhooks;
+
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ platform: string }> },
+): Promise<Response> {
+  const { platform } = await params;
+
+  const handler = chatBot.webhooks[platform as Platform];
+  if (!handler) {
+    return new Response(`Unknown platform: ${platform}`, { status: 404 });
+  }
+
+  return handler(request, {
+    waitUntil: (task) => after(() => task),
+  });
+}
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ platform: string }> },
+): Promise<Response> {
+  const { platform } = await params;
+  const isConfigured = chatBot.webhooks[platform as Platform] !== undefined;
+
+  return new Response(
+    isConfigured ? `${platform} webhook endpoint is active` : `${platform} adapter not configured`,
+    { status: isConfigured ? 200 : 404 },
+  );
+}

@@ -1,0 +1,48 @@
+/** @jsxImportSource chat */
+import { createDiscordAdapter } from "@chat-adapter/discord";
+import { createMemoryState } from "@chat-adapter/state-memory";
+import { generateText } from "ai";
+import { anthropic } from "@ai-sdk/anthropic";
+import { Actions, Button, Card, CardText as Text, Chat, Divider } from "chat";
+
+export const chatBot = new Chat({
+  userName: process.env.BOT_USERNAME || "support-bot",
+  adapters: {
+    discord: createDiscordAdapter(),
+  },
+  state: createMemoryState(),
+});
+
+chatBot.onNewMention(async (thread) => {
+  await thread.subscribe();
+  await thread.post(
+    <Card title="Support">
+      <Text>Hey! I'm here to help. Ask your question in this thread.</Text>
+      <Divider />
+      <Actions>
+        <Button id="escalate" style="danger">
+          Escalate to Human
+        </Button>
+      </Actions>
+    </Card>,
+  );
+});
+
+chatBot.onSubscribedMessage(async (thread, message) => {
+  await thread.startTyping();
+
+  const { text } = await generateText({
+    model: anthropic("claude-sonnet-4-5-20250514"),
+    system:
+      "You are a friendly support bot. Answer questions concisely. If you do not know, say so and suggest escalating to a human.",
+    prompt: message.text,
+  });
+
+  await thread.post(text);
+});
+
+chatBot.onAction("escalate", async (event) => {
+  await event.thread.post(
+    `${event.user.fullName} requested human support. A team member will follow up shortly.`,
+  );
+});

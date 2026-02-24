@@ -10,6 +10,62 @@ export function processExamplesDeps(vfs: VirtualFileSystem, config: ProjectConfi
   if (config.examples.includes("ai")) {
     setupAIDependencies(vfs, config);
   }
+
+  if (config.examples.includes("chat-sdk")) {
+    setupChatSdkDependencies(vfs, config);
+  }
+}
+
+function setupChatSdkDependencies(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  const { frontend, backend, runtime } = config;
+
+  const webPkgPath = "apps/web/package.json";
+  const serverPkgPath = "apps/server/package.json";
+  const webExists = vfs.exists(webPkgPath);
+  const serverExists = vfs.exists(serverPkgPath);
+
+  const isSelfNext = backend === "self" && frontend.includes("next");
+  const isSelfTanStackStart = backend === "self" && frontend.includes("tanstack-start");
+  const isSelfNuxt = backend === "self" && frontend.includes("nuxt");
+  const isHonoNode = backend === "hono" && runtime === "node";
+
+  if ((isSelfNext || isSelfTanStackStart) && webExists) {
+    addPackageDependency({
+      vfs,
+      packagePath: webPkgPath,
+      dependencies: ["chat", "@chat-adapter/slack", "@chat-adapter/state-memory"],
+    });
+  }
+
+  if (isSelfNuxt && webExists) {
+    addPackageDependency({
+      vfs,
+      packagePath: webPkgPath,
+      dependencies: [
+        "chat",
+        "@chat-adapter/discord",
+        "@chat-adapter/state-memory",
+        "ai",
+        "@ai-sdk/anthropic",
+      ],
+    });
+  }
+
+  if (isHonoNode && serverExists) {
+    addPackageDependency({
+      vfs,
+      packagePath: serverPkgPath,
+      dependencies: [
+        "chat",
+        "@chat-adapter/github",
+        "@chat-adapter/state-memory",
+        "@octokit/rest",
+        "@vercel/sandbox",
+        "bash-tool",
+        "ai",
+      ],
+    });
+  }
 }
 
 function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): void {

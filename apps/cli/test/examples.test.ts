@@ -1,4 +1,5 @@
-import { describe, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
+import { join } from "node:path";
 
 import { EXAMPLES, expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
@@ -276,17 +277,18 @@ describe("Example Configurations", () => {
         const config: TestConfig = {
           projectName: `test-${example}`,
           examples: [example],
-          backend: "hono",
-          runtime: "bun",
+          backend: example === "chat-sdk" ? "self" : "hono",
+          runtime: example === "chat-sdk" ? "none" : "bun",
           database: "sqlite",
           orm: "drizzle",
           auth: "none",
           api: "trpc",
-          frontend: ["tanstack-router"],
+          frontend: [example === "chat-sdk" ? "next" : "tanstack-router"],
           addons: ["none"],
           dbSetup: "none",
           webDeploy: "none",
           serverDeploy: "none",
+          ...(example === "chat-sdk" ? { ai: "none" as const } : {}),
           install: false,
         };
 
@@ -316,6 +318,216 @@ describe("Example Configurations", () => {
       });
 
       expectSuccess(result);
+    });
+  });
+
+  describe("Chat SDK Example", () => {
+    it("should scaffold Next.js self backend Slack profile", async () => {
+      const result = await runTRPCTest({
+        projectName: "chat-sdk-next",
+        examples: ["chat-sdk"],
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        ai: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      expect(result.projectDir).toBeDefined();
+
+      const projectDir = result.projectDir!;
+      const routeFile = await Bun.file(
+        join(projectDir, "apps/web/src/app/api/webhooks/[platform]/route.ts"),
+      ).text();
+      const botFile = await Bun.file(join(projectDir, "apps/web/src/lib/chat-bot.tsx")).text();
+      const webPkg = await Bun.file(join(projectDir, "apps/web/package.json")).json();
+
+      expect(routeFile).toContain("chatBot.webhooks");
+      expect(botFile).toContain("createSlackAdapter");
+      expect(webPkg.dependencies.chat).toBeDefined();
+      expect(webPkg.dependencies["@chat-adapter/slack"]).toBeDefined();
+      expect(webPkg.dependencies["@chat-adapter/state-memory"]).toBeDefined();
+    });
+
+    it("should scaffold TanStack Start self backend Slack profile", async () => {
+      const result = await runTRPCTest({
+        projectName: "chat-sdk-tss",
+        examples: ["chat-sdk"],
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-start"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        ai: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      expect(result.projectDir).toBeDefined();
+
+      const projectDir = result.projectDir!;
+      const routeFile = await Bun.file(join(projectDir, "apps/web/src/routes/api/webhooks/$.ts")).text();
+      const webPkg = await Bun.file(join(projectDir, "apps/web/package.json")).json();
+
+      expect(routeFile).toContain("createFileRoute(\"/api/webhooks/$\")");
+      expect(routeFile).toContain("chatBot.webhooks");
+      expect(webPkg.dependencies["@chat-adapter/slack"]).toBeDefined();
+    });
+
+    it("should scaffold Nuxt self backend Discord profile (requires vercel-ai)", async () => {
+      const result = await runTRPCTest({
+        projectName: "chat-sdk-nuxt",
+        examples: ["chat-sdk"],
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "orpc",
+        frontend: ["nuxt"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        ai: "vercel-ai",
+        install: false,
+      });
+
+      expectSuccess(result);
+      expect(result.projectDir).toBeDefined();
+
+      const projectDir = result.projectDir!;
+      const botFile = await Bun.file(join(projectDir, "apps/web/server/lib/chat-bot.tsx")).text();
+      const gatewayFile = await Bun.file(
+        join(projectDir, "apps/web/server/api/discord/gateway.get.ts"),
+      ).text();
+      const webEnv = await Bun.file(join(projectDir, "apps/web/.env")).text();
+      const webPkg = await Bun.file(join(projectDir, "apps/web/package.json")).json();
+
+      expect(botFile).toContain("createDiscordAdapter");
+      expect(gatewayFile).toContain("startGatewayListener");
+      expect(webEnv).toContain("DISCORD_BOT_TOKEN");
+      expect(webEnv).toContain("ANTHROPIC_API_KEY");
+      expect(webPkg.dependencies["@chat-adapter/discord"]).toBeDefined();
+      expect(webPkg.dependencies["@ai-sdk/anthropic"]).toBeDefined();
+    });
+
+    it("should scaffold Hono Node GitHub review profile (requires vercel-ai)", async () => {
+      const result = await runTRPCTest({
+        projectName: "chat-sdk-hono-node",
+        examples: ["chat-sdk"],
+        backend: "hono",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        ai: "vercel-ai",
+        install: false,
+      });
+
+      expectSuccess(result);
+      expect(result.projectDir).toBeDefined();
+
+      const projectDir = result.projectDir!;
+      const serverIndex = await Bun.file(join(projectDir, "apps/server/src/index.ts")).text();
+      const botFile = await Bun.file(join(projectDir, "apps/server/src/bot.ts")).text();
+      const reviewFile = await Bun.file(join(projectDir, "apps/server/src/review.ts")).text();
+      const serverEnv = await Bun.file(join(projectDir, "apps/server/.env")).text();
+      const serverPkg = await Bun.file(join(projectDir, "apps/server/package.json")).json();
+
+      expect(serverIndex).toContain("/api/webhooks/github");
+      expect(botFile).toContain("createGitHubAdapter");
+      expect(reviewFile).toContain("Sandbox.create");
+      expect(serverEnv).toContain("GITHUB_WEBHOOK_SECRET");
+      expect(serverPkg.dependencies["@chat-adapter/github"]).toBeDefined();
+      expect(serverPkg.dependencies["@vercel/sandbox"]).toBeDefined();
+      expect(serverPkg.dependencies["bash-tool"]).toBeDefined();
+    });
+
+    it("should fail with Hono + Bun runtime", async () => {
+      const result = await runTRPCTest({
+        projectName: "chat-sdk-hono-bun-fail",
+        examples: ["chat-sdk"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        ai: "vercel-ai",
+        expectError: true,
+      });
+
+      expectError(result, "The 'chat-sdk' example with Hono requires '--runtime node'");
+    });
+
+    it("should fail with Convex backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "chat-sdk-convex-fail",
+        examples: ["chat-sdk"],
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "none",
+        frontend: ["tanstack-router"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "The 'chat-sdk' example is not supported with the Convex backend in v1");
+    });
+
+    it("should fail with non-vercel-ai on Nuxt/Hono chat-sdk profiles", async () => {
+      const nuxtResult = await runTRPCTest({
+        projectName: "chat-sdk-nuxt-ai-fail",
+        examples: ["chat-sdk"],
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "orpc",
+        frontend: ["nuxt"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        ai: "langchain",
+        expectError: true,
+      });
+
+      expectError(nuxtResult, "The 'chat-sdk' example requires '--ai vercel-ai'");
     });
   });
 });

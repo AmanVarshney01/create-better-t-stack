@@ -1,0 +1,51 @@
+import { Sandbox } from "@vercel/sandbox";
+import { ToolLoopAgent, stepCountIs } from "ai";
+import { createBashTool } from "bash-tool";
+
+interface ReviewInput {
+  owner: string;
+  repo: string;
+  prBranch: string;
+  baseBranch: string;
+}
+
+export async function reviewPullRequest(input: ReviewInput): Promise<string> {
+  const { owner, repo, prBranch, baseBranch } = input;
+
+  const sandbox = await Sandbox.create({
+    source: {
+      type: "git",
+      url: `https://github.com/${owner}/${repo}`,
+      username: "x-access-token",
+      password: process.env.GITHUB_TOKEN,
+      depth: 50,
+    },
+    timeout: 5 * 60 * 1000,
+  });
+
+  try {
+    await sandbox.runCommand("git", ["fetch", "origin", prBranch, baseBranch]);
+    await sandbox.runCommand("git", ["checkout", prBranch]);
+
+    const diffResult = await sandbox.runCommand("git", ["diff", `origin/${baseBranch}...HEAD`]);
+    const diff = await diffResult.output("stdout");
+
+    const { tools } = await createBashTool({ sandbox });
+
+    const agent = new ToolLoopAgent({
+      model: "anthropic/claude-sonnet-4.6",
+      tools,
+      stopWhen: stepCountIs(20),
+      instructions:
+        "You are reviewing a pull request for bugs, risks, regressions, and missing tests. Prioritize concrete findings.",
+    });
+
+    const result = await agent.generate({
+      prompt: `Review this pull request diff and report issues by severity.\n\n\`\`\`diff\n${diff}\n\`\`\``,
+    });
+
+    return result.text;
+  } finally {
+    await sandbox.stop();
+  }
+}

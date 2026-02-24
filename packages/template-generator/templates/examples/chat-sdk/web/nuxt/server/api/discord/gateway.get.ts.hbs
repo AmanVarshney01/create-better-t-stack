@@ -1,0 +1,21 @@
+import { chatBot } from "../../lib/chat-bot";
+
+export default defineEventHandler(async (event) => {
+  await chatBot.initialize();
+
+  const discord = chatBot.getAdapter("discord");
+  if (!discord) {
+    throw createError({ statusCode: 404, message: "Discord adapter not configured" });
+  }
+
+  const baseUrl = process.env.NUXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const webhookUrl = `${baseUrl}/api/webhooks/discord`;
+  const durationMs = 10 * 60 * 1000;
+
+  return discord.startGatewayListener(
+    { waitUntil: (task: Promise<unknown>) => event.waitUntil(task) },
+    durationMs,
+    undefined,
+    webhookUrl,
+  );
+});

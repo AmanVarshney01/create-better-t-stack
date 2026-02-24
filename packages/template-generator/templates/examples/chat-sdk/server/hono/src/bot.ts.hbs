@@ -1,0 +1,47 @@
+import type { GitHubRawMessage } from "@chat-adapter/github";
+import { createGitHubAdapter } from "@chat-adapter/github";
+import { createMemoryState } from "@chat-adapter/state-memory";
+import { Octokit } from "@octokit/rest";
+import { Chat } from "chat";
+import { reviewPullRequest } from "./review";
+
+const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+
+export const bot = new Chat({
+  userName: process.env.BOT_USERNAME || "my-review-bot",
+  adapters: {
+    github: createGitHubAdapter(),
+  },
+  state: createMemoryState(),
+});
+
+bot.onNewMention(async (thread, message) => {
+  const raw = message.raw as GitHubRawMessage;
+  const owner = raw.repository.owner.login;
+  const repo = raw.repository.name;
+  const prNumber = raw.prNumber;
+
+  const { data: pr } = await octokit.pulls.get({
+    owner,
+    repo,
+    pull_number: prNumber,
+  });
+
+  await thread.post("Starting code review...");
+  await thread.subscribe();
+
+  const review = await reviewPullRequest({
+    owner,
+    repo,
+    prBranch: pr.head.ref,
+    baseBranch: pr.base.ref,
+  });
+
+  await thread.post(review);
+});
+
+bot.onSubscribedMessage(async (thread) => {
+  await thread.post(
+    "I've already reviewed this PR. Mention me on a new PR or inline thread to start another review.",
+  );
+});

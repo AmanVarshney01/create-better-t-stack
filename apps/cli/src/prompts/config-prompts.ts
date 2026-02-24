@@ -57,7 +57,7 @@ import type {
   WebDeploy,
 } from "../types";
 
-import { hasWebStyling } from "../utils/compatibility-rules";
+import { hasWebStyling, requiresChatSdkVercelAI } from "../utils/compatibility-rules";
 import { exitCancelled } from "../utils/errors";
 import { getAddonsChoice } from "./addons";
 import { getAIChoice } from "./ai";
@@ -277,9 +277,12 @@ export async function gatherConfig(
       },
       examples: ({ results }) => {
         if (results.ecosystem !== "typescript") return Promise.resolve([] as Examples[]);
-        return getExamplesChoice(flags.examples, results.frontend, results.backend) as Promise<
-          Examples[]
-        >;
+        return getExamplesChoice(
+          flags.examples,
+          results.frontend,
+          results.backend,
+          results.runtime,
+        ) as Promise<Examples[]>;
       },
       dbSetup: ({ results }) => {
         if (results.ecosystem !== "typescript") return Promise.resolve("none" as DatabaseSetup);
@@ -312,6 +315,13 @@ export async function gatherConfig(
       // TypeScript-specific prompts
       ai: ({ results }) => {
         if (results.ecosystem !== "typescript") return Promise.resolve("none" as AI);
+        if (
+          flags.ai === undefined &&
+          results.examples.includes("chat-sdk") &&
+          requiresChatSdkVercelAI(results.backend, results.frontend, results.runtime)
+        ) {
+          return Promise.resolve("vercel-ai" as AI);
+        }
         return getAIChoice(flags.ai);
       },
       validation: ({ results }) => {

@@ -1,4 +1,5 @@
 import type {
+  AI,
   Addons,
   API,
   AstroIntegration,
@@ -10,6 +11,7 @@ import type {
   Frontend,
   Payments,
   ProjectConfig,
+  Runtime,
   ServerDeploy,
   UILibrary,
   WebDeploy,
@@ -530,6 +532,38 @@ export function isExampleAIAllowed(backend?: ProjectConfig["backend"], frontends
   return true;
 }
 
+function hasExampleChatSdkSelfFrontend(frontends: Frontend[] = []) {
+  return frontends.some((f) => ["next", "tanstack-start", "nuxt"].includes(f));
+}
+
+export function isExampleChatSdkAllowed(
+  backend?: ProjectConfig["backend"],
+  frontends: Frontend[] = [],
+  runtime?: Runtime,
+) {
+  if (!backend || backend === "none" || backend === "convex") return false;
+
+  if (backend === "self") {
+    return hasExampleChatSdkSelfFrontend(frontends);
+  }
+
+  if (backend === "hono") {
+    return runtime === "node";
+  }
+
+  return false;
+}
+
+export function requiresChatSdkVercelAI(
+  backend?: ProjectConfig["backend"],
+  frontends: Frontend[] = [],
+  runtime?: Runtime,
+) {
+  if (backend === "self" && frontends.includes("nuxt")) return true;
+  if (backend === "hono" && runtime === "node") return true;
+  return false;
+}
+
 export function validateWebDeployRequiresWebFrontend(
   webDeploy: WebDeploy | undefined,
   hasWebFrontendFlag: boolean,
@@ -634,6 +668,8 @@ export function validateExamplesCompatibility(
   examples: string[] | undefined,
   backend: ProjectConfig["backend"] | undefined,
   frontend?: Frontend[],
+  runtime?: Runtime,
+  ai?: AI,
 ) {
   const examplesArr = examples ?? [];
   if (examplesArr.length === 0 || examplesArr.includes("none")) return;
@@ -650,6 +686,44 @@ export function validateExamplesCompatibility(
     if (includesNuxt || includesSvelte) {
       exitWithError(
         "The 'ai' example with Convex backend only supports React-based frontends (Next.js, TanStack Router, TanStack Start, React Router). Svelte and Nuxt are not supported with Convex AI.",
+      );
+    }
+  }
+
+  if (examplesArr.includes("chat-sdk")) {
+    const frontendArr = frontend ?? [];
+
+    if (!isExampleChatSdkAllowed(backend, frontendArr, runtime)) {
+      if (backend === "none") {
+        exitWithError("The 'chat-sdk' example requires a backend.");
+      }
+
+      if (backend === "convex") {
+        exitWithError(
+          "The 'chat-sdk' example is not supported with the Convex backend in v1. Use self backend (Next.js, TanStack Start, Nuxt) or Hono with Node runtime.",
+        );
+      }
+
+      if (backend === "self") {
+        exitWithError(
+          "The 'chat-sdk' example with self backend only supports Next.js, TanStack Start, or Nuxt frontends in v1.",
+        );
+      }
+
+      if (backend === "hono" && runtime !== "node") {
+        exitWithError(
+          "The 'chat-sdk' example with Hono requires '--runtime node' in v1 (Bun/Workers not supported yet).",
+        );
+      }
+
+      exitWithError(
+        "The 'chat-sdk' example is only supported with self backend (Next.js, TanStack Start, Nuxt) or Hono with Node runtime in v1.",
+      );
+    }
+
+    if (requiresChatSdkVercelAI(backend, frontendArr, runtime) && ai && ai !== "vercel-ai") {
+      exitWithError(
+        "The 'chat-sdk' example requires '--ai vercel-ai' for the selected stack in v1 (Nuxt Discord and Hono GitHub profiles).",
       );
     }
   }

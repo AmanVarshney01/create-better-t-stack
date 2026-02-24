@@ -31,6 +31,8 @@ function generateReadmeContent(options: ProjectConfig): string {
     webDeploy,
     serverDeploy,
     dbSetup,
+    examples = [],
+    ai = "none",
   } = options;
 
   const isConvex = backend === "convex";
@@ -111,10 +113,15 @@ ${packageManagerRunCmd} dev
 
 ${generateRunningInstructions(frontend, backend, webPort, hasNative, isConvex)}
 ${
-  addons.includes("pwa") && hasReactRouter
-    ? "\n## PWA Support with React Router v7\n\nThere is a known compatibility issue between VitePWA and React Router v7.\nSee: https://github.com/vite-pwa/vite-plugin-pwa/issues/809\n"
+  examples.includes("chat-sdk")
+    ? `\n${generateChatSdkExampleSection(options, packageManagerRunCmd, webPort, ai)}\n`
     : ""
 }
+  ${
+    addons.includes("pwa") && hasReactRouter
+      ? "\n## PWA Support with React Router v7\n\nThere is a known compatibility issue between VitePWA and React Router v7.\nSee: https://github.com/vite-pwa/vite-plugin-pwa/issues/809\n"
+      : ""
+  }
 ${generateDeploymentCommands(packageManagerRunCmd, webDeploy, serverDeploy)}
 ${generateGitHooksSection(packageManagerRunCmd, addons)}
 
@@ -127,6 +134,123 @@ ${generateProjectStructure(projectName, frontend, backend, addons, isConvex, api
 ## Available Scripts
 
 ${generateScriptsList(packageManagerRunCmd, database, orm, hasNative, addons, backend, dbSetup)}
+`;
+}
+
+function generateChatSdkExampleSection(
+  options: ProjectConfig,
+  packageManagerRunCmd: string,
+  webPort: string,
+  ai: ProjectConfig["ai"],
+): string {
+  const { backend, frontend, runtime } = options;
+  const isNextSlack = backend === "self" && frontend.includes("next");
+  const isTanStackStartSlack = backend === "self" && frontend.includes("tanstack-start");
+  const isNuxtDiscord = backend === "self" && frontend.includes("nuxt");
+  const isHonoGithub = backend === "hono" && runtime === "node";
+
+  if (!isNextSlack && !isTanStackStartSlack && !isNuxtDiscord && !isHonoGithub) {
+    return "";
+  }
+
+  if (isNextSlack || isTanStackStartSlack) {
+    return `## Chat SDK Example (Slack Bot)
+
+This project includes a Chat SDK Slack bot example using \`@chat-adapter/state-memory\` for local development.
+
+### Environment variables
+
+Set these in \`apps/web/.env\`:
+
+- \`SLACK_BOT_TOKEN\`
+- \`SLACK_SIGNING_SECRET\`
+- Optional: \`BOT_USERNAME\`
+
+### Local setup
+
+1. Start the app: \`${packageManagerRunCmd} dev\`
+2. Expose the app with a tunnel (for example, ngrok)
+3. Point Slack Event Subscriptions + Interactivity to \`/api/webhooks/slack\`
+4. Mention your bot in a channel to start a thread
+
+### Production note
+
+The generated example uses in-memory state. For production, switch to \`@chat-adapter/state-redis\` and set \`REDIS_URL\`.
+
+### Docs
+
+- https://chat-sdk.dev/docs/guides/slack-nextjs
+- https://chat-sdk.dev/docs/adapters/slack
+`;
+  }
+
+  if (isNuxtDiscord) {
+    return `## Chat SDK Example (Discord Support Bot)
+
+This project includes a Chat SDK Discord bot example with a Gateway forwarder route and an AI response flow.
+
+### Environment variables
+
+Set these in \`apps/web/.env\`:
+
+- \`DISCORD_BOT_TOKEN\`
+- \`DISCORD_PUBLIC_KEY\`
+- \`DISCORD_APPLICATION_ID\`
+- \`ANTHROPIC_API_KEY\`
+- \`NUXT_PUBLIC_SITE_URL\`
+
+The Chat SDK Nuxt Discord profile is scaffolded with \`ai=vercel-ai\` in v1${ai === "vercel-ai" ? " (already selected)." : "."}
+
+### Local setup
+
+1. Start the app: \`${packageManagerRunCmd} dev\`
+2. Open \`http://localhost:${webPort}/api/discord/gateway\` to start the Gateway listener
+3. Expose the app with a tunnel
+4. Set your Discord Interactions Endpoint URL to \`/api/webhooks/discord\`
+5. Mention the bot in your Discord server
+
+### Production note
+
+The generated example uses in-memory state. For production, switch to \`@chat-adapter/state-redis\` and set \`REDIS_URL\`.
+
+The Gateway listener runs for a limited duration. Configure a cron job to hit \`/api/discord/gateway\` periodically (for example every 9 minutes). Better-Fullstack does not generate Vercel cron config for this in v1.
+
+### Docs
+
+- https://chat-sdk.dev/docs/guides/discord-nuxt
+- https://chat-sdk.dev/docs/adapters/discord
+`;
+  }
+
+  return `## Chat SDK Example (GitHub Review Bot)
+
+This project includes a Chat SDK GitHub pull request review bot example on Hono with a Vercel Sandbox-based review helper.
+
+### Environment variables
+
+Set these in \`apps/server/.env\`:
+
+- \`GITHUB_TOKEN\`
+- \`GITHUB_WEBHOOK_SECRET\`
+- Optional: \`BOT_USERNAME\`
+
+### Local setup
+
+1. Start the server: \`${packageManagerRunCmd} dev\`
+2. Expose it with a tunnel
+3. Configure your GitHub repository webhook to \`/api/webhooks/github\`
+4. Mention the bot in a PR comment or review thread
+
+### Production note
+
+The generated example uses in-memory state. For production, switch to \`@chat-adapter/state-redis\` and set \`REDIS_URL\`.
+
+The review helper depends on \`@vercel/sandbox\` and \`bash-tool\` to inspect diffs and repo files. Review the upstream guide before productionizing the workflow.
+
+### Docs
+
+- https://chat-sdk.dev/docs/guides/code-review-hono
+- https://chat-sdk.dev/docs/adapters/github
 `;
 }
 

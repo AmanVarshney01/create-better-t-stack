@@ -19,6 +19,9 @@ import { auth } from "@{{projectName}}/auth";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+{{#if (and (includes examples "chat-sdk") (eq runtime "node"))}}
+import { bot as chatSdkBot } from "./bot";
+{{/if}}
 {{#if (and (includes examples "ai") (or (eq runtime "bun") (eq runtime "node")))}}
 import { streamText, convertToModelMessages, wrapLanguageModel } from "ai";
 import { google } from "@ai-sdk/google";
@@ -142,6 +145,19 @@ app.post("/ai", async (c) => {
 	});
 
 	return result.toUIMessageStreamResponse();
+});
+{{/if}}
+
+{{#if (and (includes examples "chat-sdk") (eq runtime "node"))}}
+app.post("/api/webhooks/github", async (c) => {
+	const handler = chatSdkBot.webhooks.github;
+	if (!handler) {
+		return c.text("GitHub adapter not configured", 404);
+	}
+
+	return handler(c.req.raw, {
+		waitUntil: (task) => c.executionCtx.waitUntil(task),
+	});
 });
 {{/if}}
 

@@ -1,0 +1,18 @@
+import { chatBot } from "../../lib/chat-bot";
+
+type Platform = keyof typeof chatBot.webhooks;
+
+export default defineEventHandler(async (event) => {
+  const platform = getRouterParam(event, "platform") as Platform;
+
+  const handler = chatBot.webhooks[platform];
+  if (!handler) {
+    throw createError({ statusCode: 404, message: `Unknown platform: ${platform}` });
+  }
+
+  const request = toWebRequest(event);
+
+  return handler(request, {
+    waitUntil: (task) => event.waitUntil(task),
+  });
+});

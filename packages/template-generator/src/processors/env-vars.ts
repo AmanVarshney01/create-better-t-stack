@@ -572,6 +572,13 @@ function buildServerVars(
 ): EnvVariable[] {
   const hasReactRouter = frontend.includes("react-router");
   const hasSvelte = frontend.includes("svelte");
+  const hasChatSdkExample = examples?.includes("chat-sdk") || false;
+  const isChatSdkSlackSelf =
+    hasChatSdkExample &&
+    backend === "self" &&
+    (frontend.includes("next") || frontend.includes("tanstack-start"));
+  const isChatSdkDiscordNuxt = hasChatSdkExample && backend === "self" && frontend.includes("nuxt");
+  const isChatSdkGithubHono = hasChatSdkExample && backend === "hono" && runtime === "node";
 
   let corsOrigin = "http://localhost:3001";
   if (backend === "self") {
@@ -913,6 +920,73 @@ function buildServerVars(
       key: "GOOGLE_GENERATIVE_AI_API_KEY",
       value: "",
       condition: examples?.includes("ai") || false,
+    },
+    {
+      key: "SLACK_BOT_TOKEN",
+      value: "xoxb-your-bot-token",
+      condition: isChatSdkSlackSelf,
+      comment: "Slack bot token for Chat SDK Slack profile",
+    },
+    {
+      key: "SLACK_SIGNING_SECRET",
+      value: "",
+      condition: isChatSdkSlackSelf,
+      comment: "Slack signing secret for webhook verification",
+    },
+    {
+      key: "DISCORD_BOT_TOKEN",
+      value: "",
+      condition: isChatSdkDiscordNuxt,
+      comment: "Discord bot token for Chat SDK Discord profile",
+    },
+    {
+      key: "DISCORD_PUBLIC_KEY",
+      value: "",
+      condition: isChatSdkDiscordNuxt,
+      comment: "Discord application public key for interaction verification",
+    },
+    {
+      key: "DISCORD_APPLICATION_ID",
+      value: "",
+      condition: isChatSdkDiscordNuxt,
+      comment: "Discord application ID for gateway forwarding",
+    },
+    {
+      key: "ANTHROPIC_API_KEY",
+      value: "",
+      condition: isChatSdkDiscordNuxt,
+      comment: "Anthropic API key for the Discord support bot example",
+    },
+    {
+      key: "NUXT_PUBLIC_SITE_URL",
+      value: "http://localhost:3000",
+      condition: isChatSdkDiscordNuxt,
+      comment: "Base URL used by the Discord gateway forwarder to call your webhook route",
+    },
+    {
+      key: "GITHUB_TOKEN",
+      value: "ghp_your_personal_access_token",
+      condition: isChatSdkGithubHono,
+      comment: "GitHub token for the Chat SDK GitHub review bot example",
+    },
+    {
+      key: "GITHUB_WEBHOOK_SECRET",
+      value: "",
+      condition: isChatSdkGithubHono,
+      comment: "GitHub webhook secret used to verify incoming events",
+    },
+    {
+      key: "BOT_USERNAME",
+      value: isChatSdkGithubHono ? "my-review-bot" : "mybot",
+      condition: isChatSdkSlackSelf || isChatSdkGithubHono,
+      comment: "Optional Chat SDK bot username override",
+    },
+    {
+      key: "REDIS_URL",
+      value: "redis://localhost:6379",
+      condition: hasChatSdkExample,
+      comment:
+        "Optional: switch Chat SDK examples from memory state to @chat-adapter/state-redis for production",
     },
     {
       key: "DATABASE_URL",

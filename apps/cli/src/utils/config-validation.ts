@@ -600,7 +600,13 @@ export function validateFullConfig(
     config.addons = [...new Set(config.addons)];
   }
 
-  validateExamplesCompatibility(config.examples ?? [], config.backend, config.frontend ?? []);
+  validateExamplesCompatibility(
+    config.examples ?? [],
+    config.backend,
+    config.frontend ?? [],
+    config.runtime,
+    config.ai,
+  );
 
   validatePaymentsCompatibility(
     config.payments,
@@ -648,7 +654,13 @@ export function validateConfigForProgrammaticUse(config: Partial<ProjectConfig>)
       validateAddonsAgainstFrontends(config.addons, config.frontend, config.auth);
     }
 
-    validateExamplesCompatibility(config.examples ?? [], config.backend, config.frontend ?? []);
+    validateExamplesCompatibility(
+      config.examples ?? [],
+      config.backend,
+      config.frontend ?? [],
+      config.runtime,
+      config.ai,
+    );
 
     validateUILibraryFrontendCompatibility(
       config.uiLibrary,

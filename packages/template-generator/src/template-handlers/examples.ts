@@ -25,6 +25,16 @@ export async function processExampleTemplates(
   for (const example of config.examples) {
     if (example === "none") continue;
 
+    if (example === "chat-sdk" && config.backend === "hono") {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        "examples/chat-sdk/server/hono",
+        "apps/server",
+        config,
+      );
+    }
+
     if (config.backend === "convex") {
       processTemplatesFromPrefix(
         vfs,

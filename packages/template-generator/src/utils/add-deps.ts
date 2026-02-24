@@ -113,6 +113,9 @@ export const dependencyVersionMap = {
   "@hono/node-server": "^1.19.9",
   "@hono/trpc-server": "^0.4.2",
   hono: "^4.8.2",
+  "@octokit/rest": "^21.0.2",
+  "@vercel/sandbox": "^1.7.1",
+  "bash-tool": "^1.3.15",
 
   cors: "^2.8.5",
   express: "^5.1.0",
@@ -145,7 +148,16 @@ export const dependencyVersionMap = {
 
   turbo: "^2.6.3",
 
+  // Chat SDK (Vercel)
+  chat: "^4.14.0",
+  "@chat-adapter/slack": "^4.14.0",
+  "@chat-adapter/discord": "^4.14.0",
+  "@chat-adapter/github": "^4.14.0",
+  "@chat-adapter/state-memory": "^4.14.0",
+  "@chat-adapter/state-redis": "^4.14.0",
+
   ai: "^6.0.3",
+  "@ai-sdk/anthropic": "^3.0.47",
   "@ai-sdk/google": "^3.0.29",
   "@ai-sdk/vue": "^3.0.86",
   "@ai-sdk/svelte": "^4.0.86",
