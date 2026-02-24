@@ -340,7 +340,8 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     changed = true;
     changes.push({
       category: "runtime",
-      message: "Database changed to SQLite with D1 (MongoDB incompatible with Workers)",
+      message:
+        "Database changed to SQLite with D1 (Better-Fullstack doesn't support MongoDB with Workers)",
     });
   }
 
@@ -535,7 +536,8 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
         changed = true;
         changes.push({
           category: "dbSetup",
-          message: "DB Setup set to 'D1' (Docker incompatible with Workers)",
+          message:
+            "DB Setup set to 'D1' (Better-Fullstack doesn't support Docker setup with Workers)",
         });
       }
     }
@@ -605,7 +607,7 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     changed = true;
     changes.push({
       category: "auth",
-      message: "Auth set to 'None' (Clerk only works with Convex)",
+      message: "Auth set to 'None' (Better-Fullstack currently supports Clerk only with Convex)",
     });
   }
 
@@ -956,10 +958,10 @@ export const getDisabledReason = (
       }
     }
     if (category === "webFrontend" && optionId === "solid") {
-      return "Solid is not compatible with Convex";
+      return "In Better-Fullstack, the Convex backend is currently not available with Solid";
     }
     if (category === "webFrontend" && optionId === "astro") {
-      return "Astro is not compatible with Convex";
+      return "In Better-Fullstack, the Convex backend is currently not available with Astro";
     }
     if (category === "examples" && optionId === "ai") {
       const hasIncompatibleFrontend = currentStack.webFrontend.some((f) =>
@@ -973,7 +975,7 @@ export const getDisabledReason = (
       }
     }
     if (category === "payments" && optionId === "polar") {
-      return "Polar is not compatible with Convex";
+      return "In Better-Fullstack, Polar is currently not available with the Convex backend";
     }
   }
 
@@ -1087,14 +1089,14 @@ export const getDisabledReason = (
       return "Requires Nuxt frontend";
     }
     if (optionId === "convex" && currentStack.webFrontend.includes("solid")) {
-      return "Convex is not compatible with Solid";
+      return "In Better-Fullstack, Convex is currently not available with Solid";
     }
     if (optionId === "convex" && currentStack.webFrontend.includes("astro")) {
-      return "Convex is not compatible with Astro";
+      return "In Better-Fullstack, Convex is currently not available with Astro";
     }
     // Workers runtime only works with Hono backend
     if (currentStack.runtime === "workers" && optionId !== "hono" && optionId !== "none") {
-      return "Workers runtime only works with Hono";
+      return "In Better-Fullstack, Workers runtime is currently supported only with Hono";
     }
   }
 
@@ -1103,7 +1105,7 @@ export const getDisabledReason = (
   // ============================================
   if (category === "runtime") {
     if (optionId === "workers" && currentStack.backend !== "hono") {
-      return "Workers requires Hono backend";
+      return "In Better-Fullstack, Workers runtime currently requires the Hono backend";
     }
     if (optionId === "none") {
       const allowedBackends = [
@@ -1125,7 +1127,7 @@ export const getDisabledReason = (
   // ============================================
   if (category === "database") {
     if (optionId === "mongodb" && currentStack.runtime === "workers") {
-      return "MongoDB is not compatible with Workers runtime";
+      return "In Better-Fullstack, MongoDB is currently not available with Workers runtime";
     }
     // Allow all databases when ORM is none - system will auto-select ORM
   }
@@ -1136,7 +1138,7 @@ export const getDisabledReason = (
   if (category === "orm") {
     if (optionId === "mongoose") {
       if (currentStack.runtime === "workers") {
-        return "Mongoose requires MongoDB, which is incompatible with Workers";
+        return "Mongoose requires MongoDB, and Better-Fullstack currently doesn't support MongoDB with Workers runtime";
       }
       // Only block if a non-MongoDB database is EXPLICITLY selected
       if (currentStack.database !== "none" && currentStack.database !== "mongodb") {
@@ -1233,7 +1235,7 @@ export const getDisabledReason = (
   if (category === "auth") {
     if (optionId === "clerk") {
       if (currentStack.backend !== "convex") {
-        return "Clerk only works with Convex backend";
+        return "In Better-Fullstack, Clerk is currently supported only with the Convex backend";
       }
       const hasClerkCompatibleFrontend =
         currentStack.webFrontend.some((f) =>
@@ -1433,8 +1435,12 @@ export const getDisabledReason = (
 
   if (category === "serverDeploy") {
     if (optionId === "cloudflare") {
-      if (currentStack.runtime !== "workers") return "Cloudflare requires Workers runtime";
-      if (currentStack.backend !== "hono") return "Cloudflare requires Hono backend";
+      if (currentStack.runtime !== "workers") {
+        return "In Better-Fullstack, Cloudflare server deploy currently requires Workers runtime";
+      }
+      if (currentStack.backend !== "hono") {
+        return "In Better-Fullstack, Cloudflare server deploy is currently supported only with Hono";
+      }
     }
     if (optionId !== "none") {
       const noServerDeploy = [

@@ -100,7 +100,8 @@ export function validateDatabaseOrmAuth(cfg: Partial<ProjectConfig>, flags?: Set
     orm !== "none"
   ) {
     incompatibilityError({
-      message: "MongoDB only works with Mongoose or Prisma ORM.",
+      message:
+        "In Better-Fullstack, MongoDB is currently supported only with Mongoose or Prisma ORM.",
       provided: { database: "mongodb", orm },
       suggestions: ["Use --orm mongoose", "Use --orm prisma"],
     });
@@ -226,7 +227,7 @@ export function validateDatabaseSetup(config: Partial<ProjectConfig>, providedFl
     },
     docker: {
       errorMessage:
-        "Docker setup is not compatible with SQLite database or Cloudflare Workers runtime.",
+        "In Better-Fullstack, Docker setup is currently not available with SQLite database or Cloudflare Workers runtime.",
     },
     none: { errorMessage: "" },
   };
@@ -251,12 +252,12 @@ export function validateDatabaseSetup(config: Partial<ProjectConfig>, providedFl
     if (dbSetup === "docker") {
       if (database === "sqlite") {
         exitWithError(
-          "Docker setup is not compatible with SQLite database. SQLite is file-based and doesn't require Docker. Please use '--database postgres', '--database mysql', '--database mongodb', or choose a different setup.",
+          "In Better-Fullstack, Docker setup is currently not available with SQLite database. SQLite is file-based and doesn't require Docker. Please use '--database postgres', '--database mysql', '--database mongodb', or choose a different setup.",
         );
       }
       if (runtime === "workers") {
         exitWithError(
-          "Docker setup is not compatible with Cloudflare Workers runtime. Workers runtime uses serverless databases (D1) and doesn't support local Docker containers. Please use '--db-setup d1' for SQLite or choose a different runtime.",
+          "In Better-Fullstack, Docker setup is currently not available with Cloudflare Workers runtime. Workers runtime uses serverless databases (D1) and doesn't support local Docker containers. Please use '--db-setup d1' for SQLite or choose a different runtime.",
         );
       }
     }
@@ -506,7 +507,7 @@ export function validateBackendConstraints(
 
   if (config.auth === "clerk" && backend !== "convex") {
     exitWithError(
-      "Clerk authentication is only supported with the Convex backend. Please use '--backend convex' or choose a different auth provider.",
+      "In Better-Fullstack, Clerk authentication is currently supported only with the Convex backend. Please use '--backend convex' or choose a different auth provider.",
     );
   }
 
@@ -516,7 +517,7 @@ export function validateBackendConstraints(
     );
     if (incompatibleFrontends.length > 0) {
       exitWithError(
-        `Clerk authentication is not compatible with the following frontends: ${incompatibleFrontends.join(
+        `In Better-Fullstack, Clerk + Convex is not compatible with the following frontends: ${incompatibleFrontends.join(
           ", ",
         )}. Please choose a different frontend or auth provider.`,
       );
