@@ -1,9 +1,11 @@
 "use client";
 
 import {
+  BookOpen,
   Check,
   ChevronDown,
   ClipboardCopy,
+  Github,
   InfoIcon,
   List,
   Settings,
@@ -22,7 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DEFAULT_STACK,
   ECOSYSTEMS,
@@ -40,6 +42,7 @@ import {
   RUST_CATEGORY_ORDER,
   TYPESCRIPT_CATEGORY_ORDER,
 } from "@/lib/stack-utils";
+import { getTechResourceLinks } from "@/lib/tech-resource-links";
 import { cn } from "@/lib/utils";
 
 import { ActionButtons } from "./action-buttons";
@@ -61,6 +64,58 @@ type MobileTab = "summary" | "configure";
 
 function formatProjectName(name: string): string {
   return name.replace(/\s+/g, "-");
+}
+
+function TechResourceButtons({ category, techId }: { category: string; techId: string }) {
+  const { docsUrl, githubUrl } = getTechResourceLinks(category, techId);
+
+  if (!docsUrl && !githubUrl) return null;
+
+  const linkClass =
+    "inline-flex h-6 w-6 items-center justify-center rounded-md border border-border/60 bg-background/85 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground";
+
+  return (
+    <div className="flex items-center gap-1">
+      {docsUrl && (
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <a
+                href={docsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open documentation"
+                className={linkClass}
+                onClick={(e) => e.stopPropagation()}
+              />
+            }
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+          </TooltipTrigger>
+          <TooltipContent>Docs</TooltipContent>
+        </Tooltip>
+      )}
+      {githubUrl && (
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <a
+                href={githubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open GitHub repository"
+                className={linkClass}
+                onClick={(e) => e.stopPropagation()}
+              />
+            }
+          >
+            <Github className="h-3.5 w-3.5" />
+          </TooltipTrigger>
+          <TooltipContent>GitHub</TooltipContent>
+        </Tooltip>
+      )}
+    </div>
+  );
 }
 
 function getSelectedCount(category: keyof typeof TECH_OPTIONS, stack: StackState): number {
@@ -896,16 +951,32 @@ const StackBuilder = () => {
                                           }}
                                           title={disabledReason || undefined}
                                         >
-                                          {tech.default && !isSelected && (
-                                            <span className="absolute top-2 right-2 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
-                                              Default
-                                            </span>
-                                          )}
-                                          {tech.legacy && (
-                                            <span className="absolute top-2 right-2 rounded-full bg-amber-500/15 px-2 py-0.5 font-medium text-[10px] text-amber-600 dark:text-amber-400">
-                                              Legacy
-                                            </span>
-                                          )}
+                                          <div className="absolute top-2 right-2 flex items-center gap-1">
+                                            <TechResourceButtons
+                                              category={categoryKey}
+                                              techId={tech.id}
+                                            />
+                                            {tech.default && !isSelected && (
+                                              <span className="rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
+                                                Default
+                                              </span>
+                                            )}
+                                            {tech.legacy && (
+                                              <Tooltip>
+                                                <TooltipTrigger
+                                                  onClick={(e) => e.stopPropagation()}
+                                                  className="cursor-default"
+                                                >
+                                                  <span className="rounded-sm border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-pixel text-[9px] text-amber-500 dark:text-amber-400">
+                                                    Legacy
+                                                  </span>
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                  No longer actively maintained
+                                                </TooltipContent>
+                                              </Tooltip>
+                                            )}
+                                          </div>
                                           <div className="flex items-start gap-3">
                                             {tech.icon !== "" && (
                                               <div
@@ -1004,9 +1075,19 @@ const StackBuilder = () => {
                                             </span>
                                           )}
                                           {tech.legacy && (
-                                            <span className="absolute top-2 right-2 rounded-full bg-amber-500/15 px-2 py-0.5 font-medium text-[10px] text-amber-600 dark:text-amber-400">
-                                              Legacy
-                                            </span>
+                                            <Tooltip>
+                                              <TooltipTrigger
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="absolute top-2 right-2 cursor-default"
+                                              >
+                                                <span className="rounded-sm border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-pixel text-[9px] text-amber-500 dark:text-amber-400">
+                                                  Legacy
+                                                </span>
+                                              </TooltipTrigger>
+                                              <TooltipContent>
+                                                No longer actively maintained
+                                              </TooltipContent>
+                                            </Tooltip>
                                           )}
                                           <div className="flex items-start gap-3">
                                             {tech.icon !== "" && (

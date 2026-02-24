@@ -3,6 +3,7 @@ import { writeTreeToFilesystem } from "@better-fullstack/template-generator/fs-w
 import { log } from "@clack/prompts";
 import { $ } from "execa";
 import fs from "fs-extra";
+import os from "node:os";
 import path from "node:path";
 
 import type { ProjectConfig } from "../../types";
@@ -111,7 +112,8 @@ async function setPackageManagerVersion(
   if (!(await fs.pathExists(pkgJsonPath))) return;
 
   try {
-    const { stdout } = await $`${packageManager} -v`;
+    // Avoid local package manager shims in the generated project affecting detection.
+    const { stdout } = await $({ cwd: os.tmpdir() })`${packageManager} -v`;
     const version = stdout.trim();
     const pkgJson = await fs.readJson(pkgJsonPath);
     pkgJson.packageManager = `${packageManager}@${version}`;

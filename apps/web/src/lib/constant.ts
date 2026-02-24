@@ -42,6 +42,7 @@ export const TECH_OPTIONS: Record<
       description: "Fullstack GraphQL Framework for TypeScript",
       icon: "",
       color: "from-pink-400 to-pink-600",
+      legacy: true,
     },
     {
       id: "none",
@@ -331,7 +332,6 @@ export const TECH_OPTIONS: Record<
       description: "TypeScript HTTP Framework with e2e type-safety",
       icon: "/icon/fets.svg",
       color: "from-blue-600 to-cyan-700",
-      legacy: true,
     },
     {
       id: "convex",
@@ -459,7 +459,6 @@ export const TECH_OPTIONS: Record<
       description: "Traditional ORM with Active Record/Data Mapper",
       icon: "https://cdn.simpleicons.org/typeorm/E83524",
       color: "from-red-400 to-red-600",
-      legacy: true,
     },
     {
       id: "kysely",
@@ -481,7 +480,6 @@ export const TECH_OPTIONS: Record<
       description: "Mature ORM with wide adoption",
       icon: "https://cdn.simpleicons.org/sequelize/52B0E7",
       color: "from-blue-400 to-blue-600",
-      legacy: true,
     },
     {
       id: "none",
@@ -676,9 +674,8 @@ export const TECH_OPTIONS: Record<
       id: "nextauth",
       name: "Auth.js (NextAuth)",
       description: "Open source authentication for Next.js",
-      icon: "https://cdn.simpleicons.org/authjs/000000",
+      icon: "/icon/nextauth.png",
       color: "from-orange-400 to-orange-600",
-      legacy: true,
     },
     {
       id: "stack-auth",
@@ -824,6 +821,7 @@ export const TECH_OPTIONS: Record<
       icon: "/icon/plunk.svg",
       color: "from-violet-400 to-violet-600",
       default: false,
+      legacy: true,
     },
     {
       id: "none",
@@ -1033,7 +1031,6 @@ export const TECH_OPTIONS: Record<
       icon: "https://cdn.simpleicons.org/redux/764ABC",
       color: "from-purple-500 to-purple-700",
       default: false,
-      legacy: true,
     },
     {
       id: "mobx",
@@ -1108,7 +1105,6 @@ export const TECH_OPTIONS: Record<
       icon: "",
       color: "from-blue-500 to-blue-700",
       default: false,
-      legacy: true,
     },
     {
       id: "final-form",
@@ -1117,7 +1113,6 @@ export const TECH_OPTIONS: Record<
       icon: "",
       color: "from-purple-500 to-purple-700",
       default: false,
-      legacy: true,
     },
     {
       id: "conform",
@@ -1196,10 +1191,11 @@ export const TECH_OPTIONS: Record<
     {
       id: "effect-schema",
       name: "@effect/schema",
-      description: "Effect ecosystem schema validation with powerful transformations",
+      description: "Merged into the main effect package as effect/Schema",
       icon: "",
       color: "from-black to-gray-700",
       default: false,
+      legacy: true,
     },
     {
       id: "none",
@@ -1402,7 +1398,6 @@ export const TECH_OPTIONS: Record<
       icon: "",
       color: "from-purple-500 to-purple-700",
       default: false,
-      legacy: true,
     },
     {
       id: "ruler",
@@ -1470,6 +1465,23 @@ export const TECH_OPTIONS: Record<
       description: "Build terminal user interfaces",
       icon: "",
       color: "from-cyan-500 to-cyan-700",
+      default: false,
+      legacy: true,
+    },
+    {
+      id: "mcp",
+      name: "MCP",
+      description: "Configure recommended MCP servers for your stack",
+      icon: "",
+      color: "from-emerald-500 to-teal-700",
+      default: false,
+    },
+    {
+      id: "skills",
+      name: "Skills",
+      description: "Install curated coding-agent skills based on your stack",
+      icon: "",
+      color: "from-violet-500 to-fuchsia-700",
       default: false,
     },
     {
@@ -1566,7 +1578,6 @@ export const TECH_OPTIONS: Record<
       icon: "https://cdn.simpleicons.org/langchain/1C3C3C",
       color: "from-green-500 to-emerald-700",
       default: false,
-      legacy: true,
       className: "invert-0 dark:invert",
     },
     {
@@ -1809,7 +1820,6 @@ export const TECH_OPTIONS: Record<
       icon: "",
       color: "from-pink-400 to-pink-600",
       default: false,
-      legacy: true,
     },
     {
       id: "auto-animate",
@@ -1853,7 +1863,6 @@ export const TECH_OPTIONS: Record<
       icon: "https://cdn.simpleicons.org/jest/C21325",
       color: "from-red-400 to-red-600",
       default: false,
-      legacy: true,
     },
     {
       id: "playwright",

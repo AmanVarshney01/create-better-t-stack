@@ -248,6 +248,8 @@ export function generateStackCommand(stack: StackState) {
                 "oxlint",
                 "ruler",
                 "opentui",
+                "mcp",
+                "skills",
                 "wxt",
               ].includes(addon),
             )

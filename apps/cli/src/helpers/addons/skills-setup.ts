@@ -36,6 +36,7 @@ const SKILL_SOURCES = {
   "elysiajs/skills": { label: "ElysiaJS" },
   "waynesutton/convexskills": { label: "Convex" },
   "msmps/opentui-skill": { label: "OpenTUI Platform" },
+  "haydenbleasel/ultracite": { label: "Ultracite" },
 } satisfies Record<string, SkillSource>;
 
 type SourceKey = keyof typeof SKILL_SOURCES;
@@ -109,6 +110,7 @@ function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
   if (backend === "elysia") sources.push("elysiajs/skills");
   if (backend === "convex") sources.push("waynesutton/convexskills");
   if (addons.includes("opentui")) sources.push("msmps/opentui-skill");
+  if (addons.includes("ultracite")) sources.push("haydenbleasel/ultracite");
 
   return sources;
 }
@@ -177,6 +179,7 @@ const CURATED_SKILLS_BY_SOURCE: Record<SourceKey, (config: ProjectConfig) => str
     "convex-security-check",
   ],
   "msmps/opentui-skill": () => ["opentui"],
+  "haydenbleasel/ultracite": () => ["ultracite"],
 };
 
 function getCuratedSkillNamesForSourceKey(sourceKey: SourceKey, config: ProjectConfig): string[] {
