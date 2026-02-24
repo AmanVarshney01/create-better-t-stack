@@ -901,6 +901,11 @@ const StackBuilder = () => {
                                               Default
                                             </span>
                                           )}
+                                          {tech.legacy && (
+                                            <span className="absolute top-2 right-2 rounded-full bg-amber-500/15 px-2 py-0.5 font-medium text-[10px] text-amber-600 dark:text-amber-400">
+                                              Legacy
+                                            </span>
+                                          )}
                                           <div className="flex items-start gap-3">
                                             {tech.icon !== "" && (
                                               <div
@@ -996,6 +1001,11 @@ const StackBuilder = () => {
                                           {tech.default && !isSelected && (
                                             <span className="absolute top-2 right-2 rounded-full bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground">
                                               Default
+                                            </span>
+                                          )}
+                                          {tech.legacy && (
+                                            <span className="absolute top-2 right-2 rounded-full bg-amber-500/15 px-2 py-0.5 font-medium text-[10px] text-amber-600 dark:text-amber-400">
+                                              Legacy
                                             </span>
                                           )}
                                           <div className="flex items-start gap-3">
