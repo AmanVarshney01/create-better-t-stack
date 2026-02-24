@@ -821,6 +821,7 @@ export const TECH_OPTIONS: Record<
       icon: "/icon/plunk.svg",
       color: "from-violet-400 to-violet-600",
       default: false,
+      legacy: true,
     },
     {
       id: "none",
@@ -1190,10 +1191,11 @@ export const TECH_OPTIONS: Record<
     {
       id: "effect-schema",
       name: "@effect/schema",
-      description: "Effect ecosystem schema validation with powerful transformations",
+      description: "Merged into the main effect package as effect/Schema",
       icon: "",
       color: "from-black to-gray-700",
       default: false,
+      legacy: true,
     },
     {
       id: "none",
