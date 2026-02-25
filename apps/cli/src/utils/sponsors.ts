@@ -4,6 +4,8 @@ import { consola } from "consola";
 import pc from "picocolors";
 import z from "zod";
 
+import { CLIError } from "./errors";
+
 export const SPONSORS_JSON_URL = "https://sponsors.better-t-stack.dev/sponsors.json";
 export const GITHUB_SPONSOR_URL = "https://github.com/sponsors/AmanVarshney01";
 
@@ -104,15 +106,8 @@ export async function fetchSponsors(url: string = SPONSORS_JSON_URL) {
 export async function fetchSponsorsQuietly({
   url = SPONSORS_JSON_URL,
   timeoutMs = 1500,
-}: {
-  url?: string;
-  timeoutMs?: number;
-} = {}): Promise<Result<SponsorEntry, Error>> {
-  return Result.tryPromise({
-    try: () => fetchSponsorsData({ url, withSpinner: false, timeoutMs }),
-    catch: (error) =>
-      error instanceof Error ? error : new Error(`Failed to fetch sponsors: ${String(error)}`),
-  });
+}: Pick<FetchSponsorsOptions, "url" | "timeoutMs"> = {}) {
+  return fetchSponsorsData({ url, withSpinner: false, timeoutMs });
 }
 
 export function displaySponsors(sponsors: SponsorEntry) {
@@ -185,7 +180,8 @@ function getPostInstallSponsorLineWidth(): number {
   }
 
   // Keep room for the surrounding box border/padding and avoid edge wrapping.
-  return Math.max(48, terminalWidth - 24);
+  const availableWidth = Math.max(8, terminalWidth - 24);
+  return Math.min(72, availableWidth);
 }
 
 function wrapSponsorTokens(tokens: string[], maxLineWidth: number): string[] {
@@ -221,7 +217,7 @@ async function fetchSponsorsData({
   url = SPONSORS_JSON_URL,
   withSpinner = false,
   timeoutMs,
-}: FetchSponsorsOptions): Promise<SponsorEntry> {
+}: FetchSponsorsOptions): Promise<Result<SponsorEntry, CLIError>> {
   const s = withSpinner ? spinner() : null;
   if (s) {
     s.start("Fetching sponsors…");
@@ -237,9 +233,11 @@ async function fetchSponsorsData({
   try {
     const response = await fetch(url, controller ? { signal: controller.signal } : undefined);
     if (!response.ok) {
-      throw new Error(
-        `Failed to fetch sponsors: ${response.statusText || String(response.status)}`,
-      );
+      const message = `Failed to fetch sponsors: ${response.statusText || String(response.status)}`;
+      if (s) {
+        s.stop(pc.red(message));
+      }
+      return Result.err(new CLIError({ message }));
     }
 
     const rawSponsors = await response.json();
@@ -247,21 +245,24 @@ async function fetchSponsorsData({
     if (!parseResult.success) {
       const firstIssue = parseResult.error.issues[0];
       const path = firstIssue?.path?.join(".") || "unknown";
-      throw new Error(`Invalid sponsors response format at "${path}"`);
+      const message = `Failed to fetch sponsors: invalid response format at "${path}"`;
+      if (s) {
+        s.stop(pc.red(message));
+      }
+      return Result.err(new CLIError({ message, cause: parseResult.error }));
     }
 
-    const sponsors = parseResult.data;
     if (s) {
       s.stop("Sponsors fetched successfully!");
     }
 
-    return sponsors;
+    return Result.ok(parseResult.data);
   } catch (error) {
     const normalizedError = normalizeSponsorFetchError(error);
     if (s) {
       s.stop(pc.red(normalizedError.message));
     }
-    throw normalizedError;
+    return Result.err(normalizedError);
   } finally {
     if (timeout) {
       clearTimeout(timeout);
@@ -269,14 +270,29 @@ async function fetchSponsorsData({
   }
 }
 
-function normalizeSponsorFetchError(error: unknown): Error {
+function normalizeSponsorFetchError(error: unknown): CLIError {
   if (error instanceof Error && error.name === "AbortError") {
-    return new Error("Failed to fetch sponsors: request timed out");
+    return new CLIError({
+      message: "Failed to fetch sponsors: request timed out",
+      cause: error,
+    });
   }
 
-  if (error instanceof Error) {
+  if (CLIError.is(error)) {
     return error;
   }
 
-  return new Error(`Failed to fetch sponsors: ${String(error)}`);
+  if (error instanceof Error) {
+    return new CLIError({
+      message: error.message.startsWith("Failed to fetch sponsors:")
+        ? error.message
+        : `Failed to fetch sponsors: ${error.message}`,
+      cause: error,
+    });
+  }
+
+  return new CLIError({
+    message: `Failed to fetch sponsors: ${String(error)}`,
+    cause: error,
+  });
 }

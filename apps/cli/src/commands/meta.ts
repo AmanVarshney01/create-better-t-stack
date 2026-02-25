@@ -2,7 +2,7 @@ import { intro, log } from "@clack/prompts";
 import { Result } from "better-result";
 import pc from "picocolors";
 
-import { CLIError, displayError } from "../utils/errors";
+import { displayError } from "../utils/errors";
 import { openUrl } from "../utils/open-url";
 import { renderTitle } from "../utils/render-title";
 import { displaySponsors, fetchSponsors } from "../utils/sponsors";
@@ -24,24 +24,17 @@ async function openExternalUrl(url: string, successMessage: string) {
 }
 
 export async function showSponsorsCommand() {
-  const result = await Result.tryPromise({
-    try: async () => {
-      renderTitle();
-      intro(pc.magenta("Better-T-Stack Sponsors"));
-      const sponsors = await fetchSponsors();
-      displaySponsors(sponsors);
-    },
-    catch: (error: unknown) =>
-      new CLIError({
-        message: error instanceof Error ? error.message : "Failed to display sponsors",
-        cause: error,
-      }),
-  });
+  renderTitle();
+  intro(pc.magenta("Better-T-Stack Sponsors"));
 
-  if (result.isErr()) {
-    displayError(result.error);
+  const sponsorsResult = await fetchSponsors();
+  if (sponsorsResult.isErr()) {
+    displayError(sponsorsResult.error);
     process.exit(1);
+    return;
   }
+
+  displaySponsors(sponsorsResult.value);
 }
 
 export async function openDocsCommand() {
