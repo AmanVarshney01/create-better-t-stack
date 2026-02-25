@@ -111,6 +111,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "solid-start",
+      name: "SolidStart",
+      description: "Full-stack Solid framework with SSR",
+      icon: "/icon/solid.svg",
+      color: "from-blue-600 to-blue-800",
+      default: false,
+    },
+    {
       id: "astro",
       name: "Astro",
       description: "Content-focused with Island Architecture",
@@ -368,6 +376,20 @@ export const TECH_OPTIONS: Record<
       description: "Use Nuxt server routes and Nitro runtime",
       icon: "/icon/nuxt-js.svg",
       color: "from-green-400 to-green-700",
+    },
+    {
+      id: "self-svelte",
+      name: "Fullstack SvelteKit",
+      description: "Use SvelteKit's built-in server routes",
+      icon: "https://cdn.simpleicons.org/svelte",
+      color: "from-orange-500 to-red-500",
+    },
+    {
+      id: "self-solid-start",
+      name: "Fullstack SolidStart",
+      description: "Use SolidStart's built-in server routes",
+      icon: "/icon/solid.svg",
+      color: "from-blue-600 to-blue-800",
     },
     {
       id: "none",

@@ -1,0 +1,22 @@
+import SignInForm from "@/components/sign-in-form";
+import SignUpForm from "@/components/sign-up-form";
+import Header from "@/components/header";
+import { createSignal, Match, Switch } from "solid-js";
+
+export default function LoginPage() {
+  const [showSignIn, setShowSignIn] = createSignal(false);
+
+  return (
+    <>
+      <Header />
+      <Switch>
+        <Match when={showSignIn()}>
+          <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />
+        </Match>
+        <Match when={!showSignIn()}>
+          <SignUpForm onSwitchToSignIn={() => setShowSignIn(true)} />
+        </Match>
+      </Switch>
+    </>
+  );
+}

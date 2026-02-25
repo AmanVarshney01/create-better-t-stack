@@ -1,0 +1,13 @@
+{{#if (eq cssFramework "tailwind")}}
+@import "tailwindcss";
+
+body {
+  @apply bg-neutral-950 text-neutral-100;
+}
+{{else}}
+body {
+  background-color: #0a0a0a;
+  color: #f5f5f5;
+  font-family: system-ui, sans-serif;
+}
+{{/if}}

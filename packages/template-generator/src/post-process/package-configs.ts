@@ -265,6 +265,7 @@ function updateEnvPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): vo
       "nuxt",
       "svelte",
       "solid",
+      "solid-start",
     ].includes(f),
   );
   const hasNative = config.frontend.some((f) =>

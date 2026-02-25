@@ -17,6 +17,7 @@ export async function processAuthTemplates(
   const hasNuxtWeb = config.frontend.includes("nuxt");
   const hasSvelteWeb = config.frontend.includes("svelte");
   const hasSolidWeb = config.frontend.includes("solid");
+  const hasSolidStartWeb = config.frontend.includes("solid-start");
   const hasNativeBare = config.frontend.includes("native-bare");
   const hasUniwind = config.frontend.includes("native-uniwind");
   const hasUnistyles = config.frontend.includes("native-unistyles");
@@ -285,6 +286,15 @@ export async function processAuthTemplates(
       "apps/web",
       config,
     );
+    if (config.backend === "self") {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `auth/${authProvider}/fullstack/svelte`,
+        "apps/web",
+        config,
+      );
+    }
   } else if (hasSolidWeb) {
     processTemplatesFromPrefix(
       vfs,
@@ -293,6 +303,23 @@ export async function processAuthTemplates(
       "apps/web",
       config,
     );
+  } else if (hasSolidStartWeb) {
+    processTemplatesFromPrefix(
+      vfs,
+      templates,
+      `auth/${authProvider}/web/solid-start`,
+      "apps/web",
+      config,
+    );
+    if (config.backend === "self") {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `auth/${authProvider}/fullstack/solid-start`,
+        "apps/web",
+        config,
+      );
+    }
   }
 
   if (hasNative) {

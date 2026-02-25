@@ -15,6 +15,7 @@ export async function processFrontendTemplates(
   const hasNuxtWeb = config.frontend.includes("nuxt");
   const hasSvelteWeb = config.frontend.includes("svelte");
   const hasSolidWeb = config.frontend.includes("solid");
+  const hasSolidStartWeb = config.frontend.includes("solid-start");
   const hasAstroWeb = config.frontend.includes("astro");
   const hasQwikWeb = config.frontend.includes("qwik");
   const hasAngularWeb = config.frontend.includes("angular");
@@ -30,6 +31,7 @@ export async function processFrontendTemplates(
     hasNuxtWeb ||
     hasSvelteWeb ||
     hasSolidWeb ||
+    hasSolidStartWeb ||
     hasAstroWeb ||
     hasQwikWeb ||
     hasAngularWeb ||
@@ -57,6 +59,8 @@ export async function processFrontendTemplates(
       processTemplatesFromPrefix(vfs, templates, "frontend/svelte", "apps/web", config);
     } else if (hasSolidWeb) {
       processTemplatesFromPrefix(vfs, templates, "frontend/solid", "apps/web", config);
+    } else if (hasSolidStartWeb) {
+      processTemplatesFromPrefix(vfs, templates, "frontend/solid-start", "apps/web", config);
     } else if (hasAstroWeb) {
       // Process base Astro templates (excluding integrations subfolder)
       processTemplatesFromPrefix(vfs, templates, "frontend/astro", "apps/web", config, [

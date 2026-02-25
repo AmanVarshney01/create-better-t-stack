@@ -170,6 +170,15 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
       changed = true;
       changes.push({ category: "backend", message: "Removed Solid (incompatible with Convex)" });
     }
+    if (nextStack.webFrontend.includes("solid-start")) {
+      nextStack.webFrontend = nextStack.webFrontend.filter((f) => f !== "solid-start");
+      if (nextStack.webFrontend.length === 0) nextStack.webFrontend = ["none"];
+      changed = true;
+      changes.push({
+        category: "backend",
+        message: "Removed SolidStart (incompatible with Convex)",
+      });
+    }
     if (nextStack.webFrontend.includes("astro")) {
       nextStack.webFrontend = nextStack.webFrontend.filter((f) => f !== "astro");
       if (nextStack.webFrontend.length === 0) nextStack.webFrontend = ["none"];
@@ -275,7 +284,9 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     nextStack.backend === "self-next" ||
     nextStack.backend === "self-tanstack-start" ||
     nextStack.backend === "self-astro" ||
-    nextStack.backend === "self-nuxt"
+    nextStack.backend === "self-nuxt" ||
+    nextStack.backend === "self-svelte" ||
+    nextStack.backend === "self-solid-start"
   ) {
     // Fullstack uses frontend's API routes, no separate runtime needed
     if (nextStack.runtime !== "none") {
@@ -334,6 +345,25 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
         message: "Frontend set to 'Nuxt' (required for Nuxt fullstack)",
       });
     }
+    if (nextStack.backend === "self-svelte" && !nextStack.webFrontend.includes("svelte")) {
+      nextStack.webFrontend = ["svelte"];
+      changed = true;
+      changes.push({
+        category: "backend",
+        message: "Frontend set to 'SvelteKit' (required for SvelteKit fullstack)",
+      });
+    }
+    if (
+      nextStack.backend === "self-solid-start" &&
+      !nextStack.webFrontend.includes("solid-start")
+    ) {
+      nextStack.webFrontend = ["solid-start"];
+      changed = true;
+      changes.push({
+        category: "backend",
+        message: "Frontend set to 'SolidStart' (required for SolidStart fullstack)",
+      });
+    }
   }
 
   // ============================================
@@ -378,7 +408,9 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     nextStack.backend !== "self-next" &&
     nextStack.backend !== "self-tanstack-start" &&
     nextStack.backend !== "self-astro" &&
-    nextStack.backend !== "self-nuxt"
+    nextStack.backend !== "self-nuxt" &&
+    nextStack.backend !== "self-svelte" &&
+    nextStack.backend !== "self-solid-start"
   ) {
     nextStack.runtime = DEFAULT_STACK.runtime;
     changed = true;
@@ -573,8 +605,10 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
   // ============================================
 
   if (nextStack.backend !== "convex" && nextStack.backend !== "none") {
-    // Nuxt, Svelte, Solid require oRPC (not tRPC)
-    const needsOrpc = nextStack.webFrontend.some((f) => ["nuxt", "svelte", "solid"].includes(f));
+    // Nuxt, Svelte, Solid, SolidStart require oRPC (not tRPC)
+    const needsOrpc = nextStack.webFrontend.some((f) =>
+      ["nuxt", "svelte", "solid", "solid-start"].includes(f),
+    );
     if (needsOrpc && nextStack.api === "trpc") {
       nextStack.api = "orpc";
       changed = true;
@@ -836,8 +870,8 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
 
   // AI example constraints
   if (nextStack.examples.includes("ai")) {
-    // Solid frontend is incompatible with AI example
-    if (nextStack.webFrontend.includes("solid")) {
+    // Solid/SolidStart frontend is incompatible with AI example
+    if (nextStack.webFrontend.includes("solid") || nextStack.webFrontend.includes("solid-start")) {
       nextStack.examples = nextStack.examples.filter((e) => e !== "ai");
       if (nextStack.examples.length === 0) nextStack.examples = ["none"];
       changed = true;
@@ -963,9 +997,16 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
 
   if (
     nextStack.serverDeploy !== "none" &&
-    ["none", "convex", "self-next", "self-tanstack-start", "self-astro", "self-nuxt"].includes(
-      nextStack.backend,
-    )
+    [
+      "none",
+      "convex",
+      "self-next",
+      "self-tanstack-start",
+      "self-astro",
+      "self-nuxt",
+      "self-svelte",
+      "self-solid-start",
+    ].includes(nextStack.backend)
   ) {
     nextStack.serverDeploy = "none";
     changed = true;
@@ -1147,6 +1188,30 @@ export const getDisabledReason = (
     }
   }
 
+  if (currentStack.backend === "self-svelte") {
+    if (category === "runtime" && optionId !== "none") {
+      return "SvelteKit fullstack uses built-in API routes";
+    }
+    if (category === "webFrontend" && optionId !== "svelte" && optionId !== "none") {
+      return "SvelteKit fullstack requires SvelteKit frontend";
+    }
+    if (category === "serverDeploy" && optionId !== "none") {
+      return "Fullstack uses frontend deployment";
+    }
+  }
+
+  if (currentStack.backend === "self-solid-start") {
+    if (category === "runtime" && optionId !== "none") {
+      return "SolidStart fullstack uses built-in API routes";
+    }
+    if (category === "webFrontend" && optionId !== "solid-start" && optionId !== "none") {
+      return "SolidStart fullstack requires SolidStart frontend";
+    }
+    if (category === "serverDeploy" && optionId !== "none") {
+      return "Fullstack uses frontend deployment";
+    }
+  }
+
   // ============================================
   // BACKEND SELECTION CONSTRAINTS
   // ============================================
@@ -1166,8 +1231,17 @@ export const getDisabledReason = (
     if (optionId === "self-nuxt" && !currentStack.webFrontend.includes("nuxt")) {
       return "Requires Nuxt frontend";
     }
+    if (optionId === "self-svelte" && !currentStack.webFrontend.includes("svelte")) {
+      return "Requires SvelteKit frontend";
+    }
+    if (optionId === "self-solid-start" && !currentStack.webFrontend.includes("solid-start")) {
+      return "Requires SolidStart frontend";
+    }
     if (optionId === "convex" && currentStack.webFrontend.includes("solid")) {
       return "In Better-Fullstack, Convex is currently not available with Solid";
+    }
+    if (optionId === "convex" && currentStack.webFrontend.includes("solid-start")) {
+      return "In Better-Fullstack, Convex is currently not available with SolidStart";
     }
     if (optionId === "convex" && currentStack.webFrontend.includes("astro")) {
       return "In Better-Fullstack, Convex is currently not available with Astro";
@@ -1193,6 +1267,8 @@ export const getDisabledReason = (
         "self-tanstack-start",
         "self-astro",
         "self-nuxt",
+        "self-svelte",
+        "self-solid-start",
       ];
       if (!allowedBackends.includes(currentStack.backend)) {
         return "Runtime 'None' only for Convex or fullstack backends";
@@ -1277,10 +1353,12 @@ export const getDisabledReason = (
   // API CONSTRAINTS
   // ============================================
   if (category === "api" && optionId === "trpc") {
-    const needsOrpc = currentStack.webFrontend.some((f) => ["nuxt", "svelte", "solid"].includes(f));
+    const needsOrpc = currentStack.webFrontend.some((f) =>
+      ["nuxt", "svelte", "solid", "solid-start"].includes(f),
+    );
     if (needsOrpc) {
       const frontendName = currentStack.webFrontend.find((f) =>
-        ["nuxt", "svelte", "solid"].includes(f),
+        ["nuxt", "svelte", "solid", "solid-start"].includes(f),
       );
       return `${frontendName} requires oRPC, not tRPC`;
     }
@@ -1334,6 +1412,10 @@ export const getDisabledReason = (
         return "In Better-Fullstack, Clerk is not yet supported for Astro fullstack projects";
       } else if (currentStack.backend === "self-nuxt") {
         return "In Better-Fullstack, Clerk is not yet supported for Nuxt fullstack projects";
+      } else if (currentStack.backend === "self-svelte") {
+        return "In Better-Fullstack, Clerk is not yet supported for SvelteKit fullstack projects";
+      } else if (currentStack.backend === "self-solid-start") {
+        return "In Better-Fullstack, Clerk is not yet supported for SolidStart fullstack projects";
       } else if (currentStack.backend === "none") {
         return "Clerk requires a backend";
       } else {
@@ -1390,7 +1472,10 @@ export const getDisabledReason = (
   // ============================================
   if (category === "examples") {
     if (optionId === "ai") {
-      if (currentStack.webFrontend.includes("solid")) {
+      if (
+        currentStack.webFrontend.includes("solid") ||
+        currentStack.webFrontend.includes("solid-start")
+      ) {
         return "AI example not compatible with Solid frontend";
       }
       if (currentStack.backend === "convex") {
@@ -1411,7 +1496,11 @@ export const getDisabledReason = (
       if (currentStack.backend === "convex") {
         return "Chat SDK example is not supported with Convex backend in v1";
       }
-      if (currentStack.backend === "self-astro") {
+      if (
+        currentStack.backend === "self-astro" ||
+        currentStack.backend === "self-svelte" ||
+        currentStack.backend === "self-solid-start"
+      ) {
         return "Chat SDK self backend profile supports Next.js, TanStack Start, or Nuxt in v1";
       }
       if (currentStack.backend === "self-next" || currentStack.backend === "self-tanstack-start") {
@@ -1530,7 +1619,9 @@ export const getDisabledReason = (
     if (optionId === "park-ui") {
       const hasReactFrontend = currentStack.webFrontend.some((f) => reactFrontends.includes(f));
       const hasVueFrontend = currentStack.webFrontend.includes("nuxt");
-      const hasSolidFrontend = currentStack.webFrontend.includes("solid");
+      const hasSolidFrontend =
+        currentStack.webFrontend.includes("solid") ||
+        currentStack.webFrontend.includes("solid-start");
       const hasAstroCompatible =
         currentStack.webFrontend.includes("astro") &&
         ["react", "vue", "solid"].includes(currentStack.astroIntegration);
@@ -1579,6 +1670,8 @@ export const getDisabledReason = (
         "self-tanstack-start",
         "self-astro",
         "self-nuxt",
+        "self-svelte",
+        "self-solid-start",
       ];
       if (noServerDeploy.includes(currentStack.backend)) {
         return "Server deployment not needed for this backend";

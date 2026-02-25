@@ -1,4 +1,6 @@
+{{#if (ne backend "self")}}
 import { PUBLIC_SERVER_URL } from "$env/static/public";
+{{/if}}
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
@@ -14,8 +16,8 @@ export const queryClient = new QueryClient({
 });
 
 export const link = new RPCLink({
-	url: `${PUBLIC_SERVER_URL}/rpc`,
-	{{#if (eq auth "better-auth")}}
+	url: {{#if (eq backend "self")}}"/api/rpc"{{else}}`${PUBLIC_SERVER_URL}/rpc`{{/if}},
+	{{#if (and (eq auth "better-auth") (ne backend "self"))}}
 	fetch(url, options) {
 		return fetch(url, {
 			...options,

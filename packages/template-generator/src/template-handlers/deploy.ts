@@ -23,6 +23,7 @@ export async function processDeployTemplates(
       "tanstack-start": "react/tanstack-start",
       "react-router": "react/react-router",
       solid: "solid",
+      "solid-start": "solid-start",
       next: "react/next",
       nuxt: "nuxt",
       svelte: "svelte",

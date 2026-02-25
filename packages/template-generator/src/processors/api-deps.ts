@@ -9,6 +9,7 @@ type FrontendType = {
   hasNuxtWeb: boolean;
   hasSvelteWeb: boolean;
   hasSolidWeb: boolean;
+  hasSolidStartWeb: boolean;
   hasNative: boolean;
 };
 
@@ -20,6 +21,7 @@ function getFrontendType(frontend: Frontend[]): FrontendType {
     hasNuxtWeb: frontend.includes("nuxt"),
     hasSvelteWeb: frontend.includes("svelte"),
     hasSolidWeb: frontend.includes("solid"),
+    hasSolidStartWeb: frontend.includes("solid-start"),
     hasNative: frontend.some((f) =>
       ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
     ),
@@ -146,7 +148,14 @@ function addSelfBackendWebDeps(
   if (backend !== "self") return;
 
   const webPath = "apps/web/package.json";
-  if (!vfs.exists(webPath) || !frontendType.hasReactWeb) return;
+  if (!vfs.exists(webPath)) return;
+
+  const hasSelfFrontend =
+    frontendType.hasReactWeb ||
+    frontendType.hasSvelteWeb ||
+    frontendType.hasNuxtWeb ||
+    frontendType.hasSolidStartWeb;
+  if (!hasSelfFrontend) return;
 
   // When backend is "self", add server deps to web too
   if (api === "trpc") {
@@ -234,6 +243,17 @@ function addWebClientDeps(
       ],
       devDependencies: ["@tanstack/solid-query-devtools", "@tanstack/solid-router-devtools"],
     });
+  } else if (api === "orpc" && frontendType.hasSolidStartWeb) {
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: [
+        "@orpc/tanstack-query",
+        "@orpc/client",
+        "@orpc/server",
+        "@tanstack/solid-query",
+      ],
+    });
   } else if (api === "garph" && frontendType.hasReactWeb) {
     addPackageDependency({
       vfs,
@@ -296,6 +316,14 @@ function addQueryDeps(vfs: VirtualFileSystem, frontend: Frontend[], backend: Bac
       packagePath: webPath,
       dependencies: ["@tanstack/solid-query"],
       devDependencies: ["@tanstack/solid-query-devtools", "@tanstack/solid-router-devtools"],
+    });
+  }
+
+  if (frontendType.hasSolidStartWeb && vfs.exists(webPath) && backend !== "convex") {
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: ["@tanstack/solid-query"],
     });
   }
 

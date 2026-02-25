@@ -45,6 +45,7 @@ export const FrontendSchema = z
     "native-unistyles",
     "svelte",
     "solid",
+    "solid-start",
     "astro",
     "qwik",
     "angular",

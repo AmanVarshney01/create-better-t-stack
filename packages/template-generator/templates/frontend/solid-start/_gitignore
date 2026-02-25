@@ -1,0 +1,12 @@
+node_modules
+.DS_Store
+dist
+.output
+.vinxi
+*.local
+.env
+.env.*
+
+.wrangler
+.alchemy
+.dev.vars*

@@ -8,6 +8,7 @@ export const WEB_FRAMEWORKS: readonly Frontend[] = [
   "nuxt",
   "svelte",
   "solid",
+  "solid-start",
   "astro",
   "qwik",
   "angular",

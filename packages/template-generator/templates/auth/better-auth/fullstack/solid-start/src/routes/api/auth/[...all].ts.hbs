@@ -1,0 +1,9 @@
+import type { APIEvent } from "@solidjs/start/server";
+import { auth } from "@{{projectName}}/auth";
+
+async function handler({ request }: APIEvent) {
+  return auth.handler(request);
+}
+
+export const GET = handler;
+export const POST = handler;

@@ -20,6 +20,7 @@ export async function processApiTemplates(
   const hasNuxtWeb = config.frontend.includes("nuxt");
   const hasSvelteWeb = config.frontend.includes("svelte");
   const hasSolidWeb = config.frontend.includes("solid");
+  const hasSolidStartWeb = config.frontend.includes("solid-start");
   const hasAstroWeb = config.frontend.includes("astro");
 
   if (hasReactWeb) {
@@ -87,7 +88,33 @@ export async function processApiTemplates(
     }
   } else if (hasSvelteWeb && config.api === "orpc") {
     processTemplatesFromPrefix(vfs, templates, `api/${config.api}/web/svelte`, "apps/web", config);
+    if (config.backend === "self") {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `api/${config.api}/fullstack/svelte`,
+        "apps/web",
+        config,
+      );
+    }
   } else if (hasSolidWeb && config.api === "orpc") {
     processTemplatesFromPrefix(vfs, templates, `api/${config.api}/web/solid`, "apps/web", config);
+  } else if (hasSolidStartWeb && config.api === "orpc") {
+    processTemplatesFromPrefix(
+      vfs,
+      templates,
+      `api/${config.api}/web/solid-start`,
+      "apps/web",
+      config,
+    );
+    if (config.backend === "self") {
+      processTemplatesFromPrefix(
+        vfs,
+        templates,
+        `api/${config.api}/fullstack/solid-start`,
+        "apps/web",
+        config,
+      );
+    }
   }
 }

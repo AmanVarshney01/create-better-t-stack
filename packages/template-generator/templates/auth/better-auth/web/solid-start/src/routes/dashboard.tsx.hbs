@@ -1,0 +1,56 @@
+import { authClient } from "@/lib/auth-client";
+{{#if (eq api "orpc")}}
+import { orpc } from "@/lib/orpc";
+import { useQuery } from "@tanstack/solid-query";
+{{/if}}
+import Header from "@/components/header";
+import { useNavigate } from "@solidjs/router";
+import { createEffect, Show } from "solid-js";
+
+export default function DashboardPage() {
+  const navigate = useNavigate();
+  const session = authClient.useSession();
+
+  createEffect(() => {
+    if (!session().isPending && !session().data) {
+      navigate("/login");
+    }
+  });
+
+  {{#if (eq api "orpc")}}
+  const privateData = useQuery(() => orpc.privateData.queryOptions());
+  {{/if}}
+
+  {{#if (eq payments "polar")}}
+  const hasProSubscription = () => false;
+  {{/if}}
+
+  return (
+    <>
+      <Header />
+      <Show when={session().data}>
+        <div class="container mx-auto max-w-3xl px-4 py-2">
+          <h1 class="text-2xl font-bold">Dashboard</h1>
+          <p>Welcome {session().data?.user.name}</p>
+          {{#if (eq api "orpc")}}
+          <p>API: {privateData.data?.message}</p>
+          {{/if}}
+          {{#if (eq payments "polar")}}
+          <p>Plan: {hasProSubscription() ? "Pro" : "Free"}</p>
+          {hasProSubscription() ? (
+            <button onClick={async () => await authClient.customer.portal()}>
+              Manage Subscription
+            </button>
+          ) : (
+            <button
+              onClick={async () => await authClient.checkout({ slug: "pro" })}
+            >
+              Upgrade to Pro
+            </button>
+          )}
+          {{/if}}
+        </div>
+      </Show>
+    </>
+  );
+}
