@@ -1,0 +1,250 @@
+# Dependency Version Check Report
+
+Generated: 2026-02-23T23:59:39.540Z
+
+## Summary
+
+- **Outdated**: 218
+- **Downgrades detected**: 8
+- **Up to date**: 192
+- **Errors**: 0
+
+## Outdated Packages
+
+### Downgrades Detected (Manual Review Required)
+
+| Package                | Current        | Latest   | Ecosystem   |
+| ---------------------- | -------------- | -------- | ----------- |
+| next-auth              | ^5.0.0-beta.28 | ^4.24.13 | -           |
+| @auth/core             | ^0.39.1        | ^0.34.3  | -           |
+| @effect/ai-anthropic   | ^0.33.2        | ^0.23.0  | effect      |
+| @builder.io/qwik-react | ^0.7.0         | ^0.5.8   | -           |
+| uploadthing            | ^7.8.0         | ^7.7.4   | uploadthing |
+| @uploadthing/nuxt      | ^7.3.0         | ^7.1.10  | uploadthing |
+| @uploadthing/expo      | ^7.3.0         | ^7.2.6   | uploadthing |
+| svelte-filepond        | ^1.0.2         | ^0.2.2   | -           |
+
+### Major Updates (Breaking Changes Possible)
+
+| Package                           | Current   | Latest   | Ecosystem     |
+| --------------------------------- | --------- | -------- | ------------- |
+| mongoose                          | ^8.14.0   | ^9.2.2   | -             |
+| better-sqlite3                    | ^11.9.1   | ^12.6.2  | -             |
+| @types/node                       | ^22.13.14 | ^25.3.0  | -             |
+| h3                                | ^1.15.3   | ^2.0.0   | -             |
+| streamdown                        | ^1.6.10   | ^2.3.0   | -             |
+| langchain                         | ^0.3.20   | ^1.2.26  | -             |
+| @tanstack/svelte-query            | ^5.85.3   | ^6.0.18  | tanstack      |
+| @tanstack/svelte-query-devtools   | ^5.85.3   | ^6.0.4   | tanstack      |
+| @tanstack/vue-query-devtools      | ^5.90.2   | ^6.1.5   | tanstack      |
+| resend                            | ^4.5.1    | ^6.9.2   | -             |
+| @react-email/components           | ^0.0.36   | ^1.0.8   | -             |
+| react-email                       | ^3.0.6    | ^5.2.8   | -             |
+| nodemailer                        | ^6.10.1   | ^8.0.1   | -             |
+| @types/nodemailer                 | ^6.4.17   | ^7.0.11  | -             |
+| mailgun.js                        | ^10.2.3   | ^12.7.0  | -             |
+| @angular/core                     | ^19.2.0   | ^21.1.5  | angular       |
+| @angular/common                   | ^19.2.0   | ^21.1.5  | angular       |
+| @angular/compiler                 | ^19.2.0   | ^21.1.5  | angular       |
+| @angular/platform-browser         | ^19.2.0   | ^21.1.5  | angular       |
+| @angular/platform-browser-dynamic | ^19.2.0   | ^21.1.5  | angular       |
+| @angular/router                   | ^19.2.0   | ^21.1.5  | angular       |
+| @angular/forms                    | ^19.2.0   | ^21.1.5  | angular       |
+| @angular/animations               | ^19.2.0   | ^21.1.5  | angular       |
+| @angular-devkit/build-angular     | ^19.2.0   | ^21.1.5  | angular       |
+| @angular/cli                      | ^19.2.0   | ^21.1.5  | angular       |
+| @angular/compiler-cli             | ^19.2.0   | ^21.1.5  | angular       |
+| nanostores                        | ^0.11.3   | ^1.1.0   | -             |
+| @nanostores/react                 | ^0.8.4    | ^1.0.0   | -             |
+| @xstate/react                     | ^5.0.4    | ^6.0.0   | -             |
+| typia                             | ^9.7.1    | ^11.0.3  | -             |
+| final-form                        | ^4.20.10  | ^5.0.0   | -             |
+| react-final-form                  | ^6.5.9    | ^7.0.0   | -             |
+| y-websocket                       | ^2.1.0    | ^3.0.0   | -             |
+| jest                              | ^29.7.0   | ^30.2.0  | testing       |
+| @types/jest                       | ^29.5.14  | ^30.0.0  | testing       |
+| @jest/globals                     | ^29.7.0   | ^30.2.0  | testing       |
+| jest-environment-jsdom            | ^29.7.0   | ^30.2.0  | testing       |
+| cypress                           | ^14.3.3   | ^15.10.0 | testing       |
+| vitest                            | ^3.1.1    | ^4.0.18  | testing       |
+| @vitest/ui                        | ^3.1.1    | ^4.0.18  | testing       |
+| @vitest/coverage-v8               | ^3.1.1    | ^4.0.18  | testing       |
+| jsdom                             | ^26.0.0   | ^28.1.0  | -             |
+| happy-dom                         | ^18.0.1   | ^20.7.0  | -             |
+| storybook                         | ^8.6.0    | ^10.2.11 | storybook     |
+| @storybook/react-vite             | ^8.6.0    | ^10.2.11 | storybook     |
+| @storybook/vue3-vite              | ^8.6.0    | ^10.2.11 | storybook     |
+| @storybook/svelte-vite            | ^8.6.0    | ^10.2.11 | storybook     |
+| @storybook/nextjs                 | ^8.6.0    | ^10.2.11 | storybook     |
+| @react-spring/web                 | ^9.7.5    | ^10.0.3  | -             |
+| @react-spring/native              | ^9.7.5    | ^10.0.3  | -             |
+| stripe                            | ^17.5.0   | ^20.3.1  | -             |
+| @stripe/stripe-js                 | ^5.5.0    | ^8.8.0   | -             |
+| @stripe/react-stripe-js           | ^3.1.1    | ^5.6.0   | -             |
+| @paddle/paddle-node-sdk           | ^1.8.0    | ^3.6.0   | -             |
+| @uppy/angular                     | ^0.8.0    | ^1.1.0   | uppy          |
+| pino                              | ^9.6.0    | ^10.3.1  | -             |
+| pino-http                         | ^10.4.0   | ^11.0.0  | -             |
+| @opentelemetry/resources          | ^1.30.1   | ^2.5.1   | opentelemetry |
+| @sentry/node                      | ^9.1.0    | ^10.39.0 | -             |
+| @sentry/profiling-node            | ^9.1.0    | ^10.39.0 | -             |
+| sanity                            | ^3.82.0   | ^5.11.0  | -             |
+| next-sanity                       | ^9.11.2   | ^12.1.0  | -             |
+| @sanity/image-url                 | ^1.1.0    | ^2.0.3   | -             |
+| @sanity/vision                    | ^3.82.0   | ^5.11.0  | -             |
+| typesense                         | ^2.0.0    | ^3.0.1   | -             |
+| posthog-node                      | ^4.3.3    | ^5.25.0  | -             |
+
+### Minor Updates
+
+| Package                          | Current       | Latest        | Ecosystem  |
+| -------------------------------- | ------------- | ------------- | ---------- |
+| typescript                       | ^5            | ^5.9.3        | -          |
+| @clerk/nextjs                    | ^6.37.4       | ^6.38.2       | clerk      |
+| @clerk/clerk-react               | ^5.60.1       | ^5.61.1       | clerk      |
+| @supabase/supabase-js            | ^2.96.0       | ^2.97.0       | -          |
+| pg                               | ^8.16.3       | ^8.18.0       | -          |
+| ws                               | ^8.18.3       | ^8.19.0       | -          |
+| mysql2                           | ^3.14.0       | ^3.18.0       | -          |
+| oxlint                           | ^1.34.0       | ^1.50.0       | -          |
+| oxfmt                            | ^0.19.0       | ^0.35.0       | -          |
+| lefthook                         | ^2.0.13       | ^2.1.1        | -          |
+| tsx                              | ^4.19.2       | ^4.21.0       | -          |
+| hono                             | ^4.8.2        | ^4.12.2       | -          |
+| express                          | ^5.1.0        | ^5.2.1        | -          |
+| fastify                          | ^5.3.3        | ^5.7.4        | -          |
+| nitropack                        | ^2.11.12      | ^2.13.1       | -          |
+| turbo                            | ^2.6.3        | ^2.8.10       | -          |
+| shiki                            | ^3.20.0       | ^3.22.0       | -          |
+| @mastra/core                     | ^1.4.0        | ^1.6.0        | -          |
+| @voltagent/core                  | ^2.4.1        | ^2.6.1        | -          |
+| @openai/agents                   | ^0.4.11       | ^0.5.0        | -          |
+| llamaindex                       | ^0.9.5        | ^0.12.1       | -          |
+| graphql                          | ^16.11.0      | ^16.12.0      | -          |
+| gqty                             | ^3.5.0        | ^3.6.0        | -          |
+| convex                           | ^1.31.2       | ^1.32.0       | convex     |
+| @tanstack/react-router-ssr-query | ^1.160.2      | ^1.162.8      | tanstack   |
+| @tanstack/router-cli             | ^1.154.3      | ^1.162.6      | -          |
+| @tanstack/solid-router-devtools  | ^1.160.0      | ^1.162.8      | tanstack   |
+| wrangler                         | ^4.54.0       | ^4.68.0       | cloudflare |
+| @opennextjs/cloudflare           | ^1.16.5       | ^1.17.0       | cloudflare |
+| @cloudflare/workers-types        | ^4.20260217.0 | ^4.20260302.0 | cloudflare |
+| alchemy                          | ^0.82.1       | ^0.85.2       | -          |
+| sst                              | ^3.6.11       | ^3.19.3       | -          |
+| aws-cdk-lib                      | ^2.238.0      | ^2.240.0      | -          |
+| constructs                       | ^10.4.2       | ^10.5.1       | -          |
+| dotenv                           | ^17.2.2       | ^17.3.1       | -          |
+| tsdown                           | ^0.16.5       | ^0.20.3       | -          |
+| zod                              | ^4.1.13       | ^4.3.6        | -          |
+| srvx                             | 0.8.15        | ^0.11.7       | -          |
+| @aws-sdk/client-ses              | ^3.991.0      | ^3.996.0      | -          |
+| @aws-sdk/client-s3               | ^3.991.0      | ^3.996.0      | -          |
+| @aws-sdk/s3-request-presigner    | ^3.991.0      | ^3.996.0      | -          |
+| sass                             | ^1.86.0       | ^1.97.3       | -          |
+| less                             | ^4.3.0        | ^4.5.1        | -          |
+| @ark-ui/react                    | ^5.31.0       | ^5.32.0       | ark        |
+| @ark-ui/vue                      | ^5.31.0       | ^5.32.0       | ark        |
+| @ark-ui/solid                    | ^5.31.0       | ^5.32.0       | ark        |
+| @ark-ui/svelte                   | ^5.16.0       | ^5.17.0       | ark        |
+| daisyui                          | ^5.0.0        | ^5.5.19       | -          |
+| jotai                            | ^2.12.5       | ^2.18.0       | -          |
+| mobx                             | ^6.13.5       | ^6.15.0       | -          |
+| xstate                           | ^5.19.4       | ^5.28.0       | -          |
+| valtio                           | ^2.1.2        | ^2.3.0        | -          |
+| valibot                          | ^1.1.0        | ^1.2.0        | -          |
+| yup                              | ^1.6.1        | ^1.7.1        | -          |
+| partysocket                      | ^1.0.2        | ^1.1.15       | -          |
+| ably                             | ^2.6.3        | ^2.18.0       | -          |
+| pusher                           | ^5.2.0        | ^5.3.2        | -          |
+| @liveblocks/client               | ^3.13.5       | ^3.14.0       | liveblocks |
+| @liveblocks/react                | ^3.13.5       | ^3.14.0       | liveblocks |
+| @liveblocks/node                 | ^3.13.5       | ^3.14.0       | liveblocks |
+| bullmq                           | ^5.34.8       | ^5.70.1       | -          |
+| ioredis                          | ^5.4.2        | ^5.9.3        | -          |
+| @trigger.dev/sdk                 | ^4.3.3        | ^4.4.1        | -          |
+| inngest                          | ^3.33.0       | ^3.52.3       | -          |
+| @temporalio/client               | ^1.14.1       | ^1.15.0       | temporal   |
+| @temporalio/worker               | ^1.14.1       | ^1.15.0       | temporal   |
+| @temporalio/workflow             | ^1.14.1       | ^1.15.0       | temporal   |
+| @temporalio/activity             | ^1.14.1       | ^1.15.0       | temporal   |
+| playwright                       | ^1.52.0       | ^1.58.2       | testing    |
+| msw                              | ^2.7.0        | ^2.12.10      | -          |
+| motion                           | ^12.17.0      | ^12.34.3      | -          |
+| gsap                             | ^3.12.7       | ^3.14.2       | -          |
+| dodopayments                     | ^2.19.0       | ^2.20.0       | -          |
+| preact                           | ^10.25.4      | ^10.28.4      | -          |
+| payload                          | ^3.14.1       | ^3.77.0       | payload    |
+| @payloadcms/next                 | ^3.76.1       | ^3.77.0       | payload    |
+| @payloadcms/richtext-lexical     | ^3.76.1       | ^3.77.0       | payload    |
+| @payloadcms/db-postgres          | ^3.76.1       | ^3.77.0       | payload    |
+| @payloadcms/db-mongodb           | ^3.76.1       | ^3.77.0       | payload    |
+| @payloadcms/db-sqlite            | ^3.76.1       | ^3.77.0       | payload    |
+| @payloadcms/plugin-seo           | ^3.76.1       | ^3.77.0       | payload    |
+| @payloadcms/storage-s3           | ^3.76.1       | ^3.77.0       | payload    |
+| qs                               | ^6.14.0       | ^6.15.0       | -          |
+| meilisearch                      | ^0.44.1       | ^0.55.0       | -          |
+| posthog-js                       | ^1.347.2      | ^1.353.0      | -          |
+
+### Patch Updates
+
+| Package                        | Current    | Latest   | Ecosystem  |
+| ------------------------------ | ---------- | -------- | ---------- |
+| better-auth                    | ^1.4.18    | ^1.4.19  | -          |
+| @better-auth/expo              | ^1.4.18    | ^1.4.19  | -          |
+| @clerk/tanstack-react-start    | ^0.29.2    | ^0.29.6  | clerk      |
+| @clerk/clerk-expo              | ^2.19.23   | ^2.19.26 | clerk      |
+| @stackframe/stack              | ^2.8.68    | ^2.8.70  | -          |
+| @prisma/client                 | ^7.4.0     | ^7.4.1   | prisma     |
+| prisma                         | ^7.4.0     | ^7.4.1   | prisma     |
+| @prisma/adapter-d1             | ^7.4.0     | ^7.4.1   | prisma     |
+| @prisma/adapter-neon           | ^7.4.0     | ^7.4.1   | prisma     |
+| @prisma/adapter-mariadb        | ^7.4.0     | ^7.4.1   | prisma     |
+| @prisma/adapter-libsql         | ^7.4.0     | ^7.4.1   | prisma     |
+| @prisma/adapter-better-sqlite3 | ^7.4.0     | ^7.4.1   | prisma     |
+| @prisma/adapter-pg             | ^7.4.0     | ^7.4.1   | prisma     |
+| @prisma/adapter-planetscale    | ^7.4.0     | ^7.4.1   | prisma     |
+| typeorm                        | ^0.3.23    | ^0.3.28  | -          |
+| kysely                         | ^0.28.3    | ^0.28.11 | -          |
+| sequelize                      | ^6.37.5    | ^6.37.7  | -          |
+| @biomejs/biome                 | ^2.4.2     | ^2.4.4   | -          |
+| elysia                         | ^1.4.21    | ^1.4.25  | -          |
+| cors                           | ^2.8.5     | ^2.8.6   | -          |
+| @nestjs/core                   | ^11.1.13   | ^11.1.14 | nestjs     |
+| @nestjs/common                 | ^11.1.13   | ^11.1.14 | nestjs     |
+| @nestjs/platform-express       | ^11.1.13   | ^11.1.14 | nestjs     |
+| rxjs                           | ^7.8.1     | ^7.8.2   | -          |
+| encore.dev                     | ^1.54.0    | ^1.54.2  | -          |
+| ai                             | ^6.0.3     | ^6.0.97  | -          |
+| @ai-sdk/google                 | ^3.0.29    | ^3.0.30  | -          |
+| @ai-sdk/vue                    | ^3.0.86    | ^3.0.97  | -          |
+| @ai-sdk/svelte                 | ^4.0.86    | ^4.0.97  | -          |
+| @ai-sdk/react                  | ^3.0.88    | ^3.0.99  | -          |
+| @ai-sdk/devtools               | ^0.0.14    | ^0.0.15  | -          |
+| mastra                         | ^1.3.1     | ^1.3.3   | -          |
+| @voltagent/server-hono         | ^2.0.6     | ^2.0.7   | -          |
+| @voltagent/libsql              | ^2.1.1     | ^2.1.2   | -          |
+| @langchain/langgraph           | ^1.1.4     | ^1.1.5   | -          |
+| @langchain/core                | ^1.1.24    | ^1.1.27  | -          |
+| @langchain/google-genai        | ^2.1.18    | ^2.1.20  | -          |
+| next                           | ^16.1.1    | ^16.1.6  | -          |
+| @convex-dev/better-auth        | ^0.10.10   | ^0.10.11 | convex     |
+| @cloudflare/vite-plugin        | ^1.25.1    | ^1.25.4  | cloudflare |
+| @sveltejs/adapter-cloudflare   | ^7.2.7     | ^7.2.8   | cloudflare |
+| postmark                       | ^4.0.5     | ^4.0.7   | -          |
+| effect                         | ^3.19.14   | ^3.19.19 | effect     |
+| framer-motion                  | ^12.34.1   | ^12.34.3 | -          |
+| zustand                        | ^5.0.5     | ^5.0.11  | -          |
+| formik                         | ^2.4.6     | ^2.4.9   | -          |
+| partykit                       | ^0.0.111   | ^0.0.115 | -          |
+| pusher-js                      | ^8.4.0-rc2 | ^8.4.0   | -          |
+| yjs                            | ^13.6.27   | ^13.6.29 | -          |
+| @storybook/addon-essentials    | ^8.6.0     | ^8.6.14  | storybook  |
+| @storybook/addon-interactions  | ^8.6.0     | ^8.6.14  | storybook  |
+| @storybook/test                | ^8.6.0     | ^8.6.15  | storybook  |
+| filepond                       | ^4.32.10   | ^4.32.11 | -          |
+| @uppy/dashboard                | ^5.1.0     | ^5.1.1   | uppy       |
+| @uppy/xhr-upload               | ^5.1.0     | ^5.1.1   | uppy       |
+| @uppy/tus                      | ^5.1.0     | ^5.1.1   | uppy       |
+| preact-render-to-string        | ^6.6.5     | ^6.6.6   | -          |
+| @growthbook/growthbook         | ^1.6.4     | ^1.6.5   | -          |
+| @growthbook/growthbook-react   | ^1.6.4     | ^1.6.5   | -          |
