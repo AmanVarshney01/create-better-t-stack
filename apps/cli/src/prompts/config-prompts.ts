@@ -317,7 +317,7 @@ export async function gatherConfig(
         if (results.ecosystem !== "typescript") return Promise.resolve("none" as AI);
         if (
           flags.ai === undefined &&
-          results.examples.includes("chat-sdk") &&
+          results.examples?.includes("chat-sdk") &&
           requiresChatSdkVercelAI(results.backend, results.frontend, results.runtime)
         ) {
           return Promise.resolve("vercel-ai" as AI);
