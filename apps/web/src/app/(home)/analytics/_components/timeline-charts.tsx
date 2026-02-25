@@ -51,12 +51,18 @@ const areaChartConfig = {
 } satisfies ChartConfig;
 
 const barChartConfig = {
-  count: { label: "Projects", color: "var(--chart-2)" },
+  totalProjects: { label: "Total Projects", color: "var(--chart-2)" },
 } satisfies ChartConfig;
 
 const hourlyChartConfig = {
   count: { label: "Projects", color: "var(--chart-3)" },
 } satisfies ChartConfig;
+
+function formatMonthLabel(monthKey: string, pattern: string): string {
+  const parsedMonth = parseISO(`${monthKey}-01`);
+  if (Number.isNaN(parsedMonth.getTime())) return monthKey;
+  return format(parsedMonth, pattern);
+}
 
 export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
   const { timeSeries, monthlyTimeSeries, platformDistribution, hourlyDistribution } = data;
@@ -70,7 +76,10 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <ChartCard title="daily_projects.chart" description="Project creations over time">
+        <ChartCard
+          title="daily_projects.chart"
+          description="Project creations over the last 30 days"
+        >
           <ChartContainer
             config={areaChartConfig}
             className="aspect-auto h-[280px] w-full min-h-[200px]"
@@ -109,7 +118,7 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
           </ChartContainer>
         </ChartCard>
 
-        <ChartCard title="monthly_trends.bar" description="Monthly project volume">
+        <ChartCard title="monthly_trends.bar" description="Total projects created in each month">
           <ChartContainer
             config={barChartConfig}
             className="aspect-auto h-[280px] w-full min-h-[200px]"
@@ -121,11 +130,18 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
                 tickLine={false}
                 axisLine={false}
                 tickMargin={10}
-                tickFormatter={(val) => val.slice(5)}
+                tickFormatter={(val) => formatMonthLabel(String(val), "MMM yy")}
               />
               <YAxis tickLine={false} axisLine={false} />
-              <ChartTooltip content={<ChartTooltipContent hideIndicator />} />
-              <Bar dataKey="count" fill="var(--chart-2)" radius={4} />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    labelFormatter={(value) => formatMonthLabel(String(value), "MMMM yyyy")}
+                    hideIndicator
+                  />
+                }
+              />
+              <Bar dataKey="totalProjects" fill="var(--chart-2)" radius={4} />
             </BarChart>
           </ChartContainer>
         </ChartCard>

@@ -224,10 +224,8 @@ export const getDailyStats = query({
     }),
   ),
   handler: async (ctx, args) => {
-    const days = args.days ?? 30;
     const now = Date.now();
     const today = new Date(now).toISOString().slice(0, 10);
-    const cutoffDate = new Date(now - (days - 1) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
     const allDaily = await ctx.db
       .query("analyticsDailyStats")
@@ -235,9 +233,61 @@ export const getDailyStats = query({
       .order("asc")
       .collect();
 
+    const requestedDays = args.days;
+    const sanitizedDays =
+      typeof requestedDays === "number" && Number.isFinite(requestedDays) && requestedDays > 0
+        ? Math.floor(requestedDays)
+        : 30;
+    const cutoffDate = new Date(now - (sanitizedDays - 1) * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10);
+
     return allDaily
       .filter((d) => d.date >= cutoffDate && d.date <= today)
       .map((d) => ({ date: d.date, count: d.count }));
+  },
+});
+
+export const getMonthlyStats = query({
+  args: {},
+  returns: v.object({
+    monthly: v.array(
+      v.object({
+        month: v.string(),
+        totalProjects: v.number(),
+      }),
+    ),
+    firstDate: v.union(v.string(), v.null()),
+    lastDate: v.union(v.string(), v.null()),
+  }),
+  handler: async (ctx) => {
+    const today = new Date().toISOString().slice(0, 10);
+    const allDaily = await ctx.db
+      .query("analyticsDailyStats")
+      .withIndex("by_date")
+      .order("asc")
+      .collect();
+
+    const usableDaily = allDaily.filter((d) => d.date <= today);
+    if (usableDaily.length === 0) {
+      return { monthly: [], firstDate: null, lastDate: null };
+    }
+
+    const byMonth = new Map<string, number>();
+    for (const d of usableDaily) {
+      const month = d.date.slice(0, 7);
+      byMonth.set(month, (byMonth.get(month) || 0) + d.count);
+    }
+
+    const monthly = Array.from(byMonth.entries())
+      .map(([month, totalProjects]) => ({ month, totalProjects }))
+      .sort((a, b) => a.month.localeCompare(b.month));
+
+    return {
+      monthly,
+      firstDate: usableDaily[0]?.date ?? null,
+      lastDate: usableDaily[usableDaily.length - 1]?.date ?? null,
+    };
   },
 });
 

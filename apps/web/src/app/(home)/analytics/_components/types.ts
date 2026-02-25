@@ -3,7 +3,7 @@ import type { ChartConfig } from "@/components/ui/chart";
 export type Distribution = Array<{ name: string; value: number }>;
 export type VersionDistribution = Array<{ version: string; count: number }>;
 export type TimeSeriesData = Array<{ date: string; count: number }>;
-export type MonthlyData = Array<{ month: string; count: number }>;
+export type MonthlyData = Array<{ month: string; totalProjects: number }>;
 export type HourlyData = Array<{ hour: string; count: number }>;
 
 export type AggregatedAnalyticsData = {

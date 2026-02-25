@@ -118,6 +118,21 @@ export function AnalyticsHeader({
               </Link>
             </span>
           </div>
+          <div className="flex items-start gap-2">
+            <span className="mt-0.5 shrink-0 text-primary">&gt;</span>
+            <span>
+              Website analytics dashboard:{" "}
+              <Link
+                href="https://umami.amanv.cloud/share/pHvqHleyOl9PBfaK"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent underline underline-offset-2 hover:text-primary"
+              >
+                Umami
+              </Link>{" "}
+              - self-hosted on a Hostinger VPS
+            </span>
+          </div>
         </div>
 
         <div className="mt-4 rounded-lg bg-muted/25 p-3 text-xs">
