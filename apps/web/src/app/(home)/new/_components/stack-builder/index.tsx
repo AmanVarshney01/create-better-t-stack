@@ -3,6 +3,8 @@
 import { Check, ChevronDown, ClipboardCopy, FolderTree, Settings, Terminal } from "lucide-react";
 import { startTransition } from "react";
 
+import type { Sponsor } from "@/lib/types";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,12 +19,17 @@ import { ActionButtons } from "../action-buttons";
 import { PresetDropdown } from "../preset-dropdown";
 import { PreviewPanel } from "../preview-panel";
 import { ShareButton } from "../share-button";
+import { SpecialSponsorsPanel } from "../special-sponsors-panel";
 import { YoloToggle } from "../yolo-toggle";
 import { SelectedStackBadges } from "./selected-stack-badges";
 import { TechCategories } from "./tech-categories";
 import { useStackBuilder } from "./use-stack-builder";
 
-export function StackBuilder() {
+type StackBuilderProps = {
+  specialSponsors?: Sponsor[];
+};
+
+export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
   const {
     applyPreset,
     command,
@@ -196,6 +203,8 @@ export function StackBuilder() {
 
             <div className="border-border/35 border-t bg-fd-background/95 p-2">
               <div className="rounded-2xl bg-fd-background/80 p-2">
+                <SpecialSponsorsPanel sponsors={specialSponsors} />
+                {specialSponsors.length > 0 ? <div className="my-2 h-px bg-border/25" /> : null}
                 <ActionButtons
                   onReset={resetStack}
                   onRandom={getRandomStack}
@@ -381,6 +390,8 @@ export function StackBuilder() {
 
               <div className="border-border/35 border-t bg-fd-background/95 p-2 backdrop-blur-sm">
                 <div className="rounded-xl bg-fd-background/80 p-2">
+                  <SpecialSponsorsPanel sponsors={specialSponsors} compact />
+                  {specialSponsors.length > 0 ? <div className="my-2 h-px bg-border/25" /> : null}
                   <ActionButtons
                     onReset={resetStack}
                     onRandom={getRandomStack}
