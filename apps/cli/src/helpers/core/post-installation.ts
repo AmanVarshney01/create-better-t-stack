@@ -14,6 +14,10 @@ import type {
 } from "../../types";
 
 import { getDockerStatus } from "../../utils/docker-utils";
+import {
+  fetchSponsorsQuietly,
+  formatPostInstallSpecialSponsorsSection,
+} from "../../utils/sponsors";
 export async function displayPostInstallInstructions(
   config: ProjectConfig & { depsInstalled: boolean },
 ) {
@@ -206,6 +210,15 @@ export async function displayPostInstallInstructions(
 
   if (noOrmWarning) output += `\n${noOrmWarning.trim()}\n`;
   if (bunWebNativeWarning) output += `\n${bunWebNativeWarning.trim()}\n`;
+
+  const sponsorsResult = await fetchSponsorsQuietly();
+  const specialSponsorsSection = sponsorsResult.isOk()
+    ? formatPostInstallSpecialSponsorsSection(sponsorsResult.value)
+    : "";
+
+  if (specialSponsorsSection) {
+    output += `\n${specialSponsorsSection.trim()}\n`;
+  }
 
   output += `\n${pc.bold(
     "Like Better-T-Stack?",
