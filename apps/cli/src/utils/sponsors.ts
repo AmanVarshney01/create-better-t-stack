@@ -126,8 +126,7 @@ export function formatPostInstallSpecialSponsorsSection(sponsors: SponsorEntry):
   wrappedSponsorLines.forEach((line) => {
     output += `${line}\n`;
   });
-  output += `${pc.cyan("+")} Become a sponsor: ${GITHUB_SPONSOR_URL}`;
-  return output;
+  return output.trimEnd();
 }
 
 function getPostInstallSponsorLineWidth(): number {

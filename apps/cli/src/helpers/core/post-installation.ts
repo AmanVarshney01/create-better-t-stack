@@ -15,7 +15,6 @@ import type {
 
 import { getDockerStatus } from "../../utils/docker-utils";
 import {
-  GITHUB_SPONSOR_URL,
   fetchSponsorsQuietly,
   formatPostInstallSpecialSponsorsSection,
 } from "../../utils/sponsors";
@@ -225,9 +224,6 @@ export async function displayPostInstallInstructions(
     "Like Better-T-Stack?",
   )} Please consider giving us a star\n   on GitHub:\n`;
   output += pc.cyan("https://github.com/AmanVarshney01/create-better-t-stack");
-  if (!specialSponsorsSection) {
-    output += `\n\n${pc.bold("Become a sponsor:")}\n${pc.cyan(GITHUB_SPONSOR_URL)}`;
-  }
 
   consola.box(output);
 }
