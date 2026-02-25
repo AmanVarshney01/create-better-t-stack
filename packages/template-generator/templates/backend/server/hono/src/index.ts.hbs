@@ -159,8 +159,7 @@ app.post("/api/webhooks/github", async (c) => {
 		waitUntil: (task) => c.executionCtx.waitUntil(task),
 	});
 });
-{{/if}}
-
+{{/if~}}
 app.get("/", (c) => {
 	return c.text("OK");
 });
