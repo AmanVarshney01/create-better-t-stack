@@ -67,7 +67,7 @@ describe("formatPostInstallSpecialSponsorsSection", () => {
     const fixture = createSponsorsFixture();
 
     const output = formatPostInstallSpecialSponsorsSection(fixture);
-    expect(output).toContain("Special sponsors (3)");
+    expect(output).toContain("Special sponsors");
     expect(output).toContain("Ada");
     expect(output).toContain("Grace");
     expect(output).toContain("Linus");

@@ -122,7 +122,7 @@ export function formatPostInstallSpecialSponsorsSection(sponsors: SponsorEntry):
   });
   const wrappedSponsorLines = wrapSponsorTokens(sponsorTokens, getPostInstallSponsorLineWidth());
 
-  let output = `${pc.bold(`Special sponsors (${sponsors.specialSponsors.length})`)}\n`;
+  let output = `${pc.bold("Special sponsors")}\n`;
   wrappedSponsorLines.forEach((line) => {
     output += `${line}\n`;
   });
