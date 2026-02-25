@@ -2,6 +2,7 @@ import { log, outro, spinner } from "@clack/prompts";
 import { Result } from "better-result";
 import { consola } from "consola";
 import pc from "picocolors";
+import z from "zod";
 
 export const SPONSORS_JSON_URL = "https://sponsors.better-t-stack.dev/sponsors.json";
 export const GITHUB_SPONSOR_URL = "https://github.com/sponsors/AmanVarshney01";
@@ -47,6 +48,54 @@ type FetchSponsorsOptions = {
   withSpinner?: boolean;
   timeoutMs?: number;
 };
+
+const nullableString = z
+  .string()
+  .nullish()
+  .transform((value) => value ?? undefined);
+const nullableNumber = z
+  .number()
+  .nullish()
+  .transform((value) => value ?? undefined);
+
+const sponsorSchema = z.object({
+  name: nullableString,
+  githubId: z.string(),
+  avatarUrl: z.string(),
+  websiteUrl: nullableString,
+  githubUrl: z.string(),
+  tierName: nullableString,
+  sinceWhen: z.string(),
+  transactionCount: z.number(),
+  totalProcessedAmount: nullableNumber,
+  formattedAmount: nullableString,
+});
+
+const sponsorSummarySchema = z.object({
+  total_sponsors: z.number(),
+  total_lifetime_amount: z.number(),
+  total_current_monthly: z.number(),
+  special_sponsors: z.number(),
+  current_sponsors: z.number(),
+  past_sponsors: z.number(),
+  backers: z.number(),
+  top_sponsor: z
+    .object({
+      name: z.string(),
+      amount: z.number(),
+    })
+    .nullish()
+    .transform((value) => value ?? undefined),
+});
+
+const sponsorEntrySchema = z.object({
+  generated_at: z.string(),
+  summary: sponsorSummarySchema,
+  specialSponsors: z.array(sponsorSchema),
+  sponsors: z.array(sponsorSchema),
+  pastSponsors: z.array(sponsorSchema),
+  backers: z.array(sponsorSchema),
+});
 
 export async function fetchSponsors(url: string = SPONSORS_JSON_URL) {
   return fetchSponsorsData({ url, withSpinner: true });
@@ -188,26 +237,46 @@ async function fetchSponsorsData({
   try {
     const response = await fetch(url, controller ? { signal: controller.signal } : undefined);
     if (!response.ok) {
-      if (s) {
-        s.stop(pc.red(`Failed to fetch sponsors: ${response.statusText}`));
-      }
-      throw new Error(`Failed to fetch sponsors: ${response.statusText}`);
+      throw new Error(
+        `Failed to fetch sponsors: ${response.statusText || String(response.status)}`,
+      );
     }
 
-    const sponsors = (await response.json()) as SponsorEntry;
+    const rawSponsors = await response.json();
+    const parseResult = sponsorEntrySchema.safeParse(rawSponsors);
+    if (!parseResult.success) {
+      const firstIssue = parseResult.error.issues[0];
+      const path = firstIssue?.path?.join(".") || "unknown";
+      throw new Error(`Invalid sponsors response format at "${path}"`);
+    }
+
+    const sponsors = parseResult.data;
     if (s) {
       s.stop("Sponsors fetched successfully!");
     }
 
     return sponsors;
   } catch (error) {
-    if (s && error instanceof Error && error.name === "AbortError") {
-      s.stop(pc.red("Failed to fetch sponsors: request timed out"));
+    const normalizedError = normalizeSponsorFetchError(error);
+    if (s) {
+      s.stop(pc.red(normalizedError.message));
     }
-    throw error;
+    throw normalizedError;
   } finally {
     if (timeout) {
       clearTimeout(timeout);
     }
   }
+}
+
+function normalizeSponsorFetchError(error: unknown): Error {
+  if (error instanceof Error && error.name === "AbortError") {
+    return new Error("Failed to fetch sponsors: request timed out");
+  }
+
+  if (error instanceof Error) {
+    return error;
+  }
+
+  return new Error(`Failed to fetch sponsors: ${String(error)}`);
 }
