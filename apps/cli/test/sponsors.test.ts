@@ -59,18 +59,20 @@ describe("formatPostInstallSpecialSponsorsSection", () => {
     const fixture = createSponsorsFixture();
     fixture.specialSponsors = [];
 
-    const output = formatPostInstallSpecialSponsorsSection(fixture, 2);
+    const output = formatPostInstallSpecialSponsorsSection(fixture);
     expect(output).toBe("");
   });
 
-  it("renders featured sponsors, overflow count, and sponsor CTA", () => {
+  it("renders all special sponsors without tier details and adds sponsor CTA", () => {
     const fixture = createSponsorsFixture();
 
-    const output = formatPostInstallSpecialSponsorsSection(fixture, 2);
+    const output = formatPostInstallSpecialSponsorsSection(fixture);
     expect(output).toContain("Special sponsors");
     expect(output).toContain("Ada");
     expect(output).toContain("Grace");
-    expect(output).toContain("+1 more special sponsor");
+    expect(output).toContain("Linus");
+    expect(output).not.toContain("Pro");
+    expect(output).not.toContain("Starter");
     expect(output).toContain(`Become a sponsor: ${GITHUB_SPONSOR_URL}`);
   });
 });

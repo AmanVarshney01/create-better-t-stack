@@ -214,7 +214,7 @@ export async function displayPostInstallInstructions(
 
   const sponsorsResult = await fetchSponsorsQuietly();
   const specialSponsorsSection = sponsorsResult.isOk()
-    ? formatPostInstallSpecialSponsorsSection(sponsorsResult.value, 2)
+    ? formatPostInstallSpecialSponsorsSection(sponsorsResult.value)
     : "";
 
   if (specialSponsorsSection) {

@@ -111,27 +111,17 @@ function displaySponsorsBox(sponsors: SponsorEntry) {
   consola.box(output);
 }
 
-export function formatPostInstallSpecialSponsorsSection(
-  sponsors: SponsorEntry,
-  limit: number = 3,
-): string {
+export function formatPostInstallSpecialSponsorsSection(sponsors: SponsorEntry): string {
   if (sponsors.specialSponsors.length === 0) {
     return "";
   }
 
-  const featuredSponsors = sponsors.specialSponsors.slice(0, limit);
   let output = `${pc.bold("Special sponsors")}\n`;
 
-  featuredSponsors.forEach((sponsor) => {
+  sponsors.specialSponsors.forEach((sponsor) => {
     const displayName = sponsor.name ?? sponsor.githubId;
-    const tier = sponsor.tierName ? ` ${pc.yellow(`(${sponsor.tierName})`)}` : "";
-    output += `${pc.cyan("•")} ${pc.green(displayName)}${tier}\n`;
+    output += `${pc.cyan("•")} ${pc.green(displayName)}\n`;
   });
-
-  const remainingCount = sponsors.specialSponsors.length - featuredSponsors.length;
-  if (remainingCount > 0) {
-    output += `${pc.dim(`+${remainingCount} more special sponsor${remainingCount === 1 ? "" : "s"}`)}\n`;
-  }
 
   output += `${pc.cyan("+")} Become a sponsor: ${GITHUB_SPONSOR_URL}`;
   return output;
