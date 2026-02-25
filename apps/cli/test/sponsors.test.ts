@@ -67,10 +67,11 @@ describe("formatPostInstallSpecialSponsorsSection", () => {
     const fixture = createSponsorsFixture();
 
     const output = formatPostInstallSpecialSponsorsSection(fixture);
-    expect(output).toContain("Special sponsors");
+    expect(output).toContain("Special sponsors (3)");
     expect(output).toContain("Ada");
     expect(output).toContain("Grace");
     expect(output).toContain("Linus");
+    expect(output).toContain("• Ada");
     expect(output).not.toContain("Pro");
     expect(output).not.toContain("Starter");
     expect(output).toContain(`Become a sponsor: ${GITHUB_SPONSOR_URL}`);

@@ -116,15 +116,57 @@ export function formatPostInstallSpecialSponsorsSection(sponsors: SponsorEntry):
     return "";
   }
 
-  let output = `${pc.bold("Special sponsors")}\n`;
-
-  sponsors.specialSponsors.forEach((sponsor) => {
+  const sponsorTokens = sponsors.specialSponsors.map((sponsor) => {
     const displayName = sponsor.name ?? sponsor.githubId;
-    output += `${pc.cyan("•")} ${pc.green(displayName)}\n`;
+    return `• ${displayName}`;
   });
+  const wrappedSponsorLines = wrapSponsorTokens(sponsorTokens, getPostInstallSponsorLineWidth());
 
+  let output = `${pc.bold(`Special sponsors (${sponsors.specialSponsors.length})`)}\n`;
+  wrappedSponsorLines.forEach((line) => {
+    output += `${line}\n`;
+  });
   output += `${pc.cyan("+")} Become a sponsor: ${GITHUB_SPONSOR_URL}`;
   return output;
+}
+
+function getPostInstallSponsorLineWidth(): number {
+  const terminalWidth = process.stdout.columns;
+  if (!terminalWidth || terminalWidth <= 0) {
+    return 72;
+  }
+
+  // Keep room for the surrounding box border/padding and avoid edge wrapping.
+  return Math.max(48, terminalWidth - 24);
+}
+
+function wrapSponsorTokens(tokens: string[], maxLineWidth: number): string[] {
+  const lines: string[] = [];
+  const separator = "   ";
+  let currentLine = "";
+
+  tokens.forEach((token) => {
+    const candidateLine = currentLine ? `${currentLine}${separator}${token}` : token;
+
+    if (candidateLine.length <= maxLineWidth) {
+      currentLine = candidateLine;
+      return;
+    }
+
+    if (currentLine) {
+      lines.push(currentLine);
+      currentLine = token;
+      return;
+    }
+
+    lines.push(token);
+  });
+
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+
+  return lines;
 }
 
 async function fetchSponsorsData({
