@@ -18,6 +18,7 @@ import {
   GITHUB_SPONSOR_URL,
   fetchSponsorsQuietly,
   formatPostInstallSpecialSponsorsSection,
+  formatTerminalHyperlink,
 } from "../../utils/sponsors";
 export async function displayPostInstallInstructions(
   config: ProjectConfig & { depsInstalled: boolean },
@@ -221,12 +222,16 @@ export async function displayPostInstallInstructions(
     output += `\n${specialSponsorsSection.trim()}\n`;
   }
 
+  const repositoryUrl = "https://github.com/AmanVarshney01/create-better-t-stack";
+
   output += `\n${pc.bold(
     "Like Better-T-Stack?",
   )} Please consider giving us a star\n   on GitHub:\n`;
-  output += pc.cyan("https://github.com/AmanVarshney01/create-better-t-stack");
+  output += pc.cyan(formatTerminalHyperlink(repositoryUrl, repositoryUrl));
   if (!specialSponsorsSection) {
-    output += `\n\n${pc.bold("Become a sponsor:")}\n${pc.cyan(GITHUB_SPONSOR_URL)}`;
+    output += `\n\n${pc.bold("Become a sponsor:")}\n${pc.cyan(
+      formatTerminalHyperlink(GITHUB_SPONSOR_URL, GITHUB_SPONSOR_URL),
+    )}`;
   }
 
   consola.box(output);
