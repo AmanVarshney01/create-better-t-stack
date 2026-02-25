@@ -116,30 +116,17 @@ export function formatPostInstallSpecialSponsorsSection(sponsors: SponsorEntry):
     return "";
   }
 
-  const wrappedSponsorLines = wrapSponsorTokens(
-    sponsors.specialSponsors.map((sponsor) => {
-      const displayName = sponsor.name ?? sponsor.githubId;
-      const sponsorUrl = normalizeSponsorUrl(
-        sponsor.websiteUrl ?? sponsor.githubUrl ?? `https://github.com/${sponsor.githubId}`,
-      );
-      const linkedName = formatTerminalHyperlink(displayName, sponsorUrl);
-
-      return {
-        visible: `• ${displayName}`,
-        rendered: `${pc.cyan("•")} ${linkedName}`,
-      };
-    }),
-    getPostInstallSponsorLineWidth(),
-  );
+  const sponsorTokens = sponsors.specialSponsors.map((sponsor) => {
+    const displayName = sponsor.name ?? sponsor.githubId;
+    return `• ${displayName}`;
+  });
+  const wrappedSponsorLines = wrapSponsorTokens(sponsorTokens, getPostInstallSponsorLineWidth());
 
   let output = `${pc.bold("Special sponsors")}\n`;
   wrappedSponsorLines.forEach((line) => {
     output += `${line}\n`;
   });
-  output += `${pc.cyan("+")} Become a sponsor: ${formatTerminalHyperlink(
-    GITHUB_SPONSOR_URL,
-    GITHUB_SPONSOR_URL,
-  )}`;
+  output += `${pc.cyan("+")} Become a sponsor: ${GITHUB_SPONSOR_URL}`;
   return output;
 }
 
@@ -153,99 +140,33 @@ function getPostInstallSponsorLineWidth(): number {
   return Math.max(48, terminalWidth - 24);
 }
 
-type SponsorToken = {
-  visible: string;
-  rendered: string;
-};
-
-function wrapSponsorTokens(tokens: SponsorToken[], maxLineWidth: number): string[] {
+function wrapSponsorTokens(tokens: string[], maxLineWidth: number): string[] {
   const lines: string[] = [];
   const separator = "   ";
-  let currentRenderedLine = "";
-  let currentVisibleWidth = 0;
+  let currentLine = "";
 
   tokens.forEach((token) => {
-    const candidateVisibleWidth =
-      currentVisibleWidth + (currentVisibleWidth > 0 ? separator.length : 0) + token.visible.length;
+    const candidateLine = currentLine ? `${currentLine}${separator}${token}` : token;
 
-    if (candidateVisibleWidth <= maxLineWidth) {
-      currentRenderedLine = currentRenderedLine
-        ? `${currentRenderedLine}${separator}${token.rendered}`
-        : token.rendered;
-      currentVisibleWidth = candidateVisibleWidth;
+    if (candidateLine.length <= maxLineWidth) {
+      currentLine = candidateLine;
       return;
     }
 
-    if (currentRenderedLine) {
-      lines.push(currentRenderedLine);
-      currentRenderedLine = token.rendered;
-      currentVisibleWidth = token.visible.length;
+    if (currentLine) {
+      lines.push(currentLine);
+      currentLine = token;
       return;
     }
 
-    lines.push(token.rendered);
+    lines.push(token);
   });
 
-  if (currentRenderedLine) {
-    lines.push(currentRenderedLine);
+  if (currentLine) {
+    lines.push(currentLine);
   }
 
   return lines;
-}
-
-export function formatTerminalHyperlink(label: string, url: string): string {
-  if (!supportsTerminalHyperlinks()) {
-    return label;
-  }
-
-  // OSC 8 hyperlink escape sequence.
-  return `\u001B]8;;${url}\u0007${label}\u001B]8;;\u0007`;
-}
-
-function supportsTerminalHyperlinks(): boolean {
-  if (!process.stdout.isTTY) {
-    return false;
-  }
-
-  if (process.env.FORCE_HYPERLINK === "1") {
-    return true;
-  }
-
-  if (process.env.NO_HYPERLINK === "1") {
-    return false;
-  }
-
-  if (process.env.CI) {
-    return false;
-  }
-
-  if (process.env.WT_SESSION) {
-    return true;
-  }
-
-  const termProgram = process.env.TERM_PROGRAM;
-  if (termProgram === "iTerm.app" || termProgram === "WezTerm" || termProgram === "vscode") {
-    return true;
-  }
-
-  if (process.env.KITTY_WINDOW_ID) {
-    return true;
-  }
-
-  const vteVersion = Number(process.env.VTE_VERSION ?? "0");
-  if (vteVersion >= 5000) {
-    return true;
-  }
-
-  return false;
-}
-
-function normalizeSponsorUrl(url: string): string {
-  if (url.startsWith("http://") || url.startsWith("https://")) {
-    return url;
-  }
-
-  return `https://${url}`;
 }
 
 async function fetchSponsorsData({
