@@ -47,6 +47,9 @@ const SKILL_SOURCES = {
   "better-auth/skills": {
     label: "Better Auth",
   },
+  "clerk/skills": {
+    label: "Clerk",
+  },
   "neondatabase/agent-skills": {
     label: "Neon Database",
   },
@@ -152,6 +155,10 @@ function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
     sources.push("better-auth/skills");
   }
 
+  if (auth === "clerk") {
+    sources.push("clerk/skills");
+  }
+
   if (dbSetup === "neon") {
     sources.push("neondatabase/agent-skills");
   }
@@ -218,6 +225,22 @@ const CURATED_SKILLS_BY_SOURCE: Record<SourceKey, (config: ProjectConfig) => str
   "nuxt/ui": () => ["nuxt-ui"],
   "heroui-inc/heroui": () => ["heroui-native"],
   "better-auth/skills": () => ["better-auth-best-practices"],
+  "clerk/skills": (config) => {
+    const skills = [
+      "clerk",
+      "clerk-setup",
+      "clerk-custom-ui",
+      "clerk-webhooks",
+      "clerk-testing",
+      "clerk-orgs",
+    ];
+
+    if (config.frontend.includes("next")) {
+      skills.push("clerk-nextjs-patterns");
+    }
+
+    return skills;
+  },
   "neondatabase/agent-skills": () => ["neon-postgres"],
   "supabase/agent-skills": () => ["supabase-postgres-best-practices"],
   "planetscale/database-skills": (config) => {
