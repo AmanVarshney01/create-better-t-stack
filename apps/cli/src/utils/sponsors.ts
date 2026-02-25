@@ -1,8 +1,12 @@
 import { log, outro, spinner } from "@clack/prompts";
+import { Result } from "better-result";
 import { consola } from "consola";
 import pc from "picocolors";
 
-type SponsorSummary = {
+export const SPONSORS_JSON_URL = "https://sponsors.better-t-stack.dev/sponsors.json";
+export const GITHUB_SPONSOR_URL = "https://github.com/sponsors/AmanVarshney01";
+
+export type SponsorSummary = {
   total_sponsors: number;
   total_lifetime_amount: number;
   total_current_monthly: number;
@@ -16,7 +20,7 @@ type SponsorSummary = {
   };
 };
 
-type Sponsor = {
+export type Sponsor = {
   name?: string;
   githubId: string;
   avatarUrl: string;
@@ -29,7 +33,7 @@ type Sponsor = {
   formattedAmount?: string;
 };
 
-type SponsorEntry = {
+export type SponsorEntry = {
   generated_at: string;
   summary: SponsorSummary;
   specialSponsors: Sponsor[];
@@ -38,28 +42,35 @@ type SponsorEntry = {
   backers: Sponsor[];
 };
 
-export const SPONSORS_JSON_URL = "https://sponsors.better-t-stack.dev/sponsors.json";
+type FetchSponsorsOptions = {
+  url?: string;
+  withSpinner?: boolean;
+  timeoutMs?: number;
+};
 
 export async function fetchSponsors(url: string = SPONSORS_JSON_URL) {
-  const s = spinner();
-  s.start("Fetching sponsors…");
+  return fetchSponsorsData({ url, withSpinner: true });
+}
 
-  const response = await fetch(url);
-  if (!response.ok) {
-    s.stop(pc.red(`Failed to fetch sponsors: ${response.statusText}`));
-    throw new Error(`Failed to fetch sponsors: ${response.statusText}`);
-  }
-
-  const sponsors = (await response.json()) as SponsorEntry;
-  s.stop("Sponsors fetched successfully!");
-  return sponsors;
+export async function fetchSponsorsQuietly({
+  url = SPONSORS_JSON_URL,
+  timeoutMs = 1500,
+}: {
+  url?: string;
+  timeoutMs?: number;
+} = {}): Promise<Result<SponsorEntry, Error>> {
+  return Result.tryPromise({
+    try: () => fetchSponsorsData({ url, withSpinner: false, timeoutMs }),
+    catch: (error) =>
+      error instanceof Error ? error : new Error(`Failed to fetch sponsors: ${String(error)}`),
+  });
 }
 
 export function displaySponsors(sponsors: SponsorEntry) {
   const { total_sponsors } = sponsors.summary;
   if (total_sponsors === 0) {
     log.info("No sponsors found. You can be the first one! ✨");
-    outro(pc.cyan("Visit https://github.com/sponsors/AmanVarshney01 to become a sponsor."));
+    outro(pc.cyan(`Visit ${GITHUB_SPONSOR_URL} to become a sponsor.`));
     return;
   }
 
@@ -70,7 +81,7 @@ export function displaySponsors(sponsors: SponsorEntry) {
       pc.blue(`+${total_sponsors - sponsors.specialSponsors.length} more amazing sponsors.\n`),
     );
   }
-  outro(pc.magenta("Visit https://github.com/sponsors/AmanVarshney01 to become a sponsor."));
+  outro(pc.magenta(`Visit ${GITHUB_SPONSOR_URL} to become a sponsor.`));
 }
 
 function displaySponsorsBox(sponsors: SponsorEntry) {
@@ -98,4 +109,74 @@ function displaySponsorsBox(sponsors: SponsorEntry) {
   });
 
   consola.box(output);
+}
+
+export function formatPostInstallSpecialSponsorsSection(
+  sponsors: SponsorEntry,
+  limit: number = 3,
+): string {
+  if (sponsors.specialSponsors.length === 0) {
+    return "";
+  }
+
+  const featuredSponsors = sponsors.specialSponsors.slice(0, limit);
+  let output = `${pc.bold("Special sponsors")}\n`;
+
+  featuredSponsors.forEach((sponsor) => {
+    const displayName = sponsor.name ?? sponsor.githubId;
+    const tier = sponsor.tierName ? ` ${pc.yellow(`(${sponsor.tierName})`)}` : "";
+    output += `${pc.cyan("•")} ${pc.green(displayName)}${tier}\n`;
+  });
+
+  const remainingCount = sponsors.specialSponsors.length - featuredSponsors.length;
+  if (remainingCount > 0) {
+    output += `${pc.dim(`+${remainingCount} more special sponsor${remainingCount === 1 ? "" : "s"}`)}\n`;
+  }
+
+  output += `${pc.cyan("+")} Become a sponsor: ${GITHUB_SPONSOR_URL}`;
+  return output;
+}
+
+async function fetchSponsorsData({
+  url = SPONSORS_JSON_URL,
+  withSpinner = false,
+  timeoutMs,
+}: FetchSponsorsOptions): Promise<SponsorEntry> {
+  const s = withSpinner ? spinner() : null;
+  if (s) {
+    s.start("Fetching sponsors…");
+  }
+
+  const controller = timeoutMs ? new AbortController() : null;
+  const timeout = timeoutMs
+    ? setTimeout(() => {
+        controller?.abort();
+      }, timeoutMs)
+    : null;
+
+  try {
+    const response = await fetch(url, controller ? { signal: controller.signal } : undefined);
+    if (!response.ok) {
+      if (s) {
+        s.stop(pc.red(`Failed to fetch sponsors: ${response.statusText}`));
+      }
+      throw new Error(`Failed to fetch sponsors: ${response.statusText}`);
+    }
+
+    const sponsors = (await response.json()) as SponsorEntry;
+    if (s) {
+      s.stop("Sponsors fetched successfully!");
+    }
+
+    return sponsors;
+  } catch (error) {
+    if (s && error instanceof Error && error.name === "AbortError") {
+      s.stop(pc.red("Failed to fetch sponsors: request timed out"));
+    }
+    throw error;
+  } finally {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+  }
 }

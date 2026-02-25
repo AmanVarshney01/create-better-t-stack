@@ -14,6 +14,11 @@ import type {
 } from "../../types";
 
 import { getDockerStatus } from "../../utils/docker-utils";
+import {
+  GITHUB_SPONSOR_URL,
+  fetchSponsorsQuietly,
+  formatPostInstallSpecialSponsorsSection,
+} from "../../utils/sponsors";
 export async function displayPostInstallInstructions(
   config: ProjectConfig & { depsInstalled: boolean },
 ) {
@@ -207,10 +212,22 @@ export async function displayPostInstallInstructions(
   if (noOrmWarning) output += `\n${noOrmWarning.trim()}\n`;
   if (bunWebNativeWarning) output += `\n${bunWebNativeWarning.trim()}\n`;
 
+  const sponsorsResult = await fetchSponsorsQuietly();
+  const specialSponsorsSection = sponsorsResult.isOk()
+    ? formatPostInstallSpecialSponsorsSection(sponsorsResult.value, 2)
+    : "";
+
+  if (specialSponsorsSection) {
+    output += `\n${specialSponsorsSection.trim()}\n`;
+  }
+
   output += `\n${pc.bold(
     "Like Better-T-Stack?",
   )} Please consider giving us a star\n   on GitHub:\n`;
   output += pc.cyan("https://github.com/AmanVarshney01/create-better-t-stack");
+  if (!specialSponsorsSection) {
+    output += `\n\n${pc.bold("Become a sponsor:")}\n${pc.cyan(GITHUB_SPONSOR_URL)}`;
+  }
 
   consola.box(output);
 }
