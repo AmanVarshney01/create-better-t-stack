@@ -136,7 +136,10 @@ export function formatPostInstallSpecialSponsorsSection(sponsors: SponsorEntry):
   wrappedSponsorLines.forEach((line) => {
     output += `${line}\n`;
   });
-  output += `${pc.cyan("+")} ${formatTerminalHyperlink("Become a sponsor", GITHUB_SPONSOR_URL)}`;
+  output += `${pc.cyan("+")} Become a sponsor: ${formatTerminalHyperlink(
+    GITHUB_SPONSOR_URL,
+    GITHUB_SPONSOR_URL,
+  )}`;
   return output;
 }
 

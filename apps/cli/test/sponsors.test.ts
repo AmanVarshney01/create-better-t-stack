@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 
 import type { SponsorEntry } from "../src/utils/sponsors";
 
-import { formatPostInstallSpecialSponsorsSection } from "../src/utils/sponsors";
+import { GITHUB_SPONSOR_URL, formatPostInstallSpecialSponsorsSection } from "../src/utils/sponsors";
 
 function createSponsorsFixture(): SponsorEntry {
   return {
@@ -74,6 +74,6 @@ describe("formatPostInstallSpecialSponsorsSection", () => {
     expect(output).toContain("• Ada");
     expect(output).not.toContain("Pro");
     expect(output).not.toContain("Starter");
-    expect(output).toContain("Become a sponsor");
+    expect(output).toContain(`Become a sponsor: ${GITHUB_SPONSOR_URL}`);
   });
 });

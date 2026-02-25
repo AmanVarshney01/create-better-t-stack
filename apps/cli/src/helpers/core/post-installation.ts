@@ -230,7 +230,7 @@ export async function displayPostInstallInstructions(
   output += pc.cyan(formatTerminalHyperlink(repositoryUrl, repositoryUrl));
   if (!specialSponsorsSection) {
     output += `\n\n${pc.bold("Become a sponsor:")}\n${pc.cyan(
-      formatTerminalHyperlink("Sponsor this project", GITHUB_SPONSOR_URL),
+      formatTerminalHyperlink(GITHUB_SPONSOR_URL, GITHUB_SPONSOR_URL),
     )}`;
   }
 
