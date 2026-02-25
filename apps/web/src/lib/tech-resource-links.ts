@@ -267,6 +267,10 @@ const BASE_LINKS: LinkMap = {
     docsUrl: "https://effect.website/docs/",
     githubUrl: "https://github.com/Effect-TS/effect",
   },
+  "chat-sdk": {
+    docsUrl: "https://chat-sdk.dev/docs",
+    githubUrl: "https://github.com/vercel/chat",
+  },
   zustand: {
     docsUrl: "https://zustand.docs.pmnd.rs/",
     githubUrl: "https://github.com/pmndrs/zustand",
