@@ -8,7 +8,7 @@ import Link from "next/link";
 
 export default function StatsSection() {
   const stats = useQuery(api.analytics.getStats, {});
-  const dailyStats = useQuery(api.analytics.getDailyStats, {});
+  const dailyStats = useQuery(api.analytics.getDailyStats, { days: 30 });
   const githubRepo = useQuery(api.stats.getGithubRepo, {
     name: "AmanVarshney01/create-better-t-stack",
   });

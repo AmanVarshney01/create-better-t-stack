@@ -35,7 +35,14 @@ type PrecomputedStats = {
 };
 
 type DailyStats = { date: string; count: number };
+type MonthlyStats = {
+  monthly: Array<{ month: string; totalProjects: number }>;
+  firstDate: string | null;
+  lastDate: string | null;
+};
 type ConnectionStatus = "online" | "connecting" | "reconnecting" | "offline";
+
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 function getConnectionStatus({
   isWebSocketConnected,
@@ -62,9 +69,46 @@ function getMostPopular(dist: Distribution) {
   return dist.length > 0 ? dist[0].name : "none";
 }
 
+function getCalendarDaySpan(timeSeries: DailyStats[]): number {
+  if (timeSeries.length === 0) return 1;
+
+  const firstDate = timeSeries[0]?.date;
+  const lastDate = timeSeries[timeSeries.length - 1]?.date;
+  if (!firstDate || !lastDate) return 1;
+
+  const start = Date.parse(`${firstDate}T00:00:00Z`);
+  const end = Date.parse(`${lastDate}T00:00:00Z`);
+
+  if (Number.isNaN(start) || Number.isNaN(end) || end < start) {
+    return Math.max(timeSeries.length, 1);
+  }
+
+  return Math.floor((end - start) / MILLISECONDS_PER_DAY) + 1;
+}
+
+function getCalendarDaySpanFromRange(
+  firstDate: string | null,
+  lastDate: string | null,
+  fallbackSeries: DailyStats[],
+): number {
+  if (!firstDate || !lastDate) {
+    return getCalendarDaySpan(fallbackSeries);
+  }
+
+  const start = Date.parse(`${firstDate}T00:00:00Z`);
+  const end = Date.parse(`${lastDate}T00:00:00Z`);
+
+  if (Number.isNaN(start) || Number.isNaN(end) || end < start) {
+    return getCalendarDaySpan(fallbackSeries);
+  }
+
+  return Math.floor((end - start) / MILLISECONDS_PER_DAY) + 1;
+}
+
 function buildFromPrecomputed(
   stats: PrecomputedStats,
   dailyStats: DailyStats[],
+  monthlyStats: MonthlyStats,
 ): AggregatedAnalyticsData {
   const backendDistribution = recordToDistribution(stats.backend);
   const frontendDistribution = recordToDistribution(stats.frontend);
@@ -96,16 +140,12 @@ function buildFromPrecomputed(
     .map((d) => ({ date: d.date, count: d.count }))
     .sort((a, b) => a.date.localeCompare(b.date));
 
-  const byMonth = new Map<string, number>();
-  for (const d of dailyStats) {
-    const month = d.date.slice(0, 7);
-    byMonth.set(month, (byMonth.get(month) || 0) + d.count);
-  }
-  const monthlyTimeSeries = Array.from(byMonth.entries())
-    .map(([month, count]) => ({ month, count }))
-    .sort((a, b) => a.month.localeCompare(b.month));
-
-  const uniqueDays = dailyStats.length || 1;
+  const monthlyTimeSeries = monthlyStats.monthly;
+  const calendarDaySpan = getCalendarDaySpanFromRange(
+    monthlyStats.firstDate,
+    monthlyStats.lastDate,
+    timeSeries,
+  );
 
   const hourlyDistribution = Array.from({ length: 24 }, (_, i) => {
     const hour = String(i).padStart(2, "0");
@@ -118,7 +158,7 @@ function buildFromPrecomputed(
   return {
     lastUpdated: new Date(stats.lastEventTime).toISOString(),
     totalProjects: stats.totalProjects,
-    avgProjectsPerDay: stats.totalProjects / uniqueDays,
+    avgProjectsPerDay: stats.totalProjects / calendarDaySpan,
     timeSeries,
     monthlyTimeSeries,
     hourlyDistribution,
@@ -159,17 +199,20 @@ function buildFromPrecomputed(
 export function AnalyticsClient({
   preloadedStats,
   preloadedDailyStats,
+  preloadedMonthlyStats,
 }: {
   preloadedStats: Preloaded<typeof api.analytics.getStats>;
   preloadedDailyStats: Preloaded<typeof api.analytics.getDailyStats>;
+  preloadedMonthlyStats: Preloaded<typeof api.analytics.getMonthlyStats>;
 }) {
   const stats = usePreloadedQuery(preloadedStats);
   const dailyStats = usePreloadedQuery(preloadedDailyStats);
+  const monthlyStats = usePreloadedQuery(preloadedMonthlyStats);
   const connectionState = useConvexConnectionState();
   const connectionStatus = getConnectionStatus(connectionState);
 
   const data = stats
-    ? buildFromPrecomputed(stats, dailyStats)
+    ? buildFromPrecomputed(stats, dailyStats, monthlyStats)
     : {
         lastUpdated: null,
         totalProjects: 0,
