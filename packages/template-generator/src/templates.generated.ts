@@ -1746,7 +1746,7 @@ import authConfig from "./auth.config";
 const siteUrl = process.env.SITE_URL{{#if (or (includes frontend "tanstack-start") (includes frontend "next") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}!{{else}} || "http://localhost:8081"{{/if}};
 {{/if}}
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-const nativeAppUrl = process.env.NATIVE_APP_URL || "mybettertapp://";
+const nativeAppUrl = process.env.NATIVE_APP_URL || "{{projectName}}://";
 {{/if}}
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
@@ -6322,7 +6322,7 @@ export const auth = betterAuth({
 	trustedOrigins: [
 		env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-		"mybettertapp://",
+		"{{projectName}}://",
 		...(env.NODE_ENV === "development"
 			? [
 				"exp://",
@@ -6393,7 +6393,7 @@ export const auth = betterAuth({
 	trustedOrigins: [
 		env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-		"mybettertapp://",
+		"{{projectName}}://",
 		...(env.NODE_ENV === "development"
 			? [
 				"exp://",
@@ -6463,7 +6463,7 @@ export const auth = betterAuth({
 	trustedOrigins: [
 		env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-		"mybettertapp://",
+		"{{projectName}}://",
 		...(env.NODE_ENV === "development"
 			? [
 				"exp://",
@@ -6540,7 +6540,7 @@ export const auth = betterAuth({
 	trustedOrigins: [
 		env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-		"mybettertapp://",
+		"{{projectName}}://",
 		...(env.NODE_ENV === "development"
 			? [
 				"exp://",
@@ -6602,7 +6602,7 @@ export const auth = betterAuth({
 	trustedOrigins: [
 		env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-		"mybettertapp://",
+		"{{projectName}}://",
 		...(env.NODE_ENV === "development"
 			? [
 				"exp://",
@@ -6648,7 +6648,8 @@ export const auth = betterAuth({
 	],
 {{/if}}
 });
-{{/if}}`],
+{{/if}}
+`],
   ["auth/better-auth/server/base/tsconfig.json.hbs", `{
   "extends": "@{{projectName}}/config/tsconfig.base.json",
   "compilerOptions": {
@@ -19398,7 +19399,7 @@ web-build/
 		"version": "1.0.0",
 		"orientation": "portrait",
 		"icon": "./assets/images/icon.png",
-		"scheme": "mybettertapp",
+		"scheme": "{{projectName}}",
 		"userInterfaceStyle": "automatic",
 		"ios": {
 			"supportsTablet": true
@@ -20377,7 +20378,7 @@ android
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mybettertapp",
+    "scheme": "{{projectName}}",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true
@@ -21580,7 +21581,7 @@ uniwind-types.d.ts
 `],
   ["frontend/native/uniwind/app.json.hbs", `{
   "expo": {
-    "scheme": "mybettertapp",
+    "scheme": "{{projectName}}",
     "userInterfaceStyle": "automatic",
     "orientation": "default",
     "web": {
