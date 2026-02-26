@@ -19400,7 +19400,6 @@ web-build/
 		"icon": "./assets/images/icon.png",
 		"scheme": "mybettertapp",
 		"userInterfaceStyle": "automatic",
-		"newArchEnabled": true,
 		"ios": {
 			"supportsTablet": true
 		},
@@ -19411,7 +19410,6 @@ web-build/
 				"backgroundImage": "./assets/images/android-icon-background.png",
 				"monochromeImage": "./assets/images/android-icon-monochrome.png"
 			},
-			"edgeToEdgeEnabled": true,
 			"predictiveBackGestureEnabled": false,
 			"package": "com.anonymous.mybettertapp"
 		},
@@ -19440,7 +19438,6 @@ web-build/
 		}
 	}
 }
-
 `],
   ["frontend/native/bare/app/_layout.tsx.hbs", `{{#if (includes examples "ai")}}
 import "@/polyfills";
@@ -19483,10 +19480,8 @@ import { queryClient } from "@/utils/trpc";
 import { queryClient } from "@/utils/orpc";
 {{/if}}
 import { NAV_THEME } from "@/lib/constants";
-import React, { useRef } from "react";
 import { useColorScheme } from "@/lib/use-color-scheme";
-import { Platform, StyleSheet } from "react-native";
-import { setAndroidNavigationBar } from "@/lib/android-navigation-bar";
+import { StyleSheet } from "react-native";
 
 const LIGHT_THEME: Theme = {
   ...DefaultTheme,
@@ -19507,11 +19502,6 @@ const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
 });
 {{/if}}
 
-const useIsomorphicLayoutEffect =
-  Platform.OS === "web" && typeof window === "undefined"
-    ? React.useEffect
-    : React.useLayoutEffect;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -19519,22 +19509,7 @@ const styles = StyleSheet.create({
 });
 
 export default function RootLayout() {
-  const hasMounted = useRef(false);
-  const { colorScheme, isDarkColorScheme } = useColorScheme();
-  const [isColorSchemeLoaded, setIsColorSchemeLoaded] = React.useState(false);
-
-  useIsomorphicLayoutEffect(() => {
-    if (hasMounted.current) {
-      return;
-    }
-    setAndroidNavigationBar(colorScheme);
-    setIsColorSchemeLoaded(true);
-    hasMounted.current = true;
-  }, []);
-
-  if (!isColorSchemeLoaded) {
-    return null;
-  }
+  const { isDarkColorScheme } = useColorScheme();
 
   return (
     <>
@@ -19606,7 +19581,8 @@ export default function RootLayout() {
       {{/if}}
     </>
   );
-}`],
+}
+`],
   ["frontend/native/bare/app/(drawer)/_layout.tsx.hbs", `import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { Drawer } from "expo-router/drawer";
@@ -20247,19 +20223,6 @@ export const TabBarIcon = (props: {
 };
 
 `],
-  ["frontend/native/bare/lib/android-navigation-bar.tsx.hbs", `import * as NavigationBar from "expo-navigation-bar";
-import { Platform } from "react-native";
-import { NAV_THEME } from "@/lib/constants";
-
-export async function setAndroidNavigationBar(theme: "light" | "dark") {
-  if (Platform.OS !== "android") return;
-  await NavigationBar.setButtonStyleAsync(theme === "dark" ? "light" : "dark");
-  await NavigationBar.setBackgroundColorAsync(
-    theme === "dark" ? NAV_THEME.dark.background : NAV_THEME.light.background,
-  );
-}
-
-`],
   ["frontend/native/bare/lib/constants.ts.hbs", `export const NAV_THEME = {
   light: {
     background: "hsl(0 0% 100%)",
@@ -20332,31 +20295,31 @@ module.exports = config;
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.3.0",
     {{/if}}
-		"expo": "^54.0.1",
-    "expo-constants": "~18.0.8",
-    "expo-crypto": "~15.0.6",
-    "expo-linking": "~8.0.7",
-    "expo-navigation-bar": "~5.0.8",
-    "expo-network": "~8.0.7",
-    "expo-router": "~6.0.0",
-    "expo-secure-store": "~15.0.6",
-    "expo-splash-screen": "~31.0.8",
-    "expo-status-bar": "~3.0.7",
-    "expo-system-ui": "~6.0.7",
-    "expo-web-browser": "~15.0.6",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "react-native": "0.81.4",
-    "react-native-gesture-handler": "~2.28.0",
-    "react-native-reanimated": "~4.1.0",
+		"expo": "^55.0.0",
+    "expo-constants": "~55.0.7",
+    "expo-crypto": "~55.0.8",
+    "expo-font": "~55.0.4",
+    "expo-linking": "~55.0.7",
+    "expo-network": "~55.0.8",
+    "expo-router": "~55.0.2",
+    "expo-secure-store": "~55.0.8",
+    "expo-splash-screen": "~55.0.9",
+    "expo-status-bar": "~55.0.4",
+    "expo-system-ui": "~55.0.9",
+    "expo-web-browser": "~55.0.9",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "react-native": "0.83.2",
+    "react-native-gesture-handler": "~2.30.0",
+    "react-native-reanimated": "4.2.1",
     "react-native-safe-area-context": "~5.6.0",
-    "react-native-screens": "~4.16.0",
+    "react-native-screens": "~4.23.0",
     "react-native-web": "^0.21.0",
-    "react-native-worklets": "^0.5.1"
+    "react-native-worklets": "0.7.2"
   },
   "devDependencies": {
     "@babel/core": "^7.26.10",
-    "@types/react": "~19.1.10"
+    "@types/react": "~19.2.10"
   },
   "private": true
 }
@@ -20416,7 +20379,6 @@ android
     "icon": "./assets/images/icon.png",
     "scheme": "mybettertapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
@@ -20427,7 +20389,6 @@ android
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.mybettertapp"
     },
@@ -21420,36 +21381,37 @@ module.exports = config;
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.3.0",
     {{/if}}
-    "babel-preset-expo": "~54.0.10",
-    "expo": "~54.0.33",
-    "expo-constants": "~18.0.8",
-    "expo-crypto": "~15.0.6",
-    "expo-linking": "~8.0.7",
-    "expo-network": "~8.0.8",
-    "expo-router": "~6.0.0",
-    "expo-secure-store": "~15.0.6",
-    "expo-splash-screen": "~31.0.8",
-		"expo-status-bar": "^3.0.7",
-    "expo-system-ui": "~6.0.7",
-		"expo-dev-client": "~6.0.11",
-    "expo-web-browser": "~15.0.6",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "react-native": "0.81.5",
+    "babel-preset-expo": "~55.0.8",
+    "expo": "^55.0.0",
+    "expo-constants": "~55.0.7",
+    "expo-crypto": "~55.0.8",
+    "expo-dev-client": "~55.0.9",
+    "expo-font": "~55.0.4",
+    "expo-linking": "~55.0.7",
+    "expo-network": "~55.0.8",
+    "expo-router": "~55.0.2",
+    "expo-secure-store": "~55.0.8",
+    "expo-splash-screen": "~55.0.9",
+		"expo-status-bar": "~55.0.4",
+    "expo-system-ui": "~55.0.9",
+    "expo-web-browser": "~55.0.9",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "react-native": "0.83.2",
 		"react-native-edge-to-edge": "^1.7.0",
-    "react-native-gesture-handler": "~2.28.0",
+    "react-native-gesture-handler": "~2.30.0",
 		"react-native-nitro-modules": "^0.33.2",
-    "react-native-reanimated": "~4.1.0",
+    "react-native-reanimated": "4.2.1",
     "react-native-safe-area-context": "~5.6.0",
-    "react-native-screens": "~4.16.0",
+    "react-native-screens": "~4.23.0",
 		"react-native-unistyles": "^3.0.22",
     "react-native-web": "^0.21.2",
-    "react-native-worklets": "^0.5.1"
+    "react-native-worklets": "0.7.2"
   },
   "devDependencies": {
     "ajv": "^8.17.1",
     "@babel/core": "^7.28.0",
-    "@types/react": "~19.1.10"
+    "@types/react": "~19.2.10"
   }
 }
 `],
@@ -22375,7 +22337,7 @@ module.exports = uniwindConfig;
     "web": "expo start --web"
   },
   "dependencies": {
-    "@expo/metro-runtime": "~6.1.2",
+    "@expo/metro-runtime": "~55.0.6",
     "@expo/vector-icons": "^15.0.3",
     "@gorhom/bottom-sheet": "^5",
     "@react-navigation/drawer": "^7.3.9",
@@ -22384,27 +22346,27 @@ module.exports = uniwindConfig;
     "@stardazed/streams-text-encoding": "^1.0.2",
     "@ungap/structured-clone": "^1.3.0",
     {{/if}}
-    "expo": "^54.0.23",
-    "expo-constants": "~18.0.10",
-    "expo-font": "~14.0.9",
-    "expo-haptics": "^15.0.7",
-    "expo-linking": "~8.0.8",
-    "expo-network": "~8.0.7",
-    "expo-router": "~6.0.14",
-    "expo-secure-store": "~15.0.7",
-    "expo-status-bar": "~3.0.8",
+    "expo": "^55.0.0",
+    "expo-constants": "~55.0.7",
+    "expo-font": "~55.0.4",
+    "expo-haptics": "~55.0.8",
+    "expo-linking": "~55.0.7",
+    "expo-network": "~55.0.8",
+    "expo-router": "~55.0.2",
+    "expo-secure-store": "~55.0.8",
+    "expo-status-bar": "~55.0.4",
     "heroui-native": "^1.0.0-rc.1",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "react-native": "0.81.5",
-    "react-native-gesture-handler": "^2.28.0",
-    "react-native-keyboard-controller": "1.18.5",
-    "react-native-reanimated": "~4.1.1",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "react-native": "0.83.2",
+    "react-native-gesture-handler": "~2.30.0",
+    "react-native-keyboard-controller": "1.20.7",
+    "react-native-reanimated": "4.2.1",
     "react-native-safe-area-context": "~5.6.0",
-    "react-native-screens": "~4.16.0",
-    "react-native-svg": "15.12.1",
+    "react-native-screens": "~4.23.0",
+    "react-native-svg": "15.15.3",
     "react-native-web": "^0.21.0",
-    "react-native-worklets": "0.5.1",
+    "react-native-worklets": "0.7.2",
     "tailwind-merge": "^3.4.0",
     "tailwind-variants": "^3.2.2",
     "tailwindcss": "^4.1.18",
@@ -22412,7 +22374,7 @@ module.exports = uniwindConfig;
   },
   "devDependencies": {
     "@types/node": "^24.10.0",
-    "@types/react": "~19.1.0"
+    "@types/react": "~19.2.10"
   }
 }
 `],
@@ -26725,4 +26687,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 436;
+export const TEMPLATE_COUNT = 435;
