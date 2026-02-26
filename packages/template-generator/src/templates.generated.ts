@@ -21580,7 +21580,7 @@ uniwind-types.d.ts
 `],
   ["frontend/native/uniwind/app.json.hbs", `{
   "expo": {
-    "scheme": "{{projectName}}",
+    "scheme": "mybettertapp",
     "userInterfaceStyle": "automatic",
     "orientation": "default",
     "web": {
