@@ -6305,6 +6305,9 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { env } from "@{{projectName}}/env/server";
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+import { expo } from "@better-auth/expo";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
@@ -6346,6 +6349,9 @@ export const auth = betterAuth({
 	},
 {{/if}}
 	plugins: [
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+		expo(),
+{{/if}}
 {{#if (eq payments "polar")}}
 		polar({
 			client: polarClient,
@@ -6375,6 +6381,9 @@ export const auth = betterAuth({
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { env } from "@{{projectName}}/env/server";
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+import { expo } from "@better-auth/expo";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
@@ -6417,6 +6426,9 @@ export const auth = betterAuth({
 	},
 {{/if}}
 	plugins: [
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+		expo(),
+{{/if}}
 {{#if (eq payments "polar")}}
 		polar({
 			client: polarClient,
@@ -6445,6 +6457,9 @@ export const auth = betterAuth({
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { env } from "@{{projectName}}/env/server";
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+import { expo } from "@better-auth/expo";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
@@ -6499,8 +6514,12 @@ export const auth = betterAuth({
 		//   domain: "<your-workers-subdomain>",
 		// },
 	},
-{{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 	plugins: [
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+		expo(),
+{{/if}}
+{{#if (eq payments "polar")}}
 		polar({
 			client: polarClient,
 			createCustomerOnSignUp: true,
@@ -6519,6 +6538,7 @@ export const auth = betterAuth({
 				portal(),
 			],
 		}),
+{{/if}}
 	],
 {{/if}}
 });
@@ -6529,6 +6549,9 @@ export const auth = betterAuth({
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { env } from "@{{projectName}}/env/server";
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+import { expo } from "@better-auth/expo";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
@@ -6563,8 +6586,12 @@ export const auth = betterAuth({
 		},
 	},
 {{/if}}
-{{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 	plugins: [
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+		expo(),
+{{/if}}
+{{#if (eq payments "polar")}}
 		polar({
 			client: polarClient,
 			createCustomerOnSignUp: true,
@@ -6583,6 +6610,7 @@ export const auth = betterAuth({
 				portal(),
 			],
 		}),
+{{/if}}
 	],
 {{/if}}
 });
@@ -6591,6 +6619,9 @@ export const auth = betterAuth({
 {{#if (eq orm "none")}}
 import { betterAuth } from "better-auth";
 import { env } from "@{{projectName}}/env/server";
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+import { expo } from "@better-auth/expo";
+{{/if}}
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
@@ -6625,8 +6656,12 @@ export const auth = betterAuth({
 		},
 	},
 {{/if}}
-{{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 	plugins: [
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+		expo(),
+{{/if}}
+{{#if (eq payments "polar")}}
 		polar({
 			client: polarClient,
 			createCustomerOnSignUp: true,
@@ -6645,6 +6680,7 @@ export const auth = betterAuth({
 				portal(),
 			],
 		}),
+{{/if}}
 	],
 {{/if}}
 });
@@ -21359,6 +21395,7 @@ import './unistyles';
   ["frontend/native/unistyles/metro.config.js.hbs", `const { getDefaultConfig } = require("expo/metro-config");
 
 const config = getDefaultConfig(__dirname);
+config.resolver.unstable_enablePackageExports = true;
 
 module.exports = config;
 `],
@@ -22317,6 +22354,7 @@ const { wrapWithReanimatedMetroConfig } = require("react-native-reanimated/metro
 
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
+config.resolver.unstable_enablePackageExports = true;
 
 const uniwindConfig = withUniwindConfig(wrapWithReanimatedMetroConfig(config), {
   cssEntryFile: "./global.css",
@@ -22357,6 +22395,7 @@ module.exports = uniwindConfig;
     "expo-router": "~55.0.2",
     "expo-secure-store": "~55.0.8",
     "expo-status-bar": "~55.0.4",
+    "expo-web-browser": "~55.0.9",
     "heroui-native": "^1.0.0-rc.3",
     "react": "19.2.0",
     "react-dom": "19.2.0",
