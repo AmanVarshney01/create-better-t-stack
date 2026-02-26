@@ -20270,10 +20270,7 @@ const { getDefaultConfig } = require("expo/metro-config");
 
 const config = getDefaultConfig(__dirname);
 
-config.resolver.unstable_enablePackageExports = true;
-
 module.exports = config;
-
 `],
   ["frontend/native/bare/package.json.hbs", `{
   "name": "native",
@@ -21359,7 +21356,6 @@ import './unistyles';
   ["frontend/native/unistyles/metro.config.js.hbs", `const { getDefaultConfig } = require("expo/metro-config");
 
 const config = getDefaultConfig(__dirname);
-config.resolver.unstable_enablePackageExports = true;
 
 module.exports = config;
 `],
@@ -22318,7 +22314,6 @@ const { wrapWithReanimatedMetroConfig } = require("react-native-reanimated/metro
 
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
-config.resolver.unstable_enablePackageExports = true;
 
 const uniwindConfig = withUniwindConfig(wrapWithReanimatedMetroConfig(config), {
   cssEntryFile: "./global.css",
