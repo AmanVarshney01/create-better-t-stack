@@ -4,12 +4,6 @@ import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { addPackageDependency, dependencyVersionMap } from "../utils/add-deps";
 
-const convexBetterAuthVersionOverridesByStack: Partial<
-  Record<"backend" | "web" | "native", Partial<Record<string, string>>>
-> = {
-  // Add stack-specific pins here when compatibility requires overrides.
-};
-
 export function processAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { auth, backend } = config;
   if (!auth || auth === "none") return;
@@ -40,9 +34,6 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
   const hasSolid = frontend.includes("solid");
   const hasSvelte = frontend.includes("svelte");
   const hasReactWebAuthForms = hasNextJs || hasTanStackStart || hasViteReact;
-  const backendVersionOverrides = convexBetterAuthVersionOverridesByStack.backend;
-  const webVersionOverrides = convexBetterAuthVersionOverridesByStack.web;
-  const nativeVersionOverrides = convexBetterAuthVersionOverridesByStack.native;
 
   if (auth === "clerk") {
     if (webExists) {
@@ -70,7 +61,6 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
         customDependencies: {
           "better-auth": "1.4.9",
           "@convex-dev/better-auth": dependencyVersionMap["@convex-dev/better-auth"],
-          ...backendVersionOverrides,
         },
       });
       if (hasNative) {
@@ -80,7 +70,6 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
           dependencies: ["@better-auth/expo"],
           customDependencies: {
             "@better-auth/expo": "1.4.9",
-            ...backendVersionOverrides,
           },
         });
       }
@@ -94,7 +83,6 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
         customDependencies: {
           "better-auth": "1.4.9",
           "@convex-dev/better-auth": dependencyVersionMap["@convex-dev/better-auth"],
-          ...webVersionOverrides,
         },
       });
 
@@ -127,7 +115,6 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
           "better-auth": "1.4.9",
           "@better-auth/expo": "1.4.9",
           "@convex-dev/better-auth": dependencyVersionMap["@convex-dev/better-auth"],
-          ...nativeVersionOverrides,
         },
       });
     }

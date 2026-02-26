@@ -2,11 +2,7 @@ import type { ProjectConfig, Frontend, API, Backend } from "@better-t-stack/type
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
-import {
-  addPackageDependency,
-  dependencyVersionMap,
-  type AvailableDependencies,
-} from "../utils/add-deps";
+import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
 
 type FrontendType = {
   hasReactWeb: boolean;
@@ -15,12 +11,6 @@ type FrontendType = {
   hasSolidWeb: boolean;
   hasAstroWeb: boolean;
   hasNative: boolean;
-};
-
-const convexVersionOverridesByFrontend: Partial<
-  Record<Frontend, Partial<Record<AvailableDependencies, string>>>
-> = {
-  // Add stack-specific Convex pins here when upstream compatibility requires it.
 };
 
 function getFrontendType(frontend: Frontend[]): FrontendType {
@@ -291,54 +281,10 @@ function addConvexDeps(
     if (frontend.includes("nuxt")) {
       deps.push("convex-nuxt", "convex-vue");
     }
-
-    const webCustomDependencies: Record<string, string> = {};
-    for (const dep of deps) {
-      webCustomDependencies[dep] = dependencyVersionMap[dep];
-    }
-    const webDepSet = new Set<AvailableDependencies>(deps);
-    for (const frontendName of frontend) {
-      const overrides = convexVersionOverridesByFrontend[frontendName];
-      if (!overrides) continue;
-      for (const [dep, version] of Object.entries(overrides)) {
-        const depName = dep as AvailableDependencies;
-        if (webDepSet.has(depName)) {
-          webCustomDependencies[depName] = version;
-        }
-      }
-    }
-
-    addPackageDependency({
-      vfs,
-      packagePath: webPath,
-      dependencies: deps,
-      customDependencies: webCustomDependencies,
-    });
+    addPackageDependency({ vfs, packagePath: webPath, dependencies: deps });
   }
 
   if (nativeExists && frontendType.hasNative) {
-    const deps: AvailableDependencies[] = ["convex"];
-    const nativeCustomDependencies: Record<string, string> = {};
-    for (const dep of deps) {
-      nativeCustomDependencies[dep] = dependencyVersionMap[dep];
-    }
-    const nativeDepSet = new Set<AvailableDependencies>(deps);
-    for (const frontendName of frontend) {
-      const overrides = convexVersionOverridesByFrontend[frontendName];
-      if (!overrides) continue;
-      for (const [dep, version] of Object.entries(overrides)) {
-        const depName = dep as AvailableDependencies;
-        if (nativeDepSet.has(depName)) {
-          nativeCustomDependencies[depName] = version;
-        }
-      }
-    }
-
-    addPackageDependency({
-      vfs,
-      packagePath: nativePath,
-      dependencies: deps,
-      customDependencies: nativeCustomDependencies,
-    });
+    addPackageDependency({ vfs, packagePath: nativePath, dependencies: ["convex"] });
   }
 }
