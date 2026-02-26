@@ -1728,24 +1728,22 @@ export default {
 } satisfies AuthConfig;
 `],
   ["auth/better-auth/convex/backend/convex/auth.ts.hbs", `import { createClient, type GenericCtx } from "@convex-dev/better-auth";
-{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-import { convex } from "@convex-dev/better-auth/plugins";
-import { expo } from "@better-auth/expo";
-{{else if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
 import { convex, crossDomain } from "@convex-dev/better-auth/plugins";
 {{else}}
 import { convex } from "@convex-dev/better-auth/plugins";
 {{/if}}
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+import { expo } from "@better-auth/expo";
+{{/if}}
 import { components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { query } from "./_generated/server";
-import { betterAuth } from "better-auth";
+import { betterAuth } from "better-auth/minimal";
 import authConfig from "./auth.config";
 
-{{#if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
-const siteUrl = process.env.SITE_URL!;
-{{else if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
-const siteUrl = process.env.SITE_URL!;
+{{#if (or (includes frontend "tanstack-start") (includes frontend "next") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid") (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+const siteUrl = process.env.SITE_URL{{#if (or (includes frontend "tanstack-start") (includes frontend "next") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}!{{else}} || "http://localhost:8081"{{/if}};
 {{/if}}
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
 const nativeAppUrl = process.env.NATIVE_APP_URL || "mybettertapp://";
@@ -1755,17 +1753,14 @@ export const authComponent = createClient<DataModel>(components.betterAuth);
 
 function createAuth(ctx: GenericCtx<DataModel>) {
   return betterAuth({
-    {{#if (and (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")) (or (includes frontend "tanstack-start") (includes frontend "next")))}}
+    {{#if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
     baseURL: siteUrl,
+    {{/if}}
+    {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
     trustedOrigins: [siteUrl, nativeAppUrl, ...(process.env.NODE_ENV === "development" ? ["exp://", "exp://**", "exp://192.168.*.*:*/**"] : [])],
-    {{else if (and (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles")) (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid")))}}
-    trustedOrigins: [siteUrl, nativeAppUrl, ...(process.env.NODE_ENV === "development" ? ["exp://", "exp://**", "exp://192.168.*.*:*/**"] : [])],
-    {{else if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-    trustedOrigins: [nativeAppUrl, ...(process.env.NODE_ENV === "development" ? ["exp://", "exp://**", "exp://192.168.*.*:*/**"] : [])],
-    {{else if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
-    baseURL: siteUrl,
-    trustedOrigins: [siteUrl],
     {{else if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
+    trustedOrigins: [siteUrl],
+    {{else if (or (includes frontend "tanstack-start") (includes frontend "next"))}}
     trustedOrigins: [siteUrl],
     {{/if}}
     database: authComponent.adapter(ctx),
@@ -1776,7 +1771,8 @@ function createAuth(ctx: GenericCtx<DataModel>) {
     plugins: [
       {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
       expo(),
-      {{else if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
+      {{/if}}
+      {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
       crossDomain({ siteUrl }),
       {{/if}}
       convex({
@@ -1801,7 +1797,7 @@ import { authComponent, createAuth } from "./auth";
 
 const http = httpRouter();
 
-{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles") (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
 authComponent.registerRoutes(http, createAuth, { cors: true });
 {{else}}
 authComponent.registerRoutes(http, createAuth);
@@ -2306,21 +2302,24 @@ const styles = StyleSheet.create({
 export { SignUp };
 `],
   ["auth/better-auth/convex/native/base/lib/auth-client.ts.hbs", `import { createAuthClient } from "better-auth/react";
-import { convexClient } from "@convex-dev/better-auth/client/plugins";
+import { convexClient, crossDomainClient } from "@convex-dev/better-auth/client/plugins";
 import { expoClient } from "@better-auth/expo/client";
 import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
 import { env } from "@{{projectName}}/env/native";
 
 export const authClient = createAuthClient({
 	baseURL: env.EXPO_PUBLIC_CONVEX_SITE_URL,
 	plugins: [
-		expoClient({
-			scheme: Constants.expoConfig?.scheme as string,
-			storagePrefix: Constants.expoConfig?.scheme as string,
-			storage: SecureStore,
-		}),
 		convexClient(),
+		Platform.OS === "web"
+			? crossDomainClient()
+			: expoClient({
+				scheme: Constants.expoConfig?.scheme as string,
+				storagePrefix: Constants.expoConfig?.scheme as string,
+				storage: SecureStore,
+			}),
 	],
 });
 `],
@@ -3871,8 +3870,9 @@ import { env } from "@{{projectName}}/env/web";
 
 export const authClient = createAuthClient({
 	baseURL: env.VITE_CONVEX_SITE_URL,
-	plugins: [convexClient(), crossDomainClient()],
-});`],
+	plugins: [crossDomainClient(), convexClient()],
+});
+`],
   ["auth/better-auth/convex/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `import SignInForm from "@/components/sign-in-form";
 import SignUpForm from "@/components/sign-up-form";
 import UserMenu from "@/components/user-menu";
