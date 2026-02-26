@@ -86,7 +86,14 @@ export function processAuthPlugins(vfs: VirtualFileSystem, config: ProjectConfig
         const arrayLiteral = pluginsProp.getInitializerIfKind(SyntaxKind.ArrayLiteralExpression);
         if (arrayLiteral) {
           pluginsToAdd.forEach((plugin) => {
-            arrayLiteral.addElement(plugin);
+            const normalizedPlugin = plugin.replace(/\s/g, "");
+            const alreadyExists = arrayLiteral
+              .getElements()
+              .some((element) => element.getText().replace(/\s/g, "") === normalizedPlugin);
+
+            if (!alreadyExists) {
+              arrayLiteral.addElement(plugin);
+            }
           });
         }
       } else {

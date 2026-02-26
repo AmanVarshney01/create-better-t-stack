@@ -39,10 +39,8 @@ import { queryClient } from "@/utils/trpc";
 import { queryClient } from "@/utils/orpc";
 {{/if}}
 import { NAV_THEME } from "@/lib/constants";
-import React, { useRef } from "react";
 import { useColorScheme } from "@/lib/use-color-scheme";
-import { Platform, StyleSheet } from "react-native";
-import { setAndroidNavigationBar } from "@/lib/android-navigation-bar";
+import { StyleSheet } from "react-native";
 
 const LIGHT_THEME: Theme = {
   ...DefaultTheme,
@@ -63,11 +61,6 @@ const convex = new ConvexReactClient(env.EXPO_PUBLIC_CONVEX_URL, {
 });
 {{/if}}
 
-const useIsomorphicLayoutEffect =
-  Platform.OS === "web" && typeof window === "undefined"
-    ? React.useEffect
-    : React.useLayoutEffect;
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -75,22 +68,7 @@ const styles = StyleSheet.create({
 });
 
 export default function RootLayout() {
-  const hasMounted = useRef(false);
-  const { colorScheme, isDarkColorScheme } = useColorScheme();
-  const [isColorSchemeLoaded, setIsColorSchemeLoaded] = React.useState(false);
-
-  useIsomorphicLayoutEffect(() => {
-    if (hasMounted.current) {
-      return;
-    }
-    setAndroidNavigationBar(colorScheme);
-    setIsColorSchemeLoaded(true);
-    hasMounted.current = true;
-  }, []);
-
-  if (!isColorSchemeLoaded) {
-    return null;
-  }
+  const { isDarkColorScheme } = useColorScheme();
 
   return (
     <>

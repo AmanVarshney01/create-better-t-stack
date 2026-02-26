@@ -9,6 +9,10 @@ export interface EnvVariable {
   comment?: string;
 }
 
+type AddEnvVariablesOptions = {
+  commentOutEmptyValues?: boolean;
+};
+
 function generateRandomString(length: number, charset: string) {
   let result = "";
   if (
@@ -70,25 +74,35 @@ function getConvexVar(frontend: string[]) {
   return "VITE_CONVEX_URL";
 }
 
-function addEnvVariablesToContent(currentContent: string, variables: EnvVariable[]): string {
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function addEnvVariablesToContent(
+  currentContent: string,
+  variables: EnvVariable[],
+  options: AddEnvVariablesOptions = {},
+): string {
   let envContent = currentContent || "";
   let contentToAdd = "";
 
   for (const { key, value, condition, comment } of variables) {
     if (condition) {
-      const regex = new RegExp(`^${key}=.*$`, "m");
       const valueToWrite = value ?? "";
+      const shouldComment = options.commentOutEmptyValues === true && valueToWrite.trim() === "";
+      const lineToWrite = shouldComment ? `# ${key}=${valueToWrite}` : `${key}=${valueToWrite}`;
+      const lineRegex = new RegExp(`^\\s*#?\\s*${escapeRegExp(key)}=.*$`, "m");
 
-      if (regex.test(envContent)) {
-        const existingMatch = envContent.match(regex);
-        if (existingMatch && existingMatch[0] !== `${key}=${valueToWrite}`) {
-          envContent = envContent.replace(regex, `${key}=${valueToWrite}`);
+      if (lineRegex.test(envContent)) {
+        const existingMatch = envContent.match(lineRegex);
+        if (existingMatch && existingMatch[0] !== lineToWrite) {
+          envContent = envContent.replace(lineRegex, lineToWrite);
         }
       } else {
         if (comment) {
           contentToAdd += `# ${comment}\n`;
         }
-        contentToAdd += `${key}=${valueToWrite}\n`;
+        contentToAdd += `${lineToWrite}\n`;
       }
     }
   }
@@ -103,12 +117,17 @@ function addEnvVariablesToContent(currentContent: string, variables: EnvVariable
   return `${envContent.trimEnd()}\n`;
 }
 
-function writeEnvFile(vfs: VirtualFileSystem, envPath: string, variables: EnvVariable[]): void {
+function writeEnvFile(
+  vfs: VirtualFileSystem,
+  envPath: string,
+  variables: EnvVariable[],
+  options: AddEnvVariablesOptions = {},
+): void {
   let currentContent = "";
   if (vfs.exists(envPath)) {
     currentContent = vfs.readFile(envPath) || "";
   }
-  const newContent = addEnvVariablesToContent(currentContent, variables);
+  const newContent = addEnvVariablesToContent(currentContent, variables, options);
   vfs.writeFile(envPath, newContent);
 }
 
@@ -254,6 +273,7 @@ function buildConvexBackendVars(
     frontend.includes("solid") ||
     frontend.includes("svelte") ||
     frontend.includes("astro");
+  const defaultSiteUrl = hasNative && !hasWeb ? "http://localhost:8081" : "http://localhost:3001";
 
   const vars: EnvVariable[] = [];
 
@@ -286,11 +306,18 @@ function buildConvexBackendVars(
         },
         {
           key: "SITE_URL",
-          value: "http://localhost:3001",
+          value: defaultSiteUrl,
           condition: true,
           comment: "Web app URL for authentication",
         },
       );
+    } else if (hasNative) {
+      vars.push({
+        key: "SITE_URL",
+        value: defaultSiteUrl,
+        condition: true,
+        comment: "Web app URL for authentication (for Expo web support)",
+      });
     }
   }
 
@@ -302,6 +329,10 @@ function buildConvexCommentBlocks(
   auth: ProjectConfig["auth"],
   examples: ProjectConfig["examples"],
 ): string {
+  const hasNative =
+    frontend.includes("native-bare") ||
+    frontend.includes("native-uniwind") ||
+    frontend.includes("native-unistyles");
   const hasWeb =
     frontend.includes("react-router") ||
     frontend.includes("tanstack-router") ||
@@ -311,6 +342,7 @@ function buildConvexCommentBlocks(
     frontend.includes("solid") ||
     frontend.includes("svelte") ||
     frontend.includes("astro");
+  const defaultSiteUrl = hasNative && !hasWeb ? "http://localhost:8081" : "http://localhost:3001";
 
   let commentBlocks = "";
 
@@ -324,7 +356,7 @@ function buildConvexCommentBlocks(
   if (auth === "better-auth") {
     commentBlocks += `# Set Convex environment variables
 # npx convex env set BETTER_AUTH_SECRET=$(openssl rand -base64 32)
-${hasWeb ? "# npx convex env set SITE_URL http://localhost:3001\n" : ""}`;
+${hasWeb || hasNative ? `# npx convex env set SITE_URL ${defaultSiteUrl}\n` : ""}`;
   }
 
   return commentBlocks;
@@ -502,7 +534,9 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
         if (vfs.exists(envLocalPath)) {
           existingContent = vfs.readFile(envLocalPath) || "";
         }
-        const contentWithVars = addEnvVariablesToContent(existingContent, convexBackendVars);
+        const contentWithVars = addEnvVariablesToContent(existingContent, convexBackendVars, {
+          commentOutEmptyValues: true,
+        });
         vfs.writeFile(envLocalPath, contentWithVars);
       }
     }

@@ -109,13 +109,13 @@ export const dependencyVersionMap = {
 
   next: "^16.1.1",
 
-  convex: "^1.31.2",
+  convex: "^1.32.0",
   "@convex-dev/react-query": "^0.1.0",
   "@convex-dev/agent": "^0.3.2",
   "convex-svelte": "^0.0.12",
   "convex-nuxt": "0.1.5",
   "convex-vue": "^0.1.5",
-  "@convex-dev/better-auth": "^0.10.9",
+  "@convex-dev/better-auth": "^0.10.11",
 
   "@tanstack/svelte-query": "^5.85.3",
   "@tanstack/svelte-query-devtools": "^5.85.3",

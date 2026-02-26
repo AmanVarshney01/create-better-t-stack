@@ -58,14 +58,18 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
         vfs,
         packagePath: backendPath,
         dependencies: ["better-auth", "@convex-dev/better-auth"],
-        customDependencies: { "better-auth": "1.4.9" },
+        customDependencies: {
+          "better-auth": "1.4.9",
+        },
       });
       if (hasNative) {
         addPackageDependency({
           vfs,
           packagePath: backendPath,
           dependencies: ["@better-auth/expo"],
-          customDependencies: { "@better-auth/expo": "1.4.9" },
+          customDependencies: {
+            "@better-auth/expo": "1.4.9",
+          },
         });
       }
     }
@@ -75,7 +79,9 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
         vfs,
         packagePath: webPath,
         dependencies: ["better-auth", "@convex-dev/better-auth"],
-        customDependencies: { "better-auth": "1.4.9" },
+        customDependencies: {
+          "better-auth": "1.4.9",
+        },
       });
 
       if (hasReactWebAuthForms) {
@@ -103,7 +109,10 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
           "@convex-dev/better-auth",
           "@tanstack/react-form",
         ],
-        customDependencies: { "better-auth": "1.4.9", "@better-auth/expo": "1.4.9" },
+        customDependencies: {
+          "better-auth": "1.4.9",
+          "@better-auth/expo": "1.4.9",
+        },
       });
     }
   }
