@@ -2,7 +2,28 @@ import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
-import { addPackageDependency } from "../utils/add-deps";
+import { addPackageDependency, dependencyVersionMap } from "../utils/add-deps";
+
+const convexBetterAuthVersionOverridesByStack: Partial<
+  Record<"backend" | "web" | "native", Partial<Record<string, string>>>
+> = {
+  // Add stack-specific pins here when compatibility requires overrides.
+};
+
+function resolveConvexBetterAuthVersions(
+  stack: "backend" | "web" | "native",
+  baseVersions: Record<string, string>,
+): Record<string, string> {
+  const stackOverrides = convexBetterAuthVersionOverridesByStack[stack];
+  if (!stackOverrides) {
+    return baseVersions;
+  }
+
+  return {
+    ...baseVersions,
+    ...stackOverrides,
+  };
+}
 
 export function processAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { auth, backend } = config;
@@ -58,14 +79,19 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
         vfs,
         packagePath: backendPath,
         dependencies: ["better-auth", "@convex-dev/better-auth"],
-        customDependencies: { "better-auth": "1.4.9" },
+        customDependencies: resolveConvexBetterAuthVersions("backend", {
+          "better-auth": "1.4.9",
+          "@convex-dev/better-auth": dependencyVersionMap["@convex-dev/better-auth"],
+        }),
       });
       if (hasNative) {
         addPackageDependency({
           vfs,
           packagePath: backendPath,
           dependencies: ["@better-auth/expo"],
-          customDependencies: { "@better-auth/expo": "1.4.9" },
+          customDependencies: resolveConvexBetterAuthVersions("backend", {
+            "@better-auth/expo": "1.4.9",
+          }),
         });
       }
     }
@@ -75,7 +101,10 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
         vfs,
         packagePath: webPath,
         dependencies: ["better-auth", "@convex-dev/better-auth"],
-        customDependencies: { "better-auth": "1.4.9" },
+        customDependencies: resolveConvexBetterAuthVersions("web", {
+          "better-auth": "1.4.9",
+          "@convex-dev/better-auth": dependencyVersionMap["@convex-dev/better-auth"],
+        }),
       });
 
       if (hasReactWebAuthForms) {
@@ -103,7 +132,11 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
           "@convex-dev/better-auth",
           "@tanstack/react-form",
         ],
-        customDependencies: { "better-auth": "1.4.9", "@better-auth/expo": "1.4.9" },
+        customDependencies: resolveConvexBetterAuthVersions("native", {
+          "better-auth": "1.4.9",
+          "@better-auth/expo": "1.4.9",
+          "@convex-dev/better-auth": dependencyVersionMap["@convex-dev/better-auth"],
+        }),
       });
     }
   }

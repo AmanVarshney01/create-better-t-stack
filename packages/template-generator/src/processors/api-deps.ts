@@ -2,7 +2,11 @@ import type { ProjectConfig, Frontend, API, Backend } from "@better-t-stack/type
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
-import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
+import {
+  addPackageDependency,
+  dependencyVersionMap,
+  type AvailableDependencies,
+} from "../utils/add-deps";
 
 type FrontendType = {
   hasReactWeb: boolean;
@@ -12,6 +16,37 @@ type FrontendType = {
   hasAstroWeb: boolean;
   hasNative: boolean;
 };
+
+const convexVersionOverridesByFrontend: Partial<
+  Record<Frontend, Partial<Record<AvailableDependencies, string>>>
+> = {
+  // Add stack-specific Convex pins here when upstream compatibility requires it.
+};
+
+function resolveConvexCustomDependencies(
+  frontend: Frontend[],
+  deps: AvailableDependencies[],
+): Record<string, string> {
+  const customDependencies: Record<string, string> = {};
+  for (const dep of deps) {
+    customDependencies[dep] = dependencyVersionMap[dep];
+  }
+
+  const selectedDeps = new Set<AvailableDependencies>(deps);
+  for (const frontendName of frontend) {
+    const overrides = convexVersionOverridesByFrontend[frontendName];
+    if (!overrides) continue;
+
+    for (const [dep, version] of Object.entries(overrides)) {
+      const depName = dep as AvailableDependencies;
+      if (selectedDeps.has(depName)) {
+        customDependencies[depName] = version;
+      }
+    }
+  }
+
+  return customDependencies;
+}
 
 function getFrontendType(frontend: Frontend[]): FrontendType {
   return {
@@ -281,10 +316,21 @@ function addConvexDeps(
     if (frontend.includes("nuxt")) {
       deps.push("convex-nuxt", "convex-vue");
     }
-    addPackageDependency({ vfs, packagePath: webPath, dependencies: deps });
+    addPackageDependency({
+      vfs,
+      packagePath: webPath,
+      dependencies: deps,
+      customDependencies: resolveConvexCustomDependencies(frontend, deps),
+    });
   }
 
   if (nativeExists && frontendType.hasNative) {
-    addPackageDependency({ vfs, packagePath: nativePath, dependencies: ["convex"] });
+    const deps: AvailableDependencies[] = ["convex"];
+    addPackageDependency({
+      vfs,
+      packagePath: nativePath,
+      dependencies: deps,
+      customDependencies: resolveConvexCustomDependencies(frontend, deps),
+    });
   }
 }

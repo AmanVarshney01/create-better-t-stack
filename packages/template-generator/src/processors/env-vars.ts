@@ -9,6 +9,10 @@ export interface EnvVariable {
   comment?: string;
 }
 
+type AddEnvVariablesOptions = {
+  commentOutEmptyValues?: boolean;
+};
+
 function generateRandomString(length: number, charset: string) {
   let result = "";
   if (
@@ -70,25 +74,35 @@ function getConvexVar(frontend: string[]) {
   return "VITE_CONVEX_URL";
 }
 
-function addEnvVariablesToContent(currentContent: string, variables: EnvVariable[]): string {
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function addEnvVariablesToContent(
+  currentContent: string,
+  variables: EnvVariable[],
+  options: AddEnvVariablesOptions = {},
+): string {
   let envContent = currentContent || "";
   let contentToAdd = "";
 
   for (const { key, value, condition, comment } of variables) {
     if (condition) {
-      const regex = new RegExp(`^${key}=.*$`, "m");
       const valueToWrite = value ?? "";
+      const shouldComment = options.commentOutEmptyValues === true && valueToWrite.trim() === "";
+      const lineToWrite = shouldComment ? `# ${key}=${valueToWrite}` : `${key}=${valueToWrite}`;
+      const lineRegex = new RegExp(`^\\s*#?\\s*${escapeRegExp(key)}=.*$`, "m");
 
-      if (regex.test(envContent)) {
-        const existingMatch = envContent.match(regex);
-        if (existingMatch && existingMatch[0] !== `${key}=${valueToWrite}`) {
-          envContent = envContent.replace(regex, `${key}=${valueToWrite}`);
+      if (lineRegex.test(envContent)) {
+        const existingMatch = envContent.match(lineRegex);
+        if (existingMatch && existingMatch[0] !== lineToWrite) {
+          envContent = envContent.replace(lineRegex, lineToWrite);
         }
       } else {
         if (comment) {
           contentToAdd += `# ${comment}\n`;
         }
-        contentToAdd += `${key}=${valueToWrite}\n`;
+        contentToAdd += `${lineToWrite}\n`;
       }
     }
   }
@@ -103,12 +117,17 @@ function addEnvVariablesToContent(currentContent: string, variables: EnvVariable
   return `${envContent.trimEnd()}\n`;
 }
 
-function writeEnvFile(vfs: VirtualFileSystem, envPath: string, variables: EnvVariable[]): void {
+function writeEnvFile(
+  vfs: VirtualFileSystem,
+  envPath: string,
+  variables: EnvVariable[],
+  options: AddEnvVariablesOptions = {},
+): void {
   let currentContent = "";
   if (vfs.exists(envPath)) {
     currentContent = vfs.readFile(envPath) || "";
   }
-  const newContent = addEnvVariablesToContent(currentContent, variables);
+  const newContent = addEnvVariablesToContent(currentContent, variables, options);
   vfs.writeFile(envPath, newContent);
 }
 
@@ -515,7 +534,9 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
         if (vfs.exists(envLocalPath)) {
           existingContent = vfs.readFile(envLocalPath) || "";
         }
-        const contentWithVars = addEnvVariablesToContent(existingContent, convexBackendVars);
+        const contentWithVars = addEnvVariablesToContent(existingContent, convexBackendVars, {
+          commentOutEmptyValues: true,
+        });
         vfs.writeFile(envLocalPath, contentWithVars);
       }
     }
