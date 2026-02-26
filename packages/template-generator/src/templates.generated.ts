@@ -22355,7 +22355,7 @@ module.exports = uniwindConfig;
     "expo-router": "~55.0.2",
     "expo-secure-store": "~55.0.8",
     "expo-status-bar": "~55.0.4",
-    "heroui-native": "^1.0.0-rc.1",
+    "heroui-native": "^1.0.0-rc.3",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-native": "0.83.2",
