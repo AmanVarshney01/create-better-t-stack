@@ -21418,6 +21418,7 @@ module.exports = config;
   ["frontend/native/unistyles/theme.ts.hbs", `const sharedColors = {
   success: "#22C55E",
   destructive: "#EF4444",
+  destructiveForeground: "#FFFFFF",
   warning: "#F59E0B",
   info: "#3B82F6",
 } as const;
