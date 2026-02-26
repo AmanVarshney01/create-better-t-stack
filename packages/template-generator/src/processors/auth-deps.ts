@@ -2,7 +2,7 @@ import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
-import { addPackageDependency, dependencyVersionMap } from "../utils/add-deps";
+import { addPackageDependency } from "../utils/add-deps";
 
 export function processAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { auth, backend } = config;
@@ -60,7 +60,6 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
         dependencies: ["better-auth", "@convex-dev/better-auth"],
         customDependencies: {
           "better-auth": "1.4.9",
-          "@convex-dev/better-auth": dependencyVersionMap["@convex-dev/better-auth"],
         },
       });
       if (hasNative) {
@@ -82,7 +81,6 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
         dependencies: ["better-auth", "@convex-dev/better-auth"],
         customDependencies: {
           "better-auth": "1.4.9",
-          "@convex-dev/better-auth": dependencyVersionMap["@convex-dev/better-auth"],
         },
       });
 
@@ -114,7 +112,6 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
         customDependencies: {
           "better-auth": "1.4.9",
           "@better-auth/expo": "1.4.9",
-          "@convex-dev/better-auth": dependencyVersionMap["@convex-dev/better-auth"],
         },
       });
     }
