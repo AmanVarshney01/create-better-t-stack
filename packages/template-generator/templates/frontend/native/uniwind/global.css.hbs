@@ -2,4 +2,8 @@
 @import "uniwind";
 @import "heroui-native/styles";
 
+{{#if (includes addons "turborepo")}}
+@source '../../node_modules/heroui-native/lib';
+{{else}}
 @source './node_modules/heroui-native/lib';
+{{/if}}
