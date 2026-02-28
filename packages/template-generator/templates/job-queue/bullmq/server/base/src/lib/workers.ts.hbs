@@ -8,7 +8,7 @@ import { connection, type EmailJobData, type NotificationJobData } from "./queue
 export const emailWorker = new Worker<EmailJobData>(
   "email",
   async (job: Job<EmailJobData>) => {
-    const { to, subject, body, templateId } = job.data;
+    const { to } = job.data;
 
     console.log(`Processing email job ${job.id}: sending to ${to}`);
 
@@ -39,7 +39,7 @@ export const emailWorker = new Worker<EmailJobData>(
 export const notificationWorker = new Worker<NotificationJobData>(
   "notification",
   async (job: Job<NotificationJobData>) => {
-    const { userId, type, title, message, data } = job.data;
+    const { userId, type } = job.data;
 
     console.log(`Processing notification job ${job.id}: ${type} to user ${userId}`);
 

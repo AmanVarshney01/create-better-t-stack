@@ -127,19 +127,20 @@ import { fromNodeHeaders } from "better-auth/node";
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
-export async function createContext({ req, res }: CreateFastifyContextOptions) {
 {{#if (eq auth "better-auth")}}
+export async function createContext({ req }: CreateFastifyContextOptions) {
   const session = await auth.api.getSession({
     headers: fromNodeHeaders(req.headers),
   });
   return { session };
+}
 {{else}}
-  // No auth configured
+export async function createContext(_opts: CreateFastifyContextOptions) {
 	return {
 		session: null,
 	};
-{{/if}}
 }
+{{/if}}
 
 {{else}}
 export async function createContext() {

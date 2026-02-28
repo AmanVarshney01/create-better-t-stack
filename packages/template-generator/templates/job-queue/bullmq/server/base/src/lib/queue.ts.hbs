@@ -1,20 +1,11 @@
-import { Queue, Worker, type Job, type ConnectionOptions } from "bullmq";
-import IORedis from "ioredis";
+import { Queue, type ConnectionOptions } from "bullmq";
 
-// Redis connection configuration
-// For production, use environment variables to configure the connection
-const redisConnection: ConnectionOptions = {
+export const connection: ConnectionOptions = {
   host: process.env.REDIS_HOST || "localhost",
   port: Number(process.env.REDIS_PORT) || 6379,
   password: process.env.REDIS_PASSWORD || undefined,
-  maxRetriesPerRequest: null, // Required for BullMQ
+  maxRetriesPerRequest: null,
 };
-
-// Create a shared Redis connection for all queues
-const connection = new IORedis(redisConnection);
-
-// Export connection for reuse
-export { connection };
 
 /**
  * Example queue for background job processing
@@ -107,5 +98,4 @@ export async function getQueueStats(queue: Queue) {
 export async function closeQueues() {
   await emailQueue.close();
   await notificationQueue.close();
-  await connection.quit();
 }

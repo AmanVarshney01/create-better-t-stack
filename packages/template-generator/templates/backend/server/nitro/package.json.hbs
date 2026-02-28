@@ -5,7 +5,7 @@
 		"dev": "nitro dev",
 		"build": "nitro build",
 		"start": "node .output/server/index.mjs",
-		"check-types": "tsc --noEmit"
+		"check-types": "nitro prepare && tsc --noEmit"
 	},
 	"dependencies": {},
 	"devDependencies": {}

@@ -1,4 +1,5 @@
 {
+	"extends": "./.nitro/types/tsconfig.json",
 	"compilerOptions": {
 		"target": "ESNext",
 		"module": "ESNext",
@@ -8,9 +9,8 @@
 		"esModuleInterop": true,
 		"resolveJsonModule": true,
 		"isolatedModules": true,
-		"noEmit": true,
-		"types": ["nitropack"]
+		"noEmit": true
 	},
-	"include": ["**/*.ts", "nitro.config.ts"],
-	"exclude": ["node_modules", ".output", ".nitro"]
+	"include": ["**/*.ts", ".nitro/types/**/*.d.ts", "nitro.config.ts"],
+	"exclude": ["node_modules", ".output"]
 }

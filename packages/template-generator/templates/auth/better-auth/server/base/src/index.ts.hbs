@@ -285,6 +285,67 @@ export const auth = betterAuth({
 });
 {{/if}}
 
+{{#if (or (eq orm "kysely") (eq orm "mikroorm"))}}
+import { betterAuth } from "better-auth";
+import { env } from "@{{projectName}}/env/server";
+{{#if (eq payments "polar")}}
+import { polar, checkout, portal } from "@polar-sh/better-auth";
+import { polarClient } from "./lib/payments";
+{{/if}}
+
+export const auth = betterAuth({
+	database: env.DATABASE_URL,
+	trustedOrigins: [
+		env.CORS_ORIGIN,
+{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
+		"mybettertapp://",
+		...(env.NODE_ENV === "development"
+			? [
+				"exp://",
+				"exp://**",
+				"exp://192.168.*.*:*/**",
+				"http://localhost:8081",
+			]
+			: []),
+{{/if}}
+	],
+	emailAndPassword: {
+		enabled: true,
+	},
+{{#if (ne backend "self")}}
+	advanced: {
+		defaultCookieAttributes: {
+			sameSite: "none",
+			secure: true,
+			httpOnly: true,
+		},
+	},
+{{/if}}
+	plugins: [
+{{#if (eq payments "polar")}}
+		polar({
+			client: polarClient,
+			createCustomerOnSignUp: true,
+			enableCustomerPortal: true,
+			use: [
+				checkout({
+					products: [
+						{
+							productId: "your-product-id",
+							slug: "pro",
+						},
+					],
+					successUrl: env.POLAR_SUCCESS_URL,
+					authenticatedUsersOnly: true,
+				}),
+				portal(),
+			],
+		}),
+{{/if}}
+	],
+});
+{{/if}}
+
 {{#if (eq orm "none")}}
 import { betterAuth } from "better-auth";
 import { env } from "@{{projectName}}/env/server";
@@ -295,7 +356,7 @@ import { polarClient } from "./lib/payments";
 
 
 export const auth = betterAuth({
-	database: "", // Invalid configuration
+	database: env.DATABASE_URL,
 	trustedOrigins: [
 		env.CORS_ORIGIN,
 {{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
