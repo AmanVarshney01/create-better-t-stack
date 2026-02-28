@@ -181,7 +181,9 @@ export function generateStackCommand(stack: StackState) {
       backend === "self-next" ||
       backend === "self-tanstack-start" ||
       backend === "self-astro" ||
-      backend === "self-nuxt"
+      backend === "self-nuxt" ||
+      backend === "self-svelte" ||
+      backend === "self-solid-start"
     ) {
       return "self";
     }

@@ -67,6 +67,8 @@ const FULLSTACK_FRONTENDS: readonly Frontend[] = [
   "tanstack-start",
   "astro",
   "nuxt",
+  "svelte",
+  "solid-start",
 ] as const;
 
 export function validateSelfBackendCompatibility(
@@ -83,7 +85,7 @@ export function validateSelfBackendCompatibility(
 
     if (!hasSupportedWeb) {
       exitWithError(
-        "Backend 'self' (fullstack) only supports Next.js, TanStack Start, Astro, or Nuxt frontends. Please use --frontend next, --frontend tanstack-start, --frontend astro, or --frontend nuxt.",
+        "Backend 'self' (fullstack) only supports Next.js, TanStack Start, Astro, Nuxt, SvelteKit, or SolidStart frontends. Please use --frontend next, --frontend tanstack-start, --frontend astro, --frontend nuxt, --frontend svelte, or --frontend solid-start.",
       );
     }
 
@@ -97,7 +99,7 @@ export function validateSelfBackendCompatibility(
   const hasFullstackFrontend = frontends.some((f) => FULLSTACK_FRONTENDS.includes(f));
   if (providedFlags.has("backend") && !hasFullstackFrontend && backend === "self") {
     exitWithError(
-      "Backend 'self' (fullstack) only supports Next.js, TanStack Start, Astro, or Nuxt frontends. Please use --frontend next, --frontend tanstack-start, --frontend astro, --frontend nuxt, or choose a different backend.",
+      "Backend 'self' (fullstack) only supports Next.js, TanStack Start, Astro, Nuxt, SvelteKit, or SolidStart frontends. Please use --frontend next, --frontend tanstack-start, --frontend astro, --frontend nuxt, --frontend svelte, --frontend solid-start, or choose a different backend.",
     );
   }
 }
@@ -205,13 +207,21 @@ export function validateApiFrontendCompatibility(
   const includesRedwood = frontends.includes("redwood");
   const includesFresh = frontends.includes("fresh");
 
+  const includesSolidStart = frontends.includes("solid-start");
+
   // ts-rest and garph require React like tRPC
   if (
-    (includesNuxt || includesSvelte || includesSolid) &&
+    (includesNuxt || includesSvelte || includesSolid || includesSolidStart) &&
     (api === "trpc" || api === "ts-rest" || api === "garph")
   ) {
     const apiName = api === "trpc" ? "tRPC" : api === "ts-rest" ? "ts-rest" : "garph";
-    const incompatibleFrontend = includesNuxt ? "nuxt" : includesSvelte ? "svelte" : "solid";
+    const incompatibleFrontend = includesNuxt
+      ? "nuxt"
+      : includesSvelte
+        ? "svelte"
+        : includesSolid
+          ? "solid"
+          : "solid-start";
     incompatibilityError({
       message: `${apiName} API requires React-based frontends.`,
       provided: { api, frontend: incompatibleFrontend },
@@ -285,6 +295,7 @@ export function isFrontendAllowedWithBackend(
   auth?: string,
 ) {
   if (backend === "convex" && frontend === "solid") return false;
+  if (backend === "convex" && frontend === "solid-start") return false;
   if (backend === "convex" && frontend === "astro") return false;
   if (backend === "convex" && frontend === "qwik") return false;
   if (backend === "convex" && frontend === "angular") return false;
@@ -304,7 +315,7 @@ export function isFrontendAllowedWithBackend(
   if (frontend === "fresh" && backend && backend !== "none") return false;
 
   if (auth === "clerk" && backend === "convex") {
-    const incompatibleFrontends = ["nuxt", "svelte", "solid"];
+    const incompatibleFrontends = ["nuxt", "svelte", "solid", "solid-start"];
     if (incompatibleFrontends.includes(frontend)) return false;
   }
 
@@ -335,7 +346,9 @@ export function validateClerkCompatibility(
   if (auth !== "clerk") return;
 
   if (backend === "convex") {
-    const incompatibleFrontends = frontends.filter((f) => ["nuxt", "svelte", "solid"].includes(f));
+    const incompatibleFrontends = frontends.filter((f) =>
+      ["nuxt", "svelte", "solid", "solid-start"].includes(f),
+    );
     if (incompatibleFrontends.length > 0) {
       exitWithError(
         `In Better-Fullstack, Clerk + Convex is not compatible with the following frontends: ${incompatibleFrontends.join(
@@ -368,6 +381,16 @@ export function validateClerkCompatibility(
       if (frontends.includes("nuxt")) {
         exitWithError(
           "In Better-Fullstack, Clerk is not yet supported for Nuxt fullstack projects. Please use '--frontend next' or '--frontend tanstack-start' with '--backend self', or choose a different auth provider.",
+        );
+      }
+      if (frontends.includes("svelte")) {
+        exitWithError(
+          "In Better-Fullstack, Clerk is not yet supported for SvelteKit fullstack projects. Please use '--frontend next' or '--frontend tanstack-start' with '--backend self', or choose a different auth provider.",
+        );
+      }
+      if (frontends.includes("solid-start")) {
+        exitWithError(
+          "In Better-Fullstack, Clerk is not yet supported for SolidStart fullstack projects. Please use '--frontend next' or '--frontend tanstack-start' with '--backend self', or choose a different auth provider.",
         );
       }
       exitWithError(
@@ -505,8 +528,10 @@ export function allowedApisForFrontends(
     return ["none"];
   }
 
-  // Nuxt, Svelte, and Solid only support oRPC
-  if (includesNuxt || includesSvelte || includesSolid) {
+  const includesSolidStartApi = frontends.includes("solid-start");
+
+  // Nuxt, Svelte, Solid, and SolidStart only support oRPC
+  if (includesNuxt || includesSvelte || includesSolid || includesSolidStartApi) {
     return ["orpc", "none"];
   }
 
@@ -520,7 +545,8 @@ export function allowedApisForFrontends(
 
 export function isExampleAIAllowed(backend?: ProjectConfig["backend"], frontends: Frontend[] = []) {
   const includesSolid = frontends.includes("solid");
-  if (includesSolid) return false;
+  const includesSolidStart = frontends.includes("solid-start");
+  if (includesSolid || includesSolidStart) return false;
 
   // Convex AI example only supports React-based frontends (not Svelte or Nuxt)
   if (backend === "convex") {
@@ -676,6 +702,10 @@ export function validateExamplesCompatibility(
 
   if (examplesArr.includes("ai") && (frontend ?? []).includes("solid")) {
     exitWithError("The 'ai' example is not compatible with the Solid frontend.");
+  }
+
+  if (examplesArr.includes("ai") && (frontend ?? []).includes("solid-start")) {
+    exitWithError("The 'ai' example is not compatible with the SolidStart frontend.");
   }
 
   // Convex AI example only supports React-based frontends
@@ -897,7 +927,7 @@ export function validateFormsFrontendCompatibility(
 ) {
   if (!forms || forms === "none") return;
 
-  const hasSolid = frontends.includes("solid");
+  const hasSolid = frontends.includes("solid") || frontends.includes("solid-start");
   const hasQwik = frontends.includes("qwik");
   const hasReactWeb = frontends.some((f) => REACT_WEB_FRONTENDS.includes(f));
   const hasNative = frontends.some((f) => NATIVE_FRONTENDS.includes(f));
@@ -948,7 +978,7 @@ export function validateFormsFrontendCompatibility(
  * Gets list of form libraries compatible with the selected frontend(s)
  */
 export function getCompatibleFormLibraries(frontends: Frontend[] = []): Forms[] {
-  const hasSolid = frontends.includes("solid");
+  const hasSolid = frontends.includes("solid") || frontends.includes("solid-start");
   const hasQwik = frontends.includes("qwik");
   const hasReactWeb = frontends.some((f) => REACT_WEB_FRONTENDS.includes(f));
   const hasNative = frontends.some((f) => NATIVE_FRONTENDS.includes(f));

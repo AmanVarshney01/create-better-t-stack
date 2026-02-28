@@ -1,0 +1,16 @@
+{{#if (ne backend "self")}}
+import { env } from "@{{projectName}}/env/web";
+{{/if}}
+import { createAuthClient } from "better-auth/solid";
+{{#if (eq payments "polar")}}
+import { polarClient } from "@polar-sh/better-auth";
+{{/if}}
+
+export const authClient = createAuthClient({
+{{#if (ne backend "self")}}
+	baseURL: env.VITE_SERVER_URL,
+{{/if}}
+{{#if (eq payments "polar")}}
+	plugins: [polarClient()]
+{{/if}}
+});

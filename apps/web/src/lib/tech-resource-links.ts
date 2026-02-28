@@ -29,6 +29,10 @@ const BASE_LINKS: LinkMap = {
   nuxt: { docsUrl: "https://nuxt.com/docs", githubUrl: "https://github.com/nuxt/nuxt" },
   svelte: { docsUrl: "https://svelte.dev/docs", githubUrl: "https://github.com/sveltejs/svelte" },
   solid: { docsUrl: "https://docs.solidjs.com/", githubUrl: "https://github.com/solidjs/solid" },
+  "solid-start": {
+    docsUrl: "https://docs.solidjs.com/solid-start",
+    githubUrl: "https://github.com/solidjs/solid-start",
+  },
   astro: { docsUrl: "https://docs.astro.build/", githubUrl: "https://github.com/withastro/astro" },
   qwik: { docsUrl: "https://qwik.dev/docs/", githubUrl: "https://github.com/QwikDev/qwik" },
   angular: { docsUrl: "https://angular.dev/", githubUrl: "https://github.com/angular/angular" },
@@ -86,6 +90,14 @@ const BASE_LINKS: LinkMap = {
     githubUrl: "https://github.com/withastro/astro",
   },
   "self-nuxt": { docsUrl: "https://nuxt.com/docs", githubUrl: "https://github.com/nuxt/nuxt" },
+  "self-svelte": {
+    docsUrl: "https://svelte.dev/docs/kit",
+    githubUrl: "https://github.com/sveltejs/kit",
+  },
+  "self-solid-start": {
+    docsUrl: "https://docs.solidjs.com/solid-start",
+    githubUrl: "https://github.com/solidjs/solid-start",
+  },
   "native-bare": { docsUrl: "https://docs.expo.dev/", githubUrl: "https://github.com/expo/expo" },
   "native-uniwind": {
     docsUrl: "https://www.uniwind.dev/",

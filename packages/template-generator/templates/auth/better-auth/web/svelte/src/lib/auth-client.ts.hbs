@@ -1,11 +1,15 @@
+{{#if (ne backend "self")}}
 import { PUBLIC_SERVER_URL } from "$env/static/public";
+{{/if}}
 import { createAuthClient } from "better-auth/svelte";
 {{#if (eq payments "polar")}}
 import { polarClient } from "@polar-sh/better-auth";
 {{/if}}
 
 export const authClient = createAuthClient({
+{{#if (ne backend "self")}}
 	baseURL: PUBLIC_SERVER_URL,
+{{/if}}
 {{#if (eq payments "polar")}}
 	plugins: [polarClient()]
 {{/if}}

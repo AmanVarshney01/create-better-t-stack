@@ -1,0 +1,29 @@
+import { Router } from "@solidjs/router";
+import { FileRoutes } from "@solidjs/start/router";
+import { MetaProvider } from "@solidjs/meta";
+import { Suspense } from "solid-js";
+{{#if (eq api "orpc")}}
+import { QueryClientProvider } from "@tanstack/solid-query";
+import { queryClient } from "./lib/orpc";
+{{/if}}
+import "./app.css";
+
+export default function App() {
+  return (
+    {{#if (eq api "orpc")}}
+    <QueryClientProvider client={queryClient}>
+    {{/if}}
+    <Router
+      root={(props) => (
+        <MetaProvider>
+          <Suspense>{props.children}</Suspense>
+        </MetaProvider>
+      )}
+    >
+      <FileRoutes />
+    </Router>
+    {{#if (eq api "orpc")}}
+    </QueryClientProvider>
+    {{/if}}
+  );
+}

@@ -237,6 +237,8 @@ describe("CLI and Builder Sync", () => {
             "self-tanstack-start": "self",
             "self-astro": "self",
             "self-nuxt": "self",
+            "self-svelte": "self",
+            "self-solid-start": "self",
           },
         };
 
@@ -280,6 +282,7 @@ describe("CLI and Builder Sync", () => {
             "nuxt",
             "svelte",
             "solid",
+            "solid-start",
             "astro",
             "qwik",
             "angular",

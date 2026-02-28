@@ -505,7 +505,7 @@ describe("Backend and Runtime Combinations", () => {
 
       expectError(
         result,
-        "Backend 'self' (fullstack) only supports Next.js, TanStack Start, Astro, or Nuxt frontends.",
+        "Backend 'self' (fullstack) only supports Next.js, TanStack Start, Astro, Nuxt, SvelteKit, or SolidStart frontends.",
       );
     });
 

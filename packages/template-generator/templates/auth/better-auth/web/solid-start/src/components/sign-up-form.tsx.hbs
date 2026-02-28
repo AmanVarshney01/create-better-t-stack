@@ -1,0 +1,125 @@
+import { authClient } from "@/lib/auth-client";
+import { useNavigate } from "@solidjs/router";
+{{#if (eq validation "valibot")}}
+import * as v from "valibot";
+{{else}}
+import z from "zod";
+{{/if}}
+import { createSignal, For } from "solid-js";
+
+export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
+  const navigate = useNavigate();
+
+  const [name, setName] = createSignal("");
+  const [email, setEmail] = createSignal("");
+  const [password, setPassword] = createSignal("");
+  const [errors, setErrors] = createSignal<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = createSignal(false);
+
+  const handleSubmit = async (e: Event) => {
+    e.preventDefault();
+    setErrors([]);
+    setIsSubmitting(true);
+
+{{#if (eq validation "valibot")}}
+    const schema = v.object({
+      name: v.pipe(v.string(), v.minLength(2, "Name must be at least 2 characters")),
+      email: v.pipe(v.string(), v.email("Invalid email address")),
+      password: v.pipe(v.string(), v.minLength(8, "Password must be at least 8 characters")),
+    });
+    const result = v.safeParse(schema, { name: name(), email: email(), password: password() });
+    if (!result.success) {
+      setErrors(result.issues.map((i) => i.message));
+      setIsSubmitting(false);
+      return;
+    }
+{{else}}
+    const schema = z.object({
+      name: z.string().min(2, "Name must be at least 2 characters"),
+      email: z.email("Invalid email address"),
+      password: z.string().min(8, "Password must be at least 8 characters"),
+    });
+    const result = schema.safeParse({ name: name(), email: email(), password: password() });
+    if (!result.success) {
+      setErrors(result.error.issues.map((issue: { message: string }) => issue.message));
+      setIsSubmitting(false);
+      return;
+    }
+{{/if}}
+
+    await authClient.signUp.email(
+      { email: email(), password: password(), name: name() },
+      {
+        onSuccess: () => {
+          navigate("/dashboard");
+        },
+        onError: (error: { error: { message: string } }) => {
+          setErrors([error.error.message]);
+        },
+      },
+    );
+    setIsSubmitting(false);
+  };
+
+  return (
+    <div class="mx-auto w-full mt-10 max-w-md p-6">
+      <h1 class="mb-6 text-center text-3xl font-bold">Create Account</h1>
+
+      <form onSubmit={handleSubmit} class="space-y-4">
+        <div class="space-y-2">
+          <label for="name">Name</label>
+          <input
+            id="name"
+            value={name()}
+            onInput={(e) => setName(e.currentTarget.value)}
+            class="w-full rounded border p-2"
+          />
+        </div>
+
+        <div class="space-y-2">
+          <label for="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            value={email()}
+            onInput={(e) => setEmail(e.currentTarget.value)}
+            class="w-full rounded border p-2"
+          />
+        </div>
+
+        <div class="space-y-2">
+          <label for="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            value={password()}
+            onInput={(e) => setPassword(e.currentTarget.value)}
+            class="w-full rounded border p-2"
+          />
+        </div>
+
+        <For each={errors()}>
+          {(error) => <p class="text-sm text-red-600">{error}</p>}
+        </For>
+
+        <button
+          type="submit"
+          class="w-full rounded bg-indigo-600 p-2 text-white hover:bg-indigo-700 disabled:opacity-50"
+          disabled={isSubmitting()}
+        >
+          {isSubmitting() ? "Submitting..." : "Sign Up"}
+        </button>
+      </form>
+
+      <div class="mt-4 text-center">
+        <button
+          type="button"
+          onClick={onSwitchToSignIn}
+          class="text-sm text-indigo-600 hover:text-indigo-800 hover:underline"
+        >
+          Already have an account? Sign In
+        </button>
+      </div>
+    </div>
+  );
+}

@@ -143,6 +143,7 @@ export type WebFrontend = Extract<
   | "nuxt"
   | "svelte"
   | "solid"
+  | "solid-start"
   | "astro"
   | "none"
 >;

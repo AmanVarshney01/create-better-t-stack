@@ -1,0 +1,17 @@
+import { defineConfig } from "@solidjs/start/config";
+{{#if (eq cssFramework "tailwind")}}
+import tailwindcss from "@tailwindcss/vite";
+{{/if}}
+
+export default defineConfig({
+  server: {
+    preset: "node-server",
+  },
+  vite: {
+    plugins: [
+      {{#if (eq cssFramework "tailwind")}}
+      tailwindcss(),
+      {{/if}}
+    ],
+  },
+});

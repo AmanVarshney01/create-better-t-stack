@@ -82,6 +82,11 @@ export async function getFrontendChoice(
           hint: "Simple and performant reactivity for building user interfaces",
         },
         {
+          value: "solid-start" as const,
+          label: "SolidStart",
+          hint: "Full-stack Solid framework with SSR and API routes",
+        },
+        {
           value: "astro" as const,
           label: "Astro",
           hint: "Content-focused with Island Architecture",

@@ -10,6 +10,8 @@ const FULLSTACK_FRONTENDS: readonly Frontend[] = [
   "tanstack-start",
   "astro",
   "nuxt",
+  "svelte",
+  "solid-start",
 ] as const;
 
 export async function getBackendFrameworkChoice(
@@ -18,7 +20,7 @@ export async function getBackendFrameworkChoice(
 ) {
   if (backendFramework !== undefined) return backendFramework;
 
-  const hasIncompatibleFrontend = frontends?.some((f) => f === "solid");
+  const hasIncompatibleFrontend = frontends?.some((f) => f === "solid" || f === "solid-start");
   const hasFullstackFrontend = frontends?.some((f) => FULLSTACK_FRONTENDS.includes(f));
 
   const backendOptions: Array<{
