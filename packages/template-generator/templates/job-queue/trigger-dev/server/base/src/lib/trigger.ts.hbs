@@ -40,6 +40,14 @@ export interface DataProcessingPayload {
   operation: "transform" | "aggregate" | "export";
 }
 
+interface TriggerTaskOptions {
+  delay?: string | Date;
+}
+
+interface TriggerHandle {
+  id: string;
+}
+
 /**
  * Trigger an email task
  * @example
@@ -51,8 +59,8 @@ export interface DataProcessingPayload {
  */
 export async function triggerEmail(
   payload: EmailPayload,
-  options?: { delay?: string | number }
-) {
+  options?: TriggerTaskOptions
+): Promise<TriggerHandle> {
   return tasks.trigger<typeof sendEmailTask>("send-email", payload, options);
 }
 
@@ -68,8 +76,8 @@ export async function triggerEmail(
  */
 export async function triggerNotification(
   payload: NotificationPayload,
-  options?: { delay?: string | number }
-) {
+  options?: TriggerTaskOptions
+): Promise<TriggerHandle> {
   return tasks.trigger<typeof sendNotificationTask>(
     "send-notification",
     payload,
@@ -87,8 +95,8 @@ export async function triggerNotification(
  */
 export async function triggerDataProcessing(
   payload: DataProcessingPayload,
-  options?: { delay?: string | number }
-) {
+  options?: TriggerTaskOptions
+): Promise<TriggerHandle> {
   return tasks.trigger<typeof processDataTask>(
     "process-data",
     payload,

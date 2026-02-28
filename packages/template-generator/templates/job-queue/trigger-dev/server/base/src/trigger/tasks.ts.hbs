@@ -20,7 +20,7 @@ export const sendEmailTask = task({
     body: string;
     templateId?: string;
   }) => {
-    const { to, subject, body, templateId } = payload;
+    const { to, subject, body: _body, templateId: _templateId } = payload;
 
     logger.info("Processing email task", { to, subject });
 
@@ -60,7 +60,7 @@ export const sendNotificationTask = task({
     message: string;
     data?: Record<string, unknown>;
   }) => {
-    const { userId, type, title, message, data } = payload;
+    const { userId, type, title, message: _message, data: _data } = payload;
 
     logger.info("Processing notification", { userId, type, title });
 
