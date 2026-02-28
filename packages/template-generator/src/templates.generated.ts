@@ -22302,11 +22302,15 @@ export function useAppTheme() {
 }
 
 `],
-  ["frontend/native/uniwind/global.css", `@import "tailwindcss";
+  ["frontend/native/uniwind/global.css.hbs", `@import "tailwindcss";
 @import "uniwind";
 @import "heroui-native/styles";
 
+{{#if (includes addons "turborepo")}}
+@source '../../node_modules/heroui-native/lib';
+{{else}}
 @source './node_modules/heroui-native/lib';
+{{/if}}
 `],
   ["frontend/native/uniwind/metro.config.js.hbs", `const { getDefaultConfig } = require("expo/metro-config");
 const { withUniwindConfig } = require("uniwind/metro");
