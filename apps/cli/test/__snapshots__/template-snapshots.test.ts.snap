@@ -2818,10 +2818,12 @@ export default defineNuxtConfig({
     "@snapshot-nuxt-standalone/api": "workspace:*",
     "@libsql/client": "catalog:",
     "libsql": "catalog:",
-    "@tanstack/vue-query": "^5.92.9",
-    "@orpc/tanstack-query": "^1.13.5",
+    "@orpc/server": "catalog:",
     "@orpc/client": "catalog:",
-    "@orpc/server": "catalog:"
+    "@orpc/openapi": "catalog:",
+    "@orpc/zod": "catalog:",
+    "@tanstack/vue-query": "^5.92.9",
+    "@orpc/tanstack-query": "^1.13.5"
   },
   "devDependencies": {
     "tailwindcss": "^4.1.13",
@@ -2893,8 +2895,10 @@ export default defineNuxtConfig({
       "@types/bun": "^1.3.9",
       "@libsql/client": "^0.17.0",
       "libsql": "0.5.22",
+      "@orpc/server": "^1.13.5",
       "@orpc/client": "^1.13.5",
-      "@orpc/server": "^1.13.5"
+      "@orpc/openapi": "^1.13.5",
+      "@orpc/zod": "^1.13.5"
     }
   },
   "scripts": {
@@ -2949,8 +2953,8 @@ export default defineNuxtConfig({
     "@snapshot-nuxt-standalone/db": "workspace:*",
     "@orpc/server": "catalog:",
     "@orpc/client": "catalog:",
-    "@orpc/openapi": "^1.13.5",
-    "@orpc/zod": "^1.13.5"
+    "@orpc/openapi": "catalog:",
+    "@orpc/zod": "catalog:"
   }
 }"
 ,
