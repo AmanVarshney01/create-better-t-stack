@@ -24,19 +24,30 @@ export default async function DashboardPage() {
 		redirect("/login");
 	}
 
-	{{#if (eq payments "polar")}}
+{{#if (eq payments "polar")}}
 	const { data: customerState } = await authClient.customer.state({
 		fetchOptions: {
 			headers: await headers(),
 		},
 	});
-	{{/if}}
+{{else if (eq payments "dodo")}}
+	const customerState = await authClient.dodopayments.customer.subscriptions.list({
+		query: {
+			limit: 10,
+			page: 1,
+			active: true,
+		},
+		fetchOptions: {
+			headers: await headers(),
+		},
+	});
+{{/if}}
 
 	return (
 		<div>
 			<h1>Dashboard</h1>
 			<p>Welcome {session.user.name}</p>
-			<Dashboard session={session} {{#if (eq payments "polar")}}customerState={customerState}{{/if}} />
+			<Dashboard session={session} {{#if (or (eq payments "polar") (eq payments "dodo"))}}customerState={customerState}{{/if}} />
 		</div>
 	);
 }
