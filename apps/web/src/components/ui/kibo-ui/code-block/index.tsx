@@ -83,7 +83,6 @@ import {
   SiVuedotjs,
   SiWebassembly,
 } from "react-icons/si";
-import { type BundledLanguage, type CodeOptionsMultipleThemes, codeToHtml } from "shiki";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -95,7 +94,122 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-export type { BundledLanguage } from "shiki";
+export type BundledLanguage = string;
+
+type SupportedTheme =
+  | "github-light"
+  | "github-dark-default"
+  | "catppuccin-latte"
+  | "catppuccin-mocha";
+
+type ThemePair = {
+  light: string;
+  dark: string;
+};
+
+const DEFAULT_THEMES: { light: SupportedTheme; dark: SupportedTheme } = {
+  light: "github-light",
+  dark: "github-dark-default",
+};
+
+const SUPPORTED_LANGUAGES = new Set([
+  "typescript",
+  "tsx",
+  "javascript",
+  "jsx",
+  "json",
+  "markdown",
+  "mdx",
+  "css",
+  "scss",
+  "html",
+  "astro",
+  "vue",
+  "svelte",
+  "yaml",
+  "toml",
+  "sql",
+  "prisma",
+  "graphql",
+  "bash",
+  "shellscript",
+  "handlebars",
+]);
+
+type SupportedLanguage = (typeof SUPPORTED_LANGUAGES extends Set<infer T> ? T : never) & string;
+
+const SUPPORTED_THEMES = new Set<SupportedTheme>([
+  "github-light",
+  "github-dark-default",
+  "catppuccin-latte",
+  "catppuccin-mocha",
+]);
+
+type DynamicShikiLoader = () => Promise<unknown>;
+
+const LANGUAGE_LOADERS: Record<SupportedLanguage, DynamicShikiLoader> = {
+  typescript: () => import("shiki/dist/langs/typescript.mjs"),
+  tsx: () => import("shiki/dist/langs/tsx.mjs"),
+  javascript: () => import("shiki/dist/langs/javascript.mjs"),
+  jsx: () => import("shiki/dist/langs/jsx.mjs"),
+  json: () => import("shiki/dist/langs/json.mjs"),
+  markdown: () => import("shiki/dist/langs/markdown.mjs"),
+  mdx: () => import("shiki/dist/langs/mdx.mjs"),
+  css: () => import("shiki/dist/langs/css.mjs"),
+  scss: () => import("shiki/dist/langs/scss.mjs"),
+  html: () => import("shiki/dist/langs/html.mjs"),
+  astro: () => import("shiki/dist/langs/astro.mjs"),
+  vue: () => import("shiki/dist/langs/vue.mjs"),
+  svelte: () => import("shiki/dist/langs/svelte.mjs"),
+  yaml: () => import("shiki/dist/langs/yaml.mjs"),
+  toml: () => import("shiki/dist/langs/toml.mjs"),
+  sql: () => import("shiki/dist/langs/sql.mjs"),
+  prisma: () => import("shiki/dist/langs/prisma.mjs"),
+  graphql: () => import("shiki/dist/langs/graphql.mjs"),
+  bash: () => import("shiki/dist/langs/bash.mjs"),
+  shellscript: () => import("shiki/dist/langs/shellscript.mjs"),
+  handlebars: () => import("shiki/dist/langs/handlebars.mjs"),
+};
+
+const THEME_LOADERS: Record<SupportedTheme, DynamicShikiLoader> = {
+  "github-light": () => import("shiki/dist/themes/github-light.mjs"),
+  "github-dark-default": () => import("shiki/dist/themes/github-dark-default.mjs"),
+  "catppuccin-latte": () => import("shiki/dist/themes/catppuccin-latte.mjs"),
+  "catppuccin-mocha": () => import("shiki/dist/themes/catppuccin-mocha.mjs"),
+};
+
+type HighlighterLike = {
+  codeToHtml: (
+    code: string,
+    options: {
+      lang: string;
+      themes: ThemePair;
+      transformers: unknown[];
+    },
+  ) => string;
+  loadLanguage: (lang: unknown) => Promise<void>;
+  loadTheme: (theme: unknown) => Promise<void>;
+};
+
+type HighlighterRuntime = {
+  highlighter: HighlighterLike;
+  loadedLanguages: Set<string>;
+  loadedThemes: Set<string>;
+};
+
+type ShikiCoreModule = {
+  createHighlighterCore: (options: {
+    themes: unknown[];
+    langs: unknown[];
+    engine: unknown;
+  }) => Promise<HighlighterLike>;
+};
+
+type ShikiJsEngineModule = {
+  createJavaScriptRegexEngine: () => unknown;
+};
+
+let runtimePromise: Promise<HighlighterRuntime | null> | null = null;
 
 const filenameIconMap = {
   ".env": SiDotenv,
@@ -249,16 +363,143 @@ const codeBlockClassName = cn(
   "[&_.line]:relative",
 );
 
-const highlight = (
-  html: string,
+function normalizeTheme(input: string | undefined, fallback: SupportedTheme): SupportedTheme {
+  if (!input) return fallback;
+  if (SUPPORTED_THEMES.has(input as SupportedTheme)) return input as SupportedTheme;
+  return fallback;
+}
+
+function normalizeThemes(themes?: ThemePair): { light: SupportedTheme; dark: SupportedTheme } {
+  return {
+    light: normalizeTheme(themes?.light, DEFAULT_THEMES.light),
+    dark: normalizeTheme(themes?.dark, DEFAULT_THEMES.dark),
+  };
+}
+
+function isSupportedLanguage(language: string): language is SupportedLanguage {
+  return SUPPORTED_LANGUAGES.has(language);
+}
+
+async function getModuleExport<T>(loader: () => Promise<unknown>): Promise<T> {
+  const mod = (await loader()) as Record<string, unknown>;
+  if ("default" in mod) return mod.default as T;
+  const firstNamedExport = Object.values(mod)[0];
+  if (!firstNamedExport) {
+    throw new Error("Failed to load Shiki module export");
+  }
+  return firstNamedExport as T;
+}
+
+async function getHighlighterRuntime(): Promise<HighlighterRuntime | null> {
+  if (runtimePromise) return runtimePromise;
+
+  runtimePromise = (async () => {
+    try {
+      const defaultLanguageLoader = LANGUAGE_LOADERS.typescript;
+      const defaultLightThemeLoader = THEME_LOADERS[DEFAULT_THEMES.light];
+      const defaultDarkThemeLoader = THEME_LOADERS[DEFAULT_THEMES.dark];
+      if (!defaultLanguageLoader || !defaultLightThemeLoader || !defaultDarkThemeLoader) {
+        return null;
+      }
+
+      const [shikiCore, shikiJsEngine, defaultLight, defaultDark, defaultLanguage] =
+        await Promise.all([
+          import("shiki/core") as Promise<ShikiCoreModule>,
+          import("shiki/engine/javascript") as Promise<ShikiJsEngineModule>,
+          getModuleExport<unknown>(defaultLightThemeLoader),
+          getModuleExport<unknown>(defaultDarkThemeLoader),
+          getModuleExport<unknown>(defaultLanguageLoader),
+        ]);
+
+      const highlighter = await shikiCore.createHighlighterCore({
+        themes: [defaultLight, defaultDark],
+        langs: [defaultLanguage],
+        engine: shikiJsEngine.createJavaScriptRegexEngine(),
+      });
+
+      return {
+        highlighter,
+        loadedLanguages: new Set<string>(["typescript"]),
+        loadedThemes: new Set<string>([DEFAULT_THEMES.light, DEFAULT_THEMES.dark]),
+      };
+    } catch (error) {
+      console.error("Shiki highlighter initialization failed:", error);
+      return null;
+    }
+  })();
+
+  return runtimePromise;
+}
+
+async function ensureLanguageLoaded(
+  runtime: HighlighterRuntime,
+  language: SupportedLanguage,
+): Promise<boolean> {
+  if (runtime.loadedLanguages.has(language)) return true;
+
+  const loader = LANGUAGE_LOADERS[language];
+  if (!loader) return false;
+
+  try {
+    const languageDef = await getModuleExport<unknown>(loader);
+    await runtime.highlighter.loadLanguage(languageDef);
+    runtime.loadedLanguages.add(language);
+    return true;
+  } catch (error) {
+    console.error(`Failed to load syntax language '${language}':`, error);
+    return false;
+  }
+}
+
+async function ensureThemeLoaded(
+  runtime: HighlighterRuntime,
+  theme: SupportedTheme,
+): Promise<boolean> {
+  if (runtime.loadedThemes.has(theme)) return true;
+
+  const loader = THEME_LOADERS[theme];
+  if (!loader) return false;
+
+  try {
+    const themeDef = await getModuleExport<unknown>(loader);
+    await runtime.highlighter.loadTheme(themeDef);
+    runtime.loadedThemes.add(theme);
+    return true;
+  } catch (error) {
+    console.error(`Failed to load syntax theme '${theme}':`, error);
+    return false;
+  }
+}
+
+const highlight = async (
+  code: string,
   language?: BundledLanguage,
-  themes?: CodeOptionsMultipleThemes["themes"],
-) =>
-  codeToHtml(html, {
-    lang: language ?? "typescript",
-    themes: themes ?? {
-      light: "github-light",
-      dark: "github-dark-default",
+  themes?: ThemePair,
+): Promise<string | null> => {
+  const languageToUse = language ?? "typescript";
+  if (!isSupportedLanguage(languageToUse)) {
+    return null;
+  }
+
+  const themePair = normalizeThemes(themes);
+  const runtime = await getHighlighterRuntime();
+  if (!runtime) return null;
+
+  const [languageLoaded, lightThemeLoaded, darkThemeLoaded] = await Promise.all([
+    ensureLanguageLoaded(runtime, languageToUse),
+    ensureThemeLoaded(runtime, themePair.light),
+    ensureThemeLoaded(runtime, themePair.dark),
+  ]);
+
+  if (!languageLoaded || !lightThemeLoaded || !darkThemeLoaded) {
+    return null;
+  }
+
+  return runtime.highlighter.codeToHtml(code, {
+    lang: languageToUse,
+    themes: {
+      light: themePair.light,
+      dark: themePair.dark,
     },
     transformers: [
       transformerNotationDiff({
@@ -278,6 +519,7 @@ const highlight = (
       }),
     ],
   });
+};
 
 type CodeBlockData = {
   language: string;
@@ -550,7 +792,7 @@ export const CodeBlockItem = ({
 };
 
 export type CodeBlockContentProps = HTMLAttributes<HTMLDivElement> & {
-  themes?: CodeOptionsMultipleThemes["themes"];
+  themes?: ThemePair;
   language?: BundledLanguage;
   syntaxHighlighting?: boolean;
   children: string;

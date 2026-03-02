@@ -5,8 +5,8 @@
   "type": "module",
   "sideEffects": false,
   "scripts": {
-    "prebuild": "cd ../../packages/types && bun run build && cd ../template-generator && bun run build",
-    "build": "NODE_OPTIONS='--max-old-space-size=8192' vite build",
+    "prebuild": "cd ../../packages/types && bun run build && if [ \"$BFS_ENABLE_STACK_PREVIEW\" = \"1\" ]; then cd ../template-generator && bun run build; fi",
+    "build": "vite build",
     "dev": "vite dev --port 3333",
     "start": "node .output/server/index.mjs",
     "lint": "oxlint . && tsc --noEmit",

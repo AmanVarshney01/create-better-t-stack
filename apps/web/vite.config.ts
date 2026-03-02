@@ -9,6 +9,7 @@ export default defineConfig({
   server: {
     port: 3333,
   },
+  envPrefix: ["VITE_", "BFS_ENABLE_STACK_PREVIEW"],
   build: {
     sourcemap: false,
     minify: "esbuild",

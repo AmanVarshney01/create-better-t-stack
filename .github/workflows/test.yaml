@@ -81,6 +81,9 @@ jobs:
       - name: Install Dependencies
         run: bun install --frozen-lockfile
 
+      - name: Build Web (Vercel Parity)
+        run: bun run build:web
+
       - name: Build All Packages
         run: bun run build
         env:

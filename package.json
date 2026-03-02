@@ -12,7 +12,7 @@
     "dev:cli": "turbo run dev --filter=create-better-fullstack",
     "cli": "cd apps/cli && node dist/cli.js",
     "dev:web": "turbo run dev --filter=web",
-    "build:web": "turbo run build --filter=web",
+    "build:web": "turbo run build --filter=web --only",
     "build:cli": "turbo run build --filter=create-better-fullstack",
     "lint": "turbo lint",
     "test": "turbo test --filter=create-better-fullstack",

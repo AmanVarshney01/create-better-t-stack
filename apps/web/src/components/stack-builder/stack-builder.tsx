@@ -32,6 +32,7 @@ import {
   type StackState,
   TECH_OPTIONS,
 } from "@/lib/constant";
+import { isStackPreviewEnabledClient } from "@/lib/feature-flags";
 import { useStackState } from "@/lib/stack-url-state";
 import {
   CATEGORY_ORDER,
@@ -330,6 +331,7 @@ const INITIALLY_COLLAPSED_SET = new Set([
 
 const StackBuilder = () => {
   const [stack, setStack, viewMode, setViewMode, selectedFile, setSelectedFile] = useStackState();
+  const isStackPreviewEnabled = isStackPreviewEnabledClient();
 
   const [command, setCommand] = useState("");
   const [copied, setCopied] = useState(false);
@@ -358,6 +360,12 @@ const StackBuilder = () => {
     return { ...stack, ...compatibilityAnalysis.adjustedStack };
   }, [stack, compatibilityAnalysis.adjustedStack]);
   const projectNameError = validateProjectName(stack.projectName || "");
+
+  useEffect(() => {
+    if (!isStackPreviewEnabled && viewMode === "preview") {
+      setViewMode("command");
+    }
+  }, [isStackPreviewEnabled, viewMode, setViewMode]);
 
   // ─── Derived state ──────────────────────────────────────────────────────
 
@@ -876,25 +884,36 @@ const StackBuilder = () => {
               >
                 Command
               </button>
-              <button
-                type="button"
-                onClick={() => setViewMode("preview")}
-                className={cn(
-                  "rounded-md px-2.5 py-1.5 font-pixel text-[10px] uppercase tracking-wide transition-colors sm:text-[11px]",
-                  viewMode === "preview"
-                    ? "bg-primary/15 text-primary"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                )}
-              >
-                Preview
-              </button>
+              {isStackPreviewEnabled ? (
+                <button
+                  type="button"
+                  onClick={() => setViewMode("preview")}
+                  className={cn(
+                    "rounded-md px-2.5 py-1.5 font-pixel text-[10px] uppercase tracking-wide transition-colors sm:text-[11px]",
+                    viewMode === "preview"
+                      ? "bg-primary/15 text-primary"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  )}
+                >
+                  Preview
+                </button>
+              ) : (
+                <p className="text-muted-foreground text-xs">
+                  Preview unavailable in this environment.
+                </p>
+              )}
             </div>
 
-            {viewMode === "command" ? (
+            {viewMode === "command" || !isStackPreviewEnabled ? (
               <div className="relative min-h-0 flex-1">
                 <div className="absolute inset-0">
                   <ScrollArea ref={mainScrollRef} className="h-full">
                     <div className="p-3 sm:p-4">
+                      {!isStackPreviewEnabled && (
+                        <p className="mb-3 rounded-md border border-border bg-muted/40 px-3 py-2 text-muted-foreground text-xs">
+                          Preview is unavailable in this environment.
+                        </p>
+                      )}
                       {/* Project Name */}
                       <div className="mb-6">
                         <label
