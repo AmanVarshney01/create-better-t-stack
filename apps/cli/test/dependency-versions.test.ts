@@ -30,6 +30,48 @@ const criticalDependencies: Record<string, string> = {
 
 // Cache for npm registry responses
 const versionCache = new Map<string, boolean>();
+const NPM_REGISTRY_URL = "https://registry.npmjs.org";
+const REGISTRY_FETCH_TIMEOUT_MS = 10_000;
+const REGISTRY_MAX_RETRIES = 3;
+
+interface NpmRegistryPackageResponse {
+  versions?: Record<string, unknown>;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchPackageVersions(packageName: string): Promise<string[] | null> {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= REGISTRY_MAX_RETRIES; attempt++) {
+    try {
+      const response = await fetch(`${NPM_REGISTRY_URL}/${packageName}`, {
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(REGISTRY_FETCH_TIMEOUT_MS),
+      });
+
+      if (response.status === 404) {
+        return null;
+      }
+
+      if (!response.ok) {
+        throw new Error(`npm registry returned ${response.status} for ${packageName}`);
+      }
+
+      const data = (await response.json()) as NpmRegistryPackageResponse;
+      return Object.keys(data.versions ?? {});
+    } catch (error) {
+      lastError = error;
+      if (attempt < REGISTRY_MAX_RETRIES) {
+        await sleep(250 * attempt);
+      }
+    }
+  }
+
+  throw lastError ?? new Error(`Failed to fetch npm metadata for ${packageName}`);
+}
 
 /**
  * Check if a specific version of a package exists on npm
@@ -46,19 +88,12 @@ async function checkVersionExists(packageName: string, versionSpec: string): Pro
     // Clean the version spec (remove ^, ~, etc.)
     const cleanVersion = versionSpec.replace(/^[\^~>=<]+/, "").split(" ")[0];
 
-    // Fetch package info from npm registry
-    const response = await fetch(`https://registry.npmjs.org/${packageName}`, {
-      headers: { Accept: "application/json" },
-    });
-
-    if (!response.ok) {
+    const versions = await fetchPackageVersions(packageName);
+    if (!versions) {
       console.warn(`Package ${packageName} not found on npm`);
       versionCache.set(cacheKey, false);
       return false;
     }
-
-    const data = await response.json();
-    const versions = Object.keys(data.versions || {});
 
     // For caret versions (^X.Y.Z), we need to check:
     // 1. If the base version X.Y.Z exists OR there's a higher version in the same major
@@ -101,16 +136,20 @@ async function checkVersionExists(packageName: string, versionSpec: string): Pro
 describe("Dependency Version Validation", () => {
   describe("Critical packages have valid versions", () => {
     for (const [pkgName, version] of Object.entries(criticalDependencies)) {
-      test(`${pkgName}@${version} exists on npm`, async () => {
-        const exists = await checkVersionExists(pkgName, version);
-        if (!exists) {
-          console.error(`\n❌ Package ${pkgName}@${version} does not exist on npm!`);
-          console.error(
-            `   Check https://www.npmjs.com/package/${pkgName} for available versions\n`,
-          );
-        }
-        expect(exists).toBe(true);
-      });
+      test(
+        `${pkgName}@${version} exists on npm`,
+        async () => {
+          const exists = await checkVersionExists(pkgName, version);
+          if (!exists) {
+            console.error(`\n❌ Package ${pkgName}@${version} does not exist on npm!`);
+            console.error(
+              `   Check https://www.npmjs.com/package/${pkgName} for available versions\n`,
+            );
+          }
+          expect(exists).toBe(true);
+        },
+        { timeout: 20_000 },
+      );
     }
   });
 });
