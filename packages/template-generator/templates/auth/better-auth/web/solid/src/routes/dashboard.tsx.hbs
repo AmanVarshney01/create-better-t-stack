@@ -61,6 +61,21 @@ function RouteComponent() {
 					Upgrade to Pro
 				</button>
 			)}
+			{{else if (eq payments "dodo")}}
+			<p>Plan: {hasProSubscription() ? "Pro" : "Free"}</p>
+			{hasProSubscription() ? (
+				<button onClick={async () => await authClient.dodopayments.customer.portal()}>
+					Manage Subscription
+				</button>
+			) : (
+				<button
+					onClick={async () =>
+						await authClient.dodopayments.checkoutSession({ slug: "pro" })
+					}
+				>
+					Upgrade to Pro
+				</button>
+			)}
 			{{/if}}
 		</div>
 	);
