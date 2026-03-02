@@ -1,7 +1,7 @@
 import type { StackState } from "@/lib/constant";
 
 // Mapping from StackState keys to short URL parameter keys
-export const stackUrlKeys: Record<keyof StackState, string> = {
+export const stackUrlKeys = {
   ecosystem: "eco",
   projectName: "name",
   webFrontend: "fe-w",
@@ -64,4 +64,4 @@ export const stackUrlKeys: Record<keyof StackState, string> = {
   goApi: "gapi",
   goCli: "gcli",
   goLogging: "glog",
-};
+} as const satisfies Record<keyof StackState, string>;

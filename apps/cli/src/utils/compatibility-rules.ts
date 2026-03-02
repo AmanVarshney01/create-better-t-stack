@@ -1,3 +1,19 @@
+import {
+  allowedApisForFrontends as allowedApisForFrontendsShared,
+  getCompatibleAddons as getCompatibleAddonsShared,
+  getCompatibleCSSFrameworks as getCompatibleCSSFrameworksShared,
+  getCompatibleFormLibraries as getCompatibleFormLibrariesShared,
+  getCompatibleUILibraries as getCompatibleUILibrariesShared,
+  hasWebStyling as hasWebStylingShared,
+  isExampleAIAllowed as isExampleAIAllowedShared,
+  isExampleChatSdkAllowed as isExampleChatSdkAllowedShared,
+  isFrontendAllowedWithBackend as isFrontendAllowedWithBackendShared,
+  isWebFrontend as isWebFrontendShared,
+  requiresChatSdkVercelAIForSelection,
+  splitFrontends as splitFrontendsShared,
+  validateAddonCompatibility as validateAddonCompatibilityShared,
+} from "@better-fullstack/types";
+
 import type {
   AI,
   Addons,
@@ -17,24 +33,18 @@ import type {
   WebDeploy,
 } from "../types";
 
-import { ADDON_COMPATIBILITY, UI_LIBRARY_COMPATIBILITY } from "../constants";
-import { WEB_FRAMEWORKS } from "./compatibility";
 import { incompatibilityError, invalidSelectionError } from "./error-formatter";
 import { exitWithError } from "./errors";
 
 export function isWebFrontend(value: Frontend) {
-  return WEB_FRAMEWORKS.includes(value);
+  return isWebFrontendShared(value);
 }
 
 export function splitFrontends(values: Frontend[] = []): {
   web: Frontend[];
   native: Frontend[];
 } {
-  const web = values.filter((f) => isWebFrontend(f));
-  const native = values.filter(
-    (f) => f === "native-bare" || f === "native-uniwind" || f === "native-unistyles",
-  );
-  return { web, native };
+  return splitFrontendsShared(values);
 }
 
 export function ensureSingleWebAndNative(frontends: Frontend[]) {
@@ -294,48 +304,7 @@ export function isFrontendAllowedWithBackend(
   backend?: ProjectConfig["backend"],
   auth?: string,
 ) {
-  if (backend === "convex" && frontend === "solid") return false;
-  if (backend === "convex" && frontend === "solid-start") return false;
-  if (backend === "convex" && frontend === "astro") return false;
-  if (backend === "convex" && frontend === "qwik") return false;
-  if (backend === "convex" && frontend === "angular") return false;
-  if (backend === "convex" && frontend === "redwood") return false;
-  if (backend === "convex" && frontend === "fresh") return false;
-
-  // Qwik has its own built-in server, only works with backend=none
-  if (frontend === "qwik" && backend && backend !== "none") return false;
-
-  // Angular has its own built-in dev server, only works with backend=none
-  if (frontend === "angular" && backend && backend !== "none") return false;
-
-  // RedwoodJS has its own built-in GraphQL API, only works with backend=none
-  if (frontend === "redwood" && backend && backend !== "none") return false;
-
-  // Fresh (Deno) has its own built-in server, only works with backend=none
-  if (frontend === "fresh" && backend && backend !== "none") return false;
-
-  if (auth === "clerk" && backend === "convex") {
-    const incompatibleFrontends = ["nuxt", "svelte", "solid", "solid-start"];
-    if (incompatibleFrontends.includes(frontend)) return false;
-  }
-
-  if (auth === "clerk" && backend === "self") {
-    if (!["next", "tanstack-start"].includes(frontend)) return false;
-  }
-
-  // NextAuth only works with Next.js frontend and self backend
-  if (auth === "nextauth") {
-    if (frontend !== "next") return false;
-    if (backend !== "self") return false;
-  }
-
-  // Supabase Auth only works with Next.js frontend and self backend
-  if (auth === "supabase-auth") {
-    if (frontend !== "next") return false;
-    if (backend !== "self") return false;
-  }
-
-  return true;
+  return isFrontendAllowedWithBackendShared(frontend, backend, auth);
 }
 
 export function validateClerkCompatibility(
@@ -498,68 +467,11 @@ export function allowedApisForFrontends(
   frontends: Frontend[] = [],
   astroIntegration?: AstroIntegration,
 ) {
-  const includesNuxt = frontends.includes("nuxt");
-  const includesSvelte = frontends.includes("svelte");
-  const includesSolid = frontends.includes("solid");
-  const includesAstro = frontends.includes("astro");
-  const includesQwik = frontends.includes("qwik");
-  const includesAngular = frontends.includes("angular");
-  const includesRedwood = frontends.includes("redwood");
-  const includesFresh = frontends.includes("fresh");
-  const base: API[] = ["trpc", "orpc", "ts-rest", "garph", "none"];
-
-  // Qwik uses its own server capabilities, only none is allowed
-  if (includesQwik) {
-    return ["none"];
-  }
-
-  // Angular uses its own HttpClient, only none is allowed
-  if (includesAngular) {
-    return ["none"];
-  }
-
-  // RedwoodJS uses its own GraphQL API, only none is allowed
-  if (includesRedwood) {
-    return ["none"];
-  }
-
-  // Fresh (Deno) uses its own built-in server, only none is allowed
-  if (includesFresh) {
-    return ["none"];
-  }
-
-  const includesSolidStartApi = frontends.includes("solid-start");
-
-  // Nuxt, Svelte, Solid, and SolidStart only support oRPC
-  if (includesNuxt || includesSvelte || includesSolid || includesSolidStartApi) {
-    return ["orpc", "none"];
-  }
-
-  // Astro with non-React integrations only supports oRPC
-  if (includesAstro && astroIntegration && astroIntegration !== "react") {
-    return ["orpc", "none"];
-  }
-
-  return base;
+  return allowedApisForFrontendsShared(frontends, astroIntegration);
 }
 
 export function isExampleAIAllowed(backend?: ProjectConfig["backend"], frontends: Frontend[] = []) {
-  const includesSolid = frontends.includes("solid");
-  const includesSolidStart = frontends.includes("solid-start");
-  if (includesSolid || includesSolidStart) return false;
-
-  // Convex AI example only supports React-based frontends (not Svelte or Nuxt)
-  if (backend === "convex") {
-    const includesNuxt = frontends.includes("nuxt");
-    const includesSvelte = frontends.includes("svelte");
-    if (includesNuxt || includesSvelte) return false;
-  }
-
-  return true;
-}
-
-function hasExampleChatSdkSelfFrontend(frontends: Frontend[] = []) {
-  return frontends.some((f) => ["next", "tanstack-start", "nuxt"].includes(f));
+  return isExampleAIAllowedShared(backend, frontends);
 }
 
 export function isExampleChatSdkAllowed(
@@ -567,17 +479,7 @@ export function isExampleChatSdkAllowed(
   frontends: Frontend[] = [],
   runtime?: Runtime,
 ) {
-  if (!backend || backend === "none" || backend === "convex") return false;
-
-  if (backend === "self") {
-    return hasExampleChatSdkSelfFrontend(frontends);
-  }
-
-  if (backend === "hono") {
-    return runtime === "node";
-  }
-
-  return false;
+  return isExampleChatSdkAllowedShared(backend, frontends, runtime);
 }
 
 export function requiresChatSdkVercelAI(
@@ -585,9 +487,7 @@ export function requiresChatSdkVercelAI(
   frontends: Frontend[] = [],
   runtime?: Runtime,
 ) {
-  if (backend === "self" && frontends.includes("nuxt")) return true;
-  if (backend === "hono" && runtime === "node") return true;
-  return false;
+  return requiresChatSdkVercelAIForSelection(backend, frontends, runtime);
 }
 
 export function validateWebDeployRequiresWebFrontend(
@@ -617,23 +517,7 @@ export function validateAddonCompatibility(
   frontend: Frontend[],
   _auth?: Auth,
 ): { isCompatible: boolean; reason?: string } {
-  const compatibleFrontends = ADDON_COMPATIBILITY[addon];
-
-  if (compatibleFrontends.length > 0) {
-    const hasCompatibleFrontend = frontend.some((f) =>
-      (compatibleFrontends as readonly string[]).includes(f),
-    );
-
-    if (!hasCompatibleFrontend) {
-      const frontendList = compatibleFrontends.join(", ");
-      return {
-        isCompatible: false,
-        reason: `${addon} addon requires one of these frontends: ${frontendList}`,
-      };
-    }
-  }
-
-  return { isCompatible: true };
+  return validateAddonCompatibilityShared(addon, frontend, _auth);
 }
 
 export function getCompatibleAddons(
@@ -642,14 +526,7 @@ export function getCompatibleAddons(
   existingAddons: Addons[] = [],
   auth?: Auth,
 ) {
-  return allAddons.filter((addon) => {
-    if (existingAddons.includes(addon)) return false;
-
-    if (addon === "none") return false;
-
-    const { isCompatible } = validateAddonCompatibility(addon, frontend, auth);
-    return isCompatible;
-  });
+  return getCompatibleAddonsShared(allAddons, frontend, existingAddons, auth);
 }
 
 export function validateAddonsAgainstFrontends(
@@ -768,53 +645,32 @@ export function validateUILibraryFrontendCompatibility(
   astroIntegration?: AstroIntegration,
 ) {
   if (!uiLibrary || uiLibrary === "none") return;
-
-  const { web } = splitFrontends(frontends);
-  if (web.length === 0) return;
-
-  const compatibility = UI_LIBRARY_COMPATIBILITY[uiLibrary];
-  const webFrontend = web[0];
-
-  // Handle Astro with integrations
-  if (webFrontend === "astro") {
-    // Check if library supports React frontends
-    const supportsReact = compatibility.frontends.some((f) =>
-      ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+  const compatible = getCompatibleUILibrariesShared(frontends, astroIntegration);
+  if (!compatible.includes(uiLibrary)) {
+    const { web } = splitFrontends(frontends);
+    const hasAstroWebFrontend = web.includes("astro");
+    const isAstroNonReact = hasAstroWebFrontend && astroIntegration !== "react";
+    const supportsAstroReact = getCompatibleUILibrariesShared(["astro"], "react").includes(
+      uiLibrary,
     );
 
-    // Check if library supports non-React frontends (vue, svelte, solid, etc.)
-    const supportsNonReact = compatibility.frontends.some((f) =>
-      ["nuxt", "svelte", "solid", "qwik", "angular"].includes(f),
-    );
-
-    // If React integration, allow React-compatible libraries
-    if (astroIntegration === "react") {
-      if (supportsReact) return; // OK
-    }
-
-    // For non-React integrations, the library must support non-React frontends
-    // A library that only supports React frontends (+ astro) is a React-only library
-    if (!supportsNonReact) {
-      const integrationName = astroIntegration || "none";
+    if (isAstroNonReact && supportsAstroReact) {
       incompatibilityError({
         message: `UI library '${uiLibrary}' requires React.`,
-        provided: { "ui-library": uiLibrary, "astro-integration": integrationName },
+        provided: { "ui-library": uiLibrary, "astro-integration": astroIntegration || "none" },
         suggestions: [
           "Use --astro-integration react",
           "Choose a different UI library (daisyui, ark-ui)",
         ],
       });
+      return;
     }
-    return;
-  }
 
-  // Original logic for non-Astro frontends
-  if (!compatibility.frontends.includes(webFrontend)) {
     incompatibilityError({
-      message: `UI library '${uiLibrary}' is not compatible with '${webFrontend}'.`,
-      provided: { "ui-library": uiLibrary, frontend: webFrontend },
+      message: `UI library '${uiLibrary}' is not compatible with the selected frontend.`,
+      provided: { "ui-library": uiLibrary, frontend: frontends },
       suggestions: [
-        `Supported frontends: ${compatibility.frontends.join(", ")}`,
+        `Supported choices for this stack: ${compatible.join(", ")}`,
         "Choose a different UI library",
       ],
     });
@@ -831,10 +687,9 @@ export function validateUILibraryCSSFrameworkCompatibility(
   if (!uiLibrary || uiLibrary === "none") return;
   if (!cssFramework) return;
 
-  const compatibility = UI_LIBRARY_COMPATIBILITY[uiLibrary];
-
-  if (!compatibility.cssFrameworks.includes(cssFramework)) {
-    const supportedList = compatibility.cssFrameworks.join(", ");
+  const supported = getCompatibleCSSFrameworksShared(uiLibrary);
+  if (!supported.includes(cssFramework)) {
+    const supportedList = supported.join(", ");
     exitWithError(
       `UI library '${uiLibrary}' is not compatible with '${cssFramework}' CSS framework. Supported CSS frameworks: ${supportedList}`,
     );
@@ -848,75 +703,22 @@ export function getCompatibleUILibraries(
   frontends: Frontend[] = [],
   astroIntegration?: AstroIntegration,
 ): UILibrary[] {
-  const { web } = splitFrontends(frontends);
-  if (web.length === 0) return ["none"];
-
-  const webFrontend = web[0];
-
-  const allUILibraries = Object.keys(UI_LIBRARY_COMPATIBILITY) as UILibrary[];
-  return allUILibraries.filter((lib) => {
-    if (lib === "none") return true;
-
-    const compatibility = UI_LIBRARY_COMPATIBILITY[lib];
-
-    // Handle Astro with integrations
-    if (webFrontend === "astro") {
-      if (astroIntegration === "react") {
-        // Allow React-compatible libraries
-        return compatibility.frontends.some((f) =>
-          ["tanstack-router", "react-router", "tanstack-start", "next", "astro"].includes(f),
-        );
-      }
-      // Non-React integration - only allow libraries that support non-React frontends
-      // A library that only supports React frontends (+ astro) is a React-only library
-      return compatibility.frontends.some((f) =>
-        ["nuxt", "svelte", "solid", "qwik", "angular"].includes(f),
-      );
-    }
-
-    return compatibility.frontends.includes(webFrontend);
-  });
+  return getCompatibleUILibrariesShared(frontends, astroIntegration);
 }
 
 /**
  * Gets list of CSS frameworks compatible with the selected UI library
  */
 export function getCompatibleCSSFrameworks(uiLibrary: UILibrary | undefined): CSSFramework[] {
-  if (!uiLibrary || uiLibrary === "none") {
-    return ["tailwind", "scss", "less", "postcss-only", "none"];
-  }
-
-  const compatibility = UI_LIBRARY_COMPATIBILITY[uiLibrary];
-  return compatibility.cssFrameworks as unknown as CSSFramework[];
+  return getCompatibleCSSFrameworksShared(uiLibrary);
 }
 
 /**
  * Checks if a frontend has web styling (excludes native-only frontends)
  */
 export function hasWebStyling(frontends: Frontend[] = []): boolean {
-  const { web } = splitFrontends(frontends);
-  return web.length > 0;
+  return hasWebStylingShared(frontends);
 }
-
-// React-based form libraries
-const REACT_FORM_LIBRARIES: Forms[] = [
-  "react-hook-form",
-  "tanstack-form",
-  "formik",
-  "final-form",
-  "conform",
-];
-
-// React-based frontends (web)
-const REACT_WEB_FRONTENDS: Frontend[] = [
-  "tanstack-router",
-  "react-router",
-  "tanstack-start",
-  "next",
-];
-
-// Native frontends (always React-based)
-const NATIVE_FRONTENDS: Frontend[] = ["native-bare", "native-uniwind", "native-unistyles"];
 
 /**
  * Validates that a form library is compatible with the selected frontend(s)
@@ -926,51 +728,13 @@ export function validateFormsFrontendCompatibility(
   frontends: Frontend[] = [],
 ) {
   if (!forms || forms === "none") return;
-
-  const hasSolid = frontends.includes("solid") || frontends.includes("solid-start");
-  const hasQwik = frontends.includes("qwik");
-  const hasReactWeb = frontends.some((f) => REACT_WEB_FRONTENDS.includes(f));
-  const hasNative = frontends.some((f) => NATIVE_FRONTENDS.includes(f));
-  const hasReact = hasReactWeb || hasNative;
-
-  // modular-forms is only for Solid and Qwik
-  if (forms === "modular-forms") {
-    if (!hasSolid && !hasQwik) {
-      incompatibilityError({
-        message: "Modular Forms is designed for Solid and Qwik frontends only.",
-        provided: { forms, frontend: frontends },
-        suggestions: [
-          "Use a React form library: react-hook-form, tanstack-form, formik",
-          "Use --frontend solid or --frontend qwik",
-        ],
-      });
-    }
-  }
-
-  // React form libraries are only for React-based frontends
-  if (REACT_FORM_LIBRARIES.includes(forms)) {
-    if (hasSolid || hasQwik) {
-      const incompatibleFrontend = hasSolid ? "solid" : "qwik";
-      incompatibilityError({
-        message: `${forms} is a React-based form library.`,
-        provided: { forms, frontend: incompatibleFrontend },
-        suggestions: [`Use --forms modular-forms for ${hasSolid ? "Solid" : "Qwik"}`],
-      });
-    }
-    if (!hasReact) {
-      // Allow if there's no frontend selected yet - prompts will handle this
-      const { web } = splitFrontends(frontends);
-      if (web.length > 0) {
-        incompatibilityError({
-          message: `${forms} requires a React-based frontend.`,
-          provided: { forms, frontend: web },
-          suggestions: [
-            "Use tanstack-router, react-router, tanstack-start, or next",
-            "Use --forms modular-forms for Solid or Qwik",
-          ],
-        });
-      }
-    }
+  const compatible = getCompatibleFormLibrariesShared(frontends);
+  if (!compatible.includes(forms)) {
+    incompatibilityError({
+      message: `${forms} is not compatible with the selected frontend.`,
+      provided: { forms, frontend: frontends },
+      suggestions: [`Compatible options: ${compatible.join(", ")}`],
+    });
   }
 }
 
@@ -978,30 +742,5 @@ export function validateFormsFrontendCompatibility(
  * Gets list of form libraries compatible with the selected frontend(s)
  */
 export function getCompatibleFormLibraries(frontends: Frontend[] = []): Forms[] {
-  const hasSolid = frontends.includes("solid") || frontends.includes("solid-start");
-  const hasQwik = frontends.includes("qwik");
-  const hasReactWeb = frontends.some((f) => REACT_WEB_FRONTENDS.includes(f));
-  const hasNative = frontends.some((f) => NATIVE_FRONTENDS.includes(f));
-  const hasReact = hasReactWeb || hasNative;
-
-  // Solid or Qwik - only modular-forms
-  if (hasSolid || hasQwik) {
-    return ["modular-forms", "none"];
-  }
-
-  // React frontends - all React form libraries
-  if (hasReact) {
-    return ["react-hook-form", "tanstack-form", "formik", "final-form", "conform", "none"];
-  }
-
-  // No frontend selected or non-React/Solid/Qwik - return all options
-  return [
-    "react-hook-form",
-    "tanstack-form",
-    "formik",
-    "final-form",
-    "conform",
-    "modular-forms",
-    "none",
-  ];
+  return getCompatibleFormLibrariesShared(frontends);
 }

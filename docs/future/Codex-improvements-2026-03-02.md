@@ -1,9 +1,11 @@
 # Codex Improvements Plan (2026-03-02)
 
 ## Overview
+
 This document tracks the prioritized backlog for upcoming Better-Fullstack engineering improvements and ecosystem expansion work.
 
 ## Improvement Backlog (Engineering)
+
 1. Finish Task 3: improve `/api/preview` fidelity so preview output matches real generation behavior.
 2. Remove stale/experimental web routes and unreferenced components to reduce maintenance cost.
 3. Automate combinations count generation (remove hardcoded values).
@@ -21,13 +23,19 @@ This document tracks the prioritized backlog for upcoming Better-Fullstack engin
 9. Reduce snapshot brittleness:
    - Normalize generated file whitespace/newlines before snapshot assertions.
 10. Add release-focused CI lane:
-   - Fast fail for key template snapshots + compatibility parity + CLI/web sync.
+
+- Fast fail for key template snapshots + compatibility parity + CLI/web sync.
+
 11. Add contract tests for CLI/web parity:
-   - Same normalized stack input must yield equivalent compatibility and command outcomes.
+
+- Same normalized stack input must yield equivalent compatibility and command outcomes.
+
 12. Continue weekly upstream backports:
-   - Prioritize reliability fixes, dependency safety, and compatibility improvements.
+
+- Prioritize reliability fixes, dependency safety, and compatibility improvements.
 
 ## Expansion Backlog (Libraries/Frameworks/Languages/Services)
+
 1. Deploy services: `vercel`, `render`, `netlify`.
 2. Auth services: `kinde`, `workos`.
 3. Search services: `algolia`, `opensearch`.

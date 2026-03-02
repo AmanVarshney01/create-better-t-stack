@@ -8,6 +8,12 @@ import { stackUrlKeys } from "@/lib/stack-url-keys";
 
 // Parse search params to StackState (used on server side)
 export function loadStackParams(
+  searchParams: Promise<Record<string, string | string[] | undefined>>,
+): Promise<StackState>;
+export function loadStackParams(
+  searchParams: Record<string, string | string[] | undefined>,
+): StackState;
+export function loadStackParams(
   searchParams:
     | Record<string, string | string[] | undefined>
     | Promise<Record<string, string | string[] | undefined>>,
@@ -209,7 +215,7 @@ function searchToStack(search: StackSearchParams | undefined): StackState {
   if (!search) return DEFAULT_STACK;
 
   return {
-    ecosystem: search.eco ?? DEFAULT_STACK.ecosystem,
+    ecosystem: (search.eco as StackState["ecosystem"] | undefined) ?? DEFAULT_STACK.ecosystem,
     projectName: search.name ?? DEFAULT_STACK.projectName,
     webFrontend: search["fe-w"] ?? DEFAULT_STACK.webFrontend,
     nativeFrontend: search["fe-n"] ?? DEFAULT_STACK.nativeFrontend,
