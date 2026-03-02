@@ -1,6 +1,6 @@
 # Upstream Sync Playbook
 
-This repository tracks upstream improvements from `AmanVarshney01/create-better-t-stack` without doing full rebases.
+This repository tracks upstream improvements from our baseline source without doing full rebases.
 
 ## Goals
 
@@ -56,3 +56,8 @@ bun run scripts/upstream-gap-report.ts --markdown --max-per-area 25
 - Prefer reliability, DX, and compatibility fixes first.
 - Skip upstream architectural shifts that conflict with this fork.
 - Treat report as advisory: no automatic merge/cherry-pick in CI.
+
+## Planning Document
+
+Current dated planning/backlog file:
+- `docs/future/Codex-improvements-2026-03-02.md`
