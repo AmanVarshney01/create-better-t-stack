@@ -21,6 +21,15 @@ export function generateReproducibleCommand(config: ProjectConfig) {
   flags.push(`--effect ${config.effect}`);
   flags.push(`--css-framework ${config.cssFramework}`);
   flags.push(`--ui-library ${config.uiLibrary}`);
+  if (config.uiLibrary === "shadcn-ui") {
+    flags.push(`--shadcn-base ${config.shadcnBase}`);
+    flags.push(`--shadcn-style ${config.shadcnStyle}`);
+    flags.push(`--shadcn-icon-library ${config.shadcnIconLibrary}`);
+    flags.push(`--shadcn-color-theme ${config.shadcnColorTheme}`);
+    flags.push(`--shadcn-base-color ${config.shadcnBaseColor}`);
+    flags.push(`--shadcn-font ${config.shadcnFont}`);
+    flags.push(`--shadcn-radius ${config.shadcnRadius}`);
+  }
   flags.push(`--ai ${config.ai}`);
   flags.push(`--state-management ${config.stateManagement}`);
   flags.push(`--forms ${config.forms}`);

@@ -1,7 +1,17 @@
 import * as React from 'react'
 import { Menu as MenuPrimitive } from '@base-ui/react/menu'
 
+{{#if (eq shadcnIconLibrary "tabler")}}
+import { IconCheck as CheckIcon, IconChevronRight as ChevronRightIcon } from '@tabler/icons-react'
+{{else if (eq shadcnIconLibrary "hugeicons")}}
+import { Tick02Icon as CheckIcon, ArrowRight01Icon as ChevronRightIcon } from '@hugeicons/react'
+{{else if (eq shadcnIconLibrary "phosphor")}}
+import { Check as CheckIcon, CaretRight as ChevronRightIcon } from '@phosphor-icons/react'
+{{else if (eq shadcnIconLibrary "remixicon")}}
+import { RiCheckLine as CheckIcon, RiArrowRightSLine as ChevronRightIcon } from '@remixicon/react'
+{{else}}
 import { CheckIcon, ChevronRightIcon } from 'lucide-react'
+{{/if}}
 import { cn } from '@/lib/utils'
 
 function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {

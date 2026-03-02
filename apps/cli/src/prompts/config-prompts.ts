@@ -116,6 +116,7 @@ import {
 } from "./rust-ecosystem";
 import { getSearchChoice } from "./search";
 import { getServerDeploymentChoice } from "./server-deploy";
+import { getShadcnOptions, type ShadcnOptions } from "./shadcn-options";
 import { getStateManagementChoice } from "./state-management";
 import { getTestingChoice } from "./testing";
 import { getUILibraryChoice } from "./ui-library";
@@ -129,6 +130,7 @@ type PromptGroupResults = {
   frontend: Frontend[];
   astroIntegration: AstroIntegration | undefined;
   uiLibrary: UILibrary;
+  shadcnOptions: ShadcnOptions | undefined;
   cssFramework: CSSFramework;
   backend: Backend;
   runtime: Runtime;
@@ -216,6 +218,18 @@ export async function gatherConfig(
           return getUILibraryChoice(flags.uiLibrary, results.frontend, results.astroIntegration);
         }
         return Promise.resolve("none" as UILibrary);
+      },
+      shadcnOptions: ({ results }) => {
+        if (results.uiLibrary !== "shadcn-ui") return Promise.resolve(undefined);
+        return getShadcnOptions({
+          shadcnBase: flags.shadcnBase,
+          shadcnStyle: flags.shadcnStyle,
+          shadcnIconLibrary: flags.shadcnIconLibrary,
+          shadcnColorTheme: flags.shadcnColorTheme,
+          shadcnBaseColor: flags.shadcnBaseColor,
+          shadcnFont: flags.shadcnFont,
+          shadcnRadius: flags.shadcnRadius,
+        });
       },
       cssFramework: ({ results }) => {
         if (results.ecosystem !== "typescript") return Promise.resolve("none" as CSSFramework);
@@ -486,6 +500,7 @@ export async function gatherConfig(
     frontend: result.frontend,
     astroIntegration: result.astroIntegration,
     uiLibrary: result.uiLibrary,
+    ...(result.shadcnOptions ?? {}),
     cssFramework: result.cssFramework,
     backend: result.backend,
     runtime: result.runtime,

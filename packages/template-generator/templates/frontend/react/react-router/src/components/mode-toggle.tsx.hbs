@@ -1,4 +1,14 @@
+{{#if (eq shadcnIconLibrary "tabler")}}
+import { IconMoon as Moon, IconSun as Sun } from "@tabler/icons-react";
+{{else if (eq shadcnIconLibrary "hugeicons")}}
+import { Moon02Icon as Moon, Sun03Icon as Sun } from "@hugeicons/react";
+{{else if (eq shadcnIconLibrary "phosphor")}}
+import { Moon, Sun } from "@phosphor-icons/react";
+{{else if (eq shadcnIconLibrary "remixicon")}}
+import { RiMoonLine as Moon, RiSunLine as Sun } from "@remixicon/react";
+{{else}}
 import { Moon, Sun } from "lucide-react";
+{{/if}}
 
 import { Button } from "@/components/ui/button";
 import {

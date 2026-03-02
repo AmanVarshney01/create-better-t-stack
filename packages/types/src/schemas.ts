@@ -321,6 +321,63 @@ export const UILibrarySchema = z
   ])
   .describe("UI component library");
 
+export const ShadcnBaseSchema = z
+  .enum(["radix", "base"])
+  .describe("shadcn/ui headless UI base library (radix or base-ui)");
+export const ShadcnStyleSchema = z
+  .enum(["vega", "nova", "maia", "lyra", "mira"])
+  .describe("shadcn/ui visual style preset");
+export const ShadcnIconLibrarySchema = z
+  .enum(["lucide", "tabler", "hugeicons", "phosphor", "remixicon"])
+  .describe("shadcn/ui icon library");
+export const ShadcnColorThemeSchema = z
+  .enum([
+    "neutral",
+    "stone",
+    "zinc",
+    "gray",
+    "amber",
+    "blue",
+    "cyan",
+    "emerald",
+    "fuchsia",
+    "green",
+    "indigo",
+    "lime",
+    "orange",
+    "pink",
+    "purple",
+    "red",
+    "rose",
+    "sky",
+    "teal",
+    "violet",
+    "yellow",
+  ])
+  .describe("shadcn/ui accent color theme");
+export const ShadcnBaseColorSchema = z
+  .enum(["neutral", "stone", "zinc", "gray"])
+  .describe("shadcn/ui base neutral color");
+export const ShadcnFontSchema = z
+  .enum([
+    "inter",
+    "geist",
+    "noto-sans",
+    "nunito-sans",
+    "figtree",
+    "roboto",
+    "raleway",
+    "dm-sans",
+    "public-sans",
+    "outfit",
+    "jetbrains-mono",
+    "geist-mono",
+  ])
+  .describe("shadcn/ui font family");
+export const ShadcnRadiusSchema = z
+  .enum(["default", "none", "small", "medium", "large"])
+  .describe("shadcn/ui border radius preset");
+
 export const DirectoryConflictSchema = z
   .enum(["merge", "overwrite", "increment", "error"])
   .describe("How to handle existing directory conflicts");
@@ -381,6 +438,13 @@ export const CreateInputSchema = z.object({
   email: EmailSchema.optional(),
   cssFramework: CSSFrameworkSchema.optional(),
   uiLibrary: UILibrarySchema.optional(),
+  shadcnBase: ShadcnBaseSchema.optional(),
+  shadcnStyle: ShadcnStyleSchema.optional(),
+  shadcnIconLibrary: ShadcnIconLibrarySchema.optional(),
+  shadcnColorTheme: ShadcnColorThemeSchema.optional(),
+  shadcnBaseColor: ShadcnBaseColorSchema.optional(),
+  shadcnFont: ShadcnFontSchema.optional(),
+  shadcnRadius: ShadcnRadiusSchema.optional(),
   validation: ValidationSchema.optional(),
   realtime: RealtimeSchema.optional(),
   jobQueue: JobQueueSchema.optional(),
@@ -461,6 +525,13 @@ export const ProjectConfigSchema = z.object({
   email: EmailSchema,
   cssFramework: CSSFrameworkSchema,
   uiLibrary: UILibrarySchema,
+  shadcnBase: ShadcnBaseSchema.optional(),
+  shadcnStyle: ShadcnStyleSchema.optional(),
+  shadcnIconLibrary: ShadcnIconLibrarySchema.optional(),
+  shadcnColorTheme: ShadcnColorThemeSchema.optional(),
+  shadcnBaseColor: ShadcnBaseColorSchema.optional(),
+  shadcnFont: ShadcnFontSchema.optional(),
+  shadcnRadius: ShadcnRadiusSchema.optional(),
   validation: ValidationSchema,
   realtime: RealtimeSchema,
   jobQueue: JobQueueSchema,
@@ -525,6 +596,13 @@ export const BetterTStackConfigSchema = z.object({
   email: EmailSchema,
   cssFramework: CSSFrameworkSchema,
   uiLibrary: UILibrarySchema,
+  shadcnBase: ShadcnBaseSchema.optional(),
+  shadcnStyle: ShadcnStyleSchema.optional(),
+  shadcnIconLibrary: ShadcnIconLibrarySchema.optional(),
+  shadcnColorTheme: ShadcnColorThemeSchema.optional(),
+  shadcnBaseColor: ShadcnBaseColorSchema.optional(),
+  shadcnFont: ShadcnFontSchema.optional(),
+  shadcnRadius: ShadcnRadiusSchema.optional(),
   validation: ValidationSchema,
   realtime: RealtimeSchema,
   jobQueue: JobQueueSchema,
@@ -641,3 +719,10 @@ export const GO_API_VALUES = GoApiSchema.options;
 export const GO_CLI_VALUES = GoCliSchema.options;
 export const GO_LOGGING_VALUES = GoLoggingSchema.options;
 export const AI_DOCS_VALUES = AiDocsSchema.options;
+export const SHADCN_BASE_VALUES = ShadcnBaseSchema.options;
+export const SHADCN_STYLE_VALUES = ShadcnStyleSchema.options;
+export const SHADCN_ICON_LIBRARY_VALUES = ShadcnIconLibrarySchema.options;
+export const SHADCN_COLOR_THEME_VALUES = ShadcnColorThemeSchema.options;
+export const SHADCN_BASE_COLOR_VALUES = ShadcnBaseColorSchema.options;
+export const SHADCN_FONT_VALUES = ShadcnFontSchema.options;
+export const SHADCN_RADIUS_VALUES = ShadcnRadiusSchema.options;

@@ -8,12 +8,6 @@ import { stackUrlKeys } from "@/lib/stack-url-keys";
 
 // Parse search params to StackState (used on server side)
 export function loadStackParams(
-  searchParams: Promise<Record<string, string | string[] | undefined>>,
-): Promise<StackState>;
-export function loadStackParams(
-  searchParams: Record<string, string | string[] | undefined>,
-): StackState;
-export function loadStackParams(
   searchParams:
     | Record<string, string | string[] | undefined>
     | Promise<Record<string, string | string[] | undefined>>,
@@ -50,6 +44,13 @@ export function loadStackParams(
       astroIntegration: getString("astroIntegration", DEFAULT_STACK.astroIntegration),
       cssFramework: getString("cssFramework", DEFAULT_STACK.cssFramework),
       uiLibrary: getString("uiLibrary", DEFAULT_STACK.uiLibrary),
+      shadcnBase: getString("shadcnBase", DEFAULT_STACK.shadcnBase),
+      shadcnStyle: getString("shadcnStyle", DEFAULT_STACK.shadcnStyle),
+      shadcnIconLibrary: getString("shadcnIconLibrary", DEFAULT_STACK.shadcnIconLibrary),
+      shadcnColorTheme: getString("shadcnColorTheme", DEFAULT_STACK.shadcnColorTheme),
+      shadcnBaseColor: getString("shadcnBaseColor", DEFAULT_STACK.shadcnBaseColor),
+      shadcnFont: getString("shadcnFont", DEFAULT_STACK.shadcnFont),
+      shadcnRadius: getString("shadcnRadius", DEFAULT_STACK.shadcnRadius),
       runtime: getString("runtime", DEFAULT_STACK.runtime),
       backend: getString("backend", DEFAULT_STACK.backend),
       api: getString("api", DEFAULT_STACK.api),
@@ -144,6 +145,13 @@ export function serializeStackParams(basePath: string, stack: StackState): strin
   addParam("astroIntegration", stack.astroIntegration);
   addParam("cssFramework", stack.cssFramework);
   addParam("uiLibrary", stack.uiLibrary);
+  addParam("shadcnBase", stack.shadcnBase);
+  addParam("shadcnStyle", stack.shadcnStyle);
+  addParam("shadcnIconLibrary", stack.shadcnIconLibrary);
+  addParam("shadcnColorTheme", stack.shadcnColorTheme);
+  addParam("shadcnBaseColor", stack.shadcnBaseColor);
+  addParam("shadcnFont", stack.shadcnFont);
+  addParam("shadcnRadius", stack.shadcnRadius);
   addParam("runtime", stack.runtime);
   addParam("backend", stack.backend);
   addParam("api", stack.api);
@@ -222,6 +230,13 @@ function searchToStack(search: StackSearchParams | undefined): StackState {
     astroIntegration: search.ai ?? DEFAULT_STACK.astroIntegration,
     cssFramework: search.css ?? DEFAULT_STACK.cssFramework,
     uiLibrary: search.ui ?? DEFAULT_STACK.uiLibrary,
+    shadcnBase: search.scb ?? DEFAULT_STACK.shadcnBase,
+    shadcnStyle: search.scs ?? DEFAULT_STACK.shadcnStyle,
+    shadcnIconLibrary: search.sci ?? DEFAULT_STACK.shadcnIconLibrary,
+    shadcnColorTheme: search.scc ?? DEFAULT_STACK.shadcnColorTheme,
+    shadcnBaseColor: search.scbc ?? DEFAULT_STACK.shadcnBaseColor,
+    shadcnFont: search.scf ?? DEFAULT_STACK.shadcnFont,
+    shadcnRadius: search.scr ?? DEFAULT_STACK.shadcnRadius,
     runtime: search.rt ?? DEFAULT_STACK.runtime,
     backend: search.be ?? DEFAULT_STACK.backend,
     api: search.api ?? DEFAULT_STACK.api,

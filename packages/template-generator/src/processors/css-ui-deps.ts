@@ -70,8 +70,10 @@ export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConf
   const hasAstroSvelte = hasAstro && config.astroIntegration === "svelte";
   const hasAstroSolid = hasAstro && config.astroIntegration === "solid";
 
-  if (uiLibrary === "none" || uiLibrary === "shadcn-ui") {
-    // shadcn-ui is handled by the shadcn CLI, not as a package dependency
+  if (uiLibrary === "none") return;
+
+  if (uiLibrary === "shadcn-ui") {
+    processShadcnDeps(vfs, config);
     return;
   }
 
@@ -176,6 +178,76 @@ export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConf
       dependencies: deps,
     });
   }
+}
+
+/**
+ * Process shadcn/ui dependencies based on sub-options (base, icon library, etc.)
+ */
+function processShadcnDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  const { frontend } = config;
+  const webPath = getWebPackagePath(frontend);
+  if (!vfs.exists(webPath)) return;
+
+  const deps: AvailableDependencies[] = [
+    "shadcn",
+    "class-variance-authority",
+    "clsx",
+    "tailwind-merge",
+    "tw-animate-css",
+  ];
+
+  // Base UI library
+  const shadcnBase = config.shadcnBase ?? "radix";
+  if (shadcnBase === "radix") {
+    deps.push("radix-ui");
+  } else {
+    deps.push("@base-ui-components/react");
+  }
+
+  // Icon library
+  const iconLib = config.shadcnIconLibrary ?? "lucide";
+  switch (iconLib) {
+    case "lucide":
+      deps.push("lucide-react");
+      break;
+    case "tabler":
+      deps.push("@tabler/icons-react");
+      break;
+    case "hugeicons":
+      deps.push("@hugeicons/react", "@hugeicons/core-free-icons");
+      break;
+    case "phosphor":
+      deps.push("@phosphor-icons/react");
+      break;
+    case "remixicon":
+      deps.push("@remixicon/react");
+      break;
+  }
+
+  // Font package
+  const font = config.shadcnFont ?? "inter";
+  const FONT_PACKAGE_MAP: Record<string, AvailableDependencies[]> = {
+    inter: ["@fontsource-variable/inter"],
+    geist: ["geist"],
+    figtree: ["@fontsource-variable/figtree"],
+    "noto-sans": ["@fontsource-variable/noto-sans"],
+    "nunito-sans": ["@fontsource-variable/nunito-sans"],
+    roboto: ["@fontsource/roboto"],
+    raleway: ["@fontsource-variable/raleway"],
+    "dm-sans": ["@fontsource-variable/dm-sans"],
+    "public-sans": ["@fontsource/public-sans"],
+    outfit: ["@fontsource-variable/outfit"],
+    "jetbrains-mono": ["@fontsource-variable/jetbrains-mono"],
+    "geist-mono": ["geist"],
+  };
+  const fontPkgs = FONT_PACKAGE_MAP[font];
+  if (fontPkgs) deps.push(...fontPkgs);
+
+  addPackageDependency({
+    vfs,
+    packagePath: webPath,
+    dependencies: deps,
+  });
 }
 
 /**

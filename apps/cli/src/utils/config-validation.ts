@@ -555,6 +555,42 @@ export function validateApiConstraints(_config: Partial<ProjectConfig>, _options
   // No API constraints currently needed
 }
 
+export function validateShadcnConstraints(
+  config: Partial<ProjectConfig>,
+  providedFlags: Set<string>,
+) {
+  const shadcnFlagMap: Record<string, string> = {
+    shadcnBase: "--shadcn-base",
+    shadcnStyle: "--shadcn-style",
+    shadcnIconLibrary: "--shadcn-icon-library",
+    shadcnColorTheme: "--shadcn-color-theme",
+    shadcnBaseColor: "--shadcn-base-color",
+    shadcnFont: "--shadcn-font",
+    shadcnRadius: "--shadcn-radius",
+  };
+
+  const providedShadcnFlags = Object.keys(shadcnFlagMap).filter((f) => providedFlags.has(f));
+
+  if (providedShadcnFlags.length > 0 && config.uiLibrary !== "shadcn-ui") {
+    incompatibilityError({
+      message: "shadcn/ui customization flags require --ui-library shadcn-ui.",
+      provided: {
+        "ui-library": config.uiLibrary || "none",
+        ...Object.fromEntries(
+          providedShadcnFlags.map((f) => [
+            shadcnFlagMap[f],
+            String(config[f as keyof ProjectConfig] ?? ""),
+          ]),
+        ),
+      },
+      suggestions: [
+        "Add --ui-library shadcn-ui to use shadcn customization flags",
+        "Remove the --shadcn-* flags if not using shadcn/ui",
+      ],
+    });
+  }
+}
+
 export function validateFullConfig(
   config: Partial<ProjectConfig>,
   providedFlags: Set<string>,
@@ -627,6 +663,7 @@ export function validateFullConfig(
     config.astroIntegration,
   );
   validateUILibraryCSSFrameworkCompatibility(config.uiLibrary, config.cssFramework);
+  validateShadcnConstraints(config, providedFlags);
 
   // Peer dependency conflict detection
   validatePeerDependencies(config);

@@ -55,6 +55,14 @@ export const DEFAULT_CONFIG_BASE = {
   serverDeploy: "none",
   cssFramework: "tailwind",
   uiLibrary: "shadcn-ui",
+  // shadcn/ui sub-option defaults
+  shadcnBase: "radix",
+  shadcnStyle: "nova",
+  shadcnIconLibrary: "lucide",
+  shadcnColorTheme: "neutral",
+  shadcnBaseColor: "neutral",
+  shadcnFont: "inter",
+  shadcnRadius: "default",
   // Rust ecosystem defaults
   rustWebFramework: "none",
   rustFrontend: "none",

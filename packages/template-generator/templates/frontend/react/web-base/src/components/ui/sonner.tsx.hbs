@@ -1,5 +1,14 @@
 import { useTheme } from 'next-themes'
 import { Toaster as Sonner  } from 'sonner'
+{{#if (eq shadcnIconLibrary "tabler")}}
+import { IconCircleCheck as CircleCheckIcon, IconInfoCircle as InfoIcon, IconLoader2 as Loader2Icon, IconOctagonX as OctagonXIcon, IconAlertTriangle as TriangleAlertIcon } from '@tabler/icons-react'
+{{else if (eq shadcnIconLibrary "hugeicons")}}
+import { CheckmarkCircle02Icon as CircleCheckIcon, InformationCircleIcon as InfoIcon, Loading03Icon as Loader2Icon, AlertCircleIcon as OctagonXIcon, Alert02Icon as TriangleAlertIcon } from '@hugeicons/react'
+{{else if (eq shadcnIconLibrary "phosphor")}}
+import { CheckCircle as CircleCheckIcon, Info as InfoIcon, SpinnerGap as Loader2Icon, XCircle as OctagonXIcon, Warning as TriangleAlertIcon } from '@phosphor-icons/react'
+{{else if (eq shadcnIconLibrary "remixicon")}}
+import { RiCheckboxCircleLine as CircleCheckIcon, RiInformationLine as InfoIcon, RiLoader4Line as Loader2Icon, RiCloseCircleLine as OctagonXIcon, RiAlertLine as TriangleAlertIcon } from '@remixicon/react'
+{{else}}
 import {
   CircleCheckIcon,
   InfoIcon,
@@ -7,6 +16,7 @@ import {
   OctagonXIcon,
   TriangleAlertIcon,
 } from 'lucide-react'
+{{/if}}
 import type {ToasterProps} from 'sonner';
 
 const Toaster = ({ ...props }: ToasterProps) => {

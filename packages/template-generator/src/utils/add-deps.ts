@@ -345,6 +345,33 @@ export const dependencyVersionMap = {
   // Base UI
   "@base-ui-components/react": "^1.0.0-rc.0",
 
+  // shadcn/ui core and unified packages
+  shadcn: "^3.6.2",
+  "radix-ui": "^1.4.1",
+  "class-variance-authority": "^0.7.1",
+  clsx: "^2.1.1",
+  "tailwind-merge": "^3.3.0",
+  "tw-animate-css": "^1.3.4",
+  "lucide-react": "^0.511.0",
+  "@tabler/icons-react": "^3.34.0",
+  "@hugeicons/react": "^0.3.0",
+  "@hugeicons/core-free-icons": "^0.3.0",
+  "@phosphor-icons/react": "^2.1.7",
+  "@remixicon/react": "^4.6.0",
+
+  // Font packages (fontsource variable fonts)
+  "@fontsource-variable/inter": "^5.2.5",
+  "@fontsource-variable/figtree": "^5.2.2",
+  "@fontsource-variable/noto-sans": "^5.2.5",
+  "@fontsource-variable/nunito-sans": "^5.2.3",
+  "@fontsource-variable/raleway": "^5.2.5",
+  "@fontsource-variable/dm-sans": "^5.2.5",
+  "@fontsource-variable/outfit": "^5.2.5",
+  "@fontsource-variable/jetbrains-mono": "^5.2.5",
+  "@fontsource/roboto": "^5.2.5",
+  "@fontsource/public-sans": "^5.2.5",
+  geist: "^1.3.1",
+
   // Ark UI (headless components for React/Vue/Solid/Svelte)
   "@ark-ui/react": "^5.34.0",
   "@ark-ui/vue": "^5.34.0",

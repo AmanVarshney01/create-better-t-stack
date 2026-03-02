@@ -207,7 +207,23 @@ export const ICON_REGISTRY: Record<string, IconConfig> = {
   "chakra-ui": { type: "si", slug: "chakraui", hex: "319795" },
   nextui: { type: "local", src: "/icon/nextui.svg", needsInvert: "dark" }, // stroke="currentColor"
   mantine: { type: "si", slug: "mantine", hex: "339AF0" },
-  "base-ui": { type: "si", slug: "mui", hex: "007FFF" },
+  "base-ui": { type: "local", src: "/icon/base-ui.svg", needsInvert: "dark" },
+
+  // ─── shadcn Base Libraries ───────────────────────────────────────────────────
+  radix: { type: "si", slug: "radixui", hex: "161618" },
+  base: { type: "local", src: "/icon/base-ui.svg", needsInvert: "dark" },
+
+  // ─── shadcn Icon Libraries ─────────────────────────────────────────────────
+  lucide: { type: "si", slug: "lucide", hex: "F56565" },
+  tabler: { type: "local", src: "/icon/tabler.svg", needsInvert: "dark" },
+  hugeicons: { type: "local", src: "/icon/hugeicons.svg" },
+  phosphor: { type: "si", slug: "phosphoricons", hex: "C4F042" },
+  remixicon: { type: "si", slug: "remix", hex: "000000" },
+
+  // ─── shadcn Fonts ──────────────────────────────────────────────────────────
+  geist: { type: "si", slug: "vercel", hex: "000000" },
+  "jetbrains-mono": { type: "si", slug: "jetbrains", hex: "000000" },
+  "geist-mono": { type: "si", slug: "vercel", hex: "000000" },
 
   // ─── Package Manager ───────────────────────────────────────────────────────
   npm: { type: "si", slug: "npm", hex: "CB3837" },

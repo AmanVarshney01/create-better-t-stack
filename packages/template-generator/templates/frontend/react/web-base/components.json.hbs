@@ -1,17 +1,17 @@
 {{#if (eq uiLibrary "shadcn-ui")}}
 {
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "base-lyra",
+  "style": "{{shadcnBase}}-{{shadcnStyle}}",
   "rsc": false,
   "tsx": true,
   "tailwind": {
     "config": "",
     "css": "src/index.css",
-    "baseColor": "neutral",
+    "baseColor": "{{shadcnBaseColor}}",
     "cssVariables": true,
     "prefix": ""
   },
-  "iconLibrary": "lucide",
+  "iconLibrary": "{{shadcnIconLibrary}}",
   "aliases": {
     "components": "@/components",
     "utils": "@/lib/utils",

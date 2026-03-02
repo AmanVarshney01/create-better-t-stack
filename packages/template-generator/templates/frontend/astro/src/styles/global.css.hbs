@@ -1,41 +1,91 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+{{#if (eq uiLibrary "shadcn-ui")}}
+@import "shadcn/tailwind.css";
+{{/if}}
 
-@theme {
-	--color-background: oklch(100% 0 0);
-	--color-foreground: oklch(14.08% 0.004 285.82);
-	--color-card: oklch(100% 0 0);
-	--color-card-foreground: oklch(14.08% 0.004 285.82);
-	--color-primary: oklch(20.47% 0.006 285.88);
-	--color-primary-foreground: oklch(98.51% 0.001 106.42);
-	--color-secondary: oklch(96.76% 0.001 286.38);
-	--color-secondary-foreground: oklch(20.47% 0.006 285.88);
-	--color-muted: oklch(96.76% 0.001 286.38);
-	--color-muted-foreground: oklch(55.19% 0.014 285.94);
-	--color-accent: oklch(96.76% 0.001 286.38);
-	--color-accent-foreground: oklch(20.47% 0.006 285.88);
-	--color-border: oklch(91.97% 0.004 286.32);
-	--color-input: oklch(91.97% 0.004 286.32);
-	--color-ring: oklch(14.08% 0.004 285.82);
+@custom-variant dark (&:is(.dark *));
 
-	--radius-sm: 0.25rem;
-	--radius-md: 0.375rem;
-	--radius-lg: 0.5rem;
+{{#if (eq uiLibrary "shadcn-ui")}}
+:root {
+{{{shadcnThemeVars "light"}}}
+  --radius: {{{shadcnRadiusValue}}};
 }
 
 .dark {
-	--color-background: oklch(14.08% 0.004 285.82);
-	--color-foreground: oklch(98.51% 0.001 106.42);
-	--color-card: oklch(14.08% 0.004 285.82);
-	--color-card-foreground: oklch(98.51% 0.001 106.42);
-	--color-primary: oklch(98.51% 0.001 106.42);
-	--color-primary-foreground: oklch(20.47% 0.006 285.88);
-	--color-secondary: oklch(26.96% 0.005 286.03);
-	--color-secondary-foreground: oklch(98.51% 0.001 106.42);
-	--color-muted: oklch(26.96% 0.005 286.03);
-	--color-muted-foreground: oklch(70.67% 0.01 286.07);
-	--color-accent: oklch(26.96% 0.005 286.03);
-	--color-accent-foreground: oklch(98.51% 0.001 106.42);
-	--color-border: oklch(26.96% 0.005 286.03);
-	--color-input: oklch(26.96% 0.005 286.03);
-	--color-ring: oklch(83.53% 0.005 286.29);
+{{{shadcnThemeVars "dark"}}}
 }
+
+@theme inline {
+  {{#if (shadcnFontIsMono)}}
+  --font-mono: {{{shadcnFontFamily}}};
+  {{else}}
+  --font-sans: {{{shadcnFontFamily}}};
+  {{/if}}
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    {{#if (shadcnFontIsMono)}}
+    @apply font-mono bg-background text-foreground;
+    {{else}}
+    @apply font-sans bg-background text-foreground;
+    {{/if}}
+  }
+}
+{{else}}
+@theme {
+  --color-background: oklch(100% 0 0);
+  --color-foreground: oklch(14.08% 0.004 285.82);
+  --color-primary: oklch(20.47% 0.006 285.88);
+  --color-secondary: oklch(96.76% 0.001 286.38);
+}
+
+.dark {
+  --color-background: oklch(14.08% 0.004 285.82);
+  --color-foreground: oklch(98.51% 0.001 106.42);
+  --color-primary: oklch(98.51% 0.001 106.42);
+  --color-secondary: oklch(26.96% 0.005 286.03);
+}
+{{/if}}

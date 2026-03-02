@@ -115,6 +115,13 @@ import {
   type GoLogging,
   AiDocsSchema,
   type AiDocs,
+  ShadcnBaseSchema,
+  ShadcnStyleSchema,
+  ShadcnIconLibrarySchema,
+  ShadcnColorThemeSchema,
+  ShadcnBaseColorSchema,
+  ShadcnFontSchema,
+  ShadcnRadiusSchema,
 } from "./types";
 import { handleError } from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
@@ -185,6 +192,27 @@ export const router = os.router({
           api: APISchema.optional(),
           cssFramework: CSSFrameworkSchema.optional(),
           uiLibrary: UILibrarySchema.optional(),
+          shadcnBase: ShadcnBaseSchema.optional().describe(
+            "shadcn/ui headless library (radix, base)",
+          ),
+          shadcnStyle: ShadcnStyleSchema.optional().describe(
+            "shadcn/ui visual style (vega, nova, maia, lyra, mira)",
+          ),
+          shadcnIconLibrary: ShadcnIconLibrarySchema.optional().describe(
+            "shadcn/ui icon library (lucide, tabler, hugeicons, phosphor, remixicon)",
+          ),
+          shadcnColorTheme: ShadcnColorThemeSchema.optional().describe(
+            "shadcn/ui color theme (neutral, blue, violet, etc.)",
+          ),
+          shadcnBaseColor: ShadcnBaseColorSchema.optional().describe(
+            "shadcn/ui base neutral color (neutral, stone, zinc, gray)",
+          ),
+          shadcnFont: ShadcnFontSchema.optional().describe(
+            "shadcn/ui font (inter, geist, figtree, etc.)",
+          ),
+          shadcnRadius: ShadcnRadiusSchema.optional().describe(
+            "shadcn/ui border radius (default, none, small, medium, large)",
+          ),
           webDeploy: WebDeploySchema.optional(),
           serverDeploy: ServerDeploySchema.optional(),
           directoryConflict: DirectoryConflictSchema.optional(),
@@ -489,6 +517,13 @@ export async function createVirtual(
       serverDeploy: options.serverDeploy || "none",
       cssFramework: options.cssFramework || "tailwind",
       uiLibrary: options.uiLibrary || "shadcn-ui",
+      shadcnBase: options.shadcnBase ?? "radix",
+      shadcnStyle: options.shadcnStyle ?? "nova",
+      shadcnIconLibrary: options.shadcnIconLibrary ?? "lucide",
+      shadcnColorTheme: options.shadcnColorTheme ?? "neutral",
+      shadcnBaseColor: options.shadcnBaseColor ?? "neutral",
+      shadcnFont: options.shadcnFont ?? "inter",
+      shadcnRadius: options.shadcnRadius ?? "default",
       ai: options.ai || "none",
       stateManagement: options.stateManagement || "none",
       forms: options.forms || "react-hook-form",

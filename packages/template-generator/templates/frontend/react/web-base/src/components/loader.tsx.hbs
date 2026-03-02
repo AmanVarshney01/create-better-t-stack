@@ -1,4 +1,14 @@
+{{#if (eq shadcnIconLibrary "tabler")}}
+import { IconLoader2 as Loader2 } from "@tabler/icons-react";
+{{else if (eq shadcnIconLibrary "hugeicons")}}
+import { Loading03Icon as Loader2 } from "@hugeicons/react";
+{{else if (eq shadcnIconLibrary "phosphor")}}
+import { SpinnerGap as Loader2 } from "@phosphor-icons/react";
+{{else if (eq shadcnIconLibrary "remixicon")}}
+import { RiLoader4Line as Loader2 } from "@remixicon/react";
+{{else}}
 import { Loader2 } from "lucide-react";
+{{/if}}
 
 export default function Loader() {
   return (

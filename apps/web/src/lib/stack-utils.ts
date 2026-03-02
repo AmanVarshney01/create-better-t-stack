@@ -8,6 +8,13 @@ const TYPESCRIPT_CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
   "astroIntegration",
   "cssFramework",
   "uiLibrary",
+  "shadcnBase",
+  "shadcnStyle",
+  "shadcnIconLibrary",
+  "shadcnColorTheme",
+  "shadcnBaseColor",
+  "shadcnFont",
+  "shadcnRadius",
   "backend",
   "backendLibraries",
   "runtime",
@@ -203,6 +210,18 @@ export function generateStackCommand(stack: StackState) {
       : []),
     `--css-framework ${stack.cssFramework}`,
     `--ui-library ${stack.uiLibrary}`,
+    // Add shadcn/ui sub-options only when shadcn-ui is selected
+    ...(stack.uiLibrary === "shadcn-ui"
+      ? [
+          `--shadcn-base ${stack.shadcnBase}`,
+          `--shadcn-style ${stack.shadcnStyle}`,
+          `--shadcn-icon-library ${stack.shadcnIconLibrary}`,
+          `--shadcn-color-theme ${stack.shadcnColorTheme}`,
+          `--shadcn-base-color ${stack.shadcnBaseColor}`,
+          `--shadcn-font ${stack.shadcnFont}`,
+          `--shadcn-radius ${stack.shadcnRadius}`,
+        ]
+      : []),
     `--backend ${mapBackendToCli(stack.backend)}`,
     `--runtime ${stack.runtime}`,
     `--api ${stack.api}`,

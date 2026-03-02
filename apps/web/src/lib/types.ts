@@ -46,6 +46,14 @@ export type TechCategory =
   | "git"
   | "install"
   | "effect"
+  // shadcn/ui sub-options
+  | "shadcnBase"
+  | "shadcnStyle"
+  | "shadcnIconLibrary"
+  | "shadcnColorTheme"
+  | "shadcnBaseColor"
+  | "shadcnFont"
+  | "shadcnRadius"
   // Rust ecosystem categories
   | "rustWebFramework"
   | "rustFrontend"

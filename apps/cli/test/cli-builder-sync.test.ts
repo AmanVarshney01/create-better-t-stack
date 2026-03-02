@@ -386,7 +386,9 @@ describe("CLI and Builder Sync", () => {
     // Note: Python ecosystem adds 6 categories (pythonWebFramework, pythonOrm, pythonValidation,
     // pythonAi, pythonTaskQueue, pythonQuality) that will get CLI support in a later task
     // Go ecosystem is now mapped so shouldn't add any unmapped categories
-    expect(unmappedCategories.length).toBeLessThanOrEqual(11);
+    // shadcn/ui adds 7 sub-categories (shadcnBase, shadcnStyle, shadcnIconLibrary,
+    // shadcnColorTheme, shadcnBaseColor, shadcnFont, shadcnRadius) that are Builder-only
+    expect(unmappedCategories.length).toBeLessThanOrEqual(18);
   });
 });
 

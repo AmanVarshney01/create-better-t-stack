@@ -65,6 +65,13 @@ import type {
   GoCliSchema,
   GoLoggingSchema,
   AiDocsSchema,
+  ShadcnBaseSchema,
+  ShadcnStyleSchema,
+  ShadcnIconLibrarySchema,
+  ShadcnColorThemeSchema,
+  ShadcnBaseColorSchema,
+  ShadcnFontSchema,
+  ShadcnRadiusSchema,
 } from "./schemas";
 
 // Inferred types from Zod schemas
@@ -126,6 +133,13 @@ export type GoApi = z.infer<typeof GoApiSchema>;
 export type GoCli = z.infer<typeof GoCliSchema>;
 export type GoLogging = z.infer<typeof GoLoggingSchema>;
 export type AiDocs = z.infer<typeof AiDocsSchema>;
+export type ShadcnBase = z.infer<typeof ShadcnBaseSchema>;
+export type ShadcnStyle = z.infer<typeof ShadcnStyleSchema>;
+export type ShadcnIconLibrary = z.infer<typeof ShadcnIconLibrarySchema>;
+export type ShadcnColorTheme = z.infer<typeof ShadcnColorThemeSchema>;
+export type ShadcnBaseColor = z.infer<typeof ShadcnBaseColorSchema>;
+export type ShadcnFont = z.infer<typeof ShadcnFontSchema>;
+export type ShadcnRadius = z.infer<typeof ShadcnRadiusSchema>;
 
 export type CreateInput = z.infer<typeof CreateInputSchema>;
 export type AddInput = z.infer<typeof AddInputSchema>;

@@ -52,6 +52,13 @@ import type {
   ServerDeploy,
   StateManagement,
   Testing,
+  ShadcnBase,
+  ShadcnBaseColor,
+  ShadcnColorTheme,
+  ShadcnFont,
+  ShadcnIconLibrary,
+  ShadcnRadius,
+  ShadcnStyle,
   UILibrary,
   Validation,
   WebDeploy,
@@ -227,6 +234,29 @@ export function processFlags(options: CLIInput, projectName?: string) {
 
   if (options.uiLibrary) {
     config.uiLibrary = options.uiLibrary as UILibrary;
+  }
+
+  // shadcn/ui sub-options
+  if (options.shadcnBase) {
+    config.shadcnBase = options.shadcnBase as ShadcnBase;
+  }
+  if (options.shadcnStyle) {
+    config.shadcnStyle = options.shadcnStyle as ShadcnStyle;
+  }
+  if (options.shadcnIconLibrary) {
+    config.shadcnIconLibrary = options.shadcnIconLibrary as ShadcnIconLibrary;
+  }
+  if (options.shadcnColorTheme) {
+    config.shadcnColorTheme = options.shadcnColorTheme as ShadcnColorTheme;
+  }
+  if (options.shadcnBaseColor) {
+    config.shadcnBaseColor = options.shadcnBaseColor as ShadcnBaseColor;
+  }
+  if (options.shadcnFont) {
+    config.shadcnFont = options.shadcnFont as ShadcnFont;
+  }
+  if (options.shadcnRadius) {
+    config.shadcnRadius = options.shadcnRadius as ShadcnRadius;
   }
 
   if (options.addons && options.addons.length > 0) {
