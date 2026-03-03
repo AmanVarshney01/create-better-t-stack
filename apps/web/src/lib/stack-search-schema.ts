@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { DEFAULT_STACK } from "./constant";
+import { DEFAULT_STACK } from "./stack-defaults";
 import { stackUrlKeys } from "./stack-url-keys";
 import { isArrayStackKey, stackStateKeys } from "./stack-url-state.shared";
 

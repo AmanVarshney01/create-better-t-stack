@@ -84,6 +84,26 @@ jobs:
       - name: Build Web (Vercel Parity)
         run: bun run build:web
 
+      - name: Performance Budget Check
+        run: bun run --cwd apps/web perf:check
+
+      - name: Upload Performance Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-performance-report
+          path: apps/web/reports/performance
+          if-no-files-found: warn
+
+      - name: Publish Performance Summary
+        if: always()
+        run: |
+          if [ -f apps/web/reports/performance/summary.md ]; then
+            cat apps/web/reports/performance/summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Performance summary was not generated." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Build All Packages
         run: bun run build
         env:

@@ -1,4 +1,5 @@
-import { DEFAULT_STACK, isStackDefault, type StackState, TECH_OPTIONS } from "@/lib/constant";
+import { TECH_OPTIONS } from "@/lib/constant";
+import { DEFAULT_STACK, isStackDefault, type StackState } from "@/lib/stack-defaults";
 import { createStackSearchParams } from "@/lib/stack-url-state.shared";
 
 // TypeScript ecosystem category order

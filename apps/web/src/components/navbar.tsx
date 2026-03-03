@@ -1,11 +1,29 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
+import { lazy, Suspense, useEffect, useState } from "react";
 
-import { GitHubStats } from "@/components/github-stats";
-import { NpmDownloads } from "@/components/npm-downloads";
 import { ThemeToggle } from "@/components/theme-toggle";
 
+const NavbarStats = lazy(async () => {
+  const mod = await import("@/components/navbar-stats");
+  return { default: mod.NavbarStats };
+});
+
 export function Navbar() {
+  const [showStats, setShowStats] = useState(false);
+
+  useEffect(() => {
+    const onIdle = () => setShowStats(true);
+
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      const id = window.requestIdleCallback(onIdle, { timeout: 2000 });
+      return () => window.cancelIdleCallback(id);
+    }
+
+    const timeout = globalThis.setTimeout(onIdle, 600);
+    return () => globalThis.clearTimeout(timeout);
+  }, []);
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-sm">
       <nav className="container mx-auto flex h-14 items-center justify-between px-6">
@@ -30,8 +48,23 @@ export function Navbar() {
 
         {/* Navigation Links */}
         <div className="flex items-center gap-4 sm:gap-6">
-          <GitHubStats />
-          <NpmDownloads />
+          {showStats ? (
+            <Suspense
+              fallback={
+                <>
+                  <div className="hidden h-4 w-12 animate-pulse rounded bg-muted sm:block" />
+                  <div className="hidden h-4 w-12 animate-pulse rounded bg-muted sm:block" />
+                </>
+              }
+            >
+              <NavbarStats />
+            </Suspense>
+          ) : (
+            <>
+              <div className="hidden h-4 w-12 animate-pulse rounded bg-muted sm:block" />
+              <div className="hidden h-4 w-12 animate-pulse rounded bg-muted sm:block" />
+            </>
+          )}
 
           <div className="flex items-center gap-2 sm:gap-3">
             <ThemeToggle />

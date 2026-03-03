@@ -1,7 +1,7 @@
 import { type ProjectConfig, ProjectConfigSchema } from "@better-fullstack/types";
 
 import { analyzeStackCompatibility } from "@/components/stack-builder/utils";
-import { DEFAULT_STACK, type StackState } from "@/lib/constant";
+import { DEFAULT_STACK, type StackState } from "@/lib/stack-defaults";
 
 const SELF_BACKENDS = new Set([
   "self-next",

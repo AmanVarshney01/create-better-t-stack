@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { StackSearchParams } from "@/lib/stack-search-schema";
 
-import { DEFAULT_STACK, type StackState } from "@/lib/constant";
+import { DEFAULT_STACK, type StackState } from "@/lib/stack-defaults";
 import { stackUrlKeys } from "@/lib/stack-url-keys";
 
 // Parse search params to StackState (used on server side)

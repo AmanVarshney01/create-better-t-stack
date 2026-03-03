@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { zodValidator } from "@tanstack/zod-adapter";
 import { Suspense, lazy } from "react";
 
 import {
@@ -12,13 +11,11 @@ import {
   SITE_NAME,
   canonicalUrl,
 } from "@/lib/seo";
-import { stackSearchSchema } from "@/lib/stack-search-schema";
 
 // Lazy load StackBuilder to isolate it from the main bundle
 const StackBuilder = lazy(() => import("@/components/stack-builder/stack-builder"));
 
 export const Route = createFileRoute("/new")({
-  validateSearch: zodValidator(stackSearchSchema),
   head: () => ({
     meta: [
       { title: `Stack Builder | ${SITE_NAME}` },

@@ -1,4 +1,4 @@
-import type { StackState } from "@/lib/constant";
+import type { StackState } from "@/lib/stack-defaults";
 
 // Mapping from StackState keys to short URL parameter keys
 export const stackUrlKeys = {

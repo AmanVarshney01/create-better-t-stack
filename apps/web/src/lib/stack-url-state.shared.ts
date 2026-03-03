@@ -1,4 +1,4 @@
-import { DEFAULT_STACK, type StackState } from "@/lib/constant";
+import { DEFAULT_STACK, type StackState } from "@/lib/stack-defaults";
 import { stackUrlKeys } from "@/lib/stack-url-keys";
 
 type QueryValue = string | string[] | null | undefined;

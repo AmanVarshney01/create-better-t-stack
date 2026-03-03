@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import type { StackState } from "@/lib/constant";
+import type { StackState } from "@/lib/stack-defaults";
 
 import { isStackPreviewEnabledServer } from "@/lib/feature-flags";
 import { stackStateToProjectConfig } from "@/lib/preview-config";
