@@ -29,7 +29,23 @@
 			});
 		}
 	});
-	{{/if}}
+{{else if (eq payments "dodo")}}
+	$effect(() => {
+		if ($sessionQuery.data) {
+			authClient.dodopayments.customer.subscriptions
+				.list({
+					query: {
+						limit: 10,
+						page: 1,
+						active: true,
+					},
+				})
+				.then((data) => {
+					customerState = data;
+				});
+		}
+	});
+{{/if}}
 </script>
 
 {#if $sessionQuery.isPending}
@@ -54,6 +70,17 @@
 				Upgrade to Pro
 			</button>
 		{/if}
-		{{/if}}
+{{else if (eq payments "dodo")}}
+		<p>Plan: {customerState?.data?.items?.length ? "Pro" : "Free"}</p>
+		{#if customerState?.data?.items?.length}
+			<button onclick={async () => await authClient.dodopayments.customer.portal()}>
+				Manage Subscription
+			</button>
+		{:else}
+			<button onclick={async () => await authClient.dodopayments.checkoutSession({ slug: "pro" })}>
+				Upgrade to Pro
+			</button>
+		{/if}
+{{/if}}
 	</div>
 {/if}
