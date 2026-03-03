@@ -1,0 +1,293 @@
+{
+  "v": 2,
+  "d": "2026-03-03",
+  "focus": "typescript-shadcn-full",
+  "cb": "bun create better-fullstack@latest <name> --ecosystem typescript --frontend <frontend> --backend hono --runtime bun --api trpc --database postgres --orm drizzle --auth better-auth --css-framework tailwind --ui-library shadcn-ui --shadcn-base <radix|base> --shadcn-style <vega|nova|maia|lyra|mira> --shadcn-icon-library <lucide|tabler|hugeicons|phosphor|remixicon> --shadcn-color-theme <theme> --shadcn-base-color <neutral|stone|zinc|gray> --shadcn-font <font> --shadcn-radius <default|none|small|medium|large> --payments none --email none --file-upload none --effect none --state-management none --validation zod --forms none --testing vitest --ai none --realtime none --job-queue none --animation none --logging none --observability none --analytics none --cms none --caching none --search none --file-storage none --addons none --examples none --ai-docs none --db-setup none --web-deploy none --server-deploy none --package-manager bun --no-install --no-git --disable-analytics",
+  "cbRetest": "node /Users/ibrahime/Documents/Better-Fullstack/apps/cli/dist/cli.mjs create <name> ... (same flags as cb)",
+  "tot": [10, 7, 3, 2],
+  "k": {
+    "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
+    "r": { "p": "pass", "f": "fail" },
+    "e": { "t": "typescript" },
+    "notes": [
+      "TypeScript-only shadcn/ui full-option batch: 10 combos with varied base/style/icon/theme/baseColor/font/radius",
+      "Marker verification per combo: apps/web/components.json style/icon/baseColor + shadcn import/theme vars in CSS + expected icon/font/base dependencies in apps/web/package.json",
+      "Type-check verification: bun install + bun run check-types",
+      "@latest initial result: 7 pass, 3 fail",
+      "BugQ_hugeicons_version: @hugeicons/core-free-icons pinned to ^0.3.0 in dependency map (no matching version); updated to ^3.3.0",
+      "  Files: packages/template-generator/src/utils/add-deps.ts",
+      "BugR_tabler_icon_export: sonner template imports IconOctagonX from @tabler/icons-react (export does not exist); changed to IconCircleX",
+      "  Files: packages/template-generator/templates/frontend/react/web-base/src/components/ui/sonner.tsx.hbs",
+      "Template embed regenerated after fixes (templates.generated.ts)",
+      "Local CLI re-test after fixes: 3/3 previously failing combos passed"
+    ]
+  },
+  "rows": [
+    [
+      "ts-next-shadcn-radix-nova-lucide-blue-zinc-geist-medium",
+      "t",
+      [
+        "next",
+        "tailwind",
+        "shadcn-ui",
+        "radix",
+        "nova",
+        "lucide",
+        "blue",
+        "zinc",
+        "geist",
+        "medium",
+        "hono",
+        "bun",
+        "trpc",
+        "drizzle",
+        "postgres",
+        "better-auth"
+      ],
+      "p"
+    ],
+    [
+      "ts-react-router-shadcn-base-vega-tabler-emerald-stone-inter-small",
+      "t",
+      [
+        "react-router",
+        "tailwind",
+        "shadcn-ui",
+        "base",
+        "vega",
+        "tabler",
+        "emerald",
+        "stone",
+        "inter",
+        "small",
+        "hono",
+        "bun",
+        "trpc",
+        "drizzle",
+        "postgres",
+        "better-auth"
+      ],
+      "p"
+    ],
+    [
+      "ts-tanstack-router-shadcn-radix-maia-hugeicons-violet-gray-figtree-large",
+      "t",
+      [
+        "tanstack-router",
+        "tailwind",
+        "shadcn-ui",
+        "radix",
+        "maia",
+        "hugeicons",
+        "violet",
+        "gray",
+        "figtree",
+        "large",
+        "hono",
+        "bun",
+        "trpc",
+        "drizzle",
+        "postgres",
+        "better-auth"
+      ],
+      "f",
+      "BugQ_hugeicons_version: bun install fails resolving @hugeicons/core-free-icons@^0.3.0 in @latest",
+      1
+    ],
+    [
+      "ts-tanstack-start-shadcn-base-lyra-phosphor-amber-neutral-jetbrains-mono-none",
+      "t",
+      [
+        "tanstack-start",
+        "tailwind",
+        "shadcn-ui",
+        "base",
+        "lyra",
+        "phosphor",
+        "amber",
+        "neutral",
+        "jetbrains-mono",
+        "none",
+        "hono",
+        "bun",
+        "trpc",
+        "drizzle",
+        "postgres",
+        "better-auth"
+      ],
+      "p"
+    ],
+    [
+      "ts-next-shadcn-radix-mira-remixicon-rose-zinc-outfit-default",
+      "t",
+      [
+        "next",
+        "tailwind",
+        "shadcn-ui",
+        "radix",
+        "mira",
+        "remixicon",
+        "rose",
+        "zinc",
+        "outfit",
+        "default",
+        "hono",
+        "bun",
+        "trpc",
+        "drizzle",
+        "postgres",
+        "better-auth"
+      ],
+      "p"
+    ],
+    [
+      "ts-react-router-shadcn-radix-vega-lucide-cyan-stone-noto-sans-medium",
+      "t",
+      [
+        "react-router",
+        "tailwind",
+        "shadcn-ui",
+        "radix",
+        "vega",
+        "lucide",
+        "cyan",
+        "stone",
+        "noto-sans",
+        "medium",
+        "hono",
+        "bun",
+        "trpc",
+        "drizzle",
+        "postgres",
+        "better-auth"
+      ],
+      "p"
+    ],
+    [
+      "ts-tanstack-router-shadcn-base-nova-tabler-indigo-gray-raleway-large",
+      "t",
+      [
+        "tanstack-router",
+        "tailwind",
+        "shadcn-ui",
+        "base",
+        "nova",
+        "tabler",
+        "indigo",
+        "gray",
+        "raleway",
+        "large",
+        "hono",
+        "bun",
+        "trpc",
+        "drizzle",
+        "postgres",
+        "better-auth"
+      ],
+      "f",
+      "BugR_tabler_icon_export: apps/web/src/components/ui/sonner.tsx imports non-existent IconOctagonX from @tabler/icons-react",
+      1
+    ],
+    [
+      "ts-tanstack-start-shadcn-radix-maia-hugeicons-green-neutral-dm-sans-small",
+      "t",
+      [
+        "tanstack-start",
+        "tailwind",
+        "shadcn-ui",
+        "radix",
+        "maia",
+        "hugeicons",
+        "green",
+        "neutral",
+        "dm-sans",
+        "small",
+        "hono",
+        "bun",
+        "trpc",
+        "drizzle",
+        "postgres",
+        "better-auth"
+      ],
+      "f",
+      "BugQ_hugeicons_version: bun install fails resolving @hugeicons/core-free-icons@^0.3.0 in @latest",
+      1
+    ],
+    [
+      "ts-next-shadcn-base-mira-phosphor-orange-zinc-public-sans-default",
+      "t",
+      [
+        "next",
+        "tailwind",
+        "shadcn-ui",
+        "base",
+        "mira",
+        "phosphor",
+        "orange",
+        "zinc",
+        "public-sans",
+        "default",
+        "hono",
+        "bun",
+        "trpc",
+        "drizzle",
+        "postgres",
+        "better-auth"
+      ],
+      "p"
+    ],
+    [
+      "ts-astro-react-shadcn-radix-lyra-remixicon-sky-stone-geist-mono-none",
+      "t",
+      [
+        "astro+react",
+        "tailwind",
+        "shadcn-ui",
+        "radix",
+        "lyra",
+        "remixicon",
+        "sky",
+        "stone",
+        "geist-mono",
+        "none",
+        "hono",
+        "bun",
+        "trpc",
+        "drizzle",
+        "postgres",
+        "better-auth"
+      ],
+      "p"
+    ]
+  ],
+  "schema": {
+    "row": [
+      "name",
+      "ecosystemCode",
+      "flagsByEcosystemOrder",
+      "resultCode",
+      "issueCode?",
+      "fixedInRepo?(0|1)"
+    ],
+    "flagsOrder": {
+      "t": [
+        "frontend",
+        "cssFramework",
+        "uiLibrary",
+        "shadcnBase",
+        "shadcnStyle",
+        "shadcnIconLibrary",
+        "shadcnColorTheme",
+        "shadcnBaseColor",
+        "shadcnFont",
+        "shadcnRadius",
+        "backend",
+        "runtime",
+        "api",
+        "orm",
+        "database",
+        "auth"
+      ]
+    }
+  }
+}
