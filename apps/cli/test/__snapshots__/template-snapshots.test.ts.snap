@@ -865,7 +865,8 @@ export default app;
     "@trpc/tanstack-react-query": "^11.11.0",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
-    "@tanstack/react-query": "^5.90.21"
+    "@tanstack/react-query": "^5.90.21",
+    "lucide-react": "^0.511.0"
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.154.3",
@@ -1528,7 +1529,8 @@ export default nextConfig;
     "@trpc/client": "catalog:",
     "@trpc/tanstack-react-query": "^11.11.0",
     "@tanstack/react-query": "^5.90.21",
-    "better-auth": "catalog:"
+    "better-auth": "catalog:",
+    "lucide-react": "^0.511.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.10",
@@ -3356,7 +3358,8 @@ app.listen(3000, () => {
     "@trpc/tanstack-react-query": "^11.11.0",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
-    "@tanstack/react-query": "^5.90.21"
+    "@tanstack/react-query": "^5.90.21",
+    "lucide-react": "^0.511.0"
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.154.3",
@@ -4130,7 +4133,8 @@ export default app;
     "@orpc/tanstack-query": "^1.13.6",
     "@orpc/client": "catalog:",
     "@orpc/server": "catalog:",
-    "@tanstack/react-query": "^5.90.21"
+    "@tanstack/react-query": "^5.90.21",
+    "lucide-react": "^0.511.0"
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.154.3",
@@ -4888,7 +4892,8 @@ export default app;
     "@trpc/server": "catalog:",
     "@tanstack/react-query": "^5.90.21",
     "better-auth": "catalog:",
-    "@tanstack/react-form": "^1.28.3"
+    "@tanstack/react-form": "^1.28.3",
+    "lucide-react": "^0.511.0"
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.154.3",
@@ -5766,7 +5771,8 @@ exports[`Template Snapshots Key File Content Snapshots key files: convex-clerk 1
     "@snapshot-convex-clerk/env": "workspace:*",
     "@snapshot-convex-clerk/backend": "workspace:*",
     "convex": "catalog:",
-    "@clerk/clerk-react": "^5.61.3"
+    "@clerk/clerk-react": "^5.61.3",
+    "lucide-react": "^0.511.0"
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.154.3",
@@ -6304,7 +6310,8 @@ export default nextConfig;
     "@trpc/client": "catalog:",
     "@trpc/tanstack-react-query": "^11.11.0",
     "@tanstack/react-query": "^5.90.21",
-    "@clerk/nextjs": "^6.39.0"
+    "@clerk/nextjs": "^6.39.0",
+    "lucide-react": "^0.511.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.10",
@@ -6870,7 +6877,8 @@ exports[`Template Snapshots Key File Content Snapshots key files: self-tanstack-
     "@orpc/zod": "catalog:",
     "@orpc/tanstack-query": "^1.13.6",
     "@clerk/tanstack-react-start": "^0.29.8",
-    "srvx": "0.8.15"
+    "srvx": "0.8.15",
+    "lucide-react": "^0.511.0"
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.154.3",
@@ -7641,7 +7649,8 @@ export default app;
     "@trpc/tanstack-react-query": "^11.11.0",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
-    "@tanstack/react-query": "^5.90.21"
+    "@tanstack/react-query": "^5.90.21",
+    "lucide-react": "^0.511.0"
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.154.3",
@@ -8352,7 +8361,8 @@ export default app;
     "@trpc/tanstack-react-query": "^11.11.0",
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
-    "@tanstack/react-query": "^5.90.21"
+    "@tanstack/react-query": "^5.90.21",
+    "lucide-react": "^0.511.0"
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.154.3",
@@ -8975,7 +8985,8 @@ exports[`Template Snapshots Key File Content Snapshots key files: frontend-only-
     "react-dom": "19.2.3",
     "dotenv": "catalog:",
     "zod": "catalog:",
-    "@snapshot-frontend-only-no-backend/env": "workspace:*"
+    "@snapshot-frontend-only-no-backend/env": "workspace:*",
+    "lucide-react": "^0.511.0"
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.154.3",
