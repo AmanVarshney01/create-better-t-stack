@@ -1,0 +1,195 @@
+{
+  "v": 2,
+  "d": "2026-03-03",
+  "focus": "typescript-other-combos",
+  "cb": "bun create better-fullstack@latest <name> --ecosystem typescript --frontend <frontend> --backend <backend> --runtime <runtime> --api <api> --database <db> --orm <orm> --auth <auth> --css-framework <css> --ui-library <ui> --payments none --email none --file-upload none --effect none --state-management none --validation zod --forms none --testing vitest --ai none --realtime none --job-queue none --animation none --logging none --observability none --analytics none --cms none --caching none --search none --file-storage none --addons none --examples none --ai-docs none --db-setup none --web-deploy none --server-deploy none --package-manager bun --no-install --no-git --disable-analytics",
+  "cbRetest": "node /Users/ibrahime/Documents/Better-Fullstack/apps/cli/dist/cli.mjs create <name> ... (same flags as cb)",
+  "tot": [10, 8, 2, 2],
+  "k": {
+    "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
+    "r": { "p": "pass", "f": "fail" },
+    "e": { "t": "typescript" },
+    "notes": [
+      "Non-shadcn-focused TypeScript mix batch (10 combos) to broaden coverage across UI libraries/backends/APIs/runtimes",
+      "Validation per combo: bts.jsonc records css/ui + bun install + bun run check-types",
+      "@latest initial result: 8 pass, 2 fail",
+      "BugU_react_icons_dep: React web templates import icon components based on shadcnIconLibrary even when uiLibrary is not shadcn-ui; icon deps were not added for non-shadcn UI libs",
+      "  Fix: add icon dependency injection for React/Astro-React projects in processUILibraryDeps using config.shadcnIconLibrary",
+      "  File: packages/template-generator/src/processors/css-ui-deps.ts",
+      "BugV_nitro_trpc_context: trpc nitro route passes createContext({ req }), but trpc context template had no nitro backend branch (signature/type mismatch, ctx.session typed never)",
+      "  Fix: add nitro branch in trpc context template with Request-based context and better-auth session fetch",
+      "  File: packages/template-generator/templates/api/trpc/server/src/context.ts.hbs",
+      "Template embed regenerated after fixes: packages/template-generator/src/templates.generated.ts",
+      "Local CLI re-test after fixes: 2/2 previously failing combos passed"
+    ]
+  },
+  "rows": [
+    [
+      "oc-next-hono-trpc-drizzle-pg-daisyui",
+      "t",
+      ["next", "hono", "bun", "trpc", "drizzle", "postgres", "better-auth", "tailwind", "daisyui"],
+      "p"
+    ],
+    [
+      "oc-react-router-express-orpc-prisma-mysql-radix",
+      "t",
+      [
+        "react-router",
+        "express",
+        "node",
+        "orpc",
+        "prisma",
+        "mysql",
+        "better-auth",
+        "tailwind",
+        "radix-ui"
+      ],
+      "p"
+    ],
+    [
+      "oc-tanstack-router-fastify-trpc-drizzle-sqlite-baseui",
+      "t",
+      [
+        "tanstack-router",
+        "fastify",
+        "bun",
+        "trpc",
+        "drizzle",
+        "sqlite",
+        "better-auth",
+        "scss",
+        "base-ui"
+      ],
+      "f",
+      "BugU_react_icons_dep: missing icon deps (lucide-react by default) for non-shadcn UI libraries in React web templates",
+      1
+    ],
+    [
+      "oc-tanstack-start-elysia-orpc-drizzle-pg-parkui",
+      "t",
+      [
+        "tanstack-start",
+        "elysia",
+        "bun",
+        "orpc",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "tailwind",
+        "park-ui"
+      ],
+      "p"
+    ],
+    [
+      "oc-next-nitro-trpc-drizzle-pg-noneui",
+      "t",
+      ["next", "nitro", "node", "trpc", "drizzle", "postgres", "better-auth", "none", "none"],
+      "f",
+      "BugV_nitro_trpc_context: createContext signature mismatch in trpc nitro templates and auth session typing collapse",
+      1
+    ],
+    [
+      "oc-react-router-fets-tsrest-drizzle-sqlite-chakra",
+      "t",
+      [
+        "react-router",
+        "fets",
+        "node",
+        "ts-rest",
+        "drizzle",
+        "sqlite",
+        "better-auth",
+        "scss",
+        "chakra-ui"
+      ],
+      "p"
+    ],
+    [
+      "oc-astro-react-hono-trpc-drizzle-sqlite-radix",
+      "t",
+      [
+        "astro+react",
+        "hono",
+        "bun",
+        "trpc",
+        "drizzle",
+        "sqlite",
+        "better-auth",
+        "tailwind",
+        "radix-ui"
+      ],
+      "p"
+    ],
+    [
+      "oc-svelte-hono-orpc-drizzle-pg-daisyui",
+      "t",
+      [
+        "svelte",
+        "hono",
+        "bun",
+        "orpc",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "tailwind",
+        "daisyui"
+      ],
+      "p"
+    ],
+    [
+      "oc-solid-fastify-orpc-drizzle-pg-arkui",
+      "t",
+      [
+        "solid",
+        "fastify",
+        "bun",
+        "orpc",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "tailwind",
+        "ark-ui"
+      ],
+      "p"
+    ],
+    [
+      "oc-angular-nestjs-noneapi-typeorm-pg-noneui-authnone",
+      "t",
+      [
+        "angular",
+        "nestjs",
+        "node",
+        "none(api)",
+        "typeorm",
+        "postgres",
+        "none(auth)",
+        "tailwind",
+        "none"
+      ],
+      "p"
+    ]
+  ],
+  "schema": {
+    "row": [
+      "name",
+      "ecosystemCode",
+      "flagsByEcosystemOrder",
+      "resultCode",
+      "issueCode?",
+      "fixedInRepo?(0|1)"
+    ],
+    "flagsOrder": {
+      "t": [
+        "frontend",
+        "backend",
+        "runtime",
+        "api",
+        "orm",
+        "database",
+        "auth",
+        "cssFramework",
+        "uiLibrary"
+      ]
+    }
+  }
+}

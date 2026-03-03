@@ -1,0 +1,39 @@
+{
+  "v": 2,
+  "d": "2026-03-03",
+  "focus": "shadcn-choice-completion",
+  "cb": "bun create better-fullstack@latest <name> --ecosystem typescript --frontend next --backend hono --runtime bun --api trpc --database postgres --orm drizzle --auth better-auth --css-framework tailwind --ui-library shadcn-ui --shadcn-base radix --shadcn-style nova --shadcn-icon-library lucide --shadcn-color-theme <theme> --shadcn-base-color neutral --shadcn-font <font> --shadcn-radius default --payments none --email none --file-upload none --effect none --state-management none --validation zod --forms none --testing vitest --ai none --realtime none --job-queue none --animation none --logging none --observability none --analytics none --cms none --caching none --search none --file-storage none --addons none --examples none --ai-docs none --db-setup none --web-deploy none --server-deploy none --package-manager bun --no-install --no-git --disable-analytics",
+  "tot": [13, 13, 0, 0],
+  "k": {
+    "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
+    "r": { "p": "pass", "f": "fail" },
+    "e": { "t": "typescript" },
+    "notes": [
+      "Final shadcn choice-completion sweep: tested the remaining 11 color themes and 2 fonts not covered in earlier batches",
+      "Validation per combo: components.json shadcn markers, shadcn CSS import, expected font CSS variable, expected font dependency, bun install, bun run check-types",
+      "Result: 13/13 pass on @latest (v1.4.3)",
+      "With this batch, all current shadcn option values have at least one passing production scaffold test: base(2), style(5), icon(5), colorTheme(21), baseColor(4), font(12), radius(5)"
+    ]
+  },
+  "rows": [
+    ["ts-next-hono-shadcn-sc-neutral", "t", ["neutral", "inter"], "p"],
+    ["ts-next-hono-shadcn-sc-stone", "t", ["stone", "inter"], "p"],
+    ["ts-next-hono-shadcn-sc-zinc", "t", ["zinc", "inter"], "p"],
+    ["ts-next-hono-shadcn-sc-gray", "t", ["gray", "inter"], "p"],
+    ["ts-next-hono-shadcn-sc-red", "t", ["red", "inter"], "p"],
+    ["ts-next-hono-shadcn-sc-yellow", "t", ["yellow", "inter"], "p"],
+    ["ts-next-hono-shadcn-sc-lime", "t", ["lime", "inter"], "p"],
+    ["ts-next-hono-shadcn-sc-teal", "t", ["teal", "inter"], "p"],
+    ["ts-next-hono-shadcn-sc-fuchsia", "t", ["fuchsia", "inter"], "p"],
+    ["ts-next-hono-shadcn-sc-pink", "t", ["pink", "inter"], "p"],
+    ["ts-next-hono-shadcn-sc-purple", "t", ["purple", "inter"], "p"],
+    ["ts-next-hono-shadcn-sf-nunito-sans", "t", ["neutral", "nunito-sans"], "p"],
+    ["ts-next-hono-shadcn-sf-roboto", "t", ["neutral", "roboto"], "p"]
+  ],
+  "schema": {
+    "row": ["name", "ecosystemCode", "flagsByEcosystemOrder", "resultCode"],
+    "flagsOrder": {
+      "t": ["shadcnColorTheme", "shadcnFont"]
+    }
+  }
+}

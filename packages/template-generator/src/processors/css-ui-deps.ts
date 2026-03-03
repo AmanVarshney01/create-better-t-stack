@@ -70,8 +70,6 @@ export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConf
   const hasAstroSvelte = hasAstro && config.astroIntegration === "svelte";
   const hasAstroSolid = hasAstro && config.astroIntegration === "solid";
 
-  if (uiLibrary === "none") return;
-
   if (uiLibrary === "shadcn-ui") {
     processShadcnDeps(vfs, config);
     return;
@@ -79,6 +77,40 @@ export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConf
 
   const webPath = getWebPackagePath(frontend);
   if (!vfs.exists(webPath)) return;
+
+  // React web templates always include iconized UI primitives (mode toggle, loader, etc.),
+  // keyed off shadcnIconLibrary even when uiLibrary is not shadcn-ui.
+  if (hasReactWeb || hasAstroReact) {
+    const iconDeps: AvailableDependencies[] = [];
+    const iconLib = config.shadcnIconLibrary ?? "lucide";
+    switch (iconLib) {
+      case "lucide":
+        iconDeps.push("lucide-react");
+        break;
+      case "tabler":
+        iconDeps.push("@tabler/icons-react");
+        break;
+      case "hugeicons":
+        iconDeps.push("@hugeicons/react", "@hugeicons/core-free-icons");
+        break;
+      case "phosphor":
+        iconDeps.push("@phosphor-icons/react");
+        break;
+      case "remixicon":
+        iconDeps.push("@remixicon/react");
+        break;
+    }
+
+    if (iconDeps.length > 0) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPath,
+        dependencies: iconDeps,
+      });
+    }
+  }
+
+  if (uiLibrary === "none") return;
 
   const deps: AvailableDependencies[] = [];
 
