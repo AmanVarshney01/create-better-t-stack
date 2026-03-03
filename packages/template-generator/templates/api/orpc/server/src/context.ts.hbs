@@ -177,6 +177,34 @@ export async function createContext(req: IncomingHttpHeaders) {
 {{/if}}
 }
 
+{{else if (eq backend 'nitro')}}
+import type { IncomingMessage } from "node:http";
+{{#if (eq auth "better-auth")}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+
+type CreateContextOptions = {
+  req: IncomingMessage;
+};
+
+{{#if (eq auth "better-auth")}}
+export async function createContext({ req }: CreateContextOptions) {
+  const session = await auth.api.getSession({
+    headers: req.headers as any,
+  });
+  return {
+    session,
+  };
+}
+{{else}}
+export async function createContext(_opts?: CreateContextOptions) {
+  // No auth configured
+  return {
+    session: null,
+  };
+}
+{{/if}}
+
 {{else}}
 export async function createContext() {
   return {

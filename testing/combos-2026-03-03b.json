@@ -1,0 +1,268 @@
+{
+  "v": 2,
+  "d": "2026-03-03",
+  "focus": "typescript-more-templates-post-1.4.2",
+  "cb": "bun create better-fullstack@latest <name> --ecosystem typescript --frontend <frontend> --backend <backend> --runtime <runtime> --api <api> --database <db> --orm <orm> --auth <auth> --css-framework tailwind --ui-library shadcn-ui --shadcn-base <radix|base> --shadcn-style <vega|nova|maia|lyra|mira> --shadcn-icon-library <lucide|tabler|hugeicons|phosphor|remixicon> --shadcn-color-theme <theme> --shadcn-base-color <neutral|stone|zinc|gray> --shadcn-font <font> --shadcn-radius <default|none|small|medium|large> --payments none --email none --file-upload none --effect none --state-management none --validation zod --forms none --testing vitest --ai none --realtime none --job-queue none --animation none --logging none --observability none --analytics none --cms none --caching none --search none --file-storage none --addons none --examples none --ai-docs none --db-setup none --web-deploy none --server-deploy none --package-manager bun --no-install --no-git --disable-analytics",
+  "cbRetest": "node /Users/ibrahime/Documents/Better-Fullstack/apps/cli/dist/cli.mjs create <name> ... (same flags as cb)",
+  "tot": [10, 8, 2, 2],
+  "k": {
+    "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
+    "r": { "p": "pass", "f": "fail" },
+    "e": { "t": "typescript" },
+    "notes": [
+      "Second TypeScript batch after publishing v1.4.2: broader backend/frontend coverage while keeping shadcn/ui enabled",
+      "Marker verification per combo: components.json style/icon/baseColor + shadcn CSS import + type-checking (bun install + bun run check-types)",
+      "@latest initial result: 8/10 pass, 2/10 fail",
+      "BugS_nitro_orpc_context: nitro oRPC templates passed req to createContext but context template had no nitro branch; auth session typing collapsed and broke protectedProcedure types",
+      "  Fixed in: packages/template-generator/templates/api/orpc/server/src/context.ts.hbs",
+      "BugT_fets_auth_typed_request: fets auth route handler passed FETS typed request directly to auth.handler causing Request/TypedResponse type mismatch",
+      "  Fixed in: packages/template-generator/templates/backend/server/fets/src/index.ts.hbs",
+      "Embedded templates regenerated after fixes (templates.generated.ts)",
+      "Local CLI re-test after fixes: 2/2 previously failing combos passed"
+    ]
+  },
+  "rows": [
+    [
+      "mt-next-hono-trpc-drizzle-pg-shadcn-lucide",
+      "t",
+      [
+        "next",
+        "hono",
+        "bun",
+        "trpc",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "radix",
+        "nova",
+        "lucide",
+        "blue",
+        "zinc",
+        "geist",
+        "medium"
+      ],
+      "p"
+    ],
+    [
+      "mt-react-router-express-trpc-prisma-pg-shadcn-tabler",
+      "t",
+      [
+        "react-router",
+        "express",
+        "node",
+        "trpc",
+        "prisma",
+        "postgres",
+        "better-auth",
+        "base",
+        "vega",
+        "tabler",
+        "emerald",
+        "stone",
+        "inter",
+        "small"
+      ],
+      "p"
+    ],
+    [
+      "mt-tanstack-router-fastify-orpc-drizzle-mysql-shadcn-phosphor",
+      "t",
+      [
+        "tanstack-router",
+        "fastify",
+        "bun",
+        "orpc",
+        "drizzle",
+        "mysql",
+        "better-auth",
+        "radix",
+        "maia",
+        "phosphor",
+        "violet",
+        "gray",
+        "figtree",
+        "large"
+      ],
+      "p"
+    ],
+    [
+      "mt-tanstack-start-elysia-trpc-drizzle-pg-shadcn-remix-authnone",
+      "t",
+      [
+        "tanstack-start",
+        "elysia",
+        "bun",
+        "trpc",
+        "drizzle",
+        "postgres",
+        "none(auth)",
+        "base",
+        "lyra",
+        "remixicon",
+        "amber",
+        "neutral",
+        "jetbrains-mono",
+        "none"
+      ],
+      "p"
+    ],
+    [
+      "mt-next-nestjs-noneapi-drizzle-pg-shadcn-hugeicons",
+      "t",
+      [
+        "next",
+        "nestjs",
+        "node",
+        "none(api)",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "radix",
+        "mira",
+        "hugeicons",
+        "rose",
+        "zinc",
+        "outfit",
+        "default"
+      ],
+      "p"
+    ],
+    [
+      "mt-react-router-adonisjs-noneapi-drizzle-pg-shadcn-lucide-authnone",
+      "t",
+      [
+        "react-router",
+        "adonisjs",
+        "node",
+        "none(api)",
+        "drizzle",
+        "postgres",
+        "none(auth)",
+        "radix",
+        "vega",
+        "lucide",
+        "cyan",
+        "stone",
+        "noto-sans",
+        "medium"
+      ],
+      "p"
+    ],
+    [
+      "mt-tanstack-router-nitro-orpc-drizzle-pg-shadcn-tabler",
+      "t",
+      [
+        "tanstack-router",
+        "nitro",
+        "node",
+        "orpc",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "base",
+        "nova",
+        "tabler",
+        "indigo",
+        "gray",
+        "raleway",
+        "large"
+      ],
+      "f",
+      "BugS_nitro_orpc_context: createContext signature/type mismatch in nitro oRPC templates",
+      1
+    ],
+    [
+      "mt-next-fets-tsrest-drizzle-sqlite-shadcn-phosphor",
+      "t",
+      [
+        "next",
+        "fets",
+        "node",
+        "ts-rest",
+        "drizzle",
+        "sqlite",
+        "better-auth",
+        "radix",
+        "maia",
+        "phosphor",
+        "green",
+        "neutral",
+        "dm-sans",
+        "small"
+      ],
+      "f",
+      "BugT_fets_auth_typed_request: auth.handler(Request) mismatch with FETS TypedRequest/TypedResponse",
+      1
+    ],
+    [
+      "mt-react-router-hono-trpc-typeorm-pg-shadcn-remix-authnone",
+      "t",
+      [
+        "react-router",
+        "hono",
+        "bun",
+        "trpc",
+        "typeorm",
+        "postgres",
+        "none(auth)",
+        "base",
+        "mira",
+        "remixicon",
+        "orange",
+        "zinc",
+        "public-sans",
+        "default"
+      ],
+      "p"
+    ],
+    [
+      "mt-astro-react-hono-trpc-drizzle-sqlite-shadcn-geistmono",
+      "t",
+      [
+        "astro+react",
+        "hono",
+        "bun",
+        "trpc",
+        "drizzle",
+        "sqlite",
+        "better-auth",
+        "radix",
+        "lyra",
+        "lucide",
+        "sky",
+        "stone",
+        "geist-mono",
+        "none"
+      ],
+      "p"
+    ]
+  ],
+  "schema": {
+    "row": [
+      "name",
+      "ecosystemCode",
+      "flagsByEcosystemOrder",
+      "resultCode",
+      "issueCode?",
+      "fixedInRepo?(0|1)"
+    ],
+    "flagsOrder": {
+      "t": [
+        "frontend",
+        "backend",
+        "runtime",
+        "api",
+        "orm",
+        "database",
+        "auth",
+        "shadcnBase",
+        "shadcnStyle",
+        "shadcnIconLibrary",
+        "shadcnColorTheme",
+        "shadcnBaseColor",
+        "shadcnFont",
+        "shadcnRadius"
+      ]
+    }
+  }
+}

@@ -60,12 +60,12 @@ const router = createRouter({
 	.route({
 		method: "GET",
 		path: "/api/auth/*",
-		handler: (request) => auth.handler(request),
+		handler: async (request) => (await auth.handler(request as unknown as Request)) as any,
 	})
 	.route({
 		method: "POST",
 		path: "/api/auth/*",
-		handler: (request) => auth.handler(request),
+		handler: async (request) => (await auth.handler(request as unknown as Request)) as any,
 	})
 {{/if}}
 {{#if (eq api "trpc")}}
