@@ -43,7 +43,7 @@ const FRAMEWORK_AGNOSTIC_STATE: ProjectConfig["stateManagement"][] = [
 ];
 
 export function processStateManagementDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { stateManagement, frontend, astroIntegration } = config;
+  const { stateManagement, frontend, backend, astroIntegration } = config;
 
   // Skip if not selected or set to "none"
   if (!stateManagement || stateManagement === "none") return;
@@ -55,7 +55,7 @@ export function processStateManagementDeps(vfs: VirtualFileSystem, config: Proje
   // Astro with React integration should be treated as React
   const hasAstroReact = frontend.includes("astro") && astroIntegration === "react";
 
-  const webPath = getWebPackagePath(frontend);
+  const webPath = getWebPackagePath(frontend, backend);
 
   // Add to web package if it's a React-based web frontend (all state management supported)
   // or Astro with React integration

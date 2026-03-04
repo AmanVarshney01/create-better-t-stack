@@ -24,7 +24,7 @@ const SOLID_FRAMEWORKS: Frontend[] = ["solid"];
 const QWIK_FRAMEWORKS: Frontend[] = ["qwik"];
 
 export function processFormsDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { forms, frontend, astroIntegration } = config;
+  const { forms, frontend, backend, astroIntegration } = config;
 
   // Skip if not selected or set to "none"
   if (!forms || forms === "none") return;
@@ -38,7 +38,7 @@ export function processFormsDeps(vfs: VirtualFileSystem, config: ProjectConfig):
   const hasAstroReact = frontend.includes("astro") && astroIntegration === "react";
 
   // Add to web package if it's a React-based web frontend or Astro with React
-  const webPath = getWebPackagePath(frontend);
+  const webPath = getWebPackagePath(frontend, backend);
   if ((hasReactWeb || hasAstroReact) && vfs.exists(webPath)) {
     const deps = getFormsDeps(forms, "react");
     if (deps.length > 0) {

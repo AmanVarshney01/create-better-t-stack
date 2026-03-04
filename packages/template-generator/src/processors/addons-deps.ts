@@ -22,8 +22,8 @@ export function processAddonsDeps(vfs: VirtualFileSystem, config: ProjectConfig)
   const hasSolidFrontend = config.frontend.includes("solid");
   const hasPwaCompatibleFrontend = hasViteReactFrontend || hasSolidFrontend;
 
-  const webPkgPath = getWebPackagePath(config.frontend);
-  const serverPkgPath = getServerPackagePath(config.frontend);
+  const webPkgPath = getWebPackagePath(config.frontend, config.backend);
+  const serverPkgPath = getServerPackagePath(config.frontend, config.backend);
 
   if (config.addons.includes("turborepo")) {
     addPackageDependency({ vfs, packagePath: "package.json", devDependencies: ["turbo"] });

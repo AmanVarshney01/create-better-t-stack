@@ -13,8 +13,8 @@ export function processEmailDeps(vfs: VirtualFileSystem, config: ProjectConfig):
   if (!email || email === "none") return;
   if (backend === "convex") return;
 
-  const serverPath = getServerPackagePath(frontend);
-  const webPath = getWebPackagePath(frontend);
+  const serverPath = getServerPackagePath(frontend, backend);
+  const webPath = getWebPackagePath(frontend, backend);
 
   // Determine target path: self backend targets web, standalone backend targets server,
   // fullstack frontends (fresh, qwik, etc.) fall back to web

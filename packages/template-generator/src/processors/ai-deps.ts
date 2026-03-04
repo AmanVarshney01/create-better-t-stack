@@ -22,7 +22,7 @@ export function processAIDeps(vfs: VirtualFileSystem, config: ProjectConfig): vo
   const webFrontend = frontend.find((f) => !f.startsWith("native") && f !== "none");
 
   // Template generator uses apps/web for web frontends (or web/ for Redwood)
-  const webPath = getWebPackagePath(frontend);
+  const webPath = getWebPackagePath(frontend, backend);
 
   // Determine the target package path based on backend
   // For "self" backend (Next.js, Nuxt, etc.), the server code is in the web app
@@ -37,7 +37,7 @@ export function processAIDeps(vfs: VirtualFileSystem, config: ProjectConfig): vo
   } else if (backend === "none") {
     return;
   } else {
-    serverPath = getServerPackagePath(frontend);
+    serverPath = getServerPackagePath(frontend, backend);
   }
 
   // Skip if target doesn't exist

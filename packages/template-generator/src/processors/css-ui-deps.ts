@@ -9,7 +9,7 @@ import { getWebPackagePath } from "../utils/project-paths";
  * Process CSS framework dependencies based on config.cssFramework
  */
 export function processCSSFrameworkDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { cssFramework, frontend } = config;
+  const { cssFramework, frontend, backend } = config;
 
   const hasWeb = frontend.some((f) =>
     [
@@ -30,7 +30,7 @@ export function processCSSFrameworkDeps(vfs: VirtualFileSystem, config: ProjectC
 
   if (!hasWeb) return;
 
-  const webPath = getWebPackagePath(frontend);
+  const webPath = getWebPackagePath(frontend, backend);
   if (!vfs.exists(webPath)) return;
 
   // Add CSS preprocessor dependencies
@@ -55,7 +55,7 @@ export function processCSSFrameworkDeps(vfs: VirtualFileSystem, config: ProjectC
  * Process UI library dependencies based on config.uiLibrary
  */
 export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { uiLibrary, frontend } = config;
+  const { uiLibrary, frontend, backend } = config;
 
   const hasReactWeb = frontend.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next", "redwood"].includes(f),
@@ -76,7 +76,7 @@ export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConf
     return;
   }
 
-  const webPath = getWebPackagePath(frontend);
+  const webPath = getWebPackagePath(frontend, backend);
   if (!vfs.exists(webPath)) return;
 
   // React web templates always include iconized UI primitives (mode toggle, loader, etc.),
@@ -217,8 +217,8 @@ export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConf
  * Process shadcn/ui dependencies based on sub-options (base, icon library, etc.)
  */
 function processShadcnDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { frontend } = config;
-  const webPath = getWebPackagePath(frontend);
+  const { frontend, backend } = config;
+  const webPath = getWebPackagePath(frontend, backend);
   if (!vfs.exists(webPath)) return;
 
   const deps: AvailableDependencies[] = [

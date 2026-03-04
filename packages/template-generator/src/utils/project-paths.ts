@@ -1,9 +1,13 @@
-import type { Frontend } from "@better-fullstack/types";
+import type { Backend, Frontend } from "@better-fullstack/types";
 
-export function getWebPackagePath(frontend: Frontend[]): string {
-  return frontend.includes("redwood") ? "web/package.json" : "apps/web/package.json";
+export function getWebPackagePath(frontend: Frontend[], backend?: Backend): string {
+  return frontend.includes("redwood") && backend === "none"
+    ? "web/package.json"
+    : "apps/web/package.json";
 }
 
-export function getServerPackagePath(frontend: Frontend[]): string {
-  return frontend.includes("redwood") ? "api/package.json" : "apps/server/package.json";
+export function getServerPackagePath(frontend: Frontend[], backend?: Backend): string {
+  return frontend.includes("redwood") && backend === "none"
+    ? "api/package.json"
+    : "apps/server/package.json";
 }

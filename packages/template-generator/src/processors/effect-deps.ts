@@ -16,8 +16,8 @@ export function processEffectDeps(vfs: VirtualFileSystem, config: ProjectConfig)
   );
   const hasServer = backend !== "none" && backend !== "convex" && backend !== "self";
 
-  const webPath = getWebPackagePath(frontend);
-  const serverPath = getServerPackagePath(frontend);
+  const webPath = getWebPackagePath(frontend, backend);
+  const serverPath = getServerPackagePath(frontend, backend);
 
   // Add core effect to all relevant packages
   addEffectCoreDeps(vfs, effect, hasWeb, hasNative, hasServer, webPath, serverPath);

@@ -95,7 +95,7 @@ const router = createRouter({
 				endpoint: "/trpc",
 				req: nativeRequest,
 				router: appRouter,
-				createContext: () => createContext(),
+				createContext: () => createContext({ req: nativeRequest }),
 			}) as any;
 		},
 	})
@@ -108,7 +108,7 @@ const router = createRouter({
 				endpoint: "/trpc",
 				req: nativeRequest,
 				router: appRouter,
-				createContext: () => createContext(),
+				createContext: () => createContext({ req: nativeRequest }),
 			}) as any;
 		},
 	})

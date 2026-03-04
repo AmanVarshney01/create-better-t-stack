@@ -6,12 +6,12 @@ import { addPackageDependency } from "../utils/add-deps";
 import { getWebPackagePath, getServerPackagePath } from "../utils/project-paths";
 
 export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { payments, frontend } = config;
+  const { payments, frontend, backend } = config;
   if (!payments || payments === "none") return;
 
   const authPath = "packages/auth/package.json";
-  const webPath = getWebPackagePath(frontend);
-  const serverPath = getServerPackagePath(frontend);
+  const webPath = getWebPackagePath(frontend, backend);
+  const serverPath = getServerPackagePath(frontend, backend);
 
   if (payments === "polar") {
     if (vfs.exists(authPath)) {

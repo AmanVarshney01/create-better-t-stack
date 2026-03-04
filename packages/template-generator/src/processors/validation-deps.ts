@@ -13,13 +13,13 @@ import { getWebPackagePath, getServerPackagePath } from "../utils/project-paths"
  * but Valibot can be used as the primary validation library in user code.
  */
 export function processValidationDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { validation, frontend } = config;
+  const { validation, frontend, backend } = config;
 
   // Skip if not selected, "none", or "zod" (zod is added by workspace-deps already)
   if (!validation || validation === "none" || validation === "zod") return;
 
-  const webPath = getWebPackagePath(frontend);
-  const serverPath = getServerPackagePath(frontend);
+  const webPath = getWebPackagePath(frontend, backend);
+  const serverPath = getServerPackagePath(frontend, backend);
 
   const packages = {
     api: vfs.exists("packages/api/package.json"),

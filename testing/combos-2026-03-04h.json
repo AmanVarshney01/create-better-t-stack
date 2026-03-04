@@ -1,0 +1,87 @@
+{
+  "v": 2,
+  "d": "2026-03-04",
+  "focus": "typescript-prepush-local-cycle",
+  "cb": "node /Users/ibrahime/Documents/Better-Fullstack/apps/cli/dist/cli.mjs create <name> --ecosystem typescript --frontend <frontend> --backend <backend> --runtime <runtime> --api <api> --database <db> --orm <orm> --auth <auth> --css-framework <css> --ui-library <ui> --payments none --email none --file-upload none --effect none --state-management none --validation zod --forms none --testing vitest --ai none --realtime none --job-queue none --animation none --logging none --observability none --analytics none --cms none --caching none --search none --file-storage none --addons none --examples none --ai-docs none --db-setup none --web-deploy none --server-deploy none --package-manager bun --no-install --no-git --disable-analytics",
+  "cbRetest": "same as cb; for shadcn-ui add explicit --shadcn-* flags (base/style/icon/theme/base-color/font/radius) to keep run non-interactive",
+  "tot": [10, 10, 0, 0],
+  "k": {
+    "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
+    "r": { "p": "pass", "f": "fail" },
+    "e": { "t": "typescript" },
+    "notes": [
+      "Pre-push local CLI batch after BugAA/BugAB/BugAC fixes",
+      "10 unique TypeScript combos executed with create + bun install + bun run check-types",
+      "Final outcome: 10/10 passing",
+      "One harness gotcha observed: shadcn combo requires explicit --shadcn-* flags in scripted runs; without them CLI can prompt and leave empty project folder"
+    ]
+  },
+  "rows": [
+    [
+      "m260304h-ts-tanstack-start-fets-trpc-drizzle-pg-bauth-tailwind-radixui",
+      "t",
+      ["tanstack-start", "fets", "node", "trpc", "drizzle", "postgres", "better-auth", "tailwind", "radix-ui"],
+      "p"
+    ],
+    [
+      "m260304h-ts-nuxt-self-noneapi-none-none-authnone-postcss-noneui",
+      "t",
+      ["nuxt", "self", "none", "none", "none", "none", "none", "postcss-only", "none"],
+      "p"
+    ],
+    [
+      "m260304h-ts-qwik-none-noneapi-none-none-authnone-scss-noneui",
+      "t",
+      ["qwik", "none", "none", "none", "none", "none", "none", "scss", "none"],
+      "p"
+    ],
+    [
+      "m260304h-ts-redwood-hono-noneapi-drizzle-pg-authnone-tailwind-daisyui",
+      "t",
+      ["redwood", "hono", "bun", "none", "drizzle", "postgres", "none", "tailwind", "daisyui"],
+      "p"
+    ],
+    [
+      "m260304h-ts-redwood-hono-noneapi-drizzle-pg-bauth-tailwind-daisyui",
+      "t",
+      ["redwood", "hono", "bun", "none", "drizzle", "postgres", "better-auth", "tailwind", "daisyui"],
+      "p"
+    ],
+    [
+      "m260304h-ts-redwood-express-noneapi-prisma-mysql-authnone-none-noneui",
+      "t",
+      ["redwood", "express", "node", "none", "prisma", "mysql", "none", "none", "none"],
+      "p"
+    ],
+    [
+      "m260304h-ts-redwood-fastify-noneapi-kysely-sqlite-authnone-tailwind-noneui",
+      "t",
+      ["redwood", "fastify", "node", "none", "kysely", "sqlite", "none", "tailwind", "none"],
+      "p"
+    ],
+    [
+      "m260304h-ts-next-fets-trpc-prisma-pg-bauth-tailwind-shadcn",
+      "t",
+      ["next", "fets", "node", "trpc", "prisma", "postgres", "better-auth", "tailwind", "shadcn-ui"],
+      "p"
+    ],
+    [
+      "m260304h-ts-react-router-fets-trpc-drizzle-sqlite-bauth-tailwind-radixui",
+      "t",
+      ["react-router", "fets", "node", "trpc", "drizzle", "sqlite", "better-auth", "tailwind", "radix-ui"],
+      "p"
+    ],
+    [
+      "m260304h-ts-tanstack-router-fets-trpc-kysely-pg-bauth-tailwind-daisyui",
+      "t",
+      ["tanstack-router", "fets", "node", "trpc", "kysely", "postgres", "better-auth", "tailwind", "daisyui"],
+      "p"
+    ]
+  ],
+  "schema": {
+    "row": ["name", "ecosystemCode", "flagsByEcosystemOrder", "resultCode", "issueCode?", "fixedInRepo?(0|1)"],
+    "flagsOrder": {
+      "t": ["frontend", "backend", "runtime", "api", "orm", "database", "auth", "cssFramework", "uiLibrary"]
+    }
+  }
+}

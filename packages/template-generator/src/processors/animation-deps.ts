@@ -32,7 +32,7 @@ const NATIVE_FRAMEWORKS: Frontend[] = ["native-bare", "native-uniwind", "native-
 const FRAMEWORK_AGNOSTIC_ANIMATIONS: ProjectConfig["animation"][] = ["gsap", "auto-animate"];
 
 export function processAnimationDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { animation, frontend } = config;
+  const { animation, frontend, backend } = config;
 
   // Skip if not selected or set to "none"
   if (!animation || animation === "none") return;
@@ -42,7 +42,7 @@ export function processAnimationDeps(vfs: VirtualFileSystem, config: ProjectConf
   const hasOtherWeb = frontend.some((f) => OTHER_WEB_FRAMEWORKS.includes(f));
   const hasNative = frontend.some((f) => NATIVE_FRAMEWORKS.includes(f));
 
-  const webPath = getWebPackagePath(frontend);
+  const webPath = getWebPackagePath(frontend, backend);
 
   // Add to web package if it's a React-based web frontend (all animations supported)
   if (hasReactWeb && vfs.exists(webPath)) {

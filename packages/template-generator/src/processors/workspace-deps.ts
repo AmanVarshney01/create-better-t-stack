@@ -19,8 +19,8 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
   } = config;
 
   const workspaceVersion = packageManager === "npm" ? "*" : "workspace:*";
-  const webPath = getWebPackagePath(config.frontend);
-  const serverPath = getServerPackagePath(config.frontend);
+  const webPath = getWebPackagePath(config.frontend, config.backend);
+  const serverPath = getServerPackagePath(config.frontend, config.backend);
   const packages = {
     config: vfs.exists("packages/config/package.json"),
     env: vfs.exists("packages/env/package.json"),

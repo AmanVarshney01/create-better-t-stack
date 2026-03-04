@@ -6,7 +6,7 @@ import { addPackageDependency } from "../utils/add-deps";
 import { getWebPackagePath } from "../utils/project-paths";
 
 export function processAnalyticsDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { analytics, frontend } = config;
+  const { analytics, frontend, backend } = config;
   if (!analytics || analytics === "none") return;
 
   // Check if we have a web frontend
@@ -18,7 +18,7 @@ export function processAnalyticsDeps(vfs: VirtualFileSystem, config: ProjectConf
   if (analytics === "plausible") {
     // Plausible is client-side only - add to web app
     if (hasWebFrontend) {
-      const webPath = getWebPackagePath(frontend);
+      const webPath = getWebPackagePath(frontend, backend);
       if (vfs.exists(webPath)) {
         addPackageDependency({
           vfs,

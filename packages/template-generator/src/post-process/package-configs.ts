@@ -161,21 +161,21 @@ function getPackageManagerConfig(
       return {
         dev: "pnpm -r dev",
         build: "pnpm -r build",
-        checkTypes: "pnpm -r check-types",
+        checkTypes: "pnpm -r --if-present check-types",
         filter: (workspace, script) => `pnpm --filter ${workspace} ${script}`,
       };
     case "npm":
       return {
         dev: "npm run dev --workspaces",
         build: "npm run build --workspaces",
-        checkTypes: "npm run check-types --workspaces",
+        checkTypes: "npm run check-types --workspaces --if-present",
         filter: (workspace, script) => `npm run ${script} --workspace ${workspace}`,
       };
     case "bun":
       return {
         dev: "bun run --filter '*' dev",
         build: "bun run --filter '*' build",
-        checkTypes: "bun run --filter '*' check-types",
+        checkTypes: "bun run --if-present --filter '*' check-types",
         filter: (workspace, script) => `bun run --filter ${workspace} ${script}`,
       };
   }

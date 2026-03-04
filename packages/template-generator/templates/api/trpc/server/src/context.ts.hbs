@@ -120,6 +120,33 @@ export async function createContext(opts: CreateExpressContextOptions) {
 {{/if}}
 }
 
+{{else if (eq backend 'fets')}}
+{{#if (eq auth "better-auth")}}
+import { auth } from "@{{projectName}}/auth";
+{{/if}}
+
+type CreateContextOptions = {
+  req: Request;
+};
+
+{{#if (eq auth "better-auth")}}
+export async function createContext({ req }: CreateContextOptions) {
+  const session = await auth.api.getSession({
+    headers: req.headers,
+  });
+  return {
+    session,
+  };
+}
+{{else}}
+export async function createContext(_opts: CreateContextOptions) {
+  // No auth configured
+  return {
+    session: null,
+  };
+}
+{{/if}}
+
 {{else if (eq backend 'fastify')}}
 import type { CreateFastifyContextOptions } from "@trpc/server/adapters/fastify";
 {{#if (eq auth "better-auth")}}

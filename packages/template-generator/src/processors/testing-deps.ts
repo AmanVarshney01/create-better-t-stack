@@ -38,13 +38,13 @@ const SVELTE_FRONTENDS = ["svelte"] as const;
  * when using unit test frameworks (vitest, jest, vitest-playwright).
  */
 export function processTestingDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { testing, frontend, astroIntegration } = config;
+  const { testing, frontend, backend, astroIntegration } = config;
 
   // Skip if not selected or "none"
   if (!testing || testing === "none") return;
 
-  const webPath = getWebPackagePath(frontend);
-  const serverPath = getServerPackagePath(frontend);
+  const webPath = getWebPackagePath(frontend, backend);
+  const serverPath = getServerPackagePath(frontend, backend);
   const packages = {
     server: vfs.exists(serverPath),
     web: vfs.exists(webPath),

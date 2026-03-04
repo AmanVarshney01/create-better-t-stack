@@ -15,7 +15,7 @@ export function processFeatureFlagsDeps(vfs: VirtualFileSystem, config: ProjectC
       f !== "none" && f !== "native-bare" && f !== "native-uniwind" && f !== "native-unistyles",
   );
 
-  const webPath = getWebPackagePath(frontend);
+  const webPath = getWebPackagePath(frontend, backend);
 
   if (featureFlags === "growthbook") {
     // Add client-side React SDK to web app

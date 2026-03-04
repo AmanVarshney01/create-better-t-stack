@@ -60,7 +60,7 @@ function processUploadthingDeps(vfs: VirtualFileSystem, config: ProjectConfig): 
 
   // Server-side SDK
   // Add to apps/server if it exists (separate backend)
-  const serverPath = getServerPackagePath(frontend);
+  const serverPath = getServerPackagePath(frontend, backend);
   if (vfs.exists(serverPath) && backend !== "none" && backend !== "convex") {
     addPackageDependency({
       vfs,
@@ -74,7 +74,7 @@ function processUploadthingDeps(vfs: VirtualFileSystem, config: ProjectConfig): 
     backend === "self" && frontend.some((f) => FULLSTACK_WITH_SELF_BACKEND.includes(f));
 
   // Client-side SDK
-  const webPath = getWebPackagePath(frontend);
+  const webPath = getWebPackagePath(frontend, backend);
   if (vfs.exists(webPath)) {
     const hasReactWeb = frontend.some((f) => REACT_WEB_FRONTENDS.includes(f));
     const hasSvelte = frontend.some((f) => SVELTE_FRONTENDS.includes(f));
@@ -165,9 +165,9 @@ function processUploadthingDeps(vfs: VirtualFileSystem, config: ProjectConfig): 
 }
 
 function processFilepondDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { frontend, astroIntegration } = config;
+  const { frontend, backend, astroIntegration } = config;
 
-  const webPath = getWebPackagePath(frontend);
+  const webPath = getWebPackagePath(frontend, backend);
   if (!vfs.exists(webPath)) return;
 
   const hasReactWeb = frontend.some((f) => REACT_WEB_FRONTENDS.includes(f));
@@ -235,9 +235,9 @@ function processFilepondDeps(vfs: VirtualFileSystem, config: ProjectConfig): voi
 }
 
 function processUppyDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { frontend, astroIntegration } = config;
+  const { frontend, backend, astroIntegration } = config;
 
-  const webPath = getWebPackagePath(frontend);
+  const webPath = getWebPackagePath(frontend, backend);
   if (!vfs.exists(webPath)) return;
 
   const hasReactWeb = frontend.some((f) => REACT_WEB_FRONTENDS.includes(f));

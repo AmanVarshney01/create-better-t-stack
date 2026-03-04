@@ -1,0 +1,100 @@
+{
+  "v": 2,
+  "d": "2026-03-04",
+  "focus": "typescript-production-cycle-broad",
+  "cb": "bun create better-fullstack@latest <name> --ecosystem typescript --frontend <frontend> --backend <backend> --runtime <runtime> --api <api> --database <db> --orm <orm> --auth <auth> --css-framework <css> --ui-library <ui> --payments none --email none --file-upload none --effect none --state-management none --validation zod --forms none --testing vitest --ai none --realtime none --job-queue none --animation none --logging none --observability none --analytics none --cms none --caching none --search none --file-storage none --addons none --examples none --ai-docs none --db-setup none --web-deploy none --server-deploy none --package-manager bun --no-install --no-git --disable-analytics",
+  "cbRetest": "node /Users/ibrahime/Documents/Better-Fullstack/apps/cli/dist/cli.mjs create <name> ... (same flags as cb)",
+  "tot": [10, 6, 4, 3],
+  "k": {
+    "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
+    "r": { "p": "pass", "f": "fail" },
+    "e": { "t": "typescript" },
+    "notes": [
+      "TypeScript-only production batch: 10 unique combos across react/non-react/self/backend-none/backended setups",
+      "Per combo verification: bts.jsonc marker checks + bun install + bun run check-types",
+      "@latest initial result: 6 pass, 4 fail",
+      "BugAA_trpc_fets_context_missing_branch: trpc context template had no fets backend branch; auth+trpc+fets generated session:null context, causing protectedProcedure type collapse (ctx.session.user on never)",
+      "BugAB_root_check_types_if_present: workspace check-types command failed in templates without per-package check-types scripts (Nuxt/Qwik) with 'No packages matched the filter'",
+      "InvalidCombo_redwood_trpc: redwood + trpc is intentionally rejected by CLI (use --api none); this is not a template bug",
+      "Follow-up replacement verification surfaced and fixed BugAC_redwood_external_backend_paths: redwood package-path helper incorrectly targeted web/api paths for external backends; corrected to use apps/web/apps/server when backend != none",
+      "Template embed regenerated after fixes: packages/template-generator/src/templates.generated.ts",
+      "Local CLI retest after fixes: 3/3 originally failing bug rows now pass; additional redwood external-backend checks (auth none + better-auth) pass"
+    ]
+  },
+  "rows": [
+    [
+      "m260304g-ts-next-hono-trpc-drizzle-pg-bauth-tailwind-shadcn",
+      "t",
+      ["next", "hono", "bun", "trpc", "drizzle", "postgres", "better-auth", "tailwind", "shadcn-ui"],
+      "p"
+    ],
+    [
+      "m260304g-ts-react-router-fastify-tsrest-prisma-mysql-authnone-scss-noneui",
+      "t",
+      ["react-router", "fastify", "node", "ts-rest", "prisma", "mysql", "none", "scss", "none"],
+      "p"
+    ],
+    [
+      "m260304g-ts-tanstack-router-express-orpc-kysely-sqlite-bauth-tailwind-daisyui",
+      "t",
+      ["tanstack-router", "express", "node", "orpc", "kysely", "sqlite", "better-auth", "tailwind", "daisyui"],
+      "p"
+    ],
+    [
+      "m260304g-ts-tanstack-start-fets-trpc-drizzle-pg-bauth-tailwind-radixui",
+      "t",
+      ["tanstack-start", "fets", "node", "trpc", "drizzle", "postgres", "better-auth", "tailwind", "radix-ui"],
+      "f",
+      "BugAA_trpc_fets_context_missing_branch: packages/api/src/context.ts generated session:null-only context for fets+trpc+better-auth",
+      1
+    ],
+    [
+      "m260304g-ts-nuxt-self-noneapi-none-none-authnone-postcss-noneui",
+      "t",
+      ["nuxt", "self", "none", "none", "none", "none", "none", "postcss-only", "none"],
+      "f",
+      "BugAB_root_check_types_if_present: root check-types failed when no workspace package had check-types script",
+      1
+    ],
+    [
+      "m260304g-ts-solid-nitro-orpc-prisma-pg-bauth-tailwind-arkui",
+      "t",
+      ["solid", "nitro", "node", "orpc", "prisma", "postgres", "better-auth", "tailwind", "ark-ui"],
+      "p"
+    ],
+    [
+      "m260304g-ts-qwik-none-noneapi-none-none-authnone-scss-noneui",
+      "t",
+      ["qwik", "none", "none", "none", "none", "none", "none", "scss", "none"],
+      "f",
+      "BugAB_root_check_types_if_present: root check-types failed when no workspace package had check-types script",
+      1
+    ],
+    [
+      "m260304g-ts-astro-svelte-hono-orpc-drizzle-sqlite-authnone-tailwind-daisyui",
+      "t",
+      ["astro+svelte", "hono", "bun", "orpc", "drizzle", "sqlite", "none", "tailwind", "daisyui"],
+      "p"
+    ],
+    [
+      "m260304g-ts-angular-nestjs-noneapi-typeorm-pg-authnone-less-noneui",
+      "t",
+      ["angular", "nestjs", "node", "none", "typeorm", "postgres", "none", "less", "none"],
+      "p"
+    ],
+    [
+      "m260304g-ts-redwood-hono-trpc-drizzle-pg-bauth-tailwind-radixui",
+      "t",
+      ["redwood", "hono", "bun", "trpc", "drizzle", "postgres", "better-auth", "tailwind", "radix-ui"],
+      "f",
+      "InvalidCombo_redwood_trpc: CLI validation rejects redwood + trpc (use --api none; UI options limited)",
+      0
+    ]
+  ],
+  "schema": {
+    "row": ["name", "ecosystemCode", "flagsByEcosystemOrder", "resultCode", "issueCode?", "fixedInRepo?(0|1)"],
+    "flagsOrder": {
+      "t": ["frontend", "backend", "runtime", "api", "orm", "database", "auth", "cssFramework", "uiLibrary"]
+    }
+  }
+}
