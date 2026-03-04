@@ -54,14 +54,20 @@ function RouteComponent() {
 			{{#if ( or (eq api "orpc") (eq api "trpc"))}}
 			<p>API: {privateData.data?.message}</p>
 			{{/if}}
-			{{#if (eq payments "polar")}}
+			{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 			<p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
 			{hasProSubscription ? (
-				<Button onClick={async () => await authClient.customer.portal()}>
+				<Button onClick={async () => await authClient.{{#if (eq payments "polar")}}customer.portal{{else}}dodopayments.customer.portal{{/if}}()}>
 					Manage Subscription
 				</Button>
 			) : (
-				<Button onClick={async () => await authClient.checkout({ slug: "pro" })}>
+				<Button
+					onClick={async () =>
+						await authClient.{{#if (eq payments "polar")}}checkout{{else}}dodopayments.checkoutSession{{/if}}({
+							slug: "pro",
+						})
+					}
+				>
 					Upgrade to Pro
 				</Button>
 			)}
