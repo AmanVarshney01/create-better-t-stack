@@ -2,7 +2,7 @@ import type { ProjectConfig } from "@better-fullstack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
-import { addPackageDependency } from "../utils/add-deps";
+import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
 
 export function processAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { auth, backend } = config;
@@ -103,7 +103,7 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
 }
 
 function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
-  const { auth, frontend } = config;
+  const { auth, frontend, orm } = config;
   const authPath = "packages/auth/package.json";
   const webPath = "apps/web/package.json";
   const nativePath = "apps/native/package.json";
@@ -130,10 +130,15 @@ function processStandardAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig):
 
   if (auth === "better-auth") {
     if (authExists) {
+      const authDependencies: AvailableDependencies[] = ["better-auth"];
+      if (orm === "drizzle") authDependencies.push("@better-auth/drizzle-adapter");
+      if (orm === "prisma") authDependencies.push("@better-auth/prisma-adapter");
+      if (orm === "mongoose") authDependencies.push("@better-auth/mongo-adapter");
+
       addPackageDependency({
         vfs,
         packagePath: authPath,
-        dependencies: ["better-auth"],
+        dependencies: authDependencies,
       });
       if (hasNative) {
         addPackageDependency({

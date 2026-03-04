@@ -28,6 +28,19 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
 
+const toNativeRequest = async (request: Request): Promise<Request> => {
+	const requestInit: RequestInit = {
+		method: request.method,
+		headers: request.headers as HeadersInit,
+	};
+
+	if (request.method !== "GET" && request.method !== "HEAD") {
+		requestInit.body = await request.arrayBuffer();
+	}
+
+	return new Request(request.url, requestInit);
+};
+
 const router = createRouter({
 	openAPI: {
 		info: {
@@ -60,36 +73,42 @@ const router = createRouter({
 	.route({
 		method: "GET",
 		path: "/api/auth/*",
-		handler: async (request) => (await auth.handler(request as unknown as Request)) as any,
+		handler: async (request) =>
+			(await auth.handler(await toNativeRequest(request as unknown as Request))) as any,
 	})
 	.route({
 		method: "POST",
 		path: "/api/auth/*",
-		handler: async (request) => (await auth.handler(request as unknown as Request)) as any,
+		handler: async (request) =>
+			(await auth.handler(await toNativeRequest(request as unknown as Request))) as any,
 	})
 {{/if}}
 {{#if (eq api "trpc")}}
 	.route({
 		method: "GET",
 		path: "/trpc/*",
-		handler: (request) =>
-			fetchRequestHandler({
+		handler: async (request) => {
+			const nativeRequest = await toNativeRequest(request as unknown as Request);
+			return fetchRequestHandler({
 				endpoint: "/trpc",
-				req: request,
+				req: nativeRequest,
 				router: appRouter,
-				createContext: () => createContext({ context: request }),
-			}),
+				createContext: () => createContext(),
+			}) as any;
+		},
 	})
 	.route({
 		method: "POST",
 		path: "/trpc/*",
-		handler: (request) =>
-			fetchRequestHandler({
+		handler: async (request) => {
+			const nativeRequest = await toNativeRequest(request as unknown as Request);
+			return fetchRequestHandler({
 				endpoint: "/trpc",
-				req: request,
+				req: nativeRequest,
 				router: appRouter,
-				createContext: () => createContext({ context: request }),
-			}),
+				createContext: () => createContext(),
+			}) as any;
+		},
 	})
 {{/if}}
 {{#if (eq api "orpc")}}
@@ -97,7 +116,8 @@ const router = createRouter({
 		method: "GET",
 		path: "/rpc/*",
 		handler: async (request) => {
-			const context = await createContext({ context: request });
+			const nativeRequest = await toNativeRequest(request as unknown as Request);
+			const context = await createContext();
 			const rpcHandler = new RPCHandler(appRouter, {
 				interceptors: [
 					onError((error) => {
@@ -105,21 +125,22 @@ const router = createRouter({
 					}),
 				],
 			});
-			const result = await rpcHandler.handle(request, {
+			const result = await rpcHandler.handle(nativeRequest, {
 				prefix: "/rpc",
 				context,
 			});
 			if (result.matched) {
-				return result.response;
+				return result.response as any;
 			}
-			return Response.json({ error: "Not found" }, { status: 404 });
+			return Response.json({ error: "Not found" }, { status: 404 }) as any;
 		},
 	})
 	.route({
 		method: "POST",
 		path: "/rpc/*",
 		handler: async (request) => {
-			const context = await createContext({ context: request });
+			const nativeRequest = await toNativeRequest(request as unknown as Request);
+			const context = await createContext();
 			const rpcHandler = new RPCHandler(appRouter, {
 				interceptors: [
 					onError((error) => {
@@ -127,21 +148,22 @@ const router = createRouter({
 					}),
 				],
 			});
-			const result = await rpcHandler.handle(request, {
+			const result = await rpcHandler.handle(nativeRequest, {
 				prefix: "/rpc",
 				context,
 			});
 			if (result.matched) {
-				return result.response;
+				return result.response as any;
 			}
-			return Response.json({ error: "Not found" }, { status: 404 });
+			return Response.json({ error: "Not found" }, { status: 404 }) as any;
 		},
 	})
 	.route({
 		method: "GET",
 		path: "/api-reference/*",
 		handler: async (request) => {
-			const context = await createContext({ context: request });
+			const nativeRequest = await toNativeRequest(request as unknown as Request);
+			const context = await createContext();
 			const apiHandler = new OpenAPIHandler(appRouter, {
 				plugins: [
 					new OpenAPIReferencePlugin({
@@ -154,14 +176,14 @@ const router = createRouter({
 					}),
 				],
 			});
-			const result = await apiHandler.handle(request, {
+			const result = await apiHandler.handle(nativeRequest, {
 				prefix: "/api-reference",
 				context,
 			});
 			if (result.matched) {
-				return result.response;
+				return result.response as any;
 			}
-			return Response.json({ error: "Not found" }, { status: 404 });
+			return Response.json({ error: "Not found" }, { status: 404 }) as any;
 		},
 	})
 {{/if}}

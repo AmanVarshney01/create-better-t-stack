@@ -16,6 +16,9 @@ export const dependencyVersionMap = {
 
   "better-auth": "^1.5.1",
   "@better-auth/expo": "^1.5.1",
+  "@better-auth/drizzle-adapter": "^1.5.1",
+  "@better-auth/prisma-adapter": "^1.5.1",
+  "@better-auth/mongo-adapter": "^1.5.1",
 
   "@clerk/nextjs": "^6.39.0",
   "@clerk/clerk-react": "^5.61.3",

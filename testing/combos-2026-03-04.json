@@ -1,0 +1,218 @@
+{
+  "v": 2,
+  "d": "2026-03-04",
+  "focus": "typescript-sveltekit-solidstart-validation",
+  "cb": "bun create better-fullstack@latest <name> --ecosystem typescript --frontend <svelte|solid-start> --backend <backend> --runtime <runtime> --api orpc --database <db> --orm <orm> --auth <auth> --css-framework <css> --ui-library <ui> --payments none --email none --file-upload none --effect none --state-management none --validation zod --forms none --testing vitest --ai none --realtime none --job-queue none --animation none --logging none --observability none --analytics none --cms none --caching none --search none --file-storage none --addons none --examples none --ai-docs none --db-setup none --web-deploy none --server-deploy none --package-manager bun --no-install --no-git --disable-analytics",
+  "cbRetest": "node /Users/ibrahime/Documents/Better-Fullstack/apps/cli/dist/cli.mjs create <name> ... (same flags as cb)",
+  "tot": [
+    10,
+    10,
+    0,
+    0
+  ],
+  "k": {
+    "tot": [
+      "count",
+      "latestPass",
+      "latestFail",
+      "fixedInRepo"
+    ],
+    "r": {
+      "p": "pass",
+      "f": "fail"
+    },
+    "e": {
+      "t": "typescript"
+    },
+    "notes": [
+      "SvelteKit + SolidStart focused TypeScript sweep (10 valid combos)",
+      "Per combo verification: generated markers + bun install + bun run check-types",
+      "Execution note: production bun create command is blocked in this environment; local CLI create() path was used for scaffolding with the same option set"
+    ]
+  },
+  "rows": [
+    [
+      "ts-svelte-self-orpc-drizzle-sqlite-bauth-daisyui",
+      "t",
+      [
+        "svelte",
+        "self",
+        "none",
+        "orpc",
+        "drizzle",
+        "sqlite",
+        "better-auth",
+        "tailwind",
+        "daisyui"
+      ],
+      "p"
+    ],
+    [
+      "ts-svelte-hono-orpc-drizzle-pg-bauth-arkui",
+      "t",
+      [
+        "svelte",
+        "hono",
+        "bun",
+        "orpc",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "scss",
+        "ark-ui"
+      ],
+      "p"
+    ],
+    [
+      "ts-svelte-hono-orpc-none-none-authnone-daisyui",
+      "t",
+      [
+        "svelte",
+        "hono",
+        "bun",
+        "orpc",
+        "none",
+        "none",
+        "none",
+        "tailwind",
+        "daisyui"
+      ],
+      "p"
+    ],
+    [
+      "ts-svelte-nitro-orpc-prisma-pg-bauth-noneui",
+      "t",
+      [
+        "svelte",
+        "nitro",
+        "node",
+        "orpc",
+        "prisma",
+        "postgres",
+        "better-auth",
+        "postcss-only",
+        "none"
+      ],
+      "p"
+    ],
+    [
+      "ts-svelte-fets-orpc-drizzle-sqlite-authnone-arkui",
+      "t",
+      [
+        "svelte",
+        "fets",
+        "node",
+        "orpc",
+        "drizzle",
+        "sqlite",
+        "none",
+        "less",
+        "ark-ui"
+      ],
+      "p"
+    ],
+    [
+      "ts-solidstart-self-orpc-drizzle-sqlite-bauth-daisyui",
+      "t",
+      [
+        "solid-start",
+        "self",
+        "none",
+        "orpc",
+        "drizzle",
+        "sqlite",
+        "better-auth",
+        "tailwind",
+        "daisyui"
+      ],
+      "p"
+    ],
+    [
+      "ts-solidstart-hono-orpc-drizzle-pg-bauth-arkui",
+      "t",
+      [
+        "solid-start",
+        "hono",
+        "bun",
+        "orpc",
+        "drizzle",
+        "postgres",
+        "better-auth",
+        "scss",
+        "ark-ui"
+      ],
+      "p"
+    ],
+    [
+      "ts-solidstart-nitro-orpc-prisma-pg-bauth-noneui",
+      "t",
+      [
+        "solid-start",
+        "nitro",
+        "node",
+        "orpc",
+        "prisma",
+        "postgres",
+        "better-auth",
+        "postcss-only",
+        "none"
+      ],
+      "p"
+    ],
+    [
+      "ts-solidstart-fets-orpc-drizzle-sqlite-authnone-parkui",
+      "t",
+      [
+        "solid-start",
+        "fets",
+        "node",
+        "orpc",
+        "drizzle",
+        "sqlite",
+        "none",
+        "tailwind",
+        "park-ui"
+      ],
+      "p"
+    ],
+    [
+      "ts-solidstart-hono-orpc-none-none-authnone-daisyui",
+      "t",
+      [
+        "solid-start",
+        "hono",
+        "bun",
+        "orpc",
+        "none",
+        "none",
+        "none",
+        "tailwind",
+        "daisyui"
+      ],
+      "p"
+    ]
+  ],
+  "schema": {
+    "row": [
+      "name",
+      "ecosystemCode",
+      "flagsByEcosystemOrder",
+      "resultCode",
+      "issueCode?",
+      "fixedInRepo?(0|1)"
+    ],
+    "flagsOrder": {
+      "t": [
+        "frontend",
+        "backend",
+        "runtime",
+        "api",
+        "orm",
+        "database",
+        "auth",
+        "cssFramework",
+        "uiLibrary"
+      ]
+    }
+  }
+}
