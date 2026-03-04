@@ -78,6 +78,7 @@ export default function CommandSection() {
       <div className="flex justify-center">
         <Link
           to="/new"
+          search={{ view: "command", file: "" }}
           className="group inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
           Or use the interactive builder

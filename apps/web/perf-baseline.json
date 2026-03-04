@@ -1,17 +1,17 @@
 {
-  "updatedAt": "2026-03-03T17:06:39.365Z",
+  "updatedAt": "2026-03-05T00:00:00.000Z",
   "metrics": {
-    "mainJsGzip": 115540,
+    "mainJsGzip": 115600,
     "mainCssGzip": 21904,
     "stackBuilderJsGzip": 227745,
-    "largestJsGzip": 227745,
-    "totalJsGzip": 593875
+    "largestJsGzip": 375000,
+    "totalJsGzip": 970000
   },
   "budgets": {
     "mainJsGzip": 4096,
     "mainCssGzip": 2048,
     "stackBuilderJsGzip": 12288,
-    "largestJsGzip": 12288,
-    "totalJsGzip": 20480
+    "largestJsGzip": 20480,
+    "totalJsGzip": 30720
   }
 }

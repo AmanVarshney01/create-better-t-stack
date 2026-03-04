@@ -1,15 +1,23 @@
 import type { ProjectConfig } from "@better-fullstack/types";
 
-import { Project, SyntaxKind } from "ts-morph";
-
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
-export function processAuthPlugins(vfs: VirtualFileSystem, config: ProjectConfig): void {
+export async function processAuthPlugins(
+  vfs: VirtualFileSystem,
+  config: ProjectConfig,
+): Promise<void> {
   const authIndexPath = "packages/auth/src/index.ts";
   if (!vfs.exists(authIndexPath)) return;
 
+  let tsMorph: typeof import("ts-morph");
+  try {
+    tsMorph = await import("ts-morph");
+  } catch {
+    return; // ts-morph unavailable (browser environment) — skip AST transforms
+  }
+
   const content = vfs.readFile(authIndexPath);
-  const project = new Project({
+  const project = new tsMorph.Project({
     useInMemoryFileSystem: true,
   });
 
@@ -72,18 +80,20 @@ export function processAuthPlugins(vfs: VirtualFileSystem, config: ProjectConfig
   // Add plugins to betterAuth config
   const betterAuthCall = sourceFile
     .getVariableDeclaration("auth")
-    ?.getInitializerIfKind(SyntaxKind.CallExpression);
+    ?.getInitializerIfKind(tsMorph.SyntaxKind.CallExpression);
 
   if (betterAuthCall) {
     const configObject = betterAuthCall
       .getArguments()[0]
-      ?.asKind(SyntaxKind.ObjectLiteralExpression);
+      ?.asKind(tsMorph.SyntaxKind.ObjectLiteralExpression);
 
     if (configObject) {
       const pluginsProp = configObject.getProperty("plugins");
 
-      if (pluginsProp?.isKind(SyntaxKind.PropertyAssignment)) {
-        const arrayLiteral = pluginsProp.getInitializerIfKind(SyntaxKind.ArrayLiteralExpression);
+      if (pluginsProp?.isKind(tsMorph.SyntaxKind.PropertyAssignment)) {
+        const arrayLiteral = pluginsProp.getInitializerIfKind(
+          tsMorph.SyntaxKind.ArrayLiteralExpression,
+        );
         if (arrayLiteral) {
           pluginsToAdd.forEach((plugin) => {
             arrayLiteral.addElement(plugin);

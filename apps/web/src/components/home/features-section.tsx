@@ -81,6 +81,7 @@ export default function FeaturesSection() {
         {/* CTA */}
         <Link
           to="/new"
+          search={{ view: "command", file: "" }}
           className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-2 text-xs font-medium text-background transition-colors hover:bg-foreground/90 sm:mt-8 sm:gap-2 sm:px-4 sm:text-sm"
         >
           Try it now

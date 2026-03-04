@@ -32,7 +32,6 @@ import {
   type StackState,
   TECH_OPTIONS,
 } from "@/lib/constant";
-import { isStackPreviewEnabledClient } from "@/lib/feature-flags";
 import { useStackState } from "@/lib/stack-url-state";
 import {
   CATEGORY_ORDER,
@@ -331,7 +330,6 @@ const INITIALLY_COLLAPSED_SET = new Set([
 
 const StackBuilder = () => {
   const [stack, setStack, viewMode, setViewMode, selectedFile, setSelectedFile] = useStackState();
-  const isStackPreviewEnabled = isStackPreviewEnabledClient();
 
   const [command, setCommand] = useState("");
   const [copied, setCopied] = useState(false);
@@ -360,12 +358,6 @@ const StackBuilder = () => {
     return { ...stack, ...compatibilityAnalysis.adjustedStack };
   }, [stack, compatibilityAnalysis.adjustedStack]);
   const projectNameError = validateProjectName(stack.projectName || "");
-
-  useEffect(() => {
-    if (!isStackPreviewEnabled && viewMode === "preview") {
-      setViewMode("command");
-    }
-  }, [isStackPreviewEnabled, viewMode, setViewMode]);
 
   // ─── Derived state ──────────────────────────────────────────────────────
 
@@ -728,6 +720,62 @@ const StackBuilder = () => {
           </button>
         </div>
 
+        {/* ─── Ecosystem Header Bar ─────────────────────────────────────── */}
+        <div className="relative border-b border-border bg-fd-background">
+          <div className="grid grid-cols-4">
+            {ECOSYSTEMS.map((eco) => {
+              const isActive = stack.ecosystem === eco.id;
+              return (
+                <button
+                  key={eco.id}
+                  type="button"
+                  onClick={() => {
+                    startTransition(() => {
+                      setStack({ ecosystem: eco.id as Ecosystem });
+                    });
+                  }}
+                  className={cn(
+                    "group relative flex items-center justify-center gap-2 px-3 py-3 transition-all sm:gap-2.5 sm:px-4 sm:py-3.5",
+                    isActive
+                      ? "text-foreground"
+                      : "text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/30",
+                  )}
+                >
+                  {/* Active underline */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="ecosystem-indicator"
+                      className={cn(
+                        "absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r",
+                        eco.color,
+                      )}
+                      transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+                    />
+                  )}
+
+                  <TechIcon
+                    techId={eco.id}
+                    icon={eco.icon}
+                    name={eco.name}
+                    className={cn(
+                      "relative h-4.5 w-4.5 transition-all sm:h-5 sm:w-5",
+                      isActive ? "scale-110" : "opacity-50 group-hover:opacity-75",
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "relative font-pixel text-[11px] uppercase tracking-wide transition-all sm:text-xs",
+                      isActive ? "font-bold" : "",
+                    )}
+                  >
+                    {eco.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="flex min-h-0 flex-1 overflow-hidden">
           {/* ─── Left Sidebar ───────────────────────────────────────────────── */}
           <aside
@@ -736,43 +784,6 @@ const StackBuilder = () => {
               mobileTab === "summary" ? "flex" : "hidden sm:flex",
             )}
           >
-            {/* Ecosystem Selector */}
-            <div className="border-b border-border p-3">
-              <p className="mb-2 font-pixel text-[10px] uppercase tracking-wider text-muted-foreground">
-                Ecosystem
-              </p>
-              <div className="space-y-1">
-                {ECOSYSTEMS.map((eco) => (
-                  <button
-                    key={eco.id}
-                    type="button"
-                    onClick={() => {
-                      startTransition(() => {
-                        setStack({ ecosystem: eco.id as Ecosystem });
-                      });
-                    }}
-                    className={cn(
-                      "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-all",
-                      stack.ecosystem === eco.id
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                    )}
-                  >
-                    <TechIcon
-                      techId={eco.id}
-                      icon={eco.icon}
-                      name={eco.name}
-                      className={cn(
-                        "h-4 w-4",
-                        stack.ecosystem === eco.id ? "brightness-0 invert" : "",
-                      )}
-                    />
-                    <span className="font-pixel">{eco.name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Category Accordion */}
             <div className="relative min-h-0 flex-1">
               <div className="absolute inset-0">
@@ -884,36 +895,25 @@ const StackBuilder = () => {
               >
                 Command
               </button>
-              {isStackPreviewEnabled ? (
-                <button
-                  type="button"
-                  onClick={() => setViewMode("preview")}
-                  className={cn(
-                    "rounded-md px-2.5 py-1.5 font-pixel text-[10px] uppercase tracking-wide transition-colors sm:text-[11px]",
-                    viewMode === "preview"
-                      ? "bg-primary/15 text-primary"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                  )}
-                >
-                  Preview
-                </button>
-              ) : (
-                <p className="text-muted-foreground text-xs">
-                  Preview unavailable in this environment.
-                </p>
-              )}
+              <button
+                type="button"
+                onClick={() => setViewMode("preview")}
+                className={cn(
+                  "rounded-md px-2.5 py-1.5 font-pixel text-[10px] uppercase tracking-wide transition-colors sm:text-[11px]",
+                  viewMode === "preview"
+                    ? "bg-primary/15 text-primary"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                Preview
+              </button>
             </div>
 
-            {viewMode === "command" || !isStackPreviewEnabled ? (
+            {viewMode === "command" ? (
               <div className="relative min-h-0 flex-1">
                 <div className="absolute inset-0">
                   <ScrollArea ref={mainScrollRef} className="h-full">
                     <div className="p-3 sm:p-4">
-                      {!isStackPreviewEnabled && (
-                        <p className="mb-3 rounded-md border border-border bg-muted/40 px-3 py-2 text-muted-foreground text-xs">
-                          Preview is unavailable in this environment.
-                        </p>
-                      )}
                       {/* Project Name */}
                       <div className="mb-6">
                         <label

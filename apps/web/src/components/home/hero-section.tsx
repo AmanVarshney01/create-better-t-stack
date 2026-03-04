@@ -170,6 +170,7 @@ export default function HeroSection() {
           </div>
           <Link
             to="/new"
+            search={{ view: "command", file: "" }}
             className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-foreground px-4 py-2.5 text-xs font-medium text-background transition-colors hover:bg-foreground/90 sm:gap-2 sm:px-5 sm:text-sm"
           >
             Builder
