@@ -22,9 +22,13 @@ bun dev:web    # Website development
 
 ```
 ├── apps/
-│   ├── cli/     # create-better-fullstack CLI
-│   └── web/     # Documentation website
-└── packages/    # Shared packages
+│   ├── cli/                    # create-better-fullstack CLI
+│   └── web/                    # Documentation website
+└── packages/
+    ├── template-generator/     # Handlebars templates → generated output
+    ├── types/                  # Shared TypeScript types & schemas
+    ├── backend/                # Convex backend
+    └── create-bfs/             # Project bootstrapper
 ```
 
 <br>
@@ -63,17 +67,85 @@ create-better-fullstack
 bun dev:web
 ```
 
+### Template Generator
+
+After editing `.hbs` template files:
+
+```bash
+bun run --filter=@better-fullstack/template-generator generate-templates
+bun run --filter=@better-fullstack/template-generator build
+bun run --filter=create-better-fullstack build
+```
+
+After editing `src/post-process/*.ts` files, only the build steps are needed (skip `generate-templates`).
+
 <br>
 
 ## Testing
 
+### Quick reference
+
 ```bash
-turbo test              # Run all tests
-turbo build             # Build all packages
-bun run check           # Lint and format
+bun run test              # CLI unit tests
+bun run test:all          # All tests across the monorepo
+bun run lint              # Lint all packages (turbo lint)
+bun run check             # Format + lint (oxfmt + oxlint)
 ```
 
-See [TESTING.md](../TESTING.md) for the full testing guide.
+### CLI tests
+
+```bash
+bun run test:cli          # Unit tests
+bun run test --watch      # Watch mode (from apps/cli/)
+bun run test:coverage     # With coverage report
+bun run test:ci           # CI mode (bail after 5 failures)
+bun run test:e2e          # End-to-end tests
+```
+
+### Matrix tests
+
+Test combinations of frontends, backends, databases, etc:
+
+```bash
+bun run test:matrix       # Batched mode
+bun run test:matrix:fast  # 10% random sample
+bun run test:matrix:full  # All combinations (slow)
+```
+
+### Web tests
+
+```bash
+cd apps/web
+bun test                           # Unit tests
+bun run validate:tech-links        # Validate all tech resource links
+bun run perf:check                 # Check performance budget
+```
+
+### Type checking
+
+```bash
+bun run --filter=create-better-fullstack check-types     # CLI
+bun run --filter=web typecheck                           # Website
+bun run --filter=@better-fullstack/template-generator typecheck  # Template generator
+```
+
+### Build
+
+```bash
+turbo build               # Build everything
+bun run build:cli         # CLI only
+bun run build:web         # Website only
+```
+
+<br>
+
+## Dependency Management
+
+```bash
+bun run update-deps       # Check template dependency versions
+bun run update-deps:fix   # Auto-update template dependency versions
+bun run sync-versions     # Check template version sync
+```
 
 <br>
 
@@ -83,8 +155,8 @@ See [TESTING.md](../TESTING.md) for the full testing guide.
 2. **Fork & clone** — Create your own copy
 3. **Branch** — `git checkout -b feat/your-feature` or `fix/your-bug`
 4. **Code** — Follow existing patterns
-5. **Test** — `turbo test`
-6. **Check** — `bun run check`
+5. **Test** — `bun run test`
+6. **Lint** — `bun run check`
 7. **Commit** — Use conventional commits (see below)
 8. **Push & PR** — Link the related issue
 
@@ -98,7 +170,10 @@ fix: resolve bug
 docs: update documentation
 chore: maintenance tasks
 refactor: code changes without feature/fix
+test: add or update tests
 ```
+
+Lefthook runs `turbo lint` on every commit automatically.
 
 <br>
 
