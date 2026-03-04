@@ -43,7 +43,7 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
         addPackageDependency({
           vfs,
           packagePath: webPath,
-          dependencies: ["@clerk/tanstack-react-start", "srvx"],
+          dependencies: ["@clerk/tanstack-react-start"],
         });
       } else if (hasViteReact) {
         addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@clerk/clerk-react"] });
