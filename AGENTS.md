@@ -12,3 +12,5 @@ The role of this file is to describe common mistakes and confusion points that a
 
 - `shadcn-ui` is intentionally incompatible with `svelte` and `solid-start`; CLI validation blocks those combos. For these frontends, use `daisyui`, `ark-ui`, `park-ui` (solid-start only), or `none`.
 - For SvelteKit/SolidStart Tailwind + DaisyUI, plugin activation is in `apps/web/src/app.css` via `@plugin "daisyui";` (not in `tailwind.config.ts`).
+- Fets server template emitted `toNativeRequest` even when `auth=none` and `api=none`, causing TypeScript `TS6133` (unused variable) during `bun run check-types`. The helper must be generated only when auth/API routes need it.
+- Go server template declared `addr` unconditionally, which breaks `go build` when `goWebFramework=none` (unused variable). Host/port declarations must be conditional on selected web framework/API paths.

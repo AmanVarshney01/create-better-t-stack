@@ -92,16 +92,21 @@ func main() {
 	_ = pool // Use pool in your handlers
 {{/if}}
 
-	// Get host and port from environment
+{{#if (or (or (eq goWebFramework "gin") (eq goWebFramework "echo")) (eq goApi "grpc-go"))}}
+	// Get host from environment
 	host := os.Getenv("HOST")
 	if host == "" {
 		host = "0.0.0.0"
 	}
+{{/if}}
+{{#if (or (eq goWebFramework "gin") (eq goWebFramework "echo"))}}
+	// Get HTTP port from environment
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 	addr := host + ":" + port
+{{/if}}
 
 {{#if (eq goApi "grpc-go")}}
 	// Start gRPC and HTTP servers concurrently

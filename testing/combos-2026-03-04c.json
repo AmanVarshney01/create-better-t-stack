@@ -1,0 +1,85 @@
+{
+  "v": 2,
+  "d": "2026-03-04",
+  "focus": "mixed-ecosystem-production-cycle",
+  "cb": "bun create better-fullstack@latest <name> --ecosystem <typescript|rust|python|go> ... --addons none --examples none --ai-docs none --no-install --no-git --disable-analytics",
+  "cbRetest": "node /Users/ibrahime/Documents/Better-Fullstack/apps/cli/dist/cli.mjs create <name> ... (same flags as cb)",
+  "tot": [10, 9, 1, 1],
+  "k": {
+    "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
+    "r": { "p": "pass", "f": "fail" },
+    "e": { "t": "typescript", "r": "rust", "p": "python", "g": "go" },
+    "notes": [
+      "Mixed ecosystem production batch: 10 combos (4 TypeScript, 2 Rust, 2 Python, 2 Go)",
+      "Per combo verification: marker checks + TS(bun install && bun run check-types) / Rust(cargo check) / Python(python3 -m compileall -q .) / Go(go mod tidy && go build ./...)",
+      "@latest initial result: 9 pass, 1 fail",
+      "BugY_fets_api_none_unused_toNativeRequest: fets server template always emitted toNativeRequest, causing TS6133 when api=none and auth=none",
+      "Fix: guard toNativeRequest helper in fets server template so it emits only when needed by auth/api routes",
+      "Files: packages/template-generator/templates/backend/server/fets/src/index.ts.hbs, packages/template-generator/src/templates.generated.ts",
+      "Local CLI re-test after fix: previously failing combo passed"
+    ]
+  },
+  "rows": [
+    [
+      "m260304c-ts-next-express-tsrest-drizzle-mysql-bauth-scss-noneui",
+      "t",
+      ["next", "express", "node", "ts-rest", "drizzle", "mysql", "better-auth", "scss", "none"],
+      "p"
+    ],
+    [
+      "m260304c-ts-astro-vue-hono-orpc-prisma-pg-authnone-tailwind-daisyui",
+      "t",
+      ["astro+vue", "hono", "bun", "orpc", "prisma", "postgres", "none", "tailwind", "daisyui"],
+      "p"
+    ],
+    [
+      "m260304c-ts-angular-fets-none-drizzle-sqlite-authnone-postcss-noneui",
+      "t",
+      ["angular", "fets", "node", "none", "drizzle", "sqlite", "none", "postcss-only", "none"],
+      "f",
+      "BugY_fets_api_none_unused_toNativeRequest: TS6133 unused variable in apps/server/src/index.ts",
+      1
+    ],
+    [
+      "m260304c-ts-nuxt-nitro-orpc-prisma-mysql-bauth-tailwind-daisyui",
+      "t",
+      ["nuxt", "nitro", "node", "orpc", "prisma", "mysql", "better-auth", "tailwind", "daisyui"],
+      "p"
+    ],
+    [
+      "m260304c-rust-axum-leptos-seaorm-asyncgraphql-clap-serde",
+      "r",
+      ["axum", "leptos", "sea-orm", "async-graphql", "clap", ["serde"]],
+      "p"
+    ],
+    [
+      "m260304c-rust-actix-dioxus-sqlx-tonic-ratatui-validator",
+      "r",
+      ["actix-web", "dioxus", "sqlx", "tonic", "ratatui", ["validator"]],
+      "p"
+    ],
+    [
+      "m260304c-python-fastapi-sqlmodel-pydantic-langgraph-celery-ruff",
+      "p",
+      ["fastapi", "sqlmodel", "pydantic", ["langgraph"], "celery", "ruff"],
+      "p"
+    ],
+    [
+      "m260304c-python-django-sqlalchemy-none-openai-celery-ruff",
+      "p",
+      ["django", "sqlalchemy", "none", ["openai-sdk"], "celery", "ruff"],
+      "p"
+    ],
+    ["m260304c-go-echo-sqlc-grpc-cobra-zap", "g", ["echo", "sqlc", "grpc-go", "cobra", "zap"], "p"],
+    ["m260304c-go-gin-gorm-none-bubbletea-none", "g", ["gin", "gorm", "none", "bubbletea", "none"], "p"]
+  ],
+  "schema": {
+    "row": ["name", "ecosystemCode", "flagsByEcosystemOrder", "resultCode", "issueCode?", "fixedInRepo?(0|1)"],
+    "flagsOrder": {
+      "t": ["frontend", "backend", "runtime", "api", "orm", "database", "auth", "cssFramework", "uiLibrary"],
+      "r": ["rustWebFramework", "rustFrontend", "rustOrm", "rustApi", "rustCli", "rustLibraries[]"],
+      "p": ["pythonWebFramework", "pythonOrm", "pythonValidation", "pythonAi[]", "pythonTaskQueue", "pythonQuality"],
+      "g": ["goWebFramework", "goOrm", "goApi", "goCli", "goLogging"]
+    }
+  }
+}

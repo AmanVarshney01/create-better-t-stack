@@ -1,0 +1,54 @@
+{
+  "v": 2,
+  "d": "2026-03-04",
+  "focus": "go-only-production-cycle",
+  "cb": "bun create better-fullstack@latest <name> --ecosystem go --go-web-framework <gin|echo|none> --go-orm <gorm|sqlc|none> --go-api <grpc-go|none> --go-cli <cobra|bubbletea|none> --go-logging <zap|none> --addons none --examples none --ai-docs none --no-install --no-git --disable-analytics",
+  "cbRetest": "node /Users/ibrahime/Documents/Better-Fullstack/apps/cli/dist/cli.mjs create <name> ... (same flags as cb)",
+  "tot": [10, 8, 2, 2],
+  "k": {
+    "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
+    "r": { "p": "pass", "f": "fail" },
+    "e": { "g": "go" },
+    "notes": [
+      "Go-only production batch: 10 unique combos",
+      "Per combo verification: bts.jsonc marker checks + go.mod presence + go mod tidy && go build ./...",
+      "@latest initial result: 8 pass, 2 fail",
+      "BugZ_go_none_web_unused_addr: go-base cmd/server main template declared addr even when goWebFramework=none, producing compile error 'declared and not used: addr'",
+      "Fix: conditionally emit host/port/addr variables in go server template based on goWebFramework and goApi",
+      "Files: packages/template-generator/templates/go-base/cmd/server/main.go.hbs, packages/template-generator/src/templates.generated.ts",
+      "Local CLI re-test after fix: both failing combos passed"
+    ]
+  },
+  "rows": [
+    ["m260304f-go-gin-gorm-grpc-cobra-zap", "g", ["gin", "gorm", "grpc-go", "cobra", "zap"], "p"],
+    ["m260304f-go-gin-gorm-none-none-none", "g", ["gin", "gorm", "none", "none", "none"], "p"],
+    ["m260304f-go-gin-sqlc-grpc-bubbletea-zap", "g", ["gin", "sqlc", "grpc-go", "bubbletea", "zap"], "p"],
+    ["m260304f-go-gin-sqlc-none-cobra-none", "g", ["gin", "sqlc", "none", "cobra", "none"], "p"],
+    ["m260304f-go-echo-gorm-grpc-bubbletea-zap", "g", ["echo", "gorm", "grpc-go", "bubbletea", "zap"], "p"],
+    ["m260304f-go-echo-gorm-none-cobra-none", "g", ["echo", "gorm", "none", "cobra", "none"], "p"],
+    ["m260304f-go-echo-sqlc-grpc-none-zap", "g", ["echo", "sqlc", "grpc-go", "none", "zap"], "p"],
+    ["m260304f-go-echo-sqlc-none-bubbletea-none", "g", ["echo", "sqlc", "none", "bubbletea", "none"], "p"],
+    [
+      "m260304f-go-none-gorm-none-cobra-zap",
+      "g",
+      ["none", "gorm", "none", "cobra", "zap"],
+      "f",
+      "BugZ_go_none_web_unused_addr: cmd/server/main.go has unused addr when no HTTP framework selected",
+      1
+    ],
+    [
+      "m260304f-go-none-sqlc-grpc-none-none",
+      "g",
+      ["none", "sqlc", "grpc-go", "none", "none"],
+      "f",
+      "BugZ_go_none_web_unused_addr: cmd/server/main.go has unused addr when no HTTP framework selected",
+      1
+    ]
+  ],
+  "schema": {
+    "row": ["name", "ecosystemCode", "flagsByEcosystemOrder", "resultCode", "issueCode?", "fixedInRepo?(0|1)"],
+    "flagsOrder": {
+      "g": ["goWebFramework", "goOrm", "goApi", "goCli", "goLogging"]
+    }
+  }
+}

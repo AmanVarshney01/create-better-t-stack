@@ -1,0 +1,76 @@
+{
+  "v": 2,
+  "d": "2026-03-04",
+  "focus": "python-only-production-cycle",
+  "cb": "bun create better-fullstack@latest <name> --ecosystem python --python-web-framework <fastapi|django|none> --python-orm <sqlalchemy|sqlmodel|none> --python-validation <pydantic|none> --python-ai <framework|none> --python-task-queue <celery|none> --python-quality <ruff|none> --addons none --examples none --ai-docs none --no-install --no-git --disable-analytics",
+  "tot": [10, 10, 0, 0],
+  "k": {
+    "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
+    "r": { "p": "pass", "f": "fail" },
+    "e": { "p": "python" },
+    "notes": [
+      "Python-only production batch: 10 unique combos",
+      "Per combo verification: bts.jsonc marker checks + pyproject.toml presence + python3 -m compileall -q .",
+      "@latest result: 10 pass, 0 fail",
+      "No template or generator defects were observed in this batch"
+    ]
+  },
+  "rows": [
+    [
+      "m260304e-python-fastapi-sqlalchemy-pydantic-openai-celery-ruff",
+      "p",
+      ["fastapi", "sqlalchemy", "pydantic", ["openai-sdk"], "celery", "ruff"],
+      "p"
+    ],
+    [
+      "m260304e-python-fastapi-sqlmodel-pydantic-langchain-none-ruff",
+      "p",
+      ["fastapi", "sqlmodel", "pydantic", ["langchain"], "none", "ruff"],
+      "p"
+    ],
+    ["m260304e-python-fastapi-none-none-none-none-none", "p", ["fastapi", "none", "none", ["none"], "none", "none"], "p"],
+    [
+      "m260304e-python-django-sqlalchemy-pydantic-langgraph-celery-ruff",
+      "p",
+      ["django", "sqlalchemy", "pydantic", ["langgraph"], "celery", "ruff"],
+      "p"
+    ],
+    [
+      "m260304e-python-django-sqlmodel-none-anthropic-none-none",
+      "p",
+      ["django", "sqlmodel", "none", ["anthropic-sdk"], "none", "none"],
+      "p"
+    ],
+    ["m260304e-python-django-none-none-none-celery-ruff", "p", ["django", "none", "none", ["none"], "celery", "ruff"], "p"],
+    [
+      "m260304e-python-fastapi-sqlalchemy-none-llamaindex-none-ruff",
+      "p",
+      ["fastapi", "sqlalchemy", "none", ["llamaindex"], "none", "ruff"],
+      "p"
+    ],
+    [
+      "m260304e-python-django-sqlalchemy-pydantic-crewai-celery-none",
+      "p",
+      ["django", "sqlalchemy", "pydantic", ["crewai"], "celery", "none"],
+      "p"
+    ],
+    [
+      "m260304e-python-fastapi-sqlmodel-pydantic-none-celery-none",
+      "p",
+      ["fastapi", "sqlmodel", "pydantic", ["none"], "celery", "none"],
+      "p"
+    ],
+    [
+      "m260304e-python-django-none-pydantic-openai-none-ruff",
+      "p",
+      ["django", "none", "pydantic", ["openai-sdk"], "none", "ruff"],
+      "p"
+    ]
+  ],
+  "schema": {
+    "row": ["name", "ecosystemCode", "flagsByEcosystemOrder", "resultCode", "issueCode?", "fixedInRepo?(0|1)"],
+    "flagsOrder": {
+      "p": ["pythonWebFramework", "pythonOrm", "pythonValidation", "pythonAi[]", "pythonTaskQueue", "pythonQuality"]
+    }
+  }
+}

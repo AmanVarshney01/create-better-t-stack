@@ -1,0 +1,66 @@
+{
+  "v": 2,
+  "d": "2026-03-04",
+  "focus": "rust-only-production-cycle",
+  "cb": "bun create better-fullstack@latest <name> --ecosystem rust --rust-web-framework <axum|actix-web|none> --rust-frontend <leptos|dioxus|none> --rust-orm <sea-orm|sqlx|none> --rust-api <tonic|async-graphql|none> --rust-cli <clap|ratatui|none> --rust-libraries <lib|none> --addons none --examples none --ai-docs none --no-install --no-git --disable-analytics",
+  "tot": [10, 10, 0, 0],
+  "k": {
+    "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
+    "r": { "p": "pass", "f": "fail" },
+    "e": { "r": "rust" },
+    "notes": [
+      "Rust-only production batch: 10 unique combos",
+      "Per combo verification: bts.jsonc marker checks + Cargo workspace presence + cargo check",
+      "@latest result: 10 pass, 0 fail",
+      "No template or generator defects were observed in this batch"
+    ]
+  },
+  "rows": [
+    ["m260304d-rust-axum-none-sqlx-tonic-clap-serde", "r", ["axum", "none", "sqlx", "tonic", "clap", ["serde"]], "p"],
+    [
+      "m260304d-rust-axum-leptos-seaorm-asyncgraphql-ratatui-validator",
+      "r",
+      ["axum", "leptos", "sea-orm", "async-graphql", "ratatui", ["validator"]],
+      "p"
+    ],
+    [
+      "m260304d-rust-actix-web-none-seaorm-tonic-none-mockall",
+      "r",
+      ["actix-web", "none", "sea-orm", "tonic", "none", ["mockall"]],
+      "p"
+    ],
+    [
+      "m260304d-rust-actix-web-dioxus-sqlx-none-clap-jsonwebtoken",
+      "r",
+      ["actix-web", "dioxus", "sqlx", "none", "clap", ["jsonwebtoken"]],
+      "p"
+    ],
+    [
+      "m260304d-rust-none-leptos-none-asyncgraphql-clap-argon2",
+      "r",
+      ["none", "leptos", "none", "async-graphql", "clap", ["argon2"]],
+      "p"
+    ],
+    [
+      "m260304d-rust-none-dioxus-sqlx-tonic-ratatui-tokio-test",
+      "r",
+      ["none", "dioxus", "sqlx", "tonic", "ratatui", ["tokio-test"]],
+      "p"
+    ],
+    ["m260304d-rust-axum-dioxus-none-none-none-serde", "r", ["axum", "dioxus", "none", "none", "none", ["serde"]], "p"],
+    [
+      "m260304d-rust-actix-web-leptos-seaorm-none-ratatui-validator",
+      "r",
+      ["actix-web", "leptos", "sea-orm", "none", "ratatui", ["validator"]],
+      "p"
+    ],
+    ["m260304d-rust-none-none-seaorm-none-none-none", "r", ["none", "none", "sea-orm", "none", "none", ["none"]], "p"],
+    ["m260304d-rust-axum-leptos-sqlx-tonic-none-mockall", "r", ["axum", "leptos", "sqlx", "tonic", "none", ["mockall"]], "p"]
+  ],
+  "schema": {
+    "row": ["name", "ecosystemCode", "flagsByEcosystemOrder", "resultCode", "issueCode?", "fixedInRepo?(0|1)"],
+    "flagsOrder": {
+      "r": ["rustWebFramework", "rustFrontend", "rustOrm", "rustApi", "rustCli", "rustLibraries[]"]
+    }
+  }
+}

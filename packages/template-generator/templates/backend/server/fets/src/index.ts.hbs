@@ -28,6 +28,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 {{/if}}
 
+{{#if (or (eq auth "better-auth") (or (eq api "trpc") (eq api "orpc")))}}
 const toNativeRequest = async (request: Request): Promise<Request> => {
 	const requestInit: RequestInit = {
 		method: request.method,
@@ -40,6 +41,7 @@ const toNativeRequest = async (request: Request): Promise<Request> => {
 
 	return new Request(request.url, requestInit);
 };
+{{/if}}
 
 const router = createRouter({
 	openAPI: {
