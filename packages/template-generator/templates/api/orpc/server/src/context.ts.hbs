@@ -138,8 +138,8 @@ interface CreateContextOptions {
 	req: Request;
 }
 
-export async function createContext(opts: CreateContextOptions) {
 {{#if (eq auth "better-auth")}}
+export async function createContext(opts: CreateContextOptions) {
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(opts.req.headers),
 	});
@@ -147,6 +147,7 @@ export async function createContext(opts: CreateContextOptions) {
 		session,
 	};
 {{else}}
+export async function createContext(_opts: CreateContextOptions) {
   // No auth configured
 	return {
 		session: null,

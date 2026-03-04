@@ -1,4 +1,7 @@
 @import "tailwindcss";
+{{#if (eq uiLibrary "daisyui")}}
+@plugin "daisyui";
+{{/if}}
 
 body {
   @apply bg-neutral-950 text-neutral-100;

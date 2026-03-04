@@ -1,0 +1,39 @@
+{
+  "v": 2,
+  "d": "2026-03-04",
+  "focus": "typescript-sveltekit-solidstart-ui-compat",
+  "cb": "bun create better-fullstack@latest <name> --ecosystem typescript --frontend <svelte|solid-start> --backend <backend> --runtime <runtime> --api orpc --database <db> --orm <orm> --auth <auth> --css-framework <css> --ui-library <ui> --payments none --email none --file-upload none --effect none --state-management none --validation zod --forms none --testing vitest --ai none --realtime none --job-queue none --animation none --logging none --observability none --analytics none --cms none --caching none --search none --file-storage none --addons none --examples none --ai-docs none --db-setup none --web-deploy none --server-deploy none --package-manager bun --no-install --no-git --disable-analytics",
+  "cbRetest": "node /Users/ibrahime/Documents/Better-Fullstack/apps/cli/dist/cli.mjs create <name> ... (same flags as cb)",
+  "tot": [10, 10, 0, 3],
+  "k": {
+    "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
+    "r": { "p": "pass", "f": "fail" },
+    "e": { "t": "typescript" },
+    "notes": [
+      "SvelteKit + SolidStart TS compatibility sweep across supported UI libraries (daisyui, ark-ui, park-ui, none)",
+      "Per combo verification: CLI scaffold markers in bts.jsonc + UI dependency markers + bun install + bun run check-types",
+      "Execution note: production bun create command is blocked in this environment; local CLI create() path was used with the same option set",
+      "BugV_daisyui_plugin_missing_svelte_solidstart: added @plugin \"daisyui\" to Svelte/SolidStart Tailwind app.css templates",
+      "BugW_solidstart_ark_park_missing_deps: include solid-start in UI dependency detection so @ark-ui/solid is injected for ark-ui/park-ui",
+      "BugX_orpc_express_context_unused_opts: rename no-auth Express oRPC context param to _opts to satisfy strict TS noUnusedParameters"
+    ]
+  },
+  "rows": [
+    ["ts2-svelte-hono-orpc-drizzle-pg-bauth-tailwind-daisyui", "t", ["svelte", "hono", "bun", "orpc", "drizzle", "postgres", "better-auth", "tailwind", "daisyui"], "p", "BugV", 1],
+    ["ts2-svelte-fets-orpc-drizzle-sqlite-authnone-scss-arkui", "t", ["svelte", "fets", "node", "orpc", "drizzle", "sqlite", "none", "scss", "ark-ui"], "p"],
+    ["ts2-svelte-nitro-orpc-prisma-pg-bauth-postcss-noneui", "t", ["svelte", "nitro", "node", "orpc", "prisma", "postgres", "better-auth", "postcss-only", "none"], "p"],
+    ["ts2-svelte-express-orpc-none-none-authnone-tailwind-daisyui", "t", ["svelte", "express", "node", "orpc", "none", "none", "none", "tailwind", "daisyui"], "p", "BugV+BugX", 1],
+    ["ts2-svelte-fastify-orpc-drizzle-pg-bauth-less-arkui", "t", ["svelte", "fastify", "node", "orpc", "drizzle", "postgres", "better-auth", "less", "ark-ui"], "p"],
+    ["ts2-solidstart-hono-orpc-drizzle-pg-bauth-tailwind-daisyui", "t", ["solid-start", "hono", "bun", "orpc", "drizzle", "postgres", "better-auth", "tailwind", "daisyui"], "p", "BugV", 1],
+    ["ts2-solidstart-fets-orpc-drizzle-sqlite-authnone-scss-arkui", "t", ["solid-start", "fets", "node", "orpc", "drizzle", "sqlite", "none", "scss", "ark-ui"], "p", "BugW", 1],
+    ["ts2-solidstart-nitro-orpc-prisma-pg-bauth-tailwind-parkui", "t", ["solid-start", "nitro", "node", "orpc", "prisma", "postgres", "better-auth", "tailwind", "park-ui"], "p", "BugW", 1],
+    ["ts2-solidstart-express-orpc-none-none-authnone-postcss-noneui", "t", ["solid-start", "express", "node", "orpc", "none", "none", "none", "postcss-only", "none"], "p", "BugX", 1],
+    ["ts2-solidstart-fastify-orpc-drizzle-pg-bauth-tailwind-daisyui", "t", ["solid-start", "fastify", "node", "orpc", "drizzle", "postgres", "better-auth", "tailwind", "daisyui"], "p", "BugV", 1]
+  ],
+  "schema": {
+    "row": ["name", "ecosystemCode", "flagsByEcosystemOrder", "resultCode", "issueCode?", "fixedInRepo?(0|1)"],
+    "flagsOrder": {
+      "t": ["frontend", "backend", "runtime", "api", "orm", "database", "auth", "cssFramework", "uiLibrary"]
+    }
+  }
+}

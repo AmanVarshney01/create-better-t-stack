@@ -20,6 +20,7 @@ export function processCSSFrameworkDeps(vfs: VirtualFileSystem, config: ProjectC
       "nuxt",
       "svelte",
       "solid",
+      "solid-start",
       "astro",
       "qwik",
       "angular",
@@ -60,7 +61,7 @@ export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConf
     ["tanstack-router", "react-router", "tanstack-start", "next", "redwood"].includes(f),
   );
   const hasNuxt = frontend.includes("nuxt");
-  const hasSolid = frontend.includes("solid");
+  const hasSolid = frontend.includes("solid") || frontend.includes("solid-start");
   const hasSvelte = frontend.includes("svelte");
 
   // Astro integration detection

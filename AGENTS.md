@@ -7,3 +7,8 @@ The role of this file is to describe common mistakes and confusion points that a
 - `bts.jsonc` currently does not persist shadcn sub-options (for example `shadcnColorTheme`, `shadcnFont`). Validate those via generated files (`components.json`, CSS, dependencies) instead of expecting them in `bts.jsonc`.
 - Route-level `validateSearch` on `apps/web/src/routes/new.tsx` can pull `zod` and search-schema code into the main client bundle. Prefer parsing search params inside the lazy-loaded stack builder path to protect homepage performance.
 - After adding/removing files in `apps/web/src/routes`, `apps/web/src/routeTree.gen.ts` may be stale until a route generator run (triggered by `vite build`/`vite dev`). `tsc --noEmit` can fail with route type errors if regeneration hasn't happened yet.
+
+## Discovered gotchas (2026-03-04)
+
+- `shadcn-ui` is intentionally incompatible with `svelte` and `solid-start`; CLI validation blocks those combos. For these frontends, use `daisyui`, `ark-ui`, `park-ui` (solid-start only), or `none`.
+- For SvelteKit/SolidStart Tailwind + DaisyUI, plugin activation is in `apps/web/src/app.css` via `@plugin "daisyui";` (not in `tailwind.config.ts`).

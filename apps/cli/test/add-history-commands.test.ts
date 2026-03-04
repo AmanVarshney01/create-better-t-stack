@@ -21,15 +21,37 @@ async function runCli(
     env?: Record<string, string>;
   },
 ) {
-  return execa("bun", ["run", CLI_ENTRY, ...args], {
-    cwd: options.cwd,
-    env: {
-      ...process.env,
-      CI: "true",
-      ...options.env,
-    },
-    reject: false,
-  });
+  const maxAttempts = 5;
+  let attempt = 0;
+  let lastResult: Awaited<ReturnType<typeof execa>> | undefined;
+
+  while (attempt < maxAttempts) {
+    const result = await execa("bun", ["run", CLI_ENTRY, ...args], {
+      cwd: options.cwd,
+      env: {
+        ...process.env,
+        CI: "true",
+        ...options.env,
+      },
+      reject: false,
+    });
+
+    lastResult = result;
+    const transientModuleRace =
+      result.exitCode !== 0 &&
+      result.stderr.includes("Cannot find module '@better-fullstack/types'");
+
+    if (!transientModuleRace) {
+      return result;
+    }
+
+    attempt++;
+    if (attempt < maxAttempts) {
+      await Bun.sleep(150 * attempt);
+    }
+  }
+
+  return lastResult!;
 }
 
 async function readJsoncFile(path: string): Promise<unknown> {
@@ -72,7 +94,10 @@ describe("CLI add command", () => {
       },
     );
 
-    expect(addResult.exitCode).toBe(0);
+    expect(
+      addResult.exitCode,
+      `add failed\nstdout:\n${addResult.stdout}\nstderr:\n${addResult.stderr}`,
+    ).toBe(0);
     expect(addResult.stdout).toContain("Successfully added: mcp");
 
     const config = (await readJsoncFile(join(projectDir, "bts.jsonc"))) as {
@@ -113,7 +138,10 @@ describe("CLI history command", () => {
       ["create", "history-app", "--yes", "--no-install", "--no-git", "--disable-analytics"],
       { cwd: root, env: sharedEnv },
     );
-    expect(createResult.exitCode).toBe(0);
+    expect(
+      createResult.exitCode,
+      `create failed\nstdout:\n${createResult.stdout}\nstderr:\n${createResult.stderr}`,
+    ).toBe(0);
 
     const historyJson = await runCli(["history", "--json", "--limit", "1"], {
       cwd: root,
