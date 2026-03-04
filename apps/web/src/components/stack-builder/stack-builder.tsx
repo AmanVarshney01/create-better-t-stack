@@ -214,7 +214,7 @@ function SidebarAccordionItem({
             : "text-muted-foreground hover:bg-muted/40 hover:text-foreground",
         )}
       >
-        <span className="truncate pr-2 font-pixel">{displayName}</span>
+        <span className="truncate pr-2 font-mono">{displayName}</span>
         <div className="flex items-center gap-1.5 shrink-0">
           {compatibilityNotes?.hasIssue && <InfoIcon className="h-3.5 w-3.5 text-amber-500" />}
           {count > 0 && (
@@ -764,7 +764,7 @@ const StackBuilder = () => {
                   />
                   <span
                     className={cn(
-                      "relative font-pixel text-[11px] uppercase tracking-wide transition-all sm:text-xs",
+                      "relative font-mono text-[11px] uppercase tracking-wide transition-all sm:text-xs",
                       isActive ? "font-bold" : "",
                     )}
                   >
@@ -811,7 +811,7 @@ const StackBuilder = () => {
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-1.5">
                     <Terminal className="h-3 w-3 text-muted-foreground" />
-                    <span className="font-pixel text-[10px] text-muted-foreground">Command</span>
+                    <span className="font-mono text-[10px] text-muted-foreground">Command</span>
                   </div>
                   <button
                     type="button"
@@ -865,7 +865,7 @@ const StackBuilder = () => {
                     }
                   >
                     <Settings className="h-3.5 w-3.5" />
-                    <span className="font-pixel text-[9px] leading-none">Settings</span>
+                    <span className="font-mono text-[9px] leading-none">Settings</span>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-64 bg-fd-background">
                     <YoloToggle stack={stack} onToggle={(yolo) => setStack({ yolo })} />
@@ -887,7 +887,7 @@ const StackBuilder = () => {
                 type="button"
                 onClick={() => setViewMode("command")}
                 className={cn(
-                  "rounded-md px-2.5 py-1.5 font-pixel text-[10px] uppercase tracking-wide transition-colors sm:text-[11px]",
+                  "rounded-md px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wide transition-colors sm:text-[11px]",
                   viewMode === "command"
                     ? "bg-primary/15 text-primary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -899,7 +899,7 @@ const StackBuilder = () => {
                 type="button"
                 onClick={() => setViewMode("preview")}
                 className={cn(
-                  "rounded-md px-2.5 py-1.5 font-pixel text-[10px] uppercase tracking-wide transition-colors sm:text-[11px]",
+                  "rounded-md px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wide transition-colors sm:text-[11px]",
                   viewMode === "preview"
                     ? "bg-primary/15 text-primary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -918,7 +918,7 @@ const StackBuilder = () => {
                       <div className="mb-6">
                         <label
                           htmlFor="project-name"
-                          className="mb-1.5 block font-pixel text-[10px] uppercase tracking-wider text-muted-foreground"
+                          className="mb-1.5 block font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
                         >
                           Project Name
                         </label>
@@ -982,7 +982,7 @@ const StackBuilder = () => {
                                 className="mb-3 flex w-full items-center gap-2 border-b border-border pb-2 text-left transition-opacity hover:opacity-80"
                               >
                                 <Terminal className="h-4 w-4 shrink-0 text-muted-foreground sm:h-5 sm:w-5" />
-                                <h2 className="flex-1 font-pixel text-foreground text-sm sm:text-base">
+                                <h2 className="flex-1 font-mono text-foreground text-sm sm:text-base">
                                   {categoryDisplayName}
                                 </h2>
                                 {compatibilityAnalysis.notes[categoryKey]?.hasIssue && (
@@ -1066,7 +1066,7 @@ const StackBuilder = () => {
                                                     onClick={(e) => e.stopPropagation()}
                                                     className="cursor-default"
                                                   >
-                                                    <span className="rounded-sm border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-pixel text-[9px] text-amber-500 dark:text-amber-400">
+                                                    <span className="rounded-sm border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[9px] text-amber-500 dark:text-amber-400">
                                                       Legacy
                                                     </span>
                                                   </TooltipTrigger>
@@ -1140,7 +1140,7 @@ const StackBuilder = () => {
                                       className="mb-3 flex w-full items-center gap-2 border-b border-border pb-2 text-left transition-opacity hover:opacity-80"
                                     >
                                       <Terminal className="h-4 w-4 shrink-0 text-muted-foreground sm:h-5 sm:w-5" />
-                                      <h2 className="flex-1 font-pixel text-foreground text-sm sm:text-base">
+                                      <h2 className="flex-1 font-mono text-foreground text-sm sm:text-base">
                                         shadcn/ui Configuration
                                       </h2>
                                       <motion.div
@@ -1309,7 +1309,7 @@ const StackBuilder = () => {
                                   >
                                     <div className="mb-3 flex items-center gap-2 border-border border-b pb-2">
                                       <Terminal className="h-4 w-4 shrink-0 text-muted-foreground sm:h-5 sm:w-5" />
-                                      <h2 className="font-pixel text-foreground text-sm sm:text-base">
+                                      <h2 className="font-mono text-foreground text-sm sm:text-base">
                                         Astro Integration
                                       </h2>
                                     </div>
@@ -1355,7 +1355,7 @@ const StackBuilder = () => {
                                                   onClick={(e) => e.stopPropagation()}
                                                   className="absolute top-2 right-2 cursor-default"
                                                 >
-                                                  <span className="rounded-sm border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-pixel text-[9px] text-amber-500 dark:text-amber-400">
+                                                  <span className="rounded-sm border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[9px] text-amber-500 dark:text-amber-400">
                                                     Legacy
                                                   </span>
                                                 </TooltipTrigger>
