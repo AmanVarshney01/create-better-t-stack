@@ -8,7 +8,7 @@
       "outputs": ["dist/**", ".output/**", ".vercel/output/**", ".nitro/**"]
     },
     "lint": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^lint"],
       "inputs": ["$TURBO_DEFAULT$"]
     },
     "test": {
