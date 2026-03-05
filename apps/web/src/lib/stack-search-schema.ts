@@ -10,7 +10,7 @@ const commaSeparatedArray = (defaultValue: string[]) =>
     .transform((val) => val.split(",").filter(Boolean))
     .catch([...defaultValue]);
 
-const stackSearchShape: Record<string, z.ZodTypeAny> = {};
+const stackSearchShape: Record<string, z.ZodType> = {};
 const ecosystemSchema = z
   .enum(["typescript", "rust", "python", "go"])
   .catch(DEFAULT_STACK.ecosystem);

@@ -1,10 +1,11 @@
 import type { ProjectConfig } from "@better-fullstack/types";
 
-import { IndentationText, Node, Project, QuoteKind } from "ts-morph";
-
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
-export function processPwaPlugins(vfs: VirtualFileSystem, config: ProjectConfig): void {
+export async function processPwaPlugins(
+  vfs: VirtualFileSystem,
+  config: ProjectConfig,
+): Promise<void> {
   const { addons, projectName } = config;
 
   if (!addons.includes("pwa")) return;
@@ -12,12 +13,19 @@ export function processPwaPlugins(vfs: VirtualFileSystem, config: ProjectConfig)
   const viteConfigPath = "apps/web/vite.config.ts";
   if (!vfs.exists(viteConfigPath)) return;
 
+  let tsMorph: typeof import("ts-morph");
+  try {
+    tsMorph = await import("ts-morph");
+  } catch {
+    return; // ts-morph unavailable (browser environment) — skip AST transforms
+  }
+
   const content = vfs.readFile(viteConfigPath);
-  const project = new Project({
+  const project = new tsMorph.Project({
     useInMemoryFileSystem: true,
     manipulationSettings: {
-      indentationText: IndentationText.TwoSpaces,
-      quoteKind: QuoteKind.Double,
+      indentationText: tsMorph.IndentationText.TwoSpaces,
+      quoteKind: tsMorph.QuoteKind.Double,
     },
   });
 
@@ -39,7 +47,7 @@ export function processPwaPlugins(vfs: VirtualFileSystem, config: ProjectConfig)
 
   const defineConfigCall = exportAssignment.getExpression();
   if (
-    !Node.isCallExpression(defineConfigCall) ||
+    !tsMorph.Node.isCallExpression(defineConfigCall) ||
     defineConfigCall.getExpression().getText() !== "defineConfig"
   ) {
     return;
@@ -50,7 +58,7 @@ export function processPwaPlugins(vfs: VirtualFileSystem, config: ProjectConfig)
     configObject = defineConfigCall.addArgument("{}");
   }
 
-  if (Node.isObjectLiteralExpression(configObject)) {
+  if (tsMorph.Node.isObjectLiteralExpression(configObject)) {
     const pluginsProperty = configObject.getProperty("plugins");
 
     const pwaConfig = `VitePWA({
@@ -65,9 +73,9 @@ export function processPwaPlugins(vfs: VirtualFileSystem, config: ProjectConfig)
   devOptions: { enabled: true },
 })`;
 
-    if (pluginsProperty && Node.isPropertyAssignment(pluginsProperty)) {
+    if (pluginsProperty && tsMorph.Node.isPropertyAssignment(pluginsProperty)) {
       const initializer = pluginsProperty.getInitializer();
-      if (Node.isArrayLiteralExpression(initializer)) {
+      if (tsMorph.Node.isArrayLiteralExpression(initializer)) {
         const hasPwa = initializer.getElements().some((el) => el.getText().startsWith("VitePWA("));
         if (!hasPwa) {
           initializer.addElement(pwaConfig);

@@ -95,9 +95,9 @@ export async function generateVirtualProject(options: GeneratorOptions): Promise
       processPackageConfigs(vfs, config);
       processDependencies(vfs, config);
       processEnvVariables(vfs, config);
-      processAuthPlugins(vfs, config);
-      processAlchemyPlugins(vfs, config);
-      processPwaPlugins(vfs, config);
+      await processAuthPlugins(vfs, config);
+      await processAlchemyPlugins(vfs, config);
+      await processPwaPlugins(vfs, config);
       processCatalogs(vfs, config);
     }
 

@@ -5,7 +5,7 @@
   "type": "module",
   "sideEffects": false,
   "scripts": {
-    "prebuild": "cd ../../packages/types && bun run build && if [ \"$BFS_ENABLE_STACK_PREVIEW\" = \"1\" ]; then cd ../template-generator && bun run build; fi",
+    "prebuild": "cd ../../packages/types && bun run build && cd ../template-generator && bun run build",
     "build": "vite build",
     "dev": "vite dev --port 3333",
     "start": "node .output/server/index.mjs",
@@ -51,7 +51,7 @@
     "shiki": "^3.20.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
-    "zod": "^3.25.36"
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",

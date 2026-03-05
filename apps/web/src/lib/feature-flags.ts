@@ -17,8 +17,5 @@ export function isStackPreviewEnabledServer(): boolean {
 }
 
 export function isStackPreviewEnabledClient(): boolean {
-  if (import.meta.env.DEV) return true;
-
-  const override = getPreviewEnvOverride(import.meta.env as EnvLike);
-  return override === ENABLE_STACK_PREVIEW;
+  return true;
 }

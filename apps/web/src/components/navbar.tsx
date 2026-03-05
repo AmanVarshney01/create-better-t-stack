@@ -34,12 +34,13 @@ export function Navbar() {
             className="flex items-center gap-2 font-mono text-base font-bold tracking-tight sm:text-lg"
           >
             better<span className="text-muted-foreground">fullstack</span>
-            <span className="rounded border border-border px-1.5 py-0.5 font-pixel text-[9px] text-muted-foreground">
+            <span className="rounded border border-border px-1.5 py-0.5 text-[9px] font-semibold leading-none tracking-wide text-muted-foreground">
               Alpha
             </span>
           </Link>
           <Link
             to="/new"
+            search={{ view: "command", file: "" }}
             className="text-xs text-muted-foreground transition-colors hover:text-foreground sm:text-sm"
           >
             Builder
@@ -70,6 +71,7 @@ export function Navbar() {
             <ThemeToggle />
             <Link
               to="/new"
+              search={{ view: "command", file: "" }}
               className="inline-flex items-center gap-1 rounded-lg bg-foreground px-2.5 py-1.5 text-xs font-medium text-background transition-colors hover:bg-foreground/90 sm:gap-1.5 sm:px-3 sm:text-sm"
             >
               Try now

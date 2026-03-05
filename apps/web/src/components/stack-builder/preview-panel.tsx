@@ -4,16 +4,30 @@ import { useEffect, useState, useCallback } from "react";
 import type { StackState } from "@/lib/constant";
 
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { stackStateToProjectConfig } from "@/lib/preview-config";
 import { cn } from "@/lib/utils";
 
-// Use the API endpoint instead of server function to avoid bundling issues
+// Client-side generation via dynamic import — the ~354KB template-generator
+// bundle is only loaded when the user actually opens the Preview tab.
 const generatePreview = async (stack: StackState) => {
-  const response = await fetch("/api/preview", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(stack),
+  const { generateVirtualProject, EMBEDDED_TEMPLATES } =
+    await import("@better-fullstack/template-generator");
+  const config = stackStateToProjectConfig(stack);
+  const result = await generateVirtualProject({
+    config,
+    templates: EMBEDDED_TEMPLATES,
   });
-  return response.json();
+  return {
+    success: result.success,
+    tree: result.tree
+      ? {
+          root: result.tree.root,
+          fileCount: result.tree.fileCount,
+          directoryCount: result.tree.directoryCount,
+        }
+      : undefined,
+    error: result.error,
+  };
 };
 
 import { CodeViewer, CodeViewerEmpty } from "./code-viewer";

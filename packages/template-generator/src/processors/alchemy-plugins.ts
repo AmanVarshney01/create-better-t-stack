@@ -1,10 +1,22 @@
 import type { ProjectConfig } from "@better-fullstack/types";
 
-import { IndentationText, Node, Project, QuoteKind } from "ts-morph";
-
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
-export function processAlchemyPlugins(vfs: VirtualFileSystem, config: ProjectConfig): void {
+let tsMorph: typeof import("ts-morph");
+
+async function loadTsMorph(): Promise<boolean> {
+  try {
+    tsMorph = await import("ts-morph");
+    return true;
+  } catch {
+    return false; // ts-morph unavailable (browser environment)
+  }
+}
+
+export async function processAlchemyPlugins(
+  vfs: VirtualFileSystem,
+  config: ProjectConfig,
+): Promise<void> {
   const { webDeploy, frontend } = config;
 
   if (webDeploy !== "cloudflare") return;
@@ -17,11 +29,11 @@ export function processAlchemyPlugins(vfs: VirtualFileSystem, config: ProjectCon
   if (isNext) {
     processNextAlchemy(vfs);
   } else if (isNuxt) {
-    processNuxtAlchemy(vfs);
+    if (await loadTsMorph()) processNuxtAlchemy(vfs);
   } else if (isSvelte) {
-    processSvelteAlchemy(vfs);
+    if (await loadTsMorph()) processSvelteAlchemy(vfs);
   } else if (isTanstackStart) {
-    processTanStackStartAlchemy(vfs);
+    if (await loadTsMorph()) processTanStackStartAlchemy(vfs);
   }
 }
 
@@ -54,11 +66,11 @@ function processNuxtAlchemy(vfs: VirtualFileSystem) {
   if (!vfs.exists(nuxtConfigPath)) return;
 
   const content = vfs.readFile(nuxtConfigPath);
-  const project = new Project({
+  const project = new tsMorph.Project({
     useInMemoryFileSystem: true,
     manipulationSettings: {
-      indentationText: IndentationText.TwoSpaces,
-      quoteKind: QuoteKind.Double,
+      indentationText: tsMorph.IndentationText.TwoSpaces,
+      quoteKind: tsMorph.QuoteKind.Double,
     },
   });
 
@@ -69,7 +81,7 @@ function processNuxtAlchemy(vfs: VirtualFileSystem) {
 
   const defineConfigCall = exportAssignment.getExpression();
   if (
-    !Node.isCallExpression(defineConfigCall) ||
+    !tsMorph.Node.isCallExpression(defineConfigCall) ||
     defineConfigCall.getExpression().getText() !== "defineNuxtConfig"
   ) {
     return;
@@ -80,7 +92,7 @@ function processNuxtAlchemy(vfs: VirtualFileSystem) {
     configObject = defineConfigCall.addArgument("{}");
   }
 
-  if (Node.isObjectLiteralExpression(configObject)) {
+  if (tsMorph.Node.isObjectLiteralExpression(configObject)) {
     if (!configObject.getProperty("nitro")) {
       configObject.addPropertyAssignment({
         name: "nitro",
@@ -95,9 +107,9 @@ function processNuxtAlchemy(vfs: VirtualFileSystem) {
     }
 
     const modulesProperty = configObject.getProperty("modules");
-    if (modulesProperty && Node.isPropertyAssignment(modulesProperty)) {
+    if (modulesProperty && tsMorph.Node.isPropertyAssignment(modulesProperty)) {
       const initializer = modulesProperty.getInitializer();
-      if (Node.isArrayLiteralExpression(initializer)) {
+      if (tsMorph.Node.isArrayLiteralExpression(initializer)) {
         const hasModule = initializer
           .getElements()
           .some(
@@ -125,11 +137,11 @@ function processSvelteAlchemy(vfs: VirtualFileSystem) {
   if (!vfs.exists(svelteConfigPath)) return;
 
   const content = vfs.readFile(svelteConfigPath);
-  const project = new Project({
+  const project = new tsMorph.Project({
     useInMemoryFileSystem: true,
     manipulationSettings: {
-      indentationText: IndentationText.TwoSpaces,
-      quoteKind: QuoteKind.Single,
+      indentationText: tsMorph.IndentationText.TwoSpaces,
+      quoteKind: tsMorph.QuoteKind.Single,
     },
   });
 
@@ -154,17 +166,17 @@ function processSvelteAlchemy(vfs: VirtualFileSystem) {
   const configVariable = sourceFile.getVariableDeclaration("config");
   if (configVariable) {
     const initializer = configVariable.getInitializer();
-    if (Node.isObjectLiteralExpression(initializer)) {
+    if (tsMorph.Node.isObjectLiteralExpression(initializer)) {
       const kitProperty = initializer.getProperty("kit");
-      if (kitProperty && Node.isPropertyAssignment(kitProperty)) {
+      if (kitProperty && tsMorph.Node.isPropertyAssignment(kitProperty)) {
         const kitInitializer = kitProperty.getInitializer();
-        if (Node.isObjectLiteralExpression(kitInitializer)) {
+        if (tsMorph.Node.isObjectLiteralExpression(kitInitializer)) {
           const adapterProperty = kitInitializer.getProperty("adapter");
-          if (adapterProperty && Node.isPropertyAssignment(adapterProperty)) {
+          if (adapterProperty && tsMorph.Node.isPropertyAssignment(adapterProperty)) {
             const adapterInitializer = adapterProperty.getInitializer();
-            if (Node.isCallExpression(adapterInitializer)) {
+            if (tsMorph.Node.isCallExpression(adapterInitializer)) {
               const expression = adapterInitializer.getExpression();
-              if (Node.isIdentifier(expression) && expression.getText() === "adapter") {
+              if (tsMorph.Node.isIdentifier(expression) && expression.getText() === "adapter") {
                 expression.replaceWithText("alchemy");
               }
             }
@@ -182,11 +194,11 @@ function processTanStackStartAlchemy(vfs: VirtualFileSystem) {
   if (!vfs.exists(viteConfigPath)) return;
 
   const content = vfs.readFile(viteConfigPath);
-  const project = new Project({
+  const project = new tsMorph.Project({
     useInMemoryFileSystem: true,
     manipulationSettings: {
-      indentationText: IndentationText.TwoSpaces,
-      quoteKind: QuoteKind.Double,
+      indentationText: tsMorph.IndentationText.TwoSpaces,
+      quoteKind: tsMorph.QuoteKind.Double,
     },
   });
 
@@ -208,7 +220,7 @@ function processTanStackStartAlchemy(vfs: VirtualFileSystem) {
 
   const defineConfigCall = exportAssignment.getExpression();
   if (
-    !Node.isCallExpression(defineConfigCall) ||
+    !tsMorph.Node.isCallExpression(defineConfigCall) ||
     defineConfigCall.getExpression().getText() !== "defineConfig"
   ) {
     return;
@@ -219,11 +231,11 @@ function processTanStackStartAlchemy(vfs: VirtualFileSystem) {
     configObject = defineConfigCall.addArgument("{}");
   }
 
-  if (Node.isObjectLiteralExpression(configObject)) {
+  if (tsMorph.Node.isObjectLiteralExpression(configObject)) {
     const pluginsProperty = configObject.getProperty("plugins");
-    if (pluginsProperty && Node.isPropertyAssignment(pluginsProperty)) {
+    if (pluginsProperty && tsMorph.Node.isPropertyAssignment(pluginsProperty)) {
       const initializer = pluginsProperty.getInitializer();
-      if (Node.isArrayLiteralExpression(initializer)) {
+      if (tsMorph.Node.isArrayLiteralExpression(initializer)) {
         const hasAlchemy = initializer
           .getElements()
           .some((el) => el.getText().includes("alchemy("));

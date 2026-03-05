@@ -14,7 +14,10 @@ export default defineConfig({
     sourcemap: false,
     minify: "esbuild",
     rollupOptions: {
-      external: ["@jsonjoy.com/util/lib/buffers/Writer"],
+      // ts-morph is only used by template-generator processors in Node.js (CLI).
+      // The browser dynamic imports gracefully catch the failure, so exclude it
+      // from the client bundle entirely (~1.4MB gzip savings).
+      external: ["ts-morph"],
     },
   },
   plugins: [

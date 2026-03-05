@@ -1,9 +1,10 @@
 import type { ProjectConfig } from "@better-fullstack/types";
 
 import Handlebars from "handlebars";
-import isBinaryPath from "is-binary-path";
+import { extname } from "pathe";
 
 import { composeTheme, type BaseColorName, type AccentColorName } from "../shadcn-themes";
+import { BINARY_EXTENSIONS } from "./binary-extensions";
 
 Handlebars.registerHelper("eq", (a, b) => a === b);
 Handlebars.registerHelper("ne", (a, b) => a !== b);
@@ -84,7 +85,7 @@ export function processTemplateString(content: string, context: ProjectConfig): 
 }
 
 export function isBinaryFile(filePath: string): boolean {
-  return isBinaryPath(filePath);
+  return BINARY_EXTENSIONS.has(extname(filePath).slice(1).toLowerCase());
 }
 
 export function transformFilename(filename: string): string {

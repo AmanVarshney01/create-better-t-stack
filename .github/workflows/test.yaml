@@ -83,6 +83,8 @@ jobs:
 
       - name: Build Web (Vercel Parity)
         run: bun run build:web
+        env:
+          NODE_OPTIONS: "--max-old-space-size=6144"
 
       - name: Performance Budget Check
         run: bun run --cwd apps/web perf:check

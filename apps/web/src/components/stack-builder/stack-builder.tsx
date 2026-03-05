@@ -32,7 +32,6 @@ import {
   type StackState,
   TECH_OPTIONS,
 } from "@/lib/constant";
-import { isStackPreviewEnabledClient } from "@/lib/feature-flags";
 import { useStackState } from "@/lib/stack-url-state";
 import {
   CATEGORY_ORDER,
@@ -215,7 +214,7 @@ function SidebarAccordionItem({
             : "text-muted-foreground hover:bg-muted/40 hover:text-foreground",
         )}
       >
-        <span className="truncate pr-2 font-pixel">{displayName}</span>
+        <span className="truncate pr-2 font-mono">{displayName}</span>
         <div className="flex items-center gap-1.5 shrink-0">
           {compatibilityNotes?.hasIssue && <InfoIcon className="h-3.5 w-3.5 text-amber-500" />}
           {count > 0 && (
@@ -331,7 +330,6 @@ const INITIALLY_COLLAPSED_SET = new Set([
 
 const StackBuilder = () => {
   const [stack, setStack, viewMode, setViewMode, selectedFile, setSelectedFile] = useStackState();
-  const isStackPreviewEnabled = isStackPreviewEnabledClient();
 
   const [command, setCommand] = useState("");
   const [copied, setCopied] = useState(false);
@@ -360,12 +358,6 @@ const StackBuilder = () => {
     return { ...stack, ...compatibilityAnalysis.adjustedStack };
   }, [stack, compatibilityAnalysis.adjustedStack]);
   const projectNameError = validateProjectName(stack.projectName || "");
-
-  useEffect(() => {
-    if (!isStackPreviewEnabled && viewMode === "preview") {
-      setViewMode("command");
-    }
-  }, [isStackPreviewEnabled, viewMode, setViewMode]);
 
   // ─── Derived state ──────────────────────────────────────────────────────
 
@@ -728,6 +720,62 @@ const StackBuilder = () => {
           </button>
         </div>
 
+        {/* ─── Ecosystem Header Bar ─────────────────────────────────────── */}
+        <div className="relative border-b border-border bg-fd-background">
+          <div className="grid grid-cols-4">
+            {ECOSYSTEMS.map((eco) => {
+              const isActive = stack.ecosystem === eco.id;
+              return (
+                <button
+                  key={eco.id}
+                  type="button"
+                  onClick={() => {
+                    startTransition(() => {
+                      setStack({ ecosystem: eco.id as Ecosystem });
+                    });
+                  }}
+                  className={cn(
+                    "group relative flex items-center justify-center gap-2 px-3 py-3 transition-all sm:gap-2.5 sm:px-4 sm:py-3.5",
+                    isActive
+                      ? "text-foreground"
+                      : "text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/30",
+                  )}
+                >
+                  {/* Active underline */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="ecosystem-indicator"
+                      className={cn(
+                        "absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r",
+                        eco.color,
+                      )}
+                      transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+                    />
+                  )}
+
+                  <TechIcon
+                    techId={eco.id}
+                    icon={eco.icon}
+                    name={eco.name}
+                    className={cn(
+                      "relative h-4.5 w-4.5 transition-all sm:h-5 sm:w-5",
+                      isActive ? "scale-110" : "opacity-50 group-hover:opacity-75",
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "relative font-mono text-[11px] uppercase tracking-wide transition-all sm:text-xs",
+                      isActive ? "font-bold" : "",
+                    )}
+                  >
+                    {eco.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="flex min-h-0 flex-1 overflow-hidden">
           {/* ─── Left Sidebar ───────────────────────────────────────────────── */}
           <aside
@@ -736,43 +784,6 @@ const StackBuilder = () => {
               mobileTab === "summary" ? "flex" : "hidden sm:flex",
             )}
           >
-            {/* Ecosystem Selector */}
-            <div className="border-b border-border p-3">
-              <p className="mb-2 font-pixel text-[10px] uppercase tracking-wider text-muted-foreground">
-                Ecosystem
-              </p>
-              <div className="space-y-1">
-                {ECOSYSTEMS.map((eco) => (
-                  <button
-                    key={eco.id}
-                    type="button"
-                    onClick={() => {
-                      startTransition(() => {
-                        setStack({ ecosystem: eco.id as Ecosystem });
-                      });
-                    }}
-                    className={cn(
-                      "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-all",
-                      stack.ecosystem === eco.id
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                    )}
-                  >
-                    <TechIcon
-                      techId={eco.id}
-                      icon={eco.icon}
-                      name={eco.name}
-                      className={cn(
-                        "h-4 w-4",
-                        stack.ecosystem === eco.id ? "brightness-0 invert" : "",
-                      )}
-                    />
-                    <span className="font-pixel">{eco.name}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Category Accordion */}
             <div className="relative min-h-0 flex-1">
               <div className="absolute inset-0">
@@ -800,7 +811,7 @@ const StackBuilder = () => {
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-1.5">
                     <Terminal className="h-3 w-3 text-muted-foreground" />
-                    <span className="font-pixel text-[10px] text-muted-foreground">Command</span>
+                    <span className="font-mono text-[10px] text-muted-foreground">Command</span>
                   </div>
                   <button
                     type="button"
@@ -854,7 +865,7 @@ const StackBuilder = () => {
                     }
                   >
                     <Settings className="h-3.5 w-3.5" />
-                    <span className="font-pixel text-[9px] leading-none">Settings</span>
+                    <span className="font-mono text-[9px] leading-none">Settings</span>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-64 bg-fd-background">
                     <YoloToggle stack={stack} onToggle={(yolo) => setStack({ yolo })} />
@@ -876,7 +887,7 @@ const StackBuilder = () => {
                 type="button"
                 onClick={() => setViewMode("command")}
                 className={cn(
-                  "rounded-md px-2.5 py-1.5 font-pixel text-[10px] uppercase tracking-wide transition-colors sm:text-[11px]",
+                  "rounded-md px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wide transition-colors sm:text-[11px]",
                   viewMode === "command"
                     ? "bg-primary/15 text-primary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -884,41 +895,30 @@ const StackBuilder = () => {
               >
                 Command
               </button>
-              {isStackPreviewEnabled ? (
-                <button
-                  type="button"
-                  onClick={() => setViewMode("preview")}
-                  className={cn(
-                    "rounded-md px-2.5 py-1.5 font-pixel text-[10px] uppercase tracking-wide transition-colors sm:text-[11px]",
-                    viewMode === "preview"
-                      ? "bg-primary/15 text-primary"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                  )}
-                >
-                  Preview
-                </button>
-              ) : (
-                <p className="text-muted-foreground text-xs">
-                  Preview unavailable in this environment.
-                </p>
-              )}
+              <button
+                type="button"
+                onClick={() => setViewMode("preview")}
+                className={cn(
+                  "rounded-md px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wide transition-colors sm:text-[11px]",
+                  viewMode === "preview"
+                    ? "bg-primary/15 text-primary"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                )}
+              >
+                Preview
+              </button>
             </div>
 
-            {viewMode === "command" || !isStackPreviewEnabled ? (
+            {viewMode === "command" ? (
               <div className="relative min-h-0 flex-1">
                 <div className="absolute inset-0">
                   <ScrollArea ref={mainScrollRef} className="h-full">
                     <div className="p-3 sm:p-4">
-                      {!isStackPreviewEnabled && (
-                        <p className="mb-3 rounded-md border border-border bg-muted/40 px-3 py-2 text-muted-foreground text-xs">
-                          Preview is unavailable in this environment.
-                        </p>
-                      )}
                       {/* Project Name */}
                       <div className="mb-6">
                         <label
                           htmlFor="project-name"
-                          className="mb-1.5 block font-pixel text-[10px] uppercase tracking-wider text-muted-foreground"
+                          className="mb-1.5 block font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
                         >
                           Project Name
                         </label>
@@ -982,7 +982,7 @@ const StackBuilder = () => {
                                 className="mb-3 flex w-full items-center gap-2 border-b border-border pb-2 text-left transition-opacity hover:opacity-80"
                               >
                                 <Terminal className="h-4 w-4 shrink-0 text-muted-foreground sm:h-5 sm:w-5" />
-                                <h2 className="flex-1 font-pixel text-foreground text-sm sm:text-base">
+                                <h2 className="flex-1 font-mono text-foreground text-sm sm:text-base">
                                   {categoryDisplayName}
                                 </h2>
                                 {compatibilityAnalysis.notes[categoryKey]?.hasIssue && (
@@ -1066,7 +1066,7 @@ const StackBuilder = () => {
                                                     onClick={(e) => e.stopPropagation()}
                                                     className="cursor-default"
                                                   >
-                                                    <span className="rounded-sm border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-pixel text-[9px] text-amber-500 dark:text-amber-400">
+                                                    <span className="rounded-sm border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[9px] text-amber-500 dark:text-amber-400">
                                                       Legacy
                                                     </span>
                                                   </TooltipTrigger>
@@ -1140,7 +1140,7 @@ const StackBuilder = () => {
                                       className="mb-3 flex w-full items-center gap-2 border-b border-border pb-2 text-left transition-opacity hover:opacity-80"
                                     >
                                       <Terminal className="h-4 w-4 shrink-0 text-muted-foreground sm:h-5 sm:w-5" />
-                                      <h2 className="flex-1 font-pixel text-foreground text-sm sm:text-base">
+                                      <h2 className="flex-1 font-mono text-foreground text-sm sm:text-base">
                                         shadcn/ui Configuration
                                       </h2>
                                       <motion.div
@@ -1309,7 +1309,7 @@ const StackBuilder = () => {
                                   >
                                     <div className="mb-3 flex items-center gap-2 border-border border-b pb-2">
                                       <Terminal className="h-4 w-4 shrink-0 text-muted-foreground sm:h-5 sm:w-5" />
-                                      <h2 className="font-pixel text-foreground text-sm sm:text-base">
+                                      <h2 className="font-mono text-foreground text-sm sm:text-base">
                                         Astro Integration
                                       </h2>
                                     </div>
@@ -1355,7 +1355,7 @@ const StackBuilder = () => {
                                                   onClick={(e) => e.stopPropagation()}
                                                   className="absolute top-2 right-2 cursor-default"
                                                 >
-                                                  <span className="rounded-sm border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-pixel text-[9px] text-amber-500 dark:text-amber-400">
+                                                  <span className="rounded-sm border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[9px] text-amber-500 dark:text-amber-400">
                                                     Legacy
                                                   </span>
                                                 </TooltipTrigger>
