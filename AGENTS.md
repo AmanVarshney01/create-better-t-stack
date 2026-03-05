@@ -19,3 +19,8 @@ The role of this file is to describe common mistakes and confusion points that a
 - Redwood path helpers must be backend-aware: `web/api` paths apply to `frontend=redwood` only when `backend=none`; with external backends (hono/express/etc.) paths are `apps/web` and `apps/server`.
 - Redwood constraints to remember during matrix creation: API must be `none` and compatible UI libraries are currently `daisyui` or `none`.
 - In scripted/non-interactive runs with `--ui-library shadcn-ui`, pass explicit shadcn sub-options (at minimum `--shadcn-base`, ideally full `--shadcn-*` set). Otherwise CLI can stop at the shadcn prompt and leave an empty project directory while returning exit code 0.
+
+## Discovered gotchas (2026-03-05)
+
+- `apps/web/src/components/home/` can accumulate legacy marketing sections that are no longer imported by `apps/web/src/routes/index.tsx` (for example `combinations-3d-section.tsx`, `command-section.tsx`, `sponsor-section.tsx`). When doing homepage cleanup tasks, run a reference sweep before editing active sections.
+- `apps/cli/test/cli-builder-sync.test.ts` was historically brittle: it depended on current working directory for file resolution and silently skipped prompt/schema checks when parsing failed. Keep path resolution root-safe (`apps/cli/...` fallback) and fail hard on parse gaps to avoid false-green sync tests.

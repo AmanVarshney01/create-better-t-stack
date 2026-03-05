@@ -8,5 +8,7 @@ Task planning documents are organized by state:
 
 Current files:
 
-- `docs/plans/planned/Codex-improvements-backlog.md`
-- `docs/plans/completed/Codex-improvements-completed.md`
+- `docs/plans/planned/engineering-backlog.md`
+- `docs/plans/planned/ecosystem-expansion-backlog.md`
+- `docs/plans/completed/compatibility-unification-and-url-state-foundation-2026-02-28.md`
+- `docs/plans/completed/shadcn-ui-polish-fixes-2026-03-02.md`
