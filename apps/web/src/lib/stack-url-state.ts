@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { StackSearchParams } from "@/lib/stack-search-schema";
 
 import { DEFAULT_STACK, type StackState } from "@/lib/stack-defaults";
+import { normalizeStackStateSelections } from "@/lib/stack-option-normalization";
 import { stackUrlKeys } from "@/lib/stack-url-keys";
 
 // Parse search params to StackState (used on server side)
@@ -32,7 +33,7 @@ export function loadStackParams(
       return defaultValue;
     };
 
-    return {
+    return normalizeStackStateSelections({
       ecosystem: getString("ecosystem", DEFAULT_STACK.ecosystem) as
         | "typescript"
         | "rust"
@@ -110,7 +111,7 @@ export function loadStackParams(
       goLogging: getString("goLogging", DEFAULT_STACK.goLogging),
       // AI Docs
       aiDocs: getArray("aiDocs", DEFAULT_STACK.aiDocs),
-    };
+    });
   };
 
   if (searchParams instanceof Promise) {
@@ -222,7 +223,7 @@ export type LoadedStackState = StackState;
 function searchToStack(search: StackSearchParams | undefined): StackState {
   if (!search) return DEFAULT_STACK;
 
-  return {
+  return normalizeStackStateSelections({
     ecosystem: (search.eco as StackState["ecosystem"] | undefined) ?? DEFAULT_STACK.ecosystem,
     projectName: search.name ?? DEFAULT_STACK.projectName,
     webFrontend: search["fe-w"] ?? DEFAULT_STACK.webFrontend,
@@ -295,7 +296,7 @@ function searchToStack(search: StackSearchParams | undefined): StackState {
     goApi: search.gapi ?? DEFAULT_STACK.goApi,
     goCli: search.gcli ?? DEFAULT_STACK.goCli,
     goLogging: search.glog ?? DEFAULT_STACK.goLogging,
-  };
+  });
 }
 
 export function useStackState() {

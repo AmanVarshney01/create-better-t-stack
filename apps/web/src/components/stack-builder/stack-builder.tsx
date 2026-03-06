@@ -14,6 +14,7 @@ import {
 import { AnimatePresence, motion } from "motion/react";
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { isMultiSelectCategory, type OptionCategory } from "@better-fullstack/types";
 
 import type { Ecosystem } from "@/lib/types";
 
@@ -165,15 +166,7 @@ function getSelectedCount(category: keyof typeof TECH_OPTIONS, stack: StackState
 function isSelectedCheck(stack: StackState, categoryKey: string, techId: string): boolean {
   const category = categoryKey as keyof StackState;
   const currentValue = stack[category];
-  if (
-    category === "codeQuality" ||
-    category === "documentation" ||
-    category === "appPlatforms" ||
-    category === "examples" ||
-    category === "webFrontend" ||
-    category === "nativeFrontend" ||
-    category === "aiDocs"
-  ) {
+  if (isMultiSelectCategory(categoryKey as OptionCategory)) {
     return ((currentValue as string[]) || []).includes(techId);
   }
   return currentValue === techId;
@@ -463,15 +456,7 @@ const StackBuilder = () => {
         const update: Partial<StackState> = {};
         const currentValue = currentStack[catKey];
 
-        if (
-          catKey === "webFrontend" ||
-          catKey === "nativeFrontend" ||
-          catKey === "codeQuality" ||
-          catKey === "documentation" ||
-          catKey === "appPlatforms" ||
-          catKey === "examples" ||
-          catKey === "aiDocs"
-        ) {
+        if (isMultiSelectCategory(category as OptionCategory)) {
           const currentArray = Array.isArray(currentValue) ? [...currentValue] : [];
           let nextArray = [...currentArray];
           const isSelected = currentArray.includes(techId);
@@ -522,7 +507,7 @@ const StackBuilder = () => {
           const uniqueCurrent = [...new Set(currentArray)].sort();
 
           if (JSON.stringify(uniqueNext) !== JSON.stringify(uniqueCurrent)) {
-            update[catKey] = uniqueNext;
+            (update as Record<string, unknown>)[catKey] = uniqueNext;
           }
         } else {
           if (currentValue !== techId) {
@@ -559,15 +544,7 @@ const StackBuilder = () => {
       const options = TECH_OPTIONS[category as keyof typeof TECH_OPTIONS] || [];
       if (options.length === 0) continue;
       const catKey = category as keyof StackState;
-      if (
-        catKey === "webFrontend" ||
-        catKey === "nativeFrontend" ||
-        catKey === "codeQuality" ||
-        catKey === "documentation" ||
-        catKey === "appPlatforms" ||
-        catKey === "examples" ||
-        catKey === "aiDocs"
-      ) {
+      if (isMultiSelectCategory(category as OptionCategory)) {
         if (catKey === "webFrontend" || catKey === "nativeFrontend") {
           const randomIndex = Math.floor(Math.random() * options.length);
           const selectedOption = options[randomIndex].id;

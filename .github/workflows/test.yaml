@@ -11,6 +11,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  release-guard:
+    name: Release Guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build Types
+        run: cd packages/types && bun run build
+
+      - name: Build Template Generator
+        run: cd packages/template-generator && bun run build
+
+      - name: Run Release Verification
+        run: bun run test:release
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -68,7 +93,7 @@ jobs:
     name: Build Check
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [lint, test]
+    needs: [release-guard, lint, test]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4

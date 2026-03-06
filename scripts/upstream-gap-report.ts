@@ -17,6 +17,8 @@ type ReportArea =
   | "packages/types"
   | "other";
 
+type PriorityFocus = "reliability" | "dependency-safety" | "compatibility";
+
 type ReportResult = {
   generatedAt: string;
   baseRef: string;
@@ -25,6 +27,7 @@ type ReportResult = {
   upstreamRef: string;
   totalBehindCommits: number;
   byArea: Record<ReportArea, CommitEntry[]>;
+  priorityCandidates: Record<PriorityFocus, CommitEntry[]>;
 };
 
 const DEFAULT_UPSTREAM_URL = "https://github.com/AmanVarshney01/create-better-t-stack.git";
@@ -54,11 +57,41 @@ function classifyArea(filePath: string): ReportArea {
   return "other";
 }
 
+function getPriorityFocuses(commit: CommitEntry): PriorityFocus[] {
+  const subject = commit.subject.toLowerCase();
+  const fileList = commit.files.join(" ").toLowerCase();
+  const focuses: PriorityFocus[] = [];
+
+  if (
+    /(fix|bug|regress|failure|failing|crash|error|unused|stale|retry|validation|build)/.test(subject) ||
+    /(compatibility|validation|build|template|route)/.test(fileList)
+  ) {
+    focuses.push("reliability");
+  }
+
+  if (
+    /(deps|dependency|dependencies|security|vuln|upgrade|bump|audit|version)/.test(subject) ||
+    /(package\.json|bun\.lock|pnpm-lock|package-lock|versions?)/.test(fileList)
+  ) {
+    focuses.push("dependency-safety");
+  }
+
+  if (
+    /(compat|compatibility|parity|sync|support|matrix)/.test(subject) ||
+    /(compatibility|schemas|prompt|routeTree|redwood|svelte|nuxt|solid|astro|python|rust|go)/.test(
+      fileList,
+    )
+  ) {
+    focuses.push("compatibility");
+  }
+
+  return focuses;
+}
+
 function fetchUpstreamRef(upstreamUrl: string, upstreamBranch: string): string {
   const sanitizedBranch = upstreamBranch.replace(/[^a-zA-Z0-9._/-]/g, "");
-  const upstreamRef = `refs/remotes/upstream-gap/${sanitizedBranch}`;
-  runGit(["fetch", "--no-tags", "--prune", upstreamUrl, `${sanitizedBranch}:${upstreamRef}`]);
-  return upstreamRef;
+  runGit(["fetch", "--no-tags", "--prune", upstreamUrl, sanitizedBranch]);
+  return runGit(["rev-parse", "FETCH_HEAD"]);
 }
 
 function readBehindCommits(range: string): CommitEntry[] {
@@ -121,6 +154,11 @@ function generateReport({
     "packages/types": [],
     other: [],
   };
+  const priorityCandidates: Record<PriorityFocus, CommitEntry[]> = {
+    reliability: [],
+    "dependency-safety": [],
+    compatibility: [],
+  };
 
   for (const commit of commits) {
     const areas = new Set<ReportArea>();
@@ -135,6 +173,10 @@ function generateReport({
     for (const area of areas) {
       byArea[area].push(commit);
     }
+
+    for (const focus of getPriorityFocuses(commit)) {
+      priorityCandidates[focus].push(commit);
+    }
   }
 
   return {
@@ -145,6 +187,7 @@ function generateReport({
     upstreamRef,
     totalBehindCommits: commits.length,
     byArea,
+    priorityCandidates,
   };
 }
 
@@ -158,6 +201,32 @@ function formatMarkdown(report: ReportResult, maxPerArea: number): string {
   lines.push(`- Upstream: ${report.upstreamUrl} (${report.upstreamBranch})`);
   lines.push(`- Behind commits: ${report.totalBehindCommits}`);
   lines.push("");
+
+  lines.push("## Priority Backport Candidates");
+  lines.push("");
+
+  const focuses: PriorityFocus[] = ["reliability", "dependency-safety", "compatibility"];
+
+  for (const focus of focuses) {
+    const commits = report.priorityCandidates[focus];
+    lines.push(`### ${focus} (${commits.length})`);
+
+    if (commits.length === 0) {
+      lines.push("- No commits flagged in this focus area.");
+      lines.push("");
+      continue;
+    }
+
+    for (const commit of commits.slice(0, 10)) {
+      lines.push(`- ${commit.shortHash} (${commit.date}) ${commit.subject}`);
+    }
+
+    if (commits.length > 10) {
+      lines.push(`- ... ${commits.length - 10} more commit(s)`);
+    }
+
+    lines.push("");
+  }
 
   const areas: ReportArea[] = [
     "apps/cli",
@@ -198,6 +267,19 @@ function formatText(report: ReportResult, maxPerArea: number): string {
   lines.push(`Base ref: ${report.baseRef}`);
   lines.push(`Upstream: ${report.upstreamUrl} (${report.upstreamBranch})`);
   lines.push(`Behind commits: ${report.totalBehindCommits}`);
+  lines.push("");
+
+  lines.push("Priority backport candidates:");
+  for (const focus of ["reliability", "dependency-safety", "compatibility"] as PriorityFocus[]) {
+    const commits = report.priorityCandidates[focus];
+    lines.push(`${focus}: ${commits.length}`);
+    for (const commit of commits.slice(0, 10)) {
+      lines.push(`  - ${commit.shortHash} (${commit.date}) ${commit.subject}`);
+    }
+    if (commits.length > 10) {
+      lines.push(`  - ... ${commits.length - 10} more commit(s)`);
+    }
+  }
   lines.push("");
 
   const areas: ReportArea[] = [

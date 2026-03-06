@@ -2,6 +2,7 @@ import { type ProjectConfig, ProjectConfigSchema } from "@better-fullstack/types
 
 import { analyzeStackCompatibility } from "@/components/stack-builder/utils";
 import { DEFAULT_STACK, type StackState } from "@/lib/stack-defaults";
+import { normalizeStackStateSelections } from "@/lib/stack-option-normalization";
 
 const SELF_BACKENDS = new Set([
   "self-next",
@@ -21,7 +22,7 @@ function toBoolean(value: string): boolean {
 }
 
 function normalizeInputStack(input: Partial<StackState>): StackState {
-  return {
+  return normalizeStackStateSelections({
     ...DEFAULT_STACK,
     ...input,
     webFrontend: input.webFrontend ?? DEFAULT_STACK.webFrontend,
@@ -31,7 +32,7 @@ function normalizeInputStack(input: Partial<StackState>): StackState {
     appPlatforms: input.appPlatforms ?? DEFAULT_STACK.appPlatforms,
     examples: input.examples ?? DEFAULT_STACK.examples,
     aiDocs: input.aiDocs ?? DEFAULT_STACK.aiDocs,
-  };
+  });
 }
 
 export function stackStateToProjectConfig(input: Partial<StackState>): ProjectConfig {

@@ -98,8 +98,8 @@ export const TECH_OPTIONS: Record<
     },
     {
       id: "svelte",
-      name: "Svelte",
-      description: "Cybernetically enhanced web apps",
+      name: "SvelteKit",
+      description: "Full-stack Svelte framework for modern web apps",
       icon: "/icon/svelte.png",
       color: "from-orange-500 to-orange-700",
       default: false,
@@ -983,6 +983,14 @@ export const TECH_OPTIONS: Record<
       description: "Privacy-focused, lightweight analytics - no cookies required",
       icon: "",
       color: "from-indigo-500 to-purple-600",
+      default: false,
+    },
+    {
+      id: "umami",
+      name: "Umami",
+      description: "Open-source, privacy-focused analytics with self-hosted support",
+      icon: "",
+      color: "from-emerald-500 to-teal-600",
       default: false,
     },
     {

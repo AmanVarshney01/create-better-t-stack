@@ -73,8 +73,8 @@ export async function getFrontendChoice(
         },
         {
           value: "svelte" as const,
-          label: "Svelte",
-          hint: "web development for the rest of us",
+          label: "SvelteKit",
+          hint: "Full-stack Svelte framework with SSR and server routes",
         },
         {
           value: "solid" as const,

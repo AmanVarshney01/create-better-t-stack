@@ -21,6 +21,14 @@ export interface ProjectSnapshot {
   files: SnapshotFile[];
 }
 
+function normalizeSnapshotContent(content: string): string {
+  const normalizedNewlines = content.replace(/\r\n/g, "\n");
+  return normalizedNewlines
+    .split("\n")
+    .map((line) => line.replace(/[ \t]+$/g, ""))
+    .join("\n");
+}
+
 /**
  * Files worth snapshotting full content (small, important config files)
  */
@@ -88,7 +96,9 @@ export function treeToSnapshot(tree: VirtualFileTree): ProjectSnapshot {
 
       files.push({
         path: node.path,
-        content: isKeyFile(node.path) ? (node as VirtualFile).content : "[exists]",
+        content: isKeyFile(node.path)
+          ? normalizeSnapshotContent((node as VirtualFile).content)
+          : "[exists]",
       });
     } else if (node.type === "directory") {
       for (const child of (node as VirtualDirectory).children) {
@@ -143,7 +153,7 @@ export function treeToKeyFiles(tree: VirtualFileTree): SnapshotFile[] {
 
       files.push({
         path: node.path,
-        content: (node as VirtualFile).content,
+        content: normalizeSnapshotContent((node as VirtualFile).content),
       });
     } else if (node.type === "directory") {
       for (const child of (node as VirtualDirectory).children) {

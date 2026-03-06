@@ -27,7 +27,7 @@ const BASE_LINKS: LinkMap = {
   },
   next: { docsUrl: "https://nextjs.org/docs", githubUrl: "https://github.com/vercel/next.js" },
   nuxt: { docsUrl: "https://nuxt.com/docs", githubUrl: "https://github.com/nuxt/nuxt" },
-  svelte: { docsUrl: "https://svelte.dev/docs", githubUrl: "https://github.com/sveltejs/svelte" },
+  svelte: { docsUrl: "https://svelte.dev/docs/kit", githubUrl: "https://github.com/sveltejs/kit" },
   solid: { docsUrl: "https://docs.solidjs.com/", githubUrl: "https://github.com/solidjs/solid" },
   "solid-start": {
     docsUrl: "https://docs.solidjs.com/solid-start",
@@ -270,6 +270,10 @@ const BASE_LINKS: LinkMap = {
   plausible: {
     docsUrl: "https://plausible.io/docs",
     githubUrl: "https://github.com/plausible/analytics",
+  },
+  umami: {
+    docsUrl: "https://umami.is/docs",
+    githubUrl: "https://github.com/umami-software/umami",
   },
   effect: {
     docsUrl: "https://effect.website/docs/",

@@ -1,4 +1,5 @@
 import { DEFAULT_STACK, type StackState } from "@/lib/stack-defaults";
+import { normalizeStackStateSelections } from "@/lib/stack-option-normalization";
 import { stackUrlKeys } from "@/lib/stack-url-keys";
 
 type QueryValue = string | string[] | null | undefined;
@@ -70,7 +71,7 @@ export function parseStackFromUrlRecord(params: UrlRecord): StackState {
     parsed[stackKey] = parseScalarValue(rawValue, String(defaultValue ?? ""));
   }
 
-  return parsed as StackState;
+  return normalizeStackStateSelections(parsed as StackState);
 }
 
 export function parseStackFromSearch(search: Record<string, unknown> | undefined): StackState {

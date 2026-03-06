@@ -72,91 +72,22 @@ import {
   UI_LIBRARY_VALUES,
   VALIDATION_VALUES,
   WEB_DEPLOY_VALUES,
+  getCategoryCliValues,
+  getOptionMetadata,
+  type OptionCategory,
+  OPTION_CATEGORY_METADATA,
 } from "@better-fullstack/types";
 import { describe, expect, it } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const BOOLEAN_TOGGLE_VALUES = ["true", "false"] as const;
-
-// Mapping from Builder TECH_OPTIONS category to CLI schema values
-const CLI_SCHEMA_MAP: Record<string, readonly string[]> = {
-  // TypeScript ecosystem
-  api: API_VALUES,
-  webFrontend: FRONTEND_VALUES,
-  nativeFrontend: FRONTEND_VALUES,
-  database: DATABASE_VALUES,
-  orm: ORM_VALUES,
-  backend: BACKEND_VALUES,
-  runtime: RUNTIME_VALUES,
-  auth: AUTH_VALUES,
-  payments: PAYMENTS_VALUES,
-  email: EMAIL_VALUES,
-  stateManagement: STATE_MANAGEMENT_VALUES,
-  forms: FORMS_VALUES,
-  validation: VALIDATION_VALUES,
-  testing: TESTING_VALUES,
-  realtime: REALTIME_VALUES,
-  jobQueue: JOB_QUEUE_VALUES,
-  caching: CACHING_VALUES,
-  search: SEARCH_VALUES,
-  fileStorage: FILE_STORAGE_VALUES,
-  animation: ANIMATION_VALUES,
-  cms: CMS_VALUES,
-  fileUpload: FILE_UPLOAD_VALUES,
-  logging: LOGGING_VALUES,
-  observability: OBSERVABILITY_VALUES,
-  featureFlags: FEATURE_FLAGS_VALUES,
-  analytics: ANALYTICS_VALUES,
-  ai: AI_VALUES, // aiSdk in StackState
-  codeQuality: ADDONS_VALUES,
-  documentation: ADDONS_VALUES,
-  appPlatforms: ADDONS_VALUES,
-  examples: EXAMPLES_VALUES,
-  packageManager: PACKAGE_MANAGER_VALUES,
-  dbSetup: DATABASE_SETUP_VALUES,
-  cssFramework: CSS_FRAMEWORK_VALUES,
-  uiLibrary: UI_LIBRARY_VALUES,
-  webDeploy: WEB_DEPLOY_VALUES,
-  serverDeploy: SERVER_DEPLOY_VALUES,
-  astroIntegration: ASTRO_INTEGRATION_VALUES,
-  backendLibraries: EFFECT_VALUES,
-  effect: EFFECT_VALUES,
-  shadcnBase: SHADCN_BASE_VALUES,
-  shadcnStyle: SHADCN_STYLE_VALUES,
-  shadcnIconLibrary: SHADCN_ICON_LIBRARY_VALUES,
-  shadcnColorTheme: SHADCN_COLOR_THEME_VALUES,
-  shadcnBaseColor: SHADCN_BASE_COLOR_VALUES,
-  shadcnFont: SHADCN_FONT_VALUES,
-  shadcnRadius: SHADCN_RADIUS_VALUES,
-  git: BOOLEAN_TOGGLE_VALUES,
-  install: BOOLEAN_TOGGLE_VALUES,
-  // Rust ecosystem
-  rustWebFramework: RUST_WEB_FRAMEWORK_VALUES,
-  rustFrontend: RUST_FRONTEND_VALUES,
-  rustOrm: RUST_ORM_VALUES,
-  rustApi: RUST_API_VALUES,
-  rustCli: RUST_CLI_VALUES,
-  rustLibraries: RUST_LIBRARIES_VALUES,
-  // Go ecosystem
-  goWebFramework: GO_WEB_FRAMEWORK_VALUES,
-  goOrm: GO_ORM_VALUES,
-  goApi: GO_API_VALUES,
-  goCli: GO_CLI_VALUES,
-  goLogging: GO_LOGGING_VALUES,
-  // Python ecosystem
-  pythonWebFramework: PYTHON_WEB_FRAMEWORK_VALUES,
-  pythonOrm: PYTHON_ORM_VALUES,
-  pythonValidation: PYTHON_VALIDATION_VALUES,
-  pythonAi: PYTHON_AI_VALUES,
-  pythonTaskQueue: PYTHON_TASK_QUEUE_VALUES,
-  pythonQuality: PYTHON_QUALITY_VALUES,
-  // AI Docs
-  aiDocs: AI_DOCS_VALUES,
+type BuilderOption = {
+  id: string;
+  name: string;
 };
 
 // Parse TECH_OPTIONS from the Builder's constant.ts file
-function parseBuilderOptions(): Record<string, string[]> {
+function parseBuilderOptions(): Record<string, BuilderOption[]> {
   // Handle both running from apps/cli and apps/cli/test
   const possiblePaths = [
     join(process.cwd(), "..", "web", "src", "lib", "constant.ts"),
@@ -209,7 +140,7 @@ function parseBuilderOptions(): Record<string, string[]> {
     throw new Error("Could not find TECH_OPTIONS object end");
   }
   const techOptionsSection = content.slice(objectStart + 1, objectEnd);
-  const result: Record<string, string[]> = {};
+  const result: Record<string, BuilderOption[]> = {};
 
   // Parse each category by finding "categoryName: [" patterns
   // Then extract all id: "value" within that array
@@ -234,17 +165,17 @@ function parseBuilderOptions(): Record<string, string[]> {
     const categoryContent = techOptionsSection.slice(startIndex, endIndex);
 
     // Extract all id values from this category
-    const idRegex = /id:\s*["']([^"']+)["']/g;
-    const ids: string[] = [];
-    let idMatch: RegExpExecArray | null;
+    const optionRegex = /id:\s*["']([^"']+)["'][\s\S]*?name:\s*["']([^"']+)["']/g;
+    const options: BuilderOption[] = [];
+    let optionMatch: RegExpExecArray | null;
 
     // biome-ignore lint/suspicious/noAssignInExpressions: needed for regex iteration
-    while ((idMatch = idRegex.exec(categoryContent)) !== null) {
-      ids.push(idMatch[1]);
+    while ((optionMatch = optionRegex.exec(categoryContent)) !== null) {
+      options.push({ id: optionMatch[1], name: optionMatch[2] });
     }
 
-    if (ids.length > 0) {
-      result[categoryName] = ids;
+    if (options.length > 0) {
+      result[categoryName] = options;
     }
   }
 
@@ -253,6 +184,7 @@ function parseBuilderOptions(): Record<string, string[]> {
 
 describe("CLI and Builder Sync", () => {
   const builderOptions = parseBuilderOptions();
+  const categoryMetadata = OPTION_CATEGORY_METADATA;
 
   it("should have parsed Builder options successfully", () => {
     expect(Object.keys(builderOptions).length).toBeGreaterThan(0);
@@ -260,7 +192,7 @@ describe("CLI and Builder Sync", () => {
   });
 
   // Test each category
-  const categoriesToTest = Object.keys(CLI_SCHEMA_MAP);
+  const categoriesToTest = Object.keys(categoryMetadata);
   const missingBuilderCategories = categoriesToTest.filter((category) => !builderOptions[category]);
 
   it("should have all mapped categories present in Builder", () => {
@@ -268,32 +200,18 @@ describe("CLI and Builder Sync", () => {
   });
 
   for (const category of categoriesToTest) {
-    const cliValues = CLI_SCHEMA_MAP[category];
-    const builderValues = builderOptions[category];
-    if (!builderValues) throw new Error(`Missing builder options for category '${category}'`);
+    const cliValues = getCategoryCliValues(category as OptionCategory);
+    const builderEntries = builderOptions[category];
+    if (!builderEntries) throw new Error(`Missing builder options for category '${category}'`);
+    const builderValues = builderEntries.map((option) => option.id);
 
     describe(`Category: ${category}`, () => {
       it("Builder options should all be valid CLI options", () => {
         const cliSet = new Set(cliValues);
         const missingInCli: string[] = [];
 
-        // Builder-specific options that map to different CLI values
-        const builderToCli: Record<string, Record<string, string>> = {
-          // self-* backends all map to "self" in CLI
-          backend: {
-            "self-next": "self",
-            "self-tanstack-start": "self",
-            "self-astro": "self",
-            "self-nuxt": "self",
-            "self-svelte": "self",
-            "self-solid-start": "self",
-          },
-        };
-
-        const mapping = builderToCli[category] || {};
-
         for (const option of builderValues) {
-          const cliOption = mapping[option] || option;
+          const cliOption = getOptionMetadata(category as OptionCategory, option)?.cliValue ?? option;
           if (!cliSet.has(cliOption)) {
             missingInCli.push(option);
           }
@@ -311,92 +229,16 @@ describe("CLI and Builder Sync", () => {
         expect(missingInCli).toEqual([]);
       });
 
-      it("CLI options should all be in Builder (or intentionally excluded)", () => {
-        const builderSet = new Set(builderValues);
+      it("CLI options should all be represented in Builder", () => {
+        const builderCliValues = new Set(
+          builderValues.map(
+            (option) => getOptionMetadata(category as OptionCategory, option)?.cliValue ?? option,
+          ),
+        );
         const missingInBuilder: string[] = [];
 
-        // Some CLI options are intentionally not shown in Builder UI
-        const intentionallyExcluded: Record<string, string[]> = {
-          // "self" backend is mapped from self-* variants in Builder
-          backend: ["self"],
-          // native frontends are in a separate nativeFrontend category in Builder
-          webFrontend: ["native-bare", "native-uniwind", "native-unistyles"],
-          // nativeFrontend in Builder only shows native options, web options are in webFrontend
-          nativeFrontend: [
-            "tanstack-router",
-            "react-router",
-            "tanstack-start",
-            "next",
-            "nuxt",
-            "svelte",
-            "solid",
-            "solid-start",
-            "astro",
-            "qwik",
-            "angular",
-            "redwood",
-            "fresh",
-            "none",
-          ],
-          // codeQuality, documentation, appPlatforms are subsets of AddonsSchema
-          // Each category only shows relevant addons, not all of them
-          codeQuality: [
-            "pwa",
-            "tauri",
-            "starlight",
-            "turborepo",
-            "fumadocs",
-            "opentui",
-            "wxt",
-            "msw",
-            "storybook",
-            "mcp",
-            "skills",
-            "none",
-          ],
-          documentation: [
-            "pwa",
-            "tauri",
-            "biome",
-            "lefthook",
-            "husky",
-            "ruler",
-            "turborepo",
-            "ultracite",
-            "oxlint",
-            "opentui",
-            "wxt",
-            "msw",
-            "storybook",
-            "mcp",
-            "skills",
-            "none",
-          ],
-          appPlatforms: [
-            "starlight",
-            "biome",
-            "lefthook",
-            "husky",
-            "ruler",
-            "fumadocs",
-            "ultracite",
-            "oxlint",
-            "msw",
-            "storybook",
-            "mcp",
-            "skills",
-            "none",
-          ],
-          // examples category may not show "none" explicitly
-          examples: ["none"],
-          // web builder currently ships only plausible + none in analytics UI
-          analytics: ["umami"],
-        };
-
-        const excluded = intentionallyExcluded[category] || [];
-
         for (const option of cliValues) {
-          if (!builderSet.has(option) && !excluded.includes(option)) {
+          if (!builderCliValues.has(option)) {
             missingInBuilder.push(option);
           }
         }
@@ -412,6 +254,18 @@ describe("CLI and Builder Sync", () => {
 
         expect(missingInBuilder).toEqual([]);
       });
+
+      it("Builder labels should match canonical metadata for aliased options", () => {
+        const aliasedEntries = builderEntries.filter((entry) => {
+          const metadata = getOptionMetadata(category as OptionCategory, entry.id);
+          return Boolean(metadata && metadata.aliases.length > 0);
+        });
+
+        for (const entry of aliasedEntries) {
+          const metadata = getOptionMetadata(category as OptionCategory, entry.id);
+          expect(entry.name).toBe(metadata?.label);
+        }
+      });
     });
   }
 
@@ -420,7 +274,7 @@ describe("CLI and Builder Sync", () => {
     const unmappedCategories: string[] = [];
 
     for (const category of Object.keys(builderOptions)) {
-      if (!CLI_SCHEMA_MAP[category]) {
+      if (!categoryMetadata[category as OptionCategory]) {
         unmappedCategories.push(category);
       }
     }
