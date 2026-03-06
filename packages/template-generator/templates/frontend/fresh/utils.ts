@@ -1,8 +1,7 @@
-import { createDefine } from "$fresh/server.ts";
+import { createDefine } from "fresh";
 
 export interface State {
-  // Add your state properties here
-  title?: string;
+  siteName: string;
 }
 
 export const define = createDefine<State>();

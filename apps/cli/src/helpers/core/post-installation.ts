@@ -120,6 +120,7 @@ export async function displayPostInstallInstructions(
 
   const hasReactRouter = frontend?.includes("react-router");
   const hasSvelte = frontend?.includes("svelte");
+  const hasFresh = frontend?.includes("fresh");
   const webPort = hasReactRouter || hasSvelte ? "5173" : "3001";
   const betterAuthConvexInstructions =
     isConvex && config.auth === "better-auth"
@@ -131,6 +132,10 @@ export async function displayPostInstallInstructions(
 
   if (!depsInstalled) {
     output += `${pc.cyan(`${stepCounter++}.`)} ${packageManager} install\n`;
+  }
+
+  if (hasFresh) {
+    output += `${pc.yellow("NOTE:")} Fresh projects require ${pc.white("deno")} on your PATH\n`;
   }
 
   if (database === "sqlite" && dbSetup !== "d1") {

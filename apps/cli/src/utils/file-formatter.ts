@@ -25,6 +25,11 @@ export async function formatCode(filePath: string, content: string): Promise<str
 
 export async function formatProject(projectDir: string) {
   async function formatDirectory(dir: string) {
+    const denoConfigPath = path.join(dir, "deno.json");
+    if (await fs.pathExists(denoConfigPath)) {
+      return;
+    }
+
     const entries = await fs.readdir(dir, { withFileTypes: true });
 
     await Promise.all(

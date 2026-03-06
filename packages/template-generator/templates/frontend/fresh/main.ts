@@ -1,11 +1,18 @@
 /// <reference lib="deno.ns" />
 
-import { App, staticFiles } from "$fresh/server.ts";
+import { App, staticFiles } from "fresh";
+import type { State } from "./utils.ts";
 
-export const app = new App({ root: import.meta.url }).use(staticFiles());
+export const app = new App<State>();
 
-// To add custom routes, import { define } from "./utils.ts"
-// app.get("/api/example", define.handlers(() => new Response("Hello!")));
+app.use(staticFiles());
+
+app.use(async (ctx) => {
+  ctx.state.siteName = "{{projectName}}";
+  return await ctx.next();
+});
+
+app.fsRoutes();
 
 if (import.meta.main) {
   await app.listen();

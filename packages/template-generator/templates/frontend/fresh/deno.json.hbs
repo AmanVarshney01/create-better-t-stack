@@ -1,12 +1,10 @@
 {
   "lock": false,
   "tasks": {
-    "check": "deno fmt --check && deno lint && deno check **/*.ts && deno check **/*.tsx",
-    "cli": "echo \"import '\\$fresh/src/dev/cli.ts'\" | deno run --unstable -A -",
-    "manifest": "deno task cli manifest $(pwd)",
-    "dev": "deno run -A --watch=static/,routes/ dev.ts",
-    "build": "deno run -A dev.ts build",
-    "preview": "deno run -A main.ts",
+    "check": "deno fmt --check . && deno lint . && deno check",
+    "dev": "vite",
+    "build": "vite build",
+    "start": "deno serve -A _fresh/server.js",
     "update": "deno run -A -r jsr:@fresh/update ."
   },
   "lint": {
@@ -21,22 +19,44 @@
     "**/_fresh/*"
   ],
   "imports": {
-    "$fresh/": "jsr:@fresh/core@^2.0.0-alpha/",
-    "preact": "npm:preact@^10.25.4",
-    "preact/": "npm:preact@^10.25.4/",
-    "@preact/signals": "npm:@preact/signals@^2.0.0",
-    "@preact/signals-core": "npm:@preact/signals-core@^2.0.0"{{#if (eq cssFramework "tailwind")}},
-    "tailwindcss": "npm:tailwindcss@^3.4.17",
-    "tailwindcss/plugin": "npm:tailwindcss@^3.4.17/plugin.js"{{/if}}
+    "@/": "./",
+    "fresh": "jsr:@fresh/core@^2.2.0",
+    "preact": "npm:preact@^10.27.2",
+    "@preact/signals": "npm:@preact/signals@^2.5.0",
+    "@fresh/plugin-vite": "jsr:@fresh/plugin-vite@^1.0.8",
+    "vite": "npm:vite@^7.3.1"{{#if (eq cssFramework "tailwind")}},
+    "tailwindcss": "npm:tailwindcss@^4.1.12",
+    "@tailwindcss/vite": "npm:@tailwindcss/vite@^4.1.12"{{#if (eq uiLibrary "daisyui")}},
+    "daisyui": "npm:daisyui@^5.5.19"{{/if}}{{/if}}
   },
   "compilerOptions": {
     "lib": [
       "dom",
       "dom.asynciterable",
+      "dom.iterable",
       "deno.ns"
     ],
-    "jsx": "react-jsx",
-    "jsxImportSource": "preact"
+    "jsx": "precompile",
+    "jsxImportSource": "preact",
+    "jsxPrecompileSkipElements": [
+      "a",
+      "img",
+      "source",
+      "body",
+      "html",
+      "head",
+      "title",
+      "meta",
+      "script",
+      "link",
+      "style",
+      "base",
+      "noscript",
+      "template"
+    ],
+    "types": [
+      "vite/client"
+    ]
   },
   "nodeModulesDir": "auto"
 }
