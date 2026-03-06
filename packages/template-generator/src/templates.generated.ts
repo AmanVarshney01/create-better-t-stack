@@ -22738,11 +22738,11 @@ initOpenNextCloudflareForDev();
     "babel-plugin-react-compiler": "^1.0.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.10",
+    "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^20",
     "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",
-    "tailwindcss": "^4.1.10",
+    "tailwindcss": "^4.1.18",
     "typescript": "^5"
   }
 }
@@ -23111,12 +23111,12 @@ export function ThemeProvider({
     "@react-router/node": "^7.10.1",
     "@react-router/serve": "^7.10.1",
     "isbot": "^5.1.28",
-    "lucide-react": "^0.511.0",
+    "lucide-react": "^0.546.0",
     "next-themes": "^0.4.6",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-router": "^7.10.1",
-    "sonner": "^2.0.3"
+    "sonner": "^2.0.5"
   },
   "devDependencies": {
     "@react-router/dev": "^7.10.1",
@@ -23534,9 +23534,9 @@ export default defineConfig({
 	"dependencies": {
         "@hookform/resolvers": "^5.1.1",
         "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-		"@tailwindcss/vite": "^4.0.15",
+		"@tailwindcss/vite": "^4.1.18",
 		"@tanstack/react-router": "^1.141.1",
-		"lucide-react": "^0.473.0",
+		"lucide-react": "^0.546.0",
         "next-themes": "^0.4.6",
 		"react": "^19.2.3",
 		"react-dom": "^19.2.3",
@@ -23550,7 +23550,7 @@ export default defineConfig({
 		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react": "^4.3.4",
 		"postcss": "^8.5.3",
-		"tailwindcss": "^4.0.15",
+		"tailwindcss": "^4.1.18",
 		"vite": "^6.2.2"
 	}
 }
@@ -23930,18 +23930,18 @@ export default defineConfig({
   },
   "dependencies": {
     "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
-    "@tailwindcss/vite": "^4.1.8",
+    "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-query": "^5.80.6",
     "@tanstack/react-router": "^1.141.1",
     "@tanstack/react-router-with-query": "^1.130.17",
     "@tanstack/react-start": "^1.141.1",
     "@tanstack/router-plugin": "^1.141.1",
-    "lucide-react": "^0.525.0",
+    "lucide-react": "^0.546.0",
     "next-themes": "^0.4.6",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "sonner": "^2.0.3",
-    "tailwindcss": "^4.1.3",
+    "sonner": "^2.0.5",
+    "tailwindcss": "^4.1.18",
     "vite-tsconfig-paths": "^5.1.4"
   },
   "devDependencies": {
