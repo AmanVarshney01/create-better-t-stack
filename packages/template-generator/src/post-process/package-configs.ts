@@ -33,6 +33,7 @@ export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectCon
   updateRootPackageJson(vfs, config);
   updateConfigPackageJson(vfs, config);
   updateEnvPackageJson(vfs, config);
+  updateUiPackageJson(vfs, config);
   updateInfraPackageJson(vfs, config);
   renameDevScriptsForAlchemy(vfs, config);
 
@@ -296,6 +297,14 @@ function updateEnvPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): vo
   pkgJson.exports = exports;
 
   vfs.writeJson("packages/env/package.json", pkgJson);
+}
+
+function updateUiPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  const pkgJson = vfs.readJson<PackageJson>("packages/ui/package.json");
+  if (!pkgJson) return;
+
+  pkgJson.name = `@${config.projectName}/ui`;
+  vfs.writeJson("packages/ui/package.json", pkgJson);
 }
 
 function updateInfraPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): void {

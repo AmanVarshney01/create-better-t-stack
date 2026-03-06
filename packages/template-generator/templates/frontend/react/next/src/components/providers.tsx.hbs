@@ -28,7 +28,7 @@ import { queryClient } from "@/utils/trpc";
 {{/unless}}
 {{/if}}
 import { ThemeProvider } from "./theme-provider";
-import { Toaster } from "./ui/sonner";
+import { Toaster } from "@{{projectName}}/ui/components/sonner";
 
 {{#if (eq backend "convex")}}
 const convex = new ConvexReactClient(env.NEXT_PUBLIC_CONVEX_URL);

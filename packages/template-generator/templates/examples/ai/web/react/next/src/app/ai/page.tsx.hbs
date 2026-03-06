@@ -28,8 +28,8 @@ import { Streamdown } from "streamdown";
 {{/if}}
 import { useEffect, useRef, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
 
 function MessageContent({
   text,
@@ -67,7 +67,7 @@ export default function AIPage() {
     (m: UIMessage) => m.status === "streaming",
   );
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const text = input.trim();
     if (!text || isLoading) return;
@@ -179,8 +179,8 @@ import { Streamdown } from "streamdown";
 {{/if}}
 import { useEffect, useRef, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
 import { env } from "@{{projectName}}/env/web";
 
 export default function AIPage() {
@@ -197,7 +197,7 @@ export default function AIPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     const text = input.trim();
     if (!text) return;

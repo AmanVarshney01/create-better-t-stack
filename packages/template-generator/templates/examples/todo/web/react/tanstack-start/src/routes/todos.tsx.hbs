@@ -1,13 +1,13 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@{{projectName}}/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+} from "@{{projectName}}/ui/components/card";
+import { Checkbox } from "@{{projectName}}/ui/components/checkbox";
+import { Input } from "@{{projectName}}/ui/components/input";
 import { createFileRoute } from "@tanstack/react-router";
 {{#if (eq backend "convex")}}
 import { Trash2 } from "lucide-react";
@@ -47,7 +47,7 @@ function TodosRoute() {
   const toggleTodo = useMutation(api.todos.toggle);
   const removeTodo = useMutation(api.todos.deleteTodo);
 
-  const handleAddTodo = async (e: React.FormEvent) => {
+  const handleAddTodo = async (e) => {
     e.preventDefault();
     const text = newTodoText.trim();
     if (text) {
@@ -126,7 +126,7 @@ function TodosRoute() {
   );
     {{/if}}
 
-  const handleAddTodo = (e: React.FormEvent) => {
+  const handleAddTodo = (e) => {
     e.preventDefault();
     if (newTodoText.trim()) {
       createMutation.mutate({ text: newTodoText });

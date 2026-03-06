@@ -25,6 +25,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
     db: vfs.exists("packages/db/package.json"),
     auth: vfs.exists("packages/auth/package.json"),
     api: vfs.exists("packages/api/package.json"),
+    ui: vfs.exists("packages/ui/package.json"),
     backend: vfs.exists("packages/backend/package.json"),
     server: vfs.exists("apps/server/package.json"),
     web: vfs.exists("apps/web/package.json"),
@@ -33,6 +34,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
 
   const configDep = packages.config ? { [`@${projectName}/config`]: workspaceVersion } : {};
   const envDep = packages.env ? { [`@${projectName}/env`]: workspaceVersion } : {};
+  const uiDep = packages.ui ? { [`@${projectName}/ui`]: workspaceVersion } : {};
   const isCloudflare = serverDeploy === "cloudflare" || webDeploy === "cloudflare";
   const runtimeDevDeps = getRuntimeDevDeps(runtime, backend);
   const commonDeps: AvailableDependencies[] = ["dotenv", "zod"];
@@ -141,7 +143,7 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
   }
 
   if (packages.web) {
-    const webPackageDeps: Record<string, string> = { ...envDep };
+    const webPackageDeps: Record<string, string> = { ...envDep, ...uiDep };
     if (api !== "none" && packages.api) webPackageDeps[`@${projectName}/api`] = workspaceVersion;
     if (auth !== "none" && packages.auth) webPackageDeps[`@${projectName}/auth`] = workspaceVersion;
     if (backend === "convex" && packages.backend)
@@ -152,6 +154,15 @@ export function processWorkspaceDeps(vfs: VirtualFileSystem, config: ProjectConf
       dependencies: commonDeps,
       devDependencies: ["typescript"],
       customDependencies: webPackageDeps,
+      customDevDependencies: configDep,
+    });
+  }
+
+  if (packages.ui) {
+    addPackageDependency({
+      vfs,
+      packagePath: "packages/ui/package.json",
+      devDependencies: ["typescript"],
       customDevDependencies: configDep,
     });
   }

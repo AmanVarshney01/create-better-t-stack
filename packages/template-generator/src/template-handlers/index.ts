@@ -4,7 +4,7 @@ export { processFrontendTemplates } from "./frontend";
 export { processBackendTemplates } from "./backend";
 export { processDbTemplates } from "./database";
 export { processApiTemplates } from "./api";
-export { processConfigPackage, processEnvPackage } from "./packages";
+export { processConfigPackage, processEnvPackage, processUiPackage } from "./packages";
 export { processAuthTemplates } from "./auth";
 export { processPaymentsTemplates } from "./payments";
 export { processAddonTemplates } from "./addons";

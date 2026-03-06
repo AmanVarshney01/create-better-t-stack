@@ -2,9 +2,9 @@ import { authClient } from "@/lib/auth-client";
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
 import z from "zod";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
+import { Label } from "@{{projectName}}/ui/components/label";
 import { useRouter } from "next/navigation";
 
 export default function SignInForm({
@@ -102,14 +102,14 @@ export default function SignInForm({
 					</form.Field>
 				</div>
 
-				<form.Subscribe>
-					{(state) => (
+				<form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+          {({ canSubmit, isSubmitting }) => (
 						<Button
 							type="submit"
 							className="w-full"
-							disabled={!state.canSubmit || state.isSubmitting}
+							disabled={!canSubmit || isSubmitting}
 						>
-							{state.isSubmitting ? "Submitting..." : "Sign In"}
+							{isSubmitting ? "Submitting..." : "Sign In"}
 						</Button>
 					)}
 				</form.Subscribe>

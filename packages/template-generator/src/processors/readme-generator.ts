@@ -30,6 +30,9 @@ function generateReadmeContent(options: ProjectConfig): string {
   const hasNative = frontend.some((f) =>
     ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
   );
+  const hasReactWeb = frontend.some((f) =>
+    ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+  );
   const hasSvelte = frontend.includes("svelte");
   const hasAstro = frontend.includes("astro");
   const packageManagerRunCmd = `${packageManager} run`;
@@ -88,6 +91,7 @@ ${packageManagerRunCmd} dev
 \`\`\`
 
 ${generateRunningInstructions(frontend, backend, webPort, hasNative, isConvex)}
+${generateReactUiSection(hasReactWeb, projectName)}
 ${
   addons.includes("pwa") && hasReactRouter
     ? "\n## PWA Support with React Router v7\n\nThere is a known compatibility issue between VitePWA and React Router v7.\nSee: https://github.com/vite-pwa/vite-plugin-pwa/issues/809\n"
@@ -176,12 +180,47 @@ function generateRunningInstructions(
   return instructions.join("\n");
 }
 
+function generateReactUiSection(hasReactWeb: boolean, projectName: string): string {
+  if (!hasReactWeb) return "";
+
+  return `
+## UI Customization
+
+React web apps in this stack share shadcn/ui primitives through \`packages/ui\`.
+
+- Change design tokens and global styles in \`packages/ui/src/styles/globals.css\`
+- Update shared primitives in \`packages/ui/src/components/*\`
+- Adjust shadcn aliases or style config in \`packages/ui/components.json\` and \`apps/web/components.json\`
+
+### Add more shared components
+
+Run this from the project root to add more primitives to the shared UI package:
+
+\`\`\`bash
+npx shadcn@latest add accordion dialog popover sheet table -c packages/ui
+\`\`\`
+
+Import shared components like this:
+
+\`\`\`tsx
+import { Button } from "@${projectName}/ui/components/button"
+\`\`\`
+
+### Add app-specific blocks
+
+If you want to add app-specific blocks instead of shared primitives, run the shadcn CLI from \`apps/web\`.
+`;
+}
+
 function generateProjectStructure(config: ProjectConfig): string {
   const { projectName, frontend, backend, addons, api, auth, database, orm } = config;
   const isConvex = backend === "convex";
   const structure: string[] = [`${projectName}/`, "├── apps/"];
   const hasFrontend = frontend.length > 0 && !frontend.includes("none");
   const isBackendSelf = backend === "self";
+  const hasReactWeb = frontend.some((f) =>
+    ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+  );
   const hasNative = frontend.some((f) =>
     ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
   );
@@ -222,8 +261,12 @@ function generateProjectStructure(config: ProjectConfig): string {
     structure.push(`│   └── server/      # Backend API (${desc})`);
   }
 
-  if (isConvex || backend !== "none") {
+  if (isConvex || backend !== "none" || hasReactWeb) {
     structure.push("├── packages/");
+
+    if (hasReactWeb) {
+      structure.push("│   ├── ui/          # Shared shadcn/ui components and styles");
+    }
 
     if (isConvex) {
       structure.push("│   ├── backend/     # Convex backend functions and schema");
@@ -266,6 +309,9 @@ function generateFeaturesList(
     ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
   );
   const hasFrontend = frontend.length > 0 && !frontend.includes("none");
+  const hasReactWeb = frontend.some((f) =>
+    ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+  );
 
   const features = ["- **TypeScript** - For type safety and improved developer experience"];
 
@@ -295,10 +341,11 @@ function generateFeaturesList(
   }
 
   if (hasFrontend) {
-    features.push(
-      "- **TailwindCSS** - Utility-first CSS for rapid UI development",
-      "- **shadcn/ui** - Reusable UI components",
-    );
+    features.push("- **TailwindCSS** - Utility-first CSS for rapid UI development");
+  }
+
+  if (hasReactWeb) {
+    features.push("- **Shared UI package** - shadcn/ui primitives live in `packages/ui`");
   }
 
   const backendFeatures: Record<string, string> = {

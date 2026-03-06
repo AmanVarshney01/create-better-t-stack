@@ -25,6 +25,10 @@ export function resolveDbSetupMode(
   dbSetup: DatabaseSetup,
   cliOptions: DatabaseSetupCliOptions = {},
 ): DbSetupMode | undefined {
+  if (dbSetup === "none") {
+    return undefined;
+  }
+
   const explicitMode = cliOptions.dbSetupOptions?.mode;
   if (explicitMode) {
     return explicitMode;

@@ -11,8 +11,8 @@ import { Send, Loader2 } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 import { Streamdown } from "streamdown";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
 
 export const Route = createFileRoute("/ai")({
   component: RouteComponent,
@@ -54,7 +54,7 @@ function RouteComponent() {
     (m: UIMessage) => m.status === "streaming",
   );
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const text = input.trim();
     if (!text || isLoading) return;
@@ -145,8 +145,8 @@ function RouteComponent() {
 import { createFileRoute } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Input } from "@{{projectName}}/ui/components/input";
+import { Button } from "@{{projectName}}/ui/components/button";
 import { Send } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 import { Streamdown } from "streamdown";
@@ -172,7 +172,7 @@ function RouteComponent() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     const text = input.trim();
     if (!text) return;

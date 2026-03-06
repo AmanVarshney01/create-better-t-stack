@@ -1,13 +1,13 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@{{projectName}}/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+} from "@{{projectName}}/ui/components/card";
+import { Checkbox } from "@{{projectName}}/ui/components/checkbox";
+import { Input } from "@{{projectName}}/ui/components/input";
 import { Loader2, Trash2 } from "lucide-react";
 import { useState } from "react";
 
@@ -34,7 +34,7 @@ export default function Todos() {
   const toggleTodo = useMutation(api.todos.toggle);
   const deleteTodo = useMutation(api.todos.deleteTodo);
 
-  const handleAddTodo = async (e: React.FormEvent) => {
+  const handleAddTodo = async (e) => {
     e.preventDefault();
     const text = newTodoText.trim();
     if (!text) return;
@@ -93,7 +93,7 @@ export default function Todos() {
     );
     {{/if}}
 
-  const handleAddTodo = (e: React.FormEvent) => {
+  const handleAddTodo = (e) => {
     e.preventDefault();
     if (newTodoText.trim()) {
       createMutation.mutate({ text: newTodoText });
