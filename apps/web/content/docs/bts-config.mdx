@@ -31,7 +31,7 @@ The file is JSONC with comments enabled and includes a `$schema` URL for tooling
   "$schema": "https://r2.better-t-stack.dev/schema.json",
   "version": "x.y.z",
   "createdAt": "2025-01-01T00:00:00.000Z",
-  "reproducibleCommand": "bun create better-t-stack my-app --frontend tanstack-router ...",
+  "reproducibleCommand": "bun create better-t-stack@latest create-json --input '{...}'",
   "frontend": ["tanstack-router"],
   "backend": "hono",
   "runtime": "bun",
@@ -40,8 +40,16 @@ The file is JSONC with comments enabled and includes a `$schema` URL for tooling
   "api": "trpc",
   "auth": "better-auth",
   "addons": ["turborepo"],
+  "addonOptions": {
+    "wxt": {
+      "template": "react",
+    },
+  },
   "examples": [],
   "dbSetup": "none",
+  "dbSetupOptions": {
+    "mode": "manual",
+  },
   "webDeploy": "none",
   "serverDeploy": "none",
   "packageManager": "bun",
@@ -52,6 +60,9 @@ Notes:
 
 - Values mirror what you selected during project creation
 - `reproducibleCommand` contains the exact command to recreate this project
-- The file may be updated when you run `add` (currently: addons)
+- When structured options are present, the reproducible command uses `create-json`
+- `addonOptions` stores nested configuration for prompt-driven addons
+- `dbSetupOptions` stores structured database setup behavior for automation
+- The file may be updated when you run `add` (addons and addon-specific config)
 
 See also: [`add` command](/docs/cli#add)

@@ -30,7 +30,9 @@ export async function readBtsConfig(projectDir: string): Promise<BetterTStackCon
  */
 export async function updateBtsConfig(
   projectDir: string,
-  updates: Partial<Pick<BetterTStackConfig, "addons" | "webDeploy" | "serverDeploy">>,
+  updates: Partial<
+    Pick<BetterTStackConfig, "addons" | "addonOptions" | "webDeploy" | "serverDeploy">
+  >,
 ): Promise<void> {
   try {
     const configPath = path.join(projectDir, BTS_CONFIG_FILE);

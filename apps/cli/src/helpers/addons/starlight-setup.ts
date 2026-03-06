@@ -26,6 +26,7 @@ export async function setupStarlight(
     "docs",
     "--template",
     "starlight",
+    "--yes",
     "--no-install",
     "--add",
     "tailwind",

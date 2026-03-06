@@ -35,6 +35,14 @@ Skip automatic database setup prompts and use manual database configuration.
 create-better-t-stack --manual-db
 ```
 
+### `--dry-run`
+
+Validate configuration, compatibility, and directory handling without writing files.
+
+```bash
+create-better-t-stack my-app --yes --dry-run
+```
+
 ### `--package-manager <pm>`
 
 Choose package manager: `npm`, `pnpm`, or `bun`.
@@ -115,6 +123,8 @@ create-better-t-stack --no-disable-analytics
 
 Analytics help improve Better-T-Stack by providing insights into usage patterns. When disabled, no data is collected or transmitted.
 
+For JSON-first automation, runtime schemas, and nested structured options, see [Agent Workflows](/docs/cli/agent-workflows).
+
 ## Database Options
 
 ### `--database <type>`
@@ -161,6 +171,8 @@ Database hosting/setup provider:
 ```bash
 create-better-t-stack --database postgres --db-setup neon
 ```
+
+If you need structured control over database provisioning behavior, use `dbSetupOptions` with `create-json` or the programmatic API. See [Agent Workflows](/docs/cli/agent-workflows).
 
 ## Backend Options
 
@@ -336,6 +348,18 @@ create-better-t-stack --web-deploy cloudflare
 ```
 
 **Note:** Alchemy uses TypeScript to define infrastructure programmatically. See the [Deploying to Cloudflare with Alchemy Guide](/docs/guides/cloudflare-alchemy) for details.
+
+## Automation Surfaces
+
+These are part of the CLI contract for agents and scripts even though they are commands or JSON fields instead of traditional flags:
+
+- `create-json`
+- `add-json`
+- `schema --name <schema>`
+- `addonOptions`
+- `dbSetupOptions`
+
+See [Agent Workflows](/docs/cli/agent-workflows) for examples.
 
 ### `--server-deploy <setup>`
 

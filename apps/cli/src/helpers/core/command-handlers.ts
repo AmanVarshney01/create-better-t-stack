@@ -22,6 +22,7 @@ import {
   UserCancelledError,
   displayError,
 } from "../../utils/errors";
+import { validateAgentSafePathInput } from "../../utils/input-hardening";
 import { handleDirectoryConflict, setupProjectDirectory } from "../../utils/project-directory";
 import { addToHistory } from "../../utils/project-history";
 import { validateProjectName } from "../../utils/project-name-validation";
@@ -34,6 +35,7 @@ import {
   validateConfigCompatibility,
 } from "../../validation";
 import { createProject } from "./create-project";
+import { mergeResolvedDbSetupOptions } from "./db-setup-options";
 
 export interface CreateHandlerOptions {
   silent?: boolean;
@@ -192,6 +194,8 @@ async function createProjectHandlerInternal(
       currentPathInput = projectNameResult;
     }
 
+    yield* validateResolvedProjectPathInput(currentPathInput);
+
     // Handle directory conflict
     let finalPathInput: string;
     let shouldClearDirectory: boolean;
@@ -202,20 +206,30 @@ async function createProjectHandlerInternal(
     finalPathInput = conflictResult.finalPathInput;
     shouldClearDirectory = conflictResult.shouldClearDirectory;
 
-    // Setup project directory
-    const setupResult = yield* Result.await(
-      Result.tryPromise({
-        try: async () => setupProjectDirectory(finalPathInput, shouldClearDirectory),
-        catch: (e: unknown) => {
-          if (e instanceof UserCancelledError) return e;
-          return new CLIError({
-            message: e instanceof Error ? e.message : String(e),
-            cause: e,
-          });
-        },
-      }),
-    );
-    const { finalResolvedPath, finalBaseName } = setupResult;
+    let finalResolvedPath: string;
+    let finalBaseName: string;
+
+    if (input.dryRun) {
+      finalResolvedPath =
+        finalPathInput === "." ? process.cwd() : path.resolve(process.cwd(), finalPathInput);
+      finalBaseName = path.basename(finalResolvedPath);
+    } else {
+      // Setup project directory
+      const setupResult = yield* Result.await(
+        Result.tryPromise({
+          try: async () => setupProjectDirectory(finalPathInput, shouldClearDirectory),
+          catch: (e: unknown) => {
+            if (e instanceof UserCancelledError) return e;
+            return new CLIError({
+              message: e instanceof Error ? e.message : String(e),
+              cause: e,
+            });
+          },
+        }),
+      );
+      finalResolvedPath = setupResult.finalResolvedPath;
+      finalBaseName = setupResult.finalBaseName;
+    }
 
     const originalInput = {
       ...input,
@@ -316,14 +330,59 @@ async function createProjectHandlerInternal(
       config = gatherResult;
     }
 
+    const effectiveDbSetupOptions = mergeResolvedDbSetupOptions(
+      config.dbSetup,
+      config.dbSetupOptions,
+      {
+        manualDb: cliInput.manualDb ?? input.manualDb,
+        dbSetupOptions: cliInput.dbSetupOptions ?? input.dbSetupOptions,
+      },
+    );
+
+    if (effectiveDbSetupOptions) {
+      config = {
+        ...config,
+        dbSetupOptions: effectiveDbSetupOptions,
+      };
+    }
+
+    const reproducibleCommand = generateReproducibleCommand(config);
+
+    if (input.dryRun) {
+      const elapsedTimeMs = Date.now() - startTime;
+
+      if (!isSilent()) {
+        if (shouldClearDirectory) {
+          log.warn(
+            pc.yellow(
+              `Dry run: directory "${finalPathInput}" would be cleared due to overwrite strategy.`,
+            ),
+          );
+        }
+        log.success(pc.green("Dry run validation passed. No files were written."));
+        log.message(pc.dim(`Target directory: ${finalResolvedPath}`));
+        log.message(pc.dim(`Run without --dry-run to create the project.`));
+        outro(pc.magenta("Dry run complete."));
+      }
+
+      return Result.ok({
+        success: true,
+        projectConfig: config,
+        reproducibleCommand,
+        timeScaffolded,
+        elapsedTimeMs,
+        projectDirectory: config.projectDir,
+        relativePath: config.relativePath,
+      });
+    }
+
     // Create the project
     yield* Result.await(
       createProject(config, {
         manualDb: cliInput.manualDb ?? input.manualDb,
+        dbSetupOptions: effectiveDbSetupOptions,
       }),
     );
-
-    const reproducibleCommand = generateReproducibleCommand(config);
 
     if (!isSilent()) {
       log.success(
@@ -370,15 +429,19 @@ function isPathWithinCwd(targetPath: string) {
   return !rel.startsWith("..") && !path.isAbsolute(rel);
 }
 
-async function resolveProjectNameForSilent(
-  input: CreateInput & { projectName?: string },
-): Promise<Result<string, CLIError>> {
-  const defaultConfig = getDefaultConfig();
-  const rawProjectName = input.projectName?.trim() || undefined;
-  const candidate = rawProjectName ?? defaultConfig.relativePath;
+function validateResolvedProjectPathInput(candidate: string): Result<void, CLIError> {
+  const hardeningResult = validateAgentSafePathInput(candidate, "projectName");
+  if (hardeningResult.isErr()) {
+    return Result.err(
+      new CLIError({
+        message: hardeningResult.error.message,
+        cause: hardeningResult.error,
+      }),
+    );
+  }
 
   if (candidate === ".") {
-    return Result.ok(candidate);
+    return Result.ok(undefined);
   }
 
   const finalDirName = path.basename(candidate);
@@ -398,6 +461,21 @@ async function resolveProjectNameForSilent(
         message: "Project path must be within current directory",
       }),
     );
+  }
+
+  return Result.ok(undefined);
+}
+
+async function resolveProjectNameForSilent(
+  input: CreateInput & { projectName?: string },
+): Promise<Result<string, CLIError>> {
+  const defaultConfig = getDefaultConfig();
+  const rawProjectName = input.projectName?.trim() || undefined;
+  const candidate = rawProjectName ?? defaultConfig.relativePath;
+
+  const validationResult = validateResolvedProjectPathInput(candidate);
+  if (validationResult.isErr()) {
+    return validationResult;
   }
 
   return Result.ok(candidate);

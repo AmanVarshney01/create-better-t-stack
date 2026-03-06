@@ -15,6 +15,11 @@ import {
   userCancelled,
 } from "../../utils/errors";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
+import {
+  type DatabaseSetupCliOptions,
+  type DbSetupMode,
+  resolveDbSetupMode,
+} from "../core/db-setup-options";
 
 type SupabaseSetupResult = Result<void, DatabaseSetupError | UserCancelledError>;
 
@@ -155,10 +160,13 @@ ${pc.dim(output)}`
 
 export async function setupSupabase(
   config: ProjectConfig,
-  cliInput?: { manualDb?: boolean },
+  cliInput?: DatabaseSetupCliOptions,
 ): Promise<SupabaseSetupResult> {
   const { projectDir, packageManager, backend } = config;
-  const manualDb = cliInput?.manualDb ?? false;
+  const setupMode = resolveDbSetupMode("supabase", {
+    manualDb: cliInput?.manualDb,
+    dbSetupOptions: cliInput?.dbSetupOptions ?? config.dbSetupOptions,
+  });
 
   const serverDir = path.join(projectDir, "packages", "db");
 
@@ -176,30 +184,36 @@ export async function setupSupabase(
     return ensureDirResult;
   }
 
-  if (manualDb) {
+  if (setupMode === "manual") {
     displayManualSupabaseInstructions();
     return writeSupabaseEnvFile(projectDir, backend, "");
   }
 
-  const mode = await select({
-    message: "Supabase setup: choose mode",
-    options: [
-      {
-        label: "Automatic",
-        value: "auto",
-        hint: "Automated setup with provider CLI, sets .env",
-      },
-      {
-        label: "Manual",
-        value: "manual",
-        hint: "Manual setup, add env vars yourself",
-      },
-    ],
-    initialValue: "auto",
-  });
+  let mode: DbSetupMode | undefined = setupMode;
 
-  if (isCancel(mode)) {
-    return userCancelled("Operation cancelled");
+  if (!mode) {
+    const promptedMode = await select<DbSetupMode>({
+      message: "Supabase setup: choose mode",
+      options: [
+        {
+          label: "Automatic",
+          value: "auto",
+          hint: "Automated setup with provider CLI, sets .env",
+        },
+        {
+          label: "Manual",
+          value: "manual",
+          hint: "Manual setup, add env vars yourself",
+        },
+      ],
+      initialValue: "auto",
+    });
+
+    if (isCancel(promptedMode)) {
+      return userCancelled("Operation cancelled");
+    }
+
+    mode = promptedMode;
   }
 
   if (mode === "manual") {

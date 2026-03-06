@@ -12,6 +12,8 @@ export async function detectProjectConfig(projectDir: string) {
         return {
           projectDir,
           projectName: path.basename(projectDir),
+          addonOptions: btsConfig.addonOptions,
+          dbSetupOptions: btsConfig.dbSetupOptions,
           database: btsConfig.database,
           orm: btsConfig.orm,
           backend: btsConfig.backend,

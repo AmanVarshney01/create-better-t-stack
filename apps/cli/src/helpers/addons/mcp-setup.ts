@@ -3,16 +3,22 @@ import { Result } from "better-result";
 import { $ } from "execa";
 import pc from "picocolors";
 
-import type { ProjectConfig } from "../../types";
+import type { AddonOptions, ProjectConfig } from "../../types";
 
+import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageRunnerPrefix } from "../../utils/package-runner";
 
 type McpTransport = "http" | "sse";
 
+type McpOptions = NonNullable<AddonOptions["mcp"]>;
+type McpServerKey = NonNullable<McpOptions["servers"]>[number];
+type McpAgent = NonNullable<McpOptions["agents"]>[number];
+type InstallScope = NonNullable<McpOptions["scope"]>;
+
 export type McpServerDef = {
-  key: string;
+  key: McpServerKey;
   label: string;
   name: string;
   target: string;
@@ -20,27 +26,33 @@ export type McpServerDef = {
   headers?: string[];
 };
 
-type InstallScope = "project" | "global";
-
 type AgentScope = "project" | "global" | "both";
 
 type AgentOption = {
-  value: string;
+  value: McpAgent;
   label: string;
   scope: AgentScope;
 };
 
 const MCP_AGENTS: AgentOption[] = [
+  { value: "antigravity", label: "Antigravity", scope: "global" },
+  { value: "cline", label: "Cline VSCode Extension", scope: "global" },
+  { value: "cline-cli", label: "Cline CLI", scope: "global" },
   { value: "cursor", label: "Cursor", scope: "both" },
   { value: "claude-code", label: "Claude Code", scope: "both" },
   { value: "codex", label: "Codex", scope: "both" },
   { value: "opencode", label: "OpenCode", scope: "both" },
   { value: "gemini-cli", label: "Gemini CLI", scope: "both" },
+  { value: "github-copilot-cli", label: "GitHub Copilot CLI", scope: "both" },
+  { value: "mcporter", label: "MCPorter", scope: "both" },
   { value: "vscode", label: "VS Code (GitHub Copilot)", scope: "both" },
   { value: "zed", label: "Zed", scope: "both" },
   { value: "claude-desktop", label: "Claude Desktop", scope: "global" },
   { value: "goose", label: "Goose", scope: "global" },
 ];
+
+const DEFAULT_SCOPE: InstallScope = "project";
+const DEFAULT_AGENTS: McpAgent[] = ["cursor", "claude-code", "vscode"];
 
 function uniqueValues<T>(values: T[]): T[] {
   return Array.from(new Set(values));
@@ -230,25 +242,35 @@ export async function setupMcp(
 
   log.info("Setting up MCP servers...");
 
-  const scope = await select<InstallScope>({
-    message: "Where should MCP servers be installed?",
-    options: [
-      {
-        value: "project",
-        label: "Project",
-        hint: "Writes to project config files (recommended for teams)",
-      },
-      {
-        value: "global",
-        label: "Global",
-        hint: "Writes to user-level config files (personal machine)",
-      },
-    ],
-    initialValue: "project",
-  });
+  let scope = config.addonOptions?.mcp?.scope;
 
-  if (isCancel(scope)) {
-    return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+  if (!scope) {
+    if (isSilent()) {
+      scope = DEFAULT_SCOPE;
+    } else {
+      const selectedScope = await select<InstallScope>({
+        message: "Where should MCP servers be installed?",
+        options: [
+          {
+            value: "project",
+            label: "Project",
+            hint: "Writes to project config files (recommended for teams)",
+          },
+          {
+            value: "global",
+            label: "Global",
+            hint: "Writes to user-level config files (personal machine)",
+          },
+        ],
+        initialValue: DEFAULT_SCOPE,
+      });
+
+      if (isCancel(selectedScope)) {
+        return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+      }
+
+      scope = selectedScope;
+    }
   }
 
   const recommendedServers = getRecommendedMcpServers(config);
@@ -262,15 +284,27 @@ export async function setupMcp(
     hint: s.target,
   }));
 
-  const selectedServerKeys = await multiselect({
-    message: "Select MCP servers to install",
-    options: serverOptions,
-    required: false,
-    initialValues: serverOptions.map((o) => o.value),
-  });
+  let selectedServerKeys: McpServerKey[] = config.addonOptions?.mcp?.servers
+    ? [...config.addonOptions.mcp.servers]
+    : [];
 
-  if (isCancel(selectedServerKeys)) {
-    return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+  if (selectedServerKeys.length === 0) {
+    if (isSilent()) {
+      selectedServerKeys = serverOptions.map((o) => o.value);
+    } else {
+      const promptedServerKeys = await multiselect({
+        message: "Select MCP servers to install",
+        options: serverOptions,
+        required: false,
+        initialValues: serverOptions.map((o) => o.value),
+      });
+
+      if (isCancel(promptedServerKeys)) {
+        return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+      }
+
+      selectedServerKeys = [...promptedServerKeys] as McpServerKey[];
+    }
   }
 
   if (selectedServerKeys.length === 0) {
@@ -282,19 +316,32 @@ export async function setupMcp(
     label: a.label,
   }));
 
-  const defaultAgents = uniqueValues(
-    ["cursor", "claude-code", "vscode"].filter((a) => agentOptions.some((o) => o.value === a)),
+  const defaultAgents: McpAgent[] = uniqueValues(
+    DEFAULT_AGENTS.filter((agent) => agentOptions.some((option) => option.value === agent)),
   );
 
-  const selectedAgents = await multiselect({
-    message: "Select agents to install MCP servers to",
-    options: agentOptions,
-    required: false,
-    initialValues: defaultAgents,
-  });
+  let selectedAgents: McpAgent[] =
+    config.addonOptions?.mcp?.agents?.filter((agent) =>
+      agentOptions.some((option) => option.value === agent),
+    ) ?? [];
 
-  if (isCancel(selectedAgents)) {
-    return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+  if (selectedAgents.length === 0) {
+    if (isSilent()) {
+      selectedAgents = defaultAgents;
+    } else {
+      const promptedAgents = await multiselect({
+        message: "Select agents to install MCP servers to",
+        options: agentOptions,
+        required: false,
+        initialValues: defaultAgents,
+      });
+
+      if (isCancel(promptedAgents)) {
+        return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+      }
+
+      selectedAgents = [...promptedAgents] as McpAgent[];
+    }
   }
 
   if (selectedAgents.length === 0) {
@@ -303,7 +350,7 @@ export async function setupMcp(
 
   const serversByKey = new Map(recommendedServers.map((s) => [s.key, s]));
   const selectedServers: McpServerDef[] = [];
-  for (const key of selectedServerKeys as string[]) {
+  for (const key of selectedServerKeys) {
     const server = serversByKey.get(key);
     if (server) selectedServers.push(server);
   }
@@ -321,7 +368,7 @@ export async function setupMcp(
   for (const server of selectedServers) {
     const transportFlags = server.transport ? ["-t", server.transport] : [];
     const headerFlags = (server.headers ?? []).flatMap((h) => ["--header", h]);
-    const agentFlags = (selectedAgents as string[]).flatMap((a) => ["-a", a]);
+    const agentFlags = selectedAgents.flatMap((agent) => ["-a", agent]);
 
     const args = [
       ...runner,

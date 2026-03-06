@@ -5,9 +5,10 @@ import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 
+import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
-import { getPackageExecutionArgs } from "../../utils/package-runner";
+import { getPackageRunnerPrefix } from "../../utils/package-runner";
 
 type UltraciteLinter = "biome" | "eslint" | "oxlint";
 
@@ -51,6 +52,15 @@ type UltraciteAgent =
 type UltraciteHook = "cursor" | "windsurf" | "claude";
 
 type UltraciteSetupResult = Result<void, AddonSetupError | UserCancelledError>;
+type UltraciteInitArgsInput = {
+  packageManager: ProjectConfig["packageManager"];
+  linter: UltraciteLinter;
+  frameworks: string[];
+  editors: UltraciteEditor[];
+  agents: UltraciteAgent[];
+  hooks: UltraciteHook[];
+  gitHooks: string[];
+};
 
 const LINTERS = {
   biome: { label: "Biome", hint: "Fast formatter and linter" },
@@ -103,6 +113,11 @@ const HOOKS = {
   claude: { label: "Claude" },
 } as const;
 
+const DEFAULT_LINTER: UltraciteLinter = "biome";
+const DEFAULT_EDITORS: UltraciteEditor[] = ["vscode", "cursor"];
+const DEFAULT_AGENTS: UltraciteAgent[] = ["claude", "codex"];
+const DEFAULT_HOOKS: UltraciteHook[] = [];
+
 function getFrameworksFromFrontend(frontend: string[]): string[] {
   const frameworkMap: Record<string, string> = {
     "tanstack-router": "react",
@@ -128,99 +143,15 @@ function getFrameworksFromFrontend(frontend: string[]): string[] {
   return Array.from(frameworks);
 }
 
-export async function setupUltracite(
-  config: ProjectConfig,
-  gitHooks: string[],
-): Promise<UltraciteSetupResult> {
-  if (shouldSkipExternalCommands()) {
-    return Result.ok(undefined);
-  }
-
-  const { packageManager, projectDir, frontend } = config;
-
-  log.info("Setting up Ultracite...");
-
-  let result: {
-    linter: UltraciteLinter | symbol;
-    editors: UltraciteEditor[] | symbol;
-    agents: UltraciteAgent[] | symbol;
-    hooks: UltraciteHook[] | symbol;
-  };
-
-  const groupResult = await Result.tryPromise({
-    try: async () => {
-      return await group(
-        {
-          linter: () =>
-            select<UltraciteLinter>({
-              message: "Choose linter/formatter",
-              options: Object.entries(LINTERS).map(([key, linter]) => ({
-                value: key as UltraciteLinter,
-                label: linter.label,
-                hint: linter.hint,
-              })),
-              initialValue: "biome" as UltraciteLinter,
-            }),
-          editors: () =>
-            multiselect<UltraciteEditor>({
-              message: "Choose editors",
-              options: Object.entries(EDITORS).map(([key, editor]) => ({
-                value: key as UltraciteEditor,
-                label: editor.label,
-              })),
-              required: true,
-            }),
-          agents: () =>
-            multiselect<UltraciteAgent>({
-              message: "Choose agents",
-              options: Object.entries(AGENTS).map(([key, agent]) => ({
-                value: key as UltraciteAgent,
-                label: agent.label,
-              })),
-              required: true,
-            }),
-          hooks: () =>
-            multiselect<UltraciteHook>({
-              message: "Choose hooks",
-              options: Object.entries(HOOKS).map(([key, hook]) => ({
-                value: key as UltraciteHook,
-                label: hook.label,
-              })),
-            }),
-        },
-        {
-          onCancel: () => {
-            throw new UserCancelledError({ message: "Operation cancelled" });
-          },
-        },
-      );
-    },
-    catch: (e) => {
-      if (e instanceof UserCancelledError) return e;
-      return new AddonSetupError({
-        addon: "ultracite",
-        message: `Failed to get user preferences: ${e instanceof Error ? e.message : String(e)}`,
-        cause: e,
-      });
-    },
-  });
-
-  if (groupResult.isErr()) {
-    if (UserCancelledError.is(groupResult.error)) {
-      return userCancelled(groupResult.error.message);
-    }
-    log.error(pc.red("Failed to set up Ultracite"));
-    return groupResult;
-  }
-
-  result = groupResult.value;
-
-  const linter = result.linter as UltraciteLinter;
-  const editors = result.editors as UltraciteEditor[];
-  const agents = result.agents as UltraciteAgent[];
-  const hooks = result.hooks as UltraciteHook[];
-  const frameworks = getFrameworksFromFrontend(frontend);
-
+export function buildUltraciteInitArgs({
+  packageManager,
+  linter,
+  frameworks,
+  editors,
+  agents,
+  hooks,
+  gitHooks,
+}: UltraciteInitArgsInput): string[] {
   const ultraciteArgs = ["init", "--pm", packageManager, "--linter", linter];
 
   if (frameworks.length > 0) {
@@ -247,9 +178,124 @@ export async function setupUltracite(
     ultraciteArgs.push("--integrations", ...integrations);
   }
 
-  const ultraciteArgsString = ultraciteArgs.join(" ");
-  const commandWithArgs = `ultracite@latest ${ultraciteArgsString} --skip-install`;
-  const args = getPackageExecutionArgs(packageManager, commandWithArgs);
+  return [
+    ...getPackageRunnerPrefix(packageManager),
+    "ultracite@latest",
+    ...ultraciteArgs,
+    "--skip-install",
+    "--quiet",
+  ];
+}
+
+export async function setupUltracite(
+  config: ProjectConfig,
+  gitHooks: string[],
+): Promise<UltraciteSetupResult> {
+  if (shouldSkipExternalCommands()) {
+    return Result.ok(undefined);
+  }
+
+  const { packageManager, projectDir, frontend } = config;
+
+  log.info("Setting up Ultracite...");
+
+  const configuredOptions = config.addonOptions?.ultracite;
+  let linter = configuredOptions?.linter;
+  let editors = configuredOptions?.editors;
+  let agents = configuredOptions?.agents;
+  let hooks = configuredOptions?.hooks;
+
+  if (!linter || !editors || !agents || !hooks) {
+    if (isSilent()) {
+      linter = linter ?? DEFAULT_LINTER;
+      editors = editors ?? [...DEFAULT_EDITORS];
+      agents = agents ?? [...DEFAULT_AGENTS];
+      hooks = hooks ?? [...DEFAULT_HOOKS];
+    } else {
+      const groupResult = await Result.tryPromise({
+        try: async () => {
+          return await group(
+            {
+              linter: () =>
+                select<UltraciteLinter>({
+                  message: "Choose linter/formatter",
+                  options: Object.entries(LINTERS).map(([key, linterOption]) => ({
+                    value: key as UltraciteLinter,
+                    label: linterOption.label,
+                    hint: linterOption.hint,
+                  })),
+                  initialValue: linter ?? DEFAULT_LINTER,
+                }),
+              editors: () =>
+                multiselect<UltraciteEditor>({
+                  message: "Choose editors",
+                  options: Object.entries(EDITORS).map(([key, editor]) => ({
+                    value: key as UltraciteEditor,
+                    label: editor.label,
+                  })),
+                  initialValues: editors ?? [...DEFAULT_EDITORS],
+                }),
+              agents: () =>
+                multiselect<UltraciteAgent>({
+                  message: "Choose agents",
+                  options: Object.entries(AGENTS).map(([key, agent]) => ({
+                    value: key as UltraciteAgent,
+                    label: agent.label,
+                  })),
+                  initialValues: agents ?? [...DEFAULT_AGENTS],
+                }),
+              hooks: () =>
+                multiselect<UltraciteHook>({
+                  message: "Choose hooks",
+                  options: Object.entries(HOOKS).map(([key, hook]) => ({
+                    value: key as UltraciteHook,
+                    label: hook.label,
+                  })),
+                  initialValues: hooks ?? [...DEFAULT_HOOKS],
+                }),
+            },
+            {
+              onCancel: () => {
+                throw new UserCancelledError({ message: "Operation cancelled" });
+              },
+            },
+          );
+        },
+        catch: (e) => {
+          if (e instanceof UserCancelledError) return e;
+          return new AddonSetupError({
+            addon: "ultracite",
+            message: `Failed to get user preferences: ${e instanceof Error ? e.message : String(e)}`,
+            cause: e,
+          });
+        },
+      });
+
+      if (groupResult.isErr()) {
+        if (UserCancelledError.is(groupResult.error)) {
+          return userCancelled(groupResult.error.message);
+        }
+        log.error(pc.red("Failed to set up Ultracite"));
+        return groupResult;
+      }
+
+      linter = groupResult.value.linter as UltraciteLinter;
+      editors = groupResult.value.editors as UltraciteEditor[];
+      agents = groupResult.value.agents as UltraciteAgent[];
+      hooks = groupResult.value.hooks as UltraciteHook[];
+    }
+  }
+
+  const frameworks = getFrameworksFromFrontend(frontend);
+  const args = buildUltraciteInitArgs({
+    packageManager,
+    linter,
+    frameworks,
+    editors,
+    agents,
+    hooks,
+    gitHooks,
+  });
 
   const s = spinner();
   s.start("Running Ultracite init command...");

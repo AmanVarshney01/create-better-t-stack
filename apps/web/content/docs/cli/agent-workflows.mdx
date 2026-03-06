@@ -1,0 +1,207 @@
+---
+title: Agent Workflows
+description: JSON-first and schema-driven workflows for agents, scripts, and automation
+---
+
+## Overview
+
+Better-T-Stack now supports a fully JSON-first workflow for agents and automation:
+
+- Raw JSON project creation with `create-json`
+- Raw JSON addon installation with `add-json`
+- Runtime schema introspection with `schema`
+- Structured addon configuration with `addonOptions`
+- Structured database setup configuration with `dbSetupOptions`
+- Safe planning with `--dry-run`
+
+If you are automating the CLI from an LLM, CI job, or another tool, start here instead of the interactive prompt flow.
+
+## `create-json`
+
+Create a project from a single JSON payload instead of many flags.
+
+```bash
+create-better-t-stack create-json --input '{
+  "projectName": "my-app",
+  "frontend": ["tanstack-router"],
+  "backend": "hono",
+  "runtime": "bun",
+  "database": "postgres",
+  "orm": "drizzle",
+  "api": "trpc",
+  "auth": "none",
+  "addons": ["wxt", "mcp"],
+  "addonOptions": {
+    "wxt": { "template": "react", "devPort": 5555 },
+    "mcp": {
+      "scope": "project",
+      "servers": ["context7"],
+      "agents": ["cursor"]
+    }
+  },
+  "install": false
+}'
+```
+
+This is the best path when:
+
+- Your input already exists as structured data
+- You want to avoid shell flag expansion issues
+- You need nested addon or database setup options
+
+## `add-json`
+
+Add addons to an existing project with a single JSON payload.
+
+```bash
+create-better-t-stack add-json --input '{
+  "projectDir": "./my-app",
+  "addons": ["skills", "ultracite"],
+  "addonOptions": {
+    "skills": {
+      "scope": "project",
+      "agents": ["cursor", "codex"],
+      "selections": [
+        {
+          "source": "vercel-labs/agent-skills",
+          "skills": ["web-design-guidelines"]
+        }
+      ]
+    },
+    "ultracite": {
+      "linter": "biome",
+      "editors": ["vscode", "cursor"],
+      "agents": ["claude", "codex"]
+    }
+  },
+  "dryRun": true
+}'
+```
+
+## Runtime Schema Introspection
+
+Use the CLI itself as the source of truth for current input shapes.
+
+```bash
+create-better-t-stack schema --name all
+create-better-t-stack schema --name cli
+create-better-t-stack schema --name createInput
+create-better-t-stack schema --name addInput
+create-better-t-stack schema --name addonOptions
+create-better-t-stack schema --name dbSetupOptions
+```
+
+Useful patterns:
+
+- `schema --name cli`: inspect available commands
+- `schema --name createInput`: inspect the full create payload
+- `schema --name addonOptions`: inspect nested addon configuration
+- `schema --name dbSetupOptions`: inspect structured database setup behavior
+
+## Structured Addon Options
+
+Prompt-driven addons can be configured up front through `addonOptions`.
+
+Supported structured addon surfaces include:
+
+- `wxt`
+- `fumadocs`
+- `opentui`
+- `mcp`
+- `ruler`
+- `skills`
+- `ultracite`
+
+Example:
+
+```json
+{
+  "addons": ["wxt", "ruler"],
+  "addonOptions": {
+    "wxt": {
+      "template": "react",
+      "devPort": 5555
+    },
+    "ruler": {
+      "assistants": ["agentsmd", "claude", "codex", "cursor"]
+    }
+  }
+}
+```
+
+When structured addon options are present, the reproducible command stored in `bts.jsonc` uses `create-json` so nothing is lost in translation.
+
+## Structured Database Setup Options
+
+`dbSetupOptions` controls how database provisioning behaves in automation.
+
+Example:
+
+```bash
+create-better-t-stack create-json --input '{
+  "projectName": "db-app",
+  "database": "postgres",
+  "orm": "drizzle",
+  "backend": "hono",
+  "runtime": "bun",
+  "api": "trpc",
+  "frontend": ["tanstack-router"],
+  "dbSetup": "neon",
+  "dbSetupOptions": {
+    "mode": "manual"
+  }
+}'
+```
+
+Current behavior:
+
+- Remote provisioning setups default to `manual` in silent/agent flows:
+  - `turso`
+  - `neon`
+  - `prisma-postgres`
+  - `supabase`
+  - `mongodb-atlas`
+- Safer/local setups are not forced to manual:
+  - `d1`
+  - `docker`
+  - `planetscale`
+
+This keeps agents from accidentally creating cloud resources unless automation explicitly opts into `auto`.
+
+Provider-specific options are intentionally small today:
+
+- `neon.method`, `neon.projectName`, `neon.regionId`
+- `prismaPostgres.regionId`
+- `turso.databaseName`, `turso.groupName`, `turso.installCli`
+
+## Dry Runs
+
+Use `--dry-run` to validate inputs and target directories without writing files.
+
+```bash
+create-better-t-stack --yes --dry-run
+create-better-t-stack create-json --input '{"projectName":"my-app","yes":true,"dryRun":true}'
+create-better-t-stack add-json --input '{"projectDir":"./my-app","addons":["mcp"],"dryRun":true}'
+```
+
+This is especially useful for:
+
+- Planning actions before mutation
+- CI validation
+- Agent reasoning loops
+
+## Programmatic API
+
+The exported `create()` and `add()` APIs run in silent mode by default, so they benefit from the same agent-safe behavior as the JSON commands.
+
+See [Programmatic API](/docs/cli/programmatic-api) for TypeScript examples.
+
+## Stored in `bts.jsonc`
+
+Better-T-Stack persists structured configuration in `bts.jsonc`, including:
+
+- `reproducibleCommand`
+- `addonOptions`
+- `dbSetupOptions`
+
+See [`bts.jsonc`](/docs/bts-config) for the file format.

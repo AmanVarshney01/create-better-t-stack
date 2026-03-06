@@ -7,6 +7,7 @@ import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 
+import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
@@ -38,6 +39,9 @@ const TEMPLATES = {
   },
 } as const;
 
+const DEFAULT_TEMPLATE: WxtTemplate = "react";
+const DEFAULT_DEV_PORT = 5555;
+
 export async function setupWxt(config: ProjectConfig): Promise<WxtSetupResult> {
   if (shouldSkipExternalCommands()) {
     return Result.ok(undefined);
@@ -47,19 +51,32 @@ export async function setupWxt(config: ProjectConfig): Promise<WxtSetupResult> {
 
   log.info("Setting up WXT...");
 
-  const template = await select<WxtTemplate>({
-    message: "Choose a template",
-    options: Object.entries(TEMPLATES).map(([key, template]) => ({
-      value: key as WxtTemplate,
-      label: template.label,
-      hint: template.hint,
-    })),
-    initialValue: "react",
-  });
+  const configuredOptions = config.addonOptions?.wxt;
+  let template = configuredOptions?.template;
 
-  if (isCancel(template)) {
-    return userCancelled("Operation cancelled");
+  if (!template) {
+    if (isSilent()) {
+      template = DEFAULT_TEMPLATE;
+    } else {
+      const selectedTemplate = await select<WxtTemplate>({
+        message: "Choose a template",
+        options: Object.entries(TEMPLATES).map(([key, templateOption]) => ({
+          value: key as WxtTemplate,
+          label: templateOption.label,
+          hint: templateOption.hint,
+        })),
+        initialValue: DEFAULT_TEMPLATE,
+      });
+
+      if (isCancel(selectedTemplate)) {
+        return userCancelled("Operation cancelled");
+      }
+
+      template = selectedTemplate;
+    }
   }
+
+  const devPort = configuredOptions?.devPort ?? DEFAULT_DEV_PORT;
 
   const commandWithArgs = `wxt@latest init extension --template ${template} --pm ${packageManager}`;
   const args = getPackageExecutionArgs(packageManager, commandWithArgs);
@@ -112,7 +129,7 @@ export async function setupWxt(config: ProjectConfig): Promise<WxtSetupResult> {
         packageJson.name = "extension";
 
         if (packageJson.scripts?.dev) {
-          packageJson.scripts.dev = `${packageJson.scripts.dev} --port 5555`;
+          packageJson.scripts.dev = `${packageJson.scripts.dev} --port ${devPort}`;
         }
 
         await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });

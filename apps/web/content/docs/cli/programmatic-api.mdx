@@ -9,6 +9,8 @@ You can call Better-T-Stack directly from TypeScript/JavaScript without shelling
 
 The programmatic API is exported from `create-better-t-stack` and is designed for automation tools, internal generators, and scripted workflows.
 
+Because it runs in silent mode by default, it also benefits from the same agent-safe behavior as `create-json`, including structured addon and database setup options.
+
 ## Installation
 
 ```npm
@@ -28,6 +30,7 @@ const result = await create("my-app", {
   auth: "better-auth",
   packageManager: "bun",
   install: false,
+  dryRun: true,
 });
 
 result.match({
@@ -57,6 +60,8 @@ function create(
 Notes:
 
 - Uses the same option model as the CLI `create` command (`frontend`, `backend`, `database`, `orm`, `api`, `auth`, `addons`, etc.).
+- Supports structured `addonOptions` and `dbSetupOptions`.
+- Supports `dryRun` for validation-only automation.
 - Runs in silent mode (no interactive prompts / no CLI UI output).
 - Returns a `Result` (`ok`/`err`) instead of exiting the process.
 
@@ -67,9 +72,11 @@ Add addons to an existing Better-T-Stack project.
 ```typescript
 function add(options?: {
   addons?: Addons[];
+  addonOptions?: AddonOptions;
   install?: boolean;
   packageManager?: PackageManager;
   projectDir?: string;
+  dryRun?: boolean;
 }): Promise<AddResult | undefined>;
 ```
 
@@ -81,6 +88,13 @@ import { add } from "create-better-t-stack";
 const result = await add({
   projectDir: "./my-app",
   addons: ["biome", "mcp"],
+  addonOptions: {
+    mcp: {
+      scope: "project",
+      servers: ["context7"],
+      agents: ["cursor"],
+    },
+  },
   install: true,
 });
 
@@ -90,6 +104,28 @@ if (result?.success) {
   console.error(result?.error ?? "Failed to add addons");
 }
 ```
+
+### `createVirtual(options)`
+
+Generate a project in memory without writing to disk.
+
+```typescript
+import { createVirtual } from "create-better-t-stack";
+
+const result = await createVirtual({
+  frontend: ["tanstack-router"],
+  backend: "hono",
+  database: "sqlite",
+  orm: "drizzle",
+  addonOptions: {
+    wxt: {
+      template: "react",
+    },
+  },
+});
+```
+
+This is useful for previews, tests, and web-based builders.
 
 ### `sponsors()`
 
@@ -127,6 +163,8 @@ type AddResult = {
   success: boolean;
   addedAddons: Addons[];
   projectDir: string;
+  dryRun?: boolean;
+  plannedFileCount?: number;
   error?: string;
 };
 ```
@@ -178,5 +216,13 @@ const result = await create("my-app", {
   database: "postgres",
   orm: "drizzle",
   auth: "better-auth",
+  addonOptions: {
+    wxt: { template: "react" },
+  },
+  dbSetupOptions: {
+    mode: "manual",
+  },
 });
 ```
+
+For the CLI-side JSON equivalents, see [Agent Workflows](/docs/cli/agent-workflows).

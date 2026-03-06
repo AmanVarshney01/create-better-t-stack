@@ -5,11 +5,16 @@ import fs from "fs-extra";
 import path from "node:path";
 import pc from "picocolors";
 
-import type { ProjectConfig } from "../../types";
+import type { AddonOptions, ProjectConfig } from "../../types";
 
+import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs, getPackageExecutionCommand } from "../../utils/package-runner";
+
+type RulerAssistant = NonNullable<NonNullable<AddonOptions["ruler"]>["assistants"]>[number];
+
+const DEFAULT_ASSISTANTS: RulerAssistant[] = ["agentsmd", "claude", "codex", "cursor"];
 
 export async function setupRuler(
   config: ProjectConfig,
@@ -51,6 +56,7 @@ export async function setupRuler(
     firebender: { label: "Firebender" },
     "gemini-cli": { label: "Gemini CLI" },
     goose: { label: "Goose" },
+    "jetbrains-ai": { label: "JetBrains AI" },
     jules: { label: "Jules" },
     junie: { label: "Junie" },
     kilocode: { label: "Kilo Code" },
@@ -67,17 +73,29 @@ export async function setupRuler(
     zed: { label: "Zed" },
   } as const;
 
-  const selectedEditors = await autocompleteMultiselect({
-    message: "Select AI assistants for Ruler",
-    options: Object.entries(EDITORS).map(([key, v]) => ({
-      value: key,
-      label: v.label,
-    })),
-    required: false,
-  });
+  let selectedEditors: RulerAssistant[] = config.addonOptions?.ruler?.assistants
+    ? [...config.addonOptions.ruler.assistants]
+    : [];
 
-  if (isCancel(selectedEditors)) {
-    return userCancelled("Operation cancelled");
+  if (selectedEditors.length === 0) {
+    if (isSilent()) {
+      selectedEditors = [...DEFAULT_ASSISTANTS];
+    } else {
+      const promptSelection = await autocompleteMultiselect({
+        message: "Select AI assistants for Ruler",
+        options: Object.entries(EDITORS).map(([key, v]) => ({
+          value: key,
+          label: v.label,
+        })),
+        required: false,
+      });
+
+      if (isCancel(promptSelection)) {
+        return userCancelled("Operation cancelled");
+      }
+
+      selectedEditors = [...promptSelection] as RulerAssistant[];
+    }
   }
 
   if (selectedEditors.length === 0) {

@@ -56,6 +56,7 @@ Options:
   --template <type>               Use a template (mern, pern, t3, uniwind, none)
   --database <type>               Database type (none, sqlite, postgres, mysql, mongodb)
   --orm <type>                    ORM type (none, drizzle, prisma, mongoose)
+  --dry-run                       Validate configuration without writing files
   --auth <provider>               Authentication (better-auth, clerk, none)
   --payments <provider>           Payments provider (polar, none)
   --frontend <types...>           Frontend types (tanstack-router, react-router, tanstack-start, next, nuxt, svelte, solid, astro, native-bare, native-uniwind, native-unistyles, none)
@@ -75,6 +76,23 @@ Options:
   --directory-conflict <strategy> Directory strategy (merge, overwrite, increment, error)
   --manual-db                     Skip automatic database setup prompts
   -h, --help                      Display help
+```
+
+### Agent-Focused Commands
+
+```bash
+# Raw JSON payload input (agent-friendly)
+create-better-t-stack create-json --input '{"projectName":"my-app","yes":true,"dryRun":true}'
+create-better-t-stack add-json --input '{"projectDir":"./my-app","addons":["wxt"],"addonOptions":{"wxt":{"template":"react"}}}'
+create-better-t-stack create-json --input '{"projectName":"db-app","database":"postgres","orm":"drizzle","dbSetup":"neon","dbSetupOptions":{"mode":"manual"}}'
+
+# Runtime schema/introspection output
+create-better-t-stack schema --name all
+create-better-t-stack schema --name createInput
+create-better-t-stack schema --name addInput
+create-better-t-stack schema --name addonOptions
+create-better-t-stack schema --name dbSetupOptions
+create-better-t-stack schema --name cli
 ```
 
 ## Telemetry
@@ -106,6 +124,12 @@ Create a project with default configuration:
 
 ```bash
 npx create-better-t-stack --yes
+```
+
+Validate a command without writing files:
+
+```bash
+npx create-better-t-stack --yes --dry-run
 ```
 
 Create a project with specific options:

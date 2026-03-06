@@ -8,8 +8,14 @@ import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 
 import { commandExists } from "../../utils/command-exists";
+import { isSilent } from "../../utils/context";
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
 import { DatabaseSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
+import {
+  type DatabaseSetupCliOptions,
+  type DbSetupMode,
+  resolveDbSetupMode,
+} from "../core/db-setup-options";
 
 type TursoConfig = {
   dbUrl: string;
@@ -263,13 +269,16 @@ DATABASE_AUTH_TOKEN=your_auth_token`);
 
 export async function setupTurso(
   config: ProjectConfig,
-  cliInput?: { manualDb?: boolean },
+  cliInput?: DatabaseSetupCliOptions,
 ): Promise<TursoSetupResult> {
   const { projectDir, backend } = config;
-  const manualDb = cliInput?.manualDb ?? false;
+  const setupMode = resolveDbSetupMode("turso", {
+    manualDb: cliInput?.manualDb,
+    dbSetupOptions: cliInput?.dbSetupOptions ?? config.dbSetupOptions,
+  });
   const setupSpinner = spinner();
 
-  if (manualDb) {
+  if (setupMode === "manual") {
     const envResult = await writeEnvFile(projectDir, backend);
     if (envResult.isErr()) {
       return envResult;
@@ -278,25 +287,31 @@ export async function setupTurso(
     return Result.ok(undefined);
   }
 
-  const mode = await select({
-    message: "Turso setup: choose mode",
-    options: [
-      {
-        label: "Automatic",
-        value: "auto",
-        hint: "Automated setup with provider CLI, sets .env",
-      },
-      {
-        label: "Manual",
-        value: "manual",
-        hint: "Manual setup, add env vars yourself",
-      },
-    ],
-    initialValue: "auto",
-  });
+  let mode: DbSetupMode | undefined = setupMode;
 
-  if (isCancel(mode)) {
-    return userCancelled("Operation cancelled");
+  if (!mode) {
+    const promptedMode = await select<DbSetupMode>({
+      message: "Turso setup: choose mode",
+      options: [
+        {
+          label: "Automatic",
+          value: "auto",
+          hint: "Automated setup with provider CLI, sets .env",
+        },
+        {
+          label: "Manual",
+          value: "manual",
+          hint: "Manual setup, add env vars yourself",
+        },
+      ],
+      initialValue: "auto",
+    });
+
+    if (isCancel(promptedMode)) {
+      return userCancelled("Operation cancelled");
+    }
+
+    mode = promptedMode;
   }
 
   if (mode === "manual") {
@@ -329,13 +344,23 @@ export async function setupTurso(
   const isCliInstalled = await isTursoInstalled();
 
   if (!isCliInstalled) {
-    const shouldInstall = await confirm({
-      message: "Would you like to install Turso CLI?",
-      initialValue: true,
-    });
+    let shouldInstall = cliInput?.dbSetupOptions?.turso?.installCli;
 
-    if (isCancel(shouldInstall)) {
-      return userCancelled("Operation cancelled");
+    if (shouldInstall === undefined) {
+      if (isSilent()) {
+        shouldInstall = false;
+      } else {
+        const promptedInstall = await confirm({
+          message: "Would you like to install Turso CLI?",
+          initialValue: true,
+        });
+
+        if (isCancel(promptedInstall)) {
+          return userCancelled("Operation cancelled");
+        }
+
+        shouldInstall = promptedInstall;
+      }
     }
 
     if (!shouldInstall) {
@@ -361,6 +386,16 @@ export async function setupTurso(
 
   const isLoggedIn = await isTursoLoggedIn();
   if (!isLoggedIn) {
+    if (isSilent()) {
+      log.warn(pc.yellow("Turso CLI is not logged in. Falling back to manual setup."));
+      const envResult = await writeEnvFile(projectDir, backend);
+      if (envResult.isErr()) {
+        return envResult;
+      }
+      displayManualSetupInstructions();
+      return Result.ok(undefined);
+    }
+
     const loginResult = await loginToTurso();
     if (loginResult.isErr()) {
       log.error(pc.red(loginResult.error.message));
@@ -373,13 +408,48 @@ export async function setupTurso(
     }
   }
 
-  const groupResult = await selectTursoGroup();
-  if (groupResult.isErr()) {
-    return groupResult;
-  }
-  const selectedGroup = groupResult.value;
+  let selectedGroup =
+    cliInput?.dbSetupOptions?.turso?.groupName ?? config.dbSetupOptions?.turso?.groupName ?? null;
 
-  let suggestedName = path.basename(projectDir);
+  if (!selectedGroup) {
+    if (isSilent()) {
+      const groups = await getTursoGroups();
+      selectedGroup = groups[0]?.name ?? null;
+    } else {
+      const groupResult = await selectTursoGroup();
+      if (groupResult.isErr()) {
+        return groupResult;
+      }
+      selectedGroup = groupResult.value;
+    }
+  }
+
+  let suggestedName =
+    cliInput?.dbSetupOptions?.turso?.databaseName ??
+    config.dbSetupOptions?.turso?.databaseName ??
+    path.basename(projectDir);
+
+  if (isSilent()) {
+    const createResult = await createTursoDatabase(suggestedName, selectedGroup);
+    if (createResult.isErr()) {
+      log.error(pc.red(createResult.error.message));
+      const envResult = await writeEnvFile(projectDir, backend);
+      if (envResult.isErr()) {
+        return envResult;
+      }
+      displayManualSetupInstructions();
+      log.success("Setup completed with manual configuration required.");
+      return Result.ok(undefined);
+    }
+
+    const envResult = await writeEnvFile(projectDir, backend, createResult.value);
+    if (envResult.isErr()) {
+      return envResult;
+    }
+
+    log.success("Turso database setup completed successfully!");
+    return Result.ok(undefined);
+  }
 
   while (true) {
     const dbNameResponse = await text({

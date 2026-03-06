@@ -1,4 +1,5 @@
-import { createRouterClient, os } from "@orpc/server";
+import { getAllJsonSchemas } from "@better-t-stack/types/json-schema";
+import { os } from "@orpc/server";
 import { Result } from "better-result";
 import { createCli } from "trpc-cli";
 import z from "zod";
@@ -10,6 +11,10 @@ import { createProjectHandler } from "./helpers/core/command-handlers";
 import {
   type Addons,
   AddonsSchema,
+  type AddonOptions,
+  type DbSetupOptions,
+  DbSetupOptionsSchema,
+  AddInputSchema,
   type API,
   APISchema,
   type Auth,
@@ -18,6 +23,7 @@ import {
   BackendSchema,
   type BetterTStackConfig,
   type CreateInput,
+  CreateInputSchema,
   type Database,
   DatabaseSchema,
   type DatabaseSetup,
@@ -49,6 +55,60 @@ import {
 import { CLIError, ProjectCreationError, UserCancelledError } from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
 
+const SchemaNameSchema = z
+  .enum([
+    "all",
+    "cli",
+    "database",
+    "orm",
+    "backend",
+    "runtime",
+    "frontend",
+    "addons",
+    "examples",
+    "packageManager",
+    "databaseSetup",
+    "api",
+    "auth",
+    "payments",
+    "webDeploy",
+    "serverDeploy",
+    "directoryConflict",
+    "template",
+    "addonOptions",
+    "dbSetupOptions",
+    "createInput",
+    "addInput",
+    "projectConfig",
+    "betterTStackConfig",
+    "initResult",
+  ])
+  .default("all");
+
+type SchemaName = z.infer<typeof SchemaNameSchema>;
+
+function getCliSchemaJson(): unknown {
+  return createCli({
+    router,
+    name: "create-better-t-stack",
+    version: getLatestCLIVersion(),
+  }).toJSON();
+}
+
+function getSchemaResult(name: SchemaName): unknown {
+  const schemas = getAllJsonSchemas();
+  if (name === "all") {
+    return {
+      cli: getCliSchemaJson(),
+      schemas,
+    };
+  }
+  if (name === "cli") {
+    return getCliSchemaJson();
+  }
+  return schemas[name];
+}
+
 export const router = os.router({
   create: os
     .meta({
@@ -67,6 +127,11 @@ export const router = os.router({
             .optional()
             .default(false)
             .describe("(WARNING - NOT RECOMMENDED) Bypass validations and compatibility checks"),
+          dryRun: z
+            .boolean()
+            .optional()
+            .default(false)
+            .describe("Validate setup without writing files"),
           verbose: z
             .boolean()
             .optional()
@@ -96,6 +161,9 @@ export const router = os.router({
             .optional()
             .default(false)
             .describe("Skip automatic/manual database setup prompt and use manual setup"),
+          dbSetupOptions: DbSetupOptionsSchema.optional().describe(
+            "Structured database setup options",
+          ),
         }),
       ]),
     )
@@ -107,10 +175,36 @@ export const router = os.router({
       };
       const result = await createProjectHandler(combinedInput);
 
-      if (options.verbose) {
+      if (options.verbose || options.dryRun) {
         return result;
       }
     }),
+  createJson: os
+    .meta({
+      description: "Create a project from a raw JSON payload (agent-friendly)",
+      jsonInput: true,
+    })
+    .input(CreateInputSchema)
+    .handler(async ({ input }) => {
+      const result = await createProjectHandler(input, { silent: true });
+      if (!result) {
+        throw new UserCancelledError({ message: "Operation cancelled" });
+      }
+      if (!result.success) {
+        throw new CLIError({
+          message: result.error || "Unknown error occurred",
+        });
+      }
+      return result;
+    }),
+  schema: os
+    .meta({ description: "Show runtime CLI and input schemas as JSON" })
+    .input(
+      z.object({
+        name: SchemaNameSchema.describe("Schema name to inspect"),
+      }),
+    )
+    .handler(({ input }) => getSchemaResult(input.name)),
   sponsors: os.meta({ description: "Show Better-T-Stack sponsors" }).handler(showSponsorsCommand),
   docs: os.meta({ description: "Open Better-T-Stack documentation" }).handler(openDocsCommand),
   builder: os.meta({ description: "Open the web-based stack builder" }).handler(openBuilderCommand),
@@ -131,6 +225,24 @@ export const router = os.router({
     .handler(async ({ input }) => {
       await addHandler(input);
     }),
+  addJson: os
+    .meta({
+      description: "Add addons from a raw JSON payload (agent-friendly)",
+      jsonInput: true,
+    })
+    .input(AddInputSchema)
+    .handler(async ({ input }) => {
+      const result = await addHandler(input, { silent: true });
+      if (!result) {
+        throw new UserCancelledError({ message: "Operation cancelled" });
+      }
+      if (!result.success) {
+        throw new CLIError({
+          message: result.error || "Unknown error occurred",
+        });
+      }
+      return result;
+    }),
   history: os
     .meta({ description: "Show project creation history" })
     .input(
@@ -145,9 +257,7 @@ export const router = os.router({
     }),
 });
 
-const caller = createRouterClient(router, { context: {} });
-
-export function createBtsCli() {
+export function createBtsCli(): ReturnType<typeof createCli> {
   return createCli({
     router,
     name: "create-better-t-stack",
@@ -228,15 +338,15 @@ export async function create(
 }
 
 export async function sponsors() {
-  return caller.sponsors();
+  return showSponsorsCommand();
 }
 
 export async function docs() {
-  return caller.docs();
+  return openDocsCommand();
 }
 
 export async function builder() {
-  return caller.builder();
+  return openBuilderCommand();
 }
 
 // Re-export virtual filesystem types for programmatic usage
@@ -291,6 +401,8 @@ export async function createVirtual(
     projectName: options.projectName || "my-project",
     projectDir: "/virtual",
     relativePath: "./virtual",
+    addonOptions: options.addonOptions,
+    dbSetupOptions: options.dbSetupOptions,
     database: options.database || "none",
     orm: options.orm || "none",
     backend: options.backend || "hono",
@@ -325,6 +437,8 @@ export type {
   Runtime,
   Frontend,
   Addons,
+  AddonOptions,
+  DbSetupOptions,
   Examples,
   PackageManager,
   DatabaseSetup,
@@ -359,9 +473,11 @@ export type { AddResult };
 export async function add(
   options: {
     addons?: Addons[];
+    addonOptions?: AddonOptions;
     install?: boolean;
     packageManager?: PackageManager;
     projectDir?: string;
+    dryRun?: boolean;
   } = {},
 ): Promise<AddResult | undefined> {
   return addHandler(options, { silent: true });

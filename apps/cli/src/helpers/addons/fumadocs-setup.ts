@@ -6,6 +6,7 @@ import path from "node:path";
 
 import type { ProjectConfig } from "../../types";
 
+import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
@@ -57,6 +58,9 @@ const TEMPLATES = {
   },
 } as const;
 
+const DEFAULT_TEMPLATE: FumadocsTemplate = "next-mdx";
+const DEFAULT_DEV_PORT = 4000;
+
 export async function setupFumadocs(
   config: ProjectConfig,
 ): Promise<Result<void, AddonSetupError | UserCancelledError>> {
@@ -68,22 +72,34 @@ export async function setupFumadocs(
 
   log.info("Setting up Fumadocs...");
 
-  const template = await select<FumadocsTemplate>({
-    message: "Choose a template",
-    options: Object.entries(TEMPLATES).map(([key, template]) => ({
-      value: key as FumadocsTemplate,
-      label: template.label,
-      hint: template.hint,
-    })),
-    initialValue: "next-mdx",
-  });
+  const configuredOptions = config.addonOptions?.fumadocs;
+  let template = configuredOptions?.template;
 
-  if (isCancel(template)) {
-    return userCancelled("Operation cancelled");
+  if (!template) {
+    if (isSilent()) {
+      template = DEFAULT_TEMPLATE;
+    } else {
+      const selectedTemplate = await select<FumadocsTemplate>({
+        message: "Choose a template",
+        options: Object.entries(TEMPLATES).map(([key, templateOption]) => ({
+          value: key as FumadocsTemplate,
+          label: templateOption.label,
+          hint: templateOption.hint,
+        })),
+        initialValue: DEFAULT_TEMPLATE,
+      });
+
+      if (isCancel(selectedTemplate)) {
+        return userCancelled("Operation cancelled");
+      }
+
+      template = selectedTemplate;
+    }
   }
 
   const templateArg = TEMPLATES[template].value;
   const isNextTemplate = template.startsWith("next-");
+  const devPort = configuredOptions?.devPort ?? DEFAULT_DEV_PORT;
 
   // Build command with options
   const options: string[] = [`--template ${templateArg}`, `--pm ${packageManager}`, "--no-git"];
@@ -119,7 +135,7 @@ export async function setupFumadocs(
         packageJson.name = "fumadocs";
 
         if (packageJson.scripts?.dev) {
-          packageJson.scripts.dev = `${packageJson.scripts.dev} --port=4000`;
+          packageJson.scripts.dev = `${packageJson.scripts.dev} --port=${devPort}`;
         }
 
         await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });

@@ -42,6 +42,14 @@ export function processFlags(options: CLIInput, projectName?: string) {
     config.api = options.api as API;
   }
 
+  if (options.addonOptions) {
+    config.addonOptions = options.addonOptions;
+  }
+
+  if (options.dbSetupOptions) {
+    config.dbSetupOptions = options.dbSetupOptions;
+  }
+
   if (options.backend) {
     config.backend = options.backend as Backend;
   }

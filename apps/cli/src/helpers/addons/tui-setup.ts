@@ -7,6 +7,7 @@ import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 
+import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
@@ -30,6 +31,8 @@ const TEMPLATES = {
   },
 } as const;
 
+const DEFAULT_TEMPLATE: TuiTemplate = "core";
+
 export async function setupTui(config: ProjectConfig): Promise<TuiSetupResult> {
   if (shouldSkipExternalCommands()) {
     return Result.ok(undefined);
@@ -39,18 +42,28 @@ export async function setupTui(config: ProjectConfig): Promise<TuiSetupResult> {
 
   log.info("Setting up OpenTUI...");
 
-  const template = await select<TuiTemplate>({
-    message: "Choose a template",
-    options: Object.entries(TEMPLATES).map(([key, template]) => ({
-      value: key as TuiTemplate,
-      label: template.label,
-      hint: template.hint,
-    })),
-    initialValue: "core",
-  });
+  let template = config.addonOptions?.opentui?.template;
 
-  if (isCancel(template)) {
-    return userCancelled("Operation cancelled");
+  if (!template) {
+    if (isSilent()) {
+      template = DEFAULT_TEMPLATE;
+    } else {
+      const selectedTemplate = await select<TuiTemplate>({
+        message: "Choose a template",
+        options: Object.entries(TEMPLATES).map(([key, templateOption]) => ({
+          value: key as TuiTemplate,
+          label: templateOption.label,
+          hint: templateOption.hint,
+        })),
+        initialValue: DEFAULT_TEMPLATE,
+      });
+
+      if (isCancel(selectedTemplate)) {
+        return userCancelled("Operation cancelled");
+      }
+
+      template = selectedTemplate;
+    }
   }
 
   const commandWithArgs = `create-tui@latest --template ${template} --no-git --no-install tui`;

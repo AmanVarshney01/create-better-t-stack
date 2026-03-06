@@ -17,6 +17,7 @@ import { getAddonsToAdd } from "../../prompts/addons";
 import { updateBtsConfig } from "../../utils/bts-config";
 import { isSilent, runWithContextAsync } from "../../utils/context";
 import { CLIError, UserCancelledError, displayError } from "../../utils/errors";
+import { validateAgentSafePathInput } from "../../utils/input-hardening";
 import { renderTitle } from "../../utils/render-title";
 import { setupAddons } from "../addons/addons-setup";
 import { detectProjectConfig } from "./detect-project-config";
@@ -30,6 +31,8 @@ export interface AddResult {
   success: boolean;
   addedAddons: Addons[];
   projectDir: string;
+  dryRun?: boolean;
+  plannedFileCount?: number;
   error?: string;
 }
 
@@ -78,6 +81,15 @@ async function addHandlerInternal(
   input: AddInput,
 ): Promise<Result<AddResult, UserCancelledError | CLIError>> {
   const projectDir = input.projectDir || process.cwd();
+  const hardeningResult = validateAgentSafePathInput(projectDir, "projectDir");
+  if (hardeningResult.isErr()) {
+    return Result.err(
+      new CLIError({
+        message: hardeningResult.error.message,
+        cause: hardeningResult.error,
+      }),
+    );
+  }
 
   if (!isSilent()) {
     renderTitle();
@@ -118,6 +130,12 @@ async function addHandlerInternal(
         projectDir,
       });
     }
+  } else if (isSilent()) {
+    return Result.err(
+      new CLIError({
+        message: "Addons are required in silent mode. Provide them via add() or add-json.",
+      }),
+    );
   } else {
     // Interactive mode - prompt user to select addons
     const promptResult = await Result.tryPromise({
@@ -159,10 +177,15 @@ async function addHandlerInternal(
 
   // Build config for addon setup
   const updatedAddons = [...existingConfig.addons, ...addonsToAdd];
+  const mergedAddonOptions = {
+    ...existingConfig.addonOptions,
+    ...input.addonOptions,
+  };
   const config: ProjectConfig = {
     projectName: existingConfig.projectName,
     projectDir,
     relativePath: ".",
+    addonOptions: Object.keys(mergedAddonOptions).length > 0 ? mergedAddonOptions : undefined,
     database: existingConfig.database,
     orm: existingConfig.orm,
     backend: existingConfig.backend,
@@ -212,6 +235,22 @@ async function addHandlerInternal(
     config,
   };
 
+  if (input.dryRun) {
+    if (!isSilent()) {
+      log.success(pc.green("Dry run validation passed. No addon files were written."));
+      log.info(pc.dim(`Planned addon files: ${vfs.getFileCount()}`));
+      outro(pc.magenta("Dry run complete."));
+    }
+
+    return Result.ok({
+      success: true,
+      addedAddons: addonsToAdd,
+      projectDir,
+      dryRun: true,
+      plannedFileCount: vfs.getFileCount(),
+    });
+  }
+
   const writeResult = await writeTree(tree, projectDir);
 
   if (writeResult.isErr()) {
@@ -246,6 +285,7 @@ async function addHandlerInternal(
   // Update bts.jsonc with new addons
   await updateBtsConfig(projectDir, {
     addons: updatedAddons,
+    addonOptions: config.addonOptions,
   });
 
   // Install dependencies if requested
@@ -274,5 +314,6 @@ async function addHandlerInternal(
     success: true,
     addedAddons: addonsToAdd,
     projectDir,
+    plannedFileCount: vfs.getFileCount(),
   });
 }
