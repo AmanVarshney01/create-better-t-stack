@@ -1,0 +1,24 @@
+N:video-production
+D:Programmable video production with Remotion. Generate automated, brand-consistent videos at scale from text instructions using scene planning, asset orchestration, and validation gates.
+G:video remotion animation storytelling automation react
+
+U[4]:
+  Automated video generation — auto-generate videos from text instructions
+  High-volume brand video production — produce in bulk with consistent style
+  Marketing content — product intros, onboarding, promo videos
+  Programmable content — integrate narration·visuals·animation
+S[5]{n,action,details}:
+  1,Video Spec,define audience·goal·duration(30s/60s/90s)·aspect_ratio(16:9/1:1/9:16)·tone·voice
+  2,Scene Plan,structure each scene — specify Visual·Audio·Text·Transition·Duration
+  3,Prepare Assets,checklist for logos(SVG)·screenshots(normalized)·audio(MP3·volume normalized)·fonts(woff2)
+  4,Implement Remotion,compose <Composition> component; animate with interpolate; layer with AbsoluteFill
+  5,Render & QA,npx remotion preview → verify timing/audio sync/text readability/transitions → final render
+R[5]:
+  Limit each scene to a clear 5-10 seconds
+  Define and apply a consistent typography scale
+  Align narration cues with visuals (audio sync)
+  Ensure edge safe zones for mobile aspect ratios (9:16)
+  Always run preview QA before final render
+E[2]{desc,in,out}:
+  "60s product intro","Create a 60s product intro video with 6 scenes, upbeat tone, 16:9","Scene breakdown (Hook/Problem/Solution/Features/SocialProof/CTA) + Remotion file structure"
+  "Onboarding walkthrough","Generate a 45s onboarding walkthrough using screenshots, 9:16 mobile format","5-step scene plan + asset list (screenshots·callouts) + text overlays + mobile-safe margins"

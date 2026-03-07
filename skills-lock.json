@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "skills": {
+    "create-remotion-geist": {
+      "source": "vercel-labs/skill-remotion-geist",
+      "sourceType": "github",
+      "computedHash": "cb8b1a6963b16a6a0fb32fe60e3e75750b6fa72b76e42bb2a639fd6f0df944c9"
+    },
+    "modern-short-video": {
+      "source": "imaimai17468/modern-short-video-skills",
+      "sourceType": "github",
+      "computedHash": "551dbe962967e17b3fda1c65c370a2c8512fc3d7f8d6239d52c0dbb1a4605346"
+    },
+    "remotion": {
+      "source": "google-labs-code/stitch-skills",
+      "sourceType": "github",
+      "computedHash": "73a794b428f2bb568859f0db83b66219c842a0a088db9818a45ac72c37b6aa66"
+    },
+    "remotion-animation": {
+      "source": "ncklrs/startup-os-skills",
+      "sourceType": "github",
+      "computedHash": "1348001d658c103f660a1743e90450a6c27e1b058f2423aaba84773a27039bfa"
+    },
+    "remotion-best-practices": {
+      "source": "remotion-dev/skills",
+      "sourceType": "github",
+      "computedHash": "9851afb52e1b892c43b2af973bda1776ce01fedfdfe704e0cfd70069a3a9c300"
+    },
+    "remotion-bits": {
+      "source": "av/remotion-bits",
+      "sourceType": "github",
+      "computedHash": "4307a1a1f1f194ce69b471623063a53c007f0f5abc32c4c63d03621daed38c07"
+    },
+    "video-production": {
+      "source": "supercent-io/skills-template",
+      "sourceType": "github",
+      "computedHash": "1c1a34e711af0b53a54ed519afcfa0d6eda492978bd85e7fa496b87dfc93d312"
+    }
+  }
+}
