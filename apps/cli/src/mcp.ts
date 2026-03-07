@@ -32,7 +32,7 @@ const ToolResponseSchema = z.object({
   error: z.string().optional(),
 });
 
-const McpCreateProjectInputSchema = CreateInputSchema.extend({
+const McpCreateProjectInputSchema = CreateInputSchema.safeExtend({
   projectName: z.string().describe("Project name or relative path"),
   frontend: z
     .array(FrontendSchema)

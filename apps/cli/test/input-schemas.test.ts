@@ -3,6 +3,7 @@ import { describe, expect, it } from "bun:test";
 import {
   AddInputSchema,
   BetterTStackConfigFileSchema,
+  CLIInputSchema,
   CreateInputSchema,
 } from "../../../packages/types/src/schemas";
 
@@ -57,5 +58,21 @@ describe("Input schemas", () => {
     });
 
     expect(result.success).toBe(false);
+  });
+
+  it("allows CLI input parsing on top of the refined create schema", () => {
+    const result = CLIInputSchema.safeParse({
+      projectDirectory: ".",
+      projectName: "app",
+      addons: ["biome"],
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("imports the MCP module without schema-construction crashes", async () => {
+    const module = await import("../src/mcp");
+
+    expect(typeof module.createBtsMcpServer).toBe("function");
   });
 });

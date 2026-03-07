@@ -464,7 +464,7 @@ export const AddInputSchema = z
   })
   .strict();
 
-export const CLIInputSchema = CreateInputSchema.extend({
+export const CLIInputSchema = CreateInputSchema.safeExtend({
   projectDirectory: z.string().optional(),
 }).strict();
 
