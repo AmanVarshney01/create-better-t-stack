@@ -1,4 +1,3 @@
-import { spinner } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
@@ -10,6 +9,7 @@ import { addPackageDependency } from "../../utils/add-package-deps";
 import { AddonSetupError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
+import { createSpinner } from "../../utils/terminal-output";
 
 export async function setupOxlint(
   projectDir: string,
@@ -38,9 +38,11 @@ export async function setupOxlint(
         return;
       }
 
-      const s = spinner();
-      s.start("Initializing oxlint and oxfmt...");
+      const s = createSpinner();
+
       try {
+        s.start("Initializing oxlint and oxfmt...");
+
         const oxlintArgs = getPackageExecutionArgs(packageManager, "oxlint@latest --init");
         await $({ cwd: projectDir, env: { CI: "true" } })`${oxlintArgs}`;
 

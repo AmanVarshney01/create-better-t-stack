@@ -1,4 +1,4 @@
-import { isCancel, log, select, spinner } from "@clack/prompts";
+import { isCancel, select } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
@@ -11,6 +11,7 @@ import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
+import { cliLog, createSpinner } from "../../utils/terminal-output";
 
 type WxtTemplate = "vanilla" | "vue" | "react" | "solid" | "svelte";
 
@@ -49,7 +50,7 @@ export async function setupWxt(config: ProjectConfig): Promise<WxtSetupResult> {
 
   const { packageManager, projectDir } = config;
 
-  log.info("Setting up WXT...");
+  cliLog.info("Setting up WXT...");
 
   const configuredOptions = config.addonOptions?.wxt;
   let template = configuredOptions?.template;
@@ -97,7 +98,7 @@ export async function setupWxt(config: ProjectConfig): Promise<WxtSetupResult> {
     return ensureDirResult;
   }
 
-  const s = spinner();
+  const s = createSpinner();
   s.start("Running WXT init command...");
 
   const initResult = await Result.tryPromise({
@@ -115,7 +116,7 @@ export async function setupWxt(config: ProjectConfig): Promise<WxtSetupResult> {
   });
 
   if (initResult.isErr()) {
-    log.error(pc.red("Failed to set up WXT"));
+    cliLog.error(pc.red("Failed to set up WXT"));
     return initResult;
   }
 
@@ -145,7 +146,7 @@ export async function setupWxt(config: ProjectConfig): Promise<WxtSetupResult> {
 
   if (updatePackageResult.isErr()) {
     // Log but don't fail - the main setup succeeded
-    log.warn(pc.yellow("WXT setup completed but failed to update package.json"));
+    cliLog.warn(pc.yellow("WXT setup completed but failed to update package.json"));
   }
 
   s.stop("WXT setup complete!");

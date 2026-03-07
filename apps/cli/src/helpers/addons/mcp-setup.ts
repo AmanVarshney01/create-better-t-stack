@@ -1,4 +1,4 @@
-import { isCancel, log, multiselect, select, spinner } from "@clack/prompts";
+import { isCancel, multiselect, select } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import pc from "picocolors";
@@ -9,6 +9,7 @@ import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageRunnerPrefix } from "../../utils/package-runner";
+import { cliLog, createSpinner } from "../../utils/terminal-output";
 
 type McpTransport = "http" | "sse";
 
@@ -77,6 +78,13 @@ function hasNativeFrontend(frontend: ProjectConfig["frontend"]): boolean {
 
 function getRecommendedMcpServers(config: ProjectConfig, scope: InstallScope): McpServerDef[] {
   const servers: McpServerDef[] = [];
+
+  servers.push({
+    key: "better-t-stack",
+    label: "Better T Stack",
+    name: "better-t-stack",
+    target: "create-better-t-stack mcp",
+  });
 
   servers.push({
     key: "context7",
@@ -249,7 +257,7 @@ export async function setupMcp(
 
   const { packageManager, projectDir } = config;
 
-  log.info("Setting up MCP servers...");
+  cliLog.info("Setting up MCP servers...");
 
   let scope = config.addonOptions?.mcp?.scope;
 
@@ -368,7 +376,7 @@ export async function setupMcp(
     return Result.ok(undefined);
   }
 
-  const installSpinner = spinner();
+  const installSpinner = createSpinner();
   installSpinner.start("Installing MCP servers...");
 
   const runner = getPackageRunnerPrefix(packageManager);
@@ -405,7 +413,7 @@ export async function setupMcp(
     });
 
     if (installResult.isErr()) {
-      log.warn(pc.yellow(`Warning: Could not install MCP server '${server.name}'`));
+      cliLog.warn(pc.yellow(`Warning: Could not install MCP server '${server.name}'`));
     }
   }
 

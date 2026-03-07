@@ -1,4 +1,4 @@
-import { isCancel, log, select, spinner, text } from "@clack/prompts";
+import { isCancel, select, text } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
@@ -16,6 +16,7 @@ import {
   userCancelled,
 } from "../../utils/errors";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
+import { cliLog, createSpinner } from "../../utils/terminal-output";
 import {
   type DatabaseSetupCliOptions,
   type DbSetupMode,
@@ -52,7 +53,7 @@ async function executeNeonCommand(
   commandArgsString: string,
   spinnerText?: string,
 ): Promise<Result<{ stdout: string; stderr: string }, DatabaseSetupError>> {
-  const s = spinner();
+  const s = createSpinner();
   const args = getPackageExecutionArgs(packageManager, commandArgsString);
 
   if (spinnerText) s.start(spinnerText);
@@ -157,7 +158,7 @@ async function setupWithNeonDb(
   packageManager: PackageManager,
   backend: ProjectConfig["backend"],
 ): Promise<Result<void, DatabaseSetupError>> {
-  const s = spinner();
+  const s = createSpinner();
   s.start("Creating Neon database using get-db...");
 
   const targetApp = backend === "self" ? "apps/web" : "apps/server";
@@ -200,7 +201,7 @@ async function setupWithNeonDb(
 }
 
 function displayManualSetupInstructions(target: "apps/web" | "apps/server") {
-  log.info(`Manual Neon PostgreSQL Setup Instructions:
+  cliLog.info(`Manual Neon PostgreSQL Setup Instructions:
 
 1. Get Neon with Better T Stack referral: https://get.neon.com/sbA3tIe
 2. Create a new project from the dashboard
@@ -301,14 +302,16 @@ export async function setupNeonPostgres(
   if (setupMethod === "neondb") {
     const neonDbResult = await setupWithNeonDb(projectDir, packageManager, backend);
     if (neonDbResult.isErr()) {
-      log.error(pc.red(neonDbResult.error.message));
+      cliLog.error(pc.red(neonDbResult.error.message));
       const envResult = await writeEnvFile(projectDir, backend);
       if (envResult.isErr()) {
         return envResult;
       }
       displayManualSetupInstructions(target);
     } else {
-      log.info(`Get Neon with Better T Stack referral: ${pc.cyan("https://get.neon.com/sbA3tIe")}`);
+      cliLog.info(
+        `Get Neon with Better T Stack referral: ${pc.cyan("https://get.neon.com/sbA3tIe")}`,
+      );
     }
     return neonDbResult;
   }
@@ -359,7 +362,7 @@ export async function setupNeonPostgres(
   const neonConfigResult = await createNeonProject(projectName, regionId, packageManager);
 
   if (neonConfigResult.isErr()) {
-    log.error(pc.red(neonConfigResult.error.message));
+    cliLog.error(pc.red(neonConfigResult.error.message));
     const envResult = await writeEnvFile(projectDir, backend);
     if (envResult.isErr()) {
       return envResult;
@@ -368,7 +371,7 @@ export async function setupNeonPostgres(
     return Result.ok(undefined);
   }
 
-  const finalSpinner = spinner();
+  const finalSpinner = createSpinner();
   finalSpinner.start("Configuring database connection");
 
   const envResult = await writeEnvFile(projectDir, backend, neonConfigResult.value);
@@ -378,6 +381,6 @@ export async function setupNeonPostgres(
   }
 
   finalSpinner.stop("Neon database configured!");
-  log.info(`Get Neon with Better T Stack referral: ${pc.cyan("https://get.neon.com/sbA3tIe")}`);
+  cliLog.info(`Get Neon with Better T Stack referral: ${pc.cyan("https://get.neon.com/sbA3tIe")}`);
   return Result.ok(undefined);
 }

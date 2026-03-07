@@ -1,4 +1,4 @@
-import { group, log, multiselect, select, spinner } from "@clack/prompts";
+import { group, multiselect, select } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import pc from "picocolors";
@@ -9,6 +9,7 @@ import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageRunnerPrefix } from "../../utils/package-runner";
+import { cliLog, createSpinner } from "../../utils/terminal-output";
 
 type UltraciteLinter = "biome" | "eslint" | "oxlint";
 
@@ -197,7 +198,7 @@ export async function setupUltracite(
 
   const { packageManager, projectDir, frontend } = config;
 
-  log.info("Setting up Ultracite...");
+  cliLog.info("Setting up Ultracite...");
 
   const configuredOptions = config.addonOptions?.ultracite;
   let linter = configuredOptions?.linter;
@@ -275,7 +276,7 @@ export async function setupUltracite(
         if (UserCancelledError.is(groupResult.error)) {
           return userCancelled(groupResult.error.message);
         }
-        log.error(pc.red("Failed to set up Ultracite"));
+        cliLog.error(pc.red("Failed to set up Ultracite"));
         return groupResult;
       }
 
@@ -297,7 +298,7 @@ export async function setupUltracite(
     gitHooks,
   });
 
-  const s = spinner();
+  const s = createSpinner();
   s.start("Running Ultracite init command...");
 
   const initResult = await Result.tryPromise({
@@ -315,7 +316,7 @@ export async function setupUltracite(
   });
 
   if (initResult.isErr()) {
-    log.error(pc.red("Failed to set up Ultracite"));
+    cliLog.error(pc.red("Failed to set up Ultracite"));
     return initResult;
   }
 

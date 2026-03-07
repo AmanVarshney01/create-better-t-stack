@@ -1,4 +1,3 @@
-import { spinner } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
@@ -9,6 +8,7 @@ import type { ProjectConfig } from "../../types";
 import { AddonSetupError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
+import { createSpinner } from "../../utils/terminal-output";
 
 export async function setupStarlight(
   config: ProjectConfig,
@@ -18,7 +18,7 @@ export async function setupStarlight(
   }
 
   const { packageManager, projectDir } = config;
-  const s = spinner();
+  const s = createSpinner();
 
   s.start("Setting up Starlight docs...");
 

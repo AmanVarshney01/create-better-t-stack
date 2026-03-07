@@ -10,6 +10,7 @@ Better-T-Stack now supports a fully JSON-first workflow for agents and automatio
 - Raw JSON project creation with `create-json`
 - Raw JSON addon installation with `add-json`
 - Runtime schema introspection with `schema`
+- Local stdio MCP server with `mcp`
 - Structured addon configuration with `addonOptions`
 - Structured database setup configuration with `dbSetupOptions`
 - Safe planning with `--dry-run`
@@ -98,6 +99,71 @@ Useful patterns:
 - `schema --name addonOptions`: inspect nested addon configuration
 - `schema --name dbSetupOptions`: inspect structured database setup behavior
 
+## `mcp`
+
+Run Better-T-Stack itself as a local MCP server over stdio:
+
+```bash
+create-better-t-stack mcp
+```
+
+Exposed tools:
+
+- `bts_get_stack_guidance`
+- `bts_get_schema`
+- `bts_plan_project`
+- `bts_create_project`
+- `bts_plan_addons`
+- `bts_add_addons`
+
+This is the best path when an MCP-capable client should scaffold or modify Better-T-Stack projects without shelling out to a prompt-driven CLI flow.
+
+Recommended MCP workflow:
+
+1. Call `bts_get_stack_guidance` if the user's request is ambiguous.
+2. Call `bts_get_schema` for the exact input shape you need.
+3. Build a full explicit stack config.
+4. Call `bts_plan_project` before `bts_create_project`.
+5. For MCP execution, use `install: false` when creating projects.
+6. Call `bts_plan_addons` before `bts_add_addons`.
+
+For project creation, the MCP tools now expect a full explicit config, not a partial payload. That means the agent should provide all major stack choices such as:
+
+- `frontend`
+- `backend`
+- `runtime`
+- `database`
+- `orm`
+- `api`
+- `auth`
+- `payments`
+- `addons`
+- `examples`
+- `dbSetup`
+- `webDeploy`
+- `serverDeploy`
+- `git`
+- `packageManager`
+- `install`
+
+Important field rules:
+
+- `frontend` means app surfaces, not styling choices.
+- `addons` must be an explicit array. Use `[]` when none are requested.
+- `examples` must be an explicit array. Use `[]` when none are requested.
+- `dbSetup`, `webDeploy`, and `serverDeploy` should be explicit even when the answer is `none`.
+- `git`, `install`, and `packageManager` should always be set explicitly.
+- `install` should usually be `false` for `bts_create_project`, because dependency installation can exceed common MCP client timeouts. Run `npm install`, `pnpm install`, or `bun install` separately after scaffolding.
+- If a request is still ambiguous after reading the guidance, the agent should resolve that ambiguity before calling `bts_plan_project`.
+
+If you scaffold a project with the `mcp` addon, Better-T-Stack itself is now one of the recommended MCP servers. The addon installs it through `add-mcp` as a local stdio command:
+
+```bash
+create-better-t-stack mcp
+```
+
+That means MCP-capable agents inside the generated project can talk back to Better-T-Stack through the same local CLI command, alongside other recommended docs, framework, and database MCP servers.
+
 ## Structured Addon Options
 
 Prompt-driven addons can be configured up front through `addonOptions`.
@@ -129,7 +195,7 @@ Example:
 }
 ```
 
-When structured addon options are present, the reproducible command stored in `bts.jsonc` uses `create-json` so nothing is lost in translation.
+Structured addon options are still persisted in `bts.jsonc`, but the printed reproducible command now stays on normal CLI flags for consistency. That means deeply nested addon or provider-specific setup options are not fully encoded in the one-line replay command.
 
 ## Structured Database Setup Options
 

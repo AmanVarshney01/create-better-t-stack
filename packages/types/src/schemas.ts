@@ -115,6 +115,7 @@ export const InstallScopeSchema = z.enum(["project", "global"]).describe("Instal
 
 export const McpServerSchema = z
   .enum([
+    "better-t-stack",
     "context7",
     "nx",
     "cloudflare-docs",
@@ -200,6 +201,7 @@ export const SkillsSourceSchema = z
     "vercel-labs/next-skills",
     "nuxt/ui",
     "heroui-inc/heroui",
+    "shadcn/ui",
     "better-auth/skills",
     "clerk/skills",
     "neondatabase/agent-skills",

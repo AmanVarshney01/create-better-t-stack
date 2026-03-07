@@ -77,7 +77,7 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       break;
     case "mcp":
       label = "MCP";
-      hint = "Install MCP servers (docs, databases, SaaS) via add-mcp";
+      hint = "Install MCP servers, including Better T Stack, via add-mcp";
       break;
     default:
       label = addon;

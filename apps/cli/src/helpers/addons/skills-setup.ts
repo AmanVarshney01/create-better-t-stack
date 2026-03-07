@@ -1,4 +1,4 @@
-import { isCancel, log, multiselect, select, spinner } from "@clack/prompts";
+import { isCancel, multiselect, select } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import pc from "picocolors";
@@ -10,6 +10,7 @@ import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageRunnerPrefix } from "../../utils/package-runner";
+import { cliLog, createSpinner } from "../../utils/terminal-output";
 
 type SkillSource = {
   label: string;
@@ -46,6 +47,9 @@ const SKILL_SOURCES = {
   },
   "heroui-inc/heroui": {
     label: "HeroUI Native",
+  },
+  "shadcn/ui": {
+    label: "shadcn/ui",
   },
   "better-auth/skills": {
     label: "Better Auth",
@@ -139,6 +143,7 @@ function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
 
   if (hasReactBasedFrontend(frontend)) {
     sources.push("vercel-labs/agent-skills");
+    sources.push("shadcn/ui");
   }
 
   if (frontend.includes("next")) {
@@ -230,6 +235,7 @@ const CURATED_SKILLS_BY_SOURCE: Record<SourceKey, (config: ProjectConfig) => str
   "vercel-labs/next-skills": () => ["next-best-practices", "next-cache-components"],
   "nuxt/ui": () => ["nuxt-ui"],
   "heroui-inc/heroui": () => ["heroui-native"],
+  "shadcn/ui": () => ["shadcn"],
   "better-auth/skills": () => ["better-auth-best-practices"],
   "clerk/skills": (config) => {
     const skills = [
@@ -455,7 +461,7 @@ export async function setupSkills(
     skillsBySource[source].push(skillName);
   }
 
-  const installSpinner = spinner();
+  const installSpinner = createSpinner();
   installSpinner.start("Installing skills...");
 
   const runner = getPackageRunnerPrefix(packageManager);
@@ -488,7 +494,7 @@ export async function setupSkills(
     });
 
     if (installResult.isErr()) {
-      log.warn(pc.yellow(`Warning: Could not install skills from ${source}`));
+      cliLog.warn(pc.yellow(`Warning: Could not install skills from ${source}`));
     }
   }
 

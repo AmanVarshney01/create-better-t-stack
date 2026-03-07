@@ -1,4 +1,4 @@
-import { confirm, isCancel, log, select, spinner, text } from "@clack/prompts";
+import { confirm, isCancel, select, text } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import os from "node:os";
@@ -11,6 +11,7 @@ import { commandExists } from "../../utils/command-exists";
 import { isSilent } from "../../utils/context";
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
 import { DatabaseSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
+import { cliLog, createSpinner } from "../../utils/terminal-output";
 import {
   type DatabaseSetupCliOptions,
   type DbSetupMode,
@@ -40,7 +41,7 @@ async function isTursoLoggedIn(): Promise<boolean> {
 }
 
 async function loginToTurso(): Promise<Result<void, DatabaseSetupError>> {
-  const s = spinner();
+  const s = createSpinner();
   s.start("Logging in to Turso...");
 
   return Result.tryPromise({
@@ -60,7 +61,7 @@ async function loginToTurso(): Promise<Result<void, DatabaseSetupError>> {
 }
 
 async function installTursoCLI(isMac: boolean): Promise<Result<void, DatabaseSetupError>> {
-  const s = spinner();
+  const s = createSpinner();
   s.start("Installing Turso CLI...");
 
   return Result.tryPromise({
@@ -99,7 +100,7 @@ type TursoGroup = {
 };
 
 async function getTursoGroups(): Promise<TursoGroup[]> {
-  const s = spinner();
+  const s = createSpinner();
   s.start("Fetching Turso groups...");
 
   const result = await Result.tryPromise({
@@ -137,7 +138,7 @@ async function selectTursoGroup(): Promise<Result<string | null, UserCancelledEr
   }
 
   if (groups.length === 1) {
-    log.info(`Using the only available group: ${pc.blue(groups[0].name)}`);
+    cliLog.info(`Using the only available group: ${pc.blue(groups[0].name)}`);
     return Result.ok(groups[0].name);
   }
 
@@ -162,7 +163,7 @@ async function createTursoDatabase(
   dbName: string,
   groupName: string | null,
 ): Promise<Result<TursoConfig, DatabaseSetupError>> {
-  const s = spinner();
+  const s = createSpinner();
   s.start(`Creating Turso database "${dbName}"${groupName ? ` in group "${groupName}"` : ""}...`);
 
   const createResult = await Result.tryPromise({
@@ -256,7 +257,7 @@ async function writeEnvFile(
 }
 
 function displayManualSetupInstructions() {
-  log.info(`Manual Turso Setup Instructions:
+  cliLog.info(`Manual Turso Setup Instructions:
 
 1. Visit https://turso.tech and create an account
 2. Create a new database from the dashboard
@@ -276,7 +277,7 @@ export async function setupTurso(
     manualDb: cliInput?.manualDb,
     dbSetupOptions: cliInput?.dbSetupOptions ?? config.dbSetupOptions,
   });
-  const setupSpinner = spinner();
+  const setupSpinner = createSpinner();
 
   if (setupMode === "manual") {
     const envResult = await writeEnvFile(projectDir, backend);
@@ -330,7 +331,7 @@ export async function setupTurso(
 
   if (isWindows) {
     setupSpinner.stop(pc.yellow("Turso setup not supported on Windows"));
-    log.warn(pc.yellow("Automatic Turso setup is not supported on Windows."));
+    cliLog.warn(pc.yellow("Automatic Turso setup is not supported on Windows."));
     const envResult = await writeEnvFile(projectDir, backend);
     if (envResult.isErr()) {
       return envResult;
@@ -374,7 +375,7 @@ export async function setupTurso(
 
     const installResult = await installTursoCLI(isMac);
     if (installResult.isErr()) {
-      log.error(pc.red(installResult.error.message));
+      cliLog.error(pc.red(installResult.error.message));
       const envResult = await writeEnvFile(projectDir, backend);
       if (envResult.isErr()) {
         return envResult;
@@ -387,7 +388,7 @@ export async function setupTurso(
   const isLoggedIn = await isTursoLoggedIn();
   if (!isLoggedIn) {
     if (isSilent()) {
-      log.warn(pc.yellow("Turso CLI is not logged in. Falling back to manual setup."));
+      cliLog.warn(pc.yellow("Turso CLI is not logged in. Falling back to manual setup."));
       const envResult = await writeEnvFile(projectDir, backend);
       if (envResult.isErr()) {
         return envResult;
@@ -398,7 +399,7 @@ export async function setupTurso(
 
     const loginResult = await loginToTurso();
     if (loginResult.isErr()) {
-      log.error(pc.red(loginResult.error.message));
+      cliLog.error(pc.red(loginResult.error.message));
       const envResult = await writeEnvFile(projectDir, backend);
       if (envResult.isErr()) {
         return envResult;
@@ -432,13 +433,13 @@ export async function setupTurso(
   if (isSilent()) {
     const createResult = await createTursoDatabase(suggestedName, selectedGroup);
     if (createResult.isErr()) {
-      log.error(pc.red(createResult.error.message));
+      cliLog.error(pc.red(createResult.error.message));
       const envResult = await writeEnvFile(projectDir, backend);
       if (envResult.isErr()) {
         return envResult;
       }
       displayManualSetupInstructions();
-      log.success("Setup completed with manual configuration required.");
+      cliLog.success("Setup completed with manual configuration required.");
       return Result.ok(undefined);
     }
 
@@ -447,7 +448,7 @@ export async function setupTurso(
       return envResult;
     }
 
-    log.success("Turso database setup completed successfully!");
+    cliLog.success("Turso database setup completed successfully!");
     return Result.ok(undefined);
   }
 
@@ -469,17 +470,17 @@ export async function setupTurso(
 
     if (createResult.isErr()) {
       if (createResult.error.message === "DATABASE_EXISTS") {
-        log.warn(pc.yellow(`Database "${pc.red(dbName)}" already exists`));
+        cliLog.warn(pc.yellow(`Database "${pc.red(dbName)}" already exists`));
         suggestedName = `${dbName}-${Math.floor(Math.random() * 1000)}`;
         continue;
       }
-      log.error(pc.red(createResult.error.message));
+      cliLog.error(pc.red(createResult.error.message));
       const envResult = await writeEnvFile(projectDir, backend);
       if (envResult.isErr()) {
         return envResult;
       }
       displayManualSetupInstructions();
-      log.success("Setup completed with manual configuration required.");
+      cliLog.success("Setup completed with manual configuration required.");
       return Result.ok(undefined);
     }
 
@@ -488,7 +489,7 @@ export async function setupTurso(
       return envResult;
     }
 
-    log.success("Turso database setup completed successfully!");
+    cliLog.success("Turso database setup completed successfully!");
     return Result.ok(undefined);
   }
 }

@@ -1,4 +1,4 @@
-import { isCancel, log, select, spinner } from "@clack/prompts";
+import { isCancel, select } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
@@ -11,6 +11,7 @@ import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
+import { cliLog, createSpinner } from "../../utils/terminal-output";
 
 type TuiTemplate = "core" | "react" | "solid";
 
@@ -41,7 +42,7 @@ export async function setupTui(config: ProjectConfig): Promise<TuiSetupResult> {
 
   const { packageManager, projectDir } = config;
 
-  log.info("Setting up OpenTUI...");
+  cliLog.info("Setting up OpenTUI...");
 
   let template = config.addonOptions?.opentui?.template;
 
@@ -86,7 +87,7 @@ export async function setupTui(config: ProjectConfig): Promise<TuiSetupResult> {
     return ensureDirResult;
   }
 
-  const s = spinner();
+  const s = createSpinner();
   s.start("Running OpenTUI create command...");
 
   const initResult = await Result.tryPromise({
@@ -104,13 +105,13 @@ export async function setupTui(config: ProjectConfig): Promise<TuiSetupResult> {
   });
 
   if (initResult.isErr()) {
-    log.error(pc.red("Failed to set up OpenTUI"));
+    cliLog.error(pc.red("Failed to set up OpenTUI"));
     return initResult;
   }
 
   const postProcessResult = await postProcessTuiWorkspace(path.join(appsDir, "tui"));
   if (postProcessResult.isErr()) {
-    log.warn(pc.yellow("OpenTUI setup completed but workspace normalization had warnings"));
+    cliLog.warn(pc.yellow("OpenTUI setup completed but workspace normalization had warnings"));
     return postProcessResult;
   }
 

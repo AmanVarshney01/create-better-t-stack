@@ -1,4 +1,4 @@
-import { isCancel, log, select } from "@clack/prompts";
+import { isCancel, select } from "@clack/prompts";
 import { Result } from "better-result";
 import { type ExecaError, execa } from "execa";
 import fs from "fs-extra";
@@ -7,6 +7,7 @@ import pc from "picocolors";
 
 import type { PackageManager, ProjectConfig } from "../../types";
 
+import { isSilent } from "../../utils/context";
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
 import {
   DatabaseSetupError,
@@ -15,6 +16,7 @@ import {
   userCancelled,
 } from "../../utils/errors";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
+import { cliLog } from "../../utils/terminal-output";
 import {
   type DatabaseSetupCliOptions,
   type DbSetupMode,
@@ -65,7 +67,7 @@ async function initializeSupabase(
   serverDir: string,
   packageManager: PackageManager,
 ): Promise<Result<void, DatabaseSetupError>> {
-  log.info("Initializing Supabase project...");
+  cliLog.info("Initializing Supabase project...");
   return Result.tryPromise({
     try: async () => {
       const supabaseInitArgs = getPackageExecutionArgs(packageManager, "supabase init");
@@ -73,7 +75,7 @@ async function initializeSupabase(
         cwd: serverDir,
         stdio: "inherit",
       });
-      log.success("Supabase project initialized");
+      cliLog.success("Supabase project initialized");
     },
     catch: (e) => {
       const error = e as Error;
@@ -95,7 +97,7 @@ async function startSupabase(
   serverDir: string,
   packageManager: PackageManager,
 ): Promise<Result<string, DatabaseSetupError>> {
-  log.info("Starting Supabase services (this may take a moment)...");
+  cliLog.info("Starting Supabase services (this may take a moment)...");
   const supabaseStartArgs = getPackageExecutionArgs(packageManager, "supabase start");
 
   return Result.tryPromise({
@@ -109,7 +111,9 @@ async function startSupabase(
       if (subprocess.stdout) {
         subprocess.stdout.on("data", (data) => {
           const text = data.toString();
-          process.stdout.write(text);
+          if (!isSilent()) {
+            process.stdout.write(text);
+          }
           stdoutData += text;
         });
       }
@@ -140,7 +144,7 @@ async function startSupabase(
 }
 
 function displayManualSupabaseInstructions(output?: string | null) {
-  log.info(
+  cliLog.info(
     `"Manual Supabase Setup Instructions:"
 1. Ensure Docker is installed and running.
 2. Install the Supabase CLI (e.g., \`npm install -g supabase\`).
@@ -223,14 +227,14 @@ export async function setupSupabase(
 
   const initResult = await initializeSupabase(serverDir, packageManager);
   if (initResult.isErr()) {
-    log.error(pc.red(initResult.error.message));
+    cliLog.error(pc.red(initResult.error.message));
     displayManualSupabaseInstructions();
     return writeSupabaseEnvFile(projectDir, backend, "");
   }
 
   const startResult = await startSupabase(serverDir, packageManager);
   if (startResult.isErr()) {
-    log.error(pc.red(startResult.error.message));
+    cliLog.error(pc.red(startResult.error.message));
     displayManualSupabaseInstructions();
     return writeSupabaseEnvFile(projectDir, backend, "");
   }
@@ -241,15 +245,15 @@ export async function setupSupabase(
   if (dbUrl) {
     const envResult = await writeSupabaseEnvFile(projectDir, backend, dbUrl);
     if (envResult.isOk()) {
-      log.success(pc.green("Supabase local development setup ready!"));
+      cliLog.success(pc.green("Supabase local development setup ready!"));
     } else {
-      log.error(pc.red("Supabase setup completed, but failed to update .env automatically."));
+      cliLog.error(pc.red("Supabase setup completed, but failed to update .env automatically."));
       displayManualSupabaseInstructions(supabaseOutput);
     }
     return envResult;
   }
 
-  log.error(pc.yellow("Supabase started, but could not extract DB URL automatically."));
+  cliLog.error(pc.yellow("Supabase started, but could not extract DB URL automatically."));
   displayManualSupabaseInstructions(supabaseOutput);
   return databaseSetupError(
     "supabase",

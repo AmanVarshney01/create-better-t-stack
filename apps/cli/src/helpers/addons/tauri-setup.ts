@@ -1,4 +1,3 @@
-import { spinner } from "@clack/prompts";
 import { Result } from "better-result";
 import { execa } from "execa";
 import fs from "fs-extra";
@@ -9,6 +8,7 @@ import type { ProjectConfig } from "../../types";
 import { AddonSetupError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageRunnerPrefix } from "../../utils/package-runner";
+import { createSpinner } from "../../utils/terminal-output";
 
 export function buildTauriInitArgs(
   config: Pick<ProjectConfig, "packageManager" | "frontend" | "projectDir">,
@@ -63,7 +63,7 @@ export async function setupTauri(config: ProjectConfig): Promise<Result<void, Ad
   }
 
   const { packageManager, frontend, projectDir } = config;
-  const s = spinner();
+  const s = createSpinner();
   const clientPackageDir = path.join(projectDir, "apps/web");
 
   if (!(await fs.pathExists(clientPackageDir))) {

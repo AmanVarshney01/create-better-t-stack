@@ -1,4 +1,3 @@
-import { spinner } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import pc from "picocolors";
@@ -7,6 +6,7 @@ import type { Addons, PackageManager } from "../../types";
 
 import { ProjectCreationError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
+import { createSpinner } from "../../utils/terminal-output";
 
 export async function installDependencies({
   projectDir,
@@ -20,7 +20,7 @@ export async function installDependencies({
     return Result.ok(undefined);
   }
 
-  const s = spinner();
+  const s = createSpinner();
 
   s.start(`Running ${packageManager} install...`);
 

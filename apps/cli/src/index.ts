@@ -55,7 +55,7 @@ import {
 import { CLIError, ProjectCreationError, UserCancelledError } from "./utils/errors";
 import { getLatestCLIVersion } from "./utils/get-latest-cli-version";
 
-const SchemaNameSchema = z
+export const SchemaNameSchema = z
   .enum([
     "all",
     "cli",
@@ -85,7 +85,7 @@ const SchemaNameSchema = z
   ])
   .default("all");
 
-type SchemaName = z.infer<typeof SchemaNameSchema>;
+export type SchemaName = z.infer<typeof SchemaNameSchema>;
 
 function getCliSchemaJson(): unknown {
   return createCli({
@@ -95,7 +95,7 @@ function getCliSchemaJson(): unknown {
   }).toJSON();
 }
 
-function getSchemaResult(name: SchemaName): unknown {
+export function getSchemaResult(name: SchemaName): unknown {
   const schemas = getAllJsonSchemas();
   if (name === "all") {
     return {

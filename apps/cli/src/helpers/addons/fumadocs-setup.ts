@@ -1,4 +1,4 @@
-import { isCancel, log, select, spinner } from "@clack/prompts";
+import { isCancel, select } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
@@ -10,6 +10,7 @@ import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
+import { cliLog, createSpinner } from "../../utils/terminal-output";
 
 type FumadocsTemplate =
   | "next-mdx"
@@ -70,7 +71,7 @@ export async function setupFumadocs(
 
   const { packageManager, projectDir } = config;
 
-  log.info("Setting up Fumadocs...");
+  cliLog.info("Setting up Fumadocs...");
 
   const configuredOptions = config.addonOptions?.fumadocs;
   let template = configuredOptions?.template;
@@ -120,7 +121,7 @@ export async function setupFumadocs(
   const appsDir = path.join(projectDir, "apps");
   await fs.ensureDir(appsDir);
 
-  const s = spinner();
+  const s = createSpinner();
   s.start("Running Fumadocs create command...");
 
   const result = await Result.tryPromise({

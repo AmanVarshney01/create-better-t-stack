@@ -1,4 +1,4 @@
-import { isCancel, log, select, spinner } from "@clack/prompts";
+import { isCancel, select } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
@@ -11,6 +11,7 @@ import { isSilent } from "../../utils/context";
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
 import { DatabaseSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
 import { getPackageRunnerPrefix } from "../../utils/package-runner";
+import { cliLog, createSpinner } from "../../utils/terminal-output";
 import {
   type DatabaseSetupCliOptions,
   type DbSetupMode,
@@ -48,7 +49,7 @@ async function setupWithCreateDb(
   packageManager: PackageManager,
   regionId?: string,
 ): Promise<Result<PrismaConfig, DatabaseSetupError | UserCancelledError>> {
-  log.info("Starting Prisma Postgres setup with create-db.");
+  cliLog.info("Starting Prisma Postgres setup with create-db.");
 
   let selectedRegion = regionId;
 
@@ -79,7 +80,7 @@ async function setupWithCreateDb(
     selectedRegion,
   ];
 
-  const s = spinner();
+  const s = createSpinner();
   s.start("Creating Prisma Postgres database...");
 
   const execResult = await Result.tryPromise({
@@ -163,7 +164,7 @@ async function writeEnvFile(
 }
 
 function displayManualSetupInstructions(target: "apps/web" | "apps/server") {
-  log.info(`Manual Prisma PostgreSQL Setup Instructions:
+  cliLog.info(`Manual Prisma PostgreSQL Setup Instructions:
 
 1. Visit https://console.prisma.io and create an account
 2. Create a new PostgreSQL database from the dashboard
@@ -257,13 +258,13 @@ export async function setupPrismaPostgres(
       return prismaConfigResult;
     }
 
-    log.error(pc.red(prismaConfigResult.error.message));
+    cliLog.error(pc.red(prismaConfigResult.error.message));
     const envResult = await writeEnvFile(projectDir, backend);
     if (envResult.isErr()) {
       return envResult;
     }
     displayManualSetupInstructions(target);
-    log.info("Setup completed with manual configuration required.");
+    cliLog.info("Setup completed with manual configuration required.");
     return Result.ok(undefined);
   }
 
@@ -272,10 +273,10 @@ export async function setupPrismaPostgres(
     return envResult;
   }
 
-  log.success(pc.green("Prisma Postgres database configured successfully!"));
+  cliLog.success(pc.green("Prisma Postgres database configured successfully!"));
 
   if (prismaConfigResult.value.claimUrl) {
-    log.info(pc.blue(`Claim URL saved to .env: ${prismaConfigResult.value.claimUrl}`));
+    cliLog.info(pc.blue(`Claim URL saved to .env: ${prismaConfigResult.value.claimUrl}`));
   }
 
   return Result.ok(undefined);
