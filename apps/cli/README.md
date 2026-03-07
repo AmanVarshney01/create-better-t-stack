@@ -101,10 +101,10 @@ npx create-better-t-stack@latest mcp
 To install Better T Stack into supported agent configs with `add-mcp` and avoid relying on a global CLI install:
 
 ```bash
-npx -y add-mcp@latest 'npx -y create-better-t-stack@latest mcp'
+npx -y add-mcp@latest "npx -y create-better-t-stack@latest mcp"
 ```
 
-When you scaffold with the `mcp` addon, Better T Stack itself can also be installed into supported agent configs through `add-mcp` using a package runner command instead of assuming a global CLI install, for example `npx create-better-t-stack@latest mcp` or `bunx create-better-t-stack@latest mcp`.
+When you scaffold with the `mcp` addon, Better T Stack itself can also be installed into supported agent configs through `add-mcp` using a package runner command instead of assuming a global CLI install. For Bun projects, the generated config uses the equivalent `bunx create-better-t-stack@latest mcp` server command inside `add-mcp`.
 
 For MCP project creation, prefer `install: false`. Long dependency installs can exceed common MCP client request timeouts, so the safest flow is to scaffold first and run your package manager install command afterward in the project directory.
 
