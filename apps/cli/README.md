@@ -95,10 +95,10 @@ create-better-t-stack schema --name dbSetupOptions
 create-better-t-stack schema --name cli
 
 # Local stdio MCP server
-create-better-t-stack mcp
+npx create-better-t-stack@latest mcp
 ```
 
-When you scaffold with the `mcp` addon, Better T Stack itself can also be installed into supported agent configs through `add-mcp` using the same local stdio command: `create-better-t-stack mcp`.
+When you scaffold with the `mcp` addon, Better T Stack itself can also be installed into supported agent configs through `add-mcp` using a package runner command instead of assuming a global CLI install, for example `npx create-better-t-stack@latest mcp` or `bunx create-better-t-stack@latest mcp`.
 
 For MCP project creation, prefer `install: false`. Long dependency installs can exceed common MCP client request timeouts, so the safest flow is to scaffold first and run your package manager install command afterward in the project directory.
 

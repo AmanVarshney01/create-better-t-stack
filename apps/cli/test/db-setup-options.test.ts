@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { beforeEach, describe, expect, it } from "bun:test";
 import fs from "fs-extra";
 import path from "node:path";
 
@@ -8,6 +8,11 @@ import { readBtsConfig } from "../src/utils/bts-config";
 const SMOKE_DIR_PATH = path.join(import.meta.dir, "..", ".smoke");
 
 describe("Database setup options", () => {
+  beforeEach(() => {
+    process.env.BTS_SKIP_EXTERNAL_COMMANDS = "1";
+    process.env.BTS_TEST_MODE = "1";
+  });
+
   it("defaults remote provider setup to manual in silent mode and uses flags when mode is representable", async () => {
     const projectPath = path.join(SMOKE_DIR_PATH, "db-setup-neon-default-manual");
     await fs.remove(projectPath);

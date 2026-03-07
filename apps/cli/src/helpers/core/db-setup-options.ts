@@ -38,10 +38,6 @@ export function resolveDbSetupMode(
     return "manual";
   }
 
-  if (cliOptions.manualDb === false) {
-    return "auto";
-  }
-
   if (isSilent() && requiresProvisioningGuardrails(dbSetup)) {
     return "manual";
   }
@@ -54,6 +50,10 @@ export function mergeResolvedDbSetupOptions(
   dbSetupOptions: DbSetupOptions | undefined,
   cliOptions: DatabaseSetupCliOptions = {},
 ): DbSetupOptions | undefined {
+  if (dbSetup === "none") {
+    return undefined;
+  }
+
   const resolvedMode = resolveDbSetupMode(dbSetup, {
     ...cliOptions,
     dbSetupOptions: dbSetupOptions ?? cliOptions.dbSetupOptions,

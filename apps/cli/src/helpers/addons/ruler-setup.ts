@@ -74,11 +74,10 @@ export async function setupRuler(
     zed: { label: "Zed" },
   } as const;
 
-  let selectedEditors: RulerAssistant[] = config.addonOptions?.ruler?.assistants
-    ? [...config.addonOptions.ruler.assistants]
-    : [];
+  const configuredAssistants = config.addonOptions?.ruler?.assistants;
+  let selectedEditors: RulerAssistant[] = configuredAssistants ? [...configuredAssistants] : [];
 
-  if (selectedEditors.length === 0) {
+  if (selectedEditors.length === 0 && configuredAssistants === undefined) {
     if (isSilent()) {
       selectedEditors = [...DEFAULT_ASSISTANTS];
     } else {

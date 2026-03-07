@@ -21,4 +21,22 @@ describe("Ultracite setup", () => {
     expect(args).toContain("--skip-install");
     expect(args).toContain("--quiet");
   });
+
+  it("passes integrations as a single value and keeps lint-staged separate for husky", () => {
+    const args = buildUltraciteInitArgs({
+      packageManager: "bun",
+      linter: "biome",
+      frameworks: ["react"],
+      editors: [],
+      agents: [],
+      hooks: [],
+      gitHooks: ["husky", "lefthook"],
+    });
+
+    const integrationsIndex = args.indexOf("--integrations");
+
+    expect(integrationsIndex).toBeGreaterThan(-1);
+    expect(args[integrationsIndex + 1]).toBe("husky lefthook");
+    expect(args).toContain("lint-staged");
+  });
 });

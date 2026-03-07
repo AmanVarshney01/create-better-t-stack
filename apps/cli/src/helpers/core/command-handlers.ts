@@ -205,6 +205,7 @@ async function createProjectHandlerInternal(
     );
     finalPathInput = conflictResult.finalPathInput;
     shouldClearDirectory = conflictResult.shouldClearDirectory;
+    yield* validateResolvedProjectPathInput(finalPathInput);
 
     let finalResolvedPath: string;
     let finalBaseName: string;

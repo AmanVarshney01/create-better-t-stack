@@ -256,13 +256,13 @@ async function writeEnvFile(
   });
 }
 
-function displayManualSetupInstructions() {
+function displayManualSetupInstructions(targetApp: "apps/web" | "apps/server") {
   cliLog.info(`Manual Turso Setup Instructions:
 
 1. Visit https://turso.tech and create an account
 2. Create a new database from the dashboard
 3. Get your database URL and authentication token
-4. Add these credentials to the .env file in apps/server/.env
+4. Add these credentials to the .env file in ${targetApp}/.env
 
 DATABASE_URL=your_database_url
 DATABASE_AUTH_TOKEN=your_auth_token`);
@@ -273,6 +273,7 @@ export async function setupTurso(
   cliInput?: DatabaseSetupCliOptions,
 ): Promise<TursoSetupResult> {
   const { projectDir, backend } = config;
+  const targetApp: "apps/web" | "apps/server" = backend === "self" ? "apps/web" : "apps/server";
   const setupMode = resolveDbSetupMode("turso", {
     manualDb: cliInput?.manualDb,
     dbSetupOptions: cliInput?.dbSetupOptions ?? config.dbSetupOptions,
@@ -284,35 +285,39 @@ export async function setupTurso(
     if (envResult.isErr()) {
       return envResult;
     }
-    displayManualSetupInstructions();
+    displayManualSetupInstructions(targetApp);
     return Result.ok(undefined);
   }
 
   let mode: DbSetupMode | undefined = setupMode;
 
   if (!mode) {
-    const promptedMode = await select<DbSetupMode>({
-      message: "Turso setup: choose mode",
-      options: [
-        {
-          label: "Automatic",
-          value: "auto",
-          hint: "Automated setup with provider CLI, sets .env",
-        },
-        {
-          label: "Manual",
-          value: "manual",
-          hint: "Manual setup, add env vars yourself",
-        },
-      ],
-      initialValue: "auto",
-    });
+    if (isSilent()) {
+      mode = "manual";
+    } else {
+      const promptedMode = await select<DbSetupMode>({
+        message: "Turso setup: choose mode",
+        options: [
+          {
+            label: "Automatic",
+            value: "auto",
+            hint: "Automated setup with provider CLI, sets .env",
+          },
+          {
+            label: "Manual",
+            value: "manual",
+            hint: "Manual setup, add env vars yourself",
+          },
+        ],
+        initialValue: "auto",
+      });
 
-    if (isCancel(promptedMode)) {
-      return userCancelled("Operation cancelled");
+      if (isCancel(promptedMode)) {
+        return userCancelled("Operation cancelled");
+      }
+
+      mode = promptedMode;
     }
-
-    mode = promptedMode;
   }
 
   if (mode === "manual") {
@@ -320,7 +325,7 @@ export async function setupTurso(
     if (envResult.isErr()) {
       return envResult;
     }
-    displayManualSetupInstructions();
+    displayManualSetupInstructions(targetApp);
     return Result.ok(undefined);
   }
 
@@ -336,7 +341,7 @@ export async function setupTurso(
     if (envResult.isErr()) {
       return envResult;
     }
-    displayManualSetupInstructions();
+    displayManualSetupInstructions(targetApp);
     return Result.ok(undefined);
   }
 
@@ -369,7 +374,7 @@ export async function setupTurso(
       if (envResult.isErr()) {
         return envResult;
       }
-      displayManualSetupInstructions();
+      displayManualSetupInstructions(targetApp);
       return Result.ok(undefined);
     }
 
@@ -380,7 +385,7 @@ export async function setupTurso(
       if (envResult.isErr()) {
         return envResult;
       }
-      displayManualSetupInstructions();
+      displayManualSetupInstructions(targetApp);
       return Result.ok(undefined);
     }
   }
@@ -393,7 +398,7 @@ export async function setupTurso(
       if (envResult.isErr()) {
         return envResult;
       }
-      displayManualSetupInstructions();
+      displayManualSetupInstructions(targetApp);
       return Result.ok(undefined);
     }
 
@@ -404,7 +409,7 @@ export async function setupTurso(
       if (envResult.isErr()) {
         return envResult;
       }
-      displayManualSetupInstructions();
+      displayManualSetupInstructions(targetApp);
       return Result.ok(undefined);
     }
   }
@@ -438,7 +443,7 @@ export async function setupTurso(
       if (envResult.isErr()) {
         return envResult;
       }
-      displayManualSetupInstructions();
+      displayManualSetupInstructions(targetApp);
       cliLog.success("Setup completed with manual configuration required.");
       return Result.ok(undefined);
     }
@@ -479,7 +484,7 @@ export async function setupTurso(
       if (envResult.isErr()) {
         return envResult;
       }
-      displayManualSetupInstructions();
+      displayManualSetupInstructions(targetApp);
       cliLog.success("Setup completed with manual configuration required.");
       return Result.ok(undefined);
     }

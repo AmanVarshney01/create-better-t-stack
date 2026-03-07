@@ -177,6 +177,20 @@ export async function setupMongoDBAtlas(
   let mode: DbSetupMode | undefined = setupMode;
 
   if (!mode) {
+    if (isSilent()) {
+      cliLog.warn(
+        pc.yellow(
+          "MongoDB Atlas automatic setup requires interactive input. Falling back to manual setup.",
+        ),
+      );
+      const envResult = await writeEnvFile(projectDir, backend);
+      if (envResult.isErr()) {
+        return envResult;
+      }
+      displayManualSetupInstructions();
+      return Result.ok(undefined);
+    }
+
     const promptedMode = await select<DbSetupMode>({
       message: "MongoDB Atlas setup: choose mode",
       options: [
@@ -203,20 +217,6 @@ export async function setupMongoDBAtlas(
 
   if (mode === "manual") {
     cliLog.info("MongoDB Atlas manual setup selected");
-    const envResult = await writeEnvFile(projectDir, backend);
-    if (envResult.isErr()) {
-      return envResult;
-    }
-    displayManualSetupInstructions();
-    return Result.ok(undefined);
-  }
-
-  if (isSilent()) {
-    cliLog.warn(
-      pc.yellow(
-        "MongoDB Atlas automatic setup requires interactive input. Falling back to manual setup.",
-      ),
-    );
     const envResult = await writeEnvFile(projectDir, backend);
     if (envResult.isErr()) {
       return envResult;

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { beforeEach, describe, expect, it } from "bun:test";
 import fs from "fs-extra";
 import path from "node:path";
 
@@ -8,6 +8,11 @@ import { readBtsConfig } from "../src/utils/bts-config";
 const SMOKE_DIR_PATH = path.join(import.meta.dir, "..", ".smoke");
 
 describe("Addon options", () => {
+  beforeEach(() => {
+    process.env.BTS_SKIP_EXTERNAL_COMMANDS = "1";
+    process.env.BTS_TEST_MODE = "1";
+  });
+
   it("persists addonOptions during create and keeps reproducible command on normal flags", async () => {
     const projectPath = path.join(SMOKE_DIR_PATH, "addon-options-create");
     await fs.remove(projectPath);
@@ -109,5 +114,63 @@ describe("Addon options", () => {
     const btsConfig = await readBtsConfig(projectPath);
     expect(btsConfig?.addonOptions).toEqual(addonOptions);
     expect(btsConfig?.addons).toEqual(expect.arrayContaining(["turborepo", "wxt", "mcp"]));
+  });
+
+  it("deep merges nested addonOptions during add", async () => {
+    const projectPath = path.join(SMOKE_DIR_PATH, "addon-options-deep-merge");
+    await fs.remove(projectPath);
+
+    const createResult = await create(projectPath, {
+      yes: true,
+      install: false,
+      disableAnalytics: true,
+    });
+
+    expect(createResult.isOk()).toBe(true);
+    if (createResult.isErr()) return;
+
+    const firstAddResult = await add({
+      projectDir: projectPath,
+      addons: ["mcp"],
+      addonOptions: {
+        mcp: {
+          scope: "project",
+          servers: ["context7"],
+        },
+      },
+      install: false,
+      packageManager: "bun",
+    });
+
+    expect(firstAddResult?.success).toBe(true);
+
+    const secondAddResult = await add({
+      projectDir: projectPath,
+      addons: ["wxt"],
+      addonOptions: {
+        mcp: {
+          agents: ["codex"],
+        },
+        wxt: {
+          template: "react",
+        },
+      },
+      install: false,
+      packageManager: "bun",
+    });
+
+    expect(secondAddResult?.success).toBe(true);
+
+    const btsConfig = await readBtsConfig(projectPath);
+    expect(btsConfig?.addonOptions).toEqual({
+      mcp: {
+        scope: "project",
+        servers: ["context7"],
+        agents: ["codex"],
+      },
+      wxt: {
+        template: "react",
+      },
+    });
   });
 });

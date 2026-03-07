@@ -212,28 +212,32 @@ export async function setupPrismaPostgres(
   let selectedSetupMode: DbSetupMode | undefined = setupMode;
 
   if (!selectedSetupMode) {
-    const promptedSetupMode = await select<DbSetupMode>({
-      message: "Prisma Postgres setup: choose mode",
-      options: [
-        {
-          label: "Automatic (create-db)",
-          value: "auto",
-          hint: "Provision a database via Prisma's create-db CLI",
-        },
-        {
-          label: "Manual",
-          value: "manual",
-          hint: "Add your own DATABASE_URL later",
-        },
-      ],
-      initialValue: "auto",
-    });
+    if (isSilent()) {
+      selectedSetupMode = "manual";
+    } else {
+      const promptedSetupMode = await select<DbSetupMode>({
+        message: "Prisma Postgres setup: choose mode",
+        options: [
+          {
+            label: "Automatic (create-db)",
+            value: "auto",
+            hint: "Provision a database via Prisma's create-db CLI",
+          },
+          {
+            label: "Manual",
+            value: "manual",
+            hint: "Add your own DATABASE_URL later",
+          },
+        ],
+        initialValue: "auto",
+      });
 
-    if (isCancel(promptedSetupMode)) {
-      return userCancelled("Operation cancelled");
+      if (isCancel(promptedSetupMode)) {
+        return userCancelled("Operation cancelled");
+      }
+
+      selectedSetupMode = promptedSetupMode;
     }
-
-    selectedSetupMode = promptedSetupMode;
   }
 
   if (selectedSetupMode === "manual") {

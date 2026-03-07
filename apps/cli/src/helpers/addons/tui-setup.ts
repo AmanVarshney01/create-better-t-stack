@@ -111,6 +111,7 @@ export async function setupTui(config: ProjectConfig): Promise<TuiSetupResult> {
 
   const postProcessResult = await postProcessTuiWorkspace(path.join(appsDir, "tui"));
   if (postProcessResult.isErr()) {
+    s.stop(pc.yellow("OpenTUI setup completed with warnings"));
     cliLog.warn(pc.yellow("OpenTUI setup completed but workspace normalization had warnings"));
     return postProcessResult;
   }

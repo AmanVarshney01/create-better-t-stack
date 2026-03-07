@@ -341,12 +341,16 @@ export async function setupSkills(
     : config;
 
   const recommendedSourceKeys = getRecommendedSourceKeys(fullConfig);
+  const skillsOptions = fullConfig.addonOptions?.skills;
+  const configuredSourceKeys = uniqueValues(
+    (skillsOptions?.selections ?? []).map((selection) => selection.source),
+  );
+  const sourceKeys = uniqueValues([...recommendedSourceKeys, ...configuredSourceKeys]);
 
-  if (recommendedSourceKeys.length === 0) {
+  if (sourceKeys.length === 0) {
     return Result.ok(undefined);
   }
 
-  const sourceKeys = uniqueValues(recommendedSourceKeys);
   const skillOptions = sourceKeys.flatMap((sourceKey) => {
     const source = SKILL_SOURCES[sourceKey];
     const skillNames = getCuratedSkillNamesForSourceKey(sourceKey, fullConfig);
@@ -361,7 +365,7 @@ export async function setupSkills(
     return Result.ok(undefined);
   }
 
-  let scope = config.addonOptions?.skills?.scope;
+  let scope = skillsOptions?.scope;
 
   if (!scope) {
     if (isSilent()) {
@@ -395,14 +399,13 @@ export async function setupSkills(
   // Select all skills by default
   const allSkillValues = skillOptions.map((opt) => opt.value);
 
-  const configuredSelections = config.addonOptions?.skills?.selections;
+  const configuredSelections = skillsOptions?.selections;
   let selectedSkills: string[];
 
   if (configuredSelections !== undefined) {
-    const validSkillValues = new Set(allSkillValues);
-    selectedSkills = configuredSelections
-      .flatMap((selection) => selection.skills.map((skill) => `${selection.source}::${skill}`))
-      .filter((skillValue) => validSkillValues.has(skillValue));
+    selectedSkills = configuredSelections.flatMap((selection) =>
+      selection.skills.map((skill) => `${selection.source}::${skill}`),
+    );
   } else if (isSilent()) {
     selectedSkills = allSkillValues;
   } else {
@@ -424,11 +427,10 @@ export async function setupSkills(
     return Result.ok(undefined);
   }
 
-  let selectedAgents: SkillAgent[] = config.addonOptions?.skills?.agents
-    ? [...config.addonOptions.skills.agents]
-    : [];
+  const configuredAgents = skillsOptions?.agents;
+  let selectedAgents: SkillAgent[] = configuredAgents ? [...configuredAgents] : [];
 
-  if (selectedAgents.length === 0) {
+  if (selectedAgents.length === 0 && configuredAgents === undefined) {
     if (isSilent()) {
       selectedAgents = [...DEFAULT_AGENTS];
     } else {

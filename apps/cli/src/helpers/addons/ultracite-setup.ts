@@ -172,11 +172,10 @@ export function buildUltraciteInitArgs({
   }
 
   if (gitHooks.length > 0) {
-    const integrations = [...gitHooks];
+    ultraciteArgs.push("--integrations", gitHooks.join(" "));
     if (gitHooks.includes("husky")) {
-      integrations.push("lint-staged");
+      ultraciteArgs.push("lint-staged");
     }
-    ultraciteArgs.push("--integrations", ...integrations);
   }
 
   return [
@@ -230,6 +229,7 @@ export async function setupUltracite(
               editors: () =>
                 multiselect<UltraciteEditor>({
                   message: "Choose editors",
+                  required: false,
                   options: Object.entries(EDITORS).map(([key, editor]) => ({
                     value: key as UltraciteEditor,
                     label: editor.label,
@@ -239,6 +239,7 @@ export async function setupUltracite(
               agents: () =>
                 multiselect<UltraciteAgent>({
                   message: "Choose agents",
+                  required: false,
                   options: Object.entries(AGENTS).map(([key, agent]) => ({
                     value: key as UltraciteAgent,
                     label: agent.label,
@@ -248,6 +249,7 @@ export async function setupUltracite(
               hooks: () =>
                 multiselect<UltraciteHook>({
                   message: "Choose hooks",
+                  required: false,
                   options: Object.entries(HOOKS).map(([key, hook]) => ({
                     value: key as UltraciteHook,
                     label: hook.label,

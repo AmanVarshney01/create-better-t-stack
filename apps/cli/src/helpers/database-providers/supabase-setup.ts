@@ -143,7 +143,10 @@ async function startSupabase(
   });
 }
 
-function displayManualSupabaseInstructions(output?: string | null) {
+function displayManualSupabaseInstructions(
+  targetApp: "apps/web" | "apps/server",
+  output?: string | null,
+) {
   cliLog.info(
     `"Manual Supabase Setup Instructions:"
 1. Ensure Docker is installed and running.
@@ -157,7 +160,7 @@ ${pc.bold("Relevant output from `supabase start`:")}
 ${pc.dim(output)}`
         : ""
     }
-6. Add the DB URL to the .env file in \`packages/db/.env\` as \`DATABASE_URL\`:
+6. Add the DB URL to the .env file in \`${targetApp}/.env\` as \`DATABASE_URL\`:
 			${pc.gray('DATABASE_URL="your_supabase_db_url"')}`,
   );
 }
@@ -167,6 +170,7 @@ export async function setupSupabase(
   cliInput?: DatabaseSetupCliOptions,
 ): Promise<SupabaseSetupResult> {
   const { projectDir, packageManager, backend } = config;
+  const targetApp: "apps/web" | "apps/server" = backend === "self" ? "apps/web" : "apps/server";
   const setupMode = resolveDbSetupMode("supabase", {
     manualDb: cliInput?.manualDb,
     dbSetupOptions: cliInput?.dbSetupOptions ?? config.dbSetupOptions,
@@ -189,53 +193,57 @@ export async function setupSupabase(
   }
 
   if (setupMode === "manual") {
-    displayManualSupabaseInstructions();
+    displayManualSupabaseInstructions(targetApp);
     return writeSupabaseEnvFile(projectDir, backend, "");
   }
 
   let mode: DbSetupMode | undefined = setupMode;
 
   if (!mode) {
-    const promptedMode = await select<DbSetupMode>({
-      message: "Supabase setup: choose mode",
-      options: [
-        {
-          label: "Automatic",
-          value: "auto",
-          hint: "Automated setup with provider CLI, sets .env",
-        },
-        {
-          label: "Manual",
-          value: "manual",
-          hint: "Manual setup, add env vars yourself",
-        },
-      ],
-      initialValue: "auto",
-    });
+    if (isSilent()) {
+      mode = "manual";
+    } else {
+      const promptedMode = await select<DbSetupMode>({
+        message: "Supabase setup: choose mode",
+        options: [
+          {
+            label: "Automatic",
+            value: "auto",
+            hint: "Automated setup with provider CLI, sets .env",
+          },
+          {
+            label: "Manual",
+            value: "manual",
+            hint: "Manual setup, add env vars yourself",
+          },
+        ],
+        initialValue: "auto",
+      });
 
-    if (isCancel(promptedMode)) {
-      return userCancelled("Operation cancelled");
+      if (isCancel(promptedMode)) {
+        return userCancelled("Operation cancelled");
+      }
+
+      mode = promptedMode;
     }
-
-    mode = promptedMode;
   }
 
   if (mode === "manual") {
-    displayManualSupabaseInstructions();
+    displayManualSupabaseInstructions(targetApp);
     return writeSupabaseEnvFile(projectDir, backend, "");
   }
 
   const initResult = await initializeSupabase(serverDir, packageManager);
   if (initResult.isErr()) {
     cliLog.error(pc.red(initResult.error.message));
-    displayManualSupabaseInstructions();
+    displayManualSupabaseInstructions(targetApp);
     return writeSupabaseEnvFile(projectDir, backend, "");
   }
 
   const startResult = await startSupabase(serverDir, packageManager);
   if (startResult.isErr()) {
     cliLog.error(pc.red(startResult.error.message));
-    displayManualSupabaseInstructions();
+    displayManualSupabaseInstructions(targetApp);
     return writeSupabaseEnvFile(projectDir, backend, "");
   }
 
@@ -248,13 +256,13 @@ export async function setupSupabase(
       cliLog.success(pc.green("Supabase local development setup ready!"));
     } else {
       cliLog.error(pc.red("Supabase setup completed, but failed to update .env automatically."));
-      displayManualSupabaseInstructions(supabaseOutput);
+      displayManualSupabaseInstructions(targetApp, supabaseOutput);
     }
     return envResult;
   }
 
   cliLog.error(pc.yellow("Supabase started, but could not extract DB URL automatically."));
-  displayManualSupabaseInstructions(supabaseOutput);
+  displayManualSupabaseInstructions(targetApp, supabaseOutput);
   return databaseSetupError(
     "supabase",
     "Could not extract database URL from Supabase output. Please configure manually.",

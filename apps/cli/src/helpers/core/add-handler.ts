@@ -11,7 +11,7 @@ import fs from "fs-extra";
 import path from "node:path";
 import pc from "picocolors";
 
-import type { AddInput, Addons, ProjectConfig } from "../../types";
+import type { AddInput, Addons, AddonOptions, ProjectConfig } from "../../types";
 
 import { getAddonsToAdd } from "../../prompts/addons";
 import { updateBtsConfig } from "../../utils/bts-config";
@@ -34,6 +34,39 @@ export interface AddResult {
   dryRun?: boolean;
   plannedFileCount?: number;
   error?: string;
+}
+
+function mergeAddonOptions(
+  existingAddonOptions?: AddonOptions,
+  nextAddonOptions?: AddonOptions,
+): AddonOptions | undefined {
+  if (!existingAddonOptions && !nextAddonOptions) {
+    return undefined;
+  }
+
+  const mergedAddonOptions: Partial<AddonOptions> = { ...(existingAddonOptions ?? {}) };
+
+  if (nextAddonOptions) {
+    for (const addonKey of Object.keys(nextAddonOptions) as (keyof AddonOptions)[]) {
+      const existingOptionsForAddon = existingAddonOptions?.[addonKey];
+      const nextOptionsForAddon = nextAddonOptions[addonKey];
+      const mergedOptionsForAddon =
+        existingOptionsForAddon && nextOptionsForAddon
+          ? { ...existingOptionsForAddon, ...nextOptionsForAddon }
+          : nextOptionsForAddon;
+
+      (
+        mergedAddonOptions as Record<
+          keyof AddonOptions,
+          AddonOptions[keyof AddonOptions] | undefined
+        >
+      )[addonKey] = mergedOptionsForAddon as AddonOptions[keyof AddonOptions];
+    }
+  }
+
+  return Object.keys(mergedAddonOptions).length > 0
+    ? (mergedAddonOptions as AddonOptions)
+    : undefined;
 }
 
 export async function addHandler(
@@ -177,15 +210,12 @@ async function addHandlerInternal(
 
   // Build config for addon setup
   const updatedAddons = [...existingConfig.addons, ...addonsToAdd];
-  const mergedAddonOptions = {
-    ...existingConfig.addonOptions,
-    ...input.addonOptions,
-  };
+  const mergedAddonOptions = mergeAddonOptions(existingConfig.addonOptions, input.addonOptions);
   const config: ProjectConfig = {
     projectName: existingConfig.projectName,
     projectDir,
     relativePath: ".",
-    addonOptions: Object.keys(mergedAddonOptions).length > 0 ? mergedAddonOptions : undefined,
+    addonOptions: mergedAddonOptions,
     database: existingConfig.database,
     orm: existingConfig.orm,
     backend: existingConfig.backend,

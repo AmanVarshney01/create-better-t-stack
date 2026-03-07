@@ -234,28 +234,32 @@ export async function setupNeonPostgres(
   let selectedMode: DbSetupMode | undefined = setupMode;
 
   if (!selectedMode) {
-    const promptedMode = await select<DbSetupMode>({
-      message: "Neon setup: choose mode",
-      options: [
-        {
-          label: "Automatic",
-          value: "auto",
-          hint: "Automated setup with provider CLI, sets .env",
-        },
-        {
-          label: "Manual",
-          value: "manual",
-          hint: "Manual setup, add env vars yourself",
-        },
-      ],
-      initialValue: "auto",
-    });
+    if (isSilent()) {
+      selectedMode = "manual";
+    } else {
+      const promptedMode = await select<DbSetupMode>({
+        message: "Neon setup: choose mode",
+        options: [
+          {
+            label: "Automatic",
+            value: "auto",
+            hint: "Automated setup with provider CLI, sets .env",
+          },
+          {
+            label: "Manual",
+            value: "manual",
+            hint: "Manual setup, add env vars yourself",
+          },
+        ],
+        initialValue: "auto",
+      });
 
-    if (isCancel(promptedMode)) {
-      return userCancelled("Operation cancelled");
+      if (isCancel(promptedMode)) {
+        return userCancelled("Operation cancelled");
+      }
+
+      selectedMode = promptedMode;
     }
-
-    selectedMode = promptedMode;
   }
 
   if (selectedMode === "manual") {
@@ -308,12 +312,13 @@ export async function setupNeonPostgres(
         return envResult;
       }
       displayManualSetupInstructions(target);
-    } else {
-      cliLog.info(
-        `Get Neon with Better T Stack referral: ${pc.cyan("https://get.neon.com/sbA3tIe")}`,
-      );
+      return Result.ok(undefined);
     }
-    return neonDbResult;
+
+    cliLog.info(
+      `Get Neon with Better T Stack referral: ${pc.cyan("https://get.neon.com/sbA3tIe")}`,
+    );
+    return Result.ok(undefined);
   }
 
   // neonctl setup path

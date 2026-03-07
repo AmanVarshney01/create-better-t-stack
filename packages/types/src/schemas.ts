@@ -53,6 +53,15 @@ export const AddonsSchema = z
   ])
   .describe("Additional addons");
 
+const AddonsListSchema = z.array(AddonsSchema).superRefine((addons, ctx) => {
+  if (addons.includes("nx") && addons.includes("turborepo")) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "`nx` and `turborepo` cannot be used together",
+    });
+  }
+});
+
 export const ExamplesSchema = z
   .enum(["todo", "ai", "none"])
   .describe("Example templates to include");
@@ -405,51 +414,59 @@ export const ProjectNameSchema = z
   .refine((name) => name.toLowerCase() !== "node_modules", "Project name is reserved")
   .describe("Project name or path");
 
-export const CreateInputSchema = z.object({
-  projectName: z.string().optional(),
-  template: TemplateSchema.optional(),
-  yes: z.boolean().optional(),
-  yolo: z.boolean().optional(),
-  dryRun: z.boolean().optional(),
-  verbose: z.boolean().optional(),
-  addonOptions: AddonOptionsSchema.optional(),
-  dbSetupOptions: DbSetupOptionsSchema.optional(),
-  database: DatabaseSchema.optional(),
-  orm: ORMSchema.optional(),
-  auth: AuthSchema.optional(),
-  payments: PaymentsSchema.optional(),
-  frontend: z.array(FrontendSchema).optional(),
-  addons: z.array(AddonsSchema).optional(),
-  examples: z.array(ExamplesSchema).optional(),
-  git: z.boolean().optional(),
-  packageManager: PackageManagerSchema.optional(),
-  install: z.boolean().optional(),
-  dbSetup: DatabaseSetupSchema.optional(),
-  backend: BackendSchema.optional(),
-  runtime: RuntimeSchema.optional(),
-  api: APISchema.optional(),
-  webDeploy: WebDeploySchema.optional(),
-  serverDeploy: ServerDeploySchema.optional(),
-  directoryConflict: DirectoryConflictSchema.optional(),
-  renderTitle: z.boolean().optional(),
-  disableAnalytics: z.boolean().optional(),
-  manualDb: z.boolean().optional(),
-});
+export const CreateInputSchema = z
+  .object({
+    projectName: z.string().optional(),
+    template: TemplateSchema.optional(),
+    yes: z.boolean().optional(),
+    yolo: z.boolean().optional(),
+    dryRun: z.boolean().optional(),
+    verbose: z.boolean().optional(),
+    addonOptions: AddonOptionsSchema.optional(),
+    dbSetupOptions: DbSetupOptionsSchema.optional(),
+    database: DatabaseSchema.optional(),
+    orm: ORMSchema.optional(),
+    auth: AuthSchema.optional(),
+    payments: PaymentsSchema.optional(),
+    frontend: z.array(FrontendSchema).optional(),
+    addons: AddonsListSchema.optional(),
+    examples: z.array(ExamplesSchema).optional(),
+    git: z.boolean().optional(),
+    packageManager: PackageManagerSchema.optional(),
+    install: z.boolean().optional(),
+    dbSetup: DatabaseSetupSchema.optional(),
+    backend: BackendSchema.optional(),
+    runtime: RuntimeSchema.optional(),
+    api: APISchema.optional(),
+    webDeploy: WebDeploySchema.optional(),
+    serverDeploy: ServerDeploySchema.optional(),
+    directoryConflict: DirectoryConflictSchema.optional(),
+    renderTitle: z.boolean().optional(),
+    disableAnalytics: z.boolean().optional(),
+    manualDb: z.boolean().optional(),
+  })
+  .strict()
+  .refine((input) => !(input.manualDb !== undefined && input.dbSetupOptions?.mode !== undefined), {
+    message: "`manualDb` and `dbSetupOptions.mode` are mutually exclusive",
+    path: ["dbSetupOptions", "mode"],
+  });
 
-export const AddInputSchema = z.object({
-  addons: z.array(AddonsSchema).optional(),
-  addonOptions: AddonOptionsSchema.optional(),
-  webDeploy: WebDeploySchema.optional(),
-  serverDeploy: ServerDeploySchema.optional(),
-  projectDir: z.string().optional(),
-  install: z.boolean().optional(),
-  packageManager: PackageManagerSchema.optional(),
-  dryRun: z.boolean().optional(),
-});
+export const AddInputSchema = z
+  .object({
+    addons: AddonsListSchema.optional(),
+    addonOptions: AddonOptionsSchema.optional(),
+    webDeploy: WebDeploySchema.optional(),
+    serverDeploy: ServerDeploySchema.optional(),
+    projectDir: z.string().optional(),
+    install: z.boolean().optional(),
+    packageManager: PackageManagerSchema.optional(),
+    dryRun: z.boolean().optional(),
+  })
+  .strict();
 
 export const CLIInputSchema = CreateInputSchema.extend({
   projectDirectory: z.string().optional(),
-});
+}).strict();
 
 export const ProjectConfigSchema = z.object({
   projectName: z.string(),
@@ -462,7 +479,7 @@ export const ProjectConfigSchema = z.object({
   backend: BackendSchema,
   runtime: RuntimeSchema,
   frontend: z.array(FrontendSchema),
-  addons: z.array(AddonsSchema),
+  addons: AddonsListSchema,
   examples: z.array(ExamplesSchema),
   auth: AuthSchema,
   payments: PaymentsSchema,
@@ -486,7 +503,7 @@ export const BetterTStackConfigSchema = z.object({
   backend: BackendSchema,
   runtime: RuntimeSchema,
   frontend: z.array(FrontendSchema),
-  addons: z.array(AddonsSchema),
+  addons: AddonsListSchema,
   examples: z.array(ExamplesSchema),
   auth: AuthSchema,
   payments: PaymentsSchema,
@@ -502,6 +519,7 @@ export const BetterTStackConfigFileSchema = z
     $schema: z.string().optional().describe("JSON Schema reference for validation"),
   })
   .extend(BetterTStackConfigSchema.shape)
+  .strict()
   .meta({
     id: "https://r2.better-t-stack.dev/schema.json",
     title: "Better-T-Stack Configuration",
