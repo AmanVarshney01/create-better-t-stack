@@ -32,6 +32,7 @@ const TEMPLATES = {
 } as const;
 
 const DEFAULT_TEMPLATE: TuiTemplate = "core";
+const TUI_LOCKFILES = ["bun.lock", "package-lock.json", "pnpm-lock.yaml", "yarn.lock"] as const;
 
 export async function setupTui(config: ProjectConfig): Promise<TuiSetupResult> {
   if (shouldSkipExternalCommands()) {
@@ -107,6 +108,65 @@ export async function setupTui(config: ProjectConfig): Promise<TuiSetupResult> {
     return initResult;
   }
 
+  const postProcessResult = await postProcessTuiWorkspace(path.join(appsDir, "tui"));
+  if (postProcessResult.isErr()) {
+    log.warn(pc.yellow("OpenTUI setup completed but workspace normalization had warnings"));
+    return postProcessResult;
+  }
+
   s.stop("OpenTUI setup complete!");
+  return Result.ok(undefined);
+}
+
+async function postProcessTuiWorkspace(
+  tuiDir: string,
+): Promise<Result<void, AddonSetupError | UserCancelledError>> {
+  const packageJsonPath = path.join(tuiDir, "package.json");
+
+  const packageJsonResult = await Result.tryPromise({
+    try: async () => {
+      const packageJson = await fs.readJson(packageJsonPath);
+      packageJson.scripts = packageJson.scripts || {};
+
+      if (!packageJson.scripts["check-types"]) {
+        packageJson.scripts["check-types"] = "tsc --noEmit";
+      }
+
+      await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
+    },
+    catch: (e) =>
+      new AddonSetupError({
+        addon: "tui",
+        message: `Failed to normalize OpenTUI package.json: ${e instanceof Error ? e.message : String(e)}`,
+        cause: e,
+      }),
+  });
+
+  if (packageJsonResult.isErr()) {
+    return packageJsonResult;
+  }
+
+  for (const lockfile of TUI_LOCKFILES) {
+    const lockfilePath = path.join(tuiDir, lockfile);
+
+    const removeLockfileResult = await Result.tryPromise({
+      try: async () => {
+        if (await fs.pathExists(lockfilePath)) {
+          await fs.remove(lockfilePath);
+        }
+      },
+      catch: (e) =>
+        new AddonSetupError({
+          addon: "tui",
+          message: `Failed to remove nested OpenTUI lockfile '${lockfile}': ${e instanceof Error ? e.message : String(e)}`,
+          cause: e,
+        }),
+    });
+
+    if (removeLockfileResult.isErr()) {
+      return removeLockfileResult;
+    }
+  }
+
   return Result.ok(undefined);
 }

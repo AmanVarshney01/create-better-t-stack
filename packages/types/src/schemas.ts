@@ -116,6 +116,7 @@ export const InstallScopeSchema = z.enum(["project", "global"]).describe("Instal
 export const McpServerSchema = z
   .enum([
     "context7",
+    "nx",
     "cloudflare-docs",
     "convex",
     "shadcn",

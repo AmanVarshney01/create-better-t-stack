@@ -8,7 +8,7 @@ import { readBtsConfig } from "../src/utils/bts-config";
 const SMOKE_DIR_PATH = path.join(import.meta.dir, "..", ".smoke");
 
 describe("Addon options", () => {
-  it("persists addonOptions during create and uses create-json reproducible command", async () => {
+  it("persists addonOptions during create and keeps reproducible command on normal flags", async () => {
     const projectPath = path.join(SMOKE_DIR_PATH, "addon-options-create");
     await fs.remove(projectPath);
 
@@ -64,7 +64,11 @@ describe("Addon options", () => {
     if (result.isErr()) return;
 
     expect(result.value.projectConfig.addonOptions).toEqual(addonOptions);
-    expect(result.value.reproducibleCommand).toContain("create-json --input");
+    expect(result.value.reproducibleCommand).toContain("--frontend tanstack-router");
+    expect(result.value.reproducibleCommand).toContain(
+      "--addons wxt opentui fumadocs mcp ruler skills ultracite",
+    );
+    expect(result.value.reproducibleCommand).not.toContain("create-json --input");
 
     const btsConfig = await readBtsConfig(projectPath);
     expect(btsConfig?.addonOptions).toEqual(addonOptions);

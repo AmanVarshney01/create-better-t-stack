@@ -86,6 +86,10 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   scripts["dev:native"] = pmConfig.filter("native", "dev");
   scripts["dev:web"] = pmConfig.filter("web", "dev");
 
+  if (addons.includes("opentui")) {
+    scripts["dev:tui"] = pmConfig.filter("tui", "dev");
+  }
+
   if (backend !== "self" && backend !== "none") {
     scripts["dev:server"] = pmConfig.filter(backendPackageName, "dev");
   }
@@ -169,9 +173,9 @@ function getPackageManagerConfig(
 
   if (options.hasNx) {
     return {
-      dev: "nx run-many -t dev --all",
-      build: "nx run-many -t build --all",
-      checkTypes: "nx run-many -t check-types --all",
+      dev: "nx run-many -t dev",
+      build: "nx run-many -t build",
+      checkTypes: "nx run-many -t check-types",
       filter: (workspace, script) => `nx run-many -t ${script} --projects=${workspace}`,
     };
   }

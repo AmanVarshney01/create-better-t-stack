@@ -8,7 +8,7 @@ import { readBtsConfig } from "../src/utils/bts-config";
 const SMOKE_DIR_PATH = path.join(import.meta.dir, "..", ".smoke");
 
 describe("Database setup options", () => {
-  it("defaults remote provider setup to manual in silent mode and persists the resolved mode", async () => {
+  it("defaults remote provider setup to manual in silent mode and uses flags when mode is representable", async () => {
     const projectPath = path.join(SMOKE_DIR_PATH, "db-setup-neon-default-manual");
     await fs.remove(projectPath);
 
@@ -34,10 +34,81 @@ describe("Database setup options", () => {
     if (result.isErr()) return;
 
     expect(result.value.projectConfig.dbSetupOptions).toEqual({ mode: "manual" });
-    expect(result.value.reproducibleCommand).toContain("create-json --input");
+    expect(result.value.reproducibleCommand).toContain("--db-setup neon");
+    expect(result.value.reproducibleCommand).toContain("--manual-db");
+    expect(result.value.reproducibleCommand).not.toContain("create-json --input");
 
     const btsConfig = await readBtsConfig(projectPath);
     expect(btsConfig?.dbSetupOptions).toEqual({ mode: "manual" });
+  });
+
+  it("uses flags when dbSetupOptions only contains auto mode", async () => {
+    const projectPath = path.join(SMOKE_DIR_PATH, "db-setup-neon-auto-flags");
+    await fs.remove(projectPath);
+
+    const result = await create(projectPath, {
+      frontend: ["react-router"],
+      backend: "elysia",
+      runtime: "node",
+      database: "postgres",
+      orm: "drizzle",
+      auth: "better-auth",
+      payments: "none",
+      api: "trpc",
+      addons: ["nx"],
+      examples: ["todo"],
+      dbSetup: "neon",
+      webDeploy: "none",
+      serverDeploy: "none",
+      git: true,
+      packageManager: "bun",
+      install: true,
+      dbSetupOptions: { mode: "auto" },
+      disableAnalytics: true,
+    });
+
+    expect(result.isOk()).toBe(true);
+    if (result.isErr()) return;
+
+    expect(result.value.reproducibleCommand).toContain("--db-setup neon");
+    expect(result.value.reproducibleCommand).not.toContain("create-json --input");
+    expect(result.value.reproducibleCommand).not.toContain("--manual-db");
+  });
+
+  it("keeps reproducible command on normal flags when dbSetupOptions include provider-specific nested options", async () => {
+    const projectPath = path.join(SMOKE_DIR_PATH, "db-setup-neon-structured-options");
+    await fs.remove(projectPath);
+
+    const result = await create(projectPath, {
+      frontend: ["tanstack-router"],
+      backend: "hono",
+      runtime: "bun",
+      database: "postgres",
+      orm: "drizzle",
+      auth: "none",
+      payments: "none",
+      api: "trpc",
+      addons: ["none"],
+      examples: ["none"],
+      dbSetup: "neon",
+      webDeploy: "none",
+      serverDeploy: "none",
+      dryRun: true,
+      install: false,
+      dbSetupOptions: {
+        mode: "auto",
+        neon: {
+          method: "get-db",
+        },
+      },
+      disableAnalytics: true,
+    });
+
+    expect(result.isOk()).toBe(true);
+    if (result.isErr()) return;
+
+    expect(result.value.reproducibleCommand).toContain("--db-setup neon");
+    expect(result.value.reproducibleCommand).not.toContain("create-json --input");
   });
 
   it("does not inject manual dbSetupOptions for non-provisioning setups", async () => {

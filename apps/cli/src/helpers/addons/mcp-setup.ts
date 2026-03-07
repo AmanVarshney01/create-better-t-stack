@@ -75,7 +75,7 @@ function hasNativeFrontend(frontend: ProjectConfig["frontend"]): boolean {
   );
 }
 
-function getRecommendedMcpServers(config: ProjectConfig): McpServerDef[] {
+function getRecommendedMcpServers(config: ProjectConfig, scope: InstallScope): McpServerDef[] {
   const servers: McpServerDef[] = [];
 
   servers.push({
@@ -84,6 +84,15 @@ function getRecommendedMcpServers(config: ProjectConfig): McpServerDef[] {
     name: "context7",
     target: "@upstash/context7-mcp",
   });
+
+  if (scope === "project" && config.addons.includes("nx")) {
+    servers.push({
+      key: "nx",
+      label: "Nx Workspace",
+      name: "nx",
+      target: "npx nx mcp .",
+    });
+  }
 
   if (
     config.runtime === "workers" ||
@@ -273,7 +282,7 @@ export async function setupMcp(
     }
   }
 
-  const recommendedServers = getRecommendedMcpServers(config);
+  const recommendedServers = getRecommendedMcpServers(config, scope);
   if (recommendedServers.length === 0) {
     return Result.ok(undefined);
   }
