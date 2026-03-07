@@ -481,15 +481,27 @@ function generateScriptsList(
   config: ProjectConfig,
   hasNative: boolean,
 ): string {
-  const { database, addons, backend, dbSetup } = config;
+  const { database, addons, backend, dbSetup, frontend } = config;
   const isConvex = backend === "convex";
   const isBackendSelf = backend === "self";
+  const hasWeb = frontend.some((f) =>
+    [
+      "tanstack-router",
+      "react-router",
+      "tanstack-start",
+      "next",
+      "nuxt",
+      "svelte",
+      "solid",
+      "astro",
+    ].includes(f),
+  );
   const dbSupport = getDbScriptSupport(config);
 
   let scripts = `- \`${packageManagerRunCmd} dev\`: Start all applications in development mode
 - \`${packageManagerRunCmd} build\`: Build all applications`;
 
-  if (!isBackendSelf) {
+  if (hasWeb) {
     scripts += `\n- \`${packageManagerRunCmd} dev:web\`: Start only the web application`;
   }
 
