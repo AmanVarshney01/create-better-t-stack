@@ -14634,7 +14634,7 @@ const Streamdown = dynamic(
 {{else}}
 import { Streamdown } from "streamdown";
 {{/if}}
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { Button } from "@{{projectName}}/ui/components/button";
 import { Input } from "@{{projectName}}/ui/components/input";
@@ -14675,7 +14675,7 @@ export default function AIPage() {
     (m: UIMessage) => m.status === "streaming",
   );
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
     if (!text || isLoading) return;
@@ -14785,7 +14785,7 @@ const Streamdown = dynamic(
 {{else}}
 import { Streamdown } from "streamdown";
 {{/if}}
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { Button } from "@{{projectName}}/ui/components/button";
 import { Input } from "@{{projectName}}/ui/components/input";
@@ -14805,7 +14805,7 @@ export default function AIPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
     if (!text) return;
@@ -14883,7 +14883,7 @@ import {
 } from "@convex-dev/agent/react";
 import { useMutation } from "convex/react";
 import { Send, Loader2 } from "lucide-react";
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, type FormEvent } from "react";
 import { Streamdown } from "streamdown";
 
 import { Button } from "@{{projectName}}/ui/components/button";
@@ -14925,7 +14925,7 @@ const AI: React.FC = () => {
     (m: UIMessage) => m.status === "streaming",
   );
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
     if (!text || isLoading) return;
@@ -15015,7 +15015,7 @@ const AI: React.FC = () => {
 
 export default AI;
 {{else}}
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, type FormEvent } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Send } from "lucide-react";
@@ -15039,7 +15039,7 @@ const AI: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
     if (!text) return;
@@ -15120,7 +15120,7 @@ import {
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { Send, Loader2 } from "lucide-react";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type FormEvent } from "react";
 import { Streamdown } from "streamdown";
 
 import { Button } from "@{{projectName}}/ui/components/button";
@@ -15166,7 +15166,7 @@ function RouteComponent() {
     (m: UIMessage) => m.status === "streaming",
   );
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
     if (!text || isLoading) return;
@@ -15260,7 +15260,7 @@ import { DefaultChatTransport } from "ai";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Button } from "@{{projectName}}/ui/components/button";
 import { Send } from "lucide-react";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type FormEvent } from "react";
 import { Streamdown } from "streamdown";
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
@@ -15284,7 +15284,7 @@ function RouteComponent() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
     if (!text) return;
@@ -15363,7 +15363,7 @@ import {
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { Send, Loader2 } from "lucide-react";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type FormEvent } from "react";
 import { Streamdown } from "streamdown";
 
 import { Button } from "@{{projectName}}/ui/components/button";
@@ -15409,7 +15409,7 @@ function RouteComponent() {
     (m: UIMessage) => m.status === "streaming",
   );
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
     if (!text || isLoading) return;
@@ -15501,7 +15501,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Send } from "lucide-react";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type FormEvent } from "react";
 import { Streamdown } from "streamdown";
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
@@ -15528,7 +15528,7 @@ function RouteComponent() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
     if (!text) return;
@@ -26071,7 +26071,9 @@ export {
   CardContent,
 }
 `],
-  ["packages/ui/src/components/checkbox.tsx.hbs", `import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox"
+  ["packages/ui/src/components/checkbox.tsx.hbs", `"use client"
+
+import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox"
 
 import { cn } from "@{{projectName}}/ui/lib/utils"
 import { CheckIcon } from "lucide-react"

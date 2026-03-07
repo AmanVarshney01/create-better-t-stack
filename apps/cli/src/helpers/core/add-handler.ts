@@ -44,7 +44,7 @@ function mergeAddonOptions(
     return undefined;
   }
 
-  const mergedAddonOptions: Partial<AddonOptions> = { ...(existingAddonOptions ?? {}) };
+  const mergedAddonOptions: Partial<AddonOptions> = { ...existingAddonOptions };
 
   if (nextAddonOptions) {
     for (const addonKey of Object.keys(nextAddonOptions) as (keyof AddonOptions)[]) {
