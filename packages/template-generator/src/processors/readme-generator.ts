@@ -402,6 +402,7 @@ function generateFeaturesList(
     husky: "- **Husky** - Git hooks for code quality",
     starlight: "- **Starlight** - Documentation site with Astro",
     turborepo: "- **Turborepo** - Optimized monorepo build system",
+    nx: "- **Nx** - Smart monorepo task orchestration and caching",
   };
 
   for (const addon of addons) {

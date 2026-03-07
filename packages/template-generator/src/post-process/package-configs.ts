@@ -72,12 +72,13 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   const backendPackageName = backend === "convex" ? `@${projectName}/backend` : "server";
   const dbPackageName = `@${projectName}/db`;
   const hasTurborepo = addons.includes("turborepo");
+  const hasNx = addons.includes("nx");
 
   const dbSupport = getDbScriptSupport(config);
   const needsDbScripts = dbSupport.hasDbScripts;
   const isD1Alchemy = dbSupport.isD1Alchemy;
 
-  const pmConfig = getPackageManagerConfig(packageManager, hasTurborepo);
+  const pmConfig = getPackageManagerConfig(packageManager, { hasTurborepo, hasNx });
 
   scripts.dev = pmConfig.dev;
   scripts.build = pmConfig.build;
@@ -155,14 +156,23 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
 
 function getPackageManagerConfig(
   packageManager: ProjectConfig["packageManager"],
-  hasTurborepo: boolean,
+  options: { hasTurborepo: boolean; hasNx: boolean },
 ): PackageManagerConfig {
-  if (hasTurborepo) {
+  if (options.hasTurborepo) {
     return {
       dev: "turbo dev",
       build: "turbo build",
       checkTypes: "turbo check-types",
       filter: (workspace, script) => `turbo -F ${workspace} ${script}`,
+    };
+  }
+
+  if (options.hasNx) {
+    return {
+      dev: "nx run-many -t dev --all",
+      build: "nx run-many -t build --all",
+      checkTypes: "nx run-many -t check-types --all",
+      filter: (workspace, script) => `nx run-many -t ${script} --projects=${workspace}`,
     };
   }
 

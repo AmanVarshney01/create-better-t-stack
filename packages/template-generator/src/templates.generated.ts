@@ -16,6 +16,7 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 			"!**/.next",
 			"!**/dist",
 			"!**/.turbo",
+			"!**/.nx",
 			"!**/dev-dist",
 			"!**/.zed",
 			"!**/.vscode",
@@ -12107,6 +12108,7 @@ lerna-debug.log*
 
 # Turbo
 .turbo
+.nx
 
 # Better-T-Stack
 .alchemy
@@ -12119,7 +12121,8 @@ coverage
 *.tgz
 .cache
 tmp
-temp`],
+temp
+`],
   ["base/package.json.hbs", `{
   "name": "better-t-stack",
   "private": true,

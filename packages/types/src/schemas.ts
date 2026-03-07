@@ -42,6 +42,7 @@ export const AddonsSchema = z
     "ruler",
     "mcp",
     "turborepo",
+    "nx",
     "fumadocs",
     "ultracite",
     "oxlint",

@@ -14,8 +14,8 @@ export async function processAddonTemplates(
   for (const addon of config.addons) {
     if (addon === "none") continue;
 
-    // turborepo is handled programmatically by turbo-generator.ts
-    if (addon === "turborepo") continue;
+    // monorepo tools are handled programmatically by generators
+    if (addon === "turborepo" || addon === "nx") continue;
 
     if (addon === "pwa") {
       if (config.frontend.includes("next")) {
