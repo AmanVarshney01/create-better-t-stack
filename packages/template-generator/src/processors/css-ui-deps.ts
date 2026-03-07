@@ -25,6 +25,7 @@ export function processCSSFrameworkDeps(vfs: VirtualFileSystem, config: ProjectC
       "qwik",
       "angular",
       "redwood",
+      "fresh",
     ].includes(f),
   );
 

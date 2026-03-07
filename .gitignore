@@ -57,7 +57,7 @@ templates-binary
 # Ralph (autonomous agent loop)
 scripts/ralph/
 .ralphy
-# Ignore test folder used by Claude for combo testing
-test/
+# Ignore root-level test folder used by Claude for combo testing
+/test/
 # Ignore Claude Code worktrees (ephemeral isolated branches)
 .claude/worktrees/

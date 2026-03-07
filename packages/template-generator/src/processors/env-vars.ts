@@ -1,4 +1,4 @@
-import type { ProjectConfig } from "@better-fullstack/types";
+import { getLocalWebDevPort, type ProjectConfig } from "@better-fullstack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
@@ -570,8 +570,6 @@ function buildServerVars(
   search: ProjectConfig["search"],
   fileStorage: ProjectConfig["fileStorage"],
 ): EnvVariable[] {
-  const hasReactRouter = frontend.includes("react-router");
-  const hasSvelte = frontend.includes("svelte");
   const hasChatSdkExample = examples?.includes("chat-sdk") || false;
   const isChatSdkSlackSelf =
     hasChatSdkExample &&
@@ -580,11 +578,12 @@ function buildServerVars(
   const isChatSdkDiscordNuxt = hasChatSdkExample && backend === "self" && frontend.includes("nuxt");
   const isChatSdkGithubHono = hasChatSdkExample && backend === "hono" && runtime === "node";
 
+  const webOrigin = `http://localhost:${getLocalWebDevPort(frontend)}`;
   let corsOrigin = "http://localhost:3001";
   if (backend === "self") {
     corsOrigin = "http://localhost:3001";
-  } else if (hasReactRouter || hasSvelte) {
-    corsOrigin = "http://localhost:5173";
+  } else if (frontend.some((entry) => !entry.startsWith("native-") && entry !== "none")) {
+    corsOrigin = webOrigin;
   }
 
   let databaseUrl: string | null = null;

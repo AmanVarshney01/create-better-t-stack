@@ -751,7 +751,8 @@ exports[`Template Snapshots Key File Content Snapshots key files: tanstack-route
     "@snapshot-tanstack-router-minimal/config": "workspace:*",
     "@types/bun": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "apps/server/package.json",
     },
@@ -883,7 +884,8 @@ export default app;
     "@snapshot-tanstack-router-minimal/config": "workspace:*",
     "@tanstack/react-query-devtools": "^5.91.3"
   }
-}"
+}
+"
 ,
       "path": "apps/web/package.json",
     },
@@ -1186,7 +1188,8 @@ export default defineConfig({
     "@types/bun": "catalog:",
     "@snapshot-tanstack-router-minimal/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "package.json",
     },
@@ -1217,7 +1220,8 @@ export default defineConfig({
     "@trpc/client": "catalog:",
     "hono": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "packages/api/package.json",
     },
@@ -1278,7 +1282,8 @@ export type AppRouter = typeof appRouter;
   "name": "@snapshot-tanstack-router-minimal/config",
   "version": "0.0.0",
   "private": true
-}"
+}
+"
 ,
       "path": "packages/config/package.json",
     },
@@ -1366,7 +1371,8 @@ export default defineConfig({
     "@libsql/client": "catalog:",
     "libsql": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "packages/db/package.json",
     },
@@ -1427,7 +1433,8 @@ export const db = drizzle({ client, schema });
     "@types/bun": "catalog:",
     "@snapshot-tanstack-router-minimal/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "packages/env/package.json",
     },
@@ -1542,7 +1549,8 @@ export default nextConfig;
     "@snapshot-next-self-fullstack/config": "workspace:*",
     "@tanstack/react-query-devtools": "^5.91.3"
   }
-}"
+}
+"
 ,
       "path": "apps/web/package.json",
     },
@@ -1787,7 +1795,8 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
     "@types/bun": "catalog:",
     "@snapshot-next-self-fullstack/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "package.json",
     },
@@ -1819,7 +1828,8 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
     "@trpc/client": "catalog:",
     "next": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "packages/api/package.json",
     },
@@ -1921,7 +1931,8 @@ export type AppRouter = typeof appRouter;
     "better-auth": "catalog:",
     "@better-auth/drizzle-adapter": "^1.5.1"
   }
-}"
+}
+"
 ,
       "path": "packages/auth/package.json",
     },
@@ -1981,7 +1992,8 @@ provider: "pg",
   "name": "@snapshot-next-self-fullstack/config",
   "version": "0.0.0",
   "private": true
-}"
+}
+"
 ,
       "path": "packages/config/package.json",
     },
@@ -2068,7 +2080,8 @@ export default defineConfig({
     "drizzle-orm": "^0.45.1",
     "pg": "^8.16.3"
   }
-}"
+}
+"
 ,
       "path": "packages/db/package.json",
     },
@@ -2228,7 +2241,8 @@ export {};"
     "@types/bun": "catalog:",
     "@snapshot-next-self-fullstack/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "packages/env/package.json",
     },
@@ -2315,7 +2329,8 @@ exports[`Template Snapshots Key File Content Snapshots key files: astro-react-in
     "typescript": "catalog:",
     "@snapshot-astro-react-integration/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "apps/web/package.json",
     },
@@ -2422,7 +2437,8 @@ export const client = createORPCClient<typeof appRouter>(link);
     "@types/bun": "catalog:",
     "@snapshot-astro-react-integration/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "package.json",
     },
@@ -2454,7 +2470,8 @@ export const client = createORPCClient<typeof appRouter>(link);
     "@orpc/openapi": "^1.13.6",
     "@orpc/zod": "^1.13.6"
   }
-}"
+}
+"
 ,
       "path": "packages/api/package.json",
     },
@@ -2512,7 +2529,8 @@ export type AppRouterClient = RouterClient<typeof appRouter>;
   "name": "@snapshot-astro-react-integration/config",
   "version": "0.0.0",
   "private": true
-}"
+}
+"
 ,
       "path": "packages/config/package.json",
     },
@@ -2600,7 +2618,8 @@ export default defineConfig({
     "@libsql/client": "catalog:",
     "libsql": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "packages/db/package.json",
     },
@@ -2660,7 +2679,8 @@ export const db = drizzle({ client, schema });
     "@types/bun": "catalog:",
     "@snapshot-astro-react-integration/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "packages/env/package.json",
     },
@@ -2834,7 +2854,8 @@ export default defineNuxtConfig({
     "@snapshot-nuxt-standalone/config": "workspace:*",
     "@tanstack/vue-query-devtools": "^5.90.2"
   }
-}"
+}
+"
 ,
       "path": "apps/web/package.json",
     },
@@ -2926,7 +2947,8 @@ export default defineNuxtConfig({
     "@types/bun": "catalog:",
     "@snapshot-nuxt-standalone/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "package.json",
     },
@@ -2958,7 +2980,8 @@ export default defineNuxtConfig({
     "@orpc/openapi": "catalog:",
     "@orpc/zod": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "packages/api/package.json",
     },
@@ -3016,7 +3039,8 @@ export type AppRouterClient = RouterClient<typeof appRouter>;
   "name": "@snapshot-nuxt-standalone/config",
   "version": "0.0.0",
   "private": true
-}"
+}
+"
 ,
       "path": "packages/config/package.json",
     },
@@ -3104,7 +3128,8 @@ export default defineConfig({
     "@libsql/client": "catalog:",
     "libsql": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "packages/db/package.json",
     },
@@ -3166,7 +3191,8 @@ export const db = drizzle({ client, schema });
     "@types/bun": "catalog:",
     "@snapshot-nuxt-standalone/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "packages/env/package.json",
     },
@@ -3249,7 +3275,8 @@ exports[`Template Snapshots Key File Content Snapshots key files: express-node-t
     "tsx": "^4.19.2",
     "@types/node": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "apps/server/package.json",
     },
@@ -3377,7 +3404,8 @@ app.listen(3000, () => {
     "@snapshot-express-node-trpc/config": "workspace:*",
     "@tanstack/react-query-devtools": "^5.91.3"
   }
-}"
+}
+"
 ,
       "path": "apps/web/package.json",
     },
@@ -3678,7 +3706,8 @@ export default defineConfig({
     "@types/node": "catalog:",
     "@snapshot-express-node-trpc/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "package.json",
     },
@@ -3709,7 +3738,8 @@ export default defineConfig({
     "@trpc/server": "catalog:",
     "@trpc/client": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "packages/api/package.json",
     },
@@ -3770,7 +3800,8 @@ export type AppRouter = typeof appRouter;
   "name": "@snapshot-express-node-trpc/config",
   "version": "0.0.0",
   "private": true
-}"
+}
+"
 ,
       "path": "packages/config/package.json",
     },
@@ -3838,7 +3869,8 @@ export type AppRouter = typeof appRouter;
     "@prisma/adapter-pg": "^7.4.2",
     "pg": "^8.16.3"
   }
-}"
+}
+"
 ,
       "path": "packages/db/package.json",
     },
@@ -3901,7 +3933,8 @@ export default prisma;
     "@types/node": "catalog:",
     "@snapshot-express-node-trpc/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "packages/env/package.json",
     },
@@ -3981,7 +4014,8 @@ exports[`Template Snapshots Key File Content Snapshots key files: hono-bun-orpc 
     "@snapshot-hono-bun-orpc/config": "workspace:*",
     "@types/bun": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "apps/server/package.json",
     },
@@ -4152,7 +4186,8 @@ export default app;
     "@snapshot-hono-bun-orpc/config": "workspace:*",
     "@tanstack/react-query-devtools": "^5.91.3"
   }
-}"
+}
+"
 ,
       "path": "apps/web/package.json",
     },
@@ -4453,7 +4488,8 @@ export default defineConfig({
     "@types/bun": "catalog:",
     "@snapshot-hono-bun-orpc/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "package.json",
     },
@@ -4486,7 +4522,8 @@ export default defineConfig({
     "@orpc/zod": "catalog:",
     "hono": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "packages/api/package.json",
     },
@@ -4544,7 +4581,8 @@ export type AppRouterClient = RouterClient<typeof appRouter>;
   "name": "@snapshot-hono-bun-orpc/config",
   "version": "0.0.0",
   "private": true
-}"
+}
+"
 ,
       "path": "packages/config/package.json",
     },
@@ -4632,7 +4670,8 @@ export default defineConfig({
     "@libsql/client": "catalog:",
     "libsql": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "packages/db/package.json",
     },
@@ -4693,7 +4732,8 @@ export const db = drizzle({ client, schema });
     "@types/bun": "catalog:",
     "@snapshot-hono-bun-orpc/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "packages/env/package.json",
     },
@@ -4774,7 +4814,8 @@ exports[`Template Snapshots Key File Content Snapshots key files: better-auth-fu
     "@snapshot-better-auth-full/config": "workspace:*",
     "@types/bun": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "apps/server/package.json",
     },
@@ -4911,7 +4952,8 @@ export default app;
     "@snapshot-better-auth-full/config": "workspace:*",
     "@tanstack/react-query-devtools": "^5.91.3"
   }
-}"
+}
+"
 ,
       "path": "apps/web/package.json",
     },
@@ -5242,7 +5284,8 @@ export default defineConfig({
     "@types/bun": "catalog:",
     "@snapshot-better-auth-full/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "package.json",
     },
@@ -5274,7 +5317,8 @@ export default defineConfig({
     "@trpc/client": "catalog:",
     "hono": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "packages/api/package.json",
     },
@@ -5376,7 +5420,8 @@ export type AppRouter = typeof appRouter;
     "better-auth": "catalog:",
     "@better-auth/drizzle-adapter": "^1.5.1"
   }
-}"
+}
+"
 ,
       "path": "packages/auth/package.json",
     },
@@ -5442,7 +5487,8 @@ provider: "pg",
   "name": "@snapshot-better-auth-full/config",
   "version": "0.0.0",
   "private": true
-}"
+}
+"
 ,
       "path": "packages/config/package.json",
     },
@@ -5529,7 +5575,8 @@ export default defineConfig({
     "drizzle-orm": "^0.45.1",
     "pg": "^8.16.3"
   }
-}"
+}
+"
 ,
       "path": "packages/db/package.json",
     },
@@ -5688,7 +5735,8 @@ export {};"
     "@types/bun": "catalog:",
     "@snapshot-better-auth-full/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "packages/env/package.json",
     },
@@ -5790,7 +5838,8 @@ exports[`Template Snapshots Key File Content Snapshots key files: convex-clerk 1
     "typescript": "catalog:",
     "@snapshot-convex-clerk/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "apps/web/package.json",
     },
@@ -6058,7 +6107,8 @@ export default defineConfig({
     "@types/bun": "catalog:",
     "@snapshot-convex-clerk/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "package.json",
     },
@@ -6145,7 +6195,8 @@ export default defineSchema({});
     "zod": "catalog:",
     "convex": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "packages/backend/package.json",
     },
@@ -6155,7 +6206,8 @@ export default defineSchema({});
   "name": "@snapshot-convex-clerk/config",
   "version": "0.0.0",
   "private": true
-}"
+}
+"
 ,
       "path": "packages/config/package.json",
     },
@@ -6209,7 +6261,8 @@ export default defineSchema({});
     "@types/bun": "catalog:",
     "@snapshot-convex-clerk/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "packages/env/package.json",
     },
@@ -6325,7 +6378,8 @@ export default nextConfig;
     "@snapshot-self-next-clerk/config": "workspace:*",
     "@tanstack/react-query-devtools": "^5.91.3"
   }
-}"
+}
+"
 ,
       "path": "apps/web/package.json",
     },
@@ -6546,7 +6600,8 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
     "@types/bun": "catalog:",
     "@snapshot-self-next-clerk/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "package.json",
     },
@@ -6577,7 +6632,8 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
     "@trpc/client": "catalog:",
     "next": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "packages/api/package.json",
     },
@@ -6638,7 +6694,8 @@ export type AppRouter = typeof appRouter;
   "name": "@snapshot-self-next-clerk/config",
   "version": "0.0.0",
   "private": true
-}"
+}
+"
 ,
       "path": "packages/config/package.json",
     },
@@ -6726,7 +6783,8 @@ export default defineConfig({
     "@libsql/client": "catalog:",
     "libsql": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "packages/db/package.json",
     },
@@ -6788,7 +6846,8 @@ export const db = drizzle({ client, schema });
     "@types/bun": "catalog:",
     "@snapshot-self-next-clerk/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "packages/env/package.json",
     },
@@ -6896,7 +6955,8 @@ exports[`Template Snapshots Key File Content Snapshots key files: self-tanstack-
     "@snapshot-self-tanstack-start-clerk/config": "workspace:*",
     "@tanstack/react-query-devtools": "^5.91.3"
   }
-}"
+}
+"
 ,
       "path": "apps/web/package.json",
     },
@@ -7221,7 +7281,8 @@ export default defineConfig({
     "@types/bun": "catalog:",
     "@snapshot-self-tanstack-start-clerk/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "package.json",
     },
@@ -7253,7 +7314,8 @@ export default defineConfig({
     "@orpc/openapi": "catalog:",
     "@orpc/zod": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "packages/api/package.json",
     },
@@ -7311,7 +7373,8 @@ export type AppRouterClient = RouterClient<typeof appRouter>;
   "name": "@snapshot-self-tanstack-start-clerk/config",
   "version": "0.0.0",
   "private": true
-}"
+}
+"
 ,
       "path": "packages/config/package.json",
     },
@@ -7399,7 +7462,8 @@ export default defineConfig({
     "@libsql/client": "catalog:",
     "libsql": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "packages/db/package.json",
     },
@@ -7460,7 +7524,8 @@ export const db = drizzle({ client, schema });
     "@types/bun": "catalog:",
     "@snapshot-self-tanstack-start-clerk/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "packages/env/package.json",
     },
@@ -7539,7 +7604,8 @@ exports[`Template Snapshots Key File Content Snapshots key files: mongodb-mongoo
     "@snapshot-mongodb-mongoose/config": "workspace:*",
     "@types/bun": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "apps/server/package.json",
     },
@@ -7669,7 +7735,8 @@ export default app;
     "@snapshot-mongodb-mongoose/config": "workspace:*",
     "@tanstack/react-query-devtools": "^5.91.3"
   }
-}"
+}
+"
 ,
       "path": "apps/web/package.json",
     },
@@ -7965,7 +8032,8 @@ export default defineConfig({
     "@types/bun": "catalog:",
     "@snapshot-mongodb-mongoose/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "package.json",
     },
@@ -7996,7 +8064,8 @@ export default defineConfig({
     "@trpc/client": "catalog:",
     "hono": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "packages/api/package.json",
     },
@@ -8057,7 +8126,8 @@ export type AppRouter = typeof appRouter;
   "name": "@snapshot-mongodb-mongoose/config",
   "version": "0.0.0",
   "private": true
-}"
+}
+"
 ,
       "path": "packages/config/package.json",
     },
@@ -8115,7 +8185,8 @@ export type AppRouter = typeof appRouter;
     "@snapshot-mongodb-mongoose/env": "workspace:*",
     "mongoose": "^8.14.0"
   }
-}"
+}
+"
 ,
       "path": "packages/db/package.json",
     },
@@ -8171,7 +8242,8 @@ export { client };
     "@types/bun": "catalog:",
     "@snapshot-mongodb-mongoose/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "packages/env/package.json",
     },
@@ -8250,7 +8322,8 @@ exports[`Template Snapshots Key File Content Snapshots key files: postgres-prism
     "@snapshot-postgres-prisma/config": "workspace:*",
     "@types/bun": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "apps/server/package.json",
     },
@@ -8381,7 +8454,8 @@ export default app;
     "@snapshot-postgres-prisma/config": "workspace:*",
     "@tanstack/react-query-devtools": "^5.91.3"
   }
-}"
+}
+"
 ,
       "path": "apps/web/package.json",
     },
@@ -8682,7 +8756,8 @@ export default defineConfig({
     "@types/bun": "catalog:",
     "@snapshot-postgres-prisma/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "package.json",
     },
@@ -8713,7 +8788,8 @@ export default defineConfig({
     "@trpc/client": "catalog:",
     "hono": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "packages/api/package.json",
     },
@@ -8774,7 +8850,8 @@ export type AppRouter = typeof appRouter;
   "name": "@snapshot-postgres-prisma/config",
   "version": "0.0.0",
   "private": true
-}"
+}
+"
 ,
       "path": "packages/config/package.json",
     },
@@ -8842,7 +8919,8 @@ export type AppRouter = typeof appRouter;
     "@prisma/adapter-pg": "^7.4.2",
     "pg": "^8.16.3"
   }
-}"
+}
+"
 ,
       "path": "packages/db/package.json",
     },
@@ -8905,7 +8983,8 @@ export default prisma;
     "@types/bun": "catalog:",
     "@snapshot-postgres-prisma/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "packages/env/package.json",
     },
@@ -9004,7 +9083,8 @@ exports[`Template Snapshots Key File Content Snapshots key files: frontend-only-
     "typescript": "catalog:",
     "@snapshot-frontend-only-no-backend/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "apps/web/package.json",
     },
@@ -9234,7 +9314,8 @@ export default defineConfig({
     "@types/bun": "catalog:",
     "@snapshot-frontend-only-no-backend/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "package.json",
     },
@@ -9244,7 +9325,8 @@ export default defineConfig({
   "name": "@snapshot-frontend-only-no-backend/config",
   "version": "0.0.0",
   "private": true
-}"
+}
+"
 ,
       "path": "packages/config/package.json",
     },
@@ -9298,7 +9380,8 @@ export default defineConfig({
     "@types/bun": "catalog:",
     "@snapshot-frontend-only-no-backend/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "packages/env/package.json",
     },
@@ -9629,7 +9712,8 @@ fontWeight: "bold",
     "@snapshot-native-react-native/config": "workspace:*"
   },
   "private": true
-}"
+}
+"
 ,
       "path": "apps/native/package.json",
     },
@@ -9709,7 +9793,8 @@ export const trpc = createTRPCOptionsProxy<AppRouter>({
     "@snapshot-native-react-native/config": "workspace:*",
     "@types/bun": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "apps/server/package.json",
     },
@@ -9829,7 +9914,8 @@ export default app;
     "@types/bun": "catalog:",
     "@snapshot-native-react-native/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "package.json",
     },
@@ -9860,7 +9946,8 @@ export default app;
     "@trpc/client": "catalog:",
     "hono": "catalog:"
   }
-}"
+}
+"
 ,
       "path": "packages/api/package.json",
     },
@@ -9921,7 +10008,8 @@ export type AppRouter = typeof appRouter;
   "name": "@snapshot-native-react-native/config",
   "version": "0.0.0",
   "private": true
-}"
+}
+"
 ,
       "path": "packages/config/package.json",
     },
@@ -10009,7 +10097,8 @@ export default defineConfig({
     "@libsql/client": "^0.17.0",
     "libsql": "0.5.22"
   }
-}"
+}
+"
 ,
       "path": "packages/db/package.json",
     },
@@ -10070,7 +10159,8 @@ export const db = drizzle({ client, schema });
     "@types/bun": "catalog:",
     "@snapshot-native-react-native/config": "workspace:*"
   }
-}"
+}
+"
 ,
       "path": "packages/env/package.json",
     },

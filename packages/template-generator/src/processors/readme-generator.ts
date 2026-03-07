@@ -1,4 +1,4 @@
-import type { ProjectConfig } from "@better-fullstack/types";
+import { getLocalWebDevPort, type ProjectConfig } from "@better-fullstack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
@@ -36,13 +36,11 @@ function generateReadmeContent(options: ProjectConfig): string {
   } = options;
 
   const isConvex = backend === "convex";
-  const hasReactRouter = frontend.includes("react-router");
   const hasNative = frontend.some((f) =>
     ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
   );
-  const hasSvelte = frontend.includes("svelte");
   const packageManagerRunCmd = `${packageManager} run`;
-  const webPort = hasReactRouter || hasSvelte ? "5173" : "3001";
+  const webPort = String(getLocalWebDevPort(frontend));
 
   const stackDescription = generateStackDescription(frontend, backend, api, isConvex);
 
@@ -118,7 +116,7 @@ ${
     : ""
 }
   ${
-    addons.includes("pwa") && hasReactRouter
+    addons.includes("pwa") && frontend.includes("react-router")
       ? "\n## PWA Support with React Router v7\n\nThere is a known compatibility issue between VitePWA and React Router v7.\nSee: https://github.com/vite-pwa/vite-plugin-pwa/issues/809\n"
       : ""
   }

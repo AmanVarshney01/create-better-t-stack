@@ -1,4 +1,5 @@
 import { spinner } from "@clack/prompts";
+import { getLocalWebDevPort } from "@better-fullstack/types";
 import { consola } from "consola";
 import { $ } from "execa";
 import fs from "fs-extra";
@@ -21,17 +22,11 @@ export async function setupTauri(config: ProjectConfig) {
   try {
     s.start("Setting up Tauri desktop app support...");
 
-    const hasReactRouter = frontend.includes("react-router");
     const hasNuxt = frontend.includes("nuxt");
     const hasSvelte = frontend.includes("svelte");
     const hasNext = frontend.includes("next");
 
-    const devUrl =
-      hasReactRouter || hasSvelte
-        ? "http://localhost:5173"
-        : hasNext
-          ? "http://localhost:3001"
-          : "http://localhost:3001";
+    const devUrl = `http://localhost:${getLocalWebDevPort(frontend)}`;
 
     const frontendDist = hasNuxt
       ? "../.output/public"
@@ -39,7 +34,7 @@ export async function setupTauri(config: ProjectConfig) {
         ? "../build"
         : hasNext
           ? "../.next"
-          : hasReactRouter
+          : frontend.includes("react-router")
             ? "../build/client"
             : "../dist";
 

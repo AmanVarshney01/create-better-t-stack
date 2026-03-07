@@ -1,10 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
     <linearGradient id="freshGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#06b6d4"/>
-      <stop offset="100%" style="stop-color:#8b5cf6"/>
+      <stop offset="0%" style="stop-color: #22d3ee" />
+      <stop offset="100%" style="stop-color: #0f172a" />
     </linearGradient>
   </defs>
-  <circle cx="50" cy="50" r="45" fill="url(#freshGradient)"/>
-  <text x="50" y="62" font-family="Arial, sans-serif" font-size="40" font-weight="bold" fill="white" text-anchor="middle">F</text>
+  <rect width="100" height="100" rx="24" fill="#020617" />
+  <circle cx="50" cy="50" r="38" fill="url(#freshGradient)" />
+  <path
+    d="M36 31h30v8H45v12h18v8H45v22h-9z"
+    fill="#f8fafc"
+  />
 </svg>

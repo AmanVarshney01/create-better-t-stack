@@ -27,12 +27,6 @@ jobs:
       - name: Install Dependencies
         run: bun install --frozen-lockfile
 
-      - name: Build Types
-        run: cd packages/types && bun run build
-
-      - name: Build Template Generator
-        run: cd packages/template-generator && bun run build
-
       - name: Run Release Verification
         run: bun run test:release
 
@@ -76,6 +70,11 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
 
       - name: Install Dependencies
         run: bun install --frozen-lockfile

@@ -18,7 +18,7 @@
     "test": "turbo test --filter=create-better-fullstack",
     "test:all": "turbo test",
     "test:cli": "turbo test --filter=create-better-fullstack",
-    "test:release": "bun test apps/cli/test/template-snapshots.test.ts && bun test apps/cli/test/cli-builder-sync.test.ts && bun test apps/web/test/preview-config.test.ts",
+    "test:release": "bun run --cwd packages/types build && bun run --cwd packages/template-generator build && bun test apps/cli/test/template-snapshots.test.ts && bun test apps/cli/test/cli-builder-sync.test.ts && bun test apps/web/test/preview-config.test.ts",
     "check": "oxfmt . && oxlint .",
     "prepare": "lefthook install",
     "release": "bun run scripts/release.ts",

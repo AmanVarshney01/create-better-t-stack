@@ -1,0 +1,2 @@
+// Import the app stylesheet here so Vite can handle HMR and bundling.
+import "./assets/styles{{#if (eq cssFramework "scss")}}.scss{{else if (eq cssFramework "less")}}.less{{else}}.css{{/if}}";

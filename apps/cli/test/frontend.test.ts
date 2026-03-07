@@ -1,6 +1,9 @@
-import { describe, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
+import { execa } from "execa";
 
 import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
+
+const hasDeno = Boolean(Bun.which("deno"));
 
 describe("Frontend Configurations", () => {
   describe("Single Frontend Options", () => {
@@ -437,6 +440,75 @@ describe("Frontend Configurations", () => {
 
       expectSuccess(result);
     });
+
+    it("should scaffold the current Fresh Vite layout", async () => {
+      const result = await runTRPCTest({
+        projectName: "fresh-vite-layout",
+        frontend: ["fresh"],
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+
+      if (result.projectDir) {
+        const denoJson = await Bun.file(`${result.projectDir}/apps/web/deno.json`).text();
+        const webPkg = await Bun.file(`${result.projectDir}/apps/web/package.json`).json();
+        const readme = await Bun.file(`${result.projectDir}/README.md`).text();
+        const viteConfig = Bun.file(`${result.projectDir}/apps/web/vite.config.ts`);
+        const clientEntry = Bun.file(`${result.projectDir}/apps/web/client.ts`);
+        const legacyDevEntry = Bun.file(`${result.projectDir}/apps/web/dev.ts`);
+        const modernApp = Bun.file(`${result.projectDir}/apps/web/routes/_app.tsx`);
+        const legacyLayout = Bun.file(`${result.projectDir}/apps/web/src/routes/_layout.tsx`);
+
+        expect(denoJson).toContain('"fresh": "jsr:@fresh/core@^2.2.0"');
+        expect(denoJson).toContain('"build": "vite build"');
+        expect(webPkg.scripts["check-types"]).toBe("deno check");
+        expect(readme).toContain("http://localhost:5173");
+        expect(await viteConfig.exists()).toBe(true);
+        expect(await clientEntry.exists()).toBe(true);
+        expect(await modernApp.exists()).toBe(true);
+        expect(await legacyDevEntry.exists()).toBe(false);
+        expect(await legacyLayout.exists()).toBe(false);
+      }
+    });
+
+    it.skipIf(!hasDeno)("should pass Deno check and build for Fresh", async () => {
+      const result = await runTRPCTest({
+        projectName: "fresh-runtime-smoke",
+        frontend: ["fresh"],
+        backend: "none",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "none",
+        api: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: true,
+      });
+
+      expectSuccess(result);
+      expect(result.projectDir).toBeDefined();
+
+      const projectDir = result.projectDir!;
+
+      await execa("bun", ["run", "--filter", "web", "check-types"], { cwd: projectDir });
+      await execa("bun", ["run", "--filter", "web", "build"], { cwd: projectDir });
+    }, 120000);
 
     it("should fail Fresh with tRPC API", async () => {
       const result = await runTRPCTest({

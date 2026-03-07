@@ -1,0 +1,23 @@
+import { define } from "../utils.ts";
+import Header from "../components/Header.tsx";
+
+export default define.page(function App({ Component, state }) {
+  return (
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+          name="description"
+          content="{{projectName}} generated with Better Fullstack and Fresh."
+        />
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <title>{state.siteName}</title>
+      </head>
+      <body class="app-body{{#if (eq cssFramework "tailwind")}} min-h-screen bg-slate-950 text-slate-50 antialiased{{/if}}">
+        <Header projectName={state.siteName} />
+        <Component />
+      </body>
+    </html>
+  );
+});

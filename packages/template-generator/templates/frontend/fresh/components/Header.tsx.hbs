@@ -1,0 +1,36 @@
+interface HeaderProps {
+  projectName: string;
+}
+
+const navLinks = [
+  { href: "https://fresh.deno.dev/docs", label: "Docs" },
+  { href: "https://github.com/denoland/fresh", label: "GitHub" },
+];
+
+export default function Header({ projectName }: HeaderProps) {
+  return (
+    <header class="site-header{{#if (eq cssFramework "tailwind")}} sticky top-0 z-20 border-b border-white/10 bg-slate-950/75 backdrop-blur-xl{{/if}}">
+      <nav class="site-nav{{#if (eq cssFramework "tailwind")}} mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-4 sm:px-6 lg:px-8{{/if}}">
+        <a
+          class="brand-mark{{#if (eq cssFramework "tailwind")}} text-sm font-semibold uppercase tracking-[0.32em] text-cyan-300{{/if}}"
+          href="/"
+        >
+          {projectName}
+        </a>
+        <div class="nav-links{{#if (eq cssFramework "tailwind")}} flex items-center gap-5 text-sm text-slate-300{{/if}}">
+          {navLinks.map((link) => (
+            <a
+              key={link.href}
+              class="nav-link{{#if (eq cssFramework "tailwind")}} transition-colors hover:text-white{{/if}}"
+              href={link.href}
+              rel="noreferrer"
+              target="_blank"
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
+      </nav>
+    </header>
+  );
+}

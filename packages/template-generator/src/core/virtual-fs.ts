@@ -85,7 +85,7 @@ export class VirtualFileSystem {
   }
 
   writeJson(filePath: string, data: unknown, spaces = 2): void {
-    this.writeFile(filePath, JSON.stringify(data, null, spaces));
+    this.writeFile(filePath, JSON.stringify(data, null, spaces) + "\n");
   }
 
   getAllFiles(): string[] {

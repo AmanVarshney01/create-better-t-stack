@@ -1,0 +1,87 @@
+import { Head } from "fresh/runtime";
+import { define } from "../utils.ts";
+import Counter from "../islands/Counter.tsx";
+
+const features = [
+  {
+    title: "Fresh 2 + Vite",
+    description:
+      "Modern Fresh dev and build tooling with the current Vite plugin flow.",
+  },
+  {
+    title: "Deno-Native Runtime",
+    description:
+      "TypeScript-first development with web-standard APIs and JSR packages.",
+  },
+  {
+    title: "Selective Hydration",
+    description:
+      "Keep most of the page static and wake up only the interactive island.",
+  },
+];
+
+export default define.page(function Home(ctx) {
+  return (
+    <>
+      <Head>
+        <title>{`Home | ${ctx.state.siteName}`}</title>
+      </Head>
+      <main class="page-shell{{#if (eq cssFramework "tailwind")}} mx-auto flex min-h-[calc(100vh-73px)] max-w-6xl flex-col justify-center px-4 py-16 sm:px-6 lg:px-8{{/if}}">
+        <section class="hero-grid{{#if (eq cssFramework "tailwind")}} grid items-start gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:gap-16{{/if}}">
+          <div class="hero-copy{{#if (eq cssFramework "tailwind")}} max-w-3xl{{/if}}">
+            <p class="eyebrow{{#if (eq cssFramework "tailwind")}} mb-5 text-sm font-semibold uppercase tracking-[0.32em] text-cyan-300{{/if}}">
+              Better Fullstack x Fresh
+            </p>
+            <h1 class="hero-title{{#if (eq cssFramework "tailwind")}} max-w-3xl text-5xl font-semibold tracking-tight text-white sm:text-6xl{{/if}}">
+              Deno-native pages, shipped with a current Fresh scaffold.
+            </h1>
+            <p class="hero-lead{{#if (eq cssFramework "tailwind")}} mt-6 max-w-2xl text-lg leading-8 text-slate-300{{/if}}">
+              This template is wired for the current Fresh 2.x stack, including
+              Vite-powered builds, selective hydration, and a clean path for
+              Tailwind or plain CSS.
+            </p>
+            <Counter start={3} />
+          </div>
+
+          <div class="hero-panel{{#if (eq cssFramework "tailwind")}} rounded-[28px] border border-white/10 bg-white/[0.08] p-6 shadow-2xl shadow-cyan-950/25 backdrop-blur-xl{{/if}}">
+            <div class="panel-inner{{#if (eq cssFramework "tailwind")}} rounded-[22px] border border-cyan-300/20 bg-slate-950/80 p-6{{/if}}">
+              <p class="panel-kicker{{#if (eq cssFramework "tailwind")}} text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200{{/if}}">
+                Project Snapshot
+              </p>
+              <ul class="panel-list{{#if (eq cssFramework "tailwind")}} mt-5 space-y-4 text-sm text-slate-300{{/if}}">
+                <li>
+                  <strong{{#if (eq cssFramework "tailwind")}} class="text-white"{{/if}}>Framework:</strong> Fresh
+                </li>
+                <li>
+                  <strong{{#if (eq cssFramework "tailwind")}} class="text-white"{{/if}}>Styling:</strong> {{#if (eq cssFramework "tailwind")}}Tailwind CSS{{else if (eq cssFramework "scss")}}SCSS{{else if (eq cssFramework "less")}}Less{{else if (eq cssFramework "postcss-only")}}PostCSS{{else}}CSS{{/if}}
+                </li>
+                <li>
+                  <strong{{#if (eq cssFramework "tailwind")}} class="text-white"{{/if}}>UI:</strong> {{#if (eq uiLibrary "daisyui")}}daisyUI-ready{{else}}custom primitives{{/if}}
+                </li>
+                <li>
+                  <strong{{#if (eq cssFramework "tailwind")}} class="text-white"{{/if}}>Runtime:</strong> Deno
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="feature-grid{{#if (eq cssFramework "tailwind")}} mt-12 grid gap-5 md:grid-cols-3{{/if}}">
+          {features.map((feature) => (
+            <article
+              key={feature.title}
+              class="feature-card{{#if (eq cssFramework "tailwind")}} rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur transition-transform duration-200 hover:-translate-y-1 hover:border-cyan-300/40{{/if}}"
+            >
+              <p class="feature-title{{#if (eq cssFramework "tailwind")}} text-lg font-semibold text-white{{/if}}">
+                {feature.title}
+              </p>
+              <p class="feature-description{{#if (eq cssFramework "tailwind")}} mt-3 text-sm leading-7 text-slate-300{{/if}}">
+                {feature.description}
+              </p>
+            </article>
+          ))}
+        </section>
+      </main>
+    </>
+  );
+});

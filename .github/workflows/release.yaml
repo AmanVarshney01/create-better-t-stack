@@ -77,14 +77,6 @@ jobs:
         if: steps.check-version.outputs.exists == 'false'
         run: bun install --frozen-lockfile
 
-      - name: Build Types
-        if: steps.check-version.outputs.exists == 'false'
-        run: cd packages/types && bun run build
-
-      - name: Build Template Generator
-        if: steps.check-version.outputs.exists == 'false'
-        run: cd packages/template-generator && bun run build
-
       - name: Run Release Verification
         if: steps.check-version.outputs.exists == 'false'
         run: bun run test:release
