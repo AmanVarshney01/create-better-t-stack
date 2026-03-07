@@ -44,6 +44,8 @@ const AVAILABLE_REGIONS = [
   { value: "us-west-1", label: "US West (N. California)" },
 ];
 
+const CREATE_DB_USER_AGENT = "aman/better-t-stack";
+
 async function setupWithCreateDb(
   serverDir: string,
   packageManager: PackageManager,
@@ -78,6 +80,8 @@ async function setupWithCreateDb(
     "--json",
     "--region",
     selectedRegion,
+    "--user-agent",
+    CREATE_DB_USER_AGENT,
   ];
 
   const s = createSpinner();
