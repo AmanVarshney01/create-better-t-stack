@@ -255,7 +255,7 @@ export const SkillsAgentSchema = z
   ])
   .describe("Agent target for skill installation");
 
-export const SkillSelectionSchema = z.object({
+export const SkillSelectionSchema = z.strictObject({
   source: SkillsSourceSchema.describe("Skill source to install from"),
   skills: z.array(z.string()).describe("Curated skill names to install from this source"),
 });
@@ -309,29 +309,29 @@ export const NeonSetupMethodSchema = z
   .describe("Neon database provisioning method");
 
 export const AddonOptionsSchema = z
-  .object({
+  .strictObject({
     wxt: z
-      .object({
+      .strictObject({
         template: WxtTemplateSchema,
         devPort: z.number().int().min(1).max(65535).optional().describe("WXT dev server port"),
       })
       .optional()
       .describe("Options for the WXT addon"),
     fumadocs: z
-      .object({
+      .strictObject({
         template: FumadocsTemplateSchema,
         devPort: z.number().int().min(1).max(65535).optional().describe("Fumadocs dev server port"),
       })
       .optional()
       .describe("Options for the Fumadocs addon"),
     opentui: z
-      .object({
+      .strictObject({
         template: TuiTemplateSchema,
       })
       .optional()
       .describe("Options for the OpenTUI addon"),
     mcp: z
-      .object({
+      .strictObject({
         scope: InstallScopeSchema.optional(),
         servers: z.array(McpServerSchema).optional().describe("MCP servers to install"),
         agents: z.array(McpAgentSchema).optional().describe("Agents to wire MCP servers into"),
@@ -339,7 +339,7 @@ export const AddonOptionsSchema = z
       .optional()
       .describe("Options for the MCP addon"),
     ruler: z
-      .object({
+      .strictObject({
         assistants: z
           .array(RulerAssistantSchema)
           .optional()
@@ -348,7 +348,7 @@ export const AddonOptionsSchema = z
       .optional()
       .describe("Options for the Ruler addon"),
     skills: z
-      .object({
+      .strictObject({
         scope: InstallScopeSchema.optional(),
         agents: z.array(SkillsAgentSchema).optional().describe("Agents to install skills into"),
         selections: z.array(SkillSelectionSchema).optional().describe("Skills grouped by source"),
@@ -356,7 +356,7 @@ export const AddonOptionsSchema = z
       .optional()
       .describe("Options for the Skills addon"),
     ultracite: z
-      .object({
+      .strictObject({
         linter: UltraciteLinterSchema.optional(),
         editors: z.array(UltraciteEditorSchema).optional(),
         agents: z.array(UltraciteAgentSchema).optional(),
@@ -368,10 +368,10 @@ export const AddonOptionsSchema = z
   .describe("Addon-specific configuration");
 
 export const DbSetupOptionsSchema = z
-  .object({
+  .strictObject({
     mode: DbSetupModeSchema.optional().describe("How database setup should be executed"),
     neon: z
-      .object({
+      .strictObject({
         method: NeonSetupMethodSchema.optional(),
         projectName: z.string().min(1).optional().describe("Neon project name"),
         regionId: z.string().min(1).optional().describe("Neon region identifier"),
@@ -379,13 +379,13 @@ export const DbSetupOptionsSchema = z
       .optional()
       .describe("Options for Neon setup"),
     prismaPostgres: z
-      .object({
+      .strictObject({
         regionId: z.string().min(1).optional().describe("Prisma Postgres region identifier"),
       })
       .optional()
       .describe("Options for Prisma Postgres setup"),
     turso: z
-      .object({
+      .strictObject({
         databaseName: z.string().min(1).optional().describe("Turso database name"),
         groupName: z.string().min(1).optional().describe("Turso database group name"),
         installCli: z

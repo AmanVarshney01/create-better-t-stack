@@ -35,6 +35,20 @@ const TEMPLATES = {
 const DEFAULT_TEMPLATE: TuiTemplate = "core";
 const TUI_LOCKFILES = ["bun.lock", "package-lock.json", "pnpm-lock.yaml", "yarn.lock"] as const;
 
+export function resolveTuiTemplate(config: ProjectConfig): TuiTemplate | undefined {
+  const configuredTemplate = config.addonOptions?.opentui?.template;
+
+  if (configuredTemplate) {
+    return configuredTemplate;
+  }
+
+  if (isSilent()) {
+    return DEFAULT_TEMPLATE;
+  }
+
+  return undefined;
+}
+
 export async function setupTui(config: ProjectConfig): Promise<TuiSetupResult> {
   if (shouldSkipExternalCommands()) {
     return Result.ok(undefined);
@@ -44,28 +58,24 @@ export async function setupTui(config: ProjectConfig): Promise<TuiSetupResult> {
 
   cliLog.info("Setting up OpenTUI...");
 
-  let template = config.addonOptions?.opentui?.template;
+  let template = resolveTuiTemplate(config);
 
   if (!template) {
-    if (isSilent()) {
-      template = DEFAULT_TEMPLATE;
-    } else {
-      const selectedTemplate = await select<TuiTemplate>({
-        message: "Choose a template",
-        options: Object.entries(TEMPLATES).map(([key, templateOption]) => ({
-          value: key as TuiTemplate,
-          label: templateOption.label,
-          hint: templateOption.hint,
-        })),
-        initialValue: DEFAULT_TEMPLATE,
-      });
+    const selectedTemplate = await select<TuiTemplate>({
+      message: "Choose a template",
+      options: Object.entries(TEMPLATES).map(([key, templateOption]) => ({
+        value: key as TuiTemplate,
+        label: templateOption.label,
+        hint: templateOption.hint,
+      })),
+      initialValue: DEFAULT_TEMPLATE,
+    });
 
-      if (isCancel(selectedTemplate)) {
-        return userCancelled("Operation cancelled");
-      }
-
-      template = selectedTemplate;
+    if (isCancel(selectedTemplate)) {
+      return userCancelled("Operation cancelled");
     }
+
+    template = selectedTemplate;
   }
 
   const commandWithArgs = `create-tui@latest --template ${template} --no-git --no-install tui`;
@@ -120,7 +130,7 @@ export async function setupTui(config: ProjectConfig): Promise<TuiSetupResult> {
   return Result.ok(undefined);
 }
 
-async function postProcessTuiWorkspace(
+export async function postProcessTuiWorkspace(
   tuiDir: string,
 ): Promise<Result<void, AddonSetupError | UserCancelledError>> {
   const packageJsonPath = path.join(tuiDir, "package.json");

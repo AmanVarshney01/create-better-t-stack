@@ -60,6 +60,32 @@ describe("Input schemas", () => {
     expect(result.success).toBe(false);
   });
 
+  it("rejects unknown nested addon option keys", () => {
+    const result = CreateInputSchema.safeParse({
+      projectName: "app",
+      addonOptions: {
+        skills: {
+          agent: ["cursor"],
+        },
+      },
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects unknown nested db setup option keys", () => {
+    const result = CreateInputSchema.safeParse({
+      projectName: "app",
+      dbSetupOptions: {
+        neon: {
+          region: "aws-us-east-1",
+        },
+      },
+    });
+
+    expect(result.success).toBe(false);
+  });
+
   it("allows CLI input parsing on top of the refined create schema", () => {
     const result = CLIInputSchema.safeParse({
       projectDirectory: ".",

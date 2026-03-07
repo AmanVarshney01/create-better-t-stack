@@ -473,12 +473,6 @@ async function resolveProjectNameForSilent(
   const defaultConfig = getDefaultConfig();
   const rawProjectName = input.projectName?.trim() || undefined;
   const candidate = rawProjectName ?? defaultConfig.relativePath;
-
-  const validationResult = validateResolvedProjectPathInput(candidate);
-  if (validationResult.isErr()) {
-    return validationResult;
-  }
-
   return Result.ok(candidate);
 }
 
