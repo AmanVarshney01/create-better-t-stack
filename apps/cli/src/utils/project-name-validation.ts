@@ -3,10 +3,16 @@ import path from "node:path";
 
 import { ProjectNameSchema } from "../types";
 import { ValidationError } from "./errors";
+import { validateAgentSafePathInput } from "./input-hardening";
 
 type ValidationResult<T> = Result<T, ValidationError>;
 
 export function validateProjectName(name: string): ValidationResult<void> {
+  const hardeningResult = validateAgentSafePathInput(name, "projectName");
+  if (hardeningResult.isErr()) {
+    return Result.err(hardeningResult.error);
+  }
+
   const result = ProjectNameSchema.safeParse(name);
   if (!result.success) {
     return Result.err(
@@ -24,6 +30,20 @@ export function extractAndValidateProjectName(
   projectName?: string,
   projectDirectory?: string,
 ): ValidationResult<string> {
+  if (projectName) {
+    const projectNameInputResult = validateAgentSafePathInput(projectName, "projectName");
+    if (projectNameInputResult.isErr()) {
+      return Result.err(projectNameInputResult.error);
+    }
+  }
+
+  if (projectDirectory) {
+    const projectDirInputResult = validateAgentSafePathInput(projectDirectory, "projectDirectory");
+    if (projectDirInputResult.isErr()) {
+      return Result.err(projectDirInputResult.error);
+    }
+  }
+
   const derivedName =
     projectName ||
     (projectDirectory ? path.basename(path.resolve(process.cwd(), projectDirectory)) : "");

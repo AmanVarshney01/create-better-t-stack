@@ -7,11 +7,11 @@ import {
 } from "@convex-dev/agent/react";
 import { useMutation } from "convex/react";
 import { Send, Loader2 } from "lucide-react";
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, type FormEvent } from "react";
 import { Streamdown } from "streamdown";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
 
 function MessageContent({
   text,
@@ -49,7 +49,7 @@ const AI: React.FC = () => {
     (m: UIMessage) => m.status === "streaming",
   );
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
     if (!text || isLoading) return;
@@ -139,15 +139,15 @@ const AI: React.FC = () => {
 
 export default AI;
 {{else}}
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, type FormEvent } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Send } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { env } from "@{{projectName}}/env/web";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
 
 const AI: React.FC = () => {
   const [input, setInput] = useState("");
@@ -163,7 +163,7 @@ const AI: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
     if (!text) return;

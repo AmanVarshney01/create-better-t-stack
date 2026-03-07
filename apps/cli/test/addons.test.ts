@@ -237,6 +237,27 @@ describe("Addon Configurations", () => {
       expectError(result, "pwa addon requires one of these frontends");
     });
 
+    it("should fail when turborepo and nx are combined", async () => {
+      const result = await runTRPCTest({
+        projectName: "monorepo-addon-conflict",
+        addons: ["turborepo", "nx"],
+        frontend: ["tanstack-router"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "Cannot combine 'turborepo' and 'nx' addons");
+    });
+
     it("should deduplicate addons", async () => {
       const result = await runTRPCTest({
         projectName: "duplicate-addons",
@@ -310,6 +331,7 @@ describe("Addon Configurations", () => {
       "biome",
       "husky",
       "turborepo",
+      "nx",
       "oxlint",
       // Note: starlight, ultracite, ruler, fumadocs are prompt-controlled only
     ];

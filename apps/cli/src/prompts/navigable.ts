@@ -77,6 +77,12 @@ function getMultiHint(): string {
   return ctxIsFirstPrompt() ? KEYBOARD_HINT_MULTI_FIRST : KEYBOARD_HINT_MULTI;
 }
 
+function normalizeValidationMessage(
+  validationMessage: string | Error | undefined,
+): string | undefined {
+  return validationMessage instanceof Error ? validationMessage.message : validationMessage;
+}
+
 async function runWithNavigation<T>(prompt: any): Promise<T | symbol> {
   let goBack = false;
 
@@ -160,6 +166,7 @@ export interface NavigableMultiselectOptions<T> {
   options: SelectOption<T>[];
   initialValues?: T[];
   required?: boolean;
+  validate?: (selected: T[] | undefined) => string | Error | undefined;
 }
 
 export async function navigableMultiselect<T>(
@@ -208,6 +215,7 @@ export async function navigableMultiselect<T>(
       if (required && (selected === undefined || selected.length === 0)) {
         return `Please select at least one option.\n${pc.reset(pc.dim(`Press ${pc.gray(pc.bgWhite(pc.inverse(" space ")))} to select, ${pc.gray(pc.bgWhite(pc.inverse(" enter ")))} to submit`))}`;
       }
+      return normalizeValidationMessage(opts.validate?.(selected));
     },
     render() {
       const title = `${pc.gray(S_BAR)}\n${symbol(this.state)}  ${opts.message}\n`;
@@ -370,6 +378,7 @@ export interface NavigableGroupMultiselectOptions<T> {
   options: Record<string, GroupMultiSelectOption<T>[]>;
   initialValues?: T[];
   required?: boolean;
+  validate?: (selected: T[] | undefined) => string | Error | undefined;
 }
 
 export async function navigableGroupMultiselect<T>(
@@ -431,6 +440,7 @@ export async function navigableGroupMultiselect<T>(
       if (required && (selected === undefined || selected.length === 0)) {
         return `Please select at least one option.\n${pc.reset(pc.dim(`Press ${pc.gray(pc.bgWhite(pc.inverse(" space ")))} to select, ${pc.gray(pc.bgWhite(pc.inverse(" enter ")))} to submit`))}`;
       }
+      return normalizeValidationMessage(opts.validate?.(selected));
     },
     render() {
       const title = `${pc.gray(S_BAR)}\n${symbol(this.state)}  ${opts.message}\n`;

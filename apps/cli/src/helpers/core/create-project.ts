@@ -7,7 +7,7 @@ import fs from "fs-extra";
 import os from "node:os";
 import path from "node:path";
 
-import type { ProjectConfig } from "../../types";
+import type { DbSetupOptions, ProjectConfig } from "../../types";
 
 import { isSilent } from "../../utils/context";
 import { ProjectCreationError } from "../../utils/errors";
@@ -21,6 +21,7 @@ import { displayPostInstallInstructions } from "./post-installation";
 
 export interface CreateProjectOptions {
   manualDb?: boolean;
+  dbSetupOptions?: DbSetupOptions;
 }
 
 /**

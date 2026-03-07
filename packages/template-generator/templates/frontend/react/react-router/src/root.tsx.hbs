@@ -10,7 +10,7 @@ import type { Route } from "./+types/root";
 import "./index.css";
 import Header from "./components/header";
 import { ThemeProvider } from "./components/theme-provider";
-import { Toaster } from "./components/ui/sonner";
+import { Toaster } from "@{{projectName}}/ui/components/sonner";
 
 {{#if (eq backend "convex")}}
 import { ConvexReactClient } from "convex/react";

@@ -18,6 +18,8 @@ export function writeBtsConfigToVfs(
     version,
     createdAt: new Date().toISOString(),
     reproducibleCommand,
+    addonOptions: projectConfig.addonOptions,
+    dbSetupOptions: projectConfig.dbSetupOptions,
     database: projectConfig.database,
     orm: projectConfig.orm,
     backend: projectConfig.backend,

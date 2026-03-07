@@ -1,4 +1,4 @@
-import { isCancel, log, select, spinner } from "@clack/prompts";
+import { isCancel, select } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
@@ -7,9 +7,11 @@ import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 
+import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
+import { cliLog, createSpinner } from "../../utils/terminal-output";
 
 type WxtTemplate = "vanilla" | "vue" | "react" | "solid" | "svelte";
 
@@ -38,6 +40,9 @@ const TEMPLATES = {
   },
 } as const;
 
+const DEFAULT_TEMPLATE: WxtTemplate = "react";
+const DEFAULT_DEV_PORT = 5555;
+
 export async function setupWxt(config: ProjectConfig): Promise<WxtSetupResult> {
   if (shouldSkipExternalCommands()) {
     return Result.ok(undefined);
@@ -45,21 +50,34 @@ export async function setupWxt(config: ProjectConfig): Promise<WxtSetupResult> {
 
   const { packageManager, projectDir } = config;
 
-  log.info("Setting up WXT...");
+  cliLog.info("Setting up WXT...");
 
-  const template = await select<WxtTemplate>({
-    message: "Choose a template",
-    options: Object.entries(TEMPLATES).map(([key, template]) => ({
-      value: key as WxtTemplate,
-      label: template.label,
-      hint: template.hint,
-    })),
-    initialValue: "react",
-  });
+  const configuredOptions = config.addonOptions?.wxt;
+  let template = configuredOptions?.template;
 
-  if (isCancel(template)) {
-    return userCancelled("Operation cancelled");
+  if (!template) {
+    if (isSilent()) {
+      template = DEFAULT_TEMPLATE;
+    } else {
+      const selectedTemplate = await select<WxtTemplate>({
+        message: "Choose a template",
+        options: Object.entries(TEMPLATES).map(([key, templateOption]) => ({
+          value: key as WxtTemplate,
+          label: templateOption.label,
+          hint: templateOption.hint,
+        })),
+        initialValue: DEFAULT_TEMPLATE,
+      });
+
+      if (isCancel(selectedTemplate)) {
+        return userCancelled("Operation cancelled");
+      }
+
+      template = selectedTemplate;
+    }
   }
+
+  const devPort = configuredOptions?.devPort ?? DEFAULT_DEV_PORT;
 
   const commandWithArgs = `wxt@latest init extension --template ${template} --pm ${packageManager}`;
   const args = getPackageExecutionArgs(packageManager, commandWithArgs);
@@ -80,7 +98,7 @@ export async function setupWxt(config: ProjectConfig): Promise<WxtSetupResult> {
     return ensureDirResult;
   }
 
-  const s = spinner();
+  const s = createSpinner();
   s.start("Running WXT init command...");
 
   const initResult = await Result.tryPromise({
@@ -98,7 +116,7 @@ export async function setupWxt(config: ProjectConfig): Promise<WxtSetupResult> {
   });
 
   if (initResult.isErr()) {
-    log.error(pc.red("Failed to set up WXT"));
+    cliLog.error(pc.red("Failed to set up WXT"));
     return initResult;
   }
 
@@ -112,7 +130,7 @@ export async function setupWxt(config: ProjectConfig): Promise<WxtSetupResult> {
         packageJson.name = "extension";
 
         if (packageJson.scripts?.dev) {
-          packageJson.scripts.dev = `${packageJson.scripts.dev} --port 5555`;
+          packageJson.scripts.dev = `${packageJson.scripts.dev} --port ${devPort}`;
         }
 
         await fs.writeJson(packageJsonPath, packageJson, { spaces: 2 });
@@ -128,7 +146,7 @@ export async function setupWxt(config: ProjectConfig): Promise<WxtSetupResult> {
 
   if (updatePackageResult.isErr()) {
     // Log but don't fail - the main setup succeeded
-    log.warn(pc.yellow("WXT setup completed but failed to update package.json"));
+    cliLog.warn(pc.yellow("WXT setup completed but failed to update package.json"));
   }
 
   s.stop("WXT setup complete!");

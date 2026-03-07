@@ -1,4 +1,4 @@
-import { isCancel, log, select, spinner, text } from "@clack/prompts";
+import { isCancel, select, text } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
@@ -7,6 +7,7 @@ import pc from "picocolors";
 
 import type { PackageManager, ProjectConfig } from "../../types";
 
+import { isSilent } from "../../utils/context";
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
 import {
   DatabaseSetupError,
@@ -15,6 +16,12 @@ import {
   userCancelled,
 } from "../../utils/errors";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
+import { cliLog, createSpinner } from "../../utils/terminal-output";
+import {
+  type DatabaseSetupCliOptions,
+  type DbSetupMode,
+  resolveDbSetupMode,
+} from "../core/db-setup-options";
 
 type NeonConfig = {
   connectionString: string;
@@ -46,7 +53,7 @@ async function executeNeonCommand(
   commandArgsString: string,
   spinnerText?: string,
 ): Promise<Result<{ stdout: string; stderr: string }, DatabaseSetupError>> {
-  const s = spinner();
+  const s = createSpinner();
   const args = getPackageExecutionArgs(packageManager, commandArgsString);
 
   if (spinnerText) s.start(spinnerText);
@@ -151,7 +158,7 @@ async function setupWithNeonDb(
   packageManager: PackageManager,
   backend: ProjectConfig["backend"],
 ): Promise<Result<void, DatabaseSetupError>> {
-  const s = spinner();
+  const s = createSpinner();
   s.start("Creating Neon database using get-db...");
 
   const targetApp = backend === "self" ? "apps/web" : "apps/server";
@@ -194,7 +201,7 @@ async function setupWithNeonDb(
 }
 
 function displayManualSetupInstructions(target: "apps/web" | "apps/server") {
-  log.info(`Manual Neon PostgreSQL Setup Instructions:
+  cliLog.info(`Manual Neon PostgreSQL Setup Instructions:
 
 1. Get Neon with Better T Stack referral: https://get.neon.com/sbA3tIe
 2. Create a new project from the dashboard
@@ -206,13 +213,16 @@ DATABASE_URL="your_connection_string"`);
 
 export async function setupNeonPostgres(
   config: ProjectConfig,
-  cliInput?: { manualDb?: boolean },
+  cliInput?: DatabaseSetupCliOptions,
 ): Promise<NeonSetupResult> {
   const { packageManager, projectDir, backend } = config;
-  const manualDb = cliInput?.manualDb ?? false;
+  const setupMode = resolveDbSetupMode("neon", {
+    manualDb: cliInput?.manualDb,
+    dbSetupOptions: cliInput?.dbSetupOptions ?? config.dbSetupOptions,
+  });
   const target: "apps/web" | "apps/server" = backend === "self" ? "apps/web" : "apps/server";
 
-  if (manualDb) {
+  if (setupMode === "manual") {
     const envResult = await writeEnvFile(projectDir, backend);
     if (envResult.isErr()) {
       return envResult;
@@ -221,28 +231,38 @@ export async function setupNeonPostgres(
     return Result.ok(undefined);
   }
 
-  const mode = await select({
-    message: "Neon setup: choose mode",
-    options: [
-      {
-        label: "Automatic",
-        value: "auto",
-        hint: "Automated setup with provider CLI, sets .env",
-      },
-      {
-        label: "Manual",
-        value: "manual",
-        hint: "Manual setup, add env vars yourself",
-      },
-    ],
-    initialValue: "auto",
-  });
+  let selectedMode: DbSetupMode | undefined = setupMode;
 
-  if (isCancel(mode)) {
-    return userCancelled("Operation cancelled");
+  if (!selectedMode) {
+    if (isSilent()) {
+      selectedMode = "manual";
+    } else {
+      const promptedMode = await select<DbSetupMode>({
+        message: "Neon setup: choose mode",
+        options: [
+          {
+            label: "Automatic",
+            value: "auto",
+            hint: "Automated setup with provider CLI, sets .env",
+          },
+          {
+            label: "Manual",
+            value: "manual",
+            hint: "Manual setup, add env vars yourself",
+          },
+        ],
+        initialValue: "auto",
+      });
+
+      if (isCancel(promptedMode)) {
+        return userCancelled("Operation cancelled");
+      }
+
+      selectedMode = promptedMode;
+    }
   }
 
-  if (mode === "manual") {
+  if (selectedMode === "manual") {
     const envResult = await writeEnvFile(projectDir, backend);
     if (envResult.isErr()) {
       return envResult;
@@ -251,68 +271,103 @@ export async function setupNeonPostgres(
     return Result.ok(undefined);
   }
 
-  const setupMethod = await select({
-    message: "Choose your Neon setup method:",
-    options: [
-      {
-        label: "Quick setup with get-db",
-        value: "neondb",
-        hint: "fastest, no auth required",
-      },
-      {
-        label: "Custom setup with neonctl",
-        value: "neonctl",
-        hint: "More control - choose project name and region",
-      },
-    ],
-    initialValue: "neondb",
-  });
+  let setupMethod: "neondb" | "neonctl" | undefined =
+    cliInput?.dbSetupOptions?.neon?.method ?? config.dbSetupOptions?.neon?.method;
 
-  if (isCancel(setupMethod)) {
-    return userCancelled("Operation cancelled");
+  if (!setupMethod) {
+    if (isSilent()) {
+      setupMethod = "neondb";
+    } else {
+      const promptedSetupMethod = await select<"neondb" | "neonctl">({
+        message: "Choose your Neon setup method:",
+        options: [
+          {
+            label: "Quick setup with get-db",
+            value: "neondb",
+            hint: "fastest, no auth required",
+          },
+          {
+            label: "Custom setup with neonctl",
+            value: "neonctl",
+            hint: "More control - choose project name and region",
+          },
+        ],
+        initialValue: "neondb",
+      });
+
+      if (isCancel(promptedSetupMethod)) {
+        return userCancelled("Operation cancelled");
+      }
+
+      setupMethod = promptedSetupMethod;
+    }
   }
 
   if (setupMethod === "neondb") {
     const neonDbResult = await setupWithNeonDb(projectDir, packageManager, backend);
     if (neonDbResult.isErr()) {
-      log.error(pc.red(neonDbResult.error.message));
+      cliLog.error(pc.red(neonDbResult.error.message));
       const envResult = await writeEnvFile(projectDir, backend);
       if (envResult.isErr()) {
         return envResult;
       }
       displayManualSetupInstructions(target);
-    } else {
-      log.info(`Get Neon with Better T Stack referral: ${pc.cyan("https://get.neon.com/sbA3tIe")}`);
+      return Result.ok(undefined);
     }
-    return neonDbResult;
+
+    cliLog.info(
+      `Get Neon with Better T Stack referral: ${pc.cyan("https://get.neon.com/sbA3tIe")}`,
+    );
+    return Result.ok(undefined);
   }
 
   // neonctl setup path
   const suggestedProjectName = path.basename(projectDir);
-  const projectName = await text({
-    message: "Enter a name for your Neon project:",
-    defaultValue: suggestedProjectName,
-    initialValue: suggestedProjectName,
-  });
+  let projectName =
+    cliInput?.dbSetupOptions?.neon?.projectName ?? config.dbSetupOptions?.neon?.projectName;
 
-  if (isCancel(projectName)) {
-    return userCancelled("Operation cancelled");
+  if (!projectName) {
+    if (isSilent()) {
+      projectName = suggestedProjectName;
+    } else {
+      const promptedProjectName = await text({
+        message: "Enter a name for your Neon project:",
+        defaultValue: suggestedProjectName,
+        initialValue: suggestedProjectName,
+      });
+
+      if (isCancel(promptedProjectName)) {
+        return userCancelled("Operation cancelled");
+      }
+
+      projectName = promptedProjectName as string;
+    }
   }
 
-  const regionId = await select({
-    message: "Select a region for your Neon project:",
-    options: NEON_REGIONS,
-    initialValue: NEON_REGIONS[0].value,
-  });
+  let regionId = cliInput?.dbSetupOptions?.neon?.regionId ?? config.dbSetupOptions?.neon?.regionId;
 
-  if (isCancel(regionId)) {
-    return userCancelled("Operation cancelled");
+  if (!regionId) {
+    if (isSilent()) {
+      regionId = NEON_REGIONS[0]!.value;
+    } else {
+      const promptedRegionId = await select({
+        message: "Select a region for your Neon project:",
+        options: NEON_REGIONS,
+        initialValue: NEON_REGIONS[0].value,
+      });
+
+      if (isCancel(promptedRegionId)) {
+        return userCancelled("Operation cancelled");
+      }
+
+      regionId = promptedRegionId;
+    }
   }
 
-  const neonConfigResult = await createNeonProject(projectName as string, regionId, packageManager);
+  const neonConfigResult = await createNeonProject(projectName, regionId, packageManager);
 
   if (neonConfigResult.isErr()) {
-    log.error(pc.red(neonConfigResult.error.message));
+    cliLog.error(pc.red(neonConfigResult.error.message));
     const envResult = await writeEnvFile(projectDir, backend);
     if (envResult.isErr()) {
       return envResult;
@@ -321,7 +376,7 @@ export async function setupNeonPostgres(
     return Result.ok(undefined);
   }
 
-  const finalSpinner = spinner();
+  const finalSpinner = createSpinner();
   finalSpinner.start("Configuring database connection");
 
   const envResult = await writeEnvFile(projectDir, backend, neonConfigResult.value);
@@ -331,6 +386,6 @@ export async function setupNeonPostgres(
   }
 
   finalSpinner.stop("Neon database configured!");
-  log.info(`Get Neon with Better T Stack referral: ${pc.cyan("https://get.neon.com/sbA3tIe")}`);
+  cliLog.info(`Get Neon with Better T Stack referral: ${pc.cyan("https://get.neon.com/sbA3tIe")}`);
   return Result.ok(undefined);
 }

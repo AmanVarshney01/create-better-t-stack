@@ -40,8 +40,8 @@ Follow the prompts to configure your project or use the `--yes` flag for default
 | **ORM**                  | • Drizzle (TypeScript-first)<br>• Prisma (feature-rich)<br>• Mongoose (for MongoDB)<br>• None                                                                                                                                                              |
 | **Database Setup**       | • Turso (SQLite)<br>• Cloudflare D1 (SQLite)<br>• Neon (PostgreSQL)<br>• Supabase (PostgreSQL)<br>• Prisma Postgres<br>• MongoDB Atlas<br>• None (manual setup)                                                                                            |
 | **Authentication**       | Better-Auth (email/password, with more options coming soon)                                                                                                                                                                                                |
-| **Styling**              | Tailwind CSS with shadcn/ui components                                                                                                                                                                                                                     |
-| **Addons**               | • PWA support<br>• Tauri (desktop applications)<br>• Starlight (documentation site)<br>• Biome (linting and formatting)<br>• Lefthook, Husky (Git hooks)<br>• Turborepo (optimized builds)                                                                 |
+| **Styling**              | Tailwind CSS with a shared shadcn/ui package for React web apps                                                                                                                                                                                            |
+| **Addons**               | • PWA support<br>• Tauri (desktop applications)<br>• Starlight (documentation site)<br>• Biome (linting and formatting)<br>• Lefthook, Husky (Git hooks)<br>• Turborepo or Nx (monorepo orchestration)                                                     |
 | **Examples**             | • Todo app<br>• AI Chat interface (using Vercel AI SDK)                                                                                                                                                                                                    |
 | **Developer Experience** | • Automatic Git initialization<br>• Package manager choice (npm, pnpm, bun)<br>• Automatic dependency installation                                                                                                                                         |
 
@@ -56,10 +56,11 @@ Options:
   --template <type>               Use a template (mern, pern, t3, uniwind, none)
   --database <type>               Database type (none, sqlite, postgres, mysql, mongodb)
   --orm <type>                    ORM type (none, drizzle, prisma, mongoose)
+  --dry-run                       Validate configuration without writing files
   --auth <provider>               Authentication (better-auth, clerk, none)
   --payments <provider>           Payments provider (polar, none)
   --frontend <types...>           Frontend types (tanstack-router, react-router, tanstack-start, next, nuxt, svelte, solid, astro, native-bare, native-uniwind, native-unistyles, none)
-  --addons <types...>             Additional addons (pwa, tauri, starlight, biome, lefthook, husky, ruler, mcp, turborepo, fumadocs, ultracite, oxlint, opentui, wxt, skills, none)
+  --addons <types...>             Additional addons (pwa, tauri, starlight, biome, lefthook, husky, ruler, mcp, turborepo, nx, fumadocs, ultracite, oxlint, opentui, wxt, skills, none)
   --examples <types...>           Examples to include (todo, ai, none)
   --git                           Initialize git repository
   --no-git                        Skip git initialization
@@ -76,6 +77,30 @@ Options:
   --manual-db                     Skip automatic database setup prompts
   -h, --help                      Display help
 ```
+
+### Agent-Focused Commands
+
+```bash
+# Raw JSON payload input (agent-friendly)
+create-better-t-stack create-json --input '{"projectName":"my-app","yes":true,"dryRun":true}'
+create-better-t-stack add-json --input '{"projectDir":"./my-app","addons":["wxt"],"addonOptions":{"wxt":{"template":"react"}}}'
+create-better-t-stack create-json --input '{"projectName":"db-app","database":"postgres","orm":"drizzle","dbSetup":"neon","dbSetupOptions":{"mode":"manual"}}'
+
+# Runtime schema/introspection output
+create-better-t-stack schema --name all
+create-better-t-stack schema --name createInput
+create-better-t-stack schema --name addInput
+create-better-t-stack schema --name addonOptions
+create-better-t-stack schema --name dbSetupOptions
+create-better-t-stack schema --name cli
+
+# Local stdio MCP server
+npx create-better-t-stack@latest mcp
+```
+
+When you scaffold with the `mcp` addon, Better T Stack itself can also be installed into supported agent configs through `add-mcp` using a package runner command instead of assuming a global CLI install, for example `npx create-better-t-stack@latest mcp` or `bunx create-better-t-stack@latest mcp`.
+
+For MCP project creation, prefer `install: false`. Long dependency installs can exceed common MCP client request timeouts, so the safest flow is to scaffold first and run your package manager install command afterward in the project directory.
 
 ## Telemetry
 
@@ -106,6 +131,12 @@ Create a project with default configuration:
 
 ```bash
 npx create-better-t-stack --yes
+```
+
+Validate a command without writing files:
+
+```bash
+npx create-better-t-stack --yes --dry-run
 ```
 
 Create a project with specific options:

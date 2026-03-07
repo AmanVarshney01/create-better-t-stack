@@ -33,6 +33,7 @@ export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectCon
   updateRootPackageJson(vfs, config);
   updateConfigPackageJson(vfs, config);
   updateEnvPackageJson(vfs, config);
+  updateUiPackageJson(vfs, config);
   updateInfraPackageJson(vfs, config);
   renameDevScriptsForAlchemy(vfs, config);
 
@@ -71,18 +72,23 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   const backendPackageName = backend === "convex" ? `@${projectName}/backend` : "server";
   const dbPackageName = `@${projectName}/db`;
   const hasTurborepo = addons.includes("turborepo");
+  const hasNx = addons.includes("nx");
 
   const dbSupport = getDbScriptSupport(config);
   const needsDbScripts = dbSupport.hasDbScripts;
   const isD1Alchemy = dbSupport.isD1Alchemy;
 
-  const pmConfig = getPackageManagerConfig(packageManager, hasTurborepo);
+  const pmConfig = getPackageManagerConfig(packageManager, { hasTurborepo, hasNx });
 
   scripts.dev = pmConfig.dev;
   scripts.build = pmConfig.build;
   scripts["check-types"] = pmConfig.checkTypes;
   scripts["dev:native"] = pmConfig.filter("native", "dev");
   scripts["dev:web"] = pmConfig.filter("web", "dev");
+
+  if (addons.includes("opentui")) {
+    scripts["dev:tui"] = pmConfig.filter("tui", "dev");
+  }
 
   if (backend !== "self" && backend !== "none") {
     scripts["dev:server"] = pmConfig.filter(backendPackageName, "dev");
@@ -154,14 +160,23 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
 
 function getPackageManagerConfig(
   packageManager: ProjectConfig["packageManager"],
-  hasTurborepo: boolean,
+  options: { hasTurborepo: boolean; hasNx: boolean },
 ): PackageManagerConfig {
-  if (hasTurborepo) {
+  if (options.hasTurborepo) {
     return {
       dev: "turbo dev",
       build: "turbo build",
       checkTypes: "turbo check-types",
       filter: (workspace, script) => `turbo -F ${workspace} ${script}`,
+    };
+  }
+
+  if (options.hasNx) {
+    return {
+      dev: "nx run-many -t dev",
+      build: "nx run-many -t build",
+      checkTypes: "nx run-many -t check-types",
+      filter: (workspace, script) => `nx run-many -t ${script} --projects=${workspace}`,
     };
   }
 
@@ -296,6 +311,14 @@ function updateEnvPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): vo
   pkgJson.exports = exports;
 
   vfs.writeJson("packages/env/package.json", pkgJson);
+}
+
+function updateUiPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  const pkgJson = vfs.readJson<PackageJson>("packages/ui/package.json");
+  if (!pkgJson) return;
+
+  pkgJson.name = `@${config.projectName}/ui`;
+  vfs.writeJson("packages/ui/package.json", pkgJson);
 }
 
 function updateInfraPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): void {

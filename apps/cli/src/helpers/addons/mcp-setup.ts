@@ -1,18 +1,25 @@
-import { isCancel, log, multiselect, select, spinner } from "@clack/prompts";
+import { isCancel, multiselect, select } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import pc from "picocolors";
 
-import type { ProjectConfig } from "../../types";
+import type { AddonOptions, ProjectConfig } from "../../types";
 
+import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
-import { getPackageRunnerPrefix } from "../../utils/package-runner";
+import { getPackageExecutionCommand, getPackageRunnerPrefix } from "../../utils/package-runner";
+import { cliLog, createSpinner } from "../../utils/terminal-output";
 
 type McpTransport = "http" | "sse";
 
+type McpOptions = NonNullable<AddonOptions["mcp"]>;
+type McpServerKey = NonNullable<McpOptions["servers"]>[number];
+type McpAgent = NonNullable<McpOptions["agents"]>[number];
+type InstallScope = NonNullable<McpOptions["scope"]>;
+
 export type McpServerDef = {
-  key: string;
+  key: McpServerKey;
   label: string;
   name: string;
   target: string;
@@ -20,27 +27,33 @@ export type McpServerDef = {
   headers?: string[];
 };
 
-type InstallScope = "project" | "global";
-
 type AgentScope = "project" | "global" | "both";
 
 type AgentOption = {
-  value: string;
+  value: McpAgent;
   label: string;
   scope: AgentScope;
 };
 
 const MCP_AGENTS: AgentOption[] = [
+  { value: "antigravity", label: "Antigravity", scope: "global" },
+  { value: "cline", label: "Cline VSCode Extension", scope: "global" },
+  { value: "cline-cli", label: "Cline CLI", scope: "global" },
   { value: "cursor", label: "Cursor", scope: "both" },
   { value: "claude-code", label: "Claude Code", scope: "both" },
   { value: "codex", label: "Codex", scope: "both" },
   { value: "opencode", label: "OpenCode", scope: "both" },
   { value: "gemini-cli", label: "Gemini CLI", scope: "both" },
+  { value: "github-copilot-cli", label: "GitHub Copilot CLI", scope: "both" },
+  { value: "mcporter", label: "MCPorter", scope: "both" },
   { value: "vscode", label: "VS Code (GitHub Copilot)", scope: "both" },
   { value: "zed", label: "Zed", scope: "both" },
   { value: "claude-desktop", label: "Claude Desktop", scope: "global" },
   { value: "goose", label: "Goose", scope: "global" },
 ];
+
+const DEFAULT_SCOPE: InstallScope = "project";
+const DEFAULT_AGENTS: McpAgent[] = ["cursor", "claude-code", "vscode"];
 
 function uniqueValues<T>(values: T[]): T[] {
   return Array.from(new Set(values));
@@ -63,156 +76,194 @@ function hasNativeFrontend(frontend: ProjectConfig["frontend"]): boolean {
   );
 }
 
-function getRecommendedMcpServers(config: ProjectConfig): McpServerDef[] {
-  const servers: McpServerDef[] = [];
+function getAllMcpServers(config: ProjectConfig): McpServerDef[] {
+  return [
+    {
+      key: "better-t-stack",
+      label: "Better T Stack",
+      name: "better-t-stack",
+      target: getPackageExecutionCommand(config.packageManager, "create-better-t-stack@latest mcp"),
+    },
+    {
+      key: "context7",
+      label: "Context7",
+      name: "context7",
+      target: "@upstash/context7-mcp",
+    },
+    {
+      key: "nx",
+      label: "Nx Workspace",
+      name: "nx",
+      target: "npx nx mcp .",
+    },
+    {
+      key: "cloudflare-docs",
+      label: "Cloudflare Docs",
+      name: "cloudflare-docs",
+      target: "https://docs.mcp.cloudflare.com/sse",
+      transport: "sse",
+    },
+    {
+      key: "convex",
+      label: "Convex",
+      name: "convex",
+      target: "npx -y convex@latest mcp start",
+    },
+    {
+      key: "shadcn",
+      label: "shadcn/ui",
+      name: "shadcn",
+      target: "npx -y shadcn@latest mcp",
+    },
+    {
+      key: "next-devtools",
+      label: "Next Devtools",
+      name: "next-devtools",
+      target: "npx -y next-devtools-mcp@latest",
+    },
+    {
+      key: "nuxt-docs",
+      label: "Nuxt Docs",
+      name: "nuxt",
+      target: "https://nuxt.com/mcp",
+    },
+    {
+      key: "nuxt-ui-docs",
+      label: "Nuxt UI Docs",
+      name: "nuxt-ui",
+      target: "https://ui.nuxt.com/mcp",
+    },
+    {
+      key: "svelte-docs",
+      label: "Svelte Docs",
+      name: "svelte",
+      target: "https://mcp.svelte.dev/mcp",
+    },
+    {
+      key: "astro-docs",
+      label: "Astro Docs",
+      name: "astro-docs",
+      target: "https://mcp.docs.astro.build/mcp",
+    },
+    {
+      key: "planetscale",
+      label: "PlanetScale",
+      name: "planetscale",
+      target: "https://mcp.pscale.dev/mcp/planetscale",
+    },
+    {
+      key: "neon",
+      label: "Neon",
+      name: "neon",
+      target: "https://mcp.neon.tech/mcp",
+    },
+    {
+      key: "supabase",
+      label: "Supabase",
+      name: "supabase",
+      target: "https://mcp.supabase.com/mcp",
+    },
+    {
+      key: "better-auth",
+      label: "Better Auth",
+      name: "better-auth",
+      target: "https://mcp.inkeep.com/better-auth/mcp",
+    },
+    {
+      key: "clerk",
+      label: "Clerk",
+      name: "clerk",
+      target: "https://mcp.clerk.com/mcp",
+    },
+    {
+      key: "expo",
+      label: "Expo",
+      name: "expo-mcp",
+      target: "https://mcp.expo.dev/mcp",
+    },
+    {
+      key: "polar",
+      label: "Polar",
+      name: "polar",
+      target: "https://mcp.polar.sh/mcp/polar-mcp",
+    },
+  ];
+}
 
-  servers.push({
-    key: "context7",
-    label: "Context7",
-    name: "context7",
-    target: "@upstash/context7-mcp",
-  });
+export function getRecommendedMcpServers(
+  config: ProjectConfig,
+  scope: InstallScope,
+): McpServerDef[] {
+  const serversByKey = new Map(getAllMcpServers(config).map((server) => [server.key, server]));
+  const recommendedServerKeys: McpServerKey[] = ["better-t-stack", "context7"];
+
+  if (scope === "project" && config.addons.includes("nx")) {
+    recommendedServerKeys.push("nx");
+  }
 
   if (
     config.runtime === "workers" ||
     config.webDeploy === "cloudflare" ||
     config.serverDeploy === "cloudflare"
   ) {
-    servers.push({
-      key: "cloudflare-docs",
-      label: "Cloudflare Docs",
-      name: "cloudflare-docs",
-      target: "https://docs.mcp.cloudflare.com/sse",
-      transport: "sse",
-    });
+    recommendedServerKeys.push("cloudflare-docs");
   }
 
   if (config.backend === "convex") {
-    servers.push({
-      key: "convex",
-      label: "Convex",
-      name: "convex",
-      target: "npx -y convex@latest mcp start",
-    });
+    recommendedServerKeys.push("convex");
   }
 
   if (hasReactBasedFrontend(config.frontend)) {
-    servers.push({
-      key: "shadcn",
-      label: "shadcn/ui",
-      name: "shadcn",
-      target: "npx -y shadcn@latest mcp",
-    });
+    recommendedServerKeys.push("shadcn");
   }
 
   if (config.frontend.includes("next")) {
-    servers.push({
-      key: "next-devtools",
-      label: "Next Devtools",
-      name: "next-devtools",
-      target: "npx -y next-devtools-mcp@latest",
-    });
+    recommendedServerKeys.push("next-devtools");
   }
 
   if (config.frontend.includes("nuxt")) {
-    servers.push(
-      {
-        key: "nuxt-docs",
-        label: "Nuxt Docs",
-        name: "nuxt",
-        target: "https://nuxt.com/mcp",
-      },
-      {
-        key: "nuxt-ui-docs",
-        label: "Nuxt UI Docs",
-        name: "nuxt-ui",
-        target: "https://ui.nuxt.com/mcp",
-      },
-    );
+    recommendedServerKeys.push("nuxt-docs", "nuxt-ui-docs");
   }
 
   if (config.frontend.includes("svelte")) {
-    servers.push({
-      key: "svelte-docs",
-      label: "Svelte Docs",
-      name: "svelte",
-      target: "https://mcp.svelte.dev/mcp",
-    });
+    recommendedServerKeys.push("svelte-docs");
   }
 
   if (config.frontend.includes("astro")) {
-    servers.push({
-      key: "astro-docs",
-      label: "Astro Docs",
-      name: "astro-docs",
-      target: "https://mcp.docs.astro.build/mcp",
-    });
+    recommendedServerKeys.push("astro-docs");
   }
 
   if (config.dbSetup === "planetscale") {
-    servers.push({
-      key: "planetscale",
-      label: "PlanetScale",
-      name: "planetscale",
-      target: "https://mcp.pscale.dev/mcp/planetscale",
-    });
+    recommendedServerKeys.push("planetscale");
   }
 
   if (config.dbSetup === "neon") {
-    servers.push({
-      key: "neon",
-      label: "Neon",
-      name: "neon",
-      target: "https://mcp.neon.tech/mcp",
-    });
+    recommendedServerKeys.push("neon");
   }
 
   if (config.dbSetup === "supabase") {
-    servers.push({
-      key: "supabase",
-      label: "Supabase",
-      name: "supabase",
-      target: "https://mcp.supabase.com/mcp",
-    });
+    recommendedServerKeys.push("supabase");
   }
 
   if (config.auth === "better-auth") {
-    servers.push({
-      key: "better-auth",
-      label: "Better Auth",
-      name: "better-auth",
-      target: "https://mcp.inkeep.com/better-auth/mcp",
-    });
+    recommendedServerKeys.push("better-auth");
   }
 
   if (config.auth === "clerk") {
-    servers.push({
-      key: "clerk",
-      label: "Clerk",
-      name: "clerk",
-      target: "https://mcp.clerk.com/mcp",
-    });
+    recommendedServerKeys.push("clerk");
   }
 
   if (hasNativeFrontend(config.frontend)) {
-    servers.push({
-      key: "expo",
-      label: "Expo",
-      name: "expo-mcp",
-      target: "https://mcp.expo.dev/mcp",
-    });
+    recommendedServerKeys.push("expo");
   }
 
   if (config.payments === "polar") {
-    servers.push({
-      key: "polar",
-      label: "Polar",
-      name: "polar",
-      target: "https://mcp.polar.sh/mcp/polar-mcp",
-    });
+    recommendedServerKeys.push("polar");
   }
 
-  return servers;
+  return uniqueValues(recommendedServerKeys)
+    .map((serverKey) => serversByKey.get(serverKey))
+    .filter((server): server is McpServerDef => server !== undefined);
 }
 
 function filterAgentsForScope(scope: InstallScope): AgentOption[] {
@@ -228,33 +279,44 @@ export async function setupMcp(
 
   const { packageManager, projectDir } = config;
 
-  log.info("Setting up MCP servers...");
+  cliLog.info("Setting up MCP servers...");
 
-  const scope = await select<InstallScope>({
-    message: "Where should MCP servers be installed?",
-    options: [
-      {
-        value: "project",
-        label: "Project",
-        hint: "Writes to project config files (recommended for teams)",
-      },
-      {
-        value: "global",
-        label: "Global",
-        hint: "Writes to user-level config files (personal machine)",
-      },
-    ],
-    initialValue: "project",
-  });
+  let scope = config.addonOptions?.mcp?.scope;
 
-  if (isCancel(scope)) {
-    return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+  if (!scope) {
+    if (isSilent()) {
+      scope = DEFAULT_SCOPE;
+    } else {
+      const selectedScope = await select<InstallScope>({
+        message: "Where should MCP servers be installed?",
+        options: [
+          {
+            value: "project",
+            label: "Project",
+            hint: "Writes to project config files (recommended for teams)",
+          },
+          {
+            value: "global",
+            label: "Global",
+            hint: "Writes to user-level config files (personal machine)",
+          },
+        ],
+        initialValue: DEFAULT_SCOPE,
+      });
+
+      if (isCancel(selectedScope)) {
+        return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+      }
+
+      scope = selectedScope;
+    }
   }
 
-  const recommendedServers = getRecommendedMcpServers(config);
+  const recommendedServers = getRecommendedMcpServers(config, scope);
   if (recommendedServers.length === 0) {
     return Result.ok(undefined);
   }
+  const allServersByKey = new Map(getAllMcpServers(config).map((server) => [server.key, server]));
 
   const serverOptions = recommendedServers.map((s) => ({
     value: s.key,
@@ -262,15 +324,28 @@ export async function setupMcp(
     hint: s.target,
   }));
 
-  const selectedServerKeys = await multiselect({
-    message: "Select MCP servers to install",
-    options: serverOptions,
-    required: false,
-    initialValues: serverOptions.map((o) => o.value),
-  });
+  const configuredServerKeys = config.addonOptions?.mcp?.servers;
+  const availableServerKeys = new Set(allServersByKey.keys());
+  let selectedServerKeys: McpServerKey[] =
+    configuredServerKeys?.filter((serverKey) => availableServerKeys.has(serverKey)) ?? [];
 
-  if (isCancel(selectedServerKeys)) {
-    return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+  if (selectedServerKeys.length === 0 && configuredServerKeys === undefined) {
+    if (isSilent()) {
+      selectedServerKeys = serverOptions.map((o) => o.value);
+    } else {
+      const promptedServerKeys = await multiselect({
+        message: "Select MCP servers to install",
+        options: serverOptions,
+        required: false,
+        initialValues: serverOptions.map((o) => o.value),
+      });
+
+      if (isCancel(promptedServerKeys)) {
+        return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+      }
+
+      selectedServerKeys = [...promptedServerKeys] as McpServerKey[];
+    }
   }
 
   if (selectedServerKeys.length === 0) {
@@ -282,29 +357,41 @@ export async function setupMcp(
     label: a.label,
   }));
 
-  const defaultAgents = uniqueValues(
-    ["cursor", "claude-code", "vscode"].filter((a) => agentOptions.some((o) => o.value === a)),
+  const defaultAgents: McpAgent[] = uniqueValues(
+    DEFAULT_AGENTS.filter((agent) => agentOptions.some((option) => option.value === agent)),
   );
 
-  const selectedAgents = await multiselect({
-    message: "Select agents to install MCP servers to",
-    options: agentOptions,
-    required: false,
-    initialValues: defaultAgents,
-  });
+  const configuredAgents = config.addonOptions?.mcp?.agents;
+  let selectedAgents: McpAgent[] =
+    configuredAgents?.filter((agent) => agentOptions.some((option) => option.value === agent)) ??
+    [];
 
-  if (isCancel(selectedAgents)) {
-    return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+  if (selectedAgents.length === 0 && configuredAgents === undefined) {
+    if (isSilent()) {
+      selectedAgents = defaultAgents;
+    } else {
+      const promptedAgents = await multiselect({
+        message: "Select agents to install MCP servers to",
+        options: agentOptions,
+        required: false,
+        initialValues: defaultAgents,
+      });
+
+      if (isCancel(promptedAgents)) {
+        return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+      }
+
+      selectedAgents = [...promptedAgents] as McpAgent[];
+    }
   }
 
   if (selectedAgents.length === 0) {
     return Result.ok(undefined);
   }
 
-  const serversByKey = new Map(recommendedServers.map((s) => [s.key, s]));
   const selectedServers: McpServerDef[] = [];
-  for (const key of selectedServerKeys as string[]) {
-    const server = serversByKey.get(key);
+  for (const key of selectedServerKeys) {
+    const server = allServersByKey.get(key);
     if (server) selectedServers.push(server);
   }
 
@@ -312,16 +399,17 @@ export async function setupMcp(
     return Result.ok(undefined);
   }
 
-  const installSpinner = spinner();
+  const installSpinner = createSpinner();
   installSpinner.start("Installing MCP servers...");
 
   const runner = getPackageRunnerPrefix(packageManager);
   const globalFlags = scope === "global" ? ["-g"] : [];
+  let successfulInstalls = 0;
 
   for (const server of selectedServers) {
     const transportFlags = server.transport ? ["-t", server.transport] : [];
     const headerFlags = (server.headers ?? []).flatMap((h) => ["--header", h]);
-    const agentFlags = (selectedAgents as string[]).flatMap((a) => ["-a", a]);
+    const agentFlags = selectedAgents.flatMap((agent) => ["-a", agent]);
 
     const args = [
       ...runner,
@@ -349,10 +437,27 @@ export async function setupMcp(
     });
 
     if (installResult.isErr()) {
-      log.warn(pc.yellow(`Warning: Could not install MCP server '${server.name}'`));
+      cliLog.warn(pc.yellow(`Warning: Could not install MCP server '${server.name}'`));
+      continue;
     }
+
+    successfulInstalls += 1;
   }
 
-  installSpinner.stop("MCP servers installed");
+  if (successfulInstalls === 0) {
+    installSpinner.stop(pc.red("Failed to install MCP servers"));
+    return Result.err(
+      new AddonSetupError({
+        addon: "mcp",
+        message: `Failed to install all requested MCP servers: ${selectedServers.map((server) => server.name).join(", ")}`,
+      }),
+    );
+  }
+
+  installSpinner.stop(
+    successfulInstalls === selectedServers.length
+      ? "MCP servers installed"
+      : "MCP servers installed with warnings",
+  );
   return Result.ok(undefined);
 }

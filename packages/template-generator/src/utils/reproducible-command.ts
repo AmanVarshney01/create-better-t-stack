@@ -13,7 +13,21 @@ function formatMultiFlag(flag: string, values: string[]): string {
   return `${flag} ${values.join(" ")}`;
 }
 
+function getBaseCommand(packageManager: ProjectConfig["packageManager"]): string {
+  if (packageManager === "bun") {
+    return "bun create better-t-stack@latest";
+  }
+
+  if (packageManager === "pnpm") {
+    return "pnpm create better-t-stack@latest";
+  }
+
+  return "npx create-better-t-stack@latest";
+}
+
 export function generateReproducibleCommand(config: ProjectConfig): string {
+  const baseCommand = getBaseCommand(config.packageManager);
+
   const flags: string[] = [];
   const frontend = normalizeMultiValues(config.frontend);
   const addons = normalizeMultiValues(config.addons);
@@ -33,22 +47,14 @@ export function generateReproducibleCommand(config: ProjectConfig): string {
   flags.push(formatMultiFlag("--examples", examples));
 
   flags.push(`--db-setup ${config.dbSetup}`);
+  if (config.dbSetupOptions?.mode === "manual") {
+    flags.push("--manual-db");
+  }
   flags.push(`--web-deploy ${config.webDeploy}`);
   flags.push(`--server-deploy ${config.serverDeploy}`);
   flags.push(config.git ? "--git" : "--no-git");
   flags.push(`--package-manager ${config.packageManager}`);
   flags.push(config.install ? "--install" : "--no-install");
-
-  let baseCommand = "npx create-better-t-stack@latest";
-  const pkgManager = config.packageManager;
-
-  if (pkgManager === "bun") {
-    baseCommand = "bun create better-t-stack@latest";
-  } else if (pkgManager === "pnpm") {
-    baseCommand = "pnpm create better-t-stack@latest";
-  } else if (pkgManager === "npm") {
-    baseCommand = "npx create-better-t-stack@latest";
-  }
 
   const projectPathArg = config.relativePath ? ` ${config.relativePath}` : "";
 

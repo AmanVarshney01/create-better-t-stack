@@ -296,6 +296,10 @@ export function validateAddonsAgainstFrontends(
   frontends: Frontend[] = [],
   auth?: Auth,
 ): ValidationResult {
+  if (addons.includes("turborepo") && addons.includes("nx")) {
+    return validationErr("Cannot combine 'turborepo' and 'nx' addons. Choose one monorepo tool.");
+  }
+
   for (const addon of addons) {
     if (addon === "none") continue;
     const { isCompatible, reason } = validateAddonCompatibility(addon, frontends, auth);

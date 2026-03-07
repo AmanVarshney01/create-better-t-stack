@@ -19,6 +19,10 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "Turborepo";
       hint = "High-performance build system";
       break;
+    case "nx":
+      label = "Nx";
+      hint = "Smart monorepo orchestration and task graph";
+      break;
     case "pwa":
       label = "PWA";
       hint = "Make your app installable and work offline";
@@ -73,7 +77,7 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       break;
     case "mcp":
       label = "MCP";
-      hint = "Install MCP servers (docs, databases, SaaS) via add-mcp";
+      hint = "Install MCP servers, including Better T Stack, via add-mcp";
       break;
     default:
       label = addon;
@@ -84,22 +88,53 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
 }
 
 const ADDON_GROUPS = {
-  Tooling: ["turborepo", "biome", "oxlint", "ultracite", "husky", "lefthook"],
+  "Monorepo & Tasks": ["turborepo", "nx"],
+  "Code Quality": ["biome", "oxlint", "ultracite", "husky", "lefthook"],
   Documentation: ["starlight", "fumadocs"],
-  Extensions: ["pwa", "tauri", "opentui", "wxt"],
-  AI: ["ruler", "skills", "mcp"],
+  "Platform Extensions": ["pwa", "tauri", "opentui", "wxt"],
+  "AI & Agent Tools": ["ruler", "skills", "mcp"],
 };
+
+function createGroupedOptions(): Record<string, AddonOption[]> {
+  return Object.fromEntries(Object.keys(ADDON_GROUPS).map((group) => [group, [] as AddonOption[]]));
+}
+
+function addOptionToGroup(groupedOptions: Record<string, AddonOption[]>, option: AddonOption) {
+  for (const [group, addons] of Object.entries(ADDON_GROUPS)) {
+    if (addons.includes(option.value)) {
+      groupedOptions[group]?.push(option);
+      return;
+    }
+  }
+}
+
+function sortAndPruneGroupedOptions(groupedOptions: Record<string, AddonOption[]>) {
+  Object.keys(groupedOptions).forEach((group) => {
+    if (groupedOptions[group].length === 0) {
+      delete groupedOptions[group];
+      return;
+    }
+
+    const groupOrder = ADDON_GROUPS[group as keyof typeof ADDON_GROUPS] || [];
+    groupedOptions[group].sort((a, b) => {
+      const indexA = groupOrder.indexOf(a.value);
+      const indexB = groupOrder.indexOf(b.value);
+      return indexA - indexB;
+    });
+  });
+}
+
+function validateAddonSelection(selected: Addons[] | undefined) {
+  if (selected?.includes("turborepo") && selected.includes("nx")) {
+    return "Choose either Turborepo or Nx as your monorepo tool, not both.";
+  }
+}
 
 export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[], auth?: Auth) {
   if (addons !== undefined) return addons;
 
   const allAddons = AddonsSchema.options.filter((addon) => addon !== "none");
-  const groupedOptions: Record<string, AddonOption[]> = {
-    Tooling: [],
-    Documentation: [],
-    Extensions: [],
-    AI: [],
-  };
+  const groupedOptions = createGroupedOptions();
 
   const frontendsArray = frontends || [];
 
@@ -109,30 +144,10 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
 
     const { label, hint } = getAddonDisplay(addon);
     const option = { value: addon, label, hint };
-
-    if (ADDON_GROUPS.Tooling.includes(addon)) {
-      groupedOptions.Tooling.push(option);
-    } else if (ADDON_GROUPS.Documentation.includes(addon)) {
-      groupedOptions.Documentation.push(option);
-    } else if (ADDON_GROUPS.Extensions.includes(addon)) {
-      groupedOptions.Extensions.push(option);
-    } else if (ADDON_GROUPS.AI.includes(addon)) {
-      groupedOptions.AI.push(option);
-    }
+    addOptionToGroup(groupedOptions, option);
   }
 
-  Object.keys(groupedOptions).forEach((group) => {
-    if (groupedOptions[group].length === 0) {
-      delete groupedOptions[group];
-    } else {
-      const groupOrder = ADDON_GROUPS[group as keyof typeof ADDON_GROUPS] || [];
-      groupedOptions[group].sort((a, b) => {
-        const indexA = groupOrder.indexOf(a.value);
-        const indexB = groupOrder.indexOf(b.value);
-        return indexA - indexB;
-      });
-    }
-  });
+  sortAndPruneGroupedOptions(groupedOptions);
 
   const initialValues = DEFAULT_CONFIG.addons.filter((addonValue) =>
     Object.values(groupedOptions).some((options) =>
@@ -145,6 +160,7 @@ export async function getAddonsChoice(addons?: Addons[], frontends?: Frontend[],
     options: groupedOptions,
     initialValues: initialValues,
     required: false,
+    validate: validateAddonSelection,
   });
 
   if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });
@@ -157,12 +173,7 @@ export async function getAddonsToAdd(
   existingAddons: Addons[] = [],
   auth?: Auth,
 ) {
-  const groupedOptions: Record<string, AddonOption[]> = {
-    Tooling: [],
-    Documentation: [],
-    Extensions: [],
-    AI: [],
-  };
+  const groupedOptions = createGroupedOptions();
 
   const frontendArray = frontend || [];
 
@@ -176,30 +187,10 @@ export async function getAddonsToAdd(
   for (const addon of compatibleAddons) {
     const { label, hint } = getAddonDisplay(addon);
     const option = { value: addon, label, hint };
-
-    if (ADDON_GROUPS.Tooling.includes(addon)) {
-      groupedOptions.Tooling.push(option);
-    } else if (ADDON_GROUPS.Documentation.includes(addon)) {
-      groupedOptions.Documentation.push(option);
-    } else if (ADDON_GROUPS.Extensions.includes(addon)) {
-      groupedOptions.Extensions.push(option);
-    } else if (ADDON_GROUPS.AI.includes(addon)) {
-      groupedOptions.AI.push(option);
-    }
+    addOptionToGroup(groupedOptions, option);
   }
 
-  Object.keys(groupedOptions).forEach((group) => {
-    if (groupedOptions[group].length === 0) {
-      delete groupedOptions[group];
-    } else {
-      const groupOrder = ADDON_GROUPS[group as keyof typeof ADDON_GROUPS] || [];
-      groupedOptions[group].sort((a, b) => {
-        const indexA = groupOrder.indexOf(a.value);
-        const indexB = groupOrder.indexOf(b.value);
-        return indexA - indexB;
-      });
-    }
-  });
+  sortAndPruneGroupedOptions(groupedOptions);
 
   if (Object.keys(groupedOptions).length === 0) {
     return [];
@@ -209,6 +200,7 @@ export async function getAddonsToAdd(
     message: "Select addons to add",
     options: groupedOptions,
     required: false,
+    validate: validateAddonSelection,
   });
 
   if (isCancel(response)) throw new UserCancelledError({ message: "Operation cancelled" });

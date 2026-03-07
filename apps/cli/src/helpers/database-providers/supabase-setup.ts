@@ -1,4 +1,4 @@
-import { isCancel, log, select } from "@clack/prompts";
+import { isCancel, select } from "@clack/prompts";
 import { Result } from "better-result";
 import { type ExecaError, execa } from "execa";
 import fs from "fs-extra";
@@ -7,6 +7,7 @@ import pc from "picocolors";
 
 import type { PackageManager, ProjectConfig } from "../../types";
 
+import { isSilent } from "../../utils/context";
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
 import {
   DatabaseSetupError,
@@ -15,6 +16,12 @@ import {
   userCancelled,
 } from "../../utils/errors";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
+import { cliLog } from "../../utils/terminal-output";
+import {
+  type DatabaseSetupCliOptions,
+  type DbSetupMode,
+  resolveDbSetupMode,
+} from "../core/db-setup-options";
 
 type SupabaseSetupResult = Result<void, DatabaseSetupError | UserCancelledError>;
 
@@ -60,7 +67,7 @@ async function initializeSupabase(
   serverDir: string,
   packageManager: PackageManager,
 ): Promise<Result<void, DatabaseSetupError>> {
-  log.info("Initializing Supabase project...");
+  cliLog.info("Initializing Supabase project...");
   return Result.tryPromise({
     try: async () => {
       const supabaseInitArgs = getPackageExecutionArgs(packageManager, "supabase init");
@@ -68,7 +75,7 @@ async function initializeSupabase(
         cwd: serverDir,
         stdio: "inherit",
       });
-      log.success("Supabase project initialized");
+      cliLog.success("Supabase project initialized");
     },
     catch: (e) => {
       const error = e as Error;
@@ -90,7 +97,7 @@ async function startSupabase(
   serverDir: string,
   packageManager: PackageManager,
 ): Promise<Result<string, DatabaseSetupError>> {
-  log.info("Starting Supabase services (this may take a moment)...");
+  cliLog.info("Starting Supabase services (this may take a moment)...");
   const supabaseStartArgs = getPackageExecutionArgs(packageManager, "supabase start");
 
   return Result.tryPromise({
@@ -104,7 +111,9 @@ async function startSupabase(
       if (subprocess.stdout) {
         subprocess.stdout.on("data", (data) => {
           const text = data.toString();
-          process.stdout.write(text);
+          if (!isSilent()) {
+            process.stdout.write(text);
+          }
           stdoutData += text;
         });
       }
@@ -134,8 +143,11 @@ async function startSupabase(
   });
 }
 
-function displayManualSupabaseInstructions(output?: string | null) {
-  log.info(
+function displayManualSupabaseInstructions(
+  targetApp: "apps/web" | "apps/server",
+  output?: string | null,
+) {
+  cliLog.info(
     `"Manual Supabase Setup Instructions:"
 1. Ensure Docker is installed and running.
 2. Install the Supabase CLI (e.g., \`npm install -g supabase\`).
@@ -148,17 +160,21 @@ ${pc.bold("Relevant output from `supabase start`:")}
 ${pc.dim(output)}`
         : ""
     }
-6. Add the DB URL to the .env file in \`packages/db/.env\` as \`DATABASE_URL\`:
+6. Add the DB URL to the .env file in \`${targetApp}/.env\` as \`DATABASE_URL\`:
 			${pc.gray('DATABASE_URL="your_supabase_db_url"')}`,
   );
 }
 
 export async function setupSupabase(
   config: ProjectConfig,
-  cliInput?: { manualDb?: boolean },
+  cliInput?: DatabaseSetupCliOptions,
 ): Promise<SupabaseSetupResult> {
   const { projectDir, packageManager, backend } = config;
-  const manualDb = cliInput?.manualDb ?? false;
+  const targetApp: "apps/web" | "apps/server" = backend === "self" ? "apps/web" : "apps/server";
+  const setupMode = resolveDbSetupMode("supabase", {
+    manualDb: cliInput?.manualDb,
+    dbSetupOptions: cliInput?.dbSetupOptions ?? config.dbSetupOptions,
+  });
 
   const serverDir = path.join(projectDir, "packages", "db");
 
@@ -176,48 +192,58 @@ export async function setupSupabase(
     return ensureDirResult;
   }
 
-  if (manualDb) {
-    displayManualSupabaseInstructions();
+  if (setupMode === "manual") {
+    displayManualSupabaseInstructions(targetApp);
     return writeSupabaseEnvFile(projectDir, backend, "");
   }
 
-  const mode = await select({
-    message: "Supabase setup: choose mode",
-    options: [
-      {
-        label: "Automatic",
-        value: "auto",
-        hint: "Automated setup with provider CLI, sets .env",
-      },
-      {
-        label: "Manual",
-        value: "manual",
-        hint: "Manual setup, add env vars yourself",
-      },
-    ],
-    initialValue: "auto",
-  });
+  let mode: DbSetupMode | undefined = setupMode;
 
-  if (isCancel(mode)) {
-    return userCancelled("Operation cancelled");
+  if (!mode) {
+    if (isSilent()) {
+      mode = "manual";
+    } else {
+      const promptedMode = await select<DbSetupMode>({
+        message: "Supabase setup: choose mode",
+        options: [
+          {
+            label: "Automatic",
+            value: "auto",
+            hint: "Automated setup with provider CLI, sets .env",
+          },
+          {
+            label: "Manual",
+            value: "manual",
+            hint: "Manual setup, add env vars yourself",
+          },
+        ],
+        initialValue: "auto",
+      });
+
+      if (isCancel(promptedMode)) {
+        return userCancelled("Operation cancelled");
+      }
+
+      mode = promptedMode;
+    }
   }
 
   if (mode === "manual") {
-    displayManualSupabaseInstructions();
+    displayManualSupabaseInstructions(targetApp);
     return writeSupabaseEnvFile(projectDir, backend, "");
   }
 
   const initResult = await initializeSupabase(serverDir, packageManager);
   if (initResult.isErr()) {
-    log.error(pc.red(initResult.error.message));
-    displayManualSupabaseInstructions();
+    cliLog.error(pc.red(initResult.error.message));
+    displayManualSupabaseInstructions(targetApp);
     return writeSupabaseEnvFile(projectDir, backend, "");
   }
 
   const startResult = await startSupabase(serverDir, packageManager);
   if (startResult.isErr()) {
-    log.error(pc.red(startResult.error.message));
-    displayManualSupabaseInstructions();
+    cliLog.error(pc.red(startResult.error.message));
+    displayManualSupabaseInstructions(targetApp);
     return writeSupabaseEnvFile(projectDir, backend, "");
   }
 
@@ -227,16 +253,16 @@ export async function setupSupabase(
   if (dbUrl) {
     const envResult = await writeSupabaseEnvFile(projectDir, backend, dbUrl);
     if (envResult.isOk()) {
-      log.success(pc.green("Supabase local development setup ready!"));
+      cliLog.success(pc.green("Supabase local development setup ready!"));
     } else {
-      log.error(pc.red("Supabase setup completed, but failed to update .env automatically."));
-      displayManualSupabaseInstructions(supabaseOutput);
+      cliLog.error(pc.red("Supabase setup completed, but failed to update .env automatically."));
+      displayManualSupabaseInstructions(targetApp, supabaseOutput);
     }
     return envResult;
   }
 
-  log.error(pc.yellow("Supabase started, but could not extract DB URL automatically."));
-  displayManualSupabaseInstructions(supabaseOutput);
+  cliLog.error(pc.yellow("Supabase started, but could not extract DB URL automatically."));
+  displayManualSupabaseInstructions(targetApp, supabaseOutput);
   return databaseSetupError(
     "supabase",
     "Could not extract database URL from Supabase output. Please configure manually.",

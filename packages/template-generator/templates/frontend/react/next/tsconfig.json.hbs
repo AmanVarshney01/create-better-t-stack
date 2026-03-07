@@ -3,6 +3,7 @@
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
+    "baseUrl": ".",
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
@@ -20,7 +21,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@{{projectName}}/ui/*": ["../../packages/ui/src/*"]
     }{{#if (or (eq serverDeploy "cloudflare") (eq webDeploy "cloudflare"))}},
     "types": [
       "@cloudflare/workers-types"

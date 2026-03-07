@@ -1,9 +1,9 @@
-import { log } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import pc from "picocolors";
 
 import { ProjectCreationError } from "../../utils/errors";
+import { cliLog } from "../../utils/terminal-output";
 
 export async function initializeGit(
   projectDir: string,
@@ -18,7 +18,7 @@ export async function initializeGit(
   })`git --version`;
 
   if (gitVersionResult.exitCode !== 0) {
-    log.warn(pc.yellow("Git is not installed"));
+    cliLog.warn(pc.yellow("Git is not installed"));
     return Result.ok(undefined);
   }
 

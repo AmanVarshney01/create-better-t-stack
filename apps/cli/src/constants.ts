@@ -53,6 +53,7 @@ export const ADDON_COMPATIBILITY = {
   husky: [],
   lefthook: [],
   turborepo: [],
+  nx: [],
   starlight: [],
   ultracite: [],
   ruler: [],

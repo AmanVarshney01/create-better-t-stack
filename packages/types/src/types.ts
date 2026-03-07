@@ -17,6 +17,8 @@ import type {
   ServerDeploySchema,
   DirectoryConflictSchema,
   TemplateSchema,
+  AddonOptionsSchema,
+  DbSetupOptionsSchema,
   ProjectNameSchema,
   CreateInputSchema,
   AddInputSchema,
@@ -43,6 +45,8 @@ export type WebDeploy = z.infer<typeof WebDeploySchema>;
 export type ServerDeploy = z.infer<typeof ServerDeploySchema>;
 export type DirectoryConflict = z.infer<typeof DirectoryConflictSchema>;
 export type Template = z.infer<typeof TemplateSchema>;
+export type AddonOptions = z.infer<typeof AddonOptionsSchema>;
+export type DbSetupOptions = z.infer<typeof DbSetupOptionsSchema>;
 export type ProjectName = z.infer<typeof ProjectNameSchema>;
 
 export type CreateInput = z.infer<typeof CreateInputSchema>;

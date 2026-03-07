@@ -22,6 +22,7 @@ create-better-t-stack [project-directory] [options]
 ### Key Options
 
 - `--yes, -y`: Use default configuration (skips prompts)
+- `--dry-run`: Validate configuration and target directory without writing files
 - `--verbose`: Show detailed result information as JSON
 - `--yolo`: Bypass validations and compatibility checks
 - `--package-manager <pm>`: `npm`, `pnpm`, `bun`
@@ -47,6 +48,8 @@ create-better-t-stack [project-directory] [options]
 
 See the full reference in [Options](/docs/cli/options).
 
+For JSON-first automation and agent usage, see [Agent Workflows](/docs/cli/agent-workflows).
+
 ### Examples
 
 ```bash
@@ -58,6 +61,9 @@ create-better-t-stack --yes
 
 # Specific configuration
 create-better-t-stack --database postgres --backend hono --frontend tanstack-router
+
+# Validate without writing files
+create-better-t-stack my-app --yes --dry-run
 ```
 
 ## `add`
@@ -87,6 +93,37 @@ create-better-t-stack add --addons pwa tauri --install
 # Add addons in a specific project directory
 create-better-t-stack add --project-dir ./my-app --addons mcp skills
 ```
+
+## `create-json`
+
+Create a project from a raw JSON payload.
+
+```bash
+create-better-t-stack create-json --input '{"projectName":"my-app","yes":true,"dryRun":true}'
+```
+
+Use this when you want a single machine-readable input object instead of many flags.
+
+## `add-json`
+
+Add addons from a raw JSON payload.
+
+```bash
+create-better-t-stack add-json --input '{"projectDir":"./my-app","addons":["wxt"],"addonOptions":{"wxt":{"template":"react"}}}'
+```
+
+## `schema`
+
+Print runtime CLI and input schemas as JSON.
+
+```bash
+create-better-t-stack schema --name all
+create-better-t-stack schema --name createInput
+create-better-t-stack schema --name addonOptions
+create-better-t-stack schema --name dbSetupOptions
+```
+
+This is the best way for scripts and agents to discover the current input contract at runtime.
 
 ## `sponsors`
 

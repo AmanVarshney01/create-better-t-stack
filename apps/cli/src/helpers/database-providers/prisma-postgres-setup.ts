@@ -1,4 +1,4 @@
-import { isCancel, log, select, spinner } from "@clack/prompts";
+import { isCancel, select } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
@@ -7,9 +7,16 @@ import pc from "picocolors";
 
 import type { PackageManager, ProjectConfig } from "../../types";
 
+import { isSilent } from "../../utils/context";
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
 import { DatabaseSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
-import { getPackageExecutionArgs } from "../../utils/package-runner";
+import { getPackageRunnerPrefix } from "../../utils/package-runner";
+import { cliLog, createSpinner } from "../../utils/terminal-output";
+import {
+  type DatabaseSetupCliOptions,
+  type DbSetupMode,
+  resolveDbSetupMode,
+} from "../core/db-setup-options";
 
 type PrismaConfig = {
   databaseUrl: string;
@@ -37,28 +44,47 @@ const AVAILABLE_REGIONS = [
   { value: "us-west-1", label: "US West (N. California)" },
 ];
 
+const CREATE_DB_USER_AGENT = "aman/better-t-stack";
+
 async function setupWithCreateDb(
   serverDir: string,
   packageManager: PackageManager,
+  regionId?: string,
 ): Promise<Result<PrismaConfig, DatabaseSetupError | UserCancelledError>> {
-  log.info("Starting Prisma Postgres setup with create-db.");
+  cliLog.info("Starting Prisma Postgres setup with create-db.");
 
-  const selectedRegion = await select({
-    message: "Select your preferred region:",
-    options: AVAILABLE_REGIONS,
-    initialValue: "ap-southeast-1",
-  });
+  let selectedRegion = regionId;
 
-  if (isCancel(selectedRegion)) {
-    return userCancelled("Operation cancelled");
+  if (!selectedRegion) {
+    if (isSilent()) {
+      selectedRegion = "ap-southeast-1";
+    } else {
+      const promptedRegion = await select({
+        message: "Select your preferred region:",
+        options: AVAILABLE_REGIONS,
+        initialValue: "ap-southeast-1",
+      });
+
+      if (isCancel(promptedRegion)) {
+        return userCancelled("Operation cancelled");
+      }
+
+      selectedRegion = promptedRegion;
+    }
   }
 
-  const createDbArgs = getPackageExecutionArgs(
-    packageManager,
-    `create-db@latest --json --region ${selectedRegion} --user-agent "aman/better-t-stack"`,
-  );
+  const createDbArgs = [
+    ...getPackageRunnerPrefix(packageManager),
+    "create-db@latest",
+    "create",
+    "--json",
+    "--region",
+    selectedRegion,
+    "--user-agent",
+    CREATE_DB_USER_AGENT,
+  ];
 
-  const s = spinner();
+  const s = createSpinner();
   s.start("Creating Prisma Postgres database...");
 
   const execResult = await Result.tryPromise({
@@ -142,7 +168,7 @@ async function writeEnvFile(
 }
 
 function displayManualSetupInstructions(target: "apps/web" | "apps/server") {
-  log.info(`Manual Prisma PostgreSQL Setup Instructions:
+  cliLog.info(`Manual Prisma PostgreSQL Setup Instructions:
 
 1. Visit https://console.prisma.io and create an account
 2. Create a new PostgreSQL database from the dashboard
@@ -154,10 +180,13 @@ DATABASE_URL="your_database_url"`);
 
 export async function setupPrismaPostgres(
   config: ProjectConfig,
-  cliInput?: { manualDb?: boolean },
+  cliInput?: DatabaseSetupCliOptions,
 ): Promise<PrismaSetupResult> {
   const { packageManager, projectDir, backend } = config;
-  const manualDb = cliInput?.manualDb ?? false;
+  const setupMode = resolveDbSetupMode("prisma-postgres", {
+    manualDb: cliInput?.manualDb,
+    dbSetupOptions: cliInput?.dbSetupOptions ?? config.dbSetupOptions,
+  });
   const dbDir = path.join(projectDir, "packages/db");
   const target: "apps/web" | "apps/server" = backend === "self" ? "apps/web" : "apps/server";
 
@@ -175,36 +204,6 @@ export async function setupPrismaPostgres(
     return ensureDirResult;
   }
 
-  if (manualDb) {
-    const envResult = await writeEnvFile(projectDir, backend);
-    if (envResult.isErr()) {
-      return envResult;
-    }
-    displayManualSetupInstructions(target);
-    return Result.ok(undefined);
-  }
-
-  const setupMode = await select({
-    message: "Prisma Postgres setup: choose mode",
-    options: [
-      {
-        label: "Automatic (create-db)",
-        value: "auto",
-        hint: "Provision a database via Prisma's create-db CLI",
-      },
-      {
-        label: "Manual",
-        value: "manual",
-        hint: "Add your own DATABASE_URL later",
-      },
-    ],
-    initialValue: "auto",
-  });
-
-  if (isCancel(setupMode)) {
-    return userCancelled("Operation cancelled");
-  }
-
   if (setupMode === "manual") {
     const envResult = await writeEnvFile(projectDir, backend);
     if (envResult.isErr()) {
@@ -214,7 +213,52 @@ export async function setupPrismaPostgres(
     return Result.ok(undefined);
   }
 
-  const prismaConfigResult = await setupWithCreateDb(dbDir, packageManager);
+  let selectedSetupMode: DbSetupMode | undefined = setupMode;
+
+  if (!selectedSetupMode) {
+    if (isSilent()) {
+      selectedSetupMode = "manual";
+    } else {
+      const promptedSetupMode = await select<DbSetupMode>({
+        message: "Prisma Postgres setup: choose mode",
+        options: [
+          {
+            label: "Automatic (create-db)",
+            value: "auto",
+            hint: "Provision a database via Prisma's create-db CLI",
+          },
+          {
+            label: "Manual",
+            value: "manual",
+            hint: "Add your own DATABASE_URL later",
+          },
+        ],
+        initialValue: "auto",
+      });
+
+      if (isCancel(promptedSetupMode)) {
+        return userCancelled("Operation cancelled");
+      }
+
+      selectedSetupMode = promptedSetupMode;
+    }
+  }
+
+  if (selectedSetupMode === "manual") {
+    const envResult = await writeEnvFile(projectDir, backend);
+    if (envResult.isErr()) {
+      return envResult;
+    }
+    displayManualSetupInstructions(target);
+    return Result.ok(undefined);
+  }
+
+  const prismaConfigResult = await setupWithCreateDb(
+    dbDir,
+    packageManager,
+    cliInput?.dbSetupOptions?.prismaPostgres?.regionId ??
+      config.dbSetupOptions?.prismaPostgres?.regionId,
+  );
 
   if (prismaConfigResult.isErr()) {
     // Check for user cancellation
@@ -222,13 +266,13 @@ export async function setupPrismaPostgres(
       return prismaConfigResult;
     }
 
-    log.error(pc.red(prismaConfigResult.error.message));
+    cliLog.error(pc.red(prismaConfigResult.error.message));
     const envResult = await writeEnvFile(projectDir, backend);
     if (envResult.isErr()) {
       return envResult;
     }
     displayManualSetupInstructions(target);
-    log.info("Setup completed with manual configuration required.");
+    cliLog.info("Setup completed with manual configuration required.");
     return Result.ok(undefined);
   }
 
@@ -237,10 +281,10 @@ export async function setupPrismaPostgres(
     return envResult;
   }
 
-  log.success(pc.green("Prisma Postgres database configured successfully!"));
+  cliLog.success(pc.green("Prisma Postgres database configured successfully!"));
 
   if (prismaConfigResult.value.claimUrl) {
-    log.info(pc.blue(`Claim URL saved to .env: ${prismaConfigResult.value.claimUrl}`));
+    cliLog.info(pc.blue(`Claim URL saved to .env: ${prismaConfigResult.value.claimUrl}`));
   }
 
   return Result.ok(undefined);

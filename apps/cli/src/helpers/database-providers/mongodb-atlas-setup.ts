@@ -1,4 +1,4 @@
-import { cancel, isCancel, log, select, text } from "@clack/prompts";
+import { cancel, isCancel, select, text } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
@@ -8,6 +8,7 @@ import pc from "picocolors";
 import type { ProjectConfig } from "../../types";
 
 import { commandExists } from "../../utils/command-exists";
+import { isSilent } from "../../utils/context";
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
 import {
   DatabaseSetupError,
@@ -15,6 +16,12 @@ import {
   UserCancelledError,
   userCancelled,
 } from "../../utils/errors";
+import { cliLog } from "../../utils/terminal-output";
+import {
+  type DatabaseSetupCliOptions,
+  type DbSetupMode,
+  resolveDbSetupMode,
+} from "../core/db-setup-options";
 
 type MongoDBConfig = {
   connectionString: string;
@@ -25,9 +32,9 @@ type MongoDBSetupResult = Result<void, DatabaseSetupError | UserCancelledError>;
 async function checkAtlasCLI(): Promise<boolean> {
   const exists = await commandExists("atlas");
   if (exists) {
-    log.info("MongoDB Atlas CLI found");
+    cliLog.info("MongoDB Atlas CLI found");
   } else {
-    log.warn(pc.yellow("MongoDB Atlas CLI not found"));
+    cliLog.warn(pc.yellow("MongoDB Atlas CLI not found"));
   }
   return exists;
 }
@@ -38,7 +45,7 @@ async function initMongoDBAtlas(
   const hasAtlas = await checkAtlasCLI();
 
   if (!hasAtlas) {
-    log.info(
+    cliLog.info(
       pc.yellow(
         "Please install it from: https://www.mongodb.com/docs/atlas/cli/current/install-atlas-cli/",
       ),
@@ -46,12 +53,12 @@ async function initMongoDBAtlas(
     return databaseSetupError("mongodb-atlas", "MongoDB Atlas CLI not found");
   }
 
-  log.info("Running MongoDB Atlas setup...");
+  cliLog.info("Running MongoDB Atlas setup...");
 
   const deployResult = await Result.tryPromise({
     try: async () => {
       await $({ cwd: serverDir, stdio: "inherit" })`atlas deployments setup`;
-      log.success("MongoDB Atlas deployment ready");
+      cliLog.success("MongoDB Atlas deployment ready");
     },
     catch: (e) =>
       new DatabaseSetupError({
@@ -114,7 +121,7 @@ async function writeEnvFile(
 }
 
 function displayManualSetupInstructions() {
-  log.info(`
+  cliLog.info(`
 ${pc.green("MongoDB Atlas Manual Setup Instructions:")}
 
 1. Install Atlas CLI:
@@ -133,10 +140,13 @@ ${pc.green("MongoDB Atlas Manual Setup Instructions:")}
 
 export async function setupMongoDBAtlas(
   config: ProjectConfig,
-  cliInput?: { manualDb?: boolean },
+  cliInput?: DatabaseSetupCliOptions,
 ): Promise<MongoDBSetupResult> {
   const { projectDir, backend } = config;
-  const manualDb = cliInput?.manualDb ?? false;
+  const setupMode = resolveDbSetupMode("mongodb-atlas", {
+    manualDb: cliInput?.manualDb,
+    dbSetupOptions: cliInput?.dbSetupOptions ?? config.dbSetupOptions,
+  });
 
   const serverDir = path.join(projectDir, "packages/db");
 
@@ -154,8 +164,8 @@ export async function setupMongoDBAtlas(
     return ensureDirResult;
   }
 
-  if (manualDb) {
-    log.info("MongoDB Atlas manual setup selected");
+  if (setupMode === "manual") {
+    cliLog.info("MongoDB Atlas manual setup selected");
     const envResult = await writeEnvFile(projectDir, backend);
     if (envResult.isErr()) {
       return envResult;
@@ -164,29 +174,49 @@ export async function setupMongoDBAtlas(
     return Result.ok(undefined);
   }
 
-  const mode = await select({
-    message: "MongoDB Atlas setup: choose mode",
-    options: [
-      {
-        label: "Automatic",
-        value: "auto",
-        hint: "Automated setup with provider CLI, sets .env",
-      },
-      {
-        label: "Manual",
-        value: "manual",
-        hint: "Manual setup, add env vars yourself",
-      },
-    ],
-    initialValue: "auto",
-  });
+  let mode: DbSetupMode | undefined = setupMode;
 
-  if (isCancel(mode)) {
-    return userCancelled("Operation cancelled");
+  if (!mode) {
+    if (isSilent()) {
+      cliLog.warn(
+        pc.yellow(
+          "MongoDB Atlas automatic setup requires interactive input. Falling back to manual setup.",
+        ),
+      );
+      const envResult = await writeEnvFile(projectDir, backend);
+      if (envResult.isErr()) {
+        return envResult;
+      }
+      displayManualSetupInstructions();
+      return Result.ok(undefined);
+    }
+
+    const promptedMode = await select<DbSetupMode>({
+      message: "MongoDB Atlas setup: choose mode",
+      options: [
+        {
+          label: "Automatic",
+          value: "auto",
+          hint: "Automated setup with provider CLI, sets .env",
+        },
+        {
+          label: "Manual",
+          value: "manual",
+          hint: "Manual setup, add env vars yourself",
+        },
+      ],
+      initialValue: "auto",
+    });
+
+    if (isCancel(promptedMode)) {
+      return userCancelled("Operation cancelled");
+    }
+
+    mode = promptedMode;
   }
 
   if (mode === "manual") {
-    log.info("MongoDB Atlas manual setup selected");
+    cliLog.info("MongoDB Atlas manual setup selected");
     const envResult = await writeEnvFile(projectDir, backend);
     if (envResult.isErr()) {
       return envResult;
@@ -202,7 +232,7 @@ export async function setupMongoDBAtlas(
     if (envResult.isErr()) {
       return envResult;
     }
-    log.success(pc.green("MongoDB Atlas setup complete! Connection saved to .env file."));
+    cliLog.success(pc.green("MongoDB Atlas setup complete! Connection saved to .env file."));
     return Result.ok(undefined);
   }
 
@@ -211,7 +241,7 @@ export async function setupMongoDBAtlas(
     return mongoConfigResult;
   }
 
-  log.warn(pc.yellow("Falling back to local MongoDB configuration"));
+  cliLog.warn(pc.yellow("Falling back to local MongoDB configuration"));
   const envResult = await writeEnvFile(projectDir, backend);
   if (envResult.isErr()) {
     return envResult;

@@ -1,0 +1,273 @@
+---
+title: Agent Workflows
+description: JSON-first and schema-driven workflows for agents, scripts, and automation
+---
+
+## Overview
+
+Better-T-Stack now supports a fully JSON-first workflow for agents and automation:
+
+- Raw JSON project creation with `create-json`
+- Raw JSON addon installation with `add-json`
+- Runtime schema introspection with `schema`
+- Local stdio MCP server with `mcp`
+- Structured addon configuration with `addonOptions`
+- Structured database setup configuration with `dbSetupOptions`
+- Safe planning with `--dry-run`
+
+If you are automating the CLI from an LLM, CI job, or another tool, start here instead of the interactive prompt flow.
+
+## `create-json`
+
+Create a project from a single JSON payload instead of many flags.
+
+```bash
+create-better-t-stack create-json --input '{
+  "projectName": "my-app",
+  "frontend": ["tanstack-router"],
+  "backend": "hono",
+  "runtime": "bun",
+  "database": "postgres",
+  "orm": "drizzle",
+  "api": "trpc",
+  "auth": "none",
+  "addons": ["wxt", "mcp"],
+  "addonOptions": {
+    "wxt": { "template": "react", "devPort": 5555 },
+    "mcp": {
+      "scope": "project",
+      "servers": ["context7"],
+      "agents": ["cursor"]
+    }
+  },
+  "install": false
+}'
+```
+
+This is the best path when:
+
+- Your input already exists as structured data
+- You want to avoid shell flag expansion issues
+- You need nested addon or database setup options
+
+## `add-json`
+
+Add addons to an existing project with a single JSON payload.
+
+```bash
+create-better-t-stack add-json --input '{
+  "projectDir": "./my-app",
+  "addons": ["skills", "ultracite"],
+  "addonOptions": {
+    "skills": {
+      "scope": "project",
+      "agents": ["cursor", "codex"],
+      "selections": [
+        {
+          "source": "vercel-labs/agent-skills",
+          "skills": ["web-design-guidelines"]
+        }
+      ]
+    },
+    "ultracite": {
+      "linter": "biome",
+      "editors": ["vscode", "cursor"],
+      "agents": ["claude", "codex"]
+    }
+  },
+  "dryRun": true
+}'
+```
+
+## Runtime Schema Introspection
+
+Use the CLI itself as the source of truth for current input shapes.
+
+```bash
+create-better-t-stack schema --name all
+create-better-t-stack schema --name cli
+create-better-t-stack schema --name createInput
+create-better-t-stack schema --name addInput
+create-better-t-stack schema --name addonOptions
+create-better-t-stack schema --name dbSetupOptions
+```
+
+Useful patterns:
+
+- `schema --name cli`: inspect available commands
+- `schema --name createInput`: inspect the full create payload
+- `schema --name addonOptions`: inspect nested addon configuration
+- `schema --name dbSetupOptions`: inspect structured database setup behavior
+
+## `mcp`
+
+Run Better-T-Stack itself as a local MCP server over stdio:
+
+```bash
+npx create-better-t-stack@latest mcp
+```
+
+Exposed tools:
+
+- `bts_get_stack_guidance`
+- `bts_get_schema`
+- `bts_plan_project`
+- `bts_create_project`
+- `bts_plan_addons`
+- `bts_add_addons`
+
+This is the best path when an MCP-capable client should scaffold or modify Better-T-Stack projects without shelling out to a prompt-driven CLI flow.
+
+Recommended MCP workflow:
+
+1. Call `bts_get_stack_guidance` if the user's request is ambiguous.
+2. Call `bts_get_schema` for the exact input shape you need.
+3. Build a full explicit stack config.
+4. Call `bts_plan_project` before `bts_create_project`.
+5. For MCP execution, use `install: false` when creating projects.
+6. Call `bts_plan_addons` before `bts_add_addons`.
+
+For project creation, the MCP tools now expect a full explicit config, not a partial payload. That means the agent should provide all major stack choices such as:
+
+- `frontend`
+- `backend`
+- `runtime`
+- `database`
+- `orm`
+- `api`
+- `auth`
+- `payments`
+- `addons`
+- `examples`
+- `dbSetup`
+- `webDeploy`
+- `serverDeploy`
+- `git`
+- `packageManager`
+- `install`
+
+Important field rules:
+
+- `frontend` means app surfaces, not styling choices.
+- `addons` must be an explicit array. Use `[]` when none are requested.
+- `examples` must be an explicit array. Use `[]` when none are requested.
+- `dbSetup`, `webDeploy`, and `serverDeploy` should be explicit even when the answer is `none`.
+- `git`, `install`, and `packageManager` should always be set explicitly.
+- `install` should usually be `false` for `bts_create_project`, because dependency installation can exceed common MCP client timeouts. Run `npm install`, `pnpm install`, or `bun install` separately after scaffolding.
+- If a request is still ambiguous after reading the guidance, the agent should resolve that ambiguity before calling `bts_plan_project`.
+
+If you scaffold a project with the `mcp` addon, Better-T-Stack itself is now one of the recommended MCP servers. The addon installs it through `add-mcp` with a package runner command so the generated config does not rely on a globally installed CLI:
+
+```bash
+npx create-better-t-stack@latest mcp
+```
+
+For Bun projects, the generated config uses the equivalent `bunx create-better-t-stack@latest mcp` command. That means MCP-capable agents inside the generated project can talk back to Better-T-Stack without any extra global install, alongside other recommended docs, framework, and database MCP servers.
+
+## Structured Addon Options
+
+Prompt-driven addons can be configured up front through `addonOptions`.
+
+Supported structured addon surfaces include:
+
+- `wxt`
+- `fumadocs`
+- `opentui`
+- `mcp`
+- `ruler`
+- `skills`
+- `ultracite`
+
+Example:
+
+```json
+{
+  "addons": ["wxt", "ruler"],
+  "addonOptions": {
+    "wxt": {
+      "template": "react",
+      "devPort": 5555
+    },
+    "ruler": {
+      "assistants": ["agentsmd", "claude", "codex", "cursor"]
+    }
+  }
+}
+```
+
+Structured addon options are still persisted in `bts.jsonc`, but the printed reproducible command now stays on normal CLI flags for consistency. That means deeply nested addon or provider-specific setup options are not fully encoded in the one-line replay command.
+
+## Structured Database Setup Options
+
+`dbSetupOptions` controls how database provisioning behaves in automation.
+
+Example:
+
+```bash
+create-better-t-stack create-json --input '{
+  "projectName": "db-app",
+  "database": "postgres",
+  "orm": "drizzle",
+  "backend": "hono",
+  "runtime": "bun",
+  "api": "trpc",
+  "frontend": ["tanstack-router"],
+  "dbSetup": "neon",
+  "dbSetupOptions": {
+    "mode": "manual"
+  }
+}'
+```
+
+Current behavior:
+
+- Providers with automatic cloud provisioning default to `manual` in silent/agent flows:
+  - `turso`
+  - `neon`
+  - `prisma-postgres`
+  - `supabase`
+  - `mongodb-atlas`
+- Providers that only write local/manual config today are not forced to `manual`:
+  - `d1`
+  - `docker`
+  - `planetscale`
+
+This keeps agents from accidentally creating cloud resources unless automation explicitly opts into `auto`, while leaving local or manual-only setups unchanged.
+
+Provider-specific options are intentionally small today:
+
+- `neon.method`, `neon.projectName`, `neon.regionId`
+- `prismaPostgres.regionId`
+- `turso.databaseName`, `turso.groupName`, `turso.installCli`
+
+## Dry Runs
+
+Use `--dry-run` to validate inputs and target directories without writing files.
+
+```bash
+create-better-t-stack --yes --dry-run
+create-better-t-stack create-json --input '{"projectName":"my-app","yes":true,"dryRun":true}'
+create-better-t-stack add-json --input '{"projectDir":"./my-app","addons":["mcp"],"dryRun":true}'
+```
+
+This is especially useful for:
+
+- Planning actions before mutation
+- CI validation
+- Agent reasoning loops
+
+## Programmatic API
+
+The exported `create()` and `add()` APIs run in silent mode by default, so they benefit from the same agent-safe behavior as the JSON commands.
+
+See [Programmatic API](/docs/cli/programmatic-api) for TypeScript examples.
+
+## Stored in `bts.jsonc`
+
+Better-T-Stack persists structured configuration in `bts.jsonc`, including:
+
+- `reproducibleCommand`
+- `addonOptions`
+- `dbSetupOptions`
+
+See [`bts.jsonc`](/docs/bts-config) for the file format.

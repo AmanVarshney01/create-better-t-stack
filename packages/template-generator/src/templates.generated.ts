@@ -16,6 +16,7 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 			"!**/.next",
 			"!**/dist",
 			"!**/.turbo",
+			"!**/.nx",
 			"!**/dev-dist",
 			"!**/.zed",
 			"!**/.vscode",
@@ -3162,9 +3163,9 @@ export default function DashboardPage() {
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
 import z from "zod";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
+import { Label } from "@{{projectName}}/ui/components/label";
 import { useRouter } from "next/navigation";
 
 export default function SignInForm({
@@ -3262,14 +3263,14 @@ export default function SignInForm({
 					</form.Field>
 				</div>
 
-				<form.Subscribe>
-					{(state) => (
+				<form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+          {({ canSubmit, isSubmitting }) => (
 						<Button
 							type="submit"
 							className="w-full"
-							disabled={!state.canSubmit || state.isSubmitting}
+							disabled={!canSubmit || isSubmitting}
 						>
-							{state.isSubmitting ? "Submitting..." : "Sign In"}
+							{isSubmitting ? "Submitting..." : "Sign In"}
 						</Button>
 					)}
 				</form.Subscribe>
@@ -3292,9 +3293,9 @@ export default function SignInForm({
 import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
 import z from "zod";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
+import { Label } from "@{{projectName}}/ui/components/label";
 import { useRouter } from "next/navigation";
 
 export default function SignUpForm({
@@ -3417,14 +3418,14 @@ export default function SignUpForm({
 					</form.Field>
 				</div>
 
-				<form.Subscribe>
-					{(state) => (
+				<form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+          {({ canSubmit, isSubmitting }) => (
 						<Button
 							type="submit"
 							className="w-full"
-							disabled={!state.canSubmit || state.isSubmitting}
+							disabled={!canSubmit || isSubmitting}
 						>
-							{state.isSubmitting ? "Submitting..." : "Sign Up"}
+							{isSubmitting ? "Submitting..." : "Sign Up"}
 						</Button>
 					)}
 				</form.Subscribe>
@@ -3451,9 +3452,9 @@ export default function SignUpForm({
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@{{projectName}}/ui/components/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
-import { Button } from "./ui/button";
+import { Button } from "@{{projectName}}/ui/components/button";
 import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
@@ -3520,9 +3521,9 @@ import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import z from "zod";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
+import { Label } from "@{{projectName}}/ui/components/label";
 
 export default function SignInForm({
     onSwitchToSignUp,
@@ -3623,14 +3624,14 @@ export default function SignInForm({
                     </form.Field>
                 </div>
 
-                <form.Subscribe>
-                    {(state) => (
+                <form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+          {({ canSubmit, isSubmitting }) => (
                         <Button
                             type="submit"
                             className="w-full"
-                            disabled={!state.canSubmit || state.isSubmitting}
+                            disabled={!canSubmit || isSubmitting}
                         >
-                            {state.isSubmitting ? "Submitting..." : "Sign In"}
+                            {isSubmitting ? "Submitting..." : "Sign In"}
                         </Button>
                     )}
                 </form.Subscribe>
@@ -3654,9 +3655,9 @@ import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import z from "zod";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
+import { Label } from "@{{projectName}}/ui/components/label";
 
 export default function SignUpForm({
     onSwitchToSignIn,
@@ -3782,14 +3783,14 @@ export default function SignUpForm({
                     </form.Field>
                 </div>
 
-                <form.Subscribe>
-                    {(state) => (
+                <form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+          {({ canSubmit, isSubmitting }) => (
                         <Button
                             type="submit"
                             className="w-full"
-                            disabled={!state.canSubmit || state.isSubmitting}
+                            disabled={!canSubmit || isSubmitting}
                         >
-                            {state.isSubmitting ? "Submitting..." : "Sign Up"}
+                            {isSubmitting ? "Submitting..." : "Sign Up"}
                         </Button>
                     )}
                 </form.Subscribe>
@@ -3818,12 +3819,12 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@{{projectName}}/ui/components/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
 import { useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 
-import { Button } from "./ui/button";
+import { Button } from "@{{projectName}}/ui/components/button";
 
 export default function UserMenu() {
     const navigate = useNavigate();
@@ -3922,9 +3923,9 @@ import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import z from "zod";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
+import { Label } from "@{{projectName}}/ui/components/label";
 
 export default function SignInForm({
     onSwitchToSignUp,
@@ -4025,14 +4026,14 @@ export default function SignInForm({
                     </form.Field>
                 </div>
 
-                <form.Subscribe>
-                    {(state) => (
+                <form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+          {({ canSubmit, isSubmitting }) => (
                         <Button
                             type="submit"
                             className="w-full"
-                            disabled={!state.canSubmit || state.isSubmitting}
+                            disabled={!canSubmit || isSubmitting}
                         >
-                            {state.isSubmitting ? "Submitting..." : "Sign In"}
+                            {isSubmitting ? "Submitting..." : "Sign In"}
                         </Button>
                     )}
                 </form.Subscribe>
@@ -4056,9 +4057,9 @@ import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import z from "zod";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
+import { Label } from "@{{projectName}}/ui/components/label";
 
 export default function SignUpForm({
     onSwitchToSignIn,
@@ -4184,14 +4185,14 @@ export default function SignUpForm({
                     </form.Field>
                 </div>
 
-                <form.Subscribe>
-                    {(state) => (
+                <form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+          {({ canSubmit, isSubmitting }) => (
                         <Button
                             type="submit"
                             className="w-full"
-                            disabled={!state.canSubmit || state.isSubmitting}
+                            disabled={!canSubmit || isSubmitting}
                         >
-                            {state.isSubmitting ? "Submitting..." : "Sign Up"}
+                            {isSubmitting ? "Submitting..." : "Sign Up"}
                         </Button>
                     )}
                 </form.Subscribe>
@@ -4218,12 +4219,12 @@ export default function SignUpForm({
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@{{projectName}}/ui/components/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
 import { useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 
-import { Button } from "./ui/button";
+import { Button } from "@{{projectName}}/ui/components/button";
 
 export default function UserMenu() {
     const user = useQuery(api.auth.getCurrentUser)
@@ -8061,7 +8062,7 @@ export const authClient = createAuthClient({
 `],
   ["auth/better-auth/web/react/next/src/app/dashboard/dashboard.tsx.hbs", `"use client";
 {{#if (eq payments "polar")}}
-import { Button } from "@/components/ui/button";
+import { Button } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
 {{#if (eq api "orpc")}}
@@ -8185,9 +8186,9 @@ import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
 import z from "zod";
 import Loader from "./loader";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
+import { Label } from "@{{projectName}}/ui/components/label";
 import { useRouter } from "next/navigation";
 
 export default function SignInForm({
@@ -8290,14 +8291,14 @@ export default function SignInForm({
           </form.Field>
         </div>
 
-        <form.Subscribe>
-          {(state) => (
+        <form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+          {({ canSubmit, isSubmitting }) => (
             <Button
               type="submit"
               className="w-full"
-              disabled={!state.canSubmit || state.isSubmitting}
+              disabled={!canSubmit || isSubmitting}
             >
-              {state.isSubmitting ? "Submitting..." : "Sign In"}
+              {isSubmitting ? "Submitting..." : "Sign In"}
             </Button>
           )}
         </form.Subscribe>
@@ -8321,9 +8322,9 @@ import { useForm } from "@tanstack/react-form";
 import { toast } from "sonner";
 import z from "zod";
 import Loader from "./loader";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
+import { Label } from "@{{projectName}}/ui/components/label";
 import { useRouter } from "next/navigation";
 
 export default function SignUpForm({
@@ -8451,14 +8452,14 @@ export default function SignUpForm({
           </form.Field>
         </div>
 
-        <form.Subscribe>
-          {(state) => (
+        <form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+          {({ canSubmit, isSubmitting }) => (
             <Button
               type="submit"
               className="w-full"
-              disabled={!state.canSubmit || state.isSubmitting}
+              disabled={!canSubmit || isSubmitting}
             >
-              {state.isSubmitting ? "Submitting..." : "Sign Up"}
+              {isSubmitting ? "Submitting..." : "Sign Up"}
             </Button>
           )}
         </form.Subscribe>
@@ -8488,11 +8489,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@{{projectName}}/ui/components/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
 
-import { Button } from "./ui/button";
-import { Skeleton } from "./ui/skeleton";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Skeleton } from "@{{projectName}}/ui/components/skeleton";
 
 export default function UserMenu() {
   const router = useRouter();
@@ -8546,9 +8547,9 @@ import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import z from "zod";
 import Loader from "./loader";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
+import { Label } from "@{{projectName}}/ui/components/label";
 
 export default function SignInForm({
   onSwitchToSignUp,
@@ -8650,14 +8651,14 @@ export default function SignInForm({
           </form.Field>
         </div>
 
-        <form.Subscribe>
-          {(state) => (
+        <form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+          {({ canSubmit, isSubmitting }) => (
             <Button
               type="submit"
               className="w-full"
-              disabled={!state.canSubmit || state.isSubmitting}
+              disabled={!canSubmit || isSubmitting}
             >
-              {state.isSubmitting ? "Submitting..." : "Sign In"}
+              {isSubmitting ? "Submitting..." : "Sign In"}
             </Button>
           )}
         </form.Subscribe>
@@ -8682,9 +8683,9 @@ import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import z from "zod";
 import Loader from "./loader";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
+import { Label } from "@{{projectName}}/ui/components/label";
 
 export default function SignUpForm({
   onSwitchToSignIn,
@@ -8811,14 +8812,14 @@ export default function SignUpForm({
           </form.Field>
         </div>
 
-        <form.Subscribe>
-          {(state) => (
+        <form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+          {({ canSubmit, isSubmitting }) => (
             <Button
               type="submit"
               className="w-full"
-              disabled={!state.canSubmit || state.isSubmitting}
+              disabled={!canSubmit || isSubmitting}
             >
-              {state.isSubmitting ? "Submitting..." : "Sign Up"}
+              {isSubmitting ? "Submitting..." : "Sign Up"}
             </Button>
           )}
         </form.Subscribe>
@@ -8847,11 +8848,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@{{projectName}}/ui/components/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
 
-import { Button } from "./ui/button";
-import { Skeleton } from "./ui/skeleton";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Skeleton } from "@{{projectName}}/ui/components/skeleton";
 
 export default function UserMenu() {
   const navigate = useNavigate();
@@ -8900,7 +8901,7 @@ export default function UserMenu() {
 }
 `],
   ["auth/better-auth/web/react/react-router/src/routes/dashboard.tsx.hbs", `{{#if (eq payments "polar")}}
-import { Button } from "@/components/ui/button";
+import { Button } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
 {{#if (eq api "orpc")}}
@@ -9000,9 +9001,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import z from "zod";
 import Loader from "./loader";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
+import { Label } from "@{{projectName}}/ui/components/label";
 
 export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
   const navigate = useNavigate({
@@ -9104,14 +9105,14 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
           </form.Field>
         </div>
 
-        <form.Subscribe>
-          {(state) => (
+        <form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+          {({ canSubmit, isSubmitting }) => (
             <Button
               type="submit"
               className="w-full"
-              disabled={!state.canSubmit || state.isSubmitting}
+              disabled={!canSubmit || isSubmitting}
             >
-              {state.isSubmitting ? "Submitting..." : "Sign In"}
+              {isSubmitting ? "Submitting..." : "Sign In"}
             </Button>
           )}
         </form.Subscribe>
@@ -9136,9 +9137,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import z from "zod";
 import Loader from "./loader";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
+import { Label } from "@{{projectName}}/ui/components/label";
 
 export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
   const navigate = useNavigate({
@@ -9265,14 +9266,14 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
           </form.Field>
         </div>
 
-        <form.Subscribe>
-          {(state) => (
+        <form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+          {({ canSubmit, isSubmitting }) => (
             <Button
               type="submit"
               className="w-full"
-              disabled={!state.canSubmit || state.isSubmitting}
+              disabled={!canSubmit || isSubmitting}
             >
-              {state.isSubmitting ? "Submitting..." : "Sign Up"}
+              {isSubmitting ? "Submitting..." : "Sign Up"}
             </Button>
           )}
         </form.Subscribe>
@@ -9301,11 +9302,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@{{projectName}}/ui/components/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
 
-import { Button } from "./ui/button";
-import { Skeleton } from "./ui/skeleton";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Skeleton } from "@{{projectName}}/ui/components/skeleton";
 
 export default function UserMenu() {
   const navigate = useNavigate();
@@ -9356,7 +9357,7 @@ export default function UserMenu() {
 }
 `],
   ["auth/better-auth/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `{{#if (eq payments "polar")}}
-import { Button } from "@/components/ui/button";
+import { Button } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
 {{#if (eq api "orpc")}}
@@ -9452,9 +9453,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import z from "zod";
 import Loader from "./loader";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
+import { Label } from "@{{projectName}}/ui/components/label";
 
 export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
   const navigate = useNavigate({
@@ -9556,14 +9557,14 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
           </form.Field>
         </div>
 
-        <form.Subscribe>
-          {(state) => (
+        <form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+          {({ canSubmit, isSubmitting }) => (
             <Button
               type="submit"
               className="w-full"
-              disabled={!state.canSubmit || state.isSubmitting}
+              disabled={!canSubmit || isSubmitting}
             >
-              {state.isSubmitting ? "Submitting..." : "Sign In"}
+              {isSubmitting ? "Submitting..." : "Sign In"}
             </Button>
           )}
         </form.Subscribe>
@@ -9588,9 +9589,9 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import z from "zod";
 import Loader from "./loader";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
+import { Label } from "@{{projectName}}/ui/components/label";
 
 export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () => void }) {
   const navigate = useNavigate({
@@ -9717,14 +9718,14 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
           </form.Field>
         </div>
 
-        <form.Subscribe>
-          {(state) => (
+        <form.Subscribe selector={(state) => ({ canSubmit: state.canSubmit, isSubmitting: state.isSubmitting })}>
+          {({ canSubmit, isSubmitting }) => (
             <Button
               type="submit"
               className="w-full"
-              disabled={!state.canSubmit || state.isSubmitting}
+              disabled={!canSubmit || isSubmitting}
             >
-              {state.isSubmitting ? "Submitting..." : "Sign Up"}
+              {isSubmitting ? "Submitting..." : "Sign Up"}
             </Button>
           )}
         </form.Subscribe>
@@ -9753,11 +9754,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@{{projectName}}/ui/components/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
 
-import { Button } from "./ui/button";
-import { Skeleton } from "./ui/skeleton";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Skeleton } from "@{{projectName}}/ui/components/skeleton";
 
 export default function UserMenu() {
   const navigate = useNavigate();
@@ -9847,7 +9848,7 @@ export const authMiddleware = createMiddleware().server(
 `],
   ["auth/better-auth/web/react/tanstack-start/src/routes/dashboard.tsx.hbs", `import { getUser } from "@/functions/get-user";
 {{#if (eq payments "polar") }}
-import { Button } from "@/components/ui/button";
+import { Button } from "@{{projectName}}/ui/components/button";
 import { authClient } from "@/lib/auth-client";
 import { getPayment } from "@/functions/get-payment";
 {{/if}}
@@ -12107,6 +12108,7 @@ lerna-debug.log*
 
 # Turbo
 .turbo
+.nx
 
 # Better-T-Stack
 .alchemy
@@ -12119,7 +12121,8 @@ coverage
 *.tgz
 .cache
 tmp
-temp`],
+temp
+`],
   ["base/package.json.hbs", `{
   "name": "better-t-stack",
   "private": true,
@@ -14631,10 +14634,10 @@ const Streamdown = dynamic(
 {{else}}
 import { Streamdown } from "streamdown";
 {{/if}}
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
 
 function MessageContent({
   text,
@@ -14672,7 +14675,7 @@ export default function AIPage() {
     (m: UIMessage) => m.status === "streaming",
   );
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
     if (!text || isLoading) return;
@@ -14782,10 +14785,10 @@ const Streamdown = dynamic(
 {{else}}
 import { Streamdown } from "streamdown";
 {{/if}}
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
 import { env } from "@{{projectName}}/env/web";
 
 export default function AIPage() {
@@ -14802,7 +14805,7 @@ export default function AIPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
     if (!text) return;
@@ -14880,11 +14883,11 @@ import {
 } from "@convex-dev/agent/react";
 import { useMutation } from "convex/react";
 import { Send, Loader2 } from "lucide-react";
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, type FormEvent } from "react";
 import { Streamdown } from "streamdown";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
 
 function MessageContent({
   text,
@@ -14922,7 +14925,7 @@ const AI: React.FC = () => {
     (m: UIMessage) => m.status === "streaming",
   );
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
     if (!text || isLoading) return;
@@ -15012,15 +15015,15 @@ const AI: React.FC = () => {
 
 export default AI;
 {{else}}
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, type FormEvent } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Send } from "lucide-react";
 import { Streamdown } from "streamdown";
 import { env } from "@{{projectName}}/env/web";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
 
 const AI: React.FC = () => {
   const [input, setInput] = useState("");
@@ -15036,7 +15039,7 @@ const AI: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
     if (!text) return;
@@ -15117,11 +15120,11 @@ import {
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { Send, Loader2 } from "lucide-react";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type FormEvent } from "react";
 import { Streamdown } from "streamdown";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
 
 export const Route = createFileRoute("/ai")({
   component: RouteComponent,
@@ -15163,7 +15166,7 @@ function RouteComponent() {
     (m: UIMessage) => m.status === "streaming",
   );
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
     if (!text || isLoading) return;
@@ -15254,10 +15257,10 @@ function RouteComponent() {
 import { createFileRoute } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Input } from "@{{projectName}}/ui/components/input";
+import { Button } from "@{{projectName}}/ui/components/button";
 import { Send } from "lucide-react";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type FormEvent } from "react";
 import { Streamdown } from "streamdown";
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
@@ -15281,7 +15284,7 @@ function RouteComponent() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
     if (!text) return;
@@ -15360,11 +15363,11 @@ import {
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "convex/react";
 import { Send, Loader2 } from "lucide-react";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type FormEvent } from "react";
 import { Streamdown } from "streamdown";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
 
 export const Route = createFileRoute("/ai")({
   component: RouteComponent,
@@ -15406,7 +15409,7 @@ function RouteComponent() {
     (m: UIMessage) => m.status === "streaming",
   );
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
     if (!text || isLoading) return;
@@ -15498,14 +15501,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Send } from "lucide-react";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type FormEvent } from "react";
 import { Streamdown } from "streamdown";
 {{#unless (eq backend "self")}}
 import { env } from "@{{projectName}}/env/web";
 {{/unless}}
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@{{projectName}}/ui/components/button";
+import { Input } from "@{{projectName}}/ui/components/input";
 
 export const Route = createFileRoute("/ai")({
   component: RouteComponent,
@@ -15525,7 +15528,7 @@ function RouteComponent() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = input.trim();
     if (!text) return;
@@ -17616,16 +17619,16 @@ function handleDeleteTodo(id: number) {
 `],
   ["examples/todo/web/react/next/src/app/todos/page.tsx.hbs", `"use client"
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@{{projectName}}/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+} from "@{{projectName}}/ui/components/card";
+import { Checkbox } from "@{{projectName}}/ui/components/checkbox";
+import { Input } from "@{{projectName}}/ui/components/input";
 import { Loader2, Trash2 } from "lucide-react";
 import { useState } from "react";
 
@@ -17653,7 +17656,7 @@ export default function TodosPage() {
   const toggleTodoMutation = useMutation(api.todos.toggle);
   const deleteTodoMutation = useMutation(api.todos.deleteTodo);
 
-  const handleAddTodo = async (e: React.FormEvent) => {
+  const handleAddTodo = async (e) => {
     e.preventDefault();
     const text = newTodoText.trim();
     if (!text) return;
@@ -17712,7 +17715,7 @@ export default function TodosPage() {
     );
     {{/if}}
 
-  const handleAddTodo = (e: React.FormEvent) => {
+  const handleAddTodo = (e) => {
     e.preventDefault();
     if (newTodoText.trim()) {
       createMutation.mutate({ text: newTodoText });
@@ -17860,16 +17863,16 @@ export default function TodosPage() {
   );
 }
 `],
-  ["examples/todo/web/react/react-router/src/routes/todos.tsx.hbs", `import { Button } from "@/components/ui/button";
+  ["examples/todo/web/react/react-router/src/routes/todos.tsx.hbs", `import { Button } from "@{{projectName}}/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+} from "@{{projectName}}/ui/components/card";
+import { Checkbox } from "@{{projectName}}/ui/components/checkbox";
+import { Input } from "@{{projectName}}/ui/components/input";
 import { Loader2, Trash2 } from "lucide-react";
 import { useState } from "react";
 
@@ -17896,7 +17899,7 @@ export default function Todos() {
   const toggleTodo = useMutation(api.todos.toggle);
   const deleteTodo = useMutation(api.todos.deleteTodo);
 
-  const handleAddTodo = async (e: React.FormEvent) => {
+  const handleAddTodo = async (e) => {
     e.preventDefault();
     const text = newTodoText.trim();
     if (!text) return;
@@ -17955,7 +17958,7 @@ export default function Todos() {
     );
     {{/if}}
 
-  const handleAddTodo = (e: React.FormEvent) => {
+  const handleAddTodo = (e) => {
     e.preventDefault();
     if (newTodoText.trim()) {
       createMutation.mutate({ text: newTodoText });
@@ -18103,16 +18106,16 @@ export default function Todos() {
   );
 }
 `],
-  ["examples/todo/web/react/tanstack-router/src/routes/todos.tsx.hbs", `import { Button } from "@/components/ui/button";
+  ["examples/todo/web/react/tanstack-router/src/routes/todos.tsx.hbs", `import { Button } from "@{{projectName}}/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+} from "@{{projectName}}/ui/components/card";
+import { Checkbox } from "@{{projectName}}/ui/components/checkbox";
+import { Input } from "@{{projectName}}/ui/components/input";
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -18144,7 +18147,7 @@ function TodosRoute() {
   const toggleTodo = useMutation(api.todos.toggle);
   const deleteTodo = useMutation(api.todos.deleteTodo);
 
-  const handleAddTodo = async (e: React.FormEvent) => {
+  const handleAddTodo = async (e) => {
     e.preventDefault();
     const text = newTodoText.trim();
     if (!text) return;
@@ -18203,7 +18206,7 @@ function TodosRoute() {
     );
     {{/if}}
 
-  const handleAddTodo = (e: React.FormEvent) => {
+  const handleAddTodo = (e) => {
     e.preventDefault();
     if (newTodoText.trim()) {
       createMutation.mutate({ text: newTodoText });
@@ -18351,16 +18354,16 @@ function TodosRoute() {
   );
 }
 `],
-  ["examples/todo/web/react/tanstack-start/src/routes/todos.tsx.hbs", `import { Button } from "@/components/ui/button";
+  ["examples/todo/web/react/tanstack-start/src/routes/todos.tsx.hbs", `import { Button } from "@{{projectName}}/ui/components/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+} from "@{{projectName}}/ui/components/card";
+import { Checkbox } from "@{{projectName}}/ui/components/checkbox";
+import { Input } from "@{{projectName}}/ui/components/input";
 import { createFileRoute } from "@tanstack/react-router";
 {{#if (eq backend "convex")}}
 import { Trash2 } from "lucide-react";
@@ -18400,7 +18403,7 @@ function TodosRoute() {
   const toggleTodo = useMutation(api.todos.toggle);
   const removeTodo = useMutation(api.todos.deleteTodo);
 
-  const handleAddTodo = async (e: React.FormEvent) => {
+  const handleAddTodo = async (e) => {
     e.preventDefault();
     const text = newTodoText.trim();
     if (text) {
@@ -18479,7 +18482,7 @@ function TodosRoute() {
   );
     {{/if}}
 
-  const handleAddTodo = (e: React.FormEvent) => {
+  const handleAddTodo = (e) => {
     e.preventDefault();
     if (newTodoText.trim()) {
       createMutation.mutate({ text: newTodoText });
@@ -22728,26 +22731,21 @@ initOpenNextCloudflareForDev();
     "start": "next start"
   },
   "dependencies": {
-    "@base-ui/react": "^1.0.0",
-    "shadcn": "^3.6.2",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
+    "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
     "lucide-react": "^0.546.0",
     "next": "^16.1.1",
     "next-themes": "^0.4.6",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "sonner": "^2.0.5",
-    "tailwind-merge": "^3.3.1",
-    "tw-animate-css": "^1.3.4",
     "babel-plugin-react-compiler": "^1.0.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.10",
+    "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^20",
-    "@types/react": "^19.2.7",
+    "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",
-    "tailwindcss": "^4.1.10",
+    "tailwindcss": "^4.1.18",
     "typescript": "^5"
   }
 }
@@ -22921,13 +22919,13 @@ export default function Home() {
 import * as React from "react"
 import { Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
-import { Button } from "@/components/ui/button"
+import { Button } from "@{{projectName}}/ui/components/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@{{projectName}}/ui/components/dropdown-menu"
 
 export function ModeToggle() {
   const { setTheme } = useTheme()
@@ -22984,7 +22982,7 @@ import { queryClient } from "@/utils/trpc";
 {{/unless}}
 {{/if}}
 import { ThemeProvider } from "./theme-provider";
-import { Toaster } from "./ui/sonner";
+import { Toaster } from "@{{projectName}}/ui/components/sonner";
 
 {{#if (eq backend "convex")}}
 const convex = new ConvexReactClient(env.NEXT_PUBLIC_CONVEX_URL);
@@ -23061,6 +23059,7 @@ export function ThemeProvider({
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
+    "baseUrl": ".",
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
@@ -23078,7 +23077,8 @@ export function ThemeProvider({
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@{{projectName}}/ui/*": ["../../packages/ui/src/*"]
     }{{#if (or (eq serverDeploy "cloudflare") (eq webDeploy "cloudflare"))}},
     "types": [
       "@cloudflare/workers-types"
@@ -23109,28 +23109,23 @@ export function ThemeProvider({
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
-    "@base-ui/react": "^1.0.0",
-    "shadcn": "^3.6.2",
+    "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
     "@react-router/fs-routes": "^7.10.1",
     "@react-router/node": "^7.10.1",
     "@react-router/serve": "^7.10.1",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
     "isbot": "^5.1.28",
-    "lucide-react": "^0.511.0",
+    "lucide-react": "^0.546.0",
     "next-themes": "^0.4.6",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "react-router": "^7.10.1",
-    "sonner": "^2.0.3",
-    "tailwind-merge": "^3.3.0",
-    "tw-animate-css": "^1.3.2"
+    "sonner": "^2.0.5"
   },
   "devDependencies": {
     "@react-router/dev": "^7.10.1",
     "@tailwindcss/vite": "^4.1.18",
     "@types/node": "^20",
-    "@types/react": "~19.2.7",
+    "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",
     "react-router-devtools": "^1.1.0",
     "tailwindcss": "^4.1.18",
@@ -23150,13 +23145,13 @@ export default {
 `],
   ["frontend/react/react-router/src/components/mode-toggle.tsx.hbs", `import { Moon, Sun } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@{{projectName}}/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@{{projectName}}/ui/components/dropdown-menu";
 import { useTheme } from "@/components/theme-provider";
 
 export function ModeToggle() {
@@ -23202,7 +23197,7 @@ import type { Route } from "./+types/root";
 import "./index.css";
 import Header from "./components/header";
 import { ThemeProvider } from "./components/theme-provider";
-import { Toaster } from "./components/ui/sonner";
+import { Toaster } from "@{{projectName}}/ui/components/sonner";
 
 {{#if (eq backend "convex")}}
 import { ConvexReactClient } from "convex/react";
@@ -23489,7 +23484,8 @@ export default function Home() {
     "rootDirs": [".", "./.react-router/types"],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@{{projectName}}/ui/*": ["../../packages/ui/src/*"]
     },
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,
@@ -23540,42 +23536,37 @@ export default defineConfig({
 	},
 	"dependencies": {
         "@hookform/resolvers": "^5.1.1",
-        "@base-ui/react": "^1.0.0",
-        "shadcn": "^3.6.2",
-		"@tailwindcss/vite": "^4.0.15",
+        "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
+		"@tailwindcss/vite": "^4.1.18",
 		"@tanstack/react-router": "^1.141.1",
-		"class-variance-authority": "^0.7.1",
-		"clsx": "^2.1.1",
-		"lucide-react": "^0.473.0",
+		"lucide-react": "^0.546.0",
         "next-themes": "^0.4.6",
-		"react": "19.2.3",
-		"react-dom": "19.2.3",
-        "sonner": "^2.0.5",
-		"tailwind-merge": "^3.3.1",
-		"tw-animate-css": "^1.2.5"
+		"react": "^19.2.3",
+		"react-dom": "^19.2.3",
+        "sonner": "^2.0.5"
 	},
 	"devDependencies": {
 		"@tanstack/react-router-devtools": "^1.141.1",
 		"@tanstack/router-plugin": "^1.141.1",
 		"@types/node": "^22.13.14",
-		"@types/react": "19.2.7",
-		"@types/react-dom": "19.2.3",
+		"@types/react": "^19.2.10",
+		"@types/react-dom": "^19.2.3",
 		"@vitejs/plugin-react": "^4.3.4",
 		"postcss": "^8.5.3",
-		"tailwindcss": "^4.0.15",
+		"tailwindcss": "^4.1.18",
 		"vite": "^6.2.2"
 	}
 }
 `],
   ["frontend/react/tanstack-router/src/components/mode-toggle.tsx.hbs", `import { Moon, Sun } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@{{projectName}}/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@{{projectName}}/ui/components/dropdown-menu";
 import { useTheme } from "@/components/theme-provider";
 
 export function ModeToggle() {
@@ -23702,7 +23693,7 @@ if (!rootElement.innerHTML) {
 `],
   ["frontend/react/tanstack-router/src/routes/__root.tsx.hbs", `import Header from "@/components/header";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@{{projectName}}/ui/components/sonner";
 {{#if (eq api "orpc")}}
 import { link, orpc } from "@/utils/orpc";
 import type { QueryClient } from "@tanstack/react-query";
@@ -23904,7 +23895,8 @@ function HomeComponent() {
     "rootDirs": ["."],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@{{projectName}}/ui/*": ["../../packages/ui/src/*"]
     }
   }
 }
@@ -23940,32 +23932,27 @@ export default defineConfig({
     "dev": "vite dev"
   },
   "dependencies": {
-    "@base-ui/react": "^1.0.0",
-    "shadcn": "^3.6.2",
-    "@tailwindcss/vite": "^4.1.8",
+    "@{{projectName}}/ui": "{{#if (eq packageManager "npm")}}*{{else}}workspace:*{{/if}}",
+    "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-query": "^5.80.6",
     "@tanstack/react-router": "^1.141.1",
     "@tanstack/react-router-with-query": "^1.130.17",
     "@tanstack/react-start": "^1.141.1",
     "@tanstack/router-plugin": "^1.141.1",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.525.0",
+    "lucide-react": "^0.546.0",
     "next-themes": "^0.4.6",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
-    "sonner": "^2.0.3",
-    "tailwindcss": "^4.1.3",
-    "tailwind-merge": "^3.3.1",
-    "tw-animate-css": "^1.2.5",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "sonner": "^2.0.5",
+    "tailwindcss": "^4.1.18",
     "vite-tsconfig-paths": "^5.1.4"
   },
   "devDependencies": {
     "@tanstack/react-router-devtools": "^1.141.1",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.2.0",
-    "@types/react": "19.2.7",
-    "@types/react-dom": "19.2.3",
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.0.4",
     "jsdom": "^26.0.0",
     "vite": "^7.0.2",
@@ -24122,7 +24109,7 @@ declare module "@tanstack/react-router" {
 	}
 }
 `],
-  ["frontend/react/tanstack-start/src/routes/__root.tsx.hbs", `import { Toaster } from "@/components/ui/sonner";
+  ["frontend/react/tanstack-start/src/routes/__root.tsx.hbs", `import { Toaster } from "@{{projectName}}/ui/components/sonner";
 {{#unless (eq backend "convex")}} {{#unless (eq api "none")}}
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 {{/unless}} {{/unless}}
@@ -24441,7 +24428,8 @@ function HomeComponent() {
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@{{projectName}}/ui/*": ["../../packages/ui/src/*"]
     }
   }
 }
@@ -24530,14 +24518,14 @@ dev-dist
 
 .open-next
 `],
-  ["frontend/react/web-base/components.json", `{
+  ["frontend/react/web-base/components.json.hbs", `{
   "$schema": "https://ui.shadcn.com/schema.json",
   "style": "base-lyra",
-  "rsc": false,
+  "rsc": {{#if (includes frontend "next")}}true{{else}}false{{/if}},
   "tsx": true,
   "tailwind": {
     "config": "",
-    "css": "src/index.css",
+    "css": "../../packages/ui/src/styles/globals.css",
     "baseColor": "neutral",
     "cssVariables": true,
     "prefix": ""
@@ -24545,8 +24533,8 @@ dev-dist
   "iconLibrary": "lucide",
   "aliases": {
     "components": "@/components",
-    "utils": "@/lib/utils",
-    "ui": "@/components/ui",
+    "utils": "@{{projectName}}/ui/lib/utils",
+    "ui": "@{{projectName}}/ui/components",
     "lib": "@/lib",
     "hooks": "@/hooks"
   },
@@ -24644,697 +24632,10 @@ export default function Loader() {
   );
 }
 `],
-  ["frontend/react/web-base/src/components/ui/button.tsx.hbs", `import { Button as ButtonPrimitive } from '@base-ui/react/button'
-import {  cva } from 'class-variance-authority'
-import type {VariantProps} from 'class-variance-authority';
-
-import { cn } from '@/lib/utils'
-
-const buttonVariants = cva(
-  "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 rounded-none border border-transparent bg-clip-padding text-xs font-medium focus-visible:ring-1 aria-invalid:ring-1 [&_svg:not([class*='size-'])]:size-4 inline-flex items-center justify-center whitespace-nowrap transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none shrink-0 [&_svg]:shrink-0 outline-none group/button select-none",
-  {
-    variants: {
-      variant: {
-        default: 'bg-primary text-primary-foreground [a]:hover:bg-primary/80',
-        outline:
-          'border-border bg-background hover:bg-muted hover:text-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 aria-expanded:bg-muted aria-expanded:text-foreground',
-        secondary:
-          'bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground',
-        ghost:
-          'hover:bg-muted hover:text-foreground dark:hover:bg-muted/50 aria-expanded:bg-muted aria-expanded:text-foreground',
-        destructive:
-          'bg-destructive/10 hover:bg-destructive/20 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/20 text-destructive focus-visible:border-destructive/40 dark:hover:bg-destructive/30',
-        link: 'text-primary underline-offset-4 hover:underline',
-      },
-      size: {
-        default:
-          'h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2',
-        xs: "h-6 gap-1 rounded-none px-2 text-xs has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-7 gap-1 rounded-none px-2.5 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
-        lg: 'h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3',
-        icon: 'size-8',
-        'icon-xs': "size-6 rounded-none [&_svg:not([class*='size-'])]:size-3",
-        'icon-sm': 'size-7 rounded-none',
-        'icon-lg': 'size-9',
-      },
-    },
-    defaultVariants: {
-      variant: 'default',
-      size: 'default',
-    },
-  },
-)
-
-function Button({
-  className,
-  variant = 'default',
-  size = 'default',
-  ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
-  return (
-    <ButtonPrimitive
-      data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
-  )
-}
-
-export { Button, buttonVariants }
-`],
-  ["frontend/react/web-base/src/components/ui/card.tsx.hbs", `import * as React from 'react'
-
-import { cn } from '@/lib/utils'
-
-function Card({
-  className,
-  size = 'default',
-  ...props
-}: React.ComponentProps<'div'> & { size?: 'default' | 'sm' }) {
-  return (
-    <div
-      data-slot="card"
-      data-size={size}
-      className={cn(
-        'ring-foreground/10 bg-card text-card-foreground gap-4 overflow-hidden rounded-none py-4 text-xs/relaxed ring-1 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-2 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-none *:[img:last-child]:rounded-none group/card flex flex-col',
-        className,
-      )}
-      {...props}
-    />
-  )
-}
-
-function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
-      data-slot="card-header"
-      className={cn(
-        'gap-1 rounded-none px-4 group-data-[size=sm]/card:px-3 [.border-b]:pb-4 group-data-[size=sm]/card:[.border-b]:pb-3 group/card-header @container/card-header grid auto-rows-min items-start has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto]',
-        className,
-      )}
-      {...props}
-    />
-  )
-}
-
-function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
-      data-slot="card-title"
-      className={cn(
-        'text-sm font-medium group-data-[size=sm]/card:text-sm',
-        className,
-      )}
-      {...props}
-    />
-  )
-}
-
-function CardDescription({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
-      data-slot="card-description"
-      className={cn('text-muted-foreground text-xs/relaxed', className)}
-      {...props}
-    />
-  )
-}
-
-function CardAction({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
-      data-slot="card-action"
-      className={cn(
-        'col-start-2 row-span-2 row-start-1 self-start justify-self-end',
-        className,
-      )}
-      {...props}
-    />
-  )
-}
-
-function CardContent({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
-      data-slot="card-content"
-      className={cn('px-4 group-data-[size=sm]/card:px-3', className)}
-      {...props}
-    />
-  )
-}
-
-function CardFooter({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
-      data-slot="card-footer"
-      className={cn(
-        'rounded-none border-t p-4 group-data-[size=sm]/card:p-3 flex items-center',
-        className,
-      )}
-      {...props}
-    />
-  )
-}
-
-export {
-  Card,
-  CardHeader,
-  CardFooter,
-  CardTitle,
-  CardAction,
-  CardDescription,
-  CardContent,
-}
-`],
-  ["frontend/react/web-base/src/components/ui/checkbox.tsx.hbs", `import { Checkbox as CheckboxPrimitive } from '@base-ui/react/checkbox'
-
-import { CheckIcon } from 'lucide-react'
-import { cn } from '@/lib/utils'
-
-function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
-  return (
-    <CheckboxPrimitive.Root
-      data-slot="checkbox"
-      className={cn(
-        'border-input dark:bg-input/30 data-checked:bg-primary data-checked:text-primary-foreground dark:data-checked:bg-primary data-checked:border-primary aria-invalid:aria-checked:border-primary aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 flex size-4 items-center justify-center rounded-none border transition-colors group-has-disabled/field:opacity-50 focus-visible:ring-1 aria-invalid:ring-1 peer relative shrink-0 outline-none after:absolute after:-inset-x-3 after:-inset-y-2 disabled:cursor-not-allowed disabled:opacity-50',
-        className,
-      )}
-      {...props}
-    >
-      <CheckboxPrimitive.Indicator
-        data-slot="checkbox-indicator"
-        className="[&>svg]:size-3.5 grid place-content-center text-current transition-none"
-      >
-        <CheckIcon />
-      </CheckboxPrimitive.Indicator>
-    </CheckboxPrimitive.Root>
-  )
-}
-
-export { Checkbox }
-`],
-  ["frontend/react/web-base/src/components/ui/dropdown-menu.tsx.hbs", `import * as React from 'react'
-import { Menu as MenuPrimitive } from '@base-ui/react/menu'
-
-import { CheckIcon, ChevronRightIcon } from 'lucide-react'
-import { cn } from '@/lib/utils'
-
-function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
-  return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />
-}
-
-function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
-  return <MenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />
-}
-
-function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
-  return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
-}
-
-function DropdownMenuContent({
-  align = 'start',
-  alignOffset = 0,
-  side = 'bottom',
-  sideOffset = 4,
-  className,
-  ...props
-}: MenuPrimitive.Popup.Props &
-  Pick<
-    MenuPrimitive.Positioner.Props,
-    'align' | 'alignOffset' | 'side' | 'sideOffset'
-  >) {
-  return (
-    <MenuPrimitive.Portal>
-      <MenuPrimitive.Positioner
-        className="isolate z-50 outline-none"
-        align={align}
-        alignOffset={alignOffset}
-        side={side}
-        sideOffset={sideOffset}
-      >
-        <MenuPrimitive.Popup
-          data-slot="dropdown-menu-content"
-          className={cn(
-            'data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ring-foreground/10 bg-popover text-popover-foreground min-w-32 rounded-none shadow-md ring-1 duration-100 z-50 max-h-(--available-height) w-(--anchor-width) origin-(--transform-origin) overflow-x-hidden overflow-y-auto outline-none data-closed:overflow-hidden',
-            className,
-          )}
-          {...props}
-        />
-      </MenuPrimitive.Positioner>
-    </MenuPrimitive.Portal>
-  )
-}
-
-function DropdownMenuGroup({ ...props }: MenuPrimitive.Group.Props) {
-  return <MenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />
-}
-
-function DropdownMenuLabel({
-  className,
-  inset,
-  ...props
-}: MenuPrimitive.GroupLabel.Props & {
-  inset?: boolean
-}) {
-  return (
-    <MenuPrimitive.GroupLabel
-      data-slot="dropdown-menu-label"
-      data-inset={inset}
-      className={cn(
-        'text-muted-foreground px-2 py-2 text-xs data-[inset]:pl-8',
-        className,
-      )}
-      {...props}
-    />
-  )
-}
-
-function DropdownMenuItem({
-  className,
-  inset,
-  variant = 'default',
-  ...props
-}: MenuPrimitive.Item.Props & {
-  inset?: boolean
-  variant?: 'default' | 'destructive'
-}) {
-  return (
-    <MenuPrimitive.Item
-      data-slot="dropdown-menu-item"
-      data-inset={inset}
-      data-variant={variant}
-      className={cn(
-        "focus:bg-accent focus:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:text-destructive not-data-[variant=destructive]:focus:**:text-accent-foreground gap-2 rounded-none px-2 py-2 text-xs [&_svg:not([class*='size-'])]:size-4 group/dropdown-menu-item relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0",
-        className,
-      )}
-      {...props}
-    />
-  )
-}
-
-function DropdownMenuSub({ ...props }: MenuPrimitive.SubmenuRoot.Props) {
-  return <MenuPrimitive.SubmenuRoot data-slot="dropdown-menu-sub" {...props} />
-}
-
-function DropdownMenuSubTrigger({
-  className,
-  inset,
-  children,
-  ...props
-}: MenuPrimitive.SubmenuTrigger.Props & {
-  inset?: boolean
-}) {
-  return (
-    <MenuPrimitive.SubmenuTrigger
-      data-slot="dropdown-menu-sub-trigger"
-      data-inset={inset}
-      className={cn(
-        "focus:bg-accent focus:text-accent-foreground data-open:bg-accent data-open:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground gap-2 rounded-none px-2 py-2 text-xs [&_svg:not([class*='size-'])]:size-4 flex cursor-default items-center outline-hidden select-none data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-      <ChevronRightIcon className="ml-auto" />
-    </MenuPrimitive.SubmenuTrigger>
-  )
-}
-
-function DropdownMenuSubContent({
-  align = 'start',
-  alignOffset = -3,
-  side = 'right',
-  sideOffset = 0,
-  className,
-  ...props
-}: React.ComponentProps<typeof DropdownMenuContent>) {
-  return (
-    <DropdownMenuContent
-      data-slot="dropdown-menu-sub-content"
-      className={cn(
-        'data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 ring-foreground/10 bg-popover text-popover-foreground min-w-[96px] rounded-none shadow-lg ring-1 duration-100 w-auto',
-        className,
-      )}
-      align={align}
-      alignOffset={alignOffset}
-      side={side}
-      sideOffset={sideOffset}
-      {...props}
-    />
-  )
-}
-
-function DropdownMenuCheckboxItem({
-  className,
-  children,
-  checked,
-  ...props
-}: MenuPrimitive.CheckboxItem.Props) {
-  return (
-    <MenuPrimitive.CheckboxItem
-      data-slot="dropdown-menu-checkbox-item"
-      className={cn(
-        "focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground gap-2 rounded-none py-2 pr-8 pl-2 text-xs [&_svg:not([class*='size-'])]:size-4 relative flex cursor-default items-center outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
-        className,
-      )}
-      checked={checked}
-      {...props}
-    >
-      <span
-        className="pointer-events-none absolute right-2 flex items-center justify-center pointer-events-none"
-        data-slot="dropdown-menu-checkbox-item-indicator"
-      >
-        <MenuPrimitive.CheckboxItemIndicator>
-          <CheckIcon />
-        </MenuPrimitive.CheckboxItemIndicator>
-      </span>
-      {children}
-    </MenuPrimitive.CheckboxItem>
-  )
-}
-
-function DropdownMenuRadioGroup({ ...props }: MenuPrimitive.RadioGroup.Props) {
-  return (
-    <MenuPrimitive.RadioGroup
-      data-slot="dropdown-menu-radio-group"
-      {...props}
-    />
-  )
-}
-
-function DropdownMenuRadioItem({
-  className,
-  children,
-  ...props
-}: MenuPrimitive.RadioItem.Props) {
-  return (
-    <MenuPrimitive.RadioItem
-      data-slot="dropdown-menu-radio-item"
-      className={cn(
-        "focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground gap-2 rounded-none py-2 pr-8 pl-2 text-xs [&_svg:not([class*='size-'])]:size-4 relative flex cursor-default items-center outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
-        className,
-      )}
-      {...props}
-    >
-      <span
-        className="pointer-events-none absolute right-2 flex items-center justify-center pointer-events-none"
-        data-slot="dropdown-menu-radio-item-indicator"
-      >
-        <MenuPrimitive.RadioItemIndicator>
-          <CheckIcon />
-        </MenuPrimitive.RadioItemIndicator>
-      </span>
-      {children}
-    </MenuPrimitive.RadioItem>
-  )
-}
-
-function DropdownMenuSeparator({
-  className,
-  ...props
-}: MenuPrimitive.Separator.Props) {
-  return (
-    <MenuPrimitive.Separator
-      data-slot="dropdown-menu-separator"
-      className={cn('bg-border -mx-1 h-px', className)}
-      {...props}
-    />
-  )
-}
-
-function DropdownMenuShortcut({
-  className,
-  ...props
-}: React.ComponentProps<'span'>) {
-  return (
-    <span
-      data-slot="dropdown-menu-shortcut"
-      className={cn(
-        'text-muted-foreground group-focus/dropdown-menu-item:text-accent-foreground ml-auto text-xs tracking-widest',
-        className,
-      )}
-      {...props}
-    />
-  )
-}
-
-export {
-  DropdownMenu,
-  DropdownMenuPortal,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
-  DropdownMenuItem,
-  DropdownMenuCheckboxItem,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
-}
-`],
-  ["frontend/react/web-base/src/components/ui/input.tsx.hbs", `import * as React from 'react'
-import { Input as InputPrimitive } from '@base-ui/react/input'
-
-import { cn } from '@/lib/utils'
-
-function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
-  return (
-    <InputPrimitive
-      type={type}
-      data-slot="input"
-      className={cn(
-        'dark:bg-input/30 border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 disabled:bg-input/50 dark:disabled:bg-input/80 h-8 rounded-none border bg-transparent px-2.5 py-1 text-xs transition-colors file:h-6 file:text-xs file:font-medium focus-visible:ring-1 aria-invalid:ring-1 md:text-xs file:text-foreground placeholder:text-muted-foreground w-full min-w-0 outline-none file:inline-flex file:border-0 file:bg-transparent disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-        className,
-      )}
-      {...props}
-    />
-  )
-}
-
-export { Input }
-`],
-  ["frontend/react/web-base/src/components/ui/label.tsx.hbs", `'use client'
-
-import * as React from 'react'
-
-import { cn } from '@/lib/utils'
-
-function Label({ className, ...props }: React.ComponentProps<'label'>) {
-  return (
-    <label
-      data-slot="label"
-      className={cn(
-        'gap-2 text-xs leading-none group-data-[disabled=true]:opacity-50 peer-disabled:opacity-50 flex items-center select-none group-data-[disabled=true]:pointer-events-none peer-disabled:cursor-not-allowed',
-        className,
-      )}
-      {...props}
-    />
-  )
-}
-
-export { Label }
-`],
-  ["frontend/react/web-base/src/components/ui/skeleton.tsx.hbs", `import { cn } from "@/lib/utils";
-
-function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      data-slot="skeleton"
-      className={cn("bg-muted rounded-none animate-pulse", className)}
-      {...props}
-    />
-  );
-}
-
-export { Skeleton };
-`],
-  ["frontend/react/web-base/src/components/ui/sonner.tsx.hbs", `import { useTheme } from 'next-themes'
-import { Toaster as Sonner  } from 'sonner'
-import {
-  CircleCheckIcon,
-  InfoIcon,
-  Loader2Icon,
-  OctagonXIcon,
-  TriangleAlertIcon,
-} from 'lucide-react'
-import type {ToasterProps} from 'sonner';
-
-const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = 'system' } = useTheme()
-
-  return (
-    <Sonner
-      theme={theme as ToasterProps['theme']}
-      className="toaster group"
-      icons=\\{{
-        success: <CircleCheckIcon className="size-4" />,
-        info: <InfoIcon className="size-4" />,
-        warning: <TriangleAlertIcon className="size-4" />,
-        error: <OctagonXIcon className="size-4" />,
-        loading: <Loader2Icon className="size-4 animate-spin" />,
-      }}
-      style={
-        {
-          '--normal-bg': 'var(--popover)',
-          '--normal-text': 'var(--popover-foreground)',
-          '--normal-border': 'var(--border)',
-          '--border-radius': 'var(--radius)',
-        } as React.CSSProperties
-      }
-      toastOptions=\\{{
-        classNames: {
-          toast: 'cn-toast',
-        },
-      }}
-      {...props}
-    />
-  )
-}
-
-export { Toaster }
-`],
-  ["frontend/react/web-base/src/index.css.hbs", `@import 'tailwindcss';
-@import 'tw-animate-css';
-@import 'shadcn/tailwind.css';
+  ["frontend/react/web-base/src/index.css.hbs", `@import '@{{projectName}}/ui/globals.css';
 {{#if (includes examples "ai")}}
 @source "../node_modules/streamdown/dist/*.js";
 {{/if}}
-
-@custom-variant dark (&:is(.dark *));
-
-:root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.58 0.22 27);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.87 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.371 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
-
-@theme inline {
-  --font-sans: 'Inter Variable', sans-serif;
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --color-foreground: var(--foreground);
-  --color-background: var(--background);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply font-sans bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
-  }
-}
-`],
-  ["frontend/react/web-base/src/lib/utils.ts.hbs", `import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 `],
   ["frontend/solid/_gitignore", `node_modules
 .DS_Store
@@ -26542,6 +25843,793 @@ await app.finalize();
   }
 }
 `],
+  ["packages/ui/components.json.hbs", `{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "base-lyra",
+  "rsc": {{#if (includes frontend "next")}}true{{else}}false{{/if}},
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/styles/globals.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "iconLibrary": "lucide",
+  "aliases": {
+    "components": "@{{projectName}}/ui/components",
+    "utils": "@{{projectName}}/ui/lib/utils",
+    "hooks": "@{{projectName}}/ui/hooks",
+    "lib": "@{{projectName}}/ui/lib",
+    "ui": "@{{projectName}}/ui/components"
+  },
+  "menuColor": "default",
+  "menuAccent": "subtle",
+  "registries": {}
+}
+`],
+  ["packages/ui/package.json.hbs", `{
+  "name": "@{{projectName}}/ui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./globals.css": "./src/styles/globals.css",
+    "./lib/*": "./src/lib/*.ts",
+    "./components/*": "./src/components/*.tsx",
+    "./hooks/*": "./src/hooks/*.ts",
+    "./postcss.config": "./postcss.config.mjs"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.0.0",
+    "shadcn": "^3.6.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.546.0",
+    "next-themes": "^0.4.6",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "sonner": "^2.0.5",
+    "tailwind-merge": "^3.3.1",
+    "tw-animate-css": "^1.3.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
+  }
+}
+`],
+  ["packages/ui/postcss.config.mjs.hbs", `export default {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+`],
+  ["packages/ui/src/components/button.tsx.hbs", `import { Button as ButtonPrimitive } from "@base-ui/react/button"
+import { cva, type VariantProps } from "class-variance-authority"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+
+const buttonVariants = cva(
+  "group/button inline-flex shrink-0 items-center justify-center rounded-none border border-transparent bg-clip-padding text-xs font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-1 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
+        outline:
+          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+        ghost:
+          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+        destructive:
+          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default:
+          "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
+        xs: "h-6 gap-1 rounded-none px-2 text-xs has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
+        sm: "h-7 gap-1 rounded-none px-2.5 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
+        lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3",
+        icon: "size-8",
+        "icon-xs": "size-6 rounded-none [&_svg:not([class*='size-'])]:size-3",
+        "icon-sm": "size-7 rounded-none",
+        "icon-lg": "size-9",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
+
+function Button({
+  className,
+  variant = "default",
+  size = "default",
+  ...props
+}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+  return (
+    <ButtonPrimitive
+      data-slot="button"
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
+  )
+}
+
+export { Button, buttonVariants }
+`],
+  ["packages/ui/src/components/card.tsx.hbs", `import * as React from "react"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+
+function Card({
+  className,
+  size = "default",
+  ...props
+}: React.ComponentProps<"div"> & { size?: "default" | "sm" }) {
+  return (
+    <div
+      data-slot="card"
+      data-size={size}
+      className={cn(
+        "group/card flex flex-col gap-4 overflow-hidden rounded-none bg-card py-4 text-xs/relaxed text-card-foreground ring-1 ring-foreground/10 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-2 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0 *:[img:first-child]:rounded-none *:[img:last-child]:rounded-none",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-header"
+      className={cn(
+        "group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-none px-4 group-data-[size=sm]/card:px-3 has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-4 group-data-[size=sm]/card:[.border-b]:pb-3",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-title"
+      className={cn(
+        "text-sm font-medium group-data-[size=sm]/card:text-sm",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-description"
+      className={cn("text-xs/relaxed text-muted-foreground", className)}
+      {...props}
+    />
+  )
+}
+
+function CardAction({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-action"
+      className={cn(
+        "col-start-2 row-span-2 row-start-1 self-start justify-self-end",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function CardContent({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-content"
+      className={cn("px-4 group-data-[size=sm]/card:px-3", className)}
+      {...props}
+    />
+  )
+}
+
+function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="card-footer"
+      className={cn(
+        "flex items-center rounded-none border-t p-4 group-data-[size=sm]/card:p-3",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardAction,
+  CardDescription,
+  CardContent,
+}
+`],
+  ["packages/ui/src/components/checkbox.tsx.hbs", `"use client"
+
+import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+import { CheckIcon } from "lucide-react"
+
+function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
+  return (
+    <CheckboxPrimitive.Root
+      data-slot="checkbox"
+      className={cn(
+        "peer relative flex size-4 shrink-0 items-center justify-center rounded-none border border-input transition-colors outline-none group-has-disabled/field:opacity-50 after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-1 aria-invalid:ring-destructive/20 aria-invalid:aria-checked:border-primary dark:bg-input/30 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground dark:data-checked:bg-primary",
+        className
+      )}
+      {...props}
+    >
+      <CheckboxPrimitive.Indicator
+        data-slot="checkbox-indicator"
+        className="grid place-content-center text-current transition-none [&>svg]:size-3.5"
+      >
+        <CheckIcon />
+      </CheckboxPrimitive.Indicator>
+    </CheckboxPrimitive.Root>
+  )
+}
+
+export { Checkbox }
+`],
+  ["packages/ui/src/components/dropdown-menu.tsx.hbs", `"use client"
+
+import * as React from "react"
+import { Menu as MenuPrimitive } from "@base-ui/react/menu"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+import { ChevronRightIcon, CheckIcon } from "lucide-react"
+
+function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
+  return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />
+}
+
+function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {
+  return <MenuPrimitive.Portal data-slot="dropdown-menu-portal" {...props} />
+}
+
+function DropdownMenuTrigger({ ...props }: MenuPrimitive.Trigger.Props) {
+  return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
+}
+
+function DropdownMenuContent({
+  align = "start",
+  alignOffset = 0,
+  side = "bottom",
+  sideOffset = 4,
+  className,
+  ...props
+}: MenuPrimitive.Popup.Props &
+  Pick<
+    MenuPrimitive.Positioner.Props,
+    "align" | "alignOffset" | "side" | "sideOffset"
+  >) {
+  return (
+    <MenuPrimitive.Portal>
+      <MenuPrimitive.Positioner
+        className="isolate z-50 outline-none"
+        align={align}
+        alignOffset={alignOffset}
+        side={side}
+        sideOffset={sideOffset}
+      >
+        <MenuPrimitive.Popup
+          data-slot="dropdown-menu-content"
+          className={cn(
+            "z-50 max-h-(--available-height) w-(--anchor-width) min-w-32 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-none bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 outline-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:overflow-hidden data-closed:fade-out-0 data-closed:zoom-out-95",
+            className
+          )}
+          {...props}
+        />
+      </MenuPrimitive.Positioner>
+    </MenuPrimitive.Portal>
+  )
+}
+
+function DropdownMenuGroup({ ...props }: MenuPrimitive.Group.Props) {
+  return <MenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />
+}
+
+function DropdownMenuLabel({
+  className,
+  inset,
+  ...props
+}: MenuPrimitive.GroupLabel.Props & {
+  inset?: boolean
+}) {
+  return (
+    <MenuPrimitive.GroupLabel
+      data-slot="dropdown-menu-label"
+      data-inset={inset}
+      className={cn(
+        "px-2 py-2 text-xs text-muted-foreground data-inset:pl-7",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function DropdownMenuItem({
+  className,
+  inset,
+  variant = "default",
+  ...props
+}: MenuPrimitive.Item.Props & {
+  inset?: boolean
+  variant?: "default" | "destructive"
+}) {
+  return (
+    <MenuPrimitive.Item
+      data-slot="dropdown-menu-item"
+      data-inset={inset}
+      data-variant={variant}
+      className={cn(
+        "group/dropdown-menu-item relative flex cursor-default items-center gap-2 rounded-none px-2 py-2 text-xs outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-inset:pl-7 data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 data-[variant=destructive]:focus:text-destructive dark:data-[variant=destructive]:focus:bg-destructive/20 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-[variant=destructive]:*:[svg]:text-destructive",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+function DropdownMenuSub({ ...props }: MenuPrimitive.SubmenuRoot.Props) {
+  return <MenuPrimitive.SubmenuRoot data-slot="dropdown-menu-sub" {...props} />
+}
+
+function DropdownMenuSubTrigger({
+  className,
+  inset,
+  children,
+  ...props
+}: MenuPrimitive.SubmenuTrigger.Props & {
+  inset?: boolean
+}) {
+  return (
+    <MenuPrimitive.SubmenuTrigger
+      data-slot="dropdown-menu-sub-trigger"
+      data-inset={inset}
+      className={cn(
+        "flex cursor-default items-center gap-2 rounded-none px-2 py-2 text-xs outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-inset:pl-7 data-popup-open:bg-accent data-popup-open:text-accent-foreground data-open:bg-accent data-open:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        className
+      )}
+      {...props}
+    >
+      {children}
+      <ChevronRightIcon className="ml-auto" />
+    </MenuPrimitive.SubmenuTrigger>
+  )
+}
+
+function DropdownMenuSubContent({
+  align = "start",
+  alignOffset = -3,
+  side = "right",
+  sideOffset = 0,
+  className,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuContent>) {
+  return (
+    <DropdownMenuContent
+      data-slot="dropdown-menu-sub-content"
+      className={cn(
+        "w-auto min-w-[96px] rounded-none bg-popover text-popover-foreground shadow-lg ring-1 ring-foreground/10 duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+        className
+      )}
+      align={align}
+      alignOffset={alignOffset}
+      side={side}
+      sideOffset={sideOffset}
+      {...props}
+    />
+  )
+}
+
+function DropdownMenuCheckboxItem({
+  className,
+  children,
+  checked,
+  inset,
+  ...props
+}: MenuPrimitive.CheckboxItem.Props & {
+  inset?: boolean
+}) {
+  return (
+    <MenuPrimitive.CheckboxItem
+      data-slot="dropdown-menu-checkbox-item"
+      data-inset={inset}
+      className={cn(
+        "relative flex cursor-default items-center gap-2 rounded-none py-2 pr-8 pl-2 text-xs outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        className
+      )}
+      checked={checked}
+      {...props}
+    >
+      <span
+        className="pointer-events-none absolute right-2 flex items-center justify-center"
+        data-slot="dropdown-menu-checkbox-item-indicator"
+      >
+        <MenuPrimitive.CheckboxItemIndicator>
+          <CheckIcon />
+        </MenuPrimitive.CheckboxItemIndicator>
+      </span>
+      {children}
+    </MenuPrimitive.CheckboxItem>
+  )
+}
+
+function DropdownMenuRadioGroup({ ...props }: MenuPrimitive.RadioGroup.Props) {
+  return (
+    <MenuPrimitive.RadioGroup
+      data-slot="dropdown-menu-radio-group"
+      {...props}
+    />
+  )
+}
+
+function DropdownMenuRadioItem({
+  className,
+  children,
+  inset,
+  ...props
+}: MenuPrimitive.RadioItem.Props & {
+  inset?: boolean
+}) {
+  return (
+    <MenuPrimitive.RadioItem
+      data-slot="dropdown-menu-radio-item"
+      data-inset={inset}
+      className={cn(
+        "relative flex cursor-default items-center gap-2 rounded-none py-2 pr-8 pl-2 text-xs outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        className
+      )}
+      {...props}
+    >
+      <span
+        className="pointer-events-none absolute right-2 flex items-center justify-center"
+        data-slot="dropdown-menu-radio-item-indicator"
+      >
+        <MenuPrimitive.RadioItemIndicator>
+          <CheckIcon />
+        </MenuPrimitive.RadioItemIndicator>
+      </span>
+      {children}
+    </MenuPrimitive.RadioItem>
+  )
+}
+
+function DropdownMenuSeparator({
+  className,
+  ...props
+}: MenuPrimitive.Separator.Props) {
+  return (
+    <MenuPrimitive.Separator
+      data-slot="dropdown-menu-separator"
+      className={cn("-mx-1 h-px bg-border", className)}
+      {...props}
+    />
+  )
+}
+
+function DropdownMenuShortcut({
+  className,
+  ...props
+}: React.ComponentProps<"span">) {
+  return (
+    <span
+      data-slot="dropdown-menu-shortcut"
+      className={cn(
+        "ml-auto text-xs tracking-widest text-muted-foreground group-focus/dropdown-menu-item:text-accent-foreground",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export {
+  DropdownMenu,
+  DropdownMenuPortal,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuItem,
+  DropdownMenuCheckboxItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+}
+`],
+  ["packages/ui/src/components/input.tsx.hbs", `import * as React from "react"
+import { Input as InputPrimitive } from "@base-ui/react/input"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+
+function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+  return (
+    <InputPrimitive
+      type={type}
+      data-slot="input"
+      className={cn(
+        "h-8 w-full min-w-0 rounded-none border border-input bg-transparent px-2.5 py-1 text-xs transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-xs file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-1 aria-invalid:ring-destructive/20 md:text-xs dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export { Input }
+`],
+  ["packages/ui/src/components/label.tsx.hbs", `import * as React from "react"
+
+import { cn } from "@{{projectName}}/ui/lib/utils"
+
+function Label({ className, ...props }: React.ComponentProps<"label">) {
+  return (
+    <label
+      data-slot="label"
+      className={cn(
+        "flex items-center gap-2 text-xs leading-none select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export { Label }
+`],
+  ["packages/ui/src/components/skeleton.tsx.hbs", `import { cn } from "@{{projectName}}/ui/lib/utils"
+
+function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="skeleton"
+      className={cn("animate-pulse rounded-none bg-muted", className)}
+      {...props}
+    />
+  )
+}
+
+export { Skeleton }
+`],
+  ["packages/ui/src/components/sonner.tsx.hbs", `"use client"
+
+import { useTheme } from "next-themes"
+import { Toaster as Sonner, type ToasterProps } from "sonner"
+import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
+
+const Toaster = ({ ...props }: ToasterProps) => {
+  const { theme = "system" } = useTheme()
+
+  return (
+    <Sonner
+      theme={theme as ToasterProps["theme"]}
+      className="toaster group"
+      icons=\\{{
+        success: (
+          <CircleCheckIcon className="size-4" />
+        ),
+        info: (
+          <InfoIcon className="size-4" />
+        ),
+        warning: (
+          <TriangleAlertIcon className="size-4" />
+        ),
+        error: (
+          <OctagonXIcon className="size-4" />
+        ),
+        loading: (
+          <Loader2Icon className="size-4 animate-spin" />
+        ),
+      }}
+      style={
+        {
+          "--normal-bg": "var(--popover)",
+          "--normal-text": "var(--popover-foreground)",
+          "--normal-border": "var(--border)",
+          "--border-radius": "var(--radius)",
+        } as React.CSSProperties
+      }
+      toastOptions=\\{{
+        classNames: {
+          toast: "cn-toast",
+        },
+      }}
+      {...props}
+    />
+  )
+}
+
+export { Toaster }
+`],
+  ["packages/ui/src/hooks/.gitkeep", ``],
+  ["packages/ui/src/lib/utils.ts.hbs", `import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+`],
+  ["packages/ui/src/styles/globals.css.hbs", `@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@source "../../../apps/**/*.{ts,tsx}";
+@source "../**/*.{ts,tsx}";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.58 0.22 27);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.809 0.105 251.813);
+  --chart-2: oklch(0.623 0.214 259.815);
+  --chart-3: oklch(0.546 0.245 262.881);
+  --chart-4: oklch(0.488 0.243 264.376);
+  --chart-5: oklch(0.424 0.199 265.638);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.87 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.371 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.809 0.105 251.813);
+  --chart-2: oklch(0.623 0.214 259.815);
+  --chart-3: oklch(0.546 0.245 262.881);
+  --chart-4: oklch(0.488 0.243 264.376);
+  --chart-5: oklch(0.424 0.199 265.638);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@theme inline {
+  --font-sans: 'Inter Variable', sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply font-sans bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+`],
+  ["packages/ui/tsconfig.json.hbs", `{
+  "extends": "@{{projectName}}/config/tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "jsx": "react-jsx",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "paths": {
+      "@{{projectName}}/ui/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules"]
+}
+`],
   ["payments/polar/server/base/src/lib/payments.ts.hbs", `import { Polar } from "@polar-sh/sdk";
 import { env } from "@{{projectName}}/env/server";
 
@@ -26687,4 +26775,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 435;
+export const TEMPLATE_COUNT = 441;

@@ -87,6 +87,7 @@ export const dependencyVersionMap = {
   "@fastify/cors": "^11.0.1",
 
   turbo: "^2.8.12",
+  nx: "^21.5.2",
 
   ai: "^6.0.3",
   "@ai-sdk/google": "^3.0.1",

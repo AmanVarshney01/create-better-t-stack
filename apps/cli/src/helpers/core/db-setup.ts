@@ -21,8 +21,9 @@ import { setupPlanetScale } from "../database-providers/planetscale-setup";
 import { setupPrismaPostgres } from "../database-providers/prisma-postgres-setup";
 import { setupSupabase } from "../database-providers/supabase-setup";
 import { setupTurso } from "../database-providers/turso-setup";
+import { type DatabaseSetupCliOptions, mergeResolvedDbSetupOptions } from "./db-setup-options";
 
-export async function setupDatabase(config: ProjectConfig, cliInput?: { manualDb?: boolean }) {
+export async function setupDatabase(config: ProjectConfig, cliInput?: DatabaseSetupCliOptions) {
   const { database, dbSetup, backend, projectDir } = config;
 
   if (backend === "convex" || database === "none") {
@@ -56,26 +57,31 @@ export async function setupDatabase(config: ProjectConfig, cliInput?: { manualDb
     }
   }
 
+  const resolvedCliInput: DatabaseSetupCliOptions = {
+    ...cliInput,
+    dbSetupOptions: mergeResolvedDbSetupOptions(dbSetup, config.dbSetupOptions, cliInput),
+  };
+
   // Call external database provider CLIs
   if (dbSetup === "docker") {
     await runSetup(() => setupDockerCompose(config));
   } else if (database === "sqlite" && dbSetup === "turso") {
-    await runSetup(() => setupTurso(config, cliInput));
+    await runSetup(() => setupTurso(config, resolvedCliInput));
   } else if (database === "sqlite" && dbSetup === "d1") {
     await runSetup(() => setupCloudflareD1(config));
   } else if (database === "postgres") {
     if (dbSetup === "prisma-postgres") {
-      await runSetup(() => setupPrismaPostgres(config, cliInput));
+      await runSetup(() => setupPrismaPostgres(config, resolvedCliInput));
     } else if (dbSetup === "neon") {
-      await runSetup(() => setupNeonPostgres(config, cliInput));
+      await runSetup(() => setupNeonPostgres(config, resolvedCliInput));
     } else if (dbSetup === "planetscale") {
       await runSetup(() => setupPlanetScale(config));
     } else if (dbSetup === "supabase") {
-      await runSetup(() => setupSupabase(config, cliInput));
+      await runSetup(() => setupSupabase(config, resolvedCliInput));
     }
   } else if (database === "mysql" && dbSetup === "planetscale") {
     await runSetup(() => setupPlanetScale(config));
   } else if (database === "mongodb" && dbSetup === "mongodb-atlas") {
-    await runSetup(() => setupMongoDBAtlas(config, cliInput));
+    await runSetup(() => setupMongoDBAtlas(config, resolvedCliInput));
   }
 }

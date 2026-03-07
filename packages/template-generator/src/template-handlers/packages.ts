@@ -84,3 +84,17 @@ export async function processEnvPackage(
     );
   }
 }
+
+export async function processUiPackage(
+  vfs: VirtualFileSystem,
+  templates: TemplateData,
+  config: ProjectConfig,
+): Promise<void> {
+  const hasReactWeb = config.frontend.some((f) =>
+    ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+  );
+
+  if (!hasReactWeb) return;
+
+  processTemplatesFromPrefix(vfs, templates, "packages/ui", "packages/ui", config);
+}

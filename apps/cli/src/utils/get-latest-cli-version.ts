@@ -5,13 +5,13 @@ import path from "node:path";
 import { PKG_ROOT } from "../constants";
 import { CLIError } from "./errors";
 
-export function getLatestCLIVersionResult(): Result<string | undefined, CLIError> {
+export function getLatestCLIVersionResult(): Result<string, CLIError> {
   const packageJsonPath = path.join(PKG_ROOT, "package.json");
 
   return Result.try({
     try: () => {
       const packageJsonContent = fs.readJSONSync(packageJsonPath);
-      return packageJsonContent.version;
+      return String(packageJsonContent.version ?? "1.0.0");
     },
     catch: (e) =>
       new CLIError({
@@ -21,6 +21,6 @@ export function getLatestCLIVersionResult(): Result<string | undefined, CLIError
   });
 }
 
-export function getLatestCLIVersion() {
+export function getLatestCLIVersion(): string {
   return getLatestCLIVersionResult().unwrapOr("1.0.0");
 }

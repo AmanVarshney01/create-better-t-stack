@@ -1,25 +1,29 @@
-import { isCancel, log, multiselect, select, spinner } from "@clack/prompts";
+import { isCancel, multiselect, select } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import pc from "picocolors";
 
-import type { ProjectConfig } from "../../types";
+import type { AddonOptions, ProjectConfig } from "../../types";
 
 import { readBtsConfig } from "../../utils/bts-config";
+import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
-import { getPackageExecutionArgs } from "../../utils/package-runner";
+import { getPackageRunnerPrefix } from "../../utils/package-runner";
+import { cliLog, createSpinner } from "../../utils/terminal-output";
 
 type SkillSource = {
   label: string;
 };
 
 type AgentOption = {
-  value: string;
+  value: SkillAgent;
   label: string;
 };
 
-type InstallScope = "project" | "global";
+type SkillsOptions = NonNullable<AddonOptions["skills"]>;
+type SkillAgent = NonNullable<SkillsOptions["agents"]>[number];
+type InstallScope = NonNullable<SkillsOptions["scope"]>;
 
 // Skill sources - using GitHub shorthand or full URLs
 const SKILL_SOURCES = {
@@ -43,6 +47,9 @@ const SKILL_SOURCES = {
   },
   "heroui-inc/heroui": {
     label: "HeroUI Native",
+  },
+  "shadcn/ui": {
+    label: "shadcn/ui",
   },
   "better-auth/skills": {
     label: "Better Auth",
@@ -110,6 +117,9 @@ const AVAILABLE_AGENTS: AgentOption[] = [
   { value: "mcpjam", label: "MCPJam" },
 ];
 
+const DEFAULT_SCOPE: InstallScope = "project";
+const DEFAULT_AGENTS: SkillAgent[] = ["cursor", "claude-code", "github-copilot"];
+
 function hasReactBasedFrontend(frontend: ProjectConfig["frontend"]): boolean {
   return (
     frontend.includes("react-router") ||
@@ -133,6 +143,7 @@ function getRecommendedSourceKeys(config: ProjectConfig): SourceKey[] {
 
   if (hasReactBasedFrontend(frontend)) {
     sources.push("vercel-labs/agent-skills");
+    sources.push("shadcn/ui");
   }
 
   if (frontend.includes("next")) {
@@ -224,6 +235,7 @@ const CURATED_SKILLS_BY_SOURCE: Record<SourceKey, (config: ProjectConfig) => str
   "vercel-labs/next-skills": () => ["next-best-practices", "next-cache-components"],
   "nuxt/ui": () => ["nuxt-ui"],
   "heroui-inc/heroui": () => ["heroui-native"],
+  "shadcn/ui": () => ["shadcn"],
   "better-auth/skills": () => ["better-auth-best-practices"],
   "clerk/skills": (config) => {
     const skills = [
@@ -321,16 +333,24 @@ export async function setupSkills(
   // Load full config from bts.jsonc to get all addons (existing + new)
   const btsConfig = await readBtsConfig(projectDir);
   const fullConfig: ProjectConfig = btsConfig
-    ? { ...config, addons: btsConfig.addons ?? config.addons }
+    ? {
+        ...config,
+        addons: btsConfig.addons ?? config.addons,
+        addonOptions: btsConfig.addonOptions ?? config.addonOptions,
+      }
     : config;
 
   const recommendedSourceKeys = getRecommendedSourceKeys(fullConfig);
+  const skillsOptions = fullConfig.addonOptions?.skills;
+  const configuredSourceKeys = uniqueValues(
+    (skillsOptions?.selections ?? []).map((selection) => selection.source),
+  );
+  const sourceKeys = uniqueValues([...recommendedSourceKeys, ...configuredSourceKeys]);
 
-  if (recommendedSourceKeys.length === 0) {
+  if (sourceKeys.length === 0) {
     return Result.ok(undefined);
   }
 
-  const sourceKeys = uniqueValues(recommendedSourceKeys);
   const skillOptions = sourceKeys.flatMap((sourceKey) => {
     const source = SKILL_SOURCES[sourceKey];
     const skillNames = getCuratedSkillNamesForSourceKey(sourceKey, fullConfig);
@@ -345,56 +365,88 @@ export async function setupSkills(
     return Result.ok(undefined);
   }
 
-  const scope = await select<InstallScope>({
-    message: "Where should skills be installed?",
-    options: [
-      {
-        value: "project",
-        label: "Project",
-        hint: "Writes to project config files (recommended for teams)",
-      },
-      {
-        value: "global",
-        label: "Global",
-        hint: "Writes to user-level config files (personal machine)",
-      },
-    ],
-    initialValue: "project",
-  });
+  let scope = skillsOptions?.scope;
 
-  if (isCancel(scope)) {
-    return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+  if (!scope) {
+    if (isSilent()) {
+      scope = DEFAULT_SCOPE;
+    } else {
+      const selectedScope = await select<InstallScope>({
+        message: "Where should skills be installed?",
+        options: [
+          {
+            value: "project",
+            label: "Project",
+            hint: "Writes to project config files (recommended for teams)",
+          },
+          {
+            value: "global",
+            label: "Global",
+            hint: "Writes to user-level config files (personal machine)",
+          },
+        ],
+        initialValue: DEFAULT_SCOPE,
+      });
+
+      if (isCancel(selectedScope)) {
+        return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+      }
+
+      scope = selectedScope;
+    }
   }
 
   // Select all skills by default
   const allSkillValues = skillOptions.map((opt) => opt.value);
 
-  // Prompt user to select skills
-  const selectedSkills = await multiselect({
-    message: "Select skills to install",
-    options: skillOptions,
-    required: false,
-    initialValues: allSkillValues,
-  });
+  const configuredSelections = skillsOptions?.selections;
+  let selectedSkills: string[];
 
-  if (isCancel(selectedSkills)) {
-    return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+  if (configuredSelections !== undefined) {
+    selectedSkills = configuredSelections.flatMap((selection) =>
+      selection.skills.map((skill) => `${selection.source}::${skill}`),
+    );
+  } else if (isSilent()) {
+    selectedSkills = allSkillValues;
+  } else {
+    const promptedSkills = await multiselect({
+      message: "Select skills to install",
+      options: skillOptions,
+      required: false,
+      initialValues: allSkillValues,
+    });
+
+    if (isCancel(promptedSkills)) {
+      return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+    }
+
+    selectedSkills = promptedSkills as string[];
   }
 
   if (selectedSkills.length === 0) {
     return Result.ok(undefined);
   }
 
-  // Prompt user to select agents
-  const selectedAgents = await multiselect({
-    message: "Select agents to install skills to",
-    options: AVAILABLE_AGENTS,
-    required: false,
-    initialValues: ["cursor", "claude-code", "github-copilot"],
-  });
+  const configuredAgents = skillsOptions?.agents;
+  let selectedAgents: SkillAgent[] = configuredAgents ? [...configuredAgents] : [];
 
-  if (isCancel(selectedAgents)) {
-    return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+  if (selectedAgents.length === 0 && configuredAgents === undefined) {
+    if (isSilent()) {
+      selectedAgents = [...DEFAULT_AGENTS];
+    } else {
+      const promptedAgents = await multiselect({
+        message: "Select agents to install skills to",
+        options: AVAILABLE_AGENTS,
+        required: false,
+        initialValues: [...DEFAULT_AGENTS],
+      });
+
+      if (isCancel(promptedAgents)) {
+        return Result.err(new UserCancelledError({ message: "Operation cancelled" }));
+      }
+
+      selectedAgents = [...promptedAgents] as SkillAgent[];
+    }
   }
 
   if (selectedAgents.length === 0) {
@@ -404,33 +456,35 @@ export async function setupSkills(
   // Group skills by source
   const skillsBySource: Record<string, string[]> = {};
   for (const skillKey of selectedSkills) {
-    const [source, skillName] = (skillKey as string).split("::");
+    const [source, skillName] = skillKey.split("::");
     if (!skillsBySource[source]) {
       skillsBySource[source] = [];
     }
     skillsBySource[source].push(skillName);
   }
 
-  const installSpinner = spinner();
+  const installSpinner = createSpinner();
   installSpinner.start("Installing skills...");
 
-  // Build repeated -a flags for agents (e.g., -a cursor -a claude-code)
-  const agentFlags = (selectedAgents as string[]).map((a) => `-a ${a}`).join(" ");
-  const globalFlag = scope === "global" ? "-g" : "";
+  const runner = getPackageRunnerPrefix(packageManager);
+  const globalFlags = scope === "global" ? ["-g"] : [];
 
   // Install skills grouped by source (project scope, no -g flag)
   for (const [source, skills] of Object.entries(skillsBySource)) {
-    // Build repeated -s flags for skills (e.g., -s skill1 -s skill2)
-    const skillFlags = skills.map((s) => `-s ${s}`).join(" ");
-
     const installResult = await Result.tryPromise({
       try: async () => {
-        // Format:
-        // skills@latest add <source> [-g] -s skill1 -s skill2 -a agent1 -a agent2 -y
-        const args = getPackageExecutionArgs(
-          packageManager,
-          `skills@latest add ${source} ${globalFlag} ${skillFlags} ${agentFlags} -y`,
-        );
+        const args = [
+          ...runner,
+          "skills@latest",
+          "add",
+          source,
+          ...globalFlags,
+          "--skill",
+          ...skills,
+          "--agent",
+          ...selectedAgents,
+          "-y",
+        ];
         await $({ cwd: projectDir, env: { CI: "true" } })`${args}`;
       },
       catch: (e) =>
@@ -442,7 +496,7 @@ export async function setupSkills(
     });
 
     if (installResult.isErr()) {
-      log.warn(pc.yellow(`Warning: Could not install skills from ${source}`));
+      cliLog.warn(pc.yellow(`Warning: Could not install skills from ${source}`));
     }
   }
 

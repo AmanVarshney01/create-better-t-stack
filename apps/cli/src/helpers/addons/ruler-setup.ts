@@ -1,15 +1,21 @@
-import { autocompleteMultiselect, isCancel, log, spinner } from "@clack/prompts";
+import { autocompleteMultiselect, isCancel } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
 import path from "node:path";
 import pc from "picocolors";
 
-import type { ProjectConfig } from "../../types";
+import type { AddonOptions, ProjectConfig } from "../../types";
 
+import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError, userCancelled } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs, getPackageExecutionCommand } from "../../utils/package-runner";
+import { cliLog, createSpinner } from "../../utils/terminal-output";
+
+type RulerAssistant = NonNullable<NonNullable<AddonOptions["ruler"]>["assistants"]>[number];
+
+const DEFAULT_ASSISTANTS: RulerAssistant[] = ["agentsmd", "claude", "codex", "cursor"];
 
 export async function setupRuler(
   config: ProjectConfig,
@@ -20,12 +26,12 @@ export async function setupRuler(
 
   const { packageManager, projectDir } = config;
 
-  log.info("Setting up Ruler...");
+  cliLog.info("Setting up Ruler...");
 
   const rulerDir = path.join(projectDir, ".ruler");
 
   if (!(await fs.pathExists(rulerDir))) {
-    log.error(
+    cliLog.error(
       pc.red(
         "Ruler template directory not found. Please ensure ruler addon is properly installed.",
       ),
@@ -51,6 +57,7 @@ export async function setupRuler(
     firebender: { label: "Firebender" },
     "gemini-cli": { label: "Gemini CLI" },
     goose: { label: "Goose" },
+    "jetbrains-ai": { label: "JetBrains AI" },
     jules: { label: "Jules" },
     junie: { label: "Junie" },
     kilocode: { label: "Kilo Code" },
@@ -67,22 +74,33 @@ export async function setupRuler(
     zed: { label: "Zed" },
   } as const;
 
-  const selectedEditors = await autocompleteMultiselect({
-    message: "Select AI assistants for Ruler",
-    options: Object.entries(EDITORS).map(([key, v]) => ({
-      value: key,
-      label: v.label,
-    })),
-    required: false,
-  });
+  const configuredAssistants = config.addonOptions?.ruler?.assistants;
+  let selectedEditors: RulerAssistant[] = configuredAssistants ? [...configuredAssistants] : [];
 
-  if (isCancel(selectedEditors)) {
-    return userCancelled("Operation cancelled");
+  if (selectedEditors.length === 0 && configuredAssistants === undefined) {
+    if (isSilent()) {
+      selectedEditors = [...DEFAULT_ASSISTANTS];
+    } else {
+      const promptSelection = await autocompleteMultiselect({
+        message: "Select AI assistants for Ruler",
+        options: Object.entries(EDITORS).map(([key, v]) => ({
+          value: key,
+          label: v.label,
+        })),
+        required: false,
+      });
+
+      if (isCancel(promptSelection)) {
+        return userCancelled("Operation cancelled");
+      }
+
+      selectedEditors = [...promptSelection] as RulerAssistant[];
+    }
   }
 
   if (selectedEditors.length === 0) {
-    log.info("No AI assistants selected. To apply rules later, run:");
-    log.info(
+    cliLog.info("No AI assistants selected. To apply rules later, run:");
+    cliLog.info(
       pc.cyan(
         `${getPackageExecutionCommand(packageManager, "@intellectronica/ruler@latest apply --local-only")}`,
       ),
@@ -102,7 +120,7 @@ export async function setupRuler(
 
   await addRulerScriptToPackageJson(projectDir, packageManager);
 
-  const s = spinner();
+  const s = createSpinner();
   s.start("Applying rules with Ruler...");
 
   const applyResult = await Result.tryPromise({
@@ -137,7 +155,7 @@ async function addRulerScriptToPackageJson(
   const rootPackageJsonPath = path.join(projectDir, "package.json");
 
   if (!(await fs.pathExists(rootPackageJsonPath))) {
-    log.warn("Root package.json not found, skipping ruler:apply script addition");
+    cliLog.warn("Root package.json not found, skipping ruler:apply script addition");
     return;
   }
 

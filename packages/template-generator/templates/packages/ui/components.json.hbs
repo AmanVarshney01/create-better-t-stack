@@ -1,0 +1,24 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "base-lyra",
+  "rsc": {{#if (includes frontend "next")}}true{{else}}false{{/if}},
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/styles/globals.css",
+    "baseColor": "neutral",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "iconLibrary": "lucide",
+  "aliases": {
+    "components": "@{{projectName}}/ui/components",
+    "utils": "@{{projectName}}/ui/lib/utils",
+    "hooks": "@{{projectName}}/ui/hooks",
+    "lib": "@{{projectName}}/ui/lib",
+    "ui": "@{{projectName}}/ui/components"
+  },
+  "menuColor": "default",
+  "menuAccent": "subtle",
+  "registries": {}
+}

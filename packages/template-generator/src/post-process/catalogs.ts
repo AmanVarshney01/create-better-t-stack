@@ -44,6 +44,7 @@ const PACKAGE_PATHS = [
   "packages/config",
   "packages/env",
   "packages/infra",
+  "packages/ui",
 ];
 
 /**
