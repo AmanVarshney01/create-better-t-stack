@@ -172,10 +172,10 @@ export function buildUltraciteInitArgs({
   }
 
   if (gitHooks.length > 0) {
-    ultraciteArgs.push("--integrations", gitHooks.join(" "));
-    if (gitHooks.includes("husky")) {
-      ultraciteArgs.push("lint-staged");
-    }
+    const integrations = gitHooks.includes("husky")
+      ? [...new Set([...gitHooks, "lint-staged"])]
+      : gitHooks;
+    ultraciteArgs.push("--integrations", ...integrations);
   }
 
   return [

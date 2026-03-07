@@ -348,7 +348,7 @@ export async function setupNeonPostgres(
 
   if (!regionId) {
     if (isSilent()) {
-      regionId = NEON_REGIONS[0]?.value;
+      regionId = NEON_REGIONS[0]!.value;
     } else {
       const promptedRegionId = await select({
         message: "Select a region for your Neon project:",

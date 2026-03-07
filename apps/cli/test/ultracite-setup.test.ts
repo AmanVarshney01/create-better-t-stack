@@ -22,7 +22,7 @@ describe("Ultracite setup", () => {
     expect(args).toContain("--quiet");
   });
 
-  it("passes integrations as a single value and keeps lint-staged separate for husky", () => {
+  it("passes integrations as separate values and includes lint-staged with husky", () => {
     const args = buildUltraciteInitArgs({
       packageManager: "bun",
       linter: "biome",
@@ -36,7 +36,12 @@ describe("Ultracite setup", () => {
     const integrationsIndex = args.indexOf("--integrations");
 
     expect(integrationsIndex).toBeGreaterThan(-1);
-    expect(args[integrationsIndex + 1]).toBe("husky lefthook");
-    expect(args).toContain("lint-staged");
+    expect(args[integrationsIndex + 1]).toBe("husky");
+    expect(args.slice(integrationsIndex + 1, integrationsIndex + 4)).toEqual([
+      "husky",
+      "lefthook",
+      "lint-staged",
+    ]);
+    expect(args).not.toContain("husky lefthook");
   });
 });

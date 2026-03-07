@@ -221,18 +221,18 @@ create-better-t-stack create-json --input '{
 
 Current behavior:
 
-- Remote provisioning setups default to `manual` in silent/agent flows:
+- Providers with automatic cloud provisioning default to `manual` in silent/agent flows:
   - `turso`
   - `neon`
   - `prisma-postgres`
   - `supabase`
   - `mongodb-atlas`
-- Safer/local setups are not forced to manual:
+- Providers that only write local/manual config today are not forced to `manual`:
   - `d1`
   - `docker`
   - `planetscale`
 
-This keeps agents from accidentally creating cloud resources unless automation explicitly opts into `auto`.
+This keeps agents from accidentally creating cloud resources unless automation explicitly opts into `auto`, while leaving local or manual-only setups unchanged.
 
 Provider-specific options are intentionally small today:
 
