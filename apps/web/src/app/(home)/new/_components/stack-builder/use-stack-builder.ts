@@ -247,6 +247,15 @@ export function useStackBuilder() {
               ? nextArray.filter((id) => id !== techId)
               : [...nextArray, techId];
 
+            if (catKey === "addons" && !isSelected) {
+              if (techId === "nx") {
+                nextArray = nextArray.filter((id) => id !== "turborepo");
+              }
+              if (techId === "turborepo") {
+                nextArray = nextArray.filter((id) => id !== "nx");
+              }
+            }
+
             if (nextArray.length > 1) {
               nextArray = nextArray.filter((id) => id !== "none");
             }

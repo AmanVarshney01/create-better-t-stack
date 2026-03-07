@@ -113,6 +113,7 @@ export function generateStackCommand(stack: StackState) {
                 "lefthook",
                 "husky",
                 "turborepo",
+                "nx",
                 "ultracite",
                 "fumadocs",
                 "oxlint",

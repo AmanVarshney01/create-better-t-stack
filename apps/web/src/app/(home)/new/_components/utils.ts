@@ -993,6 +993,12 @@ export const getDisabledReason = (
     if (optionId === "tauri" && !hasTauriCompatibleFrontend(currentStack.webFrontend)) {
       return "Tauri requires TanStack Router, React Router, Nuxt, Svelte, Solid, or Next.js";
     }
+    if (optionId === "nx" && currentStack.addons.includes("turborepo")) {
+      return "Nx and Turborepo cannot be used together";
+    }
+    if (optionId === "turborepo" && currentStack.addons.includes("nx")) {
+      return "Nx and Turborepo cannot be used together";
+    }
   }
 
   // ============================================
