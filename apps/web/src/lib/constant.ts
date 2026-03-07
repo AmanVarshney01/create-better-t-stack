@@ -563,6 +563,14 @@ export const TECH_OPTIONS: Record<
       default: true,
     },
     {
+      id: "nx",
+      name: "Nx",
+      description: "Smart monorepo build system and task runner",
+      icon: `${ICON_BASE_URL}/nx.svg`,
+      color: "from-cyan-500 to-cyan-700",
+      default: false,
+    },
+    {
       id: "ruler",
       name: "Ruler",
       description: "Centralize your AI rules",

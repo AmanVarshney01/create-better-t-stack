@@ -64,6 +64,7 @@ function TechIcon({ icon, name, className }: { icon: string; name: string; class
       icon.includes("express") ||
       icon.includes("clerk") ||
       icon.includes("planetscale") ||
+      icon.includes("nx") ||
       icon.includes("polar") ||
       icon.includes("astro"))
   ) {
