@@ -107,6 +107,12 @@ Run Better-T-Stack itself as a local MCP server over stdio:
 npx create-better-t-stack@latest mcp
 ```
 
+Install it into supported agent configs with `add-mcp`:
+
+```bash
+npx -y add-mcp@latest "npx -y create-better-t-stack@latest mcp"
+```
+
 Exposed tools:
 
 - `bts_get_stack_guidance`
@@ -159,10 +165,10 @@ Important field rules:
 If you scaffold a project with the `mcp` addon, Better-T-Stack itself is now one of the recommended MCP servers. The addon installs it through `add-mcp` with a package runner command so the generated config does not rely on a globally installed CLI:
 
 ```bash
-npx create-better-t-stack@latest mcp
+npx -y add-mcp@latest "npx -y create-better-t-stack@latest mcp"
 ```
 
-For Bun projects, the generated config uses the equivalent `bunx create-better-t-stack@latest mcp` command. That means MCP-capable agents inside the generated project can talk back to Better-T-Stack without any extra global install, alongside other recommended docs, framework, and database MCP servers.
+For Bun projects, the generated config uses the equivalent `bunx create-better-t-stack@latest mcp` server command inside `add-mcp`. That means MCP-capable agents inside the generated project can talk back to Better-T-Stack without any extra global install, alongside other recommended docs, framework, and database MCP servers.
 
 ## Structured Addon Options
 
