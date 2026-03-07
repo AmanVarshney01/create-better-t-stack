@@ -350,6 +350,32 @@ export const auth = betterAuth({
 				portal(),
 			],
 		}),
+{{/if}}
+{{#if (eq payments "dodo")}}
+		dodopayments({
+			client: dodoPaymentsClient,
+			createCustomerOnSignUp: true,
+			use: [
+				checkout({
+					products: [
+						{
+							productId: "your-product-id",
+							slug: "pro",
+						},
+					],
+					successUrl: "/payment/success",
+					authenticatedUsersOnly: true,
+				}),
+				portal(),
+				webhooks({
+					webhookKey: env.DODO_PAYMENTS_WEBHOOK_SECRET,
+					onPayload: async (payload) => {
+						console.log("Received webhook:", payload.event_type);
+					},
+				}),
+			],
+		}),
+{{/if}}
 	],
 {{/if}}
 });
