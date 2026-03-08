@@ -5,7 +5,6 @@ import path from "node:path";
 import type { ProjectConfig } from "../src/types";
 
 import { setupMcp, getRecommendedMcpServers } from "../src/helpers/addons/mcp-setup";
-import { setupRuler } from "../src/helpers/addons/ruler-setup";
 import { setupSkills } from "../src/helpers/addons/skills-setup";
 import { runWithContextAsync } from "../src/utils/context";
 import { SMOKE_DIR } from "./setup";
@@ -258,30 +257,5 @@ describe("Addon setup regressions", () => {
     expect(commandLog).toContain("skills@latest add vercel/turborepo");
     expect(commandLog).toContain("--agent codex");
     expect(commandLog).toContain("--skill turborepo");
-  });
-
-  it("preserves an explicit empty Ruler assistant list in silent mode", async () => {
-    const projectDir = path.join(SMOKE_DIR, "ruler-explicit-empty-assistants");
-    const rulerDir = path.join(projectDir, ".ruler");
-    await fs.remove(projectDir);
-    await fs.ensureDir(rulerDir);
-    await fs.writeFile(path.join(rulerDir, "ruler.toml"), "default_agents = []\n");
-
-    const config = createProjectConfig({
-      projectDir,
-      addons: ["ruler"],
-      addonOptions: {
-        ruler: {
-          assistants: [],
-        },
-      },
-    });
-
-    const { markerFile, result } = await runWithFakeBunx(projectDir, () =>
-      runWithContextAsync({ silent: true }, () => setupRuler(config)),
-    );
-
-    expect(result.isOk()).toBe(true);
-    expect(await fs.pathExists(markerFile)).toBe(false);
   });
 });

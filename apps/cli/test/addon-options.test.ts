@@ -26,9 +26,6 @@ describe("Addon options", () => {
         servers: ["context7"] as const,
         agents: ["cursor", "codex"] as const,
       },
-      ruler: {
-        assistants: ["agentsmd", "claude", "codex"] as const,
-      },
       skills: {
         scope: "project" as const,
         agents: ["cursor", "codex"] as const,
@@ -56,7 +53,7 @@ describe("Addon options", () => {
       auth: "none",
       payments: "none",
       api: "trpc",
-      addons: ["wxt", "opentui", "fumadocs", "mcp", "ruler", "skills", "ultracite"],
+      addons: ["wxt", "opentui", "fumadocs", "mcp", "skills", "ultracite"],
       examples: ["none"],
       dbSetup: "none",
       webDeploy: "none",
@@ -71,7 +68,7 @@ describe("Addon options", () => {
     expect(result.value.projectConfig.addonOptions).toEqual(addonOptions);
     expect(result.value.reproducibleCommand).toContain("--frontend tanstack-router");
     expect(result.value.reproducibleCommand).toContain(
-      "--addons wxt opentui fumadocs mcp ruler skills ultracite",
+      "--addons wxt opentui fumadocs mcp skills ultracite",
     );
     expect(result.value.reproducibleCommand).not.toContain("create-json --input");
 

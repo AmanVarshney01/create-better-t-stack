@@ -1,0 +1,36 @@
+import type { ElectrobunConfig } from "electrobun";
+
+const webBuildDir =
+  "{{#if (includes frontend "react-router")}}../web/build/client{{else if (includes frontend "tanstack-start")}}../web/dist/client{{else if (includes frontend "next")}}../web/out{{else if (includes frontend "nuxt")}}../web/.output/public{{else if (includes frontend "svelte")}}../web/build{{else}}../web/dist{{/if}}";
+
+export default {
+  app: {
+    name: "{{projectName}}",
+    identifier: "dev.bettertstack.{{projectName}}.desktop",
+    version: "0.0.1",
+  },
+  runtime: {
+    exitOnLastWindowClosed: true,
+  },
+  build: {
+    bun: {
+      entrypoint: "src/bun/index.ts",
+    },
+    copy: {
+      [webBuildDir]: "views/mainview",
+    },
+    watchIgnore: [`${webBuildDir}/**`],
+    mac: {
+      bundleCEF: true,
+      defaultRenderer: "cef",
+    },
+    linux: {
+      bundleCEF: true,
+      defaultRenderer: "cef",
+    },
+    win: {
+      bundleCEF: true,
+      defaultRenderer: "cef",
+    },
+  },
+} satisfies ElectrobunConfig;

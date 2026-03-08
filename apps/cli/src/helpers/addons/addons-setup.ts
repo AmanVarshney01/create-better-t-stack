@@ -4,14 +4,12 @@ import fs from "fs-extra";
 import path from "node:path";
 import pc from "picocolors";
 
-import type { ProjectConfig } from "../../types";
-
+import { desktopWebFrontends, type ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
 import { setupFumadocs } from "./fumadocs-setup";
 import { setupMcp } from "./mcp-setup";
 import { setupOxlint } from "./oxlint-setup";
-import { setupRuler } from "./ruler-setup";
 import { setupSkills } from "./skills-setup";
 import { setupStarlight } from "./starlight-setup";
 import { setupTauri } from "./tauri-setup";
@@ -52,23 +50,11 @@ async function runAddonStep(addon: string, step: () => Promise<void>): Promise<v
 
 export async function setupAddons(config: ProjectConfig) {
   const { addons, frontend, projectDir } = config;
-  const hasReactWebFrontend =
-    frontend.includes("react-router") ||
-    frontend.includes("tanstack-router") ||
-    frontend.includes("next");
-  const hasNuxtFrontend = frontend.includes("nuxt");
-  const hasSvelteFrontend = frontend.includes("svelte");
-  const hasSolidFrontend = frontend.includes("solid");
-  const hasNextFrontend = frontend.includes("next");
+  const hasWebFrontend = frontend.some((value) =>
+    (desktopWebFrontends as readonly string[]).includes(value),
+  );
 
-  if (
-    addons.includes("tauri") &&
-    (hasReactWebFrontend ||
-      hasNuxtFrontend ||
-      hasSvelteFrontend ||
-      hasSolidFrontend ||
-      hasNextFrontend)
-  ) {
+  if (addons.includes("tauri") && hasWebFrontend) {
     await runSetup(() => setupTauri(config));
   }
 
@@ -122,10 +108,6 @@ export async function setupAddons(config: ProjectConfig) {
 
   if (addons.includes("wxt")) {
     await runSetup(() => setupWxt(config));
-  }
-
-  if (addons.includes("ruler")) {
-    await runSetup(() => setupRuler(config));
   }
 
   if (addons.includes("skills")) {

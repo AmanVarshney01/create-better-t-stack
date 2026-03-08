@@ -1,6 +1,14 @@
 "use client";
 
-import { Check, ChevronDown, ClipboardCopy, FolderTree, Settings, Terminal } from "lucide-react";
+import {
+  AlertTriangle,
+  Check,
+  ChevronDown,
+  ClipboardCopy,
+  FolderTree,
+  Settings,
+  Terminal,
+} from "lucide-react";
 import { startTransition } from "react";
 
 import type { Sponsor } from "@/lib/types";
@@ -13,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { getDesktopBuildNote } from "@/lib/stack-utils";
 import { cn } from "@/lib/utils";
 
 import { ActionButtons } from "../action-buttons";
@@ -56,6 +65,7 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
     stack,
     viewMode,
   } = useStackBuilder();
+  const desktopBuildNote = getDesktopBuildNote(stack);
 
   return (
     <TooltipProvider>
@@ -195,6 +205,18 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                           </li>
                         ))}
                       </ul>
+                    </section>
+                  )}
+
+                  {desktopBuildNote && (
+                    <section className="space-y-2 border-border/20 border-t px-3 py-3">
+                      <div className="flex items-center gap-1.5 font-mono text-[11px] text-amber-600 uppercase tracking-wide dark:text-amber-400">
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        Desktop Build Note
+                      </div>
+                      <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-2.5 py-2 text-muted-foreground text-xs">
+                        {desktopBuildNote}
+                      </div>
                     </section>
                   )}
                 </div>
@@ -376,6 +398,16 @@ export function StackBuilder({ specialSponsors = [] }: StackBuilderProps) {
                         </div>
                       </div>
                     </div>
+
+                    {desktopBuildNote && (
+                      <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 px-2.5 py-2">
+                        <div className="mb-1 flex items-center gap-1.5 font-mono text-[10px] text-amber-600 uppercase tracking-wide dark:text-amber-400">
+                          <AlertTriangle className="h-3 w-3" />
+                          Desktop Build Note
+                        </div>
+                        <p className="text-muted-foreground text-xs">{desktopBuildNote}</p>
+                      </div>
+                    )}
                   </div>
 
                   <TechCategories

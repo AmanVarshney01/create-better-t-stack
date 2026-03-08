@@ -35,11 +35,11 @@ export const AddonsSchema = z
   .enum([
     "pwa",
     "tauri",
+    "electrobun",
     "starlight",
     "biome",
     "lefthook",
     "husky",
-    "ruler",
     "mcp",
     "turborepo",
     "nx",
@@ -163,43 +163,6 @@ export const McpAgentSchema = z
     "goose",
   ])
   .describe("Agent target for MCP installation");
-
-export const RulerAssistantSchema = z
-  .enum([
-    "agentsmd",
-    "aider",
-    "amazonqcli",
-    "amp",
-    "antigravity",
-    "augmentcode",
-    "claude",
-    "cline",
-    "codex",
-    "copilot",
-    "crush",
-    "cursor",
-    "factory",
-    "firebase",
-    "firebender",
-    "gemini-cli",
-    "goose",
-    "jetbrains-ai",
-    "jules",
-    "junie",
-    "kilocode",
-    "kiro",
-    "mistral",
-    "opencode",
-    "openhands",
-    "pi",
-    "qwen",
-    "roo",
-    "trae",
-    "warp",
-    "windsurf",
-    "zed",
-  ])
-  .describe("AI assistant for Ruler");
 
 export const SkillsSourceSchema = z
   .enum([
@@ -338,15 +301,6 @@ export const AddonOptionsSchema = z
       })
       .optional()
       .describe("Options for the MCP addon"),
-    ruler: z
-      .strictObject({
-        assistants: z
-          .array(RulerAssistantSchema)
-          .optional()
-          .describe("AI assistants to configure for Ruler"),
-      })
-      .optional()
-      .describe("Options for the Ruler addon"),
     skills: z
       .strictObject({
         scope: InstallScopeSchema.optional(),

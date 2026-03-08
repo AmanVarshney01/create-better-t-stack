@@ -507,6 +507,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "electrobun",
+      name: "Electrobun",
+      description: "Wrap web frontends in a lightweight desktop shell",
+      icon: "",
+      color: "from-orange-500 to-orange-700",
+      default: false,
+    },
+    {
       id: "starlight",
       name: "Starlight",
       description: "Build stellar docs with astro",
@@ -568,14 +576,6 @@ export const TECH_OPTIONS: Record<
       description: "Smart monorepo build system and task runner",
       icon: `${ICON_BASE_URL}/nx.svg`,
       color: "from-cyan-500 to-cyan-700",
-      default: false,
-    },
-    {
-      id: "ruler",
-      name: "Ruler",
-      description: "Centralize your AI rules",
-      icon: "",
-      color: "from-violet-500 to-violet-700",
       default: false,
     },
     {

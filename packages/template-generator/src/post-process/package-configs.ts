@@ -3,7 +3,7 @@
  * Updates package names, scripts, and workspaces after template generation
  */
 
-import type { ProjectConfig } from "@better-t-stack/types";
+import { desktopWebFrontends, type ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
@@ -26,6 +26,8 @@ type PackageManagerConfig = {
   filter: (workspace: string, script: string) => string;
 };
 
+type DesktopWebScript = "build" | "dev" | "generate";
+
 /**
  * Update all package.json files with proper names, scripts, and workspaces
  */
@@ -35,6 +37,7 @@ export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectCon
   updateEnvPackageJson(vfs, config);
   updateUiPackageJson(vfs, config);
   updateInfraPackageJson(vfs, config);
+  updateDesktopPackageJson(vfs, config);
   renameDevScriptsForAlchemy(vfs, config);
 
   if (config.backend === "convex") {
@@ -69,16 +72,7 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   const scripts = pkgJson.scripts;
   const { projectName, packageManager, backend, database, orm, dbSetup, addons, frontend } = config;
   const hasWebApp = frontend.some((item) =>
-    [
-      "tanstack-router",
-      "react-router",
-      "tanstack-start",
-      "next",
-      "nuxt",
-      "svelte",
-      "solid",
-      "astro",
-    ].includes(item),
+    (desktopWebFrontends as readonly string[]).includes(item),
   );
   const hasNativeApp = frontend.some((item) =>
     ["native-bare", "native-uniwind", "native-unistyles"].includes(item),
@@ -105,6 +99,12 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
 
   if (hasWebApp) {
     scripts["dev:web"] = pmConfig.filter("web", "dev");
+  }
+
+  if (addons.includes("electrobun")) {
+    scripts["dev:desktop"] = pmConfig.filter("desktop", "dev:hmr");
+    scripts["build:desktop"] = pmConfig.filter("desktop", "build:stable");
+    scripts["build:desktop:canary"] = pmConfig.filter("desktop", "build:canary");
   }
 
   if (addons.includes("opentui")) {
@@ -227,6 +227,73 @@ function getPackageManagerConfig(
   }
 }
 
+function updateDesktopPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  const pkgJson = vfs.readJson<PackageJson>("apps/desktop/package.json");
+  if (!pkgJson) return;
+
+  const { packageManager, addons, frontend } = config;
+  const hasTurborepo = addons.includes("turborepo");
+  const hasNx = addons.includes("nx");
+  const desktopBuildScript: DesktopWebScript = frontend.includes("nuxt") ? "generate" : "build";
+  const webBuildCommand = getDesktopWebCommand(
+    packageManager,
+    { hasTurborepo, hasNx },
+    desktopBuildScript,
+  );
+  const webDevCommand = getDesktopWebCommand(packageManager, { hasTurborepo, hasNx }, "dev");
+  const localRunCommand = getLocalRunCommand(packageManager);
+
+  pkgJson.scripts = {
+    ...pkgJson.scripts,
+    start: `${webBuildCommand} && electrobun dev`,
+    dev: "electrobun dev --watch",
+    "dev:hmr": `concurrently "${localRunCommand} hmr" "${localRunCommand} start"`,
+    hmr: webDevCommand,
+    build: `${webBuildCommand} && electrobun build`,
+    "build:stable": `${webBuildCommand} && electrobun build --env=stable`,
+    "build:canary": `${webBuildCommand} && electrobun build --env=canary`,
+    "check-types": "tsc --noEmit",
+  };
+
+  vfs.writeJson("apps/desktop/package.json", pkgJson);
+}
+
+function getDesktopWebCommand(
+  packageManager: ProjectConfig["packageManager"],
+  options: { hasTurborepo: boolean; hasNx: boolean },
+  script: DesktopWebScript,
+): string {
+  if (options.hasTurborepo) {
+    return `turbo -F web ${script}`;
+  }
+
+  if (options.hasNx) {
+    return `nx run-many -t ${script} --projects=web`;
+  }
+
+  switch (packageManager) {
+    case "npm":
+      return `npm run ${script} --workspace web`;
+    case "pnpm":
+      return `pnpm -w --filter web ${script}`;
+    case "bun":
+    default:
+      return `bun run --filter web ${script}`;
+  }
+}
+
+function getLocalRunCommand(packageManager: ProjectConfig["packageManager"]): string {
+  switch (packageManager) {
+    case "npm":
+      return "npm run";
+    case "pnpm":
+      return "pnpm run";
+    case "bun":
+    default:
+      return "bun run";
+  }
+}
+
 function updateDbPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const pkgJson = vfs.readJson<PackageJson>("packages/db/package.json");
   if (!pkgJson) return;
@@ -302,15 +369,7 @@ function updateEnvPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): vo
 
   // Set exports based on which env files exist
   const hasWebFrontend = config.frontend.some((f: string) =>
-    [
-      "tanstack-router",
-      "react-router",
-      "tanstack-start",
-      "next",
-      "nuxt",
-      "svelte",
-      "solid",
-    ].includes(f),
+    (desktopWebFrontends as readonly string[]).includes(f),
   );
   const hasNative = config.frontend.some((f: string) =>
     ["native-bare", "native-uniwind", "native-unistyles"].includes(f),

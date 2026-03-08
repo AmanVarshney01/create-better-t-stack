@@ -65,8 +65,11 @@ export type WebFrontend = Extract<
   | "nuxt"
   | "svelte"
   | "solid"
+  | "astro"
   | "none"
 >;
+
+export type DesktopWebFrontend = Exclude<WebFrontend, "none">;
 
 export type NativeFrontend = Extract<
   Frontend,
