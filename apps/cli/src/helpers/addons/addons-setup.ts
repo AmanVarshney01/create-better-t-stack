@@ -52,23 +52,20 @@ async function runAddonStep(addon: string, step: () => Promise<void>): Promise<v
 
 export async function setupAddons(config: ProjectConfig) {
   const { addons, frontend, projectDir } = config;
-  const hasReactWebFrontend =
-    frontend.includes("react-router") ||
-    frontend.includes("tanstack-router") ||
-    frontend.includes("next");
-  const hasNuxtFrontend = frontend.includes("nuxt");
-  const hasSvelteFrontend = frontend.includes("svelte");
-  const hasSolidFrontend = frontend.includes("solid");
-  const hasNextFrontend = frontend.includes("next");
+  const hasWebFrontend = frontend.some((value) =>
+    [
+      "tanstack-router",
+      "react-router",
+      "tanstack-start",
+      "next",
+      "nuxt",
+      "svelte",
+      "solid",
+      "astro",
+    ].includes(value),
+  );
 
-  if (
-    addons.includes("tauri") &&
-    (hasReactWebFrontend ||
-      hasNuxtFrontend ||
-      hasSvelteFrontend ||
-      hasSolidFrontend ||
-      hasNextFrontend)
-  ) {
+  if (addons.includes("tauri") && hasWebFrontend) {
     await runSetup(() => setupTauri(config));
   }
 

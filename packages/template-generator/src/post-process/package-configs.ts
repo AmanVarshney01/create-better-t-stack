@@ -26,6 +26,8 @@ type PackageManagerConfig = {
   filter: (workspace: string, script: string) => string;
 };
 
+type DesktopWebScript = "build" | "dev";
+
 /**
  * Update all package.json files with proper names, scripts, and workspaces
  */
@@ -35,6 +37,7 @@ export function processPackageConfigs(vfs: VirtualFileSystem, config: ProjectCon
   updateEnvPackageJson(vfs, config);
   updateUiPackageJson(vfs, config);
   updateInfraPackageJson(vfs, config);
+  updateDesktopPackageJson(vfs, config);
   renameDevScriptsForAlchemy(vfs, config);
 
   if (config.backend === "convex") {
@@ -105,6 +108,12 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
 
   if (hasWebApp) {
     scripts["dev:web"] = pmConfig.filter("web", "dev");
+  }
+
+  if (addons.includes("electrobun")) {
+    scripts["dev:desktop"] = pmConfig.filter("desktop", "dev:hmr");
+    scripts["build:desktop"] = pmConfig.filter("desktop", "build:stable");
+    scripts["build:desktop:canary"] = pmConfig.filter("desktop", "build:canary");
   }
 
   if (addons.includes("opentui")) {
@@ -224,6 +233,67 @@ function getPackageManagerConfig(
         checkTypes: "bun run --filter '*' check-types",
         filter: (workspace, script) => `bun run --filter ${workspace} ${script}`,
       };
+  }
+}
+
+function updateDesktopPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): void {
+  const pkgJson = vfs.readJson<PackageJson>("apps/desktop/package.json");
+  if (!pkgJson) return;
+
+  const { packageManager, addons } = config;
+  const hasTurborepo = addons.includes("turborepo");
+  const hasNx = addons.includes("nx");
+  const webBuildCommand = getDesktopWebCommand(packageManager, { hasTurborepo, hasNx }, "build");
+  const webDevCommand = getDesktopWebCommand(packageManager, { hasTurborepo, hasNx }, "dev");
+  const localRunCommand = getLocalRunCommand(packageManager);
+
+  pkgJson.scripts = {
+    start: `${webBuildCommand} && electrobun dev`,
+    dev: "electrobun dev --watch",
+    "dev:hmr": `concurrently "${localRunCommand} hmr" "${localRunCommand} start"`,
+    hmr: webDevCommand,
+    build: `${webBuildCommand} && electrobun build`,
+    "build:stable": `${webBuildCommand} && electrobun build --env=stable`,
+    "build:canary": `${webBuildCommand} && electrobun build --env=canary`,
+    "check-types": "tsc --noEmit",
+  };
+
+  vfs.writeJson("apps/desktop/package.json", pkgJson);
+}
+
+function getDesktopWebCommand(
+  packageManager: ProjectConfig["packageManager"],
+  options: { hasTurborepo: boolean; hasNx: boolean },
+  script: DesktopWebScript,
+): string {
+  if (options.hasTurborepo) {
+    return `turbo -F web ${script}`;
+  }
+
+  if (options.hasNx) {
+    return `nx run-many -t ${script} --projects=web`;
+  }
+
+  switch (packageManager) {
+    case "npm":
+      return `npm run ${script} --workspace web`;
+    case "pnpm":
+      return `pnpm -w --filter web ${script}`;
+    case "bun":
+    default:
+      return `bun run --filter web ${script}`;
+  }
+}
+
+function getLocalRunCommand(packageManager: ProjectConfig["packageManager"]): string {
+  switch (packageManager) {
+    case "npm":
+      return "npm run";
+    case "pnpm":
+      return "pnpm run";
+    case "bun":
+    default:
+      return "bun run";
   }
 }
 

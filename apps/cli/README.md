@@ -41,7 +41,7 @@ Follow the prompts to configure your project or use the `--yes` flag for default
 | **Database Setup**       | • Turso (SQLite)<br>• Cloudflare D1 (SQLite)<br>• Neon (PostgreSQL)<br>• Supabase (PostgreSQL)<br>• Prisma Postgres<br>• MongoDB Atlas<br>• None (manual setup)                                                                                            |
 | **Authentication**       | Better-Auth (email/password, with more options coming soon)                                                                                                                                                                                                |
 | **Styling**              | Tailwind CSS with a shared shadcn/ui package for React web apps                                                                                                                                                                                            |
-| **Addons**               | • PWA support<br>• Tauri (desktop applications)<br>• Starlight (documentation site)<br>• Biome (linting and formatting)<br>• Lefthook, Husky (Git hooks)<br>• Turborepo or Nx (monorepo orchestration)                                                     |
+| **Addons**               | • PWA support<br>• Tauri (desktop applications)<br>• Electrobun (lightweight desktop shell)<br>• Starlight (documentation site)<br>• Biome (linting and formatting)<br>• Lefthook, Husky (Git hooks)<br>• Turborepo or Nx (monorepo orchestration)         |
 | **Examples**             | • Todo app<br>• AI Chat interface (using Vercel AI SDK)                                                                                                                                                                                                    |
 | **Developer Experience** | • Automatic Git initialization<br>• Package manager choice (npm, pnpm, bun)<br>• Automatic dependency installation                                                                                                                                         |
 
@@ -60,7 +60,7 @@ Options:
   --auth <provider>               Authentication (better-auth, clerk, none)
   --payments <provider>           Payments provider (polar, none)
   --frontend <types...>           Frontend types (tanstack-router, react-router, tanstack-start, next, nuxt, svelte, solid, astro, native-bare, native-uniwind, native-unistyles, none)
-  --addons <types...>             Additional addons (pwa, tauri, starlight, biome, lefthook, husky, ruler, mcp, turborepo, nx, fumadocs, ultracite, oxlint, opentui, wxt, skills, none)
+  --addons <types...>             Additional addons (pwa, tauri, electrobun, starlight, biome, lefthook, husky, ruler, mcp, turborepo, nx, fumadocs, ultracite, oxlint, opentui, wxt, skills, none)
   --examples <types...>           Examples to include (todo, ai, none)
   --git                           Initialize git repository
   --no-git                        Skip git initialization

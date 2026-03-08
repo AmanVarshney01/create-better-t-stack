@@ -10,32 +10,66 @@ import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageRunnerPrefix } from "../../utils/package-runner";
 import { createSpinner } from "../../utils/terminal-output";
 
+function getWebFrontend(frontend: Pick<ProjectConfig, "frontend">["frontend"]) {
+  return frontend.find((value) =>
+    [
+      "tanstack-router",
+      "react-router",
+      "tanstack-start",
+      "next",
+      "nuxt",
+      "svelte",
+      "solid",
+      "astro",
+    ].includes(value),
+  );
+}
+
+function getTauriDevUrl(frontend: Pick<ProjectConfig, "frontend">["frontend"]) {
+  const webFrontend = getWebFrontend(frontend);
+
+  switch (webFrontend) {
+    case "react-router":
+    case "svelte":
+    case "solid":
+      return "http://localhost:5173";
+    case "astro":
+      return "http://localhost:4321";
+    default:
+      return "http://localhost:3001";
+  }
+}
+
+function getTauriFrontendDist(frontend: Pick<ProjectConfig, "frontend">["frontend"]) {
+  const webFrontend = getWebFrontend(frontend);
+
+  switch (webFrontend) {
+    case "react-router":
+      return "../build/client";
+    case "tanstack-start":
+      return "../dist/client";
+    case "next":
+      return "../out";
+    case "svelte":
+      return "../build";
+    default:
+      return "../dist";
+  }
+}
+
+function getTauriBeforeBuildCommand(
+  packageManager: Pick<ProjectConfig, "packageManager">["packageManager"],
+  frontend: Pick<ProjectConfig, "frontend">["frontend"],
+) {
+  return frontend.includes("nuxt")
+    ? `${packageManager} run generate`
+    : `${packageManager} run build`;
+}
+
 export function buildTauriInitArgs(
   config: Pick<ProjectConfig, "packageManager" | "frontend" | "projectDir">,
 ) {
   const { packageManager, frontend, projectDir } = config;
-
-  const hasReactRouter = frontend.includes("react-router");
-  const hasNuxt = frontend.includes("nuxt");
-  const hasSvelte = frontend.includes("svelte");
-  const hasNext = frontend.includes("next");
-
-  const devUrl =
-    hasReactRouter || hasSvelte
-      ? "http://localhost:5173"
-      : hasNext
-        ? "http://localhost:3001"
-        : "http://localhost:3001";
-
-  const frontendDist = hasNuxt
-    ? "../.output/public"
-    : hasSvelte
-      ? "../build"
-      : hasNext
-        ? "../.next"
-        : hasReactRouter
-          ? "../build/client"
-          : "../dist";
 
   return [
     ...getPackageRunnerPrefix(packageManager),
@@ -47,13 +81,13 @@ export function buildTauriInitArgs(
     "--window-title",
     path.basename(projectDir),
     "--frontend-dist",
-    frontendDist,
+    getTauriFrontendDist(frontend),
     "--dev-url",
-    devUrl,
+    getTauriDevUrl(frontend),
     "--before-dev-command",
     `${packageManager} run dev`,
     "--before-build-command",
-    `${packageManager} run build`,
+    getTauriBeforeBuildCommand(packageManager, frontend),
   ];
 }
 

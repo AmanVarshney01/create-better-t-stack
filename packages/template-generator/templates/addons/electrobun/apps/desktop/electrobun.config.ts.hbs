@@ -1,0 +1,30 @@
+import type { ElectrobunConfig } from "electrobun";
+
+export default {
+  app: {
+    name: "{{projectName}}",
+    identifier: "dev.bettertstack.{{projectName}}.desktop",
+    version: "0.0.1",
+  },
+  runtime: {
+    exitOnLastWindowClosed: true,
+  },
+  build: {
+    bun: {
+      entrypoint: "src/bun/index.ts",
+    },
+    copy: {
+      "{{#if (includes frontend "react-router")}}../web/build/client{{else if (includes frontend "tanstack-start")}}../web/dist/client{{else if (includes frontend "next")}}../web/out{{else if (includes frontend "svelte")}}../web/build{{else}}../web/dist{{/if}}": "views/mainview",
+    },
+    watchIgnore: ["{{#if (includes frontend "react-router")}}../web/build/client/**{{else if (includes frontend "tanstack-start")}}../web/dist/client/**{{else if (includes frontend "next")}}../web/out/**{{else if (includes frontend "svelte")}}../web/build/**{{else}}../web/dist/**{{/if}}"],
+    mac: {
+      bundleCEF: false,
+    },
+    linux: {
+      bundleCEF: false,
+    },
+    win: {
+      bundleCEF: false,
+    },
+  },
+} satisfies ElectrobunConfig;

@@ -507,6 +507,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "electrobun",
+      name: "Electrobun",
+      description: "Wrap web frontends in a lightweight desktop shell",
+      icon: "",
+      color: "from-orange-500 to-orange-700",
+      default: false,
+    },
+    {
       id: "starlight",
       name: "Starlight",
       description: "Build stellar docs with astro",

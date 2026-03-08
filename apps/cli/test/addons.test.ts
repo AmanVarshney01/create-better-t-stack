@@ -111,10 +111,12 @@ describe("Addon Configurations", () => {
       const tauriCompatibleFrontends = [
         "tanstack-router",
         "react-router",
+        "tanstack-start",
+        "next",
         "nuxt",
         "svelte",
         "solid",
-        "next",
+        "astro",
       ];
 
       for (const frontend of tauriCompatibleFrontends) {
@@ -135,7 +137,7 @@ describe("Addon Configurations", () => {
             install: false,
           };
 
-          if (["nuxt", "svelte", "solid"].includes(frontend)) {
+          if (["nuxt", "svelte", "solid", "astro"].includes(frontend)) {
             config.api = "orpc";
           } else {
             config.api = "trpc";
@@ -168,6 +170,71 @@ describe("Addon Configurations", () => {
           });
 
           expectError(result, "tauri addon requires one of these frontends");
+        });
+      }
+    });
+
+    describe("Electrobun Addon", () => {
+      const electrobunCompatibleFrontends = [
+        "tanstack-router",
+        "react-router",
+        "tanstack-start",
+        "next",
+        "nuxt",
+        "svelte",
+        "solid",
+        "astro",
+      ];
+
+      for (const frontend of electrobunCompatibleFrontends) {
+        it(`should work with Electrobun + ${frontend}`, async () => {
+          const config: TestConfig = {
+            projectName: `electrobun-${frontend}`,
+            addons: ["electrobun"],
+            frontend: [frontend as Frontend],
+            backend: "hono",
+            runtime: "bun",
+            database: "sqlite",
+            orm: "drizzle",
+            auth: "none",
+            examples: ["none"],
+            dbSetup: "none",
+            webDeploy: "none",
+            serverDeploy: "none",
+            install: false,
+          };
+
+          config.api = ["nuxt", "svelte", "solid", "astro"].includes(frontend) ? "orpc" : "trpc";
+
+          const result = await runTRPCTest(config);
+          expectSuccess(result);
+        });
+      }
+
+      const electrobunIncompatibleFrontends = ["native-bare", "native-uniwind", "native-unistyles"];
+
+      for (const frontend of electrobunIncompatibleFrontends) {
+        it(`should fail with Electrobun + ${frontend}`, async () => {
+          const config: TestConfig = {
+            projectName: `electrobun-${frontend}-fail`,
+            addons: ["electrobun"],
+            frontend: [frontend as Frontend],
+            backend: "hono",
+            runtime: "bun",
+            database: "sqlite",
+            orm: "drizzle",
+            auth: "none",
+            examples: ["none"],
+            dbSetup: "none",
+            webDeploy: "none",
+            serverDeploy: "none",
+            expectError: true,
+          };
+
+          config.api = "trpc";
+
+          const result = await runTRPCTest(config);
+          expectError(result, "electrobun addon requires one of these frontends");
         });
       }
     });
@@ -328,6 +395,7 @@ describe("Addon Configurations", () => {
     const testableAddons = [
       "pwa",
       "tauri",
+      "electrobun",
       "biome",
       "husky",
       "turborepo",
@@ -359,6 +427,8 @@ describe("Addon Configurations", () => {
           config.frontend = ["tanstack-router"]; // PWA compatible
         } else if (["tauri"].includes(addon)) {
           config.frontend = ["tanstack-router"]; // Tauri compatible
+        } else if (["electrobun"].includes(addon)) {
+          config.frontend = ["tanstack-router"]; // Electrobun compatible
         } else {
           config.frontend = ["tanstack-router"]; // Universal addons
         }

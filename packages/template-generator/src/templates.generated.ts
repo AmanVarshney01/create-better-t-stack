@@ -100,6 +100,107 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 	{{/if}}
 }
 `],
+  ["addons/electrobun/apps/desktop/.gitignore", `artifacts
+`],
+  ["addons/electrobun/apps/desktop/electrobun.config.ts.hbs", `import type { ElectrobunConfig } from "electrobun";
+
+export default {
+  app: {
+    name: "{{projectName}}",
+    identifier: "dev.bettertstack.{{projectName}}.desktop",
+    version: "0.0.1",
+  },
+  runtime: {
+    exitOnLastWindowClosed: true,
+  },
+  build: {
+    bun: {
+      entrypoint: "src/bun/index.ts",
+    },
+    copy: {
+      "{{#if (includes frontend "react-router")}}../web/build/client{{else if (includes frontend "tanstack-start")}}../web/dist/client{{else if (includes frontend "next")}}../web/out{{else if (includes frontend "svelte")}}../web/build{{else}}../web/dist{{/if}}": "views/mainview",
+    },
+    watchIgnore: ["{{#if (includes frontend "react-router")}}../web/build/client/**{{else if (includes frontend "tanstack-start")}}../web/dist/client/**{{else if (includes frontend "next")}}../web/out/**{{else if (includes frontend "svelte")}}../web/build/**{{else}}../web/dist/**{{/if}}"],
+    mac: {
+      bundleCEF: false,
+    },
+    linux: {
+      bundleCEF: false,
+    },
+    win: {
+      bundleCEF: false,
+    },
+  },
+} satisfies ElectrobunConfig;
+`],
+  ["addons/electrobun/apps/desktop/package.json.hbs", `{
+  "name": "desktop",
+  "private": true,
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "electrobun": "^1.15.1"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.4",
+    "concurrently": "^9.1.0",
+    "typescript": "^5"
+  }
+}
+`],
+  ["addons/electrobun/apps/desktop/src/bun/index.ts.hbs", `import { BrowserWindow, Updater } from "electrobun/bun";
+
+const DEV_SERVER_PORT = {{#if (or (includes frontend "react-router") (includes frontend "svelte") (includes frontend "solid"))}}5173{{else if (includes frontend "astro")}}4321{{else}}3001{{/if}};
+const DEV_SERVER_URL = \`http://localhost:\${DEV_SERVER_PORT}\`;
+
+async function getMainViewUrl(): Promise<string> {
+  const channel = await Updater.localInfo.channel();
+  if (channel === "dev") {
+    try {
+      await fetch(DEV_SERVER_URL, { method: "HEAD" });
+      console.log(\`Desktop shell connected to \${DEV_SERVER_URL}\`);
+      return DEV_SERVER_URL;
+    } catch {
+      console.log(
+        'Web dev server not running. Run "{{packageManager}} run dev:hmr" for HMR support.',
+      );
+    }
+  }
+
+  return "views://mainview/index.html";
+}
+
+const url = await getMainViewUrl();
+
+new BrowserWindow({
+  title: "{{projectName}}",
+  url,
+  frame: {
+    width: 1280,
+    height: 820,
+    x: 120,
+    y: 120,
+  },
+});
+
+console.log("Electrobun desktop shell started.");
+`],
+  ["addons/electrobun/apps/desktop/tsconfig.json.hbs", `{
+  "extends": "../../packages/config/tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM"],
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "electrobun.config.ts"]
+}
+`],
   ["addons/husky/.husky/pre-commit", `lint-staged
 `],
   ["addons/lefthook/lefthook.yml.hbs", `# Lefthook configuration
@@ -26775,4 +26876,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 441;
+export const TEMPLATE_COUNT = 446;

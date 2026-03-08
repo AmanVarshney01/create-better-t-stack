@@ -31,6 +31,10 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "Tauri";
       hint = "Build native desktop apps from your web frontend";
       break;
+    case "electrobun":
+      label = "Electrobun";
+      hint = "Wrap web frontends in a lightweight desktop shell";
+      break;
     case "biome":
       label = "Biome";
       hint = "Format, lint, and more";
@@ -91,7 +95,7 @@ const ADDON_GROUPS = {
   "Monorepo & Tasks": ["turborepo", "nx"],
   "Code Quality": ["biome", "oxlint", "ultracite", "husky", "lefthook"],
   Documentation: ["starlight", "fumadocs"],
-  "Platform Extensions": ["pwa", "tauri", "opentui", "wxt"],
+  "Platform Extensions": ["pwa", "tauri", "electrobun", "opentui", "wxt"],
   "AI & Agent Tools": ["ruler", "skills", "mcp"],
 };
 

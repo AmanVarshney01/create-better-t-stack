@@ -21,6 +21,19 @@ const CATEGORY_ORDER: Array<keyof typeof TECH_OPTIONS> = [
   "install",
 ];
 
+const desktopAddonNames = {
+  tauri: "Tauri",
+  electrobun: "Electrobun",
+} as const;
+
+const staticDesktopFrontendNames = {
+  "tanstack-start": "TanStack Start",
+  next: "Next.js",
+  nuxt: "Nuxt",
+  svelte: "SvelteKit",
+  astro: "Astro",
+} as const;
+
 export function generateStackSummary(stack: StackState) {
   const selectedTechs = CATEGORY_ORDER.flatMap((category) => {
     const options = TECH_OPTIONS[category];
@@ -45,6 +58,32 @@ export function generateStackSummary(stack: StackState) {
   });
 
   return selectedTechs.length > 0 ? selectedTechs.join(" • ") : "Custom stack";
+}
+
+export function getDesktopBuildNote(stack: Pick<StackState, "addons" | "webFrontend">) {
+  const selectedDesktopAddons = stack.addons.filter(
+    (addon): addon is keyof typeof desktopAddonNames => addon in desktopAddonNames,
+  );
+
+  if (selectedDesktopAddons.length === 0) {
+    return null;
+  }
+
+  const staticFrontend = stack.webFrontend.find(
+    (frontend): frontend is keyof typeof staticDesktopFrontendNames =>
+      frontend in staticDesktopFrontendNames,
+  );
+
+  if (!staticFrontend) {
+    return null;
+  }
+
+  const addonLabel =
+    selectedDesktopAddons.length === 2
+      ? "Tauri and Electrobun desktop builds"
+      : `${desktopAddonNames[selectedDesktopAddons[0]]} desktop builds`;
+
+  return `${addonLabel} package static web assets. ${staticDesktopFrontendNames[staticFrontend]} needs a static/export build configuration before desktop packaging will work.`;
 }
 
 export function generateStackCommand(stack: StackState) {
@@ -108,6 +147,7 @@ export function generateStackCommand(stack: StackState) {
               [
                 "pwa",
                 "tauri",
+                "electrobun",
                 "starlight",
                 "biome",
                 "lefthook",

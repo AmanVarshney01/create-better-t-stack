@@ -35,6 +35,7 @@ export const AddonsSchema = z
   .enum([
     "pwa",
     "tauri",
+    "electrobun",
     "starlight",
     "biome",
     "lefthook",
