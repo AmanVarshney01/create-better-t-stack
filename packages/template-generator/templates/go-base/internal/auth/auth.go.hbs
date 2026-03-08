@@ -1,0 +1,135 @@
+{{#if (eq auth "go-better-auth")}}
+package auth
+
+import (
+	"os"
+	"strconv"
+	"strings"
+	"time"
+
+	gobetterauth "github.com/GoBetterAuth/go-better-auth/v2"
+	gobetterauthconfig "github.com/GoBetterAuth/go-better-auth/v2/config"
+	gobetterauthmodels "github.com/GoBetterAuth/go-better-auth/v2/models"
+	emailplugin "github.com/GoBetterAuth/go-better-auth/v2/plugins/email"
+	emailpasswordplugin "github.com/GoBetterAuth/go-better-auth/v2/plugins/email-password"
+	emailpasswordplugintypes "github.com/GoBetterAuth/go-better-auth/v2/plugins/email-password/types"
+	emailplugintypes "github.com/GoBetterAuth/go-better-auth/v2/plugins/email/types"
+	sessionplugin "github.com/GoBetterAuth/go-better-auth/v2/plugins/session"
+)
+
+const (
+	defaultAuthBasePath    = "/api/auth"
+	defaultAuthDatabaseURL = "./gobetterauth.db"
+	defaultAuthSecret      = "change-me-to-a-real-secret-at-least-32-chars"
+	defaultFromAddress     = "noreply@localhost"
+	defaultSMTPHost        = "localhost"
+	defaultSMTPPort        = 1025
+)
+
+func New() *gobetterauth.Auth {
+	config := gobetterauthconfig.NewConfig(
+		gobetterauthconfig.WithAppName("{{projectName}}"),
+		gobetterauthconfig.WithBaseURL(authBaseURL()),
+		gobetterauthconfig.WithBasePath(defaultAuthBasePath),
+		gobetterauthconfig.WithSecret(authSecret()),
+		gobetterauthconfig.WithDatabase(authDatabaseConfig()),
+		gobetterauthconfig.WithSession(gobetterauthmodels.SessionConfig{
+			CookieName: "gobetterauth.session_token",
+			ExpiresIn:  7 * 24 * time.Hour,
+			HttpOnly:   true,
+			SameSite:   "lax",
+		}),
+	)
+
+	plugins := []gobetterauthmodels.Plugin{
+		emailplugin.New(emailplugintypes.EmailPluginConfig{
+			Enabled:     true,
+			Provider:    emailplugintypes.ProviderSMTP,
+			FromAddress: envOrDefault("FROM_ADDRESS", defaultFromAddress),
+			TLSMode:     emailplugintypes.SMTPTLSModeStartTLS,
+			SMTP: &emailplugintypes.SMTPConfig{
+				Host:     envOrDefault("SMTP_HOST", defaultSMTPHost),
+				Port:     envOrDefaultInt("SMTP_PORT", defaultSMTPPort),
+				Username: strings.TrimSpace(os.Getenv("SMTP_USER")),
+				Password: strings.TrimSpace(os.Getenv("SMTP_PASS")),
+			},
+		}),
+		emailpasswordplugin.New(emailpasswordplugintypes.EmailPasswordPluginConfig{
+			Enabled:                  true,
+			AutoSignIn:               true,
+			RequireEmailVerification: false,
+			SendEmailOnSignUp:        false,
+			SendEmailOnSignIn:        false,
+		}),
+		sessionplugin.New(sessionplugin.SessionPluginConfig{
+			Enabled: true,
+		}),
+	}
+
+	return gobetterauth.New(&gobetterauth.AuthConfig{
+		Config:  config,
+		Plugins: plugins,
+	})
+}
+
+func authBaseURL() string {
+	if baseURL := strings.TrimSpace(os.Getenv("GO_BETTER_AUTH_BASE_URL")); baseURL != "" {
+		return baseURL
+	}
+
+	port := strings.TrimSpace(os.Getenv("PORT"))
+	if port == "" {
+		port = "8080"
+	}
+
+	return "http://localhost:" + port
+}
+
+func authSecret() string {
+	return envOrDefault("GO_BETTER_AUTH_SECRET", defaultAuthSecret)
+}
+
+func authDatabaseConfig() gobetterauthmodels.DatabaseConfig {
+	authDatabaseURL := strings.TrimSpace(os.Getenv("GO_BETTER_AUTH_DATABASE_URL"))
+	if authDatabaseURL == "" {
+		authDatabaseURL = defaultAuthDatabaseURL
+	}
+
+	provider := "sqlite"
+	switch {
+	case strings.HasPrefix(authDatabaseURL, "postgres://"),
+		strings.HasPrefix(authDatabaseURL, "postgresql://"):
+		provider = "postgres"
+	case strings.HasPrefix(authDatabaseURL, "mysql://"),
+		strings.Contains(authDatabaseURL, "@tcp("):
+		provider = "mysql"
+	}
+
+	return gobetterauthmodels.DatabaseConfig{
+		Provider: provider,
+		URL:      authDatabaseURL,
+	}
+}
+
+func envOrDefault(key string, fallback string) string {
+	if value := strings.TrimSpace(os.Getenv(key)); value != "" {
+		return value
+	}
+
+	return fallback
+}
+
+func envOrDefaultInt(key string, fallback int) int {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return fallback
+	}
+
+	parsed, err := strconv.Atoi(value)
+	if err != nil || parsed <= 0 {
+		return fallback
+	}
+
+	return parsed
+}
+{{/if}}

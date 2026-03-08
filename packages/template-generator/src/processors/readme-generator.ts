@@ -1173,7 +1173,7 @@ ${scripts}
 }
 
 function generateGoReadmeContent(config: ProjectConfig): string {
-  const { projectName, goWebFramework, goOrm, goApi, goCli, goLogging } = config;
+  const { projectName, goWebFramework, goOrm, goApi, goCli, goLogging, auth } = config;
 
   const features: string[] = ["- **Go** - Fast, reliable, and efficient programming language"];
 
@@ -1208,6 +1208,10 @@ function generateGoReadmeContent(config: ProjectConfig): string {
     features.push("- **Zap** - Blazing fast, structured logging");
   }
 
+  if (auth === "go-better-auth") {
+    features.push("- **GoBetterAuth** - Embedded auth routes with email/password and session support");
+  }
+
   // Project structure
   const structure: string[] = [`${projectName}/`, "├── go.mod                # Module definition"];
 
@@ -1225,6 +1229,10 @@ function generateGoReadmeContent(config: ProjectConfig): string {
 
   if (goOrm !== "none") {
     structure.push("├── internal/");
+    if (auth === "go-better-auth") {
+      structure.push("│   ├── auth/             # GoBetterAuth bootstrap and config");
+      structure.push("│   │   └── auth.go");
+    }
     structure.push("│   ├── database/         # Database configuration");
     structure.push("│   │   └── database.go");
     if (goOrm === "gorm") {
@@ -1233,6 +1241,10 @@ function generateGoReadmeContent(config: ProjectConfig): string {
       structure.push("│   └── handlers/         # HTTP handlers");
       structure.push("│       └── handlers.go");
     }
+  } else if (auth === "go-better-auth") {
+    structure.push("├── internal/");
+    structure.push("│   └── auth/             # GoBetterAuth bootstrap and config");
+    structure.push("│       └── auth.go");
   }
 
   if (goApi === "grpc-go") {
@@ -1263,6 +1275,30 @@ function generateGoReadmeContent(config: ProjectConfig): string {
   if (goApi === "grpc-go") {
     goScripts += `
 - \`protoc --go_out=. --go-grpc_out=. proto/*.proto\`: Regenerate protobuf code`;
+  }
+
+  let authSetup = "";
+  if (auth === "go-better-auth") {
+    authSetup = `
+## Authentication Setup
+
+This project mounts GoBetterAuth at \`/api/auth\` and ships with:
+
+- email/password sign-in
+- cookie-based sessions
+- local SMTP defaults for development
+
+Auth-specific environment variables in \`.env\`:
+
+- \`GO_BETTER_AUTH_BASE_URL=http://localhost:8080\`
+- \`GO_BETTER_AUTH_SECRET=change-me-to-a-real-secret-at-least-32-chars\`
+- \`GO_BETTER_AUTH_DATABASE_URL=./gobetterauth.db\`
+- \`FROM_ADDRESS=noreply@localhost\`
+- \`SMTP_HOST=localhost\`
+- \`SMTP_PORT=1025\`
+
+The generated config disables verification emails on sign-up so the server can boot cleanly without extra setup. For password reset and email flows, point the SMTP settings at a local mail catcher or your real provider.
+`;
   }
 
   // Database setup section
@@ -1346,12 +1382,12 @@ cp .env.example .env
 Then, install dependencies and run the server:
 
 \`\`\`bash
-go mod download
+go mod tidy
 go run cmd/server/main.go
 \`\`\`
 
-${goWebFramework !== "none" ? `The server will be running at [http://localhost:8080](http://localhost:8080).` : ""}
-${databaseSetup}${grpcSetup}
+${goWebFramework !== "none" || auth === "go-better-auth" ? `The server will be running at [http://localhost:8080](http://localhost:8080).` : ""}
+${databaseSetup}${authSetup}${grpcSetup}
 ## Project Structure
 
 \`\`\`

@@ -136,6 +136,7 @@ function generateTechStackSection(config: ProjectConfig): string {
     if (config.goApi !== "none") lines.push(`- API: ${config.goApi}`);
     if (config.goCli !== "none") lines.push(`- CLI: ${config.goCli}`);
     if (config.goLogging !== "none") lines.push(`- Logging: ${config.goLogging}`);
+    if (config.auth !== "none") lines.push(`- Auth: ${config.auth}`);
   }
 
   return lines.join("\n");
@@ -207,7 +208,7 @@ function generateStructureSection(config: ProjectConfig): string {
     lines.push("├── go.mod           # Module definition");
     lines.push("├── cmd/");
     lines.push("│   └── server/      # Server entry point");
-    if (config.goOrm !== "none") {
+    if (config.goOrm !== "none" || config.auth !== "none") {
       lines.push("├── internal/        # Internal packages");
     }
     if (config.goApi === "grpc-go") {
@@ -323,6 +324,7 @@ function generateCursorRules(config: ProjectConfig): string {
     if (config.goOrm !== "none") rules.push(`Database: ${config.goOrm}`);
     if (config.goApi !== "none") rules.push(`API: ${config.goApi}`);
     if (config.goLogging !== "none") rules.push(`Logging: ${config.goLogging}`);
+    if (config.auth !== "none") rules.push(`Auth: ${config.auth}`);
   }
 
   rules.push(``);

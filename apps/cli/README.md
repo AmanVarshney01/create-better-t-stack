@@ -26,7 +26,7 @@ Options:
   --yolo                          Random configuration (experimental)
   --database <type>               Database type (none, sqlite, postgres, mysql, mongodb)
   --orm <type>                    ORM type (drizzle, prisma, mongoose, typeorm, kysely, mikroorm, sequelize, none)
-  --auth <type>                   Authentication (better-auth, clerk, nextauth, none)
+  --auth <type>                   Authentication (better-auth, go-better-auth, clerk, nextauth, stack-auth, supabase-auth, auth0, none)
   --payments <type>               Payments (polar, stripe, lemon-squeezy, paddle, dodo, none)
   --frontend <types...>           Frontend types
   --backend <framework>           Backend framework

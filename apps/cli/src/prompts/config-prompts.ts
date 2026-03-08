@@ -270,8 +270,13 @@ export async function gatherConfig(
         ) as Promise<API>;
       },
       auth: ({ results }) => {
-        if (results.ecosystem !== "typescript") return Promise.resolve("none" as Auth);
-        return getAuthChoice(flags.auth, results.backend, results.frontend);
+        if (results.ecosystem === "typescript") {
+          return getAuthChoice(flags.auth, results.backend, results.frontend, "typescript");
+        }
+        if (results.ecosystem === "go") {
+          return getAuthChoice(flags.auth, undefined, undefined, "go");
+        }
+        return Promise.resolve("none" as Auth);
       },
       payments: ({ results }) => {
         if (results.ecosystem !== "typescript") return Promise.resolve("none" as Payments);

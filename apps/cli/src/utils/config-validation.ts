@@ -1,3 +1,6 @@
+import consola from "consola";
+import pc from "picocolors";
+
 import type { CLIInput, Database, DatabaseSetup, ProjectConfig, Runtime } from "../types";
 
 import {
@@ -5,23 +8,20 @@ import {
   isWebFrontend,
   validateAddonsAgainstFrontends,
   validateApiFrontendCompatibility,
-  validateAuth0Compatibility,
-  validateClerkCompatibility,
   validateExamplesCompatibility,
-  validateNextAuthCompatibility,
   validatePaymentsCompatibility,
   validateSelfBackendCompatibility,
   validateServerDeployRequiresBackend,
-  validateStackAuthCompatibility,
-  validateSupabaseAuthCompatibility,
   validateUILibraryCSSFrameworkCompatibility,
   validateUILibraryFrontendCompatibility,
   validateWebDeployRequiresWebFrontend,
   validateWorkersCompatibility,
 } from "./compatibility-rules";
+import { isSilent } from "./context";
 import { constraintError, incompatibilityError, missingRequirementError } from "./error-formatter";
 import { exitWithError } from "./errors";
 import { validatePeerDependencies } from "./peer-dependency-validator";
+import { normalizeCapabilitySelection } from "../types";
 
 export function validateDatabaseOrmAuth(cfg: Partial<ProjectConfig>, flags?: Set<string>) {
   const db = cfg.database;
@@ -265,6 +265,41 @@ export function validateDatabaseSetup(config: Partial<ProjectConfig>, providedFl
   }
 }
 
+export function validateEcosystemAuthCompatibility(
+  config: Partial<ProjectConfig>,
+  providedFlags?: Set<string>,
+) {
+  const auth = config.auth;
+
+  if (!auth || auth === "none") {
+    return;
+  }
+
+  const normalized = normalizeCapabilitySelection(
+    "auth",
+    {
+      ecosystem: config.ecosystem,
+      backend: config.backend,
+      frontend: config.frontend,
+    },
+    auth,
+  );
+
+  if (!normalized.normalized || normalized.value === auth) {
+    return;
+  }
+
+  config.auth = normalized.value;
+
+  if (providedFlags?.has("auth") && normalized.reason && !isSilent()) {
+    consola.warn(
+      pc.yellow(
+        `Unsupported auth selection '${auth}' for the current stack: ${normalized.reason}. Falling back to '--auth ${normalized.value}'.`,
+      ),
+    );
+  }
+}
+
 export function validateConvexConstraints(
   config: Partial<ProjectConfig>,
   providedFlags: Set<string>,
@@ -325,30 +360,6 @@ export function validateConvexConstraints(
     });
   }
 
-  if (has("auth") && config.auth === "better-auth") {
-    const supportedFrontends = [
-      "tanstack-router",
-      "tanstack-start",
-      "next",
-      "native-bare",
-      "native-uniwind",
-      "native-unistyles",
-    ];
-    const hasSupportedFrontend = config.frontend?.some((f) => supportedFrontends.includes(f));
-
-    if (!hasSupportedFrontend) {
-      incompatibilityError({
-        message: "Better-Auth with Convex requires specific frontends.",
-        provided: { backend: "convex", auth: "better-auth", frontend: config.frontend || [] },
-        suggestions: [
-          "Use --frontend tanstack-router",
-          "Use --frontend tanstack-start",
-          "Use --frontend next",
-          "Use a native frontend",
-        ],
-      });
-    }
-  }
 }
 
 export function validateBackendNoneConstraints(
@@ -384,12 +395,6 @@ export function validateBackendNoneConstraints(
   if (has("api") && config.api !== "none") {
     exitWithError(
       "Backend 'none' requires '--api none'. Please remove the --api flag or set it to 'none'.",
-    );
-  }
-
-  if (has("auth") && config.auth !== "none") {
-    exitWithError(
-      "Backend 'none' requires '--auth none'. Please remove the --auth flag or set it to 'none'.",
     );
   }
 
@@ -596,6 +601,7 @@ export function validateFullConfig(
   providedFlags: Set<string>,
   options: CLIInput,
 ) {
+  validateEcosystemAuthCompatibility(config, providedFlags);
   validateDatabaseOrmAuth(config, providedFlags);
   validateDatabaseSetup(config, providedFlags);
 
@@ -651,12 +657,6 @@ export function validateFullConfig(
     config.frontend ?? [],
   );
 
-  validateClerkCompatibility(config.auth, config.backend, config.frontend ?? []);
-  validateNextAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
-  validateStackAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
-  validateSupabaseAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
-  validateAuth0Compatibility(config.auth, config.backend, config.frontend ?? []);
-
   validateUILibraryFrontendCompatibility(
     config.uiLibrary,
     config.frontend ?? [],
@@ -671,6 +671,7 @@ export function validateFullConfig(
 
 export function validateConfigForProgrammaticUse(config: Partial<ProjectConfig>) {
   try {
+    validateEcosystemAuthCompatibility(config);
     validateDatabaseOrmAuth(config);
 
     if (config.frontend && config.frontend.length > 0) {
@@ -680,12 +681,6 @@ export function validateConfigForProgrammaticUse(config: Partial<ProjectConfig>)
     validateApiFrontendCompatibility(config.api, config.frontend, config.astroIntegration);
 
     validatePaymentsCompatibility(config.payments, config.auth, config.backend, config.frontend);
-
-    validateClerkCompatibility(config.auth, config.backend, config.frontend ?? []);
-    validateNextAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
-    validateStackAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
-    validateSupabaseAuthCompatibility(config.auth, config.backend, config.frontend ?? []);
-    validateAuth0Compatibility(config.auth, config.backend, config.frontend ?? []);
 
     if (config.addons && config.addons.length > 0) {
       validateAddonsAgainstFrontends(config.addons, config.frontend, config.auth);

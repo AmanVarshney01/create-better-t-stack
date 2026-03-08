@@ -1,6 +1,17 @@
+import { getCapabilityDefinitions } from "@better-fullstack/types";
+
 import type { Ecosystem, TechCategory } from "./types";
 
 import { DEFAULT_STACK, isStackDefault, type StackState } from "./stack-defaults";
+
+const AUTH_TECH_OPTIONS = getCapabilityDefinitions("auth").map((cap) => ({
+  id: cap.id,
+  name: cap.label,
+  description: cap.description,
+  icon: cap.icon,
+  color: cap.color,
+  default: cap.default,
+}));
 
 export const TECH_OPTIONS: Record<
   TechCategory,
@@ -678,58 +689,7 @@ export const TECH_OPTIONS: Record<
       default: true,
     },
   ],
-  auth: [
-    {
-      id: "better-auth",
-      name: "Better-Auth",
-      description: "The most comprehensive authentication framework for TypeScript",
-      icon: "/icon/better-auth.svg",
-      color: "from-green-400 to-green-600",
-      default: true,
-    },
-    {
-      id: "clerk",
-      name: "Clerk",
-      description: "More than authentication, Complete User Management",
-      icon: "https://cdn.simpleicons.org/clerk/6C47FF",
-      color: "from-blue-400 to-blue-600",
-    },
-    {
-      id: "nextauth",
-      name: "Auth.js (NextAuth)",
-      description: "Open source authentication for Next.js",
-      icon: "/icon/nextauth.png",
-      color: "from-orange-400 to-orange-600",
-    },
-    {
-      id: "stack-auth",
-      name: "Stack Auth",
-      description: "Open-source Auth0/Clerk alternative with user management",
-      icon: "/icon/stack-auth.svg",
-      color: "from-purple-400 to-purple-600",
-    },
-    {
-      id: "supabase-auth",
-      name: "Supabase Auth",
-      description: "Open-source Auth with Supabase platform integration",
-      icon: "https://cdn.simpleicons.org/supabase/3FCF8E",
-      color: "from-emerald-400 to-emerald-600",
-    },
-    {
-      id: "auth0",
-      name: "Auth0",
-      description: "Flexible identity platform for authentication and authorization",
-      icon: "https://cdn.simpleicons.org/auth0/EB5424",
-      color: "from-orange-400 to-orange-600",
-    },
-    {
-      id: "none",
-      name: "No Auth",
-      description: "Skip authentication",
-      icon: "",
-      color: "from-red-400 to-red-600",
-    },
-  ],
+  auth: AUTH_TECH_OPTIONS,
   payments: [
     {
       id: "polar",

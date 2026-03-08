@@ -4,96 +4,110 @@ Use this guide for Remotion videos made for this project unless the user asks fo
 
 ## Default look
 
-- Default to short-form videos in the 10-20 second range.
-- Follow an OpenCode-inspired dark palette taken from the live homepage, especially the background treatment.
-- Follow the Vercel/Geist visual language for layout, typography, icon handling, and motion.
-- Keep the result sharp, minimal, premium, and technical rather than playful, loud, or cartoonish.
+- Default to short videos — under 10 seconds, ideally a single scene (3-5s).
+- Cut aggressively. Start with the minimum, don't pad with intro/outro scenes.
+- One clear message per video. No redundant text — if the heading says it, don't repeat it in a badge.
+- Follow the homepage dark palette exactly. Keep the result sharp, minimal, premium, and technical.
+
+## Branding
+
+- **Never use the BF square icon.** Only use the text treatment: "better" (white `#f2eeee`) + "fullstack" (muted `#b3b0b0`) in Geist Mono, bold, `-0.02em` tracking.
+- Text should communicate the message — don't rely on logos alone (e.g. "betterfullstack now supports Deno Fresh Framework").
+- Include the actual CLI command users run (`bun create better-fullstack@latest`) in a styled command box when relevant.
 
 ## Color system
 
-Use these as the default palette unless the user overrides it:
+Use the homepage dark theme colors exactly:
 
-- Background: `#0c0c0e`
-- Surface: `#161618`
-- Elevated surface: `#1c1c1f`
-- Primary text: `#ffffff`
-- Secondary text: `#c7c7cc`
-- Muted text: `#a1a1a6`
-- Border: `#38383a`
-- Muted border: `#2c2c2e`
-- Accent: `#007aff`
-- Accent hover/deeper emphasis: `#0056b3`
-- Accent active/deepest emphasis: `#004085`
+| Token | Value | Usage |
+|-------|-------|-------|
+| Background | `#0c0c0e` | Primary background |
+| Foreground | `#f2eeee` | Primary text, active tabs |
+| Muted foreground | `#b3b0b0` | Secondary text, subtitles |
+| Border | `#2a2a2a` | Borders, dividers |
+| Secondary/Input | `#1a1a1a` | Command box bg, card bg |
+| Primary | `#8839ef` | Brand purple (use sparingly) |
 
 Apply the palette like this:
 
-- Keep most frames dark, with the background close to `#0c0c0e`.
-- Use the accent blue sparingly for focus points, key icons, active states, graph highlights, or CTA moments.
-- Prefer grayscale layers over colorful gradients.
+- Keep frames dark, background always `#0c0c0e`.
+- Use the purple sparingly — it's the brand accent, not a fill color.
+- Prefer grayscale layers. No gradients, no glow effects, no radial orbs.
 - Avoid warm or saturated accent colors unless the prompt explicitly asks for them.
 
-## Visual direction
+## Background
 
-- Use a Vercel-like composition style: generous spacing, crisp alignment, restrained color, and clear visual hierarchy.
-- Prefer clean geometric layouts, panels, cards, terminal/code motifs, grids, and product-demo framing.
-- Use icons instead of emojis.
-- Prefer polished outline or solid icons that feel compatible with Geist-style UI.
-- Keep icon sizes bold enough to read quickly on short scenes.
+- Use a subtle **grid background**: `rgba(242,238,238,0.04)` lines at `64px` spacing.
+- No glow orbs, no radial gradients, no blurred color blobs.
+
+## Command box style
+
+When showing CLI commands:
+
+```
+background: #1a1a1a
+border: 1px solid #2a2a2a
+border-radius: 8px
+padding: 14px 32px
+font: Geist Mono, 22px, #f2eeee
+```
+
+No package manager tabs — just show the command directly.
+
+## Icons and assets
+
+- **Use official SVGs** — download from official repos (e.g. `denoland/fresh` for Fresh logo, Simple Icons for framework logos).
+- Don't hand-draw approximations — fetch the real thing.
+- Use the same icon system as the builder page: Simple Icons CDN (`cdn.simpleicons.org/{slug}`) or local `/public/icon/` assets.
+- Icon registry reference: `apps/web/src/lib/tech-icons.ts`.
+- Keep icons bold enough to read on short scenes.
+- Animate icons with scale, position shifts, or opacity — not constant floating motion.
 
 ## Typography
 
-- Use Geist-style typography when available.
-- Prefer strong sans-serif headlines with tight tracking and compact line breaks.
-- Use mono text only for terminal snippets, code labels, timing marks, or technical callouts.
-- Keep on-screen copy short. A scene should usually communicate one idea.
+- Use Geist Sans for body text, Geist Mono for code/commands and the brand text treatment.
+- Prefer strong sans-serif headlines with tight tracking.
+- Keep on-screen copy short. A scene should communicate one idea.
 
 ## Motion rules
 
-- Favor spring-based motion, smooth easing, and precise timing over flashy bounces.
+- Favor spring-based motion with smooth easing.
 - Use fast, confident entrances and clean exits.
-- Keep transitions elegant and brief; do not let transitions dominate the runtime.
-- Use staggered reveals, masked wipes, parallax, scale, blur-to-sharp, and subtle depth shifts when useful.
+- Keep transitions brief — don't let them dominate runtime.
+- **Simple effects over fancy** — confetti is fine, pulsing glow orbs are not.
 - Avoid random movement, oversized elastic effects, or constant floating motion.
 
 ## Scene structure
 
-- Build around 3-6 scenes for a 10-20 second video.
-- Open with a strong hero frame in the first second.
-- Introduce the main value quickly, then show one idea per scene.
-- Reserve the strongest transition or visual flourish for the midpoint or final beat.
-- End on a clean branded frame, product name, or concise CTA.
+- Prefer a single scene for announcements (3-5s).
+- Open with the key message immediately — no slow fade-in intros.
+- If multiple scenes needed, cap at 2-3 for under 10 seconds.
+- End with a clean branded frame or CTA (command box, URL).
 
-## Icons and assets
+## What to avoid
 
-- Use icons as core storytelling elements, not just decoration.
-- Animate icons with scale, rotation, position shifts, path reveals, or layered transitions.
-- Keep icons consistent in stroke weight and visual family within a single video.
-- Put icons on dark surfaces with enough contrast to read immediately.
-- If mixing screenshots with icons, simplify the screenshot framing so the icon motion remains the focal point.
+- No gradients, glow effects, or radial blobs.
+- No BF square icon — text treatment only.
+- No package manager tabs — just the command.
+- No redundant badges/labels that repeat the heading.
+- No bright multi-color backgrounds.
+- No emoji, meme-style motion, or cartoonish effects.
+- No overloaded scenes with too many simultaneous animations.
+- Don't copy Vercel branding directly; borrow the design discipline, not the brand identity.
 
 ## Skill usage defaults
 
 When multiple installed skills overlap, use them in this order:
 
 1. `remotion-best-practices` for core Remotion decisions.
-2. `modern-short-video` for pacing, short-form structure, and promo-style editing.
-3. `remotion-bits` for premium motion components and transitions.
-4. `create-remotion-geist` for typography, icon usage, and Vercel-like presentation.
-5. `remotion-animation` when animation tuning needs more explicit parameter guidance.
+2. `modern-short-video` for pacing and short-form structure.
+3. `remotion-bits` for premium motion components.
+4. `create-remotion-geist` for typography and Vercel-like presentation.
+5. `remotion-animation` for explicit animation parameter guidance.
 
-Use the broader `remotion` and `video-production` skills only when the task clearly needs their extra workflow or tooling guidance.
+## Tech stack
 
-## What to avoid
-
-- Do not default to bright multi-color backgrounds.
-- Do not use emoji-heavy or meme-style motion.
-- Do not overload scenes with too many simultaneous animated elements.
-- Do not turn every transition into a spectacle.
-- Do not copy Vercel branding directly; borrow the design discipline, not the brand identity.
-
-## Source notes
-
-This guide is based on:
-
-- OpenCode homepage dark theme values observed on `https://opencode.ai/` on 2026-03-07.
-- The installed `create-remotion-geist` skill's Vercel/Geist design guidance.
+- Remotion + Tailwind for video generation.
+- Project location: `videos/` directory.
+- Render: `npx remotion render MainVideo out/video.mp4`
+- Preview: `npx remotion studio`

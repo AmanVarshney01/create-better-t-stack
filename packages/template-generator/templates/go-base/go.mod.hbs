@@ -3,6 +3,9 @@ module {{projectName}}
 go 1.22
 
 require (
+{{#if (eq auth "go-better-auth")}}
+	github.com/GoBetterAuth/go-better-auth/v2 v2.10.0
+{{/if}}
 {{#if (eq goWebFramework "gin")}}
 	github.com/gin-gonic/gin v1.10.0
 {{/if}}

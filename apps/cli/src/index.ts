@@ -154,7 +154,7 @@ export const router = os.router({
             .default(false)
             .describe("Show detailed result information"),
           ecosystem: EcosystemSchema.optional().describe(
-            "Language ecosystem (typescript, rust, or python)",
+            "Language ecosystem (typescript, rust, python, or go)",
           ),
           database: DatabaseSchema.optional(),
           orm: ORMSchema.optional(),

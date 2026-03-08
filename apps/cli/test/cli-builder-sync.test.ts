@@ -10,6 +10,7 @@
  * 3. Run this test to verify sync: bun test cli-builder-sync
  */
 
+import { getCapabilityDefinitions } from "@better-fullstack/types";
 import {
   ADDONS_VALUES,
   ANALYTICS_VALUES,
@@ -86,6 +87,39 @@ type BuilderOption = {
   name: string;
 };
 
+const CAPABILITY_BACKED_CATEGORIES: Record<string, () => BuilderOption[]> = {
+  AUTH_TECH_OPTIONS: () =>
+    getCapabilityDefinitions("auth").map((cap) => ({ id: cap.id, name: cap.label })),
+};
+
+function parseReferencedOptions(
+  content: string,
+  identifier: string,
+): BuilderOption[] {
+  if (CAPABILITY_BACKED_CATEGORIES[identifier]) {
+    return CAPABILITY_BACKED_CATEGORIES[identifier]();
+  }
+
+  const identifierPattern = new RegExp(
+    `const\\s+${identifier}\\s*=\\s*\\[(?<body>[\\s\\S]*?)\\]\\s*(?:as const)?;`,
+  );
+  const match = identifierPattern.exec(content);
+  if (!match?.groups?.body) {
+    return [];
+  }
+
+  const options: BuilderOption[] = [];
+  const optionRegex = /id:\s*["']([^"']+)["'][\s\S]*?name:\s*["']([^"']+)["']/g;
+  let optionMatch: RegExpExecArray | null;
+
+  // biome-ignore lint/suspicious/noAssignInExpressions: needed for regex iteration
+  while ((optionMatch = optionRegex.exec(match.groups.body)) !== null) {
+    options.push({ id: optionMatch[1], name: optionMatch[2] });
+  }
+
+  return options;
+}
+
 // Parse TECH_OPTIONS from the Builder's constant.ts file
 function parseBuilderOptions(): Record<string, BuilderOption[]> {
   // Handle both running from apps/cli and apps/cli/test
@@ -144,12 +178,22 @@ function parseBuilderOptions(): Record<string, BuilderOption[]> {
 
   // Parse each category by finding "categoryName: [" patterns
   // Then extract all id: "value" within that array
-  const categoryPattern = /^\s*(\w+):\s*\[/gm;
+  const categoryPattern = /^\s*(\w+):\s*(?:\[(?<inlineStart>)|(?<reference>[A-Z_]+))/gm;
   let categoryMatch: RegExpExecArray | null;
 
   // biome-ignore lint/suspicious/noAssignInExpressions: needed for regex iteration
   while ((categoryMatch = categoryPattern.exec(techOptionsSection)) !== null) {
     const categoryName = categoryMatch[1];
+    const referencedIdentifier = categoryMatch.groups?.reference;
+
+    if (referencedIdentifier) {
+      const options = parseReferencedOptions(content, referencedIdentifier);
+      if (options.length > 0) {
+        result[categoryName] = options;
+      }
+      continue;
+    }
+
     const startIndex = categoryMatch.index + categoryMatch[0].length;
 
     // Find the matching closing bracket by counting brackets

@@ -4,6 +4,8 @@ import { describe, expect, it } from "bun:test";
 
 import { createVirtual } from "../src/index";
 import {
+  analyzeStackCompatibility,
+  AuthSchema,
   EcosystemSchema,
   GoWebFrameworkSchema,
   GoOrmSchema,
@@ -54,8 +56,8 @@ function getFileContent(node: VirtualNode, path: string): string | undefined {
   return file?.content;
 }
 
-// Extract all Go-related enum values
 const ECOSYSTEMS = extractEnumValues(EcosystemSchema);
+const AUTHS = extractEnumValues(AuthSchema);
 const GO_WEB_FRAMEWORKS = extractEnumValues(GoWebFrameworkSchema);
 const GO_ORMS = extractEnumValues(GoOrmSchema);
 const GO_APIS = extractEnumValues(GoApiSchema);
@@ -70,6 +72,10 @@ describe("Go Language Support", () => {
       expect(ECOSYSTEMS).toContain("python");
       expect(ECOSYSTEMS).toContain("go");
       expect(ECOSYSTEMS.length).toBe(4);
+    });
+
+    it("should include GoBetterAuth in auth options", () => {
+      expect(AUTHS).toContain("go-better-auth");
     });
 
     it("should have go web framework options", () => {
@@ -191,6 +197,87 @@ describe("Go Language Support", () => {
       expect(envContent).toContain("HOST=");
       expect(envContent).toContain("PORT=");
     });
+
+    it("should generate GoBetterAuth files and env vars when selected", async () => {
+      const result = await createVirtual({
+        projectName: "go-auth-check",
+        ecosystem: "go",
+        auth: "go-better-auth",
+        goWebFramework: "gin",
+        goOrm: "none",
+        goApi: "none",
+        goCli: "none",
+        goLogging: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      expect(hasFile(root, "internal/auth/auth.go")).toBe(true);
+
+      const goModContent = getFileContent(root, "go.mod");
+      expect(goModContent).toContain("github.com/GoBetterAuth/go-better-auth/v2");
+
+      const mainContent = getFileContent(root, "cmd/server/main.go");
+      expect(mainContent).toContain(`r.Any("/api/auth"`);
+      expect(mainContent).toContain(`gin.WrapH(authApp.Handler())`);
+
+      const envContent = getFileContent(root, ".env.example");
+      expect(envContent).toContain("GO_BETTER_AUTH_SECRET=");
+      expect(envContent).toContain("GO_BETTER_AUTH_DATABASE_URL=");
+      expect(envContent).toContain("SMTP_HOST=");
+
+      const readmeContent = getFileContent(root, "README.md");
+      expect(readmeContent).toContain("GoBetterAuth");
+      expect(readmeContent).toContain("/api/auth");
+    });
+
+    it("should generate GoBetterAuth files with Echo framework", async () => {
+      const result = await createVirtual({
+        projectName: "go-auth-echo-check",
+        ecosystem: "go",
+        auth: "go-better-auth",
+        goWebFramework: "echo",
+        goOrm: "none",
+        goApi: "none",
+        goCli: "none",
+        goLogging: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const root = result.tree!.root;
+
+      expect(hasFile(root, "internal/auth/auth.go")).toBe(true);
+
+      const goModContent = getFileContent(root, "go.mod");
+      expect(goModContent).toContain("github.com/GoBetterAuth/go-better-auth/v2");
+
+      const mainContent = getFileContent(root, "cmd/server/main.go");
+      expect(mainContent).toContain(`e.Any("/api/auth/*"`);
+      expect(mainContent).toContain("echo.WrapHandler(authApp.Handler())");
+
+      const envContent = getFileContent(root, ".env.example");
+      expect(envContent).toContain("GO_BETTER_AUTH_SECRET=");
+    });
+
+    it("should start a plain net/http server when GoBetterAuth is enabled without a web framework", async () => {
+      const result = await createVirtual({
+        projectName: "go-auth-stdlib-check",
+        ecosystem: "go",
+        auth: "go-better-auth",
+        goWebFramework: "none",
+        goOrm: "none",
+        goApi: "none",
+        goCli: "none",
+        goLogging: "none",
+      });
+
+      expect(result.success).toBe(true);
+      const mainContent = getFileContent(result.tree!.root, "cmd/server/main.go");
+      expect(mainContent).toContain("http.NewServeMux()");
+      expect(mainContent).toContain('mux.Handle("/api/auth", authApp.Handler())');
+      expect(mainContent).toContain("server.ListenAndServe()");
+    });
   });
 
   describe("Gin Web Framework Integration", () => {
@@ -279,6 +366,146 @@ describe("Go Language Support", () => {
       expect(mainContent).toContain("middleware.CORS()");
       expect(mainContent).toContain(`e.GET("/health"`);
       expect(mainContent).toContain("e.Start(addr)");
+    });
+  });
+
+  describe("Go Auth Validation", () => {
+    it("should keep GoBetterAuth selected on Go stacks", () => {
+      const result = analyzeStackCompatibility({
+        ecosystem: "go",
+        projectName: "go-auth",
+        webFrontend: ["none"],
+        nativeFrontend: ["none"],
+        astroIntegration: "none",
+        runtime: "none",
+        backend: "none",
+        database: "none",
+        orm: "none",
+        dbSetup: "none",
+        auth: "go-better-auth",
+        payments: "none",
+        email: "none",
+        fileUpload: "none",
+        logging: "none",
+        observability: "none",
+        featureFlags: "none",
+        analytics: "none",
+        backendLibraries: "none",
+        stateManagement: "none",
+        forms: "none",
+        validation: "none",
+        testing: "none",
+        realtime: "none",
+        jobQueue: "none",
+        caching: "none",
+        animation: "none",
+        cssFramework: "none",
+        uiLibrary: "none",
+        cms: "none",
+        search: "none",
+        fileStorage: "none",
+        codeQuality: [],
+        documentation: [],
+        appPlatforms: [],
+        packageManager: "bun",
+        examples: [],
+        aiSdk: "none",
+        aiDocs: [],
+        git: "false",
+        install: "false",
+        api: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        yolo: "false",
+        rustWebFramework: "none",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: "none",
+        pythonWebFramework: "none",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: "none",
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+        goWebFramework: "gin",
+        goOrm: "none",
+        goApi: "none",
+        goCli: "none",
+        goLogging: "none",
+      });
+
+      expect(result.adjustedStack).toBeNull();
+    });
+
+    it("should reset TypeScript auth providers on Go stacks", () => {
+      const result = analyzeStackCompatibility({
+        ecosystem: "go",
+        projectName: "go-auth-reset",
+        webFrontend: ["none"],
+        nativeFrontend: ["none"],
+        astroIntegration: "none",
+        runtime: "none",
+        backend: "none",
+        database: "none",
+        orm: "none",
+        dbSetup: "none",
+        auth: "better-auth",
+        payments: "none",
+        email: "none",
+        fileUpload: "none",
+        logging: "none",
+        observability: "none",
+        featureFlags: "none",
+        analytics: "none",
+        backendLibraries: "none",
+        stateManagement: "none",
+        forms: "none",
+        validation: "none",
+        testing: "none",
+        realtime: "none",
+        jobQueue: "none",
+        caching: "none",
+        animation: "none",
+        cssFramework: "none",
+        uiLibrary: "none",
+        cms: "none",
+        search: "none",
+        fileStorage: "none",
+        codeQuality: [],
+        documentation: [],
+        appPlatforms: [],
+        packageManager: "bun",
+        examples: [],
+        aiSdk: "none",
+        aiDocs: [],
+        git: "false",
+        install: "false",
+        api: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        yolo: "false",
+        rustWebFramework: "none",
+        rustFrontend: "none",
+        rustOrm: "none",
+        rustApi: "none",
+        rustCli: "none",
+        rustLibraries: "none",
+        pythonWebFramework: "none",
+        pythonOrm: "none",
+        pythonValidation: "none",
+        pythonAi: "none",
+        pythonTaskQueue: "none",
+        pythonQuality: "none",
+        goWebFramework: "gin",
+        goOrm: "none",
+        goApi: "none",
+        goCli: "none",
+        goLogging: "none",
+      });
+
+      expect(result.adjustedStack?.auth).toBe("none");
     });
   });
 

@@ -1,4 +1,4 @@
-import { describe, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
 
 import type { Backend, Runtime } from "../src/types";
 
@@ -390,7 +390,7 @@ describe("Integration Tests - Real World Scenarios", () => {
       expectError(result, "tRPC API requires React-based frontends");
     });
 
-    it("should fail with Clerk + incompatible frontend", async () => {
+    it("should normalize Clerk + incompatible frontend to no auth", async () => {
       const result = await runTRPCTest({
         projectName: "clerk-svelte-fail",
         backend: "convex",
@@ -405,10 +405,10 @@ describe("Integration Tests - Real World Scenarios", () => {
         dbSetup: "none",
         webDeploy: "none",
         serverDeploy: "none",
-        expectError: true,
       });
 
-      expectError(result, "Clerk + Convex is not compatible");
+      expectSuccess(result);
+      expect(result.result?.projectConfig.auth).toBe("none");
     });
 
     it("should fail with addon incompatibility", async () => {
@@ -564,12 +564,13 @@ describe("Integration Tests - Real World Scenarios", () => {
       expectSuccess(result);
     });
 
-    const packageManagers = ["npm", "pnpm", "bun"];
+    const packageManagers = ["npm", "pnpm", "bun"] as const;
 
     for (const packageManager of packageManagers) {
       it(`should handle ${packageManager} package manager`, async () => {
         const result = await runTRPCTest({
           projectName: `pkg-manager-${packageManager}`,
+          packageManager,
           backend: "hono",
           runtime: "bun",
           database: "sqlite",

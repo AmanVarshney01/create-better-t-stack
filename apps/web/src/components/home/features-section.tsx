@@ -21,7 +21,7 @@ const features = [
     description: "SQL, NoSQL, and graph databases with type-safe query builders",
   },
   {
-    title: "6 auth providers",
+    title: "7 auth providers",
     description: "Self-hosted and managed authentication out of the box",
   },
   {

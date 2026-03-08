@@ -1,0 +1,86 @@
+{
+  "v": 2,
+  "d": "2026-03-07",
+  "focus": "base-ui-coverage",
+  "cb": "node /Users/ibrahime/Documents/Better-Fullstack/.claude/worktrees/base-ui-testing/apps/cli/dist/cli.mjs create <name> --ecosystem typescript --frontend <frontend> --backend <backend> --runtime <runtime> --api <api> --database <db> --orm <orm> --auth <auth> --css-framework <css> --ui-library base-ui --payments none --email none --file-upload none --effect none --state-management none --validation zod --forms none --testing vitest --ai none --realtime none --job-queue none --animation none --logging none --observability none --analytics none --cms none --caching none --search none --file-storage none --addons none --examples none --ai-docs none --db-setup none --web-deploy none --server-deploy none --package-manager bun --no-install --no-git --disable-analytics",
+  "tot": [10, 10, 0, 0],
+  "k": {
+    "tot": ["count", "latestPass", "latestFail", "fixedInRepo"],
+    "r": { "p": "pass", "f": "fail" },
+    "e": { "t": "typescript" },
+    "notes": [
+      "Base UI focused batch: all 5 compatible frontends (next, tanstack-start, react-router, tanstack-router, astro) with base-ui",
+      "Varied CSS frameworks (tailwind, scss, less, postcss-only, none) and backends (hono, express, fets, elysia, fastify, self)",
+      "10 unique combos executed with bun install + bun run check-types",
+      "Final outcome: 10/10 passing, no bugs found"
+    ]
+  },
+  "rows": [
+    [
+      "m260307-ts-next-hono-trpc-drizzle-pg-bauth-tw-baseui",
+      "t",
+      ["next", "hono", "node", "trpc", "drizzle", "postgres", "better-auth", "tailwind", "base-ui"],
+      "p"
+    ],
+    [
+      "m260307-ts-next-express-orpc-prisma-mysql-scss-baseui",
+      "t",
+      ["next", "express", "node", "orpc", "prisma", "mysql", "none", "scss", "base-ui"],
+      "p"
+    ],
+    [
+      "m260307-ts-tstart-fets-trpc-drizzle-sqlite-bauth-less-baseui",
+      "t",
+      ["tanstack-start", "fets", "node", "trpc", "drizzle", "sqlite", "better-auth", "less", "base-ui"],
+      "p"
+    ],
+    [
+      "m260307-ts-tstart-self-postcss-baseui",
+      "t",
+      ["tanstack-start", "self", "none", "none", "none", "none", "none", "postcss-only", "base-ui"],
+      "p"
+    ],
+    [
+      "m260307-ts-rr-elysia-orpc-drizzle-pg-bauth-nocss-baseui",
+      "t",
+      ["react-router", "elysia", "bun", "orpc", "drizzle", "postgres", "better-auth", "none", "base-ui"],
+      "p"
+    ],
+    [
+      "m260307-ts-rr-hono-trpc-prisma-sqlite-tw-baseui",
+      "t",
+      ["react-router", "hono", "bun", "trpc", "prisma", "sqlite", "none", "tailwind", "base-ui"],
+      "p"
+    ],
+    [
+      "m260307-ts-trouter-express-orpc-kysely-pg-bauth-tw-baseui",
+      "t",
+      ["tanstack-router", "express", "node", "orpc", "kysely", "postgres", "better-auth", "tailwind", "base-ui"],
+      "p"
+    ],
+    [
+      "m260307-ts-trouter-hono-drizzle-mysql-less-baseui",
+      "t",
+      ["tanstack-router", "hono", "bun", "none", "drizzle", "mysql", "none", "less", "base-ui"],
+      "p"
+    ],
+    [
+      "m260307-ts-astro-react-hono-tw-baseui",
+      "t",
+      ["astro", "hono", "node", "none", "none", "none", "none", "tailwind", "base-ui"],
+      "p"
+    ],
+    [
+      "m260307-ts-astro-react-fastify-prisma-pg-scss-baseui",
+      "t",
+      ["astro", "fastify", "node", "none", "prisma", "postgres", "none", "scss", "base-ui"],
+      "p"
+    ]
+  ],
+  "schema": {
+    "row": ["name", "ecosystemCode", "flagsByEcosystemOrder", "resultCode", "issueCode?", "fixedInRepo?(0|1)"],
+    "flagsOrder": {
+      "t": ["frontend", "backend", "runtime", "api", "orm", "database", "auth", "cssFramework", "uiLibrary"]
+    }
+  }
+}

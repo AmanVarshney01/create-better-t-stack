@@ -735,9 +735,9 @@ describe("Frontend Configurations", () => {
   });
 
   describe("Frontend Compatibility with Auth", () => {
-    const incompatibleFrontends = ["nuxt", "svelte", "solid"] as const;
-    for (const frontend of incompatibleFrontends) {
-      it(`should fail incompatible ${frontend} with Clerk + Convex`, async () => {
+    const authNormalizedFrontends = ["nuxt", "svelte"] as const;
+    for (const frontend of authNormalizedFrontends) {
+      it(`should normalize ${frontend} with Clerk + Convex to no auth`, async () => {
         const result = await runTRPCTest({
           projectName: `${frontend}-clerk-convex-fail`,
           frontend: [frontend],
@@ -752,17 +752,33 @@ describe("Frontend Configurations", () => {
           dbSetup: "none",
           webDeploy: "none",
           serverDeploy: "none",
-          expectError: true,
         });
 
-        expectError(
-          result,
-          frontend === "solid"
-            ? "not compatible with '--backend convex'"
-            : "Clerk + Convex is not compatible",
-        );
+        expectSuccess(result);
+        expect(result.result?.projectConfig.auth).toBe("none");
       });
     }
+
+    it("should fail incompatible solid with Clerk + Convex", async () => {
+      const result = await runTRPCTest({
+        projectName: "solid-clerk-convex-fail",
+        frontend: ["solid"],
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "clerk",
+        api: "none",
+        addons: ["none"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        expectError: true,
+      });
+
+      expectError(result, "not compatible with '--backend convex'");
+    });
 
     const compatibleFrontends = [
       "tanstack-router",
