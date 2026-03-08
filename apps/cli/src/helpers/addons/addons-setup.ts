@@ -1,7 +1,8 @@
+import path from "node:path";
+
 import { Result } from "better-result";
 import consola from "consola";
 import fs from "fs-extra";
-import path from "node:path";
 import pc from "picocolors";
 
 import { desktopWebFrontends, type ProjectConfig } from "../../types";

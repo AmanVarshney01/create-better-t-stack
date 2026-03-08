@@ -1,10 +1,10 @@
+import path from "node:path";
+
 import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
-import path from "node:path";
 
 import type { PackageManager } from "../../types";
-
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { AddonSetupError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";

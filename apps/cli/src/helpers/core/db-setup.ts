@@ -4,14 +4,14 @@
  * Dependencies are handled by the generator's db-deps processor
  */
 
+import path from "node:path";
+
 import { Result } from "better-result";
 import consola from "consola";
 import fs from "fs-extra";
-import path from "node:path";
 import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
-
 import { DatabaseSetupError, UserCancelledError } from "../../utils/errors";
 import { setupCloudflareD1 } from "../database-providers/d1-setup";
 import { setupDockerCompose } from "../database-providers/docker-compose-setup";

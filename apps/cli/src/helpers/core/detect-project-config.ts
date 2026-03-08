@@ -1,6 +1,7 @@
+import path from "node:path";
+
 import { Result } from "better-result";
 import fs from "fs-extra";
-import path from "node:path";
 
 import { readBtsConfig } from "../../utils/bts-config";
 

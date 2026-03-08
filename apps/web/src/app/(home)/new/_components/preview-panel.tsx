@@ -3,9 +3,8 @@
 import { Loader2, FolderTree, FileCode2, Info, ChevronLeft } from "lucide-react";
 import { useEffect, useState, useCallback, useRef } from "react";
 
-import type { StackState } from "@/lib/constant";
-
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import type { StackState } from "@/lib/constant";
 import { cn } from "@/lib/utils";
 
 import { CodeViewer, CodeViewerEmpty } from "./code-viewer";

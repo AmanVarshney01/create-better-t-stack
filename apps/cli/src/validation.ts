@@ -1,7 +1,6 @@
 import { Result } from "better-result";
 
 import type { CLIInput, ProjectConfig } from "./types";
-
 import { getProvidedFlags, processFlags, validateArrayOptions } from "./utils/config-processing";
 import { validateConfigForProgrammaticUse, validateFullConfig } from "./utils/config-validation";
 import { ValidationError } from "./utils/errors";

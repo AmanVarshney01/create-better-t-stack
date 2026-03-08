@@ -11,8 +11,6 @@ import {
 } from "lucide-react";
 import { startTransition } from "react";
 
-import type { Sponsor } from "@/lib/types";
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { getDesktopBuildNote } from "@/lib/stack-utils";
+import type { Sponsor } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 import { ActionButtons } from "../action-buttons";

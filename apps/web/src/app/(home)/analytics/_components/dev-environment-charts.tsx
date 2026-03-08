@@ -11,9 +11,8 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 
-import type { AggregatedAnalyticsData, Distribution, VersionDistribution } from "./types";
-
 import { ChartCard } from "./chart-card";
+import type { AggregatedAnalyticsData, Distribution, VersionDistribution } from "./types";
 
 const CHART_COLORS = [
   "var(--chart-1)",

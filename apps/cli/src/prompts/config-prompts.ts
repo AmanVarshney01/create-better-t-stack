@@ -1,3 +1,4 @@
+import { DEFAULT_CONFIG } from "../constants";
 import type {
   Addons,
   API,
@@ -15,8 +16,6 @@ import type {
   ServerDeploy,
   WebDeploy,
 } from "../types";
-
-import { DEFAULT_CONFIG } from "../constants";
 import { isSilent } from "../utils/context";
 import { UserCancelledError } from "../utils/errors";
 import { getAddonsChoice } from "./addons";

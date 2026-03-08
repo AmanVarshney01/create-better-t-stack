@@ -1,6 +1,6 @@
-import type { ProjectConfig } from "@better-t-stack/types";
-
 import { describe, expect, it } from "bun:test";
+
+import type { ProjectConfig } from "@better-t-stack/types";
 
 import { VirtualFileSystem } from "../src/core/virtual-fs";
 import { processPackageConfigs } from "../src/post-process/package-configs";

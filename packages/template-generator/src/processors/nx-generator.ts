@@ -6,7 +6,6 @@
 import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
-
 import { getDbScriptSupport, type DbScriptSupport } from "../utils/db-scripts";
 
 type NxTargetDefaults = {

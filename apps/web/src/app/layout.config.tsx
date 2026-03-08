@@ -1,5 +1,4 @@
 import type { BaseLayoutProps, LinkItemType } from "fumadocs-ui/layouts/shared";
-
 import Image from "next/image";
 
 import discordLogo from "@/public/icon/discord.svg";

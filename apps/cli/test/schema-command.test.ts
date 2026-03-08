@@ -1,5 +1,6 @@
-import { createRouterClient } from "@orpc/server";
 import { describe, expect, it } from "bun:test";
+
+import { createRouterClient } from "@orpc/server";
 
 import { router } from "../src/index";
 

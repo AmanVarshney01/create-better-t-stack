@@ -1,6 +1,5 @@
-import type { Backend, Runtime, ServerDeploy, WebDeploy } from "../types";
-
 import { DEFAULT_CONFIG } from "../constants";
+import type { Backend, Runtime, ServerDeploy, WebDeploy } from "../types";
 import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableSelect } from "./navigable";
 

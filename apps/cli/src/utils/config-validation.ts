@@ -1,7 +1,6 @@
 import { Result } from "better-result";
 
 import type { CLIInput, Database, DatabaseSetup, ProjectConfig, Runtime } from "../types";
-
 import {
   ensureSingleWebAndNative,
   isWebFrontend,

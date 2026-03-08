@@ -1,10 +1,10 @@
-import { Result, TaggedError } from "better-result";
 import * as fs from "node:fs/promises";
+
+import { Result, TaggedError } from "better-result";
 import { join, dirname } from "pathe";
 
-import type { VirtualFileTree, VirtualNode, VirtualFile, VirtualDirectory } from "./types";
-
 import { getBinaryTemplatesRoot } from "./core/template-reader";
+import type { VirtualFileTree, VirtualNode, VirtualFile, VirtualDirectory } from "./types";
 
 const BINARY_FILE_MARKER = "[Binary file]";
 

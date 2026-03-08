@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
-import fs from "fs-extra";
 import path from "node:path";
+
+import fs from "fs-extra";
 
 import { create } from "../src/index";
 

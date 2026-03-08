@@ -1,8 +1,8 @@
-import type { BetterTStackConfig } from "@better-t-stack/types";
+import path from "node:path";
 
+import type { BetterTStackConfig } from "@better-t-stack/types";
 import fs from "fs-extra";
 import { applyEdits, modify, parse } from "jsonc-parser";
-import path from "node:path";
 
 const BTS_CONFIG_FILE = "bts.jsonc";
 

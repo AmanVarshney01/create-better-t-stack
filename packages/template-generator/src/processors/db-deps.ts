@@ -1,7 +1,6 @@
 import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
-
 import { addPackageDependency, type AvailableDependencies } from "../utils/add-deps";
 
 export function processDatabaseDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {

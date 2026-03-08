@@ -1,5 +1,4 @@
 import type { ProjectConfig } from "@better-t-stack/types";
-
 import Handlebars from "handlebars";
 import isBinaryPath from "is-binary-path";
 

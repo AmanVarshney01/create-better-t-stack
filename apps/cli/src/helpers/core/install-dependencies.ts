@@ -3,7 +3,6 @@ import { $ } from "execa";
 import pc from "picocolors";
 
 import type { Addons, PackageManager } from "../../types";
-
 import { ProjectCreationError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { createSpinner } from "../../utils/terminal-output";

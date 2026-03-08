@@ -1,11 +1,11 @@
 import { describe, expect, it } from "bun:test";
-import fs from "fs-extra";
 import path from "node:path";
 
-import type { ProjectConfig } from "../src/types";
+import fs from "fs-extra";
 
 import { setupMcp, getRecommendedMcpServers } from "../src/helpers/addons/mcp-setup";
 import { setupSkills } from "../src/helpers/addons/skills-setup";
+import type { ProjectConfig } from "../src/types";
 import { runWithContextAsync } from "../src/utils/context";
 import { SMOKE_DIR } from "./setup";
 

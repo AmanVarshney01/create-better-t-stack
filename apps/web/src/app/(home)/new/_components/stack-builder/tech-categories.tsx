@@ -1,12 +1,11 @@
 import { CheckCircle2, InfoIcon, Terminal } from "lucide-react";
 import { motion } from "motion/react";
 
-import type { StackState } from "@/lib/constant";
-import type { TechCategory } from "@/lib/types";
-
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import type { StackState } from "@/lib/constant";
 import { TECH_OPTIONS } from "@/lib/constant";
 import { CATEGORY_ORDER } from "@/lib/stack-utils";
+import type { TechCategory } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 import { TechIcon } from "../tech-icon";

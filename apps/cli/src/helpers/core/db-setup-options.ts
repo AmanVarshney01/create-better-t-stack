@@ -1,5 +1,4 @@
 import type { DatabaseSetup, DbSetupOptions } from "../../types";
-
 import { isSilent } from "../../utils/context";
 
 export interface DatabaseSetupCliOptions {

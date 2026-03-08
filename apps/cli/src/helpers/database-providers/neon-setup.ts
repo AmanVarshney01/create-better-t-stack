@@ -1,12 +1,12 @@
+import path from "node:path";
+
 import { isCancel, select, text } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
-import path from "node:path";
 import pc from "picocolors";
 
 import type { PackageManager, ProjectConfig } from "../../types";
-
 import { isSilent } from "../../utils/context";
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
 import {

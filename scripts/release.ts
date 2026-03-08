@@ -1,7 +1,8 @@
-import { $ } from "bun";
-import { generate } from "changelogithub";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+
+import { $ } from "bun";
+import { generate } from "changelogithub";
 
 import config from "../changelogithub.config";
 

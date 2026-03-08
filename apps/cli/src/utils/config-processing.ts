@@ -1,5 +1,6 @@
-import { Result } from "better-result";
 import path from "node:path";
+
+import { Result } from "better-result";
 
 import type {
   API,
@@ -16,7 +17,6 @@ import type {
   ServerDeploy,
   WebDeploy,
 } from "../types";
-
 import { ValidationError } from "./errors";
 
 export function processArrayOption<T>(options: (T | "none")[] | undefined) {

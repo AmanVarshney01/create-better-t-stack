@@ -1,14 +1,14 @@
+import os from "node:os";
+import path from "node:path";
+
 import { generate, EMBEDDED_TEMPLATES } from "@better-t-stack/template-generator";
 import { writeTree } from "@better-t-stack/template-generator/fs-writer";
 import { log } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
-import os from "node:os";
-import path from "node:path";
 
 import type { DbSetupOptions, ProjectConfig } from "../../types";
-
 import { isSilent } from "../../utils/context";
 import { ProjectCreationError } from "../../utils/errors";
 import { formatProject } from "../../utils/file-formatter";

@@ -4,7 +4,6 @@
  */
 
 import type { ProjectConfig } from "@better-t-stack/types";
-
 import yaml from "yaml";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";

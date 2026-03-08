@@ -1,7 +1,6 @@
 import { describe, it } from "bun:test";
 
 import type { Backend, Runtime } from "../src/types";
-
 import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
 describe("Integration Tests - Real World Scenarios", () => {

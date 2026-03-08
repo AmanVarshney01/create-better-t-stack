@@ -1,6 +1,5 @@
-import type { Auth, Backend, Frontend, Payments } from "../types";
-
 import { DEFAULT_CONFIG } from "../constants";
+import type { Auth, Backend, Frontend, Payments } from "../types";
 import { splitFrontends } from "../utils/compatibility-rules";
 import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableSelect } from "./navigable";

@@ -1,8 +1,9 @@
-import { BetterTStackConfigFileSchema } from "@better-t-stack/types";
 import { execSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+
+import { BetterTStackConfigFileSchema } from "@better-t-stack/types";
 import { z } from "zod";
 
 const schema = z.toJSONSchema(BetterTStackConfigFileSchema, { target: "draft-7" });

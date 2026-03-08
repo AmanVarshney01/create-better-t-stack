@@ -3,9 +3,8 @@
 import { api } from "@better-t-stack/backend/convex/_generated/api";
 import { type Preloaded, useConvexConnectionState, usePreloadedQuery } from "convex/react";
 
-import type { AggregatedAnalyticsData, Distribution } from "./_components/types";
-
 import AnalyticsPage from "./_components/analytics-page";
+import type { AggregatedAnalyticsData, Distribution } from "./_components/types";
 
 type PrecomputedStats = {
   totalProjects: number;

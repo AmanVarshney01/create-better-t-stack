@@ -1,6 +1,7 @@
-import isBinaryPath from "is-binary-path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
+
+import isBinaryPath from "is-binary-path";
 import { dirname, join } from "pathe";
 import { glob } from "tinyglobby";
 
