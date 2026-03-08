@@ -2965,7 +2965,7 @@ export const ECOSYSTEM_CATEGORIES: Record<Ecosystem, TechCategory[]> = {
     "git",
     "install",
   ],
-  go: ["goWebFramework", "goOrm", "goApi", "goCli", "goLogging", "aiDocs", "git", "install"],
+  go: ["goWebFramework", "goOrm", "goApi", "goCli", "goLogging", "auth", "aiDocs", "git", "install"],
 };
 
 export const PRESET_TEMPLATES: {
