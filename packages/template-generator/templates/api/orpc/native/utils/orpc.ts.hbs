@@ -19,24 +19,23 @@ export const queryClient = new QueryClient({
 
 export const link = new RPCLink({
 {{#if (eq backend "self")}}
-{{#unless (includes frontend "astro")}}
+{{#if (or (includes frontend "next") (includes frontend "tanstack-start"))}}
 	url: `${env.EXPO_PUBLIC_SERVER_URL}/api/rpc`,
 {{else}}
 	url: `${env.EXPO_PUBLIC_SERVER_URL}/rpc`,
-{{/unless}}
+{{/if}}
 {{else}}
 	url: `${env.EXPO_PUBLIC_SERVER_URL}/rpc`,
 {{/if}}
 {{#if (eq auth "better-auth")}}
 	fetch:
-		Platform.OS !== "web"
-			? undefined
-			: function (url, options) {
-					return fetch(url, {
-						...options,
-						credentials: "include",
-					});
-				},
+		function (url, options) {
+			return fetch(url, {
+				...options,
+				// Better Auth Expo forwards the session cookie manually on native.
+				credentials: Platform.OS === "web" ? "include" : "omit",
+			});
+		},
 	headers() {
 		if (Platform.OS === "web") {
 			return {};
