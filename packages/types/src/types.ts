@@ -69,18 +69,7 @@ export type WebFrontend = Extract<
   | "none"
 >;
 
-export const desktopWebFrontends = [
-  "tanstack-router",
-  "react-router",
-  "tanstack-start",
-  "next",
-  "nuxt",
-  "svelte",
-  "solid",
-  "astro",
-] as const satisfies readonly Frontend[];
-
-export type DesktopWebFrontend = (typeof desktopWebFrontends)[number];
+export type DesktopWebFrontend = Exclude<WebFrontend, "none">;
 
 export type NativeFrontend = Extract<
   Frontend,
