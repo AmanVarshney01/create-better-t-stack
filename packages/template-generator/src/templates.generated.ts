@@ -104,15 +104,13 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 `],
   ["addons/electrobun/apps/desktop/electrobun.config.ts.hbs", `import type { ElectrobunConfig } from "electrobun";
 
-const desktopIdentifierName = "{{projectName}}".trim().toLowerCase().replace(/\\s+/g, "-") || "desktop";
-
 const webBuildDir =
   "{{#if (includes frontend "react-router")}}../web/build/client{{else if (includes frontend "tanstack-start")}}../web/dist/client{{else if (includes frontend "next")}}../web/out{{else if (includes frontend "svelte")}}../web/build{{else}}../web/dist{{/if}}";
 
 export default {
   app: {
     name: "{{projectName}}",
-    identifier: \`dev.bettertstack.\${desktopIdentifierName}.desktop\`,
+    identifier: "dev.bettertstack.{{projectName}}.desktop",
     version: "0.0.1",
   },
   runtime: {
