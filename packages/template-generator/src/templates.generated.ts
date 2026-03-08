@@ -100,6 +100,114 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 	{{/if}}
 }
 `],
+  ["addons/electrobun/apps/desktop/.gitignore", `artifacts
+`],
+  ["addons/electrobun/apps/desktop/electrobun.config.ts.hbs", `import type { ElectrobunConfig } from "electrobun";
+
+const webBuildDir =
+  "{{#if (includes frontend "react-router")}}../web/build/client{{else if (includes frontend "tanstack-start")}}../web/dist/client{{else if (includes frontend "next")}}../web/out{{else if (includes frontend "nuxt")}}../web/.output/public{{else if (includes frontend "svelte")}}../web/build{{else}}../web/dist{{/if}}";
+
+export default {
+  app: {
+    name: "{{projectName}}",
+    identifier: "dev.bettertstack.{{projectName}}.desktop",
+    version: "0.0.1",
+  },
+  runtime: {
+    exitOnLastWindowClosed: true,
+  },
+  build: {
+    bun: {
+      entrypoint: "src/bun/index.ts",
+    },
+    copy: {
+      [webBuildDir]: "views/mainview",
+    },
+    watchIgnore: [\`\${webBuildDir}/**\`],
+    mac: {
+      bundleCEF: true,
+      defaultRenderer: "cef",
+    },
+    linux: {
+      bundleCEF: true,
+      defaultRenderer: "cef",
+    },
+    win: {
+      bundleCEF: true,
+      defaultRenderer: "cef",
+    },
+  },
+} satisfies ElectrobunConfig;
+`],
+  ["addons/electrobun/apps/desktop/package.json.hbs", `{
+  "name": "desktop",
+  "private": true,
+  "type": "module",
+  "scripts": {},
+  "dependencies": {
+    "electrobun": "^1.15.1"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.4",
+    "concurrently": "^9.1.0",
+    "typescript": "^5"
+  }
+}
+`],
+  ["addons/electrobun/apps/desktop/src/bun/index.ts.hbs", `import { BrowserWindow, Updater } from "electrobun/bun";
+
+const DEV_SERVER_PORT = {{#if (or (includes frontend "react-router") (includes frontend "svelte"))}}5173{{else if (includes frontend "astro")}}4321{{else}}3001{{/if}};
+const DEV_SERVER_URL = \`http://localhost:\${DEV_SERVER_PORT}\`;
+
+// Check if the web dev server is running for HMR
+async function getMainViewUrl(): Promise<string> {
+  const channel = await Updater.localInfo.channel();
+  if (channel === "dev") {
+    try {
+      await fetch(DEV_SERVER_URL, { method: "HEAD" });
+      console.log(\`HMR enabled: Using web dev server at \${DEV_SERVER_URL}\`);
+      return DEV_SERVER_URL;
+    } catch {
+      console.log(
+        'Web dev server not running. Run "{{packageManager}} run dev:hmr" for HMR support.',
+      );
+    }
+  }
+
+  return "views://mainview/index.html";
+}
+
+const url = await getMainViewUrl();
+
+new BrowserWindow({
+  title: "{{projectName}}",
+  url,
+  frame: {
+    width: 1280,
+    height: 820,
+    x: 120,
+    y: 120,
+  },
+});
+
+console.log("Electrobun desktop shell started.");
+`],
+  ["addons/electrobun/apps/desktop/tsconfig.json.hbs", `{
+  "extends": "../../packages/config/tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM"],
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "electrobun.config.ts"]
+}
+`],
   ["addons/husky/.husky/pre-commit", `lint-staged
 `],
   ["addons/lefthook/lefthook.yml.hbs", `# Lefthook configuration
@@ -199,142 +307,6 @@ export default defineConfig({
   preset,
   images: ["public/logo.png"],
 });
-`],
-  ["addons/ruler/.ruler/bts.md.hbs", `# Better-T-Stack Project Rules
-
-This is a {{projectName}} project created with Better-T-Stack CLI.
-
-## Project Structure
-
-This is a monorepo with the following structure:
-
-{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start")
-(includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
-- **\`apps/web/\`** - {{#if (eq backend "self")}}Fullstack application{{else}}Frontend application{{/if}}{{#if (includes frontend "tanstack-router")}} (React with TanStack Router){{else if (includes frontend "react-router")}} (React with React Router){{else if (includes frontend "tanstack-start")}} (TanStack Start){{else if (includes frontend "next")}} (Next.js){{else if (includes frontend "nuxt")}} (Nuxt.js){{else if (includes frontend "svelte")}} (SvelteKit){{else if (includes frontend "solid")}} (SolidStart){{/if}}
-{{/if}}
-
-{{#if (ne backend "convex")}}
-{{#if (and (ne backend "none") (ne backend "self"))}}
-- **\`apps/server/\`** - Backend server{{#if (eq backend "hono")}} (Hono){{else if (eq backend "express")}} (Express){{else if (eq backend "fastify")}} (Fastify){{else if (eq backend "elysia")}} (Elysia){{/if}}
-{{/if}}
-{{else}}
-- **\`packages/backend/\`** - Convex backend functions
-{{/if}}
-
-{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-- **\`apps/native/\`** - React Native mobile app{{#if (includes frontend "native-uniwind")}} (with NativeWind){{else if (includes frontend "native-unistyles")}} (with Unistyles){{else if (includes frontend "native-bare")}} (bare styling){{/if}}
-{{/if}}
-
-{{#if (ne backend "convex")}}
-{{#if (ne api "none")}}
-- **\`packages/api/\`** - Shared API logic and types
-{{/if}}
-{{#if (and (ne auth "none") (ne backend "convex"))}}
-- **\`packages/auth/\`** - Authentication logic and utilities
-{{/if}}
-{{#if (and (ne database "none") (ne orm "none"))}}
-- **\`packages/db/\`** - Database schema and utilities
-{{/if}}
-- **\`packages/env/\`** - Shared environment variables and validation
-- **\`packages/config/\`** - Shared TypeScript configuration
-{{#if (or (eq webDeploy "cloudflare") (eq serverDeploy "cloudflare"))}}
-- **\`packages/infra/\`** - Infrastructure as code (Alchemy for Cloudflare)
-{{/if}}
-{{/if}}
-
-## Available Scripts
-
-- \`{{packageManager}} run dev\` - Start all apps in development mode
-{{#if (and (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start")
-(includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid")) (ne backend "self"))}}
-- \`{{packageManager}} run dev:web\` - Start only the web app
-{{/if}}
-{{#if (and (ne backend "none") (ne backend "convex") (ne backend "self"))}}
-- \`{{packageManager}} run dev:server\` - Start only the server
-{{/if}}
-{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-- \`{{packageManager}} run dev:native\` - Start only the native app
-{{/if}}
-- \`{{packageManager}} run build\` - Build all apps
-- \`{{packageManager}} run lint\` - Lint all packages
-- \`{{packageManager}} run typecheck\` - Type check all packages
-
-{{#if (and (ne database "none") (ne orm "none") (ne backend "convex"))}}
-## Database Commands
-
-All database operations should be run from the {{#if (eq backend "self")}}web{{else}}server{{/if}} workspace:
-
-- \`{{packageManager}} run db:push\` - Push schema changes to database
-- \`{{packageManager}} run db:studio\` - Open database studio
-- \`{{packageManager}} run db:generate\` - Generate {{#if (eq orm "drizzle")}}Drizzle{{else if (eq orm "prisma")}}Prisma{{else}}{{orm}}{{/if}} files
-- \`{{packageManager}} run db:migrate\` - Run database migrations
-
-{{#if (eq orm "drizzle")}}
-Database schema files are located in {{#if (eq backend "self")}}\`apps/web/src/db/schema/\`{{else}}\`packages/db/src/schema/\`{{/if}}
-{{else if (eq orm "prisma")}}
-Database schema is located in {{#if (eq backend "self")}}\`apps/web/prisma/schema.prisma\`{{else}}\`packages/db/prisma/schema.prisma\`{{/if}}
-{{else if (eq orm "mongoose")}}
-Database models are located in {{#if (eq backend "self")}}\`apps/web/src/db/models/\`{{else}}\`packages/db/src/models/\`{{/if}}
-{{/if}}
-{{/if}}
-
-{{#if (ne api "none")}}
-## API Structure
-
-{{#if (eq api "trpc")}}
-- tRPC routers are in \`packages/api/src/routers/\`
-- Client-side tRPC utils are in \`apps/web/src/utils/trpc.ts\`
-{{else if (eq api "orpc")}}
-- oRPC contracts and routers are in \`packages/api/src/\`
-- Client-side oRPC client is in \`apps/web/src/utils/orpc.ts\`
-{{/if}}
-{{/if}}
-
-{{#if (eq auth "better-auth")}}
-## Authentication
-
-Authentication is powered by Better Auth:
-- Auth configuration is in \`packages/auth/src/\`
-{{#if (or (includes frontend "tanstack-router") (includes frontend "react-router") (includes frontend "tanstack-start")
-(includes frontend "next") (includes frontend "nuxt") (includes frontend "svelte") (includes frontend "solid"))}}
-- Web app auth client is in \`apps/web/src/lib/auth-client.ts\`
-{{/if}}
-{{#if (or (includes frontend "native-bare") (includes frontend "native-uniwind") (includes frontend "native-unistyles"))}}
-- Native app auth client is in \`apps/native/src/lib/auth-client.ts\`
-{{/if}}
-{{/if}}
-
-## Project Configuration
-
-This project includes a \`bts.jsonc\` configuration file that stores your Better-T-Stack settings:
-
-- Contains your selected stack configuration (database, ORM, backend, frontend, etc.)
-- Used by the CLI to understand your project structure
-- Safe to delete if not needed
-
-## Key Points
-
-- This is a {{#if (includes addons "turborepo")}}Turborepo {{/if}}monorepo using {{packageManager}} workspaces
-- Each app has its own \`package.json\` and dependencies
-- Run commands from the root to execute across all workspaces
-- Run workspace-specific commands with \`{{packageManager}} run command-name\`
-{{#if (includes addons "turborepo")}}
-- Turborepo handles build caching and parallel execution
-{{/if}}
-{{#if (or (includes addons "husky") (includes addons "lefthook"))}}
-- Git hooks are configured with {{#if (includes addons "husky")}}Husky{{else}}Lefthook{{/if}} for pre-commit checks
-{{/if}}
-`],
-  ["addons/ruler/.ruler/ruler.toml.hbs", `# Ruler Configuration File
-# See https://okigu.com/ruler for documentation.
-
-# Default agents to run when --agents is not specified
-default_agents = []
-
-# --- Global .gitignore Configuration ---
-[gitignore]
-# Enable/disable automatic .gitignore updates (default: true)
-enabled = true
 `],
   ["api/orpc/fullstack/astro/src/pages/rpc/[...rest].ts.hbs", `import type { APIRoute } from "astro";
 import { RPCHandler } from "@orpc/server/fetch";
@@ -26773,4 +26745,4 @@ function SuccessPage() {
 `]
 ]);
 
-export const TEMPLATE_COUNT = 441;
+export const TEMPLATE_COUNT = 444;

@@ -37,14 +37,14 @@ npx create-better-t-stack@latest
 
 ## Features
 
-- Frontend: React (TanStack Router, React Router, TanStack Start), Next.js, Nuxt, Svelte, Solid, React Native (NativeWind/Unistyles), or none
+- Frontend: React (TanStack Router, React Router, TanStack Start), Next.js, Nuxt, Svelte, Solid, Astro, React Native (NativeWind/Unistyles), or none
 - Backend: Hono, Express, Fastify, Elysia, Next API Routes, Convex, or none
 - API: tRPC or oRPC (or none)
 - Runtime: Bun, Node.js, or Cloudflare Workers
 - Databases: SQLite, PostgreSQL, MySQL, MongoDB (or none)
 - ORMs: Drizzle, Prisma, Mongoose (or none)
 - Auth: Better-Auth (optional)
-- Addons: Turborepo, PWA, Tauri, Biome, Lefthook, Husky, Starlight, Fumadocs, Ruler, Ultracite, Oxlint
+- Addons: Turborepo, Nx, PWA, Tauri, Electrobun, Biome, Lefthook, Husky, Starlight, Fumadocs, Ultracite, Oxlint, MCP, OpenTUI, WXT, Skills
 - Examples: Todo, AI
 - DB Setup: Turso, Neon, Supabase, Prisma PostgreSQL, MongoDB Atlas, Cloudflare D1, Docker
 - Web Deploy: Cloudflare Workers

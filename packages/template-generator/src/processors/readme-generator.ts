@@ -4,6 +4,25 @@ import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { getDbScriptSupport } from "../utils/db-scripts";
 
+function getDesktopStaticBuildNote(frontend: ProjectConfig["frontend"]): string {
+  const staticBuildFrontends = new Map([
+    ["tanstack-start", "TanStack Start"],
+    ["next", "Next.js"],
+    ["nuxt", "Nuxt"],
+    ["svelte", "SvelteKit"],
+    ["astro", "Astro"],
+  ]);
+
+  const staticBuildFrontend = frontend.find((value) => staticBuildFrontends.has(value));
+  if (!staticBuildFrontend) {
+    return "";
+  }
+
+  return `Desktop builds package static web assets. ${staticBuildFrontends.get(
+    staticBuildFrontend,
+  )} needs a static/export build configuration before desktop packaging will work.`;
+}
+
 export function processReadme(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const content = generateReadmeContent(config);
   vfs.writeFile("README.md", content);
@@ -397,6 +416,7 @@ function generateFeaturesList(
   const addonFeatures: Record<string, string> = {
     pwa: "- **PWA** - Progressive Web App support",
     tauri: "- **Tauri** - Build native desktop applications",
+    electrobun: "- **Electrobun** - Lightweight desktop shell for web frontends",
     biome: "- **Biome** - Linting and formatting",
     oxlint: "- **Oxlint** - Oxlint + Oxfmt (linting & formatting)",
     husky: "- **Husky** - Git hooks for code quality",
@@ -549,6 +569,20 @@ function generateScriptsList(
   if (addons.includes("tauri")) {
     scripts += `\n- \`cd apps/web && ${packageManagerRunCmd} desktop:dev\`: Start Tauri desktop app in development
 - \`cd apps/web && ${packageManagerRunCmd} desktop:build\`: Build Tauri desktop app`;
+    const staticBuildNote = getDesktopStaticBuildNote(frontend);
+    if (staticBuildNote) {
+      scripts += `\n- Note: ${staticBuildNote}`;
+    }
+  }
+
+  if (addons.includes("electrobun")) {
+    scripts += `\n- \`${packageManagerRunCmd} dev:desktop\`: Start the Electrobun desktop app with HMR
+- \`${packageManagerRunCmd} build:desktop\`: Build the stable Electrobun desktop app
+- \`${packageManagerRunCmd} build:desktop:canary\`: Build the canary Electrobun desktop app`;
+    const staticBuildNote = getDesktopStaticBuildNote(frontend);
+    if (staticBuildNote) {
+      scripts += `\n- Note: ${staticBuildNote}`;
+    }
   }
 
   if (addons.includes("starlight")) {

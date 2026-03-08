@@ -13,11 +13,34 @@ import type {
   WebDeploy,
 } from "../../types";
 
+import { desktopWebFrontends } from "../../types";
 import { getDockerStatus } from "../../utils/docker-utils";
 import {
   fetchSponsorsQuietly,
   formatPostInstallSpecialSponsorsSection,
 } from "../../utils/sponsors";
+
+function getDesktopStaticBuildNote(frontend: Frontend[]): string {
+  const staticBuildFrontends = new Map<Frontend, string>([
+    ["tanstack-start", "TanStack Start"],
+    ["next", "Next.js"],
+    ["nuxt", "Nuxt"],
+    ["svelte", "SvelteKit"],
+    ["astro", "Astro"],
+  ]);
+
+  const staticBuildFrontend = frontend.find((value) => staticBuildFrontends.has(value));
+  if (!staticBuildFrontend) {
+    return "";
+  }
+
+  return `${pc.yellow(
+    "NOTE:",
+  )} Desktop builds package static web assets.\n   ${staticBuildFrontends.get(
+    staticBuildFrontend,
+  )} needs a static/export web build before desktop packaging will work.`;
+}
+
 export async function displayPostInstallInstructions(
   config: ProjectConfig & { depsInstalled: boolean },
 ) {
@@ -63,7 +86,10 @@ export async function displayPostInstallInstructions(
         )
       : "";
 
-  const tauriInstructions = addons?.includes("tauri") ? getTauriInstructions(runCmd) : "";
+  const tauriInstructions = addons?.includes("tauri") ? getTauriInstructions(runCmd, frontend) : "";
+  const electrobunInstructions = addons?.includes("electrobun")
+    ? getElectrobunInstructions(runCmd, frontend)
+    : "";
   const huskyInstructions = hasHusky ? getHuskyInstructions(runCmd) : "";
   const lefthookInstructions = hasLefthook ? getLefthookInstructions(packageManager) : "";
   const lintingInstructions = hasGitHooksOrLinting ? getLintingInstructions(runCmd) : "";
@@ -91,17 +117,7 @@ export async function displayPostInstallInstructions(
     backend,
   );
 
-  const hasWeb = frontend?.some((f) =>
-    [
-      "tanstack-router",
-      "react-router",
-      "next",
-      "tanstack-start",
-      "nuxt",
-      "svelte",
-      "solid",
-    ].includes(f),
-  );
+  const hasWeb = frontend?.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
   const hasNative =
     frontend?.includes("native-bare") ||
     frontend?.includes("native-uniwind") ||
@@ -109,7 +125,8 @@ export async function displayPostInstallInstructions(
 
   const hasReactRouter = frontend?.includes("react-router");
   const hasSvelte = frontend?.includes("svelte");
-  const webPort = hasReactRouter || hasSvelte ? "5173" : "3001";
+  const hasAstro = frontend?.includes("astro");
+  const webPort = hasReactRouter || hasSvelte ? "5173" : hasAstro ? "4321" : "3001";
 
   const betterAuthConvexInstructions =
     isConvex && config.auth === "better-auth"
@@ -198,6 +215,7 @@ export async function displayPostInstallInstructions(
   if (nativeInstructions) output += `\n${nativeInstructions.trim()}\n`;
   if (databaseInstructions) output += `\n${databaseInstructions.trim()}\n`;
   if (tauriInstructions) output += `\n${tauriInstructions.trim()}\n`;
+  if (electrobunInstructions) output += `\n${electrobunInstructions.trim()}\n`;
   if (huskyInstructions) output += `\n${huskyInstructions.trim()}\n`;
   if (lefthookInstructions) output += `\n${lefthookInstructions.trim()}\n`;
   if (lintingInstructions) output += `\n${lintingInstructions.trim()}\n`;
@@ -372,14 +390,34 @@ async function getDatabaseInstructions(
   return instructions.length ? `${pc.bold("Database commands:")}\n${instructions.join("\n")}` : "";
 }
 
-function getTauriInstructions(runCmd: string) {
+function getTauriInstructions(runCmd: string, frontend: Frontend[]) {
+  const staticBuildNote = getDesktopStaticBuildNote(frontend);
+
   return `\n${pc.bold("Desktop app with Tauri:")}\n${pc.cyan(
     "•",
   )} Start desktop app: ${`cd apps/web && ${runCmd} desktop:dev`}\n${pc.cyan(
     "•",
   )} Build desktop app: ${`cd apps/web && ${runCmd} desktop:build`}\n${pc.yellow(
     "NOTE:",
-  )} Tauri requires Rust and platform-specific dependencies.\n   See: ${"https://v2.tauri.app/start/prerequisites/"}`;
+  )} Tauri requires Rust and platform-specific dependencies.\n   See: ${"https://v2.tauri.app/start/prerequisites/"}${
+    staticBuildNote ? `\n${staticBuildNote}` : ""
+  }`;
+}
+
+function getElectrobunInstructions(runCmd: string, frontend: Frontend[]) {
+  const staticBuildNote = getDesktopStaticBuildNote(frontend);
+
+  return `\n${pc.bold("Desktop app with Electrobun:")}\n${pc.cyan(
+    "•",
+  )} Start desktop app with HMR: ${`${runCmd} dev:desktop`}\n${pc.cyan(
+    "•",
+  )} Build stable desktop app (DMG/App): ${`${runCmd} build:desktop`}\n${pc.cyan(
+    "•",
+  )} Build canary desktop app: ${`${runCmd} build:desktop:canary`}\n${pc.yellow(
+    "NOTE:",
+  )} Electrobun wraps your web frontend in a desktop shell.\n   See: ${"https://blackboard.sh/electrobun/docs/"}${
+    staticBuildNote ? `\n${staticBuildNote}` : ""
+  }`;
 }
 
 function getPwaInstructions() {

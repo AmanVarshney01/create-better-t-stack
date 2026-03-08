@@ -31,6 +31,10 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "Tauri";
       hint = "Build native desktop apps from your web frontend";
       break;
+    case "electrobun":
+      label = "Electrobun";
+      hint = "Wrap web frontends in a lightweight desktop shell";
+      break;
     case "biome":
       label = "Biome";
       hint = "Format, lint, and more";
@@ -42,10 +46,6 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
     case "ultracite":
       label = "Ultracite";
       hint = "Zero-config Biome preset with AI integration";
-      break;
-    case "ruler":
-      label = "Ruler";
-      hint = "Centralize your AI rules";
       break;
     case "lefthook":
       label = "Lefthook";
@@ -91,8 +91,8 @@ const ADDON_GROUPS = {
   "Monorepo & Tasks": ["turborepo", "nx"],
   "Code Quality": ["biome", "oxlint", "ultracite", "husky", "lefthook"],
   Documentation: ["starlight", "fumadocs"],
-  "Platform Extensions": ["pwa", "tauri", "opentui", "wxt"],
-  "AI & Agent Tools": ["ruler", "skills", "mcp"],
+  "Platform Extensions": ["pwa", "tauri", "electrobun", "opentui", "wxt"],
+  "AI & Agent Tools": ["skills", "mcp"],
 };
 
 function createGroupedOptions(): Record<string, AddonOption[]> {

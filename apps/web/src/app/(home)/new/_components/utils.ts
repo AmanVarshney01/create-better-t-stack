@@ -1,3 +1,5 @@
+import { desktopWebFrontends } from "@better-t-stack/types";
+
 import { DEFAULT_STACK, type StackState, type TECH_OPTIONS } from "@/lib/constant";
 import { CATEGORY_ORDER } from "@/lib/stack-utils";
 
@@ -27,9 +29,10 @@ export const hasPWACompatibleFrontend = (webFrontend: string[]) =>
   webFrontend.some((f) => ["tanstack-router", "react-router", "solid", "next"].includes(f));
 
 export const hasTauriCompatibleFrontend = (webFrontend: string[]) =>
-  webFrontend.some((f) =>
-    ["tanstack-router", "react-router", "nuxt", "svelte", "solid", "next"].includes(f),
-  );
+  webFrontend.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
+
+export const hasElectrobunCompatibleFrontend = (webFrontend: string[]) =>
+  webFrontend.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
 
 export const getCategoryDisplayName = (categoryKey: string): string => {
   const result = categoryKey.replace(/([A-Z])/g, " $1");
@@ -551,6 +554,7 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
 
   const pwaCompat = hasPWACompatibleFrontend(nextStack.webFrontend);
   const tauriCompat = hasTauriCompatibleFrontend(nextStack.webFrontend);
+  const electrobunCompat = hasElectrobunCompatibleFrontend(nextStack.webFrontend);
 
   if (!pwaCompat && nextStack.addons.includes("pwa")) {
     nextStack.addons = nextStack.addons.filter((a) => a !== "pwa");
@@ -563,6 +567,15 @@ export const analyzeStackCompatibility = (stack: StackState): CompatibilityResul
     if (nextStack.addons.length === 0) nextStack.addons = ["none"];
     changed = true;
     changes.push({ category: "addons", message: "Tauri removed (requires compatible frontend)" });
+  }
+  if (!electrobunCompat && nextStack.addons.includes("electrobun")) {
+    nextStack.addons = nextStack.addons.filter((a) => a !== "electrobun");
+    if (nextStack.addons.length === 0) nextStack.addons = ["none"];
+    changed = true;
+    changes.push({
+      category: "addons",
+      message: "Electrobun removed (requires compatible frontend)",
+    });
   }
 
   // ============================================
@@ -941,10 +954,12 @@ export const getDisabledReason = (
   // API CONSTRAINTS
   // ============================================
   if (category === "api" && optionId === "trpc") {
-    const needsOrpc = currentStack.webFrontend.some((f) => ["nuxt", "svelte", "solid"].includes(f));
+    const needsOrpc = currentStack.webFrontend.some((f) =>
+      ["nuxt", "svelte", "solid", "astro"].includes(f),
+    );
     if (needsOrpc) {
       const frontendName = currentStack.webFrontend.find((f) =>
-        ["nuxt", "svelte", "solid"].includes(f),
+        ["nuxt", "svelte", "solid", "astro"].includes(f),
       );
       return `${frontendName} requires oRPC, not tRPC`;
     }
@@ -991,7 +1006,10 @@ export const getDisabledReason = (
       return "PWA requires TanStack Router, React Router, Solid, or Next.js";
     }
     if (optionId === "tauri" && !hasTauriCompatibleFrontend(currentStack.webFrontend)) {
-      return "Tauri requires TanStack Router, React Router, Nuxt, Svelte, Solid, or Next.js";
+      return "Tauri requires a web frontend";
+    }
+    if (optionId === "electrobun" && !hasElectrobunCompatibleFrontend(currentStack.webFrontend)) {
+      return "Electrobun requires a web frontend";
     }
     if (optionId === "nx" && currentStack.addons.includes("turborepo")) {
       return "Nx and Turborepo cannot be used together";
