@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 
 import type { Ecosystem, TechCategory } from "../src/lib/types";
 
-import { getCategoryDisplayName } from "../src/components/stack-builder/utils";
+import { getCategoryDisplayName, getVisibleOptions } from "../src/components/stack-builder/utils";
 import {
   DEFAULT_STACK,
   ECOSYSTEMS,
@@ -15,6 +15,7 @@ import {
   GO_CATEGORY_ORDER,
   RUST_CATEGORY_ORDER,
   TYPESCRIPT_CATEGORY_ORDER,
+  generateStackCommand,
 } from "../src/lib/stack-utils";
 
 describe("Go Ecosystem Tab", () => {
@@ -56,6 +57,7 @@ describe("Go Ecosystem Tab", () => {
 
     it("should include git and install in go ecosystem", () => {
       const goCategories = ECOSYSTEM_CATEGORIES.go;
+      expect(goCategories).toContain("auth");
       expect(goCategories).toContain("git");
       expect(goCategories).toContain("install");
     });
@@ -233,6 +235,7 @@ describe("Go Ecosystem Tab", () => {
     });
 
     it("GO_CATEGORY_ORDER should contain git and install", () => {
+      expect(GO_CATEGORY_ORDER).toContain("auth");
       expect(GO_CATEGORY_ORDER).toContain("git");
       expect(GO_CATEGORY_ORDER).toContain("install");
     });
@@ -264,6 +267,52 @@ describe("Go Ecosystem Tab", () => {
     it("should return camelCase conversion for other categories", () => {
       expect(getCategoryDisplayName("webFrontend")).toBe("Web Frontend");
       expect(getCategoryDisplayName("backend")).toBe("Backend");
+    });
+  });
+
+  describe("Go auth integration", () => {
+    it("should keep auth visible in the Go builder category order", () => {
+      expect(GO_CATEGORY_ORDER.indexOf("auth")).toBeGreaterThan(-1);
+      expect(GO_CATEGORY_ORDER.indexOf("auth")).toBeLessThan(GO_CATEGORY_ORDER.indexOf("aiDocs"));
+    });
+
+    it("should render only GoBetterAuth and No Auth for Go auth options", () => {
+      const visibleOptions = getVisibleOptions(
+        {
+          ...DEFAULT_STACK,
+          ecosystem: "go",
+        },
+        "auth",
+        TECH_OPTIONS.auth,
+      );
+
+      expect(visibleOptions.map((option) => option.id)).toEqual(["go-better-auth", "none"]);
+    });
+
+    it("should not render GoBetterAuth for TypeScript auth options", () => {
+      const visibleOptions = getVisibleOptions(
+        {
+          ...DEFAULT_STACK,
+          ecosystem: "typescript",
+        },
+        "auth",
+        TECH_OPTIONS.auth,
+      );
+
+      expect(visibleOptions.map((option) => option.id)).not.toContain("go-better-auth");
+      expect(visibleOptions.map((option) => option.id)).toContain("better-auth");
+      expect(visibleOptions.map((option) => option.id)).toContain("none");
+    });
+
+    it("should include Go auth selection in generated CLI commands", () => {
+      const command = generateStackCommand({
+        ...DEFAULT_STACK,
+        ecosystem: "go",
+        auth: "go-better-auth",
+      });
+
+      expect(command).toContain("--ecosystem go");
+      expect(command).toContain("--auth go-better-auth");
     });
   });
 });

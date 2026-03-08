@@ -56,6 +56,7 @@ import {
   analyzeStackCompatibility,
   getCategoryDisplayName,
   getDisabledReason,
+  getVisibleOptions,
   isOptionCompatible,
   validateProjectName,
 } from "./utils";
@@ -189,7 +190,7 @@ function SidebarAccordionItem({
   handleTechSelect: (cat: keyof typeof TECH_OPTIONS, techId: string) => void;
   compatibilityNotes?: { notes: string[]; hasIssue: boolean };
 }) {
-  const options = TECH_OPTIONS[category];
+  const options = getVisibleOptions(stack, category, TECH_OPTIONS[category]);
   if (!options || options.length === 0) return null;
 
   const count = getSelectedCount(category, stack);

@@ -40,3 +40,20 @@ export const isOptionCompatible = (
 ): boolean => {
   return isOptionCompatibleShared(currentStack, category as CompatibilityCategory, optionId);
 };
+
+export const getVisibleOptions = (
+  currentStack: StackState,
+  category: keyof typeof TECH_OPTIONS,
+  options: (typeof TECH_OPTIONS)[keyof typeof TECH_OPTIONS],
+) => {
+  if (category !== "auth") return options;
+
+  switch (currentStack.ecosystem) {
+    case "go":
+      return options.filter((option) => option.id === "go-better-auth" || option.id === "none");
+    case "typescript":
+      return options.filter((option) => option.id !== "go-better-auth");
+    default:
+      return options.filter((option) => option.id === "none");
+  }
+};
