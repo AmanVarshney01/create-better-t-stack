@@ -60,7 +60,6 @@ export const ADDON_COMPATIBILITY = {
   nx: [],
   starlight: [],
   ultracite: [],
-  ruler: [],
   mcp: [],
   oxlint: [],
   fumadocs: [],

@@ -47,10 +47,6 @@ function getAddonDisplay(addon: Addons): { label: string; hint: string } {
       label = "Ultracite";
       hint = "Zero-config Biome preset with AI integration";
       break;
-    case "ruler":
-      label = "Ruler";
-      hint = "Centralize your AI rules";
-      break;
     case "lefthook":
       label = "Lefthook";
       hint = "Fast and powerful Git hooks manager";
@@ -96,7 +92,7 @@ const ADDON_GROUPS = {
   "Code Quality": ["biome", "oxlint", "ultracite", "husky", "lefthook"],
   Documentation: ["starlight", "fumadocs"],
   "Platform Extensions": ["pwa", "tauri", "electrobun", "opentui", "wxt"],
-  "AI & Agent Tools": ["ruler", "skills", "mcp"],
+  "AI & Agent Tools": ["skills", "mcp"],
 };
 
 function createGroupedOptions(): Record<string, AddonOption[]> {

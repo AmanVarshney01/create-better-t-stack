@@ -579,14 +579,6 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
-      id: "ruler",
-      name: "Ruler",
-      description: "Centralize your AI rules",
-      icon: "",
-      color: "from-violet-500 to-violet-700",
-      default: false,
-    },
-    {
       id: "ultracite",
       name: "Ultracite",
       description: "Biome preset with AI integration",

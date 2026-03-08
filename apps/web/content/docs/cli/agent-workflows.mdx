@@ -180,7 +180,6 @@ Supported structured addon surfaces include:
 - `fumadocs`
 - `opentui`
 - `mcp`
-- `ruler`
 - `skills`
 - `ultracite`
 
@@ -188,14 +187,11 @@ Example:
 
 ```json
 {
-  "addons": ["wxt", "ruler"],
+  "addons": ["wxt"],
   "addonOptions": {
     "wxt": {
       "template": "react",
       "devPort": 5555
-    },
-    "ruler": {
-      "assistants": ["agentsmd", "claude", "codex", "cursor"]
     }
   }
 }

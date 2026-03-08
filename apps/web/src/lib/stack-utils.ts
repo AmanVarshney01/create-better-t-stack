@@ -157,7 +157,6 @@ export function generateStackCommand(stack: StackState) {
                 "ultracite",
                 "fumadocs",
                 "oxlint",
-                "ruler",
                 "opentui",
                 "wxt",
                 "skills",

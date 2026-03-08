@@ -10,7 +10,6 @@ import { AddonSetupError, UserCancelledError } from "../../utils/errors";
 import { setupFumadocs } from "./fumadocs-setup";
 import { setupMcp } from "./mcp-setup";
 import { setupOxlint } from "./oxlint-setup";
-import { setupRuler } from "./ruler-setup";
 import { setupSkills } from "./skills-setup";
 import { setupStarlight } from "./starlight-setup";
 import { setupTauri } from "./tauri-setup";
@@ -109,10 +108,6 @@ export async function setupAddons(config: ProjectConfig) {
 
   if (addons.includes("wxt")) {
     await runSetup(() => setupWxt(config));
-  }
-
-  if (addons.includes("ruler")) {
-    await runSetup(() => setupRuler(config));
   }
 
   if (addons.includes("skills")) {

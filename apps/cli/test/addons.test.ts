@@ -401,7 +401,7 @@ describe("Addon Configurations", () => {
       "turborepo",
       "nx",
       "oxlint",
-      // Note: starlight, ultracite, ruler, fumadocs are prompt-controlled only
+      // Note: starlight, ultracite, fumadocs are prompt-controlled only
     ];
 
     for (const addon of testableAddons) {
