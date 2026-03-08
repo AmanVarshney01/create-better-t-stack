@@ -3,7 +3,6 @@
 import { memo, useMemo } from "react";
 
 import type { BundledLanguage } from "@/components/ui/kibo-ui/code-block";
-
 import {
   CodeBlock,
   CodeBlockBody,

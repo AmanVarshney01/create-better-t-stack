@@ -2,6 +2,7 @@ import { expect } from "bun:test";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 
+import { create, UserCancelledError, CLIError, ProjectCreationError } from "../src/index";
 import type {
   CreateInput,
   InitResult,
@@ -19,8 +20,6 @@ import type {
   ServerDeploy,
   DatabaseSetup,
 } from "../src/types";
-
-import { create, UserCancelledError, CLIError, ProjectCreationError } from "../src/index";
 import {
   AddonsSchema,
   APISchema,

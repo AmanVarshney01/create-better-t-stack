@@ -1,7 +1,6 @@
 import { describe, it } from "bun:test";
 
 import type { Backend, Database, Frontend, ORM } from "../src/types";
-
 import {
   AUTH_PROVIDERS,
   expectError,

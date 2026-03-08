@@ -1,7 +1,8 @@
-import isBinaryPath from "is-binary-path";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import isBinaryPath from "is-binary-path";
 import { glob } from "tinyglobby";
 
 const __filename = fileURLToPath(import.meta.url);

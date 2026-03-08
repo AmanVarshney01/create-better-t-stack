@@ -1,6 +1,5 @@
-import type { Backend, Frontend } from "../types";
-
 import { DEFAULT_CONFIG } from "../constants";
+import type { Backend, Frontend } from "../types";
 import { isFrontendAllowedWithBackend } from "../utils/compatibility-rules";
 import { isFirstPrompt } from "../utils/context";
 import { UserCancelledError } from "../utils/errors";

@@ -1,8 +1,8 @@
-import { Result } from "better-result";
 import path from "node:path";
 
-import type { Database, ProjectConfig } from "../../types";
+import { Result } from "better-result";
 
+import type { Database, ProjectConfig } from "../../types";
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
 import { DatabaseSetupError } from "../../utils/errors";
 

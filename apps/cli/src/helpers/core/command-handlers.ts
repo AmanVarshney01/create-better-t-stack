@@ -1,16 +1,16 @@
+import path from "node:path";
+
 import { generateReproducibleCommand } from "@better-t-stack/template-generator";
 import { intro, log, outro } from "@clack/prompts";
 import { Result, UnhandledException } from "better-result";
 import consola from "consola";
 import fs from "fs-extra";
-import path from "node:path";
 import pc from "picocolors";
-
-import type { CreateInput, DirectoryConflict, ProjectConfig } from "../../types";
 
 import { getDefaultConfig } from "../../constants";
 import { gatherConfig } from "../../prompts/config-prompts";
 import { getProjectName } from "../../prompts/project-name";
+import type { CreateInput, DirectoryConflict, ProjectConfig } from "../../types";
 import { trackProjectCreation } from "../../utils/analytics";
 import { isSilent, runWithContextAsync } from "../../utils/context";
 import { displayConfig } from "../../utils/display-config";

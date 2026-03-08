@@ -1,7 +1,6 @@
 import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
-
 import { processAddonsDeps } from "./addons-deps";
 import { processAlchemyPlugins } from "./alchemy-plugins";
 import { processApiDeps } from "./api-deps";

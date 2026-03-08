@@ -2,9 +2,8 @@
 
 import { Share2 } from "lucide-react";
 
-import type { StackState } from "@/lib/constant";
-
 import { ShareDialog } from "@/components/ui/share-dialog";
+import type { StackState } from "@/lib/constant";
 
 interface ShareButtonProps {
   stackUrl: string;

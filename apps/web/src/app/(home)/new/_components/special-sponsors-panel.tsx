@@ -3,10 +3,9 @@
 import { Github, Globe, Plus, Star } from "lucide-react";
 import Image from "next/image";
 
-import type { Sponsor } from "@/lib/types";
-
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { formatSponsorUrl, getSponsorUrl, shouldShowLifetimeTotal } from "@/lib/sponsor-utils";
+import type { Sponsor } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 type SpecialSponsorsPanelProps = {

@@ -1,8 +1,7 @@
 import type { ProjectConfig } from "@better-t-stack/types";
 
-import type { VirtualFileSystem } from "../core/virtual-fs";
-
 import { processTemplateString, transformFilename, isBinaryFile } from "../core/template-processor";
+import type { VirtualFileSystem } from "../core/virtual-fs";
 
 export type TemplateData = Map<string, string>;
 

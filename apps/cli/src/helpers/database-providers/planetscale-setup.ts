@@ -1,9 +1,9 @@
-import { Result } from "better-result";
-import fs from "fs-extra";
 import path from "node:path";
 
-import type { ProjectConfig } from "../../types";
+import { Result } from "better-result";
+import fs from "fs-extra";
 
+import type { ProjectConfig } from "../../types";
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";
 import { DatabaseSetupError } from "../../utils/errors";
 

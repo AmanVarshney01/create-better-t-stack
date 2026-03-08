@@ -1,8 +1,5 @@
 "use client";
 
-import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
-import type { IconType } from "react-icons";
-
 import { useControlled } from "@base-ui/utils/useControlled";
 import {
   transformerNotationDiff,
@@ -12,7 +9,9 @@ import {
   transformerNotationWordHighlight,
 } from "@shikijs/transformers";
 import { CheckIcon, CopyIcon } from "lucide-react";
+import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
+import type { IconType } from "react-icons";
 import {
   SiAstro,
   SiBiome,

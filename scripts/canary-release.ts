@@ -1,7 +1,8 @@
-import { confirm, isCancel, multiselect, spinner } from "@clack/prompts";
-import { $ } from "bun";
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+
+import { confirm, isCancel, multiselect, spinner } from "@clack/prompts";
+import { $ } from "bun";
 
 const CLI_PACKAGE_JSON_PATH = join(process.cwd(), "apps/cli/package.json");
 const ALIAS_PACKAGE_JSON_PATH = join(process.cwd(), "packages/create-bts/package.json");

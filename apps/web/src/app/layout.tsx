@@ -1,9 +1,8 @@
-import type { Metadata, Viewport } from "next";
-import type { ReactNode } from "react";
-
 import { RootProvider } from "fumadocs-ui/provider/next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import type { ReactNode } from "react";
 
 import Providers from "@/components/providers";
 

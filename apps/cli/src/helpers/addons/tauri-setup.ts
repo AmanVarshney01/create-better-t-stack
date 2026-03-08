@@ -1,7 +1,8 @@
+import path from "node:path";
+
 import { Result } from "better-result";
 import { execa } from "execa";
 import fs from "fs-extra";
-import path from "node:path";
 
 import { desktopWebFrontends, type ProjectConfig } from "../../types";
 import { AddonSetupError } from "../../utils/errors";

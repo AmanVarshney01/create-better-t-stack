@@ -1,10 +1,10 @@
 import { describe, expect, it } from "bun:test";
-import fs from "fs-extra";
 import { join } from "node:path";
 
-import type { ProjectConfig } from "../src/types";
+import fs from "fs-extra";
 
 import { postProcessTuiWorkspace, resolveTuiTemplate } from "../src/helpers/addons/tui-setup";
+import type { ProjectConfig } from "../src/types";
 import { runWithContextAsync } from "../src/utils/context";
 import { SMOKE_DIR } from "./setup";
 

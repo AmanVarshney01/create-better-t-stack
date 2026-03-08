@@ -1,7 +1,6 @@
 import { describe, it } from "bun:test";
 
 import type { Addons, Frontend } from "../src";
-
 import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
 describe("Addon Configurations", () => {

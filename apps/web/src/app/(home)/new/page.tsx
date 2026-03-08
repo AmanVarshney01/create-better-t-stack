@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-
 import { Suspense } from "react";
 
 import { fetchSponsors } from "@/lib/sponsors";

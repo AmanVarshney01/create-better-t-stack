@@ -1,12 +1,12 @@
+import os from "node:os";
+import path from "node:path";
+
 import { confirm, isCancel, select, text } from "@clack/prompts";
 import { Result } from "better-result";
 import { $ } from "execa";
-import os from "node:os";
-import path from "node:path";
 import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
-
 import { commandExists } from "../../utils/command-exists";
 import { isSilent } from "../../utils/context";
 import { addEnvVariablesToFile, type EnvVariable } from "../../utils/env-utils";

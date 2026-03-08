@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import fs from "fs-extra";
 import path from "node:path";
+
+import fs from "fs-extra";
 
 import { create } from "../src/index";
 import { readBtsConfig } from "../src/utils/bts-config";

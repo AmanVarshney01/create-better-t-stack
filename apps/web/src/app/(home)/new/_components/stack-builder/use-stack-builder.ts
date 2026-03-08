@@ -1,11 +1,10 @@
 import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import type { TechCategory } from "@/lib/types";
-
 import { DEFAULT_STACK, PRESET_TEMPLATES, type StackState, TECH_OPTIONS } from "@/lib/constant";
 import { useStackState } from "@/lib/stack-url-state.client";
 import { CATEGORY_ORDER, generateStackCommand, generateStackSharingUrl } from "@/lib/stack-utils";
+import type { TechCategory } from "@/lib/types";
 
 import { analyzeStackCompatibility, isOptionCompatible, validateProjectName } from "../utils";
 

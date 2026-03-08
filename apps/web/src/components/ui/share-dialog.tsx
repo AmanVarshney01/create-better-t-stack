@@ -7,8 +7,6 @@ import QRCode from "qrcode";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import type { StackState } from "@/lib/constant";
-
 import {
   Dialog,
   DialogContent,
@@ -18,6 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { TechBadge } from "@/components/ui/tech-badge";
+import type { StackState } from "@/lib/constant";
 import { TECH_OPTIONS } from "@/lib/constant";
 import { CATEGORY_ORDER } from "@/lib/stack-utils";
 import { cn } from "@/lib/utils";

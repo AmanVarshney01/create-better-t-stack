@@ -1,7 +1,6 @@
 import { describe, it } from "bun:test";
 
 import type { API, Backend, Database, Examples, Frontend, ORM, Runtime } from "../src/types";
-
 import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
 
 describe("API Configurations", () => {

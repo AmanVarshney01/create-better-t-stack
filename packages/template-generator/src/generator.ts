@@ -1,7 +1,5 @@
 import { Result } from "better-result";
 
-import type { GeneratorOptions, VirtualFileTree } from "./types";
-
 import { writeBtsConfigToVfs } from "./bts-config";
 import { VirtualFileSystem } from "./core/virtual-fs";
 import { processCatalogs, processPackageConfigs } from "./post-process";
@@ -30,6 +28,7 @@ import {
   processExtrasTemplates,
   processDeployTemplates,
 } from "./template-handlers";
+import type { GeneratorOptions, VirtualFileTree } from "./types";
 import { GeneratorError } from "./types";
 import { generateReproducibleCommand } from "./utils/reproducible-command";
 

@@ -1,10 +1,10 @@
+import path from "node:path";
+
 import { Result } from "better-result";
 import { $ } from "execa";
 import fs from "fs-extra";
-import path from "node:path";
 
 import type { ProjectConfig } from "../../types";
-
 import { AddonSetupError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";

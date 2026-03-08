@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import {
   EMBEDDED_TEMPLATES,
   processAddonTemplates,
@@ -8,12 +10,10 @@ import { writeTree } from "@better-t-stack/template-generator/fs-writer";
 import { intro, log, outro } from "@clack/prompts";
 import { Result } from "better-result";
 import fs from "fs-extra";
-import path from "node:path";
 import pc from "picocolors";
 
-import type { AddInput, Addons, AddonOptions, ProjectConfig } from "../../types";
-
 import { getAddonsToAdd } from "../../prompts/addons";
+import type { AddInput, Addons, AddonOptions, ProjectConfig } from "../../types";
 import { updateBtsConfig } from "../../utils/bts-config";
 import { isSilent, runWithContextAsync } from "../../utils/context";
 import { CLIError, UserCancelledError, displayError } from "../../utils/errors";

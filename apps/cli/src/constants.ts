@@ -1,6 +1,7 @@
-import { desktopWebFrontends } from "@better-t-stack/types";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { desktopWebFrontends } from "@better-t-stack/types";
 
 import { getUserPkgManager } from "./utils/get-package-manager";
 

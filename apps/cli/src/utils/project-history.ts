@@ -1,10 +1,10 @@
+import path from "node:path";
+
 import { Result, TaggedError } from "better-result";
 import envPaths from "env-paths";
 import fs from "fs-extra";
-import path from "node:path";
 
 import type { ProjectConfig } from "../types";
-
 import { getLatestCLIVersion } from "./get-latest-cli-version";
 
 const paths = envPaths("better-t-stack", { suffix: "" });

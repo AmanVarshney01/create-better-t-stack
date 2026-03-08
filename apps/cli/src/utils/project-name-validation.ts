@@ -1,5 +1,6 @@
-import { Result } from "better-result";
 import path from "node:path";
+
+import { Result } from "better-result";
 
 import { ProjectNameSchema } from "../types";
 import { ValidationError } from "./errors";

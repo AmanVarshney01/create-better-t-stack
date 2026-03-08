@@ -1,6 +1,5 @@
-import type { API, Backend, Database, Examples, Frontend } from "../types";
-
 import { DEFAULT_CONFIG } from "../constants";
+import type { API, Backend, Database, Examples, Frontend } from "../types";
 import { isExampleAIAllowed, isExampleTodoAllowed } from "../utils/compatibility-rules";
 import { UserCancelledError } from "../utils/errors";
 import { isCancel, navigableMultiselect } from "./navigable";

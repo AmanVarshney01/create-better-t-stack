@@ -1,9 +1,8 @@
-import type { Metadata } from "next";
-
 import * as FilesComponents from "fumadocs-ui/components/files";
 import * as TabsComponents from "fumadocs-ui/components/tabs";
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/layouts/notebook/page";
 import defaultMdxComponents from "fumadocs-ui/mdx";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 

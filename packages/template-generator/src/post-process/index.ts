@@ -6,7 +6,6 @@
 import type { ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
-
 import { processCatalogs } from "./catalogs";
 import { processPackageConfigs } from "./package-configs";
 

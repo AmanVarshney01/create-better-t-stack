@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-
 import { Suspense } from "react";
 
 import { loadStackParams, serializeStackParams } from "@/lib/stack-url-state";

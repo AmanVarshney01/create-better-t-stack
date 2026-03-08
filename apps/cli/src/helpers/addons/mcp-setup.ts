@@ -4,7 +4,6 @@ import { $ } from "execa";
 import pc from "picocolors";
 
 import type { AddonOptions, ProjectConfig } from "../../types";
-
 import { isSilent } from "../../utils/context";
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";

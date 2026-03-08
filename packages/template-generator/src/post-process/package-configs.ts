@@ -6,7 +6,6 @@
 import { desktopWebFrontends, type ProjectConfig } from "@better-t-stack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
-
 import { getDbScriptSupport } from "../utils/db-scripts";
 
 type PackageJson = {

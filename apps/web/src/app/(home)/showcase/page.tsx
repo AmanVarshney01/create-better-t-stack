@@ -1,9 +1,8 @@
 export const dynamic = "force-static";
 
-import type { Metadata } from "next";
-
 import { api } from "@better-t-stack/backend/convex/_generated/api";
 import { fetchQuery } from "convex/nextjs";
+import type { Metadata } from "next";
 
 import { ShowcasePage } from "./_components/showcase-page";
 

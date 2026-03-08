@@ -1,10 +1,9 @@
 import { X } from "lucide-react";
 
 import type { StackState } from "@/lib/constant";
-import type { TechCategory } from "@/lib/types";
-
 import { TECH_OPTIONS } from "@/lib/constant";
 import { CATEGORY_ORDER } from "@/lib/stack-utils";
+import type { TechCategory } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 import { getBadgeColors } from "../get-badge-color";
