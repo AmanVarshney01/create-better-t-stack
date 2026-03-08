@@ -104,10 +104,21 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
 `],
   ["addons/electrobun/apps/desktop/electrobun.config.ts.hbs", `import type { ElectrobunConfig } from "electrobun";
 
+const sanitizedProjectName =
+  "{{projectName}}"
+    .toLowerCase()
+    .replace(/[^a-z0-9.-]/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/\\.{2,}/g, ".")
+    .replace(/^[.-]+|[.-]+$/g, "") || "desktop";
+
+const webBuildDir =
+  "{{#if (includes frontend "react-router")}}../web/build/client{{else if (includes frontend "tanstack-start")}}../web/dist/client{{else if (includes frontend "next")}}../web/out{{else if (includes frontend "svelte")}}../web/build{{else}}../web/dist{{/if}}";
+
 export default {
   app: {
     name: "{{projectName}}",
-    identifier: "dev.bettertstack.{{projectName}}.desktop",
+    identifier: \`dev.bettertstack.\${sanitizedProjectName}.desktop\`,
     version: "0.0.1",
   },
   runtime: {
@@ -118,17 +129,20 @@ export default {
       entrypoint: "src/bun/index.ts",
     },
     copy: {
-      "{{#if (includes frontend "react-router")}}../web/build/client{{else if (includes frontend "tanstack-start")}}../web/dist/client{{else if (includes frontend "next")}}../web/out{{else if (includes frontend "svelte")}}../web/build{{else}}../web/dist{{/if}}": "views/mainview",
+      [webBuildDir]: "views/mainview",
     },
-    watchIgnore: ["{{#if (includes frontend "react-router")}}../web/build/client/**{{else if (includes frontend "tanstack-start")}}../web/dist/client/**{{else if (includes frontend "next")}}../web/out/**{{else if (includes frontend "svelte")}}../web/build/**{{else}}../web/dist/**{{/if}}"],
+    watchIgnore: [\`\${webBuildDir}/**\`],
     mac: {
-      bundleCEF: false,
+      bundleCEF: true,
+      defaultRenderer: "cef",
     },
     linux: {
-      bundleCEF: false,
+      bundleCEF: true,
+      defaultRenderer: "cef",
     },
     win: {
-      bundleCEF: false,
+      bundleCEF: true,
+      defaultRenderer: "cef",
     },
   },
 } satisfies ElectrobunConfig;
@@ -154,7 +168,7 @@ const DEV_SERVER_PORT = {{#if (or (includes frontend "react-router") (includes f
 const DEV_SERVER_URL = \`http://localhost:\${DEV_SERVER_PORT}\`;
 
 async function getMainViewUrl(): Promise<string> {
-  const channel = await Updater.localInfo.channel();
+  const channel = (await Updater.getLocalInfo()).channel;
   if (channel === "dev") {
     try {
       await fetch(DEV_SERVER_URL, { method: "HEAD" });

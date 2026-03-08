@@ -1,16 +1,7 @@
+import { desktopWebFrontends } from "@better-t-stack/types";
+
 import { DEFAULT_STACK, type StackState, type TECH_OPTIONS } from "@/lib/constant";
 import { CATEGORY_ORDER } from "@/lib/stack-utils";
-
-const desktopCompatibleWebFrontends = [
-  "tanstack-router",
-  "react-router",
-  "tanstack-start",
-  "next",
-  "nuxt",
-  "svelte",
-  "solid",
-  "astro",
-];
 
 export function validateProjectName(name: string): string | undefined {
   const INVALID_CHARS = ["<", ">", ":", '"', "|", "?", "*"];
@@ -38,10 +29,10 @@ export const hasPWACompatibleFrontend = (webFrontend: string[]) =>
   webFrontend.some((f) => ["tanstack-router", "react-router", "solid", "next"].includes(f));
 
 export const hasTauriCompatibleFrontend = (webFrontend: string[]) =>
-  webFrontend.some((f) => desktopCompatibleWebFrontends.includes(f));
+  webFrontend.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
 
 export const hasElectrobunCompatibleFrontend = (webFrontend: string[]) =>
-  webFrontend.some((f) => desktopCompatibleWebFrontends.includes(f));
+  webFrontend.some((f) => (desktopWebFrontends as readonly string[]).includes(f));
 
 export const getCategoryDisplayName = (categoryKey: string): string => {
   const result = categoryKey.replace(/([A-Z])/g, " $1");

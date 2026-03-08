@@ -53,9 +53,13 @@ describe("Electrobun addon scaffolding", () => {
     expect(desktopPackageJson.scripts["build:stable"]).toContain("--env=stable");
     expect(desktopPackageJson.scripts["build:canary"]).toContain("--env=canary");
     expect(desktopPackageJson.scripts.start).toContain("bun run --filter web build");
-    expect(desktopConfig).toContain('"../web/dist": "views/mainview"');
-    expect(desktopConfig).toContain('watchIgnore: ["../web/dist/**"]');
+    expect(desktopConfig).toContain('const webBuildDir = "../web/dist";');
+    expect(desktopConfig).toContain('[webBuildDir]: "views/mainview"');
+    expect(desktopConfig).toContain("watchIgnore: [`${webBuildDir}/**`]");
+    expect(desktopConfig).toContain("bundleCEF: true");
+    expect(desktopConfig).toContain('defaultRenderer: "cef"');
     expect(desktopEntry).toContain("const DEV_SERVER_PORT = 3001;");
+    expect(desktopEntry).toContain("Updater.getLocalInfo()");
     expect(desktopConfig).not.toContain("views/fallback");
     expect(fallbackHtmlExists).toBe(false);
   });
@@ -91,8 +95,7 @@ describe("Electrobun addon scaffolding", () => {
       "utf8",
     );
 
-    expect(desktopConfig).toContain('"../web/build/client": "views/mainview"');
-    expect(desktopConfig).toContain('watchIgnore: ["../web/build/client/**"]');
+    expect(desktopConfig).toContain('const webBuildDir = "../web/build/client";');
     expect(desktopEntry).toContain("const DEV_SERVER_PORT = 5173;");
   });
 
@@ -101,29 +104,25 @@ describe("Electrobun addon scaffolding", () => {
       {
         frontend: "tanstack-start",
         api: "trpc",
-        expectedOutputDir: '"../web/dist/client": "views/mainview"',
-        expectedWatchIgnore: 'watchIgnore: ["../web/dist/client/**"]',
+        expectedOutputDir: 'const webBuildDir = "../web/dist/client";',
         expectedPort: "const DEV_SERVER_PORT = 3001;",
       },
       {
         frontend: "next",
         api: "trpc",
-        expectedOutputDir: '"../web/out": "views/mainview"',
-        expectedWatchIgnore: 'watchIgnore: ["../web/out/**"]',
+        expectedOutputDir: 'const webBuildDir = "../web/out";',
         expectedPort: "const DEV_SERVER_PORT = 3001;",
       },
       {
         frontend: "svelte",
         api: "orpc",
-        expectedOutputDir: '"../web/build": "views/mainview"',
-        expectedWatchIgnore: 'watchIgnore: ["../web/build/**"]',
+        expectedOutputDir: 'const webBuildDir = "../web/build";',
         expectedPort: "const DEV_SERVER_PORT = 5173;",
       },
       {
         frontend: "astro",
         api: "orpc",
-        expectedOutputDir: '"../web/dist": "views/mainview"',
-        expectedWatchIgnore: 'watchIgnore: ["../web/dist/**"]',
+        expectedOutputDir: 'const webBuildDir = "../web/dist";',
         expectedPort: "const DEV_SERVER_PORT = 4321;",
       },
     ] as const;
@@ -160,7 +159,6 @@ describe("Electrobun addon scaffolding", () => {
       );
 
       expect(desktopConfig).toContain(testCase.expectedOutputDir);
-      expect(desktopConfig).toContain(testCase.expectedWatchIgnore);
       expect(desktopEntry).toContain(testCase.expectedPort);
     }
   });

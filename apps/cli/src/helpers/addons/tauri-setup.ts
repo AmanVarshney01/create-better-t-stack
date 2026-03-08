@@ -3,26 +3,14 @@ import { execa } from "execa";
 import fs from "fs-extra";
 import path from "node:path";
 
-import type { ProjectConfig } from "../../types";
-
+import { desktopWebFrontends, type ProjectConfig } from "../../types";
 import { AddonSetupError } from "../../utils/errors";
 import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageRunnerPrefix } from "../../utils/package-runner";
 import { createSpinner } from "../../utils/terminal-output";
 
 function getWebFrontend(frontend: Pick<ProjectConfig, "frontend">["frontend"]) {
-  return frontend.find((value) =>
-    [
-      "tanstack-router",
-      "react-router",
-      "tanstack-start",
-      "next",
-      "nuxt",
-      "svelte",
-      "solid",
-      "astro",
-    ].includes(value),
-  );
+  return frontend.find((value) => (desktopWebFrontends as readonly string[]).includes(value));
 }
 
 function getTauriDevUrl(frontend: Pick<ProjectConfig, "frontend">["frontend"]) {

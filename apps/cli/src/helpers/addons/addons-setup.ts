@@ -4,8 +4,7 @@ import fs from "fs-extra";
 import path from "node:path";
 import pc from "picocolors";
 
-import type { ProjectConfig } from "../../types";
-
+import { desktopWebFrontends, type ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
 import { setupFumadocs } from "./fumadocs-setup";
@@ -53,16 +52,7 @@ async function runAddonStep(addon: string, step: () => Promise<void>): Promise<v
 export async function setupAddons(config: ProjectConfig) {
   const { addons, frontend, projectDir } = config;
   const hasWebFrontend = frontend.some((value) =>
-    [
-      "tanstack-router",
-      "react-router",
-      "tanstack-start",
-      "next",
-      "nuxt",
-      "svelte",
-      "solid",
-      "astro",
-    ].includes(value),
+    (desktopWebFrontends as readonly string[]).includes(value),
   );
 
   if (addons.includes("tauri") && hasWebFrontend) {

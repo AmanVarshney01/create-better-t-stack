@@ -1,3 +1,4 @@
+import { desktopWebFrontends } from "@better-t-stack/types";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -46,16 +47,7 @@ export function getDefaultConfig() {
 
 export const DEFAULT_CONFIG = getDefaultConfig();
 
-const desktopWebFrontends = [
-  "tanstack-router",
-  "react-router",
-  "tanstack-start",
-  "next",
-  "nuxt",
-  "svelte",
-  "solid",
-  "astro",
-] as const;
+export { desktopWebFrontends };
 
 export const ADDON_COMPATIBILITY = {
   pwa: ["tanstack-router", "react-router", "solid", "next"],

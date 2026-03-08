@@ -227,7 +227,7 @@ npx create-better-t-stack --frontend none --backend hono --api trpc --database n
 
 - **Convex backend**: Requires `database`, `orm`, `api`, `runtime`, and `server-deploy` to be `none`; auth can be `better-auth`, `clerk`, or `none` depending frontend compatibility
 - **Backend 'none'**: If selected, this option will force related options like API, ORM, database, authentication, and runtime to 'none'. Examples will also be disabled (set to none/empty).
-- **Frontend 'none'**: Creates a backend-only project. When selected, PWA, Tauri, and certain examples may be disabled.
+- **Frontend 'none'**: Creates a backend-only project. When selected, PWA, Tauri, Electrobun, and certain examples may be disabled.
 - **API 'none'**: Disables tRPC/oRPC setup. Can be used with backend frameworks for REST APIs or custom API implementations.
 - **Database 'none'**: Disables database setup and requires ORM to be `none`.
 - **ORM 'none'**: Can be used when you want to handle database operations manually or use a different ORM.
@@ -237,7 +237,8 @@ npx create-better-t-stack --frontend none --backend hono --api trpc --database n
 - **Examples 'none'**: Skips all example implementations (todo, AI chat).
 - **Nuxt, Svelte, SolidJS, and Astro** frontends are only compatible with oRPC API layer
 - **PWA support** requires TanStack Router, React Router, Next.js, or SolidJS
-- **Tauri desktop app** requires TanStack Router, React Router, Nuxt, Svelte, SolidJS, or Next.js
+- **Tauri desktop app** requires TanStack Router, React Router, TanStack Start, Next.js, Nuxt, SvelteKit, SolidJS, or Astro
+- **Electrobun desktop app** requires TanStack Router, React Router, TanStack Start, Next.js, Nuxt, SvelteKit, SolidJS, or Astro. Desktop packaging uses static web assets, so SSR-first frontends need a static/export build before desktop builds will work.
 - **AI example** is not compatible with Solid or Astro. With Convex backend, it also excludes Nuxt and Svelte.
 
 ## Project Structure

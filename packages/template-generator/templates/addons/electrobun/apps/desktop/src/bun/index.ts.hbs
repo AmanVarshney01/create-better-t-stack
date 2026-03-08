@@ -4,7 +4,7 @@ const DEV_SERVER_PORT = {{#if (or (includes frontend "react-router") (includes f
 const DEV_SERVER_URL = `http://localhost:${DEV_SERVER_PORT}`;
 
 async function getMainViewUrl(): Promise<string> {
-  const channel = await Updater.localInfo.channel();
+  const channel = (await Updater.getLocalInfo()).channel;
   if (channel === "dev") {
     try {
       await fetch(DEV_SERVER_URL, { method: "HEAD" });
