@@ -25,6 +25,12 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
+          check-latest: true
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:

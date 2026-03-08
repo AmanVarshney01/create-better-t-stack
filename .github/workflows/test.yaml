@@ -17,6 +17,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
+          check-latest: true
+
       - name: Setup Git user
         run: |
           git config --global user.name "github-actions[bot]"
