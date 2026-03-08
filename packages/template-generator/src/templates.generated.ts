@@ -608,14 +608,13 @@ export const link = new RPCLink({
 {{/if}}
 {{#if (eq auth "better-auth")}}
 	fetch:
-		Platform.OS !== "web"
-			? undefined
-			: function (url, options) {
-					return fetch(url, {
-						...options,
-						credentials: "include",
-					});
-				},
+		function (url, options) {
+			return fetch(url, {
+				...options,
+				// Better Auth Expo forwards the session cookie manually on native.
+				credentials: Platform.OS === "web" ? "include" : "omit",
+			});
+		},
 	headers() {
 		if (Platform.OS === "web") {
 			return {};
@@ -1303,14 +1302,13 @@ const trpcClient = createTRPCClient<AppRouter>({
 {{/if}}
 {{#if (eq auth "better-auth")}}
 			fetch:
-				Platform.OS !== "web"
-					? undefined
-					: function (url, options) {
-							return fetch(url, {
-								...options,
-								credentials: "include",
-							});
-						},
+				function (url, options) {
+					return fetch(url, {
+						...options,
+						// Better Auth Expo forwards the session cookie manually on native.
+						credentials: Platform.OS === "web" ? "include" : "omit",
+					});
+				},
 			headers() {
 				if (Platform.OS === "web") {
 					return {};
