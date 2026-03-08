@@ -125,9 +125,8 @@ export async function displayPostInstallInstructions(
 
   const hasReactRouter = frontend?.includes("react-router");
   const hasSvelte = frontend?.includes("svelte");
-  const hasSolid = frontend?.includes("solid");
   const hasAstro = frontend?.includes("astro");
-  const webPort = hasReactRouter || hasSvelte || hasSolid ? "5173" : hasAstro ? "4321" : "3001";
+  const webPort = hasReactRouter || hasSvelte ? "5173" : hasAstro ? "4321" : "3001";
 
   const betterAuthConvexInstructions =
     isConvex && config.auth === "better-auth"

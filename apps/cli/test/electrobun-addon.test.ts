@@ -7,7 +7,7 @@ import { runTRPCTest } from "./test-utils";
 describe("Electrobun addon scaffolding", () => {
   it("scaffolds the desktop workspace for TanStack Router", async () => {
     const result = await runTRPCTest({
-      projectName: "electrobun-files-tanstack-router-static",
+      projectName: "electrobun-files-tanstack-router-static-v2",
       addons: ["electrobun"],
       frontend: ["tanstack-router"],
       backend: "hono",
@@ -59,14 +59,13 @@ describe("Electrobun addon scaffolding", () => {
     expect(desktopConfig).toContain("bundleCEF: true");
     expect(desktopConfig).toContain('defaultRenderer: "cef"');
     expect(desktopEntry).toContain("const DEV_SERVER_PORT = 3001;");
-    expect(desktopEntry).toContain("Updater.getLocalInfo()");
     expect(desktopConfig).not.toContain("views/fallback");
     expect(fallbackHtmlExists).toBe(false);
   });
 
   it("uses the React Router client build output for packaged desktop assets", async () => {
     const result = await runTRPCTest({
-      projectName: "electrobun-files-react-router-static",
+      projectName: "electrobun-files-react-router-static-v2",
       addons: ["electrobun"],
       frontend: ["react-router"],
       backend: "hono",
@@ -114,10 +113,23 @@ describe("Electrobun addon scaffolding", () => {
         expectedPort: "const DEV_SERVER_PORT = 3001;",
       },
       {
+        frontend: "nuxt",
+        api: "orpc",
+        expectedOutputDir: 'const webBuildDir = "../web/.output/public";',
+        expectedPort: "const DEV_SERVER_PORT = 3001;",
+        expectedBuildCommand: "bun run --filter web generate",
+      },
+      {
         frontend: "svelte",
         api: "orpc",
         expectedOutputDir: 'const webBuildDir = "../web/build";',
         expectedPort: "const DEV_SERVER_PORT = 5173;",
+      },
+      {
+        frontend: "solid",
+        api: "orpc",
+        expectedOutputDir: 'const webBuildDir = "../web/dist";',
+        expectedPort: "const DEV_SERVER_PORT = 3001;",
       },
       {
         frontend: "astro",
@@ -129,7 +141,7 @@ describe("Electrobun addon scaffolding", () => {
 
     for (const testCase of cases) {
       const result = await runTRPCTest({
-        projectName: `electrobun-files-${testCase.frontend}-static`,
+        projectName: `electrobun-files-${testCase.frontend}-static-v2`,
         addons: ["electrobun"],
         frontend: [testCase.frontend],
         backend: "hono",
@@ -157,22 +169,29 @@ describe("Electrobun addon scaffolding", () => {
         path.join(result.projectDir, "apps", "desktop", "src", "bun", "index.ts"),
         "utf8",
       );
+      const desktopPackageJson = await fs.readJson(
+        path.join(result.projectDir, "apps", "desktop", "package.json"),
+      );
 
       expect(desktopConfig).toContain(testCase.expectedOutputDir);
       expect(desktopEntry).toContain(testCase.expectedPort);
+      if ("expectedBuildCommand" in testCase) {
+        expect(desktopPackageJson.scripts.start).toContain(testCase.expectedBuildCommand);
+        expect(desktopPackageJson.scripts["build:stable"]).toContain(testCase.expectedBuildCommand);
+      }
     }
   });
 
   it("uses the configured monorepo runner for desktop web commands", async () => {
     const cases = [
       {
-        projectName: "electrobun-turbo-runner-static",
+        projectName: "electrobun-turbo-runner-static-v2",
         addons: ["turborepo", "electrobun"] as const,
         expectedRunner: "turbo -F web build",
         expectedHmr: "turbo -F web dev",
       },
       {
-        projectName: "electrobun-nx-runner-static",
+        projectName: "electrobun-nx-runner-static-v2",
         addons: ["nx", "electrobun"] as const,
         expectedRunner: "nx run-many -t build --projects=web",
         expectedHmr: "nx run-many -t dev --projects=web",

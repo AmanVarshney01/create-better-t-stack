@@ -26,7 +26,7 @@ type PackageManagerConfig = {
   filter: (workspace: string, script: string) => string;
 };
 
-type DesktopWebScript = "build" | "dev";
+type DesktopWebScript = "build" | "dev" | "generate";
 
 /**
  * Update all package.json files with proper names, scripts, and workspaces
@@ -231,10 +231,15 @@ function updateDesktopPackageJson(vfs: VirtualFileSystem, config: ProjectConfig)
   const pkgJson = vfs.readJson<PackageJson>("apps/desktop/package.json");
   if (!pkgJson) return;
 
-  const { packageManager, addons } = config;
+  const { packageManager, addons, frontend } = config;
   const hasTurborepo = addons.includes("turborepo");
   const hasNx = addons.includes("nx");
-  const webBuildCommand = getDesktopWebCommand(packageManager, { hasTurborepo, hasNx }, "build");
+  const desktopBuildScript: DesktopWebScript = frontend.includes("nuxt") ? "generate" : "build";
+  const webBuildCommand = getDesktopWebCommand(
+    packageManager,
+    { hasTurborepo, hasNx },
+    desktopBuildScript,
+  );
   const webDevCommand = getDesktopWebCommand(packageManager, { hasTurborepo, hasNx }, "dev");
   const localRunCommand = getLocalRunCommand(packageManager);
 

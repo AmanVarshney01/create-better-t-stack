@@ -105,7 +105,7 @@ export const EMBEDDED_TEMPLATES: Map<string, string> = new Map([
   ["addons/electrobun/apps/desktop/electrobun.config.ts.hbs", `import type { ElectrobunConfig } from "electrobun";
 
 const webBuildDir =
-  "{{#if (includes frontend "react-router")}}../web/build/client{{else if (includes frontend "tanstack-start")}}../web/dist/client{{else if (includes frontend "next")}}../web/out{{else if (includes frontend "svelte")}}../web/build{{else}}../web/dist{{/if}}";
+  "{{#if (includes frontend "react-router")}}../web/build/client{{else if (includes frontend "tanstack-start")}}../web/dist/client{{else if (includes frontend "next")}}../web/out{{else if (includes frontend "nuxt")}}../web/.output/public{{else if (includes frontend "svelte")}}../web/build{{else}}../web/dist{{/if}}";
 
 export default {
   app: {
@@ -156,15 +156,16 @@ export default {
 `],
   ["addons/electrobun/apps/desktop/src/bun/index.ts.hbs", `import { BrowserWindow, Updater } from "electrobun/bun";
 
-const DEV_SERVER_PORT = {{#if (or (includes frontend "react-router") (includes frontend "svelte") (includes frontend "solid"))}}5173{{else if (includes frontend "astro")}}4321{{else}}3001{{/if}};
+const DEV_SERVER_PORT = {{#if (or (includes frontend "react-router") (includes frontend "svelte"))}}5173{{else if (includes frontend "astro")}}4321{{else}}3001{{/if}};
 const DEV_SERVER_URL = \`http://localhost:\${DEV_SERVER_PORT}\`;
 
+// Check if the web dev server is running for HMR
 async function getMainViewUrl(): Promise<string> {
-  const channel = (await Updater.getLocalInfo()).channel;
+  const channel = await Updater.localInfo.channel();
   if (channel === "dev") {
     try {
       await fetch(DEV_SERVER_URL, { method: "HEAD" });
-      console.log(\`Desktop shell connected to \${DEV_SERVER_URL}\`);
+      console.log(\`HMR enabled: Using web dev server at \${DEV_SERVER_URL}\`);
       return DEV_SERVER_URL;
     } catch {
       console.log(

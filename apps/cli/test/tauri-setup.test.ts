@@ -19,7 +19,7 @@ describe("Tauri setup", () => {
       },
       {
         frontend: ["nuxt"],
-        expectedDist: "../dist",
+        expectedDist: "../.output/public",
         expectedUrl: "http://localhost:3001",
         expectedBuildCommand: "bun run generate",
       },
@@ -33,6 +33,12 @@ describe("Tauri setup", () => {
         frontend: ["react-router"],
         expectedDist: "../build/client",
         expectedUrl: "http://localhost:5173",
+        expectedBuildCommand: "bun run build",
+      },
+      {
+        frontend: ["solid"],
+        expectedDist: "../dist",
+        expectedUrl: "http://localhost:3001",
         expectedBuildCommand: "bun run build",
       },
     ] as const;

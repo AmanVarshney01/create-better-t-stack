@@ -19,7 +19,6 @@ function getTauriDevUrl(frontend: Pick<ProjectConfig, "frontend">["frontend"]) {
   switch (webFrontend) {
     case "react-router":
     case "svelte":
-    case "solid":
       return "http://localhost:5173";
     case "astro":
       return "http://localhost:4321";
@@ -38,6 +37,8 @@ function getTauriFrontendDist(frontend: Pick<ProjectConfig, "frontend">["fronten
       return "../dist/client";
     case "next":
       return "../out";
+    case "nuxt":
+      return "../.output/public";
     case "svelte":
       return "../build";
     default:
