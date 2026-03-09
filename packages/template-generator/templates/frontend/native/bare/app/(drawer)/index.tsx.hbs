@@ -14,7 +14,7 @@ import { trpc } from "@/utils/trpc";
 import { Link } from "expo-router";
 import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
-import { useUser } from "@clerk/clerk-expo";
+import { useUser } from "@clerk/expo";
 import { SignOutButton } from "@/components/sign-out-button";
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
 import { useConvexAuth, useQuery } from "convex/react";

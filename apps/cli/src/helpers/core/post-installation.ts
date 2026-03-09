@@ -446,7 +446,7 @@ function getBunWebNativeWarning() {
 }
 
 function getClerkInstructions() {
-  return `${pc.bold("Clerk Authentication Setup:")}\n${pc.cyan("•")} Follow the guide: ${pc.underline("https://docs.convex.dev/auth/clerk")}\n${pc.cyan("•")} Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard\n${pc.cyan("•")} Set CLERK_PUBLISHABLE_KEY in apps/*/.env`;
+  return `${pc.bold("Clerk Authentication Setup:")}\n${pc.cyan("•")} Follow the guide: ${pc.underline("https://docs.convex.dev/auth/clerk")}\n${pc.cyan("•")} Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard\n${pc.cyan("•")} Set your Clerk publishable key in apps/*/.env\n${pc.cyan("•")} Set CLERK_SECRET_KEY when your web app uses Clerk server middleware`;
 }
 
 function getBetterAuthConvexInstructions(hasWeb: boolean, webPort: string, packageManager: string) {
