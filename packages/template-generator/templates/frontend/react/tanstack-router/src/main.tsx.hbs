@@ -15,7 +15,7 @@ import { routeTree } from "./routeTree.gen";
   import { ConvexReactClient } from "convex/react";
   import { env } from "@{{projectName}}/env/web";
   {{#if (eq auth "clerk")}}
-  import { ClerkProvider, useAuth } from "@clerk/clerk-react";
+  import { ClerkProvider, useAuth } from "@clerk/react";
   import { ConvexProviderWithClerk } from "convex/react-clerk";
   {{else if (eq auth "better-auth")}}
   import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";

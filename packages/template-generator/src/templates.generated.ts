@@ -10790,10 +10790,14 @@ export const get = query({
 });
 `],
   ["auth/clerk/convex/native/base/app/(auth)/_layout.tsx.hbs", `import { Redirect, Stack } from "expo-router";
-import { useAuth } from "@clerk/clerk-expo";
+import { useAuth } from "@clerk/expo";
 
 export default function AuthRoutesLayout() {
-  const { isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn } = useAuth();
+
+  if (!isLoaded) {
+    return null;
+  }
 
   if (isSignedIn) {
     return <Redirect href={"/"} />;
@@ -10802,7 +10806,7 @@ export default function AuthRoutesLayout() {
   return <Stack />;
 }
 `],
-  ["auth/clerk/convex/native/base/app/(auth)/sign-in.tsx.hbs", `import { useSignIn } from "@clerk/clerk-expo";
+  ["auth/clerk/convex/native/base/app/(auth)/sign-in.tsx.hbs", `import { useSignIn } from "@clerk/expo";
 import { Link, useRouter } from "expo-router";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import React from "react";
@@ -10872,7 +10876,7 @@ export default function Page() {
 `],
   ["auth/clerk/convex/native/base/app/(auth)/sign-up.tsx.hbs", `import * as React from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
-import { useSignUp } from "@clerk/clerk-expo";
+import { useSignUp } from "@clerk/expo";
 import { Link, useRouter } from "expo-router";
 
 export default function SignUpScreen() {
@@ -10979,7 +10983,7 @@ export default function SignUpScreen() {
   );
 }
 `],
-  ["auth/clerk/convex/native/base/components/sign-out-button.tsx.hbs", `import { useClerk } from "@clerk/clerk-expo";
+  ["auth/clerk/convex/native/base/components/sign-out-button.tsx.hbs", `import { useClerk } from "@clerk/expo";
 import { useRouter } from "expo-router";
 import { Text, TouchableOpacity } from "react-native";
 
@@ -11037,7 +11041,7 @@ export default function Dashboard() {
   );
 }
 `],
-  ["auth/clerk/convex/web/react/next/src/middleware.ts.hbs", `import { clerkMiddleware } from "@clerk/nextjs/server";
+  ["auth/clerk/convex/web/react/next/src/proxy.ts.hbs", `import { clerkMiddleware } from "@clerk/nextjs/server";
 
 export default clerkMiddleware();
 
@@ -11050,7 +11054,7 @@ export const config = {
 	],
 };
 `],
-  ["auth/clerk/convex/web/react/react-router/src/routes/dashboard.tsx.hbs", `import { SignInButton, UserButton, useUser } from "@clerk/clerk-react";
+  ["auth/clerk/convex/web/react/react-router/src/routes/dashboard.tsx.hbs", `import { SignInButton, UserButton, useUser } from "@clerk/react-router";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import {
 	Authenticated,
@@ -11083,7 +11087,7 @@ export default function Dashboard() {
 	);
 }
 `],
-  ["auth/clerk/convex/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `import { SignInButton, UserButton, useUser } from "@clerk/clerk-react";
+  ["auth/clerk/convex/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `import { SignInButton, UserButton, useUser } from "@clerk/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -19544,9 +19548,9 @@ import "@/polyfills";
     import { env } from "@{{projectName}}/env/native";
   {{/if}}
   {{#if (eq auth "clerk")}}
-    import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+    import { ClerkProvider, useAuth } from "@clerk/expo";
     import { ConvexProviderWithClerk } from "convex/react-clerk";
-    import { tokenCache } from "@clerk/clerk-expo/token-cache";
+    import { tokenCache } from "@clerk/expo/token-cache";
   {{/if}}
 {{else}}
   {{#unless (eq api "none")}}
@@ -19910,7 +19914,7 @@ import { trpc } from "@/utils/trpc";
 import { Link } from "expo-router";
 import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
-import { useUser } from "@clerk/clerk-expo";
+import { useUser } from "@clerk/expo";
 import { SignOutButton } from "@/components/sign-out-button";
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
 import { useConvexAuth, useQuery } from "convex/react";
@@ -20127,7 +20131,8 @@ statusCardTitle: {
 marginBottom: 8,
 fontWeight: "bold",
 },
-});`],
+});
+`],
   ["frontend/native/bare/app/+not-found.tsx.hbs", `import { Container } from "@/components/container";
 import { Link, Stack } from "expo-router";
 import { Text, View, StyleSheet } from "react-native";
@@ -20525,9 +20530,9 @@ import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { env } from "@{{projectName}}/env/native";
 {{/if}}
 {{#if (eq auth "clerk")}}
-import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { ClerkProvider, useAuth } from "@clerk/expo";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
-import { tokenCache } from "@clerk/clerk-expo/token-cache";
+import { tokenCache } from "@clerk/expo/token-cache";
 {{/if}}
 {{else}}
   {{#unless (eq api "none")}}
@@ -20895,7 +20900,7 @@ import { trpc } from "@/utils/trpc";
 import { Link } from "expo-router";
 import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
-import { useUser } from "@clerk/clerk-expo";
+import { useUser } from "@clerk/expo";
 import { SignOutButton } from "@/components/sign-out-button";
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
 import { useConvexAuth, useQuery } from "convex/react";
@@ -21211,7 +21216,8 @@ const styles = StyleSheet.create((theme) => ({
   apiStatusText: {
     color: theme.colors.mutedForeground,
   },
-}));`],
+}));
+`],
   ["frontend/native/unistyles/app/+html.tsx.hbs", `import { ScrollViewStyleReset } from "expo-router/html";
 import { type PropsWithChildren } from "react";
 
@@ -21703,9 +21709,9 @@ import "@/global.css";
   {{/if}}
 
   {{#if (eq auth "clerk")}}
-    import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+    import { ClerkProvider, useAuth } from "@clerk/expo";
     import { ConvexProviderWithClerk } from "convex/react-clerk";
-    import { tokenCache } from "@clerk/clerk-expo/token-cache";
+    import { tokenCache } from "@clerk/expo/token-cache";
   {{/if}}
 {{else}}
   {{#unless (eq api "none")}}
@@ -21816,7 +21822,8 @@ export default function Layout() {
       {{/unless}}
     {{/if}}
   );
-}`],
+}
+`],
   ["frontend/native/uniwind/app/(drawer)/_layout.tsx.hbs", `import React, { useCallback } from "react";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Link } from "expo-router";
@@ -22001,7 +22008,7 @@ import { trpc } from "@/utils/trpc";
 import { Link } from "expo-router";
 import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
-import { useUser } from "@clerk/clerk-expo";
+import { useUser } from "@clerk/expo";
 import { SignOutButton } from "@/components/sign-out-button";
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
 import { useConvexAuth, useQuery } from "convex/react";
@@ -23226,6 +23233,9 @@ export function ThemeProvider({
 export default {
   ssr: false,
   appDirectory: "src",
+  future: {
+    v8_middleware: true,
+  },
 } satisfies Config;
 `],
   ["frontend/react/react-router/src/components/mode-toggle.tsx.hbs", `import { Moon, Sun } from "lucide-react";
@@ -23288,7 +23298,8 @@ import { Toaster } from "@{{projectName}}/ui/components/sonner";
 import { ConvexReactClient } from "convex/react";
 import { env } from "@{{projectName}}/env/web";
 {{#if (eq auth "clerk")}}
-import { ClerkProvider, useAuth } from "@clerk/clerk-react";
+import { ClerkProvider, useAuth } from "@clerk/react-router";
+import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 {{else}}
 import { ConvexProvider } from "convex/react";
@@ -23304,6 +23315,12 @@ import { queryClient } from "./utils/orpc";
 import { queryClient } from "./utils/trpc";
     {{/if}}
   {{/unless}}
+{{/if}}
+
+{{#if (and (eq backend "convex") (eq auth "clerk"))}}
+export const middleware: Route.MiddlewareFunction[] = [clerkMiddleware()];
+
+export const loader = (args: Route.LoaderArgs) => rootAuthLoader(args);
 {{/if}}
 
 export const links: Route.LinksFunction = () => [
@@ -23335,11 +23352,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 {{#if (eq backend "convex")}}
+{{#if (eq auth "clerk")}}
+export default function App({ loaderData }: Route.ComponentProps) {
+{{else}}
 export default function App() {
+{{/if}}
   const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
   {{#if (eq auth "clerk")}}
   return (
-    <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
+    <ClerkProvider loaderData={loaderData}>
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <ThemeProvider
           attribute="class"
@@ -23702,7 +23723,7 @@ import { routeTree } from "./routeTree.gen";
   import { ConvexReactClient } from "convex/react";
   import { env } from "@{{projectName}}/env/web";
   {{#if (eq auth "clerk")}}
-  import { ClerkProvider, useAuth } from "@clerk/clerk-react";
+  import { ClerkProvider, useAuth } from "@clerk/react";
   import { ConvexProviderWithClerk } from "convex/react-clerk";
   {{else if (eq auth "better-auth")}}
   import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";

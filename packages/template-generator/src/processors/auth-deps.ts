@@ -28,8 +28,10 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
     ["native-bare", "native-uniwind", "native-unistyles"].includes(f),
   );
   const hasNextJs = frontend.includes("next");
+  const hasReactRouter = frontend.includes("react-router");
+  const hasTanStackRouter = frontend.includes("tanstack-router");
   const hasTanStackStart = frontend.includes("tanstack-start");
-  const hasViteReact = frontend.some((f) => ["tanstack-router", "react-router"].includes(f));
+  const hasViteReact = hasReactRouter || hasTanStackRouter;
   const hasSolid = frontend.includes("solid");
   const hasSvelte = frontend.includes("svelte");
   const hasReactWebAuthForms = hasNextJs || hasTanStackStart || hasViteReact;
@@ -38,18 +40,20 @@ function processConvexAuthDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
     if (webExists) {
       if (hasNextJs) {
         addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@clerk/nextjs"] });
+      } else if (hasReactRouter) {
+        addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@clerk/react-router"] });
+      } else if (hasTanStackRouter) {
+        addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@clerk/react"] });
       } else if (hasTanStackStart) {
         addPackageDependency({
           vfs,
           packagePath: webPath,
           dependencies: ["@clerk/tanstack-react-start"],
         });
-      } else if (hasViteReact) {
-        addPackageDependency({ vfs, packagePath: webPath, dependencies: ["@clerk/clerk-react"] });
       }
     }
     if (nativeExists && hasNative) {
-      addPackageDependency({ vfs, packagePath: nativePath, dependencies: ["@clerk/clerk-expo"] });
+      addPackageDependency({ vfs, packagePath: nativePath, dependencies: ["@clerk/expo"] });
     }
   } else if (auth === "better-auth") {
     if (backendExists) {

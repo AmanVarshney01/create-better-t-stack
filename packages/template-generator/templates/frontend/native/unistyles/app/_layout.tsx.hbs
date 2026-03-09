@@ -18,9 +18,9 @@ import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { env } from "@{{projectName}}/env/native";
 {{/if}}
 {{#if (eq auth "clerk")}}
-import { ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { ClerkProvider, useAuth } from "@clerk/expo";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
-import { tokenCache } from "@clerk/clerk-expo/token-cache";
+import { tokenCache } from "@clerk/expo/token-cache";
 {{/if}}
 {{else}}
   {{#unless (eq api "none")}}

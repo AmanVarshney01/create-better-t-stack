@@ -16,7 +16,8 @@ import { Toaster } from "@{{projectName}}/ui/components/sonner";
 import { ConvexReactClient } from "convex/react";
 import { env } from "@{{projectName}}/env/web";
 {{#if (eq auth "clerk")}}
-import { ClerkProvider, useAuth } from "@clerk/clerk-react";
+import { ClerkProvider, useAuth } from "@clerk/react-router";
+import { clerkMiddleware, rootAuthLoader } from "@clerk/react-router/server";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 {{else}}
 import { ConvexProvider } from "convex/react";
@@ -32,6 +33,12 @@ import { queryClient } from "./utils/orpc";
 import { queryClient } from "./utils/trpc";
     {{/if}}
   {{/unless}}
+{{/if}}
+
+{{#if (and (eq backend "convex") (eq auth "clerk"))}}
+export const middleware: Route.MiddlewareFunction[] = [clerkMiddleware()];
+
+export const loader = (args: Route.LoaderArgs) => rootAuthLoader(args);
 {{/if}}
 
 export const links: Route.LinksFunction = () => [
@@ -63,11 +70,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 {{#if (eq backend "convex")}}
+{{#if (eq auth "clerk")}}
+export default function App({ loaderData }: Route.ComponentProps) {
+{{else}}
 export default function App() {
+{{/if}}
   const convex = new ConvexReactClient(env.VITE_CONVEX_URL);
   {{#if (eq auth "clerk")}}
   return (
-    <ClerkProvider publishableKey={env.VITE_CLERK_PUBLISHABLE_KEY}>
+    <ClerkProvider loaderData={loaderData}>
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
         <ThemeProvider
           attribute="class"

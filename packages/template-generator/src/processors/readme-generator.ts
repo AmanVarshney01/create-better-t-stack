@@ -51,6 +51,9 @@ function generateReadmeContent(options: ProjectConfig): string {
   const hasReactWeb = frontend.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
   );
+  const hasClerkServerFrontend = frontend.some((f) =>
+    ["next", "react-router", "tanstack-start"].includes(f),
+  );
   const hasSvelte = frontend.includes("svelte");
   const hasAstro = frontend.includes("astro");
   const packageManagerRunCmd = `${packageManager} run`;
@@ -96,7 +99,11 @@ ${
 
 - Follow the guide: [Convex + Clerk](https://docs.convex.dev/auth/clerk)
 - Set \`CLERK_JWT_ISSUER_DOMAIN\` in Convex Dashboard
-- Set \`CLERK_PUBLISHABLE_KEY\` in \`apps/*/.env\``
+- Set your Clerk publishable key in \`apps/*/.env\`${
+        hasClerkServerFrontend
+          ? "\n- Set `CLERK_SECRET_KEY` in the web app env for Clerk server middleware"
+          : ""
+      }`
     : ""
 }`
     : generateDatabaseSetup(options, packageManagerRunCmd)

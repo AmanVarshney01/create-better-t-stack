@@ -178,7 +178,7 @@ function buildClientVars(
         value: "",
         condition: true,
       });
-      if (hasTanStackStart) {
+      if (hasReactRouter || hasTanStackStart) {
         vars.push({
           key: "CLERK_SECRET_KEY",
           value: "",
