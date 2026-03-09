@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@better-fullstack/types": ["../packages/types/src"],
+      "@cli/*": ["../apps/cli/src/*"]
+    }
+  }
+}

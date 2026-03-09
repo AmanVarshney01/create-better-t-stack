@@ -17,7 +17,11 @@ Run repeatable matrix tests with:
 
 - `testing/TESTING_PLAYBOOK.md`: step-by-step process
 - `testing/PROMPT_TEMPLATE.md`: reusable prompt so you do not rewrite instructions
-- `testing/combos-2026-02-17.json`: compact combo ledger from the latest cycle
+- `testing/combos-*.json`: dated compact combo ledgers from prior cycles
+
+See also:
+
+- `docs/guidelines/production-package-testing.md`: agent-facing guidance for when and how to use this workspace
 
 ## Output Convention
 

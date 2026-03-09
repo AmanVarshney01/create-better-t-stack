@@ -59,6 +59,6 @@ bun run scripts/upstream-gap-report.ts --markdown --max-per-area 25
 
 ## Planning Document
 
-Current planning/backlog file:
+Current planning index:
 
-- `docs/plans/planned/Codex-improvements-backlog.md`
+- `docs/plans/README.md`
