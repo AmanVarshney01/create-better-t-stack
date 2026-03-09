@@ -25,6 +25,12 @@ If URL parsing changes without normalization, alias handling usually breaks some
 - Before cleaning up homepage sections, check whether a component is actually imported by `apps/web/src/routes/index.tsx`. The home component directory can contain dead marketing sections.
 - For SvelteKit or SolidStart with Tailwind + DaisyUI, plugin activation lives in `apps/web/src/app.css` via `@plugin "daisyui";`, not in `tailwind.config.ts`.
 
+## Ecosystem and auth rendering
+
+- Go builder rendering depends on both `ECOSYSTEM_CATEGORIES.go` in `apps/web/src/lib/constant.ts` and `GO_CATEGORY_ORDER` in `apps/web/src/lib/stack-utils.ts`. If a Go option exists in the metadata but not the builder UI, check that both lists were updated together.
+- Auth capability metadata is intentionally global across ecosystems in `packages/types`, but the web builder should filter visible auth choices by ecosystem in `apps/web/src/components/stack-builder/utils.ts`. Do not assume disabled reasons alone are enough to produce the desired builder UI.
+- The builder has two auth option render paths in `apps/web/src/components/stack-builder/stack-builder.tsx` (sidebar accordion + main category grid). Apply auth visibility filtering in both paths to avoid inconsistent options between sidebar and main content.
+
 ## Useful verification
 
 - `bun run --cwd apps/web lint`

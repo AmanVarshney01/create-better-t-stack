@@ -106,6 +106,11 @@ export async function getPythonAiChoice(pythonAi?: PythonAi[]) {
 
   const options = [
     {
+      value: "none" as const,
+      label: "None",
+      hint: "No AI/ML framework",
+    },
+    {
       value: "langchain" as const,
       label: "LangChain",
       hint: "Building applications with LLMs through composability",
@@ -145,6 +150,8 @@ export async function getPythonAiChoice(pythonAi?: PythonAi[]) {
   });
 
   if (isCancel(response)) return exitCancelled("Operation cancelled");
+
+  if (response.includes("none")) return [];
 
   return response as PythonAi[];
 }

@@ -8,7 +8,9 @@ This repository is a Bun workspace monorepo. Most agent mistakes here come from 
 - `apps/web` owns the marketing site, stack builder UI, URL state, and preview generation for the web configurator.
 - `packages/types` is the core contract package. It owns schema values, compatibility input/output types, and canonical option metadata such as labels, aliases, and CLI value mapping.
 - `packages/template-generator` owns the generated project tree. If a chosen stack should emit different files, the change usually belongs here.
-- `packages/backend` holds shared backend/runtime helpers used by the web app and generated experiences.
+- `packages/backend` is a Convex backend service (analytics, showcase data, health checks). Used only by the web app, not by CLI or generated projects.
+- `packages/create-bfs` is an alias package that re-exports `create-better-fullstack` under the shorter `create-bfs` name.
+- `apps/analytics` is a private Convex app for analytics infrastructure.
 - `scripts` contains release, dependency, cleanup, and upstream maintenance tooling.
 - `docs/plans` is for backlog and completion records. `docs/guidelines` is for reusable agent-facing guidance.
 

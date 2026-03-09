@@ -14,6 +14,7 @@ See `docs/guidelines/` for deeper reference on these topics:
 - `testing-release-and-upstream.md` - targeted verification commands, release guard expectations, and upstream backport workflow
 - `scripted-cli-runs.md` - safe non-interactive CLI usage, prompt-avoidance flags, and matrix-testing caveats
 - `production-package-testing.md` - how to use the `testing/` workspace for published npm-package validation cycles
+- `template-output-and-validation.md` - template conditional logic, generated output validation, sync test discipline, and framework-specific constraints
 
 ## Workflow
 
@@ -24,18 +25,3 @@ See `docs/guidelines/` for deeper reference on these topics:
 ## Bun
 
 Bun is the default package manager and script runner. Use `bun install`, `bun run <script>`, `bun test`, and `bunx`. Do not switch to npm, pnpm, yarn, npx, or ad hoc `node` wrappers unless a file explicitly requires it.
-
-
-## High-Signal Gotchas
-
-- `--yes` cannot be combined with core stack flags like `--frontend`, `--css-framework`, or `--ui-library`. If you need explicit stack options, do not pass `--yes`.
-- Even with many non-interactive flags set, CLI may still prompt for AI documentation files unless `--ai-docs none` is provided explicitly.
-- Route-level `validateSearch` on `apps/web/src/routes/new.tsx` can pull `zod` and search-schema code into the main client bundle. Prefer parsing search params inside the lazy-loaded stack builder path to protect homepage performance.
-- After adding/removing files in `apps/web/src/routes`, `apps/web/src/routeTree.gen.ts` may be stale until a route generator run (triggered by `vite build`/`vite dev`). `tsc --noEmit` can fail with route type errors if regeneration hasn't happened yet.
-- `apps/cli/test/cli-builder-sync.test.ts` was historically brittle: it depended on current working directory for file resolution and silently skipped prompt/schema checks when parsing failed. Keep path resolution root-safe (`apps/cli/...` fallback) and fail hard on parse gaps to avoid false-green sync tests.
-- The old CLI/builder sync test intentionally excluded `analytics=umami`, which let the builder drift behind the CLI schema without failing CI. When excluding schema values from parity tests, document the product reason and revisit the exclusion quickly or it will mask real stack-option drift.
-## Load-on-demand guidance
-- The CI lint job builds `@better-fullstack/types` before running `validate:tech-links`, so workspace alias imports work in `apps/web`. If a new pre-build CI step is added that touches web source, ensure types are built first.
-- Go builder rendering depends on both `ECOSYSTEM_CATEGORIES.go` in `apps/web/src/lib/constant.ts` and `GO_CATEGORY_ORDER` in `apps/web/src/lib/stack-utils.ts`. If a Go option exists in the metadata but not the builder UI, check that both lists were updated together.
-- Auth capability metadata is intentionally global across ecosystems in `packages/types`, but the web builder should filter visible auth choices by ecosystem in `apps/web/src/components/stack-builder/utils.ts`. Do not assume disabled reasons alone are enough to produce the desired builder UI.
-- The builder has two auth option render paths in `apps/web/src/components/stack-builder/stack-builder.tsx` (sidebar accordion + main category grid). Apply auth visibility filtering in both paths to avoid inconsistent options between sidebar and main content.

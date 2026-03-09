@@ -15,6 +15,7 @@ import {
   PYTHON_CATEGORY_ORDER,
   RUST_CATEGORY_ORDER,
   TYPESCRIPT_CATEGORY_ORDER,
+  generateStackCommand,
 } from "../src/lib/stack-utils";
 
 describe("Python Ecosystem Tab", () => {
@@ -334,6 +335,19 @@ describe("Python Ecosystem Tab", () => {
       expect(CATEGORY_ORDER).toContain("pythonWebFramework");
       expect(CATEGORY_ORDER).toContain("pythonOrm");
       expect(CATEGORY_ORDER).toContain("pythonAi");
+    });
+  });
+
+  describe("CLI Command Generation", () => {
+    it('should include "--python-ai none" when no Python AI framework is selected', () => {
+      const command = generateStackCommand({
+        ...DEFAULT_STACK,
+        ecosystem: "python",
+        pythonAi: "none",
+      });
+
+      expect(command).toContain("--ecosystem python");
+      expect(command).toContain("--python-ai none");
     });
   });
 

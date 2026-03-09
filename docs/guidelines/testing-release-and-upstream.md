@@ -35,6 +35,10 @@ That release lane currently covers:
 - `.github/workflows/release.yaml` also runs the release verification lane before publishing packages.
 - Published packages are versioned independently inside the release workflow. Do not hand-edit version bumps casually during unrelated feature work.
 
+## CI build-order notes
+
+- The CI lint job builds `@better-fullstack/types` before running `validate:tech-links`, so workspace alias imports work in `apps/web`. If a new pre-build CI step is added that touches web source, ensure types are built first.
+
 ## Upstream maintenance
 
 - Use `bun run upstream-gap-report` or `bun run scripts/upstream-gap-report.ts --markdown` to inspect drift from upstream.

@@ -356,9 +356,8 @@ function generatePythonCommand(stack: StackState, projectName: string) {
   if (stack.pythonValidation !== "none") {
     flags.push(`--python-validation ${stack.pythonValidation}`);
   }
-  if (stack.pythonAi !== "none") {
-    flags.push(`--python-ai ${stack.pythonAi}`);
-  }
+  // Omitting this flag makes the CLI treat Python AI as unspecified and re-open the prompt.
+  flags.push(`--python-ai ${stack.pythonAi}`);
   if (stack.pythonTaskQueue !== "none") {
     flags.push(`--python-task-queue ${stack.pythonTaskQueue}`);
   }

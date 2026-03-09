@@ -698,8 +698,6 @@ describe("CLI Prompts vs Schemas Sync", () => {
     orm: ["none"],
     // "none" for runtime is auto-selected when backend is convex/none/self
     runtime: ["none"],
-    // pythonAi is a multiselect where empty selection maps to "none"
-    pythonAi: ["none"],
   };
 
   // Values that appear in prompts but are not schema values
