@@ -32,7 +32,10 @@ export async function processExtrasTemplates(
     processTemplatesFromPrefix(vfs, templates, "extras/_npmrc", "", config);
   }
 
-  if (config.serverDeploy === "cloudflare") {
+  if (
+    config.serverDeploy === "cloudflare" ||
+    (config.backend === "self" && config.webDeploy === "cloudflare")
+  ) {
     processSingleTemplate(vfs, templates, "extras/env.d.ts", "packages/env/env.d.ts", config);
   }
 }

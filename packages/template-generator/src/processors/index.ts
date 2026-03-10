@@ -12,6 +12,7 @@ import { processDeployDeps } from "./deploy-deps";
 import { processEnvDeps } from "./env-deps";
 import { processEnvVariables } from "./env-vars";
 import { processExamplesDeps } from "./examples-deps";
+import { processFrontendDeps } from "./frontend-deps";
 import { processInfraDeps } from "./infra-deps";
 import { processNxConfig } from "./nx-generator";
 import { processPaymentsDeps } from "./payments-deps";
@@ -23,6 +24,7 @@ import { processWorkspaceDeps } from "./workspace-deps";
 
 export function processDependencies(vfs: VirtualFileSystem, config: ProjectConfig): void {
   processWorkspaceDeps(vfs, config);
+  processFrontendDeps(vfs, config);
   processEnvDeps(vfs, config);
   processInfraDeps(vfs, config);
   processDatabaseDeps(vfs, config);
@@ -47,6 +49,7 @@ export {
   processDeployDeps,
   processEnvDeps,
   processExamplesDeps,
+  processFrontendDeps,
   processInfraDeps,
   processPaymentsDeps,
   processNxConfig,

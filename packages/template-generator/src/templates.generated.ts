@@ -6307,6 +6307,8 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true,
 	},
+	secret: env.BETTER_AUTH_SECRET,
+	baseURL: env.BETTER_AUTH_URL,
 {{#if (ne backend "self")}}
 	advanced: {
 		defaultCookieAttributes: {
@@ -6378,6 +6380,8 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true,
 	},
+	secret: env.BETTER_AUTH_SECRET,
+	baseURL: env.BETTER_AUTH_URL,
 {{#if (ne backend "self")}}
 	advanced: {
 		defaultCookieAttributes: {
@@ -6525,6 +6529,8 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true,
 	},
+	secret: env.BETTER_AUTH_SECRET,
+	baseURL: env.BETTER_AUTH_URL,
 {{#if (ne backend "self")}}
 	advanced: {
 		defaultCookieAttributes: {
@@ -6587,6 +6593,8 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true,
 	},
+	secret: env.BETTER_AUTH_SECRET,
+	baseURL: env.BETTER_AUTH_URL,
 {{#if (ne backend "self")}}
 	advanced: {
 		defaultCookieAttributes: {
@@ -19059,7 +19067,11 @@ linker = "hoisted" # having issues with Nuxt when linker is isolated
 {{else}}
 linker = "isolated"
 {{/if}}`],
-  ["extras/env.d.ts.hbs", `import { type server } from "@{{projectName}}/infra/alchemy.run";
+  ["extras/env.d.ts.hbs", `{{#if (eq serverDeploy "cloudflare")}}
+import { type server } from "@{{projectName}}/infra/alchemy.run";
+{{else}}
+import { type web as server } from "@{{projectName}}/infra/alchemy.run";
+{{/if}}
 
 // This file infers types for the cloudflare:workers environment from your Alchemy Worker.
 // @see https://alchemy.run/concepts/bindings/#type-safe-bindings
@@ -19142,8 +19154,7 @@ export default defineConfig({
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/node": "^9.5.2",
-    "astro": "^5.16.11"
+    "astro": "^6.0.1"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",
@@ -25309,7 +25320,7 @@ export const env = createEnv({
 	runtimeEnv: process.env,
 	emptyStringAsUndefined: true,
 });`],
-  ["packages/env/src/server.ts.hbs", `{{#if (eq serverDeploy "cloudflare")}}
+  ["packages/env/src/server.ts.hbs", `{{#if (or (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
 // Types are defined in env.d.ts based on your alchemy.run.ts bindings
@@ -25347,7 +25358,8 @@ export const env = createEnv({
 	runtimeEnv: process.env,
 	emptyStringAsUndefined: true,
 });
-{{/if}}`],
+{{/if}}
+`],
   ["packages/env/src/web.ts.hbs", `{{#if (includes frontend "next")}}
 import { createEnv } from "@t3-oss/env-nextjs";
 {{else if (includes frontend "nuxt")}}
@@ -25713,6 +25725,11 @@ export const web = await Vite("web", {
 {{else if (includes frontend "astro")}}
 export const web = await Astro("web", {
   cwd: "../../apps/web",
+  entrypoint: "dist/server/entry.mjs",
+  assets: "dist/client",
+  {{#if (eq backend "self")}}
+  compatibility: "node",
+  {{/if}}
   bindings: {
     {{#if (ne backend "self")}}
     PUBLIC_SERVER_URL: alchemy.env.PUBLIC_SERVER_URL!,
