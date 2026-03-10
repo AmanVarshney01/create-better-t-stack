@@ -57,6 +57,9 @@ jobs:
             bun update --recursive
           fi
 
+      - name: Disable Git Hooks For Automation Commit
+        run: git config core.hooksPath /dev/null
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:

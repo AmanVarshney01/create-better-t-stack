@@ -59,6 +59,7 @@ import type {
 
 import { hasWebStyling, requiresChatSdkVercelAI } from "../utils/compatibility-rules";
 import { exitCancelled } from "../utils/errors";
+import { getUserPkgManager } from "../utils/get-package-manager";
 import { getAddonsChoice } from "./addons";
 import { getAIChoice } from "./ai";
 import { getAiDocsChoice } from "./ai-docs";
@@ -488,7 +489,7 @@ export async function gatherConfig(
           results.ecosystem === "python" ||
           results.ecosystem === "go"
         )
-          return Promise.resolve("npm" as PackageManager);
+          return Promise.resolve(flags.packageManager ?? getUserPkgManager());
         return getPackageManagerChoice(flags.packageManager);
       },
       install: ({ results }) => getinstallChoice(flags.install, results.ecosystem),

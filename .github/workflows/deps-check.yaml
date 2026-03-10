@@ -103,6 +103,10 @@ jobs:
             bun run scripts/check-deps.ts --apply-all || true
           fi
 
+      - name: Disable Git Hooks For Automation Commit
+        if: steps.check.outputs.has_updates == 'true' && (steps.check.outputs.effective_update_mode == 'patch-minor' || steps.check.outputs.effective_update_mode == 'all')
+        run: git config core.hooksPath /dev/null
+
       - name: Create Pull Request
         if: steps.check.outputs.has_updates == 'true' && (steps.check.outputs.effective_update_mode == 'patch-minor' || steps.check.outputs.effective_update_mode == 'all')
         uses: peter-evans/create-pull-request@v6

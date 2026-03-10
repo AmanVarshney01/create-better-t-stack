@@ -1,11 +1,14 @@
 import { afterAll, describe, expect, it } from "bun:test";
 import { execa } from "execa";
+import { existsSync } from "node:fs";
 import { mkdtemp, mkdir, readFile, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import * as JSONC from "jsonc-parser";
 
 const CLI_ENTRY = resolve(import.meta.dir, "..", "src", "cli.ts");
+const NATIVE_BUN = resolve(homedir(), ".bun", "bin", "bun");
+const BUN_EXECUTABLE = process.env.BFS_TEST_BUN_BIN || (existsSync(NATIVE_BUN) ? NATIVE_BUN : "bun");
 const TEMP_ROOTS: string[] = [];
 
 async function makeTempRoot(prefix: string): Promise<string> {
@@ -26,7 +29,7 @@ async function runCli(
   let lastResult: Awaited<ReturnType<typeof execa>> | undefined;
 
   while (attempt < maxAttempts) {
-    const result = await execa("bun", ["run", CLI_ENTRY, ...args], {
+    const result = await execa(BUN_EXECUTABLE, ["run", CLI_ENTRY, ...args], {
       cwd: options.cwd,
       env: {
         ...process.env,
@@ -176,5 +179,88 @@ describe("CLI history command", () => {
 
     const parsedAfterClear = JSON.parse(historyAfterClear.stdout) as unknown[];
     expect(parsedAfterClear).toEqual([]);
+  });
+
+  it("stores the ecosystem-specific reproducible command for Python projects", async () => {
+    const root = await makeTempRoot("bfs-history-python-test-");
+    const homeDir = join(root, "home");
+    await mkdir(homeDir, { recursive: true });
+
+    const sharedEnv = {
+      HOME: homeDir,
+      XDG_CONFIG_HOME: join(homeDir, ".config"),
+      XDG_DATA_HOME: join(homeDir, ".local", "share"),
+    };
+
+    const expectedCommand =
+      "bun create better-fullstack@latest python-history-app " +
+      "--ecosystem python " +
+      "--python-web-framework django " +
+      "--python-orm sqlalchemy " +
+      "--python-validation pydantic " +
+      "--python-ai none " +
+      "--python-task-queue celery " +
+      "--python-quality ruff " +
+      "--addons none " +
+      "--examples none " +
+      "--db-setup none " +
+      "--web-deploy none " +
+      "--server-deploy none " +
+      "--ai-docs claude-md " +
+      "--no-git " +
+      "--package-manager bun " +
+      "--no-install";
+
+    const createResult = await runCli(
+      [
+        "create",
+        "python-history-app",
+        "--ecosystem",
+        "python",
+        "--python-web-framework",
+        "django",
+        "--python-orm",
+        "sqlalchemy",
+        "--python-validation",
+        "pydantic",
+        "--python-ai",
+        "none",
+        "--python-task-queue",
+        "celery",
+        "--python-quality",
+        "ruff",
+        "--addons",
+        "none",
+        "--examples",
+        "none",
+        "--ai-docs",
+        "claude-md",
+        "--package-manager",
+        "bun",
+        "--no-install",
+        "--no-git",
+        "--disable-analytics",
+      ],
+      { cwd: root, env: sharedEnv },
+    );
+
+    expect(
+      createResult.exitCode,
+      `create failed\nstdout:\n${createResult.stdout}\nstderr:\n${createResult.stderr}`,
+    ).toBe(0);
+    expect(createResult.stdout).toContain(expectedCommand);
+    expect(createResult.stdout).not.toContain("--frontend none");
+
+    const historyJson = await runCli(["history", "--json", "--limit", "1"], {
+      cwd: root,
+      env: sharedEnv,
+    });
+    expect(historyJson.exitCode).toBe(0);
+
+    const parsedHistory = JSON.parse(historyJson.stdout) as Array<{
+      reproducibleCommand: string;
+    }>;
+
+    expect(parsedHistory[0]?.reproducibleCommand).toBe(expectedCommand);
   });
 });
