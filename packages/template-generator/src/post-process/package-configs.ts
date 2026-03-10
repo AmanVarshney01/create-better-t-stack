@@ -313,6 +313,7 @@ function updateDbPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): voi
       scripts["db:push"] = "prisma db push";
       scripts["db:generate"] = "prisma generate";
       scripts["db:migrate"] = "prisma migrate dev";
+      scripts.postinstall ??= "prisma generate";
       if (!isD1Alchemy) {
         scripts["db:studio"] = "prisma studio";
       }

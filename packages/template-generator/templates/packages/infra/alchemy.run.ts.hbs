@@ -257,6 +257,11 @@ export const web = await Vite("web", {
 {{else if (includes frontend "astro")}}
 export const web = await Astro("web", {
   cwd: "../../apps/web",
+  entrypoint: "dist/server/entry.mjs",
+  assets: "dist/client",
+  {{#if (eq backend "self")}}
+  compatibility: "node",
+  {{/if}}
   bindings: {
     {{#if (ne backend "self")}}
     PUBLIC_SERVER_URL: alchemy.env.PUBLIC_SERVER_URL!,

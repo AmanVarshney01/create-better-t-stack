@@ -141,9 +141,10 @@ export const dependencyVersionMap = {
   "nitro-cloudflare-dev": "^0.2.2",
   "@sveltejs/adapter-cloudflare": "^7.2.4",
   "@cloudflare/workers-types": "^4.20251213.0",
-  "@astrojs/cloudflare": "^12.6.12",
+  "@astrojs/cloudflare": "^13.0.1",
+  "@astrojs/node": "^10.0.0-beta.9",
 
-  alchemy: "^0.82.1",
+  alchemy: "^0.87.0",
 
   dotenv: "^17.2.2",
   tsdown: "^0.16.5",
