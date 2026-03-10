@@ -14,6 +14,10 @@ import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/re
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
 import { useUser } from "@clerk/expo";
 import { SignOutButton } from "@/components/sign-out-button";
+{{else if (and (ne backend "convex") (eq auth "clerk"))}}
+import { Link } from "expo-router";
+import { useAuth, useUser } from "@clerk/expo";
+import { SignOutButton } from "@/components/sign-out-button";
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
 import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@{{projectName}}/backend/convex/_generated/api";
@@ -40,6 +44,9 @@ const healthCheck = useQuery(trpc.healthCheck.queryOptions());
 const { user } = useUser();
 const healthCheck = useQuery(api.healthCheck.get);
 const privateData = useQuery(api.privateData.get);
+{{else if (and (ne backend "convex") (eq auth "clerk"))}}
+const { isLoaded, isSignedIn } = useAuth();
+const { user } = useUser();
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
 const healthCheck = useQuery(api.healthCheck.get);
 const { isAuthenticated } = useConvexAuth();
@@ -144,6 +151,37 @@ return (
       <Spinner size="sm" />
     </View>
   </AuthLoading>
+  {{/if}}
+
+  {{#if (and (ne backend "convex") (eq auth "clerk"))}}
+  {!isLoaded ? (
+  <View className="mt-4 items-center">
+    <Spinner size="sm" />
+  </View>
+  ) : isSignedIn ? (
+  <Surface variant="secondary" className="mt-5 p-4 rounded-xl">
+    <View className="flex-row items-center justify-between">
+      <View className="flex-1">
+        <Text className="text-foreground font-medium">
+          {user?.fullName ?? user?.firstName ?? "Welcome"}
+        </Text>
+        <Text className="text-muted text-xs mt-0.5">
+          {user?.emailAddresses[0]?.emailAddress}
+        </Text>
+      </View>
+      <SignOutButton />
+    </View>
+  </Surface>
+  ) : (
+  <View className="mt-4 gap-3">
+    <Link href="/(auth)/sign-in" asChild>
+      <Button variant="secondary"><Button.Label>Sign In</Button.Label></Button>
+    </Link>
+    <Link href="/(auth)/sign-up" asChild>
+      <Button variant="ghost"><Button.Label>Sign Up</Button.Label></Button>
+    </Link>
+  </View>
+  )}
   {{/if}}
 
   {{#if (and (eq backend "convex") (eq auth "better-auth"))}}
