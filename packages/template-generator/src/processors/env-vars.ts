@@ -153,14 +153,9 @@ function buildClientVars(
     },
   ];
 
-  if (backend === "convex" && auth === "clerk") {
+  if (auth === "clerk") {
     if (hasNextJs) {
       vars.push(
-        {
-          key: "NEXT_PUBLIC_CLERK_FRONTEND_API_URL",
-          value: "",
-          condition: true,
-        },
         {
           key: "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
           value: "",
@@ -235,7 +230,7 @@ function buildNativeVars(
     },
   ];
 
-  if (backend === "convex" && auth === "clerk") {
+  if (auth === "clerk") {
     vars.push({
       key: "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY",
       value: "",
@@ -410,6 +405,7 @@ function buildServerVars(
   }
 
   const hasBetterAuth = auth === "better-auth";
+  const hasClerk = auth === "clerk";
 
   return [
     {
@@ -426,6 +422,11 @@ function buildServerVars(
             : "http://localhost:3001"
           : "http://localhost:3000",
       condition: hasBetterAuth,
+    },
+    {
+      key: "CLERK_SECRET_KEY",
+      value: "",
+      condition: hasClerk,
     },
     {
       key: "POLAR_ACCESS_TOKEN",

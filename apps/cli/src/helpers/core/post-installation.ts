@@ -104,7 +104,8 @@ export async function displayPostInstallInstructions(
   const starlightInstructions = addons?.includes("starlight")
     ? getStarlightInstructions(runCmd)
     : "";
-  const clerkInstructions = isConvex && config.auth === "clerk" ? getClerkInstructions() : "";
+  const clerkInstructions =
+    config.auth === "clerk" ? getClerkInstructions(frontend || [], backend) : "";
   const polarInstructions =
     config.payments === "polar" && config.auth === "better-auth"
       ? getPolarInstructions(backend)
@@ -445,8 +446,47 @@ function getBunWebNativeWarning() {
   )} 'bun' might cause issues with web + native apps in a monorepo.\n   Use 'pnpm' if problems arise.`;
 }
 
-function getClerkInstructions() {
-  return `${pc.bold("Clerk Authentication Setup:")}\n${pc.cyan("•")} Follow the guide: ${pc.underline("https://docs.convex.dev/auth/clerk")}\n${pc.cyan("•")} Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard\n${pc.cyan("•")} Set your Clerk publishable key in apps/*/.env\n${pc.cyan("•")} Set CLERK_SECRET_KEY when your web app uses Clerk server middleware`;
+function getClerkQuickstartUrl(frontend: Frontend[]) {
+  if (frontend.includes("next")) return "https://clerk.com/docs/nextjs/getting-started/quickstart";
+  if (frontend.includes("react-router")) {
+    return "https://clerk.com/docs/react-router/getting-started/quickstart";
+  }
+  if (frontend.includes("tanstack-start")) {
+    return "https://clerk.com/docs/tanstack-react-start/getting-started/quickstart";
+  }
+  if (frontend.includes("tanstack-router")) {
+    return "https://clerk.com/docs/react/getting-started/quickstart";
+  }
+  if (
+    frontend.includes("native-bare") ||
+    frontend.includes("native-uniwind") ||
+    frontend.includes("native-unistyles")
+  ) {
+    return "https://clerk.com/docs/expo/getting-started/quickstart";
+  }
+
+  return "https://clerk.com/docs";
+}
+
+function getClerkInstructions(frontend: Frontend[], backend: Backend) {
+  const lines = [
+    `${pc.bold("Clerk Authentication Setup:")}`,
+    `${pc.cyan("•")} Follow the guide: ${pc.underline(getClerkQuickstartUrl(frontend))}`,
+  ];
+
+  if (backend === "convex") {
+    lines.push(`${pc.cyan("•")} Set CLERK_JWT_ISSUER_DOMAIN in Convex Dashboard`);
+  }
+
+  lines.push(`${pc.cyan("•")} Set your Clerk publishable key in apps/*/.env`);
+
+  if (frontend.some((value) => ["next", "react-router", "tanstack-start"].includes(value))) {
+    lines.push(
+      `${pc.cyan("•")} Set CLERK_SECRET_KEY when your web app uses Clerk server middleware`,
+    );
+  }
+
+  return lines.join("\n");
 }
 
 function getBetterAuthConvexInstructions(hasWeb: boolean, webPort: string, packageManager: string) {

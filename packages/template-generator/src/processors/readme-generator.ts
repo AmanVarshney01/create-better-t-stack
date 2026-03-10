@@ -22,6 +22,28 @@ function getDesktopStaticBuildNote(frontend: ProjectConfig["frontend"]): string 
   )} needs a static/export build configuration before desktop packaging will work.`;
 }
 
+function getClerkQuickstartUrl(frontend: ProjectConfig["frontend"]): string {
+  if (frontend.includes("next")) return "https://clerk.com/docs/nextjs/getting-started/quickstart";
+  if (frontend.includes("react-router")) {
+    return "https://clerk.com/docs/react-router/getting-started/quickstart";
+  }
+  if (frontend.includes("tanstack-start")) {
+    return "https://clerk.com/docs/tanstack-react-start/getting-started/quickstart";
+  }
+  if (frontend.includes("tanstack-router")) {
+    return "https://clerk.com/docs/react/getting-started/quickstart";
+  }
+  if (
+    frontend.includes("native-bare") ||
+    frontend.includes("native-uniwind") ||
+    frontend.includes("native-unistyles")
+  ) {
+    return "https://clerk.com/docs/expo/getting-started/quickstart";
+  }
+
+  return "https://clerk.com/docs";
+}
+
 export function processReadme(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const content = generateReadmeContent(config);
   vfs.writeFile("README.md", content);
@@ -107,6 +129,19 @@ ${
     : ""
 }`
     : generateDatabaseSetup(options, packageManagerRunCmd)
+}
+${
+  !isConvex && auth === "clerk"
+    ? `
+## Clerk Authentication Setup
+
+- Follow the guide: [Clerk Quickstart](${getClerkQuickstartUrl(frontend)})
+- Set your Clerk publishable key in \`apps/*/.env\`${
+        hasClerkServerFrontend
+          ? "\n- Set `CLERK_SECRET_KEY` in the web app env for Clerk server middleware"
+          : ""
+      }`
+    : ""
 }
 
 Then, run the development server:
@@ -307,7 +342,7 @@ function generateProjectStructure(config: ProjectConfig): string {
       if (api !== "none") {
         structure.push("│   ├── api/         # API layer / business logic");
       }
-      if (auth !== "none") {
+      if (auth === "better-auth") {
         structure.push("│   ├── auth/        # Authentication configuration & logic");
       }
       if (hasDbPackage) {

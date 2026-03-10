@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../index.css";
-{{#if (eq auth "clerk")}}{{#if (eq backend "convex")}}import { ClerkProvider } from "@clerk/nextjs";
-{{/if}}{{/if}}{{#if (and (eq backend "convex") (eq auth "better-auth"))}}
+{{#if (eq auth "clerk")}}import { ClerkProvider } from "@clerk/nextjs";
+{{/if}}{{#if (and (eq backend "convex") (eq auth "better-auth"))}}
 import { getToken } from "@/lib/auth-server";
 {{/if}}
 import Providers from "@/components/providers";
@@ -51,12 +51,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  	return (
+	return (
 		<html lang="en" suppressHydrationWarning>
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
 			>
-				{{#if (and (eq auth "clerk") (eq backend "convex"))}}<ClerkProvider>
+				{{#if (eq auth "clerk")}}<ClerkProvider>
 					<Providers>
 						<div className="grid grid-rows-[auto_1fr] h-svh">
 							<Header />

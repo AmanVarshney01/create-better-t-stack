@@ -16,6 +16,10 @@ import { Authenticated, AuthLoading, Unauthenticated, useQuery } from "convex/re
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 import { useUser } from "@clerk/expo";
 import { SignOutButton } from "@/components/sign-out-button";
+{{else if (and (ne backend "convex") (eq auth "clerk"))}}
+import { Link } from "expo-router";
+import { useAuth, useUser } from "@clerk/expo";
+import { SignOutButton } from "@/components/sign-out-button";
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
 import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@{{ projectName }}/backend/convex/_generated/api";
@@ -40,6 +44,9 @@ const healthCheck = useQuery(trpc.healthCheck.queryOptions());
 const { user } = useUser();
 const healthCheck = useQuery(api.healthCheck.get);
 const privateData = useQuery(api.privateData.get);
+{{else if (and (ne backend "convex") (eq auth "clerk"))}}
+const { isLoaded, isSignedIn } = useAuth();
+const { user } = useUser();
 {{else if (and (eq backend "convex") (eq auth "better-auth"))}}
 const healthCheck = useQuery(api.healthCheck.get);
 const { isAuthenticated } = useConvexAuth();
@@ -113,6 +120,33 @@ return (
       <AuthLoading>
         <Text style=\{{ color: theme.text }}>Loading...</Text>
       </AuthLoading>
+      {{/if}}
+
+      {{#if (and (ne backend "convex") (eq auth "clerk"))}}
+      {!isLoaded ? (
+      <Text style=\{{ color: theme.text }}>Loading...</Text>
+      ) : isSignedIn ? (
+      <View style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <View style={styles.userHeader}>
+          <Text style={[styles.userText, { color: theme.text }]}>
+            Welcome, <Text style={styles.userName}>{user?.fullName ?? user?.firstName ?? "there"}</Text>
+          </Text>
+        </View>
+        <Text style={[styles.userEmail, { color: theme.text, opacity: 0.7 }]}>
+          {user?.emailAddresses[0]?.emailAddress}
+        </Text>
+        <SignOutButton />
+      </View>
+      ) : (
+      <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <Link href="/(auth)/sign-in">
+          <Text style=\{{ color: theme.primary }}>Sign in</Text>
+        </Link>
+        <Link href="/(auth)/sign-up">
+          <Text style=\{{ color: theme.primary }}>Sign up</Text>
+        </Link>
+      </View>
+      )}
       {{/if}}
 
       {{#if (and (eq backend "convex") (eq auth "better-auth"))}}

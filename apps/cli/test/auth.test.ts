@@ -186,9 +186,9 @@ describe("Authentication Configurations", () => {
       expectSuccess(result);
     });
 
-    it("should fail with clerk + non-convex backend", async () => {
+    it("should work with clerk + hono backend", async () => {
       const result = await runTRPCTest({
-        projectName: "clerk-non-convex-fail",
+        projectName: "clerk-hono-success",
         auth: "clerk",
         backend: "hono",
         runtime: "bun",
@@ -201,10 +201,52 @@ describe("Authentication Configurations", () => {
         orm: "drizzle",
         api: "trpc",
         frontend: ["tanstack-router"],
-        expectError: true,
+        install: false,
       });
 
-      expectError(result, "Clerk authentication is only supported with the Convex backend");
+      expectSuccess(result);
+    });
+
+    it("should work with clerk + self backend", async () => {
+      const result = await runTRPCTest({
+        projectName: "clerk-self-success",
+        auth: "clerk",
+        backend: "self",
+        runtime: "none",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with clerk + native frontend on hono", async () => {
+      const result = await runTRPCTest({
+        projectName: "clerk-native-hono-success",
+        auth: "clerk",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["native-bare"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
     });
 
     const compatibleFrontends = [
@@ -240,7 +282,7 @@ describe("Authentication Configurations", () => {
       });
     }
 
-    const incompatibleFrontends = ["nuxt", "svelte", "solid"];
+    const incompatibleFrontends = ["nuxt", "svelte", "solid", "astro"];
 
     for (const frontend of incompatibleFrontends) {
       it(`should fail with clerk + ${frontend}`, async () => {

@@ -17,6 +17,9 @@ export const dependencyVersionMap = {
   "better-auth": "1.5.2",
   "@better-auth/expo": "1.5.2",
 
+  "@clerk/backend": "^3.0.1",
+  "@clerk/express": "^2.0.1",
+  "@clerk/fastify": "^3.0.1",
   "@clerk/nextjs": "^7.0.1",
   "@clerk/react": "^6.0.1",
   "@clerk/react-router": "^3.0.1",
