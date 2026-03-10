@@ -26584,7 +26584,8 @@ export const env = createEnv({
 	},
 	runtimeEnv: process.env,
 	emptyStringAsUndefined: true,
-});`],
+});
+`],
   ["packages/env/src/server.ts.hbs", `{{#if (or (eq serverDeploy "cloudflare") (and (eq backend "self") (eq webDeploy "cloudflare")))}}
 /// <reference path="../env.d.ts" />
 // For Cloudflare Workers, env is accessed via cloudflare:workers module
