@@ -30,6 +30,7 @@ jobs:
         with:
           node-version-file: package.json
           check-latest: true
+          registry-url: https://registry.npmjs.org
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -40,6 +41,11 @@ jobs:
         run: bun install --frozen-lockfile
         env:
           BTS_TELEMETRY: 0
+
+      - name: Verify NPM auth
+        run: npm whoami
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Generate Preview Version
         id: version
@@ -67,9 +73,9 @@ jobs:
         run: cd packages/types && bun run build
 
       - name: Publish types to NPM
-        run: cd packages/types && bun publish --access public --tag ${{ steps.version.outputs.tag }}
+        run: cd packages/types && npm publish --access public --provenance --tag ${{ steps.version.outputs.tag }}
         env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           BTS_TELEMETRY: 0
 
       - name: Update template-generator package version and types dependency
@@ -81,9 +87,9 @@ jobs:
         run: cd packages/template-generator && bun run build
 
       - name: Publish template-generator to NPM
-        run: cd packages/template-generator && bun publish --access public --tag ${{ steps.version.outputs.tag }}
+        run: cd packages/template-generator && npm publish --access public --provenance --tag ${{ steps.version.outputs.tag }}
         env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           BTS_TELEMETRY: 0
 
       - name: Update CLI package version and dependencies
@@ -102,15 +108,15 @@ jobs:
           BTS_TELEMETRY: 0
 
       - name: Publish CLI to NPM
-        run: cd apps/cli && bun publish --access public --tag ${{ steps.version.outputs.tag }}
+        run: cd apps/cli && npm publish --access public --provenance --tag ${{ steps.version.outputs.tag }}
         env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           BTS_TELEMETRY: 0
 
       - name: Publish create-bts to NPM
-        run: cd packages/create-bts && bun publish --access public --tag ${{ steps.version.outputs.tag }}
+        run: cd packages/create-bts && npm publish --access public --provenance --tag ${{ steps.version.outputs.tag }}
         env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           BTS_TELEMETRY: 0
 
       - name: Find existing preview comment
