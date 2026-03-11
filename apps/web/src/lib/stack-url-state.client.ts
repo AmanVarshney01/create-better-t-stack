@@ -3,6 +3,7 @@ import { parseAsArrayOf, parseAsString, parseAsStringEnum, useQueryStates } from
 
 import { DEFAULT_STACK, type StackState, TECH_OPTIONS } from "@/lib/constant";
 
+import { sanitizeStackAddons } from "./sanitize-stack-addons";
 import { stackUrlKeys } from "./stack-url-keys";
 
 const getValidIds = (category: keyof typeof TECH_OPTIONS): string[] => {
@@ -61,7 +62,7 @@ export const stackQueryStatesOptions = {
 export function useStackState() {
   const [queryState, setQueryState] = useQueryStates(stackParsers, stackQueryStatesOptions);
 
-  const stack: StackState = {
+  const stack = sanitizeStackAddons({
     projectName: queryState.projectName,
     webFrontend: queryState.webFrontend,
     nativeFrontend: queryState.nativeFrontend,
@@ -81,7 +82,7 @@ export function useStackState() {
     webDeploy: queryState.webDeploy,
     serverDeploy: queryState.serverDeploy,
     yolo: queryState.yolo,
-  };
+  });
 
   const viewMode = queryState.viewMode;
   const selectedFile = queryState.selectedFile;
@@ -90,7 +91,7 @@ export function useStackState() {
     updates: Partial<StackState> | ((prev: StackState) => Partial<StackState>),
   ) => {
     const newStack = typeof updates === "function" ? updates(stack) : updates;
-    const finalStack = { ...stack, ...newStack };
+    const finalStack = sanitizeStackAddons({ ...stack, ...newStack });
     await setQueryState({ ...finalStack, viewMode, selectedFile });
   };
 
