@@ -1,0 +1,305 @@
+name: Smoke Test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/types/**"
+      - "packages/template-generator/**"
+      - "apps/cli/src/**"
+      - "testing/**"
+      - ".github/workflows/smoke-test.yaml"
+  pull_request:
+    paths:
+      - "packages/types/**"
+      - "packages/template-generator/**"
+      - "apps/cli/src/**"
+      - "testing/**"
+      - ".github/workflows/smoke-test.yaml"
+  schedule:
+    - cron: "0 3 * * *" # Nightly at 3am UTC
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: "PRNG seed override (default: commit SHA)"
+        required: false
+        type: string
+      ecosystem:
+        description: "Single ecosystem to test (leave empty for all)"
+        required: false
+        type: choice
+        options:
+          - ""
+          - typescript
+          - rust
+          - python
+          - go
+      count:
+        description: "Number of combos to generate"
+        required: false
+        type: number
+        default: 14
+
+permissions: {}
+
+concurrency:
+  group: smoke-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache Dependencies
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build Packages
+        run: |
+          cd packages/types && bun run build
+          cd ../template-generator && bun run build
+          cd ../../apps/cli && bun run build
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-dist
+          path: |
+            packages/types/dist/
+            packages/template-generator/dist/
+            apps/cli/dist/
+          retention-days: 1
+
+  generate:
+    name: Generate Combos
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.gen.outputs.matrix }}
+      seed: ${{ steps.seed.outputs.value }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache Dependencies
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-dist
+
+      - name: Compute Seed
+        id: seed
+        env:
+          INPUT_SEED: ${{ inputs.seed }}
+          FALLBACK_SEED: ${{ github.sha }}
+        run: |
+          SEED="${INPUT_SEED:-$FALLBACK_SEED}"
+          echo "value=$SEED" >> "$GITHUB_OUTPUT"
+          echo "Using seed: $SEED"
+
+      - name: Generate Combo Manifest
+        id: gen
+        env:
+          SMOKE_SEED: ${{ steps.seed.outputs.value }}
+          SMOKE_ECOSYSTEM: ${{ inputs.ecosystem }}
+          SMOKE_COUNT: ${{ inputs.count || '14' }}
+        run: |
+          ECOSYSTEM_FLAG=""
+          if [ -n "$SMOKE_ECOSYSTEM" ]; then
+            ECOSYSTEM_FLAG="--ecosystem $SMOKE_ECOSYSTEM"
+          fi
+
+          bun run testing/smoke-test.ts \
+            --mode generate \
+            --seed "$SMOKE_SEED" \
+            --count "$SMOKE_COUNT" \
+            $ECOSYSTEM_FLAG \
+            --output testing/.smoke-manifest.json
+
+          echo "matrix=$(cat testing/.smoke-manifest.matrix.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: combo-manifest
+          path: testing/.smoke-manifest.json
+          retention-days: 1
+
+  verify:
+    name: "${{ matrix.ecosystem }}/${{ matrix.combo_name }}"
+    needs: [build, generate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.generate.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup Deno
+        if: matrix.ecosystem == 'typescript'
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Setup Rust
+        if: matrix.ecosystem == 'rust'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Setup Protoc
+        if: matrix.ecosystem == 'rust'
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python + uv
+        if: matrix.ecosystem == 'python'
+        uses: astral-sh/setup-uv@v5
+
+      - name: Setup Go
+        if: matrix.ecosystem == 'go'
+        uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+
+      - name: Cache Dependencies
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-dist
+
+      - name: Download Manifest
+        uses: actions/download-artifact@v4
+        with:
+          name: combo-manifest
+          path: testing/
+
+      - name: Scaffold and Verify
+        env:
+          SMOKE_SEED: ${{ needs.generate.outputs.seed }}
+          SMOKE_COMBO_INDEX: ${{ matrix.combo_index }}
+        run: |
+          bun run testing/smoke-test.ts \
+            --mode verify \
+            --seed "$SMOKE_SEED" \
+            --combo-index "$SMOKE_COMBO_INDEX" \
+            --manifest testing/.smoke-manifest.json \
+            --output testing/.smoke-output
+
+      - name: Upload Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-result-${{ matrix.combo_index }}-${{ matrix.combo_name }}
+          path: testing/.smoke-output/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload Failing Project
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failing-project-${{ matrix.combo_name }}
+          path: testing/.smoke-output/${{ matrix.combo_name }}/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Post Step Summary
+        if: always()
+        run: |
+          if [ -f testing/.smoke-output/summary.md ]; then
+            cat testing/.smoke-output/summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  report:
+    name: Aggregate Results
+    needs: [generate, verify]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache Dependencies
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-dist
+
+      - name: Download All Results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: smoke-result-*
+          path: smoke-results/
+          merge-multiple: false
+
+      - name: Aggregate and Report
+        run: |
+          bun run testing/smoke-test.ts --mode report --output smoke-results
+          if [ -f smoke-results/smoke-summary.md ]; then
+            cat smoke-results/smoke-summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi

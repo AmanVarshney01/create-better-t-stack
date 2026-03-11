@@ -78,6 +78,8 @@ import type {
 } from "./types";
 import { DEFAULT_ECOSYSTEM_WEIGHTS } from "./types";
 
+let _rng: () => number = Math.random;
+
 const SELF_COMPATIBLE_FRONTENDS = new Set([
   "next",
   "tanstack-start",
@@ -91,14 +93,14 @@ const WEB_FRONTENDS = getCategoryOptionIds("webFrontend");
 const NATIVE_FRONTENDS = getCategoryOptionIds("nativeFrontend");
 
 function sampleOne<T>(values: readonly T[]): T {
-  return values[Math.floor(Math.random() * values.length)];
+  return values[Math.floor(_rng() * values.length)];
 }
 
 function sampleScalar<T extends string>(values: readonly T[], noneWeight: number): T {
   const unique = Array.from(new Set(values));
   const nonNone = unique.filter((value) => value !== "none");
   if (nonNone.length === 0) return "none" as T;
-  if (unique.includes("none" as T) && Math.random() < noneWeight) return "none" as T;
+  if (unique.includes("none" as T) && _rng() < noneWeight) return "none" as T;
   return sampleOne(nonNone);
 }
 
@@ -108,7 +110,7 @@ function sampleArray<T extends string>(
   maxItems = 1,
 ): T[] {
   const unique = Array.from(new Set(values)).filter((value) => value !== "none");
-  if (unique.length === 0 || Math.random() < noneWeight) {
+  if (unique.length === 0 || _rng() < noneWeight) {
     return ["none" as T];
   }
 
@@ -116,7 +118,7 @@ function sampleArray<T extends string>(
   const targetCount = Math.max(1, Math.min(maxItems, unique.length));
   while (picked.size < targetCount) {
     picked.add(sampleOne(unique));
-    if (Math.random() < 0.6) break;
+    if (_rng() < 0.6) break;
   }
 
   return Array.from(picked);
@@ -146,7 +148,7 @@ function sampleTypeScriptFrontends(): CLIInput["frontend"] {
     picked.push(native);
   }
 
-  if (picked.length === 0 && Math.random() > 0.25) {
+  if (picked.length === 0 && _rng() > 0.25) {
     picked.push(sampleOne(WEB_FRONTENDS.filter((value) => value !== "none")));
   }
 
@@ -446,6 +448,7 @@ function createDraft(ecosystem: Ecosystem, args: GeneratorArgs): CandidateDraft 
 }
 
 export function generateBatch(args: GeneratorArgs, history: HistoricalLedger): ComboCandidate[] {
+  _rng = args.rng ?? Math.random;
   const requestedEcosystems = weightedDistribution(args.count, args.ecosystems);
   const combos: ComboCandidate[] = [];
   const currentBatchKeys = new Set<string>();
