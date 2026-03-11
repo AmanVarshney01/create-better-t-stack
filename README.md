@@ -1,22 +1,31 @@
-<div align="center">
+````md
+██████╗ ███████╗████████╗████████╗███████╗██████╗     ███████╗██╗   ██╗██╗     ██╗     ███████╗████████╗ █████╗  ██████╗██╗  ██╗
+██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗    ██╔════╝██║   ██║██║     ██║     ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
+██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝    █████╗  ██║   ██║██║     ██║     ███████╗   ██║   ███████║██║     █████╔╝
+██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗    ██╔══╝  ██║   ██║██║     ██║     ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
+██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║    ██║     ╚██████╔╝███████╗███████╗███████║   ██║   ██║  ██║╚██████╗██║  ██╗
+╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝    ╚═╝      ╚═════╝ ╚══════╝╚══════╝╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
+````
+
+**Tool for you to create highly configurable projects - TypeScript, Rust, Go, Python and 100+ libraries, tools and services of your choice**
 
 <br>
 
-```
-  ██████╗  ███████╗████████╗████████╗███████╗██████╗
-  ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗
-  ██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝
-  ██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗
-  ██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║
-  ╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝
+[![Version](https://img.shields.io/npm/v/create-better-fullstack?style=for-the-badge\&colorA=18181B\&colorB=28CF8D)](https://www.npmjs.com/package/create-better-fullstack)
+ 
+[![Downloads](https://img.shields.io/npm/dm/create-better-fullstack?style=for-the-badge\&colorA=18181B\&colorB=28CF8D)](https://www.npmjs.com/package/create-better-fullstack)
+ 
+[![License](https://img.shields.io/github/license/Marve10s/Better-Fullstack?style=for-the-badge\&colorA=18181B\&colorB=28CF8D)](LICENSE)
 
-  ███████╗██╗   ██╗██╗     ██╗     ███████╗████████╗ █████╗  ██████╗██╗  ██╗
-  ██╔════╝██║   ██║██║     ██║     ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
-  █████╗   ██║   ██║██║     ██║     ███████╗   ██║   ███████║██║     █████╔╝
-  ██╔══╝   ██║   ██║██║     ██║     ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
-  ██║     ╚██████╔╝███████╗███████╗███████║   ██║   ██║  ██║╚██████╗██║  ██╗
-  ╚═╝      ╚═════╝ ╚══════╝╚══════╝╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
+</div>
 ```
+
+Notes:
+
+* Kept the ASCII title.
+* Merged it into a single banner so it stays on one row.
+* Tightened the subtitle wording and spacing for a cleaner header.
+
 
 **Tool for you to create highly configurable projects - Typescript,Rust,Go,Python and 100+ libraries,tools and services for your choice**
 
