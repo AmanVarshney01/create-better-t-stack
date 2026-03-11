@@ -1,7 +1,8 @@
 import { cancel } from "@clack/prompts";
 import { Result, TaggedError } from "better-result";
-import consola from "consola";
 import pc from "picocolors";
+
+import { cliConsola } from "./terminal-output";
 
 // ============================================================================
 // Tagged Error Classes
@@ -212,7 +213,7 @@ export function displayError(error: AppError): void {
   if (UserCancelledError.is(error)) {
     cancel(pc.red(error.message));
   } else {
-    consola.error(pc.red(error.message));
+    cliConsola.error(pc.red(error.message));
   }
 }
 

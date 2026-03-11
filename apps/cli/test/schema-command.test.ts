@@ -1,10 +1,10 @@
 import { describe, expect, it } from "bun:test";
 
-import { createRouterClient } from "@orpc/server";
+import { initTRPC } from "@trpc/server";
 
 import { router } from "../src/index";
 
-const caller = createRouterClient(router, { context: {} });
+const caller = initTRPC.create().createCallerFactory(router)({});
 
 describe("Schema command", () => {
   it("returns full schema payload for 'all'", async () => {

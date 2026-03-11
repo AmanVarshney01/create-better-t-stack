@@ -1,4 +1,3 @@
-import { consola } from "consola";
 import pc from "picocolors";
 
 import type {
@@ -18,6 +17,7 @@ import {
   fetchSponsorsQuietly,
   formatPostInstallSpecialSponsorsSection,
 } from "../../utils/sponsors";
+import { cliConsola } from "../../utils/terminal-output";
 
 function getDesktopStaticBuildNote(frontend: Frontend[]): string {
   const staticBuildFrontends = new Map<Frontend, string>([
@@ -242,7 +242,7 @@ export async function displayPostInstallInstructions(
   )} Please consider giving us a star\n   on GitHub:\n`;
   output += pc.cyan("https://github.com/AmanVarshney01/create-better-t-stack");
 
-  consola.box(output);
+  cliConsola.box(output);
 }
 
 function getNativeInstructions(

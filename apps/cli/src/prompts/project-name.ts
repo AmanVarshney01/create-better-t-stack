@@ -1,13 +1,13 @@
 import path from "node:path";
 
 import { isCancel, text } from "@clack/prompts";
-import consola from "consola";
 import fs from "fs-extra";
 import pc from "picocolors";
 
 import { DEFAULT_CONFIG } from "../constants";
 import { ProjectNameSchema } from "../types";
 import { UserCancelledError } from "../utils/errors";
+import { cliConsola } from "../utils/terminal-output";
 
 function isPathWithinCwd(targetPath: string) {
   const resolved = path.resolve(targetPath);
@@ -37,7 +37,7 @@ export async function getProjectName(initialName?: string): Promise<string> {
       if (isPathWithinCwd(projectDir)) {
         return initialName;
       }
-      consola.error(pc.red("Project path must be within current directory"));
+      cliConsola.error(pc.red("Project path must be within current directory"));
     }
   }
 

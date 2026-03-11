@@ -1,13 +1,13 @@
 import path from "node:path";
 
 import { Result } from "better-result";
-import consola from "consola";
 import fs from "fs-extra";
 import pc from "picocolors";
 
 import { desktopWebFrontends, type ProjectConfig } from "../../types";
 import { addPackageDependency } from "../../utils/add-package-deps";
 import { AddonSetupError, UserCancelledError } from "../../utils/errors";
+import { cliConsola } from "../../utils/terminal-output";
 import { setupFumadocs } from "./fumadocs-setup";
 import { setupMcp } from "./mcp-setup";
 import { setupOxlint } from "./oxlint-setup";
@@ -29,7 +29,7 @@ async function runSetup<T, E extends AddonSetupError | UserCancelledError>(
       throw result.error;
     }
     // Log other errors but don't fail the overall project creation
-    consola.error(pc.red(result.error.message));
+    cliConsola.error(pc.red(result.error.message));
   }
 }
 
@@ -45,7 +45,7 @@ async function runAddonStep(addon: string, step: () => Promise<void>): Promise<v
   });
 
   if (result.isErr()) {
-    consola.error(pc.red(result.error.message));
+    cliConsola.error(pc.red(result.error.message));
   }
 }
 

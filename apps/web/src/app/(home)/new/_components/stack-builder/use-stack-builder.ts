@@ -2,6 +2,7 @@ import { startTransition, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { DEFAULT_STACK, PRESET_TEMPLATES, type StackState, TECH_OPTIONS } from "@/lib/constant";
+import { sanitizeStackAddons } from "@/lib/sanitize-stack-addons";
 import { useStackState } from "@/lib/stack-url-state.client";
 import { CATEGORY_ORDER, generateStackCommand, generateStackSharingUrl } from "@/lib/stack-utils";
 import type { TechCategory } from "@/lib/types";
@@ -65,7 +66,7 @@ export function useStackBuilder() {
     }
 
     try {
-      const parsedStack = JSON.parse(savedStack) as StackState;
+      const parsedStack = sanitizeStackAddons(JSON.parse(savedStack) as StackState);
       setLastSavedStack(parsedStack);
     } catch (error) {
       console.error("Failed to parse saved stack", error);
