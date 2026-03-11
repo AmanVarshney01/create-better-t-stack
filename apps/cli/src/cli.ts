@@ -16,5 +16,5 @@ This command is intended to be launched by an MCP client, for example:
 
   await startBtsMcpServer();
 } else {
-  createBtsCli().run();
+  await createBtsCli().run();
 }
