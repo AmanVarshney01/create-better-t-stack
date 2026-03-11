@@ -31,6 +31,7 @@ jobs:
         with:
           node-version-file: package.json
           check-latest: true
+          registry-url: https://registry.npmjs.org
 
       - name: Extract version from commit message
         id: version
@@ -59,19 +60,6 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create and push tag
-        if: steps.check-version.outputs.exists == 'false'
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          git config --local user.email "amanvarshney.work@gmail.com"
-          git config --local user.name "Aman Varshney"
-          if ! git rev-parse "v$VERSION" >/dev/null 2>&1; then
-            git tag -a "v$VERSION" -m "Release v$VERSION"
-            git push --tags
-          else
-            echo "Tag v$VERSION already exists, skipping"
-          fi
-
       - name: Setup Bun
         if: steps.check-version.outputs.exists == 'false'
         uses: oven-sh/setup-bun@v2
@@ -82,17 +70,11 @@ jobs:
         if: steps.check-version.outputs.exists == 'false'
         run: bun install --frozen-lockfile
 
-      - name: Create GitHub Release
+      - name: Verify NPM auth
         if: steps.check-version.outputs.exists == 'false'
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          if ! gh release view "v$VERSION" >/dev/null 2>&1; then
-            bunx changelogithub
-          else
-            echo "Release v$VERSION already exists, skipping"
-          fi
+        run: npm whoami
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Update types package version
         if: steps.check-version.outputs.exists == 'false'
@@ -107,9 +89,9 @@ jobs:
 
       - name: Publish types to NPM
         if: steps.check-version.outputs.exists == 'false'
-        run: cd packages/types && bun publish --access public
+        run: cd packages/types && npm publish --access public --provenance
         env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           BTS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
@@ -126,9 +108,9 @@ jobs:
 
       - name: Publish template-generator to NPM
         if: steps.check-version.outputs.exists == 'false'
-        run: cd packages/template-generator && bun publish --access public
+        run: cd packages/template-generator && npm publish --access public --provenance
         env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           BTS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
@@ -155,19 +137,44 @@ jobs:
 
       - name: Publish CLI to NPM
         if: steps.check-version.outputs.exists == 'false'
-        run: cd apps/cli && bun publish --access public
+        run: cd apps/cli && npm publish --access public --provenance
         env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           BTS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
 
       - name: Publish create-bts alias to NPM
         if: steps.check-version.outputs.exists == 'false'
-        run: cd packages/create-bts && bun publish --access public
+        run: cd packages/create-bts && npm publish --access public --provenance
         env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           BTS_TELEMETRY: 1
           CONVEX_INGEST_URL: ${{ secrets.CONVEX_INGEST_URL }}
+
+      - name: Create and push tag
+        if: steps.check-version.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          git config --local user.email "amanvarshney.work@gmail.com"
+          git config --local user.name "Aman Varshney"
+          if ! git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            git tag -a "v$VERSION" -m "Release v$VERSION"
+            git push --tags
+          else
+            echo "Tag v$VERSION already exists, skipping"
+          fi
+
+      - name: Create GitHub Release
+        if: steps.check-version.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if ! gh release view "v$VERSION" >/dev/null 2>&1; then
+            bunx changelogithub
+          else
+            echo "Release v$VERSION already exists, skipping"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release Summary
         if: steps.check-version.outputs.exists == 'false'
