@@ -1,4 +1,5 @@
 import { log, spinner } from "@clack/prompts";
+import { consola, createConsola } from "consola";
 
 import { isSilent } from "./context";
 
@@ -18,6 +19,14 @@ export function createSpinner(): SpinnerLike {
   return isSilent() ? noopSpinner : spinner();
 }
 
+const baseConsola = createConsola({
+  ...consola.options,
+  formatOptions: {
+    ...consola.options.formatOptions,
+    date: false,
+  },
+});
+
 export const cliLog = {
   info(message: string) {
     if (!isSilent()) log.info(message);
@@ -33,5 +42,23 @@ export const cliLog = {
   },
   message(message: string) {
     if (!isSilent()) log.message(message);
+  },
+};
+
+export const cliConsola = {
+  error(message: string) {
+    if (!isSilent()) baseConsola.error(message);
+  },
+  warn(message: string) {
+    if (!isSilent()) baseConsola.warn(message);
+  },
+  info(message: string) {
+    if (!isSilent()) baseConsola.info(message);
+  },
+  fatal(message: string) {
+    if (!isSilent()) baseConsola.fatal(message);
+  },
+  box(message: string) {
+    if (!isSilent()) baseConsola.box(message);
   },
 };

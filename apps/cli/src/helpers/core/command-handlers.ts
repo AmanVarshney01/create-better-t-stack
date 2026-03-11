@@ -3,7 +3,6 @@ import path from "node:path";
 import { generateReproducibleCommand } from "@better-t-stack/template-generator";
 import { intro, log, outro } from "@clack/prompts";
 import { Result, UnhandledException } from "better-result";
-import consola from "consola";
 import fs from "fs-extra";
 import pc from "picocolors";
 
@@ -28,6 +27,7 @@ import { addToHistory } from "../../utils/project-history";
 import { validateProjectName } from "../../utils/project-name-validation";
 import { renderTitle } from "../../utils/render-title";
 import { getTemplateConfig, getTemplateDescription } from "../../utils/templates";
+import { cliConsola } from "../../utils/terminal-output";
 import {
   getProvidedFlags,
   processAndValidateFlags,
@@ -155,7 +155,7 @@ async function createProjectHandlerInternal(
     if (!isSilent()) intro(pc.magenta("Creating a new Better-T-Stack project"));
 
     if (!isSilent() && input.yolo) {
-      consola.fatal("YOLO mode enabled - skipping checks. Things may break!");
+      cliConsola.fatal("YOLO mode enabled - skipping checks. Things may break!");
     }
 
     // Get project name

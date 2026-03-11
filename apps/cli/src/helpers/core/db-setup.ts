@@ -7,12 +7,12 @@
 import path from "node:path";
 
 import { Result } from "better-result";
-import consola from "consola";
 import fs from "fs-extra";
 import pc from "picocolors";
 
 import type { ProjectConfig } from "../../types";
 import { DatabaseSetupError, UserCancelledError } from "../../utils/errors";
+import { cliConsola } from "../../utils/terminal-output";
 import { setupCloudflareD1 } from "../database-providers/d1-setup";
 import { setupDockerCompose } from "../database-providers/docker-compose-setup";
 import { setupMongoDBAtlas } from "../database-providers/mongodb-atlas-setup";
@@ -53,7 +53,7 @@ export async function setupDatabase(config: ProjectConfig, cliInput?: DatabaseSe
         throw result.error;
       }
       // Log other errors but don't fail the overall project creation
-      consola.error(pc.red(result.error.message));
+      cliConsola.error(pc.red(result.error.message));
     }
   }
 

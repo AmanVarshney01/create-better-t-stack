@@ -1,10 +1,10 @@
 import { log, outro, spinner } from "@clack/prompts";
 import { Result } from "better-result";
-import { consola } from "consola";
 import pc from "picocolors";
 import z from "zod";
 
 import { CLIError } from "./errors";
+import { cliConsola } from "./terminal-output";
 
 export const SPONSORS_JSON_URL = "https://sponsors.better-t-stack.dev/sponsors.json";
 export const GITHUB_SPONSOR_URL = "https://github.com/sponsors/AmanVarshney01";
@@ -152,7 +152,7 @@ function displaySponsorsBox(sponsors: SponsorEntry) {
     }
   });
 
-  consola.box(output);
+  cliConsola.box(output);
 }
 
 export function formatPostInstallSpecialSponsorsSection(sponsors: SponsorEntry): string {
