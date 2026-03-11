@@ -1,33 +1,22 @@
-````md
-██████╗ ███████╗████████╗████████╗███████╗██████╗     ███████╗██╗   ██╗██╗     ██╗     ███████╗████████╗ █████╗  ██████╗██╗  ██╗
-██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗    ██╔════╝██║   ██║██║     ██║     ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
-██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝    █████╗  ██║   ██║██║     ██║     ███████╗   ██║   ███████║██║     █████╔╝
-██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗    ██╔══╝  ██║   ██║██║     ██║     ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
-██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║    ██║     ╚██████╔╝███████╗███████╗███████║   ██║   ██║  ██║╚██████╗██║  ██╗
-╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝    ╚═╝      ╚═════╝ ╚══════╝╚══════╝╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
-````
+```
+██████╗ ███████╗████████╗████████╗███████╗██████╗
+██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝██╔════╝██╔══██╗
+██████╔╝█████╗     ██║      ██║   █████╗  ██████╔╝
+██╔══██╗██╔══╝     ██║      ██║   ██╔══╝  ██╔══██╗
+██████╔╝███████╗   ██║      ██║   ███████╗██║  ██║
+╚═════╝ ╚══════╝   ╚═╝      ╚═╝   ╚══════╝╚═╝  ╚═╝
 
-**Tool for you to create highly configurable projects - TypeScript, Rust, Go, Python and 100+ libraries, tools and services of your choice**
-
-<br>
-
-[![Version](https://img.shields.io/npm/v/create-better-fullstack?style=for-the-badge\&colorA=18181B\&colorB=28CF8D)](https://www.npmjs.com/package/create-better-fullstack)
- 
-[![Downloads](https://img.shields.io/npm/dm/create-better-fullstack?style=for-the-badge\&colorA=18181B\&colorB=28CF8D)](https://www.npmjs.com/package/create-better-fullstack)
- 
-[![License](https://img.shields.io/github/license/Marve10s/Better-Fullstack?style=for-the-badge\&colorA=18181B\&colorB=28CF8D)](LICENSE)
-
-</div>
+███████╗██╗   ██╗██╗     ██╗     ███████╗████████╗ █████╗  ██████╗██╗  ██╗
+██╔════╝██║   ██║██║     ██║     ██╔════╝╚══██╔══╝██╔══██╗██╔════╝██║ ██╔╝
+█████╗  ██║   ██║██║     ██║     ███████╗   ██║   ███████║██║     █████╔╝
+██╔══╝  ██║   ██║██║     ██║     ╚════██║   ██║   ██╔══██║██║     ██╔═██╗
+██║     ╚██████╔╝███████╗███████╗███████║   ██║   ██║  ██║╚██████╗██║  ██╗
+╚═╝      ╚═════╝ ╚══════╝╚══════╝╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝
 ```
 
-Notes:
+<div align="center">
 
-* Kept the ASCII title.
-* Merged it into a single banner so it stays on one row.
-* Tightened the subtitle wording and spacing for a cleaner header.
-
-
-**Tool for you to create highly configurable projects - Typescript,Rust,Go,Python and 100+ libraries,tools and services for your choice**
+**Scaffold production-ready fullstack apps in seconds. Pick your stack from 100+ libraries — the CLI wires everything together.**
 
 <br>
 
@@ -36,11 +25,19 @@ Notes:
 [![Downloads](https://img.shields.io/npm/dm/create-better-fullstack?style=for-the-badge&colorA=18181B&colorB=28CF8D)](https://www.npmjs.com/package/create-better-fullstack)
 &nbsp;
 [![License](https://img.shields.io/github/license/Marve10s/Better-Fullstack?style=for-the-badge&colorA=18181B&colorB=28CF8D)](LICENSE)
+
 </div>
 
 <br>
 
-**Better Fullstack** is a CLI that scaffolds production-ready fullstack apps in seconds. Pick your frontend, backend, database, auth, payments, and 100+ other integrations — the CLI wires everything together into a working monorepo. Supports TypeScript, Rust, Python, and Go.
+## Why Better Fullstack?
+
+Most scaffolding tools lock you into one framework and one opinion. Better Fullstack doesn't.
+
+- **100+ integrations** — frontend, backend, database, auth, payments, AI, DevOps, and more
+- **4 ecosystems** — TypeScript, Rust, Python, Go — with more coming
+- **Visual builder** — configure your stack in the browser, get a ready-to-run CLI command
+- **Wired for you** — no manual glue code; every picked integration is preconfigured and working out of the box
 
 <br>
 
@@ -50,15 +47,11 @@ Notes:
 <tr>
 <td width="50%">
 
-### 🌐 Web (Recommended)
+### 🌐 Web Builder (Recommended)
 
-Build your stack visually — pick every option from a UI, preview your choices, and get a ready-to-run command.
+Configure your stack visually — pick every option from a UI, preview your choices, and get a ready-to-run command.
 
-<h3>
-
-**[Open the App Builder →](https://better-fullstack.dev/new)**
-
-</h3>
+### **[Open the App Builder →](https://better-fullstack.dev/new)**
 
 </td>
 <td width="50%">
@@ -87,7 +80,7 @@ bunx create-better-fullstack@latest
 
 ```bash
 --yes              # Accept all defaults
---yolo             # Random configuration
+--yolo             # Scaffold a random stack — good for exploring
 --template <name>  # Use a preset (t3, mern, pern, uniwind)
 --ecosystem <lang> # Start in rust, python, or go mode
 --no-git           # Skip git initialization
@@ -218,7 +211,7 @@ Databases and hosting providers are shared across all ecosystems.
 
 | | |
 | --- | --- |
-| **UI** | shadcn/ui · Radix · Headless UI · Chakra · Mantine · DaisyUI · NextUI · Park UI |
+| **UI** | shadcn/ui · Radix · Headless UI · Chakra · Mantine · DaisyUI · NextUI · Park UI · Base UI |
 | **State** | Zustand · Jotai · Redux Toolkit · XState · TanStack Store |
 | **Forms** | TanStack Form · React Hook Form · Formik · Conform |
 | **Animation** | Framer Motion · GSAP · React Spring |
@@ -288,13 +281,13 @@ Got questions or feedback? Open a [GitHub issue](https://github.com/Marve10s/Bet
 
 ## 💛 Sponsors
 
-If you'd like to support me:
+If Better Fullstack saves you time, consider supporting:
 
 [![Patreon](https://img.shields.io/badge/Patreon-Support-F96854?style=for-the-badge&logo=patreon&logoColor=white)](https://www.patreon.com/c/marve10s)
 
 <br>
 
-## 📊 Star History
+## 📈 Star History
 
 <div align="center">
   <a href="https://star-history.com/#Marve10s/Better-Fullstack&Date">
@@ -310,10 +303,4 @@ If you'd like to support me:
 
 ## License
 
-MIT
-
----
-
-<p align="center">
-  Fork of <a href="https://github.com/AmanVarshney01/create-better-t-stack">create-better-t-stack</a> by <a href="https://github.com/AmanVarshney01">Aman Varshney</a>
-</p>
+MIT — built on top of [create-better-t-stack](https://github.com/AmanVarshney01/create-better-t-stack) by [Aman Varshney](https://github.com/AmanVarshney01).
