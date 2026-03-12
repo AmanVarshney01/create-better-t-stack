@@ -13,6 +13,7 @@ type PackageJson = {
   scripts?: Record<string, string>;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
+  overrides?: Record<string, string>;
   workspaces?: string[] | { packages?: string[]; catalog?: Record<string, string> };
   packageManager?: string;
   [key: string]: unknown;
@@ -157,6 +158,13 @@ function updateRootPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): v
   // Note: packageManager version is set by CLI at runtime since it requires running the actual CLI
   // For preview purposes, we just show the configured package manager
   pkgJson.packageManager = `${packageManager}@latest`;
+
+  if (config.api === "orpc" && config.frontend.includes("nuxt")) {
+    pkgJson.overrides = {
+      ...(pkgJson.overrides || {}),
+      "@vue/devtools-api": "^8.0.7",
+    };
+  }
 
   if (backend === "convex") {
     if (!workspaces.includes("packages/*")) {

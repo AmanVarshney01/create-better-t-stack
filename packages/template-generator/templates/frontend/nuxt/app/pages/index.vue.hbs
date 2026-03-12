@@ -30,6 +30,12 @@ const healthCheck = useConvexQuery(api.healthCheck.get, {});
 {{else}}
   {{#unless (eq api "none")}}
 const healthCheck = useQuery($orpc.healthCheck.queryOptions())
+
+onServerPrefetch(async () => {
+  try {
+    await healthCheck.suspense()
+  } catch {}
+})
   {{/unless}}
 {{/if}}
 </script>

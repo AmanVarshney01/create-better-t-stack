@@ -40,6 +40,12 @@ const queryClient = useQueryClient()
 
 const todos = useQuery($orpc.todo.getAll.queryOptions())
 
+onServerPrefetch(async () => {
+  try {
+    await todos.suspense()
+  } catch {}
+})
+
 const createMutation = useMutation($orpc.todo.create.mutationOptions({
   onSuccess: () => {
     queryClient.invalidateQueries()
