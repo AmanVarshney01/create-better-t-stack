@@ -1,4 +1,7 @@
-import { describe, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
+import path from "node:path";
+
+import fs from "fs-extra";
 
 import type { Backend, Database, Frontend, ORM } from "../src/types";
 import {
@@ -226,6 +229,99 @@ describe("Authentication Configurations", () => {
       });
 
       expectSuccess(result);
+    });
+
+    it("should scaffold Next.js Clerk middleware without importing shared server env", async () => {
+      const result = await runTRPCTest({
+        projectName: "clerk-next-hono-current",
+        auth: "clerk",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["next"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) {
+        throw new Error("Expected projectDir to be defined");
+      }
+
+      const proxyFile = await fs.readFile(
+        path.join(result.projectDir, "apps/web/src/proxy.ts"),
+        "utf8",
+      );
+      const dashboardFile = await fs.readFile(
+        path.join(result.projectDir, "apps/web/src/app/dashboard/page.tsx"),
+        "utf8",
+      );
+      const apiContextFile = await fs.readFile(
+        path.join(result.projectDir, "packages/api/src/context.ts"),
+        "utf8",
+      );
+      const serverEnvPackageFile = await fs.readFile(
+        path.join(result.projectDir, "packages/env/src/server.ts"),
+        "utf8",
+      );
+      const serverEnvFile = await fs.readFile(
+        path.join(result.projectDir, "apps/server/.env"),
+        "utf8",
+      );
+
+      expect(proxyFile).not.toContain('/env/server"');
+      expect(proxyFile).not.toContain("env.CLERK_SECRET_KEY");
+      expect(dashboardFile).not.toContain("SignedIn");
+      expect(dashboardFile).not.toContain("SignedOut");
+      expect(dashboardFile).toContain("useUser");
+      expect(apiContextFile).toContain("publishableKey: env.CLERK_PUBLISHABLE_KEY");
+      expect(serverEnvPackageFile).toContain("CLERK_PUBLISHABLE_KEY");
+      expect(serverEnvFile).toContain("CLERK_PUBLISHABLE_KEY=");
+    });
+
+    it("should scaffold TanStack Start Clerk templates without stale control components", async () => {
+      const result = await runTRPCTest({
+        projectName: "clerk-tanstack-start-hono-current",
+        auth: "clerk",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["tanstack-start"],
+        addons: ["turborepo"],
+        examples: ["todo"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      if (!result.projectDir) {
+        throw new Error("Expected projectDir to be defined");
+      }
+
+      const startFile = await fs.readFile(
+        path.join(result.projectDir, "apps/web/src/start.ts"),
+        "utf8",
+      );
+      const dashboardFile = await fs.readFile(
+        path.join(result.projectDir, "apps/web/src/routes/dashboard.tsx"),
+        "utf8",
+      );
+
+      expect(startFile).not.toContain('/env/server"');
+      expect(startFile).not.toContain("env.CLERK_SECRET_KEY");
+      expect(dashboardFile).not.toContain("SignedIn");
+      expect(dashboardFile).not.toContain("SignedOut");
+      expect(dashboardFile).toContain("useUser");
     });
 
     it("should work with clerk + native frontend on hono", async () => {

@@ -1,7 +1,4 @@
-import { env } from "@{{projectName}}/env/server";
 import { clerkMiddleware } from "@clerk/nextjs/server";
-
-void env.CLERK_SECRET_KEY;
 
 export default clerkMiddleware();
 

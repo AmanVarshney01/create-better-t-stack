@@ -76,6 +76,8 @@ function generateReadmeContent(options: ProjectConfig): string {
   const hasClerkServerFrontend = frontend.some((f) =>
     ["next", "react-router", "tanstack-start"].includes(f),
   );
+  const hasClerkBackendRequestAuth =
+    auth === "clerk" && api !== "none" && ["self", "hono", "elysia"].includes(backend);
   const hasSvelte = frontend.includes("svelte");
   const hasAstro = frontend.includes("astro");
   const packageManagerRunCmd = `${packageManager} run`;
@@ -139,6 +141,12 @@ ${
 - Set your Clerk publishable key in \`apps/*/.env\`${
         hasClerkServerFrontend
           ? "\n- Set `CLERK_SECRET_KEY` in the web app env for Clerk server middleware"
+          : ""
+      }${
+        hasClerkBackendRequestAuth
+          ? `\n- Set \`CLERK_PUBLISHABLE_KEY\` in the ${
+              backend === "self" ? "web app" : "server app"
+            } env for server-side Clerk request verification`
           : ""
       }`
     : ""

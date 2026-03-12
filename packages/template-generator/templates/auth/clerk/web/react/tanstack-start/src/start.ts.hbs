@@ -1,8 +1,5 @@
-import { env } from "@{{projectName}}/env/server"
 import { clerkMiddleware } from '@clerk/tanstack-react-start/server'
 import { createStart } from '@tanstack/react-start'
-
-void env.CLERK_SECRET_KEY
 
 export const startInstance = createStart(() => {
 	return {

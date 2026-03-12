@@ -1,30 +1,27 @@
 "use client";
 
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  UserButton,
-  useUser,
-} from "@clerk/nextjs";
+import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 
 export default function Dashboard() {
   const user = useUser();
 
+  if (!user.isLoaded) {
+    return <div className="p-6">Loading...</div>;
+  }
+
+  if (!user.user) {
+    return (
+      <div className="p-6">
+        <SignInButton />
+      </div>
+    );
+  }
+
   return (
-    <>
-      <SignedIn>
-        <div className="space-y-4 p-6">
-          <h1 className="text-2xl font-semibold">Dashboard</h1>
-          <p>Welcome {user.user?.fullName ?? user.user?.primaryEmailAddress?.emailAddress}</p>
-          <UserButton />
-        </div>
-      </SignedIn>
-      <SignedOut>
-        <div className="p-6">
-          <SignInButton />
-        </div>
-      </SignedOut>
-    </>
+    <div className="space-y-4 p-6">
+      <h1 className="text-2xl font-semibold">Dashboard</h1>
+      <p>Welcome {user.user.fullName ?? user.user.primaryEmailAddress?.emailAddress}</p>
+      <UserButton />
+    </div>
   );
 }

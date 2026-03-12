@@ -361,6 +361,7 @@ function buildServerVars(
   backend: ProjectConfig["backend"],
   frontend: string[],
   auth: ProjectConfig["auth"],
+  api: ProjectConfig["api"],
   database: ProjectConfig["database"],
   dbSetup: ProjectConfig["dbSetup"],
   runtime: ProjectConfig["runtime"],
@@ -406,6 +407,8 @@ function buildServerVars(
 
   const hasBetterAuth = auth === "better-auth";
   const hasClerk = auth === "clerk";
+  const needsClerkPublishableKey =
+    hasClerk && api !== "none" && ["self", "hono", "elysia"].includes(backend);
 
   return [
     {
@@ -427,6 +430,11 @@ function buildServerVars(
       key: "CLERK_SECRET_KEY",
       value: "",
       condition: hasClerk,
+    },
+    {
+      key: "CLERK_PUBLISHABLE_KEY",
+      value: "",
+      condition: needsClerkPublishableKey,
     },
     {
       key: "POLAR_ACCESS_TOKEN",
@@ -462,6 +470,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     frontend,
     database,
     auth,
+    api,
     examples,
     dbSetup,
     webDeploy,
@@ -549,6 +558,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     backend,
     frontend,
     auth,
+    api,
     database,
     dbSetup,
     runtime,

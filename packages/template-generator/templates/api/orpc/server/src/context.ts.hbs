@@ -4,6 +4,7 @@ import { env } from "@{{projectName}}/env/server";
 
 const clerkClient = createClerkClient({
 	secretKey: env.CLERK_SECRET_KEY,
+	publishableKey: env.CLERK_PUBLISHABLE_KEY,
 });
 
 async function authenticateClerkRequest(request: Request) {
