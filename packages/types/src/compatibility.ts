@@ -250,12 +250,12 @@ export function validateProjectName(name: string): string | undefined {
 
 export const hasPWACompatibleFrontend = (webFrontend: string[]) =>
   webFrontend.some((f) =>
-    ["tanstack-router", "react-router", "solid", "next", "astro"].includes(f),
+    ["tanstack-router", "react-router", "react-vite", "solid", "next", "astro"].includes(f),
   );
 
 export const hasTauriCompatibleFrontend = (webFrontend: string[]) =>
   webFrontend.some((f) =>
-    ["tanstack-router", "react-router", "nuxt", "svelte", "solid", "next", "astro"].includes(f),
+    ["tanstack-router", "react-router", "react-vite", "nuxt", "svelte", "solid", "next", "astro"].includes(f),
   );
 
 const isChatSdkExampleSupported = (stack: CompatibilityInput): boolean => {
@@ -414,7 +414,7 @@ export const analyzeStackCompatibility = (
       changes.push({ category: "backend", message: "Removed Astro (incompatible with Convex)" });
     }
 
-    // Remove AI example if incompatible frontends are selected (Convex AI only supports React-based frontends)
+    // Remove AI example if incompatible frontends are selected (Convex AI supports React-based frontends, including React + Vite)
     if (nextStack.examples.includes("ai")) {
       const hasIncompatibleFrontend = nextStack.webFrontend.some((f) =>
         ["solid", "svelte", "nuxt"].includes(f),
@@ -425,7 +425,8 @@ export const analyzeStackCompatibility = (
         changed = true;
         changes.push({
           category: "examples",
-          message: "AI example removed (Convex AI only supports React-based frontends)",
+          message:
+            "AI example removed (Convex AI only supports React-based frontends including React + Vite)",
         });
       }
     }
@@ -879,6 +880,16 @@ export const analyzeStackCompatibility = (
   // PAYMENTS CONSTRAINTS
   // ============================================
 
+  if (nextStack.payments === "dodo" && nextStack.webFrontend.includes("react-vite")) {
+    nextStack.payments = "none";
+    changed = true;
+    changes.push({
+      category: "payments",
+      message:
+        "Payments set to 'None' (Dodo Payments support is not available for React + Vite yet)",
+    });
+  }
+
   if (nextStack.payments === "polar") {
     if (nextStack.auth !== "better-auth") {
       nextStack.payments = "none";
@@ -968,7 +979,7 @@ export const analyzeStackCompatibility = (
 
   // React-only UI libraries - check frontend compatibility
   const reactOnlyLibraries = ["shadcn-ui", "radix-ui", "chakra-ui", "nextui"];
-  const reactFrontends = ["tanstack-router", "react-router", "tanstack-start", "next"];
+  const reactFrontends = ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next"];
   if (reactOnlyLibraries.includes(nextStack.uiLibrary)) {
     const hasReactFrontend = nextStack.webFrontend.some((f) => reactFrontends.includes(f));
     const hasAstroReact =
@@ -1077,7 +1088,8 @@ export const analyzeStackCompatibility = (
         changed = true;
         changes.push({
           category: "examples",
-          message: "AI removed (Convex AI only supports React-based frontends)",
+          message:
+            "AI removed (Convex AI only supports React-based frontends including React + Vite)",
         });
       }
     }
@@ -1085,13 +1097,17 @@ export const analyzeStackCompatibility = (
 
   // Chat SDK example constraints (framework-specific profiles in v1)
   if (nextStack.examples.includes("chat-sdk")) {
-    if (!isChatSdkExampleSupported(nextStack)) {
+    const hasReactVite = nextStack.webFrontend.includes("react-vite");
+
+    if (hasReactVite || !isChatSdkExampleSupported(nextStack)) {
       nextStack.examples = nextStack.examples.filter((e) => e !== "chat-sdk");
       if (nextStack.examples.length === 0) nextStack.examples = ["none"];
       changed = true;
 
       let reason = "unsupported stack";
-      if (nextStack.ecosystem !== "typescript") {
+      if (hasReactVite) {
+        reason = "React + Vite support is not available yet";
+      } else if (nextStack.ecosystem !== "typescript") {
         reason = "TypeScript ecosystem only";
       } else if (nextStack.backend === "convex") {
         reason = "Convex backend not supported in v1";
@@ -1264,7 +1280,7 @@ export const getDisabledReason = (
         const frontendName = currentStack.webFrontend.find((f) =>
           ["solid", "svelte", "nuxt"].includes(f),
         );
-        return `Convex AI example only supports React-based frontends (not ${frontendName})`;
+        return `Convex AI example only supports React-based frontends including React + Vite (not ${frontendName})`;
       }
     }
     if (category === "payments" && optionId === "polar") {
@@ -1584,6 +1600,15 @@ export const getDisabledReason = (
     }
   }
 
+  if (
+    category === "payments" &&
+    optionId !== "none" &&
+    currentStack.webFrontend.includes("react-vite") &&
+    optionId === "dodo"
+  ) {
+    return "Dodo Payments are not yet supported for React + Vite projects";
+  }
+
   // ============================================
   // EMAIL CONSTRAINTS
   // ============================================
@@ -1632,12 +1657,15 @@ export const getDisabledReason = (
         );
         if (hasIncompatibleFrontend) {
           const frontendName = currentStack.webFrontend.find((f) => ["svelte", "nuxt"].includes(f));
-          return `Convex AI example only supports React-based frontends (not ${frontendName})`;
+          return `Convex AI example only supports React-based frontends including React + Vite (not ${frontendName})`;
         }
       }
     }
 
     if (optionId === "chat-sdk") {
+      if (currentStack.webFrontend.includes("react-vite")) {
+        return "Chat SDK example is not yet supported for React + Vite projects";
+      }
       if (currentStack.ecosystem !== "typescript") {
         return "Chat SDK example is currently available only for TypeScript stacks";
       }
@@ -1731,7 +1759,7 @@ export const getDisabledReason = (
 
     // React-only UI libraries
     const reactOnlyLibraries = ["shadcn-ui", "radix-ui", "chakra-ui", "nextui"];
-    const reactFrontends = ["tanstack-router", "react-router", "tanstack-start", "next"];
+    const reactFrontends = ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next"];
 
     if (reactOnlyLibraries.includes(optionId)) {
       const hasReactFrontend = currentStack.webFrontend.some((f) => reactFrontends.includes(f));
@@ -1847,6 +1875,7 @@ export const isOptionCompatible = (
 const WEB_FRAMEWORKS: readonly Frontend[] = [
   "tanstack-router",
   "react-router",
+  "react-vite",
   "tanstack-start",
   "next",
   "nuxt",
@@ -1869,13 +1898,14 @@ const UI_LIBRARY_COMPATIBILITY: Record<
   }
 > = {
   "shadcn-ui": {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
+    frontends: ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind"],
   },
   daisyui: {
     frontends: [
       "tanstack-router",
       "react-router",
+      "react-vite",
       "tanstack-start",
       "next",
       "nuxt",
@@ -1891,17 +1921,18 @@ const UI_LIBRARY_COMPATIBILITY: Record<
     cssFrameworks: ["tailwind"],
   },
   "radix-ui": {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
+    frontends: ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   "headless-ui": {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "nuxt", "astro"],
+    frontends: ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "nuxt", "astro"],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   "park-ui": {
     frontends: [
       "tanstack-router",
       "react-router",
+      "react-vite",
       "tanstack-start",
       "next",
       "nuxt",
@@ -1912,19 +1943,19 @@ const UI_LIBRARY_COMPATIBILITY: Record<
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only"],
   },
   "chakra-ui": {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
+    frontends: ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   nextui: {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
+    frontends: ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind"],
   },
   mantine: {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
+    frontends: ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   "base-ui": {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
+    frontends: ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   "ark-ui": {
@@ -1942,7 +1973,7 @@ const UI_LIBRARY_COMPATIBILITY: Record<
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   "react-aria": {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
+    frontends: ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   none: {
@@ -1955,6 +1986,7 @@ const ADDON_COMPATIBILITY: Record<Addons, readonly Frontend[]> = {
   pwa: [
     "tanstack-router",
     "react-router",
+    "react-vite",
     "solid",
     "next",
     "astro",
@@ -1966,6 +1998,7 @@ const ADDON_COMPATIBILITY: Record<Addons, readonly Frontend[]> = {
   tauri: [
     "tanstack-router",
     "react-router",
+    "react-vite",
     "nuxt",
     "svelte",
     "solid",
@@ -1990,7 +2023,7 @@ const ADDON_COMPATIBILITY: Record<Addons, readonly Frontend[]> = {
   opentui: [],
   wxt: [],
   msw: [],
-  storybook: ["tanstack-router", "react-router", "next", "nuxt", "svelte", "solid"],
+  storybook: ["tanstack-router", "react-router", "react-vite", "next", "nuxt", "svelte", "solid"],
   none: [],
 };
 
@@ -2093,6 +2126,7 @@ export function isExampleChatSdkAllowed(
   frontends: Frontend[] = [],
   runtime?: Runtime | string,
 ) {
+  if (frontends.includes("react-vite")) return false;
   if (!backend || backend === "none" || backend === "convex") return false;
 
   if (backend === "self") {
@@ -2180,7 +2214,7 @@ export function getCompatibleUILibraries(
     if (webFrontend === "astro") {
       if (astroIntegration === "react") {
         return compatibility.frontends.some((f) =>
-          ["tanstack-router", "react-router", "tanstack-start", "next", "astro"].includes(f),
+          ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "astro"].includes(f),
         );
       }
       return compatibility.frontends.some((f) =>

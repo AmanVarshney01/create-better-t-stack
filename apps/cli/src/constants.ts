@@ -107,6 +107,7 @@ export const ADDON_COMPATIBILITY = {
   pwa: [
     "tanstack-router",
     "react-router",
+    "react-vite",
     "solid",
     "next",
     "astro",
@@ -118,6 +119,7 @@ export const ADDON_COMPATIBILITY = {
   tauri: [
     "tanstack-router",
     "react-router",
+    "react-vite",
     "nuxt",
     "svelte",
     "solid",
@@ -142,7 +144,7 @@ export const ADDON_COMPATIBILITY = {
   opentui: [],
   wxt: [],
   msw: [],
-  storybook: ["tanstack-router", "react-router", "next", "nuxt", "svelte", "solid"],
+  storybook: ["tanstack-router", "react-router", "react-vite", "next", "nuxt", "svelte", "solid"],
   none: [],
 } as const;
 
@@ -158,13 +160,14 @@ export const UI_LIBRARY_COMPATIBILITY: Record<
   }
 > = {
   "shadcn-ui": {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
+    frontends: ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind"],
   },
   daisyui: {
     frontends: [
       "tanstack-router",
       "react-router",
+      "react-vite",
       "tanstack-start",
       "next",
       "nuxt",
@@ -180,17 +183,18 @@ export const UI_LIBRARY_COMPATIBILITY: Record<
     cssFrameworks: ["tailwind"],
   },
   "radix-ui": {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
+    frontends: ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   "headless-ui": {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "nuxt", "astro"],
+    frontends: ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "nuxt", "astro"],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   "park-ui": {
     frontends: [
       "tanstack-router",
       "react-router",
+      "react-vite",
       "tanstack-start",
       "next",
       "nuxt",
@@ -201,25 +205,26 @@ export const UI_LIBRARY_COMPATIBILITY: Record<
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only"],
   },
   "chakra-ui": {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
+    frontends: ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   nextui: {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
+    frontends: ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind"],
   },
   mantine: {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
+    frontends: ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   "base-ui": {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
+    frontends: ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   "ark-ui": {
     frontends: [
       "tanstack-router",
       "react-router",
+      "react-vite",
       "tanstack-start",
       "next",
       "nuxt",
@@ -231,13 +236,14 @@ export const UI_LIBRARY_COMPATIBILITY: Record<
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   "react-aria": {
-    frontends: ["tanstack-router", "react-router", "tanstack-start", "next", "astro"],
+    frontends: ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "astro"],
     cssFrameworks: ["tailwind", "scss", "less", "postcss-only", "none"],
   },
   none: {
     frontends: [
       "tanstack-router",
       "react-router",
+      "react-vite",
       "tanstack-start",
       "next",
       "nuxt",
@@ -261,6 +267,7 @@ export const UI_LIBRARY_COMPATIBILITY: Record<
 export const DEFAULT_UI_LIBRARY_BY_FRONTEND: Record<Frontend, UILibrary> = {
   "tanstack-router": "shadcn-ui",
   "react-router": "shadcn-ui",
+  "react-vite": "shadcn-ui",
   "tanstack-start": "shadcn-ui",
   next: "shadcn-ui",
   nuxt: "daisyui",

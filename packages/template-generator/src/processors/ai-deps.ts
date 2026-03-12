@@ -58,7 +58,7 @@ export function processAIDeps(vfs: VirtualFileSystem, config: ProjectConfig): vo
       if (
         frontendPath &&
         webFrontend &&
-        ["tanstack-router", "react-router", "tanstack-start", "next", "redwood"].includes(
+        ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "redwood"].includes(
           webFrontend,
         )
       ) {

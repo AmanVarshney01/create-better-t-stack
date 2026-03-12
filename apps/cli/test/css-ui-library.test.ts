@@ -2,7 +2,7 @@ import { describe, it } from "bun:test";
 
 import type { CSSFramework, Frontend, UILibrary } from "../src/types";
 
-import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
+import { expectError, expectSuccess, runTRPCTest } from "./test-utils";
 
 describe("CSS Framework and UI Library Configurations", () => {
   describe("CSS Framework Options", () => {

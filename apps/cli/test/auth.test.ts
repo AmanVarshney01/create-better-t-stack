@@ -121,7 +121,73 @@ describe("Authentication Configurations", () => {
       expectSuccess(result);
     });
 
+    it("should work with better-auth + react-vite and generate routed auth templates", async () => {
+      const result = await runTRPCTest({
+        projectName: "better-auth-react-vite",
+        auth: "better-auth",
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["react-vite"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      expect(result.result?.projectConfig.auth).toBe("better-auth");
+      expect(result.projectDir).toBeDefined();
+
+      const projectDir = result.projectDir!;
+      const router = await readFile(join(projectDir, "apps/web/src/router.tsx"), "utf8");
+      const login = await readFile(join(projectDir, "apps/web/src/routes/login.tsx"), "utf8");
+      const dashboard = await readFile(join(projectDir, "apps/web/src/routes/dashboard.tsx"), "utf8");
+      const userMenu = await readFile(
+        join(projectDir, "apps/web/src/components/user-menu.tsx"),
+        "utf8",
+      );
+      const webPackageJson = JSON.parse(
+        await readFile(join(projectDir, "apps/web/package.json"), "utf8"),
+      ) as {
+        dependencies?: Record<string, string>;
+      };
+
+      expect(router).toContain('path: "login"');
+      expect(router).toContain('path: "dashboard"');
+      expect(login).toContain("SignInForm");
+      expect(dashboard).toContain('from "react-router"');
+      expect(userMenu).toContain('from "react-router"');
+      expect(webPackageJson.dependencies?.["react-router"]).toBeDefined();
+      expect(webPackageJson.dependencies?.["@tanstack/react-form"]).toBeDefined();
+    });
+
+    it("should work with better-auth + convex backend (react-vite)", async () => {
+      const result = await runTRPCTest({
+        projectName: "better-auth-convex-react-vite",
+        auth: "better-auth",
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        api: "none",
+        frontend: ["react-vite"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+      });
+
+      expectSuccess(result);
+    });
+
     const compatibleFrontends = [
+      "react-vite",
       "tanstack-router",
       "react-router",
       "tanstack-start",
@@ -292,6 +358,27 @@ describe("Authentication Configurations", () => {
       expect(result.result?.projectConfig.auth).toBe("none");
     });
 
+    it("should normalize nextauth + react-vite frontend to no auth", async () => {
+      const result = await runTRPCTest({
+        projectName: "nextauth-react-vite-fail",
+        auth: "nextauth",
+        backend: "hono",
+        runtime: "bun",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["react-vite"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+      });
+
+      expectSuccess(result);
+      expect(result.result?.projectConfig.auth).toBe("none");
+    });
+
     it("should normalize nextauth + convex backend to no auth", async () => {
       const result = await runTRPCTest({
         projectName: "nextauth-convex-fail",
@@ -430,6 +517,27 @@ describe("Authentication Configurations", () => {
         orm: "drizzle",
         api: "trpc",
         frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+      });
+
+      expectSuccess(result);
+      expect(result.result?.projectConfig.auth).toBe("none");
+    });
+
+    it("should normalize stack-auth + react-vite frontend to no auth", async () => {
+      const result = await runTRPCTest({
+        projectName: "stack-auth-react-vite-fail",
+        auth: "stack-auth",
+        backend: "hono",
+        runtime: "bun",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["react-vite"],
         addons: ["turborepo"],
         examples: ["none"],
         dbSetup: "none",
@@ -590,6 +698,27 @@ describe("Authentication Configurations", () => {
       expect(result.result?.projectConfig.auth).toBe("none");
     });
 
+    it("should normalize supabase-auth + react-vite frontend to no auth", async () => {
+      const result = await runTRPCTest({
+        projectName: "supabase-auth-react-vite-fail",
+        auth: "supabase-auth",
+        backend: "hono",
+        runtime: "bun",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["react-vite"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+      });
+
+      expectSuccess(result);
+      expect(result.result?.projectConfig.auth).toBe("none");
+    });
+
     it("should normalize supabase-auth + convex backend to no auth", async () => {
       const result = await runTRPCTest({
         projectName: "supabase-auth-convex-fail",
@@ -739,6 +868,27 @@ describe("Authentication Configurations", () => {
       expect(result.result?.projectConfig.auth).toBe("none");
     });
 
+    it("should normalize auth0 + react-vite frontend to no auth", async () => {
+      const result = await runTRPCTest({
+        projectName: "auth0-react-vite-fail",
+        auth: "auth0",
+        backend: "hono",
+        runtime: "bun",
+        database: "postgres",
+        orm: "drizzle",
+        api: "trpc",
+        frontend: ["react-vite"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+      });
+
+      expectSuccess(result);
+      expect(result.result?.projectConfig.auth).toBe("none");
+    });
+
     it("should normalize auth0 + convex backend to no auth", async () => {
       const result = await runTRPCTest({
         projectName: "auth0-convex-fail",
@@ -772,6 +922,27 @@ describe("Authentication Configurations", () => {
         orm: "none",
         api: "none",
         frontend: ["tanstack-router"],
+        addons: ["turborepo"],
+        examples: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+    });
+
+    it("should work with clerk + convex + react-vite", async () => {
+      const result = await runTRPCTest({
+        projectName: "clerk-convex-react-vite",
+        auth: "clerk",
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        api: "none",
+        frontend: ["react-vite"],
         addons: ["turborepo"],
         examples: ["none"],
         dbSetup: "none",
@@ -955,6 +1126,7 @@ describe("Authentication Configurations", () => {
     });
 
     const compatibleFrontends = [
+      "react-vite",
       "tanstack-router",
       "react-router",
       "tanstack-start",

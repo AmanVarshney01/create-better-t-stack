@@ -110,6 +110,41 @@ describe("Example Configurations", () => {
       expectError(result, "The 'ai' example is not compatible with the Solid frontend");
     });
 
+    it("should work with AI example + React + Vite and generate an AI route", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-react-vite",
+        examples: ["ai"],
+        backend: "hono",
+        runtime: "bun",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["react-vite"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      expect(result.projectDir).toBeDefined();
+
+      const projectDir = result.projectDir!;
+      const router = await Bun.file(join(projectDir, "apps/web/src/router.tsx")).text();
+      const aiRoute = await Bun.file(join(projectDir, "apps/web/src/routes/ai.tsx")).text();
+      const webPackageJson = JSON.parse(
+        await Bun.file(join(projectDir, "apps/web/package.json")).text(),
+      ) as {
+        dependencies?: Record<string, string>;
+      };
+
+      expect(router).toContain('path: "ai"');
+      expect(aiRoute).toContain("export default AI");
+      expect(webPackageJson.dependencies?.["@ai-sdk/react"]).toBeDefined();
+    });
+
     it("should work with AI example + Convex + React frontend", async () => {
       const result = await runTRPCTest({
         projectName: "ai-convex-react",
@@ -152,6 +187,31 @@ describe("Example Configurations", () => {
       expectSuccess(result);
     });
 
+    it("should work with AI example + Convex + React + Vite", async () => {
+      const result = await runTRPCTest({
+        projectName: "ai-convex-react-vite",
+        examples: ["ai"],
+        backend: "convex",
+        runtime: "none",
+        database: "none",
+        orm: "none",
+        auth: "clerk",
+        api: "none",
+        frontend: ["react-vite"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        install: false,
+      });
+
+      expectSuccess(result);
+      expect(result.projectDir).toBeDefined();
+
+      const aiRoute = await Bun.file(join(result.projectDir!, "apps/web/src/routes/ai.tsx")).text();
+      expect(aiRoute).toContain("useUIMessages");
+    });
+
     it("should fail with AI example + Convex + Svelte", async () => {
       const result = await runTRPCTest({
         projectName: "ai-convex-svelte-fail",
@@ -172,7 +232,7 @@ describe("Example Configurations", () => {
 
       expectError(
         result,
-        "The 'ai' example with Convex backend only supports React-based frontends (Next.js, TanStack Router, TanStack Start, React Router). Svelte and Nuxt are not supported with Convex AI.",
+        "The 'ai' example with Convex backend only supports React-based frontends (Next.js, TanStack Router, TanStack Start, React Router, React + Vite). Svelte and Nuxt are not supported with Convex AI.",
       );
     });
 
@@ -196,7 +256,7 @@ describe("Example Configurations", () => {
 
       expectError(
         result,
-        "The 'ai' example with Convex backend only supports React-based frontends (Next.js, TanStack Router, TanStack Start, React Router). Svelte and Nuxt are not supported with Convex AI.",
+        "The 'ai' example with Convex backend only supports React-based frontends (Next.js, TanStack Router, TanStack Start, React Router, React + Vite). Svelte and Nuxt are not supported with Convex AI.",
       );
     });
 
@@ -506,6 +566,31 @@ describe("Example Configurations", () => {
       });
 
       expectError(result, "The 'chat-sdk' example is not supported with the Convex backend in v1");
+    });
+
+    it("should fail with React + Vite", async () => {
+      const result = await runTRPCTest({
+        projectName: "chat-sdk-react-vite-fail",
+        examples: ["chat-sdk"],
+        backend: "hono",
+        runtime: "node",
+        database: "sqlite",
+        orm: "drizzle",
+        auth: "none",
+        api: "trpc",
+        frontend: ["react-vite"],
+        addons: ["none"],
+        dbSetup: "none",
+        webDeploy: "none",
+        serverDeploy: "none",
+        ai: "vercel-ai",
+        expectError: true,
+      });
+
+      expectError(
+        result,
+        "The 'chat-sdk' example is not yet supported for React + Vite projects",
+      );
     });
 
     it("should fail with non-vercel-ai on Nuxt/Hono chat-sdk profiles", async () => {

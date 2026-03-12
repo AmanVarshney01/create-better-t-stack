@@ -1,6 +1,6 @@
 {{#if (eq frontend "next")}}
 import type { Preview } from "@storybook/nextjs";
-{{else if (or (eq frontend "tanstack-router") (eq frontend "react-router") (eq frontend "solid"))}}
+{{else if (or (eq frontend "tanstack-router") (eq frontend "react-router") (eq frontend "react-vite") (eq frontend "solid"))}}
 import type { Preview } from "@storybook/react-vite";
 {{else if (eq frontend "nuxt")}}
 import type { Preview } from "@storybook/vue3-vite";

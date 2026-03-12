@@ -21,6 +21,10 @@ const BASE_LINKS: LinkMap = {
     docsUrl: "https://reactrouter.com/",
     githubUrl: "https://github.com/remix-run/react-router",
   },
+  "react-vite": {
+    docsUrl: "https://vite.dev/guide/",
+    githubUrl: "https://github.com/vitejs/vite",
+  },
   "tanstack-start": {
     docsUrl: "https://tanstack.com/start/latest",
     githubUrl: "https://github.com/TanStack/router",

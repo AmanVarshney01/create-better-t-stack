@@ -9,6 +9,7 @@ import { getWebPackagePath } from "../utils/project-paths";
 const REACT_WEB_FRAMEWORKS: Frontend[] = [
   "tanstack-router",
   "react-router",
+  "react-vite",
   "tanstack-start",
   "next",
   "redwood",

@@ -500,6 +500,7 @@ export const dependencyVersionMap = {
 
   // Storybook
   storybook: "^8.6.0",
+  "@storybook/react": "^8.6.0",
   "@storybook/react-vite": "^8.6.0",
   "@storybook/vue3-vite": "^8.6.0",
   "@storybook/svelte-vite": "^8.6.0",

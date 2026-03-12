@@ -1,8 +1,6 @@
 import { describe, it, expect } from "bun:test";
 
-import type { Backend, Frontend, Logging } from "../src/types";
-
-import { expectSuccess, runTRPCTest, type TestConfig } from "./test-utils";
+import { expectSuccess, runTRPCTest } from "./test-utils";
 
 describe("Logging Configurations", () => {
   describe("Pino Logger", () => {

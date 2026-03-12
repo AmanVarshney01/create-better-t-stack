@@ -1,7 +1,7 @@
 {{#if (includes frontend "next")}}
 "use client";
 import Link from "next/link";
-{{else if (includes frontend "react-router")}}
+{{else if (or (includes frontend "react-router") (includes frontend "react-vite"))}}
 import { NavLink } from "react-router";
 {{else if (or (includes frontend "tanstack-router") (includes frontend "tanstack-start"))}}
 import { Link } from "@tanstack/react-router";
@@ -38,7 +38,7 @@ export default function Header() {
                 {label}
               </Link>
             );
-            {{else if (includes frontend "react-router")}}
+            {{else if (or (includes frontend "react-router") (includes frontend "react-vite"))}}
             return (
               <NavLink
                 key={to}

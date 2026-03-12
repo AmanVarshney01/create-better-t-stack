@@ -1,4 +1,4 @@
-{{#if (or (eq frontend "tanstack-router") (eq frontend "react-router") (eq frontend "next") (eq frontend "solid"))}}
+{{#if (or (eq frontend "tanstack-router") (eq frontend "react-router") (eq frontend "react-vite") (eq frontend "next") (eq frontend "solid"))}}
 import type { Meta, StoryObj } from "{{#if (eq frontend "next")}}@storybook/nextjs{{else}}@storybook/react-vite{{/if}}";
 
 // Example Button component for demonstration

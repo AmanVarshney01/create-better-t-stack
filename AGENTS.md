@@ -21,6 +21,8 @@ See `docs/guidelines/` for deeper reference on these topics:
 - Never start the dev server (`turbo dev`, `bun run dev`, `vite dev`, etc.) unless explicitly asked to.
 - After code changes, run the smallest verification set that proves the modified area still works. Prefer package-local `bun run lint`, `bun run test`, `bun run build`, or specific `bun test <file>` commands over broad workspace sweeps.
 - For release-sensitive stack or generator changes, run `bun run test:release` from the repo root. That lane covers template snapshots, CLI/builder parity, and preview-config regressions.
+- Surprise worth remembering: `apps/cli/test/cli-builder-sync.test.ts` reads the built `packages/types/dist` output via the workspace package, not just the source files. After changing `packages/types/src/*`, rebuild `packages/types` before trusting that parity test.
+- Surprise worth remembering: `react-vite` originally received auth dependencies from `packages/template-generator/src/processors/auth-deps.ts` without receiving matching auth templates from `packages/template-generator/src/template-handlers/auth.ts`. When expanding `react-vite`, verify both dependency processors and template handlers are updated together.
 
 ## Bun
 

@@ -26,7 +26,7 @@ export async function processEmailTemplates(
 
   // Process React Email components for React-based frontends
   const hasReactWeb = config.frontend.some((f) =>
-    ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+    ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next"].includes(f),
   );
 
   if (hasReactWeb && (config.email === "resend" || config.email === "react-email")) {

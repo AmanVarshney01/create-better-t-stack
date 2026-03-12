@@ -14,7 +14,11 @@ export async function processFeatureFlagsTemplates(
   // Check if we have a web frontend (React-based)
   const hasReactFrontend = config.frontend.some(
     (f) =>
-      f === "tanstack-router" || f === "react-router" || f === "tanstack-start" || f === "next",
+      f === "tanstack-router" ||
+      f === "react-router" ||
+      f === "react-vite" ||
+      f === "tanstack-start" ||
+      f === "next",
   );
 
   // Process client-side templates for React-based frontends

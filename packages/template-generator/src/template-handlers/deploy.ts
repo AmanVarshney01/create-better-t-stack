@@ -22,6 +22,7 @@ export async function processDeployTemplates(
       "tanstack-router": "react/tanstack-router",
       "tanstack-start": "react/tanstack-start",
       "react-router": "react/react-router",
+      "react-vite": "react/tanstack-router",
       solid: "solid",
       "solid-start": "solid-start",
       next: "react/next",

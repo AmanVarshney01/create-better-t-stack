@@ -1,0 +1,57 @@
+import AppShell from "./app-shell";
+import Home from "./routes/home";
+{{#if (and (ne auth "none") (ne auth "clerk") (ne backend "convex"))}}
+import Dashboard from "./routes/dashboard";
+import Login from "./routes/login";
+{{else if (ne auth "none")}}
+import Dashboard from "./routes/dashboard";
+{{/if}}
+{{#if (includes examples "ai")}}
+import AI from "./routes/ai";
+{{/if}}
+{{#if (or
+  (eq payments "stripe")
+  (eq payments "lemon-squeezy")
+  (eq payments "paddle")
+  (eq payments "polar")
+)}}
+import SuccessPage from "./routes/success";
+{{/if}}
+import { createBrowserRouter } from "react-router";
+
+function NotFound() {
+  return (
+    <main className="container mx-auto max-w-3xl px-4 py-8">
+      <h1 className="text-2xl font-semibold">404</h1>
+      <p className="text-muted-foreground">The requested page could not be found.</p>
+    </main>
+  );
+}
+
+export const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <AppShell />,
+    children: [
+      { index: true, element: <Home /> },
+      {{#if (and (ne auth "none") (ne auth "clerk") (ne backend "convex"))}}
+      { path: "login", element: <Login /> },
+      { path: "dashboard", element: <Dashboard /> },
+      {{else if (ne auth "none")}}
+      { path: "dashboard", element: <Dashboard /> },
+      {{/if}}
+      {{#if (includes examples "ai")}}
+      { path: "ai", element: <AI /> },
+      {{/if}}
+      {{#if (or
+        (eq payments "stripe")
+        (eq payments "lemon-squeezy")
+        (eq payments "paddle")
+        (eq payments "polar")
+      )}}
+      { path: "success", element: <SuccessPage /> },
+      {{/if}}
+      { path: "*", element: <NotFound /> },
+    ],
+  },
+]);

@@ -9,6 +9,7 @@ import { getWebPackagePath, getServerPackagePath } from "../utils/project-paths"
 const REACT_FRONTENDS = [
   "tanstack-router",
   "react-router",
+  "react-vite",
   "tanstack-start",
   "next",
   "native-bare",

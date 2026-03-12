@@ -19,6 +19,7 @@ export async function setupAddons(config: ProjectConfig) {
   const { addons, frontend, projectDir } = config;
   const hasReactWebFrontend =
     frontend.includes("react-router") ||
+    frontend.includes("react-vite") ||
     frontend.includes("tanstack-router") ||
     frontend.includes("next");
   const hasNuxtFrontend = frontend.includes("nuxt");

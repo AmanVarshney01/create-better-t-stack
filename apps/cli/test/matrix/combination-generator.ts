@@ -137,24 +137,6 @@ const REACT_WEB_FRONTENDS: readonly Frontend[] = [
 const NATIVE_FRONTENDS: readonly Frontend[] = ["native-bare", "native-uniwind", "native-unistyles"];
 
 /**
- * All web frontends
- */
-const WEB_FRONTENDS: readonly Frontend[] = [
-  "tanstack-router",
-  "react-router",
-  "tanstack-start",
-  "next",
-  "nuxt",
-  "svelte",
-  "solid",
-  "astro",
-  "qwik",
-  "angular",
-  "redwood",
-  "fresh",
-];
-
-/**
  * Frontends that only support oRPC (not tRPC/ts-rest/garph)
  */
 const ORPC_ONLY_FRONTENDS: readonly Frontend[] = ["nuxt", "svelte", "solid"];
@@ -382,11 +364,7 @@ const ALL_ORMS: readonly ORM[] = [
 
 const ALL_APIS: readonly API[] = ["trpc", "orpc", "ts-rest", "garph", "none"];
 
-const ALL_RUNTIMES: readonly Runtime[] = ["bun", "node", "workers", "none"];
-
 const ALL_AUTHS: readonly Auth[] = ["better-auth", "clerk", "nextauth", "none"];
-
-const ASTRO_INTEGRATIONS: readonly AstroIntegration[] = ["react", "vue", "svelte", "solid", "none"];
 
 /**
  * Generate a unique ID for a combination

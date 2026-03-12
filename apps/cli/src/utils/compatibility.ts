@@ -3,6 +3,7 @@ import type { Frontend } from "../types";
 export const WEB_FRAMEWORKS: readonly Frontend[] = [
   "tanstack-router",
   "react-router",
+  "react-vite",
   "tanstack-start",
   "next",
   "nuxt",

@@ -21,7 +21,9 @@ export async function processAddonTemplates(
       if (config.frontend.includes("next")) {
         processTemplatesFromPrefix(vfs, templates, "addons/pwa/apps/web/next", "apps/web", config);
       } else if (
-        config.frontend.some((f) => ["tanstack-router", "react-router", "solid"].includes(f))
+        config.frontend.some((f) =>
+          ["tanstack-router", "react-router", "react-vite", "solid"].includes(f),
+        )
       ) {
         processTemplatesFromPrefix(vfs, templates, "addons/pwa/apps/web/vite", "apps/web", config);
       }

@@ -10,6 +10,7 @@ describe("Frontend Configurations", () => {
     const singleFrontends = [
       "tanstack-router",
       "react-router",
+      "react-vite",
       "tanstack-start",
       "next",
       "nuxt",
@@ -26,6 +27,7 @@ describe("Frontend Configurations", () => {
     ] satisfies ReadonlyArray<
       | "tanstack-router"
       | "react-router"
+      | "react-vite"
       | "tanstack-start"
       | "next"
       | "nuxt"

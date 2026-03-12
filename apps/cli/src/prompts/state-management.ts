@@ -19,7 +19,7 @@ export async function getStateManagementChoice(
 
   // Check if React-based frontend
   const isReact = web.some((f) =>
-    ["tanstack-router", "react-router", "tanstack-start", "next", "redwood"].includes(f),
+    ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "redwood"].includes(f),
   );
   const isFresh = web.includes("fresh");
 

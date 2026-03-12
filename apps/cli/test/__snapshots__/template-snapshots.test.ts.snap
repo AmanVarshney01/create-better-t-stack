@@ -1537,6 +1537,7 @@ export default nextConfig;
     "@trpc/tanstack-react-query": "^11.11.0",
     "@tanstack/react-query": "^5.90.21",
     "better-auth": "catalog:",
+    "@tanstack/react-form": "^1.28.3",
     "lucide-react": "^0.511.0"
   },
   "devDependencies": {

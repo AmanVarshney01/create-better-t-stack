@@ -96,7 +96,7 @@ export function processEmailDeps(vfs: VirtualFileSystem, config: ProjectConfig):
 
   // Add React Email components for resend and react-email options (not nodemailer)
   const hasReactWeb = frontend.some((f) =>
-    ["tanstack-router", "react-router", "tanstack-start", "next", "redwood"].includes(f),
+    ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "redwood"].includes(f),
   );
 
   if (hasReactWeb && vfs.exists(targetPath) && (email === "resend" || email === "react-email")) {

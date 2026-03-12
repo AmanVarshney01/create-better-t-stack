@@ -18,7 +18,9 @@ export function processAddonsDeps(vfs: VirtualFileSystem, config: ProjectConfig)
   if (!config.addons || config.addons.length === 0) return;
 
   const hasViteReactFrontend =
-    config.frontend.includes("react-router") || config.frontend.includes("tanstack-router");
+    config.frontend.includes("react-router") ||
+    config.frontend.includes("react-vite") ||
+    config.frontend.includes("tanstack-router");
   const hasSolidFrontend = config.frontend.includes("solid");
   const hasPwaCompatibleFrontend = hasViteReactFrontend || hasSolidFrontend;
 
@@ -79,7 +81,9 @@ export function processAddonsDeps(vfs: VirtualFileSystem, config: ProjectConfig)
     if (vfs.exists(webPkgPath)) {
       // Determine framework-specific Storybook package
       const hasReactVite =
-        config.frontend.includes("tanstack-router") || config.frontend.includes("react-router");
+        config.frontend.includes("tanstack-router") ||
+        config.frontend.includes("react-router") ||
+        config.frontend.includes("react-vite");
       const hasNext = config.frontend.includes("next");
       const hasVue = config.frontend.includes("nuxt");
       const hasSvelte = config.frontend.includes("svelte");
@@ -98,7 +102,7 @@ export function processAddonsDeps(vfs: VirtualFileSystem, config: ProjectConfig)
         devDeps.push("@storybook/nextjs");
       } else if (hasReactVite || hasSolid) {
         // Solid can use React Storybook with adapter, but for now use React-Vite
-        devDeps.push("@storybook/react-vite");
+        devDeps.push("@storybook/react-vite", "@storybook/react");
       } else if (hasVue) {
         devDeps.push("@storybook/vue3-vite");
       } else if (hasSvelte) {

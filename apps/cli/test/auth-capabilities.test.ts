@@ -255,7 +255,9 @@ describe("Auth capability matrix", () => {
         { ecosystem: "typescript", backend: "convex", frontend: ["svelte"] },
         "better-auth",
       ),
-    ).toBe("Better-Auth with Convex requires TanStack Router, TanStack Start, Next.js, or React Native");
+    ).toBe(
+      "Better-Auth with Convex requires React + Vite, TanStack Router, TanStack Start, Next.js, or React Native",
+    );
   });
 
   it("disables Clerk on self backend with unsupported frameworks", () => {

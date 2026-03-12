@@ -121,6 +121,7 @@ function buildClientVars(
 ): EnvVariable[] {
   const hasNextJs = frontend.includes("next");
   const hasReactRouter = frontend.includes("react-router");
+  const hasReactVite = frontend.includes("react-vite");
   const hasTanStackRouter = frontend.includes("tanstack-router");
   const hasTanStackStart = frontend.includes("tanstack-start");
   const hasNuxt = frontend.includes("nuxt");
@@ -157,7 +158,7 @@ function buildClientVars(
           condition: true,
         },
       );
-    } else if (hasReactRouter || hasTanStackRouter || hasTanStackStart) {
+    } else if (hasReactRouter || hasReactVite || hasTanStackRouter || hasTanStackStart) {
       vars.push({
         key: "VITE_CLERK_PUBLISHABLE_KEY",
         value: "",
@@ -468,6 +469,7 @@ function buildConvexBackendVars(
     frontend.includes("native-unistyles");
   const hasWeb =
     frontend.includes("react-router") ||
+    frontend.includes("react-vite") ||
     frontend.includes("tanstack-router") ||
     frontend.includes("tanstack-start") ||
     hasNextJs ||
@@ -524,6 +526,7 @@ function buildConvexCommentBlocks(
 ): string {
   const hasWeb =
     frontend.includes("react-router") ||
+    frontend.includes("react-vite") ||
     frontend.includes("tanstack-router") ||
     frontend.includes("tanstack-start") ||
     frontend.includes("next") ||
@@ -1301,6 +1304,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
   } = config;
 
   const hasReactRouter = frontend.includes("react-router");
+  const hasReactVite = frontend.includes("react-vite");
   const hasTanStackRouter = frontend.includes("tanstack-router");
   const hasTanStackStart = frontend.includes("tanstack-start");
   const hasNextJs = frontend.includes("next");
@@ -1309,6 +1313,7 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
   const hasSolid = frontend.includes("solid");
   const hasWebFrontend =
     hasReactRouter ||
+    hasReactVite ||
     hasTanStackRouter ||
     hasTanStackStart ||
     hasNextJs ||

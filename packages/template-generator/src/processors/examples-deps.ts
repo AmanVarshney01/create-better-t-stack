@@ -82,7 +82,7 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
   const convexBackendExists = vfs.exists(convexBackendPkgPath);
 
   const hasReactWeb = frontend.some((f) =>
-    ["react-router", "tanstack-router", "next", "tanstack-start"].includes(f),
+    ["react-router", "react-vite", "tanstack-router", "next", "tanstack-start"].includes(f),
   );
   const hasNuxt = frontend.includes("nuxt");
   const hasSvelte = frontend.includes("svelte");

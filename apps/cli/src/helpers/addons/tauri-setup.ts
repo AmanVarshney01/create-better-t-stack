@@ -33,10 +33,12 @@ export async function setupTauri(config: ProjectConfig) {
       : hasSvelte
         ? "../build"
         : hasNext
-          ? "../.next"
-          : frontend.includes("react-router")
-            ? "../build/client"
-            : "../dist";
+        ? "../.next"
+        : frontend.includes("react-router")
+          ? "../build/client"
+          : frontend.includes("react-vite")
+            ? "../dist"
+          : "../dist";
 
     const tauriArgs = [
       "@tauri-apps/cli@latest",

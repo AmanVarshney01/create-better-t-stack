@@ -260,6 +260,7 @@ function updateEnvPackageJson(vfs: VirtualFileSystem, config: ProjectConfig): vo
     [
       "tanstack-router",
       "react-router",
+      "react-vite",
       "tanstack-start",
       "next",
       "nuxt",

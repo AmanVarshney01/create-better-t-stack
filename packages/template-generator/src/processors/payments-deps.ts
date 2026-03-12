@@ -1,9 +1,25 @@
-import type { ProjectConfig } from "@better-fullstack/types";
+import type { Frontend, ProjectConfig } from "@better-fullstack/types";
 
 import type { VirtualFileSystem } from "../core/virtual-fs";
 
 import { addPackageDependency } from "../utils/add-deps";
 import { getWebPackagePath, getServerPackagePath } from "../utils/project-paths";
+
+const REACT_WEB_FRONTENDS: Frontend[] = [
+  "react-router",
+  "react-vite",
+  "tanstack-router",
+  "tanstack-start",
+  "next",
+  "redwood",
+];
+
+const CLIENT_CHECKOUT_WEB_FRONTENDS: Frontend[] = [
+  ...REACT_WEB_FRONTENDS,
+  "nuxt",
+  "svelte",
+  "solid",
+];
 
 export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { payments, frontend, backend } = config;
@@ -23,18 +39,7 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
     }
 
     if (vfs.exists(webPath)) {
-      const hasWebFrontend = frontend.some((f) =>
-        [
-          "react-router",
-          "tanstack-router",
-          "tanstack-start",
-          "next",
-          "nuxt",
-          "svelte",
-          "solid",
-          "redwood",
-        ].includes(f),
-      );
+      const hasWebFrontend = frontend.some((f) => CLIENT_CHECKOUT_WEB_FRONTENDS.includes(f));
       if (hasWebFrontend) {
         addPackageDependency({
           vfs,
@@ -66,9 +71,7 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
 
     // Add client-side Stripe.js for web frontends
     if (vfs.exists(webPath)) {
-      const hasReactWeb = frontend.some((f) =>
-        ["react-router", "tanstack-router", "tanstack-start", "next", "redwood"].includes(f),
-      );
+      const hasReactWeb = frontend.some((f) => REACT_WEB_FRONTENDS.includes(f));
       const hasOtherWeb = frontend.some((f) => ["nuxt", "svelte", "solid"].includes(f));
 
       if (hasReactWeb) {
@@ -130,18 +133,7 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
 
     // Add client-side Paddle.js for web frontends
     if (vfs.exists(webPath)) {
-      const hasWebFrontend = frontend.some((f) =>
-        [
-          "react-router",
-          "tanstack-router",
-          "tanstack-start",
-          "next",
-          "nuxt",
-          "svelte",
-          "solid",
-          "redwood",
-        ].includes(f),
-      );
+      const hasWebFrontend = frontend.some((f) => CLIENT_CHECKOUT_WEB_FRONTENDS.includes(f));
 
       if (hasWebFrontend) {
         addPackageDependency({
@@ -174,18 +166,7 @@ export function processPaymentsDeps(vfs: VirtualFileSystem, config: ProjectConfi
 
     // Add client-side Dodo Payments checkout for web frontends
     if (vfs.exists(webPath)) {
-      const hasWebFrontend = frontend.some((f) =>
-        [
-          "react-router",
-          "tanstack-router",
-          "tanstack-start",
-          "next",
-          "nuxt",
-          "svelte",
-          "solid",
-          "redwood",
-        ].includes(f),
-      );
+      const hasWebFrontend = frontend.some((f) => CLIENT_CHECKOUT_WEB_FRONTENDS.includes(f));
 
       if (hasWebFrontend) {
         addPackageDependency({

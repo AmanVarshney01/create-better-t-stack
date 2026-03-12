@@ -128,6 +128,7 @@ export function processDeployDeps(vfs: VirtualFileSystem, config: ProjectConfig)
     } else if (
       frontend.includes("tanstack-router") ||
       frontend.includes("react-router") ||
+      frontend.includes("react-vite") ||
       frontend.includes("solid")
     ) {
       addPackageDependency({ vfs, packagePath: webPkgPath, devDependencies: ["alchemy"] });

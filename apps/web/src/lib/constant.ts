@@ -83,6 +83,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "react-vite",
+      name: "React + Vite",
+      description: "Client-routed React SPA powered by Vite",
+      icon: "https://cdn.simpleicons.org/react/61DAFB",
+      color: "from-sky-400 to-cyan-600",
+      default: false,
+    },
+    {
       id: "tanstack-start",
       name: "TanStack Start",
       description: "Full-stack React and Solid framework powered by TanStack Router",

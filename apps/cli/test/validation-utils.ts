@@ -1,12 +1,10 @@
 import type {
   VirtualFileTree,
-  VirtualFile,
-  VirtualDirectory,
   VirtualNode,
 } from "@better-fullstack/template-generator";
 
 import { parse as parseJsonc, ParseError, printParseErrorCode } from "jsonc-parser";
-import { Project, DiagnosticCategory, SourceFile } from "ts-morph";
+import { Project, DiagnosticCategory } from "ts-morph";
 
 // ============================================================================
 // SHARED TS-MORPH PROJECT (MAJOR PERFORMANCE OPTIMIZATION)
@@ -17,7 +15,7 @@ import { Project, DiagnosticCategory, SourceFile } from "ts-morph";
 let sharedProject: Project | null = null;
 let fileCounter = 0;
 
-function getSharedProject(isTsx: boolean): Project {
+function getSharedProject(): Project {
   if (!sharedProject) {
     sharedProject = new Project({
       useInMemoryFileSystem: true,
@@ -111,8 +109,7 @@ const NON_SYNTAX_ERROR_PATTERNS = [
  * Uses shared project instance for speed - creating projects is expensive!
  */
 export function validateTypeScript(content: string, filename: string): ValidationResult {
-  const isTsx = filename.endsWith(".tsx") || filename.endsWith(".jsx");
-  const project = getSharedProject(isTsx);
+  const project = getSharedProject();
 
   // Use unique filename to avoid conflicts
   const uniqueFilename = `__test_${fileCounter++}_${filename.replace(/[/\\]/g, "_")}`;
@@ -266,7 +263,7 @@ export function getUnprocessedHandlebarsMarkers(content: string): string[] {
     }
 
     // Skip if it starts with special Handlebars chars (these are valid Handlebars, not unprocessed)
-    if (/^[#\/\^!>~]/.test(innerContent)) {
+    if (/^[#/^!>~]/.test(innerContent)) {
       continue;
     }
 

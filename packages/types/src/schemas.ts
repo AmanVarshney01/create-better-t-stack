@@ -37,6 +37,7 @@ export const FrontendSchema = z
   .enum([
     "tanstack-router",
     "react-router",
+    "react-vite",
     "tanstack-start",
     "next",
     "nuxt",

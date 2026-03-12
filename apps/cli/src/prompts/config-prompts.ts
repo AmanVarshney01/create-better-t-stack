@@ -506,7 +506,7 @@ export async function gatherConfig(
     frontend: result.frontend,
     astroIntegration: result.astroIntegration,
     uiLibrary: result.uiLibrary,
-    ...(result.shadcnOptions ?? {}),
+    ...result.shadcnOptions,
     cssFramework: result.cssFramework,
     backend: result.backend,
     runtime: result.runtime,

@@ -62,6 +62,11 @@ export async function getFrontendChoice(
           hint: "A user‑obsessed, standards‑focused, multi‑strategy router",
         },
         {
+          value: "react-vite" as const,
+          label: "React + Vite",
+          hint: "Client-routed React SPA powered by Vite",
+        },
+        {
           value: "next" as const,
           label: "Next.js",
           hint: "The React Framework for the Web",

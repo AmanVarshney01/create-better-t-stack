@@ -6,7 +6,13 @@ import { expectError, expectSuccess, runTRPCTest, type TestConfig } from "./test
 
 describe("API Configurations", () => {
   describe("tRPC API", () => {
-    const reactFrontends = ["tanstack-router", "react-router", "tanstack-start", "next"];
+    const reactFrontends = [
+      "tanstack-router",
+      "react-router",
+      "react-vite",
+      "tanstack-start",
+      "next",
+    ];
 
     for (const frontend of reactFrontends) {
       it(`should work with tRPC + ${frontend}`, async () => {
@@ -574,6 +580,7 @@ describe("API Configurations", () => {
     const frontends = [
       "tanstack-router",
       "react-router",
+      "react-vite",
       "tanstack-start",
       "next",
       "nuxt",

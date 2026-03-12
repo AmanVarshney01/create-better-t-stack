@@ -2,12 +2,12 @@ import { describe, expect, it } from "bun:test";
 
 import { createVirtual } from "../src/index";
 
-function listFiles(node: any, files: string[] = [], prefix = ""): string[] {
+function listFiles(node: any, files: string[] = []): string[] {
   if (node.type === "file") {
     files.push(node.path);
   } else if (node.type === "directory") {
     for (const child of node.children) {
-      listFiles(child, files, prefix);
+      listFiles(child, files);
     }
   }
   return files;

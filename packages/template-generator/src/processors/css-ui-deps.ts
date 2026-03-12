@@ -15,6 +15,7 @@ export function processCSSFrameworkDeps(vfs: VirtualFileSystem, config: ProjectC
     [
       "tanstack-router",
       "react-router",
+      "react-vite",
       "tanstack-start",
       "next",
       "nuxt",
@@ -59,7 +60,7 @@ export function processUILibraryDeps(vfs: VirtualFileSystem, config: ProjectConf
   const { uiLibrary, frontend, backend } = config;
 
   const hasReactWeb = frontend.some((f) =>
-    ["tanstack-router", "react-router", "tanstack-start", "next", "redwood"].includes(f),
+    ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next", "redwood"].includes(f),
   );
   const hasNuxt = frontend.includes("nuxt");
   const hasSolid = frontend.includes("solid") || frontend.includes("solid-start");

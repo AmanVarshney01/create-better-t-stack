@@ -103,6 +103,7 @@ function getFrameworksFromFrontend(frontend: string[]): string[] {
   const frameworkMap: Record<string, string> = {
     "tanstack-router": "react",
     "react-router": "react",
+    "react-vite": "react",
     "tanstack-start": "react",
     next: "next",
     nuxt: "vue",

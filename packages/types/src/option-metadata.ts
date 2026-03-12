@@ -145,6 +145,7 @@ export type OptionCategoryMetadata = {
 const WEB_FRONTEND_VALUES = [
   "tanstack-router",
   "react-router",
+  "react-vite",
   "tanstack-start",
   "next",
   "nuxt",
@@ -294,7 +295,12 @@ const CATEGORY_VALUE_IDS: Record<OptionCategory, readonly string[]> = {
 
 const EXACT_LABEL_OVERRIDES: Partial<Record<OptionCategory, Partial<Record<string, string>>>> = {
   api: { trpc: "tRPC", orpc: "oRPC" },
-  webFrontend: { next: "Next.js", svelte: "SvelteKit", redwood: "RedwoodJS" },
+  webFrontend: {
+    next: "Next.js",
+    "react-vite": "React + Vite",
+    svelte: "SvelteKit",
+    redwood: "RedwoodJS",
+  },
   nativeFrontend: {
     "native-bare": "Expo + Bare",
     "native-uniwind": "Expo + Uniwind",

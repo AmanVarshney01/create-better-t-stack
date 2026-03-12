@@ -92,7 +92,10 @@ export async function displayPostInstallInstructions(
       ? getNativeInstructions(isConvex, isBackendSelf, frontend || [], runCmd)
       : "";
   const pwaInstructions =
-    addons?.includes("pwa") && frontend?.includes("react-router") ? getPwaInstructions() : "";
+    addons?.includes("pwa") &&
+    (frontend?.includes("react-router") || frontend?.includes("react-vite"))
+      ? getPwaInstructions()
+      : "";
   const starlightInstructions = addons?.includes("starlight")
     ? getStarlightInstructions(runCmd)
     : "";

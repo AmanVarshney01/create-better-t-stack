@@ -8,6 +8,7 @@ import { addPackageDependency, type AvailableDependencies } from "../utils/add-d
 const REACT_WEB_FRAMEWORKS: Frontend[] = [
   "tanstack-router",
   "react-router",
+  "react-vite",
   "tanstack-start",
   "next",
 ];

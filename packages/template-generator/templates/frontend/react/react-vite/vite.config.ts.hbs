@@ -1,0 +1,23 @@
+{{#if (eq cssFramework "tailwind")}}
+import tailwindcss from "@tailwindcss/vite";
+{{/if}}
+import react from "@vitejs/plugin-react";
+import path from "node:path";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [
+    {{#if (eq cssFramework "tailwind")}}
+    tailwindcss(),
+    {{/if}}
+    react(),
+  ],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  server: {
+    port: 5173,
+  },
+});

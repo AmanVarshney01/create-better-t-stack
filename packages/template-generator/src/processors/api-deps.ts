@@ -16,7 +16,7 @@ type FrontendType = {
 function getFrontendType(frontend: Frontend[]): FrontendType {
   return {
     hasReactWeb: frontend.some((f) =>
-      ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+      ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next"].includes(f),
     ),
     hasNuxtWeb: frontend.includes("nuxt"),
     hasSvelteWeb: frontend.includes("svelte"),

@@ -12,7 +12,7 @@ export async function processExampleTemplates(
   if (!config.examples || config.examples.length === 0 || config.examples[0] === "none") return;
 
   const hasReactWeb = config.frontend.some((f) =>
-    ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
+    ["tanstack-router", "react-router", "react-vite", "tanstack-start", "next"].includes(f),
   );
   const hasNuxtWeb = config.frontend.includes("nuxt");
   const hasSvelteWeb = config.frontend.includes("svelte");
@@ -64,9 +64,11 @@ export async function processExampleTemplates(
     }
 
     if (hasReactWeb) {
-      const reactFramework = config.frontend.find((f) =>
-        ["next", "react-router", "tanstack-router", "tanstack-start"].includes(f),
-      );
+      const reactFramework = config.frontend.includes("react-vite")
+        ? "react-router"
+        : config.frontend.find((f) =>
+            ["next", "react-router", "tanstack-router", "tanstack-start"].includes(f),
+          );
       if (reactFramework) {
         processTemplatesFromPrefix(
           vfs,

@@ -238,7 +238,7 @@ export function validateApiFrontendCompatibility(
       suggestions: [
         "Use --api orpc (works with all frontends)",
         "Use --api none",
-        "Choose next, react-router, or tanstack-start",
+        "Choose next, react-router, react-vite, or tanstack-start",
       ],
     });
   }
@@ -551,6 +551,10 @@ export function validatePaymentsCompatibility(
 ) {
   if (!payments || payments === "none") return;
 
+  if (payments === "dodo" && frontends.includes("react-vite")) {
+    exitWithError("Dodo Payments are not yet supported for React + Vite projects.");
+  }
+
   if (payments === "polar") {
     if (!auth || auth === "none" || auth !== "better-auth") {
       exitWithError(
@@ -592,13 +596,17 @@ export function validateExamplesCompatibility(
     const includesSvelte = frontendArr.includes("svelte");
     if (includesNuxt || includesSvelte) {
       exitWithError(
-        "The 'ai' example with Convex backend only supports React-based frontends (Next.js, TanStack Router, TanStack Start, React Router). Svelte and Nuxt are not supported with Convex AI.",
+        "The 'ai' example with Convex backend only supports React-based frontends (Next.js, TanStack Router, TanStack Start, React Router, React + Vite). Svelte and Nuxt are not supported with Convex AI.",
       );
     }
   }
 
   if (examplesArr.includes("chat-sdk")) {
     const frontendArr = frontend ?? [];
+
+    if (frontendArr.includes("react-vite")) {
+      exitWithError("The 'chat-sdk' example is not yet supported for React + Vite projects.");
+    }
 
     if (!isExampleChatSdkAllowed(backend, frontendArr, runtime)) {
       if (backend === "none") {

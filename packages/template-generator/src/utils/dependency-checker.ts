@@ -128,6 +128,7 @@ export const ECOSYSTEM_GROUPS: Record<string, string[]> = {
   ],
   storybook: [
     "storybook",
+    "@storybook/react",
     "@storybook/react-vite",
     "@storybook/vue3-vite",
     "@storybook/svelte-vite",
