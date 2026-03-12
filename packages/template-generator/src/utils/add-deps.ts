@@ -102,7 +102,7 @@ export const dependencyVersionMap = {
   "@orpc/client": "^1.12.2",
   "@orpc/openapi": "^1.12.2",
   "@orpc/zod": "^1.12.2",
-  "@orpc/tanstack-query": "^1.12.2",
+  "@orpc/tanstack-query": "^1.13.6",
 
   "@trpc/tanstack-react-query": "^11.7.2",
   "@trpc/server": "^11.7.2",
@@ -121,8 +121,8 @@ export const dependencyVersionMap = {
   "@tanstack/svelte-query": "^5.85.3",
   "@tanstack/svelte-query-devtools": "^5.85.3",
 
-  "@tanstack/vue-query-devtools": "^5.90.2",
-  "@tanstack/vue-query": "^5.90.2",
+  "@tanstack/vue-query-devtools": "^6.1.5",
+  "@tanstack/vue-query": "^5.92.9",
 
   "@tanstack/react-query-devtools": "^5.91.1",
   "@tanstack/react-query": "^5.90.12",

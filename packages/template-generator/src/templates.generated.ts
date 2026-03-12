@@ -1010,6 +1010,11 @@ export default defineNuxtPlugin((nuxt) => {
   const toast = useToast()
 
   const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 5_000,
+      },
+    },
     queryCache: new QueryCache({
       onError: (error) => {
         console.log(error)
@@ -14535,21 +14540,47 @@ import { Chat } from '@ai-sdk/vue'
 import type { UIMessage } from 'ai'
 import { getTextFromMessage } from '@nuxt/ui/utils/ai'
 import { DefaultChatTransport } from 'ai'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
-const config = useRuntimeConfig()
+const SUGGESTIONS = [
+  {
+    title: 'Plan a feature',
+    prompt: 'Help me break down a small product feature into implementation steps.'
+  },
+  {
+    title: 'Design the schema',
+    prompt: 'Suggest a database schema for a collaborative notes app.'
+  },
+  {
+    title: 'Add auth flow',
+    prompt: 'What is the cleanest way to add login, signup, and protected routes here?'
+  },
+  {
+    title: 'Deploy checklist',
+    prompt: 'Give me a production deployment checklist for this stack.'
+  }
+] as const
+
 const messages: UIMessage[] = []
 const input = ref('')
+const aiApiUrl = {{#if (eq backend "self")}}'/api/ai'{{else}}\`\${useRuntimeConfig().public.serverUrl}/ai\`{{/if}}
 
 const chat = new Chat({
   messages,
   transport: new DefaultChatTransport({
-    api: \`\${config.public.serverUrl}/ai\`,
+    api: aiApiUrl,
   }),
   onError(error) {
     console.error('Chat error:', error)
   }
 })
+
+const hasMessages = computed(() => chat.messages.length > 0)
+const isLoading = computed(() => chat.status === 'submitted' || chat.status === 'streaming')
+
+function applySuggestion(prompt: string) {
+  input.value = prompt
+}
 
 async function handleSubmit(e: Event) {
   e.preventDefault()
@@ -14563,27 +14594,95 @@ async function handleSubmit(e: Event) {
 </script>
 
 <template>
-  <UContainer class="h-full flex flex-col overflow-hidden py-4">
-    <div class="flex-1 min-h-0 overflow-y-auto">
-      <UChatMessages :messages="chat.messages" :status="chat.status">
-        <template #content="{ message }">
-          <div class="whitespace-pre-wrap">\\{{ getTextFromMessage(message) }}</div>
-        </template>
-      </UChatMessages>
+  <UContainer class="flex min-h-[calc(100vh-var(--ui-header-height)-2rem)] max-w-5xl flex-col py-4 sm:py-6">
+    <div class="min-h-0 flex-1">
+      <div v-if="!hasMessages" class="flex h-full items-center">
+        <div class="mx-auto flex w-full max-w-3xl flex-col gap-8">
+          <div class="space-y-3 text-center">
+            <UBadge label="AI Chat" color="primary" variant="subtle" class="rounded-full" />
+            <div class="space-y-2">
+              <h1 class="text-3xl font-semibold tracking-tight text-highlighted sm:text-4xl">
+                Ask the starter for your next move.
+              </h1>
+              <p class="mx-auto max-w-2xl text-sm leading-6 text-muted sm:text-base">
+                Use the built-in chat to plan features, sketch schemas, or unblock implementation work without leaving the app.
+              </p>
+            </div>
+          </div>
+
+          <div class="grid gap-3 sm:grid-cols-2">
+            <UButton
+              v-for="suggestion in SUGGESTIONS"
+              :key="suggestion.title"
+              color="neutral"
+              variant="soft"
+              class="h-auto justify-start rounded-2xl px-4 py-4 text-left"
+              @click="applySuggestion(suggestion.prompt)"
+            >
+              <div class="space-y-1">
+                <div class="text-sm font-medium text-highlighted">\\{{ suggestion.title }}</div>
+                <div class="text-sm leading-6 text-muted">\\{{ suggestion.prompt }}</div>
+              </div>
+            </UButton>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="mx-auto flex h-full w-full max-w-3xl min-h-0 flex-col">
+        <UChatMessages
+          :messages="chat.messages"
+          :status="chat.status"
+          :assistant="{
+            variant: 'outline',
+            avatar: {
+              icon: 'i-lucide-bot'
+            }
+          }"
+          :user="{
+            variant: 'soft',
+            avatar: {
+              icon: 'i-lucide-user'
+            }
+          }"
+          class="min-h-0 flex-1 px-1"
+        >
+          <template #content="{ message }">
+            <div class="whitespace-pre-wrap text-sm leading-6">\\{{ getTextFromMessage(message) }}</div>
+          </template>
+        </UChatMessages>
+      </div>
     </div>
 
-    <div class="shrink-0 pt-4 border-t border-gray-200 dark:border-gray-800">
-      <UChatPrompt
-        v-model="input"
-        :error="chat.error"
-        @submit="handleSubmit"
-        placeholder="Type your message..."
-      >
-        <UChatPromptSubmit :status="chat.status" @stop="() => chat.stop()" @reload="() => chat.regenerate()" />
-      </UChatPrompt>
+    <div class="sticky bottom-0 mt-4 border-t border-default bg-default pt-4">
+      <div class="mx-auto w-full max-w-3xl">
+        <UChatPrompt
+          v-model="input"
+          icon="i-lucide-sparkles"
+          variant="soft"
+          :rows="1"
+          :maxrows="8"
+          :loading="isLoading"
+          :error="chat.error"
+          :placeholder="hasMessages ? 'Keep the conversation going...' : 'Ask about your app, schema, auth, or deployment...'"
+          @submit="handleSubmit"
+        >
+          <UChatPromptSubmit
+            class="ms-auto"
+            :status="chat.status"
+            @stop="() => chat.stop()"
+            @reload="() => chat.regenerate()"
+          />
+        </UChatPrompt>
+
+        <div class="mt-2 flex items-center justify-between gap-3 px-1 text-xs text-muted">
+          <span>Press Enter to send and Shift+Enter for a new line.</span>
+          <span>\\{{ hasMessages ? \`\${chat.messages.length} messages\` : 'Ready when you are.' }}</span>
+        </div>
+      </div>
     </div>
   </UContainer>
-</template>`],
+</template>
+`],
   ["examples/ai/web/react/next/src/app/ai/page.tsx.hbs", `{{#if (eq backend "convex")}}
 "use client";
 
@@ -17415,6 +17514,12 @@ const newTodoText = ref('')
 const queryClient = useQueryClient()
 
 const todos = useQuery($orpc.todo.getAll.queryOptions())
+
+onServerPrefetch(async () => {
+  try {
+    await todos.suspense()
+  } catch {}
+})
 
 const createMutation = useMutation($orpc.todo.create.mutationOptions({
   onSuccess: () => {
@@ -22405,18 +22510,11 @@ logs
 
 `],
   ["frontend/nuxt/app/app.config.ts.hbs", `export default defineAppConfig({
-  // https://ui.nuxt.com/getting-started/theme#design-system
   ui: {
     colors: {
       primary: 'emerald',
       neutral: 'neutral',
     },
-    button: {
-      defaultVariants: {
-        // Set default button color to neutral
-        // color: 'neutral'
-      }
-    }
   }
 })
 `],
@@ -22427,6 +22525,8 @@ import { VueQueryDevtools } from '@tanstack/vue-query-devtools'
 </script>
 
 <template>
+    <NuxtAnnouncer />
+    <NuxtRouteAnnouncer />
     <NuxtLoadingIndicator />
     <UApp>
         <NuxtLayout>
@@ -22485,7 +22585,7 @@ const items = computed<NavigationMenuItem[]>(() => [
   ["frontend/nuxt/app/layouts/default.vue.hbs", `<script setup></script>
 
 <template>
-  <div class="grid grid-rows-[auto_1fr] h-svh">
+  <div>
     <Header />
     <UMain>
       <slot />
@@ -22525,6 +22625,12 @@ const healthCheck = useConvexQuery(api.healthCheck.get, {});
 {{else}}
   {{#unless (eq api "none")}}
 const healthCheck = useQuery($orpc.healthCheck.queryOptions())
+
+onServerPrefetch(async () => {
+  try {
+    await healthCheck.suspense()
+  } catch {}
+})
   {{/unless}}
 {{/if}}
 </script>
@@ -22597,6 +22703,9 @@ const healthCheck = useQuery($orpc.healthCheck.queryOptions())
 export default defineNuxtConfig({
   compatibilityDate: 'latest',
   devtools: { enabled: true },
+  experimental: {
+    payloadExtraction: 'client',
+  },
   modules: [
     '@nuxt/ui'
     {{#if (eq backend "convex")}},
@@ -22611,7 +22720,7 @@ export default defineNuxtConfig({
   convex: {
     url: process.env.NUXT_PUBLIC_CONVEX_URL,
   },
-  {{else if (ne backend "self")}}
+  {{else if (and (ne backend "self") (ne backend "none"))}}
   runtimeConfig: {
     public: {
       serverUrl: process.env.NUXT_PUBLIC_SERVER_URL,
@@ -22632,17 +22741,12 @@ export default defineNuxtConfig({
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@nuxt/ui": "4.2.1",
-    "@nuxt/content": "^3.7.1",
-    "@nuxtjs/mdc": "^0.17.4",
-    "nuxt": "^4.1.2",
-    "vue": "^3.5.21",
-    "vue-router": "^4.5.1",
-    "@vue/devtools-api": "^8.0.5"
+    "@nuxt/ui": "^4.5.1",
+    "nuxt": "^4.4.2"
   },
   "devDependencies": {
-    "tailwindcss": "^4.1.13",
-    "@iconify-json/lucide": "^1.2.57"
+    "tailwindcss": "^4.2.1",
+    "@iconify-json/lucide": "^1.2.96"
   }
 }
 `],
