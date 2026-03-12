@@ -123,7 +123,7 @@ export function addBreadcrumb(breadcrumb: Sentry.Breadcrumb): void {
  * );
  */
 export async function withSpan<T>(
-  context: { name: string; op?: string; attributes?: Record<string, unknown> },
+  context: Parameters<typeof Sentry.startSpan>[0],
   callback: () => Promise<T>,
 ): Promise<T> {
   return Sentry.startSpan(context, callback);

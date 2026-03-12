@@ -278,6 +278,8 @@ export const dependencyVersionMap = {
   resend: "^4.5.1",
   "@react-email/components": "^0.0.36",
   "react-email": "^3.0.6",
+  react: "^19.2.3",
+  "@types/react": "^19.2.7",
   nodemailer: "^6.10.1",
   "@types/nodemailer": "^6.4.17",
   postmark: "^4.0.5",
@@ -535,7 +537,7 @@ export const dependencyVersionMap = {
   "dodopayments-checkout": "^1.8.0",
 
   // File Upload - UploadThing
-  uploadthing: "^7.8.0",
+  uploadthing: "^7.7.0",
   "@uploadthing/react": "^7.3.3",
   "@uploadthing/svelte": "^7.3.3",
   "@uploadthing/vue": "^7.3.3",

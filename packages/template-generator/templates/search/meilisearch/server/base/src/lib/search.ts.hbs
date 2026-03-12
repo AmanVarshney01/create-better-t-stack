@@ -75,7 +75,7 @@ export async function deleteDocument(
  */
 export async function deleteDocuments(
   indexName: string,
-  documentIds: (string | number)[]
+  documentIds: string[]
 ): Promise<{ taskUid: number }> {
   const index = searchClient.index(indexName);
   const task = await index.deleteDocuments(documentIds);
@@ -100,7 +100,7 @@ export async function getDocument<T extends Record<string, unknown>>(
 ): Promise<T | null> {
   try {
     const index = searchClient.index<T>(indexName);
-    return await index.getDocument(documentId);
+    return await index.getDocument(documentId) as T;
   } catch {
     return null;
   }
@@ -114,7 +114,8 @@ export async function getDocuments<T extends Record<string, unknown>>(
   options?: { offset?: number; limit?: number; fields?: string[] }
 ): Promise<{ results: T[]; offset: number; limit: number; total: number }> {
   const index = searchClient.index<T>(indexName);
-  return index.getDocuments(options);
+  const result = await index.getDocuments(options);
+  return { results: result.results as T[], offset: result.offset ?? 0, limit: result.limit, total: result.total };
 }
 
 /**

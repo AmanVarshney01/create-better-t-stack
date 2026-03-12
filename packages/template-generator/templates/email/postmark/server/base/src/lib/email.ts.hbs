@@ -42,7 +42,7 @@ export async function sendEmail(options: SendEmailOptions) {
         Name: a.name,
         Content: a.content,
         ContentType: a.contentType,
-        ContentID: a.contentId,
+        ContentID: a.contentId ?? null,
       })),
     });
 

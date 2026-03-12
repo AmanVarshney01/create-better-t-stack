@@ -1,6 +1,8 @@
 import Typesense from "typesense";
-import type { SearchParams, SearchResponse, CollectionCreateSchema } from "typesense/lib/Typesense/Documents";
-import type { CollectionSchema } from "typesense/lib/Typesense/Collection";
+import type { SearchResponse } from "typesense/lib/Typesense/Documents";
+import type { SearchParams } from "typesense/lib/Typesense/Types";
+import type { CollectionCreateSchema } from "typesense/lib/Typesense/Collections";
+import type { CollectionSchema, CollectionUpdateSchema } from "typesense/lib/Typesense/Collection";
 
 /**
  * Typesense client for fast, typo-tolerant search
@@ -31,7 +33,7 @@ export async function search<T extends Record<string, unknown>>(
   collectionName: string,
   query: string,
   queryBy: string,
-  options?: Omit<SearchParams, "q" | "query_by">
+  options?: Omit<SearchParams<T, string>, "q" | "query_by">
 ): Promise<SearchResponse<T>> {
   return searchClient.collections<T>(collectionName).documents().search({
     q: query,
@@ -91,8 +93,8 @@ export async function deleteDocument(
   const result = await searchClient
     .collections(collectionName)
     .documents(documentId)
-    .delete();
-  return { id: result.id };
+    .delete() as Record<string, unknown>;
+  return { id: String(result.id) };
 }
 
 /**
@@ -197,7 +199,7 @@ export async function getCollection(collectionName: string): Promise<CollectionS
  */
 export async function updateCollectionSchema(
   collectionName: string,
-  updates: { fields: Array<{ name: string; drop?: boolean; type?: string; facet?: boolean; optional?: boolean }> }
+  updates: CollectionUpdateSchema
 ): Promise<CollectionSchema> {
   return searchClient.collections(collectionName).update(updates);
 }

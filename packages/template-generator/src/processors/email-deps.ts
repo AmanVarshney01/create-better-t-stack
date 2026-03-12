@@ -103,7 +103,8 @@ export function processEmailDeps(vfs: VirtualFileSystem, config: ProjectConfig):
     addPackageDependency({
       vfs,
       packagePath: targetPath,
-      dependencies: ["@react-email/components", "react-email"],
+      dependencies: ["@react-email/components", "react-email", "react"],
+      devDependencies: ["@types/react"],
     });
   }
 }

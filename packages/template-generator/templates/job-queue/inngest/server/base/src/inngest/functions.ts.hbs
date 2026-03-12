@@ -13,7 +13,7 @@ export const sendEmail = inngest.createFunction(
   },
   { event: "app/email.send" },
   async ({ event, step }) => {
-    const { to, subject, body, templateId } = event.data;
+    const { to } = event.data;
 
     // Use steps for reliable execution with automatic retries
     const result = await step.run("send-email", async () => {
@@ -46,7 +46,7 @@ export const sendNotification = inngest.createFunction(
   },
   { event: "app/notification.send" },
   async ({ event, step }) => {
-    const { userId, type, title, message, data } = event.data;
+    const { userId, type } = event.data;
 
     const result = await step.run("send-notification", async () => {
       // TODO: Implement your notification logic here
