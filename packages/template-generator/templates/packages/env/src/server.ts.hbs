@@ -28,6 +28,9 @@ export const env = createEnv({
 {{/if}}
 {{#if (eq auth "clerk")}}
 		CLERK_SECRET_KEY: z.string().min(1),
+{{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
+		CLERK_PUBLISHABLE_KEY: z.string().min(1),
+{{/if}}
 {{/if}}
 {{#if (eq payments "polar")}}
 		POLAR_ACCESS_TOKEN: z.string().min(1),

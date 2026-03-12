@@ -668,6 +668,7 @@ import { env } from "@{{projectName}}/env/server";
 
 const clerkClient = createClerkClient({
 	secretKey: env.CLERK_SECRET_KEY,
+	publishableKey: env.CLERK_PUBLISHABLE_KEY,
 });
 
 async function authenticateClerkRequest(request: Request) {
@@ -1501,6 +1502,7 @@ import { env } from "@{{projectName}}/env/server";
 
 const clerkClient = createClerkClient({
 	secretKey: env.CLERK_SECRET_KEY,
+	publishableKey: env.CLERK_PUBLISHABLE_KEY,
 });
 
 async function authenticateClerkRequest(request: Request) {
@@ -11640,39 +11642,33 @@ export async function getClerkAuthToken() {
 `],
   ["auth/clerk/web/react/next/src/app/dashboard/page.tsx.hbs", `"use client";
 
-import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  UserButton,
-  useUser,
-} from "@clerk/nextjs";
+import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 
 export default function Dashboard() {
   const user = useUser();
 
+  if (!user.isLoaded) {
+    return <div className="p-6">Loading...</div>;
+  }
+
+  if (!user.user) {
+    return (
+      <div className="p-6">
+        <SignInButton />
+      </div>
+    );
+  }
+
   return (
-    <>
-      <SignedIn>
-        <div className="space-y-4 p-6">
-          <h1 className="text-2xl font-semibold">Dashboard</h1>
-          <p>Welcome {user.user?.fullName ?? user.user?.primaryEmailAddress?.emailAddress}</p>
-          <UserButton />
-        </div>
-      </SignedIn>
-      <SignedOut>
-        <div className="p-6">
-          <SignInButton />
-        </div>
-      </SignedOut>
-    </>
+    <div className="space-y-4 p-6">
+      <h1 className="text-2xl font-semibold">Dashboard</h1>
+      <p>Welcome {user.user.fullName ?? user.user.primaryEmailAddress?.emailAddress}</p>
+      <UserButton />
+    </div>
   );
 }
 `],
-  ["auth/clerk/web/react/next/src/proxy.ts.hbs", `import { env } from "@{{projectName}}/env/server";
-import { clerkMiddleware } from "@clerk/nextjs/server";
-
-void env.CLERK_SECRET_KEY;
+  ["auth/clerk/web/react/next/src/proxy.ts.hbs", `import { clerkMiddleware } from "@clerk/nextjs/server";
 
 export default clerkMiddleware();
 
@@ -11685,36 +11681,33 @@ export const config = {
 	],
 };
 `],
-  ["auth/clerk/web/react/react-router/src/routes/dashboard.tsx.hbs", `import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  UserButton,
-  useUser,
-} from "@clerk/react-router";
+  ["auth/clerk/web/react/react-router/src/routes/dashboard.tsx.hbs", `import { SignInButton, UserButton, useUser } from "@clerk/react-router";
 
 export default function Dashboard() {
   const user = useUser();
 
+  if (!user.isLoaded) {
+    return <div className="p-6">Loading...</div>;
+  }
+
+  if (!user.user) {
+    return (
+      <div className="p-6">
+        <SignInButton />
+      </div>
+    );
+  }
+
   return (
-    <>
-      <SignedIn>
-        <div className="space-y-4 p-6">
-          <h1 className="text-2xl font-semibold">Dashboard</h1>
-          <p>Welcome {user.user?.fullName ?? user.user?.primaryEmailAddress?.emailAddress}</p>
-          <UserButton />
-        </div>
-      </SignedIn>
-      <SignedOut>
-        <div className="p-6">
-          <SignInButton />
-        </div>
-      </SignedOut>
-    </>
+    <div className="space-y-4 p-6">
+      <h1 className="text-2xl font-semibold">Dashboard</h1>
+      <p>Welcome {user.user.fullName ?? user.user.primaryEmailAddress?.emailAddress}</p>
+      <UserButton />
+    </div>
   );
 }
 `],
-  ["auth/clerk/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from "@clerk/react";
+  ["auth/clerk/web/react/tanstack-router/src/routes/dashboard.tsx.hbs", `import { SignInButton, UserButton, useUser } from "@clerk/react";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard")({
@@ -11724,33 +11717,28 @@ export const Route = createFileRoute("/dashboard")({
 function RouteComponent() {
 	const user = useUser();
 
+	if (!user.isLoaded) {
+		return <div className="p-6">Loading...</div>;
+	}
+
+	if (!user.user) {
+		return (
+			<div className="p-6">
+				<SignInButton />
+			</div>
+		);
+	}
+
 	return (
-		<>
-			<SignedIn>
-				<div className="space-y-4 p-6">
-					<h1 className="text-2xl font-semibold">Dashboard</h1>
-					<p>
-						Welcome {user.user?.fullName ?? user.user?.primaryEmailAddress?.emailAddress}
-					</p>
-					<UserButton />
-				</div>
-			</SignedIn>
-			<SignedOut>
-				<div className="p-6">
-					<SignInButton />
-				</div>
-			</SignedOut>
-		</>
+		<div className="space-y-4 p-6">
+			<h1 className="text-2xl font-semibold">Dashboard</h1>
+			<p>Welcome {user.user.fullName ?? user.user.primaryEmailAddress?.emailAddress}</p>
+			<UserButton />
+		</div>
 	);
 }
 `],
-  ["auth/clerk/web/react/tanstack-start/src/routes/dashboard.tsx.hbs", `import {
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  UserButton,
-  useUser,
-} from "@clerk/tanstack-react-start";
+  ["auth/clerk/web/react/tanstack-start/src/routes/dashboard.tsx.hbs", `import { SignInButton, UserButton, useUser } from "@clerk/tanstack-react-start";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard")({
@@ -11760,31 +11748,29 @@ export const Route = createFileRoute("/dashboard")({
 function RouteComponent() {
 	const user = useUser();
 
+	if (!user.isLoaded) {
+		return <div className="p-6">Loading...</div>;
+	}
+
+	if (!user.user) {
+		return (
+			<div className="p-6">
+				<SignInButton />
+			</div>
+		);
+	}
+
 	return (
-		<>
-			<SignedIn>
-				<div className="space-y-4 p-6">
-					<h1 className="text-2xl font-semibold">Dashboard</h1>
-					<p>
-						Welcome {user.user?.fullName ?? user.user?.primaryEmailAddress?.emailAddress}
-					</p>
-					<UserButton />
-				</div>
-			</SignedIn>
-			<SignedOut>
-				<div className="p-6">
-					<SignInButton />
-				</div>
-			</SignedOut>
-		</>
+		<div className="space-y-4 p-6">
+			<h1 className="text-2xl font-semibold">Dashboard</h1>
+			<p>Welcome {user.user.fullName ?? user.user.primaryEmailAddress?.emailAddress}</p>
+			<UserButton />
+		</div>
 	);
 }
 `],
-  ["auth/clerk/web/react/tanstack-start/src/start.ts.hbs", `import { env } from "@{{projectName}}/env/server"
-import { clerkMiddleware } from '@clerk/tanstack-react-start/server'
+  ["auth/clerk/web/react/tanstack-start/src/start.ts.hbs", `import { clerkMiddleware } from '@clerk/tanstack-react-start/server'
 import { createStart } from '@tanstack/react-start'
-
-void env.CLERK_SECRET_KEY
 
 export const startInstance = createStart(() => {
 	return {
@@ -18357,7 +18343,7 @@ import {
 import { Checkbox } from "@{{projectName}}/ui/components/checkbox";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Loader2, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
@@ -18383,7 +18369,7 @@ export default function TodosPage() {
   const toggleTodoMutation = useMutation(api.todos.toggle);
   const deleteTodoMutation = useMutation(api.todos.deleteTodo);
 
-  const handleAddTodo = async (e) => {
+  const handleAddTodo = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = newTodoText.trim();
     if (!text) return;
@@ -18442,7 +18428,7 @@ export default function TodosPage() {
     );
     {{/if}}
 
-  const handleAddTodo = (e) => {
+  const handleAddTodo = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (newTodoText.trim()) {
       createMutation.mutate({ text: newTodoText });
@@ -18601,7 +18587,7 @@ import {
 import { Checkbox } from "@{{projectName}}/ui/components/checkbox";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Loader2, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
@@ -18626,7 +18612,7 @@ export default function Todos() {
   const toggleTodo = useMutation(api.todos.toggle);
   const deleteTodo = useMutation(api.todos.deleteTodo);
 
-  const handleAddTodo = async (e) => {
+  const handleAddTodo = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = newTodoText.trim();
     if (!text) return;
@@ -18685,7 +18671,7 @@ export default function Todos() {
     );
     {{/if}}
 
-  const handleAddTodo = (e) => {
+  const handleAddTodo = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (newTodoText.trim()) {
       createMutation.mutate({ text: newTodoText });
@@ -18845,7 +18831,7 @@ import { Checkbox } from "@{{projectName}}/ui/components/checkbox";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
@@ -18874,7 +18860,7 @@ function TodosRoute() {
   const toggleTodo = useMutation(api.todos.toggle);
   const deleteTodo = useMutation(api.todos.deleteTodo);
 
-  const handleAddTodo = async (e) => {
+  const handleAddTodo = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = newTodoText.trim();
     if (!text) return;
@@ -18933,7 +18919,7 @@ function TodosRoute() {
     );
     {{/if}}
 
-  const handleAddTodo = (e) => {
+  const handleAddTodo = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (newTodoText.trim()) {
       createMutation.mutate({ text: newTodoText });
@@ -19097,7 +19083,7 @@ import { Trash2 } from "lucide-react";
 {{else}}
 import { Loader2, Trash2 } from "lucide-react";
 {{/if}}
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 
 {{#if (eq backend "convex")}}
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -19130,7 +19116,7 @@ function TodosRoute() {
   const toggleTodo = useMutation(api.todos.toggle);
   const removeTodo = useMutation(api.todos.deleteTodo);
 
-  const handleAddTodo = async (e) => {
+  const handleAddTodo = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = newTodoText.trim();
     if (text) {
@@ -19209,7 +19195,7 @@ function TodosRoute() {
   );
     {{/if}}
 
-  const handleAddTodo = (e) => {
+  const handleAddTodo = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (newTodoText.trim()) {
       createMutation.mutate({ text: newTodoText });
@@ -26616,6 +26602,9 @@ export const env = createEnv({
 {{/if}}
 {{#if (eq auth "clerk")}}
 		CLERK_SECRET_KEY: z.string().min(1),
+{{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
+		CLERK_PUBLISHABLE_KEY: z.string().min(1),
+{{/if}}
 {{/if}}
 {{#if (eq payments "polar")}}
 		POLAR_ACCESS_TOKEN: z.string().min(1),
@@ -26836,6 +26825,9 @@ export const web = await Nextjs("web", {
     {{/if}}
     {{#if (eq auth "clerk")}}
     CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
+    {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
+    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
+    {{/if}}
     {{/if}}
     {{#if (and (includes examples "ai") (ne backend "convex"))}}
     GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
@@ -26888,6 +26880,9 @@ export const web = await Nuxt("web", {
     {{/if}}
     {{#if (eq auth "clerk")}}
     CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
+    {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
+    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
+    {{/if}}
     {{/if}}
     {{#if (and (includes examples "ai") (ne backend "convex"))}}
     GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
@@ -26949,6 +26944,9 @@ export const web = await TanStackStart("web", {
     {{/if}}
     {{#if (eq auth "clerk")}}
     CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
+    {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
+    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
+    {{/if}}
     {{/if}}
     {{#if (and (includes examples "ai") (ne backend "convex"))}}
     GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
@@ -27074,6 +27072,9 @@ export const server = await Worker("server", {
     {{/if}}
     {{#if (eq auth "clerk")}}
     CLERK_SECRET_KEY: alchemy.secret.env.CLERK_SECRET_KEY!,
+    {{#if (and (ne api "none") (or (eq backend "self") (eq backend "hono") (eq backend "elysia")))}}
+    CLERK_PUBLISHABLE_KEY: alchemy.env.CLERK_PUBLISHABLE_KEY!,
+    {{/if}}
     {{/if}}
     {{#if (includes examples "ai")}}
     GOOGLE_GENERATIVE_AI_API_KEY: alchemy.secret.env.GOOGLE_GENERATIVE_AI_API_KEY!,
