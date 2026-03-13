@@ -3,6 +3,7 @@ import { EMBEDDED_TEMPLATES } from "@better-t-stack/template-generator";
 import type { ProjectConfig } from "@better-t-stack/types";
 import { NextResponse } from "next/server";
 
+import type { StackState } from "@/lib/constant";
 import { sanitizeStackState } from "@/lib/sanitize-stack-addons";
 
 export async function POST(request: Request) {
@@ -68,26 +69,6 @@ function transformTree(node: VirtualNode): Record<string, unknown> {
     type: "directory" as const,
     children: node.children.map(transformTree),
   };
-}
-
-interface StackState {
-  projectName?: string;
-  webFrontend?: string[];
-  nativeFrontend?: string[];
-  backend?: string;
-  runtime?: string;
-  database?: string;
-  orm?: string;
-  api?: string;
-  auth?: string;
-  payments?: string;
-  addons?: string[];
-  examples?: string[];
-  git?: boolean | string;
-  packageManager?: string;
-  dbSetup?: string;
-  webDeploy?: string;
-  serverDeploy?: string;
 }
 
 function normalizeBoolean(value: boolean | string | undefined, fallback: boolean): boolean {
