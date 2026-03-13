@@ -105,6 +105,17 @@ export const env = createEnv({
 	},
 	runtimeEnv: (import.meta as any).env,
 {{/if}}
+{{else}}
+{{#if (includes frontend "next")}}
+	client: {},
+	runtimeEnv: {},
+{{else if (includes frontend "nuxt")}}
+	client: {},
+{{else}}
+	clientPrefix: "VITE_",
+	client: {},
+	runtimeEnv: (import.meta as any).env,
+{{/if}}
 {{/if}}
 	emptyStringAsUndefined: true,
 });

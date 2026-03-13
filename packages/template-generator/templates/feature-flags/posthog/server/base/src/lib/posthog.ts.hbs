@@ -91,7 +91,7 @@ export async function getFeatureFlagPayload<T = unknown>(
   if (!posthogKey) return undefined;
 
   const client = getPostHog();
-  const payload = await client.getFeatureFlagPayload(flagKey, distinctId, {
+  const payload = await client.getFeatureFlagPayload(flagKey, distinctId, undefined, {
     groups,
   });
   return payload as T | undefined;

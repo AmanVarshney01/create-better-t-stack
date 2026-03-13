@@ -78,6 +78,8 @@ import type {
 } from "./types";
 import { DEFAULT_ECOSYSTEM_WEIGHTS } from "./types";
 
+let _rng: () => number = Math.random;
+
 const SELF_COMPATIBLE_FRONTENDS = new Set([
   "next",
   "tanstack-start",
@@ -91,14 +93,14 @@ const WEB_FRONTENDS = getCategoryOptionIds("webFrontend");
 const NATIVE_FRONTENDS = getCategoryOptionIds("nativeFrontend");
 
 function sampleOne<T>(values: readonly T[]): T {
-  return values[Math.floor(Math.random() * values.length)];
+  return values[Math.floor(_rng() * values.length)];
 }
 
 function sampleScalar<T extends string>(values: readonly T[], noneWeight: number): T {
   const unique = Array.from(new Set(values));
   const nonNone = unique.filter((value) => value !== "none");
   if (nonNone.length === 0) return "none" as T;
-  if (unique.includes("none" as T) && Math.random() < noneWeight) return "none" as T;
+  if (unique.includes("none" as T) && _rng() < noneWeight) return "none" as T;
   return sampleOne(nonNone);
 }
 
@@ -108,7 +110,7 @@ function sampleArray<T extends string>(
   maxItems = 1,
 ): T[] {
   const unique = Array.from(new Set(values)).filter((value) => value !== "none");
-  if (unique.length === 0 || Math.random() < noneWeight) {
+  if (unique.length === 0 || _rng() < noneWeight) {
     return ["none" as T];
   }
 
@@ -116,7 +118,7 @@ function sampleArray<T extends string>(
   const targetCount = Math.max(1, Math.min(maxItems, unique.length));
   while (picked.size < targetCount) {
     picked.add(sampleOne(unique));
-    if (Math.random() < 0.6) break;
+    if (_rng() < 0.6) break;
   }
 
   return Array.from(picked);
@@ -146,7 +148,7 @@ function sampleTypeScriptFrontends(): CLIInput["frontend"] {
     picked.push(native);
   }
 
-  if (picked.length === 0 && Math.random() > 0.25) {
+  if (picked.length === 0 && _rng() > 0.25) {
     picked.push(sampleOne(WEB_FRONTENDS.filter((value) => value !== "none")));
   }
 
@@ -191,8 +193,23 @@ function makeTypeScriptDraft(args: GeneratorArgs): CandidateDraft {
       ? "none"
       : sampleScalar(API_VALUES, 0.2);
 
-  const auth = backend === "none" ? "none" : sampleScalar(AUTH_VALUES, 0.3);
-  const uiLibrary = cssFramework !== "tailwind" ? "none" : sampleScalar(UI_LIBRARY_VALUES, 0.25);
+  let auth = backend === "none" ? "none" : sampleScalar(AUTH_VALUES, 0.3);
+  // better-auth requires a database connection
+  if (auth === "better-auth" && database === "none") auth = "none";
+  const astroIntegration = frontend.includes("astro")
+    ? sampleScalar(ASTRO_INTEGRATION_VALUES, 0.15)
+    : undefined;
+
+  // Most UI libraries are React-only; non-React astro integrations need compatible ones
+  const REACT_ONLY_UI = new Set([
+    "radix-ui", "headless-ui", "chakra-ui", "nextui", "mantine", "base-ui", "react-aria",
+  ]);
+  const needsNonReactUI = astroIntegration && astroIntegration !== "react" && astroIntegration !== "none";
+  let uiLibrary =
+    cssFramework !== "tailwind"
+      ? "none"
+      : sampleScalar(UI_LIBRARY_VALUES, 0.25);
+  if (needsNonReactUI && REACT_ONLY_UI.has(uiLibrary)) uiLibrary = "none";
   const usesShadcn = uiLibrary === "shadcn-ui";
 
   return {
@@ -230,11 +247,14 @@ function makeTypeScriptDraft(args: GeneratorArgs): CandidateDraft {
       search: sampleScalar(SEARCH_VALUES, 0.9),
       fileStorage: sampleScalar(FILE_STORAGE_VALUES, 0.84),
       webDeploy: sampleScalar(WEB_DEPLOY_VALUES, 0.92),
-      serverDeploy: sampleScalar(SERVER_DEPLOY_VALUES, 0.92),
+      serverDeploy: backend === "hono"
+        ? sampleScalar(SERVER_DEPLOY_VALUES, 0.92)
+        : sampleScalar(SERVER_DEPLOY_VALUES.filter((v) => v !== "sst"), 0.92),
       addons: sampleArray(ADDONS_VALUES, 0.82, 2),
-      examples: sampleArray(EXAMPLES_VALUES, 0.9, 1),
-      astroIntegration:
-        frontend.includes("astro") ? sampleScalar(ASTRO_INTEGRATION_VALUES, 0.15) : undefined,
+      examples: backend === "none"
+        ? sampleArray(EXAMPLES_VALUES.filter((v) => v !== "ai"), 0.9, 1)
+        : sampleArray(EXAMPLES_VALUES, 0.9, 1),
+      astroIntegration,
       shadcnBase: usesShadcn ? sampleScalar(SHADCN_BASE_VALUES, 0) : undefined,
       shadcnStyle: usesShadcn ? sampleScalar(SHADCN_STYLE_VALUES, 0) : undefined,
       shadcnIconLibrary: usesShadcn ? sampleScalar(SHADCN_ICON_LIBRARY_VALUES, 0) : undefined,
@@ -281,6 +301,7 @@ function makeGoDraft(args: GeneratorArgs): CandidateDraft {
     ecosystem: "go",
     options: {
       ...createCommonOptions("go", args),
+      auth: sampleScalar(["go-better-auth", "none"] as const, 0.5),
       goWebFramework: sampleScalar(GO_WEB_FRAMEWORK_VALUES, 0.18),
       goOrm: sampleScalar(GO_ORM_VALUES, 0.15),
       goApi: sampleScalar(GO_API_VALUES, 0.35),
@@ -446,52 +467,57 @@ function createDraft(ecosystem: Ecosystem, args: GeneratorArgs): CandidateDraft 
 }
 
 export function generateBatch(args: GeneratorArgs, history: HistoricalLedger): ComboCandidate[] {
-  const requestedEcosystems = weightedDistribution(args.count, args.ecosystems);
-  const combos: ComboCandidate[] = [];
-  const currentBatchKeys = new Set<string>();
-  let attempts = 0;
-  const maxAttempts = Math.max(args.count * 600, 3000);
+  _rng = args.rng ?? Math.random;
+  try {
+    const requestedEcosystems = weightedDistribution(args.count, args.ecosystems);
+    const combos: ComboCandidate[] = [];
+    const currentBatchKeys = new Set<string>();
+    let attempts = 0;
+    const maxAttempts = Math.max(args.count * 600, 3000);
 
-  while (combos.length < args.count && attempts < maxAttempts) {
-    const ecosystem = requestedEcosystems[combos.length] ?? sampleOne(args.ecosystems);
-    attempts += 1;
+    while (combos.length < args.count && attempts < maxAttempts) {
+      const ecosystem = requestedEcosystems[combos.length] ?? sampleOne(args.ecosystems);
+      attempts += 1;
 
-    try {
-      const draft = createDraft(ecosystem, args);
-      const provisionalConfig = validateDraft(draft, "candidate");
-      const provisionalFingerprint = buildHistoryFingerprint(provisionalConfig);
-      const provisionalKey = fingerprintToKey(provisionalFingerprint);
+      try {
+        const draft = createDraft(ecosystem, args);
+        const provisionalConfig = validateDraft(draft, "candidate");
+        const provisionalFingerprint = buildHistoryFingerprint(provisionalConfig);
+        const provisionalKey = fingerprintToKey(provisionalFingerprint);
 
-      if (history.fingerprintKeys.has(provisionalKey) || currentBatchKeys.has(provisionalKey)) {
+        if (history.fingerprintKeys.has(provisionalKey) || currentBatchKeys.has(provisionalKey)) {
+          continue;
+        }
+
+        const name = formatNameFromFingerprint(provisionalFingerprint);
+        if (history.legacyNames.has(name) || combos.some((combo) => combo.name === name)) {
+          continue;
+        }
+
+        const config = validateDraft(draft, name);
+        const fingerprint = buildHistoryFingerprint(config);
+        const fingerprintKey = fingerprintToKey(fingerprint);
+
+        if (history.fingerprintKeys.has(fingerprintKey) || currentBatchKeys.has(fingerprintKey)) {
+          continue;
+        }
+
+        combos.push({
+          ecosystem,
+          name,
+          config,
+          fingerprint,
+          fingerprintKey,
+          command: buildCommand(name, config),
+        });
+        currentBatchKeys.add(fingerprintKey);
+      } catch {
         continue;
       }
-
-      const name = formatNameFromFingerprint(provisionalFingerprint);
-      if (history.legacyNames.has(name) || combos.some((combo) => combo.name === name)) {
-        continue;
-      }
-
-      const config = validateDraft(draft, name);
-      const fingerprint = buildHistoryFingerprint(config);
-      const fingerprintKey = fingerprintToKey(fingerprint);
-
-      if (history.fingerprintKeys.has(fingerprintKey) || currentBatchKeys.has(fingerprintKey)) {
-        continue;
-      }
-
-      combos.push({
-        ecosystem,
-        name,
-        config,
-        fingerprint,
-        fingerprintKey,
-        command: buildCommand(name, config),
-      });
-      currentBatchKeys.add(fingerprintKey);
-    } catch {
-      continue;
     }
-  }
 
-  return combos;
+    return combos;
+  } finally {
+    _rng = Math.random;
+  }
 }

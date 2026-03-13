@@ -16,6 +16,15 @@ See `docs/guidelines/` for deeper reference on these topics:
 - `production-package-testing.md` - how to use the `testing/` workspace for published npm-package validation cycles
 - `template-output-and-validation.md` - template conditional logic, generated output validation, sync test discipline, and framework-specific constraints
 
+## Git Remotes and Pull Requests
+
+This is a fork. There are two remotes:
+
+- `origin` → `Marve10s/Better-Fullstack` (our fork — **always create PRs here**)
+- `upstream` → `AmanVarshney01/create-better-t-stack` (the upstream project — never push PRs here)
+
+When creating pull requests, always target `--repo Marve10s/Better-Fullstack`. Do not let `gh pr create` default to the upstream repo.
+
 ## Workflow
 
 - Never start the dev server (`turbo dev`, `bun run dev`, `vite dev`, etc.) unless explicitly asked to.

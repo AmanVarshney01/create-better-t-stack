@@ -112,9 +112,9 @@ fastify.route({
 		try {
 			const url = new URL(request.url, `http://${request.headers.host}`);
 			const headers = new Headers();
-			Object.entries(request.headers).forEach(([key, value]) => {
-				if (value) headers.append(key, value.toString());
-			});
+			for (const [key, value] of Object.entries(request.headers)) {
+				if (value) headers.append(key, String(value));
+			}
 			const req = new Request(url.toString(), {
 				method: request.method,
 				headers,

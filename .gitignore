@@ -47,6 +47,8 @@ yarn.lock
 
 .smoke
 .smoke-e2e
+.smoke-output
+.smoke-manifest.json
 reports/
 COMPARISON-PLAN.md
 

@@ -1,7 +1,9 @@
 package main
 
 import (
+{{#if (or (or (or (eq goWebFramework "gin") (eq goWebFramework "echo")) (eq goApi "grpc-go")) (or (eq auth "go-better-auth") (eq goLogging "zap")))}}
 	"os"
+{{/if}}
 {{#if (or (or (eq goWebFramework "gin") (eq goWebFramework "echo")) (eq auth "go-better-auth"))}}
 	"net/http"
 {{/if}}

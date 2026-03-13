@@ -21,8 +21,8 @@ export const queryClient = new QueryClient({
 });
 
 // Generate schema and scalars for GQty client
-const generatedSchema = createGeneratedSchema(g);
-const scalarsEnumsHash = createScalarsEnumsHash(g);
+const generatedSchema = createGeneratedSchema(g as any);
+const scalarsEnumsHash = createScalarsEnumsHash(g as any);
 
 // Create type-safe GraphQL client
 export const client = createClient<{

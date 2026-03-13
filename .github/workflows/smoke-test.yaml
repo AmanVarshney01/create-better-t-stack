@@ -1,0 +1,142 @@
+name: Smoke Test
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/types/**"
+      - "packages/template-generator/**"
+      - "apps/cli/src/**"
+      - "testing/**"
+      - ".github/workflows/smoke-test.yaml"
+  pull_request:
+    paths:
+      - "packages/types/**"
+      - "packages/template-generator/**"
+      - "apps/cli/src/**"
+      - "testing/**"
+      - ".github/workflows/smoke-test.yaml"
+  schedule:
+    - cron: "0 3 * * *" # Nightly at 3am UTC
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: "PRNG seed override (default: commit SHA)"
+        required: false
+        type: string
+      ecosystem:
+        description: "Single ecosystem to test (leave empty for all)"
+        required: false
+        type: choice
+        options:
+          - ""
+          - typescript
+          - rust
+          - python
+          - go
+      count:
+        description: "Number of combos to generate"
+        required: false
+        type: number
+        default: 14
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoke-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: Smoke Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Setup Protoc
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python + uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+
+      - name: Cache Dependencies
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build Packages
+        run: |
+          cd packages/types && bun run build
+          cd ../template-generator && bun run build
+          cd ../../apps/cli && bun run build
+
+      - name: Run Smoke Tests
+        env:
+          INPUT_SEED: ${{ inputs.seed }}
+          FALLBACK_SEED: ${{ github.sha }}
+          SMOKE_ECOSYSTEM: ${{ inputs.ecosystem }}
+          SMOKE_COUNT: ${{ inputs.count || '14' }}
+        run: |
+          SEED="${INPUT_SEED:-$FALLBACK_SEED}"
+
+          ECOSYSTEM_FLAG=""
+          if [ -n "$SMOKE_ECOSYSTEM" ]; then
+            ECOSYSTEM_FLAG="--ecosystem $SMOKE_ECOSYSTEM"
+          fi
+
+          bun run testing/smoke-test.ts \
+            --seed "$SEED" \
+            --count "$SMOKE_COUNT" \
+            $ECOSYSTEM_FLAG \
+            --output testing/.smoke-output
+
+      - name: Post Step Summary
+        if: always()
+        run: |
+          if [ -f testing/.smoke-output/summary.md ]; then
+            cat testing/.smoke-output/summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-results
+          path: testing/.smoke-output/
+          if-no-files-found: warn
+          retention-days: 7

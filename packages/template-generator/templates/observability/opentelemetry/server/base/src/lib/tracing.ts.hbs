@@ -6,7 +6,6 @@ import { Resource } from "@opentelemetry/resources";
 import {
   ATTR_SERVICE_NAME,
   ATTR_SERVICE_VERSION,
-  ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
 } from "@opentelemetry/semantic-conventions";
 import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
 
@@ -23,7 +22,7 @@ const otlpEndpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT || "http://localhos
 const resource = new Resource({
   [ATTR_SERVICE_NAME]: serviceName,
   [ATTR_SERVICE_VERSION]: serviceVersion,
-  [ATTR_DEPLOYMENT_ENVIRONMENT_NAME]: environment,
+  "deployment.environment.name": environment,
 });
 
 // Configure trace exporter

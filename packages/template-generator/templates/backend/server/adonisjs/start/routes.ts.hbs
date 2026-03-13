@@ -105,7 +105,7 @@ router.any("/rpc/*", async ({ request, response }) => {
 {{#if (eq auth "better-auth")}}
 		context: await createContext({ req: request.request as any }),
 {{else}}
-		context: {},
+		context: { session: null },
 {{/if}}
 	});
 	if (!result.matched) {
@@ -120,7 +120,7 @@ router.any("/api-reference/*", async ({ request, response }) => {
 {{#if (eq auth "better-auth")}}
 		context: await createContext({ req: request.request as any }),
 {{else}}
-		context: {},
+		context: { session: null },
 {{/if}}
 	});
 	if (!result.matched) {

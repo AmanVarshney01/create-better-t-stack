@@ -82,7 +82,7 @@ def send_email_task(
         }
     except Exception as exc:
         logger.error(f"Failed to send email to {to_email}: {exc}")
-        raise self.retry(exc=exc)
+        raise self.retry(exc=exc) from exc
 
 
 @celery_app.task(
@@ -124,7 +124,7 @@ def process_data_task(
         processed_items = 0
 
         # Simulate processing each item
-        for i in range(total_items):
+        for _i in range(total_items):
             time.sleep(0.5)  # Simulate work
             processed_items += 1
             self.update_state(
@@ -146,7 +146,7 @@ def process_data_task(
         }
     except Exception as exc:
         logger.error(f"Data processing failed: {exc}")
-        raise self.retry(exc=exc)
+        raise self.retry(exc=exc) from exc
 
 
 @celery_app.task(bind=True, name="app.tasks.scheduled_cleanup_task")

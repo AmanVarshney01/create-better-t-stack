@@ -140,6 +140,7 @@ export const dependencyVersionMap = {
   // AdonisJS
   "@adonisjs/core": "^6.20.0",
   "@adonisjs/cors": "^2.2.1",
+  "@adonisjs/assembler": "^8.0.0",
   "@adonisjs/tsconfig": "^1.4.1",
 
   // Nitro
@@ -537,12 +538,12 @@ export const dependencyVersionMap = {
   "dodopayments-checkout": "^1.8.0",
 
   // File Upload - UploadThing
-  uploadthing: "^7.7.0",
+  uploadthing: "^7.7.4",
   "@uploadthing/react": "^7.3.3",
   "@uploadthing/svelte": "^7.3.3",
   "@uploadthing/vue": "^7.3.3",
   "@uploadthing/solid": "^7.3.3",
-  "@uploadthing/nuxt": "^7.3.0",
+  "@uploadthing/nuxt": "^7.1.10",
   "@uploadthing/expo": "^7.3.0",
 
   // File Upload - FilePond
@@ -593,7 +594,8 @@ export const dependencyVersionMap = {
   "@opentelemetry/auto-instrumentations-node": "^0.70.1",
   "@opentelemetry/exporter-trace-otlp-http": "^0.212.0",
   "@opentelemetry/exporter-metrics-otlp-http": "^0.212.0",
-  "@opentelemetry/resources": "^1.30.1",
+  "@opentelemetry/resources": "^2.0.0",
+  "@opentelemetry/sdk-metrics": "^2.2.0",
   "@opentelemetry/semantic-conventions": "^1.40.0",
 
   // Sentry

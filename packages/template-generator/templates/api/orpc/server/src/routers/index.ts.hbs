@@ -1,5 +1,5 @@
 {{#if (eq api "orpc")}}
-import { {{#if (eq auth "better-auth")}}protectedProcedure, {{/if}}publicProcedure } from "../index";
+import { {{#if (eq auth "better-auth")}}protectedProcedure, {{/if}}publicProcedure } from "../index.js";
 import type { RouterClient } from "@orpc/server";
 
 export const appRouter = {
@@ -21,7 +21,7 @@ export type AppRouterClient = RouterClient<typeof appRouter>;
 import {
   {{#if (eq auth "better-auth")}}protectedProcedure, {{/if}}publicProcedure,
   router,
-} from "../index";
+} from "../index.js";
 
 export const appRouter = router({
   healthCheck: publicProcedure.query(() => {

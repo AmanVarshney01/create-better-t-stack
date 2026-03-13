@@ -1,11 +1,11 @@
-import { g, buildSchema, InferResolvers } from "garph";
+import { g, buildSchema, type InferResolvers } from "garph";
 
 // Define GraphQL types using Garph's type-safe builder
 {{#if (eq auth "better-auth")}}
 export const userType = g.type("User", {
   id: g.string(),
   email: g.string(),
-  name: g.string().nullable(),
+  name: g.string().optional(),
 });
 
 export const privateDataType = g.type("PrivateData", {
@@ -17,12 +17,12 @@ export const privateDataType = g.type("PrivateData", {
 export const queryType = g.type("Query", {
   health: g.string().description("Health check endpoint"),
 {{#if (eq auth "better-auth")}}
-  privateData: g.ref(privateDataType).nullable().description("Get private data (requires authentication)"),
+  privateData: g.ref(privateDataType).optional().description("Get private data (requires authentication)"),
 {{/if}}
 });
 
 export const mutationType = g.type("Mutation", {
-  _empty: g.string().nullable().description("Placeholder mutation"),
+  _empty: g.string().optional().description("Placeholder mutation"),
 });
 
 // Export types for resolver type inference

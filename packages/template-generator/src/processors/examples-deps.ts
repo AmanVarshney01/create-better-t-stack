@@ -248,6 +248,12 @@ function setupAIDependencies(vfs: VirtualFileSystem, config: ProjectConfig): voi
       else if (hasSvelte) deps.push("@ai-sdk/svelte");
       else if (hasReactWeb) deps.push("@ai-sdk/react", "streamdown");
     }
+    // AI example React templates always use lucide-react icons (Send, Loader2)
+    // regardless of the configured shadcn icon library
+    if (hasReactWeb) {
+      deps.push("lucide-react");
+    }
+
     if (deps.length > 0) {
       addPackageDependency({ vfs, packagePath: webPkgPath, dependencies: deps });
     }

@@ -55,7 +55,7 @@ export function isFeatureEnabled(gb: GrowthBook, featureKey: string): boolean {
  * const buttonColor = getFeatureValue(gb, "button-color", "blue");
  */
 export function getFeatureValue<T>(gb: GrowthBook, featureKey: string, defaultValue: T): T {
-  return gb.getFeatureValue(featureKey, defaultValue);
+  return gb.getFeatureValue(featureKey, defaultValue) as T;
 }
 
 /**
@@ -73,25 +73,10 @@ export function runExperiment<T>(
   gb: GrowthBook,
   experiment: {
     key: string;
-    variations: T[];
+    variations: [T, T, ...T[]];
   },
 ) {
   return gb.run(experiment);
-}
-
-/**
- * Track an event for analytics
- *
- * @example
- * const gb = await createGrowthBook({ id: "user-123" });
- * trackEvent(gb, "purchase", { value: 99.99 });
- */
-export function trackEvent(
-  gb: GrowthBook,
-  eventName: string,
-  properties?: Record<string, unknown>,
-) {
-  gb.track(eventName, properties);
 }
 
 // Re-export GrowthBook for advanced usage

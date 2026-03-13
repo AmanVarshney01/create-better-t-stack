@@ -28,6 +28,18 @@ function getFrontendType(frontend: Frontend[]): FrontendType {
   };
 }
 
+function addSolidRouterDevtools(vfs: VirtualFileSystem, frontend: Frontend[]): void {
+  const webPath = "apps/web/package.json";
+  if (!vfs.exists(webPath)) return;
+  const hasSolid = frontend.includes("solid") || frontend.includes("solid-start");
+  if (!hasSolid) return;
+  addPackageDependency({
+    vfs,
+    packagePath: webPath,
+    devDependencies: ["@tanstack/solid-router-devtools"],
+  });
+}
+
 export function processApiDeps(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const { api, backend, frontend, auth } = config;
   const frontendType = getFrontendType(frontend);
@@ -36,6 +48,9 @@ export function processApiDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
     addConvexDeps(vfs, frontend, frontendType);
     return;
   }
+
+  // Solid frontend always needs router devtools regardless of API choice
+  addSolidRouterDevtools(vfs, frontend);
 
   if (api === "none") return;
 

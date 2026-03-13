@@ -46,7 +46,7 @@ export function processBackendDeps(vfs: VirtualFileSystem, config: ProjectConfig
     deps.push("encore.dev");
   } else if (backend === "adonisjs") {
     deps.push("@adonisjs/core", "@adonisjs/cors", "reflect-metadata");
-    devDeps.push("@adonisjs/tsconfig", "@types/node");
+    devDeps.push("@adonisjs/assembler", "@adonisjs/tsconfig", "@types/node");
   } else if (backend === "nitro") {
     deps.push("nitropack", "h3");
   } else if (backend === "fets") {

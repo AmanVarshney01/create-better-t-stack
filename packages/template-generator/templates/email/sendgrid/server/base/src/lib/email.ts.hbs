@@ -32,12 +32,12 @@ export async function sendEmail(options: SendEmailOptions) {
   const toAddresses = Array.isArray(to) ? to : [to];
 
   try {
-    const msg: sgMail.MailDataRequired = {
+    const msg = {
       to: toAddresses,
       from: fromAddress,
       subject,
-      html: html || undefined,
-      text: text || undefined,
+      ...(html ? { html } : {}),
+      ...(text ? { text } : {}),
       replyTo: replyTo || undefined,
       attachments: attachments?.map((a) => ({
         filename: a.filename,
@@ -48,11 +48,11 @@ export async function sendEmail(options: SendEmailOptions) {
       })),
       categories,
       sendAt,
-    };
+    } as sgMail.MailDataRequired;
 
-    const response = await sgMail.send(msg);
-    console.log("Email sent:", response[0].statusCode);
-    return { success: true, statusCode: response[0].statusCode };
+    const [response] = await sgMail.send(msg);
+    console.log("Email sent:", response.statusCode);
+    return { success: true, statusCode: response.statusCode };
   } catch (error) {
     console.error("Email sending error:", error);
     throw error;
@@ -75,23 +75,21 @@ export async function sendBatchEmails(
 ) {
   const fromAddress = process.env.SENDGRID_FROM_EMAIL || "noreply@example.com";
 
-  const messages: sgMail.MailDataRequired[] = emails.map((email) => ({
+  const messages = emails.map((email) => ({
     to: Array.isArray(email.to) ? email.to : [email.to],
     from: email.from || fromAddress,
     subject: email.subject,
-    html: email.html || undefined,
-    text: email.text || undefined,
+    ...(email.html ? { html: email.html } : {}),
+    ...(email.text ? { text: email.text } : {}),
     categories: email.categories,
-  }));
+  })) as sgMail.MailDataRequired[];
 
   try {
-    const responses = await sgMail.send(messages);
+    const [response] = await sgMail.send(messages);
     console.log(`Batch of ${emails.length} emails sent`);
     return {
       success: true,
-      results: responses.map((r) => ({
-        statusCode: r[0].statusCode,
-      })),
+      statusCode: response.statusCode,
     };
   } catch (error) {
     console.error("Batch email sending error:", error);
@@ -116,17 +114,17 @@ export async function sendTemplateEmail(options: {
   const toAddresses = Array.isArray(to) ? to : [to];
 
   try {
-    const msg: sgMail.MailDataRequired = {
+    const msg = {
       to: toAddresses,
       from: fromAddress,
       templateId,
       dynamicTemplateData,
       categories,
-    };
+    } as sgMail.MailDataRequired;
 
-    const response = await sgMail.send(msg);
-    console.log("Template email sent:", response[0].statusCode);
-    return { success: true, statusCode: response[0].statusCode };
+    const [response] = await sgMail.send(msg);
+    console.log("Template email sent:", response.statusCode);
+    return { success: true, statusCode: response.statusCode };
   } catch (error) {
     console.error("Template email sending error:", error);
     throw error;

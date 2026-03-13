@@ -4,8 +4,6 @@ import os
 
 from dotenv import load_dotenv
 
-load_dotenv()
-
 {{#if (eq pythonWebFramework "fastapi")}}
 from contextlib import asynccontextmanager
 
@@ -151,6 +149,8 @@ from app.celery_schemas import (
     TaskRevokeResponse,
 )
 {{/if}}
+
+load_dotenv()
 
 
 @asynccontextmanager
@@ -892,6 +892,8 @@ import django
 from django.conf import settings
 from django.http import JsonResponse
 from django.urls import path
+
+load_dotenv()
 
 if not settings.configured:
     settings.configure(

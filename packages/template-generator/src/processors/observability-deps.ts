@@ -42,6 +42,7 @@ export function processObservabilityDeps(vfs: VirtualFileSystem, config: Project
         "@opentelemetry/exporter-trace-otlp-http",
         "@opentelemetry/exporter-metrics-otlp-http",
         "@opentelemetry/resources",
+        "@opentelemetry/sdk-metrics",
         "@opentelemetry/semantic-conventions",
       ],
     });

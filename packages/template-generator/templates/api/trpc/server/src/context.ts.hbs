@@ -104,21 +104,23 @@ import { fromNodeHeaders } from "better-auth/node";
 import { auth } from "@{{projectName}}/auth";
 {{/if}}
 
-export async function createContext(opts: CreateExpressContextOptions) {
 {{#if (eq auth "better-auth")}}
+export async function createContext(opts: CreateExpressContextOptions) {
 	const session = await auth.api.getSession({
 		headers: fromNodeHeaders(opts.req.headers),
 	});
 	return {
 		session,
 	};
+}
 {{else}}
+export async function createContext(_opts: CreateExpressContextOptions) {
   // No auth configured
 	return {
 		session: null,
 	};
-{{/if}}
 }
+{{/if}}
 
 {{else if (eq backend 'fets')}}
 {{#if (eq auth "better-auth")}}

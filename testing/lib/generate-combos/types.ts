@@ -6,6 +6,7 @@ export type GeneratorArgs = {
   count: number;
   ecosystems: readonly Ecosystem[];
   installMode: InstallMode;
+  rng?: () => number;
 };
 
 export const DEFAULT_ARGS: GeneratorArgs = {

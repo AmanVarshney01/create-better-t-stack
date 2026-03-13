@@ -1,6 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 import { initClient, tsRestFetchApi } from "@ts-rest/core";
-import { initTsrReactQuery } from "@ts-rest/react-query";
+import { initTsrReactQuery } from "@ts-rest/react-query/v5";
 import { contract } from "@{{projectName}}/api/index";
 
 export const queryClient = new QueryClient({
@@ -12,13 +12,15 @@ export const queryClient = new QueryClient({
 	},
 });
 
-const client = initClient(contract, {
+const clientArgs = {
 	baseUrl: "/api/rest",
 	baseHeaders: {},
 {{#if (eq auth "better-auth")}}
-	credentials: "include",
+	credentials: "include" as const,
 {{/if}}
 	api: tsRestFetchApi,
-});
+};
 
-export const tsr = initTsrReactQuery(contract, client);
+const client = initClient(contract, clientArgs);
+
+export const tsr = initTsrReactQuery(contract, clientArgs);

@@ -9,7 +9,6 @@ export interface SendEmailOptions {
   body: string;
   from?: string;
   name?: string;
-  reply?: string;
   headers?: Record<string, string>;
   subscribed?: boolean;
 }
@@ -19,7 +18,7 @@ export interface SendEmailOptions {
  * @see https://docs.useplunk.com/api-reference/emails/send
  */
 export async function sendEmail(options: SendEmailOptions) {
-  const { to, subject, body, name, reply, headers, subscribed } = options;
+  const { to, subject, body, name, headers, subscribed } = options;
 
   try {
     const success = await plunk.emails.send({
@@ -27,7 +26,6 @@ export async function sendEmail(options: SendEmailOptions) {
       subject,
       body,
       name,
-      reply,
       headers,
       subscribed,
     });
@@ -47,7 +45,7 @@ export async function sendEmail(options: SendEmailOptions) {
 export interface TrackEventOptions {
   event: string;
   email: string;
-  data?: Record<string, string | number | boolean>;
+  data?: Record<string, string | { persistent: boolean; value: string }>;
 }
 
 /**

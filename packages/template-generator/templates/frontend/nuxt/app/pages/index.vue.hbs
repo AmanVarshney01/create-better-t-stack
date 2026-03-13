@@ -4,8 +4,9 @@ import { api } from "@{{ projectName }}/backend/convex/_generated/api";
 import { useConvexQuery } from "convex-vue";
 {{else}}
   {{#unless (eq api "none")}}
-const { $orpc } = useNuxtApp()
 import { useQuery } from '@tanstack/vue-query'
+
+const { $orpc } = useNuxtApp()
   {{/unless}}
 {{/if}}
 
