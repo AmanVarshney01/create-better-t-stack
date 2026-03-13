@@ -8,7 +8,7 @@ import {
 } from "nuqs/server";
 
 import { DEFAULT_STACK, type StackState, TECH_OPTIONS } from "@/lib/constant";
-import { sanitizeStackAddons } from "@/lib/sanitize-stack-addons";
+import { sanitizeStackState } from "@/lib/sanitize-stack-addons";
 import { stackUrlKeys } from "@/lib/stack-url-keys";
 
 const getValidIds = (category: keyof typeof TECH_OPTIONS): string[] => {
@@ -77,7 +77,7 @@ export async function loadStackParams(
   searchParams: Parameters<typeof rawLoadStackParams>[0],
 ): Promise<StackState> {
   const stackState = await rawLoadStackParams(searchParams);
-  return sanitizeStackAddons(stackState);
+  return sanitizeStackState(stackState);
 }
 
 export type LoadedStackState = Awaited<ReturnType<typeof loadStackParams>>;
