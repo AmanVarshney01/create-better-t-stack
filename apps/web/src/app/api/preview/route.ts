@@ -3,9 +3,11 @@ import { EMBEDDED_TEMPLATES } from "@better-t-stack/template-generator";
 import type { ProjectConfig } from "@better-t-stack/types";
 import { NextResponse } from "next/server";
 
+import { sanitizeStackState } from "@/lib/sanitize-stack-addons";
+
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = sanitizeStackState((await request.json()) as StackState);
 
     // Convert StackState from web to CLI options format
     const config = stackStateToConfig(body);
