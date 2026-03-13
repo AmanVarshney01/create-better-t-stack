@@ -30,6 +30,11 @@ export const env = createEnv({
 		POLAR_ACCESS_TOKEN: z.string().min(1),
 		POLAR_SUCCESS_URL: z.url(),
 {{/if}}
+{{#if (eq payments "dodo")}}
+		DODO_PAYMENTS_API_KEY: z.string().min(1),
+		DODO_PAYMENTS_WEBHOOK_SECRET: z.string().min(1),
+		DODO_PAYMENTS_ENVIRONMENT: z.enum(["test_mode", "live_mode"]),
+{{/if}}
 		CORS_ORIGIN: z.url(),
 		NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 	},
