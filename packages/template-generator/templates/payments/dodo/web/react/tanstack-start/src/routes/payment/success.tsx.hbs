@@ -1,0 +1,24 @@
+import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { getUser } from "@/functions/get-user";
+
+export const Route = createFileRoute("/payment/success")({
+	component: SuccessPage,
+	validateSearch: (search) => ({
+		checkout_id: search.checkout_id as string,
+	}),
+	beforeLoad: async () => {
+		const session = await getUser();
+		return { session };
+	},
+});
+
+function SuccessPage() {
+	const { checkout_id } = useSearch({ from: "/payment/success" });
+
+	return (
+		<div className="container mx-auto px-4 py-8">
+			<h1>Payment Successful!</h1>
+			{checkout_id && <p>Checkout ID: {checkout_id}</p>}
+		</div>
+	);
+}
