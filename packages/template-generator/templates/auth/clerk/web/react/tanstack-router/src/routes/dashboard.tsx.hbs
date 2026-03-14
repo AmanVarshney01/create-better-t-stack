@@ -1,0 +1,30 @@
+import { SignInButton, UserButton, useUser } from "@clerk/react";
+import { createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/dashboard")({
+	component: RouteComponent,
+});
+
+function RouteComponent() {
+	const user = useUser();
+
+	if (!user.isLoaded) {
+		return <div className="p-6">Loading...</div>;
+	}
+
+	if (!user.user) {
+		return (
+			<div className="p-6">
+				<SignInButton />
+			</div>
+		);
+	}
+
+	return (
+		<div className="space-y-4 p-6">
+			<h1 className="text-2xl font-semibold">Dashboard</h1>
+			<p>Welcome {user.user.fullName ?? user.user.primaryEmailAddress?.emailAddress}</p>
+			<UserButton />
+		</div>
+	);
+}

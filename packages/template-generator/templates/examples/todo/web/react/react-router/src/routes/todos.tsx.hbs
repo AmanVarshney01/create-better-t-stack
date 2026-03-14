@@ -9,7 +9,7 @@ import {
 import { Checkbox } from "@{{projectName}}/ui/components/checkbox";
 import { Input } from "@{{projectName}}/ui/components/input";
 import { Loader2, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 
 {{#if (eq backend "convex")}}
 import { useMutation, useQuery } from "convex/react";
@@ -34,7 +34,7 @@ export default function Todos() {
   const toggleTodo = useMutation(api.todos.toggle);
   const deleteTodo = useMutation(api.todos.deleteTodo);
 
-  const handleAddTodo = async (e) => {
+  const handleAddTodo = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const text = newTodoText.trim();
     if (!text) return;
@@ -93,7 +93,7 @@ export default function Todos() {
     );
     {{/if}}
 
-  const handleAddTodo = (e) => {
+  const handleAddTodo = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (newTodoText.trim()) {
       createMutation.mutate({ text: newTodoText });

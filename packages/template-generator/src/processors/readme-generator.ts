@@ -22,6 +22,28 @@ function getDesktopStaticBuildNote(frontend: ProjectConfig["frontend"]): string 
   )} needs a static/export build configuration before desktop packaging will work.`;
 }
 
+function getClerkQuickstartUrl(frontend: ProjectConfig["frontend"]): string {
+  if (frontend.includes("next")) return "https://clerk.com/docs/nextjs/getting-started/quickstart";
+  if (frontend.includes("react-router")) {
+    return "https://clerk.com/docs/react-router/getting-started/quickstart";
+  }
+  if (frontend.includes("tanstack-start")) {
+    return "https://clerk.com/docs/tanstack-react-start/getting-started/quickstart";
+  }
+  if (frontend.includes("tanstack-router")) {
+    return "https://clerk.com/docs/react/getting-started/quickstart";
+  }
+  if (
+    frontend.includes("native-bare") ||
+    frontend.includes("native-uniwind") ||
+    frontend.includes("native-unistyles")
+  ) {
+    return "https://clerk.com/docs/expo/getting-started/quickstart";
+  }
+
+  return "https://clerk.com/docs";
+}
+
 export function processReadme(vfs: VirtualFileSystem, config: ProjectConfig): void {
   const content = generateReadmeContent(config);
   vfs.writeFile("README.md", content);
@@ -51,6 +73,11 @@ function generateReadmeContent(options: ProjectConfig): string {
   const hasReactWeb = frontend.some((f) =>
     ["tanstack-router", "react-router", "tanstack-start", "next"].includes(f),
   );
+  const hasClerkServerFrontend = frontend.some((f) =>
+    ["next", "react-router", "tanstack-start"].includes(f),
+  );
+  const hasClerkBackendRequestAuth =
+    auth === "clerk" && api !== "none" && ["self", "hono", "elysia"].includes(backend);
   const hasSvelte = frontend.includes("svelte");
   const hasAstro = frontend.includes("astro");
   const packageManagerRunCmd = `${packageManager} run`;
@@ -96,10 +123,33 @@ ${
 
 - Follow the guide: [Convex + Clerk](https://docs.convex.dev/auth/clerk)
 - Set \`CLERK_JWT_ISSUER_DOMAIN\` in Convex Dashboard
-- Set \`CLERK_PUBLISHABLE_KEY\` in \`apps/*/.env\``
+- Set your Clerk publishable key in \`apps/*/.env\`${
+        hasClerkServerFrontend
+          ? "\n- Set `CLERK_SECRET_KEY` in the web app env for Clerk server middleware"
+          : ""
+      }`
     : ""
 }`
     : generateDatabaseSetup(options, packageManagerRunCmd)
+}
+${
+  !isConvex && auth === "clerk"
+    ? `
+## Clerk Authentication Setup
+
+- Follow the guide: [Clerk Quickstart](${getClerkQuickstartUrl(frontend)})
+- Set your Clerk publishable key in \`apps/*/.env\`${
+        hasClerkServerFrontend
+          ? "\n- Set `CLERK_SECRET_KEY` in the web app env for Clerk server middleware"
+          : ""
+      }${
+        hasClerkBackendRequestAuth
+          ? `\n- Set \`CLERK_PUBLISHABLE_KEY\` in the ${
+              backend === "self" ? "web app" : "server app"
+            } env for server-side Clerk request verification`
+          : ""
+      }`
+    : ""
 }
 
 Then, run the development server:
@@ -300,7 +350,7 @@ function generateProjectStructure(config: ProjectConfig): string {
       if (api !== "none") {
         structure.push("│   ├── api/         # API layer / business logic");
       }
-      if (auth !== "none") {
+      if (auth === "better-auth") {
         structure.push("│   ├── auth/        # Authentication configuration & logic");
       }
       if (hasDbPackage) {

@@ -63,22 +63,40 @@ export const env = createEnv({
 {{/if}}
 {{else if (eq backend "self")}}
 {{#if (includes frontend "next")}}
-	client: {},
-	runtimeEnv: {},
+	client: {
+{{#if (eq auth "clerk")}}
+		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+{{/if}}
+	},
+	runtimeEnv: {
+{{#if (eq auth "clerk")}}
+		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+{{/if}}
+	},
 {{else if (includes frontend "nuxt")}}
 	client: {},
 {{else}}
 	clientPrefix: "VITE_",
-	client: {},
+	client: {
+{{#if (eq auth "clerk")}}
+		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+{{/if}}
+	},
 	runtimeEnv: (import.meta as any).env,
 {{/if}}
 {{else if (ne backend "none")}}
 {{#if (includes frontend "next")}}
 	client: {
 		NEXT_PUBLIC_SERVER_URL: z.url(),
+{{#if (eq auth "clerk")}}
+		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+{{/if}}
 	},
 	runtimeEnv: {
 		NEXT_PUBLIC_SERVER_URL: process.env.NEXT_PUBLIC_SERVER_URL,
+{{#if (eq auth "clerk")}}
+		NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+{{/if}}
 	},
 {{else if (includes frontend "nuxt")}}
 	client: {
@@ -94,6 +112,9 @@ export const env = createEnv({
 	clientPrefix: "VITE_",
 	client: {
 		VITE_SERVER_URL: z.url(),
+{{#if (eq auth "clerk")}}
+		VITE_CLERK_PUBLISHABLE_KEY: z.string().min(1),
+{{/if}}
 	},
 	runtimeEnv: (import.meta as any).env,
 {{/if}}
