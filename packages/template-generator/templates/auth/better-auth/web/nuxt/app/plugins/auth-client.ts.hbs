@@ -2,14 +2,24 @@ import { createAuthClient } from "better-auth/vue";
 {{#if (eq payments "polar")}}
 import { polarClient } from "@polar-sh/better-auth";
 {{/if}}
+{{#if (eq payments "dodo")}}
+import { dodopaymentsClient } from "@dodopayments/better-auth";
+{{/if}}
 
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
 
   const authClient = createAuthClient({
     baseURL: config.public.serverUrl,
-    {{#if (eq payments "polar")}}
-    plugins: [polarClient()],
+    {{#if (or (eq payments "polar") (eq payments "dodo"))}}
+    plugins: [
+      {{#if (eq payments "polar")}}
+      polarClient(),
+      {{/if}}
+      {{#if (eq payments "dodo")}}
+      dodopaymentsClient(),
+      {{/if}}
+    ],
     {{/if}}
   });
 
