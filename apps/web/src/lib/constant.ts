@@ -2332,6 +2332,14 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
+      id: "tinacms",
+      name: "TinaCMS",
+      description: "Git-backed headless CMS with visual editing",
+      icon: "/icon/tinacms.svg",
+      color: "from-orange-400 to-orange-600",
+      default: false,
+    },
+    {
       id: "none",
       name: "No CMS",
       description: "Skip headless CMS setup",

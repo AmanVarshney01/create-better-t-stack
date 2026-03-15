@@ -303,6 +303,7 @@ export const ICON_REGISTRY: Record<string, IconConfig> = {
   payload: { type: "local", src: "/icon/payload.svg", needsInvert: "dark" }, // currentColor
   sanity: { type: "si", slug: "sanity", hex: "F03E2F" },
   strapi: { type: "si", slug: "strapi", hex: "4945FF" },
+  tinacms: { type: "local", src: "/icon/tinacms.svg" },
 
   // ─── Rust ──────────────────────────────────────────────────────────────────
   axum: { type: "local", src: "/icon/axum.svg" },

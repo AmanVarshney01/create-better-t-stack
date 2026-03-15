@@ -1,0 +1,27 @@
+import { client } from "../../../tina/__generated__/client";
+
+export async function getPostList() {
+  const postsResponse = await client.queries.postConnection();
+  return (
+    postsResponse.data.postConnection.edges
+      ?.map((edge) => edge?.node)
+      .filter(Boolean) ?? []
+  );
+}
+
+export async function getPost(relativePath: string) {
+  return client.queries.post({ relativePath });
+}
+
+export async function getPageList() {
+  const pagesResponse = await client.queries.pageConnection();
+  return (
+    pagesResponse.data.pageConnection.edges
+      ?.map((edge) => edge?.node)
+      .filter(Boolean) ?? []
+  );
+}
+
+export async function getPage(relativePath: string) {
+  return client.queries.page({ relativePath });
+}

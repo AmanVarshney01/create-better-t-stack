@@ -625,6 +625,10 @@ export const dependencyVersionMap = {
   "@strapi/client": "^1.6.1",
   qs: "^6.14.0",
 
+  // Headless CMS - TinaCMS
+  tinacms: "^3.6.1",
+  "@tinacms/cli": "^2.1.9",
+
   // Caching - Upstash Redis
   "@upstash/redis": "^1.36.3",
 

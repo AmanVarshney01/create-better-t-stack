@@ -28,6 +28,11 @@ export async function getCMSChoice(cms?: CMS, backend?: Backend) {
       hint: "Open-source headless CMS with admin panel",
     },
     {
+      value: "tinacms" as const,
+      label: "TinaCMS",
+      hint: "Git-backed headless CMS with visual editing",
+    },
+    {
       value: "none" as const,
       label: "None",
       hint: "Skip headless CMS setup",

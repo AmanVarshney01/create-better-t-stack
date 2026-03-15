@@ -332,6 +332,7 @@ const EXACT_LABEL_OVERRIDES: Partial<Record<OptionCategory, Partial<Record<strin
   },
   webDeploy: { cloudflare: "Cloudflare", fly: "Fly.io", sst: "SST" },
   serverDeploy: { cloudflare: "Cloudflare", fly: "Fly.io", sst: "SST" },
+  cms: { tinacms: "TinaCMS" },
   auth: {},
   payments: {
     "lemon-squeezy": "Lemon Squeezy",

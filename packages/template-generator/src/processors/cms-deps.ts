@@ -63,6 +63,46 @@ export function processCMSDeps(vfs: VirtualFileSystem, config: ProjectConfig): v
       }
     }
   }
+
+  if (cms === "tinacms") {
+    if (!hasNext) return;
+
+    const webPath = "apps/web/package.json";
+    if (vfs.exists(webPath)) {
+      addPackageDependency({
+        vfs,
+        packagePath: webPath,
+        dependencies: ["tinacms"],
+        devDependencies: ["@tinacms/cli"],
+      });
+
+      const pkgJson = vfs.readJson<{
+        scripts?: Record<string, string>;
+        [key: string]: unknown;
+      }>(webPath);
+      if (pkgJson?.scripts) {
+        const existingDev = pkgJson.scripts.dev || "next dev --port 3001";
+        pkgJson.scripts.dev = `tinacms dev -c "${existingDev}"`;
+
+        const existingBuild = pkgJson.scripts.build || "next build";
+        pkgJson.scripts.build = `tinacms build && ${existingBuild}`;
+
+        const existingCheckTypes = pkgJson.scripts["check-types"] || "tsc --noEmit";
+        pkgJson.scripts["check-types"] = `tinacms build && ${existingCheckTypes}`;
+
+        vfs.writeJson(webPath, pkgJson);
+      }
+    }
+
+    const gitignorePath = "apps/web/.gitignore";
+    if (vfs.exists(gitignorePath)) {
+      let gitignoreContent = vfs.readFile(gitignorePath);
+      if (gitignoreContent && !gitignoreContent.includes("tina/__generated__")) {
+        gitignoreContent += "\ntina/__generated__\npublic/admin\n";
+        vfs.writeFile(gitignorePath, gitignoreContent);
+      }
+    }
+  }
 }
 
 function getPayloadDeps(database: ProjectConfig["database"]): AvailableDependencies[] {
@@ -99,3 +139,4 @@ function getSanityDeps(): AvailableDependencies[] {
 function getStrapiDeps(): AvailableDependencies[] {
   return ["@strapi/client", "qs"];
 }
+

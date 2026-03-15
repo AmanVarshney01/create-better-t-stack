@@ -154,7 +154,7 @@ const options = {
   ],
   realtime: ["socket-io", "partykit", "ably", "pusher", "liveblocks", "yjs", "none"],
   jobQueue: ["bullmq", "trigger-dev", "inngest", "temporal", "none"],
-  cms: ["payload", "sanity", "strapi", "none"],
+  cms: ["payload", "sanity", "strapi", "tinacms", "none"],
   caching: ["upstash-redis", "none"],
   animation: ["framer-motion", "gsap", "react-spring", "auto-animate", "lottie", "none"],
   fileUpload: ["uploadthing", "filepond", "uppy", "none"],

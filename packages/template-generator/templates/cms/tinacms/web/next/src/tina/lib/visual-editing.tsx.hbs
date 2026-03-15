@@ -1,0 +1,12 @@
+"use client";
+
+import { useTina } from "tinacms/dist/react";
+
+export function useVisualEditing<T>(props: {
+  query: string;
+  variables: object;
+  data: T;
+}): T {
+  const { data } = useTina(props);
+  return data;
+}

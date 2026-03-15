@@ -589,6 +589,7 @@ const BASE_LINKS: LinkMap = {
     githubUrl: "https://github.com/sanity-io/sanity",
   },
   strapi: { docsUrl: "https://docs.strapi.io/", githubUrl: "https://github.com/strapi/strapi" },
+  tinacms: { docsUrl: "https://tina.io/docs", githubUrl: "https://github.com/tinacms/tinacms" },
   axum: {
     docsUrl: "https://docs.rs/axum/latest/axum/",
     githubUrl: "https://github.com/tokio-rs/axum",

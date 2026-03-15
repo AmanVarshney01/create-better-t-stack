@@ -330,6 +330,115 @@ describe("CMS Options", () => {
     });
   });
 
+  describe("TinaCMS with Next.js", () => {
+    test("tinacms with Next.js and SQLite", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "tinacms-nextjs-sqlite",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "sqlite",
+          cms: "tinacms",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("tinacms with Next.js and PostgreSQL", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "tinacms-nextjs-postgres",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "postgres",
+          cms: "tinacms",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("tinacms with Next.js and MongoDB", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "tinacms-nextjs-mongodb",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "mongodb",
+          orm: "mongoose",
+          cms: "tinacms",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("TinaCMS with different ORMs", () => {
+    test("tinacms with Drizzle ORM", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "tinacms-drizzle",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "postgres",
+          orm: "drizzle",
+          cms: "tinacms",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("tinacms with Prisma ORM", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "tinacms-prisma",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "postgres",
+          orm: "prisma",
+          cms: "tinacms",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
+  describe("TinaCMS with authentication", () => {
+    test("tinacms with better-auth", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "tinacms-better-auth",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "sqlite",
+          auth: "better-auth",
+          cms: "tinacms",
+        }),
+      );
+      expectSuccess(result);
+    });
+
+    test("tinacms with nextauth", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "tinacms-nextauth",
+          frontend: ["next"],
+          backend: "self",
+          runtime: "none",
+          database: "sqlite",
+          auth: "nextauth",
+          cms: "tinacms",
+        }),
+      );
+      expectSuccess(result);
+    });
+  });
+
   describe("No CMS option", () => {
     test("none CMS option with Next.js", async () => {
       const result = await runTRPCTest(
@@ -393,6 +502,19 @@ describe("CMS Options", () => {
       );
       // Strapi client requires Next.js for our templates, but the project should still be created
       // The CMS deps processor will skip adding Strapi deps for non-Next.js
+      expectSuccess(result);
+    });
+
+    test("tinacms without Next.js should still work (cms deps skipped)", async () => {
+      const result = await runTRPCTest(
+        createCustomConfig({
+          projectName: "tinacms-tanstack-router",
+          frontend: ["tanstack-router"],
+          cms: "tinacms",
+        }),
+      );
+      // TinaCMS requires Next.js for our templates, but the project should still be created
+      // The CMS deps processor will skip adding TinaCMS deps for non-Next.js
       expectSuccess(result);
     });
   });

@@ -1282,6 +1282,23 @@ function buildCMSVars(cms: ProjectConfig["cms"]): EnvVariable[] {
     );
   }
 
+  if (cms === "tinacms") {
+    vars.push(
+      {
+        key: "NEXT_PUBLIC_TINA_CLIENT_ID",
+        value: "",
+        condition: true,
+        comment: "TinaCMS client ID - get from tina.io (optional for local dev)",
+      },
+      {
+        key: "TINA_TOKEN",
+        value: "",
+        condition: true,
+        comment: "TinaCMS read-only token - get from tina.io (optional for local dev)",
+      },
+    );
+  }
+
   return vars;
 }
 
@@ -1416,8 +1433,8 @@ export function processEnvVariables(vfs: VirtualFileSystem, config: ProjectConfi
     writeEnvFile(vfs, envPath, serverVars);
   }
 
-  // --- CMS .env (Payload and Sanity require Next.js and add vars to web/.env) ---
-  if ((config.cms === "payload" || config.cms === "sanity") && hasNextJs) {
+  // --- CMS .env (Payload, Sanity, and TinaCMS require Next.js and add vars to web/.env) ---
+  if ((config.cms === "payload" || config.cms === "sanity" || config.cms === "tinacms") && hasNextJs) {
     const webDir = "apps/web";
     if (vfs.directoryExists(webDir)) {
       const envPath = `${webDir}/.env`;

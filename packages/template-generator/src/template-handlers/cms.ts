@@ -28,4 +28,9 @@ export async function processCMSTemplates(
     // Process Strapi CMS templates for Next.js
     processTemplatesFromPrefix(vfs, templates, "cms/strapi/web/next", "apps/web", config);
   }
+
+  if (config.cms === "tinacms" && hasNext) {
+    // Process TinaCMS templates for Next.js
+    processTemplatesFromPrefix(vfs, templates, "cms/tinacms/web/next", "apps/web", config);
+  }
 }
