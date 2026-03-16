@@ -1,200 +1,385 @@
 "use client";
 
-import { format, parseISO } from "date-fns";
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Pie,
-  PieChart,
-  XAxis,
-  YAxis,
-} from "recharts";
+import * as Plot from "@observablehq/plot";
+import { format } from "date-fns";
 
 import {
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
-
+  formatCompactNumber,
+  formatDateLabel,
+  formatHourLabel,
+  formatMonthLabel,
+  getPlotFontSize,
+  interpolateColor,
+  isCompactPlot,
+  resolvePlotMargins,
+} from "./analytics-helpers";
 import { ChartCard } from "./chart-card";
-import type { AggregatedAnalyticsData, Distribution } from "./types";
-
-const CHART_COLORS = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
-];
-
-function getChartConfig(data: Distribution): ChartConfig {
-  const config: ChartConfig = {};
-  for (const [index, item] of data.entries()) {
-    config[item.name] = {
-      label: item.name,
-      color: CHART_COLORS[index % CHART_COLORS.length],
-    };
-  }
-  return config;
-}
-
-const areaChartConfig = {
-  count: { label: "Projects", color: "var(--chart-1)" },
-} satisfies ChartConfig;
-
-const barChartConfig = {
-  totalProjects: { label: "Total Projects", color: "var(--chart-2)" },
-} satisfies ChartConfig;
-
-const hourlyChartConfig = {
-  count: { label: "Projects", color: "var(--chart-3)" },
-} satisfies ChartConfig;
-
-function formatMonthLabel(monthKey: string, pattern: string): string {
-  const parsedMonth = parseISO(`${monthKey}-01`);
-  if (Number.isNaN(parsedMonth.getTime())) return monthKey;
-  return format(parsedMonth, pattern);
-}
+import { PlotChart } from "./plot-chart";
+import { SectionHeader } from "./section-header";
+import type { AggregatedAnalyticsData } from "./types";
 
 export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
-  const { timeSeries, monthlyTimeSeries, platformDistribution, hourlyDistribution } = data;
-  const platformChartConfig = getChartConfig(platformDistribution);
+  const peakDayLabel = data.momentum.peakDay ? formatDateLabel(data.momentum.peakDay.date) : "n/a";
+  const busiestHourLabel = data.momentum.busiestHour
+    ? `${formatHourLabel(data.momentum.busiestHour.hour)} UTC`
+    : "n/a";
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-bold font-mono text-lg">TIMELINE_ANALYSIS</span>
-        <div className="hidden h-px flex-1 bg-border/45 sm:block" />
+      <SectionHeader
+        label="Activity"
+        title="Momentum, rhythm, and where the live stream actually concentrates."
+        description="The old dashboard showed raw volume, but not behavior. This section focuses on movement over time, weekly rhythm, and the hours when builders are most active."
+        aside={
+          <div className="rounded-full border border-border/60 bg-background/55 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+            peak day {peakDayLabel} • hot hour {busiestHourLabel}
+          </div>
+        }
+      />
+
+      <div className="grid gap-4 xl:grid-cols-[1.35fr_0.95fr]">
+        <ChartCard
+          eyebrow="30 day pulse"
+          title="Daily activity with a rolling average that makes the swings readable."
+          description="Raw daily counts can bounce around, so the rolling line shows whether interest is actually building or just spiking."
+          footer={
+            <>
+              Last 7 days:{" "}
+              <span className="text-foreground">
+                {formatCompactNumber(data.momentum.last7Days)}
+              </span>
+              {" • "}
+              Previous 7 days:{" "}
+              <span className="text-foreground">
+                {formatCompactNumber(data.momentum.previous7Days)}
+              </span>
+            </>
+          }
+        >
+          <PlotChart
+            ariaLabel="Daily project creations over the last 30 days with a rolling average"
+            className="min-h-[320px]"
+            build={({ width, palette }) => {
+              const compact = isCompactPlot(width);
+              const margins = resolvePlotMargins(
+                width,
+                { top: 18, right: 18, bottom: 32, left: 44 },
+                { top: 12, right: 8, bottom: 24, left: 30 },
+              );
+
+              return Plot.plot({
+                width,
+                height: compact ? 240 : 320,
+                marginTop: margins.top,
+                marginRight: margins.right,
+                marginBottom: margins.bottom,
+                marginLeft: margins.left,
+                style: {
+                  background: "transparent",
+                  color: palette.foreground,
+                  fontFamily: "var(--font-mono)",
+                  fontSize: getPlotFontSize(width),
+                },
+                x: {
+                  label: null,
+                  ticks: compact ? 3 : 5,
+                  tickFormat: (value) => format(new Date(value as Date), "MMM d"),
+                },
+                y: {
+                  label: null,
+                  grid: true,
+                  nice: true,
+                  ticks: compact ? 3 : undefined,
+                  tickFormat: (value) => formatCompactNumber(Number(value)),
+                },
+                marks: [
+                  Plot.ruleY([0], { stroke: palette.border }),
+                  Plot.areaY(data.timeSeries, {
+                    x: "dateValue",
+                    y: "count",
+                    curve: "catmull-rom",
+                    fill: palette.chart1,
+                    fillOpacity: 0.16,
+                  }),
+                  Plot.lineY(data.timeSeries, {
+                    x: "dateValue",
+                    y: "count",
+                    curve: "catmull-rom",
+                    stroke: palette.chart1,
+                    strokeWidth: 2.4,
+                  }),
+                  Plot.lineY(data.timeSeries, {
+                    x: "dateValue",
+                    y: "rollingAverage",
+                    curve: "catmull-rom",
+                    stroke: palette.chart2,
+                    strokeWidth: 2.2,
+                  }),
+                  Plot.dot(data.timeSeries.slice(-1), {
+                    x: "dateValue",
+                    y: "count",
+                    fill: palette.chart1,
+                    r: 4,
+                  }),
+                  Plot.dot(
+                    data.momentum.peakDay
+                      ? data.timeSeries.filter(
+                          (point) => point.date === data.momentum.peakDay?.date,
+                        )
+                      : [],
+                    {
+                      x: "dateValue",
+                      y: "count",
+                      fill: palette.chart3,
+                      r: 4.5,
+                    },
+                  ),
+                  Plot.tip(
+                    data.timeSeries,
+                    Plot.pointerX({
+                      x: "dateValue",
+                      y: "count",
+                      title: (point) =>
+                        `${formatDateLabel(point.date)}\nProjects: ${point.count}\nRolling avg: ${point.rollingAverage.toFixed(1)}`,
+                    }),
+                  ),
+                ],
+              });
+            }}
+          />
+        </ChartCard>
+
+        <ChartCard
+          eyebrow="Archive cadence"
+          title="Monthly creation volume for the entire live dataset."
+          description="This is the slower signal: how much project creation volume each month contributed to the overall curve."
+          footer={
+            <>
+              Total live projects:{" "}
+              <span className="text-foreground">{data.totalProjects.toLocaleString()}</span>
+            </>
+          }
+        >
+          <PlotChart
+            ariaLabel="Monthly project creation totals"
+            className="min-h-[320px]"
+            build={({ width, palette }) => {
+              const compact = isCompactPlot(width);
+              const compactTickStep = width < 420 ? 3 : 2;
+              const compactTicks = compact
+                ? data.monthlyTimeSeries
+                    .filter(
+                      (_, index) =>
+                        index % compactTickStep === 0 ||
+                        index === data.monthlyTimeSeries.length - 1,
+                    )
+                    .map((point) => point.month)
+                : undefined;
+              const margins = resolvePlotMargins(
+                width,
+                { top: 18, right: 16, bottom: 42, left: 44 },
+                { top: 12, right: 8, bottom: 28, left: 30 },
+              );
+
+              return Plot.plot({
+                width,
+                height: compact ? 240 : 320,
+                marginTop: margins.top,
+                marginRight: margins.right,
+                marginBottom: margins.bottom,
+                marginLeft: margins.left,
+                style: {
+                  background: "transparent",
+                  color: palette.foreground,
+                  fontFamily: "var(--font-mono)",
+                  fontSize: getPlotFontSize(width),
+                },
+                x: {
+                  type: "band",
+                  label: null,
+                  ticks: compactTicks,
+                  tickFormat: (value) =>
+                    formatMonthLabel(String(value), compact ? "MMM yy" : "MMM yy"),
+                },
+                y: {
+                  label: null,
+                  grid: true,
+                  nice: true,
+                  ticks: compact ? 3 : undefined,
+                  tickFormat: (value) => formatCompactNumber(Number(value)),
+                },
+                marks: [
+                  Plot.ruleY([0], { stroke: palette.border }),
+                  Plot.barY(data.monthlyTimeSeries, {
+                    x: "month",
+                    y: "totalProjects",
+                    fill: palette.chart4,
+                    rx: 10,
+                    title: (point) =>
+                      `${formatMonthLabel(point.month)}\nProjects: ${point.totalProjects.toLocaleString()}`,
+                  }),
+                ],
+              });
+            }}
+          />
+        </ChartCard>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <ChartCard
-          title="daily_projects.chart"
-          description="Project creations over the last 30 days"
+          eyebrow="Week rhythm"
+          title="Average daily volume by weekday over the recent 30-day window."
+          description="This normalizes for how many Mondays or Fridays are actually in the sample so the pattern is easier to trust."
+          footer={
+            <>
+              Active days in the last 30:{" "}
+              <span className="text-foreground">{data.momentum.activeDaysLast30}</span>
+            </>
+          }
         >
-          <ChartContainer
-            config={areaChartConfig}
-            className="aspect-auto h-[280px] w-full min-h-[200px]"
-          >
-            <AreaChart accessibilityLayer data={timeSeries}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="date"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={10}
-                tickFormatter={(val) => format(parseISO(val), "d")}
-                interval="preserveStartEnd"
-              />
-              <YAxis tickLine={false} axisLine={false} />
-              <ChartTooltip
-                content={
-                  <ChartTooltipContent
-                    labelFormatter={(_, payload) => {
-                      const item = payload?.[0]?.payload as { date: string } | undefined;
-                      return item ? format(parseISO(item.date), "MMM d, yyyy") : "";
-                    }}
-                    hideIndicator
-                  />
-                }
-              />
-              <Area
-                type="monotone"
-                dataKey="count"
-                stroke="var(--chart-1)"
-                fill="var(--chart-1)"
-                fillOpacity={0.2}
-                strokeWidth={2}
-              />
-            </AreaChart>
-          </ChartContainer>
+          <PlotChart
+            ariaLabel="Average project creations by weekday"
+            className="min-h-[230px]"
+            build={({ width, palette }) => {
+              const compact = isCompactPlot(width);
+              const margins = resolvePlotMargins(
+                width,
+                { top: 16, right: 16, bottom: 30, left: 44 },
+                { top: 12, right: 8, bottom: 24, left: 30 },
+              );
+
+              return Plot.plot({
+                width,
+                height: compact ? 200 : 230,
+                marginTop: margins.top,
+                marginRight: margins.right,
+                marginBottom: margins.bottom,
+                marginLeft: margins.left,
+                style: {
+                  background: "transparent",
+                  color: palette.foreground,
+                  fontFamily: "var(--font-mono)",
+                  fontSize: getPlotFontSize(width),
+                },
+                x: {
+                  label: null,
+                },
+                y: {
+                  label: null,
+                  grid: true,
+                  ticks: compact ? 3 : undefined,
+                  tickFormat: (value) => formatCompactNumber(Number(value)),
+                },
+                marks: [
+                  Plot.ruleY([0], { stroke: palette.border }),
+                  Plot.barY(data.weekdayDistribution, {
+                    x: "shortLabel",
+                    y: "averageDailyProjects",
+                    fill: palette.chart2,
+                    rx: 10,
+                    title: (point) =>
+                      `${point.weekday}\nAverage: ${point.averageDailyProjects.toFixed(1)}\nTotal: ${point.count.toLocaleString()}`,
+                  }),
+                ],
+              });
+            }}
+          />
         </ChartCard>
 
-        <ChartCard title="monthly_trends.bar" description="Total projects created in each month">
-          <ChartContainer
-            config={barChartConfig}
-            className="aspect-auto h-[280px] w-full min-h-[200px]"
-          >
-            <BarChart accessibilityLayer data={monthlyTimeSeries}>
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="month"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={10}
-                tickFormatter={(val) => formatMonthLabel(String(val), "MMM yy")}
-              />
-              <YAxis tickLine={false} axisLine={false} />
-              <ChartTooltip
-                content={
-                  <ChartTooltipContent
-                    labelFormatter={(value) => formatMonthLabel(String(value), "MMMM yyyy")}
-                    hideIndicator
-                  />
-                }
-              />
-              <Bar dataKey="totalProjects" fill="var(--chart-2)" radius={4} />
-            </BarChart>
-          </ChartContainer>
-        </ChartCard>
+        <ChartCard
+          eyebrow="Hour profile"
+          title="Hourly project starts across the UTC day."
+          description="This keeps the daily rhythm obvious without making you decode a heat strip."
+          footer={
+            <>
+              Busiest hour:{" "}
+              <span className="text-foreground">
+                {data.momentum.busiestHour
+                  ? `${formatHourLabel(data.momentum.busiestHour.hour)} UTC`
+                  : "n/a"}
+              </span>
+            </>
+          }
+        >
+          <PlotChart
+            ariaLabel="Hourly project creation activity by UTC hour"
+            className="min-h-[230px]"
+            build={({ width, palette }) => {
+              const compact = isCompactPlot(width);
+              const margins = resolvePlotMargins(
+                width,
+                { top: 18, right: 18, bottom: 36, left: 42 },
+                { top: 12, right: 8, bottom: 28, left: 30 },
+              );
+              const maxCount = Math.max(...data.hourlyDistribution.map((point) => point.count), 0);
+              const peakHour = data.momentum.busiestHour?.hour ?? null;
+              const hourlyBars = data.hourlyDistribution.map((point) => ({
+                ...point,
+                tone:
+                  point.count === 0
+                    ? palette.background
+                    : point.hour === peakHour
+                      ? palette.chart4
+                      : interpolateColor(
+                          palette.border,
+                          palette.chart3,
+                          Math.max(0.2, point.count / maxCount),
+                        ),
+                isPeak: point.hour === peakHour,
+              }));
 
-        <ChartCard title="platform_distribution.pie" description="Operating system usage">
-          <ChartContainer
-            config={platformChartConfig}
-            className="aspect-auto h-[280px] w-full min-h-[200px]"
-          >
-            <PieChart>
-              <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-              <Pie
-                data={platformDistribution}
-                cx="50%"
-                cy="45%"
-                outerRadius={65}
-                innerRadius={35}
-                dataKey="value"
-                nameKey="name"
-                paddingAngle={2}
-              >
-                {platformDistribution.map((entry, index) => (
-                  <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                ))}
-              </Pie>
-              <ChartLegend content={<ChartLegendContent nameKey="name" />} />
-            </PieChart>
-          </ChartContainer>
-        </ChartCard>
-
-        <ChartCard title="hourly_activity.bar" description="Projects by hour (UTC)">
-          <ChartContainer
-            config={hourlyChartConfig}
-            className="aspect-auto h-[280px] w-full min-h-[200px]"
-          >
-            <BarChart accessibilityLayer data={hourlyDistribution}>
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="hour"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={10}
-                interval={3}
-                tickFormatter={(val) => val.replace(":00", "")}
-              />
-              <YAxis tickLine={false} axisLine={false} />
-              <ChartTooltip
-                content={
-                  <ChartTooltipContent labelFormatter={(value) => `${value} UTC`} hideIndicator />
-                }
-              />
-              <Bar dataKey="count" fill="var(--chart-3)" radius={4} />
-            </BarChart>
-          </ChartContainer>
+              return Plot.plot({
+                width,
+                height: compact ? 210 : 230,
+                marginTop: margins.top,
+                marginRight: margins.right,
+                marginBottom: margins.bottom,
+                marginLeft: margins.left,
+                style: {
+                  background: "transparent",
+                  color: palette.foreground,
+                  fontFamily: "var(--font-mono)",
+                  fontSize: getPlotFontSize(width),
+                },
+                x: {
+                  type: "band",
+                  label: "UTC hour",
+                  tickFormat: (value) => (compact && Number(value) % 2 === 1 ? "" : String(value)),
+                },
+                y: {
+                  label: null,
+                  grid: true,
+                  nice: true,
+                  ticks: compact ? 3 : 4,
+                  tickFormat: (value) => formatCompactNumber(Number(value)),
+                },
+                marks: [
+                  Plot.ruleY([0], { stroke: palette.border }),
+                  Plot.barY(hourlyBars, {
+                    x: "label",
+                    y: "count",
+                    fill: "tone",
+                    inset: 1.5,
+                    rx: 5,
+                    title: (point) =>
+                      `${formatHourLabel(point.hour)}:00 UTC\nProjects: ${point.count.toLocaleString()}`,
+                  }),
+                  Plot.text(
+                    hourlyBars.filter((point) => point.isPeak && point.count > 0),
+                    {
+                      x: "label",
+                      y: "count",
+                      text: (point) => formatCompactNumber(point.count),
+                      dy: -10,
+                      fill: palette.foreground,
+                      fontSize: compact ? 10 : 11,
+                      fontWeight: 700,
+                    },
+                  ),
+                ],
+              });
+            }}
+          />
         </ChartCard>
       </div>
     </div>

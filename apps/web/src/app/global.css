@@ -384,138 +384,46 @@
   animation: file-load 0.3s ease-out forwards;
 }
 
-/* Chart styling to match terminal aesthetic */
-.recharts-wrapper {
+.plot-frame figure,
+.plot-frame svg {
+  width: 100%;
+}
+
+.plot-frame svg {
+  display: block;
+  overflow: visible;
+}
+
+.bts-plot {
+  max-width: 100%;
+  --plot-background: color-mix(in srgb, var(--background) 96%, var(--foreground) 4%);
+}
+
+.bts-plot text,
+.bts-plot .tick text {
   font-family: var(--font-mono);
 }
 
-.recharts-cartesian-axis-tick-value {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: hsl(var(--muted-foreground));
+.bts-plot [aria-label="tip"] {
+  color: var(--foreground);
 }
 
-.recharts-cartesian-axis-line {
-  stroke: hsl(var(--border));
-  stroke-width: 1;
+.bts-plot [aria-label="tip"] path {
+  fill: var(--plot-background);
+  stroke: color-mix(in srgb, var(--border) 92%, transparent);
 }
 
-.recharts-cartesian-grid-horizontal line,
-.recharts-cartesian-grid-vertical line {
-  stroke: hsl(var(--border));
-  stroke-width: 1;
-  stroke-dasharray: 3 3;
-  opacity: 0.5;
+.bts-plot [aria-label="tip"] text,
+.bts-plot [aria-label="tip"] tspan {
+  fill: var(--foreground);
 }
 
-.recharts-tooltip-wrapper {
-  background: hsl(var(--popover));
-  border: 1px solid hsl(var(--border));
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-lg);
-  padding: 0.5rem;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
+.bts-plot .domain,
+.bts-plot .tick line {
+  stroke: color-mix(in srgb, var(--border) 80%, transparent);
 }
 
-.recharts-tooltip-item {
-  color: hsl(var(--foreground));
-}
-
-.recharts-legend-item-text {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: hsl(var(--foreground));
-}
-
-.recharts-pie-label {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: hsl(var(--foreground));
-}
-
-.recharts-bar-rectangle {
-  transition: opacity 0.2s ease;
-}
-
-.recharts-bar-rectangle:hover {
-  opacity: 0.8;
-}
-
-.recharts-pie-sector {
-  transition: opacity 0.2s ease;
-}
-
-.recharts-pie-sector:hover {
-  opacity: 0.8;
-}
-
-.recharts-area-curve {
-  transition: opacity 0.2s ease;
-}
-
-.recharts-area-curve:hover {
-  opacity: 0.8;
-}
-
-/* Chart container styling */
-.chart-container {
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-
-/* Terminal-style chart headers */
-.chart-header {
-  border-bottom: 1px solid hsl(var(--border));
-  padding: 0.75rem 1rem;
-  background: hsl(var(--card));
-}
-
-.chart-header-title {
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: hsl(var(--foreground));
-}
-
-.chart-header-description {
-  font-size: 0.75rem;
-  color: hsl(var(--muted-foreground));
-  margin-top: 0.25rem;
-}
-
-/* Chart hover effects */
-.chart-card {
-  transition: all 0.2s ease;
-  border: 1px solid hsl(var(--border));
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-
-.chart-card:hover {
-  border-color: hsl(var(--primary));
-  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.1);
-}
-
-/* Chart loading state */
-.chart-loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 300px;
-  color: hsl(var(--muted-foreground));
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-}
-
-/* Chart error state */
-.chart-error {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 300px;
-  color: hsl(var(--destructive));
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
+.bts-plot .grid line {
+  stroke: color-mix(in srgb, var(--border) 55%, transparent);
+  stroke-dasharray: 3 4;
 }

@@ -2,6 +2,7 @@
 
 import Footer from "../../_components/footer";
 import { AnalyticsHeader } from "./analytics-header";
+import { AnalyticsSources } from "./analytics-sources";
 import { DevToolsSection } from "./dev-environment-charts";
 import { LiveLogs } from "./live-logs";
 import { MetricsCards } from "./metrics-cards";
@@ -28,19 +29,25 @@ export default function AnalyticsPage({
       <div className="container mx-auto space-y-10 px-4 py-8 pt-16">
         <AnalyticsHeader
           lastUpdated={data.lastUpdated}
+          liveTotal={data.totalProjects}
+          trackingDays={data.momentum.trackingDays}
           legacy={legacy}
           connectionStatus={connectionStatus}
         />
 
-        <MetricsCards data={data} />
-
         <LiveLogs />
+
+        <MetricsCards data={data} />
 
         <TimelineSection data={data} />
 
         <StackSection data={data} />
 
         <DevToolsSection data={data} />
+
+        <div className="max-w-xl">
+          <AnalyticsSources />
+        </div>
       </div>
       <Footer />
     </div>
