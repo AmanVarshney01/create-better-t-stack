@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 
 import { internalMutation, mutation, query } from "./_generated/server";
+import { buildDailyWindow } from "./analytics-date-utils";
 
 function incrementKey(
   dist: Record<string, number>,
@@ -242,9 +243,13 @@ export const getDailyStats = query({
       .toISOString()
       .slice(0, 10);
 
-    return allDaily
-      .filter((d) => d.date >= cutoffDate && d.date <= today)
-      .map((d) => ({ date: d.date, count: d.count }));
+    return buildDailyWindow(
+      allDaily
+        .filter((d) => d.date >= cutoffDate && d.date <= today)
+        .map((d) => ({ date: d.date, count: d.count })),
+      cutoffDate,
+      today,
+    );
   },
 });
 

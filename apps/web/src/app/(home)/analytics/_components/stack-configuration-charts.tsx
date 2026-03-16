@@ -1,163 +1,286 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, XAxis, YAxis } from "recharts";
+import * as Plot from "@observablehq/plot";
 
 import {
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
-
+  buildCompactCategoryLabels,
+  formatPercent,
+  getPlotFontSize,
+  interpolateColor,
+  isCompactPlot,
+  resolvePlotMargins,
+  shortenLabel,
+} from "./analytics-helpers";
 import { ChartCard } from "./chart-card";
-import type { AggregatedAnalyticsData, Distribution } from "./types";
+import { PlotChart } from "./plot-chart";
+import { SectionHeader } from "./section-header";
+import type { AggregatedAnalyticsData, ShareDistributionItem } from "./types";
 
-const CHART_COLORS = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
-];
-
-function getChartConfig(data: Distribution): ChartConfig {
-  const config: ChartConfig = {};
-  for (const [index, item] of data.entries()) {
-    config[item.name] = {
-      label: item.name,
-      color: CHART_COLORS[index % CHART_COLORS.length],
-    };
-  }
-  return config;
-}
-
-function BarChartComponent({ data, height = 280 }: { data: Distribution; height?: number }) {
-  const chartConfig = getChartConfig(data);
+function PreferenceCard({
+  eyebrow,
+  title,
+  description,
+  data,
+  colorKey,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  data: ShareDistributionItem[];
+  colorKey: "chart1" | "chart2" | "chart3" | "chart4" | "chart5";
+}) {
+  const ranking = data.slice(0, 5);
 
   return (
-    <ChartContainer
-      config={chartConfig}
-      style={{ height }}
-      className="aspect-auto w-full min-h-[200px]"
-    >
-      <BarChart accessibilityLayer data={data}>
-        <CartesianGrid vertical={false} />
-        <XAxis
-          dataKey="name"
-          tickLine={false}
-          axisLine={false}
-          tickMargin={10}
-          tickFormatter={(value) => (value.length > 20 ? `${value.slice(0, 20)}…` : value)}
-        />
-        <YAxis tickLine={false} axisLine={false} />
-        <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-        <Bar dataKey="value" radius={4}>
-          {data.map((entry, index) => (
-            <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ChartContainer>
+    <ChartCard eyebrow={eyebrow} title={title} description={description}>
+      <PlotChart
+        ariaLabel={title}
+        className="min-h-[230px]"
+        build={({ width, palette }) => {
+          const compact = isCompactPlot(width);
+          const shareMax = Math.max(...ranking.map((item) => item.share), 0.2);
+          const fill = palette[colorKey];
+          const compactLabels = compact
+            ? buildCompactCategoryLabels(
+                ranking.map((item) => item.name),
+                width < 360 ? 10 : 12,
+              )
+            : null;
+          const chartData = ranking.map((item, index) => ({
+            ...item,
+            label: compact ? (compactLabels?.[index] ?? item.name) : item.name,
+          }));
+          const margins = resolvePlotMargins(
+            width,
+            { top: 16, right: 48, bottom: 28, left: 128 },
+            { top: 12, right: 42, bottom: 12, left: 92 },
+          );
+
+          return Plot.plot({
+            width,
+            height: compact ? Math.max(200, chartData.length * 30 + 28) : 230,
+            marginTop: margins.top,
+            marginRight: margins.right,
+            marginBottom: margins.bottom,
+            marginLeft: margins.left,
+            style: {
+              background: "transparent",
+              color: palette.foreground,
+              fontFamily: "var(--font-mono)",
+              fontSize: getPlotFontSize(width),
+            },
+            x: {
+              axis: compact ? null : undefined,
+              label: null,
+              domain: [0, shareMax * (compact ? 1.34 : 1.22)],
+              ticks: 4,
+              grid: !compact,
+              tickFormat: (value) => formatPercent(Number(value)),
+            },
+            y: {
+              label: null,
+            },
+            marks: [
+              Plot.barX(chartData, {
+                x: "share",
+                y: "label",
+                fill,
+                rx: 10,
+                title: (item) =>
+                  `${item.name}\nShare: ${formatPercent(item.share)}\nProjects: ${item.value.toLocaleString()}`,
+              }),
+              Plot.text(chartData, {
+                x: "share",
+                y: "label",
+                text: (item) => formatPercent(item.share),
+                dx: compact ? 6 : 8,
+                textAnchor: "start",
+                fill: palette.foreground,
+                fontWeight: 600,
+              }),
+            ],
+          });
+        }}
+      />
+    </ChartCard>
   );
 }
 
-function PieChartComponent({ data }: { data: Distribution }) {
-  const chartConfig = getChartConfig(data);
-
+function PairingMatrix({
+  eyebrow,
+  title,
+  description,
+  matrix,
+  tone,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  matrix: AggregatedAnalyticsData["stackMatrix"];
+  tone: "chart1" | "chart4";
+}) {
   return (
-    <ChartContainer config={chartConfig} className="aspect-auto h-[280px] w-full min-h-[200px]">
-      <PieChart>
-        <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-        <Pie
-          data={data}
-          cx="50%"
-          cy="45%"
-          outerRadius={65}
-          innerRadius={35}
-          dataKey="value"
-          nameKey="name"
-          paddingAngle={2}
-        >
-          {data.map((entry, index) => (
-            <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-          ))}
-        </Pie>
-        <ChartLegend content={<ChartLegendContent nameKey="name" />} />
-      </PieChart>
-    </ChartContainer>
+    <ChartCard eyebrow={eyebrow} title={title} description={description}>
+      <PlotChart
+        ariaLabel={title}
+        className="min-h-[320px]"
+        build={({ width, palette }) => {
+          const compact = isCompactPlot(width);
+          const maxValue = Math.max(matrix.maxValue, 1);
+          const fillEnd = tone === "chart1" ? palette.chart1 : palette.chart4;
+          const cells = matrix.data.map((item) => ({
+            ...item,
+            tone:
+              item.count === 0
+                ? palette.background
+                : interpolateColor(palette.border, fillEnd, item.count / maxValue),
+          }));
+
+          const margins = resolvePlotMargins(
+            width,
+            { top: 18, right: 18, bottom: 54, left: 88 },
+            { top: 12, right: 8, bottom: 38, left: 62 },
+          );
+
+          return Plot.plot({
+            width,
+            height: compact
+              ? Math.max(240, matrix.yDomain.length * 40 + 70)
+              : Math.max(280, matrix.yDomain.length * 54 + 90),
+            marginTop: margins.top,
+            marginRight: margins.right,
+            marginBottom: margins.bottom,
+            marginLeft: margins.left,
+            style: {
+              background: "transparent",
+              color: palette.foreground,
+              fontFamily: "var(--font-mono)",
+              fontSize: getPlotFontSize(width),
+            },
+            x: {
+              label: null,
+              domain: matrix.xDomain,
+              tickFormat: (value) => shortenLabel(String(value), compact ? 8 : 16),
+            },
+            y: {
+              label: null,
+              domain: matrix.yDomain,
+              tickFormat: (value) => shortenLabel(String(value), compact ? 8 : 16),
+            },
+            marks: [
+              Plot.cell(cells, {
+                x: "x",
+                y: "y",
+                fill: "tone",
+                inset: 2,
+                title: (item) =>
+                  `${item.y} + ${item.x}\nProjects: ${item.count.toLocaleString()}\nShare: ${formatPercent(item.share, true)}`,
+              }),
+              Plot.text(
+                cells.filter((item) => item.count > 0),
+                {
+                  x: "x",
+                  y: "y",
+                  text: (item) => item.count.toLocaleString(),
+                  fill: (item) =>
+                    item.count / maxValue > 0.5 ? palette.background : palette.foreground,
+                  fontSize: compact ? 10 : 12,
+                  fontWeight: 700,
+                },
+              ),
+            ],
+          });
+        }}
+      />
+    </ChartCard>
   );
 }
 
 export function StackSection({ data }: { data: AggregatedAnalyticsData }) {
-  const {
-    popularStackCombinations,
-    frontendDistribution,
-    backendDistribution,
-    databaseDistribution,
-    ormDistribution,
-    dbSetupDistribution,
-    apiDistribution,
-    authDistribution,
-    runtimeDistribution,
-    databaseORMCombinations,
-  } = data;
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-bold font-mono text-lg">STACK_CONFIGURATION</span>
-        <span className="rounded-full bg-muted/30 px-2 py-0.5 font-mono text-[10px] text-muted-foreground">
-          [CORE_CHOICES]
-        </span>
-        <div className="hidden h-px flex-1 bg-border/45 sm:block" />
+      <SectionHeader
+        label="Stack choices"
+        title="Clearer answers to the real question: which combinations keep winning?"
+        description="Instead of treating each category in isolation, the pairing matrices show how choices cluster together. The preference boards underneath answer the simpler question of what keeps getting picked."
+        aside={
+          <div className="rounded-full border border-border/60 bg-background/55 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.24em] text-muted-foreground">
+            top stack {shortenLabel(data.summary.topStack, 28)}
+          </div>
+        }
+      />
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        <PairingMatrix
+          eyebrow="Frontend x backend"
+          title="Popular frontend and backend pairings stop being abstract when you can see the hotspots."
+          description="The brightest cells show where builders are converging, not just which standalone options top the list."
+          matrix={data.stackMatrix}
+          tone="chart1"
+        />
+        <PairingMatrix
+          eyebrow="Database x ORM"
+          title="Database and ORM choices reveal which data layer combinations feel safest."
+          description="This view removes string clutter and makes the strongest backend data pairings immediately visible."
+          matrix={data.databaseOrmMatrix}
+          tone="chart4"
+        />
       </div>
 
-      <ChartCard
-        title="popular_stacks.bar"
-        description="Most common backend + frontend combinations"
-      >
-        <BarChartComponent data={popularStackCombinations} height={320} />
-      </ChartCard>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <ChartCard title="frontend_frameworks.bar" description="Frontend framework distribution">
-          <BarChartComponent data={frontendDistribution} />
-        </ChartCard>
-
-        <ChartCard title="backend_frameworks.bar" description="Backend framework distribution">
-          <BarChartComponent data={backendDistribution} />
-        </ChartCard>
-
-        <ChartCard title="databases.bar" description="Database technology distribution">
-          <BarChartComponent data={databaseDistribution} />
-        </ChartCard>
-
-        <ChartCard title="orms.bar" description="ORM / query builder distribution">
-          <BarChartComponent data={ormDistribution} />
-        </ChartCard>
-
-        <ChartCard title="api_layer.pie" description="API layer technology (tRPC vs oRPC)">
-          <PieChartComponent data={apiDistribution} />
-        </ChartCard>
-
-        <ChartCard title="authentication.pie" description="Authentication provider distribution">
-          <PieChartComponent data={authDistribution} />
-        </ChartCard>
-
-        <ChartCard title="runtime.pie" description="JavaScript runtime preference">
-          <PieChartComponent data={runtimeDistribution} />
-        </ChartCard>
+      <div className="grid gap-4 xl:grid-cols-2">
+        <PreferenceCard
+          eyebrow="Frontend"
+          title="Frontend frameworks"
+          description="Most-selected frontend surfaces, ranked by project share."
+          data={data.frontendDistribution}
+          colorKey="chart1"
+        />
+        <PreferenceCard
+          eyebrow="Backend"
+          title="Backend frameworks"
+          description="Backend choices by share of tracked projects."
+          data={data.backendDistribution}
+          colorKey="chart2"
+        />
+        <PreferenceCard
+          eyebrow="Database"
+          title="Databases"
+          description="Storage backends builders reach for most often."
+          data={data.databaseDistribution}
+          colorKey="chart4"
+        />
+        <PreferenceCard
+          eyebrow="ORM"
+          title="ORMs and query builders"
+          description="Data-access tooling ranked by selection share."
+          data={data.ormDistribution}
+          colorKey="chart5"
+        />
       </div>
 
-      <ChartCard title="db_hosting.bar" description="Database hosting service choices">
-        <BarChartComponent data={dbSetupDistribution} height={320} />
-      </ChartCard>
-
-      <ChartCard title="db_orm_combos.bar" description="Popular database + ORM combinations">
-        <BarChartComponent data={databaseORMCombinations} height={320} />
-      </ChartCard>
+      <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
+        <PreferenceCard
+          eyebrow="API"
+          title="API layer"
+          description="Transport choices used in tracked projects."
+          data={data.apiDistribution}
+          colorKey="chart3"
+        />
+        <PreferenceCard
+          eyebrow="Auth"
+          title="Authentication provider"
+          description="Auth preferences across the live dataset."
+          data={data.authDistribution}
+          colorKey="chart1"
+        />
+        <PreferenceCard
+          eyebrow="Runtime"
+          title="Runtime preference"
+          description="Which JavaScript runtimes show up most often."
+          data={data.runtimeDistribution}
+          colorKey="chart2"
+        />
+      </div>
     </div>
   );
 }
