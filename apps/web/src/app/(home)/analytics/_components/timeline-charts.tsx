@@ -165,6 +165,16 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
             className="min-h-[320px]"
             build={({ width, palette }) => {
               const compact = isCompactPlot(width);
+              const compactTickStep = width < 420 ? 3 : 2;
+              const compactTicks = compact
+                ? data.monthlyTimeSeries
+                    .filter(
+                      (_, index) =>
+                        index % compactTickStep === 0 ||
+                        index === data.monthlyTimeSeries.length - 1,
+                    )
+                    .map((point) => point.month)
+                : undefined;
               const margins = resolvePlotMargins(
                 width,
                 { top: 18, right: 16, bottom: 42, left: 44 },
@@ -187,8 +197,9 @@ export function TimelineSection({ data }: { data: AggregatedAnalyticsData }) {
                 x: {
                   type: "band",
                   label: null,
+                  ticks: compactTicks,
                   tickFormat: (value) =>
-                    formatMonthLabel(String(value), compact ? "MMM" : "MMM yy"),
+                    formatMonthLabel(String(value), compact ? "MMM yy" : "MMM yy"),
                 },
                 y: {
                   label: null,

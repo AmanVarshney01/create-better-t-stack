@@ -3,7 +3,6 @@
 import * as Plot from "@observablehq/plot";
 
 import {
-  buildCompactCategoryLabels,
   formatPercent,
   getPlotFontSize,
   interpolateColor,
@@ -13,98 +12,9 @@ import {
 } from "./analytics-helpers";
 import { ChartCard } from "./chart-card";
 import { PlotChart } from "./plot-chart";
+import { PreferenceChartCard } from "./preference-chart-card";
 import { SectionHeader } from "./section-header";
-import type { AggregatedAnalyticsData, ShareDistributionItem } from "./types";
-
-function PreferenceCard({
-  eyebrow,
-  title,
-  description,
-  data,
-  colorKey,
-}: {
-  eyebrow: string;
-  title: string;
-  description: string;
-  data: ShareDistributionItem[];
-  colorKey: "chart1" | "chart2" | "chart3" | "chart4" | "chart5";
-}) {
-  const ranking = data.slice(0, 5);
-
-  return (
-    <ChartCard eyebrow={eyebrow} title={title} description={description}>
-      <PlotChart
-        ariaLabel={title}
-        className="min-h-[230px]"
-        build={({ width, palette }) => {
-          const compact = isCompactPlot(width);
-          const shareMax = Math.max(...ranking.map((item) => item.share), 0.2);
-          const fill = palette[colorKey];
-          const compactLabels = compact
-            ? buildCompactCategoryLabels(
-                ranking.map((item) => item.name),
-                width < 360 ? 10 : 12,
-              )
-            : null;
-          const chartData = ranking.map((item, index) => ({
-            ...item,
-            label: compact ? (compactLabels?.[index] ?? item.name) : item.name,
-          }));
-          const margins = resolvePlotMargins(
-            width,
-            { top: 16, right: 48, bottom: 28, left: 128 },
-            { top: 12, right: 42, bottom: 12, left: 92 },
-          );
-
-          return Plot.plot({
-            width,
-            height: compact ? Math.max(200, chartData.length * 30 + 28) : 230,
-            marginTop: margins.top,
-            marginRight: margins.right,
-            marginBottom: margins.bottom,
-            marginLeft: margins.left,
-            style: {
-              background: "transparent",
-              color: palette.foreground,
-              fontFamily: "var(--font-mono)",
-              fontSize: getPlotFontSize(width),
-            },
-            x: {
-              axis: compact ? null : undefined,
-              label: null,
-              domain: [0, shareMax * (compact ? 1.34 : 1.22)],
-              ticks: 4,
-              grid: !compact,
-              tickFormat: (value) => formatPercent(Number(value)),
-            },
-            y: {
-              label: null,
-            },
-            marks: [
-              Plot.barX(chartData, {
-                x: "share",
-                y: "label",
-                fill,
-                rx: 10,
-                title: (item) =>
-                  `${item.name}\nShare: ${formatPercent(item.share)}\nProjects: ${item.value.toLocaleString()}`,
-              }),
-              Plot.text(chartData, {
-                x: "share",
-                y: "label",
-                text: (item) => formatPercent(item.share),
-                dx: compact ? 6 : 8,
-                textAnchor: "start",
-                fill: palette.foreground,
-                fontWeight: 600,
-              }),
-            ],
-          });
-        }}
-      />
-    </ChartCard>
-  );
-}
+import type { AggregatedAnalyticsData } from "./types";
 
 function PairingMatrix({
   eyebrow,
@@ -228,28 +138,28 @@ export function StackSection({ data }: { data: AggregatedAnalyticsData }) {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <PreferenceCard
+        <PreferenceChartCard
           eyebrow="Frontend"
           title="Frontend frameworks"
           description="Most-selected frontend surfaces, ranked by project share."
           data={data.frontendDistribution}
           colorKey="chart1"
         />
-        <PreferenceCard
+        <PreferenceChartCard
           eyebrow="Backend"
           title="Backend frameworks"
           description="Backend choices by share of tracked projects."
           data={data.backendDistribution}
           colorKey="chart2"
         />
-        <PreferenceCard
+        <PreferenceChartCard
           eyebrow="Database"
           title="Databases"
           description="Storage backends builders reach for most often."
           data={data.databaseDistribution}
           colorKey="chart4"
         />
-        <PreferenceCard
+        <PreferenceChartCard
           eyebrow="ORM"
           title="ORMs and query builders"
           description="Data-access tooling ranked by selection share."
@@ -259,21 +169,21 @@ export function StackSection({ data }: { data: AggregatedAnalyticsData }) {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
-        <PreferenceCard
+        <PreferenceChartCard
           eyebrow="API"
           title="API layer"
           description="Transport choices used in tracked projects."
           data={data.apiDistribution}
           colorKey="chart3"
         />
-        <PreferenceCard
+        <PreferenceChartCard
           eyebrow="Auth"
           title="Authentication provider"
           description="Auth preferences across the live dataset."
           data={data.authDistribution}
           colorKey="chart1"
         />
-        <PreferenceCard
+        <PreferenceChartCard
           eyebrow="Runtime"
           title="Runtime preference"
           description="Which JavaScript runtimes show up most often."

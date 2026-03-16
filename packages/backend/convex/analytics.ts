@@ -3,6 +3,8 @@ import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { buildDailyWindow } from "./analytics-date-utils";
 
+const MAX_DAILY_STATS_WINDOW = 366;
+
 function incrementKey(
   dist: Record<string, number>,
   key: string | undefined,
@@ -237,7 +239,7 @@ export const getDailyStats = query({
     const requestedDays = args.days;
     const sanitizedDays =
       typeof requestedDays === "number" && Number.isFinite(requestedDays) && requestedDays > 0
-        ? Math.floor(requestedDays)
+        ? Math.min(Math.floor(requestedDays), MAX_DAILY_STATS_WINDOW)
         : 30;
     const cutoffDate = new Date(now - (sanitizedDays - 1) * 24 * 60 * 60 * 1000)
       .toISOString()

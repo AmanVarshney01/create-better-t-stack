@@ -225,10 +225,11 @@ function buildFromPrecomputed(
     (max, point) => (max && max.count >= point.count ? max : point),
     null,
   );
-  const busiestHour = hourlyDistribution.reduce<(typeof hourlyDistribution)[number] | null>(
-    (max, point) => (max && max.count >= point.count ? max : point),
-    null,
-  );
+  const busiestHourCandidate = hourlyDistribution.reduce<
+    (typeof hourlyDistribution)[number] | null
+  >((max, point) => (max && max.count >= point.count ? max : point), null);
+  const busiestHour =
+    busiestHourCandidate && busiestHourCandidate.count > 0 ? busiestHourCandidate : null;
 
   return {
     lastUpdated: new Date(stats.lastEventTime).toISOString(),

@@ -13,102 +13,9 @@ import {
 } from "./analytics-helpers";
 import { ChartCard } from "./chart-card";
 import { PlotChart } from "./plot-chart";
+import { PreferenceChartCard } from "./preference-chart-card";
 import { SectionHeader } from "./section-header";
 import type { AggregatedAnalyticsData, ShareDistributionItem, VersionDistribution } from "./types";
-
-function PreferenceCard({
-  eyebrow,
-  title,
-  description,
-  data,
-  colorKey,
-  maxItems = 5,
-}: {
-  eyebrow: string;
-  title: string;
-  description: string;
-  data: ShareDistributionItem[];
-  colorKey: "chart1" | "chart2" | "chart3" | "chart4" | "chart5";
-  maxItems?: number;
-}) {
-  const ranking = data.slice(0, maxItems);
-
-  return (
-    <ChartCard eyebrow={eyebrow} title={title} description={description}>
-      <PlotChart
-        ariaLabel={title}
-        className="min-h-[230px]"
-        build={({ width, palette }) => {
-          const compact = isCompactPlot(width);
-          const shareMax = Math.max(...ranking.map((item) => item.share), 0.2);
-          const fill = palette[colorKey];
-          const compactLabels = compact
-            ? buildCompactCategoryLabels(
-                ranking.map((item) => item.name),
-                width < 360 ? 10 : 12,
-              )
-            : null;
-          const chartData = ranking.map((item, index) => ({
-            ...item,
-            label: compact ? (compactLabels?.[index] ?? item.name) : item.name,
-          }));
-          const margins = resolvePlotMargins(
-            width,
-            { top: 16, right: 48, bottom: 28, left: 128 },
-            { top: 12, right: 42, bottom: 12, left: 92 },
-          );
-
-          return Plot.plot({
-            width,
-            height: compact
-              ? Math.max(200, chartData.length * 30 + 28)
-              : Math.max(220, chartData.length * 34 + 70),
-            marginTop: margins.top,
-            marginRight: margins.right,
-            marginBottom: margins.bottom,
-            marginLeft: margins.left,
-            style: {
-              background: "transparent",
-              color: palette.foreground,
-              fontFamily: "var(--font-mono)",
-              fontSize: getPlotFontSize(width),
-            },
-            x: {
-              axis: compact ? null : undefined,
-              label: null,
-              domain: [0, shareMax * (compact ? 1.34 : 1.22)],
-              ticks: 4,
-              grid: !compact,
-              tickFormat: (value) => formatPercent(Number(value)),
-            },
-            y: {
-              label: null,
-            },
-            marks: [
-              Plot.barX(chartData, {
-                x: "share",
-                y: "label",
-                fill,
-                rx: 10,
-                title: (item) =>
-                  `${item.name}\nShare: ${formatPercent(item.share)}\nProjects: ${item.value.toLocaleString()}`,
-              }),
-              Plot.text(chartData, {
-                x: "share",
-                y: "label",
-                text: (item) => formatPercent(item.share),
-                dx: compact ? 6 : 8,
-                textAnchor: "start",
-                fill: palette.foreground,
-                fontWeight: 600,
-              }),
-            ],
-          });
-        }}
-      />
-    </ChartCard>
-  );
-}
 
 function VersionCard({
   eyebrow,
@@ -261,21 +168,21 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
       />
 
       <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
-        <PreferenceCard
+        <PreferenceChartCard
           eyebrow="Package manager"
           title="Dependency tooling"
           description="How people install and manage their stack."
           data={data.packageManagerDistribution}
           colorKey="chart1"
         />
-        <PreferenceCard
+        <PreferenceChartCard
           eyebrow="Platform"
           title="Operating systems"
           description="Where the CLI is most often being run."
           data={data.platformDistribution}
           colorKey="chart2"
         />
-        <PreferenceCard
+        <PreferenceChartCard
           eyebrow="Database setup"
           title="Provisioning preference"
           description="Database setup services and strategies by project share."
@@ -287,7 +194,7 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
       {hasDeployTargets ? (
         <div className="grid gap-4 xl:grid-cols-2">
           {webDeployTargets.length > 0 ? (
-            <PreferenceCard
+            <PreferenceChartCard
               eyebrow="Web target"
               title="Web deploy targets"
               description="The deployment platforms picked for the web surface."
@@ -297,7 +204,7 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
           ) : null}
 
           {serverDeployTargets.length > 0 ? (
-            <PreferenceCard
+            <PreferenceChartCard
               eyebrow="Server target"
               title="Server deploy targets"
               description="Back-end hosting destinations selected during setup."
@@ -344,7 +251,7 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
         )}
       >
         {data.addonsDistribution.length > 0 ? (
-          <PreferenceCard
+          <PreferenceChartCard
             eyebrow="Add-ons"
             title="Extra capabilities"
             description="Additional tooling and generators selected during setup."
@@ -355,7 +262,7 @@ export function DevToolsSection({ data }: { data: AggregatedAnalyticsData }) {
         ) : null}
 
         {data.examplesDistribution.length > 0 ? (
-          <PreferenceCard
+          <PreferenceChartCard
             eyebrow="Examples"
             title="Included examples"
             description="Sample templates people choose to include."

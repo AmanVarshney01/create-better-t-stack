@@ -79,6 +79,8 @@ export function PlotChart({
     const mount = mountRef.current;
     if (!frame || !mount || width < 180) return;
 
+    // Keep build stable when parent state changes frequently so we do not rebuild
+    // the same Plot instance on every render.
     const plot = build({
       id,
       width,
@@ -92,7 +94,6 @@ export function PlotChart({
 
     return () => {
       plot.remove();
-      mount.replaceChildren();
     };
   }, [ariaLabel, build, id, resolvedTheme, width]);
 
