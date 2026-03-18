@@ -186,6 +186,12 @@ function getAllMcpServers(config: ProjectConfig): McpServerDef[] {
       name: "polar",
       target: "https://mcp.polar.sh/mcp/polar-mcp",
     },
+    {
+      key: "dodo",
+      label: "Dodo Payments",
+      name: "dodo",
+      target: "https://docs.dodopayments.com/mcp",
+    },
   ];
 }
 
@@ -258,6 +264,10 @@ export function getRecommendedMcpServers(
 
   if (config.payments === "polar") {
     recommendedServerKeys.push("polar");
+  }
+
+  if (config.payments === "dodo") {
+    recommendedServerKeys.push("dodo");
   }
 
   return uniqueValues(recommendedServerKeys)
