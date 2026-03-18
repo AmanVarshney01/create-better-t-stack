@@ -6386,6 +6386,10 @@ import { env } from "@{{projectName}}/env/server";
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
 {{/if}}
+{{#if (eq payments "dodo")}}
+import { dodopayments, checkout, portal, webhooks } from "@dodopayments/better-auth";
+import { dodoPaymentsClient } from "./lib/payments";
+{{/if}}
 import { db } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
 
@@ -6482,6 +6486,10 @@ import { env } from "@{{projectName}}/env/server";
 {{#if (eq payments "polar")}}
 import { polar, checkout, portal } from "@polar-sh/better-auth";
 import { polarClient } from "./lib/payments";
+{{/if}}
+{{#if (eq payments "dodo")}}
+import { dodopayments, checkout, portal, webhooks } from "@dodopayments/better-auth";
+import { dodoPaymentsClient } from "./lib/payments";
 {{/if}}
 import { db } from "@{{projectName}}/db";
 import * as schema from "@{{projectName}}/db/schema/auth";
