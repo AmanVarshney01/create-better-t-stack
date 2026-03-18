@@ -48,6 +48,9 @@ function RouteComponent() {
   {{#if (eq payments "polar") }}
   const hasProSubscription = (customerState?.activeSubscriptions?.length ?? 0) > 0;
   // For debugging: console.log("Active subscriptions:", customerState?.activeSubscriptions);
+  {{else if (eq payments "dodo") }}
+  const hasProSubscription = (customerState?.data?.items?.length ?? 0) > 0;
+  // For debugging: console.log("Active subscriptions:", customerState?.data?.items);
   {{/if}}
 
   return (
@@ -59,12 +62,12 @@ function RouteComponent() {
       {{else if (eq api "orpc") }}
       <p>API: {privateData.data?.message}</p>
       {{/if}}
-      {{#if (eq payments "polar") }}
+      {{#if (or (eq payments "polar") (eq payments "dodo")) }}
       <p>Plan: {hasProSubscription ? "Pro" : "Free"}</p>
       {hasProSubscription ? (
         <Button
           onClick={async function handlePortal() {
-            await authClient.customer.portal();
+            await authClient.{{#if (eq payments "polar")}}customer.portal{{else}}dodopayments.customer.portal{{/if}}();
           }}
         >
           Manage Subscription
