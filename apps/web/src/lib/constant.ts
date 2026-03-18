@@ -555,8 +555,8 @@ export const TECH_OPTIONS: Record<
       default: false,
     },
     {
-      id: "oxlint",
-      name: "Oxlint",
+      id: "oxc",
+      name: "Oxc",
       description: "Oxlint + Oxfmt (linting & formatting)",
       icon: `${ICON_BASE_URL}/oxc.svg`,
       color: "from-orange-500 to-orange-700",

@@ -10,7 +10,7 @@ import { AddonSetupError, UserCancelledError } from "../../utils/errors";
 import { cliConsola } from "../../utils/terminal-output";
 import { setupFumadocs } from "./fumadocs-setup";
 import { setupMcp } from "./mcp-setup";
-import { setupOxlint } from "./oxlint-setup";
+import { setupOxc } from "./oxc-setup";
 import { setupSkills } from "./skills-setup";
 import { setupStarlight } from "./starlight-setup";
 import { setupTauri } from "./tauri-setup";
@@ -63,7 +63,7 @@ export async function setupAddons(config: ProjectConfig) {
   const hasBiome = addons.includes("biome");
   const hasHusky = addons.includes("husky");
   const hasLefthook = addons.includes("lefthook");
-  const hasOxlint = addons.includes("oxlint");
+  const hasOxc = addons.includes("oxc");
 
   if (hasUltracite) {
     const gitHooks: string[] = [];
@@ -75,14 +75,14 @@ export async function setupAddons(config: ProjectConfig) {
       await runAddonStep("biome", () => setupBiome(projectDir));
     }
 
-    if (hasOxlint) {
-      await runSetup(() => setupOxlint(projectDir, config.packageManager));
+    if (hasOxc) {
+      await runSetup(() => setupOxc(projectDir, config.packageManager));
     }
 
     if (hasHusky || hasLefthook) {
-      let linter: "biome" | "oxlint" | undefined;
-      if (hasOxlint) {
-        linter = "oxlint";
+      let linter: "biome" | "oxc" | undefined;
+      if (hasOxc) {
+        linter = "oxc";
       } else if (hasBiome) {
         linter = "biome";
       }
@@ -139,7 +139,7 @@ export async function setupBiome(projectDir: string) {
   }
 }
 
-export async function setupHusky(projectDir: string, linter?: "biome" | "oxlint") {
+export async function setupHusky(projectDir: string, linter?: "biome" | "oxc") {
   await addPackageDependency({
     devDependencies: ["husky", "lint-staged"],
     projectDir,
@@ -154,7 +154,7 @@ export async function setupHusky(projectDir: string, linter?: "biome" | "oxlint"
       prepare: "husky",
     };
 
-    if (linter === "oxlint") {
+    if (linter === "oxc") {
       packageJson["lint-staged"] = {
         "*": ["oxlint", "oxfmt --write"],
       };

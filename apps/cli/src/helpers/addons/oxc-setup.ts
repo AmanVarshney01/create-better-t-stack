@@ -11,7 +11,7 @@ import { shouldSkipExternalCommands } from "../../utils/external-commands";
 import { getPackageExecutionArgs } from "../../utils/package-runner";
 import { createSpinner } from "../../utils/terminal-output";
 
-export async function setupOxlint(
+export async function setupOxc(
   projectDir: string,
   packageManager: PackageManager,
 ): Promise<Result<void, AddonSetupError>> {
@@ -41,7 +41,7 @@ export async function setupOxlint(
       const s = createSpinner();
 
       try {
-        s.start("Initializing oxlint and oxfmt...");
+        s.start("Initializing oxc...");
 
         const oxlintArgs = getPackageExecutionArgs(packageManager, "oxlint@latest --init");
         await $({ cwd: projectDir, env: { CI: "true" } })`${oxlintArgs}`;
@@ -57,8 +57,8 @@ export async function setupOxlint(
     },
     catch: (error) =>
       new AddonSetupError({
-        addon: "oxlint",
-        message: `Failed to set up oxlint: ${error instanceof Error ? error.message : String(error)}`,
+        addon: "oxc",
+        message: `Failed to set up oxc: ${error instanceof Error ? error.message : String(error)}`,
         cause: error,
       }),
   });

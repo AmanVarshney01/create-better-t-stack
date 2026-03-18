@@ -49,8 +49,8 @@ async function runSilentCreate(testCase: SilentCreateCase) {
 describe("silent create output", () => {
   const cases: SilentCreateCase[] = [
     {
-      name: "stays quiet for oxlint addon setup",
-      projectName: "silent-addon-oxlint",
+      name: "stays quiet for oxc addon setup",
+      projectName: "silent-addon-oxc",
       options: {
         frontend: ["next"],
         backend: "hono",
@@ -60,7 +60,7 @@ describe("silent create output", () => {
         api: "none",
         auth: "none",
         payments: "none",
-        addons: ["nx", "oxlint"],
+        addons: ["nx", "oxc"],
         examples: [],
         git: true,
         packageManager: "pnpm",

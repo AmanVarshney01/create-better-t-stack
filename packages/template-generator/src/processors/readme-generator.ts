@@ -417,7 +417,7 @@ function generateFeaturesList(
     tauri: "- **Tauri** - Build native desktop applications",
     electrobun: "- **Electrobun** - Lightweight desktop shell for web frontends",
     biome: "- **Biome** - Linting and formatting",
-    oxlint: "- **Oxlint** - Oxlint + Oxfmt (linting & formatting)",
+    oxc: "- **Oxc** - Oxlint + Oxfmt (linting & formatting)",
     husky: "- **Husky** - Git hooks for code quality",
     starlight: "- **Starlight** - Documentation site with Astro",
     turborepo: "- **Turborepo** - Optimized monorepo build system",
@@ -557,7 +557,7 @@ function generateScriptsList(
     scripts += `\n- \`${packageManagerRunCmd} check\`: Run Biome formatting and linting`;
   }
 
-  if (addons.includes("oxlint")) {
+  if (addons.includes("oxc")) {
     scripts += `\n- \`${packageManagerRunCmd} check\`: Run Oxlint and Oxfmt`;
   }
 
@@ -640,7 +640,7 @@ function generateGitHooksSection(
   addons: ProjectConfig["addons"],
 ): string {
   const hasHusky = addons.includes("husky");
-  const hasLinting = addons.includes("biome") || addons.includes("oxlint");
+  const hasLinting = addons.includes("biome") || addons.includes("oxc");
 
   if (!hasHusky && !hasLinting) {
     return "";
