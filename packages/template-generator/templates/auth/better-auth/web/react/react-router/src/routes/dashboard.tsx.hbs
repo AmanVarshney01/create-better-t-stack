@@ -1,4 +1,4 @@
-{{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
 import { Button } from "@{{projectName}}/ui/components/button";
 {{/if}}
 import { authClient } from "@/lib/auth-client";
@@ -17,9 +17,9 @@ import { useNavigate } from "react-router";
 export default function Dashboard() {
   const { data: session, isPending } = authClient.useSession();
   const navigate = useNavigate();
-  {{#if (eq payments "polar")}}
+{{#if (or (eq payments "polar") (eq payments "dodo"))}}
   const [customerState, setCustomerState] = useState<any>(null);
-  {{/if}}
+{{/if}}
 
   {{#if (eq api "orpc")}}
   const privateData = useQuery(orpc.privateData.queryOptions());
@@ -34,7 +34,7 @@ export default function Dashboard() {
     }
   }, [session, isPending, navigate]);
 
-  {{#if (eq payments "polar")}}
+{{#if (eq payments "polar")}}
   useEffect(() => {
     async function fetchCustomerState() {
       if (session) {
